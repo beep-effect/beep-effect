@@ -14,7 +14,7 @@ import { ReservationId } from "./Reservation.id.ts";
  * @category events
  * @since 0.0.0
  */
-export class BudgetReserved extends Domain.Event("BudgetReserved", RunEvent.fields({ reservation: ReservationId, units: S.Int, remaining: S.Int })) {}
+export class BudgetReserved extends Domain.Event("BudgetReserved", RunEvent.fields({ reservation: ReservationId, units: S.Int, remaining: S.Int }), { description: "Part of the run's allowance is held for one call. `remaining` is the units left." }) {}
 
 /**
  * Reserve budget before an inference or tool call, as the run itself.

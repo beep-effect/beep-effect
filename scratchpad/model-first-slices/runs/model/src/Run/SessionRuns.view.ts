@@ -2,7 +2,7 @@ import * as Domain from "@alchemy.run/domain";
 import { Session } from "@proto/kernel/Session.middleware";
 import type { RunId } from "@proto/kernel/Ids";
 import type { RunStatus } from "@proto/runs-contract/Run/RunStatus";
-import { NotInSession, type SessionRun, SessionRunsState } from "@proto/runs-contract/Run/SessionRuns.read";
+import { NotInSession, type SessionRun, SessionRunsState, SessionRunsRead } from "@proto/runs-contract/Run/SessionRuns.read";
 import { SessionId } from "@proto/runs-contract/Run/Session.id";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
@@ -53,5 +53,5 @@ export class SessionRuns extends Domain.View(
       ChildRunFinished: (view, _event, { source }) => upsert(view, source.id, "running"),
     },
   },
-  { description: "A session's chain of runs: requests, children and continuations, with their status." },
+  SessionRunsRead.annotations,
 ) {}

@@ -5,6 +5,7 @@ import * as A from "effect/Array";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import * as Atom from "effect/reactivity/Atom";
 import type { Receipt } from "../Bindings.ts";
@@ -56,7 +57,7 @@ export const registerParty = Atom.family((org: OrgId) =>
     Effect.gen(function* () {
       const id = yield* (yield* Effect.service(SecureRandom.SecureRandom)).uuidV4();
       const outcome = yield* Intake.RegisterParty.send({ target: PartyId.make(`party_${id}`), input: { org, name } });
-      if (outcome._tag === "Accepted") get.set(lastRegistration, O.some(outcome.receipt));
+      if (P.isTagged(outcome, "Accepted")) get.set(lastRegistration, O.some(outcome.receipt));
       return outcome._tag;
     }),
   ),

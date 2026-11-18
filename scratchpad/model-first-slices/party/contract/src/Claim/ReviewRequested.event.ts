@@ -22,4 +22,5 @@ export class ReviewRequested extends Domain.Event(
     signals: S.Array(EvidenceSignal),
     evidenceRevision: S.Int,
   }),
+  { description: "A review of the claim was asked for as this agent run, with what the run needs to assess and the evidence revision it reviews. Each review is its own run." },
 ) {}

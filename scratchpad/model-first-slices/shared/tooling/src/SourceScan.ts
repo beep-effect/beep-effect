@@ -3,6 +3,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
 import * as Path from "effect/Path";
+import type { PlatformError } from "effect/PlatformError";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -45,15 +46,26 @@ const code = (source: string): string =>
   pipe(source, Str.replace(/\/\*[\s\S]*?\*\//g, ""), Str.replace(/(^|[^:])\/\/.*$/gm, "$1"));
 
 /**
- * Every violation in one source text, comments ignored.
+ * Every violation in one source text, comments ignored. The text comes
+ * first and the file it is reported under is named, so the two strings
+ * cannot be swapped by position.
+ *
+ * **Example** (Scanning a forged root)
+ * ```ts
+ * import { scanText } from "@proto/tooling/SourceScan";
+ * import { pipe } from "effect/Function";
+ *
+ * const violations = scanText('Root.cases.Human.make({ principal: "p_x" })', { file: "forged.ts" });
+ * const same = pipe('Root.cases.Human.make({ principal: "p_x" })', scanText({ file: "forged.ts" }));
+ * ```
  *
  * @category getters
  * @since 0.0.0
  */
 export const scanText: {
-  (source: string): (file: string) => ReadonlyArray<Violation>;
-  (file: string, source: string): ReadonlyArray<Violation>;
-} = dual(2, (file: string, source: string): ReadonlyArray<Violation> => {
+  (options: { readonly file: string }): (source: string) => ReadonlyArray<Violation>;
+  (source: string, options: { readonly file: string }): ReadonlyArray<Violation>;
+} = dual(2, (source: string, { file }: { readonly file: string }): ReadonlyArray<Violation> => {
   const text = code(source);
   return A.flatMap(rules, ({ rule, pattern, unless }) =>
     unless !== undefined && unless.test(text)
@@ -64,16 +76,16 @@ export const scanText: {
 
 /**
  * Every violation under each package's `src`, except in the allowed files
- * (paths relative to `root`).
+ * (paths relative to `root`). The package directories and the allowed files
+ * are both path lists, so they are named rather than positional.
  *
  * @category getters
  * @since 0.0.0
  */
-export const scan = Effect.fn("SourceScan.scan")(function* (
-  root: string,
-  packageDirs: ReadonlyArray<string>,
-  allowed: ReadonlyArray<string>,
-) {
+export const scan: {
+  (options: ScanOptions): (root: string) => Effect.Effect<Array<Violation>, PlatformError, FileSystem.FileSystem | Path.Path>;
+  (root: string, options: ScanOptions): Effect.Effect<Array<Violation>, PlatformError, FileSystem.FileSystem | Path.Path>;
+} = dual(2, Effect.fn("SourceScan.scan")(function* (root: string, { packageDirs, allowed }: ScanOptions) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const files = yield* Effect.forEach(packageDirs, (dir) =>
@@ -87,8 +99,14 @@ export const scan = Effect.fn("SourceScan.scan")(function* (
     { concurrency: 1 },
   );
   const scanned = yield* Effect.forEach(A.flatten(files), (file) =>
-    Effect.map(fs.readFileString(path.join(root, file)), (source) => scanText(file, source)),
+    Effect.map(fs.readFileString(path.join(root, file)), scanText({ file })),
     { concurrency: 1 },
   );
   return A.filter(A.flatten(scanned), (violation) => !A.contains(allowed, violation.file));
-});
+}));
+
+/** What {@link scan} reads: the package directories to scan, and the files allowed to match. */
+interface ScanOptions {
+  readonly packageDirs: ReadonlyArray<string>;
+  readonly allowed: ReadonlyArray<string>;
+}

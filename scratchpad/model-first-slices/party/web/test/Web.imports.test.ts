@@ -35,7 +35,7 @@ const violations = Effect.fn("violations")(function* (
 ) {
   const { root, path, packages } = yield* workspace;
   return yield* Effect.forEach(entries, ({ entry, file }) =>
-    Effect.map(ImportGraph.reachable(packages, [file]), (files) => {
+    Effect.map(ImportGraph.reachable([file], packages), (files) => {
       const allowed = A.flatMap(exceptions, (exception) => (exception.entry === entry ? exception.allows : []));
       return {
         entry,

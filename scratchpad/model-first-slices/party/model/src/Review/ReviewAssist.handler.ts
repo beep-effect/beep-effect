@@ -55,7 +55,7 @@ export const ReviewAssistLive = ReviewAssist.toLayer(
     return Effect.fn(function* ({ key: run, claim, proposition, signals, evidenceRevision, provenance }) {
       // The saga stays keyed by the run it started as; `live` follows the lineage.
       let live: LiveRun = { run, provenance };
-      const hop = (step: string) => byAgent(live.run, sagaStep(ReviewAssist.sagaName, run, step));
+      const hop = (step: string) => byAgent(live.run, sagaStep(ReviewAssist.sagaName, { key: run, step }));
       const as = (step: string) => ({ provenance: live.provenance, hop: hop(step), run: live.run });
       /** Record a refusal on the claim and on the run; the run gives back what it holds. */
       const recordRefusal = (refusal: string) =>

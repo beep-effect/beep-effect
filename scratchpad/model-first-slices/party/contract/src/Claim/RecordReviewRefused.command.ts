@@ -10,7 +10,7 @@ import { ClaimId } from "./Claim.id.ts";
  * @category events
  * @since 0.0.0
  */
-export class ReviewRefused extends Domain.Event("ReviewRefused", carry({ run: RunId, reason: S.String })) {}
+export class ReviewRefused extends Domain.Event("ReviewRefused", carry({ run: RunId, reason: S.String }), { description: "A review run could not start or could not continue, and why." }) {}
 
 /**
  * Record a refused review run on the claim. Sent only by the model's own

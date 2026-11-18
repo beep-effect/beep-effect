@@ -7,7 +7,7 @@ import { Grant } from "./Grant.aggregate.ts";
 
 /** What a holder's index starts as and holds: the grants issued to them and not yet revoked or expired. */
 const HolderGrantsState = S.Struct({
-  grants: Initial.empty(GrantId).pipe(S.annotateKey({ description: "The grants the principal holds; none at first." })),
+  grants: Initial.empty(GrantId, { description: "The grants the principal holds; none at first." }),
 });
 
 /**

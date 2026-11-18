@@ -90,7 +90,7 @@ export class Delegation extends Domain.Aggregate(
     commands: [OpenDelegation, NarrowDelegation, RevokeDelegation, DelegateFurther],
     decide: {
       OpenDelegation: (state, command) =>
-        state._tag !== "Unopened"
+        !DelegationState.guards.Unopened(state)
           ? DelegationAlreadyOpen.make({})
           : [
               DelegationOpened.make({

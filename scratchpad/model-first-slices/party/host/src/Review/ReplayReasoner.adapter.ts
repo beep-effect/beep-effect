@@ -14,7 +14,7 @@ import { ReasonerTape } from "./ReasonerTape.ts";
 export const ReplayReasoner = Reasoner.toLayer(
   Effect.map(Effect.service(ReasonerTape), (tape) => ({
     assess: (request) =>
-      Effect.flatMap(tape.find(request.promptVersion, request.idempotencyKey), (recorded) =>
+      Effect.flatMap(tape.find(request), (recorded) =>
         O.match(recorded, {
           onSome: (entry) => Effect.succeed(entry.result),
           onNone: () =>

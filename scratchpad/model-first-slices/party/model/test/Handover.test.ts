@@ -17,7 +17,7 @@ import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { PartyIntake, PartyReview } from "@proto/party-contract/Party.capabilities";
 import { Proposition } from "@proto/party-contract/Proposition";
 import { Authority } from "@proto/party-model/Authority.external";
-import { Claim } from "@proto/party-model/Claim/Claim.aggregate";
+import { Claim, ClaimState } from "@proto/party-model/Claim/Claim.aggregate";
 import { ClaimReviewLive } from "@proto/party-model/Claim/ClaimReview.handler";
 import { ClaimReview } from "@proto/party-model/Claim/ClaimReview.view";
 import { MemoryPartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
@@ -149,7 +149,7 @@ it.live("an upgrade that closes generation 1 waits for the old publisher; the ne
         const backlog = Effect.gen(function* () {
           const state = yield* Effect.flatMap(Effect.service(Claim), (claims) => claims.get(claim));
           const page = yield* Effect.flatMap(Effect.service(PartyFacts), (facts) => facts.list("claims"));
-          const decided = state._tag === "Accepted" || state._tag === "Retracted";
+          const decided = ClaimState.isAnyOf(["Accepted", "Retracted"])(state);
           const published = A.some(page.entries, (entry) => entry.event.factId === `${claim}:decided`);
           return [{ stream: "PartyFacts", writer: "ClaimFacts", pending: decided && !published ? 1 : 0 }];
         }).pipe(Effect.provideContext(old));

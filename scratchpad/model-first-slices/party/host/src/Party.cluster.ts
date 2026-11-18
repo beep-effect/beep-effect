@@ -29,7 +29,7 @@ export const PartyCluster = <ROut, E, R>(platform: Layer.Layer<ROut, E, R>) => {
           intake: (yield* IntakeApi).fetch,
           agent: (yield* AgentApi).fetch,
         };
-      }).pipe(Effect.provide(context));
+      }).pipe(Effect.provideContext(context));
     }),
   };
 };

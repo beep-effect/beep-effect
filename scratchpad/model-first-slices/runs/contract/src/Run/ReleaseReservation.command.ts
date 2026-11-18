@@ -14,7 +14,7 @@ import { UnknownReservation } from "./UnknownReservation.rejection.ts";
  * @category events
  * @since 0.0.0
  */
-export class ReservationReleased extends Domain.Event("ReservationReleased", RunEvent.fields({ reservation: ReservationId, units: S.Int })) {}
+export class ReservationReleased extends Domain.Event("ReservationReleased", RunEvent.fields({ reservation: ReservationId, units: S.Int }), { description: "A reservation was released unspent." }) {}
 
 /**
  * Release a reservation whose call failed, as the run itself.

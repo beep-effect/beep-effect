@@ -13,7 +13,7 @@ import { GrantNotActive } from "./GrantNotActive.rejection.ts";
  * @category events
  * @since 0.0.0
  */
-export class GrantNarrowed extends Domain.Event("GrantNarrowed", carry({ holder: PrincipalId, terms: GrantTerms })) {}
+export class GrantNarrowed extends Domain.Event("GrantNarrowed", carry({ holder: PrincipalId, terms: GrantTerms }), { description: "An active grant's terms now reach less far." }) {}
 
 /**
  * Narrow an active grant: fewer operations, a smaller resource, an earlier expiry.

@@ -1,7 +1,8 @@
 import type { RunId } from "@proto/kernel/Ids";
-import type { AgentRunState } from "@proto/runs-model/Run/AgentRun.aggregate";
+import { AgentRunState } from "@proto/runs-model/Run/AgentRun.aggregate";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as P from "effect/Predicate";
 import * as Schedule from "effect/Schedule";
 
 /**
@@ -24,27 +25,28 @@ export const settling = { schedule: Schedule.spaced("10 millis"), times: 300 } a
  * import { AgentRun } from "@proto/runs-model/Run/AgentRun.aggregate";
  * import { liveRun } from "@proto/runs-host/Lineage";
  * import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
+ * import { pipe } from "effect/Function";
  *
- * const live = Effect.flatMap(Effect.service(AgentRun), (runs) => liveRun(runs, RunId.make("run_1")));
+ * const live = Effect.flatMap(Effect.service(AgentRun), (runs) => liveRun(RunId.make("run_1"), runs));
+ * const same = Effect.flatMap(Effect.service(AgentRun), (runs) => pipe(RunId.make("run_1"), liveRun(runs)));
  * ```
  *
  * @category getters
  * @since 0.0.0
  */
 export const liveRun: {
-  (run: RunId): (runs: RunReader) => Effect.Effect<LiveRun>;
-  (runs: RunReader, run: RunId): Effect.Effect<LiveRun>;
+  (runs: RunReader): (run: RunId) => Effect.Effect<LiveRun>;
+  (run: RunId, runs: RunReader): Effect.Effect<LiveRun>;
 } = dual(
   2,
-  (runs: RunReader, run: RunId): Effect.Effect<LiveRun> =>
+  (run: RunId, runs: RunReader): Effect.Effect<LiveRun> =>
     Effect.flatMap(runs.get(run), (state) =>
-      state._tag !== "Continued"
-        ? Effect.succeed({ run, state })
-        : runs.get(state.next).pipe(
-            Effect.repeat({ ...settling, until: (next) => next._tag !== "Unrequested" }),
-            Effect.andThen(liveRun(runs, state.next)),
-          ),
+      AgentRunState.guards.Continued(state)
+        ? runs.get(state.next).pipe(
+            Effect.repeat({ ...settling, until: P.not(AgentRunState.guards.Unrequested) }),
+            Effect.andThen(liveRun(state.next, runs)),
+          )
+        : Effect.succeed({ run, state }),
     ),
 );
 

@@ -17,6 +17,7 @@ import { ClaimNotPending } from "./ClaimNotPending.rejection.ts";
 export class EvidenceAdded extends Domain.Event(
   "EvidenceAdded",
   carry({ signals: S.Array(EvidenceSignal), revision: S.Int }),
+  { description: "More evidence arrived and the claim's evidence revision is now `revision`. A proposal made against an earlier revision is stale." },
 ) {}
 
 /**

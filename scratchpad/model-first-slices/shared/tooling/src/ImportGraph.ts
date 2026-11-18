@@ -93,14 +93,24 @@ const packageNameOf = (specifier: string): string => {
 /**
  * Every source file reachable from `entries` (absolute paths) through
  * relative imports and workspace package entries. Imports of packages
- * outside the workspace (`effect`, the library) are not followed.
+ * outside the workspace (`effect`, the library) are not followed. The
+ * entries come first, so a package's entry list pipes into
+ * `reachable(workspace)`.
  *
  * @category getters
  * @since 0.0.0
  */
-export const reachable = Effect.fn("ImportGraph.reachable")(function* (
-  workspace: HashMap.HashMap<string, WorkspacePackage>,
+export const reachable: {
+  (
+    workspace: HashMap.HashMap<string, WorkspacePackage>,
+  ): (entries: ReadonlyArray<string>) => Effect.Effect<Array<string>, UnlistedEntry | PlatformError, FileSystem.FileSystem | Path.Path>;
+  (
+    entries: ReadonlyArray<string>,
+    workspace: HashMap.HashMap<string, WorkspacePackage>,
+  ): Effect.Effect<Array<string>, UnlistedEntry | PlatformError, FileSystem.FileSystem | Path.Path>;
+} = dual(2, Effect.fn("ImportGraph.reachable")(function* (
   entries: ReadonlyArray<string>,
+  workspace: HashMap.HashMap<string, WorkspacePackage>,
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -129,7 +139,7 @@ export const reachable = Effect.fn("ImportGraph.reachable")(function* (
         });
   yield* Effect.forEach(entries, visit, { concurrency: 1, discard: true });
   return A.sort(A.fromIterable(seen), Order.String);
-});
+}));
 
 /**
  * The absolute entry files a package's `exports` names.

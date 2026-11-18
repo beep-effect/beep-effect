@@ -177,11 +177,29 @@ export const proofs: ReadonlyArray<Proof> = [
   Proof.make({
     id: "sink-positions",
     invariant: "The directory sink applies each source stream's changes once, in order, and refuses stale application, writes and checkpoints together.",
-    checkers: ["party/model/test/PartyDirectory.sink.test.ts", "party/model/test/Rebuild.test.ts"],
-    reads: "The store's apply and checkpoints; a crash injected between the write and the library's checkpoint.",
-    assumptions: "One store write is atomic (it is, in memory).",
-    gaps: "A real database needs the same transaction; not shown.",
+    checkers: [
+      "party/model/test/PartyDirectory.sink.test.ts",
+      "party/model/test/Rebuild.test.ts",
+      "party/host/test/PartyDirectoryStore.laws.test.ts",
+    ],
+    reads: "The store's apply, checkpoints, switch and search; a crash injected between the write and the library's checkpoint; one set of laws over generated scenes, held by the in-memory store and by the Postgres adapter on PGlite (one row table per generation, one positions table).",
+    assumptions: "One store write is atomic: in memory one update, in Postgres one transaction around the batch. PGlite is one connection, so the position row lock (`FOR UPDATE`) that serialises two runners is never contended in a test.",
+    gaps: "Two runners applying one stream at once are shown only on the cluster. Names are ASCII in the laws: `lower()` follows the database's locale beyond ASCII, and a NUL in a name cannot be stored.",
     reviewer: "Nothing beyond the store's transaction boundary.",
+  }),
+  Proof.make({
+    id: "derived-tables",
+    invariant: "Every SQL table a host owns is derived from a row schema, and its migrations are generated from those schemas and checked: a schema change no committed migration holds fails `bun run generated:check`, and the directory's row model reads as the read contract.",
+    checkers: [
+      "shared/tooling/src/Migrations.ts",
+      "party/host/test/PartyDirectory.table.test.ts",
+      "party/host/test/ClusterSql.test.ts",
+      "runs/host/test/ClusterSql.test.ts",
+    ],
+    reads: "Each host's schema module (`Party.schema.ts`, `Runs.schema.ts`) through drizzle-kit, diffed against the committed `migrations/` snapshots; the generated migrations module; the row model's json form beside `DirectoryRow`; the declared row tables per generation; the migrations a fresh PGlite records.",
+    assumptions: "drizzle-kit's diff is the schema's DDL. A runner applies `<Host>.migrations.ts` once per connection with `effect/sql/Migrator`, in its own migrations table.",
+    gaps: "A database created by the old `CREATE TABLE IF NOT EXISTS` adapters is not migrated in place; the cluster starts from an empty database. Retiring a generation's row table is a migration the owner generates after the switch.",
+    reviewer: "Whether a new migration drops or rewrites what a running generation still reads.",
   }),
   Proof.make({
     id: "rebuild-no-side-effects",
@@ -204,10 +222,10 @@ export const proofs: ReadonlyArray<Proof> = [
   Proof.make({
     id: "inbox-idempotency",
     invariant: "The inbox acts on each fact once: duplicates change nothing, a crash before the checkpoint is safe, a v1 consumer survives v2.",
-    checkers: ["runs/host/test/RunsHost.test.ts"],
-    reads: "Commit counts on the target run across redeliveries.",
-    assumptions: "The inbox store's commit is atomic.",
-    gaps: "In process; a durable inbox store is cluster work.",
+    checkers: ["runs/host/test/RunsHost.test.ts", "runs/host/test/InboxStore.laws.test.ts"],
+    reads: "Commit counts on the target run across redeliveries; the inbox store's laws (checkpoint is the highest committed position, a key is seen once committed, order and redelivery do not matter), held by the in-memory store and by the Postgres adapter on PGlite.",
+    assumptions: "The inbox store's commit is atomic: one transaction in Postgres.",
+    gaps: "The inbox over the Postgres store runs on the cluster only; in process it runs over memory.",
     reviewer: "What a fact-started command may do (D32).",
   }),
   Proof.make({

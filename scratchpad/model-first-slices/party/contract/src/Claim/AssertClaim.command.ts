@@ -35,6 +35,7 @@ export class ClaimAlreadyAsserted extends S.TaggedError<ClaimAlreadyAsserted, { 
 export class ClaimAsserted extends Domain.Event(
   "ClaimAsserted",
   carry({ org: OrgId, proposition: Proposition, signals: S.Array(EvidenceSignal) }),
+  { description: "A proposition was put forward in an org with its evidence, under the invocation that asserted it." },
 ) {}
 
 /**
@@ -52,7 +53,7 @@ export class AssertClaim extends Domain.Command(
     input: { org: OrgId, proposition: Proposition, signals: S.Array(EvidenceSignal) },
     events: [ClaimAsserted, ReviewRequested],
     rejects: [ClaimAlreadyAsserted, MissingGrant],
-    reply: { reviewRun: Initial.none(RunId).pipe(S.annotateKey({ description: "The review run the assertion requested; absent when none was needed." })) },
+    reply: { reviewRun: Initial.none(RunId, { description: "The review run the assertion requested; absent when none was needed." }) },
   },
   { description: "Assert a proposition about parties in an organization, with its evidence, for review." },
 ) {}

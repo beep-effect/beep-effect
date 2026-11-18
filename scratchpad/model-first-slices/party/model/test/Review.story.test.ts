@@ -74,7 +74,7 @@ const runGrant = (run: RunId, grant: string) =>
   delegated({ grant, delegation: `dlg:${run}`, capability: PartyPropose, org: acme, record: "Claim/claim_1", operations: ["ProposeDisposition"] });
 const runInvocation = (run: RunId, accountable: string, grant: string) =>
   agentRun(run, accountable, [runGrant(run, grant)]);
-const sagaHop = (run: RunId, step: string) => byAgent(run, sagaStep("ReviewAssist", run, step));
+const sagaHop = (run: RunId, step: string) => byAgent(run, sagaStep("ReviewAssist", { key: run, step }));
 const requestHop = (seq: number) =>
   byProcess("ReviewOnRequest", Cause.cases.Event.make({ stream: "Claim/claim_1", seq, event: "ReviewRequested" }));
 
@@ -357,7 +357,7 @@ it.effect("a run that continues at its history bound is followed: the next step 
   const next = RunId.make("review:claim_1:1~1");
   const nextRun = runInvocation(next, "p_intake", "g_intake_propose");
   // The saga stays keyed by the run it started as; the relayer is the live run.
-  const proposeHop = byAgent(next, sagaStep("ReviewAssist", run1, "propose"));
+  const proposeHop = byAgent(next, sagaStep("ReviewAssist", { key: run1, step: "propose" }));
   const proposing = readmitted(nextRun, proposeHop);
   const continued = { run: next, provenance: provenanceOf(nextRun) };
   return story(

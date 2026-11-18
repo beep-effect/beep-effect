@@ -49,6 +49,36 @@ export const Sequence = S.Int.check(
 export type Sequence = typeof Sequence.Type;
 
 /**
+ * The text of an id: it starts with a letter or a digit and holds letters,
+ * digits, and `_`, `.`, `:`, `~` and `-`. It is never empty and never holds
+ * a `/`, so an id can be a segment of a stream id or a storage path as it is.
+ *
+ * **Example** (A run's continuation id)
+ * ```ts
+ * import { IdText } from "@proto/kernel/Measure";
+ * import * as S from "effect/Schema";
+ *
+ * const valid = S.is(IdText)("run_1~1");
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const IdText = S.String.check(
+  S.isPattern(/^[A-Za-z0-9][A-Za-z0-9_.:~-]*$/, {
+    identifier: "IdTextCheck",
+    title: "Id text",
+    description: "An id: a letter or digit, then letters, digits, `_`, `.`, `:`, `~` or `-`.",
+    message: "Expected an id of letters, digits, `_`, `.`, `:`, `~` and `-` that starts with a letter or digit",
+  }),
+);
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type IdText = typeof IdText.Type;
+
+/**
  * A declared name: of a model, a view, a projection, an event or a stream.
  * It starts with a letter and holds letters and digits only, so it can be
  * part of a storage path or a target id without escaping.

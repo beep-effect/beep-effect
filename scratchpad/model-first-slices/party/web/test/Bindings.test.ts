@@ -19,6 +19,7 @@ import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Schedule from "effect/Schedule";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";
@@ -61,7 +62,7 @@ it.effect("commands return typed outcomes with ids; reads wait for receipts; sub
     yield* grants;
     const asserted = yield* Intake.AssertClaim.send({ target: claim, input: assertion }).pipe(as("p_intake"));
     expect(asserted._tag).toBe("Accepted");
-    if (asserted._tag !== "Accepted") return;
+    if (!P.isTagged(asserted, "Accepted")) return;
 
     // Read-after-write: the read waits until the view applied the receipt.
     const first = yield* Reviewer.ClaimReview.read(claim, asserted.receipt).pipe(as("p_rev"));
@@ -107,7 +108,7 @@ it.effect("commands return typed outcomes with ids; reads wait for receipts; sub
     }).pipe(as("p_rev"));
     expect(approved._tag).toBe("Accepted");
     expect(retried).toEqual(approved);
-    if (approved._tag !== "Accepted") return;
+    if (!P.isTagged(approved, "Accepted")) return;
     const decided = yield* Reviewer.ClaimReview.read(claim, approved.receipt).pipe(as("p_rev"));
     expect(decided.state).toMatchObject({ _tag: "Accepted" });
     const late = yield* Reviewer.AcceptClaim.send({ target: claim, input: {} }).pipe(as("p_rev"));

@@ -3,7 +3,7 @@
 <!-- Generated from proofs/Proofs.data.ts by scripts/proofs.ts. Do not edit: `bun run proofs`
      rewrites it, and `bun run proofs --check` fails on drift. -->
 
-Every invariant this prototype enforces (D8): 41 entries. Mechanical laws run in
+Every invariant this prototype enforces (D8): 42 entries. Mechanical laws run in
 `bun run check`, `bun run test` and `bun run generated:check`; semantic questions stay with a
 reviewer who did not write the change.
 
@@ -183,11 +183,21 @@ A saga run in flight finishes on the version it started while new runs start on 
 
 The directory sink applies each source stream's changes once, in order, and refuses stale application, writes and checkpoints together.
 
-- **Checker:** `party/model/test/PartyDirectory.sink.test.ts`, `party/model/test/Rebuild.test.ts`
-- **Reads:** The store's apply and checkpoints; a crash injected between the write and the library's checkpoint.
-- **Assumes:** One store write is atomic (it is, in memory).
-- **Gaps:** A real database needs the same transaction; not shown.
+- **Checker:** `party/model/test/PartyDirectory.sink.test.ts`, `party/model/test/Rebuild.test.ts`, `party/host/test/PartyDirectoryStore.laws.test.ts`
+- **Reads:** The store's apply, checkpoints, switch and search; a crash injected between the write and the library's checkpoint; one set of laws over generated scenes, held by the in-memory store and by the Postgres adapter on PGlite (one row table per generation, one positions table).
+- **Assumes:** One store write is atomic: in memory one update, in Postgres one transaction around the batch. PGlite is one connection, so the position row lock (`FOR UPDATE`) that serialises two runners is never contended in a test.
+- **Gaps:** Two runners applying one stream at once are shown only on the cluster. Names are ASCII in the laws: `lower()` follows the database's locale beyond ASCII, and a NUL in a name cannot be stored.
 - **Left to a reviewer:** Nothing beyond the store's transaction boundary.
+
+### derived-tables
+
+Every SQL table a host owns is derived from a row schema, and its migrations are generated from those schemas and checked: a schema change no committed migration holds fails `bun run generated:check`, and the directory's row model reads as the read contract.
+
+- **Checker:** `shared/tooling/src/Migrations.ts`, `party/host/test/PartyDirectory.table.test.ts`, `party/host/test/ClusterSql.test.ts`, `runs/host/test/ClusterSql.test.ts`
+- **Reads:** Each host's schema module (`Party.schema.ts`, `Runs.schema.ts`) through drizzle-kit, diffed against the committed `migrations/` snapshots; the generated migrations module; the row model's json form beside `DirectoryRow`; the declared row tables per generation; the migrations a fresh PGlite records.
+- **Assumes:** drizzle-kit's diff is the schema's DDL. A runner applies `<Host>.migrations.ts` once per connection with `effect/sql/Migrator`, in its own migrations table.
+- **Gaps:** A database created by the old `CREATE TABLE IF NOT EXISTS` adapters is not migrated in place; the cluster starts from an empty database. Retiring a generation's row table is a migration the owner generates after the switch.
+- **Left to a reviewer:** Whether a new migration drops or rewrites what a running generation still reads.
 
 ### rebuild-no-side-effects
 
@@ -213,10 +223,10 @@ The library answers a reused command id from its receipt before any check (pinne
 
 The inbox acts on each fact once: duplicates change nothing, a crash before the checkpoint is safe, a v1 consumer survives v2.
 
-- **Checker:** `runs/host/test/RunsHost.test.ts`
-- **Reads:** Commit counts on the target run across redeliveries.
-- **Assumes:** The inbox store's commit is atomic.
-- **Gaps:** In process; a durable inbox store is cluster work.
+- **Checker:** `runs/host/test/RunsHost.test.ts`, `runs/host/test/InboxStore.laws.test.ts`
+- **Reads:** Commit counts on the target run across redeliveries; the inbox store's laws (checkpoint is the highest committed position, a key is seen once committed, order and redelivery do not matter), held by the in-memory store and by the Postgres adapter on PGlite.
+- **Assumes:** The inbox store's commit is atomic: one transaction in Postgres.
+- **Gaps:** The inbox over the Postgres store runs on the cluster only; in process it runs over memory.
 - **Left to a reviewer:** What a fact-started command may do (D32).
 
 ### screen-causality

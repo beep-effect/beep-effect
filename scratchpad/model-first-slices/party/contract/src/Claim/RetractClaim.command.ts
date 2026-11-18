@@ -14,7 +14,7 @@ import { DecisionScope } from "./DecisionScope.ts";
  * @category events
  * @since 0.0.0
  */
-export class ClaimRetracted extends Domain.Event("ClaimRetracted", carry({ reason: S.String, ...DecisionScope })) {}
+export class ClaimRetracted extends Domain.Event("ClaimRetracted", carry({ reason: S.String, ...DecisionScope }), { description: "A pending claim was withdrawn, and why, with the org and review runs the decision covers." }) {}
 
 /**
  * Withdraw a pending claim.

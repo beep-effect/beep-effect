@@ -107,6 +107,9 @@ export const rules: Readonly<Record<string, Rule>> = {
   screen: { name: noun("Screen"), is: isFunction },
   bindings: { name: noun("Bindings"), is: isObject },
   runtime: { name: (n) => `${lowerFirst(n)}Runtime`, is: isObject },
+  // A host's SQL tables, derived from its row models; and the generated record of its committed migrations.
+  table: { name: noun("Tables"), is: isObject },
+  migrations: { name: noun("Migrations"), is: isObject },
 };
 
 /**
@@ -118,6 +121,7 @@ export const rules: Readonly<Record<string, Rule>> = {
  */
 export const exempt: Readonly<Record<string, string>> = {
   rules: "a bag of pure guard functions `decide` composes; no one of them is the file's subject",
+  schema: "a host's Drizzle schema module: drizzle-kit reads every table it exports by name, and no one table is the file's subject",
 };
 
 /**

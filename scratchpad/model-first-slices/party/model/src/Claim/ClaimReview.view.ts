@@ -5,6 +5,7 @@ import {
   type AssertedReview,
   ClaimNote,
   ClaimReviewInitial,
+  ClaimReviewRead,
   ClaimReviewState,
 } from "@proto/party-contract/Claim/ClaimReview.read";
 import { renderMergeRefusal } from "@proto/party-contract/Claim/RecordMergeRefused.command";
@@ -77,5 +78,5 @@ export class ClaimReview extends Domain.View(
       ReviewRefused: (view, event) => noted(view, ClaimNote.cases.ReviewRefused.make({ run: event.run, reason: event.reason })),
     },
   },
-  { description: "One claim as a reviewer sees it: the proposition, the agent's proposal, and its status." },
+  ClaimReviewRead.annotations,
 ) {}

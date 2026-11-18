@@ -1,7 +1,7 @@
-import { Accountability } from "@proto/authority-model/Accountability/Accountability.aggregate";
-import { Delegation } from "@proto/authority-model/Delegation/Delegation.aggregate";
+import { Accountability, AccountabilityState } from "@proto/authority-model/Accountability/Accountability.aggregate";
+import { Delegation, DelegationState } from "@proto/authority-model/Delegation/Delegation.aggregate";
 import { RunDelegations } from "@proto/authority-model/Delegation/RunDelegations.view";
-import { Grant } from "@proto/authority-model/Grant/Grant.aggregate";
+import { Grant, GrantState } from "@proto/authority-model/Grant/Grant.aggregate";
 import { HolderGrants } from "@proto/authority-model/Grant/HolderGrants.view";
 import { CapabilityGrant, type GrantTerms, inForce, ResourceScope, widens } from "@proto/kernel/Capability";
 import {
@@ -53,25 +53,37 @@ export class Boundary extends Context.Service<
      * every ancestor is still in force and covers them, and only while the
      * run has a live accountable human.
      */
-    readonly admit: (credential: Credential, at: DateTime.Utc) => Effect.Effect<Invocation, Unaccountable>;
+    readonly admit: {
+      (at: DateTime.Utc): (credential: Credential) => Effect.Effect<Invocation, Unaccountable>;
+      (credential: Credential, at: DateTime.Utc): Effect.Effect<Invocation, Unaccountable>;
+    };
     /**
      * The invocation for the next hop: the provenance's root, re-checked; of
      * the grants it names, those still in force; its chain plus the hop. It
      * never adds a grant the provenance did not name.
      */
-    readonly readmit: (provenance: Provenance, hop: Hop, at: DateTime.Utc) => Effect.Effect<Invocation, ReadmissionRefused>;
+    readonly readmit: {
+      (hop: Hop, at: DateTime.Utc): (provenance: Provenance) => Effect.Effect<Invocation, ReadmissionRefused>;
+      (provenance: Provenance, hop: Hop, at: DateTime.Utc): Effect.Effect<Invocation, ReadmissionRefused>;
+    };
     /**
      * The provenance a run acts under once its delegation is open: an agent
      * root naming its accountable human, and the delegation as its only grant.
+     * The two principals are named, so they cannot be swapped by position.
      */
-    readonly runProvenance: (
-      run: RunId,
-      accountable: PrincipalId,
-      onBehalfOf: PrincipalId,
-      grant: GrantRef,
-    ) => Provenance;
+    readonly runProvenance: {
+      (authority: RunAuthority): (run: RunId) => Provenance;
+      (run: RunId, authority: RunAuthority): Provenance;
+    };
   }
 >()($I`Boundary`) {}
+
+/** Who a run answers to, on whose behalf it acts, and the grant it acts under. */
+type RunAuthority = {
+  readonly accountable: PrincipalId;
+  readonly onBehalfOf: PrincipalId;
+  readonly grant: GrantRef;
+};
 
 const listed = <S, A>(state: O.Option<S>, items: (state: S) => ReadonlyArray<A>): ReadonlyArray<A> =>
   O.match(state, { onNone: A.emptyReadonly<A>, onSome: items });
@@ -96,7 +108,7 @@ export const BoundaryLive = Layer.effect(
     /** A grant's terms, if it is active, held by `holder`, and in force. */
     const grantInForce = (grant: GrantId, holder: O.Option<PrincipalId>, at: DateTime.Utc) =>
       Effect.map(grants.get(grant), (state) =>
-        state._tag === "Active" &&
+        GrantState.guards.Active(state) &&
         O.match(holder, { onNone: thunkTrue, onSome: (principal) => state.holder === principal }) &&
         inForce(state.terms, at)
           ? O.some(state.terms)
@@ -115,7 +127,7 @@ export const BoundaryLive = Layer.effect(
       Effect.gen(function* () {
         const held = yield* delegations.get(delegation);
         const usable =
-          held._tag === "Active" &&
+          DelegationState.guards.Active(held) &&
           O.match(holder, { onNone: thunkTrue, onSome: (run) => held.holder === run }) &&
           inForce(held.terms, at);
         if (!usable) return O.none();
@@ -162,7 +174,7 @@ export const BoundaryLive = Layer.effect(
     });
 
     const answerFor = (run: RunId) =>
-      Effect.map(accountability.get(run), (state) => (state._tag === "Live" ? O.some(state) : O.none()));
+      Effect.map(accountability.get(run), O.liftPredicate(AccountabilityState.guards.Live));
 
     const delegatedTo = Effect.fn("Boundary.delegatedTo")(function* (
       run: RunId,
@@ -174,7 +186,7 @@ export const BoundaryLive = Layer.effect(
       const root = Root.cases.Agent.make({ run, accountable });
       const confirmed = yield* Effect.forEach(ids, (delegation: DelegationId) =>
         Effect.flatMap(delegations.get(delegation), (held) =>
-          held._tag === "Active" ? confirm(GrantRef.make({ grant: held.parent, delegation: O.some(delegation) }), root, at) : Effect.succeedNone,
+          DelegationState.guards.Active(held) ? confirm(GrantRef.make({ grant: held.parent, delegation: O.some(delegation) }), root, at) : Effect.succeedNone,
         ),
         { concurrency: 1 },
       );
@@ -200,51 +212,60 @@ export const BoundaryLive = Layer.effect(
     });
 
     return {
-      admit: Effect.fn("Boundary.admit")((credential: Credential, at: DateTime.Utc) =>
-        Credential.match(credential, {
-          Human: ({ principal }) => humanRooted(principal, at, []),
-          // A process acts for a human, and its first hop says so; a process is never a root.
-          Process: ({ process, principal }) =>
-            humanRooted(principal, at, [byProcess(process, Cause.cases.Session.make({ scheme: "fixture" }))]),
-          Agent: ({ run }) => admitAgent(run, at),
+      admit: dual(
+        2,
+        Effect.fn("Boundary.admit")((credential: Credential, at: DateTime.Utc) =>
+          Credential.match(credential, {
+            Human: ({ principal }) => humanRooted(principal, at, []),
+            // A process acts for a human, and its first hop says so; a process is never a root.
+            Process: ({ process, principal }) =>
+              humanRooted(principal, at, [byProcess(process, Cause.cases.Session.make({ scheme: "fixture" }))]),
+            Agent: ({ run }) => admitAgent(run, at),
+          }),
+        ),
+      ),
+
+      readmit: dual(
+        3,
+        Effect.fn("Boundary.readmit")(function* (provenance: Provenance, hop: Hop, at: DateTime.Utc) {
+          // The root is re-checked, not trusted: an agent root needs a live accountable human now.
+          const onBehalfOf = yield* Root.match(provenance.root, {
+            Human: ({ principal }) => Effect.succeed(principal),
+            Agent: ({ run, accountable }) =>
+              Effect.flatMap(answerFor(run), (answerer) =>
+                O.isSome(answerer) && answerer.value.accountable === accountable
+                  ? Effect.succeed(answerer.value.onBehalfOf)
+                  : Effect.fail(ReadmissionRefused.make({ reason: "unaccountable" })),
+              ),
+          });
+          const confirmed = yield* Effect.forEach(provenance.grants, (ref) =>
+            Effect.map(confirm(ref, provenance.root, at), (live) => ({ ref, live })),
+            { concurrency: 1 },
+          );
+          const live = A.getSomes(A.map(confirmed, ({ live }) => live));
+          const lapsed = A.getSomes(A.map(confirmed, ({ ref, live }) => (O.isNone(live) ? O.some(ref) : O.none())));
+          if (A.isReadonlyArrayNonEmpty(provenance.grants) && A.isReadonlyArrayEmpty(live)) {
+            return yield* ReadmissionRefused.make({ reason: "lapsed", lapsed });
+          }
+          return Invocation.make({
+            root: provenance.root,
+            onBehalfOf,
+            grants: live,
+            chain: A.append(provenance.chain, hop),
+          });
         }),
       ),
 
-      readmit: Effect.fn("Boundary.readmit")(function* (provenance: Provenance, hop: Hop, at: DateTime.Utc) {
-        // The root is re-checked, not trusted: an agent root needs a live accountable human now.
-        const onBehalfOf = yield* Root.match(provenance.root, {
-          Human: ({ principal }) => Effect.succeed(principal),
-          Agent: ({ run, accountable }) =>
-            Effect.flatMap(answerFor(run), (answerer) =>
-              O.isSome(answerer) && answerer.value.accountable === accountable
-                ? Effect.succeed(answerer.value.onBehalfOf)
-                : Effect.fail(ReadmissionRefused.make({ reason: "unaccountable" })),
-            ),
-        });
-        const confirmed = yield* Effect.forEach(provenance.grants, (ref) =>
-          Effect.map(confirm(ref, provenance.root, at), (live) => ({ ref, live })),
-          { concurrency: 1 },
-        );
-        const live = A.getSomes(A.map(confirmed, ({ live }) => live));
-        const lapsed = A.getSomes(A.map(confirmed, ({ ref, live }) => (O.isNone(live) ? O.some(ref) : O.none())));
-        if (A.isReadonlyArrayNonEmpty(provenance.grants) && A.isReadonlyArrayEmpty(live)) {
-          return yield* ReadmissionRefused.make({ reason: "lapsed", lapsed });
-        }
-        return Invocation.make({
-          root: provenance.root,
-          onBehalfOf,
-          grants: live,
-          chain: A.append(provenance.chain, hop),
-        });
-      }),
-
-      runProvenance: (run, accountable, onBehalfOf, grant) =>
-        Provenance.make({
-          root: Root.cases.Agent.make({ run, accountable }),
-          onBehalfOf,
-          grants: [grant],
-          chain: [],
-        }),
+      runProvenance: dual(
+        2,
+        (run: RunId, { accountable, onBehalfOf, grant }: RunAuthority): Provenance =>
+          Provenance.make({
+            root: Root.cases.Agent.make({ run, accountable }),
+            onBehalfOf,
+            grants: [grant],
+            chain: [],
+          }),
+      ),
     };
   }),
 );

@@ -61,8 +61,8 @@ export type SessionRun = typeof SessionRun.Type;
  * @since 0.0.0
  */
 export const SessionRunsState = S.Struct({
-  runs: Initial.empty(SessionRun).pipe(S.annotateKey({ description: "Every run of the session, in the order requested; none at first." })),
-  requesters: Initial.empty(PrincipalId).pipe(S.annotateKey({ description: "Everyone who requested a run in the session; none at first." })),
+  runs: Initial.empty(SessionRun, { description: "Every run of the session, in the order requested; none at first." }),
+  requesters: Initial.empty(PrincipalId, { description: "Everyone who requested a run in the session; none at first." }),
 });
 /**
  * @category models
@@ -103,5 +103,5 @@ export class SessionRunsRead extends Domain.View("SessionRuns", {
   ],
   middleware: [Session],
   rejects: [NotInSession],
-}) {}
+}, { description: "A session's chain of runs: requests, children and continuations, with their status." }) {}
 

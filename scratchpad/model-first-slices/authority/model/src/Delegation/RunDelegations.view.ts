@@ -7,7 +7,7 @@ import { Delegation } from "./Delegation.aggregate.ts";
 
 /** What a run's index starts as and holds: the delegations opened for it and not yet revoked. */
 const RunDelegationsState = S.Struct({
-  delegations: Initial.empty(DelegationId).pipe(S.annotateKey({ description: "The delegations the run holds; none at first." })),
+  delegations: Initial.empty(DelegationId, { description: "The delegations the run holds; none at first." }),
 });
 
 /**

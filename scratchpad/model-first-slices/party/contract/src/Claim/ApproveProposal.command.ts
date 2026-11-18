@@ -60,6 +60,7 @@ export class ProposalApproved extends Domain.Event(
     // Added in phase 9 (D43): the decision's scope, absent on events stored before it.
     ...DecisionScope,
   }),
+  { description: "A person approved the agent run's proposal as read. It decides the claim, accepted or retracted as the proposal said, and wakes the run." },
 ) {}
 
 /**

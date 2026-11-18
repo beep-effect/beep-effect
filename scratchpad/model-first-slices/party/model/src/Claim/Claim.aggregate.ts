@@ -32,7 +32,7 @@ import { Proposition } from "@proto/party-contract/Proposition";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
-import { identity } from "effect/Function";
+import { flow, identity } from "effect/Function";
 import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 import { reviewRun } from "../Review/ReviewPlan.ts";
@@ -52,9 +52,9 @@ export const ClaimState = S.TaggedUnion({
     org: OrgId,
     proposition: Proposition,
     signals: S.Array(EvidenceSignal),
-    revision: S.Int.pipe(Initial.of(1), S.annotateKey({ description: "The evidence revision; an asserted claim starts at 1." })),
-    reviews: S.Int.pipe(Initial.of(0), S.annotateKey({ description: "How many reviews were requested; none at first." })),
-    proposal: Initial.none(ProposalView).pipe(S.annotateKey({ description: "The latest proposal still standing; absent until a review proposes one." })),
+    revision: S.Int.pipe(Initial.of(1, { description: "The evidence revision; an asserted claim starts at 1." })),
+    reviews: S.Int.pipe(Initial.of(0, { description: "How many reviews were requested; none at first." })),
+    proposal: Initial.none(ProposalView, { description: "The latest proposal still standing; absent until a review proposes one." }),
   },
   Accepted: { org: OrgId, proposition: Proposition },
   Retracted: { org: OrgId, reason: S.String },
@@ -99,7 +99,7 @@ export class Claim extends Domain.Aggregate(
       AssertClaim: Effect.fn(function* (state, command, { id, stream, now }) {
         // The org is the command's, so the grant is checked before existence is revealed.
         const invocation = yield* requireGrant(PartyIntake, command._tag, claimIn(command.org, stream), now);
-        if (state._tag !== "Unasserted") return yield* ClaimAlreadyAsserted.make({});
+        if (!ClaimState.guards.Unasserted(state)) return yield* ClaimAlreadyAsserted.make({});
         const provenance = provenanceOf(invocation);
         return [
           ClaimAsserted.make({ org: command.org, proposition: command.proposition, signals: command.signals, provenance }),
@@ -298,7 +298,7 @@ export class Claim extends Domain.Aggregate(
     reply: {
       // The review run the assertion asked for, so a caller can follow it.
       AssertClaim: (_, events) => ({
-        reviewRun: A.findFirst(events, (event) => (event._tag === "ReviewRequested" ? O.some(event.run) : O.none())),
+        reviewRun: A.findFirst(events, flow(O.liftPredicate(S.is(ReviewRequested)), O.map((requested) => requested.run))),
       }),
     },
   },

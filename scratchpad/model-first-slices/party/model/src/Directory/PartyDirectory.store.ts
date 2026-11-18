@@ -6,7 +6,7 @@ import { $PartyModelId } from "@proto/kernel/Identity";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -85,9 +85,13 @@ export class PartyDirectoryStore extends Context.Service<
      * Apply a generation's writes in order, each with its checkpoint in the
      * same write. Refused, and not counted: a write at or before the
      * generation's checkpoint for its stream, and every write of a generation
-     * older than the active one. Returns how many were applied.
+     * older than the active one. Returns how many were applied. The writes
+     * come first, so a batch pipes into `apply(generation)`.
      */
-    readonly apply: (generation: number, writes: ReadonlyArray<DirectoryWrite>) => Effect.Effect<number>;
+    readonly apply: {
+      (generation: number): (writes: ReadonlyArray<DirectoryWrite>) => Effect.Effect<number>;
+      (writes: ReadonlyArray<DirectoryWrite>, generation: number): Effect.Effect<number>;
+    };
     /** The generation queries read; the first to write becomes active. */
     readonly active: Effect.Effect<O.Option<number>>;
     /** A generation's checkpoints: the last position applied, by source stream. */
@@ -95,11 +99,10 @@ export class PartyDirectoryStore extends Context.Service<
     /** Make a generation the one queries read, once it has caught up; older generations are dropped. */
     readonly switchTo: (generation: number) => Effect.Effect<void, GenerationBehind>;
     /** One page of an org's parties whose name contains `text`, ordered by party id, from the active generation. */
-    readonly search: (
-      org: OrgId,
-      text: string,
-      page: Domain.Query.PageRequest,
-    ) => Effect.Effect<Domain.Query.Page<DirectoryRow>>;
+    readonly search: {
+      (text: string, page: Domain.Query.PageRequest): (org: OrgId) => Effect.Effect<Domain.Query.Page<DirectoryRow>>;
+      (org: OrgId, text: string, page: Domain.Query.PageRequest): Effect.Effect<Domain.Query.Page<DirectoryRow>>;
+    };
   }
 >()($I`PartyDirectoryStore`) {}
 
@@ -173,18 +176,21 @@ export const MemoryPartyDirectoryStore = Layer.effect(
   Effect.gen(function* () {
     const table = yield* Ref.make<Table>({ active: O.none(), generations: HashMap.empty() });
     return {
-      apply: Effect.fn("PartyDirectoryStore.apply")((generation: number, writes: ReadonlyArray<DirectoryWrite>) =>
-        Ref.modify(table, (current): readonly [number, Table] => {
-          if (O.exists(current.active, (active) => generation < active)) return [0, current];
-          const [applied, next] = A.reduce(writes, [0, generationOf(current, generation)] as const, applyWrite);
-          return [
-            applied,
-            {
-              active: O.orElse(current.active, () => O.some(generation)),
-              generations: HashMap.set(current.generations, generation, next),
-            },
-          ];
-        }),
+      apply: dual(
+        2,
+        Effect.fn("PartyDirectoryStore.apply")((writes: ReadonlyArray<DirectoryWrite>, generation: number) =>
+          Ref.modify(table, (current): readonly [number, Table] => {
+            if (O.exists(current.active, (active) => generation < active)) return [0, current];
+            const [applied, next] = A.reduce(writes, [0, generationOf(current, generation)] as const, applyWrite);
+            return [
+              applied,
+              {
+                active: O.orElse(current.active, () => O.some(generation)),
+                generations: HashMap.set(current.generations, generation, next),
+              },
+            ];
+          }),
+        ),
       ),
       active: Effect.map(Ref.get(table), (current) => current.active),
       checkpoints: Effect.fn("PartyDirectoryStore.checkpoints")((generation: number) =>
@@ -212,25 +218,28 @@ export const MemoryPartyDirectoryStore = Layer.effect(
             A.isReadonlyArrayEmpty(behind) ? Effect.void : Effect.fail(GenerationBehind.make({ generation, behind })),
         ),
       ),
-      search: Effect.fn("PartyDirectoryStore.search")((org: OrgId, text: string, { after, take }: Domain.Query.PageRequest) =>
-        Effect.map(Ref.get(table), (current) => {
-          const rows = O.match(current.active, {
-            onNone: () => HashMap.empty<PartyId, DirectoryRow>(),
-            onSome: (active) => generationOf(current, active).rows,
-          });
-          const matching = rows.pipe(
-            HashMap.values,
-            A.fromIterable,
-            A.filter((row) => row.org === org && pipe(Str.toLowerCase(row.name), Str.includes(Str.toLowerCase(text)))),
-            A.sort(byPartyId),
-            A.filter((row) => after === undefined || row.partyId > after),
-          );
-          const entries = A.take(matching, take);
-          return {
-            entries,
-            cursor: matching.length > take ? O.getOrNull(O.map(A.last(entries), (row) => row.partyId)) : null,
-          };
-        }),
+      search: dual(
+        3,
+        Effect.fn("PartyDirectoryStore.search")((org: OrgId, text: string, { after, take }: Domain.Query.PageRequest) =>
+          Effect.map(Ref.get(table), (current) => {
+            const rows = O.match(current.active, {
+              onNone: () => HashMap.empty<PartyId, DirectoryRow>(),
+              onSome: (active) => generationOf(current, active).rows,
+            });
+            const matching = rows.pipe(
+              HashMap.values,
+              A.fromIterable,
+              A.filter((row) => row.org === org && pipe(Str.toLowerCase(row.name), Str.includes(Str.toLowerCase(text)))),
+              A.sort(byPartyId),
+              A.filter((row) => after === undefined || row.partyId > after),
+            );
+            const entries = A.take(matching, take);
+            return {
+              entries,
+              cursor: matching.length > take ? O.getOrNull(O.map(A.last(entries), (row) => row.partyId)) : null,
+            };
+          }),
+        ),
       ),
     };
   }),

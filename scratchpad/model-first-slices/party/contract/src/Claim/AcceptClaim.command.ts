@@ -45,7 +45,7 @@ export class AdmissionGateUnmet extends S.TaggedError<AdmissionGateUnmet, { read
  * @category events
  * @since 0.0.0
  */
-export class ClaimAccepted extends Domain.Event("ClaimAccepted", carry({ proposition: Proposition, ...DecisionScope })) {}
+export class ClaimAccepted extends Domain.Event("ClaimAccepted", carry({ proposition: Proposition, ...DecisionScope }), { description: "A pending claim was accepted, under the invocation that accepted it, with the org and review runs the decision covers." }) {}
 
 /**
  * Accept a pending claim once its admission gate is met.

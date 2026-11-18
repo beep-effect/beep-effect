@@ -91,12 +91,12 @@ export type SeenView = typeof SeenView.Type;
 export const Screen = S.Struct({
   claim: ClaimId,
   view: S.Option(SeenView).pipe(
-    S.withConstructorDefault(Effect.succeedNone),
     S.annotateKey({ description: "What the screen last saw of the claim; nothing until the first snapshot." }),
+    S.withConstructorDefault(Effect.succeedNone),
   ),
   approval: Approval.pipe(
-    S.withConstructorDefault(Effect.succeed(Approval.cases.Idle.make({}))),
     S.annotateKey({ description: "Where the reviewer's approval stands; idle at first." }),
+    S.withConstructorDefault(Effect.succeed(Approval.cases.Idle.make({}))),
   ),
 });
 /**

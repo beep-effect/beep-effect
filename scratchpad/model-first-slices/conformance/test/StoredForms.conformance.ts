@@ -1,7 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import { OrgId, RunId } from "@proto/kernel/Ids";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
-import { type ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
+import { ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { SessionId } from "@proto/runs-contract/Run/Session.id";
 import { RunsContract } from "@proto/runs-contract/RunsApi.contract";
@@ -13,6 +13,7 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
@@ -158,8 +159,8 @@ if (O.contains(registration.restorePhase, "across")) {
     expect(hold.status).toBe("expired");
     // Approving the proposal phase 6 left completes the run through the fact and the runs inbox.
     yield* reviewer.ApproveProposal(claim, { digest: seeded.claimView.proposal.digest, evidenceRevision: 1 }, human("p_rev"));
-    const completed = yield* eventually(runState(`review:${claim}:1`), (state) => state._tag === "Completed", 120);
-    const decided = yield* eventually(reviewer.ClaimReview.get(claim, human("p_rev")), (found) => found?._tag === "Accepted", 60);
+    const completed = yield* eventually(runState(`review:${claim}:1`), P.isTagged("Completed"), 120);
+    const decided = yield* eventually(reviewer.ClaimReview.get(claim, human("p_rev")), ClaimReviewState.guards.Accepted, 60);
     yield* log("across-after-approval", { completed, decided });
     expect(completed.outcome).toBe("accepted");
     expect(decided?._tag).toBe("Accepted");

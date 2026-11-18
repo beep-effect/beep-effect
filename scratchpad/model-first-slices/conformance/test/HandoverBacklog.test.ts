@@ -18,7 +18,7 @@ import { ClaimDecidedV1, ClaimDecidedV2, ClaimFeed } from "@proto/party-contract
 import { PartyIntake, PartyReview } from "@proto/party-contract/Party.capabilities";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { Proposition } from "@proto/party-contract/Proposition";
-import { Claim } from "@proto/party-model/Claim/Claim.aggregate";
+import { Claim, ClaimState } from "@proto/party-model/Claim/Claim.aggregate";
 import { ClaimReviewLive } from "@proto/party-model/Claim/ClaimReview.handler";
 import { ClaimReview } from "@proto/party-model/Claim/ClaimReview.view";
 import { PartyFacts } from "@proto/party-model/Facts/PartyFacts.stream";
@@ -136,7 +136,7 @@ it.live("the generic backlog and Party's own query agree: one undelivered decisi
       const oracle = Effect.gen(function* () {
         const state = yield* claims.get(claim);
         const page = yield* Effect.flatMap(Effect.service(PartyFacts), (facts) => facts.list("claims"));
-        const decided = state._tag === "Accepted" || state._tag === "Retracted";
+        const decided = ClaimState.isAnyOf(["Accepted", "Retracted"])(state);
         return decided && !A.some(page.entries, (entry) => entry.event.factId === `${claim}:decided`) ? 1 : 0;
       });
       const held = yield* generic.pipe(Effect.repeat({ schedule: Schedule.spaced("50 millis"), until: (backlog) => backlog.pending >= 1, times: 100 }));

@@ -23,7 +23,7 @@ export const recordingReasoner = (inner: (request: AssessRequest) => Effect.Effe
   Reasoner.toLayer(
     Effect.map(Effect.service(ReasonerTape), (tape) => ({
       assess: (request: AssessRequest) =>
-        Effect.flatMap(tape.find(request.promptVersion, request.idempotencyKey), (recorded) =>
+        Effect.flatMap(tape.find(request), (recorded) =>
           O.match(recorded, {
             onSome: (entry) => Effect.succeed(entry.result),
             onNone: () =>

@@ -256,7 +256,7 @@ export const extend: {
  * import { carry } from "@proto/kernel/Invocation";
  * import * as S from "effect/Schema";
  *
- * export class ClaimRetracted extends Domain.Event("ClaimRetracted", carry({ reason: S.String })) {}
+ * export class ClaimRetracted extends Domain.Event("ClaimRetracted", carry({ reason: S.String }), { description: "A pending claim was withdrawn, and why, with the org and review runs the decision covers." }) {}
  * ```
  *
  * @category constructors
@@ -302,12 +302,26 @@ export const eventCause = (trigger: {
   Cause.cases.Event.make({ stream: trigger.envelope.stream, seq: trigger.envelope.seq, event: trigger.event._tag });
 
 /**
- * The cause of a hop a saga step makes.
+ * The cause of a hop a saga step makes. The saga is the subject; its key
+ * and step are both strings, so they are named rather than positional.
+ *
+ * **Example** (A review saga's propose step)
+ * ```ts
+ * import { sagaStep } from "@proto/kernel/Invocation";
+ * import { pipe } from "effect/Function";
+ *
+ * const cause = sagaStep("ReviewAssist", { key: "review:claim_1:1", step: "propose" });
+ * const same = pipe("ReviewAssist", sagaStep({ key: "review:claim_1:1", step: "propose" }));
+ * ```
  *
  * @category constructors
  * @since 0.0.0
  */
 export const sagaStep: {
-  (key: string, step: string): (saga: string) => Cause;
-  (saga: string, key: string, step: string): Cause;
-} = dual(3, (saga: string, key: string, step: string): Cause => Cause.cases.SagaStep.make({ saga, key, step }));
+  (at: { readonly key: string; readonly step: string }): (saga: string) => Cause;
+  (saga: string, at: { readonly key: string; readonly step: string }): Cause;
+} = dual(
+  2,
+  (saga: string, { key, step }: { readonly key: string; readonly step: string }): Cause =>
+    Cause.cases.SagaStep.make({ saga, key, step }),
+);

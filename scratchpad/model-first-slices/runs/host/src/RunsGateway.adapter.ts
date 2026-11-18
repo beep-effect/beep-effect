@@ -1,16 +1,22 @@
 import { AuthorityGateway } from "@proto/authority-contract/Authority.gateway";
 import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
+import { $RunsHostId } from "@proto/kernel/Identity";
 import { extend, type Hop, type Provenance } from "@proto/kernel/Invocation";
+import { ReadmissionRefused } from "@proto/kernel/ReadmissionRefused.rejection";
 import { requestKey } from "@proto/kernel/RequestKey";
 import { AwaitApproval } from "@proto/runs-contract/Run/AwaitApproval.command";
+import { BudgetExceeded } from "@proto/runs-contract/Run/BudgetExceeded.rejection";
 import { CompleteRun } from "@proto/runs-contract/Run/CompleteRun.command";
 import { ExhaustRun } from "@proto/runs-contract/Run/ExhaustRun.command";
+import { NotThisRun } from "@proto/runs-contract/Run/NotThisRun.rejection";
 import { RecordStep } from "@proto/runs-contract/Run/RecordStep.command";
 import { RejectRun } from "@proto/runs-contract/Run/RejectRun.command";
 import { ReleaseReservation } from "@proto/runs-contract/Run/ReleaseReservation.command";
 import { RequestRun } from "@proto/runs-contract/Run/RequestRun.command";
+import { RunNotRunning } from "@proto/runs-contract/Run/RunNotRunning.rejection";
 import { ReserveBudget } from "@proto/runs-contract/Run/ReserveBudget.command";
 import { SettleUsage } from "@proto/runs-contract/Run/SettleUsage.command";
+import { UnknownReservation } from "@proto/runs-contract/Run/UnknownReservation.rejection";
 import {
   type CurrentRun,
   RunReport,
@@ -18,10 +24,11 @@ import {
   RunEnded,
   RunBudgetExceeded,
   RunReportRefused,
+  type RunReportRefusal,
   RunRequestRefused,
   RunsGateway,
 } from "@proto/runs-contract/Runs.gateway";
-import { AgentRun, recordOf, requestOf, sessionOf } from "@proto/runs-model/Run/AgentRun.aggregate";
+import { AgentRun, AgentRunState, recordOf, requestOf, sessionOf } from "@proto/runs-model/Run/AgentRun.aggregate";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
@@ -30,6 +37,17 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { liveRun, settling } from "./Lineage.ts";
 
+const $I = $RunsHostId.create("RunsGateway.adapter");
+
+/**
+ * What a re-admitted report to a run can be refused with: the run's own
+ * rejections of the report commands, or the re-admission's.
+ */
+const ReportRejection = S.Union([RunNotRunning, NotThisRun, UnknownReservation, BudgetExceeded, ReadmissionRefused]).pipe(
+  $I.annoteSchema("ReportRejection", { description: "What a re-admitted report to a run can be refused with." }),
+  S.toTaggedUnion("_tag"),
+);
+type ReportRejection = typeof ReportRejection.Type;
 
 /**
  * The runs context's side of its gateway. Every call is re-admitted by the
@@ -72,19 +90,15 @@ export const RunsGatewayLive = Layer.effect(
       Effect.provideServiceEffect(send, CurrentInvocation, authority.readmit({ provenance, hop }));
 
     const isEnded = S.is(EndedStatus);
-    const refusal = (cause: {
-      readonly _tag: string;
-      readonly reason?: unknown;
-      readonly remaining?: unknown;
-      readonly status?: unknown;
-    }): RunReportRefused | RunBudgetExceeded | RunEnded =>
-      cause._tag === "RunNotRunning" && isEnded(cause.status)
-        ? RunEnded.make({ status: cause.status })
-        : cause._tag === "BudgetExceeded" && P.isNumber(cause.remaining)
-          ? RunBudgetExceeded.make({ remaining: cause.remaining })
-          : RunReportRefused.make({
-              reason: cause._tag === "ReadmissionRefused" ? `readmission:${String(cause.reason)}` : cause._tag,
-            });
+    const refusedAs = (cause: ReportRejection) => RunReportRefused.make({ reason: cause._tag });
+    const refusal: (cause: ReportRejection) => RunReportRefusal = ReportRejection.matchOrElse(
+      {
+        RunNotRunning: (cause) => (isEnded(cause.status) ? RunEnded.make({ status: cause.status }) : refusedAs(cause)),
+        BudgetExceeded: ({ remaining }) => RunBudgetExceeded.make({ remaining }),
+        ReadmissionRefused: ({ reason }) => RunReportRefused.make({ reason: `readmission:${reason}` }),
+      },
+      refusedAs,
+    );
 
     /**
      * The live run of the caller's lineage, with the provenance it acts under
@@ -93,7 +107,7 @@ export const RunsGatewayLive = Layer.effect(
     const follow = (
       current: CurrentRun,
     ): Effect.Effect<{ readonly current: CurrentRun; readonly org: string }, RunReportRefused> =>
-      Effect.flatMap(liveRun(runs, current.run), (live) => {
+      Effect.flatMap(liveRun(current.run, runs), (live) => {
         const org = O.getOrElse(
           O.map(requestOf(live.state), (run): string => run.terms.resource.org),
           () => "unscoped",
@@ -139,13 +153,17 @@ export const RunsGatewayLive = Layer.effect(
           Effect.mapError((refused) => RunRequestRefused.make({ reason: refused._tag })),
           Effect.andThen(
             runs.get(request.run).pipe(
-              Effect.repeat({ ...settling, until: (state) => state._tag !== "Requested" && state._tag !== "Unrequested" }),
+              Effect.repeat({ ...settling, until: P.not(AgentRunState.isAnyOf(["Requested", "Unrequested"])) }),
             ),
           ),
-          Effect.flatMap((state) =>
-            state._tag === "Running"
-              ? Effect.succeed({ provenance: state.run.provenance })
-              : Effect.fail(RunRequestRefused.make({ reason: state._tag === "Rejected" ? state.reason : state._tag })),
+          Effect.flatMap(
+            AgentRunState.matchOrElse(
+              {
+                Running: ({ run }) => Effect.succeed({ provenance: run.provenance }),
+                Rejected: ({ reason }) => Effect.fail(RunRequestRefused.make({ reason })),
+              },
+              (state) => Effect.fail(RunRequestRefused.make({ reason: state._tag })),
+            ),
           ),
         ),
       ),
@@ -157,7 +175,7 @@ export const RunsGatewayLive = Layer.effect(
             operation: report._tag,
             payload: { run: current.run, report, hop },
           });
-          const send = <A, E extends { readonly _tag: string }>(command: Effect.Effect<A, E, CurrentInvocation>) =>
+          const send = <A, E extends ReportRejection>(command: Effect.Effect<A, E, CurrentInvocation>) =>
             readmitted(current.provenance, hop, command).pipe(Effect.as(current), Effect.mapError(refusal));
           return yield* RunReport.match(report, {
             // A refusal mid-run has, by definition, no invocation to act under: record it as such.

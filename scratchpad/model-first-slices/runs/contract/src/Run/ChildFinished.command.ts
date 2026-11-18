@@ -14,6 +14,7 @@ import { RunEvent } from "./RunEvent.ts";
 export class ChildRunFinished extends Domain.Event(
   "ChildRunFinished",
   RunEvent.fields({ child: RunId, allowance: S.Int, spent: S.Int, outcome: S.String }),
+  { description: "The child run finished. What it spent counts against this run, what it did not spend returns to it, and this run continues." },
 ) {}
 
 /**

@@ -17,6 +17,7 @@ import { RunNotRunning } from "./RunNotRunning.rejection.ts";
 export class RunCompleted extends Domain.Event(
   "RunCompleted",
   RunEvent.fields({ outcome: S.String, released: Since.phase3(S.Int, 0) }),
+  { description: "The run finished with this outcome. `released` is the units its open reservations held, now returned." },
 ) {}
 
 /**

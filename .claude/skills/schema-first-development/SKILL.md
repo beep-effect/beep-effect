@@ -130,10 +130,12 @@ Keep `Schema` as the source of truth for pure data models.
 - Ask of every field what it starts as and what it is when the input leaves it
   out. When one value answers both (an empty collection, a zero counter, an
   absent link), put it on the field as a constructor default plus a decoding
-  default (`S.withDecodingDefaultTypeKey`), describe the key with
-  `S.annotateKey({ description })`, and write the owner's `initial` as
-  `State.make({})`. An optional field that starts absent is
-  `X.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone))`.
+  default (`S.withDecodingDefaultTypeKey`), and write the owner's `initial` as
+  `State.make({})`. Describe the key with `S.annotateKey({ description })`
+  first in the pipe: placed after a decoding default or after
+  `S.OptionFromOptionalKey` it is dropped from generated JSON Schema. An
+  optional field that starts absent is
+  `X.pipe(S.annotateKey({ description }), S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone))`.
   Give no default to identity, authority, provenance or money, or to a field
   whose empty value is the widest one (EF-34).
 - Prefer built-in schema constructors and checks before `S.makeFilter(...)`.

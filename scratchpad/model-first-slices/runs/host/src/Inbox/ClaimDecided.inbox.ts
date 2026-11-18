@@ -86,7 +86,7 @@ export const ClaimDecidedInboxLive = Layer.effect(
         fact.reviewRuns,
         (run) =>
           Effect.gen(function* () {
-            const live = yield* liveRun(runs, run);
+            const live = yield* liveRun(run, runs);
             const commandId = yield* requestKey({
               tenant: fact.org,
               operation: ConcludeRun.tag,

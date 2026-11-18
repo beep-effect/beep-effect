@@ -14,7 +14,7 @@ import { Proposition } from "@proto/party-contract/Proposition";
 import { Authority } from "@proto/party-model/Authority.external";
 import { Claim } from "@proto/party-model/Claim/Claim.aggregate";
 import { partyDirectoryLive } from "@proto/party-model/Directory/PartyDirectory.handler";
-import { MemoryPartyDirectoryStore, PartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
+import { type DirectoryWrite, MemoryPartyDirectoryStore, PartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
 import { switchWhenCaughtUp } from "@proto/party-model/Directory/RebuildDirectory";
 import { ContactSource, MailboxUnavailable } from "@proto/party-model/Evidence/ContactSource.external";
 import { PartyFacts2 } from "@proto/party-model/Facts/PartyFacts2.stream";
@@ -25,6 +25,7 @@ import { Reasoner, ReasonerUnavailable } from "@proto/party-model/Review/Reasone
 import { ReviewRuns, RunRefused } from "@proto/party-model/Review/ReviewRuns.external";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -158,13 +159,14 @@ it.live("a crash between the store write and the library's checkpoint: the repla
       PartyDirectoryStore,
       Effect.map(Effect.service(PartyDirectoryStore), (inner) => ({
         ...inner,
-        apply: (generation: number, writes: Parameters<typeof inner.apply>[1]) =>
-          inner.apply(generation, writes).pipe(
+        apply: dual(2, (writes: ReadonlyArray<DirectoryWrite>, generation: number) =>
+          inner.apply(writes, generation).pipe(
             Effect.tap((applied) => Ref.update(applies, A.append({ writes: writes.length, applied }))),
             Effect.flatMap((applied) =>
               Effect.flatMap(Ref.getAndSet(crashed, true), (done) => (done ? Effect.succeed(applied) : Effect.die("crash"))),
             ),
           ),
+        ),
       })),
     ).pipe(Layer.provide(MemoryPartyDirectoryStore));
     const storeContext = yield* Layer.build(crashing);

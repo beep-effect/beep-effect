@@ -1,7 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import { OrgId } from "@proto/kernel/Ids";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
-import { type ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
+import { ClaimReviewEvent, type ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { Proposition } from "@proto/party-contract/Proposition";
@@ -19,6 +19,7 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
@@ -102,7 +103,7 @@ const assertion = (org: OrgId) => ({
 const asserted = Effect.fn("asserted")(function* (claim: ClaimId, receipt: { readonly stream: string; readonly version: number }) {
   const { reviewer } = yield* clients;
   const page = yield* reviewer.ClaimReview.list(claim, { ...human("p_rev"), atLeast: receipt, take: 100 });
-  return A.filter(page.entries, (entry) => entry.event._tag === "ClaimAsserted").length;
+  return A.filter(page.entries, (entry) => ClaimReviewEvent.isAnyOf(["ClaimAsserted"])(entry.event)).length;
 });
 
 /** A case against the deployed stack, with the stack's clients built into the case's scope. */
@@ -120,7 +121,7 @@ live("a command sent twice under one id commits once, and its reaction happens o
   expect(second.version).toBe(first.version);
   const assertions = yield* asserted(claim, first);
   expect(assertions).toBe(1);
-  const run1 = yield* eventually(runState(`review:${claim}:1`), (s) => s._tag === "AwaitingApproval");
+  const run1 = yield* eventually(runState(`review:${claim}:1`), P.isTagged("AwaitingApproval"));
   const run2 = yield* runState(`review:${claim}:2`);
   yield* log("runs", { run1: run1._tag, run2: run2._tag });
   expect(run2._tag).toBe("Unrequested");
@@ -215,7 +216,7 @@ live("a projection batch cut by a runner crash is redelivered and the Postgres d
   const registered = yield* intake.RegisterParty(party, { org, name: `Dana ${r}` }, { ...human("p_intake"), commandId: `reg_${r}` });
   const window = yield* eventually(
     Effect.all({
-      rows: psql(`SELECT count(*) FROM party_directory_rows WHERE party_id = '${party}'`).pipe(Effect.orElseSucceed(() => "no table yet")),
+      rows: psql(`SELECT count(*) FROM party_directory_rows_v_0 WHERE party_id = '${party}'`).pipe(Effect.orElseSucceed(() => "no table yet")),
       blocked: blockedByLock,
       meta: psql(`SELECT left(value, 160) ${meta}`),
     }, { concurrency: 1 }),
@@ -230,7 +231,7 @@ live("a projection batch cut by a runner crash is redelivered and the Postgres d
     reviewer.FindParties({ org, text: r }, { ...human("p_rev"), atLeast: registered }).pipe(Effect.orElseSucceed(() => ({ entries: [] as ReadonlyArray<unknown> }))),
     (page) => page.entries.length === 1,
   );
-  const rows = yield* psql(`SELECT party_id, name, absorbed FROM party_directory_rows WHERE party_id = '${party}'`);
+  const rows = yield* psql(`SELECT party_id, name, absorbed FROM party_directory_rows_v_0 WHERE party_id = '${party}'`);
   const positions = yield* psql(`SELECT stream, seq FROM party_directory_positions WHERE stream = 'Party/${party}'`);
   yield* log("projection", { rowsAtKill, found: found.entries, rows, positions });
   expect(pipe(rows, Str.split("\n")).length).toBe(1);
@@ -270,12 +271,12 @@ live("a run waiting for approval survives a runner restart and completes after a
   const { intake, reviewer } = yield* clients;
   const claim = ClaimId.make(`claim_wait_${r}`);
   yield* intake.AssertClaim(claim, assertion(org), human("p_intake"));
-  yield* eventually(runState(`review:${claim}:1`), (s) => s._tag === "AwaitingApproval");
+  yield* eventually(runState(`review:${claim}:1`), P.isTagged("AwaitingApproval"));
   yield* killRunners;
   const view = yield* eventually(reviewer.ClaimReview.get(claim, human("p_rev")), (v) => O.isSome(proposalIn(v)));
   const { digest } = O.getOrThrow(proposalIn(view));
   const approved = yield* reviewer.ApproveProposal(claim, { digest, evidenceRevision: 1 }, human("p_rev"));
-  const run = yield* eventually(runState(`review:${claim}:1`), (s) => s._tag === "Completed", 120);
+  const run = yield* eventually(runState(`review:${claim}:1`), P.isTagged("Completed"), 120);
   yield* log("waiting-run", { approved, run });
   expect(run.outcome).toBe("accepted");
 }));

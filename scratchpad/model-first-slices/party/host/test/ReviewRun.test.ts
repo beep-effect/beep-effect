@@ -2,7 +2,7 @@ import * as DomainAi from "@alchemy.run/domain/Ai";
 import { expect, it } from "@effect/vitest";
 import { OrgId } from "@proto/kernel/Ids";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
-import { type ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
+import { ClaimReviewEvent, type ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { PartyIntake, PartyPropose, PartyRead, PartyReview } from "@proto/party-contract/Party.capabilities";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
@@ -10,10 +10,12 @@ import { Proposition } from "@proto/party-contract/Proposition";
 import { AgentApi } from "@proto/party-model/AgentApi.api";
 import { IntakeApi } from "@proto/party-model/IntakeApi.api";
 import { ReviewerApi } from "@proto/party-model/ReviewerApi.api";
+import { AgentRunState } from "@proto/runs-model/Run/AgentRun.aggregate";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Schedule from "effect/Schedule";
 import type * as Schema from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -83,11 +85,11 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
           Effect.repeat({ schedule: Schedule.spaced("25 millis"), until: (view) => O.isSome(proposalIn(view)), times: 200 }),
         );
         expect(O.getOrThrow(proposalIn(proposed))).toMatchObject({ disposition: "accept", run, evidenceRevision: 1 });
-        yield* access.run(run, (state) => state._tag === "AwaitingApproval");
+        yield* access.run(run, AgentRunState.guards.AwaitingApproval);
 
         // The proposal is rooted at the run and names only its delegation, by id.
         const listed = yield* reviewer.ClaimReview.list(claimId, asHuman("p_rev"));
-        const proposal = A.findFirst(listed.entries, (entry) => entry.event._tag === "DispositionProposed");
+        const proposal = A.findFirst(listed.entries, (entry) => ClaimReviewEvent.isAnyOf(["DispositionProposed"])(entry.event));
         expect(O.map(proposal, (entry) => entry.event.provenance)).toEqual(
           O.some({
             root: { _tag: "Agent", run, accountable: "p_intake" },
@@ -138,7 +140,7 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
         const approved = yield* reviewer.ApproveProposal(claimId, { digest, evidenceRevision: 1 }, asHuman("p_rev"));
         const decided = yield* reviewer.ClaimReview.get(claimId, { ...asHuman("p_rev"), atLeast: approved });
         expect(decided).toMatchObject({ _tag: "Accepted" });
-        const finished = yield* access.run(run, (state) => state._tag !== "AwaitingApproval");
+        const finished = yield* access.run(run, P.not(AgentRunState.guards.AwaitingApproval));
         expect(finished).toMatchObject({ _tag: "Completed", outcome: "accepted", run: { budget: { allowance: 100, reserved: 0 } } });
       }).pipe(Effect.scoped),
   );
@@ -153,10 +155,10 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
       const intake = yield* IntakeApi.clientInProcess;
       const reviewer = yield* ReviewerApi.clientInProcess;
       yield* intake.AssertClaim(claimId, { org: acme, proposition: hasIdentifier, signals: twoSources }, asHuman("p_intake"));
-      yield* access.run(run, (state) => state._tag === "AwaitingApproval");
+      yield* access.run(run, AgentRunState.guards.AwaitingApproval);
       // The reviewer accepts the claim outright; the run's proposal is never approved.
       yield* reviewer.AcceptClaim(claimId, {}, asHuman("p_rev"));
-      const finished = yield* access.run(run, (state) => state._tag !== "AwaitingApproval");
+      const finished = yield* access.run(run, P.not(AgentRunState.guards.AwaitingApproval));
       expect(finished).toMatchObject({ _tag: "Completed", outcome: "accepted", run: { budget: { reserved: 0 } } });
     }).pipe(Effect.scoped),
   );

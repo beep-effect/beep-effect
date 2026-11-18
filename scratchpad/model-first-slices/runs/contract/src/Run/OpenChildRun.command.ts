@@ -29,6 +29,7 @@ export class ChildRunOpened extends Domain.Event(
     requester: PrincipalId,
     runProvenance: Provenance,
   }),
+  { description: "A child run started with its share of its parent's budget and its own narrowed delegation." },
 ) {}
 
 /**

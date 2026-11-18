@@ -11,7 +11,7 @@ import { RunNotRunning } from "./RunNotRunning.rejection.ts";
  * @category events
  * @since 0.0.0
  */
-export class RunAwaitingApproval extends Domain.Event("RunAwaitingApproval", RunEvent.fields({})) {}
+export class RunAwaitingApproval extends Domain.Event("RunAwaitingApproval", RunEvent.fields({}), { description: "The run is waiting for a person's approval." }) {}
 
 /**
  * Report that the run waits for a person's approval, as the run itself.

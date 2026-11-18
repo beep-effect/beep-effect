@@ -44,6 +44,7 @@ export class ChildRequested extends Domain.Event(
     historyBound: S.Int,
     source: GrantRef,
   }),
+  { description: "The run set aside part of its budget for a child run, under narrower terms of its own delegation, and waits for it." },
 ) {}
 
 /**

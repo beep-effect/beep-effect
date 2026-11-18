@@ -116,6 +116,30 @@ export class RunBudgetExceeded extends S.TaggedError<RunBudgetExceeded, { readon
 export class RunEnded extends S.TaggedError<RunEnded, { readonly brand: unique symbol }>()("RunEnded", { status: RunStatus }) {}
 
 /**
+ * Why a report to a run was refused: refused outright, a reservation the
+ * remaining allowance cannot cover, or a run that has ended.
+ *
+ * **Example** (Telling an ended run apart)
+ * ```ts
+ * import { RunEnded, RunReportRefusal } from "@proto/runs-contract/Runs.gateway";
+ *
+ * const ended = RunReportRefusal.guards.RunEnded(RunEnded.make({ status: "completed" }));
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const RunReportRefusal = S.Union([RunReportRefused, RunBudgetExceeded, RunEnded]).pipe(
+  $I.annoteSchema("RunReportRefusal", { description: "Why a report to a run was refused." }),
+  S.toTaggedUnion("_tag"),
+);
+/**
+ * @category errors
+ * @since 0.0.0
+ */
+export type RunReportRefusal = typeof RunReportRefusal.Type;
+
+/**
  * The statuses in which a run has ended.
  *
  * @category models
@@ -146,6 +170,6 @@ export class RunsGateway extends Context.Service<
       readonly hop: Hop;
       readonly run: RunId;
       readonly report: RunReport;
-    }) => Effect.Effect<CurrentRun, RunReportRefused | RunBudgetExceeded | RunEnded>;
+    }) => Effect.Effect<CurrentRun, RunReportRefusal>;
   }
 >()($I`RunsGateway`) {}

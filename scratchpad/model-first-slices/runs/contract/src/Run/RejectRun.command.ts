@@ -18,6 +18,7 @@ import { Since } from "./Since.ts";
 export class RunRejected extends Domain.Event(
   "RunRejected",
   RunEvent.fields({ reason: S.String, released: Since.phase7(S.Int, 0) }),
+  { description: "The run was refused or could not continue, and why: its grant was refused at request, or a hop was refused at re-admission mid-run. `released` is the units its open reservations held, given back as it ends." },
 ) {}
 
 /**

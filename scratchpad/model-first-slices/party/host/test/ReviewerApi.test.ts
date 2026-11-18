@@ -14,6 +14,7 @@ import { IntakeApi } from "@proto/party-model/IntakeApi.api";
 import { ReviewerApi } from "@proto/party-model/ReviewerApi.api";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Schedule from "effect/Schedule";
@@ -185,6 +186,6 @@ it.live("two models on one InMemory share it, but merging both hosted Layers han
       _tag: "Failure",
       cause: { reasons: [{ _tag: "Die", defect: { _tag: "DefinitionError" } }] },
     });
-    expect(String(merged._tag === "Failure" ? merged.cause : "")).toContain("AcceptClaim is served, but no hosted aggregate handles it");
+    expect(String(Exit.isFailure(merged) ? merged.cause : "")).toContain("AcceptClaim is served, but no hosted aggregate handles it");
   });
 });

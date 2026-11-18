@@ -1,54 +1,85 @@
-import * as A from "effect/Array";
+import { sql } from "drizzle-orm";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import type * as SqlClient from "effect/sql/SqlClient";
-import { lazyClusterSql } from "../ClusterSql.ts";
+import * as SqlClient from "effect/sql/SqlClient";
+import { ClusterSql, ClusterSqlLive, type Connection } from "../ClusterSql.ts";
 import { InboxStore } from "./Inbox.store.ts";
-import { thunk0 } from "@beep/utils"
+import { InboxTables, RunsInboxCheckpoints, RunsInboxSeen, StoreKit } from "./Inbox.table.ts";
+
+const { checkpoints, seen } = InboxTables;
+
+/** What a connection gives the store: Drizzle for the commit, and a repository per table for the reads by key. */
+const storeOf = Effect.fnUntraced(function* (connection: Connection) {
+  const repositories = yield* Effect.all({
+    checkpoints: StoreKit.NativeRepository(RunsInboxCheckpoints, { spanPrefix: "RunsInboxCheckpoints", idColumn: "producer" }),
+    seen: StoreKit.NativeRepository(RunsInboxSeen, { spanPrefix: "RunsInboxSeen", idColumn: "key" }),
+  }, { concurrency: 1 }).pipe(Effect.provideService(SqlClient.SqlClient, connection.sql));
+  return { ...connection, ...repositories };
+});
 
 /**
- * The inbox store in the cluster's Postgres: the producer's checkpoint and
- * the fact keys acted on, moved together in one transaction, so a restarted
- * or failed-over inbox resumes where the last commit left it.
+ * The inbox store in the cluster's Postgres, over `ClusterSql`: the
+ * producer's checkpoint and the fact keys acted on, moved together in one
+ * transaction, so a restarted or failed-over inbox resumes where the last
+ * commit left it. The checkpoint only moves forward.
  *
  * @category layers
  * @since 0.0.0
  */
-export const PgInboxStore = Layer.effect(
+export const PgInboxStoreOverClusterSql = Layer.effect(
   InboxStore,
   Effect.gen(function* () {
-    const connect = yield* lazyClusterSql((sql) =>
-      Effect.all([
-        sql`CREATE TABLE IF NOT EXISTS runs_inbox_checkpoints (producer text PRIMARY KEY, seq integer NOT NULL)`,
-        sql`CREATE TABLE IF NOT EXISTS runs_inbox_seen (key text PRIMARY KEY)`,
-      ], { concurrency: 1 }),
-    );
-    const withSql = <A, E>(f: (sql: SqlClient.SqlClient) => Effect.Effect<A, E>) => Effect.flatMap(connect, f);
+    const { connect } = yield* ClusterSql;
+    const connected = yield* Effect.cached(Effect.flatMap(connect, storeOf));
+    const withStore = <A, E>(f: (store: Effect.Success<typeof connected>) => Effect.Effect<A, E>) => Effect.flatMap(connected, f);
     return InboxStore.of({
       checkpoint: Effect.fn("PgInboxStore.checkpoint")((producer: string) =>
-        withSql((sql) => sql<{ readonly seq: number }>`SELECT seq FROM runs_inbox_checkpoints WHERE producer = ${producer}`.pipe(
-          Effect.map((rows) => O.getOrElse(O.map(A.head(rows), (row) => row.seq), thunk0)),
-          Effect.orDie,
-        )),
+        withStore((store) =>
+          store.checkpoints.findById(producer).pipe(
+            Effect.map((row) => row.seq),
+            Effect.catchTag("NoSuchElementError", () => Effect.succeed(0)),
+            Effect.orDie,
+          ),
+        ),
       ),
       seen: Effect.fn("PgInboxStore.seen")((key: string) =>
-        withSql((sql) => sql`SELECT 1 FROM runs_inbox_seen WHERE key = ${key}`.pipe(
-          Effect.map((rows) => rows.length > 0),
-          Effect.orDie,
-        )),
+        withStore((store) =>
+          store.seen.findById(key).pipe(
+            Effect.as(true),
+            Effect.catchTag("NoSuchElementError", () => Effect.succeed(false)),
+            Effect.orDie,
+          ),
+        ),
       ),
-      commit: Effect.fn("PgInboxStore.commit")((producer: string, key: O.Option<string>, seq: number) =>
-        withSql((sql) => sql
-          .withTransaction(
-            Effect.gen(function* () {
-              if (O.isSome(key)) yield* sql`INSERT INTO runs_inbox_seen (key) VALUES (${key.value}) ON CONFLICT DO NOTHING`;
-              yield* sql`INSERT INTO runs_inbox_checkpoints (producer, seq) VALUES (${producer}, ${seq})
-                         ON CONFLICT (producer) DO UPDATE SET seq = GREATEST(runs_inbox_checkpoints.seq, ${seq})`;
-            }),
-          )
-          .pipe(Effect.orDie)),
+      commit: dual(
+        3,
+        Effect.fn("PgInboxStore.commit")((producer: string, key: O.Option<string>, seq: number) =>
+          withStore((store) =>
+            store.sql
+              .withTransaction(
+                Effect.gen(function* () {
+                  if (O.isSome(key)) yield* store.db.insert(seen).values({ key: key.value }).onConflictDoNothing();
+                  yield* store.db
+                    .insert(checkpoints)
+                    .values({ producer, seq })
+                    .onConflictDoUpdate({ target: checkpoints.producer, set: { seq: sql`greatest(${checkpoints.seq}, ${seq})` } });
+                }),
+              )
+              .pipe(Effect.orDie),
+          ),
+        ),
       ),
     });
   }),
 );
+
+/**
+ * The inbox store in the cluster's own Postgres (`CLUSTER_DATABASE_URL`),
+ * connected on first use, with Runs host's pending migrations applied once.
+ *
+ * @category layers
+ * @since 0.0.0
+ */
+export const PgInboxStore = PgInboxStoreOverClusterSql.pipe(Layer.provide(ClusterSqlLive));

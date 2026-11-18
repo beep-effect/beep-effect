@@ -2,8 +2,8 @@ import { AuthorityGateway, RunGrant, RunGrantRefused } from "@proto/authority-co
 import { AssignAccountability } from "@proto/authority-contract/Accountability/AssignAccountability.command";
 import { DelegateFurther } from "@proto/authority-contract/Delegation/DelegateFurther.command";
 import { DelegateGrant } from "@proto/authority-contract/Grant/DelegateGrant.command";
-import { Accountability } from "@proto/authority-model/Accountability/Accountability.aggregate";
-import { Delegation } from "@proto/authority-model/Delegation/Delegation.aggregate";
+import { Accountability, AccountabilityState } from "@proto/authority-model/Accountability/Accountability.aggregate";
+import { Delegation, DelegationState } from "@proto/authority-model/Delegation/Delegation.aggregate";
 import { Grant } from "@proto/authority-model/Grant/Grant.aggregate";
 import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
 import { GrantRef } from "@proto/kernel/Invocation";
@@ -11,6 +11,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as Schedule from "effect/Schedule";
 import { Boundary, BoundaryLive } from "./Boundary/Boundary.ts";
 import { thunkEffectVoid } from "@beep/utils"
@@ -72,20 +73,19 @@ export const AuthorityGatewayLive = Layer.effect(
             .send(run, AssignAccountability.make({}))
             .pipe(asRequester, Effect.catchTag("AccountabilityAlreadyAssigned", thunkEffectVoid));
           const answerer = yield* accountability.get(run);
-          if (answerer._tag !== "Live") return yield* RunGrantRefused.make({ reason: "NotAccountable" });
+          if (!AccountabilityState.guards.Live(answerer)) return yield* RunGrantRefused.make({ reason: "NotAccountable" });
           // The model's own policy opens the delegation; wait until it is.
           yield* delegations.get(delegation).pipe(
-            Effect.repeat({ schedule: Schedule.spaced("10 millis"), until: (state) => state._tag !== "Unopened", times: 200 }),
+            Effect.repeat({ schedule: Schedule.spaced("10 millis"), until: P.not(DelegationState.guards.Unopened), times: 200 }),
           );
           return RunGrant.make({
             delegation,
             accountable: answerer.accountable,
-            provenance: boundary.runProvenance(
-              run,
-              answerer.accountable,
-              answerer.onBehalfOf,
-              GrantRef.make({ grant: source.grant, delegation: O.some(delegation) }),
-            ),
+            provenance: boundary.runProvenance(run, {
+              accountable: answerer.accountable,
+              onBehalfOf: answerer.onBehalfOf,
+              grant: GrantRef.make({ grant: source.grant, delegation: O.some(delegation) }),
+            }),
           });
       }),
     };

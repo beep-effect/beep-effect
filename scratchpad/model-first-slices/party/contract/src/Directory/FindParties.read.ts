@@ -17,7 +17,7 @@ export const DirectoryRow = S.Struct({
   partyId: PartyId,
   org: OrgId,
   name: S.String,
-  absorbed: Initial.empty(PartyId).pipe(S.annotateKey({ description: "The parties merged into this one; none at first." })),
+  absorbed: Initial.empty(PartyId, { description: "The parties merged into this one; none at first." }),
 });
 /**
  * @category models

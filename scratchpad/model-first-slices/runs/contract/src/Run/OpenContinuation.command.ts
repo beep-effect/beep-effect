@@ -37,6 +37,7 @@ export class ContinuationOpened extends Domain.Event(
     requester: PrincipalId,
     runProvenance: Provenance,
   }),
+  { description: "A run at its history bound continued as this run, which carries its parent, purpose, versions, remaining budget, open reservations and narrowed grant forward. `allowance` includes the units those reservations hold." },
 ) {}
 
 /**

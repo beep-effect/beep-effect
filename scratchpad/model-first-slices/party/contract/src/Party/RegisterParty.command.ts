@@ -27,7 +27,7 @@ export class PartyAlreadyRegistered extends S.TaggedError<PartyAlreadyRegistered
  * @category events
  * @since 0.0.0
  */
-export class PartyRegistered extends Domain.Event("PartyRegistered", carry({ org: OrgId, name: S.String })) {}
+export class PartyRegistered extends Domain.Event("PartyRegistered", carry({ org: OrgId, name: S.String }), { description: "A party now exists in an org." }) {}
 
 /**
  * Register a party, by name, in an org.

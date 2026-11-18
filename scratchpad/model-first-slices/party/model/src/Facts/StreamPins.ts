@@ -16,9 +16,10 @@ import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
  * **Example** (Reading the open generation)
  * ```ts
  * import { partyStreamPins } from "@proto/party-model/Facts/StreamPins";
+ * import { StreamPin } from "@proto/kernel/PublishedStream";
  * import * as A from "effect/Array";
  *
- * const open = A.filter(partyStreamPins, (pin) => pin._tag === "Open");
+ * const open = A.filter(partyStreamPins, StreamPin.guards.Open);
  * ```
  *
  * @category models

@@ -53,6 +53,7 @@ export class RunRequested extends Domain.Event(
     terms: GrantTerms,
     requester: PrincipalId,
   }),
+  { description: "A person asked for a run, delegating these narrowed terms of a grant they hold, with this budget in units and this history bound." },
 ) {}
 
 /**

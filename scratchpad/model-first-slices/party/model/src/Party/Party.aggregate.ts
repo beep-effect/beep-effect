@@ -28,7 +28,7 @@ export const PartyState = S.TaggedUnion({
   Active: {
     org: OrgId,
     name: S.String,
-    absorbed: Initial.empty(PartyId).pipe(S.annotateKey({ description: "The parties merged into this one; none at first." })),
+    absorbed: Initial.empty(PartyId, { description: "The parties merged into this one; none at first." }),
   },
 });
 /**
@@ -60,12 +60,12 @@ export class Party extends Domain.Aggregate(
           ResourceScope.cases.Record.make({ org: command.org, record: stream }),
           now,
         );
-        if (state._tag !== "Unregistered") return yield* PartyAlreadyRegistered.make({});
+        if (!PartyState.guards.Unregistered(state)) return yield* PartyAlreadyRegistered.make({});
         return [PartyRegistered.make({ org: command.org, name: command.name, provenance: provenanceOf(invocation) })];
       }),
 
       MergeParties: Effect.fn(function* (state, command, { id, stream, now }) {
-        if (state._tag !== "Active") return yield* MergeVetoed.make({ reason: "not-registered" });
+        if (!PartyState.guards.Active(state)) return yield* MergeVetoed.make({ reason: "not-registered" });
         const invocation = yield* requireGrant(
           PartyReview,
           command._tag,

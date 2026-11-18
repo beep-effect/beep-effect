@@ -14,6 +14,7 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import * as Str from "effect/String";
@@ -80,7 +81,7 @@ if (O.contains(registration.restorePhase, "upgrade-decide")) {
     const claim = ClaimId.make(`claim_upgrade_${r}`);
     const run = `review:${claim}:1`;
     yield* intake.AssertClaim(claim, assertion(org), human("p_intake"));
-    yield* eventually(runState(run), (state) => state._tag === "AwaitingApproval");
+    yield* eventually(runState(run), P.isTagged("AwaitingApproval"));
     const view = yield* eventually(reviewer.ClaimReview.get(claim, human("p_rev")), (found) => O.isSome(proposalIn(found)));
     const { digest } = O.getOrThrow(proposalIn(view));
     // Hold the claim's review view on its snapshot row: the decision commits, and its delivery to the
@@ -98,7 +99,7 @@ if (O.contains(registration.restorePhase, "upgrade-decide")) {
     const drained = yield* eventually(hostBacklog({ shape: phase8Writer }), (backlog) => backlog.pending === 0, 120);
     const drainedOracle = yield* eventually(count(pendingDecisions), (n) => n === 0, 60);
     const passed = yield* checkPublisherHandover({ current: livePins, next: partyStreamPins, backlog: handoverBacklog(drained.pending) });
-    const completed = yield* eventually(runState(run), (state) => state._tag === "Completed", 120);
+    const completed = yield* eventually(runState(run), P.isTagged("Completed"), 120);
     yield* record("upgrade-decide", { claim, run, approved, blocked, held, heldOracle, refused: refused.pending, drained, drainedOracle, passed, completed });
     const fs = yield* FileSystem.FileSystem;
     const file = yield* restoreFile;

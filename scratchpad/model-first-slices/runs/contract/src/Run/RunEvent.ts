@@ -13,7 +13,7 @@ import { SessionId } from "./Session.id.ts";
  * import { RunEvent } from "@proto/runs-contract/Run/RunEvent";
  * import * as S from "effect/Schema";
  *
- * export class RunCompleted extends Domain.Event("RunCompleted", RunEvent.fields({ outcome: S.String })) {}
+ * export class RunCompleted extends Domain.Event("RunCompleted", RunEvent.fields({ outcome: S.String }), { description: "The run finished with this outcome. `released` is the units its open reservations held, now returned." }) {}
  * ```
  *
  * @category constructors

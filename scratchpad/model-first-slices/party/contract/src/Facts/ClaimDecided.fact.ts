@@ -34,7 +34,7 @@ export class ClaimDecidedV1 extends Domain.Event("ClaimDecidedV1", {
   org: OrgId,
   outcome: Decision,
   reviewRuns: S.Array(RunId),
-}) {}
+}, { description: "A claim was decided (published fact, version 1). It carries the decision and the review runs involved, and no proposition, evidence, provenance or grant terms. `factId` is stable for the decision." }) {}
 
 /**
  * Version 2 of the same fact: it says whether a person approved an agent's
@@ -52,7 +52,7 @@ export class ClaimDecidedV2 extends Domain.Event("ClaimDecidedV2", {
   basis: S.Literals(["approval", "direct"]),
   approval: S.OptionFromNullOr(ApprovalId),
   reviewRuns: S.Array(RunId),
-}) {}
+}, { description: "A claim was decided (published fact, version 2). It also says whether a person approved an agent's proposal or decided the claim directly, and names the approval." }) {}
 
 /**
  * The fact's contract: who produces it, its name, and the schema of each

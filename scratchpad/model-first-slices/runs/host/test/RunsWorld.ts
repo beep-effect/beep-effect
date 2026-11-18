@@ -98,10 +98,11 @@ export const World = Layer.unwrap(
     InboxStore,
     Effect.map(Effect.service(InboxStore), (store) => ({
       ...store,
-      commit: (producer: string, key: O.Option<string>, seq: number) =>
+      commit: dual(3, (producer: string, key: O.Option<string>, seq: number) =>
         Effect.flatMap(Ref.getAndSet(crash, false), (crashing) =>
           crashing ? Effect.die("crash before the checkpoint") : store.commit(producer, key, seq),
         ),
+      ),
     })),
   ).pipe(Layer.provide(MemoryInboxStore));
   const Inbox = ClaimDecidedInboxLive.pipe(Layer.provide(Layer.mergeAll(RunsWorld, Feed, Store)));

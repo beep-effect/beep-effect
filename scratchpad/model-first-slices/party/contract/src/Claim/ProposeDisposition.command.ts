@@ -45,6 +45,7 @@ export class ProposalStale extends S.TaggedError<ProposalStale, { readonly brand
 export class DispositionProposed extends Domain.Event(
   "DispositionProposed",
   carry({ disposition: Disposition, rationale: S.String, run: RunId, evidenceRevision: S.Int, digest: S.String }),
+  { description: "An agent run proposed what to do with a pending claim and why, against one evidence revision, under a digest that an approval names." },
 ) {}
 
 /**

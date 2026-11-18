@@ -24,12 +24,8 @@ export class UnpublishedFact extends S.TaggedError<UnpublishedFact, { readonly b
  * @since 0.0.0
  */
 export const FactLedger = S.Struct({
-  missing: Initial.empty(S.Struct({ consumer: S.String, fact: FactVersion })).pipe(
-    S.annotateKey({ description: "Fact versions a consumer needs that nobody publishes; none unless found." }),
-  ),
-  retirable: Initial.empty(S.Struct({ publisher: S.String, fact: FactVersion })).pipe(
-    S.annotateKey({ description: "Fact versions nobody consumes that a newer version supersedes; none unless found." }),
-  ),
+  missing: Initial.empty(S.Struct({ consumer: S.String, fact: FactVersion }), { description: "Fact versions a consumer needs that nobody publishes; none unless found." }),
+  retirable: Initial.empty(S.Struct({ publisher: S.String, fact: FactVersion }), { description: "Fact versions nobody consumes that a newer version supersedes; none unless found." }),
 });
 /**
  * @category models

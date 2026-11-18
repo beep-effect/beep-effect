@@ -31,7 +31,7 @@ export const EffectivePartyState = S.TaggedUnion({
   Registered: {
     org: OrgId,
     name: S.String,
-    absorbed: Initial.empty(PartyId).pipe(S.annotateKey({ description: "The parties merged into this one; none at first." })),
+    absorbed: Initial.empty(PartyId, { description: "The parties merged into this one; none at first." }),
   },
 });
 /**
@@ -67,4 +67,4 @@ export class EffectivePartyRead extends Domain.View("EffectiveParty", {
   events: [PartyRegistered, PartiesMerged],
   middleware: [Session],
   rejects: [MissingGrant],
-}) {}
+}, { description: "A party as it is now, with every duplicate merged into it." }) {}

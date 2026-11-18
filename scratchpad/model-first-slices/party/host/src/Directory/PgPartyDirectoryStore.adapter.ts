@@ -1,6 +1,5 @@
 import type * as Domain from "@alchemy.run/domain";
 import type { OrgId } from "@proto/kernel/Ids";
-import type { DirectoryRow } from "@proto/party-contract/Directory/FindParties.read";
 import type { PartyId } from "@proto/party-contract/Party/Party.id";
 import {
   DirectoryChange,
@@ -8,153 +7,251 @@ import {
   GenerationBehind,
   PartyDirectoryStore,
 } from "@proto/party-model/Directory/PartyDirectory.store";
-import { lazyClusterSql } from "../ClusterSql.ts";
+import { and, arrayContains, eq, isNull, lt, not, or, sql } from "drizzle-orm";
+import { alias } from "drizzle-orm/pg-core";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import type * as SqlClient from "effect/sql/SqlClient";
+import * as S from "effect/Schema";
+import * as SqlClient from "effect/sql/SqlClient";
 import * as Str from "effect/String";
-import { flow } from "effect"
-
-const schema = (sql: SqlClient.SqlClient) =>
-  Effect.all(
-    [
-      sql`CREATE TABLE IF NOT EXISTS party_directory_rows (
-        generation integer NOT NULL, party_id text NOT NULL, org text NOT NULL, name text NOT NULL,
-        absorbed text[] NOT NULL DEFAULT '{}', PRIMARY KEY (generation, party_id))`,
-      sql`CREATE TABLE IF NOT EXISTS party_directory_positions (
-        generation integer NOT NULL, stream text NOT NULL, seq integer NOT NULL,
-        PRIMARY KEY (generation, stream))`,
-      sql`CREATE TABLE IF NOT EXISTS party_directory_active (
-        id integer PRIMARY KEY CHECK (id = 1), generation integer NOT NULL)`,
-    ],
-    { concurrency: 1, discard: true },
-  );
+import { ClusterSql, ClusterSqlLive, type Connection } from "../ClusterSql.ts";
+import {
+  PartyDirectoryActive,
+  type PartyDirectoryRowGeneration,
+  PartyDirectoryRowTables,
+  PartyDirectoryTables,
+  StoreKit,
+} from "./PartyDirectory.table.ts";
 
 /**
- * The directory in Postgres: rows and per-source positions per generation,
- * written together in one transaction, so a replayed or redelivered change
- * is refused exactly as the in-memory store refuses it (D14, D16). The
- * model's port is unchanged; only this adapter knows about Postgres.
+ * The store was asked for a generation this deploy declares no row table
+ * for. A defect: the set of row tables is static per deploy.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class UndeclaredGeneration extends S.TaggedError<UndeclaredGeneration, { readonly brand: unique symbol }>()("UndeclaredGeneration", {
+  generation: S.Int,
+  message: S.String,
+}) {}
+
+const undeclared = (generation: number) =>
+  UndeclaredGeneration.make({
+    generation,
+    message:
+      `party directory generation ${generation} has no row table: declare PartyDirectoryRowsV${generation} ` +
+      "in party/host/src/Directory/PartyDirectory.table.ts, add it to PartyDirectoryRowTables and to " +
+      "party/host/src/Party.schema.ts, then run `bun run --cwd party/host migrations`",
+  });
+
+const { positions, active } = PartyDirectoryTables;
+const candidate = alias(positions, "candidate");
+const encodeActive = S.encodeEffect(PartyDirectoryActive.insert);
+
+/** Collate party ids bytewise, as the in-memory store orders them, whatever the database's default collation. */
+const partyIdOrder = (column: unknown) => sql`${column} collate "C"`;
+
+/** What a connection gives the store: Drizzle, the client its transactions run on, and the active pointer's repository. */
+const storeOf = Effect.fnUntraced(function* (connection: Connection) {
+  const activeRows = yield* StoreKit.NativeRepository(PartyDirectoryActive, { spanPrefix: "PartyDirectoryActive", idColumn: "slot" }).pipe(
+    Effect.provideService(SqlClient.SqlClient, connection.sql),
+  );
+  return { ...connection, activeRows };
+});
+
+/**
+ * The directory in Postgres over `rows`, the row tables the deploy keeps:
+ * each generation's rows in its own table, and the per-source positions
+ * beside them, written together in one transaction, so a replayed or
+ * redelivered change is refused exactly as the in-memory store refuses it
+ * (D14, D16). The model's port is unchanged; only this adapter knows about
+ * Postgres.
  *
  * **Details**
  *
- * It connects to the cluster's own database (`CLUSTER_DATABASE_URL`, which
- * every runner and the front have) on first use, and creates its three
- * tables if absent.
+ * A generation with no declared table dies with {@link UndeclaredGeneration},
+ * which says what to add. The switch makes a generation active and drops
+ * older generations' positions; an older generation's row table stays until
+ * a migration drops it.
+ *
+ * **Example** (Over a test's row tables)
+ * ```ts
+ * import { pgPartyDirectoryStoreFor } from "@proto/party-host/Directory/PgPartyDirectoryStore.adapter";
+ * import { PartyDirectoryRowTables } from "@proto/party-host/Directory/PartyDirectory.table";
+ *
+ * const store = pgPartyDirectoryStoreFor(PartyDirectoryRowTables);
+ * ```
  *
  * @category adapters
  * @since 0.0.0
  */
-export const PgPartyDirectoryStore = Layer.effect(
-  PartyDirectoryStore,
-  Effect.gen(function* () {
-    const connect = yield* lazyClusterSql(schema);
-    const withSql = <A, E>(f: (sql: SqlClient.SqlClient) => Effect.Effect<A, E>) =>
-      Effect.logInfo("party directory: using Postgres").pipe(Effect.andThen(Effect.flatMap(connect, f)));
-    const activeGeneration = (sql: SqlClient.SqlClient) => Effect.map(
-      sql<{ readonly generation: number }>`SELECT generation FROM party_directory_active WHERE id = 1`,
-      (rows) => O.map(A.head(rows), (row) => row.generation),
-    );
-    return PartyDirectoryStore.of({
-      apply: Effect.fn("PgPartyDirectoryStore.apply")((generation: number, writes: ReadonlyArray<DirectoryWrite>) =>
-        withSql((sql) => sql
-          .withTransaction(
-            Effect.gen(function* () {
-              const active = yield* activeGeneration(sql);
-              if (O.exists(active, (current) => generation < current)) return 0;
-              if (O.isNone(active)) {
-                yield* sql`INSERT INTO party_directory_active (id, generation) VALUES (1, ${generation}) ON CONFLICT (id) DO NOTHING`;
-              }
-              let applied = 0;
-              for (const write of writes) {
-                // Lock the position row: two runners applying one stream serialise here.
-                const position = yield* sql<{ readonly seq: number }>`
-                  SELECT seq FROM party_directory_positions
-                  WHERE generation = ${generation} AND stream = ${write.stream} FOR UPDATE`;
-                if (O.exists(A.head(position), (row) => write.seq <= row.seq)) continue;
-                yield* DirectoryChange.match(write.change, {
-                  Registered: ({ partyId, org, name }) =>
-                    sql`INSERT INTO party_directory_rows (generation, party_id, org, name, absorbed)
-                        VALUES (${generation}, ${partyId}, ${org}, ${name}, '{}')
-                        ON CONFLICT (generation, party_id) DO UPDATE SET org = ${org}, name = ${name}, absorbed = '{}'`,
-                  Merged: ({ partyId, absorbed }) =>
-                    sql`UPDATE party_directory_rows SET absorbed = array_append(absorbed, ${absorbed})
-                        WHERE generation = ${generation} AND party_id = ${partyId} AND NOT (${absorbed} = ANY(absorbed))`,
-                });
-                yield* sql`INSERT INTO party_directory_positions (generation, stream, seq)
-                           VALUES (${generation}, ${write.stream}, ${write.seq})
-                           ON CONFLICT (generation, stream) DO UPDATE SET seq = ${write.seq}`;
-                applied += 1;
-              }
-              return applied;
-            }),
-          )
-          .pipe(Effect.orDie)),
-      ),
-      active: withSql((sql) => Effect.orDie(activeGeneration(sql))),
-      checkpoints: Effect.fn("PgPartyDirectoryStore.checkpoints")((generation: number) =>
-        withSql((sql) => sql<{ readonly stream: string; readonly seq: number }>`
-          SELECT stream, seq FROM party_directory_positions WHERE generation = ${generation}`.pipe(
-          Effect.map(flow(A.map( (row) => [row.stream, row.seq] as const), HashMap.fromIterable)),
-          Effect.orDie,
-        )),
-      ),
-      switchTo: Effect.fn("PgPartyDirectoryStore.switchTo")((generation: number) =>
-        withSql((sql) => sql
-          .withTransaction(
-            Effect.gen(function* () {
-              const behind = yield* sql<{ readonly stream: string }>`
-                SELECT a.stream FROM party_directory_positions a
-                JOIN party_directory_active act ON act.id = 1 AND a.generation = act.generation
-                LEFT JOIN party_directory_positions c ON c.generation = ${generation} AND c.stream = a.stream
-                WHERE c.seq IS NULL OR c.seq < a.seq`;
-              if (behind.length > 0) return A.map(behind, (row) => row.stream);
-              yield* sql`INSERT INTO party_directory_active (id, generation) VALUES (1, ${generation})
-                         ON CONFLICT (id) DO UPDATE SET generation = ${generation}`;
-              yield* sql`DELETE FROM party_directory_rows WHERE generation < ${generation}`;
-              yield* sql`DELETE FROM party_directory_positions WHERE generation < ${generation}`;
-              return [];
-            }),
-          )
-          .pipe(
-            Effect.orDie,
-            Effect.flatMap((behind) =>
-              A.isReadonlyArrayEmpty(behind) ? Effect.void : Effect.fail(GenerationBehind.make({ generation, behind })),
+export const pgPartyDirectoryStoreFor = (rows: Readonly<Record<number, PartyDirectoryRowGeneration>>) =>
+  Layer.effect(
+    PartyDirectoryStore,
+    Effect.gen(function* () {
+      const { connect } = yield* ClusterSql;
+      const connected = yield* Effect.cached(Effect.flatMap(connect, storeOf));
+      const withStore = <A, E>(f: (store: Effect.Success<typeof connected>) => Effect.Effect<A, E>) =>
+        Effect.logInfo("party directory: using Postgres").pipe(Effect.andThen(Effect.flatMap(connected, f)));
+      const rowsOf = (generation: number) =>
+        O.match(O.fromUndefinedOr(rows[generation]), {
+          onNone: () => Effect.die(undeclared(generation)),
+          onSome: Effect.succeed,
+        });
+      const activeGeneration = ({ activeRows }: Effect.Success<typeof connected>) =>
+        activeRows.findById(1).pipe(
+          Effect.map((row) => O.some(row.generation)),
+          Effect.catchTag("NoSuchElementError", () => Effect.succeedNone),
+        );
+
+      return PartyDirectoryStore.of({
+        apply: dual(
+          2,
+          Effect.fn("PgPartyDirectoryStore.apply")((writes: ReadonlyArray<DirectoryWrite>, generation: number) =>
+            withStore((store) =>
+              store.sql
+                .withTransaction(
+                  Effect.gen(function* () {
+                    const current = yield* activeGeneration(store);
+                    if (O.exists(current, (at) => generation < at)) return 0;
+                    const { model, table } = yield* rowsOf(generation);
+                    if (O.isNone(current)) {
+                      const pointer = yield* encodeActive(PartyDirectoryActive.insert.make({ generation }));
+                      yield* store.db.insert(active).values(pointer).onConflictDoNothing();
+                    }
+                    return yield* Effect.reduce(writes, () => 0, (applied, write) =>
+                      Effect.gen(function* () {
+                        // Lock the position row: two runners applying one stream serialise here.
+                        const position = yield* store.db
+                          .select({ seq: positions.seq })
+                          .from(positions)
+                          .where(and(eq(positions.generation, generation), eq(positions.stream, write.stream)))
+                          .for("update");
+                        if (O.exists(A.head(position), (row) => write.seq <= row.seq)) return applied;
+                        yield* DirectoryChange.match(write.change, {
+                          Registered: ({ partyId, org, name }) => {
+                            // The insert variant starts `absorbed` empty; a registration replayed over a merged row resets it, as before.
+                            const row = model.insert.make({ partyId, org, name });
+                            const values = { ...row, absorbed: A.copy(row.absorbed) };
+                            return Effect.asVoid(
+                              store.db
+                                .insert(table)
+                                .values(values)
+                                .onConflictDoUpdate({ target: table.partyId, set: { org: values.org, name: values.name, absorbed: values.absorbed } }),
+                            );
+                          },
+                          Merged: ({ partyId, absorbed }) =>
+                            Effect.asVoid(
+                              store.db
+                                .update(table)
+                                .set({ absorbed: sql`array_append(${table.absorbed}, ${absorbed})` })
+                                .where(and(eq(table.partyId, partyId), not(arrayContains(table.absorbed, [absorbed])))),
+                            ),
+                        });
+                        yield* store.db
+                          .insert(positions)
+                          .values({ generation, stream: write.stream, seq: write.seq })
+                          .onConflictDoUpdate({ target: [positions.generation, positions.stream], set: { seq: write.seq } });
+                        return applied + 1;
+                      }),
+                    );
+                  }),
+                )
+                .pipe(Effect.orDie),
             ),
-          )),
-      ),
-      search: Effect.fn("PgPartyDirectoryStore.search")((org: OrgId, text: string, { after, take }: Domain.Query.PageRequest) =>
-        withSql((sql) => Effect.gen(function* () {
-          const rows = yield* sql<{
-            readonly party_id: string;
-            readonly org: string;
-            readonly name: string;
-            readonly absorbed: ReadonlyArray<string>;
-          }>`
-            SELECT r.party_id, r.org, r.name, r.absorbed FROM party_directory_rows r
-            JOIN party_directory_active act ON act.id = 1 AND r.generation = act.generation
-            WHERE r.org = ${org} AND lower(r.name) LIKE ${`%${pipe(text, Str.toLowerCase)}%`}
-              AND (${after ?? null}::text IS NULL OR r.party_id > ${after ?? null})
-            ORDER BY r.party_id LIMIT ${take + 1}`;
-          const entries = A.map(
-            A.take(rows, take),
-            (row): DirectoryRow => ({
-              partyId: row.party_id as PartyId,
-              org: row.org as OrgId,
-              name: row.name,
-              absorbed: row.absorbed as ReadonlyArray<PartyId>,
-            }),
-          );
-          return {
-            entries,
-            cursor: rows.length > take ? O.getOrNull(O.map(A.last(entries), (row) => row.partyId)) : null,
-          };
-        }).pipe(Effect.orDie)),
-      ),
-    });
-  }),
-);
+          ),
+        ),
+        active: withStore(flow(activeGeneration, Effect.orDie)),
+        checkpoints: Effect.fn("PgPartyDirectoryStore.checkpoints")((generation: number) =>
+          withStore((store) =>
+            store.db
+              .select({ stream: positions.stream, seq: positions.seq })
+              .from(positions)
+              .where(eq(positions.generation, generation))
+              .pipe(
+                Effect.map(flow(A.map((row) => [row.stream, row.seq] as const), HashMap.fromIterable)),
+                Effect.orDie,
+              ),
+          ),
+        ),
+        switchTo: Effect.fn("PgPartyDirectoryStore.switchTo")((generation: number) =>
+          withStore((store) =>
+            store.sql
+              .withTransaction(
+                Effect.gen(function* () {
+                  yield* rowsOf(generation);
+                  // The streams where the candidate has not applied what the active generation has.
+                  const behind = yield* store.db
+                    .select({ stream: positions.stream })
+                    .from(positions)
+                    .innerJoin(active, eq(positions.generation, active.generation))
+                    .leftJoin(candidate, and(eq(candidate.generation, generation), eq(candidate.stream, positions.stream)))
+                    .where(or(isNull(candidate.seq), lt(candidate.seq, positions.seq)));
+                  if (A.isReadonlyArrayNonEmpty(behind)) return A.map(behind, (row) => row.stream);
+                  const pointer = yield* encodeActive(PartyDirectoryActive.insert.make({ generation }));
+                  yield* store.db.insert(active).values(pointer).onConflictDoUpdate({ target: active.slot, set: { generation } });
+                  yield* store.db.delete(positions).where(lt(positions.generation, generation));
+                  return A.empty<string>();
+                }),
+              )
+              .pipe(
+                Effect.orDie,
+                Effect.flatMap((behind) =>
+                  A.isReadonlyArrayEmpty(behind) ? Effect.void : Effect.fail(GenerationBehind.make({ generation, behind })),
+                ),
+              ),
+          ),
+        ),
+        search: dual(
+          3,
+          Effect.fn("PgPartyDirectoryStore.search")((org: OrgId, text: string, { after, take }: Domain.Query.PageRequest) =>
+            withStore((store) =>
+              Effect.gen(function* () {
+                const current = yield* activeGeneration(store);
+                if (O.isNone(current)) return { entries: A.empty(), cursor: null };
+                const { model, table } = yield* rowsOf(current.value);
+                // Contains `text`, case-insensitively: `strpos` matches the text as written, so `%`, `_` and `\` are plain characters.
+                const found = yield* store.db
+                  .select()
+                  .from(table)
+                  .where(
+                    and(
+                      eq(table.org, org),
+                      sql`strpos(lower(${table.name}), ${Str.toLowerCase(text)}) > 0`,
+                      after === undefined ? undefined : sql`${partyIdOrder(table.partyId)} > ${after}`,
+                    ),
+                  )
+                  .orderBy(partyIdOrder(table.partyId))
+                  .limit(take + 1);
+                const decoded = yield* S.decodeEffect(S.Array(model.select))(found);
+                const entries = A.take(decoded, take);
+                return {
+                  entries,
+                  cursor: decoded.length > take ? O.getOrNull(O.map(A.last(entries), (row): PartyId => row.partyId)) : null,
+                };
+              }).pipe(Effect.orDie),
+            ),
+          ),
+        ),
+      });
+    }),
+  );
+
+/**
+ * The directory in the cluster's Postgres, over the row tables this deploy
+ * keeps ({@link PartyDirectoryRowTables}).
+ *
+ * **Details**
+ *
+ * It connects to the cluster's own database (`CLUSTER_DATABASE_URL`, which
+ * every runner and the front have) on first use and applies Party host's
+ * pending migrations once.
+ *
+ * @category adapters
+ * @since 0.0.0
+ */
+export const PgPartyDirectoryStore = pgPartyDirectoryStoreFor(PartyDirectoryRowTables).pipe(Layer.provide(ClusterSqlLive));

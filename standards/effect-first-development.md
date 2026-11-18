@@ -973,10 +973,12 @@ const input = CreateOrderInput.make({ orderId: "o-1", customerId: "c-1" })
   default, so `X.make({})` is the initial value, and a decoding default, so a missing key reads the
   same value. The owner's `initial` is then `State.make({})`, never a second literal.
 - An optional field that starts absent is
-  `X.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone))`. It needs no decoding
+  `X.pipe(S.annotateKey({ description }), S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone))`. It needs no decoding
   default: `S.OptionFromOptionalKey` already reads a missing key as `O.none()`.
 - Describe each defaulted key with `S.annotateKey({ description })`, saying what the field holds and
-  what it starts as.
+  what it starts as. Put it first in the pipe, before `S.OptionFromOptionalKey` and before any
+  default: a key annotation added after a decoding default or after `S.OptionFromOptionalKey` is
+  left out of generated JSON Schema, so it never reaches an OpenAPI document or a tool schema.
 - Give no default to a field whose empty value is the widest one, or that carries identity, authority,
   provenance or money (a grant's expiry or operations, a delegation reference, an invocation chain, an
   allowance). It stays required, so leaving it out is refused.

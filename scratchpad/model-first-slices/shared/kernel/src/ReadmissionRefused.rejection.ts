@@ -28,7 +28,7 @@ export class ReadmissionRefused extends S.TaggedError<ReadmissionRefused, { read
   "ReadmissionRefused",
   {
     reason: S.Literals(["unaccountable", "lapsed"]),
-    lapsed: Initial.empty(GrantRef).pipe(S.annotateKey({ description: "The grants that lapsed; none when the reason is `unaccountable`." })),
+    lapsed: Initial.empty(GrantRef, { description: "The grants that lapsed; none when the reason is `unaccountable`." }),
   },
   $I.annote("ReadmissionRefused", { httpApiStatus: 403, description: "The authority context will not re-admit this provenance for the next hop." }),
 ) {}

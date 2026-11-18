@@ -1,4 +1,5 @@
 import * as S from "effect/Schema";
+import { IdText } from "@proto/kernel/Measure";
 
 /**
  * One budget reservation on a run, made before an inference or tool call
@@ -14,7 +15,7 @@ import * as S from "effect/Schema";
  * @category ids
  * @since 0.0.0
  */
-export const ReservationId = S.String.pipe(S.brand("ReservationId"));
+export const ReservationId = IdText.pipe(S.brand("ReservationId"));
 /**
  * @category ids
  * @since 0.0.0

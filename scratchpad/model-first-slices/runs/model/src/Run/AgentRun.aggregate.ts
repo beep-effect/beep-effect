@@ -48,9 +48,9 @@ import { thunk0 } from "@beep/utils"
  */
 export const Budget = S.Struct({
   allowance: S.Int,
-  reserved: S.Int.pipe(Initial.of(0), S.annotateKey({ description: "Units held by open reservations; none at first." })),
-  spent: S.Int.pipe(Initial.of(0), S.annotateKey({ description: "Units settled; none at first." })),
-  allocated: S.Int.pipe(Initial.of(0), S.annotateKey({ description: "Units handed to child runs; none at first." })),
+  reserved: S.Int.pipe(Initial.of(0, { description: "Units held by open reservations; none at first." })),
+  spent: S.Int.pipe(Initial.of(0, { description: "Units settled; none at first." })),
+  allocated: S.Int.pipe(Initial.of(0, { description: "Units handed to child runs; none at first." })),
 });
 /**
  * @category models
@@ -87,8 +87,8 @@ export const RunRecord = S.Struct({
   delegation: DelegationId,
   provenance: Provenance,
   budget: Budget,
-  reservations: Initial.empty(HeldReservation).pipe(S.annotateKey({ description: "The reservations still open; none at first." })),
-  steps: S.Int.pipe(Initial.of(0), S.annotateKey({ description: "Steps recorded so far; none at first." })),
+  reservations: Initial.empty(HeldReservation, { description: "The reservations still open; none at first." }),
+  steps: S.Int.pipe(Initial.of(0, { description: "Steps recorded so far; none at first." })),
   historyBound: S.Int,
 });
 /**
@@ -337,7 +337,7 @@ export class AgentRun extends Domain.Aggregate(
       RequestRun: Effect.fn(function* (state, command) {
         const invocation = yield* CurrentInvocation;
         if (!Root.guards.Human(invocation.root)) return yield* HumanOnly.make({});
-        if (state._tag !== "Unrequested") return yield* RunAlreadyExists.make({});
+        if (!AgentRunState.guards.Unrequested(state)) return yield* RunAlreadyExists.make({});
         return [
           RunRequested.make({
             session: command.session,
@@ -355,7 +355,7 @@ export class AgentRun extends Domain.Aggregate(
 
       // Internal: the runs model's own policy sends these with the provenance it acted on.
       ActivateRun: (state, command) =>
-        state._tag !== "Requested"
+        !AgentRunState.guards.Requested(state)
           ? []
           : [
               RunActivated.make({
@@ -535,7 +535,7 @@ export class AgentRun extends Domain.Aggregate(
       }),
 
       OpenChildRun: (state, command) =>
-        state._tag !== "Unrequested"
+        !AgentRunState.guards.Unrequested(state)
           ? []
           : [
               ChildRunOpened.make({
@@ -556,7 +556,7 @@ export class AgentRun extends Domain.Aggregate(
             ],
 
       RefuseChild: (state, command) =>
-        state._tag !== "AwaitingChild" || state.child !== command.child
+        !AgentRunState.guards.AwaitingChild(state) || state.child !== command.child
           ? []
           : [
               ChildRunRefused.make({
@@ -569,7 +569,7 @@ export class AgentRun extends Domain.Aggregate(
             ],
 
       OpenContinuation: (state, command) =>
-        state._tag !== "Unrequested"
+        !AgentRunState.guards.Unrequested(state)
           ? []
           : [
               ContinuationOpened.make({
@@ -609,7 +609,7 @@ export class AgentRun extends Domain.Aggregate(
 
       // Internal: the runs model's own policy sends it when a child's lineage finished.
       ChildFinished: (state, command) =>
-        state._tag !== "AwaitingChild" || state.child !== command.child
+        !AgentRunState.guards.AwaitingChild(state) || state.child !== command.child
           ? []
           : [
               ChildRunFinished.make({

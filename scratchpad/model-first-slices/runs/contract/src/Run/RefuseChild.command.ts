@@ -13,6 +13,7 @@ import { RunEvent } from "./RunEvent.ts";
 export class ChildRunRefused extends Domain.Event(
   "ChildRunRefused",
   RunEvent.fields({ child: RunId, allowance: S.Int, reason: S.String }),
+  { description: "The child run was refused. Its share returns to the parent, which continues." },
 ) {}
 
 /**

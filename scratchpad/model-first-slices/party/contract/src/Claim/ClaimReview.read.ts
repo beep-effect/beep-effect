@@ -60,10 +60,10 @@ const asserted = {
   org: OrgId,
   proposition: Proposition,
   sources: S.Int,
-  revision: S.Int.pipe(Initial.of(1), S.annotateKey({ description: "The evidence revision; an asserted claim starts at 1." })),
-  reviews: Initial.empty(RunId).pipe(S.annotateKey({ description: "The review runs requested so far; none at first." })),
-  proposal: Initial.none(ProposalView).pipe(S.annotateKey({ description: "The latest proposal still standing; absent until a review proposes one." })),
-  notes: Initial.empty(ClaimNote).pipe(S.annotateKey({ description: "What the reviewer was told about refusals; none at first." })),
+  revision: S.Int.pipe(Initial.of(1, { description: "The evidence revision; an asserted claim starts at 1." })),
+  reviews: Initial.empty(RunId, { description: "The review runs requested so far; none at first." }),
+  proposal: Initial.none(ProposalView, { description: "The latest proposal still standing; absent until a review proposes one." }),
+  notes: Initial.empty(ClaimNote, { description: "What the reviewer was told about refusals; none at first." }),
 };
 
 /**
@@ -88,7 +88,7 @@ const asserted = {
  * @since 0.0.0
  */
 export const ClaimReviewState = S.TaggedUnion({
-  Unasserted: { notes: Initial.empty(ClaimNote).pipe(S.annotateKey({ description: "Refusals noted before the claim exists; none at first." })) },
+  Unasserted: { notes: Initial.empty(ClaimNote, { description: "Refusals noted before the claim exists; none at first." }) },
   Pending: asserted,
   Accepted: asserted,
   Retracted: asserted,
@@ -139,6 +139,32 @@ export const proposalOf = (review: ClaimReviewState): O.Option<ProposalView> =>
 export const ClaimReviewInitial: ClaimReviewState = ClaimReviewState.cases.Unasserted.make({});
 
 /**
+ * The events the `ClaimReview` view emits, in the aggregate's order, as one
+ * tagged union: what a reader of its event list discriminates.
+ *
+ * **Example** (Finding the assertions in a page)
+ * ```ts
+ * import { ClaimReviewEvent } from "@proto/party-contract/Claim/ClaimReview.read";
+ *
+ * const isAssertion = ClaimReviewEvent.isAnyOf(["ClaimAsserted"]);
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ClaimReviewEvent = S.Union([
+  ClaimAsserted,
+  ReviewRequested,
+  DispositionProposed,
+  ClaimAccepted,
+  ClaimRetracted,
+  EvidenceAdded,
+  ProposalApproved,
+  MergeRefused,
+  ReviewRefused,
+]).pipe(S.toTaggedUnion("_tag"));
+
+/**
  * The `ClaimReview` view's read contract, with no aggregate behind it: its
  * key, state, the events it emits, its middleware and rejections. The model's
  * `ClaimReview` view folds the `Claim` aggregate into the same state.
@@ -156,17 +182,7 @@ export class ClaimReviewRead extends Domain.View("ClaimReview", {
   key: ClaimId,
   state: ClaimReviewState,
   initial: ClaimReviewInitial,
-  events: [
-    ClaimAsserted,
-    ReviewRequested,
-    DispositionProposed,
-    ClaimAccepted,
-    ClaimRetracted,
-    EvidenceAdded,
-    ProposalApproved,
-    MergeRefused,
-    ReviewRefused,
-  ],
+  events: ClaimReviewEvent.members,
   middleware: [Session],
   rejects: [MissingGrant],
-}) {}
+}, { description: "One claim as a reviewer sees it: the proposition, the agent's proposal, and its status." }) {}

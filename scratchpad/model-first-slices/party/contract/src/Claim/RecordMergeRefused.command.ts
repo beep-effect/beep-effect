@@ -75,7 +75,7 @@ export const StoredMergeRefusal = S.Union([
  * @category events
  * @since 0.0.0
  */
-export class MergeRefused extends Domain.Event("MergeRefused", carry({ reason: StoredMergeRefusal })) {}
+export class MergeRefused extends Domain.Event("MergeRefused", carry({ reason: StoredMergeRefusal }), { description: "The merge an accepted same-party claim implies did not happen, and why: re-admission was refused, the merge was vetoed, or a grant was missing." }) {}
 
 /**
  * Record a refused merge on the claim. Sent only by the model's own merge

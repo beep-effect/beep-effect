@@ -11,7 +11,7 @@ import { GrantNotActive } from "./GrantNotActive.rejection.ts";
  * @category events
  * @since 0.0.0
  */
-export class GrantRevoked extends Domain.Event("GrantRevoked", carry({ holder: PrincipalId })) {}
+export class GrantRevoked extends Domain.Event("GrantRevoked", carry({ holder: PrincipalId }), { description: "The grant no longer authorizes anything, and neither do delegations of it." }) {}
 
 /**
  * Revoke an active grant.

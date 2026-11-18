@@ -17,7 +17,7 @@ import { RunVersions } from "./RunVersions.ts";
  * @category events
  * @since 0.0.0
  */
-export class StepRecorded extends Domain.Event("StepRecorded", RunEvent.fields({ step: S.String, count: S.Int })) {}
+export class StepRecorded extends Domain.Event("StepRecorded", RunEvent.fields({ step: S.String, count: S.Int }), { description: "The run took a step. `count` is how many it has recorded." }) {}
 
 /**
  * The fact: the run reached its history bound and continues as `next`,
@@ -43,6 +43,7 @@ export class RunContinued extends Domain.Event(
     terms: GrantTerms,
     requester: PrincipalId,
   }),
+  { description: "The run reached its history bound and continues as `next`, carrying its parent, remaining budget, open reservations, purpose, versions and grant forward." },
 ) {}
 
 /**

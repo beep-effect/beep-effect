@@ -5932,6 +5932,10 @@
         "packages/foundation/modeling/utils/src/**",
         "packages/foundation/primitive/types/package.json",
         "packages/foundation/primitive/types/src/**",
+        "packages/ecosystem/effect-drizzle/package.json",
+        "packages/ecosystem/effect-drizzle/src/**",
+        "packages/drivers/pglite/package.json",
+        "packages/drivers/pglite/src/**",
         "!**/node_modules/**"
       ]
     },

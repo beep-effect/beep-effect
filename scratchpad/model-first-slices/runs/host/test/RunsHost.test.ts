@@ -6,6 +6,7 @@ import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { ReservationId } from "@proto/runs-contract/Run/Reservation.id";
 import { RunReport, RunReportRefused, RunsGateway } from "@proto/runs-contract/Runs.gateway";
 import { ClaimDecidedInbox } from "@proto/runs-host/Inbox/ClaimDecided.inbox";
+import { AgentRunState } from "@proto/runs-model/Run/AgentRun.aggregate";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -67,7 +68,7 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
       const settled = yield* as(RunReport.cases.Settle.make({ reservation: ReservationId.make("r1"), units: 20 }), "settle");
       expect(settled.run).toBe("run_1~1");
       expect(settled.provenance.root).toEqual({ _tag: "Agent", run: "run_1~1", accountable: "p_req" });
-      const next = yield* harness.run("run_1~1", (state) => state._tag === "Running");
+      const next = yield* harness.run("run_1~1", AgentRunState.guards.Running);
       expect(next).toMatchObject({
         run: { lineage: "run_1", generation: 1, budget: { allowance: 100, reserved: 0, spent: 20 }, reservations: [] },
       });
@@ -75,7 +76,7 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
       // The next report is made as the live run, under its own delegation.
       const waiting = yield* as(RunReport.cases.AwaitApproval.make({}), "await", settled.run, settled.provenance);
       expect(waiting.run).toBe("run_1~1");
-      yield* harness.run("run_1~1", (state) => state._tag === "AwaitingApproval");
+      yield* harness.run("run_1~1", AgentRunState.guards.AwaitingApproval);
       const first = yield* harness.run("run_1", thunkTrue);
       expect(first).toMatchObject({ _tag: "Continued", next: "run_1~1" });
 
@@ -84,7 +85,7 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
       yield* harness.publish(decided);
       const inbox = yield* ClaimDecidedInbox;
       yield* inbox.drain;
-      const concluded = yield* harness.run("run_1~1", (state) => state._tag === "Completed");
+      const concluded = yield* harness.run("run_1~1", AgentRunState.guards.Completed);
       expect(concluded).toMatchObject({
         _tag: "Completed",
         outcome: "accepted",
@@ -106,11 +107,11 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
       yield* harness.revoke;
       const refused = yield* Effect.flip(as(RunReport.cases.Settle.make({ reservation: ReservationId.make("r1"), units: 12 }), "settle"));
       expect(refused).toEqual(RunReportRefused.make({ reason: "readmission:lapsed" }));
-      const held = yield* harness.run("run_1", (state) => state._tag === "Running");
+      const held = yield* harness.run("run_1", AgentRunState.guards.Running);
       expect(held).toMatchObject({ run: { budget: { reserved: 40 } } });
       // The executor reports the refusal; the gateway records it without re-admitting the run.
       yield* as(RunReport.cases.Refused.make({ reason: "readmission:lapsed" }), "refuse");
-      const ended = yield* harness.run("run_1", (state) => state._tag === "Refused");
+      const ended = yield* harness.run("run_1", AgentRunState.guards.Refused);
       expect(ended).toMatchObject({
         _tag: "Refused",
         reason: "readmission:lapsed",
@@ -131,7 +132,7 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
       yield* harness.publish(decided, decided);
       const read = yield* inbox.drain;
       expect(read).toBe(2);
-      const concluded = yield* harness.run("run_1", (state) => state._tag === "Completed");
+      const concluded = yield* harness.run("run_1", AgentRunState.guards.Completed);
       expect(concluded).toMatchObject({ outcome: "accepted" });
       const commits = yield* harness.commitsOn("run_1");
       expect(commits).toBe(before + 1);
@@ -161,8 +162,8 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
       const read = yield* inbox.drain;
       expect(read).toBe(4);
       const concluded = yield* Effect.all([
-        harness.run("run_1", (state) => state._tag === "Completed"),
-        harness.run("run_2", (state) => state._tag === "Completed"),
+        harness.run("run_1", AgentRunState.guards.Completed),
+        harness.run("run_2", AgentRunState.guards.Completed),
       ], { concurrency: 1 });
       expect(concluded).toMatchObject([{ outcome: "accepted" }, { outcome: "accepted" }]);
       const after1 = yield* harness.commitsOn("run_1");
@@ -191,7 +192,7 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
       expect(read).toBe(1);
       const commitsAfter = yield* harness.commitsOn("run_1");
       expect(commitsAfter).toBe(before + 1);
-      const concluded = yield* harness.run("run_1", (state) => state._tag === "Completed");
+      const concluded = yield* harness.run("run_1", AgentRunState.guards.Completed);
       expect(concluded).toMatchObject({ outcome: "accepted" });
     }),
   );
@@ -207,7 +208,7 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
       const first = yield* v1("claim_1:decided", ["run_1"]);
       yield* harness.publish(first);
       yield* inbox.drain;
-      const concluded = yield* harness.run("run_1", (state) => state._tag === "Completed");
+      const concluded = yield* harness.run("run_1", AgentRunState.guards.Completed);
       expect(concluded).toMatchObject({ outcome: "accepted" });
       // After: Party publishes both versions of every fact; the v1 inbox acts on v1 and passes over v2.
       const before = yield* harness.commitsOn("run_2");
@@ -216,7 +217,7 @@ it.layer(World, { buildPerTest: true, excludeTestServices: true })((it) => {
       yield* harness.publish(asV2, asV1);
       const read = yield* inbox.drain;
       expect(read).toBe(2);
-      const second = yield* harness.run("run_2", (state) => state._tag === "Completed");
+      const second = yield* harness.run("run_2", AgentRunState.guards.Completed);
       expect(second).toMatchObject({ outcome: "accepted" });
       const commits = yield* harness.commitsOn("run_2");
       expect(commits).toBe(before + 1);

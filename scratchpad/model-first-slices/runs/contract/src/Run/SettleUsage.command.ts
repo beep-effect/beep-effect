@@ -14,7 +14,7 @@ import { UnknownReservation } from "./UnknownReservation.rejection.ts";
  * @category events
  * @since 0.0.0
  */
-export class UsageSettled extends Domain.Event("UsageSettled", RunEvent.fields({ reservation: ReservationId, reserved: S.Int, units: S.Int, remaining: S.Int })) {}
+export class UsageSettled extends Domain.Event("UsageSettled", RunEvent.fields({ reservation: ReservationId, reserved: S.Int, units: S.Int, remaining: S.Int }), { description: "A reservation was settled at the usage reported. `remaining` is the units left." }) {}
 
 /**
  * Settle a reservation with the usage the call reported, as the run itself.

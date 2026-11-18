@@ -1,7 +1,7 @@
 import { GrantTerms } from "@proto/kernel/Capability";
 import { DelegationId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { GrantRef, Hop, type Invocation, Provenance } from "@proto/kernel/Invocation";
-import type { ReadmissionRefused } from "@proto/kernel/ReadmissionRefused.rejection";
+import { ReadmissionRefused } from "@proto/kernel/ReadmissionRefused.rejection";
 import { $AuthorityContractId } from "@proto/kernel/Identity";
 import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
@@ -58,6 +58,33 @@ export type RunGrant = typeof RunGrant.Type;
 export class RunGrantRefused extends S.TaggedError<RunGrantRefused, { readonly brand: unique symbol }>()("RunGrantRefused", { reason: S.String }) {}
 
 /**
+ * Why `grantRun` refused: the run's authority could not be granted, or the
+ * requester's hop was not re-admitted.
+ *
+ * **Example** (Rendering a refusal)
+ * ```ts
+ * import { RunGrantRefusal, RunGrantRefused } from "@proto/authority-contract/Authority.gateway";
+ *
+ * const reason = RunGrantRefusal.match(RunGrantRefused.make({ reason: "NotHeld" }), {
+ *   RunGrantRefused: (refused) => refused.reason,
+ *   ReadmissionRefused: (refused) => `readmission:${refused.reason}`,
+ * });
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const RunGrantRefusal = S.Union([RunGrantRefused, ReadmissionRefused]).pipe(
+  $I.annoteSchema("RunGrantRefusal", { description: "Why granting a run's authority was refused." }),
+  S.toTaggedUnion("_tag"),
+);
+/**
+ * @category errors
+ * @since 0.0.0
+ */
+export type RunGrantRefusal = typeof RunGrantRefusal.Type;
+
+/**
  * The authority context's synchronous contract for other contexts' hosts.
  * A product context declares its own port and adapts it to this service;
  * only the authority host implements it, so only authority builds an
@@ -92,6 +119,6 @@ export class AuthorityGateway extends Context.Service<
       readonly delegation: DelegationId;
       readonly run: RunId;
       readonly terms: GrantTerms;
-    }) => Effect.Effect<RunGrant, RunGrantRefused | ReadmissionRefused>;
+    }) => Effect.Effect<RunGrant, RunGrantRefusal>;
   }
 >()($I`AuthorityGateway`) {}

@@ -1,5 +1,6 @@
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as Match from "effect/Match";
 import { PartyDirectory } from "./PartyDirectory.projection.ts";
 import { DirectoryChange, type DirectoryWrite, PartyDirectoryStore } from "./PartyDirectory.store.ts";
@@ -35,8 +36,7 @@ export const partyDirectoryLive = (generation: number) =>
     Effect.gen(function* () {
       const store = yield* PartyDirectoryStore;
       return Effect.fn(function* (batch) {
-        yield* store.apply(
-          generation,
+        yield* pipe(
           A.map(
             batch,
             ({ key, event, envelope }): DirectoryWrite => ({
@@ -52,6 +52,7 @@ export const partyDirectoryLive = (generation: number) =>
               ),
             }),
           ),
+          store.apply(generation),
         );
       });
     }),

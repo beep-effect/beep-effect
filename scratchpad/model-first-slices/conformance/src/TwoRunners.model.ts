@@ -11,7 +11,7 @@ import * as S from "effect/Schema";
  * @category events
  * @since 0.0.0
  */
-export class Written extends Domain.Event("Written", { label: S.String, runner: S.String }) {}
+export class Written extends Domain.Event("Written", { label: S.String, runner: S.String }, { description: "A write landed on the slot, with the runner that decided it." }) {}
 
 /**
  * Write a label, holding `decide` for `holdMs` first: the slow command of the
@@ -34,12 +34,12 @@ export class Write extends Domain.Command("Write", {
  */
 /** A slot's labels, in the order written. */
 const SlotState = S.Struct({
-  labels: Initial.empty(S.String).pipe(S.annotateKey({ description: "Every label written to the slot; none at first." })),
+  labels: Initial.empty(S.String, { description: "Every label written to the slot; none at first." }),
 });
 
 /** How many writes any slot has taken. */
 const SlotTallyState = S.Struct({
-  writes: S.Int.pipe(Initial.of(0), S.annotateKey({ description: "Writes counted so far; none at first." })),
+  writes: S.Int.pipe(Initial.of(0, { description: "Writes counted so far; none at first." })),
 });
 
 export class Slot extends Domain.Aggregate("Slot", {
