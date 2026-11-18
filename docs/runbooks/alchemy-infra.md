@@ -249,8 +249,12 @@ Rollback (decision "Cost controls cutover from Pulumi"):
     `AccountCostControls` URNs from BEFORE into the current export instead
     (the `jq` filter is in the decision): every current resource stays as it
     is, and the 13 are appended in BEFORE's order, so parents precede
-    children. Check for the current count plus 13, then import the spliced
-    file.
+    children. Check for the current count plus 13. Then run the reference
+    check (its `jq` filter is beside the splice filter in the decision):
+    every resource's `parent`, `dependencies`, `propertyDependencies` and the
+    URN part of `provider` must name a resource earlier in the spliced list.
+    It prints only the violation count; on any violation, stop and do not
+    import. Import the spliced file only at 0.
   - Either way: `pulumi refresh --target` the old budget and subscription
     URNs, which drops the destroyed pair from state; then `pulumi preview`
     and `pulumi up --target` them with `--target-dependents` (the preview
