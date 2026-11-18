@@ -9,6 +9,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Str from "effect/String";
@@ -45,6 +46,44 @@ it.layer(BashSpawner)("CiRunners packed post-install in bash", (it) => {
         ])
       );
       expect(output).toBe("sourced-into-this-shell|gone");
+    })
+  );
+});
+
+// The renderer's cleanup and trap shim, from the line that starts the queue to the shim's removal, run under bash with
+// `aws` stubbed: the post-install's EXIT handlers must all run, and termination must still follow.
+const trapHarness = (postInstall: string) => {
+  const snippet = O.getOrElse(
+    O.map(
+      O.fromNullishOr(/hook_exit_traps=\(\)[\s\S]*?unset -f trap/u.exec(userData(postInstall))),
+      (match) => match[0]
+    ),
+    () => "exit 7"
+  );
+  return `aws() { echo "aws $*"; }\ninstance_id=i-0test\nregion=us-east-1\n${snippet}\necho body-done\n`;
+};
+
+it.layer(BashSpawner)("CiRunners runner EXIT traps in bash", (it) => {
+  it.effect("runs every EXIT handler a post-install queues, even a failing one, then terminates the instance", () =>
+    Effect.gen(function* () {
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const run = (postInstall: string) =>
+        spawner.string(ChildProcess.make("bash", ["-e", "-c", trapHarness(postInstall)]));
+      const one = yield* run("trap 'echo hook-one' EXIT");
+      expect(Str.split("\n")(Str.trim(one))).toStrictEqual([
+        "body-done",
+        "hook-one",
+        "runner exited with status 0",
+        "aws ec2 terminate-instances --instance-ids i-0test --region us-east-1",
+      ]);
+      const two = yield* run("trap 'echo hook-one; false' EXIT\ntrap 'echo hook-two' EXIT");
+      expect(Str.split("\n")(Str.trim(two))).toStrictEqual([
+        "body-done",
+        "hook-one",
+        "hook-two",
+        "runner exited with status 0",
+        "aws ec2 terminate-instances --instance-ids i-0test --region us-east-1",
+      ]);
     })
   );
 });

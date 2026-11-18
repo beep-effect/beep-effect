@@ -36,13 +36,13 @@ describe("renderRunnerUserData", () => {
   });
 
   it("queues an EXIT trap the post-install sets, so it runs before termination instead of replacing it", () => {
-    // `trap` is shadowed only around the post-install, and cleanup runs the queued handlers first.
+    // `trap` is shadowed only around the post-install; cleanup runs each queued handler first (executed under bash in
+    // @beep/infra-ci-runners RunnerBootstrap.test).
     expect(
-      /trap cleanup EXIT\ntrap\(\) \{[^\n]*hook_exit_traps[^\n]*\}\n[\s\S]*echo post[\s\S]*\nunset -f trap\n/u.test(
+      /trap cleanup EXIT\ntrap\(\) \{[^\n]*hook_exit_traps\+=[^\n]*\}\n[\s\S]*echo post[\s\S]*\nunset -f trap\n/u.test(
         script
       )
     ).toBe(true);
-    expect(/cleanup\(\) \{\n {2}status=\$\?\n {2}eval "\$\{hook_exit_traps:-:\}" \|\| true/u.test(script)).toBe(true);
   });
 
   const failedStartTerminates = 'if [ "$status" -ne 0 ]; then aws ec2 terminate-instances';

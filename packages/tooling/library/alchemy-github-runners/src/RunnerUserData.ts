@@ -166,18 +166,19 @@ export const renderRunnerUserData = (input: RunnerUserDataInput): string => {
       'chown -R "$run_as":"$run_as" /opt/actions-runner /opt/hostedtoolcache',
       // The EXIT trap is installed before the post-install runs, so a post-install failure under `bash -e` still terminates the
       // instance. The post-install runs in this shell, so an EXIT trap it sets would replace this one: while it runs, `trap`
-      // is shadowed to queue EXIT handlers, which cleanup runs first, and the shadow is removed afterwards.
-      "hook_exit_traps=''",
+      // is shadowed to queue EXIT handlers in an array, which cleanup runs first, each on its own so one failing
+      // handler never skips the next, and the shadow is removed afterwards.
+      "hook_exit_traps=()",
       "cleanup() {",
       "  status=$?",
-      '  eval "${hook_exit_traps:-:}" || true',
+      '  for hook_exit_trap in ${hook_exit_traps[@]+"${hook_exit_traps[@]}"}; do eval "$hook_exit_trap" || true; done',
       '  echo "runner exited with status $status"',
       input.ephemeral
         ? '  aws ec2 terminate-instances --instance-ids "$instance_id" --region "$region" || true'
         : '  if [ "$status" -ne 0 ]; then aws ec2 terminate-instances --instance-ids "$instance_id" --region "$region" || true; fi',
       "}",
       "trap cleanup EXIT",
-      'trap() { if [ "$#" -ge 2 ] && [ "${!#}" = EXIT ]; then hook_exit_traps="$hook_exit_traps; $1"; else builtin trap "$@"; fi; }',
+      'trap() { if [ "$#" -ge 2 ] && [ "${!#}" = EXIT ]; then hook_exit_traps+=("$1"); else builtin trap "$@"; fi; }',
       input.postInstall,
       "unset -f trap",
       'config=""',
