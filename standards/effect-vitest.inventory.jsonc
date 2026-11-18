@@ -11120,6 +11120,28 @@
       "reason": "Real scoped files are needed for containment, mount-root resolution, issuer byte mutation and bounded report reads, while admission and subprocess execution are controlled doubles (goals/turborepo-task-qualification/research/test-resource-boundaries.md). Owner: @beep/repo-cli. Exit: retire when MemoryFileSystem models mount-root resolution and the supervisor cases move to it."
     },
     {
+      "id": "EV010:packages/tooling/tool/cli/test/check-probe.test.ts:5:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/check-probe.test.ts",
+      "line": 5,
+      "endLine": 5,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The probe reads real tsconfig and manifest files through the filesystem, and the entry-point cases spawn `bun run check` and the CLI binary in a scoped fixture, so the native filesystem and process spawner are the subject. Owner: @beep/repo-cli. Exit: retire when the entry-point cases move to a recorded spawner and MemoryFileSystem serves the tsconfig reads."
+    },
+    {
       "id": "EV010:packages/tooling/tool/cli/test/ci-binary-commands.test.ts:5:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",

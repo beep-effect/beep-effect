@@ -67,6 +67,7 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { isHeavyDocsOnlyPath } from "../Ci/CiOperational.schemas.ts";
 import { discoverEffectImportSourceFiles, EffectImportRulesOptions } from "../Laws/EffectImports.ts";
+import { checkPackageReferencesBuilt } from "./CheckProbe.ts";
 import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
 import { defaultJSDocTotalsBaselinePath } from "./internal/JSDocRatchet.ts";
 import { readJsonc } from "./internal/QualityArtifactSupport.ts";
@@ -178,6 +179,7 @@ import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
+import type { CheckProbeReadError, UnbuiltReferenceOutputs } from "./CheckProbe.ts";
 import type { CoverageSnapshotEntry } from "./internal/CoverageRegression.ts";
 import type { CoverageAffectedScope, CoverageBaselineRowDelta, CoverageScopeMode } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
@@ -5093,6 +5095,12 @@ const runPackageTask: (
       return;
     }
 
+    // `beep:check` runs `tsrs -p`, which prints one TS6305 per reference whose
+    // declarations are unbuilt; the filesystem probe prints one line instead.
+    if (QualityTaskName.is.check(invocation.task)) {
+      yield* checkPackageReferencesBuilt(packageDir);
+    }
+
     yield* runStep(
       QualityTaskStep.make({
         label: `${packageName} ${script}`,
@@ -5191,6 +5199,8 @@ type QualityTaskError =
   | QualityTaskConfigurationError
   | QualityTaskFailed
   | QualityTaskGroupFailed
+  | CheckProbeReadError
+  | UnbuiltReferenceOutputs
   | UnexpectedQualityTaskFailure;
 
 /**
@@ -5264,17 +5274,19 @@ const runQualityTaskInternal = Effect.fn("QualityTasks.runQualityTask")(function
   yield* pipe(
     packageDir,
     O.map((dir) => runPackageTask(dir, invocation)),
-    O.getOrElse(() => runRootTask(repoRoot, invocation))
+    O.getOrElse(() => provideQualityConcurrency(runRootTask(repoRoot, invocation)))
   );
 });
 
 /**
- * Run a quality task under one admission-aware concurrency plan.
+ * Run a quality task, a repo-root one under one admission-aware concurrency plan.
  *
  * **Details**
  *
- * The plan is resolved once per invocation; the planners fall back to the
- * unscaled local plan wherever the service is not provided (tests).
+ * A root task resolves the plan once per invocation; the planners fall back to
+ * the unscaled local plan wherever the service is not provided (tests). A
+ * package-local task runs one package script and reads no plan, so it resolves
+ * none and prints no admission note.
  *
  * **Example** (Run a quality task)
  *
@@ -5285,14 +5297,13 @@ const runQualityTaskInternal = Effect.fn("QualityTasks.runQualityTask")(function
  * ```
  *
  * @param invocation - Parsed quality task invocation.
- * @returns The task run under the live concurrency plan.
+ * @returns The task run; a root task under the live concurrency plan.
  * @category use-cases
  * @since 0.0.0
  */
-export const runQualityTask = (
+export const runQualityTask: (
   invocation: QualityTaskInvocation
-): Effect.Effect<void, QualityTaskError, QualityTaskEnvironment> =>
-  provideQualityConcurrency(runQualityTaskInternal(invocation));
+) => Effect.Effect<void, QualityTaskError, QualityTaskEnvironment> = runQualityTaskInternal;
 
 /**
  * Run a quality task directly from a raw argv vector.
