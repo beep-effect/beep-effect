@@ -61,7 +61,8 @@ enumerates:
 ## Non-Goals
 
 - No new audit rules, schemas, or gate wiring — those belong to
-  `slice-topology-audit`; if a codemod reveals a missing rule, file it there.
+  `model-first-standard` (it superseded `slice-topology-audit` on 2026-11-17); if a
+  codemod reveals a missing rule, file it there.
 - No return to v3 architecture (no domain-tier protocols, no entity cluster
   kit, no per-operation client folders, no `<C>Live` namespace prefixes, no
   `Account.AccountErrors`-style concept-in-member names).
@@ -76,7 +77,7 @@ enumerates:
 2. `AGENTS.md`, `CLAUDE.md`, and required skills (`schema-first-development`,
    `effect-first-development`, `yeet`).
 3. Governing architecture/package standards as amended by
-   `slice-topology-audit`.
+   `model-first-standard` (it superseded `slice-topology-audit` on 2026-11-17).
 4. This `SPEC.md`.
 5. `PLAN.md`.
 6. `GOAL.md`.
