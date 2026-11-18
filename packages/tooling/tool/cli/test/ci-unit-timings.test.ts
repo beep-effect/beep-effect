@@ -115,6 +115,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
       );
       yield* write(".beep/ci-coverage/unit-a/manifest.json", {
         schemaVersion: "coverage-producer/v1",
+        identity: { runId: "7", runAttempt: 1 },
         packages: [
           selection("@beep/a", "packages/a", ["packages/a/test/one.test.ts", "packages/a/test/two.test.ts"]),
           selection("@beep/b", "packages/b", ["packages/b/test/bun.test.ts"]),
@@ -185,6 +186,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
       const { root, write } = yield* workspace([["@beep/a", "packages/a"]]);
       yield* write(".beep/ci-coverage/unit-a/manifest.json", {
         schemaVersion: "coverage-producer/v1",
+        identity: { runId: "7", runAttempt: 1 },
         packages: [selection("@beep/a", "packages/a", ["packages/a/test/one.test.ts"])],
       });
       const projection = yield* projectUnitTimings(root, options("unit-a"));
@@ -194,6 +196,29 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("ci unit-timings", (it) 
       );
       const push = yield* Effect.fromOption(A.head(unitTimingCensus([projection])));
       deepStrictEqual([push.expectedTestFiles, push.unmatched], [1, ["7:@beep/a:0"]]);
+    })
+  );
+
+  it.effect("a manifest an earlier attempt left in the workspace does not seal this attempt", () =>
+    Effect.gen(function* () {
+      const { root, write } = yield* workspace([["@beep/a", "packages/a"]]);
+      yield* write(
+        "packages/a/coverage/unit-results.json",
+        report(root, false, [{ file: "packages/a/test/one.test.ts", start: 0, end: 10, tests: 1 }])
+      );
+      yield* write(".beep/ci-coverage/unit-a/manifest.json", {
+        schemaVersion: "coverage-producer/v1",
+        identity: { runId: "7", runAttempt: 1 },
+        packages: [selection("@beep/a", "packages/a", ["packages/a/test/one.test.ts"])],
+      });
+      const projection = yield* projectUnitTimings(
+        root,
+        UnitTimingOptions.make({ ...options("unit-a"), runAttempt: O.some(2) })
+      );
+      strictEqual(projection.sealed, false);
+      const row = yield* Effect.fromOption(A.head(projection.packages));
+      deepStrictEqual([row.outcome, row.executedTestFiles], ["failed", 1]);
+      assertNone(row.expectedTestFiles);
     })
   );
 

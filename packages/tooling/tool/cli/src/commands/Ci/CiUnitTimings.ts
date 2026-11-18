@@ -74,6 +74,7 @@ const ManifestSelection = CoverageProducerPackage.mapFields((fields) => ({
 }));
 const ManifestView = S.Struct({
   schemaVersion: CoverageProducerManifest.fields.schemaVersion,
+  identity: S.Struct({ runId: S.NonEmptyString, runAttempt: S.Int }),
   packages: S.Array(S.Struct({ selection: ManifestSelection })),
 }).pipe(
   $I.annoteSchema("ManifestView", {
@@ -249,14 +250,19 @@ const packageRow = Effect.fnUntraced(function* (
 });
 
 // The selections the partition's sealed manifest names, keyed by report path; none when the producer sealed
-// nothing (a red shard).
+// nothing (a red shard), or when the manifest is stamped for another run or attempt (a workspace a self-hosted
+// runner kept), so an earlier attempt's selection never reads as this attempt's.
+const isOtherAttempt = (identity: (typeof ManifestView.Type)["identity"], options: UnitTimingOptions): boolean =>
+  O.exists(options.runId, (runId) => identity.runId !== `${runId}`) ||
+  O.exists(options.runAttempt, (attempt) => identity.runAttempt !== attempt);
+
 const manifestSelections = Effect.fnUntraced(function* (
   repoRoot: string,
-  coverageOutput: string
+  options: UnitTimingOptions
 ): Effect.fn.Return<O.Option<HashMap.HashMap<string, Selection>>, CiCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const manifestPath = path.join(path.resolve(repoRoot, coverageOutput), "manifest.json");
+  const manifestPath = path.join(path.resolve(repoRoot, options.coverageOutput), "manifest.json");
   if (!(yield* fs.exists(manifestPath).pipe(CiCommandError.mapError("Failed to stat the coverage manifest.")))) {
     return O.none();
   }
@@ -266,6 +272,9 @@ const manifestSelections = Effect.fnUntraced(function* (
   const manifest = yield* decodeManifest(text).pipe(
     CiCommandError.mapError(`${path.relative(repoRoot, manifestPath)} is not a coverage-producer/v1 manifest.`)
   );
+  if (isOtherAttempt(manifest.identity, options)) {
+    return O.none();
+  }
   return O.some(
     HashMap.fromIterable(
       A.map(manifest.packages, (entry): readonly [string, Selection] => {
@@ -330,7 +339,7 @@ export const projectUnitTimings = Effect.fn("CiUnitTimings.project")(function* (
     ([name, workspace]) => workspaceReports(repoRoot, name, workspace.dir),
     { concurrency: 8 }
   ).pipe(Effect.map(A.flatten));
-  const selections = yield* manifestSelections(repoRoot, options.coverageOutput);
+  const selections = yield* manifestSelections(repoRoot, options);
   const selected = O.getOrElse(selections, HashMap.empty<string, Selection>);
   const onDisk = HashMap.fromIterable(A.map(located, (location) => [location.reportPath, location] as const));
   const unreported = A.filter(HashMap.toValues(selected), (entry) => !HashMap.has(onDisk, entry.location.reportPath));
