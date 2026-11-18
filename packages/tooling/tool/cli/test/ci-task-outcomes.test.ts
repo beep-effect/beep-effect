@@ -3,6 +3,7 @@
 // `HostedJob.tasks` from them. A seeded failing task is a `task` red, a seeded setup failure (no record) a
 // `setup` red, and the captured rows decode under `route-corpus/v1`.
 
+import { fcRuns } from "@beep/fc-runs";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { Repo } from "@beep/github/Repo";
 import { RetryPolicy } from "@beep/github/Resilience";
@@ -20,7 +21,8 @@ import { layerGithubRest } from "@beep/repo-cli/test/SharedInternals";
 import { provideScopedLayer } from "@beep/test-utils/Layer";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
-import { deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import { assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as DateTime from "effect/DateTime";
@@ -72,6 +74,22 @@ const record = (job: string, tasks: ReadonlyArray<readonly [string, HostedTaskOu
     runAttempt: O.some(1),
     tasks: A.map(tasks, ([task, outcome]) => HostedTaskOutcome.make({ task, outcome })),
   });
+
+// The record is the wire shape the capture decodes from an artifact, so every value the schema admits must
+// survive its JSON codec unchanged.
+const sameRecord = S.toEquivalence(TaskOutcomeRecord);
+it.effect.prop(
+  "generated task-outcome records round-trip through the record codec",
+  [Arbitrary.schema(TaskOutcomeRecord)],
+  Effect.fnUntraced(function* ([generated]) {
+    const text = yield* encodeRecord(generated);
+    const decoded = yield* decodeRecord(text);
+    assertTrue(sameRecord(decoded, generated));
+    const again = yield* encodeRecord(decoded);
+    strictEqual(again, text);
+  }),
+  { arbitrary: fcRuns(50) }
+);
 
 it.effect("maps exit codes to outcomes and keeps the strongest evidence across summaries", () =>
   Effect.sync(() => {

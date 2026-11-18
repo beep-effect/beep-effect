@@ -322,6 +322,10 @@ const TaskOutcomeRead = S.Struct({ requests: S.Int, records: S.Array(TaskOutcome
 );
 const decodeTaskOutcomeRead = S.decodeUnknownEffect(S.fromJsonString(TaskOutcomeRead));
 
+// The task-outcome reads a continued capture carries from its receipt; a window started again counts afresh.
+const carriedReads = (loaded: RouteCorpusLoaded, kept: boolean): number =>
+  kept ? O.getOrElse(loaded.receipt.taskOutcomeReads, () => 0) : 0;
+
 // A fetched run and the GitHub requests its task-outcome records cost.
 type FetchedRun = { readonly run: HostedRun; readonly reads: number };
 
@@ -1001,7 +1005,7 @@ export const makeRouteCorpus = Effect.fn("RouteCorpus.make")(function* (
           pinned: A.every(loaded.value.runs, inWindow) ? O.some(loaded.value.receipt.sha256) : O.none(),
           covered: "",
           open: true,
-          reads: A.every(loaded.value.runs, inWindow) ? O.getOrElse(loaded.value.receipt.taskOutcomeReads, () => 0) : 0,
+          reads: carriedReads(loaded.value, A.every(loaded.value.runs, inWindow)),
         }
       : (yield* exists(corpusPath))
         ? yield* readExisting(corpusPath)
