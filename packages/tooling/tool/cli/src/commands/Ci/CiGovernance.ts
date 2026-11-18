@@ -631,9 +631,7 @@ const withClient = Effect.fn("CiGovernance.withClient")(function* <V, E, R>(
   effect: Effect.Effect<V, E, R | GithubPolicyClient>
 ) {
   const root = yield* findRepoRoot();
-  return yield* Effect.scoped(
-    Effect.flatMap(makeClient(root), (client) => effect.pipe(Effect.provideService(GithubPolicyClient, client)))
-  );
+  return yield* Effect.scoped(effect.pipe(Effect.provideServiceEffect(GithubPolicyClient, makeClient(root))));
 });
 const snapshotPath = "standards/branch-protection-contexts.json";
 const ciRulesetCommand = Command.make(
