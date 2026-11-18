@@ -1,6 +1,6 @@
 # @beep/runpod
 
-Effect-first Runpod REST API v1 driver package.
+Effect-first Runpod REST API v2 driver package (`https://api.runpod.io/v2`).
 
 ## Installation
 
@@ -13,11 +13,18 @@ bun add @beep/runpod
 ```ts
 import * as Effect from "effect/Effect";
 import * as Redacted from "effect/Redacted";
-import { Runpod, RunpodConfigInput } from "@beep/runpod"
+import * as Stream from "effect/Stream";
+import { ListPodsParams, PodActionParams, Runpod, RunpodConfigInput } from "@beep/runpod"
 
 const program = Effect.gen(function* () {
   const runpod = yield* Runpod
-  return yield* runpod.listPods()
+  // One page: `{ pods, pagination }`.
+  const page = yield* runpod.listPods(ListPodsParams.make({ limit: 100 }))
+  // Every pod, following `pagination.nextCursor`.
+  const pods = yield* Stream.runCollect(runpod.listPodsStream())
+  // Pod lifecycle goes through one action endpoint.
+  yield* runpod.podAction(PodActionParams.make({ id: "pod-id", body: { action: "stop" } }))
+  return { page, pods }
 })
 
 const layer = Runpod.makeLayer(
@@ -30,13 +37,27 @@ void program
 void layer
 ```
 
-The package exposes generated request/response models for all operations in the
-checked-in Runpod OpenAPI document, plus `Runpod.raw(...)` for ahead-of-spec REST
-paths and `RunpodDocs.fetchIndex` for `https://docs.runpod.io/llms.txt`.
+Every operation in the checked-in Runpod OpenAPI document is a method on
+`Runpod` that takes its `<Operation>Params` request. Each cursor-paginated list
+also gets a `<method>Stream` member, and the Pod and Serverless worker log
+operations return a `Stream` of Server-Sent Events. Failures are typed
+`RunpodError` values; a rejected request carries the RFC 9457 `problem` with
+its validation `errors`. Request bodies are closed. An object literal passed to
+`<Operation>Params.make` with an unknown field, such as a v1 name, is a type
+error; like every Effect Schema constructor, `make` drops unknown keys at
+runtime. A request that reaches the driver with one anyway (a JavaScript caller
+writing onto a constructed body) fails as a `request encoding` error before
+anything is sent, instead of going out without it. `Runpod.raw(...)` reaches
+ahead-of-spec paths relative to the v2 base URL, and `RunpodDocs.fetchIndex` reads
+`https://docs.runpod.io/llms.txt`.
 
 ## Development
 
 ```bash
+# Regenerate from openapi.json, then prove no drift
+bun run generate
+bun run generate:check
+
 # Build
 bun run build
 
@@ -53,7 +74,7 @@ bun run test:integration
 bun run lint:fix
 ```
 
-Unit tests stay outside `test/integration`; package integration tests live under `test/integration` and use `bun run test:integration`. Tests import package source through `@beep/runpod` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
+Unit tests stay outside `test/integration`; package integration tests live under `test/integration` and use `bun run test:integration`. The live suite fetches the public OpenAPI document and lists pods only when `RUNPOD_API_KEY` holds a resolved key. Tests import package source through `@beep/runpod` or other `@beep/*` aliases. Use relative imports only for local helpers, fixtures, and snapshots.
 
 ## License
 
