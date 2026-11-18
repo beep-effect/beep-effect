@@ -14,6 +14,7 @@ import {
   WriteFileOperation,
   WritePackageJsonOperation,
 } from "@beep/repo-cli/commands/Architecture";
+import { registerScaffoldedWorkspaceEntries } from "@beep/repo-cli/commands/CreatePackage";
 import { TsconfigSyncPlan } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan";
 import { runCapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import { workspaceDependencyGraph } from "@beep/repo-cli-kit/RepoWorkspaces";
@@ -45,6 +46,7 @@ const ManifestExports = S.Struct({
   scripts: S.Record(S.String, S.String),
 });
 const decodeManifestExports = S.decodeUnknownEffect(S.fromJsonString(ManifestExports));
+const decodeRootWorkspaces = S.decodeUnknownEffect(S.fromJsonString(S.Struct({ workspaces: S.Array(S.String) })));
 
 const platform = Layer.mergeAll(NodeServices.layer, NodeCrypto.layer);
 const TestLayer = Layer.mergeAll(
@@ -332,6 +334,52 @@ describe("beep architecture: model-first context", () => {
         expect(modelTests.exitCode).toBe(0);
         expect(`${modelTests.stdout}${modelTests.stderr}`).toContain("2 passed (2)");
         expect(`${modelTests.stdout}${modelTests.stderr}`).toContain("4 passed (4)");
+      })
+    );
+  });
+
+  layer(TestLayer, { timeout: "60 seconds" })((it) => {
+    it.effect(
+      "registers all three generated packages as workspaces with identity composers",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* repoRoot;
+        const tmpRoot = path.join(root, "packages/tooling/tool/cli/tmp");
+        yield* fs.makeDirectory(tmpRoot, { recursive: true });
+        // A disposable checkout: a root manifest, the identity workspace and its
+        // registry, and nothing the registration is meant to write.
+        const checkout = yield* fs.makeTempDirectoryScoped({ directory: tmpRoot, prefix: "model-first-registration-" });
+        const identity = "packages/foundation/modeling/identity";
+        const rootManifest = yield* jsonStringifyPretty({
+          name: "registration-proof",
+          private: true,
+          workspaces: [identity],
+        });
+        yield* fs.writeFileString(path.join(checkout, "package.json"), rootManifest);
+        yield* fs.makeDirectory(path.join(checkout, identity, "src"), { recursive: true });
+        for (const file of ["package.json", "src/packages.ts"]) {
+          yield* fs.copyFile(path.join(root, identity, file), path.join(checkout, identity, file));
+        }
+
+        const plan = yield* notesPlan;
+        yield* applyCanonicalSliceOperationPlan(checkout, plan);
+        const packagePaths = A.map(plan.roles, (role) => role.path);
+        const registered = yield* registerScaffoldedWorkspaceEntries(checkout, packagePaths);
+
+        expect(registered.addedWorkspaces).toEqual(packagePaths);
+        expect(sorted(registered.registeredSlugs)).toEqual(["notes-contract", "notes-host", "notes-model"]);
+        const manifest = yield* fs.readFileString(path.join(checkout, "package.json"));
+        const workspaces = yield* decodeRootWorkspaces(manifest);
+        expect(workspaces.workspaces).toEqual([identity, ...packagePaths]);
+        const registry = yield* fs.readFileString(path.join(checkout, identity, "src/packages.ts"));
+        for (const composer of ["$NotesContractId", "$NotesModelId", "$NotesHostId"]) {
+          expect(pipe(registry, Str.includes(`export const ${composer}`))).toBe(true);
+        }
+        // Registration is idempotent: a second pass adds nothing.
+        const again = yield* registerScaffoldedWorkspaceEntries(checkout, packagePaths);
+        expect(again.addedWorkspaces).toEqual([]);
+        expect(again.registeredSlugs).toEqual([]);
       })
     );
   });

@@ -1108,6 +1108,42 @@ const refreshBunLockfile = Effect.fn("CreatePackage.refreshBunLockfile")(functio
 });
 
 /**
+ * Add root workspace entries and identity composers for package directories
+ * another scaffolder already wrote: the registration half of
+ * {@link registerScaffoldedWorkspaces}, without the tsconfig sync and the
+ * lockfile refresh.
+ *
+ * **Example** (Register the entries of a generated context)
+ *
+ * ```ts
+ * import { registerScaffoldedWorkspaceEntries } from "@beep/repo-cli/commands/CreatePackage"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = registerScaffoldedWorkspaceEntries("/repo", ["packages/notes/contract"])
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param repoRoot - Absolute repository root.
+ * @param packagePaths - Repo-relative package directories to register.
+ * @returns The workspace paths added and the identity slugs registered.
+ * @effects Edits the root manifest and the identity registry.
+ * @internal
+ * @category utilities
+ * @since 0.0.0
+ */
+export const registerScaffoldedWorkspaceEntries = Effect.fn("CreatePackage.registerScaffoldedWorkspaceEntries")(
+  function* (repoRoot: string, packagePaths: ReadonlyArray<string>) {
+    const addedWorkspaces: Array<string> = [];
+    for (const packagePath of packagePaths) {
+      const added = yield* ensureRootWorkspaceEntry(repoRoot, packagePath);
+      if (added) A.appendInPlace(addedWorkspaces, packagePath);
+    }
+    const registeredSlugs = yield* registerMissingWorkspaceIdentityPackages(repoRoot);
+    return { addedWorkspaces, registeredSlugs } as const;
+  }
+);
+
+/**
  * Register package directories another scaffolder already wrote, the way
  * `create-package` registers its own: root workspace entries, identity
  * composers, the shared tsconfig and alias sync, and a `bun.lock` refresh.
@@ -1140,12 +1176,7 @@ export const registerScaffoldedWorkspaces = Effect.fn("CreatePackage.registerSca
   repoRoot: string,
   packagePaths: ReadonlyArray<string>
 ) {
-  const addedWorkspaces: Array<string> = [];
-  for (const packagePath of packagePaths) {
-    const added = yield* ensureRootWorkspaceEntry(repoRoot, packagePath);
-    if (added) A.appendInPlace(addedWorkspaces, packagePath);
-  }
-  const registeredSlugs = yield* registerMissingWorkspaceIdentityPackages(repoRoot);
+  const registered = yield* registerScaffoldedWorkspaceEntries(repoRoot, packagePaths);
   yield* syncTsconfigAtRoot(
     repoRoot,
     TsconfigSyncRunOptionsSync.make({
@@ -1155,7 +1186,7 @@ export const registerScaffoldedWorkspaces = Effect.fn("CreatePackage.registerSca
     })
   );
   yield* refreshBunLockfile(repoRoot);
-  return { addedWorkspaces, registeredSlugs } as const;
+  return registered;
 });
 
 // ── Command ───────────────────────────────────────────────────────────────────
