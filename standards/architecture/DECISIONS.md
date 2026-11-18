@@ -5,7 +5,8 @@ standard. Amend this file when the standard changes.
 
 ## 2026-04-21: Adopt Hexagonal Vertical Slice Architecture
 
-- **Status:** Active
+- **Status:** Active, amended by 2026-11-18 "Slices Are Model-First Bounded
+  Contexts In Four Packages": the seven-package family is the legacy shape
 
 Decision:
 
@@ -2541,7 +2542,9 @@ Rejected:
 
 ## 2026-11-06: Slices Adopt `@alchemy.run/domain`; The Entity Kit Is Frozen
 
-- **Status:** Active
+- **Status:** Active, amended by 2026-11-18 "Slices Are Model-First Bounded
+  Contexts In Four Packages": its placement table binds legacy seven-package
+  slices only
 - **Amends:** "CQRS, Events, Workflows, Cluster, And Read Models" and the
   domain/use-case/server role vocabularies in `standards/ARCHITECTURE.md`
 
@@ -2661,3 +2664,102 @@ Rejected:
   S11 exception holds down.
 - Running S11 and a queue together. A bypass merge moves the base under every
   group being built.
+
+## 2026-11-18: Slices Are Model-First Bounded Contexts In Four Packages
+
+- **Status:** Active
+- **Amends:** 2026-04-21 "Adopt Hexagonal Vertical Slice Architecture" and
+  2026-11-06 "Slices Adopt `@alchemy.run/domain`; The Entity Kit Is Frozen"
+- **Amends:** "North Star", "Slice Package Topology" (now "Model-First Slice
+  Topology" and "Legacy Seven-Package Slice Topology"), "Slice Consumption
+  Rules", "CQRS, Events, Workflows, Cluster, And Read Models" and "Enforcement
+  And Migration Posture" in `standards/ARCHITECTURE.md`
+
+Decision:
+
+A slice is a bounded context with one `Domain.Model` by default; a second Model
+is allowed only for an independent event lifecycle or storage placement. It
+ships as four packages, one per dependency closure: `contract`, `model`, `host`
+and `web` (`web` only when the context has screens). The contract holds the
+aggregate-free declarations and its client Apis as `Domain.Api` over an
+aggregate-free catalog, with a parity test against the model's Api; views and
+queries are declared a second time for the contract until upstream splits the
+Api from the model. Declarations are `<Module>/<Noun>.<kind>.ts`, with
+`.handler.ts` and `.adapter.ts` implementations, Module folders, one primary
+export per file, exact package exports and a generated handler registry.
+
+Contexts exchange versioned integration facts: a model-level projection over
+aggregate events writes a pinned published stream with generations, the host
+serves it as a feed, and the consumer keeps an inbox. Publishers drain before a
+handover, fact versions and closed generations retire only under the checked
+rules, and synchronous calls go through a consumer-declared port over the
+provider's gateway contract. Stored formats convert on read, saga activity
+results included. Only the `authority` context builds an `Invocation`; events
+store provenance and each hop is re-admitted from live grants. A generated
+proof inventory lists every invariant with its checker, and semantic questions
+go to an independent reviewer.
+
+Effect Cluster on Postgres is the first host. The monorepo carries the library
+fixes it needs as root patches until an Alchemy release includes them, and
+`@beep/alchemy-postgres` remains until then.
+
+Seven-package slices stay legal as the legacy shape until their own migration.
+No new slice migration to `@alchemy.run/domain` starts on the seven-package
+shape. New checkers start from a day-one baseline of today's violations and
+only ratchet down; there is no mass rewrite.
+
+The nine rows `explorations/v3-consistency-audit/DECISIONS.md` deferred to
+`goals/slice-topology-audit` (superseded by `goals/model-first-standard`) are
+settled against the four-package shape:
+
+| Row | Settled |
+| --- | --- |
+| `dir:package-shell-skeleton` | The shell `bun run beep create-package` emits is the package skeleton law for all four packages; the required-files rule lands with the checkers. |
+| `BN-19` | The source export map is the truth and the publish mirror is derived; exact exports make it one entry per entry point. |
+| `tests:coverage-ratio-by-tier` | Not a topology rule; it stays with the coverage ratchet. |
+| `tests:typecheck-covers-test-tree` | Every package with tests type-checks its test tree, model-first and legacy alike. |
+| `BN-12` (`<Concept>/server.ts`, `worker.ts` shims) | Not admitted in a model-first context, where the runtime split is the package line (`host`, `web`) and exact exports; legacy slices keep them under the baseline. |
+| `BN-14` (`.ts` specifiers) | Codified; no new gate. |
+| `BN-15` (root barrel) | A package's root entry, where it has one, is a pure re-export. |
+| lab `WorkItem.client.ts` | Superseded: a model-first context has no client package; its web package uses bindings generated from the contract. The lab keeps its file until its own migration. |
+| lab `WorkItem.view-model.ts` | Not admitted: a screen's state is a `.machine.ts` with a `.controller.ts`. The lab keeps its file until its own migration. |
+
+The member-vocabulary and contract sub-choices ratified on 2026-08-30 in that
+packet (`Repo`, bare values, the `Client` member, the `Contract` kit,
+`contracts/` and `handlers/` sub-folders) describe the seven-package grammar
+and bind legacy slices only.
+
+Rationale:
+
+The grilled decisions D1 to D66 in
+`explorations/model-first-slices/DECISIONS.md`, the shaped brief confirmed by
+the operator (`explorations/model-first-slices/BRIEF.md`, D59), and the
+prototype in `scratchpad/model-first-slices/`, which proved the shape in memory
+(196 tests, 109 of 109 declared command outcomes executed, a proof inventory of
+41 entries, zero Effect diagnostics) and passed the conformance suite on a
+two-runner Effect Cluster with Postgres on one build, restore and a real upgrade
+included (D53). The one slice built on `@alchemy.run/domain` since 2026-11-06
+showed the seven-package slice and the library pulling against each other: a
+whole model inside one aggregate folder, handlers and ports moved away from the
+placement table twice, and a repo-owned Postgres platform duplicating hosting
+upstream ships. A package exists for one dependency closure, and the public
+contract's closure is smaller than the write model's (D3). The binding entries
+are D2, D3, D5, D8, D9 as amended, D10 to D13, D17, D22, D24, D27, D33 to D35,
+D39 to D43, D45, D47, D49 to D51, D53 to D55 and D61. The operator set the
+appetite as the standard plus one real slice (D60) and named `authority` the
+first slice (D63). Graduated into `goals/model-first-standard`,
+`goals/effect-cluster-host` and `goals/authority-context` (D66).
+
+Rejected:
+
+- One bounded context equals exactly one `Domain.Model` (D2).
+- The model as the client SDK, or a contract-only client with no
+  `Aggregate.predict` (D3).
+- A hand-authored contract `RpcGroup` for good: it loses the typed nested
+  client (D9).
+- Keeping `.live.ts`, kind folders or wildcard exports (D10).
+- Consumers following the producer's private events or internal streams, and a
+  host-owned outbox table (D11, D33).
+- Rewriting stored events, or widen-only schemas (D22).
+- Retiring `@beep/alchemy-postgres` on fixes carried in the monorepo (D53, D61).
+- Migrating every slice in one change (D17).

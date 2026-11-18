@@ -1,6 +1,6 @@
 # 13 — Onboarding the minimum viable slice
 
-The fastest way into the architecture: the smallest legal slice, the smallest legal cross-slice promotion, and a 60-second guide to reading any slice path.
+The fastest way into the architecture: the smallest legal model-first slice, the first fact another context reads, and a 60-second guide to reading any slice path. Decision numbers cite `explorations/model-first-slices/DECISIONS.md`.
 
 ## 1. Before a legal slice: the scratchpad lane
 
@@ -20,145 +20,185 @@ Use the scratchpad lane to learn. Use slice packages to commit.
 
 ## 2. The smallest legal slice
 
-A legal slice can be three packages. The drawing below names 13 files for a `notes` slice with a single `Note` aggregate: model, errors, two barrels, commands, queries, ports, service, repository, HTTP handlers, the server layer, and the use-cases and server manifests. It does not draw the domain manifest, the test files, or the files inside `public/` and `server/`. The architecture lab built from this shape is 7 packages and 168 tracked files (68 under `src/`), counted with `git ls-files packages/architecture-lab` on 2026-09-22. A new slice starts from the drawing. `client`, `tables`, `config`, and `ui` appear in the lab because those packages had a reason; they are not part of the minimum.
+A slice is a bounded context with one `Domain.Model` by default, shipped as packages that
+each hold one dependency closure. The smallest legal slice is three packages:
+`contract`, `model` and `host`. `web` joins when the context has a screen. The
+drawing names the files of a `notes` context with a single `Note` aggregate and
+one view. It does not draw the package manifests' other fields, the README or
+the tsconfig files.
 
 ```txt
 packages/notes/
-  domain/
-    src/
-      aggregates/Note/
-        Note.model.ts        # schema-first class: identity + shape + tiny Effect.fn behavior
-        Note.errors.ts       # actionable domain errors (S.TaggedError)
-        index.ts             # public exports for the Note aggregate
-      index.ts               # package barrel
-  use-cases/
+  contract/                         @beep/notes-contract
     src/
       Note/
-        Note.commands.ts     # command schemas (intent shapes only)
-        Note.queries.ts      # query schemas (read-side intent shapes)
-        Note.ports.ts        # port interfaces, e.g. NoteRepository (Context.Service)
-        Note.service.ts      # use-case service composing ports + domain
-      public/                # client-safe re-exports: commands, queries, errors
-      server/                # server-only re-exports: ports, service interfaces
-    package.json             # exports map: ".", "./public", "./server", "./test"
-  server/
+        Note.id.ts                  the branded NoteId
+        CreateNote.command.ts       CreateNote, the NoteCreated event it records, its private rejection
+        RenameNote.command.ts       RenameNote, NoteRenamed, NoteArchived rejection
+        NoteSummary.read.ts         the view's read contract, declared a second time for clients
+      Notes.catalog.ts              the aggregate-free catalog the client Api is declared over
+      Notes.capabilities.ts         the operations a grant can name
+      NotesApi.contract.ts          Domain.Api over the catalog: the typed client
+    test/
+      Contract.imports.test.ts      the closure reaches no model, host or handler
+    package.json                    exact exports, one per entry point
+  model/                            @beep/notes-model
     src/
       Note/
-        Note.repo.ts         # NoteRepository live implementation
-        Note.http-handlers.ts # HTTP wiring for the Note concept
-      Layer.ts               # composes the slice's live Layer
-    package.json             # exports map: ".", "./layer", "./test"
+        Note.aggregate.ts           state union, decide, evolve, reply
+        NoteSummary.view.ts         the read model
+        NoteSummary.handler.ts      its implementation
+      Notes.model.ts                the context's Domain.Model
+      Notes.handlers.ts             generated from the Model, checked for drift, never edited
+      Notes.ports.ts                the ports union and the purity assertion
+      NotesApi.api.ts               the model's Api, the one the contract is compared with
+    test/
+      Notes.story.test.ts           stories on Domain.InMemory, one per behaviour
+      Api.parity.test.ts            the contract Api's group equals the model Api's
+    package.json
+  host/                             @beep/notes-host
+    src/
+      NotesApi.http.ts              the HTTP surface, with an explicit expose list
+      Adapters.ts                   every port implementation as one Layer (none yet)
+      Host.ts                       hosts the Model on the platform it is given
+      Notes.cluster.ts              what the context runs on a pool
+      Notes.descriptor.ts           the deployment descriptor, as data
+    package.json
 ```
 
 What each file owns, in one or two sentences:
 
-- `Note.model.ts` — the schema-first class. Identity, shape, and small pure behavior live here; nothing that needs a Layer.
-- `Note.errors.ts` — classes extending `S.TaggedError` for failure modes the use-cases and server may raise.
-- `Note.commands.ts` / `Note.queries.ts` — schemas for intent. They describe what the caller is asking for, not how it is executed.
-- `Note.ports.ts` — port declarations only. The use-cases package defines what a `NoteRepository` looks like; it does not implement one.
-- `Note.service.ts` — the use-case service. It depends on ports and domain values, and is the only thing the server-side Layer needs to wire.
-- `Note.repo.ts` — the live `NoteRepository`. Implementation lives in `server` because adapters are server-side.
-- `Note.http-handlers.ts` — HTTP wiring: schema-validated request decoding into use-case calls.
-- `server/src/Layer.ts` — composes the slice's live `Layer`, exported through the package's `layer` subpath export.
+- `Note.id.ts` — the branded id. Every package names a note through it.
+- `CreateNote.command.ts` — a complete decision record: the command, the events
+  it records and the rejections only it returns. The command names its events
+  and rejections before any `decide` exists.
+- `NoteSummary.read.ts` — the read contract a client subscribes to. It repeats
+  the view's read side until upstream splits the Api from the model.
+- `Notes.catalog.ts` / `NotesApi.contract.ts` — the client Api is a
+  `Domain.Api` over a catalog that holds commands, read contracts and queries
+  and no aggregate, so a browser or another context imports the typed client
+  without the write model.
+- `Note.aggregate.ts` — the consistency boundary. Rules live in `decide`; time
+  arrives as an argument, never from a clock. The aggregate does not type-check
+  until it handles every event and rejection its commands declare.
+- `NoteSummary.handler.ts` — the implementation beside its declaration. The
+  generated `Notes.handlers.ts` collects every handler the Model needs.
+- `Notes.ports.ts` — the type that fails when a handler requires a service the
+  model never declared. This context has no port yet, so it asserts none
+  leaked.
+- `Host.ts`, `Notes.cluster.ts`, `Notes.descriptor.ts` — the host is the only
+  package that knows how the context runs. The descriptor names the Model and
+  its processes; an app composes descriptors onto pools and generates the
+  cluster entry modules.
 
-> `domain` has no `Layer` because it has no live services. `use-cases` defines ports but never implements them. `server` is the only package that knows how the slice runs.
+> The contract has no Layer and no aggregate. The model has Layers only for its
+> handlers and declares every outside service as a port. The host is the only
+> package that resolves a driver.
 
-The slice's tests run with the slice's `Layer` only — no app-wide composition, no driver indirection. That is the whole point of slice-local Layers (see `05-layer-composition.md`).
+The stories run on `Domain.InMemory` with the model alone: no host, no
+database. A story fails on any event, rejection or external call it does not
+account for, and coverage counts the declared outcomes that executed.
 
-## 3. Adding the first cross-slice export
+`bun run beep architecture` will generate this shape through
+`bun run beep create-package` once `goals/model-first-standard` retargets it
+(P1 step 2); until then it emits only the legacy shape, so do not use it for a
+new context. Once it does, do not hand-author the packages.
 
-A second slice (`tasks`) needs to attach tasks to notes. It needs `NoteId` to
-reference a note and a `NoteCreated` event to react to new notes. The `notes`
-slice owner promotes both into the existing `shared/use-cases` package. One PR.
-One promotion record per export. The existing
-[PromotionGate record](../../packages/shared/use-cases/README.md) does not
-authorize unrelated exports; the notes contracts need their own accepted records.
+## 3. Adding the first fact another context reads
 
-After promotion, the exports land at canonical paths under `shared/use-cases`:
+A second context (`tasks`) needs to attach tasks to notes. It needs `NoteId` to
+reference a note and a signal that a note now exists. Nothing moves to
+`shared/*`; the `notes` context publishes, and `tasks` reads.
+
+In `notes`:
 
 ```txt
-packages/shared/use-cases/src/
-  notes/
-    NoteId.ts                # value-object schema, driver-neutral
-    events/NoteCreated.ts    # event schema, contract-only
-  public/                    # re-exports: NoteId, NoteCreated
+packages/notes/
+  contract/src/Facts/
+    NoteOpened.fact.ts              NoteOpenedV1: the fact other contexts may rely on
+    NotesFacts.gateway.ts           the feed a consumer reads
+  model/src/Facts/
+    NoteOpenings.projection.ts      reads Note events directly; writes the published stream
+    NoteOpenings.handler.ts
+    NotesFacts.stream.ts            generation 0, open
+    StreamPins.ts                   the stream pinned to its writer, generation and sources
+  host/src/Facts/
+    NotesFactsFeed.adapter.ts       serves the stream as a feed
 ```
 
-Both are published from the future `@beep/shared-use-cases/public` subpath. The `tasks` slice imports them as:
+In `tasks`:
 
 ```txt
-import { NoteId } from "@beep/shared-use-cases/public"
-import { NoteCreated } from "@beep/shared-use-cases/public"
+packages/tasks/
+  host/src/Inbox/
+    NoteOpened.inbox.ts             keyed by producer, fact id and version; sends tasks' own command
+  host/src/Tasks.descriptor.ts      declares that tasks consumes NoteOpened version 1
 ```
 
-Direct imports into `packages/notes/*` from another slice are forbidden. The canonical subpath is the only legal route.
+`tasks` imports `NoteId` and `NoteOpened` from `@beep/notes-contract` and
+nothing from the notes model or host. The fact is not `NoteCreated`: that event
+rebuilds the note's state and stays private, so notes can refactor it freely.
+The fact carries only what other contexts may depend on for years, and an
+independent reviewer reads whether each field belongs there.
 
-The promotion record (one per export) is appended to the new or existing `shared/use-cases` package README, using the schema in `02-shared-kernel.md` Appendix:
-
-> ### Promotion record: NoteId
->
-> - **Date promoted:** 2026-04-30
-> - **Shared product semantics:** the durable identity of a note as a referenceable product entity across slices.
-> - **Current consumers:** the `notes` and `tasks` use-cases packages.
-> - **Rejected homes:**
->   - Owning slice — `tasks` cannot import directly from `notes`; cross-slice imports across slice packages are forbidden.
->   - Foundation — `NoteId` encodes a product concept, not a domain-agnostic identity primitive.
-> - **Surface:** `NoteId` (branded schema + decoder), published from `@beep/shared-use-cases/public`.
-> - **Runtime limits:** contract-only.
-> - **Coupling acceptors:** `notes` owner and `tasks` owner sign-off on PR #482.
-> - **Removal trigger:** remove when `tasks` no longer needs to reference notes by id.
-
-> ### Promotion record: NoteCreated
->
-> - **Date promoted:** 2026-04-30
-> - **Shared product semantics:** the cross-slice signal that a new note exists and may be subscribed to by other slices.
-> - **Current consumers:** the `notes` server package (publisher), the `tasks` use-cases package (subscriber).
-> - **Rejected homes:**
->   - Owning slice — `tasks` cannot subscribe to events declared inside the `notes` slice packages; the event contract must be reachable through the kernel.
->   - Foundation — the event encodes product semantics specific to notes.
-> - **Surface:** `NoteCreated` (event schema), published from `@beep/shared-use-cases/public`.
-> - **Runtime limits:** contract-only.
-> - **Coupling acceptors:** `notes` owner and `tasks` owner sign-off on PR #482.
-> - **Removal trigger:** remove when no slice subscribes to `NoteCreated` outside `notes`.
-
-That is the entire ceremony: one PR, two records, one canonical subpath.
+From here the rules of `10-cross-slice-coordination.md` apply: a change to the
+fact is a new version, version 1 retires only when no deployment descriptor
+consumes it, and the publishing projection is never rebuilt in place.
 
 ## 4. Reading a slice path: a 60-second guide
 
-Decode this illustrative path piece-by-piece. There is no `iam` slice in the
-tree today; the shape is what matters:
+Decode this illustrative path piece by piece:
 
-`packages/<slice>/server/src/<Concept>/<Concept>.http-handlers.ts`, read with
-`<slice>` = `iam` and `<Concept>` = `Membership`:
+`packages/<context>/model/src/<Module>/<Noun>.<kind>.ts`, read with
+`<context>` = `party`, `<Module>` = `Claim`, `<Noun>` = `ClaimReview` and
+`<kind>` = `handler`:
 
 - `packages/` — the monorepo packages root.
-- `iam/` — the slice name (the bounded context).
-- `server/` — the slice-family layer: server-side adapters and Layer composition.
-- `src/Membership/` — the concept folder for the `Membership` aggregate.
-- `Membership.http-handlers.ts` — the role file: HTTP-handler implementations for the `Membership` concept, in the server layer.
+- `party/` — the bounded context.
+- `model/` — the dependency closure: the write and reaction model.
+- `src/Claim/` — the Module: the claim's consistency boundary and what reads it.
+- `ClaimReview.handler.ts` — the kind: the implementation of the `ClaimReview`
+  view declared in `ClaimReview.view.ts` beside it.
 
-From the path alone you know: this file is HTTP wiring for membership operations, lives in the iam slice's server adapter, and composes ports declared in `packages/<slice>/use-cases/src/<Concept>/<Concept>.ports.ts`.
+From the path alone you know: this file implements a read model of claims in
+the party context, needs only the ports the model declares, and runs unchanged
+in memory and on a cluster.
 
-### Common role suffixes
+### Common suffixes
 
-| Suffix              | Allowed contents                                                            |
-|---------------------|-----------------------------------------------------------------------------|
-| `.model.ts`         | schema-first class, identity + shape, occasional small `Effect.fn` methods. |
-| `.errors.ts`        | Classes extending `S.TaggedError`.                                         |
-| `.policy.ts`        | pure decision rules (functions, not services).                              |
-| `.behavior.ts`      | pure transitions (`Effect.fn` returning typed failures).                    |
-| `.commands.ts`      | command schemas (intent shapes).                                            |
-| `.queries.ts`       | query schemas (read-side intent shapes).                                    |
-| `.ports.ts`         | port service interfaces (`Context.Service` declarations).                   |
-| `.service.ts`       | use-case service composing ports + domain.                                  |
-| `.repo.ts`          | port implementation (server side).                                          |
-| `.http-handlers.ts` | HTTP handler implementations (server side).                                 |
-| `.event-handlers.ts`| event handler implementations (server side).                                |
+| Package | Suffix | Allowed contents |
+|---------|--------|------------------|
+| contract | `.command.ts` | a command, the events it records, the rejections only it returns |
+| contract | `.read.ts` | a view's or query's read contract |
+| contract | `.fact.ts` | a published integration fact and its versions |
+| contract | `.contract.ts` | a client `Domain.Api` over the catalog |
+| model | `.aggregate.ts` | state union, `decide`, `evolve`, `reply` |
+| model | `.view.ts`, `.policy.ts`, `.saga.ts`, `.projection.ts`, `.query.ts` | a block declaration |
+| model | `.handler.ts` | the implementation of the declaration beside it |
+| model | `.external.ts`, `.store.ts` | a port |
+| host | `.adapter.ts` | a port implementation over a driver or another context's contract |
+| host | `.inbox.ts` | a consumer's inbox |
+| web | `.screen.tsx` | a React screen over generated bindings |
+| web | `.machine.ts`, `.controller.ts` | a screen's pure state machine and the code that runs its intents |
 
-If a path doesn't match any of these suffixes, it's either a non-canonical helper or a violation of the role topology. The hard-check lane in `07-non-slice-families.md` is where repo tooling enforces these rules.
+The full vocabulary is in `standards/ARCHITECTURE.md`, "File Grammar". A path
+that matches no kind in that table is a violation of the role topology; the
+role-suffix checker that reports it lands with `goals/model-first-standard`.
+
+### Reading a legacy slice
+
+Legacy seven-package slices use `packages/<slice>/<package>/src/<Concept>/<Concept>.<role>.ts`,
+for example `packages/<slice>/server/src/<Concept>/<Concept>.http-handlers.ts`:
+the slice, its server adapter package, the concept folder and the role file.
+Their roles (`.model.ts`, `.errors.ts`, `.policy.ts`, `.behavior.ts`,
+`.commands.ts`, `.queries.ts`, `.ports.ts`, `.service.ts`, `.repo.ts`,
+`.http-handlers.ts`, `.event-handlers.ts`) are listed in
+`standards/ARCHITECTURE.md`, "Role Suffixes". They stay legal until each
+slice's own migration; no new slice is built on them.
 
 ## Next reading
 
 - `01-hexagonal-vertical-slices.md` — the architectural rationale for slice-shaped packages with hexagonal boundaries.
+- `10-cross-slice-coordination.md` — integration facts, published streams and synchronous calls between contexts.
 - `08-testing.md` — the testing story for slice-local Layers and cross-slice contracts.
-- `02-shared-kernel.md` — the full promotion record schema and what does and does not belong in `shared`.
+- `02-shared-kernel.md` — what does and does not belong in `shared`; the shared kernel stays language only.

@@ -58,6 +58,19 @@ one application. It is not a monorepo package family and must not own product
 policy, handlers, repositories, schedules, workflows, or cross-slice
 orchestration.
 
+## Authority Context
+
+The bounded context named `authority`: it owns grants, delegation and the
+Accountability relation (every agent-rooted action names an accountable human),
+and it is the only code that builds an [Invocation](#invocation). Other contexts
+re-admit provenance through a port to it at each hop.
+
+## Bounded Context
+
+The unit of architecture: a boundary inside which every name has one meaning and
+one owner holds the data and the invariants. A slice is a bounded context. One
+`Domain.Model` per context is the default.
+
 ## Brand Package
 
 A `foundation/ui-system` package that owns repo brand identity as schema-decoded
@@ -69,7 +82,16 @@ may depend on it, never the reverse, so a brand-neutral component library stays
 consumable by apps carrying another identity. Doctrine:
 [07-non-slice-families.md](./07-non-slice-families.md).
 
+## Catalog (contract)
+
+The aggregate-free declaration a contract package's `Domain.Api` is built over:
+the context's commands, view read contracts and queries, shaped like a Model with
+no aggregate. A parity test asserts each contract Api's RPC group equals the
+model Api's. It is deleted once upstream splits the Api from the model.
+
 ## Client Package
+
+Legacy seven-package slices only; a model-first slice has a [Web Package](#web-package).
 
 The slice package that owns browser/client adapters, remote command/query
 clients, client services, atoms, form models, and client state machines.
@@ -87,10 +109,20 @@ not client-safe.
 
 ## Command (event-sourced)
 
-A `Domain.Command` declaration in `domain`: the target aggregate's id schema,
+A `Domain.Command` declaration, in the contract package of a model-first slice
+(`<Module>/<VerbNoun>.command.ts`, with its events and private rejections) and
+in `domain` of a legacy slice: the target aggregate's id schema,
 its input fields, the events it may record, the rejections it may answer with,
 its middleware list and an optional reply. Alchemy's command dispatch is the
 use-case execution boundary.
+
+## Contract Package
+
+`@beep/<context>-contract`: what clients and other contexts import. It holds
+ids, commands with their events and private rejections, read contracts,
+integration facts, gateway contracts, capabilities and client Apis over the
+[catalog](#catalog-contract). It resolves no model, host, aggregate, handler or
+driver.
 
 ## Concept
 
@@ -124,6 +156,8 @@ or application entrypoint composition.
 
 ## Config Package
 
+Legacy seven-package slices only; in a model-first slice each runtime (the host or the app) owns its configuration.
+
 The slice package that owns typed config contracts for a slice:
 `@beep/<slice>-config`. It may define public config, server config, redacted
 secret config, config services, config vocabulary, and server/runtime-only
@@ -142,13 +176,24 @@ A migration bucket for legacy or transitional shapes that do not require an
 immediate sweep, but must be corrected when their boundary is edited. The
 cleanup scope is the touched boundary, not the whole package family.
 
+## Deployment Descriptor
+
+Data a host publishes naming its models, its processes and the fact versions it
+consumes (`<Context>.descriptor.ts`). An app composes descriptors onto pools and
+generates the cluster entry modules from them; descriptors are also the registry
+the fact-version retirement check reads.
+
 ## Domain-Kind Folder
+
+Legacy seven-package slices only; a model-first slice uses [Module](#module) folders.
 
 A folder that classifies the kind of domain concept. The canonical domain-kind
 folders are `aggregates/`, `entities/`, and `values/`. `policies/` and
 `services/` are escape hatches.
 
 ## Domain Package
+
+Legacy seven-package slices only; a model-first slice splits it into its [Contract Package](#contract-package) and [Model Package](#model-package).
 
 The driver-neutral package that owns rich models, values, aggregates,
 contracts, domain events, pure policies, access vocabulary, and pure lifecycle
@@ -214,6 +259,12 @@ run at read, and stored events are never rewritten.
 The way an architecture rule becomes real. Canonical lanes are `Doctrine`,
 `Generated Default`, `Review Gate`, and `Hard Check`.
 
+## Exact Exports
+
+A package `exports` map that names each entry point, with no `./*` wildcard over
+`src`. The source export map is the truth and the publish mirror is derived.
+Required for every model-first package.
+
 ## Foundation Capability
 
 A `foundation/capability` package: repo-owned, domain-agnostic technical
@@ -221,11 +272,22 @@ substrate that does not carry product semantics, does not wrap an external
 engine or browser platform API, is not tooling, and is not UI-system ergonomics.
 It needs multiple real consumers or explicit platform-capability rationale.
 
+## Gateway Contract
+
+A service declared in a provider's contract (`.gateway.ts`) that other contexts
+call synchronously. A consumer calls it only through a port it declares in its
+own model and implements in its host.
+
 ## God Layer
 
 A central runtime Layer that merges many unrelated slices and drivers into one
 global dependency graph. God Layers hide ownership, create cross-slice coupling,
 and make experiments expensive to remove.
+
+## Handler Registry
+
+`<Context>.handlers.ts` in a model package: the Layer of every handler the Model
+needs, generated from the Model and checked by diff. It is never edited by hand.
 
 ## Headless UI Kernel
 
@@ -251,10 +313,21 @@ similar automation.
 ## Hexagonal Vertical Slice
 
 A slice that combines vertical product modularity with hexagonal boundaries.
-Domain and use-cases sit inside every slice. Config sits inside the slice when
+In a model-first slice the model declares its ports and the host implements
+them; contexts meet only through contracts. In a legacy slice, domain and
+use-cases sit inside every slice. Config sits inside the slice when
 meaningful config contracts exist. Server, client, tables, and UI are adapters
 around that core, while repo-level drivers stay outside the slice as shared
 technical boundaries.
+
+## Host Package
+
+`@beep/<context>-host`: the server runtime's closure. It implements the model's
+ports in `.adapter.ts` files, holds cluster classes, the consumer inbox and
+HTTP or MCP surfaces, and publishes the context's
+[deployment descriptor](#deployment-descriptor). It resolves its own model and
+contract, other contexts' contracts and drivers, and never React or another
+context's model or host.
 
 ## Identity Authority
 
@@ -267,11 +340,33 @@ the authority as a string. It is not the [Public Origin](#public-origin):
 `/ns/` is the one route of the origin reserved for dereferencing these IRIs,
 and `@beep/identity` never depends on `@beep/public-site`.
 
+## Inbox
+
+A consumer's record of integration facts it has handled, kept in its host and
+keyed by producer, fact id and version. A fact delivered twice changes nothing,
+and the commands it sends use request keys over the org, the operation and the
+fact.
+
+## Integration Fact
+
+A versioned fact a context publishes for others (`.fact.ts` in its contract),
+one event class per version. It is written by a projection over the producer's
+aggregate events into a [published stream](#published-stream) and read by
+consumers into an [inbox](#inbox). A private domain event is never an
+integration fact.
+
 ## Internal Error
 
 A technical failure that should be logged, traced, retried, or translated at a
 boundary, but should not directly drive product behavior in domain/use-case
 code.
+
+## Invocation
+
+The authority a command runs under: the principal, on whose behalf, the agent
+run if any, and the grants in force. Only the [authority context](#authority-context)
+builds one; the kernel holds its schema and the pure grant-check language.
+Events store [provenance](#provenance-event-sourced), never an Invocation.
 
 ## Lab App
 
@@ -283,18 +378,54 @@ is not the law-relaxed, throwaway Scratchpad Lane. Product slices and public
 package surfaces must not import a lab app; promotion moves earned work into its
 lawful durable home. Doctrine: [15-lab-apps.md](./15-lab-apps.md).
 
+## Legacy Seven-Package Shape
+
+The slice package family before the model-first shape: domain, use-cases,
+config, server, client, tables and UI. Existing slices keep it until their own
+migration under the checkers' baselines; no new slice and no new migration to
+`@alchemy.run/domain` starts on it.
+
 ## Model (event-sourced)
 
-A `Domain.Model` declaration in `use-cases`: the aggregates, views, policies,
+A `Domain.Model` declaration, in the model package of a model-first slice
+(`<Context>.model.ts`) and in `use-cases` of a legacy slice: the aggregates, views, policies,
 projections, streams and sagas hosted together. `Model.layer(handlers)` hosts
-them on whatever Platform is provided. A `Domain.Api` selects what one audience
-may call from a model and derives HTTP, CLI and MCP surfaces from it.
+them on whatever Platform is provided. A `Domain.Api` selects what one kind of
+caller may call from a model and derives HTTP, CLI and MCP surfaces from it.
+
+## Model Package
+
+`@beep/<context>-model`: the write and reaction model. It holds aggregates,
+rules, views, streams, policies, sagas, projections, queries with their
+`.handler.ts` implementations, store and external-system ports, the Model, its
+Apis and the generated handler registry. It resolves its own contract, the
+library, Effect, the shared kernel and foundation primitive and modeling
+packages, and no driver, React, DOM, Node or other context.
 
 ## Modeling Package
 
 A `foundation` kind for reusable schemas, brands, identity contracts, and
 modeling vocabulary that higher-level foundation packages and slices may reuse
 without taking product-domain dependencies.
+
+## Module
+
+A folder in a model-first package that holds one consistency boundary, process
+or read model (`<Module>/<Noun>.<kind>.ts`). The same Module name appears in the
+contract and the model. Modules replace domain-kind and subdomain folders.
+
+## Proof Inventory
+
+The generated list of a context's invariants, each with its checker, inputs,
+assumptions, known gaps and evidence, checked for drift. Mechanical laws run
+automatically; story coverage counts executed outcomes; semantic questions go to
+a reviewer that did not write the change.
+
+## Provenance (event-sourced)
+
+What an event stores about the authority it was decided under: the root, on
+whose behalf, the causal chain and grant ids, never grant terms. Each hop
+re-admits it through the [authority context](#authority-context).
 
 ## Provenance Anchor
 
@@ -306,6 +437,13 @@ provenance substrate — no confidence, claim, or domain semantics — and lives
 `foundation/modeling` so any slice's `domain` can ground knowledge in a source
 span without depending on another slice. Consuming slices wrap it (e.g.
 epistemic `EvidenceSpan` = `TextAnchor` fields + a `Confidence`).
+
+## Published Stream
+
+A `Domain.Stream` that carries [integration facts](#integration-fact), served
+by the producer's host as a feed. It is pinned to its writer, generation and
+sources, is never rebuilt in place, and serves closed generations followed by
+the open one as one log.
 
 ## Schema Concept Module
 
@@ -338,8 +476,11 @@ the intended API.
 
 ## Port
 
-A product-language capability required by use-cases. Ports live in
-`use-cases` by default and are implemented by adapters, usually in `server`.
+A product-language capability the model needs from outside itself. In a
+model-first slice ports live in the model (`.external.ts`, `.store.ts`, a
+consumer port over another context's gateway), are listed in
+`<Context>.ports.ts`, and are implemented by `.adapter.ts` files in the host. In
+a legacy slice ports live in `use-cases` and are implemented in `server`.
 
 ## Port Error
 
@@ -375,8 +516,10 @@ The alchemy `Platform` contract: `model(hosted)` returns a `ModelHost` whose
 factories give each aggregate, view, policy, projection and stream its store.
 The driver owns single-writer-per-id, command dedupe, atomic persistence of
 events, state, receipt and deliveries, ordered at-least-once delivery, and
-replay. `@beep/alchemy-postgres` is the repo's Postgres Platform; `Domain.InMemory`
-hosts tests and Stories.
+replay. Effect Cluster on Postgres is the first host for model-first slices, with the
+library fixes carried as root patches until an Alchemy release includes them.
+`@beep/alchemy-postgres` is the legacy slices' Postgres Platform and remains
+until then; `Domain.InMemory` hosts tests and Stories.
 
 ## Policy Pack
 
@@ -411,8 +554,11 @@ driver access do not.
 
 ## Projection
 
-A writer that consumes events and updates a read model outside the model. In an
-event-sourced slice it is a `Domain.Projection` declaration in `use-cases` with
+A writer that consumes events and updates a read model outside the model. In a
+model-first slice it is a `.projection.ts` in the model with its `.handler.ts`
+beside it, writing a store port or a stream; a projection that feeds a
+[Published Stream](#published-stream) reads aggregate events directly and is
+never rebuilt in place. In a legacy event-sourced slice it is a `Domain.Projection` declaration in `use-cases` with
 its `toLayer` implementation in `server`; legacy drizzle tables are rebuilt by
 projections after a single-writer cutover. Read-model table declarations belong
 in `tables`.
@@ -421,6 +567,13 @@ in `tables`.
 
 A persistence shape optimized for queries, UI, reporting, or projections. Read
 model tables use `.read-model-table.ts` and are composed by `ReadModels.ts`.
+
+## Re-admission
+
+The step at each hop where a policy or saga asks the authority context to
+rebuild an Invocation from a stored provenance and live grants. It never adds a
+grant and passes those still in force; a command that needs a lapsed one is
+refused and the refusal recorded.
 
 ## Reflection / Reflection Artifact
 
@@ -480,6 +633,10 @@ commands, queries, driver-neutral DTOs, driver-neutral boundary contracts,
 client-safe application errors, facade interfaces, and ultra-high-bar product
 ports, but not workflows, process managers, schedulers, handlers, concrete
 adapters, driver imports, or live Layers.
+Model-first contexts use only the kernel's language (ids, the `Invocation` and
+`Provenance` schemas, the grant-check language, the fact envelope, the request
+key, the descriptor and stream pin schemas); their synchronous contracts live in
+the provider's contract package, never in `shared/use-cases`.
 Shared packages consume shared-kernel language from shared and may consume
 appropriate `foundation` packages beside it; they do not own drivers. Shared
 is not a synonym for `common` or `foundation`, and it is not a place for
@@ -492,9 +649,11 @@ miscellaneous leftovers from product slices.
 The `RpcMiddleware.Service` a command, view or stream declares to authenticate
 its caller. Its server half resolves the session and provides the
 `RequestContext` (principal, source kind) that `decide` and `validate` read and
-that the Platform driver persists as provenance. Views are security boundaries:
-`validate` judges every read, and one view per audience replaces caller
-filtering.
+that, in a legacy slice, the Platform driver persists as provenance. In a
+model-first slice the library does not persist request context: events store
+[provenance](#provenance-event-sourced) in their payload, and only the authority
+context builds an Invocation. Views are security boundaries: `validate` judges
+every read, and one view per kind of caller replaces caller filtering.
 
 ## Site Route
 
@@ -508,16 +667,22 @@ Route is not a subdomain and not a slice or package name.
 
 ## Slice
 
-A bounded product/domain package family such as `iam`. A slice owns its domain,
-use-cases, config contracts when present, server adapters, client adapters,
-tables, and UI. Drivers stay repo-level instead of being slice package kinds.
+A bounded context: it owns a language, its data and its invariants, with one
+`Domain.Model` by default. A model-first slice ships as four packages,
+`contract`, `model`, `host` and `web`, one per dependency closure. A legacy
+slice is the seven-package family (domain, use-cases, config, server, client,
+tables, UI). Drivers stay repo-level instead of being slice package kinds.
 
 ## Saga (event-sourced)
 
-A `Domain.Saga` declaration in `use-cases`: an Effect workflow keyed by the
+A `Domain.Saga` declaration, in the model package of a model-first slice with
+its `.handler.ts` beside it and in `use-cases` of a legacy slice: an Effect
+workflow keyed by the
 aggregate it is about, with one command per `Activity` step, compensations and
-durable waits. Its `toLayer` implementation lives in `server` and runs on the
-workflow engine the Platform driver provides (`effect/cluster` on Postgres).
+durable waits. In a legacy slice its `toLayer` implementation lives in `server`
+and runs on the workflow engine the Platform driver provides (`effect/cluster`
+on Postgres). Its activity results are a stored format: an incompatible change
+is a new saga version.
 
 ## Scratchpad Lane
 
@@ -527,7 +692,23 @@ slices and public package exports must not import it. Promotion re-enters
 through the smallest legal slice shape. The lawful next step for an experiment
 that outgrows the lane is a [Lab App](#lab-app).
 
+## Stored-Format Law
+
+Stored bytes are never rewritten; schemas convert on read. It covers events,
+state, receipts, request context, saga payloads and saga activity results. An
+incompatible saga change is a new saga version, and runs in flight finish on
+the version they started.
+
+## Stream Generation
+
+One writer's span of a published stream. A change to the projection behind a
+stream closes the generation and opens a new one. A closed generation stops
+being served only when the next holds every fact it held, every consumer has
+read past it and positions keep their meaning.
+
 ## Tables Package
+
+Legacy seven-package slices only; in a model-first slice a table is a projection store or an inbox store in the host.
 
 The slice package that owns product-specific persistence schema and mapping.
 Tables are the slice-local persistence adapter surface for product schema and
@@ -541,6 +722,8 @@ infrastructure). Tooling packages support development and operations;
 product/runtime code does not depend on them.
 
 ## Use-Case Package
+
+Legacy seven-package slices only; in a model-first slice commands live in the contract and their decisions in the model's aggregates.
 
 The slice package that owns application intent: commands, queries,
 driver-neutral boundary/protocol contracts, authorization, ports,
@@ -560,10 +743,19 @@ them local to the concept that uses them.
 
 ## View (event-sourced)
 
-A `Domain.View` declaration in `domain`: a pure fold of events from one or more
+A `Domain.View` declaration, in the model package of a model-first slice (its
+read contract repeated in the contract as a `.read.ts`) and in `domain` of a
+legacy slice: a pure fold of events from one or more
 aggregates or views into state keyed by what it is about, with `validate` as its
 security boundary. MCP tools derived from an `Api` expose Views only until the
 view-security tests pass.
+
+## Web Package
+
+`@beep/<context>-web`: React screens over bindings generated from the contract,
+with a `.machine.ts` and `.controller.ts` where a screen's interaction state
+earns them. It imports its own model only for a listed `Aggregate.predict`
+screen.
 
 ## Workflow
 
