@@ -457,7 +457,10 @@ const decideCiParityReuse = Effect.fn("Yeet.decideCiParityReuse")(function* (
     proven,
     parity
   );
-  yield* Effect.forEach(A.getSomes(A.map(decisions, renderParityLaneDecision)), Console.log, { discard: true });
+  yield* Effect.forEach(A.getSomes(A.map(decisions, renderParityLaneDecision)), Console.log, {
+    concurrency: 1,
+    discard: true,
+  });
   return decisions;
 });
 
@@ -515,7 +518,7 @@ const recordProofStepEnvironments = Effect.fn("Yeet.recordProofStepEnvironments"
       collectProofEnvironment(step.id, context.repoRoot, effectiveStepEnvironment(step), baseSha).pipe(
         Effect.flatMap((environment) => recordProofEnvironment(context, environment))
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 

@@ -412,7 +412,7 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedUsptoConfig)
       const envelope = yield* DocumentsEnvelope.decodeJsonEffect(text).pipe(
         Effect.mapError(() => UsptoError.fromReason("response-decoding"))
       );
-      const references = yield* Effect.forEach(envelope.documentBag, documentFromRecord);
+      const references = yield* Effect.forEach(envelope.documentBag, documentFromRecord, { concurrency: 1 });
       return A.flatMap(references, O.toArray);
     }),
     searchApplications: Effect.fn("Uspto.searchApplications")(function* (query: string) {
@@ -422,8 +422,10 @@ const makeService = (client: HttpClient.HttpClient, config: ResolvedUsptoConfig)
       const envelope = yield* MetadataEnvelope.decodeJsonEffect(text).pipe(
         Effect.mapError(() => UsptoError.fromReason("response-decoding"))
       );
-      return yield* Effect.forEach(envelope.patentFileWrapperDataBag, (wrapper) =>
-        metadataFromWrapper(wrapper, wrapper.applicationNumberText ?? "unknown")
+      return yield* Effect.forEach(
+        envelope.patentFileWrapperDataBag,
+        (wrapper) => metadataFromWrapper(wrapper, wrapper.applicationNumberText ?? "unknown"),
+        { concurrency: 1 }
       );
     }),
   };

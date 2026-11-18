@@ -140,8 +140,10 @@ describe("@beep/anthropic live model with request settings", () => {
           reason: AiError.UnknownError.make({ description: "fixture failure" }),
         });
         const retry = A.headNonEmpty(AnthropicTurnPlan.steps).while;
-        const retried = yield* Effect.forEach([configError, providerError], (error) =>
-          retry === undefined ? Effect.succeed(true) : retry(error)
+        const retried = yield* Effect.forEach(
+          [configError, providerError],
+          (error) => (retry === undefined ? Effect.succeed(true) : retry(error)),
+          { concurrency: 1 }
         );
 
         expect(model).toBeDefined();

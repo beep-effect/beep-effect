@@ -267,7 +267,7 @@ const setNextRowId = Effect.fnUntraced(function* (nextId: number) {
   yield* Effect.forEach(
     legalPositionTableNames,
     (table) => sql`SELECT setval(pg_get_serial_sequence(${table}, 'id'), ${nextId}, false)`,
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 

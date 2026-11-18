@@ -196,15 +196,14 @@ describe("base-merge proof replay", () => {
         YeetHeadMoveChanged.make({ ...input, change: "merge-conflict", detail: "x" })
       );
       const fromRewrites = yield* YeetHeadMoveClassifier.use((classifier) =>
-        Effect.all([classifier.classifyBaseMerge(request), classifier.isLocalMergeCommit("h")])
+        Effect.all([classifier.classifyBaseMerge(request), classifier.isLocalMergeCommit("h")], { concurrency: 1 })
       ).pipe(provideBuilt(rewrites));
       expect(fromRewrites).toMatchObject([{ _tag: "unknown", reason: "no base-merge fixture" }, false]);
       const fromMerges = yield* YeetHeadMoveClassifier.use((classifier) =>
-        Effect.all([
-          classifier.classify(request),
-          classifier.isLocalMergeCommit("h"),
-          classifier.classifyBaseMerge(request),
-        ])
+        Effect.all(
+          [classifier.classify(request), classifier.isLocalMergeCommit("h"), classifier.classifyBaseMerge(request)],
+          { concurrency: 1 }
+        )
       ).pipe(provideBuilt(merges));
       expect(fromMerges).toMatchObject([{ _tag: "unknown", reason: "no rewrite fixture" }, true, { _tag: "changed" }]);
     })

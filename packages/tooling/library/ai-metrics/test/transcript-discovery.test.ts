@@ -77,8 +77,10 @@ it.layer(Layer.fresh(layer), { timeout: "30 seconds", excludeTestServices: true 
             roots: [...input.roots, { path: `${f.dir}/retired`, source: "claude", retired: true }],
           })
         );
-        const reports = yield* Effect.forEach(A.range(1, 28), () =>
-          runDiscoveredTranscriptSweep(f.config, discovery, policy)
+        const reports = yield* Effect.forEach(
+          A.range(1, 28),
+          () => runDiscoveredTranscriptSweep(f.config, discovery, policy),
+          { concurrency: 1 }
         );
         expect(
           A.filter(

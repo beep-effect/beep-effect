@@ -558,7 +558,7 @@ const make = (client: GitHubClient["Service"]): GitHubIssueShape => ({
       },
       options?.page
     );
-    return yield* Effect.forEach(raw, project("GitHubIssue.list"));
+    return yield* Effect.forEach(raw, project("GitHubIssue.list"), { concurrency: 1 });
   }),
 
   close: dual(

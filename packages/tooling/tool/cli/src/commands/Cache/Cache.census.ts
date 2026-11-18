@@ -326,7 +326,7 @@ export const cacheTaskSelectionArgs = Effect.fn("Cache.taskSelectionArgs")(funct
         )
       );
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   if (cacheValuePending) {
     return yield* CacheCommandError.new("Runtime selection received a missing cache option value.");
@@ -375,12 +375,15 @@ const isTurboEnvExclusion = Str.startsWith("!");
 export const forwardsBiomeConfigPath = Effect.fn("Cache.forwardsBiomeConfigPath")(function* (
   entries: ReadonlyArray<string>
 ) {
-  const patterns = yield* Effect.forEach(A.filter(entries, P.not(isTurboEnvExclusion)), (entry) =>
-    Effect.fromResult(GlobPattern.compileResult(entry, turboEnvGlob)).pipe(
-      Effect.mapError((error) =>
-        CacheCommandError.new(`Turbo env entry ${entry} is not a glob pattern: ${error.message}`)
-      )
-    )
+  const patterns = yield* Effect.forEach(
+    A.filter(entries, P.not(isTurboEnvExclusion)),
+    (entry) =>
+      Effect.fromResult(GlobPattern.compileResult(entry, turboEnvGlob)).pipe(
+        Effect.mapError((error) =>
+          CacheCommandError.new(`Turbo env entry ${entry} is not a glob pattern: ${error.message}`)
+        )
+      ),
+    { concurrency: 1 }
   );
   return A.some(patterns, (pattern) => pattern.matches("BIOME_CONFIG_PATH"));
 });

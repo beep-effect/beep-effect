@@ -37,13 +37,16 @@ layer(NodeServices.layer)("extract-gfm-corpora", (it) => {
   });
 
   it.effect("re-renders the committed GFM corpora byte for byte", () =>
-    Effect.forEach(["spec-extensions.json", "extensions.json"], (name) =>
-      Effect.gen(function* () {
-        const committed = yield* readText(`data/conformance/gfm/${name}`);
-        const examples = yield* decodeCorpus(committed);
-        const rendered = yield* renderCorpus(examples);
-        expect(rendered).toBe(committed);
-      })
+    Effect.forEach(
+      ["spec-extensions.json", "extensions.json"],
+      (name) =>
+        Effect.gen(function* () {
+          const committed = yield* readText(`data/conformance/gfm/${name}`);
+          const examples = yield* decodeCorpus(committed);
+          const rendered = yield* renderCorpus(examples);
+          expect(rendered).toBe(committed);
+        }),
+      { concurrency: 1 }
     )
   );
 });

@@ -178,7 +178,8 @@ const decodeFileImported = S.decodeUnknownEffect(FileImportedEvent.payloadSchema
 export const createdNodes = (entries: ReadonlyArray<Entry>) =>
   Effect.forEach(
     A.filter(entries, (entry) => entry.event === NodeCreatedEvent.tag),
-    (entry) => Effect.map(decodeCreated(entry.payload), (payload): readonly [Entry, NodeCreated] => [entry, payload])
+    (entry) => Effect.map(decodeCreated(entry.payload), (payload): readonly [Entry, NodeCreated] => [entry, payload]),
+    { concurrency: 1 }
   );
 
 /** The `FileImported` payloads of `entries`. */
@@ -187,7 +188,8 @@ export const importedFiles = (
 ): Effect.Effect<ReadonlyArray<FileImported>, S.SchemaError> =>
   Effect.forEach(
     A.filter(entries, (entry) => entry.event === FileImportedEvent.tag),
-    (entry) => decodeFileImported(entry.payload)
+    (entry) => decodeFileImported(entry.payload),
+    { concurrency: 1 }
   );
 
 /** The platform services the projector suites run on. */

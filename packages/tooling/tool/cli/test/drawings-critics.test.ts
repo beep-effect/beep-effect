@@ -229,7 +229,7 @@ describe("extractReportText", () => {
     Effect.fnUntraced(function* () {
       const lines = (events: ReadonlyArray<unknown>) =>
         Effect.map(
-          Effect.forEach(events, (event) => encodeJson(event)),
+          Effect.forEach(events, (event) => encodeJson(event), { concurrency: 1 }),
           (encoded) => `${A.join(encoded, "\n")}\n`
         );
       const stream = yield* lines([

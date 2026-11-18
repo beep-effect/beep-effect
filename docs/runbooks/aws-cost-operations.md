@@ -256,9 +256,9 @@ Successor: the Alchemy stack `CostControls` in
 over these controls under the cutover in
 [Alchemy infrastructure](./alchemy-infra.md#cost-controls): same account
 guard, $200 budget, $10 anomaly threshold, six tags and both enrollments, a
-new budget and subscription name, the services monitor adopted. Until that
-cutover runs, the Pulumi component below remains the owner; the paragraphs
-that follow are its history.
+new budget and subscription name, the services monitor adopted. The cutover
+ran on 2026-11-14 and the Pulumi component is retired; the paragraphs that
+follow are its history.
 
 Use `AccountCostControls` in the existing infra package, composed beside the
 fleet and cache with a dedicated `us-east-1` provider restricted to the intended

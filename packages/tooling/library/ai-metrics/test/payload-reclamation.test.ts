@@ -143,7 +143,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
               })
             )
           ),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       const batch61 = yield* f.batch("2");
       const acceptBatch6 = yield* reopened.acceptBatch(batch61);
@@ -332,7 +332,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
               })
             )
           ),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     })
   )
@@ -363,7 +363,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
     () =>
       Effect.gen(function* () {
         const f = yield* fixture(2, 4, true);
-        const batches = yield* Effect.forEach(["1", "2", "3", "4", "5"], f.batch);
+        const batches = yield* Effect.forEach(["1", "2", "3", "4", "5"], f.batch, { concurrency: 1 });
         const first = batches[0];
         if (first === undefined) return yield* Effect.die("Missing fixture");
         const batch = NativeTraceBatch.make({ ...first, spans: A.flatMap(batches, (b) => b.spans) });
@@ -385,7 +385,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         const rejected = yield* prepare(3);
         yield* f.ledger.recordOutcome(rejected.attemptId, DeliveryOutcome.cases.Rejected.make({ status: 400 }));
         yield* prepare(4); // Unresolved: prepared without a terminal outcome.
-        const states = yield* Effect.forEach(batch.spans, (s) => f.ledger.state(s.eventId));
+        const states = yield* Effect.forEach(batch.spans, (s) => f.ledger.state(s.eventId), { concurrency: 1 });
         const expire23 = yield* f.reclaimer.expire(receipt.page.receiptId);
         assertNone(expire23);
         yield* TestClock.adjust("24 hours");
@@ -398,7 +398,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
             states: { pending: 1, acceptedUnverified: 1, visible: 1, rejected: 1, unresolved: 1 },
           },
         });
-        const forEach24 = yield* Effect.forEach(batch.spans, (s) => f.ledger.state(s.eventId));
+        const forEach24 = yield* Effect.forEach(batch.spans, (s) => f.ledger.state(s.eventId), { concurrency: 1 });
         expect(forEach24).toEqual(states);
         const receipt25 = yield* f.native.receipt(receipt.page.receiptId);
         assertSome(receipt25, receipt);

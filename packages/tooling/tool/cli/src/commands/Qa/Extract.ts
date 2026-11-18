@@ -729,16 +729,19 @@ const executeRequest = Effect.fn("QaExtract.executeRequest")(function* (
       ffmpeg.extractFramesAt(ExtractFramesAtRequest.make(planned.request)).pipe(
         Effect.flatMap((result) =>
           Effect.map(
-            Effect.forEach(result.frames, (frame) =>
-              stamp(
-                "frame",
-                frame.path,
-                O.getOrElse(planned.request.prefix, () => "frames"),
-                // Each strip frame carries the epoch of its own source
-                // instant — the inverse clock fit over the requested seek —
-                // not the shared window start.
-                O.some(videoSecondsToEpochMs(context.clockSync)(frame.requestedTimestampSeconds))
-              )
+            Effect.forEach(
+              result.frames,
+              (frame) =>
+                stamp(
+                  "frame",
+                  frame.path,
+                  O.getOrElse(planned.request.prefix, () => "frames"),
+                  // Each strip frame carries the epoch of its own source
+                  // instant — the inverse clock fit over the requested seek —
+                  // not the shared window start.
+                  O.some(videoSecondsToEpochMs(context.clockSync)(frame.requestedTimestampSeconds))
+                ),
+              { concurrency: 1 }
             ),
             (outcomes) =>
               ExtractionOutcome.make({
@@ -901,17 +904,20 @@ export const runQaExtract = Effect.fn("QaExtract.run")(function* (
     })
   );
 
-  const outcomes = yield* Effect.forEach(requests, (request) =>
-    executeRequest(request, {
-      clockSync,
-      events: eventLog.events,
-      layout,
-      plan,
-      session: CaptureSession.make(manifest.session),
-      // Session-relative: provenance is embedded into artifacts that may be
-      // committed to packets — absolute home paths must never ride along.
-      sourceVideo: path.relative(layout.root, prepared.path),
-    })
+  const outcomes = yield* Effect.forEach(
+    requests,
+    (request) =>
+      executeRequest(request, {
+        clockSync,
+        events: eventLog.events,
+        layout,
+        plan,
+        session: CaptureSession.make(manifest.session),
+        // Session-relative: provenance is embedded into artifacts that may be
+        // committed to packets — absolute home paths must never ride along.
+        sourceVideo: path.relative(layout.root, prepared.path),
+      }),
+    { concurrency: 1 }
   );
   const outcome = ExtractionOutcome.make({
     artifacts: A.flatMap(outcomes, (value) => value.artifacts),
@@ -942,7 +948,10 @@ export const runQaExtract = Effect.fn("QaExtract.run")(function* (
     `  artifacts: ${A.length(outcome.artifacts)}`,
     `  report: ${layout.reportPath}`,
   ]);
-  yield* Effect.forEach(outcome.failures, (failure) => Console.error(`  ! ${failure}`), { discard: true });
+  yield* Effect.forEach(outcome.failures, (failure) => Console.error(`  ! ${failure}`), {
+    concurrency: 1,
+    discard: true,
+  });
 
   return outcome;
 });

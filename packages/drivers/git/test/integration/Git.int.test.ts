@@ -245,7 +245,7 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
               yield* Effect.forEach(
                 ["missing.txt", "unknown revision", "prefix\nnot a git repository"],
                 (path) => git.show(fixture.dir, fixture.commit1, path).pipe(Effect.map(assertNone)),
-                { discard: true }
+                { concurrency: 1, discard: true }
               );
             }),
           () => runFixtureGit(fixture.dir, ["config", "--local", "--unset", "core.fsyncObjectFiles"])
@@ -269,7 +269,7 @@ it.layer(Layer.provideMerge(RepoFixtureLayer, TestLayer), { timeout: "30 seconds
             "prefix\nnot a git repository"
           ),
           (path) => git.show(fixture.dir, fixture.commit1, path).pipe(Effect.map(assertNone)),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
         const onDisk = path.join(fixture.dir, "unknown revision");
         yield* Effect.acquireUseRelease(

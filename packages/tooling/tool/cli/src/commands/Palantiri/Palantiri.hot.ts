@@ -420,6 +420,6 @@ export const printHotParcels: {
           )
         ),
     });
-    yield* Effect.forEach(renderHotBlock(printed), (line) => Console.log(line), { discard: true });
+    yield* Effect.forEach(renderHotBlock(printed), (line) => Console.log(line), { concurrency: 1, discard: true });
   })
 );

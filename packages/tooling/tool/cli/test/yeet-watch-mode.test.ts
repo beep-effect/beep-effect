@@ -290,7 +290,7 @@ const readInboxRows = Effect.fn("readInboxRows")(function* (root: string) {
     onNone: () => A.empty<string>(),
     onSome: (value) => A.filter(Str.split(value, "\n"), Str.isNonEmpty),
   });
-  return yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line));
+  return yield* Effect.forEach(lines, (line) => YeetInboxRowJson.decode(line), { concurrency: 1 });
 });
 
 describe("collectYeetWatchSnapshot", () => {
@@ -882,7 +882,9 @@ describe("runYeetWatchStream", () => {
 
           const logLines2 = yield* TestConsole.logLines;
           const lines = A.map(logLines2, String);
-          const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
+          const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line), {
+            concurrency: 1,
+          });
           expect(A.map(events, (event) => event.kind)).toEqual([
             "watch-started",
             "check-transition",
@@ -929,7 +931,9 @@ describe("runYeetWatchStream", () => {
           expect(ended.failing).toBe(0);
           const logLines3 = yield* TestConsole.logLines;
           const lines = A.map(logLines3, String);
-          const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
+          const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line), {
+            concurrency: 1,
+          });
           expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "watch-ended"]);
           const errorLines4 = yield* TestConsole.errorLines;
           const errors = A.map(errorLines4, String);
@@ -1571,7 +1575,9 @@ describe("comment rows and --until-event", () => {
           expect(ended.failing).toBe(0);
           const logLines17 = yield* TestConsole.logLines;
           const lines = A.map(logLines17, String);
-          const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
+          const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line), {
+            concurrency: 1,
+          });
           expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "watch-ended"]);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -1671,7 +1677,9 @@ describe("comment rows and --until-event", () => {
 
           const logLines18 = yield* TestConsole.logLines;
           const lines = A.map(logLines18, String);
-          const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
+          const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line), {
+            concurrency: 1,
+          });
           expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "check-transition", "watch-ended"]);
           // The capsule is durable before the exit row is emitted.
           const readInboxRows19 = yield* readInboxRows(root);
@@ -1712,7 +1720,9 @@ describe("comment rows and --until-event", () => {
           expect(ended.failing).toBe(1);
           const logLines20 = yield* TestConsole.logLines;
           const lines = A.map(logLines20, String);
-          const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
+          const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line), {
+            concurrency: 1,
+          });
           expect(A.map(events, (event) => event.kind)).toEqual(["watch-started", "watch-ended"]);
           const readInboxRows21 = yield* readInboxRows(root);
           expect(A.length(readInboxRows21)).toBe(1);
@@ -1802,7 +1812,9 @@ describe("comment rows and --until-event", () => {
 
           const logLines22 = yield* TestConsole.logLines;
           const lines = A.map(logLines22, String);
-          const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
+          const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line), {
+            concurrency: 1,
+          });
           expect(A.map(events, (event) => event.kind)).toEqual([
             "watch-started",
             "comment-posted",
@@ -1866,7 +1878,9 @@ describe("comment rows and --until-event", () => {
           expect(ended.failing).toBe(0);
           const logLines24 = yield* TestConsole.logLines;
           const lines = A.map(logLines24, String);
-          const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
+          const events = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line), {
+            concurrency: 1,
+          });
           expect(A.map(events, (event) => event.kind)).toEqual([
             "watch-started",
             "comment-posted",
@@ -2030,8 +2044,10 @@ describe("B7 watch settle cache and timeout", () => {
           const got27 = yield* Ref.get(ticks);
           expect(got27).toBe(4);
           const logLines28 = yield* TestConsole.logLines;
-          const events = yield* Effect.forEach(A.map(logLines28, String), (line) =>
-            decodeUnknownYeetWatchEventJson(line)
+          const events = yield* Effect.forEach(
+            A.map(logLines28, String),
+            (line) => decodeUnknownYeetWatchEventJson(line),
+            { concurrency: 1 }
           );
           expect(A.filter(events, (event) => event.kind === "head-changed")).toHaveLength(1);
           expect(A.filter(events, (event) => event.kind === "settle-changed")).toMatchObject([
@@ -2080,8 +2096,10 @@ describe("B8 watch base conflict", () => {
           const ended = yield* runYeetWatchStream(contextFor(root), { intervalMillis: 0 });
           expect(ended.reason).toBe("pr-merged");
           const logLines29 = yield* TestConsole.logLines;
-          const events = yield* Effect.forEach(A.map(logLines29, String), (line) =>
-            decodeUnknownYeetWatchEventJson(line)
+          const events = yield* Effect.forEach(
+            A.map(logLines29, String),
+            (line) => decodeUnknownYeetWatchEventJson(line),
+            { concurrency: 1 }
           );
           expect(A.filter(events, (event) => event.kind === "settle-changed")).toMatchObject([
             { from: "required-pending", to: "base-conflict" },
@@ -2146,8 +2164,10 @@ describe("B8 watch settle clock resumes with the budget", () => {
             });
             expect(ended.reason).toBe("pr-merged");
             const logLines31 = yield* TestConsole.logLines;
-            const events = yield* Effect.forEach(A.map(logLines31, String), (line) =>
-              decodeUnknownYeetWatchEventJson(line)
+            const events = yield* Effect.forEach(
+              A.map(logLines31, String),
+              (line) => decodeUnknownYeetWatchEventJson(line),
+              { concurrency: 1 }
             );
             expect(A.filter(events, (event) => event.kind === "settle-changed")).toMatchObject([
               { from: "base-conflict", to: "registration" },
@@ -2176,7 +2196,9 @@ describe("B8 watch heavy admission", () => {
     );
   const settleRows = Effect.fn("watchAdmissionTest.settleRows")(function* () {
     const logLines33 = yield* TestConsole.logLines;
-    const events = yield* Effect.forEach(A.map(logLines33, String), (line) => decodeUnknownYeetWatchEventJson(line));
+    const events = yield* Effect.forEach(A.map(logLines33, String), (line) => decodeUnknownYeetWatchEventJson(line), {
+      concurrency: 1,
+    });
     return A.filter(events, (event) => event.kind === "settle-changed");
   });
   const stderr = TestConsole.errorLines.pipe(Effect.map(A.map(String)), Effect.map(A.join("\n")));
@@ -2480,7 +2502,9 @@ describe("required-only watch exits", () => {
             expect(yeetWatchExitFailure(ended)).toBe(false);
             const logLines42 = yield* TestConsole.logLines;
             const lines = A.map(logLines42, String);
-            const rows = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line));
+            const rows = yield* Effect.forEach(lines, (line) => decodeUnknownYeetWatchEventJson(line), {
+              concurrency: 1,
+            });
             expect(A.filter(rows, (row) => row.kind === "watch-ended")).toEqual([ended]);
             expect(A.some(rows, (row) => row.kind === "check-transition")).toBe(true);
           })

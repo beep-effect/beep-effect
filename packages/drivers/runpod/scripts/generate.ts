@@ -5,7 +5,9 @@ import * as OpenApiPatch from "@effect/openapi-generator/OpenApiPatch";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import openApiSource from "../openapi.json" with { type: "json" };
 import openApiPatchInput from "../openapi.patch.json" with { type: "json" };
+import { closedObjectPatch } from "./openapi.lowering.ts";
 import { renderRunpodOperations } from "./operations.renderer.ts";
 
 const packageRoot = `${import.meta.dirname}/..`;
@@ -26,13 +28,19 @@ const config = GenerateConfig.make({
     _tag: "file",
     path: `${packageRoot}/openapi.json`,
   },
-  dialect: "openapi-3.0",
-  patches: [{ source: "openapi.patch.json", patch: patchDocument }],
+  dialect: "openapi-3.1",
+  // Hand-authored fixes first, then the derived `unevaluatedProperties`
+  // lowering. The renderer applies the same list and fails when a closure
+  // survives it.
+  patches: [
+    { source: "openapi.patch.json", patch: patchDocument },
+    { source: "openapi.lowering.ts", patch: closedObjectPatch(openApiSource) },
+  ],
   transforms: ["stripExamples"],
   format: "schemas",
-  schemaStyle: "class",
   output: {
     path: `${packageRoot}/src/_generated/Runpod.models.gen.ts`,
+    exampleImport: "@beep/runpod",
   },
   extraModules: [
     {

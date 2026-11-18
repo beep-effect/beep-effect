@@ -60,7 +60,9 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
         ...input(paths),
         sources: [...input(paths).sources, { path: `${dir}/retired`, source: "claude", retired: true }],
       });
-      const reports = yield* Effect.forEach(A.range(1, 6), () => runTranscriptSweep(config, declaration));
+      const reports = yield* Effect.forEach(A.range(1, 6), () => runTranscriptSweep(config, declaration), {
+        concurrency: 1,
+      });
       const identities = A.map(reports, (report) => report.outcomes[0]?.sourceId);
       expect(A.dedupe(identities).length).toBe(3);
       expect(A.take(identities, 3)).toEqual(A.drop(identities, 3));
@@ -104,13 +106,16 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds" })((it) =>
     Effect.gen(function* () {
       const { fs, dir, salt, config, input } = yield* fixture(1);
       const paths = [`${dir}/a`, `${dir}/b`];
-      yield* Effect.forEach(paths, (path) => fs.writeFileString(path, line), { discard: true });
+      yield* Effect.forEach(paths, (path) => fs.writeFileString(path, line), { concurrency: 1, discard: true });
       const first = yield* runTranscriptSweep(config, input(paths, 2));
       expect(first.outcomes[0]?._tag).toBe("Accepted");
       expect(first.outcomes[1]).toMatchObject({ _tag: "Failed", error: { reason: "capacity" } });
       const journal = yield* makeTranscriptIntakeJournal(config);
-      const cursors = yield* Effect.forEach(paths, (path) =>
-        hashPrivateIdentifier(path, O.some(salt)).pipe(Effect.flatMap((hash) => journal.readCursor("codex", hash)))
+      const cursors = yield* Effect.forEach(
+        paths,
+        (path) =>
+          hashPrivateIdentifier(path, O.some(salt)).pipe(Effect.flatMap((hash) => journal.readCursor("codex", hash))),
+        { concurrency: 1 }
       );
       expect(A.filter(cursors, O.isSome).length).toBe(1);
       expect((yield* journal.stats).pages).toBe(1);

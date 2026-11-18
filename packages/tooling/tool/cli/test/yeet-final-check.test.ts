@@ -915,7 +915,7 @@ const seedBaseWorktree = Effect.fnUntraced(function* (
           )
         )
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 

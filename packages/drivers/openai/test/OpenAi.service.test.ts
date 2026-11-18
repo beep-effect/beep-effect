@@ -271,11 +271,14 @@ describe("OpenAI model Layers", () => {
       it.effect(
         "forwards an explicit language model and exposes its model metadata through the stubbed client boundary",
         Effect.fnUntraced(function* () {
-          const result = yield* Effect.all({
-            modelName: AiModel.ModelName,
-            providerName: AiModel.ProviderName,
-            response: LanguageModel.generateText({ prompt: "test" }),
-          });
+          const result = yield* Effect.all(
+            {
+              modelName: AiModel.ModelName,
+              providerName: AiModel.ProviderName,
+              response: LanguageModel.generateText({ prompt: "test" }),
+            },
+            { concurrency: 1 }
+          );
 
           const capture = yield* RequestCapture;
           const capturedRequest = yield* capture.read;

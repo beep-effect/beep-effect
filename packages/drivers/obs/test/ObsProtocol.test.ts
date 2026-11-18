@@ -124,7 +124,7 @@ const makeFakeObsServer = Effect.fnUntraced(function* (options?: FakeObsServerOp
     ),
     writer: Effect.succeed({
       write,
-      writeAll: (chunks) => Effect.forEach(chunks, write, { discard: true }),
+      writeAll: (chunks) => Effect.forEach(chunks, write, { concurrency: 1, discard: true }),
     }),
   });
 
@@ -300,7 +300,7 @@ describe("ObsProtocol.connectWith", () => {
                   Effect.forEach(
                     A.reverse(envelopes),
                     (entry) => respondSuccess(entry, emit, O.some({ echoedRequestType: entry.requestType })),
-                    { discard: true }
+                    { concurrency: 1, discard: true }
                   ),
               })
             )

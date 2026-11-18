@@ -158,7 +158,7 @@ export const historySiftImpl = Effect.fn("Research.historySiftImpl")(function* (
         .pipe(ResearchCommandError.mapError("Failed creating browser history scratch directory."));
       for (const profile of profiles) {
         const rows = yield* readProfileHistory(profile, scratchDir, cutoff);
-        yield* Effect.forEach(rows, (row) => collectSiftRow(collection, seen, row), { discard: true });
+        yield* Effect.forEach(rows, (row) => collectSiftRow(collection, seen, row), { concurrency: 1, discard: true });
       }
     })
   );
@@ -170,7 +170,8 @@ export const historySiftImpl = Effect.fn("Research.historySiftImpl")(function* (
     Effect.fnUntraced(function* (candidate) {
       const slug = yield* slugFor(candidate.title, candidate.url);
       return yield* historyStubCard(candidate, capturedAt, path.join(VAULT_DIRS.inbox, `${slug}.md`));
-    })
+    }),
+    { concurrency: 1 }
   );
 
   yield* persistCards(options.vaultRoot, databasePath, "history-sift", cards);

@@ -174,7 +174,10 @@ const GovinfoTestHttpLayer = Layer.effect(
         const respond = yield* Ref.get(respondRef);
         return yield* respond(request);
       }),
-      reset: Effect.all([Ref.set(capturesRef, []), Ref.set(respondRef, defaultRespond)], { discard: true }),
+      reset: Effect.all([Ref.set(capturesRef, []), Ref.set(respondRef, defaultRespond)], {
+        concurrency: 1,
+        discard: true,
+      }),
       respondWith: Effect.fn("GovinfoTestHttp.respondWith")(function* (respond) {
         yield* Ref.set(respondRef, respond);
       }),

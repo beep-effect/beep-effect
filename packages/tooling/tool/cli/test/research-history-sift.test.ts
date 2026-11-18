@@ -75,7 +75,7 @@ const seedHistory = Effect.fn("ResearchHistorySiftTest.seedHistory")(
       rows,
       (row) =>
         db.run("INSERT INTO history.urls VALUES (?, ?, ?, ?)", [row.url, row.title, row.visitCount, row.lastVisitTime]),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     yield* db.run("DETACH history");
   },
@@ -102,7 +102,7 @@ const makeHome = Effect.fn("ResearchHistorySiftTest.makeHome")(function* (
         ? seedHistory(historyPath, rows)
         : fs.writeFileString(historyPath, Str.empty);
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   return home;
 });
@@ -189,7 +189,9 @@ it.layer(TestLayer, { timeout: "30 seconds" })("historySiftImpl", (it) => {
 
       const inbox = path.join(vaultRoot, VAULT_DIRS.inbox);
       const readDirectory3 = yield* fs.readDirectory(inbox);
-      const stubs = yield* Effect.forEach(readDirectory3, (name) => fs.readFileString(path.join(inbox, name)));
+      const stubs = yield* Effect.forEach(readDirectory3, (name) => fs.readFileString(path.join(inbox, name)), {
+        concurrency: 1,
+      });
       expect(A.length(stubs)).toBe(2);
       // The later visit of the same repository supplies the surviving title.
       expect(A.some(stubs, (stub) => Str.includes("title: Effect packages")(stub))).toBe(true);

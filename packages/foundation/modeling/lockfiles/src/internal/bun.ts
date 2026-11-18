@@ -328,7 +328,9 @@ const toFields = Effect.fn("BunLockfile.toFields")(function* (
       resolved: resolveBunEdges(instanceId, workspaceSections(row.entry), keys, instanceIds),
     });
   });
-  const externalPackages = yield* Effect.forEach(externals, (row) => externalPackage(row, keys, instanceIds));
+  const externalPackages = yield* Effect.forEach(externals, (row) => externalPackage(row, keys, instanceIds), {
+    concurrency: 1,
+  });
   return LockfileFields.make({
     lockfileVersion: String(raw.lockfileVersion),
     packages: A.appendAll(workspacePackages, externalPackages),

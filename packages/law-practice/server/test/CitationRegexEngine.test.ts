@@ -135,7 +135,8 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("pinned sour
                 Effect.fn("EngineTest.checkCapture")(function* ([start, end], index) {
                   const actual = yield* result.result.capture(index, 0);
                   expect(actual).toEqual({ _tag: "Range", start, end });
-                })
+                }),
+                { concurrency: 1 }
               );
             }
             const snapshot = yield* setup.observed.snapshot;

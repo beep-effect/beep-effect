@@ -336,20 +336,27 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
       pages,
       Effect.fnUntraced(function* (page: number) {
         const margins = yield* pdf.measurePage({ pdfPath, page, dpi: MARGIN_DPI, antiAlias: true });
-        const purity = yield* Effect.forEach(PURITY_DPIS, (dpi) =>
-          pdf
-            .measurePage({ pdfPath, page, dpi, antiAlias: false })
-            .pipe(Effect.map((metrics) => purityFindings({ page, metrics, options })))
+        const purity = yield* Effect.forEach(
+          PURITY_DPIS,
+          (dpi) =>
+            pdf
+              .measurePage({ pdfPath, page, dpi, antiAlias: false })
+              .pipe(Effect.map((metrics) => purityFindings({ page, metrics, options }))),
+          { concurrency: 1 }
         );
         return [...marginFindings({ page, metrics: margins }), ...A.flatten(purity)];
-      })
+      }),
+      { concurrency: 1 }
     );
     // Text labels are checked in the extracted text, which a missing font leaves empty.
     const textFindings = A.isReadonlyArrayNonEmpty(options.textLabels)
-      ? yield* Effect.forEach(pages, (page) =>
-          pdf
-            .pageText(resolved, page)
-            .pipe(Effect.map((text) => labelTextFindings({ page, pages: A.length(pages), text, options })))
+      ? yield* Effect.forEach(
+          pages,
+          (page) =>
+            pdf
+              .pageText(resolved, page)
+              .pipe(Effect.map((text) => labelTextFindings({ page, pages: A.length(pages), text, options }))),
+          { concurrency: 1 }
         )
       : [];
     return ValidationReport.make({
@@ -424,7 +431,8 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
         const file = path.join(directory, entry);
         const bytes = yield* readFont(file);
         return { file, bytes, ...(yield* fontNamesOf(file, bytes)) };
-      })
+      }),
+      { concurrency: 1 }
     );
     const resolve = Effect.fnUntraced(function* (requested: string) {
       const matches = A.filter(
@@ -449,7 +457,9 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
         onSome: (font) => Effect.succeed({ requested, ...font }),
       });
     });
-    const resolved = yield* Effect.forEach(A.dedupe(A.map(texts, ({ style }) => labelFontFamily(style))), resolve);
+    const resolved = yield* Effect.forEach(A.dedupe(A.map(texts, ({ style }) => labelFontFamily(style))), resolve, {
+      concurrency: 1,
+    });
     const fontFor = (style: LabelStyle) =>
       A.findFirst(resolved, (font) => font.requested === labelFontFamily(style)).pipe(
         O.match({
@@ -470,10 +480,13 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
         directory,
         families: A.map(resolved, (font) => LabelFontAlias.make({ requested: font.requested, family: font.family })),
       }),
-      pins: yield* Effect.forEach(resolved, (font) =>
-        Effect.map(sha256Hex(font.bytes), (digest) =>
-          FontPin.make({ family: font.requested, file: font.file, sha256: digest })
-        )
+      pins: yield* Effect.forEach(
+        resolved,
+        (font) =>
+          Effect.map(sha256Hex(font.bytes), (digest) =>
+            FontPin.make({ family: font.requested, file: font.file, sha256: digest })
+          ),
+        { concurrency: 1 }
       ),
       faces: SheetLabelFaces.make({
         sheetNumber: yield* faceFor("sheet-number"),
@@ -559,7 +572,7 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
           onSome: Effect.succeed,
         })
       );
-    const figureEdges = yield* Effect.forEach(spec.figures, (_, index) => edgesOf(index));
+    const figureEdges = yield* Effect.forEach(spec.figures, (_, index) => edgesOf(index), { concurrency: 1 });
     const omissions = yield* Effect.forEach(
       spec.omissions,
       Effect.fnUntraced(function* (claim: OmissionClaim, index: number) {
@@ -583,7 +596,8 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
               reason: "omission",
               message: `"${claim.omitted}" is not ${claim.relation} to "${claim.shown}": the projections differ.`,
             });
-      })
+      }),
+      { concurrency: 1 }
     );
     const scale = commonScale({ views: A.map(figureEdges, drawnSegments), options: sheet, faces });
     const shading = yield* shadingFor({
@@ -660,7 +674,8 @@ const makeService = Effect.fn("FigureSet.makeService")(function* () {
               ),
           }),
         });
-      })
+      }),
+      { concurrency: 1 }
     );
     const pdfFile = "sheets.pdf";
     const pdfPath = path.join(outputDir, pdfFile);

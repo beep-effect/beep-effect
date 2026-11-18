@@ -88,7 +88,9 @@ const formatCsvHeaderRowEffect = Effect.fn("CsvFormatter.formatCsvHeaderRowEffec
   headers: ReadonlyArray<string>,
   options: CsvCodecOptions
 ): Effect.fn.Return<string, CsvError> {
-  const fields = yield* Effect.forEach(headers, (header, index) => formatField(header, index, options));
+  const fields = yield* Effect.forEach(headers, (header, index) => formatField(header, index, options), {
+    concurrency: 1,
+  });
   return A.join(fields, options.delimiter);
 });
 
@@ -124,7 +126,9 @@ const formatCsvDataRowEffect = Effect.fn("CsvFormatter.formatCsvDataRowEffect")(
   fields: ReadonlyArray<string>,
   options: CsvCodecOptions
 ): Effect.fn.Return<string, CsvError> {
-  const encodedFields = yield* Effect.forEach(fields, (field, index) => formatField(field, index, options));
+  const encodedFields = yield* Effect.forEach(fields, (field, index) => formatField(field, index, options), {
+    concurrency: 1,
+  });
   return A.join(encodedFields, options.delimiter);
 });
 
@@ -162,7 +166,7 @@ const formatCsvDocumentEffect = Effect.fn("CsvFormatter.formatCsvDocumentEffect"
   options: CsvCodecOptions
 ): Effect.fn.Return<string, CsvError> {
   const header = yield* formatCsvHeaderRow(headers, options);
-  const dataRows = yield* Effect.forEach(rows, (row) => formatCsvDataRow(row, options));
+  const dataRows = yield* Effect.forEach(rows, (row) => formatCsvDataRow(row, options), { concurrency: 1 });
   return pipe([header, ...dataRows], A.join(rowDelimiter));
 });
 

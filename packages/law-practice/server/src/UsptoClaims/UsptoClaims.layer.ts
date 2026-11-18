@@ -118,7 +118,9 @@ const numberedClaim = Effect.fnUntraced(function* ([
 });
 
 const claimsFromXml = Effect.fn("UsptoClaims.claimsFromXml")(function* (xml: string) {
-  const numbered = yield* Effect.forEach(A.fromIterable(Str.matchAll(claimElementPattern)(xml)), numberedClaim);
+  const numbered = yield* Effect.forEach(A.fromIterable(Str.matchAll(claimElementPattern)(xml)), numberedClaim, {
+    concurrency: 1,
+  });
   if (A.isReadonlyArrayEmpty(numbered)) {
     return yield* portError("no-full-text-claims")(
       "The claims document has no XML claim elements; OCR text is not read."
@@ -380,7 +382,7 @@ const sourceRecords = Effect.fn("UsptoClaims.sourceRecords")(function* (xml: str
       Effect.fail(
         portError("no-full-text-claims")("The claims document has no XML claim records; OCR text is not read.")
       ),
-    onNonEmpty: (matches) => Effect.all(A.map(matches, inputRecord)),
+    onNonEmpty: (matches) => Effect.all(A.map(matches, inputRecord), { concurrency: 1 }),
   });
 });
 

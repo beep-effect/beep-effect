@@ -189,8 +189,10 @@ pipe(
                 ? sent.result
                 : yield* Effect.die(new Error("send_draft did not return a send result"));
               const names = yield* fs.readDirectory(prepared.auditDirectory);
-              const texts = yield* Effect.forEach(names, (name) =>
-                fs.readFileString(path.join(prepared.auditDirectory, name))
+              const texts = yield* Effect.forEach(
+                names,
+                (name) => fs.readFileString(path.join(prepared.auditDirectory, name)),
+                { concurrency: 1 }
               );
               const lines = pipe(texts, A.flatMap(Str.split("\n")), A.filter(Str.includes(`"${result.auditId}"`)));
 

@@ -461,11 +461,14 @@ const validateRedAttributions = Effect.fn("Goals.Completion.validateRedAttributi
   root: string,
   claims: ReadonlyArray<GoalRedAttributionClaim>
 ) {
-  const reads = yield* Effect.forEach(A.dedupe(A.map(claims, (claim) => claim.fixPullRequest)), (number) =>
-    readGoalCompletion(root, (io, root) => io.pullRequest(root, number)).pipe(
-      Effect.option,
-      Effect.map((pull) => [number, pull] as const)
-    )
+  const reads = yield* Effect.forEach(
+    A.dedupe(A.map(claims, (claim) => claim.fixPullRequest)),
+    (number) =>
+      readGoalCompletion(root, (io, root) => io.pullRequest(root, number)).pipe(
+        Effect.option,
+        Effect.map((pull) => [number, pull] as const)
+      ),
+    { concurrency: 1 }
   );
   const pulls = HashMap.fromIterable(reads);
   const pullOf = (claim: GoalRedAttributionClaim) => O.flatten(HashMap.get(pulls, claim.fixPullRequest));
@@ -1298,15 +1301,17 @@ const reportRefresh = Effect.fn("Goals.Completion.reportRefresh")(function* (
       : `${label}: ${receipt.outcome}`
   );
   yield* Effect.forEach(attributed, (red) => Console.log(`${label}: attributed ${describeAttributedRed(red)}`), {
+    concurrency: 1,
     discard: true,
   });
   if (receipt.outcome === "verified") return;
   yield* Effect.forEach(
     claims.committed.operatorRulings,
     (ruling) => Console.log(`${label}: closed by operator ruling ${ruling.decisionFile} (${ruling.source})`),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Effect.forEach(remediationHints(slug, receipt), (hint) => Console.log(`${label}: ${hint}`), {
+    concurrency: 1,
     discard: true,
   });
   if (equivalentClaimSet(claims.preview, claims.committed)) return;
@@ -1325,7 +1330,7 @@ const reportRefresh = Effect.fn("Goals.Completion.reportRefresh")(function* (
   yield* Effect.forEach(
     A.filter(claims.preview.operatorRulings, (ruling) => ruling.source === "working-tree"),
     (ruling) => Console.log(`${label}: operator ruling ${ruling.decisionFile} counts once committed`),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -1512,8 +1517,9 @@ export const updateGoalCloseoutShards = Effect.fn("Goals.updateGoalCloseoutShard
           : Result.failVoid
       )
     );
-    yield* Effect.forEach(superseded, (shard) => record(shard, 0), { discard: true });
+    yield* Effect.forEach(superseded, (shard) => record(shard, 0), { concurrency: 1, discard: true });
     yield* Effect.forEach(O.toArray(O.all([bound, update.exitCode])), ([shard, exitCode]) => record(shard, exitCode), {
+      concurrency: 1,
       discard: true,
     });
     return superseded;
@@ -1581,7 +1587,7 @@ const refresh = Effect.fn("Goals.Completion.refresh")(function* (slug: O.Option<
     onNone: () => records,
     onSome: (value) => A.filter(records, (record) => record.slug === value),
   });
-  yield* Effect.forEach(selected, (record) => refreshRecord(root, record, O.isSome(slug), write));
+  yield* Effect.forEach(selected, (record) => refreshRecord(root, record, O.isSome(slug), write), { concurrency: 1 });
 }, withGoalCompletionIo);
 /**
  * Explicit sole writer for derived completion receipts; doctor never calls this command.

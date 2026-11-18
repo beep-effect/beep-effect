@@ -8,7 +8,10 @@ import census from "./fixtures/census.json" with { type: "json" };
 
 /**
  * `fixtures/census.json` is the live state of beep-effect/beep-effect read on
- * 2026-11-13 (names and non-secret settings only). These tests fail when the
+ * 2026-11-13 (names and non-secret settings only). The eight labels without a
+ * description were re-read on 2026-11-18 after the first armed deploy: the stack
+ * writes `""` for a `None` description, and GitHub has returned `""` since, not
+ * `null`. These tests fail when the
  * declared configuration drifts from that capture, and when the capture holds
  * an object the configuration neither owns nor lists as unmanaged. A deliberate
  * change edits both the configuration and the snapshot in the same commit.
@@ -121,7 +124,8 @@ describe("the declared configuration matches the census", () => {
     expect(census.labels).toEqual(
       A.map(config.labels, ({ name, color, description }) => ({
         color,
-        description: O.getOrNull(description),
+        // What the stack writes (`declareLabel`), so the capture shows the converged state.
+        description: O.getOrElse(description, () => ""),
         name,
       }))
     );

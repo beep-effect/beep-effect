@@ -166,7 +166,7 @@ describe("failure-preserving source inspection policy", () => {
           record.kind === "text" ? record.canonicalText : "",
         ])
       );
-      const trees = yield* Effect.forEach(strict, (claim) => decomposeClaim(claim, strict));
+      const trees = yield* Effect.forEach(strict, (claim) => decomposeClaim(claim, strict), { concurrency: 1 });
       const report = yield* inspectClaimInput(input);
       assert.strictEqual(report.indexStatus, "complete");
       assert.isTrue(A.every(report.records, (record) => record.status === "complete"));

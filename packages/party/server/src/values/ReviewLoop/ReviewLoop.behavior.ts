@@ -234,7 +234,8 @@ export const applyReviews = Effect.fn("PartyReview.applyReviews")(function* (inp
       if (ReviewVerdict.guards.Skip(latest.verdict)) return row("skipped", O.some(latest));
       if (!holdsAt(latest.validity, input.scope.validAt)) return row("out-of-scope", O.some(latest));
       return row(groupedStatus(latest.verdict.groups), O.some(latest), candidate.success);
-    })
+    }),
+    { concurrency: 1 }
   );
   let changed = true;
   while (changed) {

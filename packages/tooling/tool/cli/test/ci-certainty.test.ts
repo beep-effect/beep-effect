@@ -416,21 +416,24 @@ describe("ci certainty monotonicity", () => {
           (head) => head.headClass === "code" && head.state === "green" && O.isNone(head.censor)
         );
         expect(A.length(greenCodeHeads)).toBeGreaterThan(0);
-        yield* Effect.forEach(greenCodeHeads, (head) =>
-          Effect.gen(function* () {
-            const flipped = yield* buildCiCertaintyReport(failCriticalContext(corpus, head));
-            const flippedHead = headStartingWith(flipped.heads, head.headSha);
-            strictEqual(flippedHead.state, "red");
-            strictEqual(flipped.slo.n, baseline.slo.n);
-            strictEqual(flipped.slo.misses, baseline.slo.misses + 1);
-            expect(percentileValue(flipped.slo.p50Minutes)).toBeGreaterThanOrEqual(
-              percentileValue(baseline.slo.p50Minutes)
-            );
-            expect(percentileValue(flipped.slo.p95Minutes)).toBeGreaterThanOrEqual(
-              percentileValue(baseline.slo.p95Minutes)
-            );
-            expect(flipped.slo.withinTen).toBeLessThanOrEqual(baseline.slo.withinTen);
-          })
+        yield* Effect.forEach(
+          greenCodeHeads,
+          (head) =>
+            Effect.gen(function* () {
+              const flipped = yield* buildCiCertaintyReport(failCriticalContext(corpus, head));
+              const flippedHead = headStartingWith(flipped.heads, head.headSha);
+              strictEqual(flippedHead.state, "red");
+              strictEqual(flipped.slo.n, baseline.slo.n);
+              strictEqual(flipped.slo.misses, baseline.slo.misses + 1);
+              expect(percentileValue(flipped.slo.p50Minutes)).toBeGreaterThanOrEqual(
+                percentileValue(baseline.slo.p50Minutes)
+              );
+              expect(percentileValue(flipped.slo.p95Minutes)).toBeGreaterThanOrEqual(
+                percentileValue(baseline.slo.p95Minutes)
+              );
+              expect(flipped.slo.withinTen).toBeLessThanOrEqual(baseline.slo.withinTen);
+            }),
+          { concurrency: 1 }
         );
       })
     );
@@ -1139,7 +1142,8 @@ describe("ci certainty command", () => {
                 assertInstanceOf(error, CiCommandError);
                 return error.message;
               })
-            )
+            ),
+          { concurrency: 1 }
         );
         deepStrictEqual(messages, [
           "--since must be an ISO-8601 UTC timestamp; received yesterday.",
@@ -1164,13 +1168,16 @@ describe("ci certainty command", () => {
     it.effect("fails the capture on a git log line without a valid commit time", () =>
       Effect.gen(function* () {
         // One line lacks the time field, the other carries one that does not parse.
-        const messages = yield* Effect.forEach([MAIN_CODE, `${MAIN_CODE}\tnot-a-time`], (line) =>
-          Effect.gen(function* () {
-            yield* seedRequiredContexts();
-            const error = yield* Effect.flip(runCertaintyCommand(["--since", "2026-11-09T00:00:00Z"]));
-            assertInstanceOf(error, CiCommandError);
-            return error.message;
-          }).pipe(withLiveCapture(A.empty<GithubFetchCall>(), liveGit({ stdout: `${line}\n` })))
+        const messages = yield* Effect.forEach(
+          [MAIN_CODE, `${MAIN_CODE}\tnot-a-time`],
+          (line) =>
+            Effect.gen(function* () {
+              yield* seedRequiredContexts();
+              const error = yield* Effect.flip(runCertaintyCommand(["--since", "2026-11-09T00:00:00Z"]));
+              assertInstanceOf(error, CiCommandError);
+              return error.message;
+            }).pipe(withLiveCapture(A.empty<GithubFetchCall>(), liveGit({ stdout: `${line}\n` }))),
+          { concurrency: 1 }
         );
         deepStrictEqual(messages, [
           `git log printed a commit line without a valid commit time: ${MAIN_CODE}`,

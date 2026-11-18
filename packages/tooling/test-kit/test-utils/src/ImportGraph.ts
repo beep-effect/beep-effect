@@ -316,17 +316,20 @@ export const closure = Effect.fn("ImportGraph.closure")(function* (options: Clos
     const visited = modules;
     const fresh = A.dedupe(A.filter(frontier, (module) => !HashSet.has(visited, module)));
     modules = HashSet.union(modules, HashSet.fromIterable(fresh));
-    const steps = yield* Effect.forEach(fresh, (module) =>
-      Effect.map(moduleImportsOf(options.sources, module), (edges) => {
-        const bare = A.filter(edges, P.not(isRelative));
-        return [
-          A.appendAll(
-            A.map(A.filter(edges, isRelative), (specifier) => resolveFrom(module, specifier)),
-            A.flatMap(bare, enter)
-          ),
-          bare,
-        ] as const;
-      })
+    const steps = yield* Effect.forEach(
+      fresh,
+      (module) =>
+        Effect.map(moduleImportsOf(options.sources, module), (edges) => {
+          const bare = A.filter(edges, P.not(isRelative));
+          return [
+            A.appendAll(
+              A.map(A.filter(edges, isRelative), (specifier) => resolveFrom(module, specifier)),
+              A.flatMap(bare, enter)
+            ),
+            bare,
+          ] as const;
+        }),
+      { concurrency: 1 }
     );
     packages = HashSet.union(packages, HashSet.fromIterable(A.flatMap(steps, ([, bare]) => bare)));
     frontier = A.flatMap(steps, ([next]) => next);

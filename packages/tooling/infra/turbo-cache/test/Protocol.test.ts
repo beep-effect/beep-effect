@@ -111,8 +111,10 @@ describe("artifactHandler refusals", () => {
         ["/v8/artifacts?slug=beep", "POST"],
         ["/v8/artifacts/status?slug=beep", "GET"],
       ] as const;
-      const anonymous = yield* Effect.forEach(endpoints, ([path, method]) => send(path, method));
-      const wrong = yield* Effect.forEach(endpoints, ([path, method]) => send(path, method, "test-only-wrong"));
+      const anonymous = yield* Effect.forEach(endpoints, ([path, method]) => send(path, method), { concurrency: 1 });
+      const wrong = yield* Effect.forEach(endpoints, ([path, method]) => send(path, method, "test-only-wrong"), {
+        concurrency: 1,
+      });
       expect(A.map([...anonymous, ...wrong], (response) => response.status)).toEqual(A.replicate(401, 8));
     })
   );
@@ -126,9 +128,11 @@ describe("artifactHandler refusals", () => {
         "/v8/artifacts/abc?slug=bad.slug",
         "/v8/artifacts/abc?slug=beep&teamId=team_beep",
       ];
-      const responses = yield* Effect.forEach(paths, (path) => send(path, "GET", "test-only-writer"));
+      const responses = yield* Effect.forEach(paths, (path) => send(path, "GET", "test-only-writer"), {
+        concurrency: 1,
+      });
       expect(A.map(responses, (response) => response.status)).toEqual(A.replicate(403, paths.length));
-      const codes = yield* Effect.forEach(responses, codeOf);
+      const codes = yield* Effect.forEach(responses, codeOf, { concurrency: 1 });
       expect(codes).toEqual(A.replicate("forbidden", paths.length));
     })
   );

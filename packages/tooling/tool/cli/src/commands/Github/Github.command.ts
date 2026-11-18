@@ -24,15 +24,21 @@ const mintCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Print the checked-in App manifest byte for byte and exit without serving")
     ),
+    opCli: Flag.String("op-cli").pipe(
+      Flag.optional,
+      Flag.withDescription(
+        "1Password CLI that stores the credentials (default: op-human when on PATH, else op); it must be able to create items in BEEP_SECRETS"
+      )
+    ),
   },
-  Effect.fn("Github.app.mint")(function* ({ app, dryRun }) {
+  Effect.fn("Github.app.mint")(function* ({ app, dryRun, opCli }) {
     const mint = yield* GitHubAppMint;
     if (dryRun) {
       const text = yield* mint.manifestText(app);
       const stdio = yield* Stdio.Stdio;
       return yield* Stream.make(text).pipe(Stream.run(stdio.stdout()));
     }
-    return yield* mint.serve(app);
+    return yield* mint.serve(app, opCli);
   })
 ).pipe(
   Command.withDescription(

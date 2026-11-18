@@ -123,12 +123,16 @@ export const installAgentRunsSlice = Effect.fn("AgentRunsSlice.install")(functio
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const unitDir = systemdUserUnitDir(path, home);
-  return yield* Effect.forEach(AGENT_RUNS_SLICE_UNITS, (unit) => {
-    const target = path.join(unitDir, ...unit.relativePath);
-    return fs
-      .makeDirectory(path.dirname(target), { recursive: true })
-      .pipe(Effect.andThen(fs.writeFileString(target, unit.text)), Effect.as(target));
-  });
+  return yield* Effect.forEach(
+    AGENT_RUNS_SLICE_UNITS,
+    (unit) => {
+      const target = path.join(unitDir, ...unit.relativePath);
+      return fs
+        .makeDirectory(path.dirname(target), { recursive: true })
+        .pipe(Effect.andThen(fs.writeFileString(target, unit.text)), Effect.as(target));
+    },
+    { concurrency: 1 }
+  );
 });
 
 /**

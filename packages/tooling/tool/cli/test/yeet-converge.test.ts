@@ -300,8 +300,10 @@ it.layer(platform, { timeout: "30 seconds" })("Converge", (test) => {
         YeetAckThreadResolution.make({ url: `${url}#discussion_r1` }),
         YeetAckWontfixResolution.make({ reason: "the base moves daily" }),
       ];
-      yield* Effect.forEach(A.zip(written, resolutions), ([row, resolution]) =>
-        writeYeetAckReceipt(root, YeetAckReceipt.make({ ackedAt: at, id: row.id, resolution }))
+      yield* Effect.forEach(
+        A.zip(written, resolutions),
+        ([row, resolution]) => writeYeetAckReceipt(root, YeetAckReceipt.make({ ackedAt: at, id: row.id, resolution })),
+        { concurrency: 1 }
       );
       // An unrelated append rebuilds the active index, which drops acked rows.
       const unrelatedCapsule = YeetBaseDriftCapsule.make({ base: "origin/main", headSha: fixHead, prNumber: 8 });

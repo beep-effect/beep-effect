@@ -446,7 +446,7 @@ describe("ReviewThread mutations", () => {
           },
           requested,
         },
-        (threads) => Effect.all([threads.resolve("PRRT_1"), threads.unresolve("PRRT_1")])
+        (threads) => Effect.all([threads.resolve("PRRT_1"), threads.unresolve("PRRT_1")], { concurrency: 1 })
       );
       assert.isTrue(resolved);
       assert.isFalse(unresolved);

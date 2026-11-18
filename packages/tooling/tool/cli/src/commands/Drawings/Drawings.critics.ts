@@ -963,7 +963,9 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
     Effect.fn("DrawingCritics.copyContext")(function* (dir: string) {
       yield* mkdir(path.join(packDir, "context"));
       const names = yield* fs.readDirectory(dir).pipe(Effect.mapError(fail(`Could not list "${dir}".`)));
-      yield* Effect.forEach(names, (name) => copy(path.join(dir, name), path.join(packDir, "context", name)));
+      yield* Effect.forEach(names, (name) => copy(path.join(dir, name), path.join(packDir, "context", name)), {
+        concurrency: 1,
+      });
     });
 
   const buildPack = Effect.fn("DrawingCritics.buildPack")(function* (request: CriticPackRequest) {
@@ -979,51 +981,64 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
     const pdfPath = path.join(manifestDir, manifest.pdfFile);
     yield* copy(pdfPath, path.join(renderDir, "sheets.pdf"));
     yield* copy(manifestPath, path.join(renderDir, "manifest.json"));
-    const svgs = yield* Effect.forEach(manifest.figures, (figure) =>
-      copy(path.join(manifestDir, figure.svgFile), path.join(renderDir, figure.svgFile)).pipe(
-        Effect.as(`render/${figure.svgFile}`)
-      )
-    );
-    const sheets = yield* Effect.forEach(manifest.figures, (figure) =>
-      tools
-        .renderPng(
-          PngRequest.make({
-            pdfPath,
-            page: figure.figure,
-            dpi: SHEET_DPI,
-            outputPath: path.join(renderDir, `pg-${figure.figure}.png`),
-          })
-        )
-        .pipe(
-          Effect.mapError(fail(`Could not render FIG. ${figure.figure}.`)),
-          Effect.as(`render/pg-${figure.figure}.png`)
-        )
-    );
-    const zooms = yield* Effect.forEach(request.zooms, (zoom) => {
-      const prefix = path.join(renderDir, `zoom-${zoom.figure}-${zoom.label}`);
-      // pdftoppm appends -<page> to the prefix; rename to the bare name.
-      return cropZoom(pdfPath, zoom, prefix).pipe(
-        Effect.andThen(
-          fs
-            .rename(`${prefix}-${zoom.figure}.png`, `${prefix}.png`)
-            .pipe(Effect.mapError(fail(`Could not name the zoom "${prefix}.png".`)))
+    const svgs = yield* Effect.forEach(
+      manifest.figures,
+      (figure) =>
+        copy(path.join(manifestDir, figure.svgFile), path.join(renderDir, figure.svgFile)).pipe(
+          Effect.as(`render/${figure.svgFile}`)
         ),
-        Effect.as(`render/zoom-${zoom.figure}-${zoom.label}.png`)
-      );
-    });
-    const figureSvgs = yield* Effect.forEach(manifest.figures, (figure) =>
-      read(path.join(manifestDir, figure.svgFile)).pipe(
-        Effect.map((svg) => ({
-          figure: figure.figure,
-          view: figure.view,
-          svgFile: `render/${figure.svgFile}`,
-          svg,
-          coverage: Result.getOrThrowWith(
-            S.encodeUnknownResult(UnknownJson)(O.getOrElse(figure.shadingCoverage, () => null)),
-            identity
+      { concurrency: 1 }
+    );
+    const sheets = yield* Effect.forEach(
+      manifest.figures,
+      (figure) =>
+        tools
+          .renderPng(
+            PngRequest.make({
+              pdfPath,
+              page: figure.figure,
+              dpi: SHEET_DPI,
+              outputPath: path.join(renderDir, `pg-${figure.figure}.png`),
+            })
+          )
+          .pipe(
+            Effect.mapError(fail(`Could not render FIG. ${figure.figure}.`)),
+            Effect.as(`render/pg-${figure.figure}.png`)
           ),
-        }))
-      )
+      { concurrency: 1 }
+    );
+    const zooms = yield* Effect.forEach(
+      request.zooms,
+      (zoom) => {
+        const prefix = path.join(renderDir, `zoom-${zoom.figure}-${zoom.label}`);
+        // pdftoppm appends -<page> to the prefix; rename to the bare name.
+        return cropZoom(pdfPath, zoom, prefix).pipe(
+          Effect.andThen(
+            fs
+              .rename(`${prefix}-${zoom.figure}.png`, `${prefix}.png`)
+              .pipe(Effect.mapError(fail(`Could not name the zoom "${prefix}.png".`)))
+          ),
+          Effect.as(`render/zoom-${zoom.figure}-${zoom.label}.png`)
+        );
+      },
+      { concurrency: 1 }
+    );
+    const figureSvgs = yield* Effect.forEach(
+      manifest.figures,
+      (figure) =>
+        read(path.join(manifestDir, figure.svgFile)).pipe(
+          Effect.map((svg) => ({
+            figure: figure.figure,
+            view: figure.view,
+            svgFile: `render/${figure.svgFile}`,
+            svg,
+            coverage: Result.getOrThrowWith(
+              S.encodeUnknownResult(UnknownJson)(O.getOrElse(figure.shadingCoverage, () => null)),
+              identity
+            ),
+          }))
+        ),
+      { concurrency: 1 }
     );
     yield* write(
       path.join(renderDir, "RENDER.md"),
@@ -1053,12 +1068,16 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
         const name = path.basename(dir);
         yield* mkdir(path.join(packDir, "images", name));
         const files = yield* imagesIn(dir);
-        return yield* Effect.forEach(files, (file) =>
-          copy(file, path.join(packDir, "images", name, path.basename(file))).pipe(
-            Effect.as(`images/${name}/${path.basename(file)}`)
-          )
+        return yield* Effect.forEach(
+          files,
+          (file) =>
+            copy(file, path.join(packDir, "images", name, path.basename(file))).pipe(
+              Effect.as(`images/${name}/${path.basename(file)}`)
+            ),
+          { concurrency: 1 }
         );
-      })
+      }),
+      { concurrency: 1 }
     ).pipe(Effect.map(A.flatten));
     yield* O.match(request.contextDir, { onNone: () => Effect.void, onSome: copyContext(packDir) });
     yield* copy(path.resolve(request.briefPath), path.join(packDir, "BRIEF.md"));
@@ -1096,11 +1115,14 @@ const makeService = Effect.fn("DrawingCritics.make")(function* () {
       A.filter((name) => Str.endsWith(name, ".json")),
       A.sort(Order.String)
     );
-    return yield* Effect.forEach(files, (name) =>
-      read(path.join(priorDir, name)).pipe(
-        Effect.flatMap(decodeCriticReport),
-        Effect.mapError(fail(`"${name}" is not a critic report.`))
-      )
+    return yield* Effect.forEach(
+      files,
+      (name) =>
+        read(path.join(priorDir, name)).pipe(
+          Effect.flatMap(decodeCriticReport),
+          Effect.mapError(fail(`"${name}" is not a critic report.`))
+        ),
+      { concurrency: 1 }
     );
   });
 
@@ -1536,15 +1558,18 @@ export const DEFAULT_CRITIC_REVIEWERS: ReadonlyArray<CriticReviewer> = [
 export const selectReviewers = (
   names: ReadonlyArray<string>
 ): Effect.Effect<ReadonlyArray<CriticReviewer>, DrawingsCommandError> =>
-  Effect.forEach(names, (name) =>
-    Effect.fromOption(A.findFirst(DEFAULT_CRITIC_REVIEWERS, (reviewer) => reviewer.name === name)).pipe(
-      Effect.mapError(() =>
-        DrawingsCommandError.make({
-          message: `"${name}" is not a known reviewer; known: ${A.join(
-            A.map(DEFAULT_CRITIC_REVIEWERS, (r) => r.name),
-            ", "
-          )}.`,
-        })
-      )
-    )
+  Effect.forEach(
+    names,
+    (name) =>
+      Effect.fromOption(A.findFirst(DEFAULT_CRITIC_REVIEWERS, (reviewer) => reviewer.name === name)).pipe(
+        Effect.mapError(() =>
+          DrawingsCommandError.make({
+            message: `"${name}" is not a known reviewer; known: ${A.join(
+              A.map(DEFAULT_CRITIC_REVIEWERS, (r) => r.name),
+              ", "
+            )}.`,
+          })
+        )
+      ),
+    { concurrency: 1 }
   );

@@ -417,7 +417,10 @@ export const makeMcpbPackageCommand = (spec: McpbPackageSpec) =>
         Match.when("windows-x64", () => [McpbTarget.Enum["windows-x64"]]),
         Match.exhaustive
       );
-      yield* Effect.forEach(targets, (targetName) => packageTarget(spec, targetName, output), { discard: true });
+      yield* Effect.forEach(targets, (targetName) => packageTarget(spec, targetName, output), {
+        concurrency: 1,
+        discard: true,
+      });
     })
   );
 

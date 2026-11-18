@@ -51,7 +51,8 @@ export const prepareCitationAnnotations = Effect.fn("Citation.prepareAnnotations
       const start = yield* updater.value.update(replacement.start, "right");
       const end = yield* updater.value.update(replacement.end, "left");
       return CitationAnnotationReplacement.make({ ...replacement, start, end });
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 

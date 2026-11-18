@@ -150,7 +150,8 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
               },
               catch: failure(relative(file), "Failed to parse source file."),
             }),
-        })
+        }),
+      { concurrency: 1 }
     );
     return combineHarvests(harvests);
   });
@@ -164,23 +165,26 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
     const files = yield* fsUtils
       .globFiles(DECLARATION_GLOBS, { absolute: true, cwd: repoRoot, ignore: SOURCE_IGNORE })
       .pipe(Effect.mapError(failure(repoRoot, "Failed to list instruments files.")));
-    return yield* Effect.forEach(A.sort(files, Str.Order), (file) =>
-      Effect.tryPromise({
-        try: (): Promise<Record<string, unknown>> => import(file),
-        catch: failure(relative(file), "Failed to import instrument declarations."),
-      }).pipe(
-        Effect.flatMap((module) => {
-          const declarations = A.filter(R.values(module), isInstrumentDeclarations);
-          return A.isReadonlyArrayNonEmpty(declarations)
-            ? Effect.succeed(DeclarationsFile.make({ file: PosixPath.make(relative(file)), declarations }))
-            : Effect.fail(
-                ObservabilityCommandError.make({
-                  path: relative(file),
-                  message: "Instruments file exports no InstrumentDeclarations value.",
-                })
-              );
-        })
-      )
+    return yield* Effect.forEach(
+      A.sort(files, Str.Order),
+      (file) =>
+        Effect.tryPromise({
+          try: (): Promise<Record<string, unknown>> => import(file),
+          catch: failure(relative(file), "Failed to import instrument declarations."),
+        }).pipe(
+          Effect.flatMap((module) => {
+            const declarations = A.filter(R.values(module), isInstrumentDeclarations);
+            return A.isReadonlyArrayNonEmpty(declarations)
+              ? Effect.succeed(DeclarationsFile.make({ file: PosixPath.make(relative(file)), declarations }))
+              : Effect.fail(
+                  ObservabilityCommandError.make({
+                    path: relative(file),
+                    message: "Instruments file exports no InstrumentDeclarations value.",
+                  })
+                );
+          })
+        ),
+      { concurrency: 1 }
     );
   }).pipe(Effect.withSpan("InstrumentationCatalog.loadDeclarations"));
 
@@ -272,14 +276,18 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
       O.match(scopedOwners, { onNone: () => true, onSome: A.contains(shard.package) })
     );
     const expected = HashSet.fromIterable(A.map(shards, (shard) => shardPath(shard.package)));
-    const written = yield* Effect.forEach(shards, (shard) => {
-      const shardFile = shardPath(shard.package);
-      return renderShardText(shard).pipe(
-        Effect.mapError(failure(shardFile, "Failed to encode the catalog shard.")),
-        Effect.flatMap((text) => sync(mode, shardFile, () => Effect.succeed(text))),
-        Effect.map((status) => GeneratedFile.make({ path: PosixPath.make(shardFile), status }))
-      );
-    });
+    const written = yield* Effect.forEach(
+      shards,
+      (shard) => {
+        const shardFile = shardPath(shard.package);
+        return renderShardText(shard).pipe(
+          Effect.mapError(failure(shardFile, "Failed to encode the catalog shard.")),
+          Effect.flatMap((text) => sync(mode, shardFile, () => Effect.succeed(text))),
+          Effect.map((status) => GeneratedFile.make({ path: PosixPath.make(shardFile), status }))
+        );
+      },
+      { concurrency: 1 }
+    );
     // Scoped: only an in-scope owner that lost its last span is an orphan.
     const orphans = yield* O.match(scopedOwners, {
       onNone: () =>
@@ -293,8 +301,10 @@ const makeInstrumentationCatalog = Effect.fn("InstrumentationCatalog.make")(func
           (file) => fs.exists(path.join(repoRoot, file)).pipe(Effect.mapError(failure(file, "Failed to stat file.")))
         ),
     });
-    const retired = yield* Effect.forEach(A.sort(orphans, Str.Order), (file) =>
-      Effect.map(retire(mode, file), (status) => GeneratedFile.make({ path: PosixPath.make(file), status }))
+    const retired = yield* Effect.forEach(
+      A.sort(orphans, Str.Order),
+      (file) => Effect.map(retire(mode, file), (status) => GeneratedFile.make({ path: PosixPath.make(file), status })),
+      { concurrency: 1 }
     );
     const standard = O.isSome(scoped)
       ? GeneratedFileStatus.Enum.skipped

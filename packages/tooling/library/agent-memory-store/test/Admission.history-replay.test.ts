@@ -62,7 +62,9 @@ const replayLayer = Layer.effect(
     const workspace = yield* tempDirectory("beep-ac3-history-");
     const prepared = yield* prepareReplay(fixture, workspace, historyStatus);
     const history = yield* replayInSubmissionOrder(prepared);
-    const seeded = yield* Effect.forEach(seeds, (seed) => Effect.map(replayOnce(prepared, seed), verdictOf));
+    const seeded = yield* Effect.forEach(seeds, (seed) => Effect.map(replayOnce(prepared, seed), verdictOf), {
+      concurrency: 1,
+    });
     return HistoryReplay.of({
       sessions: replay.sessions,
       commit: replay.commit,

@@ -333,7 +333,7 @@ describe("@beep/law-practice-server legal position record repository", () => {
 
     const readPerOrganization = Effect.fnUntraced(function* (recorded: ReadonlyArray<LegalPositionRelator>) {
       const repository = yield* makeInMemoryLegalPositionRecordRepository();
-      yield* Effect.forEach(recorded, (relator) => repository.recordRelator(relator));
+      yield* Effect.forEach(recorded, (relator) => repository.recordRelator(relator), { concurrency: 1 });
 
       return yield* Effect.forEach(
         HashSet.fromIterable(A.map(recorded, (relator) => relator.orgId)),
@@ -347,7 +347,8 @@ describe("@beep/law-practice-server legal position record repository", () => {
             Order.Number
           );
           return { expected, read: ids(read) };
-        })
+        }),
+        { concurrency: 1 }
       );
     });
 

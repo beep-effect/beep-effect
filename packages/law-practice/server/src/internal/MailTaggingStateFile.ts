@@ -127,6 +127,8 @@ export const decodeLines =
     readonly corrupt: (line: O.Option<number>) => () => E2;
   }) =>
   (text: string): Effect.Effect<ReadonlyArray<A>, E2> =>
-    Effect.forEach(numberedLines(text), ([number, line]) =>
-      Effect.mapError(codec.decode(line), codec.corrupt(O.some(number)))
+    Effect.forEach(
+      numberedLines(text),
+      ([number, line]) => Effect.mapError(codec.decode(line), codec.corrupt(O.some(number))),
+      { concurrency: 1 }
     );

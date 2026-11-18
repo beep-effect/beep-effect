@@ -289,13 +289,15 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
       const provenancePath = path.join(corpusRoot, "raw", "provenance.jsonl");
       const readFileString1 = yield* fs.readFileString(provenancePath);
       const provenanceLines = pipe(readFileString1, Str.split(/\r?\n/u), A.filter(Str.isNonEmpty));
-      const provenance = yield* Effect.forEach(provenanceLines, CorpusLedgerRecordJson.decode);
+      const provenance = yield* Effect.forEach(provenanceLines, CorpusLedgerRecordJson.decode, { concurrency: 1 });
       expect(A.filter(provenance, isT7ArchiveProvenanceRecord)).toHaveLength(3);
 
       const inheritedLossPath = path.join(archiveRoot, "inherited-loss.jsonl");
       const completeInheritedLoss = yield* fs.readFileString(inheritedLossPath);
       const inheritedLossLines = pipe(completeInheritedLoss, Str.split(/\r?\n/u), A.filter(Str.isNonEmpty));
-      const inheritedLoss = yield* Effect.forEach(inheritedLossLines, (line) => decodeInheritedLossRow(line));
+      const inheritedLoss = yield* Effect.forEach(inheritedLossLines, (line) => decodeInheritedLossRow(line), {
+        concurrency: 1,
+      });
       expect(A.map(inheritedLoss, (row) => [row.lossClass, row.count])).toEqual([
         ["collector-error", 1],
         ["deliberate-exclusion", 1],
@@ -1080,8 +1082,8 @@ it.layer(preservationTestLayer, { concurrent: false, timeout: "30 seconds" })("T
         sizeBytes: S.Natural.make(0),
         sourceClass: "salvage-tree",
       });
-      const stream = yield* Effect.forEach([legacy, archive], CorpusLedgerRecordJson.encode);
-      const decoded = yield* Effect.forEach(stream, CorpusLedgerRecordJson.decode);
+      const stream = yield* Effect.forEach([legacy, archive], CorpusLedgerRecordJson.encode, { concurrency: 1 });
+      const decoded = yield* Effect.forEach(stream, CorpusLedgerRecordJson.decode, { concurrency: 1 });
       const provenanceOnly = yield* decodeProvenanceLinesForTesting(`${A.join(stream, "\n")}\n`);
       const malformed = yield* decodeProvenanceLinesForTesting("{}\n").pipe(Effect.flip);
       expect(decoded).toEqual([legacy, archive]);

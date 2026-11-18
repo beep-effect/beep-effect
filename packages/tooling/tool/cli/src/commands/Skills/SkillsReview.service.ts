@@ -343,7 +343,7 @@ const requireOneHunk = (entry: SkillReviewScriptEntry, known: HashSet.HashSet<st
 export const skillReviewDeciderFromScript = (script: SkillReviewScript): SkillReviewDeciderShape =>
   SkillReviewDecider.of({
     prepare: Effect.fn("SkillReviewDeciderScript.prepare")(function* (_queue, known) {
-      const named = yield* Effect.forEach(script, (entry) => requireOneHunk(entry, known));
+      const named = yield* Effect.forEach(script, (entry) => requireOneHunk(entry, known), { concurrency: 1 });
       // Two entries that resolve to the same hunk are refused up front, before anything is recorded.
       const repeated = A.filter(
         A.dedupe(named),
@@ -516,7 +516,8 @@ const hunkTextsOf = Effect.fn("SkillsReview.hunkTextsOf")(function* (
     Effect.fnUntraced(function* (patch) {
       const decodedPatchText = yield* decodePatchText(skill, patch);
       return yield* listSkillPatchHunks(patch.path, decodedPatchText);
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.flatten(listed);
 });
@@ -710,7 +711,8 @@ const ghostRows = Effect.fn("SkillsReview.ghostRows")(function* (queue: Readonly
             prior.reviewer,
             "ghost"
           ),
-      })
+      }),
+    { concurrency: 1 }
   );
 });
 
@@ -742,8 +744,10 @@ const runReview = Effect.fn("SkillsReview.runReview")(function* (
   const ledger = yield* readHunkLedger(repoRoot);
   const batch = yield* train.replay(repoRoot, options.skill);
   const skills = vendoredEntries(lock.document.skills);
-  const reviewed = yield* Effect.forEach(batch.reports, (report) =>
-    reviewSkill(repoRoot, ledger, skills, base, report)
+  const reviewed = yield* Effect.forEach(
+    batch.reports,
+    (report) => reviewSkill(repoRoot, ledger, skills, base, report),
+    { concurrency: 1 }
   );
   const queue = A.flatMap(reviewed, ({ items }) => items);
   const session = (walk: Walk) =>

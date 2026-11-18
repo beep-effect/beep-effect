@@ -1,4 +1,9 @@
-import { GitHubAppMint, gitHubAppMintLayer, makeGitHubAppMintHandler } from "@beep/repo-cli/commands/Github";
+import {
+  GitHubAppMint,
+  GitHubAppVaultWriter,
+  gitHubAppMintLayer,
+  makeGitHubAppMintHandler,
+} from "@beep/repo-cli/commands/Github";
 import { gitHubAppManifestPath } from "@beep/repo-configs/PolicyData";
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
@@ -107,7 +112,12 @@ const harness = Effect.fn("GitHubAppMintTest.harness")(function* (app: App, opEx
       )
     )
   );
-  const handler = yield* makeGitHubAppMintHandler({ app, nonce: "fixture-state", manifestJson: '{"name":"x"}' });
+  const handler = yield* makeGitHubAppMintHandler({
+    app,
+    nonce: "fixture-state",
+    manifestJson: '{"name":"x"}',
+    writer: GitHubAppVaultWriter.make({ command: "op", source: "op" }),
+  });
   const get = Effect.fn("GitHubAppMintTest.get")(function* (url: string) {
     const response = yield* handler.pipe(
       Effect.provideService(HttpServerRequest.HttpServerRequest, HttpServerRequest.fromWeb(new Request(url))),

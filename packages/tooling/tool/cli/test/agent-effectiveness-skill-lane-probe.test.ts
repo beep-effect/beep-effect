@@ -395,7 +395,7 @@ const writeFixture = Effect.fn("SkillLaneProbeTest.writeFixture")(function* (
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const dir = yield* fs.makeTempDirectoryScoped({ directory: privacySafeSystemTempRoot(), prefix: "beep-lane-probe-" });
-  const lines = yield* Effect.forEach(records, (record) => encodeJsonLines(record));
+  const lines = yield* Effect.forEach(records, (record) => encodeJsonLines(record), { concurrency: 1 });
   const recordsPath = path.join(dir, "runs.jsonl");
   const preflightPath = path.join(dir, "preflight.json");
   yield* fs.writeFileString(recordsPath, `${A.join(lines, "\n")}\n`);

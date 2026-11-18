@@ -152,6 +152,20 @@ const ioError =
       path,
     });
 
+// Decodes each non-empty line of a JSON Lines document in order; the first
+// line that fails becomes a `PreservationArchiveIoError` for `operation`.
+const decodeJsonLines = <Row, E, R>(
+  text: string,
+  decode: (line: string) => Effect.Effect<Row, E, R>,
+  operation: string,
+  path: string
+): Effect.Effect<ReadonlyArray<Row>, PreservationArchiveIoError, R> =>
+  Effect.forEach(
+    pipe(Str.split(/\r?\n/u)(text), A.filter(Str.isNonEmpty)),
+    (line) => decode(line).pipe(Effect.mapError(ioError(operation, path))),
+    { concurrency: 1 }
+  );
+
 const archiveRootFor = (corpusRoot: string, path: Path.Path): string =>
   path.join(path.resolve(corpusRoot), "raw", archiveDirectoryName);
 
@@ -333,10 +347,7 @@ const readManifest = Effect.fn("Preservation.readManifest")(function* (
     return A.empty<PreservationManifestRow>();
   }
   const text = yield* fs.readFileString(manifestPath).pipe(Effect.mapError(ioError("manifest-read", manifestPath)));
-  const lines = pipe(Str.split(/\r?\n/u)(text), A.filter(Str.isNonEmpty));
-  return yield* Effect.forEach(lines, (line) =>
-    PreservationManifestRowJson.decode(line).pipe(Effect.mapError(ioError("manifest-decode", manifestPath)))
-  );
+  return yield* decodeJsonLines(text, PreservationManifestRowJson.decode, "manifest-decode", manifestPath);
 });
 
 const terminalManifestRows = (rows: ReadonlyArray<PreservationManifestRow>): ReadonlyArray<PreservationManifestRow> => {
@@ -941,10 +952,7 @@ const readCollectorManifest = Effect.fn("Preservation.readCollectorManifest")(fu
   const text = yield* fs
     .readFileString(manifestPath)
     .pipe(Effect.mapError(ioError("collector-manifest-read", manifestPath)));
-  const lines = pipe(Str.split(/\r?\n/u)(text), A.filter(Str.isNonEmpty));
-  return yield* Effect.forEach(lines, (line) =>
-    CollectorManifestRecordJson.decode(line).pipe(Effect.mapError(ioError("collector-manifest-decode", manifestPath)))
-  );
+  return yield* decodeJsonLines(text, CollectorManifestRecordJson.decode, "collector-manifest-decode", manifestPath);
 });
 
 type CollectorTerminalEvidence = {
@@ -1001,8 +1009,10 @@ const collectorTerminalEvidence = Effect.fn("Preservation.collectorTerminalEvide
       path: manifestPath,
     });
   }
-  const terminalEntries = yield* Effect.forEach(successfulRows, (row) =>
-    collectorSuccessCoordinates(row, manifestPath)
+  const terminalEntries = yield* Effect.forEach(
+    successfulRows,
+    (row) => collectorSuccessCoordinates(row, manifestPath),
+    { concurrency: 1 }
   );
   return {
     collectorErrors: A.length(A.filter(rows, (row) => row.status === "error")),
@@ -1045,8 +1055,10 @@ const reconcileCollectorDestinations = Effect.fn("Preservation.reconcileCollecto
   PreservationArchiveIoError,
   FileSystem.FileSystem | Path.Path
 > {
-  return yield* Effect.forEach(terminalSuccesses, ([relative, expectedSize]) =>
-    reconcileCollectorDestination(salvageRoot, manifestPath, relative, expectedSize)
+  return yield* Effect.forEach(
+    terminalSuccesses,
+    ([relative, expectedSize]) => reconcileCollectorDestination(salvageRoot, manifestPath, relative, expectedSize),
+    { concurrency: 1 }
   );
 });
 
@@ -1111,10 +1123,7 @@ const readInheritedLossRows = Effect.fn("Preservation.readInheritedLossRows")(fu
     return A.empty<InheritedLossRow>();
   }
   const text = yield* fs.readFileString(ledgerPath).pipe(Effect.mapError(ioError("inherited-loss-read", ledgerPath)));
-  const lines = pipe(Str.split(/\r?\n/u)(text), A.filter(Str.isNonEmpty));
-  return yield* Effect.forEach(lines, (line) =>
-    InheritedLossRowJson.decode(line).pipe(Effect.mapError(ioError("inherited-loss-decode", ledgerPath)))
-  );
+  return yield* decodeJsonLines(text, InheritedLossRowJson.decode, "inherited-loss-decode", ledgerPath);
 });
 
 const seedInheritedLossLedger = Effect.fn("Preservation.seedInheritedLossLedger")(function* (
@@ -1137,7 +1146,7 @@ const seedInheritedLossLedger = Effect.fn("Preservation.seedInheritedLossLedger"
     }
     return;
   }
-  const encoded = yield* Effect.forEach(expected, InheritedLossRowJson.encode).pipe(
+  const encoded = yield* Effect.forEach(expected, InheritedLossRowJson.encode, { concurrency: 1 }).pipe(
     Effect.mapError(ioError("inherited-loss-encode", ledgerPath))
   );
   yield* writeFileDurably(ledgerPath, `${A.join(encoded, "\n")}\n`);
@@ -1438,10 +1447,7 @@ const readCorpusLedger = Effect.fn("Preservation.readCorpusLedger")(function* (
     return A.empty<CorpusLedgerRecord>();
   }
   const text = yield* fs.readFileString(ledgerPath).pipe(Effect.mapError(ioError("provenance-read", ledgerPath)));
-  const lines = pipe(Str.split(/\r?\n/u)(text), A.filter(Str.isNonEmpty));
-  return yield* Effect.forEach(lines, (line) =>
-    CorpusLedgerRecordJson.decode(line).pipe(Effect.mapError(ioError("provenance-decode", ledgerPath)))
-  );
+  return yield* decodeJsonLines(text, CorpusLedgerRecordJson.decode, "provenance-decode", ledgerPath);
 });
 
 const appendPassProvenance = Effect.fn("Preservation.appendPassProvenance")(function* (

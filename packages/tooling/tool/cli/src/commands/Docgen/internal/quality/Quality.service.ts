@@ -278,7 +278,7 @@ export const analyzePackageQuality = Effect.fn("DocgenQuality.analyzePackageQual
   const budget = makeRuntimeBudget(options?.packageTimeout ?? DEFAULT_PACKAGE_TIMEOUT);
   return yield* Effect.gen(function* () {
     const candidateResult = yield* collectPackageSubjectCandidates(target, budget);
-    const finalizedSubjects = yield* Effect.forEach(candidateResult.candidates, finalizeSubject);
+    const finalizedSubjects = yield* Effect.forEach(candidateResult.candidates, finalizeSubject, { concurrency: 1 });
     const subjects = yield* withGeneratedDocSnippets(
       target,
       pipe(

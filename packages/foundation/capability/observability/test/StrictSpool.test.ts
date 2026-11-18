@@ -188,8 +188,10 @@ describe("StrictSpool", () => {
         expect(readDirectory2).toEqual(before);
         expect(A.map(entries, (entry) => entry.sealedAtMillis)).toEqual([0, 1_700_000_000, 0]);
         const segmentFiles3 = yield* segmentFiles("/survey");
-        const sizes = yield* Effect.forEach(segmentFiles3, (name) =>
-          fs.stat(`/survey/${name}`).pipe(Effect.map((info) => ByteSize.toNumberUnsafe(info.size)))
+        const sizes = yield* Effect.forEach(
+          segmentFiles3,
+          (name) => fs.stat(`/survey/${name}`).pipe(Effect.map((info) => ByteSize.toNumberUnsafe(info.size))),
+          { concurrency: 1 }
         );
         expect(A.map(entries, (entry) => entry.sizeBytes)).toEqual(sizes);
         expect(A.map(entries, (entry) => entry.outcome)).toEqual([
@@ -276,7 +278,7 @@ describe("StrictSpool", () => {
         const bodies = A.map(["one", "two", "six", "ten"], (word) =>
           StrictEgressRecord.make({ signal: "traces", body: `{"resourceSpans":[{"name":"${word}"}]}` })
         );
-        const ledgers = yield* Effect.forEach(bodies, (record) => spool.append(record));
+        const ledgers = yield* Effect.forEach(bodies, (record) => spool.append(record), { concurrency: 1 });
         const evicted = A.reduce(ledgers, 0, (total, ledger) => total + countOf(ledger, "spool-evicted"));
         expect(evicted).toBe(2);
         expect((yield* spool.replay).records).toEqual(A.drop(bodies, 2));
@@ -292,7 +294,7 @@ describe("StrictSpool", () => {
         const bodies = A.map(["one", "two", "six"], (word) =>
           StrictEgressRecord.make({ signal: "traces", body: `{"resourceSpans":[{"name":"${word}"}]}` })
         );
-        yield* Effect.forEach(bodies, (record) => roomy.append(record), { discard: true });
+        yield* Effect.forEach(bodies, (record) => roomy.append(record), { concurrency: 1, discard: true });
         const [, second] = yield* segmentFiles("/evict-failure");
         const stuck = `/evict-failure/${second ?? ""}`;
         // A disk that refuses to remove the second-oldest segment.

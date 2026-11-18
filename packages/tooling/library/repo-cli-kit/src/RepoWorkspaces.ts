@@ -315,8 +315,10 @@ export const workspaceDirectories = Effect.fn("RepoWorkspaces.workspaceDirectori
 > {
   const fs = yield* FileSystem.FileSystem;
   const members = yield* workspaceMembers(repoRoot);
-  const entries = yield* Effect.forEach(members, (member) =>
-    fs.realPath(member.path).pipe(Effect.map((dir) => [member.name, dir] as const))
+  const entries = yield* Effect.forEach(
+    members,
+    (member) => fs.realPath(member.path).pipe(Effect.map((dir) => [member.name, dir] as const)),
+    { concurrency: 1 }
   );
   return HashMap.fromIterable(entries);
 });
@@ -392,7 +394,8 @@ export const workspaceManifests = Effect.fn("RepoWorkspaces.workspaceManifests")
       const dir = yield* fs.realPath(member.path);
       const manifest = yield* decodePackageJsonEffect(member.manifestRecord);
       return [member.name, DecodedWorkspaceMember.make({ dir, manifest })] as const;
-    })
+    }),
+    { concurrency: 1 }
   );
   return HashMap.fromIterable(decoded);
 });

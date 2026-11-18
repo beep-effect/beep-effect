@@ -561,38 +561,42 @@ const reportedJobsOf = (
 ): Effect.Effect<ReadonlyArray<ContractJob>, Cause.NoSuchElementError | S.SchemaError> =>
   Effect.flatMap(read(file), (jobs) =>
     Effect.map(
-      Effect.forEach(R.toEntries(jobs), ([key, job]) => {
-        const names = A.flatMap(prefixes, (prefix) =>
-          hostedNamesOf(
-            prefix,
-            O.getOrElse(O.fromUndefinedOr(job.name), () => key)
-          )
-        );
-        return O.match(
-          pipe(
-            O.fromUndefinedOr(job.uses),
-            O.flatMap(Str.match(REUSABLE_WORKFLOW)),
-            O.filter(() => depth < MAX_WORKFLOW_DEPTH)
-          ),
-          {
-            onNone: () =>
-              Effect.succeed<ReadonlyArray<ContractJob>>([
-                {
-                  job: `${file}#${key}`,
-                  lanes: A.dedupe(A.getSomes(A.map(names, (name) => hostedJobAttribution(name).lane))),
-                  steps: A.map(O.getOrElse(O.fromUndefinedOr(job.steps), A.empty<WorkflowStepDoc>), listedStepName),
-                },
-              ]),
-            onSome: (match) =>
-              reportedJobsOf(
-                read,
-                match[0],
-                A.map(names, (name) => `${name} / `),
-                depth + 1
-              ),
-          }
-        );
-      }),
+      Effect.forEach(
+        R.toEntries(jobs),
+        ([key, job]) => {
+          const names = A.flatMap(prefixes, (prefix) =>
+            hostedNamesOf(
+              prefix,
+              O.getOrElse(O.fromUndefinedOr(job.name), () => key)
+            )
+          );
+          return O.match(
+            pipe(
+              O.fromUndefinedOr(job.uses),
+              O.flatMap(Str.match(REUSABLE_WORKFLOW)),
+              O.filter(() => depth < MAX_WORKFLOW_DEPTH)
+            ),
+            {
+              onNone: () =>
+                Effect.succeed<ReadonlyArray<ContractJob>>([
+                  {
+                    job: `${file}#${key}`,
+                    lanes: A.dedupe(A.getSomes(A.map(names, (name) => hostedJobAttribution(name).lane))),
+                    steps: A.map(O.getOrElse(O.fromUndefinedOr(job.steps), A.empty<WorkflowStepDoc>), listedStepName),
+                  },
+                ]),
+              onSome: (match) =>
+                reportedJobsOf(
+                  read,
+                  match[0],
+                  A.map(names, (name) => `${name} / `),
+                  depth + 1
+                ),
+            }
+          );
+        },
+        { concurrency: 1 }
+      ),
       A.flatten
     )
   );

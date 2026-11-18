@@ -136,8 +136,10 @@ export const eventsFromSchemas: {
     options?: Arbitrary.SampleOptions
   ): Effect.Effect<EventArbitraries<Schemas>, Arbitrary.SampleError> =>
     pipe(
-      Effect.forEach(R.toEntries(schemas), ([key, schema]) =>
-        Effect.map(arbitraryFromSchema(schema, options), (arbitrary) => [key, arbitrary] as const)
+      Effect.forEach(
+        R.toEntries(schemas),
+        ([key, schema]) => Effect.map(arbitraryFromSchema(schema, options), (arbitrary) => [key, arbitrary] as const),
+        { concurrency: 1 }
       ),
       Effect.map((entries) => R.fromEntries(entries) as EventArbitraries<Schemas>)
     )

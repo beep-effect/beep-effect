@@ -7,7 +7,7 @@ import {
   program,
   SingletonIds,
 } from "@beep/infra-cost-controls/CostControls";
-import { checkPlan, LiveSettings, PlanEntry } from "@beep/infra-cost-controls/PlanCheck";
+import { checkPlan, LiveSettings, PlanEntry, PlanLog } from "@beep/infra-cost-controls/PlanCheck";
 import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -207,7 +207,7 @@ describe("CostControls prod is live", () => {
         item === undefined ? [] : [{ fqn, action: item.action, changedProperties: [] }]
       );
       const entries = yield* decodePlanEntries(planned);
-      yield* checkPlan(entries, liveAccountSettings);
+      yield* checkPlan(PlanLog.make({ entries, unreadable: [] }), liveAccountSettings);
     })
   );
 });

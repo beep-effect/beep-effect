@@ -1205,7 +1205,7 @@ const make = Effect.gen(function* () {
         R.toEntries(bins),
         ([name, relative]) =>
           writeShim(pin, into, path.join(shimDir, shimFileName(name)), path.join(finalDirectory, relative), options),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     })
   );
@@ -1482,6 +1482,7 @@ const make = Effect.gen(function* () {
       path.join(packageDir, `${relative}.exe`),
     ]);
     yield* Effect.forEach(destinations, (destination) => copyNative(pin, packageDir, native, destination), {
+      concurrency: 1,
       discard: true,
     });
     return nativeWindowsBins(bins);
@@ -1515,7 +1516,7 @@ const make = Effect.gen(function* () {
               .pipe(Effect.mapError((cause) => errorFor(pin)({ reason: "cacheFailed", subject: file, cause })))
           )
         ),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
     return bins;
   });

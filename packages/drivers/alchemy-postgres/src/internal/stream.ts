@@ -76,7 +76,7 @@ export const makeStreamStore = (ctx: HostContext) => (_definition: DomainStream.
                   yield* sql`INSERT INTO ${sql(tables.streamEntry)} (model, stream, key, seq, event, envelope)
                       VALUES (${modelName}, ${name}, ${key}, ${seq}, ${encodedEvent}::jsonb, ${encodedEnvelope}::jsonb)`;
                 }),
-                { discard: true }
+                { concurrency: 1, discard: true }
               );
               yield* saveMeta(key, {
                 seq: meta.seq + A.length(write.events),

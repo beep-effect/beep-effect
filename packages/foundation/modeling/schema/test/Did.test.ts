@@ -56,7 +56,7 @@ describe("Did", () => {
 
           expect(error.message).toContain("DID must match W3C DID Core syntax");
         }),
-      { discard: true }
+      { concurrency: 1, discard: true }
     )
   );
 

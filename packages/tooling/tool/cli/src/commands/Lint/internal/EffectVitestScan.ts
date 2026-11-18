@@ -292,15 +292,18 @@ export const discoverEffectVitestBrowserModePaths = Effect.fn("EffectVitestScan.
     EffectVitestConfigFileGlobs,
     GlobOptions.make({ cwd: root, absolute: true, ignore: A.append(effectVitestWalkIgnores, "**/node_modules/**") })
   );
-  const included = yield* Effect.forEach(configs, (configPath) =>
-    A.match(browserModeIncludeGlobs(configProject.addSourceFileAtPath(configPath)), {
-      onEmpty: () => Effect.succeed(A.empty<string>()),
-      onNonEmpty: (globs) =>
-        fsUtils.globFiles(
-          globs,
-          GlobOptions.make({ cwd: path.dirname(configPath), absolute: true, ignore: ["**/node_modules/**"] })
-        ),
-    })
+  const included = yield* Effect.forEach(
+    configs,
+    (configPath) =>
+      A.match(browserModeIncludeGlobs(configProject.addSourceFileAtPath(configPath)), {
+        onEmpty: () => Effect.succeed(A.empty<string>()),
+        onNonEmpty: (globs) =>
+          fsUtils.globFiles(
+            globs,
+            GlobOptions.make({ cwd: path.dirname(configPath), absolute: true, ignore: ["**/node_modules/**"] })
+          ),
+      }),
+    { concurrency: 1 }
   );
   return HashSet.fromIterable(A.map(A.flatten(included), toPosixPath));
 }, EffectVitestLintError.mapError("Unable to discover the vitest browser-mode projects."));
@@ -543,6 +546,7 @@ const reportMembership = Effect.fnUntraced(function* (
   const difference = diffEffectVitestFindings(merged, baseline);
   if (difference.introduced.length > 0) {
     yield* Effect.forEach(formatEffectVitestIntroducedReport(difference.introduced), (line) => Console.error(line), {
+      concurrency: 1,
       discard: true,
     });
     return yield* failWithReportedExit("effect-vitest: ratchet failed on new instances.");
@@ -700,32 +704,38 @@ const scopedBrowserModeFiles = Effect.fn("EffectVitestScan.scopedBrowserModeFile
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const listed = yield* Effect.forEach(A.dedupe(A.flatMap(files, ancestorDirectories)), (directory) =>
-    fs
-      .readDirectory(path.join(root, directory))
-      .pipe(
-        Effect.orElseSucceed(A.empty<string>),
-        Effect.map(A.filter(isVitestConfigFileName)),
-        Effect.map(A.map((name) => `${directory}/${name}`))
-      )
+  const listed = yield* Effect.forEach(
+    A.dedupe(A.flatMap(files, ancestorDirectories)),
+    (directory) =>
+      fs
+        .readDirectory(path.join(root, directory))
+        .pipe(
+          Effect.orElseSucceed(A.empty<string>),
+          Effect.map(A.filter(isVitestConfigFileName)),
+          Effect.map(A.map((name) => `${directory}/${name}`))
+        ),
+    { concurrency: 1 }
   );
   const configProject = new Project({ useInMemoryFileSystem: true });
-  const included = yield* Effect.forEach(A.flatten(listed), (config) =>
-    fs.readFileString(path.join(root, config)).pipe(
-      Effect.map((text) => {
-        const directory = path.dirname(config);
-        const browser = GlobSet.make({
-          patterns: A.map(
-            browserModeIncludeGlobs(configProject.createSourceFile(config, text)),
-            Str.replace(/^\.\//u, "")
-          ),
-        });
-        return A.filter(
-          files,
-          (file) => Str.startsWith(`${directory}/`)(file) && browser.matches(Str.slice(directory.length + 1)(file))
-        );
-      })
-    )
+  const included = yield* Effect.forEach(
+    A.flatten(listed),
+    (config) =>
+      fs.readFileString(path.join(root, config)).pipe(
+        Effect.map((text) => {
+          const directory = path.dirname(config);
+          const browser = GlobSet.make({
+            patterns: A.map(
+              browserModeIncludeGlobs(configProject.createSourceFile(config, text)),
+              Str.replace(/^\.\//u, "")
+            ),
+          });
+          return A.filter(
+            files,
+            (file) => Str.startsWith(`${directory}/`)(file) && browser.matches(Str.slice(directory.length + 1)(file))
+          );
+        })
+      ),
+    { concurrency: 1 }
   );
   return HashSet.fromIterable(A.flatten(included));
 }, EffectVitestLintError.mapError("Unable to read the vitest configs above the scoped files."));
@@ -775,7 +785,7 @@ const reportScopedMembership = (
         diffEffectVitestFindings(merged, baseline).introduced,
         (finding) =>
           Console.error(`[effect-vitest]   ${finding.file}:${finding.line} ${finding.ruleId} ${finding.class}`),
-        { discard: true }
+        { concurrency: 1, discard: true }
       )
     )
   );
@@ -852,7 +862,8 @@ export const runEffectVitestFilesLint = Effect.fn("EffectVitestScan.runFiles")(f
       const rows = yield* detectEffectVitestFindings(project.createSourceFile(file, text), file, owner);
       const kept = retainBrowserSafeFindings(rows, HashSet.has(browserModeFiles, file));
       return isEffectVitestTestFilePath(file) ? kept : A.filter(kept, (finding) => finding.ruleId === "EV003");
-    })
+    }),
+    { concurrency: 1 }
   );
   const graphBacked = yield* applyEffectVitestPrimitiveGraph(A.flatten(detected), graph);
   const existing = yield* readEffectVitestInventory(root);

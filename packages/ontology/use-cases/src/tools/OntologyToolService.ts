@@ -416,7 +416,7 @@ const makeOntologyToolService = Effect.gen(function* () {
                 ),
             })
           ),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     }
   );

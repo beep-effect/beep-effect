@@ -129,8 +129,10 @@ const journalsIn = Effect.fnUntraced(function* (journals: string) {
   const path = yield* Path.Path;
   const readDirectory4 = yield* fs.readDirectory(journals);
   const entries = A.filter(readDirectory4, Str.endsWith(".json"));
-  return yield* Effect.forEach(A.sort(entries, Order.String), (entry) =>
-    fs.readFileString(path.join(journals, entry)).pipe(Effect.flatMap(decodeJournal))
+  return yield* Effect.forEach(
+    A.sort(entries, Order.String),
+    (entry) => fs.readFileString(path.join(journals, entry)).pipe(Effect.flatMap(decodeJournal)),
+    { concurrency: 1 }
   );
 });
 

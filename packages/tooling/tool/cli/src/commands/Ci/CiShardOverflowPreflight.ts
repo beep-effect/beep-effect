@@ -431,7 +431,7 @@ const reportProblem = (repository: string) => (problem: ShardOverflowPreflightPr
 export const runShardOverflowPreflight = Effect.fn("Ci.runShardOverflowPreflight")(function* (webhookUrl: string) {
   const facts = yield* readShardOverflowPreflightFacts(webhookUrl);
   const problems = decideShardOverflowPreflight(facts);
-  yield* Effect.forEach(problems, reportProblem(facts.repository), { discard: true });
+  yield* Effect.forEach(problems, reportProblem(facts.repository), { concurrency: 1, discard: true });
   if (A.isReadonlyArrayNonEmpty(problems)) {
     return yield* CiCommandError.make({
       message: `shard-overflow-preflight: ${A.length(problems)} problem(s); do not switch BEEP_SHARD_OVERFLOW on`,

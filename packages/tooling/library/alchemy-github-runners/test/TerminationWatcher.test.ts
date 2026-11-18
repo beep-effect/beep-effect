@@ -98,7 +98,7 @@ describe("handleTerminationEvent", () => {
       const ownerless = seed(world, { "ghr:environment": "beep-ci-heavy" });
       const run = (instanceId: string) =>
         handleTerminationEvent({ config, event: warning(instanceId) }).pipe(Effect.provideContext(worldContext(world)));
-      const outcomes = yield* Effect.forEach([foreign, ownerless, "i-unknown"], run);
+      const outcomes = yield* Effect.forEach([foreign, ownerless, "i-unknown"], run, { concurrency: 1 });
       expect(outcomes).toStrictEqual([["ignored"], ["ignored"], []]);
       expect(world.deletedRunners).toStrictEqual([]);
     })

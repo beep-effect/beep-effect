@@ -616,6 +616,11 @@
     "reason": "TransformationLedgerRecord member: corpus-command clone-boundary tests model S.is rejecting structuredClone copies of every ledger row (class semantics). Follow-up: rewrite that verdict model for plain-object ledger rows, then drop these entries."
   },
   {
+    "file": "packages/drivers/runpod/scripts/openapi.lowering.ts",
+    "class": "LoweringNode",
+    "reason": "Self-recursive schema: S.suspend((): S.Codec<LoweringNode, Encoded>) needs the class Self type; Opaque's Rebuild type carries no brand (TS2322)."
+  },
+  {
     "file": "packages/drivers/runpod/scripts/operations.renderer.ts",
     "class": "JsonSchema",
     "reason": "Self-recursive schema: S.suspend((): S.Codec<JsonSchema, ...>) needs the class Self type (an Opaque cannot satisfy it without retyping ~15 renderer functions)."

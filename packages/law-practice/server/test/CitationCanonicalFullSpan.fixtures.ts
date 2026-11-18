@@ -86,7 +86,8 @@ const readCalls = Effect.fn("CanonicalFullSpanTest.calls")(function* (
           )
         : [{ id: `${prefix}${simple ? 1189 : 1200}:12:caseDeclaration::${row.ordinal}`, index: 0 }];
       return { row, body, models, combined, simple, targets };
-    })
+    }),
+    { concurrency: 1 }
   );
   expect(A.reduce(calls, 0, (total, call) => total + call.targets.length)).toBe(13);
   return calls;

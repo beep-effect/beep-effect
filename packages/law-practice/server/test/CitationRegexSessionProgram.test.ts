@@ -66,7 +66,7 @@ it.layer(citationNativeNodeTestPlatform, { excludeTestServices: true, timeout: "
         const limits = { ...(yield* defaultCitationEnginePolicy).limits, patternMatches: 2 };
         const argument = yield* encodeCitationRegexSessionStartup(CitationRegexSessionStartup.make({ limits }));
         const chunks = A.empty<Uint8Array>();
-        const frames = yield* Effect.all([frame(0), frame(1), frame(2, 3)]);
+        const frames = yield* Effect.all([frame(0), frame(1), frame(2, 3)], { concurrency: 1 });
         yield* citationRegexSessionProgram.pipe(
           Effect.provideService(Stdio.Stdio, {
             ...stdio,

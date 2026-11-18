@@ -151,31 +151,34 @@ const program = Effect.gen(function* () {
   for (const file of implementation.files) {
     yield* verifiedText(file.path, file.sha256);
   }
-  const inputs = yield* Effect.forEach(reference.families, (family) =>
-    Effect.gen(function* () {
-      const source = yield* Effect.fromOption(
-        A.findFirst(sources.selection, (row) => row.familyId === family.familyId)
-      );
-      const base = `${fixtures}/${family.familyId}`;
-      const argument3 = S.decodeEffect(claimElementTreesJson);
-      const verifiedText4 = yield* verifiedText(`${base}/expected.json`, family.annotationSha256);
-      const gold = yield* argument3(verifiedText4);
-      const argument4 = S.decodeEffect(canonicalJson);
-      const verifiedText5 = yield* verifiedText(`${base}/claims.json`, family.canonicalClaimsSha256);
-      const canonical = yield* argument4(verifiedText5);
-      yield* verifiedText(`${base}/extractor.json`, family.extractorReceiptSha256);
-      yield* verifiedText(`${base}/critic.json`, family.criticReceiptSha256);
-      const xml = yield* verifiedText(`${base}/source.claims.xml`, source.claimsXmlSha256);
-      if (
-        gold.length !== family.selectedClaimNumbers.length ||
-        A.some(family.selectedClaimNumbers, (number) => !A.some(gold, (tree) => tree.claimNumber === number))
-      ) {
-        return yield* StructuralEvaluationError.make({
-          message: `Frozen selected coverage mismatch: ${family.familyId}`,
-        });
-      }
-      return { family, source, gold, canonical, xml };
-    })
+  const inputs = yield* Effect.forEach(
+    reference.families,
+    (family) =>
+      Effect.gen(function* () {
+        const source = yield* Effect.fromOption(
+          A.findFirst(sources.selection, (row) => row.familyId === family.familyId)
+        );
+        const base = `${fixtures}/${family.familyId}`;
+        const argument3 = S.decodeEffect(claimElementTreesJson);
+        const verifiedText4 = yield* verifiedText(`${base}/expected.json`, family.annotationSha256);
+        const gold = yield* argument3(verifiedText4);
+        const argument4 = S.decodeEffect(canonicalJson);
+        const verifiedText5 = yield* verifiedText(`${base}/claims.json`, family.canonicalClaimsSha256);
+        const canonical = yield* argument4(verifiedText5);
+        yield* verifiedText(`${base}/extractor.json`, family.extractorReceiptSha256);
+        yield* verifiedText(`${base}/critic.json`, family.criticReceiptSha256);
+        const xml = yield* verifiedText(`${base}/source.claims.xml`, source.claimsXmlSha256);
+        if (
+          gold.length !== family.selectedClaimNumbers.length ||
+          A.some(family.selectedClaimNumbers, (number) => !A.some(gold, (tree) => tree.claimNumber === number))
+        ) {
+          return yield* StructuralEvaluationError.make({
+            message: `Frozen selected coverage mismatch: ${family.familyId}`,
+          });
+        }
+        return { family, source, gold, canonical, xml };
+      }),
+    { concurrency: 1 }
   );
   if (yield* fs.exists(output)) {
     return yield* StructuralEvaluationError.make({

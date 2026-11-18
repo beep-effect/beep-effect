@@ -824,9 +824,7 @@ const runLive = Effect.fn("runLive")(function* <A, E>(
       fs
         .makeDirectory(path.dirname(path.join(root, name)), { recursive: true })
         .pipe(Effect.andThen(fs.writeFileString(path.join(root, name), content))),
-    {
-      discard: true,
-    }
+    { concurrency: 1, discard: true }
   );
   return yield* Layer.build(layerAccountsUsageLive).pipe(
     Effect.flatMap((context) => Effect.provideContext(program, context)),
@@ -1060,8 +1058,10 @@ it.layer(inheritedPlatform, { timeout: "30 seconds" })("local snapshots", (it) =
         Effect.gen(function* () {
           const usage = yield* AccountsUsage;
           const listed = yield* usage.accounts;
-          const polled = yield* Effect.forEach(listed, (ref) =>
-            usage.poll(AccountRef.make({ provider: "cursor", label: ref.label, source: ref.source }))
+          const polled = yield* Effect.forEach(
+            listed,
+            (ref) => usage.poll(AccountRef.make({ provider: "cursor", label: ref.label, source: ref.source })),
+            { concurrency: 1 }
           );
           return A.map(polled, (row) => row.outcome._tag);
         })
@@ -1198,7 +1198,7 @@ const runScreen = Effect.fnUntraced(function* (
     keys,
     (key) =>
       TestClock.adjust("1 second").pipe(Effect.andThen(P.isString(key) ? terminal.type(key) : terminal.input([key]))),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Fiber.join(screen);
   return {
@@ -1566,7 +1566,7 @@ const junieTestLayer = (
             fs
               .makeDirectory(path.dirname(`${root}/${name}`), { recursive: true })
               .pipe(Effect.andThen(fs.writeFileString(`${root}/${name}`, content))),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
       })
     ),

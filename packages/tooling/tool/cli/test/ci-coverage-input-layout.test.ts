@@ -251,7 +251,7 @@ describe("Coverage Regression evidence layout", () => {
       Effect.fnUntraced(function* () {
         const steps = coverageSteps();
         const ambientPath = yield* Config.String("PATH");
-        const contents = yield* Effect.forEach(layout.files, ([, content]) => fileContent(content));
+        const contents = yield* Effect.forEach(layout.files, ([, content]) => fileContent(content), { concurrency: 1 });
         const stdin = pipe(
           A.zip(layout.files, contents),
           A.flatMap(([file, content]) => [`${file[0]}\0`, `${content}\0`]),

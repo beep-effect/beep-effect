@@ -258,10 +258,13 @@ export const decodeAttributedCheckFlags = Effect.fnUntraced(function* <A>(
   const parsed = A.map(values, parse);
   const malformed = A.filter(A.zip(values, parsed), ([, value]) => O.isNone(value));
   if (A.isReadonlyArrayNonEmpty(malformed)) {
-    const quoted = yield* Effect.forEach(malformed, ([value]) =>
-      encodeAttributedCheckJson(value).pipe(
-        Effect.mapError(YeetCommandError.new("Failed to encode a malformed attributed check."))
-      )
+    const quoted = yield* Effect.forEach(
+      malformed,
+      ([value]) =>
+        encodeAttributedCheckJson(value).pipe(
+          Effect.mapError(YeetCommandError.new("Failed to encode a malformed attributed check."))
+        ),
+      { concurrency: 1 }
     );
     return yield* YeetCommandError.make({
       message: `--${flag} needs "<check name>=<attribution>"; got ${A.join(quoted, ", ")}.`,
@@ -1931,7 +1934,10 @@ const cancelMergedHeadRuns = Effect.fn("Yeet.cancelMergedHeadRuns")(function* (h
   const [cancelled, failures] = yield* Effect.partition(runIds, (runId) =>
     rest.cancelWorkflowRun(runId).pipe(Effect.mapError(yeetGithubFailure(`gh api cancel run ${runId}`)))
   );
-  yield* Effect.forEach(failures, warnAfterMerge("cancelling a leftover workflow run"), { discard: true });
+  yield* Effect.forEach(failures, warnAfterMerge("cancelling a leftover workflow run"), {
+    concurrency: 1,
+    discard: true,
+  });
   yield* Console.log(
     `[yeet] cancelled ${A.length(cancelled)} of ${A.length(runIds)} active workflow run(s) on ${Str.slice(0, 10)(headSha)}`
   );
@@ -2049,6 +2055,7 @@ const runMergeGateStack = Effect.fnUntraced(function* (
   const executed = yield* executeMergeGateStack(group, lower, top);
   if (S.is(MergeGateHold)(executed)) return yield* failMergeGateHold(executed);
   yield* Effect.forEach(renderMergeGateMergedLines(executed), (line) => Console.log(`[yeet] ${line}`), {
+    concurrency: 1,
     discard: true,
   });
   // B2 (2026-11-05), once per layer the stack merge landed.
@@ -2058,7 +2065,7 @@ const runMergeGateStack = Effect.fnUntraced(function* (
       broadcastPacketSiblings(context, layer.prNumber, layer.mergeSha).pipe(
         Effect.catch(warnAfterMerge("the packet sibling broadcast"))
       ),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   return top;
 });

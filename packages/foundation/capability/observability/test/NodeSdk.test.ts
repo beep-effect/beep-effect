@@ -89,7 +89,7 @@ describe("NodeSdk", () => {
           Effect.forEach(
             A.ensure(config.spanProcessor ?? []),
             (processor) => Effect.promise(() => processor.shutdown()),
-            { discard: true }
+            { concurrency: 1, discard: true }
           )
       );
 

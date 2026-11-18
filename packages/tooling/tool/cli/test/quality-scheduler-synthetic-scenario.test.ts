@@ -124,14 +124,18 @@ const readJournalEvents = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
   const admissionJournalPath28 = yield* admissionJournalPath(root);
   const readFileString4 = yield* fs.readFileString(admissionJournalPath28);
-  return yield* Effect.forEach(journalLines(readFileString4), (line) => decodeAdmissionJournalEvent(line));
+  return yield* Effect.forEach(journalLines(readFileString4), (line) => decodeAdmissionJournalEvent(line), {
+    concurrency: 1,
+  });
 });
 
 const readAttemptJournalEvents = Effect.fnUntraced(function* (checkoutRoot: string, branch: string) {
   const fs = yield* FileSystem.FileSystem;
   const attemptJournalPathForCheckout29 = yield* attemptJournalPathForCheckout(checkoutRoot, branch);
   const readFileString5 = yield* fs.readFileString(attemptJournalPathForCheckout29);
-  return yield* Effect.forEach(journalLines(readFileString5), (line) => decodeYeetAttemptJournalEvent(line));
+  return yield* Effect.forEach(journalLines(readFileString5), (line) => decodeYeetAttemptJournalEvent(line), {
+    concurrency: 1,
+  });
 });
 
 const request = (checkoutRoot: string, branch: string, attemptId: UUID) =>
@@ -184,7 +188,7 @@ const copySettledState = Effect.fn("SyntheticAdmission.copySettledState")(functi
         yield* fs.copy(from, to, { overwrite: false });
       }
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -471,7 +475,9 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { concurrent: fal
           expect(withdrawn.withdrawnAtMillis).toBeGreaterThanOrEqual(enqueuedB.enqueuedAtMillis);
           const admissionJournalPath30 = yield* admissionJournalPath(root);
           const readFileString22 = yield* fs.readFileString(admissionJournalPath30);
-          const wire = yield* Effect.forEach(journalLines(readFileString22), (line) => decodeJsonObject(line));
+          const wire = yield* Effect.forEach(journalLines(readFileString22), (line) => decodeJsonObject(line), {
+            concurrency: 1,
+          });
           const withdrawnWire = O.getOrThrow(A.findFirst(wire, (row) => row._tag === "admission-withdrawn"));
           expect(withdrawnWire).not.toHaveProperty("weightTokens");
           expect(withdrawnWire).not.toHaveProperty("reason");

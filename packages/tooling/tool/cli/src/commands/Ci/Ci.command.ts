@@ -325,7 +325,8 @@ export const appendTurboSummary = Effect.fn("Ci.appendTurboSummary")(function* (
         .pipe(CiCommandError.mapError(`Failed to read ${summaryPath}.`));
       const run = yield* decodeTurboSummary(content).pipe(CiCommandError.mapError(`Failed to parse ${summaryPath}.`));
       return O.some(renderTurboSummary(repoRoot, summaryPath, run, path));
-    })
+    }),
+    { concurrency: 1 }
   ).pipe(Effect.map(A.getSomes));
 
   if (A.isReadonlyArrayEmpty(rendered)) {

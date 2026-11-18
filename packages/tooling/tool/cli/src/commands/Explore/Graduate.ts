@@ -392,8 +392,10 @@ export const compileGraduationPlan: {
     const manifest = O.flatMap(O.fromUndefinedOr(snapshot.manifestText), decodeManifestText);
     const classification = classifyChildren(snapshot, request.children);
     const existingSlugs = A.map(snapshot.goals, (goal) => goal.slug);
-    const children = yield* Effect.forEach(classification.pending, (child) =>
-      compileMaterializationPlan(childBootstrapInput(snapshot, request.today)(child), existingSlugs)
+    const children = yield* Effect.forEach(
+      classification.pending,
+      (child) => compileMaterializationPlan(childBootstrapInput(snapshot, request.today)(child), existingSlugs),
+      { concurrency: 1 }
     );
     const childConflicts = A.flatMap(children, (plan: MaterializationPlan) =>
       A.map(plan.conflicts, (conflict) =>
@@ -833,10 +835,13 @@ export const writeGraduationPlan = Effect.fn("Explore.writeGraduationPlan")(func
         }).pipe(Effect.mapError(streamFailure))
       )
     : O.none<{ readonly owed: GraduationPendingEvents; readonly text: string }>();
-  const published = yield* Effect.forEach(plan.children, (child) =>
-    publishBootstrapPlan(child, repoRoot).pipe(
-      Effect.map((receipt) => GraduationChildReceipt.make({ slug: child.slug, outcome: "published", receipt }))
-    )
+  const published = yield* Effect.forEach(
+    plan.children,
+    (child) =>
+      publishBootstrapPlan(child, repoRoot).pipe(
+        Effect.map((receipt) => GraduationChildReceipt.make({ slug: child.slug, outcome: "published", receipt }))
+      ),
+    { concurrency: 1 }
   );
   // The sidecar lands only after every child published and immediately before
   // the flip, so a failed child publish leaves no sidecar behind.
@@ -1074,7 +1079,7 @@ const runGraduatePlan = Effect.fn("Explore.runGraduatePlan")(function* (options:
   }
   yield* requireOneMode(options);
   const exploration = yield* decodeExplorationSnapshotSlug(options.exploration);
-  const children = yield* Effect.forEach(options.goals, parseGraduationGoal);
+  const children = yield* Effect.forEach(options.goals, parseGraduationGoal, { concurrency: 1 });
   const today = yield* resolveToday(options.today);
   const snapshot = yield* readExplorationSnapshot(exploration);
   const plan = yield* compileGraduationPlan(snapshot, GraduationRequest.make({ children, today })).pipe(

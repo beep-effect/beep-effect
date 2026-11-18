@@ -192,12 +192,18 @@ export const uninstallResearchTimers: Effect.Effect<void, ResearchCommandError, 
     const path = yield* Path.Path;
     const home = yield* readHome;
     const unitDir = unitDirOf(path, home);
-    yield* Effect.forEach(RESEARCH_UNITS, (baseName) =>
-      Effect.all([
-        runSystemctl(["disable", "--now", `${baseName}.timer`]).pipe(Effect.ignore),
-        fs.remove(path.join(unitDir, `${baseName}.timer`)).pipe(Effect.ignore),
-        fs.remove(path.join(unitDir, `${baseName}.service`)).pipe(Effect.ignore),
-      ])
+    yield* Effect.forEach(
+      RESEARCH_UNITS,
+      (baseName) =>
+        Effect.all(
+          [
+            runSystemctl(["disable", "--now", `${baseName}.timer`]).pipe(Effect.ignore),
+            fs.remove(path.join(unitDir, `${baseName}.timer`)).pipe(Effect.ignore),
+            fs.remove(path.join(unitDir, `${baseName}.service`)).pipe(Effect.ignore),
+          ],
+          { concurrency: 1 }
+        ),
+      { concurrency: 1 }
     );
     yield* runSystemctl(["daemon-reload"]);
     yield* Console.log("research install-timers: removed research timers.");
@@ -226,13 +232,18 @@ export const installResearchTimers = Effect.fn("ResearchTimers.installResearchTi
   yield* fs
     .makeDirectory(unitDir, { recursive: true })
     .pipe(ResearchCommandError.mapError(`Failed creating systemd user directory "${unitDir}".`));
-  yield* Effect.forEach(units, (unit) =>
-    fs
-      .writeFileString(path.join(unitDir, unit.fileName), unit.text)
-      .pipe(ResearchCommandError.mapError(`Failed writing ${unit.fileName}.`))
+  yield* Effect.forEach(
+    units,
+    (unit) =>
+      fs
+        .writeFileString(path.join(unitDir, unit.fileName), unit.text)
+        .pipe(ResearchCommandError.mapError(`Failed writing ${unit.fileName}.`)),
+    { concurrency: 1 }
   );
   yield* runSystemctl(["daemon-reload"]);
-  yield* Effect.forEach(pairs, (unit) => runSystemctl(["enable", "--now", `${unit.baseName}.timer`]));
+  yield* Effect.forEach(pairs, (unit) => runSystemctl(["enable", "--now", `${unit.baseName}.timer`]), {
+    concurrency: 1,
+  });
   yield* Console.log(
     `research install-timers: enabled ${A.join(
       A.map(pairs, (unit) => `${unit.baseName}.timer (${unit.onCalendar})`),

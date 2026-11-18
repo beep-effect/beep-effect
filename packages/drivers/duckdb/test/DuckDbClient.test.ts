@@ -1119,8 +1119,10 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "evicts and re-prepares statements with a one-entry cache",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        const results = yield* Effect.forEach(A.range(0, 199), (i) =>
-          i % 2 === 0 ? sql`SELECT ${i}::INTEGER AS even` : sql`SELECT ${i}::INTEGER AS odd`
+        const results = yield* Effect.forEach(
+          A.range(0, 199),
+          (i) => (i % 2 === 0 ? sql`SELECT ${i}::INTEGER AS even` : sql`SELECT ${i}::INTEGER AS odd`),
+          { concurrency: 1 }
         );
         assert.deepStrictEqual(
           results,

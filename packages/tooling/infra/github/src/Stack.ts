@@ -274,8 +274,10 @@ const declareEnvironment = Effect.fnUntraced(function* (config: StackConfig, spe
     name: spec.name,
     deploymentBranchPolicy: { customBranchPolicies: A.copy(spec.branches) },
   });
-  yield* Effect.forEach(spec.variables, (variable) =>
-    declareVariable(config, environmentVariableId(spec.name, variable.name), variable, environment)
+  yield* Effect.forEach(
+    spec.variables,
+    (variable) => declareVariable(config, environmentVariableId(spec.name, variable.name), variable, environment),
+    { concurrency: 1 }
   );
   return environment;
 });
@@ -323,9 +325,11 @@ export const declareStack = Effect.fn("InfraGithub.declareStack")(function* (
   if (O.isSome(duplicate)) return yield* Effect.die(duplicate.value);
   const repository = yield* declareRepository(config);
   const ruleset = yield* declareMainRuleset(config, liveReviewer);
-  yield* Effect.forEach(config.environments, (spec) => declareEnvironment(config, spec));
-  yield* Effect.forEach(config.variables, (variable) => declareVariable(config, variableId(variable.name), variable));
-  yield* Effect.forEach(config.labels, (spec) => declareLabel(config, spec));
+  yield* Effect.forEach(config.environments, (spec) => declareEnvironment(config, spec), { concurrency: 1 });
+  yield* Effect.forEach(config.variables, (variable) => declareVariable(config, variableId(variable.name), variable), {
+    concurrency: 1,
+  });
+  yield* Effect.forEach(config.labels, (spec) => declareLabel(config, spec), { concurrency: 1 });
   return {
     repository: repository.fullName,
     mainRulesetId: ruleset.rulesetId,

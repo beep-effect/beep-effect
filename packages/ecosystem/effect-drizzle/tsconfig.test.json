@@ -157,6 +157,7 @@
           "matchEffectToMatch": "error",
           "matchToResultOrOption": "error",
           "missedPipeableOpportunity": "error",
+          "missingConcurrencyOption": "error",
           "missingEffectContext": "error",
           "missingEffectError": "error",
           "missingEffectServiceDependency": "error",

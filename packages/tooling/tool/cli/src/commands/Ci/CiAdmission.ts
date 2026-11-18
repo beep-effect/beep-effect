@@ -174,6 +174,7 @@ export const runCiAdmission = Effect.fn("Ci.runCiAdmission")(function* (
   if (input.githubOutput) {
     const outputs = yield* ActionOutputs;
     yield* Effect.forEach(heavyAdmissionGithubOutputs(admission), ([name, value]) => outputs.set(name, value), {
+      concurrency: 1,
       discard: true,
     }).pipe(CiCommandError.mapError("Failed to append the admission verdict to $GITHUB_OUTPUT."));
   }

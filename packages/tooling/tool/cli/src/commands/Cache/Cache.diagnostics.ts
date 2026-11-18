@@ -435,7 +435,7 @@ const applyPax = Effect.fnUntraced(function* (member: TarMember, pairs: PaxPairs
     pairs,
     ([keyword, value]) =>
       O.match(R.get(PAX_SETTERS, keyword), { onNone: () => Effect.void, onSome: (set) => set(member, value) }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   member.pax = A.map(pairs, ([key, entry]): [string, string] => [key, entry]);
 });

@@ -259,7 +259,7 @@ export const makeHandlers = <E1, R1, E2, R2, E3, R3>(wiring: DocketIntakeWiring<
     runs: Effect.fnUntraced(function* () {
       const config = yield* DocketIntakeAppConfigFromEnv;
       const runs = yield* asCommandError(listRuns(config));
-      yield* Effect.forEach(runs, printRunSummary, { discard: true });
+      yield* Effect.forEach(runs, printRunSummary, { concurrency: 1, discard: true });
     }),
     smoke: Effect.fnUntraced(function* (flags: { readonly write: boolean }) {
       const config = yield* DocketIntakeAppConfigFromEnv;

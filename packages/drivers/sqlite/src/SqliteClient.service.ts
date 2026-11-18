@@ -160,7 +160,7 @@ export const loadExtensions: (paths: ReadonlyArray<string>) => Effect.Effect<voi
       paths,
       (path) =>
         client.loadExtension(path).pipe(Effect.mapError((cause) => SqliteError.fromUnknown("loadExtension", cause))),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
   });
 

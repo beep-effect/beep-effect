@@ -675,13 +675,16 @@ export const makeFetchConfigDependency =
         yield* io(
           "writing the scratch workspace",
           Effect.andThen(
-            Effect.all([
-              fs.writeFileString(
-                path.join(scratch, "pnpm-workspace.yaml"),
-                scratchWorkspaceYaml(name, version, settings)
-              ),
-              fs.writeFileString(path.join(scratch, "pnpm-lock.yaml"), lockfile),
-            ]),
+            Effect.all(
+              [
+                fs.writeFileString(
+                  path.join(scratch, "pnpm-workspace.yaml"),
+                  scratchWorkspaceYaml(name, version, settings)
+                ),
+                fs.writeFileString(path.join(scratch, "pnpm-lock.yaml"), lockfile),
+              ],
+              { concurrency: 1 }
+            ),
             // Copied as-is, never read: it may carry auth. The scratch's release
             // removes it with the rest of the directory.
             orAbsent(fs.copyFile(path.join(request.root, ".npmrc"), path.join(scratch, ".npmrc")))

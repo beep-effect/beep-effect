@@ -105,7 +105,8 @@ export const physicalTargets = Effect.fn("ClearingHouse.physicalTargets")(functi
         absolute: path.join(realParent, path.basename(absolute)),
         workDir: path.join(path.dirname(realParent), MATERIALIZE_WORK_DIR),
       } satisfies PhysicalTarget;
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.dedupeWith(resolved, (left, right) => Str.Equivalence(left.absolute, right.absolute));
 });
@@ -163,7 +164,7 @@ const sweepLeftovers = Effect.fn("ClearingHouse.sweepLeftovers")(function* (work
   yield* Effect.forEach(
     entries,
     (entry) => fs.remove(path.join(workDir, entry), { recursive: true, force: true }).pipe(Effect.ignore),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
 });
 
@@ -189,7 +190,7 @@ const stageTree = Effect.fn("ClearingHouse.stageTree")(function* (
   const stage = yield* fs
     .makeTempDirectory({ directory: target.workDir, prefix: `${skill}.stage-` })
     .pipe(SkillsCommandError.mapError(`Failed to create a stage in ${target.workDir}.`, target.workDir, skill));
-  yield* Effect.forEach(files, (file) => writeStagedFile(stage, skill, file), { discard: true });
+  yield* Effect.forEach(files, (file) => writeStagedFile(stage, skill, file), { concurrency: 1, discard: true });
   return stage;
 });
 
@@ -250,8 +251,10 @@ export const publishSkillTree = Effect.fn("ClearingHouse.publishSkillTree")(func
 ): Effect.fn.Return<void, SkillsCommandError, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const physical = yield* physicalTargets(repoRoot, skill, targets);
-  const stages = yield* Effect.forEach(physical, (target) =>
-    Effect.map(stageTree(target, skill, files), (stage) => [target, stage] as const)
+  const stages = yield* Effect.forEach(
+    physical,
+    (target) => Effect.map(stageTree(target, skill, files), (stage) => [target, stage] as const),
+    { concurrency: 1 }
   );
   const swaps = yield* Ref.make(A.empty<Swap>());
   const swapIn = Effect.fnUntraced(function* (target: PhysicalTarget, stage: string) {
@@ -271,11 +274,12 @@ export const publishSkillTree = Effect.fn("ClearingHouse.publishSkillTree")(func
       .rename(stage, target.absolute)
       .pipe(SkillsCommandError.mapError(`Failed to publish ${target.absolute}.`, target.absolute, skill));
   });
-  yield* Effect.forEach(stages, ([target, stage]) => swapIn(target, stage), { discard: true }).pipe(
+  yield* Effect.forEach(stages, ([target, stage]) => swapIn(target, stage), { concurrency: 1, discard: true }).pipe(
     Effect.catchTag("SkillsCommandError", restoreAfter(swaps, skill)),
     Effect.onInterrupt(() => Effect.flatMap(Ref.get(swaps), restore)),
     Effect.ensuring(
       Effect.forEach(stages, ([, stage]) => fs.remove(stage, { recursive: true, force: true }).pipe(Effect.ignore), {
+        concurrency: 1,
         discard: true,
       })
     )
@@ -284,7 +288,7 @@ export const publishSkillTree = Effect.fn("ClearingHouse.publishSkillTree")(func
   yield* Effect.forEach(
     A.getSomes(A.map(got2, (swap) => swap.previous)),
     (previous) => fs.remove(previous, { recursive: true, force: true }).pipe(Effect.ignore),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
-  yield* Effect.forEach(physical, (target) => removeIfEmpty(target.workDir), { discard: true });
+  yield* Effect.forEach(physical, (target) => removeIfEmpty(target.workDir), { concurrency: 1, discard: true });
 });

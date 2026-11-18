@@ -628,14 +628,17 @@ const hasBuildEquivalenceSources = Effect.fn("CheckCensusBuildEquivalence.hasSou
 ): Effect.fn.Return<boolean, never, FileSystem.FileSystem | Path.Path> {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const [build, check, src] = yield* Effect.all([
-    fs.exists(path.join(dir, BUILD_CONFIG)).pipe(Effect.orElseSucceed(thunkFalse)),
-    fs.exists(path.join(dir, CHECK_CONFIG)).pipe(Effect.orElseSucceed(thunkFalse)),
-    fs.stat(path.join(dir, "src")).pipe(
-      Effect.map((stat) => stat.type === "Directory"),
-      Effect.orElseSucceed(thunkFalse)
-    ),
-  ]);
+  const [build, check, src] = yield* Effect.all(
+    [
+      fs.exists(path.join(dir, BUILD_CONFIG)).pipe(Effect.orElseSucceed(thunkFalse)),
+      fs.exists(path.join(dir, CHECK_CONFIG)).pipe(Effect.orElseSucceed(thunkFalse)),
+      fs.stat(path.join(dir, "src")).pipe(
+        Effect.map((stat) => stat.type === "Directory"),
+        Effect.orElseSucceed(thunkFalse)
+      ),
+    ],
+    { concurrency: 1 }
+  );
 
   return build && check && src;
 });

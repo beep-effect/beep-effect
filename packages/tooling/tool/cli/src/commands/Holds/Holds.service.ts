@@ -205,8 +205,10 @@ export const makeHoldLedger = Effect.fn("HoldLedger.make")(function* (repoRoot: 
     if (A.isReadonlyArrayEmpty(versions)) {
       return;
     }
-    const lines = yield* Effect.forEach(versions, (version) =>
-      HoldClaimVersionJson.encode(version).pipe(Effect.mapError(encodeFailure("a hold claim version")))
+    const lines = yield* Effect.forEach(
+      versions,
+      (version) => HoldClaimVersionJson.encode(version).pipe(Effect.mapError(encodeFailure("a hold claim version"))),
+      { concurrency: 1 }
     );
     yield* appendLines(claimsFile, lines);
   });

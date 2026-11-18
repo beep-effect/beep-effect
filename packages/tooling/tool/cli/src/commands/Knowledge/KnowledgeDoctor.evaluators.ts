@@ -921,7 +921,9 @@ export const evaluateSkillsLocal = Effect.fn("KnowledgeDoctor.evaluateSkillsLoca
   tree: KnowledgeDoctorTree
 ) {
   const spans = yield* skillTreeSpans(tree);
-  return yield* Effect.forEach(spans, (span) =>
-    Effect.map(evaluateSkillSpan(span, tree), (outcome) => [span, outcome] as const)
+  return yield* Effect.forEach(
+    spans,
+    (span) => Effect.map(evaluateSkillSpan(span, tree), (outcome) => [span, outcome] as const),
+    { concurrency: 1 }
   );
 });

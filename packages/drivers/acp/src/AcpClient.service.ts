@@ -355,7 +355,10 @@ interface AcpClientState {
 }
 
 const runNotificationHandlers = <A>(handlers: ReadonlyArray<NotificationHandler<A>>, notification: A) =>
-  Effect.forEach(handlers, (handler) => isolateNotificationHandler(handler(notification)), { discard: true });
+  Effect.forEach(handlers, (handler) => isolateNotificationHandler(handler(notification)), {
+    concurrency: 1,
+    discard: true,
+  });
 
 const appendPending = <A>(pending: ReadonlyArray<A>, notification: A): ReadonlyArray<A> =>
   A.takeRight(A.append(pending, notification), ACP_CLIENT_PENDING_NOTIFICATION_CAPACITY);
@@ -382,6 +385,7 @@ const makeNotificationChannel = <A>(): Effect.Effect<NotificationChannel<A>> =>
         }).pipe(
           Effect.flatMap(({ handlers, pending }) =>
             Effect.forEach(pending, (notification) => runNotificationHandlers(handlers, notification), {
+              concurrency: 1,
               discard: true,
             })
           )
@@ -457,14 +461,19 @@ const completePrompt = (prompts: PromptRegistry, notification: Compat.SessionNot
 const failPrompts = (prompts: PromptRegistry, error: AcpError.AcpError) =>
   Ref.getAndSet(prompts, HashMap.empty()).pipe(
     Effect.flatMap((pending) =>
-      Effect.forEach(HashMap.values(pending), (completion) => Deferred.fail(completion, error), { discard: true })
+      Effect.forEach(HashMap.values(pending), (completion) => Deferred.fail(completion, error), {
+        concurrency: 1,
+        discard: true,
+      })
     )
   );
 
 // --- Inbound notifications and extension requests --------------------------------------------------
 
 const dispatchExtNotification = (state: AcpClientState, method: string, params: unknown) =>
-  Effect.all([Ref.get(state.extNotificationHandlers), Ref.get(state.unknownExtNotificationHandler)]).pipe(
+  Effect.all([Ref.get(state.extNotificationHandlers), Ref.get(state.unknownExtNotificationHandler)], {
+    concurrency: 1,
+  }).pipe(
     Effect.flatMap(([handlers, unknownHandler]) =>
       HashMap.get(handlers, method).pipe(
         O.map((handler) => handler(params)),

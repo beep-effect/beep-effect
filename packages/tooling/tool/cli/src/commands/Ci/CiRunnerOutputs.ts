@@ -36,7 +36,7 @@ const runnerVariable = (name: string) =>
 
 /** The present, non-empty runner variables, read through the current `ConfigProvider`. */
 const runnerEnvironment = Effect.map(
-  Effect.forEach(RUNNER_VARIABLES, runnerVariable),
+  Effect.forEach(RUNNER_VARIABLES, runnerVariable, { concurrency: 1 }),
   (entries): Readonly<Record<string, string>> => R.fromEntries(A.getSomes(entries))
 );
 

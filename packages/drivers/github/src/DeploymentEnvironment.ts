@@ -271,16 +271,19 @@ const make = (client: GitHubClient["Service"]): DeploymentEnvironmentShape => {
       // Paginated, so this is already an array — octokit's paginator normalises
       // the envelope, including the case where a repository with none answers
       // without the key at all.
-      return yield* Effect.forEach(environments, (environment) =>
-        S.decodeEffect(DeploymentEnvironmentInfo)(environment).pipe(
-          Effect.mapError((error) =>
-            GitHubError.decode(
-              "DeploymentEnvironment.list",
-              "GitHub returned an unexpected deployment environment",
-              error
+      return yield* Effect.forEach(
+        environments,
+        (environment) =>
+          S.decodeEffect(DeploymentEnvironmentInfo)(environment).pipe(
+            Effect.mapError((error) =>
+              GitHubError.decode(
+                "DeploymentEnvironment.list",
+                "GitHub returned an unexpected deployment environment",
+                error
+              )
             )
-          )
-        )
+          ),
+        { concurrency: 1 }
       );
     })
   );

@@ -2086,7 +2086,11 @@ const anchoredCandidate = Effect.fnUntraced(function* (candidate: ParityCandidat
  * @since 0.0.0
  */
 const parityEntriesFromSourceFile = Effect.fnUntraced(function* (sourceFile: SourceFile, file: string, owner: string) {
-  const anchored = yield* Effect.forEach(A.sort(parityCandidates(sourceFile), parityCandidateOrder), anchoredCandidate);
+  const anchored = yield* Effect.forEach(
+    A.sort(parityCandidates(sourceFile), parityCandidateOrder),
+    anchoredCandidate,
+    { concurrency: 1 }
+  );
   const duplicates = MutableHashMap.empty<string, number>();
   return A.map(anchored, ({ candidate, path, hash }) => {
     const stem = `${path}::${candidate.wrapper.name}@${hash}`;

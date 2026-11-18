@@ -360,7 +360,7 @@ const make = (client: GitHubClient["Service"]): PullRequestCommentShape => {
         { owner, repo, issue_number: issueNumber },
         options?.page
       );
-      const records = yield* Effect.forEach(comments, recordOf("PullRequestComment.find"));
+      const records = yield* Effect.forEach(comments, recordOf("PullRequestComment.find"), { concurrency: 1 });
       return A.findFirst(records, (comment) => marker.matches(comment.body));
     })
   );

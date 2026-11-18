@@ -121,7 +121,8 @@ const readRows = Effect.fn("CanonicalWorkflowTest.read")(function* () {
       expect(context.get_citations_args.plain_text ?? "", id).toBe(body.input.plain_text);
       expect(context.get_citations_args.markup_text ?? "", id).toBe(body.input.markup_text);
       return { id, ordinal: row.ordinal, raw, mode, steps, models, context, expected: criterion.operands[1].value };
-    })
+    }),
+    { concurrency: 1 }
   );
 });
 /** Recompute cleaning, parsing, verified ranges and final original annotations.

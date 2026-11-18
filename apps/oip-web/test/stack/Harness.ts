@@ -81,18 +81,28 @@ const leafStrings = (value: unknown): ReadonlyArray<string> => {
 export const persistedStrings = Effect.gen(function* () {
   const store = yield* yield* State;
   const stacks = yield* store.listStacks();
-  const rows = yield* Effect.forEach(stacks, (stack) =>
-    store
-      .listStages(stack)
-      .pipe(
-        Effect.flatMap((stages) =>
-          Effect.forEach(stages, (stage) =>
-            store
-              .list({ stack, stage })
-              .pipe(Effect.flatMap((fqns) => Effect.forEach(fqns, (fqn) => store.get({ stack, stage, fqn }))))
+  const rows = yield* Effect.forEach(
+    stacks,
+    (stack) =>
+      store
+        .listStages(stack)
+        .pipe(
+          Effect.flatMap((stages) =>
+            Effect.forEach(
+              stages,
+              (stage) =>
+                store
+                  .list({ stack, stage })
+                  .pipe(
+                    Effect.flatMap((fqns) =>
+                      Effect.forEach(fqns, (fqn) => store.get({ stack, stage, fqn }), { concurrency: 1 })
+                    )
+                  ),
+              { concurrency: 1 }
+            )
           )
-        )
-      )
+        ),
+    { concurrency: 1 }
   );
   return leafStrings(rows);
 });
@@ -116,24 +126,30 @@ export const renderPlanLog =
 export const checkpointAsCreating = Effect.fn("checkpointAsCreating")(function* (fqn: string) {
   const store = yield* yield* State;
   const stacks = yield* store.listStacks();
-  yield* Effect.forEach(stacks, (stack) =>
-    store.listStages(stack).pipe(
-      Effect.flatMap((stages) =>
-        Effect.forEach(stages, (stage) =>
-          store.get({ stack, stage, fqn }).pipe(
-            Effect.flatMap((row) =>
-              row === undefined
-                ? Effect.void
-                : store.set({
-                    stack,
-                    stage,
-                    fqn,
-                    value: { ...row, status: "creating", attr: undefined } as typeof row,
-                  })
-            )
+  yield* Effect.forEach(
+    stacks,
+    (stack) =>
+      store.listStages(stack).pipe(
+        Effect.flatMap((stages) =>
+          Effect.forEach(
+            stages,
+            (stage) =>
+              store.get({ stack, stage, fqn }).pipe(
+                Effect.flatMap((row) =>
+                  row === undefined
+                    ? Effect.void
+                    : store.set({
+                        stack,
+                        stage,
+                        fqn,
+                        value: { ...row, status: "creating", attr: undefined } as typeof row,
+                      })
+                )
+              ),
+            { concurrency: 1 }
           )
         )
-      )
-    )
+      ),
+    { concurrency: 1 }
   );
 });

@@ -209,7 +209,7 @@ const makeLive = (fs: FileSystem.FileSystem, crypto: Digest.Digest["Service"]) =
     if (!DateTime.Equivalence(facts.captureInstant, kpiWindows[0].end)) {
       return yield* decodeFailure("fleet-manifest", manifestPin.path, "The manifest's capture instant is not W's end.");
     }
-    const journals = yield* Effect.forEach(facts.journals, readJournal(input, manifestPin.path));
+    const journals = yield* Effect.forEach(facts.journals, readJournal(input, manifestPin.path), { concurrency: 1 });
     return [facts.captureInstant, journals] as const;
   });
 

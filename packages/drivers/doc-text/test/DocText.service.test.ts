@@ -37,13 +37,16 @@ const encode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: C
 const decode = <Codec extends S.Codec<unknown, unknown>>(schema: Codec, value: Codec["Encoded"]): Codec["Type"] =>
   Result.getOrThrow(S.decodeUnknownResult(schema)(value));
 
-const fixtureIds = Effect.all({
-  artifactId: S.decodeEffect(ArtifactId)("artifact:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
-  digest: S.decodeEffect(ContentDigest)("sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
-  operationId: S.decodeEffect(OperationId)(
-    "operation:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"
-  ),
-});
+const fixtureIds = Effect.all(
+  {
+    artifactId: S.decodeEffect(ArtifactId)("artifact:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
+    digest: S.decodeEffect(ContentDigest)("sha256:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"),
+    operationId: S.decodeEffect(OperationId)(
+      "operation:3a6eb0790f39ac87c94f3856b2dd2c5d110e6811602261a9a923d3bb23adc8b7"
+    ),
+  },
+  { concurrency: 1 }
+);
 
 type FixtureIds = {
   readonly artifactId: ArtifactId;

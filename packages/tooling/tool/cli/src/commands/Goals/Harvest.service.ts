@@ -504,17 +504,22 @@ const templateRootCheckboxTexts = Effect.fnUntraced(function* (repoRoot: string,
   const absolute = path.join(repoRoot, templateRoot);
   const entries = yield* fs.readDirectory(absolute, { recursive: true }).pipe(Effect.orElseSucceed(A.empty<string>));
   const markdown = A.sort(A.filter(entries, Str.endsWith(".md")), Order.String);
-  const texts = yield* Effect.forEach(markdown, (entry) =>
-    Effect.map(readOptionalText(path.join(absolute, entry), `${templateRoot}/${entry}`), (content) =>
-      O.match(content, { onNone: A.empty<string>, onSome: checkboxItemTexts })
-    )
+  const texts = yield* Effect.forEach(
+    markdown,
+    (entry) =>
+      Effect.map(readOptionalText(path.join(absolute, entry), `${templateRoot}/${entry}`), (content) =>
+        O.match(content, { onNone: A.empty<string>, onSome: checkboxItemTexts })
+      ),
+    { concurrency: 1 }
   );
   return A.flatten(texts);
 });
 
 const templateCheckboxTexts = Effect.fnUntraced(function* (repoRoot: string) {
-  const lists = yield* Effect.forEach(TEMPLATE_ROOTS, (templateRoot) =>
-    templateRootCheckboxTexts(repoRoot, templateRoot)
+  const lists = yield* Effect.forEach(
+    TEMPLATE_ROOTS,
+    (templateRoot) => templateRootCheckboxTexts(repoRoot, templateRoot),
+    { concurrency: 1 }
   );
   return HashSet.fromIterable(A.flatten(lists));
 });
@@ -572,35 +577,46 @@ const goalPacketRows = Effect.fnUntraced(function* (
     })
   );
 
-  const planDrafts = yield* Effect.forEach(["PLAN.md", "SPEC.md"], (name) =>
-    Effect.map(readOptionalText(path.join(absolute, name), `${relative}/${name}`), (content) =>
-      O.match(content, {
-        onNone: A.empty<HarvestRowDraft>,
-        onSome: (value) =>
-          A.filter(
-            uncheckedPlanItems(`${relative}/${name}`, value),
-            (draft) => !HashSet.has(boilerplate, normalizeCheckboxText(draft.text))
-          ),
-      })
-    )
+  const planDrafts = yield* Effect.forEach(
+    ["PLAN.md", "SPEC.md"],
+    (name) =>
+      Effect.map(readOptionalText(path.join(absolute, name), `${relative}/${name}`), (content) =>
+        O.match(content, {
+          onNone: A.empty<HarvestRowDraft>,
+          onSome: (value) =>
+            A.filter(
+              uncheckedPlanItems(`${relative}/${name}`, value),
+              (draft) => !HashSet.has(boilerplate, normalizeCheckboxText(draft.text))
+            ),
+        })
+      ),
+    { concurrency: 1 }
   );
 
   const decisionEntries = yield* listDirectory(path.join(absolute, GOAL_DECISIONS_DIR));
   const decisionNames = A.filter(decisionEntries, Str.endsWith(".md"));
-  const decisionDrafts = yield* Effect.forEach(decisionNames, (name) => {
-    const file = `${relative}/${GOAL_DECISIONS_DIR}/${name}`;
-    return Effect.flatMap(readText(path.join(absolute, GOAL_DECISIONS_DIR, name), file), (raw) =>
-      decisionDraft(file, name, raw)
-    );
-  });
+  const decisionDrafts = yield* Effect.forEach(
+    decisionNames,
+    (name) => {
+      const file = `${relative}/${GOAL_DECISIONS_DIR}/${name}`;
+      return Effect.flatMap(readText(path.join(absolute, GOAL_DECISIONS_DIR, name), file), (raw) =>
+        decisionDraft(file, name, raw)
+      );
+    },
+    { concurrency: 1 }
+  );
 
   const reflectionsDir = path.join(absolute, "history", "reflections");
   const reflectionEntries = yield* listDirectory(reflectionsDir);
   const reflectionNames = A.filter(reflectionEntries, reflectionFileNameIsArtifact);
-  const reflectionDraftLists = yield* Effect.forEach(reflectionNames, (name) => {
-    const file = `${relative}/history/reflections/${name}`;
-    return Effect.flatMap(readText(path.join(reflectionsDir, name), file), (raw) => reflectionDrafts(file, raw));
-  });
+  const reflectionDraftLists = yield* Effect.forEach(
+    reflectionNames,
+    (name) => {
+      const file = `${relative}/history/reflections/${name}`;
+      return Effect.flatMap(readText(path.join(reflectionsDir, name), file), (raw) => reflectionDrafts(file, raw));
+    },
+    { concurrency: 1 }
+  );
 
   const drafts = A.flatten([
     statusNoteDrafts,
@@ -735,7 +751,7 @@ const collectLedger = Effect.fn("Harvest.collect")(function* (options: HarvestCo
 
   const rows = yield* Effect.forEach(
     A.appendAll(packets, ledgerDrafts),
-    ({ context, drafts }) => Effect.forEach(drafts, (draft) => makeRow(context, draft)),
+    ({ context, drafts }) => Effect.forEach(drafts, (draft) => makeRow(context, draft), { concurrency: 1 }),
     { concurrency: 8 }
   );
   const sorted = A.sort(A.flatten(rows), orderRows);
@@ -786,7 +802,7 @@ export const renderHarvestLedger = Effect.fn("Harvest.renderHarvestLedger")(func
       rowCount: ledger.rowCount,
     })
   ).pipe(Effect.orDie);
-  const rows = yield* Effect.forEach(ledger.rows, (row) => encodeRow(row).pipe(Effect.orDie));
+  const rows = yield* Effect.forEach(ledger.rows, (row) => encodeRow(row).pipe(Effect.orDie), { concurrency: 1 });
   return `${A.join(A.map(A.prepend(rows, header), canonicalJsonText), "\n")}\n`;
 });
 
@@ -819,8 +835,11 @@ export const parseHarvestLedgerText = Effect.fn("Harvest.parseHarvestLedgerText"
   const header = yield* decodeHeaderJson(first).pipe(
     Effect.mapError((error) => parseFailed(`header: ${error.message}`))
   );
-  const rows = yield* Effect.forEach(rest, (line, index) =>
-    decodeRowJson(line).pipe(Effect.mapError((error) => parseFailed(`line ${index + 2}: ${error.message}`)))
+  const rows = yield* Effect.forEach(
+    rest,
+    (line, index) =>
+      decodeRowJson(line).pipe(Effect.mapError((error) => parseFailed(`line ${index + 2}: ${error.message}`))),
+    { concurrency: 1 }
   );
   if (header.rowCount !== A.length(rows)) {
     return yield* parseFailed(`header rowCount ${header.rowCount} but ${A.length(rows)} row line(s)`);

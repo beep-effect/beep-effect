@@ -1308,7 +1308,8 @@ export class ConfigDependencyHooks extends Context.Service<ConfigDependencyHooks
             const pnpmfiles = yield* resolvePnpmfiles(root, configDependencies, context, fetch);
             const loadable = yield* Effect.forEach(
               A.flatMap(pnpmfiles, ({ name, path }) => (path === undefined ? [] : [{ name, path }])),
-              ({ name, path }) => Effect.map(fileUrlOf(name, path), (url) => [name, url] as const)
+              ({ name, path }) => Effect.map(fileUrlOf(name, path), (url) => [name, url] as const),
+              { concurrency: 1 }
             );
             if (loadable.length === 0) return untouched(seed, rules, replaysOf(pnpmfiles));
 

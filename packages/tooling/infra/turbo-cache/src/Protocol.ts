@@ -159,14 +159,17 @@ const authenticate = Effect.fn("TurboCache.authenticate")(function* (
   // Digest even an absent bearer and compare against every credential, so the
   // time a refusal takes does not reveal which teams or tokens exist.
   const presented = yield* digest(O.getOrElse(bearer, () => ""));
-  const matches = yield* Effect.forEach(credentials, (credential) =>
-    credential.token.pipe(
-      Effect.flatMap((value) => value.pipe(Redacted.value, digest)),
-      Effect.map((expected) => ({
-        credential,
-        matches: native.timingSafeEqual.call(crypto.subtle, expected, presented),
-      }))
-    )
+  const matches = yield* Effect.forEach(
+    credentials,
+    (credential) =>
+      credential.token.pipe(
+        Effect.flatMap((value) => value.pipe(Redacted.value, digest)),
+        Effect.map((expected) => ({
+          credential,
+          matches: native.timingSafeEqual.call(crypto.subtle, expected, presented),
+        }))
+      ),
+    { concurrency: 1 }
   );
   return O.isNone(bearer)
     ? O.none<Credential>()
@@ -190,18 +193,21 @@ const queryArtifacts = Effect.fn("TurboCache.query")(function* <R>(
     return refusal(400);
   }
 
-  const hits = yield* Effect.forEach(parsed.value.hashes, (hash) =>
-    bucket
-      .head(`${team}/${hash}`)
-      .pipe(
-        Effect.map(
-          (hit) =>
-            [
-              hash,
-              hit === null ? null : { size: hit.size, taskDurationMs: Number(hit.customMetadata?.duration ?? "0") },
-            ] as const
-        )
-      )
+  const hits = yield* Effect.forEach(
+    parsed.value.hashes,
+    (hash) =>
+      bucket
+        .head(`${team}/${hash}`)
+        .pipe(
+          Effect.map(
+            (hit) =>
+              [
+                hash,
+                hit === null ? null : { size: hit.size, taskDurationMs: Number(hit.customMetadata?.duration ?? "0") },
+              ] as const
+          )
+        ),
+    { concurrency: 1 }
   );
 
   return Response.json(R.fromEntries(hits), { headers: noStore });

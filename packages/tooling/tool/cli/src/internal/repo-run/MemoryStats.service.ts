@@ -379,15 +379,18 @@ export const readAdmissionHostPressure = Effect.fn("MemoryStats.readAdmissionHos
   FileSystem.FileSystem
 > {
   const fs = yield* FileSystem.FileSystem;
-  return yield* Effect.all({
-    psiCpuSome10: readPressureSome10(fs, "cpu"),
-    psiMemorySome10: readPressureSome10(fs, "memory"),
-    psiIoSome10: readPressureSome10(fs, "io"),
-    unadmittedSliceGib: readUnadmittedSliceBytes(leases).pipe(
-      Effect.map((bytes) => Num.round(bytes / GIB, 3)),
-      Effect.option
-    ),
-  });
+  return yield* Effect.all(
+    {
+      psiCpuSome10: readPressureSome10(fs, "cpu"),
+      psiMemorySome10: readPressureSome10(fs, "memory"),
+      psiIoSome10: readPressureSome10(fs, "io"),
+      unadmittedSliceGib: readUnadmittedSliceBytes(leases).pipe(
+        Effect.map((bytes) => Num.round(bytes / GIB, 3)),
+        Effect.option
+      ),
+    },
+    { concurrency: 1 }
+  );
 });
 
 const makeMemoryStats = Effect.fnUntraced(function* (

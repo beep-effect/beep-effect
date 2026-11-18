@@ -124,8 +124,10 @@ const publishedMessageIds = (state: DocketIntakeState): ReadonlyArray<string> =>
   );
 
 const digestPairs = (messageIds: ReadonlyArray<string>) =>
-  Effect.forEach(messageIds, (messageId) =>
-    Effect.map(docketQuestionDigest(messageId), (digest) => [digest, messageId] as const)
+  Effect.forEach(
+    messageIds,
+    (messageId) => Effect.map(docketQuestionDigest(messageId), (digest) => [digest, messageId] as const),
+    { concurrency: 1 }
   );
 
 /**
@@ -176,11 +178,14 @@ export const backfillQuestions = Effect.fn("DocketIntakeApp.backfillQuestions")(
       O.map(HashMap.get(journaled, digest), (messageId) => ({ messageId, question }))
     )
   );
-  const described = yield* Effect.forEach(matched, ({ messageId, question }) =>
-    Effect.map(
-      input.describe(messageId),
-      O.map((email) => withDocketQuestionEmail(question, email))
-    )
+  const described = yield* Effect.forEach(
+    matched,
+    ({ messageId, question }) =>
+      Effect.map(
+        input.describe(messageId),
+        O.map((email) => withDocketQuestionEmail(question, email))
+      ),
+    { concurrency: 1 }
   );
   const enriched = A.filter(A.getSomes(described), docketQuestionNamesEmail);
   if (input.apply && A.isReadonlyArrayNonEmpty(enriched)) {

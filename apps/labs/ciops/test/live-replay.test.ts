@@ -488,7 +488,8 @@ describe("@beep/ciops live replay", () => {
             { ...released, checkoutRoot: undefined },
             { ...legacyShapes[0], nonce: "row", ownerRef: "0a1b2c3d4e5f" },
           ],
-          (row) => Effect.flip(decodeRow(row))
+          (row) => Effect.flip(decodeRow(row)),
+          { concurrency: 1 }
         );
         const checkoutRefOnly = yield* decodeRow({ ...released, checkoutRoot: undefined, checkoutRef: "9f8e7d6c5b4a" });
 

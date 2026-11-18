@@ -103,8 +103,10 @@ const seededHub = Effect.fnUntraced(function* () {
   const directory = yield* fs.makeTempDirectoryScoped({ prefix: "review-hub-" });
   const build1 = yield* Layer.build(makeReviewFilesLayer(ReviewFilesConfig.make({ dataDirectory: directory })));
   const store = Context.get(build1, ReviewItemStore);
-  const forEach2 = yield* Effect.forEach(["m-journaled", "m-in-ledger", "m-unjournaled", "m-moved"], (messageId) =>
-    questions.raise(DocketQuestionInput.make({ outcome: needsReview(messageId) }))
+  const forEach2 = yield* Effect.forEach(
+    ["m-journaled", "m-in-ledger", "m-unjournaled", "m-moved"],
+    (messageId) => questions.raise(DocketQuestionInput.make({ outcome: needsReview(messageId) })),
+    { concurrency: 1 }
   );
   const unnamed = A.getSomes(forEach2);
   const named = yield* questions.raise(

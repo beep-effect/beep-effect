@@ -1012,7 +1012,8 @@ describe("knowledge doctor on this checkout", () => {
             tree.readBytes(entry.path).pipe(
               Effect.flatMap((bytes) => decodeKnowledgeUtf8(bytes, "AGENTS.md is not UTF-8")),
               Effect.map((text) => spansOf(entry.path, text))
-            )
+            ),
+          { concurrency: 1 }
         );
         const verdicts = yield* knowledgeCounterfactualVerdicts(
           tree,

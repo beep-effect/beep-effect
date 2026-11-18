@@ -63,11 +63,14 @@ export const normalizeEnv = (record: Env): Env =>
  * @since 0.0.0
  */
 export const readEnv = (keys: ReadonlyArray<string>): Effect.Effect<Env> =>
-  Effect.forEach(keys, (key) =>
-    Config.option(Config.String(key)).pipe(
-      Effect.orElseSucceed(O.none<string>),
-      Effect.map((value) => [key, value] as const)
-    )
+  Effect.forEach(
+    keys,
+    (key) =>
+      Config.option(Config.String(key)).pipe(
+        Effect.orElseSucceed(O.none<string>),
+        Effect.map((value) => [key, value] as const)
+      ),
+    { concurrency: 1 }
   ).pipe(
     Effect.map((entries) =>
       R.fromEntries(

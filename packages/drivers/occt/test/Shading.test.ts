@@ -345,16 +345,19 @@ describe("@beep/occt shading", () => {
       Effect.fnUntraced(function* () {
         const occt = yield* Occt;
         const run = (plan: (litThreshold: number) => ShadingPlan) =>
-          Effect.forEach([-0.2, 0.55, 0.75, 1], (litThreshold) =>
-            occt
-              .project(
-                ProjectionRequest.make({
-                  solid: legacyFixture,
-                  cameras: legacyCameras,
-                  shading: O.some(plan(litThreshold)),
-                })
-              )
-              .pipe(Effect.map(A.map((v: EdgeSet) => [v.visible, v.hidden, v.shading])))
+          Effect.forEach(
+            [-0.2, 0.55, 0.75, 1],
+            (litThreshold) =>
+              occt
+                .project(
+                  ProjectionRequest.make({
+                    solid: legacyFixture,
+                    cameras: legacyCameras,
+                    shading: O.some(plan(litThreshold)),
+                  })
+                )
+                .pipe(Effect.map(A.map((v: EdgeSet) => [v.visible, v.hidden, v.shading]))),
+            { concurrency: 1 }
           ).pipe(
             Effect.flatMap((views) =>
               sha256Of(Result.getOrThrowWith(S.encodeUnknownResult(UnknownJson)(views), identity))

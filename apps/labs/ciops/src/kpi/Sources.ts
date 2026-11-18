@@ -445,7 +445,7 @@ export const decodeAttemptJournal = Effect.fn("KpiSources.decodeAttemptJournal")
   pin: AttemptJournalPin,
   text: string
 ): Effect.fn.Return<FleetJournal, KpiInputDecodeError> {
-  const rows = yield* Effect.forEach(nonEmptyLines(text), decodeJournalLine(pin.path));
+  const rows = yield* Effect.forEach(nonEmptyLines(text), decodeJournalLine(pin.path), { concurrency: 1 });
   const terminals = firstTerminals(rows);
   const starts = A.filter(rows, AttemptJournalRow.guards["attempt-started"]);
   return FleetJournal.make({
@@ -540,10 +540,15 @@ export const readFleetManifestFacts = Effect.fn("KpiSources.readFleetManifestFac
     Effect.mapError(() => manifestFailure(path, "The manifest carries no readable capture_instant."))
   );
   const pins = A.getSomes(A.map(listItems(topLevelBlock(lines, "files")), pinOf(writerCapByPath(lines))));
-  const journals = yield* Effect.forEach(pins, (pin, index) =>
-    Effect.fromOption(pin).pipe(
-      Effect.mapError(() => manifestFailure(path, `Attempt file item ${index + 1} lacks a pin member or ring window.`))
-    )
+  const journals = yield* Effect.forEach(
+    pins,
+    (pin, index) =>
+      Effect.fromOption(pin).pipe(
+        Effect.mapError(() =>
+          manifestFailure(path, `Attempt file item ${index + 1} lacks a pin member or ring window.`)
+        )
+      ),
+    { concurrency: 1 }
   );
   return FleetManifestFacts.make({ captureInstant, journals });
 });
@@ -731,11 +736,13 @@ export const mergeAdmissionSources = Effect.fn("KpiSources.mergeAdmissionSources
 ): Effect.fn.Return<ReadonlyArray<KpiAdmissionRow>, KpiInputDecodeError | KpiAdmissionJoinMismatchError> {
   const canonicalRows = yield* Effect.forEach(
     nonEmptyLines(canonical.text),
-    decodeAdmissionLine("fleet-admission-journal", canonical.path)
+    decodeAdmissionLine("fleet-admission-journal", canonical.path),
+    { concurrency: 1 }
   );
   const snapshotRows = yield* Effect.forEach(
     nonEmptyLines(snapshot.text),
-    decodeAdmissionLine("admission-snapshot", snapshot.path)
+    decodeAdmissionLine("admission-snapshot", snapshot.path),
+    { concurrency: 1 }
   );
   const groups = A.groupBy(A.appendAll(canonicalRows, snapshotRows), (row) => row.key);
   const ordered = A.sort(R.values(groups), groupOrder);

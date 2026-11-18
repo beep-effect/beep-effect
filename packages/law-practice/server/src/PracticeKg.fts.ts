@@ -183,7 +183,8 @@ const insertRows = <Row>(
   statement: string,
   rows: ReadonlyArray<Row>,
   parameters: (row: Row) => ReadonlyArray<string | number | boolean | null>
-) => Effect.forEach(rows, (row) => db.run(statement, A.fromIterable(parameters(row))), { discard: true });
+) =>
+  Effect.forEach(rows, (row) => db.run(statement, A.fromIterable(parameters(row))), { concurrency: 1, discard: true });
 
 const buildDocumentTextSql = (sourceSpecs: ReadonlyArray<GraphTextSourceSpec>, maxTextBytes: number): string => {
   const sourceUnion = A.join(

@@ -3107,7 +3107,10 @@ const reportTestTsgoResults = Effect.fn("QualityScriptCommands.reportTestTsgoRes
     yield* Console.error(A.join(effectDiagnosticLines, "\n"));
   }
 
-  yield* Effect.forEach(failures, (failure) => reportTestTsgoFailure(repoRoot, failure), { discard: true });
+  yield* Effect.forEach(failures, (failure) => reportTestTsgoFailure(repoRoot, failure), {
+    concurrency: 1,
+    discard: true,
+  });
 
   return A.isReadonlyArrayNonEmpty(effectDiagnosticLines) || A.isReadonlyArrayNonEmpty(failures);
 });
@@ -3478,8 +3481,10 @@ export const runJSDocInventory = Effect.fn("QualityScriptCommands.runJSDocInvent
 
   yield* Console.log(`wrote ${repoRelative(result.outputJsonPath, repoRoot, path)}`);
   yield* Console.log(`wrote ${repoRelative(result.outputMarkdownPath, repoRoot, path)}`);
-  yield* Effect.forEach(A.getSomes([ciOutputJsonPath, ciOutputMarkdownPath]), (mirrorPath) =>
-    Console.log(`wrote ${repoRelative(mirrorPath, repoRoot, path)} (mirror)`)
+  yield* Effect.forEach(
+    A.getSomes([ciOutputJsonPath, ciOutputMarkdownPath]),
+    (mirrorPath) => Console.log(`wrote ${repoRelative(mirrorPath, repoRoot, path)} (mirror)`),
+    { concurrency: 1 }
   );
   yield* Console.log(
     `packages=${result.totals.packages} openPackages=${result.totals.packagesNeedingRemediation} openExports=${result.totals.openExports} openModules=${result.totals.openModules} rootPolicyOpen=${result.totals.rootPolicyOpen}`

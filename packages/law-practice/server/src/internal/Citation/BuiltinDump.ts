@@ -76,14 +76,16 @@ export const makeCitationBuiltinDump = Effect.fn("Citation.makeBuiltinDump")(fun
         if (value === null) return O.none();
         const nativeName = yield* label(name);
         return O.some({ name: nativeName, value: scalar(value) });
-      })
+      }),
+      { concurrency: 1 }
     );
     const groups = yield* Effect.forEach(
       R.toEntries(model.token.groups),
       Effect.fnUntraced(function* ([name, value]) {
         const nativeName = yield* label(name);
         return { name: nativeName, value: scalar(value) };
-      })
+      }),
+      { concurrency: 1 }
     );
     const fields = [
       CitationDumpField.cases.Fields.make({ name: "groups", entries: groups }),

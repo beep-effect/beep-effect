@@ -89,10 +89,14 @@ const renderCategoryReport: ReportRendererServiceShape["renderCategoryReport"] =
   const hasItems = yield* A.match(report.items, {
     onEmpty: () => Effect.succeed(false),
     onNonEmpty: (items) =>
-      Effect.forEach(items, (item) => {
-        const arrow = Str.equivalence(item.current, item.expected) ? "" : ` -> ${item.expected}`;
-        return Console.log(`  ${item.file} ${item.field}: ${item.current}${arrow}`);
-      }).pipe(Effect.as(true)),
+      Effect.forEach(
+        items,
+        (item) => {
+          const arrow = Str.equivalence(item.current, item.expected) ? "" : ` -> ${item.expected}`;
+          return Console.log(`  ${item.file} ${item.field}: ${item.current}${arrow}`);
+        },
+        { concurrency: 1 }
+      ).pipe(Effect.as(true)),
   });
 
   if (!hasItems && report.status === "ok" && O.isNone(report.error)) {

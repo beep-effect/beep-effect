@@ -43,7 +43,7 @@ export const makeProjectionStore =
             sql`DELETE FROM ${sql(tables.projectionPartition)} WHERE model = ${modelName} AND projection = ${name}`,
             sql`DELETE FROM ${sql(tables.consumerInput)} WHERE model = ${modelName} AND consumer = ${consumerId}`,
           ],
-          { discard: true }
+          { concurrency: 1, discard: true }
         )
       );
       /** One lock per key: intake, processing and the key's consumer role hold it. */
@@ -178,7 +178,7 @@ export const makeProjectionStore =
         lockOf,
         singleSource: kit.singleSource,
         history: kit.history,
-        apply: (_key, deliveries) => Effect.forEach(deliveries, intake, { discard: true }),
+        apply: (_key, deliveries) => Effect.forEach(deliveries, intake, { concurrency: 1, discard: true }),
       });
 
       // Keys a previous process accepted but did not finish processing resume once workers start.

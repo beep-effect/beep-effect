@@ -283,7 +283,8 @@ export const makeArchitectureOperationPlan = Effect.fn(function* (
         }),
         "accepted-proof"
       );
-    })
+    }),
+    { concurrency: 1 }
   );
 
   return CanonicalSliceOperationPlan.make({

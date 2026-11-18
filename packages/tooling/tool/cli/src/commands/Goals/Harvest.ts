@@ -152,7 +152,7 @@ export const runGoalsHarvest = Effect.fn("Goals.runGoalsHarvest")(function* (
   if (!options.check) {
     yield* projector.write(fresh, target);
     yield* Console.log(`[goals:harvest] wrote ${fresh.rowCount} row(s) to ${options.out} at ${fresh.sourceCommit}:`);
-    yield* Effect.forEach(sourceCountLines(fresh), (line) => Console.log(line), { discard: true });
+    yield* Effect.forEach(sourceCountLines(fresh), (line) => Console.log(line), { concurrency: 1, discard: true });
     return fresh;
   }
   const onDisk = yield* projector.read(target);

@@ -179,7 +179,9 @@ const sha256Hex = Effect.fn("RouteCorpusTest.sha256Hex")(function* (bytes: Uint8
 const gunzip = (bytes: Uint8Array): string => new TextDecoder().decode(NodeZlib.gunzipSync(bytes));
 
 const ndjsonRuns = (bytes: Uint8Array) =>
-  Effect.forEach(A.filter(Str.split(gunzip(bytes), "\n"), Str.isNonEmpty), (line) => decodeRun(line));
+  Effect.forEach(A.filter(Str.split(gunzip(bytes), "\n"), Str.isNonEmpty), (line) => decodeRun(line), {
+    concurrency: 1,
+  });
 
 const pinnedCorpusPath = Effect.fn("RouteCorpusTest.pinnedCorpusPath")(function* (outDir: string) {
   const fs = yield* FileSystem.FileSystem;
@@ -654,7 +656,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         // Five rows of the 2026-09-01..10-30 corpus (sha256 e840ea6d...), branch names replaced.
         const text = yield* fs.readFileString(path.join(directory, "v1-rows-2026-09.ndjson"));
         const lines = A.filter(Str.split(text, "\n"), Str.isNonEmpty);
-        const runs = yield* Effect.forEach(lines, (line) => decodeRun(line));
+        const runs = yield* Effect.forEach(lines, (line) => decodeRun(line), { concurrency: 1 });
         const jobs = A.flatMap(runs, (run) => run.jobs);
         expect([runs.length, jobs.length]).toEqual([5, 120]);
         assertTrue(A.every(jobs, (job) => O.isNone(job.steps) && O.isNone(job.tasks)));
@@ -662,7 +664,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         const origins = A.getSomes(A.map(jobs, hostedJobRedOrigin));
         expect(origins.length).toBe(15);
         assertTrue(A.every(origins, (origin) => origin === "unattributed"));
-        const reencoded = yield* Effect.forEach(runs, (run) => encodeRun(run));
+        const reencoded = yield* Effect.forEach(runs, (run) => encodeRun(run), { concurrency: 1 });
         expect(reencoded).toEqual(lines);
       })
     );

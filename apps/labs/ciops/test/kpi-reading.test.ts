@@ -499,8 +499,11 @@ describe("@beep/ciops KPI reading", () => {
         const readText8 = yield* readText(`${repoRoot}/${manifestPin.path}`);
         const facts: FleetManifestFacts = yield* readFleetManifestFacts(manifestPin.path, readText8);
         const directory = Str.slice(0, Str.lastIndexOf("/")(manifestPin.path).pipe(O.getOrThrow))(manifestPin.path);
-        const journals = yield* Effect.forEach(facts.journals, (pin: AttemptJournalPin) =>
-          Effect.flatMap(readText(`${repoRoot}/${directory}/${pin.path}`), (text) => decodeAttemptJournal(pin, text))
+        const journals = yield* Effect.forEach(
+          facts.journals,
+          (pin: AttemptJournalPin) =>
+            Effect.flatMap(readText(`${repoRoot}/${directory}/${pin.path}`), (text) => decodeAttemptJournal(pin, text)),
+          { concurrency: 1 }
         );
         const starts = A.flatMap(journals, (entry) => entry.attempts);
         const carried = A.dedupe(A.map(starts, (start) => pairKey(start.stage, start.proofScope)));

@@ -500,12 +500,15 @@ it.layer(SqliteHarnessLayer, { timeout: 90_000 })("@beep/effect-drizzle live SQL
         status: "active",
       });
       const concurrentSeed = yield* repository.insert(value1);
-      const concurrentRequests = yield* forEach(["Concurrent A", "Concurrent B"], (name) =>
-        makeEffect(SqliteUser.update)({
-          id: concurrentSeed.id,
-          rowVersion: concurrentSeed.rowVersion,
-          name,
-        })
+      const concurrentRequests = yield* forEach(
+        ["Concurrent A", "Concurrent B"],
+        (name) =>
+          makeEffect(SqliteUser.update)({
+            id: concurrentSeed.id,
+            rowVersion: concurrentSeed.rowVersion,
+            name,
+          }),
+        { concurrency: 1 }
       );
       const concurrentUpdates = yield* forEach(concurrentRequests, (current) => exit(repository.update(current)), {
         concurrency: "unbounded",

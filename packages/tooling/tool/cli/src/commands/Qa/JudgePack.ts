@@ -806,33 +806,37 @@ const collectCandidates = Effect.fn("QaJudgePack.collectCandidates")(function* (
   const listImages = Effect.fn("QaJudgePack.listImages")(function* (dir: string, kind: JudgeEvidenceKind) {
     const entries = yield* fs.readDirectory(dir).pipe(Effect.orElseSucceed((): ReadonlyArray<string> => []));
     const images = A.filter(entries, (entry) => A.contains(IMAGE_EXTENSIONS, Str.toLowerCase(path.extname(entry))));
-    return yield* Effect.forEach(images, (entry) => {
-      const absolute = path.join(dir, entry);
-      return resolvePathWithinCanonicalRoot({
-        canonicalRoot,
-        candidate: path.relative(canonicalRoot, absolute),
-      }).pipe(
-        Effect.filterOrFail(
-          (canonical) => Eq.equals(path.resolve(absolute), canonical),
-          () => QaCommandError.make({ message: `qa judge-pack refused linked evidence path "${absolute}".` })
-        ),
-        Effect.flatMap((canonical) => fs.stat(canonical)),
-        Effect.filterOrFail(
-          (info) => Eq.equals(info.type, "File"),
-          () => QaCommandError.make({ message: `qa judge-pack refused non-file evidence path "${absolute}".` })
-        ),
-        Effect.map((info) =>
-          O.some(
-            JudgeEvidenceFile.make({
-              bytes: Number(info.size),
-              kind,
-              path: path.relative(layout.root, absolute),
-            })
-          )
-        ),
-        Effect.orElseSucceed(O.none<JudgeEvidenceFile>)
-      );
-    });
+    return yield* Effect.forEach(
+      images,
+      (entry) => {
+        const absolute = path.join(dir, entry);
+        return resolvePathWithinCanonicalRoot({
+          canonicalRoot,
+          candidate: path.relative(canonicalRoot, absolute),
+        }).pipe(
+          Effect.filterOrFail(
+            (canonical) => Eq.equals(path.resolve(absolute), canonical),
+            () => QaCommandError.make({ message: `qa judge-pack refused linked evidence path "${absolute}".` })
+          ),
+          Effect.flatMap((canonical) => fs.stat(canonical)),
+          Effect.filterOrFail(
+            (info) => Eq.equals(info.type, "File"),
+            () => QaCommandError.make({ message: `qa judge-pack refused non-file evidence path "${absolute}".` })
+          ),
+          Effect.map((info) =>
+            O.some(
+              JudgeEvidenceFile.make({
+                bytes: Number(info.size),
+                kind,
+                path: path.relative(layout.root, absolute),
+              })
+            )
+          ),
+          Effect.orElseSucceed(O.none<JudgeEvidenceFile>)
+        );
+      },
+      { concurrency: 1 }
+    );
   });
 
   const [screenshots, frames, sheets] = yield* Effect.all(

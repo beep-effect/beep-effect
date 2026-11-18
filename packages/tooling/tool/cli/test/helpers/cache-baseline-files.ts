@@ -19,7 +19,7 @@ export const writeCachePolicyBaselineFixture = Effect.fn("CacheBaselineFixture.w
       yield* fs.makeDirectory(path.dirname(target), { recursive: true });
       yield* fs.writeFileString(target, file.text);
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   return files;
 });

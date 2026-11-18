@@ -140,7 +140,8 @@ export const layoutSecretsItem = Effect.fn("Accounts.layoutSecretsItem")(
           onNone: () => Effect.fail(error("Unmapped field label; add a reviewed prefix or mapping before applying.")),
           onSome: (label) => Effect.succeed({ ...field, section: O.some({ id: Str.toLowerCase(label), label }) }),
         });
-      }
+      },
+      { concurrency: 1 }
     );
     const fields = [...A.filter(item.fields, isNote), ...A.sort(rest, fieldOrder)];
     const sections = A.map(

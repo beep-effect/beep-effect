@@ -162,7 +162,7 @@ export const replayCitationCaseNameScan = Effect.fn("CaseNameScanTest.replay")(f
     setup.corpus.cases,
     (row) => full || row.smoke || A.contains(smokeBoundaryRows, row.id) || row.error !== null || row.calls.length === 0
   );
-  yield* Effect.forEach(rows, (row) => assertScanRow(setup.stage, row), { discard: true });
+  yield* Effect.forEach(rows, (row) => assertScanRow(setup.stage, row), { concurrency: 1, discard: true });
   expect(rows).toHaveLength(full ? 64 : 54);
   const processCount = A.filter(rows, (row) => row.calls.length > 0).length;
   const calls = A.reduce(rows, 0, (sum, row) => sum + row.calls.length);

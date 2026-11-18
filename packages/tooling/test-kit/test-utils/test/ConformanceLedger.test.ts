@@ -224,10 +224,13 @@ const validateFixtureArtifacts = (root: string, options: FixtureOptions) => {
 const validateFixture = Effect.fn("ConformanceLedgerTest.validateFixture")(function* (options: FixtureOptions) {
   const fileSystem = yield* FileSystem.FileSystem;
   const root = yield* fileSystem.makeTempDirectoryScoped({ prefix: "beep-conformance-ledger-" });
-  yield* Effect.all([
-    fileSystem.makeDirectory(`${root}/data/conformance`, { recursive: true }),
-    fileSystem.makeDirectory(`${root}/test`, { recursive: true }),
-  ]);
+  yield* Effect.all(
+    [
+      fileSystem.makeDirectory(`${root}/data/conformance`, { recursive: true }),
+      fileSystem.makeDirectory(`${root}/test`, { recursive: true }),
+    ],
+    { concurrency: 1 }
+  );
   const fixtureFiles1 = yield* fixtureFiles(options);
   yield* Effect.forEach(
     fixtureFiles1,

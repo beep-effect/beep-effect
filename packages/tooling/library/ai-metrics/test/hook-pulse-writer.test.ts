@@ -211,7 +211,7 @@ const assertAdapterStamp = Effect.fnUntraced(function* (
   stdout: string,
   harnessHash: string
 ) {
-  const refusals = yield* Effect.forEach(run.refusals, (row) => decodeHookPulseRefusalJson(row));
+  const refusals = yield* Effect.forEach(run.refusals, (row) => decodeHookPulseRefusalJson(row), { concurrency: 1 });
   const diagnostics = yield* encodeJson({
     agentKind,
     exitCode: run.exitCode,
@@ -236,10 +236,13 @@ const assertAdapterStamp = Effect.fnUntraced(function* (
 const readWriterLines = Effect.fnUntraced(function* (directory: string, files: ReadonlyArray<string>) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const forEach1 = yield* Effect.forEach(files, (entry) =>
-    fs
-      .readFileString(path.join(directory, entry))
-      .pipe(Effect.map((contents) => A.filter(Str.split("\n")(contents), (line) => line.length > 0)))
+  const forEach1 = yield* Effect.forEach(
+    files,
+    (entry) =>
+      fs
+        .readFileString(path.join(directory, entry))
+        .pipe(Effect.map((contents) => A.filter(Str.split("\n")(contents), (line) => line.length > 0))),
+    { concurrency: 1 }
   );
   return A.flatten(forEach1);
 });
@@ -1191,7 +1194,7 @@ it.layer(GitNodeServices, { timeout: "30 seconds" })("hook-pulse writer conforma
           expect(codecRow.surface).toEqual(expected);
           expect(row).not.toContain(CANARY);
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     })
   );
@@ -1897,7 +1900,9 @@ fi
           expectSilentRefusal(run);
           expect(run.stderr).toBe("");
           // The payload-free refusal row is the only trace either path leaves.
-          const refusals = yield* Effect.forEach(run.refusals, (row) => decodeHookPulseRefusalJson(row));
+          const refusals = yield* Effect.forEach(run.refusals, (row) => decodeHookPulseRefusalJson(row), {
+            concurrency: 1,
+          });
           expect(A.map(refusals, (refusal) => refusal.reason)).toEqual([reason]);
           const calls54 = yield* stub.calls;
           expect(calls54).toHaveLength(0);
@@ -2207,7 +2212,7 @@ fi
           (hashSalt) => ({ ...projectionFields, hashSalt })
         ),
       ];
-      const invalidDocuments = yield* Effect.forEach(invalidFields, (fields) => encodeJson(fields));
+      const invalidDocuments = yield* Effect.forEach(invalidFields, (fields) => encodeJson(fields), { concurrency: 1 });
       const validDocument = yield* projectionDocument;
       for (const text of [...invalidDocuments, `${validDocument}\n${validDocument}`, "null", "[]"]) {
         const { file } = yield* writeProjection(text);

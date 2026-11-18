@@ -1071,8 +1071,10 @@ export const makeRouteGit = Effect.fn("RouteGit.make")(function* (
         }
       }).pipe(Effect.withSpan("RouteGit.fetchPullHeads")),
       missingCommits: Effect.fn("RouteGit.missingCommits")(function* (shas: ReadonlyArray<string>) {
-        const missing = yield* Effect.forEach(A.chunksOf(shas, ROUTE_BATCH_CHECK_CHUNK), (chunk) =>
-          batchCheckMissing(chunk)
+        const missing = yield* Effect.forEach(
+          A.chunksOf(shas, ROUTE_BATCH_CHECK_CHUNK),
+          (chunk) => batchCheckMissing(chunk),
+          { concurrency: 1 }
         );
         return A.flatten(missing);
       }),

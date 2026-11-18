@@ -1007,6 +1007,7 @@ export const runPackageVerifyCli = Effect.fn("PackageVerify.runPackageVerifyCli"
         Effect.catch((error) => Console.error(`[pkg-verify] failed to update the checkout inbox: ${error.message}`))
       );
       yield* Effect.forEach(renderPackageVerifyReportForTesting(report), (line) => Console.log(line), {
+        concurrency: 1,
         discard: true,
       });
       return A.some(report.results, (result) => !result.ok && !result.skipped);

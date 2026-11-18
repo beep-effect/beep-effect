@@ -40,7 +40,7 @@ const makeSource = (source: string | ast.SourceFile) => {
 };
 
 const print = Effect.fn("print")(function* (printables: ReadonlyArray<Printer.Printable>) {
-  const strings = yield* Effect.forEach(printables, (printable) => Printer.print(printable));
+  const strings = yield* Effect.forEach(printables, (printable) => Printer.print(printable), { concurrency: 1 });
   return A.join("\n")(strings);
 });
 

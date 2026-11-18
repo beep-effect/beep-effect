@@ -56,8 +56,10 @@ describe("spike state schemas", () => {
         { edgeCount: 0, elementCount: 0, label: "1k", nodeCount: 1 },
         { edgeCount: 0, elementCount: 1, label: "1k", nodeCount: 0 },
       ];
-      const invalidSizeExits = yield* Effect.forEach(invalidSizes, (input) =>
-        Effect.exit(decodeCosmosSpikeSize(input))
+      const invalidSizeExits = yield* Effect.forEach(
+        invalidSizes,
+        (input) => Effect.exit(decodeCosmosSpikeSize(input)),
+        { concurrency: 1 }
       );
       pipe(A.every(invalidSizeExits, Exit.isFailure), assertTrue);
 

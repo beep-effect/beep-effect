@@ -818,8 +818,10 @@ describe("CI lane partitions", () => {
     Effect.gen(function* () {
       const lintPartitions = A.filter(CI_LANE_PARTITIONS, (partition) => partition.lane === "lint");
       const taskPackages = [...A.flatMap(lintPartitions, (partition) => partition.packages), "@beep/fresh-package"];
-      const proofs = yield* Effect.forEach(["lint-a", "lint-b"] as const, (partition) =>
-        proveCiLanePartition("lint", partition, taskPackages, taskPackages, taskPackages, false)
+      const proofs = yield* Effect.forEach(
+        ["lint-a", "lint-b"] as const,
+        (partition) => proveCiLanePartition("lint", partition, taskPackages, taskPackages, taskPackages, false),
+        { concurrency: 1 }
       );
       const holders = A.filter(proofs, (proof) => A.contains(proof.packages, "@beep/fresh-package"));
 

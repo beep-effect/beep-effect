@@ -444,8 +444,10 @@ describe("decideTurboForce", () => {
   it.effect("never reads git in a mode that does not force", () =>
     Effect.gen(function* () {
       // An unstubbed double dies on any read.
-      const decisions = yield* Effect.forEach(["monitor", "closeout", "status"] as const, (mode) =>
-        decideTurboForce(context, mode).pipe(Effect.provideService(Git, Git.makeTest({})))
+      const decisions = yield* Effect.forEach(
+        ["monitor", "closeout", "status"] as const,
+        (mode) => decideTurboForce(context, mode).pipe(Effect.provideService(Git, Git.makeTest({}))),
+        { concurrency: 1 }
       );
       deepStrictEqual(
         A.map(decisions, (decision) => decision.reasons),
@@ -568,7 +570,7 @@ describe("decideTurboForce", () => {
       yield* Effect.forEach(
         A.flatMap(scenarios, (scenario) => A.map(ALL_MODES, (mode) => [scenario, mode] as const)),
         ([scenario, mode]) => checkForcedSet(scenario, mode),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       expect(A.isReadonlyArrayNonEmpty(forcedStepsFor("verify", true))).toBe(true);
     })

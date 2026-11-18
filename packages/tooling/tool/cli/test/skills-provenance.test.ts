@@ -1352,7 +1352,7 @@ layer(TestLayer, { timeout: "60 seconds" })("skills provenance service", (it) =>
       yield* Effect.forEach(
         [auditedRepo, trustedDirectory, binDirectory, outsideDirectory],
         (directory) => fs.makeDirectory(directory, { recursive: true, mode: 0o700 }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       yield* fs.writeFileString(adapter, "#!/usr/bin/env python3\n");
       yield* fs.chmod(adapter, 0o644);

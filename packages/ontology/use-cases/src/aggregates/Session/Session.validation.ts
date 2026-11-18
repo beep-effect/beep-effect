@@ -745,8 +745,10 @@ const runOntologyValidation = Effect.fn("Ontology.Validation.run")(function* (in
   const validation = yield* shacl
     .validate(validationRequest(input, partitions, shapes))
     .pipe(Effect.mapError(shaclFailure));
-  const repairs = yield* Effect.forEach(validation.violations, (violation, violationIndex) =>
-    repairProposal(input, shapes, shacl, violation, violationIndex)
+  const repairs = yield* Effect.forEach(
+    validation.violations,
+    (violation, violationIndex) => repairProposal(input, shapes, shacl, violation, violationIndex),
+    { concurrency: 1 }
   ).pipe(Effect.map(A.getSomes));
 
   return RunOntologyValidationResult.make({

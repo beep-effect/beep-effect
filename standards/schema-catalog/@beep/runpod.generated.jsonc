@@ -4,7 +4,7 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/runpod",
   "entries": [
-    {"file":"packages/drivers/runpod/src/Runpod.config.ts","symbol":"RunpodConfigInput","kind":"struct-const","owner":"@beep/runpod","identity":"RunpodConfigInput","description":"Runtime configuration accepted by the Runpod REST API driver layer."},
+    {"file":"packages/drivers/runpod/src/Runpod.config.ts","symbol":"RunpodConfigInput","kind":"struct-const","owner":"@beep/runpod","identity":"RunpodConfigInput","description":"Runtime configuration accepted by the Runpod REST API v2 driver layer."},
     {"file":"packages/drivers/runpod/src/Runpod.config.ts","symbol":"RunpodConfigUrl","kind":"codec","owner":"@beep/runpod","identity":"RunpodConfigUrl","description":"Validated Runpod configuration URL with trailing slash separators removed."},
     {"file":"packages/drivers/runpod/src/Runpod.config.ts","symbol":"RunpodDocsConfigInput","kind":"struct-const","owner":"@beep/runpod","identity":"RunpodDocsConfigInput","description":"Runtime configuration accepted by the Runpod documentation index driver layer."},
     {"file":"packages/drivers/runpod/src/Runpod.errors.ts","symbol":"RunpodDocsError","kind":"tagged-error","owner":"@beep/runpod","identity":"RunpodDocsError"},
@@ -15,6 +15,8 @@
     {"file":"packages/drivers/runpod/src/Runpod.errors.ts","symbol":"RunpodErrorOptions","kind":"struct-const","owner":"@beep/runpod","identity":"RunpodErrorOptions","description":"Sanitized options for configuring RunpodError instances."},
     {"file":"packages/drivers/runpod/src/Runpod.errors.ts","symbol":"RunpodErrorOptionsInput","kind":"struct-const","owner":"@beep/runpod","identity":"RunpodErrorOptionsInput","description":"Raw option input accepted by RunpodError constructors before schema-owned normalization."},
     {"file":"packages/drivers/runpod/src/Runpod.errors.ts","symbol":"RunpodErrorReason","kind":"literal-kit","owner":"@beep/runpod","identity":"RunpodErrorReason","description":"Redacted technical error reasons emitted by the Runpod REST API driver."},
+    {"file":"packages/drivers/runpod/src/Runpod.errors.ts","symbol":"RunpodProblem","kind":"struct-const","owner":"@beep/runpod","identity":"RunpodProblem","description":"RFC 9457 problem details returned by a failed Runpod REST API v2 request."},
+    {"file":"packages/drivers/runpod/src/Runpod.errors.ts","symbol":"RunpodProblemFromProblemDetails","kind":"codec","owner":"@beep/runpod","identity":"RunpodProblemFromProblemDetails","description":"Runpod problem details decoded leniently from an RFC 9457 problem body."},
     {"file":"packages/drivers/runpod/src/Runpod.errors.ts","symbol":"RunpodRawErrorOptions","kind":"struct-const","owner":"@beep/runpod","identity":"RunpodRawErrorOptions","description":"Options for configuring RunpodError instances for raw requests."},
     {"file":"packages/drivers/runpod/src/Runpod.service.ts","symbol":"RunpodQueryScalar","kind":"union","owner":"@beep/runpod","identity":"RunpodQueryScalar","description":"Scalar query values accepted by Runpod request models and raw requests."},
     {"file":"packages/drivers/runpod/src/Runpod.service.ts","symbol":"RunpodQueryValue","kind":"union","owner":"@beep/runpod","identity":"RunpodQueryValue","description":"Query value accepted by the raw Runpod request escape hatch."},

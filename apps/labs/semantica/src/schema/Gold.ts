@@ -380,7 +380,7 @@ const GoldEntityLabelFromEncoded = EncodedGoldEntityLabel.pipe(
             options,
             "entity label"
           );
-          return Effect.all({ label: entityLabel, quote }).pipe(
+          return Effect.all({ label: entityLabel, quote }, { concurrency: 1 }).pipe(
             Effect.map(({ label: hydratedLabel, quote: hydratedQuote }) =>
               GoldEntityLabel.make({
                 cluster: label.cluster,
@@ -434,27 +434,30 @@ const GoldRelationLabelFromEncoded = EncodedGoldRelationLabel.pipe(
     decode: SchemaGetter.transformEffect<GoldRelationLabel, EncodedGoldRelationLabel, CurrentGoldDocumentText>(
       (label, options) =>
         CurrentGoldDocumentText.use((text) =>
-          Effect.all({
-            object: sliceForDigest(
-              text,
-              label.objectStartChar,
-              label.objectEndChar,
-              label.objectSha256,
-              label,
-              options,
-              "relation object"
-            ),
-            quote: sliceForDigest(text, label.startChar, label.endChar, label.quoteSha256, label, options, "quote"),
-            subject: sliceForDigest(
-              text,
-              label.subjectStartChar,
-              label.subjectEndChar,
-              label.subjectSha256,
-              label,
-              options,
-              "relation subject"
-            ),
-          }).pipe(
+          Effect.all(
+            {
+              object: sliceForDigest(
+                text,
+                label.objectStartChar,
+                label.objectEndChar,
+                label.objectSha256,
+                label,
+                options,
+                "relation object"
+              ),
+              quote: sliceForDigest(text, label.startChar, label.endChar, label.quoteSha256, label, options, "quote"),
+              subject: sliceForDigest(
+                text,
+                label.subjectStartChar,
+                label.subjectEndChar,
+                label.subjectSha256,
+                label,
+                options,
+                "relation subject"
+              ),
+            },
+            { concurrency: 1 }
+          ).pipe(
             Effect.map((surfaces) =>
               GoldRelationLabel.make({
                 endChar: label.endChar,

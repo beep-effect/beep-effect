@@ -170,7 +170,8 @@ const githubPullRequests: ReapPullRequestLister = Effect.fnUntraced(function* (c
           A.filter(rows, (row) => state === "open" || row.merged),
           1
         ),
-        (row) => decodeGhPr({ number: row.number, headRefOid: row.headSha })
+        (row) => decodeGhPr({ number: row.number, headRefOid: row.headSha }),
+        { concurrency: 1 }
       ).pipe(Effect.option),
   });
 });

@@ -344,5 +344,8 @@ export const createTsMorphIntegrationService = (
   adapter: TsMorphMutationAdapter = UnsupportedTsMorphAdapter
 ): TsMorphIntegrationServiceShape => ({
   previewMutations: A.map((mutation) => `${mutation.kind} ${mutation.symbolName} in ${mutation.filePath}`),
-  applyMutations: flow(Effect.forEach(adapter.applyMutation), Effect.map(TsMorphIntegrationResult.new)),
+  applyMutations: flow(
+    Effect.forEach(adapter.applyMutation, { concurrency: 1 }),
+    Effect.map(TsMorphIntegrationResult.new)
+  ),
 });

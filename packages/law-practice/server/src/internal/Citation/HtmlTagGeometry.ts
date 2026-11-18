@@ -114,7 +114,8 @@ export const makeCitationHtmlTagGeometry = Effect.fn("Citation.makeHtmlTagGeomet
     Effect.fn("Citation.ownHtmlEmphasis")(function* (tag) {
       const text = (yield* input.prepareUnicode(tag.text, () => Effect.void)).value.storage;
       return CitationHtmlEmphasis.make({ text, start: tag.start, end: tag.end });
-    })
+    }),
+    { concurrency: 1 }
   );
   const find = Effect.fn("Citation.findHtmlTagsAtPosition")(function* (position: unknown) {
     const markup = yield* forward.update(position, "right");

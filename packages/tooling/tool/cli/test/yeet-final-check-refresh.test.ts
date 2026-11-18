@@ -548,7 +548,9 @@ describe("finalCheckPatchIdentityDigest", () => {
       const bytes = encodeText(hunkDiff("1", "@@ -1 +1 @@ \u00e9t\u00e9", "-caf\u00e9\n+na\u00efve \u2713\n"));
       const whole = yield* digestOf(bytes);
       const splits = A.range(1, bytes.length - 1);
-      const pieces = yield* Effect.forEach(splits, (at) => digestOf(bytes.subarray(0, at), bytes.subarray(at)));
+      const pieces = yield* Effect.forEach(splits, (at) => digestOf(bytes.subarray(0, at), bytes.subarray(at)), {
+        concurrency: 1,
+      });
       expect(A.dedupe(pieces)).toEqual([whole]);
     })
   );
@@ -1034,12 +1036,14 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
       Effect.gen(function* () {
         const repoRoot = yield* initRepo("final-check-refresh-bytes-");
         yield* Effect.forEach(PATCH_FIXTURES, ({ path, before }) => writeFile(repoRoot, path, before), {
+          concurrency: 1,
           discard: true,
         });
         yield* git(repoRoot, ["add", "--all"]);
         yield* moveGitlink(repoRoot, "1");
         const from = yield* commitIndex(repoRoot, ["-m", "before"]);
         yield* Effect.forEach(PATCH_FIXTURES, ({ path, after }) => writeFile(repoRoot, path, after), {
+          concurrency: 1,
           discard: true,
         });
         yield* git(repoRoot, ["add", "--", ...A.map(PATCH_FIXTURES, ({ path }) => path)]);
@@ -1061,7 +1065,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer), { timeo
             assertInclude(clean, `diff --git a/${path} b/${path}`);
             expect(underHostile).toBe(clean);
           }),
-          { discard: true }
+          { concurrency: 1, discard: true }
         );
       })
     );

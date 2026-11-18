@@ -734,13 +734,16 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
       );
     });
 
-    const counterRefs = yield* Effect.all({
-      createdDirectories: Ref.make(0),
-      writtenFiles: Ref.make(0),
-      skippedFileWrites: Ref.make(0),
-      createdSymlinks: Ref.make(0),
-      skippedSymlinks: Ref.make(0),
-    });
+    const counterRefs = yield* Effect.all(
+      {
+        createdDirectories: Ref.make(0),
+        writtenFiles: Ref.make(0),
+        skippedFileWrites: Ref.make(0),
+        createdSymlinks: Ref.make(0),
+        skippedSymlinks: Ref.make(0),
+      },
+      { concurrency: 1 }
+    );
 
     const incrementCounter = Ref.update(Num.increment);
     const countCreatedDirectory = incrementCounter(counterRefs.createdDirectories);
@@ -904,16 +907,19 @@ export const createFileGenerationPlanService = (): FileGenerationPlanServiceShap
           resolveActionPath(action),
           Effect.andThen((absolutePath: string) => runAction(absolutePath, action))
         ),
-      { discard: true }
+      { concurrency: 1, discard: true }
     );
 
-    const all2 = yield* Effect.all({
-      createdDirectories: Ref.get(counterRefs.createdDirectories),
-      writtenFiles: Ref.get(counterRefs.writtenFiles),
-      skippedFileWrites: Ref.get(counterRefs.skippedFileWrites),
-      createdSymlinks: Ref.get(counterRefs.createdSymlinks),
-      skippedSymlinks: Ref.get(counterRefs.skippedSymlinks),
-    });
+    const all2 = yield* Effect.all(
+      {
+        createdDirectories: Ref.get(counterRefs.createdDirectories),
+        writtenFiles: Ref.get(counterRefs.writtenFiles),
+        skippedFileWrites: Ref.get(counterRefs.skippedFileWrites),
+        createdSymlinks: Ref.get(counterRefs.createdSymlinks),
+        skippedSymlinks: Ref.get(counterRefs.skippedSymlinks),
+      },
+      { concurrency: 1 }
+    );
     return FileGenerationExecutionResult.make(all2);
   });
 

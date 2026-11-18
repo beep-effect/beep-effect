@@ -75,7 +75,7 @@ const validateErrorCauseEffect = <Error extends S.Top>(
   cause: Cause.Cause<Error["Type"]>
 ): Effect.Effect<Cause.Cause<Error["Type"]>, SchemaIssue.Issue> =>
   Effect.map(
-    Effect.forEach(cause.reasons, (reason) => validateFailReasonEffect(errorSchema, reason)),
+    Effect.forEach(cause.reasons, (reason) => validateFailReasonEffect(errorSchema, reason), { concurrency: 1 }),
     Cause.fromReasons
   );
 

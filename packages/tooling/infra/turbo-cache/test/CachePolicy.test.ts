@@ -82,7 +82,9 @@ describe("CachePolicy", () => {
         { teams: [{ slug: "beep", principals: [{ name: "ci", access: "admin", rotation: 1 }] }] },
         { teams: [{ slug: "beep", principals: [{ name: "ci", access: "read", rotation: 0 }] }] },
       ];
-      const results = yield* Effect.forEach(cases, (input) => decodePolicy(input).pipe(Effect.result));
+      const results = yield* Effect.forEach(cases, (input) => decodePolicy(input).pipe(Effect.result), {
+        concurrency: 1,
+      });
       assertTrue(A.every(results, Result.isFailure));
     })
   );

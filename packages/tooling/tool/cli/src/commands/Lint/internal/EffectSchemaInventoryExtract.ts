@@ -501,8 +501,10 @@ export const extractEffectSchemaInventory = Effect.fn("EffectSchemaInventoryExtr
   const moduleFiles = HashSet.fromIterable(A.map(sources, ([module]) => module.file));
   if (HashSet.size(moduleFiles) !== sources.length)
     return yield* EffectSchemaInventoryError.new("Duplicate file in the effect-schema-inventory module list.");
-  const parsed = yield* Effect.forEach(sources, ([module, text]) =>
-    Effect.map(parseModule(module, text), (source) => [module, source] as const)
+  const parsed = yield* Effect.forEach(
+    sources,
+    ([module, text]) => Effect.map(parseModule(module, text), (source) => [module, source] as const),
+    { concurrency: 1 }
   );
   const resolveTarget = (from: string, specifier: string): string =>
     path.normalize(path.join(path.dirname(from), specifier));
@@ -528,10 +530,12 @@ export const extractEffectSchemaInventory = Effect.fn("EffectSchemaInventoryExtr
       const rows = yield* Effect.forEach(
         A.getSomes(A.map(walk.order, (key) => MutableHashMap.get(walk.drafts, key))),
         (draft) =>
-          decodeRow(draft).pipe(EffectSchemaInventoryError.mapError(`Invalid row ${draft.module} ${draft.symbol}`))
+          decodeRow(draft).pipe(EffectSchemaInventoryError.mapError(`Invalid row ${draft.module} ${draft.symbol}`)),
+        { concurrency: 1 }
       );
       return EffectSchemaInventoryModuleRows.make({ module, rows: A.sort(rows, rowOrder) });
-    })
+    }),
+    { concurrency: 1 }
   );
   return EffectSchemaInventoryExtraction.make({ parser: ts.version, bareStarDeclarationsOmitted, modules });
 });

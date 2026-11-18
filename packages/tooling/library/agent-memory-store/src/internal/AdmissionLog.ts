@@ -118,7 +118,7 @@ const stepOf = (entry: Entry): Effect.Effect<Step, S.SchemaError> =>
  */
 export const readNodeState = Effect.fnUntraced(function* (log: MemoryLog["Service"], nodeId: NodeId) {
   const entries = yield* log.history(nodeId);
-  const steps = yield* Effect.forEach(entries, stepOf);
+  const steps = yield* Effect.forEach(entries, stepOf, { concurrency: 1 });
   return O.map(O.all({ place: A.findFirst(steps, (step) => step.place), last: A.last(steps) }), ({ place, last }) =>
     NodeState.make(
       {
@@ -217,7 +217,8 @@ export const holdClosedAfter = Effect.fnUntraced(function* (
   const entries = yield* log.entriesAfter(cursor);
   const resolved = yield* Effect.forEach(
     A.filter(entries, (entry) => entry.event === HoldResolvedEvent.tag),
-    (entry) => decodeHoldResolved(entry.payload)
+    (entry) => decodeHoldResolved(entry.payload),
+    { concurrency: 1 }
   );
   return A.some(resolved, (resolution) => resolution.holdId === holdId);
 });

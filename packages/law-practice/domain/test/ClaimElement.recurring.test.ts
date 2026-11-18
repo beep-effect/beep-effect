@@ -193,7 +193,7 @@ describe("next recurring source-structure gaps", () => {
         ["1", "A tester comprising the associated signals are recorded."],
         ["2", "The tester of claim 1 wherein the signals are evaluated."],
       ]);
-      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims));
+      const trees = yield* Effect.forEach(claims, (claim) => decomposeClaim(claim, claims), { concurrency: 1 });
       assert.isTrue(
         A.some(
           O.getOrThrow(A.last(trees)).edges,

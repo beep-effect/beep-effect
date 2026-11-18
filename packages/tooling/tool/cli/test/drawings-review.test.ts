@@ -569,13 +569,16 @@ const writeReviewerFiles = Effect.fnUntraced(function* (inputs: string) {
     ],
     ["Foreign.pdf", foreignDrawing, [["Not one of ours", 72, 720]]],
   ] as const;
-  return yield* Effect.forEach(files, ([name, draw, notes]) =>
-    Effect.gen(function* () {
-      const file = path.join(inputs, name);
-      const reviewerPdf4 = yield* reviewerPdf(draw ?? stroke, notes);
-      yield* fs.writeFile(file, reviewerPdf4);
-      return file;
-    })
+  return yield* Effect.forEach(
+    files,
+    ([name, draw, notes]) =>
+      Effect.gen(function* () {
+        const file = path.join(inputs, name);
+        const reviewerPdf4 = yield* reviewerPdf(draw ?? stroke, notes);
+        yield* fs.writeFile(file, reviewerPdf4);
+        return file;
+      }),
+    { concurrency: 1 }
   );
 });
 

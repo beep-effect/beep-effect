@@ -384,7 +384,7 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
         (candidate: string) => candidate === "steps-string",
         () =>
           Effect.gen(function* () {
-            steps = yield* Effect.forEach(["h", "t", "m", "l"], h.values.text);
+            steps = yield* Effect.forEach(["h", "t", "m", "l"], h.values.text, { concurrency: 1 });
           })
       ),
       Match.when(
@@ -702,13 +702,16 @@ export const makeControlledLiteralScene = Effect.fn("CleanerCustomTest.scene")(f
     events: Effect.sync(() => events),
     bindings: Effect.gen(function* () {
       const citationResult10 = yield* h.registry.read;
-      return yield* Effect.forEach(citationResult10, ([key, value, builtin]) =>
-        Effect.gen(function* () {
-          const descriptor = O.isSome(builtin)
-            ? { kind: "builtin-function", name: builtin.value }
-            : yield* present(value);
-          return { key: yield* present(key), value: descriptor };
-        })
+      return yield* Effect.forEach(
+        citationResult10,
+        ([key, value, builtin]) =>
+          Effect.gen(function* () {
+            const descriptor = O.isSome(builtin)
+              ? { kind: "builtin-function", name: builtin.value }
+              : yield* present(value);
+            return { key: yield* present(key), value: descriptor };
+          }),
+        { concurrency: 1 }
       );
     }),
     source: (text: string) =>

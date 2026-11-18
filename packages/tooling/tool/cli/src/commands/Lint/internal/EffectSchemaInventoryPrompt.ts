@@ -486,7 +486,8 @@ export const checkEffectSchemaInventoryPrompts = Effect.fn("EffectSchemaInventor
         [EffectSchemaInventoryFile.make({ name: file, content: expected })],
         HashMap.make([file, committed])
       );
-    })
+    }),
+    { concurrency: 1 }
   );
   return A.flatten(drift);
 });

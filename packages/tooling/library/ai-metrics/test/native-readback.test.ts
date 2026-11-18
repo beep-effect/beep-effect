@@ -114,7 +114,8 @@ const decodeWireAttributes = Effect.fnUntraced(function* (bytes: Uint8Array) {
           value.stringValue ?? (value.intValue !== undefined ? Number(value.intValue) : value.boolValue)
         );
         return [key, scalar] satisfies readonly [string, string | number | boolean];
-      })
+      }),
+    { concurrency: 1 }
   );
   return R.fromEntries(entries);
 });

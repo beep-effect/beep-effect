@@ -845,16 +845,19 @@ export const migrations = (options?: { readonly prefix?: string | undefined }): 
       // Add message indexes optimized for the specific query patterns
       const shardLookupIndex = `${messagesTable}_shard_idx`;
       const requestIdLookupIndex = `${messagesTable}_request_id_idx`;
-      yield* Effect.all([
-        sql`
+      yield* Effect.all(
+        [
+          sql`
               CREATE INDEX IF NOT EXISTS ${sql(shardLookupIndex)}
               ON ${messagesTableSql} (shard_id, processed, last_read, deliver_at)
             `,
-        sql`
+          sql`
               CREATE INDEX IF NOT EXISTS ${sql(requestIdLookupIndex)}
               ON ${messagesTableSql} (request_id)
             `,
-      ]).pipe(sql.withTransaction);
+        ],
+        { concurrency: 1 }
+      ).pipe(sql.withTransaction);
 
       yield* sql`
             CREATE TABLE IF NOT EXISTS ${repliesTableSql} (

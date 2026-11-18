@@ -226,7 +226,7 @@ export const sessionRegisterListCommand = Command.make(
               "\n"
             )
           ),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
     });
     yield* reportSessionFailure(program);

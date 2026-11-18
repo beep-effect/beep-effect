@@ -294,7 +294,8 @@ describe("GitHub identity labels", () => {
         const files = yield* fs.readDirectory(root, { recursive: true });
         const texts = yield* Effect.forEach(
           A.filter(files, (file) => Str.endsWith(".json")(file) || Str.endsWith(".jsonl")(file)),
-          (file) => fs.readFileString(path.join(root, file))
+          (file) => fs.readFileString(path.join(root, file)),
+          { concurrency: 1 }
         );
         const all = A.join(texts, "\n");
         expect(A.length(texts)).toBeGreaterThan(0);

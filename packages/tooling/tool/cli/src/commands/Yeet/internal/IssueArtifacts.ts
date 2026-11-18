@@ -237,7 +237,7 @@ export const writeIssueArtifacts = Effect.fn("Yeet.writeIssueArtifacts")(functio
     return packetPath;
   });
 
-  const packetPaths = yield* Effect.forEach(index.packages, writePackagePacket);
+  const packetPaths = yield* Effect.forEach(index.packages, writePackagePacket, { concurrency: 1 });
 
   return YeetRunResult.make({
     artifactDir,

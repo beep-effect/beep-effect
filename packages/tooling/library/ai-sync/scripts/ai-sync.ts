@@ -65,8 +65,10 @@ const program = Match.value(command).pipe(
     checkGeneratedArtifacts().pipe(
       Effect.flatMap(() => validateCurrentCheckoutDogfoodConfigs()),
       Effect.tap((results) =>
-        Effect.forEach(results, (result) =>
-          Console.log(`Validated ${result.relativePath} with ${result.schemaId} and repo safety policy.`)
+        Effect.forEach(
+          results,
+          (result) => Console.log(`Validated ${result.relativePath} with ${result.schemaId} and repo safety policy.`),
+          { concurrency: 1 }
         )
       ),
       Effect.as(0)

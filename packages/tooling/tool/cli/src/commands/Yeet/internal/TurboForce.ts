@@ -564,8 +564,10 @@ export const packageInstalledTreeDigests = Effect.fn("Yeet.packageInstalledTreeD
     ),
     [ROOT_INSTALLED_TREE_PACKAGE, root] as const
   );
-  const digests = yield* Effect.forEach(trees, ([name, instances]) =>
-    Effect.map(digestTreeText(treeText(lockfile, instances)), (hex) => [name, hex] as const)
+  const digests = yield* Effect.forEach(
+    trees,
+    ([name, instances]) => Effect.map(digestTreeText(treeText(lockfile, instances)), (hex) => [name, hex] as const),
+    { concurrency: 1 }
   );
   return HashMap.fromIterable(digests);
 });
@@ -784,7 +786,10 @@ export const decideTurboForce = Effect.fn("Yeet.decideTurboForce")(function* (
     return noTurboForce;
   }
   const decision = yield* readTurboForceDecision(context);
-  yield* Effect.forEach(forceLines(context.base, decision.reasons), (line) => Console.log(line), { discard: true });
+  yield* Effect.forEach(forceLines(context.base, decision.reasons), (line) => Console.log(line), {
+    concurrency: 1,
+    discard: true,
+  });
   return decision;
 });
 
