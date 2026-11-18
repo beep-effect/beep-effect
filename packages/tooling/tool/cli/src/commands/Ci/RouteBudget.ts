@@ -140,8 +140,8 @@ export const makeRouteReadBudget = Effect.fnUntraced(function* (
   const reserveWaits = yield* Ref.make(0);
   const identity = yield* Ref.make(O.none<GithubIdentityLabel>());
 
-  const observe = (inner: RateLimitSinkShape) => (observation: RateLimitObservation) =>
-    Effect.gen(function* () {
+  const observe = (inner: RateLimitSinkShape) =>
+    Effect.fnUntraced(function* (observation: RateLimitObservation) {
       yield* Ref.update(requests, (n) => n + 1);
       if (O.isSome(ledger)) {
         const aliases = yield* ledger.value.aliases;
@@ -150,11 +150,10 @@ export const makeRouteReadBudget = Effect.fnUntraced(function* (
       yield* inner.record(observation);
     });
 
-  const metered = <A, E, R>(call: Effect.Effect<A, E, R>): Effect.Effect<A, E, R> =>
-    Effect.gen(function* () {
-      const inner = yield* RateLimitSink;
-      return yield* Effect.provideService(call, RateLimitSink, { record: observe(inner) });
-    });
+  const metered: RouteReadBudgetShape["metered"] = Effect.fnUntraced(function* <A, E, R>(call: Effect.Effect<A, E, R>) {
+    const inner = yield* RateLimitSink;
+    return yield* Effect.provideService(call, RateLimitSink, { record: observe(inner) });
+  });
 
   // The held bucket and its reset while the capture identity's core bucket is below its floor; none
   // admits the call. Until a response names the identity, any user's core bucket below its floor holds,
