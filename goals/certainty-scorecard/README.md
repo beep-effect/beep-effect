@@ -148,7 +148,7 @@ declaration-only builds) are not comparable with later readings (checkpoint
   #3274); MEAS-03 slice 2 (residual handler errors typed and located, slice 10b, #3342); SCHE-09 slice 2
   (capacity and host-pressure stamps on admission rows, slice 5b, #3344); MEAS-05 slice 2 (the ledger fold with
   absent-source rows, slice 15, #3347); PERIL-11 slice 3 (host and seat fields, read-only fleet-host reads,
-  slice 9, #3349). Built: MEAS-08 (PSI samples and admission stamps joined onto attempts, slice 16) and ROUT-05 slice 2b (per-task outcome records the capture reads into `tasks`, slice 11b, held for the window-5 verdict).
+  slice 9, #3349). Built: MEAS-08 (PSI samples and admission stamps joined onto attempts, slice 16) and ROUT-05 slice 2b (per-task outcome records the capture reads into `tasks`, slice 11b, merged by hand last in the 2026-11-18 held set).
 - Order constraints: MEAS-02 lands before any WaveOrder re-seed in `local-proof-under-ten`; ROUT-05 lands
   before any census or cost ledger (MEAS-05) is trusted and before any route refinement replay; MEAS-07 lands
   before journal retention (PERIL-11); SCHE-09 is owned here and consumed by `local-proof-under-ten` (D23); nightly reads are budgeted against
