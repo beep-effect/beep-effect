@@ -287,9 +287,10 @@ Riding in the slot, not holding it:
    [`mcp-stateless-kit-and-drivers`](../goals/mcp-stateless-kit-and-drivers/README.md),
    closed, so it can start; it feeds the desktop ontology sidecar, so it is
    the queue's one Lane 1-adjacent item.
-5. [`slice-topology-audit`](../goals/slice-topology-audit/README.md) (0/5) →
+5. [`model-first-standard`](../goals/model-first-standard/README.md) (0/5, superseded
+   `slice-topology-audit` on 2026-11-17) →
    [`canonical-proof-reconciliation`](../goals/canonical-proof-reconciliation/README.md)
-   (0/5, blockedBy the audit) — after the time-to-certainty flip.
+   (0/5, blockedBy the standard; to be re-scoped against it) — after the time-to-certainty flip.
 6. [`ciops-ontology-pipeline`](../goals/ciops-ontology-pipeline/README.md)
    (0/7, graduated 2026-10-01; auditor run 4 is gated on C4.1 facts from both
    local stages) — slot-free auditor work, listed for order only.

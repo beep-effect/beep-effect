@@ -3,7 +3,9 @@
 ## Status
 
 Status: `pending` — blocked on `architecture/slice-audit` from
-[`goals/slice-topology-audit`](../slice-topology-audit/README.md).
+[`goals/model-first-standard`](../model-first-standard/README.md), which superseded
+[`goals/slice-topology-audit`](../slice-topology-audit/README.md) on 2026-11-17. Re-scope this plan
+against the four-package standard before starting.
 
 ## Phases
 

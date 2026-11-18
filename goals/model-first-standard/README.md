@@ -41,4 +41,7 @@ Not started.
 
 Graduated 2026-11-17 from `explorations/model-first-slices` with `effect-cluster-host` and `authority-context` (D66). The
 doctrine pull request comes first: the other two goals cite it. This goal supersedes
-`goals/slice-topology-audit` (D65).
+`goals/slice-topology-audit` (D65) and inherits two things from it: the doctrine rows that
+`explorations/v3-consistency-audit` deferred to its first phase (read that packet's `DECISIONS.md`,
+"deferred rows", and settle each against the four-package shape), and the dependent packet
+`goals/canonical-proof-reconciliation`, which now waits on this goal.
