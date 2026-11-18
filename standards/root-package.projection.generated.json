@@ -132,7 +132,7 @@
     "op": "op run --env-file=.env --",
     "pkg:verify": "beep-cli quality package-verify",
     "pkg:verify:quick": "beep-cli quality package-verify --quick",
-    "postinstall": "lefthook install && bun run infra:prepare-gha-runners && bun run install:model-first-slices",
+    "postinstall": "lefthook install && bun run infra:prepare-gha-runners && if [ -z \"${CI:-}\" ]; then bun run install:model-first-slices; fi",
     "prepare": "effect-tsgo unpatch --tsrs && bun run beep toolchain prune-tsgo-backups && effect-tsgo patch --tsrs",
     "purge": "bun run beep purge",
     "quality:dev": "bun run beep quality dev",

@@ -1,13 +1,13 @@
 {
   "previous": {
-    "//": "0f6bf02d514da1ab6d3667112264a12bb5ba5809c1212c5b01c5928e65367fca"
+    "//": "b9ca19268815f9a3c9f22b82956cb24df31928a60ae138fc8f6b3d5a6279eeaa"
   },
   "review": {
     "reviewer": "Claude Opus 5.5 (model-first-slices check wiring lane, ci/model-first-slices-check)",
-    "reason": "Record the new cached root task //#check:model-first-slices (the standalone prototype's typecheck and toolchain guard tests; inputs: the prototype's tracked sources, manifests, lockfile, bunfig and dependency patches, the root tsconfig.base.json, package.json and bun.lock, and the linked @beep/identity, @beep/schema, @beep/utils and @beep/types sources) and the root drift of three new root script words (install:model-first-slices, postinstall, check:model-first-slices): every cached root computation drifts on the manifest bytes. No existing command, cache flag, input, output or environment changed; no qualification is granted.",
+    "reason": "Re-record the root subject for the final bytes after merging main 4c8ff79287b: the root postinstall now runs install:model-first-slices only when CI is unset, so every cached root computation, //#check:model-first-slices included, drifts on the manifest bytes. The task's inputs are unchanged, and it still installs the prototype itself, so its result does not depend on CI. No other command, cache flag, input, output or environment changed; no qualification is granted.",
     "basis": {
       "path": "docs/reports/model-first-slices-check-cache-review-2026-11-18.md",
-      "sha256": "085365bbc1d87b3f16b35d8682b8c3ab76e871ca0ce5d1cc7ed787b3ceb12ad4"
+      "sha256": "00eeaf94c35febdb1752886a1d30c2aa65fcdb2c14da25e13512d90fceeb6f25"
     }
   },
   "subjects": ["//"],

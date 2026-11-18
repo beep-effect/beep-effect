@@ -4,7 +4,10 @@
 
 A root `bun install` also installs this workspace: the root `postinstall` runs
 `bun run install:model-first-slices`, a `bun install --frozen-lockfile` here, and the root install
-fails when `scratchpad/model-first-slices/bun.lock` is out of date. Hosted CI runs the root Turbo
+fails when `scratchpad/model-first-slices/bun.lock` is out of date. The `postinstall` skips that
+step when the `CI` environment variable is set (GitHub Actions sets `CI=true`), so hosted jobs that
+never read this workspace do not download its dependencies. Local clones, worktrees and the Yeet
+head-install preflight leave `CI` unset and install it. Hosted CI runs the root Turbo
 task `check:model-first-slices` in the Lint Policy lane whenever this workspace, the root
 `tsconfig.base.json`, the root `package.json` or `bun.lock`, or the linked `@beep/identity` and
 `@beep/schema` sources change. The task installs this workspace first, then runs its check and its

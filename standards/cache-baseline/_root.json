@@ -9,10 +9,10 @@
   ],
   "review": {
     "reviewer": "Claude Opus 5.5 (model-first-slices check wiring lane, ci/model-first-slices-check)",
-    "reason": "Record the new cached root task //#check:model-first-slices (the standalone prototype's typecheck and toolchain guard tests; inputs: the prototype's tracked sources, manifests, lockfile, bunfig and dependency patches, the root tsconfig.base.json, package.json and bun.lock, and the linked @beep/identity, @beep/schema, @beep/utils and @beep/types sources) and the root drift of three new root script words (install:model-first-slices, postinstall, check:model-first-slices): every cached root computation drifts on the manifest bytes. No existing command, cache flag, input, output or environment changed; no qualification is granted.",
+    "reason": "Re-record the root subject for the final bytes after merging main 4c8ff79287b: the root postinstall now runs install:model-first-slices only when CI is unset, so every cached root computation, //#check:model-first-slices included, drifts on the manifest bytes. The task's inputs are unchanged, and it still installs the prototype itself, so its result does not depend on CI. No other command, cache flag, input, output or environment changed; no qualification is granted.",
     "basis": {
       "path": "docs/reports/model-first-slices-check-cache-review-2026-11-18.md",
-      "sha256": "085365bbc1d87b3f16b35d8682b8c3ab76e871ca0ce5d1cc7ed787b3ceb12ad4"
+      "sha256": "00eeaf94c35febdb1752886a1d30c2aa65fcdb2c14da25e13512d90fceeb6f25"
     }
   },
   "globalConfiguration": {
@@ -195,7 +195,7 @@
     {
       "computation": "//#changeset:status",
       "command": "bun run beep quality changeset-status",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-changeset-status"
       ],
@@ -228,7 +228,7 @@
     {
       "computation": "//#check:model-first-slices",
       "command": "bun run install:model-first-slices && bun run --cwd scratchpad/model-first-slices check && bun run --cwd scratchpad/model-first-slices/shared/tooling test",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -270,7 +270,7 @@
     {
       "computation": "//#config-sync:check",
       "command": "bun run beep tsconfig-sync --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:tsconfig-sync"
       ],
@@ -323,7 +323,7 @@
     {
       "computation": "//#fallow:audit:check",
       "command": "bun run beep quality fallow audit --check --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/audit.check.json --quiet",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-fallow"
       ],
@@ -386,7 +386,7 @@
     {
       "computation": "//#fallow:boundaries:advisory",
       "command": "bun run beep quality fallow boundaries --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/boundaries.advisory.json --quiet",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-fallow"
       ],
@@ -450,7 +450,7 @@
     {
       "computation": "//#fallow:boundaries:config-check",
       "command": "bun run beep quality fallow boundaries config-check --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-fallow"
       ],
@@ -509,7 +509,7 @@
     {
       "computation": "//#fallow:dead-code:check",
       "command": "bun run beep quality fallow dead-code --check --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/dead-code.check.json --quiet",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-fallow"
       ],
@@ -573,7 +573,7 @@
     {
       "computation": "//#fallow:fix-preview:advisory",
       "command": "bun run beep quality fallow fix-preview --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/fix-preview.advisory.json --quiet",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-fallow"
       ],
@@ -637,7 +637,7 @@
     {
       "computation": "//#fallow:flags:advisory",
       "command": "bun run beep quality fallow flags --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/flags.advisory.json --quiet",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-fallow"
       ],
@@ -701,7 +701,7 @@
     {
       "computation": "//#fallow:health:advisory",
       "command": "bun run beep quality fallow health --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/health.advisory.json --quiet",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-fallow"
       ],
@@ -765,7 +765,7 @@
     {
       "computation": "//#fallow:health:check",
       "command": "bun run beep quality fallow health --check --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/health.check.json --quiet",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-fallow"
       ],
@@ -829,7 +829,7 @@
     {
       "computation": "//#fallow:security:advisory",
       "command": "bun run beep quality fallow security --advisory --base \"$BEEP_PROOF_BASE\" --out .beep/fallow/security.advisory.json --quiet",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-fallow"
       ],
@@ -893,7 +893,7 @@
     {
       "computation": "//#goals:doctor",
       "command": "bun run beep goals doctor",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:goals-doctor"
       ],
@@ -926,7 +926,7 @@
     {
       "computation": "//#goals:index-check",
       "command": "bun run beep goals index --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:goals-index"
       ],
@@ -960,7 +960,7 @@
     {
       "computation": "//#jsdoc:inventory:check",
       "command": "bun run beep quality jsdoc-inventory --output-json .beep/ci/jsdoc-documentation.inventory.jsonc --output-markdown .beep/ci/jsdoc-documentation.inventory.md",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-jsdoc-inventory"
       ],
@@ -1010,7 +1010,7 @@
     {
       "computation": "//#jsdoc:ratchet:check",
       "command": "bun run beep quality jsdoc-ratchet --inventory .beep/ci/jsdoc-documentation.inventory.jsonc",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "//#jsdoc:inventory:check",
         "@beep/repo-cli#lint:policy-fingerprint:quality-jsdoc-ratchet"
@@ -1045,7 +1045,7 @@
     {
       "computation": "//#knowledge:refs-check",
       "command": "bun run beep knowledge refs --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:knowledge"
       ],
@@ -1089,7 +1089,7 @@
     {
       "computation": "//#knowledge:semantic-delta",
       "command": "bun run beep knowledge semantic-delta",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:knowledge"
       ],
@@ -1135,7 +1135,7 @@
     {
       "computation": "//#lint:allowlist",
       "command": "bun run beep laws allowlist-check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:laws"
       ],
@@ -1170,7 +1170,7 @@
     {
       "computation": "//#lint:circular",
       "command": "bun run beep lint circular",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-circular"
       ],
@@ -1205,7 +1205,7 @@
     {
       "computation": "//#lint:deprecated-imports",
       "command": "biome lint apps packages infra --only=suspicious/noDeprecatedImports --error-on-warnings --reporter=summary",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -1248,7 +1248,7 @@
     {
       "computation": "//#lint:ecosystem-polarity",
       "command": "bun run beep lint ecosystem-polarity",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-ecosystem-polarity"
       ],
@@ -1280,7 +1280,7 @@
     {
       "computation": "//#lint:effect-imports",
       "command": "bun run beep laws effect-imports --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:laws"
       ],
@@ -1339,7 +1339,7 @@
     {
       "computation": "//#lint:effect-imports-markdown",
       "command": "bun run beep laws effect-imports --mode markdown --check --enforce-documentation",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:laws"
       ],
@@ -1390,7 +1390,7 @@
     {
       "computation": "//#lint:effect-vitest",
       "command": "bun run beep lint effect-vitest",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-effect-vitest"
       ],
@@ -1428,7 +1428,7 @@
     {
       "computation": "//#lint:entity-kit-freeze",
       "command": "bun run beep laws entity-kit-freeze --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:laws"
       ],
@@ -1473,7 +1473,7 @@
     {
       "computation": "//#lint:holds",
       "command": "bun run beep holds lint",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:holds"
       ],
@@ -1518,7 +1518,7 @@
     {
       "computation": "//#lint:identity-registry",
       "command": "bun run beep lint identity-registry",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-identity-registry"
       ],
@@ -1562,7 +1562,7 @@
     {
       "computation": "//#lint:jsdoc-module-tags",
       "command": "bun run beep quality jsdoc-module-tags",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-jsdoc-module-tags"
       ],
@@ -1605,7 +1605,7 @@
     {
       "computation": "//#lint:jsdoc:root",
       "command": "beep-cli lint jsdoc --root-only",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -1659,7 +1659,7 @@
     {
       "computation": "//#lint:judge-rubric",
       "command": "bun run beep lint judge-rubric",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-judge-rubric"
       ],
@@ -1690,7 +1690,7 @@
     {
       "computation": "//#lint:markdown-fences",
       "command": "bun run beep laws markdown-fences --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:laws"
       ],
@@ -1737,7 +1737,7 @@
     {
       "computation": "//#lint:native-runtime:roots",
       "command": "beep-cli laws native-runtime --check --include-prefix scratchpad,packages/_internal/db-admin/effect-ontology",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:laws"
       ],
@@ -1781,7 +1781,7 @@
     {
       "computation": "//#lint:no-tracked-python",
       "command": "bun run beep laws no-tracked-python --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:laws"
       ],
@@ -1826,7 +1826,7 @@
     {
       "computation": "//#lint:opaque-roundtrips",
       "command": "bun run beep lint opaque-roundtrips",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-opaque-roundtrips"
       ],
@@ -1868,7 +1868,7 @@
     {
       "computation": "//#lint:oxlint",
       "command": "oxlint --quiet --disable-nested-config",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -1906,7 +1906,7 @@
     {
       "computation": "//#lint:package-scripts",
       "command": "bun run beep lint package-scripts --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-package-scripts"
       ],
@@ -1951,7 +1951,7 @@
     {
       "computation": "//#lint:package-test-typecheck",
       "command": "bun run beep lint package-test-typecheck",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-package-test-typecheck"
       ],
@@ -1994,7 +1994,7 @@
     {
       "computation": "//#lint:policy-fingerprint",
       "command": "beep-cli lint policy-fingerprint --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -2299,7 +2299,7 @@
     {
       "computation": "//#lint:private-home-paths",
       "command": "bun run beep laws private-home-paths --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:laws"
       ],
@@ -2344,7 +2344,7 @@
     {
       "computation": "//#lint:reflection-artifacts",
       "command": "bun run beep lint reflection-artifacts",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-reflection-artifacts"
       ],
@@ -2376,7 +2376,7 @@
     {
       "computation": "//#lint:retired-effect-paths",
       "command": "bun run beep laws retired-effect-paths --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:laws"
       ],
@@ -2421,7 +2421,7 @@
     {
       "computation": "//#lint:retired-iri-authorities",
       "command": "bun run beep laws retired-iri-authorities --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:laws"
       ],
@@ -2466,7 +2466,7 @@
     {
       "computation": "//#lint:roadmap-refs",
       "command": "bun run beep lint roadmap-refs",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-roadmap-refs"
       ],
@@ -2499,7 +2499,7 @@
     {
       "computation": "//#lint:schema-catalog",
       "command": "bun run beep lint schema-catalog",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-schema-catalog"
       ],
@@ -2540,7 +2540,7 @@
     {
       "computation": "//#lint:schema-first",
       "command": "bun run beep lint schema-first",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-schema-first"
       ],
@@ -2581,7 +2581,7 @@
     {
       "computation": "//#lint:schema-tag-idioms",
       "command": "bun run beep laws schema-tag-idioms --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:laws"
       ],
@@ -2628,7 +2628,7 @@
     {
       "computation": "//#lint:shadcn",
       "command": "oxlint --disable-nested-config --deny-warnings -c .oxlintrc.shadcn.json apps packages",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -2666,7 +2666,7 @@
     {
       "computation": "//#lint:tracked-shell-allowlist",
       "command": "bun run beep laws tracked-shell-allowlist --check",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:laws"
       ],
@@ -2711,7 +2711,7 @@
     {
       "computation": "//#lint:tsconfig-overlay",
       "command": "bun run beep lint tsconfig-overlay",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-tsconfig-overlay"
       ],
@@ -2751,7 +2751,7 @@
     {
       "computation": "//#lint:tsgo-rules",
       "command": "bun run beep quality tsgo-rules",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-tsgo-rules"
       ],
@@ -2793,7 +2793,7 @@
     {
       "computation": "//#lint:typos",
       "command": "typos",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -2862,7 +2862,7 @@
     {
       "computation": "//#repo-sanity:bun-audit",
       "command": "bun run beep quality bun-audit",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-bun-audit"
       ],
@@ -2894,7 +2894,7 @@
     {
       "computation": "//#repo-sanity:changeset-graph",
       "command": "bun run beep quality changeset-graph",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:quality-changeset-graph"
       ],
@@ -2943,7 +2943,7 @@
     {
       "computation": "//#repo-sanity:sherif",
       "command": "bunx sherif@1.10.0 -r non-existent-packages",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -2986,7 +2986,7 @@
     {
       "computation": "//#repo-sanity:syncpack",
       "command": "bunx syncpack lint",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -3030,7 +3030,7 @@
     {
       "computation": "//#repo-sanity:versions",
       "command": "bun run version-sync --skip-network",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:version-sync"
       ],
@@ -3079,7 +3079,7 @@
     {
       "computation": "//#topo-sort",
       "command": "bun run beep topo-sort",
-      "commandDigest": "b6109f09b19107789c17bf89bb26ca7df41962b77b26960c79d81a26099f3d6b",
+      "commandDigest": "135d5357d4bbced27f26cd329bf68fcfcb09a184000ccb1d38089ac4212c7622",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:topo-sort"
       ],
