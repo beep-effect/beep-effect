@@ -1,3 +1,5 @@
+import * as Str from "effect/String";
+import * as A from "effect/Array";
 import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -15,7 +17,7 @@ const EmbeddingServiceTest = Layer.succeed(
   EmbeddingService,
   EmbeddingService.of({
     embed: Effect.fn("EmbeddingService.embed")(() => Effect.succeed([1])),
-    embedBatch: Effect.fn("EmbeddingService.embedBatch")((texts) => Effect.succeed(texts.map(() => [1]))),
+    embedBatch: Effect.fn("EmbeddingService.embedBatch")((texts) => Effect.succeed(A.map(texts, () => [1]))),
     cosineSimilarity: () => 1,
     getProviderMetadata: Effect.succeed({
       providerId: "nomic",
@@ -70,10 +72,10 @@ describe("NlpService canonical Wink adapter", () => {
         });
 
         assert.deepEqual(
-          chunks.map((chunk) => text.slice(chunk.startOffset, chunk.endOffset)),
-          chunks.map((chunk) => chunk.text)
+          chunks.map((chunk) => Str.slice(chunk.startOffset, chunk.endOffset)(text)),
+          A.map(chunks, (chunk) => chunk.text)
         );
-        assert.isTrue(chunks.every((chunk) => chunk.text.length <= 9));
+        assert.isTrue(A.every(chunks, (chunk) => chunk.text.length <= 9));
       })
     );
 
@@ -94,11 +96,11 @@ describe("NlpService canonical Wink adapter", () => {
         });
 
         assert.deepEqual(
-          sectionChunks.map((chunk) => chunk.text),
+          A.map(sectionChunks, (chunk) => chunk.text),
           ["Preface.", "## First\nAlpha.", "## Second\nBeta."]
         );
         assert.deepEqual(
-          speakerChunks.map((chunk) => chunk.text),
+          A.map(speakerChunks, (chunk) => chunk.text),
           ["SPEAKER 1: Hello.", "SPEAKER 2: Hi."]
         );
         assert.strictEqual(sectionChunks[1].startOffset, sectionText.indexOf("## First"));

@@ -410,7 +410,8 @@ const makeEventBroadcastHubMemory = Effect.gen(function* () {
  */
 const makeEventBroadcastHubPubSub = Effect.gen(function* () {
   const config = yield* EventBroadcastConfig;
-  const runFork = Effect.runForkWith(yield* Effect.context());
+  const yielded1 = yield* Effect.context();
+const runFork = Effect.runForkWith(yielded1);
 
   // Initialize Cloud Pub/Sub client
   const pubsub = new GCloudPubSub({ projectId: config.projectId });
@@ -692,13 +693,15 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
   const hub = yield* EventBroadcastHub;
   const writer = yield* socket.writer;
   const serverId = (yield* Random.nextIntBetween(0, 0x7fffffff)).toString(16);
-  const connected: ServerMessage = {
+  const yielded2 = yield* Clock.currentTimeMillis;
+const connected: ServerMessage = {
     type: "connected",
     ontologyId,
     serverId,
-    timestamp: S.Natural.make(yield* Clock.currentTimeMillis),
+    timestamp: S.Natural.make(yielded2),
   };
-  yield* writer.write(new TextEncoder().encode(yield* encodeServerMessage(connected)));
+  const yielded3 = yield* encodeServerMessage(connected);
+yield* writer.write(new TextEncoder().encode(yielded3));
   yield* Effect.logInfo("WebSocket client connected", { ontologyId });
   const eventQueue = yield* hub.subscribe(ontologyId);
   const fibers = yield* FiberMap.make<string>();
@@ -710,7 +713,8 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
       Stream.tap(
         Effect.fnUntraced(function* (event) {
           const message: ServerMessage = { ...event, type: "event" };
-          yield* writer.write(new TextEncoder().encode(yield* encodeServerMessage(message)));
+          const yielded4 = yield* encodeServerMessage(message);
+yield* writer.write(new TextEncoder().encode(yielded4));
         })
       ),
       Stream.runDrain
@@ -721,8 +725,10 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
     "ping"
   )(
     Effect.gen(function* () {
-      const ping: ServerMessage = { type: "ping", timestamp: S.Natural.make(yield* Clock.currentTimeMillis) };
-      yield* writer.write(new TextEncoder().encode(yield* encodeServerMessage(ping)));
+      const yielded5 = yield* Clock.currentTimeMillis;
+const ping: ServerMessage = { type: "ping", timestamp: S.Natural.make(yielded5) };
+      const yielded6 = yield* encodeServerMessage(ping);
+yield* writer.write(new TextEncoder().encode(yielded6));
     }).pipe(Effect.delay("30 seconds"), Effect.forever, Effect.ignore)
   );
   const reader = yield* socket.reader;
@@ -776,11 +782,12 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
 export const broadcastDomainEvent = Effect.fn("broadcastDomainEvent")(function* (event: EventEntry) {
   const hub = yield* EventBroadcastHub;
   const ontologyId = event.payload.ontologyId;
-  const broadcastEvent: BroadcastEvent = {
+  const yielded7 = yield* Clock.currentTimeMillis;
+const broadcastEvent: BroadcastEvent = {
     type: "event",
     entry: event,
     ontologyId,
-    timestamp: S.Natural.make(yield* Clock.currentTimeMillis),
+    timestamp: S.Natural.make(yielded7),
   };
   yield* hub.broadcast(ontologyId, broadcastEvent);
 });

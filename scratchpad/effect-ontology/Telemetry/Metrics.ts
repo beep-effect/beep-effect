@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 /**
  * Telemetry: Prometheus Metrics Service
  *
@@ -392,7 +393,7 @@ export class MetricsService extends Context.Service<MetricsService>()($I`Metrics
         lines.push("# TYPE embedding_cache_latency_ms_sum counter");
         lines.push(`embedding_cache_latency_ms_sum ${state.embeddingCache.latencySumMs}`);
 
-        return lines.join("\n");
+        return A.join(lines, "\n");
       }),
 
       /**

@@ -55,15 +55,18 @@ describe("InferenceJobStore", () => {
         const retained = InferenceRunResponse.make({ jobId: "job-retained", status: "processing" });
         yield* first.put(retained);
 
-        assert.isTrue(O.isNone(yield* second.get(retained.jobId)));
+        const yielded1 = yield* second.get(retained.jobId);
+assert.isTrue(O.isNone(yielded1));
 
         yield* Effect.forEach(
           A.range(0, 256),
           (index) => first.put(InferenceRunResponse.make({ jobId: `job-${index}`, status: "processing" })),
           { concurrency: 1, discard: true }
         );
-        assert.isTrue(O.isNone(yield* first.get("job-retained")));
-        assert.isTrue(O.isSome(yield* first.get("job-256")));
+        const yielded2 = yield* first.get("job-retained");
+assert.isTrue(O.isNone(yielded2));
+        const yielded3 = yield* first.get("job-256");
+assert.isTrue(O.isSome(yielded3));
       })
     );
   });
@@ -83,7 +86,8 @@ describe("EventBridge", () => {
         const clientScope = yield* Scope.make();
         const subscription = yield* hub.subscribe(ontologyId).pipe(Effect.provideService(Scope.Scope, clientScope));
 
-        assert.strictEqual(yield* hub.getClientCount(ontologyId), 1);
+        const yielded4 = yield* hub.getClientCount(ontologyId);
+assert.strictEqual(yielded4, 1);
 
         const createdAt = yield* DateTime.now;
         const entry = yield* S.decodeEffect(OntologyEventEntry)({
@@ -104,10 +108,12 @@ describe("EventBridge", () => {
         });
 
         yield* hub.broadcast(ontologyId, event);
-        assert.deepStrictEqual(yield* PubSub.take(subscription), event);
+        const yielded5 = yield* PubSub.take(subscription);
+assert.deepStrictEqual(yielded5, event);
 
         yield* Scope.close(clientScope, Exit.void);
-        assert.strictEqual(yield* hub.getClientCount(ontologyId), 0);
+        const yielded6 = yield* hub.getClientCount(ontologyId);
+assert.strictEqual(yielded6, 0);
       })
     );
 

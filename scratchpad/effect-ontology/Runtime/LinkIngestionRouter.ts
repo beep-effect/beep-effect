@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 /**
  * Router: Link Ingestion API
  *
@@ -146,7 +147,8 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       }
 
       const httpRequest = yield* HttpServerRequest.HttpServerRequest;
-      const request = S.decodeUnknownOption(CreateBatchFromLinksBody)(yield* httpRequest.json);
+      const yielded1 = yield* httpRequest.json;
+const request = S.decodeUnknownOption(CreateBatchFromLinksBody)(yielded1);
       if (O.isNone(request)) {
         return yield* HttpServerResponse.json(
           { error: "VALIDATION_ERROR", message: "Invalid create-batch request" },
@@ -161,13 +163,13 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       const backgroundTasks = yield* LinkIngestionBackgroundTasks;
       const requestedIds = request.value.linkIds;
       const links = yield* ingestion.getByIds(requestedIds);
-      const foundIds = HashSet.fromIterable(links.map((link) => link.id));
-      const missingIds = requestedIds.filter((id) => !HashSet.has(foundIds, id));
+      const foundIds = HashSet.fromIterable(A.map(links, (link) => link.id));
+      const missingIds = A.filter(requestedIds, (id) => !HashSet.has(foundIds, id));
       if (missingIds.length > 0) {
         return yield* HttpServerResponse.json(
           {
             error: "VALIDATION_ERROR",
-            message: `Unknown or missing link IDs: ${missingIds.join(", ")}`,
+            message: `Unknown or missing link IDs: ${A.join(missingIds, ", ")}`,
           },
           { status: 400 }
         );
@@ -178,15 +180,15 @@ export const LinkIngestionRouter = HttpRouter.addAll([
         return yield* HttpServerResponse.json(
           {
             error: "VALIDATION_ERROR",
-            message: `Links do not belong to ontology "${ontologyId}": ${invalidLinks.map((link) => link.id).join(", ")}`,
+            message: `Links do not belong to ontology "${ontologyId}": ${A.map(invalidLinks, (link) => link.id).join(", ")}`,
           },
           { status: 400 }
         );
       }
 
       const bucket = O.getOrElse(config.storage.bucket, () => "local-bucket");
-      const randomA = (yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36).padStart(6, "0");
-      const randomB = (yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36).padStart(6, "0");
+      const randomA = Str.padStart(6, "0")((yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36));
+      const randomB = Str.padStart(6, "0")((yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36));
       const batchId = Result.getOrThrow(S.decodeResult(BatchId)(`batch-${randomA}${randomB}`));
       const targetNamespace = Result.getOrThrow(
         S.decodeResult(Namespace)(request.value.targetNamespace ?? entry.value.targetNamespace)
@@ -198,7 +200,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       const embeddingsUri = O.map(entry.value.embeddingsPath, (path) =>
         GcsUri.resolve(path, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket)))
       );
-      const documents = links.map((link) => ({
+      const documents = A.map(links, (link) => ({
         documentId: DocumentId.fromContentHash(Result.getOrThrow(S.decodeResult(ContentHash)(link.contentHash))),
         sourceUri: GcsUri.resolve(link.storageUri, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket))),
         contentType: "text/markdown",
@@ -218,7 +220,8 @@ export const LinkIngestionRouter = HttpRouter.addAll([
         createdAt: now,
       });
       const manifestPath = PathLayout.batch.manifest(batchId);
-      yield* storage.set(manifestPath, yield* BatchManifest.encodeEffectFromJsonString(manifest));
+      const yielded2 = yield* BatchManifest.encodeEffectFromJsonString(manifest);
+yield* storage.set(manifestPath, yielded2);
       const manifestUri = Result.getOrThrow(S.decodeUnknownResult(GcsUri)(`gs://${bucket}/${manifestPath}`));
       const payload = yield* BatchWorkflowPayload.decodeUnknownEffect({
         batchId,
@@ -228,7 +231,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
         ontologyUri,
         targetNamespace,
         shaclUri,
-        documentIds: documents.map((document) => document.documentId),
+        documentIds: A.map(documents, (document) => document.documentId),
         ontologyEmbeddingsUri: embeddingsUri,
       });
 

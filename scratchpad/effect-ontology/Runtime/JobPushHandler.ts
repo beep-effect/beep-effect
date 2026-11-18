@@ -310,10 +310,11 @@ export const JobPushRouter = HttpRouter.addAll([
     "GET",
     "/v1/jobs/health",
     Effect.gen(function* () {
-      return yield* HttpServerResponse.json({
+      const yielded1 = yield* DateTime.now;
+return yield* HttpServerResponse.json({
         status: "healthy",
         service: "job-push-handler",
-        timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
+        timestamp: DateTime.toDateUtc(yielded1).toISOString(),
       });
     })
   ),

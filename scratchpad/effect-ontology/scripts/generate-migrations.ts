@@ -57,7 +57,8 @@ const program = Effect.gen(function* () {
     });
   }
 
-  const baselineFolders = A.filter(yield* fs.readDirectory(migrationsFolder), Str.endsWith("_baseline"));
+  const yielded1 = yield* fs.readDirectory(migrationsFolder);
+const baselineFolders = A.filter(yielded1, Str.endsWith("_baseline"));
   yield* Effect.forEach(
     baselineFolders,
     Effect.fn("installExtensionPrelude")(function* (folder) {
@@ -67,7 +68,7 @@ const program = Effect.gen(function* () {
         yield* fs.writeFileString(migrationFile, `${ExtensionPrelude}${sql}`);
       }
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Console.log(`Generated migrations in ${migrationsFolder}`);
 });

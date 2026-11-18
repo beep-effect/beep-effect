@@ -590,7 +590,8 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository, Em
               )
               .limit(1)
               .pipe(Effect.mapError((cause) => DrizzleError.fromUnknown("execute", cause)));
-            return A.head(yield* decodeEmbeddingSqlRows(result));
+            const yielded1 = yield* decodeEmbeddingSqlRows(result);
+return A.head(yielded1);
           })
       );
 
@@ -676,7 +677,7 @@ export class EmbeddingRepository extends Context.Service<EmbeddingRepository, Em
           if (items.length === 0) return 0;
 
           // Use batched upsert with CTE for efficiency
-          const values = items.map((item) => ({
+          const values = A.map(items, (item) => ({
             ontologyId: item.ontologyId,
             entityType: item.entityType,
             entityId: item.entityId,

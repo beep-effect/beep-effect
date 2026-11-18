@@ -98,7 +98,7 @@ const linkHandler = Effect.fn("linkHandler")(function* (
     }
     yield* Console.log(`Found ${candidates.length} candidates:\n`);
     for (const candidate of candidates) {
-      yield* Console.log(`  [${candidate.score.toFixed(0).padStart(3)}] ${candidate.qid}: ${candidate.label}`);
+      yield* Console.log(`  [${Str.padStart(3)(candidate.score.toFixed(0))}] ${candidate.qid}: ${candidate.label}`);
       if (O.isSome(candidate.description)) {
         yield* Console.log(`        ${candidate.description}`);
       }

@@ -171,9 +171,10 @@ export class HealthCheckService extends Context.Service<HealthCheckService>()($I
        * Should be fast and never fail unless service is crashed.
        */
       liveness: Effect.fn("liveness")(function* () {
-        return {
+        const yielded1 = yield* DateTime.now;
+return {
           status: "ok",
-          timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
+          timestamp: DateTime.toDateUtc(yielded1).toISOString(),
         };
       }),
 
@@ -189,9 +190,10 @@ export class HealthCheckService extends Context.Service<HealthCheckService>()($I
 
         const hasError = A.some(R.values(checks), (check) => check === "error");
 
-        return {
+        const yielded2 = yield* DateTime.now;
+return {
           status: hasError ? "degraded" : "ok",
-          timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
+          timestamp: DateTime.toDateUtc(yielded2).toISOString(),
           checks,
         };
       }),
@@ -251,9 +253,10 @@ export class HealthCheckService extends Context.Service<HealthCheckService>()($I
           overallStatus = "error";
         }
 
-        return {
+        const yielded3 = yield* DateTime.now;
+return {
           status: overallStatus,
-          timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
+          timestamp: DateTime.toDateUtc(yielded3).toISOString(),
           checks,
         };
       }),

@@ -67,14 +67,17 @@ if (Str.isEmpty(externalUrl)) {
             Result: JournalRow,
             execute: () => sql`SELECT name FROM effect_ontology.__drizzle_migrations ORDER BY id`,
           });
-          const names = A.map(yield* readJournal(undefined), (row) => row.name);
+          const yielded1 = yield* readJournal(undefined);
+const names = A.map(yielded1, (row) => row.name);
           assert.deepEqual(names, [
             "20260817213414_baseline",
             "20260817213424_postgres_features",
             FutureMigration.name,
           ]);
-          assert.strictEqual(database, yield* PostgresDrizzle);
-          assert.strictEqual(sql, yield* SqlClient.SqlClient);
+          const yielded2 = yield* PostgresDrizzle;
+assert.strictEqual(database, yielded2);
+          const yielded3 = yield* SqlClient.SqlClient;
+assert.strictEqual(sql, yielded3);
         })
       );
     });

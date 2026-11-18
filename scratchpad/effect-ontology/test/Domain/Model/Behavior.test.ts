@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import { IRI } from "@beep/rdf/Iri";
 import { describe, expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
@@ -143,7 +144,7 @@ describe("effect-ontology model behavior", () => {
         ontologyVersion: OntologyVersion.fromParts(
           Namespace.make("football"),
           OntologyName.make("premier_league"),
-          ContentHash.make("a".repeat(64))
+          ContentHash.make(Str.repeat(64)("a"))
         ),
         createdAt: now,
         updatedAt: now,
@@ -241,7 +242,7 @@ describe("effect-ontology model behavior", () => {
   it("rejects ontology embedding artifacts with inconsistent dimensions", () => {
     const artifact = decodeOntologyEmbeddingsResult({
       ontologyUri: "gs://beep-ontology/ontology.ttl",
-      version: "a".repeat(64),
+      version: Str.repeat(64)("a"),
       model: "text-embedding-3-small",
       dimension: 2,
       createdAt: "2026-07-25T12:00:00.000Z",

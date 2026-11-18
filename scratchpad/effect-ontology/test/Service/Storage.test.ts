@@ -129,27 +129,37 @@ describe("effect-ontology local StorageService", { concurrent: false }, () => {
 
         yield* storage.set("documents/report.txt", "inside");
 
-        assert.strictEqual(yield* storage.get("documents/report.txt"), "inside");
-        assert.deepStrictEqual(yield* storage.getOption("documents/report.txt"), O.some("inside"));
-        assert.deepStrictEqual(yield* storage.getOption("documents/missing.txt"), O.none());
-        assert.deepStrictEqual(yield* storage.list("documents"), ["report.txt"]);
-        assert.strictEqual(yield* fs.readFileString(path.join(root, "tenant-a", "documents", "report.txt")), "inside");
+        const yielded1 = yield* storage.get("documents/report.txt");
+assert.strictEqual(yielded1, "inside");
+        const yielded2 = yield* storage.getOption("documents/report.txt");
+assert.deepStrictEqual(yielded2, O.some("inside"));
+        const yielded3 = yield* storage.getOption("documents/missing.txt");
+assert.deepStrictEqual(yielded3, O.none());
+        const yielded4 = yield* storage.list("documents");
+assert.deepStrictEqual(yielded4, ["report.txt"]);
+        const yielded5 = yield* fs.readFileString(path.join(root, "tenant-a", "documents", "report.txt"));
+assert.strictEqual(yielded5, "inside");
 
         const bytes = new Uint8Array([0, 1, 2, 255]);
         yield* storage.set("documents/payload.bin", bytes);
-        assert.deepStrictEqual(yield* storage.getUint8Array("documents/payload.bin"), bytes);
+        const yielded6 = yield* storage.getUint8Array("documents/payload.bin");
+assert.deepStrictEqual(yielded6, bytes);
 
         const versioned = yield* storage.getWithGeneration("documents/report.txt");
         assert.isTrue(O.isSome(versioned));
         if (O.isSome(versioned)) {
           yield* storage.setIfGenerationMatch("documents/report.txt", "updated", versioned.value.generation);
-          assert.strictEqual(yield* storage.get("documents/report.txt"), "updated");
+          const yielded7 = yield* storage.get("documents/report.txt");
+assert.strictEqual(yielded7, "updated");
         }
 
         yield* storage.clear;
-        assert.deepStrictEqual(yield* storage.list(""), []);
-        assert.isFalse(yield* fs.exists(path.join(root, "tenant-a", "documents")));
-        assert.deepStrictEqual(yield* fs.readDirectory(path.join(root, "tenant-a")), [".effect-ontology-storage"]);
+        const yielded8 = yield* storage.list("");
+assert.deepStrictEqual(yielded8, []);
+        const yielded9 = yield* fs.exists(path.join(root, "tenant-a", "documents"));
+assert.isFalse(yielded9);
+        const yielded10 = yield* fs.readDirectory(path.join(root, "tenant-a"));
+assert.deepStrictEqual(yielded10, [".effect-ontology-storage"]);
       })
     );
   });
@@ -175,7 +185,8 @@ describe("effect-ontology local StorageService", { concurrent: false }, () => {
         );
         assert(staleWrite.pipe(Result.isFailure));
         assert(staleWrite.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
-        assert.strictEqual(yield* first.get("stale.txt"), "second");
+        const yielded11 = yield* first.get("stale.txt");
+assert.strictEqual(yielded11, "second");
       })
     );
 
@@ -219,7 +230,8 @@ describe("effect-ontology local StorageService", { concurrent: false }, () => {
         );
         assert(staleWrite.pipe(Result.isFailure));
         assert(staleWrite.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
-        assert.strictEqual(yield* first.get("aliases/same.txt"), "same");
+        const yielded12 = yield* first.get("aliases/same.txt");
+assert.strictEqual(yielded12, "same");
       })
     );
 
@@ -243,7 +255,8 @@ describe("effect-ontology local StorageService", { concurrent: false }, () => {
         );
         assert(staleWrite.pipe(Result.isFailure));
         assert(staleWrite.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
-        assert.strictEqual(yield* first.get("aba.txt"), "same");
+        const yielded13 = yield* first.get("aba.txt");
+assert.strictEqual(yielded13, "same");
       })
     );
   });
@@ -280,7 +293,8 @@ describe("effect-ontology local StorageService", { concurrent: false }, () => {
         );
         assert(deletedBeforeUpdate.pipe(Result.isFailure));
         assert(deletedBeforeUpdate.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
-        assert.deepStrictEqual(yield* storage.getOption("documents/created.txt"), O.none());
+        const yielded14 = yield* storage.getOption("documents/created.txt");
+assert.deepStrictEqual(yielded14, O.none());
 
         yield* storage.setIfGenerationMatch("documents/created.txt", "first", "0");
         const recreated = yield* storage.getWithGeneration("documents/created.txt");
@@ -292,7 +306,8 @@ describe("effect-ontology local StorageService", { concurrent: false }, () => {
         );
         assert(staleAfterRecreate.pipe(Result.isFailure));
         assert(staleAfterRecreate.pipe(Result.getFailure, O.exists(GenerationMismatchError.is)));
-        assert.deepStrictEqual(yield* storage.getOption("documents/created.txt"), O.some("first"));
+        const yielded15 = yield* storage.getOption("documents/created.txt");
+assert.deepStrictEqual(yielded15, O.some("first"));
 
         yield* storage.setIfGenerationMatch(
           "documents/created.txt",
@@ -351,7 +366,8 @@ describe("effect-ontology local StorageService", { concurrent: false }, () => {
               child.kill();
               yield* Effect.tryPromise(() => child.exited).pipe(Effect.orDie);
               yield* storage.setIfGenerationMatch("document.txt", "recovered", "0");
-              assert.strictEqual(yield* storage.get("document.txt"), "recovered");
+              const yielded16 = yield* storage.get("document.txt");
+assert.strictEqual(yielded16, "recovered");
             }),
             (child) =>
               Effect.sync(() => child.kill()).pipe(
@@ -404,12 +420,15 @@ describe("effect-ontology local StorageService", { concurrent: false }, () => {
           storage.getWithGeneration("linked-outside/secret.txt").pipe(Effect.flip),
           storage.setIfGenerationMatch("../outside/new.txt", "escaped", "0").pipe(Effect.flip),
           storage.setIfGenerationMatch("linked-outside/new.txt", "escaped", "0").pipe(Effect.flip),
-        ]);
+        ], { concurrency: 1 });
 
         A.forEach(errors, assertLocalPathRejected);
-        assert.strictEqual(yield* fs.readFileString(absoluteInside), "inside");
-        assert.strictEqual(yield* fs.readFileString(outsideSecret), "outside-secret");
-        assert.isFalse(yield* fs.exists(outsideNew));
+        const yielded17 = yield* fs.readFileString(absoluteInside);
+assert.strictEqual(yielded17, "inside");
+        const yielded18 = yield* fs.readFileString(outsideSecret);
+assert.strictEqual(yielded18, "outside-secret");
+        const yielded19 = yield* fs.exists(outsideNew);
+assert.isFalse(yielded19);
       })
     );
   });
@@ -449,8 +468,10 @@ describe("effect-ontology local StorageService", { concurrent: false }, () => {
         ).pipe(Effect.flip);
 
         assertLocalPathRejected(error);
-        assert.strictEqual(yield* fs.readFileString(outsideSecret), "outside-secret");
-        assert.strictEqual(yield* fs.readLink(prefixRoot), outside);
+        const yielded20 = yield* fs.readFileString(outsideSecret);
+assert.strictEqual(yielded20, "outside-secret");
+        const yielded21 = yield* fs.readLink(prefixRoot);
+assert.strictEqual(yielded21, outside);
       })
     );
   });
@@ -472,11 +493,13 @@ describe("effect-ontology local StorageService", { concurrent: false }, () => {
 
         yield* fs.rename(root, movedRoot);
         yield* fs.symlink(outside, root);
-        const errors = yield* Effect.all([storage.size.pipe(Effect.flip), storage.clear.pipe(Effect.flip)]);
+        const errors = yield* Effect.all([storage.size.pipe(Effect.flip), storage.clear.pipe(Effect.flip)], { concurrency: 1 });
 
         A.forEach(errors, assertLocalPathRejected);
-        assert.strictEqual(yield* fs.readFileString(outsideSecret), "outside-secret");
-        assert.strictEqual(yield* fs.readFileString(path.join(movedRoot, "inside.txt")), "inside");
+        const yielded22 = yield* fs.readFileString(outsideSecret);
+assert.strictEqual(yielded22, "outside-secret");
+        const yielded23 = yield* fs.readFileString(path.join(movedRoot, "inside.txt"));
+assert.strictEqual(yielded23, "inside");
       })
     );
   });
@@ -500,8 +523,10 @@ describe("effect-ontology local StorageService", { concurrent: false }, () => {
 
         assertLocalPathRejected(error);
         assert.strictEqual((yield* fs.stat(root)).type, "Directory");
-        assert.strictEqual(yield* fs.readLink(linkedOutside), outside);
-        assert.strictEqual(yield* fs.readFileString(outsideSecret), "outside-secret");
+        const yielded24 = yield* fs.readLink(linkedOutside);
+assert.strictEqual(yielded24, outside);
+        const yielded25 = yield* fs.readFileString(outsideSecret);
+assert.strictEqual(yielded25, "outside-secret");
       })
     );
   });
@@ -519,7 +544,8 @@ describe("effect-ontology local StorageService", { concurrent: false }, () => {
         const error = yield* Layer.build(makeLocalStorageLayer(root, "../outside")).pipe(Effect.flip);
 
         assertLocalPathRejected(error);
-        assert.isFalse(yield* fs.exists(path.join(sandbox, "outside")));
+        const yielded26 = yield* fs.exists(path.join(sandbox, "outside"));
+assert.isFalse(yielded26);
       })
     );
   });

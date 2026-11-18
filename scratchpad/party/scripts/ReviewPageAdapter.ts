@@ -102,7 +102,7 @@ export const encodeReviewPageCases = Effect.fn("ReviewPageAdapter.encode")(funct
           : encodeURIComponent(row.id);
       labels = HashMap.set(labels, row.id, label);
     })
-  );
+  , { concurrency: 1 });
   const cases = yield* Effect.forEach(
     input.cases,
     Effect.fn("ReviewPageAdapter.case")(function* (current) {
@@ -113,7 +113,7 @@ export const encodeReviewPageCases = Effect.fn("ReviewPageAdapter.encode")(funct
             Effect.fromOption(HashMap.get(labels, id)).pipe(
               Effect.mapError(() => ReviewPageBindingError.make({ reason: "missing-identifier" }))
             )
-          );
+          , { concurrency: 1 });
           return PageMailbox.make({
             party: mailbox.party,
             identifiers,
@@ -122,10 +122,10 @@ export const encodeReviewPageCases = Effect.fn("ReviewPageAdapter.encode")(funct
             lastSeen: O.map(mailbox.span, (span) => span.last),
           });
         })
-      );
+      , { concurrency: 1 });
       return PageCase.make({ ...current.evidence, mailboxes, basis: current.basis });
     })
-  );
+  , { concurrency: 1 });
   return yield* S.encodeEffect(PageCase.pipe(S.Array, S.fromJsonString))(cases);
 });
 

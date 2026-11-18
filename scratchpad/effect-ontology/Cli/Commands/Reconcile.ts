@@ -243,10 +243,10 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
       );
       if (verbose) {
         yield* Console.log(`  Entity 1: ${pair.entity1.iri}`);
-        yield* Console.log(`    Types: ${pair.entity1.types.join(", ")}`);
+        yield* Console.log(`    Types: ${A.join(pair.entity1.types, ", ")}`);
         yield* Console.log(`    Source: ${pair.entity1.sourceDoc}`);
         yield* Console.log(`  Entity 2: ${pair.entity2.iri}`);
-        yield* Console.log(`    Types: ${pair.entity2.types.join(", ")}`);
+        yield* Console.log(`    Types: ${A.join(pair.entity2.types, ", ")}`);
         yield* Console.log(`    Source: ${pair.entity2.sourceDoc}`);
       }
     }

@@ -176,7 +176,7 @@ export const MockShaclService = (options?: {
     datatype: Rdf.makeNamedNode(XSD_STRING.value),
   });
   const makeReport = Effect.fn("ShaclService.makeTestReport")(function* (dataStore: RdfStore, shapesStore: RdfStore) {
-    const violations = (options?.violations ?? []).map((violation) => ({
+    const violations = A.map(options?.violations ?? [], (violation) => ({
       focusNode: violation.focusNode ?? "test:node",
       path: Rdf.makeNamedNode(violation.path ?? "urn:beep:shacl:path:unknown"),
       message: violation.message,
@@ -189,9 +189,10 @@ export const MockShaclService = (options?: {
         : {}),
       ...(P.isNotUndefined(violation.sourceShape) ? { sourceShape: Rdf.makeNamedNode(violation.sourceShape) } : {}),
     }));
-    return yield* S.decodeEffect(ShaclValidationReport)({
+    const yielded1 = yield* DateTime.now;
+return yield* S.decodeEffect(ShaclValidationReport)({
       validation: { conforms: A.isReadonlyArrayEmpty(violations), violations, truncated: false },
-      validatedAt: DateTime.formatIso(yield* DateTime.now),
+      validatedAt: DateTime.formatIso(yielded1),
       dataGraphTripleCount: rdfStoreSize(dataStore),
       shapesGraphTripleCount: rdfStoreSize(shapesStore),
       durationMs: 0,

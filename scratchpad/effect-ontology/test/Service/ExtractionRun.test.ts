@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -8,7 +9,7 @@ import { IdempotencyKey } from "../../Domain/Identity.ts";
 import { ExtractionRunError, ExtractionRunService, ExtractionRunServiceLive } from "../../Service/ExtractionRun.ts";
 import { StorageService, StorageServiceTest } from "../../Service/Storage.ts";
 
-const key = IdempotencyKey.make("a".repeat(64));
+const key = IdempotencyKey.make(Str.repeat(64)("a"));
 
 const FailingStorage = Layer.effect(
   StorageService,
@@ -68,7 +69,8 @@ describe("ExtractionRunService storage boundaries", () => {
       "initializes only missing index state as empty",
       Effect.fnUntraced(function* () {
         const runs = yield* ExtractionRunService;
-        assert.isFalse(yield* runs.existsByKey(key));
+        const yielded1 = yield* runs.existsByKey(key);
+assert.isFalse(yielded1);
       })
     );
   });

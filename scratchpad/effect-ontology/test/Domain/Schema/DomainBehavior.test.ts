@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import { MimeType } from "@beep/schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
@@ -25,7 +26,7 @@ const decodePreprocessingOptionsResult = S.decodeResult(PreprocessingOptions);
 const decodeTextSpanResult = S.decodeResult(TextSpan);
 const encodeTextSpan = S.encodeEffect(TextSpan);
 
-const contentHash = ContentHash.make("a".repeat(64));
+const contentHash = ContentHash.make(Str.repeat(64)("a"));
 
 describe("effect-ontology schema-owned domain behavior", () => {
   it("enforces adaptive chunking and preprocessing bounds at decode time", () => {

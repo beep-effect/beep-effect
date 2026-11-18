@@ -257,7 +257,8 @@ export const makeLoggingMiddleware = Effect.sync(() =>
     Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
       const start = yield* Clock.currentTimeMillis;
-      const requestId = Math.abs(yield* Random.nextInt)
+      const yielded1 = yield* Random.nextInt;
+const requestId = Math.abs(yielded1)
         .toString(16)
         .slice(0, 8);
 

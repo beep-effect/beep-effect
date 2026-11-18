@@ -124,7 +124,7 @@ export const levenshteinSimilarity: {
   if (a.length === 0 || b.length === 0) return 0.0;
 
   const maxLen = Math.max(a.length, b.length);
-  const distance = levenshteinDistance(a.toLowerCase(), b.toLowerCase());
+  const distance = levenshteinDistance(Str.toLowerCase(a), Str.toLowerCase(b));
   return 1.0 - distance / maxLen;
 });
 

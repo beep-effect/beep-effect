@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 /**
  * LLM Span Attributes
  *
@@ -171,7 +172,7 @@ export const annotateRetry = (attrs: { retryCount: number; maxAttempts: number }
   Effect.all([
     Effect.annotateCurrentSpan(LlmAttributes.RETRY_COUNT, attrs.retryCount),
     Effect.annotateCurrentSpan(LlmAttributes.RETRY_MAX_ATTEMPTS, attrs.maxAttempts),
-  ]).pipe(Effect.asVoid);
+  ], { concurrency: 1 }).pipe(Effect.asVoid);
 
 /**
  * Annotates the current span with an error type and an optional message.
@@ -202,7 +203,7 @@ export const annotateError = (attrs: { errorType: string; errorMessage?: string 
     yield* Effect.annotateCurrentSpan(LlmAttributes.ERROR_TYPE, attrs.errorType);
     if (attrs.errorMessage !== undefined) {
       // Truncate error message to avoid huge spans
-      yield* Effect.annotateCurrentSpan(LlmAttributes.ERROR_MESSAGE, attrs.errorMessage.slice(0, 500));
+      yield* Effect.annotateCurrentSpan(LlmAttributes.ERROR_MESSAGE, Str.slice(0, 500)(attrs.errorMessage));
     }
   });
 

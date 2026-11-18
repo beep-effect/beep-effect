@@ -483,7 +483,7 @@ export const generateClaimId = dual4(
   (subjectIri: string, predicateIri: string, objectValue: string, articleId: string): ClaimId => {
     // Create deterministic hash from claim content
     const contentKey = `${subjectIri}|${predicateIri}|${objectValue}|${articleId}`;
-    const hash = Math.abs(Hash.string(contentKey)).toString(16).padStart(12, "0");
+    const hash = Str.padStart(12, "0")(Math.abs(Hash.string(contentKey)).toString(16));
     return ClaimId.make(`claim-${hash}`);
   }
 );
@@ -1119,5 +1119,6 @@ export const claimExtractionArtifactFromQuads = Effect.fn("ClaimFactory.claimExt
     O.getOrElse(() => "")
   );
 
-  return O.some(yield* S.decodeEffect(ClaimExtractionArtifactJson)(payload));
+  const yielded1 = yield* S.decodeEffect(ClaimExtractionArtifactJson)(payload);
+return O.some(yielded1);
 });

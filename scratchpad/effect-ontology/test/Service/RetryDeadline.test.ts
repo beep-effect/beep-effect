@@ -46,8 +46,10 @@ describe("RetryPolicy", () => {
       );
       yield* TestClock.adjust(Duration.seconds(2));
 
-      assert.strictEqual(yield* Fiber.join(dataFirstFiber), 3);
-      assert.strictEqual(yield* Ref.get(dataFirstAttempts), 3);
+      const yielded1 = yield* Fiber.join(dataFirstFiber);
+assert.strictEqual(yielded1, 3);
+      const yielded2 = yield* Ref.get(dataFirstAttempts);
+assert.strictEqual(yielded2, 3);
 
       const dataLastAttempts = yield* Ref.make(0);
       const dataLastFiber = yield* succeedOnThirdAttempt(dataLastAttempts).pipe(
@@ -56,8 +58,10 @@ describe("RetryPolicy", () => {
       );
       yield* TestClock.adjust(Duration.seconds(2));
 
-      assert.strictEqual(yield* Fiber.join(dataLastFiber), 3);
-      assert.strictEqual(yield* Ref.get(dataLastAttempts), 3);
+      const yielded3 = yield* Fiber.join(dataLastFiber);
+assert.strictEqual(yielded3, 3);
+      const yielded4 = yield* Ref.get(dataLastAttempts);
+assert.strictEqual(yielded4, 3);
     })
   );
 
@@ -84,7 +88,8 @@ describe("RetryPolicy", () => {
 
       const error = yield* Fiber.join(fiber);
       assert.isTrue(Cause.isTimeoutError(error));
-      assert.strictEqual(yield* Ref.get(attempts), 2);
+      const yielded5 = yield* Ref.get(attempts);
+assert.strictEqual(yielded5, 2);
     })
   );
 
@@ -104,7 +109,8 @@ describe("RetryPolicy", () => {
 
       assert.isTrue(Result.isFailure(result));
       assert.isTrue(S.isSchemaError(error));
-      assert.strictEqual(yield* Ref.get(attempts), 0);
+      const yielded6 = yield* Ref.get(attempts);
+assert.strictEqual(yielded6, 0);
     })
   );
 });
@@ -128,7 +134,8 @@ describe("StageTimeoutService", () => {
           .pipe(Effect.flip, Effect.forkChild);
 
         yield* TestClock.adjust(Duration.seconds(1));
-        assert.isTrue(yield* Ref.get(softWarningObserved));
+        const yielded7 = yield* Ref.get(softWarningObserved);
+assert.isTrue(yielded7);
 
         yield* TestClock.adjust(Duration.seconds(1));
         const error = yield* Fiber.join(fiber);
@@ -149,9 +156,12 @@ describe("StageTimeoutService", () => {
         yield* TestClock.adjust(Duration.seconds(2));
 
         assert.strictEqual(result, "complete");
-        assert.isFalse(yield* Ref.get(softWarningObserved));
-        assert.isFalse(yield* timeouts.wouldTimeout("chunking", Duration.seconds(2)));
-        assert.isTrue(yield* timeouts.wouldTimeout("chunking", Duration.millis(2001)));
+        const yielded8 = yield* Ref.get(softWarningObserved);
+assert.isFalse(yielded8);
+        const yielded9 = yield* timeouts.wouldTimeout("chunking", Duration.seconds(2));
+assert.isFalse(yielded9);
+        const yielded10 = yield* timeouts.wouldTimeout("chunking", Duration.millis(2001));
+assert.isTrue(yielded10);
       })
     );
   });

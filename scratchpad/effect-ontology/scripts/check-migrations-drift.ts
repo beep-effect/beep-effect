@@ -43,7 +43,8 @@ const program = Effect.scoped(
     const scratchRoot = yield* fs.makeTempDirectoryScoped({ prefix: "effect-ontology-migrations-drift-" });
     const scratch = path.join(scratchRoot, "migrations");
     yield* fs.copy(migrationsFolder, scratch);
-    const before = HashSet.fromIterable(yield* fs.readDirectory(scratch));
+    const yielded1 = yield* fs.readDirectory(scratch);
+const before = HashSet.fromIterable(yielded1);
 
     const exitCode = yield* spawner.exitCode(
       ChildProcess.make(
@@ -69,15 +70,17 @@ const program = Effect.scoped(
       });
     }
 
-    const newFolders = A.filter(yield* fs.readDirectory(scratch), (entry) => !HashSet.has(before, entry));
+    const yielded2 = yield* fs.readDirectory(scratch);
+const newFolders = A.filter(yielded2, (entry) => !HashSet.has(before, entry));
     if (A.isReadonlyArrayNonEmpty(newFolders)) {
       yield* Effect.forEach(
         newFolders,
         Effect.fnUntraced(function* (folder) {
           yield* Console.error(`--- pending migration ${folder} ---`);
-          yield* Console.error(yield* fs.readFileString(path.join(scratch, folder, "migration.sql")));
+          const yielded3 = yield* fs.readFileString(path.join(scratch, folder, "migration.sql"));
+yield* Console.error(yielded3);
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       return yield* MigrationsDriftError.make({
         message:

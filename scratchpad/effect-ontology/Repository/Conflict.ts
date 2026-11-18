@@ -376,7 +376,8 @@ export class ConflictRepository extends Context.Service<ConflictRepository, Conf
               .where(and(eq(conflicts.ontologyId, ontologyId), eq(conflicts.id, id)))
               .limit(1)
           );
-          return A.head(yield* decodeConflictRecords(rows));
+          const yielded1 = yield* decodeConflictRecords(rows);
+return A.head(yielded1);
         })
       );
 
@@ -418,7 +419,8 @@ export class ConflictRepository extends Context.Service<ConflictRepository, Conf
               })
               .returning()
           );
-          return A.head(yield* decodeConflictRows(rows));
+          const yielded2 = yield* decodeConflictRows(rows);
+return A.head(yielded2);
         }
       );
 
@@ -430,7 +432,8 @@ export class ConflictRepository extends Context.Service<ConflictRepository, Conf
           action: ConflictTransition,
           actor: ConflictActor
         ) {
-          const now = DateTime.toDate(yield* DateTime.now);
+          const yielded3 = yield* DateTime.now;
+const now = DateTime.toDate(yielded3);
           const existing = yield* get(ontologyId, id);
           if (O.isNone(existing) || !Equal.equals(existing.value.conflict.status, "pending")) {
             return O.none<ConflictRecord>();
@@ -476,7 +479,8 @@ export class ConflictRepository extends Context.Service<ConflictRepository, Conf
               .where(and(eq(conflicts.ontologyId, ontologyId), eq(conflicts.id, id), eq(conflicts.status, "pending")))
               .returning()
           );
-          if (A.isReadonlyArrayEmpty(yield* decodeConflictRows(updated))) {
+          const yielded4 = yield* decodeConflictRows(updated);
+if (A.isReadonlyArrayEmpty(yielded4)) {
             return O.none<ConflictRecord>();
           }
           return yield* get(ontologyId, id);

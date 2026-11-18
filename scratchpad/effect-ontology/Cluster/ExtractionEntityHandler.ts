@@ -109,7 +109,8 @@ const makeEvent = Effect.fn("ExtractionEntityHandler.makeEvent")(function* (
   extra: Record<string, unknown> = {}
 ) {
   const eventNumber = yield* Random.nextInt;
-  const timestamp = DateTime.formatIso(yield* DateTime.now);
+  const yielded1 = yield* DateTime.now;
+const timestamp = DateTime.formatIso(yielded1);
   return yield* S.decodeUnknownEffect(ProgressEvent)({
     _tag,
     eventId: `evt-${eventNumber}`,
@@ -175,8 +176,8 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
   const cancellationRegistry = yield* Ref.make(HashMap.empty<IdempotencyKey, CancellationSignal>());
 
   const ontology = yield* ontologyService.ontology;
-  const datatypeProperties = ontology.properties.filter((property) => property.rangeType === "datatype");
-  const objectProperties = ontology.properties.filter((property) => property.rangeType === "object");
+  const datatypeProperties = A.filter(ontology.properties, (property) => property.rangeType === "datatype");
+  const objectProperties = A.filter(ontology.properties, (property) => property.rangeType === "object");
 
   const acquireRateLimit = Effect.fn("ExtractionEntityHandler.acquireRateLimit")(
     function* (estimatedTokens: number) {
@@ -195,10 +196,11 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
   const extractFromText = Effect.fn("ExtractionEntityHandler.extractFromText")(
     function* (envelope: ClusterEntity.Request<typeof ExtractFromTextRpc>) {
       const { ontologyId, ontologyVersion, params, text } = envelope.payload;
-      const idempotencyKey = IdempotencyKey.make(
-        yield* computeIdempotencyKey(text, ontologyId, ontologyVersion, toExtractionParams(params)).pipe(
+      const yielded2 = yield* computeIdempotencyKey(text, ontologyId, ontologyVersion, toExtractionParams(params)).pipe(
           Effect.provideService(Digest.Digest, crypto)
-        )
+        );
+const idempotencyKey = IdempotencyKey.make(
+        yielded2
       );
       const runId = yield* getRunIdFromText(text).pipe(Effect.provideService(Digest.Digest, crypto));
       const keyString = idempotencyKey;
@@ -209,15 +211,16 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       const existingRun = yield* runService.getByKey(idempotencyKey);
       if (O.isSome(existingRun) && RunStatus.guards.Complete(existingRun.value.status)) {
         const stats = O.getOrElse(existingRun.value.stats, () => emptyStats);
-        return Stream.make(
-          yield* makeEvent(runId, "extraction_complete", 100, {
+        const yielded3 = yield* makeEvent(runId, "extraction_complete", 100, {
             totalEntities: "entityCount" in stats ? stats.entityCount : stats.totalEntities,
             totalRelations: "relationCount" in stats ? stats.relationCount : stats.verifiedRelations,
             uniqueEntityTypes: 0,
             totalDurationMs: "duration" in stats ? Duration.toMillis(stats.duration) : 0,
             successfulChunks: "chunkCount" in stats ? stats.chunkCount : stats.successfulChunks,
             failedChunks: 0,
-          })
+          });
+return Stream.make(
+          yielded3
         );
       }
 
@@ -279,7 +282,8 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       yield* runService.setStatus(runId, RunStatus.cases.Running.make({ startedAt: yield* DateTime.now }));
 
       const statsRef = yield* Ref.make(emptyStats);
-      const initialEvents = [
+      const yielded4 = yield* DateTime.now;
+const initialEvents = [
         yield* makeEvent(runId, "extraction_started", 0, {
           totalChunks: chunks.length,
           textMetadata: {
@@ -291,7 +295,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         yield* makeEvent(runId, "stage_started", 5, { stage: "chunking" }),
         yield* makeEvent(runId, "stage_completed", 10, {
           stage: "chunking",
-          durationMs: DateTime.distance(chunkingStart, yield* DateTime.now).pipe(Duration.toMillis),
+          durationMs: DateTime.distance(chunkingStart, yielded4).pipe(Duration.toMillis),
           itemCount: chunks.length,
         }),
       ];
@@ -327,7 +331,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
               }));
 
           const entityArray = Chunk.toReadonlyArray(entities);
-          const entityTypes = HashSet.fromIterable(entityArray.flatMap((entity) => entity.types));
+          const entityTypes = HashSet.fromIterable(A.flatMap(entityArray, (entity) => entity.types));
           yield* tokenBudget.recordUsage("entity_extraction", estimatedTokens);
           yield* Ref.update(statsRef, (stats) =>
             ExtractionStats.make({
@@ -342,12 +346,13 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           );
           yield* rateLimiter.release(estimatedTokens, true);
 
-          events.push(
-            yield* makeEvent(runId, "chunk_processing_complete", chunkProgress + 5, {
+          const yielded5 = yield* makeEvent(runId, "chunk_processing_complete", chunkProgress + 5, {
               chunkIndex: chunk.index,
               entityCount: entityArray.length,
               relationCount: verifiedRelations.length,
-            })
+            });
+events.push(
+            yielded5
           );
           return events;
         }),
@@ -355,7 +360,8 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       );
 
       const stats = yield* Ref.get(statsRef);
-      const totalDuration = DateTime.distance(startTime, yield* DateTime.now).pipe(Duration.toMillis);
+      const yielded6 = yield* DateTime.now;
+const totalDuration = DateTime.distance(startTime, yielded6).pipe(Duration.toMillis);
       yield* runService.updateStats(runId, {
         chunkCount: S.Natural.make(chunks.length),
         entityCount: S.Natural.make(stats.totalEntities),
@@ -388,20 +394,22 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
             const text = envelope.payload.text;
             const runId = yield* getRunIdFromText(text).pipe(Effect.provideService(Digest.Digest, crypto));
             const { ontologyId, ontologyVersion, params } = envelope.payload;
-            const idempotencyKey = IdempotencyKey.make(
-              yield* computeIdempotencyKey(text, ontologyId, ontologyVersion, toExtractionParams(params)).pipe(
+            const yielded7 = yield* computeIdempotencyKey(text, ontologyId, ontologyVersion, toExtractionParams(params)).pipe(
                 Effect.provideService(Digest.Digest, crypto)
-              )
+              );
+const idempotencyKey = IdempotencyKey.make(
+              yielded7
             );
             const extractionError = toExtractionError(error);
             yield* runService.failRun(runId, "llm_error", extractionError.message).pipe(Effect.ignore);
             yield* Ref.update(cancellationRegistry, HashMap.remove(idempotencyKey));
-            return Stream.make(
-              yield* makeEvent(runId, "extraction_failed", 0, {
+            const yielded8 = yield* makeEvent(runId, "extraction_failed", 0, {
                 errorType: "extraction_error",
                 errorMessage: extractionError.message,
                 isRecoverable: false,
-              })
+              });
+return Stream.make(
+              yielded8
             );
           })
         ),
@@ -440,7 +448,8 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       if (O.isNone(run)) return yield* ExtractionError.make({ message: "Extraction not found" });
       if (P.isTagged(run.value.status, "Complete") || P.isTagged(run.value.status, "Failed")) return false;
 
-      const signal = HashMap.get(yield* Ref.get(cancellationRegistry), key);
+      const yielded9 = yield* Ref.get(cancellationRegistry);
+const signal = HashMap.get(yielded9, key);
       if (O.isSome(signal)) {
         yield* Deferred.succeed(signal.value, void 0);
         yield* Ref.update(cancellationRegistry, HashMap.remove(key));

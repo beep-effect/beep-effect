@@ -33,8 +33,10 @@ describe("extraction factory evidence", () => {
       const person = yield* decodePerson;
       const typeName = makeLocalNameSchema([person.id], "Type", "Class");
 
-      expect(yield* S.decodeEffect(typeName)("person")).toBe("person");
-      expect(yield* S.encodeEffect(typeName)("person")).toBe("Person");
+      const yielded1 = yield* S.decodeEffect(typeName)("person");
+expect(yielded1).toBe("person");
+      const yielded2 = yield* S.encodeEffect(typeName)("person");
+expect(yielded2).toBe("Person");
     })
   );
 

@@ -235,7 +235,8 @@ describe("durable activity boundaries", () => {
         );
 
         assert.strictEqual(output.claimsPersisted, 1);
-        assert.isTrue(Equal.equals(yield* Ref.get(persistedClaims), artifact.claims));
+        const yielded1 = yield* Ref.get(persistedClaims);
+assert.isTrue(Equal.equals(yielded1, artifact.claims));
       })
     );
 
@@ -278,7 +279,8 @@ describe("durable activity boundaries", () => {
           })
         ).execute.pipe(Effect.provideService(CrossBatchEntityResolver, resolver));
 
-        assert.strictEqual(yield* Ref.get(resolveCalls), 1);
+        const yielded2 = yield* Ref.get(resolveCalls);
+assert.strictEqual(yielded2, 1);
         assert.strictEqual(output.newCanonicals, 1);
       })
     );
@@ -297,7 +299,8 @@ describe("durable activity boundaries", () => {
 
         yield* TestClock.adjust(Duration.seconds(30));
 
-        assert.strictEqual(yield* Ref.get(attempts), 4);
+        const yielded3 = yield* Ref.get(attempts);
+assert.strictEqual(yielded3, 4);
         assert.isTrue(O.isSome(O.fromUndefinedOr(fiber.pollUnsafe())));
       })
     );

@@ -390,14 +390,15 @@ export class ClaimRepository extends Context.Service<ClaimRepository, ClaimRepos
     const getClaim: ClaimRepositoryShape["getClaim"] = dual(
       2,
       Effect.fn("getClaim")(function* (id: PersistedClaimId, ontologyId: string) {
-        const [result] = yield* decodeClaimRows(
-          yield* normalizeQueryError(
+        const yielded1 = yield* normalizeQueryError(
             drizzle
               .select()
               .from(claims)
               .where(and(eq(claims.id, id), eq(claims.ontologyId, ontologyId)))
               .limit(1)
-          )
+          );
+const [result] = yield* decodeClaimRows(
+          yielded1
         );
         return O.fromNullishOr(result);
       })
@@ -446,7 +447,8 @@ export class ClaimRepository extends Context.Service<ClaimRepository, ClaimRepos
       if (P.isNotUndefined(filter.offset)) {
         query = query.offset(filter.offset);
       }
-      return yield* decodeClaimRows(yield* normalizeQueryError(query));
+      const yielded2 = yield* normalizeQueryError(query);
+return yield* decodeClaimRows(yielded2);
     });
 
     // -------------------------------------------------------------------------
@@ -534,8 +536,9 @@ export class ClaimRepository extends Context.Service<ClaimRepository, ClaimRepos
     const insertCorrection: ClaimRepositoryShape["insertCorrection"] = Effect.fn("insertCorrection")(function* (
       correction: CorrectionInsertRow
     ) {
-      const [result] = yield* decodeCorrectionRows(
-        yield* normalizeQueryError(drizzle.insert(corrections).values(correction).returning())
+      const yielded3 = yield* normalizeQueryError(drizzle.insert(corrections).values(correction).returning());
+const [result] = yield* decodeCorrectionRows(
+        yielded3
       );
       return result;
     });
@@ -546,8 +549,9 @@ export class ClaimRepository extends Context.Service<ClaimRepository, ClaimRepos
     const getCorrection: ClaimRepositoryShape["getCorrection"] = Effect.fn("getCorrection")(function* (
       id: PersistedCorrectionId
     ) {
-      const [result] = yield* decodeCorrectionRows(
-        yield* normalizeQueryError(drizzle.select().from(corrections).where(eq(corrections.id, id)).limit(1))
+      const yielded4 = yield* normalizeQueryError(drizzle.select().from(corrections).where(eq(corrections.id, id)).limit(1));
+const [result] = yield* decodeCorrectionRows(
+        yielded4
       );
       return O.fromNullishOr(result);
     });
@@ -666,7 +670,8 @@ export class ClaimRepository extends Context.Service<ClaimRepository, ClaimRepos
       if (A.isReadonlyArrayNonEmpty(conditions)) {
         query = query.where(and(...conditions));
       }
-      const [result] = yield* decodeClaimCountRows(yield* normalizeQueryError(query));
+      const yielded5 = yield* normalizeQueryError(query);
+const [result] = yield* decodeClaimCountRows(yielded5);
       return result.count;
     });
 

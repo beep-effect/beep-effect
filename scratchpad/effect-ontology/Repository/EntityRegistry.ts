@@ -513,7 +513,8 @@ export class EntityRegistryRepository extends Context.Service<
             .where(and(eq(canonicalEntities.ontologyId, ontologyId), eq(canonicalEntities.id, id)))
             .limit(1)
         );
-        return A.head(yield* decodeCanonicalEntityDrizzleRows(rows));
+        const yielded1 = yield* decodeCanonicalEntityDrizzleRows(rows);
+return A.head(yielded1);
       })
     );
 
@@ -530,7 +531,8 @@ export class EntityRegistryRepository extends Context.Service<
             .where(and(eq(canonicalEntities.ontologyId, ontologyId), eq(canonicalEntities.iri, iri)))
             .limit(1)
         );
-        return A.head(yield* decodeCanonicalEntityDrizzleRows(rows));
+        const yielded2 = yield* decodeCanonicalEntityDrizzleRows(rows);
+return A.head(yielded2);
       })
     );
 
@@ -805,7 +807,8 @@ export class EntityRegistryRepository extends Context.Service<
             .where(and(eq(entityAliases.ontologyId, ontologyId), eq(entityAliases.mentionNormalized, normalized)))
             .limit(1)
         );
-        return A.head(yield* decodeEntityAliasDrizzleRows(rows));
+        const yielded3 = yield* decodeEntityAliasDrizzleRows(rows);
+return A.head(yielded3);
       })
     );
 

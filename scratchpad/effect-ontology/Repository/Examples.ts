@@ -491,7 +491,8 @@ export class ExamplesRepository extends Context.Service<ExamplesRepository, Exam
         const rows = yield* normalizeQueryError(
           drizzle.select().from(llmExamples).where(eq(llmExamples.id, id)).limit(1)
         );
-        return A.head(yield* decodeLlmExampleRows(rows));
+        const yielded1 = yield* decodeLlmExampleRows(rows);
+return A.head(yielded1);
       });
 
       /**

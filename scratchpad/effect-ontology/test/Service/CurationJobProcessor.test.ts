@@ -54,13 +54,15 @@ describe("CurationJobProcessor", () => {
           Effect.gen(function* () {
             yield* processor.runBackground(Duration.millis(5));
             yield* TestClock.adjust(Duration.millis(25));
-            assert.isAbove(yield* Ref.get(polls), 0);
+            const yielded1 = yield* Ref.get(polls);
+assert.isAbove(yielded1, 0);
           })
         );
 
         const pollsAtScopeClose = yield* Ref.get(polls);
         yield* TestClock.adjust(Duration.millis(25));
-        assert.strictEqual(yield* Ref.get(polls), pollsAtScopeClose);
+        const yielded2 = yield* Ref.get(polls);
+assert.strictEqual(yielded2, pollsAtScopeClose);
       })
     );
   });

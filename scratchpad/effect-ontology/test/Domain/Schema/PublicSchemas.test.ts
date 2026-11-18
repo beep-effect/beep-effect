@@ -1,3 +1,5 @@
+import * as Str from "effect/String";
+import * as R from "effect/Record";
 import { HttpUrl as CanonicalHttpUrl } from "@beep/ontology/Ontology.models";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
@@ -49,7 +51,7 @@ const schemaModules: ReadonlyArray<readonly [string, object]> = [
 ];
 
 const publicSchemas = A.flatMap(schemaModules, ([moduleName, moduleExports]) =>
-  A.filterMap(Object.entries(moduleExports), ([exportName, value]) =>
+  A.filterMap(R.toEntries(moduleExports), ([exportName, value]) =>
     /^[A-Z]/.test(exportName) && S.isSchema(value)
       ? Result.succeed({
           name: `${moduleName}.${exportName}`,
@@ -91,7 +93,7 @@ describe("effect-ontology public schema surface", () => {
     const request = decodeBatchRequestBatchRequestResult({
       ontologyId: "premier-league",
       ontologyUri: "gs://beep-ontology/football/premier-league.ttl",
-      ontologyVersion: `football/premier-league@${"a".repeat(64)}`,
+      ontologyVersion: `football/premier-league@${Str.repeat(64)("a")}`,
       targetNamespace: "football",
       documents: [
         {
@@ -103,7 +105,7 @@ describe("effect-ontology public schema surface", () => {
     const empty = decodeUnknownBatchRequestBatchRequestResult({
       ontologyId: "premier-league",
       ontologyUri: "gs://beep-ontology/football/premier-league.ttl",
-      ontologyVersion: `football/premier-league@${"a".repeat(64)}`,
+      ontologyVersion: `football/premier-league@${Str.repeat(64)("a")}`,
       targetNamespace: "football",
       documents: [],
     });

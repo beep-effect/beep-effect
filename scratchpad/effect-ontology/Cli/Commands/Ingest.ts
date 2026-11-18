@@ -102,8 +102,8 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
   const path = yield* Path.Path;
   const storage = yield* StorageService;
   const config = yield* ConfigService;
-  const randomA = (yield* Random.nextIntBetween(0, 16_777_216)).toString(16).padStart(6, "0");
-  const randomB = (yield* Random.nextIntBetween(0, 16_777_216)).toString(16).padStart(6, "0");
+  const randomA = Str.padStart(6, "0")((yield* Random.nextIntBetween(0, 16_777_216)).toString(16));
+  const randomB = Str.padStart(6, "0")((yield* Random.nextIntBetween(0, 16_777_216)).toString(16));
   const effectiveBatchId = yield* O.match(batchId, {
     onNone: () => Effect.succeed(BatchId.make(`batch-${randomA}${randomB}`)),
     onSome: S.decodeUnknownEffect(BatchId),
@@ -131,7 +131,8 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
     const filePath = path.join(dir, file);
     const stat = yield* fs.stat(filePath);
     const content = yield* fs.readFileString(filePath);
-    const docId = DocumentId.fromContentHash(ContentHash.make(yield* sha256SyncFull(content)));
+    const yielded1 = yield* sha256SyncFull(content);
+const docId = DocumentId.fromContentHash(ContentHash.make(yielded1));
     const storageKey = `${storagePrefix}/documents/${docId}`;
     yield* storage.set(storageKey, content);
     const contentType = Str.endsWith(".json")(file)
@@ -153,7 +154,8 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
   const ontologyContent = yield* fs.readFileString(ontology);
   const ontologyName = yield* S.decodeEffect(OntologyName)(ontologyId);
   const targetNamespace = yield* S.decodeEffect(Namespace)(namespace);
-  const ontologyHash = ContentHash.make(yield* sha256SyncFull(ontologyContent));
+  const yielded2 = yield* sha256SyncFull(ontologyContent);
+const ontologyHash = ContentHash.make(yielded2);
   const ontologyFilename = path.basename(ontology);
   const ontologyKey = `${storagePrefix}/ontology/${ontologyFilename}`;
   yield* storage.set(ontologyKey, ontologyContent);

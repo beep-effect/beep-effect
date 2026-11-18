@@ -101,8 +101,8 @@ const resolveBucket = (config: { storage: { bucket: O.Option<string> } }) =>
 const randomIdFragment = Effect.all([
   Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
   Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
-]).pipe(
-  Effect.map(A.map((part) => part.toString(16).padStart(8, "0"))),
+], { concurrency: 1 }).pipe(
+  Effect.map(A.map((part) => Str.padStart(8, "0")(part.toString(16)))),
   Effect.map(A.join("")),
   Effect.map(Str.takeLeft(12))
 );
@@ -162,7 +162,7 @@ const createManifest = Effect.fn("HttpServer.createManifest")(function* (request
         sizeBytes,
       };
     })
-  );
+  , { concurrency: 1 });
 
   return BatchManifest.make({
     batchId,
@@ -240,9 +240,10 @@ const claimRowToClaimWithRank = Effect.fn("HttpServer.claimRowToClaimWithRank")(
   const predicate = yield* S.decodeEffect(IRI)(claim.predicateIri);
   const rank = yield* ClaimRank.decodeEffect(claim.rank);
   const source = yield* articleRowToArticleSummary(article);
-  const object =
+  const yielded1 = yield* S.decodeEffect(IRI)(claim.objectValue);
+const object =
     claim.objectType === "iri"
-      ? makeNamedNode(yield* S.decodeEffect(IRI)(claim.objectValue))
+      ? makeNamedNode(yielded1)
       : makeLiteral(
           claim.objectValue,
           claim.objectDatatype ?? XSD_STRING.value,
@@ -302,8 +303,10 @@ const conflictRecordToClaimConflict = Effect.fn("HttpServer.conflictRecordToClai
         reason: "Conflict references a claim whose article is unavailable in the ontology scope.",
       })
     );
-  const claimA = yield* claimRowToClaimWithRank(record.claimA, yield* requireArticle(articleA, record.claimA.id));
-  const claimB = yield* claimRowToClaimWithRank(record.claimB, yield* requireArticle(articleB, record.claimB.id));
+  const yielded2 = yield* requireArticle(articleA, record.claimA.id);
+const claimA = yield* claimRowToClaimWithRank(record.claimA, yielded2);
+  const yielded3 = yield* requireArticle(articleB, record.claimB.id);
+const claimB = yield* claimRowToClaimWithRank(record.claimB, yielded3);
   const base = {
     id: record.conflict.id,
     ontologyId: record.conflict.ontologyId,
@@ -414,9 +417,10 @@ export const TimelineRouter = HttpRouter.addAll([
           if (O.isNone(articleOpt)) {
             return O.none<ClaimWithRank>();
           }
-          return O.some(yield* claimRowToClaimWithRank(claim, articleOpt.value));
+          const yielded4 = yield* claimRowToClaimWithRank(claim, articleOpt.value);
+return O.some(yielded4);
         })
-      );
+      , { concurrency: 1 });
 
       const validClaims = A.filter(A.getSomes(claimsWithArticles), (claim) => {
         const claimedAt = DateTime.toEpochMillis(claim.transactionTime.assertedAt);
@@ -507,9 +511,10 @@ export const TimelineRouter = HttpRouter.addAll([
           if (O.isSome(queryParams.source) && articleOpt.value.sourceName !== queryParams.source.value) {
             return O.none<ClaimWithRank>();
           }
-          return O.some(yield* claimRowToClaimWithRank(claim, articleOpt.value));
+          const yielded5 = yield* claimRowToClaimWithRank(claim, articleOpt.value);
+return O.some(yielded5);
         })
-      );
+      , { concurrency: 1 });
 
       const validClaims = A.getSomes(claimsWithArticles);
 
@@ -570,7 +575,7 @@ export const TimelineRouter = HttpRouter.addAll([
       const claims = yield* claimRepo.getClaimsByArticle(articleId, queryParams.ontologyId);
 
       // Transform claims
-      const claimsWithRank = yield* Effect.forEach(claims, (claim) => claimRowToClaimWithRank(claim, article));
+      const claimsWithRank = yield* Effect.forEach(claims, (claim) => claimRowToClaimWithRank(claim, article), { concurrency: 1 });
 
       // Count unique entities (subjects)
       const uniqueSubjects = HashSet.fromIterable(A.map(claims, (claim) => claim.subjectIri));
@@ -604,7 +609,7 @@ export const TimelineRouter = HttpRouter.addAll([
       const counts = yield* conflictRepo.counts(query);
       return yield* HttpServerResponse.schemaJson(ConflictsResponse)(
         ConflictsResponse.make({
-          conflicts: yield* Effect.forEach(records, conflictRecordToClaimConflict),
+          conflicts: yield* Effect.forEach(records, conflictRecordToClaimConflict, { concurrency: 1 }),
           total: S.Natural.make(counts.total),
           pendingCount: S.Natural.make(counts.pending),
         })
@@ -628,8 +633,9 @@ export const TimelineRouter = HttpRouter.addAll([
       const transitioned = yield* conflictRepo.transition(query.ontologyId, id, action, actor);
 
       if (O.isSome(transitioned)) {
-        return yield* HttpServerResponse.schemaJson(ClaimConflict)(
-          yield* conflictRecordToClaimConflict(transitioned.value)
+        const yielded6 = yield* conflictRecordToClaimConflict(transitioned.value);
+return yield* HttpServerResponse.schemaJson(ClaimConflict)(
+          yielded6
         );
       }
 
@@ -738,9 +744,10 @@ export const SearchRouter = HttpRouter.addAll([
                   return O.none<ClaimWithRank>();
                 }
               }
-              return O.some(yield* claimRowToClaimWithRank(claim, article));
+              const yielded7 = yield* claimRowToClaimWithRank(claim, article);
+return O.some(yielded7);
             })
-          );
+          , { concurrency: 1 });
 
           const filteredClaims = A.getSomes(claimsWithArticles);
           const validClaims = A.take(A.drop(filteredClaims, offset), limit);
@@ -833,7 +840,7 @@ export const SearchRouter = HttpRouter.addAll([
           const entities = yield* Effect.forEach(entityCandidates, (entity) =>
             Effect.gen(function* () {
               const iri = yield* S.decodeEffect(IRI)(entity.iri);
-              const types = yield* Effect.forEach(A.fromIterable(entity.types), (type) => S.decodeEffect(IRI)(type));
+              const types = yield* Effect.forEach(A.fromIterable(entity.types), (type) => S.decodeEffect(IRI)(type), { concurrency: 1 });
               const label = O.filter(A.last(Str.split(/[#/]/)(entity.iri)), Str.isNonEmpty);
               return EntitySearchResult.make({
                 iri,
@@ -843,7 +850,7 @@ export const SearchRouter = HttpRouter.addAll([
                 topClaims: [],
               });
             })
-          );
+          , { concurrency: 1 });
 
           return yield* HttpServerResponse.schemaJson(EntitySearchResponse)(
             EntitySearchResponse.make({
@@ -914,7 +921,7 @@ export const SearchRouter = HttpRouter.addAll([
             })
           )
         )
-      );
+      , { concurrency: 1 });
 
       return yield* HttpServerResponse.schemaJson(SuggestionsResponse)(
         SuggestionsResponse.make({
@@ -1000,7 +1007,7 @@ export const SearchRouter = HttpRouter.addAll([
                 conflictCount: S.Natural.make(conflictCounts.total),
               });
             })
-          );
+          , { concurrency: 1 });
 
           const total = S.Natural.make(filtered.length);
 
@@ -1042,7 +1049,8 @@ const startExtraction = Effect.fn("startExtraction")(function* (request: BatchRe
 
 const extractionRouteHandler = Effect.gen(function* () {
   const request = yield* HttpServerRequest.HttpServerRequest;
-  const decoded = BatchRequest.decodeUnknownOption(yield* request.json);
+  const yielded8 = yield* request.json;
+const decoded = BatchRequest.decodeUnknownOption(yielded8);
   if (O.isNone(decoded)) {
     return yield* HttpServerResponse.json(
       { error: "VALIDATION_ERROR", message: "Invalid batch extraction request" },
@@ -1130,7 +1138,8 @@ export const HealthRouter = HttpRouter.addAll([
     "/health/live",
     Effect.gen(function* () {
       const health = yield* HealthCheckService;
-      return yield* HttpServerResponse.json(yield* health.liveness());
+      const yielded9 = yield* health.liveness();
+return yield* HttpServerResponse.json(yielded9);
     })
   ),
   HttpRouter.route(
@@ -1280,7 +1289,8 @@ const makeHttpServerLive = <A, E, R>(apiRouter: Layer.Layer<A, E, R>) =>
                 if (Cause.hasInterrupts(cause)) {
                   return yield* Effect.failCause(cause);
                 }
-                const requestId = Math.abs(yield* Random.nextInt).toString(16);
+                const yielded10 = yield* Random.nextInt;
+const requestId = Math.abs(yielded10).toString(16);
 
                 yield* Effect.logError("Unhandled error in HTTP handler", {
                   requestId,

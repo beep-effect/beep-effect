@@ -114,7 +114,7 @@ const cleanupStaleHandler = Effect.fn("cleanupStaleHandler")(function* (
       limit: 1000,
     });
     const cutoffDate = DateTime.toDateUtc(DateTime.makeUnsafe((yield* Clock.currentTimeMillis) - minutes * 60 * 1000));
-    const staleCandidates = staleLinks.filter((link) => link.updatedAt && link.updatedAt < cutoffDate);
+    const staleCandidates = A.filter(staleLinks, (link) => link.updatedAt && link.updatedAt < cutoffDate);
     if (A.isReadonlyArrayEmpty(staleCandidates)) {
       yield* Console.log("No stale links would be cleaned up.");
       return;
@@ -162,8 +162,8 @@ const reEnrichHandler = Effect.fn("reEnrichHandler")(function* (
   yield* Console.log("");
   yield* Console.log(`  Status: ${link.status}`);
   yield* Console.log(`  Headline: ${link.headline}`);
-  yield* Console.log(`  Topics: ${link.topics?.join(", ") || "(none)"}`);
-  yield* Console.log(`  Key Entities: ${link.keyEntities?.join(", ") || "(none)"}`);
+  yield* A.log(Console, `  Topics: ${link.topics?.join(", ") || "(none)"}`);
+  yield* A.log(Console, `  Key Entities: ${link.keyEntities?.join(", ") || "(none)"}`);
 });
 
 const reEnrichCommand = Command.make("re-enrich", { linkId: linkIdOption }, ({ linkId }) =>

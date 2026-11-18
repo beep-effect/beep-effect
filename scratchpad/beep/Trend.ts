@@ -64,7 +64,7 @@ export type TrendEnum = typeof TrendEnum.Type;
  * @since 0.0.0
  */
 export declare namespace TrendEnum {
-  export type Encoded = S.Codec.Encoded<typeof TrendEnum>;
+  export type Encoded = typeof TrendEnum.Encoded;
 }
 
 /**
@@ -107,7 +107,7 @@ export type TrendType = typeof TrendType.Type;
  * @since 0.0.0
  */
 export declare namespace TrendType {
-  export type Encoded = S.Codec.Encoded<typeof TrendType>;
+  export type Encoded = typeof TrendType.Encoded;
 }
 
 /**
@@ -451,5 +451,5 @@ export class Trend extends Model<Trend>("Trend")(
  * @since 0.0.0
  */
 export declare namespace Trend {
-  export type Encoded = S.Codec.Encoded<typeof Trend>;
+  export type Encoded = typeof Trend.Encoded;
 }

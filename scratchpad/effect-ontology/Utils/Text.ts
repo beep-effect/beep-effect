@@ -113,8 +113,7 @@ export const tokenizeMentionForBlocking = (mention: string): Array<string> =>
  * @since 0.0.0
  */
 export const splitCamelCase = (text: string): string =>
-  text
-    .replace(/([a-z])([A-Z])/g, "$1 $2") // Insert space before capital letters
+  Str.replace(/([a-z])([A-Z])/g, "$1 $2")(text) // Insert space before capital letters
     .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2") // Handle consecutive capitals
     .trim();
 
@@ -152,7 +151,7 @@ export const generateNGrams = dual2((tokens: ReadonlyArray<string>, n: number): 
 
   const ngrams: Array<string> = [];
   for (let i = 0; i <= tokens.length - n; i++) {
-    ngrams.push(tokens.slice(i, i + n).join(" "));
+    ngrams.push(A.join(tokens.slice(i, i + n), " "));
   }
   return ngrams;
 });
@@ -189,8 +188,7 @@ export const enhanceTextForSearch = dual2((text: string, ngramSize: number): str
   const camelCaseSplit = splitCamelCase(text);
 
   // Tokenize (split on whitespace and normalize)
-  const tokens = camelCaseSplit
-    .toLowerCase()
+  const tokens = Str.toLowerCase(camelCaseSplit)
     .split(/\s+/)
     .filter((t) => t.length > 0);
 
@@ -205,5 +203,5 @@ export const enhanceTextForSearch = dual2((text: string, ngramSize: number): str
     }
   }
 
-  return parts.join(" ");
+  return A.join(parts, " ");
 });

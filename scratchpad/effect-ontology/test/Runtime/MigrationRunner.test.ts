@@ -38,10 +38,10 @@ describe("effect-ontology migrations", { concurrent: false }, () => {
         const migrationNames = yield* fs.readDirectory(migrationsFolder);
         const customSql = yield* Effect.forEach(A.filter(migrationNames, Str.endsWith("_postgres_features")), (name) =>
           fs.readFileString(`${migrationsFolder}/${name}/migration.sql`)
-        );
+        , { concurrency: 1 });
         const baselineSql = yield* Effect.forEach(A.filter(migrationNames, Str.endsWith("_baseline")), (name) =>
           fs.readFileString(`${migrationsFolder}/${name}/migration.sql`)
-        );
+        , { concurrency: 1 });
         const sql = A.join(customSql, "\n");
         const baseline = A.join(baselineSql, "\n");
 

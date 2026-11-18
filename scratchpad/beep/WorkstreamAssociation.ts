@@ -82,7 +82,7 @@ export class WorkstreamAssociationError extends S.TaggedError<WorkstreamAssociat
  */
 export declare namespace WorkstreamAssociationError {
   /** Encoded form of {@link WorkstreamAssociationError}. */
-  export type Encoded = S.Codec.Encoded<typeof WorkstreamAssociationError>;
+  export type Encoded = typeof WorkstreamAssociationError.Encoded;
 }
 
 /**
@@ -136,7 +136,7 @@ export class AssociationEvidence extends Model<AssociationEvidence>("Association
  */
 export declare namespace AssociationEvidence {
   /** Encoded form of {@link AssociationEvidence}. */
-  export type Encoded = S.Codec.Encoded<typeof AssociationEvidence>;
+  export type Encoded = typeof AssociationEvidence.Encoded;
 }
 
 /**
@@ -179,7 +179,7 @@ export class AssociationCandidateView extends Model<AssociationCandidateView>("A
  */
 export declare namespace AssociationCandidateView {
   /** Encoded form of {@link AssociationCandidateView}. */
-  export type Encoded = S.Codec.Encoded<typeof AssociationCandidateView>;
+  export type Encoded = typeof AssociationCandidateView.Encoded;
 }
 
 /**
@@ -226,7 +226,7 @@ export class AssociationAdjudicationInput extends Model<AssociationAdjudicationI
  */
 export declare namespace AssociationAdjudicationInput {
   /** Encoded form of {@link AssociationAdjudicationInput}. */
-  export type Encoded = S.Codec.Encoded<typeof AssociationAdjudicationInput>;
+  export type Encoded = typeof AssociationAdjudicationInput.Encoded;
 }
 
 /**
@@ -315,7 +315,7 @@ export class AssociationJudgment extends Model<AssociationJudgment>("Association
  */
 export declare namespace AssociationJudgment {
   /** Encoded form of {@link AssociationJudgment}. */
-  export type Encoded = S.Codec.Encoded<typeof AssociationJudgment>;
+  export type Encoded = typeof AssociationJudgment.Encoded;
 }
 
 const decodeUnknownEffectAssociationJudgment = S.decodeUnknownEffect(AssociationJudgment);
@@ -471,7 +471,7 @@ export class AssociationOutcome extends Model<AssociationOutcome>("AssociationOu
  */
 export declare namespace AssociationOutcome {
   /** Encoded form of {@link AssociationOutcome}. */
-  export type Encoded = S.Codec.Encoded<typeof AssociationOutcome>;
+  export type Encoded = typeof AssociationOutcome.Encoded;
 }
 
 /**
@@ -526,7 +526,7 @@ export class WorkstreamIndexRebuildReport extends Model<WorkstreamIndexRebuildRe
  */
 export declare namespace WorkstreamIndexRebuildReport {
   /** Encoded form of {@link WorkstreamIndexRebuildReport}. */
-  export type Encoded = S.Codec.Encoded<typeof WorkstreamIndexRebuildReport>;
+  export type Encoded = typeof WorkstreamIndexRebuildReport.Encoded;
 }
 
 /**
@@ -604,7 +604,7 @@ export class RecurrenceConsumptionOutcome extends Model<RecurrenceConsumptionOut
  */
 export declare namespace RecurrenceConsumptionOutcome {
   /** Encoded form of {@link RecurrenceConsumptionOutcome}. */
-  export type Encoded = S.Codec.Encoded<typeof RecurrenceConsumptionOutcome>;
+  export type Encoded = typeof RecurrenceConsumptionOutcome.Encoded;
 }
 
 /**
@@ -701,5 +701,5 @@ export class RecurrenceInboxReceipt extends Model<RecurrenceInboxReceipt>("Recur
  */
 export declare namespace RecurrenceInboxReceipt {
   /** Encoded form of {@link RecurrenceInboxReceipt}. */
-  export type Encoded = S.Codec.Encoded<typeof RecurrenceInboxReceipt>;
+  export type Encoded = typeof RecurrenceInboxReceipt.Encoded;
 }

@@ -322,7 +322,7 @@ export const buildLocalNameToIriMapSafe = (iris: ReadonlyArray<IRI>): LocalNameM
   const allByLocalName = MutableHashMap.empty<string, Array<IRI>>();
 
   for (const iri of iris) {
-    const localName = extractLocalNameFromIri(iri).toLowerCase();
+    const localName = Str.toLowerCase(extractLocalNameFromIri(iri));
 
     // Track all IRIs for this local name
     const existing = MutableHashMap.get(allByLocalName, localName).pipe(O.getOrElse(A.empty<IRI>));

@@ -207,7 +207,7 @@ export type SpeakerIdentityStatus = typeof SpeakerIdentityStatus.Type;
  * @since 0.0.0
  */
 export declare namespace SpeakerIdentityStatus {
-  export type Encoded = S.Codec.Encoded<typeof SpeakerIdentityStatus>;
+  export type Encoded = typeof SpeakerIdentityStatus.Encoded;
 }
 
 /**
@@ -243,7 +243,7 @@ export class Translation extends Model<Translation>("Translation")(
  * @since 0.0.0
  */
 export declare namespace Translation {
-  export type Encoded = S.Codec.Encoded<typeof Translation>;
+  export type Encoded = typeof Translation.Encoded;
 }
 
 const finiteColumn = (column: string) => S.Finite.pipe(pg.doublePrecision(), pg.columnName(column));
@@ -319,7 +319,7 @@ export class TranscriptSegment extends Model<TranscriptSegment>("TranscriptSegme
  * @since 0.0.0
  */
 export declare namespace TranscriptSegment {
-  export type Encoded = S.Codec.Encoded<typeof TranscriptSegment>;
+  export type Encoded = typeof TranscriptSegment.Encoded;
 }
 
 /**
@@ -658,7 +658,7 @@ export class CombineSegmentsResult extends Model<CombineSegmentsResult>("Combine
  * @since 0.0.0
  */
 export declare namespace CombineSegmentsResult {
-  export type Encoded = S.Codec.Encoded<typeof CombineSegmentsResult>;
+  export type Encoded = typeof CombineSegmentsResult.Encoded;
 }
 
 /**
@@ -966,7 +966,7 @@ export class ImprovedTranscriptSegment extends Model<ImprovedTranscriptSegment>(
  * @since 0.0.0
  */
 export declare namespace ImprovedTranscriptSegment {
-  export type Encoded = S.Codec.Encoded<typeof ImprovedTranscriptSegment>;
+  export type Encoded = typeof ImprovedTranscriptSegment.Encoded;
 }
 
 /**
@@ -1001,5 +1001,5 @@ export class ImprovedTranscript extends Model<ImprovedTranscript>("ImprovedTrans
  * @since 0.0.0
  */
 export declare namespace ImprovedTranscript {
-  export type Encoded = S.Codec.Encoded<typeof ImprovedTranscript>;
+  export type Encoded = typeof ImprovedTranscript.Encoded;
 }

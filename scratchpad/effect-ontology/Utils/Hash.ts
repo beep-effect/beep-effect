@@ -133,7 +133,8 @@ export const sha256SyncFull = sha256;
  * @since 0.0.0
  */
 export const sha256Sync = Effect.fn("Hash.sha256Sync")(function* (input: string) {
-  return Str.slice(0, 16)(yield* sha256(input));
+  const yielded1 = yield* sha256(input);
+return Str.slice(0, 16)(yielded1);
 });
 
 /**

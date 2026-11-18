@@ -160,8 +160,8 @@ const readInputText = Effect.fn("Extract.readInputText")(function* (
  * Create a content hash from text (for OntologyRef)
  */
 const createContentHash = (content: string): string => {
-  const hash = Bun.hash(content).toString(16).padStart(16, "0");
-  return hash.slice(0, 16);
+  const hash = Str.padStart(16, "0")(Bun.hash(content).toString(16));
+  return Str.slice(0, 16)(hash);
 };
 
 // =============================================================================

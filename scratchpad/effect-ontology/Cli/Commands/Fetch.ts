@@ -78,11 +78,11 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
       `  Title: ${content.title}`,
       ...(O.isSome(content.siteName) ? [`  Site: ${content.siteName.value}`] : []),
       ...(O.isSome(content.publishedDate) ? [`  Published: ${content.publishedDate.value}`] : []),
-      ...(O.isSome(content.description) ? [`  Description: ${content.description.value.slice(0, 100)}...`] : []),
+      ...(O.isSome(content.description) ? [`  Description: ${Str.slice(0, 100)(content.description.value)}...`] : []),
       `  Word count: ${content.wordCount}`,
       "---",
     ];
-    yield* Console.log(metadataLines.join("\n"));
+    yield* Console.log(A.join(metadataLines, "\n"));
   }
   if (enrich) {
     yield* Console.log("Running AI enrichment...\n(Note: Enrichment requires LLM service to be configured)");
@@ -110,19 +110,19 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
         ...(O.isSome(enriched.author) ? [`  Author: ${enriched.author.value}`] : []),
         ...(O.isSome(enriched.organization) ? [`  Organization: ${enriched.organization.value}`] : []),
         ...(O.isSome(enriched.publishedAt) ? [`  Published: ${DateTime.formatIso(enriched.publishedAt.value)}`] : []),
-        `  Key entities: ${enriched.keyEntities.join(", ")}`,
-        `  Topics: ${enriched.topics.join(", ")}`,
+        `  Key entities: ${A.join(enriched.keyEntities, ", ")}`,
+        `  Topics: ${A.join(enriched.topics, ", ")}`,
         `  Language: ${enriched.language}`,
         `  Word count: ${enriched.wordCount}`,
         "---",
       ];
-      yield* Console.log(enrichedLines.join("\n"));
+      yield* Console.log(A.join(enrichedLines, "\n"));
     } else {
       yield* Console.log("  Enrichment service not available. Configure LLM to enable.\n---");
     }
   }
   const maxLength = O.getOrElse(truncate, () => content.content.length);
-  const displayContent = content.content.slice(0, maxLength);
+  const displayContent = Str.slice(0, maxLength)(content.content);
   const truncated = content.content.length > maxLength;
   const contentOutput = truncated
     ? `Content:\n${displayContent}\n\n... [truncated, ${content.content.length - maxLength} more chars]`
@@ -224,7 +224,7 @@ const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
         ...(P.isNotUndefined(result.wordCount) ? [`  Word count: ${result.wordCount}`] : []),
       ];
 
-  yield* Console.log(outputLines.join("\n"));
+  yield* Console.log(A.join(outputLines, "\n"));
 });
 
 /**
@@ -331,14 +331,14 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
         `  Hash: ${Str.slice(0, 12)(doc.contentHash)}...`,
         ...(P.isNotNull(doc.sourceUri) ? [`  URL: ${doc.sourceUri}`] : []),
         ...(P.isNotNull(doc.headline)
-          ? [`  Title: ${doc.headline.slice(0, 60)}${doc.headline.length > 60 ? "..." : ""}`]
+          ? [`  Title: ${Str.slice(0, 60)(doc.headline)}${doc.headline.length > 60 ? "..." : ""}`]
           : []),
         ...(P.isNotNull(doc.sourceType) ? [`  Type: ${doc.sourceType}`] : []),
         ...(P.isNotNull(doc.organization) ? [`  Org: ${doc.organization}`] : []),
         ...(P.isNotNull(doc.wordCount) ? [`  Words: ${doc.wordCount}`] : []),
         "",
       ];
-      return lines.join("\n");
+      return A.join(lines, "\n");
     };
     const formattedDocs = A.map(documents, formatDocument);
     const output = A.join([`Ingested documents (${documents.length}):`, "", ...formattedDocs], "\n");
@@ -432,7 +432,7 @@ const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
         );
       }
     }
-  });
+  }, { concurrency: 1 });
   const errors = A.filter(results, LinkIngestionError.is);
   const successes = A.filter(results, (result): result is IngestResult => !LinkIngestionError.is(result));
   const counts = {
