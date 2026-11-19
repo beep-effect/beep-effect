@@ -1,8 +1,10 @@
 // AC-L1, AC-L2 and AC-L3 as properties over inputs generated from the report
 // schema's arbitrary: verdict first and last, silent on success, bounded.
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
+import { verdictWord } from "@beep/gate-report/Classify";
 import { ConsoleBudget, ConsoleDocument, ConsoleEntry } from "@beep/gate-report/ConsoleDocument";
 import { ConsoleInput, dispatch } from "@beep/gate-report/Dispatch";
+import { formatDuration } from "@beep/gate-report/Format";
 import { GateReport } from "@beep/gate-report/GateReport";
 import { fitDocument, projectLines } from "@beep/gate-report/PlainText";
 import { assert, describe, it } from "@effect/vitest";
@@ -10,11 +12,25 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 import { agentBudget } from "./support/builders.ts";
+import type { FailureEntry } from "@beep/gate-report/ConsoleDocument";
 
 const runs = { arbitrary: fcRuns(100) };
 
 const size = (lines: ReadonlyArray<string>): number => A.reduce(lines, 0, (total, line) => total + line.length + 1);
+
+/** Project one failure entry alone and count its projected lines and the diff lines among them. */
+const projectEntry = (document: ConsoleDocument, entry: FailureEntry, budget: ConsoleBudget) => {
+  const single = ConsoleDocument.make({ ...document, entries: [entry], folds: [], cap: O.none() });
+  const kept = fitDocument({ document: single, budget }).entries.length === 1;
+  const lines = projectLines({ document: single, budget });
+  const tail = A.filter([O.isSome(single.delta), O.isSome(single.path), O.isSome(single.pointer)], Boolean).length;
+  const entryLines = kept ? lines.length - 2 - tail : 0;
+  const header = kept ? 1 : 0;
+  const message = kept && O.isSome(entry.message) ? 1 : 0;
+  return { kept, entryLines, diffLines: entryLines - header - message };
+};
 
 const inputs = Arbitrary.schema(ConsoleInput);
 const budgets = Arbitrary.schema(ConsoleBudget);
@@ -32,6 +48,25 @@ describe("console laws", () => {
         assert.isTrue(A.isReadonlyArrayNonEmpty(lines));
         assert.strictEqual(lines[0], lines[lines.length - 1]);
         assert.deepStrictEqual(projectLines({ document: verdictOnly, budget }), A.take(lines, 1));
+      }),
+    runs
+  );
+
+  it.effect.prop(
+    "AC-L1: the verdict word, counts and duration survive on both verdict lines whenever they fit the line limit",
+    [documents, budgets],
+    ([document, budget]) =>
+      Effect.sync(() => {
+        const verdict = document.verdict;
+        const result = Str.replace(
+          /[\u0000-\u001f\u007f]/gu,
+          " "
+        )(`: ${verdictWord(verdict.reason)}, ${verdict.counts} (${formatDuration(verdict.durationMs)})`);
+        const lines = projectLines({ document, budget });
+        if (result.length + 4 <= budget.maxLineChars) {
+          assert.include(lines[0] ?? "", result);
+          assert.include(lines[lines.length - 1] ?? "", result);
+        }
       }),
     runs
   );
@@ -58,15 +93,15 @@ describe("console laws", () => {
       Effect.sync(() => {
         const lines = projectLines({ document, budget });
         const fitted = fitDocument({ document, budget });
-        const dropped = document.entries.length + document.folds.length - fitted.entries.length - fitted.folds.length;
+        const prior = O.getOrElse(
+          O.map(document.cap, (cap) => cap.dropped),
+          () => 0
+        );
+        const dropped =
+          prior + document.entries.length + document.folds.length - fitted.entries.length - fitted.folds.length;
         assert.isAtMost(size(lines), budget.maxChars);
         for (const line of lines) {
           assert.isAtMost(line.length, budget.maxLineChars);
-        }
-        for (const entry of fitted.entries) {
-          if (ConsoleEntry.guards.FailureEntry(entry)) {
-            assert.isAtMost(A.take(entry.diff, budget.maxDiffLines).length, budget.maxDiffLines);
-          }
         }
         assert.strictEqual(
           O.getOrElse(
@@ -87,19 +122,14 @@ describe("console laws", () => {
     [documents, budgets],
     ([document, budget]) =>
       Effect.sync(() => {
-        for (const entry of document.entries) {
-          if (ConsoleEntry.guards.FailureEntry(entry)) {
-            const single = ConsoleDocument.make({ ...document, entries: [entry], folds: [], cap: O.none() });
-            const fitted = fitDocument({ document: single, budget });
-            const lines = projectLines({ document: single, budget });
-            const tail = A.filter(
-              [O.isSome(single.delta), O.isSome(single.path), O.isSome(single.pointer)],
-              Boolean
-            ).length;
-            const entryLines = fitted.entries.length === 1 ? lines.length - 2 - tail : 0;
-            assert.isAtMost(entryLines, 2 + budget.maxDiffLines);
-            assert.isAtLeast(entryLines, fitted.entries.length);
-          }
+        for (const entry of A.filter(document.entries, ConsoleEntry.guards.FailureEntry)) {
+          const projected = projectEntry(document, entry, budget);
+          assert.isAtMost(projected.entryLines, 2 + budget.maxDiffLines);
+          assert.isAtMost(projected.diffLines, budget.maxDiffLines);
+          assert.strictEqual(
+            projected.diffLines,
+            projected.kept ? Math.min(entry.diff.length, budget.maxDiffLines) : 0
+          );
         }
       }),
     runs

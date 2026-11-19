@@ -9,12 +9,49 @@
 import { $GateReportId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { flow } from "effect/Function";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { optionalSlot } from "./internal/slots.ts";
 import { Text } from "./Scalars.ts";
 import { FailureKind } from "./Vocabulary.ts";
 
 const $I = $GateReportId.create("ItemKey");
+
+/**
+ * The ordinal of a repeated diagnostic occurrence within one run, from 2.
+ *
+ * **Details**
+ *
+ * The first occurrence of a diagnostic key carries no ordinal, so a key and
+ * its fingerprint stay the same across runs whenever a diagnostic occurs once.
+ *
+ * **Example** (Check an ordinal)
+ *
+ * ```ts
+ * import { Occurrence } from "@beep/gate-report/ItemKey";
+ * import * as S from "effect/Schema";
+ *
+ * console.log(S.is(Occurrence)(2)); // true
+ * console.log(S.is(Occurrence)(1)); // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const Occurrence = S.Int.check(S.isGreaterThanOrEqualTo(2)).pipe(
+  $I.annoteSchema("Occurrence", {
+    description: "The ordinal of a repeated diagnostic occurrence within one run, from 2; the first has none.",
+  })
+);
+
+/**
+ * Type of {@link Occurrence}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type Occurrence = typeof Occurrence.Type;
 
 /**
  * The key of an item: a tagged union over tests, diagnostics and faults.
@@ -24,7 +61,10 @@ const $I = $GateReportId.create("ItemKey");
  * A test key carries the file, so same-named tests in two files stay
  * distinct (upstream's flat `fullName` map collides). A diagnostic key carries
  * the message shape, with quoted literals and numbers normalized out, so a
- * diagnostic keeps its key when a line moves or a type name changes.
+ * diagnostic keeps its key when a line moves or a type name changes. Two
+ * diagnostics with the same file, code and shape at different locations in
+ * one run are told apart by `occurrence`, which the reducer assigns: absent
+ * for the first, 2 and up for the rest.
  *
  * **Example** (Build a test key)
  *
@@ -40,7 +80,7 @@ const $I = $GateReportId.create("ItemKey");
  */
 export const ItemKey = S.TaggedUnion({
   TestKey: { file: Text, fullName: S.String },
-  DiagnosticKey: { file: Text, code: Text, shape: S.String },
+  DiagnosticKey: { file: Text, code: Text, shape: S.String, occurrence: optionalSlot(Occurrence) },
   FaultKey: { unit: Text, kind: FailureKind, name: S.String },
 }).pipe(
   $I.annoteSchema("ItemKey", {
@@ -131,7 +171,14 @@ export class DiagnosticKeyInput extends S.Opaque<DiagnosticKeyInput, { readonly 
 export const diagnosticKey = (input: DiagnosticKeyInput): typeof ItemKey.cases.DiagnosticKey.Type =>
   ItemKey.cases.DiagnosticKey.make({ file: input.file, code: input.code, shape: messageShape(input.message) });
 
-const SEPARATOR = "\u001f";
+const field = (value: string): string => `|${value.length}:${value}`;
+
+const encodeKey = (tag: string, fields: ReadonlyArray<string>): string => `${tag}${A.join(A.map(fields, field), "")}`;
+
+const occurrenceSuffix: (occurrence: O.Option<Occurrence>) => string = flow(
+  O.map((ordinal) => `#${ordinal}`),
+  O.getOrElse(() => "")
+);
 
 /**
  * The key as one string, the fingerprint SARIF and CTRF carry and the index a
@@ -139,8 +186,11 @@ const SEPARATOR = "\u001f";
  *
  * **Details**
  *
- * Fields are joined with the ASCII unit separator, which no file path, test
- * name or message shape contains in practice.
+ * The fingerprint is the key tag followed by each field as `|<length>:<text>`,
+ * lengths in UTF-16 code units, and `#<ordinal>` for a repeated diagnostic
+ * occurrence. Every field can be read back by its length, so the encoding is
+ * injective: two keys have the same fingerprint exactly when they are equal,
+ * whatever characters their fields contain.
  *
  * **Example** (Fingerprint a key)
  *
@@ -155,9 +205,10 @@ const SEPARATOR = "\u001f";
  * @since 0.0.0
  */
 export const fingerprint: (key: ItemKey) => string = ItemKey.match({
-  TestKey: (key) => A.join(["test", key.file, key.fullName], SEPARATOR),
-  DiagnosticKey: (key) => A.join(["diagnostic", key.file, key.code, key.shape], SEPARATOR),
-  FaultKey: (key) => A.join(["fault", key.unit, key.kind, key.name], SEPARATOR),
+  TestKey: (key) => encodeKey("test", [key.file, key.fullName]),
+  DiagnosticKey: (key) =>
+    `${encodeKey("diagnostic", [key.file, key.code, key.shape])}${occurrenceSuffix(key.occurrence)}`,
+  FaultKey: (key) => encodeKey("fault", [key.unit, key.kind, key.name]),
 });
 
 /**

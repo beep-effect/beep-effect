@@ -6,7 +6,9 @@
  * @since 0.0.0
  */
 import { $GateReportId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import { flow } from "effect/Function";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { optionalSlot } from "./internal/slots.ts";
@@ -94,10 +96,27 @@ const patternSuffix: (pattern: O.Option<string>) => string = flow(
   O.getOrElse(() => "")
 );
 
-const percent = (value: number): string => `${Math.round(value * 10) / 10}%`;
+const DIGITS: ReadonlyArray<number> = [1, 2, 3, 4, 5, 6];
+
+const precisionFor = (actual: number, expected: number): number =>
+  O.getOrElse(
+    A.findFirst(DIGITS, (digits) => Num.round(actual, digits) !== Num.round(expected, digits)),
+    () => 6
+  );
+
+const comparison = (actual: number, expected: number): string => {
+  const digits = precisionFor(actual, expected);
+  return `${Num.round(actual, digits)}% < ${Num.round(expected, digits)}%`;
+};
 
 /**
  * The one console line a breach renders as.
+ *
+ * **Details**
+ *
+ * Coverage percentages print to one decimal, and with up to six when one
+ * decimal would show equal numbers, so `79.99` against `80` reads
+ * `79.99% < 80%`.
  *
  * **Example** (Render a coverage breach)
  *
@@ -113,7 +132,7 @@ const percent = (value: number): string => `${Math.round(value * 10) / 10}%`;
  */
 export const breachLine: (breach: PolicyBreach) => string = PolicyBreach.match({
   CoverageBreach: (breach) =>
-    `coverage ${breach.metric} ${percent(breach.actual)} < ${percent(breach.expected)}${patternSuffix(breach.pattern)}`,
+    `coverage ${breach.metric} ${comparison(breach.actual, breach.expected)}${patternSuffix(breach.pattern)}`,
   ErrorBudgetBreach: (breach) => `error budget: ${breach.actual} errors > ${breach.budget} allowed`,
   WarningLimitBreach: (breach) => `warnings: ${breach.actual} > ${breach.maximum} allowed`,
 });

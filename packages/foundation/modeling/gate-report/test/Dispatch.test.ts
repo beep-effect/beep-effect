@@ -9,7 +9,7 @@ import { Totals, Unit } from "@beep/gate-report/GateReport";
 import { ItemDetail, Location } from "@beep/gate-report/Item";
 import { DiagnosticKeyInput, diagnosticKey } from "@beep/gate-report/ItemKey";
 import { projectLines, verdictText } from "@beep/gate-report/PlainText";
-import { PolicyBreach, PolicyRenderState } from "@beep/gate-report/Policy";
+import { breachLine, PolicyBreach, PolicyRenderState } from "@beep/gate-report/Policy";
 import { StrayOutput } from "@beep/gate-report/StrayOutput";
 import { RunOutcome, RunShape } from "@beep/gate-report/Vocabulary";
 import { assert, describe, it } from "@effect/vitest";
@@ -274,6 +274,15 @@ describe("dispatch — policy breaches (glob shortfalls retargeted)", () => {
 
   it("the item cell renders the verdict and the breach (upstream printed nothing)", () => {
     assert.strictEqual(projectLines({ document: breaching("item", coverage), budget: agentBudget }).length, 4);
+  });
+
+  it("keeps the precision that shows a shortfall when one decimal would print equal numbers", () => {
+    const line = (actual: number, expected: number) =>
+      breachLine(PolicyBreach.cases.CoverageBreach.make({ metric: "lines", expected, actual }));
+    assert.strictEqual(line(79.99, 80), "coverage lines 79.99% < 80%");
+    assert.strictEqual(line(79.9996, 80), "coverage lines 79.9996% < 80%");
+    assert.strictEqual(line(72, 80), "coverage lines 72% < 80%");
+    assert.strictEqual(line(80, 80), "coverage lines 80% < 80%");
   });
 
   it("renders error budget and warning limit breaches", () => {

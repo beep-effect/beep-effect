@@ -27,14 +27,13 @@ const ELLIPSIS = "...";
 
 const oneLine: (text: string) => string = Str.replace(/[\u0000-\u001f\u007f]/gu, " ");
 
+const cut = (text: string, room: number): string =>
+  text.length <= room ? text : `${Str.takeLeft(text, room - ELLIPSIS.length)}${ELLIPSIS}`;
+
 const fitLine =
   (budget: ConsoleBudget) =>
-  (text: string): string => {
-    const line = oneLine(text);
-    return line.length <= budget.maxLineChars
-      ? line
-      : `${Str.takeLeft(line, budget.maxLineChars - ELLIPSIS.length)}${ELLIPSIS}`;
-  };
+  (text: string): string =>
+    cut(oneLine(text), budget.maxLineChars);
 
 /**
  * The delta phrase: `since last run: F fixed, S still failing, N new`.
@@ -55,6 +54,18 @@ const fitLine =
 export const deltaText = (delta: RunDelta): string =>
   `since last run: ${delta.fixed} fixed, ${delta.stillFailing} still failing, ${delta.new} new`;
 
+const verdictHead = (verdict: VerdictLine): string => `${verdict.gate} ${verdict.scope}`;
+
+const verdictResult = (verdict: VerdictLine): string =>
+  `: ${verdictWord(verdict.reason)}, ${verdict.counts} (${formatDuration(verdict.durationMs)})`;
+
+const deltaSuffix = (verdict: VerdictLine): string =>
+  pipe(
+    verdict.delta,
+    O.map((delta) => `; ${deltaText(delta)}`),
+    O.getOrElse(() => "")
+  );
+
 /**
  * The verdict line's text.
  *
@@ -72,13 +83,20 @@ export const deltaText = (delta: RunDelta): string =>
  * @since 0.0.0
  */
 export const verdictText = (verdict: VerdictLine): string =>
-  `${verdict.gate} ${verdict.scope}: ${verdictWord(verdict.reason)}, ${verdict.counts} (${formatDuration(
-    verdict.durationMs
-  )})${pipe(
-    verdict.delta,
-    O.map((delta) => `; ${deltaText(delta)}`),
-    O.getOrElse(() => "")
-  )}`;
+  `${verdictHead(verdict)}${verdictResult(verdict)}${deltaSuffix(verdict)}`;
+
+const MIN_HEAD = ELLIPSIS.length + 1;
+
+const fitVerdict =
+  (budget: ConsoleBudget) =>
+  (verdict: VerdictLine): string => {
+    const max = budget.maxLineChars;
+    const result = oneLine(verdictResult(verdict));
+    const withDelta = `${result}${oneLine(deltaSuffix(verdict))}`;
+    const tail = withDelta.length + MIN_HEAD <= max ? withDelta : result;
+    const head = oneLine(verdictHead(verdict));
+    return tail.length + MIN_HEAD <= max ? `${cut(head, max - tail.length)}${tail}` : cut(`${head}${tail}`, max);
+  };
 
 const locationText = (location: Location): string => `${location.file}:${location.line}:${location.column}`;
 
@@ -151,17 +169,16 @@ const tail = (document: ConsoleDocument): ReadonlyArray<string> => [
 ];
 
 const render = (document: ConsoleDocument, budget: ConsoleBudget): ReadonlyArray<string> => {
-  const verdict = verdictText(document.verdict);
-  const body = [
-    ...A.flatMap(document.entries, (entry) => entryLines(entry, budget)),
-    ...A.map(document.folds, foldText),
-  ];
-  return A.map(
-    A.isReadonlyArrayNonEmpty(body) || A.isReadonlyArrayNonEmpty(tail(document))
-      ? [verdict, ...body, ...tail(document), verdict]
-      : [verdict],
+  const verdict = fitVerdict(budget)(document.verdict);
+  const body = A.map(
+    [
+      ...A.flatMap(document.entries, (entry) => entryLines(entry, budget)),
+      ...A.map(document.folds, foldText),
+      ...tail(document),
+    ],
     fitLine(budget)
   );
+  return A.isReadonlyArrayNonEmpty(body) ? [verdict, ...body, verdict] : [verdict];
 };
 
 type Kept = { readonly entries: ReadonlyArray<ConsoleEntry>; readonly folds: ReadonlyArray<FoldLine> };
@@ -181,17 +198,21 @@ const keepPrefix = <V>(values: ReadonlyArray<V>, sizes: ReadonlyArray<number>, r
   return A.take(values, count);
 };
 
+const capOf = (dropped: number): O.Option<CapLine> => (dropped > 0 ? CapLine.makeOption({ dropped }) : O.none());
+
 /**
  * Fit a document to a budget: keep the longest prefix of folds that fits,
- * then the longest prefix of entries that fits in the room left, and record how many were dropped in the cap. Any cap
- * the document already held is recomputed.
+ * then the longest prefix of entries that fits in the room left, and record
+ * how many were dropped in the cap.
  *
  * **Details**
  *
  * Folds are kept before entries, since one fold line stands for many items;
  * an entry may still fit in the room the dropped folds leave.
  * The frame (both verdict lines, the cap, delta, path and pointer lines) is
- * reserved first; a {@link ConsoleBudget} always holds it.
+ * reserved first; a {@link ConsoleBudget} always holds it. A cap the document
+ * already holds counts entries an earlier fit dropped: it is kept and new
+ * drops add to it, so fitting a fitted document changes nothing.
  *
  * **Example** (Fit a green document)
  *
@@ -217,20 +238,20 @@ export const fitDocument = (input: {
   readonly budget: ConsoleBudget;
 }): ConsoleDocument => {
   const budget = input.budget;
-  const document = ConsoleDocument.make({ ...input.document, cap: O.none() });
+  const prior = pipe(
+    input.document.cap,
+    O.map((cap) => cap.dropped),
+    O.getOrElse(() => 0)
+  );
+  const document = ConsoleDocument.make({ ...input.document, cap: capOf(prior) });
   if (size(render(document, budget)) <= budget.maxChars) return document;
   const blocks = document.entries.length + document.folds.length;
-  const frame = ConsoleDocument.make({
-    ...document,
-    entries: [],
-    folds: [],
-    cap: CapLine.makeOption({ dropped: blocks }),
-  });
+  const frame = ConsoleDocument.make({ ...document, entries: [], folds: [], cap: capOf(prior + blocks) });
   const kept = keepWithin(document, budget, budget.maxChars - size(render(frame, budget)));
   return ConsoleDocument.make({
     ...document,
     ...kept,
-    cap: CapLine.makeOption({ dropped: blocks - kept.entries.length - kept.folds.length }),
+    cap: capOf(prior + blocks - kept.entries.length - kept.folds.length),
   });
 };
 
@@ -242,8 +263,12 @@ export const fitDocument = (input: {
  * The order is the verdict line, the entries, the fold lines, the cap line,
  * the delta line, the path line, the pointer line and the verdict line again.
  * A green document is the verdict line alone. Every line has its control
- * characters replaced and is cut to the line limit with `...`; the whole
- * projection, newlines included, stays within the budget.
+ * characters replaced and is cut to the line limit with `...`; the verdict
+ * line is cut in its gate and scope first, so the verdict word, counts and
+ * duration stay whenever they fit the line limit, and the delta suffix goes
+ * before them. The whole projection, newlines included, stays within the
+ * budget, and projecting a document {@link fitDocument} already fitted keeps
+ * its cap.
  *
  * **Example** (Project a green document)
  *

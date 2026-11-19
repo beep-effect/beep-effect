@@ -18,11 +18,10 @@ import * as S from "effect/Schema";
 import { classifyOutcome, tally } from "./Classify.ts";
 import { GateEvent } from "./GateEvent.ts";
 import { GateReport, Unit } from "./GateReport.ts";
-import { Item, ItemDetail } from "./Item.ts";
+import { Item, ItemDetail, Location } from "./Item.ts";
 import { fingerprint, ItemKey } from "./ItemKey.ts";
 import { PolicyRenderState } from "./Policy.ts";
 import { ItemOutcome, RunReason } from "./Vocabulary.ts";
-import type { Location } from "./Item.ts";
 import type { PolicyBreach } from "./Policy.ts";
 import type { StrayOutput } from "./StrayOutput.ts";
 import type { FailureKind } from "./Vocabulary.ts";
@@ -60,8 +59,13 @@ type RunFinished = typeof GateEvent.cases.RunFinished.Type;
 
 type Indexed<V> = { readonly order: number; readonly value: V };
 
+type DiagnosticKey = typeof ItemKey.cases.DiagnosticKey.Type;
+
+type Occurrence = { readonly ordinal: number; readonly location: O.Option<Location> };
+
 type RunState = {
   readonly start: O.Option<RunStarted>;
+  readonly occurrences: HashMap.HashMap<string, ReadonlyArray<Occurrence>>;
   readonly units: HashMap.HashMap<string, Indexed<Unit>>;
   readonly items: HashMap.HashMap<string, Indexed<Item>>;
   readonly collected: O.Option<number>;
@@ -74,6 +78,7 @@ type RunState = {
 
 const emptyState: RunState = {
   start: O.none(),
+  occurrences: HashMap.empty(),
   units: HashMap.empty(),
   items: HashMap.empty(),
   collected: O.none(),
@@ -105,6 +110,35 @@ const putItem = (state: RunState, item: Item): RunState => ({
   ...state,
   items: upsert(state.items, fingerprint(item.key), item),
 });
+
+const sameLocation = O.makeEquivalence(S.toEquivalence(Location));
+
+const placeOccurrence = (state: RunState, item: Item, key: DiagnosticKey): RunState => {
+  const base = ItemKey.cases.DiagnosticKey.make({ file: key.file, code: key.code, shape: key.shape });
+  const id = fingerprint(base);
+  const seen = O.getOrElse(HashMap.get(state.occurrences, id), (): ReadonlyArray<Occurrence> => []);
+  const ordinal = pipe(
+    A.findFirst(seen, (occurrence) => sameLocation(occurrence.location, item.location)),
+    O.map((occurrence) => occurrence.ordinal),
+    O.getOrElse(() => seen.length + 1)
+  );
+  const occurrences =
+    ordinal > seen.length
+      ? HashMap.set(state.occurrences, id, A.append(seen, { ordinal, location: item.location }))
+      : state.occurrences;
+  const placed = ItemKey.cases.DiagnosticKey.make({
+    file: key.file,
+    code: key.code,
+    shape: key.shape,
+    occurrence: ordinal > 1 ? O.some(ordinal) : O.none(),
+  });
+  return putItem({ ...state, occurrences }, Item.make({ ...item, key: placed }));
+};
+
+const placeItem = (state: RunState, item: Item): RunState => {
+  const key = item.key;
+  return ItemKey.guards.DiagnosticKey(key) ? placeOccurrence(state, item, key) : putItem(state, item);
+};
 
 const subjectOf = (state: RunState): string =>
   pipe(
@@ -202,7 +236,7 @@ const step = (state: RunState, event: GateEvent): RunState =>
     UnitFinished: (finished) => onUnitFinished(state, finished),
     UnitFaulted: (faulted) => onUnitFaulted(state, faulted),
     ItemStarted: () => state,
-    ItemFinished: (finished) => putItem(state, finished.item),
+    ItemFinished: (finished) => placeItem(state, finished.item),
     ItemLabelled: (labelled) => onLabelled(state, labelled),
     UnhandledError: (unhandled) => onUnhandled(state, unhandled),
     PolicyBreached: (breached) => ({ ...state, breaches: A.append(state.breaches, breached.breach) }),
@@ -307,7 +341,12 @@ const incomplete = (message: string): IncompleteRunError => IncompleteRunError.m
  *
  * A `RunStarted` resets everything before it, so a watch-mode rerun reduces
  * into a clean report. Items are keyed by their {@link ItemKey}: a second
- * `ItemFinished` for the same key replaces the first and keeps its position.
+ * `ItemFinished` for the same key replaces the first and keeps its position,
+ * so a retried test is one item. Diagnostics are the exception that keeps
+ * count: a diagnostic whose key was already seen at a different location in
+ * this run is a distinct occurrence and gets the next `occurrence` ordinal
+ * (2, 3, ...); the same key at the same location replaces in place. The
+ * reducer assigns ordinals and ignores any an adapter supplied.
  * A `RunCancelled` ends the run even when no `RunFinished` follows.
  *
  * **Example** (Reduce an empty run)
