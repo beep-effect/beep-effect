@@ -543,6 +543,14 @@ Lane feat/gate-report-core
 
 Reverse: Change the default ConsoleBudget the library supplies.
 
+### A marked later Vitest run folds into the record of the run before it, 2026-11-19
+
+Four packages chain two Vitest runs in one test script, and the second run overwrote the test record with only its own files. A later run is now marked with BEEP_GATE_CONTINUES=1 in the script and folds into the existing record through a pure merge in the model: units and items deduplicated by key, totals recounted from the items, durations summed, the first run's id and start kept; the log appends. A run without the mark replaces the record and clears the sidecar that names the run a chain may extend, so a chain never folds into a record left by a cache restore or an earlier invocation. An inferred session key was measured and rejected: the parent process differs between the two runs of one chained script, and the coverage orchestrator runs each Vitest command without a shell. A guard test requires the mark on every later run of a chained script.
+
+Lane feat/gate-report-wiring · PR #3419
+
+Reverse: Remove the mark from the four scripts and the fold from the adapter; the last run's record wins again.
+
 ### The generated package check is one slim gate entry, 2026-11-19
 
 A package's generated `check` is `beep-cli gate run check`, a slim entry that loads only the gate and four platform services. It probes for unbuilt references; if any are missing it writes a record that folds to the TS6305 line and exits 1 without starting a compiler. Otherwise it runs the compiler script with output captured to the log, turns the output into events, writes the record, prints the console for the audience and exits with the compiler's code. The infra kind keeps its plain script because its check builds references itself. On a built package the entry costs about 25 to 40 ms more than the probe plus compiler it replaces (about 350 ms against 328, compiler alone 180).
@@ -550,6 +558,14 @@ A package's generated `check` is `beep-cli gate run check`, a slim entry that lo
 Lane feat/gate-report-wiring
 
 Reverse: Point the generated check back at the probe followed by the compiler script and re-record the package cache baselines.
+
+### The check hash names the record's producer sources as inputs, not a package dependency, 2026-11-19
+
+A cached check record must be invalidated when the code that builds it changes. The check task lists those sources as root inputs: the gate-run library, the repo CLI's Gate command directory, the unbuilt-reference probe, the output bound, and the tsconfig loader with its extends resolver. A transit dependency on the gate-run library was rejected because its package closure reaches the repo CLI kit and its drivers, so an edit to an unrelated driver would re-key every check. Known gap: the tsconfig parsing libraries under the loader are not listed, so a change in tsconfig parsing does not re-key check. A test fails when a source file of the Gate directory or the gate-run library is not matched by the inputs. For the test task the adapter's transit already covers its whole writer.
+
+Lane feat/gate-report-wiring · PR #3419
+
+Reverse: Replace the listed inputs with a transit dependency on the gate-run library and accept the wider invalidation.
 
 ### All twenty cells print one contract; upstream's tables and trailers are not ported, 2026-11-19
 
@@ -614,6 +630,14 @@ The `gate show` query prints a run's record and `gate item` prints one item in f
 Lane feat/gate-report-wiring
 
 Reverse: Mark the pointer commands planned and print them without a target.
+
+### Captured gate steps declare to the lane ledger through the streaming runner's group, 2026-11-19
+
+A root gate step runs its Turbo command captured, which bypassed the code that declares a step's Turbo digest to the lane ledger; under a wrapper lane nothing was declared and the lane's proof could not be reused. One ledger group now serves both runners: every direct Turbo step, streamed or captured, declares its digest, and each group closes once with its attempt count. A root gate step also adds Turbo's run-summary flag only when the caller did not pass it, because Turbo rejects a repeated flag and the CI lane passes its own.
+
+Lane feat/gate-report-wiring · PR #3419
+
+Reverse: Give the root gate steps their own ledger calls again.
 
 ### The history read deadline belongs to the caller, 2026-11-19
 
