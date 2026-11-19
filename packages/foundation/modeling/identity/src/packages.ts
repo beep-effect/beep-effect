@@ -7,6 +7,12 @@
  * specific workspace package. Use these to derive schema identifiers,
  * error tags, and service keys without manually calling `make`.
  *
+ * Every package export is an independent, pure-annotated `$I.create("<slug>")`
+ * leaf, so a bundle that imports one composer drops every other slug. The
+ * `$I.compose(...)` groups are the registry that `beep create-package` and the
+ * identity-registry lint read and write; they are pure and only
+ * {@link RepoPkgs} evaluates them.
+ *
  * **Example** (Derive schema and service IDs)
  *
  * ```ts
@@ -22,9 +28,7 @@
  * @since 0.0.0
  */
 import * as Identity from "./Id.ts";
-// import * as Struct from "effect/Struct";
-// import { pipe } from "effect/Function";
-// import * as A from "effect/Array";
+
 /**
  * Root identity composer for the `@beep` namespace.
  *
@@ -46,7 +50,7 @@ import * as Identity from "./Id.ts";
  */
 export const $I = Identity.make("beep", { authority: Identity.IdentityAuthority, prefix: "beep" }).$BeepId;
 
-const generatedComposers = $I.compose(
+const generatedComposers = /*#__PURE__*/ $I.compose(
   // IaC Infra Package
   "infra",
 
@@ -273,7 +277,7 @@ const generatedComposers = $I.compose(
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
-const generatedLabComposers = $I.compose(
+const generatedLabComposers = /*#__PURE__*/ $I.compose(
   "api-docs",
   "ciops",
   "lane-cockpit",
@@ -283,11 +287,38 @@ const generatedLabComposers = $I.compose(
 );
 // GENERATED LAB COMPOSERS END
 
-const composers = {
+/**
+ * Record type of every registered package composer, keyed by accessor name.
+ *
+ * **Details**
+ *
+ * The type is read off the `$I.compose(...)` registry groups, so it names
+ * every slug the identity-registry lint and `beep create-package` maintain,
+ * plus the `$LangExtractId` casing alias. {@link RepoPkgs} has this type.
+ *
+ * **Example** (Read a composer type from the registry)
+ *
+ * ```ts
+ * import type { RegisteredComposers } from "@beep/identity/packages"
+ *
+ * type SchemaComposer = RegisteredComposers["$SchemaId"]
+ * const accessor: keyof RegisteredComposers = "$SchemaId"
+ * console.log(accessor)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RegisteredComposers = typeof generatedComposers &
+  typeof generatedLabComposers & {
+    readonly $LangExtractId: typeof generatedComposers.$LangextractId;
+  };
+
+const registeredComposers = (): RegisteredComposers => ({
   ...generatedComposers,
   ...generatedLabComposers,
   $LangExtractId: generatedComposers.$LangextractId,
-};
+});
 
 // GENERATED LAB EXPORTS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
 
@@ -306,7 +337,7 @@ const composers = {
  * @category configuration
  * @since 0.0.0
  */
-export const $ApiDocsId: Identity.IdentityComposer<"@beep/api-docs"> = composers.$ApiDocsId;
+export const $ApiDocsId: Identity.IdentityComposer<"@beep/api-docs"> = /*#__PURE__*/ $I.create("api-docs");
 
 /**
  * Identity composer for `@beep/ciops`.
@@ -323,7 +354,7 @@ export const $ApiDocsId: Identity.IdentityComposer<"@beep/api-docs"> = composers
  * @category configuration
  * @since 0.0.0
  */
-export const $CiopsId: Identity.IdentityComposer<"@beep/ciops"> = composers.$CiopsId;
+export const $CiopsId: Identity.IdentityComposer<"@beep/ciops"> = /*#__PURE__*/ $I.create("ciops");
 
 /**
  * Identity composer for `@beep/lane-cockpit`.
@@ -340,7 +371,7 @@ export const $CiopsId: Identity.IdentityComposer<"@beep/ciops"> = composers.$Cio
  * @category configuration
  * @since 0.0.0
  */
-export const $LaneCockpitId: Identity.IdentityComposer<"@beep/lane-cockpit"> = composers.$LaneCockpitId;
+export const $LaneCockpitId: Identity.IdentityComposer<"@beep/lane-cockpit"> = /*#__PURE__*/ $I.create("lane-cockpit");
 
 /**
  * Identity composer for `@beep/lejeune-bolt-workbench`.
@@ -358,7 +389,7 @@ export const $LaneCockpitId: Identity.IdentityComposer<"@beep/lane-cockpit"> = c
  * @since 0.0.0
  */
 export const $LejeuneBoltWorkbenchId: Identity.IdentityComposer<"@beep/lejeune-bolt-workbench"> =
-  composers.$LejeuneBoltWorkbenchId;
+  /*#__PURE__*/ $I.create("lejeune-bolt-workbench");
 
 /**
  * Identity composer for `@beep/semantica`.
@@ -375,7 +406,7 @@ export const $LejeuneBoltWorkbenchId: Identity.IdentityComposer<"@beep/lejeune-b
  * @category configuration
  * @since 0.0.0
  */
-export const $SemanticaId: Identity.IdentityComposer<"@beep/semantica"> = composers.$SemanticaId;
+export const $SemanticaId: Identity.IdentityComposer<"@beep/semantica"> = /*#__PURE__*/ $I.create("semantica");
 
 /**
  * Identity composer for `@beep/trustgraph-workbench`.
@@ -392,8 +423,9 @@ export const $SemanticaId: Identity.IdentityComposer<"@beep/semantica"> = compos
  * @category configuration
  * @since 0.0.0
  */
-export const $TrustgraphWorkbenchId: Identity.IdentityComposer<"@beep/trustgraph-workbench"> =
-  composers.$TrustgraphWorkbenchId;
+export const $TrustgraphWorkbenchId: Identity.IdentityComposer<"@beep/trustgraph-workbench"> = /*#__PURE__*/ $I.create(
+  "trustgraph-workbench"
+);
 // GENERATED LAB EXPORTS END
 
 // --- foundation ---
@@ -412,7 +444,7 @@ export const $TrustgraphWorkbenchId: Identity.IdentityComposer<"@beep/trustgraph
  * @category configuration
  * @since 0.0.0
  */
-export const $DataId = composers.$DataId;
+export const $DataId: Identity.IdentityComposer<"@beep/data"> = /*#__PURE__*/ $I.create("data");
 
 /**
  * Identity composer for the `@beep/identity` package.
@@ -428,7 +460,7 @@ export const $DataId = composers.$DataId;
  * @category configuration
  * @since 0.0.0
  */
-export const $IdentityId = composers.$IdentityId;
+export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = /*#__PURE__*/ $I.create("identity");
 
 /**
  * Identity composer for the `@beep/schema` package.
@@ -444,7 +476,7 @@ export const $IdentityId = composers.$IdentityId;
  * @category configuration
  * @since 0.0.0
  */
-export const $SchemaId = composers.$SchemaId;
+export const $SchemaId: Identity.IdentityComposer<"@beep/schema"> = /*#__PURE__*/ $I.create("schema");
 
 /**
  * Identity composer for the `@beep/provenance` package.
@@ -460,7 +492,7 @@ export const $SchemaId = composers.$SchemaId;
  * @category configuration
  * @since 0.0.0
  */
-export const $ProvenanceId: Identity.IdentityComposer<"@beep/provenance"> = composers.$ProvenanceId;
+export const $ProvenanceId: Identity.IdentityComposer<"@beep/provenance"> = /*#__PURE__*/ $I.create("provenance");
 
 /**
  * Identity composer for the `@beep/rdf` package.
@@ -476,7 +508,7 @@ export const $ProvenanceId: Identity.IdentityComposer<"@beep/provenance"> = comp
  * @category configuration
  * @since 0.0.0
  */
-export const $RdfId: Identity.IdentityComposer<"@beep/rdf"> = composers.$RdfId;
+export const $RdfId: Identity.IdentityComposer<"@beep/rdf"> = /*#__PURE__*/ $I.create("rdf");
 
 /**
  * Identity composer for the `@beep/ontology` package.
@@ -492,7 +524,7 @@ export const $RdfId: Identity.IdentityComposer<"@beep/rdf"> = composers.$RdfId;
  * @category configuration
  * @since 0.0.0
  */
-export const $OntologyId: Identity.IdentityComposer<"@beep/ontology"> = composers.$OntologyId;
+export const $OntologyId: Identity.IdentityComposer<"@beep/ontology"> = /*#__PURE__*/ $I.create("ontology");
 
 /**
  * Identity composer for the semantic-foundation vocabulary under `@beep/ontology`.
@@ -508,7 +540,7 @@ export const $OntologyId: Identity.IdentityComposer<"@beep/ontology"> = composer
  * @category configuration
  * @since 0.0.0
  */
-export const $SemanticFoundationId = $OntologyId.create("semantic-foundation");
+export const $SemanticFoundationId = /*#__PURE__*/ $OntologyId.create("semantic-foundation");
 
 /**
  * Identity composer for the epistemic slice vocabulary (claims, evidence quotes, claim subjects).
@@ -534,7 +566,7 @@ export const $SemanticFoundationId = $OntologyId.create("semantic-foundation");
  * @category configuration
  * @since 0.0.0
  */
-export const $EpistemicId = $I.create("epistemic");
+export const $EpistemicId = /*#__PURE__*/ $I.create("epistemic");
 
 /**
  * Identity composer for the QA evidence vocabulary (judge evidence and receipt
@@ -560,7 +592,7 @@ export const $EpistemicId = $I.create("epistemic");
  * @category configuration
  * @since 0.0.0
  */
-export const $QaId = $I.create("qa");
+export const $QaId = /*#__PURE__*/ $I.create("qa");
 
 /**
  * Identity composer for the `@beep/types` package.
@@ -576,7 +608,7 @@ export const $QaId = $I.create("qa");
  * @category configuration
  * @since 0.0.0
  */
-export const $TypesId = composers.$TypesId;
+export const $TypesId: Identity.IdentityComposer<"@beep/types"> = /*#__PURE__*/ $I.create("types");
 
 /**
  * Identity composer for the `@beep/utils` package.
@@ -592,7 +624,7 @@ export const $TypesId = composers.$TypesId;
  * @category configuration
  * @since 0.0.0
  */
-export const $UtilsId = composers.$UtilsId;
+export const $UtilsId: Identity.IdentityComposer<"@beep/utils"> = /*#__PURE__*/ $I.create("utils");
 
 // --- ui ---
 
@@ -610,7 +642,7 @@ export const $UtilsId = composers.$UtilsId;
  * @category configuration
  * @since 0.0.0
  */
-export const $UiId = composers.$UiId;
+export const $UiId: Identity.IdentityComposer<"@beep/ui"> = /*#__PURE__*/ $I.create("ui");
 
 // --- tooling ---
 
@@ -628,7 +660,9 @@ export const $UiId = composers.$UiId;
  * @category configuration
  * @since 0.0.0
  */
-export const $RepoAiMetricsId = composers.$RepoAiMetricsId;
+export const $RepoAiMetricsId: Identity.IdentityComposer<"@beep/repo-ai-metrics"> = /*#__PURE__*/ $I.create(
+  "repo-ai-metrics"
+);
 
 /**
  * Identity composer for the `@beep/repo-cli` package.
@@ -644,7 +678,7 @@ export const $RepoAiMetricsId = composers.$RepoAiMetricsId;
  * @category configuration
  * @since 0.0.0
  */
-export const $RepoCliId = composers.$RepoCliId;
+export const $RepoCliId: Identity.IdentityComposer<"@beep/repo-cli"> = /*#__PURE__*/ $I.create("repo-cli");
 
 /**
  * Identity composer for the `@beep/repo-configs` package.
@@ -660,7 +694,7 @@ export const $RepoCliId = composers.$RepoCliId;
  * @category configuration
  * @since 0.0.0
  */
-export const $RepoConfigsId = composers.$RepoConfigsId;
+export const $RepoConfigsId: Identity.IdentityComposer<"@beep/repo-configs"> = /*#__PURE__*/ $I.create("repo-configs");
 
 /**
  * Identity composer for the `@beep/repo-utils` package.
@@ -676,7 +710,7 @@ export const $RepoConfigsId = composers.$RepoConfigsId;
  * @category configuration
  * @since 0.0.0
  */
-export const $RepoUtilsId = composers.$RepoUtilsId;
+export const $RepoUtilsId: Identity.IdentityComposer<"@beep/repo-utils"> = /*#__PURE__*/ $I.create("repo-utils");
 
 /**
  * Identity composer for the `@beep/test-utils` package.
@@ -692,7 +726,7 @@ export const $RepoUtilsId = composers.$RepoUtilsId;
  * @category configuration
  * @since 0.0.0
  */
-export const $TestUtilsId = composers.$TestUtilsId;
+export const $TestUtilsId: Identity.IdentityComposer<"@beep/test-utils"> = /*#__PURE__*/ $I.create("test-utils");
 
 // --- shared ---
 
@@ -710,7 +744,9 @@ export const $TestUtilsId = composers.$TestUtilsId;
  * @category configuration
  * @since 0.0.0
  */
-export const $SharedDomainId = composers.$SharedDomainId;
+export const $SharedDomainId: Identity.IdentityComposer<"@beep/shared-domain"> = /*#__PURE__*/ $I.create(
+  "shared-domain"
+);
 
 /**
  * Identity composer for the `@beep/shared-use-cases` package.
@@ -727,7 +763,9 @@ export const $SharedDomainId = composers.$SharedDomainId;
  * @category configuration
  * @since 0.0.0
  */
-export const $SharedUseCasesId: Identity.IdentityComposer<"@beep/shared-use-cases"> = composers.$SharedUseCasesId;
+export const $SharedUseCasesId: Identity.IdentityComposer<"@beep/shared-use-cases"> = /*#__PURE__*/ $I.create(
+  "shared-use-cases"
+);
 
 /**
  * Identity composer for the `@beep/shared-tables` package.
@@ -743,7 +781,9 @@ export const $SharedUseCasesId: Identity.IdentityComposer<"@beep/shared-use-case
  * @category configuration
  * @since 0.0.0
  */
-export const $SharedTablesId = composers.$SharedTablesId;
+export const $SharedTablesId: Identity.IdentityComposer<"@beep/shared-tables"> = /*#__PURE__*/ $I.create(
+  "shared-tables"
+);
 
 /**
  * Identity composer for the `@beep/semantic-web` package.
@@ -759,7 +799,7 @@ export const $SharedTablesId = composers.$SharedTablesId;
  * @category configuration
  * @since 0.0.0
  */
-export const $SemanticWebId: Identity.IdentityComposer<"@beep/semantic-web"> = composers.$SemanticWebId;
+export const $SemanticWebId: Identity.IdentityComposer<"@beep/semantic-web"> = /*#__PURE__*/ $I.create("semantic-web");
 
 /**
  * Identity composer for the `@beep/nlp` package.
@@ -775,7 +815,7 @@ export const $SemanticWebId: Identity.IdentityComposer<"@beep/semantic-web"> = c
  * @category configuration
  * @since 0.0.0
  */
-export const $NlpId: Identity.IdentityComposer<"@beep/nlp"> = composers.$NlpId;
+export const $NlpId: Identity.IdentityComposer<"@beep/nlp"> = /*#__PURE__*/ $I.create("nlp");
 
 /**
  * Identity composer for the `@beep/nlp-processing` package.
@@ -791,7 +831,9 @@ export const $NlpId: Identity.IdentityComposer<"@beep/nlp"> = composers.$NlpId;
  * @category configuration
  * @since 0.0.0
  */
-export const $NlpProcessingId: Identity.IdentityComposer<"@beep/nlp-processing"> = composers.$NlpProcessingId;
+export const $NlpProcessingId: Identity.IdentityComposer<"@beep/nlp-processing"> = /*#__PURE__*/ $I.create(
+  "nlp-processing"
+);
 
 /**
  * Identity composer for the `@beep/langextract` package.
@@ -807,7 +849,7 @@ export const $NlpProcessingId: Identity.IdentityComposer<"@beep/nlp-processing">
  * @category configuration
  * @since 0.0.0
  */
-export const $LangExtractId: Identity.IdentityComposer<"@beep/langextract"> = composers.$LangExtractId;
+export const $LangExtractId: Identity.IdentityComposer<"@beep/langextract"> = /*#__PURE__*/ $I.create("langextract");
 
 /**
  * Identity composer for the `@beep/observability` package.
@@ -823,7 +865,9 @@ export const $LangExtractId: Identity.IdentityComposer<"@beep/langextract"> = co
  * @category configuration
  * @since 0.0.0
  */
-export const $ObservabilityId: Identity.IdentityComposer<"@beep/observability"> = composers.$ObservabilityId;
+export const $ObservabilityId: Identity.IdentityComposer<"@beep/observability"> = /*#__PURE__*/ $I.create(
+  "observability"
+);
 
 /**
  * Identity composer for the `@beep/colors` package.
@@ -839,7 +883,7 @@ export const $ObservabilityId: Identity.IdentityComposer<"@beep/observability"> 
  * @category configuration
  * @since 0.0.0
  */
-export const $ColorsId: Identity.IdentityComposer<"@beep/colors"> = composers.$ColorsId;
+export const $ColorsId: Identity.IdentityComposer<"@beep/colors"> = /*#__PURE__*/ $I.create("colors");
 
 /**
  * Identity composer for the `@beep/chalk` package.
@@ -855,7 +899,7 @@ export const $ColorsId: Identity.IdentityComposer<"@beep/colors"> = composers.$C
  * @category configuration
  * @since 0.0.0
  */
-export const $ChalkId: Identity.IdentityComposer<"@beep/chalk"> = composers.$ChalkId;
+export const $ChalkId: Identity.IdentityComposer<"@beep/chalk"> = /*#__PURE__*/ $I.create("chalk");
 
 /**
  * Identity composer for the `@beep/repo-docgen` package.
@@ -871,7 +915,7 @@ export const $ChalkId: Identity.IdentityComposer<"@beep/chalk"> = composers.$Cha
  * @category configuration
  * @since 0.0.0
  */
-export const $RepoDocgenId: Identity.IdentityComposer<"@beep/repo-docgen"> = composers.$RepoDocgenId;
+export const $RepoDocgenId: Identity.IdentityComposer<"@beep/repo-docgen"> = /*#__PURE__*/ $I.create("repo-docgen");
 
 /**
  * Identity composer for the `@beep/infra` package.
@@ -887,7 +931,7 @@ export const $RepoDocgenId: Identity.IdentityComposer<"@beep/repo-docgen"> = com
  * @category configuration
  * @since 0.0.0
  */
-export const $InfraId: Identity.IdentityComposer<"@beep/infra"> = composers.$InfraId;
+export const $InfraId: Identity.IdentityComposer<"@beep/infra"> = /*#__PURE__*/ $I.create("infra");
 
 // --- p3 professional runtime proof ---
 
@@ -905,7 +949,9 @@ export const $InfraId: Identity.IdentityComposer<"@beep/infra"> = composers.$Inf
  * @category configuration
  * @since 0.0.0
  */
-export const $WorkspaceDomainId: Identity.IdentityComposer<"@beep/workspace-domain"> = composers.$WorkspaceDomainId;
+export const $WorkspaceDomainId: Identity.IdentityComposer<"@beep/workspace-domain"> = /*#__PURE__*/ $I.create(
+  "workspace-domain"
+);
 
 /**
  * Identity composer for the `@beep/epistemic-domain` package.
@@ -921,7 +967,9 @@ export const $WorkspaceDomainId: Identity.IdentityComposer<"@beep/workspace-doma
  * @category configuration
  * @since 0.0.0
  */
-export const $EpistemicDomainId: Identity.IdentityComposer<"@beep/epistemic-domain"> = composers.$EpistemicDomainId;
+export const $EpistemicDomainId: Identity.IdentityComposer<"@beep/epistemic-domain"> = /*#__PURE__*/ $I.create(
+  "epistemic-domain"
+);
 
 /**
  * Identity composer for the `@beep/epistemic-use-cases` package.
@@ -938,8 +986,9 @@ export const $EpistemicDomainId: Identity.IdentityComposer<"@beep/epistemic-doma
  * @category configuration
  * @since 0.0.0
  */
-export const $EpistemicUseCasesId: Identity.IdentityComposer<"@beep/epistemic-use-cases"> =
-  composers.$EpistemicUseCasesId;
+export const $EpistemicUseCasesId: Identity.IdentityComposer<"@beep/epistemic-use-cases"> = /*#__PURE__*/ $I.create(
+  "epistemic-use-cases"
+);
 
 /**
  * Identity composer for the `@beep/agents-domain` package.
@@ -955,7 +1004,9 @@ export const $EpistemicUseCasesId: Identity.IdentityComposer<"@beep/epistemic-us
  * @category configuration
  * @since 0.0.0
  */
-export const $AgentsDomainId: Identity.IdentityComposer<"@beep/agents-domain"> = composers.$AgentsDomainId;
+export const $AgentsDomainId: Identity.IdentityComposer<"@beep/agents-domain"> = /*#__PURE__*/ $I.create(
+  "agents-domain"
+);
 
 /**
  * Identity composer for the `@beep/agents-server` package.
@@ -971,7 +1022,9 @@ export const $AgentsDomainId: Identity.IdentityComposer<"@beep/agents-domain"> =
  * @category configuration
  * @since 0.0.0
  */
-export const $AgentsServerId: Identity.IdentityComposer<"@beep/agents-server"> = composers.$AgentsServerId;
+export const $AgentsServerId: Identity.IdentityComposer<"@beep/agents-server"> = /*#__PURE__*/ $I.create(
+  "agents-server"
+);
 
 /**
  * Identity composer for the `@beep/agents-use-cases` package.
@@ -987,7 +1040,9 @@ export const $AgentsServerId: Identity.IdentityComposer<"@beep/agents-server"> =
  * @category configuration
  * @since 0.0.0
  */
-export const $AgentsUseCasesId: Identity.IdentityComposer<"@beep/agents-use-cases"> = composers.$AgentsUseCasesId;
+export const $AgentsUseCasesId: Identity.IdentityComposer<"@beep/agents-use-cases"> = /*#__PURE__*/ $I.create(
+  "agents-use-cases"
+);
 
 /**
  * Identity composer for the `@beep/agents-client` package.
@@ -1003,7 +1058,9 @@ export const $AgentsUseCasesId: Identity.IdentityComposer<"@beep/agents-use-case
  * @category configuration
  * @since 0.0.0
  */
-export const $AgentsClientId: Identity.IdentityComposer<"@beep/agents-client"> = composers.$AgentsClientId;
+export const $AgentsClientId: Identity.IdentityComposer<"@beep/agents-client"> = /*#__PURE__*/ $I.create(
+  "agents-client"
+);
 
 /**
  * Identity composer for the `@beep/law-practice-domain` package.
@@ -1019,8 +1076,9 @@ export const $AgentsClientId: Identity.IdentityComposer<"@beep/agents-client"> =
  * @category configuration
  * @since 0.0.0
  */
-export const $LawPracticeDomainId: Identity.IdentityComposer<"@beep/law-practice-domain"> =
-  composers.$LawPracticeDomainId;
+export const $LawPracticeDomainId: Identity.IdentityComposer<"@beep/law-practice-domain"> = /*#__PURE__*/ $I.create(
+  "law-practice-domain"
+);
 
 /**
  * Identity composer for the `@beep/law-practice-use-cases` package.
@@ -1038,7 +1096,7 @@ export const $LawPracticeDomainId: Identity.IdentityComposer<"@beep/law-practice
  * @since 0.0.0
  */
 export const $LawPracticeUseCasesId: Identity.IdentityComposer<"@beep/law-practice-use-cases"> =
-  composers.$LawPracticeUseCasesId;
+  /*#__PURE__*/ $I.create("law-practice-use-cases");
 
 /**
  * Identity composer for the `@beep/law-practice-server` package.
@@ -1055,8 +1113,9 @@ export const $LawPracticeUseCasesId: Identity.IdentityComposer<"@beep/law-practi
  * @category configuration
  * @since 0.0.0
  */
-export const $LawPracticeServerId: Identity.IdentityComposer<"@beep/law-practice-server"> =
-  composers.$LawPracticeServerId;
+export const $LawPracticeServerId: Identity.IdentityComposer<"@beep/law-practice-server"> = /*#__PURE__*/ $I.create(
+  "law-practice-server"
+);
 
 /**
  * Identity composer for the `@beep/professional-desktop` package.
@@ -1072,11 +1131,18 @@ export const $LawPracticeServerId: Identity.IdentityComposer<"@beep/law-practice
  * @category configuration
  * @since 0.0.0
  */
-export const $ProfessionalDesktopId: Identity.IdentityComposer<"@beep/professional-desktop"> =
-  composers.$ProfessionalDesktopId;
+export const $ProfessionalDesktopId: Identity.IdentityComposer<"@beep/professional-desktop"> = /*#__PURE__*/ $I.create(
+  "professional-desktop"
+);
 
 /**
  * RepoPkgs - export object containing all package IdentityComposer's
+ *
+ * **Details**
+ *
+ * The record is built from the `$I.compose(...)` registry groups behind a
+ * pure annotation, so a bundle that never reads `RepoPkgs` drops it and the
+ * full slug list with it.
  *
  * **Example** (Log all package composers)
  *
@@ -1089,7 +1155,7 @@ export const $ProfessionalDesktopId: Identity.IdentityComposer<"@beep/profession
  * @category configuration
  * @since 0.0.0
  */
-export const RepoPkgs = composers;
+export const RepoPkgs: RegisteredComposers = /*#__PURE__*/ registeredComposers();
 
 /**
  * $md id export.
@@ -1105,7 +1171,7 @@ export const RepoPkgs = composers;
  * @category configuration
  * @since 0.0.0
  */
-export const $MdId: Identity.IdentityComposer<"@beep/md"> = composers.$MdId;
+export const $MdId: Identity.IdentityComposer<"@beep/md"> = /*#__PURE__*/ $I.create("md");
 
 /**
  * $oip web id export.
@@ -1121,7 +1187,7 @@ export const $MdId: Identity.IdentityComposer<"@beep/md"> = composers.$MdId;
  * @category configuration
  * @since 0.0.0
  */
-export const $OipWebId: Identity.IdentityComposer<"@beep/oip-web"> = composers.$OipWebId;
+export const $OipWebId: Identity.IdentityComposer<"@beep/oip-web"> = /*#__PURE__*/ $I.create("oip-web");
 
 /**
  * $drizzle id export.
@@ -1137,7 +1203,7 @@ export const $OipWebId: Identity.IdentityComposer<"@beep/oip-web"> = composers.$
  * @category configuration
  * @since 0.0.0
  */
-export const $DrizzleId: Identity.IdentityComposer<"@beep/drizzle"> = composers.$DrizzleId;
+export const $DrizzleId: Identity.IdentityComposer<"@beep/drizzle"> = /*#__PURE__*/ $I.create("drizzle");
 
 /**
  * $duckdb id export.
@@ -1153,7 +1219,7 @@ export const $DrizzleId: Identity.IdentityComposer<"@beep/drizzle"> = composers.
  * @category configuration
  * @since 0.0.0
  */
-export const $DuckdbId: Identity.IdentityComposer<"@beep/duckdb"> = composers.$DuckdbId;
+export const $DuckdbId: Identity.IdentityComposer<"@beep/duckdb"> = /*#__PURE__*/ $I.create("duckdb");
 
 /**
  * $ffmpeg id export.
@@ -1169,7 +1235,7 @@ export const $DuckdbId: Identity.IdentityComposer<"@beep/duckdb"> = composers.$D
  * @category configuration
  * @since 0.0.0
  */
-export const $FfmpegId: Identity.IdentityComposer<"@beep/ffmpeg"> = composers.$FfmpegId;
+export const $FfmpegId: Identity.IdentityComposer<"@beep/ffmpeg"> = /*#__PURE__*/ $I.create("ffmpeg");
 
 /**
  * $postgres id export.
@@ -1185,7 +1251,7 @@ export const $FfmpegId: Identity.IdentityComposer<"@beep/ffmpeg"> = composers.$F
  * @category configuration
  * @since 0.0.0
  */
-export const $PostgresId: Identity.IdentityComposer<"@beep/postgres"> = composers.$PostgresId;
+export const $PostgresId: Identity.IdentityComposer<"@beep/postgres"> = /*#__PURE__*/ $I.create("postgres");
 
 /**
  * Identity composer for `@beep/anthropic`.
@@ -1202,7 +1268,7 @@ export const $PostgresId: Identity.IdentityComposer<"@beep/postgres"> = composer
  * @category configuration
  * @since 0.0.0
  */
-export const $AnthropicId: Identity.IdentityComposer<"@beep/anthropic"> = composers.$AnthropicId;
+export const $AnthropicId: Identity.IdentityComposer<"@beep/anthropic"> = /*#__PURE__*/ $I.create("anthropic");
 
 /**
  * Identity composer for `@beep/acp`.
@@ -1219,7 +1285,7 @@ export const $AnthropicId: Identity.IdentityComposer<"@beep/anthropic"> = compos
  * @category configuration
  * @since 0.0.0
  */
-export const $AcpId: Identity.IdentityComposer<"@beep/acp"> = composers.$AcpId;
+export const $AcpId: Identity.IdentityComposer<"@beep/acp"> = /*#__PURE__*/ $I.create("acp");
 
 /**
  * Identity composer for `@beep/openai-compat`.
@@ -1236,7 +1302,9 @@ export const $AcpId: Identity.IdentityComposer<"@beep/acp"> = composers.$AcpId;
  * @category configuration
  * @since 0.0.0
  */
-export const $OpenaiCompatId: Identity.IdentityComposer<"@beep/openai-compat"> = composers.$OpenaiCompatId;
+export const $OpenaiCompatId: Identity.IdentityComposer<"@beep/openai-compat"> = /*#__PURE__*/ $I.create(
+  "openai-compat"
+);
 
 /**
  * Identity composer for `@beep/workspace-tables`.
@@ -1253,7 +1321,9 @@ export const $OpenaiCompatId: Identity.IdentityComposer<"@beep/openai-compat"> =
  * @category configuration
  * @since 0.0.0
  */
-export const $WorkspaceTablesId: Identity.IdentityComposer<"@beep/workspace-tables"> = composers.$WorkspaceTablesId;
+export const $WorkspaceTablesId: Identity.IdentityComposer<"@beep/workspace-tables"> = /*#__PURE__*/ $I.create(
+  "workspace-tables"
+);
 
 /**
  * Identity composer for `@beep/workspace-use-cases`.
@@ -1270,8 +1340,9 @@ export const $WorkspaceTablesId: Identity.IdentityComposer<"@beep/workspace-tabl
  * @category configuration
  * @since 0.0.0
  */
-export const $WorkspaceUseCasesId: Identity.IdentityComposer<"@beep/workspace-use-cases"> =
-  composers.$WorkspaceUseCasesId;
+export const $WorkspaceUseCasesId: Identity.IdentityComposer<"@beep/workspace-use-cases"> = /*#__PURE__*/ $I.create(
+  "workspace-use-cases"
+);
 
 /**
  * Identity composer for `@beep/workspace-server`.
@@ -1288,7 +1359,9 @@ export const $WorkspaceUseCasesId: Identity.IdentityComposer<"@beep/workspace-us
  * @category configuration
  * @since 0.0.0
  */
-export const $WorkspaceServerId: Identity.IdentityComposer<"@beep/workspace-server"> = composers.$WorkspaceServerId;
+export const $WorkspaceServerId: Identity.IdentityComposer<"@beep/workspace-server"> = /*#__PURE__*/ $I.create(
+  "workspace-server"
+);
 
 /**
  * Identity composer for `@beep/documents-domain`.
@@ -1305,7 +1378,9 @@ export const $WorkspaceServerId: Identity.IdentityComposer<"@beep/workspace-serv
  * @category configuration
  * @since 0.0.0
  */
-export const $DocumentsDomainId: Identity.IdentityComposer<"@beep/documents-domain"> = composers.$DocumentsDomainId;
+export const $DocumentsDomainId: Identity.IdentityComposer<"@beep/documents-domain"> = /*#__PURE__*/ $I.create(
+  "documents-domain"
+);
 
 /**
  * Identity composer for `@beep/documents-use-cases`.
@@ -1322,8 +1397,9 @@ export const $DocumentsDomainId: Identity.IdentityComposer<"@beep/documents-doma
  * @category configuration
  * @since 0.0.0
  */
-export const $DocumentsUseCasesId: Identity.IdentityComposer<"@beep/documents-use-cases"> =
-  composers.$DocumentsUseCasesId;
+export const $DocumentsUseCasesId: Identity.IdentityComposer<"@beep/documents-use-cases"> = /*#__PURE__*/ $I.create(
+  "documents-use-cases"
+);
 
 /**
  * Identity composer for `@beep/documents-server`.
@@ -1340,7 +1416,9 @@ export const $DocumentsUseCasesId: Identity.IdentityComposer<"@beep/documents-us
  * @category configuration
  * @since 0.0.0
  */
-export const $DocumentsServerId: Identity.IdentityComposer<"@beep/documents-server"> = composers.$DocumentsServerId;
+export const $DocumentsServerId: Identity.IdentityComposer<"@beep/documents-server"> = /*#__PURE__*/ $I.create(
+  "documents-server"
+);
 
 /**
  * Identity composer for `@beep/architecture-lab-domain`.
@@ -1358,7 +1436,7 @@ export const $DocumentsServerId: Identity.IdentityComposer<"@beep/documents-serv
  * @since 0.0.0
  */
 export const $ArchitectureLabDomainId: Identity.IdentityComposer<"@beep/architecture-lab-domain"> =
-  composers.$ArchitectureLabDomainId;
+  /*#__PURE__*/ $I.create("architecture-lab-domain");
 
 /**
  * Identity composer for `@beep/architecture-lab-use-cases`.
@@ -1376,7 +1454,7 @@ export const $ArchitectureLabDomainId: Identity.IdentityComposer<"@beep/architec
  * @since 0.0.0
  */
 export const $ArchitectureLabUseCasesId: Identity.IdentityComposer<"@beep/architecture-lab-use-cases"> =
-  composers.$ArchitectureLabUseCasesId;
+  /*#__PURE__*/ $I.create("architecture-lab-use-cases");
 
 /**
  * Identity composer for `@beep/architecture-lab-config`.
@@ -1394,7 +1472,7 @@ export const $ArchitectureLabUseCasesId: Identity.IdentityComposer<"@beep/archit
  * @since 0.0.0
  */
 export const $ArchitectureLabConfigId: Identity.IdentityComposer<"@beep/architecture-lab-config"> =
-  composers.$ArchitectureLabConfigId;
+  /*#__PURE__*/ $I.create("architecture-lab-config");
 
 /**
  * Identity composer for `@beep/architecture-lab-server`.
@@ -1412,7 +1490,7 @@ export const $ArchitectureLabConfigId: Identity.IdentityComposer<"@beep/architec
  * @since 0.0.0
  */
 export const $ArchitectureLabServerId: Identity.IdentityComposer<"@beep/architecture-lab-server"> =
-  composers.$ArchitectureLabServerId;
+  /*#__PURE__*/ $I.create("architecture-lab-server");
 
 /**
  * Identity composer for `@beep/architecture-lab-tables`.
@@ -1430,7 +1508,7 @@ export const $ArchitectureLabServerId: Identity.IdentityComposer<"@beep/architec
  * @since 0.0.0
  */
 export const $ArchitectureLabTablesId: Identity.IdentityComposer<"@beep/architecture-lab-tables"> =
-  composers.$ArchitectureLabTablesId;
+  /*#__PURE__*/ $I.create("architecture-lab-tables");
 
 /**
  * Identity composer for `@beep/architecture-lab-client`.
@@ -1448,7 +1526,7 @@ export const $ArchitectureLabTablesId: Identity.IdentityComposer<"@beep/architec
  * @since 0.0.0
  */
 export const $ArchitectureLabClientId: Identity.IdentityComposer<"@beep/architecture-lab-client"> =
-  composers.$ArchitectureLabClientId;
+  /*#__PURE__*/ $I.create("architecture-lab-client");
 
 /**
  * Identity composer for `@beep/architecture-lab-ui`.
@@ -1465,8 +1543,9 @@ export const $ArchitectureLabClientId: Identity.IdentityComposer<"@beep/architec
  * @category configuration
  * @since 0.0.0
  */
-export const $ArchitectureLabUiId: Identity.IdentityComposer<"@beep/architecture-lab-ui"> =
-  composers.$ArchitectureLabUiId;
+export const $ArchitectureLabUiId: Identity.IdentityComposer<"@beep/architecture-lab-ui"> = /*#__PURE__*/ $I.create(
+  "architecture-lab-ui"
+);
 
 /**
  * Identity composer for `@beep/architecture-lab-proof`.
@@ -1484,7 +1563,7 @@ export const $ArchitectureLabUiId: Identity.IdentityComposer<"@beep/architecture
  * @since 0.0.0
  */
 export const $ArchitectureLabProofId: Identity.IdentityComposer<"@beep/architecture-lab-proof"> =
-  composers.$ArchitectureLabProofId;
+  /*#__PURE__*/ $I.create("architecture-lab-proof");
 
 /**
  * Identity composer for `@beep/runpod`.
@@ -1501,7 +1580,7 @@ export const $ArchitectureLabProofId: Identity.IdentityComposer<"@beep/architect
  * @category configuration
  * @since 0.0.0
  */
-export const $RunpodId: Identity.IdentityComposer<"@beep/runpod"> = composers.$RunpodId;
+export const $RunpodId: Identity.IdentityComposer<"@beep/runpod"> = /*#__PURE__*/ $I.create("runpod");
 
 /**
  * Identity composer for `@beep/onepassword-cli`.
@@ -1518,7 +1597,9 @@ export const $RunpodId: Identity.IdentityComposer<"@beep/runpod"> = composers.$R
  * @category configuration
  * @since 0.0.0
  */
-export const $OnepasswordCliId: Identity.IdentityComposer<"@beep/onepassword-cli"> = composers.$OnepasswordCliId;
+export const $OnepasswordCliId: Identity.IdentityComposer<"@beep/onepassword-cli"> = /*#__PURE__*/ $I.create(
+  "onepassword-cli"
+);
 
 /**
  * Identity composer for `@beep/discord`.
@@ -1535,7 +1616,7 @@ export const $OnepasswordCliId: Identity.IdentityComposer<"@beep/onepassword-cli
  * @category configuration
  * @since 0.0.0
  */
-export const $DiscordId: Identity.IdentityComposer<"@beep/discord"> = composers.$DiscordId;
+export const $DiscordId: Identity.IdentityComposer<"@beep/discord"> = /*#__PURE__*/ $I.create("discord");
 
 /**
  * Identity composer for `@beep/ai-provider-cli`.
@@ -1552,7 +1633,9 @@ export const $DiscordId: Identity.IdentityComposer<"@beep/discord"> = composers.
  * @category configuration
  * @since 0.0.0
  */
-export const $AiProviderCliId: Identity.IdentityComposer<"@beep/ai-provider-cli"> = composers.$AiProviderCliId;
+export const $AiProviderCliId: Identity.IdentityComposer<"@beep/ai-provider-cli"> = /*#__PURE__*/ $I.create(
+  "ai-provider-cli"
+);
 
 /**
  * Identity composer for `@beep/sanity`.
@@ -1569,7 +1652,7 @@ export const $AiProviderCliId: Identity.IdentityComposer<"@beep/ai-provider-cli"
  * @category configuration
  * @since 0.0.0
  */
-export const $SanityId: Identity.IdentityComposer<"@beep/sanity"> = composers.$SanityId;
+export const $SanityId: Identity.IdentityComposer<"@beep/sanity"> = /*#__PURE__*/ $I.create("sanity");
 
 /**
  * Identity composer for `@beep/hubspot`.
@@ -1586,7 +1669,7 @@ export const $SanityId: Identity.IdentityComposer<"@beep/sanity"> = composers.$S
  * @category configuration
  * @since 0.0.0
  */
-export const $HubspotId: Identity.IdentityComposer<"@beep/hubspot"> = composers.$HubspotId;
+export const $HubspotId: Identity.IdentityComposer<"@beep/hubspot"> = /*#__PURE__*/ $I.create("hubspot");
 
 /**
  * Identity composer for `@beep/phoenix`.
@@ -1603,7 +1686,7 @@ export const $HubspotId: Identity.IdentityComposer<"@beep/hubspot"> = composers.
  * @category configuration
  * @since 0.0.0
  */
-export const $PhoenixId: Identity.IdentityComposer<"@beep/phoenix"> = composers.$PhoenixId;
+export const $PhoenixId: Identity.IdentityComposer<"@beep/phoenix"> = /*#__PURE__*/ $I.create("phoenix");
 
 /**
  * Identity composer for `@beep/ai-sync`.
@@ -1620,7 +1703,7 @@ export const $PhoenixId: Identity.IdentityComposer<"@beep/phoenix"> = composers.
  * @category configuration
  * @since 0.0.0
  */
-export const $AiSyncId: Identity.IdentityComposer<"@beep/ai-sync"> = composers.$AiSyncId;
+export const $AiSyncId: Identity.IdentityComposer<"@beep/ai-sync"> = /*#__PURE__*/ $I.create("ai-sync");
 
 /**
  * Identity composer for `@beep/box`.
@@ -1637,7 +1720,7 @@ export const $AiSyncId: Identity.IdentityComposer<"@beep/ai-sync"> = composers.$
  * @category configuration
  * @since 0.0.0
  */
-export const $BoxId: Identity.IdentityComposer<"@beep/box"> = composers.$BoxId;
+export const $BoxId: Identity.IdentityComposer<"@beep/box"> = /*#__PURE__*/ $I.create("box");
 
 /**
  * Identity composer for `@beep/nlp-mcp`.
@@ -1654,7 +1737,7 @@ export const $BoxId: Identity.IdentityComposer<"@beep/box"> = composers.$BoxId;
  * @category configuration
  * @since 0.0.0
  */
-export const $NlpMcpId: Identity.IdentityComposer<"@beep/nlp-mcp"> = composers.$NlpMcpId;
+export const $NlpMcpId: Identity.IdentityComposer<"@beep/nlp-mcp"> = /*#__PURE__*/ $I.create("nlp-mcp");
 
 /**
  * Identity composer for `@beep/rdf-canonize`.
@@ -1671,7 +1754,7 @@ export const $NlpMcpId: Identity.IdentityComposer<"@beep/nlp-mcp"> = composers.$
  * @category configuration
  * @since 0.0.0
  */
-export const $RdfCanonizeId: Identity.IdentityComposer<"@beep/rdf-canonize"> = composers.$RdfCanonizeId;
+export const $RdfCanonizeId: Identity.IdentityComposer<"@beep/rdf-canonize"> = /*#__PURE__*/ $I.create("rdf-canonize");
 
 /**
  * Identity composer for `@beep/wink`.
@@ -1688,7 +1771,7 @@ export const $RdfCanonizeId: Identity.IdentityComposer<"@beep/rdf-canonize"> = c
  * @category configuration
  * @since 0.0.0
  */
-export const $WinkId: Identity.IdentityComposer<"@beep/wink"> = composers.$WinkId;
+export const $WinkId: Identity.IdentityComposer<"@beep/wink"> = /*#__PURE__*/ $I.create("wink");
 
 /**
  * Identity composer for `@beep/file-processing`.
@@ -1705,7 +1788,9 @@ export const $WinkId: Identity.IdentityComposer<"@beep/wink"> = composers.$WinkI
  * @category configuration
  * @since 0.0.0
  */
-export const $FileProcessingId: Identity.IdentityComposer<"@beep/file-processing"> = composers.$FileProcessingId;
+export const $FileProcessingId: Identity.IdentityComposer<"@beep/file-processing"> = /*#__PURE__*/ $I.create(
+  "file-processing"
+);
 
 /**
  * Identity composer for `@beep/tika`.
@@ -1722,7 +1807,7 @@ export const $FileProcessingId: Identity.IdentityComposer<"@beep/file-processing
  * @category configuration
  * @since 0.0.0
  */
-export const $TikaId: Identity.IdentityComposer<"@beep/tika"> = composers.$TikaId;
+export const $TikaId: Identity.IdentityComposer<"@beep/tika"> = /*#__PURE__*/ $I.create("tika");
 
 /**
  * Identity composer for `@beep/libpff`.
@@ -1739,7 +1824,7 @@ export const $TikaId: Identity.IdentityComposer<"@beep/tika"> = composers.$TikaI
  * @category configuration
  * @since 0.0.0
  */
-export const $LibpffId: Identity.IdentityComposer<"@beep/libpff"> = composers.$LibpffId;
+export const $LibpffId: Identity.IdentityComposer<"@beep/libpff"> = /*#__PURE__*/ $I.create("libpff");
 
 /**
  * Identity composer for the `@beep/uspto` package.
@@ -1756,7 +1841,7 @@ export const $LibpffId: Identity.IdentityComposer<"@beep/libpff"> = composers.$L
  * @category configuration
  * @since 0.0.0
  */
-export const $UsptoId: Identity.IdentityComposer<"@beep/uspto"> = composers.$UsptoId;
+export const $UsptoId: Identity.IdentityComposer<"@beep/uspto"> = /*#__PURE__*/ $I.create("uspto");
 
 /**
  * Identity composer for `@beep/lexical-schema`.
@@ -1773,7 +1858,9 @@ export const $UsptoId: Identity.IdentityComposer<"@beep/uspto"> = composers.$Usp
  * @category configuration
  * @since 0.0.0
  */
-export const $LexicalSchemaId: Identity.IdentityComposer<"@beep/lexical-schema"> = composers.$LexicalSchemaId;
+export const $LexicalSchemaId: Identity.IdentityComposer<"@beep/lexical-schema"> = /*#__PURE__*/ $I.create(
+  "lexical-schema"
+);
 
 /**
  * Identity composer for `@beep/editor`.
@@ -1790,7 +1877,7 @@ export const $LexicalSchemaId: Identity.IdentityComposer<"@beep/lexical-schema">
  * @category configuration
  * @since 0.0.0
  */
-export const $EditorId: Identity.IdentityComposer<"@beep/editor"> = composers.$EditorId;
+export const $EditorId: Identity.IdentityComposer<"@beep/editor"> = /*#__PURE__*/ $I.create("editor");
 
 /**
  * Identity composer for `@beep/scratchpad`.
@@ -1807,7 +1894,7 @@ export const $EditorId: Identity.IdentityComposer<"@beep/editor"> = composers.$E
  * @category configuration
  * @since 0.0.0
  */
-export const $ScratchpadId: Identity.IdentityComposer<"@beep/scratchpad"> = composers.$ScratchpadId;
+export const $ScratchpadId: Identity.IdentityComposer<"@beep/scratchpad"> = /*#__PURE__*/ $I.create("scratchpad");
 
 /**
  * Identity composer for `@beep/html`.
@@ -1824,7 +1911,7 @@ export const $ScratchpadId: Identity.IdentityComposer<"@beep/scratchpad"> = comp
  * @category configuration
  * @since 0.0.0
  */
-export const $HtmlId: Identity.IdentityComposer<"@beep/html"> = composers.$HtmlId;
+export const $HtmlId: Identity.IdentityComposer<"@beep/html"> = /*#__PURE__*/ $I.create("html");
 
 /**
  * Identity composer for `@beep/pandoc-ast`.
@@ -1841,7 +1928,7 @@ export const $HtmlId: Identity.IdentityComposer<"@beep/html"> = composers.$HtmlI
  * @category configuration
  * @since 0.0.0
  */
-export const $PandocAstId: Identity.IdentityComposer<"@beep/pandoc-ast"> = composers.$PandocAstId;
+export const $PandocAstId: Identity.IdentityComposer<"@beep/pandoc-ast"> = /*#__PURE__*/ $I.create("pandoc-ast");
 
 /**
  * Identity composer for `@beep/pglite`.
@@ -1858,7 +1945,7 @@ export const $PandocAstId: Identity.IdentityComposer<"@beep/pandoc-ast"> = compo
  * @category configuration
  * @since 0.0.0
  */
-export const $PgliteId: Identity.IdentityComposer<"@beep/pglite"> = composers.$PgliteId;
+export const $PgliteId: Identity.IdentityComposer<"@beep/pglite"> = /*#__PURE__*/ $I.create("pglite");
 
 /**
  * Identity composer for `@beep/m365`.
@@ -1875,7 +1962,7 @@ export const $PgliteId: Identity.IdentityComposer<"@beep/pglite"> = composers.$P
  * @category configuration
  * @since 0.0.0
  */
-export const $M365Id: Identity.IdentityComposer<"@beep/m365"> = composers.$M365Id;
+export const $M365Id: Identity.IdentityComposer<"@beep/m365"> = /*#__PURE__*/ $I.create("m365");
 
 /**
  * Identity composer for `@beep/m365-mcp`.
@@ -1892,7 +1979,7 @@ export const $M365Id: Identity.IdentityComposer<"@beep/m365"> = composers.$M365I
  * @category configuration
  * @since 0.0.0
  */
-export const $M365McpId: Identity.IdentityComposer<"@beep/m365-mcp"> = composers.$M365McpId;
+export const $M365McpId: Identity.IdentityComposer<"@beep/m365-mcp"> = /*#__PURE__*/ $I.create("m365-mcp");
 
 /**
  * Identity composer for `@beep/govinfo`.
@@ -1909,7 +1996,7 @@ export const $M365McpId: Identity.IdentityComposer<"@beep/m365-mcp"> = composers
  * @category configuration
  * @since 0.0.0
  */
-export const $GovinfoId: Identity.IdentityComposer<"@beep/govinfo"> = composers.$GovinfoId;
+export const $GovinfoId: Identity.IdentityComposer<"@beep/govinfo"> = /*#__PURE__*/ $I.create("govinfo");
 
 /**
  * Identity composer for `@beep/ecfr`.
@@ -1926,7 +2013,7 @@ export const $GovinfoId: Identity.IdentityComposer<"@beep/govinfo"> = composers.
  * @category configuration
  * @since 0.0.0
  */
-export const $EcfrId: Identity.IdentityComposer<"@beep/ecfr"> = composers.$EcfrId;
+export const $EcfrId: Identity.IdentityComposer<"@beep/ecfr"> = /*#__PURE__*/ $I.create("ecfr");
 
 /**
  * Identity composer for `@beep/api-transport`.
@@ -1943,7 +2030,9 @@ export const $EcfrId: Identity.IdentityComposer<"@beep/ecfr"> = composers.$EcfrI
  * @category configuration
  * @since 0.0.0
  */
-export const $ApiTransportId: Identity.IdentityComposer<"@beep/api-transport"> = composers.$ApiTransportId;
+export const $ApiTransportId: Identity.IdentityComposer<"@beep/api-transport"> = /*#__PURE__*/ $I.create(
+  "api-transport"
+);
 
 /**
  * Identity composer for `@beep/mcp-kit`.
@@ -1960,7 +2049,7 @@ export const $ApiTransportId: Identity.IdentityComposer<"@beep/api-transport"> =
  * @category configuration
  * @since 0.0.0
  */
-export const $McpKitId: Identity.IdentityComposer<"@beep/mcp-kit"> = composers.$McpKitId;
+export const $McpKitId: Identity.IdentityComposer<"@beep/mcp-kit"> = /*#__PURE__*/ $I.create("mcp-kit");
 
 /**
  * Identity composer for `@beep/uspto-mcp`.
@@ -1977,7 +2066,7 @@ export const $McpKitId: Identity.IdentityComposer<"@beep/mcp-kit"> = composers.$
  * @category configuration
  * @since 0.0.0
  */
-export const $UsptoMcpId: Identity.IdentityComposer<"@beep/uspto-mcp"> = composers.$UsptoMcpId;
+export const $UsptoMcpId: Identity.IdentityComposer<"@beep/uspto-mcp"> = /*#__PURE__*/ $I.create("uspto-mcp");
 
 /**
  * Identity composer for `@beep/pacer`.
@@ -1994,7 +2083,7 @@ export const $UsptoMcpId: Identity.IdentityComposer<"@beep/uspto-mcp"> = compose
  * @category configuration
  * @since 0.0.0
  */
-export const $PacerId: Identity.IdentityComposer<"@beep/pacer"> = composers.$PacerId;
+export const $PacerId: Identity.IdentityComposer<"@beep/pacer"> = /*#__PURE__*/ $I.create("pacer");
 
 /**
  * Identity composer for `@beep/fc-runs`.
@@ -2011,7 +2100,7 @@ export const $PacerId: Identity.IdentityComposer<"@beep/pacer"> = composers.$Pac
  * @category configuration
  * @since 0.0.0
  */
-export const $FcRunsId: Identity.IdentityComposer<"@beep/fc-runs"> = composers.$FcRunsId;
+export const $FcRunsId: Identity.IdentityComposer<"@beep/fc-runs"> = /*#__PURE__*/ $I.create("fc-runs");
 
 /**
  * Identity composer for `@beep/cosmos`.
@@ -2028,7 +2117,7 @@ export const $FcRunsId: Identity.IdentityComposer<"@beep/fc-runs"> = composers.$
  * @category configuration
  * @since 0.0.0
  */
-export const $CosmosId: Identity.IdentityComposer<"@beep/cosmos"> = composers.$CosmosId;
+export const $CosmosId: Identity.IdentityComposer<"@beep/cosmos"> = /*#__PURE__*/ $I.create("cosmos");
 
 /**
  * Identity composer for `@beep/db-admin`.
@@ -2045,7 +2134,7 @@ export const $CosmosId: Identity.IdentityComposer<"@beep/cosmos"> = composers.$C
  * @category configuration
  * @since 0.0.0
  */
-export const $DbAdminId: Identity.IdentityComposer<"@beep/db-admin"> = composers.$DbAdminId;
+export const $DbAdminId: Identity.IdentityComposer<"@beep/db-admin"> = /*#__PURE__*/ $I.create("db-admin");
 
 /**
  * Identity composer for `@beep/epistemic-server`.
@@ -2062,7 +2151,9 @@ export const $DbAdminId: Identity.IdentityComposer<"@beep/db-admin"> = composers
  * @category configuration
  * @since 0.0.0
  */
-export const $EpistemicServerId: Identity.IdentityComposer<"@beep/epistemic-server"> = composers.$EpistemicServerId;
+export const $EpistemicServerId: Identity.IdentityComposer<"@beep/epistemic-server"> = /*#__PURE__*/ $I.create(
+  "epistemic-server"
+);
 
 /**
  * Identity composer for `@beep/epistemic-tables`.
@@ -2079,7 +2170,9 @@ export const $EpistemicServerId: Identity.IdentityComposer<"@beep/epistemic-serv
  * @category configuration
  * @since 0.0.0
  */
-export const $EpistemicTablesId: Identity.IdentityComposer<"@beep/epistemic-tables"> = composers.$EpistemicTablesId;
+export const $EpistemicTablesId: Identity.IdentityComposer<"@beep/epistemic-tables"> = /*#__PURE__*/ $I.create(
+  "epistemic-tables"
+);
 
 /**
  * Identity composer for `@beep/lint-rules`.
@@ -2096,7 +2189,7 @@ export const $EpistemicTablesId: Identity.IdentityComposer<"@beep/epistemic-tabl
  * @category configuration
  * @since 0.0.0
  */
-export const $LintRulesId: Identity.IdentityComposer<"@beep/lint-rules"> = composers.$LintRulesId;
+export const $LintRulesId: Identity.IdentityComposer<"@beep/lint-rules"> = /*#__PURE__*/ $I.create("lint-rules");
 
 /**
  * Identity composer for `@beep/n3`.
@@ -2113,7 +2206,7 @@ export const $LintRulesId: Identity.IdentityComposer<"@beep/lint-rules"> = compo
  * @category configuration
  * @since 0.0.0
  */
-export const $N3Id: Identity.IdentityComposer<"@beep/n3"> = composers.$N3Id;
+export const $N3Id: Identity.IdentityComposer<"@beep/n3"> = /*#__PURE__*/ $I.create("n3");
 
 /**
  * Identity composer for `@beep/pretext`.
@@ -2130,7 +2223,7 @@ export const $N3Id: Identity.IdentityComposer<"@beep/n3"> = composers.$N3Id;
  * @category configuration
  * @since 0.0.0
  */
-export const $PretextId: Identity.IdentityComposer<"@beep/pretext"> = composers.$PretextId;
+export const $PretextId: Identity.IdentityComposer<"@beep/pretext"> = /*#__PURE__*/ $I.create("pretext");
 
 /**
  * Identity composer for `@beep/graph-3d`.
@@ -2147,7 +2240,7 @@ export const $PretextId: Identity.IdentityComposer<"@beep/pretext"> = composers.
  * @category configuration
  * @since 0.0.0
  */
-export const $Graph3dId: Identity.IdentityComposer<"@beep/graph-3d"> = composers.$Graph3dId;
+export const $Graph3dId: Identity.IdentityComposer<"@beep/graph-3d"> = /*#__PURE__*/ $I.create("graph-3d");
 
 /**
  * Identity composer for `@beep/dock`.
@@ -2164,7 +2257,7 @@ export const $Graph3dId: Identity.IdentityComposer<"@beep/graph-3d"> = composers
  * @category configuration
  * @since 0.0.0
  */
-export const $DockId: Identity.IdentityComposer<"@beep/dock"> = composers.$DockId;
+export const $DockId: Identity.IdentityComposer<"@beep/dock"> = /*#__PURE__*/ $I.create("dock");
 
 /**
  * Identity composer for `@beep/dock-react`.
@@ -2181,7 +2274,7 @@ export const $DockId: Identity.IdentityComposer<"@beep/dock"> = composers.$DockI
  * @category configuration
  * @since 0.0.0
  */
-export const $DockReactId: Identity.IdentityComposer<"@beep/dock-react"> = composers.$DockReactId;
+export const $DockReactId: Identity.IdentityComposer<"@beep/dock-react"> = /*#__PURE__*/ $I.create("dock-react");
 
 /**
  * Identity composer for `@beep/ontology-client`.
@@ -2198,7 +2291,9 @@ export const $DockReactId: Identity.IdentityComposer<"@beep/dock-react"> = compo
  * @category configuration
  * @since 0.0.0
  */
-export const $OntologyClientId: Identity.IdentityComposer<"@beep/ontology-client"> = composers.$OntologyClientId;
+export const $OntologyClientId: Identity.IdentityComposer<"@beep/ontology-client"> = /*#__PURE__*/ $I.create(
+  "ontology-client"
+);
 
 /**
  * Identity composer for `@beep/ontology-config`.
@@ -2215,7 +2310,9 @@ export const $OntologyClientId: Identity.IdentityComposer<"@beep/ontology-client
  * @category configuration
  * @since 0.0.0
  */
-export const $OntologyConfigId: Identity.IdentityComposer<"@beep/ontology-config"> = composers.$OntologyConfigId;
+export const $OntologyConfigId: Identity.IdentityComposer<"@beep/ontology-config"> = /*#__PURE__*/ $I.create(
+  "ontology-config"
+);
 
 /**
  * Identity composer for `@beep/ontology-domain`.
@@ -2232,7 +2329,9 @@ export const $OntologyConfigId: Identity.IdentityComposer<"@beep/ontology-config
  * @category configuration
  * @since 0.0.0
  */
-export const $OntologyDomainId: Identity.IdentityComposer<"@beep/ontology-domain"> = composers.$OntologyDomainId;
+export const $OntologyDomainId: Identity.IdentityComposer<"@beep/ontology-domain"> = /*#__PURE__*/ $I.create(
+  "ontology-domain"
+);
 
 /**
  * Identity composer for `@beep/ontology-server`.
@@ -2249,7 +2348,9 @@ export const $OntologyDomainId: Identity.IdentityComposer<"@beep/ontology-domain
  * @category configuration
  * @since 0.0.0
  */
-export const $OntologyServerId: Identity.IdentityComposer<"@beep/ontology-server"> = composers.$OntologyServerId;
+export const $OntologyServerId: Identity.IdentityComposer<"@beep/ontology-server"> = /*#__PURE__*/ $I.create(
+  "ontology-server"
+);
 
 /**
  * Identity composer for `@beep/ontology-ui`.
@@ -2266,7 +2367,7 @@ export const $OntologyServerId: Identity.IdentityComposer<"@beep/ontology-server
  * @category configuration
  * @since 0.0.0
  */
-export const $OntologyUiId: Identity.IdentityComposer<"@beep/ontology-ui"> = composers.$OntologyUiId;
+export const $OntologyUiId: Identity.IdentityComposer<"@beep/ontology-ui"> = /*#__PURE__*/ $I.create("ontology-ui");
 
 /**
  * Identity composer for `@beep/ontology-use-cases`.
@@ -2283,7 +2384,9 @@ export const $OntologyUiId: Identity.IdentityComposer<"@beep/ontology-ui"> = com
  * @category configuration
  * @since 0.0.0
  */
-export const $OntologyUseCasesId: Identity.IdentityComposer<"@beep/ontology-use-cases"> = composers.$OntologyUseCasesId;
+export const $OntologyUseCasesId: Identity.IdentityComposer<"@beep/ontology-use-cases"> = /*#__PURE__*/ $I.create(
+  "ontology-use-cases"
+);
 
 /**
  * Identity composer for `@beep/oxigraph`.
@@ -2300,7 +2403,7 @@ export const $OntologyUseCasesId: Identity.IdentityComposer<"@beep/ontology-use-
  * @category configuration
  * @since 0.0.0
  */
-export const $OxigraphId: Identity.IdentityComposer<"@beep/oxigraph"> = composers.$OxigraphId;
+export const $OxigraphId: Identity.IdentityComposer<"@beep/oxigraph"> = /*#__PURE__*/ $I.create("oxigraph");
 
 /**
  * Identity composer for `@beep/shacl`.
@@ -2317,7 +2420,7 @@ export const $OxigraphId: Identity.IdentityComposer<"@beep/oxigraph"> = composer
  * @category configuration
  * @since 0.0.0
  */
-export const $ShaclId: Identity.IdentityComposer<"@beep/shacl"> = composers.$ShaclId;
+export const $ShaclId: Identity.IdentityComposer<"@beep/shacl"> = /*#__PURE__*/ $I.create("shacl");
 
 /**
  * Identity composer for `@beep/storybook`.
@@ -2334,7 +2437,7 @@ export const $ShaclId: Identity.IdentityComposer<"@beep/shacl"> = composers.$Sha
  * @category configuration
  * @since 0.0.0
  */
-export const $StorybookId: Identity.IdentityComposer<"@beep/storybook"> = composers.$StorybookId;
+export const $StorybookId: Identity.IdentityComposer<"@beep/storybook"> = /*#__PURE__*/ $I.create("storybook");
 
 /**
  * Identity composer for `@beep/tsgo-shim`.
@@ -2351,7 +2454,7 @@ export const $StorybookId: Identity.IdentityComposer<"@beep/storybook"> = compos
  * @category configuration
  * @since 0.0.0
  */
-export const $TsgoShimId: Identity.IdentityComposer<"@beep/tsgo-shim"> = composers.$TsgoShimId;
+export const $TsgoShimId: Identity.IdentityComposer<"@beep/tsgo-shim"> = /*#__PURE__*/ $I.create("tsgo-shim");
 
 /**
  * Identity composer for `@beep/doc-text`.
@@ -2368,7 +2471,7 @@ export const $TsgoShimId: Identity.IdentityComposer<"@beep/tsgo-shim"> = compose
  * @category configuration
  * @since 0.0.0
  */
-export const $DocTextId: Identity.IdentityComposer<"@beep/doc-text"> = composers.$DocTextId;
+export const $DocTextId: Identity.IdentityComposer<"@beep/doc-text"> = /*#__PURE__*/ $I.create("doc-text");
 
 /**
  * Identity composer for `@beep/documents-tables`.
@@ -2385,7 +2488,9 @@ export const $DocTextId: Identity.IdentityComposer<"@beep/doc-text"> = composers
  * @category configuration
  * @since 0.0.0
  */
-export const $DocumentsTablesId: Identity.IdentityComposer<"@beep/documents-tables"> = composers.$DocumentsTablesId;
+export const $DocumentsTablesId: Identity.IdentityComposer<"@beep/documents-tables"> = /*#__PURE__*/ $I.create(
+  "documents-tables"
+);
 
 /**
  * Identity composer for `@beep/tailscale`.
@@ -2402,7 +2507,7 @@ export const $DocumentsTablesId: Identity.IdentityComposer<"@beep/documents-tabl
  * @category configuration
  * @since 0.0.0
  */
-export const $TailscaleId: Identity.IdentityComposer<"@beep/tailscale"> = composers.$TailscaleId;
+export const $TailscaleId: Identity.IdentityComposer<"@beep/tailscale"> = /*#__PURE__*/ $I.create("tailscale");
 
 /**
  * Identity composer for `@beep/agents-tables`.
@@ -2419,7 +2524,9 @@ export const $TailscaleId: Identity.IdentityComposer<"@beep/tailscale"> = compos
  * @category configuration
  * @since 0.0.0
  */
-export const $AgentsTablesId: Identity.IdentityComposer<"@beep/agents-tables"> = composers.$AgentsTablesId;
+export const $AgentsTablesId: Identity.IdentityComposer<"@beep/agents-tables"> = /*#__PURE__*/ $I.create(
+  "agents-tables"
+);
 
 /**
  * Identity composer for `@beep/law-practice-tables`.
@@ -2436,8 +2543,9 @@ export const $AgentsTablesId: Identity.IdentityComposer<"@beep/agents-tables"> =
  * @category configuration
  * @since 0.0.0
  */
-export const $LawPracticeTablesId: Identity.IdentityComposer<"@beep/law-practice-tables"> =
-  composers.$LawPracticeTablesId;
+export const $LawPracticeTablesId: Identity.IdentityComposer<"@beep/law-practice-tables"> = /*#__PURE__*/ $I.create(
+  "law-practice-tables"
+);
 
 /**
  * Identity composer for `@beep/practice-kg-mcp`.
@@ -2454,7 +2562,9 @@ export const $LawPracticeTablesId: Identity.IdentityComposer<"@beep/law-practice
  * @category configuration
  * @since 0.0.0
  */
-export const $PracticeKgMcpId: Identity.IdentityComposer<"@beep/practice-kg-mcp"> = composers.$PracticeKgMcpId;
+export const $PracticeKgMcpId: Identity.IdentityComposer<"@beep/practice-kg-mcp"> = /*#__PURE__*/ $I.create(
+  "practice-kg-mcp"
+);
 
 /**
  * Identity composer for `@beep/openclaw`.
@@ -2471,7 +2581,7 @@ export const $PracticeKgMcpId: Identity.IdentityComposer<"@beep/practice-kg-mcp"
  * @category configuration
  * @since 0.0.0
  */
-export const $OpenclawId: Identity.IdentityComposer<"@beep/openclaw"> = composers.$OpenclawId;
+export const $OpenclawId: Identity.IdentityComposer<"@beep/openclaw"> = /*#__PURE__*/ $I.create("openclaw");
 
 /**
  * Identity composer for `@beep/obs`.
@@ -2488,7 +2598,7 @@ export const $OpenclawId: Identity.IdentityComposer<"@beep/openclaw"> = composer
  * @category configuration
  * @since 0.0.0
  */
-export const $ObsId: Identity.IdentityComposer<"@beep/obs"> = composers.$ObsId;
+export const $ObsId: Identity.IdentityComposer<"@beep/obs"> = /*#__PURE__*/ $I.create("obs");
 
 /**
  * Identity composer for `@beep/exiftool`.
@@ -2505,7 +2615,7 @@ export const $ObsId: Identity.IdentityComposer<"@beep/obs"> = composers.$ObsId;
  * @category configuration
  * @since 0.0.0
  */
-export const $ExiftoolId: Identity.IdentityComposer<"@beep/exiftool"> = composers.$ExiftoolId;
+export const $ExiftoolId: Identity.IdentityComposer<"@beep/exiftool"> = /*#__PURE__*/ $I.create("exiftool");
 
 /**
  * Identity composer for `@beep/qa-capture`.
@@ -2522,7 +2632,7 @@ export const $ExiftoolId: Identity.IdentityComposer<"@beep/exiftool"> = composer
  * @category configuration
  * @since 0.0.0
  */
-export const $QaCaptureId: Identity.IdentityComposer<"@beep/qa-capture"> = composers.$QaCaptureId;
+export const $QaCaptureId: Identity.IdentityComposer<"@beep/qa-capture"> = /*#__PURE__*/ $I.create("qa-capture");
 
 /**
  * Identity composer for `@beep/gov-legal-mcp`.
@@ -2539,7 +2649,9 @@ export const $QaCaptureId: Identity.IdentityComposer<"@beep/qa-capture"> = compo
  * @category configuration
  * @since 0.0.0
  */
-export const $GovLegalMcpId: Identity.IdentityComposer<"@beep/gov-legal-mcp"> = composers.$GovLegalMcpId;
+export const $GovLegalMcpId: Identity.IdentityComposer<"@beep/gov-legal-mcp"> = /*#__PURE__*/ $I.create(
+  "gov-legal-mcp"
+);
 
 /**
  * Identity composer for `@beep/epistemic-client`.
@@ -2555,7 +2667,9 @@ export const $GovLegalMcpId: Identity.IdentityComposer<"@beep/gov-legal-mcp"> = 
  * @category configuration
  * @since 0.0.0
  */
-export const $EpistemicClientId: Identity.IdentityComposer<"@beep/epistemic-client"> = composers.$EpistemicClientId;
+export const $EpistemicClientId: Identity.IdentityComposer<"@beep/epistemic-client"> = /*#__PURE__*/ $I.create(
+  "epistemic-client"
+);
 
 /**
  * Identity composer for `@beep/epistemic-ui`.
@@ -2571,7 +2685,7 @@ export const $EpistemicClientId: Identity.IdentityComposer<"@beep/epistemic-clie
  * @category configuration
  * @since 0.0.0
  */
-export const $EpistemicUiId: Identity.IdentityComposer<"@beep/epistemic-ui"> = composers.$EpistemicUiId;
+export const $EpistemicUiId: Identity.IdentityComposer<"@beep/epistemic-ui"> = /*#__PURE__*/ $I.create("epistemic-ui");
 
 /**
  * Identity composer for `@beep/effect-drizzle`.
@@ -2587,7 +2701,9 @@ export const $EpistemicUiId: Identity.IdentityComposer<"@beep/epistemic-ui"> = c
  * @category configuration
  * @since 0.0.0
  */
-export const $EffectDrizzleId: Identity.IdentityComposer<"@beep/effect-drizzle"> = composers.$EffectDrizzleId;
+export const $EffectDrizzleId: Identity.IdentityComposer<"@beep/effect-drizzle"> = /*#__PURE__*/ $I.create(
+  "effect-drizzle"
+);
 
 /**
  * Identity composer for `@beep/skill-contract`.
@@ -2604,7 +2720,9 @@ export const $EffectDrizzleId: Identity.IdentityComposer<"@beep/effect-drizzle">
  * @category configuration
  * @since 0.0.0
  */
-export const $SkillContractId: Identity.IdentityComposer<"@beep/skill-contract"> = composers.$SkillContractId;
+export const $SkillContractId: Identity.IdentityComposer<"@beep/skill-contract"> = /*#__PURE__*/ $I.create(
+  "skill-contract"
+);
 
 /**
  * Identity composer for `@beep/codegen-kit`.
@@ -2621,7 +2739,7 @@ export const $SkillContractId: Identity.IdentityComposer<"@beep/skill-contract">
  * @category configuration
  * @since 0.0.0
  */
-export const $CodegenKitId: Identity.IdentityComposer<"@beep/codegen-kit"> = composers.$CodegenKitId;
+export const $CodegenKitId: Identity.IdentityComposer<"@beep/codegen-kit"> = /*#__PURE__*/ $I.create("codegen-kit");
 
 /**
  * Identity composer for `@beep/brand`.
@@ -2638,7 +2756,7 @@ export const $CodegenKitId: Identity.IdentityComposer<"@beep/codegen-kit"> = com
  * @category configuration
  * @since 0.0.0
  */
-export const $BrandId: Identity.IdentityComposer<"@beep/brand"> = composers.$BrandId;
+export const $BrandId: Identity.IdentityComposer<"@beep/brand"> = /*#__PURE__*/ $I.create("brand");
 
 /**
  * Identity composer for `@beep/openai`.
@@ -2655,7 +2773,7 @@ export const $BrandId: Identity.IdentityComposer<"@beep/brand"> = composers.$Bra
  * @category configuration
  * @since 0.0.0
  */
-export const $OpenaiId: Identity.IdentityComposer<"@beep/openai"> = composers.$OpenaiId;
+export const $OpenaiId: Identity.IdentityComposer<"@beep/openai"> = /*#__PURE__*/ $I.create("openai");
 
 /**
  * Identity composer for `@beep/todox`.
@@ -2672,7 +2790,7 @@ export const $OpenaiId: Identity.IdentityComposer<"@beep/openai"> = composers.$O
  * @category configuration
  * @since 0.0.0
  */
-export const $TodoxId: Identity.IdentityComposer<"@beep/todox"> = composers.$TodoxId;
+export const $TodoxId: Identity.IdentityComposer<"@beep/todox"> = /*#__PURE__*/ $I.create("todox");
 
 /**
  * Identity composer for `@beep/box-provisioning`.
@@ -2689,7 +2807,9 @@ export const $TodoxId: Identity.IdentityComposer<"@beep/todox"> = composers.$Tod
  * @category configuration
  * @since 0.0.0
  */
-export const $BoxProvisioningId: Identity.IdentityComposer<"@beep/box-provisioning"> = composers.$BoxProvisioningId;
+export const $BoxProvisioningId: Identity.IdentityComposer<"@beep/box-provisioning"> = /*#__PURE__*/ $I.create(
+  "box-provisioning"
+);
 
 /**
  * Identity composer for `@beep/freshbooks`.
@@ -2706,7 +2826,7 @@ export const $BoxProvisioningId: Identity.IdentityComposer<"@beep/box-provisioni
  * @category configuration
  * @since 0.0.0
  */
-export const $FreshbooksId: Identity.IdentityComposer<"@beep/freshbooks"> = composers.$FreshbooksId;
+export const $FreshbooksId: Identity.IdentityComposer<"@beep/freshbooks"> = /*#__PURE__*/ $I.create("freshbooks");
 
 /**
  * Identity composer for `@beep/test-runner`.
@@ -2723,7 +2843,7 @@ export const $FreshbooksId: Identity.IdentityComposer<"@beep/freshbooks"> = comp
  * @category configuration
  * @since 0.0.0
  */
-export const $TestRunnerId: Identity.IdentityComposer<"@beep/test-runner"> = composers.$TestRunnerId;
+export const $TestRunnerId: Identity.IdentityComposer<"@beep/test-runner"> = /*#__PURE__*/ $I.create("test-runner");
 
 /**
  * Identity composer for `@beep/xstate`.
@@ -2740,7 +2860,7 @@ export const $TestRunnerId: Identity.IdentityComposer<"@beep/test-runner"> = com
  * @category configuration
  * @since 0.0.0
  */
-export const $XstateId: Identity.IdentityComposer<"@beep/xstate"> = composers.$XstateId;
+export const $XstateId: Identity.IdentityComposer<"@beep/xstate"> = /*#__PURE__*/ $I.create("xstate");
 
 /**
  * Identity composer for `@beep/tesseract`.
@@ -2757,7 +2877,7 @@ export const $XstateId: Identity.IdentityComposer<"@beep/xstate"> = composers.$X
  * @category configuration
  * @since 0.0.0
  */
-export const $TesseractId: Identity.IdentityComposer<"@beep/tesseract"> = composers.$TesseractId;
+export const $TesseractId: Identity.IdentityComposer<"@beep/tesseract"> = /*#__PURE__*/ $I.create("tesseract");
 
 /**
  * Identity composer for `@beep/poppler`.
@@ -2774,7 +2894,7 @@ export const $TesseractId: Identity.IdentityComposer<"@beep/tesseract"> = compos
  * @category configuration
  * @since 0.0.0
  */
-export const $PopplerId: Identity.IdentityComposer<"@beep/poppler"> = composers.$PopplerId;
+export const $PopplerId: Identity.IdentityComposer<"@beep/poppler"> = /*#__PURE__*/ $I.create("poppler");
 
 /**
  * Identity composer for `@beep/docket-intake`.
@@ -2791,7 +2911,9 @@ export const $PopplerId: Identity.IdentityComposer<"@beep/poppler"> = composers.
  * @category configuration
  * @since 0.0.0
  */
-export const $DocketIntakeId: Identity.IdentityComposer<"@beep/docket-intake"> = composers.$DocketIntakeId;
+export const $DocketIntakeId: Identity.IdentityComposer<"@beep/docket-intake"> = /*#__PURE__*/ $I.create(
+  "docket-intake"
+);
 
 /**
  * Identity composer for `@beep/practice-mail-tagging`.
@@ -2808,8 +2930,9 @@ export const $DocketIntakeId: Identity.IdentityComposer<"@beep/docket-intake"> =
  * @category configuration
  * @since 0.0.0
  */
-export const $PracticeMailTaggingId: Identity.IdentityComposer<"@beep/practice-mail-tagging"> =
-  composers.$PracticeMailTaggingId;
+export const $PracticeMailTaggingId: Identity.IdentityComposer<"@beep/practice-mail-tagging"> = /*#__PURE__*/ $I.create(
+  "practice-mail-tagging"
+);
 
 /**
  * Identity composer for `@beep/occt`.
@@ -2826,7 +2949,7 @@ export const $PracticeMailTaggingId: Identity.IdentityComposer<"@beep/practice-m
  * @category configuration
  * @since 0.0.0
  */
-export const $OcctId: Identity.IdentityComposer<"@beep/occt"> = composers.$OcctId;
+export const $OcctId: Identity.IdentityComposer<"@beep/occt"> = /*#__PURE__*/ $I.create("occt");
 
 /**
  * Identity composer for `@beep/pdf-tools`.
@@ -2843,7 +2966,7 @@ export const $OcctId: Identity.IdentityComposer<"@beep/occt"> = composers.$OcctI
  * @category configuration
  * @since 0.0.0
  */
-export const $PdfToolsId: Identity.IdentityComposer<"@beep/pdf-tools"> = composers.$PdfToolsId;
+export const $PdfToolsId: Identity.IdentityComposer<"@beep/pdf-tools"> = /*#__PURE__*/ $I.create("pdf-tools");
 
 /**
  * Identity composer for `@beep/technical-drawing`.
@@ -2860,7 +2983,9 @@ export const $PdfToolsId: Identity.IdentityComposer<"@beep/pdf-tools"> = compose
  * @category configuration
  * @since 0.0.0
  */
-export const $TechnicalDrawingId: Identity.IdentityComposer<"@beep/technical-drawing"> = composers.$TechnicalDrawingId;
+export const $TechnicalDrawingId: Identity.IdentityComposer<"@beep/technical-drawing"> = /*#__PURE__*/ $I.create(
+  "technical-drawing"
+);
 
 /**
  * Identity composer for `@beep/practice-identify`.
@@ -2877,7 +3002,9 @@ export const $TechnicalDrawingId: Identity.IdentityComposer<"@beep/technical-dra
  * @category configuration
  * @since 0.0.0
  */
-export const $PracticeIdentifyId: Identity.IdentityComposer<"@beep/practice-identify"> = composers.$PracticeIdentifyId;
+export const $PracticeIdentifyId: Identity.IdentityComposer<"@beep/practice-identify"> = /*#__PURE__*/ $I.create(
+  "practice-identify"
+);
 
 /**
  * Identity composer for `@beep/practice-m365-contacts`.
@@ -2895,7 +3022,7 @@ export const $PracticeIdentifyId: Identity.IdentityComposer<"@beep/practice-iden
  * @since 0.0.0
  */
 export const $PracticeM365ContactsId: Identity.IdentityComposer<"@beep/practice-m365-contacts"> =
-  composers.$PracticeM365ContactsId;
+  /*#__PURE__*/ $I.create("practice-m365-contacts");
 
 /**
  * Identity composer for `@beep/practice-claude-mod`.
@@ -2912,8 +3039,9 @@ export const $PracticeM365ContactsId: Identity.IdentityComposer<"@beep/practice-
  * @category configuration
  * @since 0.0.0
  */
-export const $PracticeClaudeModId: Identity.IdentityComposer<"@beep/practice-claude-mod"> =
-  composers.$PracticeClaudeModId;
+export const $PracticeClaudeModId: Identity.IdentityComposer<"@beep/practice-claude-mod"> = /*#__PURE__*/ $I.create(
+  "practice-claude-mod"
+);
 /**
  * Identity composer for `@beep/practice-review-hub`.
  *
@@ -2929,8 +3057,9 @@ export const $PracticeClaudeModId: Identity.IdentityComposer<"@beep/practice-cla
  * @category configuration
  * @since 0.0.0
  */
-export const $PracticeReviewHubId: Identity.IdentityComposer<"@beep/practice-review-hub"> =
-  composers.$PracticeReviewHubId;
+export const $PracticeReviewHubId: Identity.IdentityComposer<"@beep/practice-review-hub"> = /*#__PURE__*/ $I.create(
+  "practice-review-hub"
+);
 
 /**
  * Identity composer for `@beep/palantiri`.
@@ -2947,7 +3076,7 @@ export const $PracticeReviewHubId: Identity.IdentityComposer<"@beep/practice-rev
  * @category configuration
  * @since 0.0.0
  */
-export const $PalantiriId: Identity.IdentityComposer<"@beep/palantiri"> = composers.$PalantiriId;
+export const $PalantiriId: Identity.IdentityComposer<"@beep/palantiri"> = /*#__PURE__*/ $I.create("palantiri");
 
 /**
  * Identity composer for `@beep/windows-secrets`.
@@ -2964,7 +3093,9 @@ export const $PalantiriId: Identity.IdentityComposer<"@beep/palantiri"> = compos
  * @category configuration
  * @since 0.0.0
  */
-export const $WindowsSecretsId: Identity.IdentityComposer<"@beep/windows-secrets"> = composers.$WindowsSecretsId;
+export const $WindowsSecretsId: Identity.IdentityComposer<"@beep/windows-secrets"> = /*#__PURE__*/ $I.create(
+  "windows-secrets"
+);
 
 /**
  * Identity composer for `@beep/practice-gateway`.
@@ -2981,7 +3112,9 @@ export const $WindowsSecretsId: Identity.IdentityComposer<"@beep/windows-secrets
  * @category configuration
  * @since 0.0.0
  */
-export const $PracticeGatewayId: Identity.IdentityComposer<"@beep/practice-gateway"> = composers.$PracticeGatewayId;
+export const $PracticeGatewayId: Identity.IdentityComposer<"@beep/practice-gateway"> = /*#__PURE__*/ $I.create(
+  "practice-gateway"
+);
 
 /**
  * Identity composer for `@beep/mcpb-kit`.
@@ -2998,7 +3131,7 @@ export const $PracticeGatewayId: Identity.IdentityComposer<"@beep/practice-gatew
  * @category configuration
  * @since 0.0.0
  */
-export const $McpbKitId: Identity.IdentityComposer<"@beep/mcpb-kit"> = composers.$McpbKitId;
+export const $McpbKitId: Identity.IdentityComposer<"@beep/mcpb-kit"> = /*#__PURE__*/ $I.create("mcpb-kit");
 
 /**
  * Identity composer for `@beep/practice-setup`.
@@ -3015,7 +3148,9 @@ export const $McpbKitId: Identity.IdentityComposer<"@beep/mcpb-kit"> = composers
  * @category configuration
  * @since 0.0.0
  */
-export const $PracticeSetupId: Identity.IdentityComposer<"@beep/practice-setup"> = composers.$PracticeSetupId;
+export const $PracticeSetupId: Identity.IdentityComposer<"@beep/practice-setup"> = /*#__PURE__*/ $I.create(
+  "practice-setup"
+);
 
 /**
  * Identity composer for `@beep/jsonc`.
@@ -3032,7 +3167,7 @@ export const $PracticeSetupId: Identity.IdentityComposer<"@beep/practice-setup">
  * @category configuration
  * @since 0.0.0
  */
-export const $JsoncId: Identity.IdentityComposer<"@beep/jsonc"> = composers.$JsoncId;
+export const $JsoncId: Identity.IdentityComposer<"@beep/jsonc"> = /*#__PURE__*/ $I.create("jsonc");
 
 /**
  * Identity composer for `@beep/jsonl`.
@@ -3049,7 +3184,7 @@ export const $JsoncId: Identity.IdentityComposer<"@beep/jsonc"> = composers.$Jso
  * @category configuration
  * @since 0.0.0
  */
-export const $JsonlId: Identity.IdentityComposer<"@beep/jsonl"> = composers.$JsonlId;
+export const $JsonlId: Identity.IdentityComposer<"@beep/jsonl"> = /*#__PURE__*/ $I.create("jsonl");
 
 /**
  * Identity composer for `@beep/semver`.
@@ -3066,7 +3201,7 @@ export const $JsonlId: Identity.IdentityComposer<"@beep/jsonl"> = composers.$Jso
  * @category configuration
  * @since 0.0.0
  */
-export const $SemverId: Identity.IdentityComposer<"@beep/semver"> = composers.$SemverId;
+export const $SemverId: Identity.IdentityComposer<"@beep/semver"> = /*#__PURE__*/ $I.create("semver");
 
 /**
  * Identity composer for `@beep/spdx`.
@@ -3083,7 +3218,7 @@ export const $SemverId: Identity.IdentityComposer<"@beep/semver"> = composers.$S
  * @category configuration
  * @since 0.0.0
  */
-export const $SpdxId: Identity.IdentityComposer<"@beep/spdx"> = composers.$SpdxId;
+export const $SpdxId: Identity.IdentityComposer<"@beep/spdx"> = /*#__PURE__*/ $I.create("spdx");
 
 /**
  * Identity composer for `@beep/schema-org`.
@@ -3100,7 +3235,7 @@ export const $SpdxId: Identity.IdentityComposer<"@beep/spdx"> = composers.$SpdxI
  * @category configuration
  * @since 0.0.0
  */
-export const $SchemaOrgId: Identity.IdentityComposer<"@beep/schema-org"> = composers.$SchemaOrgId;
+export const $SchemaOrgId: Identity.IdentityComposer<"@beep/schema-org"> = /*#__PURE__*/ $I.create("schema-org");
 
 /**
  * Identity composer for `@beep/github-references`.
@@ -3117,7 +3252,9 @@ export const $SchemaOrgId: Identity.IdentityComposer<"@beep/schema-org"> = compo
  * @category configuration
  * @since 0.0.0
  */
-export const $GithubReferencesId: Identity.IdentityComposer<"@beep/github-references"> = composers.$GithubReferencesId;
+export const $GithubReferencesId: Identity.IdentityComposer<"@beep/github-references"> = /*#__PURE__*/ $I.create(
+  "github-references"
+);
 
 /**
  * Identity composer for `@beep/github-commands`.
@@ -3134,7 +3271,9 @@ export const $GithubReferencesId: Identity.IdentityComposer<"@beep/github-refere
  * @category configuration
  * @since 0.0.0
  */
-export const $GithubCommandsId: Identity.IdentityComposer<"@beep/github-commands"> = composers.$GithubCommandsId;
+export const $GithubCommandsId: Identity.IdentityComposer<"@beep/github-commands"> = /*#__PURE__*/ $I.create(
+  "github-commands"
+);
 
 /**
  * Identity composer for `@beep/commands`.
@@ -3151,7 +3290,7 @@ export const $GithubCommandsId: Identity.IdentityComposer<"@beep/github-commands
  * @category configuration
  * @since 0.0.0
  */
-export const $CommandsId: Identity.IdentityComposer<"@beep/commands"> = composers.$CommandsId;
+export const $CommandsId: Identity.IdentityComposer<"@beep/commands"> = /*#__PURE__*/ $I.create("commands");
 
 /**
  * Identity composer for `@beep/public-site`.
@@ -3168,7 +3307,7 @@ export const $CommandsId: Identity.IdentityComposer<"@beep/commands"> = composer
  * @category configuration
  * @since 0.0.0
  */
-export const $PublicSiteId: Identity.IdentityComposer<"@beep/public-site"> = composers.$PublicSiteId;
+export const $PublicSiteId: Identity.IdentityComposer<"@beep/public-site"> = /*#__PURE__*/ $I.create("public-site");
 
 /**
  * Identity composer for `@beep/git`.
@@ -3185,7 +3324,7 @@ export const $PublicSiteId: Identity.IdentityComposer<"@beep/public-site"> = com
  * @category configuration
  * @since 0.0.0
  */
-export const $GitId: Identity.IdentityComposer<"@beep/git"> = composers.$GitId;
+export const $GitId: Identity.IdentityComposer<"@beep/git"> = /*#__PURE__*/ $I.create("git");
 
 /**
  * Identity composer for `@beep/glob`.
@@ -3202,7 +3341,7 @@ export const $GitId: Identity.IdentityComposer<"@beep/git"> = composers.$GitId;
  * @category configuration
  * @since 0.0.0
  */
-export const $GlobId: Identity.IdentityComposer<"@beep/glob"> = composers.$GlobId;
+export const $GlobId: Identity.IdentityComposer<"@beep/glob"> = /*#__PURE__*/ $I.create("glob");
 
 /**
  * Identity composer for `@beep/managed-section`.
@@ -3219,7 +3358,9 @@ export const $GlobId: Identity.IdentityComposer<"@beep/glob"> = composers.$GlobI
  * @category configuration
  * @since 0.0.0
  */
-export const $ManagedSectionId: Identity.IdentityComposer<"@beep/managed-section"> = composers.$ManagedSectionId;
+export const $ManagedSectionId: Identity.IdentityComposer<"@beep/managed-section"> = /*#__PURE__*/ $I.create(
+  "managed-section"
+);
 
 /**
  * Identity composer for `@beep/memfs`.
@@ -3236,7 +3377,7 @@ export const $ManagedSectionId: Identity.IdentityComposer<"@beep/managed-section
  * @category configuration
  * @since 0.0.0
  */
-export const $MemfsId: Identity.IdentityComposer<"@beep/memfs"> = composers.$MemfsId;
+export const $MemfsId: Identity.IdentityComposer<"@beep/memfs"> = /*#__PURE__*/ $I.create("memfs");
 
 /**
  * Identity composer for `@beep/toml`.
@@ -3253,7 +3394,7 @@ export const $MemfsId: Identity.IdentityComposer<"@beep/memfs"> = composers.$Mem
  * @category configuration
  * @since 0.0.0
  */
-export const $TomlId: Identity.IdentityComposer<"@beep/toml"> = composers.$TomlId;
+export const $TomlId: Identity.IdentityComposer<"@beep/toml"> = /*#__PURE__*/ $I.create("toml");
 
 /**
  * Identity composer for `@beep/yaml`.
@@ -3270,7 +3411,7 @@ export const $TomlId: Identity.IdentityComposer<"@beep/toml"> = composers.$TomlI
  * @category configuration
  * @since 0.0.0
  */
-export const $YamlId: Identity.IdentityComposer<"@beep/yaml"> = composers.$YamlId;
+export const $YamlId: Identity.IdentityComposer<"@beep/yaml"> = /*#__PURE__*/ $I.create("yaml");
 
 /**
  * Identity composer for `@beep/npm-spec`.
@@ -3287,7 +3428,7 @@ export const $YamlId: Identity.IdentityComposer<"@beep/yaml"> = composers.$YamlI
  * @category configuration
  * @since 0.0.0
  */
-export const $NpmSpecId: Identity.IdentityComposer<"@beep/npm-spec"> = composers.$NpmSpecId;
+export const $NpmSpecId: Identity.IdentityComposer<"@beep/npm-spec"> = /*#__PURE__*/ $I.create("npm-spec");
 
 /**
  * Identity composer for `@beep/tsconfig`.
@@ -3304,7 +3445,7 @@ export const $NpmSpecId: Identity.IdentityComposer<"@beep/npm-spec"> = composers
  * @category configuration
  * @since 0.0.0
  */
-export const $TsconfigId: Identity.IdentityComposer<"@beep/tsconfig"> = composers.$TsconfigId;
+export const $TsconfigId: Identity.IdentityComposer<"@beep/tsconfig"> = /*#__PURE__*/ $I.create("tsconfig");
 
 /**
  * Identity composer for `@beep/walker`.
@@ -3321,7 +3462,7 @@ export const $TsconfigId: Identity.IdentityComposer<"@beep/tsconfig"> = composer
  * @category configuration
  * @since 0.0.0
  */
-export const $WalkerId: Identity.IdentityComposer<"@beep/walker"> = composers.$WalkerId;
+export const $WalkerId: Identity.IdentityComposer<"@beep/walker"> = /*#__PURE__*/ $I.create("walker");
 
 /**
  * Identity composer for `@beep/github`.
@@ -3338,7 +3479,7 @@ export const $WalkerId: Identity.IdentityComposer<"@beep/walker"> = composers.$W
  * @category configuration
  * @since 0.0.0
  */
-export const $GithubId: Identity.IdentityComposer<"@beep/github"> = composers.$GithubId;
+export const $GithubId: Identity.IdentityComposer<"@beep/github"> = /*#__PURE__*/ $I.create("github");
 
 /**
  * Identity composer for `@beep/runtime-env`.
@@ -3355,7 +3496,7 @@ export const $GithubId: Identity.IdentityComposer<"@beep/github"> = composers.$G
  * @category configuration
  * @since 0.0.0
  */
-export const $RuntimeEnvId: Identity.IdentityComposer<"@beep/runtime-env"> = composers.$RuntimeEnvId;
+export const $RuntimeEnvId: Identity.IdentityComposer<"@beep/runtime-env"> = /*#__PURE__*/ $I.create("runtime-env");
 
 /**
  * Identity composer for `@beep/epistemics`.
@@ -3372,7 +3513,7 @@ export const $RuntimeEnvId: Identity.IdentityComposer<"@beep/runtime-env"> = com
  * @category configuration
  * @since 0.0.0
  */
-export const $EpistemicsId: Identity.IdentityComposer<"@beep/epistemics"> = composers.$EpistemicsId;
+export const $EpistemicsId: Identity.IdentityComposer<"@beep/epistemics"> = /*#__PURE__*/ $I.create("epistemics");
 
 /**
  * Identity composer for `@beep/markdown`.
@@ -3389,7 +3530,7 @@ export const $EpistemicsId: Identity.IdentityComposer<"@beep/epistemics"> = comp
  * @category configuration
  * @since 0.0.0
  */
-export const $MarkdownId: Identity.IdentityComposer<"@beep/markdown"> = composers.$MarkdownId;
+export const $MarkdownId: Identity.IdentityComposer<"@beep/markdown"> = /*#__PURE__*/ $I.create("markdown");
 
 /**
  * Identity composer for `@beep/github-reporting`.
@@ -3406,7 +3547,9 @@ export const $MarkdownId: Identity.IdentityComposer<"@beep/markdown"> = composer
  * @category configuration
  * @since 0.0.0
  */
-export const $GithubReportingId: Identity.IdentityComposer<"@beep/github-reporting"> = composers.$GithubReportingId;
+export const $GithubReportingId: Identity.IdentityComposer<"@beep/github-reporting"> = /*#__PURE__*/ $I.create(
+  "github-reporting"
+);
 
 /**
  * Identity composer for `@beep/repo-tsconfig`.
@@ -3423,7 +3566,9 @@ export const $GithubReportingId: Identity.IdentityComposer<"@beep/github-reporti
  * @category configuration
  * @since 0.0.0
  */
-export const $RepoTsconfigId: Identity.IdentityComposer<"@beep/repo-tsconfig"> = composers.$RepoTsconfigId;
+export const $RepoTsconfigId: Identity.IdentityComposer<"@beep/repo-tsconfig"> = /*#__PURE__*/ $I.create(
+  "repo-tsconfig"
+);
 
 /**
  * Identity composer for `@beep/package-json`.
@@ -3440,7 +3585,7 @@ export const $RepoTsconfigId: Identity.IdentityComposer<"@beep/repo-tsconfig"> =
  * @category configuration
  * @since 0.0.0
  */
-export const $PackageJsonId: Identity.IdentityComposer<"@beep/package-json"> = composers.$PackageJsonId;
+export const $PackageJsonId: Identity.IdentityComposer<"@beep/package-json"> = /*#__PURE__*/ $I.create("package-json");
 
 /**
  * Identity composer for `@beep/config-file`.
@@ -3457,7 +3602,7 @@ export const $PackageJsonId: Identity.IdentityComposer<"@beep/package-json"> = c
  * @category configuration
  * @since 0.0.0
  */
-export const $ConfigFileId: Identity.IdentityComposer<"@beep/config-file"> = composers.$ConfigFileId;
+export const $ConfigFileId: Identity.IdentityComposer<"@beep/config-file"> = /*#__PURE__*/ $I.create("config-file");
 
 /**
  * Identity composer for `@beep/lockfiles`.
@@ -3474,7 +3619,7 @@ export const $ConfigFileId: Identity.IdentityComposer<"@beep/config-file"> = com
  * @category configuration
  * @since 0.0.0
  */
-export const $LockfilesId: Identity.IdentityComposer<"@beep/lockfiles"> = composers.$LockfilesId;
+export const $LockfilesId: Identity.IdentityComposer<"@beep/lockfiles"> = /*#__PURE__*/ $I.create("lockfiles");
 
 /**
  * Identity composer for `@beep/xdg`.
@@ -3491,7 +3636,7 @@ export const $LockfilesId: Identity.IdentityComposer<"@beep/lockfiles"> = compos
  * @category configuration
  * @since 0.0.0
  */
-export const $XdgId: Identity.IdentityComposer<"@beep/xdg"> = composers.$XdgId;
+export const $XdgId: Identity.IdentityComposer<"@beep/xdg"> = /*#__PURE__*/ $I.create("xdg");
 
 /**
  * Identity composer for `@beep/cli-kit`.
@@ -3508,7 +3653,7 @@ export const $XdgId: Identity.IdentityComposer<"@beep/xdg"> = composers.$XdgId;
  * @category configuration
  * @since 0.0.0
  */
-export const $CliKitId: Identity.IdentityComposer<"@beep/cli-kit"> = composers.$CliKitId;
+export const $CliKitId: Identity.IdentityComposer<"@beep/cli-kit"> = /*#__PURE__*/ $I.create("cli-kit");
 
 /**
  * Identity composer for `@beep/repo-workspaces`.
@@ -3525,7 +3670,9 @@ export const $CliKitId: Identity.IdentityComposer<"@beep/cli-kit"> = composers.$
  * @category configuration
  * @since 0.0.0
  */
-export const $RepoWorkspacesId: Identity.IdentityComposer<"@beep/repo-workspaces"> = composers.$RepoWorkspacesId;
+export const $RepoWorkspacesId: Identity.IdentityComposer<"@beep/repo-workspaces"> = /*#__PURE__*/ $I.create(
+  "repo-workspaces"
+);
 
 /**
  * Identity composer for `@beep/sbom`.
@@ -3542,7 +3689,7 @@ export const $RepoWorkspacesId: Identity.IdentityComposer<"@beep/repo-workspaces
  * @category configuration
  * @since 0.0.0
  */
-export const $SbomId: Identity.IdentityComposer<"@beep/sbom"> = composers.$SbomId;
+export const $SbomId: Identity.IdentityComposer<"@beep/sbom"> = /*#__PURE__*/ $I.create("sbom");
 
 /**
  * Identity composer for `@beep/github-actions`.
@@ -3559,7 +3706,9 @@ export const $SbomId: Identity.IdentityComposer<"@beep/sbom"> = composers.$SbomI
  * @category configuration
  * @since 0.0.0
  */
-export const $GithubActionsId: Identity.IdentityComposer<"@beep/github-actions"> = composers.$GithubActionsId;
+export const $GithubActionsId: Identity.IdentityComposer<"@beep/github-actions"> = /*#__PURE__*/ $I.create(
+  "github-actions"
+);
 
 /**
  * Identity composer for `@beep/beep-effect-web`.
@@ -3576,7 +3725,9 @@ export const $GithubActionsId: Identity.IdentityComposer<"@beep/github-actions">
  * @category configuration
  * @since 0.0.0
  */
-export const $BeepEffectWebId: Identity.IdentityComposer<"@beep/beep-effect-web"> = composers.$BeepEffectWebId;
+export const $BeepEffectWebId: Identity.IdentityComposer<"@beep/beep-effect-web"> = /*#__PURE__*/ $I.create(
+  "beep-effect-web"
+);
 
 /**
  * Identity composer for `@beep/party-domain`.
@@ -3593,7 +3744,7 @@ export const $BeepEffectWebId: Identity.IdentityComposer<"@beep/beep-effect-web"
  * @category configuration
  * @since 0.0.0
  */
-export const $PartyDomainId: Identity.IdentityComposer<"@beep/party-domain"> = composers.$PartyDomainId;
+export const $PartyDomainId: Identity.IdentityComposer<"@beep/party-domain"> = /*#__PURE__*/ $I.create("party-domain");
 
 /**
  * Identity composer for `@beep/party-use-cases`.
@@ -3610,7 +3761,9 @@ export const $PartyDomainId: Identity.IdentityComposer<"@beep/party-domain"> = c
  * @category configuration
  * @since 0.0.0
  */
-export const $PartyUseCasesId: Identity.IdentityComposer<"@beep/party-use-cases"> = composers.$PartyUseCasesId;
+export const $PartyUseCasesId: Identity.IdentityComposer<"@beep/party-use-cases"> = /*#__PURE__*/ $I.create(
+  "party-use-cases"
+);
 
 /**
  * Identity composer for `@beep/party-server`.
@@ -3627,7 +3780,7 @@ export const $PartyUseCasesId: Identity.IdentityComposer<"@beep/party-use-cases"
  * @category configuration
  * @since 0.0.0
  */
-export const $PartyServerId: Identity.IdentityComposer<"@beep/party-server"> = composers.$PartyServerId;
+export const $PartyServerId: Identity.IdentityComposer<"@beep/party-server"> = /*#__PURE__*/ $I.create("party-server");
 
 /**
  * Identity composer for `@beep/repo-cli-kit`.
@@ -3644,7 +3797,7 @@ export const $PartyServerId: Identity.IdentityComposer<"@beep/party-server"> = c
  * @category configuration
  * @since 0.0.0
  */
-export const $RepoCliKitId: Identity.IdentityComposer<"@beep/repo-cli-kit"> = composers.$RepoCliKitId;
+export const $RepoCliKitId: Identity.IdentityComposer<"@beep/repo-cli-kit"> = /*#__PURE__*/ $I.create("repo-cli-kit");
 
 /**
  * Identity composer for `@beep/alchemy-postgres`.
@@ -3661,7 +3814,9 @@ export const $RepoCliKitId: Identity.IdentityComposer<"@beep/repo-cli-kit"> = co
  * @category configuration
  * @since 0.0.0
  */
-export const $AlchemyPostgresId: Identity.IdentityComposer<"@beep/alchemy-postgres"> = composers.$AlchemyPostgresId;
+export const $AlchemyPostgresId: Identity.IdentityComposer<"@beep/alchemy-postgres"> = /*#__PURE__*/ $I.create(
+  "alchemy-postgres"
+);
 
 /**
  * Identity composer for `@beep/firecrawl`.
@@ -3678,7 +3833,7 @@ export const $AlchemyPostgresId: Identity.IdentityComposer<"@beep/alchemy-postgr
  * @category configuration
  * @since 0.0.0
  */
-export const $FirecrawlId: Identity.IdentityComposer<"@beep/firecrawl"> = composers.$FirecrawlId;
+export const $FirecrawlId: Identity.IdentityComposer<"@beep/firecrawl"> = /*#__PURE__*/ $I.create("firecrawl");
 
 /**
  * Identity composer for `@beep/execution-authority-domain`.
@@ -3696,7 +3851,7 @@ export const $FirecrawlId: Identity.IdentityComposer<"@beep/firecrawl"> = compos
  * @since 0.0.0
  */
 export const $ExecutionAuthorityDomainId: Identity.IdentityComposer<"@beep/execution-authority-domain"> =
-  composers.$ExecutionAuthorityDomainId;
+  /*#__PURE__*/ $I.create("execution-authority-domain");
 
 /**
  * Identity composer for `@beep/execution-authority-use-cases`.
@@ -3714,7 +3869,7 @@ export const $ExecutionAuthorityDomainId: Identity.IdentityComposer<"@beep/execu
  * @since 0.0.0
  */
 export const $ExecutionAuthorityUseCasesId: Identity.IdentityComposer<"@beep/execution-authority-use-cases"> =
-  composers.$ExecutionAuthorityUseCasesId;
+  /*#__PURE__*/ $I.create("execution-authority-use-cases");
 
 /**
  * Identity composer for `@beep/execution-authority-tables`.
@@ -3732,7 +3887,7 @@ export const $ExecutionAuthorityUseCasesId: Identity.IdentityComposer<"@beep/exe
  * @since 0.0.0
  */
 export const $ExecutionAuthorityTablesId: Identity.IdentityComposer<"@beep/execution-authority-tables"> =
-  composers.$ExecutionAuthorityTablesId;
+  /*#__PURE__*/ $I.create("execution-authority-tables");
 
 /**
  * Identity composer for `@beep/execution-authority-server`.
@@ -3750,7 +3905,7 @@ export const $ExecutionAuthorityTablesId: Identity.IdentityComposer<"@beep/execu
  * @since 0.0.0
  */
 export const $ExecutionAuthorityServerId: Identity.IdentityComposer<"@beep/execution-authority-server"> =
-  composers.$ExecutionAuthorityServerId;
+  /*#__PURE__*/ $I.create("execution-authority-server");
 
 /**
  * Identity composer for `@beep/execution-authority-config`.
@@ -3768,7 +3923,7 @@ export const $ExecutionAuthorityServerId: Identity.IdentityComposer<"@beep/execu
  * @since 0.0.0
  */
 export const $ExecutionAuthorityConfigId: Identity.IdentityComposer<"@beep/execution-authority-config"> =
-  composers.$ExecutionAuthorityConfigId;
+  /*#__PURE__*/ $I.create("execution-authority-config");
 
 /**
  * Identity composer for `@beep/eyecite`.
@@ -3785,7 +3940,7 @@ export const $ExecutionAuthorityConfigId: Identity.IdentityComposer<"@beep/execu
  * @category configuration
  * @since 0.0.0
  */
-export const $EyeciteId: Identity.IdentityComposer<"@beep/eyecite"> = composers.$EyeciteId;
+export const $EyeciteId: Identity.IdentityComposer<"@beep/eyecite"> = /*#__PURE__*/ $I.create("eyecite");
 
 /**
  * Identity composer for `@beep/agent-memory-store`.
@@ -3802,7 +3957,9 @@ export const $EyeciteId: Identity.IdentityComposer<"@beep/eyecite"> = composers.
  * @category configuration
  * @since 0.0.0
  */
-export const $AgentMemoryStoreId: Identity.IdentityComposer<"@beep/agent-memory-store"> = composers.$AgentMemoryStoreId;
+export const $AgentMemoryStoreId: Identity.IdentityComposer<"@beep/agent-memory-store"> = /*#__PURE__*/ $I.create(
+  "agent-memory-store"
+);
 
 /**
  * Identity composer for `@beep/sqlite`.
@@ -3819,7 +3976,7 @@ export const $AgentMemoryStoreId: Identity.IdentityComposer<"@beep/agent-memory-
  * @category configuration
  * @since 0.0.0
  */
-export const $SqliteId: Identity.IdentityComposer<"@beep/sqlite"> = composers.$SqliteId;
+export const $SqliteId: Identity.IdentityComposer<"@beep/sqlite"> = /*#__PURE__*/ $I.create("sqlite");
 
 /**
  * Identity composer for `@beep/infra-turbo-cache`.
@@ -3836,7 +3993,9 @@ export const $SqliteId: Identity.IdentityComposer<"@beep/sqlite"> = composers.$S
  * @category configuration
  * @since 0.0.0
  */
-export const $InfraTurboCacheId: Identity.IdentityComposer<"@beep/infra-turbo-cache"> = composers.$InfraTurboCacheId;
+export const $InfraTurboCacheId: Identity.IdentityComposer<"@beep/infra-turbo-cache"> = /*#__PURE__*/ $I.create(
+  "infra-turbo-cache"
+);
 
 /**
  * Identity composer for `@beep/alchemy-github-runners`.
@@ -3854,7 +4013,7 @@ export const $InfraTurboCacheId: Identity.IdentityComposer<"@beep/infra-turbo-ca
  * @since 0.0.0
  */
 export const $AlchemyGithubRunnersId: Identity.IdentityComposer<"@beep/alchemy-github-runners"> =
-  composers.$AlchemyGithubRunnersId;
+  /*#__PURE__*/ $I.create("alchemy-github-runners");
 
 /**
  * Identity composer for `@beep/alchemy-aws-extras`.
@@ -3871,7 +4030,9 @@ export const $AlchemyGithubRunnersId: Identity.IdentityComposer<"@beep/alchemy-g
  * @category configuration
  * @since 0.0.0
  */
-export const $AlchemyAwsExtrasId: Identity.IdentityComposer<"@beep/alchemy-aws-extras"> = composers.$AlchemyAwsExtrasId;
+export const $AlchemyAwsExtrasId: Identity.IdentityComposer<"@beep/alchemy-aws-extras"> = /*#__PURE__*/ $I.create(
+  "alchemy-aws-extras"
+);
 
 /**
  * Identity composer for `@beep/alchemy-vercel`.
@@ -3888,7 +4049,9 @@ export const $AlchemyAwsExtrasId: Identity.IdentityComposer<"@beep/alchemy-aws-e
  * @category configuration
  * @since 0.0.0
  */
-export const $AlchemyVercelId: Identity.IdentityComposer<"@beep/alchemy-vercel"> = composers.$AlchemyVercelId;
+export const $AlchemyVercelId: Identity.IdentityComposer<"@beep/alchemy-vercel"> = /*#__PURE__*/ $I.create(
+  "alchemy-vercel"
+);
 
 /**
  * Identity composer for `@beep/infra-cost-controls`.
@@ -3905,8 +4068,9 @@ export const $AlchemyVercelId: Identity.IdentityComposer<"@beep/alchemy-vercel">
  * @category configuration
  * @since 0.0.0
  */
-export const $InfraCostControlsId: Identity.IdentityComposer<"@beep/infra-cost-controls"> =
-  composers.$InfraCostControlsId;
+export const $InfraCostControlsId: Identity.IdentityComposer<"@beep/infra-cost-controls"> = /*#__PURE__*/ $I.create(
+  "infra-cost-controls"
+);
 
 /**
  * Identity composer for `@beep/infra-hosts`.
@@ -3923,7 +4087,7 @@ export const $InfraCostControlsId: Identity.IdentityComposer<"@beep/infra-cost-c
  * @category configuration
  * @since 0.0.0
  */
-export const $InfraHostsId: Identity.IdentityComposer<"@beep/infra-hosts"> = composers.$InfraHostsId;
+export const $InfraHostsId: Identity.IdentityComposer<"@beep/infra-hosts"> = /*#__PURE__*/ $I.create("infra-hosts");
 
 /**
  * Identity composer for `@beep/infra-github`.
@@ -3940,7 +4104,7 @@ export const $InfraHostsId: Identity.IdentityComposer<"@beep/infra-hosts"> = com
  * @category configuration
  * @since 0.0.0
  */
-export const $InfraGithubId: Identity.IdentityComposer<"@beep/infra-github"> = composers.$InfraGithubId;
+export const $InfraGithubId: Identity.IdentityComposer<"@beep/infra-github"> = /*#__PURE__*/ $I.create("infra-github");
 
 /**
  * Identity composer for `@beep/contract-kit`.
@@ -3957,7 +4121,7 @@ export const $InfraGithubId: Identity.IdentityComposer<"@beep/infra-github"> = c
  * @category configuration
  * @since 0.0.0
  */
-export const $ContractKitId: Identity.IdentityComposer<"@beep/contract-kit"> = composers.$ContractKitId;
+export const $ContractKitId: Identity.IdentityComposer<"@beep/contract-kit"> = /*#__PURE__*/ $I.create("contract-kit");
 
 /**
  * Identity composer for `@beep/infra-ci-runners`.
@@ -3974,7 +4138,9 @@ export const $ContractKitId: Identity.IdentityComposer<"@beep/contract-kit"> = c
  * @category configuration
  * @since 0.0.0
  */
-export const $InfraCiRunnersId: Identity.IdentityComposer<"@beep/infra-ci-runners"> = composers.$InfraCiRunnersId;
+export const $InfraCiRunnersId: Identity.IdentityComposer<"@beep/infra-ci-runners"> = /*#__PURE__*/ $I.create(
+  "infra-ci-runners"
+);
 
 /**
  * Identity composer for `@beep/gate-report`.
@@ -3991,7 +4157,7 @@ export const $InfraCiRunnersId: Identity.IdentityComposer<"@beep/infra-ci-runner
  * @category configuration
  * @since 0.0.0
  */
-export const $GateReportId: Identity.IdentityComposer<"@beep/gate-report"> = composers.$GateReportId;
+export const $GateReportId: Identity.IdentityComposer<"@beep/gate-report"> = /*#__PURE__*/ $I.create("gate-report");
 
 /**
  * Identity composer for `@beep/repo-gate-record`.
@@ -4008,7 +4174,9 @@ export const $GateReportId: Identity.IdentityComposer<"@beep/gate-report"> = com
  * @category configuration
  * @since 0.0.0
  */
-export const $RepoGateRecordId: Identity.IdentityComposer<"@beep/repo-gate-record"> = composers.$RepoGateRecordId;
+export const $RepoGateRecordId: Identity.IdentityComposer<"@beep/repo-gate-record"> = /*#__PURE__*/ $I.create(
+  "repo-gate-record"
+);
 
 /**
  * Identity composer for `@beep/repo-gate-run`.
@@ -4025,7 +4193,9 @@ export const $RepoGateRecordId: Identity.IdentityComposer<"@beep/repo-gate-recor
  * @category configuration
  * @since 0.0.0
  */
-export const $RepoGateRunId: Identity.IdentityComposer<"@beep/repo-gate-run"> = composers.$RepoGateRunId;
+export const $RepoGateRunId: Identity.IdentityComposer<"@beep/repo-gate-run"> = /*#__PURE__*/ $I.create(
+  "repo-gate-run"
+);
 
 /**
  * Identity composer for `@beep/csv`.
@@ -4042,7 +4212,7 @@ export const $RepoGateRunId: Identity.IdentityComposer<"@beep/repo-gate-run"> = 
  * @category configuration
  * @since 0.0.0
  */
-export const $CsvId: Identity.IdentityComposer<"@beep/csv"> = composers.$CsvId;
+export const $CsvId: Identity.IdentityComposer<"@beep/csv"> = /*#__PURE__*/ $I.create("csv");
 
 /**
  * Identity composer for `@beep/xlsx`.
@@ -4059,4 +4229,4 @@ export const $CsvId: Identity.IdentityComposer<"@beep/csv"> = composers.$CsvId;
  * @category configuration
  * @since 0.0.0
  */
-export const $XlsxId: Identity.IdentityComposer<"@beep/xlsx"> = composers.$XlsxId;
+export const $XlsxId: Identity.IdentityComposer<"@beep/xlsx"> = /*#__PURE__*/ $I.create("xlsx");
