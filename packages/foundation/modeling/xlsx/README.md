@@ -49,22 +49,34 @@ workbook written and read back is its canonical form, and that form does not mov
 
 Nothing a file declares. Caps (`XlsxLimits`) are counted as bytes are inflated, a declared extent is kept as a
 claim, and a cell the file gets wrong is kept as `Unreadable` with what was written, and reported: an ISO date with
-an impossible time such as `T99:99:99` among them. The work a file can ask for is bounded by what it holds: a hidden
-`<col>` span is kept as its two ends and each column comes out once, however many spans name it, and each sheet's
-relationship is one lookup in an index built once. When records are read under a header row, a cell with a value in
-a column the header row has no heading for stops the read, as an empty or repeated heading does.
+an impossible time such as `T99:99:99`, or day 0, among them. A style index that is not a whole number is reported as
+written (`UnknownStyle`) and read as General; no attribute, whatever it holds, makes a read die.
+
+The work a file can ask for is bounded by what it holds. A hidden `<col>` span is kept as its two ends and each column
+comes out once, however many spans name it; each sheet's relationship is one lookup in an index built once; a repeated
+column in a row is found in one step whatever order the cells come in; and the text a shared formula hands to the
+cells that share it is counted against `maxSharedFormulaChars`. A part that several sheets name is read once, and its
+findings name the first of them. The lists a read keeps beside the rows (warnings, merged ranges, hidden spans, hidden
+columns, shared formulas) each have one cap for the whole read, not one per sheet: what goes past it is dropped and
+counted, and the warnings end with a `ListTruncated` saying how many. A range merged twice is kept once.
+
+When records are read under a header row, a cell with a value in a column the header row has no heading for stops the
+read, as an empty or repeated heading does. Writing records refuses, as a schema issue, what such a read could not give
+back: an empty heading, one longer than a cell, more headings than a sheet has columns.
 
 The archive is read with `effect/encoding/Zip` and the XML with `effect/encoding/Xml` (each behind one file in
-`src/internal`). That zip reader goes through the entries in order and never reads the central directory. Two things
-follow, and a caller should know both:
+`src/internal`). That zip reader goes through the entries in order from the first byte and never reads the central
+directory, which is what Excel opens a file by. Two checks keep the two from showing different workbooks:
 
-- A path met twice stops the read (`DuplicatePart`), because Excel would open the entry the directory names.
-- An entry that is in the archive and missing from the directory is invisible to Excel and visible here. Only parts
-  the workbook's own relationships name are read, so such an entry is ignored unless it takes a real part's path,
-  which is the repeat above.
+- A part name met twice stops the read (`DuplicatePart`). Names are compared as OPC compares them, without regard to
+  ASCII case, and a relationship finds its part the same way.
+- When the file ends with a central directory, that directory must name exactly the entries the walk read, each
+  where the one before it ends, from the first byte up to the directory (`DirectoryMismatch`). An archive updated by
+  appending, whose last directory names entries the walk never reached, is refused; so is an entry the directory
+  leaves out.
 
-A file cut short inside its directory, after the last entry, still reads: every entry it holds was checked against
-its checksum.
+A file cut short inside its directory, after the last entry, still reads: it has no directory to disagree with, and
+every entry it holds was checked against its checksum.
 
 ## Displayed text
 

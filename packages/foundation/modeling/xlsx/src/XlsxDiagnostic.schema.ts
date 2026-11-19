@@ -123,6 +123,31 @@ export class DuplicatePart extends S.Opaque<DuplicatePart, { readonly brand: uni
 ) {}
 
 /**
+ * The archive's central directory, which Excel opens the file by, names other entries than the ones the archive
+ * holds from its first byte, as an archive updated by appending does. Two readers could be shown two workbooks, so
+ * the read stops.
+ *
+ * **Example** (An archive updated by appending)
+ *
+ * ```ts import.meta.vitest name="An archive updated by appending"
+ * import { describeFinding, DirectoryMismatch } from "@beep/xlsx"
+ *
+ * const finding = DirectoryMismatch.make({ reason: "the directory starts at byte 2048, the entries end at 1024" })
+ * describeFinding(finding) // => "the archive's directory names other entries: the directory starts at byte 2048, the entries end at 1024"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export class DirectoryMismatch extends S.Opaque<DirectoryMismatch, { readonly brand: unique symbol }>()(
+  S.Struct({ kind: S.tag("DirectoryMismatch"), reason: short("Where the directory and the entries part") }).pipe(
+    $I.annoteSchema("DirectoryMismatch", {
+      description: "The archive's central directory names other entries than the archive holds in order",
+    })
+  )
+) {}
+
+/**
  * How an archive is damaged, in the words of Effect's zip reader.
  *
  * **Example** (Known kinds of damage)
@@ -222,6 +247,7 @@ export const XlsxLimit = LiteralKit([
   "rows",
   "columns",
   "cellChars",
+  "sharedFormulaChars",
   "xml",
 ]).pipe($I.annoteSchema("XlsxLimit", { description: "Which cap a read ran into" }));
 
@@ -368,14 +394,15 @@ export class RowOutOfOrder extends S.Opaque<RowOutOfOrder, { readonly brand: uni
 ) {}
 
 /**
- * A cell names a style the workbook does not have; it was read as General.
+ * A cell names a style the workbook does not have, or writes a style index that is not a whole number; it was read
+ * as General. The index is kept as the cell writes it.
  *
  * **Example** (A style index past the table)
  *
  * ```ts import.meta.vitest name="A style index past the table"
  * import { describeFinding, UnknownStyle, XlsxAddress } from "@beep/xlsx"
  *
- * const finding = UnknownStyle.make({ sheet: "Items", address: XlsxAddress.make({ column: 0, row: 1 }), style: 99 })
+ * const finding = UnknownStyle.make({ sheet: "Items", address: XlsxAddress.make({ column: 0, row: 1 }), style: "99" })
  * describeFinding(finding) // => 'A1 on "Items" names style 99, which the workbook does not have'
  * ```
  *
@@ -383,7 +410,7 @@ export class RowOutOfOrder extends S.Opaque<RowOutOfOrder, { readonly brand: uni
  * @since 0.0.0
  */
 export class UnknownStyle extends S.Opaque<UnknownStyle, { readonly brand: unique symbol }>()(
-  S.Struct({ kind: S.tag("UnknownStyle"), sheet, address, style: whole("The style index the cell names") }).pipe(
+  S.Struct({ kind: S.tag("UnknownStyle"), sheet, address, style: short("The style index as the cell writes it") }).pipe(
     $I.annoteSchema("UnknownStyle", { description: "A cell names a style the workbook does not have" })
   )
 ) {}
@@ -484,6 +511,58 @@ export class DeclaredExtentWrong extends S.Opaque<DeclaredExtentWrong, { readonl
 ) {}
 
 /**
+ * A list a read keeps beside the rows, which a file could otherwise grow without end: the warnings, the merged
+ * ranges, the hidden `<col>` spans, the hidden columns they expand to, and the shared formulas.
+ *
+ * **Example** (Known lists)
+ *
+ * ```ts import.meta.vitest name="Known lists"
+ * import { XlsxKeptList } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxKeptList)("merges") // => true
+ * S.is(XlsxKeptList)("rows") // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const XlsxKeptList = LiteralKit(["warnings", "merges", "hiddenSpans", "hiddenColumns", "sharedFormulas"]).pipe(
+  $I.annoteSchema("XlsxKeptList", { description: "A list a read keeps beside the rows, under a cap" })
+);
+
+/**
+ * The name of a list a read caps, such as `"merges"`; the type {@link XlsxKeptList} decodes to.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type XlsxKeptList = typeof XlsxKeptList.Type;
+
+/**
+ * A list went past its cap for the whole read (`XlsxLimits`), and this many of its items were dropped. It comes
+ * after every other warning, and is not itself counted against the cap on warnings.
+ *
+ * **Example** (Warnings past their cap)
+ *
+ * ```ts import.meta.vitest name="Warnings past their cap"
+ * import { describeFinding, ListTruncated } from "@beep/xlsx"
+ *
+ * describeFinding(ListTruncated.make({ list: "warnings", dropped: 12 })) // => "12 warnings went past the read's cap and were dropped"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
+export class ListTruncated extends S.Opaque<ListTruncated, { readonly brand: unique symbol }>()(
+  S.Struct({
+    kind: S.tag("ListTruncated"),
+    list: XlsxKeptList.pipe(S.annotateKey({ description: "Which list" })),
+    dropped: whole("How many of its items were dropped"),
+  }).pipe($I.annoteSchema("ListTruncated", { description: "A list went past its cap and some items were dropped" }))
+) {}
+
+/**
  * What a read goes past.
  *
  * **Example** (Branch on a warning finding)
@@ -508,6 +587,7 @@ export const XlsxWarningFinding = LiteralKit([
   "FormulaWithoutResult",
   "FictitiousLeapDay",
   "DeclaredExtentWrong",
+  "ListTruncated",
 ])
   .mapMembers(() =>
     Tuple.make(
@@ -518,7 +598,8 @@ export const XlsxWarningFinding = LiteralKit([
       FormatNotShown,
       FormulaWithoutResult,
       FictitiousLeapDay,
-      DeclaredExtentWrong
+      DeclaredExtentWrong,
+      ListTruncated
     )
   )
   .pipe(S.toTaggedUnion("kind"), $I.annoteSchema("XlsxWarningFinding", { description: "What a read goes past" }));
@@ -551,13 +632,23 @@ export const XlsxFatalFinding = LiteralKit([
   "NotAWorkbook",
   "MissingPart",
   "DuplicatePart",
+  "DirectoryMismatch",
   "DamagedArchive",
   "DamagedXml",
   "LimitExceeded",
   "NoSheets",
 ])
   .mapMembers(() =>
-    Tuple.make(NotAWorkbook, MissingPart, DuplicatePart, DamagedArchive, DamagedXml, LimitExceeded, NoSheets)
+    Tuple.make(
+      NotAWorkbook,
+      MissingPart,
+      DuplicatePart,
+      DirectoryMismatch,
+      DamagedArchive,
+      DamagedXml,
+      LimitExceeded,
+      NoSheets
+    )
   )
   .pipe(S.toTaggedUnion("kind"), $I.annoteSchema("XlsxFatalFinding", { description: "What stops a read" }));
 
@@ -677,6 +768,7 @@ export const describeFinding: (finding: XlsxWarningFinding | XlsxFatalFinding) =
     NotAWorkbook: (f) => `the file is not an .xlsx workbook (${f.container})`,
     MissingPart: (f) => `the part ${f.path} is missing`,
     DuplicatePart: (f) => `the archive holds ${f.path} twice`,
+    DirectoryMismatch: (f) => `the archive's directory names other entries: ${f.reason}`,
     DamagedArchive: (f) => `the archive is damaged (${f.damage}): ${f.reason}`,
     DamagedXml: (f) => `${f.path} is not well-formed at ${f.line}:${f.column}: ${f.reason}`,
     LimitExceeded: (f) => `the file went past its cap on ${f.limit} in ${f.path}`,
@@ -688,6 +780,7 @@ export const describeFinding: (finding: XlsxWarningFinding | XlsxFatalFinding) =
     FormatNotShown: (f) => `${f.cells} cells of "${f.sheet}" have the format ${f.code}, which is not rendered`,
     FormulaWithoutResult: (f) => `the formula in ${at(f)} has no saved result`,
     FictitiousLeapDay: (f) => `${at(f)} holds 29 February 1900, a day that never was`,
+    ListTruncated: (f) => `${f.dropped} ${f.list} went past the read's cap and were dropped`,
     DeclaredExtentWrong: (f) =>
       `"${f.sheet}" declares ${XlsxRange.format(f.declared)} and holds ${O.match(f.found, {
         onNone: () => "nothing",

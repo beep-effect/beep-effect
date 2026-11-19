@@ -3,6 +3,7 @@
 
 import { Csv } from "@beep/csv/Csv.codec";
 import { DuplicateHeader, EmptyHeader } from "@beep/csv/CsvDiagnostic.schema";
+import { CsvFixedDelimiter, CsvFixedEncoding, CsvReadOptions } from "@beep/csv/CsvOptions.schema";
 import { CsvRecord } from "@beep/csv/CsvTable.schema";
 import { describe, it } from "@effect/vitest";
 import { assertFailure, assertSuccess, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
@@ -14,7 +15,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { runs, utf8 } from "./support.ts";
+import { findingsOfFatals, growth, runs, thenFail, untilFailure, utf8 } from "./support.ts";
 
 const rowsCodec = Csv.recordsFromString();
 const decodeRows = S.decodeResult(rowsCodec);
@@ -26,7 +27,7 @@ const findingsOf = (text: string) =>
     Stream.runCollect,
     Effect.result,
     Effect.map(
-      Result.mapError((error) => (error._tag === "CsvParseError" ? A.map(error.diagnostics, (d) => d.finding) : error))
+      Result.mapError((error) => (error._tag === "CsvParseError" ? findingsOfFatals(error.diagnostics) : error))
     )
   );
 
@@ -86,18 +87,34 @@ describe("header findings", () => {
     assertTrue(Str.includes('heading 2 repeats "a" from heading 1')(rows.failure.message));
   });
 
-  it("100,000 headings are checked in linear time, distinct or all empty", () => {
-    const distinct = A.join(
-      A.makeBy(100_000, (i) => `h${i}`),
-      ","
-    );
-    const started = performance.now();
-    assertTrue(Result.isSuccess(decodeRows(`${distinct}\n`)), "the read succeeds");
-    const empty = decodeRows(`${Str.repeat(99_999)(",")}\n`);
-    assertTrue(Result.isFailure(empty), "the read fails");
-    // The quadratic check took about 13 s for the distinct header alone; linear is well under a second for both.
-    assertTrue(performance.now() - started < 3_000);
+  it("headings are checked in linear time, distinct or all empty", () => {
+    const distinct = (n: number) =>
+      A.join(
+        A.makeBy(n, (i) => `h${i}`),
+        ","
+      );
+    assertTrue(Result.isSuccess(decodeRows(`${distinct(100_000)}\n`)), "the read succeeds");
+    assertTrue(Result.isFailure(decodeRows(`${Str.repeat(99_999)(",")}\n`)), "the read fails");
+    // From 10,000 headings to 80,000 a quadratic check grows about 64 times; this one grows about 11 (a little over 8,
+    // from the wider row the read builds), so the bound sits between them with room on both sides.
+    const ratio = growth(decodeRows, [`${distinct(10_000)}\n`, `${distinct(80_000)}\n`]);
+    assertTrue(ratio < 24, `checking 8n headings cost ${ratio} times n`);
   });
+
+  it.effect("a failing upstream fails the rows channel with its error, after the rows it finished and no others", () =>
+    Effect.gen(function* () {
+      const options = CsvReadOptions.make({
+        delimiter: CsvFixedDelimiter.make({ delimiter: "," }),
+        encoding: CsvFixedEncoding.make({ encoding: "utf-8" }),
+      });
+      const rows = yield* untilFailure(
+        thenFail([utf8("a,b\n1,2\n3")], "io").pipe(
+          Stream.pipeThroughChannel(Csv.decodeSchema(S.Struct({ a: S.String, b: S.String }))<string>(options))
+        )
+      );
+      deepStrictEqual(rows, [Result.succeed({ a: "1", b: "2" }), Result.fail("io")]);
+    })
+  );
 });
 
 describe("writing rows", () => {

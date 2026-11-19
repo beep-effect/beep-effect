@@ -1,8 +1,12 @@
 // The archive a workbook is: what the first bytes say the file is, and the passes over its parts with Effect's zip
-// reader. This file reads with `effect/encoding/Zip` and internal/writer.ts writes with it; nothing else imports it. The reader goes through local headers in order
-// and never reads the central directory, so one path met twice is refused: Excel would open the entry the
-// directory names, and a file could otherwise show two readers two workbooks. Caps are counted as bytes are
-// inflated, never taken from the sizes a file declares.
+// reader. This file reads with `effect/encoding/Zip` and internal/writer.ts writes with it; nothing else imports it.
+// That reader goes through the local entries in order and never reads the central directory, which is what Excel
+// opens a file by, so a file could show the two readers two workbooks. Two checks close that: one part name met twice
+// is refused (`DuplicatePart`), part names compared as OPC compares them, without regard to ASCII case; and when the
+// file ends with a directory, that directory must name exactly the entries the walk read, each where the one before
+// it ends, from the first byte to the directory itself (`DirectoryMismatch`). An archive updated by appending, an
+// entry the directory leaves out and a directory that names an entry the walk never reached are all refused by the
+// second. Caps are counted as bytes are inflated, never taken from the sizes a file declares.
 import { $XlsxId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
@@ -12,10 +16,17 @@ import { dual } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { DamagedArchive, DuplicatePart, LimitExceeded, XlsxFatal } from "../XlsxDiagnostic.schema.ts";
+import {
+  DamagedArchive,
+  DirectoryMismatch,
+  DuplicatePart,
+  LimitExceeded,
+  XlsxFatal,
+} from "../XlsxDiagnostic.schema.ts";
 import type { XlsxContainer } from "../XlsxDiagnostic.schema.ts";
 import type { XlsxLimits } from "../XlsxOptions.schema.ts";
 
@@ -28,13 +39,19 @@ export class Caps extends S.Opaque<Caps, { readonly brand: unique symbol }>()(
   S.Struct({
     cellChars: cap("Most characters in one cell"),
     columns: cap("Most columns a cell may be at"),
+    hiddenColumns: cap("Most hidden columns kept over the read"),
+    hiddenSpans: cap("Most hidden column spans kept over the read"),
     inflatedBytes: cap("Most bytes all parts may inflate to"),
     inputBytes: cap("Most bytes the file itself may have"),
+    merges: cap("Most merged ranges kept over the read"),
     partBytes: cap("Most bytes one part may inflate to"),
     parts: cap("Most parts in the archive"),
     rows: cap("Most rows read from one sheet"),
+    sharedFormulaChars: cap("Most characters of formula text handed to cells sharing a formula"),
+    sharedFormulas: cap("Most shared formulas kept over the read"),
     sharedStrings: cap("Most entries in the shared text table"),
     sheets: cap("Most sheets in the workbook"),
+    warnings: cap("Most warnings kept over the read"),
   }).pipe($I.annoteSchema("Caps", { description: "The caps of a read as plain numbers" }))
 ) {}
 
@@ -55,7 +72,25 @@ export const capsOf = (
     rows: limits.maxRows,
     columns: limits.maxColumns,
     cellChars: limits.maxCellChars,
+    sharedFormulaChars: limits.maxSharedFormulaChars,
+    warnings: limits.maxWarnings,
+    merges: limits.maxMerges,
+    hiddenSpans: limits.maxHiddenSpans,
+    hiddenColumns: limits.maxHiddenColumns,
+    sharedFormulas: limits.maxSharedFormulas,
   });
+
+/**
+ * A part name as OPC compares it: without regard to ASCII case (ECMA-376 part 2, 9.1.1.1). Every lookup of a part by
+ * its name goes through this key; findings keep the name as the archive or the relationship writes it.
+ */
+export const partKey = (path: string): string => {
+  // crispen: read for every entry and every lookup; only `A` to `Z` fold, as OPC folds them, which no Effect string
+  // helper does without folding the rest of Unicode too.
+  let key = "";
+  for (const letter of path) key += letter >= "A" && letter <= "Z" ? Str.toLowerCase(letter) : letter;
+  return key;
+};
 
 /** A finding that stops a read, as the failure of an engine step. */
 export const stop = (finding: XlsxFatal["finding"]): XlsxFatal => XlsxFatal.make({ finding });
@@ -112,14 +147,124 @@ export const concatBytes = (chunks: ReadonlyArray<Uint8Array>): Uint8Array => {
   return out;
 };
 
+const LOCAL = 0x04034b50;
+const CENTRAL = 0x02014b50;
+const END = 0x06054b50;
+const END64 = 0x06064b50;
+const LOCATOR64 = 0x07064b50;
+const MAX16 = 0xffff;
+const MAX32 = 0xffffffff;
+const FLAG_DESCRIPTOR = 0x0008;
+/** The lengths a data descriptor may have: with or without its signature, with 32-bit or 64-bit sizes. */
+const descriptorLengths = [12, 16, 20, 24];
+
+/** One entry as the central directory names it. */
+interface Listed {
+  readonly compressed: number;
+  readonly descriptor: boolean;
+  readonly offset: number;
+}
+
+const byOffset = Order.mapInput(Order.Number, (entry: Listed) => entry.offset);
+
 /**
- * The first pass: every part inflated and counted against the caps, every path checked for a repeat, and the parts
- * `keep` asks for held. A part that is not kept is inflated and let go.
+ * Where the central directory of a file and the entries it holds from its first byte part ways, none when they
+ * agree or when the file does not end with a directory (a file cut short inside it, whose every entry the walk has
+ * checked). The directory is found as Excel finds it, from the last end record, and must be the sequence of entries
+ * the walk reads: the first at byte 0, each where the one before it ends, the last ending where the directory
+ * starts.
+ */
+// crispen: a walk over little-endian records at byte offsets, each step a bounds check that may end it.
+export const directoryMismatch = (bytes: Uint8Array): O.Option<string> => {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const length = bytes.length;
+  const u16 = (at: number): number => (at + 2 <= length ? view.getUint16(at, true) : -1);
+  const u32 = (at: number): number => (at + 4 <= length ? view.getUint32(at, true) : -1);
+  const u64 = (at: number): number => (at + 8 <= length ? Number(view.getBigUint64(at, true)) : -1);
+  let end = -1;
+  for (let at = length - 22; at >= Math.max(0, length - 22 - MAX16); at -= 1) {
+    if (u32(at) === END && at + 22 + u16(at + 20) <= length) {
+      end = at;
+      break;
+    }
+  }
+  if (end === -1) return O.none();
+  let count = u16(end + 10);
+  let size = u32(end + 12);
+  let start = u32(end + 16);
+  let directoryEnd = end;
+  if (count === MAX16 || size === MAX32 || start === MAX32) {
+    const record = u64(end - 20 + 8);
+    if (u32(end - 20) !== LOCATOR64 || record < 0 || u32(record) !== END64) {
+      return O.some("the end record names a 64-bit record that is not there");
+    }
+    count = u64(record + 32);
+    size = u64(record + 40);
+    start = u64(record + 48);
+    directoryEnd = record;
+  }
+  if (start + size !== directoryEnd) {
+    return O.some(`the directory at byte ${start} of ${size} bytes does not reach its end record at ${directoryEnd}`);
+  }
+  if (count * 46 > size) return O.some(`the directory is too short for the ${count} entries it counts`);
+  const listed: Array<Listed> = [];
+  let at = start;
+  for (let n = 0; n < count; n += 1) {
+    if (u32(at) !== CENTRAL) return O.some(`the directory's entry ${n + 1} is not where it should be`);
+    const names = u16(at + 28);
+    const extras = u16(at + 30);
+    let compressed = u32(at + 20);
+    let offset = u32(at + 42);
+    if (compressed === MAX32 || offset === MAX32) {
+      // The 64-bit extra field holds, in order, each of the sizes and the offset that its 32-bit field leaves out.
+      let field = at + 46 + names;
+      const fieldsEnd = field + extras;
+      while (field + 4 <= fieldsEnd) {
+        const id = u16(field);
+        const span = u16(field + 2);
+        if (id === 0x0001) {
+          let value = field + 4;
+          if (u32(at + 24) === MAX32) value += 8;
+          if (compressed === MAX32) {
+            compressed = u64(value);
+            value += 8;
+          }
+          if (offset === MAX32) offset = u64(value);
+        }
+        field += 4 + span;
+      }
+    }
+    listed.push({ compressed, descriptor: (u16(at + 8) & FLAG_DESCRIPTOR) !== 0, offset });
+    at += 46 + names + extras + u16(at + 32);
+  }
+  if (at !== directoryEnd) return O.some(`the directory's ${count} entries do not fill it`);
+  const sorted = A.sort(listed, byOffset);
+  let expected = 0;
+  for (let n = 0; n < sorted.length; n += 1) {
+    const entry = sorted[n];
+    if (entry === undefined) break;
+    if (entry.offset !== expected || u32(entry.offset) !== LOCAL) {
+      return O.some(`the directory names an entry at byte ${entry.offset}, where the walk reached ${expected}`);
+    }
+    const dataEnd = entry.offset + 30 + u16(entry.offset + 26) + u16(entry.offset + 28) + entry.compressed;
+    const next = sorted[n + 1]?.offset ?? start;
+    // A descriptor's length is not recorded anywhere: it is the one that lands on the next entry or the directory.
+    expected = entry.descriptor && A.some(descriptorLengths, (extra) => dataEnd + extra === next) ? next : dataEnd;
+  }
+  return expected === start
+    ? O.none()
+    : O.some(`the directory starts at byte ${start}, where the entries it names end at ${expected}`);
+};
+
+/**
+ * The first pass: every part inflated and counted against the caps, every path checked for a repeat, the parts
+ * `keep` asks for held (by their `partKey`), and the directory checked against what the pass read. A part that is
+ * not kept is inflated and let go.
  */
 export const census = Effect.fnUntraced(function* (input: {
   readonly bytes: Uint8Array;
   readonly caps: Caps;
-  readonly keep: (path: string) => boolean;
+  readonly keep: (key: string) => boolean;
 }) {
   const { caps, keep } = input;
   // crispen: counters and a held-chunk list per part, updated as each inflated chunk arrives; the caps must be
@@ -133,13 +278,14 @@ export const census = Effect.fnUntraced(function* (input: {
     Stream.mapEffect((entry) => {
       const path = entry.header.path;
       if (entry.header.type === "Directory") return Effect.void;
-      if (MutableHashSet.has(seen, path))
+      const key = partKey(path);
+      if (MutableHashSet.has(seen, key))
         return Effect.fail(stop(DuplicatePart.make({ path: Str.slice(0, 1024)(path) })));
-      MutableHashSet.add(seen, path);
+      MutableHashSet.add(seen, key);
       paths.push(path);
       if (paths.length > caps.parts) return Effect.fail(stop(LimitExceeded.make({ limit: "parts", path: "" })));
       const held: Array<Uint8Array> = [];
-      const wanted = keep(path);
+      const wanted = keep(key);
       let size = 0;
       return entry.body.pipe(
         Stream.mapError(damaged),
@@ -157,31 +303,36 @@ export const census = Effect.fnUntraced(function* (input: {
         }),
         Stream.runDrain,
         Effect.map(() => {
-          if (wanted) MutableHashMap.set(kept, path, concatBytes(held));
+          if (wanted) MutableHashMap.set(kept, key, concatBytes(held));
         })
       );
     }),
     Stream.runDrain
   );
+  const mismatch = directoryMismatch(input.bytes);
+  if (O.isSome(mismatch)) {
+    return yield* Effect.fail(stop(DirectoryMismatch.make({ reason: Str.slice(0, 255)(mismatch.value) })));
+  }
   return { paths, kept };
 });
 
-/** A later pass: the named parts held, every other part skipped. The census has already counted them all. */
+/** A later pass: the parts `wanted` asks for by their `partKey` held under it, every other part skipped. The census
+ * has already counted them all. */
 export const collect = Effect.fnUntraced(function* (input: {
   readonly bytes: Uint8Array;
-  readonly wanted: (path: string) => boolean;
+  readonly wanted: (key: string) => boolean;
 }) {
   const kept = MutableHashMap.empty<string, Uint8Array>();
   yield* entriesOf(input.bytes).pipe(
     Stream.mapError(damaged),
     Stream.mapEffect((entry) => {
-      const path = entry.header.path;
-      if (entry.header.type === "Directory" || !input.wanted(path)) return Effect.void;
+      const key = partKey(entry.header.path);
+      if (entry.header.type === "Directory" || !input.wanted(key)) return Effect.void;
       return entry.body.pipe(
         Stream.mapError(damaged),
         Stream.runCollect,
         Effect.map((chunks) => {
-          MutableHashMap.set(kept, path, concatBytes(chunks));
+          MutableHashMap.set(kept, key, concatBytes(chunks));
         })
       );
     }),
@@ -191,24 +342,26 @@ export const collect = Effect.fnUntraced(function* (input: {
 });
 
 /**
- * The parts `wanted` asks for, each as its path and the stream of its inflated bytes, in the order the archive holds
- * them. A body must be read before the next part is pulled, which `Stream.flatMap` and `Stream.mapEffect` do.
+ * The parts `wanted` asks for by their `partKey`, each as its path, its key and the stream of its inflated bytes, in
+ * the order the archive holds them. A body must be read before the next part is pulled, which `Stream.flatMap` and `Stream.mapEffect` do.
  */
 export const bodiesOf: {
-  (wanted: (path: string) => boolean): (bytes: Uint8Array) => Stream.Stream<Body, XlsxFatal>;
-  (bytes: Uint8Array, wanted: (path: string) => boolean): Stream.Stream<Body, XlsxFatal>;
+  (wanted: (key: string) => boolean): (bytes: Uint8Array) => Stream.Stream<Body, XlsxFatal>;
+  (bytes: Uint8Array, wanted: (key: string) => boolean): Stream.Stream<Body, XlsxFatal>;
 } = dual(
   2,
-  (bytes: Uint8Array, wanted: (path: string) => boolean): Stream.Stream<Body, XlsxFatal> =>
+  (bytes: Uint8Array, wanted: (key: string) => boolean): Stream.Stream<Body, XlsxFatal> =>
     entriesOf(bytes).pipe(
       Stream.mapError(damaged),
-      Stream.filter((entry) => entry.header.type === "File" && wanted(entry.header.path)),
-      Stream.map((entry) => ({ path: entry.header.path, body: Stream.mapError(entry.body, damaged) }))
+      Stream.map((entry) => ({ entry, key: partKey(entry.header.path) })),
+      Stream.filter(({ entry, key }) => entry.header.type === "File" && wanted(key)),
+      Stream.map(({ entry, key }) => ({ path: entry.header.path, key, body: Stream.mapError(entry.body, damaged) }))
     )
 );
 
-/** One part's path and the stream of its inflated bytes. */
+/** One part's path as the archive writes it, its `partKey`, and the stream of its inflated bytes. */
 interface Body {
   readonly body: Stream.Stream<Uint8Array, XlsxFatal>;
+  readonly key: string;
   readonly path: string;
 }

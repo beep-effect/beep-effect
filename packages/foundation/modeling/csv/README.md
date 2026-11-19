@@ -47,7 +47,8 @@ Csv.stringify(read.table); // canonical: commas, CRLF, minimal quoting
   read keeps at most `maxWarnings` warnings (1,000 by default) and counts the
   rest in one closing `WarningsTruncated`, so a hostile file cannot fill
   memory with them. A read costs time linear in its input, however it is cut
-  into chunks.
+  into chunks; a stream holds at most its detect window (64 KiB by default,
+  256 MiB at most) and its delimiter-detection window before it reads on.
 - Bytes are decoded by their byte-order mark, else as UTF-8 when valid, else
   as Windows-1252 (what Excel writes). The decision and the first invalid byte
   are recorded in `CsvRead.source`.
@@ -69,21 +70,27 @@ Csv.stringify(read.table); // canonical: commas, CRLF, minimal quoting
   so `decode(encode(table))` is the table.
 - Chunk invariance: reading in pieces, or through a channel split anywhere
   (inside a BOM, a `sep=` line, a UTF-8 sequence or a CRLF), gives what
-  reading at once gives, findings and their positions included. The one
-  exception is a detected encoding in a byte channel, which settles within
-  `CsvDetectEncoding.window`: a byte past the window that breaks UTF-8 fails
-  the channel with `InvalidUtf8`, where the whole read falls back to
-  Windows-1252.
+  reading at once gives, findings and their positions included. Two exceptions,
+  both in a byte channel. A detected encoding settles within
+  `CsvDetectEncoding.window`, so a byte past the window that breaks UTF-8
+  fails the channel with `InvalidUtf8`, where the whole read falls back to
+  Windows-1252; input that ends within the window reads the same both ways.
+  And a channel reports the first fatal finding in input order, where a whole
+  read checks the byte cap and the encoding before it parses: bytes past a
+  passed text cap that the encoding or the byte cap refuses fail the two
+  differently. An upstream failure passes through a channel unchanged, with
+  nothing flushed before it.
 - Strict mode agrees with Effect's `effect/encoding/Csv`: on RFC 4180 text both
   read the same records, on misplaced quotes both refuse, and each reads the
   other's output back unchanged. Effect's module covers strict streaming of one
   dialect only; lenient reads, positions, warnings, delimiter and encoding
   detection, the synchronous API and BOM, quote-everything and formula-guard
   writing are this package's.
-- One parser: `internal/machine.ts` is a push machine. One machine lives
-  across the chunks of a read, and its state can be taken and resumed as a
-  schema value (`MachineState`). The engine in `internal/` never imports the
-  facade; only `Csv.codec.ts` decides that a fatal finding fails.
+- One parser: `internal/machine.ts` is a push machine, and one machine lives
+  across the chunks of a read. `internal/start.ts` reads a start (BOM, `sep=`
+  line, delimiter) for whole reads and streams alike, and `internal/stream.ts`
+  holds the channels' state chunk by chunk. The engine in `internal/` never
+  imports the facade; only `Csv.codec.ts` decides that a fatal finding fails.
 
 ## Tests
 
@@ -98,10 +105,11 @@ tight-cap reads), `test/oracle.property.test.ts` the agreement with
 `effect/encoding/Csv`, `test/CsvSchemas.property.test.ts` that every exported
 schema (and the machine's state) generates only values it accepts,
 `test/brands.test.ts` that Opaque-typed fields keep their nominal types,
-`test/encoding.test.ts` byte decoding and the byte cap, `test/header.test.ts`
+`test/encoding.test.ts` byte decoding, the byte cap and failing upstreams, `test/header.test.ts`
 the header view, `test/lenient.test.ts` the findings a lenient read reports and
 a strict read refuses, `test/write.test.ts` the formula guard, write options and
-writing channels, and `test/hostile.test.ts` the caps and linear cost.
+writing channels, and `test/hostile.test.ts` the caps and linear cost (by structure and
+machine counts, not wall-clock bounds).
 Generators come from the schemas through `effect/Arbitrary`. Tests import
 package source through `@beep/csv/...` aliases.
 

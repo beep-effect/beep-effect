@@ -1,6 +1,6 @@
 // Writing: the formula guard defuses exactly the OWASP first characters, a guarded table is not a round trip, the
 // non-default write options spell what they say, and the writing channels give `stringify`'s text however the records
-// are batched.
+// are batched, and a failing upstream fails them with its own error.
 
 import { Csv } from "@beep/csv/Csv.codec";
 import { CsvWriteOptions } from "@beep/csv/CsvOptions.schema";
@@ -13,7 +13,8 @@ import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import { outcomeOfRead, readWith, runs } from "./support.ts";
+import { outcomeOfRead, readWith, runs, thenFail, untilFailure, utf8 } from "./support.ts";
+import type { CsvRecord } from "@beep/csv/CsvTable.schema";
 
 const guarded = CsvWriteOptions.make({ formulaGuard: "apostrophe" });
 const one = (cell: string) => ({ records: [[cell]] as const });
@@ -100,5 +101,24 @@ describe("the writing channels", () => {
         deepStrictEqual(Uint8Array.from(A.flatMap(bytes, (chunk) => [...chunk])), Csv.stringifyBytes(table, options));
       }),
     runs
+  );
+
+  it.effect("a failing upstream fails both channels with its error, with no final terminator or BOM before it", () =>
+    Effect.gen(function* () {
+      const options = CsvWriteOptions.make({ bom: true });
+      const written: ReadonlyArray<CsvRecord> = [["a", "b"]];
+      const text = yield* untilFailure(
+        thenFail(written, "io").pipe(Stream.pipeThroughChannel(Csv.encodeString<string>(options)))
+      );
+      deepStrictEqual(text, [Result.succeed("\uFEFFa,b"), Result.fail("io")]);
+      const nothing = yield* untilFailure(
+        thenFail([], "io").pipe(Stream.pipeThroughChannel(Csv.encodeString<string>(options)))
+      );
+      deepStrictEqual(nothing, [Result.fail("io")]);
+      const bytes = yield* untilFailure(
+        thenFail(written, "io").pipe(Stream.pipeThroughChannel(Csv.encode<string>(options)))
+      );
+      deepStrictEqual(bytes, [Result.succeed(utf8("\uFEFFa,b")), Result.fail("io")]);
+    })
   );
 });

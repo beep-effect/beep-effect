@@ -48,23 +48,30 @@ export const XlsxDateSystem = LiteralKit(["1900", "1904"]).pipe(
 export type XlsxDateSystem = typeof XlsxDateSystem.Type;
 
 /**
- * The last moment Excel shows in the 1900 system: the end of 31 December 9999. A 1904 workbook reaches the same
- * moment 1,462 days sooner; {@link maxSerial} gives the bound of either system.
+ * The last moment Excel shows in the 1900 system: 23:59:59 on 31 December 9999, as a workbook stores it, to 15
+ * significant digits. A 1904 workbook reaches the same moment 1,462 days sooner; {@link maxSerial} gives the bound
+ * of either system.
  *
- * **Example** (The last day Excel shows)
+ * **Details**
  *
- * ```ts import.meta.vitest name="The last day Excel shows"
+ * The bound is the last whole second: a fraction of a second later on that day is past it, as Excel's own last
+ * date-time, 9999-12-31 23:59:59, is.
+ *
+ * **Example** (The last moment Excel shows)
+ *
+ * ```ts import.meta.vitest name="The last moment Excel shows"
  * import { MAX_SERIAL, XlsxCalendar } from "@beep/xlsx"
  * import * as O from "effect/Option"
  *
- * O.map(XlsxCalendar.fromSerial(MAX_SERIAL, "1900"), (calendar) => [calendar.year, calendar.day]) // => O.some([9999, 31])
+ * const last = O.getOrThrow(XlsxCalendar.fromSerial(MAX_SERIAL, "1900"))
+ * ;[last.year, last.month, last.day, last.hour, last.minute, last.second] // => [9999, 12, 31, 23, 59, 59]
  * O.isNone(XlsxCalendar.fromSerial(MAX_SERIAL, "1904")) // => true
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const MAX_SERIAL = 2_958_465.999;
+export const MAX_SERIAL = 2_958_465.999_988_43;
 
 /**
  * The last serial a date system shows: {@link MAX_SERIAL} in the 1900 system, 1,462 days less in the 1904 system,
@@ -76,7 +83,7 @@ export const MAX_SERIAL = 2_958_465.999;
  * import { maxSerial, MAX_SERIAL } from "@beep/xlsx"
  *
  * maxSerial("1900") === MAX_SERIAL // => true
- * maxSerial("1904") // => 2957003.999
+ * maxSerial("1904") // => 2957003.99998843
  * ```
  *
  * @category constants

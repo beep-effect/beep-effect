@@ -22,7 +22,7 @@ import { describe, it } from "@effect/vitest";
 import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Result from "effect/Result";
-import { outcomeOfRead, readWith, readWithRules } from "./support.ts";
+import { fatalFindings, outcomeOfRead, readWith, readWithRules } from "./support.ts";
 import type { CsvWarningFinding } from "@beep/csv/CsvDiagnostic.schema";
 
 const at = (offset: number, length: number, line: number, character: number) =>
@@ -36,10 +36,7 @@ const readOf = (text: string, options = readWith(",")) =>
   }));
 
 const findingsOf = (text: string, options: CsvReadOptions) =>
-  Result.mapError(
-    outcomeOfRead(Csv.parseResult(text, options)),
-    A.map((fatal) => fatal.finding)
-  );
+  Csv.parseResult(text, options).pipe(outcomeOfRead, fatalFindings);
 
 const read = (records: ReadonlyArray<ReadonlyArray<string>>, warnings: ReadonlyArray<CsvWarningFinding> = []) => ({
   records,

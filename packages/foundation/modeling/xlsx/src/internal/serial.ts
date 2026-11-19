@@ -6,7 +6,6 @@ import { $XlsxId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import type { XlsxCalendar, XlsxDateSystem } from "../XlsxSerial.schema.ts";
 
 const $I = $XlsxId.create("internal/serial");
@@ -58,11 +57,11 @@ const EPOCH_1900 = daysFromCivil(1900, 1, 1);
 /** The gap between the two date systems, in 1900-system serials. */
 export const DAYS_1904 = 1462;
 
-/** A serial cut to the 15 significant digits a workbook stores, so 0.6041666666666666 is 14:30 and not 14:29:59. */
-const cut = (serial: number): number => {
-  const text = serial.toPrecision(16);
-  return Str.includes("e")(text) || !Str.includes(".")(text) ? serial : Number(Str.slice(0, -1)(text));
-};
+/**
+ * A serial rounded to the 15 significant digits a workbook stores, so 0.6041666666666666 is 14:30 and not 14:29:59,
+ * and a seven-digit serial keeps its last second (9999-12-31 23:59:59 is stored as 2958465.99998843).
+ */
+const cut = (serial: number): number => Number(serial.toPrecision(15));
 
 /** The calendar fields of a serial in a date system. `serial` is 0 or more. */
 export const partsOf: {

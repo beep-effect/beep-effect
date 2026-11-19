@@ -3,8 +3,9 @@
 // workbook, and the canonical form does not move under a second pass.
 
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
-import { XlsxAddress, XlsxRange } from "@beep/xlsx/XlsxAddress.schema";
+import { MAX_COLUMN, XlsxAddress, XlsxRange } from "@beep/xlsx/XlsxAddress.schema";
 import {
+  MAX_CELL_CHARS,
   XlsxBlank,
   XlsxBoolean,
   XlsxCell,
@@ -16,15 +17,18 @@ import {
   XlsxUnreadable,
 } from "@beep/xlsx/XlsxCell.schema";
 import { XlsxWriteOptions } from "@beep/xlsx/XlsxOptions.schema";
-import { XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema";
+import { XlsxRecord, XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
-import type { XlsxRecord } from "@beep/xlsx/Xlsx.codec";
+import * as Str from "effect/String";
 
 const runs = { arbitrary: { runs: 150 } };
 const workbooks = Arbitrary.schema(XlsxWorkbook);
@@ -142,7 +146,7 @@ describe("a workbook written and read back", () => {
                 last: XlsxAddress.make({ column: 1, row: 2 }),
               }),
             ],
-            hiddenColumns: [5, 2],
+            hiddenColumns: [2, 5],
           }),
           XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "empty" }) }),
         ],
@@ -273,5 +277,44 @@ describe("the codecs", () => {
       const back = yield* S.decodeEffect(codec)(bytes);
       expect(back).toEqual([record]);
     })
+  );
+
+  // The records codec writes only what it reads back: a heading that is empty or longer than a cell, more headings
+  // than a sheet has columns, are each a schema issue on the way to bytes, never a defect and never dropped.
+  it.effect("records refuse, as a schema issue, a heading or a count a sheet cannot hold", () =>
+    Effect.gen(function* () {
+      const codec = Xlsx.recordsFromBytes({ sheet: "S", header: "first" });
+      const one = XlsxNumber.make({ value: 1 });
+      const wide: XlsxRecord = R.fromEntries(A.map(A.range(0, MAX_COLUMN + 1), (i) => [`h${i}`, one] as const));
+      for (const records of [[{ [Str.repeat(MAX_CELL_CHARS + 1)("h")]: one }], [{ "": one }], [wide]]) {
+        const exit = yield* Effect.exit(S.encodeUnknownEffect(codec)(records));
+        expect(Exit.isFailure(exit) && !Cause.hasDies(exit.cause)).toBe(true);
+        if (Exit.isFailure(exit)) expect(Cause.squash(exit.cause)).toBeInstanceOf(S.SchemaError);
+      }
+    })
+  );
+
+  // Every record its schema accepts is written and read back as itself, with each heading any record has: a record
+  // that lacks one reads it as blank. Records with no heading at all are a sheet with no rows.
+  it.effect.prop(
+    "records written and read back are the records, every heading filled",
+    [Arbitrary.schema(XlsxRecord.pipe(S.Array))],
+    ([records]) =>
+      Effect.gen(function* () {
+        const codec = Xlsx.recordsFromBytes({ sheet: "S", header: "first" });
+        const bytes = yield* S.encodeEffect(codec)(records);
+        const back = yield* S.decodeEffect(codec)(bytes);
+        const headings = A.dedupe(A.flatMap(records, R.keys));
+        const filled = A.map(records, (record) =>
+          R.fromEntries(
+            A.map(
+              headings,
+              (heading) => [heading, R.get(record, heading).pipe(O.getOrElse(() => XlsxBlank.make({})))] as const
+            )
+          )
+        );
+        expect(back).toEqual(headings.length === 0 ? [] : filled);
+      }),
+    { arbitrary: { runs: 40 } }
   );
 });

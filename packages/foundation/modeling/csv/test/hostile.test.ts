@@ -4,18 +4,50 @@
 
 import { Csv } from "@beep/csv/Csv.codec";
 import { UnterminatedQuote, WarningsTruncated } from "@beep/csv/CsvDiagnostic.schema";
-import { CsvLimits } from "@beep/csv/CsvOptions.schema";
+import {
+  CsvDetectEncoding,
+  CsvLimits,
+  CsvReadOptions,
+  CsvTerminator,
+  CsvWriteOptions,
+  MAX_DETECT_WINDOW,
+} from "@beep/csv/CsvOptions.schema";
 import { CsvTextSpan } from "@beep/csv/CsvPosition.schema";
 import { CsvRead } from "@beep/csv/CsvRead.schema";
-import { describe, it } from "@effect/vitest";
-import { assertFailure, assertSome, assertSuccess, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import { CsvTable } from "@beep/csv/CsvTable.schema";
+import { Machine } from "@beep/csv/internal/machine";
+import { textSteps } from "@beep/csv/internal/stream";
+import { describe, it, vi } from "@effect/vitest";
+import {
+  assertFailure,
+  assertSome,
+  assertSuccess,
+  assertTrue,
+  deepStrictEqual,
+  strictEqual,
+} from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { constVoid } from "effect/Function";
+import { constVoid, flow } from "effect/Function";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
-import { outcomeOfRead, pieces, readWith, readWithRules, streamBytes, streamText, utf8 } from "./support.ts";
+import {
+  cuts,
+  fatalFindings,
+  messyText,
+  outcomeOfRead,
+  pieces,
+  readConfigs,
+  readWith,
+  readWithRules,
+  runs,
+  streamBytes,
+  streamText,
+  utf8,
+} from "./support.ts";
 import type { CsvFatalFinding } from "@beep/csv/CsvDiagnostic.schema";
 import type { Outcome } from "./support.ts";
 
@@ -23,20 +55,9 @@ import type { Outcome } from "./support.ts";
 const summary = (finding: CsvFatalFinding): string =>
   finding.kind === "LimitExceeded" ? `${finding.kind}:${finding.limit}` : finding.kind;
 
-const failedWith = (streamed: Outcome) =>
-  Result.mapError(
-    streamed,
-    A.map((fatal) => summary(fatal.finding))
-  );
+const failedWith = flow(fatalFindings, Result.mapError(A.map(summary)));
 
 const limited = (limits: Partial<CsvLimits>) => readWithRules(",", { limits: CsvLimits.make(limits) });
-
-/** Milliseconds a thunk takes. */
-const timed = (thunk: () => void): number => {
-  const started = performance.now();
-  thunk();
-  return performance.now() - started;
-};
 
 describe("hostile input", () => {
   it("a 20 MiB cell exceeds the field-length cap", () => {
@@ -53,19 +74,13 @@ describe("hostile input", () => {
   });
 
   it("an unclosed quote at the start of a large file names where it opened", () => {
-    assertFailure(
-      Result.mapError(
-        outcomeOfRead(Csv.parseResult(`"${Str.repeat(200_000)("a,b\n")}`)),
-        A.map((f) => f.finding)
-      ),
-      [
-        UnterminatedQuote.make({
-          at: CsvTextSpan.make({ offset: 0, length: 1, line: 0, character: 0 }),
-          record: 0,
-          field: 0,
-        }),
-      ]
-    );
+    assertFailure(Csv.parseResult(`"${Str.repeat(200_000)("a,b\n")}`).pipe(outcomeOfRead, fatalFindings), [
+      UnterminatedQuote.make({
+        at: CsvTextSpan.make({ offset: 0, length: 1, line: 0, character: 0 }),
+        record: 0,
+        field: 0,
+      }),
+    ]);
   });
 
   it("a record of 100,001 cells", () => {
@@ -73,6 +88,38 @@ describe("hostile input", () => {
       "LimitExceeded:fieldsPerRecord",
     ]);
   });
+});
+
+describe("the record-length cap counts a record's text, not its line break", () => {
+  it("a four-unit record passes a cap of four however it ends, and a five-unit one fails", () => {
+    const capped = limited({ maxRecordLength: 4 });
+    for (const text of ["abcd", "abcd\n", "abcd\r\n", "abcd\r", '"ab"\r\n', '"a\n"\n'])
+      assertSuccess(
+        Result.map(Csv.parseResult(text, capped), (done) => done.table.records.length),
+        1
+      );
+    assertFailure(Csv.parseResult("abcde\n", capped).pipe(outcomeOfRead, failedWith), ["LimitExceeded:recordLength"]);
+  });
+
+  it.prop(
+    "a table passes a cap of its longest written record under every terminator, and fails one unit under it",
+    [Arbitrary.schema(CsvTable), Arbitrary.schema(CsvTerminator)],
+    ([table, terminator]) => {
+      const options = CsvWriteOptions.make({ terminator });
+      const unterminated = CsvWriteOptions.make({ terminator, finalTerminator: false });
+      const longest = A.reduce(table.records, 1, (most, record) =>
+        Num.max(most, Csv.stringify({ records: [record] }, unterminated).length)
+      );
+      const text = Csv.stringify(table, options);
+      assertTrue(Result.isSuccess(Csv.parseResult(text, limited({ maxRecordLength: longest }))), "the read passes");
+      if (longest > 1)
+        assertFailure(
+          Csv.parseResult(text, limited({ maxRecordLength: longest - 1 })).pipe(outcomeOfRead, failedWith),
+          ["LimitExceeded:recordLength"]
+        );
+    },
+    runs
+  );
 });
 
 describe("every cap, read at once, in one-character pieces and through both channels", () => {
@@ -106,37 +153,95 @@ describe("every cap, read at once, in one-character pieces and through both chan
 describe("linear cost", () => {
   const wide = `${Str.repeat(40_000)("a,")}a\n`;
 
-  it("a record of 40,001 cells read in 8-character pieces costs time in the input, not its width", () => {
+  /** How many machines `thunk` starts. */
+  const machinesStarted = (thunk: () => void): number => {
+    const start = vi.spyOn(Machine, "start");
+    try {
+      thunk();
+      return start.mock.calls.length;
+    } finally {
+      start.mockRestore();
+    }
+  };
+
+  // Copying the open record into a new machine each piece took about 16 s here; one machine lives across the pieces.
+  it("a record of 40,001 cells read in 8-character pieces is read by one machine", () => {
     let read: Result.Result<CsvRead, unknown> = Result.fail(undefined);
-    const ms = timed(() => {
+    const started = machinesStarted(() => {
       read = Csv.parseBytesInPiecesResult(utf8(wide), { options: readWith(","), pieceChars: 8, onPiece: constVoid });
     });
     assertSuccess(
       Result.map(read, (done) => done.table.records[0]?.length),
       40_001
     );
-    // Copying the open record each piece took about 16 s here; one machine across the pieces takes milliseconds.
-    assertTrue(ms < 2_000);
+    strictEqual(started, 1);
   });
 
-  it.effect("the same record dripped through the text channel in 8-character chunks", () =>
-    Effect.gen(function* () {
-      const chunks = pieces(wide.length, A.replicate(8, wide.length / 8 + 1), (from, to) => Str.slice(from, to)(wide));
-      const started = performance.now();
-      const streamed = yield* streamText(chunks, readWith(","));
-      assertSuccess(
-        Result.map(streamed, (records) => records[0]?.length),
-        40_001
-      );
-      assertTrue(performance.now() - started < 5_000);
-    })
+  it("the same record dripped through the text channel in 8-character chunks is read by one machine", () => {
+    const chunks = pieces(wide.length, A.replicate(8, wide.length / 8 + 1), (from, to) => Str.slice(from, to)(wide));
+    let streamed: Outcome = Result.fail([]);
+    const started = machinesStarted(() => {
+      streamed = Effect.runSync(streamText(chunks, readWith(",")));
+    });
+    assertSuccess(
+      Result.map(streamed, (records) => records[0]?.length),
+      40_001
+    );
+    strictEqual(started, 1);
+  });
+
+  // The first text was rebuilt and re-read with every chunk, about 6 s of CPU for a 256K-character start fed one
+  // character at a time; now an undecided start is at most a BOM and `sep=X\r`, and the rest is held as the chunks
+  // that came, joined once.
+  it.prop(
+    "the text channel holds an undecided start in at most 7 units, and the text after it as the chunks that came",
+    [messyText, cuts],
+    ([text, cutLengths]) => {
+      for (const options of [readConfigs.detect, CsvReadOptions.make({ excelSepHint: true })]) {
+        const steps = textSteps(options);
+        A.reduce(
+          pieces(text.length, cutLengths, (from, to) => Str.slice(from, to)(text)),
+          steps.initial(),
+          (pending, chunk) => {
+            const held = pending.phase === "sniffing" ? pending.pieces.length : 0;
+            const [next] = steps.step(pending, [chunk]);
+            if (next.phase === "opening")
+              assertTrue(next.head.length <= 7, `an undecided start of ${next.head.length}`);
+            if (next.phase === "sniffing") {
+              strictEqual(next.length, Num.sumAll(A.map(next.pieces, Str.length)));
+              if (pending.phase === "sniffing") {
+                strictEqual(next.pieces.length, held + 1);
+                assertSome(A.last(next.pieces), chunk);
+              }
+            }
+            return next;
+          }
+        );
+      }
+    },
+    runs
   );
 
+  // The detect window was copied whole with every chunk: 1 MiB in 256-byte chunks copied about 2 GiB.
+  it("a wide detect window filled in small chunks copies each byte at most twice", () => {
+    const options = CsvReadOptions.make({ encoding: CsvDetectEncoding.make({ window: MAX_DETECT_WINDOW }) });
+    const bytes = utf8(Str.repeat(64 * 1024)("a,b\n"));
+    const chunks = pieces(bytes.length, A.replicate(256, bytes.length / 256 + 1), (from, to) =>
+      bytes.subarray(from, to)
+    );
+    const set = vi.spyOn(Uint8Array.prototype, "set");
+    try {
+      const streamed = Effect.runSync(streamBytes(chunks, options));
+      assertSuccess(Result.map(streamed, A.length), 64 * 1024);
+      const copied = Num.sumAll(A.map(set.mock.calls, ([source]) => source.length));
+      assertTrue(copied <= 2 * bytes.length, `copied ${copied} bytes of ${bytes.length}`);
+    } finally {
+      set.mockRestore();
+    }
+  });
+
   it("a flood of warnings keeps the first maxWarnings and counts the rest in one WarningsTruncated", () => {
-    let read: Result.Result<CsvRead, unknown> = Result.fail(undefined);
-    const ms = timed(() => {
-      read = Csv.parseResult(Str.repeat(100_000)('a"\n'));
-    });
+    const read = Csv.parseResult(Str.repeat(100_000)('a"\n'));
     assertTrue(Result.isSuccess(read), "the read succeeds");
     const warnings = CsvRead.warnings(read.success);
     deepStrictEqual(warnings.length, 1_001);
@@ -144,7 +249,6 @@ describe("linear cost", () => {
       O.map(A.last(warnings), (warning) => warning.finding),
       WarningsTruncated.make({ kept: 1_000, dropped: 99_000 })
     );
-    assertTrue(ms < 5_000);
   });
 
   it("the cap counts every kind of warning, ragged records included", () => {

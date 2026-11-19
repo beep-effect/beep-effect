@@ -9,10 +9,9 @@ import { $XlsxId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { XlsxColumn, XlsxRange } from "./XlsxAddress.schema.ts";
 import { XlsxWarning } from "./XlsxDiagnostic.schema.ts";
 import { XlsxDateSystem } from "./XlsxSerial.schema.ts";
-import { XlsxSheetCount, XlsxWorkbook } from "./XlsxWorkbook.schema.ts";
+import { XlsxHiddenColumns, XlsxMerges, XlsxSheetCount, XlsxWorkbook } from "./XlsxWorkbook.schema.ts";
 import type { XlsxDroppedKind } from "./XlsxWorkbook.schema.ts";
 
 const $I = $XlsxId.create("XlsxRead");
@@ -106,10 +105,8 @@ export class XlsxRead extends S.Opaque<XlsxRead, { readonly brand: unique symbol
 export class XlsxSheetOutline extends S.Opaque<XlsxSheetOutline, { readonly brand: unique symbol }>()(
   S.Struct({
     count: XlsxSheetCount,
-    merges: S.Array(XlsxRange).pipe(S.annotateKey({ description: "The merged ranges" })),
-    hiddenColumns: S.Array(XlsxColumn.annotateKey({ description: "One hidden column" })).pipe(
-      S.annotateKey({ description: "The hidden columns" })
-    ),
+    merges: XlsxMerges.pipe(S.annotateKey({ description: "The merged ranges, each once" })),
+    hiddenColumns: XlsxHiddenColumns.pipe(S.annotateKey({ description: "The hidden columns, each once" })),
   }).pipe($I.annoteSchema("XlsxSheetOutline", { description: "One sheet, counted and not kept" }))
 ) {}
 

@@ -157,6 +157,14 @@ const size = (fallback: () => ByteSize.ByteSize, description: string) =>
  * The caps a read holds a file to. They are counted as bytes are inflated, never taken from the sizes a file
  * declares, so a small file built to inflate without end stops at `maxInflatedBytes`.
  *
+ * **Details**
+ *
+ * The caps on bytes, parts, sheets, shared text, rows, columns and characters stop the read with `LimitExceeded`,
+ * as does `maxSharedFormulaChars`, the text that cells sharing a formula are handed between them. The caps on lists
+ * the read keeps beside the rows (`maxWarnings`, `maxMerges`, `maxHiddenSpans`, `maxHiddenColumns` and
+ * `maxSharedFormulas`) are each counted once across the whole read: what goes past one is dropped and counted, and
+ * the read ends with one `ListTruncated` warning per such list saying how many.
+ *
  * **Example** (Tighten one cap)
  *
  * ```ts import.meta.vitest name="Tighten one cap"
@@ -183,6 +191,20 @@ export class XlsxLimits extends S.Opaque<XlsxLimits, { readonly brand: unique sy
     maxRows: count(MAX_ROW, MAX_ROW, "Most rows read from one sheet"),
     maxColumns: count(MAX_COLUMN + 1, MAX_COLUMN + 1, "Most columns a cell may be at"),
     maxCellChars: count(MAX_CELL_CHARS, MAX_CELL_CHARS, "Most characters in one cell"),
+    maxSharedFormulaChars: count(
+      1_073_741_824,
+      16_777_216,
+      "Most characters of formula text that cells sharing a formula are handed, over the whole read"
+    ),
+    maxWarnings: count(10_000_000, 10_000, "Most warnings kept over the whole read"),
+    maxMerges: count(10_000_000, 100_000, "Most merged ranges kept over the whole read, each sheet's repeats once"),
+    maxHiddenSpans: count(10_000_000, 100_000, "Most hidden `<col>` spans kept over the whole read"),
+    maxHiddenColumns: count(
+      100_000_000,
+      1_048_576,
+      "Most hidden columns the spans expand to over the whole read, each sheet's columns once"
+    ),
+    maxSharedFormulas: count(10_000_000, 100_000, "Most shared formulas kept over the whole read"),
   }).pipe($I.annoteSchema("XlsxLimits", { description: "The caps a read holds a file to" }))
 ) {
   /** The starting caps: 3 MiB of file, 64 MiB inflated, a worksheet's own bounds. */

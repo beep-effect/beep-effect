@@ -63,15 +63,10 @@
     {"file":"packages/foundation/modeling/csv/src/CsvTable.schema.ts","symbol":"CsvHeaderRow","kind":"schema-const","owner":"@beep/csv","identity":"CsvHeaderRow","description":"One row of the header view, keyed by the first record's headings"},
     {"file":"packages/foundation/modeling/csv/src/CsvTable.schema.ts","symbol":"CsvRecordSlice","kind":"struct-const","owner":"@beep/csv","identity":"CsvRecordSlice","description":"One record in a stream and where it was"},
     {"file":"packages/foundation/modeling/csv/src/CsvTable.schema.ts","symbol":"CsvTable","kind":"struct-const","owner":"@beep/csv","identity":"CsvTable","description":"The canonical decoded side of every CSV codec"},
-    {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"AfterQuoteSpaces","kind":"struct-const","owner":"@beep/csv","identity":"AfterQuoteSpaces","description":"Spaces after a closing quote"},
-    {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"FieldStart","kind":"struct-const","owner":"@beep/csv","identity":"FieldStart","description":"Before a field"},
     {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"MachineConfig","kind":"struct-const","owner":"@beep/csv","identity":"MachineConfig","description":"The rules the machine reads by"},
-    {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"MachineMode","kind":"tagged-union","owner":"@beep/csv","identity":"MachineMode","description":"Where the machine is in a record"},
     {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"MachineModeName","kind":"literal-kit","owner":"@beep/csv","identity":"MachineModeName","description":"The name of a place the machine can be in a record"},
-    {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"MachineState","kind":"struct-const","owner":"@beep/csv","identity":"MachineState","description":"The parser's state between chunks"},
-    {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"QuoteInQuoted","kind":"struct-const","owner":"@beep/csv","identity":"QuoteInQuoted","description":"Just after a quote inside a quoted field"},
-    {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"Quoted","kind":"struct-const","owner":"@beep/csv","identity":"Quoted","description":"Inside a quoted field"},
-    {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"RawRecord","kind":"struct-const","owner":"@beep/csv","identity":"RawRecord","description":"A record as the machine emits it"},
-    {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"Unquoted","kind":"struct-const","owner":"@beep/csv","identity":"Unquoted","description":"Inside an unquoted field"}
+    {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"MachineState","kind":"struct-const","owner":"@beep/csv","identity":"MachineState","description":"The state of one read in progress"},
+    {"file":"packages/foundation/modeling/csv/src/internal/start.ts","symbol":"Prepared","kind":"struct-const","owner":"@beep/csv","identity":"Prepared","description":"A read start with its delimiter settled"},
+    {"file":"packages/foundation/modeling/csv/src/internal/start.ts","symbol":"Start","kind":"struct-const","owner":"@beep/csv","identity":"Start","description":"A read's start"}
   ]
 }

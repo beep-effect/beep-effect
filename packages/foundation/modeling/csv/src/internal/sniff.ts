@@ -18,8 +18,7 @@ export const SNIFF_WINDOW = 256 * 1024;
 const PREVIEW = 10;
 const PIECE = 4096;
 
-const widthsOf = (machine: Machine): ReadonlyArray<number> =>
-  A.map(machine.takeRecords(), (record) => record.cells.length);
+const widthsOf = (machine: Machine): ReadonlyArray<number> => A.map(machine.takeCells(), A.length);
 
 // crispen: kept as a loop — it stops reading the sample as soon as ten records are seen, which a fold over every
 // piece would not.

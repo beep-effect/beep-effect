@@ -1,6 +1,7 @@
 // Bytes to text: a byte-order mark names the encoding, else valid UTF-8 is UTF-8, else Windows-1252; a fixed UTF-8
 // refuses invalid bytes with their offset; the byte cap holds for whole reads and streams; a U+FEFF inside the data
-// survives a stream split right before it; and the one place a stream may differ from a whole read is pinned.
+// survives a stream split right before it; a failing upstream fails a channel with its own error, nothing flushed
+// before it; and the two places a stream may differ from a whole read are pinned.
 
 import { Csv } from "@beep/csv/Csv.codec";
 import { InvalidUtf8, TooManyBytes } from "@beep/csv/CsvDiagnostic.schema";
@@ -14,16 +15,28 @@ import {
   CsvSource,
 } from "@beep/csv/CsvRead.schema";
 import { describe, it } from "@effect/vitest";
-import { assertFailure, assertSuccess } from "@effect/vitest/utils";
+import { assertFailure, assertSuccess, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { outcomeOfRead, pieces, readWith, streamBytes, utf8 } from "./support.ts";
+import {
+  fatalFindings,
+  outcomeOfRead,
+  pieces,
+  readWith,
+  readWithRules,
+  streamBytes,
+  thenFail,
+  untilFailure,
+  utf8,
+} from "./support.ts";
 import type { CsvRead } from "@beep/csv/CsvRead.schema";
+import type { CsvRecord, CsvRecordSlice } from "@beep/csv/CsvTable.schema";
 
 const sourceOf = (read: Result.Result<CsvRead, unknown>) => Result.map(read, (done) => done.source);
 const encodingOf = (read: Result.Result<CsvRead, unknown>) =>
@@ -68,10 +81,7 @@ describe("encoding detection", () => {
 
   it("a fixed UTF-8 refuses invalid bytes with their offset, and a fixed encoding is recorded as given", () => {
     const read = Csv.parseBytesResult(bytesOf("Caf", [0xe9], "\n"), fixed("utf-8"));
-    assertFailure(
-      Result.mapError(outcomeOfRead(read), (fatals) => A.map(fatals, (f) => f.finding)),
-      [InvalidUtf8.make({ byteOffset: 3 })]
-    );
+    assertFailure(read.pipe(outcomeOfRead, fatalFindings), [InvalidUtf8.make({ byteOffset: 3 })]);
     assertSuccess(
       encodingOf(Csv.parseBytesResult(bytesOf("Caf", [0xe9], "\n"), fixed("windows-1252"))),
       CsvEncodingGiven.makeOption({ encoding: "windows-1252", bom: false })
@@ -84,20 +94,18 @@ describe("the byte cap", () => {
   const bytes = utf8(Str.repeat(100)("a,b\n"));
 
   it("a whole read past the cap fails with the input's size", () => {
-    assertFailure(
-      Result.mapError(outcomeOfRead(Csv.parseBytesResult(bytes, capped)), (fatals) => A.map(fatals, (f) => f.finding)),
-      [TooManyBytes.make({ maximum: ByteSize.bytes(10n), actual: ByteSize.bytes(400n) })]
-    );
+    assertFailure(Csv.parseBytesResult(bytes, capped).pipe(outcomeOfRead, fatalFindings), [
+      TooManyBytes.make({ maximum: ByteSize.bytes(10n), actual: ByteSize.bytes(400n) }),
+    ]);
   });
 
   it.effect("a stream past the cap fails at the first chunk that passes it, with the count so far", () =>
     Effect.gen(function* () {
       const chunks = pieces(bytes.length, A.replicate(4, 100), (from, to) => bytes.subarray(from, to));
       const streamed = yield* streamBytes(chunks, capped);
-      assertFailure(
-        Result.mapError(streamed, (fatals) => A.map(fatals, (f) => f.finding)),
-        [TooManyBytes.make({ maximum: ByteSize.bytes(10n), actual: ByteSize.bytes(12n) })]
-      );
+      assertFailure(fatalFindings(streamed), [
+        TooManyBytes.make({ maximum: ByteSize.bytes(10n), actual: ByteSize.bytes(12n) }),
+      ]);
     })
   );
 
@@ -133,10 +141,7 @@ describe("streaming bytes", () => {
   it.effect("an unfinished UTF-8 sequence at the end fails the stream at its offset", () =>
     Effect.gen(function* () {
       const streamed = yield* streamBytes([bytesOf("a", [0xe2, 0x82])], fixed("utf-8"));
-      assertFailure(
-        Result.mapError(streamed, (fatals) => A.map(fatals, (f) => f.finding)),
-        [InvalidUtf8.make({ byteOffset: 1 })]
-      );
+      assertFailure(fatalFindings(streamed), [InvalidUtf8.make({ byteOffset: 1 })]);
     })
   );
 
@@ -145,13 +150,103 @@ describe("streaming bytes", () => {
       const bytes = bytesOf(Str.repeat(71_681)("a"), [0xe9], "\n");
       const chunks = pieces(bytes.length, A.replicate(4096, 18), (from, to) => bytes.subarray(from, to));
       const streamed = yield* streamBytes(chunks, CsvReadOptions.default);
-      assertFailure(
-        Result.mapError(streamed, (fatals) => A.map(fatals, (f) => f.finding)),
-        [InvalidUtf8.make({ byteOffset: 71_681 })]
-      );
+      assertFailure(fatalFindings(streamed), [InvalidUtf8.make({ byteOffset: 71_681 })]);
       assertSuccess(
         encodingOf(Csv.parseBytesResult(bytes)),
         CsvEncodingFallback.makeOption({ firstInvalidByte: 71_681 })
+      );
+    })
+  );
+});
+
+describe("a short file that ends in a Windows-1252 byte", () => {
+  it.effect("reads as Windows-1252 in a stream, as the whole read does, in one chunk or split", () =>
+    Effect.gen(function* () {
+      const bytes = bytesOf("Name,City\nAnn,Caf", [0xe9]);
+      const expected: ReadonlyArray<CsvRecord> = [
+        ["Name", "City"],
+        ["Ann", "Café"],
+      ];
+      assertSuccess(outcomeOfRead(Csv.parseBytesResult(bytes)), expected);
+      const oneChunk = yield* streamBytes([bytes], CsvReadOptions.default);
+      assertSuccess(oneChunk, expected);
+      const split = yield* streamBytes([bytes.subarray(0, 17), bytes.subarray(17)], CsvReadOptions.default);
+      assertSuccess(split, expected);
+    })
+  );
+});
+
+describe("a failing upstream", () => {
+  const cellsOf = Result.map((slice: CsvRecordSlice) => slice.cells);
+
+  it.effect("fails the text channel with the caller's error, after the records it finished and no others", () =>
+    Effect.gen(function* () {
+      const emitted = yield* untilFailure(
+        thenFail(["1,2\n3"], "io").pipe(Stream.pipeThroughChannel(Csv.decodeString<string>(readWith(","))))
+      );
+      deepStrictEqual(A.map(emitted, cellsOf), [Result.succeed<CsvRecord>(["1", "2"]), Result.fail("io")]);
+    })
+  );
+
+  it.effect("fails the text channel with the caller's error while a quote is open, not with UnterminatedQuote", () =>
+    Effect.gen(function* () {
+      const emitted = yield* untilFailure(
+        thenFail(['a,"b'], "io").pipe(Stream.pipeThroughChannel(Csv.decodeString<string>(readWith(","))))
+      );
+      deepStrictEqual(emitted, [Result.fail("io")]);
+    })
+  );
+
+  it.effect("fails the bytes channel with the caller's error, under a fixed and a detected encoding", () =>
+    Effect.gen(function* () {
+      const decodeWith = (options: CsvReadOptions) =>
+        untilFailure(thenFail([utf8("1,2\n3")], "io").pipe(Stream.pipeThroughChannel(Csv.decode<string>(options))));
+      const fixedUtf8 = yield* decodeWith(
+        readWithRules(",", { encoding: CsvFixedEncoding.make({ encoding: "utf-8" }) })
+      );
+      deepStrictEqual(A.map(fixedUtf8, cellsOf), [Result.succeed<CsvRecord>(["1", "2"]), Result.fail("io")]);
+      // The detect window is still open when the upstream fails, so nothing was decoded.
+      const detected = yield* decodeWith(readWith(","));
+      deepStrictEqual(detected, [Result.fail("io")]);
+    })
+  );
+
+  it.effect("a byte cap passed while a quote is open fails with TooManyBytes, not UnterminatedQuote", () =>
+    Effect.gen(function* () {
+      const options = CsvReadOptions.make({
+        encoding: CsvFixedEncoding.make({ encoding: "utf-8" }),
+        limits: CsvLimits.make({ maxInputBytes: ByteSize.bytes(10n) }),
+      });
+      const streamed = yield* streamBytes([utf8('"aaaa'), utf8("aaaaaaaaaa")], options);
+      assertFailure(fatalFindings(streamed), [
+        TooManyBytes.make({ maximum: ByteSize.bytes(10n), actual: ByteSize.bytes(15n) }),
+      ]);
+    })
+  );
+
+  it.effect("bytes UTF-8 refuses, split after an open quote, fail with InvalidUtf8 at their offset", () =>
+    Effect.gen(function* () {
+      const streamed = yield* streamBytes([bytesOf(',"'), bytesOf([0xa9])], fixed("utf-8"));
+      assertFailure(fatalFindings(streamed), [InvalidUtf8.make({ byteOffset: 2 })]);
+    })
+  );
+});
+
+describe("the order of fatal findings", () => {
+  it.effect("a stream fails on the first finding in input order; a whole read checks the encoding first", () =>
+    Effect.gen(function* () {
+      const options = readWithRules(",", {
+        encoding: CsvFixedEncoding.make({ encoding: "utf-8" }),
+        limits: CsvLimits.make({ maxRecords: 2 }),
+      });
+      const text = utf8("a\nb\nc\n");
+      assertFailure(Csv.parseBytesResult(bytesOf("a\nb\nc\n", [0xff]), options).pipe(outcomeOfRead, fatalFindings), [
+        InvalidUtf8.make({ byteOffset: 6 }),
+      ]);
+      const streamed = yield* streamBytes([text, bytesOf([0xff])], options);
+      assertTrue(
+        Result.isFailure(streamed) && A.every(streamed.failure, (fatal) => fatal.finding.kind === "LimitExceeded"),
+        "the stream fails with the records cap"
       );
     })
   );

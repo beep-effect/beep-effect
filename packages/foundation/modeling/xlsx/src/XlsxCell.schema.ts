@@ -462,7 +462,8 @@ export class XlsxCell extends S.Opaque<XlsxCell, { readonly brand: unique symbol
 
   /**
    * The text Excel would display for the cell's number or date, when this package works it out: for the General
-   * format, dates and times, zero-padding and plain number patterns. None for any other value or format.
+   * format, dates and times, zero-padding and plain number patterns. None for any other value or format, and none
+   * for a date past the last serial of the date system, which Excel shows as `#####`.
    */
   static readonly shown = (cell: Pick<XlsxCell, "value" | "format">, system: XlsxDateSystem): O.Option<string> => {
     if (cell.value.kind === "Date") return renderDate(cell.format.code, cell.value.serial, system);

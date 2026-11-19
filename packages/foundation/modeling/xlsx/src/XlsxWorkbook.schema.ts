@@ -14,12 +14,13 @@ import * as HashMap from "effect/HashMap";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
+import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { builtinIds } from "./internal/numberFormat.ts";
 import { XmlSafeText } from "./internal/text.ts";
 import { MAX_COLUMN, MAX_ROW, XlsxAddress, XlsxColumn, XlsxRange, XlsxRowNumber } from "./XlsxAddress.schema.ts";
-import { holdsSomething, XlsxCell, XlsxNumberFormat } from "./XlsxCell.schema.ts";
+import { holdsSomething, MAX_CELL_CHARS, XlsxCell, XlsxNumberFormat, XlsxValue } from "./XlsxCell.schema.ts";
 import { XlsxDateSystem } from "./XlsxSerial.schema.ts";
 
 const $I = $XlsxId.create("XlsxWorkbook");
@@ -71,6 +72,80 @@ const uniqueBy = <T>(
     (values) => A.dedupe(A.map(values, key)).length === values.length,
     $I.annote(name, { ...annotations, arbitraryConstraint: { uniqueBy: key } })
   );
+
+/**
+ * A sheet's merged ranges, no range twice. Excel repairs a sheet that merges one range twice, so the reader keeps
+ * each once and the writer never writes a repeat.
+ *
+ * **Example** (A range merged twice)
+ *
+ * ```ts import.meta.vitest name="A range merged twice"
+ * import { XlsxMerges, XlsxRange } from "@beep/xlsx"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const range = O.getOrThrow(XlsxRange.parse("A1:B2"))
+ * S.is(XlsxMerges)([range]) // => true
+ * S.is(XlsxMerges)([range, range]) // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const XlsxMerges = S.Array(XlsxRange)
+  .check(
+    uniqueBy(XlsxRange.format, "UniqueMerges", {
+      title: "Unique merged ranges",
+      description: "A sheet merges each range at most once",
+      expected: "merged ranges with no range twice",
+    })
+  )
+  .pipe($I.annoteSchema("XlsxMerges", { description: "A sheet's merged ranges, no range twice" }));
+
+/**
+ * A sheet's merged ranges, each once; the type {@link XlsxMerges} decodes to.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type XlsxMerges = typeof XlsxMerges.Type;
+
+/**
+ * A sheet's hidden columns, each once. The reader gives them in rising order and `XlsxWorkbook.canonical` puts a
+ * hand-built list in that order, as it does a sheet's rows and a row's cells, which their schemas likewise hold to
+ * no repeat and leave in any order.
+ *
+ * **Example** (A column hidden twice)
+ *
+ * ```ts import.meta.vitest name="A column hidden twice"
+ * import { XlsxHiddenColumns } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxHiddenColumns)([1, 2, 5]) // => true
+ * S.is(XlsxHiddenColumns)([5, 2]) // => true
+ * S.is(XlsxHiddenColumns)([2, 2]) // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const XlsxHiddenColumns = S.Array(XlsxColumn)
+  .check(
+    uniqueBy((column: number) => column, "UniqueHiddenColumns", {
+      title: "Unique hidden columns",
+      description: "A sheet hides each column at most once",
+      expected: "hidden columns with no column twice",
+    })
+  )
+  .pipe($I.annoteSchema("XlsxHiddenColumns", { description: "A sheet's hidden columns, each once" }));
+
+/**
+ * A sheet's hidden columns, each once; the type {@link XlsxHiddenColumns} decodes to.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type XlsxHiddenColumns = typeof XlsxHiddenColumns.Type;
 
 /**
  * One row of a sheet: its number, whether it is hidden, and the cells that hold something, no column twice. The
@@ -349,18 +424,16 @@ export class XlsxWorksheet extends S.Opaque<XlsxWorksheet, { readonly brand: uni
         S.withConstructorDefault(Effect.succeed([])),
         S.withDecodingDefaultTypeKey(Effect.succeed([]))
       ),
-    merges: S.Array(XlsxRange).pipe(
-      S.annotateKey({ description: "The merged ranges" }),
+    merges: XlsxMerges.pipe(
+      S.annotateKey({ description: "The merged ranges, each once" }),
       S.withConstructorDefault(Effect.succeed([])),
       S.withDecodingDefaultTypeKey(Effect.succeed([]))
     ),
-    hiddenColumns: S.Array(XlsxColumn.annotateKey({ description: "One hidden column" }))
-      .check(S.isUnique())
-      .pipe(
-        S.annotateKey({ description: "The hidden columns" }),
-        S.withConstructorDefault(Effect.succeed([])),
-        S.withDecodingDefaultTypeKey(Effect.succeed([]))
-      ),
+    hiddenColumns: XlsxHiddenColumns.pipe(
+      S.annotateKey({ description: "The hidden columns, each once" }),
+      S.withConstructorDefault(Effect.succeed([])),
+      S.withDecodingDefaultTypeKey(Effect.succeed([]))
+    ),
   }).pipe($I.annoteSchema("XlsxWorksheet", { description: "One sheet of a workbook" }))
 ) {
   /** The smallest range that holds every cell with something in it, when the sheet has one. */
@@ -510,9 +583,9 @@ export class XlsxWorkbook extends S.Opaque<XlsxWorkbook, { readonly brand: uniqu
   /**
    * The workbook as a file gives it back, which is what a write followed by a read returns: rows in rising order,
    * each row's cells in rising column order and in their canonical form, no cell that holds nothing and has no
-   * formula, merged ranges with their top-left corner first, hidden columns in rising order, each sheet's declared
-   * extent the extent of what it writes, number format ids as a written file numbers them (Excel's own id for a
-   * built-in code, 164 and up for the others in the order they are met), and no dropped part.
+   * formula, each sheet's declared extent the extent of what it writes, number format ids as a written file numbers
+   * them (Excel's own id for a built-in code, 164 and up for the others in the order they are met), and no dropped
+   * part, merged ranges with their top-left corner first and hidden columns in rising order.
    */
   static readonly canonical = (workbook: Pick<XlsxWorkbook, "dateSystem" | "sheets">): XlsxWorkbook => {
     const ids = MutableHashMap.empty<string, number>();
@@ -566,3 +639,84 @@ export class XlsxWorkbook extends S.Opaque<XlsxWorkbook, { readonly brand: uniqu
   static readonly visible = (workbook: Pick<XlsxWorkbook, "sheets">): ReadonlyArray<XlsxWorksheet> =>
     A.filter(workbook.sheets, (sheet) => sheet.info.state === "visible");
 }
+
+/**
+ * A heading of a sheet read as records: text a cell can hold, and never empty, since an empty heading names no
+ * column.
+ *
+ * **Example** (Headings a header row can have)
+ *
+ * ```ts import.meta.vitest name="Headings a header row can have"
+ * import { MAX_CELL_CHARS, XlsxHeading } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxHeading)("SKU") // => true
+ * S.is(XlsxHeading)("") // => false
+ * S.is(XlsxHeading)("x".repeat(MAX_CELL_CHARS + 1)) // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const XlsxHeading = S.String.check(S.isMinLength(1), S.isMaxLength(MAX_CELL_CHARS)).pipe(
+  $I.annoteSchema("XlsxHeading", { description: "A heading of a header row: text a cell holds, never empty" })
+);
+
+/**
+ * A heading of a header row; the type {@link XlsxHeading} decodes to.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type XlsxHeading = typeof XlsxHeading.Type;
+
+/**
+ * One row of a sheet under its first row's headings: each heading an own property, each value what the cell holds.
+ * The decoded side of `Xlsx.recordsFromBytes`.
+ *
+ * **Details**
+ *
+ * A heading that would be a property of every object, such as `constructor`, is still an own property. A cell the
+ * row lacks under a heading reads as `XlsxBlank`.
+ *
+ * **Gotchas**
+ *
+ * As with any `S.Record`, decoding passes over a key the key schema refuses. Encoding refuses it, so a record
+ * written through `Xlsx.recordsFromBytes` never loses a key, empty or too long, without a schema issue.
+ *
+ * **Example** (A record and a heading it cannot have)
+ *
+ * ```ts import.meta.vitest name="A record and a heading it cannot have"
+ * import { XlsxNumber, XlsxRecord } from "@beep/xlsx"
+ * import * as Exit from "effect/Exit"
+ * import * as S from "effect/Schema"
+ *
+ * const quantity = XlsxNumber.make({ value: 120 })
+ * S.is(XlsxRecord)({ Quantity: quantity }) // => true
+ * Exit.isFailure(S.encodeUnknownExit(XlsxRecord)({ "": quantity })) // => true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const XlsxRecord = S.Record(XlsxHeading, XlsxValue)
+  .check(
+    // A record schema passes over a key its key schema refuses; on the way to bytes this check refuses it instead.
+    S.makeFilter<{ readonly [heading: string]: unknown }>(
+      (record) => A.every(R.keys(record), S.is(XlsxHeading)),
+      $I.annote("EveryKeyAHeading", {
+        title: "Every key a heading",
+        description: "Each property of a record is named by a heading a header row can have",
+        expected: "a record whose every key is a non-empty text a cell holds",
+      })
+    )
+  )
+  .pipe($I.annoteSchema("XlsxRecord", { description: "One row of a sheet under its first row's headings" }));
+
+/**
+ * One row as records under headings; the type {@link XlsxRecord} decodes to.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type XlsxRecord = typeof XlsxRecord.Type;

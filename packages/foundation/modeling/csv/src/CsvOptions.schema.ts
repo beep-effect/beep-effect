@@ -159,12 +159,34 @@ export const CsvEncodingName = LiteralKit(["utf-8", "utf-16le", "utf-16be", "win
 export type CsvEncodingName = typeof CsvEncodingName.Type;
 
 /**
+ * The widest detect window a stream may hold before it decides its encoding: 256 MiB, the default byte cap.
+ *
+ * **Example** (Refuse a window past the maximum)
+ *
+ * ```ts import.meta.vitest name="Refuse a window past the maximum"
+ * import { CsvDetectEncoding, MAX_DETECT_WINDOW } from "@beep/csv/CsvOptions.schema"
+ * import * as ByteSize from "effect/ByteSize"
+ * import * as S from "effect/Schema"
+ *
+ * const decode = S.decodeUnknownResult(CsvDetectEncoding)
+ * MAX_DETECT_WINDOW === ByteSize.mebibytes(256) // => true
+ * decode({ kind: "detect", window: MAX_DETECT_WINDOW })._tag // => "Success"
+ * decode({ kind: "detect", window: ByteSize.bytes(MAX_DETECT_WINDOW + 1n) })._tag // => "Failure"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const MAX_DETECT_WINDOW: ByteSize.ByteSize = ByteSize.mebibytes(256);
+
+/**
  * Decide the encoding from a byte-order mark, then from whether the first `window` bytes are valid UTF-8.
  *
  * **Details**
  *
  * The window matters only to streams, which must settle the encoding before the input ends. A whole byte input is
- * checked in full, and bytes that are not UTF-8 are read as Windows-1252.
+ * checked in full, and bytes that are not UTF-8 are read as Windows-1252. A stream holds its window in memory until
+ * it decides, so the window is at most `MAX_DETECT_WINDOW` (256 MiB, the default byte cap); 64 KiB by default.
  *
  * **Example** (Detect within the default window)
  *
@@ -181,8 +203,8 @@ export type CsvEncodingName = typeof CsvEncodingName.Type;
 export class CsvDetectEncoding extends S.Opaque<CsvDetectEncoding, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("detect"),
-    window: S.ByteSize.pipe(
-      S.annotateKey({ description: "How many leading bytes a stream decides from" }),
+    window: S.ByteSize.check(S.isLessThanOrEqualToBigInt(MAX_DETECT_WINDOW)).pipe(
+      S.annotateKey({ description: "How many leading bytes a stream decides from, at most 256 MiB" }),
       S.withConstructorDefault(Effect.sync(() => ByteSize.kibibytes(64))),
       S.withDecodingDefaultTypeKey(Effect.sync(() => ByteSize.kibibytes(64)))
     ),
@@ -402,7 +424,11 @@ export class CsvLimits extends S.Opaque<CsvLimits, { readonly brand: unique symb
     maxRecords: count(2_147_483_647, 10_000_000, "Most records read"),
     maxFieldsPerRecord: count(MAX_FIELDS, 100_000, "Most cells in one record"),
     maxFieldLength: count(MAX_TEXT_UNITS, 16 * 1024 * 1024, "Most UTF-16 units in one cell"),
-    maxRecordLength: count(MAX_TEXT_UNITS, 64 * 1024 * 1024, "Most UTF-16 units in one record"),
+    maxRecordLength: count(
+      MAX_TEXT_UNITS,
+      64 * 1024 * 1024,
+      "Most UTF-16 units in one record, its line break not counted"
+    ),
     maxWarnings: count(MAX_TEXT_UNITS, 1000, "Most warnings kept; the rest are counted in one WarningsTruncated"),
     maxInputBytes: S.ByteSize.pipe(
       S.annotateKey({ description: "Most input bytes read" }),

@@ -2,14 +2,32 @@
 // in: never a defect, a stack overflow or a hang.
 
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
+import { columnLetters } from "@beep/xlsx/XlsxAddress.schema";
 import { XlsxLimits, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema";
+import { XlsxRead } from "@beep/xlsx/XlsxRead.schema";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
+import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { archive, partsOf, sheet, sheetWith, strings, workbook } from "./support/workbooks.ts";
+import {
+  appended,
+  archive,
+  partsOf,
+  sheet,
+  sheetWith,
+  streamedArchive,
+  strings,
+  styles,
+  withoutLastListed,
+  workbook,
+} from "./support/workbooks.ts";
+import type { XlsxWarning } from "@beep/xlsx/XlsxDiagnostic.schema";
 import type { Recipe } from "./support/workbooks.ts";
 
 const rel = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
@@ -25,6 +43,43 @@ const builtFindingOf = (recipe: Recipe, limits?: Parameters<typeof XlsxLimits.ma
   Effect.flatMap(workbook(recipe), (bytes) => findingOf(bytes, limits ?? big));
 const one = (xml: string): Recipe => ({ sheets: [{ name: "S", xml }] });
 const cell = "<c><v>1</v></c>";
+const limited = (limits: Parameters<typeof XlsxLimits.make>[0]) =>
+  XlsxReadOptions.make({ limits: XlsxLimits.make({ ...big, ...limits }) });
+const kinds = (warnings: ReadonlyArray<XlsxWarning>) => A.map(warnings, (warning) => warning.finding.kind);
+const lastOf = (warnings: ReadonlyArray<XlsxWarning>) => warnings[warnings.length - 1]?.finding;
+/** A workbook whose sheets name parts by index, so several sheets can name one part. */
+const sharing = (input: {
+  readonly sheets: ReadonlyArray<readonly [name: string, part: number]>;
+  readonly parts: ReadonlyArray<string>;
+}) =>
+  archive([
+    ["[Content_Types].xml", "<Types/>"],
+    [
+      "_rels/.rels",
+      `<Relationships xmlns="${pkg}"><Relationship Id="rId1" Type="${rel}/officeDocument" Target="xl/workbook.xml"/></Relationships>`,
+    ],
+    [
+      "xl/_rels/workbook.xml.rels",
+      `<Relationships xmlns="${pkg}">${A.join(
+        A.map(
+          input.parts,
+          (_, i) => `<Relationship Id="p${i}" Type="${rel}/worksheet" Target="worksheets/sheet${i}.xml"/>`
+        ),
+        ""
+      )}</Relationships>`,
+    ],
+    ...A.map(input.parts, (xml, i): readonly [string, string] => [`xl/worksheets/sheet${i}.xml`, xml]),
+    [
+      "xl/workbook.xml",
+      `<workbook xmlns:r="${rel}"><sheets>${A.join(
+        A.map(input.sheets, ([name, part], i) => `<sheet name="${name}" sheetId="${i + 1}" r:id="p${part}"/>`),
+        ""
+      )}</sheets></workbook>`,
+    ],
+  ]);
+const late = (rows: number) => sheet(Str.repeat(rows)('<row r="1"/>'));
+const escaped = (text: string): string =>
+  Str.replace(/"/g, "&quot;")(Str.replace(/</g, "&lt;")(Str.replace(/&/g, "&amp;")(text)));
 
 describe("hostile files", () => {
   it.effect("a part that inflates from a few kilobytes past the cap on inflated bytes", () =>
@@ -247,6 +302,229 @@ describe("hostile files", () => {
       expect(finding).toMatchObject({ kind: "NotAWorkbook", container: "notAnArchive" });
       const garbage = yield* findingOf(new Uint8Array([0x50, 0x4b, 0x03, 0x04, 1, 2, 3, 4, 5, 6, 7, 8, 9]));
       expect(garbage).toMatchObject({ kind: "NotAWorkbook", container: "otherZip" });
+    })
+  );
+
+  // One part named by two sheets is read once, and its warnings with a second part's meet one cap for the read: the
+  // read keeps 100 of the 450 rows written late and says how many it dropped. Read per sheet, the two sheets naming
+  // one part each carried its 300 warnings.
+  it.effect("warnings past the read's cap, from a part two sheets name and from another part", () =>
+    Effect.gen(function* () {
+      const bytes = yield* sharing({
+        sheets: [
+          ["A", 0],
+          ["B", 0],
+          ["C", 1],
+        ],
+        parts: [late(301), late(151)],
+      });
+      const read = yield* Xlsx.parse(bytes, limited({ maxWarnings: 100 }));
+      expect(read.warnings.length).toBe(101);
+      expect(A.dedupe(kinds(A.take(read.warnings, 100)))).toEqual(["RowOutOfOrder"]);
+      expect(lastOf(read.warnings)).toMatchObject({ kind: "ListTruncated", list: "warnings", dropped: 350 });
+      const sheets = A.dedupe(
+        A.map(A.take(read.warnings, 100), (warning) =>
+          warning.finding.kind === "RowOutOfOrder" ? warning.finding.sheet : ""
+        )
+      );
+      expect(sheets).toEqual(["A"]);
+      expect(S.is(XlsxRead)(read)).toBe(true);
+    })
+  );
+
+  it.effect("a style index that is no whole number, or past any table, is reported as written", () =>
+    Effect.gen(function* () {
+      const written = ["1e300", "9007199254740993", "-1", "1.5", "NaN", "", "99"];
+      const found = yield* Effect.forEach(
+        written,
+        (style) =>
+          Effect.flatMap(
+            workbook({
+              ...one(sheet(`<row r="1"><c r="A1" s="${style}"><v>1</v></c></row>`)),
+              styles: styles(["0.00"]),
+            }),
+            (bytes) => Xlsx.parse(bytes)
+          ),
+        { concurrency: 1 }
+      );
+      expect(A.map(found, (read) => A.map(read.warnings, (warning) => warning.finding))).toEqual(
+        A.map(written, (style) => [expect.objectContaining({ kind: "UnknownStyle", style })])
+      );
+    })
+  );
+
+  // Every attribute or value the reader turns into a number, holding any text at all: the read succeeds with a
+  // workbook its schema accepts, or fails with a finding, and never dies.
+  const numeric: ReadonlyArray<(text: string) => Recipe> = [
+    (x) => one(sheet(`<row r="${x}"><c><v>1</v></c></row>`)),
+    (x) => one(sheet(`<row r="1"><c r="${x}"><v>1</v></c></row>`)),
+    (x) => ({ ...one(sheet(`<row r="1"><c r="A1" s="${x}"><v>1</v></c></row>`)), styles: styles(["0.00"]) }),
+    (x) => one(sheetWith({ before: `<cols><col min="${x}" max="3" hidden="1"/></cols>`, rows: "" })),
+    (x) => one(sheetWith({ before: `<cols><col min="1" max="${x}" hidden="1"/></cols>`, rows: "" })),
+    (x) => one(sheetWith({ before: `<dimension ref="${x}"/>`, rows: '<row r="1"><c><v>1</v></c></row>' })),
+    (x) => one(sheetWith({ rows: "", after: `<mergeCells><mergeCell ref="${x}"/></mergeCells>` })),
+    (x) =>
+      one(
+        sheet(
+          `<row r="1"><c r="A1"><f t="shared" si="${x}">A1</f><v>1</v></c><c r="B1"><f t="shared" si="${x}"/><v>1</v></c></row>`
+        )
+      ),
+    (x) => ({
+      ...one(sheet('<row r="1"><c r="A1" s="1"><v>1</v></c></row>')),
+      styles: `<styleSheet><numFmts><numFmt numFmtId="${x}" formatCode="0.0"/></numFmts><cellXfs><xf/><xf numFmtId="${x}"/></cellXfs></styleSheet>`,
+    }),
+    ...A.map(["s", "n", "b", "e", "d"], (type) => (x: string) => ({
+      ...one(sheet(`<row r="1"><c r="A1" t="${type}"><v>${x}</v></c></row>`)),
+      sharedStrings: strings(["<t>a</t>"]),
+    })),
+  ];
+  it.effect.prop(
+    "no numeric attribute or value, whatever it holds, makes the read die",
+    [Arbitrary.schema(S.String), Arbitrary.schema(S.Finite)],
+    ([text, number]) =>
+      Effect.gen(function* () {
+        for (const written of [text, `${number}`]) {
+          for (const recipe of numeric) {
+            const exit = yield* Effect.exit(
+              Effect.flatMap(workbook(recipe(escaped(written))), (bytes) => Xlsx.parse(bytes))
+            );
+            expect(Exit.isFailure(exit) && Cause.hasDies(exit.cause)).toBe(false);
+            if (Exit.isSuccess(exit)) expect(S.is(XlsxRead)(exit.value)).toBe(true);
+          }
+        }
+      }),
+    { arbitrary: { runs: 15 } }
+  );
+
+  // A row written from its last column to its first, with one column twice: the repeat is found by a stamp per
+  // column, whatever the order, and the row keeps every column once in rising order.
+  it.effect("a full row written right to left, with one column written twice", () =>
+    Effect.gen(function* () {
+      const columns = A.map(A.range(0, 16_383), columnLetters);
+      const cells = A.join(
+        A.map(A.reverse(columns), (letters) => `<c r="${letters}1"><v>1</v></c>`),
+        ""
+      );
+      const bytes = yield* workbook(one(sheet(`<row r="1">${cells}<c r="B1"><v>2</v></c></row>`)));
+      const read = yield* Xlsx.parse(bytes, limited({}));
+      const row = read.workbook.sheets[0].rows[0];
+      expect(row?.cells.length).toBe(16_384);
+      expect(row?.cells[1]).toMatchObject({ column: 1, value: { kind: "Number", value: 1 } });
+      expect(A.map(read.warnings, (warning) => warning.finding)).toEqual([
+        expect.objectContaining({ kind: "BadAddress", row: 1, raw: "B1" }),
+      ]);
+    })
+  );
+
+  it.effect("merged ranges written many times, and more than the read's cap over two sheets", () =>
+    Effect.gen(function* () {
+      const twice = yield* workbook(
+        one(
+          sheetWith({
+            rows: "",
+            after: `<mergeCells>${Str.repeat(1000)('<mergeCell ref="B2:A1"/><mergeCell ref="A1:B2"/>')}</mergeCells>`,
+          })
+        )
+      );
+      const once = yield* Xlsx.parse(twice);
+      expect(once.workbook.sheets[0].merges.length).toBe(1);
+      expect(once.warnings).toEqual([]);
+      const ranges = (row: number) =>
+        sheetWith({
+          rows: "",
+          after: `<mergeCells>${A.join(
+            A.map(A.range(1, 4), (n) => `<mergeCell ref="A${row + n}:B${row + n}"/>`),
+            ""
+          )}</mergeCells>`,
+        });
+      const two = yield* workbook({
+        sheets: [
+          { name: "A", xml: ranges(0) },
+          { name: "B", xml: ranges(10) },
+        ],
+      });
+      const capped = yield* Xlsx.parse(two, limited({ maxMerges: 6 }));
+      expect(A.map(capped.workbook.sheets, (found) => found.merges.length)).toEqual([4, 2]);
+      expect(kinds(capped.warnings)).toEqual(["ListTruncated"]);
+      expect(lastOf(capped.warnings)).toMatchObject({ list: "merges", dropped: 2 });
+    })
+  );
+
+  it.effect("hidden column spans and the columns they expand to, past the read's caps", () =>
+    Effect.gen(function* () {
+      const cols = (n: number) =>
+        sheetWith({ before: `<cols>${Str.repeat(n)('<col min="1" max="10" hidden="1"/>')}</cols>`, rows: "" });
+      const bytes = yield* workbook({
+        sheets: [
+          { name: "A", xml: cols(3) },
+          { name: "B", xml: cols(3) },
+        ],
+      });
+      const spans = yield* Xlsx.parse(bytes, limited({ maxHiddenSpans: 4 }));
+      expect(lastOf(spans.warnings)).toMatchObject({ kind: "ListTruncated", list: "hiddenSpans", dropped: 2 });
+      const columns = yield* Xlsx.parse(bytes, limited({ maxHiddenColumns: 15 }));
+      expect(A.map(columns.workbook.sheets, (found) => found.hiddenColumns.length)).toEqual([10, 5]);
+      expect(lastOf(columns.warnings)).toMatchObject({ kind: "ListTruncated", list: "hiddenColumns", dropped: 5 });
+    })
+  );
+
+  // A shared formula is written once and handed, whole, to every cell that names it: a cell of a few bytes costs the
+  // formula's length. The text handed out is counted for the whole read, and the groups kept are capped.
+  it.effect("a long shared formula handed to many cells, and more shared formulas than the read's cap", () =>
+    Effect.gen(function* () {
+      const master = `${Str.repeat(1000)("A1+")}A1`;
+      const rows =
+        `<row r="1"><c r="A1"><f t="shared" si="0">${master}</f><v>1</v></c></row>` +
+        A.join(
+          A.map(A.range(2, 40), (r) => `<row r="${r}"><c r="A${r}"><f t="shared" si="0"/><v>1</v></c></row>`),
+          ""
+        );
+      const finding = yield* builtFindingOf(one(sheet(rows)), { ...big, maxSharedFormulaChars: 30_000 });
+      expect(finding).toMatchObject({
+        kind: "LimitExceeded",
+        limit: "sharedFormulaChars",
+        path: "xl/worksheets/sheet1.xml",
+      });
+      const groups = A.join(
+        A.map(A.range(0, 4), (si) => `<c r="${columnLetters(si)}1"><f t="shared" si="${si}">1+1</f><v>2</v></c>`),
+        ""
+      );
+      const many = yield* workbook(
+        one(sheet(`<row r="1">${groups}</row><row r="2"><c r="E2"><f t="shared" si="4"/><v>2</v></c></row>`))
+      );
+      const read = yield* Xlsx.parse(many, limited({ maxSharedFormulas: 4 }));
+      expect(lastOf(read.warnings)).toMatchObject({ kind: "ListTruncated", list: "sharedFormulas", dropped: 1 });
+    })
+  );
+
+  it.effect("two paths that differ only in case, which OPC takes for one part", () =>
+    Effect.gen(function* () {
+      const parts = partsOf(one(sheet('<row r="1"><c r="A1"><v>1</v></c></row>')));
+      const bytes = yield* archive([
+        ...parts,
+        ["XL/WORKSHEETS/SHEET1.XML", sheet('<row r="1"><c r="A1"><v>2</v></c></row>')],
+      ]);
+      const finding = yield* findingOf(bytes);
+      expect(finding).toMatchObject({ kind: "DuplicatePart", path: "XL/WORKSHEETS/SHEET1.XML" });
+    })
+  );
+
+  // Excel opens a file by the directory its last end record names; the reader here walks the entries from the first
+  // byte. An archive updated by appending shows the two different workbooks, so it is refused, as is an entry the
+  // directory leaves out. A file whose entries are streamed, with descriptors and 64-bit sizes, agrees and reads.
+  it.effect("an archive updated by appending, and an entry its directory leaves out", () =>
+    Effect.gen(function* () {
+      const build = (value: number) => workbook(one(sheet(`<row r="1"><c r="A1"><v>${value}</v></c></row>`)));
+      const first = yield* build(1);
+      const second = yield* build(2);
+      const updated = yield* findingOf(appended({ first, second }));
+      expect(updated).toMatchObject({ kind: "DirectoryMismatch" });
+      const extra = yield* workbook({ ...one(sheet("")), extra: [["xl/extra.xml", "<x/>"]] });
+      const unlisted = yield* findingOf(withoutLastListed(extra));
+      expect(unlisted).toMatchObject({ kind: "DirectoryMismatch" });
+      const streamed = yield* streamedArchive(partsOf(one(sheet('<row r="1"><c r="A1"><v>3</v></c></row>'))));
+      const read = yield* Xlsx.parse(streamed);
+      expect(read.workbook.sheets[0].rows[0]?.cells[0]?.value).toMatchObject({ kind: "Number", value: 3 });
     })
   );
 });

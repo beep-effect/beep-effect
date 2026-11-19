@@ -5,11 +5,9 @@
 import { Csv } from "@beep/csv/Csv.codec";
 import { CsvDelimiter, CsvReadOptions, CsvTerminator, CsvWriteOptions } from "@beep/csv/CsvOptions.schema";
 import { CsvTable } from "@beep/csv/CsvTable.schema";
-import { Machine, MachineConfig } from "@beep/csv/internal/machine";
 import { describe, it } from "@effect/vitest";
 import { assertSuccess, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
-import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { constVoid } from "effect/Function";
 import * as R from "effect/Record";
@@ -23,6 +21,7 @@ import {
   messyText,
   outcomeOfRead,
   pieces,
+  rawBytes,
   readConfigs,
   readWith,
   readWithRules,
@@ -147,7 +146,7 @@ describe("chunk invariance", () => {
     );
 
     it.effect.prop(
-      `the text channel, cut anywhere, gives the one-shot streamed (${name})`,
+      `the text channel, cut anywhere, gives the read at once (${name})`,
       [messyText, cuts],
       ([text, cutLengths]) =>
         Effect.gen(function* () {
@@ -160,7 +159,7 @@ describe("chunk invariance", () => {
 
     for (const [decoding, encoding] of R.toEntries(byteConfigs)) {
       it.effect.prop(
-        `the bytes channel, cut anywhere, gives the one-shot streamed (${name}, ${decoding})`,
+        `the bytes channel, cut anywhere, gives the read at once (${name}, ${decoding})`,
         [messyText, cuts],
         ([text, cutLengths]) =>
           Effect.gen(function* () {
@@ -175,20 +174,28 @@ describe("chunk invariance", () => {
     }
   }
 
-  it.prop(
-    "a machine resumed from the state another took at any cut reads on as if never stopped",
-    [messyText, Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 64 })))],
-    ([text, cut]) => {
-      const config = MachineConfig.make({ delimiter: "," });
-      const taken = (machine: Machine) => [machine.takeRecords(), machine.takeDiagnostics()] as const;
-      const expected = taken(Machine.start(config).feed(text).finish());
-      const first = Machine.start(config).feed(Str.slice(0, cut)(text));
-      const before = taken(first);
-      const after = taken(Machine.start(config, first.state()).feed(Str.slice(cut)(text)).finish());
-      deepStrictEqual([A.appendAll(before[0], after[0]), A.appendAll(before[1], after[1])], expected);
-    },
-    runs
-  );
+  // Raw bytes, valid UTF-8 or not, under the decodings whose window holds the whole input. The caps stay wide: a
+  // stream reports the first fatal finding in input order, so a passed text cap ahead of bytes UTF-8 refuses fails it
+  // differently from the whole read, which decodes first (the `Csv.decode` Gotchas).
+  for (const [name, options] of R.toEntries({ fixed: readConfigs.fixed, detect: readConfigs.detect })) {
+    for (const [decoding, encoding] of R.toEntries({
+      fixedUtf8: byteConfigs.fixedUtf8,
+      detectDefault: byteConfigs.detectDefault,
+    })) {
+      it.effect.prop(
+        `the bytes channel over raw bytes, cut anywhere, gives the read at once (${name}, ${decoding})`,
+        [rawBytes, cuts],
+        ([bytes, cutLengths]) =>
+          Effect.gen(function* () {
+            const read = CsvReadOptions.make({ ...options, encoding });
+            const chunks = pieces(bytes.length, cutLengths, (from, to) => bytes.subarray(from, to));
+            const streamed = yield* streamBytes(chunks, read);
+            deepStrictEqual(streamed, outcomeOfRead(Csv.parseBytesResult(bytes, read)));
+          }),
+        runs
+      );
+    }
+  }
 
   it.effect("a sep= line split across chunks is still the sep= line", () =>
     Effect.gen(function* () {

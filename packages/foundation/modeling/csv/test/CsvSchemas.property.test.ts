@@ -1,4 +1,5 @@
-// Every exported schema, and the machine's state, generates only values it accepts (schema-first rule SF-7).
+// Every exported schema, the engine's internal ones included, generates only values it accepts (schema-first
+// rule SF-7).
 
 import { CsvDiagnostic } from "@beep/csv/CsvDiagnostic.schema";
 import { CsvCodecOptions, CsvReadOptions, CsvWriteOptions } from "@beep/csv/CsvOptions.schema";
@@ -6,6 +7,7 @@ import { CsvByteOffset, CsvIndex, CsvTextSpan } from "@beep/csv/CsvPosition.sche
 import { CsvRead } from "@beep/csv/CsvRead.schema";
 import { CsvRecordSlice, CsvTable } from "@beep/csv/CsvTable.schema";
 import { MachineState } from "@beep/csv/internal/machine";
+import { Prepared, Start } from "@beep/csv/internal/start";
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -25,6 +27,8 @@ const schemas = {
   CsvCodecOptions,
   CsvRead,
   MachineState,
+  Start,
+  Prepared,
 };
 
 describe("every schema generates only valid values", () => {

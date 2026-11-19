@@ -4,6 +4,8 @@
 import * as O from "effect/Option";
 import type { CsvEncodingName } from "../CsvOptions.schema.ts";
 
+// crispen: kept as loops — it walks the bytes once and stops at the first invalid one, decoding each sequence's code
+// point to refuse overlong forms and surrogates; no Effect module validates UTF-8 with an offset.
 /** The offset of the first byte that breaks UTF-8, or none when all of `bytes` is valid UTF-8. */
 export const firstInvalidUtf8 = (bytes: Uint8Array): O.Option<number> => {
   const length = bytes.length;

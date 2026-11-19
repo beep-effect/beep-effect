@@ -182,7 +182,7 @@ describe("cells", () => {
         { kind: "UnreadableCell", reason: "boolean" },
         { kind: "UnreadableCell", reason: "errorCode" },
         { kind: "UnreadableCell", reason: "date" },
-        { kind: "UnknownStyle", style: 9, address: { column: 5, row: 1 } },
+        { kind: "UnknownStyle", style: "9", address: { column: 5, row: 1 } },
       ]);
     })
   );
@@ -223,6 +223,34 @@ describe("cells", () => {
         workbookPr: '<workbookPr date1904="1"/>',
       });
       expect(grid(first(found))).toEqual([[1, "0:date 2957003", "1:2958000", "2:date 2957003"]]);
+    })
+  );
+
+  // The last moment either system shows is 23:59:59 on 31 December 9999; a fraction of a second is kept, and day 0,
+  // which only a serial names, is no ISO date.
+  it.effect("reads ISO dates to the last second of each system, keeps fractions of a second, and refuses day 0", () =>
+    Effect.gen(function* () {
+      const rows =
+        '<row r="1"><c r="A1" t="d"><v>9999-12-31T23:59:59</v></c><c r="B1" t="d"><v>2026-03-04T12:00:00.5</v></c>' +
+        '<c r="C1" t="d"><v>1900-01-00</v></c><c r="D1" t="d"><v>9999-12-31T23:59:59.5</v></c></row>';
+      const found = yield* readOf({ sheets: [{ name: "S", xml: sheet(rows) }] });
+      expect(grid(first(found))).toEqual([
+        [
+          1,
+          `0:date ${2_958_465 + 86_399 / 86_400}`,
+          `1:date ${46_085.5 + 0.5 / 86_400}`,
+          '2:unreadable "1900-01-00"',
+          '3:unreadable "9999-12-31T23:59:59.5"',
+        ],
+      ]);
+      const later = yield* readOf({
+        sheets: [{ name: "S", xml: sheet(rows) }],
+        workbookPr: '<workbookPr date1904="1"/>',
+      });
+      expect(first(later).rows[0]?.cells[0]?.value).toEqual({ kind: "Date", serial: 2_957_003 + 86_399 / 86_400 });
+      expect(
+        A.map(first(later).rows[0]?.cells ?? [], (cell) => O.getOrUndefined(XlsxCell.shown(cell, "1904")))[0]
+      ).toBe("12/31/99");
     })
   );
 
@@ -322,6 +350,23 @@ describe("the file's own form", () => {
       const before = yield* readOf({ ...recipe, stringsFirst: true });
       expect(grid(first(after))).toEqual([[1, '0:"one"', '1:"zero"']]);
       expect(before.workbook).toEqual(after.workbook);
+    })
+  );
+
+  // OPC compares part names without regard to ASCII case, so a relationship may name a part in another case than
+  // the archive writes it.
+  it.effect("finds a part its relationship names in another case", () =>
+    Effect.gen(function* () {
+      const parts = A.map(
+        partsOf({ sheets: [{ name: "S", xml: sheet('<row r="1"><c r="A1"><v>7</v></c></row>') }] }),
+        ([path, text]): readonly [string, string | Uint8Array] =>
+          path === "xl/_rels/workbook.xml.rels" && P.isString(text)
+            ? [path, Str.replace("worksheets/sheet1.xml", "WORKSHEETS/SHEET1.XML")(text)]
+            : [path, text]
+      );
+      const bytes = yield* archive(parts);
+      const found = yield* read(bytes);
+      expect(grid(first(found))).toEqual([[1, "0:7"]]);
     })
   );
 

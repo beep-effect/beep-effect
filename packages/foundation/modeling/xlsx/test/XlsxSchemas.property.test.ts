@@ -18,7 +18,7 @@ import {
   XlsxText,
   XlsxValue,
 } from "@beep/xlsx/XlsxCell.schema";
-import { XlsxContainer, XlsxDiagnostic } from "@beep/xlsx/XlsxDiagnostic.schema";
+import { XlsxContainer, XlsxDiagnostic, XlsxKeptList } from "@beep/xlsx/XlsxDiagnostic.schema";
 import { XlsxFormatKind } from "@beep/xlsx/XlsxFormatKind.schema";
 import {
   XlsxCodecOptions,
@@ -31,6 +31,10 @@ import { XlsxOutline, XlsxRead, XlsxSheetOutline } from "@beep/xlsx/XlsxRead.sch
 import { MAX_SERIAL, maxSerial, XlsxCalendar, XlsxDateSystem, XlsxSerial } from "@beep/xlsx/XlsxSerial.schema";
 import {
   XlsxDroppedPart,
+  XlsxHeading,
+  XlsxHiddenColumns,
+  XlsxMerges,
+  XlsxRecord,
   XlsxRow,
   XlsxSheetCount,
   XlsxSheetInfo,
@@ -79,6 +83,11 @@ const schemas: Readonly<Record<string, S.Top>> = {
   XlsxRead,
   XlsxSheetOutline,
   XlsxOutline,
+  XlsxMerges,
+  XlsxHiddenColumns,
+  XlsxHeading,
+  XlsxRecord,
+  XlsxKeptList,
 };
 
 describe("every schema generates only valid values", () => {
@@ -148,6 +157,32 @@ describe("serials", () => {
     expect(ymd(maxSerial("1904"), "1904")).toEqual(O.some("9999-12-31"));
     expect(XlsxCalendar.fromSerial(MAX_SERIAL, "1904")).toEqual(O.none());
     expect(XlsxCalendar.toDateTime(MAX_SERIAL, "1904")).toEqual(O.none());
+  });
+  // The bound is the last whole second of 31 December 9999, as a workbook stores it to 15 digits: that second is a
+  // date in both systems, reads back to itself, and is shown; the next day is none, and so is shown as nothing.
+  it("keeps the last second of 31 December 9999 in both systems, and shows nothing past it", () => {
+    const last = XlsxCalendar.make({ year: 9999, month: 12, day: 31, hour: 23, minute: 59, second: 59 });
+    for (const system of XlsxDateSystem.literals) {
+      const serial = O.getOrThrow(XlsxCalendar.toSerial(last, system));
+      expect(serial).toBeLessThanOrEqual(maxSerial(system));
+      expect(XlsxCalendar.fromSerial(serial, system)).toEqual(O.some(last));
+      expect(XlsxCalendar.fromSerial(maxSerial(system), system)).toEqual(O.some(last));
+      const shown = (at: number) =>
+        XlsxCell.shown(
+          {
+            value: XlsxDate.make({ serial: at }),
+            format: XlsxNumberFormat.make({ id: 164, code: "yyyy-mm-dd hh:mm:ss" }),
+          },
+          system
+        );
+      expect(shown(serial)).toEqual(O.some("9999-12-31 23:59:59"));
+      expect(shown(Math.min(maxSerial(system) + 1, MAX_SERIAL))).toEqual(system === "1904" ? O.none() : shown(serial));
+    }
+    // A 1904 serial past the system's last day was shown as the year 0002.
+    const late = XlsxDate.make({ serial: 2_958_000 });
+    expect(
+      XlsxCell.shown({ value: late, format: XlsxNumberFormat.make({ id: 164, code: "yyyy-mm-dd" }) }, "1904")
+    ).toEqual(O.none());
   });
   // The serial domain is one schema for both systems, so a 1904 serial can name a day past 9999; `fromSerial` says
   // none there and never throws. Within a system's range it always gives the day, back to within a second.
@@ -289,9 +324,26 @@ describe("uniqueness", () => {
       }
     }
   });
-  // The checks hash their keys, so they are linear: a check that compared every pair would take minutes here.
-  it("checks a sheet of 200,000 rows, a full row and 1,000 sheets in linear time", () => {
-    const rows = A.map(A.range(1, 200_000), row);
+  // Each key is read once per row: a check that compared every pair would read 2,000 rows' numbers four million
+  // times. The row schema reads its number once more, so a linear check reads each number at most three times.
+  it("reads each row's number a bounded number of times to check a sheet", () => {
+    let reads = 0;
+    const counted = A.map(A.range(1, 2000), (number) => ({
+      hidden: false,
+      cells: row(number).cells,
+      get number() {
+        reads += 1;
+        return number;
+      },
+    }));
+    expect(
+      S.is(XlsxWorksheet)({ ...XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "S" }) }), rows: counted })
+    ).toBe(true);
+    expect(reads).toBeGreaterThanOrEqual(counted.length);
+    expect(reads).toBeLessThanOrEqual(3 * counted.length);
+  });
+  it("checks a sheet of 20,000 rows, a full row and 1,000 sheets", () => {
+    const rows = A.map(A.range(1, 20_000), row);
     expect(S.is(XlsxWorksheet)(XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "S" }), rows }))).toBe(true);
     expect(
       S.is(XlsxWorksheet)({
@@ -303,5 +355,17 @@ describe("uniqueness", () => {
     const sheets = A.map(A.range(1, 1000), (n) => sheet(`Sheet ${n}`));
     expect(S.is(XlsxWorkbook)(XlsxWorkbook.make({ sheets: [sheet("Sheet 0"), ...sheets] }))).toBe(true);
     expect(XlsxWorkbook.makeOption({ sheets: [sheet("sheet 1"), ...sheets] })).toEqual(O.none());
+  });
+  // A sheet's merged ranges and hidden columns are one schema each, wherever a sheet's layout is held.
+  it("refuses a range merged twice or a column hidden twice, in a worksheet and an outline alike", () => {
+    const range = O.getOrThrow(XlsxRange.parse("A1:B2"));
+    const reversed = XlsxRange.make({ first: range.last, last: range.first });
+    const base = XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "S" }) });
+    expect(S.is(XlsxWorksheet)({ ...base, merges: [range, reversed] })).toBe(false);
+    expect(S.is(XlsxWorksheet)({ ...base, hiddenColumns: [3, 3, 1] })).toBe(false);
+    const count = XlsxWorksheet.count(base);
+    expect(O.isSome(XlsxSheetOutline.makeOption({ count, merges: [], hiddenColumns: [3, 1] }))).toBe(true);
+    expect(O.isNone(XlsxSheetOutline.makeOption({ count, merges: [], hiddenColumns: [3, 3, 1] }))).toBe(true);
+    expect(O.isNone(XlsxSheetOutline.makeOption({ count, merges: [range, range], hiddenColumns: [] }))).toBe(true);
   });
 });

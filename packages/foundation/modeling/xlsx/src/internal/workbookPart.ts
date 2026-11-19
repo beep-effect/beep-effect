@@ -16,7 +16,7 @@ import { DamagedXml, LimitExceeded, MissingPart, NoSheets, NotAWorkbook } from "
 import { XlsxFormatKind } from "../XlsxFormatKind.schema.ts";
 import { XlsxDateSystem } from "../XlsxSerial.schema.ts";
 import { XlsxDroppedPart, XlsxSheetName, XlsxSheetState } from "../XlsxWorkbook.schema.ts";
-import { Caps, census, collect, sniffContainer, stop } from "./container.ts";
+import { Caps, census, collect, partKey, sniffContainer, stop } from "./container.ts";
 import { builtinFormats, classify, isDateFormat, renderDate } from "./numberFormat.ts";
 import {
   attribute,
@@ -93,6 +93,9 @@ export const styleOf = (format: XlsxNumberFormat): StyleFormat => {
 
 const malformed = (path: string, reason: string) =>
   stop(DamagedXml.make({ path: Str.slice(0, 1024)(path), line: 0, column: 0, reason }));
+
+/** The content types part, by its `partKey`. */
+const contentTypes = "[content_types].xml";
 
 const endsWith = (type: string, kind: string): boolean => Str.endsWith(`/${kind}`)(type);
 
@@ -225,14 +228,15 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
     caps,
     // Every small XML part is held on this pass, so the workbook part, the styles and the shared text are usually
     // in hand without a second one; a sheet's own XML is not held, wherever the workbook says it is.
-    keep: (path) =>
-      Str.endsWith(".rels")(path) ||
-      path === "[Content_Types].xml" ||
-      (Str.endsWith(".xml")(path) && !Str.includes("/worksheets/")(path)),
+    keep: (key) =>
+      Str.endsWith(".rels")(key) ||
+      key === contentTypes ||
+      (Str.endsWith(".xml")(key) && !Str.includes("/worksheets/")(key)),
   });
-  const present = MutableHashSet.fromIterable(first.paths);
+  // Every part is looked up by its `partKey`, as OPC compares names; a finding names the part as it was written.
+  const present = MutableHashSet.fromIterable(A.map(first.paths, partKey));
   const partOf = Effect.fnUntraced(function* (from: { readonly kept: typeof first.kept; readonly path: string }) {
-    const found = MutableHashMap.get(from.kept, from.path);
+    const found = MutableHashMap.get(from.kept, partKey(from.path));
     return O.isSome(found)
       ? found.value
       : yield* Effect.fail(stop(MissingPart.make({ path: Str.slice(0, 1024)(from.path) })));
@@ -250,7 +254,7 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
     ),
     () => "xl/workbook.xml"
   );
-  if (!MutableHashSet.has(present, workbookPath)) {
+  if (!MutableHashSet.has(present, partKey(workbookPath))) {
     return yield* Effect.fail(stop(MissingPart.make({ path: Str.slice(0, 1024)(workbookPath) })));
   }
   const links: ReadonlyArray<Relationship> = yield* relationships(workbookPath);
@@ -264,21 +268,21 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
         A.findFirst(links, (r) => endsWith(r.type, kind)),
         (r) => r.path
       ),
-      (path) => MutableHashSet.has(present, path)
+      (path) => MutableHashSet.has(present, partKey(path))
     );
   const stylesPath = pathOfKind("styles");
   const stringsPath = pathOfKind("sharedStrings");
   const wanted = MutableHashSet.fromIterable(
     A.filter(
-      [workbookPath, ...O.toArray(stylesPath), ...O.toArray(stringsPath)],
-      (path) => !MutableHashMap.has(first.kept, path)
+      A.map([workbookPath, ...O.toArray(stylesPath), ...O.toArray(stringsPath)], partKey),
+      (key) => !MutableHashMap.has(first.kept, key)
     )
   );
   const second =
     MutableHashSet.size(wanted) === 0
       ? first.kept
-      : yield* collect({ bytes, wanted: (path) => MutableHashSet.has(wanted, path) });
-  for (const [path, part] of first.kept) if (!MutableHashMap.has(second, path)) MutableHashMap.set(second, path, part);
+      : yield* collect({ bytes, wanted: (key) => MutableHashSet.has(wanted, key) });
+  for (const [key, part] of first.kept) if (!MutableHashMap.has(second, key)) MutableHashMap.set(second, key, part);
   const root = yield* rootOf({
     path: workbookPath,
     bytes: yield* partOf({ kept: second, path: workbookPath }),
@@ -293,13 +297,15 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
   // crispen: each listed sheet can stop the open with its own finding, so this is a loop with early returns.
   const sheets: Array<SheetEntry> = [];
   const names = MutableHashSet.empty<string>();
-  const read = MutableHashSet.make(workbookPath, ...O.toArray(stylesPath), ...O.toArray(stringsPath));
+  const read = MutableHashSet.fromIterable(
+    A.map([workbookPath, ...O.toArray(stylesPath), ...O.toArray(stringsPath)], partKey)
+  );
   for (const sheet of listed) {
     const link = O.flatMap(attribute(sheet.attributes, "id"), (id) => MutableHashMap.get(linkById, id));
     if (O.isNone(link))
       return yield* Effect.fail(malformed(workbookPath, "a sheet names a relationship the workbook lacks"));
     if (!endsWith(link.value.type, "worksheet")) continue;
-    if (!MutableHashSet.has(present, link.value.path)) {
+    if (!MutableHashSet.has(present, partKey(link.value.path))) {
       return yield* Effect.fail(stop(MissingPart.make({ path: Str.slice(0, 1024)(link.value.path) })));
     }
     const written = sheet.attributes.name ?? "";
@@ -313,7 +319,7 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
     sheets.push(
       SheetEntry.make({ name, state: S.is(XlsxSheetState)(state) ? state : "visible", path: link.value.path })
     );
-    MutableHashSet.add(read, link.value.path);
+    MutableHashSet.add(read, partKey(link.value.path));
     if (sheets.length > caps.sheets) return yield* Effect.fail(stop(LimitExceeded.make({ limit: "sheets", path: "" })));
   }
   if (!A.isArrayNonEmpty(sheets)) return yield* Effect.fail(stop(NoSheets.make({})));
@@ -334,9 +340,11 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
   // crispen: one pass over every path the census saw, with a skip for each part that is read or is plumbing.
   const dropped: Array<XlsxDroppedPart> = [];
   for (const path of first.paths) {
-    if (path.length > 1024 || Str.endsWith(".rels")(path) || path === "[Content_Types].xml") continue;
-    if (MutableHashSet.has(read, path)) {
-      if (styled.more && O.contains(stylesPath, path)) dropped.push(XlsxDroppedPart.make({ path, kind: "styles" }));
+    const key = partKey(path);
+    if (path.length > 1024 || Str.endsWith(".rels")(key) || key === contentTypes) continue;
+    if (MutableHashSet.has(read, key)) {
+      if (styled.more && O.exists(stylesPath, (styles) => partKey(styles) === key))
+        dropped.push(XlsxDroppedPart.make({ path, kind: "styles" }));
       continue;
     }
     dropped.push(XlsxDroppedPart.make({ path, kind: droppedKindOf(path) }));

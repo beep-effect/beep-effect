@@ -3,6 +3,7 @@
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Zip from "effect/encoding/Zip";
+import * as P from "effect/Predicate";
 import * as Stream from "effect/Stream";
 
 const main = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
@@ -14,20 +15,23 @@ const head = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 /** One part of an archive: its path and its text. */
 export type Part = readonly [path: string, text: string | Uint8Array];
 
+/** Chunks of bytes as one array. */
+const joined = (chunks: ReadonlyArray<Uint8Array>): Uint8Array => {
+  const out = new Uint8Array(A.reduce(chunks, 0, (n, chunk) => n + chunk.length));
+  let at = 0;
+  for (const chunk of chunks) {
+    out.set(chunk, at);
+    at += chunk.length;
+  }
+  return out;
+};
+
 /** Parts as one zip archive, in the order given. */
 export const archive = (parts: ReadonlyArray<Part>): Effect.Effect<Uint8Array> =>
   Stream.fromIterable(A.map(parts, ([path, text]) => Zip.file(path, text))).pipe(
     Stream.pipeThroughChannel(Zip.encode()),
     Stream.runCollect,
-    Effect.map((chunks) => {
-      const out = new Uint8Array(A.reduce(chunks, 0, (n, chunk) => n + chunk.length));
-      let at = 0;
-      for (const chunk of chunks) {
-        out.set(chunk, at);
-        at += chunk.length;
-      }
-      return out;
-    }),
+    Effect.map(joined),
     Effect.orDie
   );
 
@@ -132,3 +136,62 @@ export const styles = (codes: ReadonlyArray<string>): string =>
 
 /** The namespace a Strict workbook uses. */
 export const strict = strictMain;
+
+/**
+ * Parts as one zip archive whose bodies are streamed, so each entry's sizes follow its data in a descriptor and are
+ * given as 64-bit fields: the form a writer that does not know a part's size ahead takes.
+ */
+export const streamedArchive = (parts: ReadonlyArray<Part>): Effect.Effect<Uint8Array> =>
+  Stream.fromIterable(
+    A.map(parts, ([path, text]) =>
+      Zip.fileStream(path, Stream.make(P.isString(text) ? new TextEncoder().encode(text) : text))
+    )
+  ).pipe(Stream.pipeThroughChannel(Zip.encode()), Stream.runCollect, Effect.map(joined), Effect.orDie);
+
+/** Where an archive's end-of-directory record is: its last `PK 5 6`. */
+const endOf = (bytes: Uint8Array): number => {
+  for (let at = bytes.length - 22; at >= 0; at -= 1) {
+    if (bytes[at] === 0x50 && bytes[at + 1] === 0x4b && bytes[at + 2] === 5 && bytes[at + 3] === 6) return at;
+  }
+  return -1;
+};
+
+/**
+ * One archive updated by appending another, as a zip tool updates a file in place: the second's entries and
+ * directory follow the first's, its offsets moved past the first, so the last end record, which Excel opens the
+ * file by, names the second's entries.
+ */
+export const appended = (input: { readonly first: Uint8Array; readonly second: Uint8Array }): Uint8Array => {
+  const { first, second } = input;
+  const moved = second.slice();
+  const view = new DataView(moved.buffer);
+  const end = endOf(moved);
+  const start = view.getUint32(end + 16, true);
+  let at = start;
+  for (let n = 0; n < view.getUint16(end + 10, true); n += 1) {
+    view.setUint32(at + 42, view.getUint32(at + 42, true) + first.length, true);
+    at += 46 + view.getUint16(at + 28, true) + view.getUint16(at + 30, true) + view.getUint16(at + 32, true);
+  }
+  view.setUint32(end + 16, start + first.length, true);
+  return joined([first, moved]);
+};
+
+/** An archive whose directory leaves out its last entry, which is still in the archive before the directory. */
+export const withoutLastListed = (bytes: Uint8Array): Uint8Array => {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const end = endOf(bytes);
+  const count = view.getUint16(end + 10, true);
+  const start = view.getUint32(end + 16, true);
+  let at = start;
+  for (let n = 0; n < count - 1; n += 1) {
+    at += 46 + view.getUint16(at + 28, true) + view.getUint16(at + 30, true) + view.getUint16(at + 32, true);
+  }
+  const last = 46 + view.getUint16(at + 28, true) + view.getUint16(at + 30, true) + view.getUint16(at + 32, true);
+  const out = joined([bytes.subarray(0, at), bytes.subarray(at + last)]);
+  const record = new DataView(out.buffer);
+  const moved = end - last;
+  record.setUint16(moved + 8, count - 1, true);
+  record.setUint16(moved + 10, count - 1, true);
+  record.setUint32(moved + 12, view.getUint32(end + 12, true) - last, true);
+  return out;
+};

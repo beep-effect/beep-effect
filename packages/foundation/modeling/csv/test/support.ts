@@ -1,5 +1,6 @@
-// Shared test pieces: read options, the generators of hostile text, a splitter that cuts input at arbitrary points,
-// and the outcome of a read reduced to what the laws compare (records, or the fatal findings).
+// Shared test pieces: read options, the generators of hostile text and raw bytes, a splitter that cuts input at
+// arbitrary points, the outcome of a read reduced to what the laws compare (records, or the fatal findings), a stream
+// that fails after its values, and a cost ratio that needs no wall-clock bound.
 
 import { Csv } from "@beep/csv/Csv.codec";
 import {
@@ -14,7 +15,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as Num from "effect/Number";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -142,3 +143,59 @@ export const streamBytes: {
 );
 
 export const utf8 = (text: string): Uint8Array => new TextEncoder().encode(text);
+
+/** The findings the fatal diagnostics carry. */
+export const findingsOfFatals = A.map((fatal: CsvFatal) => fatal.finding);
+
+/** An outcome with its fatal findings in place of the diagnostics that carry them. */
+export const fatalFindings = Result.mapError(findingsOfFatals);
+
+// Bytes over ASCII CSV characters, UTF-8 lead and continuation bytes, a UTF-8 BOM and bytes that UTF-8 never uses, so
+// inputs end inside a sequence, hold a Windows-1252 accent, or are valid UTF-8, all often.
+const RawByte = S.Literals([0x61, 0x2c, 0x0a, 0x22, 0xc3, 0xa9, 0xe2, 0x82, 0xf0, 0x9f, 0xff, 0xef, 0xbb, 0xbf]);
+
+/** Raw bytes, valid UTF-8 or not. */
+export const rawBytes = RawByte.pipe(
+  S.Array,
+  Arbitrary.schema,
+  Arbitrary.map((bytes) => Uint8Array.from(bytes))
+);
+
+/** A stream's elements, each as a success, then the error that failed it, so a test sees what came before a failure. */
+export const untilFailure = <A, E>(stream: Stream.Stream<A, E>): Effect.Effect<Array<Result.Result<A, E>>> =>
+  stream.pipe(Stream.map(Result.succeed<A>), Stream.catch(flow(Result.fail<E>, Stream.make)), Stream.runCollect);
+
+/** A stream of `values`, then the caller's own failure, as an upstream that breaks mid-input. */
+export const thenFail: {
+  (error: string): <A>(values: ReadonlyArray<A>) => Stream.Stream<A, string>;
+  <A>(values: ReadonlyArray<A>, error: string): Stream.Stream<A, string>;
+} = dual(
+  2,
+  <A>(values: ReadonlyArray<A>, error: string): Stream.Stream<A, string> =>
+    Stream.concat(streamPieces(values), Stream.fail(error))
+);
+
+/** Milliseconds `thunk` takes: the median of five runs, after one to warm up. */
+const medianMs = (thunk: () => void): number => {
+  thunk();
+  const times = A.makeBy(5, () => {
+    const started = performance.now();
+    thunk();
+    return performance.now() - started;
+  });
+  return A.sort(times, Num.Order)[2] ?? 0;
+};
+
+/**
+ * How much more `run` costs on the larger of two texts than on the smaller, measured in the same test and with the
+ * texts built beforehand. For texts k times apart, about k for a linear cost and about k squared for a quadratic one:
+ * a ratio, not a time, so a loaded machine slows both sides alike.
+ */
+export const growth: {
+  (inputs: readonly [string, string]): (run: (input: string) => unknown) => number;
+  (run: (input: string) => unknown, inputs: readonly [string, string]): number;
+} = dual(
+  2,
+  (run: (input: string) => unknown, [smaller, larger]: readonly [string, string]): number =>
+    medianMs(() => run(larger)) / medianMs(() => run(smaller))
+);

@@ -13,8 +13,8 @@ import * as EffectCsv from "effect/encoding/Csv";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import { runs } from "./support.ts";
 
-const runs = { arbitrary: { runs: 200 } };
 const strict = CsvReadOptions.make({ delimiter: CsvFixedDelimiter.make({ delimiter: "," }), quotes: "strict" });
 
 const effectRead = (text: string): Effect.Effect<Result.Result<ReadonlyArray<ReadonlyArray<string>>, unknown>> =>

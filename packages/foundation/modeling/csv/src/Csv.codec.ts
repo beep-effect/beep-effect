@@ -23,7 +23,6 @@ import * as Channel from "effect/Channel";
 import * as Effect from "effect/Effect";
 import { constVoid, flow } from "effect/Function";
 import * as HashSet from "effect/HashSet";
-import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
@@ -36,7 +35,6 @@ import { CsvDiagnostic, CsvFatal, InvalidUtf8, TooManyBytes } from "./CsvDiagnos
 import { CsvParseError } from "./CsvError.errors.ts";
 import {
   CsvCodecOptions,
-  CsvDelimiter,
   CsvDelimiterChoice,
   CsvEncodingChoice,
   CsvReadOptions,
@@ -45,10 +43,6 @@ import {
 import { recordEndText } from "./CsvPosition.schema.ts";
 import {
   CsvClean,
-  CsvDelimiterDetected,
-  CsvDelimiterFallback,
-  CsvDelimiterFromSepLine,
-  CsvDelimiterGiven,
   CsvEncodingFallback,
   CsvEncodingFromBom,
   CsvEncodingGiven,
@@ -58,133 +52,42 @@ import {
   CsvNoted,
   CsvRead,
 } from "./CsvRead.schema.ts";
-import { CsvHeaderRow, CsvRecordSlice, CsvTable } from "./CsvTable.schema.ts";
-import { bomOf, decodeBytes, decoderFor, encodeUtf8, firstInvalidUtf8 } from "./internal/encoding.ts";
+import { CsvHeaderRow, CsvTable } from "./CsvTable.schema.ts";
+import { bomOf, decodeBytes, encodeUtf8, firstInvalidUtf8 } from "./internal/encoding.ts";
 import { checkHeader, rowsOf, toHeaderRows } from "./internal/header.ts";
-import { Machine, MachineConfig } from "./internal/machine.ts";
+import { built, Machine } from "./internal/machine.ts";
 import { SNIFF_WINDOW, sniffDelimiter } from "./internal/sniff.ts";
+import { prepare, startOf } from "./internal/start.ts";
+import { bytesSteps, mapAccumToEnd, textSteps } from "./internal/stream.ts";
 import { writeTable } from "./internal/writer.ts";
 import type { TextDecodeTo } from "@beep/utils/Schema";
-import type { CsvEncodingName } from "./CsvOptions.schema.ts";
-import type { CsvDelimiterFound, CsvEncodingFound } from "./CsvRead.schema.ts";
-import type { CsvRecord } from "./CsvTable.schema.ts";
-import type { RawRecord } from "./internal/machine.ts";
+import type { CsvDelimiter, CsvEncodingName } from "./CsvOptions.schema.ts";
+import type { CsvEncodingFound } from "./CsvRead.schema.ts";
+import type { CsvRecord, CsvRecordSlice } from "./CsvTable.schema.ts";
+import type { MachineConfig } from "./internal/machine.ts";
+import type { Prepared } from "./internal/start.ts";
 
 // ── reading ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 type ReadOptions = CsvCodecOptions["read"];
 type WriteOptions = CsvCodecOptions["write"];
 
-/** Engine-built values hold their invariants by construction; the property tests prove them, so `make` skips checks. */
-const built = { disableChecks: true } as const;
-
-const sepLine = /^sep=([,;\t|])(\r\n|\n|\r)/;
-
-/** A start more input could still turn into a `sep=` line, or change its line break (`sep=;\r` may be `sep=;\r\n`). */
-const openSepLine = /^(?:s|se|sep|sep=|sep=[,;\t|]|sep=[,;\t|]\r)?$/;
-
-/** A first line such as `sep=;`: the delimiter it names and how many units it spans. */
-interface SepLine {
-  readonly delimiter: CsvDelimiter;
-  readonly length: number;
-}
-
-/** The input's start, read: whether it had a byte-order mark, its `sep=` line when honoured, and the text after. */
-interface Start {
-  readonly bom: boolean;
-  readonly sep: O.Option<SepLine>;
-  readonly text: string;
-}
-
-interface Prepared {
-  readonly bom: boolean;
-  readonly config: MachineConfig;
-  readonly delimiter: CsvDelimiterFound;
-  readonly text: string;
-}
-
-const sepLineOf = (text: string): O.Option<SepLine> =>
-  O.flatMap(O.fromNullishOr(sepLine.exec(text)), (match) =>
-    O.map(O.filter(O.fromNullishOr(match[1]), S.is(CsvDelimiter)), (delimiter) => ({
-      delimiter,
-      length: match[0].length,
-    }))
-  );
-
-const unmarked = (input: string): string => (Str.startsWith("\uFEFF")(input) ? Str.slice(1)(input) : input);
-
-/** Strips a BOM and, when asked, a `sep=` line. */
-const startOf = (input: string, options: ReadOptions): Start => {
-  const text = unmarked(input);
-  const sep = options.excelSepHint ? sepLineOf(text) : O.none();
-  return {
-    bom: text.length < input.length,
-    sep,
-    text: O.getOrElse(
-      O.map(sep, ({ length }) => Str.slice(length)(text)),
-      () => text
-    ),
-  };
-};
-
-/**
- * Whether more input could no longer change what {@link startOf} makes of a stream's first text: a BOM is decided by
- * the first unit, a `sep=` line once its line break is known.
- */
-const startDecided = (input: string, options: ReadOptions): boolean =>
-  Str.isNonEmpty(input) && !(options.excelSepHint && openSepLine.test(unmarked(input)));
-
-/** The delimiter the options fix, or the one detected from the text's start, or the comma fallback. */
-const settleDelimiter = (text: string, options: ReadOptions): CsvDelimiterFound =>
-  CsvDelimiterChoice.match(options.delimiter, {
-    fixed: ({ delimiter }) => CsvDelimiterGiven.make({ delimiter }),
-    detect: ({ candidates }) =>
-      O.getOrElse(
-        O.map(
-          sniffDelimiter({ sample: Str.slice(0, SNIFF_WINDOW)(text), candidates, limits: options.limits }),
-          (delimiter) => CsvDelimiterDetected.make({ delimiter })
-        ),
-        () => CsvDelimiterFallback.make({})
-      ),
-  });
-
-/** Settles the delimiter of a read start: from its `sep=` line, else as the options say. */
-const prepare = (start: Start, options: ReadOptions): Prepared => {
-  const delimiter = O.getOrElse(
-    O.map(start.sep, ({ delimiter }): CsvDelimiterFound => CsvDelimiterFromSepLine.make({ delimiter })),
-    () => settleDelimiter(start.text, options)
-  );
-  return {
-    text: start.text,
-    bom: start.bom,
-    delimiter,
-    config: MachineConfig.make({
-      delimiter: delimiter.delimiter,
-      quotes: options.quotes,
-      ragged: options.ragged,
-      blankLines: options.blankLines,
-      trim: options.trim,
-      limits: options.limits,
-    }),
-  };
-};
-
 /** Told after each piece how many records and characters are done, out of how many characters. */
 type OnPiece = (records: number, charsRead: number, charsTotal: number) => void;
 
 interface Ran {
   readonly diagnostics: ReadonlyArray<CsvDiagnostic>;
-  readonly records: ReadonlyArray<RawRecord>;
+  readonly records: ReadonlyArray<CsvRecord>;
 }
 
 // crispen: kept as a loop — it drives the push machine piece by piece and stops at the first fatal finding; a fold
 // would visit every remaining piece, and recursion would overflow on one-character pieces.
 /** Runs the machine over the text in pieces of `pieceChars` characters. */
 const run = (text: string, config: MachineConfig, pieceChars: number, onPiece: OnPiece): Ran => {
-  const records: Array<RawRecord> = [];
+  const records: Array<CsvRecord> = [];
   const diagnostics: Array<CsvDiagnostic> = [];
   const collect = (machine: Machine): void => {
-    A.forEach(machine.takeRecords(), (record) => records.push(record));
+    A.forEach(machine.takeCells(), (record) => records.push(record));
     A.forEach(machine.takeDiagnostics(), (diagnostic) => diagnostics.push(diagnostic));
   };
   const machine = Machine.start(config);
@@ -217,7 +120,7 @@ const finish = (
       Result.succeed(
         CsvRead.make(
           {
-            table: CsvTable.make({ records: A.map(ran.records, (record) => record.cells) }, built),
+            table: CsvTable.make({ records: ran.records }, built),
             delimiter: prepared.delimiter,
             source: source(prepared.bom),
             outcome: A.match(warningsOf(ran.diagnostics), {
@@ -371,67 +274,6 @@ const headerRecords = (rows: ReadonlyArray<CsvHeaderRow>): Result.Result<Readonl
 
 // ── streaming ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
-interface Running {
-  readonly machine: Machine;
-  readonly phase: "running";
-}
-
-type Pending = { readonly phase: "buffering"; readonly buffer: string } | Running;
-
-/** What the text channel emits before failing on errors: the records of a step, or the error that stopped it. */
-type Emitted = Result.Result<A.NonEmptyReadonlyArray<CsvRecordSlice>, CsvParseError>;
-
-const sliceOf = (record: RawRecord): CsvRecordSlice =>
-  CsvRecordSlice.make({ cells: record.cells, record: record.record, span: record.span, end: record.end }, built);
-
-/** A step's records, then the error that stopped it, each only when there is one. */
-const slicesOf = (machine: Machine): ReadonlyArray<Emitted> => [
-  ...A.match(A.map(machine.takeRecords(), sliceOf), {
-    onEmpty: A.empty<Emitted>,
-    onNonEmpty: flow(Result.succeed, A.of<Emitted>),
-  }),
-  ...A.match(fatalsOf(machine.takeDiagnostics()), {
-    onEmpty: A.empty<Emitted>,
-    onNonEmpty: flow(parseError, Result.fail, A.of<Emitted>),
-  }),
-];
-
-const startRunning = (prepared: Prepared): readonly [Running, ReadonlyArray<Emitted>] => {
-  const machine = Machine.start(prepared.config);
-  return [{ phase: "running", machine }, slicesOf(machine.feed(prepared.text))];
-};
-
-const buffering = (buffer: string): readonly [Pending, ReadonlyArray<Emitted>] => [{ phase: "buffering", buffer }, []];
-
-/**
- * One text chunk. The first text is held until its start is decided (a BOM, a `sep=` line) and, when the delimiter
- * is detected, until the text after that start fills the detection window, so a stream sniffs and strips exactly what
- * a whole read would.
- */
-const stepText = (
-  pending: Pending,
-  chunk: string,
-  options: ReadOptions
-): readonly [Pending, ReadonlyArray<Emitted>] => {
-  if (pending.phase === "running")
-    return [pending, pending.machine.stopped ? [] : slicesOf(pending.machine.feed(chunk))];
-  const buffer = pending.buffer + chunk;
-  if (!startDecided(buffer, options)) return buffering(buffer);
-  const start = startOf(buffer, options);
-  return options.delimiter.kind === "fixed" || O.isSome(start.sep) || start.text.length >= SNIFF_WINDOW
-    ? startRunning(prepare(start, options))
-    : buffering(buffer);
-};
-
-const haltRunning = (running: Running): ReadonlyArray<Emitted> =>
-  running.machine.stopped ? [] : slicesOf(running.machine.finish());
-
-const haltText = (pending: Pending, options: ReadOptions): Array<Emitted> => {
-  if (pending.phase === "running") return [...haltRunning(pending)];
-  const [started, emitted] = startRunning(prepare(startOf(pending.buffer, options), options));
-  return [...emitted, ...haltRunning(started)];
-};
-
 const decodeStringChannel = <IE, Done>(
   options: ReadOptions
 ): Channel.Channel<
@@ -443,143 +285,9 @@ const decodeStringChannel = <IE, Done>(
   Done
 > =>
   Channel.identity<A.NonEmptyReadonlyArray<string>, IE, Done>().pipe(
-    Channel.mapAccum(
-      (): Pending => ({ phase: "buffering", buffer: "" }),
-      (pending, chunks: A.NonEmptyReadonlyArray<string>) => stepText(pending, A.join(chunks, ""), options),
-      { onHalt: (pending) => haltText(pending, options) }
-    ),
-    Channel.mapEffect(Effect.fromResult)
+    mapAccumToEnd(textSteps(options)),
+    Channel.mapEffect(flow(Result.mapError(parseError), Effect.fromResult))
   );
-
-type Decoding =
-  | { readonly phase: "window"; readonly bytes: Uint8Array }
-  | { readonly phase: "utf8"; readonly carry: Uint8Array; readonly at: number }
-  | { readonly phase: "fixed"; readonly decoder: TextDecoder };
-
-/** The decoding so far and the bytes seen, against the byte cap. */
-interface BytesPending {
-  readonly decoding: Decoding;
-  readonly over: boolean;
-  readonly seen: number;
-}
-
-/** A decoded piece of text, or the error that stopped the decoding. */
-type Text = Result.Result<string, CsvParseError>;
-
-type DecodingStep = readonly [Decoding, ReadonlyArray<Text>];
-
-const concatBytes = (left: Uint8Array, right: Uint8Array): Uint8Array => {
-  const out = new Uint8Array(left.length + right.length);
-  out.set(left, 0);
-  out.set(right, left.length);
-  return out;
-};
-
-// crispen: kept as a loop — it reads at most the last three bytes of a chunk, back to the first that starts a
-// UTF-8 sequence; no Effect module reads a partial UTF-8 tail.
-/** How many trailing bytes start a UTF-8 sequence that the chunk does not finish. */
-const incompleteTail = (bytes: Uint8Array): number => {
-  for (let back = 1; back <= Num.min(3, bytes.length); back += 1) {
-    const b = bytes[bytes.length - back] ?? 0;
-    if ((b & 0xc0) === 0x80) continue;
-    const need = b >= 0xf0 ? 4 : b >= 0xe0 ? 3 : b >= 0xc0 ? 2 : 1;
-    return need > back ? back : 0;
-  }
-  return 0;
-};
-
-const fixedStep = (decoder: TextDecoder, bytes: Uint8Array): DecodingStep => [
-  { phase: "fixed", decoder },
-  [Result.succeed(decoder.decode(bytes, { stream: true }))],
-];
-
-const utf8Step = (carry: Uint8Array, at: number, chunk: Uint8Array): DecodingStep => {
-  const bytes = concatBytes(carry, chunk);
-  const keep = incompleteTail(bytes);
-  const whole = bytes.subarray(0, bytes.length - keep);
-  return O.match(firstInvalidUtf8(whole), {
-    onSome: (invalid): DecodingStep => [
-      { phase: "utf8", carry: new Uint8Array(0), at },
-      [Result.fail(fatal(InvalidUtf8.make({ byteOffset: at + invalid })))],
-    ],
-    onNone: () => {
-      const text = decodeBytes({ bytes: whole, encoding: "utf-8" });
-      return [
-        { phase: "utf8", carry: bytes.slice(bytes.length - keep), at: at + whole.length },
-        Str.isNonEmpty(text) ? [Result.succeed(text)] : [],
-      ];
-    },
-  });
-};
-
-/**
- * Decides the encoding from the detect window: a UTF-16 BOM, else whether the window is valid UTF-8. A byte-order
- * mark stays in the decoded text; the text reader strips it, as it does for a whole read.
- */
-const decideWindow = (bytes: Uint8Array): DecodingStep => {
-  const mark = bomOf(bytes);
-  if (O.isSome(mark) && mark.value !== "utf-8") return fixedStep(decoderFor(mark.value), bytes);
-  return O.isSome(firstInvalidUtf8(bytes.subarray(0, bytes.length - incompleteTail(bytes))))
-    ? fixedStep(decoderFor("windows-1252"), bytes)
-    : utf8Step(new Uint8Array(0), 0, bytes);
-};
-
-/** Fills the detect window, or decodes at once when the options fix the encoding. */
-const windowStep = (bytes: Uint8Array, options: ReadOptions): DecodingStep =>
-  CsvEncodingChoice.match(options.encoding, {
-    fixed: ({ encoding }): DecodingStep =>
-      encoding === "utf-8" ? utf8Step(new Uint8Array(0), 0, bytes) : fixedStep(decoderFor(encoding), bytes),
-    detect: ({ window }): DecodingStep =>
-      ByteSize.isGreaterThanOrEqualTo(byteSizeOf(bytes), window)
-        ? decideWindow(bytes)
-        : [{ phase: "window", bytes }, []],
-  });
-
-const stepDecoding: (decoding: Decoding) => (chunk: Uint8Array, options: ReadOptions) => DecodingStep =
-  Match.type<Decoding>().pipe(
-    Match.discriminatorsExhaustive("phase")({
-      fixed:
-        ({ decoder }) =>
-        (chunk: Uint8Array) =>
-          fixedStep(decoder, chunk),
-      utf8:
-        ({ carry, at }) =>
-        (chunk: Uint8Array) =>
-          utf8Step(carry, at, chunk),
-      window:
-        ({ bytes }) =>
-        (chunk: Uint8Array, options: ReadOptions) =>
-          windowStep(concatBytes(bytes, chunk), options),
-    })
-  );
-
-/** What is left at the end of the bytes: a decoder's tail, an unfinished UTF-8 sequence, or an undecided window. */
-const haltDecoding: (decoding: Decoding) => ReadonlyArray<Text> = Match.type<Decoding>().pipe(
-  Match.discriminatorsExhaustive("phase")({
-    fixed: ({ decoder }): ReadonlyArray<Text> => [Result.succeed(decoder.decode())],
-    utf8: ({ carry, at }): ReadonlyArray<Text> =>
-      carry.length > 0 ? [Result.fail(fatal(InvalidUtf8.make({ byteOffset: at })))] : [],
-    window: ({ bytes }): ReadonlyArray<Text> => {
-      const [next, texts] = decideWindow(bytes);
-      return [...texts, ...haltDecoding(next)];
-    },
-  })
-);
-
-/** One byte chunk: counted against the byte cap first, so a stream fails as soon as it has read past the cap. */
-const stepBytes = (
-  pending: BytesPending,
-  chunk: Uint8Array,
-  options: ReadOptions
-): readonly [BytesPending, ReadonlyArray<Text>] => {
-  if (pending.over) return [pending, []];
-  const seen = pending.seen + chunk.length;
-  const size = ByteSize.bytes(BigInt(seen));
-  if (ByteSize.isGreaterThan(size, options.limits.maxInputBytes))
-    return [{ ...pending, seen, over: true }, [Result.fail(tooManyBytes(size, options))]];
-  const [decoding, texts] = stepDecoding(pending.decoding)(chunk, options);
-  return [{ decoding, seen, over: false }, texts];
-};
 
 const bytesToText = <IE, Done>(
   options: ReadOptions
@@ -592,23 +300,13 @@ const bytesToText = <IE, Done>(
   Done
 > =>
   Channel.identity<A.NonEmptyReadonlyArray<Uint8Array>, IE, Done>().pipe(
-    Channel.mapAccum(
-      (): BytesPending => ({ decoding: { phase: "window", bytes: new Uint8Array(0) }, seen: 0, over: false }),
-      (pending, chunks: A.NonEmptyReadonlyArray<Uint8Array>) => {
-        const initial: readonly [BytesPending, ReadonlyArray<Text>] = [pending, []];
-        return A.reduce(chunks, initial, ([state, texts], chunk): readonly [BytesPending, ReadonlyArray<Text>] => {
-          const [next, more] = stepBytes(state, chunk, options);
-          return [next, A.appendAll(texts, more)];
-        });
-      },
-      { onHalt: (pending) => (pending.over ? [] : [...haltDecoding(pending.decoding)]) }
-    ),
-    Channel.mapEffect((text) => Effect.map(Effect.fromResult(text), A.of))
+    mapAccumToEnd(bytesSteps(options)),
+    Channel.mapEffect(flow(Result.mapBoth({ onSuccess: A.of, onFailure: parseError }), Effect.fromResult))
   );
 
 /** What closes written text: a BOM alone when no record came, as `stringify` writes an empty table, else the final
  * terminator when asked. */
-const ending = (first: boolean, options: WriteOptions): Array<string> => {
+const ending = (first: boolean, options: WriteOptions): ReadonlyArray<string> => {
   if (first) return options.bom ? ["\uFEFF"] : [];
   return options.finalTerminator ? [recordEndText(options.terminator)] : [];
 };
@@ -617,18 +315,18 @@ const encodeStringChannel = <IE, Done>(
   options: WriteOptions
 ): Channel.Channel<A.NonEmptyReadonlyArray<string>, IE, Done, A.NonEmptyReadonlyArray<CsvRecord>, IE, Done> =>
   Channel.identity<A.NonEmptyReadonlyArray<CsvRecord>, IE, Done>().pipe(
-    Channel.mapAccum(
-      () => true,
-      (first: boolean, records: A.NonEmptyReadonlyArray<CsvRecord>) => {
+    mapAccumToEnd({
+      initial: () => true,
+      step: (first, records) => {
         const body = writeRecords(
           records,
           CsvWriteOptions.make({ ...options, bom: first && options.bom, finalTerminator: false })
         );
         const separator = first ? "" : recordEndText(options.terminator);
-        return [false, [`${separator}${body}`]] as const;
+        return [false, [`${separator}${body}`]];
       },
-      { onHalt: (first) => ending(first, options) }
-    ),
+      halt: (first) => ending(first, options),
+    }),
     Channel.map(A.of)
   );
 
@@ -876,7 +574,8 @@ export class Csv {
 
   /**
    * A channel from text chunks to records with where they were; a fatal finding fails it with `CsvParseError`. Split
-   * anywhere, it gives the records of {@link Csv.parseResult}.
+   * anywhere, it gives the records of {@link Csv.parseResult}. An upstream failure passes through unchanged, and the
+   * record left open when it came is not emitted.
    */
   static decodeString<IE = never, Done = unknown>(
     options: CsvReadOptions = CsvReadOptions.default
@@ -899,8 +598,12 @@ export class Csv {
    *
    * Under a detected encoding the channel cannot look past its window, so it can differ from
    * {@link Csv.parseBytesResult}: bytes valid as UTF-8 within the window and not after it fail the channel with
-   * `InvalidUtf8`, where the whole read falls back to Windows-1252. A fixed encoding, or input that the window
-   * decides, reads the same both ways.
+   * `InvalidUtf8`, where the whole read falls back to Windows-1252. Input that ends within the window is decided on
+   * all of its bytes, as the whole read decides it.
+   *
+   * The channel fails on the first fatal finding in input order, where the whole read checks the byte cap and the
+   * encoding before it parses: when a text cap is passed before bytes that the cap or a fixed UTF-8 refuses, the
+   * channel fails with the `LimitExceeded` and the whole read with `TooManyBytes` or `InvalidUtf8`.
    */
   static decode<IE = never, Done = unknown>(
     options: CsvReadOptions = CsvReadOptions.default

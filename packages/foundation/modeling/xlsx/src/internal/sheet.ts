@@ -7,12 +7,13 @@ import { $XlsxId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { MAX_COLUMN, MAX_ROW, XlsxAddress, XlsxColumn, XlsxRange, XlsxRowNumber } from "../XlsxAddress.schema.ts";
+import { MAX_COLUMN, MAX_ROW, XlsxAddress, XlsxRange, XlsxRowNumber } from "../XlsxAddress.schema.ts";
 import {
   holdsSomething,
   MAX_FORMULA_CHARS,
@@ -36,18 +37,19 @@ import {
   RowOutOfOrder,
   UnknownStyle,
   UnreadableCell,
-  XlsxWarning,
 } from "../XlsxDiagnostic.schema.ts";
 import { maxSerial, XlsxCalendar } from "../XlsxSerial.schema.ts";
+import { XlsxHiddenColumns, XlsxMerges } from "../XlsxWorkbook.schema.ts";
 import { stop } from "./container.ts";
 import { shifted } from "./formula.ts";
 import { isTrue, localName, unescaped } from "./ooxml.ts";
 import { detached, isXmlSafe } from "./text.ts";
 import { StyleFormat, styleOf } from "./workbookPart.ts";
 import type { XlsxValue } from "../XlsxCell.schema.ts";
-import type { XlsxFatal, XlsxLimit } from "../XlsxDiagnostic.schema.ts";
+import type { XlsxFatal, XlsxLimit, XlsxWarning } from "../XlsxDiagnostic.schema.ts";
 import type { XlsxDateSystem } from "../XlsxSerial.schema.ts";
 import type { XlsxRow } from "../XlsxWorkbook.schema.ts";
+import type { ReadBudget } from "./budget.ts";
 import type { Caps } from "./container.ts";
 import type { XmlEvent } from "./ooxml.ts";
 
@@ -60,11 +62,11 @@ export class SheetLayout extends S.Opaque<SheetLayout, { readonly brand: unique 
   S.Struct({
     cellsWithValues: tally("Cells that hold something"),
     declared: S.Option(XlsxRange).pipe(S.annotateKey({ description: "The extent the sheet declares, if any" })),
-    hiddenColumns: S.Array(XlsxColumn)
-      .check(S.isUnique())
-      .pipe(S.annotateKey({ description: "The hidden columns, in rising order and each once" })),
+    hiddenColumns: XlsxHiddenColumns.pipe(
+      S.annotateKey({ description: "The hidden columns, in rising order and each once" })
+    ),
     lastRow: S.Option(XlsxRowNumber).pipe(S.annotateKey({ description: "The last row that holds something" })),
-    merges: S.Array(XlsxRange).pipe(S.annotateKey({ description: "The merged ranges" })),
+    merges: XlsxMerges.pipe(S.annotateKey({ description: "The merged ranges, each once" })),
     rows: tally("Rows the sheet writes, empty ones included"),
     rowsWithValues: tally("Rows with at least one cell that holds something"),
     unordered: S.Boolean.pipe(
@@ -91,7 +93,9 @@ const none: ReadonlyArray<RowInput> = [];
 const byColumn = Order.mapInput(Order.Number, (cell: CellInput) => cell.column);
 const byStart = Order.mapInput(Order.Number, (span: readonly [first: number, last: number]) => span[0]);
 const numberText = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
-const isoDate = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?Z?)?$/;
+const isoDate = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(\.\d+)?)?Z?)?$/;
+/** A style index as a cell may write one: digits only, nine at most, so it is read exactly and names a style or none. */
+const styleIndex = /^\d{1,9}$/;
 const general = StyleFormat.general;
 const shortDate: StyleFormat = styleOf(XlsxNumberFormat.shortDate);
 const blank = XlsxBlank.make({});
@@ -100,16 +104,24 @@ const blank = XlsxBlank.make({});
 // a fixture, a generated file or a hostile one, is held to `S.is(XlsxWorkbook)`, which runs them all.
 const checked = { disableChecks: true } as const;
 
-/** The hidden columns that `<col>` spans cover, each once and in rising order: never more than the spans cover. */
-const columnsOf = (spans: ReadonlyArray<readonly [first: number, last: number]>): ReadonlyArray<number> => {
+/**
+ * The hidden columns that `<col>` spans cover, each once and in rising order, as many as the read's cap on hidden
+ * columns leaves room for; the columns past it are counted as dropped.
+ */
+const columnsOf = (spans: ReadonlyArray<readonly [first: number, last: number]>, budget: ReadBudget): Array<number> => {
   // crispen: a sweep over the spans sorted by start; `next` is the first column not yet given, so a column covered
-  // by many spans is given once and the work is the spans plus the columns, whatever the spans repeat.
+  // by many spans is given once and the work is the spans plus the columns kept, whatever the spans repeat.
   const columns: Array<number> = [];
+  const room = budget.room("hiddenColumns");
+  let covered = 0;
   let next = 0;
   for (const [first, last] of A.sort(spans, byStart)) {
-    for (let column = Math.max(first, next); column <= last; column += 1) columns.push(column);
+    const from = Math.max(first, next);
+    if (from <= last) covered += last - from + 1;
+    for (let column = from; column <= last && columns.length < room; column += 1) columns.push(column);
     next = Math.max(next, last + 1);
   }
+  budget.takeUpTo("hiddenColumns", covered);
   return columns;
 };
 const yes = XlsxBoolean.make({ value: true });
@@ -152,13 +164,14 @@ const columnOf = (reference: string): number => {
 // crispen: a mutable state machine fed one XML event at a time, for every element of every sheet; the fields are the
 // parser's position and the row and cell in hand. A reducer over immutable state would allocate per event.
 export class SheetReader {
-  readonly warnings: Array<XlsxWarning> = [];
   failed: O.Option<XlsxFatal> = O.none();
 
   private depth = 0;
   private section = "";
   private declared: O.Option<XlsxRange> = O.none();
   private readonly merges: Array<XlsxRange> = [];
+  /** The merged ranges already kept, by their reference, so a range written twice is kept once. */
+  private readonly mergeKeys = MutableHashSet.empty<string>();
   /** Each hidden `<col>` as the span it names, clamped to the column cap; expanded once, in `finish`. */
   private readonly hiddenSpans: Array<readonly [first: number, last: number]> = [];
   private readonly masters = MutableHashMap.empty<
@@ -188,7 +201,9 @@ export class SheetReader {
   private inCell = false;
   private cellColumn = 0;
   private cellType: CellType = "n";
+  /** The style index the cell names, -1 when it names none and -2 when what it writes is not a whole number. */
   private cellStyle = -1;
+  private cellStyleText = "";
   private cellReference = "";
   // crispen: the text the next event belongs to; a plain union read on every text event of the sheet.
   private target: "" | "v" | "f" | "t" = "";
@@ -209,6 +224,7 @@ export class SheetReader {
   private readonly system: XlsxDateSystem;
   private readonly lastSerial: number;
   private readonly caps: Caps;
+  private readonly budget: ReadBudget;
 
   constructor(input: {
     readonly sheet: string;
@@ -217,6 +233,7 @@ export class SheetReader {
     readonly strings: ReadonlyArray<string>;
     readonly system: XlsxDateSystem;
     readonly caps: Caps;
+    readonly budget: ReadBudget;
   }) {
     this.sheet = input.sheet;
     this.path = input.path;
@@ -225,6 +242,7 @@ export class SheetReader {
     this.system = input.system;
     this.lastSerial = maxSerial(input.system);
     this.caps = input.caps;
+    this.budget = input.budget;
   }
 
   /** Takes one event of the part and returns the rows that ended with it. */
@@ -284,7 +302,7 @@ export class SheetReader {
       {
         declared: this.declared,
         merges: this.merges,
-        hiddenColumns: columnsOf(this.hiddenSpans),
+        hiddenColumns: columnsOf(this.hiddenSpans, this.budget),
         rows: this.rowCount,
         rowsWithValues: this.rowsWithValues,
         cellsWithValues: this.cellsWithValues,
@@ -296,7 +314,7 @@ export class SheetReader {
   }
 
   private warn(finding: XlsxWarning["finding"]): void {
-    if (this.warnings.length < 10_000) this.warnings.push(XlsxWarning.make({ finding }));
+    this.budget.warn(finding);
   }
 
   private fail(limit: XlsxLimit): void {
@@ -315,12 +333,18 @@ export class SheetReader {
       if (this.section === "sheetData" && name === "row") this.startRow(attributes);
       else if (this.section === "mergeCells" && name === "mergeCell") {
         const range = XlsxRange.parse(attributes.ref ?? "");
-        if (O.isSome(range)) this.merges.push(range.value);
+        if (O.isSome(range)) {
+          const key = XlsxRange.format(range.value);
+          if (!MutableHashSet.has(this.mergeKeys, key) && this.budget.take("merges")) {
+            MutableHashSet.add(this.mergeKeys, key);
+            this.merges.push(range.value);
+          }
+        }
       } else if (this.section === "cols" && name === "col" && isTrue(attributes.hidden)) {
         // A span is kept as its two ends, never as its columns: one `<col>` of a few bytes may name every column.
         const first = Math.max(Number(attributes.min), 1);
         const last = Math.min(Number(attributes.max), this.caps.columns);
-        if (Number.isInteger(first) && Number.isInteger(last) && first <= last) {
+        if (Number.isInteger(first) && Number.isInteger(last) && first <= last && this.budget.take("hiddenSpans")) {
           this.hiddenSpans.push([first - 1, last - 1]);
         }
       }
@@ -380,6 +404,7 @@ export class SheetReader {
     this.cellsSorted = true;
     this.lastCellColumn = -1;
     this.held = 0;
+    this.budget.nextRow();
   }
 
   private endRow(): ReadonlyArray<RowInput> {
@@ -413,7 +438,10 @@ export class SheetReader {
     const type = attributes.t ?? "n";
     this.cellType = S.is(CellType)(type) ? type : "n";
     const style = attributes.s;
-    this.cellStyle = style === undefined ? -1 : Number(style);
+    this.cellStyleText = style ?? "";
+    // A style index is a whole number the styles table could hold; anything else (a fraction, a sign, an exponent,
+    // digits past a safe integer) is no index at all, and is reported as the cell wrote it.
+    this.cellStyle = style === undefined ? -1 : styleIndex.test(style) ? Number(style) : -2;
     this.hasValue = false;
     this.valueText = "";
     this.hasInline = false;
@@ -425,15 +453,11 @@ export class SheetReader {
 
   private styleFormat(address: () => XlsxAddress): StyleFormat {
     if (this.cellStyle === -1) return this.styles[0] ?? general;
-    const style = this.styles[this.cellStyle];
+    const style = this.cellStyle >= 0 ? this.styles[this.cellStyle] : undefined;
     if (style !== undefined) return style;
     if (this.styles.length > 0 || this.cellStyle !== 0) {
       this.warn(
-        UnknownStyle.make({
-          sheet: this.sheet,
-          address: address(),
-          style: Number.isInteger(this.cellStyle) && this.cellStyle >= 0 ? this.cellStyle : 0,
-        })
+        UnknownStyle.make({ sheet: this.sheet, address: address(), style: Str.slice(0, 255)(this.cellStyleText) })
       );
     }
     return general;
@@ -449,10 +473,21 @@ export class SheetReader {
     if (this.hasFormula) {
       let text = this.formulaText;
       if (this.formulaShared !== "") {
-        if (text !== "") MutableHashMap.set(this.masters, this.formulaShared, { text, column, row });
-        else {
+        if (text !== "") {
+          // A group already kept takes its new text in place; a new group needs room under the read's cap, and a
+          // group with none is dropped and counted, its cells keeping the empty formula they wrote.
+          if (MutableHashMap.has(this.masters, this.formulaShared) || this.budget.take("sharedFormulas")) {
+            MutableHashMap.set(this.masters, this.formulaShared, { text, column, row });
+          }
+        } else {
           const master = MutableHashMap.get(this.masters, this.formulaShared);
           if (O.isSome(master)) {
+            // Each cell that shares a formula is handed its whole text, a few bytes of the file costing as much as
+            // the formula, so that text is counted against the read's cap before it is moved.
+            if (!this.budget.spendSharedFormula(master.value.text.length)) {
+              this.fail("sharedFormulaChars");
+              return;
+            }
             text = shifted({
               formula: master.value.text,
               columns: column - master.value.column,
@@ -499,19 +534,29 @@ export class SheetReader {
       d: () => {
         if (!written) return blank;
         // The calendar schema holds each field to its range (an hour 0 to 23, a minute 0 to 59), so an impossible
-        // time such as T99:99:99 is unreadable rather than carried into a later day.
-        const serial = O.flatMap(O.fromNullishOr(isoDate.exec(Str.trim(raw))), (found) =>
-          O.flatMap(
-            XlsxCalendar.makeOption({
-              year: Number(found[1]),
-              month: Number(found[2]),
-              day: Number(found[3]),
-              hour: Number(found[4] ?? "0"),
-              minute: Number(found[5] ?? "0"),
-              second: Number(found[6] ?? "0"),
-            }),
-            (calendar) => XlsxCalendar.toSerial(calendar, this.system)
-          )
+        // time such as T99:99:99 is unreadable rather than carried into a later day. Day 0 is a serial's alone
+        // ("January 0, 1900"); no ISO date names it. A fraction of a second is kept, and must still fall within the
+        // system's last serial.
+        const serial = O.flatMap(
+          O.filter(O.fromNullishOr(isoDate.exec(Str.trim(raw))), (found) => found[3] !== "00"),
+          (found) =>
+            O.filter(
+              O.map(
+                O.flatMap(
+                  XlsxCalendar.makeOption({
+                    year: Number(found[1]),
+                    month: Number(found[2]),
+                    day: Number(found[3]),
+                    hour: Number(found[4] ?? "0"),
+                    minute: Number(found[5] ?? "0"),
+                    second: Number(found[6] ?? "0"),
+                  }),
+                  (calendar) => XlsxCalendar.toSerial(calendar, this.system)
+                ),
+                (whole) => whole + Number(found[7] ?? "0") / 86_400
+              ),
+              (moment) => moment <= this.lastSerial
+            )
         );
         return O.match(serial, {
           onNone: () => unreadable("date"),
@@ -540,15 +585,14 @@ export class SheetReader {
       }
       if (style.notShown) this.countNotShown(style.format.code);
     } else if (value.kind === "Number" && style.notShown && !style.dated) this.countNotShown(style.format.code);
-    if (column <= this.lastCellColumn) {
-      for (const cell of this.cells) {
-        if (cell.column === column) {
-          this.warn(BadAddress.make({ sheet: this.sheet, row, raw: Str.slice(0, 255)(this.cellReference) }));
-          return;
-        }
-      }
-      this.cellsSorted = false;
-    } else this.lastCellColumn = column;
+    // A column already used in this row is a repeat, found by its stamp in one step whatever order the cells
+    // came in: the first cell written there is kept and the repeat reported.
+    if (!this.budget.claim(column)) {
+      this.warn(BadAddress.make({ sheet: this.sheet, row, raw: Str.slice(0, 255)(this.cellReference) }));
+      return;
+    }
+    if (column <= this.lastCellColumn) this.cellsSorted = false;
+    else this.lastCellColumn = column;
     if (holdsSomething(value)) {
       this.held += 1;
       if (column < this.firstColumn) this.firstColumn = column;

@@ -1,10 +1,10 @@
 // The only CSV parser in the package: a push machine. `Machine.start(config)` begins a read, `feed(chunk)` reads one
-// chunk, `finish()` flushes the last record, and `takeRecords()` / `takeDiagnostics()` hand over what they completed.
+// chunk, `finish()` flushes the last record, and `takeCells()` or `takeSlices()` and `takeDiagnostics()` hand over what it completed.
 // Splitting the input anywhere gives the same records and findings (the chunk-invariance laws in
 // Csv.property.test.ts). One machine lives across the chunks of a read and keeps its state in one mutable record, so a
-// chunk costs time in its own length, not in the width of the record left open across it. `state()` takes that record
-// as a `MachineState` schema value and `Machine.start(config, state)` resumes from one. Engine code never imports the
-// `Csv` facade: it returns findings as schema values and the facade decides what fails.
+// chunk costs time in its own length, not in the width of the record left open across it. The record's fields and
+// their starting values are the `MachineState` schema. Engine code never imports the `Csv` facade: it returns
+// findings as schema values and the facade decides what fails.
 
 import { $CsvId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -15,7 +15,6 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
-import * as Tuple from "effect/Tuple";
 import {
   CsvDiagnostic,
   LimitExceeded,
@@ -27,40 +26,15 @@ import {
   WarningsTruncated,
 } from "../CsvDiagnostic.schema.ts";
 import { CsvDelimiter, CsvReadOptions } from "../CsvOptions.schema.ts";
-import { CsvIndex, CsvRecordEnd, CsvTextSpan } from "../CsvPosition.schema.ts";
-import { CsvCell, CsvRecord } from "../CsvTable.schema.ts";
+import { CsvIndex, CsvRecordEnd, CsvTextSpan, recordEndText } from "../CsvPosition.schema.ts";
+import { CsvCell, CsvRecordSlice } from "../CsvTable.schema.ts";
 import { applyTrim, judgeQuote, judgeRagged } from "./rules.ts";
 import type { CsvTextLimit } from "../CsvDiagnostic.schema.ts";
+import type { CsvRecord } from "../CsvTable.schema.ts";
 
 const $I = $CsvId.create("internal/machine");
 
-// ── the state between chunks, as schemas ─────────────────────────────────────────────────────────────────────────────
-
-/** Where the machine is inside a record. */
-export class FieldStart extends S.Opaque<FieldStart, { readonly brand: unique symbol }>()(
-  S.Struct({ mode: S.tag("fieldStart") }).pipe($I.annoteSchema("FieldStart", { description: "Before a field" }))
-) {}
-/** Inside a field that did not start with a quote. */
-export class Unquoted extends S.Opaque<Unquoted, { readonly brand: unique symbol }>()(
-  S.Struct({ mode: S.tag("unquoted") }).pipe($I.annoteSchema("Unquoted", { description: "Inside an unquoted field" }))
-) {}
-/** Inside a quoted field. */
-export class Quoted extends S.Opaque<Quoted, { readonly brand: unique symbol }>()(
-  S.Struct({ mode: S.tag("quoted") }).pipe($I.annoteSchema("Quoted", { description: "Inside a quoted field" }))
-) {}
-/** Just after a quote inside a quoted field: it closes the field or starts a doubled quote. */
-export class QuoteInQuoted extends S.Opaque<QuoteInQuoted, { readonly brand: unique symbol }>()(
-  S.Struct({ mode: S.tag("quoteInQuoted") }).pipe(
-    $I.annoteSchema("QuoteInQuoted", { description: "Just after a quote inside a quoted field" })
-  )
-) {}
-/** Spaces after a closing quote; a delimiter or line break next drops them (papaparse's rule). */
-export class AfterQuoteSpaces extends S.Opaque<AfterQuoteSpaces, { readonly brand: unique symbol }>()(
-  S.Struct({
-    mode: S.tag("afterQuoteSpaces"),
-    spaces: CsvIndex.pipe(S.annotateKey({ description: "Spaces seen after the closing quote" })),
-  }).pipe($I.annoteSchema("AfterQuoteSpaces", { description: "Spaces after a closing quote" }))
-) {}
+// ── the state of a read, as schemas ──────────────────────────────────────────────────────────────────────────────────
 
 /** The names of the places the machine can be inside a record. */
 export const MachineModeName = LiteralKit([
@@ -72,27 +46,17 @@ export const MachineModeName = LiteralKit([
 ]).pipe($I.annoteSchema("MachineModeName", { description: "The name of a place the machine can be in a record" }));
 export type MachineModeName = typeof MachineModeName.Type;
 
-/** Where the machine is inside a record. */
-export const MachineMode = MachineModeName.mapMembers(() =>
-  Tuple.make(FieldStart, Unquoted, Quoted, QuoteInQuoted, AfterQuoteSpaces)
-).pipe(S.toTaggedUnion("mode"), $I.annoteSchema("MachineMode", { description: "Where the machine is in a record" }));
-export type MachineMode = typeof MachineMode.Type;
-
 const point = CsvIndex;
-/** The machine's state between chunks. */
+/** The state of one read in progress, past where the machine is inside a record. */
 export class MachineState extends S.Opaque<MachineState, { readonly brand: unique symbol }>()(
   S.Struct({
-    mode: MachineMode.pipe(
-      S.annotateKey({ description: "Where the machine is inside a record" }),
-      S.withConstructorDefault(Effect.sync(() => FieldStart.make({})))
-    ),
     cells: S.Array(CsvCell).pipe(
       S.annotateKey({ description: "The current record's finished cells" }),
       S.withConstructorDefault(Effect.succeed([]))
     ),
-    quoted: S.Array(S.Boolean).pipe(
-      S.annotateKey({ description: "Whether each finished cell was quoted" }),
-      S.withConstructorDefault(Effect.succeed([]))
+    lastQuoted: S.Boolean.pipe(
+      S.annotateKey({ description: "Whether the current record's last finished cell was quoted" }),
+      S.withConstructorDefault(Effect.succeed(false))
     ),
     field: CsvCell.pipe(
       S.annotateKey({ description: "The current cell's text so far" }),
@@ -173,22 +137,27 @@ export class MachineState extends S.Opaque<MachineState, { readonly brand: uniqu
       S.annotateKey({ description: "A fatal finding stopped the read" }),
       S.withConstructorDefault(Effect.succeed(false))
     ),
-  }).pipe($I.annoteSchema("MachineState", { description: "The parser's state between chunks" }))
+  }).pipe($I.annoteSchema("MachineState", { description: "The state of one read in progress" }))
 ) {
   /** A fresh read. */
   static readonly initial: MachineState = MachineState.make({});
 }
 
-/** A record as the machine emits it: cells, per-cell quoting and how it ended, so a lossless document can follow. */
-export class RawRecord extends S.Opaque<RawRecord, { readonly brand: unique symbol }>()(
-  S.Struct({
-    cells: CsvRecord.pipe(S.annotateKey({ description: "The cells" })),
-    quoted: S.NonEmptyArray(S.Boolean).pipe(S.annotateKey({ description: "Whether each cell was quoted" })),
-    record: CsvIndex.pipe(S.annotateKey({ description: "0-based record number" })),
-    span: CsvTextSpan,
-    end: CsvRecordEnd.pipe(S.annotateKey({ description: "How the record ended" })),
-  }).pipe($I.annoteSchema("RawRecord", { description: "A record as the machine emits it" }))
-) {}
+/**
+ * A completed record until it is taken. Its span is plain numbers and nothing here is built with `make`, so a whole
+ * read, which takes only the cells, pays for no position values; `takeSlices` builds them for a channel.
+ */
+interface Completed {
+  readonly cells: CsvRecord;
+  readonly end: CsvRecordEnd;
+  readonly record: number;
+  readonly span: {
+    readonly offset: number;
+    readonly length: number;
+    readonly line: number;
+    readonly character: number;
+  };
+}
 
 /**
  * The rules the machine reads by: the read options' record rules and caps, with the delimiter settled. Each rule
@@ -203,41 +172,38 @@ export class MachineConfig extends S.Opaque<MachineConfig, { readonly brand: uni
 
 // ── the machine ──────────────────────────────────────────────────────────────────────────────────────────────────────
 
-/** Every `MachineState` field but the mode, writable, with the open record's cells as arrays the machine appends to. */
+/** Every `MachineState` field, writable, with the open record's cells as an array the machine appends to. */
 type Working = {
-  -readonly [K in Exclude<keyof MachineState, "brand" | "mode" | "cells" | "quoted">]: MachineState[K];
-} & { cells: Array<CsvCell>; quoted: Array<boolean> };
+  -readonly [K in Exclude<keyof MachineState, "brand" | "cells">]: MachineState[K];
+} & { cells: Array<CsvCell> };
 
 /** Engine-built values hold their invariants by construction; the property tests prove them, so `make` skips checks. */
-const built = { disableChecks: true } as const;
+export const built = { disableChecks: true } as const;
 
-// crispen: kept as a mutable class — it is one read's working state, mutated once per character run for speed; the
-// state leaves it only as the `MachineState` schema value `state()` builds.
+// crispen: kept as a mutable class — it is one read's working state, mutated per character for speed, and it never
+// leaves the machine.
 /** One read in progress. */
 export class Machine {
   /** Where the machine is inside a record. */
-  mode: MachineModeName;
+  mode: MachineModeName = "fieldStart";
   /** Spaces seen after a closing quote, in `afterQuoteSpaces`. */
-  spaces: number;
+  spaces = 0;
   /** The rest of the state. */
   readonly s: Working;
-  private records: Array<RawRecord> = [];
+  private records: Array<Completed> = [];
   private diagnostics: Array<CsvDiagnostic> = [];
 
   /** The rules this read goes by. */
   readonly config: MachineConfig;
 
-  private constructor(config: MachineConfig, state: MachineState) {
+  private constructor(config: MachineConfig) {
     this.config = config;
-    const { mode, cells, quoted, ...rest } = state;
-    this.mode = mode.mode;
-    this.spaces = MachineMode.guards.afterQuoteSpaces(mode) ? mode.spaces : 0;
-    this.s = { ...rest, cells: A.copy(cells), quoted: A.copy(quoted) };
+    this.s = { ...MachineState.initial, cells: [] };
   }
 
-  /** A read under `config`, from the start or resumed from a state another machine took. */
-  static start(config: MachineConfig, state: MachineState = MachineState.initial): Machine {
-    return new Machine(config, state);
+  /** A read under `config`, from the start. */
+  static start(config: MachineConfig): Machine {
+    return new Machine(config);
   }
 
   /** Whether a fatal finding stopped the read. */
@@ -250,16 +216,7 @@ export class Machine {
     return !this.s.content && !this.s.held;
   }
 
-  /** The state so far, as a schema value another machine can resume from. */
-  state(): MachineState {
-    const mode: MachineMode =
-      this.mode === "afterQuoteSpaces"
-        ? AfterQuoteSpaces.make({ spaces: this.spaces })
-        : MachineMode.cases[this.mode].make({});
-    return MachineState.make({ ...this.s, mode, cells: A.copy(this.s.cells), quoted: A.copy(this.s.quoted) });
-  }
-
-  /** Reads one chunk; `takeRecords` and `takeDiagnostics` then give what it completed. */
+  /** Reads one chunk; the takes then give what it completed. */
   feed(text: string): Machine {
     let i = 0;
     while (i < text.length && !this.s.stopped) {
@@ -290,8 +247,19 @@ export class Machine {
     return this;
   }
 
-  /** The records completed since the last take, in file order. */
-  takeRecords(): ReadonlyArray<RawRecord> {
+  /** The cells of the records completed since the last take, in file order. */
+  takeCells(): ReadonlyArray<CsvRecord> {
+    return A.map(this.takeCompleted(), (completed) => completed.cells);
+  }
+
+  /** The records completed since the last take, with where they were, in file order. */
+  takeSlices(): ReadonlyArray<CsvRecordSlice> {
+    return A.map(this.takeCompleted(), (completed) =>
+      CsvRecordSlice.make({ ...completed, span: CsvTextSpan.make(completed.span, built) }, built)
+    );
+  }
+
+  private takeCompleted(): ReadonlyArray<Completed> {
     const records = this.records;
     this.records = [];
     return records;
@@ -378,40 +346,44 @@ export class Machine {
     );
   }
 
-  checkField(): void {
+  /**
+   * Fails the read when the open field or record has passed its cap. `lineBreak` units at the end are the record's
+   * line break, which the record cap does not count.
+   */
+  checkField(lineBreak = 0): void {
     const { maxFieldLength, maxRecordLength } = this.config.limits;
     if (this.s.field.length > maxFieldLength) this.limit("fieldLength", maxFieldLength, this.here(0));
-    else if (this.s.offset - this.s.recordOffset > maxRecordLength)
+    else if (this.s.offset - this.s.recordOffset - lineBreak > maxRecordLength)
       this.limit("recordLength", maxRecordLength, this.here(0));
   }
 
-  endField(): void {
+  endField(lineBreak = 0): void {
     this.s.cells.push(applyTrim(this.config.trim, this.s.field, this.s.fieldQuoted));
-    this.s.quoted.push(this.s.fieldQuoted);
+    this.s.lastQuoted = this.s.fieldQuoted;
     this.s.field = "";
     this.s.fieldQuoted = false;
     this.mode = "fieldStart";
     this.spaces = 0;
     const { maxFieldsPerRecord } = this.config.limits;
     if (this.s.cells.length > maxFieldsPerRecord) this.limit("fieldsPerRecord", maxFieldsPerRecord, this.here(0));
-    else this.checkField();
+    else this.checkField(lineBreak);
   }
 
   /** Finishes the current record's last field and emits the record with how it ended. */
   endRecord(end: CsvRecordEnd): void {
-    if (this.mode !== "fieldStart" || this.s.cells.length === 0 || this.s.content) this.endField();
+    if (this.mode !== "fieldStart" || this.s.cells.length === 0 || this.s.content)
+      this.endField(recordEndText(end).length);
     if (this.s.stopped) return;
     const cells = this.s.cells;
-    const quoted = this.s.quoted;
     const recordIndex = this.s.record;
-    const span = this.span(
-      this.s.recordOffset,
-      this.s.offset - this.s.recordOffset,
-      this.s.recordLine,
-      this.s.recordCharacter
-    );
+    const at = {
+      offset: this.s.recordOffset,
+      length: this.s.offset - this.s.recordOffset,
+      line: this.s.recordLine,
+      character: this.s.recordCharacter,
+    };
+    const span = (): CsvTextSpan => CsvTextSpan.make(at, built);
     this.s.cells = [];
-    this.s.quoted = [];
     this.s.content = false;
     this.s.record += 1;
     if (end !== "EndOfInput") {
@@ -424,45 +396,42 @@ export class Machine {
             this.s.mixedReported = true;
             if (this.keepWarning())
               this.report(
-                CsvDiagnostic.cases.warning.make({ finding: MixedTerminators.make({ at: span, first, other: end }) })
+                CsvDiagnostic.cases.warning.make({ finding: MixedTerminators.make({ at: span(), first, other: end }) })
               );
           }
         },
       });
     }
-    const blank = cells.length === 1 && cells[0] === "" && quoted[0] === false;
+    const blank = cells.length === 1 && cells[0] === "" && !this.s.lastQuoted;
     if (blank && this.config.blankLines === "skip") return;
-    if (!A.isArrayNonEmpty(cells) || !A.isArrayNonEmpty(quoted)) return;
-    O.match(this.s.width, {
+    if (!A.isArrayNonEmpty(cells)) return;
+    const row = O.match(this.s.width, {
       onNone: () => {
         this.s.width = O.some(cells.length);
+        return cells;
       },
       onSome: (width) => {
-        if (cells.length !== width) {
-          if (this.config.ragged === "reject" || this.keepWarning())
-            this.report(
-              judgeRagged(
-                this.config.ragged,
-                RaggedRecord.make({ at: span, record: recordIndex, expected: width, actual: cells.length })
-              )
-            );
-          if (this.config.ragged === "pad") {
-            while (cells.length < width) {
-              cells.push("");
-              quoted.push(false);
-            }
-          }
-        }
+        if (cells.length === width) return cells;
+        if (this.config.ragged === "reject" || this.keepWarning())
+          this.report(
+            judgeRagged(
+              this.config.ragged,
+              RaggedRecord.make({ at: span(), record: recordIndex, expected: width, actual: cells.length })
+            )
+          );
+        return this.config.ragged === "pad" && cells.length < width
+          ? A.appendAll(cells, A.replicate("", width - cells.length))
+          : cells;
       },
     });
     if (this.s.stopped) return;
     this.s.emitted += 1;
     const { maxRecords } = this.config.limits;
     if (this.s.emitted > maxRecords) {
-      this.limit("records", maxRecords, span);
+      this.limit("records", maxRecords, span());
       return;
     }
-    this.records.push(RawRecord.make({ cells, quoted, record: recordIndex, span, end }, built));
+    this.records.push({ cells: row, record: recordIndex, span: at, end });
   }
 
   startRecordIfNeeded(): void {

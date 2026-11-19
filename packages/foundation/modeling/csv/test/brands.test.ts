@@ -12,7 +12,8 @@ import type { CsvLimits, CsvReadOptions, CsvWriteOptions } from "@beep/csv/CsvOp
 import type { CsvTextSpan } from "@beep/csv/CsvPosition.schema";
 import type { CsvNoted, CsvRead } from "@beep/csv/CsvRead.schema";
 import type { CsvRecordSlice, CsvTable } from "@beep/csv/CsvTable.schema";
-import type { MachineState, RawRecord } from "@beep/csv/internal/machine";
+import type { MachineConfig, MachineState } from "@beep/csv/internal/machine";
+import type { Prepared } from "@beep/csv/internal/start";
 
 describe("Opaque fields keep their brands", () => {
   it("in reads, options, findings and the engine's records", () => {
@@ -23,8 +24,8 @@ describe("Opaque fields keep their brands", () => {
     expectTypeOf<CsvCodecOptions["write"]>().toEqualTypeOf<CsvWriteOptions>();
     expectTypeOf<CsvRecordSlice["span"]>().toEqualTypeOf<CsvTextSpan>();
     expectTypeOf<StrayQuote["at"]>().toEqualTypeOf<CsvTextSpan>();
-    expectTypeOf<RawRecord["span"]>().toEqualTypeOf<CsvTextSpan>();
     expectTypeOf<MachineState["width"]>().not.toBeAny();
+    expectTypeOf<Prepared["config"]>().toEqualTypeOf<MachineConfig>();
     const read = Csv.parseResult("a,b\n", CsvCodecOptions.default.read);
     assertTrue(Result.isSuccess(read), "the read succeeds");
     expectTypeOf(read.success.table).toEqualTypeOf<CsvTable>();

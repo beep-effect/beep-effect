@@ -18,6 +18,7 @@ import {
   XlsxOtherFormat,
   XlsxZeroPaddedFormat,
 } from "../XlsxFormatKind.schema.ts";
+import { maxSerial } from "../XlsxSerial.schema.ts";
 import { partsOf, SerialParts } from "./serial.ts";
 import type { XlsxFormatKind } from "../XlsxFormatKind.schema.ts";
 import type { XlsxDateSystem } from "../XlsxSerial.schema.ts";
@@ -388,15 +389,17 @@ const tokenText = (parts: SerialParts, twelve: boolean): ((token: DateToken) => 
   );
 
 /**
- * A serial as a date format shows it, none for a format this package does not render: elapsed time, fractions of a
- * second, eras, or a zero under a format with a section of its own for zero.
+/**
+ * A serial as a date format shows it, none for a format this package does not render (elapsed time, fractions of a
+ * second, eras, or a zero under a format with a section of its own for zero) and none past the system's last
+ * serial, where Excel shows `#####`.
  */
 export const renderDate: {
   (serial: number, system: XlsxDateSystem): (code: string) => O.Option<string>;
   (code: string, serial: number, system: XlsxDateSystem): O.Option<string>;
 } = dual(3, (code: string, serial: number, system: XlsxDateSystem): O.Option<string> => {
   const [section, sections] = firstSection(code);
-  if (sections >= 3 && serial === 0) return O.none();
+  if (serial > maxSerial(system) || (sections >= 3 && serial === 0)) return O.none();
   return O.flatMap(dateTokens(section), (tokens) => {
     const timed = A.some(tokens, (token) => token.t === "h" || token.t === "M" || token.t === "s");
     const twelve = A.some(tokens, (token) => token.t === "ampm");
