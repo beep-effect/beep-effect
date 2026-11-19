@@ -7,7 +7,8 @@
 
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import { IdentityAuthority, make } from "./Id.ts";
+import { IdentityAuthority } from "./Authority.ts";
+import { make } from "./Id.ts";
 import { SparTerms } from "./internal/generated/SparTerms.ts";
 
 const { $IdentityId } = make("identity");

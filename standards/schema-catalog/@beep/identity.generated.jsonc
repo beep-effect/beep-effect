@@ -19,6 +19,16 @@
     {"file":"packages/foundation/modeling/identity/src/PnLocal.ts","symbol":"EscapedPnLocal","kind":"codec","owner":"@beep/identity"},
     {"file":"packages/foundation/modeling/identity/src/PnLocal.ts","symbol":"SafePnLocal","kind":"codec","owner":"@beep/identity"},
     {"file":"packages/foundation/modeling/identity/src/PnLocal.ts","symbol":"SafePnPrefix","kind":"codec","owner":"@beep/identity"},
+    {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"CodeId","kind":"brand","owner":"@beep/identity","identity":"CodeId","description":"A code-path identity for a kind."},
+    {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"Deprecation","kind":"struct-const","owner":"@beep/identity","identity":"Deprecation","description":"A term deprecation with its optional successor."},
+    {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"Namespace","kind":"struct-const","owner":"@beep/identity","identity":"Namespace","description":"A registry namespace: prefix and IRI."},
+    {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"ReleaseVersion","kind":"brand","owner":"@beep/identity","identity":"ReleaseVersion","description":"A vocabulary release of the term snapshot."},
+    {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"SnapshotViolation","kind":"tagged-union","owner":"@beep/identity","identity":"SnapshotViolation","description":"A break of the published term set (L0-3)."},
+    {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"Term","kind":"struct-const","owner":"@beep/identity","identity":"Term","description":"A registry term: IRI, namespace and local name."},
+    {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"TermBinding","kind":"struct-const","owner":"@beep/identity","identity":"TermBinding","description":"Data-table binding from a code identity to a published term IRI."},
+    {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"TermIri","kind":"brand","owner":"@beep/identity","identity":"TermIri","description":"A registry-declared term IRI."},
+    {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"TermLocal","kind":"brand","owner":"@beep/identity","identity":"TermLocal","description":"The local name of a declared term."},
+    {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"TermSnapshot","kind":"struct-const","owner":"@beep/identity","identity":"TermSnapshot","description":"Snapshot of the published term set (L0-3)."},
     {"file":"packages/foundation/modeling/identity/src/Vocab.ts","symbol":"VocabEntry","kind":"struct-const","owner":"@beep/identity","identity":"VocabEntry","description":"One namespace IRI and term list inside an identity vocabulary registry."},
     {"file":"packages/foundation/modeling/identity/src/Vocab.ts","symbol":"VocabRegistry","kind":"schema-const","owner":"@beep/identity"}
   ]

@@ -37,10 +37,12 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
+import { BaseSegmentSchema, ModuleSegmentSchema, validateModuleSegment, validateSegment } from "./internal/Segment.ts";
 import * as SchemaStatics from "./internal/schemaStatics.ts";
 import type { TString } from "@beep/types";
 import type { PayloadEncoding } from "effect/http-api/HttpApiSchema";
 import type { Get, Paths } from "type-fest";
+import type { IdentityAuthority } from "./Authority.ts";
 import type { CoreVocab, Predicate, VocabShape } from "./Vocab.ts";
 
 const BeepNamespace = S.Literal("@beep");
@@ -48,33 +50,6 @@ type BeepNamespace = typeof BeepNamespace.Type;
 
 const BeepBase = S.Literal("beep");
 type BeepBase = typeof BeepBase.Type;
-
-/**
- * Identity authority that roots every owned `@beep/*` IRI.
- *
- * **Details**
- *
- * This is the single runtime source for the repository identity root. The
- * root `$I` composer, the default composer authority type, and the `beep`
- * vocabulary namespace all reference it, so the authority is written once.
- * Owned identities are appended directly, so the value keeps its trailing
- * `/`: `@beep/a/b` mints `https://beep-effect.com/ns/a/b`.
- *
- * **Example** (Read the identity authority)
- *
- * ```ts import.meta.vitest name="Read the identity authority"
- * import { IdentityAuthority } from "@beep/identity/Id"
- * import { $I } from "@beep/identity/packages"
- *
- * IdentityAuthority // => "https://beep-effect.com/ns/"
- * $I.iri === IdentityAuthority // => true
- * $I.create("x").iri // => "https://beep-effect.com/ns/x"
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const IdentityAuthority = "https://beep-effect.com/ns/" as const;
 
 type DefaultIdentityAuthority = typeof IdentityAuthority;
 type DefaultIdentityPrefix = "beep";
@@ -84,9 +59,6 @@ const isBeepBase = S.is(BeepBase);
 
 const beepNamespace = BeepNamespace.make("@beep");
 const beepBase = BeepBase.make("beep");
-const MODULE_CHARACTERS = /^[A-Za-z0-9_-]+$/;
-const MODULE_LEADING_ALPHA = /^[A-Za-z]/;
-const BASE_CHARACTERS = /^[A-Za-z0-9](?:[A-Za-z0-9_-]*[A-Za-z0-9])?$/;
 
 /**
  * Bootstrap identity annotation helper for schemas defined before `make` exists.
@@ -1531,59 +1503,6 @@ type NormalizedBase<Base extends TString.NonEmpty> = Base extends `@beep/${infer
 type BaseIdentity<Base extends TString.NonEmpty> =
   NormalizedBase<Base> extends BeepBase ? BeepNamespace : `${BeepNamespace}/${NormalizedBase<Base>}`;
 
-const SegmentCheck = S.makeFilterGroup(
-  [
-    S.isNonEmpty({
-      identifier: "@beep/identity/check/non-empty-segment",
-      message: "Identity segments cannot be empty.",
-    }),
-    S.makeFilter((segment: string) => !pipe(segment, Str.startsWith("/")), {
-      identifier: "@beep/identity/check/no-leading-slash",
-      message: 'Identity segments cannot start with "/".',
-    }),
-    S.makeFilter((segment: string) => !pipe(segment, Str.endsWith("/")), {
-      identifier: "@beep/identity/check/no-trailing-slash",
-      message: 'Identity segments cannot end with "/".',
-    }),
-  ],
-  {
-    title: "Identity Segment",
-    description: "Identity segments are non-empty and do not start or end with a slash.",
-  }
-);
-
-const SegmentSchema = S.String.check(SegmentCheck);
-
-const ModuleSegmentCheck = S.makeFilterGroup(
-  [
-    S.isPattern(MODULE_CHARACTERS, {
-      identifier: "@beep/identity/check/module-characters",
-      message: "Module segments must contain only alphanumeric characters, hyphens, or underscores.",
-    }),
-    S.isPattern(MODULE_LEADING_ALPHA, {
-      identifier: "@beep/identity/check/module-leading-alpha",
-      message: "Module segments must start with an alphabetic character to create valid accessors.",
-    }),
-  ],
-  {
-    title: "Identity Module Segment",
-    description: "Module segments are identity segments that are safe for generated module accessor names.",
-  }
-);
-
-const ModuleSegmentSchema = SegmentSchema.check(ModuleSegmentCheck);
-
-const BaseSegmentSchema = S.String.check(
-  S.isNonEmpty({
-    identifier: "@beep/identity/check/non-empty-base",
-    message: "Identity bases cannot be empty.",
-  }),
-  S.isPattern(BASE_CHARACTERS, {
-    identifier: "@beep/identity/check/base-characters",
-    message: "Identity bases must use alphanumeric, hyphen, or underscore characters and start/end with alphanumeric.",
-  })
-);
-
 const stripPrefix = (prefix: string) =>
   flow(O.liftPredicate(Str.startsWith(prefix)), O.map(Str.slice(Str.length(prefix))));
 
@@ -1715,16 +1634,6 @@ const toPascalIdentifier = <const Segment extends TString.NonEmpty>(segment: Seg
 
 const toTaggedKey = <const Segment extends TString.NonEmpty>(segment: Segment): TaggedAccessor<Segment> =>
   `$${toPascalIdentifier(segment)}Id` as TaggedAccessor<Segment>;
-
-const validateSegment = <const Segment extends TString.NonEmpty>(segment: Segment): Segment => {
-  SegmentSchema.make(segment);
-  return segment;
-};
-
-const validateModuleSegment = <const Segment extends TString.NonEmpty>(segment: Segment): Segment => {
-  ModuleSegmentSchema.make(segment);
-  return segment;
-};
 
 const validateTemplateInterpolations = (values: ReadonlyArray<unknown>): void =>
   A.match(values, {

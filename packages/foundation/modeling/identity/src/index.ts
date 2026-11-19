@@ -15,6 +15,21 @@
  * @since 0.0.0
  */
 /**
+ * The identity authority, the IRI root of every declared internal namespace.
+ *
+ * **Example** (Read the identity authority)
+ *
+ * ```ts
+ * import { IdentityAuthority } from "@beep/identity/Authority"
+ *
+ * console.log(IdentityAuthority)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export * from "./Authority.ts";
+/**
  * CURIE expansion, contraction, and schema codecs for identity vocabularies.
  *
  * **Example** (Expand CURIE to IRI)
@@ -134,6 +149,22 @@ export * from "./PnLocal.ts";
  * @since 0.0.0
  */
 export * from "./packages.ts";
+/**
+ * Declared terms, namespaces, term bindings, deprecations and the term-stability snapshot.
+ *
+ * **Example** (Check a term local)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { TermLocal } from "@beep/identity/Term"
+ *
+ * console.log(S.is(TermLocal)("receipts/accepted/v2"))
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Term.ts";
 /**
  * Static borrowed vocabulary registry and literal CURIE type helpers.
  *
