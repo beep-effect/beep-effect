@@ -67,14 +67,22 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Design and grill, in review. The resolved questions and the eleven design
-items are confirmed or reversed in `decisions/2026-11-19-*.md`;
-`research/consumer-census.md` is the work list; the design module under
-`ops/design/` type-checks; the ledger names every test; chapter 16, the ten
-`DECISIONS.md` entries and the glossary entries are drafted. Next action after
-the P0 PR merges: P1 (L0 identity).
+P1 L0 identity, in progress. P0 Design and grill is complete: PR #3420 merged
+as `dcf6b16a77d`. P1 follows the registry-first design
+(`research/2026-11-19-p1-design-registry-first.md`) with the grafts and the
+rulings recorded in `decisions/2026-11-19-p1-*.md`, and ships as three PRs
+opened one after another: PR A foundation, PR B registry and pins, PR C
+bindings and the break.
 
 ## Latest Evidence
+
+2026-11-19: P1 opened. Three maps (identity derivation, registries and
+namespaces, the IRI schema move) and three competing designs are under
+`research/2026-11-19-p1-*.md`; two judges chose registry-first with grafts,
+and nineteen P1 decision files record the rulings and the design decisions
+they amend. The judges corrected the base design's facts: 87 owned
+research-library property IRIs, not 90; class locals as the live fold prints
+them; the full design-module importer list. No package code has changed yet.
 
 2026-11-19: packet resumed (`active`). P0 ran from the live tree at
 `f9982f3b5e6`: the census and `research/2026-11-19-p0-design-facts.md`

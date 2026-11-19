@@ -42,6 +42,12 @@
     "research/2026-11-08-reader-d-standards-vision.md",
     "research/2026-11-08-rebuild-report.md",
     "research/2026-11-19-p0-design-facts.md",
+    "research/2026-11-19-p1-design-evolution-first.md",
+    "research/2026-11-19-p1-design-minimal-surface.md",
+    "research/2026-11-19-p1-design-registry-first.md",
+    "research/2026-11-19-p1-map-identity-derivation.md",
+    "research/2026-11-19-p1-map-iri-move.md",
+    "research/2026-11-19-p1-map-registries-and-namespaces.md",
     "research/OPPORTUNITIES.md",
     "research/SOURCES.md",
     "research/consumer-census.md",
@@ -73,12 +79,12 @@
     {
       "id": "P0",
       "name": "Design and grill",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "L0 identity: declared terms, one digest",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P2",
@@ -139,7 +145,7 @@
     "The same blocker repeats after reasonable investigation.",
     "A retirement or rename is attempted without its row in research/consumer-census.md or without the consumer migration in the same PR: that step stops, the packet does not."
   ],
-  "statusNote": "Resumed 2026-11-19 on the operator's /goal launch, which reverses the 2026-11-13 finish-board pause. P0 Design and grill is in review (decisions/2026-11-19-*, research/consumer-census.md, ops/design); P1 (L0 identity) is next after the P0 PR merges; no package code has changed.",
+  "statusNote": "P0 Design and grill is complete (PR #3420, merged as dcf6b16a77d). P1 (L0 identity) is in progress as a three-PR stack opened one after another: PR A foundation, PR B registry and pins, PR C bindings and the break. Base design research/2026-11-19-p1-design-registry-first.md; rulings in decisions/2026-11-19-p1-*.",
   "opsScripts": [
     {
       "path": "ops/design/index.ts",
