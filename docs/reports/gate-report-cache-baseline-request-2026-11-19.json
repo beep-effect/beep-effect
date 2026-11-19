@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "//": "901097fce51b2847de9df08e8e1925e1496cf0e22a434d0fccdaebfb93c9c20e"
+  },
+  "review": {
+    "reviewer": "Claude Fable 5.2 (gate-report-core P1 lane, feat/gate-report-core)",
+    "reason": "Record the new @beep/gate-report package's tasks (generated library scripts, root task definitions, no override) and the one manifest input the policy fingerprint added to //#lint:policy-fingerprint. No qualification is granted.",
+    "basis": {
+      "path": "docs/reports/gate-report-cache-review-2026-11-19.md",
+      "sha256": "39300e400686c32a28f42e92022fa0cb609fb5b47be2646574997652930caf80"
+    }
+  },
+  "subjects": ["//", "@beep/gate-report"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

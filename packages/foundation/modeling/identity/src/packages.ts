@@ -264,7 +264,8 @@ const generatedComposers = $I.compose(
   "infra-hosts",
   "infra-github",
   "contract-kit",
-  "infra-ci-runners"
+  "infra-ci-runners",
+  "gate-report"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -3970,3 +3971,20 @@ export const $ContractKitId: Identity.IdentityComposer<"@beep/contract-kit"> = c
  * @since 0.0.0
  */
 export const $InfraCiRunnersId: Identity.IdentityComposer<"@beep/infra-ci-runners"> = composers.$InfraCiRunnersId;
+
+/**
+ * Identity composer for `@beep/gate-report`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $GateReportId } from "@beep/identity/packages"
+ *
+ * const id = $GateReportId.make("GateReport")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $GateReportId: Identity.IdentityComposer<"@beep/gate-report"> = composers.$GateReportId;
