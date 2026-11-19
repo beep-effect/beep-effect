@@ -21,6 +21,7 @@ import {
 } from "@alchemy.run/aws/Lambda";
 import * as AwsCredentials from "@distilled.cloud/aws/Credentials";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { identity, pipe } from "effect/Function";
@@ -117,32 +118,30 @@ const lambdaError = (status: number, errorType: string): FakeAnswer => ({
 
 const decoder = new TextDecoder();
 
-const route = Effect.fn("FakeLambdaPolicy.route")(function* (
+const getPolicy = Effect.fn("FakeLambdaPolicy.getPolicy")(function* (fake: FakeLambdaPolicy) {
+  fake.calls.push("GetPolicy");
+  const statements = fake.statements.pipe(MutableHashMap.values, A.fromIterable);
+  if (A.isArrayEmpty(statements)) return lambdaError(404, "ResourceNotFoundException");
+  const policy = yield* encodeJson({ Version: "2012-10-17", Id: "default", Statement: statements });
+  return { status: 200, body: { Policy: policy, RevisionId: "revision" } };
+});
+
+const addPermission = Effect.fn("FakeLambdaPolicy.addPermission")(function* (
   fake: FakeLambdaPolicy,
   request: HttpClientRequest.HttpClientRequest,
-  url: URL
+  resource: string
 ) {
-  if (!Str.startsWith(policyPath)(url.pathname)) return lambdaError(404, "UnknownOperationException");
-  const qualifier = url.searchParams.get("Qualifier");
-  fake.qualifiers.push(qualifier);
-  const resource = qualifier === null ? functionArn : `${functionArn}:${qualifier}`;
-  if (request.method === "GET") {
-    fake.calls.push("GetPolicy");
-    const statements = fake.statements.pipe(MutableHashMap.values, A.fromIterable);
-    if (A.isArrayEmpty(statements)) return lambdaError(404, "ResourceNotFoundException");
-    const policy = yield* encodeJson({ Version: "2012-10-17", Id: "default", Statement: statements });
-    return { status: 200, body: { Policy: policy, RevisionId: "revision" } };
-  }
-  if (request.method === "POST") {
-    const body = yield* decodeAddPermissionBody(
-      request.body._tag === "Uint8Array" ? decoder.decode(request.body.body) : ""
-    );
-    fake.calls.push(`AddPermission ${body.StatementId}`);
-    if (MutableHashMap.has(fake.statements, body.StatementId)) return lambdaError(409, "ResourceConflictException");
-    const statement = storedStatement(body, resource);
-    MutableHashMap.set(fake.statements, body.StatementId, statement);
-    return { status: 201, body: { Statement: yield* encodeJson(statement) } };
-  }
+  const body = yield* decodeAddPermissionBody(
+    request.body._tag === "Uint8Array" ? decoder.decode(request.body.body) : ""
+  );
+  fake.calls.push(`AddPermission ${body.StatementId}`);
+  if (MutableHashMap.has(fake.statements, body.StatementId)) return lambdaError(409, "ResourceConflictException");
+  const statement = storedStatement(body, resource);
+  MutableHashMap.set(fake.statements, body.StatementId, statement);
+  return { status: 201, body: { Statement: yield* encodeJson(statement) } };
+});
+
+const removePermission = (fake: FakeLambdaPolicy, url: URL): FakeAnswer => {
   const sid = pipe(
     url.pathname,
     Str.split("/"),
@@ -153,6 +152,20 @@ const route = Effect.fn("FakeLambdaPolicy.route")(function* (
   if (!MutableHashMap.has(fake.statements, sid)) return lambdaError(404, "ResourceNotFoundException");
   MutableHashMap.remove(fake.statements, sid);
   return { status: 204, body: undefined };
+};
+
+const route = Effect.fn("FakeLambdaPolicy.route")(function* (
+  fake: FakeLambdaPolicy,
+  request: HttpClientRequest.HttpClientRequest,
+  url: URL
+) {
+  if (!Str.startsWith(policyPath)(url.pathname)) return lambdaError(404, "UnknownOperationException");
+  const qualifier = url.searchParams.get("Qualifier");
+  fake.qualifiers.push(qualifier);
+  const resource = qualifier === null ? functionArn : `${functionArn}:${qualifier}`;
+  if (request.method === "GET") return yield* getPolicy(fake);
+  if (request.method === "POST") return yield* addPermission(fake, request, resource);
+  return removePermission(fake, url);
 });
 
 /** An effect `HttpClient` that serves `fake`, so the distilled Lambda client runs for real with no network. */
@@ -249,9 +262,11 @@ describe("function URL permission reconcile over the Lambda API", () => {
         `RemovePermission ${FunctionUrlPublicInvokeStatementId}`,
         `AddPermission ${FunctionUrlPublicInvokeStatementId}`,
       ]);
-      expect(
-        O.map(MutableHashMap.get(fake.statements, FunctionUrlPublicInvokeStatementId), (s) => s.Condition)
-      ).toStrictEqual(O.some({ Bool: { "lambda:InvokedViaFunctionUrl": "true" } }));
+      const condition = O.map(
+        MutableHashMap.get(fake.statements, FunctionUrlPublicInvokeStatementId),
+        (statement) => statement.Condition
+      );
+      assertSome(condition, { Bool: { "lambda:InvokedViaFunctionUrl": "true" } });
     })
   );
 
