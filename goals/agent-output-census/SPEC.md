@@ -181,6 +181,54 @@ The transcript census becomes a repeatable command on the repo CLI. Its 2026-11-
 
 Reverse: Delete the census command and judge goals by output-size fixtures alone
 
+### Each census run is one JSON file under standards/agent-output-census/runs, 2026-11-19
+
+The baseline is a tracked standard other goals cite, so it sits beside the repository's other measured baselines. One file per run, named by the window end and the rule version, decoded by the baseline file schema; the command refuses to overwrite an existing file, so no run edits another's. The reproduction run is the first file.
+
+Lane goals/agent-output-census-library
+
+Reverse: Move the run files and update the command's default directory.
+
+### The census lives in four flat modules of @beep/repo-ai-metrics and runs as beep ai-metrics census, 2026-11-19
+
+The library's sources are flat kebab-case modules, so the census follows: census-report.ts (the agent-output-census/v1 report and baseline file schemas), census-rules.ts (the closed class domains with each member's matching rule and the rule version), census-projection.ts (the in-memory projection of one record into calls, results and usage, internal), and census.ts (the Census Context.Service contract and its layer). The command is census under the existing ai-metrics group, with --since and --until for the window, --claude-root, --codex-root and --repository for selection, --json for the encoded report, and --write-baseline to add the run's file.
+
+Lane goals/agent-output-census-library
+
+Reverse: Move the census into its own tooling library and re-point the command.
+
+### The census ships as one pull request, not a library PR followed by a command PR, 2026-11-19
+
+The plan named two pull requests. In goals/gate-report-core three stacked lanes over squash merges each cost a wall of add/add conflicts and a regeneration pass, and a final waited hours at the merge gate; the command PR would wait on the library PR the same way. The library has no consumer but the command, the change is a single tooling library plus one command group, and the reproduction run is what proves both. One PR carries P1 to P4 and the closeout.
+
+Lane goals/agent-output-census-library
+
+Reverse: Split the branch at the library boundary and open the command as a second PR stacked on the first.
+
+### The surviving audit scripts are the method reference, and their rules move into the class domain unchanged, 2026-11-19
+
+The scripts that produced the 2026-11-18 tables survive in the authoring session's scratch directory: a first pass that attributes tool results, carried cost and the calibration samples; a second pass that classifies turns; and a pass over the captured verification output that measures filter habits and line classes. They are not tracked and are not copied into the repository. The census ports their behaviour: the first-match command rules, the filter rule, the verification set, the turn rules, the shell-prefix stripping used for re-run detection, the redirect-target extraction used for log digs, and the line-class rules, all under the rule version census-rules/2026-11-18. The full-precision numbers that run wrote (calls, token totals, 127 sessions, 96 subagents, 32 Codex sessions, 9,038 calibration samples) are the comparison target in P4 beside the audit's rounded tables. Where the audit's prose and the scripts differ, the scripts win, because they made the numbers.
+
+Lane goals/agent-output-census-library
+
+Reverse: Rewrite the class rules from the audit's prose and re-attribute every row that moves.
+
+### A transcript belongs to the repository by its Claude project directory name or its Codex session working directory, 2026-11-19
+
+Claude: every directory under the Claude projects root whose name contains the repository name (beep-effect), walked three levels deep, skipping tool-results directories, taking every .jsonl file. A file is a subagent context when its path has a subagents directory or its name starts with agent-. Codex: every .jsonl file under the Codex sessions root whose first session_meta record has a working directory, or a runtime workspace root, containing the repository name; a file whose first records are not a match is abandoned after six records. Both rules are part of the rule version. The repository name is a flag with the reference value as its default, and roots default to the harnesses' own directories, printed with a tilde.
+
+Lane goals/agent-output-census-library
+
+Reverse: Match on a recorded working directory for both harnesses instead of the project directory name.
+
+### The reproduction window is 2026-11-11T11:56:00Z to 2026-11-18T11:57:45Z, 2026-11-19
+
+The reference run took its cutoff as seven days before it started and had no upper bound. Its summary was written at 2026-11-18T11:57:57Z and the latest record it counted is 2026-11-18T11:57:44Z, so it started within a few minutes before that, and its cutoff fell near 2026-11-11T11:56Z. The earliest record it counted is 2026-11-12T18:58Z, so any start between those points selects the same Claude records. The census takes the window as two explicit timestamps. A record belongs to the window when its timestamp is within both bounds; a record with no timestamp takes the time of the record before it in the same file, so an append after the window end is never counted. A file is scanned when its modification time is at or after the window start and its first timestamped record is at or before the window end, which reproduces the reference selection on a corpus that has grown since. Codex token totals take the last token-count record at or before the window end, where the reference took the last one in the file.
+
+Lane goals/agent-output-census-library
+
+Reverse: Pin a different pair of timestamps and re-run the reproduction.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
