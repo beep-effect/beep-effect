@@ -12,6 +12,8 @@ import * as Atom from "effect/reactivity/Atom";
 import type { Receipt } from "../Bindings.ts";
 import { Intake, Reviewer } from "../Party.bindings.ts";
 import { partyRuntime } from "../Party.runtime.ts";
+import { Button } from "@beep/ui/components/button"
+
 
 /**
  * What the person is searching for.
@@ -88,9 +90,9 @@ export const FindPartiesScreen = ({ org }: { readonly org: OrgId }) => {
   return (
     <section aria-label="Party directory">
       <input aria-label="Search parties" value={text} onChange={(event) => setText(event.currentTarget.value)} />
-      <button type="button" disabled={Str.isEmpty(Str.trim(text))} onClick={() => register(Str.trim(text))}>
+      <Button type="button" disabled={Str.isEmpty(Str.trim(text))} onClick={() => register(Str.trim(text))}>
         Register
-      </button>
+      </Button>
       {AsyncResult.isSuccess(registered) ? <p role="status">Registration: {registered.value}</p> : null}
       {AsyncResult.match(results, {
         onInitial: () => <p>Searching</p>,

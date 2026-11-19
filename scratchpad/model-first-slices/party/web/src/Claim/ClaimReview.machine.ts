@@ -10,7 +10,10 @@ import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { Receipt } from "../Bindings.ts";
 import { thunk0, thunkTrue } from "@beep/utils/thunk"
-
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as Tuple from "effect/Tuple";
+const $I = $ScratchpadId.create("model-first-slices/party/web/Claim/ClaimReview.machine")
 /** What every approval in flight carries: its command id, what it approves, the view revision it was made from, and how many times it was sent. */
 const inFlight = {
   commandId: IdText,
@@ -37,6 +40,21 @@ export const Notice = S.TaggedUnion({
  */
 export type Notice = typeof Notice.Type;
 
+export const ApprovalTag = LiteralKit(
+  [
+    "Idle",
+    "Sending",
+    "Committed",
+    "Noticed"
+  ]
+).pipe(
+  $I.annoteSchema("ApprovalTag", {
+    // TODO(kriegcloud): describe
+    description: ""
+  })
+)
+
+export type ApprovalTag = typeof ApprovalTag.Type;
 /**
  * Where the person's approval stands: nothing asked, sent and waiting for
  * its outcome, committed with its receipt and waiting for the view to catch
@@ -45,12 +63,19 @@ export type Notice = typeof Notice.Type;
  * @category models
  * @since 0.0.0
  */
-export const Approval = S.TaggedUnion({
-  Idle: {},
-  Sending: inFlight,
-  Committed: { ...inFlight, receipt: Receipt },
-  Noticed: { notice: Notice },
-});
+export const Approval = ApprovalTag.mapMembers(
+  Tuple.evolve([
+    () => S.TaggedStruct("Idle",{}),
+    () => S.TaggedStruct("Sending", inFlight),
+    () => S.TaggedStruct("Committed", { ...inFlight, receipt: Receipt }),
+    () => S.TaggedStruct("Noticed", { notice: Notice })
+  ])
+).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("Approval", {
+    description: ""
+  })
+)
 /**
  * @category models
  * @since 0.0.0

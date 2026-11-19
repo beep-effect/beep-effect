@@ -112,5 +112,12 @@ const loggingOf = (line: string, since: string) =>
     ),
   );
 
-/** The runners table's health flags. */
-export const runnerHealth = psql("SELECT address, healthy FROM cluster_runners ORDER BY address");
+/**
+ * The health flags of the runners the cluster counts: those whose last heartbeat is inside the
+ * shard lock's expiry (35 s, `ShardingConfig.shardLockExpiration`), which is how the cluster's own
+ * storage reads the table. A killed runner's row stays, flagged healthy, until some runner
+ * unregisters; nothing reads it once its heartbeat is that old.
+ */
+export const runnerHealth = psql(
+  "SELECT address, healthy FROM cluster_runners WHERE last_heartbeat > now() - INTERVAL '35 seconds' ORDER BY address",
+);

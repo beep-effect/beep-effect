@@ -1,0 +1,76 @@
+fix(effect-cluster): give what a hosted model launches the runner's sharding config
+
+Against alchemy `packages/effect-cluster/src` at 33c10dd (2.0.0-beta.87) with 03, 08, 07 and 10
+applied first. Apply from the repository root with `git apply`; the text above the first `---`
+line is ignored.
+
+**This change ran on a cluster** (Docker swarm, two runners, 2026-11-18): without it both runners
+exit at start; with it they start, and every conformance case passes.
+
+## Problem
+
+10 makes a hosted model check, in the Layer it hands the runner, that the runner's pool is named
+after it (`checkRunnerPool`). The check reads `ShardingConfig`. The bootstrap launches that Layer
+with `Layer.provide(cluster)`, and `NodeClusterHttp.layer` provides `Sharding`, `Runners` and
+`MessageStorage` but keeps its `ShardingConfig` to itself. The Layer's requirements are typed
+`any`, so nothing fails to compile. On a real runner the check dies:
+
+    Effect Cluster runner bootstrap failed: Error: Service not found: effect/cluster/ShardingConfig
+
+and the task restarts in a loop. 10's in-process test provides `ShardingConfig` itself, so it
+passed.
+
+## Fix
+
+`packages/effect-cluster/src/internal/Bootstrap.ts`: the sharding options are built once, given to
+`NodeClusterHttp.layer` as before, and provided again as `ShardingConfig.layerFromEnv(options)` to
+everything the bootstrap launches. Both read the same environment and the same options, so the
+check sees the address the cluster runs on.
+
+--- a/packages/effect-cluster/src/internal/Bootstrap.ts
++++ b/packages/effect-cluster/src/internal/Bootstrap.ts
+@@ -25,6 +25,7 @@
+   ClusterWorkflowEngine,
+   Entity as EffectEntity,
+   RunnerAddress,
++  ShardingConfig,
+   Singleton,
+ } from "effect/cluster";
+ import * as ConfigProvider from "effect/ConfigProvider";
+@@ -302,17 +303,18 @@
+         // So does the entity itself: its RPCs' middleware is provided to its Layer.
+         .pipe(Layer.provide(Layer.succeedContext(entry.context))),
+     );
++    const shardingConfig = {
++      runnerAddress: Option.some(RunnerAddress.make(host, RUNNER_PORT)),
++      // Fly's private network is IPv6 only.
++      runnerListenAddress: Option.some(
++        RunnerAddress.make(env("CLUSTER_LISTEN_HOST") ?? "0.0.0.0", RUNNER_PORT),
++      ),
++      ...shardGroupsConfig(),
++    };
+     const cluster = NodeClusterHttp.layer({
+       transport: "http",
+       storage: "sql",
+-      shardingConfig: {
+-        runnerAddress: Option.some(RunnerAddress.make(host, RUNNER_PORT)),
+-        // Fly's private network is IPv6 only.
+-        runnerListenAddress: Option.some(
+-          RunnerAddress.make(env("CLUSTER_LISTEN_HOST") ?? "0.0.0.0", RUNNER_PORT),
+-        ),
+-        ...shardGroupsConfig(),
+-      },
++      shardingConfig,
+     }).pipe(
+       // Named after the runner, so its shard-lock session can be told apart (`runnerPoolName`).
+       Layer.provide(
+@@ -372,6 +374,9 @@
+         // Workflows run on Effect Cluster's own engine, over the cluster.
+         Layer.provide(ClusterWorkflowEngine.layer),
+         Layer.provide(cluster),
++        // The cluster Layer keeps its sharding config to itself; what a hosted model launches
++        // beside its entities reads the runner's address from it (`checkRunnerPool`).
++        Layer.provide(Layer.orDie(ShardingConfig.layerFromEnv(shardingConfig))),
+       ),
+     );
+   }).pipe(Effect.provide(platform), Effect.scoped);

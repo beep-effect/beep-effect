@@ -13,7 +13,7 @@ import { Authority } from "@proto/party-model/Authority.external";
 import { Claim } from "@proto/party-model/Claim/Claim.aggregate";
 import { partyDirectoryLive } from "@proto/party-model/Directory/PartyDirectory.handler";
 import { type DirectoryWrite, MemoryPartyDirectoryStore, PartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
-import { switchWhenCaughtUp } from "@proto/party-model/Directory/RebuildDirectory";
+import { switchIfBehind, switchWhenCaughtUp } from "@proto/party-model/Directory/RebuildDirectory";
 import { ContactSource, MailboxUnavailable } from "@proto/party-model/Evidence/ContactSource.external";
 import { PartyFacts2 } from "@proto/party-model/Facts/PartyFacts2.stream";
 import { PartyHandlers } from "@proto/party-model/Party.handlers";
@@ -209,11 +209,17 @@ it.live.prop("a party registered while a generation is building is found before 
           const found = yield* until(directory, hasLate);
           expect(found.entries).toContainEqual({ partyId: scene.elsewhere, org: scene.home, name: lateName, absorbed: [] });
           expect(found.entries).toHaveLength(3);
-          yield* switchWhenCaughtUp(1);
+          // The host's own step: behind, so it switches; then on the active generation, so it changes nothing.
+          yield* switchIfBehind(1);
           const activeAfter = yield* s.active;
           expect(activeAfter).toEqual(O.some(1));
           const after = yield* directory;
           expect(after).toEqual(found);
+          yield* switchIfBehind(1);
+          const activeAgain = yield* s.active;
+          expect(activeAgain).toEqual(O.some(1));
+          const again = yield* directory;
+          expect(again).toEqual(found);
         }).pipe(Effect.provideContext(deployment));
       }),
     );

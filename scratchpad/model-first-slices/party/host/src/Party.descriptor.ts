@@ -18,6 +18,7 @@ export const PartyDeployment = DeploymentDescriptor.make({
   processes: [
     { name: "MailboxPoller", kind: "poller" },
     { name: "PartyFactsFeed", kind: "feed" },
+    { name: "DirectorySwitch", kind: "poller" },
   ],
   publishes: A.map(R.keys(ClaimDecided.versions), (version) => ({
     producer: ClaimDecided.producer,
@@ -27,7 +28,10 @@ export const PartyDeployment = DeploymentDescriptor.make({
   cluster: {
     module: "@proto/party-host/Party.cluster",
     export: "PartyCluster",
-    parts: [{ name: "PartyFactsFeed", uses: ["AuthorityGateway", "RunsGateway"] }],
+    parts: [
+      { name: "PartyFactsFeed", uses: ["AuthorityGateway", "RunsGateway"] },
+      { name: "DirectorySwitch", uses: ["AuthorityGateway", "RunsGateway"] },
+    ],
     apis: ["AuthorityGateway", "RunsGateway", "Session"],
   },
 });
