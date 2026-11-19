@@ -30,7 +30,7 @@ import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
-import { CI_BINARY_PIN_FILE, CiBinaryPin, rewriteCiBinaryPin } from "./CiBinaryPin.ts";
+import { CI_BINARY_PIN_FILE, CiBinaryPin, decodeCiBinaryPinFlags, rewriteCiBinaryPin } from "./CiBinaryPin.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiBinaryPinSync");
 
@@ -92,18 +92,21 @@ export type CiBinaryPinSyncOutcome = typeof CiBinaryPinSyncOutcome.Type;
  * @category models
  * @since 0.0.0
  */
-export class BeepCiRelease extends S.Class<BeepCiRelease, { readonly brand: unique symbol }>($I`BeepCiRelease`)(
-  {
-    tagName: S.String,
-    createdAt: S.DateTimeUtcFromString,
-  },
-  $I.annote("BeepCiRelease", {
-    description: "A published release's tag and creation time, the order that decides which release is newer.",
-  })
+export class BeepCiRelease extends S.Opaque<BeepCiRelease, { readonly brand: unique symbol }>()(
+  S.Struct({
+    tagName: S.String.pipe($I.annoteKey("BeepCiRelease.tagName", { description: "The release tag." })),
+    createdAt: S.DateTimeUtcFromString.pipe(
+      $I.annoteKey("BeepCiRelease.createdAt", { description: "When the release was created." })
+    ),
+  }).pipe(
+    $I.annoteSchema("BeepCiRelease", {
+      description: "A published release's tag and creation time, the order that decides which release is newer.",
+    })
+  )
 ) {}
 
 const decodeReleases = S.decodeUnknownEffect(S.fromJsonString(S.Array(BeepCiRelease)));
-const decodePin = S.decodeUnknownEffect(CiBinaryPin);
+const decodeCiBinaryPin = S.decodeUnknownEffect(CiBinaryPin);
 
 const createdAt = (releases: ReadonlyArray<BeepCiRelease>, tag: string) =>
   O.map(
@@ -136,10 +139,8 @@ const isUnmerged = (entry: { readonly x: string; readonly y: string }): boolean 
  * @category models
  * @since 0.0.0
  */
-export class CiBinaryPinSyncRequest extends S.Class<CiBinaryPinSyncRequest, { readonly brand: unique symbol }>(
-  $I`CiBinaryPinSyncRequest`
-)(
-  {
+export class CiBinaryPinSyncRequest extends S.Opaque<CiBinaryPinSyncRequest, { readonly brand: unique symbol }>()(
+  S.Struct({
     cwd: S.String.pipe(
       $I.annoteKey("CiBinaryPinSyncRequest.cwd", {
         description: "A checkout of the pin-bump branch head (a detached worktree in the workflow).",
@@ -155,9 +156,83 @@ export class CiBinaryPinSyncRequest extends S.Class<CiBinaryPinSyncRequest, { re
       })
     ),
     file: S.String.pipe($I.annoteKey("CiBinaryPinSyncRequest.file", { description: "The pin file, relative to cwd." })),
-  },
-  $I.annote("CiBinaryPinSyncRequest", { description: "The inputs of one pin-bump branch sync." })
+  }).pipe($I.annoteSchema("CiBinaryPinSyncRequest", { description: "The inputs of one pin-bump branch sync." }))
 ) {}
+
+const gitFailure = (request: CiBinaryPinSyncRequest) => CiCommandError.new(`git failed in ${request.cwd}.`);
+
+const readPinFile = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const file = path.resolve(request.cwd, request.file);
+  return yield* fs.readFileString(file).pipe(Effect.mapError(CiCommandError.new(`Failed to read ${file}.`)));
+});
+
+// The resolved release when the branch pins it exactly; the branch's own pin when it is a newer
+// release (the sync then only merges main under it); otherwise none, which is `stale`.
+const resolveSyncTarget = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
+  const branchText = yield* readPinFile(request);
+  const branch = yield* rewriteCiBinaryPin(branchText, request.pin);
+  if (branch.previousTag === request.pin.tag && branch.previousSha256 === request.pin.sha256) {
+    return O.some(request.pin);
+  }
+  const branchPin = yield* decodeCiBinaryPin({ tag: branch.previousTag, sha256: branch.previousSha256 }).pipe(
+    Effect.option
+  );
+  return O.filter(branchPin, (pin) => isNewerRelease(request.releases, pin.tag, request.pin.tag));
+});
+
+// Merge the base ref in; true when the merge stopped on conflicts, which must all be in the pin file.
+const mergeBase = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
+  const git = yield* Git;
+  const path = yield* Path.Path;
+  const conflicted = yield* git.pull(request.cwd, { remote: ".", ref: request.base }).pipe(
+    Effect.as(false),
+    Effect.catchIf(S.is(MergeConflictError), () => Effect.succeed(true)),
+    Effect.mapError(gitFailure(request))
+  );
+  const status = conflicted ? yield* git.status(request.cwd).pipe(Effect.mapError(gitFailure(request))) : [];
+  const pinFile = path.resolve(request.cwd, request.file);
+  const others = A.filter(status, (entry) => isUnmerged(entry) && path.resolve(request.cwd, entry.path) !== pinFile);
+  if (A.isReadonlyArrayNonEmpty(others)) {
+    const paths = A.join(
+      A.map(others, (entry) => entry.path),
+      ", "
+    );
+    return yield* CiCommandError.make({
+      message: `Merging ${request.base} conflicts outside ${request.file}: ${paths}. Nothing was committed; resolve the pin-bump branch by hand.`,
+    });
+  }
+  return conflicted;
+});
+
+// Set the pin file to the base's text with only the two pinned lines changed, and commit when that
+// differs from the merged file (always after a conflict, which concludes the merge commit).
+const commitResolvedPin = Effect.fnUntraced(function* (
+  request: CiBinaryPinSyncRequest,
+  target: CiBinaryPin,
+  conflicted: boolean
+) {
+  const git = yield* Git;
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const baseFile = yield* git.show(request.cwd, request.base, request.file).pipe(Effect.mapError(gitFailure(request)));
+  if (O.isNone(baseFile)) {
+    return yield* CiCommandError.make({ message: `${request.base} has no ${request.file}.` });
+  }
+  const resolved = yield* rewriteCiBinaryPin(baseFile.value, target);
+  const merged = yield* readPinFile(request);
+  if (!conflicted && merged === resolved.text) {
+    return;
+  }
+  const file = path.resolve(request.cwd, request.file);
+  yield* fs.writeFileString(file, resolved.text).pipe(Effect.mapError(CiCommandError.new(`Failed to write ${file}.`)));
+  yield* git.add(request.cwd, [request.file]).pipe(Effect.mapError(gitFailure(request)));
+  const message = conflicted
+    ? `Merge ${request.base} into the pin-bump branch, keeping the pin at ${target.tag}`
+    : `ci: keep the beep CI binary pin at ${target.tag}`;
+  yield* git.commit(request.cwd, message, { noVerify: true }).pipe(Effect.mapError(gitFailure(request)));
+});
 
 /**
  * Merge `base` into a pin-bump branch checkout when it is behind or in conflict, never moving the pin backwards.
@@ -189,65 +264,18 @@ export class CiBinaryPinSyncRequest extends S.Class<CiBinaryPinSyncRequest, { re
  */
 export const syncCiBinaryPinBranch = Effect.fn("Ci.syncCiBinaryPinBranch")(function* (request: CiBinaryPinSyncRequest) {
   const git = yield* Git;
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const file = path.resolve(request.cwd, request.file);
-  const readFile = fs.readFileString(file).pipe(Effect.mapError(CiCommandError.new(`Failed to read ${file}.`)));
-  const branchText = yield* readFile;
-  const branch = yield* rewriteCiBinaryPin(branchText, request.pin);
-  const pinsResolved = branch.previousTag === request.pin.tag && branch.previousSha256 === request.pin.sha256;
-  // A newer branch pin is kept as the branch wrote it: the sync only merges main under it.
-  const branchPin = yield* decodePin({ tag: branch.previousTag, sha256: branch.previousSha256 }).pipe(Effect.option);
-  const target = pinsResolved
-    ? O.some(request.pin)
-    : O.filter(branchPin, (pin) => isNewerRelease(request.releases, pin.tag, request.pin.tag));
+  const target = yield* resolveSyncTarget(request);
   if (O.isNone(target)) {
     return "stale" satisfies CiBinaryPinSyncOutcome;
   }
-  const gitError = CiCommandError.new(`git failed in ${request.cwd}.`);
-  const containsBase = yield* git.isAncestor(request.cwd, request.base, "HEAD").pipe(Effect.mapError(gitError));
+  const containsBase = yield* git
+    .isAncestor(request.cwd, request.base, "HEAD")
+    .pipe(Effect.mapError(gitFailure(request)));
   if (containsBase) {
     return "current" satisfies CiBinaryPinSyncOutcome;
   }
-  const conflicted = yield* git.pull(request.cwd, { remote: ".", ref: request.base }).pipe(
-    Effect.as(false),
-    Effect.catchIf(S.is(MergeConflictError), () => Effect.succeed(true)),
-    Effect.mapError(gitError)
-  );
-  if (conflicted) {
-    const status = yield* git.status(request.cwd).pipe(Effect.mapError(gitError));
-    const unmerged = A.filter(status, isUnmerged);
-    const others = A.filter(unmerged, (entry) => path.resolve(request.cwd, entry.path) !== file);
-    if (A.isReadonlyArrayNonEmpty(others)) {
-      return yield* CiCommandError.make({
-        message: `Merging ${request.base} conflicts outside ${request.file}: ${A.join(
-          A.map(others, (entry) => entry.path),
-          ", "
-        )}. Nothing was committed; resolve the pin-bump branch by hand.`,
-      });
-    }
-  }
-  const baseText = yield* git.show(request.cwd, request.base, request.file).pipe(
-    Effect.mapError(gitError),
-    Effect.flatMap(
-      O.match({
-        onNone: () => Effect.fail(CiCommandError.make({ message: `${request.base} has no ${request.file}.` })),
-        onSome: Effect.succeed,
-      })
-    )
-  );
-  const resolved = yield* rewriteCiBinaryPin(baseText, target.value);
-  const mergedText = yield* readFile;
-  if (conflicted || mergedText !== resolved.text) {
-    yield* fs
-      .writeFileString(file, resolved.text)
-      .pipe(Effect.mapError(CiCommandError.new(`Failed to write ${file}.`)));
-    yield* git.add(request.cwd, [request.file]).pipe(Effect.mapError(gitError));
-    const message = conflicted
-      ? `Merge ${request.base} into the pin-bump branch, keeping the pin at ${target.value.tag}`
-      : `ci: keep the beep CI binary pin at ${target.value.tag}`;
-    yield* git.commit(request.cwd, message, { noVerify: true }).pipe(Effect.mapError(gitError));
-  }
+  const conflicted = yield* mergeBase(request);
+  yield* commitResolvedPin(request, target.value, conflicted);
   return "merged" satisfies CiBinaryPinSyncOutcome;
 });
 
@@ -260,9 +288,7 @@ const runBinaryPinSync = Effect.fn("Ci.binaryPinSync")(function* (options: {
   readonly file: string;
   readonly output: O.Option<string>;
 }) {
-  const pin = yield* decodePin({ tag: options.tag, sha256: options.sha256 }).pipe(
-    Effect.mapError((error) => CiCommandError.make({ message: `Invalid pin: ${error.message}` }))
-  );
+  const pin = yield* decodeCiBinaryPinFlags(options);
   const fs = yield* FileSystem.FileSystem;
   const releases = yield* fs.readFileString(options.releases).pipe(
     Effect.mapError(CiCommandError.new(`Failed to read ${options.releases}.`)),
