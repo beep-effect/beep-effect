@@ -4,7 +4,9 @@
  * Enforces the canonical `@beep/identity` composer registry invariant:
  * every `@beep/*` workspace package (apps included) has a slug in the
  * `$I.compose(...)` call and a dedicated `export const $XxxId` block in
- * `packages/foundation/modeling/identity/src/packages.ts`, lab workspaces
+ * `packages/foundation/modeling/identity/src/packages.ts`, every such export
+ * is an independent pure `$I.create("<slug>")` leaf whose literal equals its
+ * slug (so a bundle that uses one composer drops the rest), lab workspaces
  * under `apps/labs/` live exactly in the marker-fenced generated labs
  * segment (both directions, with misplacement detection), and no package
  * outside `@beep/identity` constructs a local root composer via the
@@ -70,6 +72,7 @@ const EXCLUDED_SCAN_DIRECTORIES = HashSet.fromIterable([
 const IdentityRegistryViolationKind = LiteralKit([
   "missing-registration",
   "orphan-registration",
+  "registry-leaf-mismatch",
   "local-root-composer",
   "labs-segment-missing",
   "labs-segment-extra",
@@ -77,7 +80,7 @@ const IdentityRegistryViolationKind = LiteralKit([
 ]).pipe(
   $I.annoteSchema("IdentityRegistryViolationKind", {
     description:
-      "Closed identity-registry violation kind: registry completeness, orphaned registrations, local root composers, and generated-labs-segment drift.",
+      "Closed identity-registry violation kind: registry completeness, orphaned registrations, non-leaf registry exports, local root composers, and generated-labs-segment drift.",
   })
 );
 
@@ -262,6 +265,20 @@ const registrySlugViolations = (
   return A.appendAll(completenessViolations, orphanViolations);
 };
 
+// Leaf rows: registry exports that are not an independent pure `$I.create("<slug>")` leaf whose
+// literal equals the slug, so a one-composer bundle would keep a slug it never reads.
+const registryLeafViolations = (
+  registryContent: string,
+  identityPackagesFilePath: string
+): ReadonlyArray<IdentityRegistryViolation> =>
+  A.map(CreatePackageIdentityRegistration.identityLeafMismatches(registryContent), ([accessor, slug, detail]) =>
+    IdentityRegistryViolation.make({
+      kind: "registry-leaf-mismatch",
+      subject: `@beep/${slug}`,
+      detail: `\`${accessor}\` in ${identityPackagesFilePath} must be \`export const ${accessor}: Identity.IdentityComposer<"@beep/${slug}"> = /*#__PURE__*/ $I.create("${slug}")\`: ${detail}.`,
+    })
+  );
+
 // Labs-segment drift rows: expected labs absent from the generated segment,
 // stale generated entries, and labs registered outside the segment.
 const labsSegmentViolations = (
@@ -430,7 +447,10 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
 
   const registryContent = yield* fs.readFileString(identityPackagesAbsolutePath);
   const argument = A.appendAll(
-    registrySlugViolations(registryContent, slugs, identityPackagesFilePath),
+    A.appendAll(
+      registrySlugViolations(registryContent, slugs, identityPackagesFilePath),
+      registryLeafViolations(registryContent, identityPackagesFilePath)
+    ),
     labsSegmentViolations(labsState, identityPackagesFilePath)
   );
   const collectLocalRootViolations1 = yield* collectLocalRootViolations(repoRoot, slugsToDirs);
