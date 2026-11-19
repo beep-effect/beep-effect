@@ -168,6 +168,12 @@ jobs:
             echo "::error::a $MODE deploy needs expect_plan_head and expect_plan_digest from its plan_only run"
             exit 1
           fi
+          # plan-check trims the digest, drops a "sha256:" prefix and reads an empty rest as "no pin". So a set value
+          # that is not a whole digest is refused here, or it would pass as a pin and be ignored as one.
+          if [[ -n "$EXPECT_PLAN_DIGEST" && ! "$EXPECT_PLAN_DIGEST" =~ ^(sha256:)?[0-9a-f]{64}$ ]]; then
+            echo "::error::expect_plan_digest must be the 64-character lower-case sha256 the plan_only run printed, with or without the sha256: prefix"
+            exit 1
+          fi
           if [[ -n "$EXPECT_PLAN_HEAD" ]]; then
             if [[ ! "$EXPECT_PLAN_HEAD" =~ ^[0-9a-f]{40}$ ]]; then
               echo "::error::expect_plan_head must be the full 40-character commit SHA"

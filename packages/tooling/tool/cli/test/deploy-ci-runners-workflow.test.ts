@@ -224,6 +224,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("deploy-ci-runners workf
       expect(Str.includes(`--expect-digest ${digest}`)(pinned.output)).toBe(true);
       const step1b = yield* runDeploy({ mode: "default-security-group", expectHead: head, expectDigest: digest });
       expect([step1b.exitCode, step1b.reached]).toStrictEqual([0, true]);
+      // The prefixed form is the other one plan-check accepts, and it reaches plan-check as given.
+      const prefixed = yield* runDeploy({ mode: "bootstrap", expectHead: head, expectDigest: `sha256:${digest}` });
+      expect([prefixed.exitCode, prefixed.reached]).toStrictEqual([0, true]);
+      expect(Str.includes(`--expect-digest sha256:${digest}`)(prefixed.output)).toBe(true);
       // A head mismatch refuses before anything plans, for a cutover mode and for a pinned routine dispatch.
       const refused = yield* Effect.forEach(
         [
@@ -234,6 +238,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("deploy-ci-runners workf
           { mode: "bootstrap", expectHead: Str.slice(0, 12)(head), expectDigest: digest },
           { mode: "bootstrap", expectHead: `${head}a`, expectDigest: digest },
           { mode: "bootstrap", expectHead: Str.toUpperCase(head), expectDigest: digest },
+          // A digest that plan-check would read as "no pin", or that is not a whole lower-case sha256, is refused.
+          { mode: "bootstrap", expectHead: head, expectDigest: "sha256:" },
+          { mode: "bootstrap", expectHead: head, expectDigest: " " },
+          { mode: "bootstrap", expectHead: head, expectDigest: Str.slice(0, 63)(digest) },
+          { mode: "bootstrap", expectHead: head, expectDigest: Str.toUpperCase(digest) },
+          { mode: "bootstrap", expectHead: head, expectDigest: `sha256:${Str.slice(0, 63)(digest)}` },
+          { mode: "bootstrap", expectHead: head, expectDigest: ` ${digest}` },
+          { mode: "routine", expectHead: head, expectDigest: "sha256:" },
           // The pins travel together.
           { mode: "bootstrap", expectDigest: digest },
           { mode: "bootstrap", expectHead: head },

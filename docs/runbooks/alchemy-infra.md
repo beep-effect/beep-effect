@@ -898,7 +898,9 @@ reaches the deploy or webhook step. It needs no arming, so
 `CI_RUNNERS_DEPLOY_ARMED` stays the one switch for a write. Its log also
 prints `plan-check: head sha <sha>`. A deploy dispatched with
 `expect_plan_head` and `expect_plan_digest` set to those two values refuses
-unless it runs on the plan-only run's commit and prints the same rows digest:
+unless it runs on the plan-only run's commit and prints the same rows digest
+(the digest is given as its 64 lower-case hex characters, with or without the
+`sha256:` prefix; any other value is refused):
 the head is compared before anything plans, the digest before any write. The
 two pins travel together (one without the other is refused), and a
 `bootstrap` or `default-security-group` dispatch is refused without them. A
@@ -906,9 +908,10 @@ push carries neither and runs as routine. The rows and digest print before the
 check, so a refused plan is still read whole.
 
 A plan-only run holds the `alchemy-ci-runners-prod` concurrency group, and
-that group never cancels a run in progress: do not dispatch `plan_only` while
-`CI_RUNNERS_ROUTINE_ARMED` is set and a push run is pending, or the two queue
-behind each other. The digest covers the rows, labels, bindings and stack
+that group never cancels a run in progress but keeps only one pending run: a later run for the group
+cancels the one already waiting. So do not dispatch `plan_only` while
+`CI_RUNNERS_ROUTINE_ARMED` is set and a push run is pending, or one of the
+two is cancelled. The digest covers the rows, labels, bindings and stack
 actions, not the commit, so it stays the same across commits that plan the
 same rows; `expect_plan_head` is what binds the commit. Relay both runs' head
 SHA with the deploy run's `plan-rows digest` log line.
