@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `in-progress`
+Status: `complete`
 
 ## Phases
 
@@ -18,8 +18,8 @@ agent projection, and `test` plus `check` for one package printing the contract 
 | P3 Implementation and first slice | complete | Port the pure core into the model, implement the services and both adapters, and wire `test` and `check` for `@beep/glob`. | `AC-L1` to `AC-L10` pass; green `test` for `@beep/glob` prints one line; the TS6305 fixture folds; a cache hit prints the same console. |
 | P4 Every package and the queries | complete | Put `test` and `check` on the contract for every package at the package directory and the root, and add the `gate` command family's show-run and show-item queries. | Every remaining acceptance criterion in `SPEC.md` holds; `bun run beep quality package-verify` passes for each new and touched package. |
 | P5 Port review | complete | Review each ported module against upstream and repo law, last, as the effected precedent did. | Attribution, style laws and invariants confirmed per module; findings fixed in place. |
-| P6 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P7 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P6 Yeet: PR to mergeable | complete | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P7 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Phase Detail
 

@@ -4,13 +4,13 @@
     "id": "gate-report-core",
     "packetId": "goal-packet/v1:a67f0d389b4036591ce56673e605f5f8d581b2bbc2c2308145f6852d59840f3d",
     "title": "Gate Report Core",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-18",
-    "updated": "2026-11-18",
+    "updated": "2026-11-19",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/gate-report-core",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Build the gate-neutral report model and its console renderer by porting vitest-agent's core into @beep/* packages, and prove it on the test and check gates.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3419,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -34,7 +40,7 @@
     "goals/gate-report-core/GOAL.md",
     "goals/gate-report-core/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -85,12 +91,12 @@
     {
       "id": "P6",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P7",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -104,5 +110,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3419
+  }
 }

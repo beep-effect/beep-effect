@@ -342,73 +342,74 @@ contributors`. No `@vitest-agent/*` or `@effected/*` entry appears in any manife
 The console laws. Each is a test in the library or the model package. Property tests generate
 reports from the report schema's arbitrary.
 
-- [ ] **AC-L1 Verdict first and last.** Property: for any report, the agent projection's first and
+- [x] **AC-L1 Verdict first and last.** Property: for any report, the agent projection's first and
   last lines are both the verdict line (gate, subject, verdict word, counts, duration). The
   projection is the block rendered from a finished report. Lines a gate prints while it is still
   running (the heartbeat `goals/gate-report-rollout` adds) come before that block; nothing follows
   it.
-- [ ] **AC-L2 Silent on success.** Property: an `all-pass` report projects to exactly one line.
+- [x] **AC-L2 Silent on success.** Property: an `all-pass` report projects to exactly one line.
   Measured: a green `test` run for `@beep/glob` (273 tests) prints one line of at most 120
   characters, against 13,450 characters through Turbo on 2026-11-18.
-- [ ] **AC-L3 Failures only, bounded.** Property: for any report, the agent projection is at most
+- [x] **AC-L3 Failures only, bounded.** Property: for any report, the agent projection is at most
   8,000 characters and no line exceeds 240. Each failure entry is one line plus at most its first
   message line and a diff of at most 12 lines, never a stack. When entries are dropped, one cap
   line says `... N more in the record` with N equal to the number dropped.
-- [ ] **AC-L4 Honest counts.** Tests: a report with nothing collected is `ERRORED`, never
+- [x] **AC-L4 Honest counts.** Tests: a report with nothing collected is `ERRORED`, never
   `PASSED`; timeouts, load failures, hook failures and unhandled errors each have their own
   total, cancellation renders `CANCELLED`, and none yields `all-pass`; a nonzero tool exit with no failed item is `ERRORED`
   with one item carrying the log excerpt; a zero exit with a failed item is `FAILED`. The ported
   `build-report` tests pass retargeted.
-- [ ] **AC-L5 Labels from history.** Given labels from the history contract's test layer, every
+- [x] **AC-L5 Labels from history.** Given labels from the history contract's test layer, every
   failure entry carries exactly one label from the closed set. Without a history service, or with
   one that fails, entries carry none and the projection is otherwise unchanged. The labels' values
   are acceptance of `goals/gate-run-history`.
-- [ ] **AC-L6 Delta on re-run.** Given a delta from the history contract's test layer, one line
+- [x] **AC-L6 Delta on re-run.** Given a delta from the history contract's test layer, one line
   `since last run: F fixed, S still failing, N new` renders before the path line; on a green run it
   is a suffix of the single verdict line. Its values are acceptance of `goals/gate-run-history`.
-- [ ] **AC-L7 Causes fold.** The cause-folding table is keyed on diagnostic codes, TS6305 first.
+- [x] **AC-L7 Causes fold.** The cause-folding table is keyed on diagnostic codes, TS6305 first.
   Fixture: the TS6305 cascade a package-local `check` prints on a fresh lane with unbuilt
   dependencies (701 lines for one cause in the census; the fixture is regenerated from the
   repository, never from transcript text) renders as one fold line with the count, the cause and
   the fix command, and the whole projection is at most 5 lines; diagnostics that share a file, a
   code and a message shape remain distinct items.
-- [ ] **AC-L8 A path with its size.** Every non-green projection has one line naming the raw log
+- [x] **AC-L8 A path with its size.** Every non-green projection has one line naming the raw log
   and the record by repository-relative path with the log's size; a test reads both files back at
   those paths and checks the size.
-- [ ] **AC-L9 Next steps are commands.** A test parses every pointer line of every cell against
+- [x] **AC-L9 Next steps are commands.** A test parses every pointer line of every cell against
   the repo CLI command tree and fails on an MCP tool name, a bare tool name or a pointer to
   documentation. `rg -n 'test_errors|failure_signature_get|file_coverage|test_coverage'` over the
   new packages finds nothing.
-- [ ] **AC-L10 Rendering never waits.** With a recorder layer that fails, and with a history layer
+- [x] **AC-L10 Rendering never waits.** With a recorder layer that fails, and with a history layer
   that fails or misses its deadline, the projection still begins and ends with the verdict line,
   adds one line naming what was not written, and the exit code is unchanged.
 
 The model, the services and the wiring:
 
-- [ ] Every row of the widening table has its widened type in the model, and a table test maps
+- [x] Every row of the widening table has its widened type in the model, and a table test maps
   each upstream fixture value to it.
-- [ ] A table test maps every item to a CTRF `status` and to a SARIF `level`, `ruleId`, region and
+- [x] A table test maps every item to a CTRF `status` and to a SARIF `level`, `ruleId`, region and
   `partialFingerprints`, and maps each back to an equal item.
-- [ ] The dispatch table is total over `RunShape` by `RunOutcome` at the type level; a test renders
+- [x] The dispatch table is total over `RunShape` by `RunOutcome` at the type level; a test renders
   all twenty cells.
-- [ ] One renderer serves both gates: a test-gate fixture and a check-gate fixture render through
+- [x] One renderer serves both gates: a test-gate fixture and a check-gate fixture render through
   the one console service, and the cells import nothing from either adapter.
-- [ ] Property: the terminal projection, with ANSI escapes and the progress line removed, equals
+- [x] Property: the terminal projection, with ANSI escapes and the progress line removed, equals
   the agent projection for any report inside the agent budget.
-- [ ] Running the `test` task for `@beep/glob` twice, the second a Turbo cache hit, prints
+- [x] Running the `test` task for `@beep/glob` twice, the second a Turbo cache hit, prints
   byte-identical consoles; the same holds for `check`.
-- [ ] `test` and `check` print the console contract for every package on the repo CLI task path,
+- [x] `test` and `check` print the console contract for every package on the repo CLI task path,
   at the package directory and at the root.
-- [ ] The Vitest adapter's package tests pass under Node and under Bun; the resolved Vitest
+- [x] The Vitest adapter's package tests pass under Node and under Bun; the resolved Vitest
   reporter list equals Vitest's own default selection plus the adapter.
-- [ ] The planned `gate` command family shows a run's record and one item in full.
-- [ ] Each new package carries the dual-copyright `LICENSE` and the README `Provenance` and
+- [x] The `gate` command family shows a run's record and one item in full.
+- [x] Each new package carries the dual-copyright `LICENSE` and the README `Provenance` and
   `Attribution` sections; no manifest lists `@vitest-agent/*` or `@effected/*`.
-- [ ] `bun run beep quality package-verify` passes for every new and touched package, and
+- [x] `bun run beep quality package-verify` passes for every new and touched package, and
   `bun run beep lint identity-registry` passes.
-- [ ] When `goals/agent-output-census` has landed, the census rows for characters per green run
-  and log digs per run are cited before and after in `history/`.
-- [ ] No unrelated refactors or formatting churn.
+- [x] When `goals/agent-output-census` has landed, the census rows for characters per green run
+  and log digs per run are cited before and after in `history/`. It had not landed at closeout, so
+  no rows are cited; the evidence file says so.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -718,9 +719,9 @@ Lane feat/gate-report-wiring
 
 Reverse: Return the root steps to streaming their Turbo output.
 
-### The goal lands as four sequential pull requests, 2026-11-19
+### The goal lands as three sequential pull requests, 2026-11-19
 
-The plan lands P1 through P3 as one pull request. It is split so each is reviewable and green alone: first `@beep/gate-report` complete (schemas, reducer, classifiers, counts, signature, folding table, dispatch cells and the law tests that need no service), then the record and gate-run libraries, then the Vitest adapter with the `test` and `check` wiring and the gate queries, then the port review and the closeout. The wiring rewrites every package manifest, so it stays apart from the libraries. The packet allows three open pull requests; these are sequential.
+The plan lands P1 through P3 as one pull request. It is split so each is reviewable and green alone: first `@beep/gate-report` complete (schemas, reducer, classifiers, counts, signature, folding table, dispatch cells and the law tests that need no service), then the record and gate-run libraries, then the Vitest adapter with the `test` and `check` wiring, the gate queries and the closeout. The port review ran before the third opened and its findings were fixed in the pull request that owns each piece of code, so a fourth pull request for documents alone was dropped. The wiring rewrites every package manifest, so it stays apart from the libraries. The packet allows three open pull requests; these are sequential.
 
 Lane feat/gate-report-core
 
