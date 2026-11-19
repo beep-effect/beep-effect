@@ -5304,6 +5304,31 @@ const runPackageTask: (
 // summary (`--summarize`) names them and says which the cache served.
 const TURBO_SUMMARIZE_ARG = "--summarize";
 
+// Turbo rejects a repeated flag, and a caller (the CI lane) may already ask for the summary.
+const withTurboSummary = (args: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.some(args, (arg) => arg === TURBO_SUMMARIZE_ARG || Str.startsWith(`${TURBO_SUMMARIZE_ARG}=`)(arg))
+    ? args
+    : [...args, TURBO_SUMMARIZE_ARG];
+
+/**
+ * Test hook for the run-summary flag a root gate step needs.
+ *
+ * **Example** (Keep a caller's own flag)
+ *
+ * ```ts
+ * import { withTurboSummaryForTesting } from "@beep/repo-cli/commands/Quality/Tasks"
+ *
+ * console.log(withTurboSummaryForTesting(["--affected", "--summarize"])) // ["--affected", "--summarize"]
+ * console.log(withTurboSummaryForTesting(["--affected"])) // ["--affected", "--summarize"]
+ * ```
+ *
+ * @param args - Turbo arguments a root gate step is about to run with.
+ * @returns The arguments with exactly one run-summary flag, the caller's own kept.
+ * @category testing
+ * @since 0.0.0
+ */
+export const withTurboSummaryForTesting = withTurboSummary;
+
 // The flake quarantine of a captured gate step: the attempt it judges is the
 // same bounded output the streaming runner captured, so detection, the
 // standalone and lane reruns, and the artifact behave as they did there. A
@@ -5417,7 +5442,7 @@ const runRootCheckTask = Effect.fn("QualityTasks.runRootCheckTask")(function* (
     repoRoot,
     "check",
     A.map(O.toArray(O.fromUndefinedOr(gateStep)), (step) =>
-      QualityTaskStep.make({ ...step, args: [...step.args, TURBO_SUMMARIZE_ARG] })
+      QualityTaskStep.make({ ...step, args: withTurboSummary(step.args) })
     ),
     flags
   );
@@ -5434,8 +5459,7 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
   const plan = yield* qualityConcurrencyPlan;
   const unitSteps = optionalQualityTaskStep({
     enabled: lanes.unit,
-    step: () =>
-      turboStep(repoRoot, "test:unit", ["test"], boundedRootTurboArgs([...lanes.args, TURBO_SUMMARIZE_ARG], plan)),
+    step: () => turboStep(repoRoot, "test:unit", ["test"], boundedRootTurboArgs(withTurboSummary(lanes.args), plan)),
   });
   const unitExit = yield* runRootGateSteps(repoRoot, "test", unitSteps, flags);
   let integrationFailures = A.empty<QualityTaskFailed>();

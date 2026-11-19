@@ -17,7 +17,11 @@ import {
   runCheckGate,
   runTestGate,
 } from "@beep/repo-cli/commands/Gate";
-import { parseQualityTaskInvocation, runQualityTask } from "@beep/repo-cli/commands/Quality/Tasks";
+import {
+  parseQualityTaskInvocation,
+  runQualityTask,
+  withTurboSummaryForTesting,
+} from "@beep/repo-cli/commands/Quality/Tasks";
 import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
 import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
@@ -116,6 +120,18 @@ const logText = Effect.map(TestConsole.logLines, (lines) =>
 );
 
 const invocation = (argv: ReadonlyArray<string>) => O.getOrThrow(parseQualityTaskInvocation(argv));
+
+// Turbo rejects a repeated flag; the CI lane already passes the summary flag to a root check.
+describe("root gate summary flag", () => {
+  it("adds the flag once and keeps a caller's own", () => {
+    assert.deepStrictEqual(withTurboSummaryForTesting(["--affected"]), ["--affected", "--summarize"]);
+    assert.deepStrictEqual(withTurboSummaryForTesting(["--affected", "--summarize"]), ["--affected", "--summarize"]);
+    assert.deepStrictEqual(withTurboSummaryForTesting(["--summarize=true", "--force"]), [
+      "--summarize=true",
+      "--force",
+    ]);
+  });
+});
 
 describe("package gates", { concurrent: false }, () => {
   // The task path also reads git and digests, as the CLI runtime provides them.
