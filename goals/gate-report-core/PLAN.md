@@ -17,7 +17,7 @@ agent projection, and `test` plus `check` for one package printing the contract 
 | P2 Service contracts | complete | Create the gate-run library and define its `Context.Service` contracts with test layers: recorder, console, audience selection, history slot, type-checker adapter, the adapter event sink. | Contracts compile with schema-typed shapes; test layers exist, including a failing recorder and a failing or slow history layer. |
 | P3 Implementation and first slice | complete | Port the pure core into the model, implement the services and both adapters, and wire `test` and `check` for `@beep/glob`. | `AC-L1` to `AC-L10` pass; green `test` for `@beep/glob` prints one line; the TS6305 fixture folds; a cache hit prints the same console. |
 | P4 Every package and the queries | complete | Put `test` and `check` on the contract for every package at the package directory and the root, and add the `gate` command family's show-run and show-item queries. | Every remaining acceptance criterion in `SPEC.md` holds; `bun run beep quality package-verify` passes for each new and touched package. |
-| P5 Port review | pending | Review each ported module against upstream and repo law, last, as the effected precedent did. | Attribution, style laws and invariants confirmed per module; findings fixed in place. |
+| P5 Port review | complete | Review each ported module against upstream and repo law, last, as the effected precedent did. | Attribution, style laws and invariants confirmed per module; findings fixed in place. |
 | P6 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
 | P7 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
@@ -136,6 +136,14 @@ A green test run of `@beep/glob` prints one line of 47 characters (`test @beep/g
 Lane feat/gate-report-wiring
 
 Reverse: Revert the wiring commits and re-record the package cache baselines.
+
+### P5 port review complete, 2026-11-19
+
+Every ported module was compared with its upstream file by a separate read-only review. Attribution, outcome precedence, footer dominance, failure-signature inputs, top-frame selection, the suite and hook fault rules and stray-output counting match upstream. Four defects and about a dozen notes were found and fixed in the pull requests that own the code: the model and library findings with the libraries, the adapter and CLI findings with the wiring. Service shapes stay interfaces, as elsewhere in the repository.
+
+Lane feat/gate-report-wiring
+
+Reverse: Reopen the port review and list the modules to re-read.
 
 ### P5 port review: model and library findings fixed, 2026-11-19
 

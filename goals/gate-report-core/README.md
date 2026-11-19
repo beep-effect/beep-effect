@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 is complete: four package homes are confirmed by decision file. P1 is complete: the model package `@beep/gate-report` is built with its law tests. P2 is complete: the record and gate-run libraries are built with their contracts, services and tests. P3 and P4 are complete: the Vitest adapter, the slim check entry, the task-path consoles for every package and the root, and the gate queries are built. P5 (port review) and the closeout remain; P1 through P3 are the first vertical slice.
+P0 is complete: four package homes are confirmed by decision file. P1 is complete: the model package `@beep/gate-report` is built with its law tests. P2 is complete: the record and gate-run libraries are built with their contracts, services and tests. P3 and P4 are complete: the Vitest adapter, the slim check entry, the task-path consoles for every package and the root, and the gate queries are built. P5 (port review) is complete; the closeout remains; P1 through P3 are the first vertical slice.
 
 ## Latest Evidence
 

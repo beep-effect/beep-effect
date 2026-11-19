@@ -526,6 +526,14 @@ Lane explore/agent-verification-output
 
 Reverse: Rename the model and packages and re-key their identities
 
+### Adapter port review: repeated names, every unit fault, bounded console logs, 2026-11-19
+
+The port review found four things in the Vitest adapter and they are fixed. Two tests with one full name in one file stay distinct items: the adapter numbers the repeats, the first keeping its plain name so existing keys are stable. It is done in the adapter, which knows the two test cases are distinct objects; the reducer only sees keys and must keep replacing by key for retries. Every module or suite error is its own unit fault, up to ten per module, where only the first was kept. Console lines accumulate up to one mebibyte, after which later lines are counted and the log says so. The timeout helper is named in the provenance and its upstream test cases are carried over. The escape-stripping pattern is one public leaf of the model, used by the plain-text projection and the stray-output recorder.
+
+Lane feat/gate-report-wiring
+
+Reverse: Revert the adapter changes in the merge commit that carries them.
+
 ### The agent budget stays 8,000 characters, 240 per line, 12 diff lines, 2026-11-19
 
 Re-read against the harness limits in the exploration research (section 5 of the external landscape): Claude Code keeps about 10,000 characters of a failing command inline and Codex cuts the middle of a larger budget, so the smallest window is about 10,000 characters and 2,000 are left for what prints outside the renderer. The numbers are the default of a budget parameter, not constants in the model.
