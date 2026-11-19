@@ -1,0 +1,254 @@
+// AC-L5, AC-L6, AC-L8 and AC-L10 through the gate run entry: labels and the
+// delta from the history contract's test layers, the record and log paths
+// read back with the log's size, and a console that still opens and closes
+// on the verdict when the recorder or history fails.
+import { RunDelta } from "@beep/gate-report/ConsoleDocument";
+import { formatBytes } from "@beep/gate-report/Format";
+import { fingerprint } from "@beep/gate-report/ItemKey";
+import { HistoryLabel } from "@beep/gate-report/Vocabulary";
+import { $RepoGateRunId } from "@beep/identity/packages";
+import { GateRecordFile } from "@beep/repo-gate-record/GateRecordFile";
+import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
+import { ConsoleSettings, GateConsole } from "@beep/repo-gate-run/GateConsole";
+import { GateHistory, HistoryAnswer } from "@beep/repo-gate-run/GateHistory";
+import { GateRecorder } from "@beep/repo-gate-run/GateRecorder";
+import { GateRunRequest, runGate } from "@beep/repo-gate-run/GateRun";
+import * as NodeServices from "@effect/platform-node/NodeServices";
+import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
+import * as Context from "effect/Context";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
+import * as Fiber from "effect/Fiber";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
+import * as TestClock from "effect/testing/TestClock";
+import * as TestConsole from "effect/testing/TestConsole";
+import { eventsSource, failedTest, linesOf, packageTarget, testRunEvents } from "./support/fixtures.ts";
+import type { GateEvent } from "@beep/gate-report/GateEvent";
+
+const $I = $RepoGateRunId.create("test/GateRun");
+
+const LOG = Str.repeat(200)("vitest output line\n");
+const log = Stream.make(new TextEncoder().encode(LOG));
+
+const request = (events: ReadonlyArray<GateEvent>, exitCode: number) =>
+  GateRunRequest.make({ target: packageTarget("test"), source: eventsSource(events), exitCode });
+
+const red = request(testRunEvents(["adds", "divides"]), 1);
+const green = request(testRunEvents([]), 0);
+
+const agent = GateConsole.layer(ConsoleSettings.make({ audience: "agent" }));
+const memoryRecorder = GateRecorder.layer.pipe(Layer.provide(GateRecordStore.layerMemory));
+const services = (history: Layer.Layer<GateHistory>, recorder: Layer.Layer<GateRecorder> = memoryRecorder) =>
+  Layer.mergeAll(agent, history, recorder);
+
+const opensAndClosesOnVerdict = (lines: A.NonEmptyReadonlyArray<string>) => {
+  assert.isTrue(Str.includes(": FAILED,")(lines[0] ?? "") || Str.includes(": PASSED,")(lines[0] ?? ""));
+  assert.strictEqual(lines[0], A.lastNonEmpty(lines));
+};
+
+const printed = Effect.map(
+  TestConsole.logLines,
+  A.map((line) => `${line}`)
+);
+
+class TempRepo extends Context.Service<TempRepo, { readonly root: string }>()($I`TempRepo`) {}
+
+const liveStore = Layer.effect(
+  GateRecordStore,
+  Effect.gen(function* () {
+    const { root } = yield* TempRepo;
+    const store = yield* GateRecordStore.make(root);
+    return GateRecordStore.of(store);
+  })
+).pipe(
+  Layer.provideMerge(
+    Layer.effect(
+      TempRepo,
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped({ prefix: "gate-run-" });
+        return TempRepo.of({ root });
+      })
+    )
+  ),
+  Layer.provideMerge(NodeServices.layer)
+);
+
+describe("runGate", () => {
+  it.layer(Layer.mergeAll(agent, GateHistory.layerNone, GateRecorder.layer.pipe(Layer.provideMerge(liveStore))), {
+    timeout: "30 seconds",
+  })("AC-L8: a path with its size", (it) => {
+    it.effect("names the record and raw log by repository-relative path with the log's size, and both read back", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { root } = yield* TempRepo;
+        const result = yield* runGate(red, log);
+        const lines = linesOf(result.output.text);
+        const pathLine = O.getOrThrow(A.findFirst(lines, Str.startsWith("record: ")));
+        const [, record = "", logPath = "", size = ""] = /^record: (\S+) \| log: (\S+) \((.+)\)$/u.exec(pathLine) ?? [];
+        const logBytes = (yield* fs.readFile(path.join(root, logPath))).length;
+        const recordText = yield* fs.readFileString(path.join(root, record));
+        const decoded = yield* S.decodeEffect(GateRecordFile)(recordText);
+        assert.strictEqual(record, "packages/foundation/primitive/glob/.beep/gates/test/report.json");
+        assert.strictEqual(logPath, "packages/foundation/primitive/glob/.beep/gates/test/report.log");
+        assert.strictEqual(logBytes, new TextEncoder().encode(LOG).length);
+        assert.strictEqual(size, formatBytes(logBytes));
+        assert.strictEqual(decoded.report.runId, "20261119T100000000Z-0001");
+        const printedLines = yield* printed;
+        assert.deepStrictEqual(printedLines, [result.output.text]);
+      })
+    );
+  });
+
+  it.layer(services(GateHistory.layerNone, GateRecorder.layerFailing("recorder unavailable")), {
+    timeout: "30 seconds",
+  })("AC-L10: with a recorder that fails", (it) => {
+    it.effect("still opens and closes on the verdict, names what was not written, and keeps the exit code", () =>
+      Effect.gen(function* () {
+        const failed = yield* runGate(red, log);
+        const passed = yield* runGate(green, log);
+        const lines = linesOf(failed.output.text);
+        opensAndClosesOnVerdict(lines);
+        opensAndClosesOnVerdict(linesOf(passed.output.text));
+        assert.include(lines, "record and raw log not written: recorder unavailable");
+        assert.isFalse(A.some(lines, Str.startsWith("record: ")));
+        assert.strictEqual(failed.exitCode, 1);
+        assert.strictEqual(passed.exitCode, 0);
+        assert.strictEqual(linesOf(passed.output.text).length, 3);
+      })
+    );
+  });
+
+  it.layer(
+    services(
+      GateHistory.layerNone,
+      GateRecorder.layer.pipe(Layer.provide(GateRecordStore.layerFailingWrites("disk full")))
+    ),
+    { timeout: "30 seconds" }
+  )("AC-L10: with a record store whose writes fail", (it) => {
+    it.effect("renders from the settled report and names the record and log as not written", () =>
+      Effect.gen(function* () {
+        const result = yield* runGate(red, log);
+        const lines = linesOf(result.output.text);
+        opensAndClosesOnVerdict(lines);
+        assert.strictEqual(A.filter(lines, Str.includes("not written")).length, 1);
+        const notice = O.getOrThrow(A.findFirst(lines, Str.startsWith("record and raw log not written: ")));
+        assert.include(notice, "disk full");
+        assert.strictEqual(result.exitCode, 1);
+      })
+    );
+  });
+
+  it.layer(services(GateHistory.layerFailing("history store locked")), { timeout: "30 seconds" })(
+    "AC-L10: with a history read that fails",
+    (it) => {
+      it.effect("adds one line naming the history and is otherwise unchanged", () =>
+        Effect.gen(function* () {
+          const result = yield* runGate(red, log);
+          const lines = linesOf(result.output.text);
+          opensAndClosesOnVerdict(lines);
+          assert.include(lines, "history not read: history store locked");
+          assert.isFalse(A.some(lines, Str.includes("[")));
+          assert.strictEqual(result.exitCode, 1);
+        })
+      );
+    }
+  );
+
+  it.layer(services(GateHistory.layerSlow(Duration.hours(1))), { timeout: "30 seconds" })(
+    "AC-L10: with a history read that misses its deadline",
+    (it) => {
+      it.effect("renders at the deadline without labels and names the missed deadline", () =>
+        Effect.gen(function* () {
+          const fiber = yield* Effect.forkChild(runGate(GateRunRequest.make({ ...green, historyDeadlineMs: 10 }), log));
+          yield* TestClock.adjust(Duration.millis(10));
+          const result = yield* Fiber.join(fiber);
+          const lines = linesOf(result.output.text);
+          opensAndClosesOnVerdict(lines);
+          assert.strictEqual(lines[1], "history not read: no answer within 10ms");
+          assert.strictEqual(result.exitCode, 0);
+        })
+      );
+    }
+  );
+
+  it.layer(services(GateHistory.layerSlow(Duration.hours(1))), { timeout: "30 seconds" })(
+    "with a slow history read inside its deadline",
+    (it) => {
+      it.effect("waits for a slow answer that arrives inside the deadline", () =>
+        Effect.gen(function* () {
+          const fiber = yield* Effect.forkChild(
+            runGate(GateRunRequest.make({ ...green, historyDeadlineMs: 2 * 60 * 60 * 1000 }), log)
+          );
+          yield* TestClock.adjust(Duration.hours(1));
+          const result = yield* Fiber.join(fiber);
+          assert.strictEqual(linesOf(result.output.text).length, 1);
+        })
+      );
+    }
+  );
+
+  const failing = [failedTest("adds"), failedTest("divides")];
+  const labels = R.fromEntries(
+    A.map(failing, (item, index) => [fingerprint(item.key), HistoryLabel.literals[index] ?? "flaky"])
+  );
+
+  it.layer(
+    services(
+      GateHistory.layerTest(
+        HistoryAnswer.make({ labels, delta: RunDelta.makeOption({ fixed: 2, stillFailing: 1, new: 1 }) })
+      )
+    ),
+    { timeout: "30 seconds" }
+  )("AC-L5 and AC-L6: labels and the delta from history", (it) => {
+    it.effect("every failure entry carries exactly one label, and the delta renders before the path line", () =>
+      Effect.gen(function* () {
+        const result = yield* runGate(red, log);
+        const lines = linesOf(result.output.text);
+        const entries = A.filter(lines, Str.startsWith("- "));
+        const deltaAt = A.findFirstIndex(lines, Str.startsWith("since last run: "));
+        const pathAt = A.findFirstIndex(lines, Str.startsWith("record: "));
+        assert.strictEqual(entries.length, 2);
+        assert.isTrue(
+          A.every(
+            entries,
+            (entry) => A.filter(HistoryLabel.literals, (label) => Str.includes(`[${label}]`)(entry)).length === 1
+          )
+        );
+        assert.include(lines, "since last run: 2 fixed, 1 still failing, 1 new");
+        assert.isTrue(O.getOrThrow(deltaAt) < O.getOrThrow(pathAt));
+      })
+    );
+
+    it.effect("on a green run the delta is a suffix of the single verdict line", () =>
+      Effect.gen(function* () {
+        const result = yield* runGate(green, log);
+        assert.strictEqual(
+          result.output.text,
+          "test @beep/glob src/math.test.ts: PASSED, 3/3 passed (1.2s); since last run: 2 fixed, 1 still failing, 1 new"
+        );
+      })
+    );
+  });
+
+  it.layer(services(GateHistory.layerNone), { timeout: "30 seconds" })("without history", (it) => {
+    it.effect("entries carry no label and no delta line renders", () =>
+      Effect.gen(function* () {
+        const result = yield* runGate(red, log);
+        const lines = linesOf(result.output.text);
+        assert.isFalse(A.some(lines, Str.includes("[")));
+        assert.isFalse(A.some(lines, Str.startsWith("since last run")));
+        assert.isTrue(A.some(lines, Str.startsWith("record: ")));
+      })
+    );
+  });
+});

@@ -1002,6 +1002,18 @@
         ]
       },
       {
+        "name": "@beep/repo-gate-record",
+        "patterns": [
+          "packages/tooling/library/repo-gate-record/src/**"
+        ]
+      },
+      {
+        "name": "@beep/repo-gate-run",
+        "patterns": [
+          "packages/tooling/library/repo-gate-run/src/**"
+        ]
+      },
+      {
         "name": "@beep/repo-tsconfig",
         "patterns": [
           "packages/tooling/library/repo-tsconfig/src/**"
@@ -5032,6 +5044,7 @@
           "@beep/repo-cli-kit",
           "@beep/repo-configs",
           "@beep/repo-docgen",
+          "@beep/repo-gate-run",
           "@beep/repo-tsconfig",
           "@beep/repo-utils",
           "@beep/repo-workspaces",
@@ -5107,6 +5120,7 @@
           "@beep/repo-cli-kit",
           "@beep/repo-configs",
           "@beep/repo-docgen",
+          "@beep/repo-gate-run",
           "@beep/repo-tsconfig",
           "@beep/repo-utils",
           "@beep/repo-workspaces",
@@ -5233,6 +5247,50 @@
           "@beep/test-utils",
           "@beep/tsconfig",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/repo-gate-record",
+        "allow": [
+          "@beep/fc-runs",
+          "@beep/gate-report",
+          "@beep/identity",
+          "@beep/memfs",
+          "@beep/repo-gate-record",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/fc-runs",
+          "@beep/gate-report",
+          "@beep/identity",
+          "@beep/memfs",
+          "@beep/repo-gate-record",
+          "@beep/schema"
+        ]
+      },
+      {
+        "from": "@beep/repo-gate-run",
+        "allow": [
+          "@beep/cli-kit",
+          "@beep/fc-runs",
+          "@beep/gate-report",
+          "@beep/identity",
+          "@beep/repo-cli-kit",
+          "@beep/repo-gate-record",
+          "@beep/repo-gate-run",
+          "@beep/runtime-env",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/cli-kit",
+          "@beep/fc-runs",
+          "@beep/gate-report",
+          "@beep/identity",
+          "@beep/repo-cli-kit",
+          "@beep/repo-gate-record",
+          "@beep/repo-gate-run",
+          "@beep/runtime-env",
+          "@beep/schema"
         ]
       },
       {

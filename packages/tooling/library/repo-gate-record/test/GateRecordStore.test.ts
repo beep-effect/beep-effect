@@ -1,0 +1,206 @@
+import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
+import { GateRecord } from "@beep/gate-report/GateRecord";
+import { GateReport, Totals } from "@beep/gate-report/GateReport";
+import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
+import { RecordTarget, recordLocation } from "@beep/repo-gate-record/GatePaths";
+import { GateRecordReadError, GateRecordWriteError, recordProvenance } from "@beep/repo-gate-record/GateRecordFile";
+import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
+import { ROOT_RUNS_KEPT } from "@beep/repo-gate-record/RunId";
+import { assert, describe, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as Layer from "effect/Layer";
+import * as Path from "effect/Path";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
+import type { Vitest } from "@effect/vitest";
+
+const encoder = new TextEncoder();
+
+const record = (runId: string) =>
+  GateRecord.make({
+    generatedAt: DateTime.makeUnsafe(1000),
+    report: GateReport.make({
+      gate: "test",
+      subject: "@beep/glob",
+      itemKind: "test",
+      runId,
+      startedAt: DateTime.makeUnsafe(0),
+      durationMs: 12,
+      inputFingerprint: "fingerprint",
+      reason: "passed",
+      outcome: "all-pass",
+      units: [],
+      items: [],
+      totals: Totals.make({ collected: 1, passed: 1 }),
+    }),
+  });
+
+// Each test addresses its own package, since a layer's store is shared by
+// the tests of its block.
+const packageTarget = (name: string) =>
+  RecordTarget.cases.PackageTarget.make({ packageDir: `packages/${name}`, gate: "test" });
+const rootTarget = (runId: string) => RecordTarget.cases.RootTarget.make({ gate: "test", runId });
+const runIds = (count: number) => A.makeBy(count, (index) => `run-${index + 10}`);
+
+const LOG_TEXT = "line one\nline two ✓\n";
+const logStream = Stream.make(encoder.encode("line one\n"), encoder.encode("line two ✓\n"));
+
+const sameRecord = S.toEquivalence(GateRecord);
+
+// The rules every store obeys, live or in memory.
+const storeRules = (it: Vitest.MethodsNonLive<GateRecordStore>) => {
+  it.effect("writes the whole raw stream and counts its bytes", () =>
+    Effect.gen(function* () {
+      const store = yield* GateRecordStore;
+      const written = yield* store.writeLog(packageTarget("log"), logStream);
+      assert.strictEqual(written.path, "packages/log/.beep/gates/test/report.log");
+      assert.strictEqual(written.bytes, encoder.encode(LOG_TEXT).length);
+    })
+  );
+
+  it.effect("reads back the record it wrote, with its original run id", () =>
+    Effect.gen(function* () {
+      const store = yield* GateRecordStore;
+      const written = yield* store.writeRecord(packageTarget("read"), record("r1"));
+      const read = yield* store.readRecord(packageTarget("read"));
+      assert.strictEqual(written.path, recordLocation(packageTarget("read")).record);
+      assert.isTrue(sameRecord(read, record("r1")));
+      assert.strictEqual(recordProvenance(read, "r2"), "replay");
+      assert.strictEqual(recordProvenance("r1")(read), "fresh");
+    })
+  );
+
+  it.effect("overwrites a package record on the next run", () =>
+    Effect.gen(function* () {
+      const store = yield* GateRecordStore;
+      yield* store.writeRecord(packageTarget("again"), record("r1"));
+      yield* store.writeRecord(packageTarget("again"), record("r2"));
+      const read = yield* store.readRecord(packageTarget("again"));
+      assert.strictEqual(read.report.runId, "r2");
+    })
+  );
+
+  it.effect("keeps the newest twenty root runs of a gate, record and log", () =>
+    Effect.gen(function* () {
+      const store = yield* GateRecordStore;
+      yield* Effect.forEach(
+        runIds(ROOT_RUNS_KEPT + 2),
+        (runId) =>
+          Effect.andThen(
+            store.writeLog(rootTarget(runId), logStream),
+            store.writeRecord(rootTarget(runId), record(runId))
+          ),
+        { concurrency: 1 }
+      );
+      const kept = yield* store.listRuns("test");
+      const expired = yield* Effect.flip(store.readRecord(rootTarget("run-11")));
+      assert.strictEqual(kept.length, ROOT_RUNS_KEPT);
+      assert.strictEqual(kept[0], "run-31");
+      assert.isFalse(A.contains(kept, "run-10"));
+      assert.strictEqual(expired.reason, "missing");
+    })
+  );
+
+  it.effect("reports a missing record and lists no runs for an unused gate", () =>
+    Effect.gen(function* () {
+      const store = yield* GateRecordStore;
+      const missing = yield* Effect.flip(store.readRecord(packageTarget("missing")));
+      const runs = yield* store.listRuns("check");
+      assert.strictEqual(missing.reason, "missing");
+      assert.deepStrictEqual(runs, []);
+    })
+  );
+
+  it.effect("returns a stream failure as it is", () =>
+    Effect.gen(function* () {
+      const store = yield* GateRecordStore;
+      const failure = yield* Effect.flip(store.writeLog(packageTarget("stream"), Stream.fail("tool crashed")));
+      assert.strictEqual(failure, "tool crashed");
+    })
+  );
+};
+
+// The platform store over an in-memory file system that keeps POSIX errors
+// (EISDIR, ENOTDIR), so the platform code path runs with no disk.
+const platform = Layer.mergeAll(MemoryFileSystem.layer, Path.layer);
+
+const liveStore = GateRecordStore.layer("/repo").pipe(Layer.provideMerge(platform));
+
+describe("GateRecordStore", () => {
+  it.layer(GateRecordStore.layerMemory, { timeout: "30 seconds" })("in memory", storeRules);
+
+  it.layer(liveStore, { timeout: "30 seconds" })("on the file system", storeRules);
+
+  it.layer(platform, { timeout: "30 seconds" })("on a file system that refuses", (it) => {
+    it.effect("tells an unreadable record from a missing or invalid one", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = "/repo-unreadable";
+        const store = yield* GateRecordStore.make(root);
+        const target = packageTarget("glob");
+        const recordPath = path.join(root, recordLocation(target).record);
+        yield* fs.makeDirectory(recordPath, { recursive: true });
+        const unreadable = yield* Effect.flip(store.readRecord(target));
+        yield* fs.remove(recordPath, { recursive: true });
+        yield* fs.writeFileString(recordPath, '{"version":"gate-report/v0"}');
+        const invalid = yield* Effect.flip(store.readRecord(target));
+        assert.strictEqual(unreadable.reason, "unreadable");
+        assert.strictEqual(invalid.reason, "invalid");
+      })
+    );
+
+    it.effect("fails a listing and a retention it cannot carry out", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = "/repo-refusing";
+        const store = yield* GateRecordStore.make(root);
+        yield* fs.makeDirectory(path.join(root, ".beep/gates/test/run-00.json/held"), { recursive: true });
+        yield* fs.writeFileString(path.join(root, ".beep/gates/check"), "not a directory");
+        const listing = yield* Effect.flip(store.listRuns("check"));
+        const retention = yield* Effect.flip(
+          Effect.forEach(runIds(ROOT_RUNS_KEPT), (runId) => store.writeRecord(rootTarget(runId), record(runId)), {
+            concurrency: 1,
+          })
+        );
+        assert.instanceOf(listing, GateRecordReadError);
+        assert.strictEqual(listing.reason, "unreadable");
+        assert.instanceOf(retention, GateRecordWriteError);
+      })
+    );
+  });
+
+  it.layer(GateRecordStore.layerFailingWrites("disk full"), { timeout: "30 seconds" })("with failing writes", (it) => {
+    it.effect("fails every write with a write error and keeps nothing", () =>
+      Effect.gen(function* () {
+        const store = yield* GateRecordStore;
+        const log = yield* Effect.flip(store.writeLog(packageTarget("glob"), logStream));
+        const written = yield* Effect.flip(store.writeRecord(packageTarget("glob"), record("r1")));
+        const read = yield* Effect.flip(store.readRecord(packageTarget("glob")));
+        assert.instanceOf(log, GateRecordWriteError);
+        assert.instanceOf(written, GateRecordWriteError);
+        assert.strictEqual(read.reason, "missing");
+      })
+    );
+  });
+
+  it.layer(GateRecordStore.layerMemory, { timeout: "30 seconds" })("round trip", (it) => {
+    it.effect.prop(
+      "any record reads back equal through the store",
+      [Arbitrary.schema(GateRecord)],
+      ([generated]) =>
+        Effect.gen(function* () {
+          const store = yield* GateRecordStore;
+          yield* store.writeRecord(packageTarget("prop"), generated);
+          const read = yield* store.readRecord(packageTarget("prop"));
+          assert.isTrue(sameRecord(read, generated));
+        }),
+      { arbitrary: fcRuns(50) }
+    );
+  });
+});

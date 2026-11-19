@@ -4303,6 +4303,45 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/tooling/library/repo-gate-record": {
+      "name": "@beep/repo-gate-record",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/gate-report": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/fc-runs": "workspace:^",
+        "@beep/memfs": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
+    "packages/tooling/library/repo-gate-run": {
+      "name": "@beep/repo-gate-run",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/cli-kit": "workspace:^",
+        "@beep/gate-report": "workspace:^",
+        "@beep/identity": "workspace:^",
+        "@beep/repo-cli-kit": "workspace:^",
+        "@beep/repo-gate-record": "workspace:^",
+        "@beep/runtime-env": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/fc-runs": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/tooling/library/repo-tsconfig": {
       "name": "@beep/repo-tsconfig",
       "version": "0.0.0",
@@ -4556,6 +4595,7 @@
         "@beep/repo-cli-kit": "workspace:^",
         "@beep/repo-configs": "workspace:^",
         "@beep/repo-docgen": "workspace:^",
+        "@beep/repo-gate-run": "workspace:^",
         "@beep/repo-tsconfig": "workspace:^",
         "@beep/repo-utils": "workspace:^",
         "@beep/repo-workspaces": "workspace:^",
@@ -5570,6 +5610,10 @@
     "@beep/repo-configs": ["@beep/repo-configs@workspace:packages/tooling/policy-pack/repo-configs"],
 
     "@beep/repo-docgen": ["@beep/repo-docgen@workspace:packages/tooling/tool/docgen"],
+
+    "@beep/repo-gate-record": ["@beep/repo-gate-record@workspace:packages/tooling/library/repo-gate-record"],
+
+    "@beep/repo-gate-run": ["@beep/repo-gate-run@workspace:packages/tooling/library/repo-gate-run"],
 
     "@beep/repo-tsconfig": ["@beep/repo-tsconfig@workspace:packages/tooling/library/repo-tsconfig"],
 
