@@ -7,6 +7,7 @@ import {
   LAB_EXPORTS_START_MARKER,
   LabIdentitySegment,
 } from "@beep/repo-cli/commands/CreatePackage/internal/LabIdentitySegment";
+import { RegistryLayout, renderRegistryJson } from "@beep/repo-cli/commands/Identity/Registry";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
 import { it } from "@beep/test-runner";
@@ -166,6 +167,63 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             expect(logLines).toContain(
               "[lint:identity-registry] OK: 2 workspace packages registered; 0 lab(s) in the generated labs segment; no orphan or local root composers."
             );
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "reports declared-term registry drift and regenerates it under --fix",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const layout = RegistryLayout.of("packages/identity");
+            yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget"] });
+            yield* fs.makeDirectory(layout.shards, { recursive: true });
+            yield* fs.writeFileString(
+              `${layout.shards}/fabio.json`,
+              renderRegistryJson({
+                namespace: { prefix: "fabio", iri: "http://purl.org/spar/fabio/" },
+                terms: ["Report"],
+                bindings: [],
+                deprecations: [],
+              })
+            );
+
+            const drifted = yield* Effect.exit(runLintCommand(["identity-registry"]));
+            expectReportedExit(drifted);
+            const errorLines = yield* TestConsole.errorLines;
+            expect(errorLines).toContain(
+              `${layout.snapshot} [registry-generated-drift] The generated artifact is missing. Run \`bun run beep identity registry --write\` to regenerate.`
+            );
+
+            yield* runLintCommand(["identity-registry", "--fix"]);
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toContain(`[lint:identity-registry] regenerated ${layout.data}`);
+            const snapshotText = yield* fs.readFileString(layout.snapshot);
+            expect(snapshotText).toContain('"release": "1.0.0"');
+            yield* runLintCommand(["identity-registry"]);
+
+            yield* fs.writeFileString(
+              `${layout.shards}/fab.json`,
+              renderRegistryJson({
+                namespace: { prefix: "fab", iri: "http://purl.org/spar/fabio/" },
+                terms: [],
+                bindings: [],
+                deprecations: [],
+              })
+            );
+            const conflicted = yield* Effect.exit(runLintCommand(["identity-registry", "--fix"]));
+            expectReportedExit(conflicted);
+            const conflictLines = yield* TestConsole.errorLines;
+            expect(
+              A.some(
+                conflictLines,
+                (line) => P.isString(line) && Str.startsWith(`${layout.shards} [registry-conflict]`)(line)
+              )
+            ).toBe(true);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       LINT_TIMEOUT

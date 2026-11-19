@@ -1,0 +1,6 @@
+{
+  "namespace": { "prefix": "fabio", "iri": "http://purl.org/spar/fabio/" },
+  "terms": ["Report"],
+  "bindings": [],
+  "deprecations": []
+}

@@ -1,6 +1,6 @@
 import { fcRuns } from "@beep/fc-runs";
 import { IdentityEncoding } from "@beep/identity/IdentityRegistry";
-import { ReleaseVersion } from "@beep/identity/Term";
+import { RegistryProjection, ReleaseVersion } from "@beep/identity/Term";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import { assert, describe, it } from "@effect/vitest";
@@ -40,10 +40,15 @@ describe("identity registry parity with @beep/schema", () => {
   );
 
   it("the S.Literals domains of identity equal a LiteralKit of the same members", () => {
-    const Kit = LiteralKit(IdentityEncoding.literals);
-    assert.deepStrictEqual(Kit.literals, IdentityEncoding.literals);
-    for (const candidate of A.appendAll(IdentityEncoding.literals, ["identifier", "IRI", ""])) {
-      assert.strictEqual(S.is(Kit)(candidate), S.is(IdentityEncoding)(candidate), candidate);
+    for (const [domain, foreign] of [
+      [IdentityEncoding, ["identifier", "IRI", ""]],
+      [RegistryProjection, ["@beep/schema", "test-runner", ""]],
+    ] as const) {
+      const Kit = LiteralKit(domain.literals);
+      assert.deepStrictEqual(Kit.literals, domain.literals);
+      for (const candidate of A.appendAll<string, string>(domain.literals, foreign)) {
+        assert.strictEqual(S.is(Kit)(candidate), S.is(domain)(candidate), candidate);
+      }
     }
   });
 });

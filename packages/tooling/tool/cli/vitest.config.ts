@@ -91,6 +91,7 @@ const isolatedSuites = [
   "test/goals-set-status-closeout.test.ts",
   "test/goals-set-status-stream.test.ts",
   "test/identity-registration-removal.test.ts",
+  "test/identity-registry-generator.test.ts",
   "test/knowledge-doctor-baseline.test.ts",
   "test/knowledge-doctor.test.ts",
   "test/lab-identity-segment.test.ts",

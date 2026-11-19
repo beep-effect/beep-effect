@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core P2 lane, feat/gate-report-services)",
-    "reason": "Record the two new libraries' tasks (generated library scripts, root task definitions, no override), the repo CLI tasks whose configuration changed with its new dependency on the gate-run library, and the inputs the policy fingerprint added to the root. No qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 registry lane, goals/text-knowledge-stack-rebuild-p1b-registry)",
+    "reason": "//#lint:identity-registry gains the input glob packages/foundation/modeling/identity/registry/**/*.json because the lint now checks the registry shards and the term snapshot. No command, cache flag, output or environment changed; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-run-libraries-cache-review-2026-11-19.md",
-      "sha256": "bbbc45f4f8d6f8888e8781843104af37ac3229ad9b70a731aa7634bd3ff26c80"
+      "path": "docs/reports/identity-registry-shards-cache-review-2026-11-19.md",
+      "sha256": "ccb7e2b34f6d1a44de41d5340aef92473a1e5593395de764b3853b5f381f1d26"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "d2661d46fd5e91ccc215095fe4b8677c11837a503bbba70855a0ad714e4bcc5c"
+      "sha256": "06b4dc77118ed7b178c188d326241c01fa092805e14545a4fe8ae593045a49e7"
     }
   ],
   "nodes": [
@@ -1566,6 +1566,7 @@
           "./tsconfig.base.json",
           "./tsconfig.json",
           "./tsconfig.packages.json",
+          "packages/foundation/modeling/identity/registry/**/*.json",
           "packages/foundation/modeling/identity/src/packages.ts",
           "{packages,apps,infra,tools,scratchpad}/**/*.{ts,tsx}"
         ],

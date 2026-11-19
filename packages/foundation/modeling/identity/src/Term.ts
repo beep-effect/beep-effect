@@ -20,12 +20,12 @@ import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { IRI } from "./Iri.ts";
 import { isSafeLocal, SafePnPrefix } from "./PnLocal.ts";
 import { $IdentityId } from "./packages.ts";
-import type * as Result from "effect/Result";
 
 const $I = $IdentityId.create("Term");
 
@@ -750,3 +750,630 @@ export const snapshotViolations: {
       namespaceViolations(previous, next),
     ])
 );
+
+/**
+ * The packages a registry shard may project its rows into.
+ *
+ * **Details**
+ *
+ * A package that `@beep/identity` depends on cannot import the registry, so the
+ * generator writes such a shard's rows into that package as plain literals.
+ *
+ * **Example** (Check a projection target)
+ *
+ * ```ts import.meta.vitest name="Check a projection target"
+ * import * as S from "effect/Schema"
+ * import { RegistryProjection } from "@beep/identity/Term"
+ *
+ * S.is(RegistryProjection)("@beep/test-runner") // => true
+ * S.is(RegistryProjection)("@beep/schema") // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const RegistryProjection = S.Literals(["@beep/test-runner"]).pipe(
+  $I.annoteSchema("RegistryProjection", { description: "A package a registry shard projects its rows into." })
+);
+
+/**
+ * Decoded type of {@link RegistryProjection}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RegistryProjection = typeof RegistryProjection.Type;
+
+/**
+ * A binding row of a source shard: a code identity bound to a local of the shard's namespace.
+ *
+ * **Example** (Bind a code identity inside a shard)
+ *
+ * ```ts import.meta.vitest name="Bind a code identity inside a shard"
+ * import { CodeId, ReleaseVersion, ShardBinding, TermLocal } from "@beep/identity/Term"
+ *
+ * const binding = ShardBinding.make({
+ *   code: CodeId.make("@beep/test-runner/Vitest/TestHang"),
+ *   local: TermLocal.make("TestHang"),
+ *   since: ReleaseVersion.make("1.0.0")
+ * })
+ * binding.local // => "TestHang"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ShardBinding extends S.Opaque<ShardBinding, { readonly brand: unique symbol }>()(
+  S.Struct({
+    code: CodeId.annotateKey({ description: "Code identity of the kind today." }),
+    local: TermLocal.annotateKey({ description: "Local of the shard namespace the code identity is bound to." }),
+    since: ReleaseVersion.annotateKey({ description: "Vocabulary release that first published the binding." }),
+  }).pipe($I.annoteSchema("ShardBinding", { description: "A source-shard binding of a code identity to a local." }))
+) {}
+
+/**
+ * Encoded representation of {@link ShardBinding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ShardBinding {
+  /**
+   * Encoded shard binding row.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ShardBinding.Encoded;
+}
+
+/**
+ * A deprecation row of a source shard, whose replacement is a local of the shard's namespace.
+ *
+ * **Example** (Deprecate a re-minted term inside a shard)
+ *
+ * ```ts import.meta.vitest name="Deprecate a re-minted term inside a shard"
+ * import * as O from "effect/Option"
+ * import { ReleaseVersion, ShardDeprecation, TermIri, TermLocal } from "@beep/identity/Term"
+ *
+ * const deprecation = ShardDeprecation.make({
+ *   term: TermIri.make("https://beep-effect.com/ns/test-utils/Vitest/TestHang"),
+ *   since: ReleaseVersion.make("1.0.0"),
+ *   replacement: O.some(TermLocal.make("TestHang"))
+ * })
+ * O.getOrThrow(deprecation.replacement) // => "TestHang"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ShardDeprecation extends S.Opaque<ShardDeprecation, { readonly brand: unique symbol }>()(
+  S.Struct({
+    term: TermIri.annotateKey({ description: "The deprecated term IRI, under any namespace." }),
+    since: ReleaseVersion.annotateKey({ description: "Vocabulary release that deprecated the term." }),
+    replacement: S.OptionFromOptionalKey(TermLocal).annotateKey({
+      description: "Local of the shard namespace that succeeds the term, when one exists.",
+    }),
+  }).pipe($I.annoteSchema("ShardDeprecation", { description: "A source-shard term deprecation." }))
+) {}
+
+/**
+ * Encoded representation of {@link ShardDeprecation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ShardDeprecation {
+  /**
+   * Encoded shard deprecation row; an absent `replacement` key means no successor.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ShardDeprecation.Encoded;
+}
+
+const localKey = (local: TermLocal): string => local;
+const shardBindingKey = (binding: ShardBinding): string => binding.code;
+const shardDeprecationKey = (deprecation: ShardDeprecation): string => deprecation.term;
+const isIri = S.is(IRI);
+
+const RegistryShardFields = S.Struct({
+  namespace: Namespace,
+  terms: S.Array(TermLocal)
+    .check(strictlyAscending(localKey, "ShardTerm"))
+    .annotateKey({ description: "Live term locals, ascending." }),
+  bindings: S.Array(ShardBinding)
+    .check(strictlyAscending(shardBindingKey, "ShardBinding"))
+    .annotateKey({ description: "Bindings of code identities to locals, ascending by code identity." }),
+  deprecations: S.Array(ShardDeprecation)
+    .check(strictlyAscending(shardDeprecationKey, "ShardDeprecation"))
+    .annotateKey({ description: "Append-only deprecations, ascending by term." }),
+  projection: S.OptionFromOptionalKey(RegistryProjection).annotateKey({
+    description: "Package the shard's rows are also projected into, when one is named.",
+  }),
+});
+
+const shardLocals = (shard: typeof RegistryShardFields.Type): ReadonlyArray<string> =>
+  A.flatten([
+    shard.terms,
+    A.map(shard.bindings, (binding) => binding.local),
+    A.getSomes(A.map(shard.deprecations, (deprecation) => deprecation.replacement)),
+  ]);
+
+const shardIriIssues = (shard: typeof RegistryShardFields.Type): ReadonlyArray<string> =>
+  pipe(
+    shardLocals(shard),
+    A.filter((local) => !isIri(`${shard.namespace.iri}${local}`)),
+    A.map((local) => `The namespace IRI followed by "${local}" is not an IRI.`)
+  );
+
+/**
+ * One source shard of the registry: one namespace, its locals, its bindings and its deprecations.
+ *
+ * **Details**
+ *
+ * A shard is the encoded JSON file `registry/namespaces/<prefix>.json` of the
+ * identity package. Every collection is strictly ascending, and every local
+ * must form an IRI under the namespace, so a decoded shard always yields valid
+ * terms.
+ *
+ * **Example** (Decode a shard)
+ *
+ * ```ts import.meta.vitest name="Decode a shard"
+ * import * as S from "effect/Schema"
+ * import { RegistryShard } from "@beep/identity/Term"
+ *
+ * const shard = S.decodeUnknownSync(RegistryShard)({
+ *   namespace: { prefix: "fabio", iri: "http://purl.org/spar/fabio/" },
+ *   terms: ["Report"],
+ *   bindings: [],
+ *   deprecations: []
+ * })
+ * shard.namespace.prefix // => "fabio"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RegistryShard extends S.Opaque<RegistryShard, { readonly brand: unique symbol }>()(
+  RegistryShardFields.check(
+    S.makeFilter(
+      shardIriIssues,
+      $I.annote("RegistryShardIris", {
+        title: "Registry Shard IRIs",
+        description: "Every local of the shard forms an IRI under the shard namespace.",
+        message: "Expected every local of the shard to form an IRI under the shard namespace.",
+      })
+    )
+  ).pipe($I.annoteSchema("RegistryShard", { description: "One source shard of the identity registry." }))
+) {}
+
+/**
+ * Encoded representation of {@link RegistryShard}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RegistryShard {
+  /**
+   * Encoded shard, the shape of a `registry/namespaces/<prefix>.json` file.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RegistryShard.Encoded;
+}
+
+/**
+ * Every way a set of shards fails to form one registry table.
+ *
+ * **Details**
+ *
+ * - `DuplicatePrefix` and `DuplicateNamespaceIri`: prefixes and namespace IRIs are unique.
+ * - `DuplicateTermIri`: a term IRI is declared once, so contraction is an exact lookup.
+ * - `TermOutsideNamespace`: a term IRI is its namespace IRI followed by its local.
+ * - `DuplicateBinding`: a code identity is bound at most once.
+ * - `BindingToUnknownTerm`: a binding names a live term.
+ * - `DuplicateDeprecation`: a term is deprecated at most once.
+ * - `DeprecatedTermLive`: a deprecated IRI is not live.
+ * - `ReplacementUnknown` and `ReplacementCycle`: a replacement chain ends at a live term.
+ *
+ * **Example** (Make a conflict)
+ *
+ * ```ts import.meta.vitest name="Make a conflict"
+ * import { RegistryConflict } from "@beep/identity/Term"
+ *
+ * const conflict = RegistryConflict.cases.DuplicatePrefix.make({ prefix: "dc", iris: [] })
+ * conflict._tag // => "DuplicatePrefix"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RegistryConflict = S.TaggedUnion({
+  DuplicatePrefix: { prefix: SafePnPrefix, iris: S.Array(IRI) },
+  DuplicateNamespaceIri: { iri: IRI, prefixes: S.Array(SafePnPrefix) },
+  DuplicateTermIri: { term: TermIri, namespaces: S.Array(SafePnPrefix) },
+  TermOutsideNamespace: { term: TermIri, namespace: SafePnPrefix },
+  DuplicateBinding: { code: CodeId, terms: S.Array(TermIri) },
+  BindingToUnknownTerm: { code: CodeId, term: TermIri },
+  DuplicateDeprecation: { term: TermIri },
+  DeprecatedTermLive: { term: TermIri },
+  ReplacementUnknown: { term: TermIri, replacement: TermIri },
+  ReplacementCycle: { term: TermIri },
+}).pipe($I.annoteSchema("RegistryConflict", { description: "A reason shards do not form one registry table." }));
+
+/**
+ * Decoded type of {@link RegistryConflict}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type RegistryConflict = typeof RegistryConflict.Type;
+
+const Conflict = RegistryConflict.cases;
+
+/**
+ * A one-line, human-readable statement of a registry conflict.
+ *
+ * **Example** (Describe a conflict)
+ *
+ * ```ts import.meta.vitest name="Describe a conflict"
+ * import { RegistryConflict, registryConflictMessage, TermIri } from "@beep/identity/Term"
+ *
+ * const conflict = RegistryConflict.cases.DeprecatedTermLive.make({ term: TermIri.make("http://purl.org/spar/fabio/Report") })
+ * registryConflictMessage(conflict) // => "http://purl.org/spar/fabio/Report is deprecated and still declared live."
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
+export const registryConflictMessage: (conflict: RegistryConflict) => string = RegistryConflict.match({
+  DuplicatePrefix: ({ prefix, iris }) => `Prefix "${prefix}" is declared more than once (${A.join(iris, ", ")}).`,
+  DuplicateNamespaceIri: ({ iri, prefixes }) =>
+    `Namespace IRI ${iri} is declared under more than one prefix (${A.join(prefixes, ", ")}).`,
+  DuplicateTermIri: ({ term, namespaces }) =>
+    `Term ${term} is declared more than once (in ${A.join(namespaces, ", ")}).`,
+  TermOutsideNamespace: ({ term, namespace }) =>
+    `Term ${term} is not its namespace "${namespace}" IRI followed by its local.`,
+  DuplicateBinding: ({ code, terms }) => `Code identity ${code} is bound more than once (${A.join(terms, ", ")}).`,
+  BindingToUnknownTerm: ({ code, term }) => `Code identity ${code} is bound to ${term}, which is not a live term.`,
+  DuplicateDeprecation: ({ term }) => `Term ${term} is deprecated more than once.`,
+  DeprecatedTermLive: ({ term }) => `${term} is deprecated and still declared live.`,
+  ReplacementUnknown: ({ term, replacement }) =>
+    `The replacement chain of ${term} reaches ${replacement}, which is neither live nor deprecated with a successor.`,
+  ReplacementCycle: ({ term }) => `The replacement chain of ${term} returns to a term it already visited.`,
+});
+
+const RegistryTableFields = S.Struct({
+  namespaces: S.Array(Namespace)
+    .check(strictlyAscending(namespaceKey, "RegistryNamespace"))
+    .annotateKey({ description: "Every namespace, ascending by prefix." }),
+  terms: S.Array(Term)
+    .check(strictlyAscending((term: Term) => term.iri, "RegistryTerm"))
+    .annotateKey({ description: "Every live term, ascending by IRI." }),
+  bindings: S.Array(TermBinding)
+    .check(strictlyAscending(bindingKey, "RegistryBinding"))
+    .annotateKey({ description: "Every binding, ascending by code identity." }),
+  deprecations: S.Array(Deprecation)
+    .check(strictlyAscending(deprecationKey, "RegistryDeprecation"))
+    .annotateKey({ description: "Every deprecation, ascending by term." }),
+});
+
+type RegistryRows = typeof RegistryTableFields.Type;
+
+const duplicateGroups = <Row>(
+  rows: ReadonlyArray<Row>,
+  key: (row: Row) => string
+): ReadonlyArray<A.NonEmptyReadonlyArray<Row>> =>
+  pipe(
+    A.groupBy(rows, key),
+    R.values,
+    A.filter((group) => group.length > 1),
+    A.sort(Order.mapInput(Order.String, (group: A.NonEmptyReadonlyArray<Row>) => key(A.headNonEmpty(group))))
+  );
+
+const sortedStrings = <Value extends string>(values: ReadonlyArray<Value>): Array<Value> =>
+  A.sort(A.dedupe(values), Order.String);
+
+const followReplacement = (
+  live: HashSet.HashSet<string>,
+  byTerm: HashMap.HashMap<string, Deprecation>,
+  origin: TermIri,
+  current: TermIri,
+  seen: HashSet.HashSet<string>
+): O.Option<RegistryConflict> =>
+  HashSet.has(live, current)
+    ? O.none()
+    : HashSet.has(seen, current)
+      ? Conflict.ReplacementCycle.makeOption({ term: origin })
+      : pipe(
+          HashMap.get(byTerm, current),
+          O.flatMap((successor) => successor.replacement),
+          O.match({
+            onNone: () => Conflict.ReplacementUnknown.makeOption({ term: origin, replacement: current }),
+            onSome: (next) => followReplacement(live, byTerm, origin, next, HashSet.add(seen, current)),
+          })
+        );
+
+const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> => {
+  const live = HashSet.fromIterable(
+    A.appendAll(
+      A.map(rows.terms, (term) => term.iri),
+      A.map(rows.namespaces, (namespace): string => namespace.iri)
+    )
+  );
+  const namespaceByPrefix = indexBy(rows.namespaces, namespaceKey);
+  const deprecationByTerm = indexBy(rows.deprecations, deprecationKey);
+  return A.flatten([
+    A.map(duplicateGroups(rows.namespaces, namespaceKey), (group) =>
+      Conflict.DuplicatePrefix.make({
+        prefix: A.headNonEmpty(group).prefix,
+        iris: sortedStrings(A.map(group, (namespace) => namespace.iri)),
+      })
+    ),
+    A.map(
+      duplicateGroups(rows.namespaces, (namespace) => namespace.iri),
+      (group) =>
+        Conflict.DuplicateNamespaceIri.make({
+          iri: A.headNonEmpty(group).iri,
+          prefixes: sortedStrings(A.map(group, namespaceKey)),
+        })
+    ),
+    A.map(
+      duplicateGroups(rows.terms, (term) => term.iri),
+      (group) =>
+        Conflict.DuplicateTermIri.make({
+          term: A.headNonEmpty(group).iri,
+          namespaces: sortedStrings(A.map(group, (term) => term.namespace)),
+        })
+    ),
+    pipe(
+      rows.terms,
+      A.filter((term) =>
+        O.match(HashMap.get(namespaceByPrefix, term.namespace), {
+          onNone: () => true,
+          onSome: (namespace) => term.iri !== `${namespace.iri}${term.local}`,
+        })
+      ),
+      A.map((term) => Conflict.TermOutsideNamespace.make({ term: term.iri, namespace: term.namespace }))
+    ),
+    A.map(duplicateGroups(rows.bindings, bindingKey), (group) =>
+      Conflict.DuplicateBinding.make({
+        code: A.headNonEmpty(group).code,
+        terms: sortedStrings(A.map(group, (binding) => binding.term)),
+      })
+    ),
+    pipe(
+      rows.bindings,
+      A.filter((binding) => !HashSet.has(live, binding.term)),
+      A.map((binding) => Conflict.BindingToUnknownTerm.make({ code: binding.code, term: binding.term }))
+    ),
+    A.map(duplicateGroups(rows.deprecations, deprecationKey), (group) =>
+      Conflict.DuplicateDeprecation.make({ term: A.headNonEmpty(group).term })
+    ),
+    pipe(
+      rows.deprecations,
+      A.filter((deprecation) => HashSet.has(live, deprecation.term)),
+      A.map((deprecation) => Conflict.DeprecatedTermLive.make({ term: deprecation.term }))
+    ),
+    A.filterMap(rows.deprecations, (deprecation) =>
+      pipe(
+        deprecation.replacement,
+        O.flatMap((replacement) =>
+          followReplacement(live, deprecationByTerm, deprecation.term, replacement, HashSet.make(deprecation.term))
+        ),
+        Result.fromOption(() => deprecation)
+      )
+    ),
+  ]);
+};
+
+const termIriOf = (namespace: Namespace, local: TermLocal): TermIri => TermIri.make(`${namespace.iri}${local}`);
+
+const releaseParts = (release: ReleaseVersion): readonly [number, number] => {
+  const [major = "0", minor = "0"] = Str.split(".")(release);
+  return [Number(major), Number(minor)];
+};
+
+const nextMajor = (release: ReleaseVersion): ReleaseVersion =>
+  ReleaseVersion.make(`${releaseParts(release)[0] + 1}.0.0`);
+
+const nextMinor = (release: ReleaseVersion): ReleaseVersion => {
+  const [major, minor] = releaseParts(release);
+  return ReleaseVersion.make(`${major}.${minor + 1}.0`);
+};
+
+const genesisRelease = ReleaseVersion.make("1.0.0");
+const snapshotEquivalence = S.toEquivalence(TermSnapshot);
+
+const snapshotAt = (table: RegistryRows, release: ReleaseVersion): TermSnapshot =>
+  Result.getOrThrow(
+    TermSnapshot.fromRows({
+      release,
+      namespaces: table.namespaces,
+      terms: A.appendAll(
+        A.map(table.terms, (term) => term.iri),
+        A.map(table.namespaces, (namespace) => TermIri.make(namespace.iri))
+      ),
+      bindings: table.bindings,
+      deprecations: table.deprecations,
+    })
+  );
+
+const nextRelease = (previous: TermSnapshot, unchanged: TermSnapshot): ReleaseVersion => {
+  if (snapshotEquivalence(unchanged, previous)) {
+    return previous.release;
+  }
+  if (previous.release === TermSnapshot.empty.release) {
+    return genesisRelease;
+  }
+  const deprecated = HashSet.fromIterable(A.map(previous.deprecations, deprecationKey));
+  return A.some(unchanged.deprecations, (deprecation) => !HashSet.has(deprecated, deprecation.term))
+    ? nextMajor(previous.release)
+    : nextMinor(previous.release);
+};
+
+/**
+ * The one registry table: every namespace, live term, binding and deprecation.
+ *
+ * **Details**
+ *
+ * The table's invariants are a schema check, so decoding refuses a table with
+ * a {@link RegistryConflict}. {@link RegistryTable.fromShards} is the
+ * constructor the generator uses.
+ *
+ * **Example** (Build a table from shards)
+ *
+ * ```ts import.meta.vitest name="Build a table from shards"
+ * import * as Result from "effect/Result"
+ * import * as S from "effect/Schema"
+ * import { RegistryShard, RegistryTable } from "@beep/identity/Term"
+ *
+ * const fabio = S.decodeUnknownSync(RegistryShard)({
+ *   namespace: { prefix: "fabio", iri: "http://purl.org/spar/fabio/" },
+ *   terms: ["Report"],
+ *   bindings: [],
+ *   deprecations: []
+ * })
+ * const table = Result.getOrThrow(RegistryTable.fromShards([fabio]))
+ * table.terms[0]?.iri // => "http://purl.org/spar/fabio/Report"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: unique symbol }>()(
+  RegistryTableFields.check(
+    S.makeFilter(
+      (rows: RegistryRows) => A.map(registryConflicts(rows), registryConflictMessage),
+      $I.annote("RegistryTableInvariants", {
+        title: "Registry Table Invariants",
+        description: "The table has no registry conflict.",
+        message: "Expected a registry table with no conflict.",
+      })
+    )
+  ).pipe($I.annoteSchema("RegistryTable", { description: "The one identity registry table." }))
+) {
+  /**
+   * Build the table from source shards, or return every conflict they hold.
+   *
+   * **Details**
+   *
+   * Conflicts are ordered by kind and then by key, so equal shards give equal
+   * results whatever their input order.
+   *
+   * **Example** (Refuse two shards with one prefix)
+   *
+   * ```ts import.meta.vitest name="Refuse two shards with one prefix"
+   * import * as A from "effect/Array"
+   * import * as Result from "effect/Result"
+   * import * as S from "effect/Schema"
+   * import { RegistryShard, RegistryTable } from "@beep/identity/Term"
+   *
+   * const shard = (iri: string) =>
+   *   S.decodeUnknownSync(RegistryShard)({ namespace: { prefix: "ex", iri }, terms: [], bindings: [], deprecations: [] })
+   * const result = RegistryTable.fromShards([shard("https://a.example/"), shard("https://b.example/")])
+   * Result.isFailure(result) && A.map(result.failure, (conflict) => conflict._tag) // => ["DuplicatePrefix"]
+   * ```
+   *
+   * @category constructors
+   * @since 0.0.0
+   */
+  static readonly fromShards = (
+    shards: Iterable<RegistryShard>
+  ): Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>> => {
+    const all = A.fromIterable(shards);
+    const rows: RegistryRows = {
+      namespaces: A.map(all, (shard) => shard.namespace),
+      terms: A.flatMap(all, (shard) => A.map(shard.terms, (local) => Term.of(shard.namespace, local))),
+      bindings: A.flatMap(all, (shard) =>
+        A.map(shard.bindings, (binding) =>
+          TermBinding.make({
+            code: binding.code,
+            term: termIriOf(shard.namespace, binding.local),
+            since: binding.since,
+          })
+        )
+      ),
+      deprecations: A.flatMap(all, (shard) =>
+        A.map(shard.deprecations, (deprecation) =>
+          Deprecation.make({
+            term: deprecation.term,
+            since: deprecation.since,
+            replacement: O.map(deprecation.replacement, (local) => termIriOf(shard.namespace, local)),
+          })
+        )
+      ),
+    };
+    const conflicts = registryConflicts(rows);
+    return A.isReadonlyArrayNonEmpty(conflicts)
+      ? Result.fail(conflicts)
+      : Result.succeed(
+          RegistryTable.make({
+            namespaces: canonicalRows(rows.namespaces, namespaceKey),
+            terms: canonicalRows(rows.terms, (term) => term.iri),
+            bindings: canonicalRows(rows.bindings, bindingKey),
+            deprecations: canonicalRows(rows.deprecations, deprecationKey),
+          })
+        );
+  };
+
+  /**
+   * Project the table to the term-stability snapshot that succeeds `previous`.
+   *
+   * **Details**
+   *
+   * The snapshot's `terms` hold every live term IRI and every namespace IRI.
+   * Its `release` is `previous.release` when nothing changed, `1.0.0` when
+   * `previous` is the empty snapshot, the next major when the table adds a
+   * deprecation and the next minor for any other change. Rows keep their own
+   * `since`.
+   *
+   * **Example** (Take the first snapshot)
+   *
+   * ```ts import.meta.vitest name="Take the first snapshot"
+   * import * as Result from "effect/Result"
+   * import * as S from "effect/Schema"
+   * import { RegistryShard, RegistryTable, TermSnapshot } from "@beep/identity/Term"
+   *
+   * const fabio = S.decodeUnknownSync(RegistryShard)({
+   *   namespace: { prefix: "fabio", iri: "http://purl.org/spar/fabio/" },
+   *   terms: ["Report"],
+   *   bindings: [],
+   *   deprecations: []
+   * })
+   * const snapshot = RegistryTable.snapshot(Result.getOrThrow(RegistryTable.fromShards([fabio])), TermSnapshot.empty)
+   * snapshot.release // => "1.0.0"
+   * snapshot.terms // => ["http://purl.org/spar/fabio/", "http://purl.org/spar/fabio/Report"]
+   * ```
+   *
+   * @category projections
+   * @since 0.0.0
+   */
+  static readonly snapshot: {
+    (previous: TermSnapshot): (table: RegistryTable) => TermSnapshot;
+    (table: RegistryTable, previous: TermSnapshot): TermSnapshot;
+  } = dual(2, (table: RegistryTable, previous: TermSnapshot): TermSnapshot => {
+    const unchanged = snapshotAt(table, previous.release);
+    const release = nextRelease(previous, unchanged);
+    return release === previous.release ? unchanged : snapshotAt(table, release);
+  });
+}
+
+/**
+ * Encoded representation of {@link RegistryTable}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RegistryTable {
+  /**
+   * Encoded registry table.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RegistryTable.Encoded;
+}

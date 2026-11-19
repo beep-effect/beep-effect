@@ -1,0 +1,27 @@
+{
+  "namespace": {
+    "prefix": "rdf",
+    "iri": "http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+  },
+  "terms": [
+    "Alt",
+    "Bag",
+    "HTML",
+    "List",
+    "Property",
+    "Seq",
+    "Statement",
+    "XMLLiteral",
+    "first",
+    "langString",
+    "nil",
+    "object",
+    "predicate",
+    "rest",
+    "subject",
+    "type",
+    "value"
+  ],
+  "bindings": [],
+  "deprecations": []
+}
