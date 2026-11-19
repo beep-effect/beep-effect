@@ -23,7 +23,7 @@ const $I = $XlsxId.create("XlsxOptions");
  *
  * **Example** (The starting sheet choice)
  *
- * ```ts
+ * ```ts import.meta.vitest name="The starting sheet choice"
  * import { XlsxAllSheets, XlsxReadOptions } from "@beep/xlsx"
  * import * as S from "effect/Schema"
  *
@@ -42,7 +42,7 @@ export class XlsxAllSheets extends S.Opaque<XlsxAllSheets, { readonly brand: uni
  *
  * **Example** (Read one sheet by name)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read one sheet by name"
  * import {
  *   Xlsx,
  *   XlsxCell,
@@ -92,7 +92,7 @@ export class XlsxNamedSheets extends S.Opaque<XlsxNamedSheets, { readonly brand:
  *
  * **Example** (Choose the first sheet)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Choose the first sheet"
  * import { XlsxFirstSheet, XlsxReadOptions } from "@beep/xlsx"
  *
  * const options = XlsxReadOptions.make({ sheets: XlsxFirstSheet.make({}) })
@@ -111,7 +111,7 @@ export class XlsxFirstSheet extends S.Opaque<XlsxFirstSheet, { readonly brand: u
  *
  * **Example** (Describe a choice)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Describe a choice"
  * import { XlsxNamedSheets, XlsxSheetChoice } from "@beep/xlsx"
  *
  * const describe = (choice: XlsxSheetChoice): string =>
@@ -159,7 +159,7 @@ const size = (fallback: () => ByteSize.ByteSize, description: string) =>
  *
  * **Example** (Tighten one cap)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Tighten one cap"
  * import { XlsxLimits, XlsxReadOptions } from "@beep/xlsx"
  * import * as ByteSize from "effect/ByteSize"
  *
@@ -194,7 +194,7 @@ export class XlsxLimits extends S.Opaque<XlsxLimits, { readonly brand: unique sy
  *
  * **Example** (Read with the starting options)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read with the starting options"
  * import { XlsxReadOptions } from "@beep/xlsx"
  *
  * XlsxReadOptions.default.sheets.kind // => "All"
@@ -212,7 +212,6 @@ export class XlsxReadOptions extends S.Opaque<XlsxReadOptions, { readonly brand:
       S.withDecodingDefaultTypeKey(Effect.sync(() => XlsxAllSheets.make({})))
     ),
     limits: XlsxLimits.pipe(
-      S.annotateKey({ description: "The caps the file is held to" }),
       S.withConstructorDefault(Effect.sync(() => XlsxLimits.default)),
       S.withDecodingDefaultTypeKey(Effect.sync(() => XlsxLimits.default))
     ),
@@ -227,7 +226,7 @@ export class XlsxReadOptions extends S.Opaque<XlsxReadOptions, { readonly brand:
  *
  * **Example** (Accepted values)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Accepted values"
  * import { XlsxCompression } from "@beep/xlsx"
  * import * as S from "effect/Schema"
  *
@@ -255,7 +254,7 @@ export type XlsxCompression = typeof XlsxCompression.Type;
  *
  * **Example** (Store parts without deflating)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Store parts without deflating"
  * import { Xlsx, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet, XlsxWriteOptions } from "@beep/xlsx"
  * import * as Effect from "effect/Effect"
  *
@@ -292,7 +291,7 @@ export class XlsxWriteOptions extends S.Opaque<XlsxWriteOptions, { readonly bran
  *
  * **Example** (A codec that reads only the first sheet)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A codec that reads only the first sheet"
  * import {
  *   Xlsx,
  *   XlsxCell,
@@ -335,12 +334,10 @@ export class XlsxWriteOptions extends S.Opaque<XlsxWriteOptions, { readonly bran
 export class XlsxCodecOptions extends S.Opaque<XlsxCodecOptions, { readonly brand: unique symbol }>()(
   S.Struct({
     read: XlsxReadOptions.pipe(
-      S.annotateKey({ description: "How the codec reads" }),
       S.withConstructorDefault(Effect.sync(() => XlsxReadOptions.default)),
       S.withDecodingDefaultTypeKey(Effect.sync(() => XlsxReadOptions.default))
     ),
     write: XlsxWriteOptions.pipe(
-      S.annotateKey({ description: "How the codec writes" }),
       S.withConstructorDefault(Effect.sync(() => XlsxWriteOptions.default)),
       S.withDecodingDefaultTypeKey(Effect.sync(() => XlsxWriteOptions.default))
     ),

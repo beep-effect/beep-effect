@@ -6,57 +6,61 @@
 // Notice: the format behaviour here follows SheetJS (https://sheetjs.com, Apache License 2.0), which is also this
 // package's test oracle (test/oracle.property.test.ts). The code is this package's own.
 import * as A from "effect/Array";
+import { dual } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
+import {
+  XlsxDateFormat,
+  XlsxFixedFormat,
+  XlsxGeneralFormat,
+  XlsxOtherFormat,
+  XlsxZeroPaddedFormat,
+} from "../XlsxFormatKind.schema.ts";
 import { partsOf, SerialParts } from "./serial.ts";
+import type { XlsxFormatKind } from "../XlsxFormatKind.schema.ts";
+import type { XlsxDateSystem } from "../XlsxSerial.schema.ts";
 
-/** What a format code is, to this package. */
-export type RawFormatKind =
-  | { readonly kind: "General" }
-  | { readonly kind: "Date" }
-  | { readonly kind: "ZeroPadded"; readonly width: number }
-  | {
-      readonly kind: "Fixed";
-      readonly decimals: number;
-      readonly thousands: boolean;
-      readonly percent: boolean;
-      readonly prefix: string;
-      readonly suffix: string;
-    }
-  | { readonly kind: "Other" };
+/** The format codes Excel has built in (ECMA-376 part 1, 18.8.30), as far as a file may leave them unwritten. */
+const builtins: ReadonlyArray<readonly [id: number, code: string]> = [
+  [0, "General"],
+  [1, "0"],
+  [2, "0.00"],
+  [3, "#,##0"],
+  [4, "#,##0.00"],
+  [9, "0%"],
+  [10, "0.00%"],
+  [11, "0.00E+00"],
+  [12, "# ?/?"],
+  [13, "# ??/??"],
+  [14, "m/d/yy"],
+  [15, "d-mmm-yy"],
+  [16, "d-mmm"],
+  [17, "mmm-yy"],
+  [18, "h:mm AM/PM"],
+  [19, "h:mm:ss AM/PM"],
+  [20, "h:mm"],
+  [21, "h:mm:ss"],
+  [22, "m/d/yy h:mm"],
+  [37, "#,##0 ;(#,##0)"],
+  [38, "#,##0 ;[Red](#,##0)"],
+  [39, "#,##0.00;(#,##0.00)"],
+  [40, "#,##0.00;[Red](#,##0.00)"],
+  [45, "mm:ss"],
+  [46, "[h]:mm:ss"],
+  [47, "mmss.0"],
+  [48, "##0.0E+0"],
+  [49, "@"],
+];
 
-/** The format codes Excel has built in, by id (ECMA-376 part 1, 18.8.30), as far as a file may leave them unwritten. */
-export const builtinFormats: { readonly [id: number]: string } = {
-  0: "General",
-  1: "0",
-  2: "0.00",
-  3: "#,##0",
-  4: "#,##0.00",
-  9: "0%",
-  10: "0.00%",
-  11: "0.00E+00",
-  12: "# ?/?",
-  13: "# ??/??",
-  14: "m/d/yy",
-  15: "d-mmm-yy",
-  16: "d-mmm",
-  17: "mmm-yy",
-  18: "h:mm AM/PM",
-  19: "h:mm:ss AM/PM",
-  20: "h:mm",
-  21: "h:mm:ss",
-  22: "m/d/yy h:mm",
-  37: "#,##0 ;(#,##0)",
-  38: "#,##0 ;[Red](#,##0)",
-  39: "#,##0.00;(#,##0.00)",
-  40: "#,##0.00;[Red](#,##0.00)",
-  45: "mm:ss",
-  46: "[h]:mm:ss",
-  47: "mmss.0",
-  48: "##0.0E+0",
-  49: "@",
-};
+/** The code Excel has built in under each id. */
+export const builtinFormats: HashMap.HashMap<number, string> = HashMap.fromIterable(builtins);
+
+/** Excel's own id for each built-in code; the list runs in rising id order, so the lowest id is the last one set. */
+export const builtinIds: HashMap.HashMap<string, number> = HashMap.fromIterable(
+  A.map(A.reverse(builtins), ([id, code]) => [code, id] as const)
+);
 
 const isGeneralAt = (code: string, at: number): boolean => Str.toLowerCase(Str.slice(at, at + 7)(code)) === "general";
 const elapsed = /^\[(h+|m+|s+)\]$/i;
@@ -73,6 +77,8 @@ const blockEnd = (code: string, at: number): number => {
  * Whether a format code shows its number as a date or a time: it has a year, month, day, hour or second letter, an
  * AM/PM mark or an elapsed-time block outside quotes, escapes and the word General.
  */
+// crispen: the scanners of a format code (this one, `literalFrom`, `firstSection`, `dateTokens`) are cursor
+// loops: a code is read once per style and once per displayed value, and each step depends on the character before.
 export const isDateFormat = (code: string): boolean => {
   let i = 0;
   while (i < code.length) {
@@ -134,25 +140,32 @@ const literalFrom = (code: string, at: number): readonly [text: string, next: nu
   return [text, i];
 };
 
-/** What a format code is. A code with sections, colours, conditions, fractions or exponents is `Other`. */
-export const classify = (code: string): RawFormatKind => {
-  if (code === "" || Str.toLowerCase(code) === "general") return { kind: "General" };
-  if (isDateFormat(code)) return { kind: "Date" };
-  if (zeroPadded.test(code)) return { kind: "ZeroPadded", width: code.length };
+const other = (): XlsxFormatKind => XlsxOtherFormat.make({});
+
+/**
+ * What a format code is. A code with sections, colours, conditions, fractions or exponents is `Other`, and so is a
+ * zero-padded or plain pattern past the bounds its schema holds: the kind is the one thing `shown` renders from.
+ */
+export const classify = (code: string): XlsxFormatKind => {
+  if (code === "" || Str.toLowerCase(code) === "general") return XlsxGeneralFormat.make({});
+  if (isDateFormat(code)) return XlsxDateFormat.make({});
+  if (zeroPadded.test(code)) return O.getOrElse(XlsxZeroPaddedFormat.makeOption({ width: code.length }), other);
   const [prefix, start] = literalFrom(code, 0);
   let end = start;
   while (end < code.length && Str.includes(code[end] ?? " ")("#,0.%")) end += 1;
   const [suffix, rest] = literalFrom(code, end);
   const found = plain.exec(Str.slice(start, end)(code));
-  if (found === null || rest !== code.length) return { kind: "Other" };
-  return {
-    kind: "Fixed",
-    decimals: (found[2] ?? "").length,
-    thousands: found[1] === "#,##0",
-    percent: found[3] === "%",
-    prefix,
-    suffix,
-  };
+  if (found === null || rest !== code.length) return other();
+  return O.getOrElse(
+    XlsxFixedFormat.makeOption({
+      decimals: (found[2] ?? "").length,
+      thousands: found[1] === "#,##0",
+      percent: found[3] === "%",
+      prefix,
+      suffix,
+    }),
+    other
+  );
 };
 
 const stripDecimal = (text: string): string =>
@@ -193,11 +206,10 @@ const grouped = (digits: string): string => {
 };
 
 /** A number under a `ZeroPadded` or `Fixed` format, when it is small enough to write out in digits. */
-export const renderNumber = (input: {
-  readonly kind: Extract<RawFormatKind, { readonly kind: "ZeroPadded" | "Fixed" }>;
-  readonly value: number;
-}): O.Option<string> => {
-  const { kind, value } = input;
+export const renderNumber: {
+  (value: number): (kind: XlsxZeroPaddedFormat | XlsxFixedFormat) => O.Option<string>;
+  (kind: XlsxZeroPaddedFormat | XlsxFixedFormat, value: number): O.Option<string>;
+} = dual(2, (kind: XlsxZeroPaddedFormat | XlsxFixedFormat, value: number): O.Option<string> => {
   const sign = value < 0 ? "-" : "";
   const size = Math.abs(value);
   if (kind.kind === "ZeroPadded") {
@@ -212,8 +224,11 @@ export const renderNumber = (input: {
   return O.some(
     `${sign}${kind.prefix}${kind.thousands ? grouped(whole) : whole}${decimals}${kind.percent ? "%" : ""}${kind.suffix}`
   );
-};
+});
 
+// crispen: kept as plain types, not schemas — a token list is built and thrown away on every displayed date (the
+// oracle test renders 100k+), and nothing outside this file sees a token; make it a `LiteralKit` tagged union if a
+// token ever crosses a module boundary.
 type DateField = "y" | "m" | "d" | "h" | "M" | "s";
 
 type DateToken =
@@ -259,8 +274,8 @@ const firstSection = (code: string): readonly [section: string, sections: number
   return [cut === -1 ? code : Str.slice(0, cut)(code), sections];
 };
 
-/** The tokens of a date format, or undefined when it holds something this package does not render. */
-const dateTokens = (section: string): ReadonlyArray<DateToken> | undefined => {
+/** The tokens of a date format, none when it holds something this package does not render. */
+const dateTokens = (section: string): O.Option<ReadonlyArray<DateToken>> => {
   const out: Array<DateToken> = [];
   let last = "";
   let i = 0;
@@ -281,7 +296,7 @@ const dateTokens = (section: string): ReadonlyArray<DateToken> | undefined => {
     } else if (c === "*") i += 2;
     else if (c === "[") {
       const end = blockEnd(section, i);
-      if (elapsed.test(Str.slice(i, end)(section))) return undefined;
+      if (elapsed.test(Str.slice(i, end)(section))) return O.none();
       i = end;
     } else if (lower === "a") {
       const upper = Str.toUpperCase(Str.slice(i, i + 5)(section));
@@ -305,7 +320,7 @@ const dateTokens = (section: string): ReadonlyArray<DateToken> | undefined => {
     } else if (Str.includes(c)(dateLiteral) || Str.includes(c)("cfijklopqrtuvwxzP")) {
       out.push({ t: "text", v: c });
       i += 1;
-    } else return undefined;
+    } else return O.none();
   }
   // A month letter just before seconds is minutes: "mm:ss".
   let after = "";
@@ -315,7 +330,7 @@ const dateTokens = (section: string): ReadonlyArray<DateToken> | undefined => {
     if (token.t === "m" && after === "s") out[k] = { t: "M", n: token.n };
     else after = token.t;
   }
-  return out;
+  return O.some(out);
 };
 
 const isDateLetter = (letter: string): letter is "y" | "m" | "d" | "h" | "s" =>
@@ -324,7 +339,7 @@ const isDateLetter = (letter: string): letter is "y" | "m" | "d" | "h" | "s" =>
 const padded = (value: number, width: number): string => Str.padStart(width, "0")(String(value));
 
 /** The calendar fields rounded to the second and carried, as a format with a time in it shows them. */
-const rounded = (parts: SerialParts, date1904: boolean): SerialParts => {
+const rounded = (parts: SerialParts, system: XlsxDateSystem): SerialParts => {
   if (parts.fraction < 0.5) return parts;
   let { hour, minute, second } = parts;
   second += 1;
@@ -337,7 +352,7 @@ const rounded = (parts: SerialParts, date1904: boolean): SerialParts => {
     hour += 1;
   }
   if (hour < 24) return SerialParts.make({ ...parts, hour, minute, second, fraction: 0 });
-  return SerialParts.make({ ...partsOf({ serial: parts.days + 1, date1904 }), hour: 0, minute, second, fraction: 0 });
+  return SerialParts.make({ ...partsOf(parts.days + 1, system), hour: 0, minute, second, fraction: 0 });
 };
 
 /** A two-digit-at-most time field, none when the format asks for more digits than Excel shows. */
@@ -376,19 +391,17 @@ const tokenText = (parts: SerialParts, twelve: boolean): ((token: DateToken) => 
  * A serial as a date format shows it, none for a format this package does not render: elapsed time, fractions of a
  * second, eras, or a zero under a format with a section of its own for zero.
  */
-export const renderDate = (input: {
-  readonly code: string;
-  readonly serial: number;
-  readonly date1904: boolean;
-}): O.Option<string> => {
-  const { code, serial, date1904 } = input;
+export const renderDate: {
+  (serial: number, system: XlsxDateSystem): (code: string) => O.Option<string>;
+  (code: string, serial: number, system: XlsxDateSystem): O.Option<string>;
+} = dual(3, (code: string, serial: number, system: XlsxDateSystem): O.Option<string> => {
   const [section, sections] = firstSection(code);
   if (sections >= 3 && serial === 0) return O.none();
-  return O.flatMap(O.fromUndefinedOr(dateTokens(section)), (tokens) => {
+  return O.flatMap(dateTokens(section), (tokens) => {
     const timed = A.some(tokens, (token) => token.t === "h" || token.t === "M" || token.t === "s");
     const twelve = A.some(tokens, (token) => token.t === "ampm");
-    const exact = partsOf({ serial, date1904 });
-    const parts = timed ? rounded(exact, date1904) : exact;
+    const exact = partsOf(serial, system);
+    const parts = timed ? rounded(exact, system) : exact;
     return O.map(O.all(A.map(tokens, tokenText(parts, twelve))), A.join(""));
   });
-};
+});

@@ -11,14 +11,10 @@ import { $CsvId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
-import { CsvDiagnostic } from "./CsvDiagnostic.schema.ts";
 import { MAX_TEXT_UNITS } from "./CsvPosition.schema.ts";
 import { MAX_FIELDS } from "./CsvTable.schema.ts";
-import type { RaggedRecord, StrayQuote, TextAfterClosingQuote } from "./CsvDiagnostic.schema.ts";
 
 const $I = $CsvId.create("CsvOptions");
 
@@ -49,29 +45,6 @@ export const CsvDelimiter = LiteralKit([",", ";", "\t", "|"]).pipe(
  * @since 0.0.0
  */
 export type CsvDelimiter = typeof CsvDelimiter.Type;
-
-/**
- * The plural a person reads for each delimiter ("Columns are separated by semicolons").
- *
- * **Example** (Name a delimiter for a person)
- *
- * ```ts import.meta.vitest name="Name a delimiter for a person"
- * import { delimiterName } from "@beep/csv/CsvOptions.schema"
- *
- * const sentence = `Columns are separated by ${delimiterName("\t")}`
- * sentence // => "Columns are separated by tabs"
- * delimiterName(";") // => "semicolons"
- * ```
- *
- * @category formatting
- * @since 0.0.0
- */
-export const delimiterName = CsvDelimiter.match({
-  ",": () => "commas",
-  ";": () => "semicolons",
-  "\t": () => "tabs",
-  "|": () => "vertical bars",
-});
 
 const defaultCandidates: readonly [CsvDelimiter, ...Array<CsvDelimiter>] = [",", "\t", "|", ";"];
 
@@ -135,9 +108,10 @@ export class CsvFixedDelimiter extends S.Opaque<CsvFixedDelimiter, { readonly br
  *
  * ```ts import.meta.vitest name="Decode a choice and fill its defaults"
  * import { CsvDelimiterChoice } from "@beep/csv/CsvOptions.schema"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
- * const choice = S.decodeUnknownSync(CsvDelimiterChoice)({ kind: "detect" })
+ * const choice = Result.getOrThrow(S.decodeUnknownResult(CsvDelimiterChoice)({ kind: "detect" }))
  * CsvDelimiterChoice.guards.detect(choice) && choice.candidates // => [",", "\t", "|", ";"]
  * ```
  *
@@ -218,12 +192,18 @@ export class CsvDetectEncoding extends S.Opaque<CsvDetectEncoding, { readonly br
 /**
  * Read the bytes in one encoding. A fixed UTF-8 still refuses bytes that are not UTF-8 rather than falling back.
  *
- * **Example** (Fix the encoding to Windows-1252)
+ * **Example** (Refuse bytes that are not the fixed UTF-8)
  *
- * ```ts import.meta.vitest name="Fix the encoding to Windows-1252"
- * import { CsvFixedEncoding } from "@beep/csv/CsvOptions.schema"
+ * ```ts import.meta.vitest name="Refuse bytes that are not the fixed UTF-8"
+ * import { Csv } from "@beep/csv/Csv.codec"
+ * import { CsvFixedEncoding, CsvReadOptions } from "@beep/csv/CsvOptions.schema"
+ * import * as Result from "effect/Result"
  *
- * CsvFixedEncoding.make({ encoding: "windows-1252" }).kind // => "fixed"
+ * const bytes = Uint8Array.of(0x43, 0x61, 0x66, 0xe9, 0x0a)
+ * const utf8 = CsvReadOptions.make({ encoding: CsvFixedEncoding.make({ encoding: "utf-8" }) })
+ * const cp1252 = CsvReadOptions.make({ encoding: CsvFixedEncoding.make({ encoding: "windows-1252" }) })
+ * Result.isFailure(Csv.parseBytesResult(bytes, utf8)) // => true
+ * Result.map(Csv.parseBytesResult(bytes, cp1252), (read) => read.table.records) // => Result.succeed([["Café"]])
  * ```
  *
  * @category models
@@ -243,9 +223,10 @@ export class CsvFixedEncoding extends S.Opaque<CsvFixedEncoding, { readonly bran
  *
  * ```ts import.meta.vitest name="Decode a fixed encoding"
  * import { CsvEncodingChoice } from "@beep/csv/CsvOptions.schema"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
- * const choice = S.decodeUnknownSync(CsvEncodingChoice)({ kind: "fixed", encoding: "utf-16le" })
+ * const choice = Result.getOrThrow(S.decodeUnknownResult(CsvEncodingChoice)({ kind: "fixed", encoding: "utf-16le" }))
  * CsvEncodingChoice.guards.fixed(choice) // => true
  * ```
  *
@@ -294,36 +275,6 @@ export const CsvQuoteRule = LiteralKit(["lenient", "strict"]).pipe(
 export type CsvQuoteRule = typeof CsvQuoteRule.Type;
 
 /**
- * How serious a quoting finding is under a rule: a warning when lenient, fatal when strict.
- *
- * **Example** (Judge a stray quote under both rules)
- *
- * ```ts import.meta.vitest name="Judge a stray quote under both rules"
- * import { StrayQuote } from "@beep/csv/CsvDiagnostic.schema"
- * import { judgeQuote } from "@beep/csv/CsvOptions.schema"
- * import { CsvTextSpan } from "@beep/csv/CsvPosition.schema"
- *
- * const finding = StrayQuote.make({ at: CsvTextSpan.locate('a,b"c', 3, 1), record: 0, field: 1 })
- * judgeQuote("lenient", finding).severity // => "warning"
- * judgeQuote(finding)("strict").severity // => "fatal"
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const judgeQuote: {
-  (finding: StrayQuote | TextAfterClosingQuote): (rule: CsvQuoteRule) => CsvDiagnostic;
-  (rule: CsvQuoteRule, finding: StrayQuote | TextAfterClosingQuote): CsvDiagnostic;
-} = dual(
-  2,
-  (rule: CsvQuoteRule, finding: StrayQuote | TextAfterClosingQuote): CsvDiagnostic =>
-    CsvQuoteRule.match(rule, {
-      lenient: () => CsvDiagnostic.cases.warning.make({ finding }),
-      strict: () => CsvDiagnostic.cases.fatal.make({ finding }),
-    })
-);
-
-/**
  * What happens to a record with more or fewer cells than the first: kept as written, padded with empty cells, or
  * refused. Kept and padded records are reported as warnings.
  *
@@ -351,38 +302,6 @@ export const CsvRaggedRule = LiteralKit(["keep", "pad", "reject"]).pipe(
  * @since 0.0.0
  */
 export type CsvRaggedRule = typeof CsvRaggedRule.Type;
-
-/**
- * How serious a ragged record is under a rule: a warning when kept or padded, fatal when rejected.
- *
- * **Example** (Judge a short record under each rule)
- *
- * ```ts import.meta.vitest name="Judge a short record under each rule"
- * import { RaggedRecord } from "@beep/csv/CsvDiagnostic.schema"
- * import { judgeRagged } from "@beep/csv/CsvOptions.schema"
- * import { CsvTextSpan } from "@beep/csv/CsvPosition.schema"
- *
- * const at = CsvTextSpan.locate("SKU,Name\nBRK-040\n", 9, 7)
- * const finding = RaggedRecord.make({ at, record: 1, expected: 2, actual: 1 })
- * judgeRagged("pad", finding).severity // => "warning"
- * judgeRagged(finding)("reject").severity // => "fatal"
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const judgeRagged: {
-  (finding: RaggedRecord): (rule: CsvRaggedRule) => CsvDiagnostic;
-  (rule: CsvRaggedRule, finding: RaggedRecord): CsvDiagnostic;
-} = dual(
-  2,
-  (rule: CsvRaggedRule, finding: RaggedRecord): CsvDiagnostic =>
-    CsvRaggedRule.match(rule, {
-      keep: () => CsvDiagnostic.cases.warning.make({ finding }),
-      pad: () => CsvDiagnostic.cases.warning.make({ finding }),
-      reject: () => CsvDiagnostic.cases.fatal.make({ finding }),
-    })
-);
 
 /**
  * Whether a blank line is kept as a record of one empty cell or skipped. A quoted empty cell (`""`) is never skipped.
@@ -440,34 +359,6 @@ export const CsvTrimRule = LiteralKit(["none", "unquoted", "all"]).pipe(
  */
 export type CsvTrimRule = typeof CsvTrimRule.Type;
 
-/**
- * A cell after the trim rule, given whether it was quoted. Under `unquoted`, spaces inside quotes are kept because
- * the writer quoted them on purpose.
- *
- * **Example** (Trim only unquoted cells)
- *
- * ```ts import.meta.vitest name="Trim only unquoted cells"
- * import { applyTrim } from "@beep/csv/CsvOptions.schema"
- *
- * applyTrim("unquoted", "  Bracket ", false) // => "Bracket"
- * applyTrim("unquoted", "  Bracket ", true) // => "  Bracket "
- * applyTrim("  Bracket ", true)("all") // => "Bracket"
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const applyTrim: {
-  (cell: string, quoted: boolean): (rule: CsvTrimRule) => string;
-  (rule: CsvTrimRule, cell: string, quoted: boolean): string;
-} = dual(3, (rule: CsvTrimRule, cell: string, quoted: boolean): string =>
-  CsvTrimRule.match(rule, {
-    none: () => cell,
-    unquoted: () => (quoted ? cell : Str.trim(cell)),
-    all: () => Str.trim(cell),
-  })
-);
-
 const count = (maximum: number, fallback: number, description: string) =>
   S.Int.check(S.isBetween({ minimum: 1, maximum })).pipe(
     S.annotateKey({ description }),
@@ -480,9 +371,15 @@ const count = (maximum: number, fallback: number, description: string) =>
  *
  * **Details**
  *
- * Defaults: 10,000,000 records, 100,000 cells per record, 16 Mi units per cell, 64 Mi units per record and 256 MiB of
- * input. Every count is an integer of at least 1: records at most 2,147,483,647, cells per record at most
- * `MAX_FIELDS`, and lengths at most `MAX_TEXT_UNITS`.
+ * Defaults: 10,000,000 records, 100,000 cells per record, 16 Mi units per cell, 64 Mi units per record, 1,000 kept
+ * warnings and 256 MiB of input. Every count is an integer of at least 1: records at most 2,147,483,647, cells per
+ * record at most `MAX_FIELDS`, and lengths and warnings at most `MAX_TEXT_UNITS`.
+ *
+ * Passing a text cap or the byte cap ends the read with a `CsvParseError`. The warning cap does not: past
+ * `maxWarnings` the read stops building warnings, counts them, and ends its warnings with one `WarningsTruncated`.
+ * The byte cap applies to byte input (`parseBytes*`, `fromBytes`, `decode`, `decodeSchema`); a channel fails as
+ * soon as its running count passes the cap, so its `TooManyBytes.actual` is the count at that point, not the input's
+ * full size. Text input is bounded by the text caps alone.
  *
  * **Example** (Tighten one cap and keep the rest)
  *
@@ -493,6 +390,7 @@ const count = (maximum: number, fallback: number, description: string) =>
  * const limits = CsvLimits.make({ maxRecords: 1000 })
  * limits.maxRecords // => 1000
  * limits.maxFieldsPerRecord // => 100000
+ * limits.maxWarnings // => 1000
  * limits.maxInputBytes // => ByteSize.mebibytes(256)
  * ```
  *
@@ -505,6 +403,7 @@ export class CsvLimits extends S.Opaque<CsvLimits, { readonly brand: unique symb
     maxFieldsPerRecord: count(MAX_FIELDS, 100_000, "Most cells in one record"),
     maxFieldLength: count(MAX_TEXT_UNITS, 16 * 1024 * 1024, "Most UTF-16 units in one cell"),
     maxRecordLength: count(MAX_TEXT_UNITS, 64 * 1024 * 1024, "Most UTF-16 units in one record"),
+    maxWarnings: count(MAX_TEXT_UNITS, 1000, "Most warnings kept; the rest are counted in one WarningsTruncated"),
     maxInputBytes: S.ByteSize.pipe(
       S.annotateKey({ description: "Most input bytes read" }),
       S.withConstructorDefault(Effect.sync(() => ByteSize.mebibytes(256))),
@@ -569,9 +468,9 @@ export class CsvReadOptions extends S.Opaque<CsvReadOptions, { readonly brand: u
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
     limits: CsvLimits.pipe(
-      S.annotateKey({ description: "The caps" }),
       S.withConstructorDefault(Effect.sync(() => CsvLimits.make({}))),
-      S.withDecodingDefaultTypeKey(Effect.sync(() => CsvLimits.make({})))
+      S.withDecodingDefaultTypeKey(Effect.sync(() => CsvLimits.make({}))),
+      S.annotateKey({ description: "The caps" })
     ),
   }).pipe($I.annoteSchema("CsvReadOptions", { description: "How a CSV is read" }))
 ) {
@@ -638,14 +537,26 @@ export type CsvQuoteStyle = typeof CsvQuoteStyle.Type;
 /**
  * Whether a written cell that a spreadsheet would run as a formula is defused with a leading apostrophe.
  *
- * **Example** (Accept the formula guards)
+ * **Details**
  *
- * ```ts import.meta.vitest name="Accept the formula guards"
- * import { CsvFormulaGuard } from "@beep/csv/CsvOptions.schema"
- * import * as S from "effect/Schema"
+ * `apostrophe` prefixes `'` to every cell whose first character is `=`, `+`, `-`, `@`, a tab or a carriage return
+ * (the OWASP list). It looks at the first character only: a cell that starts with a space before `=`, or with a
+ * full-width `＝`, is written unchanged.
  *
- * S.is(CsvFormulaGuard)("apostrophe") // => true
- * S.is(CsvFormulaGuard)("escape") // => false
+ * **Gotchas**
+ *
+ * A guarded table does not read back as itself: `-40` is written `'-40` and reads back as `'-40`. The round trip
+ * holds only under `none`, the default.
+ *
+ * **Example** (Defuse a formula when writing)
+ *
+ * ```ts import.meta.vitest name="Defuse a formula when writing"
+ * import { Csv } from "@beep/csv/Csv.codec"
+ * import { CsvWriteOptions } from "@beep/csv/CsvOptions.schema"
+ *
+ * const table = { records: [["=SUM(A1:A9)", "-40", "Bolt"]] } as const
+ * Csv.stringify(table, CsvWriteOptions.make({ formulaGuard: "apostrophe" })) // => "'=SUM(A1:A9),'-40,Bolt\r\n"
+ * Csv.stringify(table) // => "=SUM(A1:A9),-40,Bolt\r\n"
  * ```
  *
  * @category schemas
@@ -663,44 +574,10 @@ export const CsvFormulaGuard = LiteralKit(["none", "apostrophe"]).pipe(
  */
 export type CsvFormulaGuard = typeof CsvFormulaGuard.Type;
 
-const formulaStart = /^[=+\-@\t\r]/;
-
-/**
- * A cell after the formula guard: `apostrophe` prefixes `'` to a cell starting with `=`, `+`, `-`, `@`, tab or
- * carriage return.
- *
- * **Gotchas**
- *
- * The guard looks only at the first character, so a negative number such as `-40` is prefixed too and no longer
- * reads back as the same cell.
- *
- * **Example** (Defuse a formula cell)
- *
- * ```ts import.meta.vitest name="Defuse a formula cell"
- * import { applyFormulaGuard } from "@beep/csv/CsvOptions.schema"
- *
- * applyFormulaGuard("apostrophe", "=SUM(A1:A9)") // => "'=SUM(A1:A9)"
- * applyFormulaGuard("apostrophe", "-40") // => "'-40"
- * applyFormulaGuard("Bracket")("apostrophe") // => "Bracket"
- * applyFormulaGuard("none", "=SUM(A1:A9)") // => "=SUM(A1:A9)"
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const applyFormulaGuard: {
-  (cell: string): (guard: CsvFormulaGuard) => string;
-  (guard: CsvFormulaGuard, cell: string): string;
-} = dual(2, (guard: CsvFormulaGuard, cell: string): string =>
-  CsvFormulaGuard.match(guard, {
-    none: () => cell,
-    apostrophe: () => (formulaStart.test(cell) ? `'${cell}` : cell),
-  })
-);
-
 /**
  * How a CSV is written. `CsvWriteOptions.default` writes commas, CRLF after every record, minimal quoting, no BOM
- * and no formula guard.
+ * and no formula guard. Every combination reads back as the same table under the same delimiter, except a
+ * `formulaGuard` of `apostrophe`, which changes the cells it defuses.
  *
  * **Example** (Write LF line breaks)
  *
@@ -744,7 +621,9 @@ export class CsvWriteOptions extends S.Opaque<CsvWriteOptions, { readonly brand:
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
     formulaGuard: CsvFormulaGuard.pipe(
-      S.annotateKey({ description: "Whether formula-like cells are defused" }),
+      S.annotateKey({
+        description: "Whether formula-like cells are defused; a guarded table does not read back as itself",
+      }),
       S.withConstructorDefault(Effect.succeed("none" as const)),
       S.withDecodingDefaultTypeKey(Effect.succeed("none" as const))
     ),
@@ -754,17 +633,29 @@ export class CsvWriteOptions extends S.Opaque<CsvWriteOptions, { readonly brand:
   static readonly default: CsvWriteOptions = CsvWriteOptions.make({});
 }
 
+const commaRead = CsvReadOptions.make({ delimiter: CsvFixedDelimiter.make({ delimiter: "," }) });
+
 /**
- * The options of a CSV codec: how it reads and how it writes. Either side left out takes its `default`.
+ * The options of a CSV codec: how it reads and how it writes. Left out, `write` is `CsvWriteOptions.default` and
+ * `read` is `CsvReadOptions.default` with the delimiter fixed to the comma that `write` writes, so the default
+ * codec reads back exactly what it wrote.
  *
- * **Example** (Read strictly and write by default)
+ * **Gotchas**
  *
- * ```ts import.meta.vitest name="Read strictly and write by default"
- * import { CsvCodecOptions, CsvReadOptions } from "@beep/csv/CsvOptions.schema"
+ * The two sides are set apart: a codec that writes another delimiter must fix `read.delimiter` to the same character,
+ * and a codec whose `read` detects the delimiter can read a table back split differently from how it was written.
  *
- * const options = CsvCodecOptions.make({ read: CsvReadOptions.make({ quotes: "strict" }) })
- * options.read.quotes // => "strict"
+ * **Example** (Read and write semicolons)
+ *
+ * ```ts import.meta.vitest name="Read and write semicolons"
+ * import { CsvCodecOptions, CsvFixedDelimiter, CsvReadOptions, CsvWriteOptions } from "@beep/csv/CsvOptions.schema"
+ *
+ * const options = CsvCodecOptions.make({
+ *   read: CsvReadOptions.make({ delimiter: CsvFixedDelimiter.make({ delimiter: ";" }) }),
+ *   write: CsvWriteOptions.make({ delimiter: ";" }),
+ * })
  * options.write.quoteStyle // => "minimal"
+ * CsvCodecOptions.default.read.delimiter.kind // => "fixed"
  * ```
  *
  * @category models
@@ -773,14 +664,14 @@ export class CsvWriteOptions extends S.Opaque<CsvWriteOptions, { readonly brand:
 export class CsvCodecOptions extends S.Opaque<CsvCodecOptions, { readonly brand: unique symbol }>()(
   S.Struct({
     read: CsvReadOptions.pipe(
-      S.annotateKey({ description: "How the codec decodes" }),
-      S.withConstructorDefault(Effect.sync(() => CsvReadOptions.default)),
-      S.withDecodingDefaultTypeKey(Effect.sync(() => CsvReadOptions.default))
+      S.withConstructorDefault(Effect.succeed(commaRead)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(commaRead)),
+      S.annotateKey({ description: "How the codec decodes; by default with the comma it writes" })
     ),
     write: CsvWriteOptions.pipe(
-      S.annotateKey({ description: "How the codec encodes" }),
       S.withConstructorDefault(Effect.sync(() => CsvWriteOptions.default)),
-      S.withDecodingDefaultTypeKey(Effect.sync(() => CsvWriteOptions.default))
+      S.withDecodingDefaultTypeKey(Effect.sync(() => CsvWriteOptions.default)),
+      S.annotateKey({ description: "How the codec encodes" })
     ),
   }).pipe($I.annoteSchema("CsvCodecOptions", { description: "How a CSV codec reads and writes" }))
 ) {

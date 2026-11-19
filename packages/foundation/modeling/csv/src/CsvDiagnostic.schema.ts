@@ -18,7 +18,7 @@ import { CsvCell } from "./CsvTable.schema.ts";
 
 const $I = $CsvId.create("CsvDiagnostic");
 
-const at = CsvTextSpan.pipe(S.annotateKey({ description: "Where in the decoded text" }));
+const at = CsvTextSpan;
 const record = CsvIndex.pipe(S.annotateKey({ description: "0-based record number, blank lines counted" }));
 const field = CsvIndex.pipe(S.annotateKey({ description: "0-based field within the record" }));
 
@@ -143,6 +143,41 @@ export class MixedTerminators extends S.Opaque<MixedTerminators, { readonly bran
     first: CsvRecordEnd.pipe(S.annotateKey({ description: "How the first record ended" })),
     other: CsvRecordEnd.pipe(S.annotateKey({ description: "The first different ending" })),
   }).pipe($I.annoteSchema("MixedTerminators", { description: "Records end in more than one way" }))
+) {}
+
+/**
+ * The read went past more warnings than `CsvLimits.maxWarnings` keeps: it kept the first `kept` and only counted
+ * the `dropped` ones after them. It is always the last warning, so a hostile file cannot fill memory with them.
+ *
+ * **Example** (Read a file with more oddities than the cap)
+ *
+ * ```ts import.meta.vitest name="Read a file with more oddities than the cap"
+ * import { Csv } from "@beep/csv/Csv.codec"
+ * import { describeFinding } from "@beep/csv/CsvDiagnostic.schema"
+ * import { CsvLimits, CsvReadOptions } from "@beep/csv/CsvOptions.schema"
+ * import { CsvRead } from "@beep/csv/CsvRead.schema"
+ * import * as A from "effect/Array"
+ * import * as O from "effect/Option"
+ * import * as Result from "effect/Result"
+ *
+ * const options = CsvReadOptions.make({ limits: CsvLimits.make({ maxWarnings: 2 }) })
+ * const read = Result.getOrThrow(Csv.parseResult('a"\nb"\nc"\nd"\n', options))
+ * const warnings = CsvRead.warnings(read)
+ * warnings.length // => 3
+ * O.map(A.last(warnings), (last) => describeFinding(last.finding)) // => O.some("2 more warnings were read past but not kept, beyond the cap of 2")
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class WarningsTruncated extends S.Opaque<WarningsTruncated, { readonly brand: unique symbol }>()(
+  S.Struct({
+    kind: S.tag("WarningsTruncated"),
+    kept: CsvIndex.check(S.isGreaterThan(0)).pipe(S.annotateKey({ description: "How many warnings were kept" })),
+    dropped: S.Int.check(S.isBetween({ minimum: 1, maximum: Number.MAX_SAFE_INTEGER })).pipe(
+      S.annotateKey({ description: "How many warnings after them were only counted" })
+    ),
+  }).pipe($I.annoteSchema("WarningsTruncated", { description: "More warnings than the cap keeps" }))
 ) {}
 
 /**
@@ -306,8 +341,14 @@ export class TooManyBytes extends S.Opaque<TooManyBytes, { readonly brand: uniqu
  * @category schemas
  * @since 0.0.0
  */
-export const CsvWarningFinding = LiteralKit(["StrayQuote", "TextAfterClosingQuote", "RaggedRecord", "MixedTerminators"])
-  .mapMembers(() => Tuple.make(StrayQuote, TextAfterClosingQuote, RaggedRecord, MixedTerminators))
+export const CsvWarningFinding = LiteralKit([
+  "StrayQuote",
+  "TextAfterClosingQuote",
+  "RaggedRecord",
+  "MixedTerminators",
+  "WarningsTruncated",
+])
+  .mapMembers(() => Tuple.make(StrayQuote, TextAfterClosingQuote, RaggedRecord, MixedTerminators, WarningsTruncated))
   .pipe(S.toTaggedUnion("kind"), $I.annoteSchema("CsvWarningFinding", { description: "What a read can go past" }));
 
 /**
@@ -319,7 +360,8 @@ export const CsvWarningFinding = LiteralKit(["StrayQuote", "TextAfterClosingQuot
 export type CsvWarningFinding = typeof CsvWarningFinding.Type;
 
 /**
- * What stops a read: every finding kind except {@link MixedTerminators}, which is only ever a warning.
+ * What stops a read: every finding kind except {@link MixedTerminators} and {@link WarningsTruncated}, which are only
+ * ever warnings.
  *
  * **Example** (Mixed line endings never stop a read)
  *
@@ -481,6 +523,7 @@ export const describeFinding: (finding: CsvWarningFinding | CsvFatalFinding) => 
     RaggedRecord: (f) =>
       `record ${f.record + 1} has ${f.actual} cells where the first has ${f.expected}, at ${CsvTextSpan.render(f.at)}`,
     MixedTerminators: (f) => `records end with ${f.first} and also with ${f.other}, from ${CsvTextSpan.render(f.at)}`,
+    WarningsTruncated: (f) => `${f.dropped} more warnings were read past but not kept, beyond the cap of ${f.kept}`,
     InvalidUtf8: (f) => `the bytes are not UTF-8 from byte ${f.byteOffset}`,
     EmptyHeader: (f) => `heading ${f.field + 1} is empty`,
     DuplicateHeader: (f) => `heading ${f.field + 1} repeats "${f.name}" from heading ${f.firstField + 1}`,

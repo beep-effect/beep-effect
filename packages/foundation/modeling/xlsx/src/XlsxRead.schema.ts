@@ -22,7 +22,7 @@ const $I = $XlsxId.create("XlsxRead");
  *
  * **Example** (Read a workbook and its warnings)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Read a workbook and its warnings"
  * import { Xlsx, XlsxCell, XlsxRow, XlsxSheetInfo, XlsxText, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
  * import * as Effect from "effect/Effect"
  *
@@ -46,7 +46,7 @@ const $I = $XlsxId.create("XlsxRead");
  *
  * **Example** (List the kinds of part read past)
  *
- * ```ts
+ * ```ts import.meta.vitest name="List the kinds of part read past"
  * import { XlsxDroppedPart, XlsxRead } from "@beep/xlsx"
  *
  * const dropped = [
@@ -62,8 +62,8 @@ const $I = $XlsxId.create("XlsxRead");
  */
 export class XlsxRead extends S.Opaque<XlsxRead, { readonly brand: unique symbol }>()(
   S.Struct({
-    workbook: XlsxWorkbook.pipe(S.annotateKey({ description: "The workbook" })),
-    warnings: S.Array(XlsxWarning.annotateKey({ description: "One oddity" })).pipe(
+    workbook: XlsxWorkbook,
+    warnings: S.Array(XlsxWarning).pipe(
       S.annotateKey({ description: "What the read went past, in the order it was found" }),
       S.withConstructorDefault(Effect.succeed([])),
       S.withDecodingDefaultTypeKey(Effect.succeed([]))
@@ -81,7 +81,7 @@ export class XlsxRead extends S.Opaque<XlsxRead, { readonly brand: unique symbol
  *
  * **Example** (Describe a sheet for a chooser)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Describe a sheet for a chooser"
  * import { XlsxRange, XlsxSheetCount, XlsxSheetInfo, XlsxSheetOutline } from "@beep/xlsx"
  * import * as O from "effect/Option"
  *
@@ -105,10 +105,8 @@ export class XlsxRead extends S.Opaque<XlsxRead, { readonly brand: unique symbol
  */
 export class XlsxSheetOutline extends S.Opaque<XlsxSheetOutline, { readonly brand: unique symbol }>()(
   S.Struct({
-    count: XlsxSheetCount.pipe(S.annotateKey({ description: "How much the sheet holds" })),
-    merges: S.Array(XlsxRange.annotateKey({ description: "One merged range" })).pipe(
-      S.annotateKey({ description: "The merged ranges" })
-    ),
+    count: XlsxSheetCount,
+    merges: S.Array(XlsxRange).pipe(S.annotateKey({ description: "The merged ranges" })),
     hiddenColumns: S.Array(XlsxColumn.annotateKey({ description: "One hidden column" })).pipe(
       S.annotateKey({ description: "The hidden columns" })
     ),
@@ -121,7 +119,7 @@ export class XlsxSheetOutline extends S.Opaque<XlsxSheetOutline, { readonly bran
  *
  * **Example** (Outline a workbook without keeping its rows)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Outline a workbook without keeping its rows"
  * import { Xlsx, XlsxCell, XlsxNumber, XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
  * import * as Effect from "effect/Effect"
  *
@@ -149,8 +147,6 @@ export class XlsxSheetOutline extends S.Opaque<XlsxSheetOutline, { readonly bran
 export class XlsxOutline extends S.Opaque<XlsxOutline, { readonly brand: unique symbol }>()(
   S.Struct({
     dateSystem: XlsxDateSystem.pipe(S.annotateKey({ description: "The day the workbook's date serials count from" })),
-    sheets: S.Array(XlsxSheetOutline.annotateKey({ description: "One sheet" })).pipe(
-      S.annotateKey({ description: "The sheets, in the workbook's order" })
-    ),
+    sheets: S.Array(XlsxSheetOutline).pipe(S.annotateKey({ description: "The sheets, in the workbook's order" })),
   }).pipe($I.annoteSchema("XlsxOutline", { description: "A workbook's date system and its sheets, counted" }))
 ) {}

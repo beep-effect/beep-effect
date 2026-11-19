@@ -10,14 +10,14 @@ import { $XlsxId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashMap from "effect/HashMap";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { builtinFormats } from "./internal/numberFormat.ts";
-import { isXmlSafe } from "./internal/text.ts";
+import { builtinIds } from "./internal/numberFormat.ts";
+import { XmlSafeText } from "./internal/text.ts";
 import { MAX_COLUMN, MAX_ROW, XlsxAddress, XlsxColumn, XlsxRange, XlsxRowNumber } from "./XlsxAddress.schema.ts";
 import { holdsSomething, XlsxCell, XlsxNumberFormat } from "./XlsxCell.schema.ts";
 import { XlsxDateSystem } from "./XlsxSerial.schema.ts";
@@ -29,7 +29,7 @@ const $I = $XlsxId.create("XlsxWorkbook");
  *
  * **Example** (Hide a sheet from Excel's tabs)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Hide a sheet from Excel's tabs"
  * import { XlsxSheetInfo, XlsxSheetState, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
  * import * as S from "effect/Schema"
  *
@@ -58,13 +58,18 @@ export const XlsxSheetState = LiteralKit(["visible", "hidden", "veryHidden"]).pi
  */
 export type XlsxSheetState = typeof XlsxSheetState.Type;
 
-const uniqueBy = <T>(key: (value: T) => unknown, expected: string) =>
+/**
+ * A check that no two items share a key. The keys are numbers or lower-cased text, so `A.dedupe`'s hash buckets
+ * compare them exactly and the check is linear in the items.
+ */
+const uniqueBy = <T>(
+  key: (value: T) => number | string,
+  name: string,
+  annotations: { readonly title: string; readonly description: string; readonly expected: string }
+) =>
   S.makeFilter<ReadonlyArray<T>>(
-    (values) => A.dedupeWith(values, (a, b) => key(a) === key(b)).length === values.length,
-    {
-      expected,
-      arbitraryConstraint: { uniqueBy: key },
-    }
+    (values) => A.dedupe(A.map(values, key)).length === values.length,
+    $I.annote(name, { ...annotations, arbitraryConstraint: { uniqueBy: key } })
   );
 
 /**
@@ -73,7 +78,7 @@ const uniqueBy = <T>(key: (value: T) => unknown, expected: string) =>
  *
  * **Example** (Find a cell in a row)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Find a cell in a row"
  * import { XlsxCell, XlsxRow, XlsxText } from "@beep/xlsx"
  * import * as O from "effect/Option"
  *
@@ -101,10 +106,14 @@ export class XlsxRow extends S.Opaque<XlsxRow, { readonly brand: unique symbol }
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultTypeKey(Effect.succeed(false))
     ),
-    cells: S.Array(XlsxCell.annotateKey({ description: "One cell" }))
+    cells: S.Array(XlsxCell)
       .check(
         S.isMaxLength(MAX_COLUMN + 1),
-        uniqueBy((cell: { readonly column: number }) => cell.column, "cells with no column twice")
+        uniqueBy((cell: XlsxCell) => cell.column, "UniqueCellColumns", {
+          title: "Unique cell columns",
+          description: "A row holds at most one cell in each column",
+          expected: "cells with no column twice",
+        })
       )
       .pipe(S.annotateKey({ description: "The row's cells, no column twice" })),
   }).pipe($I.annoteSchema("XlsxRow", { description: "One row of a sheet" }))
@@ -114,7 +123,7 @@ export class XlsxRow extends S.Opaque<XlsxRow, { readonly brand: unique symbol }
     A.every(row.cells, (cell) => !holdsSomething(cell.value));
 
   /** The cell at a column, when the row has one there. */
-  static readonly cellAt = (row: Pick<XlsxRow, "cells">, column: XlsxColumn): O.Option<XlsxRow["cells"][number]> =>
+  static readonly cellAt = (row: Pick<XlsxRow, "cells">, column: XlsxColumn): O.Option<XlsxCell> =>
     A.findFirst(row.cells, (cell) => cell.column === column);
 }
 
@@ -125,7 +134,7 @@ export class XlsxRow extends S.Opaque<XlsxRow, { readonly brand: unique symbol }
  *
  * **Example** (Names a file may carry)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Names a file may carry"
  * import { XlsxSheetName } from "@beep/xlsx"
  * import * as S from "effect/Schema"
  *
@@ -136,11 +145,9 @@ export class XlsxRow extends S.Opaque<XlsxRow, { readonly brand: unique symbol }
  * @category schemas
  * @since 0.0.0
  */
-export const XlsxSheetName = S.String.check(
-  S.isMinLength(1),
-  S.isMaxLength(255),
-  S.makeFilter((name: string) => isXmlSafe(name), { expected: "a name without control characters" })
-).pipe($I.annoteSchema("XlsxSheetName", { description: "A sheet's name" }));
+export const XlsxSheetName = S.String.check(S.isMinLength(1), S.isMaxLength(255), XmlSafeText).pipe(
+  $I.annoteSchema("XlsxSheetName", { description: "A sheet's name" })
+);
 
 const forbiddenInName = /[:\\/?*[\]]/;
 
@@ -149,7 +156,7 @@ const forbiddenInName = /[:\\/?*[\]]/;
  *
  * **Example** (Names Excel takes)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Names Excel takes"
  * import { fitsExcel } from "@beep/xlsx"
  *
  * fitsExcel("Q1 sales") // => true
@@ -176,7 +183,7 @@ export type XlsxSheetName = typeof XlsxSheetName.Type;
  *
  * **Example** (A sheet's starting info)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A sheet's starting info"
  * import { XlsxSheetInfo } from "@beep/xlsx"
  * import * as O from "effect/Option"
  *
@@ -213,7 +220,7 @@ const count = (maximum: number, description: string) =>
  *
  * **Example** (Count a sheet built by hand)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Count a sheet built by hand"
  * import { XlsxCell, XlsxNumber, XlsxRow, XlsxSheetInfo, XlsxText, XlsxWorksheet } from "@beep/xlsx"
  * import * as O from "effect/Option"
  *
@@ -235,7 +242,7 @@ const count = (maximum: number, description: string) =>
  */
 export class XlsxSheetCount extends S.Opaque<XlsxSheetCount, { readonly brand: unique symbol }>()(
   S.Struct({
-    info: XlsxSheetInfo.pipe(S.annotateKey({ description: "The sheet" })),
+    info: XlsxSheetInfo,
     rows: count(MAX_ROW, "Rows the sheet writes, empty ones included"),
     rowsWithValues: count(MAX_ROW, "Rows with at least one cell that holds something"),
     cellsWithValues: count(MAX_ROW * (MAX_COLUMN + 1), "Cells that hold something"),
@@ -250,7 +257,7 @@ export class XlsxSheetCount extends S.Opaque<XlsxSheetCount, { readonly brand: u
  *
  * **Example** (A custom code gets the first free id)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A custom code gets the first free id"
  * import { FIRST_CUSTOM_FORMAT, XlsxCell, XlsxNumber, XlsxNumberFormat, XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
  *
  * const cell = XlsxCell.make({
@@ -271,20 +278,44 @@ export class XlsxSheetCount extends S.Opaque<XlsxSheetCount, { readonly brand: u
  */
 export const FIRST_CUSTOM_FORMAT = 164;
 
-/** Excel's own id for each built-in code, the lowest where a code has two. */
-const builtinIds: { readonly [code: string]: number } = R.fromEntries(
-  A.map(A.reverse(R.toEntries(builtinFormats)), ([id, code]) => [code, Number(id)] as const)
-);
+const byRowNumber = Order.mapInput(Order.Number, (row: XlsxRow) => row.number);
+const byColumn = Order.mapInput(Order.Number, (cell: XlsxCell) => cell.column);
 
-const byRowNumber = Order.mapInput(Order.Number, (row: { readonly number: number }) => row.number);
-const byColumn = Order.mapInput(Order.Number, (cell: { readonly column: number }) => cell.column);
+// crispen: a loop, not a fold — `canonical` runs it on every write over every cell, and a reduce over an
+// accumulator record allocates per cell; the sheet reader keeps the same bounds as it streams (internal/sheet.ts)
+// because it never holds the rows.
+/** The smallest range that holds every cell `holds` accepts, when there is one. */
+const boundsOf = (rows: ReadonlyArray<XlsxRow>, holds: (cell: XlsxCell) => boolean): O.Option<XlsxRange> => {
+  let firstRow = MAX_ROW + 1;
+  let lastRow = 0;
+  let firstColumn = MAX_COLUMN + 1;
+  let lastColumn = -1;
+  for (const row of rows) {
+    for (const cell of row.cells) {
+      if (!holds(cell)) continue;
+      firstRow = Math.min(firstRow, row.number);
+      lastRow = Math.max(lastRow, row.number);
+      firstColumn = Math.min(firstColumn, cell.column);
+      lastColumn = Math.max(lastColumn, cell.column);
+    }
+  }
+  return lastRow === 0
+    ? O.none()
+    : XlsxRange.makeOption({
+        first: XlsxAddress.make({ column: firstColumn, row: firstRow }),
+        last: XlsxAddress.make({ column: lastColumn, row: lastRow }),
+      });
+};
+
+const holdsValue = (cell: XlsxCell): boolean => holdsSomething(cell.value);
+const isWritten = (cell: XlsxCell): boolean => cell.value.kind !== "Blank" || O.isSome(cell.formula);
 
 /**
  * One sheet with its rows. No row number is used twice; the reader hands rows in rising order.
  *
  * **Example** (Where a sheet's data lies)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Where a sheet's data lies"
  * import { XlsxCell, XlsxNumber, XlsxRange, XlsxRow, XlsxSheetInfo, XlsxWorksheet } from "@beep/xlsx"
  * import * as O from "effect/Option"
  *
@@ -304,15 +335,21 @@ const byColumn = Order.mapInput(Order.Number, (cell: { readonly column: number }
  */
 export class XlsxWorksheet extends S.Opaque<XlsxWorksheet, { readonly brand: unique symbol }>()(
   S.Struct({
-    info: XlsxSheetInfo.pipe(S.annotateKey({ description: "The sheet's name, state and declared extent" })),
-    rows: S.Array(XlsxRow.annotateKey({ description: "One row" }))
-      .check(uniqueBy((row: { readonly number: number }) => row.number, "rows with no number twice"))
+    info: XlsxSheetInfo,
+    rows: S.Array(XlsxRow)
+      .check(
+        uniqueBy((row: XlsxRow) => row.number, "UniqueRowNumbers", {
+          title: "Unique row numbers",
+          description: "A sheet writes each row number at most once",
+          expected: "rows with no number twice",
+        })
+      )
       .pipe(
         S.annotateKey({ description: "The rows the sheet writes, no number twice" }),
         S.withConstructorDefault(Effect.succeed([])),
         S.withDecodingDefaultTypeKey(Effect.succeed([]))
       ),
-    merges: S.Array(XlsxRange.annotateKey({ description: "One merged range" })).pipe(
+    merges: S.Array(XlsxRange).pipe(
       S.annotateKey({ description: "The merged ranges" }),
       S.withConstructorDefault(Effect.succeed([])),
       S.withDecodingDefaultTypeKey(Effect.succeed([]))
@@ -327,30 +364,12 @@ export class XlsxWorksheet extends S.Opaque<XlsxWorksheet, { readonly brand: uni
   }).pipe($I.annoteSchema("XlsxWorksheet", { description: "One sheet of a workbook" }))
 ) {
   /** The smallest range that holds every cell with something in it, when the sheet has one. */
-  static readonly extent = (sheet: Pick<XlsxWorksheet, "rows">): O.Option<XlsxRange> => {
-    let firstRow = MAX_ROW + 1;
-    let lastRow = 0;
-    let firstColumn = MAX_COLUMN + 1;
-    let lastColumn = -1;
-    for (const row of sheet.rows) {
-      for (const cell of row.cells) {
-        if (!holdsSomething(cell.value)) continue;
-        firstRow = Math.min(firstRow, row.number);
-        lastRow = Math.max(lastRow, row.number);
-        firstColumn = Math.min(firstColumn, cell.column);
-        lastColumn = Math.max(lastColumn, cell.column);
-      }
-    }
-    return lastRow === 0
-      ? O.none()
-      : XlsxRange.makeOption({
-          first: XlsxAddress.make({ column: firstColumn, row: firstRow }),
-          last: XlsxAddress.make({ column: lastColumn, row: lastRow }),
-        });
-  };
+  static readonly extent = (sheet: Pick<XlsxWorksheet, "rows">): O.Option<XlsxRange> =>
+    boundsOf(sheet.rows, holdsValue);
 
   /** How much a sheet holds, counted from its rows. */
   static readonly count = (sheet: Pick<XlsxWorksheet, "info" | "rows">): XlsxSheetCount => {
+    // crispen: three counters in one pass over every row; a fold would allocate an accumulator per row.
     let rowsWithValues = 0;
     let cellsWithValues = 0;
     let lastRow = 0;
@@ -371,27 +390,8 @@ export class XlsxWorksheet extends S.Opaque<XlsxWorksheet, { readonly brand: uni
   };
 
   /** The smallest range that holds every cell the sheet writes, formulas without a result included. */
-  static readonly written = (sheet: Pick<XlsxWorksheet, "rows">): O.Option<XlsxRange> => {
-    let firstRow = MAX_ROW + 1;
-    let lastRow = 0;
-    let firstColumn = MAX_COLUMN + 1;
-    let lastColumn = -1;
-    for (const row of sheet.rows) {
-      for (const cell of row.cells) {
-        if (cell.value.kind === "Blank" && O.isNone(cell.formula)) continue;
-        firstRow = Math.min(firstRow, row.number);
-        lastRow = Math.max(lastRow, row.number);
-        firstColumn = Math.min(firstColumn, cell.column);
-        lastColumn = Math.max(lastColumn, cell.column);
-      }
-    }
-    return lastRow === 0
-      ? O.none()
-      : XlsxRange.makeOption({
-          first: XlsxAddress.make({ column: firstColumn, row: firstRow }),
-          last: XlsxAddress.make({ column: lastColumn, row: lastRow }),
-        });
-  };
+  static readonly written = (sheet: Pick<XlsxWorksheet, "rows">): O.Option<XlsxRange> =>
+    boundsOf(sheet.rows, isWritten);
 }
 
 /**
@@ -399,7 +399,7 @@ export class XlsxWorksheet extends S.Opaque<XlsxWorksheet, { readonly brand: uni
  *
  * **Example** (Known kinds of part)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Known kinds of part"
  * import { XlsxDroppedKind } from "@beep/xlsx"
  * import * as S from "effect/Schema"
  *
@@ -437,7 +437,7 @@ export type XlsxDroppedKind = typeof XlsxDroppedKind.Type;
  *
  * **Example** (A chart read past)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A chart read past"
  * import { XlsxDroppedPart } from "@beep/xlsx"
  *
  * const part = XlsxDroppedPart.make({ path: "xl/charts/chart1.xml", kind: "chart" })
@@ -459,7 +459,7 @@ export class XlsxDroppedPart extends S.Opaque<XlsxDroppedPart, { readonly brand:
  *
  * **Example** (Build a workbook and look up a sheet)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build a workbook and look up a sheet"
  * import { XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
  * import * as O from "effect/Option"
  *
@@ -473,7 +473,7 @@ export class XlsxDroppedPart extends S.Opaque<XlsxDroppedPart, { readonly brand:
  *
  * **Example** (Sheet names clash whatever the case)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Sheet names clash whatever the case"
  * import { XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
  * import * as O from "effect/Option"
  *
@@ -491,15 +491,16 @@ export class XlsxWorkbook extends S.Opaque<XlsxWorkbook, { readonly brand: uniqu
       S.withConstructorDefault(Effect.succeed("1900" as const)),
       S.withDecodingDefaultTypeKey(Effect.succeed("1900" as const))
     ),
-    sheets: S.NonEmptyArray(XlsxWorksheet.annotateKey({ description: "One sheet" }))
+    sheets: S.NonEmptyArray(XlsxWorksheet)
       .check(
-        uniqueBy(
-          (sheet: { readonly info: { readonly name: string } }) => Str.toLowerCase(sheet.info.name),
-          "sheets with no name twice, whatever the case"
-        )
+        uniqueBy((sheet: XlsxWorksheet) => Str.toLowerCase(sheet.info.name), "UniqueSheetNames", {
+          title: "Unique sheet names",
+          description: "No two sheets of a workbook share a name, compared without regard to case",
+          expected: "sheets with no name twice, whatever the case",
+        })
       )
       .pipe(S.annotateKey({ description: "The sheets, in the workbook's order" })),
-    dropped: S.Array(XlsxDroppedPart.annotateKey({ description: "One part" })).pipe(
+    dropped: S.Array(XlsxDroppedPart).pipe(
       S.annotateKey({ description: "Parts the file held that are not modelled and not written back" }),
       S.withConstructorDefault(Effect.succeed([])),
       S.withDecodingDefaultTypeKey(Effect.succeed([]))
@@ -516,8 +517,9 @@ export class XlsxWorkbook extends S.Opaque<XlsxWorkbook, { readonly brand: uniqu
   static readonly canonical = (workbook: Pick<XlsxWorkbook, "dateSystem" | "sheets">): XlsxWorkbook => {
     const ids = MutableHashMap.empty<string, number>();
     let next = FIRST_CUSTOM_FORMAT;
+    // crispen: a counter, not a fold — the ids are handed out in the order codes are met across every cell.
     const idOf = (code: string): number => {
-      const known = O.orElse(MutableHashMap.get(ids, code), () => R.get(builtinIds, code));
+      const known = O.orElse(MutableHashMap.get(ids, code), () => HashMap.get(builtinIds, code));
       if (O.isSome(known)) return known.value;
       const id = next;
       next += 1;
@@ -529,28 +531,22 @@ export class XlsxWorkbook extends S.Opaque<XlsxWorkbook, { readonly brand: uniqu
         XlsxRow.make({
           number: row.number,
           hidden: row.hidden,
-          cells: A.map(
-            A.sort(
-              A.filter(row.cells, (cell) => cell.value.kind !== "Blank" || O.isSome(cell.formula)),
-              byColumn
-            ),
-            (cell) => {
-              const canonical = XlsxCell.canonical(cell);
-              return XlsxCell.make({
-                column: canonical.column,
-                value: canonical.value,
-                formula: canonical.formula,
-                format: XlsxNumberFormat.make({ id: idOf(canonical.format.code), code: canonical.format.code }),
-              });
-            }
-          ),
+          cells: A.map(A.sort(A.filter(row.cells, isWritten), byColumn), (cell) => {
+            const canonical = XlsxCell.canonical(cell, workbook.dateSystem);
+            return XlsxCell.make({
+              column: canonical.column,
+              value: canonical.value,
+              formula: canonical.formula,
+              format: XlsxNumberFormat.make({ id: idOf(canonical.format.code), code: canonical.format.code }),
+            });
+          }),
         })
       );
       return XlsxWorksheet.make({
         info: XlsxSheetInfo.make({
           name: sheet.info.name,
           state: sheet.info.state,
-          declared: XlsxWorksheet.written({ rows }),
+          declared: boundsOf(rows, isWritten),
         }),
         rows,
         merges: A.map(sheet.merges, XlsxRange.ordered),
@@ -561,13 +557,12 @@ export class XlsxWorkbook extends S.Opaque<XlsxWorkbook, { readonly brand: uniqu
   };
 
   /** The sheet of a name, whatever the case, when the workbook has it. */
-  static readonly sheet = (
-    workbook: Pick<XlsxWorkbook, "sheets">,
-    name: string
-  ): O.Option<XlsxWorkbook["sheets"][number]> =>
-    A.findFirst(workbook.sheets, (sheet) => Str.toLowerCase(sheet.info.name) === Str.toLowerCase(name));
+  static readonly sheet = (workbook: Pick<XlsxWorkbook, "sheets">, name: string): O.Option<XlsxWorksheet> => {
+    const wanted = Str.toLowerCase(name);
+    return A.findFirst(workbook.sheets, (sheet) => Str.toLowerCase(sheet.info.name) === wanted);
+  };
 
   /** The sheets a person sees in Excel's tabs. */
-  static readonly visible = (workbook: Pick<XlsxWorkbook, "sheets">): ReadonlyArray<XlsxWorkbook["sheets"][number]> =>
+  static readonly visible = (workbook: Pick<XlsxWorkbook, "sheets">): ReadonlyArray<XlsxWorksheet> =>
     A.filter(workbook.sheets, (sheet) => sheet.info.state === "visible");
 }

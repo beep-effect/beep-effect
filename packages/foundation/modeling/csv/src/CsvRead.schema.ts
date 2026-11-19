@@ -46,14 +46,16 @@ export class CsvDelimiterGiven extends S.Opaque<CsvDelimiterGiven, { readonly br
 /**
  * The delimiter was detected: one of the candidates split the first records into a consistent number of cells.
  *
- * **Example** (Record a detected delimiter)
+ * **Example** (Detect tabs from the first records)
  *
- * ```ts import.meta.vitest name="Record a detected delimiter"
+ * ```ts import.meta.vitest name="Detect tabs from the first records"
+ * import { Csv } from "@beep/csv/Csv.codec"
  * import { CsvDelimiterDetected } from "@beep/csv/CsvRead.schema"
+ * import * as Result from "effect/Result"
  *
- * const found = CsvDelimiterDetected.make({ delimiter: "\t" })
- * found.how // => "detected"
- * found.delimiter // => "\t"
+ * const read = Result.getOrThrow(Csv.parseResult("SKU\tName\tQty\nBRK-040\tBracket\t12\nBLT-0042\tBolt\t3\n"))
+ * read.delimiter // => CsvDelimiterDetected.make({ delimiter: "\t" })
+ * read.table.records[1] // => ["BRK-040", "Bracket", "12"]
  * ```
  *
  * @category models
@@ -172,12 +174,16 @@ export class CsvEncodingFromBom extends S.Opaque<CsvEncodingFromBom, { readonly 
  * The bytes had no byte-order mark and were valid UTF-8 (a stream checks only its detection window), so they were read
  * as UTF-8.
  *
- * **Example** (Record bytes that were valid UTF-8)
+ * **Example** (Read bytes that are UTF-8 without a mark)
  *
- * ```ts import.meta.vitest name="Record bytes that were valid UTF-8"
- * import { CsvEncodingValidUtf8 } from "@beep/csv/CsvRead.schema"
+ * ```ts import.meta.vitest name="Read bytes that are UTF-8 without a mark"
+ * import { Csv } from "@beep/csv/Csv.codec"
+ * import { CsvSource } from "@beep/csv/CsvRead.schema"
+ * import * as Result from "effect/Result"
  *
- * CsvEncodingValidUtf8.make({}).encoding // => "utf-8"
+ * const read = Result.getOrThrow(Csv.parseBytesResult(new TextEncoder().encode("Größe,Qty\n40 mm,12\n")))
+ * CsvSource.guards.bytes(read.source) && read.source.encoding.how // => "valid"
+ * read.table.records[0] // => ["Größe", "Qty"]
  * ```
  *
  * @category models
@@ -193,14 +199,17 @@ export class CsvEncodingValidUtf8 extends S.Opaque<CsvEncodingValidUtf8, { reado
  * The bytes were not UTF-8, so they were read as Windows-1252, the encoding Excel writes; `firstInvalidByte` says
  * where UTF-8 failed.
  *
- * **Example** (Record the Windows-1252 fallback)
+ * **Example** (Read bytes Excel wrote in Windows-1252)
  *
- * ```ts import.meta.vitest name="Record the Windows-1252 fallback"
- * import { CsvEncodingFallback } from "@beep/csv/CsvRead.schema"
+ * ```ts import.meta.vitest name="Read bytes Excel wrote in Windows-1252"
+ * import { Csv } from "@beep/csv/Csv.codec"
+ * import { CsvEncodingFallback, CsvSource } from "@beep/csv/CsvRead.schema"
+ * import * as Result from "effect/Result"
  *
- * const found = CsvEncodingFallback.make({ firstInvalidByte: 12 })
- * found.encoding // => "windows-1252"
- * found.firstInvalidByte // => 12
+ * // "Caf\xE9,1\n": the lone 0xE9 is not UTF-8
+ * const read = Result.getOrThrow(Csv.parseBytesResult(Uint8Array.of(0x43, 0x61, 0x66, 0xe9, 0x2c, 0x31, 0x0a)))
+ * CsvSource.guards.bytes(read.source) && read.source.encoding // => CsvEncodingFallback.make({ firstInvalidByte: 3 })
+ * read.table.records // => [["Café", "1"]]
  * ```
  *
  * @category models
@@ -386,9 +395,7 @@ export class CsvClean extends S.Opaque<CsvClean, { readonly brand: unique symbol
 export class CsvNoted extends S.Opaque<CsvNoted, { readonly brand: unique symbol }>()(
   S.Struct({
     outcome: S.tag("noted"),
-    warnings: S.NonEmptyArray(CsvWarning.annotateKey({ description: "One warning" })).pipe(
-      S.annotateKey({ description: "Every oddity read past, in file order" })
-    ),
+    warnings: S.NonEmptyArray(CsvWarning).pipe(S.annotateKey({ description: "Every oddity read past, in file order" })),
   }).pipe($I.annoteSchema("CsvNoted", { description: "Read, with oddities to show the person" }))
 ) {}
 
@@ -449,7 +456,7 @@ export type CsvOutcome = typeof CsvOutcome.Type;
  */
 export class CsvRead extends S.Opaque<CsvRead, { readonly brand: unique symbol }>()(
   S.Struct({
-    table: CsvTable.pipe(S.annotateKey({ description: "The records read" })),
+    table: CsvTable,
     delimiter: CsvDelimiterFound.pipe(S.annotateKey({ description: "How the delimiter was found" })),
     source: CsvSource.pipe(S.annotateKey({ description: "What the input was" })),
     outcome: CsvOutcome.pipe(
@@ -459,6 +466,6 @@ export class CsvRead extends S.Opaque<CsvRead, { readonly brand: unique symbol }
   }).pipe($I.annoteSchema("CsvRead", { description: "What a CSV read returns" }))
 ) {
   /** The warnings of a read, empty when it was clean. */
-  static readonly warnings = (read: CsvRead): ReadonlyArray<CsvNoted["warnings"][number]> =>
+  static readonly warnings = (read: CsvRead): ReadonlyArray<CsvWarning> =>
     CsvOutcome.match(read.outcome, { clean: () => [], noted: (noted) => noted.warnings });
 }

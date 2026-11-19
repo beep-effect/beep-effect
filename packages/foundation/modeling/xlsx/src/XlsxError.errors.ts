@@ -7,18 +7,17 @@
  */
 
 import { $XlsxId } from "@beep/identity/packages";
-import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { describeFinding, XlsxFatal, XlsxWarning } from "./XlsxDiagnostic.schema.ts";
+import { describeFinding, XlsxFatal } from "./XlsxDiagnostic.schema.ts";
 
 const $I = $XlsxId.create("XlsxError");
 
 /**
- * Why a workbook could not be read: the finding that stopped the read, and what was read past before it.
+ * Why a workbook could not be read: the finding that stopped the read.
  *
  * **Example** (Recover from a file that is not a workbook)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Recover from a file that is not a workbook"
  * import { Xlsx } from "@beep/xlsx"
  * import * as Effect from "effect/Effect"
  *
@@ -33,11 +32,11 @@ const $I = $XlsxId.create("XlsxError");
  *
  * **Example** (Build the error from a finding)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Build the error from a finding"
  * import { NoSheets, XlsxFatal, XlsxParseError } from "@beep/xlsx"
  *
  * const error = XlsxParseError.make({ fatal: XlsxFatal.make({ finding: NoSheets.make({}) }) })
- * error.warnings.length // => 0
+ * error.fatal.finding.kind // => "NoSheets"
  * error.message // => "XLSX parse failed: the workbook has no sheet"
  * ```
  *
@@ -48,14 +47,7 @@ export class XlsxParseError extends S.TaggedError<XlsxParseError, { readonly bra
   $I`XlsxParseError`
 )(
   "XlsxParseError",
-  {
-    fatal: XlsxFatal.pipe(S.annotateKey({ description: "The finding that stopped the read" })),
-    warnings: S.Array(XlsxWarning.annotateKey({ description: "One oddity" })).pipe(
-      S.annotateKey({ description: "What was read past before the read stopped" }),
-      S.withConstructorDefault(Effect.succeed([])),
-      S.withDecodingDefaultTypeKey(Effect.succeed([]))
-    ),
-  },
+  { fatal: XlsxFatal },
   $I.annoteError<XlsxParseError>("XlsxParseError", { description: "Why a workbook could not be read" })
 ) {
   /** The finding, in words. */
@@ -65,20 +57,26 @@ export class XlsxParseError extends S.TaggedError<XlsxParseError, { readonly bra
 }
 
 /**
- * Why a workbook could not be written. The schema admits only workbooks the format can hold, so this is reached
- * only by a value built past it, or when the runtime has no deflate.
+ * Why a workbook could not be written: the zip writer's failure, kept as the cause.
+ *
+ * **Gotchas**
+ *
+ * The writer names every part itself, so the zip writer's refusals (a path it cannot hold) are not reached by any
+ * workbook the schema admits. A runtime without `CompressionStream` is not this error: `effect/encoding/Zip` dies on
+ * it, as on any compressor failure; write with `compression: "store"` there.
  *
  * **Example** (Handle a failed write)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Handle a failed write"
  * import { XlsxStringifyError } from "@beep/xlsx"
  * import * as Effect from "effect/Effect"
  *
- * const program = Effect.fail(XlsxStringifyError.make({ reason: "the runtime has no CompressionStream" })).pipe(
+ * const cause = new Error("path is empty")
+ * const program = Effect.fail(XlsxStringifyError.make({ reason: cause.message, cause })).pipe(
  *   Effect.catchTag("XlsxStringifyError", (error) => Effect.succeed(error.message))
  * )
  *
- * Effect.runSync(program) // => "XLSX stringify failed: the runtime has no CompressionStream"
+ * Effect.runSync(program) // => "XLSX stringify failed: path is empty"
  * ```
  *
  * @category errors
@@ -88,7 +86,10 @@ export class XlsxStringifyError extends S.TaggedError<XlsxStringifyError, { read
   $I`XlsxStringifyError`
 )(
   "XlsxStringifyError",
-  { reason: S.String.pipe(S.annotateKey({ description: "What could not be written" })) },
+  {
+    reason: S.String.pipe(S.annotateKey({ description: "What could not be written" })),
+    cause: S.Defect({ includeStack: true }).pipe(S.annotateKey({ description: "The zip writer's failure" })),
+  },
   $I.annoteError<XlsxStringifyError>("XlsxStringifyError", { description: "Why a workbook could not be written" })
 ) {
   /** The reason, in words. */

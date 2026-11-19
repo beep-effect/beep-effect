@@ -141,9 +141,10 @@ export class CsvTextSpan extends S.Opaque<CsvTextSpan, { readonly brand: unique 
  *
  * ```ts import.meta.vitest name="Decode a record end"
  * import { CsvRecordEnd } from "@beep/csv/CsvPosition.schema"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
- * S.decodeUnknownSync(CsvRecordEnd)("CRLF") // => "CRLF"
+ * Result.getOrThrow(S.decodeUnknownResult(CsvRecordEnd)("CRLF")) // => "CRLF"
  * S.is(CsvRecordEnd)("CRCR") // => false
  * ```
  *

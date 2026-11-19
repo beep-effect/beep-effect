@@ -6,6 +6,7 @@ import { $XlsxId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Xml from "effect/encoding/Xml";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
@@ -32,16 +33,19 @@ export const localName = (name: string): string => {
 };
 
 /** An attribute by its local name, whatever prefix the file gave it. */
-export const attribute = (input: {
-  readonly attributes: Readonly<Record<string, string>>;
-  readonly name: string;
-}): O.Option<string> =>
-  O.orElse(R.get(input.attributes, input.name), () =>
-    O.map(
-      A.findFirst(R.toEntries(input.attributes), ([key]) => localName(key) === input.name),
-      ([, value]) => value
+export const attribute: {
+  (name: string): (attributes: Readonly<Record<string, string>>) => O.Option<string>;
+  (attributes: Readonly<Record<string, string>>, name: string): O.Option<string>;
+} = dual(
+  2,
+  (attributes: Readonly<Record<string, string>>, name: string): O.Option<string> =>
+    O.orElse(R.get(attributes, name), () =>
+      O.map(
+        A.findFirst(R.toEntries(attributes), ([key]) => localName(key) === name),
+        ([, value]) => value
+      )
     )
-  );
+);
 
 /** Whether an attribute says yes, as `1` or `true`. */
 export const isTrue = (value: string | undefined): boolean => value === "1" || value === "true";
@@ -105,15 +109,20 @@ export const rootOf = Effect.fnUntraced(function* (input: {
 });
 
 /** The child elements of an element with a local name. */
-export const children = (input: { readonly of: XmlElement; readonly name: string }): ReadonlyArray<XmlElement> =>
-  A.filter(
-    input.of.children,
-    (child): child is XmlElement => !P.isString(child) && localName(child.name) === input.name
-  );
+export const children: {
+  (name: string): (of: XmlElement) => ReadonlyArray<XmlElement>;
+  (of: XmlElement, name: string): ReadonlyArray<XmlElement>;
+} = dual(
+  2,
+  (of: XmlElement, name: string): ReadonlyArray<XmlElement> =>
+    A.filter(of.children, (found): found is XmlElement => !P.isString(found) && localName(found.name) === name)
+);
 
 /** The first child element with a local name. */
-export const child = (input: { readonly of: XmlElement; readonly name: string }): O.Option<XmlElement> =>
-  A.head(children(input));
+export const child: {
+  (name: string): (of: XmlElement) => O.Option<XmlElement>;
+  (of: XmlElement, name: string): O.Option<XmlElement>;
+} = dual(2, (of: XmlElement, name: string): O.Option<XmlElement> => A.head(children(of, name)));
 
 /** One relationship of a part: its id, what kind of part it points at, and that part's path in the archive. */
 export class Relationship extends S.Opaque<Relationship, { readonly brand: unique symbol }>()(
@@ -128,11 +137,15 @@ export class Relationship extends S.Opaque<Relationship, { readonly brand: uniqu
 const folderOf = (path: string): string =>
   O.match(Str.lastIndexOf("/")(path), { onNone: () => "", onSome: (at) => Str.slice(0, at + 1)(path) });
 
-/** The path a relationship's target names, from the part that holds the relationship. */
+/**
+ * The path a relationship's target names, from the part that holds the relationship. An absolute target starts at
+ * the archive's root; either kind has its `.` and `..` segments worked out, and a `..` past the root stays there.
+ */
 const resolve = (from: string, target: string): string => {
-  if (Str.startsWith("/")(target)) return Str.slice(1)(target);
+  const joined = Str.startsWith("/")(target) ? target : `${folderOf(from)}${target}`;
+  // crispen: a stack of segments, popped by `..`; a fold would rebuild the array per segment.
   const parts: Array<string> = [];
-  for (const piece of Str.split("/")(`${folderOf(from)}${target}`)) {
+  for (const piece of Str.split("/")(joined)) {
     if (piece === "" || piece === ".") continue;
     if (piece === "..") parts.pop();
     else parts.push(piece);
@@ -147,23 +160,27 @@ export const relationshipsPath = (part: string): string => {
 };
 
 /** The relationships a `.rels` part lists, their targets resolved from the part they belong to. */
-export const relationshipsOf = (input: {
-  readonly root: XmlElement;
-  readonly part: string;
-}): ReadonlyArray<Relationship> =>
-  A.map(children({ of: input.root, name: "Relationship" }), (element) =>
-    Relationship.make({
-      id: element.attributes.Id ?? "",
-      type: element.attributes.Type ?? "",
-      path: resolve(input.part, element.attributes.Target ?? ""),
-    })
-  );
+export const relationshipsOf: {
+  (part: string): (root: XmlElement) => ReadonlyArray<Relationship>;
+  (root: XmlElement, part: string): ReadonlyArray<Relationship>;
+} = dual(
+  2,
+  (root: XmlElement, part: string): ReadonlyArray<Relationship> =>
+    A.map(children(root, "Relationship"), (element) =>
+      Relationship.make({
+        id: element.attributes.Id ?? "",
+        type: element.attributes.Type ?? "",
+        path: resolve(part, element.attributes.Target ?? ""),
+      })
+    )
+);
 
 const escape = /_x([0-9A-Fa-f]{4})_/g;
 
 /** Cell text as it is meant: Excel writes a character XML cannot hold as `_xHHHH_`. */
 export const unescaped = (text: string): string => {
   if (!Str.includes("_x")(text)) return text;
+  // crispen: the text between escapes is copied as each is decoded, on the path every cell's text takes.
   let out = "";
   let at = 0;
   for (const found of Str.matchAll(escape)(text)) {

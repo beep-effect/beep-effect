@@ -6,7 +6,8 @@ import { CsvByteOffset, CsvIndex, CsvTextSpan } from "@beep/csv/CsvPosition.sche
 import { CsvRead } from "@beep/csv/CsvRead.schema";
 import { CsvRecordSlice, CsvTable } from "@beep/csv/CsvTable.schema";
 import { MachineState } from "@beep/csv/internal/machine";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, it } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -32,7 +33,7 @@ describe("every schema generates only valid values", () => {
       name,
       [Arbitrary.schema(schema)],
       ([value]) => {
-        expect(S.is(schema)(value)).toBe(true);
+        assertTrue(S.is(schema)(value));
       },
       runs
     );

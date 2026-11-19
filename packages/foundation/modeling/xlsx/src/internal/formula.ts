@@ -13,6 +13,8 @@ export const shifted = (input: {
   readonly rows: number;
 }): string => {
   if (input.columns === 0 && input.rows === 0) return input.formula;
+  // crispen: the text between matches is copied as each reference is moved; a replace callback cannot skip a match
+  // that would move off the sheet without also losing its place.
   let out = "";
   let at = 0;
   for (const found of Str.matchAll(reference)(input.formula)) {

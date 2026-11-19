@@ -3,9 +3,11 @@
 // every later serial is one more than the true day count. The 1904 system counts 0 as 1 January 1904 and has no
 // such day. Serial 0 in the 1900 system is shown as "January 0, 1900". Nothing here has a time zone.
 import { $XlsxId } from "@beep/identity/packages";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import type { XlsxCalendar, XlsxDateSystem } from "../XlsxSerial.schema.ts";
 
 const $I = $XlsxId.create("internal/serial");
 
@@ -63,9 +65,11 @@ const cut = (serial: number): number => {
 };
 
 /** The calendar fields of a serial in a date system. `serial` is 0 or more. */
-export const partsOf = (input: { readonly serial: number; readonly date1904: boolean }): SerialParts => {
-  const { date1904 } = input;
-  const value = cut(input.serial);
+export const partsOf: {
+  (system: XlsxDateSystem): (serial: number) => SerialParts;
+  (serial: number, system: XlsxDateSystem): SerialParts;
+} = dual(2, (serial: number, system: XlsxDateSystem): SerialParts => {
+  const value = cut(serial);
   let days = Math.trunc(value);
   let seconds = Math.floor(86_400 * (value - days));
   let fraction = 86_400 * (value - days) - seconds;
@@ -82,28 +86,23 @@ export const partsOf = (input: { readonly serial: number; readonly date1904: boo
   const minute = Math.floor(seconds / 60) % 60;
   const hour = Math.floor(seconds / 3600);
   const time = { days, hour, minute, second, fraction };
-  const count = date1904 ? days + DAYS_1904 : days;
+  const count = system === "1904" ? days + DAYS_1904 : days;
   if (count === 60) return SerialParts.make({ ...time, year: 1900, month: 2, day: 29, weekday: 3 });
   if (count === 0) return SerialParts.make({ ...time, year: 1900, month: 1, day: 0, weekday: 6 });
   const real = count > 60 ? count - 1 : count;
   const [year, month, day] = civilFromDays(EPOCH_1900 + real - 1);
   const weekday = ((((real % 7) + 7) % 7) + (count < 60 ? 6 : 0)) % 7;
   return SerialParts.make({ ...time, year, month, day, weekday });
-};
+});
 
-/** The serial of calendar fields in a date system, when the sheet's calendar has such a moment. */
-export const serialOf = (input: {
-  readonly parts: {
-    readonly year: number;
-    readonly month: number;
-    readonly day: number;
-    readonly hour: number;
-    readonly minute: number;
-    readonly second: number;
-  };
-  readonly date1904: boolean;
-}): O.Option<number> => {
-  const { parts, date1904 } = input;
+/**
+ * The serial of calendar fields in a date system, when the sheet's calendar has such a day. The time of day is in
+ * range already: `XlsxCalendar` holds hours 0 to 23 and minutes and seconds 0 to 59.
+ */
+export const serialOf: {
+  (system: XlsxDateSystem): (parts: XlsxCalendar) => O.Option<number>;
+  (parts: XlsxCalendar, system: XlsxDateSystem): O.Option<number>;
+} = dual(2, (parts: XlsxCalendar, system: XlsxDateSystem): O.Option<number> => {
   const time = (parts.hour * 3600 + parts.minute * 60 + parts.second) / 86_400;
   let count: number;
   if (parts.year === 1900 && parts.month === 2 && parts.day === 29) count = 60;
@@ -116,6 +115,6 @@ export const serialOf = (input: {
     const real = days - EPOCH_1900 + 1;
     count = real >= 60 ? real + 1 : real;
   }
-  const days = date1904 ? count - DAYS_1904 : count;
+  const days = system === "1904" ? count - DAYS_1904 : count;
   return days < 0 ? O.none() : O.some(days + time);
-};
+});

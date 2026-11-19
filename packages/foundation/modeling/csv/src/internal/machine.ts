@@ -1,14 +1,16 @@
-// The only CSV parser in the package: a push machine. `push(state, chunk)` reads one chunk and returns the next state
-// with the records and findings the chunk completed; `end(state)` flushes the last record. Splitting the input
-// anywhere gives the same records and findings (the chunk-invariance law in Csv.property.test.ts). Inside one chunk
-// the state lives in local variables, for speed; a `MachineState` value is built only at the chunk's end. Engine code
-// never imports the `Csv` facade: it returns findings as schema values and the facade decides what fails.
+// The only CSV parser in the package: a push machine. `Machine.start(config)` begins a read, `feed(chunk)` reads one
+// chunk, `finish()` flushes the last record, and `takeRecords()` / `takeDiagnostics()` hand over what they completed.
+// Splitting the input anywhere gives the same records and findings (the chunk-invariance laws in
+// Csv.property.test.ts). One machine lives across the chunks of a read and keeps its state in one mutable record, so a
+// chunk costs time in its own length, not in the width of the record left open across it. `state()` takes that record
+// as a `MachineState` schema value and `Machine.start(config, state)` resumes from one. Engine code never imports the
+// `Csv` facade: it returns findings as schema values and the facade decides what fails.
 
 import { $CsvId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
+import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -22,10 +24,12 @@ import {
   StrayQuote,
   TextAfterClosingQuote,
   UnterminatedQuote,
+  WarningsTruncated,
 } from "../CsvDiagnostic.schema.ts";
-import { applyTrim, CsvDelimiter, CsvReadOptions, judgeQuote, judgeRagged } from "../CsvOptions.schema.ts";
+import { CsvDelimiter, CsvReadOptions } from "../CsvOptions.schema.ts";
 import { CsvIndex, CsvRecordEnd, CsvTextSpan } from "../CsvPosition.schema.ts";
 import { CsvCell, CsvRecord } from "../CsvTable.schema.ts";
+import { applyTrim, judgeQuote, judgeRagged } from "./rules.ts";
 import type { CsvTextLimit } from "../CsvDiagnostic.schema.ts";
 
 const $I = $CsvId.create("internal/machine");
@@ -157,6 +161,14 @@ export class MachineState extends S.Opaque<MachineState, { readonly brand: uniqu
       S.annotateKey({ description: "Whether mixed terminators were reported" }),
       S.withConstructorDefault(Effect.succeed(false))
     ),
+    warningsKept: point.pipe(
+      S.annotateKey({ description: "Warnings kept so far, at most the warning cap" }),
+      S.withConstructorDefault(Effect.succeed(0))
+    ),
+    warningsDropped: S.Int.check(S.isBetween({ minimum: 0, maximum: Number.MAX_SAFE_INTEGER })).pipe(
+      S.annotateKey({ description: "Warnings past the cap, counted but not kept" }),
+      S.withConstructorDefault(Effect.succeed(0))
+    ),
     stopped: S.Boolean.pipe(
       S.annotateKey({ description: "A fatal finding stopped the read" }),
       S.withConstructorDefault(Effect.succeed(false))
@@ -173,7 +185,7 @@ export class RawRecord extends S.Opaque<RawRecord, { readonly brand: unique symb
     cells: CsvRecord.pipe(S.annotateKey({ description: "The cells" })),
     quoted: S.NonEmptyArray(S.Boolean).pipe(S.annotateKey({ description: "Whether each cell was quoted" })),
     record: CsvIndex.pipe(S.annotateKey({ description: "0-based record number" })),
-    span: CsvTextSpan.pipe(S.annotateKey({ description: "Where the record is" })),
+    span: CsvTextSpan,
     end: CsvRecordEnd.pipe(S.annotateKey({ description: "How the record ended" })),
   }).pipe($I.annoteSchema("RawRecord", { description: "A record as the machine emits it" }))
 ) {}
@@ -189,125 +201,152 @@ export class MachineConfig extends S.Opaque<MachineConfig, { readonly brand: uni
   }).pipe($I.annoteSchema("MachineConfig", { description: "The rules the machine reads by" }))
 ) {}
 
-/** What one step produced: the next state, the records it completed and the findings it made, in file order. */
-export class Step extends S.Opaque<Step, { readonly brand: unique symbol }>()(
-  S.Struct({
-    state: MachineState,
-    records: S.Array(RawRecord).pipe(S.annotateKey({ description: "The records the step completed" })),
-    diagnostics: S.Array(CsvDiagnostic).pipe(S.annotateKey({ description: "The findings the step made" })),
-  }).pipe($I.annoteSchema("Step", { description: "What one machine step produced" }))
-) {}
-
 // ── the machine ──────────────────────────────────────────────────────────────────────────────────────────────────────
 
-// crispen: kept as a mutable class — it is the per-chunk working copy of `MachineState`, mutated once per character
-// for speed; the state crosses chunk boundaries only as the `MachineState` schema value built in `snapshot`.
-/** The mutable working copy of a state, for one chunk. */
-class Run {
-  mode: MachineModeName;
-  spaces: number;
-  cells: Array<string>;
-  quoted: Array<boolean>;
-  field: string;
-  fieldQuoted: boolean;
-  content: boolean;
-  held: boolean;
-  crInQuotes: boolean;
-  offset: number;
-  line: number;
-  character: number;
-  recordOffset: number;
-  recordLine: number;
-  recordCharacter: number;
-  quoteOffset: number;
-  quoteLine: number;
-  quoteCharacter: number;
-  record: number;
-  emitted: number;
-  width: O.Option<number>;
-  firstEnd: O.Option<CsvRecordEnd>;
-  mixedReported: boolean;
-  stopped: boolean;
-  readonly records: Array<RawRecord> = [];
-  readonly diagnostics: Array<CsvDiagnostic> = [];
+/** Every `MachineState` field but the mode, writable, with the open record's cells as arrays the machine appends to. */
+type Working = {
+  -readonly [K in Exclude<keyof MachineState, "brand" | "mode" | "cells" | "quoted">]: MachineState[K];
+} & { cells: Array<CsvCell>; quoted: Array<boolean> };
 
+/** Engine-built values hold their invariants by construction; the property tests prove them, so `make` skips checks. */
+const built = { disableChecks: true } as const;
+
+// crispen: kept as a mutable class — it is one read's working state, mutated once per character run for speed; the
+// state leaves it only as the `MachineState` schema value `state()` builds.
+/** One read in progress. */
+export class Machine {
+  /** Where the machine is inside a record. */
+  mode: MachineModeName;
+  /** Spaces seen after a closing quote, in `afterQuoteSpaces`. */
+  spaces: number;
+  /** The rest of the state. */
+  readonly s: Working;
+  private records: Array<RawRecord> = [];
+  private diagnostics: Array<CsvDiagnostic> = [];
+
+  /** The rules this read goes by. */
   readonly config: MachineConfig;
 
-  constructor(state: MachineState, config: MachineConfig) {
+  private constructor(config: MachineConfig, state: MachineState) {
     this.config = config;
-    this.mode = state.mode.mode;
-    this.spaces = MachineMode.guards.afterQuoteSpaces(state.mode) ? state.mode.spaces : 0;
-    this.cells = A.copy(state.cells);
-    this.quoted = A.copy(state.quoted);
-    this.field = state.field;
-    this.fieldQuoted = state.fieldQuoted;
-    this.content = state.content;
-    this.held = state.held;
-    this.crInQuotes = state.crInQuotes;
-    this.offset = state.offset;
-    this.line = state.line;
-    this.character = state.character;
-    this.recordOffset = state.recordOffset;
-    this.recordLine = state.recordLine;
-    this.recordCharacter = state.recordCharacter;
-    this.quoteOffset = state.quoteOffset;
-    this.quoteLine = state.quoteLine;
-    this.quoteCharacter = state.quoteCharacter;
-    this.record = state.record;
-    this.emitted = state.emitted;
-    this.width = state.width;
-    this.firstEnd = state.firstEnd;
-    this.mixedReported = state.mixedReported;
-    this.stopped = state.stopped;
+    const { mode, cells, quoted, ...rest } = state;
+    this.mode = mode.mode;
+    this.spaces = MachineMode.guards.afterQuoteSpaces(mode) ? mode.spaces : 0;
+    this.s = { ...rest, cells: A.copy(cells), quoted: A.copy(quoted) };
   }
 
-  snapshot(): Step {
+  /** A read under `config`, from the start or resumed from a state another machine took. */
+  static start(config: MachineConfig, state: MachineState = MachineState.initial): Machine {
+    return new Machine(config, state);
+  }
+
+  /** Whether a fatal finding stopped the read. */
+  get stopped(): boolean {
+    return this.s.stopped;
+  }
+
+  /** Whether the read sits between records: no record open and none held at a carriage return. */
+  get atRecordBoundary(): boolean {
+    return !this.s.content && !this.s.held;
+  }
+
+  /** The state so far, as a schema value another machine can resume from. */
+  state(): MachineState {
     const mode: MachineMode =
       this.mode === "afterQuoteSpaces"
         ? AfterQuoteSpaces.make({ spaces: this.spaces })
         : MachineMode.cases[this.mode].make({});
-    return Step.make({
-      state: MachineState.make({
-        mode,
-        cells: this.cells,
-        quoted: this.quoted,
-        field: this.field,
-        fieldQuoted: this.fieldQuoted,
-        content: this.content,
-        held: this.held,
-        crInQuotes: this.crInQuotes,
-        offset: this.offset,
-        line: this.line,
-        character: this.character,
-        recordOffset: this.recordOffset,
-        recordLine: this.recordLine,
-        recordCharacter: this.recordCharacter,
-        quoteOffset: this.quoteOffset,
-        quoteLine: this.quoteLine,
-        quoteCharacter: this.quoteCharacter,
-        record: this.record,
-        emitted: this.emitted,
-        width: this.width,
-        firstEnd: this.firstEnd,
-        mixedReported: this.mixedReported,
-        stopped: this.stopped,
-      }),
-      records: this.records,
-      diagnostics: this.diagnostics,
-    });
+    return MachineState.make({ ...this.s, mode, cells: A.copy(this.s.cells), quoted: A.copy(this.s.quoted) });
+  }
+
+  /** Reads one chunk; `takeRecords` and `takeDiagnostics` then give what it completed. */
+  feed(text: string): Machine {
+    let i = 0;
+    while (i < text.length && !this.s.stopped) {
+      if (this.s.held) {
+        if (text[i] === "\n") {
+          this.releaseHeld(true);
+          i += 1;
+          continue;
+        }
+        this.releaseHeld(false);
+        if (this.s.stopped) break;
+      }
+      i = stepFor(this.mode)(this, text, i);
+    }
+    return this;
+  }
+
+  /** Ends the input: flushes the last record, and notes how many warnings went past the cap. */
+  finish(): Machine {
+    this.end();
+    if (!this.s.stopped && this.s.warningsDropped > 0) {
+      this.diagnostics.push(
+        CsvDiagnostic.cases.warning.make({
+          finding: WarningsTruncated.make({ kept: this.s.warningsKept, dropped: this.s.warningsDropped }),
+        })
+      );
+    }
+    return this;
+  }
+
+  /** The records completed since the last take, in file order. */
+  takeRecords(): ReadonlyArray<RawRecord> {
+    const records = this.records;
+    this.records = [];
+    return records;
+  }
+
+  /** The findings made since the last take, in file order. */
+  takeDiagnostics(): ReadonlyArray<CsvDiagnostic> {
+    const diagnostics = this.diagnostics;
+    this.diagnostics = [];
+    return diagnostics;
+  }
+
+  private end(): void {
+    if (this.s.stopped) return;
+    if (this.s.held) {
+      this.releaseHeld(false);
+      return;
+    }
+    if (this.mode === "quoted") {
+      const at = this.span(this.s.quoteOffset, 1, this.s.quoteLine, this.s.quoteCharacter);
+      this.report(
+        CsvDiagnostic.cases.fatal.make({
+          finding: UnterminatedQuote.make({ at, record: this.s.record, field: this.s.cells.length }),
+        })
+      );
+      return;
+    }
+    if (this.mode === "afterQuoteSpaces" && this.config.quotes === "strict") {
+      this.quoteFinding(TextAfterClosingQuote.make);
+      return;
+    }
+    if (this.s.content) this.endRecord("EndOfInput");
   }
 
   span(offset: number, length: number, line: number, character: number): CsvTextSpan {
-    return CsvTextSpan.make({ offset, length, line, character });
+    return CsvTextSpan.make({ offset, length, line, character }, built);
   }
 
   here(length: number): CsvTextSpan {
-    return this.span(this.offset, length, this.line, this.character);
+    return this.span(this.s.offset, length, this.s.line, this.s.character);
   }
 
   report(diagnostic: CsvDiagnostic): void {
     this.diagnostics.push(diagnostic);
-    if (diagnostic.severity === "fatal") this.stopped = true;
+    if (diagnostic.severity === "fatal") this.s.stopped = true;
+  }
+
+  /** Whether one more warning may be kept; past `maxWarnings` it is only counted, and never built. */
+  keepWarning(): boolean {
+    if (this.s.warningsKept < this.config.limits.maxWarnings) {
+      this.s.warningsKept += 1;
+      return true;
+    }
+    this.s.warningsDropped += 1;
+    return false;
   }
 
   limit(limit: CsvTextLimit, maximum: number, at: CsvTextSpan): void {
@@ -316,62 +355,77 @@ class Run {
 
   /** Moves past one consumed unit that is not a line break. */
   advance(units: number): void {
-    this.offset += units;
-    this.character += units;
+    this.s.offset += units;
+    this.s.character += units;
   }
 
   /** Moves past a line break of `units` units. */
   breakLine(units: number): void {
-    this.offset += units;
-    this.line += 1;
-    this.character = 0;
+    this.s.offset += units;
+    this.s.line += 1;
+    this.s.character = 0;
+  }
+
+  /**
+   * How many units a character run may take before the next one would pass the field or record cap, at least one: a
+   * run stops at the unit that passes a cap, so the cap is found at that unit however the input is cut.
+   */
+  budget(): number {
+    const { maxFieldLength, maxRecordLength } = this.config.limits;
+    return Num.max(
+      1,
+      Num.min(maxFieldLength - this.s.field.length, maxRecordLength - (this.s.offset - this.s.recordOffset)) + 1
+    );
   }
 
   checkField(): void {
     const { maxFieldLength, maxRecordLength } = this.config.limits;
-    if (this.field.length > maxFieldLength) this.limit("fieldLength", maxFieldLength, this.here(0));
-    else if (this.offset - this.recordOffset > maxRecordLength)
+    if (this.s.field.length > maxFieldLength) this.limit("fieldLength", maxFieldLength, this.here(0));
+    else if (this.s.offset - this.s.recordOffset > maxRecordLength)
       this.limit("recordLength", maxRecordLength, this.here(0));
   }
 
   endField(): void {
-    const cell = applyTrim(this.config.trim, this.field, this.fieldQuoted);
-    this.cells.push(cell);
-    this.quoted.push(this.fieldQuoted);
-    this.field = "";
-    this.fieldQuoted = false;
+    this.s.cells.push(applyTrim(this.config.trim, this.s.field, this.s.fieldQuoted));
+    this.s.quoted.push(this.s.fieldQuoted);
+    this.s.field = "";
+    this.s.fieldQuoted = false;
     this.mode = "fieldStart";
     this.spaces = 0;
     const { maxFieldsPerRecord } = this.config.limits;
-    if (this.cells.length > maxFieldsPerRecord) this.limit("fieldsPerRecord", maxFieldsPerRecord, this.here(0));
+    if (this.s.cells.length > maxFieldsPerRecord) this.limit("fieldsPerRecord", maxFieldsPerRecord, this.here(0));
     else this.checkField();
   }
 
   /** Finishes the current record's last field and emits the record with how it ended. */
   endRecord(end: CsvRecordEnd): void {
-    if (this.mode !== "fieldStart" || this.cells.length === 0 || this.content) this.endField();
-    if (this.stopped) return;
-    const cells = this.cells;
-    const quoted = this.quoted;
-    const recordIndex = this.record;
-    const span = this.span(this.recordOffset, this.offset - this.recordOffset, this.recordLine, this.recordCharacter);
-    this.cells = [];
-    this.quoted = [];
-    this.content = false;
-    this.record += 1;
+    if (this.mode !== "fieldStart" || this.s.cells.length === 0 || this.s.content) this.endField();
+    if (this.s.stopped) return;
+    const cells = this.s.cells;
+    const quoted = this.s.quoted;
+    const recordIndex = this.s.record;
+    const span = this.span(
+      this.s.recordOffset,
+      this.s.offset - this.s.recordOffset,
+      this.s.recordLine,
+      this.s.recordCharacter
+    );
+    this.s.cells = [];
+    this.s.quoted = [];
+    this.s.content = false;
+    this.s.record += 1;
     if (end !== "EndOfInput") {
-      O.match(this.firstEnd, {
+      O.match(this.s.firstEnd, {
         onNone: () => {
-          this.firstEnd = O.some(end);
+          this.s.firstEnd = O.some(end);
         },
         onSome: (first) => {
-          if (first !== end && !this.mixedReported) {
-            this.mixedReported = true;
-            this.report(
-              CsvDiagnostic.cases.warning.make({
-                finding: MixedTerminators.make({ at: span, first, other: end }),
-              })
-            );
+          if (first !== end && !this.s.mixedReported) {
+            this.s.mixedReported = true;
+            if (this.keepWarning())
+              this.report(
+                CsvDiagnostic.cases.warning.make({ finding: MixedTerminators.make({ at: span, first, other: end }) })
+              );
           }
         },
       });
@@ -379,115 +433,74 @@ class Run {
     const blank = cells.length === 1 && cells[0] === "" && quoted[0] === false;
     if (blank && this.config.blankLines === "skip") return;
     if (!A.isArrayNonEmpty(cells) || !A.isArrayNonEmpty(quoted)) return;
-    const record = cells;
-    const flags = quoted;
-    O.match(this.width, {
+    O.match(this.s.width, {
       onNone: () => {
-        this.width = O.some(record.length);
+        this.s.width = O.some(cells.length);
       },
       onSome: (width) => {
-        if (record.length !== width) {
-          this.report(
-            judgeRagged(
-              this.config.ragged,
-              RaggedRecord.make({ at: span, record: recordIndex, expected: width, actual: record.length })
-            )
-          );
+        if (cells.length !== width) {
+          if (this.config.ragged === "reject" || this.keepWarning())
+            this.report(
+              judgeRagged(
+                this.config.ragged,
+                RaggedRecord.make({ at: span, record: recordIndex, expected: width, actual: cells.length })
+              )
+            );
           if (this.config.ragged === "pad") {
-            while (record.length < width) {
-              record.push("");
-              flags.push(false);
+            while (cells.length < width) {
+              cells.push("");
+              quoted.push(false);
             }
           }
         }
       },
     });
-    if (this.stopped) return;
-    this.emitted += 1;
+    if (this.s.stopped) return;
+    this.s.emitted += 1;
     const { maxRecords } = this.config.limits;
-    if (this.emitted > maxRecords) {
+    if (this.s.emitted > maxRecords) {
       this.limit("records", maxRecords, span);
       return;
     }
-    this.records.push(RawRecord.make({ cells: record, quoted: flags, record: recordIndex, span, end }));
+    this.records.push(RawRecord.make({ cells, quoted, record: recordIndex, span, end }, built));
   }
 
   startRecordIfNeeded(): void {
-    if (!this.content) {
-      this.content = true;
-      this.recordOffset = this.offset;
-      this.recordLine = this.line;
-      this.recordCharacter = this.character;
+    if (!this.s.content) {
+      this.s.content = true;
+      this.s.recordOffset = this.s.offset;
+      this.s.recordLine = this.s.line;
+      this.s.recordCharacter = this.s.character;
     }
   }
 
-  quoteFinding(kind: "stray" | "after"): void {
-    const at = this.here(1);
-    const field = this.cells.length;
-    const finding =
-      kind === "stray"
-        ? StrayQuote.make({ at, record: this.record, field })
-        : TextAfterClosingQuote.make({ at, record: this.record, field });
-    this.report(judgeQuote(this.config.quotes, finding));
+  /** A misplaced quote here, as the finding `make` builds; a lenient warning past the cap is only counted. */
+  quoteFinding(make: typeof StrayQuote.make | typeof TextAfterClosingQuote.make): void {
+    if (this.config.quotes === "lenient" && !this.keepWarning()) return;
+    this.report(
+      judgeQuote(this.config.quotes, make({ at: this.here(1), record: this.s.record, field: this.s.cells.length }))
+    );
   }
 
   /** Releases a record held at a carriage return, now that the next unit is known not to be a line feed. */
   releaseHeld(lineFeedFollows: boolean): void {
-    if (!this.held) return;
-    this.held = false;
+    if (!this.s.held) return;
+    this.s.held = false;
     if (lineFeedFollows) {
       // The CR was already counted as a line break; the LF joins it.
-      this.offset += 1;
+      this.s.offset += 1;
       this.endRecord("CRLF");
     } else {
       this.endRecord("CR");
     }
   }
-
-  push(text: string): void {
-    let i = 0;
-    while (i < text.length && !this.stopped) {
-      if (this.held) {
-        if (text[i] === "\n") {
-          this.releaseHeld(true);
-          i += 1;
-          continue;
-        }
-        this.releaseHeld(false);
-        if (this.stopped) break;
-      }
-      i = stepFor(this.mode)(this, text, i);
-    }
-  }
-
-  end(): void {
-    if (this.stopped) return;
-    if (this.held) {
-      this.releaseHeld(false);
-      return;
-    }
-    if (this.mode === "quoted") {
-      const at = this.span(this.quoteOffset, 1, this.quoteLine, this.quoteCharacter);
-      this.report(
-        CsvDiagnostic.cases.fatal.make({
-          finding: UnterminatedQuote.make({ at, record: this.record, field: this.cells.length }),
-        })
-      );
-      return;
-    }
-    if (this.mode === "afterQuoteSpaces" && this.config.quotes === "strict") {
-      this.quoteFinding("after");
-      return;
-    }
-    if (this.content) this.endRecord("EndOfInput");
-  }
 }
 
 // ── one step per mode ────────────────────────────────────────────────────────────────────────────────────────────────
 // Each step reads at `i` and returns where the next step reads. A step that stops the read returns `i`; the loop in
-// `Run.push` ends on `stopped`.
+// `Machine.feed` ends on `stopped`.
 
-type Stepper = (run: Run, text: string, i: number) => number;
+type Stepper = (run: Machine, text: string, i: number) => number;
 
 /** Before a field or inside an unquoted one. */
 const stepPlain: Stepper = (run, text, i) => {
@@ -497,7 +510,7 @@ const stepPlain: Stepper = (run, text, i) => {
     // A blank line: a record of one empty cell.
     if (run.mode === "fieldStart") run.startRecordIfNeeded();
     run.breakLine(1);
-    if (c === "\r") run.held = true;
+    if (c === "\r") run.s.held = true;
     else run.endRecord("LF");
     return i + 1;
   }
@@ -509,29 +522,31 @@ const stepPlain: Stepper = (run, text, i) => {
   }
   if (c === '"' && run.mode === "fieldStart") {
     run.mode = "quoted";
-    run.fieldQuoted = true;
-    run.quoteOffset = run.offset;
-    run.quoteLine = run.line;
-    run.quoteCharacter = run.character;
+    run.s.fieldQuoted = true;
+    run.s.quoteOffset = run.s.offset;
+    run.s.quoteLine = run.s.line;
+    run.s.quoteCharacter = run.s.character;
     run.advance(1);
     return i + 1;
   }
   if (c === '"') {
-    run.quoteFinding("stray");
+    run.quoteFinding(StrayQuote.make);
     if (run.stopped) return i;
-    run.field += '"';
+    run.s.field += '"';
     run.advance(1);
+    run.checkField();
     return i + 1;
   }
-  // A run of ordinary characters.
+  // A run of ordinary characters, up to the unit that would pass a cap.
   run.mode = "unquoted";
+  const stop = Num.min(text.length, i + run.budget());
   let j = i + 1;
-  while (j < text.length) {
+  while (j < stop) {
     const d = text[j];
     if (d === delimiter || d === '"' || d === "\r" || d === "\n") break;
     j += 1;
   }
-  run.field += Str.slice(i, j)(text);
+  run.s.field += Str.slice(i, j)(text);
   run.advance(j - i);
   run.checkField();
   return j;
@@ -544,27 +559,29 @@ const stepQuoted: Stepper = (run, text, i) => {
     run.advance(1);
     return i + 1;
   }
+  const s = run.s;
+  const stop = Num.min(text.length, i + run.budget());
   let j = i;
-  while (j < text.length) {
+  while (j < stop) {
     const d = text[j];
     if (d === '"') break;
     if (d === "\r") {
-      run.line += 1;
-      run.character = 0;
-      run.offset += 1;
-      run.crInQuotes = true;
+      s.line += 1;
+      s.character = 0;
+      s.offset += 1;
+      s.crInQuotes = true;
     } else if (d === "\n") {
-      if (!run.crInQuotes) run.line += 1;
-      run.character = 0;
-      run.offset += 1;
-      run.crInQuotes = false;
+      if (!s.crInQuotes) s.line += 1;
+      s.character = 0;
+      s.offset += 1;
+      s.crInQuotes = false;
     } else {
-      run.crInQuotes = false;
+      s.crInQuotes = false;
       run.advance(1);
     }
     j += 1;
   }
-  run.field += Str.slice(i, j)(text);
+  s.field += Str.slice(i, j)(text);
   run.checkField();
   return j;
 };
@@ -572,11 +589,12 @@ const stepQuoted: Stepper = (run, text, i) => {
 /** Just after a quote inside a quoted field: a doubled quote, the field's end, or text after the closing quote. */
 const stepQuoteInQuoted: Stepper = (run, text, i) => {
   const c = text[i];
-  run.crInQuotes = false;
+  run.s.crInQuotes = false;
   if (c === '"') {
-    run.field += '"';
+    run.s.field += '"';
     run.mode = "quoted";
     run.advance(1);
+    run.checkField();
     return i + 1;
   }
   if (c === run.config.delimiter) {
@@ -594,10 +612,11 @@ const stepQuoteInQuoted: Stepper = (run, text, i) => {
     run.advance(1);
     return i + 1;
   }
-  run.quoteFinding("after");
+  run.quoteFinding(TextAfterClosingQuote.make);
   if (run.stopped) return i;
-  run.field += '"';
+  run.s.field += '"';
   run.mode = "quoted";
+  run.checkField();
   return i;
 };
 
@@ -611,7 +630,7 @@ const stepAfterQuoteSpaces: Stepper = (run, text, i) => {
   }
   if (c === run.config.delimiter || c === "\r" || c === "\n") {
     if (run.config.quotes === "strict") {
-      run.quoteFinding("after");
+      run.quoteFinding(TextAfterClosingQuote.make);
       return i;
     }
     if (c === run.config.delimiter) {
@@ -622,10 +641,12 @@ const stepAfterQuoteSpaces: Stepper = (run, text, i) => {
     run.mode = "unquoted";
     return i;
   }
-  run.quoteFinding("after");
+  run.quoteFinding(TextAfterClosingQuote.make);
   if (run.stopped) return i;
-  run.field += `"${Str.repeat(run.spaces)(" ")}`;
+  run.s.field += `"${Str.repeat(run.spaces)(" ")}`;
   run.spaces = 0;
+  run.checkField();
+  if (run.stopped) return i;
   if (c === '"') {
     run.mode = "quoteInQuoted";
     run.advance(1);
@@ -642,24 +663,4 @@ const stepFor: (mode: MachineModeName) => Stepper = MachineModeName.match({
   quoted: () => stepQuoted,
   quoteInQuoted: () => stepQuoteInQuoted,
   afterQuoteSpaces: () => stepAfterQuoteSpaces,
-});
-
-/** Reads one chunk. */
-export const push: {
-  (chunk: string, config: MachineConfig): (state: MachineState) => Step;
-  (state: MachineState, chunk: string, config: MachineConfig): Step;
-} = dual(3, (state: MachineState, chunk: string, config: MachineConfig): Step => {
-  const run = new Run(state, config);
-  run.push(chunk);
-  return run.snapshot();
-});
-
-/** Flushes the last record at the end of the input. */
-export const end: {
-  (config: MachineConfig): (state: MachineState) => Step;
-  (state: MachineState, config: MachineConfig): Step;
-} = dual(2, (state: MachineState, config: MachineConfig): Step => {
-  const run = new Run(state, config);
-  run.end();
-  return run.snapshot();
 });

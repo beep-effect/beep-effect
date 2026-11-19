@@ -5,17 +5,18 @@
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Zip from "effect/encoding/Zip";
+import { dual } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { columnLetters, XlsxAddress, XlsxRange } from "../XlsxAddress.schema.ts";
 import { XlsxValue } from "../XlsxCell.schema.ts";
+import { XlsxCompression } from "../XlsxOptions.schema.ts";
 import { FIRST_CUSTOM_FORMAT } from "../XlsxWorkbook.schema.ts";
-import type { XlsxWorkbook } from "../XlsxWorkbook.schema.ts";
-
-type Sheet = XlsxWorkbook["sheets"][number];
-type Cell = Sheet["rows"][number]["cells"][number];
+import { concatBytes } from "./container.ts";
+import type { XlsxCell } from "../XlsxCell.schema.ts";
+import type { XlsxWorkbook, XlsxWorksheet } from "../XlsxWorkbook.schema.ts";
 
 const main = "http://schemas.openxmlformats.org/spreadsheetml/2006/main";
 const relationships = "http://schemas.openxmlformats.org/officeDocument/2006/relationships";
@@ -39,6 +40,8 @@ const escapeStartsAt = (text: string, at: number): boolean =>
  * `_xHHHH_`, as does a carriage return, and an underscore that would read as such an escape is escaped itself;
  * without it, a tab or a line break becomes a character reference, which is what a formula or an attribute needs.
  */
+// crispen: a loop over code units, run on every written text; a surrogate is judged by its neighbours, which no
+// per-character `Str` helper sees.
 const escaped = (text: string, cell: boolean): string => {
   let out = "";
   for (let i = 0; i < text.length; i += 1) {
@@ -65,9 +68,10 @@ const escaped = (text: string, cell: boolean): string => {
   return out;
 };
 
-const numberText = (value: number): string => (Object.is(value, -0) ? "-0" : String(value));
+/** A number as the cell's text; negative zero, which `String` writes as `0`, keeps its sign. */
+const numberText = (value: number): string => (value === 0 && 1 / value < 0 ? "-0" : `${value}`);
 
-const cellXml = (cell: Cell, row: number, styleOf: (id: number) => number): string => {
+const cellXml = (cell: XlsxCell, row: number, styleOf: (id: number) => number): string => {
   const reference = `${columnLetters(cell.column)}${row}`;
   const style = styleOf(cell.format.id);
   const open = `<c r="${reference}"${style === 0 ? "" : ` s="${style}"`}`;
@@ -84,7 +88,9 @@ const cellXml = (cell: Cell, row: number, styleOf: (id: number) => number): stri
   });
 };
 
-const sheetXml = (sheet: Sheet, styleOf: (id: number) => number): string => {
+// crispen: `push` into one piece list per sheet, then one join; a sheet of a million cells would otherwise build a
+// million intermediate strings.
+const sheetXml = (sheet: XlsxWorksheet, styleOf: (id: number) => number): string => {
   const pieces: Array<string> = [head, `<worksheet xmlns="${main}">`];
   if (O.isSome(sheet.info.declared)) pieces.push(`<dimension ref="${XlsxRange.format(sheet.info.declared.value)}"/>`);
   if (sheet.hiddenColumns.length > 0) {
@@ -114,8 +120,10 @@ const sheetXml = (sheet: Sheet, styleOf: (id: number) => number): string => {
 export const partsOf = (
   workbook: Pick<XlsxWorkbook, "dateSystem" | "sheets">
 ): ReadonlyArray<readonly [string, string]> => {
+  // crispen: the style index of a format is its position among the formats first met, so the scan keeps a list and
+  // a map side by side.
   const styles = MutableHashMap.empty<number, number>();
-  const formats: Array<{ readonly id: number; readonly code: string }> = [];
+  const formats: Array<XlsxCell["format"]> = [];
   MutableHashMap.set(styles, 0, 0);
   for (const sheet of workbook.sheets) {
     for (const row of sheet.rows) {
@@ -201,21 +209,28 @@ export const partsOf = (
   ];
 };
 
+const methodOf = XlsxCompression.match({ deflate: () => "Deflate" as const, store: () => "Store" as const });
+
 /** The parts as one archive. Deflating needs the runtime's `CompressionStream`, so this is an Effect. */
-export const archiveOf = (input: {
-  readonly parts: ReadonlyArray<readonly [string, string]>;
-  readonly method: "Deflate" | "Store";
-}): Effect.Effect<Uint8Array, Zip.ZipError> =>
-  Stream.fromIterable(A.map(input.parts, ([path, text]) => Zip.file(path, text, { method: input.method }))).pipe(
-    Stream.pipeThroughChannel(Zip.encode()),
-    Stream.runCollect,
-    Effect.map((chunks) => {
-      const out = new Uint8Array(A.reduce(chunks, 0, (n, chunk) => n + chunk.length));
-      let at = 0;
-      for (const chunk of chunks) {
-        out.set(chunk, at);
-        at += chunk.length;
-      }
-      return out;
-    })
-  );
+export const archiveOf: {
+  (
+    compression: XlsxCompression
+  ): (parts: ReadonlyArray<readonly [string, string]>) => Effect.Effect<Uint8Array, Zip.ZipError>;
+  (
+    parts: ReadonlyArray<readonly [string, string]>,
+    compression: XlsxCompression
+  ): Effect.Effect<Uint8Array, Zip.ZipError>;
+} = dual(
+  2,
+  (
+    parts: ReadonlyArray<readonly [string, string]>,
+    compression: XlsxCompression
+  ): Effect.Effect<Uint8Array, Zip.ZipError> => {
+    const method = methodOf(compression);
+    return Stream.fromIterable(A.map(parts, ([path, text]) => Zip.file(path, text, { method }))).pipe(
+      Stream.pipeThroughChannel(Zip.encode()),
+      Stream.runCollect,
+      Effect.map(concatBytes)
+    );
+  }
+);

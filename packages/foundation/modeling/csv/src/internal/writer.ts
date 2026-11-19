@@ -5,18 +5,20 @@
 // writer stays here and the channels reuse it.
 import * as A from "effect/Array";
 import * as Str from "effect/String";
-import { applyFormulaGuard } from "../CsvOptions.schema.ts";
 import { recordEndText } from "../CsvPosition.schema.ts";
-import { isBlankRecord, needsQuotes } from "../CsvTable.schema.ts";
+import { applyFormulaGuard, needsQuotes } from "./rules.ts";
 import type { CsvCodecOptions } from "../CsvOptions.schema.ts";
 import type { CsvRecord } from "../CsvTable.schema.ts";
 
 type WriteOptions = CsvCodecOptions["write"];
 
+/** A record a reader would take for a blank line: one empty cell. */
+const isOneEmptyCell = (record: CsvRecord): boolean => record.length === 1 && record[0] === "";
+
 const quote = (cell: string): string => `"${Str.replaceAll('"', '""')(cell)}"`;
 
 const writeRecord = (record: CsvRecord, options: WriteOptions): string =>
-  isBlankRecord(record)
+  isOneEmptyCell(record)
     ? '""'
     : A.join(
         A.map(record, (raw) => {
@@ -38,5 +40,5 @@ export const writeTable = (input: {
     terminator
   );
   const ending = options.finalTerminator && A.isReadonlyArrayNonEmpty(table.records) ? terminator : "";
-  return `${options.bom ? "﻿" : ""}${body}${ending}`;
+  return `${options.bom ? "\uFEFF" : ""}${body}${ending}`;
 };

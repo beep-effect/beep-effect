@@ -18,7 +18,7 @@ const $I = $XlsxId.create("XlsxAddress");
  *
  * **Example** (The last column's letters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="The last column's letters"
  * import { columnLetters, MAX_COLUMN } from "@beep/xlsx"
  *
  * MAX_COLUMN // => 16383
@@ -35,7 +35,7 @@ export const MAX_COLUMN = 16_383;
  *
  * **Example** (A row past the last one)
  *
- * ```ts
+ * ```ts import.meta.vitest name="A row past the last one"
  * import { MAX_ROW, XlsxRowNumber } from "@beep/xlsx"
  * import * as S from "effect/Schema"
  *
@@ -53,7 +53,7 @@ export const MAX_ROW = 1_048_576;
  *
  * **Example** (Check a column)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Check a column"
  * import { XlsxColumn } from "@beep/xlsx"
  * import * as S from "effect/Schema"
  *
@@ -82,7 +82,7 @@ export type XlsxColumn = typeof XlsxColumn.Type;
  *
  * **Example** (Rows start at 1)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Rows start at 1"
  * import { XlsxRowNumber } from "@beep/xlsx"
  * import * as S from "effect/Schema"
  *
@@ -110,7 +110,7 @@ export type XlsxRowNumber = typeof XlsxRowNumber.Type;
  *
  * **Example** (Letters of a column)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Letters of a column"
  * import { columnLetters } from "@beep/xlsx"
  *
  * columnLetters(0) // => "A"
@@ -138,7 +138,7 @@ export const columnLetters = (column: XlsxColumn): string => {
  *
  * **Example** (Column of letters)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Column of letters"
  * import { columnFromLetters } from "@beep/xlsx"
  * import * as O from "effect/Option"
  *
@@ -171,7 +171,7 @@ const rangePattern = /^([^:]+)(?::([^:]+))?$/;
  *
  * **Example** (Parse and format)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Parse and format"
  * import { XlsxAddress } from "@beep/xlsx"
  * import * as O from "effect/Option"
  *
@@ -210,7 +210,7 @@ export class XlsxAddress extends S.Opaque<XlsxAddress, { readonly brand: unique 
  *
  * **Example** (Parse a range)
  *
- * ```ts
+ * ```ts import.meta.vitest name="Parse a range"
  * import { XlsxAddress, XlsxRange } from "@beep/xlsx"
  * import * as O from "effect/Option"
  *
@@ -226,9 +226,14 @@ export class XlsxAddress extends S.Opaque<XlsxAddress, { readonly brand: unique 
  */
 export class XlsxRange extends S.Opaque<XlsxRange, { readonly brand: unique symbol }>()(
   S.Struct({
-    first: XlsxAddress.pipe(S.annotateKey({ description: "One corner: the top-left one, once ordered" })),
-    last: XlsxAddress.pipe(S.annotateKey({ description: "The opposite corner: the bottom-right one, once ordered" })),
-  }).pipe($I.annoteSchema("XlsxRange", { description: "A rectangle of cells, by two opposite corners" }))
+    first: XlsxAddress,
+    last: XlsxAddress,
+  }).pipe(
+    $I.annoteSchema("XlsxRange", {
+      description:
+        "A rectangle of cells, by two opposite corners: `first`, the top-left one once ordered, and `last`, the bottom-right one",
+    })
+  )
 ) {
   /** The same rectangle with its top-left corner first and its bottom-right corner last. */
   static readonly ordered = (range: Pick<XlsxRange, "first" | "last">): XlsxRange =>

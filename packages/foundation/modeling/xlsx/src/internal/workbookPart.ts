@@ -8,12 +8,12 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { MAX_FORMAT_CHARS, XlsxNumberFormat } from "../XlsxCell.schema.ts";
 import { DamagedXml, LimitExceeded, MissingPart, NoSheets, NotAWorkbook } from "../XlsxDiagnostic.schema.ts";
+import { XlsxFormatKind } from "../XlsxFormatKind.schema.ts";
 import { XlsxDateSystem } from "../XlsxSerial.schema.ts";
 import { XlsxDroppedPart, XlsxSheetName, XlsxSheetState } from "../XlsxWorkbook.schema.ts";
 import { Caps, census, collect, sniffContainer, stop } from "./container.ts";
@@ -30,8 +30,8 @@ import {
   rootOf,
   unescaped,
 } from "./ooxml.ts";
-import { isXmlSafe } from "./text.ts";
-import { detached, trusted } from "./trusted.ts";
+import { detached, isXmlSafe } from "./text.ts";
+import type { XlsxLimit } from "../XlsxDiagnostic.schema.ts";
 import type { XlsxDroppedKind } from "../XlsxWorkbook.schema.ts";
 import type { Relationship, XmlElement, XmlEvent } from "./ooxml.ts";
 
@@ -50,7 +50,7 @@ export class SheetEntry extends S.Opaque<SheetEntry, { readonly brand: unique sy
 export class StyleFormat extends S.Opaque<StyleFormat, { readonly brand: unique symbol }>()(
   S.Struct({
     dated: S.Boolean.pipe(S.annotateKey({ description: "Whether a number under it is a date" })),
-    format: XlsxNumberFormat.pipe(S.annotateKey({ description: "The number format" })),
+    format: XlsxNumberFormat,
     notShown: S.Boolean.pipe(
       S.annotateKey({ description: "Whether a number or a date under it has no displayed text worked out" })
     ),
@@ -68,10 +68,12 @@ export class StyleFormat extends S.Opaque<StyleFormat, { readonly brand: unique 
 export class Opened extends S.Opaque<Opened, { readonly brand: unique symbol }>()(
   S.Struct({
     bytes: S.Uint8Array.pipe(S.annotateKey({ description: "The file's bytes, for the passes that read the sheets" })),
-    caps: Caps,
+    // `annotateKey` on the Opaque itself would drop its brand. An opened workbook is built, never decoded or
+    // encoded, so its decoded side (`toType`) is all of it and keeps the brand under the key's description.
+    caps: S.toType(Caps).pipe(S.annotateKey({ description: "The caps of the read, as plain numbers" })),
     dateSystem: XlsxDateSystem.pipe(S.annotateKey({ description: "The day the workbook's date serials count from" })),
     dropped: S.Array(XlsxDroppedPart).pipe(S.annotateKey({ description: "Parts the file held that are not modelled" })),
-    sheets: S.Array(SheetEntry).pipe(S.annotateKey({ description: "The sheets, in the workbook's order" })),
+    sheets: S.NonEmptyArray(SheetEntry).pipe(S.annotateKey({ description: "The sheets, in the workbook's order" })),
     strings: S.Array(S.String).pipe(S.annotateKey({ description: "The shared text table" })),
     styles: S.Array(StyleFormat).pipe(S.annotateKey({ description: "The number format of each style index" })),
   }).pipe($I.annoteSchema("Opened", { description: "A workbook opened: everything but its sheets' rows" }))
@@ -85,9 +87,7 @@ export const styleOf = (format: XlsxNumberFormat): StyleFormat => {
   return StyleFormat.make({
     format,
     dated,
-    notShown: dated
-      ? O.isNone(renderDate({ code: format.code, serial: 1, date1904: false }))
-      : classify(format.code).kind === "Other",
+    notShown: dated ? O.isNone(renderDate(format.code, 1, "1900")) : XlsxFormatKind.guards.Other(classify(format.code)),
   });
 };
 
@@ -104,10 +104,8 @@ const stylesOf = Effect.fnUntraced(function* (input: {
 }) {
   const root = yield* rootOf({ path: input.path, bytes: input.bytes, cellChars: input.caps.cellChars });
   let codes = HashMap.empty<number, string>();
-  const numFmts = O.match(child({ of: root, name: "numFmts" }), {
-    onNone: A.empty<XmlElement>,
-    onSome: (of) => children({ of, name: "numFmt" }),
-  });
+  const numFmts = O.match(child(root, "numFmts"), { onNone: A.empty<XmlElement>, onSome: children("numFmt") });
+  // crispen: a fold into a persistent HashMap; a later `numFmt` of an id replaces an earlier one, as Excel reads it.
   for (const numFmt of numFmts) {
     const id = Number(numFmt.attributes.numFmtId);
     const code = numFmt.attributes.formatCode ?? "";
@@ -119,7 +117,7 @@ const stylesOf = Effect.fnUntraced(function* (input: {
   const formatOf = (id: number): StyleFormat => {
     const known = MutableHashMap.get(formats, id);
     if (O.isSome(known)) return known.value;
-    const code = O.orElse(HashMap.get(codes, id), () => R.get(builtinFormats, String(id)));
+    const code = O.orElse(HashMap.get(codes, id), () => HashMap.get(builtinFormats, id));
     const made = O.match(code, {
       onNone: () => (id === 0 ? general : styleOf(XlsxNumberFormat.make({ id, code: "General" }))),
       onSome: (text) => styleOf(XlsxNumberFormat.make({ id, code: text })),
@@ -127,16 +125,13 @@ const stylesOf = Effect.fnUntraced(function* (input: {
     MutableHashMap.set(formats, id, made);
     return made;
   };
-  const xfs = O.match(child({ of: root, name: "cellXfs" }), {
-    onNone: A.empty<XmlElement>,
-    onSome: (of) => children({ of, name: "xf" }),
-  });
+  const xfs = O.match(child(root, "cellXfs"), { onNone: A.empty<XmlElement>, onSome: children("xf") });
   const styles = A.map(xfs, (xf) => {
     const id = Number(xf.attributes.numFmtId ?? "0");
     return Number.isInteger(id) && id >= 0 && id <= 65_535 ? formatOf(id) : general;
   });
   const countOf = (name: string): number =>
-    O.match(child({ of: root, name }), {
+    O.match(child(root, name), {
       onNone: () => 0,
       onSome: (element) => A.length(A.filter(element.children, P.not(P.isString))),
     });
@@ -150,13 +145,15 @@ const stringsOf = Effect.fnUntraced(function* (input: {
   readonly bytes: Uint8Array;
   readonly caps: Caps;
 }) {
+  // crispen: a state machine over every event of the shared text table, which can run to millions of entries; the
+  // depths and the text so far are its state, kept in locals for the hot loop.
   const strings: Array<string> = [];
   let depth = 0;
   let entryAt = -1;
   let phoneticAt = -1;
   let textAt = -1;
   let text = "";
-  let failed: O.Option<"sharedStrings" | "cellChars"> = O.none();
+  let failed: O.Option<XlsxLimit> = O.none();
   const step = (event: XmlEvent): void => {
     if (event._tag === "StartElement") {
       depth += 1;
@@ -243,7 +240,7 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
   const relationships = Effect.fnUntraced(function* (part: string) {
     const path = relationshipsPath(part);
     const root = yield* rootOf({ path, bytes: yield* partOf({ kept: first.kept, path }), cellChars: caps.cellChars });
-    return relationshipsOf({ root, part });
+    return relationshipsOf(root, part);
   });
   const rootRelationships = MutableHashSet.has(present, "_rels/.rels") ? yield* relationships("") : [];
   const workbookPath = O.getOrElse(
@@ -257,6 +254,10 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
     return yield* Effect.fail(stop(MissingPart.make({ path: Str.slice(0, 1024)(workbookPath) })));
   }
   const links: ReadonlyArray<Relationship> = yield* relationships(workbookPath);
+  // Each sheet names its relationship by id. The file decides how many of each there are, so the links are indexed
+  // once, the first of an id kept, and every sheet's lookup is one hash probe rather than a scan of the links.
+  const linkById = MutableHashMap.empty<string, Relationship>();
+  for (const link of links) if (!MutableHashMap.has(linkById, link.id)) MutableHashMap.set(linkById, link.id, link);
   const pathOfKind = (kind: string): O.Option<string> =>
     O.filter(
       O.map(
@@ -283,21 +284,18 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
     bytes: yield* partOf({ kept: second, path: workbookPath }),
     cellChars: caps.cellChars,
   });
-  const dateSystem: XlsxDateSystem = O.exists(child({ of: root, name: "workbookPr" }), (properties) =>
+  const dateSystem: XlsxDateSystem = O.exists(child(root, "workbookPr"), (properties) =>
     isTrue(properties.attributes.date1904)
   )
     ? "1904"
     : "1900";
-  const listed = O.match(child({ of: root, name: "sheets" }), {
-    onNone: A.empty<XmlElement>,
-    onSome: (of) => children({ of, name: "sheet" }),
-  });
+  const listed = O.match(child(root, "sheets"), { onNone: A.empty<XmlElement>, onSome: children("sheet") });
+  // crispen: each listed sheet can stop the open with its own finding, so this is a loop with early returns.
   const sheets: Array<SheetEntry> = [];
   const names = MutableHashSet.empty<string>();
   const read = MutableHashSet.make(workbookPath, ...O.toArray(stylesPath), ...O.toArray(stringsPath));
   for (const sheet of listed) {
-    const id = attribute({ attributes: sheet.attributes, name: "id" });
-    const link = A.findFirst(links, (r) => O.contains(id, r.id));
+    const link = O.flatMap(attribute(sheet.attributes, "id"), (id) => MutableHashMap.get(linkById, id));
     if (O.isNone(link))
       return yield* Effect.fail(malformed(workbookPath, "a sheet names a relationship the workbook lacks"));
     if (!endsWith(link.value.type, "worksheet")) continue;
@@ -318,7 +316,7 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
     MutableHashSet.add(read, link.value.path);
     if (sheets.length > caps.sheets) return yield* Effect.fail(stop(LimitExceeded.make({ limit: "sheets", path: "" })));
   }
-  if (sheets.length === 0) return yield* Effect.fail(stop(NoSheets.make({})));
+  if (!A.isArrayNonEmpty(sheets)) return yield* Effect.fail(stop(NoSheets.make({})));
   const styled = O.isSome(stylesPath)
     ? yield* stylesOf({
         path: stylesPath.value,
@@ -333,6 +331,7 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
         caps,
       })
     : [];
+  // crispen: one pass over every path the census saw, with a skip for each part that is read or is plumbing.
   const dropped: Array<XlsxDroppedPart> = [];
   for (const path of first.paths) {
     if (path.length > 1024 || Str.endsWith(".rels")(path) || path === "[Content_Types].xml") continue;
@@ -342,6 +341,10 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
     }
     dropped.push(XlsxDroppedPart.make({ path, kind: droppedKindOf(path) }));
   }
-  // Built without `make`: the shared text table can hold millions of entries, each already checked as it was read.
-  return trusted<Opened>({ bytes, caps, dateSystem, sheets, styles: styled.styles, strings, dropped });
+  // `disableChecks` keeps the shape checked and skips the filters: the shared text table can hold millions of
+  // entries, each already held to the caps as it was read.
+  return Opened.make(
+    { bytes, caps, dateSystem, sheets, styles: styled.styles, strings, dropped },
+    { disableChecks: true }
+  );
 });

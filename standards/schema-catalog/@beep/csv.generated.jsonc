@@ -20,6 +20,7 @@
     {"file":"packages/foundation/modeling/csv/src/CsvDiagnostic.schema.ts","symbol":"TextAfterClosingQuote","kind":"struct-const","owner":"@beep/csv","identity":"TextAfterClosingQuote","description":"A closing quote followed by something other than a delimiter or a line break"},
     {"file":"packages/foundation/modeling/csv/src/CsvDiagnostic.schema.ts","symbol":"TooManyBytes","kind":"struct-const","owner":"@beep/csv","identity":"TooManyBytes","description":"The input had more bytes than its cap"},
     {"file":"packages/foundation/modeling/csv/src/CsvDiagnostic.schema.ts","symbol":"UnterminatedQuote","kind":"struct-const","owner":"@beep/csv","identity":"UnterminatedQuote","description":"A quote opened a field and the input ended"},
+    {"file":"packages/foundation/modeling/csv/src/CsvDiagnostic.schema.ts","symbol":"WarningsTruncated","kind":"struct-const","owner":"@beep/csv","identity":"WarningsTruncated","description":"More warnings than the cap keeps"},
     {"file":"packages/foundation/modeling/csv/src/CsvError.errors.ts","symbol":"CsvParseError","kind":"tagged-error","owner":"@beep/csv","identity":"CsvParseError"},
     {"file":"packages/foundation/modeling/csv/src/CsvOptions.schema.ts","symbol":"CsvBlankLineRule","kind":"literal-kit","owner":"@beep/csv","identity":"CsvBlankLineRule","description":"Whether a blank line is kept or skipped"},
     {"file":"packages/foundation/modeling/csv/src/CsvOptions.schema.ts","symbol":"CsvCodecOptions","kind":"struct-const","owner":"@beep/csv","identity":"CsvCodecOptions","description":"How a CSV codec reads and writes"},
@@ -71,7 +72,6 @@
     {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"QuoteInQuoted","kind":"struct-const","owner":"@beep/csv","identity":"QuoteInQuoted","description":"Just after a quote inside a quoted field"},
     {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"Quoted","kind":"struct-const","owner":"@beep/csv","identity":"Quoted","description":"Inside a quoted field"},
     {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"RawRecord","kind":"struct-const","owner":"@beep/csv","identity":"RawRecord","description":"A record as the machine emits it"},
-    {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"Step","kind":"struct-const","owner":"@beep/csv","identity":"Step","description":"What one machine step produced"},
     {"file":"packages/foundation/modeling/csv/src/internal/machine.ts","symbol":"Unquoted","kind":"struct-const","owner":"@beep/csv","identity":"Unquoted","description":"Inside an unquoted field"}
   ]
 }

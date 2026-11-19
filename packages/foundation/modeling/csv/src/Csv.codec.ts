@@ -22,6 +22,7 @@ import * as ByteSize from "effect/ByteSize";
 import * as Channel from "effect/Channel";
 import * as Effect from "effect/Effect";
 import { constVoid, flow } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -58,28 +59,41 @@ import {
   CsvRead,
 } from "./CsvRead.schema.ts";
 import { CsvHeaderRow, CsvRecordSlice, CsvTable } from "./CsvTable.schema.ts";
-import { bomOf, decodeBytes, encodeUtf8, firstInvalidUtf8 } from "./internal/encoding.ts";
-import { toHeaderRows } from "./internal/header.ts";
-import { end, MachineConfig, MachineState, push } from "./internal/machine.ts";
+import { bomOf, decodeBytes, decoderFor, encodeUtf8, firstInvalidUtf8 } from "./internal/encoding.ts";
+import { checkHeader, rowsOf, toHeaderRows } from "./internal/header.ts";
+import { Machine, MachineConfig } from "./internal/machine.ts";
 import { SNIFF_WINDOW, sniffDelimiter } from "./internal/sniff.ts";
 import { writeTable } from "./internal/writer.ts";
 import type { TextDecodeTo } from "@beep/utils/Schema";
 import type { CsvEncodingName } from "./CsvOptions.schema.ts";
 import type { CsvDelimiterFound, CsvEncodingFound } from "./CsvRead.schema.ts";
 import type { CsvRecord } from "./CsvTable.schema.ts";
-import type { RawRecord, Step } from "./internal/machine.ts";
+import type { RawRecord } from "./internal/machine.ts";
 
 // ── reading ─────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 type ReadOptions = CsvCodecOptions["read"];
 type WriteOptions = CsvCodecOptions["write"];
 
+/** Engine-built values hold their invariants by construction; the property tests prove them, so `make` skips checks. */
+const built = { disableChecks: true } as const;
+
 const sepLine = /^sep=([,;\t|])(\r\n|\n|\r)/;
+
+/** A start more input could still turn into a `sep=` line, or change its line break (`sep=;\r` may be `sep=;\r\n`). */
+const openSepLine = /^(?:s|se|sep|sep=|sep=[,;\t|]|sep=[,;\t|]\r)?$/;
 
 /** A first line such as `sep=;`: the delimiter it names and how many units it spans. */
 interface SepLine {
   readonly delimiter: CsvDelimiter;
   readonly length: number;
+}
+
+/** The input's start, read: whether it had a byte-order mark, its `sep=` line when honoured, and the text after. */
+interface Start {
+  readonly bom: boolean;
+  readonly sep: O.Option<SepLine>;
+  readonly text: string;
 }
 
 interface Prepared {
@@ -97,6 +111,29 @@ const sepLineOf = (text: string): O.Option<SepLine> =>
     }))
   );
 
+const unmarked = (input: string): string => (Str.startsWith("\uFEFF")(input) ? Str.slice(1)(input) : input);
+
+/** Strips a BOM and, when asked, a `sep=` line. */
+const startOf = (input: string, options: ReadOptions): Start => {
+  const text = unmarked(input);
+  const sep = options.excelSepHint ? sepLineOf(text) : O.none();
+  return {
+    bom: text.length < input.length,
+    sep,
+    text: O.getOrElse(
+      O.map(sep, ({ length }) => Str.slice(length)(text)),
+      () => text
+    ),
+  };
+};
+
+/**
+ * Whether more input could no longer change what {@link startOf} makes of a stream's first text: a BOM is decided by
+ * the first unit, a `sep=` line once its line break is known.
+ */
+const startDecided = (input: string, options: ReadOptions): boolean =>
+  Str.isNonEmpty(input) && !(options.excelSepHint && openSepLine.test(unmarked(input)));
+
 /** The delimiter the options fix, or the one detected from the text's start, or the comma fallback. */
 const settleDelimiter = (text: string, options: ReadOptions): CsvDelimiterFound =>
   CsvDelimiterChoice.match(options.delimiter, {
@@ -111,22 +148,15 @@ const settleDelimiter = (text: string, options: ReadOptions): CsvDelimiterFound 
       ),
   });
 
-/** Strips a BOM, honours a `sep=` line when asked, and settles the delimiter. */
-const prepare = (input: string, options: ReadOptions): Prepared => {
-  const bom = Str.startsWith("﻿")(input);
-  const unmarked = bom ? Str.slice(1)(input) : input;
-  const sep = options.excelSepHint ? sepLineOf(unmarked) : O.none();
-  const text = O.getOrElse(
-    O.map(sep, ({ length }) => Str.slice(length)(unmarked)),
-    () => unmarked
-  );
+/** Settles the delimiter of a read start: from its `sep=` line, else as the options say. */
+const prepare = (start: Start, options: ReadOptions): Prepared => {
   const delimiter = O.getOrElse(
-    O.map(sep, ({ delimiter }): CsvDelimiterFound => CsvDelimiterFromSepLine.make({ delimiter })),
-    () => settleDelimiter(text, options)
+    O.map(start.sep, ({ delimiter }): CsvDelimiterFound => CsvDelimiterFromSepLine.make({ delimiter })),
+    () => settleDelimiter(start.text, options)
   );
   return {
-    text,
-    bom,
+    text: start.text,
+    bom: start.bom,
     delimiter,
     config: MachineConfig.make({
       delimiter: delimiter.delimiter,
@@ -153,20 +183,19 @@ interface Ran {
 const run = (text: string, config: MachineConfig, pieceChars: number, onPiece: OnPiece): Ran => {
   const records: Array<RawRecord> = [];
   const diagnostics: Array<CsvDiagnostic> = [];
-  const collect = (step: Step): MachineState => {
-    A.forEach(step.records, (record) => records.push(record));
-    A.forEach(step.diagnostics, (diagnostic) => diagnostics.push(diagnostic));
-    return step.state;
+  const collect = (machine: Machine): void => {
+    A.forEach(machine.takeRecords(), (record) => records.push(record));
+    A.forEach(machine.takeDiagnostics(), (diagnostic) => diagnostics.push(diagnostic));
   };
-  let state = MachineState.initial;
+  const machine = Machine.start(config);
   let at = 0;
-  while (at < text.length && !state.stopped) {
+  while (at < text.length && !machine.stopped) {
     const next = Num.min(text.length, at + pieceChars);
-    state = collect(push(state, Str.slice(at, next)(text), config));
+    collect(machine.feed(Str.slice(at, next)(text)));
     at = next;
     if (at < text.length) onPiece(records.length, at, text.length);
   }
-  if (!state.stopped) collect(end(state, config));
+  if (!machine.stopped) collect(machine.finish());
   onPiece(records.length, text.length, text.length);
   return { records, diagnostics };
 };
@@ -186,15 +215,18 @@ const finish = (
     onNonEmpty: (fatals): Result.Result<CsvRead, CsvParseError> => Result.fail(parseError(fatals)),
     onEmpty: () =>
       Result.succeed(
-        CsvRead.make({
-          table: CsvTable.make({ records: A.map(ran.records, (record) => record.cells) }),
-          delimiter: prepared.delimiter,
-          source: source(prepared.bom),
-          outcome: A.match(warningsOf(ran.diagnostics), {
-            onEmpty: (): CsvRead["outcome"] => CsvClean.make({}),
-            onNonEmpty: (warnings) => CsvNoted.make({ warnings }),
-          }),
-        })
+        CsvRead.make(
+          {
+            table: CsvTable.make({ records: A.map(ran.records, (record) => record.cells) }, built),
+            delimiter: prepared.delimiter,
+            source: source(prepared.bom),
+            outcome: A.match(warningsOf(ran.diagnostics), {
+              onEmpty: (): CsvRead["outcome"] => CsvClean.make({}),
+              onNonEmpty: (warnings) => CsvNoted.make({ warnings }, built),
+            }),
+          },
+          built
+        )
       ),
   });
 
@@ -239,11 +271,14 @@ const decodeDetected = (bytes: Uint8Array): Decoded => {
   });
 };
 
+const tooManyBytes = (actual: ByteSize.ByteSize, options: ReadOptions): CsvParseError =>
+  fatal(TooManyBytes.make({ maximum: options.limits.maxInputBytes, actual }));
+
 /** Bytes to text, under the byte cap and the encoding rule. */
 const decodeInput = (bytes: Uint8Array, options: ReadOptions): Result.Result<Decoded, CsvParseError> => {
   const size = byteSizeOf(bytes);
   return ByteSize.isGreaterThan(size, options.limits.maxInputBytes)
-    ? Result.fail(fatal(TooManyBytes.make({ maximum: options.limits.maxInputBytes, actual: size })))
+    ? Result.fail(tooManyBytes(size, options))
     : CsvEncodingChoice.match(options.encoding, {
         fixed: ({ encoding }) => decodeFixed(bytes, encoding),
         detect: () => Result.succeed(decodeDetected(bytes)),
@@ -256,7 +291,7 @@ const readText = (
   pieceChars: number,
   onPiece: OnPiece
 ): Result.Result<CsvRead, CsvParseError> => {
-  const prepared = prepare(text, options);
+  const prepared = prepare(startOf(text, options), options);
   return finish(prepared, run(prepared.text, prepared.config, pieceChars, onPiece), (bom) => CsvFromText.make({ bom }));
 };
 
@@ -267,7 +302,7 @@ const readBytes = (
   onPiece: OnPiece
 ): Result.Result<CsvRead, CsvParseError> =>
   Result.flatMap(decodeInput(bytes, options), (decoded) => {
-    const prepared = prepare(decoded.text, options);
+    const prepared = prepare(startOf(decoded.text, options), options);
     return finish(prepared, run(prepared.text, prepared.config, pieceChars, onPiece), () =>
       CsvFromBytes.make({ encoding: decoded.encoding, bytes: byteSizeOf(bytes) })
     );
@@ -280,53 +315,65 @@ const WHOLE = Number.MAX_SAFE_INTEGER;
 const issue = (error: CsvParseError, input: unknown): SchemaIssue.Issue =>
   new SchemaIssue.InvalidValue({ message: error.message }, input);
 
-const tableFromText = (text: string, options: CsvCodecOptions) =>
-  Effect.mapBoth(Effect.fromResult(readText(text, options.read, WHOLE, constVoid)), {
-    onSuccess: (read) => read.table,
-    onFailure: (error) => issue(error, text),
+/** A read's table, or its error as the issue a Schema codec fails with. */
+const tableOf = (read: Result.Result<CsvRead, CsvParseError>, input: unknown) =>
+  Effect.mapBoth(Effect.fromResult(read), {
+    onSuccess: (done) => done.table,
+    onFailure: (error) => issue(error, input),
   });
 
 const writeRecords = (records: ReadonlyArray<CsvRecord>, options: WriteOptions): string =>
-  writeTable({ table: CsvTable.make({ records }), options });
+  writeTable({ table: { records }, options });
 
 /** A header row's cells in the header's order; a missing heading is an empty cell. */
-const rowCells = (header: ReadonlyArray<string>, row: CsvHeaderRow): ReadonlyArray<string> =>
+const rowCells = (header: CsvRecord, row: CsvHeaderRow): CsvRecord =>
   A.map(header, (name) => O.getOrElse(R.get(row, name), () => ""));
 
-/** A record of the cells, or one empty cell when there are none. */
-const asRecord = (cells: ReadonlyArray<string>): CsvRecord => (A.isReadonlyArrayNonEmpty(cells) ? cells : [""]);
+/** The header of rows to write: the first row's keys, which must be non-empty, and hold every later row's keys. */
+const headerOf = (rows: A.NonEmptyReadonlyArray<CsvHeaderRow>): Result.Result<CsvRecord, string> =>
+  Result.flatMap(
+    A.match(R.keys(A.headNonEmpty(rows)), {
+      onEmpty: (): Result.Result<CsvRecord, string> =>
+        Result.fail("the first row has no keys, so there is no header to write"),
+      onNonEmpty: (header) =>
+        A.contains(header, "")
+          ? Result.fail("the first row has an empty key, which no header can name")
+          : Result.succeed(header),
+    }),
+    (header) => {
+      const known = HashSet.fromIterable(header);
+      return O.match(
+        A.findFirst(A.tailNonEmpty(rows), (row) => A.some(R.keys(row), (key) => !HashSet.has(known, key))),
+        {
+          onNone: () => Result.succeed(header),
+          onSome: (row) =>
+            Result.fail(
+              `a row has the keys ${A.join(
+                A.map(
+                  A.filter(R.keys(row), (key) => !HashSet.has(known, key)),
+                  (key) => `"${key}"`
+                ),
+                ", "
+              )}, which the first row does not, so they cannot be written`
+            ),
+        }
+      );
+    }
+  );
 
-/** The header rows as records: the first row's keys, then each row's cells in that order. */
-const headerRecords = (rows: ReadonlyArray<CsvHeaderRow>): ReadonlyArray<CsvRecord> =>
+/** The header rows as records, the header first; refused when the rows cannot be written and read back. */
+const headerRecords = (rows: ReadonlyArray<CsvHeaderRow>): Result.Result<ReadonlyArray<CsvRecord>, string> =>
   A.match(rows, {
-    onEmpty: A.empty,
-    onNonEmpty: (nonEmpty) => {
-      const header = R.keys(A.headNonEmpty(nonEmpty));
-      return A.map([header, ...A.map(nonEmpty, (row) => rowCells(header, row))], asRecord);
-    },
+    onEmpty: () => Result.succeed(A.empty()),
+    onNonEmpty: (nonEmpty) =>
+      Result.map(headerOf(nonEmpty), (header) => [header, ...A.map(nonEmpty, (row) => rowCells(header, row))]),
   });
-
-/**
- * A domain codec bound to its two directions, returned by {@link Csv.bind}.
- *
- * @category models
- * @since 0.0.0
- */
-export interface CsvBoundCodec<T, RD = never, RE = never> {
-  /** Decode CSV text into `T`. */
-  readonly decode: (text: string) => Effect.Effect<T, S.SchemaError, RD>;
-  /** Encode `T` as canonical CSV text. */
-  readonly encode: (value: T) => Effect.Effect<string, S.SchemaError, RE>;
-  /** The composed codec. */
-  readonly schema: S.Codec<T, string, RD, RE>;
-}
 
 // ── streaming ────────────────────────────────────────────────────────────────────────────────────────────────────────
 
 interface Running {
-  readonly config: MachineConfig;
+  readonly machine: Machine;
   readonly phase: "running";
-  readonly state: MachineState;
 }
 
 type Pending = { readonly phase: "buffering"; readonly buffer: string } | Running;
@@ -335,47 +382,53 @@ type Pending = { readonly phase: "buffering"; readonly buffer: string } | Runnin
 type Emitted = Result.Result<A.NonEmptyReadonlyArray<CsvRecordSlice>, CsvParseError>;
 
 const sliceOf = (record: RawRecord): CsvRecordSlice =>
-  CsvRecordSlice.make({ cells: record.cells, record: record.record, span: record.span, end: record.end });
+  CsvRecordSlice.make({ cells: record.cells, record: record.record, span: record.span, end: record.end }, built);
 
 /** A step's records, then the error that stopped it, each only when there is one. */
-const slicesOf = (step: Step): ReadonlyArray<Emitted> => [
-  ...A.match(A.map(step.records, sliceOf), {
+const slicesOf = (machine: Machine): ReadonlyArray<Emitted> => [
+  ...A.match(A.map(machine.takeRecords(), sliceOf), {
     onEmpty: A.empty<Emitted>,
     onNonEmpty: flow(Result.succeed, A.of<Emitted>),
   }),
-  ...A.match(fatalsOf(step.diagnostics), {
+  ...A.match(fatalsOf(machine.takeDiagnostics()), {
     onEmpty: A.empty<Emitted>,
     onNonEmpty: flow(parseError, Result.fail, A.of<Emitted>),
   }),
 ];
 
-const startRunning = (buffer: string, options: ReadOptions): readonly [Running, ReadonlyArray<Emitted>] => {
-  const prepared = prepare(buffer, options);
-  const step = push(MachineState.initial, prepared.text, prepared.config);
-  return [{ phase: "running", state: step.state, config: prepared.config }, slicesOf(step)];
+const startRunning = (prepared: Prepared): readonly [Running, ReadonlyArray<Emitted>] => {
+  const machine = Machine.start(prepared.config);
+  return [{ phase: "running", machine }, slicesOf(machine.feed(prepared.text))];
 };
 
+const buffering = (buffer: string): readonly [Pending, ReadonlyArray<Emitted>] => [{ phase: "buffering", buffer }, []];
+
+/**
+ * One text chunk. The first text is held until its start is decided (a BOM, a `sep=` line) and, when the delimiter
+ * is detected, until the text after that start fills the detection window, so a stream sniffs and strips exactly what
+ * a whole read would.
+ */
 const stepText = (
   pending: Pending,
   chunk: string,
   options: ReadOptions
 ): readonly [Pending, ReadonlyArray<Emitted>] => {
-  if (pending.phase === "running") {
-    if (pending.state.stopped) return [pending, []];
-    const step = push(pending.state, chunk, pending.config);
-    return [{ phase: "running", state: step.state, config: pending.config }, slicesOf(step)];
-  }
+  if (pending.phase === "running")
+    return [pending, pending.machine.stopped ? [] : slicesOf(pending.machine.feed(chunk))];
   const buffer = pending.buffer + chunk;
-  const settled = options.delimiter.kind === "fixed" || buffer.length >= SNIFF_WINDOW;
-  return settled ? startRunning(buffer, options) : [{ phase: "buffering", buffer }, []];
+  if (!startDecided(buffer, options)) return buffering(buffer);
+  const start = startOf(buffer, options);
+  return options.delimiter.kind === "fixed" || O.isSome(start.sep) || start.text.length >= SNIFF_WINDOW
+    ? startRunning(prepare(start, options))
+    : buffering(buffer);
 };
 
 const haltRunning = (running: Running): ReadonlyArray<Emitted> =>
-  running.state.stopped ? [] : slicesOf(end(running.state, running.config));
+  running.machine.stopped ? [] : slicesOf(running.machine.finish());
 
 const haltText = (pending: Pending, options: ReadOptions): Array<Emitted> => {
   if (pending.phase === "running") return [...haltRunning(pending)];
-  const [started, emitted] = startRunning(pending.buffer, options);
+  const [started, emitted] = startRunning(prepare(startOf(pending.buffer, options), options));
   return [...emitted, ...haltRunning(started)];
 };
 
@@ -398,15 +451,22 @@ const decodeStringChannel = <IE, Done>(
     Channel.mapEffect(Effect.fromResult)
   );
 
-type BytesPending =
+type Decoding =
   | { readonly phase: "window"; readonly bytes: Uint8Array }
   | { readonly phase: "utf8"; readonly carry: Uint8Array; readonly at: number }
-  | { readonly phase: "fixed"; readonly decoder: InstanceType<typeof TextDecoder> };
+  | { readonly phase: "fixed"; readonly decoder: TextDecoder };
+
+/** The decoding so far and the bytes seen, against the byte cap. */
+interface BytesPending {
+  readonly decoding: Decoding;
+  readonly over: boolean;
+  readonly seen: number;
+}
 
 /** A decoded piece of text, or the error that stopped the decoding. */
 type Text = Result.Result<string, CsvParseError>;
 
-type BytesStep = readonly [BytesPending, ReadonlyArray<Text>];
+type DecodingStep = readonly [Decoding, ReadonlyArray<Text>];
 
 const concatBytes = (left: Uint8Array, right: Uint8Array): Uint8Array => {
   const out = new Uint8Array(left.length + right.length);
@@ -428,17 +488,17 @@ const incompleteTail = (bytes: Uint8Array): number => {
   return 0;
 };
 
-const fixedStep = (decoder: InstanceType<typeof TextDecoder>, bytes: Uint8Array): BytesStep => [
+const fixedStep = (decoder: TextDecoder, bytes: Uint8Array): DecodingStep => [
   { phase: "fixed", decoder },
   [Result.succeed(decoder.decode(bytes, { stream: true }))],
 ];
 
-const utf8Step = (carry: Uint8Array, at: number, chunk: Uint8Array): BytesStep => {
+const utf8Step = (carry: Uint8Array, at: number, chunk: Uint8Array): DecodingStep => {
   const bytes = concatBytes(carry, chunk);
   const keep = incompleteTail(bytes);
   const whole = bytes.subarray(0, bytes.length - keep);
   return O.match(firstInvalidUtf8(whole), {
-    onSome: (invalid): BytesStep => [
+    onSome: (invalid): DecodingStep => [
       { phase: "utf8", carry: new Uint8Array(0), at },
       [Result.fail(fatal(InvalidUtf8.make({ byteOffset: at + invalid })))],
     ],
@@ -452,32 +512,31 @@ const utf8Step = (carry: Uint8Array, at: number, chunk: Uint8Array): BytesStep =
   });
 };
 
-/** Decides the encoding from the detect window: a BOM, else whether the window is valid UTF-8. */
-const decideWindow = (bytes: Uint8Array): BytesStep => {
+/**
+ * Decides the encoding from the detect window: a UTF-16 BOM, else whether the window is valid UTF-8. A byte-order
+ * mark stays in the decoded text; the text reader strips it, as it does for a whole read.
+ */
+const decideWindow = (bytes: Uint8Array): DecodingStep => {
   const mark = bomOf(bytes);
-  if (O.isSome(mark) && mark.value !== "utf-8") return fixedStep(new TextDecoder(mark.value), bytes);
-  const body = O.isSome(mark) ? bytes.subarray(3) : bytes;
-  return O.isSome(firstInvalidUtf8(body.subarray(0, body.length - incompleteTail(body))))
-    ? fixedStep(new TextDecoder("windows-1252"), bytes)
-    : utf8Step(new Uint8Array(0), O.isSome(mark) ? 3 : 0, body);
+  if (O.isSome(mark) && mark.value !== "utf-8") return fixedStep(decoderFor(mark.value), bytes);
+  return O.isSome(firstInvalidUtf8(bytes.subarray(0, bytes.length - incompleteTail(bytes))))
+    ? fixedStep(decoderFor("windows-1252"), bytes)
+    : utf8Step(new Uint8Array(0), 0, bytes);
 };
 
 /** Fills the detect window, or decodes at once when the options fix the encoding. */
-const windowStep = (bytes: Uint8Array, options: ReadOptions): BytesStep =>
+const windowStep = (bytes: Uint8Array, options: ReadOptions): DecodingStep =>
   CsvEncodingChoice.match(options.encoding, {
-    fixed: ({ encoding }): BytesStep => {
-      if (encoding !== "utf-8") return fixedStep(new TextDecoder(encoding), bytes);
-      const body = O.isSome(bomOf(bytes)) ? bytes.subarray(3) : bytes;
-      return utf8Step(new Uint8Array(0), bytes.length - body.length, body);
-    },
-    detect: ({ window }): BytesStep =>
+    fixed: ({ encoding }): DecodingStep =>
+      encoding === "utf-8" ? utf8Step(new Uint8Array(0), 0, bytes) : fixedStep(decoderFor(encoding), bytes),
+    detect: ({ window }): DecodingStep =>
       ByteSize.isGreaterThanOrEqualTo(byteSizeOf(bytes), window)
         ? decideWindow(bytes)
         : [{ phase: "window", bytes }, []],
   });
 
-const stepBytes: (pending: BytesPending) => (chunk: Uint8Array, options: ReadOptions) => BytesStep =
-  Match.type<BytesPending>().pipe(
+const stepDecoding: (decoding: Decoding) => (chunk: Uint8Array, options: ReadOptions) => DecodingStep =
+  Match.type<Decoding>().pipe(
     Match.discriminatorsExhaustive("phase")({
       fixed:
         ({ decoder }) =>
@@ -495,17 +554,32 @@ const stepBytes: (pending: BytesPending) => (chunk: Uint8Array, options: ReadOpt
   );
 
 /** What is left at the end of the bytes: a decoder's tail, an unfinished UTF-8 sequence, or an undecided window. */
-const haltBytes: (pending: BytesPending) => ReadonlyArray<Text> = Match.type<BytesPending>().pipe(
+const haltDecoding: (decoding: Decoding) => ReadonlyArray<Text> = Match.type<Decoding>().pipe(
   Match.discriminatorsExhaustive("phase")({
     fixed: ({ decoder }): ReadonlyArray<Text> => [Result.succeed(decoder.decode())],
     utf8: ({ carry, at }): ReadonlyArray<Text> =>
       carry.length > 0 ? [Result.fail(fatal(InvalidUtf8.make({ byteOffset: at })))] : [],
     window: ({ bytes }): ReadonlyArray<Text> => {
       const [next, texts] = decideWindow(bytes);
-      return [...texts, ...haltBytes(next)];
+      return [...texts, ...haltDecoding(next)];
     },
   })
 );
+
+/** One byte chunk: counted against the byte cap first, so a stream fails as soon as it has read past the cap. */
+const stepBytes = (
+  pending: BytesPending,
+  chunk: Uint8Array,
+  options: ReadOptions
+): readonly [BytesPending, ReadonlyArray<Text>] => {
+  if (pending.over) return [pending, []];
+  const seen = pending.seen + chunk.length;
+  const size = ByteSize.bytes(BigInt(seen));
+  if (ByteSize.isGreaterThan(size, options.limits.maxInputBytes))
+    return [{ ...pending, seen, over: true }, [Result.fail(tooManyBytes(size, options))]];
+  const [decoding, texts] = stepDecoding(pending.decoding)(chunk, options);
+  return [{ decoding, seen, over: false }, texts];
+};
 
 const bytesToText = <IE, Done>(
   options: ReadOptions
@@ -519,18 +593,25 @@ const bytesToText = <IE, Done>(
 > =>
   Channel.identity<A.NonEmptyReadonlyArray<Uint8Array>, IE, Done>().pipe(
     Channel.mapAccum(
-      (): BytesPending => ({ phase: "window", bytes: new Uint8Array(0) }),
+      (): BytesPending => ({ decoding: { phase: "window", bytes: new Uint8Array(0) }, seen: 0, over: false }),
       (pending, chunks: A.NonEmptyReadonlyArray<Uint8Array>) => {
-        const initial: BytesStep = [pending, []];
-        return A.reduce(chunks, initial, ([state, texts], chunk): BytesStep => {
-          const [next, more] = stepBytes(state)(chunk, options);
+        const initial: readonly [BytesPending, ReadonlyArray<Text>] = [pending, []];
+        return A.reduce(chunks, initial, ([state, texts], chunk): readonly [BytesPending, ReadonlyArray<Text>] => {
+          const [next, more] = stepBytes(state, chunk, options);
           return [next, A.appendAll(texts, more)];
         });
       },
-      { onHalt: (pending) => [...haltBytes(pending)] }
+      { onHalt: (pending) => (pending.over ? [] : [...haltDecoding(pending.decoding)]) }
     ),
     Channel.mapEffect((text) => Effect.map(Effect.fromResult(text), A.of))
   );
+
+/** What closes written text: a BOM alone when no record came, as `stringify` writes an empty table, else the final
+ * terminator when asked. */
+const ending = (first: boolean, options: WriteOptions): Array<string> => {
+  if (first) return options.bom ? ["\uFEFF"] : [];
+  return options.finalTerminator ? [recordEndText(options.terminator)] : [];
+};
 
 const encodeStringChannel = <IE, Done>(
   options: WriteOptions
@@ -546,10 +627,41 @@ const encodeStringChannel = <IE, Done>(
         const separator = first ? "" : recordEndText(options.terminator);
         return [false, [`${separator}${body}`]] as const;
       },
-      { onHalt: (first) => (!first && options.finalTerminator ? [recordEndText(options.terminator)] : []) }
+      { onHalt: (first) => ending(first, options) }
     ),
     Channel.map(A.of)
   );
+
+/** The header-view rows of a stream's batch, or the error about its header. */
+type RowsEmitted = Result.Result<ReadonlyArray<CsvHeaderRow>, CsvParseError>;
+
+const cellsOf = (slice: CsvRecordSlice): CsvRecord => slice.cells;
+
+/** A batch of records against the header: the first batch names and checks it, once; later ones only use it. */
+const stepRows = (
+  seen: O.Option<CsvRecord>,
+  slices: A.NonEmptyReadonlyArray<CsvRecordSlice>
+): readonly [O.Option<CsvRecord>, ReadonlyArray<RowsEmitted>] =>
+  O.match(seen, {
+    onSome: (header): readonly [O.Option<CsvRecord>, ReadonlyArray<RowsEmitted>] => [
+      seen,
+      [Result.succeed(rowsOf(header, A.map(slices, cellsOf)))],
+    ],
+    onNone: () => {
+      const header = A.headNonEmpty(slices).cells;
+      const body = A.map(A.drop(slices, 1), cellsOf);
+      return Result.match(checkHeader(header), {
+        onFailure: (fatals): readonly [O.Option<CsvRecord>, ReadonlyArray<RowsEmitted>] => [
+          O.some(header),
+          [Result.fail(parseError(fatals))],
+        ],
+        onSuccess: (checked) => [
+          O.some(checked),
+          A.isReadonlyArrayNonEmpty(body) ? [Result.succeed(rowsOf(checked, body))] : [],
+        ],
+      });
+    },
+  });
 
 // ── the facade ───────────────────────────────────────────────────────────────────────────────────────────────────────
 
@@ -561,6 +673,13 @@ const encodeStringChannel = <IE, Done>(
  * Every read returns the same `CsvTable` model. The `*Result` readers are synchronous; their `Effect` twins carry a
  * span. `fromString`, `fromBytes` and `recordsFromString` are `effect/Schema` codecs, so they compose with
  * `S.decodeTo`; `decodeString`, `decode`, `decodeSchema`, `encodeString` and `encode` are streaming channels.
+ *
+ * A read fails with `CsvParseError` on any fatal finding, and only then: a passed text cap (`LimitExceeded`), more
+ * bytes than `maxInputBytes` (`TooManyBytes`, byte input only), a quote never closed (`UnterminatedQuote`), a
+ * misplaced quote under `quotes: "strict"` (`StrayQuote`, `TextAfterClosingQuote`), a ragged record under
+ * `ragged: "reject"` (`RaggedRecord`), bytes that are not UTF-8 where UTF-8 was fixed or, in a stream, chosen
+ * (`InvalidUtf8`), and in the header view an empty or repeated heading (`EmptyHeader`, `DuplicateHeader`). Anything
+ * else a lenient read goes past is a warning.
  *
  * **Example** (Read a messy file leniently)
  *
@@ -584,11 +703,11 @@ const encodeStringChannel = <IE, Done>(
  * import * as S from "effect/Schema"
  *
  * const program = Effect.gen(function* () {
- *   const text = yield* S.encodeEffect(Csv.CsvFromString)(CsvTable.make({ records: [["a", "b,c"]] }))
+ *   const text = yield* S.encodeEffect(Csv.CsvFromString)(CsvTable.make({ records: [["a", "b,c"], ["d;e"]] }))
  *   const table = yield* S.decodeEffect(Csv.CsvFromString)(text)
  *   return [text, table.records] as const
  * })
- * Effect.runSync(program) // => ['a,"b,c"\r\n', [["a", "b,c"]]]
+ * Effect.runSync(program) // => ['a,"b,c"\r\nd;e\r\n', [["a", "b,c"], ["d;e"]]]
  * ```
  *
  * @category codecs
@@ -597,7 +716,10 @@ const encodeStringChannel = <IE, Done>(
 export class Csv {
   private constructor() {}
 
-  /** Reads CSV text, synchronously. A lenient read succeeds with its warnings in `outcome`. */
+  /**
+   * Reads CSV text, synchronously. A lenient read succeeds with its warnings in `outcome`; a fatal finding fails it
+   * with `CsvParseError`. Text input has no byte cap; the text caps bound it.
+   */
   static parseResult(
     text: string,
     options: CsvReadOptions = CsvReadOptions.default
@@ -610,7 +732,11 @@ export class Csv {
     Effect.fromResult(Csv.parseResult(text, options))
   );
 
-  /** Reads CSV bytes, detecting or fixing the encoding; `source` says how. */
+  /**
+   * Reads CSV bytes, detecting or fixing the encoding; `source` says how. Besides the findings of a text read, more
+   * bytes than `maxInputBytes` fail with `TooManyBytes`, and bytes that are not UTF-8 under a fixed UTF-8 with
+   * `InvalidUtf8`.
+   */
   static parseBytesResult(
     bytes: Uint8Array,
     options: CsvReadOptions = CsvReadOptions.default
@@ -625,7 +751,8 @@ export class Csv {
 
   /**
    * {@link Csv.parseBytesResult} read in pieces of `pieceChars` characters, telling `onPiece` after each how many
-   * records and characters are done, so a screen can show progress. The result is that of reading at once.
+   * records and characters are done, so a screen can show progress. The result is that of reading at once, failures
+   * included.
    */
   static parseBytesInPiecesResult(
     bytes: Uint8Array,
@@ -638,12 +765,15 @@ export class Csv {
     return readBytes(bytes, progress.options, Num.max(1, progress.pieceChars), progress.onPiece);
   }
 
-  /** Writes a table as canonical CSV text. Total: every table has a spelling. */
+  /**
+   * Writes a table as canonical CSV text. Total: every table has a spelling, and it reads back as the same table
+   * under the same delimiter unless `formulaGuard` is `apostrophe`.
+   */
   static stringify(table: Pick<CsvTable, "records">, options: CsvWriteOptions = CsvWriteOptions.default): string {
     return writeTable({ table, options });
   }
 
-  /** Writes a table as UTF-8 bytes. */
+  /** Writes a table as UTF-8 bytes; a lone UTF-16 surrogate in a cell is written as U+FFFD, as `TextEncoder` does. */
   static stringifyBytes(
     table: Pick<CsvTable, "records">,
     options: CsvWriteOptions = CsvWriteOptions.default
@@ -651,13 +781,17 @@ export class Csv {
     return encodeUtf8(Csv.stringify(table, options));
   }
 
-  /** A `Codec<CsvTable, string>`: decode reads (warnings are dropped; call `parse` to see them), encode writes. */
+  /**
+   * A `Codec<CsvTable, string>`: decode reads (warnings are dropped; call `parse` to see them), encode writes. A fatal
+   * finding fails the decode with the `CsvParseError`'s message as its issue. Under `CsvCodecOptions.default` it
+   * reads with the comma it writes, so `decode(encode(table))` is the table.
+   */
   static fromString(options: CsvCodecOptions = CsvCodecOptions.default): S.Codec<CsvTable, string> {
     return S.String.pipe(
       S.decodeTo(
         CsvTable,
         SchemaTransformation.transformEffect({
-          decode: (text: string) => tableFromText(text, options),
+          decode: (text: string) => tableOf(readText(text, options.read, WHOLE, constVoid), text),
           encode: (table: Pick<CsvTable, "records">) => Effect.succeed(writeRecords(table.records, options.write)),
         })
       )
@@ -667,19 +801,28 @@ export class Csv {
   /** {@link Csv.fromString} with every default, pre-bound. */
   static readonly CsvFromString: S.Codec<CsvTable, string> = Csv.fromString();
 
-  /** A `Codec<CsvTable, Uint8Array>`: bytes decode through the encoding rules, encode as UTF-8. */
+  /**
+   * A `Codec<CsvTable, Uint8Array>`: bytes decode through the encoding rules and the byte cap, encode as UTF-8. A
+   * cell holding a lone UTF-16 surrogate has no UTF-8 spelling, so its table fails to encode rather than come back
+   * changed.
+   */
   static fromBytes(options: CsvCodecOptions = CsvCodecOptions.default): S.Codec<CsvTable, Uint8Array> {
     return S.Uint8Array.pipe(
       S.decodeTo(
         CsvTable,
         SchemaTransformation.transformEffect({
-          decode: (bytes: Uint8Array) =>
-            Effect.mapBoth(Effect.fromResult(readBytes(bytes, options.read, WHOLE, constVoid)), {
-              onSuccess: (read) => read.table,
-              onFailure: (error) => issue(error, bytes),
-            }),
-          encode: (table: Pick<CsvTable, "records">) =>
-            Effect.succeed(encodeUtf8(writeRecords(table.records, options.write))),
+          decode: (bytes: Uint8Array) => tableOf(readBytes(bytes, options.read, WHOLE, constVoid), bytes),
+          encode: (table: Pick<CsvTable, "records">) => {
+            const text = writeRecords(table.records, options.write);
+            return text.isWellFormed()
+              ? Effect.succeed(encodeUtf8(text))
+              : Effect.fail(
+                  new SchemaIssue.InvalidValue(
+                    { message: "a cell holds a lone UTF-16 surrogate, which UTF-8 cannot carry" },
+                    table
+                  )
+                );
+          },
         })
       )
     );
@@ -688,6 +831,13 @@ export class Csv {
   /**
    * A codec of rows keyed by the first record's headings. An empty or repeated heading fails the decode; a heading
    * named `__proto__` is an ordinary key.
+   *
+   * **Details**
+   *
+   * Encoding writes the first row's keys as the header and each row's cells in that order; a row missing a heading
+   * writes an empty cell, which is how the decode reads a short record. Rows the decode could not give back are
+   * refused with an issue: a first row with no keys or with an empty key, and a later row with a key the first row
+   * lacks.
    */
   static recordsFromString(
     options: CsvCodecOptions = CsvCodecOptions.default
@@ -697,31 +847,37 @@ export class Csv {
         S.Array(CsvHeaderRow),
         SchemaTransformation.transformEffect({
           decode: (text: string) =>
-            Effect.flatMap(tableFromText(text, options), (table) =>
+            Effect.flatMap(tableOf(readText(text, options.read, WHOLE, constVoid), text), (table) =>
               Effect.mapError(Effect.fromResult(toHeaderRows(table)), (fatals) => issue(parseError(fatals), text))
             ),
           encode: (rows: ReadonlyArray<CsvHeaderRow>) =>
-            Effect.succeed(writeRecords(headerRecords(rows), options.write)),
+            Effect.mapBoth(Effect.fromResult(headerRecords(rows)), {
+              onSuccess: (records) => writeRecords(records, options.write),
+              onFailure: (message) => new SchemaIssue.InvalidValue({ message }, rows),
+            }),
         })
       )
     );
   }
 
-  /** Composes the header view with a target schema: `Csv.schema(S.Array(Row))`. */
+  /**
+   * Composes the header view with a target schema: `Csv.schema(S.Array(Row))`.
+   *
+   * **Gotchas**
+   *
+   * A heading named `__proto__` reaches the row as an own key, and an `S.Struct` target reads it when its field is
+   * declared with a computed key, `S.Struct({ ["__proto__"]: S.String })`. Written as `{ "__proto__": S.String }`,
+   * the object literal sets the fields object's prototype instead of declaring a field, so the struct has no such
+   * field and the column is dropped.
+   */
   static readonly schema: TextDecodeTo<CsvCodecOptions> = makeTextDecodeTo((options?: CsvCodecOptions) =>
     Csv.recordsFromString(options)
   );
 
-  /** Binds a target schema to the header view once, with its two directions. */
-  static bind<T, E, RD = never, RE = never>(
-    target: S.Codec<T, E, RD, RE>,
-    options: CsvCodecOptions = CsvCodecOptions.default
-  ): CsvBoundCodec<T, RD, RE> {
-    const schema = Csv.recordsFromString(options).pipe(S.decodeTo(target));
-    return { schema, decode: S.decodeEffect(schema), encode: S.encodeEffect(schema) };
-  }
-
-  /** A channel from text chunks to records with where they were; a fatal finding fails it. */
+  /**
+   * A channel from text chunks to records with where they were; a fatal finding fails it with `CsvParseError`. Split
+   * anywhere, it gives the records of {@link Csv.parseResult}.
+   */
   static decodeString<IE = never, Done = unknown>(
     options: CsvReadOptions = CsvReadOptions.default
   ): Channel.Channel<
@@ -735,7 +891,17 @@ export class Csv {
     return decodeStringChannel<IE, Done>(options);
   }
 
-  /** A channel from bytes to records: the encoding is decided within the detect window, then held. */
+  /**
+   * A channel from bytes to records: the encoding is decided within the detect window, then held, and the bytes are
+   * counted against `maxInputBytes` as they arrive.
+   *
+   * **Gotchas**
+   *
+   * Under a detected encoding the channel cannot look past its window, so it can differ from
+   * {@link Csv.parseBytesResult}: bytes valid as UTF-8 within the window and not after it fail the channel with
+   * `InvalidUtf8`, where the whole read falls back to Windows-1252. A fixed encoding, or input that the window
+   * decides, reads the same both ways.
+   */
   static decode<IE = never, Done = unknown>(
     options: CsvReadOptions = CsvReadOptions.default
   ): Channel.Channel<
@@ -751,7 +917,8 @@ export class Csv {
 
   /**
    * A channel from bytes to rows decoded with `row`, through the header view: the first record names the fields, an
-   * empty or repeated heading fails with `CsvParseError`, a row that does not decode fails with `S.SchemaError`.
+   * empty or repeated heading fails with `CsvParseError` (even with no record after it), a row that does not decode
+   * fails with `S.SchemaError`. The header is checked once, on the first record.
    */
   static decodeSchema<Row extends S.Top>(row: Row) {
     return <IE = never, Done = unknown>(
@@ -767,31 +934,20 @@ export class Csv {
     > => {
       const decodeRows = S.decodeUnknownEffect(S.NonEmptyArray(row));
       return Csv.decode<IE, Done>(options).pipe(
-        Channel.mapAccum(
-          (): O.Option<CsvRecord> => O.none(),
-          (seen, slices: A.NonEmptyReadonlyArray<CsvRecordSlice>) => {
-            const header = O.getOrElse(seen, () => A.headNonEmpty(slices).cells);
-            const body = O.isNone(seen) ? A.drop(slices, 1) : slices;
-            return [O.some(header), A.isReadonlyArrayNonEmpty(body) ? [{ header, body }] : []] as const;
-          }
-        ),
-        Channel.mapEffect(({ header, body }) =>
-          Effect.fromResult(
-            Result.mapError(toHeaderRows({ records: [header, ...A.map(body, (slice) => slice.cells)] }), parseError)
-          ).pipe(Effect.flatMap(decodeRows))
-        )
+        Channel.mapAccum((): O.Option<CsvRecord> => O.none(), stepRows),
+        Channel.mapEffect(flow(Effect.fromResult, Effect.flatMap(decodeRows)))
       );
     };
   }
 
-  /** A channel from records to canonical text chunks. */
+  /** A channel from records to canonical text chunks; joined, they are {@link Csv.stringify} of the records. */
   static encodeString<IE = never, Done = unknown>(
     options: CsvWriteOptions = CsvWriteOptions.default
   ): Channel.Channel<A.NonEmptyReadonlyArray<string>, IE, Done, A.NonEmptyReadonlyArray<CsvRecord>, IE, Done> {
     return encodeStringChannel<IE, Done>(options);
   }
 
-  /** A channel from records to UTF-8 bytes. */
+  /** A channel from records to UTF-8 bytes; a lone UTF-16 surrogate in a cell is written as U+FFFD. */
   static encode<IE = never, Done = unknown>(
     options: CsvWriteOptions = CsvWriteOptions.default
   ): Channel.Channel<A.NonEmptyReadonlyArray<Uint8Array>, IE, Done, A.NonEmptyReadonlyArray<CsvRecord>, IE, Done> {

@@ -4,7 +4,8 @@
 import { Csv } from "@beep/csv/Csv.codec";
 import { CsvFixedDelimiter, CsvReadOptions } from "@beep/csv/CsvOptions.schema";
 import { CsvRecord, CsvTable } from "@beep/csv/CsvTable.schema";
-import { describe, expect, it } from "@effect/vitest";
+import { describe, it } from "@effect/vitest";
+import { assertSuccess, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -16,13 +17,8 @@ import * as Stream from "effect/Stream";
 const runs = { arbitrary: { runs: 200 } };
 const strict = CsvReadOptions.make({ delimiter: CsvFixedDelimiter.make({ delimiter: "," }), quotes: "strict" });
 
-const effectRead = (text: string) =>
-  Stream.make(text).pipe(
-    Stream.pipeThroughChannel(EffectCsv.decodeString()),
-    Stream.runCollect,
-    Effect.map((rows) => A.map(rows, (row) => [...row])),
-    Effect.result
-  );
+const effectRead = (text: string): Effect.Effect<Result.Result<ReadonlyArray<ReadonlyArray<string>>, unknown>> =>
+  Stream.make(text).pipe(Stream.pipeThroughChannel(EffectCsv.decodeString()), Stream.runCollect, Effect.result);
 
 const effectWrite = (records: ReadonlyArray<ReadonlyArray<string>>) =>
   Stream.fromIterable(records).pipe(
@@ -42,12 +38,12 @@ describe("strict mode agrees with effect/encoding/Csv", () => {
     ([records]) =>
       Effect.gen(function* () {
         const text = yield* effectWrite(records);
-        const theirs = yield* effectRead(text);
-        const ours = Csv.parseResult(text, strict);
-        expect(Result.isSuccess(theirs)).toBe(true);
-        expect(Result.isSuccess(ours)).toBe(true);
-        if (Result.isSuccess(theirs) && Result.isSuccess(ours))
-          expect(ours.success.table.records).toEqual(theirs.success);
+        const streamed = yield* effectRead(text);
+        assertSuccess(streamed, records);
+        assertSuccess(
+          Result.map(Csv.parseResult(text, strict), (read) => read.table.records),
+          records
+        );
       }),
     runs
   );
@@ -57,10 +53,8 @@ describe("strict mode agrees with effect/encoding/Csv", () => {
     [Arbitrary.schema(Records)],
     ([records]) =>
       Effect.gen(function* () {
-        const text = Csv.stringify(CsvTable.make({ records }));
-        const theirs = yield* effectRead(text);
-        expect(Result.isSuccess(theirs)).toBe(true);
-        if (Result.isSuccess(theirs)) expect(theirs.success).toEqual(records);
+        const streamed = yield* effectRead(Csv.stringify(CsvTable.make({ records })));
+        assertSuccess(streamed, records);
       }),
     runs
   );
@@ -72,10 +66,9 @@ describe("strict mode agrees with effect/encoding/Csv", () => {
       Effect.gen(function* () {
         const text = A.join(chars, "");
         const theirs = yield* effectRead(text);
-        const ours = Csv.parseResult(text, strict);
-        expect(Result.isSuccess(ours)).toBe(Result.isSuccess(theirs));
-        if (Result.isSuccess(theirs) && Result.isSuccess(ours))
-          expect(ours.success.table.records).toEqual(theirs.success);
+        const ours = Result.map(Csv.parseResult(text, strict), (read) => read.table.records);
+        strictEqual(Result.isSuccess(ours), Result.isSuccess(theirs));
+        if (Result.isSuccess(ours)) assertSuccess(theirs, ours.success);
       }),
     runs
   );

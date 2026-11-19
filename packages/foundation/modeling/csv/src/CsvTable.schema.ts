@@ -7,11 +7,7 @@
  */
 
 import { $CsvId } from "@beep/identity/packages";
-import * as A from "effect/Array";
-import { dual } from "effect/Function";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import { CsvIndex, CsvRecordEnd, CsvTextSpan, MAX_TEXT_UNITS } from "./CsvPosition.schema.ts";
 
 const $I = $CsvId.create("CsvTable");
@@ -42,9 +38,10 @@ export const MAX_FIELDS = 1_000_000;
  *
  * ```ts import.meta.vitest name="Keep a cell's text as written"
  * import { CsvCell } from "@beep/csv/CsvTable.schema"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
- * S.decodeUnknownSync(CsvCell)("03/04/2026") // => "03/04/2026"
+ * Result.getOrThrow(S.decodeUnknownResult(CsvCell)("03/04/2026")) // => "03/04/2026"
  * S.is(CsvCell)(12) // => false
  * ```
  *
@@ -62,37 +59,6 @@ export const CsvCell = S.String.check(S.isMaxLength(MAX_TEXT_UNITS)).pipe(
  * @since 0.0.0
  */
 export type CsvCell = typeof CsvCell.Type;
-
-/**
- * Whether a cell must be quoted to read back unchanged: it holds the delimiter, a quote, a carriage return or a line
- * feed, or starts with a byte-order mark (which a reader strips at the start of a file).
- *
- * **Example** (Cells that need quotes)
- *
- * ```ts import.meta.vitest name="Cells that need quotes"
- * import { needsQuotes } from "@beep/csv/CsvTable.schema"
- *
- * needsQuotes("Bracket, 40 mm", ",") // => true
- * needsQuotes("Bracket, 40 mm", ";") // => false
- * needsQuotes('12" pipe', ",") // => true
- * needsQuotes("Bolt", ",") // => false
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const needsQuotes: {
-  (delimiter: string): (cell: CsvCell) => boolean;
-  (cell: CsvCell, delimiter: string): boolean;
-} = dual(
-  2,
-  (cell: CsvCell, delimiter: string): boolean =>
-    Str.includes(delimiter)(cell) ||
-    Str.includes('"')(cell) ||
-    Str.includes("\r")(cell) ||
-    Str.includes("\n")(cell) ||
-    Str.startsWith("\uFEFF")(cell)
-);
 
 /**
  * One record's cells, never empty: a blank line reads as one empty cell.
@@ -124,46 +90,21 @@ export const CsvRecord = S.NonEmptyArray(CsvCell.annotateKey({ description: "One
 export type CsvRecord = typeof CsvRecord.Type;
 
 /**
- * Whether a record is a blank line's: exactly one empty cell.
- *
- * **Gotchas**
- *
- * A quoted empty cell (`""` on its own line) reads as the same record, so this cannot tell the two apart. Blank-line
- * skipping is decided by the reader, which still sees the quotes, not by this predicate.
- *
- * **Example** (Tell a blank line from a record)
- *
- * ```ts import.meta.vitest name="Tell a blank line from a record"
- * import { isBlankRecord } from "@beep/csv/CsvTable.schema"
- *
- * isBlankRecord([""]) // => true
- * isBlankRecord(["", ""]) // => false
- * isBlankRecord(["BRK-040"]) // => false
- * ```
- *
- * @category predicates
- * @since 0.0.0
- */
-export const isBlankRecord = (record: CsvRecord): boolean => record.length === 1 && record[0] === "";
-
-/**
  * The records of a CSV file in file order: the canonical decoded side of every codec.
  *
  * **Details**
  *
- * `CsvTable.width` is the first record's cell count (`O.none()` for an empty table), and `CsvTable.ragged` lists the
- * 0-based indexes of the records whose width differs from it.
+ * Every reader returns this model, and every writer takes it; nothing about the dialect is kept. A record is never
+ * empty, so a table that is not a list of non-empty records is refused.
  *
- * **Example** (Measure a table and find its ragged records)
+ * **Example** (Refuse a table with an empty record)
  *
- * ```ts import.meta.vitest name="Measure a table and find its ragged records"
+ * ```ts import.meta.vitest name="Refuse a table with an empty record"
  * import { CsvTable } from "@beep/csv/CsvTable.schema"
- * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
  *
- * const table = CsvTable.make({ records: [["SKU", "Name"], ["BRK-040", "Bracket"], ["BLT-010"]] })
- * CsvTable.width(table) // => O.some(2)
- * CsvTable.ragged(table) // => [2]
- * CsvTable.width(CsvTable.make({ records: [] })) // => O.none()
+ * S.is(CsvTable)(CsvTable.make({ records: [["SKU", "Name"], [""]] })) // => true
+ * S.is(CsvTable)({ records: [["SKU"], []] }) // => false
  * ```
  *
  * @category models
@@ -175,19 +116,7 @@ export class CsvTable extends S.Opaque<CsvTable, { readonly brand: unique symbol
       S.annotateKey({ description: "The records in file order" })
     ),
   }).pipe($I.annoteSchema("CsvTable", { description: "The canonical decoded side of every CSV codec" }))
-) {
-  /** Cells in the first record, when there is one. */
-  static readonly width = (table: CsvTable): O.Option<number> => O.map(A.head(table.records), A.length);
-
-  /** The 0-based indexes of the records whose width differs from the first record's. */
-  static readonly ragged = (table: CsvTable): ReadonlyArray<number> =>
-    O.getOrElse(
-      O.map(CsvTable.width(table), (width) =>
-        A.getSomes(A.map(table.records, (record, index) => (record.length === width ? O.none() : O.some(index))))
-      ),
-      A.empty
-    );
-}
+) {}
 
 /**
  * One row of the header view: the first record's headings as keys, this record's cells as values.
@@ -201,9 +130,10 @@ export class CsvTable extends S.Opaque<CsvTable, { readonly brand: unique symbol
  *
  * ```ts import.meta.vitest name="Decode a header row"
  * import { CsvHeaderRow } from "@beep/csv/CsvTable.schema"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
- * const row = S.decodeUnknownSync(CsvHeaderRow)({ SKU: "BRK-040", Name: "Bracket" })
+ * const row = Result.getOrThrow(S.decodeUnknownResult(CsvHeaderRow)({ SKU: "BRK-040", Name: "Bracket" }))
  * row.Name // => "Bracket"
  * S.is(CsvHeaderRow)({ SKU: 40 }) // => false
  * ```
@@ -252,7 +182,7 @@ export class CsvRecordSlice extends S.Opaque<CsvRecordSlice, { readonly brand: u
   S.Struct({
     cells: CsvRecord.pipe(S.annotateKey({ description: "The record's cells" })),
     record: CsvIndex.pipe(S.annotateKey({ description: "0-based record number, blank lines counted" })),
-    span: CsvTextSpan.pipe(S.annotateKey({ description: "Where the record is in the decoded text" })),
+    span: CsvTextSpan,
     end: CsvRecordEnd.pipe(S.annotateKey({ description: "How the record ended" })),
   }).pipe($I.annoteSchema("CsvRecordSlice", { description: "One record in a stream and where it was" }))
 ) {}

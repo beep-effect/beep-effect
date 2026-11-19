@@ -47,9 +47,16 @@ export const bomOf = (bytes: Uint8Array): O.Option<"utf-8" | "utf-16le" | "utf-1
   return O.none();
 };
 
-/** Decodes bytes in an encoding; a leading byte-order mark of that encoding is dropped. */
+/**
+ * A decoder that keeps every U+FEFF it decodes. `TextDecoder` drops a leading one by default, and a stream decodes
+ * piece by piece, so the default would drop a U+FEFF that starts a piece of cell data. The one byte-order mark at the
+ * start of the input is stripped from the text instead, once, by the reader.
+ */
+export const decoderFor = (encoding: CsvEncodingName): TextDecoder => new TextDecoder(encoding, { ignoreBOM: true });
+
+/** Decodes bytes in an encoding, keeping a leading byte-order mark as text (see `decoderFor`). */
 export const decodeBytes = (input: { readonly bytes: Uint8Array; readonly encoding: CsvEncodingName }): string =>
-  new TextDecoder(input.encoding).decode(input.bytes);
+  decoderFor(input.encoding).decode(input.bytes);
 
 const encoder = new TextEncoder();
 

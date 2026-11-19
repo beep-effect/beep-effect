@@ -13,13 +13,13 @@ import {
   XlsxCell,
   XlsxDate,
   XlsxErrorCode,
-  XlsxFormatKind,
   XlsxNumber,
   XlsxNumberFormat,
   XlsxText,
   XlsxValue,
 } from "@beep/xlsx/XlsxCell.schema";
 import { XlsxContainer, XlsxDiagnostic } from "@beep/xlsx/XlsxDiagnostic.schema";
+import { XlsxFormatKind } from "@beep/xlsx/XlsxFormatKind.schema";
 import {
   XlsxCodecOptions,
   XlsxLimits,
@@ -28,7 +28,7 @@ import {
   XlsxWriteOptions,
 } from "@beep/xlsx/XlsxOptions.schema";
 import { XlsxOutline, XlsxRead, XlsxSheetOutline } from "@beep/xlsx/XlsxRead.schema";
-import { XlsxCalendar, XlsxDateSystem, XlsxSerial } from "@beep/xlsx/XlsxSerial.schema";
+import { MAX_SERIAL, maxSerial, XlsxCalendar, XlsxDateSystem, XlsxSerial } from "@beep/xlsx/XlsxSerial.schema";
 import {
   XlsxDroppedPart,
   XlsxRow,
@@ -45,9 +45,10 @@ import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const runs = { arbitrary: { runs: 50 } };
-const schemas = {
+const schemas: Readonly<Record<string, S.Top>> = {
   XlsxColumn,
   XlsxRowNumber,
   XlsxAddress,
@@ -84,9 +85,9 @@ describe("every schema generates only valid values", () => {
   for (const [name, schema] of R.toEntries(schemas)) {
     it.prop(
       name,
-      [Arbitrary.schema(schema as S.Top)],
+      [Arbitrary.schema(schema)],
       ([value]) => {
-        expect(S.is(schema as S.Top)(value)).toBe(true);
+        expect(S.is(schema)(value)).toBe(true);
       },
       runs
     );
@@ -120,34 +121,73 @@ describe("addresses", () => {
   });
 });
 
-const ymd = (serial: number, system: "1900" | "1904") => {
-  const c = XlsxCalendar.fromSerial(serial, system);
-  return `${c.year}-${c.month}-${c.day}`;
-};
+const ymd = (serial: number, system: "1900" | "1904") =>
+  O.map(XlsxCalendar.fromSerial(serial, system), (c) => `${c.year}-${c.month}-${c.day}`);
 
 describe("serials", () => {
   it("keeps the day that never was in the 1900 system", () => {
-    expect(A.map([1, 59, 60, 61, 46_085], (serial) => ymd(serial, "1900"))).toEqual([
-      "1900-1-1",
-      "1900-2-28",
-      "1900-2-29",
-      "1900-3-1",
-      "2026-3-4",
-    ]);
-    expect(ymd(0, "1900")).toBe("1900-1-0");
+    expect(A.map([1, 59, 60, 61, 46_085], (serial) => ymd(serial, "1900"))).toEqual(
+      A.map(["1900-1-1", "1900-2-28", "1900-2-29", "1900-3-1", "2026-3-4"], O.some)
+    );
+    expect(ymd(0, "1900")).toEqual(O.some("1900-1-0"));
   });
   it("counts from 1 January 1904 in the 1904 system", () => {
-    expect(A.map([0, 1, 59, 60, 61, 44_623], (serial) => ymd(serial, "1904"))).toEqual([
-      "1904-1-1",
-      "1904-1-2",
-      "1904-2-29",
-      "1904-3-1",
-      "1904-3-2",
-      "2026-3-4",
-    ]);
+    expect(A.map([0, 1, 59, 60, 61, 44_623], (serial) => ymd(serial, "1904"))).toEqual(
+      A.map(["1904-1-1", "1904-1-2", "1904-2-29", "1904-3-1", "1904-3-2", "2026-3-4"], O.some)
+    );
   });
   it("reads a time of day without losing a second", () => {
-    expect(XlsxCalendar.fromSerial(46_085.604_166_666_66, "1900")).toMatchObject({ hour: 14, minute: 30, second: 0 });
+    expect(O.getOrThrow(XlsxCalendar.fromSerial(46_085.604_166_666_66, "1900"))).toMatchObject({
+      hour: 14,
+      minute: 30,
+      second: 0,
+    });
+  });
+  it("ends each system on 31 December 9999, the 1904 one 1,462 serials sooner", () => {
+    expect(ymd(maxSerial("1900"), "1900")).toEqual(O.some("9999-12-31"));
+    expect(ymd(maxSerial("1904"), "1904")).toEqual(O.some("9999-12-31"));
+    expect(XlsxCalendar.fromSerial(MAX_SERIAL, "1904")).toEqual(O.none());
+    expect(XlsxCalendar.toDateTime(MAX_SERIAL, "1904")).toEqual(O.none());
+  });
+  // The serial domain is one schema for both systems, so a 1904 serial can name a day past 9999; `fromSerial` says
+  // none there and never throws. Within a system's range it always gives the day, back to within a second.
+  it.prop(
+    "fromSerial gives every serial of a system its day, and toSerial gives the serial back",
+    [Arbitrary.schema(XlsxDateSystem), Arbitrary.schema(S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })))],
+    ([system, share]) => {
+      const serial = share * maxSerial(system);
+      const calendar = XlsxCalendar.fromSerial(serial, system);
+      expect(O.isSome(calendar)).toBe(true);
+      const back = O.getOrThrow(O.flatMap(calendar, (found) => XlsxCalendar.toSerial(found, system)));
+      expect(Math.abs(back - serial)).toBeLessThan(1 / 86_400);
+    },
+    { arbitrary: { runs: 500 } }
+  );
+  // A time that rounds up to midnight carries into the next day, in both systems. SheetJS gets these wrong (it
+  // shows 12:00:00 PM for the end of a day and drops the 1904 offset after the carry), so they are stated here
+  // rather than in the oracle test.
+  it("carries a time that rounds up to midnight into the next day", () => {
+    // The calendar keeps whole seconds and carries only what is within a ten-thousandth of the next one; the
+    // displayed text rounds to the nearest second.
+    expect(O.getOrThrow(XlsxCalendar.fromSerial(0.999_999_999_5, "1900"))).toMatchObject({
+      year: 1900,
+      month: 1,
+      day: 1,
+      hour: 0,
+      minute: 0,
+      second: 0,
+    });
+    expect(O.getOrThrow(XlsxCalendar.fromSerial(0.999_999_99, "1900"))).toMatchObject({
+      day: 0,
+      hour: 23,
+      minute: 59,
+      second: 59,
+    });
+    const shown = (serial: number, code: string, system: "1900" | "1904") =>
+      XlsxCell.shown({ value: XlsxDate.make({ serial }), format: XlsxNumberFormat.make({ id: 164, code }) }, system);
+    expect(shown(46_085.999_999_995, "yyyy-mm-dd hh:mm:ss", "1904")).toEqual(O.some("2030-03-06 00:00:00"));
+    expect(shown(59.999_999_9, "yyyy-mm-dd hh:mm:ss", "1900")).toEqual(O.some("1900-02-29 00:00:00"));
+    expect(shown(0.999_999_99, "h:mm:ss AM/PM", "1900")).toEqual(O.some("12:00:00 AM"));
   });
   it("has no DateTime for the days no calendar has", () => {
     expect(O.isNone(XlsxCalendar.toDateTime(60, "1900"))).toBe(true);
@@ -165,7 +205,9 @@ describe("serials", () => {
     ],
     ([day, seconds, system]) => {
       const serial = day + seconds / 86_400;
-      expect(XlsxCalendar.toSerial(XlsxCalendar.fromSerial(serial, system), system)).toEqual(O.some(serial));
+      expect(
+        O.flatMap(XlsxCalendar.fromSerial(serial, system), (calendar) => XlsxCalendar.toSerial(calendar, system))
+      ).toEqual(O.some(serial));
     },
     { arbitrary: { runs: 500 } }
   );
@@ -199,8 +241,67 @@ describe("displayed text", () => {
     expect(XlsxNumberFormat.kind({ code: "00000" })).toMatchObject({ kind: "ZeroPadded", width: 5 });
   });
   it("puts a cell built by hand in the form a file gives back", () => {
-    expect(XlsxCell.canonical(date(5, "0.00")).format).toMatchObject({ id: 14, code: "m/d/yy" });
-    expect(XlsxCell.canonical(number(5, "yyyy")).value).toMatchObject({ kind: "Date", serial: 5 });
-    expect(XlsxCell.canonical(number(-5, "yyyy")).value).toMatchObject({ kind: "Number", value: -5 });
+    expect(XlsxCell.canonical(date(5, "0.00"), "1900").format).toMatchObject({ id: 14, code: "m/d/yy" });
+    expect(XlsxCell.canonical(number(5, "yyyy"), "1900").value).toMatchObject({ kind: "Date", serial: 5 });
+    expect(XlsxCell.canonical(number(-5, "yyyy"), "1900").value).toMatchObject({ kind: "Number", value: -5 });
+    expect(XlsxCell.canonical(date(MAX_SERIAL, "yyyy"), "1904").value).toMatchObject({ kind: "Number" });
+    expect(XlsxCell.canonical(number(MAX_SERIAL, "yyyy"), "1904").value).toMatchObject({ kind: "Number" });
+    expect(XlsxCell.canonical(number(MAX_SERIAL, "yyyy"), "1900").value).toMatchObject({ kind: "Date" });
+  });
+  // A format kind and the displayed text come from one reading of the code: whatever `shown` renders, `kind` does
+  // not call a format it does not render.
+  const patterns = A.flatMap(A.range(0, 40), (n) => [
+    Str.repeat(n + 1)("0"),
+    `0.${Str.repeat(n)("0")}`,
+    `#,##0.${Str.repeat(n)("0")}%`,
+  ]);
+  it.prop(
+    "a number is shown only under a format whose kind is rendered",
+    [Arbitrary.schema(XlsxNumberFormat), Arbitrary.schema(S.Finite)],
+    ([format, value]) => {
+      for (const candidate of [format, ...A.map(patterns, (code) => XlsxNumberFormat.make({ id: 164, code }))]) {
+        if (O.isSome(XlsxCell.shown({ value: XlsxNumber.make({ value }), format: candidate }, "1900"))) {
+          expect(XlsxNumberFormat.kind(candidate).kind).not.toBe("Other");
+        }
+      }
+    }
+  );
+  it("calls a pattern past its schema's bounds a format it does not render", () => {
+    const wide = XlsxNumberFormat.make({ id: 164, code: `0.${Str.repeat(31)("0")}` });
+    expect(XlsxNumberFormat.kind(wide).kind).toBe("Other");
+    expect(XlsxCell.shown({ value: XlsxNumber.make({ value: 0 }), format: wide }, "1900")).toEqual(O.none());
+  });
+});
+
+describe("uniqueness", () => {
+  const cell = (column: number) => XlsxCell.make({ column, value: XlsxNumber.make({ value: column }) });
+  const row = (number: number) => XlsxRow.make({ number, cells: [cell(0)] });
+  const sheet = (name: string) => XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name }) });
+  it.prop("a repeated row number, cell column or sheet name is refused", [Arbitrary.schema(XlsxWorkbook)], ([wb]) => {
+    const [first] = wb.sheets;
+    expect(S.is(XlsxWorkbook)({ ...wb, sheets: [first, ...wb.sheets] })).toBe(false);
+    const upper = { ...first, info: { ...first.info, name: Str.toUpperCase(first.info.name) } };
+    expect(S.is(XlsxWorkbook)({ ...wb, sheets: [first, upper] })).toBe(false);
+    for (const found of A.take(first.rows, 1)) {
+      expect(S.is(XlsxWorksheet)({ ...first, rows: [found, ...first.rows] })).toBe(false);
+      for (const kept of A.take(found.cells, 1)) {
+        expect(S.is(XlsxRow)({ ...found, cells: [kept, ...found.cells] })).toBe(false);
+      }
+    }
+  });
+  // The checks hash their keys, so they are linear: a check that compared every pair would take minutes here.
+  it("checks a sheet of 200,000 rows, a full row and 1,000 sheets in linear time", () => {
+    const rows = A.map(A.range(1, 200_000), row);
+    expect(S.is(XlsxWorksheet)(XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "S" }), rows }))).toBe(true);
+    expect(
+      S.is(XlsxWorksheet)({
+        ...XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "S" }) }),
+        rows: [...rows, row(1)],
+      })
+    ).toBe(false);
+    expect(S.is(XlsxRow)(XlsxRow.make({ number: 1, cells: A.map(A.range(0, 16_383), cell) }))).toBe(true);
+    const sheets = A.map(A.range(1, 1000), (n) => sheet(`Sheet ${n}`));
+    expect(S.is(XlsxWorkbook)(XlsxWorkbook.make({ sheets: [sheet("Sheet 0"), ...sheets] }))).toBe(true);
+    expect(XlsxWorkbook.makeOption({ sheets: [sheet("sheet 1"), ...sheets] })).toEqual(O.none());
   });
 });

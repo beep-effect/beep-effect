@@ -4,9 +4,11 @@
 // directory names, and a file could otherwise show two readers two workbooks. Caps are counted as bytes are
 // inflated, never taken from the sizes a file declares.
 import { $XlsxId } from "@beep/identity/packages";
+import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
 import * as Zip from "effect/encoding/Zip";
+import { dual } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
@@ -65,6 +67,7 @@ const startsWith = (bytes: Uint8Array, prefix: ReadonlyArray<number>): boolean =
 
 /** A name as an OLE directory writes it: UTF-16LE, which read byte for byte puts a NUL after each letter. */
 const wide = (name: string): string => {
+  // crispen: one short name, built once per sniff.
   let out = "";
   for (const letter of name) out += `${letter}\u0000`;
   return out;
@@ -97,8 +100,10 @@ const damaged = (error: Zip.ZipError): XlsxFatal =>
 
 const entriesOf = (bytes: Uint8Array) => Stream.make(bytes).pipe(Stream.pipeThroughChannel(Zip.decode()));
 
-const joined = (chunks: ReadonlyArray<Uint8Array>, length: number): Uint8Array => {
-  const out = new Uint8Array(length);
+/** Chunks of bytes as one array, the reader's inflated parts and the writer's archive alike. */
+export const concatBytes = (chunks: ReadonlyArray<Uint8Array>): Uint8Array => {
+  const out = new Uint8Array(A.reduce(chunks, 0, (n, chunk) => n + chunk.length));
+  // crispen: `set` at an offset is the copy; there is no Effect combinator over typed arrays.
   let at = 0;
   for (const chunk of chunks) {
     out.set(chunk, at);
@@ -117,6 +122,8 @@ export const census = Effect.fnUntraced(function* (input: {
   readonly keep: (path: string) => boolean;
 }) {
   const { caps, keep } = input;
+  // crispen: counters and a held-chunk list per part, updated as each inflated chunk arrives; the caps must be
+  // checked chunk by chunk, so the state cannot be folded after the stream ends.
   const paths: Array<string> = [];
   const seen = MutableHashSet.empty<string>();
   const kept = MutableHashMap.empty<string, Uint8Array>();
@@ -150,7 +157,7 @@ export const census = Effect.fnUntraced(function* (input: {
         }),
         Stream.runDrain,
         Effect.map(() => {
-          if (wanted) MutableHashMap.set(kept, path, joined(held, size));
+          if (wanted) MutableHashMap.set(kept, path, concatBytes(held));
         })
       );
     }),
@@ -170,20 +177,11 @@ export const collect = Effect.fnUntraced(function* (input: {
     Stream.mapEffect((entry) => {
       const path = entry.header.path;
       if (entry.header.type === "Directory" || !input.wanted(path)) return Effect.void;
-      const held: Array<Uint8Array> = [];
-      let size = 0;
       return entry.body.pipe(
         Stream.mapError(damaged),
-        Stream.runForEachArray((chunks) =>
-          Effect.sync(() => {
-            for (const chunk of chunks) {
-              held.push(chunk);
-              size += chunk.length;
-            }
-          })
-        ),
-        Effect.map(() => {
-          MutableHashMap.set(kept, path, joined(held, size));
+        Stream.runCollect,
+        Effect.map((chunks) => {
+          MutableHashMap.set(kept, path, concatBytes(chunks));
         })
       );
     }),
@@ -196,9 +194,21 @@ export const collect = Effect.fnUntraced(function* (input: {
  * The parts `wanted` asks for, each as its path and the stream of its inflated bytes, in the order the archive holds
  * them. A body must be read before the next part is pulled, which `Stream.flatMap` and `Stream.mapEffect` do.
  */
-export const bodiesOf = (input: { readonly bytes: Uint8Array; readonly wanted: (path: string) => boolean }) =>
-  entriesOf(input.bytes).pipe(
-    Stream.mapError(damaged),
-    Stream.filter((entry) => entry.header.type === "File" && input.wanted(entry.header.path)),
-    Stream.map((entry) => ({ path: entry.header.path, body: Stream.mapError(entry.body, damaged) }))
-  );
+export const bodiesOf: {
+  (wanted: (path: string) => boolean): (bytes: Uint8Array) => Stream.Stream<Body, XlsxFatal>;
+  (bytes: Uint8Array, wanted: (path: string) => boolean): Stream.Stream<Body, XlsxFatal>;
+} = dual(
+  2,
+  (bytes: Uint8Array, wanted: (path: string) => boolean): Stream.Stream<Body, XlsxFatal> =>
+    entriesOf(bytes).pipe(
+      Stream.mapError(damaged),
+      Stream.filter((entry) => entry.header.type === "File" && wanted(entry.header.path)),
+      Stream.map((entry) => ({ path: entry.header.path, body: Stream.mapError(entry.body, damaged) }))
+    )
+);
+
+/** One part's path and the stream of its inflated bytes. */
+interface Body {
+  readonly body: Stream.Stream<Uint8Array, XlsxFatal>;
+  readonly path: string;
+}

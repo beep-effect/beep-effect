@@ -20,12 +20,15 @@ const program = (bytes: Uint8Array) =>
 
 ## Modules
 
-- `Xlsx` (`Xlsx.codec.ts`): the facade. `parse` / `parseResult`, `outline`, `sheets`, `sheetLayout`, `rows`,
-  `stringify`, `container`, and `fromBytes`, `recordsFromBytes`, `sheetFromBytes` and `bind` as Schema codecs.
+- `Xlsx` (`Xlsx.codec.ts`): the facade. `parse`, `outline`, `sheets`, `sheetLayout`, `rows`, `stringify`,
+  `container`, and `fromBytes`, `recordsFromBytes` and `sheetFromBytes` as Schema codecs for `S.decodeEffect` and
+  `S.encodeEffect`.
 - `XlsxWorkbook`, `XlsxWorksheet`, `XlsxRow`, `XlsxSheetInfo`, `XlsxSheetCount` (`XlsxWorkbook.schema.ts`): the
-  decoded side.
+  decoded side. Every nested value keeps its nominal type: a sheet of a workbook is an `XlsxWorksheet`.
 - `XlsxCell`, `XlsxValue`, `XlsxNumberFormat` (`XlsxCell.schema.ts`): one cell, what it holds, how it is shown.
-- `XlsxAddress`, `XlsxRange` (`XlsxAddress.schema.ts`), `XlsxSerial`, `XlsxCalendar` (`XlsxSerial.schema.ts`).
+- `XlsxFormatKind` (`XlsxFormatKind.schema.ts`): what a number format code is, as far as its text is rendered.
+- `XlsxAddress`, `XlsxRange` (`XlsxAddress.schema.ts`), `XlsxSerial`, `XlsxCalendar`, `maxSerial`
+  (`XlsxSerial.schema.ts`). A 1904 workbook's last date comes 1,462 serials before a 1900 one's.
 - `XlsxRead`, `XlsxOutline` (`XlsxRead.schema.ts`): what a read returns.
 - `XlsxDiagnostic` (`XlsxDiagnostic.schema.ts`): findings, as a warning or a fatal.
 - `XlsxReadOptions`, `XlsxWriteOptions`, `XlsxCodecOptions`, `XlsxLimits` (`XlsxOptions.schema.ts`): every choice
@@ -45,7 +48,11 @@ workbook written and read back is its canonical form, and that form does not mov
 ## What it trusts
 
 Nothing a file declares. Caps (`XlsxLimits`) are counted as bytes are inflated, a declared extent is kept as a
-claim, and a cell the file gets wrong is kept as `Unreadable` with what was written, and reported.
+claim, and a cell the file gets wrong is kept as `Unreadable` with what was written, and reported: an ISO date with
+an impossible time such as `T99:99:99` among them. The work a file can ask for is bounded by what it holds: a hidden
+`<col>` span is kept as its two ends and each column comes out once, however many spans name it, and each sheet's
+relationship is one lookup in an index built once. When records are read under a header row, a cell with a value in
+a column the header row has no heading for stops the read, as an empty or repeated heading does.
 
 The archive is read with `effect/encoding/Zip` and the XML with `effect/encoding/Xml` (each behind one file in
 `src/internal`). That zip reader goes through the entries in order and never reads the central directory. Two things

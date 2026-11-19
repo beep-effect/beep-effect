@@ -1,6 +1,6 @@
 // What the reader makes of each kind of file, on workbooks built from hand-written parts (test/support/workbooks.ts).
-// Every workbook read here is also held to its schema, which is what lets the reader build cells without walking
-// each one through `make`.
+// Every workbook read here is also held to its schema, which is what lets the reader build cells with their checks
+// skipped (`make` with `disableChecks`).
 
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
 import { XlsxCell } from "@beep/xlsx/XlsxCell.schema";
@@ -10,10 +10,13 @@ import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 import { archive, partsOf, sheet, sheetWith, strict, strings, styles, workbook } from "./support/workbooks.ts";
 import type { XlsxRead } from "@beep/xlsx/XlsxRead.schema";
+import type { XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema";
 import type { Recipe } from "./support/workbooks.ts";
 
 const read = (bytes: Uint8Array, options?: XlsxReadOptions) =>
@@ -25,11 +28,10 @@ const read = (bytes: Uint8Array, options?: XlsxReadOptions) =>
 const readOf = (recipe: Recipe, options?: XlsxReadOptions) =>
   Effect.flatMap(workbook(recipe), (bytes) => read(bytes, options));
 
-type Sheet = XlsxRead["workbook"]["sheets"][number];
-const first = (found: XlsxRead): Sheet => found.workbook.sheets[0];
+const first = (found: XlsxRead): XlsxWorksheet => found.workbook.sheets[0];
 
 /** A sheet as rows of `column:what it holds`, for an expectation a person can read. */
-const grid = (found: Sheet) =>
+const grid = (found: XlsxWorksheet) =>
   A.map(found.rows, (row) => [
     row.number,
     ...A.map(row.cells, (cell) => {
@@ -182,6 +184,45 @@ describe("cells", () => {
         { kind: "UnreadableCell", reason: "date" },
         { kind: "UnknownStyle", style: 9, address: { column: 5, row: 1 } },
       ]);
+    })
+  );
+
+  // An ISO cell's time is held to the calendar: an hour past 23 or a minute or second past 59 is not carried into a
+  // later day. ISO's 24:00:00 for the end of a day is refused the same way.
+  it.effect("keeps an ISO date with an impossible time as unreadable, and reports it", () =>
+    Effect.gen(function* () {
+      const rows =
+        '<row r="1"><c r="A1" t="d"><v>2026-03-04T99:99:99</v></c><c r="B1" t="d"><v>2026-03-04T24:00:00</v></c>' +
+        '<c r="C1" t="d"><v>2026-03-04T12:60:00</v></c><c r="D1" t="d"><v>2026-03-04T23:59:59</v></c></row>';
+      const found = yield* readOf({ sheets: [{ name: "S", xml: sheet(rows) }] });
+      expect(grid(first(found))).toEqual([
+        [
+          1,
+          '0:unreadable "2026-03-04T99:99:99"',
+          '1:unreadable "2026-03-04T24:00:00"',
+          '2:unreadable "2026-03-04T12:60:00"',
+          `3:date ${46_085 + 86_399 / 86_400}`,
+        ],
+      ]);
+      expect(A.map(found.warnings, (warning) => warning.finding)).toMatchObject([
+        { kind: "UnreadableCell", reason: "date", address: { column: 0, row: 1 } },
+        { kind: "UnreadableCell", reason: "date", address: { column: 1, row: 1 } },
+        { kind: "UnreadableCell", reason: "date", address: { column: 2, row: 1 } },
+      ]);
+    })
+  );
+
+  it.effect("reads a 1904 date the system shows and refuses a number or ISO date past its last day", () =>
+    Effect.gen(function* () {
+      const rows =
+        '<row r="1"><c r="A1" s="1"><v>2957003</v></c><c r="B1" s="1"><v>2958000</v></c>' +
+        '<c r="C1" t="d"><v>9999-12-31</v></c></row>';
+      const found = yield* readOf({
+        sheets: [{ name: "S", xml: sheet(rows) }],
+        styles: styles(["yyyy-mm-dd"]),
+        workbookPr: '<workbookPr date1904="1"/>',
+      });
+      expect(grid(first(found))).toEqual([[1, "0:date 2957003", "1:2958000", "2:date 2957003"]]);
     })
   );
 
@@ -374,7 +415,7 @@ describe("one sheet at a time", () => {
     })
   );
 
-  it.effect("streams one sheet's rows, the same rows a whole read gives", () =>
+  it.effect("streams one sheet's rows: on a sheet written in order, the same rows a whole read gives", () =>
     Effect.gen(function* () {
       const bytes = yield* workbook(recipe);
       const streamed = yield* Stream.runCollect(Xlsx.rows(bytes, "data"));
@@ -382,6 +423,54 @@ describe("one sheet at a time", () => {
       expect(streamed).toEqual(whole.workbook.sheets[1]?.rows);
       const missing = yield* Xlsx.rows(bytes, "Nope").pipe(Stream.runCollect, Effect.flip);
       expect(missing.fatal.finding).toMatchObject({ kind: "MissingPart" });
+    })
+  );
+
+  it.effect("streams a row number a sheet repeats each time, where a whole read keeps the first", () =>
+    Effect.gen(function* () {
+      const rows =
+        '<row r="3"><c r="A3"><v>3</v></c></row><row r="1"><c r="A1"><v>1</v></c></row><row r="3"><c r="A3"><v>9</v></c></row>';
+      const bytes = yield* workbook({ sheets: [{ name: "S", xml: sheet(rows) }] });
+      const streamed = yield* Stream.runCollect(Xlsx.rows(bytes, "S"));
+      const whole = yield* read(bytes);
+      expect(A.map(streamed, (row) => row.number)).toEqual([3, 1, 3]);
+      expect(grid(first(whole))).toEqual([
+        [1, "0:1"],
+        [3, "0:3"],
+      ]);
+    })
+  );
+});
+
+describe("relationships", () => {
+  // A target is resolved inside the archive whatever form it takes: relative to the part that holds it, or from the
+  // root with `.` and `..` segments, and a `..` past the root stays at the root.
+  it.effect("resolves absolute and relative targets, with their dot segments", () =>
+    Effect.gen(function* () {
+      const targets = [
+        "/xl/worksheets/sheet1.xml",
+        "/xl/./worksheets/sheet1.xml",
+        "/xl/worksheets/../worksheets/sheet1.xml",
+        "../../../xl/worksheets/sheet1.xml",
+        "./worksheets/sheet1.xml",
+      ];
+      const parts = partsOf({ sheets: [{ name: "S", xml: sheet('<row r="1"><c r="A1"><v>1</v></c></row>') }] });
+      const counts = yield* Effect.forEach(
+        targets,
+        (target) =>
+          Effect.flatMap(
+            archive(
+              A.map(parts, ([path, text]) =>
+                path === "xl/_rels/workbook.xml.rels" && P.isString(text)
+                  ? ([path, Str.replace('Target="worksheets/sheet1.xml"', `Target="${target}"`)(text)] as const)
+                  : ([path, text] as const)
+              )
+            ),
+            (bytes) => Effect.map(read(bytes), (found) => first(found).rows.length)
+          ),
+        { concurrency: 1 }
+      );
+      expect(counts).toEqual([1, 1, 1, 1, 1]);
     })
   );
 });
@@ -418,6 +507,32 @@ describe("what a file is", () => {
       "notAnArchive",
     ]);
   });
+
+  it.effect("refuses every container that is not a workbook, naming what it is", () =>
+    Effect.gen(function* () {
+      const others = [
+        bytesOf(zip, "xl/workbook.bin"),
+        bytesOf(zip, "mimetypeapplication/vnd.oasis.opendocument.spreadsheet"),
+        bytesOf(zip, "word/document.xml"),
+        bytesOf(zip, "readme.txt"),
+        bytesOf(ole, "EncryptedPackage", true),
+        bytesOf(ole, "Workbook", true),
+        bytesOf(ole, "PowerPoint Document", true),
+        bytesOf([0x53, 0x4b, 0x55], ",Name"),
+      ];
+      const refused = yield* Effect.forEach(
+        others,
+        (bytes) => Effect.map(Effect.flip(Xlsx.parse(bytes)), (error) => error.fatal.finding),
+        { concurrency: 1 }
+      );
+      expect(refused).toEqual(
+        A.map(
+          ["binaryWorkbook", "openDocument", "word", "otherZip", "encrypted", "legacyXls", "otherOle", "notAnArchive"],
+          (container) => ({ kind: "NotAWorkbook", container })
+        )
+      );
+    })
+  );
 
   it.effect("stops at a file that is not a workbook, a workbook with no sheet, and a part that is not there", () =>
     Effect.gen(function* () {

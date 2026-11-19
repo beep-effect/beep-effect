@@ -41,9 +41,7 @@ const $I = $CsvId.create("CsvError");
 export class CsvParseError extends S.TaggedError<CsvParseError, { readonly brand: unique symbol }>($I`CsvParseError`)(
   "CsvParseError",
   {
-    diagnostics: S.NonEmptyArray(CsvFatal.annotateKey({ description: "One finding that stopped the read" })).pipe(
-      S.annotateKey({ description: "The findings that stopped the read" })
-    ),
+    diagnostics: S.NonEmptyArray(CsvFatal).pipe(S.annotateKey({ description: "The findings that stopped the read" })),
   },
   $I.annoteError<CsvParseError>("CsvParseError", { description: "Why a CSV could not be read" })
 ) {
