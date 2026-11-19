@@ -263,5 +263,27 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "120 s
         expect(built.output).toContain(COMPILER_MARKER);
       })
     );
+
+    it.effect(
+      "`beep-cli check` leaves a package alone when its generated check carries no probe",
+      Effect.fnUntraced(function* () {
+        const path = yield* Path.Path;
+        const fixture = yield* writeFixtureRepo();
+        const binDir = path.join(fixture.repoRoot, "node_modules", ".bin");
+        const bin = path.join(fixture.repoRoot, "packages", "tooling", "tool", "cli", "src", "bin.ts");
+        // The infra kind: `beep:check` builds the referenced projects itself, so
+        // the generator writes a plain `check`.
+        yield* writeJson(fixture.consumerDir, "package.json", {
+          name: "@fixture/consumer",
+          private: true,
+          scripts: { check: "bun run beep:check", "beep:check": `echo ${COMPILER_MARKER}` },
+        });
+
+        const unbuilt = yield* runIn(fixture.consumerDir, binDir, [bin, "check"]);
+        expect(unbuilt.exitCode).toBe(0);
+        expect(unbuilt.output).toContain(COMPILER_MARKER);
+        expect(unbuilt.output).not.toContain("unbuilt upstream declarations");
+      })
+    );
   }
 );

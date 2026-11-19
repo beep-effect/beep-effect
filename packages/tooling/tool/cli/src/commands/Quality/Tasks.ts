@@ -78,6 +78,7 @@ import type { LsTreeEntry } from "@beep/git/Git";
 export { coverageProducerEnvironment } from "./internal/CoverageEnvironment.ts";
 
 import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
+import { PACKAGE_CHECK_PROBE_COMMAND } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 import {
   CapturedStep,
   formatCommandLine,
@@ -5168,11 +5169,17 @@ const packageAuditTasks: ReadonlyArray<QualityTaskName> = ["build", "check", "te
 
 // `beep:check` runs `tsrs -p`, which prints one TS6305 per reference whose
 // declarations are unbuilt; the filesystem probe prints one line instead.
+// The task path probes exactly when the package's generated `check` does: the
+// generator leaves the probe off a kind whose `beep:check` builds the
+// referenced projects itself (`tsrs -b`, the infra kind).
 const probeBeforePackageCheck = (
   packageDir: string,
-  task: QualityTaskInvocation["task"]
+  task: QualityTaskInvocation["task"],
+  scripts: { readonly [name: string]: string }
 ): Effect.Effect<void, CheckProbeReadError | UnbuiltReferenceOutputs, FileSystem.FileSystem | Path.Path> =>
-  QualityTaskName.is.check(task) ? checkPackageReferencesBuilt(packageDir) : Effect.void;
+  QualityTaskName.is.check(task) && pipe(scripts, R.get("check"), O.exists(Str.startsWith(PACKAGE_CHECK_PROBE_COMMAND)))
+    ? checkPackageReferencesBuilt(packageDir)
+    : Effect.void;
 
 const runPackageTask: (
   packageDir: string,
@@ -5203,7 +5210,7 @@ const runPackageTask: (
       return;
     }
 
-    yield* probeBeforePackageCheck(packageDir, invocation.task);
+    yield* probeBeforePackageCheck(packageDir, invocation.task, scripts);
 
     yield* runStep(
       QualityTaskStep.make({
