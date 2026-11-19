@@ -6,6 +6,7 @@
  */
 import { $UiId } from "@beep/identity";
 import { useAtomMount, useAtomSet } from "@effect/atom-react";
+import * as Data from "effect/Data";
 import * as Match from "effect/Match";
 import * as Atom from "effect/reactivity/Atom";
 import * as S from "effect/Schema";
@@ -13,7 +14,12 @@ import { useId } from "react";
 
 const $I = $UiId.create("hooks/useSpinner");
 
-class SpinnerSchedule extends S.Opaque<SpinnerSchedule, { readonly brand: unique symbol }>()(
+class SpinnerSchedule extends S.Opaque<
+  SpinnerSchedule,
+  {
+    readonly brand: unique symbol;
+  }
+>()(
   S.Struct({
     continuousChangeInterval: S.Natural,
     continuousChangeDelay: S.Natural,
@@ -38,14 +44,12 @@ type SpinnerState = {
   readonly timeout: number | undefined;
 };
 
-type SpinnerCommand =
-  | {
-      readonly _tag: "start";
-      readonly run: () => void;
-    }
-  | {
-      readonly _tag: "stop";
-    };
+type SpinnerCommand = Data.TaggedEnum<{
+  start: { readonly run: () => void };
+  stop: {};
+}>;
+
+const SpinnerCommand = Data.taggedEnum<SpinnerCommand>();
 
 const emptySpinnerState: SpinnerState = {
   interval: undefined,
@@ -178,15 +182,17 @@ export function useSpinner<T>(actions: {
 
   return {
     up: (params?: T) =>
-      dispatch({
-        _tag: "start",
-        run: () => actions.increment(params),
-      }),
+      dispatch(
+        SpinnerCommand.start({
+          run: () => actions.increment(params),
+        })
+      ),
     down: (params?: T) =>
-      dispatch({
-        _tag: "start",
-        run: () => actions.decrement(params),
-      }),
-    stop: () => dispatch({ _tag: "stop" }),
+      dispatch(
+        SpinnerCommand.start({
+          run: () => actions.decrement(params),
+        })
+      ),
+    stop: () => dispatch(SpinnerCommand.stop()),
   };
 }

@@ -265,7 +265,9 @@ const generatedComposers = $I.compose(
   "infra-github",
   "contract-kit",
   "infra-ci-runners",
-  "gate-report"
+  "gate-report",
+  "csv",
+  "xlsx"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -3988,3 +3990,37 @@ export const $InfraCiRunnersId: Identity.IdentityComposer<"@beep/infra-ci-runner
  * @since 0.0.0
  */
 export const $GateReportId: Identity.IdentityComposer<"@beep/gate-report"> = composers.$GateReportId;
+
+/**
+ * Identity composer for `@beep/csv`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $CsvId } from "@beep/identity/packages"
+ *
+ * const id = $CsvId.make("Csv")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $CsvId: Identity.IdentityComposer<"@beep/csv"> = composers.$CsvId;
+
+/**
+ * Identity composer for `@beep/xlsx`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $XlsxId } from "@beep/identity/packages"
+ *
+ * const id = $XlsxId.make("Xlsx")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $XlsxId: Identity.IdentityComposer<"@beep/xlsx"> = composers.$XlsxId;

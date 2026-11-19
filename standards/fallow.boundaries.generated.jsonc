@@ -228,6 +228,12 @@
         ]
       },
       {
+        "name": "@beep/csv",
+        "patterns": [
+          "packages/foundation/modeling/csv/src/**"
+        ]
+      },
+      {
         "name": "@beep/data",
         "patterns": [
           "packages/foundation/primitive/data/src/**"
@@ -1272,6 +1278,12 @@
         ]
       },
       {
+        "name": "@beep/xlsx",
+        "patterns": [
+          "packages/foundation/modeling/xlsx/src/**"
+        ]
+      },
+      {
         "name": "@beep/xstate",
         "patterns": [
           "packages/drivers/xstate/src/**"
@@ -2058,6 +2070,15 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/csv",
+        "allow": [
+          "@beep/csv"
+        ],
+        "allowTypeOnly": [
+          "@beep/csv"
         ]
       },
       {
@@ -6180,6 +6201,15 @@
           "@beep/utils",
           "@beep/walker",
           "@beep/xdg"
+        ]
+      },
+      {
+        "from": "@beep/xlsx",
+        "allow": [
+          "@beep/xlsx"
+        ],
+        "allowTypeOnly": [
+          "@beep/xlsx"
         ]
       },
       {

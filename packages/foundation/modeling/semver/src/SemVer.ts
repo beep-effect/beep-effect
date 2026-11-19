@@ -9,7 +9,7 @@ import { $SemverId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import * as Equal from "effect/Equal";
+import * as Eq from "effect/Equal";
 import * as Fn from "effect/Function";
 import * as Hash from "effect/Hash";
 import * as Match from "effect/Match";
@@ -1129,7 +1129,7 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
 
   // Structural equality deliberately ignores build metadata (SemVer §10)
   // while including exact prerelease identifiers (§11). Hash must agree:
-  // Equal.equals short-circuits on hash mismatch.
+  // Eq.equals short-circuits on hash mismatch.
 
   /**
    * Supports Effect structural equality using exact prerelease identifiers while ignoring build metadata.
@@ -1142,13 +1142,13 @@ export class SemVer extends S.Class<SemVer, { readonly brand: unique symbol }>($
    *
    * const left = SemVer.of(1, 2, 3, ["rc", 1], ["a"]);
    * const right = SemVer.of(1, 2, 3, ["rc", 1], ["b"]);
-   * console.log(Equal.equals(left, right)); // true
+   * console.log(Eq.equals(left, right)); // true
    * ```
    *
    * @category predicates
    * @since 0.0.0
    */
-  [Equal.symbol](that: unknown): boolean {
+  [Eq.symbol](that: unknown): boolean {
     if (!S.is(SemVer)(that)) return false;
     return (
       this.major === that.major &&
