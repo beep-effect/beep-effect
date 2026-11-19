@@ -886,14 +886,21 @@ resource outside the stack or a stack action (`src/PlanCheck.ts`, tested in
 again, and applies that same plan only when it equals the saved one; any
 added, removed or changed resource, binding, property digest or action stops
 it with `PlanDrift` before any write (`src/CheckedDeploy.ts`, tested in
-`test/CheckedDeploy.test.ts`). The job never runs `alchemy deploy`. If either
+`test/CheckedDeploy.test.ts`). Each `update` or `replace` row also names what
+it changes, as `changes <name>` segments after its bindings: the top-level
+declared properties whose new value differs from the applied one (never a
+value), with `(unresolved)` on a property known only after apply. A Lambda
+function update that changes no declared property and no binding reads
+`changes code (bundle hash, inferred)`, because the plan does not carry the
+bundle hash; these names are part of the plan-rows digest and of the drift
+comparison. The job never runs `alchemy deploy`. If either
 step refuses, do not re-run or work around it: ask the CI goals driver through
 the orchestrator. A change that must replace or delete a resource is an
 operator-reviewed deploy, never the push job.
 
 Plan only, and a deploy held to a read plan. A dispatch with `plan_only` runs
 the plan step and stops: it prints one row per resource and the plan-rows
-digest (SHA-256 over the sorted rows; no property, secret or salt), and never
+digest (SHA-256 over the sorted rows; no property value, secret or salt), and never
 reaches the deploy or webhook step. It needs no arming, so
 `CI_RUNNERS_DEPLOY_ARMED` stays the one switch for a write. Its log also
 prints `plan-check: head sha <sha>`. A deploy dispatched with

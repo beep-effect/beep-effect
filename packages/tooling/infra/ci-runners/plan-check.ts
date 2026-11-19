@@ -154,7 +154,8 @@ const planStage = Effect.fn("CiRunners.planStage")(function* (input: {
   );
   const checked = yield* readEnginePlan({ stage: stageName, plan: snapshot.native, salt, expectation, sourceTree });
   yield* Effect.forEach(checked.resources, listChecked, { concurrency: 1, discard: true });
-  // Rows only (FQN, action, binding actions): no property, secret or salt, so it is stable across runs.
+  // Rows only (FQN, action, binding actions, changed property names): no property value, secret or salt, so it is
+  // stable across runs.
   // Printed before the check, so a refused plan is still read whole with its digest.
   const rowsDigest = yield* planRowsDigest(checked);
   yield* Console.log(`plan-check: plan-rows digest sha256:${rowsDigest}`);
