@@ -59,6 +59,15 @@ const GitleaksAllowlist = S.Struct({
 const GitleaksConfig = S.Struct({ allowlists: S.Array(GitleaksAllowlist) });
 const GitleaksReport = S.Struct({ RuleID: S.String }).pipe(S.Array, S.fromJsonString);
 
+const loadConfig = Effect.fn("GitleaksObservationDigestTest.loadConfig")(function* () {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const configPath = yield* path.fromFileUrl(CONFIG);
+  const text = yield* fs.readFileString(configPath);
+  const parsed = yield* Effect.fromResult(Toml.parse(text));
+  return yield* S.decodeUnknownEffect(GitleaksConfig)(parsed);
+});
+
 const runGitleaks = Effect.fn("GitleaksObservationDigestTest.run")(function* (
   args: ReadonlyArray<string>,
   cwd: string
@@ -106,12 +115,7 @@ const scan = Effect.fn("GitleaksObservationDigestTest.scan")(function* (target: 
 it.layer(TestLayer, { timeout: "120 seconds" })("gitleaks observation digest allowlist", (it) => {
   it.effect("exception pins rule, path and complete line", () =>
     Effect.gen(function* () {
-      const fs = yield* FileSystem.FileSystem;
-      const path = yield* Path.Path;
-      const configPath = yield* path.fromFileUrl(CONFIG);
-      const text = yield* fs.readFileString(configPath);
-      const parsed = yield* Effect.fromResult(Toml.parse(text));
-      const config = yield* S.decodeUnknownEffect(GitleaksConfig)(parsed);
+      const config = yield* loadConfig();
       const matches = A.filter(config.allowlists, (item) =>
         A.some(item.paths ?? [], (allowedPath) => Str.includes("integrated")(allowedPath))
       );
@@ -167,6 +171,73 @@ it.layer(TestLayer, { timeout: "120 seconds" })("gitleaks observation digest all
         const rules = yield* scan(RECEIPT, document(...lines));
         expect(rules, `case ${index}`).toContain("github-pat");
       }
+    })
+  );
+});
+
+// A reviewed cache baseline request keys the digest of each re-recorded baseline by package name.
+const CACHE_REQUEST = "docs/reports/" + "check-probe-cache-baseline-request-2026-11-18.json";
+const CACHE_REQUEST_RULES = ["generic-api-key", "discord-api-token", "freshbooks-access-token"];
+const TOKEN_NAMED_PACKAGES = ["@beep/api-docs", "@beep/discord", "@beep/freshbooks", "@beep/windows-secrets"];
+
+it.layer(TestLayer, { timeout: "120 seconds" })("gitleaks cache baseline request allowlist", (it) => {
+  it.effect("exception pins rules, request paths and one package digest per line", () =>
+    Effect.gen(function* () {
+      const config = yield* loadConfig();
+      const matches = A.filter(config.allowlists, (item) =>
+        A.some(item.paths ?? [], (allowedPath) => Str.includes("docs/reports")(allowedPath))
+      );
+      expect(A.length(matches)).toBe(1);
+      const exception = O.getOrThrow(A.head(matches));
+      expect(exception.targetRules).toEqual(CACHE_REQUEST_RULES);
+      expect(exception.condition).toBe("AND");
+      expect(exception.regexTarget).toBe("line");
+      expect(exception.paths).toHaveLength(1);
+      expect(exception.regexes).toHaveLength(1);
+      const pathPattern = O.getOrThrow(A.head(exception.paths ?? []));
+      const linePattern = O.getOrThrow(A.head(exception.regexes ?? []));
+      for (const allowed of [
+        CACHE_REQUEST,
+        `/repo/${CACHE_REQUEST}`,
+        "docs/reports/gate-output-switch-on-cache-request-2026-11-18.json",
+      ]) {
+        expect(fullMatch(pathPattern, allowed), allowed).toBe(true);
+      }
+      for (const rejected of [
+        `other/${CACHE_REQUEST}`,
+        `${CACHE_REQUEST}.bak`,
+        "docs/reports/notes/x-cache-request.json",
+        "docs/reports/cache-review-2026-11-18.md",
+      ]) {
+        expect(fullMatch(pathPattern, rejected), rejected).toBe(false);
+      }
+      expect(fullMatch(linePattern, digestLine("@beep/freshbooks"))).toBe(true);
+      expect(fullMatch(linePattern, digestLine("api_key"))).toBe(false);
+      expect(fullMatch(linePattern, `${digestLine("@beep/freshbooks")} "api_key": "extra",`)).toBe(false);
+    })
+  );
+
+  it.effect.skipIf(!gitleaksOnPath)("package digests are allowed at a request path only", () =>
+    Effect.gen(function* () {
+      const lines = A.map(TOKEN_NAMED_PACKAGES, (name) => digestLine(name));
+      const atRequest = yield* scan(CACHE_REQUEST, document(...lines));
+      expect(atRequest).toEqual([]);
+      const elsewhere = yield* scan("outside/request.json", document(...lines));
+      expect(A.isReadonlyArrayNonEmpty(elsewhere)).toBe(true);
+    })
+  );
+
+  it.effect.skipIf(!gitleaksOnPath)("another key, another value and another detector remain detected", () =>
+    Effect.gen(function* () {
+      const synthetic = yield* syntheticValue;
+      const keyed = [digestLine("api_key"), digestLine("@beep/api-docs", synthetic)];
+      for (const [index, line] of A.map(keyed, (line, index) => [index, line] as const)) {
+        const rules = yield* scan(CACHE_REQUEST, document(line));
+        expect(rules, `case ${index}`).toContain("generic-api-key");
+      }
+      const other = `    "github_token": "${SYNTHETIC_GITHUB_VALUE}",`;
+      const rules = yield* scan(CACHE_REQUEST, document(digestLine("@beep/api-docs"), other));
+      expect(rules).toContain("github-pat");
     })
   );
 });
