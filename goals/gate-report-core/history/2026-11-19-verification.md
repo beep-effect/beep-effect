@@ -14,6 +14,8 @@ stderr, `wc -m`.
 | Root `test --unit --filter=@beep/glob`, miss then Turbo cache hit | Consoles identical by `cmp` |
 | Root `check --filter=@beep/glob`, miss then Turbo cache hit | Consoles identical by `cmp` |
 | Doctest and property-sweep runs of `@beep/schema` | The test record's run id is unchanged |
+| `@beep/repo-utils`, whose test script chains two Vitest runs | 289 of 289 tests in one record, where the second run alone had left 8 |
+| The CI lane's root call, `check` with the affected and summary flags | One console: 214 packages, `PASSED` |
 
 The baseline for the first row was 13,450 characters through Turbo on 2026-11-18, and 820 after
 `goals/gate-output-switch-on`.
@@ -37,13 +39,14 @@ the probe followed by the compiler script it replaces, and 180 ms for the compil
 
 | Package | Tests (Node and Bun) |
 | --- | ---: |
-| `@beep/gate-report` | 272 |
+| `@beep/gate-report` | 276 |
 | `@beep/repo-gate-record` | 33 |
 | `@beep/repo-gate-run` | 66 |
-| `@beep/repo-gate-vitest` | 87 |
+| `@beep/repo-gate-vitest` | 93 |
 
-Every new source file has 100% statement, function and line coverage from its own package's tests;
-new files in `@beep/repo-cli` were measured by single-file runs.
+Every new source file has 100% statement, function, branch and line coverage from its own
+package's tests under the hosted provider (Bun with Istanbul). New files in `@beep/repo-cli` were
+measured by single-file runs, and hosted Coverage Regression is green on the reviewed head.
 
 ## Static checks
 
@@ -64,8 +67,11 @@ this goal should show the change in characters per green run and in log digs per
 
 ## Review
 
-The three pull requests went through seven review rounds in total. The findings that changed
+The three pull requests went through nine review rounds in total. The findings that changed
 behaviour: repeated diagnostics collapsed into one item; the item fingerprint was not injective;
 a long scope cut the verdict fields; the run entry could end with no console; a cut-off rerun
 crashed the fallback; a tight budget could drop an omission line; tests that repeat a name in one
-file lost the failure; the flake quarantine stopped detecting on the root check path.
+file lost the failure; the flake quarantine stopped detecting on the root check path; root gate steps stopped declaring
+their Turbo digest to the lane ledger; the check hash did not cover the record's producers; a
+second Vitest run in one script overwrote the test record. The local final proof also caught one
+defect no review had: the root gate step repeated a Turbo flag the CI lane already passes.
