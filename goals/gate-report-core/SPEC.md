@@ -150,10 +150,10 @@ relative to `.repos/vitest-agent`.
 | --- | --- |
 | `TestState` (`.repos/vitest-agent/packages/sdk/src/schemas/Common.ts:37`) -> `ItemOutcome` | adds `warned`; `pending` folds into `skipped` |
 | `TestRunReason` (`Common.ts:47`) -> `RunReason` | adds `errored`; `interrupted` becomes `cancelled` |
-| `ReportError` (`Common.ts:180`) -> `ItemDetail` | adds `location { file, line, column }`, `code`, `rule`, `severity` |
+| `ReportError` (`Common.ts:180`) -> `ItemDetail` | keeps the message and the diff; `location { file, line, column }`, `code`, `rule` and `severity` sit on the `Item`, where the item key reads them |
 | `AgentReport` > `ModuleReport` > `TestReport` (`AgentReport.ts:33-88`) -> `GateReport` > `Unit` > `Item` | project > file > test becomes gate > unit (package, file, job) > item (test, diagnostic, step) |
 | `RunEvent` (`RunEvent.ts:82-262`) -> `GateEvent` | `Module*`, `Test*`, `Suite*`, `Hook*` become `Unit*` and `Item*`; coverage and annotations become gate extensions |
-| `RenderTotals` (`RenderState.ts:117`) -> `Totals` | adds `collected`, `warned`, `errored` beside `passed`, `failed`, `skipped`, `timedOut`, `durationMs` |
+| `RenderTotals` (`RenderState.ts:117`) -> `Totals` | adds `collected`, `warned`, `loadFailed`, `hookFailed`, `unhandled`, `errored` beside `passed`, `failed`, `skipped`, `timedOut`, `durationMs` |
 | `FailureRecord` (`RenderState.ts:61`) -> `FailureEntry` | `modulePath`, `suitePath`, `testName` become unit, path segments, item label, location |
 | `RunShape` (`dispatcher.ts:17`) -> `RunShape` | `single-test`, `single-file`, `single-project`, `workspace` become `item`, `unit`, `package`, `workspace` |
 | `RunOutcome` (`dispatcher.ts:27`) -> `RunOutcome` | adds `warnings-only`, `interrupted`; `threshold-violation` becomes `policy-violation` |
@@ -228,8 +228,8 @@ and is overridden by the `--agent`, `--human` and `--ci` flags of `@beep/cli-kit
 
 - `foundation/modeling` may depend only on `foundation/primitive` and `foundation/modeling`
   (`standards/ARCHITECTURE.md`, "Family And Kind Dependency Rules"). The model package therefore
-  takes `@beep/schema`, `@beep/identity` and Effect, and may take `@beep/github-reporting`. It may
-  not import `@beep/cli-kit`, which is `foundation/capability`. Its dispatch cells produce a
+  takes `@beep/schema`, `@beep/identity` and Effect, and never `@beep/github-reporting`
+  (decision `model-home`). It may not import `@beep/cli-kit`, which is `foundation/capability`. Its dispatch cells produce a
   model-owned neutral document (verdict, failure entry, fold, cap, delta, path, pointer); the
   library maps that document onto `@beep/cli-kit` `Doc` blocks and renders it with `Render`.
 - `tooling/library` may depend on any foundation kind and `tooling/library`. The library takes
@@ -311,8 +311,9 @@ weakened. Each module meets repo law before its PR merges:
 - `effect/HashMap`, `effect/HashSet`, `effect/MutableHashMap` and `effect/MutableHashSet` replace
   every native `Map` and `Set`. Upstream constructs 46.
 - String-literal unions are `LiteralKit` domains from `@beep/schema`, never hand-rolled unions.
-- Class schemas use the extend style, `class X extends Parent.extend<X>()({}) {}`, with the encoded
-  side declared in `export declare namespace X`. Upstream schemas are plain `Schema.Struct`.
+- Plain-data schemas are branded opaque schemas over an annotated struct, as current repo law has
+  it; the class extend style, `class X extends Parent.extend<X>()({}) {}`, applies only where that
+  law allows it. Upstream schemas are plain `Schema.Struct`.
 - Every schema and service key takes an identity from the package's `@beep/identity` composer
   (`$I`), registered by `bun run beep create-package`.
 - `Context.Service` contracts are schema-typed shapes, not interface literals.
@@ -352,8 +353,8 @@ reports from the report schema's arbitrary.
   message line and a diff of at most 12 lines, never a stack. When entries are dropped, one cap
   line says `... N more in the record` with N equal to the number dropped.
 - [ ] **AC-L4 Honest counts.** Tests: a report with nothing collected is `ERRORED`, never
-  `PASSED`; timeouts, load failures, hook failures, unhandled errors and cancellation each have
-  their own total and never yield `all-pass`; a nonzero tool exit with no failed item is `ERRORED`
+  `PASSED`; timeouts, load failures, hook failures and unhandled errors each have their own
+  total, cancellation renders `CANCELLED`, and none yields `all-pass`; a nonzero tool exit with no failed item is `ERRORED`
   with one item carrying the log excerpt; a zero exit with a failed item is `FAILED`. The ported
   `build-report` tests pass retargeted.
 - [ ] **AC-L5 Labels from history.** Given labels from the history contract's test layer, every
@@ -530,6 +531,14 @@ Lane feat/gate-report-core
 
 Reverse: Change the default ConsoleBudget the library supplies.
 
+### All twenty cells print one contract; upstream's tables and trailers are not ported, 2026-11-19
+
+A green run prints its verdict line alone in every shape, so upstream's project table, module list, trend line, coverage table and action trailers are not ported. Stray output prints only on a red run. The single-item policy cell prints the verdict and the breach where upstream printed nothing, because law 1 needs a verdict. An unlabelled or recovered failure points at the failure command; a gate missing from the pointer table gets no pointer line. A run with exactly one diagnostic is scoped by its file in the verdict line.
+
+Lane feat/gate-report-core
+
+Reverse: Restore a per-cell body in the dispatch table.
+
 ### Coverage runs write no gate record in this goal, 2026-11-19
 
 The coverage planner passes its own reporters on the command line, and a command-line reporter replaces the configured list, so the adapter does not run under the coverage commands. This goal leaves that as it is: a coverage run writes no record and the coverage gate keeps its own report. The spec sentence that expects the adapter under the Node coverage commands is narrowed to the five packages whose ordinary test script runs Vitest on Node. Putting the coverage gate on the contract is rollout work in `goals/gate-report-rollout`.
@@ -554,6 +563,30 @@ Lane feat/gate-report-core
 
 Reverse: Replace a generated fixture with a hand-written one and note why in the test.
 
+### Reason precedence: cancelled, errored, failed, passed; a fallback item explains an unexplained failure, 2026-11-19
+
+Totals are computed from the items, never taken from the runner. Load, hook and unhandled failures are fault items with their own totals, and `failed` counts ordinary failures only. A run is errored when the tool said so, when nothing was collected, or when a fallback was added. The fallback is one fault item carrying the log excerpt, added when no item failed and the exit code was nonzero or the tool reported a reason other than passed. Every item is recorded, passed ones included, so a later run can tell fixed from never seen.
+
+Lane feat/gate-report-core
+
+Reverse: Edit the settled-reason and fallback rules in the reducer.
+
+### CTRF and SARIF stay lossless through an extension bag, 2026-11-19
+
+Fields neither format has a native slot for travel in CTRF `extra` and SARIF `properties`. A warned item maps to CTRF `other` and SARIF `review`; a skipped item maps to SARIF `notApplicable`. The mapping functions exist for the round-trip test only; the emitters stay deferred.
+
+Lane feat/gate-report-core
+
+Reverse: Change the interchange mapping module.
+
+### The item key is a three-way union and fingerprints with a unit separator, 2026-11-19
+
+An item key is one of test (file and full name), diagnostic (file, code or rule, normalized message shape) or fault (a load, hook or unhandled failure of a unit). Its fingerprint joins the fields with the ASCII unit separator, which cannot appear in a path or a test name. The failure signature hashes with FNV-1a 64 instead of a SHA-256 prefix, which keeps the model synchronous and free of a crypto dependency; the function-boundary line is an optional input an adapter may supply.
+
+Lane feat/gate-report-core
+
+Reverse: Change the item key schema and its fingerprint function.
+
 ### The record writer is its own library, @beep/repo-gate-record, beside @beep/repo-gate-run, 2026-11-19
 
 Two tooling libraries instead of one. `@beep/repo-gate-record` holds the record and log codec, the package and root path rules, newest-20 retention and the writes; it depends only on the model and Effect, and the caller supplies the platform layer. `@beep/repo-gate-run` holds stream capture, the console service, audience selection, the TypeScript diagnostic adapter and the query services, and may depend on `@beep/cli-kit`, `@beep/runtime-env` and the `process/StepExec` leaf of `@beep/repo-cli-kit`, never that package root. The reason is the test hash: the Vitest adapter must be a declared input of every `test` task, and through the gate-run library that closure would reach 32 packages, so an edit to the git or DuckDB drivers would rerun about 210 test tasks. Through the record library it stays near the size of `@beep/utils`. Command trees stay in the repo CLI; only query services live in the library.
@@ -561,6 +594,14 @@ Two tooling libraries instead of one. `@beep/repo-gate-record` holds the record 
 Lane feat/gate-report-core
 
 Reverse: Fold the record modules back into the gate-run library and point the Vitest adapter at it.
+
+### The model package uses flat leaf modules, 2026-11-19
+
+The scaffold exports every source file as a leaf, and the neighbouring modeling packages are flat, so the model keeps one module per concept at the top of its source folder with private helpers under an internal folder. Concept folders would need a hand-written export map.
+
+Lane feat/gate-report-core
+
+Reverse: Move each module into a concept folder with role files and write an export map.
 
 ### The model is @beep/gate-report in foundation/modeling, free of repo specifics, 2026-11-19
 
@@ -570,6 +611,14 @@ Lane feat/gate-report-core
 
 Reverse: Move the model's modules into the gate-run library and delete the modeling package.
 
+### The model owns the plain-text projection and the budget fit, 2026-11-19
+
+The model turns a report into a console document and also into plain lines, so laws 1 to 3 are property-tested in the model with no service. The gate-run library maps the same fitted document onto `@beep/cli-kit` for colour. Fitting keeps fold lines first, then the longest run of failure entries that fits the budget; the cap line counts every dropped entry and fold. A budget must hold eight full lines and a line limit of at least 40 characters.
+
+Lane feat/gate-report-core
+
+Reverse: Move the projection module into the gate-run library and test the laws there.
+
 ### The first slice lands as two pull requests: the model, then the services and wiring, 2026-11-19
 
 The plan lands P1 through P3 as one pull request. It is split so each is reviewable and green alone: first `@beep/gate-report` complete (schemas, reducer, classifiers, counts, signature, folding table, dispatch cells and the law tests that need no service), then the record and gate-run libraries, the Vitest adapter and the `test` and `check` wiring for `@beep/glob`. P4, P5 and the closeout follow as the third. The packet allows three open pull requests; these are sequential.
@@ -577,6 +626,14 @@ The plan lands P1 through P3 as one pull request. It is split so each is reviewa
 Lane feat/gate-report-core
 
 Reverse: Open one pull request for P1 through P3 as the plan first said.
+
+### Five spec statements corrected while building the model, 2026-11-19
+
+Location, code, rule and severity sit on the item, where the item key reads them, not on the detail. Totals also carry load-failed, hook-failed and unhandled counts. Cancellation is a run reason, not a total. The model never takes the GitHub reporting package (decision `model-home`). Plain-data schemas are branded opaque schemas over an annotated struct, as current repo law has it; the class extend style applies only where that law allows it.
+
+Lane feat/gate-report-core
+
+Reverse: Restore the earlier wording in the spec.
 
 ### The Vitest adapter is a new test kit, @beep/repo-gate-vitest, loaded lazily and registered by specifier, 2026-11-19
 
