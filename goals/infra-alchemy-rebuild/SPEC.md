@@ -2238,7 +2238,7 @@ Cutover step 1a (run 44435840783) passed its plan check and stopped in the deplo
 
 Evidence: research/p5-ci-runners-deploy-role-coverage.md.
 
-Lane fix/ci-runners-deploy-role-read-and-vpc-grants
+Lane fix/ci-runners-deploy-role-read-and-vpc-grants · PR #3408
 
 Reverse: revert the PR; the deploy role's managed policies return to the previous default version with aws iam set-default-policy-version, and the workflow loses plan_only and expect_plan_digest
 

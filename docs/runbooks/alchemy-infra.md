@@ -900,6 +900,15 @@ dispatched with `expect_plan_digest` set to that digest, on the same commit,
 refuses before any write unless its own rows give the same digest. The rows
 and digest print before the check, so a refused plan is still read whole.
 
+Two limits of a plan-only run, both by design. It holds the
+`alchemy-ci-runners-prod` concurrency group, and that group never cancels a
+run in progress: do not dispatch `plan_only` while
+`CI_RUNNERS_ROUTINE_ARMED` is set and a push run is pending, or the two queue
+behind each other. And the digest covers the rows, not the commit, and an
+empty `expect_plan_digest` switches the pin off: dispatch the bootstrap on
+the same head SHA as the plan-only run, and relay both runs' head SHA with the
+bootstrap run's `plan-rows digest` log line.
+
 Resuming a stopped bootstrap. A deploy that stops part-way leaves a state row
 `creating` for each resource it had started. The next plan shows such a row
 as `resumed create`, with the bindings the stopped run saved as `noop` or

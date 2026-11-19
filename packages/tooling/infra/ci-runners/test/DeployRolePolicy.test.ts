@@ -63,8 +63,9 @@ describe("CiRunners deploy role managed policies", () => {
           concurrency: 1,
         });
         assertTrue(A.every(lengths, (length) => length <= managedPolicyLimit));
-        // The role takes ten managed policies; the split must leave room.
-        assertTrue(documents.length >= 2 && documents.length <= 4);
+        // The role holds exactly two managed policies (ci-runners-deploy-1 and -2). A third document needs a new
+        // policy created and attached by hand before the role can use it, so growing past two must fail here first.
+        expect(documents.length).toBe(2);
         // The union is the source: every statement once, whole, with its Sid, in the source order.
         expect(A.flatMap(documents, (document) => document.Statement)).toStrictEqual(policy.Statement);
         expect(A.dedupe(A.map(documents, (document) => document.Version))).toStrictEqual([policy.Version]);

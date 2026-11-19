@@ -2,6 +2,7 @@
 title: "CI runners step 1a resumes after a denied deploy"
 date: 2026-11-19
 lane: "fix/ci-runners-deploy-role-read-and-vpc-grants"
+pullRequest: 3408
 reversal: "revert the PR; the deploy role's managed policies return to the previous default version with aws iam set-default-policy-version, and the workflow loses plan_only and expect_plan_digest"
 ---
 
