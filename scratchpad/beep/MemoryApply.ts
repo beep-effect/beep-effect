@@ -366,7 +366,7 @@ export class WriterAdmissionError extends S.TaggedError<WriterAdmissionError, { 
  * @since 0.0.0
  */
 export declare namespace WriterAdmissionError {
-  export type Encoded = S.Codec.Encoded<typeof WriterAdmissionError>;
+  export type Encoded = typeof WriterAdmissionError.Encoded;
 }
 
 /**
@@ -404,7 +404,7 @@ export class MemoryApplyError extends S.TaggedError<MemoryApplyError, { readonly
  * @since 0.0.0
  */
 export declare namespace MemoryApplyError {
-  export type Encoded = S.Codec.Encoded<typeof MemoryApplyError>;
+  export type Encoded = typeof MemoryApplyError.Encoded;
 }
 
 /**
@@ -514,7 +514,7 @@ export class MemoryControlState extends Model<MemoryControlState>("MemoryControl
  * @since 0.0.0
  */
 export declare namespace MemoryControlState {
-  export type Encoded = S.Codec.Encoded<typeof MemoryControlState>;
+  export type Encoded = typeof MemoryControlState.Encoded;
 }
 
 const isTransitioning = (mode: WriterMode): boolean =>
@@ -912,7 +912,7 @@ export class MemoryOutboxEvent extends Model<MemoryOutboxEvent>("MemoryOutboxEve
  * @since 0.0.0
  */
 export declare namespace MemoryOutboxEvent {
-  export type Encoded = S.Codec.Encoded<typeof MemoryOutboxEvent>;
+  export type Encoded = typeof MemoryOutboxEvent.Encoded;
 }
 
 /**
@@ -1006,7 +1006,7 @@ export class ApplyResult extends Model<ApplyResult>("ApplyResult")(
  * @since 0.0.0
  */
 export declare namespace ApplyResult {
-  export type Encoded = S.Codec.Encoded<typeof ApplyResult>;
+  export type Encoded = typeof ApplyResult.Encoded;
 }
 
 const readKey = (record: S.JsonObject, snake: string, camel: string): O.Option<unknown> =>
@@ -1422,7 +1422,8 @@ export const resolvedUpdateContent: {
   hasText(patch.memoryText) ? patch.memoryText : existing.content,
 );
 
-const encodeItem = S.encodeSync(MemoryItem);
+const encodeItem = (item: MemoryItem): typeof MemoryItem.Encoded =>
+  S.encodeResult(MemoryItem)(item).pipe(Result.getOrThrow);
 const decodeItem = S.decodeUnknownEffect(MemoryItem);
 
 const overlayExtras = Effect.fn("MemoryApply.overlayExtras")(function* (item: MemoryItem, extras: { readonly [key: string]: unknown }) {
@@ -1725,8 +1726,14 @@ const requiredPatchKeys = HashSet.make(
  * these encoded defaults under the caller's payload before decoding. Required
  * keys are removed so a missing required key still fails.
  */
+const encodeDurableMemoryPatch = (patch: DurableMemoryPatch): typeof DurableMemoryPatch.Encoded =>
+  S.encodeResult(DurableMemoryPatch)(patch).pipe(Result.getOrThrow);
+
+const encodeMemoryEvidence = (evidence: MemoryEvidence): typeof MemoryEvidence.Encoded =>
+  S.encodeResult(MemoryEvidence)(evidence).pipe(Result.getOrThrow);
+
 const patchWireDefaults: { readonly [key: string]: unknown } = Rec.filter(
-  recordOf(S.encodeSync(DurableMemoryPatch)(
+  recordOf(encodeDurableMemoryPatch(
     DurableMemoryPatch.make({
       patchId: "x",
       packetId: "x",
@@ -1743,7 +1750,7 @@ const patchWireDefaults: { readonly [key: string]: unknown } = Rec.filter(
 const requiredEvidenceKeys = HashSet.make("evidenceId", "sourceType", "artifactPreservation");
 
 const evidenceWireDefaults: { readonly [key: string]: unknown } = Rec.filter(
-  recordOf(S.encodeSync(MemoryEvidence)(MemoryEvidence.make({ evidenceId: "x", sourceType: "x", artifactPreservation: "preserved" }))),
+  recordOf(encodeMemoryEvidence(MemoryEvidence.make({ evidenceId: "x", sourceType: "x", artifactPreservation: "preserved" }))),
   (_, key) => !HashSet.has(requiredEvidenceKeys, key),
 );
 
@@ -1938,7 +1945,8 @@ export const applyLongTermPatchTransaction = Effect.fn("MemoryApply.applyLongTer
     return ApplyResult.make({ status: "idempotent_skip", controlState, operation });
   }
   if (operation.accountGeneration !== controlState.accountGeneration || operation.sourceGeneration !== controlState.sourceGeneration) {
-    return rejected("generation_mismatch", controlState, yield* staleOperation(operation), "operation generation does not match control state");
+    const stale = yield* staleOperation(operation);
+    return rejected("generation_mismatch", controlState, stale, "operation generation does not match control state");
   }
   if (hasText(operation.observedHeadCommitId) && O.getOrNull(operation.observedHeadCommitId) !== controlState.headCommitId) {
     const now = yield* DateTime.now;

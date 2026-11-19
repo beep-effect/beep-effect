@@ -1,3 +1,5 @@
+import * as Str from "effect/String";
+import * as A from "effect/Array";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
@@ -123,16 +125,34 @@ describe("KnowledgeLedgerPolicy", () => {
       row({ id: "a", writeReason: "legacy_migration", content: "Austin" }),
       row({ id: "b", writeReason: "onboarding", content: "Seattle", validFrom: at("2026-01-01T00:00:00Z") }),
       row({ id: "c", writeReason: "onboarding", content: "Portland", validFrom: at("2026-02-01T00:00:00Z") }),
-      row({ id: "d", writeReason: "onboarding", content: "Denver", validFrom: at("2026-02-01T00:00:00Z"), curationWeight: 2.7 }),
-      row({ id: "e", writeReason: "onboarding", content: "Boise", validFrom: at("2026-02-01T00:00:00Z"), curationWeight: 2 }),
-      row({ memoryId: "f", writeReason: "onboarding", content: "Reno", validFrom: at("2026-02-01T00:00:00Z"), curationWeight: 2 }),
+      row({
+        id: "d",
+        writeReason: "onboarding",
+        content: "Denver",
+        validFrom: at("2026-02-01T00:00:00Z"),
+        curationWeight: 2.7,
+      }),
+      row({
+        id: "e",
+        writeReason: "onboarding",
+        content: "Boise",
+        validFrom: at("2026-02-01T00:00:00Z"),
+        curationWeight: 2,
+      }),
+      row({
+        memoryId: "f",
+        writeReason: "onboarding",
+        content: "Reno",
+        validFrom: at("2026-02-01T00:00:00Z"),
+        curationWeight: 2,
+      }),
       row({ id: "n", slot: "display_name", content: "Ada", writeReason: "explicit_remember" }),
       row({ id: "z", slot: "shoe_size", content: "9" }),
       row({ id: "y", slot: 7, content: "?" }),
     ];
     const winners = selectProfileSlotWinners(rows);
     assert.deepStrictEqual(
-      winners.map(([slot, winner]) => [slot, Reflect.get(winner, "content")]),
+      A.map(winners, ([slot, winner]) => [slot, Reflect.get(winner, "content")]),
       [
         ["preferred_name", "Ada"],
         ["home_city", "Reno"],
@@ -146,10 +166,10 @@ describe("KnowledgeLedgerPolicy", () => {
       row({ id: "n", slot: "preferred_name", content: "  Ada   Lovelace " }),
       row({ id: "h", slot: "home_city", content: "Seattle" }),
       row({ id: "e", slot: "employer", content: "" }),
-      row({ id: "o", slot: "occupation", content: "x".repeat(400) }),
+      row({ id: "o", slot: "occupation", content: Str.repeat(400)("x") }),
     ];
     const full = Effect.runSync(renderBoundedProfile(rows));
-    const lines = full.split("\n");
+    const lines = Str.split("\n")(full);
     assert.strictEqual(lines[0], "preferred_name: Ada Lovelace");
     assert.strictEqual(lines[1], "home_city: Seattle");
     assert.strictEqual(lines[2]?.length, "occupation: ".length + PROFILE_LINE_CHARACTER_LIMIT);

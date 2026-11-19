@@ -8,7 +8,7 @@ import { carry, Provenance } from "@proto/kernel/Invocation";
  * @category events
  * @since 0.0.0
  */
-export class GrantExpired extends Domain.Event("GrantExpired", carry({ holder: PrincipalId })) {}
+export class GrantExpired extends Domain.Event("GrantExpired", carry({ holder: PrincipalId }), { description: "The grant reached its expiry." }) {}
 
 /**
  * A deadline: expire the grant if its expiry has passed. It never rejects,

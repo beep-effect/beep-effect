@@ -156,7 +156,7 @@ export class NotificationMessage extends Model<NotificationMessage>("Notificatio
  * @since 0.0.0
  */
 export declare namespace NotificationMessage {
-  export type Encoded = S.Codec.Encoded<typeof NotificationMessage>;
+  export type Encoded = typeof NotificationMessage.Encoded;
 }
 
 const utf8Size = (value: string): number => new TextEncoder().encode(value).byteLength;

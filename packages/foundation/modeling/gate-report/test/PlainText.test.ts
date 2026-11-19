@@ -104,6 +104,21 @@ describe("projectLines", () => {
     );
   });
 
+  // Retargets upstream ui __test__/dispatcher/helpers.test.ts "strips escape sequences an error
+  // message carries" (vitest-agent 1cf1ab94).
+  it("strips escape sequences a message or a diff carries, so only the text counts", () => {
+    const styled = FailureEntry.make({
+      unit: "src/a.test.ts",
+      path: [],
+      name: "colours",
+      message: O.some("\u001b[31mred\u001b[39m"),
+      diff: ["\u001b[32m+ received\u001b[39m", "\u001b]8;;https://x.dev\u0007link\u001b]8;;\u0007"],
+    });
+    const lines = projectLines({ document: red([styled]), budget: agentBudget });
+    assert.strictEqual(lines[2], "  red");
+    assert.deepStrictEqual(A.take(A.drop(lines, 3), 2), ["  + received", "  link"]);
+  });
+
   it("prints a note's lines and a fold line in order before the tail", () => {
     const fold = FoldLine.make({ code: "TS6305", count: 3, cause: "upstream declarations are not built" });
     const lines = projectLines({
@@ -148,6 +163,14 @@ describe("fitDocument and the cap", () => {
     assert.include(lines, `... ${dropped} more in the record`);
     assert.isAtMost(size(lines), tight.maxChars);
     assert.strictEqual(lines[0], lines[lines.length - 1]);
+  });
+
+  it("does not count a dropped note in the cap: a note stands for nothing in the record", () => {
+    const note = NoteEntry.make({ lines: A.makeBy(30, (index) => `stray line ${index} ${Str.repeat(50)("x")}`) });
+    const document = ConsoleDocument.make({ ...red([entry(0, 0)]), entries: [entry(0, 0), note] });
+    const fitted = fitDocument({ document, budget: tight });
+    assert.strictEqual(fitted.entries.length, 1);
+    assertNone(fitted.cap);
   });
 
   it("drops folds too when they alone overflow", () => {

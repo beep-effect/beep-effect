@@ -1147,8 +1147,13 @@ const configGetAll = (key: string, file?: string): GitInvocation =>
   git(["config", ...(file !== undefined ? ["-f", file] : []), "--get-all", "-z", key]);
 
 // Implementation of GitCommand.configUnset; the public contract lives on the static.
-const configUnset = (key: string, file?: string, all = false): GitInvocation =>
-  git(["config", ...(file !== undefined ? ["-f", file] : []), all ? "--unset-all" : "--unset", key]);
+const configUnset = (key: string, file?: string, all = false, value?: string): GitInvocation =>
+  git([
+    "config",
+    ...(file !== undefined ? ["-f", file] : []),
+    all ? "--unset-all" : "--unset",
+    ...(value !== undefined ? ["--fixed-value", key, secretValue(value)] : [key]),
+  ]);
 
 // Implementation of GitCommand.configRemoveSection; the public contract lives on the static.
 const configRemoveSection = (section: string, file?: string): GitInvocation =>
@@ -3642,14 +3647,19 @@ export class GitCommand {
    *
    * **Details**
    *
-   * Mutating: `git config [-f <file>] (--unset | --unset-all) <key>` —
+   * Mutating: `git config [-f <file>] (--unset | --unset-all) [--fixed-value] <key> [<value>]` —
    * removes a key (or, with `all`, every value of a multi-valued key).
+   * With `value`, only the entries equal to it are removed (`--fixed-value`,
+   * so the value is compared literally, never as a regex); other values of a
+   * multi-valued key stay. The value is redacted in `redactedArgs`, like
+   * {@link GitCommand.configSet}'s.
    *
    * **Gotchas**
    *
-   * git exits 5, silently, when the key was not set — a loud failure by
-   * this package's classification, deliberately: an unset that silently did
-   * nothing is indistinguishable from one that worked.
+   * git exits 5, silently, when the key (or, with `value`, a matching entry)
+   * was not set — a loud failure by this package's classification,
+   * deliberately: an unset that silently did nothing is indistinguishable
+   * from one that worked.
    *
    * **Example** (Inspect config unset argv)
    *

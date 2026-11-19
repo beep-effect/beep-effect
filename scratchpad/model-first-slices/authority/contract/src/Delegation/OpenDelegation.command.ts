@@ -35,6 +35,7 @@ export class DelegationOpened extends Domain.Event(
     delegator: PrincipalId,
     terms: GrantTerms,
   }),
+  { description: "An agent run now holds a delegation of a grant, directly or through a parent delegation, on these terms." },
 ) {}
 
 /**

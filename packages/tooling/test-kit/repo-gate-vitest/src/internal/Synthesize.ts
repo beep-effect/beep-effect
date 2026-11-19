@@ -2,24 +2,28 @@
  * Turn a finished Vitest run into gate events, ported from upstream
  * `packages/ui/src/synthesize.ts` with the module and suite failure rules of
  * `packages/sdk/src/utils/build-report.ts`: every test is an item keyed by
- * its file and full name, a module that failed to load or whose hook threw
- * is a unit fault, an unhandled error is its own item, and Vitest's reason
- * is the tool's reason. The model's reducer applies the honest-count rules.
+ * its file and full name (a repeated full name numbered), each error of a
+ * module that failed to load or whose hook threw is a unit fault, an
+ * unhandled error is its own item, and Vitest's reason is the tool's
+ * reason. The model's reducer applies the honest-count rules.
  *
  * @since 0.0.0
  */
+import { plural } from "@beep/gate-report/Format";
 import { GateEvent } from "@beep/gate-report/GateEvent";
 import { Unit } from "@beep/gate-report/GateReport";
-import { Item } from "@beep/gate-report/Item";
+import { Item, ItemDetail } from "@beep/gate-report/Item";
 import { ItemKey } from "@beep/gate-report/ItemKey";
 import { ItemOutcome, RunReason } from "@beep/gate-report/Vocabulary";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import { errorDetail, messageOf, readField } from "./ErrorText.ts";
 import { errorSignature, failureLocation, topFrame } from "./TopFrame.ts";
+import type { Location } from "@beep/gate-report/Item";
 import type { StrayOutput } from "@beep/gate-report/StrayOutput";
 import type * as DateTime from "effect/DateTime";
 import type { VitestError, VitestModule, VitestSuite, VitestTestCase } from "./VitestShapes.ts";
@@ -124,7 +128,7 @@ const locationOf = (root: string, error: VitestError) => O.flatMap(topFrame(erro
 
 const testItem =
   (root: string, file: string) =>
-  (test: VitestTestCase): Item => {
+  (test: VitestTestCase, fullName: string): Item => {
     const result = O.fromNullishOr(guarded(() => test.result(), undefined));
     const outcome = pipe(
       result,
@@ -138,7 +142,7 @@ const testItem =
     );
     const failure = O.filter(first, () => ItemOutcome.is.failed(outcome));
     return Item.make({
-      key: ItemKey.cases.TestKey.make({ file, fullName: test.fullName }),
+      key: ItemKey.cases.TestKey.make({ file, fullName }),
       unit: file,
       path: suitePath(test.parent),
       name: test.name,
@@ -151,6 +155,71 @@ const testItem =
       durationMs: O.map(O.fromNullishOr(guarded(() => test.diagnostic(), undefined)), (diag) => diag.duration),
     });
   };
+
+// The first free name for a test: its full name, else the full name with the next ordinal from 2.
+const freeName = (taken: HashSet.HashSet<string>, fullName: string, ordinal = 1): string => {
+  const candidate = ordinal === 1 ? fullName : `${fullName} (${ordinal})`;
+  return HashSet.has(taken, candidate) ? freeName(taken, fullName, ordinal + 1) : candidate;
+};
+
+/**
+ * The full name each test of one module is keyed by. Vitest accepts two
+ * tests with one title, so a repeated full name gets ` (2)`, ` (3)` and so
+ * on in collection order, and every test stays its own item. The first keeps
+ * the plain name, so its key and history stay as they were.
+ *
+ * @since 0.0.0
+ */
+export const keyedNames = (fullNames: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.mapAccum(fullNames, HashSet.empty<string>(), (taken, fullName) => {
+    const name = freeName(taken, fullName);
+    return [HashSet.add(taken, name), name];
+  })[1];
+
+/**
+ * The most unit faults one module records. Errors past it are counted in
+ * the last recorded fault's message.
+ *
+ * @since 0.0.0
+ */
+export const MAX_UNIT_FAULTS = 10;
+
+const faultName = (label: string, index: number): string => (index === 0 ? label : `${label} (${index + 1})`);
+
+const withDropped = (detail: ItemDetail, dropped: number): ItemDetail =>
+  dropped === 0
+    ? detail
+    : ItemDetail.make({
+        ...detail,
+        message: `${detail.message}\n${plural({ count: dropped, one: "more error", other: "more errors" })} in this module not recorded`,
+      });
+
+const NO_ERROR = errorDetail({ message: "the module failed without an error" });
+
+// One fault per error, up to the bound: a module whose `beforeAll` and `afterAll` both threw keeps
+// both messages. A failed module with no error at all still gets one fault.
+const unitFaults = (input: {
+  readonly root: string;
+  readonly unit: string;
+  readonly collected: boolean;
+  readonly errors: ReadonlyArray<VitestError>;
+}): A.NonEmptyReadonlyArray<GateEvent> => {
+  const kind = input.collected ? "hook" : "load";
+  const label = input.collected ? SUITE_FAILURE_LABEL : SUITE_LOAD_FAILURE_LABEL;
+  const fault = (detail: ItemDetail, location: O.Option<Location>, index: number) =>
+    GateEvent.cases.UnitFaulted.make({ unit: input.unit, kind, name: faultName(label, index), detail, location });
+  const kept = A.take(input.errors, MAX_UNIT_FAULTS);
+  const dropped = input.errors.length - kept.length;
+  return A.isReadonlyArrayNonEmpty(kept)
+    ? A.map(kept, (error, index) =>
+        fault(
+          index === kept.length - 1 ? withDropped(errorDetail(error), dropped) : errorDetail(error),
+          locationOf(input.root, error),
+          index
+        )
+      )
+    : [fault(NO_ERROR, O.none(), 0)];
+};
 
 const suiteErrors = (module: VitestModule): ReadonlyArray<VitestError> =>
   A.flatMap(
@@ -180,21 +249,13 @@ const moduleFault = (input: {
     anySuiteFailed(input.module);
   const explained = A.some(input.items, (item) => ItemOutcome.is.failed(item.outcome));
   const faulted = A.isReadonlyArrayNonEmpty(errors) || (failedState && !explained);
-  const unit = input.module.relativeModuleId;
-  const first = A.head(errors);
   return faulted
-    ? [
-        GateEvent.cases.UnitFaulted.make({
-          unit,
-          kind: A.isReadonlyArrayNonEmpty(input.tests) ? "hook" : "load",
-          name: A.isReadonlyArrayNonEmpty(input.tests) ? SUITE_FAILURE_LABEL : SUITE_LOAD_FAILURE_LABEL,
-          detail: pipe(
-            O.map(first, errorDetail),
-            O.getOrElse(() => errorDetail({ message: "the module failed without an error" }))
-          ),
-          location: O.flatMap(first, (error) => locationOf(input.root, error)),
-        }),
-      ]
+    ? unitFaults({
+        root: input.root,
+        unit: input.module.relativeModuleId,
+        collected: A.isReadonlyArrayNonEmpty(input.tests),
+        errors,
+      })
     : [];
 };
 
@@ -203,7 +264,7 @@ const moduleEvents =
   (module: VitestModule): ReadonlyArray<GateEvent> => {
     const unit = module.relativeModuleId;
     const tests = guarded(() => A.fromIterable(module.children.allTests()), []);
-    const items = A.map(tests, testItem(root, unit));
+    const items = A.zipWith(tests, keyedNames(A.map(tests, (test) => test.fullName)), testItem(root, unit));
     return [
       GateEvent.cases.UnitStarted.make({ unit }),
       GateEvent.cases.UnitCollected.make({ unit, items: tests.length }),

@@ -220,6 +220,8 @@ export class RecordLocation extends S.Opaque<RecordLocation, { readonly brand: u
  * console.log(rootGateDir("test")); // .beep/gates/test
  * ```
  *
+ * @param gate - the gate whose root runs the directory holds
+ * @returns the directory, relative to the repository root, where that gate's root records and logs live
  * @category utilities
  * @since 0.0.0
  */

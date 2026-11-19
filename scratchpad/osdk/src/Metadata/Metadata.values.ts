@@ -85,6 +85,22 @@ export const ReleaseStatus = MappedLiteralKit([
 export type ReleaseStatus = typeof ReleaseStatus.Type;
 
 /**
+ * Companion namespace for {@link ReleaseStatus}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ReleaseStatus {
+  /**
+   * Encoded (wire) form of {@link ReleaseStatus}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ReleaseStatus.Encoded;
+}
+
+/**
  * How prominently applications should surface an object type or a property.
  *
  * **Details**
@@ -126,6 +142,22 @@ export const Visibility = MappedLiteralKit([
  */
 export type Visibility = typeof Visibility.Type;
 
+/**
+ * Companion namespace for {@link Visibility}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Visibility {
+  /**
+   * Encoded (wire) form of {@link Visibility}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof Visibility.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Icon
 // -----------------------------------------------------------------------------
@@ -149,6 +181,26 @@ export class BlueprintIcon extends S.Opaque<BlueprintIcon, { readonly brand: uni
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link BlueprintIcon}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BlueprintIcon {
+  /**
+   * Encoded (wire) form of {@link BlueprintIcon}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "blueprint";
+    readonly color: string;
+    readonly name: string;
+  }
+}
 
 /**
  * Icon an application draws next to an object type.
@@ -184,6 +236,23 @@ export const Icon = IconKind.mapMembers(() => Tuple.make(BlueprintIcon)).pipe(
  * @since 0.0.0
  */
 export type Icon = typeof Icon.Type;
+
+/**
+ * Companion namespace for {@link Icon}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Icon {
+  /**
+   * Encoded (wire) form of {@link Icon}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | BlueprintIcon.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Client hints
@@ -221,3 +290,22 @@ export class TypeClass extends S.Opaque<TypeClass, { readonly brand: unique symb
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TypeClass}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TypeClass {
+  /**
+   * Encoded (wire) form of {@link TypeClass}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly kind: string;
+    readonly name: string;
+  }
+}

@@ -1,4 +1,5 @@
 import * as S from "effect/Schema";
+import { IdText } from "@proto/kernel/Measure";
 
 /**
  * One approval: the committed fact a reviewer made, by its command id. A
@@ -14,7 +15,7 @@ import * as S from "effect/Schema";
  * @category ids
  * @since 0.0.0
  */
-export const ApprovalId = S.String.pipe(S.brand("ApprovalId"));
+export const ApprovalId = IdText.pipe(S.brand("ApprovalId"));
 /**
  * @category ids
  * @since 0.0.0

@@ -6,6 +6,8 @@
   "exports": {
     "./Adapters": "./src/Adapters.ts",
     "./Authority.adapter": "./src/Authority.adapter.ts",
+    "./ClusterSql": "./src/ClusterSql.ts",
+    "./Directory/PartyDirectory.table": "./src/Directory/PartyDirectory.table.ts",
     "./Directory/PgPartyDirectoryStore.adapter": "./src/Directory/PgPartyDirectoryStore.adapter.ts",
     "./Evidence/FixtureContactSource.adapter": "./src/Evidence/FixtureContactSource.adapter.ts",
     "./Evidence/MailboxPoller.handler": "./src/Evidence/MailboxPoller.handler.ts",
@@ -14,6 +16,8 @@
     "./Host": "./src/Host.ts",
     "./Party.cluster": "./src/Party.cluster.ts",
     "./Party.descriptor": "./src/Party.descriptor.ts",
+    "./Party.migrations": "./src/Party.migrations.ts",
+    "./Party.schema": "./src/Party.schema.ts",
     "./Review/FixtureReasoner.adapter": "./src/Review/FixtureReasoner.adapter.ts",
     "./Review/ReasonerTape": "./src/Review/ReasonerTape.ts",
     "./Review/RecordingReasoner.adapter": "./src/Review/RecordingReasoner.adapter.ts",
@@ -22,6 +26,7 @@
     "./ReviewerApi.http": "./src/ReviewerApi.http.ts"
   },
   "scripts": {
+    "migrations": "bun scripts/migrations.ts",
     "test": "vitest run"
   },
   "dependencies": {
@@ -37,6 +42,7 @@
     "effect": "4.1.4"
   },
   "devDependencies": {
+    "@beep/pglite": "link:../../../../packages/drivers/pglite",
     "@effect/platform-node": "4.1.4",
     "@effect/vitest": "4.1.4",
     "@proto/authority-contract": "workspace:*",

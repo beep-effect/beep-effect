@@ -10,7 +10,7 @@ import {
   makeGateVitestRun,
   writeRunRecord,
 } from "@beep/repo-gate-vitest/internal/GateVitestRun";
-import { runLogText } from "@beep/repo-gate-vitest/internal/RunLog";
+import { makeConsoleLogBuffer, runLogText } from "@beep/repo-gate-vitest/internal/RunLog";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { afterEach, assert, describe, it, vi } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -53,7 +53,7 @@ it.layer(NodeServices.layer)("on disk", (it) => {
         root: packageRoot,
         argv: [],
         startedAt: O.none(),
-        logs: [{ content: "hello", type: "stdout" }],
+        consoleText: "[stdout] hello\n",
         modules: [failingModule],
         unhandledErrors: [],
         reason: "failed",
@@ -68,7 +68,7 @@ it.layer(NodeServices.layer)("on disk", (it) => {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
       const log = yield* fs.readFileString(path.join(packageRoot, ".beep/gates/test/report.log"));
-      assert.strictEqual(log, runLogText(record.report, [{ content: "hello", type: "stdout" }]));
+      assert.strictEqual(log, runLogText(record.report, "[stdout] hello\n"));
       assert.isTrue(pipe(log, Str.includes("[stdout] hello\n")));
       assert.isTrue(pipe(log, Str.includes("FAIL test/math.test.ts > adds\nexpected 1 to be 2\n- 2\n+ 1\n")));
     })
@@ -81,7 +81,7 @@ it.layer(NodeServices.layer)("on disk", (it) => {
         root: repoRoot,
         argv: [],
         startedAt: O.none(),
-        logs: [],
+        consoleText: "",
         modules: [],
         unhandledErrors: [],
         reason: "passed",
@@ -98,6 +98,7 @@ it.layer(NodeServices.layer)("on disk", (it) => {
     Effect.gen(function* () {
       const { repoRoot, packageRoot } = yield* tempRepo();
       const session = makeGateVitestRun({ root: packageRoot, argv: [] });
+      session.console({ content: "from an earlier run", type: "stdout" });
       session.start();
       session.console({ content: "kept\n", type: "stderr" });
       yield* Effect.promise(() =>
@@ -107,6 +108,11 @@ it.layer(NodeServices.layer)("on disk", (it) => {
       const record = yield* store.readRecord(target);
       assert.strictEqual(record.report.totals.failed, 1);
       assert.strictEqual(record.report.totals.passed, 1);
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const log = yield* fs.readFileString(path.join(packageRoot, ".beep/gates/test/report.log"));
+      assert.isTrue(Str.startsWith("[stderr] kept\n")(log));
+      assert.isFalse(pipe(log, Str.includes("earlier run")));
     })
   );
 
@@ -134,5 +140,32 @@ describe("failureLine", () => {
     assert.isTrue(Str.startsWith(`${ADAPTER_PREFIX} gate record not written: `)(line));
     assert.isTrue(pipe(line, Str.includes("disk full")));
     assert.isFalse(pipe(line, Str.includes("\n")));
+  });
+});
+
+describe("makeConsoleLogBuffer", () => {
+  it("keeps whole lines in order up to the bound, then counts every later line", () => {
+    const buffer = makeConsoleLogBuffer(36);
+    buffer.add({ content: "abc", type: "stdout" });
+    buffer.add({ content: "def\n", type: "stdout" });
+    buffer.add({ content: "ghi", type: "stderr" });
+    // Would still fit, but a line after a dropped one is dropped too, so the log keeps an unbroken start.
+    buffer.add({ content: "", type: "stdout" });
+    assert.strictEqual(
+      buffer.text(),
+      "[stdout] abc\n[stdout] def\n[gate] not recorded past the 36-character bound: 2 console lines, 23 characters\n"
+    );
+  });
+
+  it("holds nothing after a reset", () => {
+    const buffer = makeConsoleLogBuffer(8);
+    buffer.add({ content: "too long for the bound", type: "stdout" });
+    buffer.reset();
+    assert.strictEqual(buffer.text(), "");
+    buffer.add({ content: "", type: "stdout" });
+    assert.strictEqual(
+      buffer.text(),
+      "[gate] not recorded past the 8-character bound: 1 console line, 10 characters\n"
+    );
   });
 });

@@ -89,7 +89,7 @@ export class FocusSession extends Model<FocusSession>("FocusSession")(
  * @since 0.0.0
  */
 export declare namespace FocusSession {
-  export type Encoded = S.Codec.Encoded<typeof FocusSession>;
+  export type Encoded = typeof FocusSession.Encoded;
 }
 
 /**
@@ -174,7 +174,7 @@ export class FocusDistraction extends Model<FocusDistraction>("FocusDistraction"
  * @since 0.0.0
  */
 export declare namespace FocusDistraction {
-  export type Encoded = S.Codec.Encoded<typeof FocusDistraction>;
+  export type Encoded = typeof FocusDistraction.Encoded;
 }
 
 /**
@@ -271,7 +271,7 @@ export class FocusStats extends Model<FocusStats>("FocusStats")(
  * @since 0.0.0
  */
 export declare namespace FocusStats {
-  export type Encoded = S.Codec.Encoded<typeof FocusStats>;
+  export type Encoded = typeof FocusStats.Encoded;
 }
 
 /**

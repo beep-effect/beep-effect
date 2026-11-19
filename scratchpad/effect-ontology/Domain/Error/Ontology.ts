@@ -104,7 +104,9 @@ export class ClassNotFound extends S.TaggedError<ClassNotFound, { readonly brand
  * @category errors
  * @since 0.0.0
  */
-export class PropertyNotFound extends S.TaggedError<PropertyNotFound, { readonly brand: unique symbol }>($I`PropertyNotFound`)(
+export class PropertyNotFound extends S.TaggedError<PropertyNotFound, { readonly brand: unique symbol }>(
+  $I`PropertyNotFound`
+)(
   "PropertyNotFound",
   {
     ...commonFields,
@@ -137,7 +139,9 @@ export class PropertyNotFound extends S.TaggedError<PropertyNotFound, { readonly
  * @category errors
  * @since 0.0.0
  */
-export class OntologyFileNotFound extends S.TaggedError<OntologyFileNotFound, { readonly brand: unique symbol }>($I`OntologyFileNotFound`)(
+export class OntologyFileNotFound extends S.TaggedError<OntologyFileNotFound, { readonly brand: unique symbol }>(
+  $I`OntologyFileNotFound`
+)(
   "OntologyFileNotFound",
   {
     ...commonFields,
@@ -170,7 +174,9 @@ export class OntologyFileNotFound extends S.TaggedError<OntologyFileNotFound, { 
  * @category errors
  * @since 0.0.0
  */
-export class OntologyParsingFailed extends S.TaggedError<OntologyParsingFailed, { readonly brand: unique symbol }>($I`OntologyParsingFailed`)(
+export class OntologyParsingFailed extends S.TaggedError<OntologyParsingFailed, { readonly brand: unique symbol }>(
+  $I`OntologyParsingFailed`
+)(
   "OntologyParsingFailed",
   {
     ...commonFields,
@@ -204,7 +210,9 @@ export class OntologyParsingFailed extends S.TaggedError<OntologyParsingFailed, 
  * @category errors
  * @since 0.0.0
  */
-export class EmbeddingsNotFound extends S.TaggedError<EmbeddingsNotFound, { readonly brand: unique symbol }>($I`EmbeddingsNotFound`)(
+export class EmbeddingsNotFound extends S.TaggedError<EmbeddingsNotFound, { readonly brand: unique symbol }>(
+  $I`EmbeddingsNotFound`
+)(
   "EmbeddingsNotFound",
   {
     ...commonFields,
@@ -242,7 +250,10 @@ export class EmbeddingsNotFound extends S.TaggedError<EmbeddingsNotFound, { read
  * @category errors
  * @since 0.0.0
  */
-export class EmbeddingsVersionMismatch extends S.TaggedError<EmbeddingsVersionMismatch, { readonly brand: unique symbol }>($I`EmbeddingsVersionMismatch`)(
+export class EmbeddingsVersionMismatch extends S.TaggedError<
+  EmbeddingsVersionMismatch,
+  { readonly brand: unique symbol }
+>($I`EmbeddingsVersionMismatch`)(
   "EmbeddingsVersionMismatch",
   {
     ...commonFields,

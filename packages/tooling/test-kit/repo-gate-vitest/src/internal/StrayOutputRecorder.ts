@@ -11,6 +11,7 @@
  *
  * @since 0.0.0
  */
+import { stripEscapes } from "@beep/gate-report/Escapes";
 import { StrayOutput, StrayOutputSample } from "@beep/gate-report/StrayOutput";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
@@ -21,11 +22,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { OutputStream } from "@beep/gate-report/Vocabulary";
 
-// CSI (`ESC [ ... final`), OSC (`ESC ] ... BEL` or `ESC ] ... ESC \`), and
-// the two-byte escapes (`ESC c` reset included).
-// biome-ignore lint/suspicious/noControlCharactersInRegex: matches terminal escape sequences on purpose
-const ESCAPE = /\u001b(?:\[[0-?]*[ -/]*[@-~]|\][^\u0007\u001b]*(?:\u0007|\u001b\\)|[@-Z\\-_]|c)/gu;
-// biome-ignore lint/suspicious/noControlCharactersInRegex: strips stray control characters from a sample
+// Stray control characters a sample drops once its escape sequences are stripped.
 const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f]/gu;
 
 /**
@@ -35,8 +32,7 @@ const CONTROL = /[\u0000-\u0008\u000b-\u001f\u007f]/gu;
  *
  * @since 0.0.0
  */
-export const isEscapeOnly = (text: string): boolean =>
-  Str.isNonEmpty(text) && Str.isEmpty(Str.replace(ESCAPE, "")(text));
+export const isEscapeOnly = (text: string): boolean => Str.isNonEmpty(text) && Str.isEmpty(stripEscapes(text));
 
 /**
  * The bounds of one recorder: how many sample lines it keeps and how many
@@ -69,7 +65,7 @@ type Tally = { stdout: number; stderr: number };
 
 const encoder = new TextEncoder();
 
-const clean = (line: string): string => Str.trim(Str.replace(CONTROL, "")(Str.replace(ESCAPE, "")(line)));
+const clean = (line: string): string => Str.trim(Str.replace(CONTROL, "")(stripEscapes(line)));
 
 /**
  * Make a {@link StrayOutputRecorder}: five samples of at most 160 characters

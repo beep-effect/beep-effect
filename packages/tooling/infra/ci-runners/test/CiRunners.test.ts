@@ -12,6 +12,7 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -246,6 +247,27 @@ describe("CiRunners production stage", () => {
       expect(overflow.pool.maximumCount).toBe(2);
       expect(overflow.pool.runnerGroup).toBe("beep-shard-overflow");
       expect(A.filter(declaredNames(recorder), touchesLiveFleet)).toEqual([]);
+      // All five production mappings name their function by ARN: scale-up and job-retry of both pools, and the
+      // deregister retry. The deploy role conditions every mapping call on lambda:FunctionArn.
+      const mappings = A.filter(recorder.reconciled, (entry) => entry.type === "Lambda.EventSourceMapping");
+      expect(
+        A.sort(
+          A.map(mappings, (entry) => entry.fqn),
+          Order.String
+        )
+      ).toStrictEqual([
+        "Runners/DeregisterRetrySource",
+        "Runners/Poolheavy/JobRetrySource",
+        "Runners/Poolheavy/ScaleUpSource",
+        "Runners/Pooloverflow/JobRetrySource",
+        "Runners/Pooloverflow/ScaleUpSource",
+      ]);
+      const notByArn = A.filter(
+        mappings,
+        (entry) =>
+          !(P.isString(entry.news.functionName) && Str.startsWith("arn:aws:lambda:us-east-1:")(entry.news.functionName))
+      );
+      expect(A.map(notByArn, (entry) => entry.fqn)).toStrictEqual([]);
     })
   );
 

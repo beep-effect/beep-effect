@@ -28,9 +28,10 @@ export const Session = authority.parts.Session;
 export const Conformance = conformance.parts.Conformance;
 export const RunsGateway = runs.parts.RunsGateway.pipe(Layer.provide(Layer.mergeAll(AuthorityGateway)));
 export const PartyFactsFeed = party.parts.PartyFactsFeed.pipe(Layer.provide(Layer.mergeAll(AuthorityGateway, RunsGateway)));
+export const DirectorySwitch = party.parts.DirectorySwitch.pipe(Layer.provide(Layer.mergeAll(AuthorityGateway, RunsGateway)));
 export const ClaimDecidedInbox = runs.parts.ClaimDecidedInbox.pipe(Layer.provide(Layer.mergeAll(AuthorityGateway, PartyFactsFeed)));
 
 /** What every runner of the pool builds: every part, and so every context's model. */
-export const PracticeLive = Layer.mergeAll(AuthorityGateway, Session, Conformance, RunsGateway, PartyFactsFeed, ClaimDecidedInbox);
+export const PracticeLive = Layer.mergeAll(AuthorityGateway, Session, Conformance, RunsGateway, PartyFactsFeed, DirectorySwitch, ClaimDecidedInbox);
 
 export default PracticeLive;

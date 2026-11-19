@@ -1,4 +1,5 @@
 import * as S from "effect/Schema";
+import { IdText } from "./Measure.ts";
 
 /**
  * An organization: the tenant every record belongs to and every grant is
@@ -14,7 +15,7 @@ import * as S from "effect/Schema";
  * @category ids
  * @since 0.0.0
  */
-export const OrgId = S.String.pipe(S.brand("OrgId"));
+export const OrgId = IdText.pipe(S.brand("OrgId"));
 /**
  * @category ids
  * @since 0.0.0
@@ -34,7 +35,7 @@ export type OrgId = typeof OrgId.Type;
  * @category ids
  * @since 0.0.0
  */
-export const PrincipalId = S.String.pipe(S.brand("PrincipalId"));
+export const PrincipalId = IdText.pipe(S.brand("PrincipalId"));
 /**
  * @category ids
  * @since 0.0.0
@@ -54,7 +55,7 @@ export type PrincipalId = typeof PrincipalId.Type;
  * @category ids
  * @since 0.0.0
  */
-export const RunId = S.String.pipe(S.brand("RunId"));
+export const RunId = IdText.pipe(S.brand("RunId"));
 /**
  * @category ids
  * @since 0.0.0
@@ -75,7 +76,7 @@ export type RunId = typeof RunId.Type;
  * @category ids
  * @since 0.0.0
  */
-export const GrantId = S.String.pipe(S.brand("GrantId"));
+export const GrantId = IdText.pipe(S.brand("GrantId"));
 /**
  * @category ids
  * @since 0.0.0
@@ -96,7 +97,7 @@ export type GrantId = typeof GrantId.Type;
  * @category ids
  * @since 0.0.0
  */
-export const CapabilityId = S.String.pipe(S.brand("CapabilityId"));
+export const CapabilityId = IdText.pipe(S.brand("CapabilityId"));
 /**
  * @category ids
  * @since 0.0.0
@@ -117,9 +118,30 @@ export type CapabilityId = typeof CapabilityId.Type;
  * @category ids
  * @since 0.0.0
  */
-export const DelegationId = S.String.pipe(S.brand("DelegationId"));
+export const DelegationId = IdText.pipe(S.brand("DelegationId"));
 /**
  * @category ids
  * @since 0.0.0
  */
 export type DelegationId = typeof DelegationId.Type;
+
+/**
+ * A published fact: stable for the thing the fact says, so every consumer
+ * recognises a redelivery, and the same across the fact's versions.
+ *
+ * **Example** (Brand a fact id)
+ * ```ts
+ * import { FactId } from "@proto/kernel/Ids";
+ *
+ * const fact = FactId.make("claim_1:decided");
+ * ```
+ *
+ * @category ids
+ * @since 0.0.0
+ */
+export const FactId = IdText.pipe(S.brand("FactId"));
+/**
+ * @category ids
+ * @since 0.0.0
+ */
+export type FactId = typeof FactId.Type;

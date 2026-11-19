@@ -207,7 +207,7 @@ export class MemoryImportBatchItem extends Model<MemoryImportBatchItem>("MemoryI
  * @since 0.0.0
  */
 export declare namespace MemoryImportBatchItem {
-  export type Encoded = S.Codec.Encoded<typeof MemoryImportBatchItem>;
+  export type Encoded = typeof MemoryImportBatchItem.Encoded;
 }
 
 /**
@@ -328,7 +328,7 @@ export class MemoryImportBatchRequest extends Model<MemoryImportBatchRequest>("M
  * @since 0.0.0
  */
 export declare namespace MemoryImportBatchRequest {
-  export type Encoded = S.Codec.Encoded<typeof MemoryImportBatchRequest>;
+  export type Encoded = typeof MemoryImportBatchRequest.Encoded;
 }
 
 /**
@@ -404,7 +404,7 @@ export class MemoryImportRun extends Model<MemoryImportRun>("MemoryImportRun")(
  * @since 0.0.0
  */
 export declare namespace MemoryImportRun {
-  export type Encoded = S.Codec.Encoded<typeof MemoryImportRun>;
+  export type Encoded = typeof MemoryImportRun.Encoded;
 }
 
 /**
@@ -526,7 +526,7 @@ export class MemoryImportArtifact extends Model<MemoryImportArtifact>("MemoryImp
  * @since 0.0.0
  */
 export declare namespace MemoryImportArtifact {
-  export type Encoded = S.Codec.Encoded<typeof MemoryImportArtifact>;
+  export type Encoded = typeof MemoryImportArtifact.Encoded;
 }
 
 /**

@@ -97,6 +97,26 @@ export class Link extends S.Opaque<Link, { readonly brand: unique symbol }>()(
   )
 ) {}
 
+/**
+ * Companion namespace for {@link Link}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Link {
+  /**
+   * Encoded (wire) form of {@link Link}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly source: ObjectLocator.Encoded;
+    readonly target: ObjectLocator.Encoded;
+    readonly linkType: LinkTypeApiName.Encoded;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // The paged listing
 // -----------------------------------------------------------------------------
@@ -259,6 +279,23 @@ export const LinksFromSourceRows = SourceRows.pipe(
 export type LinksFromSourceRows = typeof LinksFromSourceRows.Type;
 
 /**
+ * Companion namespace for {@link LinksFromSourceRows}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinksFromSourceRows {
+  /**
+   * Encoded (wire) form of {@link LinksFromSourceRows}: the platform's rows, one per source object with the
+   * objects it links to.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LinksFromSourceRows.Encoded;
+}
+
+/**
  * Request for one page of the links that leave the objects of an object set.
  *
  * **Details**
@@ -306,6 +343,28 @@ export class LoadLinksRequest extends S.Opaque<LoadLinksRequest, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link LoadLinksRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LoadLinksRequest {
+  /**
+   * Encoded (wire) form of {@link LoadLinksRequest}: `linkTypes` travels as `links`, and an absent optional key
+   * stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly objectSet: ObjectSet.Encoded;
+    readonly links: ReadonlyArray<LinkTypeApiName.Encoded>;
+    readonly pageToken?: PageToken.Encoded;
+    readonly includeComputeUsage?: boolean;
+  }
+}
 
 /**
  * One page of the links that leave the objects of an object set.
@@ -362,6 +421,27 @@ export class LinkPage extends S.Opaque<LinkPage, { readonly brand: unique symbol
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link LinkPage}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkPage {
+  /**
+   * Encoded (wire) form of {@link LinkPage}: `data` carries the platform's per-source rows, and an absent optional
+   * key stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly data: LinksFromSourceRows.Encoded;
+    readonly nextPageToken?: PageToken.Encoded;
+    readonly computeUsage?: number;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // The bulk listing
@@ -432,6 +512,28 @@ export class BulkLink extends S.Opaque<BulkLink, { readonly brand: unique symbol
   )
 ) {}
 
+/**
+ * Companion namespace for {@link BulkLink}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BulkLink {
+  /**
+   * Encoded (wire) form of {@link BulkLink}: the keys travel as `object`, `linkApiName`, `otherObjectApiName` and
+   * `otherObjectPk`, and a null or absent `otherObjectApiName` stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly object: ObjectLocator.Encoded;
+    readonly linkApiName: LinkTypeApiName.Encoded;
+    readonly otherObjectApiName?: ObjectTypeApiName.Encoded | null | undefined;
+    readonly otherObjectPk: typeof S.Json.Encoded;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // The link stream: client to server
 // -----------------------------------------------------------------------------
@@ -463,6 +565,25 @@ export class KeyedObjectLocator extends S.Opaque<KeyedObjectLocator, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link KeyedObjectLocator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace KeyedObjectLocator {
+  /**
+   * Encoded (wire) form of {@link KeyedObjectLocator}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly objectType: ObjectTypeApiName.Encoded;
+    readonly primaryKey: PrimaryKeyRecord.Encoded;
+  }
+}
+
+/**
  * A set of objects and the link types to watch on each of them.
  *
  * **Details**
@@ -486,6 +607,25 @@ export class LinkSubscribeRequest extends S.Opaque<LinkSubscribeRequest, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link LinkSubscribeRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkSubscribeRequest {
+  /**
+   * Encoded (wire) form of {@link LinkSubscribeRequest}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly selectedObjects: ReadonlyArray<KeyedObjectLocator.Encoded>;
+    readonly linkTypes: ReadonlyArray<LinkTypeApiName.Encoded>;
+  }
+}
 
 /**
  * The message a client sends over the link stream: every link subscription it wants from now on.
@@ -539,6 +679,25 @@ export class LinkSubscribeRequests extends S.Opaque<LinkSubscribeRequests, { rea
   )
 ) {}
 
+/**
+ * Companion namespace for {@link LinkSubscribeRequests}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkSubscribeRequests {
+  /**
+   * Encoded (wire) form of {@link LinkSubscribeRequests}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly id: RequestId.Encoded;
+    readonly requests: ReadonlyArray<LinkSubscribeRequest.Encoded>;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // The link stream: server to client
 // -----------------------------------------------------------------------------
@@ -583,6 +742,22 @@ export const LinkState = MappedLiteralKit([
  * @since 0.0.0
  */
 export type LinkState = typeof LinkState.Type;
+
+/**
+ * Companion namespace for {@link LinkState}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkState {
+  /**
+   * Encoded (wire) form of {@link LinkState}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LinkState.Encoded;
+}
 
 /**
  * One link of a watched object appeared or disappeared.
@@ -632,6 +807,27 @@ export class LinkUpdate extends S.Opaque<LinkUpdate, { readonly brand: unique sy
   )
 ) {}
 
+/**
+ * Companion namespace for {@link LinkUpdate}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkUpdate {
+  /**
+   * Encoded (wire) form of {@link LinkUpdate}: `source` and `target` travel as `selectedSide` and `linkedSide`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly selectedSide: KeyedObjectLocator.Encoded;
+    readonly linkType: LinkTypeApiName.Encoded;
+    readonly linkedSide: KeyedObjectLocator.Encoded;
+    readonly state: LinkState.Encoded;
+  }
+}
+
 const LinkStreamMessageKind = LiteralKit(["subscribeResponses", "updates", "refresh", "subscriptionClosed"]);
 
 /**
@@ -651,6 +847,26 @@ export class LinkUpdates extends S.Opaque<LinkUpdates, { readonly brand: unique 
 ) {}
 
 /**
+ * Companion namespace for {@link LinkUpdates}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkUpdates {
+  /**
+   * Encoded (wire) form of {@link LinkUpdates}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "updates";
+    readonly id: SubscriptionId.Encoded;
+    readonly updates: ReadonlyArray<LinkUpdate.Encoded>;
+  }
+}
+
+/**
  * Notice that changes of some link types cannot be listed: the client must load those links again in full.
  *
  * @category models
@@ -667,6 +883,26 @@ export class RefreshLinks extends S.Opaque<RefreshLinks, { readonly brand: uniqu
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RefreshLinks}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RefreshLinks {
+  /**
+   * Encoded (wire) form of {@link RefreshLinks}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "refresh";
+    readonly id: SubscriptionId.Encoded;
+    readonly linkTypes: ReadonlyArray<LinkTypeApiName.Encoded>;
+  }
+}
 
 /**
  * Everything the server sends over the link subscription websocket.
@@ -724,3 +960,23 @@ export const LinkStreamMessage = LinkStreamMessageKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type LinkStreamMessage = typeof LinkStreamMessage.Type;
+
+/**
+ * Companion namespace for {@link LinkStreamMessage}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkStreamMessage {
+  /**
+   * Encoded (wire) form of {@link LinkStreamMessage}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | SubscribeResponses.Encoded
+    | LinkUpdates.Encoded
+    | RefreshLinks.Encoded
+    | SubscriptionClosed.Encoded;
+}

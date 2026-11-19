@@ -10,14 +10,14 @@ import { $ScratchpadId } from "@beep/identity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { IRI } from "@beep/rdf";
 import { LiteralKit, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
+import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as Order from "effect/Order";
-import * as SchemaGetter from "effect/SchemaGetter";
-import * as Result from "effect/Result";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 import { ContentHash } from "../Identity.ts";
 import { Attributes } from "./shared.ts";
@@ -71,10 +71,10 @@ export const CoreClass = LiteralKit([
   "https://effect-ontology.dev/core#Place",
   "https://effect-ontology.dev/core#Artifact",
 ]).pipe(
-    $I.annoteSchema("CoreClass", {
-      description: "Narrow closed set of class IRIs declared by the experimental core ontology.",
-    })
-  );
+  $I.annoteSchema("CoreClass", {
+    description: "Narrow closed set of class IRIs declared by the experimental core ontology.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link CoreClass}.
@@ -128,10 +128,10 @@ export const CoreProperty = LiteralKit([
   "https://effect-ontology.dev/core#endTime",
   "https://effect-ontology.dev/core#groundingConfidence",
 ]).pipe(
-    $I.annoteSchema("CoreProperty", {
-      description: "Narrow closed set of property IRIs declared by the experimental core ontology.",
-    })
-  );
+  $I.annoteSchema("CoreProperty", {
+    description: "Narrow closed set of property IRIs declared by the experimental core ontology.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link CoreProperty}.
@@ -186,27 +186,30 @@ const withSeedDerivedIdStatics =
  * @since 0.0.0
  */
 export const MentionId = S.String.check(
-  S.isPattern(mentionIdPattern, $I.annote("MentionIdPatternCheck", {
-    title: "Mention Identifier",
-    description: "A mention prefix followed by 12 lowercase hexadecimal characters.",
-    message: 'Mention identifier must have the form "mention-{12 lowercase hex characters}".',
-  }))
+  S.isPattern(
+    mentionIdPattern,
+    $I.annote("MentionIdPatternCheck", {
+      title: "Mention Identifier",
+      description: "A mention prefix followed by 12 lowercase hexadecimal characters.",
+      message: 'Mention identifier must have the form "mention-{12 lowercase hex characters}".',
+    })
+  )
 ).pipe(
-    S.brand("MentionId"),
-    $I.annoteSchema("MentionId", {
-      description: "Deterministic short identifier for one document character span.",
+  S.brand("MentionId"),
+  $I.annoteSchema("MentionId", {
+    description: "Deterministic short identifier for one document character span.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    fromCoordinates: Effect.fn("MentionId.fromCoordinates")(function* (
+      documentId: string,
+      startOffset: number,
+      endOffset: number
+    ) {
+      const digest = yield* digestText(`${documentId}:${startOffset}:${endOffset}`);
+      return schema.make(`mention-${Str.takeLeft(12)(digest)}`);
     }),
-    SchemaUtils.withStatics((schema) => ({
-      fromCoordinates: Effect.fn("MentionId.fromCoordinates")(function* (
-        documentId: string,
-        startOffset: number,
-        endOffset: number
-      ) {
-        const digest = yield* digestText(`${documentId}:${startOffset}:${endOffset}`);
-        return schema.make(`mention-${Str.takeLeft(12)(digest)}`);
-      }),
-    }))
-  );
+  }))
+);
 
 /**
  * Runtime value decoded by {@link MentionId}.
@@ -305,16 +308,20 @@ export type MentionEvidence = typeof MentionEvidence.Type;
  * @category entities
  * @since 0.0.0
  */
-export class Mention extends S.Opaque<Mention, { readonly brand: unique symbol }>()(S.Struct({
+export class Mention extends S.Opaque<Mention, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: MentionId,
     evidence: MentionEvidence,
     confidence: Confidence,
     mentionsEntity: IRI,
     sourceDocument: S.OptionFromOptionalKey(IRI).pipe(S.withConstructorDefault(Effect.succeedNone)),
     extractedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("Mention", {
-    description: "Confidence-scored source evidence referring to a tracked entity or event.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("Mention", {
+      description: "Confidence-scored source evidence referring to a tracked entity or event.",
+    })
+  )
+) {}
 
 /**
  * Stable canonical identifier for a persistent resolved entity.
@@ -332,18 +339,22 @@ export class Mention extends S.Opaque<Mention, { readonly brand: unique symbol }
  * @since 0.0.0
  */
 export const CanonicalEntityId = S.String.check(
-  S.isPattern(canonicalEntityIdPattern, $I.annote("CanonicalEntityIdPatternCheck", {
-    title: "Canonical Entity Identifier",
-    description: "A short digest identifier or stable snake-case entity identifier.",
-    message: 'Canonical entity identifier must be snake_case or have the form "entity-{12 lowercase hex characters}".',
-  }))
+  S.isPattern(
+    canonicalEntityIdPattern,
+    $I.annote("CanonicalEntityIdPatternCheck", {
+      title: "Canonical Entity Identifier",
+      description: "A short digest identifier or stable snake-case entity identifier.",
+      message:
+        'Canonical entity identifier must be snake_case or have the form "entity-{12 lowercase hex characters}".',
+    })
+  )
 ).pipe(
-    S.brand("CanonicalEntityId"),
-    $I.annoteSchema("CanonicalEntityId", {
-      description: "Stable canonical identifier for a persistent resolved entity.",
-    }),
-    withSeedDerivedIdStatics("CanonicalEntityId.fromSeed", "entity")
-  );
+  S.brand("CanonicalEntityId"),
+  $I.annoteSchema("CanonicalEntityId", {
+    description: "Stable canonical identifier for a persistent resolved entity.",
+  }),
+  withSeedDerivedIdStatics("CanonicalEntityId.fromSeed", "entity")
+);
 
 /**
  * Runtime value decoded by {@link CanonicalEntityId}.
@@ -395,12 +406,21 @@ export class TrackedEntity extends S.Class<TrackedEntity, { readonly brand: uniq
     name: S.NonEmptyString,
     description: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     types: S.NonEmptyArray(IRI),
-    attributes: Attributes.pipe(S.withConstructorDefault(Effect.succeed(trackedEntityAttributesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(trackedEntityAttributesDefault))),
+    attributes: Attributes.pipe(
+      S.withConstructorDefault(Effect.succeed(trackedEntityAttributesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(trackedEntityAttributesDefault))
+    ),
     groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(S.withConstructorDefault(Effect.succeedNone)),
     resolutionConfidence: S.OptionFromOptionalKey(Confidence).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    mergedFrom: S.Array(IRI).pipe(S.withConstructorDefault(Effect.succeed(trackedEntityMergedFromDefault)), S.withDecodingDefaultType(Effect.succeed(trackedEntityMergedFromDefault))),
+    mergedFrom: S.Array(IRI).pipe(
+      S.withConstructorDefault(Effect.succeed(trackedEntityMergedFromDefault)),
+      S.withDecodingDefaultType(Effect.succeed(trackedEntityMergedFromDefault))
+    ),
     location: S.OptionFromOptionalKey(IRI).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    externalIds: S.Record(S.String, S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(trackedEntityExternalIdsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(trackedEntityExternalIdsDefault))),
+    externalIds: S.Record(S.String, S.NonEmptyString).pipe(
+      S.withConstructorDefault(Effect.succeed(trackedEntityExternalIdsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(trackedEntityExternalIdsDefault))
+    ),
   },
   $I.annote("TrackedEntity", {
     description: "Persistent canonical entity with ontology types, confidence, merges, and links.",
@@ -447,21 +467,24 @@ export class TrackedEntity extends S.Class<TrackedEntity, { readonly brand: uniq
  * @since 0.0.0
  */
 export const EventId = S.String.check(
-  S.isPattern(eventIdPattern, $I.annote("EventIdPatternCheck", {
-    title: "Event Identifier",
-    description: "An event prefix followed by 12 lowercase hexadecimal characters.",
-    message: 'Event identifier must have the form "event-{12 lowercase hex characters}".',
-  }))
+  S.isPattern(
+    eventIdPattern,
+    $I.annote("EventIdPatternCheck", {
+      title: "Event Identifier",
+      description: "An event prefix followed by 12 lowercase hexadecimal characters.",
+      message: 'Event identifier must have the form "event-{12 lowercase hex characters}".',
+    })
+  )
 ).pipe(
-    S.brand("EventId"),
-    $I.annoteSchema("EventId", {
-      description: "Stable deterministic short identifier for a tracked event.",
-    }),
-    SchemaUtils.withStatics((schema) => ({
-      fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`event-${ContentHash.idFragment(hash)}`),
-    })),
-    withSeedDerivedIdStatics("EventId.fromSeed", "event")
-  );
+  S.brand("EventId"),
+  $I.annoteSchema("EventId", {
+    description: "Stable deterministic short identifier for a tracked event.",
+  }),
+  SchemaUtils.withStatics((schema) => ({
+    fromContentHash: (hash: ContentHash): typeof schema.Type => schema.make(`event-${ContentHash.idFragment(hash)}`),
+  })),
+  withSeedDerivedIdStatics("EventId.fromSeed", "event")
+);
 
 /**
  * Runtime value decoded by {@link EventId}.
@@ -497,19 +520,27 @@ export type EventId = typeof EventId.Type;
  * @category models
  * @since 0.0.0
  */
-export class Participant extends S.Opaque<Participant, { readonly brand: unique symbol }>()(S.Struct({
+export class Participant extends S.Opaque<Participant, { readonly brand: unique symbol }>()(
+  S.Struct({
     entityIri: IRI,
     role: S.OptionFromOptionalKey(IRI).pipe(S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("Participant", {
-    description: "Entity participation in an event with an optional ontology-defined role.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("Participant", {
+      description: "Entity participation in an event with an optional ontology-defined role.",
+    })
+  )
+) {}
 
-class EventIntervalFieldsModel extends S.Opaque<EventIntervalFieldsModel, { readonly brand: unique symbol }>()(S.Struct({
+class EventIntervalFieldsModel extends S.Opaque<EventIntervalFieldsModel, { readonly brand: unique symbol }>()(
+  S.Struct({
     start: S.DateTimeUtcFromString,
     end: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("EventIntervalFieldsModel", {
-    description: "Internal field model for a start and optional end instant.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("EventIntervalFieldsModel", {
+      description: "Internal field model for a start and optional end instant.",
+    })
+  )
+) {}
 
 const isNotAfter = Order.isLessThanOrEqualTo(DateTime.Order);
 
@@ -638,10 +669,19 @@ export class TrackedEvent extends S.Class<TrackedEvent, { readonly brand: unique
     id: EventId,
     iri: IRI,
     types: S.NonEmptyArray(IRI),
-    time: EventTime.pipe(S.withConstructorDefault(Effect.succeed(trackedEventTimeDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(trackedEventTimeDefault))),
-    participants: S.Array(Participant).pipe(S.withConstructorDefault(Effect.succeed(trackedEventParticipantsDefault)), S.withDecodingDefaultType(Effect.succeed(trackedEventParticipantsDefault))),
+    time: EventTime.pipe(
+      S.withConstructorDefault(Effect.succeed(trackedEventTimeDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(trackedEventTimeDefault))
+    ),
+    participants: S.Array(Participant).pipe(
+      S.withConstructorDefault(Effect.succeed(trackedEventParticipantsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(trackedEventParticipantsDefault))
+    ),
     location: S.OptionFromOptionalKey(IRI).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    attributes: Attributes.pipe(S.withConstructorDefault(Effect.succeed(trackedEventAttributesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(trackedEventAttributesDefault))),
+    attributes: Attributes.pipe(
+      S.withConstructorDefault(Effect.succeed(trackedEventAttributesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(trackedEventAttributesDefault))
+    ),
     groundingConfidence: S.OptionFromOptionalKey(Confidence).pipe(S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("TrackedEvent", {
@@ -713,7 +753,9 @@ export class MentionError extends S.TaggedError<MentionError, { readonly brand: 
  * @category errors
  * @since 0.0.0
  */
-export class TrackedEntityError extends S.TaggedError<TrackedEntityError, { readonly brand: unique symbol }>($I`TrackedEntityError`)(
+export class TrackedEntityError extends S.TaggedError<TrackedEntityError, { readonly brand: unique symbol }>(
+  $I`TrackedEntityError`
+)(
   "TrackedEntityError",
   CoreOperationErrorFields,
   $I.annote("TrackedEntityError", {
@@ -735,7 +777,9 @@ export class TrackedEntityError extends S.TaggedError<TrackedEntityError, { read
  * @category errors
  * @since 0.0.0
  */
-export class TrackedEventError extends S.TaggedError<TrackedEventError, { readonly brand: unique symbol }>($I`TrackedEventError`)(
+export class TrackedEventError extends S.TaggedError<TrackedEventError, { readonly brand: unique symbol }>(
+  $I`TrackedEventError`
+)(
   "TrackedEventError",
   CoreOperationErrorFields,
   $I.annote("TrackedEventError", {

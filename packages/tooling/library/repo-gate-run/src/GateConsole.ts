@@ -347,8 +347,8 @@ export interface GateConsoleShape {
  * console.log(console_.render(ConsoleRequest.make({ report })).text); // test @beep/glob: PASSED, 3/3 passed (10ms)
  * ```
  *
- * @param settings - The audience, colour level, budget and pointer table to render with.
- * @returns The render and progress operations for those settings.
+ * @param settings - the audience, colour level, budget and pointer table to render with
+ * @returns the render and progress operations for those settings
  * @category constructors
  * @since 0.0.0
  */

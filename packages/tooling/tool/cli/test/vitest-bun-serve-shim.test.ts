@@ -1,5 +1,6 @@
 import * as NodeModule from "node:module";
 import { it } from "@beep/test-runner";
+import { currentHostPlatform } from "@beep/utils";
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import { NodeServices } from "@effect/platform-node";
 import * as NodeHttpClient from "@effect/platform-node/NodeHttpClient";
@@ -183,7 +184,7 @@ it.layer(FetchHttpClient.layer)("vitest Bun.serve shim", (it) => {
 
   // A listener outside every shim process holds no lock file. The shim reads the kernel's listening
   // sockets so it never hands out that port and loses the bind after `serve` returned.
-  it.effect.skipIf(!shimActive || process.platform !== "linux")(
+  it.effect.skipIf(!shimActive || currentHostPlatform !== "linux")(
     "skips a port another process is already listening on",
     () =>
       Effect.gen(function* () {

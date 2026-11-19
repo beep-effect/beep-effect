@@ -1,5 +1,5 @@
 import { type AssessRequest, Reasoner, Usage } from "@proto/party-model/Review/Reasoner.external";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 

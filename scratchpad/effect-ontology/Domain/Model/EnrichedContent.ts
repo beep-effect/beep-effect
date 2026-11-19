@@ -7,23 +7,27 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, URLStr } from "@beep/schema";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Effect from "effect/Effect";
+
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EnrichedContent");
 
 const LanguageCode = S.String.check(
-  S.isPattern(/^[a-z]{2}$/, $I.annote("LanguageCodePatternCheck", {
-    title: "ISO 639-1 Language Code",
-    description: "A lowercase two-letter ISO 639-1 language code.",
-    message: "Language code must contain exactly two lowercase ASCII letters.",
-  }))
-).pipe(
-    $I.annoteSchema("LanguageCode", {
-      description: "Lowercase two-letter language code used for enriched content.",
+  S.isPattern(
+    /^[a-z]{2}$/,
+    $I.annote("LanguageCodePatternCheck", {
+      title: "ISO 639-1 Language Code",
+      description: "A lowercase two-letter ISO 639-1 language code.",
+      message: "Language code must contain exactly two lowercase ASCII letters.",
     })
-  );
+  )
+).pipe(
+  $I.annoteSchema("LanguageCode", {
+    description: "Lowercase two-letter language code used for enriched content.",
+  })
+);
 
 /**
  * Classification assigned to an ingested content source.
@@ -40,10 +44,10 @@ const LanguageCode = S.String.check(
  * @since 0.0.0
  */
 export const SourceType = LiteralKit(["news", "blog", "press_release", "official", "academic", "unknown"]).pipe(
-    $I.annoteSchema("SourceType", {
-      description: "Closed classification of source kinds recognized by content enrichment.",
-    })
-  );
+  $I.annoteSchema("SourceType", {
+    description: "Closed classification of source kinds recognized by content enrichment.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link SourceType}.
@@ -124,19 +128,22 @@ export class EnrichedContent extends S.Class<EnrichedContent, { readonly brand: 
       })
     ),
     keyEntities: S.Array(S.NonEmptyString).pipe(
-      S.withConstructorDefault(Effect.succeed(enrichedContentKeyEntitiesDefault)), S.withDecodingDefaultType(Effect.succeed(enrichedContentKeyEntitiesDefault)),
+      S.withConstructorDefault(Effect.succeed(enrichedContentKeyEntitiesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(enrichedContentKeyEntitiesDefault)),
       S.annotateKey({
         description: "Prominent named entities detected in the source.",
       })
     ),
     topics: S.Array(S.NonEmptyString).pipe(
-      S.withConstructorDefault(Effect.succeed(enrichedContentTopicsDefault)), S.withDecodingDefaultType(Effect.succeed(enrichedContentTopicsDefault)),
+      S.withConstructorDefault(Effect.succeed(enrichedContentTopicsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(enrichedContentTopicsDefault)),
       S.annotateKey({
         description: "Topic labels assigned to the source.",
       })
     ),
     language: LanguageCode.pipe(
-      S.withConstructorDefault(Effect.succeed("en")), S.withDecodingDefaultTypeKey(Effect.succeed("en")),
+      S.withConstructorDefault(Effect.succeed("en")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("en")),
       S.annotateKey({
         description: "Detected ISO 639-1 language code, defaulting to English.",
       })

@@ -48,6 +48,22 @@ export const OntologyApiName = S.NonEmptyString.pipe(
 export type OntologyApiName = typeof OntologyApiName.Type;
 
 /**
+ * Companion namespace for {@link OntologyApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyApiName {
+  /**
+   * Encoded (wire) form of {@link OntologyApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof OntologyApiName.Encoded;
+}
+
+/**
  * API name of an object type, unique within its ontology.
  *
  * **Example** (Brand an object type name)
@@ -80,6 +96,22 @@ export const ObjectTypeApiName = S.NonEmptyString.pipe(
 export type ObjectTypeApiName = typeof ObjectTypeApiName.Type;
 
 /**
+ * Companion namespace for {@link ObjectTypeApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectTypeApiName {
+  /**
+   * Encoded (wire) form of {@link ObjectTypeApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ObjectTypeApiName.Encoded;
+}
+
+/**
  * API name of a property, unique within the object or interface type that declares it.
  *
  * @category identifiers
@@ -99,6 +131,22 @@ export const PropertyApiName = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type PropertyApiName = typeof PropertyApiName.Type;
+
+/**
+ * Companion namespace for {@link PropertyApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyApiName {
+  /**
+   * Encoded (wire) form of {@link PropertyApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof PropertyApiName.Encoded;
+}
 
 /**
  * API name of one field inside a struct property.
@@ -122,6 +170,22 @@ export const StructFieldApiName = S.NonEmptyString.pipe(
 export type StructFieldApiName = typeof StructFieldApiName.Type;
 
 /**
+ * Companion namespace for {@link StructFieldApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructFieldApiName {
+  /**
+   * Encoded (wire) form of {@link StructFieldApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof StructFieldApiName.Encoded;
+}
+
+/**
  * API name of one side of a link type, unique only within its source object type.
  *
  * @category identifiers
@@ -141,6 +205,22 @@ export const LinkTypeApiName = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type LinkTypeApiName = typeof LinkTypeApiName.Type;
+
+/**
+ * Companion namespace for {@link LinkTypeApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkTypeApiName {
+  /**
+   * Encoded (wire) form of {@link LinkTypeApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LinkTypeApiName.Encoded;
+}
 
 /**
  * API name of an interface type, conventionally UpperCamelCase and optionally namespaced with dots.
@@ -164,6 +244,22 @@ export const InterfaceTypeApiName = S.NonEmptyString.pipe(
 export type InterfaceTypeApiName = typeof InterfaceTypeApiName.Type;
 
 /**
+ * Companion namespace for {@link InterfaceTypeApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceTypeApiName {
+  /**
+   * Encoded (wire) form of {@link InterfaceTypeApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof InterfaceTypeApiName.Encoded;
+}
+
+/**
  * API name of a property declared on an interface type.
  *
  * @category identifiers
@@ -183,6 +279,22 @@ export const InterfacePropertyApiName = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type InterfacePropertyApiName = typeof InterfacePropertyApiName.Type;
+
+/**
+ * Companion namespace for {@link InterfacePropertyApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfacePropertyApiName {
+  /**
+   * Encoded (wire) form of {@link InterfacePropertyApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof InterfacePropertyApiName.Encoded;
+}
 
 /**
  * API name of a link declared on an interface type.
@@ -206,6 +318,22 @@ export const InterfaceLinkTypeApiName = S.NonEmptyString.pipe(
 export type InterfaceLinkTypeApiName = typeof InterfaceLinkTypeApiName.Type;
 
 /**
+ * Companion namespace for {@link InterfaceLinkTypeApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceLinkTypeApiName {
+  /**
+   * Encoded (wire) form of {@link InterfaceLinkTypeApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof InterfaceLinkTypeApiName.Encoded;
+}
+
+/**
  * API name of a shared property type, a property definition reused across object and interface types.
  *
  * @category identifiers
@@ -225,6 +353,22 @@ export const SharedPropertyTypeApiName = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type SharedPropertyTypeApiName = typeof SharedPropertyTypeApiName.Type;
+
+/**
+ * Companion namespace for {@link SharedPropertyTypeApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SharedPropertyTypeApiName {
+  /**
+   * Encoded (wire) form of {@link SharedPropertyTypeApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof SharedPropertyTypeApiName.Encoded;
+}
 
 /**
  * API name of a value type, a reusable constrained base type that properties may reference.
@@ -248,6 +392,22 @@ export const ValueTypeApiName = S.NonEmptyString.pipe(
 export type ValueTypeApiName = typeof ValueTypeApiName.Type;
 
 /**
+ * Companion namespace for {@link ValueTypeApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ValueTypeApiName {
+  /**
+   * Encoded (wire) form of {@link ValueTypeApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ValueTypeApiName.Encoded;
+}
+
+/**
  * API name of an action type.
  *
  * @category identifiers
@@ -267,6 +427,22 @@ export const ActionTypeApiName = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type ActionTypeApiName = typeof ActionTypeApiName.Type;
+
+/**
+ * Companion namespace for {@link ActionTypeApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionTypeApiName {
+  /**
+   * Encoded (wire) form of {@link ActionTypeApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ActionTypeApiName.Encoded;
+}
 
 /**
  * Identifier of one parameter of an action or query, unique within that action or query.
@@ -290,6 +466,22 @@ export const ParameterId = S.NonEmptyString.pipe(
 export type ParameterId = typeof ParameterId.Type;
 
 /**
+ * Companion namespace for {@link ParameterId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ParameterId {
+  /**
+   * Encoded (wire) form of {@link ParameterId}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ParameterId.Encoded;
+}
+
+/**
  * API name of a query, the ontology-facing name of a function.
  *
  * @category identifiers
@@ -311,6 +503,22 @@ export const QueryApiName = S.NonEmptyString.pipe(
 export type QueryApiName = typeof QueryApiName.Type;
 
 /**
+ * Companion namespace for {@link QueryApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryApiName {
+  /**
+   * Encoded (wire) form of {@link QueryApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof QueryApiName.Encoded;
+}
+
+/**
  * Caller-chosen name under which a derived property is returned on loaded objects.
  *
  * @category identifiers
@@ -330,6 +538,22 @@ export const DerivedPropertyApiName = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type DerivedPropertyApiName = typeof DerivedPropertyApiName.Type;
+
+/**
+ * Companion namespace for {@link DerivedPropertyApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DerivedPropertyApiName {
+  /**
+   * Encoded (wire) form of {@link DerivedPropertyApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DerivedPropertyApiName.Encoded;
+}
 
 /**
  * API name of an object type or of an interface type, where only the ontology knows which of the two it is.
@@ -367,6 +591,22 @@ export const EntityTypeApiName = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type EntityTypeApiName = typeof EntityTypeApiName.Type;
+
+/**
+ * Companion namespace for {@link EntityTypeApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EntityTypeApiName {
+  /**
+   * Encoded (wire) form of {@link EntityTypeApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof EntityTypeApiName.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Resource identifiers
@@ -426,6 +666,22 @@ export const ResourceIdentifier = S.NonEmptyString.check(hasResourceIdentifierFo
  * @since 0.0.0
  */
 export type ResourceIdentifier = typeof ResourceIdentifier.Type;
+
+/**
+ * Companion namespace for {@link ResourceIdentifier}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ResourceIdentifier {
+  /**
+   * Encoded (wire) form of {@link ResourceIdentifier}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ResourceIdentifier.Encoded;
+}
 
 // Segment grammars of a resource identifier. They constrain the decoded struct as well as the parsed
 // string, so every value the type side admits can be encoded.
@@ -527,6 +783,23 @@ export const ResourceIdentifierParts = S.TemplateLiteralParser([
 export type ResourceIdentifierParts = typeof ResourceIdentifierParts.Type;
 
 /**
+ * Companion namespace for {@link ResourceIdentifierParts}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ResourceIdentifierParts {
+  /**
+   * Encoded (wire) form of {@link ResourceIdentifierParts}: the whole
+   * `ri.<service>.<instance>.<type>.<locator>` string.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ResourceIdentifierParts.Encoded;
+}
+
+/**
  * Resource identifier of an ontology.
  *
  * @category identifiers
@@ -544,6 +817,22 @@ export const OntologyRid = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type OntologyRid = typeof OntologyRid.Type;
+
+/**
+ * Companion namespace for {@link OntologyRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyRid {
+  /**
+   * Encoded (wire) form of {@link OntologyRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof OntologyRid.Encoded;
+}
 
 /**
  * Names an ontology the way the platform's routes accept it: by resource identifier or by API name.
@@ -600,6 +889,24 @@ export const OntologyIdentifier = S.Union([OntologyRid.check(hasResourceIdentifi
 export type OntologyIdentifier = typeof OntologyIdentifier.Type;
 
 /**
+ * Companion namespace for {@link OntologyIdentifier}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyIdentifier {
+  /**
+   * Encoded (wire) form of {@link OntologyIdentifier}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | OntologyRid.Encoded
+    | OntologyApiName.Encoded;
+}
+
+/**
  * Resource identifier of an object type.
  *
  * @category identifiers
@@ -617,6 +924,22 @@ export const ObjectTypeRid = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type ObjectTypeRid = typeof ObjectTypeRid.Type;
+
+/**
+ * Companion namespace for {@link ObjectTypeRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectTypeRid {
+  /**
+   * Encoded (wire) form of {@link ObjectTypeRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ObjectTypeRid.Encoded;
+}
 
 /**
  * Resource identifier of a property type declared on an object type.
@@ -638,6 +961,22 @@ export const PropertyTypeRid = S.NonEmptyString.pipe(
 export type PropertyTypeRid = typeof PropertyTypeRid.Type;
 
 /**
+ * Companion namespace for {@link PropertyTypeRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyTypeRid {
+  /**
+   * Encoded (wire) form of {@link PropertyTypeRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof PropertyTypeRid.Encoded;
+}
+
+/**
  * Resource identifier of a shared property type.
  *
  * @category identifiers
@@ -655,6 +994,22 @@ export const SharedPropertyTypeRid = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type SharedPropertyTypeRid = typeof SharedPropertyTypeRid.Type;
+
+/**
+ * Companion namespace for {@link SharedPropertyTypeRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SharedPropertyTypeRid {
+  /**
+   * Encoded (wire) form of {@link SharedPropertyTypeRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof SharedPropertyTypeRid.Encoded;
+}
 
 /**
  * Resource identifier of one field type inside a struct property.
@@ -676,6 +1031,22 @@ export const StructFieldTypeRid = S.NonEmptyString.pipe(
 export type StructFieldTypeRid = typeof StructFieldTypeRid.Type;
 
 /**
+ * Companion namespace for {@link StructFieldTypeRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructFieldTypeRid {
+  /**
+   * Encoded (wire) form of {@link StructFieldTypeRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof StructFieldTypeRid.Encoded;
+}
+
+/**
  * Resource identifier of a link type, shared by both of its sides.
  *
  * @category identifiers
@@ -695,6 +1066,22 @@ export const LinkTypeRid = S.NonEmptyString.pipe(
 export type LinkTypeRid = typeof LinkTypeRid.Type;
 
 /**
+ * Companion namespace for {@link LinkTypeRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkTypeRid {
+  /**
+   * Encoded (wire) form of {@link LinkTypeRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LinkTypeRid.Encoded;
+}
+
+/**
  * Resource identifier of an interface type.
  *
  * @category identifiers
@@ -712,6 +1099,22 @@ export const InterfaceTypeRid = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type InterfaceTypeRid = typeof InterfaceTypeRid.Type;
+
+/**
+ * Companion namespace for {@link InterfaceTypeRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceTypeRid {
+  /**
+   * Encoded (wire) form of {@link InterfaceTypeRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof InterfaceTypeRid.Encoded;
+}
 
 /**
  * Resource identifier of a property declared on an interface type.
@@ -735,6 +1138,22 @@ export const InterfacePropertyTypeRid = S.NonEmptyString.pipe(
 export type InterfacePropertyTypeRid = typeof InterfacePropertyTypeRid.Type;
 
 /**
+ * Companion namespace for {@link InterfacePropertyTypeRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfacePropertyTypeRid {
+  /**
+   * Encoded (wire) form of {@link InterfacePropertyTypeRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof InterfacePropertyTypeRid.Encoded;
+}
+
+/**
  * Resource identifier of a link declared on an interface type.
  *
  * @category identifiers
@@ -752,6 +1171,22 @@ export const InterfaceLinkTypeRid = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type InterfaceLinkTypeRid = typeof InterfaceLinkTypeRid.Type;
+
+/**
+ * Companion namespace for {@link InterfaceLinkTypeRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceLinkTypeRid {
+  /**
+   * Encoded (wire) form of {@link InterfaceLinkTypeRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof InterfaceLinkTypeRid.Encoded;
+}
 
 /**
  * Resource identifier of an action type.
@@ -773,6 +1208,22 @@ export const ActionTypeRid = S.NonEmptyString.pipe(
 export type ActionTypeRid = typeof ActionTypeRid.Type;
 
 /**
+ * Companion namespace for {@link ActionTypeRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionTypeRid {
+  /**
+   * Encoded (wire) form of {@link ActionTypeRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ActionTypeRid.Encoded;
+}
+
+/**
  * Resource identifier of the function that backs a query.
  *
  * @category identifiers
@@ -790,6 +1241,22 @@ export const FunctionRid = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type FunctionRid = typeof FunctionRid.Type;
+
+/**
+ * Companion namespace for {@link FunctionRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FunctionRid {
+  /**
+   * Encoded (wire) form of {@link FunctionRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof FunctionRid.Encoded;
+}
 
 /**
  * Resource identifier of a value type.
@@ -811,6 +1278,22 @@ export const ValueTypeRid = S.NonEmptyString.pipe(
 export type ValueTypeRid = typeof ValueTypeRid.Type;
 
 /**
+ * Companion namespace for {@link ValueTypeRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ValueTypeRid {
+  /**
+   * Encoded (wire) form of {@link ValueTypeRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ValueTypeRid.Encoded;
+}
+
+/**
  * Resource identifier of one object instance.
  *
  * @category identifiers
@@ -828,6 +1311,22 @@ export const ObjectRid = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type ObjectRid = typeof ObjectRid.Type;
+
+/**
+ * Companion namespace for {@link ObjectRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectRid {
+  /**
+   * Encoded (wire) form of {@link ObjectRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ObjectRid.Encoded;
+}
 
 /**
  * Resource identifier of a saved or temporary object set.
@@ -849,6 +1348,22 @@ export const ObjectSetRid = S.NonEmptyString.pipe(
 export type ObjectSetRid = typeof ObjectSetRid.Type;
 
 /**
+ * Companion namespace for {@link ObjectSetRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectSetRid {
+  /**
+   * Encoded (wire) form of {@link ObjectSetRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ObjectSetRid.Encoded;
+}
+
+/**
  * Resource identifier of an uploaded attachment.
  *
  * @category identifiers
@@ -866,6 +1381,22 @@ export const AttachmentRid = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type AttachmentRid = typeof AttachmentRid.Type;
+
+/**
+ * Companion namespace for {@link AttachmentRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AttachmentRid {
+  /**
+   * Encoded (wire) form of {@link AttachmentRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AttachmentRid.Encoded;
+}
 
 /**
  * Resource identifier of a media set.
@@ -887,6 +1418,22 @@ export const MediaSetRid = S.NonEmptyString.pipe(
 export type MediaSetRid = typeof MediaSetRid.Type;
 
 /**
+ * Companion namespace for {@link MediaSetRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaSetRid {
+  /**
+   * Encoded (wire) form of {@link MediaSetRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof MediaSetRid.Encoded;
+}
+
+/**
  * Resource identifier of a view over a media set.
  *
  * @category identifiers
@@ -906,6 +1453,22 @@ export const MediaSetViewRid = S.NonEmptyString.pipe(
 export type MediaSetViewRid = typeof MediaSetViewRid.Type;
 
 /**
+ * Companion namespace for {@link MediaSetViewRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaSetViewRid {
+  /**
+   * Encoded (wire) form of {@link MediaSetViewRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof MediaSetViewRid.Encoded;
+}
+
+/**
  * Resource identifier of one item stored in a media set.
  *
  * @category identifiers
@@ -923,6 +1486,22 @@ export const MediaItemRid = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type MediaItemRid = typeof MediaItemRid.Type;
+
+/**
+ * Companion namespace for {@link MediaItemRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaItemRid {
+  /**
+   * Encoded (wire) form of {@link MediaItemRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof MediaItemRid.Encoded;
+}
 
 /**
  * Resource identifier of an ontology scenario, an isolated what-if overlay of edits.
@@ -946,6 +1525,22 @@ export const OntologyScenarioRid = S.NonEmptyString.pipe(
 export type OntologyScenarioRid = typeof OntologyScenarioRid.Type;
 
 /**
+ * Companion namespace for {@link OntologyScenarioRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyScenarioRid {
+  /**
+   * Encoded (wire) form of {@link OntologyScenarioRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof OntologyScenarioRid.Encoded;
+}
+
+/**
  * Identifier of an open ontology transaction whose edits are not yet committed.
  *
  * @category identifiers
@@ -967,6 +1562,22 @@ export const OntologyTransactionId = S.NonEmptyString.pipe(
 export type OntologyTransactionId = typeof OntologyTransactionId.Type;
 
 /**
+ * Companion namespace for {@link OntologyTransactionId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyTransactionId {
+  /**
+   * Encoded (wire) form of {@link OntologyTransactionId}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof OntologyTransactionId.Encoded;
+}
+
+/**
  * Identifier of a security marking, either a classification or a mandatory marking.
  *
  * @category identifiers
@@ -986,6 +1597,22 @@ export const MarkingId = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type MarkingId = typeof MarkingId.Type;
+
+/**
+ * Companion namespace for {@link MarkingId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MarkingId {
+  /**
+   * Encoded (wire) form of {@link MarkingId}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof MarkingId.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Platform identifiers that are not part of an ontology
@@ -1013,6 +1640,22 @@ export const FoundryBranch = S.NonEmptyString.pipe(
 export type FoundryBranch = typeof FoundryBranch.Type;
 
 /**
+ * Companion namespace for {@link FoundryBranch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FoundryBranch {
+  /**
+   * Encoded (wire) form of {@link FoundryBranch}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof FoundryBranch.Encoded;
+}
+
+/**
  * Identifier of a user or service known to the platform, such as the publisher of an agent version.
  *
  * @category identifiers
@@ -1030,6 +1673,22 @@ export const PrincipalId = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type PrincipalId = typeof PrincipalId.Type;
+
+/**
+ * Companion namespace for {@link PrincipalId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PrincipalId {
+  /**
+   * Encoded (wire) form of {@link PrincipalId}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof PrincipalId.Encoded;
+}
 
 /**
  * Name of a failure the platform reports, such as `ObjectTypeNotFound`.
@@ -1051,6 +1710,22 @@ export const ErrorName = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type ErrorName = typeof ErrorName.Type;
+
+/**
+ * Companion namespace for {@link ErrorName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ErrorName {
+  /**
+   * Encoded (wire) form of {@link ErrorName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ErrorName.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Versions
@@ -1096,3 +1771,19 @@ export const FunctionVersion = S.NonEmptyString.check(
  * @since 0.0.0
  */
 export type FunctionVersion = typeof FunctionVersion.Type;
+
+/**
+ * Companion namespace for {@link FunctionVersion}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FunctionVersion {
+  /**
+   * Encoded (wire) form of {@link FunctionVersion}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof FunctionVersion.Encoded;
+}

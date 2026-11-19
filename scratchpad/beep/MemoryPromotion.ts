@@ -563,7 +563,7 @@ export class GraphRelationEndpoint extends Model<GraphRelationEndpoint>("GraphRe
  * @since 0.0.0
  */
 export declare namespace GraphRelationEndpoint {
-  export type Encoded = S.Codec.Encoded<typeof GraphRelationEndpoint>;
+  export type Encoded = typeof GraphRelationEndpoint.Encoded;
 }
 
 /**
@@ -714,7 +714,7 @@ export class PromotionGraphPlanV1 extends Model<PromotionGraphPlanV1>("Promotion
  * @since 0.0.0
  */
 export declare namespace PromotionGraphPlanV1 {
-  export type Encoded = S.Codec.Encoded<typeof PromotionGraphPlanV1>;
+  export type Encoded = typeof PromotionGraphPlanV1.Encoded;
 }
 
 /**
@@ -767,7 +767,7 @@ export class PromotionGraphPlanV2 extends Model<PromotionGraphPlanV2>("Promotion
  * @since 0.0.0
  */
 export declare namespace PromotionGraphPlanV2 {
-  export type Encoded = S.Codec.Encoded<typeof PromotionGraphPlanV2>;
+  export type Encoded = typeof PromotionGraphPlanV2.Encoded;
 }
 
 const PlanVersionKit = LiteralKit([PROMOTION_GRAPH_PLAN_VERSION, PROMOTION_GRAPH_PLAN_V2_VERSION]);
@@ -1066,7 +1066,7 @@ export class PromotionAdmissionReceipt extends Model<PromotionAdmissionReceipt>(
  * @since 0.0.0
  */
 export declare namespace PromotionAdmissionReceipt {
-  export type Encoded = S.Codec.Encoded<typeof PromotionAdmissionReceipt>;
+  export type Encoded = typeof PromotionAdmissionReceipt.Encoded;
 }
 
 /**
@@ -1288,7 +1288,7 @@ export class MemoryGraphAssertionV1 extends Model<MemoryGraphAssertionV1>("Memor
  * @since 0.0.0
  */
 export declare namespace MemoryGraphAssertionV1 {
-  export type Encoded = S.Codec.Encoded<typeof MemoryGraphAssertionV1>;
+  export type Encoded = typeof MemoryGraphAssertionV1.Encoded;
 }
 
 /**
@@ -1351,7 +1351,7 @@ export class MemoryGraphAssertionV2 extends Model<MemoryGraphAssertionV2>("Memor
  * @since 0.0.0
  */
 export declare namespace MemoryGraphAssertionV2 {
-  export type Encoded = S.Codec.Encoded<typeof MemoryGraphAssertionV2>;
+  export type Encoded = typeof MemoryGraphAssertionV2.Encoded;
 }
 
 const AssertionVersionKit = LiteralKit([PROMOTION_GRAPH_ASSERTION_VERSION, PROMOTION_GRAPH_ASSERTION_V2_VERSION]);
@@ -1580,7 +1580,7 @@ export class GraphNodeRecord extends Model<GraphNodeRecord>("GraphNodeRecord")(
  * @since 0.0.0
  */
 export declare namespace GraphNodeRecord {
-  export type Encoded = S.Codec.Encoded<typeof GraphNodeRecord>;
+  export type Encoded = typeof GraphNodeRecord.Encoded;
 }
 
 /**
@@ -1623,7 +1623,7 @@ export class GraphEdgeRecord extends Model<GraphEdgeRecord>("GraphEdgeRecord")(
  * @since 0.0.0
  */
 export declare namespace GraphEdgeRecord {
-  export type Encoded = S.Codec.Encoded<typeof GraphEdgeRecord>;
+  export type Encoded = typeof GraphEdgeRecord.Encoded;
 }
 
 /**
@@ -1656,7 +1656,7 @@ export class GraphRecords extends Model<GraphRecords>("GraphRecords")(
  * @since 0.0.0
  */
 export declare namespace GraphRecords {
-  export type Encoded = S.Codec.Encoded<typeof GraphRecords>;
+  export type Encoded = typeof GraphRecords.Encoded;
 }
 
 const edgeId = (sourceId: string, targetId: string, label: string): string =>

@@ -321,7 +321,7 @@ export class ArtifactRef extends Model<ArtifactRef>("ArtifactRef")(
  * @since 0.0.0
  */
 export declare namespace ArtifactRef {
-  export type Encoded = S.Codec.Encoded<typeof ArtifactRef>;
+  export type Encoded = typeof ArtifactRef.Encoded;
 }
 
 const active = "active";
@@ -431,7 +431,7 @@ export class MemoryEvidence extends Model<MemoryEvidence>("MemoryEvidence")(
  * @since 0.0.0
  */
 export declare namespace MemoryEvidence {
-  export type Encoded = S.Codec.Encoded<typeof MemoryEvidence>;
+  export type Encoded = typeof MemoryEvidence.Encoded;
 }
 
 const someText = (value: O.Option<string>): boolean => O.isSome(value) && !Str.isEmpty(Str.trim(value.value));

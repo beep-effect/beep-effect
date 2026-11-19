@@ -22,6 +22,7 @@ import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
 import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
 import { ConsoleSettings } from "@beep/repo-gate-run/GateConsole";
 import {
+  ContractGate,
   commandText,
   repoCommands,
   repoGateCommandsFor,
@@ -244,9 +245,9 @@ describe("gate queries", { concurrent: false }, () => {
 // AC-L9: render every cell of the dispatch table for both gates, with the
 // pointers pinned to a package record and to a root run, and resolve every
 // command of every pointer line in the repo CLI's real command tree.
-const GATES = ["test", "check"] as const;
+const GATES = ContractGate.literals;
 
-const targetsOf = (gate: (typeof GATES)[number]) => [
+const targetsOf = (gate: ContractGate) => [
   RecordTarget.cases.PackageTarget.make({ packageDir: "packages/foundation/modeling/glob", gate }),
   RecordTarget.cases.RootTarget.make({ gate, runId: "20261119T000000000Z-0001" }),
 ];

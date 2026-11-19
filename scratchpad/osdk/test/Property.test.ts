@@ -205,9 +205,7 @@ const bonusHistory = ArrayType.make({
       StructMainValue.make({ mainValueType: IntegerType.make({}), fields: [StructFieldApiName.make("amount")] })
     ),
   }),
-  reducers: [
-    ArrayReducer.make({ direction: "descendingNullsLast", field: O.some(StructFieldApiName.make("year")) }),
-  ],
+  reducers: [ArrayReducer.make({ direction: "descendingNullsLast", field: O.some(StructFieldApiName.make("year")) })],
 });
 
 const perCase: { readonly [K in PropertyTypeKind]: readonly [wire: PropertyType.Encoded, domain: PropertyType] } = {
@@ -331,7 +329,8 @@ describe("PropertyType", () => {
             PropertyType.guards[kind](decoded) &&
             PropertyType.isAnyOf([kind])(decoded)
           );
-        })
+        }),
+        { concurrency: 1 }
       );
       strictEqual(A.length(results), 22);
       assertTrue(A.every(results, identity));
@@ -400,17 +399,23 @@ describe("PropertyType", () => {
     Effect.fnUntraced(function* () {
       const foreignTags = A.filter(DataTypeKind.literals, (tag) => !S.is(PropertyTypeKind)(tag));
       strictEqual(A.length(foreignTags), 22);
-      const foreign = yield* Effect.all(A.map(foreignTags, (tag) => rejects(PropertyType)({ type: tag })));
-      const renamed = yield* Effect.all([
-        rejects(PropertyType)({ type: "datetime" }),
-        rejects(PropertyType)({ type: "numericTimeseries" }),
-        rejects(PropertyType)({ type: "stringTimeseries" }),
-        rejects(PropertyType)({ type: "sensorTimeseries" }),
-        rejects(PropertyType)({}),
-        rejects(PropertyType)("string"),
-        rejects(PropertyType)(null),
-        rejects(PropertyType)([{ type: "string" }]),
-      ]);
+      const foreign = yield* Effect.all(
+        A.map(foreignTags, (tag) => rejects(PropertyType)({ type: tag })),
+        { concurrency: 1 }
+      );
+      const renamed = yield* Effect.all(
+        [
+          rejects(PropertyType)({ type: "datetime" }),
+          rejects(PropertyType)({ type: "numericTimeseries" }),
+          rejects(PropertyType)({ type: "stringTimeseries" }),
+          rejects(PropertyType)({ type: "sensorTimeseries" }),
+          rejects(PropertyType)({}),
+          rejects(PropertyType)("string"),
+          rejects(PropertyType)(null),
+          rejects(PropertyType)([{ type: "string" }]),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(foreign, identity));
       assertTrue(A.every(renamed, identity));
     })
@@ -633,41 +638,44 @@ describe("ArrayType and StructType", () => {
   it.effect(
     "rejects the domain key names on the wire and malformed members",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(PropertyType)({ type: "array", elementType: { type: "string" }, reducers: [] }),
-        rejects(PropertyType)({ type: "array", reducers: [] }),
-        rejects(PropertyType)({ type: "array", subType: { type: "set" }, reducers: [] }),
-        rejects(PropertyType)({ type: "array", subType: "string", reducers: [] }),
-        rejects(PropertyType)({ type: "array", subType: { type: "string" }, reducers: [{ direction: "ASC" }] }),
-        rejects(PropertyType)({ type: "array", subType: { type: "string" }, reducers: [{ field: "year" }] }),
-        rejects(PropertyType)({
-          type: "array",
-          subType: { type: "string" },
-          reducers: [{ direction: "ASCENDING_NULLS_LAST", field: "" }],
-        }),
-        rejects(PropertyType)({ type: "struct", fields: [] }),
-        rejects(PropertyType)({ type: "struct" }),
-        rejects(PropertyType)({
-          type: "struct",
-          structFieldTypes: [{ apiName: "", rid: "r", dataType: { type: "string" } }],
-        }),
-        rejects(PropertyType)({
-          type: "struct",
-          structFieldTypes: [{ apiName: "a", rid: "", dataType: { type: "string" } }],
-        }),
-        rejects(PropertyType)({ type: "struct", structFieldTypes: [{ apiName: "a", rid: "r" }] }),
-        rejects(PropertyType)({
-          type: "struct",
-          structFieldTypes: [{ apiName: "a", rid: "r", dataType: { type: "map" } }],
-        }),
-        rejects(PropertyType)({ type: "struct", structFieldTypes: [], mainValue: { fields: [] } }),
-        rejects(PropertyType)({
-          type: "struct",
-          structFieldTypes: [],
-          mainValue: { mainValueType: { type: "string" } },
-        }),
-        rejects(PropertyType)({ type: "struct", structFieldTypes: { bio: { type: "string" } } }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(PropertyType)({ type: "array", elementType: { type: "string" }, reducers: [] }),
+          rejects(PropertyType)({ type: "array", reducers: [] }),
+          rejects(PropertyType)({ type: "array", subType: { type: "set" }, reducers: [] }),
+          rejects(PropertyType)({ type: "array", subType: "string", reducers: [] }),
+          rejects(PropertyType)({ type: "array", subType: { type: "string" }, reducers: [{ direction: "ASC" }] }),
+          rejects(PropertyType)({ type: "array", subType: { type: "string" }, reducers: [{ field: "year" }] }),
+          rejects(PropertyType)({
+            type: "array",
+            subType: { type: "string" },
+            reducers: [{ direction: "ASCENDING_NULLS_LAST", field: "" }],
+          }),
+          rejects(PropertyType)({ type: "struct", fields: [] }),
+          rejects(PropertyType)({ type: "struct" }),
+          rejects(PropertyType)({
+            type: "struct",
+            structFieldTypes: [{ apiName: "", rid: "r", dataType: { type: "string" } }],
+          }),
+          rejects(PropertyType)({
+            type: "struct",
+            structFieldTypes: [{ apiName: "a", rid: "", dataType: { type: "string" } }],
+          }),
+          rejects(PropertyType)({ type: "struct", structFieldTypes: [{ apiName: "a", rid: "r" }] }),
+          rejects(PropertyType)({
+            type: "struct",
+            structFieldTypes: [{ apiName: "a", rid: "r", dataType: { type: "map" } }],
+          }),
+          rejects(PropertyType)({ type: "struct", structFieldTypes: [], mainValue: { fields: [] } }),
+          rejects(PropertyType)({
+            type: "struct",
+            structFieldTypes: [],
+            mainValue: { mainValueType: { type: "string" } },
+          }),
+          rejects(PropertyType)({ type: "struct", structFieldTypes: { bio: { type: "string" } } }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -754,17 +762,20 @@ describe("PropertyStatus", () => {
   it.effect(
     "rejects the release-status spellings, unknown statuses and an incomplete deprecation",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(PropertyStatus)({ type: "ACTIVE" }),
-        rejects(PropertyStatus)("ACTIVE"),
-        rejects(PropertyStatus)({ type: "endorsed" }),
-        rejects(PropertyStatus)({ type: "deprecated" }),
-        rejects(PropertyStatus)({ type: "deprecated", message: "m" }),
-        rejects(PropertyStatus)({ type: "deprecated", deadline: "2027-01-01" }),
-        rejects(PropertyStatus)({ type: "deprecated", message: "m", deadline: "2027-01-01", replacedBy: "" }),
-        rejects(PropertyStatus)({ type: "deprecated", message: "m", deadline: 20270101 }),
-        rejects(PropertyStatus)({ type: "deprecated", message: "m", deadline: null }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(PropertyStatus)({ type: "ACTIVE" }),
+          rejects(PropertyStatus)("ACTIVE"),
+          rejects(PropertyStatus)({ type: "endorsed" }),
+          rejects(PropertyStatus)({ type: "deprecated" }),
+          rejects(PropertyStatus)({ type: "deprecated", message: "m" }),
+          rejects(PropertyStatus)({ type: "deprecated", deadline: "2027-01-01" }),
+          rejects(PropertyStatus)({ type: "deprecated", message: "m", deadline: "2027-01-01", replacedBy: "" }),
+          rejects(PropertyStatus)({ type: "deprecated", message: "m", deadline: 20270101 }),
+          rejects(PropertyStatus)({ type: "deprecated", message: "m", deadline: null }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -774,14 +785,18 @@ describe("PropertyStatus", () => {
     "keeps a deprecation deadline verbatim, whatever text it is, including the empty string",
     Effect.fnUntraced(function* () {
       const deadlines = ["", " ", "2027-01-01", "2027-01-01T00:00:00Z", "next quarter"];
-      const decoded = yield* Effect.forEach(deadlines, (deadline) =>
-        S.decodeEffect(DeprecatedProperty)({ type: "deprecated", message: "m", deadline })
+      const decoded = yield* Effect.forEach(
+        deadlines,
+        (deadline) => S.decodeEffect(DeprecatedProperty)({ type: "deprecated", message: "m", deadline }),
+        { concurrency: 1 }
       );
       deepStrictEqual(
         A.map(decoded, (status) => status.deadline),
         deadlines
       );
-      const encoded = yield* Effect.forEach(decoded, (status) => S.encodeEffect(PropertyStatus)(status));
+      const encoded = yield* Effect.forEach(decoded, (status) => S.encodeEffect(PropertyStatus)(status), {
+        concurrency: 1,
+      });
       deepStrictEqual(
         encoded,
         A.map(deadlines, (deadline) => ({ type: "deprecated", message: "m", deadline }))
@@ -954,24 +969,27 @@ describe("PropertyDefinition", () => {
   it.effect(
     "rejects a definition without a type or a rid, and wire enums in their domain spelling",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(PropertyDefinition)({ rid: "rid", typeClasses: [] }),
-        rejects(PropertyDefinition)({ dataType: { type: "string" }, typeClasses: [] }),
-        rejects(PropertyDefinition)({ dataType: { type: "string" }, rid: "", typeClasses: [] }),
-        rejects(PropertyDefinition)({ dataType: { type: "binary" }, rid: "rid", typeClasses: [] }),
-        rejects(PropertyDefinition)({ dataType: "string", rid: "rid", typeClasses: [] }),
-        rejects(PropertyDefinition)({ baseType: "String", rid: "rid", typeClasses: [] }),
-        rejects(PropertyDefinition)({ dataType: { type: "string" }, rid: "rid", visibility: "prominent" }),
-        rejects(PropertyDefinition)({ dataType: { type: "string" }, rid: "rid", status: "ACTIVE" }),
-        rejects(PropertyDefinition)({ dataType: { type: "string" }, rid: "rid", valueTypeApiName: "" }),
-        rejects(PropertyDefinition)({ dataType: { type: "string" }, rid: "rid", typeClasses: [{ kind: "k" }] }),
-        rejects(PropertyDefinition)({
-          dataType: { type: "string" },
-          rid: "rid",
-          dataConstraints: { nullability: "notNullable" },
-        }),
-        rejects(PropertyDefinition)({ dataType: { type: "string" }, rid: "rid", displayName: null }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(PropertyDefinition)({ rid: "rid", typeClasses: [] }),
+          rejects(PropertyDefinition)({ dataType: { type: "string" }, typeClasses: [] }),
+          rejects(PropertyDefinition)({ dataType: { type: "string" }, rid: "", typeClasses: [] }),
+          rejects(PropertyDefinition)({ dataType: { type: "binary" }, rid: "rid", typeClasses: [] }),
+          rejects(PropertyDefinition)({ dataType: "string", rid: "rid", typeClasses: [] }),
+          rejects(PropertyDefinition)({ baseType: "String", rid: "rid", typeClasses: [] }),
+          rejects(PropertyDefinition)({ dataType: { type: "string" }, rid: "rid", visibility: "prominent" }),
+          rejects(PropertyDefinition)({ dataType: { type: "string" }, rid: "rid", status: "ACTIVE" }),
+          rejects(PropertyDefinition)({ dataType: { type: "string" }, rid: "rid", valueTypeApiName: "" }),
+          rejects(PropertyDefinition)({ dataType: { type: "string" }, rid: "rid", typeClasses: [{ kind: "k" }] }),
+          rejects(PropertyDefinition)({
+            dataType: { type: "string" },
+            rid: "rid",
+            dataConstraints: { nullability: "notNullable" },
+          }),
+          rejects(PropertyDefinition)({ dataType: { type: "string" }, rid: "rid", displayName: null }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1021,12 +1039,20 @@ describe("PropertyDefinition", () => {
   it.effect(
     "requires a shared property type to carry its own name and display name",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(SharedPropertyType)({ rid: "rid", displayName: "Tags", dataType: { type: "string" }, typeClasses: [] }),
-        rejects(SharedPropertyType)({ rid: "rid", apiName: "tags", dataType: { type: "string" }, typeClasses: [] }),
-        rejects(SharedPropertyType)({ apiName: "tags", displayName: "Tags", dataType: { type: "string" } }),
-        rejects(SharedPropertyType)({ rid: "rid", apiName: "", displayName: "Tags", dataType: { type: "string" } }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(SharedPropertyType)({
+            rid: "rid",
+            displayName: "Tags",
+            dataType: { type: "string" },
+            typeClasses: [],
+          }),
+          rejects(SharedPropertyType)({ rid: "rid", apiName: "tags", dataType: { type: "string" }, typeClasses: [] }),
+          rejects(SharedPropertyType)({ apiName: "tags", displayName: "Tags", dataType: { type: "string" } }),
+          rejects(SharedPropertyType)({ rid: "rid", apiName: "", displayName: "Tags", dataType: { type: "string" } }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       const minimal = SharedPropertyType.make({
         rid: SharedPropertyTypeRid.make("rid"),
@@ -1059,9 +1085,15 @@ describe("PropertyLoadLevel", () => {
   it.effect(
     "decodes each of the four empty wire records to its literal and encodes the literal back to the record",
     Effect.fnUntraced(function* () {
-      const decoded = yield* Effect.all(A.map(levels, (level) => S.decodeEffect(PropertyLoadLevel)({ type: level })));
+      const decoded = yield* Effect.all(
+        A.map(levels, (level) => S.decodeEffect(PropertyLoadLevel)({ type: level })),
+        { concurrency: 1 }
+      );
       deepStrictEqual(decoded, levels);
-      const encoded = yield* Effect.all(A.map(levels, (level) => S.encodeEffect(PropertyLoadLevel)(level)));
+      const encoded = yield* Effect.all(
+        A.map(levels, (level) => S.encodeEffect(PropertyLoadLevel)(level)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(encoded, [
         { type: "noLoadLevel" },
         { type: "applyReducers" },
@@ -1085,16 +1117,19 @@ describe("PropertyLoadLevel", () => {
   it.effect(
     "rejects the bare literal, the documentation's upper-case names and an empty record",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(PropertyLoadLevel)("applyReducers"),
-        rejects(PropertyLoadLevel)({ type: "APPLY_REDUCERS" }),
-        rejects(PropertyLoadLevel)({ type: "EXTRACT_MAIN_VALUE" }),
-        rejects(PropertyLoadLevel)({ type: "reduce" }),
-        rejects(PropertyLoadLevel)({}),
-        rejects(PropertyLoadLevel)(null),
-        refusesToEncode(PropertyLoadLevel)("APPLY_REDUCERS"),
-        refusesToEncode(PropertyLoadLevel)({ type: "applyReducers" }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(PropertyLoadLevel)("applyReducers"),
+          rejects(PropertyLoadLevel)({ type: "APPLY_REDUCERS" }),
+          rejects(PropertyLoadLevel)({ type: "EXTRACT_MAIN_VALUE" }),
+          rejects(PropertyLoadLevel)({ type: "reduce" }),
+          rejects(PropertyLoadLevel)({}),
+          rejects(PropertyLoadLevel)(null),
+          refusesToEncode(PropertyLoadLevel)("APPLY_REDUCERS"),
+          refusesToEncode(PropertyLoadLevel)({ type: "applyReducers" }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1237,31 +1272,34 @@ describe("PropertySelector", () => {
   it.effect(
     "rejects the domain key on the wire, a bare load level and incomplete selectors",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(PropertySelector)({
-          type: "propertyWithLoadLevel",
-          selector: { type: "titleProperty" },
-          loadLevel: { type: "noLoadLevel" },
-        }),
-        rejects(PropertySelector)({
-          type: "propertyWithLoadLevel",
-          propertyIdentifier: { type: "titleProperty" },
-          loadLevel: "noLoadLevel",
-        }),
-        rejects(PropertySelector)({ type: "propertyWithLoadLevel", propertyIdentifier: { type: "titleProperty" } }),
-        rejects(PropertySelector)({ type: "propertyWithLoadLevel", loadLevel: { type: "noLoadLevel" } }),
-        rejects(PropertySelector)({
-          type: "propertyWithLoadLevel",
-          propertyIdentifier: "fullName",
-          loadLevel: { type: "noLoadLevel" },
-        }),
-        rejects(PropertySelector)({ type: "property" }),
-        rejects(PropertySelector)({ type: "property", apiName: "" }),
-        rejects(PropertySelector)({ type: "structField", propertyApiName: "address" }),
-        rejects(PropertySelector)({ type: "structField", propertyApiName: "address", structFieldApiName: "" }),
-        rejects(PropertySelector)({ type: "title" }),
-        rejects(PropertySelector)("fullName"),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(PropertySelector)({
+            type: "propertyWithLoadLevel",
+            selector: { type: "titleProperty" },
+            loadLevel: { type: "noLoadLevel" },
+          }),
+          rejects(PropertySelector)({
+            type: "propertyWithLoadLevel",
+            propertyIdentifier: { type: "titleProperty" },
+            loadLevel: "noLoadLevel",
+          }),
+          rejects(PropertySelector)({ type: "propertyWithLoadLevel", propertyIdentifier: { type: "titleProperty" } }),
+          rejects(PropertySelector)({ type: "propertyWithLoadLevel", loadLevel: { type: "noLoadLevel" } }),
+          rejects(PropertySelector)({
+            type: "propertyWithLoadLevel",
+            propertyIdentifier: "fullName",
+            loadLevel: { type: "noLoadLevel" },
+          }),
+          rejects(PropertySelector)({ type: "property" }),
+          rejects(PropertySelector)({ type: "property", apiName: "" }),
+          rejects(PropertySelector)({ type: "structField", propertyApiName: "address" }),
+          rejects(PropertySelector)({ type: "structField", propertyApiName: "address", structFieldApiName: "" }),
+          rejects(PropertySelector)({ type: "title" }),
+          rejects(PropertySelector)("fullName"),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1407,7 +1445,8 @@ describe("valueCodec", () => {
           const again = yield* throughCodec(type, encoded);
           deepStrictEqual(again.encoded, canonical);
           return type.type === kind && S.toEquivalence(valueCodec(type))(again.decoded, decoded);
-        })
+        }),
+        { concurrency: 1 }
       );
       strictEqual(A.length(results), 22);
       assertTrue(A.every(results, identity));
@@ -1423,7 +1462,8 @@ describe("valueCodec", () => {
           const codec = valueCodec(valuePerCase[kind][0]);
           const values = yield* Arbitrary.sampleEffect(Arbitrary.schema(codec), { count: 25, seed: 7 });
           return A.length(values) === 25 && A.every(values, S.is(codec));
-        })
+        }),
+        { concurrency: 1 }
       );
       strictEqual(A.length(results), 22);
       assertTrue(A.every(results, identity));
@@ -1445,10 +1485,12 @@ describe("valueCodec", () => {
               const encoded = yield* S.encodeUnknownEffect(codec)(value);
               const decoded = yield* S.decodeUnknownEffect(codec)(encoded);
               return equivalence(decoded, value);
-            })
+            }),
+            { concurrency: 1 }
           );
           return A.every(verdicts, identity);
-        })
+        }),
+        { concurrency: 1 }
       );
       strictEqual(A.length(results), 22);
       assertTrue(A.every(results, identity));
@@ -1503,15 +1545,18 @@ describe("valueCodec", () => {
       const codec = valueCodec(VectorType.make({ dimension: 3 }));
       const exact = yield* S.decodeEffect(codec)([0.1, 0.2, 0.3]);
       deepStrictEqual(exact, [0.1, 0.2, 0.3]);
-      const verdicts = yield* Effect.all([
-        rejects(codec)([]),
-        rejects(codec)([0.1, 0.2]),
-        rejects(codec)([0.1, 0.2, 0.3, 0.4]),
-        rejects(codec)([0.1, 0.2, "0.3"]),
-        rejects(codec)([0.1, 0.2, Number.NaN]),
-        refusesToEncode(codec)([0.1, 0.2]),
-        refusesToEncode(codec)([0.1, 0.2, 0.3, 0.4]),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(codec)([]),
+          rejects(codec)([0.1, 0.2]),
+          rejects(codec)([0.1, 0.2, 0.3, 0.4]),
+          rejects(codec)([0.1, 0.2, "0.3"]),
+          rejects(codec)([0.1, 0.2, Number.NaN]),
+          refusesToEncode(codec)([0.1, 0.2]),
+          refusesToEncode(codec)([0.1, 0.2, 0.3, 0.4]),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       const single = valueCodec(VectorType.make({ dimension: 1 }));
       const one = yield* S.decodeEffect(single)([7]);
@@ -1589,18 +1634,21 @@ describe("valueCodec", () => {
         year: O.none(),
       });
       deepStrictEqual(lenient.encoded, { amount: "58319870951433" });
-      const verdicts = yield* Effect.all([
-        rejects(codec)({ amount: 1.5 }),
-        rejects(codec)({ amount: "" }),
-        rejects(codec)({ amount: "0x10" }),
-        rejects(codec)({ year: 1.5 }),
-        rejects(codec)({ year: "" }),
-        rejects(codec)({ paidAt: "not a timestamp" }),
-        rejects(codec)({ paidAt: "2021-01-04" }),
-        rejects(codec)([]),
-        rejects(codec)("struct"),
-        rejects(codec)(null),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(codec)({ amount: 1.5 }),
+          rejects(codec)({ amount: "" }),
+          rejects(codec)({ amount: "0x10" }),
+          rejects(codec)({ year: 1.5 }),
+          rejects(codec)({ year: "" }),
+          rejects(codec)({ paidAt: "not a timestamp" }),
+          rejects(codec)({ paidAt: "2021-01-04" }),
+          rejects(codec)([]),
+          rejects(codec)("struct"),
+          rejects(codec)(null),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1625,16 +1673,19 @@ describe("valueCodec", () => {
       const mixed = yield* throughCodec(matrix, [["1", 2]]);
       deepStrictEqual(mixed.decoded, [[BigInt(1), BigInt(2)]]);
       deepStrictEqual(mixed.encoded, [["1", "2"]]);
-      const verdicts = yield* Effect.all([
-        rejects(codec)([["1", 2.5]]),
-        rejects(codec)([["1", "two"]]),
-        rejects(codec)([["1", true]]),
-        rejects(codec)(["1"]),
-        rejects(codec)([null]),
-        rejects(codec)(null),
-        rejects(codec)({ 0: [] }),
-        rejects(valueCodec(ArrayType.make({ elementType: StringType.make({}) })))(["alpha", null]),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(codec)([["1", 2.5]]),
+          rejects(codec)([["1", "two"]]),
+          rejects(codec)([["1", true]]),
+          rejects(codec)(["1"]),
+          rejects(codec)([null]),
+          rejects(codec)(null),
+          rejects(codec)({ 0: [] }),
+          rejects(valueCodec(ArrayType.make({ elementType: StringType.make({}) })))(["alpha", null]),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1694,13 +1745,16 @@ describe("valueCodec", () => {
           { apiName: "Value", dataType: { type: "integer" }, rid: "ri.struct.value-a", typeClasses: [] },
         ],
       };
-      const verdicts = yield* Effect.all([
-        rejects(StructType)(duplicateWire),
-        rejects(PropertyType)(duplicateWire),
-        // The check reaches nested structs too.
-        rejects(PropertyType)({ type: "array", subType: duplicateWire, reducers: [] }),
-        refusesToEncode(StructType)({ type: "struct", fields: [first, second], mainValue: O.none() }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(StructType)(duplicateWire),
+          rejects(PropertyType)(duplicateWire),
+          // The check reaches nested structs too.
+          rejects(PropertyType)({ type: "array", subType: duplicateWire, reducers: [] }),
+          refusesToEncode(StructType)({ type: "struct", fields: [first, second], mainValue: O.none() }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       deepStrictEqual(
         [
@@ -1732,12 +1786,10 @@ describe("valueCodec", () => {
     "valueCodec: a struct with no fields still accepts only records",
     Effect.fnUntraced(function* () {
       const codec = valueCodec(StructType.make({ fields: [] }));
-      const verdicts = yield* Effect.all([
-        rejects(codec)("not a struct"),
-        rejects(codec)(42),
-        rejects(codec)(true),
-        rejects(codec)([]),
-      ]);
+      const verdicts = yield* Effect.all(
+        [rejects(codec)("not a struct"), rejects(codec)(42), rejects(codec)(true), rejects(codec)([])],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1748,17 +1800,20 @@ describe("valueCodec", () => {
       const codec = valueCodec(StructType.make({ fields: [] }));
       const { decoded, encoded } = yield* throughCodec(StructType.make({ fields: [] }), {});
       deepStrictEqual([decoded, encoded], [{}, {}]);
-      const verdicts = yield* Effect.all([
-        rejects(codec)(null),
-        rejects(codec)(undefined),
-        rejects(codec)(["x"]),
-        rejects(codec)(0),
-        rejects(codec)(""),
-        // Unlike a struct with fields, which strips undeclared keys, the empty projection has no key to keep.
-        rejects(codec)({ undeclared: "value" }),
-        refusesToEncode(codec)("not a struct"),
-        refusesToEncode(codec)([]),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(codec)(null),
+          rejects(codec)(undefined),
+          rejects(codec)(["x"]),
+          rejects(codec)(0),
+          rejects(codec)(""),
+          // Unlike a struct with fields, which strips undeclared keys, the empty projection has no key to keep.
+          rejects(codec)({ undeclared: "value" }),
+          refusesToEncode(codec)("not a struct"),
+          refusesToEncode(codec)([]),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       deepStrictEqual(
         [S.is(codec)({}), S.is(codec)("text"), S.is(codec)(7), S.is(codec)([]), S.is(codec)(null)],
@@ -1777,13 +1832,16 @@ describe("valueCodec", () => {
     "valueCodec: a geotime series reference property accepts a reference, not only a dereferenced value",
     Effect.fnUntraced(function* () {
       const codec = valueCodec(GeotimeSeriesReferenceType.make({}));
-      const verdicts = yield* Effect.all([
-        rejects(codec)("GeotimeSeriesReferencePlaceholder"),
-        rejects(codec)({
-          geotimeSeriesId: "employee-50030",
-          geotimeSeriesIntegrationRid: `ri.geotime-catalog.main.integration.${uuid}`,
-        }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(codec)("GeotimeSeriesReferencePlaceholder"),
+          rejects(codec)({
+            geotimeSeriesId: "employee-50030",
+            geotimeSeriesIntegrationRid: `ri.geotime-catalog.main.integration.${uuid}`,
+          }),
+        ],
+        { concurrency: 1 }
+      );
       assertFalse(A.some(verdicts, identity));
     })
   );
@@ -1818,15 +1876,18 @@ describe("valueCodec", () => {
         ]
       );
       const codec = valueCodec(type);
-      const refusals = yield* Effect.all([
-        rejects(codec)(""),
-        rejects(codec)(7),
-        rejects(codec)(null),
-        rejects(codec)({ geotimeSeriesId: "employee-50030" }),
-        rejects(codec)({ geotimeSeriesId: "", geotimeSeriesIntegrationRid: integration }),
-        rejects(codec)({ type: "geotimeSeriesValue", position: [102.0, 0.5] }),
-        rejects(codec)(["employee-50030"]),
-      ]);
+      const refusals = yield* Effect.all(
+        [
+          rejects(codec)(""),
+          rejects(codec)(7),
+          rejects(codec)(null),
+          rejects(codec)({ geotimeSeriesId: "employee-50030" }),
+          rejects(codec)({ geotimeSeriesId: "", geotimeSeriesIntegrationRid: integration }),
+          rejects(codec)({ type: "geotimeSeriesValue", position: [102.0, 0.5] }),
+          rejects(codec)(["employee-50030"]),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(refusals, identity));
     })
   );
@@ -1861,13 +1922,16 @@ describe("operandCodec", () => {
       Effect.fnUntraced(function* (generated) {
         const wire = yield* S.encodeUnknownEffect(value)(generated);
         if (!S.is(ScalarValue)(wire)) {
-          const refusals = yield* Effect.all([refusesToEncode(operand)(generated), rejects(operand)(wire)]);
+          const refusals = yield* Effect.all([refusesToEncode(operand)(generated), rejects(operand)(wire)], {
+            concurrency: 1,
+          });
           return { scalar: false, lawful: A.every(refusals, identity) };
         }
         const written = yield* S.encodeUnknownEffect(operand)(generated);
         const read = yield* S.decodeEffect(operand)(wire);
         return { scalar: true, lawful: written === wire && S.is(value)(read) && same(read, generated) };
-      })
+      }),
+      { concurrency: 1 }
     );
     return {
       kind,
@@ -1879,7 +1943,7 @@ describe("operandCodec", () => {
   it.effect(
     "round-trips every value that travels as a scalar and refuses every other, for each case of the union",
     Effect.fnUntraced(function* () {
-      const shares = yield* Effect.forEach(PropertyTypeKind.literals, scalarShare);
+      const shares = yield* Effect.forEach(PropertyTypeKind.literals, scalarShare, { concurrency: 1 });
       strictEqual(A.length(shares), 22);
       deepStrictEqual(
         A.filter(shares, (share) => !share.lawful),
@@ -1946,12 +2010,15 @@ describe("operandCodec", () => {
       deepStrictEqual<unknown>(timestamp.decoded, DateTime.makeUnsafe("2021-01-04T05:00:00.000Z"));
       strictEqual(timestamp.encoded, "2021-01-04T05:00:00.000Z");
       // The forms the wire tolerates on decode are read too, and the canonical form is what is written.
-      const legacy = yield* Effect.all([
-        through(IntegerType.make({}), "238940"),
-        through(BooleanType.make({}), "true"),
-        through(LongType.make({}), 7),
-        through(DecimalType.make({}), 2.5),
-      ]);
+      const legacy = yield* Effect.all(
+        [
+          through(IntegerType.make({}), "238940"),
+          through(BooleanType.make({}), "true"),
+          through(LongType.make({}), 7),
+          through(DecimalType.make({}), 2.5),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(
         A.map(legacy, ({ encoded }) => encoded),
         [238940, true, "7", "2.5"]
@@ -1983,11 +2050,14 @@ describe("operandCodec", () => {
       const written = yield* S.encodeUnknownEffect(operandCodec(matrix))(BigInt(7));
       strictEqual(written, "7");
       // The array itself is not an operand, in either direction.
-      const verdicts = yield* Effect.all([
-        rejects(operandCodec(dates))(["2021-01-04"]),
-        refusesToEncode(operandCodec(dates))([LocalDate.make({ year: 2021, month: 1, day: 4 })]),
-        refusesToEncode(operandCodec(matrix))([[BigInt(7)]]),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(operandCodec(dates))(["2021-01-04"]),
+          refusesToEncode(operandCodec(dates))([LocalDate.make({ year: 2021, month: 1, day: 4 })]),
+          refusesToEncode(operandCodec(matrix))([[BigInt(7)]]),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(verdicts, [true, true, true]);
     })
   );
@@ -1995,35 +2065,43 @@ describe("operandCodec", () => {
   it.effect(
     "refuses an operand the property's type does not read, and anything that is not a wire scalar",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(operandCodec(DateType.make({})))("4 January"),
-        rejects(operandCodec(DateType.make({})))("2021-02-30"),
-        rejects(operandCodec(IntegerType.make({})))("old"),
-        rejects(operandCodec(IntegerType.make({})))(2147483648),
-        rejects(operandCodec(LongType.make({})))("9223372036854775808"),
-        rejects(operandCodec(TimestampType.make({})))("yesterday"),
-        rejects(operandCodec(BooleanType.make({})))("yes"),
-        rejects(operandCodec(StringType.make({})))(7),
-        // A struct, a geometry, an attachment: their values are records, so no scalar is one of them.
-        rejects(operandCodec(valuePerCase.struct[0]))("Alex"),
-        rejects(operandCodec(GeoPointType.make({})))("102.0,0.5"),
-        rejects(operandCodec(AttachmentType.make({})))(
-          "ri.blobster.main.attachment.bb32154e-e043-4b00-9461-93136ca96b6f"
-        ),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(operandCodec(DateType.make({})))("4 January"),
+          rejects(operandCodec(DateType.make({})))("2021-02-30"),
+          rejects(operandCodec(IntegerType.make({})))("old"),
+          rejects(operandCodec(IntegerType.make({})))(2147483648),
+          rejects(operandCodec(LongType.make({})))("9223372036854775808"),
+          rejects(operandCodec(TimestampType.make({})))("yesterday"),
+          rejects(operandCodec(BooleanType.make({})))("yes"),
+          rejects(operandCodec(StringType.make({})))(7),
+          // A struct, a geometry, an attachment: their values are records, so no scalar is one of them.
+          rejects(operandCodec(valuePerCase.struct[0]))("Alex"),
+          rejects(operandCodec(GeoPointType.make({})))("102.0,0.5"),
+          rejects(operandCodec(AttachmentType.make({})))(
+            "ri.blobster.main.attachment.bb32154e-e043-4b00-9461-93136ca96b6f"
+          ),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       const notScalars: ReadonlyArray<unknown> = [null, undefined, {}, [], ["x"], BigInt(7), Number.NaN];
-      const refused = yield* Effect.forEach(PropertyTypeKind.literals, (kind) =>
-        Effect.forEach(notScalars, rejects(operandCodec(valuePerCase[kind][0])))
+      const refused = yield* Effect.forEach(
+        PropertyTypeKind.literals,
+        (kind) => Effect.forEach(notScalars, rejects(operandCodec(valuePerCase[kind][0])), { concurrency: 1 }),
+        { concurrency: 1 }
       );
       assertTrue(A.every(A.flatten(refused), identity));
       // A rich value is not a wire operand: it has to be written by this codec, not handed to it as its wire form.
-      const rich = yield* Effect.all([
-        rejects(operandCodec(LongType.make({})))(BigInt("9007199254740993")),
-        rejects(operandCodec(DateType.make({})))(LocalDate.make({ year: 2021, month: 1, day: 4 })),
-        rejects(operandCodec(TimestampType.make({})))(DateTime.makeUnsafe(0)),
-        rejects(operandCodec(DecimalType.make({})))(BigDecimal.fromStringUnsafe("12.50")),
-      ]);
+      const rich = yield* Effect.all(
+        [
+          rejects(operandCodec(LongType.make({})))(BigInt("9007199254740993")),
+          rejects(operandCodec(DateType.make({})))(LocalDate.make({ year: 2021, month: 1, day: 4 })),
+          rejects(operandCodec(TimestampType.make({})))(DateTime.makeUnsafe(0)),
+          rejects(operandCodec(DecimalType.make({})))(BigDecimal.fromStringUnsafe("12.50")),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(rich, [true, true, true, true]);
     })
   );
@@ -2051,13 +2129,16 @@ describe("fieldCodec", () => {
     "still rejects a present value of the wrong type",
     Effect.fnUntraced(function* () {
       const Row = S.Struct({ balance: fieldCodec(LongType.make({})) });
-      const verdicts = yield* Effect.all([
-        rejects(Row)({ balance: 12.5 }),
-        rejects(Row)({ balance: true }),
-        rejects(Row)({ balance: "" }),
-        rejects(Row)({ balance: "12.5" }),
-        rejects(Row)({ balance: "9223372036854775808" }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(Row)({ balance: 12.5 }),
+          rejects(Row)({ balance: true }),
+          rejects(Row)({ balance: "" }),
+          rejects(Row)({ balance: "12.5" }),
+          rejects(Row)({ balance: "9223372036854775808" }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -2273,7 +2354,8 @@ describe("parity with the OSDK test stubs", () => {
             array: ({ elementType }) => [type.type, elementType.type],
             struct: () => [type.type],
           });
-        })
+        }),
+        { concurrency: 1 }
       );
       // Between them the two stubs exercise every property type except `marking`.
       const covered: ReadonlyArray<string> = A.dedupe(A.flatten(tags));
@@ -2290,7 +2372,8 @@ describe("parity with the OSDK test stubs", () => {
     Effect.fnUntraced(function* () {
       const verdicts = yield* Effect.forEach(
         R.toEntries(allPropertyValuesStub),
-        decodesAsStubProperty(allPropertyTypesStub)
+        decodesAsStubProperty(allPropertyTypesStub),
+        { concurrency: 1 }
       );
       const refused = A.map(
         A.filter(verdicts, ([, decoded]) => !decoded),
@@ -2324,7 +2407,9 @@ describe("parity with the OSDK test stubs", () => {
   it.effect(
     "decodes the stub values of the employee object and encodes them back unchanged",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.forEach(R.toEntries(employeeValuesStub), decodesAsStubProperty(employeeStub));
+      const verdicts = yield* Effect.forEach(R.toEntries(employeeValuesStub), decodesAsStubProperty(employeeStub), {
+        concurrency: 1,
+      });
       deepStrictEqual(
         A.map(
           A.filter(verdicts, ([, decoded]) => !decoded),
@@ -2339,7 +2424,8 @@ describe("parity with the OSDK test stubs", () => {
           const type = yield* S.decodeEffect(PropertyType)(wire);
           const result = yield* throughCodec(type, value);
           return Tuple.make(property, result.encoded);
-        })
+        }),
+        { concurrency: 1 }
       );
       deepStrictEqual(R.fromEntries(encoded), employeeValuesStub);
     })
@@ -2369,7 +2455,9 @@ describe("decodeAddressTo", () => {
       deepStrictEqual(byField, { property: bySalary, width: 10 });
       deepStrictEqual(byRecord, byField);
       deepStrictEqual(byTitle, { property: TitleProperty.make({}), width: 10 });
-      const wire = yield* Effect.forEach([byField, byRecord, byTitle], (value) => S.encodeEffect(Bucketed)(value));
+      const wire = yield* Effect.forEach([byField, byRecord, byTitle], (value) => S.encodeEffect(Bucketed)(value), {
+        concurrency: 1,
+      });
       deepStrictEqual<unknown>(wire, [
         { field: "salary", fixedWidth: 10 },
         { field: "salary", fixedWidth: 10 },
@@ -2390,9 +2478,13 @@ describe("decodeAddressTo", () => {
           { field: "salary", fixedWidth: 0 },
           { field: "", fixedWidth: 10 },
         ],
-        rejects(Bucketed)
+        rejects(Bucketed),
+        { concurrency: 1 }
       );
-      deepStrictEqual(verdicts, A.map(verdicts, () => true));
+      deepStrictEqual(
+        verdicts,
+        A.map(verdicts, () => true)
+      );
       assertFalse(S.is(Bucketed)({ property: bySalary, width: 0 }));
     })
   );
@@ -2457,7 +2549,9 @@ describe("selectedType", () => {
     assertSome(select(PropertyAtLoadLevel.make({ selector: named(age), loadLevel: "applyReducers" })), O.none());
     // The load level does not make an undeclared property declared.
     assertNone(
-      select(PropertyAtLoadLevel.make({ selector: named(PropertyApiName.make("nickname")), loadLevel: "applyReducers" }))
+      select(
+        PropertyAtLoadLevel.make({ selector: named(PropertyApiName.make("nickname")), loadLevel: "applyReducers" })
+      )
     );
   });
 

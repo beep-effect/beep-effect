@@ -14,20 +14,20 @@ import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { Dataset } from "@beep/rdf";
 import { ShaclSeverity, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
+import * as A from "effect/Array";
+import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as LanguageModel from "effect/ai/LanguageModel";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithFeedback } from "./GenerateWithFeedback.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ViolationExplainer");
 
@@ -61,7 +61,9 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ViolationExplainer");
  * @category errors
  * @since 0.0.0
  */
-export class ExplanationError extends S.TaggedError<ExplanationError, { readonly brand: unique symbol }>($I`ExplanationError`)(
+export class ExplanationError extends S.TaggedError<ExplanationError, { readonly brand: unique symbol }>(
+  $I`ExplanationError`
+)(
   "ExplanationError",
   {
     message: ErrorMessage.annotateKey({
@@ -101,23 +103,36 @@ const explanationContextMaxTokensDefault = PosInt.make(500);
  * @category schemas
  * @since 0.0.0
  */
-export class ExplanationContext extends S.Opaque<ExplanationContext, { readonly brand: unique symbol }>()(S.Struct({
-  /** The canonical RDF dataset containing the data graph */
-  dataStore: S.OptionFromOptionalKey(Dataset).pipe(
-    S.withConstructorDefault(Effect.succeedNone),
-    S.annotateKey({
-      description: "Optional canonical RDF dataset containing the data graph used for explanation context.",
+export class ExplanationContext extends S.Opaque<ExplanationContext, { readonly brand: unique symbol }>()(
+  S.Struct({
+    /** The canonical RDF dataset containing the data graph */
+    dataStore: S.OptionFromOptionalKey(Dataset).pipe(
+      S.withConstructorDefault(Effect.succeedNone),
+      S.annotateKey({
+        description: "Optional canonical RDF dataset containing the data graph used for explanation context.",
+      })
+    ),
+    /** Turtle representation of relevant triples around the focus node */
+    neighborhoodTurtle: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(""))
+    ),
+    /** Domain description for additional context */
+    domainDescription: S.String.pipe(
+      S.withConstructorDefault(Effect.succeed("")),
+      S.withDecodingDefaultTypeKey(Effect.succeed(""))
+    ),
+    /** Maximum tokens for the explanation */
+    maxTokens: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(explanationContextMaxTokensDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(explanationContextMaxTokensDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("ExplanationContext", {
+      description: "Neighborhood triples, domain description, and token bound for a SHACL explanation.",
     })
-  ),
-  /** Turtle representation of relevant triples around the focus node */
-  neighborhoodTurtle: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultTypeKey(Effect.succeed(""))),
-  /** Domain description for additional context */
-  domainDescription: S.String.pipe(S.withConstructorDefault(Effect.succeed("")), S.withDecodingDefaultTypeKey(Effect.succeed(""))),
-  /** Maximum tokens for the explanation */
-  maxTokens: PosInt.pipe(S.withConstructorDefault(Effect.succeed(explanationContextMaxTokensDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(explanationContextMaxTokensDefault))),
-  }).pipe($I.annoteSchema("ExplanationContext", {
-    description: "Neighborhood triples, domain description, and token bound for a SHACL explanation.",
-  }))) {
+  )
+) {
   /**
    * Create empty context
    *
@@ -127,7 +142,7 @@ export class ExplanationContext extends S.Opaque<ExplanationContext, { readonly 
    * import { ExplanationContext } from "@effect-ontology/Service/ViolationExplainer"
    *
    * const context = ExplanationContext.empty()
- * console.log(context.maxTokens)
+   * console.log(context.maxTokens)
    * ```
    *
    * @returns Result produced by this operation.
@@ -145,7 +160,7 @@ export class ExplanationContext extends S.Opaque<ExplanationContext, { readonly 
    * import { ExplanationContext } from "@effect-ontology/Service/ViolationExplainer"
    *
    * const context = ExplanationContext.empty()
- * console.log(context.maxTokens)
+   * console.log(context.maxTokens)
    * ```
    *
    * @param turtle - Input consumed by this operation.
@@ -178,21 +193,27 @@ const llmViolationExplanationConfidenceDefault = Confidence.make(0.8);
  * @category schemas
  * @since 0.0.0
  */
-export class LlmViolationExplanation extends S.Class<LlmViolationExplanation, { readonly brand: unique symbol }>($I`LlmViolationExplanation`)({
-  /** Original violation */
-  focusNode: S.String,
-  /** Path that was violated (if any) */
-  path: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-  /** Human-readable explanation of what went wrong */
-  explanation: S.String,
-  /** Suggested fix action */
-  suggestion: S.String,
-  /** Severity level */
-  severity: ShaclSeverity,
-  /** Affected entity IRIs */
-  affectedEntities: S.Array(S.String),
-  /** Confidence in the explanation (0-1) */
-  confidence: Confidence.pipe(S.withConstructorDefault(Effect.succeed(llmViolationExplanationConfidenceDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(llmViolationExplanationConfidenceDefault))),
+export class LlmViolationExplanation extends S.Class<LlmViolationExplanation, { readonly brand: unique symbol }>(
+  $I`LlmViolationExplanation`
+)(
+  {
+    /** Original violation */
+    focusNode: S.String,
+    /** Path that was violated (if any) */
+    path: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /** Human-readable explanation of what went wrong */
+    explanation: S.String,
+    /** Suggested fix action */
+    suggestion: S.String,
+    /** Severity level */
+    severity: ShaclSeverity,
+    /** Affected entity IRIs */
+    affectedEntities: S.Array(S.String),
+    /** Confidence in the explanation (0-1) */
+    confidence: Confidence.pipe(
+      S.withConstructorDefault(Effect.succeed(llmViolationExplanationConfidenceDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(llmViolationExplanationConfidenceDefault))
+    ),
   },
   $I.annote("LlmViolationExplanation", {
     description: "Human-readable SHACL explanation, suggested fix, severity, and confidence.",
@@ -207,13 +228,13 @@ export class LlmViolationExplanation extends S.Class<LlmViolationExplanation, { 
    * import { LlmViolationExplanation } from "@effect-ontology/Service/ViolationExplainer"
    *
    * const explanation = LlmViolationExplanation.make({
- *   focusNode: "https://example.org/Ada",
- *   explanation: "The founder relation is missing.",
- *   suggestion: "Add a founded triple.",
- *   severity: "violation",
- *   affectedEntities: ["https://example.org/Ada"]
- * })
- * console.log(explanation.isCritical) // true
+   *   focusNode: "https://example.org/Ada",
+   *   explanation: "The founder relation is missing.",
+   *   suggestion: "Add a founded triple.",
+   *   severity: "violation",
+   *   affectedEntities: ["https://example.org/Ada"]
+   * })
+   * console.log(explanation.isCritical) // true
    * ```
    *
    * @returns Result produced by this operation.
@@ -245,7 +266,9 @@ export class LlmViolationExplanation extends S.Class<LlmViolationExplanation, { 
  * @category schemas
  * @since 0.0.0
  */
-export class BatchExplanationResult extends S.Class<BatchExplanationResult, { readonly brand: unique symbol }>($I`BatchExplanationResult`)(
+export class BatchExplanationResult extends S.Class<BatchExplanationResult, { readonly brand: unique symbol }>(
+  $I`BatchExplanationResult`
+)(
   {
     explanations: S.Array(LlmViolationExplanation),
     totalViolations: S.Natural,

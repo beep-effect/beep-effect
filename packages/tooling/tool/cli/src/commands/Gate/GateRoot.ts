@@ -40,6 +40,7 @@ import * as Str from "effect/String";
 import { consoleSettings, EventRun, GateServicesConfig, recordEventRun } from "./GateRuntime.ts";
 import type { AudienceFlagInput } from "@beep/cli-kit/CliAudience";
 import type { ItemKind } from "@beep/gate-report/Vocabulary";
+import type { ContractGate } from "@beep/repo-gate-run/RepoPointers";
 import type { CapturedRun } from "./GateRuntime.ts";
 
 const $I = $RepoCliId.create("commands/Gate/GateRoot");
@@ -291,6 +292,18 @@ const reasonRank = Order.mapInput(Order.Number, (reason: RunReason) =>
  * package counts one), and its duration the sum of the package durations, so
  * the console of a cache hit equals the console of the run it restores.
  *
+ * **Example** (Fold no package runs)
+ *
+ * ```ts
+ * import { WorkspaceFold, workspaceEvents } from "@beep/repo-cli/commands/Gate"
+ * import * as DateTime from "effect/DateTime"
+ *
+ * const events = workspaceEvents(
+ *   WorkspaceFold.make({ gate: "test", runId: "r1", startedAt: DateTime.makeUnsafe(0), inputFingerprint: "x", exitCode: 0, runs: [] })
+ * )
+ * console.log(events.map((event) => event._tag).join(" ")) // RunStarted RunFinished
+ * ```
+ *
  * @param input - The root run's identity, Turbo's exit code and the package runs.
  * @returns The events that reduce to the workspace report.
  *
@@ -357,7 +370,7 @@ export const workspaceEvents = (input: WorkspaceFold): ReadonlyArray<GateEvent> 
  */
 export const recordRootRun = Effect.fn("Gate.recordRootRun")(function* (input: {
   readonly repoRoot: string;
-  readonly gate: "test" | "check";
+  readonly gate: ContractGate;
   readonly startedAt: DateTime.Utc;
   readonly captured: CapturedRun;
   readonly flags: AudienceFlagInput;

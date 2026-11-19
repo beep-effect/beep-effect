@@ -361,7 +361,7 @@ export class JitPlannedNotificationReceipt extends Model<JitPlannedNotificationR
  * @since 0.0.0
  */
 export declare namespace JitPlannedNotificationReceipt {
-  export type Encoded = S.Codec.Encoded<typeof JitPlannedNotificationReceipt>;
+  export type Encoded = typeof JitPlannedNotificationReceipt.Encoded;
 }
 
 /**
@@ -412,7 +412,7 @@ export class JitAmbientNotificationReceipt extends Model<JitAmbientNotificationR
  * @since 0.0.0
  */
 export declare namespace JitAmbientNotificationReceipt {
-  export type Encoded = S.Codec.Encoded<typeof JitAmbientNotificationReceipt>;
+  export type Encoded = typeof JitAmbientNotificationReceipt.Encoded;
 }
 
 /**
@@ -461,7 +461,7 @@ export class JitNanoTriageReceipt extends Model<JitNanoTriageReceipt>("JitNanoTr
  * @since 0.0.0
  */
 export declare namespace JitNanoTriageReceipt {
-  export type Encoded = S.Codec.Encoded<typeof JitNanoTriageReceipt>;
+  export type Encoded = typeof JitNanoTriageReceipt.Encoded;
 }
 
 /**
@@ -516,7 +516,7 @@ export class JitFullTurnReceipt extends Model<JitFullTurnReceipt>("JitFullTurnRe
  * @since 0.0.0
  */
 export declare namespace JitFullTurnReceipt {
-  export type Encoded = S.Codec.Encoded<typeof JitFullTurnReceipt>;
+  export type Encoded = typeof JitFullTurnReceipt.Encoded;
 }
 
 /**
@@ -615,7 +615,7 @@ export class JitTriggerPairInvalid extends S.TaggedError<JitTriggerPairInvalid, 
  * @since 0.0.0
  */
 export declare namespace JitTriggerPairInvalid {
-  export type Encoded = S.Codec.Encoded<typeof JitTriggerPairInvalid>;
+  export type Encoded = typeof JitTriggerPairInvalid.Encoded;
 }
 
 const triggerPairInvalid = (): JitTriggerPairInvalid =>

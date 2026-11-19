@@ -10,7 +10,9 @@
  *   checked plan.
  * - `deploy --stage <s> --checked <file>` plans the stage again, checks it,
  *   and applies that same plan only when it equals the saved one
- *   (`applyIfUnchanged`); any drift stops it before a write.
+ *   (`applyIfUnchanged`); any drift stops it before a write. With
+ *   `--expect-digest <sha256>` it also refuses unless the plan-rows digest
+ *   both steps print equals the one a plan-only run printed.
  *
  * @internal
  * @since 0.0.0
@@ -35,12 +37,15 @@ import {
   checkEnginePlan,
   newSecretSalt,
   PlanExpectation,
+  planRowLine,
+  planRowsDigest,
   readEnginePlan,
   readSourceTree,
+  requirePlanDigest,
 } from "./src/CheckedDeploy.ts";
 import { placeholderCredentials, requireSigningAppKey, stageCredentials } from "./src/Credentials.ts";
 import { checkPlan, mustEscalate, PlanViolation, readPlanLog } from "./src/PlanCheck.ts";
-import type { CheckedPlan, CheckedResource, PlanDrift } from "./src/CheckedDeploy.ts";
+import type { CheckedPlan, CheckedResource, PlanDigestMismatch, PlanDrift } from "./src/CheckedDeploy.ts";
 import type { PlannedResource, PlanRefused } from "./src/PlanCheck.ts";
 
 const listResource = (resource: PlannedResource) =>
@@ -55,13 +60,7 @@ const listResource = (resource: PlannedResource) =>
     )
   );
 
-const listChecked = (resource: CheckedResource) =>
-  Console.log(
-    A.join(
-      [`[${resource.fqn}] ${resource.action}`, ...A.map(resource.bindings, (binding) => `binding ${binding}`)],
-      " | "
-    )
-  );
+const listChecked = (resource: CheckedResource) => Console.log(planRowLine(resource));
 
 const explain = PlanViolation.match({
   DestructiveAction: (v) => `${v.fqn}: ${v.action} is never deployed by this job`,
@@ -107,6 +106,14 @@ const refuseDrift = Effect.fn("CiRunners.planDriftRefuse")(function* (drift: Pla
   return yield* drift;
 });
 
+const refuseDigest = Effect.fn("CiRunners.planDigestRefuse")(function* (mismatch: PlanDigestMismatch) {
+  yield* Console.error(
+    `DIGEST the plan rows digest is sha256:${mismatch.actual}, the dispatch expected sha256:${mismatch.expected}; nothing was applied`
+  );
+  yield* escalate;
+  return yield* mismatch;
+});
+
 const stage = Flag.String("stage").pipe(Flag.withDescription("The stage to plan"));
 
 // The bootstrap deploy excludes DefaultSecurityGroup until the deploy role is scoped to the new VPC (cutover step 1a).
@@ -147,6 +154,10 @@ const planStage = Effect.fn("CiRunners.planStage")(function* (input: {
   );
   const checked = yield* readEnginePlan({ stage: stageName, plan: snapshot.native, salt, expectation, sourceTree });
   yield* Effect.forEach(checked.resources, listChecked, { concurrency: 1, discard: true });
+  // Rows only (FQN, action, binding actions): no property, secret or salt, so it is stable across runs.
+  // Printed before the check, so a refused plan is still read whole with its digest.
+  const rowsDigest = yield* planRowsDigest(checked);
+  yield* Console.log(`plan-check: plan-rows digest sha256:${rowsDigest}`);
   yield* checkEnginePlan(checked).pipe(Effect.catchTag("PlanRefused", refuse));
   return { snapshot, checked };
 });
@@ -187,12 +198,17 @@ const deploy = Command.make(
     exclude,
     expect,
     checked: Flag.String("checked").pipe(Flag.withDescription("The plan the plan step saved")),
+    expectDigest: Flag.String("expect-digest").pipe(
+      Flag.withDescription("Apply only when the plan-rows digest equals this one (from a plan-only run)"),
+      Flag.optional
+    ),
   },
   Effect.fn("CiRunners.planCheckDeploy")(function* ({
     stage: stageName,
     exclude: excluded,
     expect: expectation,
     checked: checkedPath,
+    expectDigest,
   }) {
     const fs = yield* FileSystem.FileSystem;
     const text = yield* fs.readFileString(checkedPath);
@@ -204,6 +220,7 @@ const deploy = Command.make(
       salt: checked.secretSalt,
       expectation,
     });
+    yield* requirePlanDigest(current, expectDigest).pipe(Effect.catchTag("PlanDigestMismatch", refuseDigest));
     const output = yield* applyIfUnchanged(checked, current, Alchemist.apply(snapshot)).pipe(
       Effect.catchTag("PlanDrift", refuseDrift)
     );

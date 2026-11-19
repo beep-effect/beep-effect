@@ -23,6 +23,7 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Redacted from "effect/Redacted";
 import type { VitestError } from "@beep/repo-gate-vitest/internal/VitestShapes";
 
 describe("errorFrames — parsed frames", () => {
@@ -148,6 +149,21 @@ describe("error text", () => {
     assertSome(coerceErrorText("plain"), "plain");
     assertSome(coerceErrorText({ a: 1 }), '{"a":1}');
     assertSome(coerceErrorText(10n), "10n");
+  });
+
+  // Retarget upstream packages/sdk/__test__/coerce-error-text.test.ts (vitest-agent 1cf1ab94).
+  it("renders an Error's name and message instead of an empty object", () => {
+    assertSome(coerceErrorText(new Error("boom")), '{"name":"Error","message":"boom"}');
+  });
+
+  it("drops a circular reference instead of falling back to [object Object]", () => {
+    const cyclic: Record<string, unknown> = { name: "test" };
+    cyclic.self = cyclic;
+    assertSome(coerceErrorText(cyclic), '{"name":"test"}');
+  });
+
+  it("renders a Redacted value as <redacted>, never its secret", () => {
+    assertSome(coerceErrorText({ token: Redacted.make("hunter2") }), '{"token":"<redacted>"}');
   });
 
   it("marks a value that cannot be printed at all", () => {

@@ -12,10 +12,10 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../Domain/Model/Entity.ts";
@@ -47,13 +47,26 @@ const entityResolutionConfigTypeOverlapRatioDefault = UnitInterval.make(0.5);
  * @category models
  * @since 0.0.0
  */
-export class EntityResolutionConfig extends S.Opaque<EntityResolutionConfig, { readonly brand: unique symbol }>()(S.Struct({
-    mentionSimilarityThreshold: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(entityResolutionConfigMentionSimilarityThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityResolutionConfigMentionSimilarityThresholdDefault))),
-    requireTypeOverlap: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
-    typeOverlapRatio: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(entityResolutionConfigTypeOverlapRatioDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityResolutionConfigTypeOverlapRatioDefault))),
-  }).pipe($I.annoteSchema("EntityResolutionConfig", {
-    description: "Mention similarity and type-overlap thresholds used by the legacy graph merge workflow.",
-  }))) {}
+export class EntityResolutionConfig extends S.Opaque<EntityResolutionConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
+    mentionSimilarityThreshold: UnitInterval.pipe(
+      S.withConstructorDefault(Effect.succeed(entityResolutionConfigMentionSimilarityThresholdDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(entityResolutionConfigMentionSimilarityThresholdDefault))
+    ),
+    requireTypeOverlap: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+    typeOverlapRatio: UnitInterval.pipe(
+      S.withConstructorDefault(Effect.succeed(entityResolutionConfigTypeOverlapRatioDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(entityResolutionConfigTypeOverlapRatioDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("EntityResolutionConfig", {
+      description: "Mention similarity and type-overlap thresholds used by the legacy graph merge workflow.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link EntityResolutionConfig}.
@@ -138,8 +151,8 @@ const findEntityClusters = (
   // Compare all pairs of entities
   for (let i = 0; i < entities.length; i++) {
     for (let j = i + 1; j < entities.length; j++) {
-      if (shouldMerge(entities[i], entities[j], config)) {
-        union(entities[i].id, entities[j].id);
+      if (shouldMerge(A.getUnsafe(entities, i), A.getUnsafe(entities, j), config)) {
+        union(A.getUnsafe(entities, i).id, A.getUnsafe(entities, j).id);
       }
     }
   }
@@ -251,7 +264,7 @@ export const resolveEntities = dual2(
     yield* Effect.logDebug("Entity clusters found", {
       stage: "entity-resolution",
       clusterCount: MutableHashMap.size(clusters),
-      clusters: A.fromIterable(clusters).map(([root, ids]) => ({
+      clusters: A.map(A.fromIterable(clusters), ([root, ids]) => ({
         canonical: root,
         members: ids,
       })),

@@ -1,7 +1,7 @@
 import { describe, expect, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ExtractionMetrics } from "../../Domain/Model/OntologyAgent.ts";
@@ -12,6 +12,7 @@ import {
   recordProviderAttempt,
   recordProviderUsage,
 } from "../../Telemetry/ExtractionTelemetry.ts";
+
 const decodeProviderTokenUsageOption = S.decodeOption(ProviderTokenUsage);
 
 describe("ExtractionTelemetry", () => {

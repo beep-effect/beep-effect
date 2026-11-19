@@ -1,7 +1,7 @@
 import * as Domain from "@alchemy.run/domain";
 import { RunId } from "@proto/kernel/Ids";
 import { Hop } from "@proto/kernel/Invocation";
-import * as S from "effect/Schema";
+import { Text } from "@proto/kernel/Measure";
 import { RunCompleted } from "./CompleteRun.command.ts";
 
 /**
@@ -16,6 +16,6 @@ import { RunCompleted } from "./CompleteRun.command.ts";
  */
 export class ConcludeRun extends Domain.Command(
   "ConcludeRun",
-  { target: RunId, input: { outcome: S.String, hop: Hop }, events: [RunCompleted] },
+  { target: RunId, input: { outcome: Text, hop: Hop }, events: [RunCompleted] },
   { description: "Close a run whose subject another context decided." },
 ) {}

@@ -14,20 +14,20 @@
 
 import { AnthropicClient } from "@effect/ai-anthropic";
 import { OpenAiClient } from "@effect/ai-openai";
+import * as AiError from "effect/ai/AiError";
 import * as Clock from "effect/Clock";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as RateLimiter from "effect/persistence/RateLimiter";
 import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
-import * as O from "effect/Option";
-import * as AiError from "effect/ai/AiError";
-import * as RateLimiter from "effect/persistence/RateLimiter";
+import { PosInt } from "../Schema/PosInt.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { LlmAttributes } from "../Telemetry/LlmAttributes.ts";
 import { makeCircuitBreaker } from "./CircuitBreaker.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 interface ProviderRateLimit {
   readonly perSecond: number;

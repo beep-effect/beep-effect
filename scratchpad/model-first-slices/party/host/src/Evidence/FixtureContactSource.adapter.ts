@@ -8,6 +8,8 @@ import * as Effect from "effect/Effect";
 /**
  * A mailbox that always holds the same one finding. Stands where a vendor
  * adapter (Graph, IMAP) would; the same contract tests run against both.
+ * The finding's upstream id, and the claim it names, is the mailbox and
+ * `msg-1` joined by `:`, so it is an id as it is.
  *
  * **Example** (Provide the fixture mailbox)
  * ```ts
@@ -25,8 +27,8 @@ export const FixtureContactSource = ContactSource.toLayer(
       Effect.succeed({
         assertions: [
           {
-            sourceId: `${mailbox}/msg-1`,
-            claimId: ClaimId.make(`${mailbox}/msg-1`),
+            sourceId: `${mailbox}:msg-1`,
+            claimId: ClaimId.make(`${mailbox}:msg-1`),
             proposition: Proposition.cases.HasIdentifier.make({
               party: PartyId.make("party_dana"),
               scheme: "email",

@@ -2,7 +2,7 @@ import type { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Atom from "effect/reactivity/Atom";
 import * as Stream from "effect/Stream";
 import * as SubscriptionRef from "effect/SubscriptionRef";

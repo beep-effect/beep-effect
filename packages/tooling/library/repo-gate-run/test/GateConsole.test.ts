@@ -88,7 +88,7 @@ describe("GateConsole", () => {
       agentConsole.render(ConsoleRequest.make({ report: reportOf(testRunEvents([])), omissions })).text
     );
     assert.deepStrictEqual(A.drop(lines, 1), [
-      "record and raw log not written: disk full",
+      "record and raw log unavailable: disk full",
       "history not read: deadline missed",
       "test @beep/glob src/math.test.ts: PASSED, 3/3 passed (1.2s)",
     ]);
@@ -97,10 +97,10 @@ describe("GateConsole", () => {
 
   it("names a lone record or log failure and cuts a long reason to the line limit", () => {
     assert.deepStrictEqual(omissionLines([Omission.make({ part: "log", reason: "gone" })]), [
-      "raw log not written: gone",
+      "raw log unavailable: gone",
     ]);
     assert.deepStrictEqual(omissionLines([Omission.make({ part: "record", reason: "gone" })]), [
-      "record not written: gone",
+      "record unavailable: gone",
     ]);
     const long = Str.repeat(300)("x");
     const lines = linesOf(

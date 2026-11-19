@@ -1,8 +1,9 @@
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
-import * as A from "effect/Array";
+import { Count, Name } from "@proto/kernel/Measure";
+import { sameWriter, StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 
 /**
@@ -26,7 +27,7 @@ export type HandoverChange = typeof HandoverChange.Type;
  * @category models
  * @since 0.0.0
  */
-export const Handover = S.Struct({ stream: S.String, writer: StreamWriter, change: HandoverChange });
+export const Handover = S.Struct({ stream: Name, writer: StreamWriter, change: HandoverChange });
 /**
  * @category models
  * @since 0.0.0
@@ -41,7 +42,7 @@ export type Handover = typeof Handover.Type;
  * @category models
  * @since 0.0.0
  */
-export const PublisherBacklog = S.Struct({ stream: S.String, writer: S.String, pending: S.Int });
+export const PublisherBacklog = S.Struct({ stream: Name, writer: Name, pending: Count });
 /**
  * @category models
  * @since 0.0.0
@@ -56,33 +57,27 @@ export type PublisherBacklog = typeof PublisherBacklog.Type;
  * @since 0.0.0
  */
 export class PublisherPending extends S.TaggedError<PublisherPending, { readonly brand: unique symbol }>()("PublisherPending", {
-  pending: S.Array(S.Struct({ handover: Handover, pending: S.Int })),
+  pending: S.Array(S.Struct({ handover: Handover, pending: Count })),
   unread: S.Array(Handover),
 }) {}
 
-const sameWriter = (a: StreamWriter, b: StreamWriter): boolean =>
-  a.projection === b.projection &&
-  a.generation === b.generation &&
-  A.length(a.sources) === A.length(b.sources) &&
-  A.every(a.sources, (source) => A.contains(b.sources, source));
-
 const handoverOf = (next: ReadonlyArray<StreamPin>) => (pin: StreamPin): O.Option<Handover> =>
   StreamPin.match(pin, {
-    Closed: () => O.none(),
-    Retired: () => O.none(),
+    Closed: O.none<Handover>,
+    Retired: O.none<Handover>,
     Open: ({ stream, writer }) =>
       O.match(
         A.findFirst(next, (candidate) => candidate.stream === stream),
         {
           // A generation the next code drops is closed too (the stream-pin check refuses it anyway).
-          onNone: () => O.some(Handover.make({ stream, writer, change: "closed" })),
+          onNone: () => Handover.makeOption({ stream, writer, change: "closed" }),
           onSome: (after) =>
             StreamPin.match(after, {
-              Closed: () => O.some(Handover.make({ stream, writer, change: "closed" })),
+              Closed: () => Handover.makeOption({ stream, writer, change: "closed" }),
               // Retired at once: its writer is taken all the same (the retirement check refuses it).
-              Retired: () => O.some(Handover.make({ stream, writer, change: "closed" })),
+              Retired: () => Handover.makeOption({ stream, writer, change: "closed" }),
               Open: ({ writer: incoming }) =>
-                sameWriter(writer, incoming) ? O.none() : O.some(Handover.make({ stream, writer, change: "replaced" })),
+                sameWriter(writer, incoming) ? O.none() : Handover.makeOption({ stream, writer, change: "replaced" }),
             }),
         },
       ),

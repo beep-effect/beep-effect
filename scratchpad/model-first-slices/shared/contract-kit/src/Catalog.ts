@@ -1,6 +1,6 @@
-import type * as Domain from "@alchemy.run/domain";
+import * as Domain from "@alchemy.run/domain";
 import type * as Kernel from "@alchemy.run/domain/Kernel";
-import type * as Projection from "@alchemy.run/domain/Projection";
+import * as S from "effect/Schema";
 
 /**
  * A model-shaped catalog of a context's aggregate-free declarations: its
@@ -64,18 +64,34 @@ export const make = <
 
 /**
  * What a contract query lists as `waitsFor` so its RPC carries the
- * `ConsistencyTimeout` the model's query can fail with. Only the length of
- * `waitsFor` shapes a query's RPC (`Query.ts` `make`); the name is kept for
- * the reader. Never host a query that waits on this.
+ * `ConsistencyTimeout` the model's query can fail with: a projection of the
+ * same name declared with the library's own constructor, with no sources and
+ * no events. Only the length of `waitsFor` shapes a query's RPC (`Query.ts`
+ * `make`); the name is kept for the reader.
  *
  * **Gotchas**
  *
  * Interim (D9): the model's query must wait on its own projection, and
  * `Domain.verify` refuses a wait on anything the model does not hold, so
- * the model and the contract each declare the query from shared parts.
+ * the model and the contract each declare the query from shared parts. The
+ * declaration shares the model projection's service key and is never part of
+ * a model: never host it, give it a Layer, or host a query that waits on it.
+ *
+ * **Example** (A contract query that can time out waiting)
+ * ```ts
+ * import * as Domain from "@alchemy.run/domain";
+ * import * as Catalog from "@proto/contract-kit/Catalog";
+ * import * as S from "effect/Schema";
+ *
+ * class FindThings extends Domain.Query("FindThings", {
+ *   input: { text: S.String },
+ *   success: S.String,
+ *   waitsFor: [Catalog.waitsOnProjection("ThingDirectory")],
+ * }) {}
+ * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const waitsOnProjection = (projectionName: string): Projection.Any =>
-  ({ kind: "Projection", projectionName }) as unknown as Projection.Any;
+export const waitsOnProjection = <const Name extends string>(projectionName: Name) =>
+  Domain.Projection(projectionName, { from: [], key: S.String, on: [] });

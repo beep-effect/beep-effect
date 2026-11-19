@@ -61,6 +61,22 @@ export const PageToken = S.NonEmptyString.pipe(
 export type PageToken = typeof PageToken.Type;
 
 /**
+ * Companion namespace for {@link PageToken}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PageToken {
+  /**
+   * Encoded (wire) form of {@link PageToken}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof PageToken.Encoded;
+}
+
+/**
  * Largest number of items a caller is willing to receive in one page.
  *
  * **Details**
@@ -105,6 +121,22 @@ export const PageSize = S.Int.check(
  * @since 0.0.0
  */
 export type PageSize = typeof PageSize.Type;
+
+/**
+ * Companion namespace for {@link PageSize}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PageSize {
+  /**
+   * Encoded (wire) form of {@link PageSize}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof PageSize.Encoded;
+}
 
 /**
  * Number of items across every page of a listing, decoded from the decimal string the wire carries.
@@ -167,6 +199,22 @@ export const TotalCount = S.BigIntFromString.check(
  */
 export type TotalCount = typeof TotalCount.Type;
 
+/**
+ * Companion namespace for {@link TotalCount}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TotalCount {
+  /**
+   * Encoded (wire) form of {@link TotalCount}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TotalCount.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Request
 // -----------------------------------------------------------------------------
@@ -213,6 +261,25 @@ export class PageRequest extends S.Opaque<PageRequest, { readonly brand: unique 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link PageRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PageRequest {
+  /**
+   * Encoded (wire) form of {@link PageRequest}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly pageSize?: PageSize.Encoded;
+    readonly pageToken?: PageToken.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Response

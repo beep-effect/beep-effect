@@ -1,7 +1,7 @@
 import * as Domain from "@alchemy.run/domain";
 import { RunId } from "@proto/kernel/Ids";
 import { Session } from "@proto/kernel/Session.middleware";
-import * as S from "effect/Schema";
+import { Count } from "@proto/kernel/Measure";
 import { NotThisRun } from "./NotThisRun.rejection.ts";
 import { RunEvent } from "./RunEvent.ts";
 import { RunNotRunning } from "./RunNotRunning.rejection.ts";
@@ -14,7 +14,7 @@ import { UnknownReservation } from "./UnknownReservation.rejection.ts";
  * @category events
  * @since 0.0.0
  */
-export class ReservationReleased extends Domain.Event("ReservationReleased", RunEvent.fields({ reservation: ReservationId, units: S.Int })) {}
+export class ReservationReleased extends Domain.Event("ReservationReleased", RunEvent.fields({ reservation: ReservationId, units: Count }), { description: "A reservation was released unspent." }) {}
 
 /**
  * Release a reservation whose call failed, as the run itself.

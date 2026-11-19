@@ -53,7 +53,7 @@ export class EmptyResponse extends Model<EmptyResponse>("EmptyResponse")(
  * @since 0.0.0
  */
 export declare namespace EmptyResponse {
-  export type Encoded = S.Codec.Encoded<typeof EmptyResponse>;
+  export type Encoded = typeof EmptyResponse.Encoded;
 }
 
 /**
@@ -100,5 +100,5 @@ export class StatusResponse extends Model<StatusResponse>("StatusResponse")(
  * @since 0.0.0
  */
 export declare namespace StatusResponse {
-  export type Encoded = S.Codec.Encoded<typeof StatusResponse>;
+  export type Encoded = typeof StatusResponse.Encoded;
 }

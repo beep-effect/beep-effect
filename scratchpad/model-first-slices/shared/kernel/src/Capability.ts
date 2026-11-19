@@ -1,10 +1,12 @@
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as DateTime from "effect/DateTime";
 import { dual } from "effect/Function";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { CapabilityId, DelegationId, GrantId, OrgId } from "./Ids.ts";
+import { Name, StreamId, Text } from "./Measure.ts";
+import { thunkFalse, thunkTrue } from "@beep/utils"
 
 /**
  * What a grant reaches: a whole org, or one record in it (a stream such as
@@ -23,7 +25,7 @@ import { CapabilityId, DelegationId, GrantId, OrgId } from "./Ids.ts";
  */
 export const ResourceScope = S.TaggedUnion({
   Org: { org: OrgId },
-  Record: { org: OrgId, record: S.String },
+  Record: { org: OrgId, record: StreamId },
 });
 /**
  * @category models
@@ -59,7 +61,7 @@ export const covers: {
   (granted: ResourceScope, wanted: ResourceScope): boolean =>
     granted.org === wanted.org &&
     ResourceScope.match(granted, {
-      Org: () => true,
+      Org: thunkTrue,
       Record: ({ record }) => ResourceScope.guards.Record(wanted) && wanted.record === record,
     }),
 );
@@ -74,7 +76,7 @@ export const covers: {
  */
 export const GrantTerms = S.Struct({
   capability: CapabilityId,
-  operations: S.String.pipe(S.Array, S.OptionFromNullOr),
+  operations: Name.pipe(S.Array, S.OptionFromNullOr),
   resource: ResourceScope,
   expires: S.OptionFromNullOr(S.DateTimeUtc),
 });
@@ -120,8 +122,8 @@ export type CapabilityGrant = typeof CapabilityGrant.Type;
  */
 export const Capability = S.Struct({
   id: CapabilityId,
-  operations: S.Array(S.String),
-  description: S.String,
+  operations: S.Array(Name),
+  description: Text,
 });
 /**
  * @category models
@@ -156,9 +158,9 @@ export const allows =
   (grant: CapabilityGrant): boolean =>
     grant.capability === need.capability.id &&
     A.contains(need.capability.operations, need.operation) &&
-    O.match(grant.operations, { onNone: () => true, onSome: A.contains(need.operation) }) &&
+    O.match(grant.operations, { onNone: thunkTrue, onSome: A.contains(need.operation) }) &&
     covers(grant.resource, need.resource) &&
-    O.match(grant.expires, { onNone: () => true, onSome: (expires) => DateTime.isGreaterThan(expires, need.at) });
+    O.match(grant.expires, { onNone: thunkTrue, onSome: (expires) => DateTime.isGreaterThan(expires, need.at) });
 
 /**
  * Which term of a grant a change would widen.
@@ -179,9 +181,9 @@ const within: ReadonlyArray<readonly [TermDimension, (parent: GrantTerms, child:
     "operations",
     (parent, child) =>
       O.match(parent.operations, {
-        onNone: () => true,
+        onNone: thunkTrue,
         onSome: (granted) =>
-          O.match(child.operations, { onNone: () => false, onSome: A.every((operation) => A.contains(granted, operation)) }),
+          O.match(child.operations, { onNone: thunkFalse, onSome: A.every((operation) => A.contains(granted, operation)) }),
       }),
   ],
   ["resource", (parent, child) => covers(parent.resource, child.resource)],
@@ -189,8 +191,8 @@ const within: ReadonlyArray<readonly [TermDimension, (parent: GrantTerms, child:
     "expires",
     (parent, child) =>
       O.match(parent.expires, {
-        onNone: () => true,
-        onSome: (until) => O.match(child.expires, { onNone: () => false, onSome: DateTime.isLessThanOrEqualTo(until) }),
+        onNone: thunkTrue,
+        onSome: (until) => O.match(child.expires, { onNone: thunkFalse, onSome: DateTime.isLessThanOrEqualTo(until) }),
       }),
   ],
 ];
@@ -237,5 +239,5 @@ export const inForce: {
 } = dual(
   2,
   (terms: GrantTerms, at: DateTime.Utc): boolean =>
-    O.match(terms.expires, { onNone: () => true, onSome: (expires) => DateTime.isGreaterThan(expires, at) }),
+    O.match(terms.expires, { onNone: thunkTrue, onSome: (expires) => DateTime.isGreaterThan(expires, at) }),
 );

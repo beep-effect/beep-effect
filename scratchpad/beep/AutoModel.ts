@@ -71,5 +71,5 @@ export class AutoModelPick extends Model<AutoModelPick>("AutoModelPick")(
  * @since 0.0.0
  */
 export declare namespace AutoModelPick {
-  export type Encoded = S.Codec.Encoded<typeof AutoModelPick>;
+  export type Encoded = typeof AutoModelPick.Encoded;
 }

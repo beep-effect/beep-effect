@@ -220,7 +220,7 @@ export class GoalContractError extends S.TaggedError<GoalContractError, { readon
  * @since 0.0.0
  */
 export declare namespace GoalContractError {
-  export type Encoded = S.Codec.Encoded<typeof GoalContractError>;
+  export type Encoded = typeof GoalContractError.Encoded;
 }
 
 const optionalFinite = (column: string) => S.Finite.pipe(optionalNull, pg.doublePrecision(), pg.columnName(column));
@@ -277,7 +277,7 @@ export class GoalMetric extends Model<GoalMetric>("GoalMetric")(
  * @since 0.0.0
  */
 export declare namespace GoalMetric {
-  export type Encoded = S.Codec.Encoded<typeof GoalMetric>;
+  export type Encoded = typeof GoalMetric.Encoded;
 }
 
 /**
@@ -487,7 +487,7 @@ export class GoalCreate extends Model<GoalCreate>("GoalCreate")(
  * @since 0.0.0
  */
 export declare namespace GoalCreate {
-  export type Encoded = S.Codec.Encoded<typeof GoalCreate>;
+  export type Encoded = typeof GoalCreate.Encoded;
 }
 
 /**
@@ -565,20 +565,21 @@ export const normalizeLegacyMetric = Effect.fn("GoalCreate.normalizeLegacyMetric
   }
   const successCriteria = trimmedCriteria(create.successCriteria);
   const synthesize = O.isNone(create.metric) && (O.isSome(create.targetValue) || O.isSome(create.goalType));
-  const metric = synthesize
-    ? O.some(
-        yield* validateMetricBounds(
-          GoalMetric.make({
-            type: yield* decodeGoalType(O.getOrElse(create.goalType, () => scaleType)),
-            current: O.getOrElse(create.currentValue, () => 0),
-            target: O.getOrElse(create.targetValue, () => 0),
-            min: create.minValue,
-            max: create.maxValue,
-            unit: create.unit,
-          }),
-        ),
-      )
-    : create.metric;
+  let metric = create.metric;
+  if (synthesize) {
+    const type = yield* decodeGoalType(O.getOrElse(create.goalType, () => scaleType));
+    const validated = yield* validateMetricBounds(
+      GoalMetric.make({
+        type,
+        current: O.getOrElse(create.currentValue, () => 0),
+        target: O.getOrElse(create.targetValue, () => 0),
+        min: create.minValue,
+        max: create.maxValue,
+        unit: create.unit,
+      }),
+    );
+    metric = O.some(validated);
+  }
   if (O.isSome(metric)) yield* validateMetricBounds(metric.value);
   return GoalCreate.make({
     ...create,
@@ -684,7 +685,7 @@ export class GoalUpdate extends Model<GoalUpdate>("GoalUpdate")(
  * @since 0.0.0
  */
 export declare namespace GoalUpdate {
-  export type Encoded = S.Codec.Encoded<typeof GoalUpdate>;
+  export type Encoded = typeof GoalUpdate.Encoded;
 }
 
 /**
@@ -840,7 +841,7 @@ export class GoalFocusRequest extends Model<GoalFocusRequest>("GoalFocusRequest"
  * @since 0.0.0
  */
 export declare namespace GoalFocusRequest {
-  export type Encoded = S.Codec.Encoded<typeof GoalFocusRequest>;
+  export type Encoded = typeof GoalFocusRequest.Encoded;
 }
 
 /**
@@ -905,7 +906,7 @@ export class GoalLifecycleRequest extends Model<GoalLifecycleRequest>("GoalLifec
  * @since 0.0.0
  */
 export declare namespace GoalLifecycleRequest {
-  export type Encoded = S.Codec.Encoded<typeof GoalLifecycleRequest>;
+  export type Encoded = typeof GoalLifecycleRequest.Encoded;
 }
 
 /**
@@ -1044,7 +1045,7 @@ export class GoalProgressEventCreate extends Model<GoalProgressEventCreate>("Goa
  * @since 0.0.0
  */
 export declare namespace GoalProgressEventCreate {
-  export type Encoded = S.Codec.Encoded<typeof GoalProgressEventCreate>;
+  export type Encoded = typeof GoalProgressEventCreate.Encoded;
 }
 
 /**
@@ -1133,7 +1134,7 @@ export class GoalProgressEvent extends Model<GoalProgressEvent>("GoalProgressEve
  * @since 0.0.0
  */
 export declare namespace GoalProgressEvent {
-  export type Encoded = S.Codec.Encoded<typeof GoalProgressEvent>;
+  export type Encoded = typeof GoalProgressEvent.Encoded;
 }
 
 /**
@@ -1266,7 +1267,7 @@ export class GoalResponse extends Model<GoalResponse>("GoalResponse")(
  * @since 0.0.0
  */
 export declare namespace GoalResponse {
-  export type Encoded = S.Codec.Encoded<typeof GoalResponse>;
+  export type Encoded = typeof GoalResponse.Encoded;
 }
 
 /**
@@ -1367,7 +1368,7 @@ export class GoalHistoryEntryResponse extends Model<GoalHistoryEntryResponse>("G
  * @since 0.0.0
  */
 export declare namespace GoalHistoryEntryResponse {
-  export type Encoded = S.Codec.Encoded<typeof GoalHistoryEntryResponse>;
+  export type Encoded = typeof GoalHistoryEntryResponse.Encoded;
 }
 
 /**
@@ -1428,7 +1429,7 @@ export class GoalDeleteResponse extends Model<GoalDeleteResponse>("GoalDeleteRes
  * @since 0.0.0
  */
 export declare namespace GoalDeleteResponse {
-  export type Encoded = S.Codec.Encoded<typeof GoalDeleteResponse>;
+  export type Encoded = typeof GoalDeleteResponse.Encoded;
 }
 
 /**
@@ -1491,7 +1492,7 @@ export class GoalSuggestionResponse extends Model<GoalSuggestionResponse>("GoalS
  * @since 0.0.0
  */
 export declare namespace GoalSuggestionResponse {
-  export type Encoded = S.Codec.Encoded<typeof GoalSuggestionResponse>;
+  export type Encoded = typeof GoalSuggestionResponse.Encoded;
 }
 
 /**
@@ -1565,5 +1566,5 @@ export class AdviceResponse extends Model<AdviceResponse>("AdviceResponse")(
  * @since 0.0.0
  */
 export declare namespace AdviceResponse {
-  export type Encoded = S.Codec.Encoded<typeof AdviceResponse>;
+  export type Encoded = typeof AdviceResponse.Encoded;
 }

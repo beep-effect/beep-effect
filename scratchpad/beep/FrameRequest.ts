@@ -154,7 +154,7 @@ export class FrameRequestContractError extends S.TaggedError<FrameRequestContrac
  * @since 0.0.0
  */
 export declare namespace FrameRequestContractError {
-  export type Encoded = S.Codec.Encoded<typeof FrameRequestContractError>;
+  export type Encoded = typeof FrameRequestContractError.Encoded;
 }
 
 const hasSlash = (value: string): boolean => Str.includes("/")(value) || Str.includes("\\")(value);
@@ -454,7 +454,7 @@ export class FrameRequest extends Model<FrameRequest>("FrameRequest")(
  * @since 0.0.0
  */
 export declare namespace FrameRequest {
-  export type Encoded = S.Codec.Encoded<typeof FrameRequest>;
+  export type Encoded = typeof FrameRequest.Encoded;
 }
 
 /**
@@ -712,7 +712,7 @@ export class CreateFrameRequest extends Model<CreateFrameRequest>("CreateFrameRe
  * @since 0.0.0
  */
 export declare namespace CreateFrameRequest {
-  export type Encoded = S.Codec.Encoded<typeof CreateFrameRequest>;
+  export type Encoded = typeof CreateFrameRequest.Encoded;
 }
 
 /**
@@ -841,7 +841,7 @@ export class FrameRequestStateUpdate extends Model<FrameRequestStateUpdate>("Fra
  * @since 0.0.0
  */
 export declare namespace FrameRequestStateUpdate {
-  export type Encoded = S.Codec.Encoded<typeof FrameRequestStateUpdate>;
+  export type Encoded = typeof FrameRequestStateUpdate.Encoded;
 }
 
 /**
@@ -964,7 +964,7 @@ export class FrameRequestPromotion extends Model<FrameRequestPromotion>("FrameRe
  * @since 0.0.0
  */
 export declare namespace FrameRequestPromotion {
-  export type Encoded = S.Codec.Encoded<typeof FrameRequestPromotion>;
+  export type Encoded = typeof FrameRequestPromotion.Encoded;
 }
 
 /**
@@ -1037,7 +1037,7 @@ export class FrameRequestEnvelope extends Model<FrameRequestEnvelope>("FrameRequ
  * @since 0.0.0
  */
 export declare namespace FrameRequestEnvelope {
-  export type Encoded = S.Codec.Encoded<typeof FrameRequestEnvelope>;
+  export type Encoded = typeof FrameRequestEnvelope.Encoded;
 }
 
 /**
@@ -1104,7 +1104,7 @@ export class FrameRequestBatch extends Model<FrameRequestBatch>("FrameRequestBat
  * @since 0.0.0
  */
 export declare namespace FrameRequestBatch {
-  export type Encoded = S.Codec.Encoded<typeof FrameRequestBatch>;
+  export type Encoded = typeof FrameRequestBatch.Encoded;
 }
 
 /**

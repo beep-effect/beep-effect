@@ -1,0 +1,23 @@
+{
+  "previous": {
+    "//": "8acfaaefe0576827de7653b26504ee0fc183a8a6cb70a517b8898228021262ec",
+    "@beep/repo-cli": "292f9bc49e3043b9bdd265abaa443b317755b0581f3264a7312d7aa52d474816"
+  },
+  "review": {
+    "reviewer": "Claude Fable 5.2 (gate-report-core P2 lane, feat/gate-report-services)",
+    "reason": "Record the two new libraries' tasks (generated library scripts, root task definitions, no override), the repo CLI tasks whose configuration changed with its new dependency on the gate-run library, and the inputs the policy fingerprint added to the root. No qualification is granted.",
+    "basis": {
+      "path": "docs/reports/gate-run-libraries-cache-review-2026-11-19.md",
+      "sha256": "bbbc45f4f8d6f8888e8781843104af37ac3229ad9b70a731aa7634bd3ff26c80"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/repo-cli",
+    "@beep/repo-gate-record",
+    "@beep/repo-gate-run"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

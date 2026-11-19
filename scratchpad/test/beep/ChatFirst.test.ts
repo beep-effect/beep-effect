@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -69,9 +70,9 @@ describe("ChatFirst", () => {
     expect(decode(ChatFirstLegacyBlockSpec, { type: "memoryLink", memoryId: "m1", title: "Fact" }).type).toBe(
       "memoryLink",
     );
-    expect(decodeFails(ChatFirstLegacyBlockSpec, { type: "conversationLink", conversationId: "c1", title: "Talk" })).toBe(
-      true,
-    );
+    expect(
+      decodeFails(ChatFirstLegacyBlockSpec, { type: "conversationLink", conversationId: "c1", title: "Talk" }),
+    ).toBe(true);
   });
 
   it("covers question, receipt, and intent branches", () => {
@@ -123,33 +124,51 @@ describe("ChatFirst", () => {
     });
     expect(O.isSome(receiptRequestIssue(shown))).toBe(true);
     expect(O.isSome(receiptResultIssue(ChatFirstReceiptResult.make({ blockId: "b1", accepted: false })))).toBe(true);
-    expect(O.isSome(receiptResultIssue(ChatFirstReceiptResult.make({ blockId: "b1", accepted: true, reason: O.some("no") })))).toBe(true);
+    expect(
+      O.isSome(
+        receiptResultIssue(ChatFirstReceiptResult.make({ blockId: "b1", accepted: true, reason: O.some("no") })),
+      ),
+    ).toBe(true);
     const intent = Effect.runSync(
       decodeProactiveIntent({ intentId: "intent_1", deliveryState: "future", block: goal }),
     );
     expect(intent.deliveryState).toBe("dead_letter");
-    expect(consumesTurnBudget(ProactiveIntent.make({ intentId: "intent_1", deliveryState: "ready", block: goal }))).toBe(true);
-    expect(consumesTurnBudget(ProactiveIntent.make({ intentId: "intent_1", deliveryState: "delivered", block: goal }))).toBe(false);
-    expect("requeueCount" in materializablePayload(MaterializableProactiveIntent.make({
-      intentId: "intent_1",
-      deliveryState: "ready",
-      block: goal,
-    }))).toBe(false);
+    expect(
+      consumesTurnBudget(ProactiveIntent.make({ intentId: "intent_1", deliveryState: "ready", block: goal })),
+    ).toBe(true);
+    expect(
+      consumesTurnBudget(ProactiveIntent.make({ intentId: "intent_1", deliveryState: "delivered", block: goal })),
+    ).toBe(false);
+    expect(
+      "requeueCount" in
+        materializablePayload(
+          MaterializableProactiveIntent.make({
+            intentId: "intent_1",
+            deliveryState: "ready",
+            block: goal,
+          }),
+        ),
+    ).toBe(false);
     expect(
       O.isSome(
         outcomeRequestIssue(
-          ProactiveIntentOutcomeRequest.make({ outcome: "suppressed", occurredAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z") }),
+          ProactiveIntentOutcomeRequest.make({
+            outcome: "suppressed",
+            occurredAt: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+          }),
         ),
       ),
     ).toBe(true);
-    expect(stableBlockId({ uid: "u1", generation: 1, block: goal }).startsWith("cfb_")).toBe(true);
+    expect(Str.startsWith("cfb_")(stableBlockId({ uid: "u1", generation: 1, block: goal }))).toBe(true);
     expect(TaskCardSpec.make({ type: "taskCard", taskId: "task_1", title: "Write" }).title).toBe("Write");
     expect(CaptureLinkSpec.make({ type: "captureLink", captureId: "cap_1", title: "Clip" }).type).toBe("captureLink");
     expect(ConversationLinkSpec.make({ type: "conversationLink", conversationId: "c1", title: "Talk" }).type).toBe(
       "conversationLink",
     );
     expect(MemoryLinkSpec.make({ type: "memoryLink", memoryId: "m1", title: "Fact" }).type).toBe("memoryLink");
-    expect(MemoryReviewCardSpec.make({ type: "memoryReviewCard", memoryId: "m1", content: "Seattle" }).category).toBe("");
+    expect(MemoryReviewCardSpec.make({ type: "memoryReviewCard", memoryId: "m1", content: "Seattle" }).category).toBe(
+      "",
+    );
     for (const schema of [QuestionCardSpec, TaskCardSpec, GoalLinkSpec, ProactiveIntent, ChatFirstBlockSpec]) {
       expect(Arbitrary.schema(schema)).toBeTruthy();
     }

@@ -1,21 +1,21 @@
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { IRI } from "@beep/rdf";
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
+import * as LanguageModel from "effect/ai/LanguageModel";
+import * as Response from "effect/ai/Response";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Stream from "effect/Stream";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as LanguageModel from "effect/ai/LanguageModel";
-import * as Response from "effect/ai/Response";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { Entity, KnowledgeGraph, Relation, RelationObject } from "../../Domain/Model/Entity.ts";
 import { EntityId } from "../../Domain/Model/shared.ts";
-import { EntityIndex } from "../../Service/EntityIndex.ts";
+import { EntityIndex, ScoredEntity } from "../../Service/EntityIndex.ts";
 import { GraphRAG, GraphRAGGenerationError } from "../../Service/GraphRAG.ts";
 import { RetryPolicy } from "../../Service/Retry.ts";
-import { SubgraphExtractor } from "../../Service/SubgraphExtractor.ts";
-import * as S from "effect/Schema";
+import { Subgraph, SubgraphExtractor } from "../../Service/SubgraphExtractor.ts";
 
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 
@@ -70,7 +70,9 @@ const EntityIndexTest = Layer.succeed(
   EntityIndex,
   EntityIndex.of({
     index: Effect.fn("EntityIndex.index")((source) => Effect.succeed(A.length(source.entities))),
-    findSimilar: Effect.fn("EntityIndex.findSimilar")((_query, count) => Effect.succeed(A.take(ranked, count))),
+    findSimilar: Effect.fn("EntityIndex.findSimilar")((_query, count) =>
+      Effect.succeed(A.map(A.take(ranked, count), (row) => ScoredEntity.make(row)))
+    ),
     findByType: Effect.fn("EntityIndex.findByType")(() => Effect.succeed([])),
     add: Effect.fn("EntityIndex.add")(() => Effect.void),
     remove: Effect.fn("EntityIndex.remove")(() => Effect.succeed(false)),
@@ -124,12 +126,7 @@ describe("SubgraphExtractor", () => {
         const extractor = yield* SubgraphExtractor;
         const options = { maxNodes: PosInt.make(2), followIncoming: true, followOutgoing: true };
 
-        const dataFirst = yield* extractor.extract(
-          graph,
-          [alice.id, bob.id, carol.id],
-          S.Natural.make(2),
-          options
-        );
+        const dataFirst = yield* extractor.extract(graph, [alice.id, bob.id, carol.id], S.Natural.make(2), options);
         const dataLast = yield* extractor.extract([alice.id, bob.id, carol.id], S.Natural.make(2), options)(graph);
 
         assert.deepEqual(dataLast, dataFirst);
@@ -207,14 +204,18 @@ describe("GraphRAG", () => {
         assert.include(retrievalFirst.context, "[id: alice]");
         assert.include(retrievalFirst.context, "[id: carol]");
 
-        const contextFirst = yield* graphRag.formatContext(retrievalFirst.subgraph, retrievalFirst.query, {
-          includeAttributes: true,
-          includeRelations: true,
-        });
+        const contextFirst = yield* graphRag.formatContext(
+          Subgraph.make(retrievalFirst.subgraph),
+          retrievalFirst.query,
+          {
+            includeAttributes: true,
+            includeRelations: true,
+          }
+        );
         const contextLast = yield* graphRag.formatContext(retrievalFirst.query, {
           includeAttributes: true,
           includeRelations: true,
-        })(retrievalFirst.subgraph);
+        })(Subgraph.make(retrievalFirst.subgraph));
         assert.strictEqual(contextLast, contextFirst);
 
         const generatedFirst = yield* graphRag.generate(retrievalFirst, retrievalFirst.query, generationOptions);

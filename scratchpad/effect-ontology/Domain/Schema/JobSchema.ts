@@ -13,10 +13,11 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { HttpsUrl, LiteralKit } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { OntologyName, UUID, withContentHashIdStatics } from "../Identity.ts";
 import { EntityId } from "../Model/shared.ts";
-import * as Effect from "effect/Effect";
+
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/JobSchema");
 const backgroundJobIdPattern = /^job-[0-9a-f]{12}$/;
 
@@ -37,18 +38,21 @@ const backgroundJobIdPattern = /^job-[0-9a-f]{12}$/;
  * @since 0.0.0
  */
 export const BackgroundJobId = S.String.check(
-  S.isPattern(backgroundJobIdPattern, $I.annote("BackgroundJobIdPatternCheck", {
-    title: "Background Job Identifier",
-    description: "A job- prefix followed by exactly twelve lowercase hexadecimal characters.",
-    message: "Background job ID must use job- followed by exactly twelve lowercase hexadecimal characters.",
-  }))
+  S.isPattern(
+    backgroundJobIdPattern,
+    $I.annote("BackgroundJobIdPatternCheck", {
+      title: "Background Job Identifier",
+      description: "A job- prefix followed by exactly twelve lowercase hexadecimal characters.",
+      message: "Background job ID must use job- followed by exactly twelve lowercase hexadecimal characters.",
+    })
+  )
 ).pipe(
-    S.brand("BackgroundJobId"),
-    $I.annoteSchema("BackgroundJobId", {
-      description: "Compact content-derived identifier for a persisted background job.",
-    }),
-    withContentHashIdStatics("job")
-  );
+  S.brand("BackgroundJobId"),
+  $I.annoteSchema("BackgroundJobId", {
+    description: "Compact content-derived identifier for a persisted background job.",
+  }),
+  withContentHashIdStatics("job")
+);
 
 /**
  * Runtime value decoded by {@link BackgroundJobId}.
@@ -70,10 +74,10 @@ export const BackgroundJobId = S.String.check(
 export type BackgroundJobId = typeof BackgroundJobId.Type;
 
 const SimilarityReason = LiteralKit(["alias_added", "embedding_updated", "manual"]).pipe(
-    $I.annoteSchema("SimilarityReason", {
-      description: "Supported reasons for recomputing entity-similarity scores.",
-    })
-  );
+  $I.annoteSchema("SimilarityReason", {
+    description: "Supported reasons for recomputing entity-similarity scores.",
+  })
+);
 
 const CommonJobFields = {
   id: BackgroundJobId,
@@ -240,7 +244,8 @@ const JobMetadataDefinition = S.Struct({
     description: "Identifier of the job whose retries are tracked.",
   }),
   attempts: S.Natural.pipe(
-    S.withConstructorDefault(Effect.succeed(jobMetadataDefinitionAttemptsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(jobMetadataDefinitionAttemptsDefault)),
+    S.withConstructorDefault(Effect.succeed(jobMetadataDefinitionAttemptsDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(jobMetadataDefinitionAttemptsDefault)),
     S.annotateKey({
       description: "Number of completed delivery attempts; defaults to zero.",
     })

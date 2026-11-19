@@ -108,8 +108,8 @@ export class RepoCommand extends S.Opaque<RepoCommand, { readonly brand: unique 
  * console.log(commandText(RepoCommand.make({ words: ["gate", "show", "test"], status: "planned" })).endsWith("gate show test")); // true
  * ```
  *
- * @param command - A repo CLI command's words and status.
- * @returns The command as an agent types it, with the repo CLI prefix.
+ * @param command - the repo CLI command to print
+ * @returns the command line an agent can run from the repository root
  * @category projections
  * @since 0.0.0
  */
@@ -146,11 +146,39 @@ export class GateQueryCommands extends S.Opaque<GateQueryCommands, { readonly br
 ) {}
 
 // `beep gate show <gate>` and `beep gate item <gate> <selector>` are built in the repo CLI.
-const liveQueries = (gate: string): GateQueryCommands =>
+const liveQueries = (gate: ContractGate): GateQueryCommands =>
   GateQueryCommands.make({
     showRun: RepoCommand.make({ words: ["gate", "show", gate], status: "live" }),
     showItem: RepoCommand.make({ words: ["gate", "item", gate], status: "live" }),
   });
+
+/**
+ * The gates on the console contract in this goal: `test` and `check`.
+ *
+ * **Example** (Check a contract gate)
+ *
+ * ```ts
+ * import { ContractGate } from "@beep/repo-gate-run/RepoPointers";
+ *
+ * console.log(ContractGate.is.check("check")); // true
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const ContractGate = LiteralKit(["test", "check"]).pipe(
+  $I.annoteSchema("ContractGate", {
+    description: "The gates on the console contract: test and check.",
+  })
+);
+
+/**
+ * Type of {@link ContractGate}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ContractGate = typeof ContractGate.Type;
 
 /**
  * The repo's query commands by gate, for the gates on the console contract.
@@ -166,7 +194,7 @@ const liveQueries = (gate: string): GateQueryCommands =>
  * @category constants
  * @since 0.0.0
  */
-export const repoGateCommands: Readonly<Record<"test" | "check", GateQueryCommands>> = {
+export const repoGateCommands: Readonly<Record<ContractGate, GateQueryCommands>> = {
   test: liveQueries("test"),
   check: liveQueries("check"),
 };

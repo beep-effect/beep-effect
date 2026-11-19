@@ -11,8 +11,9 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import * as S from "effect/Schema";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+
 const $I = $ScratchpadId.create("effect-ontology/Schema/MentionFactory");
 
 /**
@@ -30,7 +31,8 @@ const $I = $ScratchpadId.create("effect-ontology/Schema/MentionFactory");
  * @category models
  * @since 0.0.0
  */
-export class Mention extends S.Opaque<Mention, { readonly brand: unique symbol }>()(S.Struct({
+export class Mention extends S.Opaque<Mention, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: S.String.pipe(
       S.check(
         S.isPattern(/^[a-z][a-z0-9_]*$/, {
@@ -48,9 +50,12 @@ export class Mention extends S.Opaque<Mention, { readonly brand: unique symbol }
     context: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Brief source context used to disambiguate the mention.",
     }),
-  }).pipe($I.annoteSchema("Mention", {
-    description: "Schema-backed entity mention captured before ontology typing.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("Mention", {
+      description: "Schema-backed entity mention captured before ontology typing.",
+    })
+  )
+) {}
 
 /**
  * Schema for mention extraction (entity detection without typing)

@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { ContentHash, DocumentId, GcsUri } from "../../../Domain/Identity.ts";
 import {
   ChunkingParams,
@@ -14,6 +15,7 @@ import {
 } from "../../../Domain/Schema/DocumentMetadata.ts";
 import { BackgroundJobId, JobMetadata } from "../../../Domain/Schema/JobSchema.ts";
 import { AssertionId, ClaimId, DerivedAssertionId, TextSpan } from "../../../Domain/Schema/KnowledgeModel.ts";
+
 const decodeGcsUri = S.decodeEffect(GcsUri);
 const decodeJobMetadata = S.decodeEffect(JobMetadata);
 const decodePreprocessingOptions = S.decodeEffect(PreprocessingOptions);
@@ -24,7 +26,7 @@ const decodePreprocessingOptionsResult = S.decodeResult(PreprocessingOptions);
 const decodeTextSpanResult = S.decodeResult(TextSpan);
 const encodeTextSpan = S.encodeEffect(TextSpan);
 
-const contentHash = ContentHash.make("a".repeat(64));
+const contentHash = ContentHash.make(Str.repeat(64)("a"));
 
 describe("effect-ontology schema-owned domain behavior", () => {
   it("enforces adaptive chunking and preprocessing bounds at decode time", () => {

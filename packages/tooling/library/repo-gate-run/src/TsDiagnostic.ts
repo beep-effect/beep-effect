@@ -148,8 +148,8 @@ const fromMatch = (match: RegExpExecArray | null): O.Option<TsDiagnostic> =>
  * console.log(O.map(parsed, (diagnostic) => diagnostic.line)); // { _id: 'Option', _tag: 'Some', value: 3 }
  * ```
  *
- * @param line - One line of `--pretty` compiler output, colour codes removed.
- * @returns The diagnostic it reports, or none for any other line.
+ * @param line - one line of compiler output, colours already stripped
+ * @returns the diagnostic when the line is in the pretty form, else none
  * @category parsing
  * @since 0.0.0
  */
@@ -170,8 +170,8 @@ export const parsePrettyDiagnostic = (line: string): O.Option<TsDiagnostic> =>
  * console.log(O.isSome(parseDiagnosticLine("src/a.ts(3,7): error TS2322: nope"))); // true
  * ```
  *
- * @param line - One trimmed line of compiler output in any of the three forms.
- * @returns The diagnostic it reports, or none for any other line.
+ * @param line - one line of compiler output, colours already stripped
+ * @returns the diagnostic the line prints, in whichever form, or none for any other line
  * @category parsing
  * @since 0.0.0
  */

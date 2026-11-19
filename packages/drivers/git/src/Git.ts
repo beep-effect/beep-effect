@@ -2239,15 +2239,23 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
+  // Annotates a single-key config call and refuses option-like argv: the key
+  // and file as reported refs, a config value (when passed) on the redacted
+  // sensitive arm, since git config has no documented `--` separator.
+  const guardConfigKey = Effect.fnUntraced(function* (
+    cwd: string,
+    key: string,
+    file: string | undefined,
+    value?: string
+  ) {
+    yield* Effect.annotateCurrentSpan({ cwd, key, file: file ?? "(repository config)" });
+    yield* rejectOptionLikeRefs(cwd, withDefined([key], file), withDefined([], value));
+  });
+
   const configGetAll: GitShape["configGetAll"] = dual(
     stringAt(1),
     Effect.fn("Git.configGetAll")(function* (cwd: string, key: string, options?: { readonly file?: string }) {
-      yield* Effect.annotateCurrentSpan({
-        cwd,
-        key,
-        file: options?.file ?? "(repository config)",
-      });
-      yield* rejectOptionLikeRefs(cwd, [key, ...(options?.file !== undefined ? [options.file] : [])]);
+      yield* guardConfigKey(cwd, key, options?.file);
       return yield* runParsed(
         "Git.configGetAll",
         GitCommand.configGetAll(key, options?.file),
@@ -2264,17 +2272,12 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     Effect.fn("Git.configUnset")(function* (
       cwd: string,
       key: string,
-      options?: { readonly file?: string; readonly all?: boolean }
+      options?: { readonly file?: string; readonly all?: boolean; readonly value?: string }
     ) {
-      yield* Effect.annotateCurrentSpan({
-        cwd,
-        key,
-        file: options?.file ?? "(repository config)",
-      });
-      yield* rejectOptionLikeRefs(cwd, [key, ...(options?.file !== undefined ? [options.file] : [])]);
+      yield* guardConfigKey(cwd, key, options?.file, options?.value);
       return yield* runVoid(
         "Git.configUnset",
-        GitCommand.configUnset(key, options?.file, options?.all ?? false),
+        GitCommand.configUnset(key, options?.file, options?.all ?? false, options?.value),
         cwd,
         key
       );
@@ -3014,21 +3017,24 @@ export interface GitShape {
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**
-   * Mutating: `git config [-f <file>] (--unset | --unset-all) <key>` —
+   * Mutating: `git config [-f <file>] (--unset | --unset-all) [--fixed-value] <key> [<value>]` —
    * removes `key` (or, with `options.all`, every value of a multi-valued
-   * key). Unsetting a key that was never set fails LOUDLY (git exits 5) —
-   * an unset that silently did nothing is indistinguishable from one that
-   * worked; probe with `configGet` first when idempotency is wanted.
+   * key). With `options.value`, only the entries literally equal to it are
+   * removed and the key's other values stay; the value is redacted from
+   * error argv like `configSet`'s. Unsetting a key (or value) that was never
+   * set fails LOUDLY (git exits 5) — an unset that silently did nothing is
+   * indistinguishable from one that worked; probe with `configGetAll` first
+   * when idempotency is wanted.
    */
   readonly configUnset: {
     (
       cwd: string,
       key: string,
-      options?: { readonly file?: string; readonly all?: boolean }
+      options?: { readonly file?: string; readonly all?: boolean; readonly value?: string }
     ): Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
     (
       key: string,
-      options?: { readonly file?: string; readonly all?: boolean }
+      options?: { readonly file?: string; readonly all?: boolean; readonly value?: string }
     ): (cwd: string) => Effect.Effect<void, GitCommandError | NotARepositoryError | UnknownRefError>;
   };
   /**

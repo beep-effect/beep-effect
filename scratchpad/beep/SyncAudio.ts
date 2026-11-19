@@ -66,7 +66,7 @@ export class AudioPrecacheResponse extends Model<AudioPrecacheResponse>("AudioPr
  * @since 0.0.0
  */
 export declare namespace AudioPrecacheResponse {
-  export type Encoded = S.Codec.Encoded<typeof AudioPrecacheResponse>;
+  export type Encoded = typeof AudioPrecacheResponse.Encoded;
 }
 
 /**
@@ -114,7 +114,7 @@ export class AudioFileUrlInfo extends Model<AudioFileUrlInfo>("AudioFileUrlInfo"
  * @since 0.0.0
  */
 export declare namespace AudioFileUrlInfo {
-  export type Encoded = S.Codec.Encoded<typeof AudioFileUrlInfo>;
+  export type Encoded = typeof AudioFileUrlInfo.Encoded;
 }
 
 /**
@@ -171,7 +171,7 @@ export class ConversationAudioSpanInfo extends Model<ConversationAudioSpanInfo>(
  * @since 0.0.0
  */
 export declare namespace ConversationAudioSpanInfo {
-  export type Encoded = S.Codec.Encoded<typeof ConversationAudioSpanInfo>;
+  export type Encoded = typeof ConversationAudioSpanInfo.Encoded;
 }
 
 const emptySpans: ReadonlyArray<ConversationAudioSpanInfo> = [];
@@ -222,7 +222,7 @@ export class ConversationAudioUrlInfo extends Model<ConversationAudioUrlInfo>("C
  * @since 0.0.0
  */
 export declare namespace ConversationAudioUrlInfo {
-  export type Encoded = S.Codec.Encoded<typeof ConversationAudioUrlInfo>;
+  export type Encoded = typeof ConversationAudioUrlInfo.Encoded;
 }
 
 /**
@@ -278,5 +278,5 @@ export class AudioUrlsResponse extends Model<AudioUrlsResponse>("AudioUrlsRespon
  * @since 0.0.0
  */
 export declare namespace AudioUrlsResponse {
-  export type Encoded = S.Codec.Encoded<typeof AudioUrlsResponse>;
+  export type Encoded = typeof AudioUrlsResponse.Encoded;
 }

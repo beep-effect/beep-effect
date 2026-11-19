@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
@@ -71,7 +72,10 @@ describe("TranscriptSegment", () => {
       speaker_identity_status: "not_user",
     });
     assert.strictEqual(present.speakerId, 1);
-    assert.strictEqual(O.getOrElse(present.personId, () => ""), "p1");
+    assert.strictEqual(
+      O.getOrElse(present.personId, () => ""),
+      "p1",
+    );
     assert.strictEqual(O.getOrElse(present.translations, () => []).length, 1);
     const missing = decode(toWire(TranscriptSegment), {
       id: "seg-2",
@@ -83,7 +87,10 @@ describe("TranscriptSegment", () => {
       speech_profile_processed: true,
       speaker_identity_status: "user",
     });
-    assert.strictEqual(O.getOrElse(missing.speaker, () => ""), "SPEAKER_00");
+    assert.strictEqual(
+      O.getOrElse(missing.speaker, () => ""),
+      "SPEAKER_00",
+    );
     assert.strictEqual(O.isNone(missing.personId), true);
     assert.strictEqual(O.isNone(missing.sttProvider), true);
     const nulled = decode(toWire(TranscriptSegment), {
@@ -146,14 +153,16 @@ describe("TranscriptSegment", () => {
       "mints the legacy segment id as an RFC 9562 UUIDv5 in the URL namespace",
       Effect.fnUntraced(function* () {
         // Expected values come from Python's uuid.uuid5(uuid.NAMESPACE_URL, name).
-        assert.strictEqual(yield* legacyConversationSegmentId("conv-1", 0), "da57cb65-5efc-5c8a-9e87-2959d45b8279");
-        assert.strictEqual(yield* legacyConversationSegmentId("conv-1", 12), "3c2eac32-5076-5f96-9418-b7d508a27857");
-        assert.strictEqual(
-          yield* legacyConversationSegmentId("café-会话", 7),
-          "32780498-b4ca-5190-925b-28089309cc2d",
-        );
-        assert.strictEqual(yield* legacyConversationSegmentId(0)("conv-1"), "da57cb65-5efc-5c8a-9e87-2959d45b8279");
-        assert.strictEqual(isUUIDv5(yield* legacyConversationSegmentId("conv-1", 0)), true);
+        const result1 = yield* legacyConversationSegmentId("conv-1", 0);
+        assert.strictEqual(result1, "da57cb65-5efc-5c8a-9e87-2959d45b8279");
+        const result2 = yield* legacyConversationSegmentId("conv-1", 12);
+        assert.strictEqual(result2, "3c2eac32-5076-5f96-9418-b7d508a27857");
+        const result3 = yield* legacyConversationSegmentId("café-会话", 7);
+        assert.strictEqual(result3, "32780498-b4ca-5190-925b-28089309cc2d");
+        const result4 = yield* legacyConversationSegmentId(0)("conv-1");
+        assert.strictEqual(result4, "da57cb65-5efc-5c8a-9e87-2959d45b8279");
+        const result5 = yield* legacyConversationSegmentId("conv-1", 0);
+        assert.strictEqual(isUUIDv5(result5), true);
         const illFormed = yield* Effect.flip(legacyConversationSegmentId("\ud800", 0));
         assert.strictEqual(illFormed.reason._tag, "BadArgument");
       }),
@@ -179,7 +188,7 @@ describe("TranscriptSegment", () => {
     ];
     assert.strictEqual(canDisplaySeconds(overlap), false);
     assert.strictEqual(segmentsAsString(overlap, true), "Speaker 0: A\n\nSpeaker 0: B");
-    assert.strictEqual(SENTENCE_ENDERS.includes("。"), true);
+    assert.strictEqual(Str.includes("。")(SENTENCE_ENDERS), true);
     assert.strictEqual(decode(SpeakerIdentityStatus, "no_match"), "no_match");
   });
 

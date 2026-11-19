@@ -1,3 +1,6 @@
+import * as A from "effect/Array";
+import * as R from "effect/Record";
+import * as Str from "effect/String";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
@@ -153,13 +156,13 @@ describe("normalizePromotionGraphArguments", () => {
     assert.strictEqual(failed(normalizePromotionGraphArguments({})), true);
     assert.strictEqual(failed(normalizePromotionGraphArguments({ " ": 1 })), true);
     assert.strictEqual(failed(normalizePromotionGraphArguments({ a: 1, " a": 2 })), true);
-    assert.strictEqual(failed(normalizePromotionGraphArguments({ [`${"k".repeat(65)}`]: 1 })), true);
-    assert.strictEqual(failed(normalizePromotionGraphArguments({ a: { [`${"k".repeat(65)}`]: 1 } })), true);
-    const tooMany = Object.fromEntries(
+    assert.strictEqual(failed(normalizePromotionGraphArguments({ [`${Str.repeat(65)("k")}`]: 1 })), true);
+    assert.strictEqual(failed(normalizePromotionGraphArguments({ a: { [`${Str.repeat(65)("k")}`]: 1 } })), true);
+    const tooMany = R.fromEntries(
       Array.from({ length: PROMOTION_GRAPH_ARGUMENT_MAX_COUNT + 1 }, (_, index) => [`k${index}`, index]),
     );
     assert.strictEqual(failed(normalizePromotionGraphArguments(tooMany)), true);
-    assert.strictEqual(failed(normalizePromotionGraphArguments({ big: "x".repeat(8200) })), true);
+    assert.strictEqual(failed(normalizePromotionGraphArguments({ big: Str.repeat(8200)("x") })), true);
     const nested = (depth: number): S.Json => (depth === 0 ? "leaf" : [nested(depth - 1)]);
     assert.strictEqual(failed(normalizePromotionGraphArguments({ a: nested(8) })), false);
     assert.strictEqual(failed(normalizePromotionGraphArguments({ a: nested(9) })), true);
@@ -180,21 +183,30 @@ describe("GraphRelationEndpoint", () => {
     assert.strictEqual(decoded.entityId, "user");
     assert.strictEqual(GraphRelationEndpoint.make({ label: "Seattle", nodeType: "place" }).entityId, "");
     assert.strictEqual(decodeFails(GraphRelationEndpoint, { label: "   ", nodeType: "place" }), true);
-    assert.strictEqual(decodeFails(GraphRelationEndpoint, { label: "x".repeat(201), nodeType: "place" }), true);
+    assert.strictEqual(decodeFails(GraphRelationEndpoint, { label: Str.repeat(201)("x"), nodeType: "place" }), true);
     assert.strictEqual(decodeFails(GraphRelationEndpoint, { label: "Seattle", nodeType: "entity" }), true);
   });
 
   it("normalizes the label and derives or checks the id", () => {
-    const derived = ok(normalizeGraphRelationEndpoint(GraphRelationEndpoint.make({ label: " The  City ", nodeType: "place" })));
+    const derived = ok(
+      normalizeGraphRelationEndpoint(GraphRelationEndpoint.make({ label: " The  City ", nodeType: "place" })),
+    );
     assert.strictEqual(derived.label, "The City");
     assert.strictEqual(derived.entityId, ok(canonicalGraphEntityId("the city")));
     assert.strictEqual(
-      failed(normalizeGraphRelationEndpoint(GraphRelationEndpoint.make({ entityId: "user", label: "Seattle", nodeType: "place" }))),
+      failed(
+        normalizeGraphRelationEndpoint(
+          GraphRelationEndpoint.make({ entityId: "user", label: "Seattle", nodeType: "place" }),
+        ),
+      ),
       true,
     );
     assert.strictEqual(
-      ok(normalizeGraphRelationEndpoint(GraphRelationEndpoint.make({ entityId: SEATTLE_ID, label: "Seattle", nodeType: "place" })))
-        .entityId,
+      ok(
+        normalizeGraphRelationEndpoint(
+          GraphRelationEndpoint.make({ entityId: SEATTLE_ID, label: "Seattle", nodeType: "place" }),
+        ),
+      ).entityId,
       SEATTLE_ID,
     );
   });
@@ -238,9 +250,32 @@ describe("PromotionGraphPlan", () => {
       planHash: "",
     });
     assert.strictEqual(decoded.schemaVersion, PROMOTION_GRAPH_PLAN_V2_VERSION);
-    assert.strictEqual(decodeFails(PromotionGraphPlan, { schemaVersion: "v3", subjectEntityId: "user", predicate: "p" }), true);
-    assert.strictEqual(decodeFails(PromotionGraphPlanV1, { schemaVersion: PROMOTION_GRAPH_PLAN_VERSION, subjectEntityId: " ", predicate: "p", arguments: {}, qualifiers: {}, planHash: "" }), true);
-    assert.strictEqual(decodeFails(PromotionGraphPlanV1, { schemaVersion: PROMOTION_GRAPH_PLAN_VERSION, subjectEntityId: "user", predicate: "p".repeat(65), arguments: {}, qualifiers: {}, planHash: "" }), true);
+    assert.strictEqual(
+      decodeFails(PromotionGraphPlan, { schemaVersion: "v3", subjectEntityId: "user", predicate: "p" }),
+      true,
+    );
+    assert.strictEqual(
+      decodeFails(PromotionGraphPlanV1, {
+        schemaVersion: PROMOTION_GRAPH_PLAN_VERSION,
+        subjectEntityId: " ",
+        predicate: "p",
+        arguments: {},
+        qualifiers: {},
+        planHash: "",
+      }),
+      true,
+    );
+    assert.strictEqual(
+      decodeFails(PromotionGraphPlanV1, {
+        schemaVersion: PROMOTION_GRAPH_PLAN_VERSION,
+        subjectEntityId: "user",
+        predicate: Str.repeat(65)("p"),
+        arguments: {},
+        qualifiers: {},
+        planHash: "",
+      }),
+      true,
+    );
   });
 
   it("derives the Python v1 hash and normalizes the arguments", () => {
@@ -248,7 +283,7 @@ describe("PromotionGraphPlan", () => {
     assert.strictEqual(derived.planHash, P1_HASH);
     assert.deepStrictEqual(derived.arguments, { place: "Seattle", since: 2020 });
     assert.strictEqual(ok(derivePromotionGraphPlan(derived)).planHash, P1_HASH);
-    assert.strictEqual(Object.keys(promotionGraphPlanHashPayload(derived)).length, 4);
+    assert.strictEqual(R.keys<string, S.Json>(promotionGraphPlanHashPayload(derived)).length, 4);
   });
 
   it("derives the Python v2 hash, normalizes endpoints, and mirrors qualifiers", () => {
@@ -259,12 +294,18 @@ describe("PromotionGraphPlan", () => {
     assert.strictEqual(derived.subject.entityId, "user");
     assert.strictEqual(derived.subject.label, "User");
     assert.strictEqual(derived.object.entityId, SEATTLE_ID);
-    assert.strictEqual(Object.keys(promotionGraphPlanHashPayload(derived)).length, 7);
+    assert.strictEqual(R.keys<string, S.Json>(promotionGraphPlanHashPayload(derived)).length, 7);
   });
 
   it("rejects each version rule", () => {
-    assert.strictEqual(failed(derivePromotionGraphPlan(PromotionGraphPlanV1.make({ subjectEntityId: "user", predicate: "p" }))), true);
-    assert.strictEqual(failed(derivePromotionGraphPlan(PromotionGraphPlanV1.make({ ...v1Plan(), planHash: "stale" }))), true);
+    assert.strictEqual(
+      failed(derivePromotionGraphPlan(PromotionGraphPlanV1.make({ subjectEntityId: "user", predicate: "p" }))),
+      true,
+    );
+    assert.strictEqual(
+      failed(derivePromotionGraphPlan(PromotionGraphPlanV1.make({ ...v1Plan(), planHash: "stale" }))),
+      true,
+    );
     const mismatch = PromotionGraphPlanV2.make({
       ...v2Plan(),
       subjectEntityId: "someone",
@@ -291,10 +332,22 @@ describe("PromotionAdmissionReceipt", () => {
     assert.strictEqual(made.receiptId, "");
     const decoded = decode(PromotionAdmissionReceipt, encode(PromotionAdmissionReceipt, made));
     assert.strictEqual(decoded.sourceItemRevision, 3);
-    assert.strictEqual(decodeFails(PromotionAdmissionReceipt, { ...encode(PromotionAdmissionReceipt, made), sourceItemRevision: 0 }), true);
-    assert.strictEqual(decodeFails(PromotionAdmissionReceipt, { ...encode(PromotionAdmissionReceipt, made), evidenceIds: [" "] }), true);
-    assert.strictEqual(decodeFails(PromotionAdmissionReceipt, { ...encode(PromotionAdmissionReceipt, made), memoryId: " " }), true);
-    assert.strictEqual(decodeFails(PromotionAdmissionReceipt, { ...encode(PromotionAdmissionReceipt, made), decision: "review" }), true);
+    assert.strictEqual(
+      decodeFails(PromotionAdmissionReceipt, { ...encode(PromotionAdmissionReceipt, made), sourceItemRevision: 0 }),
+      true,
+    );
+    assert.strictEqual(
+      decodeFails(PromotionAdmissionReceipt, { ...encode(PromotionAdmissionReceipt, made), evidenceIds: [" "] }),
+      true,
+    );
+    assert.strictEqual(
+      decodeFails(PromotionAdmissionReceipt, { ...encode(PromotionAdmissionReceipt, made), memoryId: " " }),
+      true,
+    );
+    assert.strictEqual(
+      decodeFails(PromotionAdmissionReceipt, { ...encode(PromotionAdmissionReceipt, made), decision: "review" }),
+      true,
+    );
   });
 
   it("derives the Python receipt id and normalizes the id lists", () => {
@@ -302,9 +355,14 @@ describe("PromotionAdmissionReceipt", () => {
     assert.strictEqual(derived.receiptId, RECEIPT_ID);
     assert.deepStrictEqual(derived.evidenceIds, ["ev-1", "ev-2"]);
     assert.deepStrictEqual(derived.supersedes, ["old"]);
-    assert.strictEqual(Object.keys(promotionAdmissionIdentityPayload(derived)).length, 10);
+    assert.strictEqual(R.keys<string, S.Json>(promotionAdmissionIdentityPayload(derived)).length, 10);
     assert.strictEqual(ok(derivePromotionAdmissionReceipt(derived)).receiptId, RECEIPT_ID);
-    assert.strictEqual(failed(derivePromotionAdmissionReceipt(PromotionAdmissionReceipt.make({ ...receipt(), receiptId: "padm_other" }))), true);
+    assert.strictEqual(
+      failed(
+        derivePromotionAdmissionReceipt(PromotionAdmissionReceipt.make({ ...receipt(), receiptId: "padm_other" })),
+      ),
+      true,
+    );
   });
 
   it("builds a receipt from a plan", () => {
@@ -353,7 +411,10 @@ describe("MemoryGraphAssertion", () => {
     assert.strictEqual(decodeFails(MemoryGraphAssertion, { ...v1AssertionWire, commitSequence: 0 }), true);
     assert.strictEqual(decodeFails(MemoryGraphAssertion, { ...v1AssertionWire, status: "retired" }), true);
     assert.strictEqual(decodeFails(MemoryGraphAssertion, { ...v1AssertionWire, evidenceIds: [] }), true);
-    assert.strictEqual(decodeFails(MemoryGraphAssertion, { ...v1AssertionWire, schemaVersion: PROMOTION_GRAPH_ASSERTION_V2_VERSION }), true);
+    assert.strictEqual(
+      decodeFails(MemoryGraphAssertion, { ...v1AssertionWire, schemaVersion: PROMOTION_GRAPH_ASSERTION_V2_VERSION }),
+      true,
+    );
   });
 
   it("builds the Python v1 assertion and re-validates its plan hash", () => {
@@ -417,7 +478,7 @@ describe("graphRecords", () => {
   it("projects a multi-slot v1 assertion like Python", () => {
     const records = ok(graphRecords(build(v1Plan())));
     assert.deepStrictEqual(
-      records.nodes.map((node) => [node.id, node.label, node.nodeType]),
+      A.map(records.nodes, (node) => [node.id, node.label, node.nodeType]),
       [
         ["user", "user", "entity"],
         [SEATTLE_ID, "Seattle", "entity"],
@@ -425,7 +486,7 @@ describe("graphRecords", () => {
       ],
     );
     assert.deepStrictEqual(
-      records.edges.map((edge) => [edge.id, edge.label, edge.targetId]),
+      A.map(records.edges, (edge) => [edge.id, edge.label, edge.targetId]),
       [
         ["edge_b915f1ae1f1df5ede70bf6e2", "lives_in:place", SEATTLE_ID],
         ["edge_9c2d80bb3e10f300da7a4611", "lives_in:since", "ent_c4e384460edf613d6166"],
@@ -436,12 +497,26 @@ describe("graphRecords", () => {
 
   it("labels a single-slot v1 edge with the predicate alone and dedupes nodes", () => {
     const single = ok(
-      graphRecords(build(PromotionGraphPlanV1.make({ subjectEntityId: "user", predicate: "lives_in", arguments: { place: "Seattle" } }))),
+      graphRecords(
+        build(
+          PromotionGraphPlanV1.make({
+            subjectEntityId: "user",
+            predicate: "lives_in",
+            arguments: { place: "Seattle" },
+          }),
+        ),
+      ),
     );
     assert.strictEqual(single.edges[0]?.label, "lives_in");
     const duplicate = ok(
       graphRecords(
-        build(PromotionGraphPlanV1.make({ subjectEntityId: "user", predicate: "knows", arguments: { a: "User", b: "User" } })),
+        build(
+          PromotionGraphPlanV1.make({
+            subjectEntityId: "user",
+            predicate: "knows",
+            arguments: { a: "User", b: "User" },
+          }),
+        ),
       ),
     );
     assert.strictEqual(duplicate.nodes.length, 1);
@@ -461,7 +536,7 @@ describe("graphRecords", () => {
       ),
     );
     assert.deepStrictEqual(
-      records.nodes.map((node) => [node.id, node.label]),
+      A.map(records.nodes, (node) => [node.id, node.label]),
       [
         ["user", "user"],
         ["ent_ada", "Ada"],
@@ -469,11 +544,15 @@ describe("graphRecords", () => {
       ],
     );
     assert.deepStrictEqual(
-      records.edges.map((edge) => edge.id),
+      A.map(records.edges, (edge) => edge.id),
       ["edge_263e986fedb36372bd994ed6", "edge_4ca3e86f0586da7e5f2fee38"],
     );
     assert.strictEqual(
-      failed(graphRecords(build(PromotionGraphPlanV1.make({ subjectEntityId: "user", predicate: "knows", arguments: { who: "   " } })))),
+      failed(
+        graphRecords(
+          build(PromotionGraphPlanV1.make({ subjectEntityId: "user", predicate: "knows", arguments: { who: "   " } })),
+        ),
+      ),
       true,
     );
   });
@@ -481,14 +560,14 @@ describe("graphRecords", () => {
   it("projects a v2 assertion with typed nodes and one edge", () => {
     const records = ok(graphRecords(build(v2Plan())));
     assert.deepStrictEqual(
-      records.nodes.map((node) => [node.id, node.label, node.nodeType]),
+      A.map(records.nodes, (node) => [node.id, node.label, node.nodeType]),
       [
         ["user", "User", "person"],
         [SEATTLE_ID, "Seattle", "place"],
       ],
     );
     assert.deepStrictEqual(
-      records.edges.map((edge) => [edge.id, edge.label, edge.sourceId, edge.targetId]),
+      A.map(records.edges, (edge) => [edge.id, edge.label, edge.sourceId, edge.targetId]),
       [["edge_794277db8a3e5422e694db5a", "lives_in", "user", SEATTLE_ID]],
     );
   });
@@ -531,7 +610,9 @@ describe("validPromotionAdmission", () => {
     assert.strictEqual(validPromotionAdmission({ ...base(), supersedes: [] }), false);
     const stale = { ...encode(PromotionGraphPlan, plan), planHash: "stale" };
     assert.strictEqual(validPromotionAdmission({ ...base(), promotion: { ...promotion(), graphPlan: stale } }), false);
-    const selfSupersede = ok(derivePromotionAdmissionReceipt(PromotionAdmissionReceipt.make({ ...receipt(), supersedes: ["mem-1"] })));
+    const selfSupersede = ok(
+      derivePromotionAdmissionReceipt(PromotionAdmissionReceipt.make({ ...receipt(), supersedes: ["mem-1"] })),
+    );
     assert.strictEqual(
       validPromotionAdmission({
         ...base(),

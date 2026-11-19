@@ -86,6 +86,22 @@ export const TypeReferenceId = S.NonEmptyString.pipe(
 export type TypeReferenceId = typeof TypeReferenceId.Type;
 
 /**
+ * Companion namespace for {@link TypeReferenceId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TypeReferenceId {
+  /**
+   * Encoded (wire) form of {@link TypeReferenceId}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TypeReferenceId.Encoded;
+}
+
+/**
  * Name of one field of a struct passed to or returned by a query.
  *
  * @category identifiers
@@ -105,6 +121,22 @@ export const QueryStructFieldName = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type QueryStructFieldName = typeof QueryStructFieldName.Type;
+
+/**
+ * Companion namespace for {@link QueryStructFieldName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryStructFieldName {
+  /**
+   * Encoded (wire) form of {@link QueryStructFieldName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof QueryStructFieldName.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Aggregation type descriptors
@@ -148,6 +180,26 @@ export const QueryAggregationBoundType = AggregationBoundKind.mapMembers(() =>
 export type QueryAggregationBoundType = typeof QueryAggregationBoundType.Type;
 
 /**
+ * Companion namespace for {@link QueryAggregationBoundType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryAggregationBoundType {
+  /**
+   * Encoded (wire) form of {@link QueryAggregationBoundType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | IntegerType.Encoded
+    | DoubleType.Encoded
+    | DateType.Encoded
+    | TimestampType.Encoded;
+}
+
+/**
  * Key type of groups that are keyed by a range of values instead of one value.
  *
  * **Details**
@@ -172,6 +224,25 @@ export class QueryAggregationRangeKeyType extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link QueryAggregationRangeKeyType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryAggregationRangeKeyType {
+  /**
+   * Encoded (wire) form of {@link QueryAggregationRangeKeyType}: `boundType` travels as `subType`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "range";
+    readonly subType: QueryAggregationBoundType.Encoded;
+  }
+}
 
 /**
  * What the groups of an aggregation can be keyed by: one scalar, or a range of an orderable scalar.
@@ -219,6 +290,29 @@ export const QueryAggregationKeyType = AggregationKeyKind.mapMembers(() =>
 export type QueryAggregationKeyType = typeof QueryAggregationKeyType.Type;
 
 /**
+ * Companion namespace for {@link QueryAggregationKeyType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryAggregationKeyType {
+  /**
+   * Encoded (wire) form of {@link QueryAggregationKeyType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | BooleanType.Encoded
+    | IntegerType.Encoded
+    | DoubleType.Encoded
+    | StringType.Encoded
+    | DateType.Encoded
+    | TimestampType.Encoded
+    | QueryAggregationRangeKeyType.Encoded;
+}
+
+/**
  * What an aggregation can measure for each group: a number, a calendar date or an instant.
  *
  * **Example** (List the measurable value types)
@@ -250,6 +344,25 @@ export const QueryAggregationValueType = AggregationValueKind.mapMembers(() =>
 export type QueryAggregationValueType = typeof QueryAggregationValueType.Type;
 
 /**
+ * Companion namespace for {@link QueryAggregationValueType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryAggregationValueType {
+  /**
+   * Encoded (wire) form of {@link QueryAggregationValueType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | DoubleType.Encoded
+    | DateType.Encoded
+    | TimestampType.Encoded;
+}
+
+/**
  * Key and value types of the inner grouping of a three-dimensional aggregation.
  *
  * **Details**
@@ -273,6 +386,25 @@ export class NestedAggregationType extends S.Opaque<NestedAggregationType, { rea
 ) {}
 
 /**
+ * Companion namespace for {@link NestedAggregationType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NestedAggregationType {
+  /**
+   * Encoded (wire) form of {@link NestedAggregationType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly keyType: QueryAggregationKeyType.Encoded;
+    readonly valueType: QueryAggregationValueType.Encoded;
+  }
+}
+
+/**
  * Query data type of a grouped measurement: one value per group key.
  *
  * @category models
@@ -292,6 +424,26 @@ export class TwoDimensionalAggregationType extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TwoDimensionalAggregationType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TwoDimensionalAggregationType {
+  /**
+   * Encoded (wire) form of {@link TwoDimensionalAggregationType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "twoDimensionalAggregation";
+    readonly keyType: QueryAggregationKeyType.Encoded;
+    readonly valueType: QueryAggregationValueType.Encoded;
+  }
+}
 
 /**
  * Query data type of a measurement grouped twice: one value per pair of outer and inner group keys.
@@ -315,6 +467,26 @@ export class ThreeDimensionalAggregationType extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ThreeDimensionalAggregationType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ThreeDimensionalAggregationType {
+  /**
+   * Encoded (wire) form of {@link ThreeDimensionalAggregationType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "threeDimensionalAggregation";
+    readonly keyType: QueryAggregationKeyType.Encoded;
+    readonly valueType: NestedAggregationType.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Composite query data types
@@ -474,7 +646,7 @@ export declare namespace QueryStructField {
    * @since 0.0.0
    */
   export interface Encoded {
-    readonly name: string;
+    readonly name: QueryStructFieldName.Encoded;
     readonly fieldType: QueryDataType.Encoded;
   }
 }
@@ -596,6 +768,26 @@ export class ObjectReferenceType extends S.Opaque<ObjectReferenceType, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link ObjectReferenceType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectReferenceType {
+  /**
+   * Encoded (wire) form of {@link ObjectReferenceType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "object";
+    readonly objectApiName: ObjectTypeApiName.Encoded;
+    readonly objectTypeApiName: ObjectTypeApiName.Encoded;
+  }
+}
+
+/**
  * Query data type of a set of objects, which travels as an object set definition or its resource identifier.
  *
  * **Gotchas**
@@ -623,6 +815,26 @@ export class ObjectSetType extends S.Opaque<ObjectSetType, { readonly brand: uni
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ObjectSetType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectSetType {
+  /**
+   * Encoded (wire) form of {@link ObjectSetType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "objectSet";
+    readonly objectApiName?: ObjectTypeApiName.Encoded;
+    readonly objectTypeApiName?: ObjectTypeApiName.Encoded;
+  }
+}
 
 /**
  * Query data type of a reference to one object seen through an interface.
@@ -653,6 +865,25 @@ export class InterfaceObjectReferenceType extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link InterfaceObjectReferenceType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceObjectReferenceType {
+  /**
+   * Encoded (wire) form of {@link InterfaceObjectReferenceType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "interfaceObject";
+    readonly interfaceTypeApiName?: InterfaceTypeApiName.Encoded;
+  }
+}
+
+/**
  * Query data type of a set of objects that all implement one interface.
  *
  * @category models
@@ -670,6 +901,25 @@ export class InterfaceObjectSetType extends S.Opaque<InterfaceObjectSetType, { r
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link InterfaceObjectSetType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceObjectSetType {
+  /**
+   * Encoded (wire) form of {@link InterfaceObjectSetType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "interfaceObjectSet";
+    readonly interfaceTypeApiName: InterfaceTypeApiName.Encoded;
+  }
+}
 
 /**
  * Query data type that stands for another one, stored by name on the enclosing query type.
@@ -693,6 +943,25 @@ export class TypeReferenceType extends S.Opaque<TypeReferenceType, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TypeReferenceType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TypeReferenceType {
+  /**
+   * Encoded (wire) form of {@link TypeReferenceType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "typeReference";
+    readonly typeId: TypeReferenceId.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // The query data type union
@@ -810,32 +1079,32 @@ export declare namespace QueryDataType {
    * @since 0.0.0
    */
   export type Encoded =
-    | (typeof BooleanType)["Encoded"]
-    | (typeof IntegerType)["Encoded"]
-    | (typeof LongType)["Encoded"]
-    | (typeof FloatType)["Encoded"]
-    | (typeof DoubleType)["Encoded"]
-    | (typeof StringType)["Encoded"]
-    | (typeof DateType)["Encoded"]
-    | (typeof TimestampType)["Encoded"]
-    | (typeof AttachmentType)["Encoded"]
-    | (typeof MediaReferenceType)["Encoded"]
-    | (typeof GeoShapeType)["Encoded"]
+    | BooleanType.Encoded
+    | IntegerType.Encoded
+    | LongType.Encoded
+    | FloatType.Encoded
+    | DoubleType.Encoded
+    | StringType.Encoded
+    | DateType.Encoded
+    | TimestampType.Encoded
+    | AttachmentType.Encoded
+    | MediaReferenceType.Encoded
+    | GeoShapeType.Encoded
     | QueryArrayType.Encoded
     | QuerySetType.Encoded
     | EntrySetType.Encoded
     | QueryStructType.Encoded
     | QueryUnionType.Encoded
-    | (typeof ObjectReferenceType)["Encoded"]
-    | (typeof ObjectSetType)["Encoded"]
-    | (typeof InterfaceObjectReferenceType)["Encoded"]
-    | (typeof InterfaceObjectSetType)["Encoded"]
-    | (typeof TwoDimensionalAggregationType)["Encoded"]
-    | (typeof ThreeDimensionalAggregationType)["Encoded"]
-    | (typeof TypeReferenceType)["Encoded"]
-    | (typeof NullType)["Encoded"]
-    | (typeof VoidType)["Encoded"]
-    | (typeof UnsupportedType)["Encoded"];
+    | ObjectReferenceType.Encoded
+    | ObjectSetType.Encoded
+    | InterfaceObjectReferenceType.Encoded
+    | InterfaceObjectSetType.Encoded
+    | TwoDimensionalAggregationType.Encoded
+    | ThreeDimensionalAggregationType.Encoded
+    | TypeReferenceType.Encoded
+    | NullType.Encoded
+    | VoidType.Encoded
+    | UnsupportedType.Encoded;
 }
 
 const isNullType = QueryDataType.guards.null;
@@ -941,6 +1210,26 @@ export class QueryParameter extends S.Opaque<QueryParameter, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link QueryParameter}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryParameter {
+  /**
+   * Encoded (wire) form of {@link QueryParameter}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly description?: string;
+    readonly dataType: QueryDataType.Encoded;
+    readonly required: boolean;
+  }
+}
+
+/**
  * The signature of a query at one version: its parameters, its output and the types they refer to by name.
  *
  * **Details**
@@ -1005,6 +1294,31 @@ export class QueryType extends S.Opaque<QueryType, { readonly brand: unique symb
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link QueryType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryType {
+  /**
+   * Encoded (wire) form of {@link QueryType}: an absent `typeReferences` decodes to an empty table.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly apiName: QueryApiName.Encoded;
+    readonly description?: string;
+    readonly displayName?: string;
+    readonly parameters: R.ReadonlyRecord<ParameterId.Encoded, QueryParameter.Encoded>;
+    readonly output: QueryDataType.Encoded;
+    readonly rid: FunctionRid.Encoded;
+    readonly version: FunctionVersion.Encoded;
+    readonly typeReferences?: R.ReadonlyRecord<TypeReferenceId.Encoded, QueryDataType.Encoded>;
+  }
+}
 
 /**
  * Looks up the data type a by-name reference stands for on its query type.
@@ -1139,6 +1453,25 @@ export class QueryRange extends S.Opaque<QueryRange, { readonly brand: unique sy
 ) {}
 
 /**
+ * Companion namespace for {@link QueryRange}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryRange {
+  /**
+   * Encoded (wire) form of {@link QueryRange}: an open end is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly startValue?: ScalarValue.Encoded;
+    readonly endValue?: ScalarValue.Encoded;
+  }
+}
+
+/**
  * What one group of an aggregation is keyed by: a scalar, or a range of scalars.
  *
  * **Example** (Decode both kinds of key)
@@ -1173,6 +1506,24 @@ export const QueryAggregationKey = S.Union([ScalarValue, QueryRange]).pipe(
 export type QueryAggregationKey = typeof QueryAggregationKey.Type;
 
 /**
+ * Companion namespace for {@link QueryAggregationKey}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryAggregationKey {
+  /**
+   * Encoded (wire) form of {@link QueryAggregationKey}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ScalarValue.Encoded
+    | QueryRange.Encoded;
+}
+
+/**
  * One group of an aggregation: its key and the value measured for it.
  *
  * @category models
@@ -1188,6 +1539,25 @@ export class QueryAggregationGroup extends S.Opaque<QueryAggregationGroup, { rea
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link QueryAggregationGroup}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryAggregationGroup {
+  /**
+   * Encoded (wire) form of {@link QueryAggregationGroup}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly key: QueryAggregationKey.Encoded;
+    readonly value: ScalarValue.Encoded;
+  }
+}
 
 /**
  * One outer group of an aggregation grouped twice: its key and the inner groups found under it.
@@ -1208,6 +1578,25 @@ export class NestedQueryAggregationGroup extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link NestedQueryAggregationGroup}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NestedQueryAggregationGroup {
+  /**
+   * Encoded (wire) form of {@link NestedQueryAggregationGroup}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly key: QueryAggregationKey.Encoded;
+    readonly groups: ReadonlyArray<QueryAggregationGroup.Encoded>;
+  }
+}
 
 /**
  * A grouped measurement passed to or returned by a query: one value per group key.
@@ -1253,6 +1642,24 @@ export class TwoDimensionalAggregation extends S.Opaque<TwoDimensionalAggregatio
 ) {}
 
 /**
+ * Companion namespace for {@link TwoDimensionalAggregation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TwoDimensionalAggregation {
+  /**
+   * Encoded (wire) form of {@link TwoDimensionalAggregation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly groups: ReadonlyArray<QueryAggregationGroup.Encoded>;
+  }
+}
+
+/**
  * A measurement grouped twice, passed to or returned by a query: one value per pair of outer and inner keys.
  *
  * **Example** (Decode a three-dimensional aggregation with a range key)
@@ -1295,6 +1702,24 @@ export class ThreeDimensionalAggregation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ThreeDimensionalAggregation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ThreeDimensionalAggregation {
+  /**
+   * Encoded (wire) form of {@link ThreeDimensionalAggregation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly groups: ReadonlyArray<NestedQueryAggregationGroup.Encoded>;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Execution
@@ -1339,6 +1764,24 @@ export class ExecuteQueryRequest extends S.Opaque<ExecuteQueryRequest, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link ExecuteQueryRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExecuteQueryRequest {
+  /**
+   * Encoded (wire) form of {@link ExecuteQueryRequest}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly parameters: R.ReadonlyRecord<ParameterId.Encoded, typeof S.Json.Encoded>;
+  }
+}
+
+/**
  * The result of one query call.
  *
  * @category models
@@ -1349,6 +1792,24 @@ export class ExecuteQueryResponse extends S.Opaque<ExecuteQueryResponse, { reado
     value: S.Json.annotateKey({ description: "What the query returned, shaped by the query type's output." }),
   }).pipe($I.annoteSchema("ExecuteQueryResponse", { description: "The result of one query call." }))
 ) {}
+
+/**
+ * Companion namespace for {@link ExecuteQueryResponse}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExecuteQueryResponse {
+  /**
+   * Encoded (wire) form of {@link ExecuteQueryResponse}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly value: typeof S.Json.Encoded;
+  }
+}
 
 const QueryStreamEventKind = LiteralKit(["data", "error"]);
 
@@ -1364,6 +1825,25 @@ export class QueryStreamData extends S.Opaque<QueryStreamData, { readonly brand:
     value: S.Json.annotateKey({ description: "The batch, shaped by the query type's output." }),
   }).pipe($I.annoteSchema("QueryStreamData", { description: "One batch of results of a streaming query call." }))
 ) {}
+
+/**
+ * Companion namespace for {@link QueryStreamData}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryStreamData {
+  /**
+   * Encoded (wire) form of {@link QueryStreamData}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "data";
+    readonly value: typeof S.Json.Encoded;
+  }
+}
 
 /**
  * Notice, sent in place of further results, that a streaming query call failed while running.
@@ -1391,6 +1871,29 @@ export class QueryStreamFailure extends S.Opaque<QueryStreamFailure, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link QueryStreamFailure}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryStreamFailure {
+  /**
+   * Encoded (wire) form of {@link QueryStreamFailure}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "error";
+    readonly errorCode: string;
+    readonly errorName: string;
+    readonly errorInstanceId: string;
+    readonly errorDescription?: string;
+    readonly parameters: R.ReadonlyRecord<string, typeof S.Json.Encoded>;
+  }
+}
 
 /**
  * One server-sent event of a streaming query call: a batch of results, or the failure that ended the call.
@@ -1443,6 +1946,24 @@ export const QueryStreamEvent = QueryStreamEventKind.mapMembers(() =>
 export type QueryStreamEvent = typeof QueryStreamEvent.Type;
 
 /**
+ * Companion namespace for {@link QueryStreamEvent}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryStreamEvent {
+  /**
+   * Encoded (wire) form of {@link QueryStreamEvent}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | QueryStreamData.Encoded
+    | QueryStreamFailure.Encoded;
+}
+
+/**
  * Names the signature of one function: by resource identifier, at a stated version or at the latest.
  *
  * **Example** (Ask for the latest version by not naming one)
@@ -1478,6 +1999,25 @@ export class QueryTypeByRid extends S.Opaque<QueryTypeByRid, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link QueryTypeByRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryTypeByRid {
+  /**
+   * Encoded (wire) form of {@link QueryTypeByRid}: an absent `functionVersion` asks for the latest.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly queryTypeRid: FunctionRid.Encoded;
+    readonly functionVersion?: FunctionVersion.Encoded;
+  }
+}
+
+/**
  * Asks for the signatures of several functions at once.
  *
  * @category models
@@ -1494,6 +2034,24 @@ export class GetQueryTypesByRidRequest extends S.Opaque<GetQueryTypesByRidReques
 ) {}
 
 /**
+ * Companion namespace for {@link GetQueryTypesByRidRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GetQueryTypesByRidRequest {
+  /**
+   * Encoded (wire) form of {@link GetQueryTypesByRidRequest}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly requests: ReadonlyArray<QueryTypeByRid.Encoded>;
+  }
+}
+
+/**
  * The signatures found for a batch request.
  *
  * @category models
@@ -1507,3 +2065,21 @@ export class GetQueryTypesByRidResponse extends S.Opaque<
     data: S.Array(QueryType).annotateKey({ description: "The query types that were found." }),
   }).pipe($I.annoteSchema("GetQueryTypesByRidResponse", { description: "The signatures found for a batch request." }))
 ) {}
+
+/**
+ * Companion namespace for {@link GetQueryTypesByRidResponse}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GetQueryTypesByRidResponse {
+  /**
+   * Encoded (wire) form of {@link GetQueryTypesByRidResponse}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly data: ReadonlyArray<QueryType.Encoded>;
+  }
+}

@@ -2,6 +2,7 @@ import * as Domain from "@alchemy.run/domain";
 import { RunId } from "@proto/kernel/Ids";
 import { Session } from "@proto/kernel/Session.middleware";
 import * as S from "effect/Schema";
+import { Text } from "@proto/kernel/Measure";
 import { RunEvent } from "./RunEvent.ts";
 import { RunNotRunning } from "./RunNotRunning.rejection.ts";
 import { $RunsContractId } from "@proto/kernel/Identity";
@@ -26,7 +27,7 @@ export class NotRunOwner extends S.TaggedError<NotRunOwner, { readonly brand: un
  * @category events
  * @since 0.0.0
  */
-export class RunCancelled extends Domain.Event("RunCancelled", RunEvent.fields({ reason: S.String })) {}
+export class RunCancelled extends Domain.Event("RunCancelled", RunEvent.fields({ reason: Text }), { description: "A person cancelled the run." }) {}
 
 /**
  * Cancel a run that has not finished.
@@ -39,7 +40,7 @@ export class CancelRun extends Domain.Command(
   {
     target: RunId,
     middleware: [Session],
-    input: { reason: S.String },
+    input: { reason: Text },
     events: [RunCancelled],
     rejects: [NotRunOwner, RunNotRunning],
   },

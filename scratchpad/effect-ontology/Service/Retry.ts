@@ -6,14 +6,14 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
 import type * as Cause from "effect/Cause";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Num from "effect/Number";
-import * as Schedule from "effect/Schedule";
-import * as A from "effect/Array";
 import { dual } from "effect/Function";
+import * as Num from "effect/Number";
 import * as P from "effect/Predicate";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CircuitOpenError } from "../Domain/Error/Circuit.ts";
@@ -23,11 +23,14 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Retry");
 
 const PositiveDuration = S.Duration.pipe(
   S.check(
-    S.makeFilter(Duration.isGreaterThan(Duration.zero), $I.annote("PositiveRetryDurationCheck", {
-      title: "Positive Retry Duration",
-      description: "A finite retry duration greater than zero.",
-      message: "Retry durations must be greater than zero.",
-    }))
+    S.makeFilter(
+      Duration.isGreaterThan(Duration.zero),
+      $I.annote("PositiveRetryDurationCheck", {
+        title: "Positive Retry Duration",
+        description: "A finite retry duration greater than zero.",
+        message: "Retry durations must be greater than zero.",
+      })
+    )
   )
 );
 
@@ -104,31 +107,38 @@ const retryPolicyMaxAttemptsDefault = PosInt.make(3);
 export class RetryPolicy extends S.Class<RetryPolicy, { readonly brand: unique symbol }>($I`RetryPolicy`)(
   S.Struct({
     attemptTimeout: PositiveDuration.pipe(
-      S.withConstructorDefault(Effect.succeed(retryPolicyAttemptTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyAttemptTimeoutDefault)),
+      S.withConstructorDefault(Effect.succeed(retryPolicyAttemptTimeoutDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyAttemptTimeoutDefault)),
       S.annotateKey({ description: "Maximum duration allowed for one attempt." })
     ),
     overallTimeout: PositiveDuration.pipe(
-      S.withConstructorDefault(Effect.succeed(retryPolicyOverallTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyOverallTimeoutDefault)),
+      S.withConstructorDefault(Effect.succeed(retryPolicyOverallTimeoutDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyOverallTimeoutDefault)),
       S.annotateKey({ description: "Maximum duration allowed for all attempts and retry delays." })
     ),
     initialDelay: PositiveDuration.pipe(
-      S.withConstructorDefault(Effect.succeed(retryPolicyInitialDelayDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyInitialDelayDefault)),
+      S.withConstructorDefault(Effect.succeed(retryPolicyInitialDelayDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyInitialDelayDefault)),
       S.annotateKey({ description: "Delay before the first retry." })
     ),
     maxDelay: PositiveDuration.pipe(
-      S.withConstructorDefault(Effect.succeed(retryPolicyMaxDelayDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyMaxDelayDefault)),
+      S.withConstructorDefault(Effect.succeed(retryPolicyMaxDelayDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyMaxDelayDefault)),
       S.annotateKey({ description: "Upper bound applied to exponential retry delays." })
     ),
     maxAttempts: PosInt.pipe(
-      S.withConstructorDefault(Effect.succeed(retryPolicyMaxAttemptsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyMaxAttemptsDefault)),
+      S.withConstructorDefault(Effect.succeed(retryPolicyMaxAttemptsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(retryPolicyMaxAttemptsDefault)),
       S.annotateKey({ description: "Maximum number of attempts, including the initial attempt." })
     ),
     serviceName: S.NonEmptyString.pipe(
-      S.withConstructorDefault(Effect.succeed("LanguageModel")), S.withDecodingDefaultTypeKey(Effect.succeed("LanguageModel")),
+      S.withConstructorDefault(Effect.succeed("LanguageModel")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("LanguageModel")),
       S.annotateKey({ description: "Stable service name attached to retry diagnostics." })
     ),
     jitter: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({ description: "Whether retry delays receive random jitter to avoid synchronized retries." })
     ),
   }).pipe(S.check(RetryPolicyInvariantCheck)),

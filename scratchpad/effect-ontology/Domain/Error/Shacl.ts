@@ -70,7 +70,9 @@ export type ValidationPolicySeverity = typeof ValidationPolicySeverity.Type;
  * @category errors
  * @since 0.0.0
  */
-export class ShapesLoadError extends S.TaggedError<ShapesLoadError, { readonly brand: unique symbol }>($I`ShapesLoadError`)(
+export class ShapesLoadError extends S.TaggedError<ShapesLoadError, { readonly brand: unique symbol }>(
+  $I`ShapesLoadError`
+)(
   "ShapesLoadError",
   {
     message: ErrorMessage.annotateKey({
@@ -107,7 +109,9 @@ export class ShapesLoadError extends S.TaggedError<ShapesLoadError, { readonly b
  * @category errors
  * @since 0.0.0
  */
-export class ValidationReportError extends S.TaggedError<ValidationReportError, { readonly brand: unique symbol }>($I`ValidationReportError`)(
+export class ValidationReportError extends S.TaggedError<ValidationReportError, { readonly brand: unique symbol }>(
+  $I`ValidationReportError`
+)(
   "ValidationReportError",
   {
     message: ErrorMessage.annotateKey({
@@ -145,7 +149,9 @@ export class ValidationReportError extends S.TaggedError<ValidationReportError, 
  * @category errors
  * @since 0.0.0
  */
-export class ValidationPolicyError extends S.TaggedError<ValidationPolicyError, { readonly brand: unique symbol }>($I`ValidationPolicyError`)(
+export class ValidationPolicyError extends S.TaggedError<ValidationPolicyError, { readonly brand: unique symbol }>(
+  $I`ValidationPolicyError`
+)(
   "ValidationPolicyError",
   {
     message: ErrorMessage.annotateKey({

@@ -7,17 +7,17 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
-import * as HashMap from "effect/HashMap";
-import * as Match from "effect/Match";
-import * as Tuple from "effect/Tuple";
-import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import { flow, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import type { RuleCategory } from "./ExtractionRule.ts";
@@ -63,28 +63,32 @@ export class AllowedIriSet extends S.Class<AllowedIriSet, { readonly brand: uniq
   {
     /** Canonical class IRIs accepted during entity extraction. */
     classIris: S.Array(IRI).pipe(
-      S.withConstructorDefault(Effect.succeed(allowedIriSetClassIrisDefault)), S.withDecodingDefaultType(Effect.succeed(allowedIriSetClassIrisDefault)),
+      S.withConstructorDefault(Effect.succeed(allowedIriSetClassIrisDefault)),
+      S.withDecodingDefaultType(Effect.succeed(allowedIriSetClassIrisDefault)),
       $I.annoteKey("AllowedIriSet.classIris", {
         description: "Canonical class IRIs accepted during entity extraction.",
       })
     ),
     /** Canonical object-property IRIs accepted during relation extraction. */
     objectPropertyIris: S.Array(IRI).pipe(
-      S.withConstructorDefault(Effect.succeed(allowedIriSetObjectPropertyIrisDefault)), S.withDecodingDefaultType(Effect.succeed(allowedIriSetObjectPropertyIrisDefault)),
+      S.withConstructorDefault(Effect.succeed(allowedIriSetObjectPropertyIrisDefault)),
+      S.withDecodingDefaultType(Effect.succeed(allowedIriSetObjectPropertyIrisDefault)),
       $I.annoteKey("AllowedIriSet.objectPropertyIris", {
         description: "Canonical object-property IRIs accepted during relation extraction.",
       })
     ),
     /** Canonical datatype-property IRIs accepted during extraction. */
     datatypePropertyIris: S.Array(IRI).pipe(
-      S.withConstructorDefault(Effect.succeed(allowedIriSetDatatypePropertyIrisDefault)), S.withDecodingDefaultType(Effect.succeed(allowedIriSetDatatypePropertyIrisDefault)),
+      S.withConstructorDefault(Effect.succeed(allowedIriSetDatatypePropertyIrisDefault)),
+      S.withDecodingDefaultType(Effect.succeed(allowedIriSetDatatypePropertyIrisDefault)),
       $I.annoteKey("AllowedIriSet.datatypePropertyIris", {
         description: "Canonical datatype-property IRIs accepted during extraction.",
       })
     ),
     /** Entity identifiers produced by the preceding extraction stage. */
     entityIds: S.Array(S.String).pipe(
-      S.withConstructorDefault(Effect.succeed(allowedIriSetEntityIdsDefault)), S.withDecodingDefaultType(Effect.succeed(allowedIriSetEntityIdsDefault)),
+      S.withConstructorDefault(Effect.succeed(allowedIriSetEntityIdsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(allowedIriSetEntityIdsDefault)),
       $I.annoteKey("AllowedIriSet.entityIds", {
         description: "Entity identifiers produced by the preceding extraction stage.",
       })
@@ -361,7 +365,7 @@ export type RuleSet = typeof RuleSet.Type;
 const makeExtractionRule = (input: typeof ExtractionRule.Encoded): ExtractionRule =>
   ExtractionRule.make({
     ...input,
-    counterExample: O.fromUndefinedOr(input.counterExample),
+    counterExample: O.map(O.fromUndefinedOr(input.counterExample), RuleExample.make),
   });
 
 const previewValues = <Value>(values: ReadonlyArray<Value>, render: (value: Value) => string): string =>

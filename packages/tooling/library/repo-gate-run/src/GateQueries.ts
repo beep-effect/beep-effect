@@ -157,6 +157,27 @@ export class ItemQuery extends S.Opaque<ItemQuery, { readonly brand: unique symb
 /**
  * A run as shown: where its record and log are, and the record.
  *
+ * **Example** (Build a run view)
+ *
+ * ```ts
+ * import { GateRecord } from "@beep/gate-report/GateRecord";
+ * import { GateReport, Totals } from "@beep/gate-report/GateReport";
+ * import { RecordLocation } from "@beep/repo-gate-record/GatePaths";
+ * import { RunView } from "@beep/repo-gate-run/GateQueries";
+ * import * as DateTime from "effect/DateTime";
+ *
+ * const report = GateReport.make({
+ *   gate: "test", subject: "@beep/glob", itemKind: "test", runId: "r1",
+ *   startedAt: DateTime.makeUnsafe(0), durationMs: 0, inputFingerprint: "x",
+ *   reason: "passed", outcome: "all-pass", units: [], items: [], totals: Totals.make({ collected: 1, passed: 1 }),
+ * });
+ * const view = RunView.make({
+ *   location: RecordLocation.make({ record: ".beep/gates/test/r1.json", log: ".beep/gates/test/r1.log" }),
+ *   record: GateRecord.make({ generatedAt: DateTime.makeUnsafe(0), report }),
+ * });
+ * console.log(view.record.report.runId); // r1
+ * ```
+ *
  * @category schemas
  * @since 0.0.0
  */
@@ -173,6 +194,27 @@ export class RunView extends S.Opaque<RunView, { readonly brand: unique symbol }
 
 /**
  * An item as shown: its run's location and id, the item, and its full text.
+ *
+ * **Example** (Build an item view)
+ *
+ * ```ts
+ * import { Item } from "@beep/gate-report/Item";
+ * import { ItemKey } from "@beep/gate-report/ItemKey";
+ * import { RecordLocation } from "@beep/repo-gate-record/GatePaths";
+ * import { ItemView, itemLines } from "@beep/repo-gate-run/GateQueries";
+ *
+ * const item = Item.make({
+ *   key: ItemKey.cases.TestKey.make({ file: "src/a.test.ts", fullName: "adds" }),
+ *   unit: "src/a.test.ts", path: [], name: "adds", outcome: "failed",
+ * });
+ * const view = ItemView.make({
+ *   location: RecordLocation.make({ record: ".beep/gates/test/r1.json", log: ".beep/gates/test/r1.log" }),
+ *   runId: "r1",
+ *   item,
+ *   lines: itemLines(item),
+ * });
+ * console.log(view.lines[1]); // outcome: failed
+ * ```
  *
  * @category schemas
  * @since 0.0.0
@@ -264,8 +306,8 @@ const field = (label: string, value: O.Option<string>): ReadonlyArray<string> =>
  * console.log(itemLines(item)[1]); // outcome: passed
  * ```
  *
- * @param item - The item to print.
- * @returns Its lines: header, outcome, the fields it carries, then message, diff and stack.
+ * @param item - the recorded item to show
+ * @returns every field the item carries, with its message, diff and stack whole
  * @category projections
  * @since 0.0.0
  */

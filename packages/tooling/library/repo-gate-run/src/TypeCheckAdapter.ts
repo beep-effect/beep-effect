@@ -241,8 +241,8 @@ const runEvents = (input: {
  * console.log(events.map((event) => event._tag).join(",")); // RunStarted,UnitQueued,ItemFinished,RunFinished
  * ```
  *
- * @param compiler - The finished compiler run: its check run, exit code and output.
- * @returns The run's gate events, one item per diagnostic line.
+ * @param compiler - the finished compiler run: its exit code, output and units checked
+ * @returns the run's events, one item per diagnostic line the compiler printed
  * @category adapters
  * @since 0.0.0
  */
@@ -280,8 +280,8 @@ export const compilerEvents = (compiler: CompilerRun): ReadonlyArray<GateEvent> 
  * console.log(events.length); // 4
  * ```
  *
- * @param probe - The check run and the references with no declaration index.
- * @returns The run's gate events, one TS6305 item per missing index.
+ * @param probe - the run and every referenced project with no declaration index
+ * @returns the run's events, one TS6305 item per missing declaration index
  * @category adapters
  * @since 0.0.0
  */

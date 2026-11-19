@@ -21,6 +21,7 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import type * as R from "@beep/utils/Record";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
@@ -73,6 +74,25 @@ export class ObjectEntityType extends S.Opaque<ObjectEntityType, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link ObjectEntityType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectEntityType {
+  /**
+   * Encoded (wire) form of {@link ObjectEntityType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "object";
+    readonly apiName: ObjectTypeApiName.Encoded;
+  }
+}
+
+/**
  * An interface type, named as the type of the objects in a set.
  *
  * @category models
@@ -88,6 +108,25 @@ export class InterfaceEntityType extends S.Opaque<InterfaceEntityType, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link InterfaceEntityType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceEntityType {
+  /**
+   * Encoded (wire) form of {@link InterfaceEntityType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "interface";
+    readonly apiName: InterfaceTypeApiName.Encoded;
+  }
+}
 
 /**
  * The type every object of a set has: an object type, or an interface type.
@@ -132,6 +171,24 @@ export const EntityType = EntityTypeKind.mapMembers(() => Tuple.make(ObjectEntit
  */
 export type EntityType = typeof EntityType.Type;
 
+/**
+ * Companion namespace for {@link EntityType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EntityType {
+  /**
+   * Encoded (wire) form of {@link EntityType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ObjectEntityType.Encoded
+    | InterfaceEntityType.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Nearest-neighbour queries
 // -----------------------------------------------------------------------------
@@ -157,6 +214,25 @@ export class VectorQuery extends S.Opaque<VectorQuery, { readonly brand: unique 
 ) {}
 
 /**
+ * Companion namespace for {@link VectorQuery}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VectorQuery {
+  /**
+   * Encoded (wire) form of {@link VectorQuery}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "vector";
+    readonly value: ReadonlyArray<number>;
+  }
+}
+
+/**
  * A nearest-neighbour query given as text, which the platform embeds with the property's own embedding model.
  *
  * @category models
@@ -172,6 +248,25 @@ export class TextQuery extends S.Opaque<TextQuery, { readonly brand: unique symb
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TextQuery}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TextQuery {
+  /**
+   * Encoded (wire) form of {@link TextQuery}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "text";
+    readonly value: string;
+  }
+}
 
 /**
  * What to search near: a vector, or text that the platform turns into one.
@@ -214,6 +309,24 @@ export const NearestNeighborsQuery = NearestNeighborsQueryKind.mapMembers(() =>
  */
 export type NearestNeighborsQuery = typeof NearestNeighborsQuery.Type;
 
+/**
+ * Companion namespace for {@link NearestNeighborsQuery}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NearestNeighborsQuery {
+  /**
+   * Encoded (wire) form of {@link NearestNeighborsQuery}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | VectorQuery.Encoded
+    | TextQuery.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Leaves
 // -----------------------------------------------------------------------------
@@ -250,6 +363,25 @@ export class BaseObjectSet extends S.Opaque<BaseObjectSet, { readonly brand: uni
 ) {}
 
 /**
+ * Companion namespace for {@link BaseObjectSet}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BaseObjectSet {
+  /**
+   * Encoded (wire) form of {@link BaseObjectSet}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "base";
+    readonly objectType: ObjectTypeApiName.Encoded;
+  }
+}
+
+/**
  * Every object whose type implements one interface type.
  *
  * @category models
@@ -275,6 +407,26 @@ export class InterfaceBaseObjectSet extends S.Opaque<InterfaceBaseObjectSet, { r
 ) {}
 
 /**
+ * Companion namespace for {@link InterfaceBaseObjectSet}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceBaseObjectSet {
+  /**
+   * Encoded (wire) form of {@link InterfaceBaseObjectSet}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "interfaceBase";
+    readonly interfaceType: InterfaceTypeApiName.Encoded;
+    readonly includeAllBaseObjectProperties?: boolean;
+  }
+}
+
+/**
  * Exactly the objects with the listed resource identifiers.
  *
  * @category models
@@ -288,6 +440,25 @@ export class StaticObjectSet extends S.Opaque<StaticObjectSet, { readonly brand:
     $I.annoteSchema("StaticObjectSet", { description: "Exactly the objects with the listed resource identifiers." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link StaticObjectSet}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StaticObjectSet {
+  /**
+   * Encoded (wire) form of {@link StaticObjectSet}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "static";
+    readonly objects: ReadonlyArray<ObjectRid.Encoded>;
+  }
+}
 
 /**
  * An object set stored on the platform, saved or temporary, referred to by its resource identifier.
@@ -312,6 +483,25 @@ export class SavedObjectSet extends S.Opaque<SavedObjectSet, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link SavedObjectSet}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SavedObjectSet {
+  /**
+   * Encoded (wire) form of {@link SavedObjectSet}: the identifier under `reference`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "reference";
+    readonly reference: ObjectSetRid.Encoded;
+  }
+}
+
+/**
  * The object a derived property is being computed for: the root of every selection inside a derived property.
  *
  * @category models
@@ -324,6 +514,24 @@ export class MethodInputObjectSet extends S.Opaque<MethodInputObjectSet, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MethodInputObjectSet}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MethodInputObjectSet {
+  /**
+   * Encoded (wire) form of {@link MethodInputObjectSet}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "methodInput";
+  }
+}
 
 // -----------------------------------------------------------------------------
 // One source
@@ -402,7 +610,7 @@ export declare namespace LinkTraversal {
   export interface Encoded {
     readonly type: "searchAround";
     readonly objectSet: ObjectSet.Encoded;
-    readonly link: string;
+    readonly link: LinkTypeApiName.Encoded;
   }
 }
 
@@ -442,7 +650,7 @@ export declare namespace InterfaceLinkTraversal {
   export interface Encoded {
     readonly type: "interfaceLinkSearchAround";
     readonly objectSet: ObjectSet.Encoded;
-    readonly interfaceLink: string;
+    readonly interfaceLink: InterfaceLinkTypeApiName.Encoded;
   }
 }
 
@@ -482,7 +690,7 @@ export declare namespace NarrowedObjectSet {
   export interface Encoded {
     readonly type: "asType";
     readonly objectSet: ObjectSet.Encoded;
-    readonly entityType: string;
+    readonly entityType: EntityTypeApiName.Encoded;
   }
 }
 
@@ -577,7 +785,7 @@ export declare namespace NearestNeighborsObjectSet {
     readonly propertyIdentifier: PropertySelector.Encoded;
     readonly numNeighbors: number;
     readonly similarityThreshold?: number;
-    readonly query: (typeof NearestNeighborsQuery)["Encoded"];
+    readonly query: NearestNeighborsQuery.Encoded;
   }
 }
 
@@ -623,7 +831,7 @@ export declare namespace DerivedObjectSet {
   export interface Encoded {
     readonly type: "withProperties";
     readonly objectSet: ObjectSet.Encoded;
-    readonly derivedProperties: { readonly [name: string]: DerivedProperty.Encoded };
+    readonly derivedProperties: R.ReadonlyRecord<DerivedPropertyApiName.Encoded, DerivedProperty.Encoded>;
   }
 }
 
@@ -856,11 +1064,11 @@ export declare namespace ObjectSet {
    * @since 0.0.0
    */
   export type Encoded =
-    | (typeof BaseObjectSet)["Encoded"]
-    | (typeof InterfaceBaseObjectSet)["Encoded"]
-    | (typeof StaticObjectSet)["Encoded"]
-    | (typeof SavedObjectSet)["Encoded"]
-    | (typeof MethodInputObjectSet)["Encoded"]
+    | BaseObjectSet.Encoded
+    | InterfaceBaseObjectSet.Encoded
+    | StaticObjectSet.Encoded
+    | SavedObjectSet.Encoded
+    | MethodInputObjectSet.Encoded
     | FilteredObjectSet.Encoded
     | LinkTraversal.Encoded
     | InterfaceLinkTraversal.Encoded
@@ -915,6 +1123,24 @@ export const ObjectSetArgument = S.Union([ObjectSetRid, ObjectSet]).pipe(
  */
 export type ObjectSetArgument = typeof ObjectSetArgument.Type;
 
+/**
+ * Companion namespace for {@link ObjectSetArgument}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectSetArgument {
+  /**
+   * Encoded (wire) form of {@link ObjectSetArgument}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ObjectSetRid.Encoded
+    | ObjectSet.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Ordering
 // -----------------------------------------------------------------------------
@@ -955,6 +1181,22 @@ export const SortDirection = LiteralKit(["asc", "desc"]).pipe(
 export type SortDirection = typeof SortDirection.Type;
 
 /**
+ * Companion namespace for {@link SortDirection}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SortDirection {
+  /**
+   * Encoded (wire) form of {@link SortDirection}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof SortDirection.Encoded;
+}
+
+/**
  * One key of a sort: a property and, optionally, the direction to sort it in.
  *
  * **Details**
@@ -978,6 +1220,25 @@ export class PropertyOrdering extends S.Opaque<PropertyOrdering, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link PropertyOrdering}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyOrdering {
+  /**
+   * Encoded (wire) form of {@link PropertyOrdering}: the property under `field`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly field: PropertyApiName.Encoded;
+    readonly direction?: SortDirection.Encoded;
+  }
+}
 
 const OrderByKind = LiteralKit(["relevance", "fields"]);
 
@@ -1010,6 +1271,25 @@ export class OrderByRelevance extends S.Opaque<OrderByRelevance, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link OrderByRelevance}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OrderByRelevance {
+  /**
+   * Encoded (wire) form of {@link OrderByRelevance}: tagged by `orderType`, with an empty `fields` list.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly orderType: "relevance";
+    readonly fields: readonly [];
+  }
+}
+
+/**
  * Orders results by the listed properties, the first one deciding and each later one breaking ties.
  *
  * @category models
@@ -1037,6 +1317,25 @@ export class OrderByFields extends S.Opaque<OrderByFields, { readonly brand: uni
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link OrderByFields}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OrderByFields {
+  /**
+   * Encoded (wire) form of {@link OrderByFields}: the sort keys alone, `orderType` optional.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly orderType?: "fields" | "relevance";
+    readonly fields: ReadonlyArray<PropertyOrdering.Encoded>;
+  }
+}
 
 /**
  * How to order the objects of a result page: by relevance, or by properties.
@@ -1086,3 +1385,21 @@ export const OrderBy = OrderByKind.mapMembers(() => Tuple.make(OrderByRelevance,
  * @since 0.0.0
  */
 export type OrderBy = typeof OrderBy.Type;
+
+/**
+ * Companion namespace for {@link OrderBy}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OrderBy {
+  /**
+   * Encoded (wire) form of {@link OrderBy}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | OrderByRelevance.Encoded
+    | OrderByFields.Encoded;
+}

@@ -1,11 +1,12 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
 import * as ImportGraph from "@proto/tooling/ImportGraph";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
+import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Path from "effect/Path";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 
 // A file the contract's closure must never reach: anything of a model or host
 // package (this context's or another's), or a write-model or handler file anywhere.
@@ -19,7 +20,7 @@ const closureOf = Effect.fn("closureOf")(function* (packageName: string) {
   const root = yield* path.fromFileUrl(new URL("../../../", import.meta.url));
   const workspace = yield* ImportGraph.loadWorkspace(root);
   const pkg = yield* Effect.fromOption(HashMap.get(workspace, packageName));
-  const files = yield* ImportGraph.reachable(workspace, ImportGraph.entriesOf(pkg, path.join));
+  const files = yield* pipe(pkg, ImportGraph.entriesOf(path.join), ImportGraph.reachable(workspace));
   return A.map(files, (file) => path.relative(root, file));
 });
 

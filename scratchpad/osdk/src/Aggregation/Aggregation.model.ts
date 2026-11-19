@@ -82,6 +82,22 @@ export const OrderDirection = MappedLiteralKit([
 export type OrderDirection = typeof OrderDirection.Type;
 
 /**
+ * Companion namespace for {@link OrderDirection}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OrderDirection {
+  /**
+   * Encoded (wire) form of {@link OrderDirection}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof OrderDirection.Encoded;
+}
+
+/**
  * How exact the caller needs aggregation results to be.
  *
  * **Details**
@@ -123,6 +139,22 @@ export const AccuracyRequirement = MappedLiteralKit([
 export type AccuracyRequirement = typeof AccuracyRequirement.Type;
 
 /**
+ * Companion namespace for {@link AccuracyRequirement}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AccuracyRequirement {
+  /**
+   * Encoded (wire) form of {@link AccuracyRequirement}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AccuracyRequirement.Encoded;
+}
+
+/**
  * How exact the returned aggregation results actually are.
  *
  * **Example** (Read how exact a result is)
@@ -155,6 +187,22 @@ export const AggregationAccuracy = MappedLiteralKit([
  * @since 0.0.0
  */
 export type AggregationAccuracy = typeof AggregationAccuracy.Type;
+
+/**
+ * Companion namespace for {@link AggregationAccuracy}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AggregationAccuracy {
+  /**
+   * Encoded (wire) form of {@link AggregationAccuracy}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AggregationAccuracy.Encoded;
+}
 
 /**
  * Every metric an aggregation can compute, by its wire tag.
@@ -195,6 +243,22 @@ export const AggregationKind = LiteralKit([
 export type AggregationKind = typeof AggregationKind.Type;
 
 /**
+ * Companion namespace for {@link AggregationKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AggregationKind {
+  /**
+   * Encoded (wire) form of {@link AggregationKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AggregationKind.Encoded;
+}
+
+/**
  * The metrics that are computed from one property's values: every metric except the object count.
  *
  * **Example** (Tell a property metric from the count)
@@ -224,6 +288,22 @@ export const PropertyMetricKind = AggregationKind.omit(["count"]).pipe(
  * @since 0.0.0
  */
 export type PropertyMetricKind = typeof PropertyMetricKind.Type;
+
+/**
+ * Companion namespace for {@link PropertyMetricKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyMetricKind {
+  /**
+   * Encoded (wire) form of {@link PropertyMetricKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof PropertyMetricKind.Encoded;
+}
 
 /**
  * Every way to divide objects into groups before aggregating, by its wire tag.
@@ -259,6 +339,22 @@ export const GroupByKind = LiteralKit(["exact", "fixedWidth", "ranges", "duratio
  */
 export type GroupByKind = typeof GroupByKind.Type;
 
+/**
+ * Companion namespace for {@link GroupByKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GroupByKind {
+  /**
+   * Encoded (wire) form of {@link GroupByKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof GroupByKind.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Names and small values
 // -----------------------------------------------------------------------------
@@ -291,6 +387,22 @@ export const MetricName = S.NonEmptyString.pipe(
 export type MetricName = typeof MetricName.Type;
 
 /**
+ * Companion namespace for {@link MetricName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MetricName {
+  /**
+   * Encoded (wire) form of {@link MetricName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof MetricName.Encoded;
+}
+
+/**
  * Key of one grouping in a result row's `group` record: the name of the property the row was grouped by.
  *
  * @category identifiers
@@ -310,6 +422,22 @@ export const GroupKey = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type GroupKey = typeof GroupKey.Type;
+
+/**
+ * Companion namespace for {@link GroupKey}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GroupKey {
+  /**
+   * Encoded (wire) form of {@link GroupKey}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof GroupKey.Encoded;
+}
 
 const CountOfAtLeastOne = S.Int.check(S.isGreaterThanOrEqualTo(1));
 
@@ -357,6 +485,26 @@ export class CountAggregation extends S.Opaque<CountAggregation, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link CountAggregation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CountAggregation {
+  /**
+   * Encoded (wire) form of {@link CountAggregation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "count";
+    readonly name?: MetricName.Encoded;
+    readonly direction?: OrderDirection.Encoded;
+  }
+}
+
+/**
  * Adds up a numeric property over each group.
  *
  * @category models
@@ -367,6 +515,28 @@ export class SumAggregation extends S.Opaque<SumAggregation, { readonly brand: u
     $I.annoteSchema("SumAggregation", { description: "Adds up a numeric property over each group." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link SumAggregation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SumAggregation {
+  /**
+   * Encoded (wire) form of {@link SumAggregation}: the property under `field` or `propertyIdentifier`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "sum";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly name?: MetricName.Encoded;
+    readonly direction?: OrderDirection.Encoded;
+  }
+}
 
 /**
  * Averages a numeric property over each group.
@@ -381,6 +551,28 @@ export class AverageAggregation extends S.Opaque<AverageAggregation, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link AverageAggregation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AverageAggregation {
+  /**
+   * Encoded (wire) form of {@link AverageAggregation}: the property under `field` or `propertyIdentifier`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "avg";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly name?: MetricName.Encoded;
+    readonly direction?: OrderDirection.Encoded;
+  }
+}
+
+/**
  * Takes the smallest value of a property in each group.
  *
  * @category models
@@ -393,6 +585,28 @@ export class MinAggregation extends S.Opaque<MinAggregation, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link MinAggregation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MinAggregation {
+  /**
+   * Encoded (wire) form of {@link MinAggregation}: the property under `field` or `propertyIdentifier`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "min";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly name?: MetricName.Encoded;
+    readonly direction?: OrderDirection.Encoded;
+  }
+}
+
+/**
  * Takes the largest value of a property in each group.
  *
  * @category models
@@ -403,6 +617,28 @@ export class MaxAggregation extends S.Opaque<MaxAggregation, { readonly brand: u
     $I.annoteSchema("MaxAggregation", { description: "Takes the largest value of a property in each group." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MaxAggregation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MaxAggregation {
+  /**
+   * Encoded (wire) form of {@link MaxAggregation}: the property under `field` or `propertyIdentifier`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "max";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly name?: MetricName.Encoded;
+    readonly direction?: OrderDirection.Encoded;
+  }
+}
 
 /**
  * Estimates how many distinct values a property takes in each group.
@@ -422,6 +658,28 @@ export class ApproximateDistinctAggregation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link ApproximateDistinctAggregation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ApproximateDistinctAggregation {
+  /**
+   * Encoded (wire) form of {@link ApproximateDistinctAggregation}: the property under `field` or `propertyIdentifier`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "approximateDistinct";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly name?: MetricName.Encoded;
+    readonly direction?: OrderDirection.Encoded;
+  }
+}
+
+/**
  * Counts exactly how many distinct values a property takes in each group.
  *
  * **Gotchas**
@@ -438,6 +696,28 @@ export class ExactDistinctAggregation extends S.Opaque<ExactDistinctAggregation,
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ExactDistinctAggregation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExactDistinctAggregation {
+  /**
+   * Encoded (wire) form of {@link ExactDistinctAggregation}: the property under `field` or `propertyIdentifier`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "exactDistinct";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly name?: MetricName.Encoded;
+    readonly direction?: OrderDirection.Encoded;
+  }
+}
 
 /**
  * Estimates the value below which a given share of a numeric property's values fall in each group.
@@ -481,6 +761,30 @@ export class ApproximatePercentileAggregation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ApproximatePercentileAggregation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ApproximatePercentileAggregation {
+  /**
+   * Encoded (wire) form of {@link ApproximatePercentileAggregation}: the property under `field` or
+   * `propertyIdentifier`, the percentile under `approximatePercentile`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "approximatePercentile";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly name?: MetricName.Encoded;
+    readonly direction?: OrderDirection.Encoded;
+    readonly approximatePercentile: number;
+  }
+}
 
 /**
  * One metric to compute over each group of objects.
@@ -543,6 +847,30 @@ export const Aggregation = AggregationKind.mapMembers(() =>
  */
 export type Aggregation = typeof Aggregation.Type;
 
+/**
+ * Companion namespace for {@link Aggregation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Aggregation {
+  /**
+   * Encoded (wire) form of {@link Aggregation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | CountAggregation.Encoded
+    | SumAggregation.Encoded
+    | AverageAggregation.Encoded
+    | MinAggregation.Encoded
+    | MaxAggregation.Encoded
+    | ApproximateDistinctAggregation.Encoded
+    | ExactDistinctAggregation.Encoded
+    | ApproximatePercentileAggregation.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Group-bys
 // -----------------------------------------------------------------------------
@@ -586,6 +914,25 @@ export class AggregationRange extends S.Opaque<AggregationRange, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link AggregationRange}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AggregationRange {
+  /**
+   * Encoded (wire) form of {@link AggregationRange}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly startValue: ScalarValue.Encoded;
+    readonly endValue: ScalarValue.Encoded;
+  }
+}
+
+/**
  * The value an exact grouping files null property values under: text, whatever the property's type.
  *
  * **Details**
@@ -621,6 +968,22 @@ export const GroupDefaultValue = S.String.pipe(
  * @since 0.0.0
  */
 export type GroupDefaultValue = typeof GroupDefaultValue.Type;
+
+/**
+ * Companion namespace for {@link GroupDefaultValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GroupDefaultValue {
+  /**
+   * Encoded (wire) form of {@link GroupDefaultValue}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof GroupDefaultValue.Encoded;
+}
 
 const exactFields = {
   maxGroupCount: S.OptionFromOptionalKey(CountOfAtLeastOne).pipe(
@@ -670,6 +1033,29 @@ export class ExactGrouping extends S.Opaque<ExactGrouping, { readonly brand: uni
 ) {}
 
 /**
+ * Companion namespace for {@link ExactGrouping}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExactGrouping {
+  /**
+   * Encoded (wire) form of {@link ExactGrouping}: the property under `field` or `propertyIdentifier`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "exact";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly maxGroupCount?: number;
+    readonly defaultValue?: GroupDefaultValue.Encoded;
+    readonly includeNullValues?: boolean;
+  }
+}
+
+/**
  * Groups objects into numeric buckets of equal width.
  *
  * **Details**
@@ -695,6 +1081,28 @@ export class FixedWidthGrouping extends S.Opaque<FixedWidthGrouping, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link FixedWidthGrouping}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FixedWidthGrouping {
+  /**
+   * Encoded (wire) form of {@link FixedWidthGrouping}: the property under `field` or `propertyIdentifier`, the
+   * width under `fixedWidth`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "fixedWidth";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly fixedWidth: number;
+  }
+}
+
+/**
  * Groups objects into the buckets the caller lists.
  *
  * @category models
@@ -714,6 +1122,27 @@ export class RangesGrouping extends S.Opaque<RangesGrouping, { readonly brand: u
     $I.annoteSchema("RangesGrouping", { description: "Groups objects into the buckets the caller lists." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RangesGrouping}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RangesGrouping {
+  /**
+   * Encoded (wire) form of {@link RangesGrouping}: the property under `field` or `propertyIdentifier`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "ranges";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly ranges: ReadonlyArray<AggregationRange.Encoded>;
+  }
+}
 
 const isCalendarStep = TimeUnit.To.match({
   milliseconds: constFalse,
@@ -767,6 +1196,28 @@ export class DurationGrouping extends S.Opaque<DurationGrouping, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link DurationGrouping}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DurationGrouping {
+  /**
+   * Encoded (wire) form of {@link DurationGrouping}: the property under `field` or `propertyIdentifier`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "duration";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: number;
+    readonly unit: TimeUnit.Encoded;
+  }
+}
+
+/**
  * One way to divide objects into groups before aggregating them.
  *
  * **Details**
@@ -809,6 +1260,26 @@ export const GroupBy = GroupByKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type GroupBy = typeof GroupBy.Type;
+
+/**
+ * Companion namespace for {@link GroupBy}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GroupBy {
+  /**
+   * Encoded (wire) form of {@link GroupBy}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ExactGrouping.Encoded
+    | FixedWidthGrouping.Encoded
+    | RangesGrouping.Encoded
+    | DurationGrouping.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Request and response envelopes
@@ -956,6 +1427,27 @@ export class AggregateRequest extends S.Opaque<AggregateRequest, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link AggregateRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AggregateRequest {
+  /**
+   * Encoded (wire) form of {@link AggregateRequest}: the metrics under `aggregation`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly aggregation: ReadonlyArray<Aggregation.Encoded>;
+    readonly where?: ObjectFilter.Encoded;
+    readonly groupBy: ReadonlyArray<GroupBy.Encoded>;
+    readonly accuracy?: AccuracyRequirement.Encoded;
+  }
+}
+
+/**
  * The value of one metric in one result row.
  *
  * **Details**
@@ -976,6 +1468,25 @@ export class MetricResult extends S.Opaque<MetricResult, { readonly brand: uniqu
     ),
   }).pipe($I.annoteSchema("MetricResult", { description: "The value of one metric in one aggregation result row." }))
 ) {}
+
+/**
+ * Companion namespace for {@link MetricResult}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MetricResult {
+  /**
+   * Encoded (wire) form of {@link MetricResult}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly name: MetricName.Encoded;
+    readonly value?: typeof S.Json.Encoded;
+  }
+}
 
 /**
  * One row of an aggregation result: a group of objects and the metrics computed over it.
@@ -1003,6 +1514,25 @@ export class AggregationRow extends S.Opaque<AggregationRow, { readonly brand: u
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AggregationRow}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AggregationRow {
+  /**
+   * Encoded (wire) form of {@link AggregationRow}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly group: R.ReadonlyRecord<GroupKey.Encoded, typeof S.Json.Encoded>;
+    readonly metrics: ReadonlyArray<MetricResult.Encoded>;
+  }
+}
 
 /**
  * What an aggregation returns: one row per group, and how much to trust them.
@@ -1045,6 +1575,27 @@ export class AggregateResponse extends S.Opaque<AggregateResponse, { readonly br
   )
 ) {}
 
+/**
+ * Companion namespace for {@link AggregateResponse}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AggregateResponse {
+  /**
+   * Encoded (wire) form of {@link AggregateResponse}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly excludedItems?: number;
+    readonly accuracy: AggregationAccuracy.Encoded;
+    readonly data: ReadonlyArray<AggregationRow.Encoded>;
+    readonly computeUsage?: number;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Metric keys and the regrouped view of a row
 // -----------------------------------------------------------------------------
@@ -1064,6 +1615,24 @@ export class CountKey extends S.Opaque<CountKey, { readonly brand: unique symbol
 ) {}
 
 /**
+ * Companion namespace for {@link CountKey}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CountKey {
+  /**
+   * Encoded (wire) form of {@link CountKey}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "count";
+  }
+}
+
+/**
  * Identifies one metric of one property among a row's metrics.
  *
  * @category models
@@ -1080,6 +1649,26 @@ export class PropertyMetricKey extends S.Opaque<PropertyMetricKey, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link PropertyMetricKey}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyMetricKey {
+  /**
+   * Encoded (wire) form of {@link PropertyMetricKey}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "property";
+    readonly property: PropertyApiName.Encoded;
+    readonly metric: PropertyMetricKind.Encoded;
+  }
+}
 
 /**
  * What a conventionally named metric stands for: the object count, or one metric of one property.
@@ -1123,6 +1712,24 @@ export const MetricKey = MetricKeyKind.mapMembers(() => Tuple.make(CountKey, Pro
 export type MetricKey = typeof MetricKey.Type;
 
 /**
+ * Companion namespace for {@link MetricKey}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MetricKey {
+  /**
+   * Encoded (wire) form of {@link MetricKey}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | CountKey.Encoded
+    | PropertyMetricKey.Encoded;
+}
+
+/**
  * The metrics computed from one property in one result row, each present only when the row carried it.
  *
  * @category models
@@ -1142,6 +1749,30 @@ export class PropertyMetricValues extends S.Opaque<PropertyMetricValues, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link PropertyMetricValues}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyMetricValues {
+  /**
+   * Encoded (wire) form of {@link PropertyMetricValues}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly sum?: typeof S.Json.Encoded;
+    readonly avg?: typeof S.Json.Encoded;
+    readonly min?: typeof S.Json.Encoded;
+    readonly max?: typeof S.Json.Encoded;
+    readonly approximateDistinct?: typeof S.Json.Encoded;
+    readonly exactDistinct?: typeof S.Json.Encoded;
+    readonly approximatePercentile?: typeof S.Json.Encoded;
+  }
+}
 
 /**
  * A result row's metrics, regrouped from a flat list of named values into a lookup by property and metric.
@@ -1176,3 +1807,23 @@ export class MetricLookup extends S.Opaque<MetricLookup, { readonly brand: uniqu
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MetricLookup}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MetricLookup {
+  /**
+   * Encoded (wire) form of {@link MetricLookup}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly count?: typeof S.Json.Encoded;
+    readonly properties: R.ReadonlyRecord<PropertyApiName.Encoded, PropertyMetricValues.Encoded>;
+    readonly aliased: R.ReadonlyRecord<MetricName.Encoded, typeof S.Json.Encoded>;
+  }
+}

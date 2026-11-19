@@ -13,10 +13,10 @@
 import { $ScratchpadId } from "@beep/identity";
 import { Quad } from "@beep/rdf/Rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -71,14 +71,18 @@ const serializeQuad = (quad: Quad): string => {
  * @category models
  * @since 0.0.0
  */
-export class QuadDelta extends S.Opaque<QuadDelta, { readonly brand: unique symbol }>()(S.Struct({
+export class QuadDelta extends S.Opaque<QuadDelta, { readonly brand: unique symbol }>()(
+  S.Struct({
     newQuads: S.Array(Quad).annotateKey({ description: "Quads present in the enriched graph only." }),
     originalCount: S.Natural.annotateKey({ description: "Number of quads in the original graph." }),
     enrichedCount: S.Natural.annotateKey({ description: "Number of quads in the enriched graph." }),
     deltaCount: S.Natural.annotateKey({ description: "Number of newly inferred quads." }),
-  }).pipe($I.annoteSchema("QuadDelta", {
-    description: "New RDF quads and non-negative graph-size statistics for one enrichment delta.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("QuadDelta", {
+      description: "New RDF quads and non-negative graph-size statistics for one enrichment delta.",
+    })
+  )
+) {}
 
 /**
  * Computes the delta between two RDF stores.

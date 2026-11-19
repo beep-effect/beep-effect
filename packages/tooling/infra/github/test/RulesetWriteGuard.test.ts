@@ -4,6 +4,7 @@ import { productionConfig } from "@beep/infra-github/Production";
 import { decodeLiveRuleset, liveReviewerCheck } from "@beep/infra-github/RulesetGuard";
 import { guardedRulesetProvider } from "@beep/infra-github/RulesetWriteGuard";
 import { declareStack } from "@beep/infra-github/Stack";
+import { atRegistration } from "@beep/test-utils/Registration";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -57,7 +58,7 @@ const scenario = (
 ) => {
   const fake = FakeRepository.fromCensus();
   before(fake);
-  const capture = Effect.runSync(decodeLiveRuleset(fake.ruleset(MAIN)));
+  const capture = atRegistration(decodeLiveRuleset(fake.ruleset(MAIN)));
   const providers = guardedRulesetProvider(capture).pipe(Layer.provideMerge(fakeProviders(fake)));
   const { test } = Test.make({ providers, stage: "test" });
   test.provider(name, (stack) =>
@@ -121,7 +122,7 @@ scenario(
 {
   const fake = FakeRepository.fromCensus();
   const { id: _id, ...withoutId } = fake.ruleset(MAIN);
-  const capture = Effect.runSync(decodeLiveRuleset(withoutId));
+  const capture = atRegistration(decodeLiveRuleset(withoutId));
   const providers = guardedRulesetProvider(capture).pipe(Layer.provideMerge(fakeProviders(fake)));
   const { test } = Test.make({ providers, stage: "test" });
   test.provider("a capture without an id refuses the write", (scratch) =>
@@ -137,7 +138,7 @@ scenario(
 // Any other ruleset goes straight to the shipped provider, with no re-read of 10240248.
 {
   const fake = FakeRepository.fromCensus();
-  const capture = Effect.runSync(decodeLiveRuleset(fake.ruleset(MAIN)));
+  const capture = atRegistration(decodeLiveRuleset(fake.ruleset(MAIN)));
   const providers = guardedRulesetProvider(capture).pipe(Layer.provideMerge(fakeProviders(fake)));
   const { test } = Test.make({ providers, stage: "test" });
   test.provider("a ruleset with another name is written without the re-read", (scratch) =>
@@ -163,7 +164,7 @@ scenario(
 // A name-based read that misses plans a create, whose shipped path POSTs a second ruleset: refused, nothing sent.
 {
   const fake = FakeRepository.fromCensus();
-  const capture = Effect.runSync(decodeLiveRuleset(fake.ruleset(MAIN)));
+  const capture = atRegistration(decodeLiveRuleset(fake.ruleset(MAIN)));
   const providers = guardedRulesetProvider(capture).pipe(Layer.provideMerge(fakeProviders(fake)));
   const { test } = Test.make({ providers, stage: "test" });
   test.provider("a write on the create path, not aimed at the captured id, is refused", (scratch) =>

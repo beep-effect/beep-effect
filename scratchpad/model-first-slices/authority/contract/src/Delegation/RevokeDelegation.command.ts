@@ -11,7 +11,7 @@ import { NotDelegator } from "./NotDelegator.rejection.ts";
  * @category events
  * @since 0.0.0
  */
-export class DelegationRevoked extends Domain.Event("DelegationRevoked", carry({ holder: RunId })) {}
+export class DelegationRevoked extends Domain.Event("DelegationRevoked", carry({ holder: RunId }), { description: "The delegation no longer authorizes anything." }) {}
 
 /**
  * Revoke an active delegation.

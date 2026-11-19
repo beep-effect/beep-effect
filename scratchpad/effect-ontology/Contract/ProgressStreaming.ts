@@ -45,18 +45,22 @@ const $I = $ScratchpadId.create("effect-ontology/Contract/ProgressStreaming");
  */
 export const IsoDateTimeString = S.Trim.check(
   S.isNonEmpty({ message: "String must not be empty" }),
-  S.makeFilter((value: string) => O.isSome(DateTime.make(value)), $I.annote("IsoDateTimeStringCheck", {
-    title: "ISO DateTime String",
-    description: "Accepts any string DateTime.make parses; generation stays inside a constructive ISO 8601 UTC shape.",
-    arbitraryConstraint: {
-      patterns: [
-        {
-          source: "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|1\\d|2[0-8])T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}Z$",
-          flags: "",
-        },
-      ],
-    },
-  }))
+  S.makeFilter(
+    (value: string) => O.isSome(DateTime.make(value)),
+    $I.annote("IsoDateTimeStringCheck", {
+      title: "ISO DateTime String",
+      description:
+        "Accepts any string DateTime.make parses; generation stays inside a constructive ISO 8601 UTC shape.",
+      arbitraryConstraint: {
+        patterns: [
+          {
+            source: "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|1\\d|2[0-8])T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}Z$",
+            flags: "",
+          },
+        ],
+      },
+    })
+  )
 ).pipe(
   $I.annoteSchema("IsoDateTimeString", {
     description: "Trimmed, non-empty datetime string that DateTime.make parses, kept verbatim.",
@@ -249,8 +253,8 @@ const BaseProgressEvent = S.Struct({
  * @category domain-events
  * @since 0.0.0
  */
-export class ExtractionStartedEvent extends S.Opaque<ExtractionStartedEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("extraction_started",
-  {
+export class ExtractionStartedEvent extends S.Opaque<ExtractionStartedEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("extraction_started", {
     ...BaseProgressEvent.fields,
 
     /** Total number of chunks scheduled for this extraction. */
@@ -292,9 +296,12 @@ export class ExtractionStartedEvent extends S.Opaque<ExtractionStartedEvent, { r
         description: "Source-text statistics available before chunk processing begins.",
       })
     ),
-  }).pipe($I.annoteSchema("ExtractionStartedEvent", {
-    description: "Extraction lifecycle event announcing the initial chunk workload and source-text statistics.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExtractionStartedEvent", {
+      description: "Extraction lifecycle event announcing the initial chunk workload and source-text statistics.",
+    })
+  )
+) {}
 
 /**
  * Records the chunking policy selected when source segmentation begins.
@@ -320,8 +327,8 @@ export class ExtractionStartedEvent extends S.Opaque<ExtractionStartedEvent, { r
  * @category domain-events
  * @since 0.0.0
  */
-export class ChunkingStartedEvent extends S.Opaque<ChunkingStartedEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("chunking_started",
-  {
+export class ChunkingStartedEvent extends S.Opaque<ChunkingStartedEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("chunking_started", {
     ...BaseProgressEvent.fields,
     /** Text segmentation policy used by the chunking stage. */
     config: S.Struct({
@@ -345,9 +352,12 @@ export class ChunkingStartedEvent extends S.Opaque<ChunkingStartedEvent, { reado
         description: "Text segmentation policy used by the chunking stage.",
       })
     ),
-  }).pipe($I.annoteSchema("ChunkingStartedEvent", {
-    description: "Extraction lifecycle event emitted when text chunking begins.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ChunkingStartedEvent", {
+      description: "Extraction lifecycle event emitted when text chunking begins.",
+    })
+  )
+) {}
 
 /**
  * Reports completed and active chunk counts while text segmentation is running.
@@ -370,8 +380,8 @@ export class ChunkingStartedEvent extends S.Opaque<ChunkingStartedEvent, { reado
  * @category domain-events
  * @since 0.0.0
  */
-export class ChunkingProgressEvent extends S.Opaque<ChunkingProgressEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("chunking_progress",
-  {
+export class ChunkingProgressEvent extends S.Opaque<ChunkingProgressEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("chunking_progress", {
     ...BaseProgressEvent.fields,
 
     /** Number of chunks fully produced when the event was emitted. */
@@ -394,9 +404,12 @@ export class ChunkingProgressEvent extends S.Opaque<ChunkingProgressEvent, { rea
         description: "Mean size in characters of chunks produced so far.",
       })
     ),
-  }).pipe($I.annoteSchema("ChunkingProgressEvent", {
-    description: "Periodic progress snapshot for the text chunking stage.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ChunkingProgressEvent", {
+      description: "Periodic progress snapshot for the text chunking stage.",
+    })
+  )
+) {}
 
 /**
  * Summarizes the final chunk count, average size, and elapsed time after text
@@ -420,8 +433,8 @@ export class ChunkingProgressEvent extends S.Opaque<ChunkingProgressEvent, { rea
  * @category domain-events
  * @since 0.0.0
  */
-export class ChunkingCompleteEvent extends S.Opaque<ChunkingCompleteEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("chunking_complete",
-  {
+export class ChunkingCompleteEvent extends S.Opaque<ChunkingCompleteEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("chunking_complete", {
     ...BaseProgressEvent.fields,
 
     /** Final number of chunks produced from the source text. */
@@ -444,9 +457,12 @@ export class ChunkingCompleteEvent extends S.Opaque<ChunkingCompleteEvent, { rea
         description: "Elapsed chunking time in milliseconds.",
       })
     ),
-  }).pipe($I.annoteSchema("ChunkingCompleteEvent", {
-    description: "Extraction lifecycle event summarizing successful text chunking.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ChunkingCompleteEvent", {
+      description: "Extraction lifecycle event summarizing successful text chunking.",
+    })
+  )
+) {}
 
 /**
  * Identifies the chunk entering the extraction pipeline and carries a bounded
@@ -470,8 +486,11 @@ export class ChunkingCompleteEvent extends S.Opaque<ChunkingCompleteEvent, { rea
  * @category domain-events
  * @since 0.0.0
  */
-export class ChunkProcessingStartedEvent extends S.Opaque<ChunkProcessingStartedEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("chunk_processing_started",
-  {
+export class ChunkProcessingStartedEvent extends S.Opaque<
+  ChunkProcessingStartedEvent,
+  { readonly brand: unique symbol }
+>()(
+  S.TaggedStruct("chunk_processing_started", {
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk entering pipeline processing. */
@@ -495,9 +514,12 @@ export class ChunkProcessingStartedEvent extends S.Opaque<ChunkProcessingStarted
         description: "Preview containing at most the first 200 characters of the chunk.",
       })
     ),
-  }).pipe($I.annoteSchema("ChunkProcessingStartedEvent", {
-    description: "Extraction lifecycle event emitted when full processing begins for one chunk.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ChunkProcessingStartedEvent", {
+      description: "Extraction lifecycle event emitted when full processing begins for one chunk.",
+    })
+  )
+) {}
 
 /**
  * Reports mention-detection progress and the number of mentions accumulated for
@@ -521,8 +543,11 @@ export class ChunkProcessingStartedEvent extends S.Opaque<ChunkProcessingStarted
  * @category domain-events
  * @since 0.0.0
  */
-export class MentionExtractionProgressEvent extends S.Opaque<MentionExtractionProgressEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("mention_extraction_progress",
-  {
+export class MentionExtractionProgressEvent extends S.Opaque<
+  MentionExtractionProgressEvent,
+  { readonly brand: unique symbol }
+>()(
+  S.TaggedStruct("mention_extraction_progress", {
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk undergoing mention extraction. */
@@ -545,9 +570,12 @@ export class MentionExtractionProgressEvent extends S.Opaque<MentionExtractionPr
         description: "Number of mentions detected in the active chunk so far.",
       })
     ),
-  }).pipe($I.annoteSchema("MentionExtractionProgressEvent", {
-    description: "Periodic progress snapshot for mention extraction within one chunk.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("MentionExtractionProgressEvent", {
+      description: "Periodic progress snapshot for mention extraction within one chunk.",
+    })
+  )
+) {}
 
 /**
  * Reports entity-resolution progress and candidate-class activity for the active
@@ -571,8 +599,11 @@ export class MentionExtractionProgressEvent extends S.Opaque<MentionExtractionPr
  * @category domain-events
  * @since 0.0.0
  */
-export class EntityExtractionProgressEvent extends S.Opaque<EntityExtractionProgressEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("entity_extraction_progress",
-  {
+export class EntityExtractionProgressEvent extends S.Opaque<
+  EntityExtractionProgressEvent,
+  { readonly brand: unique symbol }
+>()(
+  S.TaggedStruct("entity_extraction_progress", {
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk undergoing entity extraction. */
@@ -602,9 +633,12 @@ export class EntityExtractionProgressEvent extends S.Opaque<EntityExtractionProg
         description: "Number of ontology classes considered during entity extraction.",
       })
     ),
-  }).pipe($I.annoteSchema("EntityExtractionProgressEvent", {
-    description: "Periodic progress snapshot for entity extraction within one chunk.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("EntityExtractionProgressEvent", {
+      description: "Periodic progress snapshot for entity extraction within one chunk.",
+    })
+  )
+) {}
 
 /**
  * Carries a sampled entity discovery for live inspection without requiring the
@@ -628,8 +662,8 @@ export class EntityExtractionProgressEvent extends S.Opaque<EntityExtractionProg
  * @category domain-events
  * @since 0.0.0
  */
-export class EntityFoundEvent extends S.Opaque<EntityFoundEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("entity_found",
-  {
+export class EntityFoundEvent extends S.Opaque<EntityFoundEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("entity_found", {
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk in which the entity was found. */
@@ -671,9 +705,12 @@ export class EntityFoundEvent extends S.Opaque<EntityFoundEvent, { readonly bran
         description: "Optional confidence assigned to this sampled entity extraction.",
       })
     ),
-  }).pipe($I.annoteSchema("EntityFoundEvent", {
-    description: "Sampled domain event exposing one extracted entity during streaming.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("EntityFoundEvent", {
+      description: "Sampled domain event exposing one extracted entity during streaming.",
+    })
+  )
+) {}
 
 /**
  * Reports relation-extraction progress together with the entity population
@@ -697,8 +734,11 @@ export class EntityFoundEvent extends S.Opaque<EntityFoundEvent, { readonly bran
  * @category domain-events
  * @since 0.0.0
  */
-export class RelationExtractionProgressEvent extends S.Opaque<RelationExtractionProgressEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("relation_extraction_progress",
-  {
+export class RelationExtractionProgressEvent extends S.Opaque<
+  RelationExtractionProgressEvent,
+  { readonly brand: unique symbol }
+>()(
+  S.TaggedStruct("relation_extraction_progress", {
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk undergoing relation extraction. */
@@ -728,9 +768,12 @@ export class RelationExtractionProgressEvent extends S.Opaque<RelationExtraction
         description: "Number of extracted entities available as relation endpoints.",
       })
     ),
-  }).pipe($I.annoteSchema("RelationExtractionProgressEvent", {
-    description: "Periodic progress snapshot for relation extraction within one chunk.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("RelationExtractionProgressEvent", {
+      description: "Periodic progress snapshot for relation extraction within one chunk.",
+    })
+  )
+) {}
 
 /**
  * Carries a sampled relation discovery with enough information to distinguish an
@@ -755,8 +798,8 @@ export class RelationExtractionProgressEvent extends S.Opaque<RelationExtraction
  * @category domain-events
  * @since 0.0.0
  */
-export class RelationFoundEvent extends S.Opaque<RelationFoundEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("relation_found",
-  {
+export class RelationFoundEvent extends S.Opaque<RelationFoundEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("relation_found", {
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk in which the relation was found. */
@@ -805,9 +848,12 @@ export class RelationFoundEvent extends S.Opaque<RelationFoundEvent, { readonly 
         description: "Optional confidence assigned to this sampled relation extraction.",
       })
     ),
-  }).pipe($I.annoteSchema("RelationFoundEvent", {
-    description: "Sampled domain event exposing one extracted relation during streaming.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("RelationFoundEvent", {
+      description: "Sampled domain event exposing one extracted relation during streaming.",
+    })
+  )
+) {}
 
 /**
  * Reports how many candidate relations have been verified and how many satisfy
@@ -832,8 +878,8 @@ export class RelationFoundEvent extends S.Opaque<RelationFoundEvent, { readonly 
  * @category domain-events
  * @since 0.0.0
  */
-export class GroundingProgressEvent extends S.Opaque<GroundingProgressEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("grounding_progress",
-  {
+export class GroundingProgressEvent extends S.Opaque<GroundingProgressEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("grounding_progress", {
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk undergoing grounding verification. */
@@ -863,9 +909,12 @@ export class GroundingProgressEvent extends S.Opaque<GroundingProgressEvent, { r
         description: "Minimum confidence required for a relation to count as grounded.",
       })
     ),
-  }).pipe($I.annoteSchema("GroundingProgressEvent", {
-    description: "Periodic progress snapshot for relation grounding within one chunk.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("GroundingProgressEvent", {
+      description: "Periodic progress snapshot for relation grounding within one chunk.",
+    })
+  )
+) {}
 
 /**
  * Summarizes the results, duration, and non-fatal diagnostics produced after one
@@ -889,8 +938,11 @@ export class GroundingProgressEvent extends S.Opaque<GroundingProgressEvent, { r
  * @category domain-events
  * @since 0.0.0
  */
-export class ChunkProcessingCompleteEvent extends S.Opaque<ChunkProcessingCompleteEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("chunk_processing_complete",
-  {
+export class ChunkProcessingCompleteEvent extends S.Opaque<
+  ChunkProcessingCompleteEvent,
+  { readonly brand: unique symbol }
+>()(
+  S.TaggedStruct("chunk_processing_complete", {
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk that completed processing. */
@@ -951,9 +1003,12 @@ export class ChunkProcessingCompleteEvent extends S.Opaque<ChunkProcessingComple
         description: "Optional ordered diagnostics from recoverable chunk-processing failures.",
       })
     ),
-  }).pipe($I.annoteSchema("ChunkProcessingCompleteEvent", {
-    description: "Extraction lifecycle event summarizing the completed processing of one chunk.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ChunkProcessingCompleteEvent", {
+      description: "Extraction lifecycle event summarizing the completed processing of one chunk.",
+    })
+  )
+) {}
 
 /**
  * Publishes the final graph counts, chunk outcomes, and wall-clock duration after
@@ -978,8 +1033,8 @@ export class ChunkProcessingCompleteEvent extends S.Opaque<ChunkProcessingComple
  * @category domain-events
  * @since 0.0.0
  */
-export class ExtractionCompleteEvent extends S.Opaque<ExtractionCompleteEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("extraction_complete",
-  {
+export class ExtractionCompleteEvent extends S.Opaque<ExtractionCompleteEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("extraction_complete", {
     ...BaseProgressEvent.fields,
 
     /** Total number of entities in the merged knowledge graph. */
@@ -1023,9 +1078,12 @@ export class ExtractionCompleteEvent extends S.Opaque<ExtractionCompleteEvent, {
         description: "Number of chunks omitted because of recoverable failures.",
       })
     ),
-  }).pipe($I.annoteSchema("ExtractionCompleteEvent", {
-    description: "Terminal domain event summarizing a successfully merged extraction.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExtractionCompleteEvent", {
+      description: "Terminal domain event summarizing a successfully merged extraction.",
+    })
+  )
+) {}
 
 /**
  * Optional retry policy for a recoverable extraction failure: exponential
@@ -1150,8 +1208,8 @@ export type ExtractionFailedRetryStrategy = typeof ExtractionFailedRetryStrategy
  * @category domain-events
  * @since 0.0.0
  */
-export class ExtractionFailedEvent extends S.Opaque<ExtractionFailedEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("extraction_failed",
-  {
+export class ExtractionFailedEvent extends S.Opaque<ExtractionFailedEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("extraction_failed", {
     ...BaseProgressEvent.fields,
 
     /** Stable classifier for the systemic extraction failure. */
@@ -1176,7 +1234,10 @@ export class ExtractionFailedEvent extends S.Opaque<ExtractionFailedEvent, { rea
     ),
 
     /** Optional retry policy for a recoverable extraction failure. */
-    retryStrategy: ExtractionFailedRetryStrategy.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    retryStrategy: ExtractionFailedRetryStrategy.pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
 
     /** Optional usable counts accumulated before the terminal failure. */
     partialResults: S.Struct({
@@ -1214,9 +1275,12 @@ export class ExtractionFailedEvent extends S.Opaque<ExtractionFailedEvent, { rea
         description: "Optional zero-based checkpoint from which a resumable extraction may continue.",
       })
     ),
-  }).pipe($I.annoteSchema("ExtractionFailedEvent", {
-    description: "Terminal domain event describing a systemic extraction failure and recovery options.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExtractionFailedEvent", {
+      description: "Terminal domain event describing a systemic extraction failure and recovery options.",
+    })
+  )
+) {}
 
 /**
  * Terminates the stream after client cancellation while preserving optional
@@ -1240,8 +1304,8 @@ export class ExtractionFailedEvent extends S.Opaque<ExtractionFailedEvent, { rea
  * @category domain-events
  * @since 0.0.0
  */
-export class ExtractionCancelledEvent extends S.Opaque<ExtractionCancelledEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("extraction_cancelled",
-  {
+export class ExtractionCancelledEvent extends S.Opaque<ExtractionCancelledEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("extraction_cancelled", {
     ...BaseProgressEvent.fields,
 
     /** Human-readable reason supplied for cancelling the extraction. */
@@ -1290,9 +1354,12 @@ export class ExtractionCancelledEvent extends S.Opaque<ExtractionCancelledEvent,
         description: "Optional zero-based index of the last chunk processed before cancellation.",
       })
     ),
-  }).pipe($I.annoteSchema("ExtractionCancelledEvent", {
-    description: "Terminal domain event describing graceful client-requested extraction cancellation.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExtractionCancelledEvent", {
+      description: "Terminal domain event describing graceful client-requested extraction cancellation.",
+    })
+  )
+) {}
 
 /**
  * Warns that the server event queue is approaching capacity and tells the client
@@ -1317,8 +1384,8 @@ export class ExtractionCancelledEvent extends S.Opaque<ExtractionCancelledEvent,
  * @category domain-events
  * @since 0.0.0
  */
-export class BackpressureWarningEvent extends S.Opaque<BackpressureWarningEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("backpressure_warning",
-  {
+export class BackpressureWarningEvent extends S.Opaque<BackpressureWarningEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("backpressure_warning", {
     ...BaseProgressEvent.fields,
 
     /** Current number of events awaiting client consumption. */
@@ -1351,9 +1418,12 @@ export class BackpressureWarningEvent extends S.Opaque<BackpressureWarningEvent,
         description: "Concrete client action recommended to restore safe queue headroom.",
       })
     ),
-  }).pipe($I.annoteSchema("BackpressureWarningEvent", {
-    description: "Flow-control event warning that slow client consumption is exhausting server queue capacity.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("BackpressureWarningEvent", {
+      description: "Flow-control event warning that slow client consumption is exhausting server queue capacity.",
+    })
+  )
+) {}
 
 /**
  * Reports a chunk-scoped failure together with the recovery action taken while
@@ -1378,8 +1448,8 @@ export class BackpressureWarningEvent extends S.Opaque<BackpressureWarningEvent,
  * @category domain-events
  * @since 0.0.0
  */
-export class RecoverableErrorEvent extends S.Opaque<RecoverableErrorEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("error_recoverable",
-  {
+export class RecoverableErrorEvent extends S.Opaque<RecoverableErrorEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("error_recoverable", {
     ...BaseProgressEvent.fields,
 
     /** Zero-based index of the chunk affected by the recoverable failure. */
@@ -1416,9 +1486,12 @@ export class RecoverableErrorEvent extends S.Opaque<RecoverableErrorEvent, { rea
         description: "Action already taken by the server to continue extraction.",
       })
     ),
-  }).pipe($I.annoteSchema("RecoverableErrorEvent", {
-    description: "Non-terminal domain event describing a recovered chunk-level extraction failure.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("RecoverableErrorEvent", {
+      description: "Non-terminal domain event describing a recovered chunk-level extraction failure.",
+    })
+  )
+) {}
 
 /**
  * Reports the systemic condition that halted extraction and exposes optional
@@ -1443,8 +1516,8 @@ export class RecoverableErrorEvent extends S.Opaque<RecoverableErrorEvent, { rea
  * @category domain-events
  * @since 0.0.0
  */
-export class FatalErrorEvent extends S.Opaque<FatalErrorEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("error_fatal",
-  {
+export class FatalErrorEvent extends S.Opaque<FatalErrorEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("error_fatal", {
     ...BaseProgressEvent.fields,
 
     /** Stable classifier for the fatal systemic failure. */
@@ -1507,9 +1580,12 @@ export class FatalErrorEvent extends S.Opaque<FatalErrorEvent, { readonly brand:
         description: "Optional server-recommended delay in milliseconds before retrying.",
       })
     ),
-  }).pipe($I.annoteSchema("FatalErrorEvent", {
-    description: "Terminal domain event describing a fatal systemic extraction failure.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("FatalErrorEvent", {
+      description: "Terminal domain event describing a fatal systemic extraction failure.",
+    })
+  )
+) {}
 
 // =============================================================================
 // Generic Stage Lifecycle Events (used by ExtractionEntityHandler)
@@ -1564,8 +1640,8 @@ const StageType = LiteralKit([
  * @category domain-events
  * @since 0.0.0
  */
-export class StageStartedEvent extends S.Opaque<StageStartedEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("stage_started",
-  {
+export class StageStartedEvent extends S.Opaque<StageStartedEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("stage_started", {
     ...BaseProgressEvent.fields,
 
     /** Pipeline stage that has begun processing. */
@@ -1574,9 +1650,12 @@ export class StageStartedEvent extends S.Opaque<StageStartedEvent, { readonly br
         description: "Pipeline stage that has begun processing.",
       })
     ),
-  }).pipe($I.annoteSchema("StageStartedEvent", {
-    description: "Generic lifecycle event announcing the start of an extraction stage.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("StageStartedEvent", {
+      description: "Generic lifecycle event announcing the start of an extraction stage.",
+    })
+  )
+) {}
 
 /**
  * Reports completion and item counts for a coarse pipeline stage.
@@ -1599,8 +1678,8 @@ export class StageStartedEvent extends S.Opaque<StageStartedEvent, { readonly br
  * @category domain-events
  * @since 0.0.0
  */
-export class StageProgressEvent extends S.Opaque<StageProgressEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("stage_progress",
-  {
+export class StageProgressEvent extends S.Opaque<StageProgressEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("stage_progress", {
     ...BaseProgressEvent.fields,
 
     /** Pipeline stage currently reporting progress. */
@@ -1630,9 +1709,12 @@ export class StageProgressEvent extends S.Opaque<StageProgressEvent, { readonly 
         description: "Total number of work items expected by the stage.",
       })
     ),
-  }).pipe($I.annoteSchema("StageProgressEvent", {
-    description: "Generic progress snapshot for a coarse extraction stage.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("StageProgressEvent", {
+      description: "Generic progress snapshot for a coarse extraction stage.",
+    })
+  )
+) {}
 
 /**
  * Summarizes the elapsed time and item count after a coarse pipeline stage
@@ -1656,8 +1738,8 @@ export class StageProgressEvent extends S.Opaque<StageProgressEvent, { readonly 
  * @category domain-events
  * @since 0.0.0
  */
-export class StageCompletedEvent extends S.Opaque<StageCompletedEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("stage_completed",
-  {
+export class StageCompletedEvent extends S.Opaque<StageCompletedEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("stage_completed", {
     ...BaseProgressEvent.fields,
 
     /** Pipeline stage that completed. */
@@ -1680,9 +1762,12 @@ export class StageCompletedEvent extends S.Opaque<StageCompletedEvent, { readonl
         description: "Number of work items completed by the stage.",
       })
     ),
-  }).pipe($I.annoteSchema("StageCompletedEvent", {
-    description: "Generic lifecycle event summarizing a completed extraction stage.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("StageCompletedEvent", {
+      description: "Generic lifecycle event summarizing a completed extraction stage.",
+    })
+  )
+) {}
 
 /**
  * Reports a bounded delay caused by token, request, or concurrency limits.
@@ -1705,8 +1790,8 @@ export class StageCompletedEvent extends S.Opaque<StageCompletedEvent, { readonl
  * @category domain-events
  * @since 0.0.0
  */
-export class RateLimitedEvent extends S.Opaque<RateLimitedEvent, { readonly brand: unique symbol }>()(S.TaggedStruct("rate_limited",
-  {
+export class RateLimitedEvent extends S.Opaque<RateLimitedEvent, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("rate_limited", {
     ...BaseProgressEvent.fields,
 
     /** Server-imposed delay in milliseconds before work may continue. */
@@ -1725,9 +1810,12 @@ export class RateLimitedEvent extends S.Opaque<RateLimitedEvent, { readonly bran
         description: "Resource dimension responsible for the rate-limit delay.",
       })
     ),
-  }).pipe($I.annoteSchema("RateLimitedEvent", {
-    description: "Flow-control event describing a temporary rate-limit delay.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("RateLimitedEvent", {
+      description: "Flow-control event describing a temporary rate-limit delay.",
+    })
+  )
+) {}
 
 // =============================================================================
 // Union Type: All Progress Events
@@ -1871,15 +1959,34 @@ const backpressureConfigDetailedEventSampleRateDefault = UnitInterval.make(0.1);
  * @category configuration
  * @since 0.0.0
  */
-export class BackpressureConfig extends S.Opaque<BackpressureConfig, { readonly brand: unique symbol }>()(S.Struct({
-    maxQueueSize: PosInt.pipe(S.withConstructorDefault(Effect.succeed(backpressureConfigMaxQueueSizeDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigMaxQueueSizeDefault))),
-    warningThreshold: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(backpressureConfigWarningThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigWarningThresholdDefault))),
-    strategy: BackpressureStrategy.pipe(S.withConstructorDefault(Effect.succeed(BackpressureStrategy.Enum.drop_oldest)), S.withDecodingDefaultTypeKey(Effect.succeed(BackpressureStrategy.Enum.drop_oldest))),
-    blockTimeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(backpressureConfigBlockTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigBlockTimeoutDefault))),
-    detailedEventSampleRate: UnitInterval.pipe(S.withConstructorDefault(Effect.succeed(backpressureConfigDetailedEventSampleRateDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigDetailedEventSampleRateDefault))),
-  }).pipe($I.annoteSchema("BackpressureConfig", {
-    description: "Capacity, warning, overflow, blocking, and sampling policy for progress-event queues.",
-  }))) {}
+export class BackpressureConfig extends S.Opaque<BackpressureConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
+    maxQueueSize: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(backpressureConfigMaxQueueSizeDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigMaxQueueSizeDefault))
+    ),
+    warningThreshold: UnitInterval.pipe(
+      S.withConstructorDefault(Effect.succeed(backpressureConfigWarningThresholdDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigWarningThresholdDefault))
+    ),
+    strategy: BackpressureStrategy.pipe(
+      S.withConstructorDefault(Effect.succeed(BackpressureStrategy.Enum.drop_oldest)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(BackpressureStrategy.Enum.drop_oldest))
+    ),
+    blockTimeout: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(backpressureConfigBlockTimeoutDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigBlockTimeoutDefault))
+    ),
+    detailedEventSampleRate: UnitInterval.pipe(
+      S.withConstructorDefault(Effect.succeed(backpressureConfigDetailedEventSampleRateDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(backpressureConfigDetailedEventSampleRateDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("BackpressureConfig", {
+      description: "Capacity, warning, overflow, blocking, and sampling policy for progress-event queues.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link BackpressureConfig}.
@@ -1929,7 +2036,9 @@ export const DefaultBackpressureConfig = BackpressureConfig.make({});
  * @category commands
  * @since 0.0.0
  */
-export class CancellationRequest extends S.Class<CancellationRequest, { readonly brand: unique symbol }>($I`CancellationRequest`)(
+export class CancellationRequest extends S.Class<CancellationRequest, { readonly brand: unique symbol }>(
+  $I`CancellationRequest`
+)(
   S.Struct({
     /** Identifier of the active extraction run to cancel. */
     runId: ExtractionRunId.pipe(
@@ -1984,7 +2093,9 @@ export class CancellationRequest extends S.Class<CancellationRequest, { readonly
  * @category protocols
  * @since 0.0.0
  */
-export class CancellationResponse extends S.Class<CancellationResponse, { readonly brand: unique symbol }>($I`CancellationResponse`)(
+export class CancellationResponse extends S.Class<CancellationResponse, { readonly brand: unique symbol }>(
+  $I`CancellationResponse`
+)(
   S.Struct({
     /** Identifier of the extraction run addressed by the response. */
     runId: ExtractionRunId.pipe(
@@ -2071,7 +2182,8 @@ export class CancellationResponse extends S.Class<CancellationResponse, { readon
  * @category protocols
  * @since 0.0.0
  */
-export class ErrorRecoverySemantics extends S.Opaque<ErrorRecoverySemantics, { readonly brand: unique symbol }>()(S.Struct({
+export class ErrorRecoverySemantics extends S.Opaque<ErrorRecoverySemantics, { readonly brand: unique symbol }>()(
+  S.Struct({
     /**
      * Systemic Errors (LlmTimeout, LlmRateLimit, DatabaseConnection, etc.)
      *
@@ -2165,9 +2277,12 @@ export class ErrorRecoverySemantics extends S.Opaque<ErrorRecoverySemantics, { r
       /** The terminal cancellation event may carry usable completed work. */
       partialResults: S.tag(true),
     }),
-  }).pipe($I.annoteSchema("ErrorRecoverySemantics", {
-    description: "Canonical stream termination, partial-result, and client recovery behavior by failure class.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ErrorRecoverySemantics", {
+      description: "Canonical stream termination, partial-result, and client recovery behavior by failure class.",
+    })
+  )
+) {}
 
 /**
  * Canonical recovery behavior clients can consult when implementing progress
@@ -2241,8 +2356,8 @@ export const ErrorRecoverySemanticsSpec = ErrorRecoverySemantics.make({
  * @category protocols
  * @since 0.0.0
  */
-export class ProgressMessage extends S.Opaque<ProgressMessage, { readonly brand: unique symbol }>()(S.TaggedStruct("progress",
-  {
+export class ProgressMessage extends S.Opaque<ProgressMessage, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("progress", {
     /** Progress event payload or serialization diagnostic. */
     data: S.Union([
       ProgressEvent,
@@ -2279,9 +2394,12 @@ export class ProgressMessage extends S.Opaque<ProgressMessage, { readonly brand:
         description: "Server timestamp at which the transport envelope was created.",
       })
     ),
-  }).pipe($I.annoteSchema("ProgressMessage", {
-    description: "RPC-safe envelope for one extraction progress event or serialization diagnostic.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ProgressMessage", {
+      description: "RPC-safe envelope for one extraction progress event or serialization diagnostic.",
+    })
+  )
+) {}
 
 // =============================================================================
 // WebSocket Contract Layer (Protocol)
@@ -2347,8 +2465,8 @@ export class ProgressMessage extends S.Opaque<ProgressMessage, { readonly brand:
  * @category commands
  * @since 0.0.0
  */
-export class StartExtractionRequest extends S.Opaque<StartExtractionRequest, { readonly brand: unique symbol }>()(S.TaggedStruct("start_extraction",
-  {
+export class StartExtractionRequest extends S.Opaque<StartExtractionRequest, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("start_extraction", {
     /** Non-empty source text from which entities and relations will be extracted. */
     text: S.String.pipe(
       S.check(S.isMinLength(1)),
@@ -2410,9 +2528,12 @@ export class StartExtractionRequest extends S.Opaque<StartExtractionRequest, { r
         description: "Optional existing run identifier used to resume an extraction.",
       })
     ),
-  }).pipe($I.annoteSchema("StartExtractionRequest", {
-    description: "Client command requesting a new or resumed ontology extraction.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("StartExtractionRequest", {
+      description: "Client command requesting a new or resumed ontology extraction.",
+    })
+  )
+) {}
 
 /**
  * Server acknowledgment that identifies the run and reports whether an extraction
@@ -2435,8 +2556,8 @@ export class StartExtractionRequest extends S.Opaque<StartExtractionRequest, { r
  * @category protocols
  * @since 0.0.0
  */
-export class StartExtractionResponse extends S.Opaque<StartExtractionResponse, { readonly brand: unique symbol }>()(S.TaggedStruct("start_extraction_response",
-  {
+export class StartExtractionResponse extends S.Opaque<StartExtractionResponse, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("start_extraction_response", {
     /** Generated or caller-provided identifier of the extraction run. */
     runId: ExtractionRunId.pipe(
       $I.annoteKey("StartExtractionResponse.runId", {
@@ -2482,9 +2603,12 @@ export class StartExtractionResponse extends S.Opaque<StartExtractionResponse, {
         description: "Server timestamp at which the response was created.",
       })
     ),
-  }).pipe($I.annoteSchema("StartExtractionResponse", {
-    description: "Server acknowledgment accepting or rejecting an extraction request.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("StartExtractionResponse", {
+      description: "Server acknowledgment accepting or rejecting an extraction request.",
+    })
+  )
+) {}
 
 /**
  * Client acknowledgment identifying the progress event released from server-side
@@ -2507,8 +2631,8 @@ export class StartExtractionResponse extends S.Opaque<StartExtractionResponse, {
  * @category protocols
  * @since 0.0.0
  */
-export class AckMessage extends S.Opaque<AckMessage, { readonly brand: unique symbol }>()(S.TaggedStruct("ack",
-  {
+export class AckMessage extends S.Opaque<AckMessage, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("ack", {
     /** Extraction run whose event delivery is being acknowledged. */
     runId: ExtractionRunId.pipe(
       $I.annoteKey("AckMessage.runId", {
@@ -2529,6 +2653,9 @@ export class AckMessage extends S.Opaque<AckMessage, { readonly brand: unique sy
         description: "Client timestamp at which event receipt was acknowledged.",
       })
     ),
-  }).pipe($I.annoteSchema("AckMessage", {
-    description: "Client acknowledgment used to release one event from backpressure tracking.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("AckMessage", {
+      description: "Client acknowledgment used to release one event from backpressure tracking.",
+    })
+  )
+) {}

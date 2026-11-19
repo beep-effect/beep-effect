@@ -21,11 +21,10 @@ import { GateReport, Unit } from "./GateReport.ts";
 import { Item, ItemDetail } from "./Item.ts";
 import { fingerprint, ItemKey } from "./ItemKey.ts";
 import { PolicyRenderState } from "./Policy.ts";
-import { ItemOutcome, RunReason } from "./Vocabulary.ts";
+import { FailureKind, ItemOutcome, RunReason } from "./Vocabulary.ts";
 import type { Location } from "./Item.ts";
 import type { PolicyBreach } from "./Policy.ts";
 import type { StrayOutput } from "./StrayOutput.ts";
-import type { FailureKind } from "./Vocabulary.ts";
 
 const $I = $GateReportId.create("Reducer");
 
@@ -113,15 +112,19 @@ const putItem = (state: RunState, item: Item): RunState => ({
   items: upsert(state.items, fingerprint(item.key), item),
 });
 
-// Line and column are integers, so the first two colons delimit them whatever the file holds;
-// a diagnostic with no location has the empty place.
-const placeOf = (location: O.Option<Location>): string =>
-  O.match(location, { onNone: () => "", onSome: (at) => `${at.line}:${at.column}:${at.file}` });
+// Line and column are integers, so the first two colons delimit them whatever the file holds. A
+// diagnostic with no location is placed by its raw message, prefixed so it cannot read as a line:
+// different messages of one shape stay apart, and a repeat of one message is the same item.
+const placeOf = (item: Item): string =>
+  O.match(item.location, {
+    onNone: () => `message:${item.name}`,
+    onSome: (at) => `${at.line}:${at.column}:${at.file}`,
+  });
 
 const placeOccurrence = (state: RunState, item: Item, key: DiagnosticKey): RunState => {
   const base = ItemKey.cases.DiagnosticKey.make({ file: key.file, code: key.code, shape: key.shape });
   const id = fingerprint(base);
-  const place = placeOf(item.location);
+  const place = placeOf(item);
   const seen = O.getOrElse(HashMap.get(state.occurrences, id), (): Occurrences => HashMap.empty());
   const ordinal = O.getOrElse(HashMap.get(seen, place), () => HashMap.size(seen) + 1);
   const occurrences = HashMap.set(state.occurrences, id, HashMap.set(seen, place, ordinal));
@@ -290,6 +293,11 @@ const collectedOf = (state: RunState, finish: RunFinished, items: ReadonlyArray<
     O.getOrElse(() => A.filter(items, (item) => !ItemKey.guards.FaultKey(item.key)).length)
   );
 
+// Nothing collected is errored unless a load fault explains it: a module that failed to load
+// collected nothing, and the run fails on the fault whether or not other modules collected.
+const unexplainedEmpty = (collected: number, items: ReadonlyArray<Item>): boolean =>
+  collected === 0 && !A.some(items, (item) => O.exists(item.failureKind, FailureKind.is.load));
+
 const settledReason = (input: {
   readonly cancelled: boolean;
   readonly errored: boolean;
@@ -305,7 +313,7 @@ const settle = (state: RunState, start: RunStarted, finish: RunFinished): GateRe
   const fallback = needsFallback(state, finish, recorded);
   const items = fallback ? A.append(recorded, erroredFallback(subjectOf(state), finish)) : recorded;
   const collected = collectedOf(state, finish, items);
-  const errored = fallback || collected === 0 || RunReason.is.errored(finish.reason);
+  const errored = fallback || unexplainedEmpty(collected, items) || RunReason.is.errored(finish.reason);
   const reason = settledReason({ cancelled: isCancelled(state, finish), errored, items });
   const totals = tally({ items, collected, durationMs: finish.durationMs });
   const policy = A.isReadonlyArrayNonEmpty(state.breaches)

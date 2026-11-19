@@ -173,7 +173,7 @@ export class ImportJob extends Model<ImportJob>("ImportJob")(
  * @since 0.0.0
  */
 export declare namespace ImportJob {
-  export type Encoded = S.Codec.Encoded<typeof ImportJob>;
+  export type Encoded = typeof ImportJob.Encoded;
 }
 
 const encodeImportJob = S.encodeEffect(ImportJob);
@@ -229,7 +229,7 @@ export class ImportJobResponse extends Model<ImportJobResponse>("ImportJobRespon
  * @since 0.0.0
  */
 export declare namespace ImportJobResponse {
-  export type Encoded = S.Codec.Encoded<typeof ImportJobResponse>;
+  export type Encoded = typeof ImportJobResponse.Encoded;
 }
 
 /**

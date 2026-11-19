@@ -1,3 +1,5 @@
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 import { describe, expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -34,27 +36,27 @@ const candidate = {
   mimeType: "image/jpeg",
   declaredWidth: 640,
   declaredHeight: 480,
-  sha256Base64: "a".repeat(44),
+  sha256Base64: Str.repeat(44)("a"),
   bytesBase64: "aaaa",
 };
 
 describe("ScreenFrame", () => {
   it("truncates captions by code point and leaves non-strings alone", () => {
     expect(truncateCaption("hello")).toBe("hello");
-    expect(truncateCaption("a".repeat(161))).toBe("a".repeat(160));
-    expect(truncateCaption(`${"a".repeat(159)}\u0301extra`)).toBe("a".repeat(159));
-    expect(truncateCaption(`${"a".repeat(159)}\u200dextra`)).toBe("a".repeat(159));
-    expect(truncateCaption("😀".repeat(161))).toBe("😀".repeat(160));
+    expect(truncateCaption(Str.repeat(161)("a"))).toBe(Str.repeat(160)("a"));
+    expect(truncateCaption(`${Str.repeat(159)("a")}\u0301extra`)).toBe(Str.repeat(159)("a"));
+    expect(truncateCaption(`${Str.repeat(159)("a")}\u200dextra`)).toBe(Str.repeat(159)("a"));
+    expect(truncateCaption(Str.repeat(161)("😀"))).toBe(Str.repeat(160)("😀"));
     expect(truncateCaption(1)).toBe(1);
     const capped = capLabels(["a", "b", "c", "d", "e", "f", "g", "h", "i"]);
-    expect(Array.isArray(capped) && capped).toHaveLength(8);
+    expect(A.isArray(capped) && capped).toHaveLength(8);
     expect(capLabels("labels")).toBe("labels");
   });
 
   it("applies caption and label caps while decoding a judgement", () => {
     const approved = decode(ScreenFrameJudgement, {
       outcome: "approved_clean",
-      caption: "a".repeat(161),
+      caption: Str.repeat(161)("a"),
       labels: ["1", "2", "3", "4", "5", "6", "7", "8", "9"],
       bannerSuitability: 1,
       rejectReason: "other",
@@ -69,12 +71,14 @@ describe("ScreenFrame", () => {
     expect(approved.labels).toHaveLength(8);
     expect(approved.rejectReason).toEqual(O.some("other"));
     expect(O.isNone(rejected.rejectReason)).toBe(true);
-    expect(fails(ScreenFrameJudgement, {
-      outcome: "approved_clean",
-      caption: "ok",
-      labels: ["one"],
-      bannerSuitability: 1.1,
-    })).toBe(true);
+    expect(
+      fails(ScreenFrameJudgement, {
+        outcome: "approved_clean",
+        caption: "ok",
+        labels: ["one"],
+        bannerSuitability: 1.1,
+      }),
+    ).toBe(true);
   });
 
   it("decodes both mime types, both attempt outcomes, and an open claim purpose", () => {
@@ -140,8 +144,9 @@ describe("ScreenFrame", () => {
       false,
     );
     expect(decode(ScreenFrameSharingUpdateRequest, { enabled: true }).enabled).toBe(true);
-    expect(decode(ScreenFrameSettingsUpdateRequest, { meetingNoteScreenshotsEnabled: true })
-      .meetingNoteScreenshotsEnabled).toBe(true);
+    expect(
+      decode(ScreenFrameSettingsUpdateRequest, { meetingNoteScreenshotsEnabled: true }).meetingNoteScreenshotsEnabled,
+    ).toBe(true);
     expect(decode(NormalizedRect, { x: 0, y: 0, width: 1, height: 1 }).width).toBe(1);
     expect(decode(ScreenFrameSubjectIn, { kind: "conversation", id: "conv-1" }).id).toBe("conv-1");
     const set = ConversationScreenFrameSet.make({ revision: 0 });

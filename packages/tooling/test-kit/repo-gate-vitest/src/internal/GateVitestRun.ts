@@ -1,8 +1,8 @@
 /**
  * The adapter's implementation, loaded by the registered reporter when
- * Vitest starts: it keeps the run's start time and console lines, and at
- * the end of the run synthesizes the gate events, reduces them with the
- * model, and writes the package's test record and raw log through the
+ * Vitest starts: it keeps the run's start time and console lines, under a
+ * bound, and at the end of the run synthesizes the gate events, reduces them
+ * with the model, and writes the package's test record and raw log through the
  * record library. It never prints on success and never fails the run: a
  * failure becomes one line on stderr.
  *
@@ -25,7 +25,7 @@ import * as ManagedRuntime from "effect/ManagedRuntime";
 import * as O from "effect/Option";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { runLogText } from "./RunLog.ts";
+import { makeConsoleLogBuffer, runLogText } from "./RunLog.ts";
 import { readStrayOutput } from "./StrayOutputRecorder.ts";
 import { synthesizeEvents } from "./Synthesize.ts";
 import type { VitestConsoleLog, VitestError, VitestModule } from "./VitestShapes.ts";
@@ -55,7 +55,7 @@ type FinishInput = {
   readonly root: string;
   readonly argv: ReadonlyArray<string>;
   readonly startedAt: O.Option<DateTime.Utc>;
-  readonly logs: ReadonlyArray<VitestConsoleLog>;
+  readonly consoleText: string;
   readonly modules: ReadonlyArray<VitestModule>;
   readonly unhandledErrors: ReadonlyArray<VitestError>;
   readonly reason: string;
@@ -94,7 +94,7 @@ export const writeRunRecord = Effect.fn("GateVitestRun.writeRunRecord")(function
   const report = yield* Effect.fromResult(reduceEvents(events));
   const store = yield* GateRecordStore.make(repoRoot);
   const target = RecordTarget.cases.PackageTarget.make({ packageDir, gate });
-  yield* store.writeLog(target, Stream.make(encoder.encode(runLogText(report, input.logs))));
+  yield* store.writeLog(target, Stream.make(encoder.encode(runLogText(report, input.consoleText))));
   yield* store.writeRecord(target, GateRecord.make({ generatedAt: finishedAt, report }));
 });
 
@@ -139,18 +139,14 @@ export const makeGateVitestRun = (options: {
   readonly printLine?: (line: string) => void;
 }) => {
   const printLine = options.printLine ?? printToStderr;
-  const state: { startedAt: O.Option<DateTime.Utc>; logs: Array<VitestConsoleLog> } = {
-    startedAt: O.none(),
-    logs: [],
-  };
+  const logs = makeConsoleLogBuffer();
+  const state: { startedAt: O.Option<DateTime.Utc> } = { startedAt: O.none() };
   const session: GateVitestRun = {
     start: () => {
       state.startedAt = O.some(DateTime.nowUnsafe());
-      state.logs = [];
+      logs.reset();
     },
-    console: (log) => {
-      state.logs.push(log);
-    },
+    console: logs.add,
     finish: (input) => {
       const runtime = ManagedRuntime.make(NodeServices.layer);
       return runtime
@@ -160,7 +156,7 @@ export const makeGateVitestRun = (options: {
             root: options.root,
             argv: options.argv,
             startedAt: state.startedAt,
-            logs: state.logs,
+            consoleText: logs.text(),
           }).pipe(Effect.catchCause((cause) => Effect.sync(() => pipe(cause, failureLine, printLine))))
         )
         .finally(runtime.dispose);

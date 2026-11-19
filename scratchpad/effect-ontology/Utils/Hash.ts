@@ -10,8 +10,8 @@
  * @since 0.0.0
  */
 
-import * as Effect from "effect/Effect";
 import * as Digest from "effect/crypto/Digest";
+import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as Str from "effect/String";
 import { dual2, dual3 } from "./Dual.ts";
@@ -42,8 +42,7 @@ import { dual2, dual3 } from "./Dual.ts";
  */
 export const sha256 = Effect.fn("Hash.sha256")(function* (input: string) {
   const crypto = yield* Digest.Digest;
-  const digest = yield* crypto
-    .digest(Digest.sha256, new TextEncoder().encode(input));
+  const digest = yield* crypto.digest(Digest.sha256, new TextEncoder().encode(input));
   return Hex.encode(digest);
 });
 
@@ -134,7 +133,8 @@ export const sha256SyncFull = sha256;
  * @since 0.0.0
  */
 export const sha256Sync = Effect.fn("Hash.sha256Sync")(function* (input: string) {
-  return Str.slice(0, 16)(yield* sha256(input));
+  const digest = yield* sha256(input);
+  return Str.slice(0, 16)(digest);
 });
 
 /**
@@ -254,13 +254,12 @@ export const hashVersionedEmbeddingKeySync = hashVersionedEmbeddingKey;
  * @category utilities
  * @since 0.0.0
  */
-export const sha256Bytes = Effect.fn("Hash.sha256Bytes")(function* (bytes: BufferSource) {
+export const sha256Bytes = Effect.fn("Hash.sha256Bytes")(function* (bytes: ArrayBuffer | ArrayBufferView) {
   const crypto = yield* Digest.Digest;
   const input = ArrayBuffer.isView(bytes)
     ? new Uint8Array(bytes.buffer, bytes.byteOffset, bytes.byteLength)
     : new Uint8Array(bytes);
-  const digest = yield* crypto
-    .digest(Digest.sha256, input);
+  const digest = yield* crypto.digest(Digest.sha256, input);
   return Hex.encode(digest);
 });
 

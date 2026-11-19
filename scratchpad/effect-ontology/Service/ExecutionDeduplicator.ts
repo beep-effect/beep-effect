@@ -16,8 +16,8 @@ import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
-import * as Ref from "effect/Ref";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { KnowledgeGraph } from "../Domain/Model/Entity.ts";
@@ -41,7 +41,9 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ExecutionDeduplicator")
  * @category errors
  * @since 0.0.0
  */
-export class ExecutionFailure extends S.TaggedError<ExecutionFailure, { readonly brand: unique symbol }>($I`ExecutionFailure`)(
+export class ExecutionFailure extends S.TaggedError<ExecutionFailure, { readonly brand: unique symbol }>(
+  $I`ExecutionFailure`
+)(
   "ExecutionFailure",
   {
     message: ErrorMessage.annotateKey({

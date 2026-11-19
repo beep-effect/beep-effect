@@ -10,10 +10,10 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as A from "effect/Array";
 import { KnowledgeGraph } from "../Domain/Model/Entity.ts";
 import type { EntityResolutionConfig } from "../Domain/Model/EntityResolution.ts";
 import { buildEntityResolutionGraph } from "../Workflow/EntityResolutionGraph.ts";

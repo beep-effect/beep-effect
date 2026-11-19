@@ -106,6 +106,26 @@ export class DerivedPropertiesInOperand extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link DerivedPropertiesInOperand}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DerivedPropertiesInOperand {
+  /**
+   * Encoded (wire) form of {@link DerivedPropertiesInOperand}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "derivedPropertiesInOperand";
+    readonly operator: "union" | "intersect" | "subtract";
+    readonly operand: number;
+  }
+}
+
+/**
  * A nearest-neighbour search asks for a number of objects outside the documented range.
  *
  * @category models
@@ -121,6 +141,25 @@ export class NeighborCountOutOfRange extends S.Opaque<NeighborCountOutOfRange, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link NeighborCountOutOfRange}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NeighborCountOutOfRange {
+  /**
+   * Encoded (wire) form of {@link NeighborCountOutOfRange}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "neighborCountOutOfRange";
+    readonly count: number;
+  }
+}
 
 /**
  * A collecting operation asks for more values than the platform returns.
@@ -142,6 +181,27 @@ export class CollectLimitExceeded extends S.Opaque<CollectLimitExceeded, { reado
 ) {}
 
 /**
+ * Companion namespace for {@link CollectLimitExceeded}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CollectLimitExceeded {
+  /**
+   * Encoded (wire) form of {@link CollectLimitExceeded}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "collectLimitExceeded";
+    readonly operation: "collectList" | "collectSet";
+    readonly property: PropertyApiName.Encoded;
+    readonly limit: number;
+  }
+}
+
+/**
  * A sum, product, least or greatest has fewer than the two operands the platform requires.
  *
  * @category models
@@ -158,6 +218,26 @@ export class TooFewOperands extends S.Opaque<TooFewOperands, { readonly brand: u
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TooFewOperands}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TooFewOperands {
+  /**
+   * Encoded (wire) form of {@link TooFewOperands}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "tooFewOperands";
+    readonly operator: "add" | "multiply" | "least" | "greatest";
+    readonly operands: number;
+  }
+}
 
 /**
  * One way an object set breaks a rule the platform enforces but the wire shape does not.
@@ -195,6 +275,26 @@ export const ObjectSetFinding = ObjectSetFindingKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type ObjectSetFinding = typeof ObjectSetFinding.Type;
+
+/**
+ * Companion namespace for {@link ObjectSetFinding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectSetFinding {
+  /**
+   * Encoded (wire) form of {@link ObjectSetFinding}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | DerivedPropertiesInOperand.Encoded
+    | NeighborCountOutOfRange.Encoded
+    | CollectLimitExceeded.Encoded
+    | TooFewOperands.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Checks

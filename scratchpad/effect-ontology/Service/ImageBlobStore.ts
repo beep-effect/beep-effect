@@ -12,19 +12,19 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { getSomesStruct } from "@beep/utils/Option";
-import type * as Duration from "effect/Duration";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
+import type * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as MutableHashSet from "effect/MutableHashSet";
-import * as Result from "effect/Result";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import type { PlatformError, SystemError } from "effect/PlatformError";
+import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
 import { ContentHash } from "../Domain/Identity.ts";
 import { ImageAsset } from "../Domain/Model/Image.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
@@ -179,13 +179,14 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
           yield* storage.set(PathLayout.image.original(pathHash), bytes);
 
           // Create metadata
+          const resolvedValue188_43 = yield* DateTime.now;
           const asset = yield* ImageAsset.decodeUnknownEffect({
             hash,
             contentType,
             sizeBytes: bytes.length,
             storagePath: PathLayout.image.original(pathHash),
             ...getSomesStruct({ sourceUrl: O.fromUndefinedOr(sourceUrl) }),
-            createdAt: DateTime.formatIso(yield* DateTime.now),
+            createdAt: DateTime.formatIso(resolvedValue188_43),
           });
 
           // Store metadata
@@ -202,7 +203,7 @@ export class ImageBlobStore extends Context.Service<ImageBlobStore, ImageBlobSto
               storage.remove(PathLayout.image.metadata(imagePathHash(hash))),
               storage.remove(PathLayout.image.labels(imagePathHash(hash))),
             ],
-            { discard: true }
+            { discard: true, concurrency: 1 }
           ),
 
         listHashes: Effect.gen(function* () {

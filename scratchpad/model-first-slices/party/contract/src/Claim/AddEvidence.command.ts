@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { carry } from "@proto/kernel/Invocation";
+import { Sequence } from "@proto/kernel/Measure";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
 import * as S from "effect/Schema";
@@ -16,7 +17,8 @@ import { ClaimNotPending } from "./ClaimNotPending.rejection.ts";
  */
 export class EvidenceAdded extends Domain.Event(
   "EvidenceAdded",
-  carry({ signals: S.Array(EvidenceSignal), revision: S.Int }),
+  carry({ signals: S.Array(EvidenceSignal), revision: Sequence }),
+  { description: "More evidence arrived and the claim's evidence revision is now `revision`. A proposal made against an earlier revision is stale." },
 ) {}
 
 /**

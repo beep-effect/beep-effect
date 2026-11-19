@@ -57,7 +57,7 @@ export class SyncRequestValidationErrorResponse extends Model<SyncRequestValidat
  * @since 0.0.0
  */
 export declare namespace SyncRequestValidationErrorResponse {
-  export type Encoded = S.Codec.Encoded<typeof SyncRequestValidationErrorResponse>;
+  export type Encoded = typeof SyncRequestValidationErrorResponse.Encoded;
 }
 
 /**
@@ -110,7 +110,7 @@ export class SyncRecoveryWindowExceededResponse extends Model<SyncRecoveryWindow
  * @since 0.0.0
  */
 export declare namespace SyncRecoveryWindowExceededResponse {
-  export type Encoded = S.Codec.Encoded<typeof SyncRecoveryWindowExceededResponse>;
+  export type Encoded = typeof SyncRecoveryWindowExceededResponse.Encoded;
 }
 
 /**

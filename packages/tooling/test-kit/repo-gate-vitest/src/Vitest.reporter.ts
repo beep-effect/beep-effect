@@ -69,6 +69,7 @@ export default class GateVitestReporter implements Reporter {
    * ```
    *
    * @param vitest - The Vitest instance whose root is the package directory.
+   * @returns Nothing: the implementation loads in the background, and the later hooks wait for it.
    * @category adapters
    * @since 0.0.0
    */

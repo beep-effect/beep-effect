@@ -12,21 +12,21 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
-import * as Inspectable from "effect/Inspectable";
-import * as Layer from "effect/Layer";
-import * as Random from "effect/Random";
-import * as Ref from "effect/Ref";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import * as HttpRouter from "effect/http/HttpRouter";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
+import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import {
   InferenceRunRequest,
   InferenceRunResponse,
@@ -159,7 +159,9 @@ const InferenceFailureStage = LiteralKit(["parse", "reason", "serialize", "stati
  * @category errors
  * @since 0.0.0
  */
-export class InferenceExecutionError extends S.TaggedError<InferenceExecutionError, { readonly brand: unique symbol }>($I`InferenceExecutionError`)(
+export class InferenceExecutionError extends S.TaggedError<InferenceExecutionError, { readonly brand: unique symbol }>(
+  $I`InferenceExecutionError`
+)(
   "InferenceExecutionError",
   {
     stage: InferenceFailureStage,

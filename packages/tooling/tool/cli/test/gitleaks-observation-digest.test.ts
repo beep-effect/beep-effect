@@ -7,6 +7,7 @@
  * without it; the configuration case always runs.
  */
 import { it } from "@beep/test-runner";
+import { atRegistrationAsync } from "@beep/test-utils/Registration";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
@@ -81,11 +82,19 @@ const runGitleaks = Effect.fn("GitleaksObservationDigestTest.run")(function* (
   return exitCode;
 }, Effect.scoped);
 
-const gitleaksOnPath = await Effect.runPromise(
-  runGitleaks(["version"], ".").pipe(
-    Effect.map((exitCode) => exitCode === 0),
-    Effect.orElseSucceed(() => false),
-    Effect.provide(NodeServices.layer)
+// Build the platform services into a Context and provide that at this registration entry point,
+// keeping scope lifetimes correct and satisfying effect(strictEffectProvide).
+const gitleaksOnPath = await atRegistrationAsync(
+  NodeServices.layer.pipe(
+    Layer.build,
+    Effect.flatMap((context) =>
+      runGitleaks(["version"], ".").pipe(
+        Effect.map((exitCode) => exitCode === 0),
+        Effect.orElseSucceed(() => false),
+        Effect.provide(context)
+      )
+    ),
+    Effect.scoped
   )
 );
 

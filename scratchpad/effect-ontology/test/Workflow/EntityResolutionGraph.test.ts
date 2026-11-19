@@ -10,6 +10,7 @@ import { Entity } from "../../Domain/Model/Entity.ts";
 import { EntityResolutionConfig } from "../../Domain/Model/EntityResolution.ts";
 import { EntityId } from "../../Domain/Model/shared.ts";
 import { EmbeddingService } from "../../Service/Embedding.ts";
+import { ProviderMetadata } from "../../Service/EmbeddingProvider.ts";
 import { clusterEntities } from "../../Workflow/EntityResolutionGraph.ts";
 
 const UnavailableEmbeddings = Layer.succeed(
@@ -34,7 +35,7 @@ const UnavailableEmbeddings = Layer.succeed(
       )
     ),
     cosineSimilarity: () => 0,
-    getProviderMetadata: Effect.succeed({ providerId: "nomic", modelId: "test", dimension: 1 }),
+    getProviderMetadata: Effect.succeed(ProviderMetadata.make({ providerId: "nomic", modelId: "test", dimension: 1 })),
   })
 );
 

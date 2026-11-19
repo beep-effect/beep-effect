@@ -9,6 +9,8 @@ import { StrayOutput } from "@beep/gate-report/StrayOutput";
 import { UNREADABLE_FIELD } from "@beep/repo-gate-vitest/internal/ErrorText";
 import {
   isTimeoutError,
+  keyedNames,
+  MAX_UNIT_FAULTS,
   normalizeState,
   runReasonOf,
   SUITE_FAILURE_LABEL,
@@ -112,6 +114,54 @@ describe("synthesizeEvents — structure", () => {
         ["test/a.test.ts", "file"],
       ]
     );
+  });
+
+  it("keeps two tests with one full name in one file as two items, the failure whole", () => {
+    const report = reportOf(
+      [
+        makeModule({
+          file: "test/dup.test.ts",
+          tests: [
+            makeTestCase({
+              name: "dup",
+              state: "failed",
+              errors: [
+                {
+                  message: "expected 1 to be 2",
+                  stacks: [{ method: "dup", file: `${ROOT}/test/dup.test.ts`, line: 4, column: 9 }],
+                },
+              ],
+            }),
+            makeTestCase({ name: "dup" }),
+          ],
+        }),
+      ],
+      { reason: "failed" }
+    );
+    assert.strictEqual(report.items.length, 2);
+    assert.strictEqual(report.totals.failed, 1);
+    assert.strictEqual(report.totals.passed, 1);
+    assert.strictEqual(report.reason, "failed");
+    const failed = A.filter(report.items, (item) => item.outcome === "failed");
+    const passed = A.filter(report.items, (item) => item.outcome === "passed");
+    assert.strictEqual(failed.length, 1);
+    assert.deepStrictEqual(
+      A.map(failed, (item) => item.key),
+      [{ _tag: "TestKey", file: "test/dup.test.ts", fullName: "dup" }]
+    );
+    assert.deepStrictEqual(
+      A.map(passed, (item) => item.key),
+      [{ _tag: "TestKey", file: "test/dup.test.ts", fullName: "dup (2)" }]
+    );
+    const failure = A.flatMap(failed, (item) =>
+      O.toArray(O.zipWith(item.detail, item.location, (detail, at) => [detail.message, at.file, at.line]))
+    );
+    assert.deepStrictEqual(failure, [["expected 1 to be 2", "test/dup.test.ts", 4]]);
+  });
+
+  it("numbers a repeated full name with the next free ordinal, the first keeping its name", () => {
+    assert.deepStrictEqual(keyedNames(["a", "b", "a", "a (2)", "a"]), ["a", "b", "a (2)", "a (2) (2)", "a (3)"]);
+    assert.deepStrictEqual(keyedNames([]), []);
   });
 
   it("accumulates module durations onto the file units", () => {
@@ -296,6 +346,19 @@ describe("synthesizeEvents — failures", () => {
     assert.isFalse(isTimeoutError({ message: "expected 1 to be 2" }));
   });
 
+  // Retarget upstream packages/sdk/__test__/detect-timeout.test.ts (vitest-agent 1cf1ab94).
+  it("matches a hook-timeout message", () => {
+    assert.isTrue(isTimeoutError({ message: "Hook timed out in 10000ms." }));
+  });
+
+  it("is case-insensitive on the message", () => {
+    assert.isTrue(isTimeoutError({ message: "TEST TIMED OUT IN 5000MS" }));
+  });
+
+  it("does not match when the message is undefined", () => {
+    assert.isFalse(isTimeoutError({}));
+  });
+
   it("captures unhandled errors as their own items", () => {
     const report = reportOf([], {
       unhandledErrors: [{ message: "global crash", stacks: ["at top-level"] }],
@@ -348,7 +411,8 @@ describe("synthesizeEvents — suite-level failures", () => {
     assertSome(item.failureKind, "load");
     assert.strictEqual(report.totals.loadFailed, 1);
     assert.strictEqual(report.totals.failed, 0);
-    assert.strictEqual(report.reason, "errored");
+    // A load failure reads the same alone as beside other modules (the model's GR-4 fix).
+    assert.strictEqual(report.reason, "failed");
   });
 
   it("fails a module whose afterAll hook threw even though every test passed", () => {
@@ -363,6 +427,41 @@ describe("synthesizeEvents — suite-level failures", () => {
     assert.strictEqual(fault.length, 1);
     assert.strictEqual(report.totals.hookFailed, 1);
     assert.strictEqual(report.outcome, "some-fail");
+  });
+
+  it("keeps every hook error of a module, each its own fault", () => {
+    const report = reportOf([
+      makeModule({
+        file: "test/hooks.test.ts",
+        tests: [makeTestCase({ name: "t1" })],
+        errors: [{ message: "beforeAll threw" }],
+        suites: [makeSuite({ state: "failed", errors: [{ message: "afterAll threw" }] })],
+      }),
+    ]);
+    const faults = A.filter(report.items, (item) => O.exists(item.failureKind, (kind) => kind === "hook"));
+    assert.deepStrictEqual(
+      A.map(faults, (item) => [item.name, O.getOrUndefined(O.map(item.detail, (detail) => detail.message))]),
+      [
+        [SUITE_FAILURE_LABEL, "beforeAll threw"],
+        [`${SUITE_FAILURE_LABEL} (2)`, "afterAll threw"],
+      ]
+    );
+    assert.strictEqual(report.totals.hookFailed, 2);
+  });
+
+  it("records at most the bound of faults per module and counts the rest in the last", () => {
+    const errors = A.makeBy(MAX_UNIT_FAULTS + 2, (index) => ({ message: `load error ${index + 1}` }));
+    const report = reportOf([makeModule({ file: "test/many.test.ts", state: "failed", errors })], {
+      reason: "failed",
+    });
+    assert.strictEqual(report.items.length, MAX_UNIT_FAULTS);
+    assert.strictEqual(report.totals.loadFailed, MAX_UNIT_FAULTS);
+    const last = pipe(
+      A.last(report.items),
+      O.flatMap((item) => item.detail),
+      O.map((detail) => detail.message)
+    );
+    assertSome(last, `load error ${MAX_UNIT_FAULTS}\n2 more errors in this module not recorded`);
   });
 
   it("fails a module in state failed with empty errors() and only passing tests", () => {

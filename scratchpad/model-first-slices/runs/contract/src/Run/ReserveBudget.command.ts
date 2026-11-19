@@ -1,7 +1,7 @@
 import * as Domain from "@alchemy.run/domain";
 import { RunId } from "@proto/kernel/Ids";
 import { Session } from "@proto/kernel/Session.middleware";
-import * as S from "effect/Schema";
+import { Count } from "@proto/kernel/Measure";
 import { NotThisRun } from "./NotThisRun.rejection.ts";
 import { RunEvent } from "./RunEvent.ts";
 import { RunNotRunning } from "./RunNotRunning.rejection.ts";
@@ -14,7 +14,7 @@ import { ReservationId } from "./Reservation.id.ts";
  * @category events
  * @since 0.0.0
  */
-export class BudgetReserved extends Domain.Event("BudgetReserved", RunEvent.fields({ reservation: ReservationId, units: S.Int, remaining: S.Int })) {}
+export class BudgetReserved extends Domain.Event("BudgetReserved", RunEvent.fields({ reservation: ReservationId, units: Count, remaining: Count }), { description: "Part of the run's allowance is held for one call. `remaining` is the units left." }) {}
 
 /**
  * Reserve budget before an inference or tool call, as the run itself.
@@ -27,10 +27,10 @@ export class ReserveBudget extends Domain.Command(
   {
     target: RunId,
     middleware: [Session],
-    input: { reservation: ReservationId, units: S.Int },
+    input: { reservation: ReservationId, units: Count },
     events: [BudgetReserved],
     rejects: [RunNotRunning, NotThisRun, BudgetExceeded],
-    reply: { remaining: S.Int },
+    reply: { remaining: Count },
   },
   { description: "Reserve budget before an inference or tool call, as the run itself." },
 ) {}

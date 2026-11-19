@@ -13,6 +13,7 @@ import { ComputeOptimizerEnrollmentType } from "@beep/alchemy-aws-extras/Compute
 import { CostAllocationTagType } from "@beep/alchemy-aws-extras/CostAllocationTag";
 import { CostOptimizationHubEnrollmentType } from "@beep/alchemy-aws-extras/CostOptimizationHubEnrollment";
 import { Providers, providers } from "@beep/alchemy-aws-extras/Providers";
+import { atRegistration } from "@beep/test-utils/Registration";
 import { describe, expect } from "@effect/vitest";
 import { inMemoryState } from "alchemy/State";
 import * as Config from "effect/Config";
@@ -20,7 +21,7 @@ import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Redacted from "effect/Redacted";
 
-const live = Effect.runSync(Config.Boolean("BEEP_ALCHEMY_AWS_EXTRAS_LIVE").pipe(Config.withDefault(false)));
+const live = atRegistration(Config.Boolean("BEEP_ALCHEMY_AWS_EXTRAS_LIVE").pipe(Config.withDefault(false)));
 
 const environment = Layer.succeed(
   AWSEnvironment,

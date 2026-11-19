@@ -12,9 +12,9 @@
  * @since 0.0.0
  */
 import * as Str from "@beep/utils/Str";
-import * as HashSet from "effect/HashSet";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 
 /**
  * Normalize a string for comparison
@@ -83,15 +83,15 @@ export const levenshteinDistance: {
     for (let i = 1; i <= a.length; i++) {
       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
       currRow[i] = Math.min(
-        prevRow[i] + 1, // deletion
-        currRow[i - 1] + 1, // insertion
-        prevRow[i - 1] + cost // substitution
+        A.getUnsafe(prevRow, i) + 1, // deletion
+        A.getUnsafe(currRow, i - 1) + 1, // insertion
+        A.getUnsafe(prevRow, i - 1) + cost // substitution
       );
     }
     [prevRow, currRow] = [currRow, prevRow];
   }
 
-  return prevRow[a.length];
+  return A.getUnsafe(prevRow, a.length);
 });
 
 /**
@@ -124,7 +124,7 @@ export const levenshteinSimilarity: {
   if (a.length === 0 || b.length === 0) return 0.0;
 
   const maxLen = Math.max(a.length, b.length);
-  const distance = levenshteinDistance(a.toLowerCase(), b.toLowerCase());
+  const distance = levenshteinDistance(Str.toLowerCase(a), Str.toLowerCase(b));
   return 1.0 - distance / maxLen;
 });
 

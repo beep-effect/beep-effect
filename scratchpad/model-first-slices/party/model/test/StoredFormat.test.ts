@@ -18,14 +18,14 @@ import { PartyModel } from "@proto/party-model/Party.model";
 import { Reasoner } from "@proto/party-model/Review/Reasoner.external";
 import { ProposalSent, ReviewAssist, ReviewAssistActivities } from "@proto/party-model/Review/ReviewAssist.saga";
 import { ReviewRuns } from "@proto/party-model/Review/ReviewRuns.external";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 

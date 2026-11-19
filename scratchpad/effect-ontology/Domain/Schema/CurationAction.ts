@@ -14,24 +14,28 @@
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { NamedNode } from "@beep/rdf";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { OntologyName, UUID } from "../Identity.ts";
 import { ClaimId, RdfObject } from "./KnowledgeModel.ts";
-import * as Effect from "effect/Effect";
+
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/CurationAction");
 
 const WikidataQid = S.String.check(
-  S.isPattern(/^Q[1-9][0-9]*$/, $I.annote("WikidataQidPatternCheck", {
-    title: "Wikidata QID",
-    description: "A Wikidata item identifier beginning with Q and a non-zero canonical decimal integer.",
-    message: "Wikidata QID must use Q followed by a positive decimal integer without leading zeroes.",
-  }))
-).pipe(
-    S.brand("WikidataQid"),
-    $I.annoteSchema("WikidataQid", {
-      description: "Canonical Wikidata item identifier.",
+  S.isPattern(
+    /^Q[1-9][0-9]*$/,
+    $I.annote("WikidataQidPatternCheck", {
+      title: "Wikidata QID",
+      description: "A Wikidata item identifier beginning with Q and a non-zero canonical decimal integer.",
+      message: "Wikidata QID must use Q followed by a positive decimal integer without leading zeroes.",
     })
-  );
+  )
+).pipe(
+  S.brand("WikidataQid"),
+  $I.annoteSchema("WikidataQid", {
+    description: "Canonical Wikidata item identifier.",
+  })
+);
 
 const ActionBase = {
   ontologyId: OntologyName.annotateKey({
@@ -66,21 +70,33 @@ const CurationActionDefinition = S.TaggedUnion({
       description: "Complete canonical RDF triple that replaces the original claim.",
     }),
     reason: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    storeAsExample: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
+    storeAsExample: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
   },
   MarkAsWrongAction: {
     ...ActionBase,
     claimId: ClaimId,
     errorCategory: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     negativePattern: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    storeAsNegativeExample: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
+    storeAsNegativeExample: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
   },
   AddAliasAction: {
     ...ActionBase,
     canonicalEntity: NamedNode,
     aliasMention: S.NonEmptyString,
-    resolutionMethod: S.NonEmptyString.pipe(S.withConstructorDefault(Effect.succeed("manual")), S.withDecodingDefaultTypeKey(Effect.succeed("manual"))),
-    confidence: Confidence.pipe(S.withConstructorDefault(Effect.succeed(curationActionDefinitionConfidenceDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(curationActionDefinitionConfidenceDefault))),
+    resolutionMethod: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("manual")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("manual"))
+    ),
+    confidence: Confidence.pipe(
+      S.withConstructorDefault(Effect.succeed(curationActionDefinitionConfidenceDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(curationActionDefinitionConfidenceDefault))
+    ),
   },
   PromoteToPreferredAction: {
     ...ActionBase,

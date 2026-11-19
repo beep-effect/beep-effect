@@ -1,11 +1,13 @@
 import { HttpUrl as CanonicalHttpUrl } from "@beep/ontology/Ontology.models";
 import { describe, expect, it } from "@effect/vitest";
-import * as Effect from "effect/Effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/Arbitrary";
+import * as Str from "effect/String";
 import * as Api from "../../../Domain/Schema/Api.ts";
 import * as Auth from "../../../Domain/Schema/Auth.ts";
 import * as Batch from "../../../Domain/Schema/Batch.ts";
@@ -22,13 +24,14 @@ import * as OntologyRegistry from "../../../Domain/Schema/OntologyRegistry.ts";
 import * as Search from "../../../Domain/Schema/Search.ts";
 import * as Shacl from "../../../Domain/Schema/Shacl.ts";
 import * as Timeline from "../../../Domain/Schema/Timeline.ts";
+
 const decodeApiSubmitJobSource = S.decodeEffect(Api.SubmitJobSource);
 const decodeBatchStatusResponseBatchStatusResponse = S.decodeEffect(BatchStatusResponse.BatchStatusResponse);
 const decodeBatchRequestBatchRequestResult = S.decodeResult(BatchRequest.BatchRequest);
 const decodeUnknownApiSubmitJobRequestResult = S.decodeUnknownResult(Api.SubmitJobRequest);
 const decodeUnknownBatchRequestBatchRequestResult = S.decodeUnknownResult(BatchRequest.BatchRequest);
 
-const schemaModules: ReadonlyArray<readonly [string, object]> = [
+const schemaModules: ReadonlyArray<readonly [string, Readonly<Record<string, unknown>>]> = [
   ["Api", Api],
   ["Auth", Auth],
   ["Batch", Batch],
@@ -48,7 +51,7 @@ const schemaModules: ReadonlyArray<readonly [string, object]> = [
 ];
 
 const publicSchemas = A.flatMap(schemaModules, ([moduleName, moduleExports]) =>
-  A.filterMap(Object.entries(moduleExports), ([exportName, value]) =>
+  A.filterMap(R.toEntries<string, unknown>(moduleExports), ([exportName, value]) =>
     /^[A-Z]/.test(exportName) && S.isSchema(value)
       ? Result.succeed({
           name: `${moduleName}.${exportName}`,
@@ -74,7 +77,7 @@ describe("effect-ontology public schema surface", () => {
           Arbitrary.checkEffect(
             Arbitrary.all([arbitrary]),
             ([value]) => {
-          expect(S.is(schema)(value), name).toBe(true);
+              expect(S.is(schema)(value), name).toBe(true);
 
               return true;
             },
@@ -90,7 +93,7 @@ describe("effect-ontology public schema surface", () => {
     const request = decodeBatchRequestBatchRequestResult({
       ontologyId: "premier-league",
       ontologyUri: "gs://beep-ontology/football/premier-league.ttl",
-      ontologyVersion: `football/premier-league@${"a".repeat(64)}`,
+      ontologyVersion: `football/premier-league@${Str.repeat(64)("a")}`,
       targetNamespace: "football",
       documents: [
         {
@@ -102,7 +105,7 @@ describe("effect-ontology public schema surface", () => {
     const empty = decodeUnknownBatchRequestBatchRequestResult({
       ontologyId: "premier-league",
       ontologyUri: "gs://beep-ontology/football/premier-league.ttl",
-      ontologyVersion: `football/premier-league@${"a".repeat(64)}`,
+      ontologyVersion: `football/premier-league@${Str.repeat(64)("a")}`,
       targetNamespace: "football",
       documents: [],
     });

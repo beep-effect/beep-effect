@@ -4,6 +4,11 @@
     "$ref": "#/$defs/ClaimDecidedV2Encoded"
   },
   "definitions": {
+    "IdTextCheck": {
+      "type": "string",
+      "title": "Id text",
+      "description": "An id: a letter or digit, then letters, digits, `_`, `.`, `:`, `~` or `-`."
+    },
     "ClaimDecidedV2Encoded": {
       "type": "object",
       "properties": {
@@ -14,13 +19,13 @@
           ]
         },
         "factId": {
-          "type": "string"
+          "$ref": "#/$defs/IdTextCheck"
         },
         "claim": {
-          "type": "string"
+          "$ref": "#/$defs/IdTextCheck"
         },
         "org": {
-          "type": "string"
+          "$ref": "#/$defs/IdTextCheck"
         },
         "decision": {
           "type": "string",
@@ -39,7 +44,7 @@
         "approval": {
           "anyOf": [
             {
-              "type": "string"
+              "$ref": "#/$defs/IdTextCheck"
             },
             {
               "type": "null"
@@ -49,7 +54,7 @@
         "reviewRuns": {
           "type": "array",
           "items": {
-            "type": "string"
+            "$ref": "#/$defs/IdTextCheck"
           }
         }
       },

@@ -189,20 +189,23 @@ describe("identifiers and literal domains", () => {
   it.effect(
     "rejects empty identifiers, domain literals on the wire, unknown units and quarters as a series unit",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(SeriesId)(""),
-        rejects(TimeSeriesSyncRid)(""),
-        rejects(TimeSeriesTemplateRid)(""),
-        rejects(TimeSeriesTemplateVersion)(""),
-        rejects(TimeUnit)("quarters"),
-        rejects(TimeUnit)("FORTNIGHTS"),
-        rejects(SeriesTimeUnit)("QUARTERS"),
-        rejects(PreciseTimeUnit)("MILLISECONDS"),
-        rejects(PreciseTimeUnit)("MONTHS"),
-        rejects(TimeSeriesAggregationMethod)("MEDIAN"),
-        rejects(WindowEdge)("MIDDLE"),
-        rejects(StreamingOutputFormat)("CSV"),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(SeriesId)(""),
+          rejects(TimeSeriesSyncRid)(""),
+          rejects(TimeSeriesTemplateRid)(""),
+          rejects(TimeSeriesTemplateVersion)(""),
+          rejects(TimeUnit)("quarters"),
+          rejects(TimeUnit)("FORTNIGHTS"),
+          rejects(SeriesTimeUnit)("QUARTERS"),
+          rejects(PreciseTimeUnit)("MILLISECONDS"),
+          rejects(PreciseTimeUnit)("MONTHS"),
+          rejects(TimeSeriesAggregationMethod)("MEDIAN"),
+          rejects(WindowEdge)("MIDDLE"),
+          rejects(StreamingOutputFormat)("CSV"),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -367,17 +370,20 @@ describe("TimeRange", () => {
   it.effect(
     "rejects unknown range kinds, malformed bounds, quarters and non-finite distances",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(TimeRange)({ type: "open" }),
-        rejects(TimeRange)({ startTime: "2021-01-04T05:00:00.000Z" }),
-        rejects(TimeRange)({ type: "absolute", startTime: "not a timestamp" }),
-        rejects(TimeRange)({ type: "absolute", startTime: 1609736400000 }),
-        rejects(TimeRange)({ type: "relative", startTime: { when: "BEFORE", value: 1, unit: "QUARTERS" } }),
-        rejects(TimeRange)({ type: "relative", startTime: { when: "before", value: 1, unit: "DAYS" } }),
-        rejects(TimeRange)({ type: "relative", startTime: { when: "BEFORE", unit: "DAYS" } }),
-        rejects(RelativeTime)({ when: "BEFORE", value: Number.POSITIVE_INFINITY, unit: "DAYS" }),
-        rejects(RelativeTime)({ when: "BEFORE", value: "7", unit: "DAYS" }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(TimeRange)({ type: "open" }),
+          rejects(TimeRange)({ startTime: "2021-01-04T05:00:00.000Z" }),
+          rejects(TimeRange)({ type: "absolute", startTime: "not a timestamp" }),
+          rejects(TimeRange)({ type: "absolute", startTime: 1609736400000 }),
+          rejects(TimeRange)({ type: "relative", startTime: { when: "BEFORE", value: 1, unit: "QUARTERS" } }),
+          rejects(TimeRange)({ type: "relative", startTime: { when: "before", value: 1, unit: "DAYS" } }),
+          rejects(TimeRange)({ type: "relative", startTime: { when: "BEFORE", unit: "DAYS" } }),
+          rejects(RelativeTime)({ when: "BEFORE", value: Number.POSITIVE_INFINITY, unit: "DAYS" }),
+          rejects(RelativeTime)({ when: "BEFORE", value: "7", unit: "DAYS" }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -445,16 +451,19 @@ describe("TimeSeriesPoint", () => {
   it.effect(
     "rejects values that are neither finite numbers nor text, and times that are not timestamps",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(PointValue)(true),
-        rejects(PointValue)(null),
-        rejects(PointValue)(Number.NaN),
-        rejects(PointValue)({ type: "Point", coordinates: [102.0, 0.5] }),
-        rejects(TimeSeriesPoint)({ time: "yesterday", value: 1 }),
-        rejects(TimeSeriesPoint)({ time: "2021-01-04T05:00:00.000Z" }),
-        rejects(TimeSeriesPoint)({ value: 1 }),
-        rejects(StreamPointsResponse)({}),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(PointValue)(true),
+          rejects(PointValue)(null),
+          rejects(PointValue)(Number.NaN),
+          rejects(PointValue)({ type: "Point", coordinates: [102.0, 0.5] }),
+          rejects(TimeSeriesPoint)({ time: "yesterday", value: 1 }),
+          rejects(TimeSeriesPoint)({ time: "2021-01-04T05:00:00.000Z" }),
+          rejects(TimeSeriesPoint)({ value: 1 }),
+          rejects(StreamPointsResponse)({}),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -634,25 +643,28 @@ describe("TimeSeriesAggregation", () => {
   it.effect(
     "rejects windows without a positive whole point count, calendar units and missing strategy parts",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(PointsCountWindow)({ type: "pointsCount", count: 0 }),
-        rejects(PointsCountWindow)({ type: "pointsCount", count: 1.5 }),
-        rejects(RollingWindow)({ type: "points", count: 5 }),
-        rejects(RollingWindow)({ value: 30, unit: "MINUTES" }),
-        rejects(PreciseDuration)({ value: 1, unit: "MONTHS" }),
-        rejects(PreciseDuration)({ value: 1, unit: "hours" }),
-        rejects(PeriodicAggregate)({ type: "periodic", windowSize: { value: 1, unit: "HOURS" } }),
-        rejects(PeriodicAggregate)({
-          type: "periodic",
-          windowSize: { value: 1, unit: "HOURS" },
-          alignmentTimestamp: "noon",
-          windowType: "START",
-        }),
-        rejects(TimeSeriesAggregationStrategy)({ type: "rolling" }),
-        rejects(TimeSeriesAggregationStrategy)({ type: "exponential" }),
-        rejects(TimeSeriesAggregation)({ method: "sum", strategy: { type: "cumulative" } }),
-        rejects(TimeSeriesAggregation)({ method: "SUM" }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(PointsCountWindow)({ type: "pointsCount", count: 0 }),
+          rejects(PointsCountWindow)({ type: "pointsCount", count: 1.5 }),
+          rejects(RollingWindow)({ type: "points", count: 5 }),
+          rejects(RollingWindow)({ value: 30, unit: "MINUTES" }),
+          rejects(PreciseDuration)({ value: 1, unit: "MONTHS" }),
+          rejects(PreciseDuration)({ value: 1, unit: "hours" }),
+          rejects(PeriodicAggregate)({ type: "periodic", windowSize: { value: 1, unit: "HOURS" } }),
+          rejects(PeriodicAggregate)({
+            type: "periodic",
+            windowSize: { value: 1, unit: "HOURS" },
+            alignmentTimestamp: "noon",
+            windowType: "START",
+          }),
+          rejects(TimeSeriesAggregationStrategy)({ type: "rolling" }),
+          rejects(TimeSeriesAggregationStrategy)({ type: "exponential" }),
+          rejects(TimeSeriesAggregation)({ method: "sum", strategy: { type: "cumulative" } }),
+          rejects(TimeSeriesAggregation)({ method: "SUM" }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -743,12 +755,15 @@ describe("stream requests", () => {
   it.effect(
     "rejects a malformed range or aggregation inside a request",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(StreamPointsRequest)({ range: { type: "sometime" } }),
-        rejects(StreamPointsRequest)({ aggregate: { method: "MEAN" } }),
-        rejects(StreamPointsRequest)({ range: null }),
-        rejects(StreamValuesRequest)({ range: "last week" }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(StreamPointsRequest)({ range: { type: "sometime" } }),
+          rejects(StreamPointsRequest)({ aggregate: { method: "MEAN" } }),
+          rejects(StreamPointsRequest)({ range: null }),
+          rejects(StreamValuesRequest)({ range: "last week" }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -855,12 +870,12 @@ describe("TimeSeriesReference", () => {
         { seriesId: "sensor-123", syncRid },
         { templateRid: `ri.time-series-catalog.main.template.${uuid}`, templateVersion: "1" },
       ];
-      const decoded = yield* Effect.forEach(wires, (wire) => decodeReference(wire));
+      const decoded = yield* Effect.forEach(wires, (wire) => decodeReference(wire), { concurrency: 1 });
       deepStrictEqual(
         A.map(decoded, (reference) => reference.type),
         ["series", "qualifiedSeries", "template"]
       );
-      const encoded = yield* Effect.forEach(decoded, (reference) => encodeReference(reference));
+      const encoded = yield* Effect.forEach(decoded, (reference) => encodeReference(reference), { concurrency: 1 });
       deepStrictEqual(encoded, wires);
     })
   );
@@ -913,20 +928,23 @@ describe("TimeSeriesReference", () => {
   it.effect(
     "rejects empty identifiers, a series record without its sync, the tagged domain form and non-references",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(TimeSeriesReference)(""),
-        rejects(TimeSeriesReference)({ seriesId: "wellPressureSeriesId" }),
-        rejects(TimeSeriesReference)({ seriesId: "", syncRid }),
-        rejects(TimeSeriesReference)({ seriesId: "wellPressureSeriesId", syncRid: "" }),
-        rejects(TimeSeriesReference)({ templateRid: "" }),
-        rejects(TimeSeriesReference)({ templateVersion: "0.0.0" }),
-        rejects(TimeSeriesReference)({ type: "series", seriesId: "wellPressureSeriesId" }),
-        rejects(TimeSeriesReference)({}),
-        rejects(TimeSeriesReference)(42),
-        rejects(TimeSeriesReference)(null),
-        rejects(SeriesReference)({ seriesId: "wellPressureSeriesId", syncRid }),
-        rejects(QualifiedSeriesReference)("wellPressureSeriesId"),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(TimeSeriesReference)(""),
+          rejects(TimeSeriesReference)({ seriesId: "wellPressureSeriesId" }),
+          rejects(TimeSeriesReference)({ seriesId: "", syncRid }),
+          rejects(TimeSeriesReference)({ seriesId: "wellPressureSeriesId", syncRid: "" }),
+          rejects(TimeSeriesReference)({ templateRid: "" }),
+          rejects(TimeSeriesReference)({ templateVersion: "0.0.0" }),
+          rejects(TimeSeriesReference)({ type: "series", seriesId: "wellPressureSeriesId" }),
+          rejects(TimeSeriesReference)({}),
+          rejects(TimeSeriesReference)(42),
+          rejects(TimeSeriesReference)(null),
+          rejects(SeriesReference)({ seriesId: "wellPressureSeriesId", syncRid }),
+          rejects(QualifiedSeriesReference)("wellPressureSeriesId"),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1009,17 +1027,20 @@ describe("GeotimeSeriesValue", () => {
     "rejects positions that are not a longitude and a latitude, a missing tag and a malformed timestamp",
     Effect.fnUntraced(function* () {
       const timestamp = "2021-01-04T05:00:00.000Z";
-      const verdicts = yield* Effect.all([
-        rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: [102.0] }),
-        rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: [] }),
-        rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: [180.5, 0.5] }),
-        rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: [102.0, -90.5] }),
-        rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: [102.0, 0.5, "high"] }),
-        rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: ["102.0", "0.5"] }),
-        rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: { lon: 102.0, lat: 0.5 } }),
-        rejects(GeotimeSeriesValue)({ timestamp, position: [102.0, 0.5] }),
-        rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp: "now", position: [102.0, 0.5] }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: [102.0] }),
+          rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: [] }),
+          rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: [180.5, 0.5] }),
+          rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: [102.0, -90.5] }),
+          rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: [102.0, 0.5, "high"] }),
+          rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: ["102.0", "0.5"] }),
+          rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp, position: { lon: 102.0, lat: 0.5 } }),
+          rejects(GeotimeSeriesValue)({ timestamp, position: [102.0, 0.5] }),
+          rejects(GeotimeSeriesValue)({ type: "geotimeSeriesValue", timestamp: "now", position: [102.0, 0.5] }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );

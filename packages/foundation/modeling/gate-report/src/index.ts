@@ -19,6 +19,7 @@ export * from "./CauseFold.ts";
 export * from "./Classify.ts";
 export * from "./ConsoleDocument.ts";
 export * from "./Dispatch.ts";
+export * from "./Escapes.ts";
 export * from "./FailureSignature.ts";
 export * from "./Format.ts";
 export * from "./GateEvent.ts";

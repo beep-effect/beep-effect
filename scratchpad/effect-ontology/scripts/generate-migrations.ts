@@ -6,27 +6,31 @@
  */
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
+import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
-import * as Path from "effect/Path";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
+
 const ExtensionPrelude = `-- Drizzle Kit emits extension-dependent vector columns but cannot declare their
 -- prerequisite extensions. This generator-owned prelude must precede every CREATE TABLE.
 CREATE EXTENSION IF NOT EXISTS vector;--> statement-breakpoint
 CREATE EXTENSION IF NOT EXISTS pg_trgm;--> statement-breakpoint
 `;
 
-class MigrationGenerationError extends S.TaggedError<MigrationGenerationError, { readonly brand: unique symbol }>()("MigrationGenerationError", {
-  message: S.NonEmptyString,
-  exitCode: S.Int,
-}) {}
+class MigrationGenerationError extends S.TaggedError<MigrationGenerationError, { readonly brand: unique symbol }>()(
+  "MigrationGenerationError",
+  {
+    message: S.NonEmptyString,
+    exitCode: S.Int,
+  }
+) {}
 
 const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
@@ -53,7 +57,8 @@ const program = Effect.gen(function* () {
     });
   }
 
-  const baselineFolders = A.filter(yield* fs.readDirectory(migrationsFolder), Str.endsWith("_baseline"));
+  const migrationEntries = yield* fs.readDirectory(migrationsFolder);
+  const baselineFolders = A.filter(migrationEntries, Str.endsWith("_baseline"));
   yield* Effect.forEach(
     baselineFolders,
     Effect.fn("installExtensionPrelude")(function* (folder) {
@@ -63,13 +68,11 @@ const program = Effect.gen(function* () {
         yield* fs.writeFileString(migrationFile, `${ExtensionPrelude}${sql}`);
       }
     }),
-    { discard: true }
+    { concurrency: 1, discard: true }
   );
   yield* Console.log(`Generated migrations in ${migrationsFolder}`);
 });
 
-const main = Effect.scoped(
-  Layer.build(Layer.effectDiscard(program).pipe(Layer.provide(BunServices.layer))).pipe(Effect.asVoid)
-);
+const main = program.pipe(Layer.effectDiscard, Layer.provide(BunServices.layer), Layer.build, Effect.scoped);
 
 BunRuntime.runMain(main);

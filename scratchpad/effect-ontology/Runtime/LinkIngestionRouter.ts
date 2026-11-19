@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 /**
  * Router: Link Ingestion API
  *
@@ -10,23 +11,23 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FiberSet from "effect/FiberSet";
 import * as HashSet from "effect/HashSet";
-import * as Inspectable from "effect/Inspectable";
-import * as Layer from "effect/Layer";
-import * as Random from "effect/Random";
-import * as Schedule from "effect/Schedule";
-import * as Result from "effect/Result";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import * as HttpRouter from "effect/http/HttpRouter";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
+import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
 import { BatchId, ContentHash, DocumentId, GcsBucket, GcsUri, Namespace } from "../Domain/Identity.ts";
 import { BatchStage, BatchState } from "../Domain/Model/BatchWorkflow.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
@@ -44,9 +45,18 @@ const CreateBatchFromLinksBody = S.Struct({
   targetNamespace: S.optionalKey(S.String),
 });
 
-const NonTerminalBatchStage = BatchStage.pick(["Pending", "Preprocessing", "Extracting", "Resolving", "Validating", "Ingesting"]);
+const NonTerminalBatchStage = BatchStage.pick([
+  "Pending",
+  "Preprocessing",
+  "Extracting",
+  "Resolving",
+  "Validating",
+  "Ingesting",
+]);
 
-class BatchNotTerminalError extends S.TaggedError<BatchNotTerminalError, { readonly brand: unique symbol }>($I`BatchNotTerminalError`)(
+class BatchNotTerminalError extends S.TaggedError<BatchNotTerminalError, { readonly brand: unique symbol }>(
+  $I`BatchNotTerminalError`
+)(
   "BatchNotTerminalError",
   {
     batchId: BatchId.annotateKey({
@@ -137,7 +147,8 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       }
 
       const httpRequest = yield* HttpServerRequest.HttpServerRequest;
-      const request = S.decodeUnknownOption(CreateBatchFromLinksBody)(yield* httpRequest.json);
+      const requestBody = yield* httpRequest.json;
+      const request = S.decodeUnknownOption(CreateBatchFromLinksBody)(requestBody);
       if (O.isNone(request)) {
         return yield* HttpServerResponse.json(
           { error: "VALIDATION_ERROR", message: "Invalid create-batch request" },
@@ -152,13 +163,13 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       const backgroundTasks = yield* LinkIngestionBackgroundTasks;
       const requestedIds = request.value.linkIds;
       const links = yield* ingestion.getByIds(requestedIds);
-      const foundIds = HashSet.fromIterable(links.map((link) => link.id));
-      const missingIds = requestedIds.filter((id) => !HashSet.has(foundIds, id));
+      const foundIds = HashSet.fromIterable(A.map(links, (link) => link.id));
+      const missingIds = A.filter(requestedIds, (id) => !HashSet.has(foundIds, id));
       if (missingIds.length > 0) {
         return yield* HttpServerResponse.json(
           {
             error: "VALIDATION_ERROR",
-            message: `Unknown or missing link IDs: ${missingIds.join(", ")}`,
+            message: `Unknown or missing link IDs: ${A.join(missingIds, ", ")}`,
           },
           { status: 400 }
         );
@@ -169,23 +180,30 @@ export const LinkIngestionRouter = HttpRouter.addAll([
         return yield* HttpServerResponse.json(
           {
             error: "VALIDATION_ERROR",
-            message: `Links do not belong to ontology "${ontologyId}": ${invalidLinks.map((link) => link.id).join(", ")}`,
+            message: `Links do not belong to ontology "${ontologyId}": ${A.join(
+              A.map(invalidLinks, (link) => link.id),
+              ", "
+            )}`,
           },
           { status: 400 }
         );
       }
 
       const bucket = O.getOrElse(config.storage.bucket, () => "local-bucket");
-      const randomA = (yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36).padStart(6, "0");
-      const randomB = (yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36).padStart(6, "0");
+      const randomA = Str.padStart(6, "0")((yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36));
+      const randomB = Str.padStart(6, "0")((yield* Random.nextIntBetween(0, 2_176_782_336)).toString(36));
       const batchId = Result.getOrThrow(S.decodeResult(BatchId)(`batch-${randomA}${randomB}`));
-      const targetNamespace = Result.getOrThrow(S.decodeResult(Namespace)(request.value.targetNamespace ?? entry.value.targetNamespace));
+      const targetNamespace = Result.getOrThrow(
+        S.decodeResult(Namespace)(request.value.targetNamespace ?? entry.value.targetNamespace)
+      );
       const ontologyUri = GcsUri.resolve(entry.value.storagePath, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket)));
-      const shaclUri = O.map(entry.value.shapesPath, (path) => GcsUri.resolve(path, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket))));
+      const shaclUri = O.map(entry.value.shapesPath, (path) =>
+        GcsUri.resolve(path, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket)))
+      );
       const embeddingsUri = O.map(entry.value.embeddingsPath, (path) =>
         GcsUri.resolve(path, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket)))
       );
-      const documents = links.map((link) => ({
+      const documents = A.map(links, (link) => ({
         documentId: DocumentId.fromContentHash(Result.getOrThrow(S.decodeResult(ContentHash)(link.contentHash))),
         sourceUri: GcsUri.resolve(link.storageUri, Result.getOrThrow(S.decodeResult(GcsBucket)(bucket))),
         contentType: "text/markdown",
@@ -205,7 +223,8 @@ export const LinkIngestionRouter = HttpRouter.addAll([
         createdAt: now,
       });
       const manifestPath = PathLayout.batch.manifest(batchId);
-      yield* storage.set(manifestPath, yield* BatchManifest.encodeEffectFromJsonString(manifest));
+      const manifestJson = yield* BatchManifest.encodeEffectFromJsonString(manifest);
+      yield* storage.set(manifestPath, manifestJson);
       const manifestUri = Result.getOrThrow(S.decodeUnknownResult(GcsUri)(`gs://${bucket}/${manifestPath}`));
       const payload = yield* BatchWorkflowPayload.decodeUnknownEffect({
         batchId,
@@ -215,7 +234,7 @@ export const LinkIngestionRouter = HttpRouter.addAll([
         ontologyUri,
         targetNamespace,
         shaclUri,
-        documentIds: documents.map((document) => document.documentId),
+        documentIds: A.map(documents, (document) => document.documentId),
         ontologyEmbeddingsUri: embeddingsUri,
       });
 
@@ -224,10 +243,14 @@ export const LinkIngestionRouter = HttpRouter.addAll([
       yield* backgroundTasks.fork(
         Effect.gen(function* () {
           const state = yield* pollToBatchState(String(batchId)).pipe(
-            Effect.filterOrElse(current => BatchState.isTerminal(current), current => BatchNotTerminalError.make({
-    batchId,
-    status: current._tag,
-})),
+            Effect.filterOrElse(
+              (current) => BatchState.isTerminal(current),
+              (current) =>
+                BatchNotTerminalError.make({
+                  batchId,
+                  status: current._tag,
+                })
+            ),
             Effect.retry({ times: 120, schedule: Schedule.spaced("5 seconds") })
           );
           const failed = BatchState.guards.Failed(state);

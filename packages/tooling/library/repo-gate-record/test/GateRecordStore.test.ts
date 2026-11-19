@@ -154,7 +154,7 @@ describe("GateRecordStore", () => {
       })
     );
 
-    it.effect("fails a listing and a retention it cannot carry out", () =>
+    it.effect("fails a listing it cannot read, and a retention it cannot carry out keeps the record written", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -163,14 +163,18 @@ describe("GateRecordStore", () => {
         yield* fs.makeDirectory(path.join(root, ".beep/gates/test/run-00.json/held"), { recursive: true });
         yield* fs.writeFileString(path.join(root, ".beep/gates/check"), "not a directory");
         const listing = yield* Effect.flip(store.listRuns("check"));
-        const retention = yield* Effect.flip(
-          Effect.forEach(runIds(ROOT_RUNS_KEPT), (runId) => store.writeRecord(rootTarget(runId), record(runId)), {
-            concurrency: 1,
-          })
+        const written = yield* Effect.forEach(
+          runIds(ROOT_RUNS_KEPT),
+          (runId) => store.writeRecord(rootTarget(runId), record(runId)),
+          { concurrency: 1 }
         );
+        const last = yield* store.readRecord(rootTarget("run-29"));
+        const kept = yield* store.listRuns("test");
         assert.instanceOf(listing, GateRecordReadError);
         assert.strictEqual(listing.reason, "unreadable");
-        assert.instanceOf(retention, GateRecordWriteError);
+        assert.strictEqual(written.length, ROOT_RUNS_KEPT);
+        assert.strictEqual(last.report.runId, "run-29");
+        assert.isTrue(A.contains(kept, "run-00"));
       })
     );
   });

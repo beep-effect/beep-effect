@@ -5,6 +5,7 @@ import { productionConfig, productionCreateAllowList, productionStage } from "@b
 import { prodGitHubProviders } from "@beep/infra-github/ProdWriteGuard";
 import { decodeLiveRuleset } from "@beep/infra-github/RulesetGuard";
 import { declareStack } from "@beep/infra-github/Stack";
+import { atRegistration } from "@beep/test-utils/Registration";
 import { expect } from "@effect/vitest";
 import * as ProviderModule from "alchemy/Provider";
 import * as A from "effect/Array";
@@ -52,7 +53,7 @@ const scenario = (
   between: (fake: FakeRepository) => void = () => undefined
 ) => {
   const fake = FakeRepository.fromCensus();
-  const capture = Effect.runSync(decodeLiveRuleset(fake.ruleset(MAIN)));
+  const capture = atRegistration(decodeLiveRuleset(fake.ruleset(MAIN)));
   const providers = prodGitHubProviders(productionCreateAllowList, capture).pipe(
     Layer.provideMerge(fakeProviders(fake))
   );
@@ -163,7 +164,7 @@ scenario("a planned replace fails the plan", (stack, fake) =>
 // precreate and delete are refused outright, whatever the logical id.
 {
   const fake = FakeRepository.fromCensus();
-  const capture = Effect.runSync(decodeLiveRuleset(fake.ruleset(MAIN)));
+  const capture = atRegistration(decodeLiveRuleset(fake.ruleset(MAIN)));
   const providers = prodGitHubProviders(productionCreateAllowList, capture).pipe(
     Layer.provideMerge(fakeProviders(fake))
   );

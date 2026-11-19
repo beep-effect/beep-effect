@@ -8,16 +8,16 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf/Iri";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as PrimaryKey from "effect/PrimaryKey";
-import * as Result from "effect/Result";
-import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as PrimaryKey from "effect/PrimaryKey";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { extractLocalNameFromIri } from "../../Utils/Iri.ts";
@@ -97,15 +97,18 @@ const skosFieldsExactMatchDefault = A.empty<IRI>();
 const skosFieldsCloseMatchDefault = A.empty<IRI>();
 const SkosFields = {
   prefLabels: S.Array(S.NonEmptyString).pipe(
-    S.withConstructorDefault(Effect.succeed(skosFieldsPrefLabelsDefault)), S.withDecodingDefaultType(Effect.succeed(skosFieldsPrefLabelsDefault)),
+    S.withConstructorDefault(Effect.succeed(skosFieldsPrefLabelsDefault)),
+    S.withDecodingDefaultType(Effect.succeed(skosFieldsPrefLabelsDefault)),
     S.annotateKey({ description: "Preferred SKOS labels in display order." })
   ),
   altLabels: S.Array(S.NonEmptyString).pipe(
-    S.withConstructorDefault(Effect.succeed(skosFieldsAltLabelsDefault)), S.withDecodingDefaultType(Effect.succeed(skosFieldsAltLabelsDefault)),
+    S.withConstructorDefault(Effect.succeed(skosFieldsAltLabelsDefault)),
+    S.withDecodingDefaultType(Effect.succeed(skosFieldsAltLabelsDefault)),
     S.annotateKey({ description: "Alternative SKOS labels and synonyms." })
   ),
   hiddenLabels: S.Array(S.NonEmptyString).pipe(
-    S.withConstructorDefault(Effect.succeed(skosFieldsHiddenLabelsDefault)), S.withDecodingDefaultType(Effect.succeed(skosFieldsHiddenLabelsDefault)),
+    S.withConstructorDefault(Effect.succeed(skosFieldsHiddenLabelsDefault)),
+    S.withDecodingDefaultType(Effect.succeed(skosFieldsHiddenLabelsDefault)),
     S.annotateKey({ description: "Hidden SKOS labels such as abbreviations or common misspellings." })
   ),
   definition: S.OptionFromOptionalKey(S.NonEmptyString).pipe(
@@ -121,23 +124,28 @@ const SkosFields = {
     S.annotateKey({ description: "Illustrative SKOS example when supplied." })
   ),
   broader: S.Array(IRI).pipe(
-    S.withConstructorDefault(Effect.succeed(skosFieldsBroaderDefault)), S.withDecodingDefaultType(Effect.succeed(skosFieldsBroaderDefault)),
+    S.withConstructorDefault(Effect.succeed(skosFieldsBroaderDefault)),
+    S.withDecodingDefaultType(Effect.succeed(skosFieldsBroaderDefault)),
     S.annotateKey({ description: "Broader SKOS concepts." })
   ),
   narrower: S.Array(IRI).pipe(
-    S.withConstructorDefault(Effect.succeed(skosFieldsNarrowerDefault)), S.withDecodingDefaultType(Effect.succeed(skosFieldsNarrowerDefault)),
+    S.withConstructorDefault(Effect.succeed(skosFieldsNarrowerDefault)),
+    S.withDecodingDefaultType(Effect.succeed(skosFieldsNarrowerDefault)),
     S.annotateKey({ description: "Narrower SKOS concepts." })
   ),
   related: S.Array(IRI).pipe(
-    S.withConstructorDefault(Effect.succeed(skosFieldsRelatedDefault)), S.withDecodingDefaultType(Effect.succeed(skosFieldsRelatedDefault)),
+    S.withConstructorDefault(Effect.succeed(skosFieldsRelatedDefault)),
+    S.withDecodingDefaultType(Effect.succeed(skosFieldsRelatedDefault)),
     S.annotateKey({ description: "Non-hierarchical related SKOS concepts." })
   ),
   exactMatch: S.Array(IRI).pipe(
-    S.withConstructorDefault(Effect.succeed(skosFieldsExactMatchDefault)), S.withDecodingDefaultType(Effect.succeed(skosFieldsExactMatchDefault)),
+    S.withConstructorDefault(Effect.succeed(skosFieldsExactMatchDefault)),
+    S.withDecodingDefaultType(Effect.succeed(skosFieldsExactMatchDefault)),
     S.annotateKey({ description: "SKOS concepts judged interchangeable across vocabularies." })
   ),
   closeMatch: S.Array(IRI).pipe(
-    S.withConstructorDefault(Effect.succeed(skosFieldsCloseMatchDefault)), S.withDecodingDefaultType(Effect.succeed(skosFieldsCloseMatchDefault)),
+    S.withConstructorDefault(Effect.succeed(skosFieldsCloseMatchDefault)),
+    S.withDecodingDefaultType(Effect.succeed(skosFieldsCloseMatchDefault)),
     S.annotateKey({ description: "Closely aligned SKOS concepts in other vocabularies." })
   ),
 };
@@ -159,10 +167,10 @@ const SkosFields = {
  * @since 0.0.0
  */
 export const PropertyRangeKind = LiteralKit(["object", "datatype"]).pipe(
-    $I.annoteSchema("PropertyRangeKind", {
-      description: "Closed property-range taxonomy distinguishing resource links from literal values.",
-    })
-  );
+  $I.annoteSchema("PropertyRangeKind", {
+    description: "Closed property-range taxonomy distinguishing resource links from literal values.",
+  })
+);
 
 /**
  * Decoded `object` or `datatype` literal produced by the {@link PropertyRangeKind} schema.
@@ -217,26 +225,26 @@ export class OntologyRef extends S.Class<OntologyRef, { readonly brand: unique s
   })
 ) {
   /**
-     * Effect primary key for identity-aware collections.
-     *
-     * **Example** (Build a stable primary key)
-     *
-     * ```ts
-     * import * as PrimaryKey from "effect/PrimaryKey";
-     * import * as O from "effect/Option"
-     * import * as S from "effect/Schema"
-     * import { OntologyRef } from "@effect-ontology/Model/Ontology"
-     *
-     * const ref = S.decodeUnknownOption(OntologyRef)({
-     *   namespace: "legal",
-     *   name: "claims",
-     *   contentHash: "a".repeat(64)
-     * })
-     * console.log(O.map(ref, (value) => value[PrimaryKey.symbol]()))
-     * ```
-     *
-     * @returns Stable namespace, name, and full-content-hash identity.
-     */
+   * Effect primary key for identity-aware collections.
+   *
+   * **Example** (Build a stable primary key)
+   *
+   * ```ts
+   * import * as PrimaryKey from "effect/PrimaryKey";
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { OntologyRef } from "@effect-ontology/Model/Ontology"
+   *
+   * const ref = S.decodeUnknownOption(OntologyRef)({
+   *   namespace: "legal",
+   *   name: "claims",
+   *   contentHash: "a".repeat(64)
+   * })
+   * console.log(O.map(ref, (value) => value[PrimaryKey.symbol]()))
+   * ```
+   *
+   * @returns Stable namespace, name, and full-content-hash identity.
+   */
   [PrimaryKey.symbol](): string {
     return `${this.namespace}:${this.name}@${this.contentHash}`;
   }
@@ -313,17 +321,21 @@ const ClassDefinitionFields = {
     S.annotateKey({ description: "Informal RDFS class description when supplied." })
   ),
   properties: S.Array(IRI).pipe(
-    S.withConstructorDefault(Effect.succeed(classDefinitionFieldsPropertiesDefault)), S.withDecodingDefaultType(Effect.succeed(classDefinitionFieldsPropertiesDefault)),
+    S.withConstructorDefault(Effect.succeed(classDefinitionFieldsPropertiesDefault)),
+    S.withDecodingDefaultType(Effect.succeed(classDefinitionFieldsPropertiesDefault)),
     S.annotateKey({ description: "Property IRIs applicable to this class." })
   ),
   ...SkosFields,
   equivalentClass: S.Array(IRI).pipe(
-    S.withConstructorDefault(Effect.succeed(classDefinitionFieldsEquivalentClassDefault)), S.withDecodingDefaultType(Effect.succeed(classDefinitionFieldsEquivalentClassDefault)),
+    S.withConstructorDefault(Effect.succeed(classDefinitionFieldsEquivalentClassDefault)),
+    S.withDecodingDefaultType(Effect.succeed(classDefinitionFieldsEquivalentClassDefault)),
     S.annotateKey({ description: "OWL classes declared equivalent to this class." })
   ),
 };
 
-class ClassDefinitionModel extends S.Class<ClassDefinitionModel, { readonly brand: unique symbol }>($I`ClassDefinition`)(
+class ClassDefinitionModel extends S.Class<ClassDefinitionModel, { readonly brand: unique symbol }>(
+  $I`ClassDefinition`
+)(
   ClassDefinitionFields,
   $I.annote("ClassDefinition", {
     description: "OWL or RDFS class metadata normalized for lookup and semantic search.",
@@ -412,28 +424,34 @@ const PropertyDefinitionFields = {
     S.annotateKey({ description: "Informal RDFS property description when supplied." })
   ),
   domain: S.Array(IRI).pipe(
-    S.withConstructorDefault(Effect.succeed(propertyDefinitionFieldsDomainDefault)), S.withDecodingDefaultType(Effect.succeed(propertyDefinitionFieldsDomainDefault)),
+    S.withConstructorDefault(Effect.succeed(propertyDefinitionFieldsDomainDefault)),
+    S.withDecodingDefaultType(Effect.succeed(propertyDefinitionFieldsDomainDefault)),
     S.annotateKey({ description: "Class IRIs valid in the property's subject position." })
   ),
   range: S.Array(IRI).pipe(
-    S.withConstructorDefault(Effect.succeed(propertyDefinitionFieldsRangeDefault)), S.withDecodingDefaultType(Effect.succeed(propertyDefinitionFieldsRangeDefault)),
+    S.withConstructorDefault(Effect.succeed(propertyDefinitionFieldsRangeDefault)),
+    S.withDecodingDefaultType(Effect.succeed(propertyDefinitionFieldsRangeDefault)),
     S.annotateKey({ description: "Class or datatype IRIs valid in the property's object position." })
   ),
   rangeType: PropertyRangeKind.annotateKey({
     description: "Whether values are linked resources or RDF literals.",
   }),
   inverseOf: S.Array(IRI).pipe(
-    S.withConstructorDefault(Effect.succeed(propertyDefinitionFieldsInverseOfDefault)), S.withDecodingDefaultType(Effect.succeed(propertyDefinitionFieldsInverseOfDefault)),
+    S.withConstructorDefault(Effect.succeed(propertyDefinitionFieldsInverseOfDefault)),
+    S.withDecodingDefaultType(Effect.succeed(propertyDefinitionFieldsInverseOfDefault)),
     S.annotateKey({ description: "OWL inverse-property IRIs." })
   ),
   isFunctional: S.Boolean.pipe(
-    S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
+    S.withConstructorDefault(Effect.succeed(false)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(false)),
     S.annotateKey({ description: "Whether the property admits at most one value per subject." })
   ),
   ...SkosFields,
 };
 
-class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel, { readonly brand: unique symbol }>($I`PropertyDefinition`)(
+class PropertyDefinitionModel extends S.Class<PropertyDefinitionModel, { readonly brand: unique symbol }>(
+  $I`PropertyDefinition`
+)(
   PropertyDefinitionFields,
   $I.annote("PropertyDefinition", {
     description: "RDF or OWL property metadata normalized for validation and semantic search.",
@@ -643,16 +661,19 @@ const childrenFor: {
 );
 
 const IriRecordKey = S.String.check(
-  S.makeFilter(S.is(IRI), $I.annote("IriRecordKeyCheck", {
-    title: "IRI Record Key",
-    description: "A string record key accepted by the canonical RDF IRI schema.",
-    message: "Ontology hierarchy keys must be valid IRIs.",
-  }))
-).pipe(
-    $I.annoteSchema("IriRecordKey", {
-      description: "Canonical RDF IRI represented by a string-compatible record-key schema.",
+  S.makeFilter(
+    S.is(IRI),
+    $I.annote("IriRecordKeyCheck", {
+      title: "IRI Record Key",
+      description: "A string record key accepted by the canonical RDF IRI schema.",
+      message: "Ontology hierarchy keys must be valid IRIs.",
     })
-  );
+  )
+).pipe(
+  $I.annoteSchema("IriRecordKey", {
+    description: "Canonical RDF IRI represented by a string-compatible record-key schema.",
+  })
+);
 
 const ontologyContextFieldsClassesDefault = A.empty<ClassDefinition>();
 const ontologyContextFieldsPropertiesDefault = A.empty<PropertyDefinition>();
@@ -661,23 +682,28 @@ const ontologyContextFieldsHierarchyDefault = {};
 const ontologyContextFieldsPropertyHierarchyDefault = {};
 const OntologyContextFields = {
   classes: S.Array(ClassDefinition).pipe(
-    S.withConstructorDefault(Effect.succeed(ontologyContextFieldsClassesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyContextFieldsClassesDefault)),
+    S.withConstructorDefault(Effect.succeed(ontologyContextFieldsClassesDefault)),
+    S.withDecodingDefaultType(Effect.succeed(ontologyContextFieldsClassesDefault)),
     S.annotateKey({ description: "All normalized ontology class definitions." })
   ),
   properties: S.Array(PropertyDefinition).pipe(
-    S.withConstructorDefault(Effect.succeed(ontologyContextFieldsPropertiesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyContextFieldsPropertiesDefault)),
+    S.withConstructorDefault(Effect.succeed(ontologyContextFieldsPropertiesDefault)),
+    S.withDecodingDefaultType(Effect.succeed(ontologyContextFieldsPropertiesDefault)),
     S.annotateKey({ description: "All normalized ontology property definitions." })
   ),
   metadata: S.Record(S.String, S.String).pipe(
-    S.withConstructorDefault(Effect.succeed(ontologyContextFieldsMetadataDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(ontologyContextFieldsMetadataDefault)),
+    S.withConstructorDefault(Effect.succeed(ontologyContextFieldsMetadataDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(ontologyContextFieldsMetadataDefault)),
     S.annotateKey({ description: "Open ontology-level metadata such as title and version." })
   ),
   hierarchy: S.Record(IriRecordKey, S.Array(IRI)).pipe(
-    S.withConstructorDefault(Effect.succeed(ontologyContextFieldsHierarchyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(ontologyContextFieldsHierarchyDefault)),
+    S.withConstructorDefault(Effect.succeed(ontologyContextFieldsHierarchyDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(ontologyContextFieldsHierarchyDefault)),
     S.annotateKey({ description: "Direct class-parent edges keyed by child IRI." })
   ),
   propertyHierarchy: S.Record(IriRecordKey, S.Array(IRI)).pipe(
-    S.withConstructorDefault(Effect.succeed(ontologyContextFieldsPropertyHierarchyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(ontologyContextFieldsPropertyHierarchyDefault)),
+    S.withConstructorDefault(Effect.succeed(ontologyContextFieldsPropertyHierarchyDefault)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(ontologyContextFieldsPropertyHierarchyDefault)),
     S.annotateKey({ description: "Direct property-parent edges keyed by child IRI." })
   ),
 };

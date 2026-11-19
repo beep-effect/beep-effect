@@ -134,3 +134,38 @@ index 1c0404234cfb4880397f018b2f7f7c43248c8fff..eda66e9bc5711c98fe38cdc2884512ac
            });
            const roleArn = ensuredRole.Role.Arn ?? output?.roleArn;
            yield* syncLogGroupGuard({ roleName, functionName });
+diff --git a/lib/IAM/Role.js b/lib/IAM/Role.js
+--- a/lib/IAM/Role.js
++++ b/lib/IAM/Role.js
+@@ -470,11 +470,8 @@
+             };
+         }),
+         delete: Effect.fn(function* ({ output }) {
+-            yield* iam
+-                .deleteRolePermissionsBoundary({
+-                RoleName: output.roleName,
+-            })
+-                .pipe(Effect.catchTag("NoSuchEntityException", () => Effect.void));
++            // beep patch: the boundary stays on the role until DeleteRole. IAM does not need it removed first, and a
++            // deployer allowed to remove it could uncap a role it also writes policies on.
+             yield* iam.listRolePolicies.items({ RoleName: output.roleName }).pipe(Stream.mapEffect((policyName) => iam
+                 .deleteRolePolicy({
+                 RoleName: output.roleName,
+diff --git a/src/IAM/Role.ts b/src/IAM/Role.ts
+--- a/src/IAM/Role.ts
++++ b/src/IAM/Role.ts
+@@ -701,12 +701,8 @@
+           };
+         }),
+         delete: Effect.fn(function* ({ output }) {
+-          yield* iam
+-            .deleteRolePermissionsBoundary({
+-              RoleName: output.roleName,
+-            })
+-            .pipe(Effect.catchTag("NoSuchEntityException", () => Effect.void));
+-
++          // beep patch: the boundary stays on the role until DeleteRole. IAM does not need it removed first, and a
++          // deployer allowed to remove it could uncap a role it also writes policies on.
+           yield* iam.listRolePolicies.items({ RoleName: output.roleName }).pipe(
+             Stream.mapEffect((policyName) =>
+               iam

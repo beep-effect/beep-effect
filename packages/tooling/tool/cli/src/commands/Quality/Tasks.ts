@@ -183,6 +183,7 @@ import type { GitShape } from "@beep/git/Git";
 import type { GlobPatternError } from "@beep/glob/GlobPattern";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
 import type { CaptureCommandTimedOutError } from "@beep/repo-cli-kit/process/index";
+import type { ContractGate } from "@beep/repo-gate-run/RepoPointers";
 import type { DomainError, NoSuchFileError } from "@beep/repo-utils";
 import type { EnumerationFailure } from "@beep/repo-workspaces/internal/enumerate";
 import type { PgliteTestcontainerResource } from "@beep/test-utils";
@@ -5356,7 +5357,7 @@ export const settleQuarantineForTesting = settleQuarantine;
 
 const runRootGateStep = Effect.fn("QualityTasks.runRootGateStep")(function* (
   repoRoot: string,
-  gate: "test" | "check",
+  gate: ContractGate,
   step: QualityTaskStep,
   flags: AudienceFlagInput
 ) {
@@ -5382,7 +5383,7 @@ const runRootGateStep = Effect.fn("QualityTasks.runRootGateStep")(function* (
 
 const runRootGateSteps = (
   repoRoot: string,
-  gate: "test" | "check",
+  gate: ContractGate,
   steps: ReadonlyArray<QualityTaskStep>,
   flags: AudienceFlagInput
 ) =>

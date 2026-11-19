@@ -15,10 +15,10 @@ import * as pg from "@beep/effect-drizzle/pg";
 import { $ScratchpadId } from "@beep/identity";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { sql } from "drizzle-orm";
-import * as Num from "effect/Number";
-import * as SchemaGetter from "effect/SchemaGetter";
 import * as A from "effect/Array";
+import * as Num from "effect/Number";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 import { ClaimRank } from "../Domain/Schema/KnowledgeModel.ts";
 import { LinkStatus } from "../Domain/Schema/LinkIngestion.ts";
@@ -66,11 +66,15 @@ const executionTimingFields = {
 };
 
 const EmbeddingVectorValues = S.Array(S.Finite).check(
-  S.isBetweenLength(768, 768, $I.annote("EmbeddingVector768LengthCheck", {
-    title: "Embedding Vector 768",
-    description: "Exactly 768 finite numeric embedding coordinates.",
-    message: "Expected exactly 768 finite embedding coordinates.",
-  }))
+  S.isBetweenLength(
+    768,
+    768,
+    $I.annote("EmbeddingVector768LengthCheck", {
+      title: "Embedding Vector 768",
+      description: "Exactly 768 finite numeric embedding coordinates.",
+      message: "Expected exactly 768 finite embedding coordinates.",
+    })
+  )
 );
 
 const EmbeddingVector768Codec = S.String.pipe(

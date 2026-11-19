@@ -79,9 +79,9 @@ const writtenLine = (omissions: ReadonlyArray<Omission>): O.Option<string> => {
   const record = reasonOf(omissions, "record");
   const log = reasonOf(omissions, "log");
   return pipe(
-    O.map(O.all([record, log]), ([reason]) => `record and raw log not written: ${reason}`),
-    O.orElse(() => O.map(record, (reason) => `record not written: ${reason}`)),
-    O.orElse(() => O.map(log, (reason) => `raw log not written: ${reason}`))
+    O.map(O.all([record, log]), ([reason]) => `record and raw log unavailable: ${reason}`),
+    O.orElse(() => O.map(record, (reason) => `record unavailable: ${reason}`)),
+    O.orElse(() => O.map(log, (reason) => `raw log unavailable: ${reason}`))
   );
 };
 
@@ -98,11 +98,11 @@ const writtenLine = (omissions: ReadonlyArray<Omission>): O.Option<string> => {
  *   Omission.make({ part: "record", reason: "disk full" }),
  *   Omission.make({ part: "log", reason: "disk full" }),
  * ]));
- * // ["record and raw log not written: disk full"]
+ * // ["record and raw log unavailable: disk full"]
  * ```
  *
- * @param omissions - What a gate run could not write or read.
- * @returns At most two lines: what was not written, and history not read.
+ * @param omissions - what the run could not write or read, and why
+ * @returns at most two lines: one for the record and log, one for history
  * @category projections
  * @since 0.0.0
  */

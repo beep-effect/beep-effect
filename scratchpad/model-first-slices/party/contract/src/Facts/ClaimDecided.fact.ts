@@ -1,5 +1,5 @@
 import * as Domain from "@alchemy.run/domain";
-import { OrgId, RunId } from "@proto/kernel/Ids";
+import { FactId, OrgId, RunId } from "@proto/kernel/Ids";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 import { ApprovalId } from "../Claim/Approval.id.ts";
@@ -29,12 +29,12 @@ export type Decision = typeof Decision.Type;
  * @since 0.0.0
  */
 export class ClaimDecidedV1 extends Domain.Event("ClaimDecidedV1", {
-  factId: S.String,
+  factId: FactId,
   claim: ClaimId,
   org: OrgId,
   outcome: Decision,
   reviewRuns: S.Array(RunId),
-}) {}
+}, { description: "A claim was decided (published fact, version 1). It carries the decision and the review runs involved, and no proposition, evidence, provenance or grant terms. `factId` is stable for the decision." }) {}
 
 /**
  * Version 2 of the same fact: it says whether a person approved an agent's
@@ -45,14 +45,14 @@ export class ClaimDecidedV1 extends Domain.Event("ClaimDecidedV1", {
  * @since 0.0.0
  */
 export class ClaimDecidedV2 extends Domain.Event("ClaimDecidedV2", {
-  factId: S.String,
+  factId: FactId,
   claim: ClaimId,
   org: OrgId,
   decision: Decision,
   basis: S.Literals(["approval", "direct"]),
   approval: S.OptionFromNullOr(ApprovalId),
   reviewRuns: S.Array(RunId),
-}) {}
+}, { description: "A claim was decided (published fact, version 2). It also says whether a person approved an agent's proposal or decided the claim directly, and names the approval." }) {}
 
 /**
  * The fact's contract: who produces it, its name, and the schema of each
@@ -74,6 +74,8 @@ export const ClaimDecided = {
   producer: "party",
   contract: "ClaimDecided",
   versions: { 1: ClaimDecidedV1, 2: ClaimDecidedV2 },
+  /** The fact of one claim's decision: the same id in every version and on every redelivery. */
+  factIdOf: (claim: ClaimId): FactId => FactId.make(`${claim}:decided`),
 } as const;
 
 /**

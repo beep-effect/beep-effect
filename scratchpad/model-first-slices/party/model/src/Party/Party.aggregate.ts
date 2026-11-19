@@ -6,14 +6,16 @@ import { provenanceOf } from "@proto/kernel/Invocation";
 import { PartyIntake, PartyReview } from "@proto/party-contract/Party.capabilities";
 import { MergeParties, MergeVetoed, PartiesMerged } from "@proto/party-contract/Party/MergeParties.command";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
+import { PartyName } from "@proto/party-contract/Party/PartyName";
 import {
   PartyAlreadyRegistered,
   PartyRegistered,
   RegisterParty,
 } from "@proto/party-contract/Party/RegisterParty.command";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
+import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 
 /**
@@ -24,7 +26,11 @@ import * as S from "effect/Schema";
  */
 export const PartyState = S.TaggedUnion({
   Unregistered: {},
-  Active: { org: OrgId, name: S.String, absorbed: S.Array(PartyId) },
+  Active: {
+    org: OrgId,
+    name: PartyName,
+    absorbed: Initial.empty(PartyId, { description: "The parties merged into this one; none at first." }),
+  },
 });
 /**
  * @category models
@@ -55,12 +61,12 @@ export class Party extends Domain.Aggregate(
           ResourceScope.cases.Record.make({ org: command.org, record: stream }),
           now,
         );
-        if (state._tag !== "Unregistered") return yield* PartyAlreadyRegistered.make({});
+        if (!PartyState.guards.Unregistered(state)) return yield* PartyAlreadyRegistered.make({});
         return [PartyRegistered.make({ org: command.org, name: command.name, provenance: provenanceOf(invocation) })];
       }),
 
       MergeParties: Effect.fn(function* (state, command, { id, stream, now }) {
-        if (state._tag !== "Active") return yield* MergeVetoed.make({ reason: "not-registered" });
+        if (!PartyState.guards.Active(state)) return yield* MergeVetoed.make({ reason: "not-registered" });
         const invocation = yield* requireGrant(
           PartyReview,
           command._tag,
@@ -74,7 +80,7 @@ export class Party extends Domain.Aggregate(
       }),
     },
     evolve: {
-      PartyRegistered: (_, event) => PartyState.cases.Active.make({ org: event.org, name: event.name, absorbed: [] }),
+      PartyRegistered: (_, event) => PartyState.cases.Active.make({ org: event.org, name: event.name }),
       PartiesMerged: (state, event) =>
         PartyState.matchOrElse(
           state,
