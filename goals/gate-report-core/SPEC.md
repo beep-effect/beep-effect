@@ -541,6 +541,14 @@ Lane feat/gate-report-core
 
 Reverse: Restore a per-cell body in the dispatch table.
 
+### Persist, then render, under a deadline; the console is unconditional, 2026-11-19
+
+Upstream renders before it persists. Here the record step runs first, because the path line prints the log's written size, and it runs under a deadline the caller sets (10 seconds by default). Anything other than success becomes one omission line: a write error, a missed deadline, a defect, a log stream error or an incomplete event list. The run entry then settles the report itself, completing a missing start or end, so it cannot fail: the console always begins and ends with the verdict and the exit code is the tool's. The path line appears only when both files were confirmed written; otherwise the line says the record and log are unavailable, since a write may have landed without confirmation.
+
+Lane feat/gate-report-services
+
+Reverse: Render before the writes and print the path line from a second pass.
+
 ### Coverage runs write no gate record in this goal, 2026-11-19
 
 The coverage planner passes its own reporters on the command line, and a command-line reporter replaces the configured list, so the adapter does not run under the coverage commands. This goal leaves that as it is: a coverage run writes no record and the coverage gate keeps its own report. The spec sentence that expects the adapter under the Node coverage commands is narrowed to the five packages whose ordinary test script runs Vitest on Node. Putting the coverage gate on the contract is rollout work in `goals/gate-report-rollout`.
@@ -583,7 +591,7 @@ Reverse: Put the deadline back on the history service shape and record a schema-
 
 ### Reason precedence: cancelled, errored, failed, passed; a fallback item explains an unexplained failure, 2026-11-19
 
-Totals are computed from the items, never taken from the runner. Load, hook and unhandled failures are fault items with their own totals, and `failed` counts ordinary failures only. A run is errored when the tool said so, when nothing was collected, or when a fallback was added. The fallback is one fault item carrying the log excerpt, added when no item failed and the exit code was nonzero or the tool reported a reason other than passed. Every item is recorded, passed ones included, so a later run can tell fixed from never seen.
+Totals are computed from the items, never taken from the runner. Load, hook and unhandled failures are fault items with their own totals, and `failed` counts ordinary failures only. A run is errored when the tool said so, when nothing was collected and no load failure explains it, or when a fallback was added. A run with a load failure reads FAILED whether or not another module collected tests. The fallback is one fault item carrying the log excerpt, added when no item failed and the exit code was nonzero or the tool reported a reason other than passed. Every item is recorded, passed ones included, so a later run can tell fixed from never seen.
 
 Lane feat/gate-report-core
 
