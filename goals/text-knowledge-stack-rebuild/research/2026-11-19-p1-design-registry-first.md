@@ -30,6 +30,16 @@ evolution-first designs. The orchestrator's P1 rulings are recorded as the
 `2026-11-19-p1-*` decision files, and where they differ from this text the decision
 file wins. They override this design at these points:
 
+- **D2** is amended. A research-library IRI written to a committed or exported artifact
+  (the T-Box and SHACL Turtle, the SPARQL `lib:` prefix) counts as published and gets a
+  deprecation row naming its replacement when re-minted; an IRI that never leaves the
+  process gets none. The deprecation rows are re-derived by the codemod from the live
+  fold, not taken from the 119 of section 5.3 (decision
+  `2026-11-19-p1-research-library-iris-published-get-deprecations`).
+- **D4** is amended. The moved IRI schemas are annotated with the identity composer
+  `$IdentityId`, `canonicalizeSchemaOrgIri` moves to `rdf/src/Vocab/SchemaOrg.ts`, the
+  `@beep/rdf/Iri` subpath is removed with no re-export, and the first term snapshot is
+  taken after the move (decision `2026-11-19-p1-iri-schemas-re-home-under-identity`).
 - **D5** is withdrawn. `CanonicalHashSet` lives in `@beep/schema`, as the split ruling
   and the `L0.digest.ts` owner line say. `@beep/identity` keeps strictly ascending
   sorted arrays for its snapshot and registry collections (decision
@@ -44,6 +54,15 @@ file wins. They override this design at these points:
   `doco` and the three SPAR pins already carried (`deo`, `fabio`, `cito`). The test
   that every external namespace is pinned stays in P5 (decision
   `2026-11-19-p1-pin-scope-eight-namespaces`).
+- **D9** is amended. The seven test-runner IRIs are re-minted from the registry under a
+  `vitest` namespace, each old value gets a deprecation row, and their code ids become
+  `@beep/test-runner/Vitest/<Name>` (decision
+  `2026-11-19-p1-test-runner-iris-re-minted-from-the-registry`).
+- **D10** is amended. Every slice-local canonical-JSON copy retires in P1 to an existing
+  owner export without a new dependency edge, and the epistemic-domain
+  `ContradictionDetection` re-export retires in P1 with them. Only the `@beep/epistemics`
+  `canonicalDetectionJson*` alias chain waits for P4 (decision
+  `2026-11-19-p1-canonical-json-slice-copies-retire`).
 - **Section 5.5, changesets**, is withdrawn. Every package P1 touches is private and
   repo-sanity forbids a changeset for a private workspace, so none is written. Each
   breaking change is recorded in a P1 decision file instead (decision
@@ -935,7 +954,7 @@ Each is a file under `decisions/` with a reversal clause.
 | D7 | `since` is the `@beep/identity` release version, computed from pending changesets | per-owner-package versions |
 | D8 | Every external namespace is pinned in P1 (19, SHACL and VoID included). `PinnedSource.revision` uses the Conformance revision kinds. `as:` is `http://`. `xsd` pins RDF 1.1 Concepts. PROV pins the dated PROV-O | pin only the eight named and add an exemption list to the rdf test |
 | D9 | The test-runner gets a generated projection, and its code ids are corrected to `@beep/test-runner` | keep the hand-written pins, with parity checked by the registry |
-| D10 | Canonical-JSON copies retire through `JsoncFingerprint.canonicalizeSchemaResult`. The epistemic-domain `ContradictionDetection` alias and the epistemics `canonicalDetectionJson*` pair wait for P4 | re-add the slice re-exports |
+| D10 | Canonical-JSON copies retire through `JsoncFingerprint.canonicalizeSchemaResult`, and the epistemic-domain `ContradictionDetection` re-export retires with them in P1. Only the epistemics `canonicalDetectionJson*` pair waits for P4 | re-add the slice re-exports |
 | D11 | `IdentityAuthority` moves to `@beep/identity/Authority` | move it back and inline the authority in the generated data |
 | D12 | The version and literal cross-check lives in `@beep/schema/test`, because an identity dev dependency on schema is a workspace cycle | add a schema-free copy of `SemanticVersion` to the identity tests |
 
@@ -1004,8 +1023,8 @@ Each is a file under `decisions/` with a reversal clause.
 - The OA and NIF adapters and the use of `as:generator` come in P3.
 - The ontology seed move to the law-practice asset pack is P5. P1 routes those IRIs
   through `Registry.mint` with unchanged bytes.
-- The epistemic-domain `canonicalDetectionJson` re-export and the epistemics alias pair
-  wait for P4 (D10).
+- The epistemics `canonicalDetectionJson*` alias pair waits for P4 (D10); the
+  epistemic-domain re-export retires in P1.
 - The schema.org vocabulary table and its `FOREIGN_PREFIXES` (72) retire with
   `@beep/schema-org` in P7.
 - Candidate vocabularies LKIF, ELI and OntoLex `lexicog` (rq3 decision) are not
