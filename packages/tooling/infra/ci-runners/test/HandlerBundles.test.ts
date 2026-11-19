@@ -4,6 +4,7 @@ import * as Bundle from "alchemy/Bundle";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -28,10 +29,12 @@ const ALLOWED_IDENTITY_SOURCES = ["Id.ts", "Root.ts", "internal/schemaStatics.ts
 const identitySources = (sources: ReadonlyArray<string>): ReadonlyArray<string> =>
   A.sort(
     A.dedupe(
-      A.filterMap(sources, (source) => {
-        const at = source.lastIndexOf(IDENTITY_SOURCE_PREFIX);
-        return at < 0 ? Result.failVoid : Result.succeed(source.slice(at + IDENTITY_SOURCE_PREFIX.length));
-      })
+      A.filterMap(sources, (source) =>
+        O.match(Str.lastIndexOf(IDENTITY_SOURCE_PREFIX)(source), {
+          onNone: () => Result.failVoid,
+          onSome: (at) => Result.succeed(Str.slice(at + IDENTITY_SOURCE_PREFIX.length)(source)),
+        })
+      )
     ),
     Str.Order
   );
