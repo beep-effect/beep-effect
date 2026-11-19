@@ -35,8 +35,11 @@ name: Deploy CI runners
 # `if` on the input, and the deploy script refuses on its own when the input
 # is set. A plan-only run needs no arming, so CI_RUNNERS_DEPLOY_ARMED stays the
 # one switch for a write; a push carries no inputs and takes the path above.
-# `expect_plan_digest` holds a deploy to the rows a plan-only run printed: the
-# deploy step refuses before a write unless its own plan-rows digest equals it.
+# `expect_plan_head` and `expect_plan_digest` hold a deploy to a plan-only run:
+# the deploy step refuses, before it plans, unless it runs on that run's commit
+# (the full head SHA), and refuses before a write unless its own plan-rows
+# digest equals that run's. The two pins travel together, and the two cutover
+# dispatches (`bootstrap`, `default-security-group`) refuse without them.
 # Credentials: the stack-scoped OIDC role vars.CI_RUNNERS_DEPLOY_ROLE_ARN on
 # the ci-runners-prod environment; App credentials are that environment's
 # secrets, passed only to the plan and deploy steps, and stay Redacted to SSM.
@@ -61,8 +64,12 @@ on:
         description: "Plan and check only: print the plan rows and their digest, then stop before the deploy step (runs unarmed)"
         type: boolean
         default: false
+      expect_plan_head:
+        description: "Deploy only on this commit: the full 40-character head SHA the plan_only run printed. Required with expect_plan_digest, and for bootstrap and default-security-group"
+        type: string
+        default: ""
       expect_plan_digest:
-        description: "Deploy only when the plan-rows digest equals this sha256 (from a plan_only run on the same commit); empty skips the check"
+        description: "Deploy only when the plan-rows digest equals this sha256, printed by the plan_only run. Required with expect_plan_head, and for bootstrap and default-security-group"
         type: string
         default: ""
 
@@ -122,6 +129,9 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          # Printed first, so a refused plan still shows it: with the "plan-rows digest" line below, one plan_only
+          # log gives both pins the deploy dispatch takes.
+          echo "plan-check: head sha $GITHUB_SHA"
           bun plan-check.ts plan --stage prod --expect "$MODE" ${EXCLUDE:+--exclude "$EXCLUDE"} \
             --out "$RUNNER_TEMP/ci-runners-checked-plan.json"
 
@@ -141,12 +151,32 @@ jobs:
           EXCLUDE: ${{ inputs.mode == 'bootstrap' && 'DefaultSecurityGroup' || '' }}
           PLAN_ONLY: ${{ inputs.plan_only && 'true' || 'false' }}
           EXPECT_PLAN_DIGEST: ${{ inputs.expect_plan_digest || '' }}
+          EXPECT_PLAN_HEAD: ${{ inputs.expect_plan_head || '' }}
         run: |
           set -euo pipefail
           # Second lock on plan_only: the step-level `if` already skips this step.
           if [[ "$PLAN_ONLY" != "false" ]]; then
             echo "::error::a plan_only run never deploys"
             exit 1
+          fi
+          # The pins, checked before anything plans. A push carries neither and runs as routine.
+          if [[ -n "$EXPECT_PLAN_DIGEST" && -z "$EXPECT_PLAN_HEAD" ]] || [[ -z "$EXPECT_PLAN_DIGEST" && -n "$EXPECT_PLAN_HEAD" ]]; then
+            echo "::error::expect_plan_digest and expect_plan_head travel together: set both or neither"
+            exit 1
+          fi
+          if [[ "$MODE" == "bootstrap" || "$MODE" == "default-security-group" ]] && [[ -z "$EXPECT_PLAN_HEAD" ]]; then
+            echo "::error::a $MODE deploy needs expect_plan_head and expect_plan_digest from its plan_only run"
+            exit 1
+          fi
+          if [[ -n "$EXPECT_PLAN_HEAD" ]]; then
+            if [[ ! "$EXPECT_PLAN_HEAD" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "::error::expect_plan_head must be the full 40-character commit SHA"
+              exit 1
+            fi
+            if [[ "$EXPECT_PLAN_HEAD" != "$GITHUB_SHA" ]]; then
+              echo "::error::this run is on $GITHUB_SHA, the plan_only run was on $EXPECT_PLAN_HEAD; nothing was planned or applied"
+              exit 1
+            fi
           fi
           bun plan-check.ts deploy --stage prod --expect "$MODE" ${EXCLUDE:+--exclude "$EXCLUDE"} \
             ${EXPECT_PLAN_DIGEST:+--expect-digest "$EXPECT_PLAN_DIGEST"} \

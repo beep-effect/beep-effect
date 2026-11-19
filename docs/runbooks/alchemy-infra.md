@@ -895,19 +895,23 @@ Plan only, and a deploy held to a read plan. A dispatch with `plan_only` runs
 the plan step and stops: it prints one row per resource and the plan-rows
 digest (SHA-256 over the sorted rows; no property, secret or salt), and never
 reaches the deploy or webhook step. It needs no arming, so
-`CI_RUNNERS_DEPLOY_ARMED` stays the one switch for a write. A deploy
-dispatched with `expect_plan_digest` set to that digest, on the same commit,
-refuses before any write unless its own rows give the same digest. The rows
-and digest print before the check, so a refused plan is still read whole.
+`CI_RUNNERS_DEPLOY_ARMED` stays the one switch for a write. Its log also
+prints `plan-check: head sha <sha>`. A deploy dispatched with
+`expect_plan_head` and `expect_plan_digest` set to those two values refuses
+unless it runs on the plan-only run's commit and prints the same rows digest:
+the head is compared before anything plans, the digest before any write. The
+two pins travel together (one without the other is refused), and a
+`bootstrap` or `default-security-group` dispatch is refused without them. A
+push carries neither and runs as routine. The rows and digest print before the
+check, so a refused plan is still read whole.
 
-Two limits of a plan-only run, both by design. It holds the
-`alchemy-ci-runners-prod` concurrency group, and that group never cancels a
-run in progress: do not dispatch `plan_only` while
+A plan-only run holds the `alchemy-ci-runners-prod` concurrency group, and
+that group never cancels a run in progress: do not dispatch `plan_only` while
 `CI_RUNNERS_ROUTINE_ARMED` is set and a push run is pending, or the two queue
-behind each other. And the digest covers the rows, not the commit, and an
-empty `expect_plan_digest` switches the pin off: dispatch the bootstrap on
-the same head SHA as the plan-only run, and relay both runs' head SHA with the
-bootstrap run's `plan-rows digest` log line.
+behind each other. The digest covers the rows, labels, bindings and stack
+actions, not the commit, so it stays the same across commits that plan the
+same rows; `expect_plan_head` is what binds the commit. Relay both runs' head
+SHA with the deploy run's `plan-rows digest` log line.
 
 Resuming a stopped bootstrap. A deploy that stops part-way leaves a state row
 `creating` for each resource it had started. The next plan shows such a row

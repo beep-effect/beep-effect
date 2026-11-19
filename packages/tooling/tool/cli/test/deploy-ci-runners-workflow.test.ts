@@ -3,10 +3,12 @@ import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
 import { parseWorkflowYaml, yamlAt } from "./support/WorkflowYaml.ts";
@@ -85,7 +87,7 @@ const dispatch = (
   vars: Readonly<Record<string, Value>>
 ): Context => ({
   github: { event_name: "workflow_dispatch" },
-  inputs: { ...inputs, expect_plan_digest: "" },
+  inputs: { ...inputs, expect_plan_digest: "", expect_plan_head: "" },
   vars,
 });
 
@@ -156,6 +158,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("deploy-ci-runners workf
       const deploy = step("Deploy the checked plan");
       expect(yamlAt(deploy, ["env", "PLAN_ONLY"])).toBe("${{ inputs.plan_only && 'true' || 'false' }}");
       expect(yamlAt(deploy, ["env", "EXPECT_PLAN_DIGEST"])).toBe("${{ inputs.expect_plan_digest || '' }}");
+      expect(yamlAt(deploy, ["env", "EXPECT_PLAN_HEAD"])).toBe("${{ inputs.expect_plan_head || '' }}");
+      // The plan step prints the head before it plans, so a refused plan-only run still shows both pins.
+      const planScript = yamlAt(step("Plan and check the prod stage"), ["run"]);
+      expect(
+        P.isString(planScript) &&
+          O.getOrElse(Str.indexOf('echo "plan-check: head sha')(planScript), () => -1) <
+            O.getOrElse(Str.indexOf("bun plan-check.ts plan")(planScript), () => -1)
+      ).toBe(true);
       const script = yamlAt(deploy, ["run"]);
       expect(P.isString(script) && Str.includes('if [[ "$PLAN_ONLY" != "false" ]]; then')(script)).toBe(true);
       expect(
@@ -164,6 +174,95 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("deploy-ci-runners workf
       // Only the plan and deploy steps hold the App secrets, and a plan_only run needs no write permission beyond them.
       expect(yamlAt(workflow, ["on", "workflow_dispatch", "inputs", "plan_only", "default"])).toBe(false);
       expect(yamlAt(workflow, ["on", "workflow_dispatch", "inputs", "plan_only", "type"])).toBe("boolean");
+    })
+  );
+
+  // The deploy step's own script, run by bash with a recording `bun` in place of the real one: "reached" means the
+  // script got as far as the deploy command, with the arguments it would pass.
+  const head = Str.repeat(40)("a");
+  const otherHead = Str.repeat(40)("b");
+  const digest = Str.repeat(64)("c");
+  const runDeploy = Effect.fn(function* (inputs: {
+    readonly mode: string;
+    readonly planOnly?: boolean;
+    readonly expectHead?: string;
+    readonly expectDigest?: string;
+    readonly sha?: string;
+  }) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const { step } = yield* read;
+    const script = yamlAt(step("Deploy the checked plan"), ["run"]);
+    const ambientPath = yield* Config.String("PATH");
+    const temp = yield* fs.makeTempDirectoryScoped();
+    const fakeBun = path.join(temp, "bun");
+    yield* fs.writeFileString(fakeBun, '#!/usr/bin/env bash\nprintf "reached %s\\n" "$*"\n');
+    yield* fs.chmod(fakeBun, 0o755);
+    const result = Bun.spawnSync(["bash", "-c", P.isString(script) ? script : "exit 99"], {
+      cwd: temp,
+      env: {
+        PATH: `${temp}:${ambientPath}`,
+        RUNNER_TEMP: temp,
+        GITHUB_SHA: inputs.sha ?? head,
+        MODE: inputs.mode,
+        EXCLUDE: inputs.mode === "bootstrap" ? "DefaultSecurityGroup" : "",
+        PLAN_ONLY: inputs.planOnly === true ? "true" : "false",
+        EXPECT_PLAN_DIGEST: inputs.expectDigest ?? "",
+        EXPECT_PLAN_HEAD: inputs.expectHead ?? "",
+      },
+      stderr: "pipe",
+      stdout: "pipe",
+    });
+    const output = result.stdout.toString();
+    return { exitCode: result.exitCode, reached: Str.includes("reached ")(output), output };
+  }, Effect.scoped);
+
+  it.effect("a cutover deploy runs only with both pins, on the plan-only run's commit", () =>
+    Effect.gen(function* () {
+      const pinned = yield* runDeploy({ mode: "bootstrap", expectHead: head, expectDigest: digest });
+      expect([pinned.exitCode, pinned.reached]).toStrictEqual([0, true]);
+      expect(Str.includes(`--expect-digest ${digest}`)(pinned.output)).toBe(true);
+      const step1b = yield* runDeploy({ mode: "default-security-group", expectHead: head, expectDigest: digest });
+      expect([step1b.exitCode, step1b.reached]).toStrictEqual([0, true]);
+      // A head mismatch refuses before anything plans, for a cutover mode and for a pinned routine dispatch.
+      const refused = yield* Effect.forEach(
+        [
+          { mode: "bootstrap", expectHead: otherHead, expectDigest: digest },
+          { mode: "default-security-group", expectHead: otherHead, expectDigest: digest },
+          { mode: "routine", expectHead: otherHead, expectDigest: digest },
+          // A prefix is not a match, and neither is a longer or malformed value.
+          { mode: "bootstrap", expectHead: Str.slice(0, 12)(head), expectDigest: digest },
+          { mode: "bootstrap", expectHead: `${head}a`, expectDigest: digest },
+          { mode: "bootstrap", expectHead: Str.toUpperCase(head), expectDigest: digest },
+          // The pins travel together.
+          { mode: "bootstrap", expectDigest: digest },
+          { mode: "bootstrap", expectHead: head },
+          { mode: "routine", expectDigest: digest },
+          { mode: "routine", expectHead: head },
+          // A cutover mode without pins refuses.
+          { mode: "bootstrap" },
+          { mode: "default-security-group" },
+          // The script's own lock on plan_only.
+          { mode: "bootstrap", planOnly: true, expectHead: head, expectDigest: digest },
+        ],
+        runDeploy,
+        { concurrency: 1 }
+      );
+      expect(A.map(refused, (result) => [result.exitCode, result.reached])).toStrictEqual(
+        A.replicate([1, false], refused.length)
+      );
+    })
+  );
+
+  it.effect("a push deploy carries no pins and reaches the deploy command as before", () =>
+    Effect.gen(function* () {
+      const push = yield* runDeploy({ mode: "routine" });
+      expect([push.exitCode, push.reached]).toStrictEqual([0, true]);
+      expect(Str.includes("--expect-digest")(push.output)).toBe(false);
+      expect(Str.includes("deploy --stage prod --expect routine")(push.output)).toBe(true);
+      // A routine dispatch may still pin itself to a plan-only run.
+      const pinned = yield* runDeploy({ mode: "routine", expectHead: head, expectDigest: digest });
+      expect([pinned.exitCode, pinned.reached]).toStrictEqual([0, true]);
     })
   );
 });
