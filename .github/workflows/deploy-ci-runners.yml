@@ -28,6 +28,15 @@ name: Deploy CI runners
 # dispatch input `mode` names the cutover expectation both steps enforce:
 # `bootstrap` (step 1a) and `default-security-group` (step 1b) refuse any other
 # change; pushes run as `routine`.
+#
+# `plan_only` (dispatch only) ends the job after the plan step: it prints the
+# plan rows and their digest and never reaches the deploy or webhook step,
+# whatever the arm variables say. Those two steps are skipped by a step-level
+# `if` on the input, and the deploy script refuses on its own when the input
+# is set. A plan-only run needs no arming, so CI_RUNNERS_DEPLOY_ARMED stays the
+# one switch for a write; a push carries no inputs and takes the path above.
+# `expect_plan_digest` holds a deploy to the rows a plan-only run printed: the
+# deploy step refuses before a write unless its own plan-rows digest equals it.
 # Credentials: the stack-scoped OIDC role vars.CI_RUNNERS_DEPLOY_ROLE_ARN on
 # the ci-runners-prod environment; App credentials are that environment's
 # secrets, passed only to the plan and deploy steps, and stay Redacted to SSM.
@@ -48,6 +57,14 @@ on:
         type: choice
         options: [routine, bootstrap, default-security-group]
         default: routine
+      plan_only:
+        description: "Plan and check only: print the plan rows and their digest, then stop before the deploy step (runs unarmed)"
+        type: boolean
+        default: false
+      expect_plan_digest:
+        description: "Deploy only when the plan-rows digest equals this sha256 (from a plan_only run on the same commit); empty skips the check"
+        type: string
+        default: ""
 
 concurrency:
   group: alchemy-ci-runners-prod
@@ -60,9 +77,10 @@ jobs:
   deploy:
     name: Deploy CI runners (prod)
     if: >-
-      vars.CI_RUNNERS_DEPLOY_ARMED == 'true' &&
+      (github.event_name == 'workflow_dispatch' && inputs.plan_only) ||
+      (vars.CI_RUNNERS_DEPLOY_ARMED == 'true' &&
       (vars.CI_RUNNERS_ROUTINE_ARMED == 'true' ||
-      (github.event_name == 'workflow_dispatch' && inputs.mode != 'routine'))
+      (github.event_name == 'workflow_dispatch' && inputs.mode != 'routine')))
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     environment:
@@ -110,6 +128,8 @@ jobs:
       # Applies only the checked change set: plans again, checks again, and
       # refuses before any write when the plan differs from the saved one.
       - name: Deploy the checked plan
+        # A push has no inputs, so this is true there; only a plan_only dispatch skips the step.
+        if: ${{ !inputs.plan_only }}
         working-directory: packages/tooling/infra/ci-runners
         shell: bash
         # The App secrets reach only the two steps that run the stack program.
@@ -119,9 +139,17 @@ jobs:
           CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
           MODE: ${{ inputs.mode || 'routine' }}
           EXCLUDE: ${{ inputs.mode == 'bootstrap' && 'DefaultSecurityGroup' || '' }}
+          PLAN_ONLY: ${{ inputs.plan_only && 'true' || 'false' }}
+          EXPECT_PLAN_DIGEST: ${{ inputs.expect_plan_digest || '' }}
         run: |
           set -euo pipefail
+          # Second lock on plan_only: the step-level `if` already skips this step.
+          if [[ "$PLAN_ONLY" != "false" ]]; then
+            echo "::error::a plan_only run never deploys"
+            exit 1
+          fi
           bun plan-check.ts deploy --stage prod --expect "$MODE" ${EXCLUDE:+--exclude "$EXCLUDE"} \
+            ${EXPECT_PLAN_DIGEST:+--expect-digest "$EXPECT_PLAN_DIGEST"} \
             --checked "$RUNNER_TEMP/ci-runners-checked-plan.json" \
             | tee "$RUNNER_TEMP/ci-runners-deploy.log"
 
@@ -131,7 +159,7 @@ jobs:
       # account's EC2 API rate the live scale-up shares.
       # A bootstrap deploy is filtered, so it prints no stack output; the next full deploy checks the webhook.
       - name: Verify the webhook answers and refuses an unsigned event
-        if: ${{ inputs.mode != 'bootstrap' }}
+        if: ${{ !inputs.plan_only && inputs.mode != 'bootstrap' }}
         shell: bash
         run: |
           set -euo pipefail

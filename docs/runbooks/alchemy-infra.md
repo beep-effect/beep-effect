@@ -891,6 +891,38 @@ step refuses, do not re-run or work around it: ask the CI goals driver through
 the orchestrator. A change that must replace or delete a resource is an
 operator-reviewed deploy, never the push job.
 
+Plan only, and a deploy held to a read plan. A dispatch with `plan_only` runs
+the plan step and stops: it prints one row per resource and the plan-rows
+digest (SHA-256 over the sorted rows; no property, secret or salt), and never
+reaches the deploy or webhook step. It needs no arming, so
+`CI_RUNNERS_DEPLOY_ARMED` stays the one switch for a write. A deploy
+dispatched with `expect_plan_digest` set to that digest, on the same commit,
+refuses before any write unless its own rows give the same digest. The rows
+and digest print before the check, so a refused plan is still read whole.
+
+Resuming a stopped bootstrap. A deploy that stops part-way leaves a state row
+`creating` for each resource it had started. The next plan shows such a row
+as `resumed create`, with the bindings the stopped run saved as `noop` or
+`update`. One row kind shows `resumed create (replace of an empty
+generation)`: an event-source mapping checkpointed before its queue existed,
+which Alchemy plans as a replace although no mapping was ever made. Step 1a
+takes these; every other expectation refuses the replace
+(`ResumeKind` in `src/CheckedDeploy.ts`). Before relaying such a plan, check
+that no mapping targets a `beep-fleet-prod-*` function and that CloudTrail
+shows no `CreateEventSourceMapping` since the stopped run. Never delete a
+state row by hand to change what the plan shows.
+
+Deploy role policy. The role holds the policy as customer managed policies
+`ci-runners-deploy-<n>` under `/beep-alchemy-deploy/`, because the document
+is longer than one inline policy. `bun deploy-role-policy.ts --out-dir <dir>
+[--vpc-arn <arn>]` writes them as `managed-<version>-<n>.json`, split in
+statement order at 6,144 characters (`managedPolicyDocuments`). Apply a
+version with `aws iam create-policy-version --set-as-default` on each, delete
+the oldest non-default version first when a policy already has five, then run
+the principal simulations on the live role. Which call needs which statement,
+and what is deliberately not granted:
+`goals/infra-alchemy-rebuild/research/p5-ci-runners-deploy-role-coverage.md`.
+
 User data. The post-install travels gzip-compressed and base64-encoded and is
 sourced by the user data shell (`packPostInstall`); inline it would push the
 rendered user data past EC2's 16 KiB limit. `test/RunnerBootstrap.test.ts`

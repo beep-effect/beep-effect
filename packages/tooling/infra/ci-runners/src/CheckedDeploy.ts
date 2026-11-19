@@ -52,6 +52,55 @@ import type { CRUD, Plan } from "alchemy/Plan";
 const $I = $InfraCiRunnersId.create("CheckedDeploy");
 
 /**
+ * How a planned row continues a deploy that stopped part-way.
+ *
+ * **Details**
+ *
+ * A failed deploy leaves a state row `creating` for every resource it had
+ * started. Alchemy plans such a row again as a `create` and drives the same
+ * create handler under the first attempt's instance id: `create` here. One
+ * provider differs: an event-source mapping whose source queue did not exist
+ * at the first plan was checkpointed without its `eventSourceArn`, so its
+ * diff reads the now-known ARN as a change and Alchemy plans a `replace`.
+ * `empty-replace` is that row and nothing wider: the type is
+ * `AWS.Lambda.EventSourceMapping`, the prior state is `creating` with no
+ * recorded outputs and incomplete props, and the replace does not delete
+ * first. Nothing exists for such a row to delete: Alchemy drops the empty
+ * generation without a provider call.
+ *
+ * **Example** (A first deploy resumes nothing)
+ *
+ * ```ts
+ * import { ResumeKind } from "@beep/infra-ci-runners/CheckedDeploy"
+ *
+ * console.log(ResumeKind.is.none("none")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ResumeKind = LiteralKit(["none", "create", "empty-replace"]).pipe(
+  $I.annoteSchema("ResumeKind", { description: "How a planned row continues a deploy that stopped part-way." })
+);
+
+/**
+ * Type of {@link ResumeKind}. {@inheritDoc ResumeKind}
+ *
+ * **Example** (Annotate a value)
+ *
+ * ```ts
+ * import type { ResumeKind } from "@beep/infra-ci-runners/CheckedDeploy"
+ *
+ * const kind: ResumeKind = "create"
+ * console.log(kind) // "create"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ResumeKind = typeof ResumeKind.Type;
+
+/**
  * One resource of a checked plan.
  *
  * **Example** (A created VPC)
@@ -59,7 +108,7 @@ const $I = $InfraCiRunnersId.create("CheckedDeploy");
  * ```ts
  * import { CheckedResource } from "@beep/infra-ci-runners/CheckedDeploy"
  *
- * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "00", bindingsDigest: "", secretsDigest: "", baselineDigest: "", pendingReplacement: false })
+ * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "00", bindingsDigest: "", secretsDigest: "", baselineDigest: "", pendingReplacement: false, resume: "none" })
  * console.log(vpc.action) // "create"
  * ```
  *
@@ -77,10 +126,11 @@ export class CheckedResource extends S.Opaque<CheckedResource, { readonly brand:
     secretsDigest: S.String,
     baselineDigest: S.String,
     pendingReplacement: S.Boolean,
+    resume: ResumeKind,
   }).pipe(
     $I.annoteSchema("CheckedResource", {
       description:
-        "A planned resource: action, `<fqn>/<sid> <action>` bindings, digests of its declared properties, binding payloads, secrets and starting state, and whether it holds a pending replacement.",
+        "A planned resource: action, `<fqn>/<sid> <action>` bindings, digests of its declared properties, binding payloads, secrets and starting state, whether it holds a pending replacement, and how it continues a stopped deploy.",
     })
   )
 ) {}
@@ -344,6 +394,30 @@ const secretsDigestOf = Effect.fn("CiRunners.secretsDigest")(function* (
 // An update whose state still holds an unfinished replacement: applying it also deletes the old generation.
 const isPendingReplacement = (node: CRUD): boolean => node.action === "update" && node.state.status === "replaced";
 
+const eventSourceMapping = "AWS.Lambda.EventSourceMapping";
+
+// A row the failed deploy had started: Alchemy keeps its state `creating` until the create finishes.
+const isCreating = (node: CRUD): boolean => P.isObject(node.state) && node.state.status === "creating";
+
+const recordedOutputs = (node: CRUD): boolean => P.hasProperty(node.state, "attr") && P.isNotUndefined(node.state.attr);
+
+const incompleteProps = (node: CRUD): boolean =>
+  P.hasProperty(node.state, "propsIncomplete") && node.state.propsIncomplete === true;
+
+// See ResumeKind: the replace of a mapping generation that never existed, and every other resumed create.
+const resumeOf = (node: CRUD, resourceType: string): ResumeKind =>
+  !isCreating(node)
+    ? "none"
+    : node.action === "create"
+      ? "create"
+      : node.action === "replace" &&
+          resourceType === eventSourceMapping &&
+          !recordedOutputs(node) &&
+          incompleteProps(node) &&
+          !node.deleteFirst
+        ? "empty-replace"
+        : "none";
+
 // The state an update or delete starts from: the props last applied and the attributes last observed. A plan that
 // changes retention 7 -> 30 and one that changes it 90 -> 30 declare the same props; only this tells them apart.
 // Keyed by the plan's salt like the secrets fingerprint, because state attributes can hold secret values.
@@ -447,6 +521,7 @@ export const readEnginePlan = Effect.fn("CiRunners.readEnginePlan")(function* (i
         secretsDigest: yield* secretsDigestOf(salt, planSecrets, entriesOf(node)),
         baselineDigest: yield* baselineDigestOf(salt, node),
         pendingReplacement: isPendingReplacement(node),
+        resume: resumeOf(node, row.resourceType),
       });
     }),
     { concurrency: 1 }
@@ -487,7 +562,9 @@ export const toReading = (plan: CheckedPlan): PlanReading =>
     resources: A.map(plan.resources, (resource) =>
       PlannedResource.make({
         fqn: resource.fqn,
-        action: resource.action,
+        // Step 1a reads the replace of a mapping generation that never existed as the create it is. Every other
+        // expectation keeps `replace`, which the plan check refuses.
+        action: plan.expectation === "bootstrap" && resource.resume === "empty-replace" ? "create" : resource.action,
         bindings: resource.bindings,
         changedProperties: [],
       })
@@ -513,21 +590,33 @@ const bindingAction = (binding: string): string => A.lastNonEmpty(Str.split(" ")
 const unexpected = (expectation: PlanExpectation, fqn: string, change: string) =>
   PlanViolation.cases.UnexpectedChange.make({ fqn, change, expectation });
 
-// Bindings whose action is not `allowed`, as violations of `expectation`.
-const bindingViolations = (expectation: PlanExpectation, resource: CheckedResource, allowed: string) =>
+// Bindings whose action is not one of `allowed`, as violations of `expectation`.
+const bindingViolations = (
+  expectation: PlanExpectation,
+  resource: CheckedResource,
+  ...allowed: ReadonlyArray<string>
+) =>
   A.map(
-    A.filter(resource.bindings, (binding) => bindingAction(binding) !== allowed),
+    A.filter(resource.bindings, (binding) => !A.contains(allowed, bindingAction(binding))),
     (binding) => unexpected(expectation, resource.fqn, `binding ${binding}`)
   );
 
-// Step 1a creates; a re-run after a partial bootstrap also meets the resources the failed run created, as noops.
-// Nothing else passes: no update, replace, delete or adoption, and a noop resource takes only noop bindings.
+// The failed deploy saved a started row's bindings with it, so a resumed row's bindings diff `noop` or `update`,
+// never `create`. A row planned for the first time takes only `create`; a finished row only `noop`.
+const bootstrapBindings = (resource: CheckedResource): ReadonlyArray<string> =>
+  resource.action === "noop" ? ["noop"] : resource.resume === "none" ? ["create"] : ["create", "noop", "update"];
+
+// Step 1a creates. A re-run after a partial bootstrap also meets the resources the failed run finished, as noops,
+// and the ones it had started, as resumed creates (ResumeKind). Nothing else passes: no update, delete or adoption,
+// no replace but the empty one, and a noop resource takes only noop bindings.
 const bootstrapViolations = (resource: CheckedResource): ReadonlyArray<PlanViolation> => [
   ...(resource.fqn === defaultSecurityGroup ? [unexpected("bootstrap", resource.fqn, "planned in step 1a")] : []),
-  ...(resource.action === "create" || resource.action === "noop"
+  ...(resource.action === "create" ||
+  resource.action === "noop" ||
+  (resource.action === "replace" && resource.resume === "empty-replace")
     ? []
     : [unexpected("bootstrap", resource.fqn, resource.action)]),
-  ...bindingViolations("bootstrap", resource, resource.action === "noop" ? "noop" : "create"),
+  ...bindingViolations("bootstrap", resource, ...bootstrapBindings(resource)),
 ];
 
 // Alchemy reads the VPC's AWS-made default group before it has a state row and plans it `adopted`, not `create`.
@@ -596,7 +685,7 @@ export const expectationViolations = (plan: CheckedPlan): ReadonlyArray<PlanViol
  * import { CheckedPlan, CheckedResource, checkEnginePlan } from "@beep/infra-ci-runners/CheckedDeploy"
  * import * as Effect from "effect/Effect"
  *
- * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "", bindingsDigest: "", secretsDigest: "", baselineDigest: "", pendingReplacement: false })
+ * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "", bindingsDigest: "", secretsDigest: "", baselineDigest: "", pendingReplacement: false, resume: "none" })
  * const plan = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [vpc], actions: [] })
  * console.log(Effect.runSync(checkEnginePlan(plan)).length) // 1
  * ```
@@ -632,6 +721,7 @@ const keyed = (plan: CheckedPlan) =>
               resource.secretsDigest,
               resource.baselineDigest,
               String(resource.pendingReplacement),
+              resource.resume,
             ],
             "|"
           ),
@@ -668,7 +758,7 @@ const differencesOf = (checked: CheckedPlan, current: CheckedPlan): PlanDifferen
  * ```ts
  * import { CheckedPlan, CheckedResource, planDifferences } from "@beep/infra-ci-runners/CheckedDeploy"
  *
- * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "", bindingsDigest: "", secretsDigest: "", baselineDigest: "", pendingReplacement: false })
+ * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "", bindingsDigest: "", secretsDigest: "", baselineDigest: "", pendingReplacement: false, resume: "none" })
  * const checked = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [], actions: [] })
  * const current = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [vpc], actions: [] })
  * console.log(planDifferences(checked, current).added) // ["Vpc"]
@@ -695,7 +785,7 @@ export const planDifferences: {
  * import { applyIfUnchanged, CheckedPlan, CheckedResource } from "@beep/infra-ci-runners/CheckedDeploy"
  * import * as Effect from "effect/Effect"
  *
- * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "", bindingsDigest: "", secretsDigest: "", baselineDigest: "", pendingReplacement: false })
+ * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "", bindingsDigest: "", secretsDigest: "", baselineDigest: "", pendingReplacement: false, resume: "none" })
  * const checked = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [], actions: [] })
  * const current = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [vpc], actions: [] })
  * const exit = Effect.runSyncExit(applyIfUnchanged(checked, current, Effect.succeed("applied")))
@@ -720,4 +810,138 @@ export const applyIfUnchanged = Effect.fn("CiRunners.applyIfUnchanged")(function
     return yield* PlanDrift.make(differences);
   }
   return yield* write;
+});
+
+// A resumed row is labelled, so the gate reads it apart from a first create, and the digest covers the label.
+const rowLabel = (resource: CheckedResource): string =>
+  ResumeKind.match(resource.resume, {
+    none: () => resource.action,
+    create: () => "resumed create",
+    "empty-replace": () => "resumed create (replace of an empty generation)",
+  });
+
+/**
+ * The line the plan step prints for one resource: `[fqn] action`, then each
+ * binding action. A row that continues a stopped deploy prints
+ * `resumed create` in place of its action ({@link ResumeKind}).
+ *
+ * **Example** (A created VPC)
+ *
+ * ```ts
+ * import { CheckedResource, planRowLine } from "@beep/infra-ci-runners/CheckedDeploy"
+ *
+ * const vpc = CheckedResource.make({ fqn: "Vpc", type: "AWS.EC2.Vpc", action: "create", bindings: [], propsDigest: "", bindingsDigest: "", secretsDigest: "", baselineDigest: "", pendingReplacement: false, resume: "none" })
+ * console.log(planRowLine(vpc)) // "[Vpc] create"
+ * ```
+ *
+ * @param resource - One resource of a checked plan.
+ * @returns Its plan row.
+ * @category validation
+ * @since 0.0.0
+ */
+export const planRowLine = (resource: CheckedResource): string =>
+  A.join(
+    [`[${resource.fqn}] ${rowLabel(resource)}`, ...A.map(resource.bindings, (binding) => `binding ${binding}`)],
+    " | "
+  );
+
+/**
+ * The plan-rows digest: SHA-256 over the sorted plan rows, one per line, the
+ * resources' ({@link planRowLine}) and then the stack actions'.
+ *
+ * **Details**
+ *
+ * It reads only FQNs, actions and binding actions: no property, secret or
+ * salt. Two plans of one commit over one state therefore print the same
+ * digest, so the gate can read a plan-only run's rows and then hold the
+ * deploy to them with `--expect-digest`.
+ *
+ * **Example** (An empty plan)
+ *
+ * ```ts
+ * import { CheckedPlan, planRowsDigest } from "@beep/infra-ci-runners/CheckedDeploy"
+ * import * as Digest from "effect/crypto/Digest"
+ * import * as Effect from "effect/Effect"
+ *
+ * const plan = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [], actions: [] })
+ * const digest = await Effect.runPromise(planRowsDigest(plan).pipe(Effect.provide(Digest.layerWebCrypto)))
+ * console.log(digest.length) // 64
+ * ```
+ *
+ * @param plan - A checked plan.
+ * @returns The digest in lowercase hex.
+ * @category validation
+ * @since 0.0.0
+ */
+export const planRowsDigest = Effect.fn("CiRunners.planRowsDigest")(function* (plan: CheckedPlan) {
+  const digest = yield* Digest.Digest;
+  const rows = [
+    ...A.sort(A.map(plan.resources, planRowLine), Order.String),
+    ...A.sort(
+      A.map(plan.actions, (action) => `[${action.fqn}] action ${action.action}`),
+      Order.String
+    ),
+  ];
+  return yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(A.join(rows, "\n")));
+});
+
+/**
+ * The deploy's plan rows are not the rows the gate read; nothing was applied.
+ *
+ * **Example** (Construct the refusal)
+ *
+ * ```ts
+ * import { PlanDigestMismatch } from "@beep/infra-ci-runners/CheckedDeploy"
+ *
+ * console.log(PlanDigestMismatch.make({ expected: "aa", actual: "bb" })._tag) // "PlanDigestMismatch"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class PlanDigestMismatch extends S.TaggedError<PlanDigestMismatch, { readonly brand: unique symbol }>(
+  $I`PlanDigestMismatch`
+)(
+  "PlanDigestMismatch",
+  { expected: S.String, actual: S.String },
+  $I.annoteError<PlanDigestMismatch>("PlanDigestMismatch", {
+    title: "Plan digest mismatch",
+    description: "The deploy-time plan-rows digest differs from the one the dispatch expected.",
+  })
+) {}
+
+/**
+ * Pass when no digest is expected or the plan's rows digest equals it.
+ *
+ * **Example** (No expectation passes)
+ *
+ * ```ts
+ * import { CheckedPlan, requirePlanDigest } from "@beep/infra-ci-runners/CheckedDeploy"
+ * import * as Digest from "effect/crypto/Digest"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const plan = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [], actions: [] })
+ * await Effect.runPromise(requirePlanDigest(plan, O.none()).pipe(Effect.provide(Digest.layerWebCrypto)))
+ * ```
+ *
+ * @param plan - The plan the deploy computed.
+ * @param expected - The digest the dispatch named, if any; surrounding space and a `sha256:` prefix are ignored.
+ * @returns The plan's digest, or `PlanDigestMismatch`.
+ * @category validation
+ * @since 0.0.0
+ */
+export const requirePlanDigest = Effect.fn("CiRunners.requirePlanDigest")(function* (
+  plan: CheckedPlan,
+  expected: O.Option<string>
+) {
+  const actual = yield* planRowsDigest(plan);
+  const wanted = O.filter(
+    O.map(expected, (text) => Str.replace(/^sha256:/, "")(Str.toLowerCase(Str.trim(text)))),
+    Str.isNonEmpty
+  );
+  if (O.isSome(wanted) && wanted.value !== actual) {
+    return yield* PlanDigestMismatch.make({ expected: wanted.value, actual });
+  }
+  return actual;
 });

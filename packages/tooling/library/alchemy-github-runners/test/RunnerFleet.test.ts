@@ -154,7 +154,8 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
 
     const source = O.getOrThrow(recorder.byFqn("Runners/Poolheavy/ScaleUpSource"));
     expect([source.news.functionName, source.news.functionResponseTypes]).toStrictEqual([
-      "Runners-Poolheavy-ScaleUp",
+      // By ARN, so lambda:FunctionArn in the deploy role policy reads the same value on every mapping call.
+      "arn:aws:lambda:us-east-1:123456789012:function-Runners-Poolheavy-ScaleUp",
       ["ReportBatchItemFailures"],
     ]);
 

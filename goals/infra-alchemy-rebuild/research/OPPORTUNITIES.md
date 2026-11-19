@@ -683,3 +683,29 @@ to the gap between the reference checkout (main) and the pinned release.
   the real checkout. Getting the full key list took two review rounds (CodeRabbit, then beep-reviewer).
 - **Would have prevented it:** one exported constant that scrubs the repository-locating variables, shared by every
   test-support and probe git spawn, with a test that plants them.
+
+## 2026-11-19: 59 passing policy simulations, and the first real deploy was denied 14 times
+
+- **Doing:** P5 cutover step 1a, the first deploy of the CiRunners stack under its own deploy role (#3386).
+- **Evidence:** the plan check passed and the deploy stopped on `ec2:CreateSubnet`, `CreateRouteTable`,
+  `CreateSecurityGroup` and `CreateFlowLogs` "on resource" the new VPC, `iam:ListPolicyTags` and
+  `lambda:GetFunctionConcurrency`, leaving 52 of 72 state rows `creating`. The simulation cases named one ARN
+  per create and supplied the request tags; `aws iam simulate-custom-policy` applies every context key to
+  every resource, so it never showed that EC2 also authorizes the parent VPC, where request tags do not exist.
+  No case covered a provider's read after a create. A source read of the providers then found a third read
+  (`lambda:GetFunctionEventInvokeConfig`) the failed run had not reached yet.
+- **Would have prevented it:** deriving the cases from the providers, not from the policy: every client call
+  per lifecycle step, each run once per resource the Service Authorization Reference lists for it, with only
+  the condition keys that resource carries. `research/p5-ci-runners-deploy-role-coverage.md` is that table
+  for this stack. A deploy role for a new stack gets one before its first run.
+
+## 2026-11-19: the bootstrap expectation covered a finished row but not a started one
+
+- **Doing:** working out what the re-run after the failed step 1a would plan.
+- **Evidence:** the expectation took `create` rows with `create` bindings and `noop` rows. A started row
+  (state `creating`) plans `create` with the bindings the failed run saved, so they diff `noop` or `update`,
+  and an event-source mapping checkpointed before its queue existed plans `replace` of a generation that
+  never existed. The re-run would have been refused on 16 rows after the permissions were fixed.
+- **Would have prevented it:** a test that stops a fake deploy part-way and plans again. The expectation now
+  names resumed rows (`ResumeKind`), and the workflow has a plan-only run whose rows the gate reads before any
+  write.

@@ -9,7 +9,10 @@ import {
   expectationViolations,
   newSecretSalt,
   planDifferences,
+  planRowLine,
+  planRowsDigest,
   readEnginePlan,
+  requirePlanDigest,
 } from "@beep/infra-ci-runners/CheckedDeploy";
 import { program } from "@beep/infra-ci-runners/CiRunners";
 import { describe, expect, it } from "@effect/vitest";
@@ -22,6 +25,7 @@ import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
+import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
@@ -87,6 +91,7 @@ const resource = (fqn: string, overrides: Partial<CheckedResource> = {}) =>
     secretsDigest: "",
     baselineDigest: "",
     pendingReplacement: false,
+    resume: "none",
     ...overrides,
   });
 
@@ -113,10 +118,13 @@ const engineNode = (
     readonly props?: unknown;
     readonly bindings?: ReadonlyArray<{ readonly sid: string; readonly action: string; readonly data: unknown }>;
     readonly state?: unknown;
+    readonly type?: string;
+    readonly deleteFirst?: boolean;
   }
 ) => ({
-  resource: { FQN: fqn, LogicalId: fqn, Type: "Test.Resource" },
+  resource: { FQN: fqn, LogicalId: fqn, Type: node.type ?? "Test.Resource" },
   action: node.action,
+  ...(node.deleteFirst === undefined ? {} : { deleteFirst: node.deleteFirst }),
   props: node.props,
   bindings: node.bindings ?? [],
   state: node.state ?? { status: "created" },
@@ -410,6 +418,222 @@ describe("CiRunners checked-plan reading", () => {
       );
       expect(minted).toMatch(/^[0-9a-f]{64}$/u);
     })
+  );
+});
+
+describe("CiRunners plan-rows digest", () => {
+  const sha256 = Effect.provide(Digest.layerWebCrypto);
+  const vpc = resource("Vpc");
+  const reaper = resource("Reaper", { action: "noop", bindings: ["Reaper/Invoke create"] });
+
+  it("prints one row per resource: the action, then each binding action", () => {
+    expect(planRowLine(vpc)).toBe("[Vpc] create");
+    expect(planRowLine(reaper)).toBe("[Reaper] noop | binding Reaper/Invoke create");
+  });
+
+  it.effect("reads rows only: order, salt, source tree and property digests do not move it", () =>
+    Effect.gen(function* () {
+      const digest = yield* planRowsDigest(planWith(vpc, reaper));
+      expect(digest).toMatch(/^[0-9a-f]{64}$/);
+      const reordered = yield* planRowsDigest(planWith(reaper, vpc));
+      const resalted = yield* planRowsDigest(
+        CheckedPlan.make({ ...planWith(vpc, reaper), secretSalt: "ff", sourceTree: "tree-2" })
+      );
+      const otherProps = yield* planRowsDigest(
+        planWith(resource("Vpc", { propsDigest: "d2", secretsDigest: "s2" }), reaper)
+      );
+      expect([reordered, resalted, otherProps]).toStrictEqual([digest, digest, digest]);
+    }).pipe(sha256)
+  );
+
+  it.effect("moves with an action, a binding action, a resource and a stack action", () =>
+    Effect.gen(function* () {
+      const digest = yield* planRowsDigest(planWith(vpc, reaper));
+      const others = yield* Effect.forEach(
+        [
+          planWith(resource("Vpc", { action: "replace" }), reaper),
+          planWith(vpc, resource("Reaper", { action: "noop", bindings: ["Reaper/Invoke delete"] })),
+          planWith(vpc),
+          planWith(vpc, reaper, resource("Extra")),
+          CheckedPlan.make({
+            ...planWith(vpc, reaper),
+            actions: [CheckedAction.make({ fqn: "Seed", action: "run" })],
+          }),
+        ],
+        planRowsDigest,
+        { concurrency: 1 }
+      );
+      expect(A.filter(others, (other) => other === digest)).toStrictEqual([]);
+      expect(A.dedupe(others).length).toBe(others.length);
+    }).pipe(sha256)
+  );
+
+  it.effect("holds a deploy to the expected digest and passes when none is named", () =>
+    Effect.gen(function* () {
+      const plan = planWith(vpc, reaper);
+      const digest = yield* planRowsDigest(plan);
+      const accepted = yield* Effect.forEach(
+        [O.none(), O.some(""), O.some(` sha256:${Str.toUpperCase(digest)}\n`)],
+        (expected) => requirePlanDigest(plan, expected),
+        { concurrency: 1 }
+      );
+      expect(accepted).toStrictEqual([digest, digest, digest]);
+      const refused = yield* Effect.flip(requirePlanDigest(planWith(vpc), O.some(digest)));
+      expect([refused._tag, refused.expected]).toStrictEqual(["PlanDigestMismatch", digest]);
+      // A refusal comes before the write: the deploy runs the digest check, then applyIfUnchanged.
+      const written = yield* Ref.make(false);
+      const outcome = yield* outcomeOf(
+        requirePlanDigest(planWith(vpc), O.some(digest)).pipe(Effect.andThen(recordingWrite(written)))
+      );
+      expect(outcome).toBe("PlanDigestMismatch");
+      const wrote = yield* Ref.get(written);
+      assertFalse(wrote);
+    }).pipe(sha256)
+  );
+});
+
+describe("CiRunners resumed bootstrap", () => {
+  const mappingType = "AWS.Lambda.EventSourceMapping";
+  // The shape of the live rows after the failed step 1a: checkpointed before the source queue existed, so the
+  // stored props hold no eventSourceArn, the row is marked incomplete and it records no outputs.
+  const liveMappingState = {
+    status: "creating",
+    propsIncomplete: true,
+    props: { batchSize: 10, functionResponseTypes: ["ReportBatchItemFailures"] },
+    bindings: [],
+  };
+  const mappingProps = {
+    functionName: "beep-fleet-prod-heavy-scale-up",
+    eventSourceArn: "arn:aws:sqs:us-east-1:832907639880:beep-fleet-prod-heavy-build",
+    batchSize: 10,
+  };
+  const mapping = (node: Partial<Parameters<typeof engineNode>[1]> = {}) =>
+    enginePlan({
+      Source: engineNode("Runners/Poolheavy/ScaleUpSource", {
+        action: "replace",
+        type: mappingType,
+        deleteFirst: false,
+        props: mappingProps,
+        state: liveMappingState,
+        ...node,
+      }),
+    });
+  const read = (plan: Plan, expectation: PlanExpectation) => readWith(plan, { expectation });
+  const refusedTags = (plan: CheckedPlan) =>
+    Effect.match(checkEnginePlan(plan), {
+      onFailure: (refusal) => A.map(refusal.violations, (violation) => violation._tag),
+      onSuccess: () => A.empty<string>(),
+    });
+
+  it.effect("takes the replace of a mapping generation that never existed, labelled, in step 1a only", () =>
+    Effect.gen(function* () {
+      const bootstrap = yield* read(mapping(), "bootstrap");
+      expect(A.map(bootstrap.resources, (row) => [row.action, row.resume])).toStrictEqual([
+        ["replace", "empty-replace"],
+      ]);
+      expect(A.map(bootstrap.resources, planRowLine)).toStrictEqual([
+        "[Runners/Poolheavy/ScaleUpSource] resumed create (replace of an empty generation)",
+      ]);
+      const bootstrapTags = yield* refusedTags(bootstrap);
+      expect(bootstrapTags).toStrictEqual([]);
+      // Routine and step 1b read the same row as the replace it is, and refuse it.
+      const routine = yield* read(mapping(), "routine");
+      const routineTags = yield* refusedTags(routine);
+      expect(routineTags).toStrictEqual(["DestructiveAction"]);
+      const step1b = yield* read(mapping(), "default-security-group");
+      const step1bTags = yield* refusedTags(step1b);
+      assertTrue(A.contains(step1bTags, "DestructiveAction"));
+    })
+  );
+
+  it.effect(
+    "refuses every other replace in step 1a: outputs, complete props, delete-first, another type, another state",
+    () =>
+      Effect.gen(function* () {
+        const others = [
+          mapping({ state: { ...liveMappingState, attr: { uuid: "0000" } } }),
+          mapping({ state: { ...liveMappingState, propsIncomplete: undefined } }),
+          mapping({ deleteFirst: true }),
+          mapping({ type: "AWS.SQS.Queue" }),
+          mapping({ type: "AWS.Lambda.Function" }),
+          mapping({ state: { ...liveMappingState, status: "created" } }),
+        ];
+        const outcomes = yield* Effect.forEach(
+          others,
+          Effect.fnUntraced(function* (plan) {
+            const checked = yield* read(plan, "bootstrap");
+            const tags = yield* refusedTags(checked);
+            return [A.map(checked.resources, (row) => row.resume), tags] as const;
+          }),
+          { concurrency: 1 }
+        );
+        expect(outcomes).toStrictEqual(A.replicate([["none"], ["UnexpectedChange", "DestructiveAction"]] as const, 6));
+      })
+  );
+
+  it.effect("labels a resumed create and takes its saved bindings as noop or update, never a delete", () =>
+    Effect.gen(function* () {
+      const fn = (action: string, state: unknown, bindingAction: string) =>
+        enginePlan({
+          Webhook: engineNode("Runners/Webhook", {
+            action,
+            type: "AWS.Lambda.Function",
+            props: { functionName: "beep-fleet-prod-webhook" },
+            bindings: [{ sid: "Webhook", action: bindingAction, data: { policy: 1 } }],
+            state,
+          }),
+        });
+      const creating = { status: "creating", props: { functionName: "beep-fleet-prod-webhook" }, bindings: [{}] };
+      const verdict = (action: string, state: unknown, bindingAction: string) =>
+        read(fn(action, state, bindingAction), "bootstrap").pipe(
+          Effect.flatMap((checked) =>
+            Effect.map(refusedTags(checked), (tags) => [A.map(checked.resources, planRowLine), tags] as const)
+          )
+        );
+      // Resumed rows: the binding the failed run saved diffs noop or update; a first-time create is still fine.
+      const resumed = yield* Effect.forEach(
+        ["noop", "update", "create"],
+        (bindingAction) => verdict("create", creating, bindingAction),
+        { concurrency: 1 }
+      );
+      expect(resumed).toStrictEqual(
+        A.map(["noop", "update", "create"], (bindingAction) => [
+          [`[Runners/Webhook] resumed create | binding Runners/Webhook/Webhook ${bindingAction}`],
+          [],
+        ])
+      );
+      const [, deleted] = yield* verdict("create", creating, "delete");
+      assertTrue(A.contains(deleted, "UnexpectedChange") && A.contains(deleted, "DestructiveBinding"));
+      // A row planned for the first time takes only create bindings.
+      const fresh = { status: "created" };
+      const first = yield* verdict("create", fresh, "create");
+      expect(first).toStrictEqual([["[Runners/Webhook] create | binding Runners/Webhook/Webhook create"], []]);
+      const tagsOnly = (action: string, bindingAction: string) =>
+        Effect.map(verdict(action, fresh, bindingAction), ([, tags]) => tags);
+      const firstRefused = yield* Effect.forEach(
+        ["noop", "update"],
+        (bindingAction) => tagsOnly("create", bindingAction),
+        { concurrency: 1 }
+      );
+      expect(firstRefused).toStrictEqual([["UnexpectedChange"], ["UnexpectedChange"]]);
+      // A row the failed run finished stays a noop with noop bindings only.
+      const finished = yield* Effect.forEach(
+        ["noop", "update", "create"],
+        (bindingAction) => tagsOnly("noop", bindingAction),
+        { concurrency: 1 }
+      );
+      expect(finished).toStrictEqual([[], ["UnexpectedChange"], ["UnexpectedChange"]]);
+    })
+  );
+
+  it.effect("moves the digest and the drift signature with the resume label", () =>
+    Effect.gen(function* () {
+      const plain = planWith(resource("Reaper"));
+      const resumed = planWith(resource("Reaper", { resume: "create" }));
+      const digests = yield* Effect.forEach([plain, resumed], planRowsDigest, { concurrency: 1 });
+      expect(A.dedupe(digests).length).toBe(2);
+      expect(planDifferences(plain, resumed).changed).toStrictEqual(["Reaper"]);
+    }).pipe(Effect.provideService(Digest.Digest, hexDigest))
   );
 });
 
