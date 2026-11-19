@@ -12,8 +12,11 @@
  *
  * Everything else keeps importing its composer from
  * `@beep/identity/packages`, which stays the one list `beep create-package`
- * and `beep lint identity-registry` read and write. A test asserts that each
- * leaf derived from `$BeepId` equals the registry composer for the same slug.
+ * and `beep lint identity-registry` read and write. Tests assert that each
+ * leaf derived from `$BeepId` mints what the registry composer for the same
+ * slug mints, and `beep lint identity-registry` confines `$BeepId` to
+ * `src/internal/<Composer>.ts` leaves over their own registry slug and keeps
+ * every module of a leaf package off the registry.
  *
  * **Example** (Derive a package leaf from the root)
  *
@@ -38,7 +41,8 @@ import * as Identity from "./Id.ts";
  * Equal to `$I` from `@beep/identity/packages`: same identifier, IRI and
  * CURIE. Import it only in a package-local leaf module that must stay out of
  * the registry's module graph; any other module takes its composer from
- * `@beep/identity/packages`.
+ * `@beep/identity/packages`. `beep lint identity-registry` reports a use
+ * anywhere else.
  *
  * **Example** (Mint a root identifier)
  *

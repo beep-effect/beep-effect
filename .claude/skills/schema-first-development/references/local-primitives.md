@@ -36,6 +36,8 @@ Inside `@beep/schema`, `@beep/alchemy-github-runners` and
 `src/internal/<Composer>.ts` leaf instead (for `@beep/schema`,
 `import { $SchemaId } from "../internal/SchemaId.ts"` at the right depth):
 deployed Lambda bundles load those modules and must not load the registry.
+`bun run beep lint identity-registry` reports a registry import in any module
+of those packages and any use of `$BeepId` outside a leaf.
 
 Use `$I\`Name\`` for class or service identifiers. Annotation metadata comes
 from `.pipe($I.annoteSchema(...))` on non-class schemas and from `$I.annote(...)`

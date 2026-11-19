@@ -12,6 +12,15 @@
  * outside `@beep/identity` constructs a local root composer via the
  * identity `make(...)` export.
  *
+ * The registry-free root `$BeepId` (`@beep/identity/Root`) is confined to
+ * package leaves: only a package's `src/internal/<Composer>.ts` (for example
+ * `src/internal/SchemaId.ts` in `@beep/schema`) may use it, and that leaf
+ * holds exactly one `$BeepId.create("<slug>")` over its own registry slug.
+ * A package that has such a leaf is a leaf package: none of its scanned
+ * modules may import `@beep/identity/packages` or the `@beep/identity`
+ * barrel, which both load the registry, so the rule covers every module of
+ * the package and not only the ones a deployed bundle reaches today.
+ *
  * A registration whose workspace the checkout pruned (a product leaf or a
  * package the checkout's prune declaration names, its directory gone) or owns
  * is not an orphan: the orphan and stale-labs rows for it are skipped and
@@ -49,6 +58,7 @@ import { Node, Project } from "ts-morph";
 import { registerMissingWorkspaceIdentityPackages } from "../CreatePackage/internal/IdentityBulkRegistration.ts";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
 import { LabIdentitySegment } from "../CreatePackage/internal/LabIdentitySegment.ts";
+import type { ImportDeclaration } from "ts-morph";
 import type { LabIdentitySegmentState } from "../CreatePackage/internal/LabIdentitySegment.ts";
 
 const $I = $RepoCliId.create("commands/Lint/IdentityRegistry");
@@ -56,6 +66,8 @@ const $I = $RepoCliId.create("commands/Lint/IdentityRegistry");
 const IDENTITY_PACKAGE_NAME = "@beep/identity";
 const IDENTITY_MODULE_PREFIX = "@beep/identity/";
 const IDENTITY_PACKAGES_MODULE = "@beep/identity/packages";
+const IDENTITY_ROOT_MODULE = "@beep/identity/Root";
+const ROOT_COMPOSER_NAME = "$BeepId";
 const FIX_HINT = "Run `bun run beep lint identity-registry --fix` to register missing packages.";
 // Test sources are deliberately exempt from the local-root scan;
 // generated/output directories never carry authored composers.
@@ -74,13 +86,16 @@ const IdentityRegistryViolationKind = LiteralKit([
   "orphan-registration",
   "registry-leaf-mismatch",
   "local-root-composer",
+  "root-composer-outside-leaf",
+  "root-leaf-slug-mismatch",
+  "leaf-package-registry-import",
   "labs-segment-missing",
   "labs-segment-extra",
   "labs-segment-misplaced",
 ]).pipe(
   $I.annoteSchema("IdentityRegistryViolationKind", {
     description:
-      "Closed identity-registry violation kind: registry completeness, orphaned registrations, non-leaf registry exports, local root composers, and generated-labs-segment drift.",
+      "Closed identity-registry violation kind: registry completeness, orphaned registrations, non-leaf registry exports, local root composers, registry-free root uses outside a package leaf, leaf slug drift, registry imports in a leaf package, and generated-labs-segment drift.",
   })
 );
 
@@ -126,14 +141,42 @@ const isIdentityRootModuleSpecifier = (specifier: string): boolean =>
   specifier !== IDENTITY_PACKAGES_MODULE &&
   (specifier === IDENTITY_PACKAGE_NAME || Str.startsWith(IDENTITY_MODULE_PREFIX)(specifier));
 
+// Modules whose evaluation loads the registry: the registry itself and the barrel that re-exports it.
+const isRegistryLoadingModuleSpecifier = (specifier: string): boolean =>
+  specifier === IDENTITY_PACKAGES_MODULE || specifier === IDENTITY_PACKAGE_NAME;
+
+// A package's registry-free leaf: `src/internal/<Composer>.ts`, the composer named after its slug.
+const leafModulePathFor = (slug: string): string => `src/internal/${Str.pascalCase(slug)}Id.ts`;
+
+// Whether an import declaration survives type erasure: a side-effect import, or one with a value binding.
+const importsRuntimeBinding = (declaration: ImportDeclaration): boolean =>
+  !declaration.isTypeOnly() &&
+  (declaration.getNamespaceImport() !== undefined ||
+    declaration.getDefaultImport() !== undefined ||
+    A.isReadonlyArrayEmpty(declaration.getNamedImports()) ||
+    A.some(declaration.getNamedImports(), (namedImport) => !namedImport.isTypeOnly()));
+
 const collectLocalRootComposerUses = (
   project: Project,
   filePath: string,
-  content: string
+  content: string,
+  scope: {
+    readonly slug: string;
+    readonly leafModulePath: string;
+    readonly isLeafModule: boolean;
+    readonly inLeafPackage: boolean;
+  }
 ): ReadonlyArray<IdentityRegistryViolation> => {
   const sourceFile = project.createSourceFile(filePath, content, { overwrite: true });
   let violations = A.empty<IdentityRegistryViolation>();
   let namespaceAliases = A.empty<string>();
+  let rootComposerNames = A.empty<string>();
+  let rootCreateArguments = A.empty<string>();
+  let ownSlugCreates = 0;
+  const report = (kind: IdentityRegistryViolation["kind"], line: number, detail: string) => {
+    violations = A.append(violations, IdentityRegistryViolation.make({ kind, subject: `${filePath}:${line}`, detail }));
+  };
+  const outsideLeafDetail = `Only the package's registry-free leaf (${scope.leafModulePath}) may use \`${ROOT_COMPOSER_NAME}\`; import the composer from "${IDENTITY_PACKAGES_MODULE}" or from that leaf.`;
 
   for (const declaration of sourceFile.getImportDeclarations()) {
     if (declaration.isTypeOnly()) {
@@ -142,20 +185,41 @@ const collectLocalRootComposerUses = (
 
     const specifier = declaration.getModuleSpecifier().getLiteralText();
 
+    if (scope.inLeafPackage && isRegistryLoadingModuleSpecifier(specifier) && importsRuntimeBinding(declaration)) {
+      report(
+        "leaf-package-registry-import",
+        declaration.getStartLineNumber(),
+        `This package has a registry-free leaf (${scope.leafModulePath}), so its modules take their composer from it; "${specifier}" loads the identity registry.`
+      );
+    }
+
     if (!isIdentityRootModuleSpecifier(specifier)) {
       continue;
     }
 
+    if (specifier === IDENTITY_ROOT_MODULE && !scope.isLeafModule && importsRuntimeBinding(declaration)) {
+      report("root-composer-outside-leaf", declaration.getStartLineNumber(), outsideLeafDetail);
+    }
+
     for (const namedImport of declaration.getNamedImports()) {
-      if (namedImport.getName() === "make" && !namedImport.isTypeOnly()) {
-        violations = A.append(
-          violations,
-          IdentityRegistryViolation.make({
-            kind: "local-root-composer",
-            subject: `${filePath}:${namedImport.getStartLineNumber()}`,
-            detail: `Import the canonical composer from "${IDENTITY_PACKAGES_MODULE}" instead of building a local root via \`make(...)\`.`,
-          })
+      if (namedImport.isTypeOnly()) {
+        continue;
+      }
+
+      if (namedImport.getName() === "make") {
+        report(
+          "local-root-composer",
+          namedImport.getStartLineNumber(),
+          `Import the canonical composer from "${IDENTITY_PACKAGES_MODULE}" instead of building a local root via \`make(...)\`.`
         );
+      }
+
+      if (namedImport.getName() === ROOT_COMPOSER_NAME) {
+        rootComposerNames = A.append(rootComposerNames, namedImport.getAliasNode()?.getText() ?? ROOT_COMPOSER_NAME);
+
+        if (specifier !== IDENTITY_ROOT_MODULE && !scope.isLeafModule) {
+          report("root-composer-outside-leaf", namedImport.getStartLineNumber(), outsideLeafDetail);
+        }
       }
     }
 
@@ -166,31 +230,69 @@ const collectLocalRootComposerUses = (
     }
   }
 
-  if (A.isReadonlyArrayNonEmpty(namespaceAliases)) {
+  const isNamespaceAlias = (node: Node): boolean =>
+    Node.isIdentifier(node) && A.some(namespaceAliases, Str.equivalence(node.getText()));
+  const isRootComposer = (node: Node): boolean =>
+    (Node.isIdentifier(node) && A.some(rootComposerNames, Str.equivalence(node.getText()))) ||
+    (Node.isPropertyAccessExpression(node) &&
+      node.getName() === ROOT_COMPOSER_NAME &&
+      isNamespaceAlias(node.getExpression()));
+
+  if (A.isReadonlyArrayNonEmpty(namespaceAliases) || A.isReadonlyArrayNonEmpty(rootComposerNames)) {
     sourceFile.forEachDescendant((node) => {
+      if (
+        !scope.isLeafModule &&
+        Node.isPropertyAccessExpression(node) &&
+        node.getName() === ROOT_COMPOSER_NAME &&
+        isNamespaceAlias(node.getExpression())
+      ) {
+        report("root-composer-outside-leaf", node.getStartLineNumber(), outsideLeafDetail);
+      }
+
       if (!Node.isCallExpression(node)) {
         return;
       }
 
       const expression = node.getExpression();
 
-      if (!Node.isPropertyAccessExpression(expression) || expression.getName() !== "make") {
+      if (!Node.isPropertyAccessExpression(expression)) {
         return;
       }
 
       const receiver = expression.getExpression();
 
-      if (Node.isIdentifier(receiver) && A.some(namespaceAliases, Str.equivalence(receiver.getText()))) {
-        violations = A.append(
-          violations,
-          IdentityRegistryViolation.make({
-            kind: "local-root-composer",
-            subject: `${filePath}:${node.getStartLineNumber()}`,
-            detail: `Import the canonical composer from "${IDENTITY_PACKAGES_MODULE}" instead of building a local root via \`${receiver.getText()}.make(...)\`.`,
-          })
+      if (expression.getName() === "make" && isNamespaceAlias(receiver)) {
+        report(
+          "local-root-composer",
+          node.getStartLineNumber(),
+          `Import the canonical composer from "${IDENTITY_PACKAGES_MODULE}" instead of building a local root via \`${receiver.getText()}.make(...)\`.`
         );
       }
+
+      if (scope.isLeafModule && expression.getName() === "create" && isRootComposer(receiver)) {
+        const [argument] = node.getArguments();
+        rootCreateArguments = A.append(rootCreateArguments, argument?.getText() ?? Str.empty);
+
+        if (argument !== undefined && Node.isStringLiteral(argument) && argument.getLiteralText() === scope.slug) {
+          ownSlugCreates += 1;
+        }
+      }
     });
+  }
+
+  if (scope.isLeafModule && !(A.length(rootCreateArguments) === 1 && ownSlugCreates === 1)) {
+    report(
+      "root-leaf-slug-mismatch",
+      1,
+      `A registry-free leaf holds exactly one \`${ROOT_COMPOSER_NAME}.create("${scope.slug}")\` over its package's registry slug; found ${
+        A.isReadonlyArrayEmpty(rootCreateArguments)
+          ? "none"
+          : A.join(
+              A.map(rootCreateArguments, (argument) => `\`create(${argument})\``),
+              ", "
+            )
+      }.`
+    );
   }
 
   return violations;
@@ -357,17 +459,28 @@ const collectLocalRootViolations = Effect.fn("IdentityRegistry.collectLocalRootV
   const project = new Project({ skipAddingFilesFromTsConfig: true });
   let violations = A.empty<IdentityRegistryViolation>();
 
-  for (const [, dir] of A.filter(slugsToDirs, ([slug]) => slug !== "identity")) {
-    for (const file of yield* collectSourceFiles(dir)) {
-      const content = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(() => Str.empty));
+  for (const [slug, dir] of A.filter(slugsToDirs, ([slug]) => slug !== "identity")) {
+    const files = yield* collectSourceFiles(dir);
+    const leafModule = normalizePath(path.resolve(dir, leafModulePathFor(slug)));
+    const inLeafPackage = A.some(files, Str.equivalence(leafModule));
+    const leafModulePath = normalizePath(path.relative(repoRoot, leafModule));
 
-      if (!Str.includes(IDENTITY_PACKAGE_NAME)(content)) {
+    for (const file of files) {
+      const content = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(() => Str.empty));
+      const isLeafModule = file === leafModule;
+
+      if (!isLeafModule && !Str.includes(IDENTITY_PACKAGE_NAME)(content)) {
         continue;
       }
 
       violations = A.appendAll(
         violations,
-        collectLocalRootComposerUses(project, normalizePath(path.relative(repoRoot, file)), content)
+        collectLocalRootComposerUses(project, normalizePath(path.relative(repoRoot, file)), content, {
+          slug,
+          leafModulePath,
+          isLeafModule,
+          inLeafPackage,
+        })
       );
     }
   }
@@ -491,6 +604,6 @@ export const lintIdentityRegistryCommand = Command.make(
   runIdentityRegistryLint
 ).pipe(
   Command.withDescription(
-    "Check that @beep/* workspace packages and identity composers agree exactly and no package builds local root composers"
+    "Check that @beep/* workspace packages and identity composers agree exactly, no package builds local root composers, and the registry-free root stays in package leaves"
   )
 );

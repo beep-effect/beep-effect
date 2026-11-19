@@ -77,8 +77,65 @@ const bundleSources = Effect.fn("bundleSources")(function* (main: string) {
   return sources;
 });
 
+// The `main` forms the stack modules may declare: both resolve inside the two directories the
+// bundle test lists. `RunnerFleet.ts` defines `lambdaDir` as its own `internal/lambda` directory.
+const LAMBDA_DIR_DECLARATION = "const lambdaDir = `${import.meta.dirname}/internal/lambda`;";
+const LAMBDA_DIR_MAIN_PREFIX = "main: `${lambdaDir}/";
+const DIRNAME_MAIN_PREFIX = "main: `${import.meta.dirname}/internal/lambda/";
+
+// Every `main` property and `Lambda.Function(` call in a package's sources, one row per file.
+const lambdaDeclarations = Effect.fn("lambdaDeclarations")(function* (sourceDirectory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const entries = yield* fs.readDirectory(sourceDirectory, { recursive: true });
+  const files = A.sort(A.filter(entries, Str.endsWith(".ts")), Str.Order);
+  return yield* Effect.forEach(
+    files,
+    (file) =>
+      Effect.map(fs.readFileString(path.join(sourceDirectory, file)), (content) => {
+        const lines = A.map(Str.split(content, "\n"), Str.trim);
+        return {
+          file,
+          declaresLambdaDir: A.contains(lines, LAMBDA_DIR_DECLARATION),
+          functions: A.length(A.filter(lines, Str.includes("Lambda.Function("))),
+          mains: A.filter(lines, Str.startsWith("main: ")),
+        };
+      }),
+    { concurrency: 1 }
+  );
+});
+
 it.layer(BunServices.layer, { timeout: "240 seconds" })((it) => {
   describe("CiRunners Lambda handler bundles", () => {
+    it.effect("declare every Lambda main inside the directories the bundle test lists", () =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const library = yield* lambdaDeclarations(
+          path.resolve(import.meta.dirname, "../../../library/alchemy-github-runners/src")
+        );
+        const stack = yield* lambdaDeclarations(path.resolve(import.meta.dirname, "../src"));
+        const declarations = A.filter(
+          A.appendAll(library, stack),
+          (row) => row.functions > 0 || A.isReadonlyArrayNonEmpty(row.mains)
+        );
+
+        expect(
+          A.map(declarations, (row) => ({
+            file: row.file,
+            oneMainPerFunction: A.length(row.mains) === row.functions,
+            unguardedMains: A.filter(row.mains, (main) =>
+              Str.startsWith(LAMBDA_DIR_MAIN_PREFIX)(main)
+                ? !row.declaresLambdaDir
+                : !Str.startsWith(DIRNAME_MAIN_PREFIX)(main)
+            ),
+          }))
+        ).toStrictEqual([
+          { file: "RunnerFleet.ts", oneMainPerFunction: true, unguardedMains: [] },
+          { file: "Reaper.ts", oneMainPerFunction: true, unguardedMains: [] },
+        ]);
+      })
+    );
+
     it.effect("never embed the identity registry in a handler's source map", () =>
       Effect.gen(function* () {
         const path = yield* Path.Path;

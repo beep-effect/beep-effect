@@ -28,7 +28,13 @@ import { $BeepId } from "@beep/identity/Root";
  * Identity composer for the `@beep/schema` package, built without the
  * identity registry.
  *
- * **Example** (Derive a schema identifier)
+ * **Details**
+ *
+ * `@beep/schema` exports no `internal/*` path, so the example shows the
+ * expression this leaf evaluates; package modules import `$SchemaId` from
+ * this file by relative path.
+ *
+ * **Example** (Build the same composer from the root)
  *
  * ```ts
  * import { $BeepId } from "@beep/identity/Root"

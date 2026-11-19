@@ -86,6 +86,8 @@ Keep `Schema` as the source of truth for pure data models.
   `@beep/alchemy-github-runners`, `@beep/infra-ci-runners`) takes its composer
   from its `src/internal/<Composer>.ts` leaf instead, so the registry stays out
   of the bundle (goals/infra-alchemy-rebuild decision of 2026-11-19).
+  `beep lint identity-registry` enforces it: `$BeepId` only in such a leaf,
+  over the package's own slug, and no registry import in a leaf package.
 - Plain data is `class X extends S.Opaque<X, { readonly brand: unique symbol }>()(S.Struct({...}).pipe($I.annoteSchema("X", {...}))) {}`.
   Construct with `X.make(...)`; there is no `new X(...)` and no `.extend`.
   Annotate the Struct inside the pipe, because `X.annotate(...)` drops the
