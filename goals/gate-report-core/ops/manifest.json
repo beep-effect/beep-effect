@@ -70,12 +70,12 @@
     {
       "id": "P3",
       "name": "Implementation and first slice",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Every package and the queries",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P5",

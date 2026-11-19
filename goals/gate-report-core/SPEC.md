@@ -199,7 +199,8 @@ and is overridden by the `--agent`, `--human` and `--ci` flags of `@beep/cli-kit
   path writes the run's aggregate record and log to `.beep/gates/<gate>/<run-id>.json` and
   `<run-id>.log` at the repository root and keeps the newest 20 runs per gate. `.beep/*` is
   ignored by git.
-- The package record is a declared Turbo output of the `test` and `check` tasks. A cache hit
+- The package record is a declared Turbo output of the `test` and `check` tasks, each declaring
+  only its own gate directory (decision `outputs-per-gate`). A cache hit
   restores the record, and the console is rendered from it, never from a replayed log
   (decision `record-is-the-source`). The record keeps its original run id, so a restored record
   is recognizably a replay.
@@ -209,8 +210,8 @@ and is overridden by the `--agent`, `--human` and `--ci` flags of `@beep/cli-kit
 
 ### The Vitest adapter
 
-- It implements Vitest's reporter interface (`onTestRunStart`, `onTestModule*`, `onTestCase*`,
-  `onHook*`, `onTestRunEnd`) and emits gate events. It reads reporter events and builds a report.
+- It implements Vitest's reporter interface (`onInit`, `onTestRunStart`, `onUserConsoleLog` and
+  `onTestRunEnd`) and synthesizes the run from the finished module tree into gate events.
 - It does not manage the reporter chain: it strips no reporter, patches no logger stream, zeroes
   no coverage reporter and mutates no Vitest config. It is one entry appended in
   `vitest.shared.ts`. Upstream's 3,141-line `.repos/vitest-agent/packages/plugin/src/reporter.ts` is read for its
@@ -256,7 +257,7 @@ Ported, widened along the seams above:
 | `.repos/vitest-agent/packages/sdk/src/schemas/AgentReport.ts`, `Common.ts`, `RunEvent.ts`, `RenderState.ts`, `RunReportFile.ts`, `StrayOutput.ts` | model | Result, event, render-state and record-file schemas only |
 | `.repos/vitest-agent/packages/sdk/src/contracts/dispatcher.ts` | model | Shape, outcome and cell contract |
 | `.repos/vitest-agent/packages/sdk/src/utils/build-report.ts:324-371` | model and adapter | Honest-count rules to the model; Vitest `TestModule` duck typing to the adapter |
-| `.repos/vitest-agent/packages/sdk/src/utils/stray-output.ts:62-184` | model and adapter | Summary schema and note text to the model; the recorder's install point to the adapter |
+| `.repos/vitest-agent/packages/sdk/src/utils/stray-output.ts:62-184` | model and adapter | Summary schema and note text to the model; the recorder and reader to the adapter. The capture that wraps the logger streams is not ported |
 | `.repos/vitest-agent/packages/ui/src/reducer.ts` | model | Events reduce to a report |
 | `.repos/vitest-agent/packages/ui/src/dispatcher/classify.ts:34-94` | model | Shape and outcome classifiers, widened |
 | `.repos/vitest-agent/packages/ui/src/dispatcher/dispatch.ts:41-145`, `cells/`, `helpers.ts`, `cell-types.ts` | model | Twelve cells grow to twenty (four shapes by five outcomes) |
@@ -533,6 +534,14 @@ Lane feat/gate-report-core
 
 Reverse: Change the default ConsoleBudget the library supplies.
 
+### The generated package check is one slim gate entry, 2026-11-19
+
+A package's generated `check` is `beep-cli gate run check`, a slim entry that loads only the gate and four platform services. It probes for unbuilt references; if any are missing it writes a record that folds to the TS6305 line and exits 1 without starting a compiler. Otherwise it runs the compiler script with output captured to the log, turns the output into events, writes the record, prints the console for the audience and exits with the compiler's code. The infra kind keeps its plain script because its check builds references itself. On a built package the entry costs about 25 to 40 ms more than the probe plus compiler it replaces (about 350 ms against 328, compiler alone 180).
+
+Lane feat/gate-report-wiring
+
+Reverse: Point the generated check back at the probe followed by the compiler script and re-record the package cache baselines.
+
 ### All twenty cells print one contract; upstream's tables and trailers are not ported, 2026-11-19
 
 A green run prints its verdict line alone in every shape, so upstream's project table, module list, trend line, coverage table and action trailers are not ported. Stray output prints only on a red run. The single-item policy cell prints the verdict and the breach where upstream printed nothing, because law 1 needs a verdict. An unlabelled or recovered failure points at the failure command; a gate missing from the pointer table gets no pointer line. A run with exactly one diagnostic is scoped by its file in the verdict line.
@@ -572,6 +581,22 @@ The fixture set: a green test run of `@beep/glob`; a red test run with an assert
 Lane feat/gate-report-core
 
 Reverse: Replace a generated fixture with a hand-written one and note why in the test.
+
+### The flake quarantine reads the check logs, 2026-11-19
+
+Once a package check prints the gate console, the Turbo stream no longer carries the raw compiler lines the no-location TS2589 detector reads, and detection on the root check run stopped. Before detection, each failed check task's raw log is appended to the lane output with the task prefix Turbo uses. The quarantine judges the same bounded attempt as before; its waves, reruns and artifact are unchanged, and its existing tests pass unchanged.
+
+Lane feat/gate-report-wiring
+
+Reverse: Have the check gate echo compiler output into the Turbo stream again.
+
+### The gate queries exist and pointers carry their target, 2026-11-19
+
+The `gate show` query prints a run's record and `gate item` prints one item in full. They read the package named by `--dir`, else the working directory's package, else the newest root run; `--run` picks an older root run. A console pointer is built from the record it was printed for: a package record prints `--dir` with the repository-relative directory and a root run prints `--run` with its id, so the printed command opens that record from any directory. Law 9 is tested against the real command tree: every pointer of every cell resolves to a leaf command.
+
+Lane feat/gate-report-wiring
+
+Reverse: Mark the pointer commands planned and print them without a target.
 
 ### The history read deadline belongs to the caller, 2026-11-19
 
@@ -645,6 +670,14 @@ Lane feat/gate-report-services
 
 Reverse: Import the bound from the step-execution module again and delete the leaf.
 
+### Each task declares its own gate directory as output, and its writer is in its hash, 2026-11-19
+
+The `test` task declares the test gate directory and the `check` task declares the check gate directory, never the whole gates directory, so a check cache hit cannot restore a stale test record. The `test` task depends on the Vitest adapter's transit task and the `check` task on the record library's, so a change to the code or the format that writes a cached record invalidates it. A restored record keeps its run id, and a cache hit prints a console identical to the miss.
+
+Lane feat/gate-report-wiring
+
+Reverse: Widen the output globs to the whole gates directory and drop the transit dependencies.
+
 ### Pointer commands are marked planned until the gate queries exist, 2026-11-19
 
 The pointer table names the two planned queries of the gate command family and marks them planned. A test fails as soon as one is marked live without the check against the real command tree, which is the seam for law 9; the wiring slice adds the commands and flips the mark.
@@ -652,6 +685,22 @@ The pointer table names the two planned queries of the gate command family and m
 Lane feat/gate-report-services
 
 Reverse: Mark the two query commands live and add the command-tree check.
+
+### The repository root is the nearest Turbo config that extends nothing; the fingerprint is the Turbo hash or the run id, 2026-11-19
+
+Twenty-seven packages have their own Turbo config, so the root is the nearest one with no `extends`. The input fingerprint is the Turbo task hash under Turbo and the run id otherwise; a digest of the head commit and uncommitted changes is left to the history goal, which is the only reader that compares fingerprints.
+
+Lane feat/gate-report-wiring
+
+Reverse: Change the root rule and the fingerprint in the package-location module of the record library.
+
+### A root test or check run prints one console from the package records, 2026-11-19
+
+The root unit test run and the root check run capture their Turbo step and print one console for the workspace: counts and duration summed from the package records, packages taken from the run summary. A cache hit's record is trusted; a miss's record must be newer than the run start. The repo-wide type smoke step still streams, and integration lanes are not aggregated because Turbo neither caches nor restores their records. The package test path runs the package test script with output captured, renders the fresh record, and records an errored run with the log excerpt when no record was written.
+
+Lane feat/gate-report-wiring
+
+Reverse: Return the root steps to streaming their Turbo output.
 
 ### The goal lands as four sequential pull requests, 2026-11-19
 
@@ -676,6 +725,14 @@ The TypeScript diagnostic parser moved out of the Yeet issue parser into a leaf 
 Lane feat/gate-report-services
 
 Reverse: Fold the parser back into the type-check adapter and count a probe finding as nothing checked.
+
+### The Vitest adapter synthesizes at run end and writes its own log, 2026-11-19
+
+The adapter builds the run from the finished module tree when the run ends, not from per-test hooks, and implements only the start, console-log and end hooks. Its log holds the console lines Vitest hands a reporter and then every failed item in full, because a reporter never sees the process streams. The stray-output recorder and reader are ported; the capture that wraps the logger streams is not, since the adapter patches no stream. A run under an integration test directory records its own gate, so it cannot overwrite the unit record. The registered module loads its implementation when Vitest starts and turns itself off with one stderr line on any failure.
+
+Lane feat/gate-report-wiring
+
+Reverse: Emit events from the per-test reporter hooks and have the task path write the log.
 
 ### The Vitest adapter is a new test kit, @beep/repo-gate-vitest, loaded lazily and registered by specifier, 2026-11-19
 
