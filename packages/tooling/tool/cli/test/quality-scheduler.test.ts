@@ -6924,11 +6924,13 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
             const fiber = yield* Effect.forkChild(
               withQualityAdmission(request(), noAdmissionOriginGate, Effect.succeed("ran"), fastConfig)
             );
-            // Past one 0.4 s progress interval, so the waiter reports its owner.
-            yield* Effect.sleep("600 millis");
+            // Wait for the first 0.4 s progress report, which names the owner. It is polled (every 10 ms, at
+            // most 300 times) rather than read after a fixed 600 ms a loaded host can outrun.
+            const holderLines = yield* TestConsole.logLines.pipe(
+              Effect.map((lines) => A.filter(A.map(lines, String), Str.includes("holders: pid"))),
+              Effect.repeat({ schedule: Schedule.spaced("10 millis"), times: 300, until: A.isReadonlyArrayNonEmpty })
+            );
             expect(fiber.pollUnsafe()).toBeUndefined();
-            const progressLines = yield* TestConsole.logLines;
-            const holderLines = A.filter(A.map(progressLines, String), Str.includes("holders: pid"));
             expect(A.some(holderLines, Str.includes("@ feat/other"))).toBe(true);
             expect(A.some(holderLines, Str.includes("[suspect: heartbeat stale]"))).toBe(false);
             const heldLeaseKept = yield* fs.exists(heldLease);
@@ -6953,17 +6955,26 @@ it.layer(Layer.mergeAll(PlatformLayer, SchedulerCommandLayer), { concurrent: fal
           return yield* Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
             const path = yield* Path.Path;
-            // Hold the admission past a few 20 ms heartbeats and read the lease it holds.
+            // Hold the admission until its first 20 ms heartbeat has landed, then read the lease it holds.
+            // The heartbeat stamps the clock after a full interval, so it is always later than the
+            // admission; what a fixed 80 ms wait raced was a loaded host running that first heartbeat at
+            // all. Polling (every 10 ms, at most 300 times) waits for it instead.
+            const readHeldLease = Effect.gen(function* () {
+              const leaseNames = yield* listDirectory(tempRoot.leases);
+              const leaseName = O.getOrThrow(A.head(A.filter(leaseNames, Str.endsWith(".json"))));
+              const leaseText = yield* fs.readFileString(path.join(tempRoot.leases, leaseName));
+              return yield* decodeLease(leaseText);
+            });
             const heldLease = yield* withQualityAdmission(
               request(),
               noAdmissionOriginGate,
-              Effect.gen(function* () {
-                yield* Effect.sleep("80 millis");
-                const leaseNames = yield* listDirectory(tempRoot.leases);
-                const leaseName = O.getOrThrow(A.head(A.filter(leaseNames, Str.endsWith(".json"))));
-                const leaseText = yield* fs.readFileString(path.join(tempRoot.leases, leaseName));
-                return yield* decodeLease(leaseText);
-              }),
+              readHeldLease.pipe(
+                Effect.repeat({
+                  schedule: Schedule.spaced("10 millis"),
+                  times: 300,
+                  until: (lease) => lease.heartbeatAtMillis > lease.admittedAtMillis,
+                })
+              ),
               fastConfig
             );
             expect(heldLease.heartbeatAtMillis).toBeGreaterThan(heldLease.admittedAtMillis);
