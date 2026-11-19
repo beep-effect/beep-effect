@@ -529,7 +529,9 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             expect(O.getOrThrow(row("packages/gadget/src/Gadget.ts:2 [root-composer-outside-leaf]"))).toContain(
               "(packages/gadget/src/internal/GadgetId.ts)"
             );
-            expect(O.isSome(row("packages/gadget/src/Gadget.ts:3 [root-composer-outside-leaf]"))).toBe(true);
+            expect(O.getOrThrow(row("packages/gadget/src/Gadget.ts:3 [root-composer-outside-leaf]"))).toContain(
+              "(packages/gadget/src/internal/GadgetId.ts)"
+            );
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       LINT_TIMEOUT
