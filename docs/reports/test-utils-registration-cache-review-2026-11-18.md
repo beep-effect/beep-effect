@@ -1,6 +1,6 @@
 # Cache review for the `@slop/11-18-26` cleanup branch
 
-Reviewed on `@slop/11-18-26` with `main` @ a4ce5e8b0c9 merged in. Reviewer: Claude Opus 5.5
+Reviewed on `@slop/11-18-26` with `main` @ 20a8fc786a4 (#3403) merged in; the audit was re-run after that merge and reports the same 13 findings. Reviewer: Claude Opus 5.5
 (slop-cleanup closeout lane). No command, cache flag, output or environment variable changed;
 no qualification is granted.
 

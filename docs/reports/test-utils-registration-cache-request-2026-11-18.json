@@ -1,16 +1,16 @@
 {
   "previous": {
-    "//": "2181371710b13a335af649537aa1a45ddc23d5b1fac0c79f5471bfac34a80e6b",
-    "@beep/alchemy-aws-extras": "00db2c71fd607b470f41023056678e95069570699adbbcb217e57cb32fc2f8e5",
-    "@beep/alchemy-postgres": "dd67cbafbd3b3a1a2f2c96ed7e98ff20bb6f89dee83fc3aedd8b4a6039718ea6",
-    "@beep/infra-github": "81e0233cdd950ebbd87559c7a61aca368fa3460380ca7beb4d6ca6d97bb0c5f7"
+    "//": "901097fce51b2847de9df08e8e1925e1496cf0e22a434d0fccdaebfb93c9c20e",
+    "@beep/alchemy-aws-extras": "2e8dffe5664b8b83ccbd2eb496e4ea9972081154747201e0ecf06a3dd2e39fb3",
+    "@beep/alchemy-postgres": "959781fa892d74d70ccfe075b75626515791182de5e63cbf123719a614cebbd5",
+    "@beep/infra-github": "4fa82821b70231cec2f1dfd30872c1d7d7b5797b45915bc7fa45bc9caf79ea64"
   },
   "review": {
     "reviewer": "Claude Opus 5.5 (slop-cleanup closeout lane, @slop/11-18-26)",
     "reason": "//#check:model-first-slices gains the effect-drizzle and pglite manifests and sources the prototype now links; three packages gain a @beep/test-utils devDependency and tsconfig references for atRegistration. No command, cache flag, output or environment changed; no qualification granted.",
     "basis": {
       "path": "docs/reports/test-utils-registration-cache-review-2026-11-18.md",
-      "sha256": "80798e279b6dfc1a6ae68aa9dba04cade5214fcb06bff580976b5401d3e36a49"
+      "sha256": "ef9be88a5bb61ab589eaf67606a908c414cf831a3ddf82d883553d59b5b7caf4"
     }
   },
   "subjects": [

@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-output-switch-on P3 lane, fix/gate-output-check-probe)",
-    "reason": "Re-record two subjects after merging main at a4ce5e8b0c9. @beep/infra-ci-runners reached main after the probe lane rewrote the other manifests; the scripts writer gave it the same generated check, beep-cli quality check-probe && bun run beep:check, re-keying the scripts digest of its tasks. The root subject changed on both sides: main added the new package's tasks, and this lane regenerated the input lists of the policy fingerprint tasks. Task outputs, environment entries and cache flags are unchanged; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (slop-cleanup closeout lane, @slop/11-18-26)",
+    "reason": "//#check:model-first-slices gains the effect-drizzle and pglite manifests and sources the prototype now links; three packages gain a @beep/test-utils devDependency and tsconfig references for atRegistration. No command, cache flag, output or environment changed; no qualification granted.",
     "basis": {
-      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
-      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+      "path": "docs/reports/test-utils-registration-cache-review-2026-11-18.md",
+      "sha256": "ef9be88a5bb61ab589eaf67606a908c414cf831a3ddf82d883553d59b5b7caf4"
     }
   },
   "globalConfiguration": {
@@ -96,75 +96,75 @@
   "sources": [
     {
       "path": "apps/beep-effect-web/turbo.json",
-      "sha256": "37b04e382e965c44a657e3623293dfc49d721dab72c76879df386fb3f2763fe2"
+      "sha256": "e1e69476682284d53a7c3890f5217632986699fd77460a5cc52a1d11e01faca7"
     },
     {
       "path": "apps/docket-intake/turbo.json",
-      "sha256": "9accc8a05011f6c3ab63c2bd17b6a7402b9b6680ce519df4f01617dfef3c35b5"
+      "sha256": "40ef226ef5a9f848acaa681a85277eb7a2b08393245a6852fe14ae71441ca596"
     },
     {
       "path": "apps/labs/api-docs/turbo.json",
-      "sha256": "9accc8a05011f6c3ab63c2bd17b6a7402b9b6680ce519df4f01617dfef3c35b5"
+      "sha256": "40ef226ef5a9f848acaa681a85277eb7a2b08393245a6852fe14ae71441ca596"
     },
     {
       "path": "apps/labs/ciops/turbo.json",
-      "sha256": "9accc8a05011f6c3ab63c2bd17b6a7402b9b6680ce519df4f01617dfef3c35b5"
+      "sha256": "40ef226ef5a9f848acaa681a85277eb7a2b08393245a6852fe14ae71441ca596"
     },
     {
       "path": "apps/labs/lane-cockpit/turbo.json",
-      "sha256": "9accc8a05011f6c3ab63c2bd17b6a7402b9b6680ce519df4f01617dfef3c35b5"
+      "sha256": "40ef226ef5a9f848acaa681a85277eb7a2b08393245a6852fe14ae71441ca596"
     },
     {
       "path": "apps/labs/lejeune-bolt-workbench/turbo.json",
-      "sha256": "37b04e382e965c44a657e3623293dfc49d721dab72c76879df386fb3f2763fe2"
+      "sha256": "e1e69476682284d53a7c3890f5217632986699fd77460a5cc52a1d11e01faca7"
     },
     {
       "path": "apps/labs/semantica/turbo.json",
-      "sha256": "37b04e382e965c44a657e3623293dfc49d721dab72c76879df386fb3f2763fe2"
+      "sha256": "e1e69476682284d53a7c3890f5217632986699fd77460a5cc52a1d11e01faca7"
     },
     {
       "path": "apps/labs/trustgraph-workbench/turbo.json",
-      "sha256": "37b04e382e965c44a657e3623293dfc49d721dab72c76879df386fb3f2763fe2"
+      "sha256": "e1e69476682284d53a7c3890f5217632986699fd77460a5cc52a1d11e01faca7"
     },
     {
       "path": "apps/oip-web/turbo.json",
-      "sha256": "f5e8ac7f09113a2c25250b2ee39f7e25c983162c84398fffd8e13283964be98f"
+      "sha256": "b0f1f9a6d1a00da871e6657ce7565b1b9820437225dc7ca8b3419407e8fa9755"
     },
     {
       "path": "apps/practice-claude-mod/turbo.json",
-      "sha256": "9accc8a05011f6c3ab63c2bd17b6a7402b9b6680ce519df4f01617dfef3c35b5"
+      "sha256": "40ef226ef5a9f848acaa681a85277eb7a2b08393245a6852fe14ae71441ca596"
     },
     {
       "path": "apps/practice-identify/turbo.json",
-      "sha256": "9accc8a05011f6c3ab63c2bd17b6a7402b9b6680ce519df4f01617dfef3c35b5"
+      "sha256": "40ef226ef5a9f848acaa681a85277eb7a2b08393245a6852fe14ae71441ca596"
     },
     {
       "path": "apps/practice-m365-contacts/turbo.json",
-      "sha256": "9accc8a05011f6c3ab63c2bd17b6a7402b9b6680ce519df4f01617dfef3c35b5"
+      "sha256": "40ef226ef5a9f848acaa681a85277eb7a2b08393245a6852fe14ae71441ca596"
     },
     {
       "path": "apps/practice-mail-tagging/turbo.json",
-      "sha256": "9accc8a05011f6c3ab63c2bd17b6a7402b9b6680ce519df4f01617dfef3c35b5"
+      "sha256": "40ef226ef5a9f848acaa681a85277eb7a2b08393245a6852fe14ae71441ca596"
     },
     {
       "path": "apps/practice-review-hub/turbo.json",
-      "sha256": "9accc8a05011f6c3ab63c2bd17b6a7402b9b6680ce519df4f01617dfef3c35b5"
+      "sha256": "40ef226ef5a9f848acaa681a85277eb7a2b08393245a6852fe14ae71441ca596"
     },
     {
       "path": "apps/practice-setup/turbo.json",
-      "sha256": "9accc8a05011f6c3ab63c2bd17b6a7402b9b6680ce519df4f01617dfef3c35b5"
+      "sha256": "40ef226ef5a9f848acaa681a85277eb7a2b08393245a6852fe14ae71441ca596"
     },
     {
       "path": "apps/professional-desktop/turbo.json",
-      "sha256": "6cb3210ec2354bdf4ab47e89310507f2327896f84e3e3a031bfa34f48cb88212"
+      "sha256": "813be28d8f2a11a5656765a097a82608711079f47beef0419a052768ca1f37c5"
     },
     {
       "path": "apps/storybook/turbo.json",
-      "sha256": "4dbfe6b02993cb450c65122a5de3952a6b0ff9ef03c54819d935c06ca5062aa0"
+      "sha256": "cb56ecf2b14159964d4a78361e3a97811ec7b06cb2001c792510245490d5a61e"
     },
     {
       "path": "apps/todox/turbo.json",
-      "sha256": "1c844b2a867af319a0e1093944418c8c38aa921387cc9eb7e86c6ed2d275248e"
+      "sha256": "55c9d20436eb20929b07ff8059f825fcddbc94ffd344d03786f55c4e58d83af2"
     },
     {
       "path": "infra/turbo.json",
@@ -172,23 +172,23 @@
     },
     {
       "path": "packages/drivers/eyecite/turbo.json",
-      "sha256": "802a9d3cf3515d16ff9fa369b9daeb38161eedc6e486223ca36bf7e5339dc7eb"
+      "sha256": "4740cf7df445f262fdf6d05dbeb931cc00f0121d5411138578689f2b84c12b50"
     },
     {
       "path": "packages/foundation/modeling/identity/turbo.json",
-      "sha256": "0df8d7a4d6ccb7e03bca5490c8f50e0da2c5451d69f14638c3a5813b734549c7"
+      "sha256": "012a0ac557334250b98e2256f25022b1b254cb713b9a19e25dca6dbcd85da30e"
     },
     {
       "path": "packages/foundation/primitive/types/turbo.json",
-      "sha256": "67f664f5ec879486c97c612c8c49530327794cc57e4a32ab4f5724db925e3ff8"
+      "sha256": "56950453c8693f0ee5e4e361f9ec859bbe95141053932fa44db2febd87fef94e"
     },
     {
       "path": "packages/tooling/library/ai-sync/turbo.json",
-      "sha256": "bf8c82d39bcf4268c3e97febefc41ce47eca9d4f5e2acb32d73dbb11067a7960"
+      "sha256": "eff38563df5ceef4790def9b591bc423eaa4c7e74673c0998d9fb385a967872d"
     },
     {
       "path": "packages/tooling/policy-pack/repo-configs/turbo.json",
-      "sha256": "815743721cd11b539741731fc55d149845f8e03740e606569791a0c779dd824c"
+      "sha256": "63e12c05adb82783fc9a2f7be5bfc75669c2725ec7e4c4fb13445395ad3bab40"
     },
     {
       "path": "packages/tooling/test-kit/fc-runs/turbo.json",
@@ -200,11 +200,11 @@
     },
     {
       "path": "packages/tooling/tool/cli/turbo.json",
-      "sha256": "70c7a4aa97e36372abb933a30dddc0dfdf1b03af467cafdbe4cb22ec15754591"
+      "sha256": "5808eed2f64e81ca545adac5e48b92b21f5744364b49e80d2c32eb278b99a402"
     },
     {
       "path": "turbo.json",
-      "sha256": "5618523274536dc1f38fda4ce47c0c3880b631f061ab8ae61cd3b62438905d9a"
+      "sha256": "53f13db4c629a6bad85f9c25e633007f8b8b0188cb4707aea5007af7e2ce79c8"
     }
   ],
   "nodes": [
@@ -259,6 +259,10 @@
           "./tsconfig.packages.json",
           "bun.lock",
           "package.json",
+          "packages/drivers/pglite/package.json",
+          "packages/drivers/pglite/src/**",
+          "packages/ecosystem/effect-drizzle/package.json",
+          "packages/ecosystem/effect-drizzle/src/**",
           "packages/foundation/modeling/identity/package.json",
           "packages/foundation/modeling/identity/src/**",
           "packages/foundation/modeling/schema/package.json",
