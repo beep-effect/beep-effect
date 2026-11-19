@@ -107,7 +107,7 @@ export const ActivityStartFields = {
  * import { ActivityPin, ActivityStart } from "@beep/jsonc/ActivityStart"
  *
  * const start = ActivityStart.make({
- *   operation: IRI.make("https://beep-effect.com/ns/ops/extract"),
+ *   operation: IRI.make("https://example.org/ops/extract"),
  *   pin: ActivityPin.cases.Engine.make({ engine: "langextract", edition: "1.0.0" }),
  *   promptDigest: O.none(),
  *   used: HashSet.empty(),
@@ -168,7 +168,7 @@ export const ActivityPreimage = definePreimage({
   ]),
   golden: {
     preimage: [
-      "https://beep-effect.com/ns/ops/extract",
+      "https://example.org/ops/extract",
       { _tag: "Model", model: "claude-opus-5-5", version: "2026-11-01" },
       "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       [
@@ -177,7 +177,7 @@ export const ActivityPreimage = definePreimage({
       ],
       1_763_510_400_000,
     ],
-    hash: ContentHash.make("sha256:f6571ee38ca8346f37be976229c20f0c6b032fa9f2fa1f7bbc6f997582c07918"),
+    hash: ContentHash.make("sha256:2a2b259a63e6402ee336c2e1d4f1023b98bee9880bfa586fface844bca277388"),
   },
 });
 
@@ -204,7 +204,7 @@ const toPreimage = (start: ActivityStartView): typeof ActivityPreimage.schema.Ty
  * import { ActivityPin, ActivityStart, mintActivityId } from "@beep/jsonc/ActivityStart"
  *
  * const start = ActivityStart.make({
- *   operation: IRI.make("https://beep-effect.com/ns/ops/extract"),
+ *   operation: IRI.make("https://example.org/ops/extract"),
  *   pin: ActivityPin.cases.Engine.make({ engine: "langextract", edition: "1.0.0" }),
  *   promptDigest: O.none(),
  *   used: HashSet.empty(),
@@ -239,7 +239,7 @@ export const mintActivityId = Effect.fn("ActivityStart.mintActivityId")(function
  * import { ActivityPin, ActivityStart, mintActivityIdResult } from "@beep/jsonc/ActivityStart"
  *
  * const start = ActivityStart.make({
- *   operation: IRI.make("https://beep-effect.com/ns/ops/extract"),
+ *   operation: IRI.make("https://example.org/ops/extract"),
  *   pin: ActivityPin.cases.Engine.make({ engine: "langextract", edition: "1.0.0" }),
  *   promptDigest: O.none(),
  *   used: HashSet.empty(),

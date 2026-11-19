@@ -31,7 +31,7 @@ const $I = $SchemaId.create("CanonicalHashSet");
  *
  * **When to use**
  *
- * Use for every set-valued field of a record that is canonicalized or hashed,
+ * Use as the schema of every set-valued field of a record that is canonicalized or hashed,
  * such as the entities an activity used inside its content-hash preimage.
  *
  * **Details**

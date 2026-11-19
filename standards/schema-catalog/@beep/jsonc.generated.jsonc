@@ -34,6 +34,7 @@
     {"file":"packages/foundation/modeling/jsonc/src/JsoncVisitor.ts","symbol":"JsoncVisitorEvent","kind":"tagged-union","owner":"@beep/jsonc","identity":"JsoncVisitorEvent","description":"One event of a JSONC document walk: structure, values, separators, comments or recovered errors."},
     {"file":"packages/foundation/modeling/jsonc/src/Mint.ts","symbol":"DuplicateDomainTag","kind":"tagged-error","owner":"@beep/jsonc"},
     {"file":"packages/foundation/modeling/jsonc/src/Mint.ts","symbol":"PreimageGoldenMismatch","kind":"tagged-error","owner":"@beep/jsonc"},
+    {"file":"packages/foundation/modeling/jsonc/src/Mint.ts","symbol":"PreimageGoldenNotCanonical","kind":"tagged-error","owner":"@beep/jsonc"},
     {"file":"packages/foundation/modeling/jsonc/src/internal/navigate.ts","symbol":"NavigateContainer","kind":"literal-kit","owner":"@beep/jsonc","identity":"NavigateContainer","description":"The JSONC container kind a path segment addresses."},
     {"file":"packages/foundation/modeling/jsonc/src/internal/navigate.ts","symbol":"NavigateResult","kind":"tagged-union","owner":"@beep/jsonc","identity":"NavigateResult","description":"Where a JSONC path resolves in the source text: a located value, an insertion point, a structural mismatch or no edit."},
     {"file":"packages/foundation/modeling/jsonc/src/internal/parser.ts","symbol":"ParseCode","kind":"literal-kit","owner":"@beep/jsonc","identity":"ParseCode","description":"Parse-error codes the recovering JSONC parser can report."},

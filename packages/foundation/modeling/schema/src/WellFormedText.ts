@@ -22,7 +22,7 @@ const wellFormedUtf16 = /^(?:[\u0000-퟿-￿]|[\uD800-\uDBFF][\uDC00-\uDFFF])
  *
  * **When to use**
  *
- * Use for free-text leaves of a record that is hashed through canonical JSON,
+ * Use as the schema of free-text leaves of a record that is hashed through canonical JSON,
  * such as a model or engine pin inside a content-hash preimage.
  *
  * **Example** (Refuse a lone surrogate)

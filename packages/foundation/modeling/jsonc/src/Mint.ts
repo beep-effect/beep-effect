@@ -42,8 +42,8 @@ const prefixHex = (hex: string): ContentHash => ContentHash.make(`sha256:${hex}`
  *
  * **When to use**
  *
- * Use through a {@link Preimage}, whose schema encodes the record first. Call
- * it directly only with a preimage that is already plain, canonical JSON.
+ * Use when minting outside a {@link Preimage}, whose schema should encode the
+ * record first; pass only a preimage that is already plain, canonical JSON.
  *
  * **Details**
  *
@@ -82,7 +82,7 @@ export const mintContentHash = Effect.fn("Mint.mintContentHash")(function* (
  *
  * **When to use**
  *
- * Use where no fiber can run the `Digest.Digest` service, such as a property
+ * Use when no fiber can run the `Digest.Digest` service, such as a property
  * generator that mints dependent identifiers while it builds a value.
  *
  * **Example** (Mint synchronously)
@@ -206,13 +206,74 @@ export class DuplicateDomainTag extends S.TaggedError<DuplicateDomainTag, { read
 }
 
 /**
- * Why a golden vector failed: its committed preimage no longer decodes, it
- * is not plain JSON, or it mints a different hash.
+ * A golden vector's recorded preimage is not the canonical encoded form of
+ * the value it decodes to, such as a set recorded unsorted or with a repeat:
+ * the committed bytes would differ from the bytes that are hashed.
+ *
+ * **Example** (Read the canonical form)
+ *
+ * ```ts
+ * import { DomainTag } from "@beep/schema/ContentHash"
+ * import { PreimageGoldenNotCanonical } from "@beep/jsonc/Mint"
+ *
+ * const error = PreimageGoldenNotCanonical.make({
+ *   domainTag: DomainTag.make("example/v1"),
+ *   recorded: '[["b","a"]]',
+ *   canonical: '[["a","b"]]',
+ * })
+ *
+ * console.log(error.canonical) // '[["a","b"]]'
+ * ```
  *
  * @category errors
  * @since 0.0.0
  */
-export type PreimageGoldenError = PreimageGoldenMismatch | S.SchemaError | JsoncCanonicalizeError;
+export class PreimageGoldenNotCanonical extends S.TaggedError<
+  PreimageGoldenNotCanonical,
+  { readonly brand: unique symbol }
+>($I.make("PreimageGoldenNotCanonical"))(
+  "PreimageGoldenNotCanonical",
+  {
+    domainTag: DomainTag,
+    recorded: S.String,
+    canonical: S.String,
+  },
+  $I.annoteError<PreimageGoldenNotCanonical>("PreimageGoldenNotCanonical", {
+    description: "A golden vector's recorded preimage differs from its canonical encoded form.",
+  })
+) {
+  /**
+   * Name the domain tag and both canonical JSON texts.
+   *
+   * **Example** (Render the message)
+   *
+   * ```ts
+   * import { DomainTag } from "@beep/schema/ContentHash"
+   * import { PreimageGoldenNotCanonical } from "@beep/jsonc/Mint"
+   *
+   * const error = PreimageGoldenNotCanonical.make({ domainTag: DomainTag.make("example/v1"), recorded: "[2]", canonical: "[1]" })
+   *
+   * console.log(error.message.startsWith("Preimage example/v1")) // true
+   * ```
+   */
+  override get message(): string {
+    return `Preimage ${this.domainTag} records the golden preimage ${this.recorded}, but its canonical encoded form is ${this.canonical}`;
+  }
+}
+
+/**
+ * Why a golden vector failed: its committed preimage no longer decodes, it
+ * is not plain JSON, it is not in canonical encoded form, or it mints a
+ * different hash.
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export type PreimageGoldenError =
+  | PreimageGoldenMismatch
+  | PreimageGoldenNotCanonical
+  | S.SchemaError
+  | JsoncCanonicalizeError;
 
 /**
  * Why minting through a {@link Preimage} failed: the value did not encode
@@ -232,8 +293,9 @@ export type PreimageMintError = S.SchemaError | JsoncCanonicalizeError;
  *
  * `mint` encodes the value through the schema, so set-valued fields arrive
  * sorted and options as `null`, then mints with {@link mintContentHash}.
- * `verifyGolden` decodes the golden preimage, mints it again and compares the
- * hash with the recorded one.
+ * `verifyGolden` decodes the golden preimage, encodes it again, requires the
+ * result to be the recorded preimage byte for byte, then mints it and compares
+ * the hash with the recorded one.
  *
  * **Example** (Mint through a preimage)
  *
@@ -353,7 +415,8 @@ export class Preimage<Value, Encoded extends ReadonlyArray<unknown>> {
 
   /**
    * Check the golden vector through a caller-supplied synchronous SHA-256:
-   * decode its preimage, mint it and compare the hash with the recorded one.
+   * decode its preimage, require that encoding it again gives the recorded
+   * canonical bytes, mint it and compare the hash with the recorded one.
    *
    * **Example** (Refuse a wrong golden)
    *
@@ -380,7 +443,9 @@ export class Preimage<Value, Encoded extends ReadonlyArray<unknown>> {
    */
   readonly verifyGoldenResult = (digest: JsoncDigest): Result.Result<void, PreimageGoldenError> =>
     S.decodeUnknownResult(this.schema)(this.golden.preimage).pipe(
-      Result.flatMap(this.mintResult(digest)),
+      Result.flatMap(S.encodeResult(this.schema)),
+      Result.flatMap(this.requireCanonical),
+      Result.flatMap((encoded) => mintContentHashResult(digest)(this.domainTag, encoded)),
       Result.flatMap(this.compareGolden)
     );
 
@@ -411,10 +476,26 @@ export class Preimage<Value, Encoded extends ReadonlyArray<unknown>> {
   readonly verifyGolden = Effect.fn("Preimage.verifyGolden")(
     (): Effect.Effect<void, PreimageGoldenError, Digest.Digest> =>
       S.decodeUnknownEffect(this.schema)(this.golden.preimage).pipe(
-        Effect.flatMap(this.mint),
+        Effect.flatMap(S.encodeEffect(this.schema)),
+        Effect.flatMap((encoded) => Effect.fromResult(this.requireCanonical(encoded))),
+        Effect.flatMap((encoded) => mintContentHash(this.domainTag, encoded)),
         Effect.flatMap((actual) => Effect.fromResult(this.compareGolden(actual)))
       )
   );
+
+  private readonly requireCanonical = (
+    encoded: Encoded
+  ): Result.Result<Encoded, PreimageGoldenNotCanonical | JsoncCanonicalizeError> =>
+    Result.all([
+      JsoncFingerprint.canonicalizeResult(encoded),
+      JsoncFingerprint.canonicalizeResult(this.golden.preimage),
+    ]).pipe(
+      Result.flatMap(([canonical, recorded]) =>
+        canonical === recorded
+          ? Result.succeed(encoded)
+          : Result.fail(PreimageGoldenNotCanonical.make({ domainTag: this.domainTag, recorded, canonical }))
+      )
+    );
 
   private readonly compareGolden = (actual: ContentHash): Result.Result<void, PreimageGoldenMismatch> =>
     actual === this.golden.hash
@@ -428,9 +509,9 @@ export class Preimage<Value, Encoded extends ReadonlyArray<unknown>> {
  *
  * **When to use**
  *
- * Use once per minted identifier domain. Register every declaration in a
- * {@link PreimageRegistry} so a duplicate tag is refused and every golden is
- * checked.
+ * Use when declaring a minted identifier domain, once per domain. Register
+ * every declaration in a {@link PreimageRegistry} so a duplicate tag is refused
+ * and every golden is checked.
  *
  * **Example** (Declare a preimage)
  *
@@ -491,7 +572,7 @@ export declare namespace Preimage {
  * import { ContentHash, DomainTag } from "@beep/schema/ContentHash"
  * import { definePreimage, PreimageRegistry } from "@beep/jsonc/Mint"
  *
- * const declare = () =>
+ * const makeExample = () =>
  *   definePreimage({
  *     domainTag: DomainTag.make("example/v1"),
  *     schema: S.Tuple([S.String]),
@@ -501,7 +582,7 @@ export declare namespace Preimage {
  *     },
  *   })
  *
- * console.log(Result.isFailure(PreimageRegistry.make([declare(), declare()]))) // true
+ * console.log(Result.isFailure(PreimageRegistry.make([makeExample(), makeExample()]))) // true
  * ```
  *
  * @category models

@@ -15,6 +15,7 @@ import {
   definePreimage,
   mintContentHashResult,
   PreimageGoldenMismatch,
+  PreimageGoldenNotCanonical,
   PreimageRegistry,
 } from "@beep/jsonc/Mint";
 import { CanonicalHashSet } from "@beep/schema/CanonicalHashSet";
@@ -146,7 +147,7 @@ const KeyOrders = Arbitrary.all([Arbitrary.schema(Probe), Arbitrary.schema(Scram
 );
 
 const goldenStart = {
-  operation: IRI.make("https://beep-effect.com/ns/ops/extract"),
+  operation: IRI.make("https://example.org/ops/extract"),
   pin: ActivityPin.cases.Model.make({ model: "claude-opus-5-5", version: "2026-11-01" }),
   promptDigest: Sha256PrefixedDigest.makeOption(
     "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -226,7 +227,7 @@ describe("ContentHash laws", () => {
     it("L0-2 the activity/v1 golden hashes these canonical bytes", () => {
       assertSuccess(
         JsoncFingerprint.canonicalizeResult(A.prepend(ActivityPreimage.golden.preimage, ActivityPreimage.domainTag)),
-        '["activity/v1","https://beep-effect.com/ns/ops/extract",{"_tag":"Model","model":"claude-opus-5-5","version":"2026-11-01"},"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",["sha256:2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae","sha256:fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9"],1763510400000]'
+        '["activity/v1","https://example.org/ops/extract",{"_tag":"Model","model":"claude-opus-5-5","version":"2026-11-01"},"sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",["sha256:2c26b46b68ffc68ff99b453c1d30413413422d706483bfa0f98a5e886266e7ae","sha256:fcde2b2edba56bf408601fb721fe9b5c338d10ee429ea04fae5511b68fbf8fb9"],1763510400000]'
       );
     });
 
@@ -255,5 +256,42 @@ describe("ContentHash laws", () => {
         })
       );
     });
+
+    it("L0-2 a golden whose recorded set is unsorted or repeats a member is refused", () => {
+      const canonical = ProbePreimage.golden.preimage[0];
+      const recordedTags = [
+        ["y", "x"],
+        ["x", "x", "y"],
+      ] as const;
+      A.forEach(recordedTags, (tags) => {
+        const loose = definePreimage({
+          ...ProbePreimage,
+          golden: { ...ProbePreimage.golden, preimage: [{ ...canonical, tags }] },
+        });
+        const expected = PreimageGoldenNotCanonical.make({
+          domainTag: ProbeDomainTag,
+          recorded: Result.getOrThrow(JsoncFingerprint.canonicalizeResult(loose.golden.preimage)),
+          canonical: Result.getOrThrow(JsoncFingerprint.canonicalizeResult(ProbePreimage.golden.preimage)),
+        });
+        assertFailure(loose.verifyGoldenResult(sha256), expected);
+      });
+    });
+  });
+
+  it.layer(Digest.layerWebCrypto)("a non-canonical golden through the Digest service", (it) => {
+    it.effect("L0-2 the Digest-service golden check refuses an unsorted recorded set", () =>
+      definePreimage({
+        ...ProbePreimage,
+        golden: {
+          ...ProbePreimage.golden,
+          preimage: [{ ...ProbePreimage.golden.preimage[0], tags: ["y", "x"] }],
+        },
+      })
+        .verifyGolden()
+        .pipe(
+          Effect.flip,
+          Effect.map((error) => assert.strictEqual(error._tag, "PreimageGoldenNotCanonical"))
+        )
+    );
   });
 });
