@@ -13,6 +13,7 @@ import { it } from "@beep/test-runner";
 import { A, Str } from "@beep/utils";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
@@ -224,7 +225,7 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             const gadgetRow = O.getOrThrow(leafRow("@beep/gadget"));
             expect(gadgetRow).toContain('its initializer is not `$I.create("gadget")`');
             expect(gadgetRow).toContain('it is not typed `Identity.IdentityComposer<"@beep/gadget">`');
-            expect(O.isNone(leafRow("@beep/identity"))).toBe(true);
+            assertNone(leafRow("@beep/identity"));
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       LINT_TIMEOUT
@@ -266,7 +267,7 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             const widgetRow = O.getOrThrow(leafRow("@beep/widget"));
             expect(widgetRow).toContain('its initializer is not `$I.create("widget")`');
             expect(widgetRow).toContain('it is not typed `Identity.IdentityComposer<"@beep/widget">`');
-            expect(O.isNone(leafRow("@beep/identity"))).toBe(true);
+            assertNone(leafRow("@beep/identity"));
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       LINT_TIMEOUT
