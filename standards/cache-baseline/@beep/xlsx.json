@@ -3,17 +3,17 @@
   "subject": "@beep/xlsx",
   "review": {
     "reviewer": "Claude Fable 5.2 (csv and xlsx lane, feat/xlsx-and-csv-foundation-modeling)",
-    "reason": "Record the two new modeling packages' tasks (generated scripts, root task definitions, no override) and the two manifest inputs the policy fingerprint added to the root. No qualification is granted.",
+    "reason": "Record the two new modeling packages' tasks (generated scripts, including the gate-run check script main regenerated, root task definitions, no override) and the two manifest inputs the policy fingerprint added to the root. No qualification is granted.",
     "basis": {
       "path": "docs/reports/csv-xlsx-cache-review-2026-11-19.md",
-      "sha256": "17e1887c130d4677b316ec71c5074f8d58a1e785ced0326ca54378782e20de62"
+      "sha256": "2276c12fc15782beb0bd1e56d956daf437f52eba99e04c548bc6a9b4da7b358e"
     }
   },
   "nodes": [
     {
       "computation": "@beep/xlsx#build",
       "command": "bun run beep:build",
-      "commandDigest": "2c1ab9b81b659f6ff9a0f140d3b6a0a63911012a8fdf8a964ad1e6c070feebfc",
+      "commandDigest": "0e75a676dad25daf84841032c9d9e50a9d4346d85e4ea2d119a00be24d7aa9ef",
       "dependencies": [
         "@beep/identity#build",
         "@beep/schema#build",
@@ -67,10 +67,11 @@
     },
     {
       "computation": "@beep/xlsx#check",
-      "command": "beep-cli quality check-probe && bun run beep:check",
-      "commandDigest": "2c1ab9b81b659f6ff9a0f140d3b6a0a63911012a8fdf8a964ad1e6c070feebfc",
+      "command": "beep-cli gate run check",
+      "commandDigest": "0e75a676dad25daf84841032c9d9e50a9d4346d85e4ea2d119a00be24d7aa9ef",
       "dependencies": [
         "@beep/identity#build",
+        "@beep/repo-gate-record#transit",
         "@beep/schema#build",
         "@beep/utils#build",
         "@beep/xlsx#build"
@@ -86,6 +87,12 @@
           "!README.md",
           "../../../../.bun-version",
           "../../../../.nvmrc",
+          "../../../../packages/tooling/library/repo-cli-kit/src/process/OutputBound.ts",
+          "../../../../packages/tooling/library/repo-gate-run/src/**",
+          "../../../../packages/tooling/library/repo-tsconfig/src/TsconfigLoader.ts",
+          "../../../../packages/tooling/library/repo-tsconfig/src/internal/extendsTarget.ts",
+          "../../../../packages/tooling/tool/cli/src/commands/Gate/**",
+          "../../../../packages/tooling/tool/cli/src/commands/Quality/CheckProbe.ts",
           "../../../../standards/root-package.projection.generated.json",
           "../../../../tools/tsgo-shim/package.json",
           "../../../../tools/tsgo-shim/tsgo.js",
@@ -98,8 +105,11 @@
         ],
         "env": [],
         "passThroughEnv": [],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/check/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-record#transit",
           "^build",
           "build"
         ],
@@ -112,7 +122,7 @@
     {
       "computation": "@beep/xlsx#coverage",
       "command": "bunx vitest run --coverage --exclude=test/integration/**",
-      "commandDigest": "2c1ab9b81b659f6ff9a0f140d3b6a0a63911012a8fdf8a964ad1e6c070feebfc",
+      "commandDigest": "0e75a676dad25daf84841032c9d9e50a9d4346d85e4ea2d119a00be24d7aa9ef",
       "dependencies": [
         "@beep/identity#build",
         "@beep/schema#build",
@@ -164,7 +174,7 @@
     {
       "computation": "@beep/xlsx#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "2c1ab9b81b659f6ff9a0f140d3b6a0a63911012a8fdf8a964ad1e6c070feebfc",
+      "commandDigest": "0e75a676dad25daf84841032c9d9e50a9d4346d85e4ea2d119a00be24d7aa9ef",
       "dependencies": [
         "@beep/repo-docgen#transit",
         "@beep/xlsx#transit"
@@ -204,7 +214,7 @@
     {
       "computation": "@beep/xlsx#doctest",
       "command": "bun run beep:doctest",
-      "commandDigest": "2c1ab9b81b659f6ff9a0f140d3b6a0a63911012a8fdf8a964ad1e6c070feebfc",
+      "commandDigest": "0e75a676dad25daf84841032c9d9e50a9d4346d85e4ea2d119a00be24d7aa9ef",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/schema#transit",
@@ -255,7 +265,7 @@
     {
       "computation": "@beep/xlsx#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "2c1ab9b81b659f6ff9a0f140d3b6a0a63911012a8fdf8a964ad1e6c070feebfc",
+      "commandDigest": "0e75a676dad25daf84841032c9d9e50a9d4346d85e4ea2d119a00be24d7aa9ef",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -289,7 +299,7 @@
     {
       "computation": "@beep/xlsx#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "2c1ab9b81b659f6ff9a0f140d3b6a0a63911012a8fdf8a964ad1e6c070feebfc",
+      "commandDigest": "0e75a676dad25daf84841032c9d9e50a9d4346d85e4ea2d119a00be24d7aa9ef",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
@@ -356,7 +366,7 @@
     {
       "computation": "@beep/xlsx#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "2c1ab9b81b659f6ff9a0f140d3b6a0a63911012a8fdf8a964ad1e6c070feebfc",
+      "commandDigest": "0e75a676dad25daf84841032c9d9e50a9d4346d85e4ea2d119a00be24d7aa9ef",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -386,7 +396,7 @@
     {
       "computation": "@beep/xlsx#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "2c1ab9b81b659f6ff9a0f140d3b6a0a63911012a8fdf8a964ad1e6c070feebfc",
+      "commandDigest": "0e75a676dad25daf84841032c9d9e50a9d4346d85e4ea2d119a00be24d7aa9ef",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -442,7 +452,7 @@
     {
       "computation": "@beep/xlsx#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "2c1ab9b81b659f6ff9a0f140d3b6a0a63911012a8fdf8a964ad1e6c070feebfc",
+      "commandDigest": "0e75a676dad25daf84841032c9d9e50a9d4346d85e4ea2d119a00be24d7aa9ef",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -488,7 +498,7 @@
     {
       "computation": "@beep/xlsx#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "2c1ab9b81b659f6ff9a0f140d3b6a0a63911012a8fdf8a964ad1e6c070feebfc",
+      "commandDigest": "0e75a676dad25daf84841032c9d9e50a9d4346d85e4ea2d119a00be24d7aa9ef",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/schema#transit",
@@ -533,9 +543,10 @@
     {
       "computation": "@beep/xlsx#test",
       "command": "bun run beep:test",
-      "commandDigest": "2c1ab9b81b659f6ff9a0f140d3b6a0a63911012a8fdf8a964ad1e6c070feebfc",
+      "commandDigest": "0e75a676dad25daf84841032c9d9e50a9d4346d85e4ea2d119a00be24d7aa9ef",
       "dependencies": [
         "@beep/identity#transit",
+        "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
         "@beep/utils#transit",
         "@beep/utils#transit"
@@ -572,8 +583,11 @@
           "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
           "GITHUB_STEP_SUMMARY"
         ],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/test/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-vitest#transit",
           "@beep/utils#transit",
           "^transit"
         ],
@@ -586,7 +600,7 @@
     {
       "computation": "@beep/xlsx#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "2c1ab9b81b659f6ff9a0f140d3b6a0a63911012a8fdf8a964ad1e6c070feebfc",
+      "commandDigest": "0e75a676dad25daf84841032c9d9e50a9d4346d85e4ea2d119a00be24d7aa9ef",
       "dependencies": [
         "@beep/identity#build",
         "@beep/schema#build",

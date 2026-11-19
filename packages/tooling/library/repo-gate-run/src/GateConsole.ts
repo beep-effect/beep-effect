@@ -121,6 +121,11 @@ export class ConsoleSettings extends S.Opaque<ConsoleSettings, { readonly brand:
  * What one console renders: the report, where its record and log were
  * written, the delta history gave, and what could not be written or read.
  *
+ * **Details**
+ *
+ * `pointers`, when given, replaces the settings' pointer table for this
+ * console: the caller pins the next-step commands to the record it wrote.
+ *
  * **Example** (Request a console)
  *
  * ```ts
@@ -145,9 +150,11 @@ export class ConsoleRequest extends S.Opaque<ConsoleRequest, { readonly brand: u
     paths: S.OptionFromOptionalKey(RecordPaths).pipe(S.withConstructorDefault(Effect.succeedNone)),
     delta: S.OptionFromOptionalKey(RunDelta).pipe(S.withConstructorDefault(Effect.succeedNone)),
     omissions: S.Array(Omission).pipe(S.withConstructorDefault(Effect.succeed([]))),
+    pointers: S.OptionFromOptionalKey(PointerTable).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("ConsoleRequest", {
-      description: "A report with its record paths, history delta and omissions, to render as one console.",
+      description:
+        "A report with its record paths, history delta, omissions and pointer table, to render as one console.",
     })
   )
 ) {}
@@ -298,7 +305,7 @@ const consoleLines = (settings: ConsoleSettings, request: ConsoleRequest): Reado
   const dispatched = dispatch(
     ConsoleInput.make({
       report: request.report,
-      pointers: settings.pointers,
+      pointers: O.getOrElse(request.pointers, () => settings.pointers),
       fixes: foldFixesFor(request.report.subject),
       paths: request.paths,
       delta: request.delta,

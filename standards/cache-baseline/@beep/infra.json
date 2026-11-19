@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/infra",
   "review": {
-    "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p4-hosts)",
-    "reason": "Record the new @beep/infra-hosts subject with its generated scripts, re-record @beep/infra after it gains one workspace dependency on @beep/infra-hosts, and the root subject for the new workspace member and its @alchemy.run/docker catalog pin; no command, output or environment changes, no qualification granted.",
+    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
+    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
     "basis": {
-      "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-hosts.md",
-      "sha256": "a9155c262f04ad7f2d780857dfd5757200de818ebf00b7a236cf4d0fc61f1217"
+      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
+      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
     }
   },
   "nodes": [
@@ -83,6 +83,12 @@
           "!README.md",
           "../.bun-version",
           "../.nvmrc",
+          "../packages/tooling/library/repo-cli-kit/src/process/OutputBound.ts",
+          "../packages/tooling/library/repo-gate-run/src/**",
+          "../packages/tooling/library/repo-tsconfig/src/TsconfigLoader.ts",
+          "../packages/tooling/library/repo-tsconfig/src/internal/extendsTarget.ts",
+          "../packages/tooling/tool/cli/src/commands/Gate/**",
+          "../packages/tooling/tool/cli/src/commands/Quality/CheckProbe.ts",
           "../standards/root-package.projection.generated.json",
           "../tools/tsgo-shim/package.json",
           "../tools/tsgo-shim/tsgo.js",
@@ -95,7 +101,9 @@
         ],
         "env": [],
         "passThroughEnv": [],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/check/**"
+        ],
         "dependsOn": [
           "^build"
         ],
@@ -499,6 +507,7 @@
         "@beep/infra-hosts#transit",
         "@beep/openclaw#transit",
         "@beep/repo-ai-metrics#transit",
+        "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
@@ -537,8 +546,11 @@
           "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
           "GITHUB_STEP_SUMMARY"
         ],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/test/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-vitest#transit",
           "@beep/utils#transit",
           "^transit"
         ],

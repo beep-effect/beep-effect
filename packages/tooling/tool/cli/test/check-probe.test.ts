@@ -89,6 +89,7 @@ const writeFixtureRepo = Effect.fn("CheckProbeTest.writeFixtureRepo")(function* 
   return {
     repoRoot,
     consumerDir: path.join(root, "packages", "consumer"),
+    consumerLog: path.join(root, "packages", "consumer", ".beep", "gates", "check", "report.log"),
     buildUpstream: writeFile(root, "packages/upstream/dist/index.d.ts", "export declare const upstream: number;\n"),
   };
 });
@@ -100,6 +101,23 @@ const outputLines = (output: string): ReadonlyArray<string> =>
 // those lines are Bun's own, not the check's.
 const isBunRunnerLine = (line: string): boolean => Str.startsWith("$ ")(line) || Str.startsWith("error: script ")(line);
 
+// The check gate's agent console for the unbuilt reference: the verdict, one
+// fold line naming the cause and the build command, the record and log paths,
+// the pointer, the verdict again. At most five lines, whatever the cascade.
+const expectFoldedConsole = (lines: ReadonlyArray<string>): void => {
+  expect(lines.length).toBeLessThanOrEqual(5);
+  expect(A.head(lines)).toStrictEqual(A.last(lines));
+  expect(A.getUnsafe(lines, 0)).toMatch(/^check @fixture\/consumer .*: FAILED, 1 error/);
+  expect(A.filter(lines, Str.includes("TS6305"))).toStrictEqual([
+    "TS6305 x1: upstream declarations are not built. Fix: bun x turbo run build --filter=@fixture/consumer^...",
+  ]);
+};
+
+const expectGreenConsole = (lines: ReadonlyArray<string>): void => {
+  expect(lines.length).toBe(1);
+  expect(A.getUnsafe(lines, 0)).toMatch(/^check @fixture\/consumer: PASSED, 0 errors/);
+};
+
 // `bin` leads PATH so `beep-cli` resolves to this checkout's entry.
 const runIn = Effect.fn("CheckProbeTest.runIn")(function* (cwd: string, bin: string, args: ReadonlyArray<string>) {
   const inheritedPath = yield* Config.String("PATH");
@@ -107,7 +125,8 @@ const runIn = Effect.fn("CheckProbeTest.runIn")(function* (cwd: string, bin: str
     command: "bun",
     args,
     cwd,
-    env: { PATH: `${bin}:${inheritedPath}`, BEEP_TURBO_HOST_CACHE_DISABLED: "true" },
+    // The gate prints the agent console, whoever runs the suite.
+    env: { PATH: `${bin}:${inheritedPath}`, BEEP_TURBO_HOST_CACHE_DISABLED: "true", AI_AGENT: "1" },
     extendEnv: true,
     source: "all",
     timeout: "60 seconds",
@@ -224,43 +243,48 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "120 s
     );
 
     it.effect(
-      "`bun run check` prints the one line, exits non-zero and never reaches the compiler",
+      "`bun run check` folds the cascade to one cause line, exits non-zero and never reaches the compiler",
       Effect.fnUntraced(function* () {
         const path = yield* Path.Path;
+        const fs = yield* FileSystem.FileSystem;
         const fixture = yield* writeFixtureRepo();
         const binDir = path.join(fixture.repoRoot, "node_modules", ".bin");
 
         const unbuilt = yield* runIn(fixture.consumerDir, binDir, ["run", "check"]);
         expect(unbuilt.exitCode).not.toBe(0);
-        expect(A.filter(outputLines(unbuilt.output), (line) => !isBunRunnerLine(line))).toStrictEqual([EXPECTED_LINE]);
+        expectFoldedConsole(A.filter(outputLines(unbuilt.output), (line) => !isBunRunnerLine(line)));
         expect(unbuilt.output).not.toContain(COMPILER_MARKER);
-        expect(unbuilt.output).not.toContain("TS6305");
 
         yield* fixture.buildUpstream;
         const built = yield* runIn(fixture.consumerDir, binDir, ["run", "check"]);
         expect(built.exitCode).toBe(0);
-        expect(built.output).toContain(COMPILER_MARKER);
-        expect(built.output).not.toContain("[beep-cli]");
+        expectGreenConsole(A.filter(outputLines(built.output), (line) => !isBunRunnerLine(line)));
+        // The compiler's own output goes to the raw log, never to the console.
+        expect(built.output).not.toContain(COMPILER_MARKER);
+        const log = yield* fs.readFileString(fixture.consumerLog);
+        expect(log).toContain(COMPILER_MARKER);
       })
     );
 
     it.effect(
-      "`beep-cli check` prints only the one line, exits non-zero and never reaches the compiler",
+      "`beep-cli check` prints only the gate console, exits 1 and never reaches the compiler",
       Effect.fnUntraced(function* () {
         const path = yield* Path.Path;
+        const fs = yield* FileSystem.FileSystem;
         const fixture = yield* writeFixtureRepo();
         const binDir = path.join(fixture.repoRoot, "node_modules", ".bin");
         const bin = path.join(fixture.repoRoot, "packages", "tooling", "tool", "cli", "src", "bin.ts");
 
-        const unbuilt = yield* runIn(fixture.consumerDir, binDir, [bin, "check"]);
+        const unbuilt = yield* runIn(fixture.consumerDir, binDir, [bin, "check", "--agent"]);
         expect(unbuilt.exitCode).toBe(1);
-        expect(outputLines(unbuilt.output)).toStrictEqual([EXPECTED_LINE]);
+        expectFoldedConsole(outputLines(unbuilt.output));
 
         yield* fixture.buildUpstream;
-        const built = yield* runIn(fixture.consumerDir, binDir, [bin, "check"]);
+        const built = yield* runIn(fixture.consumerDir, binDir, [bin, "check", "--agent"]);
         expect(built.exitCode).toBe(0);
-        expect(built.output).toContain("[beep-cli] @fixture/consumer beep:check: bun run beep:check");
-        expect(built.output).toContain(COMPILER_MARKER);
+        expectGreenConsole(outputLines(built.output));
+        const log = yield* fs.readFileString(fixture.consumerLog);
+        expect(log).toContain(COMPILER_MARKER);
       })
     );
 

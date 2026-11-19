@@ -32,6 +32,11 @@ const coveredScripts = {
   "beep:check": "tsgo -p tsconfig.check.json",
   "package-test-typecheck": "beep-cli quality test-tsgo-package",
 } as const;
+// The generated `check` is the check gate, which runs `bun run beep:check` itself.
+const gateScripts = {
+  check: "beep-cli gate run check",
+  "beep:check": "tsgo -p tsconfig.check.json",
+} as const;
 const blindScripts = {
   check: "tsgo -p tsconfig.check.json",
   "package-test-typecheck": "beep-cli quality test-tsgo-package",
@@ -83,6 +88,10 @@ describe("test-typecheck coverage", () => {
         ]);
         expect(blindVerdict.covered).toBe(false);
         expect(blindVerdict.uncoveredSources).toEqual([blind.testFile]);
+
+        const gated = yield* writeFixturePackage(root, "gated", gateScripts, ["src", "test"]);
+        const gatedVerdict = yield* checkScriptTestTypecheckCoverage(gated.packageDir, gateScripts, [gated.testFile]);
+        expect(gatedVerdict.covered).toBe(true);
       })
     );
   });

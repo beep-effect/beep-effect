@@ -2408,5 +2408,17 @@
   "@beep/csv/*": ["./packages/foundation/modeling/csv/src/*"],
   "@beep/xlsx": ["./packages/foundation/modeling/xlsx/src/index.ts"],
   "@beep/xlsx/*": ["./packages/foundation/modeling/xlsx/src/*"],
-  "@beep/csv/internal/*": ["./packages/foundation/modeling/csv/src/internal/*"]
+  "@beep/csv/internal/*": ["./packages/foundation/modeling/csv/src/internal/*"],
+  "@beep/repo-gate-vitest": [
+    "./packages/tooling/test-kit/repo-gate-vitest/src/index.ts"
+  ],
+  "@beep/repo-gate-vitest/*": [
+    "./packages/tooling/test-kit/repo-gate-vitest/src/*"
+  ],
+  "@beep/repo-gate-vitest/internal/*": [
+    "./packages/tooling/test-kit/repo-gate-vitest/src/internal/*"
+  ],
+  "@beep/repo-cli/commands/Gate": [
+    "./packages/tooling/tool/cli/src/commands/Gate/index.ts"
+  ]
 }

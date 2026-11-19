@@ -18,6 +18,15 @@ confirms, and has no per-package `turbo.json`.
 `bun run beep lint policy-fingerprint --write` added the two package manifests to the generated
 input list in `turbo.json`. Those two input lines are the root drift.
 
+## Main merge (e5b61d30932)
+
+Merging main brought #3419, which regenerates every package's `check` script to
+`beep-cli gate run check`. `bun run beep lint package-scripts --write` applied it to both
+manifests, so all nine tasks of each package drift as `configuration-drift` against the first
+record. `bun run beep lint policy-fingerprint --write` re-sealed the root inputs. The root
+review now carries this lane; main's gate-wiring review of the check inputs stays in its own
+basis file and its recorded inputs are unchanged.
+
 ## Decision
 
 Record all three subjects. No task command, output, environment entry or cache flag differs from

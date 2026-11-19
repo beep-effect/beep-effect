@@ -273,7 +273,8 @@ const generatedComposers = /*#__PURE__*/ $I.compose(
   "repo-gate-record",
   "repo-gate-run",
   "csv",
-  "xlsx"
+  "xlsx",
+  "repo-gate-vitest"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -4230,3 +4231,22 @@ export const $CsvId: Identity.IdentityComposer<"@beep/csv"> = /*#__PURE__*/ $I.c
  * @since 0.0.0
  */
 export const $XlsxId: Identity.IdentityComposer<"@beep/xlsx"> = /*#__PURE__*/ $I.create("xlsx");
+
+/**
+ * Identity composer for `@beep/repo-gate-vitest`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $RepoGateVitestId } from "@beep/identity/packages"
+ *
+ * const id = $RepoGateVitestId.make("RepoGateVitest")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $RepoGateVitestId: Identity.IdentityComposer<"@beep/repo-gate-vitest"> = /*#__PURE__*/ $I.create(
+  "repo-gate-vitest"
+);

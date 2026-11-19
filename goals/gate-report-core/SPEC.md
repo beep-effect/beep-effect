@@ -199,7 +199,8 @@ and is overridden by the `--agent`, `--human` and `--ci` flags of `@beep/cli-kit
   path writes the run's aggregate record and log to `.beep/gates/<gate>/<run-id>.json` and
   `<run-id>.log` at the repository root and keeps the newest 20 runs per gate. `.beep/*` is
   ignored by git.
-- The package record is a declared Turbo output of the `test` and `check` tasks. A cache hit
+- The package record is a declared Turbo output of the `test` and `check` tasks, each declaring
+  only its own gate directory (decision `outputs-per-gate`). A cache hit
   restores the record, and the console is rendered from it, never from a replayed log
   (decision `record-is-the-source`). The record keeps its original run id, so a restored record
   is recognizably a replay.
@@ -209,8 +210,8 @@ and is overridden by the `--agent`, `--human` and `--ci` flags of `@beep/cli-kit
 
 ### The Vitest adapter
 
-- It implements Vitest's reporter interface (`onTestRunStart`, `onTestModule*`, `onTestCase*`,
-  `onHook*`, `onTestRunEnd`) and emits gate events. It reads reporter events and builds a report.
+- It implements Vitest's reporter interface (`onInit`, `onTestRunStart`, `onUserConsoleLog` and
+  `onTestRunEnd`) and synthesizes the run from the finished module tree into gate events.
 - It does not manage the reporter chain: it strips no reporter, patches no logger stream, zeroes
   no coverage reporter and mutates no Vitest config. It is one entry appended in
   `vitest.shared.ts`. Upstream's 3,141-line `.repos/vitest-agent/packages/plugin/src/reporter.ts` is read for its
@@ -256,7 +257,7 @@ Ported, widened along the seams above:
 | `.repos/vitest-agent/packages/sdk/src/schemas/AgentReport.ts`, `Common.ts`, `RunEvent.ts`, `RenderState.ts`, `RunReportFile.ts`, `StrayOutput.ts` | model | Result, event, render-state and record-file schemas only |
 | `.repos/vitest-agent/packages/sdk/src/contracts/dispatcher.ts` | model | Shape, outcome and cell contract |
 | `.repos/vitest-agent/packages/sdk/src/utils/build-report.ts:324-371` | model and adapter | Honest-count rules to the model; Vitest `TestModule` duck typing to the adapter |
-| `.repos/vitest-agent/packages/sdk/src/utils/stray-output.ts:62-184` | model and adapter | Summary schema and note text to the model; the recorder's install point to the adapter |
+| `.repos/vitest-agent/packages/sdk/src/utils/stray-output.ts:62-184` | model and adapter | Summary schema and note text to the model; the recorder and reader to the adapter. The capture that wraps the logger streams is not ported |
 | `.repos/vitest-agent/packages/ui/src/reducer.ts` | model | Events reduce to a report |
 | `.repos/vitest-agent/packages/ui/src/dispatcher/classify.ts:34-94` | model | Shape and outcome classifiers, widened |
 | `.repos/vitest-agent/packages/ui/src/dispatcher/dispatch.ts:41-145`, `cells/`, `helpers.ts`, `cell-types.ts` | model | Twelve cells grow to twenty (four shapes by five outcomes) |
@@ -341,73 +342,74 @@ contributors`. No `@vitest-agent/*` or `@effected/*` entry appears in any manife
 The console laws. Each is a test in the library or the model package. Property tests generate
 reports from the report schema's arbitrary.
 
-- [ ] **AC-L1 Verdict first and last.** Property: for any report, the agent projection's first and
+- [x] **AC-L1 Verdict first and last.** Property: for any report, the agent projection's first and
   last lines are both the verdict line (gate, subject, verdict word, counts, duration). The
   projection is the block rendered from a finished report. Lines a gate prints while it is still
   running (the heartbeat `goals/gate-report-rollout` adds) come before that block; nothing follows
   it.
-- [ ] **AC-L2 Silent on success.** Property: an `all-pass` report projects to exactly one line.
+- [x] **AC-L2 Silent on success.** Property: an `all-pass` report projects to exactly one line.
   Measured: a green `test` run for `@beep/glob` (273 tests) prints one line of at most 120
   characters, against 13,450 characters through Turbo on 2026-11-18.
-- [ ] **AC-L3 Failures only, bounded.** Property: for any report, the agent projection is at most
+- [x] **AC-L3 Failures only, bounded.** Property: for any report, the agent projection is at most
   8,000 characters and no line exceeds 240. Each failure entry is one line plus at most its first
   message line and a diff of at most 12 lines, never a stack. When entries are dropped, one cap
   line says `... N more in the record` with N equal to the number dropped.
-- [ ] **AC-L4 Honest counts.** Tests: a report with nothing collected is `ERRORED`, never
+- [x] **AC-L4 Honest counts.** Tests: a report with nothing collected is `ERRORED`, never
   `PASSED`; timeouts, load failures, hook failures and unhandled errors each have their own
   total, cancellation renders `CANCELLED`, and none yields `all-pass`; a nonzero tool exit with no failed item is `ERRORED`
   with one item carrying the log excerpt; a zero exit with a failed item is `FAILED`. The ported
   `build-report` tests pass retargeted.
-- [ ] **AC-L5 Labels from history.** Given labels from the history contract's test layer, every
+- [x] **AC-L5 Labels from history.** Given labels from the history contract's test layer, every
   failure entry carries exactly one label from the closed set. Without a history service, or with
   one that fails, entries carry none and the projection is otherwise unchanged. The labels' values
   are acceptance of `goals/gate-run-history`.
-- [ ] **AC-L6 Delta on re-run.** Given a delta from the history contract's test layer, one line
+- [x] **AC-L6 Delta on re-run.** Given a delta from the history contract's test layer, one line
   `since last run: F fixed, S still failing, N new` renders before the path line; on a green run it
   is a suffix of the single verdict line. Its values are acceptance of `goals/gate-run-history`.
-- [ ] **AC-L7 Causes fold.** The cause-folding table is keyed on diagnostic codes, TS6305 first.
+- [x] **AC-L7 Causes fold.** The cause-folding table is keyed on diagnostic codes, TS6305 first.
   Fixture: the TS6305 cascade a package-local `check` prints on a fresh lane with unbuilt
   dependencies (701 lines for one cause in the census; the fixture is regenerated from the
   repository, never from transcript text) renders as one fold line with the count, the cause and
   the fix command, and the whole projection is at most 5 lines; diagnostics that share a file, a
   code and a message shape remain distinct items.
-- [ ] **AC-L8 A path with its size.** Every non-green projection has one line naming the raw log
+- [x] **AC-L8 A path with its size.** Every non-green projection has one line naming the raw log
   and the record by repository-relative path with the log's size; a test reads both files back at
   those paths and checks the size.
-- [ ] **AC-L9 Next steps are commands.** A test parses every pointer line of every cell against
+- [x] **AC-L9 Next steps are commands.** A test parses every pointer line of every cell against
   the repo CLI command tree and fails on an MCP tool name, a bare tool name or a pointer to
   documentation. `rg -n 'test_errors|failure_signature_get|file_coverage|test_coverage'` over the
   new packages finds nothing.
-- [ ] **AC-L10 Rendering never waits.** With a recorder layer that fails, and with a history layer
+- [x] **AC-L10 Rendering never waits.** With a recorder layer that fails, and with a history layer
   that fails or misses its deadline, the projection still begins and ends with the verdict line,
   adds one line naming what was not written, and the exit code is unchanged.
 
 The model, the services and the wiring:
 
-- [ ] Every row of the widening table has its widened type in the model, and a table test maps
+- [x] Every row of the widening table has its widened type in the model, and a table test maps
   each upstream fixture value to it.
-- [ ] A table test maps every item to a CTRF `status` and to a SARIF `level`, `ruleId`, region and
+- [x] A table test maps every item to a CTRF `status` and to a SARIF `level`, `ruleId`, region and
   `partialFingerprints`, and maps each back to an equal item.
-- [ ] The dispatch table is total over `RunShape` by `RunOutcome` at the type level; a test renders
+- [x] The dispatch table is total over `RunShape` by `RunOutcome` at the type level; a test renders
   all twenty cells.
-- [ ] One renderer serves both gates: a test-gate fixture and a check-gate fixture render through
+- [x] One renderer serves both gates: a test-gate fixture and a check-gate fixture render through
   the one console service, and the cells import nothing from either adapter.
-- [ ] Property: the terminal projection, with ANSI escapes and the progress line removed, equals
+- [x] Property: the terminal projection, with ANSI escapes and the progress line removed, equals
   the agent projection for any report inside the agent budget.
-- [ ] Running the `test` task for `@beep/glob` twice, the second a Turbo cache hit, prints
+- [x] Running the `test` task for `@beep/glob` twice, the second a Turbo cache hit, prints
   byte-identical consoles; the same holds for `check`.
-- [ ] `test` and `check` print the console contract for every package on the repo CLI task path,
+- [x] `test` and `check` print the console contract for every package on the repo CLI task path,
   at the package directory and at the root.
-- [ ] The Vitest adapter's package tests pass under Node and under Bun; the resolved Vitest
+- [x] The Vitest adapter's package tests pass under Node and under Bun; the resolved Vitest
   reporter list equals Vitest's own default selection plus the adapter.
-- [ ] The planned `gate` command family shows a run's record and one item in full.
-- [ ] Each new package carries the dual-copyright `LICENSE` and the README `Provenance` and
+- [x] The `gate` command family shows a run's record and one item in full.
+- [x] Each new package carries the dual-copyright `LICENSE` and the README `Provenance` and
   `Attribution` sections; no manifest lists `@vitest-agent/*` or `@effected/*`.
-- [ ] `bun run beep quality package-verify` passes for every new and touched package, and
+- [x] `bun run beep quality package-verify` passes for every new and touched package, and
   `bun run beep lint identity-registry` passes.
-- [ ] When `goals/agent-output-census` has landed, the census rows for characters per green run
-  and log digs per run are cited before and after in `history/`.
-- [ ] No unrelated refactors or formatting churn.
+- [x] When `goals/agent-output-census` has landed, the census rows for characters per green run
+  and log digs per run are cited before and after in `history/`. It had not landed at closeout, so
+  no rows are cited; the evidence file says so.
+- [x] No unrelated refactors or formatting churn.
 
 ## Verification Matrix
 
@@ -525,6 +527,14 @@ Lane explore/agent-verification-output
 
 Reverse: Rename the model and packages and re-key their identities
 
+### Adapter port review: repeated names, every unit fault, bounded console logs, 2026-11-19
+
+The port review found four things in the Vitest adapter and they are fixed. Two tests with one full name in one file stay distinct items: the adapter numbers the repeats, the first keeping its plain name so existing keys are stable. It is done in the adapter, which knows the two test cases are distinct objects; the reducer only sees keys and must keep replacing by key for retries. Every module or suite error is its own unit fault, up to ten per module, where only the first was kept. Console lines accumulate up to one mebibyte, after which later lines are counted and the log says so. The timeout helper is named in the provenance and its upstream test cases are carried over. The escape-stripping pattern is one public leaf of the model, used by the plain-text projection and the stray-output recorder.
+
+Lane feat/gate-report-wiring
+
+Reverse: Revert the adapter changes in the merge commit that carries them.
+
 ### The agent budget stays 8,000 characters, 240 per line, 12 diff lines, 2026-11-19
 
 Re-read against the harness limits in the exploration research (section 5 of the external landscape): Claude Code keeps about 10,000 characters of a failing command inline and Codex cuts the middle of a larger budget, so the smallest window is about 10,000 characters and 2,000 are left for what prints outside the renderer. The numbers are the default of a budget parameter, not constants in the model.
@@ -532,6 +542,30 @@ Re-read against the harness limits in the exploration research (section 5 of the
 Lane feat/gate-report-core
 
 Reverse: Change the default ConsoleBudget the library supplies.
+
+### A marked later Vitest run folds into the record of the run before it, 2026-11-19
+
+Four packages chain two Vitest runs in one test script, and the second run overwrote the test record with only its own files. A later run is now marked with BEEP_GATE_CONTINUES=1 in the script and folds into the existing record through a pure merge in the model: units and items deduplicated by key, totals recounted from the items, durations summed, the first run's id and start kept; the log appends. A run without the mark replaces the record and clears the sidecar that names the run a chain may extend, so a chain never folds into a record left by a cache restore or an earlier invocation. An inferred session key was measured and rejected: the parent process differs between the two runs of one chained script, and the coverage orchestrator runs each Vitest command without a shell. A guard test requires the mark on every later run of a chained script.
+
+Lane feat/gate-report-wiring · PR #3419
+
+Reverse: Remove the mark from the four scripts and the fold from the adapter; the last run's record wins again.
+
+### The generated package check is one slim gate entry, 2026-11-19
+
+A package's generated `check` is `beep-cli gate run check`, a slim entry that loads only the gate and four platform services. It probes for unbuilt references; if any are missing it writes a record that folds to the TS6305 line and exits 1 without starting a compiler. Otherwise it runs the compiler script with output captured to the log, turns the output into events, writes the record, prints the console for the audience and exits with the compiler's code. The infra kind keeps its plain script because its check builds references itself. On a built package the entry costs about 25 to 40 ms more than the probe plus compiler it replaces (about 350 ms against 328, compiler alone 180).
+
+Lane feat/gate-report-wiring
+
+Reverse: Point the generated check back at the probe followed by the compiler script and re-record the package cache baselines.
+
+### The check hash names the record's producer sources as inputs, not a package dependency, 2026-11-19
+
+A cached check record must be invalidated when the code that builds it changes. The check task lists those sources as root inputs: the gate-run library, the repo CLI's Gate command directory, the unbuilt-reference probe, the output bound, and the tsconfig loader with its extends resolver. A transit dependency on the gate-run library was rejected because its package closure reaches the repo CLI kit and its drivers, so an edit to an unrelated driver would re-key every check. Known gap: the tsconfig parsing libraries under the loader are not listed, so a change in tsconfig parsing does not re-key check. A test fails when a source file of the Gate directory or the gate-run library is not matched by the inputs. For the test task the adapter's transit already covers its whole writer.
+
+Lane feat/gate-report-wiring · PR #3419
+
+Reverse: Replace the listed inputs with a transit dependency on the gate-run library and accept the wider invalidation.
 
 ### All twenty cells print one contract; upstream's tables and trailers are not ported, 2026-11-19
 
@@ -580,6 +614,30 @@ The fixture set: a green test run of `@beep/glob`; a red test run with an assert
 Lane feat/gate-report-core
 
 Reverse: Replace a generated fixture with a hand-written one and note why in the test.
+
+### The flake quarantine reads the check logs, 2026-11-19
+
+Once a package check prints the gate console, the Turbo stream no longer carries the raw compiler lines the no-location TS2589 detector reads, and detection on the root check run stopped. Before detection, each failed check task's raw log is appended to the lane output with the task prefix Turbo uses. The quarantine judges the same bounded attempt as before; its waves, reruns and artifact are unchanged, and its existing tests pass unchanged.
+
+Lane feat/gate-report-wiring
+
+Reverse: Have the check gate echo compiler output into the Turbo stream again.
+
+### The gate queries exist and pointers carry their target, 2026-11-19
+
+The `gate show` query prints a run's record and `gate item` prints one item in full. They read the package named by `--dir`, else the working directory's package, else the newest root run; `--run` picks an older root run. A console pointer is built from the record it was printed for: a package record prints `--dir` with the repository-relative directory and a root run prints `--run` with its id, so the printed command opens that record from any directory. Law 9 is tested against the real command tree: every pointer of every cell resolves to a leaf command.
+
+Lane feat/gate-report-wiring
+
+Reverse: Mark the pointer commands planned and print them without a target.
+
+### Captured gate steps declare to the lane ledger through the streaming runner's group, 2026-11-19
+
+A root gate step runs its Turbo command captured, which bypassed the code that declares a step's Turbo digest to the lane ledger; under a wrapper lane nothing was declared and the lane's proof could not be reused. One ledger group now serves both runners: every direct Turbo step, streamed or captured, declares its digest, and each group closes once with its attempt count. A root gate step also adds Turbo's run-summary flag only when the caller did not pass it, because Turbo rejects a repeated flag and the CI lane passes its own.
+
+Lane feat/gate-report-wiring · PR #3419
+
+Reverse: Give the root gate steps their own ledger calls again.
 
 ### The history read deadline belongs to the caller, 2026-11-19
 
@@ -653,6 +711,14 @@ Lane feat/gate-report-services
 
 Reverse: Import the bound from the step-execution module again and delete the leaf.
 
+### Each task declares its own gate directory as output, and its writer is in its hash, 2026-11-19
+
+The `test` task declares the test gate directory and the `check` task declares the check gate directory, never the whole gates directory, so a check cache hit cannot restore a stale test record. The `test` task depends on the Vitest adapter's transit task and the `check` task on the record library's, so a change to the code or the format that writes a cached record invalidates it. A restored record keeps its run id, and a cache hit prints a console identical to the miss.
+
+Lane feat/gate-report-wiring
+
+Reverse: Widen the output globs to the whole gates directory and drop the transit dependencies.
+
 ### Pointer commands are marked planned until the gate queries exist, 2026-11-19
 
 The pointer table names the two planned queries of the gate command family and marks them planned. A test fails as soon as one is marked live without the check against the real command tree, which is the seam for law 9; the wiring slice adds the commands and flips the mark.
@@ -661,9 +727,25 @@ Lane feat/gate-report-services
 
 Reverse: Mark the two query commands live and add the command-tree check.
 
-### The goal lands as four sequential pull requests, 2026-11-19
+### The repository root is the nearest Turbo config that extends nothing; the fingerprint is the Turbo hash or the run id, 2026-11-19
 
-The plan lands P1 through P3 as one pull request. It is split so each is reviewable and green alone: first `@beep/gate-report` complete (schemas, reducer, classifiers, counts, signature, folding table, dispatch cells and the law tests that need no service), then the record and gate-run libraries, then the Vitest adapter with the `test` and `check` wiring and the gate queries, then the port review and the closeout. The wiring rewrites every package manifest, so it stays apart from the libraries. The packet allows three open pull requests; these are sequential.
+Twenty-seven packages have their own Turbo config, so the root is the nearest one with no `extends`. The input fingerprint is the Turbo task hash under Turbo and the run id otherwise; a digest of the head commit and uncommitted changes is left to the history goal, which is the only reader that compares fingerprints.
+
+Lane feat/gate-report-wiring
+
+Reverse: Change the root rule and the fingerprint in the package-location module of the record library.
+
+### A root test or check run prints one console from the package records, 2026-11-19
+
+The root unit test run and the root check run capture their Turbo step and print one console for the workspace: counts and duration summed from the package records, packages taken from the run summary. A cache hit's record is trusted; a miss's record must be newer than the run start. The repo-wide type smoke step still streams, and integration lanes are not aggregated because Turbo neither caches nor restores their records. The package test path runs the package test script with output captured, renders the fresh record, and records an errored run with the log excerpt when no record was written.
+
+Lane feat/gate-report-wiring
+
+Reverse: Return the root steps to streaming their Turbo output.
+
+### The goal lands as three sequential pull requests, 2026-11-19
+
+The plan lands P1 through P3 as one pull request. It is split so each is reviewable and green alone: first `@beep/gate-report` complete (schemas, reducer, classifiers, counts, signature, folding table, dispatch cells and the law tests that need no service), then the record and gate-run libraries, then the Vitest adapter with the `test` and `check` wiring, the gate queries and the closeout. The port review ran before the third opened and its findings were fixed in the pull request that owns each piece of code, so a fourth pull request for documents alone was dropped. The wiring rewrites every package manifest, so it stays apart from the libraries. The packet allows three open pull requests; these are sequential.
 
 Lane feat/gate-report-core
 
@@ -684,6 +766,14 @@ The TypeScript diagnostic parser moved out of the Yeet issue parser into a leaf 
 Lane feat/gate-report-services
 
 Reverse: Fold the parser back into the type-check adapter and count a probe finding as nothing checked.
+
+### The Vitest adapter synthesizes at run end and writes its own log, 2026-11-19
+
+The adapter builds the run from the finished module tree when the run ends, not from per-test hooks, and implements only the start, console-log and end hooks. Its log holds the console lines Vitest hands a reporter and then every failed item in full, because a reporter never sees the process streams. The stray-output recorder and reader are ported; the capture that wraps the logger streams is not, since the adapter patches no stream. A run under an integration test directory records its own gate, so it cannot overwrite the unit record. The registered module loads its implementation when Vitest starts and turns itself off with one stderr line on any failure.
+
+Lane feat/gate-report-wiring
+
+Reverse: Emit events from the per-test reporter hooks and have the task path write the log.
 
 ### The Vitest adapter is a new test kit, @beep/repo-gate-vitest, loaded lazily and registered by specifier, 2026-11-19
 

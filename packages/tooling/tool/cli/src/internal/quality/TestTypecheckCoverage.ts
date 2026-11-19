@@ -25,6 +25,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { PACKAGE_CHECK_GATE_COMMAND, PACKAGE_CHECK_GATE_SCRIPT } from "@beep/repo-cli-kit/package-scripts/CheckGate";
 import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
 import { normalizePath } from "@beep/schema";
 import { A, O, pipe, R, Str, thunkFalse } from "@beep/utils";
@@ -382,6 +383,11 @@ const makeGlobMatchers = Effect.fn("TestTypecheckCoverage.makeGlobMatchers")(fun
   return yield* Effect.forEach(entries, makeGlobMatcher, { concurrency: 1 });
 });
 
+// The check gate runs `bun run beep:check` itself, so its command reads as that
+// delegation when the script graph is flattened.
+const delegatedCommand = (command: string): string =>
+  command === PACKAGE_CHECK_GATE_COMMAND ? `bun run ${PACKAGE_CHECK_GATE_SCRIPT}` : command;
+
 // Flatten a package script with every script it transitively invokes through
 // `bun run`. `check` almost always delegates (check -> beep:check ->
 // beep:check:tests), so coverage can only be judged on the flattened text;
@@ -402,8 +408,10 @@ const flattenScriptCommand = (input: {
       R.get(input.scripts, name),
       O.match({
         onNone: A.empty<string>,
-        onSome: (command) =>
-          A.appendAll(A.of(command), pipe(capturedGroups(scriptReferencePattern, command), A.flatMap(collect))),
+        onSome: (script) => {
+          const command = delegatedCommand(script);
+          return A.appendAll(A.of(command), pipe(capturedGroups(scriptReferencePattern, command), A.flatMap(collect)));
+        },
       })
     );
   };

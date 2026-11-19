@@ -198,6 +198,10 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
   groupRoute({ name: "lint", description: "Repository lint policy checks" }, ["fs-utils", "ts-morph", "memory-stats"])(
     () => import("../../commands/Lint/index.ts").then((module) => module.lintCommand)
   ),
+  groupRoute(
+    { name: "gate", description: "Gate reports: run a gate and print its console from the record" },
+    []
+  )(() => import("../../commands/Gate/index.ts").then((module) => module.gateCommand)),
   // `lawsCommand` and `researchCommand` are exported with their requirements cast away, so
   // their keys are set by hand: Laws reads TSMorphService, Research only the platform base.
   groupRoute({ name: "laws", description: "Effect governance validation and migration commands" }, ["ts-morph"])(() =>

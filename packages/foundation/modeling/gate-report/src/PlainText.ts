@@ -11,8 +11,8 @@ import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { verdictWord } from "./Classify.ts";
 import { CapLine, ConsoleDocument, ConsoleEntry } from "./ConsoleDocument.ts";
+import { stripEscapes } from "./Escapes.ts";
 import { formatBytes, formatDuration } from "./Format.ts";
-import { stripEscapes } from "./internal/escapes.ts";
 import type {
   ConsoleBudget,
   FailureEntry,

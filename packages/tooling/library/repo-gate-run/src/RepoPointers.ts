@@ -7,6 +7,7 @@
  */
 import { GatePointers } from "@beep/gate-report/ConsoleDocument";
 import { $RepoGateRunId } from "@beep/identity/packages";
+import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
@@ -42,9 +43,9 @@ export const REPO_CLI_PREFIX = "bun run beep ";
  *
  * **Details**
  *
- * The `gate` command family is planned: its commands are named here so the
- * console can point at them, and a test fails once one is marked `live`
- * without a check against the repo CLI's command tree.
+ * The `gate show` and `gate item` queries are live: the repo CLI's tests
+ * resolve every live pointer command in its real command tree. A `planned`
+ * command may be named before it is built.
  *
  * **Example** (Match a status)
  *
@@ -144,10 +145,11 @@ export class GateQueryCommands extends S.Opaque<GateQueryCommands, { readonly br
   )
 ) {}
 
-const plannedQueries = (gate: ContractGate): GateQueryCommands =>
+// `beep gate show <gate>` and `beep gate item <gate> <selector>` are built in the repo CLI.
+const liveQueries = (gate: ContractGate): GateQueryCommands =>
   GateQueryCommands.make({
-    showRun: RepoCommand.make({ words: ["gate", "show", gate], status: "planned" }),
-    showItem: RepoCommand.make({ words: ["gate", "item", gate], status: "planned" }),
+    showRun: RepoCommand.make({ words: ["gate", "show", gate], status: "live" }),
+    showItem: RepoCommand.make({ words: ["gate", "item", gate], status: "live" }),
   });
 
 /**
@@ -193,8 +195,8 @@ export type ContractGate = typeof ContractGate.Type;
  * @since 0.0.0
  */
 export const repoGateCommands: Readonly<Record<ContractGate, GateQueryCommands>> = {
-  test: plannedQueries("test"),
-  check: plannedQueries("check"),
+  test: liveQueries("test"),
+  check: liveQueries("check"),
 };
 
 /**
@@ -234,6 +236,63 @@ export const repoCommands: ReadonlyArray<RepoCommand> = A.flatMap(R.values(repoG
   commands.showRun,
   commands.showItem,
 ]);
+
+// The flags that pin a query to one record: a package's directory, or a root
+// run's id, so a printed pointer still names its run after later runs.
+const targetFlags: (target: RecordTarget) => ReadonlyArray<string> = RecordTarget.match({
+  PackageTarget: (target) => ["--dir", target.packageDir],
+  RootTarget: (target) => ["--run", target.runId],
+});
+
+/**
+ * The query commands for one record: `gate show` of that record, and
+ * `gate item` of its first listed item, each pinned by `--dir <package>` for
+ * a package record or `--run <run id>` for a root run.
+ *
+ * **Example** (Pin a package record)
+ *
+ * ```ts
+ * import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
+ * import { commandText, repoGateCommandsFor } from "@beep/repo-gate-run/RepoPointers";
+ *
+ * const target = RecordTarget.cases.PackageTarget.make({ packageDir: "packages/foundation/modeling/glob", gate: "check" });
+ * console.log(commandText(repoGateCommandsFor(target).showRun));
+ * // bun run beep gate show check --dir packages/foundation/modeling/glob
+ * ```
+ *
+ * @param target - The record a console was rendered for.
+ * @returns Its show and item queries, each pinned to that record.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const repoGateCommandsFor = (target: RecordTarget): GateQueryCommands =>
+  GateQueryCommands.make({
+    showRun: RepoCommand.make({ words: ["gate", "show", target.gate, ...targetFlags(target)], status: "live" }),
+    showItem: RepoCommand.make({ words: ["gate", "item", target.gate, "1", ...targetFlags(target)], status: "live" }),
+  });
+
+/**
+ * The pointer table for one record: its gate's pointer line names the
+ * show query pinned to that record, so the next step works as printed after
+ * any later run.
+ *
+ * **Example** (Point at a root run)
+ *
+ * ```ts
+ * import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
+ * import { repoPointerTableFor } from "@beep/repo-gate-run/RepoPointers";
+ *
+ * const table = repoPointerTableFor(RecordTarget.cases.RootTarget.make({ gate: "test", runId: "20261119T000000000Z-0001" }));
+ * console.log(table.test?.failure); // bun run beep gate show test --run 20261119T000000000Z-0001
+ * ```
+ *
+ * @param target - The record a console was rendered for.
+ * @returns A pointer table with that record's gate only.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const repoPointerTableFor = (target: RecordTarget): PointerTable =>
+  R.singleton(target.gate, GatePointers.make({ failure: commandText(repoGateCommandsFor(target).showRun) }));
 
 /**
  * Why a pointer command was refused: it names an MCP tool, a tool outside the

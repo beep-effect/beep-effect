@@ -324,6 +324,25 @@ const scanOutputForTs2589 = (output: string): Ts2589Scan =>
   );
 
 /**
+ * The tasks Turbo's failure footer names in a lane's output, once each.
+ *
+ * **Example** (Read the failed tasks)
+ *
+ * ```ts
+ * import { failedTurboTasks } from "@beep/repo-cli/test/Quality"
+ *
+ * console.log(failedTurboTasks(" ERROR  run failed\nFailed:    @beep/a#check\n").map((task) => task.taskId)) // [ "@beep/a#check" ]
+ * ```
+ *
+ * @param output - The lane's captured output.
+ * @returns The failed tasks, in footer order.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const failedTurboTasks = (output: string): ReadonlyArray<FlakeQuarantineTask> =>
+  pipe(scanOutputForTs2589(output).failedTaskIds, A.dedupe, A.map(taskFromTaskId), A.getSomes);
+
+/**
  * Decide whether a failed lane output matches the no-location TS2589 flake
  * signature, returning the failed Turbo tasks to rerun standalone.
  *

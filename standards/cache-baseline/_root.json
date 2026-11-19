@@ -9,10 +9,10 @@
   ],
   "review": {
     "reviewer": "Claude Fable 5.2 (csv and xlsx lane, feat/xlsx-and-csv-foundation-modeling)",
-    "reason": "Record the two new modeling packages' tasks (generated scripts, root task definitions, no override) and the two manifest inputs the policy fingerprint added to the root. No qualification is granted.",
+    "reason": "Record the two new modeling packages' tasks (generated scripts, including the gate-run check script main regenerated, root task definitions, no override) and the two manifest inputs the policy fingerprint added to the root. No qualification is granted.",
     "basis": {
       "path": "docs/reports/csv-xlsx-cache-review-2026-11-19.md",
-      "sha256": "17e1887c130d4677b316ec71c5074f8d58a1e785ced0326ca54378782e20de62"
+      "sha256": "2276c12fc15782beb0bd1e56d956daf437f52eba99e04c548bc6a9b4da7b358e"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "766933ccb311f2fb313be0f190ed16f116e3ae40973830c15f4af7c2d023d8f9"
+      "sha256": "3310b8e0930ba1d7bcbc2882a9ac7777056962919070a962bc369986a9038e08"
     }
   ],
   "nodes": [
@@ -2188,6 +2188,7 @@
           "packages/foundation/modeling/epistemics/package.json",
           "packages/foundation/modeling/epistemics/src/**",
           "packages/foundation/modeling/gate-report/package.json",
+          "packages/foundation/modeling/gate-report/src/**",
           "packages/foundation/modeling/github-commands/package.json",
           "packages/foundation/modeling/github-commands/src/**",
           "packages/foundation/modeling/github-references/package.json",
@@ -2284,6 +2285,7 @@
           "packages/tooling/library/repo-cli-kit/package.json",
           "packages/tooling/library/repo-cli-kit/src/**",
           "packages/tooling/library/repo-gate-record/package.json",
+          "packages/tooling/library/repo-gate-record/src/**",
           "packages/tooling/library/repo-gate-run/package.json",
           "packages/tooling/library/repo-gate-run/src/**",
           "packages/tooling/library/repo-tsconfig/package.json",
@@ -2298,6 +2300,7 @@
           "packages/tooling/test-kit/fc-runs/package.json",
           "packages/tooling/test-kit/fc-runs/src/**",
           "packages/tooling/test-kit/memfs/package.json",
+          "packages/tooling/test-kit/repo-gate-vitest/package.json",
           "packages/tooling/test-kit/test-runner/package.json",
           "packages/tooling/test-kit/test-utils/package.json",
           "packages/tooling/test-kit/test-utils/src/**",

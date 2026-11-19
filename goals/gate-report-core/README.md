@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -31,11 +31,18 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 is complete: four package homes are confirmed by decision file. P1 is complete: the model package `@beep/gate-report` is built with its law tests. P2 is complete: the record and gate-run libraries are built with their contracts, services and tests. P3 (the Vitest adapter and the `test` and `check` wiring) is in progress; P1 through P3 are the first vertical slice.
+P0 is complete: four package homes are confirmed by decision file. P1 is complete: the model package `@beep/gate-report` is built with its law tests. P2 is complete: the record and gate-run libraries are built with their contracts, services and tests. P3 and P4 are complete: the Vitest adapter, the slim check entry, the task-path consoles for every package and the root, and the gate queries are built. Every phase is complete. The goal landed as three pull requests: the model (#3407), the libraries (#3413), and the adapter, wiring and closeout (#3419); P1 through P3 are the first vertical slice.
 
 ## Latest Evidence
 
-Not started.
+2026-11-19, measured on the wiring lane:
+
+- A green `test` run of `@beep/glob` on the task path prints one line of 47 characters, against
+  13,450 at the exploration baseline and 820 after the switch-on goal.
+- A red test with a diff prints 14 lines, 520 characters; a package with unbuilt references prints
+  5 lines.
+- Root `test` and root `check`, a miss then a Turbo cache hit, print identical consoles.
+- The slim check entry costs about 25 to 40 ms more than the probe plus compiler it replaces.
 
 ## Notes
 
