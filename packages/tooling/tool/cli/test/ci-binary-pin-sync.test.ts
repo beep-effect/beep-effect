@@ -384,6 +384,73 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
       })
     );
 
+    // A stale branch is bumped by create-pull-request, which force-updates it to main plus the pin
+    // commit; when main changed a workflow file since the branch was cut, the App cannot push that.
+    it.effect("a stale pin-only branch whose update carries workflow changes supersedes to the newest release", () =>
+      Effect.gen(function* () {
+        const repo = yield* fixture(MID, O.some(mainWorkflow));
+        const outcome = yield* sync(repo);
+        const after = yield* head(repo.root);
+        expect(outcome).toStrictEqual(decided("supersede", O.some(NEW)));
+        expect(after).toBe(repo.before);
+      })
+    );
+
+    it.effect("a stale branch with an extra commit is blocked, names the waiting release, and changes nothing", () =>
+      Effect.gen(function* () {
+        const repo = yield* fixture(MID, O.some(mainWorkflow));
+        yield* commitFile(repo.root, { file: "docs/fix.md", text: "# a hand fix\n", message: "hand fix" });
+        const before = yield* head(repo.root);
+        const outcome = yield* sync(repo);
+        const after = yield* head(repo.root);
+        expect(A.take(outcome, 1)).toStrictEqual(decided("blocked", O.none()));
+        expect(outcome[1]).toContain(`reason=a newer release ${NEW.tag} is waiting`);
+        expect(outcome[1]).toContain("carries workflow changes (.github/workflows/ci.yml)");
+        expect(outcome[1]).toContain("holds changes besides the pin (docs/fix.md)");
+        expect(after).toBe(before);
+      })
+    );
+
+    it.effect("a stale branch whose pin file differs beyond the pinned lines is blocked", () =>
+      Effect.gen(function* () {
+        const stray = `${actionText(MID)}# a stray line on the branch\n`;
+        const repo = yield* fixture(MID, O.some(mainWorkflow), releaseRows, O.some(stray));
+        const outcome = yield* sync(repo);
+        expect(A.take(outcome, 1)).toStrictEqual(decided("blocked", O.none()));
+        expect(outcome[1]).toContain(`${PIN_FILE} beyond the two pinned lines`);
+      })
+    );
+
+    it.effect("a stale branch that created the pin file itself is blocked", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
+        yield* gitOutput(root, ["init", "-q", "-b", "main"]);
+        yield* gitOutput(root, ["config", "user.email", "pin-sync@example.test"]);
+        yield* gitOutput(root, ["config", "user.name", "Pin Sync Test"]);
+        yield* gitOutput(root, ["config", "commit.gpgsign", "false"]);
+        yield* commitFile(root, unrelated);
+        yield* gitOutput(root, ["checkout", "-q", "-b", "pin"]);
+        yield* commitFile(root, { file: PIN_FILE, text: actionText(MID), message: "add the pin" });
+        yield* gitOutput(root, ["checkout", "-q", "main"]);
+        yield* commitFile(root, mainWorkflow);
+        yield* gitOutput(root, ["checkout", "-q", "pin"]);
+        const scratch = yield* fs.makeTempDirectoryScoped();
+        const rows = yield* decodeReleaseRows(releaseRows);
+        const releasesText = yield* encodeReleases(rows);
+        yield* fs.writeFileString(`${scratch}/releases.json`, releasesText);
+        const before = yield* head(root);
+        const outcome = yield* sync({
+          root,
+          releases: `${scratch}/releases.json`,
+          output: `${scratch}/output`,
+          before,
+        });
+        expect(A.take(outcome, 1)).toStrictEqual(decided("blocked", O.none()));
+        expect(outcome[1]).toContain(`${PIN_FILE} beyond the two pinned lines`);
+      })
+    );
+
     // GitHub refuses a push by the pin-bump App (no `workflows` permission) that updates an existing
     // branch with workflow-file changes, so such a merge cannot be pushed. A branch that holds nothing
     // but the pin is superseded by a fresh pull request from main; anything more stops.

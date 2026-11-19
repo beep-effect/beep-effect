@@ -354,14 +354,17 @@ jobs:
           #   fails). `current`: nothing to do. `merged`: main merged in with the
           #   pin file resolved to main's text and only the two pinned lines set;
           #   the push step pushes it without force, so the pull request keeps its
-          #   number and review history. `supersede`: the merge would carry
-          #   workflow files, which the pin-bump App (no `workflows` permission)
-          #   cannot push onto an existing branch, and the branch holds only the
-          #   pin: the pull request is labelled `superseded`, its branch deleted,
-          #   and the pull-request step opens a fresh one from main with that pin.
-          #   `blocked`: the sync cannot heal the branch; it is reported once on
-          #   the pull request and as a warning, and the job stays green. `stale`:
-          #   a newer release, which the pull-request step bumps;
+          #   number and review history. `supersede`: the merge, or the
+          #   create-pull-request update of a stale branch, would carry workflow
+          #   files, which the pin-bump App (no `workflows` permission) cannot push
+          #   onto an existing branch, and the branch holds only the pin: the pull
+          #   request is labelled `superseded`, its branch deleted, and the
+          #   pull-request step opens a fresh one from main with the branch's pin
+          #   (the newest release, for a stale branch). `blocked`: the sync cannot
+          #   heal the branch (for a stale one, the reason names the newer release
+          #   that is waiting); it is reported once on the pull request and as a
+          #   warning, and the job stays green. `stale`: a newer release whose
+          #   update carries no workflow file, which the pull-request step bumps;
           # - anything else (no branch, a pull request missing or unlabelled
           #   because creation failed after the push, a re-run after a failed
           #   pull-request step): run the pull-request step, which opens or
@@ -492,7 +495,7 @@ jobs:
               exit 0
             fi
             if [[ "$supersede" == "true" ]]; then
-              echo "- merging \`$DEFAULT_BRANCH\` into \`$PIN_BRANCH\` would carry workflow files, which the pin-bump App cannot push onto an existing branch, and the branch holds only the pin: the open pull request is closed as \`superseded\` and a fresh one is opened for \`$tag\`."
+              echo "- bringing \`$PIN_BRANCH\` up to date with \`$DEFAULT_BRANCH\` would carry workflow files, which the pin-bump App cannot push onto an existing branch, and the branch holds only the pin: the open pull request is closed as \`superseded\` and a fresh one is opened for \`$tag\`."
             fi
             echo "- main pins an older release: open or update the pin-bump pull request on \`$PIN_BRANCH\`."
             echo ""
@@ -538,9 +541,10 @@ jobs:
           # create-pull-request applies `ready-for-heavy` through the Issues labels API.
           permission-issues: write
 
-      # `supersede`: the pin step found that merging main would carry workflow
-      # files (the App has no `workflows` permission, so it cannot push them onto
-      # the existing branch) and that the branch holds only the pin. Label the
+      # `supersede`: the pin step found that merging main into the branch, or
+      # updating a stale branch to main, would carry workflow files (the App
+      # has no `workflows` permission, so it cannot push them onto the existing
+      # branch) and that the branch holds only the pin. Label the
       # open pull request `superseded` (a closed `superseded` pull request does
       # not park its release), say why, and delete the branch, which closes the
       # pull request; the pull-request step below then opens a fresh one from
@@ -571,7 +575,7 @@ jobs:
             fi
             if [[ -n "$PULL" ]]; then
               gh api -X POST "repos/${GH_REPO}/issues/${PULL}/labels" -f 'labels[]=superseded' >/dev/null
-              gh api -X POST "repos/${GH_REPO}/issues/${PULL}/comments" -f body="Superseded by [this run](${RUN_URL}): merging main into \`${PIN_BRANCH}\` would carry workflow-file changes, which the pin-bump App (no \`workflows\` permission) cannot push onto an existing branch. The branch held only the pin, so it is deleted and a fresh pin-bump pull request for \`${PIN_TAG}\` is opened from main." >/dev/null
+              gh api -X POST "repos/${GH_REPO}/issues/${PULL}/comments" -f body="Superseded by [this run](${RUN_URL}): bringing \`${PIN_BRANCH}\` up to date with main would carry workflow-file changes, which the pin-bump App (no \`workflows\` permission) cannot push onto an existing branch. The branch held only the pin, so it is deleted and a fresh pin-bump pull request for \`${PIN_TAG}\` is opened from main." >/dev/null
             fi
             gh api -X DELETE "repos/${GH_REPO}/git/refs/heads/${PIN_BRANCH}"
             echo "- superseded the pin-bump pull request ${PULL:+#${PULL} }and deleted \`${PIN_BRANCH}\`." >> "$GITHUB_STEP_SUMMARY"

@@ -42,20 +42,23 @@ const $I = $RepoCliId.create("commands/Ci/CiBinaryPinSync");
  * **Details**
  *
  * - `stale`: the branch pins an older release than the one resolved, or the
- *   right tag with another sha256. Nothing changed; the workflow re-runs the
- *   pin bump, which retitles the pull request for the new release.
+ *   right tag with another sha256, and updating it to main carries no
+ *   workflow file. Nothing changed; the workflow re-runs the pin bump, which
+ *   retitles the pull request for the new release.
  * - `current`: the branch already contains main and pins the resolved
  *   release (or a newer one). Nothing changed and nothing is pushed.
  * - `merged`: the branch was behind main or in conflict with it. Main is now
  *   merged in with the pin resolved, and the workflow pushes the new head.
- * - `supersede`: merging main would carry `.github/workflows` changes, which
- *   the pin-bump App (no `workflows` permission) may not push onto an existing
- *   branch, and the branch holds nothing but the pin. The checkout is reset;
- *   the workflow closes the pull request as superseded and opens a fresh one
- *   from main with the same pin.
+ * - `supersede`: merging main into the branch, or updating a stale branch
+ *   to main, would carry `.github/workflows` changes, which the pin-bump App
+ *   (no `workflows` permission) may not push onto an existing branch, and the
+ *   branch holds nothing but the pin. The checkout is left as it was; the
+ *   workflow closes the pull request as superseded and opens a fresh one from
+ *   main, with the branch's pin (or, for a stale branch, the newest release).
  * - `blocked`: the sync cannot heal the branch (a conflict outside the pin
- *   file, or a workflow-carrying merge onto a branch that holds more than the
- *   pin). The checkout is reset and the workflow reports it once.
+ *   file, or a workflow-carrying merge or stale update onto a branch that
+ *   holds more than the pin; the stale reason names the newer release that is
+ *   waiting). The checkout is left as it was and the workflow reports it once.
  *
  * **Example** (Check an outcome)
  *
@@ -297,6 +300,51 @@ const commitResolvedPin = Effect.fnUntraced(function* (
   yield* git.commit(request.cwd, message, { noVerify: true }).pipe(Effect.mapError(gitFailure(request)));
 });
 
+// What the branch holds beyond main: files changed since the merge base other than the pin file, and
+// whether the pin file differs from the merge base outside the two pinned lines.
+const branchExtras = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
+  const git = yield* Git;
+  const changed = yield* git
+    .changedFiles(request.cwd, { base: request.base, head: "HEAD" })
+    .pipe(Effect.mapError(gitFailure(request)));
+  const others = A.filter(changed, (file) => file !== request.file);
+  const forkPoint = yield* git.mergeBase(request.cwd, request.base, "HEAD").pipe(Effect.mapError(gitFailure(request)));
+  const forkText = yield* git.show(request.cwd, forkPoint, request.file).pipe(Effect.mapError(gitFailure(request)));
+  const branchText = yield* readPinFile(request);
+  const branchPinned = yield* rewriteCiBinaryPin(branchText, request.pin);
+  const forkPinned = yield* O.match(forkText, {
+    onNone: () => Effect.succeed(O.none<string>()),
+    onSome: (text) => Effect.map(rewriteCiBinaryPin(text, request.pin), (rewritten) => O.some(rewritten.text)),
+  });
+  // Rewriting both sides to the same pin leaves only the differences outside the two pinned lines.
+  const pinLinesOnly = O.exists(forkPinned, (text) => text === branchPinned.text);
+  return pinLinesOnly ? others : A.append(others, `${request.file} beyond the two pinned lines`);
+});
+
+// A stale branch is bumped by create-pull-request, which force-updates it to main plus the pin commit.
+// That update carries every workflow change main made since the branch was cut, which the pin-bump App
+// (no `workflows` permission) may not push onto an existing branch: a pin-only branch is superseded
+// with the newest release instead, and one holding anything else is blocked while that release waits.
+const classifyStale = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
+  const git = yield* Git;
+  const workflows = yield* git
+    .changedFiles(request.cwd, { base: "HEAD", head: request.base, twoDot: true, pathspec: [WORKFLOWS_PATH] })
+    .pipe(Effect.mapError(gitFailure(request)));
+  if (A.isReadonlyArrayEmpty(workflows)) {
+    return syncResult("stale", O.none());
+  }
+  const extras = yield* branchExtras(request);
+  return A.isReadonlyArrayEmpty(extras)
+    ? syncResult("supersede", O.some(request.pin))
+    : syncResult(
+        "blocked",
+        O.none(),
+        O.some(
+          `a newer release ${request.pin.tag} is waiting, but updating the branch to it carries workflow changes (${A.join(workflows, ", ")}), which the pin-bump App cannot push, and the branch holds changes besides the pin (${A.join(extras, ", ")}), so it cannot be superseded`
+        )
+      );
+});
+
 // After the merge: a merge that carries no workflow file is pushed as is. One that does can only
 // replace the branch, which is safe only while the branch holds nothing but the pin.
 const classifyMerge = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest, before: string, pin: CiBinaryPin) {
@@ -378,7 +426,7 @@ export const syncCiBinaryPinBranch = Effect.fn("Ci.syncCiBinaryPinBranch")(funct
   const git = yield* Git;
   const target = yield* resolveSyncTarget(request);
   if (O.isNone(target)) {
-    return syncResult("stale", O.none());
+    return yield* classifyStale(request);
   }
   const containsBase = yield* git
     .isAncestor(request.cwd, request.base, "HEAD")

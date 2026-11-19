@@ -2917,6 +2917,29 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       });
       expect(supersedingNewer.decision).toEqual({ ...bumps, supersede: "true" });
       expect(supersedingNewer.outputs.tag).toBe("beep-ci-fedcba987654");
+      // A stale branch (an older release) whose create-pull-request update would carry workflow files:
+      // a pin-only branch is superseded and the fresh pull request carries the NEWEST release...
+      const staleOlder = pulls(pull("OPEN", oldTag, ["ready-for-heavy"]));
+      const staleSuperseded = yield* runCase(mainOld, O.some(mainOld), staleOlder, {
+        sync: "supersede",
+        syncTag: newTag,
+      });
+      expect(staleSuperseded.decision).toEqual({ ...bumps, supersede: "true" });
+      expect(staleSuperseded.outputs.tag).toBe(newTag);
+      expect(staleSuperseded.outputs.sha256).toBe(newSha);
+      expect(staleSuperseded.outputs.pull).toBe("7");
+      // ...and a branch holding more is blocked: reported once, the job green, nothing bumped, and the
+      // report says a newer release is waiting.
+      const staleBlocked = yield* runCase(mainOld, O.some(mainOld), staleOlder, {
+        sync: "blocked",
+        syncReason: `a newer release ${newTag} is waiting, but updating the branch to it carries workflow changes`,
+      });
+      expect(staleBlocked.status).toBe(0);
+      expect(staleBlocked.decision).toEqual({ ...idle, report: "true" });
+      expect(staleBlocked.summary).toContain(`a newer release ${newTag} is waiting`);
+      // A stale branch whose update carries no workflow file keeps today's path: the pull-request step.
+      const staleOnly = yield* runCase(mainOld, O.some(mainOld), staleOlder, { sync: "stale" });
+      expect(staleOnly.decision).toEqual(bumps);
       // A branch the sync cannot heal is reported (warning, summary, one comment) and the job stays green.
       const blocked = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"])), {
         sync: "blocked",
