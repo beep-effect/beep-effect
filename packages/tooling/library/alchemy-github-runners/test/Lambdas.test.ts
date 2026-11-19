@@ -32,7 +32,18 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { World, worldContext } from "./support/FakeWorld.ts";
-import { heavyPool, message, poolConfig } from "./support/Fixtures.ts";
+import {
+  heavyPool,
+  liveEnvironments,
+  liveHeavyPool,
+  liveOverflowPool,
+  liveSsmRoot,
+  message,
+  oldFleetPrefixes,
+  oldFleetRunnerName,
+  oldFleetTags,
+  poolConfig,
+} from "./support/Fixtures.ts";
 
 const encodeMessage = S.encodeEffect(S.fromJsonString(S.Unknown));
 const encodePool = S.encodeEffect(S.fromJsonString(PoolRuntimeConfig));
@@ -53,6 +64,62 @@ const watcherConfig = TerminationWatcherRuntimeConfig.make({
   environments: ["beep-ci-heavy"],
   app: appParameterNames("/beep-ci"),
   deregisterRetryQueueUrl: "https://sqs/deregister-retry",
+});
+
+const liveWatcherConfig = TerminationWatcherRuntimeConfig.make({
+  environments: liveEnvironments,
+  app: appParameterNames(liveSsmRoot),
+  deregisterRetryQueueUrl: "https://sqs/beep-fleet-prod-deregister-retry",
+});
+
+const noFailures = { batchItemFailures: [] };
+
+/**
+ * Drives the termination watcher Lambda under the live config. Per pool it seeds an instance with an idle runner,
+ * then one with a busy runner (every delete answers 422), runner ids counting up from 10; sends a Spot warning for
+ * each, then one deregister-retry batch naming all of them.
+ */
+const watchLive = Effect.fn("watchLive")(function* (
+  pools: ReadonlyArray<{
+    readonly tags: Readonly<Record<string, string>>;
+    readonly runnerName: (instanceId: string) => string;
+  }>
+) {
+  const world = new World();
+  const instances = A.flatMap(pools, (pool, poolIndex) =>
+    A.map([false, true], (busy, index) => {
+      const id = 10 + 2 * poolIndex + index;
+      const [instanceId = ""] = world.launch(1, pool.tags);
+      world.githubRunners.push(
+        SelfHostedRunner.make({ id, name: pool.runnerName(instanceId), status: "online", busy })
+      );
+      world.busyOnDelete = busy ? A.append(world.busyOnDelete, id) : world.busyOnDelete;
+      return instanceId;
+    })
+  );
+  const context = worldContext(world);
+  const warned = yield* Effect.forEach(
+    instances,
+    (instanceId) =>
+      WatcherLambda.definition
+        .run(liveWatcherConfig, {
+          "detail-type": "EC2 Spot Instance Interruption Warning",
+          detail: { "instance-id": instanceId, "instance-action": "terminate" },
+        })
+        .pipe(Effect.provideContext(context)),
+    { concurrency: 1 }
+  );
+  const retry = yield* sqsEvent(
+    A.map(instances, (instanceId) => ({
+      instanceId,
+      owner: "beep-effect",
+      runnerType: "Org",
+      runnerId: 0,
+      retryCount: 0,
+    }))
+  );
+  const retried = yield* WatcherLambda.definition.run(liveWatcherConfig, retry).pipe(Effect.provideContext(context));
+  return { world, warned, retried };
 });
 
 describe("Lambda entry points", () => {
@@ -190,6 +257,45 @@ describe("Lambda entry points", () => {
       ]);
       yield* WatcherLambda.definition.run(watcherConfig, retry).pipe(Effect.provideContext(context));
       expect(world.deletedRunners).toStrictEqual([5, 6]);
+    })
+  );
+
+  it.effect("termination watcher ignores the old fleet's idle and busy runners in events and retry batches", () =>
+    Effect.gen(function* () {
+      const run = yield* watchLive(
+        A.map(oldFleetPrefixes, (prefix) => ({
+          tags: oldFleetTags(prefix),
+          runnerName: oldFleetRunnerName(prefix),
+        }))
+      );
+      expect([run.warned, run.retried]).toStrictEqual([A.makeBy(4, () => noFailures), noFailures]);
+      expect([
+        run.world.deletedRunners,
+        run.world.sent,
+        A.map(run.world.githubRunners, (runner) => runner.id),
+      ]).toStrictEqual([[], [], [10, 11, 12, 13]]);
+    })
+  );
+
+  it.effect("termination watcher acts on the new fleet's runners under the same live config (control)", () =>
+    Effect.gen(function* () {
+      const run = yield* watchLive(
+        A.map([liveHeavyPool, liveOverflowPool], (pool) => ({
+          tags: {
+            "ghr:environment": `beep-fleet-prod-${pool.name}`,
+            "ghr:Application": "github-action-runner",
+            "ghr:Owner": "beep-effect",
+            "ghr:Type": "Org",
+          },
+          runnerName: (instanceId: string) => `${pool.runnerNamePrefix}${instanceId}`,
+        }))
+      );
+      expect([run.warned, run.retried]).toStrictEqual([A.makeBy(4, () => noFailures), noFailures]);
+      // The idle runners go on the warning; each busy one is queued on the warning and re-queued from the batch.
+      expect([run.world.deletedRunners, A.map(run.world.sent, (sent) => sent.queueUrl)]).toStrictEqual([
+        [10, 12],
+        A.makeBy(4, () => liveWatcherConfig.deregisterRetryQueueUrl),
+      ]);
     })
   );
 
