@@ -378,9 +378,9 @@ const stepRows = (
  * const program = Effect.gen(function* () {
  *   const text = yield* S.encodeEffect(Csv.CsvFromString)(CsvTable.make({ records: [["a", "b,c"], ["d;e"]] }))
  *   const table = yield* S.decodeEffect(Csv.CsvFromString)(text)
- *   return [text, table.records] as const
+ *   return { text, records: table.records }
  * })
- * Effect.runSync(program) // => ['a,"b,c"\r\nd;e\r\n', [["a", "b,c"], ["d;e"]]]
+ * Effect.runSync(program) // => { text: 'a,"b,c"\r\nd;e\r\n', records: [["a", "b,c"], ["d;e"]] }
  * ```
  *
  * @category codecs

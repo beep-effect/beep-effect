@@ -11,7 +11,7 @@
  * **Example** (Read and write back)
  *
  * ```ts import.meta.vitest name="Read and write back"
- * import { Csv } from "@beep/csv"
+ * import { Csv } from "@beep/csv/Csv.codec"
  * import * as Result from "effect/Result"
  *
  * const read = Result.getOrThrow(Csv.parseResult("SKU,Qty\nBRK-040,12\n"))

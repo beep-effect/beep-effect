@@ -1,6 +1,7 @@
 // A shared formula is written once, on its first cell; the cells that share it say only which one. Each of them
 // gets the first cell's text with its relative references moved by the distance between the two cells, as Excel
 // shows it. A reference is moved wherever one stands in the text, as the reader this package replaced did.
+import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { columnFromLetters, columnLetters, MAX_COLUMN, MAX_ROW } from "../XlsxAddress.schema.ts";
 
@@ -18,15 +19,22 @@ export const shifted = (input: {
   let out = "";
   let at = 0;
   for (const found of Str.matchAll(reference)(input.formula)) {
+    const moved = movedReference(found, input.columns, input.rows);
+    if (O.isNone(moved)) continue;
     const index = found.index ?? 0;
-    const [whole, before = "", fixedColumn = "", letters = "", fixedRow = "", digits = ""] = found;
-    const column = columnFromLetters(letters);
-    if (column._tag === "None") continue;
-    const movedColumn = fixedColumn === "$" ? column.value : column.value + input.columns;
-    const movedRow = fixedRow === "$" ? Number(digits) : Number(digits) + input.rows;
-    if (movedColumn < 0 || movedColumn > MAX_COLUMN || movedRow < 1 || movedRow > MAX_ROW) continue;
-    out += `${Str.slice(at, index)(input.formula)}${before}${fixedColumn}${columnLetters(movedColumn)}${fixedRow}${movedRow}`;
-    at = index + whole.length;
+    out += `${Str.slice(at, index)(input.formula)}${moved.value}`;
+    at = index + found[0].length;
   }
   return out + Str.slice(at)(input.formula);
+};
+
+/** A matched reference moved by a number of columns and rows, none when it would move off the sheet. */
+const movedReference = (found: RegExpMatchArray, columns: number, rows: number): O.Option<string> => {
+  const [, before = "", fixedColumn = "", letters = "", fixedRow = "", digits = ""] = found;
+  return O.flatMap(columnFromLetters(letters), (column) => {
+    const movedColumn = fixedColumn === "$" ? column : column + columns;
+    const movedRow = fixedRow === "$" ? Number(digits) : Number(digits) + rows;
+    if (movedColumn < 0 || movedColumn > MAX_COLUMN || movedRow < 1 || movedRow > MAX_ROW) return O.none();
+    return O.some(`${before}${fixedColumn}${columnLetters(movedColumn)}${fixedRow}${movedRow}`);
+  });
 };

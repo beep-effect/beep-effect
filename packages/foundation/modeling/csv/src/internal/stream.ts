@@ -209,17 +209,25 @@ const concatBytes = (parts: ReadonlyArray<Uint8Array>): Uint8Array => {
   return out;
 };
 
+/** Whether a byte continues a UTF-8 sequence rather than starting one. */
+const isContinuation = (byte: number): boolean => (byte & 0xc0) === 0x80;
+
+/** How many bytes the UTF-8 sequence a starting byte leads takes, by its high bits alone. */
+const sequenceLength = (lead: number): number => {
+  if (lead >= 0xf0) return 4;
+  if (lead >= 0xe0) return 3;
+  return lead >= 0xc0 ? 2 : 1;
+};
+
 // crispen: kept as a loop — it reads at most the last three bytes of a chunk, back to the first that starts a
 // UTF-8 sequence; no Effect module reads a partial UTF-8 tail.
 /** How many trailing bytes start a UTF-8 sequence that the chunk does not finish. */
 const incompleteTail = (bytes: Uint8Array): number => {
-  for (let back = 1; back <= Num.min(3, bytes.length); back += 1) {
-    const b = bytes[bytes.length - back] ?? 0;
-    if ((b & 0xc0) === 0x80) continue;
-    const need = b >= 0xf0 ? 4 : b >= 0xe0 ? 3 : b >= 0xc0 ? 2 : 1;
-    return need > back ? back : 0;
-  }
-  return 0;
+  const reach = Num.min(3, bytes.length);
+  let back = 1;
+  while (back <= reach && isContinuation(bytes[bytes.length - back] ?? 0)) back += 1;
+  if (back > reach) return 0;
+  return sequenceLength(bytes[bytes.length - back] ?? 0) > back ? back : 0;
 };
 
 const fixedStep = (decoder: TextDecoder, bytes: Uint8Array): DecodingStep => [

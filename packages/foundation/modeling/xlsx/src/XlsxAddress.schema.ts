@@ -19,7 +19,7 @@ const $I = $XlsxId.create("XlsxAddress");
  * **Example** (The last column's letters)
  *
  * ```ts import.meta.vitest name="The last column's letters"
- * import { columnLetters, MAX_COLUMN } from "@beep/xlsx"
+ * import { columnLetters, MAX_COLUMN } from "@beep/xlsx/XlsxAddress.schema"
  *
  * MAX_COLUMN // => 16383
  * columnLetters(MAX_COLUMN) // => "XFD"
@@ -36,7 +36,7 @@ export const MAX_COLUMN = 16_383;
  * **Example** (A row past the last one)
  *
  * ```ts import.meta.vitest name="A row past the last one"
- * import { MAX_ROW, XlsxRowNumber } from "@beep/xlsx"
+ * import { MAX_ROW, XlsxRowNumber } from "@beep/xlsx/XlsxAddress.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxRowNumber)(MAX_ROW) // => true
@@ -54,7 +54,7 @@ export const MAX_ROW = 1_048_576;
  * **Example** (Check a column)
  *
  * ```ts import.meta.vitest name="Check a column"
- * import { XlsxColumn } from "@beep/xlsx"
+ * import { XlsxColumn } from "@beep/xlsx/XlsxAddress.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxColumn)(0) // => true
@@ -83,7 +83,7 @@ export type XlsxColumn = typeof XlsxColumn.Type;
  * **Example** (Rows start at 1)
  *
  * ```ts import.meta.vitest name="Rows start at 1"
- * import { XlsxRowNumber } from "@beep/xlsx"
+ * import { XlsxRowNumber } from "@beep/xlsx/XlsxAddress.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxRowNumber)(1) // => true
@@ -111,7 +111,7 @@ export type XlsxRowNumber = typeof XlsxRowNumber.Type;
  * **Example** (Letters of a column)
  *
  * ```ts import.meta.vitest name="Letters of a column"
- * import { columnLetters } from "@beep/xlsx"
+ * import { columnLetters } from "@beep/xlsx/XlsxAddress.schema"
  *
  * columnLetters(0) // => "A"
  * columnLetters(25) // => "Z"
@@ -139,7 +139,7 @@ export const columnLetters = (column: XlsxColumn): string => {
  * **Example** (Column of letters)
  *
  * ```ts import.meta.vitest name="Column of letters"
- * import { columnFromLetters } from "@beep/xlsx"
+ * import { columnFromLetters } from "@beep/xlsx/XlsxAddress.schema"
  * import * as O from "effect/Option"
  *
  * columnFromLetters("AB") // => O.some(27)
@@ -172,7 +172,7 @@ const rangePattern = /^([^:]+)(?::([^:]+))?$/;
  * **Example** (Parse and format)
  *
  * ```ts import.meta.vitest name="Parse and format"
- * import { XlsxAddress } from "@beep/xlsx"
+ * import { XlsxAddress } from "@beep/xlsx/XlsxAddress.schema"
  * import * as O from "effect/Option"
  *
  * const address = XlsxAddress.make({ column: 1, row: 7 })
@@ -211,7 +211,7 @@ export class XlsxAddress extends S.Opaque<XlsxAddress, { readonly brand: unique 
  * **Example** (Parse a range)
  *
  * ```ts import.meta.vitest name="Parse a range"
- * import { XlsxAddress, XlsxRange } from "@beep/xlsx"
+ * import { XlsxAddress, XlsxRange } from "@beep/xlsx/XlsxAddress.schema"
  * import * as O from "effect/Option"
  *
  * O.map(XlsxRange.parse("C3:A1"), XlsxRange.format) // => O.some("A1:C3")

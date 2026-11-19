@@ -3,10 +3,12 @@
 // skipped (`make` with `disableChecks`).
 
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
-import { XlsxCell } from "@beep/xlsx/XlsxCell.schema";
+import { XlsxRange } from "@beep/xlsx/XlsxAddress.schema";
+import { XlsxCell, XlsxValue } from "@beep/xlsx/XlsxCell.schema";
 import { XlsxFirstSheet, XlsxNamedSheets, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema";
 import { XlsxWorkbook } from "@beep/xlsx/XlsxWorkbook.schema";
 import { describe, expect, it } from "@effect/vitest";
+import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
@@ -30,28 +32,26 @@ const readOf = (recipe: Recipe, options?: XlsxReadOptions) =>
 
 const first = (found: XlsxRead): XlsxWorksheet => found.workbook.sheets[0];
 
+/** What a cell holds, as an expectation a person can read. */
+const heldOf = XlsxValue.match({
+  Text: (value) => `"${value.text}"`,
+  Number: (value) => String(value.value),
+  Date: (value) => `date ${value.serial}`,
+  Boolean: (value) => String(value.value),
+  Error: (value) => value.code,
+  Unreadable: (value) => `unreadable "${value.raw}"`,
+  Blank: () => "blank",
+});
+
 /** A sheet as rows of `column:what it holds`, for an expectation a person can read. */
 const grid = (found: XlsxWorksheet) =>
   A.map(found.rows, (row) => [
     row.number,
-    ...A.map(row.cells, (cell) => {
-      const value = cell.value;
-      const held =
-        value.kind === "Text"
-          ? `"${value.text}"`
-          : value.kind === "Number"
-            ? String(value.value)
-            : value.kind === "Date"
-              ? `date ${value.serial}`
-              : value.kind === "Boolean"
-                ? String(value.value)
-                : value.kind === "Error"
-                  ? value.code
-                  : value.kind === "Unreadable"
-                    ? `unreadable ${`"${value.raw}"`}`
-                    : "blank";
-      return `${cell.column}:${held}${O.match(cell.formula, { onNone: () => "", onSome: (f) => ` =${f}` })}`;
-    }),
+    ...A.map(
+      row.cells,
+      (cell) =>
+        `${cell.column}:${heldOf(cell.value)}${O.match(cell.formula, { onNone: () => "", onSome: (f) => ` =${f}` })}`
+    ),
   ]);
 const findings = (found: XlsxRead) => A.map(found.warnings, (warning) => warning.finding.kind);
 
@@ -330,9 +330,10 @@ describe("layout", () => {
         [1, "0:1"],
         [40, "7:2"],
       ]);
-      expect(A.map(found.warnings, (warning) => warning.finding)).toMatchObject([
-        { kind: "DeclaredExtentWrong", found: O.some({ first: { column: 0, row: 1 }, last: { column: 7, row: 40 } }) },
-      ]);
+      expect(findings(found)).toEqual(["DeclaredExtentWrong"]);
+      const finding = found.warnings[0]?.finding;
+      assertTrue(finding?.kind === "DeclaredExtentWrong");
+      assertSome(O.map(finding.found, XlsxRange.format), "A1:H40");
     })
   );
 });

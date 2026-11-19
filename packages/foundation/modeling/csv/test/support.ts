@@ -108,7 +108,7 @@ export type Outcome = Result.Result<ReadonlyArray<CsvRecord>, ReadonlyArray<CsvF
 export const outcomeOfRead = (read: Result.Result<CsvRead, CsvParseError>): Outcome =>
   Result.mapBoth(read, { onSuccess: (done) => done.table.records, onFailure: (error) => error.diagnostics });
 
-export const outcomeOfSlices = (slices: Result.Result<ReadonlyArray<CsvRecordSlice>, CsvParseError>): Outcome =>
+const outcomeOfSlices = (slices: Result.Result<ReadonlyArray<CsvRecordSlice>, CsvParseError>): Outcome =>
   Result.mapBoth(slices, {
     onSuccess: A.map((slice) => slice.cells),
     onFailure: (error) => error.diagnostics,

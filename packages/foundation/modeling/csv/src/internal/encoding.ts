@@ -7,37 +7,46 @@ import type { CsvEncodingName } from "../CsvOptions.schema.ts";
 
 // crispen: kept as loops — it walks the bytes once and stops at the first invalid one, decoding each sequence's code
 // point to refuse overlong forms and surrogates; no Effect module validates UTF-8 with an offset.
+
+/** Continuation bytes after each lead byte; 0 for a byte that cannot lead a multi-byte sequence. */
+const CONTINUATIONS = new Uint8Array(256);
+CONTINUATIONS.fill(1, 0xc2, 0xe0);
+CONTINUATIONS.fill(2, 0xe0, 0xf0);
+CONTINUATIONS.fill(3, 0xf0, 0xf5);
+/** The lead byte's payload bits, by continuation count. */
+const LEAD_MASK = [0, 0x1f, 0x0f, 0x07];
+/** The smallest code point each sequence length may carry; below it the form is overlong. */
+const MIN_CODE = [0, 0x80, 0x800, 0x10000];
+
+/** The code point of the `need` continuation bytes after a lead at `i`, or -1 when one is not a continuation. */
+const codePointAt = (bytes: Uint8Array, i: number, need: number): number => {
+  let code = (bytes[i] ?? 0) & (LEAD_MASK[need] ?? 0);
+  for (let k = 1; k <= need; k += 1) {
+    const c = bytes[i + k] ?? 0;
+    if ((c & 0xc0) !== 0x80) return -1;
+    code = (code << 6) | (c & 0x3f);
+  }
+  return code;
+};
+
+/** Whether `code` is a Unicode scalar value in its shortest form for a sequence of `need` continuations. */
+const isShortestScalar = (code: number, need: number): boolean =>
+  code >= (MIN_CODE[need] ?? 0) && code <= 0x10ffff && (code < 0xd800 || code > 0xdfff);
+
+/** Where the multi-byte sequence led at `i` ends, or -1 when it is not valid UTF-8. */
+const sequenceEnd = (bytes: Uint8Array, i: number): number => {
+  const need = CONTINUATIONS[bytes[i] ?? 0] ?? 0;
+  if (need === 0 || i + need >= bytes.length) return -1;
+  return isShortestScalar(codePointAt(bytes, i, need), need) ? i + need + 1 : -1;
+};
+
 /** The offset of the first byte that breaks UTF-8, or none when all of `bytes` is valid UTF-8. */
 export const firstInvalidUtf8 = (bytes: Uint8Array): O.Option<number> => {
-  const length = bytes.length;
   let i = 0;
-  while (i < length) {
-    const b = bytes[i] ?? 0;
-    if (b < 0x80) {
-      i += 1;
-      continue;
-    }
-    let need = 0;
-    let min = 0;
-    if (b >= 0xc2 && b <= 0xdf) {
-      need = 1;
-      min = 0x80;
-    } else if (b >= 0xe0 && b <= 0xef) {
-      need = 2;
-      min = 0x800;
-    } else if (b >= 0xf0 && b <= 0xf4) {
-      need = 3;
-      min = 0x10000;
-    } else return O.some(i);
-    if (i + need >= length) return O.some(i);
-    let code = b & (need === 1 ? 0x1f : need === 2 ? 0x0f : 0x07);
-    for (let k = 1; k <= need; k += 1) {
-      const c = bytes[i + k] ?? 0;
-      if ((c & 0xc0) !== 0x80) return O.some(i);
-      code = (code << 6) | (c & 0x3f);
-    }
-    if (code < min || code > 0x10ffff || (code >= 0xd800 && code <= 0xdfff)) return O.some(i);
-    i += need + 1;
+  while (i < bytes.length) {
+    const next = (bytes[i] ?? 0) < 0x80 ? i + 1 : sequenceEnd(bytes, i);
+    if (next < 0) return O.some(i);
+    i = next;
   }
   return O.none();
 };

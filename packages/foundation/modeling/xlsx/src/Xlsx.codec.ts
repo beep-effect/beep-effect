@@ -371,7 +371,9 @@ const fromRecords = (
  * **Example** (Write a workbook and read it back)
  *
  * ```ts import.meta.vitest name="Write a workbook and read it back"
- * import { Xlsx, XlsxCell, XlsxNumber, XlsxRow, XlsxSheetInfo, XlsxText, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
+ * import { Xlsx } from "@beep/xlsx/Xlsx.codec"
+ * import { XlsxCell, XlsxNumber, XlsxText } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as Effect from "effect/Effect"
  *
  * const header = XlsxRow.make({
@@ -410,7 +412,8 @@ const fromRecords = (
  * **Example** (Decode a sheet through a row schema)
  *
  * ```ts import.meta.vitest name="Decode a sheet through a row schema"
- * import { Xlsx, XlsxNumber, XlsxText } from "@beep/xlsx"
+ * import { Xlsx } from "@beep/xlsx/Xlsx.codec"
+ * import { XlsxNumber, XlsxText } from "@beep/xlsx/XlsxCell.schema"
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
  *
@@ -433,7 +436,9 @@ const fromRecords = (
  * **Example** (Stream one sheet's rows)
  *
  * ```ts import.meta.vitest name="Stream one sheet's rows"
- * import { Xlsx, XlsxCell, XlsxNumber, XlsxRow, XlsxSheetInfo, XlsxText, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
+ * import { Xlsx } from "@beep/xlsx/Xlsx.codec"
+ * import { XlsxCell, XlsxNumber, XlsxText } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as Effect from "effect/Effect"
  * import * as Stream from "effect/Stream"
  *

@@ -22,7 +22,9 @@ const $I = $XlsxId.create("XlsxRead");
  * **Example** (Read a workbook and its warnings)
  *
  * ```ts import.meta.vitest name="Read a workbook and its warnings"
- * import { Xlsx, XlsxCell, XlsxRow, XlsxSheetInfo, XlsxText, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
+ * import { Xlsx } from "@beep/xlsx/Xlsx.codec"
+ * import { XlsxCell, XlsxText } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as Effect from "effect/Effect"
  *
  * const workbook = XlsxWorkbook.make({
@@ -46,7 +48,8 @@ const $I = $XlsxId.create("XlsxRead");
  * **Example** (List the kinds of part read past)
  *
  * ```ts import.meta.vitest name="List the kinds of part read past"
- * import { XlsxDroppedPart, XlsxRead } from "@beep/xlsx"
+ * import { XlsxRead } from "@beep/xlsx/XlsxRead.schema"
+ * import { XlsxDroppedPart } from "@beep/xlsx/XlsxWorkbook.schema"
  *
  * const dropped = [
  *   XlsxDroppedPart.make({ path: "xl/theme/theme1.xml", kind: "theme" }),
@@ -81,7 +84,9 @@ export class XlsxRead extends S.Opaque<XlsxRead, { readonly brand: unique symbol
  * **Example** (Describe a sheet for a chooser)
  *
  * ```ts import.meta.vitest name="Describe a sheet for a chooser"
- * import { XlsxRange, XlsxSheetCount, XlsxSheetInfo, XlsxSheetOutline } from "@beep/xlsx"
+ * import { XlsxRange } from "@beep/xlsx/XlsxAddress.schema"
+ * import { XlsxSheetOutline } from "@beep/xlsx/XlsxRead.schema"
+ * import { XlsxSheetCount, XlsxSheetInfo } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as O from "effect/Option"
  *
  * const outline = XlsxSheetOutline.make({
@@ -117,7 +122,9 @@ export class XlsxSheetOutline extends S.Opaque<XlsxSheetOutline, { readonly bran
  * **Example** (Outline a workbook without keeping its rows)
  *
  * ```ts import.meta.vitest name="Outline a workbook without keeping its rows"
- * import { Xlsx, XlsxCell, XlsxNumber, XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
+ * import { Xlsx } from "@beep/xlsx/Xlsx.codec"
+ * import { XlsxCell, XlsxNumber } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as Effect from "effect/Effect"
  *
  * const row = (number: number) =>

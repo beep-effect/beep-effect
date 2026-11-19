@@ -229,18 +229,7 @@ export class Machine {
     const room = maxTextLength - this.s.offset;
     const text = chunk.length > room ? Str.slice(0, room)(chunk) : chunk;
     let i = 0;
-    while (i < text.length && !this.s.stopped) {
-      if (this.s.held) {
-        if (text[i] === "\n") {
-          this.releaseHeld(true);
-          i += 1;
-          continue;
-        }
-        this.releaseHeld(false);
-        if (this.s.stopped) break;
-      }
-      i = stepFor(this.mode)(this, text, i);
-    }
+    while (i < text.length && !this.s.stopped) i = nextStep(this)(this, text, i);
     if (text.length < chunk.length && !this.s.stopped) this.limit("textLength", maxTextLength, this.here(0));
     return this;
   }
@@ -382,67 +371,92 @@ export class Machine {
 
   /** Finishes the current record's last field and emits the record with how it ended. */
   endRecord(end: CsvRecordEnd): void {
-    if (this.mode !== "fieldStart" || this.s.cells.length === 0 || this.s.content)
-      this.endField(recordEndText(end).length);
+    this.closeLastField(end);
     if (this.s.stopped) return;
     const cells = this.s.cells;
-    const recordIndex = this.s.record;
-    const at = {
+    const record = this.s.record;
+    const span = {
       offset: this.s.recordOffset,
       length: this.s.offset - this.s.recordOffset,
       line: this.s.recordLine,
       character: this.s.recordCharacter,
     };
-    const span = (): CsvTextSpan => CsvTextSpan.make(at, built);
     this.s.cells = [];
     this.s.content = false;
     this.s.record += 1;
-    if (end !== "EndOfInput") {
-      O.match(this.s.firstEnd, {
-        onNone: () => {
-          this.s.firstEnd = O.some(end);
-        },
-        onSome: (first) => {
-          if (first !== end && !this.s.mixedReported) {
-            this.s.mixedReported = true;
-            if (this.keepWarning())
-              this.report(
-                CsvDiagnostic.cases.warning.make({ finding: MixedTerminators.make({ at: span(), first, other: end }) })
-              );
-          }
-        },
-      });
-    }
-    const blank = cells.length === 1 && cells[0] === "" && !this.s.lastQuoted;
-    if (blank && this.config.blankLines === "skip") return;
-    if (!A.isArrayNonEmpty(cells)) return;
-    const row = O.match(this.s.width, {
+    this.noteTerminator(end, span);
+    if (this.skipsBlank(cells) || !A.isArrayNonEmpty(cells)) return;
+    const row = this.fitWidth(cells, record, span);
+    if (this.s.stopped) return;
+    this.emit({ cells: row, record, span, end });
+  }
+
+  /** Finishes the record's last field before the record is emitted. */
+  private closeLastField(end: CsvRecordEnd): void {
+    if (this.mode !== "fieldStart" || this.s.cells.length === 0 || this.s.content)
+      this.endField(recordEndText(end).length);
+  }
+
+  /** Remembers the first line break a record ended with, and warns once when a later one differs. */
+  private noteTerminator(end: CsvRecordEnd, span: Completed["span"]): void {
+    if (end === "EndOfInput") return;
+    O.match(this.s.firstEnd, {
+      onNone: () => {
+        this.s.firstEnd = O.some(end);
+      },
+      onSome: (first) => this.noteMixed(first, end, span),
+    });
+  }
+
+  private noteMixed(first: CsvRecordEnd, other: CsvRecordEnd, span: Completed["span"]): void {
+    if (first === other || this.s.mixedReported) return;
+    this.s.mixedReported = true;
+    if (this.keepWarning())
+      this.report(
+        CsvDiagnostic.cases.warning.make({
+          finding: MixedTerminators.make({ at: CsvTextSpan.make(span, built), first, other }),
+        })
+      );
+  }
+
+  /** Whether a record is a blank line the read skips: one empty, unquoted cell. */
+  private skipsBlank(cells: ReadonlyArray<CsvCell>): boolean {
+    return this.config.blankLines === "skip" && cells.length === 1 && cells[0] === "" && !this.s.lastQuoted;
+  }
+
+  /** The record's cells held to the first record's width: the first record sets it, a ragged one is judged. */
+  private fitWidth(cells: CsvRecord, record: number, span: Completed["span"]): CsvRecord {
+    return O.match(this.s.width, {
       onNone: () => {
         this.s.width = O.some(cells.length);
         return cells;
       },
-      onSome: (width) => {
-        if (cells.length === width) return cells;
-        if (this.config.ragged === "reject" || this.keepWarning())
-          this.report(
-            judgeRagged(
-              this.config.ragged,
-              RaggedRecord.make({ at: span(), record: recordIndex, expected: width, actual: cells.length })
-            )
-          );
-        return this.config.ragged === "pad" && cells.length < width
-          ? A.appendAll(cells, A.replicate("", width - cells.length))
-          : cells;
-      },
+      onSome: (width) => (cells.length === width ? cells : this.judgeWidth(cells, width, record, span)),
     });
-    if (this.s.stopped) return;
+  }
+
+  private judgeWidth(cells: CsvRecord, width: number, record: number, span: Completed["span"]): CsvRecord {
+    if (this.config.ragged === "reject" || this.keepWarning())
+      this.report(
+        judgeRagged(
+          this.config.ragged,
+          RaggedRecord.make({ at: CsvTextSpan.make(span, built), record, expected: width, actual: cells.length })
+        )
+      );
+    return this.config.ragged === "pad" && cells.length < width
+      ? A.appendAll(cells, A.replicate("", width - cells.length))
+      : cells;
+  }
+
+  /** Hands over a completed record, or fails the read when it is one past the record cap. */
+  private emit(completed: Completed): void {
     this.s.emitted += 1;
     const { maxRecords } = this.config.limits;
     if (this.s.emitted > maxRecords) {
-      this.limit("records", maxRecords, span());
+      this.limit("records", maxRecords, CsvTextSpan.make(completed.span, built));
       return;
     }
-    this.records.push({ cells: row, record: recordIndex, span: at, end });
+    this.records.push(completed);
   }
 
   startRecordIfNeeded(): void {
@@ -482,54 +496,95 @@ export class Machine {
 
 type Stepper = (run: Machine, text: string, i: number) => number;
 
-/** Before a field or inside an unquoted one. */
-const stepPlain: Stepper = (run, text, i) => {
-  const c = text[i];
-  const delimiter = run.config.delimiter;
-  if (c === "\r" || c === "\n") {
-    // A blank line: a record of one empty cell.
-    if (run.mode === "fieldStart") run.startRecordIfNeeded();
-    run.breakLine(1);
-    if (c === "\r") run.s.held = true;
-    else run.endRecord("LF");
-    return i + 1;
-  }
-  run.startRecordIfNeeded();
-  if (c === delimiter) {
-    run.endField();
-    run.advance(1);
-    return i + 1;
-  }
-  if (c === '"' && run.mode === "fieldStart") {
-    run.mode = "quoted";
-    run.s.fieldQuoted = true;
-    run.s.quoteOffset = run.s.offset;
-    run.s.quoteLine = run.s.line;
-    run.s.quoteCharacter = run.s.character;
-    run.advance(1);
-    return i + 1;
-  }
-  if (c === '"') {
-    run.quoteFinding(StrayQuote.make);
-    if (run.stopped) return i;
-    run.s.field += '"';
-    run.advance(1);
-    run.checkField();
-    return i + 1;
-  }
-  // A run of ordinary characters, up to the unit that would pass a cap.
-  run.mode = "unquoted";
-  const stop = Num.min(text.length, i + run.budget());
+/** A delimiter ends the field. */
+const delimit = (run: Machine, i: number): number => {
+  run.endField();
+  run.advance(1);
+  return i + 1;
+};
+
+/** A line break outside quotes; a carriage return holds the record to see whether a line feed follows. */
+const plainLineBreak = (run: Machine, c: string, i: number): number => {
+  // A blank line: a record of one empty cell.
+  if (run.mode === "fieldStart") run.startRecordIfNeeded();
+  run.breakLine(1);
+  if (c === "\r") run.s.held = true;
+  else run.endRecord("LF");
+  return i + 1;
+};
+
+/** A quote that starts a field opens a quoted field. */
+const openQuote = (run: Machine, i: number): number => {
+  run.mode = "quoted";
+  run.s.fieldQuoted = true;
+  run.s.quoteOffset = run.s.offset;
+  run.s.quoteLine = run.s.line;
+  run.s.quoteCharacter = run.s.character;
+  run.advance(1);
+  return i + 1;
+};
+
+/** A quote inside an unquoted field: a finding, and kept as text when the read goes on. */
+const strayQuote = (run: Machine, i: number): number => {
+  run.quoteFinding(StrayQuote.make);
+  if (run.stopped) return i;
+  run.s.field += '"';
+  run.advance(1);
+  run.checkField();
+  return i + 1;
+};
+
+// crispen: kept as a loop — the hot per-character scan of unquoted text, up to the first unit that ends it.
+/** Where a run of ordinary characters from `i` ends, at `stop` at the latest. */
+const plainRunEnd = (text: string, i: number, stop: number, delimiter: string): number => {
   let j = i + 1;
   while (j < stop) {
     const d = text[j];
-    if (d === delimiter || d === '"' || d === "\r" || d === "\n") break;
+    if (d === delimiter || d === '"' || d === "\r" || d === "\n") return j;
     j += 1;
   }
+  return j;
+};
+
+/** A run of ordinary characters, up to the unit that would pass a cap. */
+const plainRun = (run: Machine, text: string, i: number): number => {
+  run.mode = "unquoted";
+  const j = plainRunEnd(text, i, Num.min(text.length, i + run.budget()), run.config.delimiter);
   run.s.field += Str.slice(i, j)(text);
   run.advance(j - i);
   run.checkField();
   return j;
+};
+
+/** Before a field or inside an unquoted one. */
+const stepPlain: Stepper = (run, text, i) => {
+  const c = text[i] ?? "";
+  if (c === "\r" || c === "\n") return plainLineBreak(run, c, i);
+  run.startRecordIfNeeded();
+  if (c === run.config.delimiter) return delimit(run, i);
+  if (c === '"') return run.mode === "fieldStart" ? openQuote(run, i) : strayQuote(run, i);
+  return plainRun(run, text, i);
+};
+
+/** Moves past one unit of quoted text, counting a line for a CR, an LF, or a CRLF once. */
+const passQuotedUnit = (run: Machine, d: string | undefined): void => {
+  const s = run.s;
+  if (d === "\r") {
+    s.line += 1;
+    s.character = 0;
+    s.offset += 1;
+    s.crInQuotes = true;
+    return;
+  }
+  if (d === "\n") {
+    if (!s.crInQuotes) s.line += 1;
+    s.character = 0;
+    s.offset += 1;
+    s.crInQuotes = false;
+    return;
+  }
+  s.crInQuotes = false;
+  run.advance(1);
 };
 
 /** Inside a quoted field: everything up to the next quote is text, line breaks included. */
@@ -539,29 +594,13 @@ const stepQuoted: Stepper = (run, text, i) => {
     run.advance(1);
     return i + 1;
   }
-  const s = run.s;
   const stop = Num.min(text.length, i + run.budget());
   let j = i;
-  while (j < stop) {
-    const d = text[j];
-    if (d === '"') break;
-    if (d === "\r") {
-      s.line += 1;
-      s.character = 0;
-      s.offset += 1;
-      s.crInQuotes = true;
-    } else if (d === "\n") {
-      if (!s.crInQuotes) s.line += 1;
-      s.character = 0;
-      s.offset += 1;
-      s.crInQuotes = false;
-    } else {
-      s.crInQuotes = false;
-      run.advance(1);
-    }
+  while (j < stop && text[j] !== '"') {
+    passQuotedUnit(run, text[j]);
     j += 1;
   }
-  s.field += Str.slice(i, j)(text);
+  run.s.field += Str.slice(i, j)(text);
   run.checkField();
   return j;
 };
@@ -577,11 +616,7 @@ const stepQuoteInQuoted: Stepper = (run, text, i) => {
     run.checkField();
     return i + 1;
   }
-  if (c === run.config.delimiter) {
-    run.endField();
-    run.advance(1);
-    return i + 1;
-  }
+  if (c === run.config.delimiter) return delimit(run, i);
   if (c === "\r" || c === "\n") {
     run.mode = "unquoted";
     return i;
@@ -600,27 +635,19 @@ const stepQuoteInQuoted: Stepper = (run, text, i) => {
   return i;
 };
 
-/** Spaces after a closing quote: dropped before a delimiter or line break when lenient, else kept as text. */
-const stepAfterQuoteSpaces: Stepper = (run, text, i) => {
-  const c = text[i];
-  if (c === " ") {
-    run.spaces += 1;
-    run.advance(1);
-    return i + 1;
-  }
-  if (c === run.config.delimiter || c === "\r" || c === "\n") {
-    if (run.config.quotes === "strict") {
-      run.quoteFinding(TextAfterClosingQuote.make);
-      return i;
-    }
-    if (c === run.config.delimiter) {
-      run.endField();
-      run.advance(1);
-      return i + 1;
-    }
-    run.mode = "unquoted";
+/** A delimiter or line break after the spaces: a finding when strict, else the spaces are dropped. */
+const spacesBeforeEnd = (run: Machine, c: string, i: number): number => {
+  if (run.config.quotes === "strict") {
+    run.quoteFinding(TextAfterClosingQuote.make);
     return i;
   }
+  if (c === run.config.delimiter) return delimit(run, i);
+  run.mode = "unquoted";
+  return i;
+};
+
+/** Text after the spaces: a finding, and the quote and spaces kept as text when the read goes on. */
+const textAfterSpaces = (run: Machine, c: string, i: number): number => {
   run.quoteFinding(TextAfterClosingQuote.make);
   if (run.stopped) return i;
   run.s.field += `"${Str.repeat(run.spaces)(" ")}`;
@@ -636,6 +663,18 @@ const stepAfterQuoteSpaces: Stepper = (run, text, i) => {
   return i;
 };
 
+/** Spaces after a closing quote: dropped before a delimiter or line break when lenient, else kept as text. */
+const stepAfterQuoteSpaces: Stepper = (run, text, i) => {
+  const c = text[i] ?? "";
+  if (c === " ") {
+    run.spaces += 1;
+    run.advance(1);
+    return i + 1;
+  }
+  if (c === run.config.delimiter || c === "\r" || c === "\n") return spacesBeforeEnd(run, c, i);
+  return textAfterSpaces(run, c, i);
+};
+
 /** The step for each mode, chosen once per character run. */
 const stepFor: (mode: MachineModeName) => Stepper = MachineModeName.match({
   fieldStart: () => stepPlain,
@@ -644,3 +683,13 @@ const stepFor: (mode: MachineModeName) => Stepper = MachineModeName.match({
   quoteInQuoted: () => stepQuoteInQuoted,
   afterQuoteSpaces: () => stepAfterQuoteSpaces,
 });
+
+/** A record held at a carriage return: a line feed joins it, anything else releases it and is read next. */
+const stepHeld: Stepper = (run, text, i) => {
+  const lineFeedFollows = text[i] === "\n";
+  run.releaseHeld(lineFeedFollows);
+  return lineFeedFollows ? i + 1 : i;
+};
+
+/** The step for the machine's next unit: the held record first, else its mode's. */
+const nextStep = (run: Machine): Stepper => (run.s.held ? stepHeld : stepFor(run.mode));

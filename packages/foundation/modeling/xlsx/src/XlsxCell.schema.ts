@@ -36,7 +36,7 @@ const $I = $XlsxId.create("XlsxCell");
  * **Example** (Text past the cap)
  *
  * ```ts import.meta.vitest name="Text past the cap"
- * import { MAX_CELL_CHARS, XlsxText } from "@beep/xlsx"
+ * import { MAX_CELL_CHARS, XlsxText } from "@beep/xlsx/XlsxCell.schema"
  * import * as O from "effect/Option"
  *
  * O.isSome(XlsxText.makeOption({ text: "x".repeat(MAX_CELL_CHARS) })) // => true
@@ -54,7 +54,7 @@ export const MAX_CELL_CHARS = 32_767;
  * **Example** (A formula past the cap)
  *
  * ```ts import.meta.vitest name="A formula past the cap"
- * import { MAX_FORMULA_CHARS, XlsxBlank, XlsxCell } from "@beep/xlsx"
+ * import { MAX_FORMULA_CHARS, XlsxBlank, XlsxCell } from "@beep/xlsx/XlsxCell.schema"
  * import * as O from "effect/Option"
  *
  * const tooLong = O.some("1+".repeat(MAX_FORMULA_CHARS))
@@ -72,7 +72,7 @@ export const MAX_FORMULA_CHARS = 8192;
  * **Example** (A format code past the cap)
  *
  * ```ts import.meta.vitest name="A format code past the cap"
- * import { MAX_FORMAT_CHARS, XlsxNumberFormat } from "@beep/xlsx"
+ * import { MAX_FORMAT_CHARS, XlsxNumberFormat } from "@beep/xlsx/XlsxCell.schema"
  * import * as O from "effect/Option"
  *
  * O.isNone(XlsxNumberFormat.makeOption({ id: 164, code: "0".repeat(MAX_FORMAT_CHARS + 1) })) // => true
@@ -89,7 +89,7 @@ export const MAX_FORMAT_CHARS = 255;
  * **Example** (Known error codes)
  *
  * ```ts import.meta.vitest name="Known error codes"
- * import { XlsxErrorCode } from "@beep/xlsx"
+ * import { XlsxErrorCode } from "@beep/xlsx/XlsxCell.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxErrorCode)("#DIV/0!") // => true
@@ -125,7 +125,7 @@ export type XlsxErrorCode = typeof XlsxErrorCode.Type;
  * **Example** (What a code is)
  *
  * ```ts import.meta.vitest name="What a code is"
- * import { XlsxNumberFormat } from "@beep/xlsx"
+ * import { XlsxNumberFormat } from "@beep/xlsx/XlsxCell.schema"
  * import * as O from "effect/Option"
  *
  * XlsxNumberFormat.general.code // => "General"
@@ -185,7 +185,7 @@ const cellText = S.String.check(
  * **Example** (A cell waiting for its formula)
  *
  * ```ts import.meta.vitest name="A cell waiting for its formula"
- * import { holdsSomething, XlsxBlank, XlsxCell } from "@beep/xlsx"
+ * import { holdsSomething, XlsxBlank, XlsxCell } from "@beep/xlsx/XlsxCell.schema"
  * import * as S from "effect/Schema"
  *
  * const cell = XlsxCell.blank(2)
@@ -206,7 +206,7 @@ export class XlsxBlank extends S.Opaque<XlsxBlank, { readonly brand: unique symb
  * **Example** (Text keeps its spaces)
  *
  * ```ts import.meta.vitest name="Text keeps its spaces"
- * import { XlsxText } from "@beep/xlsx"
+ * import { XlsxText } from "@beep/xlsx/XlsxCell.schema"
  *
  * XlsxText.make({ text: " 007 " }).text // => " 007 "
  * ```
@@ -227,7 +227,7 @@ export class XlsxText extends S.Opaque<XlsxText, { readonly brand: unique symbol
  * **Example** (A number under the General format)
  *
  * ```ts import.meta.vitest name="A number under the General format"
- * import { XlsxCell, XlsxNumber } from "@beep/xlsx"
+ * import { XlsxCell, XlsxNumber } from "@beep/xlsx/XlsxCell.schema"
  * import * as O from "effect/Option"
  *
  * const cell = XlsxCell.make({ column: 0, value: XlsxNumber.make({ value: 1234.5 }) })
@@ -250,7 +250,7 @@ export class XlsxNumber extends S.Opaque<XlsxNumber, { readonly brand: unique sy
  * **Example** (A boolean value)
  *
  * ```ts import.meta.vitest name="A boolean value"
- * import { XlsxBoolean, XlsxValue } from "@beep/xlsx"
+ * import { XlsxBoolean, XlsxValue } from "@beep/xlsx/XlsxCell.schema"
  *
  * const value = XlsxBoolean.make({ value: true })
  * XlsxValue.guards.Boolean(value) // => true
@@ -273,7 +273,7 @@ export class XlsxBoolean extends S.Opaque<XlsxBoolean, { readonly brand: unique 
  * **Example** (A division error)
  *
  * ```ts import.meta.vitest name="A division error"
- * import { XlsxError } from "@beep/xlsx"
+ * import { XlsxError } from "@beep/xlsx/XlsxCell.schema"
  * import * as S from "effect/Schema"
  *
  * XlsxError.make({ code: "#DIV/0!" }).code // => "#DIV/0!"
@@ -296,7 +296,7 @@ export class XlsxError extends S.Opaque<XlsxError, { readonly brand: unique symb
  * **Example** (A date shown under its format)
  *
  * ```ts import.meta.vitest name="A date shown under its format"
- * import { XlsxCell, XlsxDate, XlsxNumberFormat } from "@beep/xlsx"
+ * import { XlsxCell, XlsxDate, XlsxNumberFormat } from "@beep/xlsx/XlsxCell.schema"
  * import * as O from "effect/Option"
  *
  * const cell = XlsxCell.make({
@@ -323,7 +323,7 @@ export class XlsxDate extends S.Opaque<XlsxDate, { readonly brand: unique symbol
  * **Example** (What counts as unreadable)
  *
  * ```ts import.meta.vitest name="What counts as unreadable"
- * import { holdsSomething, XlsxUnreadable } from "@beep/xlsx"
+ * import { holdsSomething, XlsxUnreadable } from "@beep/xlsx/XlsxCell.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxUnreadable)({ kind: "Unreadable", raw: "abc" }) // => true
@@ -349,7 +349,7 @@ export class XlsxUnreadable extends S.Opaque<XlsxUnreadable, { readonly brand: u
  * **Example** (Decode and test a value)
  *
  * ```ts import.meta.vitest name="Decode and test a value"
- * import { XlsxValue } from "@beep/xlsx"
+ * import { XlsxValue } from "@beep/xlsx/XlsxCell.schema"
  * import * as S from "effect/Schema"
  *
  * const value = S.decodeUnknownSync(XlsxValue)({ kind: "Number", value: 42 })
@@ -378,7 +378,7 @@ export type XlsxValue = typeof XlsxValue.Type;
  * **Example** (Zero counts, empty text does not)
  *
  * ```ts import.meta.vitest name="Zero counts, empty text does not"
- * import { holdsSomething, XlsxNumber, XlsxText } from "@beep/xlsx"
+ * import { holdsSomething, XlsxNumber, XlsxText } from "@beep/xlsx/XlsxCell.schema"
  *
  * holdsSomething(XlsxNumber.make({ value: 0 })) // => true
  * holdsSomething(XlsxText.make({ text: "" })) // => false
@@ -398,7 +398,7 @@ export const holdsSomething = (value: XlsxValue): boolean =>
  * **Example** (Displayed text)
  *
  * ```ts import.meta.vitest name="Displayed text"
- * import { XlsxCell, XlsxNumber, XlsxNumberFormat } from "@beep/xlsx"
+ * import { XlsxCell, XlsxNumber, XlsxNumberFormat } from "@beep/xlsx/XlsxCell.schema"
  * import * as O from "effect/Option"
  *
  * const sku = XlsxCell.make({
@@ -412,7 +412,7 @@ export const holdsSomething = (value: XlsxValue): boolean =>
  * **Example** (Canonical form of a hand-built date)
  *
  * ```ts import.meta.vitest name="Canonical form of a hand-built date"
- * import { XlsxCell, XlsxDate } from "@beep/xlsx"
+ * import { XlsxCell, XlsxDate } from "@beep/xlsx/XlsxCell.schema"
  *
  * const built = XlsxCell.make({ column: 0, value: XlsxDate.make({ serial: 45_000 }) })
  * XlsxCell.canonical(built, "1900").format.code // => "m/d/yy"
@@ -448,15 +448,9 @@ export class XlsxCell extends S.Opaque<XlsxCell, { readonly brand: unique symbol
    */
   static readonly canonical = (written: XlsxCell, system: XlsxDateSystem): XlsxCell => {
     const cell = O.exists(written.formula, Str.isEmpty) ? XlsxCell.make({ ...written, formula: O.none() }) : written;
-    const dated = isDateFormat(cell.format.code);
-    const last = maxSerial(system);
-    if (cell.value.kind === "Date" && cell.value.serial > last) {
-      return XlsxCell.make({ ...cell, value: XlsxNumber.make({ value: cell.value.serial }) });
-    }
-    if (cell.value.kind === "Date" && !dated) return XlsxCell.make({ ...cell, format: XlsxNumberFormat.shortDate });
-    if (cell.value.kind === "Number" && dated && cell.value.value >= 0 && cell.value.value <= last) {
-      return XlsxCell.make({ ...cell, value: XlsxDate.make({ serial: cell.value.value }) });
-    }
+    const value = cell.value;
+    if (value.kind === "Date") return canonicalDate(cell, value.serial, system);
+    if (value.kind === "Number") return canonicalNumber(cell, value.value, system);
     return cell;
   };
 
@@ -481,3 +475,15 @@ export class XlsxCell extends S.Opaque<XlsxCell, { readonly brand: unique symbol
     });
   };
 }
+
+/** A dated cell as a file gives it back: a number past the system's last serial, Excel's short date when undated. */
+const canonicalDate = (cell: XlsxCell, serial: number, system: XlsxDateSystem): XlsxCell => {
+  if (serial > maxSerial(system)) return XlsxCell.make({ ...cell, value: XlsxNumber.make({ value: serial }) });
+  return isDateFormat(cell.format.code) ? cell : XlsxCell.make({ ...cell, format: XlsxNumberFormat.shortDate });
+};
+
+/** A number as a file gives it back: the date it is read as under a date format, within the system's dates. */
+const canonicalNumber = (cell: XlsxCell, value: number, system: XlsxDateSystem): XlsxCell =>
+  isDateFormat(cell.format.code) && value >= 0 && value <= maxSerial(system)
+    ? XlsxCell.make({ ...cell, value: XlsxDate.make({ serial: value }) })
+    : cell;

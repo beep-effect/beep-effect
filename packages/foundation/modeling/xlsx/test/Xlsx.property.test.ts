@@ -19,6 +19,7 @@ import {
 import { XlsxWriteOptions } from "@beep/xlsx/XlsxOptions.schema";
 import { XlsxRecord, XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
@@ -199,7 +200,7 @@ describe("the codecs", () => {
   it.effect("writes an empty formula as no formula", () =>
     Effect.gen(function* () {
       const cell = XlsxCell.make({ column: 0, value: XlsxNumber.make({ value: 1 }), formula: O.some("") });
-      expect(XlsxCell.canonical(cell, "1900").formula).toEqual(O.none());
+      assertNone(XlsxCell.canonical(cell, "1900").formula);
       const workbook = XlsxWorkbook.make({
         sheets: [
           XlsxWorksheet.make({
@@ -211,7 +212,9 @@ describe("the codecs", () => {
       const bytes = yield* Xlsx.stringify(workbook, XlsxWriteOptions.make({ compression: "store" }));
       expect(Str.includes("<f>")(new TextDecoder().decode(bytes))).toBe(false);
       const back = yield* Xlsx.parse(bytes);
-      expect(back.workbook.sheets[0]?.rows[0]?.cells[0]?.formula).toEqual(O.none());
+      const readBack = back.workbook.sheets[0]?.rows[0]?.cells[0];
+      assertTrue(readBack !== undefined);
+      assertNone(readBack.formula);
     })
   );
 
@@ -310,7 +313,7 @@ describe("the codecs", () => {
       const wide: XlsxRecord = R.fromEntries(A.map(A.range(0, MAX_COLUMN + 1), (i) => [`h${i}`, one] as const));
       for (const records of [[{ [Str.repeat(MAX_CELL_CHARS + 1)("h")]: one }], [{ "": one }], [wide], [{}], [{}, {}]]) {
         const exit = yield* Effect.exit(S.encodeUnknownEffect(codec)(records));
-        expect(Exit.isFailure(exit) && !Cause.hasDies(exit.cause)).toBe(true);
+        assertTrue(Exit.isFailure(exit) && !Cause.hasDies(exit.cause));
         if (Exit.isFailure(exit)) expect(Cause.squash(exit.cause)).toBeInstanceOf(S.SchemaError);
       }
     })

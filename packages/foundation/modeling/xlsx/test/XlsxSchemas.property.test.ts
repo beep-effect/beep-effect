@@ -44,6 +44,7 @@ import {
   XlsxWorksheet,
 } from "@beep/xlsx/XlsxWorkbook.schema";
 import { describe, expect, it } from "@effect/vitest";
+import { assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -112,22 +113,25 @@ describe("addresses", () => {
       "AA",
       "XFD",
     ]);
-    expect(columnFromLetters("xfd")).toEqual(O.some(16_383));
-    expect(columnFromLetters("XFE")).toEqual(O.none());
+    assertSome(columnFromLetters("xfd"), 16_383);
+    assertNone(columnFromLetters("XFE"));
   });
+  // A generated value may have a null prototype, so a round trip is compared by the schema's own equivalence.
+  const sameAddress = S.toEquivalence(S.Option(XlsxAddress));
+  const sameRange = S.toEquivalence(S.Option(XlsxRange));
   it.prop("parse after format is the identity", [Arbitrary.schema(XlsxAddress)], ([address]) => {
-    expect(XlsxAddress.parse(XlsxAddress.format(address))).toEqual(O.some(address));
+    assertTrue(sameAddress(XlsxAddress.parse(XlsxAddress.format(address)), O.some(address)));
   });
   it.prop("a range parses back from its reference", [Arbitrary.schema(XlsxRange)], ([range]) => {
-    expect(XlsxRange.parse(XlsxRange.format(range))).toEqual(O.some(XlsxRange.ordered(range)));
+    assertTrue(sameRange(XlsxRange.parse(XlsxRange.format(range)), O.some(XlsxRange.ordered(range))));
   });
   it("orders a range's corners", () => {
-    expect(O.map(XlsxRange.parse("C3:A1"), XlsxRange.format)).toEqual(O.some("A1:C3"));
+    assertSome(O.map(XlsxRange.parse("C3:A1"), XlsxRange.format), "A1:C3");
   });
   it("reads absolute references and refuses what is off the sheet", () => {
-    expect(O.map(XlsxAddress.parse("$B$7"), XlsxAddress.format)).toEqual(O.some("B7"));
-    expect(XlsxAddress.parse("A0")).toEqual(O.none());
-    expect(XlsxAddress.parse("A1048577")).toEqual(O.none());
+    assertSome(O.map(XlsxAddress.parse("$B$7"), XlsxAddress.format), "B7");
+    assertNone(XlsxAddress.parse("A0"));
+    assertNone(XlsxAddress.parse("A1048577"));
   });
 });
 
@@ -139,7 +143,7 @@ describe("serials", () => {
     expect(A.map([1, 59, 60, 61, 46_085], (serial) => ymd(serial, "1900"))).toEqual(
       A.map(["1900-1-1", "1900-2-28", "1900-2-29", "1900-3-1", "2026-3-4"], O.some)
     );
-    expect(ymd(0, "1900")).toEqual(O.some("1900-1-0"));
+    assertSome(ymd(0, "1900"), "1900-1-0");
   });
   it("counts from 1 January 1904 in the 1904 system", () => {
     expect(A.map([0, 1, 59, 60, 61, 44_623], (serial) => ymd(serial, "1904"))).toEqual(
@@ -154,10 +158,10 @@ describe("serials", () => {
     });
   });
   it("ends each system on 31 December 9999, the 1904 one 1,462 serials sooner", () => {
-    expect(ymd(maxSerial("1900"), "1900")).toEqual(O.some("9999-12-31"));
-    expect(ymd(maxSerial("1904"), "1904")).toEqual(O.some("9999-12-31"));
-    expect(XlsxCalendar.fromSerial(MAX_SERIAL, "1904")).toEqual(O.none());
-    expect(XlsxCalendar.toDateTime(MAX_SERIAL, "1904")).toEqual(O.none());
+    assertSome(ymd(maxSerial("1900"), "1900"), "9999-12-31");
+    assertSome(ymd(maxSerial("1904"), "1904"), "9999-12-31");
+    assertNone(XlsxCalendar.fromSerial(MAX_SERIAL, "1904"));
+    assertNone(XlsxCalendar.toDateTime(MAX_SERIAL, "1904"));
   });
   // The bound is the last whole second of 31 December 9999, as a workbook stores it to 15 digits: that second is a
   // date in both systems, reads back to itself, and is shown; the next day is none, and so is shown as nothing.
@@ -166,8 +170,8 @@ describe("serials", () => {
     for (const system of XlsxDateSystem.literals) {
       const serial = O.getOrThrow(XlsxCalendar.toSerial(last, system));
       expect(serial).toBeLessThanOrEqual(maxSerial(system));
-      expect(XlsxCalendar.fromSerial(serial, system)).toEqual(O.some(last));
-      expect(XlsxCalendar.fromSerial(maxSerial(system), system)).toEqual(O.some(last));
+      assertSome(XlsxCalendar.fromSerial(serial, system), last);
+      assertSome(XlsxCalendar.fromSerial(maxSerial(system), system), last);
       const shown = (at: number) =>
         XlsxCell.shown(
           {
@@ -176,14 +180,12 @@ describe("serials", () => {
           },
           system
         );
-      expect(shown(serial)).toEqual(O.some("9999-12-31 23:59:59"));
-      expect(shown(Math.min(maxSerial(system) + 1, MAX_SERIAL))).toEqual(system === "1904" ? O.none() : shown(serial));
+      assertSome(shown(serial), "9999-12-31 23:59:59");
+      deepStrictEqual(shown(Math.min(maxSerial(system) + 1, MAX_SERIAL)), system === "1904" ? O.none() : shown(serial));
     }
     // A 1904 serial past the system's last day was shown as the year 0002.
     const late = XlsxDate.make({ serial: 2_958_000 });
-    expect(
-      XlsxCell.shown({ value: late, format: XlsxNumberFormat.make({ id: 164, code: "yyyy-mm-dd" }) }, "1904")
-    ).toEqual(O.none());
+    assertNone(XlsxCell.shown({ value: late, format: XlsxNumberFormat.make({ id: 164, code: "yyyy-mm-dd" }) }, "1904"));
   });
   // The serial domain is one schema for both systems, so a 1904 serial can name a day past 9999; `fromSerial` says
   // none there and never throws. Within a system's range it always gives the day, back to within a second.
@@ -193,7 +195,7 @@ describe("serials", () => {
     ([system, share]) => {
       const serial = share * maxSerial(system);
       const calendar = XlsxCalendar.fromSerial(serial, system);
-      expect(O.isSome(calendar)).toBe(true);
+      assertTrue(calendar.pipe(O.isSome));
       const back = O.getOrThrow(O.flatMap(calendar, (found) => XlsxCalendar.toSerial(found, system)));
       expect(Math.abs(back - serial)).toBeLessThan(1 / 86_400);
     },
@@ -221,24 +223,24 @@ describe("serials", () => {
     });
     const shown = (serial: number, code: string, system: "1900" | "1904") =>
       XlsxCell.shown({ value: XlsxDate.make({ serial }), format: XlsxNumberFormat.make({ id: 164, code }) }, system);
-    expect(shown(46_085.999_999_995, "yyyy-mm-dd hh:mm:ss", "1904")).toEqual(O.some("2030-03-06 00:00:00"));
-    expect(shown(59.999_999_9, "yyyy-mm-dd hh:mm:ss", "1900")).toEqual(O.some("1900-02-29 00:00:00"));
-    expect(shown(0.999_999_99, "h:mm:ss AM/PM", "1900")).toEqual(O.some("12:00:00 AM"));
+    assertSome(shown(46_085.999_999_995, "yyyy-mm-dd hh:mm:ss", "1904"), "2030-03-06 00:00:00");
+    assertSome(shown(59.999_999_9, "yyyy-mm-dd hh:mm:ss", "1900"), "1900-02-29 00:00:00");
+    assertSome(shown(0.999_999_99, "h:mm:ss AM/PM", "1900"), "12:00:00 AM");
   });
   it("has no DateTime for the days no calendar has", () => {
-    expect(O.isNone(XlsxCalendar.toDateTime(60, "1900"))).toBe(true);
-    expect(O.isNone(XlsxCalendar.toDateTime(0.5, "1900"))).toBe(true);
-    expect(O.isSome(XlsxCalendar.toDateTime(61, "1900"))).toBe(true);
+    assertNone(XlsxCalendar.toDateTime(60, "1900"));
+    assertNone(XlsxCalendar.toDateTime(0.5, "1900"));
+    assertTrue(XlsxCalendar.toDateTime(61, "1900").pipe(O.isSome));
   });
   // `toDateTime` once passed the time under plural keys `DateTime.make` does not read, so every moment was midnight.
   it("keeps the time of day in a DateTime, to the millisecond", () => {
     const iso = (serial: number, system: XlsxDateSystem) =>
       O.map(XlsxCalendar.toDateTime(serial, system), DateTime.formatIso);
-    expect(iso(45_292.5, "1900")).toEqual(O.some("2024-01-01T12:00:00.000Z"));
-    expect(iso(45_292.75, "1900")).toEqual(O.some("2024-01-01T18:00:00.000Z"));
-    expect(iso(43_830.75, "1904")).toEqual(O.some("2024-01-01T18:00:00.000Z"));
-    expect(iso(1_938_086.986_574_074, "1900")).toEqual(O.some("7206-04-18T23:40:40.000Z"));
-    expect(iso(45_292 + 1.5 / 86_400, "1900")).toEqual(O.some("2024-01-01T00:00:01.500Z"));
+    assertSome(iso(45_292.5, "1900"), "2024-01-01T12:00:00.000Z");
+    assertSome(iso(45_292.75, "1900"), "2024-01-01T18:00:00.000Z");
+    assertSome(iso(43_830.75, "1904"), "2024-01-01T18:00:00.000Z");
+    assertSome(iso(1_938_086.986_574_074, "1900"), "7206-04-18T23:40:40.000Z");
+    assertSome(iso(45_292 + 1.5 / 86_400, "1900"), "2024-01-01T00:00:01.500Z");
   });
   // A workbook stores 15 significant digits, which keep at least eight decimals of a day (under a millisecond)
   // through the last serial of either system, and the time of day is rounded to the millisecond: so every whole
@@ -254,9 +256,10 @@ describe("serials", () => {
     [XlsxDateSystem, share, secondOfDay],
     ([system, part, seconds]) => {
       const serial = serialOf(system, part, seconds);
-      expect(
-        O.flatMap(XlsxCalendar.fromSerial(serial, system), (calendar) => XlsxCalendar.toSerial(calendar, system))
-      ).toEqual(O.some(serial));
+      assertSome(
+        O.flatMap(XlsxCalendar.fromSerial(serial, system), (calendar) => XlsxCalendar.toSerial(calendar, system)),
+        serial
+      );
     },
     { arbitrary: { runs: 1000 } }
   );
@@ -268,7 +271,7 @@ describe("serials", () => {
       const calendar = O.getOrThrow(XlsxCalendar.fromSerial(serial, system));
       const moment = XlsxCalendar.toDateTime(serial, system);
       if (calendar.day === 0 || (calendar.year === 1900 && calendar.month === 2 && calendar.day === 29)) {
-        expect(O.isNone(moment)).toBe(true);
+        assertNone(moment);
         return;
       }
       const parts = moment.pipe(O.getOrThrow, DateTime.toPartsUtc);
@@ -295,24 +298,27 @@ const date = (serial: number, code: string) =>
 
 describe("displayed text", () => {
   it("is worked out for the formats of the fixtures", () => {
-    expect(XlsxCell.shown(number(12.5, "$#,##0.00"), "1900")).toEqual(O.some("$12.50"));
-    expect(XlsxCell.shown(number(123, "00000"), "1900")).toEqual(O.some("00123"));
-    expect(XlsxCell.shown(number(0.1 + 0.2, "General"), "1900")).toEqual(O.some("0.3"));
-    expect(XlsxCell.shown(date(46_085, "m/d/yyyy"), "1900")).toEqual(O.some("3/4/2026"));
-    expect(XlsxCell.shown(date(46_115, "dd/mm/yyyy"), "1900")).toEqual(O.some("03/04/2026"));
-    expect(XlsxCell.shown(date(46_085.604_166_666_66, "yyyy-mm-dd hh:mm"), "1900")).toEqual(O.some("2026-03-04 14:30"));
-    expect(XlsxCell.shown(date(44_623, "yyyy-mm-dd"), "1904")).toEqual(O.some("2026-03-04"));
+    assertSome(XlsxCell.shown(number(12.5, "$#,##0.00"), "1900"), "$12.50");
+    assertSome(XlsxCell.shown(number(123, "00000"), "1900"), "00123");
+    assertSome(XlsxCell.shown(number(0.1 + 0.2, "General"), "1900"), "0.3");
+    assertSome(XlsxCell.shown(date(46_085, "m/d/yyyy"), "1900"), "3/4/2026");
+    assertSome(XlsxCell.shown(date(46_115, "dd/mm/yyyy"), "1900"), "03/04/2026");
+    assertSome(XlsxCell.shown(date(46_085.604_166_666_66, "yyyy-mm-dd hh:mm"), "1900"), "2026-03-04 14:30");
+    assertSome(XlsxCell.shown(date(44_623, "yyyy-mm-dd"), "1904"), "2026-03-04");
   });
   it("is refused for a format that is not rendered, never guessed", () => {
-    expect(XlsxCell.shown(number(0.5, "# ?/?"), "1900")).toEqual(O.none());
-    expect(XlsxCell.shown(number(1200, "0.00E+00"), "1900")).toEqual(O.none());
-    expect(XlsxCell.shown(number(-5, "#,##0 ;(#,##0)"), "1900")).toEqual(O.none());
-    expect(XlsxCell.shown(date(1.5, "[h]:mm:ss"), "1900")).toEqual(O.none());
-    expect(XlsxCell.shown(XlsxCell.make({ column: 0, value: XlsxText.make({ text: "a" }) }), "1900")).toEqual(O.none());
+    assertNone(XlsxCell.shown(number(0.5, "# ?/?"), "1900"));
+    assertNone(XlsxCell.shown(number(1200, "0.00E+00"), "1900"));
+    assertNone(XlsxCell.shown(number(-5, "#,##0 ;(#,##0)"), "1900"));
+    assertNone(XlsxCell.shown(date(1.5, "[h]:mm:ss"), "1900"));
+    assertNone(XlsxCell.shown(XlsxCell.make({ column: 0, value: XlsxText.make({ text: "a" }) }), "1900"));
   });
   it("knows Excel's built-in formats by id", () => {
-    expect(O.map(XlsxNumberFormat.builtin(14), (format) => format.code)).toEqual(O.some("m/d/yy"));
-    expect(XlsxNumberFormat.builtin(5)).toEqual(O.none());
+    assertSome(
+      O.map(XlsxNumberFormat.builtin(14), (format) => format.code),
+      "m/d/yy"
+    );
+    assertNone(XlsxNumberFormat.builtin(5));
     expect(XlsxNumberFormat.kind({ code: "00000" })).toMatchObject({ kind: "ZeroPadded", width: 5 });
   });
   it("puts a cell built by hand in the form a file gives back", () => {
@@ -344,7 +350,7 @@ describe("displayed text", () => {
   it("calls a pattern past its schema's bounds a format it does not render", () => {
     const wide = XlsxNumberFormat.make({ id: 164, code: `0.${Str.repeat(31)("0")}` });
     expect(XlsxNumberFormat.kind(wide).kind).toBe("Other");
-    expect(XlsxCell.shown({ value: XlsxNumber.make({ value: 0 }), format: wide }, "1900")).toEqual(O.none());
+    assertNone(XlsxCell.shown({ value: XlsxNumber.make({ value: 0 }), format: wide }, "1900"));
   });
 });
 
@@ -394,7 +400,7 @@ describe("uniqueness", () => {
     expect(S.is(XlsxRow)(XlsxRow.make({ number: 1, cells: A.map(A.range(0, 16_383), cell) }))).toBe(true);
     const sheets = A.map(A.range(1, 1000), (n) => sheet(`Sheet ${n}`));
     expect(S.is(XlsxWorkbook)(XlsxWorkbook.make({ sheets: [sheet("Sheet 0"), ...sheets] }))).toBe(true);
-    expect(XlsxWorkbook.makeOption({ sheets: [sheet("sheet 1"), ...sheets] })).toEqual(O.none());
+    assertNone(XlsxWorkbook.makeOption({ sheets: [sheet("sheet 1"), ...sheets] }));
   });
   // A sheet's merged ranges and hidden columns are one schema each, wherever a sheet's layout is held.
   it("refuses a range merged twice or a column hidden twice, in a worksheet and an outline alike", () => {
@@ -404,8 +410,8 @@ describe("uniqueness", () => {
     expect(S.is(XlsxWorksheet)({ ...base, merges: [range, reversed] })).toBe(false);
     expect(S.is(XlsxWorksheet)({ ...base, hiddenColumns: [3, 3, 1] })).toBe(false);
     const count = XlsxWorksheet.count(base);
-    expect(O.isSome(XlsxSheetOutline.makeOption({ count, merges: [], hiddenColumns: [3, 1] }))).toBe(true);
-    expect(O.isNone(XlsxSheetOutline.makeOption({ count, merges: [], hiddenColumns: [3, 3, 1] }))).toBe(true);
-    expect(O.isNone(XlsxSheetOutline.makeOption({ count, merges: [range, range], hiddenColumns: [] }))).toBe(true);
+    assertTrue(XlsxSheetOutline.makeOption({ count, merges: [], hiddenColumns: [3, 1] }).pipe(O.isSome));
+    assertNone(XlsxSheetOutline.makeOption({ count, merges: [], hiddenColumns: [3, 3, 1] }));
+    assertNone(XlsxSheetOutline.makeOption({ count, merges: [range, range], hiddenColumns: [] }));
   });
 });

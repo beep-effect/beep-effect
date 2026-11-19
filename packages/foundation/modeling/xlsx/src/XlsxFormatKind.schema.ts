@@ -19,7 +19,8 @@ const $I = $XlsxId.create("XlsxFormatKind");
  * **Example** (Read the General code)
  *
  * ```ts import.meta.vitest name="Read the General code"
- * import { XlsxGeneralFormat, XlsxNumberFormat } from "@beep/xlsx"
+ * import { XlsxNumberFormat } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxGeneralFormat } from "@beep/xlsx/XlsxFormatKind.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxGeneralFormat)(XlsxNumberFormat.kind({ code: "General" })) // => true
@@ -41,7 +42,8 @@ export class XlsxGeneralFormat extends S.Opaque<XlsxGeneralFormat, { readonly br
  * **Example** (Read a date code)
  *
  * ```ts import.meta.vitest name="Read a date code"
- * import { XlsxDateFormat, XlsxNumberFormat } from "@beep/xlsx"
+ * import { XlsxNumberFormat } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxDateFormat } from "@beep/xlsx/XlsxFormatKind.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxDateFormat)(XlsxNumberFormat.kind({ code: "yyyy-mm-dd" })) // => true
@@ -64,7 +66,8 @@ export class XlsxDateFormat extends S.Opaque<XlsxDateFormat, { readonly brand: u
  * **Example** (Read a zero-padded code)
  *
  * ```ts import.meta.vitest name="Read a zero-padded code"
- * import { XlsxNumberFormat, XlsxZeroPaddedFormat } from "@beep/xlsx"
+ * import { XlsxNumberFormat } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxZeroPaddedFormat } from "@beep/xlsx/XlsxFormatKind.schema"
  *
  * XlsxNumberFormat.kind({ code: "00000" }) // => XlsxZeroPaddedFormat.make({ width: 5 })
  * ```
@@ -88,7 +91,8 @@ export class XlsxZeroPaddedFormat extends S.Opaque<XlsxZeroPaddedFormat, { reado
  * **Example** (Read a thousands pattern)
  *
  * ```ts import.meta.vitest name="Read a thousands pattern"
- * import { XlsxFixedFormat, XlsxNumberFormat } from "@beep/xlsx"
+ * import { XlsxNumberFormat } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxFixedFormat } from "@beep/xlsx/XlsxFormatKind.schema"
  *
  * XlsxNumberFormat.kind({ code: "#,##0.00" }) // => XlsxFixedFormat.make({ decimals: 2, thousands: true, percent: false, prefix: "", suffix: "" })
  * ```
@@ -116,7 +120,8 @@ export class XlsxFixedFormat extends S.Opaque<XlsxFixedFormat, { readonly brand:
  * **Example** (An exponent code is not rendered)
  *
  * ```ts import.meta.vitest name="An exponent code is not rendered"
- * import { XlsxCell, XlsxNumber, XlsxNumberFormat, XlsxOtherFormat } from "@beep/xlsx"
+ * import { XlsxCell, XlsxNumber, XlsxNumberFormat } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxOtherFormat } from "@beep/xlsx/XlsxFormatKind.schema"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
@@ -140,7 +145,8 @@ export class XlsxOtherFormat extends S.Opaque<XlsxOtherFormat, { readonly brand:
  * **Example** (Branch on a format's kind)
  *
  * ```ts import.meta.vitest name="Branch on a format's kind"
- * import { XlsxFormatKind, XlsxNumberFormat } from "@beep/xlsx"
+ * import { XlsxNumberFormat } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxFormatKind } from "@beep/xlsx/XlsxFormatKind.schema"
  *
  * const kind = XlsxNumberFormat.kind({ code: "0.0%" })
  * XlsxFormatKind.guards.Fixed(kind) // => true

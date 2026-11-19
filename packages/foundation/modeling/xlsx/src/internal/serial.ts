@@ -104,17 +104,25 @@ export const serialOf: {
   (parts: XlsxCalendar, system: XlsxDateSystem): O.Option<number>;
 } = dual(2, (parts: XlsxCalendar, system: XlsxDateSystem): O.Option<number> => {
   const time = (parts.hour * 3600 + parts.minute * 60 + parts.second) / 86_400;
-  let count: number;
-  if (parts.year === 1900 && parts.month === 2 && parts.day === 29) count = 60;
-  else if (parts.year === 1900 && parts.month === 1 && parts.day === 0) count = 0;
-  else {
-    if (parts.day < 1) return O.none();
-    const days = daysFromCivil(parts.year, parts.month, parts.day);
-    const [year, month, day] = civilFromDays(days);
-    if (year !== parts.year || month !== parts.month || day !== parts.day) return O.none();
-    const real = days - EPOCH_1900 + 1;
-    count = real >= 60 ? real + 1 : real;
-  }
-  const days = system === "1904" ? count - DAYS_1904 : count;
-  return days < 0 ? O.none() : O.some(days + time);
+  return O.flatMap(countOf(parts), (count) => {
+    const days = system === "1904" ? count - DAYS_1904 : count;
+    return days < 0 ? O.none() : O.some(days + time);
+  });
 });
+
+/** The 1900 system's day count of calendar fields, its fictitious February 29 and January 0 included. */
+const countOf = (parts: XlsxCalendar): O.Option<number> => {
+  if (parts.year === 1900 && parts.month === 2 && parts.day === 29) return O.some(60);
+  if (parts.year === 1900 && parts.month === 1 && parts.day === 0) return O.some(0);
+  return realCountOf(parts);
+};
+
+/** The 1900 system's day count of a real calendar day, none for a day the calendar does not have. */
+const realCountOf = (parts: XlsxCalendar): O.Option<number> => {
+  if (parts.day < 1) return O.none();
+  const days = daysFromCivil(parts.year, parts.month, parts.day);
+  const [year, month, day] = civilFromDays(days);
+  if (year !== parts.year || month !== parts.month || day !== parts.day) return O.none();
+  const real = days - EPOCH_1900 + 1;
+  return O.some(real >= 60 ? real + 1 : real);
+};

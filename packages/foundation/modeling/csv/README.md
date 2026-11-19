@@ -28,7 +28,7 @@ and the streaming channels.
 - `CsvParseError` (`CsvError.errors.ts`): the one typed failure.
 
 ```ts
-import { Csv } from "@beep/csv";
+import { Csv } from "@beep/csv/Csv.codec";
 import * as Result from "effect/Result";
 
 const read = Result.getOrThrow(Csv.parseResult('SKU;Name;Qty\nBRK-040;Bracket "40" mm;12\nBLT-0042;Bolt;3\n'));

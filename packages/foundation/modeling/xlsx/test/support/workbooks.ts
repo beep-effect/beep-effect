@@ -1,6 +1,7 @@
 // Workbooks built from hand-written parts, each named for what it holds. A test asks for one by name and gets its
 // bytes; nothing binary is committed, so what a fixture holds can be read here.
 import * as A from "effect/Array";
+import * as Bytes from "effect/Bytes";
 import * as Effect from "effect/Effect";
 import * as Zip from "effect/encoding/Zip";
 import * as P from "effect/Predicate";
@@ -15,23 +16,12 @@ const head = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>';
 /** One part of an archive: its path and its text. */
 export type Part = readonly [path: string, text: string | Uint8Array];
 
-/** Chunks of bytes as one array. */
-const joined = (chunks: ReadonlyArray<Uint8Array>): Uint8Array => {
-  const out = new Uint8Array(A.reduce(chunks, 0, (n, chunk) => n + chunk.length));
-  let at = 0;
-  for (const chunk of chunks) {
-    out.set(chunk, at);
-    at += chunk.length;
-  }
-  return out;
-};
-
 /** Parts as one zip archive, in the order given. */
 export const archive = (parts: ReadonlyArray<Part>): Effect.Effect<Uint8Array> =>
   Stream.fromIterable(A.map(parts, ([path, text]) => Zip.file(path, text))).pipe(
     Stream.pipeThroughChannel(Zip.encode()),
     Stream.runCollect,
-    Effect.map(joined),
+    Effect.map(Bytes.concat),
     Effect.orDie
   );
 
@@ -146,7 +136,7 @@ export const streamedArchive = (parts: ReadonlyArray<Part>): Effect.Effect<Uint8
     A.map(parts, ([path, text]) =>
       Zip.fileStream(path, Stream.make(P.isString(text) ? new TextEncoder().encode(text) : text))
     )
-  ).pipe(Stream.pipeThroughChannel(Zip.encode()), Stream.runCollect, Effect.map(joined), Effect.orDie);
+  ).pipe(Stream.pipeThroughChannel(Zip.encode()), Stream.runCollect, Effect.map(Bytes.concat), Effect.orDie);
 
 /** Where an archive's end-of-directory record is: its last `PK 5 6`. */
 const endOf = (bytes: Uint8Array): number => {
@@ -173,7 +163,7 @@ export const appended = (input: { readonly first: Uint8Array; readonly second: U
     at += 46 + view.getUint16(at + 28, true) + view.getUint16(at + 30, true) + view.getUint16(at + 32, true);
   }
   view.setUint32(end + 16, start + first.length, true);
-  return joined([first, moved]);
+  return Bytes.concat([first, moved]);
 };
 
 /** Where an archive's central directory starts, from its end record or the 64-bit record that one names. */
@@ -222,7 +212,7 @@ export const withoutLastListed = (bytes: Uint8Array): Uint8Array => {
     at += 46 + view.getUint16(at + 28, true) + view.getUint16(at + 30, true) + view.getUint16(at + 32, true);
   }
   const last = 46 + view.getUint16(at + 28, true) + view.getUint16(at + 30, true) + view.getUint16(at + 32, true);
-  const out = joined([bytes.subarray(0, at), bytes.subarray(at + last)]);
+  const out = Bytes.concat([bytes.subarray(0, at), bytes.subarray(at + last)]);
   const record = new DataView(out.buffer);
   const moved = end - last;
   record.setUint16(moved + 8, count - 1, true);

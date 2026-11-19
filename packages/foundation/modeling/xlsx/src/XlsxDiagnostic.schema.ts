@@ -30,7 +30,8 @@ const whole = (description: string) =>
  * **Example** (Sniff a file before reading it)
  *
  * ```ts import.meta.vitest name="Sniff a file before reading it"
- * import { Xlsx, XlsxContainer } from "@beep/xlsx"
+ * import { Xlsx } from "@beep/xlsx/Xlsx.codec"
+ * import { XlsxContainer } from "@beep/xlsx/XlsxDiagnostic.schema"
  * import * as S from "effect/Schema"
  *
  * Xlsx.container(new Uint8Array([1, 2, 3])) // => "notAnArchive"
@@ -67,7 +68,7 @@ export type XlsxContainer = typeof XlsxContainer.Type;
  * **Example** (A legacy .xls file)
  *
  * ```ts import.meta.vitest name="A legacy .xls file"
- * import { describeFinding, NotAWorkbook } from "@beep/xlsx"
+ * import { describeFinding, NotAWorkbook } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * describeFinding(NotAWorkbook.make({ container: "legacyXls" })) // => "the file is not an .xlsx workbook (legacyXls)"
  * ```
@@ -88,7 +89,7 @@ export class NotAWorkbook extends S.Opaque<NotAWorkbook, { readonly brand: uniqu
  * **Example** (A missing workbook part)
  *
  * ```ts import.meta.vitest name="A missing workbook part"
- * import { describeFinding, MissingPart } from "@beep/xlsx"
+ * import { describeFinding, MissingPart } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * describeFinding(MissingPart.make({ path: "xl/workbook.xml" })) // => "the part xl/workbook.xml is missing"
  * ```
@@ -108,7 +109,7 @@ export class MissingPart extends S.Opaque<MissingPart, { readonly brand: unique 
  * **Example** (A path held twice)
  *
  * ```ts import.meta.vitest name="A path held twice"
- * import { describeFinding, DuplicatePart } from "@beep/xlsx"
+ * import { describeFinding, DuplicatePart } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * describeFinding(DuplicatePart.make({ path: "xl/workbook.xml" })) // => "the archive holds xl/workbook.xml twice"
  * ```
@@ -130,7 +131,7 @@ export class DuplicatePart extends S.Opaque<DuplicatePart, { readonly brand: uni
  * **Example** (An archive updated by appending)
  *
  * ```ts import.meta.vitest name="An archive updated by appending"
- * import { describeFinding, DirectoryMismatch } from "@beep/xlsx"
+ * import { describeFinding, DirectoryMismatch } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * const finding = DirectoryMismatch.make({ reason: "the directory starts at byte 2048, the entries end at 1024" })
  * describeFinding(finding) // => "the archive's directory names other entries: the directory starts at byte 2048, the entries end at 1024"
@@ -153,7 +154,7 @@ export class DirectoryMismatch extends S.Opaque<DirectoryMismatch, { readonly br
  * **Example** (Known kinds of damage)
  *
  * ```ts import.meta.vitest name="Known kinds of damage"
- * import { XlsxArchiveDamage } from "@beep/xlsx"
+ * import { XlsxArchiveDamage } from "@beep/xlsx/XlsxDiagnostic.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxArchiveDamage)("Truncated") // => true
@@ -174,12 +175,20 @@ export const XlsxArchiveDamage = LiteralKit([
 ]).pipe($I.annoteSchema("XlsxArchiveDamage", { description: "How the archive is damaged" }));
 
 /**
+ * How an archive is damaged, such as `"Truncated"`; the type {@link XlsxArchiveDamage} decodes to.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type XlsxArchiveDamage = typeof XlsxArchiveDamage.Type;
+
+/**
  * The archive itself is damaged, cut short, or uses something this package does not read, such as encryption.
  *
  * **Example** (A truncated archive)
  *
  * ```ts import.meta.vitest name="A truncated archive"
- * import { DamagedArchive, describeFinding } from "@beep/xlsx"
+ * import { DamagedArchive, describeFinding } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * const finding = DamagedArchive.make({ damage: "Truncated", reason: "unexpected end of data" })
  * describeFinding(finding) // => "the archive is damaged (Truncated): unexpected end of data"
@@ -202,7 +211,7 @@ export class DamagedArchive extends S.Opaque<DamagedArchive, { readonly brand: u
  * **Example** (Malformed sheet XML)
  *
  * ```ts import.meta.vitest name="Malformed sheet XML"
- * import { DamagedXml, describeFinding } from "@beep/xlsx"
+ * import { DamagedXml, describeFinding } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * const finding = DamagedXml.make({ path: "xl/worksheets/sheet1.xml", line: 3, column: 14, reason: "unclosed tag" })
  * describeFinding(finding) // => "xl/worksheets/sheet1.xml is not well-formed at 3:14: unclosed tag"
@@ -227,7 +236,7 @@ export class DamagedXml extends S.Opaque<DamagedXml, { readonly brand: unique sy
  * **Example** (Known caps)
  *
  * ```ts import.meta.vitest name="Known caps"
- * import { XlsxLimit } from "@beep/xlsx"
+ * import { XlsxLimit } from "@beep/xlsx/XlsxDiagnostic.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxLimit)("inflatedBytes") // => true
@@ -265,7 +274,7 @@ export type XlsxLimit = typeof XlsxLimit.Type;
  * **Example** (A file over its byte cap)
  *
  * ```ts import.meta.vitest name="A file over its byte cap"
- * import { describeFinding, LimitExceeded } from "@beep/xlsx"
+ * import { describeFinding, LimitExceeded } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * const finding = LimitExceeded.make({ limit: "inputBytes", path: "the file" })
  * describeFinding(finding) // => "the file went past its cap on inputBytes in the file"
@@ -288,7 +297,7 @@ export class LimitExceeded extends S.Opaque<LimitExceeded, { readonly brand: uni
  * **Example** (A workbook with no sheet)
  *
  * ```ts import.meta.vitest name="A workbook with no sheet"
- * import { describeFinding, NoSheets } from "@beep/xlsx"
+ * import { describeFinding, NoSheets } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * describeFinding(NoSheets.make({})) // => "the workbook has no sheet"
  * ```
@@ -306,7 +315,7 @@ export class NoSheets extends S.Opaque<NoSheets, { readonly brand: unique symbol
  * **Example** (Known reasons)
  *
  * ```ts import.meta.vitest name="Known reasons"
- * import { XlsxUnreadableReason } from "@beep/xlsx"
+ * import { XlsxUnreadableReason } from "@beep/xlsx/XlsxDiagnostic.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxUnreadableReason)("sharedString") // => true
@@ -321,12 +330,21 @@ export const XlsxUnreadableReason = LiteralKit(["sharedString", "number", "boole
 );
 
 /**
+ * What kind of value a cell failed to be, such as `"number"`; the type {@link XlsxUnreadableReason} decodes to.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type XlsxUnreadableReason = typeof XlsxUnreadableReason.Type;
+
+/**
  * A cell the file itself gets wrong: a text index that points nowhere, text where a number belongs.
  *
  * **Example** (A shared text index that points nowhere)
  *
  * ```ts import.meta.vitest name="A shared text index that points nowhere"
- * import { describeFinding, UnreadableCell, XlsxAddress } from "@beep/xlsx"
+ * import { XlsxAddress } from "@beep/xlsx/XlsxAddress.schema"
+ * import { describeFinding, UnreadableCell } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * const finding = UnreadableCell.make({
  *   sheet: "Items",
@@ -354,7 +372,7 @@ export class UnreadableCell extends S.Opaque<UnreadableCell, { readonly brand: u
  * **Example** (An unreadable reference)
  *
  * ```ts import.meta.vitest name="An unreadable reference"
- * import { BadAddress, describeFinding } from "@beep/xlsx"
+ * import { BadAddress, describeFinding } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * describeFinding(BadAddress.make({ sheet: "Items", row: 4, raw: "ZZZZ4" })) // => 'a reference in row 4 of "Items" cannot be used: ZZZZ4'
  * ```
@@ -377,7 +395,7 @@ export class BadAddress extends S.Opaque<BadAddress, { readonly brand: unique sy
  * **Example** (A row written late)
  *
  * ```ts import.meta.vitest name="A row written late"
- * import { describeFinding, RowOutOfOrder } from "@beep/xlsx"
+ * import { describeFinding, RowOutOfOrder } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * describeFinding(RowOutOfOrder.make({ sheet: "Items", row: 2 })) // => 'row 2 of "Items" was written after a later row'
  * ```
@@ -400,7 +418,8 @@ export class RowOutOfOrder extends S.Opaque<RowOutOfOrder, { readonly brand: uni
  * **Example** (A style index past the table)
  *
  * ```ts import.meta.vitest name="A style index past the table"
- * import { describeFinding, UnknownStyle, XlsxAddress } from "@beep/xlsx"
+ * import { XlsxAddress } from "@beep/xlsx/XlsxAddress.schema"
+ * import { describeFinding, UnknownStyle } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * const finding = UnknownStyle.make({ sheet: "Items", address: XlsxAddress.make({ column: 0, row: 1 }), style: "99" })
  * describeFinding(finding) // => 'A1 on "Items" names style 99, which the workbook does not have'
@@ -421,7 +440,7 @@ export class UnknownStyle extends S.Opaque<UnknownStyle, { readonly brand: uniqu
  * **Example** (Cells under an unrendered format)
  *
  * ```ts import.meta.vitest name="Cells under an unrendered format"
- * import { describeFinding, FormatNotShown } from "@beep/xlsx"
+ * import { describeFinding, FormatNotShown } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * const finding = FormatNotShown.make({ sheet: "Items", code: "0.00E+00", cells: 12 })
  * describeFinding(finding) // => '12 cells of "Items" have the format 0.00E+00, which is not rendered'
@@ -445,7 +464,8 @@ export class FormatNotShown extends S.Opaque<FormatNotShown, { readonly brand: u
  * **Example** (A formula never calculated)
  *
  * ```ts import.meta.vitest name="A formula never calculated"
- * import { describeFinding, FormulaWithoutResult, XlsxAddress } from "@beep/xlsx"
+ * import { XlsxAddress } from "@beep/xlsx/XlsxAddress.schema"
+ * import { describeFinding, FormulaWithoutResult } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * const finding = FormulaWithoutResult.make({ sheet: "Items", address: XlsxAddress.make({ column: 3, row: 2 }) })
  * describeFinding(finding) // => 'the formula in D2 on "Items" has no saved result'
@@ -466,7 +486,8 @@ export class FormulaWithoutResult extends S.Opaque<FormulaWithoutResult, { reado
  * **Example** (The leap day that never was)
  *
  * ```ts import.meta.vitest name="The leap day that never was"
- * import { describeFinding, FictitiousLeapDay, XlsxAddress } from "@beep/xlsx"
+ * import { XlsxAddress } from "@beep/xlsx/XlsxAddress.schema"
+ * import { describeFinding, FictitiousLeapDay } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * const finding = FictitiousLeapDay.make({ sheet: "Items", address: XlsxAddress.make({ column: 1, row: 4 }) })
  * describeFinding(finding) // => 'B4 on "Items" holds 29 February 1900, a day that never was'
@@ -487,7 +508,8 @@ export class FictitiousLeapDay extends S.Opaque<FictitiousLeapDay, { readonly br
  * **Example** (A declared extent larger than the data)
  *
  * ```ts import.meta.vitest name="A declared extent larger than the data"
- * import { DeclaredExtentWrong, describeFinding, XlsxRange } from "@beep/xlsx"
+ * import { XlsxRange } from "@beep/xlsx/XlsxAddress.schema"
+ * import { DeclaredExtentWrong, describeFinding } from "@beep/xlsx/XlsxDiagnostic.schema"
  * import * as O from "effect/Option"
  *
  * const finding = DeclaredExtentWrong.make({
@@ -517,7 +539,7 @@ export class DeclaredExtentWrong extends S.Opaque<DeclaredExtentWrong, { readonl
  * **Example** (Known lists)
  *
  * ```ts import.meta.vitest name="Known lists"
- * import { XlsxKeptList } from "@beep/xlsx"
+ * import { XlsxKeptList } from "@beep/xlsx/XlsxDiagnostic.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxKeptList)("merges") // => true
@@ -546,7 +568,7 @@ export type XlsxKeptList = typeof XlsxKeptList.Type;
  * **Example** (Warnings past their cap)
  *
  * ```ts import.meta.vitest name="Warnings past their cap"
- * import { describeFinding, ListTruncated } from "@beep/xlsx"
+ * import { describeFinding, ListTruncated } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * describeFinding(ListTruncated.make({ list: "warnings", dropped: 12 })) // => "12 warnings went past the read's cap and were dropped"
  * ```
@@ -568,7 +590,7 @@ export class ListTruncated extends S.Opaque<ListTruncated, { readonly brand: uni
  * **Example** (Branch on a warning finding)
  *
  * ```ts import.meta.vitest name="Branch on a warning finding"
- * import { RowOutOfOrder, XlsxWarningFinding } from "@beep/xlsx"
+ * import { RowOutOfOrder, XlsxWarningFinding } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * const finding = RowOutOfOrder.make({ sheet: "Items", row: 2 })
  * XlsxWarningFinding.guards.RowOutOfOrder(finding) // => true
@@ -618,7 +640,7 @@ export type XlsxWarningFinding = typeof XlsxWarningFinding.Type;
  * **Example** (Branch on a fatal finding)
  *
  * ```ts import.meta.vitest name="Branch on a fatal finding"
- * import { NoSheets, XlsxFatalFinding } from "@beep/xlsx"
+ * import { NoSheets, XlsxFatalFinding } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * const finding = NoSheets.make({})
  * XlsxFatalFinding.guards.NoSheets(finding) // => true
@@ -666,7 +688,7 @@ export type XlsxFatalFinding = typeof XlsxFatalFinding.Type;
  * **Example** (Wrap a finding as a warning)
  *
  * ```ts import.meta.vitest name="Wrap a finding as a warning"
- * import { RowOutOfOrder, XlsxWarning } from "@beep/xlsx"
+ * import { RowOutOfOrder, XlsxWarning } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * const warning = XlsxWarning.make({ finding: RowOutOfOrder.make({ sheet: "Items", row: 2 }) })
  * warning.severity // => "warning"
@@ -689,7 +711,7 @@ export class XlsxWarning extends S.Opaque<XlsxWarning, { readonly brand: unique 
  * **Example** (The fatal finding of a failed read)
  *
  * ```ts import.meta.vitest name="The fatal finding of a failed read"
- * import { Xlsx } from "@beep/xlsx"
+ * import { Xlsx } from "@beep/xlsx/Xlsx.codec"
  * import * as Effect from "effect/Effect"
  *
  * const program = Xlsx.parse(new Uint8Array([1, 2, 3])).pipe(
@@ -719,7 +741,7 @@ export class XlsxFatal extends S.Opaque<XlsxFatal, { readonly brand: unique symb
  * **Example** (Tell warnings from fatal problems)
  *
  * ```ts import.meta.vitest name="Tell warnings from fatal problems"
- * import { NoSheets, RowOutOfOrder, XlsxDiagnostic, XlsxFatal, XlsxWarning } from "@beep/xlsx"
+ * import { NoSheets, RowOutOfOrder, XlsxDiagnostic, XlsxFatal, XlsxWarning } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * const findings = [
  *   XlsxWarning.make({ finding: RowOutOfOrder.make({ sheet: "Items", row: 2 }) }),
@@ -753,7 +775,7 @@ const at = (finding: { readonly sheet: string; readonly address: Pick<XlsxAddres
  * **Example** (Log a finding)
  *
  * ```ts import.meta.vitest name="Log a finding"
- * import { describeFinding, MissingPart } from "@beep/xlsx"
+ * import { describeFinding, MissingPart } from "@beep/xlsx/XlsxDiagnostic.schema"
  *
  * describeFinding(MissingPart.make({ path: "xl/styles.xml" })) // => "the part xl/styles.xml is missing"
  * ```

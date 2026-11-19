@@ -74,37 +74,78 @@ const blockEnd = (code: string, at: number): number => {
   return i + 1;
 };
 
+/** The index of the first `"` from `from` on, the code's length when there is none. */
+const quoteAt = (code: string, from: number): number => {
+  let i = from;
+  while (i < code.length && code[i] !== '"') i += 1;
+  return i;
+};
+
+// crispen: the scanners of a format code (`isDateFormat`, `literalFrom`, `firstSection`, `dateTokens`) are cursor
+// loops: a code is read once per style and once per displayed value, and each step depends on the character before.
+// Each loop hands the character at its cursor to a step that says where the next one starts.
+
+/** A step of a scanner: where the next piece of `code` starts after the one at `at`. */
+type Step = (code: string, at: number) => number;
+
+/** What a step of `isDateFormat` returns when the code shows a date. */
+const DATED = -1;
+
+const past =
+  (width: number): Step =>
+  (_code, at) =>
+    at + width;
+
+/** The steps of `isDateFormat` for each character that opens something other than a single letter. */
+const dateMarkSteps: { readonly [character: string]: Step } = {
+  G: (code, at) => (isGeneralAt(code, at) ? at + 7 : at + 1),
+  '"': (code, at) => quoteAt(code, at + 1) + 1,
+  "\\": past(2),
+  _: past(2),
+  "*": past(2),
+  "[": (code, at) => {
+    const end = blockEnd(code, at);
+    return elapsed.test(Str.slice(at, end)(code)) ? DATED : end;
+  },
+  "0": (code, at) => numberRunEnd(code, at + 1),
+  "#": (code, at) => numberRunEnd(code, at + 1),
+  ".": (code, at) => numberRunEnd(code, at + 1),
+  A: (code, at) => ampmMark(code, at),
+  a: (code, at) => ampmMark(code, at),
+  B: (code, at) => eraMark(code, at),
+  b: (code, at) => eraMark(code, at),
+};
+
+const numberRunEnd: Step = (code, at) => {
+  let i = at;
+  while (i < code.length && Str.includes(code[i] ?? " ")(numberRun)) i += 1;
+  return i;
+};
+
+const ampmMark: Step = (code, at) => {
+  const upper = Str.toUpperCase(Str.slice(at, at + 5)(code));
+  return upper === "AM/PM" || Str.startsWith("A/P")(upper) ? DATED : at + 1;
+};
+
+const eraMark: Step = (code, at) => (code[at + 1] === "1" || code[at + 1] === "2" ? DATED : at + 1);
+
+/** One step of `isDateFormat`: a date or time letter outside everything else marks the code as dated. */
+const dateMarkStep: Step = (code, at) => {
+  const c = code[at] ?? "";
+  const step = dateMarkSteps[c];
+  if (step !== undefined) return step(code, at);
+  return Str.includes(c)("MDYHSEmdyhseg") ? DATED : at + 1;
+};
+
 /**
  * Whether a format code shows its number as a date or a time: it has a year, month, day, hour or second letter, an
  * AM/PM mark or an elapsed-time block outside quotes, escapes and the word General.
  */
-// crispen: the scanners of a format code (this one, `literalFrom`, `firstSection`, `dateTokens`) are cursor
-// loops: a code is read once per style and once per displayed value, and each step depends on the character before.
 export const isDateFormat = (code: string): boolean => {
   let i = 0;
   while (i < code.length) {
-    const c = code[i] ?? "";
-    if (c === "G" && isGeneralAt(code, i)) i += 7;
-    else if (c === '"') {
-      i += 1;
-      while (i < code.length && code[i] !== '"') i += 1;
-      i += 1;
-    } else if (c === "\\" || c === "_") i += 2;
-    else if (c === "*") i += 2;
-    else if (c === "[") {
-      const end = blockEnd(code, i);
-      if (elapsed.test(Str.slice(i, end)(code))) return true;
-      i = end;
-    } else if (c === "0" || c === "#" || c === ".") {
-      i += 1;
-      while (i < code.length && Str.includes(code[i] ?? " ")(numberRun)) i += 1;
-    } else if (c === "A" || c === "a") {
-      const upper = Str.toUpperCase(Str.slice(i, i + 5)(code));
-      if (upper === "AM/PM" || Str.startsWith("A/P")(upper)) return true;
-      i += 1;
-    } else if ((c === "B" || c === "b") && (code[i + 1] === "1" || code[i + 1] === "2")) return true;
-    else if (Str.includes(c)("MDYHSEmdyhseg")) return true;
-    else i += 1;
+    i = dateMarkStep(code, i);
+    if (i === DATED) return true;
   }
   return false;
 };
@@ -113,30 +154,45 @@ const zeroPadded = /^0{2,}$/;
 const plain = /^(#,##0|0)(?:\.(0+))?(%?)$/;
 const bareLiteral = "$-+/():!^&'~{}<>= €";
 
+/** A piece of literal text and where it ends; an end of -1 means no literal text starts there. */
+type Piece = readonly [text: string, next: number];
+
+const noLiteral: Piece = ["", -1];
+
+/** The literal piece at `at`: quoted, escaped, a currency block or a bare sign. */
+const literalAt = (code: string, at: number): Piece => {
+  const c = code[at] ?? "";
+  if (c === '"') return quotedAt(code, at);
+  if (c === "\\" && at + 1 < code.length) return [code[at + 1] ?? "", at + 2];
+  if (c === "[" && code[at + 1] === "$") return currencyAt(code, at);
+  return Str.includes(c)(bareLiteral) ? [c, at + 1] : noLiteral;
+};
+
+/** A quoted piece, none when its closing quote is missing. */
+const quotedAt = (code: string, at: number): Piece => {
+  const close = quoteAt(code, at + 1);
+  return close >= code.length ? noLiteral : [Str.slice(at + 1, close)(code), close + 1];
+};
+
+/** A currency block such as `[$€-407]`: its symbol, the text before any dash. */
+const currencyAt = (code: string, at: number): Piece => {
+  const end = blockEnd(code, at);
+  const inside = Str.slice(at + 2, end - 1)(code);
+  return [
+    O.match(Str.indexOf("-")(inside), { onNone: () => inside, onSome: (dash) => Str.slice(0, dash)(inside) }),
+    end,
+  ];
+};
+
 /** Reads the literal text at the start of `code` from `at`: quoted, escaped, a currency block or bare signs. */
 const literalFrom = (code: string, at: number): readonly [text: string, next: number] => {
   let text = "";
   let i = at;
   while (i < code.length) {
-    const c = code[i] ?? "";
-    if (c === '"') {
-      let j = i + 1;
-      while (j < code.length && code[j] !== '"') j += 1;
-      if (j >= code.length) return [text, i];
-      text += Str.slice(i + 1, j)(code);
-      i = j + 1;
-    } else if (c === "\\" && i + 1 < code.length) {
-      text += code[i + 1] ?? "";
-      i += 2;
-    } else if (c === "[" && code[i + 1] === "$") {
-      const end = blockEnd(code, i);
-      const inside = Str.slice(i + 2, end - 1)(code);
-      text += O.match(Str.indexOf("-")(inside), { onNone: () => inside, onSome: (dash) => Str.slice(0, dash)(inside) });
-      i = end;
-    } else if (Str.includes(c)(bareLiteral)) {
-      text += c;
-      i += 1;
-    } else return [text, i];
+    const [piece, next] = literalAt(code, i);
+    if (next === -1) return [text, i];
+    text += piece;
+    i = next;
   }
   return [text, i];
 };
@@ -151,9 +207,20 @@ export const classify = (code: string): XlsxFormatKind => {
   if (code === "" || Str.toLowerCase(code) === "general") return XlsxGeneralFormat.make({});
   if (isDateFormat(code)) return XlsxDateFormat.make({});
   if (zeroPadded.test(code)) return O.getOrElse(XlsxZeroPaddedFormat.makeOption({ width: code.length }), other);
-  const [prefix, start] = literalFrom(code, 0);
+  return fixedOf(code);
+};
+
+/** The end of the digit pattern of a plain number format that starts at `start`. */
+const patternEnd = (code: string, start: number): number => {
   let end = start;
   while (end < code.length && Str.includes(code[end] ?? " ")("#,0.%")) end += 1;
+  return end;
+};
+
+/** A code as a plain number pattern between literal texts, `Other` when it is not one. */
+const fixedOf = (code: string): XlsxFormatKind => {
+  const [prefix, start] = literalFrom(code, 0);
+  const end = patternEnd(code, start);
   const [suffix, rest] = literalFrom(code, end);
   const found = plain.exec(Str.slice(start, end)(code));
   if (found === null || rest !== code.length) return other();
@@ -183,20 +250,31 @@ const normalizeExponent = (text: string): string =>
  */
 export const renderGeneral = (value: number): string => {
   if (Number.isInteger(value) && Math.abs(value) < 2_147_483_648) return String(value);
+  return stripDecimal(normalizeExponent(Str.toUpperCase(generalText(value))));
+};
+
+/** The General text of a number that is not a small integer, before its exponent and decimals are tidied. */
+const generalText = (value: number): string => {
   const width = value < 0 ? 12 : 11;
   const magnitude = Math.floor(Math.log10(Math.abs(value)));
-  let text: string;
-  if (magnitude >= -4 && magnitude <= -1) text = value.toPrecision(10 + magnitude);
-  else if (Math.abs(magnitude) <= 9) {
-    const exact = stripDecimal(value.toFixed(12));
-    const rounded = value.toPrecision(10);
-    text = exact.length <= width ? exact : rounded.length <= width ? rounded : value.toExponential(5);
-  } else if (magnitude === 10) text = Str.slice(0, 12)(value.toFixed(10));
-  else {
-    const exact = stripDecimal(value.toFixed(11));
-    text = exact.length > width || exact === "0" || exact === "-0" ? value.toPrecision(6) : exact;
-  }
-  return stripDecimal(normalizeExponent(Str.toUpperCase(text)));
+  if (magnitude >= -4 && magnitude <= -1) return value.toPrecision(10 + magnitude);
+  if (Math.abs(magnitude) <= 9) return nearText(value, width);
+  if (magnitude === 10) return Str.slice(0, 12)(value.toFixed(10));
+  return farText(value, width);
+};
+
+/** A number of magnitude -9 to 9: exact when it fits, else to ten significant digits, else in scientific form. */
+const nearText = (value: number, width: number): string => {
+  const exact = stripDecimal(value.toFixed(12));
+  if (exact.length <= width) return exact;
+  const rounded = value.toPrecision(10);
+  return rounded.length <= width ? rounded : value.toExponential(5);
+};
+
+/** A number of magnitude past 10 or below -9: exact when it fits and is not zero, else to six significant digits. */
+const farText = (value: number, width: number): string => {
+  const exact = stripDecimal(value.toFixed(11));
+  return exact.length > width || exact === "0" || exact === "-0" ? value.toPrecision(6) : exact;
 };
 
 const grouped = (digits: string): string => {
@@ -206,26 +284,32 @@ const grouped = (digits: string): string => {
   return A.join(groups, ",");
 };
 
+const signOf = (value: number): string => (value < 0 ? "-" : "");
+
 /** A number under a `ZeroPadded` or `Fixed` format, when it is small enough to write out in digits. */
 export const renderNumber: {
   (value: number): (kind: XlsxZeroPaddedFormat | XlsxFixedFormat) => O.Option<string>;
   (kind: XlsxZeroPaddedFormat | XlsxFixedFormat, value: number): O.Option<string>;
-} = dual(2, (kind: XlsxZeroPaddedFormat | XlsxFixedFormat, value: number): O.Option<string> => {
-  const sign = value < 0 ? "-" : "";
-  const size = Math.abs(value);
-  if (kind.kind === "ZeroPadded") {
-    const whole = Math.round(size);
-    return whole < 1e21 ? O.some(`${sign}${Str.padStart(kind.width, "0")(String(whole))}`) : O.none();
-  }
-  const scaled = Math.round(size * (kind.percent ? 100 : 1) * 10 ** kind.decimals);
+} = dual(
+  2,
+  (kind: XlsxZeroPaddedFormat | XlsxFixedFormat, value: number): O.Option<string> =>
+    kind.kind === "ZeroPadded" ? zeroPaddedText(kind, value) : fixedText(kind, value)
+);
+
+const zeroPaddedText = (kind: XlsxZeroPaddedFormat, value: number): O.Option<string> => {
+  const whole = Math.round(Math.abs(value));
+  return whole < 1e21 ? O.some(`${signOf(value)}${Str.padStart(kind.width, "0")(String(whole))}`) : O.none();
+};
+
+const fixedText = (kind: XlsxFixedFormat, value: number): O.Option<string> => {
+  const scaled = Math.round(Math.abs(value) * (kind.percent ? 100 : 1) * 10 ** kind.decimals);
   if (!(scaled < 1e21)) return O.none();
   const digits = Str.padStart(kind.decimals + 1, "0")(String(scaled));
   const whole = Str.slice(0, digits.length - kind.decimals)(digits);
   const decimals = kind.decimals === 0 ? "" : `.${Str.slice(digits.length - kind.decimals)(digits)}`;
-  return O.some(
-    `${sign}${kind.prefix}${kind.thousands ? grouped(whole) : whole}${decimals}${kind.percent ? "%" : ""}${kind.suffix}`
-  );
-});
+  const shown = kind.thousands ? grouped(whole) : whole;
+  return O.some(`${signOf(value)}${kind.prefix}${shown}${decimals}${kind.percent ? "%" : ""}${kind.suffix}`);
+};
 
 // crispen: kept as plain types, not schemas — a token list is built and thrown away on every displayed date (the
 // oracle test renders 100k+), and nothing outside this file sees a token; make it a `LiteralKit` tagged union if a
@@ -254,76 +338,110 @@ const months = [
 const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const dateLiteral = ",$-+/():!^&'~{}<>=€ ";
 
+/** Where the piece of a code at `at` ends, a quoted text, an escape or a bracketed block read whole. */
+const sectionStep: Step = (code, at) => {
+  const c = code[at];
+  if (c === '"') return quoteAt(code, at + 1) + 1;
+  if (c === "\\") return at + 2;
+  if (c === "[") return blockEnd(code, at);
+  return at + 1;
+};
+
 /** The first section of a format code: what a positive number is shown with. */
 const firstSection = (code: string): readonly [section: string, sections: number] => {
   let i = 0;
   let cut = -1;
   let sections = 1;
   while (i < code.length) {
-    const c = code[i] ?? "";
-    if (c === '"') {
-      i += 1;
-      while (i < code.length && code[i] !== '"') i += 1;
-    } else if (c === "\\") i += 1;
-    else if (c === "[") i = blockEnd(code, i) - 1;
-    else if (c === ";") {
-      if (cut === -1) cut = i;
+    if (code[i] === ";") {
+      cut = cut === -1 ? i : cut;
       sections += 1;
     }
-    i += 1;
+    i = sectionStep(code, i);
   }
   return [cut === -1 ? code : Str.slice(0, cut)(code), sections];
 };
 
-/** The tokens of a date format, none when it holds something this package does not render. */
-const dateTokens = (section: string): O.Option<ReadonlyArray<DateToken>> => {
-  const out: Array<DateToken> = [];
-  let last = "";
-  let i = 0;
-  while (i < section.length) {
-    const c = section[i] ?? "";
-    const lower = Str.toLowerCase(c);
-    if (c === '"') {
-      let j = i + 1;
-      while (j < section.length && section[j] !== '"') j += 1;
-      out.push({ t: "text", v: Str.slice(i + 1, j)(section) });
-      i = j + 1;
-    } else if (c === "\\") {
-      out.push({ t: "text", v: section[i + 1] ?? "" });
-      i += 2;
-    } else if (c === "_") {
-      out.push({ t: "text", v: " " });
-      i += 2;
-    } else if (c === "*") i += 2;
-    else if (c === "[") {
-      const end = blockEnd(section, i);
-      if (elapsed.test(Str.slice(i, end)(section))) return O.none();
-      i = end;
-    } else if (lower === "a") {
-      const upper = Str.toUpperCase(Str.slice(i, i + 5)(section));
-      if (upper === "AM/PM") {
-        out.push({ t: "ampm", short: false, am: "AM", pm: "PM" });
-        i += 5;
-      } else if (Str.startsWith("A/P")(upper)) {
-        out.push({ t: "ampm", short: true, am: c, pm: section[i + 2] ?? "P" });
-        i += 3;
-      } else {
-        out.push({ t: "text", v: c });
-        i += 1;
-      }
-      last = "a";
-    } else if (isDateLetter(lower)) {
-      let j = i + 1;
-      while (j < section.length && Str.toLowerCase(section[j] ?? "") === lower) j += 1;
-      out.push({ t: lower === "m" && last === "h" ? "M" : lower, n: j - i });
-      last = lower;
-      i = j;
-    } else if (Str.includes(c)(dateLiteral) || Str.includes(c)("cfijklopqrtuvwxzP")) {
-      out.push({ t: "text", v: c });
-      i += 1;
-    } else return O.none();
+/** What a step of `DateScan` returns when the section holds something this package does not render. */
+const UNRENDERED = -1;
+
+/** The tokens of one date format section, read with a cursor; `last` is the field letter read before. */
+class DateScan {
+  readonly out: Array<DateToken> = [];
+  private last = "";
+  private readonly section: string;
+
+  constructor(section: string) {
+    this.section = section;
   }
-  // A month letter just before seconds is minutes: "mm:ss".
+
+  run(): O.Option<ReadonlyArray<DateToken>> {
+    let i = 0;
+    while (i < this.section.length) {
+      i = this.step(i);
+      if (i === UNRENDERED) return O.none();
+    }
+    minutesBeforeSeconds(this.out);
+    return O.some(this.out);
+  }
+
+  private step(at: number): number {
+    const c = this.section[at] ?? "";
+    if (c === '"') return this.quoted(at);
+    if (c === "\\") return this.text(this.section[at + 1] ?? "", at + 2);
+    if (c === "_") return this.text(" ", at + 2);
+    if (c === "*") return at + 2;
+    if (c === "[") return this.block(at);
+    return this.letter(at, c);
+  }
+
+  private letter(at: number, c: string): number {
+    const lower = Str.toLowerCase(c);
+    if (lower === "a") return this.ampm(at, c);
+    if (isDateLetter(lower)) return this.field(at, lower);
+    return Str.includes(c)(dateLiteral) || Str.includes(c)("cfijklopqrtuvwxzP") ? this.text(c, at + 1) : UNRENDERED;
+  }
+
+  private token(token: DateToken, next: number): number {
+    this.out.push(token);
+    return next;
+  }
+
+  private text(v: string, next: number): number {
+    return this.token({ t: "text", v }, next);
+  }
+
+  private quoted(at: number): number {
+    const close = quoteAt(this.section, at + 1);
+    return this.text(Str.slice(at + 1, close)(this.section), close + 1);
+  }
+
+  private block(at: number): number {
+    const end = blockEnd(this.section, at);
+    return elapsed.test(Str.slice(at, end)(this.section)) ? UNRENDERED : end;
+  }
+
+  private ampm(at: number, c: string): number {
+    const upper = Str.toUpperCase(Str.slice(at, at + 5)(this.section));
+    this.last = "a";
+    if (upper === "AM/PM") return this.token({ t: "ampm", short: false, am: "AM", pm: "PM" }, at + 5);
+    if (Str.startsWith("A/P")(upper)) {
+      return this.token({ t: "ampm", short: true, am: c, pm: this.section[at + 2] ?? "P" }, at + 3);
+    }
+    return this.text(c, at + 1);
+  }
+
+  private field(at: number, lower: "y" | "m" | "d" | "h" | "s"): number {
+    let j = at + 1;
+    while (j < this.section.length && Str.toLowerCase(this.section[j] ?? "") === lower) j += 1;
+    this.out.push({ t: lower === "m" && this.last === "h" ? "M" : lower, n: j - at });
+    this.last = lower;
+    return j;
+  }
+}
+
+/** A month letter just before seconds is minutes: "mm:ss". */
+const minutesBeforeSeconds = (out: Array<DateToken>): void => {
   let after = "";
   for (let k = out.length - 1; k >= 0; k -= 1) {
     const token = out[k];
@@ -331,8 +449,10 @@ const dateTokens = (section: string): O.Option<ReadonlyArray<DateToken>> => {
     if (token.t === "m" && after === "s") out[k] = { t: "M", n: token.n };
     else after = token.t;
   }
-  return O.some(out);
 };
+
+/** The tokens of a date format, none when it holds something this package does not render. */
+const dateTokens = (section: string): O.Option<ReadonlyArray<DateToken>> => new DateScan(section).run();
 
 const isDateLetter = (letter: string): letter is "y" | "m" | "d" | "h" | "s" =>
   letter === "y" || letter === "m" || letter === "d" || letter === "h" || letter === "s";
@@ -391,7 +511,6 @@ const tokenText = (parts: SerialParts, twelve: boolean): ((token: DateToken) => 
     })
   );
 
-/**
 /**
  * A serial as a date format shows it, none for a format this package does not render (elapsed time, fractions of a
  * second, eras, or a zero under a format with a section of its own for zero) and none past the system's last

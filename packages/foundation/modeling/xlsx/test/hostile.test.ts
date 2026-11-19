@@ -7,6 +7,7 @@ import { XlsxParseError } from "@beep/xlsx/XlsxError.errors";
 import { XlsxLimits, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema";
 import { XlsxRead } from "@beep/xlsx/XlsxRead.schema";
 import { describe, expect, it } from "@effect/vitest";
+import { assertFalse } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
@@ -393,7 +394,7 @@ describe("hostile files", () => {
             const exit = yield* Effect.exit(
               Effect.flatMap(workbook(recipe(escaped(written))), (bytes) => Xlsx.parse(bytes))
             );
-            expect(Exit.isFailure(exit) && Cause.hasDies(exit.cause)).toBe(false);
+            assertFalse(Exit.isFailure(exit) && Cause.hasDies(exit.cause));
             if (Exit.isSuccess(exit)) expect(S.is(XlsxRead)(exit.value)).toBe(true);
           }
         }

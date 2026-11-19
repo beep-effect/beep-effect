@@ -23,7 +23,7 @@ const $I = $XlsxId.create("XlsxSerial");
  * **Example** (One serial in both systems)
  *
  * ```ts import.meta.vitest name="One serial in both systems"
- * import { XlsxCalendar, XlsxDateSystem } from "@beep/xlsx"
+ * import { XlsxCalendar, XlsxDateSystem } from "@beep/xlsx/XlsxSerial.schema"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
@@ -60,7 +60,7 @@ export type XlsxDateSystem = typeof XlsxDateSystem.Type;
  * **Example** (The last moment Excel shows)
  *
  * ```ts import.meta.vitest name="The last moment Excel shows"
- * import { MAX_SERIAL, XlsxCalendar } from "@beep/xlsx"
+ * import { MAX_SERIAL, XlsxCalendar } from "@beep/xlsx/XlsxSerial.schema"
  * import * as O from "effect/Option"
  *
  * const last = O.getOrThrow(XlsxCalendar.fromSerial(MAX_SERIAL, "1900"))
@@ -80,7 +80,7 @@ export const MAX_SERIAL = 2_958_465.999_988_43;
  * **Example** (The last date of each system)
  *
  * ```ts import.meta.vitest name="The last date of each system"
- * import { maxSerial, MAX_SERIAL } from "@beep/xlsx"
+ * import { maxSerial, MAX_SERIAL } from "@beep/xlsx/XlsxSerial.schema"
  *
  * maxSerial("1900") === MAX_SERIAL // => true
  * maxSerial("1904") // => 2957003.99998843
@@ -97,7 +97,7 @@ export const maxSerial = (system: XlsxDateSystem): number => (system === "1904" 
  * **Example** (Serials in range)
  *
  * ```ts import.meta.vitest name="Serials in range"
- * import { XlsxSerial } from "@beep/xlsx"
+ * import { XlsxSerial } from "@beep/xlsx/XlsxSerial.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxSerial)(45_292.5) // => true
@@ -130,7 +130,7 @@ const field = (minimum: number, maximum: number, description: string) =>
  * **Example** (The day that never was)
  *
  * ```ts import.meta.vitest name="The day that never was"
- * import { XlsxCalendar } from "@beep/xlsx"
+ * import { XlsxCalendar } from "@beep/xlsx/XlsxSerial.schema"
  * import * as O from "effect/Option"
  *
  * const leap = XlsxCalendar.fromSerial(60, "1900")
@@ -182,7 +182,7 @@ export class XlsxCalendar extends S.Opaque<XlsxCalendar, { readonly brand: uniqu
    * **Example** (A serial's moment, time of day included)
    *
    * ```ts import.meta.vitest name="A serial's moment, time of day included"
-   * import { XlsxCalendar } from "@beep/xlsx"
+   * import { XlsxCalendar } from "@beep/xlsx/XlsxSerial.schema"
    * import * as DateTime from "effect/DateTime"
    * import * as O from "effect/Option"
    *

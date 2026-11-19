@@ -17,6 +17,7 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { constVoid } from "effect/Function";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
@@ -48,31 +49,32 @@ const streamRows = <Row extends S.Top & { readonly DecodingServices: never }>(ro
 
 const pieceSizes = Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 1, maximum: 64 })));
 
+/** A delimiter as a test name shows it. */
+const delimiterName = (delimiter: CsvDelimiter): string => (delimiter === "\t" ? "tab" : delimiter);
+
 describe("round trip", () => {
-  for (const delimiter of CsvDelimiter.literals) {
-    for (const terminator of CsvTerminator.literals) {
-      it.prop(
-        `decode(encode(t)) = t, ${delimiter === "\t" ? "tab" : delimiter} ${terminator}`,
-        [tables],
-        ([table]) => {
-          const options = CsvWriteOptions.make({ delimiter, terminator });
-          const text = Csv.stringify(table, options);
-          const read = Result.map(Csv.parseResult(text, readWith(delimiter)), (done) => done.table);
-          assertSuccess(
-            Result.map(read, (back) => back.records),
-            table.records
-          );
-          strictEqual(
-            Csv.stringify(
-              Result.getOrElse(read, () => table),
-              options
-            ),
-            text
-          );
-        },
-        runs
-      );
-    }
+  for (const [delimiter, terminator] of A.cartesian(CsvDelimiter.literals, CsvTerminator.literals)) {
+    it.prop(
+      `decode(encode(t)) = t, ${delimiterName(delimiter)} ${terminator}`,
+      [tables],
+      ([table]) => {
+        const options = CsvWriteOptions.make({ delimiter, terminator });
+        const text = Csv.stringify(table, options);
+        const read = Result.map(Csv.parseResult(text, readWith(delimiter)), (done) => done.table);
+        assertSuccess(
+          Result.map(read, (back) => back.records),
+          table.records
+        );
+        strictEqual(
+          Csv.stringify(
+            Result.getOrElse(read, () => table),
+            options
+          ),
+          text
+        );
+      },
+      runs
+    );
   }
 
   // First records a `sep=` reader would take for its line if they were written bare, under each delimiter.
@@ -87,7 +89,7 @@ describe("round trip", () => {
   const sepStart = Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: sepStarts.length })));
   for (const delimiter of CsvDelimiter.literals) {
     it.prop(
-      `decode(encode(t)) = t with excelSepHint on, a sep= first cell included, ${delimiter === "\t" ? "tab" : delimiter}`,
+      `decode(encode(t)) = t with excelSepHint on, a sep= first cell included, ${delimiterName(delimiter)}`,
       [tables, sepStart, Arbitrary.schema(CsvWriteOptions)],
       ([table, start, written]) => {
         const records = O.match(A.get(sepStarts, start), {
@@ -156,8 +158,8 @@ describe("round trip", () => {
 
   it.effect("the bytes codec refuses a lone surrogate instead of writing U+FFFD", () =>
     Effect.gen(function* () {
-      const encoded = yield* Effect.result(S.encodeEffect(Csv.fromBytes())(CsvTable.make({ records: [["\ud800"]] })));
-      assertTrue(Result.isFailure(encoded), "the table is refused");
+      const encoded = yield* Effect.exit(S.encodeEffect(Csv.fromBytes())(CsvTable.make({ records: [["\ud800"]] })));
+      assertTrue(Exit.isFailure(encoded), "the table is refused");
     })
   );
 

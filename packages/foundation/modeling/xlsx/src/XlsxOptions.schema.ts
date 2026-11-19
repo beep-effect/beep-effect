@@ -24,7 +24,7 @@ const $I = $XlsxId.create("XlsxOptions");
  * **Example** (The starting sheet choice)
  *
  * ```ts import.meta.vitest name="The starting sheet choice"
- * import { XlsxAllSheets, XlsxReadOptions } from "@beep/xlsx"
+ * import { XlsxAllSheets, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxAllSheets)(XlsxReadOptions.default.sheets) // => true
@@ -43,17 +43,10 @@ export class XlsxAllSheets extends S.Opaque<XlsxAllSheets, { readonly brand: uni
  * **Example** (Read one sheet by name)
  *
  * ```ts import.meta.vitest name="Read one sheet by name"
- * import {
- *   Xlsx,
- *   XlsxCell,
- *   XlsxNamedSheets,
- *   XlsxReadOptions,
- *   XlsxRow,
- *   XlsxSheetInfo,
- *   XlsxText,
- *   XlsxWorkbook,
- *   XlsxWorksheet
- * } from "@beep/xlsx"
+ * import { Xlsx } from "@beep/xlsx/Xlsx.codec"
+ * import { XlsxCell, XlsxText } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxNamedSheets, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema"
+ * import { XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as Effect from "effect/Effect"
  *
  * const note = XlsxRow.make({ number: 1, cells: [XlsxCell.make({ column: 0, value: XlsxText.make({ text: "draft" }) })] })
@@ -93,7 +86,7 @@ export class XlsxNamedSheets extends S.Opaque<XlsxNamedSheets, { readonly brand:
  * **Example** (Choose the first sheet)
  *
  * ```ts import.meta.vitest name="Choose the first sheet"
- * import { XlsxFirstSheet, XlsxReadOptions } from "@beep/xlsx"
+ * import { XlsxFirstSheet, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema"
  *
  * const options = XlsxReadOptions.make({ sheets: XlsxFirstSheet.make({}) })
  * options.sheets.kind // => "First"
@@ -112,7 +105,7 @@ export class XlsxFirstSheet extends S.Opaque<XlsxFirstSheet, { readonly brand: u
  * **Example** (Describe a choice)
  *
  * ```ts import.meta.vitest name="Describe a choice"
- * import { XlsxNamedSheets, XlsxSheetChoice } from "@beep/xlsx"
+ * import { XlsxNamedSheets, XlsxSheetChoice } from "@beep/xlsx/XlsxOptions.schema"
  *
  * const describe = (choice: XlsxSheetChoice): string =>
  *   XlsxSheetChoice.match(choice, {
@@ -175,7 +168,7 @@ const size = (fallback: () => ByteSize.ByteSize, description: string) =>
  * **Example** (Tighten one cap)
  *
  * ```ts import.meta.vitest name="Tighten one cap"
- * import { XlsxLimits, XlsxReadOptions } from "@beep/xlsx"
+ * import { XlsxLimits, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema"
  * import * as ByteSize from "effect/ByteSize"
  *
  * const limits = XlsxLimits.make({ maxInputBytes: ByteSize.kibibytes(512) })
@@ -228,7 +221,7 @@ export class XlsxLimits extends S.Opaque<XlsxLimits, { readonly brand: unique sy
  * **Example** (Read with the starting options)
  *
  * ```ts import.meta.vitest name="Read with the starting options"
- * import { XlsxReadOptions } from "@beep/xlsx"
+ * import { XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema"
  *
  * XlsxReadOptions.default.sheets.kind // => "All"
  * XlsxReadOptions.default.limits.maxRows // => 1048576
@@ -260,7 +253,7 @@ export class XlsxReadOptions extends S.Opaque<XlsxReadOptions, { readonly brand:
  * **Example** (Accepted values)
  *
  * ```ts import.meta.vitest name="Accepted values"
- * import { XlsxCompression } from "@beep/xlsx"
+ * import { XlsxCompression } from "@beep/xlsx/XlsxOptions.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxCompression)("store") // => true
@@ -288,7 +281,9 @@ export type XlsxCompression = typeof XlsxCompression.Type;
  * **Example** (Store parts without deflating)
  *
  * ```ts import.meta.vitest name="Store parts without deflating"
- * import { Xlsx, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet, XlsxWriteOptions } from "@beep/xlsx"
+ * import { Xlsx } from "@beep/xlsx/Xlsx.codec"
+ * import { XlsxWriteOptions } from "@beep/xlsx/XlsxOptions.schema"
+ * import { XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as Effect from "effect/Effect"
  *
  * const workbook = XlsxWorkbook.make({ sheets: [XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "Items" }) })] })
@@ -325,18 +320,10 @@ export class XlsxWriteOptions extends S.Opaque<XlsxWriteOptions, { readonly bran
  * **Example** (A codec that reads only the first sheet)
  *
  * ```ts import.meta.vitest name="A codec that reads only the first sheet"
- * import {
- *   Xlsx,
- *   XlsxCell,
- *   XlsxCodecOptions,
- *   XlsxFirstSheet,
- *   XlsxReadOptions,
- *   XlsxRow,
- *   XlsxSheetInfo,
- *   XlsxText,
- *   XlsxWorkbook,
- *   XlsxWorksheet
- * } from "@beep/xlsx"
+ * import { Xlsx } from "@beep/xlsx/Xlsx.codec"
+ * import { XlsxCell, XlsxText } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxCodecOptions, XlsxFirstSheet, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema"
+ * import { XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as Effect from "effect/Effect"
  * import * as S from "effect/Schema"
  *

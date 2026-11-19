@@ -18,7 +18,7 @@ const $I = $XlsxId.create("XlsxError");
  * **Example** (Recover from a file that is not a workbook)
  *
  * ```ts import.meta.vitest name="Recover from a file that is not a workbook"
- * import { Xlsx } from "@beep/xlsx"
+ * import { Xlsx } from "@beep/xlsx/Xlsx.codec"
  * import * as Effect from "effect/Effect"
  *
  * const program = Xlsx.parse(new Uint8Array([1, 2, 3])).pipe(
@@ -33,7 +33,8 @@ const $I = $XlsxId.create("XlsxError");
  * **Example** (Build the error from a finding)
  *
  * ```ts import.meta.vitest name="Build the error from a finding"
- * import { NoSheets, XlsxFatal, XlsxParseError } from "@beep/xlsx"
+ * import { NoSheets, XlsxFatal } from "@beep/xlsx/XlsxDiagnostic.schema"
+ * import { XlsxParseError } from "@beep/xlsx/XlsxError.errors"
  *
  * const error = XlsxParseError.make({ fatal: XlsxFatal.make({ finding: NoSheets.make({}) }) })
  * error.fatal.finding.kind // => "NoSheets"
@@ -68,7 +69,7 @@ export class XlsxParseError extends S.TaggedError<XlsxParseError, { readonly bra
  * **Example** (Handle a failed write)
  *
  * ```ts import.meta.vitest name="Handle a failed write"
- * import { XlsxStringifyError } from "@beep/xlsx"
+ * import { XlsxStringifyError } from "@beep/xlsx/XlsxError.errors"
  * import * as Effect from "effect/Effect"
  *
  * const cause = new Error("path is empty")

@@ -383,12 +383,15 @@ export const CsvTrimRule = LiteralKit(["none", "unquoted", "all"]).pipe(
  */
 export type CsvTrimRule = typeof CsvTrimRule.Type;
 
-const count = (maximum: number, fallback: number, description: string) =>
-  S.Int.check(S.isBetween({ minimum: 1, maximum })).pipe(
-    S.annotateKey({ description }),
-    S.withConstructorDefault(Effect.succeed(fallback)),
-    S.withDecodingDefaultTypeKey(Effect.succeed(fallback))
+/** A cap field: an integer from 1 to `cap.maximum`, set to `cap.fallback` when the key or constructor input is missing. */
+const count = (cap: { readonly maximum: number; readonly fallback: number; readonly description: string }) => {
+  const fallback = Effect.succeed(cap.fallback);
+  return S.Int.check(S.isBetween({ minimum: 1, maximum: cap.maximum })).pipe(
+    S.annotateKey({ description: cap.description }),
+    S.withConstructorDefault(fallback),
+    S.withDecodingDefaultTypeKey(fallback)
   );
+};
 
 /**
  * Caps that keep a hostile file in the typed channel. Text caps count UTF-16 units; the byte cap is a `ByteSize`.
@@ -430,20 +433,29 @@ const count = (maximum: number, fallback: number, description: string) =>
  */
 export class CsvLimits extends S.Opaque<CsvLimits, { readonly brand: unique symbol }>()(
   S.Struct({
-    maxRecords: count(2_147_483_647, 10_000_000, "Most records read"),
-    maxFieldsPerRecord: count(MAX_FIELDS, 100_000, "Most cells in one record"),
-    maxFieldLength: count(MAX_TEXT_UNITS, 16 * 1024 * 1024, "Most UTF-16 units in one cell"),
-    maxRecordLength: count(
-      MAX_TEXT_UNITS,
-      64 * 1024 * 1024,
-      "Most UTF-16 units in one record, its line break not counted"
-    ),
-    maxWarnings: count(MAX_TEXT_UNITS, 1000, "Most warnings kept; the rest are counted in one WarningsTruncated"),
-    maxTextLength: count(
-      MAX_TEXT_UNITS,
-      MAX_TEXT_UNITS,
-      "Most UTF-16 units read in all, after a byte-order mark and a sep= line; every position is within it"
-    ),
+    maxRecords: count({ maximum: 2_147_483_647, fallback: 10_000_000, description: "Most records read" }),
+    maxFieldsPerRecord: count({ maximum: MAX_FIELDS, fallback: 100_000, description: "Most cells in one record" }),
+    maxFieldLength: count({
+      maximum: MAX_TEXT_UNITS,
+      fallback: 16 * 1024 * 1024,
+      description: "Most UTF-16 units in one cell",
+    }),
+    maxRecordLength: count({
+      maximum: MAX_TEXT_UNITS,
+      fallback: 64 * 1024 * 1024,
+      description: "Most UTF-16 units in one record, its line break not counted",
+    }),
+    maxWarnings: count({
+      maximum: MAX_TEXT_UNITS,
+      fallback: 1000,
+      description: "Most warnings kept; the rest are counted in one WarningsTruncated",
+    }),
+    maxTextLength: count({
+      maximum: MAX_TEXT_UNITS,
+      fallback: MAX_TEXT_UNITS,
+      description:
+        "Most UTF-16 units read in all, after a byte-order mark and a sep= line; every position is within it",
+    }),
     maxInputBytes: S.ByteSize.pipe(
       S.annotateKey({ description: "Most input bytes read" }),
       S.withConstructorDefault(Effect.sync(() => ByteSize.mebibytes(256))),
@@ -593,8 +605,9 @@ export type CsvQuoteStyle = typeof CsvQuoteStyle.Type;
  * ```ts import.meta.vitest name="Defuse a formula when writing"
  * import { Csv } from "@beep/csv/Csv.codec"
  * import { CsvWriteOptions } from "@beep/csv/CsvOptions.schema"
+ * import { CsvTable } from "@beep/csv/CsvTable.schema"
  *
- * const table = { records: [["=SUM(A1:A9)", "-40", "Bolt"]] } as const
+ * const table = CsvTable.make({ records: [["=SUM(A1:A9)", "-40", "Bolt"]] })
  * Csv.stringify(table, CsvWriteOptions.make({ formulaGuard: "apostrophe" })) // => "'=SUM(A1:A9),'-40,Bolt\r\n"
  * Csv.stringify(table) // => "=SUM(A1:A9),-40,Bolt\r\n"
  * ```

@@ -3,6 +3,7 @@
 // its cell, so there is no shared text table, and a cell's style says its number format and nothing else. The
 // workbook must be in canonical form (`XlsxWorkbook.canonical`), which gives every format code one id.
 import * as A from "effect/Array";
+import * as Bytes from "effect/Bytes";
 import * as Effect from "effect/Effect";
 import * as Zip from "effect/encoding/Zip";
 import { dual } from "effect/Function";
@@ -14,7 +15,6 @@ import { columnLetters, XlsxAddress, XlsxRange } from "../XlsxAddress.schema.ts"
 import { XlsxValue } from "../XlsxCell.schema.ts";
 import { XlsxCompression } from "../XlsxOptions.schema.ts";
 import { FIRST_CUSTOM_FORMAT } from "../XlsxWorkbook.schema.ts";
-import { concatBytes } from "./container.ts";
 import type { XlsxCell } from "../XlsxCell.schema.ts";
 import type { XlsxWorkbook, XlsxWorksheet } from "../XlsxWorkbook.schema.ts";
 
@@ -43,29 +43,43 @@ const escapeStartsAt = (text: string, at: number): boolean =>
 // crispen: a loop over code units, run on every written text; a surrogate is judged by its neighbours, which no
 // per-character `Str` helper sees.
 const escaped = (text: string, cell: boolean): string => {
+  const escapeAt = cell ? cellEscape : plainEscape;
   let out = "";
-  for (let i = 0; i < text.length; i += 1) {
-    const letter = text[i] ?? "";
-    const unit = O.getOrElse(Str.charCodeAt(text, i), () => 0);
-    if (letter === "&") out += "&amp;";
-    else if (letter === "<") out += "&lt;";
-    else if (letter === ">") out += "&gt;";
-    else if (letter === '"') out += "&quot;";
-    else if (cell) {
-      const next = O.getOrElse(Str.charCodeAt(text, i + 1), () => 0);
-      const previous = i === 0 ? 0 : O.getOrElse(Str.charCodeAt(text, i - 1), () => 0);
-      const high = unit >= 0xd800 && unit <= 0xdbff;
-      const low = unit >= 0xdc00 && unit <= 0xdfff;
-      const lone =
-        (high && !(next >= 0xdc00 && next <= 0xdfff)) || (low && !(previous >= 0xd800 && previous <= 0xdbff));
-      if ((unit < 0x20 && unit !== 0x09 && unit !== 0x0a) || unit === 0xfffe || unit === 0xffff || lone) {
-        out += `_x${hex(unit)}_`;
-      } else if (letter === "_" && escapeStartsAt(text, i)) out += "_x005F_";
-      else out += letter;
-    } else if (unit === 0x09 || unit === 0x0a || unit === 0x0d) out += `&#${unit};`;
-    else out += letter;
-  }
+  for (let i = 0; i < text.length; i += 1) out += entities[text[i] ?? ""] ?? escapeAt(text, i);
   return out;
+};
+
+/** The entity each of the characters XML reserves becomes, in an element or an attribute alike. */
+const entities: { readonly [letter: string]: string } = { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" };
+
+/** The code unit at a place in a text, 0 outside it. */
+const unitAt = (text: string, at: number): number => (at < 0 ? 0 : O.getOrElse(Str.charCodeAt(text, at), () => 0));
+
+const isHighSurrogate = (unit: number): boolean => unit >= 0xd800 && unit <= 0xdbff;
+const isLowSurrogate = (unit: number): boolean => unit >= 0xdc00 && unit <= 0xdfff;
+
+/** Whether the code unit at a place is half of a surrogate pair whose other half is missing. */
+const isLoneSurrogate = (text: string, at: number, unit: number): boolean =>
+  (isHighSurrogate(unit) && !isLowSurrogate(unitAt(text, at + 1))) ||
+  (isLowSurrogate(unit) && !isHighSurrogate(unitAt(text, at - 1)));
+
+/** Whether XML cannot hold a code unit in a cell's text: a control character, U+FFFE or U+FFFF. */
+const isUnwritable = (unit: number): boolean =>
+  (unit < 0x20 && unit !== 0x09 && unit !== 0x0a) || unit === 0xfffe || unit === 0xffff;
+
+/** A character of a cell's text as written: Excel's `_xHHHH_` for one XML cannot hold or an underscore that would
+ * read as one, else itself. */
+const cellEscape = (text: string, at: number): string => {
+  const letter = text[at] ?? "";
+  const unit = unitAt(text, at);
+  if (isUnwritable(unit) || isLoneSurrogate(text, at, unit)) return `_x${hex(unit)}_`;
+  return letter === "_" && escapeStartsAt(text, at) ? "_x005F_" : letter;
+};
+
+/** A character of a formula or an attribute as written: a tab or a line break as a character reference. */
+const plainEscape = (text: string, at: number): string => {
+  const unit = unitAt(text, at);
+  return unit === 0x09 || unit === 0x0a || unit === 0x0d ? `&#${unit};` : (text[at] ?? "");
 };
 
 /** A number as the cell's text; negative zero, which `String` writes as `0`, keeps its sign. */
@@ -97,28 +111,46 @@ const cellXml = (cell: XlsxCell, row: number, styleOf: (id: number) => number): 
 const sheetXml = (sheet: XlsxWorksheet, styleOf: (id: number) => number): string => {
   const pieces: Array<string> = [head, `<worksheet xmlns="${main}">`];
   if (O.isSome(sheet.info.declared)) pieces.push(`<dimension ref="${XlsxRange.format(sheet.info.declared.value)}"/>`);
-  if (sheet.hiddenColumns.length > 0) {
-    pieces.push("<cols>");
-    for (const column of sheet.hiddenColumns) pieces.push(`<col min="${column + 1}" max="${column + 1}" hidden="1"/>`);
-    pieces.push("</cols>");
-  }
+  pushColumns(pieces, sheet.hiddenColumns);
+  pushRows(pieces, sheet.rows, styleOf);
+  pushMerges(pieces, sheet.merges);
+  pieces.push("</worksheet>");
+  return A.join(pieces, "");
+};
+
+/** The `<cols>` of a sheet's hidden columns, none when it hides none. */
+const pushColumns = (pieces: Array<string>, hidden: XlsxWorksheet["hiddenColumns"]): void => {
+  if (hidden.length === 0) return;
+  pieces.push("<cols>");
+  for (const column of hidden) pieces.push(`<col min="${column + 1}" max="${column + 1}" hidden="1"/>`);
+  pieces.push("</cols>");
+};
+
+/** The `<sheetData>` of a sheet's rows. */
+const pushRows = (pieces: Array<string>, rows: XlsxWorksheet["rows"], styleOf: (id: number) => number): void => {
   pieces.push("<sheetData>");
-  for (const row of sheet.rows) {
+  for (const row of rows) {
     pieces.push(`<row r="${row.number}"${row.hidden ? ' hidden="1"' : ""}>`);
     for (const cell of row.cells) pieces.push(cellXml(cell, row.number, styleOf));
     pieces.push("</row>");
   }
   pieces.push("</sheetData>");
-  if (sheet.merges.length > 0) {
-    pieces.push(`<mergeCells count="${sheet.merges.length}">`);
-    for (const range of sheet.merges) {
-      pieces.push(`<mergeCell ref="${XlsxAddress.format(range.first)}:${XlsxAddress.format(range.last)}"/>`);
-    }
-    pieces.push("</mergeCells>");
-  }
-  pieces.push("</worksheet>");
-  return A.join(pieces, "");
 };
+
+/** The `<mergeCells>` of a sheet's merged ranges, none when it merges none. */
+const pushMerges = (pieces: Array<string>, merges: XlsxWorksheet["merges"]): void => {
+  if (merges.length === 0) return;
+  pieces.push(`<mergeCells count="${merges.length}">`);
+  for (const range of merges) {
+    pieces.push(`<mergeCell ref="${XlsxAddress.format(range.first)}:${XlsxAddress.format(range.last)}"/>`);
+  }
+  pieces.push("</mergeCells>");
+};
+
+/** Every cell of the sheets, sheet by sheet and row by row. */
+function* cellsOf(sheets: XlsxWorkbook["sheets"]): Generator<XlsxCell> {
+  for (const sheet of sheets) for (const row of sheet.rows) yield* row.cells;
+}
 
 /** The parts of a canonical workbook, each with its path in the archive. */
 export const partsOf = (
@@ -129,14 +161,10 @@ export const partsOf = (
   const styles = MutableHashMap.empty<number, number>();
   const formats: Array<XlsxCell["format"]> = [];
   MutableHashMap.set(styles, 0, 0);
-  for (const sheet of workbook.sheets) {
-    for (const row of sheet.rows) {
-      for (const cell of row.cells) {
-        if (MutableHashMap.has(styles, cell.format.id)) continue;
-        formats.push(cell.format);
-        MutableHashMap.set(styles, cell.format.id, formats.length);
-      }
-    }
+  for (const cell of cellsOf(workbook.sheets)) {
+    if (MutableHashMap.has(styles, cell.format.id)) continue;
+    formats.push(cell.format);
+    MutableHashMap.set(styles, cell.format.id, formats.length);
   }
   const styleOf = (id: number): number => O.getOrElse(MutableHashMap.get(styles, id), () => 0);
   const custom = A.filter(formats, (format) => format.id >= FIRST_CUSTOM_FORMAT);
@@ -234,7 +262,7 @@ export const archiveOf: {
     return Stream.fromIterable(A.map(parts, ([path, text]) => Zip.file(path, text, { method }))).pipe(
       Stream.pipeThroughChannel(Zip.encode()),
       Stream.runCollect,
-      Effect.map(concatBytes)
+      Effect.map(Bytes.concat)
     );
   }
 );

@@ -137,25 +137,69 @@ const letters: { readonly [letter: string]: number } = R.fromEntries(
 // crispen: read for every cell of every sheet, so a loop over the letters with no pattern and no allocation, and -1
 // rather than an Option; `XlsxAddress.parse` is the pattern-based reading for anything that is not this hot path.
 const columnOf = (reference: string): number => {
-  let column = 0;
-  let i = 0;
-  if (reference[0] === "$") i = 1;
-  const start = i;
-  while (i < reference.length) {
-    const value = letters[reference[i] ?? ""];
-    if (value === undefined) break;
-    column = column * 26 + value;
-    i += 1;
-  }
-  if (i === start || i - start > 3 || column > MAX_COLUMN + 1) return -1;
-  if (reference[i] === "$") i += 1;
-  if (i >= reference.length) return -1;
-  for (let k = i; k < reference.length; k += 1) {
-    const digit = reference[k] ?? "";
-    if (digit < "0" || digit > "9") return -1;
-  }
-  return column - 1;
+  const start = reference[0] === "$" ? 1 : 0;
+  const end = lettersEnd(reference, start);
+  const column = lettersValue(reference, start, end);
+  if (end === start || end - start > 3 || column > MAX_COLUMN + 1) return -1;
+  const digits = reference[end] === "$" ? end + 1 : end;
+  return digits < reference.length && allDigits(reference, digits) ? column - 1 : -1;
 };
+
+/** The index past the column letters of `reference` that begin at `from`. */
+const lettersEnd = (reference: string, from: number): number => {
+  let i = from;
+  while (letters[reference[i] ?? ""] !== undefined) i += 1;
+  return i;
+};
+
+/** The 1-based column the letters of `reference` from `from` up to `to` name. */
+const lettersValue = (reference: string, from: number, to: number): number => {
+  let column = 0;
+  for (let i = from; i < to; i += 1) column = column * 26 + (letters[reference[i] ?? ""] ?? 0);
+  return column;
+};
+
+/** Whether every character of `reference` from `from` on is a digit. */
+const allDigits = (reference: string, from: number): boolean => {
+  for (let i = from; i < reference.length; i += 1) {
+    const digit = reference[i] ?? "";
+    if (digit < "0" || digit > "9") return false;
+  }
+  return true;
+};
+
+const isCellType = S.is(CellType);
+const isErrorCode = S.is(XlsxErrorCode);
+
+/** A cell's `t` attribute as the reader tells it apart: `n` when it has none or one the reader does not know. */
+const cellTypeOf = (written: string | undefined): CellType => {
+  const type = written ?? "n";
+  return isCellType(type) ? type : "n";
+};
+
+/**
+ * The style index a cell's `s` attribute names: -1 when it has none and -2 when what it writes is not a whole number.
+ * A style index is a whole number the styles table could hold; anything else (a fraction, a sign, an exponent, digits
+ * past a safe integer) is no index at all, and is reported as the cell wrote it.
+ */
+const styleIndexOf = (written: string | undefined): number => {
+  if (written === undefined) return -1;
+  return styleIndex.test(written) ? Number(written) : -2;
+};
+
+/** What a cell reads as when its value cannot be read, for the reason given; the reason is reported. */
+type Unreadable = (reason: UnreadableCell["reason"]) => XlsxValue;
+
+const textValue = (value: string): XlsxValue => XlsxText.make({ text: value }, checked);
+const writtenText = (raw: string): XlsxValue => textValue(detached(unescaped(raw)));
+
+const booleans: { readonly [text: string]: XlsxValue } = { "1": yes, true: yes, "0": no, false: no };
+
+const booleanOf = (raw: string, unreadable: Unreadable): XlsxValue =>
+  O.getOrElse(R.get(booleans, Str.toLowerCase(Str.trim(raw))), () => unreadable("boolean"));
+
+const errorOf = (raw: string, unreadable: Unreadable): XlsxValue =>
+  isErrorCode(raw) ? XlsxError.make({ code: raw }) : unreadable("errorCode");
 
 /**
  * Reads one worksheet part. Feed it the part's events with `push`; each call returns the rows that ended in it.
@@ -248,18 +292,25 @@ export class SheetReader {
   /** Takes one event of the part and returns the rows that ended with it. */
   push(event: XmlEvent): ReadonlyArray<RowInput> {
     if (O.isSome(this.failed)) return none;
-    if (event._tag === "Text") {
-      if (this.target === "v") this.valueText += event.text;
-      else if (this.target === "t") this.inlineText += event.text;
-      else if (this.target === "f") this.formulaText += event.text;
-      return none;
-    }
-    if (event._tag === "StartElement") {
+    // crispen: one test per event of every sheet, in place of a matcher run on each one.
+    if (event._tag === "EndElement") return this.end();
+    if (event._tag === "Text") this.text(event.text);
+    else if (event._tag === "StartElement") {
       this.depth += 1;
       this.start(localName(event.name), event.attributes);
-      return none;
     }
-    if (event._tag !== "EndElement") return none;
+    return none;
+  }
+
+  /** Adds a text event to the value, inline text or formula it belongs to, if any. */
+  private text(text: string): void {
+    if (this.target === "v") this.valueText += text;
+    else if (this.target === "t") this.inlineText += text;
+    else if (this.target === "f") this.formulaText += text;
+  }
+
+  /** Closes the element in hand and returns the row it ended, if it was one. */
+  private end(): ReadonlyArray<RowInput> {
     const depth = this.depth;
     this.depth -= 1;
     if (depth === this.targetDepth) {
@@ -325,29 +376,11 @@ export class SheetReader {
     const depth = this.depth;
     if (this.skipDepth !== -1) return;
     if (depth === 2) {
-      this.section = name;
-      if (name === "dimension") this.declared = XlsxRange.parse(attributes.ref ?? "");
+      this.startSection(name, attributes);
       return;
     }
     if (depth === 3) {
-      if (this.section === "sheetData" && name === "row") this.startRow(attributes);
-      else if (this.section === "mergeCells" && name === "mergeCell") {
-        const range = XlsxRange.parse(attributes.ref ?? "");
-        if (O.isSome(range)) {
-          const key = XlsxRange.format(range.value);
-          if (!MutableHashSet.has(this.mergeKeys, key) && this.budget.take("merges")) {
-            MutableHashSet.add(this.mergeKeys, key);
-            this.merges.push(range.value);
-          }
-        }
-      } else if (this.section === "cols" && name === "col" && isTrue(attributes.hidden)) {
-        // A span is kept as its two ends, never as its columns: one `<col>` of a few bytes may name every column.
-        const first = Math.max(Number(attributes.min), 1);
-        const last = Math.min(Number(attributes.max), this.caps.columns);
-        if (Number.isInteger(first) && Number.isInteger(last) && first <= last && this.budget.take("hiddenSpans")) {
-          this.hiddenSpans.push([first - 1, last - 1]);
-        }
-      }
+      this.startSectionChild(name, attributes);
       return;
     }
     if (depth === 4 && this.inRow && name === "c") {
@@ -355,39 +388,80 @@ export class SheetReader {
       return;
     }
     if (!this.inCell) return;
-    if (depth === 5) {
-      if (name === "v") {
-        this.hasValue = true;
-        this.target = "v";
-        this.targetDepth = depth;
-      } else if (name === "f") {
-        this.hasFormula = true;
-        this.formulaShared = attributes.t === "shared" ? (attributes.si ?? "") : "";
-        this.target = "f";
-        this.targetDepth = depth;
-      } else if (name === "is") this.hasInline = true;
-      return;
-    }
-    if (this.hasInline && this.target === "") {
-      if (name === "rPh") this.skipDepth = depth;
-      else if (name === "t") {
-        this.target = "t";
-        this.targetDepth = depth;
-      }
+    if (depth === 5) this.startCellChild(name, attributes);
+    else this.startInlineChild(name);
+  }
+
+  /** A child of the worksheet: the section the elements under it belong to. */
+  private startSection(name: string, attributes: Readonly<Record<string, string>>): void {
+    this.section = name;
+    if (name === "dimension") this.declared = XlsxRange.parse(attributes.ref ?? "");
+  }
+
+  /** A child of a section: a row, a merged range or a column span. */
+  private startSectionChild(name: string, attributes: Readonly<Record<string, string>>): void {
+    if (this.section === "sheetData" && name === "row") this.startRow(attributes);
+    else if (this.section === "mergeCells" && name === "mergeCell") this.addMerge(attributes.ref ?? "");
+    else if (this.section === "cols" && name === "col" && isTrue(attributes.hidden)) this.addHiddenSpan(attributes);
+  }
+
+  /** Keeps a merged range once, while the read's cap on merges leaves room. */
+  private addMerge(ref: string): void {
+    const range = XlsxRange.parse(ref);
+    if (O.isNone(range)) return;
+    const key = XlsxRange.format(range.value);
+    if (MutableHashSet.has(this.mergeKeys, key) || !this.budget.take("merges")) return;
+    MutableHashSet.add(this.mergeKeys, key);
+    this.merges.push(range.value);
+  }
+
+  /** Keeps a hidden `<col>` span, clamped to the column cap. */
+  private addHiddenSpan(attributes: Readonly<Record<string, string>>): void {
+    // A span is kept as its two ends, never as its columns: one `<col>` of a few bytes may name every column.
+    const first = Math.max(Number(attributes.min), 1);
+    const last = Math.min(Number(attributes.max), this.caps.columns);
+    if (Number.isInteger(first) && Number.isInteger(last) && first <= last && this.budget.take("hiddenSpans")) {
+      this.hiddenSpans.push([first - 1, last - 1]);
     }
   }
 
+  /** A child of a cell: its value, its formula or its inline string. */
+  private startCellChild(name: string, attributes: Readonly<Record<string, string>>): void {
+    if (name === "v") {
+      this.hasValue = true;
+      this.aim("v");
+    } else if (name === "f") {
+      this.hasFormula = true;
+      this.formulaShared = attributes.t === "shared" ? (attributes.si ?? "") : "";
+      this.aim("f");
+    } else if (name === "is") this.hasInline = true;
+  }
+
+  /** An element inside a cell's inline string: its text, or a phonetic run that is skipped whole. */
+  private startInlineChild(name: string): void {
+    if (!this.hasInline || this.target !== "") return;
+    if (name === "rPh") this.skipDepth = this.depth;
+    else if (name === "t") this.aim("t");
+  }
+
+  /** Sends the text of the element just opened to `target`. */
+  private aim(target: "v" | "f" | "t"): void {
+    this.target = target;
+    this.targetDepth = this.depth;
+  }
+
+  /** The row a `<row>` names, or the one after the last when it names none it can read. */
+  private rowNumberOf(written: string | undefined): number {
+    const next = this.previousRow + 1;
+    if (written === undefined) return next;
+    const parsed = Number(written);
+    if (Number.isInteger(parsed) && parsed >= 1) return parsed;
+    this.warn(BadAddress.make({ sheet: this.sheet, row: Math.min(next, MAX_ROW), raw: Str.slice(0, 255)(written) }));
+    return next;
+  }
+
   private startRow(attributes: Readonly<Record<string, string>>): void {
-    const written = attributes.r;
-    let number = this.previousRow + 1;
-    if (written !== undefined) {
-      const parsed = Number(written);
-      if (Number.isInteger(parsed) && parsed >= 1) number = parsed;
-      else
-        this.warn(
-          BadAddress.make({ sheet: this.sheet, row: Math.min(number, MAX_ROW), raw: Str.slice(0, 255)(written) })
-        );
-    }
+    const number = this.rowNumberOf(attributes.r);
     this.rowCount += 1;
     if (number > MAX_ROW || this.rowCount > this.caps.rows) {
       this.fail("rows");
@@ -420,14 +494,19 @@ export class SheetReader {
     return [{ number: this.rowNumber, hidden: this.rowHidden, cells: this.cells }];
   }
 
+  /** The column a `<c>` names, or the one after the last when it names none it can read. */
+  private cellColumnOf(written: string | undefined): number {
+    const next = this.lastCellColumn + 1;
+    if (written === undefined) return next;
+    const parsed = columnOf(written);
+    if (parsed >= 0) return parsed;
+    this.warn(BadAddress.make({ sheet: this.sheet, row: this.rowNumber, raw: Str.slice(0, 255)(written) }));
+    return next;
+  }
+
   private startCell(attributes: Readonly<Record<string, string>>): void {
     const written = attributes.r;
-    let column = this.lastCellColumn + 1;
-    if (written !== undefined) {
-      const parsed = columnOf(written);
-      if (parsed >= 0) column = parsed;
-      else this.warn(BadAddress.make({ sheet: this.sheet, row: this.rowNumber, raw: Str.slice(0, 255)(written) }));
-    }
+    const column = this.cellColumnOf(written);
     if (column >= this.caps.columns) {
       this.fail("columns");
       return;
@@ -435,13 +514,9 @@ export class SheetReader {
     this.inCell = true;
     this.cellColumn = column;
     this.cellReference = written ?? "";
-    const type = attributes.t ?? "n";
-    this.cellType = S.is(CellType)(type) ? type : "n";
-    const style = attributes.s;
-    this.cellStyleText = style ?? "";
-    // A style index is a whole number the styles table could hold; anything else (a fraction, a sign, an exponent,
-    // digits past a safe integer) is no index at all, and is reported as the cell wrote it.
-    this.cellStyle = style === undefined ? -1 : styleIndex.test(style) ? Number(style) : -2;
+    this.cellType = cellTypeOf(attributes.t);
+    this.cellStyleText = attributes.s ?? "";
+    this.cellStyle = styleIndexOf(attributes.s);
     this.hasValue = false;
     this.valueText = "";
     this.hasInline = false;
@@ -469,132 +544,160 @@ export class SheetReader {
     const column = this.cellColumn;
     const row = this.rowNumber;
     const address = (): XlsxAddress => XlsxAddress.make({ column, row });
-    let formula: O.Option<string> = O.none();
-    if (this.hasFormula) {
-      let text = this.formulaText;
-      if (this.formulaShared !== "") {
-        if (text !== "") {
-          // A group already kept takes its new text in place; a new group needs room under the read's cap, and a
-          // group with none is dropped and counted, its cells keeping the empty formula they wrote.
-          if (MutableHashMap.has(this.masters, this.formulaShared) || this.budget.take("sharedFormulas")) {
-            MutableHashMap.set(this.masters, this.formulaShared, { text, column, row });
-          }
-        } else {
-          const master = MutableHashMap.get(this.masters, this.formulaShared);
-          if (O.isSome(master)) {
-            // Each cell that shares a formula is handed its whole text, a few bytes of the file costing as much as
-            // the formula, so that text is counted against the read's cap before it is moved.
-            if (!this.budget.spendSharedFormula(master.value.text.length)) {
-              this.fail("sharedFormulaChars");
-              return;
-            }
-            text = shifted({
-              formula: master.value.text,
-              columns: column - master.value.column,
-              rows: row - master.value.row,
-            });
-          }
-        }
-      }
-      if (text.length > MAX_FORMULA_CHARS * 4) {
-        this.fail("cellChars");
-        return;
-      }
-      formula = O.some(text.length <= MAX_FORMULA_CHARS && isXmlSafe(text) ? text : "");
-    }
-    let style = this.styleFormat(address);
+    const formula = this.cellFormula(column, row);
+    if (O.isSome(this.failed)) return;
+    const style = this.styleFormat(address);
     const raw = this.hasInline ? this.inlineText : this.valueText;
     if (raw.length > this.caps.cellChars) {
       this.fail("cellChars");
       return;
     }
-    const unreadable = (reason: UnreadableCell["reason"]): XlsxValue => {
-      this.warn(UnreadableCell.make({ sheet: this.sheet, address: address(), reason }));
-      const written = unescaped(raw);
-      return XlsxUnreadable.make({ raw: detached(S.is(XlsxErrorCode)(written) ? `'${written}` : written) }, checked);
-    };
-    const text = (value: string): XlsxValue => XlsxText.make({ text: value }, checked);
-    const written = this.hasValue || this.hasInline;
-    const dated = style.dated;
-    const value: XlsxValue = CellType.match(this.cellType, {
-      inlineStr: () => (this.hasInline ? text(detached(unescaped(raw))) : blank),
-      s: () => {
-        if (!written) return blank;
-        const index = Number(Str.trim(raw));
-        const shared = Number.isInteger(index) && index >= 0 ? this.strings[index] : undefined;
-        return shared === undefined ? unreadable("sharedString") : text(shared);
-      },
-      str: () => (written ? text(detached(unescaped(raw))) : blank),
-      b: () => {
-        if (!written) return blank;
-        const text = Str.toLowerCase(Str.trim(raw));
-        return text === "1" || text === "true" ? yes : text === "0" || text === "false" ? no : unreadable("boolean");
-      },
-      e: () => (written ? (S.is(XlsxErrorCode)(raw) ? XlsxError.make({ code: raw }) : unreadable("errorCode")) : blank),
-      d: () => {
-        if (!written) return blank;
-        // The calendar schema holds each field to its range (an hour 0 to 23, a minute 0 to 59), so an impossible
-        // time such as T99:99:99 is unreadable rather than carried into a later day. Day 0 is a serial's alone
-        // ("January 0, 1900"); no ISO date names it. A fraction of a second is kept, and must still fall within the
-        // system's last serial.
-        const serial = O.fromNullishOr(isoDate.exec(Str.trim(raw))).pipe(
-          O.filter((found) => found[3] !== "00"),
-          O.flatMap((found) =>
-            XlsxCalendar.makeOption({
-              year: Number(found[1]),
-              month: Number(found[2]),
-              day: Number(found[3]),
-              hour: Number(found[4] ?? "0"),
-              minute: Number(found[5] ?? "0"),
-              second: Number(found[6] ?? "0"),
-            }).pipe(
-              O.flatMap((calendar) => XlsxCalendar.toSerial(calendar, this.system)),
-              O.map((whole) => whole + Number(found[7] ?? "0") / 86_400)
-            )
-          ),
-          O.filter((moment) => moment <= this.lastSerial)
-        );
-        return O.match(serial, {
-          onNone: () => unreadable("date"),
-          onSome: (moment): XlsxValue => XlsxDate.make({ serial: moment }, checked),
-        });
-      },
-      n: () => {
-        const trimmed = Str.trim(raw);
-        if (!written || trimmed === "") return blank;
-        const number = numberText.test(trimmed) ? Number(trimmed) : Number.NaN;
-        if (!Number.isFinite(number)) return unreadable("number");
-        return dated && number >= 0 && number <= this.lastSerial
-          ? XlsxDate.make({ serial: number }, checked)
-          : XlsxNumber.make({ value: number }, checked);
-      },
-    });
+    const value = this.cellValue(raw, style.dated, (reason) => this.unreadable(raw, reason, address));
+    if (value.kind === "Blank" && O.isNone(formula)) return;
     // A date read from an ISO cell under a format that is not a date format is shown as Excel's short date; a number
     // becomes a date only under a date format, so this touches the ISO case alone.
-    if (value.kind === "Date" && !dated) style = shortDate;
-    if (value.kind === "Blank") {
-      if (O.isNone(formula)) return;
-      this.warn(FormulaWithoutResult.make({ sheet: this.sheet, address: address() }));
-    } else if (value.kind === "Date") {
-      if (this.system === "1900" && Math.floor(value.serial) === 60) {
-        this.warn(FictitiousLeapDay.make({ sheet: this.sheet, address: address() }));
-      }
-      if (style.notShown) this.countNotShown(style.format.code);
-    } else if (value.kind === "Number" && style.notShown && !style.dated) this.countNotShown(style.format.code);
+    const shown = value.kind === "Date" && !style.dated ? shortDate : style;
+    this.note(value, shown, address);
+    this.place(column, value, formula, shown.format);
+  }
+
+  /** The formula the cell in hand writes, if any; a shared one is shifted from its group's first cell. */
+  private cellFormula(column: number, row: number): O.Option<string> {
+    if (!this.hasFormula) return O.none();
+    const text = this.formulaShared === "" ? this.formulaText : this.sharedFormula(column, row);
+    if (O.isSome(this.failed)) return O.none();
+    if (text.length > MAX_FORMULA_CHARS * 4) {
+      this.fail("cellChars");
+      return O.none();
+    }
+    return O.some(text.length <= MAX_FORMULA_CHARS && isXmlSafe(text) ? text : "");
+  }
+
+  /** The text of a cell in a shared formula group: its own when it is the group's first cell, else the shifted first. */
+  private sharedFormula(column: number, row: number): string {
+    const text = this.formulaText;
+    if (text !== "") {
+      this.keepMaster(text, column, row);
+      return text;
+    }
+    const master = MutableHashMap.get(this.masters, this.formulaShared);
+    if (O.isNone(master)) return text;
+    // Each cell that shares a formula is handed its whole text, a few bytes of the file costing as much as the
+    // formula, so that text is counted against the read's cap before it is moved.
+    if (!this.budget.spendSharedFormula(master.value.text.length)) {
+      this.fail("sharedFormulaChars");
+      return text;
+    }
+    return shifted({ formula: master.value.text, columns: column - master.value.column, rows: row - master.value.row });
+  }
+
+  private keepMaster(text: string, column: number, row: number): void {
+    // A group already kept takes its new text in place; a new group needs room under the read's cap, and a group
+    // with none is dropped and counted, its cells keeping the empty formula they wrote.
+    if (MutableHashMap.has(this.masters, this.formulaShared) || this.budget.take("sharedFormulas")) {
+      MutableHashMap.set(this.masters, this.formulaShared, { text, column, row });
+    }
+  }
+
+  /** The value the cell in hand holds, read by its type. */
+  private cellValue(raw: string, dated: boolean, unreadable: Unreadable): XlsxValue {
+    const written = this.hasValue || this.hasInline;
+    const ifWritten = (read: () => XlsxValue): XlsxValue => (written ? read() : blank);
+    return CellType.match(this.cellType, {
+      inlineStr: () => (this.hasInline ? writtenText(raw) : blank),
+      s: () => ifWritten(() => this.sharedString(raw, unreadable)),
+      str: () => ifWritten(() => writtenText(raw)),
+      b: () => ifWritten(() => booleanOf(raw, unreadable)),
+      e: () => ifWritten(() => errorOf(raw, unreadable)),
+      d: () => ifWritten(() => this.isoDate(raw, unreadable)),
+      n: () => ifWritten(() => this.number(raw, dated, unreadable)),
+    });
+  }
+
+  private unreadable(raw: string, reason: UnreadableCell["reason"], address: () => XlsxAddress): XlsxValue {
+    this.warn(UnreadableCell.make({ sheet: this.sheet, address: address(), reason }));
+    const written = unescaped(raw);
+    return XlsxUnreadable.make({ raw: detached(isErrorCode(written) ? `'${written}` : written) }, checked);
+  }
+
+  private sharedString(raw: string, unreadable: Unreadable): XlsxValue {
+    const index = Number(Str.trim(raw));
+    const shared = Number.isInteger(index) && index >= 0 ? this.strings[index] : undefined;
+    return shared === undefined ? unreadable("sharedString") : textValue(shared);
+  }
+
+  private isoDate(raw: string, unreadable: Unreadable): XlsxValue {
+    // The calendar schema holds each field to its range (an hour 0 to 23, a minute 0 to 59), so an impossible time
+    // such as T99:99:99 is unreadable rather than carried into a later day. Day 0 is a serial's alone ("January 0,
+    // 1900"); no ISO date names it. A fraction of a second is kept, and must still fall within the system's last
+    // serial.
+    const serial = O.fromNullishOr(isoDate.exec(Str.trim(raw))).pipe(
+      O.filter((found) => found[3] !== "00"),
+      O.flatMap((found) => this.serialOfIso(found)),
+      O.filter((moment) => moment <= this.lastSerial)
+    );
+    return O.match(serial, {
+      onNone: () => unreadable("date"),
+      onSome: (moment): XlsxValue => XlsxDate.make({ serial: moment }, checked),
+    });
+  }
+
+  private serialOfIso(found: RegExpExecArray): O.Option<number> {
+    return XlsxCalendar.makeOption({
+      year: Number(found[1]),
+      month: Number(found[2]),
+      day: Number(found[3]),
+      hour: Number(found[4] ?? "0"),
+      minute: Number(found[5] ?? "0"),
+      second: Number(found[6] ?? "0"),
+    }).pipe(
+      O.flatMap((calendar) => XlsxCalendar.toSerial(calendar, this.system)),
+      O.map((whole) => whole + Number(found[7] ?? "0") / 86_400)
+    );
+  }
+
+  private number(raw: string, dated: boolean, unreadable: Unreadable): XlsxValue {
+    const trimmed = Str.trim(raw);
+    if (trimmed === "") return blank;
+    const number = numberText.test(trimmed) ? Number(trimmed) : Number.NaN;
+    if (!Number.isFinite(number)) return unreadable("number");
+    return dated && number >= 0 && number <= this.lastSerial
+      ? XlsxDate.make({ serial: number }, checked)
+      : XlsxNumber.make({ value: number }, checked);
+  }
+
+  /** Reports what the cell's value says about the sheet: a formula with no result, a fictitious day, a hidden format. */
+  private note(value: XlsxValue, style: StyleFormat, address: () => XlsxAddress): void {
+    if (value.kind === "Blank") this.warn(FormulaWithoutResult.make({ sheet: this.sheet, address: address() }));
+    else if (value.kind === "Date") this.noteDate(value.serial, style, address);
+    else if (value.kind === "Number" && style.notShown && !style.dated) this.countNotShown(style.format.code);
+  }
+
+  private noteDate(serial: number, style: StyleFormat, address: () => XlsxAddress): void {
+    if (this.system === "1900" && Math.floor(serial) === 60) {
+      this.warn(FictitiousLeapDay.make({ sheet: this.sheet, address: address() }));
+    }
+    if (style.notShown) this.countNotShown(style.format.code);
+  }
+
+  /** Adds the cell to its row, unless its column is already used there. */
+  private place(column: number, value: XlsxValue, formula: O.Option<string>, format: XlsxNumberFormat): void {
     // A column already used in this row is a repeat, found by its stamp in one step whatever order the cells
     // came in: the first cell written there is kept and the repeat reported.
     if (!this.budget.claim(column)) {
-      this.warn(BadAddress.make({ sheet: this.sheet, row, raw: Str.slice(0, 255)(this.cellReference) }));
+      this.warn(
+        BadAddress.make({ sheet: this.sheet, row: this.rowNumber, raw: Str.slice(0, 255)(this.cellReference) })
+      );
       return;
     }
     if (column <= this.lastCellColumn) this.cellsSorted = false;
     else this.lastCellColumn = column;
     if (holdsSomething(value)) {
       this.held += 1;
-      if (column < this.firstColumn) this.firstColumn = column;
-      if (column > this.lastColumn) this.lastColumn = column;
+      this.firstColumn = Math.min(this.firstColumn, column);
+      this.lastColumn = Math.max(this.lastColumn, column);
     }
-    this.cells.push({ column, value, formula, format: style.format });
+    this.cells.push({ column, value, formula, format });
   }
 
   private countNotShown(code: string): void {

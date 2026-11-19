@@ -10,6 +10,7 @@
 import { $XlsxId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
+import * as Bytes from "effect/Bytes";
 import * as Effect from "effect/Effect";
 import * as Zip from "effect/encoding/Zip";
 import { dual } from "effect/Function";
@@ -119,17 +120,28 @@ const oleMagic = [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1];
  * name of ASCII letters never matches, so the result is the one `partKey` folding would give.
  */
 export const sniffContainer = (bytes: Uint8Array): XlsxContainer => {
-  const zip = startsWith(bytes, zipMagic);
-  if (!zip && !startsWith(bytes, oleMagic)) return "notAnArchive";
+  if (startsWith(bytes, zipMagic)) return zipContainer(namesIn(bytes));
+  if (startsWith(bytes, oleMagic)) return oleContainer(namesIn(bytes));
+  return "notAnArchive";
+};
+
+/** Whether the bytes hold a name, looked for by its `partKey` in the bytes lower-cased as one-byte characters. */
+const namesIn = (bytes: Uint8Array): ((name: string) => boolean) => {
   const text = Str.toLowerCase(new TextDecoder("latin1").decode(bytes));
-  const holds = (name: string): boolean => Str.includes(partKey(name))(text);
-  if (zip) {
-    if (holds("xl/workbook.xml")) return holds("vbaProject.bin") ? "macroWorkbook" : "workbook";
-    if (holds("xl/workbook.bin")) return "binaryWorkbook";
-    if (holds("opendocument.spreadsheet")) return "openDocument";
-    if (holds("word/document.xml")) return "word";
-    return "otherZip";
-  }
+  return (name) => Str.includes(partKey(name))(text);
+};
+
+/** What a zip archive is, from the names it holds. */
+const zipContainer = (holds: (name: string) => boolean): XlsxContainer => {
+  if (holds("xl/workbook.xml")) return holds("vbaProject.bin") ? "macroWorkbook" : "workbook";
+  if (holds("xl/workbook.bin")) return "binaryWorkbook";
+  if (holds("opendocument.spreadsheet")) return "openDocument";
+  if (holds("word/document.xml")) return "word";
+  return "otherZip";
+};
+
+/** What an OLE compound file is, from the names its directory writes. */
+const oleContainer = (holds: (name: string) => boolean): XlsxContainer => {
   if (holds(wide("EncryptedPackage"))) return "encrypted";
   if (holds(wide("Workbook")) || holds(wide("Book"))) return "legacyXls";
   return "otherOle";
@@ -139,18 +151,6 @@ const damaged = (error: Zip.ZipError): XlsxFatal =>
   stop(DamagedArchive.make({ damage: error.kind, reason: Str.slice(0, 255)(error.message) }));
 
 const entriesOf = (bytes: Uint8Array) => Stream.make(bytes).pipe(Stream.pipeThroughChannel(Zip.decode()));
-
-/** Chunks of bytes as one array, the reader's inflated parts and the writer's archive alike. */
-export const concatBytes = (chunks: ReadonlyArray<Uint8Array>): Uint8Array => {
-  const out = new Uint8Array(A.reduce(chunks, 0, (n, chunk) => n + chunk.length));
-  // crispen: `set` at an offset is the copy; there is no Effect combinator over typed arrays.
-  let at = 0;
-  for (const chunk of chunks) {
-    out.set(chunk, at);
-    at += chunk.length;
-  }
-  return out;
-};
 
 const LOCAL = 0x04034b50;
 const CENTRAL = 0x02014b50;
@@ -191,97 +191,195 @@ interface Located {
 // and count here comes from the file, so each read is bounded on both ends (-1 outside the file) and each count is
 // checked against the bytes left before it is used.
 export const directoryMismatch = (bytes: Uint8Array): O.Option<string> => {
-  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  const length = bytes.length;
-  const inside = (at: number, width: number): boolean => Number.isSafeInteger(at) && at >= 0 && at + width <= length;
-  const u16 = (at: number): number => (inside(at, 2) ? view.getUint16(at, true) : -1);
-  const u32 = (at: number): number => (inside(at, 4) ? view.getUint32(at, true) : -1);
-  const u64 = (at: number): number => (inside(at, 8) ? Number(view.getBigUint64(at, true)) : -1);
-
-  /** What the end record at `end` names, or why it names no directory; constant work, so every candidate is tried. */
-  const locate = (end: number): Result.Result<Located, string> => {
-    const marked = u16(end + 10) === MAX16 || u32(end + 12) === MAX32 || u32(end + 16) === MAX32;
-    // The 64-bit record is taken whenever its locator precedes the end record, whatever the 32-bit fields hold.
-    const record = u32(end - 20) === LOCATOR64 ? u64(end - 12) : -1;
-    const zip64 = record >= 0 && record + 56 <= end - 20 && u32(record) === END64;
-    if (marked && !zip64) return Result.fail("the end record names a 64-bit record that is not there");
-    const located = zip64
-      ? { count: u64(record + 32), size: u64(record + 40), start: u64(record + 48), directoryEnd: record }
-      : { count: u16(end + 10), size: u32(end + 12), start: u32(end + 16), directoryEnd: end };
-    const { count, size, start, directoryEnd } = located;
-    if (count < 0 || size < 0 || start < 0 || start + size !== directoryEnd) {
-      return Result.fail(
-        `the directory at byte ${start} of ${size} bytes does not reach its end record at ${directoryEnd}`
-      );
-    }
-    if (count * 46 > size) return Result.fail(`the directory is too short for the ${count} entries it counts`);
-    return Result.succeed(located);
-  };
-
-  /** The entries a located directory lists, checked against the walk from byte 0. */
-  const walk = ({ count, directoryEnd, start }: Located): O.Option<string> => {
-    const listed: Array<Listed> = [];
-    let at = start;
-    for (let n = 0; n < count; n += 1) {
-      if (u32(at) !== CENTRAL) return O.some(`the directory's entry ${n + 1} is not where it should be`);
-      const names = u16(at + 28);
-      const extras = u16(at + 30);
-      const recordEnd = at + 46 + names + extras + u16(at + 32);
-      if (names < 0 || extras < 0 || recordEnd < at + 46 || recordEnd > directoryEnd) {
-        return O.some(`the directory's entry ${n + 1} runs past the directory`);
-      }
-      let compressed = u32(at + 20);
-      let offset = u32(at + 42);
-      if (compressed === MAX32 || offset === MAX32) {
-        // The 64-bit extra field holds, in order, each of the sizes and the offset that its 32-bit field leaves out.
-        let field = at + 46 + names;
-        const fieldsEnd = field + extras;
-        while (field + 4 <= fieldsEnd) {
-          const id = u16(field);
-          const spanEnd = field + 4 + u16(field + 2);
-          const within = (value: number): number => (value + 8 <= spanEnd && spanEnd <= fieldsEnd ? u64(value) : -1);
-          if (id === 0x0001) {
-            let value = field + 4;
-            if (u32(at + 24) === MAX32) value += 8;
-            if (compressed === MAX32) {
-              compressed = within(value);
-              value += 8;
-            }
-            if (offset === MAX32) offset = within(value);
-          }
-          field = spanEnd;
-        }
-      }
-      if (compressed < 0 || offset < 0) return O.some(`the directory's entry ${n + 1} has no 64-bit size or offset`);
-      listed.push({ compressed, descriptor: (u16(at + 8) & FLAG_DESCRIPTOR) !== 0, offset });
-      at = recordEnd;
-    }
-    if (at !== directoryEnd) return O.some(`the directory's ${count} entries do not fill it`);
-    const sorted = A.sort(listed, byOffset);
-    let expected = 0;
-    for (const [n, entry] of sorted.entries()) {
-      if (entry.offset !== expected || u32(entry.offset) !== LOCAL) {
-        return O.some(`the directory names an entry at byte ${entry.offset}, where the walk reached ${expected}`);
-      }
-      const dataEnd = entry.offset + 30 + u16(entry.offset + 26) + u16(entry.offset + 28) + entry.compressed;
-      const next = O.match(A.get(sorted, n + 1), { onNone: () => start, onSome: (after) => after.offset });
-      // A descriptor's length is not recorded anywhere: it is the one that lands on the next entry or the directory.
-      expected = entry.descriptor && A.some(descriptorLengths, (extra) => dataEnd + extra === next) ? next : dataEnd;
-    }
-    return expected === start
-      ? O.none()
-      : O.some(`the directory starts at byte ${start}, where the entries it names end at ${expected}`);
-  };
-
+  const file = new LittleEndian(bytes);
   let refused: O.Option<string> = O.none();
-  for (let at = length - 22; at >= Math.max(0, length - 22 - MAX16); at -= 1) {
-    if (u32(at) === END && at + 22 + u16(at + 20) <= length) {
-      const located = locate(at);
-      if (Result.isSuccess(located)) return walk(located.success);
-      if (O.isNone(refused)) refused = O.some(located.failure);
-    }
+  for (let at = file.length - 22; at >= Math.max(0, file.length - 22 - MAX16); at -= 1) {
+    if (!isEndRecord(file, at)) continue;
+    const located = locate(file, at);
+    if (Result.isSuccess(located)) return walk(file, located.success);
+    if (O.isNone(refused)) refused = O.some(located.failure);
   }
   return refused;
+};
+
+/** Bounded little-endian reads over a file's bytes: each read is -1 when it falls outside the file. */
+class LittleEndian {
+  readonly length: number;
+  private readonly view: DataView;
+
+  constructor(bytes: Uint8Array) {
+    this.length = bytes.length;
+    this.view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  }
+
+  private inside(at: number, width: number): boolean {
+    return Number.isSafeInteger(at) && at >= 0 && at + width <= this.length;
+  }
+
+  u16(at: number): number {
+    return this.inside(at, 2) ? this.view.getUint16(at, true) : -1;
+  }
+
+  u32(at: number): number {
+    return this.inside(at, 4) ? this.view.getUint32(at, true) : -1;
+  }
+
+  u64(at: number): number {
+    return this.inside(at, 8) ? Number(this.view.getBigUint64(at, true)) : -1;
+  }
+}
+
+/** Whether an end record's signature is at `at`, with its comment inside the file. */
+const isEndRecord = (file: LittleEndian, at: number): boolean =>
+  file.u32(at) === END && at + 22 + file.u16(at + 20) <= file.length;
+
+/** Whether the end record at `end` marks a field as held in a 64-bit record. */
+const marked64 = (file: LittleEndian, end: number): boolean =>
+  file.u16(end + 10) === MAX16 || file.u32(end + 12) === MAX32 || file.u32(end + 16) === MAX32;
+
+/** Where the 64-bit end record is, -1 when none precedes the end record at `end`. */
+const record64 = (file: LittleEndian, end: number): number => {
+  // The 64-bit record is taken whenever its locator precedes the end record, whatever the 32-bit fields hold.
+  const record = file.u32(end - 20) === LOCATOR64 ? file.u64(end - 12) : -1;
+  return record >= 0 && record + 56 <= end - 20 && file.u32(record) === END64 ? record : -1;
+};
+
+/** What the end record at `end` names, or why it names no directory; constant work, so every candidate is tried. */
+const locate = (file: LittleEndian, end: number): Result.Result<Located, string> => {
+  const record = record64(file, end);
+  if (record < 0 && marked64(file, end)) return Result.fail("the end record names a 64-bit record that is not there");
+  const located =
+    record >= 0
+      ? {
+          count: file.u64(record + 32),
+          size: file.u64(record + 40),
+          start: file.u64(record + 48),
+          directoryEnd: record,
+        }
+      : { count: file.u16(end + 10), size: file.u32(end + 12), start: file.u32(end + 16), directoryEnd: end };
+  return checkLocated(located);
+};
+
+/** A located directory, if it ends at its end record and has room for the entries it counts. */
+const checkLocated = (located: Located): Result.Result<Located, string> => {
+  const { count, size, start, directoryEnd } = located;
+  if (count < 0 || size < 0 || start < 0 || start + size !== directoryEnd) {
+    return Result.fail(
+      `the directory at byte ${start} of ${size} bytes does not reach its end record at ${directoryEnd}`
+    );
+  }
+  if (count * 46 > size) return Result.fail(`the directory is too short for the ${count} entries it counts`);
+  return Result.succeed(located);
+};
+
+/** The entries a located directory lists, checked against the walk from byte 0. */
+const walk = (file: LittleEndian, located: Located): O.Option<string> =>
+  Result.match(listedOf(file, located), {
+    onFailure: O.some,
+    onSuccess: (listed) => orderMismatch(file, listed, located.start),
+  });
+
+/** The entries a located directory lists, each read from its record, or why one cannot be read. */
+const listedOf = (
+  file: LittleEndian,
+  { count, directoryEnd, start }: Located
+): Result.Result<Array<Listed>, string> => {
+  const listed: Array<Listed> = [];
+  let at = start;
+  for (let n = 0; n < count; n += 1) {
+    const entry = entryAt(file, at, directoryEnd, n + 1);
+    if (Result.isFailure(entry)) return Result.fail(entry.failure);
+    listed.push(entry.success.listed);
+    at = entry.success.end;
+  }
+  if (at !== directoryEnd) return Result.fail(`the directory's ${count} entries do not fill it`);
+  return Result.succeed(listed);
+};
+
+/** The directory's entry `ordinal`, whose record starts at `at`, and where its record ends. */
+const entryAt = (
+  file: LittleEndian,
+  at: number,
+  directoryEnd: number,
+  ordinal: number
+): Result.Result<{ readonly listed: Listed; readonly end: number }, string> => {
+  if (file.u32(at) !== CENTRAL) return Result.fail(`the directory's entry ${ordinal} is not where it should be`);
+  const names = file.u16(at + 28);
+  const extras = file.u16(at + 30);
+  const end = at + 46 + names + extras + file.u16(at + 32);
+  if (names < 0 || extras < 0 || end < at + 46 || end > directoryEnd) {
+    return Result.fail(`the directory's entry ${ordinal} runs past the directory`);
+  }
+  const { compressed, offset } = sizesOf(file, at, at + 46 + names, extras);
+  if (compressed < 0 || offset < 0) return Result.fail(`the directory's entry ${ordinal} has no 64-bit size or offset`);
+  return Result.succeed({
+    listed: { compressed, descriptor: (file.u16(at + 8) & FLAG_DESCRIPTOR) !== 0, offset },
+    end,
+  });
+};
+
+/** An entry's compressed size and offset, as its record or its 64-bit extra field holds them. */
+interface Sizes {
+  readonly compressed: number;
+  readonly offset: number;
+}
+
+/** The sizes of the entry whose record starts at `at`, its extra fields from `fields` for `extras` bytes. */
+const sizesOf = (file: LittleEndian, at: number, fields: number, extras: number): Sizes => {
+  let sizes: Sizes = { compressed: file.u32(at + 20), offset: file.u32(at + 42) };
+  if (sizes.compressed !== MAX32 && sizes.offset !== MAX32) return sizes;
+  const fieldsEnd = fields + extras;
+  let field = fields;
+  while (field + 4 <= fieldsEnd) {
+    const spanEnd = field + 4 + file.u16(field + 2);
+    if (file.u16(field) === 0x0001) sizes = zip64Sizes(file, { at, field, spanEnd, fieldsEnd }, sizes);
+    field = spanEnd;
+  }
+  return sizes;
+};
+
+/** The sizes a 64-bit extra field fills in: in order, each of the sizes and the offset its 32-bit field leaves out. */
+const zip64Sizes = (
+  file: LittleEndian,
+  span: { readonly at: number; readonly field: number; readonly spanEnd: number; readonly fieldsEnd: number },
+  sizes: Sizes
+): Sizes => {
+  const within = (value: number): number =>
+    value + 8 <= span.spanEnd && span.spanEnd <= span.fieldsEnd ? file.u64(value) : -1;
+  let value = file.u32(span.at + 24) === MAX32 ? span.field + 12 : span.field + 4;
+  let { compressed, offset } = sizes;
+  if (compressed === MAX32) {
+    compressed = within(value);
+    value += 8;
+  }
+  if (offset === MAX32) offset = within(value);
+  return { compressed, offset };
+};
+
+/** Where the listed entries, in the order of their offsets, stop following each other from byte 0 to `start`. */
+const orderMismatch = (file: LittleEndian, listed: ReadonlyArray<Listed>, start: number): O.Option<string> => {
+  const sorted = A.sort(listed, byOffset);
+  let expected = 0;
+  for (const [n, entry] of sorted.entries()) {
+    if (entry.offset !== expected || file.u32(entry.offset) !== LOCAL) {
+      return O.some(`the directory names an entry at byte ${entry.offset}, where the walk reached ${expected}`);
+    }
+    expected = entryEnd(
+      file,
+      entry,
+      O.match(A.get(sorted, n + 1), { onNone: () => start, onSome: (after) => after.offset })
+    );
+  }
+  return expected === start
+    ? O.none()
+    : O.some(`the directory starts at byte ${start}, where the entries it names end at ${expected}`);
+};
+
+/** Where a listed entry ends, its data descriptor included, given where the next entry or the directory starts. */
+const entryEnd = (file: LittleEndian, entry: Listed, next: number): number => {
+  const dataEnd = entry.offset + 30 + file.u16(entry.offset + 26) + file.u16(entry.offset + 28) + entry.compressed;
+  // A descriptor's length is not recorded anywhere: it is the one that lands on the next entry or the directory.
+  return entry.descriptor && A.some(descriptorLengths, (extra) => dataEnd + extra === next) ? next : dataEnd;
 };
 
 /**
@@ -331,7 +429,7 @@ export const census = Effect.fnUntraced(function* (input: {
         }),
         Stream.runDrain,
         Effect.map(() => {
-          if (wanted) MutableHashMap.set(kept, key, concatBytes(held));
+          if (wanted) MutableHashMap.set(kept, key, Bytes.concat(held));
         })
       );
     }),
@@ -360,7 +458,7 @@ export const collect = Effect.fnUntraced(function* (input: {
         Stream.mapError(damaged),
         Stream.runCollect,
         Effect.map((chunks) => {
-          MutableHashMap.set(kept, key, concatBytes(chunks));
+          MutableHashMap.set(kept, key, Bytes.concat(chunks));
         })
       );
     }),

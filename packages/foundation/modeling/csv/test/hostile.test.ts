@@ -54,7 +54,6 @@ import {
 } from "./support.ts";
 import type { CsvFatalFinding } from "@beep/csv/CsvDiagnostic.schema";
 import type { CsvRecord } from "@beep/csv/CsvTable.schema";
-import type { Outcome } from "./support.ts";
 
 /** A fatal finding as its kind, and its cap when it is one. */
 const summary = (finding: CsvFatalFinding): string =>
@@ -225,48 +224,52 @@ describe("the text-length cap bounds every position a read reports", () => {
   );
 });
 
-describe("linear cost", () => {
+// One test at a time: the suites and tests of a file run concurrently, and the spies here would count other tests'
+// calls too.
+describe("linear cost", { concurrent: false }, () => {
   const wide = `${Str.repeat(40_000)("a,")}a\n`;
 
-  /**
-   * How many machines `thunk` starts. `thunk` must stay synchronous: the tests in a file run concurrently, so an
-   * `await` inside it would count other tests' machines too.
-   */
-  const machinesStarted = (thunk: () => void): number => {
-    const start = vi.spyOn(Machine, "start");
-    try {
-      thunk();
-      return start.mock.calls.length;
-    } finally {
-      start.mockRestore();
-    }
-  };
+  /** Runs `use` with a spy installed, and restores it however `use` ends. */
+  const spying = <Spy extends { readonly mockRestore: () => void }, A, E>(
+    spyOn: () => Spy,
+    use: (spy: Spy) => Effect.Effect<A, E>
+  ): Effect.Effect<A, E> =>
+    Effect.acquireUseRelease(Effect.sync(spyOn), use, (spy) => Effect.sync(() => spy.mockRestore()));
+
+  /** What `effect` gives and how many machines it starts. */
+  const machinesStarted = <A, E>(effect: Effect.Effect<A, E>) =>
+    spying(
+      () => vi.spyOn(Machine, "start"),
+      (start) => Effect.map(effect, (value) => ({ value, started: start.mock.calls.length }))
+    );
 
   // Copying the open record into a new machine each piece took about 16 s here; one machine lives across the pieces.
-  it("a record of 40,001 cells read in 8-character pieces is read by one machine", () => {
-    let read: Result.Result<CsvRead, unknown> = Result.fail(undefined);
-    const started = machinesStarted(() => {
-      read = Csv.parseBytesInPiecesResult(utf8(wide), { options: readWith(","), pieceChars: 8, onPiece: constVoid });
-    });
-    assertSuccess(
-      Result.map(read, (done) => done.table.records[0]?.length),
-      40_001
-    );
-    strictEqual(started, 1);
-  });
+  it.effect("a record of 40,001 cells read in 8-character pieces is read by one machine", () =>
+    Effect.gen(function* () {
+      const { value: read, started } = yield* machinesStarted(
+        Effect.sync(() =>
+          Csv.parseBytesInPiecesResult(utf8(wide), { options: readWith(","), pieceChars: 8, onPiece: constVoid })
+        )
+      );
+      assertSuccess(
+        Result.map(read, (done) => done.table.records[0]?.length),
+        40_001
+      );
+      strictEqual(started, 1);
+    })
+  );
 
-  it("the same record dripped through the text channel in 8-character chunks is read by one machine", () => {
-    const chunks = pieces(wide.length, A.replicate(8, wide.length / 8 + 1), (from, to) => Str.slice(from, to)(wide));
-    let streamed: Outcome = Result.fail([]);
-    const started = machinesStarted(() => {
-      streamed = Effect.runSync(streamText(chunks, readWith(",")));
-    });
-    assertSuccess(
-      Result.map(streamed, (records) => records[0]?.length),
-      40_001
-    );
-    strictEqual(started, 1);
-  });
+  it.effect("the same record dripped through the text channel in 8-character chunks is read by one machine", () =>
+    Effect.gen(function* () {
+      const chunks = pieces(wide.length, A.replicate(8, wide.length / 8 + 1), (from, to) => Str.slice(from, to)(wide));
+      const { value: streamed, started } = yield* machinesStarted(streamText(chunks, readWith(",")));
+      assertSuccess(
+        Result.map(streamed, (records) => records[0]?.length),
+        40_001
+      );
+      strictEqual(started, 1);
+    })
+  );
 
   // The first text was rebuilt and re-read with every chunk, about 6 s of CPU for a 256K-character start fed one
   // character at a time; now an undecided start is at most a BOM and `sep=X\r`, and the rest is held as the chunks
@@ -301,24 +304,25 @@ describe("linear cost", () => {
   );
 
   // The detect window was copied whole with every chunk: 1 MiB in 256-byte chunks copied about 2 GiB.
-  it("a wide detect window filled in small chunks copies each byte at most twice", () => {
-    const options = CsvReadOptions.make({ encoding: CsvDetectEncoding.make({ window: MAX_DETECT_WINDOW }) });
-    const bytes = utf8(Str.repeat(64 * 1024)("a,b\n"));
-    const chunks = pieces(bytes.length, A.replicate(256, bytes.length / 256 + 1), (from, to) =>
-      bytes.subarray(from, to)
-    );
-    // The measured read must stay synchronous (`Effect.runSync`): the tests in a file run concurrently, and an
-    // asynchronous one would count other tests' copies too.
-    const set = vi.spyOn(Uint8Array.prototype, "set");
-    try {
-      const streamed = Effect.runSync(streamBytes(chunks, options));
+  it.effect("a wide detect window filled in small chunks copies each byte at most twice", () =>
+    Effect.gen(function* () {
+      const options = CsvReadOptions.make({ encoding: CsvDetectEncoding.make({ window: MAX_DETECT_WINDOW }) });
+      const bytes = utf8(Str.repeat(64 * 1024)("a,b\n"));
+      const chunks = pieces(bytes.length, A.replicate(256, bytes.length / 256 + 1), (from, to) =>
+        bytes.subarray(from, to)
+      );
+      const { streamed, copied } = yield* spying(
+        () => vi.spyOn(Uint8Array.prototype, "set"),
+        (set) =>
+          Effect.map(streamBytes(chunks, options), (streamed) => ({
+            streamed,
+            copied: Num.sumAll(A.map(set.mock.calls, ([source]) => source.length)),
+          }))
+      );
       assertSuccess(Result.map(streamed, A.length), 64 * 1024);
-      const copied = Num.sumAll(A.map(set.mock.calls, ([source]) => source.length));
       assertTrue(copied <= 2 * bytes.length, `copied ${copied} bytes of ${bytes.length}`);
-    } finally {
-      set.mockRestore();
-    }
-  });
+    })
+  );
 
   it("a flood of warnings keeps the first maxWarnings and counts the rest in one WarningsTruncated", () => {
     const read = Csv.parseResult(Str.repeat(100_000)('a"\n'));

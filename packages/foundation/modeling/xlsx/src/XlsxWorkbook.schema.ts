@@ -32,7 +32,7 @@ const $I = $XlsxId.create("XlsxWorkbook");
  * **Example** (Hide a sheet from Excel's tabs)
  *
  * ```ts import.meta.vitest name="Hide a sheet from Excel's tabs"
- * import { XlsxSheetInfo, XlsxSheetState, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
+ * import { XlsxSheetInfo, XlsxSheetState, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as S from "effect/Schema"
  *
  * const workbook = XlsxWorkbook.make({
@@ -81,7 +81,8 @@ const uniqueBy = <T>(
  * **Example** (A range merged twice)
  *
  * ```ts import.meta.vitest name="A range merged twice"
- * import { XlsxMerges, XlsxRange } from "@beep/xlsx"
+ * import { XlsxRange } from "@beep/xlsx/XlsxAddress.schema"
+ * import { XlsxMerges } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  *
@@ -119,7 +120,7 @@ export type XlsxMerges = typeof XlsxMerges.Type;
  * **Example** (A column hidden twice)
  *
  * ```ts import.meta.vitest name="A column hidden twice"
- * import { XlsxHiddenColumns } from "@beep/xlsx"
+ * import { XlsxHiddenColumns } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxHiddenColumns)([1, 2, 5]) // => true
@@ -155,7 +156,8 @@ export type XlsxHiddenColumns = typeof XlsxHiddenColumns.Type;
  * **Example** (Find a cell in a row)
  *
  * ```ts import.meta.vitest name="Find a cell in a row"
- * import { XlsxCell, XlsxRow, XlsxText } from "@beep/xlsx"
+ * import { XlsxCell, XlsxText } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxRow } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as O from "effect/Option"
  *
  * const row = XlsxRow.make({
@@ -211,7 +213,7 @@ export class XlsxRow extends S.Opaque<XlsxRow, { readonly brand: unique symbol }
  * **Example** (Names a file may carry)
  *
  * ```ts import.meta.vitest name="Names a file may carry"
- * import { XlsxSheetName } from "@beep/xlsx"
+ * import { XlsxSheetName } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxSheetName)("Q1/Q2 sales") // => true
@@ -233,7 +235,7 @@ const forbiddenInName = /[:\\/?*[\]]/;
  * **Example** (Names Excel takes)
  *
  * ```ts import.meta.vitest name="Names Excel takes"
- * import { fitsExcel } from "@beep/xlsx"
+ * import { fitsExcel } from "@beep/xlsx/XlsxWorkbook.schema"
  *
  * fitsExcel("Q1 sales") // => true
  * fitsExcel("Q1/Q2 sales") // => false
@@ -260,7 +262,7 @@ export type XlsxSheetName = typeof XlsxSheetName.Type;
  * **Example** (A sheet's starting info)
  *
  * ```ts import.meta.vitest name="A sheet's starting info"
- * import { XlsxSheetInfo } from "@beep/xlsx"
+ * import { XlsxSheetInfo } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as O from "effect/Option"
  *
  * const info = XlsxSheetInfo.make({ name: "Items" })
@@ -297,7 +299,8 @@ const count = (maximum: number, description: string) =>
  * **Example** (Count a sheet built by hand)
  *
  * ```ts import.meta.vitest name="Count a sheet built by hand"
- * import { XlsxCell, XlsxNumber, XlsxRow, XlsxSheetInfo, XlsxText, XlsxWorksheet } from "@beep/xlsx"
+ * import { XlsxCell, XlsxNumber, XlsxText } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxRow, XlsxSheetInfo, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as O from "effect/Option"
  *
  * const count = XlsxWorksheet.count({
@@ -334,7 +337,8 @@ export class XlsxSheetCount extends S.Opaque<XlsxSheetCount, { readonly brand: u
  * **Example** (A custom code gets the first free id)
  *
  * ```ts import.meta.vitest name="A custom code gets the first free id"
- * import { FIRST_CUSTOM_FORMAT, XlsxCell, XlsxNumber, XlsxNumberFormat, XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
+ * import { XlsxCell, XlsxNumber, XlsxNumberFormat } from "@beep/xlsx/XlsxCell.schema"
+ * import { FIRST_CUSTOM_FORMAT, XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema"
  *
  * const cell = XlsxCell.make({
  *   column: 0,
@@ -392,7 +396,9 @@ const isWritten = (cell: XlsxCell): boolean => cell.value.kind !== "Blank" || O.
  * **Example** (Where a sheet's data lies)
  *
  * ```ts import.meta.vitest name="Where a sheet's data lies"
- * import { XlsxCell, XlsxNumber, XlsxRange, XlsxRow, XlsxSheetInfo, XlsxWorksheet } from "@beep/xlsx"
+ * import { XlsxRange } from "@beep/xlsx/XlsxAddress.schema"
+ * import { XlsxCell, XlsxNumber } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxRow, XlsxSheetInfo, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as O from "effect/Option"
  *
  * const sheet = XlsxWorksheet.make({
@@ -474,7 +480,7 @@ export class XlsxWorksheet extends S.Opaque<XlsxWorksheet, { readonly brand: uni
  * **Example** (Known kinds of part)
  *
  * ```ts import.meta.vitest name="Known kinds of part"
- * import { XlsxDroppedKind } from "@beep/xlsx"
+ * import { XlsxDroppedKind } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxDroppedKind)("pivot") // => true
@@ -512,7 +518,7 @@ export type XlsxDroppedKind = typeof XlsxDroppedKind.Type;
  * **Example** (A chart read past)
  *
  * ```ts import.meta.vitest name="A chart read past"
- * import { XlsxDroppedPart } from "@beep/xlsx"
+ * import { XlsxDroppedPart } from "@beep/xlsx/XlsxWorkbook.schema"
  *
  * const part = XlsxDroppedPart.make({ path: "xl/charts/chart1.xml", kind: "chart" })
  * part.kind // => "chart"
@@ -534,7 +540,7 @@ export class XlsxDroppedPart extends S.Opaque<XlsxDroppedPart, { readonly brand:
  * **Example** (Build a workbook and look up a sheet)
  *
  * ```ts import.meta.vitest name="Build a workbook and look up a sheet"
- * import { XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
+ * import { XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as O from "effect/Option"
  *
  * const workbook = XlsxWorkbook.make({
@@ -548,7 +554,7 @@ export class XlsxDroppedPart extends S.Opaque<XlsxDroppedPart, { readonly brand:
  * **Example** (Sheet names clash whatever the case)
  *
  * ```ts import.meta.vitest name="Sheet names clash whatever the case"
- * import { XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
+ * import { XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as O from "effect/Option"
  *
  * const sheet = (name: string) => XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name }) })
@@ -653,7 +659,8 @@ export class XlsxWorkbook extends S.Opaque<XlsxWorkbook, { readonly brand: uniqu
  * **Example** (Headings a header row can have)
  *
  * ```ts import.meta.vitest name="Headings a header row can have"
- * import { MAX_CELL_CHARS, XlsxHeading } from "@beep/xlsx"
+ * import { MAX_CELL_CHARS } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxHeading } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxHeading)("SKU") // => true
@@ -693,7 +700,8 @@ export type XlsxHeading = typeof XlsxHeading.Type;
  * **Example** (A record and a heading it cannot have)
  *
  * ```ts import.meta.vitest name="A record and a heading it cannot have"
- * import { XlsxNumber, XlsxRecord } from "@beep/xlsx"
+ * import { XlsxNumber } from "@beep/xlsx/XlsxCell.schema"
+ * import { XlsxRecord } from "@beep/xlsx/XlsxWorkbook.schema"
  * import * as Exit from "effect/Exit"
  * import * as S from "effect/Schema"
  *
