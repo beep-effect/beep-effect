@@ -65,12 +65,12 @@
     {
       "id": "P2",
       "name": "Service contracts",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Implementation and first slice",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",

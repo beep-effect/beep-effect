@@ -14,8 +14,8 @@ agent projection, and `test` plus `check` for one package printing the contract 
 | --- | --- | --- | --- |
 | P0 Research and homes | complete | Confirm package names and homes, the Vitest adapter's location, the agent budget and the fixtures. | Decision files record each name and home after an architecture-guardian review, the adapter's home, the `--passWithNoTests` count and exit-code rule, and the fixture list. |
 | P1 Schema | complete | Create the model package and define every schema: report, unit, item, closed sets, events, totals, neutral console document, record file. | The package exists through `bun run beep create-package`; schemas round-trip; the widening-table and CTRF/SARIF mapping tests pass; the dispatch table's type is total over shape by outcome. |
-| P2 Service contracts | pending | Create the gate-run library and define its `Context.Service` contracts with test layers: recorder, console, audience selection, history slot, type-checker adapter, the adapter event sink. | Contracts compile with schema-typed shapes; test layers exist, including a failing recorder and a failing or slow history layer. |
-| P3 Implementation and first slice | pending | Port the pure core into the model, implement the services and both adapters, and wire `test` and `check` for `@beep/glob`. | `AC-L1` to `AC-L10` pass; green `test` for `@beep/glob` prints one line; the TS6305 fixture folds; a cache hit prints the same console. |
+| P2 Service contracts | complete | Create the gate-run library and define its `Context.Service` contracts with test layers: recorder, console, audience selection, history slot, type-checker adapter, the adapter event sink. | Contracts compile with schema-typed shapes; test layers exist, including a failing recorder and a failing or slow history layer. |
+| P3 Implementation and first slice | in-progress | Port the pure core into the model, implement the services and both adapters, and wire `test` and `check` for `@beep/glob`. | `AC-L1` to `AC-L10` pass; green `test` for `@beep/glob` prints one line; the TS6305 fixture folds; a cache hit prints the same console. |
 | P4 Every package and the queries | pending | Put `test` and `check` on the contract for every package at the package directory and the root, and add the `gate` command family's show-run and show-item queries. | Every remaining acceptance criterion in `SPEC.md` holds; `bun run beep quality package-verify` passes for each new and touched package. |
 | P5 Port review | pending | Review each ported module against upstream and repo law, last, as the effected precedent did. | Attribution, style laws and invariants confirmed per module; findings fixed in place. |
 | P6 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
@@ -120,5 +120,21 @@ The model package exists with 20 modules and 242 tests in 16 files; every source
 Lane feat/gate-report-core
 
 Reverse: Remove the gate-report package and its generated registrations.
+
+### P2 service contracts and their implementations built, 2026-11-19
+
+The record library has 24 tests and the gate-run library 48; every new source file has full statement, function and line coverage under Bun and Node. Laws 8 and 10 pass as tests, laws 5 and 6 pass through the history contract's test layers, the terminal projection equals the agent projection with escapes removed as a property, and one console service renders a test-gate and a check-gate fixture. The two-diagnostic fixture and the TS6305 cascade are produced by the real compiler on fixture packages. The existing Yeet parser tests pass unchanged.
+
+Lane feat/gate-report-services
+
+Reverse: Remove the two libraries and restore the diagnostic pattern in the Yeet issue parser.
+
+### P5 port review: model and library findings fixed, 2026-11-19
+
+A read-only review compared every ported module with its upstream file. Attribution, outcome precedence, footer dominance, failure-signature inputs and stray-output counting came back clean. Fixed for the model and the libraries: diagnostics with no location are told apart by their message; terminal escape sequences are stripped before the budget is counted; the console is unconditional; the cap line counts only dropped items; a load failure reads the same beside other modules or alone; a failed prune of old root runs no longer reports the record unwritten. Service shapes stay interfaces, as elsewhere in the repo. The adapter findings are fixed on the wiring lane.
+
+Lane feat/gate-report-services
+
+Reverse: Revert the port-review commit on the libraries lane.
 
 <!-- beep:decisions:end -->

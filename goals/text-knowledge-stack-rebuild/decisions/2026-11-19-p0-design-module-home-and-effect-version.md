@@ -1,0 +1,8 @@
+---
+title: "P0 design module: goals ops home confirmed, checked on effect 4.1.4, with the Effect diagnostics run by a second config"
+date: 2026-11-19
+lane: "goals/text-knowledge-stack-rebuild-p0-design"
+reversal: "Move the design module to a scratchpad workspace package and drop the ops registration, by a decision file; nothing imports the module."
+---
+
+The section 4 sketches become a module under this packet's ops/design directory, registered file by file in the manifest's opsScripts and checked by bunx tsrs -p goals/tsconfig.ops.json --noEmit, which resolves @beep/* aliases to package sources and passes on this checkout (design-facts section 8). The installed effect is 4.1.4, not the 4.1.2 the SPEC and the report name; every API is validated against 4.1.4 and the SPEC text is corrected. The ops tsconfig sets no compiler plugins, so the Effect language-service diagnostics do not run there. The design module is held to the same bar as package source, so P0 adds a second tsconfig beside the module that turns the diagnostics on and is run as a named verification command; it must report zero diagnostics. The module is a design artifact: each phase moves its part into the owning package and deletes it from ops/design in the same PR, so it is empty at P7. Handoff: the phase that moves a layer into its package also, in the same PR, re-points or removes every remaining import of that design file, updates index and generators, and removes the file's opsScripts entry; the PR that moves the last design file removes the design tsconfig and its verification command and keeps the general goals ops check. PLAN.md Execution Notes carries the same rule ("Design-module handoff").

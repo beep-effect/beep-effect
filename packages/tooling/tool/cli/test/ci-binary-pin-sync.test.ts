@@ -681,6 +681,88 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
       })
     );
 
+    // The workflow's real shape (Beep CI Binary run 44479791618): a depth-1 clone of this run's main
+    // commit with no stored credentials, the pin step's own unshallow fetch of main and the bot branch,
+    // and a DETACHED LINKED worktree of the bot branch configured as the step configures it.
+    it.effect("syncs in the workflow's shape: depth-1 clone, unshallow fetch, detached linked worktree", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const source = yield* fs.makeTempDirectoryScoped();
+        yield* gitOutput(source, ["init", "-q", "-b", "main"]);
+        yield* gitOutput(source, ["config", "user.email", "pin-sync@example.test"]);
+        yield* gitOutput(source, ["config", "user.name", "Pin Sync Test"]);
+        yield* gitOutput(source, ["config", "commit.gpgsign", "false"]);
+        yield* commitFile(source, { file: PIN_FILE, text: actionText(OLD), message: "pin OLD" });
+        yield* gitOutput(source, ["checkout", "-q", "-b", "ci/beep-ci-pin-bump"]);
+        yield* commitFile(source, { file: PIN_FILE, text: actionText(NEW), message: "bump the pin" });
+        const botHead = yield* head(source);
+        yield* gitOutput(source, ["checkout", "-q", "main"]);
+        yield* commitFile(source, unrelated);
+        const mainCommit = yield* head(source);
+        // actions/checkout: a depth-1 fetch of the run's commit, persist-credentials false (none stored).
+        const clone = yield* fs.makeTempDirectoryScoped();
+        yield* gitOutput(clone, ["init", "-q", "-b", "main"]);
+        yield* gitOutput(clone, ["remote", "add", "origin", `file://${source}`]);
+        yield* gitOutput(clone, [
+          "-c",
+          "protocol.version=2",
+          "fetch",
+          "-q",
+          "--no-tags",
+          "--depth=1",
+          "origin",
+          "+refs/heads/main:refs/remotes/origin/main",
+        ]);
+        yield* gitOutput(clone, ["checkout", "-q", "--force", "-B", "main", "refs/remotes/origin/main"]);
+        const shallow = yield* gitOutput(clone, ["rev-parse", "--is-shallow-repository"]);
+        expect(shallow).toBe("true");
+        // The pin step: unshallow main and the bot branch, then a detached linked worktree of the branch.
+        yield* gitOutput(clone, [
+          "fetch",
+          "-q",
+          "--no-tags",
+          "--unshallow",
+          "origin",
+          "+refs/heads/main:refs/remotes/origin/main",
+          "+refs/heads/ci/beep-ci-pin-bump:refs/remotes/origin/ci/beep-ci-pin-bump",
+        ]);
+        const fetchedBot = yield* gitOutput(clone, ["rev-parse", "refs/remotes/origin/ci/beep-ci-pin-bump"]);
+        expect(fetchedBot).toBe(botHead);
+        const scratch = yield* fs.makeTempDirectoryScoped();
+        const worktree = `${scratch}/pin-bump-branch`;
+        yield* gitOutput(clone, ["worktree", "add", "-q", "--detach", worktree, botHead]);
+        yield* gitOutput(worktree, ["config", "user.name", "beep-ci-pin-bump"]);
+        yield* gitOutput(worktree, ["config", "user.email", "41898282+github-actions[bot]@users.noreply.github.com"]);
+        yield* gitOutput(worktree, ["config", "pull.rebase", "false"]);
+        yield* gitOutput(worktree, ["config", "commit.gpgsign", "false"]);
+        const rows = yield* decodeReleaseRows(releaseRows);
+        const releasesText = yield* encodeReleases(rows);
+        yield* fs.writeFileString(`${scratch}/releases.json`, releasesText);
+        yield* runSync([
+          "--cwd",
+          worktree,
+          "--base",
+          mainCommit,
+          "--tag",
+          NEW.tag,
+          "--sha256",
+          NEW.sha256,
+          "--releases",
+          `${scratch}/releases.json`,
+          "--output",
+          `${scratch}/out`,
+        ]);
+        const text = yield* fs.readFileString(`${scratch}/out`);
+        const merge = yield* gitOutput(worktree, ["rev-list", "--parents", "-n", "1", "HEAD"]);
+        const status = yield* gitOutput(worktree, ["status", "--porcelain"]);
+        expect(A.take(A.filter(Str.split(text, "\n"), Str.isNonEmpty), 3)).toStrictEqual(
+          decided("merged", O.some(NEW))
+        );
+        expect(A.drop(Str.split(merge, " "), 1)).toStrictEqual([botHead, mainCommit]);
+        expect(status).toBe("");
+      })
+    );
+
     it.effect("a merge failure whose restore also fails reports both", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -689,6 +771,8 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
         yield* fs.writeFileString(`${repo.root}/.git/index.lock`, "");
         const failure = yield* Effect.flip(sync(repo));
         expect(`${failure}`).toContain(`Restoring ${repo.before} also failed`);
+        // The failure names the git command and carries git's own stderr (the held lock), not a bare "git failed".
+        expect(`${failure}`).toContain("index.lock");
       })
     );
 

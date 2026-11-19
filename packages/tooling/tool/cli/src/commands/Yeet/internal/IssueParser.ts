@@ -6,6 +6,7 @@
  */
 
 import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
+import { parsePrettyDiagnostic } from "@beep/repo-gate-run/TsDiagnostic";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -23,6 +24,7 @@ import {
   knownSubLaneHintFromOutput,
   routeForCategory,
 } from "./IssueClassification.ts";
+import type { TsDiagnostic } from "@beep/repo-gate-run/TsDiagnostic";
 import type {
   RepoPlanStep,
   RepoRunContext,
@@ -34,8 +36,6 @@ import type { QualityIssueCategory, QualityIssueSeverity } from "../Yeet.schemas
 
 const MAX_RAW_EXCERPT_CHARS = 4 * 1024;
 const ansiPattern = /\u001b\[[0-9;]*m/gu;
-const tsDiagnosticPattern =
-  /^(?<file>[^:\n]+):(?<line>\d+):(?<column>\d+)(?:\s+-)?\s+(?<severity>error|warning)\s+TS(?<code>\d+):\s+(?<message>.+)$/u;
 const stripAnsi = Str.replace(ansiPattern, "");
 const normalizeOutput = flow(stripAnsi, Str.trim);
 const lineText = flow(Str.trim, normalizeOutput);
@@ -50,15 +50,6 @@ const truncateExcerpt = (value: string): string =>
 const severityForLine = (severity: string): QualityIssueSeverity => (severity === "warning" ? "warning" : "error");
 const lineIndicatesEffectDiagnostic = (line: string): boolean =>
   Str.includes(" effect(")(line) || Str.includes("effectFn")(line) || Str.includes("@effect")(line);
-
-const optionalNumberFromString = (value: string | undefined): O.Option<number> =>
-  pipe(
-    O.fromUndefinedOr(value),
-    O.flatMap((text) => {
-      const parsed = globalThis.Number.parseInt(text, 10);
-      return globalThis.Number.isNaN(parsed) ? O.none<number>() : O.some(parsed);
-    })
-  );
 
 const optionalStringFromStep = (value: string | undefined): O.Option<string> =>
   pipe(O.fromUndefinedOr(value), O.filter(Str.isNonEmpty));
@@ -245,35 +236,36 @@ const diagnosticIssueFromLine = (
   step: RepoPlanStep,
   result: RepoStepRunResult,
   line: string
-): O.Option<QualityIssue> => {
-  const match = tsDiagnosticPattern.exec(line);
-  if (match?.groups === undefined) {
-    return O.none();
-  }
+): O.Option<QualityIssue> =>
+  O.map(parsePrettyDiagnostic(line), (diagnostic) => diagnosticIssue(context, step, result, line, diagnostic));
 
-  const file = O.fromUndefinedOr(match.groups.file);
-  const startLine = optionalNumberFromString(match.groups.line);
-  const startColumn = optionalNumberFromString(match.groups.column);
-  const message = match.groups.message ?? line;
+const diagnosticIssue = (
+  context: RepoRunContext,
+  step: RepoPlanStep,
+  result: RepoStepRunResult,
+  line: string,
+  diagnostic: TsDiagnostic
+): QualityIssue => {
+  const file = diagnostic.file;
+  const startLine = O.some(diagnostic.line);
+  const startColumn = O.some(diagnostic.column);
+  const message = diagnostic.message;
   const category: QualityIssueCategory = lineIndicatesEffectDiagnostic(line) ? "effect-tsgo-policy" : "typecheck";
   const inferredPackageName = pipe(
     file,
     O.flatMap((path) => packageNameForFile(context, path))
   );
 
-  // biome-ignore lint/plugin/prefer-schema-make-option: Fail closed: None reads as a pass here, so a refused input must throw
-  return O.some(
-    QualityIssue.make({
-      ...issueBase(context, step, result, category, message, inferredPackageName),
-      id: issueId(step, category, message, inferredPackageName, file, linePosition(startLine)),
-      severity: severityForLine(match.groups.severity ?? "error"),
-      confidence: "structured",
-      evidence: [line],
-      ...optionalProp("file", file),
-      ...optionalProp("line", startLine),
-      ...optionalProp("column", startColumn),
-    })
-  );
+  return QualityIssue.make({
+    ...issueBase(context, step, result, category, message, inferredPackageName),
+    id: issueId(step, category, message, inferredPackageName, file, linePosition(startLine)),
+    severity: severityForLine(diagnostic.severity),
+    confidence: "structured",
+    evidence: [line],
+    ...optionalProp("file", file),
+    ...optionalProp("line", startLine),
+    ...optionalProp("column", startColumn),
+  });
 };
 
 const schemaFirstPolicyFindingSeverity = (

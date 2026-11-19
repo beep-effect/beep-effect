@@ -2394,8 +2394,19 @@
     "./packages/foundation/modeling/gate-report/src/index.ts"
   ],
   "@beep/gate-report/*": ["./packages/foundation/modeling/gate-report/src/*"],
+  "@beep/repo-gate-record": [
+    "./packages/tooling/library/repo-gate-record/src/index.ts"
+  ],
+  "@beep/repo-gate-record/*": [
+    "./packages/tooling/library/repo-gate-record/src/*"
+  ],
+  "@beep/repo-gate-run": [
+    "./packages/tooling/library/repo-gate-run/src/index.ts"
+  ],
+  "@beep/repo-gate-run/*": ["./packages/tooling/library/repo-gate-run/src/*"],
   "@beep/csv": ["./packages/foundation/modeling/csv/src/index.ts"],
   "@beep/csv/*": ["./packages/foundation/modeling/csv/src/*"],
   "@beep/xlsx": ["./packages/foundation/modeling/xlsx/src/index.ts"],
-  "@beep/xlsx/*": ["./packages/foundation/modeling/xlsx/src/*"]
+  "@beep/xlsx/*": ["./packages/foundation/modeling/xlsx/src/*"],
+  "@beep/csv/internal/*": ["./packages/foundation/modeling/csv/src/internal/*"]
 }

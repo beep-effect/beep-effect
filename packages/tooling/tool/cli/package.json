@@ -240,6 +240,7 @@
     "@beep/repo-cli-kit": "workspace:^",
     "@beep/repo-configs": "workspace:^",
     "@beep/repo-docgen": "workspace:^",
+    "@beep/repo-gate-run": "workspace:^",
     "@beep/repo-tsconfig": "workspace:^",
     "@beep/repo-utils": "workspace:^",
     "@beep/repo-workspaces": "workspace:^",

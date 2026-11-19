@@ -266,6 +266,8 @@ const generatedComposers = $I.compose(
   "contract-kit",
   "infra-ci-runners",
   "gate-report",
+  "repo-gate-record",
+  "repo-gate-run",
   "csv",
   "xlsx"
 );
@@ -3990,6 +3992,40 @@ export const $InfraCiRunnersId: Identity.IdentityComposer<"@beep/infra-ci-runner
  * @since 0.0.0
  */
 export const $GateReportId: Identity.IdentityComposer<"@beep/gate-report"> = composers.$GateReportId;
+
+/**
+ * Identity composer for `@beep/repo-gate-record`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $RepoGateRecordId } from "@beep/identity/packages"
+ *
+ * const id = $RepoGateRecordId.make("RepoGateRecord")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $RepoGateRecordId: Identity.IdentityComposer<"@beep/repo-gate-record"> = composers.$RepoGateRecordId;
+
+/**
+ * Identity composer for `@beep/repo-gate-run`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $RepoGateRunId } from "@beep/identity/packages"
+ *
+ * const id = $RepoGateRunId.make("RepoGateRun")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $RepoGateRunId: Identity.IdentityComposer<"@beep/repo-gate-run"> = composers.$RepoGateRunId;
 
 /**
  * Identity composer for `@beep/csv`.

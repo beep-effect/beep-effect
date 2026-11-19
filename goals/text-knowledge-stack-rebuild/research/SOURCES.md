@@ -52,7 +52,8 @@ cites as precedent (`reference`). Line numbers are as read on 2026-11-08.
 
 **How these inform implementation:** `cm1`/`ca1`, `vta` and `sti` are the
 house style: the rebuild generalizes their preimage discipline into
-`OccurrenceId`, re-mints their records by migration (2026-11-09 ruling) and
+`OccurrenceId`, re-mints identifiers that have no stored rows and converts
+receipts on read (2026-11-19 decisions) and
 keeps the `TextAnchor` and `VerifiedTextAnchor` shapes. `claim` already has the
 signals the design needs; the work is the immutable-core split and the
 separate records. `oa`, `evid`, `prov` and `fold` are the codec and vocabulary
@@ -118,7 +119,7 @@ reading.
 
 | Brick | Path | Role in this goal |
 |-------|------|-------------------|
-| `@beep/identity` | `packages/foundation/modeling/identity` | extend (L0: registry, `TermBinding`, `ContentHash`, `ActivityId`, canonical JSON) |
+| `@beep/identity` | `packages/foundation/modeling/identity` | extend (L0: registry, `TermBinding`, stability snapshot, the IRI schemas moved from rdf); canonical JSON and minting stay in `@beep/jsonc`, the `ContentHash` brand in `@beep/schema` |
 | `@beep/provenance` | `packages/foundation/modeling/provenance` | retire in P2; L1 (`Selector`, `OccurrenceId`, `Resolution`, `Reanchoring`, unit conversion, `TextAnchor`, `VerifiedTextAnchor`) lives in `@beep/text` |
 | `@beep/rdf` | `packages/foundation/modeling/rdf` | extend (L6: `Dataset` quotient, `Literal` cases, `TextAnchor <-> oa:`, registry-backed namespaces) |
 | `@beep/epistemics` | `packages/foundation/modeling/epistemics` | extend (L4: immutable core, `Stance`, `Admission`, `Assessments<K>`, `epistemics/rdf`) |
@@ -127,9 +128,9 @@ reading.
 | `@beep/md`, `@beep/pandoc-ast`, `@beep/lexical`, `@beep/html` | `packages/foundation/modeling/{md,pandoc-ast,lexical,html}` | extend (AST source maps into `@beep/text`) |
 | `@beep/langextract` | `packages/foundation/capability/langextract` | repair (lossless handoff; unit conversion moves down to L1) |
 | `@beep/schema` (`LiteralKit`) | `packages/foundation/modeling/schema` | reuse |
-| `@beep/schema-org` | `packages/foundation/modeling/schema-org` | every facet rehomed or deleted in P7 per the consumer census |
+| `@beep/schema-org` | `packages/foundation/modeling/schema-org` | retired whole in P7 (census: no consumer, no package.json dependent) |
 | `mcp-kit` (`S.toJsonSchemaDocument`) | `packages/foundation/capability/mcp-kit/src/SanitizedSpan.ts` | reuse (L7: tool schemas are the Effect schemas) |
-| law-practice citation identity | `packages/law-practice/server/src/internal/Citation`, `packages/law-practice/domain/src/values/Citation` | reuse as precedent; the `cm1:` preimage becomes the occurrence preimage and records are re-minted by a P2 migration with the `citation-extraction-engine` lane |
+| law-practice citation identity | `packages/law-practice/server/src/internal/Citation`, `packages/law-practice/domain/src/values/Citation` | reuse as precedent; the citation mention id is re-expressed over the occurrence preimage in P2 and citation receipts convert on read (2026-11-19 decisions) |
 | law-practice office action, docket, IrToLaw | `packages/law-practice/use-cases/src/{OfficeActionReview,DocketIntake,IrToLaw}` | repair (defaults, the unavailable-document-text docket check, handoff consumer) |
 | semantica lab | `apps/labs/semantica` | repair (projection loss declared; `1` default removed; gold fixture migrated) |
 | `@beep/annotation` | NET-NEW in P3 via `bun run beep create-package` after the P0 routing decision | L2 home |
@@ -154,8 +155,8 @@ reading.
   [`ontology-interop-roadmap`](../../ontology-interop-roadmap/README.md) (completed-retained; rdf and ontology interop v1),
   [`nlp-adjunct-port`](../../nlp-adjunct-port/README.md) (completed-retained; the `@beep/nlp` port),
   [`langextract-capability`](../../langextract-capability/README.md) (completed-retained),
-  [`belief-view-engine`](../../belief-view-engine/README.md) (paused; selection policy over contention sets),
-  [`citation-extraction-engine`](../../citation-extraction-engine/README.md) (active; owner of `cm1:`/`ca1:`).
+  [`belief-view-engine`](../../belief-view-engine/README.md) (superseded 2026-11-13; re-openable; selection policy over contention sets),
+  [`citation-extraction-engine`](../../citation-extraction-engine/README.md) (completed-retained; owned `cm1:`/`ca1:`; P2 edits its module directly per decision p0-rq4).
 - Related exploration: [`knowledge-endgame`](../../../explorations/knowledge-endgame/README.md) (parked).
 - Standards this packet gives content to: `standards/architecture/DECISIONS.md`
   2026-10-21 (epistemic vocabulary is foundation), the upstream-first ruling,

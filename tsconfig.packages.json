@@ -583,6 +583,12 @@
       "path": "packages/tooling/library/repo-cli-kit"
     },
     {
+      "path": "packages/tooling/library/repo-gate-record"
+    },
+    {
+      "path": "packages/tooling/library/repo-gate-run"
+    },
+    {
       "path": "packages/tooling/library/repo-tsconfig"
     },
     {
