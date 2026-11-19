@@ -118,9 +118,8 @@ const nonEmpty = <A>(values: ReadonlyArray<A>): Result.Result<A.NonEmptyReadonly
 const toCodePoint = (pick: number): number => (pick > 0x2fff ? 0x1f600 + (pick - 0x3000) : pick);
 
 // Well-formed text and its UTF-16 code-point boundaries (offset 0, then the end of each code point).
-const wellFormedText = Arbitrary.map(
-  Arbitrary.array(Arbitrary.schema(CodePointPick), { minLength: 1, maxLength: 80 }),
-  (raw) => {
+const wellFormedTextWith = (minLength: number) =>
+  Arbitrary.map(Arbitrary.array(Arbitrary.schema(CodePointPick), { minLength, maxLength: 80 }), (raw) => {
     const codePoints = A.map(raw, toCodePoint);
     return {
       text: A.join(
@@ -129,8 +128,9 @@ const wellFormedText = Arbitrary.map(
       ),
       boundaries: A.scan(codePoints, 0, (offset, codePoint) => offset + (codePoint > 0xffff ? 2 : 1)),
     };
-  }
-);
+  });
+
+const wellFormedText = wellFormedTextWith(1);
 
 const rangeIn = (boundaries: A.NonEmptyReadonlyArray<number>) =>
   Arbitrary.flatMap(between(0, boundaries.length - 2), (first) =>
@@ -719,3 +719,160 @@ export const claimLogResultArbitrary = (digest: JsoncDigest) => {
 /** Generated claim logs; `digest` is a pure SHA-256 from the test harness. */
 export const claimLogArbitrary = (digest: JsoncDigest): Arbitrary.Arbitrary<GeneratedClaimLog> =>
   Arbitrary.filterMap(claimLogResultArbitrary(digest), identity);
+
+/** An ordered pair of annotation ids in one document. */
+export class AnnotationPair extends S.Opaque<AnnotationPair, { readonly brand: unique symbol }>()(
+  S.Struct({
+    first: AnnotationId.annotateKey({ description: "The annotation the law expects to contain, or the left one." }),
+    second: AnnotationId.annotateKey({
+      description: "The annotation the law expects to be contained, or the right one.",
+    }),
+  }).pipe($I.annoteSchema("AnnotationPair", { description: "Two annotation ids of one generated document." }))
+) {}
+
+/**
+ * One document with the three L2-5 containment cases present by
+ * construction: `strict` (first contains second on a strict subrange),
+ * `tieBreak` (equal span, first has the lower level and contains second) and
+ * `equalLevel` (equal span, equal level, neither contains the other).
+ */
+export class ContainmentCase extends S.Opaque<ContainmentCase, { readonly brand: unique symbol }>()(
+  S.Struct({
+    document: TextDocument,
+    strict: AnnotationPair,
+    tieBreak: AnnotationPair,
+    equalLevel: AnnotationPair,
+  }).pipe($I.annoteSchema("ContainmentCase", { description: "A document carrying every L2-5 case." }))
+) {}
+
+/**
+ * Generated containment cases over well-formed text of at least two code
+ * points. The outer Section spans the whole text, the inner Sentence a strict
+ * subrange on code-point boundaries; Paragraph (level 1) and Word (level 3)
+ * share the inner span for the tie-break; Title and Figure (both level 1)
+ * share the whole span. No root is discarded.
+ */
+export const containmentCaseResultArbitrary = (digest: JsoncDigest) => {
+  const mint = minters(digest);
+  const leaves = Arbitrary.all({
+    text: wellFormedTextWith(2),
+    scopeRef: Arbitrary.schema(WellFormedText),
+    sourceRef: Arbitrary.schema(WellFormedText),
+    locator: Arbitrary.schema(PosixPath),
+    sourceDigest: Arbitrary.schema(SourceTextDigest),
+    extractorName: Arbitrary.schema(WellFormedText),
+    extractorVersion: Arbitrary.schema(WellFormedText),
+    normalizationVersion: Arbitrary.schema(WellFormedText),
+    pin: Arbitrary.schema(ActivityPin),
+    started: instantArbitrary,
+    section: Arbitrary.schema(Section),
+    sentence: Arbitrary.schema(Sentence),
+    paragraph: Arbitrary.schema(Paragraph),
+    word: Arbitrary.schema(Word),
+    title: Arbitrary.schema(Title),
+    figure: Arbitrary.schema(Figure),
+  });
+  const withInner = Arbitrary.flatMap(leaves, (base) =>
+    Arbitrary.all({ base: Arbitrary.Constant(base), inner: rangeIn(base.text.boundaries) })
+  );
+  return Arbitrary.map(withInner, ({ base, inner: drawn }) =>
+    Result.gen(function* () {
+      const end = A.lastNonEmpty(base.text.boundaries);
+      // A drawn range equal to the whole text is narrowed to end one code point early: still non-empty, now strict.
+      const inner =
+        drawn.start === 0 && drawn.end === end
+          ? { start: 0, end: at(base.text.boundaries, base.text.boundaries.length - 2) }
+          : drawn;
+      const capture = SourceTextIdentity.make({
+        scopeRef: base.scopeRef,
+        sourceRef: base.sourceRef,
+        locator: base.locator,
+        sourceDigest: base.sourceDigest,
+        textDigest: mint.textDigest(base.text.text),
+        extractor: SourceTextExtractor.make({ name: base.extractorName, version: base.extractorVersion }),
+        normalizationVersion: base.normalizationVersion,
+      });
+      const wholeRow = anchoredOn(capture, base.text.text, { start: 0, end });
+      const innerRow = anchoredOn(capture, base.text.text, inner);
+      const whole = yield* mint.occurrence(wholeRow);
+      const span = yield* mint.occurrence(innerRow);
+      const K = DocumentKinds;
+      const row = (kind: AnyAnnotationKind, target: OccurrenceId, body: unknown, annotation: Annotation) =>
+        Result.map(mint.annotation(kind, [target], body), (id): Row => ({ id, annotation }));
+      const outer = yield* row(
+        K.Section,
+        whole,
+        base.section,
+        K.Section.case.make({ targets: HashSet.make(whole), body: base.section })
+      );
+      const contained = yield* row(
+        K.Sentence,
+        span,
+        base.sentence,
+        K.Sentence.case.make({ targets: HashSet.make(span), body: base.sentence })
+      );
+      const lower = yield* row(
+        K.Paragraph,
+        span,
+        base.paragraph,
+        K.Paragraph.case.make({ targets: HashSet.make(span), body: base.paragraph })
+      );
+      const higher = yield* row(
+        K.Word,
+        span,
+        base.word,
+        K.Word.case.make({ targets: HashSet.make(span), body: base.word })
+      );
+      const left = yield* row(
+        K.Title,
+        whole,
+        base.title,
+        K.Title.case.make({ targets: HashSet.make(whole), body: base.title })
+      );
+      const right = yield* row(
+        K.Figure,
+        whole,
+        base.figure,
+        K.Figure.case.make({ targets: HashSet.make(whole), body: base.figure })
+      );
+      const rows = [outer, contained, lower, higher, left, right];
+      const activity = yield* mint.activity(
+        ActivityStart.make({
+          operation: ExtractOperation,
+          pin: base.pin,
+          promptDigest: O.none(),
+          used: HashSet.empty(),
+          started: base.started,
+        })
+      );
+      const generations = yield* Result.all(
+        A.map(rows, (entry) =>
+          Result.map(mint.run(entry.id, activity), (run) =>
+            Generation.make({ run, content: entry.id, activity, at: base.started })
+          )
+        )
+      );
+      const document = yield* Result.fromOption(
+        TextDocument.makeOption({
+          text: capture,
+          anchors: HashMap.make([whole, wholeRow], [span, innerRow]),
+          annotations: HashMap.fromIterable(A.map(rows, (entry) => [entry.id, entry.annotation])),
+          attribution: HashMap.fromIterable(
+            A.map(generations, (generation) => [generation.content, HashSet.make(generation)])
+          ),
+        }),
+        () => "document-check-failed"
+      );
+      return ContainmentCase.make({
+        document,
+        strict: AnnotationPair.make({ first: outer.id, second: contained.id }),
+        tieBreak: AnnotationPair.make({ first: lower.id, second: higher.id }),
+        equalLevel: AnnotationPair.make({ first: left.id, second: right.id }),
+      });
+    })
+  );
+};
+
+/** Generated containment cases; `digest` is a pure SHA-256 from the test harness. */
+export const containmentCaseArbitrary = (digest: JsoncDigest): Arbitrary.Arbitrary<ContainmentCase> =>
+  Arbitrary.filterMap(containmentCaseResultArbitrary(digest), identity);
