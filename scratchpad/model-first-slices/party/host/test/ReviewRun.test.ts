@@ -19,6 +19,7 @@ import type * as Tool from "effect/ai/Tool";
 import type * as Toolkit from "effect/ai/Toolkit";
 import { Cast, delegationOf, grantIdOf, grantsBy, hasIdentifier } from "./Cast.ts";
 import { Access, asAgent, asHuman, inWorld } from "./World.ts";
+import { thunkEmptyStr } from "@beep/utils"
 
 // Both stories run over a generated cast, each run in a fresh world, 10 runs each rather than the
 // default 100: a run waits on the live clock for the review saga, the runs context and the fact
@@ -121,7 +122,7 @@ it.live.prop(
       const current = yield* reviewer.ClaimReview.get(claim, asHuman(cast.reviewer));
       const digest = O.getOrElse(
         O.map(proposalIn(current), (made) => made.digest),
-        () => "",
+        thunkEmptyStr,
       );
       const byAgent = yield* reviewer.ApproveProposal(claim, { digest, evidenceRevision: 1 }, asAgent(run)).pipe(Effect.flip);
       expect(byAgent._tag).toBe("HumanApprovalRequired");

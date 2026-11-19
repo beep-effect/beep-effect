@@ -9,6 +9,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "@beep/utils/Str";
+import { thunkEmptyStr } from "@beep/utils"
 
 /**
  * A model member needs a handler and no `<Member>.handler.ts` exists.
@@ -174,7 +175,7 @@ export const check = Effect.fn("HandlerRegistry.check")(function* (options: Opti
   const path = yield* Path.Path;
   const file = path.join(options.srcDir, options.output);
   const expected = yield* plan(options);
-  const actual = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(() => ""));
+  const actual = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(thunkEmptyStr));
   return yield* actual === expected ? Effect.void : Effect.fail(RegistryDrift.make({ file: options.output }));
 });
 
