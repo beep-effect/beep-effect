@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core P2 lane, feat/gate-report-services)",
-    "reason": "Record the two new libraries' tasks (generated library scripts, root task definitions, no override), the repo CLI tasks whose configuration changed with its new dependency on the gate-run library, and the inputs the policy fingerprint added to the root. No qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
+    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-run-libraries-cache-review-2026-11-19.md",
-      "sha256": "bbbc45f4f8d6f8888e8781843104af37ac3229ad9b70a731aa7634bd3ff26c80"
+      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
+      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "d2661d46fd5e91ccc215095fe4b8677c11837a503bbba70855a0ad714e4bcc5c"
+      "sha256": "ce0d06ffe3eef56a095f030eeca4b8b378872a49756c519ab9aae9df5147c581"
     }
   ],
   "nodes": [
@@ -2187,6 +2187,7 @@
           "packages/foundation/modeling/epistemics/package.json",
           "packages/foundation/modeling/epistemics/src/**",
           "packages/foundation/modeling/gate-report/package.json",
+          "packages/foundation/modeling/gate-report/src/**",
           "packages/foundation/modeling/github-commands/package.json",
           "packages/foundation/modeling/github-commands/src/**",
           "packages/foundation/modeling/github-references/package.json",
@@ -2282,6 +2283,7 @@
           "packages/tooling/library/repo-cli-kit/package.json",
           "packages/tooling/library/repo-cli-kit/src/**",
           "packages/tooling/library/repo-gate-record/package.json",
+          "packages/tooling/library/repo-gate-record/src/**",
           "packages/tooling/library/repo-gate-run/package.json",
           "packages/tooling/library/repo-gate-run/src/**",
           "packages/tooling/library/repo-tsconfig/package.json",
@@ -2296,6 +2298,7 @@
           "packages/tooling/test-kit/fc-runs/package.json",
           "packages/tooling/test-kit/fc-runs/src/**",
           "packages/tooling/test-kit/memfs/package.json",
+          "packages/tooling/test-kit/repo-gate-vitest/package.json",
           "packages/tooling/test-kit/test-runner/package.json",
           "packages/tooling/test-kit/test-utils/package.json",
           "packages/tooling/test-kit/test-utils/src/**",

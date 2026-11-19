@@ -17,7 +17,7 @@
   },
   "scripts": {
     "build": "bun run beep:build",
-    "check": "beep-cli quality check-probe && bun run beep:check",
+    "check": "beep-cli gate run check",
     "coverage": "bunx vitest run --coverage --exclude=test/integration/**",
     "docgen": "bun run beep:docgen",
     "lint": "bun run beep:lint",
@@ -34,7 +34,7 @@
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
     "beep:test": "bunx vitest run --passWithNoTests --exclude=test/integration/**",
-    "beep:test:integration": "bunx vitest run test/integration --passWithNoTests --exclude=test/integration/bun.int.test.ts && bunx --bun vitest run test/integration/bun.int.test.ts",
+    "beep:test:integration": "bunx vitest run test/integration --passWithNoTests --exclude=test/integration/bun.int.test.ts && BEEP_GATE_CONTINUES=1 bunx --bun vitest run test/integration/bun.int.test.ts",
     "beep:check:tests": "tsrs -p tsconfig.test.json --noEmit"
   },
   "exports": {

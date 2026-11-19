@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/repo-cli",
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core P2 lane, feat/gate-report-services)",
-    "reason": "Record the two new libraries' tasks (generated library scripts, root task definitions, no override), the repo CLI tasks whose configuration changed with its new dependency on the gate-run library, and the inputs the policy fingerprint added to the root. No qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
+    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-run-libraries-cache-review-2026-11-19.md",
-      "sha256": "bbbc45f4f8d6f8888e8781843104af37ac3229ad9b70a731aa7634bd3ff26c80"
+      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
+      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
     }
   },
   "nodes": [
     {
       "computation": "@beep/repo-cli#build",
       "command": "bun run beep:build",
-      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
+      "commandDigest": "dcbeb3a2cf5c7f23de2f05cec01881d0ee2ab9fa392d859951a3ffbc30dde4a9",
       "dependencies": [
         "@beep/ai-sync#build",
         "@beep/box#build",
@@ -30,6 +30,7 @@
         "@beep/ffmpeg#build",
         "@beep/file-processing#build",
         "@beep/firecrawl#build",
+        "@beep/gate-report#build",
         "@beep/git#build",
         "@beep/github#build",
         "@beep/github-actions#build",
@@ -66,6 +67,7 @@
         "@beep/repo-cli-kit#build",
         "@beep/repo-configs#build",
         "@beep/repo-docgen#build",
+        "@beep/repo-gate-record#build",
         "@beep/repo-gate-run#build",
         "@beep/repo-tsconfig#build",
         "@beep/repo-utils#build",
@@ -137,8 +139,8 @@
     },
     {
       "computation": "@beep/repo-cli#check",
-      "command": "beep-cli quality check-probe && bun run beep:check",
-      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
+      "command": "beep-cli gate run check",
+      "commandDigest": "dcbeb3a2cf5c7f23de2f05cec01881d0ee2ab9fa392d859951a3ffbc30dde4a9",
       "dependencies": [
         "@beep/ai-sync#build",
         "@beep/box#build",
@@ -155,6 +157,7 @@
         "@beep/ffmpeg#build",
         "@beep/file-processing#build",
         "@beep/firecrawl#build",
+        "@beep/gate-report#build",
         "@beep/git#build",
         "@beep/github#build",
         "@beep/github-actions#build",
@@ -192,6 +195,8 @@
         "@beep/repo-cli-kit#build",
         "@beep/repo-configs#build",
         "@beep/repo-docgen#build",
+        "@beep/repo-gate-record#build",
+        "@beep/repo-gate-record#transit",
         "@beep/repo-gate-run#build",
         "@beep/repo-tsconfig#build",
         "@beep/repo-utils#build",
@@ -226,6 +231,12 @@
           "!README.md",
           "../../../../.bun-version",
           "../../../../.nvmrc",
+          "../../../../packages/tooling/library/repo-cli-kit/src/process/OutputBound.ts",
+          "../../../../packages/tooling/library/repo-gate-run/src/**",
+          "../../../../packages/tooling/library/repo-tsconfig/src/TsconfigLoader.ts",
+          "../../../../packages/tooling/library/repo-tsconfig/src/internal/extendsTarget.ts",
+          "../../../../packages/tooling/tool/cli/src/commands/Gate/**",
+          "../../../../packages/tooling/tool/cli/src/commands/Quality/CheckProbe.ts",
           "../../../../standards/root-package.projection.generated.json",
           "../../../../tools/tsgo-shim/package.json",
           "../../../../tools/tsgo-shim/tsgo.js",
@@ -238,8 +249,11 @@
         ],
         "env": [],
         "passThroughEnv": [],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/check/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-record#transit",
           "^build",
           "build"
         ],
@@ -252,7 +266,7 @@
     {
       "computation": "@beep/repo-cli#coverage",
       "command": "bunx vitest run --coverage",
-      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
+      "commandDigest": "dcbeb3a2cf5c7f23de2f05cec01881d0ee2ab9fa392d859951a3ffbc30dde4a9",
       "dependencies": [
         "@beep/ai-sync#build",
         "@beep/box#build",
@@ -269,6 +283,7 @@
         "@beep/ffmpeg#build",
         "@beep/file-processing#build",
         "@beep/firecrawl#build",
+        "@beep/gate-report#build",
         "@beep/git#build",
         "@beep/github#build",
         "@beep/github-actions#build",
@@ -305,6 +320,7 @@
         "@beep/repo-cli-kit#build",
         "@beep/repo-configs#build",
         "@beep/repo-docgen#build",
+        "@beep/repo-gate-record#build",
         "@beep/repo-gate-run#build",
         "@beep/repo-tsconfig#build",
         "@beep/repo-utils#build",
@@ -395,7 +411,7 @@
     {
       "computation": "@beep/repo-cli#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
+      "commandDigest": "dcbeb3a2cf5c7f23de2f05cec01881d0ee2ab9fa392d859951a3ffbc30dde4a9",
       "dependencies": [
         "@beep/repo-cli#transit",
         "@beep/repo-docgen#transit"
@@ -435,7 +451,7 @@
     {
       "computation": "@beep/repo-cli#doctest",
       "command": "bun run beep:doctest",
-      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
+      "commandDigest": "dcbeb3a2cf5c7f23de2f05cec01881d0ee2ab9fa392d859951a3ffbc30dde4a9",
       "dependencies": [
         "@beep/ai-sync#transit",
         "@beep/box#transit",
@@ -452,6 +468,7 @@
         "@beep/ffmpeg#transit",
         "@beep/file-processing#transit",
         "@beep/firecrawl#transit",
+        "@beep/gate-report#transit",
         "@beep/git#transit",
         "@beep/github#transit",
         "@beep/github-actions#transit",
@@ -488,6 +505,7 @@
         "@beep/repo-cli-kit#transit",
         "@beep/repo-configs#transit",
         "@beep/repo-docgen#transit",
+        "@beep/repo-gate-record#transit",
         "@beep/repo-gate-run#transit",
         "@beep/repo-tsconfig#transit",
         "@beep/repo-utils#transit",
@@ -556,7 +574,7 @@
     {
       "computation": "@beep/repo-cli#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
+      "commandDigest": "dcbeb3a2cf5c7f23de2f05cec01881d0ee2ab9fa392d859951a3ffbc30dde4a9",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -590,7 +608,7 @@
     {
       "computation": "@beep/repo-cli#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
+      "commandDigest": "dcbeb3a2cf5c7f23de2f05cec01881d0ee2ab9fa392d859951a3ffbc30dde4a9",
       "dependencies": [
         "@beep/ai-sync#transit",
         "@beep/box#transit",
@@ -607,6 +625,7 @@
         "@beep/ffmpeg#transit",
         "@beep/file-processing#transit",
         "@beep/firecrawl#transit",
+        "@beep/gate-report#transit",
         "@beep/git#transit",
         "@beep/github#transit",
         "@beep/github-actions#transit",
@@ -644,6 +663,7 @@
         "@beep/repo-cli-kit#transit",
         "@beep/repo-configs#transit",
         "@beep/repo-docgen#transit",
+        "@beep/repo-gate-record#transit",
         "@beep/repo-gate-run#transit",
         "@beep/repo-tsconfig#transit",
         "@beep/repo-utils#transit",
@@ -727,7 +747,7 @@
     {
       "computation": "@beep/repo-cli#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
+      "commandDigest": "dcbeb3a2cf5c7f23de2f05cec01881d0ee2ab9fa392d859951a3ffbc30dde4a9",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -757,7 +777,7 @@
     {
       "computation": "@beep/repo-cli#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
+      "commandDigest": "dcbeb3a2cf5c7f23de2f05cec01881d0ee2ab9fa392d859951a3ffbc30dde4a9",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -813,7 +833,7 @@
     {
       "computation": "@beep/repo-cli#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
+      "commandDigest": "dcbeb3a2cf5c7f23de2f05cec01881d0ee2ab9fa392d859951a3ffbc30dde4a9",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -859,7 +879,7 @@
     {
       "computation": "@beep/repo-cli#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
+      "commandDigest": "dcbeb3a2cf5c7f23de2f05cec01881d0ee2ab9fa392d859951a3ffbc30dde4a9",
       "dependencies": [
         "@beep/ai-sync#transit",
         "@beep/box#transit",
@@ -876,6 +896,7 @@
         "@beep/ffmpeg#transit",
         "@beep/file-processing#transit",
         "@beep/firecrawl#transit",
+        "@beep/gate-report#transit",
         "@beep/git#transit",
         "@beep/github#transit",
         "@beep/github-actions#transit",
@@ -912,6 +933,7 @@
         "@beep/repo-cli-kit#transit",
         "@beep/repo-configs#transit",
         "@beep/repo-docgen#transit",
+        "@beep/repo-gate-record#transit",
         "@beep/repo-gate-run#transit",
         "@beep/repo-tsconfig#transit",
         "@beep/repo-utils#transit",
@@ -974,7 +996,7 @@
     {
       "computation": "@beep/repo-cli#test",
       "command": "bun run beep:test",
-      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
+      "commandDigest": "dcbeb3a2cf5c7f23de2f05cec01881d0ee2ab9fa392d859951a3ffbc30dde4a9",
       "dependencies": [
         "@beep/ai-sync#transit",
         "@beep/box#transit",
@@ -991,6 +1013,7 @@
         "@beep/ffmpeg#transit",
         "@beep/file-processing#transit",
         "@beep/firecrawl#transit",
+        "@beep/gate-report#transit",
         "@beep/git#transit",
         "@beep/github#transit",
         "@beep/github-actions#transit",
@@ -1027,7 +1050,9 @@
         "@beep/repo-cli-kit#transit",
         "@beep/repo-configs#transit",
         "@beep/repo-docgen#transit",
+        "@beep/repo-gate-record#transit",
         "@beep/repo-gate-run#transit",
+        "@beep/repo-gate-vitest#transit",
         "@beep/repo-tsconfig#transit",
         "@beep/repo-utils#transit",
         "@beep/repo-workspaces#transit",
@@ -1104,8 +1129,11 @@
           "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
           "GITHUB_STEP_SUMMARY"
         ],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/test/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-vitest#transit",
           "@beep/utils#transit",
           "^transit"
         ],
@@ -1118,7 +1146,7 @@
     {
       "computation": "@beep/repo-cli#test:property",
       "command": "bun run beep:test",
-      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
+      "commandDigest": "dcbeb3a2cf5c7f23de2f05cec01881d0ee2ab9fa392d859951a3ffbc30dde4a9",
       "dependencies": [
         "@beep/ai-sync#transit",
         "@beep/box#transit",
@@ -1135,6 +1163,7 @@
         "@beep/ffmpeg#transit",
         "@beep/file-processing#transit",
         "@beep/firecrawl#transit",
+        "@beep/gate-report#transit",
         "@beep/git#transit",
         "@beep/github#transit",
         "@beep/github-actions#transit",
@@ -1171,6 +1200,7 @@
         "@beep/repo-cli-kit#transit",
         "@beep/repo-configs#transit",
         "@beep/repo-docgen#transit",
+        "@beep/repo-gate-record#transit",
         "@beep/repo-gate-run#transit",
         "@beep/repo-tsconfig#transit",
         "@beep/repo-utils#transit",

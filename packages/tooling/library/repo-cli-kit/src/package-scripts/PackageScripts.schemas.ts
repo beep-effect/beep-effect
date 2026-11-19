@@ -5,7 +5,6 @@
  */
 import { $RepoCliKitId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
-import { thunkEmptyStr } from "@beep/utils/thunk";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual, flow, pipe } from "effect/Function";
@@ -17,6 +16,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
+import { PACKAGE_CHECK_GATE_COMMAND, PACKAGE_CHECK_GATE_SCRIPT } from "./CheckGate.ts";
 
 const $I = $RepoCliKitId.create("package-scripts/PackageScripts.schemas");
 /**
@@ -161,13 +161,13 @@ export type ImplScriptName = typeof ImplScriptName.Type;
  * @since 0.0.0
  */
 export const TaskScriptBinding = S.TaggedUnion({
-  indirection: { impl: ImplScriptName, ifPresent: S.Boolean, guard: S.optionalKey(S.String) },
+  indirection: { impl: ImplScriptName, ifPresent: S.Boolean, via: S.optionalKey(S.String) },
   cli: { command: S.String },
   owned: {},
 }).pipe(
   $I.annoteSchema("TaskScriptBinding", {
     description:
-      "Binding from a task to an implementation (optionally behind a guard command), CLI command, or package-owned text.",
+      "Binding from a task to an implementation (optionally run by a CLI command), CLI command, or package-owned text.",
   })
 );
 /**
@@ -179,28 +179,16 @@ export const TaskScriptBinding = S.TaggedUnion({
 export type TaskScriptBinding = typeof TaskScriptBinding.Type;
 
 /**
- * Guard that leads every generated package `check` script: it fails with one
- * line, before any compiler, when a referenced project has no built
- * declarations.
- *
- * **Example** (Read the check guard)
- *
- * ```ts
- * import { PACKAGE_CHECK_PROBE_COMMAND } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
- *
- * console.log(PACKAGE_CHECK_PROBE_COMMAND) // "beep-cli quality check-probe"
- * ```
- *
- * @category configuration
- * @since 0.0.0
- */
-export const PACKAGE_CHECK_PROBE_COMMAND = "beep-cli quality check-probe";
-
-/**
  * Render the script text of an indirection or CLI binding, as the generator
  * writes it into a package manifest.
  *
- * **Example** (Render a guarded indirection)
+ * **Details**
+ *
+ * An indirection with `via` names the CLI command that runs its
+ * implementation (the check gate runs `beep:check`): the script is the command
+ * alone, and the implementation script is still generated.
+ *
+ * **Example** (Render an indirection run by a CLI command)
  *
  * ```ts
  * import { renderTaskScriptBinding, TaskScriptBinding } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
@@ -208,9 +196,9 @@ export const PACKAGE_CHECK_PROBE_COMMAND = "beep-cli quality check-probe";
  * const binding = TaskScriptBinding.cases.indirection.make({
  *   impl: "beep:check",
  *   ifPresent: false,
- *   guard: "beep-cli quality check-probe",
+ *   via: "beep-cli gate run check",
  * })
- * console.log(renderTaskScriptBinding(binding)) // "beep-cli quality check-probe && bun run beep:check"
+ * console.log(renderTaskScriptBinding(binding)) // "beep-cli gate run check"
  * ```
  *
  * @param binding - A binding that owns no package text.
@@ -221,7 +209,10 @@ export const PACKAGE_CHECK_PROBE_COMMAND = "beep-cli quality check-probe";
 export const renderTaskScriptBinding = (binding: Exclude<TaskScriptBinding, { readonly _tag: "owned" }>): string =>
   binding._tag === "cli"
     ? binding.command
-    : `${pipe(O.fromUndefinedOr(binding.guard), O.map(Str.concat(" && ")), O.getOrElse(thunkEmptyStr))}bun run ${binding.ifPresent ? "--if-present " : ""}${binding.impl}`;
+    : O.getOrElse(
+        O.fromUndefinedOr(binding.via),
+        () => `bun run ${binding.ifPresent ? "--if-present " : ""}${binding.impl}`
+      );
 
 /**
  * Required, optional, forbidden, or evidence-derived task presence.
@@ -1099,37 +1090,62 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
     kind: "library",
     name: "check",
     presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false, guard: PACKAGE_CHECK_PROBE_COMMAND },
+    binding: {
+      _tag: "indirection",
+      impl: PACKAGE_CHECK_GATE_SCRIPT,
+      ifPresent: false,
+      via: PACKAGE_CHECK_GATE_COMMAND,
+    },
   }),
   TaskScriptRule.make({
     kind: "tool",
     name: "check",
     presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false, guard: PACKAGE_CHECK_PROBE_COMMAND },
+    binding: {
+      _tag: "indirection",
+      impl: PACKAGE_CHECK_GATE_SCRIPT,
+      ifPresent: false,
+      via: PACKAGE_CHECK_GATE_COMMAND,
+    },
   }),
   TaskScriptRule.make({
     kind: "ecosystem",
     name: "check",
     presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false, guard: PACKAGE_CHECK_PROBE_COMMAND },
+    binding: {
+      _tag: "indirection",
+      impl: PACKAGE_CHECK_GATE_SCRIPT,
+      ifPresent: false,
+      via: PACKAGE_CHECK_GATE_COMMAND,
+    },
   }),
   TaskScriptRule.make({
     kind: "app",
     name: "check",
     presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false, guard: PACKAGE_CHECK_PROBE_COMMAND },
+    binding: {
+      _tag: "indirection",
+      impl: PACKAGE_CHECK_GATE_SCRIPT,
+      ifPresent: false,
+      via: PACKAGE_CHECK_GATE_COMMAND,
+    },
   }),
   TaskScriptRule.make({
     kind: "lab",
     name: "check",
     presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false, guard: PACKAGE_CHECK_PROBE_COMMAND },
+    binding: {
+      _tag: "indirection",
+      impl: PACKAGE_CHECK_GATE_SCRIPT,
+      ifPresent: false,
+      via: PACKAGE_CHECK_GATE_COMMAND,
+    },
   }),
   TaskScriptRule.make({
     kind: "infra",
     name: "check",
     presence: { _tag: "required" },
-    // No probe: the infra check runs `tsrs -b`, which builds the referenced projects itself.
+    // No gate: the infra check runs `tsrs -b`, which builds the referenced projects itself.
     binding: { _tag: "indirection", impl: "beep:check", ifPresent: false },
   }),
   TaskScriptRule.make({ kind: "exempt", name: "check", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),

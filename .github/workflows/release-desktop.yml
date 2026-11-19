@@ -166,24 +166,19 @@ jobs:
       # Tauri v2 Linux prerequisites (webkit2gtk 4.1, gtk, rsvg, appindicator, …).
       - name: Install Tauri Linux system dependencies
         if: runner.os == 'Linux'
-        shell: bash
-        run: |
-          set -euo pipefail
-          # The image's third-party apt sources (Google Chrome, Microsoft) fail apt-get
-          # update with "Hash Sum mismatch" / "403 Forbidden" for minutes at a time;
-          # keep only the Ubuntu archive, which is where these packages come from.
-          beep ci prune-apt
-          sudo apt-get update
-          sudo apt-get install -y \
-            libwebkit2gtk-4.1-dev \
-            libgtk-3-dev \
-            librsvg2-dev \
-            patchelf \
-            libayatana-appindicator3-dev \
-            build-essential \
-            curl \
-            wget \
-            file \
+        uses: ./.github/actions/apt-install
+        with:
+          no-install-recommends: "false"
+          packages: >-
+            libwebkit2gtk-4.1-dev
+            libgtk-3-dev
+            librsvg2-dev
+            patchelf
+            libayatana-appindicator3-dev
+            build-essential
+            curl
+            wget
+            file
             libssl-dev
 
       - name: Setup Rust toolchain

@@ -8,6 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { PointerTable } from "@beep/gate-report/ConsoleDocument";
 import { formatDuration } from "@beep/gate-report/Format";
 import { GateEvent } from "@beep/gate-report/GateEvent";
 import { GateReport, Totals } from "@beep/gate-report/GateReport";
@@ -58,10 +59,11 @@ export const DEFAULT_RECORD_DEADLINE_MS = 10_000;
 /**
  * One finished tool run to report: whose record, what the run produced, the
  * exit code the tool returned, how long to wait for the record and log
- * writes (10 s by default) and how long to wait for history (250 ms by
- * default). `subject` is the package name, which the caller
- * knows; it states the run when the events do not, and without it a package
- * run is stated by its directory.
+ * writes (10 s by default), how long to wait for history (250 ms by
+ * default), and the pointer table to print with instead of the console's
+ * own, when the caller pins the next step to this run's record. `subject` is
+ * the package name, which the caller knows; it states the run when the
+ * events do not, and without it a package run is stated by its directory.
  *
  * **Example** (Describe a finished run)
  *
@@ -88,11 +90,12 @@ export class GateRunRequest extends S.Opaque<GateRunRequest, { readonly brand: u
     exitCode: S.Int,
     historyDeadlineMs: DurationMs.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_HISTORY_DEADLINE_MS))),
     recordDeadlineMs: DurationMs.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_RECORD_DEADLINE_MS))),
+    pointers: S.OptionFromOptionalKey(PointerTable).pipe(S.withConstructorDefault(Effect.succeedNone)),
     subject: S.OptionFromOptionalKey(Text).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("GateRunRequest", {
       description:
-        "A finished tool run: whose record, its events or report, the tool's exit code, and the record and history deadlines.",
+        "A finished tool run: whose record, its events or report, the tool's exit code, the record and history deadlines, the pointers and the package name.",
     })
   )
 ) {}
@@ -292,6 +295,7 @@ const recordWithin = Effect.fnUntraced(function* <E, R>(
     onFailure: (cause) => unrecorded(request, causeReason(cause)),
   });
 });
+
 type HistoryRead = { readonly answer: HistoryAnswer; readonly omission: O.Option<Omission> };
 
 const withoutHistory = (reason: string): HistoryRead => ({
@@ -372,6 +376,7 @@ export const runGate = Effect.fn("GateRun.runGate")(function* <E, R>(
       paths: recorded.paths,
       delta: read.answer.delta,
       omissions: [...recorded.omissions, ...O.toArray(read.omission)],
+      pointers: request.pointers,
     })
   );
   yield* Console.log(output.text);

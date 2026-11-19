@@ -350,16 +350,40 @@ export const itemLines = (item: Item): ReadonlyArray<string> => [
   ),
 ];
 
-// The items the console lists, failing and warning ones in record order; skipped and passed items
-// never shift a position.
-const listed = (record: GateRecord): ReadonlyArray<Item> =>
+/**
+ * The items a run lists, in record order: the failing and warning ones, as
+ * the console lists them. An item selector's position counts among these, so
+ * skipped and passed items never shift a position.
+ *
+ * **Example** (List a run with no items)
+ *
+ * ```ts
+ * import { GateRecord } from "@beep/gate-report/GateRecord";
+ * import { GateReport, Totals } from "@beep/gate-report/GateReport";
+ * import { listedItems } from "@beep/repo-gate-run/GateQueries";
+ * import * as DateTime from "effect/DateTime";
+ *
+ * const report = GateReport.make({
+ *   gate: "test", subject: "@beep/glob", itemKind: "test", runId: "r1",
+ *   startedAt: DateTime.makeUnsafe(0), durationMs: 0, inputFingerprint: "x",
+ *   reason: "passed", outcome: "all-pass", units: [], items: [], totals: Totals.make({ collected: 1, passed: 1 }),
+ * });
+ * console.log(listedItems(GateRecord.make({ generatedAt: DateTime.makeUnsafe(0), report })).length); // 0
+ * ```
+ *
+ * @param record - The run's record.
+ * @returns Its failed and warned items; a position selector counts from 1 among them.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const listedItems = (record: GateRecord): ReadonlyArray<Item> =>
   A.filter(record.report.items, (item) => ItemOutcome.is.failed(item.outcome) || ItemOutcome.is.warned(item.outcome));
 
 const select = (record: GateRecord, selector: ItemSelector): O.Option<Item> =>
   ItemSelector.match(selector, {
-    ByPosition: (byPosition) => A.get(listed(record), byPosition.position - 1),
+    ByPosition: (byPosition) => A.get(listedItems(record), byPosition.position - 1),
     ByText: (byText) =>
-      A.findFirst(listed(record), (item) =>
+      A.findFirst(listedItems(record), (item) =>
         A.some([titleOf(item), item.unit], (text) => Str.includes(byText.text)(text))
       ),
   });
