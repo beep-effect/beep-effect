@@ -2096,6 +2096,7 @@
     {"name":"History.notes.write","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"HistoryNotes.check","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"HistoryNotes.compareNotes","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"HistoryNotes.dropConfigValue","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"HistoryNotes.ensureConfigValue","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"HistoryNotes.loadRows","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"HistoryNotes.readMap","owner":"@beep/repo-cli","family":"tooling","conforms":true},

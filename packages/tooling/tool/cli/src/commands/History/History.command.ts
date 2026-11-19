@@ -63,7 +63,7 @@ const syncCommand = Command.make(
   {
     noFetch: Flag.Boolean("no-fetch").pipe(
       Flag.withDefault(false),
-      Flag.withDescription("Only configure the fetch refspec and display ref; do not fetch")
+      Flag.withDescription("Only configure the fetch refspec (after an ls-remote probe) and display ref; do not fetch")
     ),
   },
   Effect.fn("History.notes.sync")(function* ({ noFetch }) {

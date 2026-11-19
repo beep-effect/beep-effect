@@ -43,9 +43,13 @@ bun run beep history notes sync
 git log 6f33208961 -1
 ```
 
-`sync` adds `+refs/notes/history:refs/notes/history` to the `origin` fetch
-refspecs and `refs/notes/history` to `notes.displayRef`, each only if missing,
-then fetches the ref. From then on, plain `git log` and `git show` print a
+`sync` adds `refs/notes/history` to `notes.displayRef` and, once `origin`
+publishes the ref, `+refs/notes/history:refs/notes/history` to the `origin`
+fetch refspecs, each only if missing, then fetches the ref. A fork whose
+`origin` lacks the ref gets no refspec (and loses one an older `sync` added),
+because a refspec naming a missing remote ref makes every plain `git fetch`
+fail with `couldn't find remote ref`; such a fork can fetch the ref from the
+remote that publishes it. From then on, plain `git log` and `git show` print a
 `Notes (history):` block under each corrected commit. github.com does not show
 git notes.
 

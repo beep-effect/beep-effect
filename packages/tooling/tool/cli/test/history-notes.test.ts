@@ -1,4 +1,4 @@
-import { Git, GitCommandError, NoteEntry, UnknownRefError } from "@beep/git/Git";
+import { Git, GitCommandError, LsRemoteEntry, NoteEntry, UnknownRefError } from "@beep/git/Git";
 import {
   decodeHistoryCommitMessageMap,
   HistoryCommitMessage,
@@ -312,6 +312,50 @@ describe("HistoryNotes.sync", () => {
     })
   );
 
+  it.effect("an unpublished ref removes a stale origin refspec and renders why", () =>
+    Effect.gen(function* () {
+      const removed: Array<string> = [];
+      const report = yield* runSync(
+        {
+          remoteUrl: () => Effect.succeedSome("git@example.com:fork.git"),
+          configGetAll: (_cwd, key) =>
+            Effect.succeed(
+              key === "notes.displayRef"
+                ? ["refs/notes/history"]
+                : ["+refs/heads/*:refs/remotes/origin/*", "+refs/notes/history:refs/notes/history"]
+            ),
+          lsRemote: () => Effect.succeed([]),
+          configUnset: (_cwd, key, options) => Effect.sync(() => removed.push(`${key}=${options?.value}`)),
+        },
+        true
+      );
+      assert.deepStrictEqual([report.fetchRefspec, report.fetch], ["removed", "unpublished"]);
+      assert.deepStrictEqual(removed, ["remote.origin.fetch=+refs/notes/history:refs/notes/history"]);
+      assert.strictEqual(
+        renderHistoryNotesSync(report)[1],
+        "  remote.origin.fetch +refs/notes/history:refs/notes/history: removed (origin does not publish the ref)"
+      );
+    })
+  );
+
+  it.effect("a failing origin probe fails as HistoryGitError", () =>
+    Effect.gen(function* () {
+      const failure = yield* Effect.flip(
+        runSync(
+          {
+            remoteUrl: () => Effect.succeedSome("git@example.com:repo.git"),
+            configGetAll: () => Effect.succeed(["refs/notes/history"]),
+            lsRemote: (cwd) =>
+              Effect.fail(GitCommandError.make({ kind: "failed", args: ["ls-remote"], cwd, stderr: "network down" })),
+          },
+          false
+        )
+      );
+      assertInstanceOf(failure, HistoryGitError);
+      assert.strictEqual(failure.operation, "ls-remote");
+    })
+  );
+
   it.effect("a failing fetch other than an unpublished ref fails as HistoryGitError", () =>
     Effect.gen(function* () {
       const failure = yield* Effect.flip(
@@ -322,6 +366,7 @@ describe("HistoryNotes.sync", () => {
               Effect.succeed(
                 key === "notes.displayRef" ? ["refs/notes/history"] : ["+refs/notes/history:refs/notes/history"]
               ),
+            lsRemote: () => Effect.succeed([LsRemoteEntry.make({ sha: SHA_A, ref: "refs/notes/history" })]),
             fetch: (cwd) =>
               Effect.fail(GitCommandError.make({ kind: "failed", args: ["fetch"], cwd, stderr: "network down" })),
           },

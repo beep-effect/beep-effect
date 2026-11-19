@@ -547,9 +547,9 @@ export class HistoryNotesWriteReport extends S.Opaque<HistoryNotesWriteReport, {
  * @category models
  * @since 0.0.0
  */
-export const HistoryConfigChange = LiteralKit(["added", "present", "skipped"]).pipe(
+export const HistoryConfigChange = LiteralKit(["added", "present", "removed", "skipped"]).pipe(
   $I.annoteSchema("HistoryConfigChange", {
-    description: "Whether sync added a config value, found it present, or skipped the key.",
+    description: "Whether sync added a config value, found it present, removed a stale copy, or skipped the key.",
   })
 );
 
