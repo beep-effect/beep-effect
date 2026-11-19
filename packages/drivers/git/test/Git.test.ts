@@ -2860,6 +2860,27 @@ describe("Git", () => {
       })
     );
 
+    it.effect("configUnset refuses an option-like VALUE without spawning and redacts it", () =>
+      Effect.gen(function* () {
+        let spawned = false;
+        const program = Effect.gen(function* () {
+          const git = yield* Git;
+          return yield* git.configUnset(cwd, "remote.origin.fetch", { value: "--exec=evil" });
+        });
+        const failure = yield* Effect.flip(
+          run(program, () => {
+            spawned = true;
+            return { exit: 0 };
+          })
+        );
+        assert.instanceOf(failure, GitCommandError);
+        if (S.is(GitCommandError)(failure)) {
+          assert.deepStrictEqual(failure.args, ["<redacted>"]);
+        }
+        assert.isFalse(spawned);
+      })
+    );
+
     it.effect("configSet refuses an option-like KEY without spawning", () =>
       Effect.gen(function* () {
         let spawned = false;

@@ -2239,15 +2239,23 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
     })
   );
 
+  // Annotates a single-key config call and refuses option-like argv: the key
+  // and file as reported refs, a config value (when passed) on the redacted
+  // sensitive arm, since git config has no documented `--` separator.
+  const guardConfigKey = Effect.fnUntraced(function* (
+    cwd: string,
+    key: string,
+    file: string | undefined,
+    value?: string
+  ) {
+    yield* Effect.annotateCurrentSpan({ cwd, key, file: file ?? "(repository config)" });
+    yield* rejectOptionLikeRefs(cwd, withDefined([key], file), withDefined([], value));
+  });
+
   const configGetAll: GitShape["configGetAll"] = dual(
     stringAt(1),
     Effect.fn("Git.configGetAll")(function* (cwd: string, key: string, options?: { readonly file?: string }) {
-      yield* Effect.annotateCurrentSpan({
-        cwd,
-        key,
-        file: options?.file ?? "(repository config)",
-      });
-      yield* rejectOptionLikeRefs(cwd, [key, ...(options?.file !== undefined ? [options.file] : [])]);
+      yield* guardConfigKey(cwd, key, options?.file);
       return yield* runParsed(
         "Git.configGetAll",
         GitCommand.configGetAll(key, options?.file),
@@ -2266,12 +2274,7 @@ const makeShape = ({ runFor, runForNetwork }: Execution): GitShape => {
       key: string,
       options?: { readonly file?: string; readonly all?: boolean; readonly value?: string }
     ) {
-      yield* Effect.annotateCurrentSpan({
-        cwd,
-        key,
-        file: options?.file ?? "(repository config)",
-      });
-      yield* rejectOptionLikeRefs(cwd, [key, ...(options?.file !== undefined ? [options.file] : [])]);
+      yield* guardConfigKey(cwd, key, options?.file, options?.value);
       return yield* runVoid(
         "Git.configUnset",
         GitCommand.configUnset(key, options?.file, options?.all ?? false, options?.value),

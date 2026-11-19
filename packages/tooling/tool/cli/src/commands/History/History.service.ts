@@ -305,32 +305,26 @@ const makeHistoryNotes = Effect.gen(function* () {
     });
   });
 
-  // Appends `value` to the multi-valued `key` unless some value already equals it.
-  const ensureConfigValue = Effect.fn("HistoryNotes.ensureConfigValue")(function* (
+  // Makes `value` present in (`wanted`) or absent from the multi-valued `key`,
+  // leaving the key's other values alone; reports what changed.
+  const reconcileConfigValue = Effect.fn("HistoryNotes.reconcileConfigValue")(function* (
     root: string,
     key: string,
-    value: string
+    value: string,
+    wanted: boolean
   ) {
     const values = yield* git.configGetAll(root, key).pipe(Effect.mapError(gitError("config", `Cannot read ${key}.`)));
-    if (A.contains(values, value)) return HistoryConfigChange.Enum.present;
-    yield* git
-      .configSet(root, key, value, { add: true })
-      .pipe(Effect.mapError(gitError("config", `Cannot add ${value} to ${key}.`)));
-    return HistoryConfigChange.Enum.added;
-  });
-
-  // Removes every `value` entry of the multi-valued `key`, leaving its other values.
-  const dropConfigValue = Effect.fn("HistoryNotes.dropConfigValue")(function* (
-    root: string,
-    key: string,
-    value: string
-  ) {
-    const values = yield* git.configGetAll(root, key).pipe(Effect.mapError(gitError("config", `Cannot read ${key}.`)));
-    if (!A.contains(values, value)) return HistoryConfigChange.Enum.skipped;
-    yield* git
-      .configUnset(root, key, { all: true, value })
-      .pipe(Effect.mapError(gitError("config", `Cannot remove ${value} from ${key}.`)));
-    return HistoryConfigChange.Enum.removed;
+    const present = A.contains(values, value);
+    if (wanted && present) return HistoryConfigChange.Enum.present;
+    if (!wanted && !present) return HistoryConfigChange.Enum.skipped;
+    yield* (
+      wanted ? git.configSet(root, key, value, { add: true }) : git.configUnset(root, key, { all: true, value })
+    ).pipe(
+      Effect.mapError(
+        gitError("config", `Cannot ${wanted ? "add" : "remove"} ${value} ${wanted ? "to" : "from"} ${key}.`)
+      )
+    );
+    return wanted ? HistoryConfigChange.Enum.added : HistoryConfigChange.Enum.removed;
   });
 
   const sync: HistoryNotesShape["sync"] = Effect.fn("HistoryNotes.sync")(function* (options) {
@@ -338,7 +332,7 @@ const makeHistoryNotes = Effect.gen(function* () {
     const origin = yield* git
       .remoteUrl(options.root, { remote: "origin" })
       .pipe(Effect.mapBoth({ onFailure: gitError("config", "Cannot read the origin remote."), onSuccess: O.isSome }));
-    const displayRef = yield* ensureConfigValue(options.root, "notes.displayRef", HISTORY_NOTES_REF);
+    const displayRef = yield* reconcileConfigValue(options.root, "notes.displayRef", HISTORY_NOTES_REF, true);
     if (!origin) {
       return HistoryNotesSyncReport.make({
         origin,
@@ -356,7 +350,12 @@ const makeHistoryNotes = Effect.gen(function* () {
     if (!published) {
       // The remote has not published the ref yet: a notice, not a failure. A
       // refspec for it would break every plain `git fetch`, so drop any copy.
-      const fetchRefspec = yield* dropConfigValue(options.root, "remote.origin.fetch", HISTORY_NOTES_FETCH_REFSPEC);
+      const fetchRefspec = yield* reconcileConfigValue(
+        options.root,
+        "remote.origin.fetch",
+        HISTORY_NOTES_FETCH_REFSPEC,
+        false
+      );
       return HistoryNotesSyncReport.make({
         origin,
         fetchRefspec,
@@ -364,7 +363,12 @@ const makeHistoryNotes = Effect.gen(function* () {
         fetch: options.fetch ? HistoryNotesFetchOutcome.Enum.unpublished : HistoryNotesFetchOutcome.Enum.skipped,
       });
     }
-    const fetchRefspec = yield* ensureConfigValue(options.root, "remote.origin.fetch", HISTORY_NOTES_FETCH_REFSPEC);
+    const fetchRefspec = yield* reconcileConfigValue(
+      options.root,
+      "remote.origin.fetch",
+      HISTORY_NOTES_FETCH_REFSPEC,
+      true
+    );
     const fetch = options.fetch
       ? yield* git
           .fetch(options.root, { remote: "origin", ref: HISTORY_NOTES_FETCH_REFSPEC, noTags: true })
