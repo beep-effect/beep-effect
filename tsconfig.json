@@ -2606,6 +2606,15 @@
       ],
       "@beep/repo-gate-run/*": [
         "./packages/tooling/library/repo-gate-run/src/*"
+      ],
+      "@beep/schema/CanonicalHashSet": [
+        "./packages/foundation/modeling/schema/src/CanonicalHashSet.ts"
+      ],
+      "@beep/schema/ContentHash": [
+        "./packages/foundation/modeling/schema/src/ContentHash.ts"
+      ],
+      "@beep/schema/WellFormedText": [
+        "./packages/foundation/modeling/schema/src/WellFormedText.ts"
       ]
     }
   }

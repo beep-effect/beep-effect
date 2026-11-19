@@ -1,13 +1,10 @@
 /**
- * Content-derived proposal identity and canonical JSON reuse for detection.
+ * Content-derived proposal identity for detection.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
-import {
-  canonicalDetectionJson as canonicalJson,
-  makeDetectionProposalId,
-} from "@beep/epistemics/ContradictionDetection";
+import { makeDetectionProposalId } from "@beep/epistemics/ContradictionDetection";
 import {
   BeliefVersionRef,
   ContradictionProposalContent,
@@ -16,20 +13,6 @@ import {
 import type * as Result from "effect/Result";
 import type * as S from "effect/Schema";
 import type { ContradictionProposalId } from "../Contradiction/index.ts";
-/**
- * Encode JSON values with the same canonicalizer used by shipped contradiction seals.
- *
- * **Example** (canonicalDetectionJson)
- *
- * ```ts import.meta.vitest name="canonicalDetectionJson"
- * import { canonicalDetectionJson } from "@beep/epistemic-domain/values/ContradictionDetection"
- * console.log(canonicalDetectionJson({ b: 2, a: 1 }))
- * ```
- *
- * @category encoding
- * @since 0.0.0
- */
-export const canonicalDetectionJson: (value: unknown) => string = canonicalJson;
 /**
  * Hash the losing immutable ref and the complete replacement fact for one proposal.
  *

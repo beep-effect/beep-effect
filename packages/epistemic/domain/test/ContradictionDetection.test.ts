@@ -2,11 +2,11 @@ import { BeliefVersionRef } from "@beep/epistemic-domain/values/Contradiction";
 import {
   ConflictClass,
   ContradictionDetectionSnapshot,
-  canonicalDetectionJson,
   DetectionBelief,
   DetectionPolarity,
   detectionProposalId,
 } from "@beep/epistemic-domain/values/ContradictionDetection";
+import { canonicalDetectionJson } from "@beep/epistemics/ContradictionDetection";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";

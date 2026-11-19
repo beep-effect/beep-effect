@@ -4,18 +4,16 @@
  * Not part of the public API surface: the package `exports` map nulls
  * `./internal/*`.
  *
- * `@beep/epistemic-domain`'s agent-authority seals (grant sets, execution
- * records) reuse this one implementation through `canonicalDetectionJson`, so
- * every seal that shares a digest shares the encoder.
+ * Both exports delegate to `JsoncFingerprint`, the one canonical JSON owner,
+ * so these seals and the execution-authority seals (grant sets, execution
+ * records), which call the owner directly, share one encoder.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
 import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
-import { identity } from "effect/Function";
 import * as Result from "effect/Result";
-import * as S from "effect/Schema";
-import * as SchemaIssue from "effect/SchemaIssue";
+import type * as S from "effect/Schema";
 
 /**
  * Deterministic canonical JSON over wire-form values: the RFC 8785 text that
@@ -33,8 +31,7 @@ import * as SchemaIssue from "effect/SchemaIssue";
  * @category encoding
  * @since 0.0.0
  */
-export const canonicalJson = (value: unknown): string =>
-  Result.getOrThrowWith(JsoncFingerprint.canonicalizeResult(value), identity);
+export const canonicalJson = (value: unknown): string => Result.getOrThrow(JsoncFingerprint.canonicalizeResult(value));
 
 /**
  * {@link canonicalJson} returning a `Result`: the owner's refusal of a value
@@ -46,7 +43,4 @@ export const canonicalJson = (value: unknown): string =>
  * @since 0.0.0
  */
 export const canonicalJsonResult = (value: unknown): Result.Result<string, S.SchemaError> =>
-  Result.mapError(
-    JsoncFingerprint.canonicalizeResult(value),
-    (error) => new S.SchemaError(new SchemaIssue.InvalidValue({ message: error.message }))
-  );
+  JsoncFingerprint.canonicalizeSchemaResult(value);

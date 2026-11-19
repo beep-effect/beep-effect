@@ -9,7 +9,6 @@ import {
 } from "@beep/epistemic-domain/values/Contradiction";
 import {
   ContradictionDetectionSnapshot,
-  canonicalDetectionJson,
   DetectedContradiction,
 } from "@beep/epistemic-domain/values/ContradictionDetection";
 import {
@@ -17,6 +16,7 @@ import {
   ContradictionDetectionService,
   SubmitContradictionCandidate,
 } from "@beep/epistemic-use-cases/server";
+import { canonicalDetectionJson } from "@beep/epistemics/ContradictionDetection";
 import { it } from "@beep/test-runner";
 import { productEntityFixtureInput, systemPrincipal } from "@beep/test-utils";
 import { describe, expect } from "@effect/vitest";

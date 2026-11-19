@@ -21,6 +21,7 @@
  * @since 0.0.0
  */
 import { $ExecutionAuthorityDomainId } from "@beep/identity/packages";
+import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import { A } from "@beep/utils";
@@ -31,7 +32,6 @@ import { constFalse, dual } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
-import { canonicalJsonResult } from "../../internal/CanonicalJson.ts";
 import { ExecutionGrant, PolicyRevision } from "../ExecutionGrant/index.ts";
 import { ExecutionVerdict } from "../ExecutionVerdict/index.ts";
 import { GrantRevisionMismatch } from "./GrantSet.errors.ts";
@@ -343,7 +343,7 @@ const encodeDigestInput = S.encodeResult(GrantSetDigestInput);
 // surrogate) fails in the same `SchemaError` channel as an encoding failure.
 const computeGrantSetDigest = (input: GrantSetDigestInput): Result.Result<GrantSetDigest, S.SchemaError> =>
   Result.flatMap(encodeDigestInput(input), (encoded) =>
-    Result.map(canonicalJsonResult(encoded), (canonical) =>
+    Result.map(JsoncFingerprint.canonicalizeSchemaResult(encoded), (canonical) =>
       GrantSetDigest.make(bytesToHex(sha256(utf8ToBytes(`${grantSetEncodingVersion}\n${canonical}`))))
     )
   );

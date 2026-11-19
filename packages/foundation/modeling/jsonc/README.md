@@ -209,6 +209,16 @@ Digests are always exactly 64 lowercase hexadecimal characters, with no `sha256:
 
 `ActivityStart` declares the first preimage, `activity/v1`: the operation IRI, the model or engine pin, the prompt digest or `null`, the ascending used ids and the start time in epoch milliseconds. `mintActivityId` mints an `ActivityId` from those start-time facts only, so the outputs of a run can name it.
 
+## Pinned encoders
+
+`JsoncFingerprint` is the one canonical JSON encoder: every slice imports it, or a public export that delegates to it, and the Biome plugin `no-hand-rolled-canonical-json` refuses a new hand-written copy under `**/src/**`. Three historical encoders stay outside it on purpose, because stored or externally compared bytes depend on their exact output and a switch to RFC 8785 would change those bytes. Each is pinned: it may not change, and a new format gets a new version instead.
+
+| Encoder | Source | In-source anchor | Why it is pinned |
+| --- | --- | --- | --- |
+| PartyKey v1 (census E5) | `packages/party/domain/src/values/PartyKey/PartyKey.behavior.ts` (`canonicalJson`, `canonicalBytes`) | `biome-ignore lint/plugin/no-hand-rolled-canonical-json: census E5, pinned: PartyKey v1 bytes` | stored PartyKey v1 digests; `party/domain/test/PartyKey.test.ts` holds the owner-parity test |
+| eyecite 2.7.6 parity (census E6) | `packages/law-practice/server/src/internal/Citation/RuntimeHashEncoding.ts`, `PublicationResourceHash.ts`, `CaseResourceHash.ts` | `biome-ignore lint/plugin/no-hand-rolled-canonical-json: census E6, pinned: eyecite 2.7.6 json.dumps bytes` | resource hashes must equal Python eyecite 2.7.6 `json.dumps` output |
+| `LogicalEdgeIdentity` key | `packages/foundation/modeling/epistemics/src/LogicalEdgeIdentity/LogicalEdgeIdentity.model.ts` (`makeLogicalEdgeKey`) | the pinned-encoder note above `makeLogicalEdgeKey` | the escaped, `\|`-joined preimage behind the logical edge key stored in SQL; it is not JSON, so the Biome plugin never fires on it |
+
 ## Features
 
 - `Jsonc.parse` / `Jsonc.parseTree`: error-recovery parsing to a plain value or an offset-preserving `JsoncNode` AST, aggregating every recovered error into one `JsoncParseError` rather than failing on the first.

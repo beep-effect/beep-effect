@@ -22,6 +22,7 @@
  * @since 0.0.0
  */
 import { $ExecutionAuthorityDomainId } from "@beep/identity/packages";
+import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { A, O } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
@@ -29,8 +30,8 @@ import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { canonicalJson } from "../../internal/CanonicalJson.ts";
 import { PolicyRevision, SinkAudience, SinkClass } from "../../values/ExecutionGrant/index.ts";
 import { DenialReason } from "../../values/ExecutionVerdict/index.ts";
 import { GrantSetDigest } from "../../values/GrantSet/index.ts";
@@ -457,8 +458,11 @@ export class ExecutionOutcomeRecord extends S.Opaque<ExecutionOutcomeRecord, { r
   )
 ) {}
 
-const digestOf = (version: string, canonical: string): string =>
-  bytesToHex(sha256(utf8ToBytes(`${version}\n${canonical}`)));
+// The seal preimage is `${version}\n${canonical}` over the canonical JSON
+// owner's text. A record has no typed channel, so the owner's refusal of a
+// value outside plain JSON throws its `JsoncCanonicalizeError`.
+const digestOf = (version: string, wire: Record<string, unknown>): string =>
+  bytesToHex(sha256(utf8ToBytes(`${version}\n${Result.getOrThrow(JsoncFingerprint.canonicalizeResult(wire))}`)));
 
 /**
  * Distributes `Omit` over a union so each variant loses the key individually
@@ -539,9 +543,7 @@ const encodeDecisionContent = (content: ExecutionDecisionContent): Record<string
  * @since 0.0.0
  */
 export const sealExecutionDecision = (content: ExecutionDecisionContent): ExecutionDecisionRecord => {
-  const hash = DecisionRecordHash.make(
-    digestOf(decisionEncodingVersion, canonicalJson(encodeDecisionContent(content)))
-  );
+  const hash = DecisionRecordHash.make(digestOf(decisionEncodingVersion, encodeDecisionContent(content)));
   return ExecutionDecisionRecord.make({ ...content, hash });
 };
 
@@ -579,7 +581,7 @@ export const sealExecutionDecision = (content: ExecutionDecisionContent): Execut
  * @since 0.0.0
  */
 export const verifyExecutionDecisionHash = (record: ExecutionDecisionRecord): boolean =>
-  digestOf(decisionEncodingVersion, canonicalJson(encodeDecisionContent(record))) === record.hash;
+  digestOf(decisionEncodingVersion, encodeDecisionContent(record)) === record.hash;
 
 const ChainVerificationTag = LiteralKit(["chain-intact", "chain-broken"]);
 
@@ -785,7 +787,7 @@ export type ExecutionOutcomeContent = Omit<S.Struct.Type<typeof ExecutionOutcome
 export const sealExecutionOutcome = (content: ExecutionOutcomeContent): ExecutionOutcomeRecord =>
   ExecutionOutcomeRecord.make({
     ...content,
-    hash: OutcomeRecordHash.make(digestOf(outcomeEncodingVersion, canonicalJson(encodeOutcomeContent(content)))),
+    hash: OutcomeRecordHash.make(digestOf(outcomeEncodingVersion, encodeOutcomeContent(content))),
   });
 
 /**
@@ -811,7 +813,7 @@ export const sealExecutionOutcome = (content: ExecutionOutcomeContent): Executio
  * @since 0.0.0
  */
 export const verifyExecutionOutcomeHash = (record: ExecutionOutcomeRecord): boolean =>
-  digestOf(outcomeEncodingVersion, canonicalJson(encodeOutcomeContent(record))) === record.hash;
+  digestOf(outcomeEncodingVersion, encodeOutcomeContent(record)) === record.hash;
 
 /**
  * Digests a raw operation or destination string for ledger storage. The one

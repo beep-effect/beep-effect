@@ -2390,8 +2390,8 @@
       "name": "@beep/execution-authority-domain",
       "version": "0.0.0",
       "dependencies": {
-        "@beep/epistemics": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/jsonc": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",
         "@beep/utils": "workspace:^",
@@ -2399,7 +2399,6 @@
         "effect": "catalog:",
       },
       "devDependencies": {
-        "@beep/jsonc": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",

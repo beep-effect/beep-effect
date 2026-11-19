@@ -2673,7 +2673,6 @@
       {
         "from": "@beep/execution-authority-domain",
         "allow": [
-          "@beep/epistemics",
           "@beep/execution-authority-domain",
           "@beep/identity",
           "@beep/jsonc",
@@ -2684,7 +2683,6 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
-          "@beep/epistemics",
           "@beep/execution-authority-domain",
           "@beep/identity",
           "@beep/jsonc",
