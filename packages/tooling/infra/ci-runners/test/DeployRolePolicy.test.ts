@@ -52,9 +52,9 @@ describe("CiRunners deploy role policy chunks", () => {
   );
 });
 
-describe("CiRunners deploy role managed policies", () => {
-  const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
+const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 
+describe("CiRunners deploy role managed policies", () => {
   it.effect("splits v1 and v2 into whole statements in source order, each document within the IAM limit", () =>
     Effect.gen(function* () {
       for (const policy of [v1, v2]) {
@@ -155,7 +155,7 @@ describe("CiRunners deploy role policy", () => {
   it.effect("never names the deploy role's own managed policies, and never removes a boundary", () =>
     Effect.gen(function* () {
       const allows = A.filter(v2.Statement, (statement) => statement.Effect === "Allow");
-      const text = yield* S.encodeEffect(S.fromJsonString(S.Unknown))(allows);
+      const text = yield* encodeJson(allows);
       assertFalse(Str.includes("beep-alchemy-deploy")(text));
       assertFalse(Str.includes("iam:DeleteRolePermissionsBoundary")(text));
       // A fleet role's trust policy stays as created: no grant rewrites it.

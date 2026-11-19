@@ -422,7 +422,8 @@ describe("CiRunners checked-plan reading", () => {
 });
 
 describe("CiRunners plan-rows digest", () => {
-  const sha256 = Effect.provide(Digest.layerWebCrypto);
+  // The stand-in digest is the hex of its input, so equal rows give equal digests and different rows differ.
+  const sha256 = Effect.provideService(Digest.Digest, hexDigest);
   const vpc = resource("Vpc");
   const reaper = resource("Reaper", { action: "noop", bindings: ["Reaper/Invoke create"] });
 
@@ -434,7 +435,7 @@ describe("CiRunners plan-rows digest", () => {
   it.effect("reads rows only: order, salt, source tree and property digests do not move it", () =>
     Effect.gen(function* () {
       const digest = yield* planRowsDigest(planWith(vpc, reaper));
-      expect(digest).toMatch(/^[0-9a-f]{64}$/);
+      expect(digest).toMatch(/^[0-9a-f]+$/);
       const reordered = yield* planRowsDigest(planWith(reaper, vpc));
       const resalted = yield* planRowsDigest(
         CheckedPlan.make({ ...planWith(vpc, reaper), secretSalt: "ff", sourceTree: "tree-2" })

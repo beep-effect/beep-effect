@@ -84,16 +84,7 @@ export const ResumeKind = LiteralKit(["none", "create", "empty-replace"]).pipe(
 );
 
 /**
- * Type of {@link ResumeKind}. {@inheritDoc ResumeKind}
- *
- * **Example** (Annotate a value)
- *
- * ```ts
- * import type { ResumeKind } from "@beep/infra-ci-runners/CheckedDeploy"
- *
- * const kind: ResumeKind = "create"
- * console.log(kind) // "create"
- * ```
+ * Decoded resume kind.
  *
  * @category models
  * @since 0.0.0
