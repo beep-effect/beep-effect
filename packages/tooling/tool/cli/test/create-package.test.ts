@@ -11,6 +11,7 @@ import {
   createPackageCommand,
   registerScaffoldedWorkspaces,
 } from "@beep/repo-cli/commands/CreatePackage";
+import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration";
 import { syncTsconfigAtRoot, TsconfigSyncRunOptionsCheck } from "@beep/repo-cli/commands/TsconfigSync";
 import { workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 import { FsUtilsLive, findRepoRoot, TSMorphServiceLive } from "@beep/repo-utils";
@@ -427,22 +428,23 @@ export default config;
 
 export const $I = {
   compose: (..._segments: ReadonlyArray<string>) => ({}) as Record<string, Identity.IdentityComposer<string>>,
+  create: (slug: string) => \`@beep/\${slug}\` as Identity.IdentityComposer<string>,
 };
 
-const generatedComposers = $I.compose(
+const generatedComposers = /*#__PURE__*/ $I.compose(
   "identity"
 );
 
 // GENERATED LAB COMPOSERS START
-const generatedLabComposers = $I.compose();
+const generatedLabComposers = /*#__PURE__*/ $I.compose();
 // GENERATED LAB COMPOSERS END
 
-const composers = { ...generatedComposers, ...generatedLabComposers };
+export type RegisteredComposers = typeof generatedComposers & typeof generatedLabComposers;
 
 // GENERATED LAB EXPORTS START
 // GENERATED LAB EXPORTS END
 
-export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composers.$IdentityId;
+export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = /*#__PURE__*/ $I.create("identity");
 `;
 
   const withBunShim = <A, E, R>(binDir: string, argsFilePath: string, use: Effect.Effect<A, E, R>) =>
@@ -512,13 +514,16 @@ export const $I = {
   compose: (..._segments: ReadonlyArray<string>) => ({
     $IdentityId: "@beep/identity" as Identity.IdentityComposer<"@beep/identity">,
   }),
+  create: <const Slug extends string>(slug: Slug): Identity.IdentityComposer<\`@beep/\${Slug}\`> => \`@beep/\${slug}\`,
 };
 
-const composers = $I.compose(
+const composers = /*#__PURE__*/ $I.compose(
   "identity",
 );
 
-export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composers.$IdentityId;
+export type RegisteredComposers = typeof composers;
+
+export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = /*#__PURE__*/ $I.create("identity");
 `
     );
   });
@@ -631,6 +636,16 @@ export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composer
       );
       expect(identityPackages).toContain(`"${packageName}"`);
       expect(identityPackages).toContain(`export const $${composerName}Id`);
+      // The registered export is an independent pure leaf over the package's own slug.
+      expect(
+        CreatePackageIdentityRegistration.registeredIdentityExportSlugs(identityPackages),
+        "registry export slugs"
+      ).toContain(packageName);
+      expect(
+        A.filter(CreatePackageIdentityRegistration.identityLeafMismatches(identityPackages), ([, slug]) =>
+          Str.equivalence(slug, packageName)
+        )
+      ).toEqual([]);
     });
 
     const bootstrapFoundationIdentityRoot = Effect.fn(function* (rootDir: string) {

@@ -19,6 +19,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -59,7 +60,11 @@ const registryContentFor = (slugs: ReadonlyArray<string>, labSlugs: ReadonlyArra
       LabIdentitySegment.renderLabComposersRegion(labSlugs),
       LAB_COMPOSERS_END_MARKER,
       "",
-      ...A.map(slugs, (slug) => `export const $${Str.pascalCase(slug)}Id = composers.$${Str.pascalCase(slug)}Id;`),
+      ...A.map(
+        slugs,
+        (slug) =>
+          `export const $${Str.pascalCase(slug)}Id: Identity.IdentityComposer<"@beep/${slug}"> = /*#__PURE__*/ $I.create("${slug}");`
+      ),
       "",
       LAB_EXPORTS_START_MARKER,
       ...(A.isReadonlyArrayEmpty(labSlugs)
@@ -189,6 +194,43 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
     );
 
     it.effect(
+      "reports registry exports that are not a pure $I.create leaf over their own slug",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget", "gadget"] });
+            const registryContent = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
+            const drifted = Str.replace(
+              'export const $GadgetId: Identity.IdentityComposer<"@beep/gadget"> = /*#__PURE__*/ $I.create("gadget");',
+              "export const $GadgetId = composers.$GadgetId;"
+            )(Str.replace('= /*#__PURE__*/ $I.create("widget");', '= $I.create("widgets");')(registryContent));
+            yield* fs.writeFileString(IDENTITY_REGISTRY_PATH, drifted);
+
+            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+
+            expectReportedExit(exit);
+            const errorLines = yield* TestConsole.errorLines;
+            const leafRow = (subject: string) =>
+              A.findFirst(
+                errorLines,
+                (line): line is string =>
+                  P.isString(line) && Str.startsWith(`${subject} [registry-leaf-mismatch]`)(line)
+              );
+            const widgetRow = O.getOrThrow(leafRow("@beep/widget"));
+            expect(widgetRow).toContain('literal does not equal its slug "widget"');
+            expect(widgetRow).toContain("lacks /*#__PURE__*/");
+            const gadgetRow = O.getOrThrow(leafRow("@beep/gadget"));
+            expect(gadgetRow).toContain('its initializer is not `$I.create("gadget")`');
+            expect(gadgetRow).toContain('it is not typed `Identity.IdentityComposer<"@beep/gadget">`');
+            expect(O.isNone(leafRow("@beep/identity"))).toBe(true);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
       "reports an export-only orphan whose compose slug is already gone",
       () =>
         Effect.andThen(
@@ -199,7 +241,10 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             const registryContent = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
             yield* fs.writeFileString(
               IDENTITY_REGISTRY_PATH,
-              Str.concat(registryContent, "export const $GhostId = composers.$GhostId;\n")
+              Str.concat(
+                registryContent,
+                'export const $GhostId: Identity.IdentityComposer<"@beep/ghost"> = /*#__PURE__*/ $I.create("ghost");\n'
+              )
             );
 
             const composeOnlyContent = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
@@ -549,8 +594,8 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
               A.join(
                 [
                   'const composers = $I.compose("identity", "widget");',
-                  "export const $IdentityId = composers.$IdentityId;",
-                  "export const $WidgetId = composers.$WidgetId;",
+                  'export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = /*#__PURE__*/ $I.create("identity");',
+                  'export const $WidgetId: Identity.IdentityComposer<"@beep/widget"> = /*#__PURE__*/ $I.create("widget");',
                   "",
                 ],
                 "\n"

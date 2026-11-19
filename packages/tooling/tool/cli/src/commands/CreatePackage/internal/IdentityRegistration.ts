@@ -17,7 +17,7 @@ import * as HashMap from "effect/HashMap";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import { Project, SyntaxKind } from "ts-morph";
-import { toIdentityAccessorName, typedIdentityExportBlock } from "./IdentityExportBlock.ts";
+import { PURE_ANNOTATION, toIdentityAccessorName, typedIdentityExportBlock } from "./IdentityExportBlock.ts";
 import type { CallExpression, SourceFile, VariableDeclaration } from "ts-morph";
 
 /**
@@ -141,6 +141,56 @@ const removeComposeSlugArguments = (call: CallExpression, packageName: string): 
   }
 };
 
+const ROOT_LEAF_CALLEE = "$I.create";
+const LEGACY_COMPOSERS_READ_PREFIX = "composers.$";
+
+/**
+ * Read the slug literal of a registry leaf initializer, `$I.create("<slug>")`.
+ *
+ * @param declaration - Variable declaration whose initializer is inspected.
+ * @returns The single string-literal argument of a root `$I.create(...)` call.
+ */
+const rootLeafSlug = (declaration: VariableDeclaration): O.Option<string> =>
+  pipe(
+    O.fromNullishOr(declaration.getInitializerIfKind(SyntaxKind.CallExpression)),
+    O.filter((call) => Str.equivalence(call.getExpression().getText(), ROOT_LEAF_CALLEE)),
+    O.map((call) => call.getArguments()),
+    O.filter((arguments_) => A.length(arguments_) === 1),
+    O.flatMap(A.head),
+    O.flatMap((argument) => O.fromNullishOr(argument.asKind(SyntaxKind.StringLiteral))),
+    O.map((literal) => literal.getLiteralText())
+  );
+
+const PURE_COMMENT_PATTERN = /\/\*\s*[#@]__PURE__\s*\*\//;
+
+// The `/*#__PURE__*/` (or `@__PURE__`) comment that lets bundlers drop an unused leaf. It is read
+// from the initializer's leading trivia: ts-morph files a same-line comment after `=` as a
+// trailing comment of the `=` token, so `getLeadingCommentRanges` misses the unwrapped form.
+const hasPureAnnotation = (declaration: VariableDeclaration): boolean =>
+  pipe(
+    O.fromNullishOr(declaration.getInitializer()),
+    O.exists((initializer) =>
+      O.isSome(
+        Str.match(PURE_COMMENT_PATTERN)(Str.slice(0, initializer.getLeadingTriviaWidth())(initializer.getFullText()))
+      )
+    )
+  );
+
+// Pre-leaf registry form: the export reads a property off the merged `composers` object.
+const readsLegacyComposers = (declaration: VariableDeclaration): boolean =>
+  pipe(
+    O.fromNullishOr(declaration.getInitializer()),
+    O.exists((initializer) => Str.startsWith(LEGACY_COMPOSERS_READ_PREFIX)(initializer.getText()))
+  );
+
+// The package slug a typed `Identity.IdentityComposer<"@beep/<slug>">` annotation names.
+const typedExportSlug = (declaration: VariableDeclaration): O.Option<string> =>
+  pipe(
+    O.fromNullishOr(declaration.getTypeNode()),
+    O.flatMap((node) => Str.match(/IdentityComposer<"@beep\/([^"]+)">/)(node.getText())),
+    O.flatMap((match) => O.fromNullishOr(match[1]))
+  );
+
 const isAccessorExportFor = (
   declaration: VariableDeclaration,
   packageName: string,
@@ -151,13 +201,15 @@ const isAccessorExportFor = (
   return (
     Str.equivalence(declaration.getName(), mechanicalAccessor) ||
     Str.includes(`IdentityComposer<"@beep/${packageName}">`)(declarationText) ||
+    O.exists(rootLeafSlug(declaration), Str.equivalence(packageName)) ||
     readsComposerAccessor(declarationText)
   );
 };
 
 const removeAccessorExportStatements = (sourceFile: SourceFile, packageName: string): void => {
   const mechanicalAccessor = toIdentityAccessorName(packageName);
-  // Whole token: `composers.$XId` must not match a `composers.$XIdentityId` sibling.
+  // Whole token: `composers.$XId` must not match a `composers.$XIdentityId` sibling. Kept so a
+  // pre-leaf registry still loses its legacy reads; a leaf matches by its `$I.create` literal.
   const readsComposerAccessor = mentionsToken(`composers.${mechanicalAccessor}`);
   for (const declaration of sourceFile.getVariableDeclarations()) {
     const statement = declaration.getVariableStatement();
@@ -313,44 +365,133 @@ const registeredIdentityComposerSlugs = (registryContent: string): ReadonlyArray
   return A.sort(A.flatMap(composeCallExpressions(sourceFile), stringLiteralArgumentTexts), Order.String);
 };
 
+// The package slug a legacy `composers.$X` read targets, matched against the compose groups first.
+const legacyExportSlug = (declaration: VariableDeclaration, composerSlugs: ReadonlyArray<string>): string =>
+  pipe(
+    A.findFirst(composerSlugs, (slug) => accessorExportPattern(slug).test(`export const ${declaration.getName()}`)),
+    O.getOrElse(() => pipe(Str.slice(1, -2)(declaration.getName()), Str.kebabCase))
+  );
+
+/**
+ * Pair each registry export declaration with the package slug it registers.
+ *
+ * **Details**
+ *
+ * A registry export is an exported declaration typed
+ * `Identity.IdentityComposer<"@beep/<slug>">`, an untyped `$I.create("<slug>")`
+ * leaf whose slug a compose group lists, or a legacy `composers.$X` read.
+ * Untyped root composers over a non-package segment (vocabulary composers such
+ * as `$QaId`) are not registry exports.
+ *
+ * @param sourceFile - Parsed identity `packages.ts` source.
+ * @param composerSlugs - Slugs every `$I.compose(...)` group lists.
+ * @returns One `[declaration, slug]` pair per registry export, in file order.
+ */
+const registryExportDeclarations = (
+  sourceFile: SourceFile,
+  composerSlugs: ReadonlyArray<string>
+): ReadonlyArray<readonly [declaration: VariableDeclaration, slug: string]> =>
+  A.flatMap(sourceFile.getVariableDeclarations(), (declaration) => {
+    const statement = declaration.getVariableStatement();
+    if (statement === undefined || !statement.isExported()) return A.empty();
+    const slug = pipe(
+      typedExportSlug(declaration),
+      O.orElse(() => O.filter(rootLeafSlug(declaration), (literal) => A.contains(composerSlugs, literal))),
+      O.orElse(() =>
+        readsLegacyComposers(declaration) ? O.some(legacyExportSlug(declaration, composerSlugs)) : O.none()
+      )
+    );
+    return pipe(
+      slug,
+      O.map((value) => [declaration, value] as const),
+      O.toArray
+    );
+  });
+
+const registryExports = (registryContent: string) => {
+  const project = new Project({ useInMemoryFileSystem: true });
+  const sourceFile = project.createSourceFile("packages.ts", registryContent);
+  return registryExportDeclarations(sourceFile, registeredIdentityComposerSlugs(registryContent));
+};
+
 /**
  * Read package slugs represented by dedicated exported identity composers.
  *
  * @param registryContent - Current text of the identity `packages.ts` file.
- * @returns Sorted package slugs inferred from the dedicated composer exports.
+ * @returns Sorted package slugs of every registry export (pure leaves and legacy reads).
  * @category getters
  * @since 0.0.0
  */
-const registeredIdentityExportSlugs = (registryContent: string): ReadonlyArray<string> => {
-  const project = new Project({ useInMemoryFileSystem: true });
-  const sourceFile = project.createSourceFile("packages.ts", registryContent);
-  const composerSlugs = registeredIdentityComposerSlugs(registryContent);
-  let slugs = A.empty<string>();
-  for (const declaration of sourceFile.getVariableDeclarations()) {
-    const statement = declaration.getVariableStatement();
-    if (statement === undefined || !statement.isExported()) continue;
-    const initializer = declaration.getInitializer();
-    if (initializer === undefined || !Str.startsWith("composers.$")(initializer.getText())) continue;
-    const typedSlug = pipe(
-      O.fromNullishOr(declaration.getTypeNode()),
-      O.flatMap((node) => Str.match(/IdentityComposer<"@beep\/([^"]+)">/)(node.getText())),
-      O.flatMap((match) => O.fromNullishOr(match[1]))
-    );
-    const matchedComposer = A.findFirst(composerSlugs, (slug) =>
-      accessorExportPattern(slug).test(`export const ${declaration.getName()}`)
-    );
-    const inferredSlug = pipe(Str.slice(1, -2)(declaration.getName()), Str.kebabCase);
-    slugs = A.append(
-      slugs,
+const registeredIdentityExportSlugs = (registryContent: string): ReadonlyArray<string> =>
+  A.sort(
+    A.map(registryExports(registryContent), ([, slug]) => slug),
+    Order.String
+  );
+
+// Every way one registry export departs from the canonical pure leaf for its slug.
+const leafProblems = (declaration: VariableDeclaration, slug: string): ReadonlyArray<string> => {
+  const leafSlug = rootLeafSlug(declaration);
+  return A.filter(
+    [
       pipe(
-        typedSlug,
-        O.orElse(() => matchedComposer),
-        O.getOrElse(() => inferredSlug)
-      )
-    );
-  }
-  return A.sort(slugs, Order.String);
+        leafSlug,
+        O.match({
+          onNone: () => `its initializer is not \`$I.create("${slug}")\``,
+          onSome: (literal) =>
+            Str.equivalence(literal, slug)
+              ? Str.empty
+              : `its \`$I.create("${literal}")\` literal does not equal its slug "${slug}"`,
+        })
+      ),
+      O.isSome(leafSlug) && !hasPureAnnotation(declaration) ? `its initializer lacks ${PURE_ANNOTATION}` : Str.empty,
+      O.isNone(typedExportSlug(declaration))
+        ? `it is not typed \`Identity.IdentityComposer<"@beep/${slug}">\``
+        : Str.empty,
+      accessorExportPattern(slug).test(`export const ${declaration.getName()}`)
+        ? Str.empty
+        : `its name does not match the accessor \`${toIdentityAccessorName(slug)}\``,
+    ],
+    Str.isNonEmpty
+  );
 };
+
+/**
+ * Report registry exports that are not the canonical independent pure leaf
+ * for their slug.
+ *
+ * **Details**
+ *
+ * The canonical leaf is `export const $XId: Identity.IdentityComposer<"@beep/<slug>">`
+ * initialized by a pure-annotated `$I.create("<slug>")` call (see
+ * `typedIdentityExportBlock`). Each leaf's `$I.create` literal must equal its
+ * slug, carry the pure annotation and keep its typed annotation, so a bundle
+ * that imports one composer drops every other slug and the compose groups.
+ *
+ * **Example** (Report a leaf whose literal drifted)
+ *
+ * ```ts
+ * import { CreatePackageIdentityRegistration } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityRegistration"
+ *
+ * const rows = CreatePackageIdentityRegistration.identityLeafMismatches(
+ *   'export const $AId: Identity.IdentityComposer<"@beep/a"> = $I.create("b");'
+ * )
+ * console.log(rows) // [["$AId", "a", "..."]]
+ * ```
+ *
+ * @param registryContent - Current text of the identity `packages.ts` file.
+ * @returns One `[accessor, slug, detail]` row per non-canonical registry export, in file order.
+ * @category getters
+ * @since 0.0.0
+ */
+const identityLeafMismatches = (
+  registryContent: string
+): ReadonlyArray<readonly [accessor: string, slug: string, detail: string]> =>
+  A.flatMap(registryExports(registryContent), ([declaration, slug]) => {
+    const problems = leafProblems(declaration, slug);
+    return A.isReadonlyArrayNonEmpty(problems)
+      ? [[declaration.getName(), slug, A.join(problems, "; ")] as const]
+      : A.empty();
+  });
 
 /**
  * Enumerate every `@beep/*` workspace package as `[slug, directory]` entries,
@@ -404,6 +545,7 @@ export const CreatePackageIdentityRegistration = {
   accessorExportPattern,
   collectWorkspaceIdentityEntries,
   ensureIdentityPackageRegistration,
+  identityLeafMismatches,
   identityPackageRegistrationNeeded,
   missingIdentityRegistrations,
   registeredIdentityComposerSlugs,
