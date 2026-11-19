@@ -355,7 +355,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           });
           yield* fs.writeFileString(
             path.join(repoRoot, "packages", "foundation", "modeling", "identity", "src", "packages.ts"),
-            'const generatedLabComposers = $I.compose("probe");\nexport const $ProbeId = composers.$ProbeId;\n'
+            'const generatedLabComposers = /*#__PURE__*/ $I.compose("probe");\nexport const $ProbeId: Identity.IdentityComposer<"@beep/probe"> = /*#__PURE__*/ $I.create("probe");\n'
           );
           const observations = yield* inspectTargetAtRoot(repoRoot, labTarget);
           const identity = O.getOrThrow(

@@ -238,9 +238,10 @@ const markedIdentityRegistry = A.join(
     "  compose: (..._segments: ReadonlyArray<string>) => ({",
     '    $IdentityId: "@beep/identity" as Identity.IdentityComposer<"@beep/identity">,',
     "  }),",
+    "  create: <const Slug extends string>(slug: Slug): Identity.IdentityComposer<`@beep/${Slug}`> => `@beep/${slug}`,",
     "};",
     "",
-    "const generatedComposers = $I.compose(",
+    "const generatedComposers = /*#__PURE__*/ $I.compose(",
     '  "identity",',
     ");",
     "",
@@ -248,12 +249,9 @@ const markedIdentityRegistry = A.join(
     "const generatedLabComposers = {};",
     LAB_COMPOSERS_END_MARKER,
     "",
-    "const composers = {",
-    "  ...generatedComposers,",
-    "  ...generatedLabComposers,",
-    "};",
+    "export type RegisteredComposers = typeof generatedComposers & typeof generatedLabComposers;",
     "",
-    'export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = composers.$IdentityId;',
+    'export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = /*#__PURE__*/ $I.create("identity");',
     "",
     LAB_EXPORTS_START_MARKER,
     LAB_EXPORTS_END_MARKER,
@@ -552,7 +550,7 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             expect(rootPackage.workspaces).toEqual(["packages/foundation/*/*", "apps/labs/*"]);
 
             const registry = yield* readIdentityRegistry(context);
-            expect(registry).toContain('const generatedLabComposers = $I.compose("web-lab");');
+            expect(registry).toContain('const generatedLabComposers = /*#__PURE__*/ $I.compose("web-lab");');
             expect(registry).toContain("export const $WebLabId");
             expect(markerIndex("export const $WebLabId")(registry)).toBeGreaterThan(
               markerIndex(LAB_EXPORTS_START_MARKER)(registry)
@@ -614,7 +612,7 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             expect(appTsconfig.compilerOptions.rootDir).toBe("../../..");
 
             const registry = yield* readIdentityRegistry(context);
-            expect(registry).toContain('const generatedLabComposers = $I.compose("graph-lab");');
+            expect(registry).toContain('const generatedLabComposers = /*#__PURE__*/ $I.compose("graph-lab");');
             expect(registry).toContain("export const $GraphLabId");
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
@@ -689,7 +687,7 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             expect(healthTest).not.toContain('from "effect"');
 
             const registry = yield* readIdentityRegistry(context);
-            expect(registry).toContain('const generatedLabComposers = $I.compose("probe-svc");');
+            expect(registry).toContain('const generatedLabComposers = /*#__PURE__*/ $I.compose("probe-svc");');
             expect(registry).toContain("export const $ProbeSvcId");
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
@@ -745,7 +743,7 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             expect(labManifest.disposition).toBe("active");
 
             const registry = yield* readIdentityRegistry(context);
-            expect(registry).toContain('const generatedLabComposers = $I.compose("probe-tauri");');
+            expect(registry).toContain('const generatedLabComposers = /*#__PURE__*/ $I.compose("probe-tauri");');
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       CreatePackageLabTestTimeoutMs
@@ -778,7 +776,9 @@ it.layer(CommandTestLayer, { concurrent: false, timeout: "30 seconds" })((it) =>
             ]);
 
             const registry = yield* readIdentityRegistry(context);
-            expect(registry).toContain('const generatedLabComposers = $I.compose("alpha-lab", "zeta-lab");');
+            expect(registry).toContain(
+              'const generatedLabComposers = /*#__PURE__*/ $I.compose("alpha-lab", "zeta-lab");'
+            );
             expect(registry).toContain("export const $AlphaLabId");
             expect(registry).toContain("export const $ZetaLabId");
             expect(markerIndex("export const $AlphaLabId")(registry)).toBeLessThan(

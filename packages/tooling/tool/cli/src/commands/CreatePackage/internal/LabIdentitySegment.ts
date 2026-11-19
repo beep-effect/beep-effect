@@ -3,9 +3,9 @@
  * composer registry (`packages/foundation/modeling/identity/src/packages.ts`).
  *
  * The registry keeps a marker-fenced, machine-owned labs segment: a
- * `generatedLabComposers` group between the flat `generatedComposers` call and
- * the `composers` object, plus a marker-fenced export block before the
- * authored export section. This module is the single writer for that segment:
+ * pure `generatedLabComposers` group after the flat `generatedComposers` call,
+ * plus a marker-fenced block of independent pure `$I.create("<slug>")` leaf
+ * exports before the authored export section. This module is the single writer for that segment:
  * create-package (forward), delete-package (reconstructive inverse),
  * `lint identity-registry --fix`, and `beep architecture` all route lab
  * registrations through {@link LabIdentitySegment.syncLabIdentitySegment},
@@ -30,6 +30,7 @@ import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import { PURE_ANNOTATION } from "./IdentityExportBlock.ts";
 import { CreatePackageIdentityRegistration } from "./IdentityRegistration.ts";
 
 const $I = $RepoCliId.create("commands/CreatePackage/internal/LabIdentitySegment");
@@ -138,6 +139,11 @@ const BEEP_SCOPE_PREFIX = "@beep/";
 // text is already biome-canonical and `yeet repair` never churns it.
 const BIOME_LINE_WIDTH = 120;
 const EMPTY_LAB_COMPOSERS_REGION = "const generatedLabComposers = {};";
+// The labs compose group is a pure registry: only `RepoPkgs` evaluates it, so a bundle that never
+// reads `RepoPkgs` drops the group and its slugs.
+const LAB_COMPOSERS_DECLARATION_HEAD = `const generatedLabComposers = ${PURE_ANNOTATION} $I.compose`;
+// Where biome breaks an over-long leaf export: after `=`, before the pure-annotated initializer.
+const LEAF_INITIALIZER_JOIN = ` = ${PURE_ANNOTATION} $I.create(`;
 
 const markerError = (problem: string, marker: string): DomainError =>
   DomainError.make({
@@ -220,7 +226,7 @@ const renderLabComposersRegion = (slugs: ReadonlyArray<string>): string => {
   }
 
   const sorted = A.sort(slugs, Order.String);
-  const singleLine = `const generatedLabComposers = $I.compose(${A.join(
+  const singleLine = `${LAB_COMPOSERS_DECLARATION_HEAD}(${A.join(
     A.map(sorted, (slug) => `"${slug}"`),
     ", "
   )});`;
@@ -228,7 +234,7 @@ const renderLabComposersRegion = (slugs: ReadonlyArray<string>): string => {
   return Str.length(singleLine) <= BIOME_LINE_WIDTH
     ? singleLine
     : Text.joinLines([
-        "const generatedLabComposers = $I.compose(",
+        `${LAB_COMPOSERS_DECLARATION_HEAD}(`,
         A.join(
           A.map(sorted, (slug) => `  "${slug}"`),
           ",\n"
@@ -248,9 +254,18 @@ const labExportBlock = (slug: string): string => {
   const block = CreatePackageIdentityRegistration.typedIdentityExportBlock(slug);
   const lastLineStart = pipe(Str.lastIndexOf("\n")(block), O.match({ onNone: () => 0, onSome: (index) => index + 1 }));
 
-  return Str.length(block) - lastLineStart > BIOME_LINE_WIDTH
-    ? Str.replace(" = composers.", " =\n  composers.")(block)
-    : block;
+  if (Str.length(block) - lastLineStart <= BIOME_LINE_WIDTH) {
+    return block;
+  }
+
+  // Biome keeps `... = /*#__PURE__*/ $I.create(` on one line and breaks the argument when that
+  // head fits the line width; otherwise it breaks after `=` and indents the initializer.
+  const leafCall = `$I.create("${slug}");`;
+  const headWidth = Str.length(block) - lastLineStart - Str.length(leafCall) + Str.length("$I.create(");
+
+  return headWidth <= BIOME_LINE_WIDTH
+    ? Str.replace(leafCall, `$I.create(\n  "${slug}"\n);`)(block)
+    : Str.replace(LEAF_INITIALIZER_JOIN, ` =\n  ${PURE_ANNOTATION} $I.create(`)(block);
 };
 
 /**
