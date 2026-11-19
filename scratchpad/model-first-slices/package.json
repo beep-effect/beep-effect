@@ -48,7 +48,9 @@
     "vitest": "5.0.4"
   },
   "overrides": {
-    "effect": "4.1.4"
+    "effect": "4.1.4",
+    "react": "link:../../node_modules/react",
+    "react-dom": "link:../../node_modules/react-dom"
   },
   "patchedDependencies": {
     "@alchemy.run/domain@2.0.0-beta.87": "patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch",

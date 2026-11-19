@@ -37,16 +37,17 @@ const FIXTURE = /^Fixture (human|agent|process):([^@\s]+)(?:@(\S+))?$/;
 const decode = S.decodeUnknownOption(Credential);
 
 // Each part is decoded, so a malformed id or process name reads as no credential, never a defect.
+// The `_tag` stays in each literal: the union's decoder reads it, and without it nothing decodes.
 const parse = (value: string): O.Option<Credential> =>
   pipe(
     O.fromNullishOr(FIXTURE.exec(value)),
     O.flatMap(([, kind, subject = "", principal]) =>
       Match.value(kind).pipe(
         Match.withReturnType<O.Option<Credential>>(),
-        Match.when("human", () => decode({principal: subject })),
-        Match.when("agent", () => decode({ run: subject })),
+        Match.when("human", () => decode({ _tag: "Human", principal: subject })),
+        Match.when("agent", () => decode({ _tag: "Agent", run: subject })),
         Match.when("process", () =>
-          O.flatMap(O.fromNullishOr(principal), (on) => decode({ process: subject, principal: on })),
+          O.flatMap(O.fromNullishOr(principal), (on) => decode({ _tag: "Process", process: subject, principal: on })),
         ),
         Match.orElse(O.none<Credential>),
       ),

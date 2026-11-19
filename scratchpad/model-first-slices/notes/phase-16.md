@@ -4,8 +4,11 @@ The stack ran on a single-node Docker swarm: Postgres, two runners and the front
 `mfs-conformance`, local state only. It was the first cluster run since phase 11. Phases 12, 14 and
 15 were in process only, and this run found one defect from each of the first two.
 
-On one fresh deploy of the final tree, every case of the suite passes: FINAL_COUNTS. The rebuild
-case ran on that same tree before it, around a deploy of a copy with the generation bumped.
+On one fresh deploy of the final tree, every case of the suite passes: 23 of 23 (the 4 directory
+cases, 10 upstream, 8 of the prototype's own, 1 stored-forms). The rebuild's two halves passed on
+the same tree before it, around a deploy of a copy with the generation bumped. An earlier pass on
+this run's first working build had 17 of 19: the two two-runner cases failed in the harness (item 3
+below), and passed once it was fixed.
 
 ## Defects the run found
 
@@ -101,12 +104,12 @@ The rebuild steps in the table file's doc comment are complete as written.
 - **Killed runners stay in `cluster_runners`, flagged healthy.** Effect deletes stale rows only when
   a runner unregisters. Nothing reads them, but the table is not a list of live runners.
 - **The frozen-runner case's numbers.** A write sent 45 s into the pause was answered in
-  FROZEN_QUICK_MS ms by the other runner, which had taken the shard. The write in flight on the
+  21 ms by the other runner, which had taken the shard. The write in flight on the
   paused runner was answered with a 503; its retry under the same command id got a receipt. Each
   write was stored once.
-- **The fence case's numbers.** The shard moved FENCE_MOVED_MS ms into the pause; the paused commit
-  was refused at `COMMIT`; the refused writes landed once, the last FENCE_LAST_MS ms after the
-  unpause (bound 33 s); only two named sessions held locks.
+- **The fence case's numbers.** The shard moved 34.6 s into the pause; the paused commit
+  was refused at `COMMIT`; every write landed once, the last 12.0 s after the unpause (bound 33 s);
+  only two named sessions held locks. The kill-after-commit case recovered in 66.9 s (bound 80 s).
 
 ## Not verified
 
@@ -128,8 +131,51 @@ The rebuild steps in the table file's doc comment are complete as written.
 
 ## Teardown
 
-TEARDOWN
+In order:
+
+1. `alchemy destroy` for the stage, three times in all: after the rebuild (from the copy, which
+   held the state), and twice from this tree.
+2. Five images were removed: three runner images the redeploys left, and the two
+   `postgres:17-alpine` images the deploys pulled, by digest (`cdef2be3`, `526f86d9`). The
+   baseline's `3540c0362c80` kept its tag.
+3. `docker swarm leave --force`, since this run's `swarm init` created the swarm.
+4. `docker network rm docker_gwbridge`.
+5. `apps/practice/.alchemy/state`, `bundles`, `cluster` and `tmp` were deleted, and so was the
+   copy under `~/.cache/beep/`.
+
+No `practice-*` or driver service, container, network, volume or image remains. Against the
+baseline recorded before the run the only difference is Docker's build cache: 7.837 GB before,
+7.885 GB after. It was not pruned. Free disk is 235 GB. The 5-minute load stayed under 60.
 
 ## Gates
 
-GATES
+- `bun run check`: 0 diagnostics over all 17 projects.
+- `bun run generated:check`: passes (handlers, bindings, entries, migrations, proofs).
+- `bun run test`: the whole suite last passed in full before the first deploy (18:53 local): 264
+  tests, 110 of 110 declared outcomes. One test is new, `party/host/test/ReviewerHttp.test.ts`.
+  What changed between then and the last deploy (the switch, the harness) was re-run by package
+  and passed.
+
+### The tree moved after the cluster run
+
+Two of the owner's commits landed after the last deploy, so the cluster results describe the tree
+before them.
+
+- **`chore: ran lint:fix` (19:43).** It replaced `<button>` with `Button` from `@beep/ui` in the two
+  screens of `party/web`. The prototype does not link `@beep/ui`; Node finds it in the repository's
+  own `node_modules`, with that tree's React beside the prototype's. Two screen tests now fail with
+  `Cannot read properties of null (reading 'useRef')`. **Fixed, on the owner's yes**:
+  `party/web` links `@beep/ui` as the hosts link `@beep/pglite`, and the workspace's `overrides`
+  point `react` and `react-dom` at the repository's copies, as `drizzle-orm` already is, so one
+  React is loaded. Linking `react` from `party/web` alone did not work: bun then gave
+  `@effect/atom-react` and `@testing-library/react` copies of their own. The root `turbo.json`
+  lists `@beep/ui` among the inputs of `check:model-first-slices`.
+- **`chore: unslopping` (19:48).** It removed `_tag` from the three literals `FixtureCredential`
+  decodes, so no credential decoded and six boundary tests failed; on a cluster every call would
+  have been `Unauthorized`. **Fixed**: the tags are back, with a comment saying the decoder reads
+  them. It also left an unused `import { Equal } from "effect"` in `AuthorityGateway.adapter.ts`,
+  removed.
+
+At the head with those fixes: `bun run check` 0 diagnostics; 264 tests pass; 110 of 110 outcomes
+execute; `bun run generated:check` passes. The fixed credential code has not run on a cluster. The
+cache baseline for the root `turbo.json` is owed at publish.

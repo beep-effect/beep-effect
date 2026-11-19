@@ -18,7 +18,6 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { Boundary, BoundaryLive } from "./Boundary/Boundary.ts";
 import { thunkEffectVoid } from "@beep/utils"
-import { Equal } from "effect"
 
 /**
  * The authority context's side of its gateway: re-admission through the

@@ -6065,6 +6065,8 @@
         "packages/ecosystem/effect-drizzle/src/**",
         "packages/drivers/pglite/package.json",
         "packages/drivers/pglite/src/**",
+        "packages/foundation/ui-system/ui/package.json",
+        "packages/foundation/ui-system/ui/src/**",
         "!**/node_modules/**"
       ]
     },
