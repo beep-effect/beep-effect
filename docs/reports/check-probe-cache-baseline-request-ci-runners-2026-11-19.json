@@ -1,0 +1,18 @@
+{
+  "previous": {
+    "//": "2181371710b13a335af649537aa1a45ddc23d5b1fac0c79f5471bfac34a80e6b",
+    "@beep/infra-ci-runners": "a344e9664c85a37e84b46e5a78b9a8fd07c25f4afcc2fd248685d3b745a5715b"
+  },
+  "review": {
+    "reviewer": "Claude Fable 5.2 (gate-output-switch-on P3 lane, fix/gate-output-check-probe)",
+    "reason": "Re-record two subjects after merging main at a4ce5e8b0c9. @beep/infra-ci-runners reached main after the probe lane rewrote the other manifests; the scripts writer gave it the same generated check, beep-cli quality check-probe && bun run beep:check, re-keying the scripts digest of its tasks. The root subject changed on both sides: main added the new package's tasks, and this lane regenerated the input lists of the policy fingerprint tasks. Task outputs, environment entries and cache flags are unchanged; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+    }
+  },
+  "subjects": ["//", "@beep/infra-ci-runners"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

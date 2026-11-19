@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "@beep/contract-kit": "633a04b48557945769a8ef8c526668b9e1fae5df2e8cd977d9831b3a37cebc3c"
+  },
+  "review": {
+    "reviewer": "Claude Fable 5.2 (gate-output-switch-on P3 lane, fix/gate-output-check-probe)",
+    "reason": "Record the package check probe on @beep/contract-kit, a package that reached main after the probe lane rewrote the other 207 manifests. bun run beep lint package-scripts --write gave it the same generated check, beep-cli quality check-probe && bun run beep:check, re-keying the scripts digest of its tasks. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+    }
+  },
+  "subjects": ["@beep/contract-kit"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

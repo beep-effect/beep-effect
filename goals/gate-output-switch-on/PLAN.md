@@ -2,19 +2,19 @@
 
 ## Status
 
-Status: `pending`
+Status: `complete`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Re-verify the six sites against the current head and settle the two open choices: which entry carries the unbuilt-dependency probe (the generated `check` script or a `beep-cli` route), and where the GitHub-check report's durable file lives. | Each site's state matches `SPEC.md` Target Surfaces or the spec is corrected; one decision file per choice. |
+| P0 Research | complete | Re-verify the six sites against the current head and settle the two open choices: which entry carries the unbuilt-dependency probe (the generated `check` script or a `beep-cli` route), and where the GitHub-check report's durable file lives. | Each site's state matches `SPEC.md` Target Surfaces or the spec is corrected; one decision file per choice. |
 | P1 Agent signal through Turbo | complete | Fixes 1 and 2: export the agent keys from `@beep/runtime-env`, add them to `turbo.json`, set `AGENT=1` and `--output-logs=errors-only` in `turboStep`/`turboRunArgs` under a detected agent, and re-record the cache baseline. | AC1 to AC4 and AC9 hold; the two measured numbers are written to `history/`. |
 | P2 Quiet surfaces | complete | Fixes 3, 4 and 5: formatter options on `CliColor.formatterLayer` and `globalFlags: "summary"` in the repo CLI; envelopes off stdout when the artifact env is set, with a durable GitHub-check report; the submit step on the split executor. | AC5 to AC7 hold. |
-| P3 Unbuilt-dependency probe | pending | Fix 6: the one-line probe on both package-local check entry points, reusing `missingReferenceOutputs`. | AC8 holds; a fresh lane's package check prints one line where it printed one TS6305 per reference. |
-| P4 Verify | pending | Run `bun run beep quality package-verify` for every touched package and `bun run beep cache audit`; record the before and after character counts. | AC9 and AC10 hold; evidence is under `history/`. |
-| P5 Yeet: PR to mergeable | pending | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P6 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P3 Unbuilt-dependency probe | complete | Fix 6: the one-line probe on both package-local check entry points, reusing `missingReferenceOutputs`. | AC8 holds; a fresh lane's package check prints one line where it printed one TS6305 per reference. |
+| P4 Verify | complete | Run `bun run beep quality package-verify` for every touched package and `bun run beep cache audit`; record the before and after character counts. | AC9 and AC10 hold; evidence is under `history/`. |
+| P5 Yeet: PR to mergeable | complete | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P6 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Work Breakdown
 
@@ -90,5 +90,13 @@ Fixes 3, 4 and 5 are implemented with tests. AC5: a test walks every command pat
 Lane fix/gate-output-quiet-surfaces
 
 Reverse: Revert the three commits on the lane.
+
+### P3 unbuilt-dependency probe built, 2026-11-18
+
+Fix 6 is implemented with nine tests over a fixture with one unbuilt reference. AC8: on `@beep/schema` with two upstream declaration indexes missing, the compiler alone printed 134,905 characters in 711 lines; `beep-cli check` prints one line of 175 characters, and `bun run check` prints that line between Bun's command echo and exit line, 269 characters. No compiler starts. A built tree runs the check unchanged. P0 closed with it: both open choices have a decision file, and the spec's count of generated check scripts (186) is 209 at this head. Six package-keyed SHA-256 digests in the baseline request matched token detectors; a path and line allowlist for such requests landed on `main` first, because the hosted scan pins its configuration to the base. Numbers: `history/2026-11-18-p3-probe-and-verify.md` in this packet.
+
+Lane fix/gate-output-check-probe
+
+Reverse: Revert the probe commits on the lane, run the scripts writer and restore the previous per-package cache baselines.
 
 <!-- beep:decisions:end -->

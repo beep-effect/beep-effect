@@ -15,9 +15,11 @@ import {
   OWN_SOURCE_CHECK_COMMAND,
   OwnSourceCheckOverride,
   ownSourceCheckOverrides,
+  PACKAGE_CHECK_PROBE_COMMAND,
   PackageKind,
   PackageScriptsReportFromWire,
   RetiredScriptName,
+  renderTaskScriptBinding,
   retiredCheckSegments,
   retiredImplScripts,
   ScriptsBlock,
@@ -99,6 +101,14 @@ describe("canonical package scripts schemas", () => {
     assertSome(HashMap.get(scripts, "build"), "bun run beep:build");
     expect(HashMap.has(scripts, "beep:build")).toBe(false);
     expect(HashMap.size(scripts)).toBe(2);
+  });
+  it("leads every generated check with the unbuilt-reference probe except infra's build-mode check", () => {
+    expect(scaffoldPackageScripts("library", []).check).toBe(`${PACKAGE_CHECK_PROBE_COMMAND} && bun run beep:check`);
+    expect(scaffoldPackageScripts("app", []).check).toBe("beep-cli quality check-probe && bun run beep:check");
+    expect(scaffoldPackageScripts("infra", []).check).toBe("bun run beep:check");
+    expect(
+      renderTaskScriptBinding(TaskScriptBinding.cases.indirection.make({ impl: "beep:build", ifPresent: true }))
+    ).toBe("bun run --if-present beep:build");
   });
   it("does not restore removed audit aliases or unused tool implementations", () => {
     const tool = scaffoldPackageScripts("tool", ["test:integration"]);

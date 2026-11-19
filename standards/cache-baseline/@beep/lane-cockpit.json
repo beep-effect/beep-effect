@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/lane-cockpit",
   "review": {
-    "reviewer": "Claude Opus 5.5 medium, @chore/organizing-goal-packets",
-    "reason": "Record the six cached task slots of the new @beep/lane-cockpit lab (#3107), which inherit the root build, check, lint, lint:deprecated-apis, lint:laws and test definitions except for build: build.outputs is [] and build.inputs is the root build.inputs without !test/**, as in apps/labs/api-docs, because the lab's noEmit tsconfig.check.json build compiles test/ and a test edit must re-key it. Re-stamp // for the lab package.json added to //#lint:policy-fingerprint inputs and the turbo.json $schema bump to 2.11.11. Preserve commands, cache flags, outputs, environment, epoch and qualification scope; inputs only grow; no qualification or exception.",
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
+    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/lane-cockpit-cache-review-2026-11-12.md",
-      "sha256": "5211c359b40fb982623dc64f8c93d357d176e4d580c22697ad5b3a3392d4ca78"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/lane-cockpit#build",
       "command": "bun run beep:build",
-      "commandDigest": "49b4607e148586b1a740a003a8873d16659dba622d281cd2035a98a519761ec6",
+      "commandDigest": "ddf81f83ce0e86b563ddb13ca11b4d6d865c20262e40f48347c6164868dfdb94",
       "dependencies": [
         "@beep/identity#build",
         "@beep/schema#build"
@@ -53,8 +53,8 @@
     },
     {
       "computation": "@beep/lane-cockpit#check",
-      "command": "bun run beep:check",
-      "commandDigest": "49b4607e148586b1a740a003a8873d16659dba622d281cd2035a98a519761ec6",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "ddf81f83ce0e86b563ddb13ca11b4d6d865c20262e40f48347c6164868dfdb94",
       "dependencies": [
         "@beep/identity#build",
         "@beep/schema#build"
@@ -95,7 +95,7 @@
     {
       "computation": "@beep/lane-cockpit#coverage",
       "command": "bun run beep:coverage",
-      "commandDigest": "49b4607e148586b1a740a003a8873d16659dba622d281cd2035a98a519761ec6",
+      "commandDigest": "ddf81f83ce0e86b563ddb13ca11b4d6d865c20262e40f48347c6164868dfdb94",
       "dependencies": [
         "@beep/identity#build",
         "@beep/schema#build"
@@ -146,7 +146,7 @@
     {
       "computation": "@beep/lane-cockpit#dev",
       "command": "portless lane-cockpit.labs.beep sh -c 'bun --watch src/main.ts'",
-      "commandDigest": "49b4607e148586b1a740a003a8873d16659dba622d281cd2035a98a519761ec6",
+      "commandDigest": "ddf81f83ce0e86b563ddb13ca11b4d6d865c20262e40f48347c6164868dfdb94",
       "dependencies": [
         "@beep/identity#build",
         "@beep/schema#build"
@@ -177,7 +177,7 @@
     {
       "computation": "@beep/lane-cockpit#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "49b4607e148586b1a740a003a8873d16659dba622d281cd2035a98a519761ec6",
+      "commandDigest": "ddf81f83ce0e86b563ddb13ca11b4d6d865c20262e40f48347c6164868dfdb94",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -211,7 +211,7 @@
     {
       "computation": "@beep/lane-cockpit#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "49b4607e148586b1a740a003a8873d16659dba622d281cd2035a98a519761ec6",
+      "commandDigest": "ddf81f83ce0e86b563ddb13ca11b4d6d865c20262e40f48347c6164868dfdb94",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
@@ -277,7 +277,7 @@
     {
       "computation": "@beep/lane-cockpit#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "49b4607e148586b1a740a003a8873d16659dba622d281cd2035a98a519761ec6",
+      "commandDigest": "ddf81f83ce0e86b563ddb13ca11b4d6d865c20262e40f48347c6164868dfdb94",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -307,7 +307,7 @@
     {
       "computation": "@beep/lane-cockpit#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "49b4607e148586b1a740a003a8873d16659dba622d281cd2035a98a519761ec6",
+      "commandDigest": "ddf81f83ce0e86b563ddb13ca11b4d6d865c20262e40f48347c6164868dfdb94",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -353,7 +353,7 @@
     {
       "computation": "@beep/lane-cockpit#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "49b4607e148586b1a740a003a8873d16659dba622d281cd2035a98a519761ec6",
+      "commandDigest": "ddf81f83ce0e86b563ddb13ca11b4d6d865c20262e40f48347c6164868dfdb94",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/schema#transit"
@@ -397,7 +397,7 @@
     {
       "computation": "@beep/lane-cockpit#test",
       "command": "bun run beep:test",
-      "commandDigest": "49b4607e148586b1a740a003a8873d16659dba622d281cd2035a98a519761ec6",
+      "commandDigest": "ddf81f83ce0e86b563ddb13ca11b4d6d865c20262e40f48347c6164868dfdb94",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/schema#transit",
