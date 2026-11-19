@@ -17,6 +17,7 @@ import { makeRunId } from "@beep/repo-gate-record/RunId";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
+import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
@@ -106,10 +107,10 @@ export const writeRunRecord = Effect.fn("GateVitestRun.writeRunRecord")(function
 export const failureLine = (cause: Cause.Cause<unknown>): string =>
   `${ADAPTER_PREFIX} gate record not written: ${pipe(cause, Cause.pretty, Str.split("\n"), A.headNonEmpty)}`;
 
-// The adapter's one line goes straight to the process's stderr, beside
-// Vitest's own output, whatever console the test environment installed.
+// The adapter's one line goes to the error console of the Vitest main
+// process, beside Vitest's own output.
 const printToStderr = (line: string): void => {
-  process.stderr.write(`${line}\n`);
+  Effect.runSync(Console.error(line));
 };
 
 /**

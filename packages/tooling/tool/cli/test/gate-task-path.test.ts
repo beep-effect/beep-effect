@@ -38,6 +38,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 
 const agent = { audience: [], human: [], agent: [true], ci: [] };
 const encodeRecord = S.encodeEffect(S.fromJsonString(GateRecord));
+const encodeManifest = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
 const PACKAGE_DIR = "packages/demo";
 
@@ -75,7 +76,7 @@ const tempRepo = Effect.fn("GateTaskPathTest.tempRepo")(function* (scripts: Read
   yield* fs.makeDirectory(packageRoot, { recursive: true });
   yield* fs.writeFileString(path.join(repoRoot, "turbo.json"), "{}");
   yield* fs.writeFileString(path.join(repoRoot, "package.json"), '{"name":"root","workspaces":["packages/*"]}');
-  const manifest = yield* S.encodeUnknownEffect(S.fromJsonString(S.Unknown))({ name: "@beep/demo", scripts });
+  const manifest = yield* encodeManifest({ name: "@beep/demo", scripts });
   yield* fs.writeFileString(path.join(packageRoot, "package.json"), manifest);
   yield* fs.writeFileString(path.join(packageRoot, "tsconfig.json"), "{}");
   return { repoRoot, packageRoot };

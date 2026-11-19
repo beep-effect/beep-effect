@@ -22,13 +22,13 @@ afterEach(() => {
 
 const target = RecordTarget.cases.PackageTarget.make({ packageDir: PACKAGE_DIR, gate: "test" });
 
-// The cases spy on process.stderr, so they run one at a time.
+// The cases spy on the error console, so they run one at a time.
 describe("GateVitestReporter", { concurrent: false }, () => {
   it.layer(NodeServices.layer)("on disk", (it) => {
     it.effect("writes the package record at the end of a run, printing nothing", () =>
       Effect.gen(function* () {
         const { repoRoot, packageRoot } = yield* tempRepo();
-        const writes = vi.spyOn(process.stderr, "write");
+        const writes = vi.spyOn(console, "error");
         const reporter = new GateVitestReporter();
         reporter.onInit({ config: { root: packageRoot }, logger: {} });
         yield* Effect.promise(() => reporter.onTestRunStart());
@@ -60,7 +60,7 @@ describe("GateVitestReporter", { concurrent: false }, () => {
     it.effect("switches itself off with one stderr line when it cannot start", () =>
       Effect.gen(function* () {
         const { packageRoot } = yield* tempRepo();
-        const writes = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+        const writes = vi.spyOn(console, "error").mockImplementation(() => undefined);
         const reporter = new GateVitestReporter();
         reporter.onInit({
           get config(): { readonly root: string } {
@@ -71,7 +71,7 @@ describe("GateVitestReporter", { concurrent: false }, () => {
         yield* Effect.promise(() => reporter.onTestRunEnd([makeModule({ tests: [makeTestCase()] })], [], "passed"));
         assert.deepStrictEqual(
           A.map(writes.mock.calls, (call) => call[0]),
-          ["[@beep/repo-gate-vitest] off for this run: no resolved config\n"]
+          ["[@beep/repo-gate-vitest] off for this run: no resolved config"]
         );
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -86,7 +86,7 @@ describe("GateVitestReporter", { concurrent: false }, () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         yield* fs.writeFileString(path.join(packageRoot, ".beep"), "not a directory");
-        const writes = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+        const writes = vi.spyOn(console, "error").mockImplementation(() => undefined);
         const reporter = new GateVitestReporter();
         reporter.onInit({ config: { root: packageRoot }, logger: {} });
         yield* Effect.promise(() => reporter.onTestRunEnd([makeModule({ tests: [makeTestCase()] })], [], "passed"));
@@ -97,7 +97,7 @@ describe("GateVitestReporter", { concurrent: false }, () => {
 
     it.effect("reports a thrown value that is not an error by its text", () =>
       Effect.gen(function* () {
-        const writes = vi.spyOn(process.stderr, "write").mockImplementation(() => true);
+        const writes = vi.spyOn(console, "error").mockImplementation(() => undefined);
         const reporter = new GateVitestReporter();
         reporter.onInit({
           get config(): { readonly root: string } {

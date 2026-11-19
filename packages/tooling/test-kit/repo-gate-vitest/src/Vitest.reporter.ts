@@ -16,6 +16,8 @@
  * @since 0.0.0
  */
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Effect from "effect/Effect";
 import * as Inspectable from "effect/Inspectable";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";
@@ -33,7 +35,7 @@ const firstLine = (error: unknown): string =>
   A.headNonEmpty(Str.split(P.isError(error) ? error.message : Inspectable.toStringUnknown(error, 0), "\n"));
 
 const switchedOff = (error: unknown): undefined => {
-  process.stderr.write(`${PREFIX} off for this run: ${firstLine(error)}\n`);
+  Effect.runSync(Console.error(`${PREFIX} off for this run: ${firstLine(error)}`));
   return undefined;
 };
 
