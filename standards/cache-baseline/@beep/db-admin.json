@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/db-admin",
   "review": {
-    "reviewer": "Claude Opus 5.5 (declaration-only-builds PR 3, check once)",
-    "reason": "Record the configuration drift of check once: the root turbo.json check task depends on the package's own build as well as ^build, and bun run beep lint package-scripts --write rewrote 180 declaration-only scripts blocks so beep:check leads with tsrs -p tsconfig.json --emitDeclarationOnly instead of tsrs -p tsconfig.check.json (first-segment flags such as @beep/repo-cli's --checkerCostCache carried over), re-keying the command digest of every task of the written packages, cached or not. The 19 packages whose build is not declaration-only keep their previous check graph through an explicit tasks.check.dependsOn [\"^build\"] in their own turbo.json. Task commands, cache flags, inputs, outputs and environment are unchanged; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
+    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/check-once-cache-review-2026-11-13.md",
-      "sha256": "3c9c0c16b9aff33114a2733091c6ea5e9831fbd7b5fc27fee96432d6bdfa3cc3"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/db-admin#build",
       "command": "bun run beep:build",
-      "commandDigest": "327b3b105691078464a4e97c952b09a05859619956d2ffaf1d920e9e7b66caa8",
+      "commandDigest": "c010a0e6d091d6191e216c251ed973909811344dac0208d60aa4736598007416",
       "dependencies": [
         "@beep/architecture-lab-tables#build",
         "@beep/documents-domain#build",
@@ -80,8 +80,8 @@
     },
     {
       "computation": "@beep/db-admin#check",
-      "command": "bun run beep:check",
-      "commandDigest": "327b3b105691078464a4e97c952b09a05859619956d2ffaf1d920e9e7b66caa8",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "c010a0e6d091d6191e216c251ed973909811344dac0208d60aa4736598007416",
       "dependencies": [
         "@beep/architecture-lab-tables#build",
         "@beep/db-admin#build",
@@ -138,7 +138,7 @@
     {
       "computation": "@beep/db-admin#coverage",
       "command": "bunx vitest run --coverage",
-      "commandDigest": "327b3b105691078464a4e97c952b09a05859619956d2ffaf1d920e9e7b66caa8",
+      "commandDigest": "c010a0e6d091d6191e216c251ed973909811344dac0208d60aa4736598007416",
       "dependencies": [
         "@beep/architecture-lab-tables#build",
         "@beep/documents-domain#build",
@@ -203,7 +203,7 @@
     {
       "computation": "@beep/db-admin#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "327b3b105691078464a4e97c952b09a05859619956d2ffaf1d920e9e7b66caa8",
+      "commandDigest": "c010a0e6d091d6191e216c251ed973909811344dac0208d60aa4736598007416",
       "dependencies": [
         "@beep/db-admin#transit",
         "@beep/repo-docgen#transit"
@@ -243,7 +243,7 @@
     {
       "computation": "@beep/db-admin#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "327b3b105691078464a4e97c952b09a05859619956d2ffaf1d920e9e7b66caa8",
+      "commandDigest": "c010a0e6d091d6191e216c251ed973909811344dac0208d60aa4736598007416",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -277,7 +277,7 @@
     {
       "computation": "@beep/db-admin#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "327b3b105691078464a4e97c952b09a05859619956d2ffaf1d920e9e7b66caa8",
+      "commandDigest": "c010a0e6d091d6191e216c251ed973909811344dac0208d60aa4736598007416",
       "dependencies": [
         "@beep/architecture-lab-tables#transit",
         "@beep/documents-domain#transit",
@@ -357,7 +357,7 @@
     {
       "computation": "@beep/db-admin#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "327b3b105691078464a4e97c952b09a05859619956d2ffaf1d920e9e7b66caa8",
+      "commandDigest": "c010a0e6d091d6191e216c251ed973909811344dac0208d60aa4736598007416",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -387,7 +387,7 @@
     {
       "computation": "@beep/db-admin#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "327b3b105691078464a4e97c952b09a05859619956d2ffaf1d920e9e7b66caa8",
+      "commandDigest": "c010a0e6d091d6191e216c251ed973909811344dac0208d60aa4736598007416",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -443,7 +443,7 @@
     {
       "computation": "@beep/db-admin#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "327b3b105691078464a4e97c952b09a05859619956d2ffaf1d920e9e7b66caa8",
+      "commandDigest": "c010a0e6d091d6191e216c251ed973909811344dac0208d60aa4736598007416",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -489,7 +489,7 @@
     {
       "computation": "@beep/db-admin#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "327b3b105691078464a4e97c952b09a05859619956d2ffaf1d920e9e7b66caa8",
+      "commandDigest": "c010a0e6d091d6191e216c251ed973909811344dac0208d60aa4736598007416",
       "dependencies": [
         "@beep/architecture-lab-tables#transit",
         "@beep/documents-domain#transit",
@@ -547,7 +547,7 @@
     {
       "computation": "@beep/db-admin#test",
       "command": "bun run beep:test",
-      "commandDigest": "327b3b105691078464a4e97c952b09a05859619956d2ffaf1d920e9e7b66caa8",
+      "commandDigest": "c010a0e6d091d6191e216c251ed973909811344dac0208d60aa4736598007416",
       "dependencies": [
         "@beep/architecture-lab-tables#transit",
         "@beep/documents-domain#transit",
@@ -613,7 +613,7 @@
     {
       "computation": "@beep/db-admin#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "327b3b105691078464a4e97c952b09a05859619956d2ffaf1d920e9e7b66caa8",
+      "commandDigest": "c010a0e6d091d6191e216c251ed973909811344dac0208d60aa4736598007416",
       "dependencies": [
         "@beep/architecture-lab-tables#build",
         "@beep/documents-domain#build",
@@ -668,7 +668,7 @@
     {
       "computation": "@beep/db-admin#test:integration:parallel",
       "command": "bun run beep:test:integration",
-      "commandDigest": "327b3b105691078464a4e97c952b09a05859619956d2ffaf1d920e9e7b66caa8",
+      "commandDigest": "c010a0e6d091d6191e216c251ed973909811344dac0208d60aa4736598007416",
       "dependencies": [
         "@beep/architecture-lab-tables#build",
         "@beep/documents-domain#build",
@@ -723,7 +723,7 @@
     {
       "computation": "@beep/db-admin#test:property",
       "command": "bun run beep:test",
-      "commandDigest": "327b3b105691078464a4e97c952b09a05859619956d2ffaf1d920e9e7b66caa8",
+      "commandDigest": "c010a0e6d091d6191e216c251ed973909811344dac0208d60aa4736598007416",
       "dependencies": [
         "@beep/architecture-lab-tables#transit",
         "@beep/documents-domain#transit",

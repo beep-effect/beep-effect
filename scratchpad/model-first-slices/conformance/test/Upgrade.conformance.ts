@@ -14,7 +14,6 @@ import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
-import * as P from "@beep/utils/Predicate";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import * as Str from "@beep/utils/Str";
@@ -24,6 +23,7 @@ import {
   clients,
   eventually,
   fresh,
+  hasStatus,
   holdLock,
   human,
   issue,
@@ -34,6 +34,7 @@ import {
   releaseLock,
   runState,
   services,
+  statusOf,
 } from "./Stack.ts";
 import { thunk0 } from "@beep/utils"
 
@@ -81,7 +82,7 @@ if (O.contains(registration.restorePhase, "upgrade-decide")) {
     const claim = ClaimId.make(`claim_upgrade_${r}`);
     const run = `review:${claim}:1`;
     yield* intake.AssertClaim(claim, assertion(org), human("p_intake"));
-    yield* eventually(runState(run), P.isTagged("AwaitingApproval"));
+    yield* eventually(runState(run), hasStatus("awaiting-approval"));
     const view = yield* eventually(reviewer.ClaimReview.get(claim, human("p_rev")), (found) => O.isSome(proposalIn(found)));
     const { digest } = O.getOrThrow(proposalIn(view));
     // Hold the claim's review view on its snapshot row: the decision commits, and its delivery to the
@@ -99,8 +100,8 @@ if (O.contains(registration.restorePhase, "upgrade-decide")) {
     const drained = yield* eventually(hostBacklog({ shape: phase8Writer }), (backlog) => backlog.pending === 0, 120);
     const drainedOracle = yield* eventually(count(pendingDecisions), (n) => n === 0, 60);
     const passed = yield* checkPublisherHandover({ current: livePins, next: partyStreamPins, backlog: handoverBacklog(drained.pending) });
-    const completed = yield* eventually(runState(run), P.isTagged("Completed"), 120);
-    yield* record("upgrade-decide", { claim, run, approved, blocked, held, heldOracle, refused: refused.pending, drained, drainedOracle, passed, completed });
+    const completed = yield* eventually(runState(run), hasStatus("completed"), 120);
+    yield* record("upgrade-decide", { claim, run, approved, blocked, held, heldOracle, refused: refused.pending, drained, drainedOracle, passed, completed: statusOf(completed) });
     const fs = yield* FileSystem.FileSystem;
     const file = yield* restoreFile;
     const text = yield* S.encodeEffect(decidedJson)({ claim, run });
@@ -111,7 +112,7 @@ if (O.contains(registration.restorePhase, "upgrade-decide")) {
     expect(drained.pending).toBe(0);
     expect(drainedOracle).toBe(0);
     expect(passed).toMatchObject([{ stream: "PartyFacts", change: "closed" }]);
-    expect(completed._tag).toBe("Completed");
+    expect(statusOf(completed)).toBe("completed");
   }));
 }
 
@@ -160,11 +161,11 @@ if (O.contains(registration.restorePhase, "upgrade-after")) {
     const events = yield* runEvents(run);
     const state = yield* runState(run);
     const seen = yield* psql(`SELECT key FROM runs_inbox_seen WHERE key LIKE 'party:${claim}:%' ORDER BY key`);
-    yield* record("upgrade-after", { claim, review: review?._tag, run, republished: lastLine(republished), facts, same, end, checkpoint, concluded, events, state, seen });
+    yield* record("upgrade-after", { claim, review: review?._tag, run, republished: lastLine(republished), facts, same, end, checkpoint, concluded, events, state: statusOf(state), seen });
     expect(same).toBe(2);
     expect(A.filter(concluded, (entry) => entry.concluded > 1)).toEqual([]);
     expect(concludedOf(concluded, run)).toBe(1);
-    expect(state._tag).toBe("Completed");
+    expect(statusOf(state)).toBe("completed");
     expect(A.filter(Str.split(seen, "\n"), Str.isNonEmpty)).toEqual([`party:${claim}:decided:v1`]);
   }));
 }

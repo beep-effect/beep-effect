@@ -12,13 +12,8 @@
     "directory": "apps/practice-setup"
   },
   "scripts": {
-    "beep:build": "tsrs -p tsconfig.check.json",
-    "beep:check": "tsrs -p tsconfig.check.json",
-    "beep:lint": "biome check .",
-    "beep:lint:fix": "biome check . --write",
-    "beep:test": "bunx --bun vitest run",
     "build": "bun run beep:build",
-    "check": "bun run beep:check",
+    "check": "beep-cli quality check-probe && bun run beep:check",
     "coverage": "bunx vitest run --coverage",
     "lint": "bun run beep:lint",
     "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
@@ -27,6 +22,11 @@
     "lint:laws": "beep-cli lint laws --package .",
     "package-test-typecheck": "beep-cli quality test-tsgo-package",
     "test": "bun run beep:test",
+    "beep:build": "tsrs -p tsconfig.check.json",
+    "beep:check": "tsrs -p tsconfig.check.json",
+    "beep:lint": "biome check .",
+    "beep:lint:fix": "biome check . --write",
+    "beep:test": "bunx --bun vitest run",
     "package:windows": "bun run src/build.ts"
   },
   "dependencies": {

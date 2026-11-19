@@ -1,5 +1,5 @@
 import { expect, it } from "@effect/vitest";
-import { OrgId } from "@proto/kernel/Ids";
+import type { OrgId } from "@proto/kernel/Ids";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { ClaimReviewEvent, type ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
@@ -19,7 +19,6 @@ import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as N from "effect/Number";
 import * as O from "@beep/utils/Option";
-import * as P from "@beep/utils/Predicate";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
@@ -34,18 +33,21 @@ import {
   eventually,
   fresh,
   get,
+  hasStatus,
   holdLock,
   human,
-  issue,
   killRunners,
   killRunnersThen,
   lockHeld,
+  outcomeOf,
   psql,
   releaseLock,
   revoke,
   runnerService,
   runState,
   services,
+  setup,
+  statusOf,
 } from "./Stack.ts";
 import { FROZEN_WRITE_BOUND_MS, RECOVERY_BOUND_MS, REFUSED_WRITE_BOUND_MS } from "./RecoveryBound.ts";
 import {
@@ -74,22 +76,6 @@ const log = Effect.fn("log")(function* (label: string, value: unknown) {
   const json = yield* encodeJson(value);
   yield* fs.writeFileString(file, `${DateTime.formatIso(now)} ${label}: ${json}\n`, { flag: "a" });
 }, Effect.orDie);
-
-/** A fresh org with intake (and propose) for p_intake, review and read for p_rev. */
-const setup = Effect.gen(function* () {
-  const r = yield* fresh("r");
-  const org = `org_${r}`;
-  const grants = yield* Effect.all([
-    issue(`g_intake_${r}`, "p_intake", "party.intake", org),
-    issue(`g_propose_${r}`, "p_intake", "party.propose", org),
-    issue(`g_review_${r}`, "p_rev", "party.review", org),
-    issue(`g_read_${r}`, "p_rev", "party.read", org),
-  ], { concurrency: 1 });
-  expect(A.every(grants, (g) => g.ok)).toBe(true);
-  // The boundary reads grants from the authority model's views; give them a moment.
-  yield* Effect.sleep("2 seconds");
-  return { r, org: OrgId.make(org) };
-});
 
 const assertion = (org: OrgId) => ({
   org,
@@ -121,10 +107,10 @@ live("a command sent twice under one id commits once, and its reaction happens o
   expect(second.version).toBe(first.version);
   const assertions = yield* asserted(claim, first);
   expect(assertions).toBe(1);
-  const run1 = yield* eventually(runState(`review:${claim}:1`), P.isTagged("AwaitingApproval"));
+  const run1 = yield* eventually(runState(`review:${claim}:1`), hasStatus("awaiting-approval"));
   const run2 = yield* runState(`review:${claim}:2`);
-  yield* log("runs", { run1: run1._tag, run2: run2._tag });
-  expect(run2._tag).toBe("Unrequested");
+  yield* log("runs", { run1: statusOf(run1), run2: statusOf(run2) });
+  expect(statusOf(run2)).toBe("unrequested");
 }));
 
 live("a lost response, retried under the same id, gets the stored result", Effect.gen(function* () {
@@ -195,12 +181,12 @@ live("a runner killed right after a commit: every reaction happens once, within 
     doneAfterMs: O.map(atDone, () => doneAt - killedAt),
     atDone,
     atBound,
-    run2: run2._tag,
+    run2: statusOf(run2),
   });
   expect(O.map(atDone, done)).toEqual(O.some(true));
   expect(doneAt - killedAt).toBeLessThanOrEqual(RECOVERY_BOUND_MS);
   expect(atBound).toEqual({ claim: claimReactions, run: runReactions, review: true });
-  expect(run2._tag).toBe("Unrequested");
+  expect(statusOf(run2)).toBe("unrequested");
 }));
 
 live("a projection batch cut by a runner crash is redelivered and the Postgres directory is right", Effect.gen(function* () {
@@ -262,7 +248,7 @@ live("a grant revoked while a chain is in flight: the next hop is refused and re
     60,
   );
   const run1 = yield* runState(`review:${claim}:1`);
-  yield* log("revocation", { revoked, notes: view?.notes, proposal: O.getOrNull(proposalIn(view)), run: run1 });
+  yield* log("revocation", { revoked, notes: view?.notes, proposal: O.getOrNull(proposalIn(view)), run: statusOf(run1) });
   expect(view?.notes.length ?? 0).toBeGreaterThan(0);
 }));
 
@@ -271,14 +257,14 @@ live("a run waiting for approval survives a runner restart and completes after a
   const { intake, reviewer } = yield* clients;
   const claim = ClaimId.make(`claim_wait_${r}`);
   yield* intake.AssertClaim(claim, assertion(org), human("p_intake"));
-  yield* eventually(runState(`review:${claim}:1`), P.isTagged("AwaitingApproval"));
+  yield* eventually(runState(`review:${claim}:1`), hasStatus("awaiting-approval"));
   yield* killRunners;
   const view = yield* eventually(reviewer.ClaimReview.get(claim, human("p_rev")), (v) => O.isSome(proposalIn(v)));
   const { digest } = O.getOrThrow(proposalIn(view));
   const approved = yield* reviewer.ApproveProposal(claim, { digest, evidenceRevision: 1 }, human("p_rev"));
-  const run = yield* eventually(runState(`review:${claim}:1`), P.isTagged("Completed"), 120);
-  yield* log("waiting-run", { approved, run });
-  expect(run.outcome).toBe("accepted");
+  const run = yield* eventually(runState(`review:${claim}:1`), hasStatus("completed"), 120);
+  yield* log("waiting-run", { approved, run: O.getOrNull(run) });
+  expect(outcomeOf(run)).toEqual(O.some("accepted"));
 }));
 
 // Phase 12 (D55), the stale runner paused in `decide` past its shard lock, judged by the guarantee

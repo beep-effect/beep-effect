@@ -5,6 +5,7 @@
  */
 import { $RepoCliKitId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { thunkEmptyStr } from "@beep/utils/thunk";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual, flow, pipe } from "effect/Function";
@@ -160,12 +161,13 @@ export type ImplScriptName = typeof ImplScriptName.Type;
  * @since 0.0.0
  */
 export const TaskScriptBinding = S.TaggedUnion({
-  indirection: { impl: ImplScriptName, ifPresent: S.Boolean },
+  indirection: { impl: ImplScriptName, ifPresent: S.Boolean, guard: S.optionalKey(S.String) },
   cli: { command: S.String },
   owned: {},
 }).pipe(
   $I.annoteSchema("TaskScriptBinding", {
-    description: "Binding from a task to an implementation, CLI command, or package-owned text.",
+    description:
+      "Binding from a task to an implementation (optionally behind a guard command), CLI command, or package-owned text.",
   })
 );
 /**
@@ -175,6 +177,51 @@ export const TaskScriptBinding = S.TaggedUnion({
  * @since 0.0.0
  */
 export type TaskScriptBinding = typeof TaskScriptBinding.Type;
+
+/**
+ * Guard that leads every generated package `check` script: it fails with one
+ * line, before any compiler, when a referenced project has no built
+ * declarations.
+ *
+ * **Example** (Read the check guard)
+ *
+ * ```ts
+ * import { PACKAGE_CHECK_PROBE_COMMAND } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ *
+ * console.log(PACKAGE_CHECK_PROBE_COMMAND) // "beep-cli quality check-probe"
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const PACKAGE_CHECK_PROBE_COMMAND = "beep-cli quality check-probe";
+
+/**
+ * Render the script text of an indirection or CLI binding, as the generator
+ * writes it into a package manifest.
+ *
+ * **Example** (Render a guarded indirection)
+ *
+ * ```ts
+ * import { renderTaskScriptBinding, TaskScriptBinding } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas"
+ *
+ * const binding = TaskScriptBinding.cases.indirection.make({
+ *   impl: "beep:check",
+ *   ifPresent: false,
+ *   guard: "beep-cli quality check-probe",
+ * })
+ * console.log(renderTaskScriptBinding(binding)) // "beep-cli quality check-probe && bun run beep:check"
+ * ```
+ *
+ * @param binding - A binding that owns no package text.
+ * @returns The generated script value.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const renderTaskScriptBinding = (binding: Exclude<TaskScriptBinding, { readonly _tag: "owned" }>): string =>
+  binding._tag === "cli"
+    ? binding.command
+    : `${pipe(O.fromUndefinedOr(binding.guard), O.map(Str.concat(" && ")), O.getOrElse(thunkEmptyStr))}bun run ${binding.ifPresent ? "--if-present " : ""}${binding.impl}`;
 
 /**
  * Required, optional, forbidden, or evidence-derived task presence.
@@ -1052,36 +1099,37 @@ export const taskScriptRules: ReadonlyArray<TaskScriptRule> = [
     kind: "library",
     name: "check",
     presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false },
+    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false, guard: PACKAGE_CHECK_PROBE_COMMAND },
   }),
   TaskScriptRule.make({
     kind: "tool",
     name: "check",
     presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false },
+    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false, guard: PACKAGE_CHECK_PROBE_COMMAND },
   }),
   TaskScriptRule.make({
     kind: "ecosystem",
     name: "check",
     presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false },
+    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false, guard: PACKAGE_CHECK_PROBE_COMMAND },
   }),
   TaskScriptRule.make({
     kind: "app",
     name: "check",
     presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false },
+    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false, guard: PACKAGE_CHECK_PROBE_COMMAND },
   }),
   TaskScriptRule.make({
     kind: "lab",
     name: "check",
     presence: { _tag: "required" },
-    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false },
+    binding: { _tag: "indirection", impl: "beep:check", ifPresent: false, guard: PACKAGE_CHECK_PROBE_COMMAND },
   }),
   TaskScriptRule.make({
     kind: "infra",
     name: "check",
     presence: { _tag: "required" },
+    // No probe: the infra check runs `tsrs -b`, which builds the referenced projects itself.
     binding: { _tag: "indirection", impl: "beep:check", ifPresent: false },
   }),
   TaskScriptRule.make({ kind: "exempt", name: "check", presence: { _tag: "optional" }, binding: { _tag: "owned" } }),
@@ -1974,7 +2022,7 @@ const scaffoldRule = (scripts: HashMap.HashMap<string, string>, rule: TaskScript
   const binding = rule.binding;
   if (binding._tag === "owned") return scripts;
   if (binding._tag === "cli") return HashMap.set(scripts, rule.name, binding.command);
-  const tasks = HashMap.set(scripts, rule.name, `bun run ${binding.ifPresent ? "--if-present " : ""}${binding.impl}`);
+  const tasks = HashMap.set(scripts, rule.name, renderTaskScriptBinding(binding));
   const implementation = A.findFirst(implScriptDefaults, (row) => row.kind === rule.kind && row.name === binding.impl);
   return O.isSome(implementation) ? HashMap.set(tasks, binding.impl, implementation.value.value) : tasks;
 };

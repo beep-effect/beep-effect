@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/repo-cli",
   "review": {
-    "reviewer": "Claude Opus 5.5 (model-first-standard scaffolder lane, claude/model-first-standard-scaffolder)",
-    "reason": "Record the @beep/contract-kit dev dependency edge @beep/repo-cli gains so its model-first context test's build input is declared. No command, cache flag, input, output or environment changed; no qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-output-switch-on P3 lane, fix/gate-output-check-probe)",
+    "reason": "Re-record two subjects after merging the P1 and P2 slices of the same goal into the probe lane. @beep/repo-cli was re-recorded independently on both sides (the probe rewrote its generated check script; the merged slices changed its manifest), so the merged manifest matches neither record. The root subject drifts because turbo.json now carries both the merged passThroughEnv keys and the probe's CheckProbe.ts entries in four task input lists. Task outputs, environment entries and cache flags are unchanged by the merge; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/repo-cli-contract-kit-dev-dependency-cache-review-2026-11-18.md",
-      "sha256": "7e8fcd6baec0720a672d21c012a9197962b4258aaba3e571f21a17d76255563a"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/repo-cli#build",
       "command": "bun run beep:build",
-      "commandDigest": "7cc74b45d7b2d06908413b2c1b31f6806c60814969ccc0c05ee330b0cde63aec",
+      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
       "dependencies": [
         "@beep/ai-sync#build",
         "@beep/box#build",
@@ -136,8 +136,8 @@
     },
     {
       "computation": "@beep/repo-cli#check",
-      "command": "bun run beep:check",
-      "commandDigest": "7cc74b45d7b2d06908413b2c1b31f6806c60814969ccc0c05ee330b0cde63aec",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
       "dependencies": [
         "@beep/ai-sync#build",
         "@beep/box#build",
@@ -250,7 +250,7 @@
     {
       "computation": "@beep/repo-cli#coverage",
       "command": "bunx vitest run --coverage",
-      "commandDigest": "7cc74b45d7b2d06908413b2c1b31f6806c60814969ccc0c05ee330b0cde63aec",
+      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
       "dependencies": [
         "@beep/ai-sync#build",
         "@beep/box#build",
@@ -392,7 +392,7 @@
     {
       "computation": "@beep/repo-cli#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "7cc74b45d7b2d06908413b2c1b31f6806c60814969ccc0c05ee330b0cde63aec",
+      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
       "dependencies": [
         "@beep/repo-cli#transit",
         "@beep/repo-docgen#transit"
@@ -432,7 +432,7 @@
     {
       "computation": "@beep/repo-cli#doctest",
       "command": "bun run beep:doctest",
-      "commandDigest": "7cc74b45d7b2d06908413b2c1b31f6806c60814969ccc0c05ee330b0cde63aec",
+      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
       "dependencies": [
         "@beep/ai-sync#transit",
         "@beep/box#transit",
@@ -552,7 +552,7 @@
     {
       "computation": "@beep/repo-cli#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "7cc74b45d7b2d06908413b2c1b31f6806c60814969ccc0c05ee330b0cde63aec",
+      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -586,7 +586,7 @@
     {
       "computation": "@beep/repo-cli#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "7cc74b45d7b2d06908413b2c1b31f6806c60814969ccc0c05ee330b0cde63aec",
+      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
       "dependencies": [
         "@beep/ai-sync#transit",
         "@beep/box#transit",
@@ -722,7 +722,7 @@
     {
       "computation": "@beep/repo-cli#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "7cc74b45d7b2d06908413b2c1b31f6806c60814969ccc0c05ee330b0cde63aec",
+      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -752,7 +752,7 @@
     {
       "computation": "@beep/repo-cli#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "7cc74b45d7b2d06908413b2c1b31f6806c60814969ccc0c05ee330b0cde63aec",
+      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -808,7 +808,7 @@
     {
       "computation": "@beep/repo-cli#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "7cc74b45d7b2d06908413b2c1b31f6806c60814969ccc0c05ee330b0cde63aec",
+      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -854,7 +854,7 @@
     {
       "computation": "@beep/repo-cli#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "7cc74b45d7b2d06908413b2c1b31f6806c60814969ccc0c05ee330b0cde63aec",
+      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
       "dependencies": [
         "@beep/ai-sync#transit",
         "@beep/box#transit",
@@ -968,7 +968,7 @@
     {
       "computation": "@beep/repo-cli#test",
       "command": "bun run beep:test",
-      "commandDigest": "7cc74b45d7b2d06908413b2c1b31f6806c60814969ccc0c05ee330b0cde63aec",
+      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
       "dependencies": [
         "@beep/ai-sync#transit",
         "@beep/box#transit",
@@ -1111,7 +1111,7 @@
     {
       "computation": "@beep/repo-cli#test:property",
       "command": "bun run beep:test",
-      "commandDigest": "7cc74b45d7b2d06908413b2c1b31f6806c60814969ccc0c05ee330b0cde63aec",
+      "commandDigest": "db626cedd9c1273da23c58aba849f04bd1a5cf6982eec03b0e80e2543aaa549d",
       "dependencies": [
         "@beep/ai-sync#transit",
         "@beep/box#transit",

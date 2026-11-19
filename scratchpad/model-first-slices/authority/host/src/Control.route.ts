@@ -12,6 +12,7 @@ import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as O from "@beep/utils/Option";
 import * as Str from "@beep/utils/Str";
 import { bootstrap } from "./Boundary/Boundary.ts";
+import { thunkEmptyStr } from "@beep/utils"
 
 /**
  * A conformance-only route: `/control/issue?grant=&holder=&capability=&org=`
@@ -30,7 +31,7 @@ export const controlRoute = Effect.map(Effect.service(Grant), (grants) =>
     const param = (name: string) => url.searchParams.get(name) ?? "";
     const org = OrgId.make(param("org"));
     const as = Effect.provideService(CurrentInvocation, bootstrap(PrincipalId.make("p_owner"), org));
-    const action = pipe(url.pathname, Str.split("/"), A.get(2), O.getOrElse(() => ""));
+    const action = pipe(url.pathname, Str.split("/"), A.get(2), O.getOrElse(thunkEmptyStr));
     // Either command's receipt, or the tagged rejection it was refused with.
     const result: Effect.Effect<{ readonly version: number }, { readonly _tag: string }> =
       action === "issue"

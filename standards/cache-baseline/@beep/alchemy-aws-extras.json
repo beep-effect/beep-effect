@@ -2,22 +2,21 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/alchemy-aws-extras",
   "review": {
-    "reviewer": "Claude Opus 5.5 (slop-cleanup closeout lane, @slop/11-18-26)",
-    "reason": "//#check:model-first-slices gains the effect-drizzle and pglite manifests and sources the prototype now links; three packages gain a @beep/test-utils devDependency and tsconfig references for atRegistration. No command, cache flag, output or environment changed; no qualification granted.",
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
+    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/test-utils-registration-cache-review-2026-11-18.md",
-      "sha256": "80798e279b6dfc1a6ae68aa9dba04cade5214fcb06bff580976b5401d3e36a49"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/alchemy-aws-extras#build",
       "command": "bun run beep:build",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#build",
         "@beep/schema#build",
-        "@beep/test-utils#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -68,13 +67,12 @@
     },
     {
       "computation": "@beep/alchemy-aws-extras#check",
-      "command": "bun run beep:check",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/alchemy-aws-extras#build",
         "@beep/identity#build",
         "@beep/schema#build",
-        "@beep/test-utils#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -114,11 +112,10 @@
     {
       "computation": "@beep/alchemy-aws-extras#coverage",
       "command": "bunx vitest run --coverage --exclude=test/integration/**",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#build",
         "@beep/schema#build",
-        "@beep/test-utils#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -167,7 +164,7 @@
     {
       "computation": "@beep/alchemy-aws-extras#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/alchemy-aws-extras#transit",
         "@beep/repo-docgen#transit"
@@ -207,7 +204,7 @@
     {
       "computation": "@beep/alchemy-aws-extras#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -241,12 +238,11 @@
     {
       "computation": "@beep/alchemy-aws-extras#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
         "@beep/schema#transit",
-        "@beep/test-utils#transit",
         "@beep/utils#transit"
       ],
       "configuration": {
@@ -309,7 +305,7 @@
     {
       "computation": "@beep/alchemy-aws-extras#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -339,7 +335,7 @@
     {
       "computation": "@beep/alchemy-aws-extras#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -395,7 +391,7 @@
     {
       "computation": "@beep/alchemy-aws-extras#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -441,11 +437,10 @@
     {
       "computation": "@beep/alchemy-aws-extras#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/schema#transit",
-        "@beep/test-utils#transit",
         "@beep/utils#transit"
       ],
       "configuration": {
@@ -487,11 +482,10 @@
     {
       "computation": "@beep/alchemy-aws-extras#test",
       "command": "bun run beep:test",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/schema#transit",
-        "@beep/test-utils#transit",
         "@beep/utils#transit",
         "@beep/utils#transit"
       ],
@@ -541,11 +535,10 @@
     {
       "computation": "@beep/alchemy-aws-extras#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#build",
         "@beep/schema#build",
-        "@beep/test-utils#build",
         "@beep/utils#build"
       ],
       "configuration": {

@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/storybook",
   "review": {
-    "reviewer": "Claude Fable 5.2 (goals/infra-alchemy-rebuild-p3-storybook)",
-    "reason": "Re-record @beep/storybook after the Alchemy stack adds a build script, one linted file and the stack dependencies, and the root subject for turbo.json input-list regeneration inherited from main (#3263, #3271, #3274, #3276); no command, output or environment changes, no qualification granted.",
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
+    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-storybook-alchemy-stack.md",
-      "sha256": "d22636ceba560fac18f37d0b28ae28d6d04e7985c9f7765bae99027af3c117e5"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/storybook#build",
       "command": "bun run beep:build",
-      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "commandDigest": "f2bd8af57c8e8afb0fd9b966cf9ae71245290432f158d770a3f801b83e6556a7",
       "dependencies": [
         "@beep/epistemic-ui#build",
         "@beep/graph-3d#build",
@@ -69,8 +69,8 @@
     },
     {
       "computation": "@beep/storybook#check",
-      "command": "bun run beep:check",
-      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "f2bd8af57c8e8afb0fd9b966cf9ae71245290432f158d770a3f801b83e6556a7",
       "dependencies": [
         "@beep/dock-react#check",
         "@beep/editor#check",
@@ -118,7 +118,7 @@
     {
       "computation": "@beep/storybook#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "commandDigest": "f2bd8af57c8e8afb0fd9b966cf9ae71245290432f158d770a3f801b83e6556a7",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -153,7 +153,7 @@
     {
       "computation": "@beep/storybook#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "commandDigest": "f2bd8af57c8e8afb0fd9b966cf9ae71245290432f158d770a3f801b83e6556a7",
       "dependencies": [
         "@beep/epistemic-ui#transit",
         "@beep/graph-3d#transit",
@@ -222,7 +222,7 @@
     {
       "computation": "@beep/storybook#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "commandDigest": "f2bd8af57c8e8afb0fd9b966cf9ae71245290432f158d770a3f801b83e6556a7",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -252,7 +252,7 @@
     {
       "computation": "@beep/storybook#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "commandDigest": "f2bd8af57c8e8afb0fd9b966cf9ae71245290432f158d770a3f801b83e6556a7",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -308,7 +308,7 @@
     {
       "computation": "@beep/storybook#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "commandDigest": "f2bd8af57c8e8afb0fd9b966cf9ae71245290432f158d770a3f801b83e6556a7",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -354,7 +354,7 @@
     {
       "computation": "@beep/storybook#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "commandDigest": "f2bd8af57c8e8afb0fd9b966cf9ae71245290432f158d770a3f801b83e6556a7",
       "dependencies": [
         "@beep/epistemic-ui#transit",
         "@beep/graph-3d#transit",
@@ -401,7 +401,7 @@
     {
       "computation": "@beep/storybook#storybook",
       "command": "portless storybook.beep sh -c 'storybook dev -p \"${PORT:-6006}\"'",
-      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "commandDigest": "f2bd8af57c8e8afb0fd9b966cf9ae71245290432f158d770a3f801b83e6556a7",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -430,7 +430,7 @@
     {
       "computation": "@beep/storybook#storybook:build",
       "command": "NODE_OPTIONS=--disable-warning=DEP0205 storybook build -o storybook-static",
-      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "commandDigest": "f2bd8af57c8e8afb0fd9b966cf9ae71245290432f158d770a3f801b83e6556a7",
       "dependencies": [
         "@beep/epistemic-ui#build",
         "@beep/graph-3d#build",
@@ -479,7 +479,7 @@
     {
       "computation": "@beep/storybook#storybook:start",
       "command": "portless storybook.beep sh -c 'vite preview --host 0.0.0.0 --port \"${PORT:-6006}\" --outDir storybook-static'",
-      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "commandDigest": "f2bd8af57c8e8afb0fd9b966cf9ae71245290432f158d770a3f801b83e6556a7",
       "dependencies": [
         "@beep/storybook#storybook:build"
       ],
@@ -509,7 +509,7 @@
     {
       "computation": "@beep/storybook#test",
       "command": "bun run beep:test",
-      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "commandDigest": "f2bd8af57c8e8afb0fd9b966cf9ae71245290432f158d770a3f801b83e6556a7",
       "dependencies": [
         "@beep/epistemic-ui#transit",
         "@beep/graph-3d#transit",
@@ -564,7 +564,7 @@
     {
       "computation": "@beep/storybook#test:storybook",
       "command": "bun run scripts/run-storybook-tests.mjs",
-      "commandDigest": "e29d7967c6c4b9c0dbed739316fdb0b16c223d79f60a6df1661f299f87021c1b",
+      "commandDigest": "f2bd8af57c8e8afb0fd9b966cf9ae71245290432f158d770a3f801b83e6556a7",
       "dependencies": [
         "@beep/epistemic-ui#build",
         "@beep/graph-3d#build",

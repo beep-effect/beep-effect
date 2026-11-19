@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "//": "02b93fa7c9483f5306087948660b3a13a9fe5cb89af3d9e46666c0a3ec0ad304"
+  },
+  "review": {
+    "reviewer": "Claude Fable 5.2 (gate-output-switch-on P3 lane, fix/gate-output-check-probe)",
+    "reason": "Re-record the root subject after the policy-fingerprint writer regenerated the input lists of the policy fingerprint tasks in turbo.json: the task runner now imports the package-scripts schema module to read the probe command, so that file's place in those generated lists changed. Only input lists of fingerprint seal tasks moved; no task command, output, environment entry or cache flag changed and no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+    }
+  },
+  "subjects": ["//"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

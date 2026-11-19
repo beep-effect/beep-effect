@@ -69,6 +69,7 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { isHeavyDocsOnlyPath } from "../Ci/CiOperational.schemas.ts";
 import { discoverEffectImportSourceFiles, EffectImportRulesOptions } from "../Laws/EffectImports.ts";
+import { checkPackageReferencesBuilt } from "./CheckProbe.ts";
 import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
 import { defaultJSDocTotalsBaselinePath } from "./internal/JSDocRatchet.ts";
 import { readJsonc } from "./internal/QualityArtifactSupport.ts";
@@ -77,6 +78,7 @@ import type { LsTreeEntry } from "@beep/git/Git";
 export { coverageProducerEnvironment } from "./internal/CoverageEnvironment.ts";
 
 import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
+import { PACKAGE_CHECK_PROBE_COMMAND } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
 import {
   CapturedStep,
   formatCommandLine,
@@ -181,6 +183,7 @@ import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
+import type { CheckProbeReadError, UnbuiltReferenceOutputs } from "./CheckProbe.ts";
 import type { CoverageSnapshotEntry } from "./internal/CoverageRegression.ts";
 import type { CoverageAffectedScope, CoverageBaselineRowDelta, CoverageScopeMode } from "./internal/CoverageScope.ts";
 import type { FlakeQuarantineTask } from "./internal/FlakeQuarantine.ts";
@@ -5164,6 +5167,20 @@ const readPackageJson = Effect.fn("QualityTasks.readPackageJson")(function* (pac
 // there is no separate `beep:audit` script (see `rootAuditSteps`).
 const packageAuditTasks: ReadonlyArray<QualityTaskName> = ["build", "check", "test", "lint"];
 
+// `beep:check` runs `tsrs -p`, which prints one TS6305 per reference whose
+// declarations are unbuilt; the filesystem probe prints one line instead.
+// The task path probes exactly when the package's generated `check` does: the
+// generator leaves the probe off a kind whose `beep:check` builds the
+// referenced projects itself (`tsrs -b`, the infra kind).
+const probeBeforePackageCheck = (
+  packageDir: string,
+  task: QualityTaskInvocation["task"],
+  scripts: { readonly [name: string]: string }
+): Effect.Effect<void, CheckProbeReadError | UnbuiltReferenceOutputs, FileSystem.FileSystem | Path.Path> =>
+  QualityTaskName.is.check(task) && pipe(scripts, R.get("check"), O.exists(Str.startsWith(PACKAGE_CHECK_PROBE_COMMAND)))
+    ? checkPackageReferencesBuilt(packageDir)
+    : Effect.void;
+
 const runPackageTask: (
   packageDir: string,
   invocation: QualityTaskInvocation
@@ -5192,6 +5209,8 @@ const runPackageTask: (
       yield* Console.log(`[beep-cli] ${packageName} ${invocation.task}${fix ? ":fix" : ""}: no-op`);
       return;
     }
+
+    yield* probeBeforePackageCheck(packageDir, invocation.task, scripts);
 
     yield* runStep(
       QualityTaskStep.make({
@@ -5291,6 +5310,8 @@ type QualityTaskError =
   | QualityTaskConfigurationError
   | QualityTaskFailed
   | QualityTaskGroupFailed
+  | CheckProbeReadError
+  | UnbuiltReferenceOutputs
   | UnexpectedQualityTaskFailure;
 
 /**
@@ -5364,17 +5385,19 @@ const runQualityTaskInternal = Effect.fn("QualityTasks.runQualityTask")(function
   yield* pipe(
     packageDir,
     O.map((dir) => runPackageTask(dir, invocation)),
-    O.getOrElse(() => runRootTask(repoRoot, invocation))
+    O.getOrElse(() => provideQualityConcurrency(runRootTask(repoRoot, invocation)))
   );
 });
 
 /**
- * Run a quality task under one admission-aware concurrency plan.
+ * Run a quality task, a repo-root one under one admission-aware concurrency plan.
  *
  * **Details**
  *
- * The plan is resolved once per invocation; the planners fall back to the
- * unscaled local plan wherever the service is not provided (tests).
+ * A root task resolves the plan once per invocation; the planners fall back to
+ * the unscaled local plan wherever the service is not provided (tests). A
+ * package-local task runs one package script and reads no plan, so it resolves
+ * none and prints no admission note.
  *
  * **Example** (Run a quality task)
  *
@@ -5385,14 +5408,13 @@ const runQualityTaskInternal = Effect.fn("QualityTasks.runQualityTask")(function
  * ```
  *
  * @param invocation - Parsed quality task invocation.
- * @returns The task run under the live concurrency plan.
+ * @returns The task run; a root task under the live concurrency plan.
  * @category use-cases
  * @since 0.0.0
  */
-export const runQualityTask = (
+export const runQualityTask: (
   invocation: QualityTaskInvocation
-): Effect.Effect<void, QualityTaskError, QualityTaskEnvironment> =>
-  provideQualityConcurrency(runQualityTaskInternal(invocation));
+) => Effect.Effect<void, QualityTaskError, QualityTaskEnvironment> = runQualityTaskInternal;
 
 /**
  * Run a quality task directly from a raw argv vector.
