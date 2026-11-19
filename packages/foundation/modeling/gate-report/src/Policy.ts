@@ -98,16 +98,15 @@ const patternSuffix: (pattern: O.Option<string>) => string = flow(
 
 const DIGITS: ReadonlyArray<number> = [1, 2, 3, 4, 5, 6];
 
-const precisionFor = (actual: number, expected: number): number =>
+// The first precision that tells the two numbers apart; past six decimals, the numbers as given.
+const comparison = (actual: number, expected: number): string =>
   O.getOrElse(
-    A.findFirst(DIGITS, (digits) => Num.round(actual, digits) !== Num.round(expected, digits)),
-    () => 6
+    O.map(
+      A.findFirst(DIGITS, (digits) => Num.round(actual, digits) !== Num.round(expected, digits)),
+      (digits) => `${Num.round(actual, digits)}% < ${Num.round(expected, digits)}%`
+    ),
+    () => `${actual}% < ${expected}%`
   );
-
-const comparison = (actual: number, expected: number): string => {
-  const digits = precisionFor(actual, expected);
-  return `${Num.round(actual, digits)}% < ${Num.round(expected, digits)}%`;
-};
 
 /**
  * The one console line a breach renders as.
@@ -116,7 +115,7 @@ const comparison = (actual: number, expected: number): string => {
  *
  * Coverage percentages print to one decimal, and with up to six when one
  * decimal would show equal numbers, so `79.99` against `80` reads
- * `79.99% < 80%`.
+ * `79.99% < 80%`. Numbers that six decimals cannot tell apart print as given.
  *
  * **Example** (Render a coverage breach)
  *
