@@ -369,7 +369,8 @@ reports from the report schema's arbitrary.
   Fixture: the TS6305 cascade a package-local `check` prints on a fresh lane with unbuilt
   dependencies (701 lines for one cause in the census; the fixture is regenerated from the
   repository, never from transcript text) renders as one fold line with the count, the cause and
-  the fix command, and the whole projection is at most 5 lines.
+  the fix command, and the whole projection is at most 5 lines; diagnostics that share a file, a
+  code and a message shape remain distinct items.
 - [ ] **AC-L8 A path with its size.** Every non-green projection has one line naming the raw log
   and the record by repository-relative path with the log's size; a test reads both files back at
   those paths and checks the size.
@@ -540,6 +541,14 @@ Lane feat/gate-report-core
 
 Reverse: Restore a per-cell body in the dispatch table.
 
+### Persist, then render, under a deadline; the console is unconditional, 2026-11-19
+
+Upstream renders before it persists. Here the record step runs first, because the path line prints the log's written size, and it runs under a deadline the caller sets (10 seconds by default). Anything other than success becomes one omission line: a write error, a missed deadline, a defect, a log stream error or an incomplete event list. The run entry then settles the report itself, completing a missing start or end, so it cannot fail: the console always begins and ends with the verdict and the exit code is the tool's. The path line appears only when both files were confirmed written; otherwise the line says the record and log are unavailable, since a write may have landed without confirmation.
+
+Lane feat/gate-report-services
+
+Reverse: Render before the writes and print the path line from a second pass.
+
 ### Coverage runs write no gate record in this goal, 2026-11-19
 
 The coverage planner passes its own reporters on the command line, and a command-line reporter replaces the configured list, so the adapter does not run under the coverage commands. This goal leaves that as it is: a coverage run writes no record and the coverage gate keeps its own report. The spec sentence that expects the adapter under the Node coverage commands is narrowed to the five packages whose ordinary test script runs Vitest on Node. Putting the coverage gate on the contract is rollout work in `goals/gate-report-rollout`.
@@ -556,6 +565,14 @@ Lane feat/gate-report-core
 
 Reverse: Make the task path exit non-zero when a record's reason is errored.
 
+### A failed record or log write is an omission, never an error, 2026-11-19
+
+The recorder returns what it could not write as omissions beside the report. The console prints one line naming them before the closing verdict, and the exit code stays the tool's. The raw stream is read once: if the log write fails partway, the in-memory excerpt holds what was read before the failure.
+
+Lane feat/gate-report-services
+
+Reverse: Make the recorder fail on a write error and catch it in the run entry.
+
 ### Seven fixtures, each generated from the repository, 2026-11-19
 
 The fixture set: a green test run of `@beep/glob`; a red test run with an assertion diff; a test timeout; a module that fails to load; an empty run; a check run with two diagnostics; and the TS6305 cascade a package check prints with unbuilt upstream declarations. Each is produced by running the real tool on repository code or on a small fixture package and capturing its events or output; none is copied from a session transcript. The cascade fixture is captured from a fixture package, never by removing declarations from the working tree: a compiler run on an unbuilt tree overwrites the package's own declarations.
@@ -564,9 +581,17 @@ Lane feat/gate-report-core
 
 Reverse: Replace a generated fixture with a hand-written one and note why in the test.
 
+### The history read deadline belongs to the caller, 2026-11-19
+
+The history contract answers labels and a delta for a report; it carries no deadline of its own. The gate run request names how long to wait (250 ms by default) and the run entry enforces it, because a service shape holds operations, not data. A history that fails or misses the deadline costs one omission line and nothing else.
+
+Lane feat/gate-report-services
+
+Reverse: Put the deadline back on the history service shape and record a schema-first exception.
+
 ### Reason precedence: cancelled, errored, failed, passed; a fallback item explains an unexplained failure, 2026-11-19
 
-Totals are computed from the items, never taken from the runner. Load, hook and unhandled failures are fault items with their own totals, and `failed` counts ordinary failures only. A run is errored when the tool said so, when nothing was collected, or when a fallback was added. The fallback is one fault item carrying the log excerpt, added when no item failed and the exit code was nonzero or the tool reported a reason other than passed. Every item is recorded, passed ones included, so a later run can tell fixed from never seen.
+Totals are computed from the items, never taken from the runner. Load, hook and unhandled failures are fault items with their own totals, and `failed` counts ordinary failures only. A run is errored when the tool said so, when nothing was collected and no load failure explains it, or when a fallback was added. A run with a load failure reads FAILED whether or not another module collected tests. The fallback is one fault item carrying the log excerpt, added when no item failed and the exit code was nonzero or the tool reported a reason other than passed. Every item is recorded, passed ones included, so a later run can tell fixed from never seen.
 
 Lane feat/gate-report-core
 
@@ -620,9 +645,25 @@ Lane feat/gate-report-core
 
 Reverse: Move the projection module into the gate-run library and test the laws there.
 
-### The first slice lands as two pull requests: the model, then the services and wiring, 2026-11-19
+### OutputBound lives in a leaf that does not load the Bun platform, 2026-11-19
 
-The plan lands P1 through P3 as one pull request. It is split so each is reviewable and green alone: first `@beep/gate-report` complete (schemas, reducer, classifiers, counts, signature, folding table, dispatch cells and the law tests that need no service), then the record and gate-run libraries, the Vitest adapter and the `test` and `check` wiring for `@beep/glob`. P4, P5 and the closeout follow as the third. The packet allows three open pull requests; these are sequential.
+The output bound and its chunk reducer moved to their own leaf of the repo CLI kit; the step-execution module re-exports them, so no existing import changes. The gate-run library imports the leaf, which cut its cold start from about 0.28 seconds to about 0.15, on a path every package check takes. The check probe takes its build-closure command from the library instead of repeating it, at a measured cost of at most 10 ms.
+
+Lane feat/gate-report-services
+
+Reverse: Import the bound from the step-execution module again and delete the leaf.
+
+### Pointer commands are marked planned until the gate queries exist, 2026-11-19
+
+The pointer table names the two planned queries of the gate command family and marks them planned. A test fails as soon as one is marked live without the check against the real command tree, which is the seam for law 9; the wiring slice adds the commands and flips the mark.
+
+Lane feat/gate-report-services
+
+Reverse: Mark the two query commands live and add the command-tree check.
+
+### The goal lands as four sequential pull requests, 2026-11-19
+
+The plan lands P1 through P3 as one pull request. It is split so each is reviewable and green alone: first `@beep/gate-report` complete (schemas, reducer, classifiers, counts, signature, folding table, dispatch cells and the law tests that need no service), then the record and gate-run libraries, then the Vitest adapter with the `test` and `check` wiring and the gate queries, then the port review and the closeout. The wiring rewrites every package manifest, so it stays apart from the libraries. The packet allows three open pull requests; these are sequential.
 
 Lane feat/gate-report-core
 
@@ -635,6 +676,14 @@ Location, code, rule and severity sit on the item, where the item key reads them
 Lane feat/gate-report-core
 
 Reverse: Restore the earlier wording in the spec.
+
+### Diagnostic parsing is a leaf of its own; a probe finding is a failed item, 2026-11-19
+
+The TypeScript diagnostic parser moved out of the Yeet issue parser into a leaf of the gate-run library that does not import the report model, so the repo CLI can parse diagnostics without loading the model. The type-check adapter builds on it and emits each diagnostic with its plain key and location; the reducer numbers repeats. An unbuilt-reference probe finding is keyed on the reference it names and counts as one unit checked, so the run reads FAILED with the TS6305 fold line and not as an empty run.
+
+Lane feat/gate-report-services
+
+Reverse: Fold the parser back into the type-check adapter and count a probe finding as nothing checked.
 
 ### The Vitest adapter is a new test kit, @beep/repo-gate-vitest, loaded lazily and registered by specifier, 2026-11-19
 

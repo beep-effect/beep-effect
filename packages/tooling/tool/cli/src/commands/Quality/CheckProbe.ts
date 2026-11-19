@@ -12,6 +12,7 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
+import { buildClosureCommand } from "@beep/repo-gate-run/ConsoleDefaults";
 import { TsconfigLoader } from "@beep/repo-tsconfig/TsconfigLoader";
 import { thunkFalse } from "@beep/utils/thunk";
 import * as A from "effect/Array";
@@ -319,8 +320,7 @@ export const missingReferenceOutputs = Effect.fn("CheckProbe.missingReferenceOut
  * @category utilities
  * @since 0.0.0
  */
-export const packageBuildClosureCommand = (packageName: string): string =>
-  `bun x turbo run build --filter=${packageName}^...`;
+export const packageBuildClosureCommand = (packageName: string): string => buildClosureCommand(packageName);
 
 const readPackageName = Effect.fn("CheckProbe.readPackageName")(function* (
   packageDir: string
