@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core P2 lane, feat/gate-report-services)",
-    "reason": "Record the two new libraries' tasks (generated library scripts, root task definitions, no override), the repo CLI tasks whose configuration changed with its new dependency on the gate-run library, and the inputs the policy fingerprint added to the root. No qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (csv and xlsx lane, feat/xlsx-and-csv-foundation-modeling)",
+    "reason": "Record the two new modeling packages' tasks (generated scripts, root task definitions, no override) and the two manifest inputs the policy fingerprint added to the root. No qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-run-libraries-cache-review-2026-11-19.md",
-      "sha256": "bbbc45f4f8d6f8888e8781843104af37ac3229ad9b70a731aa7634bd3ff26c80"
+      "path": "docs/reports/csv-xlsx-cache-review-2026-11-19.md",
+      "sha256": "17e1887c130d4677b316ec71c5074f8d58a1e785ced0326ca54378782e20de62"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "d2661d46fd5e91ccc215095fe4b8677c11837a503bbba70855a0ad714e4bcc5c"
+      "sha256": "766933ccb311f2fb313be0f190ed16f116e3ae40973830c15f4af7c2d023d8f9"
     }
   ],
   "nodes": [
@@ -2184,6 +2184,7 @@
           "packages/foundation/capability/xdg/package.json",
           "packages/foundation/capability/xdg/src/**",
           "packages/foundation/modeling/contract-kit/package.json",
+          "packages/foundation/modeling/csv/package.json",
           "packages/foundation/modeling/epistemics/package.json",
           "packages/foundation/modeling/epistemics/src/**",
           "packages/foundation/modeling/gate-report/package.json",
@@ -2235,6 +2236,7 @@
           "packages/foundation/modeling/tsconfig/src/**",
           "packages/foundation/modeling/utils/package.json",
           "packages/foundation/modeling/utils/src/**",
+          "packages/foundation/modeling/xlsx/package.json",
           "packages/foundation/modeling/yaml/package.json",
           "packages/foundation/modeling/yaml/src/**",
           "packages/foundation/primitive/data/package.json",
