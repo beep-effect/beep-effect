@@ -9,7 +9,7 @@
   ],
   "review": {
     "reviewer": "Claude Fable 5.2 (gate-output-switch-on P3 lane, fix/gate-output-check-probe)",
-    "reason": "Re-record two subjects after merging the P1 and P2 slices of the same goal into the probe lane. @beep/repo-cli was re-recorded independently on both sides (the probe rewrote its generated check script; the merged slices changed its manifest), so the merged manifest matches neither record. The root subject drifts because turbo.json now carries both the merged passThroughEnv keys and the probe's CheckProbe.ts entries in four task input lists. Task outputs, environment entries and cache flags are unchanged by the merge; no qualification is granted.",
+    "reason": "Re-record the root subject after the policy-fingerprint writer regenerated the input lists of the policy fingerprint tasks in turbo.json: the task runner now imports the package-scripts schema module to read the probe command, so that file's place in those generated lists changed. Only input lists of fingerprint seal tasks moved; no task command, output, environment entry or cache flag changed and no qualification is granted.",
     "basis": {
       "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
       "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "3b74e78e443d46fc003cbee01305dbb88b7e429e8c8c276993341f9d04907cdd"
+      "sha256": "94f561062541ab4be4cb5ede68f3746ed3fbe969c0ced46a156c5f810d17ca71"
     }
   ],
   "nodes": [
