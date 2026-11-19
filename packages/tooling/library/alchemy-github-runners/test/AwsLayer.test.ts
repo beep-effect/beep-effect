@@ -20,6 +20,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 import { FakeHttp } from "./support/FakeHttp.ts";
@@ -67,6 +68,27 @@ const ec2Route = (request: RecordedRequest): O.Option<FakeAnswer> =>
       O.some(xml('<Response xmlns="http://ec2.amazonaws.com/doc/2016-11-15/"><return>true</return></Response>'))
     )
   );
+
+/** The EC2 query protocol's `Filter.N.Name` / `Filter.N.Value.M` pairs of a request body, keyed by filter name. */
+const ec2Filters = (body: string): Readonly<Record<string, ReadonlyArray<string>>> => {
+  const params = A.fromIterable(new URLSearchParams(body));
+  return R.fromEntries(
+    A.getSomes(
+      A.map(params, ([key, name]) => {
+        const valuePrefix = `${Str.slice(0, -"Name".length)(key)}Value.`;
+        return Str.startsWith("Filter.")(key) && Str.endsWith(".Name")(key)
+          ? O.some([
+              name,
+              A.map(
+                A.filter(params, ([valueKey]) => Str.startsWith(valuePrefix)(valueKey)),
+                ([, value]) => value
+              ),
+            ] as const)
+          : O.none();
+      })
+    )
+  );
+};
 
 const releaseAnswer: FakeAnswer = {
   body: '{"tag_name":"v2.330.0","assets":[{"name":"actions-runner-linux-x64-2.330.0.tar.gz","browser_download_url":"https://github.com/actions/runner/releases/download/v2.330.0/actions-runner-linux-x64-2.330.0.tar.gz"},{"name":"actions-runner-linux-arm64-2.330.0.tar.gz","browser_download_url":"https://x"}]}',
@@ -160,8 +182,9 @@ describe("live AWS layers over distilled", () => {
           })
         );
         const runners = yield* ec2.listRunners(
-          RunnerFilter.make({ environment: O.some("beep-ci-heavy"), orphan: true })
+          RunnerFilter.make({ environment: O.some("beep-fleet-prod-heavy"), orphan: true })
         );
+        yield* ec2.listRunners(RunnerFilter.make({ environment: O.some("beep-fleet-prod-overflow") }));
         const described = yield* ec2.describeInstances(["i-0a"]);
         yield* ec2.tag("i-0a", { "ghr:orphan": "true" });
         yield* ec2.untag("i-0a", ["ghr:orphan"]);
@@ -187,9 +210,31 @@ describe("live AWS layers over distilled", () => {
           (fragment) => Str.includes(fragment)(decodedFleet)
         )
       ).toStrictEqual([true, true, true, true]);
-      const describe =
-        http.matching((request) => Str.includes("Action=DescribeInstances")(request.body))[0]?.body ?? "";
-      expect(Str.includes("tag:ghr:environment")(decodeURIComponent(describe))).toBe(true);
+      // The fleet boundary is these values on the wire, in every DescribeInstances request: each live pool
+      // environment matches exactly, never by prefix. An EC2 filter value treats `*` and `?` as wildcards, so the
+      // layer must add neither (a `beep-fleet-prod-heavy*` would still be fenced; a `beep-ci*` would not).
+      const describes = A.map(
+        http.matching((request) => Str.includes("Action=DescribeInstances")(request.body)),
+        (request) => ec2Filters(request.body)
+      );
+      const listings = A.filter(describes, (filters) => R.has(filters, "tag:ghr:environment"));
+      expect(
+        A.map(listings, (filters) => [
+          filters["tag:ghr:environment"],
+          filters["tag:ghr:Application"],
+          filters["tag:ghr:orphan"],
+        ])
+      ).toStrictEqual([
+        [["beep-fleet-prod-heavy"], ["github-action-runner"], ["true"]],
+        [["beep-fleet-prod-overflow"], ["github-action-runner"], undefined],
+      ]);
+      expect(describes).toHaveLength(3);
+      expect(
+        A.filter(
+          A.flatMap(describes, (filters) => A.flatten(R.values(filters))),
+          (value) => Str.includes("*")(value) || Str.includes("?")(value)
+        )
+      ).toStrictEqual([]);
       expect(http.matching((request) => Str.includes("Action=TerminateInstances")(request.body))).toHaveLength(1);
     })
   );

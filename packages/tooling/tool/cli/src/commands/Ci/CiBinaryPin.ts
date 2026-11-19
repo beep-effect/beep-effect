@@ -113,6 +113,35 @@ export class CiBinaryPin extends S.Opaque<CiBinaryPin, { readonly brand: unique 
 
 const decodeCiBinaryPin = S.decodeUnknownEffect(CiBinaryPin);
 
+/**
+ * Decode a `--tag` and `--sha256` flag pair into a {@link CiBinaryPin}.
+ *
+ * **Details**
+ *
+ * A tag or digest of the wrong shape fails with a `CiCommandError` whose
+ * message starts with `Invalid pin:`, so every pin command reports a bad
+ * flag the same way.
+ *
+ * **Example** (Decode pin flags)
+ *
+ * ```ts
+ * import { decodeCiBinaryPinFlags } from "@beep/repo-cli/commands/Ci/CiBinaryPin"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = decodeCiBinaryPinFlags({ tag: "beep-ci-a56516d6d309", sha256: "0".repeat(64) })
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @param flags - The `--tag` and `--sha256` flag values.
+ * @returns The decoded pin.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const decodeCiBinaryPinFlags = (flags: typeof CiBinaryPin.Encoded) =>
+  decodeCiBinaryPin({ tag: flags.tag, sha256: flags.sha256 }).pipe(
+    Effect.mapError((error) => CiCommandError.make({ message: `Invalid pin: ${error.message}` }))
+  );
+
 // One `KEY: value` line under a step's `env:` block; the value is a single token.
 const pinLinePattern = (key: string): RegExp => new RegExp(`^([\\t ]*${key}:[\\t ]*)(\\S+)[\\t ]*$`, "gmu");
 
@@ -179,9 +208,7 @@ const runBinaryPin = Effect.fn("Ci.binaryPin")(function* (options: {
   if (options.check && options.write) {
     return yield* CiCommandError.make({ message: "Pass --check or --write, not both." });
   }
-  const pin = yield* decodeCiBinaryPin({ tag: options.tag, sha256: options.sha256 }).pipe(
-    Effect.mapError((error) => CiCommandError.make({ message: `Invalid pin: ${error.message}` }))
-  );
+  const pin = yield* decodeCiBinaryPinFlags(options);
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const root = yield* findRepoRoot().pipe(Effect.mapError(CiCommandError.new("Cannot find the repository root.")));
