@@ -281,6 +281,7 @@ describe("dispatch — policy breaches (glob shortfalls retargeted)", () => {
       breachLine(PolicyBreach.cases.CoverageBreach.make({ metric: "lines", expected, actual }));
     assert.strictEqual(line(79.99, 80), "coverage lines 79.99% < 80%");
     assert.strictEqual(line(79.9996, 80), "coverage lines 79.9996% < 80%");
+    assert.strictEqual(line(79.9999999, 80), "coverage lines 79.9999999% < 80%");
     assert.strictEqual(line(72, 80), "coverage lines 72% < 80%");
     assert.strictEqual(line(80, 80), "coverage lines 80% < 80%");
   });
