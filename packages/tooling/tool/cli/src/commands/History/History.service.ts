@@ -92,10 +92,15 @@ export interface HistoryNotesShape {
    * never published the overlay). So the refspec is written only after the
    * probe sees the ref, and an existing copy is removed (`removed`) when
    * origin does not publish it; the key's other values are left alone.
+   *
+   * With `offline`, only local config is touched: no `ls-remote` probe and no
+   * fetch, and the origin refspec is left as configured (`unchecked`). Worktree
+   * creation uses this so a new lane never waits on the network.
    */
   readonly sync: (options: {
     readonly root: string;
     readonly fetch: boolean;
+    readonly offline?: boolean | undefined;
   }) => Effect.Effect<HistoryNotesSyncReport, HistoryGitError>;
   /**
    * Rebuilds `options.ref` from the map as one parentless notes commit with
@@ -328,15 +333,16 @@ const makeHistoryNotes = Effect.gen(function* () {
   });
 
   const sync: HistoryNotesShape["sync"] = Effect.fn("HistoryNotes.sync")(function* (options) {
-    yield* Effect.annotateCurrentSpan({ fetch: options.fetch });
+    const offline = options.offline ?? false;
+    yield* Effect.annotateCurrentSpan({ fetch: options.fetch, offline });
     const origin = yield* git
       .remoteUrl(options.root, { remote: "origin" })
       .pipe(Effect.mapBoth({ onFailure: gitError("config", "Cannot read the origin remote."), onSuccess: O.isSome }));
     const displayRef = yield* reconcileConfigValue(options.root, "notes.displayRef", HISTORY_NOTES_REF, true);
-    if (!origin) {
+    if (!origin || offline) {
       return HistoryNotesSyncReport.make({
         origin,
-        fetchRefspec: HistoryConfigChange.Enum.skipped,
+        fetchRefspec: origin ? HistoryConfigChange.Enum.unchecked : HistoryConfigChange.Enum.skipped,
         displayRef,
         fetch: HistoryNotesFetchOutcome.Enum.skipped,
       });
@@ -578,6 +584,7 @@ export const renderHistoryNotesSync = (report: HistoryNotesSyncReport): Readonly
           present: () => "present",
           removed: () => "removed (origin does not publish the ref)",
           skipped: () => "skipped (origin does not publish the ref)",
+          unchecked: () => "unchecked (offline; run `beep history notes sync` to reconcile)",
         })
       : "skipped (no origin remote)"
   }`,

@@ -35,8 +35,9 @@ force-pushes the notes ref. Nobody pushes the notes ref by hand.
 
 ## Seeing the overlay
 
-`bun run beep worktree new` and the cloud bootstrap configure this for you.
-In any other clone, run it once:
+The cloud bootstrap configures this for you. `bun run beep worktree new` sets
+only the display ref, offline, so a new lane never waits on the network. In
+any other clone, run it once:
 
 ```sh
 bun run beep history notes sync
