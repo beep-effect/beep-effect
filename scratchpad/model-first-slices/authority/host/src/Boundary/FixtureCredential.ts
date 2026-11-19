@@ -43,10 +43,10 @@ const parse = (value: string): O.Option<Credential> =>
     O.flatMap(([, kind, subject = "", principal]) =>
       Match.value(kind).pipe(
         Match.withReturnType<O.Option<Credential>>(),
-        Match.when("human", () => decode({ _tag: "Human", principal: subject })),
-        Match.when("agent", () => decode({ _tag: "Agent", run: subject })),
+        Match.when("human", () => decode({principal: subject })),
+        Match.when("agent", () => decode({ run: subject })),
         Match.when("process", () =>
-          O.flatMap(O.fromNullishOr(principal), (on) => decode({ _tag: "Process", process: subject, principal: on })),
+          O.flatMap(O.fromNullishOr(principal), (on) => decode({ process: subject, principal: on })),
         ),
         Match.orElse(O.none<Credential>),
       ),

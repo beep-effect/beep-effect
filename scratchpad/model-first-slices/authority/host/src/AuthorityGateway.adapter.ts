@@ -10,7 +10,7 @@ import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
 import { GrantRef } from "@proto/kernel/Invocation";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as Equal from "effect/Equal";
+import * as Eq from "effect/Equal";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
 import * as P from "@beep/utils/Predicate";
@@ -18,6 +18,7 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { Boundary, BoundaryLive } from "./Boundary/Boundary.ts";
 import { thunkEffectVoid } from "@beep/utils"
+import { Equal } from "effect"
 
 /**
  * The authority context's side of its gateway: re-admission through the
@@ -70,7 +71,7 @@ export const AuthorityGatewayLive = Layer.effect(
             DelegationState.guards.Active(state) &&
             state.holder === run &&
             state.parent === source.grant &&
-            Equal.equals(state.parentDelegation, source.delegation) &&
+            Eq.equals(state.parentDelegation, source.delegation) &&
             sameTerms(state.terms, terms);
           // A delegation id names one delegation: one already opened for anything else is never
           // pointed at this run. The same request again (a redelivered trigger) is granted again.
