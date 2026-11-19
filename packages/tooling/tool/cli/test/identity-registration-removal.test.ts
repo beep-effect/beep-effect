@@ -127,12 +127,12 @@ describe("identity registration removal", () => {
     })
   );
 
-  it.effect("removes an untyped leaf by its $I.create literal and a legacy composers read by its token", () =>
+  it.effect("removes an untyped accessor-named leaf by its name and a legacy composers read by its token", () =>
     Effect.gen(function* () {
       const registry = A.join(
         [
           'const generatedComposers = /*#__PURE__*/ $I.compose("courtlistener", "courtlistener-identity", "beta");',
-          'export const $CourtAliasId = /*#__PURE__*/ $I.create("courtlistener");',
+          'export const $CourtListenerId = /*#__PURE__*/ $I.create("courtlistener");',
           'export const $CourtlistenerIdentityId = /*#__PURE__*/ $I.create("courtlistener-identity");',
           "export const $BetaAliasId = composers.$BetaId;",
           "",
@@ -140,11 +140,38 @@ describe("identity registration removal", () => {
         "\n"
       );
       const withoutCourtlistener = yield* removeFrom(registry, "courtlistener");
-      expect(Str.includes("$CourtAliasId")(withoutCourtlistener)).toBe(false);
+      expect(Str.includes("$CourtListenerId")(withoutCourtlistener)).toBe(false);
       expect(Str.includes("$CourtlistenerIdentityId")(withoutCourtlistener)).toBe(true);
       const withoutBeta = yield* removeFrom(registry, "beta");
       expect(Str.includes("$BetaAliasId")(withoutBeta)).toBe(false);
-      expect(Str.includes("$CourtAliasId")(withoutBeta)).toBe(true);
+      expect(Str.includes("$CourtListenerId")(withoutBeta)).toBe(true);
+    })
+  );
+
+  it.effect("keeps a vocabulary composer whose $I.create literal equals the deleted package slug", () =>
+    Effect.gen(function* () {
+      const registry = A.join(
+        [
+          'const generatedComposers = /*#__PURE__*/ $I.compose("alpha", "epistemic");',
+          'export const $AlphaId: Identity.IdentityComposer<"@beep/alpha"> = /*#__PURE__*/ $I.create("alpha");',
+          'export const $EpistemicId: Identity.IdentityComposer<"@beep/epistemic"> = /*#__PURE__*/ $I.create("epistemic");',
+          'export const $EpistemicVocabularyId = /*#__PURE__*/ $I.create("epistemic");',
+          "",
+        ],
+        "\n"
+      );
+      const next = yield* removeFrom(registry, "epistemic");
+      expect(next).toBe(
+        A.join(
+          [
+            'const generatedComposers = /*#__PURE__*/ $I.compose("alpha");',
+            'export const $AlphaId: Identity.IdentityComposer<"@beep/alpha"> = /*#__PURE__*/ $I.create("alpha");',
+            'export const $EpistemicVocabularyId = /*#__PURE__*/ $I.create("epistemic");',
+            "",
+          ],
+          "\n"
+        )
+      );
     })
   );
 

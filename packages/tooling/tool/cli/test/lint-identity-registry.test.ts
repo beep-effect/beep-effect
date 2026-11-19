@@ -231,6 +231,48 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
     );
 
     it.effect(
+      "reports untyped accessor-named exports that read a shared composer object",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget", "gadget"] });
+            const registryContent = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
+            const reverted = Str.replace(
+              'export const $GadgetId: Identity.IdentityComposer<"@beep/gadget"> = /*#__PURE__*/ $I.create("gadget");',
+              "export const $GadgetId = generatedComposers.$GadgetId;"
+            )(
+              Str.replace(
+                'export const $WidgetId: Identity.IdentityComposer<"@beep/widget"> = /*#__PURE__*/ $I.create("widget");',
+                "export const $WidgetId = RepoPkgs.$WidgetId;"
+              )(registryContent)
+            );
+            yield* fs.writeFileString(IDENTITY_REGISTRY_PATH, reverted);
+
+            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+
+            expectReportedExit(exit);
+            const errorLines = yield* TestConsole.errorLines;
+            const leafRow = (subject: string) =>
+              A.findFirst(
+                errorLines,
+                (line): line is string =>
+                  P.isString(line) && Str.startsWith(`${subject} [registry-leaf-mismatch]`)(line)
+              );
+            const gadgetRow = O.getOrThrow(leafRow("@beep/gadget"));
+            expect(gadgetRow).toContain('its initializer is not `$I.create("gadget")`');
+            expect(gadgetRow).toContain('it is not typed `Identity.IdentityComposer<"@beep/gadget">`');
+            const widgetRow = O.getOrThrow(leafRow("@beep/widget"));
+            expect(widgetRow).toContain('its initializer is not `$I.create("widget")`');
+            expect(widgetRow).toContain('it is not typed `Identity.IdentityComposer<"@beep/widget">`');
+            expect(O.isNone(leafRow("@beep/identity"))).toBe(true);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
       "reports an export-only orphan whose compose slug is already gone",
       () =>
         Effect.andThen(

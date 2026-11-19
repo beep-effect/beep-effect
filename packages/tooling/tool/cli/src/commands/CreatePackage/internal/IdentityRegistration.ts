@@ -191,30 +191,26 @@ const typedExportSlug = (declaration: VariableDeclaration): O.Option<string> =>
     O.flatMap((match) => O.fromNullishOr(match[1]))
   );
 
-const isAccessorExportFor = (
-  declaration: VariableDeclaration,
-  packageName: string,
-  mechanicalAccessor: string,
-  readsComposerAccessor: (text: string) => boolean
-): boolean => {
-  const declarationText = declaration.getText();
-  return (
-    Str.equivalence(declaration.getName(), mechanicalAccessor) ||
-    Str.includes(`IdentityComposer<"@beep/${packageName}">`)(declarationText) ||
-    O.exists(rootLeafSlug(declaration), Str.equivalence(packageName)) ||
-    readsComposerAccessor(declarationText)
-  );
-};
+// Whether a declaration's name is the accessor for a slug, tolerating manual casing aliases.
+const isAccessorNamedFor = (declaration: VariableDeclaration, slug: string): boolean =>
+  accessorExportPattern(slug).test(`export const ${declaration.getName()}`);
+
+// Whether the registry reader accepts a declaration as the export of `slug`: typed for that slug,
+// or named its accessor. A vocabulary composer such as `$QaId = $I.create("qa")` under another
+// name is neither, so a package whose slug equals its literal never claims it.
+const isRegistryExportFor = (declaration: VariableDeclaration, slug: string): boolean =>
+  O.exists(typedExportSlug(declaration), Str.equivalence(slug)) || isAccessorNamedFor(declaration, slug);
 
 const removeAccessorExportStatements = (sourceFile: SourceFile, packageName: string): void => {
-  const mechanicalAccessor = toIdentityAccessorName(packageName);
   // Whole token: `composers.$XId` must not match a `composers.$XIdentityId` sibling. Kept so a
-  // pre-leaf registry still loses its legacy reads; a leaf matches by its `$I.create` literal.
-  const readsComposerAccessor = mentionsToken(`composers.${mechanicalAccessor}`);
+  // pre-leaf registry still loses its legacy reads; a leaf matches by its type or accessor name.
+  const readsComposerAccessor = mentionsToken(`composers.${toIdentityAccessorName(packageName)}`);
   for (const declaration of sourceFile.getVariableDeclarations()) {
     const statement = declaration.getVariableStatement();
     if (statement === undefined || !statement.isExported()) continue;
-    if (isAccessorExportFor(declaration, packageName, mechanicalAccessor, readsComposerAccessor)) statement.remove();
+    if (isRegistryExportFor(declaration, packageName) || readsComposerAccessor(declaration.getText())) {
+      statement.remove();
+    }
   }
 };
 
@@ -224,8 +220,10 @@ const removeAccessorExportStatements = (sourceFile: SourceFile, packageName: str
  * **Details**
  *
  * The removal visits every `$I.compose(...)` declaration so it also supports the
- * generated labs group when that P2 writer lands. Dedicated exports and manual
- * casing aliases are removed by their package identity or composer initializer.
+ * generated labs group when that P2 writer lands. An export is removed when it is
+ * typed for the package or named its accessor (manual casing aliases included),
+ * and a legacy `composers.$X` read by its token. A vocabulary composer that only
+ * shares the slug as its `$I.create` literal, under another name, is kept.
  *
  * **Example** (Build an identity removal effect)
  *
@@ -379,9 +377,11 @@ const legacyExportSlug = (declaration: VariableDeclaration, composerSlugs: Reado
  *
  * A registry export is an exported declaration typed
  * `Identity.IdentityComposer<"@beep/<slug>">`, an untyped `$I.create("<slug>")`
- * leaf whose slug a compose group lists, or a legacy `composers.$X` read.
- * Untyped root composers over a non-package segment (vocabulary composers such
- * as `$QaId`) are not registry exports.
+ * leaf whose slug a compose group lists, a legacy `composers.$X` read, or any
+ * other export named the accessor of a listed slug (an untyped
+ * `generatedComposers.$XId` or `RepoPkgs.$XId` read). Untyped root composers
+ * over a non-package segment (vocabulary composers such as `$QaId`) are not
+ * registry exports.
  *
  * @param sourceFile - Parsed identity `packages.ts` source.
  * @param composerSlugs - Slugs every `$I.compose(...)` group lists.
@@ -399,7 +399,10 @@ const registryExportDeclarations = (
       O.orElse(() => O.filter(rootLeafSlug(declaration), (literal) => A.contains(composerSlugs, literal))),
       O.orElse(() =>
         readsLegacyComposers(declaration) ? O.some(legacyExportSlug(declaration, composerSlugs)) : O.none()
-      )
+      ),
+      // Any other export named a slug's accessor, such as an untyped `generatedComposers.$XId` or
+      // `RepoPkgs.$XId` read, is that slug's export, so the leaf check reports the non-leaf form.
+      O.orElse(() => A.findFirst(composerSlugs, (composerSlug) => isAccessorNamedFor(declaration, composerSlug)))
     );
     return pipe(
       slug,
