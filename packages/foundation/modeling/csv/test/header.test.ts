@@ -1,21 +1,23 @@
 // The header view: headings become own keys (even `__proto__`), an empty or repeated heading fails with its
-// finding, the header is checked once in linear time, and rows written back read back as the same rows.
+// finding, the header is checked once in one pass, and rows written back read back as the same rows.
 
 import { Csv } from "@beep/csv/Csv.codec";
 import { DuplicateHeader, EmptyHeader } from "@beep/csv/CsvDiagnostic.schema";
 import { CsvFixedDelimiter, CsvFixedEncoding, CsvReadOptions } from "@beep/csv/CsvOptions.schema";
 import { CsvRecord } from "@beep/csv/CsvTable.schema";
+import { checkHeader } from "@beep/csv/internal/header";
 import { describe, it } from "@effect/vitest";
 import { assertFailure, assertSuccess, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import { findingsOfFatals, growth, runs, thenFail, untilFailure, utf8 } from "./support.ts";
+import { findingsOfFatals, runs, thenFail, untilFailure, utf8 } from "./support.ts";
 
 const rowsCodec = Csv.recordsFromString();
 const decodeRows = S.decodeResult(rowsCodec);
@@ -87,18 +89,30 @@ describe("header findings", () => {
     assertTrue(Str.includes('heading 2 repeats "a" from heading 1')(rows.failure.message));
   });
 
-  it("headings are checked in linear time, distinct or all empty", () => {
-    const distinct = (n: number) =>
-      A.join(
-        A.makeBy(n, (i) => `h${i}`),
-        ","
-      );
-    assertTrue(Result.isSuccess(decodeRows(`${distinct(100_000)}\n`)), "the read succeeds");
+  // A header that counts how often its headings are read: a check that scans the header again per heading reads it
+  // about n²/2 times, where one pass and one map lookup per heading read it a small constant times n.
+  const index = /^\d+$/;
+  const counted = (header: CsvRecord) => {
+    let reads = 0;
+    const proxy = new Proxy(header, {
+      get: (target, key, receiver) => {
+        if (P.isString(key) && index.test(key)) reads += 1;
+        return Reflect.get(target, key, receiver);
+      },
+    });
+    return { header: proxy, reads: () => reads };
+  };
+
+  it("headings are checked in one pass, distinct, all empty or all the same", () => {
+    const distinct = (n: number) => A.makeBy(n, (i) => `h${i}`);
+    assertTrue(Result.isSuccess(decodeRows(`${A.join(distinct(100_000), ",")}\n`)), "the read succeeds");
     assertTrue(Result.isFailure(decodeRows(`${Str.repeat(99_999)(",")}\n`)), "the read fails");
-    // From 10,000 headings to 80,000 a quadratic check grows about 64 times; this one grows about 11 (a little over 8,
-    // from the wider row the read builds), so the bound sits between them with room on both sides.
-    const ratio = growth(decodeRows, [`${distinct(10_000)}\n`, `${distinct(80_000)}\n`]);
-    assertTrue(ratio < 24, `checking 8n headings cost ${ratio} times n`);
+    const n = 10_000;
+    for (const header of [distinct(n), A.replicate("", n), A.replicate("a", n)]) {
+      const { header: watched, reads } = counted(header);
+      checkHeader(watched);
+      assertTrue(reads() <= 4 * n, `checking ${n} headings read them ${reads()} times`);
+    }
   });
 
   it.effect("a failing upstream fails the rows channel with its error, after the rows it finished and no others", () =>

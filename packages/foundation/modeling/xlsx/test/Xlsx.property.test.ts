@@ -194,6 +194,27 @@ describe("the codecs", () => {
     { arbitrary: { runs: 50 } }
   );
 
+  // A read gives the cells of a shared formula it dropped an empty formula. That is no formula: it is written as none
+  // (an empty `<f>` is one Excel repairs) and comes back as none.
+  it.effect("writes an empty formula as no formula", () =>
+    Effect.gen(function* () {
+      const cell = XlsxCell.make({ column: 0, value: XlsxNumber.make({ value: 1 }), formula: O.some("") });
+      expect(XlsxCell.canonical(cell, "1900").formula).toEqual(O.none());
+      const workbook = XlsxWorkbook.make({
+        sheets: [
+          XlsxWorksheet.make({
+            info: XlsxSheetInfo.make({ name: "S" }),
+            rows: [XlsxRow.make({ number: 1, cells: [cell] })],
+          }),
+        ],
+      });
+      const bytes = yield* Xlsx.stringify(workbook, XlsxWriteOptions.make({ compression: "store" }));
+      expect(Str.includes("<f>")(new TextDecoder().decode(bytes))).toBe(false);
+      const back = yield* Xlsx.parse(bytes);
+      expect(back.workbook.sheets[0]?.rows[0]?.cells[0]?.formula).toEqual(O.none());
+    })
+  );
+
   it.effect("refuses bytes that are no workbook as a schema issue", () =>
     Effect.gen(function* () {
       const error = yield* Effect.flip(S.decodeEffect(Xlsx.XlsxFromBytes)(new Uint8Array([1, 2, 3])));
@@ -280,13 +301,14 @@ describe("the codecs", () => {
   );
 
   // The records codec writes only what it reads back: a heading that is empty or longer than a cell, more headings
-  // than a sheet has columns, are each a schema issue on the way to bytes, never a defect and never dropped.
+  // than a sheet has columns, records with no heading at all (an empty header row, read back as no records), are
+  // each a schema issue on the way to bytes, never a defect and never dropped.
   it.effect("records refuse, as a schema issue, a heading or a count a sheet cannot hold", () =>
     Effect.gen(function* () {
       const codec = Xlsx.recordsFromBytes({ sheet: "S", header: "first" });
       const one = XlsxNumber.make({ value: 1 });
       const wide: XlsxRecord = R.fromEntries(A.map(A.range(0, MAX_COLUMN + 1), (i) => [`h${i}`, one] as const));
-      for (const records of [[{ [Str.repeat(MAX_CELL_CHARS + 1)("h")]: one }], [{ "": one }], [wide]]) {
+      for (const records of [[{ [Str.repeat(MAX_CELL_CHARS + 1)("h")]: one }], [{ "": one }], [wide], [{}], [{}, {}]]) {
         const exit = yield* Effect.exit(S.encodeUnknownEffect(codec)(records));
         expect(Exit.isFailure(exit) && !Cause.hasDies(exit.cause)).toBe(true);
         if (Exit.isFailure(exit)) expect(Cause.squash(exit.cause)).toBeInstanceOf(S.SchemaError);
@@ -294,17 +316,24 @@ describe("the codecs", () => {
     })
   );
 
-  // Every record its schema accepts is written and read back as itself, with each heading any record has: a record
-  // that lacks one reads it as blank. Records with no heading at all are a sheet with no rows.
+  // Whatever records the codec writes, it reads back as themselves, each with every heading any record has: a record
+  // that lacks one reads it as blank. The only records it refuses here are records with no heading at all, which a
+  // header row cannot hold; no records at all are written as a sheet with no rows and read back as none.
   it.effect.prop(
-    "records written and read back are the records, every heading filled",
+    "records written are read back as the records, every heading filled",
     [Arbitrary.schema(XlsxRecord.pipe(S.Array))],
     ([records]) =>
       Effect.gen(function* () {
         const codec = Xlsx.recordsFromBytes({ sheet: "S", header: "first" });
-        const bytes = yield* S.encodeEffect(codec)(records);
-        const back = yield* S.decodeEffect(codec)(bytes);
         const headings = A.dedupe(A.flatMap(records, R.keys));
+        const written = yield* Effect.exit(S.encodeEffect(codec)(records));
+        if (Exit.isFailure(written)) {
+          expect(Cause.hasDies(written.cause)).toBe(false);
+          expect(Cause.squash(written.cause)).toBeInstanceOf(S.SchemaError);
+          expect(headings.length === 0 && records.length > 0).toBe(true);
+          return;
+        }
+        const back = yield* S.decodeEffect(codec)(written.value);
         const filled = A.map(records, (record) =>
           R.fromEntries(
             A.map(
@@ -313,7 +342,7 @@ describe("the codecs", () => {
             )
           )
         );
-        expect(back).toEqual(headings.length === 0 ? [] : filled);
+        expect(back).toEqual(filled);
       }),
     { arbitrary: { runs: 40 } }
   );

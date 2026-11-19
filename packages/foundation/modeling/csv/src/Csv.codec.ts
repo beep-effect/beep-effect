@@ -41,24 +41,14 @@ import {
   CsvWriteOptions,
 } from "./CsvOptions.schema.ts";
 import { recordEndText } from "./CsvPosition.schema.ts";
-import {
-  CsvClean,
-  CsvEncodingFallback,
-  CsvEncodingFromBom,
-  CsvEncodingGiven,
-  CsvEncodingValidUtf8,
-  CsvFromBytes,
-  CsvFromText,
-  CsvNoted,
-  CsvRead,
-} from "./CsvRead.schema.ts";
+import { CsvClean, CsvEncodingGiven, CsvFromBytes, CsvFromText, CsvNoted, CsvRead } from "./CsvRead.schema.ts";
 import { CsvHeaderRow, CsvTable } from "./CsvTable.schema.ts";
-import { bomOf, decodeBytes, encodeUtf8, firstInvalidUtf8 } from "./internal/encoding.ts";
+import { bomOf, decodeBytes, detectEncoding, encodeUtf8, firstInvalidUtf8 } from "./internal/encoding.ts";
 import { checkHeader, rowsOf, toHeaderRows } from "./internal/header.ts";
 import { built, Machine } from "./internal/machine.ts";
 import { SNIFF_WINDOW, sniffDelimiter } from "./internal/sniff.ts";
 import { prepare, startOf } from "./internal/start.ts";
-import { bytesSteps, mapAccumToEnd, textSteps } from "./internal/stream.ts";
+import { bytesSteps, fatalsOf, mapAccumToEnd, textSteps } from "./internal/stream.ts";
 import { writeTable } from "./internal/writer.ts";
 import type { TextDecodeTo } from "@beep/utils/Schema";
 import type { CsvDelimiter, CsvEncodingName } from "./CsvOptions.schema.ts";
@@ -103,7 +93,6 @@ const run = (text: string, config: MachineConfig, pieceChars: number, onPiece: O
   return { records, diagnostics };
 };
 
-const fatalsOf = A.filter(CsvDiagnostic.guards.fatal);
 const warningsOf = A.filter(CsvDiagnostic.guards.warning);
 
 const parseError = (diagnostics: A.NonEmptyReadonlyArray<CsvFatal>): CsvParseError =>
@@ -153,25 +142,10 @@ const decodeFixed = (bytes: Uint8Array, encoding: CsvEncodingName): Result.Resul
       }),
   });
 
-/** A BOM names the encoding; otherwise valid UTF-8, else Windows-1252 (the old reader's rule). */
+/** The bytes in the encoding `detectEncoding` finds for them. */
 const decodeDetected = (bytes: Uint8Array): Decoded => {
-  const mark = bomOf(bytes);
-  if (O.isSome(mark) && mark.value !== "utf-8") {
-    return {
-      text: decodeBytes({ bytes, encoding: mark.value }),
-      encoding: CsvEncodingFromBom.make({ encoding: mark.value }),
-    };
-  }
-  return O.match(firstInvalidUtf8(bytes), {
-    onSome: (firstInvalidByte): Decoded => ({
-      text: decodeBytes({ bytes, encoding: "windows-1252" }),
-      encoding: CsvEncodingFallback.make({ firstInvalidByte }),
-    }),
-    onNone: () => ({
-      text: decodeBytes({ bytes, encoding: "utf-8" }),
-      encoding: O.isSome(mark) ? CsvEncodingFromBom.make({ encoding: "utf-8" }) : CsvEncodingValidUtf8.make({}),
-    }),
-  });
+  const encoding = detectEncoding({ bytes });
+  return { text: decodeBytes({ bytes, encoding: encoding.encoding }), encoding };
 };
 
 const tooManyBytes = (actual: ByteSize.ByteSize, options: ReadOptions): CsvParseError =>
@@ -225,8 +199,8 @@ const tableOf = (read: Result.Result<CsvRead, CsvParseError>, input: unknown) =>
     onFailure: (error) => issue(error, input),
   });
 
-const writeRecords = (records: ReadonlyArray<CsvRecord>, options: WriteOptions): string =>
-  writeTable({ table: { records }, options });
+const writeRecords = (records: ReadonlyArray<CsvRecord>, options: WriteOptions, opensText = true): string =>
+  writeTable({ table: { records }, options, opensText });
 
 /** A header row's cells in the header's order; a missing heading is an empty cell. */
 const rowCells = (header: CsvRecord, row: CsvHeaderRow): CsvRecord =>
@@ -320,7 +294,8 @@ const encodeStringChannel = <IE, Done>(
       step: (first, records) => {
         const body = writeRecords(
           records,
-          CsvWriteOptions.make({ ...options, bom: first && options.bom, finalTerminator: false })
+          CsvWriteOptions.make({ ...options, bom: first && options.bom, finalTerminator: false }),
+          first
         );
         const separator = first ? "" : recordEndText(options.terminator);
         return [false, [`${separator}${body}`]];
@@ -465,7 +440,8 @@ export class Csv {
 
   /**
    * Writes a table as canonical CSV text. Total: every table has a spelling, and it reads back as the same table
-   * under the same delimiter unless `formulaGuard` is `apostrophe`.
+   * under the same fixed delimiter, with or without `excelSepHint` and the other read rules at their defaults, unless
+   * `formulaGuard` is `apostrophe`.
    */
   static stringify(table: Pick<CsvTable, "records">, options: CsvWriteOptions = CsvWriteOptions.default): string {
     return writeTable({ table, options });
@@ -596,10 +572,11 @@ export class Csv {
    *
    * **Gotchas**
    *
-   * Under a detected encoding the channel cannot look past its window, so it can differ from
-   * {@link Csv.parseBytesResult}: bytes valid as UTF-8 within the window and not after it fail the channel with
-   * `InvalidUtf8`, where the whole read falls back to Windows-1252. Input that ends within the window is decided on
-   * all of its bytes, as the whole read decides it.
+   * Under a detected encoding the channel decides from the bytes it holds once they pass its window by more than
+   * three (an unfinished UTF-8 sequence that starts inside the window is then finished or broken), so it can differ
+   * from {@link Csv.parseBytesResult}: bytes valid as UTF-8 in what it held and not after it fail the channel with
+   * `InvalidUtf8`, where the whole read falls back to Windows-1252. Input that ends within the window, or at most
+   * three bytes past it, is decided on all of its bytes, as the whole read decides it.
    *
    * The channel fails on the first fatal finding in input order, where the whole read checks the byte cap and the
    * encoding before it parses: when a text cap is passed before bytes that the cap or a fixed UTF-8 refuses, the

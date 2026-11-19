@@ -12,6 +12,7 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as Tuple from "effect/Tuple";
 import {
   builtinFormats,
@@ -442,9 +443,11 @@ export class XlsxCell extends S.Opaque<XlsxCell, { readonly brand: unique symbol
   /**
    * The cell as a file in a date system gives it back: a date past the system's last serial is the number it is
    * written as, a date under a format that is not a date format gets Excel's short date (`m/d/yy`), and a number in
-   * the system's range of dates under a date format is the date it would be read as.
+   * the system's range of dates under a date format is the date it would be read as. An empty formula, which a read
+   * gives the cells of a shared formula it dropped, is no formula: it is not written, so it does not come back.
    */
-  static readonly canonical = (cell: XlsxCell, system: XlsxDateSystem): XlsxCell => {
+  static readonly canonical = (written: XlsxCell, system: XlsxDateSystem): XlsxCell => {
+    const cell = O.exists(written.formula, Str.isEmpty) ? XlsxCell.make({ ...written, formula: O.none() }) : written;
     const dated = isDateFormat(cell.format.code);
     const last = maxSerial(system);
     if (cell.value.kind === "Date" && cell.value.serial > last) {

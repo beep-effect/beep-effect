@@ -17,8 +17,8 @@ export class SerialParts extends S.Opaque<SerialParts, { readonly brand: unique 
   S.Struct({
     day: field("The day of the month; 0 only for serial 0 of the 1900 system"),
     days: field("The serial's whole days as written, after a carry from a time that rounds up to midnight"),
-    fraction: S.Finite.pipe(S.annotateKey({ description: "The part of a second left over, 0 under a millionth" })),
     hour: field("The hour, from 0"),
+    millisecond: field("The milliseconds past the whole second, the time of day rounded to the nearest one"),
     minute: field("The minute"),
     month: field("The month, from 1"),
     second: field("The whole second"),
@@ -63,28 +63,29 @@ export const DAYS_1904 = 1462;
  */
 const cut = (serial: number): number => Number(serial.toPrecision(15));
 
-/** The calendar fields of a serial in a date system. `serial` is 0 or more. */
+const MS_PER_DAY = 86_400_000;
+
+/**
+ * The calendar fields of a serial in a date system. `serial` is 0 or more. The time of day is rounded once, to the
+ * nearest millisecond, and every reading of a serial (its calendar fields, its `DateTime`, its displayed text) starts
+ * from that one value: 15 digits keep at least eight decimals of a day, under a millisecond, through the last serial,
+ * so a whole second always survives. A time that rounds to midnight is the next day's 00:00:00.
+ */
 export const partsOf: {
   (system: XlsxDateSystem): (serial: number) => SerialParts;
   (serial: number, system: XlsxDateSystem): SerialParts;
 } = dual(2, (serial: number, system: XlsxDateSystem): SerialParts => {
   const value = cut(serial);
-  let days = Math.trunc(value);
-  let seconds = Math.floor(86_400 * (value - days));
-  let fraction = 86_400 * (value - days) - seconds;
-  if (Math.abs(fraction) < 1e-6) fraction = 0;
-  if (fraction > 0.9999) {
-    fraction = 0;
-    seconds += 1;
-    if (seconds === 86_400) {
-      seconds = 0;
-      days += 1;
-    }
-  }
+  const whole = Math.trunc(value);
+  const rounded = Math.round((value - whole) * MS_PER_DAY);
+  const days = rounded === MS_PER_DAY ? whole + 1 : whole;
+  const ms = rounded === MS_PER_DAY ? 0 : rounded;
+  const seconds = Math.floor(ms / 1000);
+  const millisecond = ms % 1000;
   const second = seconds % 60;
   const minute = Math.floor(seconds / 60) % 60;
   const hour = Math.floor(seconds / 3600);
-  const time = { days, hour, minute, second, fraction };
+  const time = { days, hour, minute, second, millisecond };
   const count = system === "1904" ? days + DAYS_1904 : days;
   if (count === 60) return SerialParts.make({ ...time, year: 1900, month: 2, day: 29, weekday: 3 });
   if (count === 0) return SerialParts.make({ ...time, year: 1900, month: 1, day: 0, weekday: 6 });

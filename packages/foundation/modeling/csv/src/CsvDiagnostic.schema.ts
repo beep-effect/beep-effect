@@ -262,9 +262,13 @@ export class DuplicateHeader extends S.Opaque<DuplicateHeader, { readonly brand:
  * @category schemas
  * @since 0.0.0
  */
-export const CsvTextLimit = LiteralKit(["records", "fieldsPerRecord", "fieldLength", "recordLength"]).pipe(
-  $I.annoteSchema("CsvTextLimit", { description: "Which text cap a read ran into" })
-);
+export const CsvTextLimit = LiteralKit([
+  "records",
+  "fieldsPerRecord",
+  "fieldLength",
+  "recordLength",
+  "textLength",
+]).pipe($I.annoteSchema("CsvTextLimit", { description: "Which text cap a read ran into" }));
 
 /**
  * One of the text caps named by {@link CsvTextLimit}.

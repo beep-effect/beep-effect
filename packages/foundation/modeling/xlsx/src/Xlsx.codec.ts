@@ -292,14 +292,18 @@ const toRecords = (
 
 /**
  * Records as one sheet: the headings of the records in the first row, a date under Excel's short date. Each heading
- * is already one a cell holds (`XlsxHeading`); records with more headings than a sheet has columns, or more records
- * than it has rows below its header, are refused here, so nothing is written that a read could not give back.
+ * is already one a cell holds (`XlsxHeading`); records with more headings than a sheet has columns, more records
+ * than it has rows below its header, or records with no heading at all (whose header row would be empty, so a read
+ * gives no records back), are refused here, so nothing is written that a read could not give back.
  */
 const fromRecords = (
   records: ReadonlyArray<XlsxRecord>,
   name: XlsxSheetName
 ): Result.Result<XlsxWorkbook, SchemaIssue.Issue> => {
   const headings = A.dedupe(A.flatMap(records, R.keys));
+  if (headings.length === 0 && records.length > 0) {
+    return Result.fail(issue({ message: "records with no heading cannot be written under a header row" }, records));
+  }
   if (headings.length > MAX_COLUMN + 1) {
     return Result.fail(
       issue(

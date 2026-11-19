@@ -1,8 +1,8 @@
 // Delimiter detection, papaparse's rule as the app met it: for each candidate in order, read the sample's first ten
 // records with it and measure how consistent their widths are (the sum of width changes between consecutive records)
 // and how wide they are on average. The most consistent candidate whose average is above 1.99 wins; ties go to the
-// wider. A sample that is the whole input and ends with a line break counts one more, empty record after it, as
-// papaparse's preview does; that is why a two-record file read alone falls back to a comma.
+// wider. A sample that ends with a line break, the whole input or a cut prefix of a longer one, counts one more, empty
+// record after it, as papaparse's preview does; that is why a two-record file read alone falls back to a comma.
 import * as A from "effect/Array";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";

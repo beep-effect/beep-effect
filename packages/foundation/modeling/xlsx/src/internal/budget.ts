@@ -51,8 +51,7 @@ export class ReadBudget {
 
   /** How many of `wanted` items of a list may be kept; the rest are counted as dropped. */
   takeUpTo(list: XlsxKeptList, wanted: number): number {
-    const room = Math.max(this.caps[list] - this.used[list], 0);
-    const granted = Math.min(room, wanted);
+    const granted = Math.min(this.room(list), wanted);
     this.used[list] += granted;
     this.dropped[list] += wanted - granted;
     return granted;

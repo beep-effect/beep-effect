@@ -5,7 +5,7 @@
 
 import { Csv } from "@beep/csv/Csv.codec";
 import { InvalidUtf8, TooManyBytes } from "@beep/csv/CsvDiagnostic.schema";
-import { CsvFixedEncoding, CsvLimits, CsvReadOptions } from "@beep/csv/CsvOptions.schema";
+import { CsvDetectEncoding, CsvFixedEncoding, CsvLimits, CsvReadOptions } from "@beep/csv/CsvOptions.schema";
 import {
   CsvEncodingFallback,
   CsvEncodingFromBom,
@@ -172,6 +172,34 @@ describe("a short file that ends in a Windows-1252 byte", () => {
       assertSuccess(oneChunk, expected);
       const split = yield* streamBytes([bytes.subarray(0, 17), bytes.subarray(17)], CsvReadOptions.default);
       assertSuccess(split, expected);
+    })
+  );
+});
+
+describe("input that ends at the detect window's edge", () => {
+  const windowOf = (size: bigint) =>
+    CsvReadOptions.make({ encoding: CsvDetectEncoding.make({ window: ByteSize.bytes(size) }) });
+
+  it.effect("a four-byte window over 'Caf' and a Windows-1252 byte reads as the whole read does", () =>
+    Effect.gen(function* () {
+      const bytes = bytesOf("Caf", [0xe9]);
+      const streamed = yield* streamBytes([bytes], windowOf(4n));
+      assertSuccess(streamed, [["Café"]]);
+      deepStrictEqual(streamed, outcomeOfRead(Csv.parseBytesResult(bytes, windowOf(4n))));
+    })
+  );
+
+  it.effect("the default window, one byte under, exactly and one byte over, reads as the whole read does", () =>
+    Effect.gen(function* () {
+      for (const length of [65_534, 65_535, 65_536]) {
+        const bytes = bytesOf(Str.repeat(length)("a"), [0xe9]);
+        const streamed = yield* streamBytes([bytes], CsvReadOptions.default);
+        deepStrictEqual(streamed, outcomeOfRead(Csv.parseBytesResult(bytes)));
+        assertSuccess(
+          Result.map(streamed, (records) => Str.slice(-1)(records[0]?.[0] ?? "")),
+          "é"
+        );
+      }
     })
   );
 });

@@ -2,6 +2,7 @@
 // read as Windows-1252, the encoding Excel writes "CSV (Comma delimited)" in, as the app's old reader did. UTF-8 is
 // validated here, so the first invalid byte has an offset; `TextDecoder` with `fatal` would only throw.
 import * as O from "effect/Option";
+import { CsvEncodingFallback, CsvEncodingFromBom, CsvEncodingValidUtf8 } from "../CsvRead.schema.ts";
 import type { CsvEncodingName } from "../CsvOptions.schema.ts";
 
 // crispen: kept as loops — it walks the bytes once and stops at the first invalid one, decoding each sequence's code
@@ -47,6 +48,23 @@ export const bomOf = (bytes: Uint8Array): O.Option<"utf-8" | "utf-16le" | "utf-1
   if (bytes[0] === 0xff && bytes[1] === 0xfe) return O.some("utf-16le");
   if (bytes[0] === 0xfe && bytes[1] === 0xff) return O.some("utf-16be");
   return O.none();
+};
+
+/** How a detected encoding was found: by the rule above. */
+export type DetectedEncoding = CsvEncodingFromBom | CsvEncodingValidUtf8 | CsvEncodingFallback;
+
+/**
+ * The encoding the bytes are read in when it is detected: a byte-order mark names UTF-8 or UTF-16; otherwise the
+ * first `checked` bytes (all of them when left out) are UTF-8 when valid, and Windows-1252 when not.
+ */
+export const detectEncoding = (input: { readonly bytes: Uint8Array; readonly checked?: number }): DetectedEncoding => {
+  const { bytes, checked = bytes.length } = input;
+  const mark = bomOf(bytes);
+  if (O.isSome(mark) && mark.value !== "utf-8") return CsvEncodingFromBom.make({ encoding: mark.value });
+  return O.match(firstInvalidUtf8(bytes.subarray(0, checked)), {
+    onSome: (firstInvalidByte): DetectedEncoding => CsvEncodingFallback.make({ firstInvalidByte }),
+    onNone: () => (O.isSome(mark) ? CsvEncodingFromBom.make({ encoding: "utf-8" }) : CsvEncodingValidUtf8.make({})),
+  });
 };
 
 /**

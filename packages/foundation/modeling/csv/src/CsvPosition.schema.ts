@@ -14,8 +14,14 @@ import * as S from "effect/Schema";
 const $I = $CsvId.create("CsvPosition");
 
 /**
- * The longest string a JavaScript engine holds (V8: 2^29 - 24 units); it bounds every text position, so generated
- * positions are ones a real text can have.
+ * The most UTF-16 units of text a read takes in: 2^29 - 24, the longest string V8 holds. Every text position and
+ * length is bounded by it, so generated positions are ones a real read can have.
+ *
+ * **Details**
+ *
+ * The bound is the package's, not every engine's: JavaScriptCore (Bun) holds longer strings, and a stream's text has
+ * no length at all. A read never reports a position past it: `CsvLimits.maxTextLength`, at most this, stops the read
+ * with `LimitExceeded` `textLength` at the first unit past the cap.
  *
  * **Example** (Bound a text position)
  *
@@ -33,7 +39,8 @@ const $I = $CsvId.create("CsvPosition");
 export const MAX_TEXT_UNITS = 536_870_888;
 
 /**
- * A 0-based position or count in decoded text, an integer from 0 up to {@link MAX_TEXT_UNITS}.
+ * A 0-based position or count in decoded text, an integer from 0 up to {@link MAX_TEXT_UNITS}. A position in a
+ * stream counts units across every chunk.
  *
  * **Example** (Accept indexes and refuse the rest)
  *
@@ -51,12 +58,12 @@ export const MAX_TEXT_UNITS = 536_870_888;
  */
 export const CsvIndex = S.Int.check(S.isBetween({ minimum: 0, maximum: MAX_TEXT_UNITS })).pipe(
   $I.annoteSchema("CsvIndex", {
-    description: "A 0-based position or count in decoded text, within the length a JavaScript string can have",
+    description: "A 0-based position or count in decoded text, at most the text a read takes in",
   })
 );
 
 /**
- * A decoded {@link CsvIndex}: a plain non-negative integer that fits in a JavaScript string's length.
+ * A decoded {@link CsvIndex}: a plain non-negative integer, at most {@link MAX_TEXT_UNITS}.
  *
  * @category models
  * @since 0.0.0
@@ -65,7 +72,7 @@ export type CsvIndex = typeof CsvIndex.Type;
 
 /**
  * A 0-based offset into the input bytes, for findings about the encoding. Unlike {@link CsvIndex} it is bounded by
- * `Number.MAX_SAFE_INTEGER`, because byte input is not limited by string length.
+ * `Number.MAX_SAFE_INTEGER`, because the text-length cap does not count bytes.
  *
  * **Example** (Accept a byte offset past the text bound)
  *
@@ -98,7 +105,8 @@ export type CsvByteOffset = typeof CsvByteOffset.Type;
  * **Details**
  *
  * `CsvTextSpan.locate` builds a span from the text it points into, counting `\n`, `\r` and `\r\n` each as one line
- * break; `CsvTextSpan.render` gives the 1-based `line:column` a person sees in an editor.
+ * break; `CsvTextSpan.render` gives the 1-based `line:column` a person sees in an editor. A span a stream reports
+ * counts its offset and line across every chunk of the stream, so it is bounded by `CsvLimits.maxTextLength`.
  *
  * **Example** (Locate an offset)
  *

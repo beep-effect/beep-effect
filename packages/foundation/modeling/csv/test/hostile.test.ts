@@ -3,7 +3,7 @@
 // cost more than linear time or memory, wide records and floods of warnings included.
 
 import { Csv } from "@beep/csv/Csv.codec";
-import { UnterminatedQuote, WarningsTruncated } from "@beep/csv/CsvDiagnostic.schema";
+import { CsvFatal, LimitExceeded, UnterminatedQuote, WarningsTruncated } from "@beep/csv/CsvDiagnostic.schema";
 import {
   CsvDetectEncoding,
   CsvLimits,
@@ -14,7 +14,7 @@ import {
 } from "@beep/csv/CsvOptions.schema";
 import { CsvTextSpan } from "@beep/csv/CsvPosition.schema";
 import { CsvRead } from "@beep/csv/CsvRead.schema";
-import { CsvTable } from "@beep/csv/CsvTable.schema";
+import { CsvRecordSlice, CsvTable } from "@beep/csv/CsvTable.schema";
 import { Machine } from "@beep/csv/internal/machine";
 import { textSteps } from "@beep/csv/internal/stream";
 import { describe, it, vi } from "@effect/vitest";
@@ -33,6 +33,8 @@ import { constVoid, flow } from "effect/Function";
 import * as Num from "effect/Number";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import {
   cuts,
@@ -45,10 +47,13 @@ import {
   readWithRules,
   runs,
   streamBytes,
+  streamPieces,
   streamText,
+  untilFailure,
   utf8,
 } from "./support.ts";
 import type { CsvFatalFinding } from "@beep/csv/CsvDiagnostic.schema";
+import type { CsvRecord } from "@beep/csv/CsvTable.schema";
 import type { Outcome } from "./support.ts";
 
 /** A fatal finding as its kind, and its cap when it is one. */
@@ -128,6 +133,7 @@ describe("every cap, read at once, in one-character pieces and through both chan
     ["fieldsPerRecord", { maxFieldsPerRecord: 5 }, "a,b,c,d,e,f\n"],
     ["fieldLength", { maxFieldLength: 10 }, `a,${Str.repeat(11)("x")}\n`],
     ["recordLength", { maxRecordLength: 20 }, `${A.join(A.replicate("abcd", 6), ",")}\n`],
+    ["textLength", { maxTextLength: 20 }, Str.repeat(7)("a,b\n")],
   ] as const) {
     it.effect(`${name} fails the same everywhere`, () =>
       Effect.gen(function* () {
@@ -150,10 +156,82 @@ describe("every cap, read at once, in one-character pieces and through both chan
   }
 });
 
+// A stream has no length of its own, so the text-length cap is what keeps its positions valid `CsvIndex` values.
+describe("the text-length cap bounds every position a read reports", () => {
+  const capped = limited({ maxTextLength: 20 });
+  const units = (text: string) =>
+    pieces(text.length, A.replicate(1, text.length), (from, to) => Str.slice(from, to)(text));
+
+  it.effect("a stream of exactly the cap passes; one unit more fails at the cap, after the records before it", () =>
+    Effect.gen(function* () {
+      const text = Str.repeat(5)("abc\n");
+      const atTheCap = yield* streamText(units(text), capped);
+      assertSuccess(atTheCap, A.replicate(["abc"], 5));
+      const emitted = yield* untilFailure(
+        streamPieces(units(`${text}x`)).pipe(Stream.pipeThroughChannel(Csv.decodeString(capped)))
+      );
+      deepStrictEqual(
+        A.map(
+          emitted,
+          Result.mapBoth({
+            onSuccess: (slice) => slice.cells,
+            onFailure: (error): ReadonlyArray<CsvFatal> => error.diagnostics,
+          })
+        ),
+        [
+          ...A.replicate(Result.succeed<CsvRecord>(["abc"]), 5),
+          Result.fail<ReadonlyArray<CsvFatal>>([
+            CsvFatal.make({
+              finding: LimitExceeded.make({
+                limit: "textLength",
+                maximum: 20,
+                at: CsvTextSpan.make({ offset: 20, length: 0, line: 5, character: 0 }),
+              }),
+            }),
+          ]),
+        ]
+      );
+    })
+  );
+
+  it.effect.prop(
+    "every slice a capped stream emits, and every finding's span, is valid and within the cap",
+    [messyText, cuts, Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 1, maximum: 40 })))],
+    ([text, cutLengths, maxTextLength]) =>
+      Effect.gen(function* () {
+        const options = readWithRules(",", { limits: CsvLimits.make({ maxTextLength }) });
+        const chunks = pieces(text.length, cutLengths, (from, to) => Str.slice(from, to)(text));
+        const emitted = yield* untilFailure(
+          streamPieces(chunks).pipe(Stream.pipeThroughChannel(Csv.decodeString(options)))
+        );
+        const spans = A.flatMap(emitted, (result) =>
+          Result.match(result, {
+            onSuccess: (slice) => {
+              assertTrue(S.is(CsvRecordSlice)(slice), "the slice is valid");
+              return [slice.span];
+            },
+            onFailure: (error) =>
+              A.flatMap(error.diagnostics, ({ finding }) =>
+                finding.kind === "LimitExceeded" || finding.kind === "UnterminatedQuote" ? [finding.at] : []
+              ),
+          })
+        );
+        assertTrue(
+          A.every(spans, (span) => S.is(CsvTextSpan)(span) && span.offset + span.length <= maxTextLength),
+          "every span is within the cap"
+        );
+      }),
+    runs
+  );
+});
+
 describe("linear cost", () => {
   const wide = `${Str.repeat(40_000)("a,")}a\n`;
 
-  /** How many machines `thunk` starts. */
+  /**
+   * How many machines `thunk` starts. `thunk` must stay synchronous: the tests in a file run concurrently, so an
+   * `await` inside it would count other tests' machines too.
+   */
   const machinesStarted = (thunk: () => void): number => {
     const start = vi.spyOn(Machine, "start");
     try {
@@ -229,6 +307,8 @@ describe("linear cost", () => {
     const chunks = pieces(bytes.length, A.replicate(256, bytes.length / 256 + 1), (from, to) =>
       bytes.subarray(from, to)
     );
+    // The measured read must stay synchronous (`Effect.runSync`): the tests in a file run concurrently, and an
+    // asynchronous one would count other tests' copies too.
     const set = vi.spyOn(Uint8Array.prototype, "set");
     try {
       const streamed = Effect.runSync(streamBytes(chunks, options));

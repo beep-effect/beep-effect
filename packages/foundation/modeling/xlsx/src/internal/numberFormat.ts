@@ -339,9 +339,12 @@ const isDateLetter = (letter: string): letter is "y" | "m" | "d" | "h" | "s" =>
 
 const padded = (value: number, width: number): string => Str.padStart(width, "0")(String(value));
 
-/** The calendar fields rounded to the second and carried, as a format with a time in it shows them. */
+/**
+ * The calendar fields rounded to the second from the millisecond `partsOf` keeps, and carried, as a format with a
+ * time in it shows them.
+ */
 const rounded = (parts: SerialParts, system: XlsxDateSystem): SerialParts => {
-  if (parts.fraction < 0.5) return parts;
+  if (parts.millisecond < 500) return parts;
   let { hour, minute, second } = parts;
   second += 1;
   if (second >= 60) {
@@ -352,8 +355,8 @@ const rounded = (parts: SerialParts, system: XlsxDateSystem): SerialParts => {
     minute = 0;
     hour += 1;
   }
-  if (hour < 24) return SerialParts.make({ ...parts, hour, minute, second, fraction: 0 });
-  return SerialParts.make({ ...partsOf(parts.days + 1, system), hour: 0, minute, second, fraction: 0 });
+  if (hour < 24) return SerialParts.make({ ...parts, hour, minute, second, millisecond: 0 });
+  return SerialParts.make({ ...partsOf(parts.days + 1, system), hour: 0, minute, second, millisecond: 0 });
 };
 
 /** A two-digit-at-most time field, none when the format asks for more digits than Excel shows. */

@@ -40,10 +40,12 @@ Csv.stringify(read.table); // canonical: commas, CRLF, minimal quoting
 ## What it trusts and what it does not
 
 - Input is untrusted. Every cap (`CsvLimits`: records, cells per record, cell
-  and record length, input bytes) ends a read as a typed `CsvParseError` with
+  and record length, text length, input bytes) ends a read as a typed `CsvParseError` with
   the finding and its position, never as a defect or a stack overflow. The
   byte cap bounds byte input, streams included (a channel fails as soon as its
-  running count passes it); text input is bounded by the text caps. A lenient
+  running count passes it); text input is bounded by the text caps, and
+  `maxTextLength` (`MAX_TEXT_UNITS` by default and at most) bounds the whole
+  text of any read, a stream's included, so every reported position is valid. A lenient
   read keeps at most `maxWarnings` warnings (1,000 by default) and counts the
   rest in one closing `WarningsTruncated`, so a hostile file cannot fill
   memory with them. A read costs time linear in its input, however it is cut
@@ -63,18 +65,22 @@ Csv.stringify(read.table); // canonical: commas, CRLF, minimal quoting
 
 ## Laws
 
-- Round trip: a table written and read back with the same delimiter is the
-  same table, under any write options except `formulaGuard: "apostrophe"`
-  (which changes the cells it defuses), and canonical text read and written
+- Round trip: a table written and read back with the same fixed delimiter,
+  with or without `excelSepHint` and the other read rules at their defaults
+  (trimming, padding or skipping can change a table), is the same table, under
+  any write options except `formulaGuard: "apostrophe"` (which changes the
+  cells it defuses); a first cell starting `sep=` is written quoted so that a
+  `sep=` reader keeps it. Canonical text read and written
   back is the same text. The default codecs read with the comma they write,
   so `decode(encode(table))` is the table.
 - Chunk invariance: reading in pieces, or through a channel split anywhere
   (inside a BOM, a `sep=` line, a UTF-8 sequence or a CRLF), gives what
   reading at once gives, findings and their positions included. Two exceptions,
-  both in a byte channel. A detected encoding settles within
-  `CsvDetectEncoding.window`, so a byte past the window that breaks UTF-8
-  fails the channel with `InvalidUtf8`, where the whole read falls back to
-  Windows-1252; input that ends within the window reads the same both ways.
+  both in a byte channel. A detected encoding settles once the bytes held pass
+  `CsvDetectEncoding.window` by more than three, so a later byte that breaks
+  UTF-8 fails the channel with `InvalidUtf8`, where the whole read falls back
+  to Windows-1252; input that ends within the window, or at most three bytes
+  past it, reads the same both ways.
   And a channel reports the first fatal finding in input order, where a whole
   read checks the byte cap and the encoding before it parses: bytes past a
   passed text cap that the encoding or the byte cap refuses fail the two

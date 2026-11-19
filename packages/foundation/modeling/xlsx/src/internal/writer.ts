@@ -75,7 +75,11 @@ const cellXml = (cell: XlsxCell, row: number, styleOf: (id: number) => number): 
   const reference = `${columnLetters(cell.column)}${row}`;
   const style = styleOf(cell.format.id);
   const open = `<c r="${reference}"${style === 0 ? "" : ` s="${style}"`}`;
-  const formula = O.match(cell.formula, { onNone: () => "", onSome: (text) => `<f>${escaped(text, false)}</f>` });
+  // An empty formula is no formula (`XlsxCell.canonical`), so no empty `<f>` is written for Excel to repair.
+  const formula = O.match(O.filter(cell.formula, Str.isNonEmpty), {
+    onNone: () => "",
+    onSome: (text) => `<f>${escaped(text, false)}</f>`,
+  });
   return XlsxValue.match(cell.value, {
     Blank: () => `${open}>${formula}</c>`,
     Text: (value) =>

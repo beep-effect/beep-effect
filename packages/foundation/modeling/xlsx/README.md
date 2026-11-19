@@ -62,7 +62,8 @@ counted, and the warnings end with a `ListTruncated` saying how many. A range me
 
 When records are read under a header row, a cell with a value in a column the header row has no heading for stops the
 read, as an empty or repeated heading does. Writing records refuses, as a schema issue, what such a read could not give
-back: an empty heading, one longer than a cell, more headings than a sheet has columns.
+back: an empty heading, one longer than a cell, more headings than a sheet has columns, and records with no heading
+at all (an empty header row, which reads back as no records).
 
 The archive is read with `effect/encoding/Zip` and the XML with `effect/encoding/Xml` (each behind one file in
 `src/internal`). That zip reader goes through the entries in order from the first byte and never reads the central
@@ -73,10 +74,17 @@ directory, which is what Excel opens a file by. Two checks keep the two from sho
 - When the file ends with a central directory, that directory must name exactly the entries the walk read, each
   where the one before it ends, from the first byte up to the directory (`DirectoryMismatch`). An archive updated by
   appending, whose last directory names entries the walk never reached, is refused; so is an entry the directory
-  leaves out.
+  leaves out. The directory is found from the last end record whose fields name a directory ending at it, so an end
+  record copied into the archive comment is passed over, and a 64-bit end record is used whenever its locator is
+  there. Every offset and count the directory gives is checked against the file's length before it is read: damage
+  there is a `DirectoryMismatch`, never a defect.
 
 A file cut short inside its directory, after the last entry, still reads: it has no directory to disagree with, and
 every entry it holds was checked against its checksum.
+
+Some archive shapes other zip tools accept are refused: a stored (uncompressed) entry whose sizes come after its data
+in a descriptor, and an entry compressed with Deflate64, are `DamagedArchive` (`Unsupported`); an archive with bytes
+before its first entry, such as a self-extractor, is `NotAWorkbook`.
 
 ## Displayed text
 

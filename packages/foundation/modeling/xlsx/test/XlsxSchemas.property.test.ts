@@ -46,6 +46,7 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
@@ -202,8 +203,8 @@ describe("serials", () => {
   // shows 12:00:00 PM for the end of a day and drops the 1904 offset after the carry), so they are stated here
   // rather than in the oracle test.
   it("carries a time that rounds up to midnight into the next day", () => {
-    // The calendar keeps whole seconds and carries only what is within a ten-thousandth of the next one; the
-    // displayed text rounds to the nearest second.
+    // The time of day is rounded to the nearest millisecond, and only a time that rounds to midnight carries; the
+    // calendar keeps the whole second of that value and the displayed text rounds it to the nearest second.
     expect(O.getOrThrow(XlsxCalendar.fromSerial(0.999_999_999_5, "1900"))).toMatchObject({
       year: 1900,
       month: 1,
@@ -229,22 +230,61 @@ describe("serials", () => {
     expect(O.isNone(XlsxCalendar.toDateTime(0.5, "1900"))).toBe(true);
     expect(O.isSome(XlsxCalendar.toDateTime(61, "1900"))).toBe(true);
   });
-  // A workbook stores 15 significant digits, so past serial 99,999 (the year 2173) a time is kept to less than a
-  // second; the identity is stated where a whole second survives.
+  // `toDateTime` once passed the time under plural keys `DateTime.make` does not read, so every moment was midnight.
+  it("keeps the time of day in a DateTime, to the millisecond", () => {
+    const iso = (serial: number, system: XlsxDateSystem) =>
+      O.map(XlsxCalendar.toDateTime(serial, system), DateTime.formatIso);
+    expect(iso(45_292.5, "1900")).toEqual(O.some("2024-01-01T12:00:00.000Z"));
+    expect(iso(45_292.75, "1900")).toEqual(O.some("2024-01-01T18:00:00.000Z"));
+    expect(iso(43_830.75, "1904")).toEqual(O.some("2024-01-01T18:00:00.000Z"));
+    expect(iso(1_938_086.986_574_074, "1900")).toEqual(O.some("7206-04-18T23:40:40.000Z"));
+    expect(iso(45_292 + 1.5 / 86_400, "1900")).toEqual(O.some("2024-01-01T00:00:01.500Z"));
+  });
+  // A workbook stores 15 significant digits, which keep at least eight decimals of a day (under a millisecond)
+  // through the last serial of either system, and the time of day is rounded to the millisecond: so every whole
+  // second, of every day a system shows, reads back to itself.
+  const share = S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 }));
+  const secondOfDay = S.Int.check(S.isBetween({ minimum: 0, maximum: 86_399 }));
+  const serialOf = (system: XlsxDateSystem, part: number, seconds: number) => {
+    const day = Math.min(Math.floor(part * maxSerial(system)), Math.floor(maxSerial(system)));
+    return day + seconds / 86_400;
+  };
   it.prop(
     "toSerial after fromSerial is the identity on whole seconds",
-    [
-      Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 99_999 }))),
-      Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: 86_399 }))),
-      Arbitrary.schema(XlsxDateSystem),
-    ],
-    ([day, seconds, system]) => {
-      const serial = day + seconds / 86_400;
+    [XlsxDateSystem, share, secondOfDay],
+    ([system, part, seconds]) => {
+      const serial = serialOf(system, part, seconds);
       expect(
         O.flatMap(XlsxCalendar.fromSerial(serial, system), (calendar) => XlsxCalendar.toSerial(calendar, system))
       ).toEqual(O.some(serial));
     },
-    { arbitrary: { runs: 500 } }
+    { arbitrary: { runs: 1000 } }
+  );
+  it.prop(
+    "a whole-second serial's DateTime has the calendar fields fromSerial gives it",
+    [XlsxDateSystem, share, secondOfDay],
+    ([system, part, seconds]) => {
+      const serial = serialOf(system, part, seconds);
+      const calendar = O.getOrThrow(XlsxCalendar.fromSerial(serial, system));
+      const moment = XlsxCalendar.toDateTime(serial, system);
+      if (calendar.day === 0 || (calendar.year === 1900 && calendar.month === 2 && calendar.day === 29)) {
+        expect(O.isNone(moment)).toBe(true);
+        return;
+      }
+      const parts = moment.pipe(O.getOrThrow, DateTime.toPartsUtc);
+      expect({ ...parts, weekDay: 0 }).toEqual({
+        year: calendar.year,
+        month: calendar.month,
+        day: calendar.day,
+        hour: calendar.hour,
+        minute: calendar.minute,
+        second: calendar.second,
+        millisecond: 0,
+        weekDay: 0,
+      });
+      expect(parts.second + parts.minute * 60 + parts.hour * 3600).toBe(seconds);
+    },
+    { arbitrary: { runs: 1000 } }
   );
 });
 

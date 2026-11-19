@@ -3,13 +3,23 @@
 // reading at once gives.
 
 import { Csv } from "@beep/csv/Csv.codec";
-import { CsvDelimiter, CsvReadOptions, CsvTerminator, CsvWriteOptions } from "@beep/csv/CsvOptions.schema";
+import {
+  CsvDelimiter,
+  CsvDetectEncoding,
+  CsvReadOptions,
+  CsvTerminator,
+  CsvWriteOptions,
+} from "@beep/csv/CsvOptions.schema";
 import { CsvTable } from "@beep/csv/CsvTable.schema";
 import { describe, it } from "@effect/vitest";
 import { assertSuccess, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
+import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
 import { constVoid } from "effect/Function";
+import * as Num from "effect/Number";
+import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -63,6 +73,39 @@ describe("round trip", () => {
         runs
       );
     }
+  }
+
+  // First records a `sep=` reader would take for its line if they were written bare, under each delimiter.
+  const sepStarts: ReadonlyArray<CsvTable["records"][number]> = [
+    ["sep=;"],
+    ["sep=,"],
+    ["sep=\t"],
+    ["sep=|"],
+    ["sep=", ""],
+    ["SEP=;"],
+  ];
+  const sepStart = Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0, maximum: sepStarts.length })));
+  for (const delimiter of CsvDelimiter.literals) {
+    it.prop(
+      `decode(encode(t)) = t with excelSepHint on, a sep= first cell included, ${delimiter === "\t" ? "tab" : delimiter}`,
+      [tables, sepStart, Arbitrary.schema(CsvWriteOptions)],
+      ([table, start, written]) => {
+        const records = O.match(A.get(sepStarts, start), {
+          onNone: () => table.records,
+          onSome: (first) => A.prepend(table.records, first),
+        });
+        const options = CsvWriteOptions.make({ ...written, delimiter, formulaGuard: "none" });
+        const read = Csv.parseResult(
+          Csv.stringify({ records }, options),
+          readWithRules(delimiter, { excelSepHint: true })
+        );
+        assertSuccess(
+          Result.map(read, (done) => done.table.records),
+          records
+        );
+      },
+      runs
+    );
   }
 
   it.prop(
@@ -195,6 +238,36 @@ describe("chunk invariance", () => {
         runs
       );
     }
+  }
+
+  // Raw bytes that end one byte before a small detect window, at it, or up to three bytes past it: the stream holds
+  // them all to the end, so it decides on every byte, as the whole read does.
+  const windowEdges = Arbitrary.schema(
+    S.Tuple([
+      S.Int.check(S.isBetween({ minimum: 1, maximum: 8 })),
+      S.Int.check(S.isBetween({ minimum: -1, maximum: 3 })),
+    ])
+  );
+  for (const [name, options] of R.toEntries({ fixed: readConfigs.fixed, detect: readConfigs.detect })) {
+    it.effect.prop(
+      `the bytes channel over raw bytes ending at a small detect window's edge gives the read at once (${name})`,
+      [windowEdges, rawBytes, rawBytes, cuts],
+      ([[window, past], head, tail, cutLengths]) =>
+        Effect.gen(function* () {
+          const read = CsvReadOptions.make({
+            ...options,
+            encoding: CsvDetectEncoding.make({ window: ByteSize.bytes(BigInt(window)) }),
+          });
+          const length = Num.max(0, window + past);
+          const bytes = Uint8Array.from(
+            A.take(A.appendAll(A.appendAll(head, tail), A.replicate(0x61, length)), length)
+          );
+          const chunks = pieces(bytes.length, cutLengths, (from, to) => bytes.subarray(from, to));
+          const streamed = yield* streamBytes(chunks, read);
+          deepStrictEqual(streamed, outcomeOfRead(Csv.parseBytesResult(bytes, read)));
+        }),
+      runs
+    );
   }
 
   it.effect("a sep= line split across chunks is still the sep= line", () =>

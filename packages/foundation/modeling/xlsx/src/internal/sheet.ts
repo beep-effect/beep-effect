@@ -537,26 +537,22 @@ export class SheetReader {
         // time such as T99:99:99 is unreadable rather than carried into a later day. Day 0 is a serial's alone
         // ("January 0, 1900"); no ISO date names it. A fraction of a second is kept, and must still fall within the
         // system's last serial.
-        const serial = O.flatMap(
-          O.filter(O.fromNullishOr(isoDate.exec(Str.trim(raw))), (found) => found[3] !== "00"),
-          (found) =>
-            O.filter(
-              O.map(
-                O.flatMap(
-                  XlsxCalendar.makeOption({
-                    year: Number(found[1]),
-                    month: Number(found[2]),
-                    day: Number(found[3]),
-                    hour: Number(found[4] ?? "0"),
-                    minute: Number(found[5] ?? "0"),
-                    second: Number(found[6] ?? "0"),
-                  }),
-                  (calendar) => XlsxCalendar.toSerial(calendar, this.system)
-                ),
-                (whole) => whole + Number(found[7] ?? "0") / 86_400
-              ),
-              (moment) => moment <= this.lastSerial
+        const serial = O.fromNullishOr(isoDate.exec(Str.trim(raw))).pipe(
+          O.filter((found) => found[3] !== "00"),
+          O.flatMap((found) =>
+            XlsxCalendar.makeOption({
+              year: Number(found[1]),
+              month: Number(found[2]),
+              day: Number(found[3]),
+              hour: Number(found[4] ?? "0"),
+              minute: Number(found[5] ?? "0"),
+              second: Number(found[6] ?? "0"),
+            }).pipe(
+              O.flatMap((calendar) => XlsxCalendar.toSerial(calendar, this.system)),
+              O.map((whole) => whole + Number(found[7] ?? "0") / 86_400)
             )
+          ),
+          O.filter((moment) => moment <= this.lastSerial)
         );
         return O.match(serial, {
           onNone: () => unreadable("date"),

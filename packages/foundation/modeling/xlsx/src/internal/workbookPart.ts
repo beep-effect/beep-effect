@@ -95,7 +95,7 @@ const malformed = (path: string, reason: string) =>
   stop(DamagedXml.make({ path: Str.slice(0, 1024)(path), line: 0, column: 0, reason }));
 
 /** The content types part, by its `partKey`. */
-const contentTypes = "[content_types].xml";
+const contentTypes = partKey("[Content_Types].xml");
 
 const endsWith = (type: string, kind: string): boolean => Str.endsWith(`/${kind}`)(type);
 
@@ -196,8 +196,10 @@ const stringsOf = Effect.fnUntraced(function* (input: {
   return strings;
 });
 
+/** What a part the read leaves out holds, from its name as OPC compares it. */
 const droppedKindOf = (path: string): XlsxDroppedKind => {
-  const has = (piece: string): boolean => Str.includes(piece)(path);
+  const key = partKey(path);
+  const has = (piece: string): boolean => Str.includes(partKey(piece))(key);
   if (has("/theme/")) return "theme";
   if (has("vbaProject")) return "macros";
   if (has("/charts/") || has("/chartsheets/")) return "chart";
@@ -206,7 +208,7 @@ const droppedKindOf = (path: string): XlsxDroppedKind => {
   if (has("/tables/")) return "table";
   if (has("pivot")) return "pivot";
   if (has("/externalLinks/")) return "externalLink";
-  if (Str.startsWith("docProps/")(path)) return "properties";
+  if (Str.startsWith(partKey("docProps/"))(key)) return "properties";
   return "other";
 };
 
@@ -246,7 +248,7 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
     const root = yield* rootOf({ path, bytes: yield* partOf({ kept: first.kept, path }), cellChars: caps.cellChars });
     return relationshipsOf(root, part);
   });
-  const rootRelationships = MutableHashSet.has(present, "_rels/.rels") ? yield* relationships("") : [];
+  const rootRelationships = MutableHashSet.has(present, partKey("_rels/.rels")) ? yield* relationships("") : [];
   const workbookPath = O.getOrElse(
     O.map(
       A.findFirst(rootRelationships, (r) => endsWith(r.type, "officeDocument")),

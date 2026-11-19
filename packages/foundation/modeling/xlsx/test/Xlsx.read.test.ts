@@ -370,6 +370,33 @@ describe("the file's own form", () => {
     })
   );
 
+  // The same holds for the names that say what the file is: an archive whose every part name is upper-cased, or
+  // whose workbook part alone is `xl/Workbook.xml`, is a workbook and reads, macros found in any case too.
+  it.effect("reads a workbook whose part names are in another case, the workbook part's included", () =>
+    Effect.gen(function* () {
+      const parts = partsOf({ sheets: [{ name: "S", xml: sheet('<row r="1"><c r="A1"><v>7</v></c></row>') }] });
+      const upper = yield* archive(
+        A.map(parts, ([path, text]): readonly [string, string | Uint8Array] => [Str.toUpperCase(path), text])
+      );
+      expect(Xlsx.container(upper)).toBe("workbook");
+      const upperRead = yield* read(upper);
+      expect(grid(first(upperRead))).toEqual([[1, "0:7"]]);
+      const capital = yield* archive(
+        A.map(parts, ([path, text]): readonly [string, string | Uint8Array] => [
+          path === "xl/workbook.xml" ? "xl/Workbook.xml" : path,
+          text,
+        ])
+      );
+      expect(Xlsx.container(capital)).toBe("workbook");
+      const capitalRead = yield* read(capital);
+      expect(grid(first(capitalRead))).toEqual([[1, "0:7"]]);
+      const macros = yield* archive([...parts, ["XL/VBAPROJECT.BIN", new Uint8Array([1, 2, 3])]]);
+      expect(Xlsx.container(macros)).toBe("macroWorkbook");
+      const found = yield* read(macros);
+      expect(found.workbook.dropped).toEqual([{ path: "XL/VBAPROJECT.BIN", kind: "macros" }]);
+    })
+  );
+
   it.effect("reads prefixed element names", () =>
     Effect.gen(function* () {
       const xml =

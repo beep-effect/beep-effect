@@ -3,6 +3,7 @@
 
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
 import { columnLetters } from "@beep/xlsx/XlsxAddress.schema";
+import { XlsxParseError } from "@beep/xlsx/XlsxError.errors";
 import { XlsxLimits, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema";
 import { XlsxRead } from "@beep/xlsx/XlsxRead.schema";
 import { describe, expect, it } from "@effect/vitest";
@@ -12,12 +13,16 @@ import * as ByteSize from "effect/ByteSize";
 import * as Cause from "effect/Cause";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import {
   appended,
   archive,
+  earlyEndRecord,
+  filler,
   partsOf,
   sheet,
   sheetWith,
@@ -526,5 +531,102 @@ describe("hostile files", () => {
       const read = yield* Xlsx.parse(streamed);
       expect(read.workbook.sheets[0].rows[0]?.cells[0]?.value).toMatchObject({ kind: "Number", value: 3 });
     })
+  );
+  // The directory is found from the back, so an end-record signature can sit anywhere: here at byte 14, the CRC field
+  // of a streamed entry's local header, counting 0xFFFF entries, so the reader looks for a 64-bit locator 20 bytes
+  // before it. That read lies before the file's first byte, and it is refused, not thrown.
+  it.effect("an end record inside the first local header, naming a 64-bit locator before byte 0", () =>
+    Effect.gen(function* () {
+      const streamed = yield* streamedArchive([
+        ...partsOf(one(sheet('<row r="1"><c r="A1"><v>1</v></c></row>'))),
+        ["xl/media/filler.bin", filler(30_000)],
+      ]);
+      const finding = yield* findingOf(earlyEndRecord(streamed));
+      expect(finding).toMatchObject({
+        kind: "DirectoryMismatch",
+        reason: "the end record names a 64-bit record that is not there",
+      });
+    })
+  );
+
+  // Any damage to a workbook's bytes is a typed failure of every read or a read, never a defect. The places a byte
+  // matters most are near a record, so each mutation lands within a few bytes of the file's first byte, a local
+  // header, a directory entry or the end record: a run of bytes overwritten or inserted, the file cut there, or an
+  // end-record signature written there (with the bytes after it read as that record's fields). The streamed form
+  // leaves fields a reader skips at their maximum, which an early end record reads as its 64-bit markers, and the
+  // first part's name is short, so the bytes such a record reads as its comment length are small.
+  const Anchor = S.Literals(["start", "local", "central", "end"]);
+  const Mutation = S.Struct({
+    kind: S.Literals(["overwrite", "insert", "truncate", "signature"]),
+    anchor: Anchor,
+    which: S.Int.check(S.isBetween({ minimum: 0, maximum: 7 })),
+    delta: S.Int.check(S.isBetween({ minimum: -4, maximum: 20 })),
+    bytes: S.Array(S.Int.check(S.isBetween({ minimum: 0, maximum: 255 }))).check(S.isMinLength(1), S.isMaxLength(8)),
+  });
+  const signatures = { local: [0x50, 0x4b, 3, 4], central: [0x50, 0x4b, 1, 2], end: [0x50, 0x4b, 5, 6] } as const;
+  const anchorsOf = (bytes: Uint8Array, anchor: typeof Anchor.Type): ReadonlyArray<number> =>
+    anchor === "start"
+      ? [0]
+      : A.filter(A.range(0, bytes.length - 4), (at) =>
+          A.every(signatures[anchor], (byte, i) => bytes[at + i] === byte)
+        );
+  const mutate = (bytes: Uint8Array, mutation: typeof Mutation.Type): Uint8Array => {
+    const anchors = anchorsOf(bytes, mutation.anchor);
+    const base = anchors[mutation.which % Math.max(1, anchors.length)] ?? 0;
+    const at = Math.min(bytes.length, Math.max(0, base + mutation.delta));
+    const written = Uint8Array.from(mutation.kind === "signature" ? signatures.end : mutation.bytes);
+    if (mutation.kind === "truncate") return bytes.slice(0, at);
+    if (mutation.kind === "insert") {
+      const out = new Uint8Array(bytes.length + written.length);
+      out.set(bytes.subarray(0, at));
+      out.set(written, at);
+      out.set(bytes.subarray(at), at + written.length);
+      return out;
+    }
+    const out = bytes.slice();
+    out.set(written.subarray(0, Math.max(0, bytes.length - at)), at);
+    return out;
+  };
+  const whole = streamedArchive([["a.xml", "<a/>"], ...partsOf(one(sheet('<row r="1"><c r="A1"><v>1</v></c></row>')))]);
+  // Each case damages the workbook and the same workbook cut inside its directory, after its last entry: that one
+  // still reads, and has no end record left to be found before one a mutation writes. Both are built once.
+  const targets = Effect.runSync(
+    whole.pipe(
+      Effect.map((bytes) => [bytes, bytes.subarray(0, bytes.length - 30)]),
+      Effect.cached
+    )
+  );
+  /** A read's exit is a success or a typed failure (`XlsxParseError`, or the codec's `SchemaError`), never a defect. */
+  const typed = <A, E>(exit: Exit.Exit<A, E>): boolean =>
+    Exit.isSuccess(exit) ||
+    (!Cause.hasDies(exit.cause) &&
+      O.exists(Cause.findErrorOption(exit.cause), (error) => S.is(XlsxParseError)(error) || S.isSchemaError(error)));
+  /** Every public read but `parse`, which each case runs; each case runs one of these beside it. */
+  const Other = S.Literals(["outline", "sheets", "sheetLayout", "rows", "fromBytes", "recordsFromBytes"]);
+  const others: {
+    readonly [K in typeof Other.Type]: (bytes: Uint8Array) => Effect.Effect<Exit.Exit<unknown, unknown>>;
+  } = {
+    outline: (bytes: Uint8Array) => Effect.exit(Xlsx.outline(bytes)),
+    sheets: (bytes: Uint8Array) => Effect.exit(Xlsx.sheets(bytes)),
+    sheetLayout: (bytes: Uint8Array) => Effect.exit(Xlsx.sheetLayout(bytes, "S")),
+    rows: (bytes: Uint8Array) => Effect.exit(Xlsx.rows(bytes, "S").pipe(Stream.runDrain)),
+    fromBytes: (bytes: Uint8Array) => Effect.exit(S.decodeEffect(Xlsx.XlsxFromBytes)(bytes)),
+    recordsFromBytes: (bytes: Uint8Array) =>
+      Effect.exit(S.decodeEffect(Xlsx.recordsFromBytes({ sheet: "S", header: "first" }))(bytes)),
+  };
+  it.effect.prop(
+    "no damage to a workbook's bytes makes a read die",
+    [S.Array(Mutation).check(S.isMinLength(1), S.isMaxLength(2)), Other],
+    ([mutations, other]) =>
+      Effect.gen(function* () {
+        for (const target of yield* targets) {
+          const bytes = A.reduce(mutations, target, mutate);
+          const parsed = yield* Effect.exit(Xlsx.parse(bytes));
+          const read = yield* others[other](bytes);
+          expect(typed(parsed)).toBe(true);
+          expect(typed(read)).toBe(true);
+        }
+      }),
+    { arbitrary: { runs: 1200 } }
   );
 });

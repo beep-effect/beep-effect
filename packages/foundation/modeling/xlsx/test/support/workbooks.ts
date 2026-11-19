@@ -176,6 +176,41 @@ export const appended = (input: { readonly first: Uint8Array; readonly second: U
   return joined([first, moved]);
 };
 
+/** Where an archive's central directory starts, from its end record or the 64-bit record that one names. */
+const directoryStartOf = (bytes: Uint8Array): number => {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  const end = endOf(bytes);
+  const start = view.getUint32(end + 16, true);
+  return start === 0xffffffff ? Number(view.getBigUint64(Number(view.getBigUint64(end - 12, true)) + 48, true)) : start;
+};
+
+/**
+ * A streamed archive (its first entry's sizes in a descriptor) whose first local header holds an end-record
+ * signature in its unused CRC field, cut ten bytes into its directory. The early signature counts 0xFFFF entries
+ * (the high half of the local size field, which a streamed entry leaves at its maximum), so a reader taking it for
+ * the end record looks for a 64-bit locator 20 bytes before byte 14. Its comment length is two letters of the first
+ * part's name, so the archive must be longer than that for the record to fit: `filler` pads it.
+ */
+export const earlyEndRecord = (bytes: Uint8Array): Uint8Array => {
+  const out = bytes.slice(0, directoryStartOf(bytes) + 10);
+  new DataView(out.buffer).setUint32(14, 0x06054b50, true);
+  return out;
+};
+
+/** Bytes no deflate can shrink much, the same on every run, so an archive holding them has a known size. */
+export const filler = (size: number): Uint8Array => {
+  const out = new Uint8Array(size);
+  // xorshift32: every byte of its state is well mixed, so deflate finds no repeats to shrink.
+  let state = 0x9e3779b9;
+  for (let i = 0; i < size; i += 1) {
+    state ^= state << 13;
+    state ^= state >>> 17;
+    state ^= state << 5;
+    out[i] = state >>> 24;
+  }
+  return out;
+};
+
 /** An archive whose directory leaves out its last entry, which is still in the archive before the directory. */
 export const withoutLastListed = (bytes: Uint8Array): Uint8Array => {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);

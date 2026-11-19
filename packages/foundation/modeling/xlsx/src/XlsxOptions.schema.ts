@@ -165,6 +165,13 @@ const size = (fallback: () => ByteSize.ByteSize, description: string) =>
  * `maxSharedFormulas`) are each counted once across the whole read: what goes past one is dropped and counted, and
  * the read ends with one `ListTruncated` warning per such list saying how many.
  *
+ * **Gotchas**
+ *
+ * - The `ListTruncated` warnings come after the `maxWarnings` kept, so a read may return up to five warnings more
+ *   than that cap (one per list).
+ * - `dropped` counts occurrences: a merged range written again after it was dropped is counted again, while a range
+ *   that was kept is kept, and counted, once per sheet.
+ *
  * **Example** (Tighten one cap)
  *
  * ```ts import.meta.vitest name="Tighten one cap"
@@ -196,7 +203,11 @@ export class XlsxLimits extends S.Opaque<XlsxLimits, { readonly brand: unique sy
       16_777_216,
       "Most characters of formula text that cells sharing a formula are handed, over the whole read"
     ),
-    maxWarnings: count(10_000_000, 10_000, "Most warnings kept over the whole read"),
+    maxWarnings: count(
+      10_000_000,
+      10_000,
+      "Most warnings kept over the whole read, before the one ListTruncated per list that dropped items"
+    ),
     maxMerges: count(10_000_000, 100_000, "Most merged ranges kept over the whole read, each sheet's repeats once"),
     maxHiddenSpans: count(10_000_000, 100_000, "Most hidden `<col>` spans kept over the whole read"),
     maxHiddenColumns: count(

@@ -10,6 +10,7 @@ import { $XlsxId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { identity, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
@@ -131,7 +132,7 @@ export type XlsxMerges = typeof XlsxMerges.Type;
  */
 export const XlsxHiddenColumns = S.Array(XlsxColumn)
   .check(
-    uniqueBy((column: number) => column, "UniqueHiddenColumns", {
+    uniqueBy(identity<number>, "UniqueHiddenColumns", {
       title: "Unique hidden columns",
       description: "A sheet hides each column at most once",
       expected: "hidden columns with no column twice",
@@ -604,15 +605,20 @@ export class XlsxWorkbook extends S.Opaque<XlsxWorkbook, { readonly brand: uniqu
         XlsxRow.make({
           number: row.number,
           hidden: row.hidden,
-          cells: A.map(A.sort(A.filter(row.cells, isWritten), byColumn), (cell) => {
-            const canonical = XlsxCell.canonical(cell, workbook.dateSystem);
-            return XlsxCell.make({
-              column: canonical.column,
-              value: canonical.value,
-              formula: canonical.formula,
-              format: XlsxNumberFormat.make({ id: idOf(canonical.format.code), code: canonical.format.code }),
-            });
-          }),
+          cells: pipe(
+            row.cells,
+            A.map((cell) => XlsxCell.canonical(cell, workbook.dateSystem)),
+            A.filter(isWritten),
+            A.sort(byColumn),
+            A.map((canonical) =>
+              XlsxCell.make({
+                column: canonical.column,
+                value: canonical.value,
+                formula: canonical.formula,
+                format: XlsxNumberFormat.make({ id: idOf(canonical.format.code), code: canonical.format.code }),
+              })
+            )
+          ),
         })
       );
       return XlsxWorksheet.make({

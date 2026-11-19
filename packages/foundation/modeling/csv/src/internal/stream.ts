@@ -1,6 +1,6 @@
 // The reading channels' state, one chunk at a time. Text: the first text is held until its start is decided and,
 // when the delimiter is detected, until it fills the detection window; then one machine reads every chunk. Bytes: the
-// detect window is held until it is full, then the decided decoding turns each chunk into text. Held input is kept as
+// detect window and up to three bytes past it are held, then the decided decoding turns each chunk into text. Held input is kept as
 // the chunks that came, appended in place and joined once, so a chunk costs time in its own length. A step returns
 // fatal findings as schema values; the `Csv` facade turns them into the `CsvParseError` the channel fails with.
 import * as A from "effect/Array";
@@ -14,7 +14,7 @@ import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { CsvDiagnostic, CsvFatal, InvalidUtf8, TooManyBytes } from "../CsvDiagnostic.schema.ts";
 import { CsvEncodingChoice } from "../CsvOptions.schema.ts";
-import { bomOf, decodeBytes, decoderFor, firstInvalidUtf8 } from "./encoding.ts";
+import { decoderFor, detectEncoding, firstInvalidUtf8 } from "./encoding.ts";
 import { built, Machine } from "./machine.ts";
 import { SNIFF_WINDOW } from "./sniff.ts";
 import { prepare, Start, startDecided, startOf } from "./start.ts";
@@ -83,7 +83,8 @@ type TextEmitted = Result.Result<A.NonEmptyReadonlyArray<CsvRecordSlice>, Fatals
 
 type TextStep = readonly [TextPending, ReadonlyArray<TextEmitted>];
 
-const fatalsOf = A.filter(CsvDiagnostic.guards.fatal);
+/** The fatal diagnostics among a read's findings, in order. */
+export const fatalsOf = A.filter(CsvDiagnostic.guards.fatal);
 
 /** A step's records, then the findings that stopped it, each only when there is one. */
 const slicesOf = (machine: Machine): ReadonlyArray<TextEmitted> => [
@@ -180,7 +181,7 @@ interface Window {
 
 type Decoding =
   | Window
-  | { readonly phase: "utf8"; readonly carry: Uint8Array; readonly at: number }
+  | { readonly phase: "utf8"; readonly carry: Uint8Array; readonly at: number; readonly decoder: TextDecoder }
   | { readonly phase: "fixed"; readonly decoder: TextDecoder };
 
 /** The bytes channel's decoding so far and the bytes it has seen, against the byte cap. */
@@ -226,49 +227,55 @@ const fixedStep = (decoder: TextDecoder, bytes: Uint8Array): DecodingStep => [
   [Result.succeed(decoder.decode(bytes, { stream: true }))],
 ];
 
-const utf8Step = (carry: Uint8Array, at: number, chunk: Uint8Array): DecodingStep => {
-  const bytes = concatBytes([carry, chunk]);
+/**
+ * Validated UTF-8: the chunk after the carried start of an unfinished sequence, decoded up to its own unfinished end.
+ * A chunk with no carry is read in place, and one decoder serves the whole stream.
+ */
+const utf8Step = (carry: Uint8Array, at: number, decoder: TextDecoder, chunk: Uint8Array): DecodingStep => {
+  const bytes = carry.length === 0 ? chunk : concatBytes([carry, chunk]);
   const keep = incompleteTail(bytes);
   const whole = bytes.subarray(0, bytes.length - keep);
   return O.match(firstInvalidUtf8(whole), {
     onSome: (invalid): DecodingStep => [
-      { phase: "utf8", carry: new Uint8Array(0), at },
+      { phase: "utf8", carry: new Uint8Array(0), at, decoder },
       [failWith(InvalidUtf8.make({ byteOffset: at + invalid }))],
     ],
     onNone: () => {
-      const text = decodeBytes({ bytes: whole, encoding: "utf-8" });
+      const text = decoder.decode(whole);
       return [
-        { phase: "utf8", carry: bytes.slice(bytes.length - keep), at: at + whole.length },
+        { phase: "utf8", carry: bytes.slice(bytes.length - keep), at: at + whole.length, decoder },
         Str.isNonEmpty(text) ? [Result.succeed(text)] : [],
       ];
     },
   });
 };
 
+const startUtf8 = (bytes: Uint8Array): DecodingStep => utf8Step(new Uint8Array(0), 0, decoderFor("utf-8"), bytes);
+
 /**
- * Decides the encoding from the detect window: a UTF-16 BOM, else whether the window is valid UTF-8. A byte-order
- * mark stays in the decoded text; the text reader strips it, as it does for a whole read. Before the end of the input
- * an unfinished UTF-8 sequence at the window's end may still be completed, so it does not count; at the end it does,
- * and the window decides as a whole read does.
+ * Decides the encoding from the held bytes by the whole read's rule (`detectEncoding`). A byte-order mark stays in
+ * the decoded text; the text reader strips it, as it does for a whole read. Before the end of the input an unfinished
+ * UTF-8 sequence at the end of the held bytes may still be completed, so it is not checked; it starts past the
+ * window, because the window is decided only once more than `UTF8_TAIL` bytes past it have arrived. At the end of
+ * the input every held byte is checked, as a whole read checks them.
  */
 const decideWindow = (bytes: Uint8Array, final: boolean): DecodingStep => {
-  const mark = bomOf(bytes);
-  if (O.isSome(mark) && mark.value !== "utf-8") return fixedStep(decoderFor(mark.value), bytes);
-  const decided = final ? bytes : bytes.subarray(0, bytes.length - incompleteTail(bytes));
-  return O.isSome(firstInvalidUtf8(decided))
-    ? fixedStep(decoderFor("windows-1252"), bytes)
-    : utf8Step(new Uint8Array(0), 0, bytes);
+  const encoding = detectEncoding({ bytes, checked: final ? bytes.length : bytes.length - incompleteTail(bytes) });
+  return encoding.encoding === "utf-8" ? startUtf8(bytes) : fixedStep(decoderFor(encoding.encoding), bytes);
 };
+
+/** The most bytes of an unfinished UTF-8 sequence: a four-byte one missing its last byte. */
+const UTF8_TAIL = 3;
 
 /** Fills the detect window, or decodes at once when the options fix the encoding. */
 const windowStep = (window: Window, options: CsvReadOptions): DecodingStep =>
   CsvEncodingChoice.match(options.encoding, {
     fixed: ({ encoding }): DecodingStep => {
       const bytes = concatBytes(window.pieces);
-      return encoding === "utf-8" ? utf8Step(new Uint8Array(0), 0, bytes) : fixedStep(decoderFor(encoding), bytes);
+      return encoding === "utf-8" ? startUtf8(bytes) : fixedStep(decoderFor(encoding), bytes);
     },
     detect: (detect): DecodingStep =>
-      ByteSize.isGreaterThanOrEqualTo(ByteSize.bytes(BigInt(window.size)), detect.window)
+      ByteSize.isGreaterThan(ByteSize.bytes(BigInt(Num.max(0, window.size - UTF8_TAIL))), detect.window)
         ? decideWindow(concatBytes(window.pieces), false)
         : [window, []],
   });
@@ -281,9 +288,9 @@ const stepDecoding: (decoding: Decoding) => (chunk: Uint8Array, options: CsvRead
         (chunk: Uint8Array) =>
           fixedStep(decoder, chunk),
       utf8:
-        ({ carry, at }) =>
+        ({ at, carry, decoder }) =>
         (chunk: Uint8Array) =>
-          utf8Step(carry, at, chunk),
+          utf8Step(carry, at, decoder, chunk),
       window: (window) => (chunk: Uint8Array, options: CsvReadOptions) => {
         window.pieces.push(chunk);
         return windowStep({ ...window, size: window.size + chunk.length }, options);

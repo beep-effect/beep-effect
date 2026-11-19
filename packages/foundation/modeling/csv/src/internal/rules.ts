@@ -60,8 +60,9 @@ export const applyFormulaGuard: {
 );
 
 /**
- * Whether a cell must be quoted to read back unchanged: it holds the delimiter, a quote, a carriage return or a line
- * feed, or starts with a byte-order mark (which a reader strips at the start of a file).
+ * Whether a cell must be quoted to read back unchanged wherever it stands: it holds the delimiter, a quote, a
+ * carriage return or a line feed, or starts with a byte-order mark (which a reader strips at the start of a file).
+ * The table's first cell has one more rule, `opensSepLine`.
  */
 export const needsQuotes: {
   (delimiter: string): (cell: string) => boolean;
@@ -75,3 +76,11 @@ export const needsQuotes: {
     Str.includes("\n")(cell) ||
     Str.startsWith("\uFEFF")(cell)
 );
+
+const sepLineStart = /^sep=/i;
+
+/**
+ * Whether a table's first cell, written bare, could start a `sep=` line, which a reader honouring `excelSepHint`
+ * (and Excel, in any case) takes for the delimiter instead of a record; quoted, it reads back as the cell.
+ */
+export const opensSepLine = (cell: string): boolean => sepLineStart.test(cell);

@@ -1,6 +1,6 @@
 // Shared test pieces: read options, the generators of hostile text and raw bytes, a splitter that cuts input at
-// arbitrary points, the outcome of a read reduced to what the laws compare (records, or the fatal findings), a stream
-// that fails after its values, and a cost ratio that needs no wall-clock bound.
+// arbitrary points, the outcome of a read reduced to what the laws compare (records, or the fatal findings), and a
+// stream that fails after its values.
 
 import { Csv } from "@beep/csv/Csv.codec";
 import {
@@ -58,6 +58,7 @@ export const readConfigs = {
       maxFieldLength: 3,
       maxRecordLength: 8,
       maxWarnings: 2,
+      maxTextLength: 24,
     }),
   }),
 };
@@ -173,29 +174,4 @@ export const thenFail: {
   2,
   <A>(values: ReadonlyArray<A>, error: string): Stream.Stream<A, string> =>
     Stream.concat(streamPieces(values), Stream.fail(error))
-);
-
-/** Milliseconds `thunk` takes: the median of five runs, after one to warm up. */
-const medianMs = (thunk: () => void): number => {
-  thunk();
-  const times = A.makeBy(5, () => {
-    const started = performance.now();
-    thunk();
-    return performance.now() - started;
-  });
-  return A.sort(times, Num.Order)[2] ?? 0;
-};
-
-/**
- * How much more `run` costs on the larger of two texts than on the smaller, measured in the same test and with the
- * texts built beforehand. For texts k times apart, about k for a linear cost and about k squared for a quadratic one:
- * a ratio, not a time, so a loaded machine slows both sides alike.
- */
-export const growth: {
-  (inputs: readonly [string, string]): (run: (input: string) => unknown) => number;
-  (run: (input: string) => unknown, inputs: readonly [string, string]): number;
-} = dual(
-  2,
-  (run: (input: string) => unknown, [smaller, larger]: readonly [string, string]): number =>
-    medianMs(() => run(larger)) / medianMs(() => run(smaller))
 );

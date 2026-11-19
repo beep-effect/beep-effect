@@ -185,8 +185,10 @@ export const MAX_DETECT_WINDOW: ByteSize.ByteSize = ByteSize.mebibytes(256);
  * **Details**
  *
  * The window matters only to streams, which must settle the encoding before the input ends. A whole byte input is
- * checked in full, and bytes that are not UTF-8 are read as Windows-1252. A stream holds its window in memory until
- * it decides, so the window is at most `MAX_DETECT_WINDOW` (256 MiB, the default byte cap); 64 KiB by default.
+ * checked in full, and bytes that are not UTF-8 are read as Windows-1252. A stream holds its window, and the chunk
+ * that carries it more than three bytes past it, in memory until it decides, so the window is at most
+ * `MAX_DETECT_WINDOW` (256 MiB, the default byte cap); 64 KiB by default. Input that ends sooner is decided on all of
+ * its bytes, as a whole read decides it.
  *
  * **Example** (Detect within the default window)
  *
@@ -394,8 +396,13 @@ const count = (maximum: number, fallback: number, description: string) =>
  * **Details**
  *
  * Defaults: 10,000,000 records, 100,000 cells per record, 16 Mi units per cell, 64 Mi units per record, 1,000 kept
- * warnings and 256 MiB of input. Every count is an integer of at least 1: records at most 2,147,483,647, cells per
- * record at most `MAX_FIELDS`, and lengths and warnings at most `MAX_TEXT_UNITS`.
+ * warnings, `MAX_TEXT_UNITS` units of text in all and 256 MiB of input. Every count is an integer of at least 1:
+ * records at most 2,147,483,647, cells per record at most `MAX_FIELDS`, and lengths and warnings at most
+ * `MAX_TEXT_UNITS`.
+ *
+ * `maxTextLength` bounds the whole text a read takes in, the units after a byte-order mark and a `sep=` line, so
+ * every position a read reports is a valid `CsvIndex`. A stream has no other length bound: past the cap it fails
+ * with `LimitExceeded` `textLength` at the first unit it does not read, after the records before it.
  *
  * Passing a text cap or the byte cap ends the read with a `CsvParseError`. The warning cap does not: past
  * `maxWarnings` the read stops building warnings, counts them, and ends its warnings with one `WarningsTruncated`.
@@ -407,12 +414,14 @@ const count = (maximum: number, fallback: number, description: string) =>
  *
  * ```ts import.meta.vitest name="Tighten one cap and keep the rest"
  * import { CsvLimits } from "@beep/csv/CsvOptions.schema"
+ * import { MAX_TEXT_UNITS } from "@beep/csv/CsvPosition.schema"
  * import * as ByteSize from "effect/ByteSize"
  *
  * const limits = CsvLimits.make({ maxRecords: 1000 })
  * limits.maxRecords // => 1000
  * limits.maxFieldsPerRecord // => 100000
  * limits.maxWarnings // => 1000
+ * limits.maxTextLength // => MAX_TEXT_UNITS
  * limits.maxInputBytes // => ByteSize.mebibytes(256)
  * ```
  *
@@ -430,6 +439,11 @@ export class CsvLimits extends S.Opaque<CsvLimits, { readonly brand: unique symb
       "Most UTF-16 units in one record, its line break not counted"
     ),
     maxWarnings: count(MAX_TEXT_UNITS, 1000, "Most warnings kept; the rest are counted in one WarningsTruncated"),
+    maxTextLength: count(
+      MAX_TEXT_UNITS,
+      MAX_TEXT_UNITS,
+      "Most UTF-16 units read in all, after a byte-order mark and a sep= line; every position is within it"
+    ),
     maxInputBytes: S.ByteSize.pipe(
       S.annotateKey({ description: "Most input bytes read" }),
       S.withConstructorDefault(Effect.sync(() => ByteSize.mebibytes(256))),
@@ -602,8 +616,9 @@ export type CsvFormulaGuard = typeof CsvFormulaGuard.Type;
 
 /**
  * How a CSV is written. `CsvWriteOptions.default` writes commas, CRLF after every record, minimal quoting, no BOM
- * and no formula guard. Every combination reads back as the same table under the same delimiter, except a
- * `formulaGuard` of `apostrophe`, which changes the cells it defuses.
+ * and no formula guard. Every combination reads back as the same table under the same fixed delimiter, with or
+ * without `excelSepHint` and the other read rules at their defaults, except a `formulaGuard` of `apostrophe`, which
+ * changes the cells it defuses.
  *
  * **Example** (Write LF line breaks)
  *

@@ -177,7 +177,11 @@ type Working = {
   -readonly [K in Exclude<keyof MachineState, "brand" | "cells">]: MachineState[K];
 } & { cells: Array<CsvCell> };
 
-/** Engine-built values hold their invariants by construction; the property tests prove them, so `make` skips checks. */
+/**
+ * Engine-built values hold their invariants by construction, so `make` skips checks: every position is at most the
+ * text-length cap, which `Machine.feed` never reads past, and the cap is at most `MAX_TEXT_UNITS`. The property tests
+ * prove them.
+ */
 export const built = { disableChecks: true } as const;
 
 // crispen: kept as a mutable class — it is one read's working state, mutated per character for speed, and it never
@@ -216,8 +220,14 @@ export class Machine {
     return !this.s.content && !this.s.held;
   }
 
-  /** Reads one chunk; the takes then give what it completed. */
-  feed(text: string): Machine {
+  /**
+   * Reads one chunk; the takes then give what it completed. Units past the text-length cap are not read: the read
+   * fails at the first of them, so every position stays within the cap however the input is cut.
+   */
+  feed(chunk: string): Machine {
+    const { maxTextLength } = this.config.limits;
+    const room = maxTextLength - this.s.offset;
+    const text = chunk.length > room ? Str.slice(0, room)(chunk) : chunk;
     let i = 0;
     while (i < text.length && !this.s.stopped) {
       if (this.s.held) {
@@ -231,6 +241,7 @@ export class Machine {
       }
       i = stepFor(this.mode)(this, text, i);
     }
+    if (text.length < chunk.length && !this.s.stopped) this.limit("textLength", maxTextLength, this.here(0));
     return this;
   }
 

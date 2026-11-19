@@ -176,11 +176,23 @@ export class XlsxCalendar extends S.Opaque<XlsxCalendar, { readonly brand: uniqu
     O.filter(serialOf(calendar, system), (serial) => serial <= maxSerial(system));
 
   /**
-   * The moment a serial names, read as UTC, when a real calendar has it: none for serial 60 and for serials below 1
-   * in the 1900 system, and none past the last serial of the system.
+   * The moment a serial names, read as UTC and kept to the millisecond, when a real calendar has it: none for serial
+   * 60 and for serials below 1 in the 1900 system, and none past the last serial of the system.
+   *
+   * **Example** (A serial's moment, time of day included)
+   *
+   * ```ts import.meta.vitest name="A serial's moment, time of day included"
+   * import { XlsxCalendar } from "@beep/xlsx"
+   * import * as DateTime from "effect/DateTime"
+   * import * as O from "effect/Option"
+   *
+   * O.map(XlsxCalendar.toDateTime(45_292.75, "1900"), DateTime.formatIso) // => O.some("2024-01-01T18:00:00.000Z")
+   * O.map(XlsxCalendar.toDateTime(43_830.75, "1904"), DateTime.formatIso) // => O.some("2024-01-01T18:00:00.000Z")
+   * ```
    */
-  static readonly toDateTime = (serial: XlsxSerial, system: XlsxDateSystem): O.Option<DateTime.Utc> =>
-    O.flatMap(
+  static readonly toDateTime = (serial: XlsxSerial, system: XlsxDateSystem): O.Option<DateTime.Utc> => {
+    const { millisecond } = partsOf(serial, system);
+    return O.flatMap(
       O.filter(
         XlsxCalendar.fromSerial(serial, system),
         (parts) => parts.day !== 0 && !(parts.year === 1900 && parts.month === 2 && parts.day === 29)
@@ -190,9 +202,11 @@ export class XlsxCalendar extends S.Opaque<XlsxCalendar, { readonly brand: uniqu
           year: parts.year,
           month: parts.month,
           day: parts.day,
-          hours: parts.hour,
-          minutes: parts.minute,
-          seconds: parts.second,
+          hour: parts.hour,
+          minute: parts.minute,
+          second: parts.second,
+          millisecond,
         })
     );
+  };
 }
