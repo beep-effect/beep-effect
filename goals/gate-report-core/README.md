@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research and homes — not started. P1 through P3 are the first vertical slice.
+P0 is complete: four package homes are confirmed by decision file. P1 (the model package) is in progress; P1 through P3 are the first vertical slice.
 
 ## Latest Evidence
 

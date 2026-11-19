@@ -51,15 +51,16 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-New packages. Each is created with `bun run beep create-package`, never by hand. The names are
-working names; phase P0 confirms each name and home with the architecture guardian and records
-the result as a decision file.
+New packages. Each is created with `bun run beep create-package`, never by hand. Phase P0
+confirmed each name and home with the architecture guardian; the decision files `model-home`,
+`library-split` and `vitest-adapter-home` record the review.
 
-| Working name | Family / kind | Path | Holds |
+| Name | Family / kind | Path | Holds |
 | --- | --- | --- | --- |
 | `@beep/gate-report` | foundation / modeling | `foundation/modeling/gate-report` | Report schemas, the event union, the reducer, shape and outcome classifiers, honest-count rules, failure signature, cause-folding table, the dispatch table and its cells producing a neutral console document |
-| `@beep/repo-gate-run` | tooling / library | `tooling/library/repo-gate-run` | Recorder, console service (agent and terminal projections), audience selection, the type-checker text adapter, the `gate` query services |
-| `@beep/repo-gate-vitest`, or a module of `@beep/test-runner` | tooling / test-kit | `tooling/test-kit/repo-gate-vitest`, or `packages/tooling/test-kit/test-runner` | The Vitest reporter that emits gate events |
+| `@beep/repo-gate-record` | tooling / library | `tooling/library/repo-gate-record` | The record and log codec, the package and root path rules, newest-20 retention and the writes |
+| `@beep/repo-gate-run` | tooling / library | `tooling/library/repo-gate-run` | Stream capture, console service (agent and terminal projections), audience selection, the type-checker text adapter, the `gate` query services |
+| `@beep/repo-gate-vitest` | tooling / test-kit | `tooling/test-kit/repo-gate-vitest` | The Vitest reporter that emits gate events and writes the record through the record library |
 
 Existing surfaces this goal changes:
 
@@ -214,8 +215,9 @@ and is overridden by the `--agent`, `--human` and `--ci` flags of `@beep/cli-kit
   `vitest.shared.ts`. Upstream's 3,141-line `.repos/vitest-agent/packages/plugin/src/reporter.ts` is read for its
   invariants and rebuilt small.
 - A reporter runs in the Vitest main process, which is Bun under the generated
-  `bunx --bun vitest run` script and Node under the Node coverage commands
-  (`CoverageRuntimeReporter` records which). Test workers are Node processes. The adapter
+  `bunx --bun vitest run` script and Node for the five packages whose test script runs
+  `bunx vitest`. Coverage runs pass their own reporters on the command line and write no gate
+  record (decision `coverage-runs-write-no-record`). Test workers are Node processes. The adapter
   therefore loads under both runtimes and its import graph reaches no `bun:` module, which keeps
   the history store (on `bun:sqlite`) out of it.
 - The generated `beep:test` script passes `--passWithNoTests`, so a package with no test files
@@ -519,6 +521,70 @@ The packages follow the word: a gate-report model and a gate-run library. `YeetV
 Lane explore/agent-verification-output
 
 Reverse: Rename the model and packages and re-key their identities
+
+### The agent budget stays 8,000 characters, 240 per line, 12 diff lines, 2026-11-19
+
+Re-read against the harness limits in the exploration research (section 5 of the external landscape): Claude Code keeps about 10,000 characters of a failing command inline and Codex cuts the middle of a larger budget, so the smallest window is about 10,000 characters and 2,000 are left for what prints outside the renderer. The numbers are the default of a budget parameter, not constants in the model.
+
+Lane feat/gate-report-core
+
+Reverse: Change the default ConsoleBudget the library supplies.
+
+### Coverage runs write no gate record in this goal, 2026-11-19
+
+The coverage planner passes its own reporters on the command line, and a command-line reporter replaces the configured list, so the adapter does not run under the coverage commands. This goal leaves that as it is: a coverage run writes no record and the coverage gate keeps its own report. The spec sentence that expects the adapter under the Node coverage commands is narrowed to the five packages whose ordinary test script runs Vitest on Node. Putting the coverage gate on the contract is rollout work in `goals/gate-report-rollout`.
+
+Lane feat/gate-report-core
+
+Reverse: Have the coverage planner pass the gate reporter beside its own on the command line.
+
+### An empty run renders ERRORED and the task exit code stays the tool's, 2026-11-19
+
+Of 210 workspace manifests with a `beep:test` script, one has no test files: the Storybook app, whose Vitest config does not extend the shared config, so the adapter never runs there. 161 scripts pass `--passWithNoTests`. The report rule stands (nothing collected is `ERRORED`, law 4), and the exit code is not changed by this goal: it stays what the tool returned. No package changes behaviour today, and a gate that starts failing because its report says so is a policy change for `goals/gate-report-rollout` to make with the census in hand.
+
+Lane feat/gate-report-core
+
+Reverse: Make the task path exit non-zero when a record's reason is errored.
+
+### Seven fixtures, each generated from the repository, 2026-11-19
+
+The fixture set: a green test run of `@beep/glob`; a red test run with an assertion diff; a test timeout; a module that fails to load; an empty run; a check run with two diagnostics; and the TS6305 cascade a package check prints with unbuilt upstream declarations. Each is produced by running the real tool on repository code or on a small fixture package and capturing its events or output; none is copied from a session transcript. The cascade fixture is captured from a fixture package, never by removing declarations from the working tree: a compiler run on an unbuilt tree overwrites the package's own declarations.
+
+Lane feat/gate-report-core
+
+Reverse: Replace a generated fixture with a hand-written one and note why in the test.
+
+### The record writer is its own library, @beep/repo-gate-record, beside @beep/repo-gate-run, 2026-11-19
+
+Two tooling libraries instead of one. `@beep/repo-gate-record` holds the record and log codec, the package and root path rules, newest-20 retention and the writes; it depends only on the model and Effect, and the caller supplies the platform layer. `@beep/repo-gate-run` holds stream capture, the console service, audience selection, the TypeScript diagnostic adapter and the query services, and may depend on `@beep/cli-kit`, `@beep/runtime-env` and the `process/StepExec` leaf of `@beep/repo-cli-kit`, never that package root. The reason is the test hash: the Vitest adapter must be a declared input of every `test` task, and through the gate-run library that closure would reach 32 packages, so an edit to the git or DuckDB drivers would rerun about 210 test tasks. Through the record library it stays near the size of `@beep/utils`. Command trees stay in the repo CLI; only query services live in the library.
+
+Lane feat/gate-report-core
+
+Reverse: Fold the record modules back into the gate-run library and point the Vitest adapter at it.
+
+### The model is @beep/gate-report in foundation/modeling, free of repo specifics, 2026-11-19
+
+The architecture review approved `@beep/gate-report` at foundation/modeling/gate-report: it models a developer-artifact format, as `@beep/sbom`, `@beep/lockfiles` and `@beep/tsconfig` do, and foundation is the only family a product slice could reuse it from. Typed, pure console data is allowed there; `@beep/github-reporting` is the precedent. Three conditions hold. Repo specifics stay out: the pointer table is a schema whose command strings the library supplies, record paths live in tooling, and the input fingerprint is an opaque string. The console budget (8,000 characters, 240 per line, 12 diff lines) is a `ConsoleBudget` input with the agent default supplied by the library. The model does not depend on `@beep/github-reporting`: its closure is ten packages against four, and the CI projection in `goals/ci-gate-reports` should depend on both instead.
+
+Lane feat/gate-report-core
+
+Reverse: Move the model's modules into the gate-run library and delete the modeling package.
+
+### The first slice lands as two pull requests: the model, then the services and wiring, 2026-11-19
+
+The plan lands P1 through P3 as one pull request. It is split so each is reviewable and green alone: first `@beep/gate-report` complete (schemas, reducer, classifiers, counts, signature, folding table, dispatch cells and the law tests that need no service), then the record and gate-run libraries, the Vitest adapter and the `test` and `check` wiring for `@beep/glob`. P4, P5 and the closeout follow as the third. The packet allows three open pull requests; these are sequential.
+
+Lane feat/gate-report-core
+
+Reverse: Open one pull request for P1 through P3 as the plan first said.
+
+### The Vitest adapter is a new test kit, @beep/repo-gate-vitest, loaded lazily and registered by specifier, 2026-11-19
+
+A module of `@beep/test-runner` was rejected: that package has no runtime dependency on schema or identity so foundation tests can adopt it, 152 manifests depend on it, and the adapter would create dev-dependency cycles through `@beep/identity`. The adapter is its own test kit at tooling/test-kit/repo-gate-vitest and depends on the model, the record library, Effect and `@effect/platform-node` only. Rules: the registered reporter module has no workspace import at top level; it loads the implementation when Vitest starts and on any failure prints one stderr line, turns itself off and leaves the exit code alone. The root devDependencies name it, and the shared config appends it after the spread of Vitest's own default reporters, so the agent and GitHub reporters stay. It registers only outside doctest and deep property-sweep runs, which share the config but must not overwrite the test record. The `test` task depends on the adapter's transit task, as it does for `@beep/utils`, so the code that writes a cached record is in the hash. An import-boundary test proves no `bun:` module is reachable.
+
+Lane feat/gate-report-core
+
+Reverse: Remove the adapter from the shared Vitest config and delete the test kit.
 
 <!-- beep:decisions:end -->
 
