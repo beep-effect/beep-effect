@@ -16,13 +16,16 @@
 
 import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as A from "effect/Array";
+import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { FleetLaunchRequest, FleetOverride } from "./Ec2Fleet.models.ts";
 import { Ec2Fleet } from "./Ec2Fleet.service.ts";
 import { GitHubRunners } from "./GitHubApp.service.ts";
@@ -202,8 +205,12 @@ const failedLaunch = (count: number, retryable: boolean): LaunchOutcome =>
  * **Details**
  *
  * A thrown `CreateFleet` counts every runner as failed, retryable when the
- * error is. A partial launch counts the shortfall as retryable when any
- * reported error code is in `scaleErrors`, otherwise as not retryable.
+ * error is (throttling, 5xx, network) or when its code is in `scaleErrors`,
+ * the same quota and capacity codes as a per-instance error. A partial launch
+ * counts the shortfall as retryable when any reported error code is in
+ * `scaleErrors`, otherwise as not retryable. Retryable messages go back to the
+ * build queue as batch item failures and are never also published to the
+ * job-retry queue.
  *
  * **Example** (Wire the launcher)
  *
@@ -224,7 +231,10 @@ export const launchRunners: (input: FleetLaunchInput) => Effect.Effect<LaunchOut
   const ec2 = yield* Ec2Fleet;
   const attempt = yield* ec2.createFleet(fleetLaunchRequest(input)).pipe(Effect.result);
   if (attempt._tag === "Failure") {
-    return failedLaunch(input.count, attempt.failure.retryable);
+    // A request-level quota or capacity error (`MaxSpotInstanceCountExceeded`, `InsufficientInstanceCapacity`, ...) is
+    // retryable exactly as the same code is per instance: the group's messages return as batch item failures only.
+    const scaleError = O.exists(attempt.failure.code, (code) => A.contains(input.config.scaleErrors, code));
+    return failedLaunch(input.count, attempt.failure.retryable || scaleError);
   }
   const fleet: FleetLaunchResult = attempt.success;
   const missing = input.count - fleet.instanceIds.length;
@@ -439,16 +449,12 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
     return [];
   }
 
-  const current =
-    config.pool.maximumCount === -1
-      ? 0
-      : (yield* ec2.listRunners(
-          RunnerFilter.make({
-            environment: O.some(config.environment),
-            type: O.some(owner.type),
-            owner: O.some(owner.owner),
-          })
-        )).length;
+  const ownerFilter = RunnerFilter.make({
+    environment: O.some(config.environment),
+    type: O.some(owner.type),
+    owner: O.some(owner.owner),
+  });
+  const current = config.pool.maximumCount === -1 ? 0 : yield* countRunners(config, ownerFilter);
   const wanted = stillQueued.length;
   const allowed =
     config.pool.maximumCount === -1 ? wanted : Math.max(0, Math.min(wanted, config.pool.maximumCount - current));
@@ -500,6 +506,38 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
   return retrying;
 });
 
+// A runner's JIT config parameter lives from its configuration until the runner reads and deletes it at boot, and
+// Parameter Store reads are consistent where EC2's tag-filtered DescribeInstances lags a fresh launch. So a pool's
+// launched runners are those EC2 shows plus those with a recent unconsumed JIT config EC2 does not show yet. Older
+// parameters are left to the housekeeper: a runner that never booted within the window is not in flight.
+const inFlightWindowMillis = 15 * 60 * 1000;
+
+const instanceIdOf = (parameterName: string): string => A.lastNonEmpty(Str.split("/")(parameterName));
+
+// Either read failing fails the group, so no launch happens and every message of the group goes back for retry.
+// Parameter Store is read FIRST, EC2 second. A runner whose JIT config is gone at the first read has already booted,
+// and a boot normally outlasts EC2's tag-filter lag (seconds), so the second read normally sees it. Reading EC2 first
+// would let a runner fall between the reads: unseen by EC2, then its config deleted before Parameter Store is read. A
+// runner seen by both is counted once, by instance id. An EC2 lag longer than a boot can still undercount. An invocation
+// then launches at most min(runners missed, cap) beyond the true cap, since it requests at most `cap - counted`; across
+// invocations the overshoot accumulates, ceilinged by the account's Spot vCPU quota. The CI runners cutover decision
+// records the residual and its tripwire.
+const countRunners = Effect.fnUntraced(function* (config: PoolRuntimeConfig, filter: RunnerFilter) {
+  const ec2 = yield* Ec2Fleet;
+  const ssm = yield* SsmStore;
+  const tokens = yield* ssm.listByPath(config.tokenPath);
+  const visible = yield* ec2.listRunners(filter);
+  const now = yield* Clock.currentTimeMillis;
+  const seen = HashSet.fromIterable(A.map(visible, (runner) => runner.instanceId));
+  const inFlight = A.filter(
+    tokens,
+    (token) =>
+      O.exists(token.lastModified, (modified) => now - modified <= inFlightWindowMillis) &&
+      !HashSet.has(seen, instanceIdOf(token.name))
+  );
+  return A.length(visible) + A.length(inFlight);
+});
+
 /**
  * Handles one build-queue batch and returns the SQS message ids to report as
  * batch item failures (they come back after the visibility timeout).
@@ -507,8 +545,18 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
  * **Details**
  *
  * Messages are sorted by retry counter and grouped by owner. Per group:
- * optional "still queued" check (fail-open), live runner count against the
- * VM cap, launch, configure, terminate what failed configuration. With
+ * optional "still queued" check (fail-open), runner count against the VM
+ * cap, launch, configure, terminate what failed configuration. The count is
+ * the runners EC2 shows plus those launched but not yet shown, read from
+ * their unconsumed JIT config parameters. Parameter Store is read first, so a
+ * runner that deleted its config before that read has booted, and EC2
+ * normally shows a booted runner. An EC2 read lag longer than a boot can
+ * still undercount. An invocation then launches at most min(runners missed,
+ * cap) beyond the true cap, because it requests at most `cap - counted`;
+ * across invocations the overshoot accumulates, ceilinged by the account's
+ * Spot vCPU quota. The residual and its tripwire are in the CI runners
+ * cutover decision. When either read fails, the group launches nothing
+ * and every one of its messages is returned for retry. With
  * ephemeral runners, messages over the cap and retryable launch failures are
  * returned for redelivery; everything else handled is published to the
  * job-retry queue. Non-`workflow_job` events with ephemeral runners are

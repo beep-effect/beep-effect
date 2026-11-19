@@ -41,7 +41,7 @@ unbuilt reference, covering the slim entry, the task path and the built case.
 
 `bun run beep cache audit` reports 0 blocking findings on the merged tree. Re-recorded subjects:
 the root subject (twice on the P1 lane, once here), 207 packages for the generated `check`, and
-`@beep/repo-cli` and `@beep/contract-kit` again after the merge. Each record has a reviewed request
+`@beep/repo-cli`, `@beep/contract-kit` and `@beep/infra-ci-runners` after base merges. Each record has a reviewed request
 under `docs/reports`.
 
 ## AC10: packages verified

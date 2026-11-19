@@ -9,7 +9,7 @@
   ],
   "review": {
     "reviewer": "Claude Fable 5.2 (gate-output-switch-on P3 lane, fix/gate-output-check-probe)",
-    "reason": "Re-record the root subject after the policy-fingerprint writer regenerated the input lists of the policy fingerprint tasks in turbo.json: the task runner now imports the package-scripts schema module to read the probe command, so that file's place in those generated lists changed. Only input lists of fingerprint seal tasks moved; no task command, output, environment entry or cache flag changed and no qualification is granted.",
+    "reason": "Re-record two subjects after merging main at a4ce5e8b0c9. @beep/infra-ci-runners reached main after the probe lane rewrote the other manifests; the scripts writer gave it the same generated check, beep-cli quality check-probe && bun run beep:check, re-keying the scripts digest of its tasks. The root subject changed on both sides: main added the new package's tasks, and this lane regenerated the input lists of the policy fingerprint tasks. Task outputs, environment entries and cache flags are unchanged; no qualification is granted.",
     "basis": {
       "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
       "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "94f561062541ab4be4cb5ede68f3746ed3fbe969c0ced46a156c5f810d17ca71"
+      "sha256": "5618523274536dc1f38fda4ce47c0c3880b631f061ab8ae61cd3b62438905d9a"
     }
   ],
   "nodes": [
@@ -2254,6 +2254,7 @@
           "packages/shared/domain/package.json",
           "packages/shared/tables/package.json",
           "packages/shared/use-cases/package.json",
+          "packages/tooling/infra/ci-runners/package.json",
           "packages/tooling/infra/cost-controls/package.json",
           "packages/tooling/infra/github/package.json",
           "packages/tooling/infra/infra-hosts/package.json",

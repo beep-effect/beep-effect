@@ -109,6 +109,55 @@ const toRunner = (runner: {
   SelfHostedRunner.make({ id: runner.id, name: runner.name, status: runner.status, busy: runner.busy });
 
 /**
+ * A GitHub App id with its decoded PEM private key, the input of
+ * {@link appKeyCanSign}.
+ *
+ * **Example** (Build a signing key)
+ *
+ * ```ts
+ * import { AppSigningKey } from "@beep/alchemy-github-runners/GitHubApp.layer"
+ * import * as Redacted from "effect/Redacted"
+ *
+ * console.log(AppSigningKey.make({ appId: "1", privateKeyPem: Redacted.make("pem") }).appId) // "1"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class AppSigningKey extends S.Opaque<AppSigningKey, { readonly brand: unique symbol }>()(
+  S.Struct({ appId: S.String, privateKeyPem: S.Redacted(S.String) }).pipe(
+    $I.annoteSchema("AppSigningKey", { description: "A GitHub App id with its decoded PEM private key." })
+  )
+) {}
+
+/**
+ * Whether a PEM App key can sign the RS256 JWT GitHub requires, checked with
+ * the same signer the runtime uses (distilled GitHub `App.appJwt`); never
+ * reveals the key.
+ *
+ * **Example** (A non-key cannot sign)
+ *
+ * ```ts
+ * import { AppSigningKey, appKeyCanSign } from "@beep/alchemy-github-runners/GitHubApp.layer"
+ * import * as Effect from "effect/Effect"
+ * import * as Redacted from "effect/Redacted"
+ *
+ * const key = AppSigningKey.make({ appId: "1", privateKeyPem: Redacted.make("not a key") })
+ * console.log(Effect.runSync(appKeyCanSign(key))) // false
+ * ```
+ *
+ * @param key - The App id, the JWT issuer, and the decoded PEM private key.
+ * @returns `true` when a JWT can be signed with it.
+ * @category validation
+ * @since 0.0.0
+ */
+export const appKeyCanSign = (key: AppSigningKey): Effect.Effect<boolean> =>
+  GitHubApp.appJwt({ appId: key.appId, privateKey: key.privateKeyPem }).pipe(
+    Effect.as(true),
+    Effect.orElseSucceed(() => false)
+  );
+
+/**
  * Live {@link GitHubAppAuth}: reads the App id and base64 PEM key from SSM on
  * first use, signs a fresh JWT per call with distilled GitHub's `App.appJwt`
  * and exchanges it with distilled

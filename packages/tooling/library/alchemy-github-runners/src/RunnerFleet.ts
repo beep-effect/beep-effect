@@ -15,6 +15,7 @@
  * @since 0.0.0
  */
 
+import { AWSEnvironment } from "@alchemy.run/aws/Environment";
 import * as EventBridge from "@alchemy.run/aws/EventBridge";
 import * as IAM from "@alchemy.run/aws/IAM";
 import * as KMS from "@alchemy.run/aws/KMS";
@@ -33,6 +34,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { instanceStateChangeDetailType, spotInterruptionWarningDetailType } from "./Ec2Events.models.ts";
+import { FleetNamePrefix, fleetResourceNames, poolResourceNames } from "./RunnerFleetNames.ts";
 import { RunnerPool, RunnerType } from "./RunnerPool.models.ts";
 import {
   HousekeeperRuntimeConfig,
@@ -50,6 +52,7 @@ import { AppParameterNames, appParameterNames, poolConfigPath, poolTokenPath } f
 import type { RunnerLaunchTemplateProps } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate";
 import type { Input, PropsInput } from "alchemy/Input";
 import type * as Redacted from "effect/Redacted";
+import type { FleetResourceNames, PoolResourceNames } from "./RunnerFleetNames.ts";
 
 type Value<T> = T | Output.Output<T>;
 
@@ -103,9 +106,12 @@ export type RunnerFleetLaunchTemplate = Pick<
  * the termination watcher's tag filter. `ssmRoot` holds the App parameters
  * and each pool's token and config paths. `app` values are written as
  * SecureString parameters under the fleet's own KMS key; nothing here mints
- * an App. `runnerManagedPolicyArns` and `runnerPermissionsBoundaryArn` go on
- * every pool's runner role (the live fleet attaches its IMDS-disable policy
- * this way).
+ * an App. `runnerManagedPolicyArns` go on every pool's runner role (the live
+ * fleet attaches its IMDS-disable policy this way). `permissionsBoundaryArn`
+ * is the permissions boundary of every role the composite creates: the
+ * runner roles and each Lambda function's execution role. `namePrefix` pins every physical name the composite chooses
+ * (see `RunnerFleetNames`); without it the resources take Alchemy's
+ * generated names.
  *
  * **Example** (Build the props of a one-pool fleet)
  *
@@ -142,13 +148,14 @@ export class RunnerFleetProps extends S.Opaque<RunnerFleetProps, { readonly bran
     launchTemplate: LaunchTemplateInput,
     logRetention: S.optionalKey(DurationInput),
     name: S.String,
+    namePrefix: S.optionalKey(FleetNamePrefix),
     pools: S.NonEmptyArray(RunnerPool),
     postInstall: S.optionalKey(S.String),
     preInstall: S.optionalKey(S.String),
     repositoryAllowList: S.Array(S.String),
     runAs: S.optionalKey(S.String),
     runnerManagedPolicyArns: StringValue.pipe(S.Array, S.optionalKey),
-    runnerPermissionsBoundaryArn: S.optionalKey(StringValue),
+    permissionsBoundaryArn: S.optionalKey(StringValue),
     runnerType: RunnerType,
     ssmRoot: S.String,
     subnetIds: S.NonEmptyArray(StringValue),
@@ -193,8 +200,10 @@ const scheduledFunction = Effect.fn("RunnerFleet.scheduledFunction")(function* (
   readonly id: string;
   readonly fn: Lambda.Function;
   readonly scheduleExpression: string;
+  readonly ruleName: O.Option<string>;
 }) {
   const rule = yield* EventBridge.Rule(`${input.id}Schedule`, {
+    ...O.match(input.ruleName, { onNone: () => ({}), onSome: (name) => ({ name }) }),
     scheduleExpression: input.scheduleExpression,
     targets: [{ Id: input.id, Arn: input.fn.functionArn }],
   });
@@ -207,6 +216,10 @@ const scheduledFunction = Effect.fn("RunnerFleet.scheduledFunction")(function* (
   return rule;
 });
 
+// The permissions boundary every role of the fleet carries, when the fleet sets one.
+const boundaryOf = (props: RunnerFleetProps) =>
+  props.permissionsBoundaryArn === undefined ? {} : { permissionsBoundary: props.permissionsBoundaryArn };
+
 const queueConsumer = (queue: SQS.Queue): Statement =>
   allow({
     actions: ["sqs:ReceiveMessage", "sqs:DeleteMessage", "sqs:GetQueueAttributes", "sqs:ChangeMessageVisibility"],
@@ -217,9 +230,15 @@ const queueWithDlq = Effect.fn("RunnerFleet.queueWithDlq")(function* (input: {
   readonly id: string;
   readonly visibilityTimeout: Duration.Input;
   readonly maxReceiveCount: number;
+  readonly names: O.Option<{ readonly queue: string; readonly dlq: string }>;
 }) {
-  const dlq = yield* SQS.Queue(`${input.id}Dlq`, { messageRetentionPeriod: "14 days", sqsManagedSseEnabled: true });
+  const dlq = yield* SQS.Queue(`${input.id}Dlq`, {
+    ...O.match(input.names, { onNone: () => ({}), onSome: (names) => ({ queueName: names.dlq }) }),
+    messageRetentionPeriod: "14 days",
+    sqsManagedSseEnabled: true,
+  });
   return yield* SQS.Queue(input.id, {
+    ...O.match(input.names, { onNone: () => ({}), onSome: (names) => ({ queueName: names.queue }) }),
     visibilityTimeout: input.visibilityTimeout,
     sqsManagedSseEnabled: true,
     redrivePolicy: { deadLetterTargetArn: dlq.queueArn, maxReceiveCount: input.maxReceiveCount },
@@ -272,6 +291,13 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
     props.id,
     Effect.gen(function* () {
       const appNames = appParameterNames(props.ssmRoot);
+      // Every ARN the fleet's own policies name carries the stage's account and region, not a wildcard.
+      const { accountId, region } = yield* AWSEnvironment.current;
+      const prefix = O.fromUndefinedOr(props.namePrefix);
+      const fleetNames = O.map(prefix, fleetResourceNames);
+      const pinFunction = (name: (names: FleetResourceNames) => string) =>
+        O.match(fleetNames, { onNone: () => ({}), onSome: (names) => ({ functionName: name(names) }) });
+      const pinRule = (name: (names: FleetResourceNames) => string) => O.map(fleetNames, name);
       const logging = { retention: props.logRetention ?? "14 days" };
       const key = yield* KMS.Key("SecretsKey", {
         description: `GitHub App secrets of runner fleet ${props.name}`,
@@ -288,7 +314,12 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         allow({ actions: ["kms:Decrypt"], resources: [key.keyArn] }),
       ] as const;
 
+      const bucketName = O.match(fleetNames, {
+        onNone: () => ({}),
+        onSome: (names) => ({ bucketName: `${names.binariesBucketPrefix}-${accountId}` }),
+      });
       const binaries = yield* S3.Bucket("RunnerBinaries", {
+        ...bucketName,
         forceDestroy: true,
         publicAccessBlock: {
           blockPublicAcls: true,
@@ -306,21 +337,25 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
             `Pool${pool.name}`,
             Effect.gen(function* () {
               const environment = `${props.name}-${pool.name}`;
+              const poolNames = O.map(prefix, poolResourceNames(pool.name));
+              const pin = <K extends string>(key: K, name: (names: PoolResourceNames) => string) =>
+                O.match(poolNames, { onNone: () => ({}), onSome: (names) => ({ [key]: name(names) }) });
+              const queueNames = (queue: (n: PoolResourceNames) => string, dlq: (n: PoolResourceNames) => string) =>
+                O.map(poolNames, (names) => ({ queue: queue(names), dlq: dlq(names) }));
               const tokenPath = poolTokenPath(props.ssmRoot, pool.name);
               const configPath = poolConfigPath(props.ssmRoot, pool.name);
-              const tokenArn = ssmArn`arn:aws:ssm:*:*:parameter${tokenPath}`;
-              const configArn = ssmArn`arn:aws:ssm:*:*:parameter${configPath}`;
+              const tokenArn = ssmArn`arn:aws:ssm:${region}:${accountId}:parameter${tokenPath}`;
+              const configArn = ssmArn`arn:aws:ssm:${region}:${accountId}:parameter${configPath}`;
 
               const runnerRole = yield* IAM.Role("RunnerRole", {
+                ...pin("roleName", (names) => names.runnerRole),
                 assumeRolePolicyDocument: {
                   Version: "2012-10-17",
                   Statement: [
                     { Effect: "Allow", Principal: { Service: "ec2.amazonaws.com" }, Action: ["sts:AssumeRole"] },
                   ],
                 },
-                ...(props.runnerPermissionsBoundaryArn === undefined
-                  ? {}
-                  : { permissionsBoundary: props.runnerPermissionsBoundaryArn }),
+                ...boundaryOf(props),
                 ...(props.runnerManagedPolicyArns === undefined
                   ? {}
                   : { managedPolicyArns: A.copy(props.runnerManagedPolicyArns) }),
@@ -344,7 +379,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                       }),
                       allow({
                         actions: ["ec2:TerminateInstances", "ec2:CreateTags"],
-                        resources: ["arn:aws:ec2:*:*:instance/*"],
+                        resources: [`arn:aws:ec2:${region}:${accountId}:instance/*`],
                         condition: { StringEquals: { "aws:ARN": "${ec2:SourceInstanceARN}" } },
                       }),
                       allow({ actions: ["ec2:DescribeTags"], resources: ["*"] }),
@@ -353,10 +388,12 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                 },
               });
               const instanceProfile = yield* IAM.InstanceProfile("RunnerInstanceProfile", {
+                ...pin("instanceProfileName", (names) => names.instanceProfile),
                 roleName: runnerRole.roleName,
               });
               const template = yield* RunnerLaunchTemplate("LaunchTemplate", {
                 ...props.launchTemplate,
+                ...pin("launchTemplateName", (names) => names.launchTemplate),
                 instanceProfileArn: instanceProfile.instanceProfileArn,
                 // A runner that powers itself off must not leak as a stopped instance (upstream does the same).
                 instanceInitiatedShutdownBehavior: "terminate",
@@ -386,11 +423,21 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                 id: "BuildQueue",
                 visibilityTimeout: "2 minutes",
                 maxReceiveCount: 5,
+                names: queueNames(
+                  (names) => names.buildQueue,
+                  (names) => names.buildDlq
+                ),
               });
               const jobRetryQueue = O.isSome(pool.jobRetry)
-                ? yield* queueWithDlq({ id: "JobRetryQueue", visibilityTimeout: "2 minutes", maxReceiveCount: 3 }).pipe(
-                    Effect.asSome
-                  )
+                ? yield* queueWithDlq({
+                    id: "JobRetryQueue",
+                    visibilityTimeout: "2 minutes",
+                    maxReceiveCount: 3,
+                    names: queueNames(
+                      (names) => names.jobRetryQueue,
+                      (names) => names.jobRetryDlq
+                    ),
+                  }).pipe(Effect.asSome)
                 : O.none<SQS.Queue>();
 
               const runtimeConfig = Output.all(
@@ -423,6 +470,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
               );
               const poolFunction = (logicalId: string, file: string, extra: Partial<Lambda.FunctionProps> = {}) =>
                 Lambda.Function(logicalId, {
+                  ...boundaryOf(props),
                   main: `${lambdaDir}/${file}`,
                   handler: "handler",
                   functionUrl: false,
@@ -433,7 +481,10 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                   ...extra,
                 } as Lambda.FunctionZipProps);
 
-              const scaleUp = yield* poolFunction("ScaleUp", "scale-up.ts", { reservedConcurrentExecutions: 1 });
+              const scaleUp = yield* poolFunction("ScaleUp", "scale-up.ts", {
+                reservedConcurrentExecutions: 1,
+                ...pin("functionName", (names) => names.scaleUp),
+              });
               yield* Lambda.EventSourceMapping("ScaleUpSource", {
                 functionName: scaleUp.functionName,
                 eventSourceArn: buildQueue.queueArn,
@@ -464,6 +515,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                     actions: ["ssm:PutParameter", "ssm:AddTagsToResource", "ssm:GetParameter"],
                     resources: [Output.interpolate`${tokenArn}/*`, Output.interpolate`${configArn}/*`],
                   }),
+                  // Counts launched runners EC2 does not show yet: their JIT configs under the token path.
+                  allow({ actions: ["ssm:GetParametersByPath"], resources: [tokenArn] }),
                   ...readAppSecrets,
                   ...O.match(jobRetryQueue, {
                     onNone: () => [],
@@ -473,7 +526,11 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
               );
 
               if (O.isSome(jobRetryQueue)) {
-                const jobRetry = yield* poolFunction("JobRetry", "job-retry.ts");
+                const jobRetry = yield* poolFunction(
+                  "JobRetry",
+                  "job-retry.ts",
+                  pin("functionName", (names) => names.jobRetry)
+                );
                 yield* Lambda.EventSourceMapping("JobRetrySource", {
                   functionName: jobRetry.functionName,
                   eventSourceArn: jobRetryQueue.value.queueArn,
@@ -490,8 +547,17 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                 );
               }
 
-              const scaleDown = yield* poolFunction("ScaleDown", "scale-down.ts");
-              yield* scheduledFunction({ id: "ScaleDown", fn: scaleDown, scheduleExpression: "cron(* * * * ? *)" });
+              const scaleDown = yield* poolFunction(
+                "ScaleDown",
+                "scale-down.ts",
+                pin("functionName", (names) => names.scaleDown)
+              );
+              yield* scheduledFunction({
+                id: "ScaleDown",
+                fn: scaleDown,
+                scheduleExpression: "cron(* * * * ? *)",
+                ruleName: O.map(poolNames, (names) => names.scaleDownRule),
+              });
               yield* scaleDown.bind(
                 "ScaleDown",
                 lambdaRole([
@@ -544,6 +610,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         )
       );
       const webhook = yield* Lambda.Function("Webhook", {
+        ...boundaryOf(props),
+        ...pinFunction((names) => names.webhook),
         main: `${lambdaDir}/webhook.ts`,
         handler: "handler",
         functionUrl: true,
@@ -563,6 +631,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
 
       const tokenPaths = A.map(pools, (pool) => pool.tokenPath);
       const housekeeper = yield* Lambda.Function("SsmHousekeeper", {
+        ...boundaryOf(props),
+        ...pinFunction((names) => names.housekeeper),
         main: `${lambdaDir}/ssm-housekeeper.ts`,
         handler: "handler",
         functionUrl: false,
@@ -578,15 +648,20 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
           ),
         },
       });
-      yield* scheduledFunction({ id: "SsmHousekeeper", fn: housekeeper, scheduleExpression: "rate(1 day)" });
+      yield* scheduledFunction({
+        id: "SsmHousekeeper",
+        fn: housekeeper,
+        scheduleExpression: "rate(1 day)",
+        ruleName: pinRule((names) => names.housekeeperRule),
+      });
       yield* housekeeper.bind(
         "SsmHousekeeper",
         lambdaRole([
           allow({
             actions: ["ssm:GetParametersByPath", "ssm:DeleteParameter"],
             resources: A.flatMap(tokenPaths, (path) => [
-              ssmArn`arn:aws:ssm:*:*:parameter${path}`,
-              ssmArn`arn:aws:ssm:*:*:parameter${path}/*`,
+              ssmArn`arn:aws:ssm:${region}:${accountId}:parameter${path}`,
+              ssmArn`arn:aws:ssm:${region}:${accountId}:parameter${path}/*`,
             ]),
           }),
         ])
@@ -600,6 +675,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         )
       );
       const syncer = yield* Lambda.Function("RunnerBinariesSyncer", {
+        ...boundaryOf(props),
+        ...pinFunction((names) => names.syncer),
         main: `${lambdaDir}/runner-binaries-syncer.ts`,
         handler: "handler",
         functionUrl: false,
@@ -608,7 +685,12 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         logging,
         env: { [runtimeConfigEnvName]: syncerConfig },
       });
-      yield* scheduledFunction({ id: "RunnerBinariesSyncer", fn: syncer, scheduleExpression: "rate(1 day)" });
+      yield* scheduledFunction({
+        id: "RunnerBinariesSyncer",
+        fn: syncer,
+        scheduleExpression: "rate(1 day)",
+        ruleName: pinRule((names) => names.syncerRule),
+      });
       yield* syncer.bind(
         "RunnerBinariesSyncer",
         lambdaRole([
@@ -623,12 +705,13 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         id: "DeregisterRetryQueue",
         visibilityTimeout: "2 minutes",
         maxReceiveCount: 3,
+        names: O.map(fleetNames, (names) => ({ queue: names.deregisterQueue, dlq: names.deregisterDlq })),
       });
       const watcherConfig = deregisterRetry.queueUrl.pipe(
         Output.mapEffect((deregisterRetryQueueUrl) =>
           encodeWatcher(
             TerminationWatcherRuntimeConfig.make({
-              environmentPrefix: props.name,
+              environments: A.map(pools, (pool) => pool.environment),
               app: appNames,
               deregisterRetryQueueUrl,
             })
@@ -636,6 +719,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         )
       );
       const watcher = yield* Lambda.Function("TerminationWatcher", {
+        ...boundaryOf(props),
+        ...pinFunction((names) => names.terminationWatcher),
         main: `${lambdaDir}/termination-watcher.ts`,
         handler: "handler",
         functionUrl: false,
@@ -653,10 +738,12 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         [
           {
             id: "SpotInterruption",
+            ruleName: pinRule((names) => names.spotInterruptionRule),
             pattern: { source: ["aws.ec2"], "detail-type": [spotInterruptionWarningDetailType] },
           },
           {
             id: "InstanceStateChange",
+            ruleName: pinRule((names) => names.instanceStateChangeRule),
             pattern: {
               source: ["aws.ec2"],
               "detail-type": [instanceStateChangeDetailType],
@@ -664,8 +751,9 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
             },
           },
         ],
-        Effect.fnUntraced(function* ({ id: ruleId, pattern }) {
+        Effect.fnUntraced(function* ({ id: ruleId, ruleName, pattern }) {
           const rule = yield* EventBridge.Rule(`${ruleId}Rule`, {
+            ...O.match(ruleName, { onNone: () => ({}), onSome: (name) => ({ name }) }),
             eventPattern: pattern,
             targets: [{ Id: ruleId, Arn: watcher.functionArn }],
           });

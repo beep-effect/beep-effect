@@ -21,6 +21,7 @@
     {"name":"CostOptimizationHubEnrollment.delete","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
     {"name":"CostOptimizationHubEnrollment.observe","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
     {"name":"CostOptimizationHubEnrollment.reconcile","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
+    {"name":"DeployTarget.require","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
     {"name":"RunnerLaunchTemplate.createTemplate","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
     {"name":"RunnerLaunchTemplate.delete","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},
     {"name":"RunnerLaunchTemplate.diff","owner":"@beep/alchemy-aws-extras","family":"tooling","conforms":true},

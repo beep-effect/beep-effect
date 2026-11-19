@@ -106,6 +106,7 @@ decision file per object).
 | `BeepEffectWeb` | `apps/beep-effect-web/alchemy.run.ts` | `deploy-beep-effect-web.yml` | `beep-effect-web-prod` | `https://beep-effect.com` (custom domain, `www` redirect) |
 | `Storybook` | `apps/storybook/alchemy.run.ts` | `deploy-storybook.yml` | `storybook-prod` | `https://beep-effect.com/storybook/` (zone route `beep-effect.com/storybook*` in front of the apex Worker) |
 | `CostControls` | `packages/tooling/infra/cost-controls/alchemy.run.ts` | `deploy-cost-controls.yml` | `cost-controls-prod` | AWS account budget, services anomaly monitor and subscription, cost allocation tags, Compute Optimizer and Cost Optimization Hub enrollment |
+| `CiRunners` | `packages/tooling/infra/ci-runners/alchemy.run.ts` | `deploy-ci-runners.yml` (disarmed: `CI_RUNNERS_DEPLOY_ARMED`) | `ci-runners-prod` | Self-hosted runner fleet: network, heavy and shard-overflow pools, reaper (P5; not yet deployed) |
 | `InfraGithub` | `packages/tooling/infra/github/alchemy.run.ts` | `deploy-infra-github.yml` (armed by repo variable `INFRA_GITHUB_DEPLOY_ARMED=true`, 2026-11-18) | `infra-github-prod` | settings, `main` ruleset, deploy environments, variables, labels of `beep-effect/beep-effect` |
 | `HostsAiMetrics` | `packages/tooling/infra/infra-hosts/alchemy.run.ts` | none (operator workstation only, D21) | none | Arize Phoenix on dankserver behind Tailscale Serve |
 | `HostsOpenClaw` | `packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts` | none (operator workstation only, D21) | none | the OpenClaw generation on the operator workstation |
@@ -834,6 +835,72 @@ change to any project, domain or DNS record. Decision:
 To hand one object back without deleting it, `alchemy state delete` its row. Never
 `alchemy destroy` a live stage. Rewording the DNS comment to name Alchemy is its own deploy and
 needs DNS · Edit.
+
+## CI runners
+
+`CiRunners` (`@beep/infra-ci-runners`) replaces the Pulumi runner fleet of
+`beep-ci-runners/production`: the network, the heavy and shard-overflow pools
+through `RunnerFleet`, the runner IAM policies and the reaper. Design and
+resource table: the package README. Decisions:
+`goals/infra-alchemy-rebuild/decisions/*-ci-runners-*.md`. Not deployed: the
+workflow `deploy-ci-runners.yml` ships disarmed, its job running only while the
+repository variable `CI_RUNNERS_DEPLOY_ARMED` is `true` (unset, a merge, push or
+dispatch deploys nothing). The packet gate arms it for cutover step 1, after the
+deploy role and the `ci-runners-prod` environment exist and the orchestrator
+confirms the heavy burst cap is 6.
+
+Personal stage. A plan needs AWS credentials for the configured account and
+region (the state store and the account guard read them), but no GitHub App
+credentials. A deploy builds a fleet that cannot launch or register a runner.
+Rehearsals that launch runners are deferred while the overlap budget holds the
+whole Spot quota (personal-stage fence decision):
+
+```sh
+eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
+export AWS_REGION=us-east-1
+cd packages/tooling/infra/ci-runners
+bunx alchemy plan --stage "dev-$USER" --env-file /dev/null
+```
+
+The stage name must be canonical (`[a-z0-9-]`, equal to its slug; `dev_$USER`
+is refused) and its fleet name must not prefix `beep-fleet-prod` or start
+with it (`requireDistinctStage`).
+
+Bootstrap (cutover step 1a): the first deploy is a `workflow_dispatch` with
+`mode: bootstrap`, which excludes `DefaultSecurityGroup` from both the plan
+and the deploy and accepts creates only, because the deploy role's
+default-group grant is scoped to the new VPC and that VPC does not exist yet.
+After the gate scopes the role to the new VPC (policy v2 from
+`src/DeployRolePolicy.ts`), a dispatch with `mode: default-security-group`
+accepts exactly the one `DefaultSecurityGroup` create (step 1b). Pushes run as
+`routine`.
+
+Read a saved personal plan log with `bun plan-check.ts log <plan log>`.
+
+Pre-deploy gate and checked deploy. The workflow's plan step runs
+`plan-check.ts plan --stage prod --out <file>`: it plans, refuses a replace,
+delete or orphan of any resource, a binding replace, unbind or delete, a
+resource outside the stack or a stack action (`src/PlanCheck.ts`, tested in
+`test/PlanCheck.test.ts`), and saves the checked plan. The deploy step runs
+`plan-check.ts deploy --stage prod --checked <file>`: it plans again, checks
+again, and applies that same plan only when it equals the saved one; any
+added, removed or changed resource, binding, property digest or action stops
+it with `PlanDrift` before any write (`src/CheckedDeploy.ts`, tested in
+`test/CheckedDeploy.test.ts`). The job never runs `alchemy deploy`. If either
+step refuses, do not re-run or work around it: ask the CI goals driver through
+the orchestrator. A change that must replace or delete a resource is an
+operator-reviewed deploy, never the push job.
+
+User data. The post-install travels gzip-compressed and base64-encoded and is
+sourced by the user data shell (`packPostInstall`); inline it would push the
+rendered user data past EC2's 16 KiB limit. `test/RunnerBootstrap.test.ts`
+keeps the rendered size under the limit, and cutover step 3 proves each pool
+boots and completes a real job.
+
+Outside IaC, owned by the operator: the org runner groups `beep-ec2-heavy` and
+`beep-shard-overflow` (selected workflows only) and the GitHub App and webhook
+that deliver `workflow_job` events to the fleet's function URL. Cutover order,
+checks and rollback: decision "CI runners cutover from the Pulumi fleet".
 
 ## Acceptance evidence
 

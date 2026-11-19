@@ -14217,6 +14217,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The rate-limit capture case forks one capture whose task-outcome read is refused once, then advances its own TestClock in one-second steps until that capture finishes the reset wait; nothing else in the case shares the clock or forks work. Owner: @beep/repo-cli. Exit: retire when the corpus takes its rate-limit wait from an injectable service the test can make immediate."
+    },
+    {
+      "id": "EV010:packages/tooling/infra/ci-runners/test/RunnerBootstrap.test.ts:4:@effect/platform-bun/BunFileSystem@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/infra-ci-runners",
+      "file": "packages/tooling/infra/ci-runners/test/RunnerBootstrap.test.ts",
+      "line": 4,
+      "endLine": 4,
+      "symbol": "@effect/platform-bun/BunFileSystem",
+      "occurrence": "v2:689f2ca9582e57cd48cd48977a32f050ebbc170ed72e17f695a1478642d29772",
+      "class": "platform-filesystem-candidate",
+      "evidence": "import * as BunFileSystem from \"@effect/platform-bun/BunFileSystem\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The test runs the packed post-install loader in a real bash process, which writes its temp file through the native filesystem, so a native platform layer is the subject, not a leak: only BunChildProcessSpawner over BunFileSystem and BunPath is provided, never the whole BunServices bundle. Owner: @beep/infra-ci-runners. Exit: retire if the loader is ever verified without spawning bash."
     }
   ]
 }

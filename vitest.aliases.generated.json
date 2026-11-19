@@ -2382,5 +2382,12 @@
   "@beep/contract-kit": [
     "./packages/foundation/modeling/contract-kit/src/index.ts"
   ],
-  "@beep/contract-kit/*": ["./packages/foundation/modeling/contract-kit/src/*"]
+  "@beep/contract-kit/*": ["./packages/foundation/modeling/contract-kit/src/*"],
+  "@beep/infra-ci-runners": [
+    "./packages/tooling/infra/ci-runners/src/index.ts"
+  ],
+  "@beep/infra-ci-runners/*": ["./packages/tooling/infra/ci-runners/src/*"],
+  "@beep/infra-ci-runners/internal/*": [
+    "./packages/tooling/infra/ci-runners/src/internal/*"
+  ]
 }
