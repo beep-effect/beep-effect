@@ -82,6 +82,18 @@ Ported from the MIT project vitest-agent by C. Spencer Beggs: the pure core of `
 
 The model is gate-neutral: project, file and test become gate, unit and item, and every closed set is widened as the goal's SPEC widening table lists (item outcome adds `warned`, run reason adds `errored` and renames `interrupted` to `cancelled`, run outcome adds `warnings-only` and `interrupted` and renames `threshold-violation` to `policy-violation`, shapes become `item`, `unit`, `package`, `workspace`). The report records every item, passed ones included, under a key that carries the file, so same-named tests in two files no longer collide; a diagnostic seen again at another location in the same run is a distinct item with an occurrence ordinal, so diagnostic totals and folded cascades count diagnostics, not files. The key fingerprint is length-prefixed and injective. Totals are counted from the items, not trusted from the runner, and load, hook and unhandled failures are items with their own totals. Events reduce straight to a report rather than to an intermediate render state; a hook throw and a load failure are one `UnitFaulted` event, coverage thresholds are `PolicyBreached`, classification is `ItemLabelled`, and the module, test and suite start events carry no state. The twelve cells grow to twenty and now share one console contract: verdict line first and last, entries, fold lines, cap, delta, path, pointer; a green run prints its verdict alone, so upstream's projects table, module list, trend line, coverage-gap table, suggested actions, console-leak note and scoped-coverage note are not rendered, and stray output prints only on a red run. The pointer line names caller-supplied commands instead of MCP tools, and an unlabelled or `recovered` failure now points at the failure command instead of printing nothing. The failure signature hashes with 64-bit FNV-1a instead of a SHA-256 prefix, so the model needs neither `node:crypto` nor a parser; the function-boundary line is an input the adapter may supply. CTRF and SARIF are mapped losslessly through an extension bag; a SARIF result has a level only when its item failed, and a CTRF test is flaky only when it finally passed after a failed attempt. The record envelope is `gate-report/v1` with one report and no published JSON Schema URL. Vitest duck typing, stack-frame formatting, the stray-output recorder and the task-tree synthesizer are the Vitest adapter's, not this package's.
 
+### Rules an adapter relies on
+
+- **Where `collected` comes from.** It is the one total not computed from the items. The reducer
+  takes the count the `RunFinished` event carries, then the sum of the `UnitCollected` counts, and
+  counts items only when neither was sent. A run that reports zero collected is `ERRORED` even if an
+  item passed, so an adapter sends the count it means or sends none.
+- **What an occurrence ordinal is.** It is a position among same-shape diagnostics in one run, not
+  an identity. Diagnostics that share a file, a code and a message shape are interchangeable across
+  runs, because the key holds no line number. When one of several is fixed, the highest ordinal
+  disappears and the others keep the lower keys. A history over the keys therefore reports the
+  right number fixed and still failing for that shape, and cannot say which of them it was.
+
 ## License
 
 [MIT](LICENSE)
