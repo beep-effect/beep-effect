@@ -26,6 +26,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 
@@ -58,6 +59,7 @@ const enabled = CiShardOverflowPoolConfig.make({
   githubAppWebhookSecretSsmParameterArn: O.some(overflowSecretArn),
 });
 const isString = S.is(S.String);
+const isRecord = S.is(S.Record(S.String, S.Unknown));
 
 // The roles the hand-maintained `beep-ci-fleet-boundary` (v5) lets a pool's scale-up Lambda pass to EC2.
 const passOwnRoles = ["role/beep-ci/beep-ci-", "role/beep-ovf/beep-ovf-"];
@@ -299,6 +301,19 @@ describe("@beep/infra CiFleetController with the overflow pool", () => {
         "vpc_id",
       ]) {
         expect(o[rail], rail).toStrictEqual(h[rail]);
+      }
+      // Each live termination watcher keeps the module's default tag filter `{ "ghr:environment": <prefix> }`
+      // (prefix match). The new fleet's cutover isolation tests (`packages/tooling/infra/ci-runners/test/Config.test.ts`)
+      // mirror exactly that filter, so neither controller may pass a tag-filter override.
+      for (const module of [h, o]) {
+        const watcher = module.instance_termination_watcher;
+        assertTrue(isRecord(watcher));
+        expect(R.keys(watcher)).toStrictEqual(["enable", "enable_runner_deregistration", "features", "zip"]);
+        expect(watcher.features).toStrictEqual({
+          enable_spot_termination_handler: true,
+          enable_spot_termination_notification_watcher: true,
+        });
+        expect(A.filter(R.keys(module), Str.includes("tag_filter"))).toStrictEqual([]);
       }
       expect(o.instance_target_capacity_type).toBe("spot");
       expect(o.enable_runner_on_demand_failover_for_errors).toStrictEqual([]);

@@ -4,6 +4,7 @@ import {
   handleDeregisterRetry,
   handleTerminationEvent,
   InstanceStateChange,
+  poolTokenPath,
   RunnerSweepIncomplete,
   SelfHostedRunner,
   SpotInterruptionWarning,
@@ -20,6 +21,15 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import { World, worldContext } from "./support/FakeWorld.ts";
+import {
+  liveEnvironments,
+  liveHeavyPool,
+  liveOverflowPool,
+  liveSsmRoot,
+  oldFleetPrefixes,
+  oldFleetRunnerName,
+  oldFleetTags,
+} from "./support/Fixtures.ts";
 
 const config = TerminationWatcherRuntimeConfig.make({
   environments: ["beep-ci-heavy"],
@@ -230,6 +240,240 @@ describe("sweepRunners", () => {
       const error = yield* sweepRunners(sweepInput).pipe(Effect.provideContext(worldContext(world)), Effect.flip);
       assertInstanceOf(error, RunnerSweepIncomplete);
       expect([error.instanceIds, world.deletedRunners]).toStrictEqual([[instanceId], []]);
+    })
+  );
+});
+
+describe("cross-fleet isolation during the cutover", () => {
+  // Both fleets share one AWS account and one GitHub org: each watcher receives the other's EC2 events and lists
+  // every runner, and a cross-fleet deregistration leaves no CloudTrail entry and has no IAM backstop. Each negative
+  // seeds, per pool, an idle runner (a deregistration is reachable) and a busy one (GitHub answers 422, so a retry
+  // would be queued); its positive control drives the same calls under the same live config.
+  const liveConfig = TerminationWatcherRuntimeConfig.make({
+    environments: liveEnvironments,
+    app: appParameterNames(liveSsmRoot),
+    deregisterRetryQueueUrl: "https://sqs/beep-fleet-prod-deregister-retry",
+  });
+
+  const newFleetTags = (environment: string) => ({
+    "ghr:environment": environment,
+    "ghr:Application": "github-action-runner",
+    "ghr:Type": "Org",
+    "ghr:Owner": "beep-effect",
+  });
+
+  const oldFleetPools = A.map(oldFleetPrefixes, (prefix) => ({
+    tags: oldFleetTags(prefix),
+    runnerName: oldFleetRunnerName(prefix),
+  }));
+
+  const newFleetPools = A.map([liveHeavyPool, liveOverflowPool], (pool) => ({
+    tags: newFleetTags(`beep-fleet-prod-${pool.name}`),
+    runnerName: (instanceId: string) => `${pool.runnerNamePrefix}${instanceId}`,
+  }));
+
+  /**
+   * Per pool, launches an instance with an idle runner, then one with a busy runner (every delete answers 422).
+   * Runner ids count up from `firstRunnerId`; returns the instance ids in launch order.
+   */
+  const seedPools = (
+    world: World,
+    pools: ReadonlyArray<{
+      readonly tags: Readonly<Record<string, string>>;
+      readonly runnerName: (instanceId: string) => string;
+    }>,
+    firstRunnerId: number
+  ) =>
+    A.flatMap(pools, (pool, poolIndex) =>
+      A.map([false, true], (busy, index) => {
+        const id = firstRunnerId + 2 * poolIndex + index;
+        const [instanceId = ""] = world.launch(1, pool.tags);
+        world.githubRunners.push(
+          SelfHostedRunner.make({ id, name: pool.runnerName(instanceId), status: "online", busy })
+        );
+        world.busyOnDelete = busy ? A.append(world.busyOnDelete, id) : world.busyOnDelete;
+        return instanceId;
+      })
+    );
+
+  const stateChange = (instanceId: string, state: string) =>
+    InstanceStateChange.make({
+      "detail-type": "EC2 Instance State-change Notification",
+      detail: { "instance-id": instanceId, state },
+    });
+
+  /** Drives a Spot interruption warning, then state changes to shutting-down and terminated. */
+  const driveTermination = (world: World) => (instanceId: string) =>
+    Effect.forEach(
+      [warning(instanceId), stateChange(instanceId, "shutting-down"), stateChange(instanceId, "terminated")],
+      (event) => handleTerminationEvent({ config: liveConfig, event }).pipe(Effect.provideContext(worldContext(world))),
+      { concurrency: 1 }
+    );
+
+  const retryOnce = (world: World) => (instanceId: string) =>
+    handleDeregisterRetry({
+      config: liveConfig,
+      message: DeregisterRetryMessage.make({
+        instanceId,
+        owner: "beep-effect",
+        runnerType: "Org",
+        runnerId: 0,
+        retryCount: 0,
+      }),
+    }).pipe(Effect.provideContext(worldContext(world)));
+
+  const runnerIds = (world: World) => A.map(world.githubRunners, (runner) => runner.id);
+
+  /** Each queued retry as `[queue url, instance id, retry count]`. */
+  const queuedRetries = (world: World) =>
+    Effect.forEach(
+      world.sent,
+      (sent) => decodeRetry(sent.body).pipe(Effect.map((retry) => [sent.queueUrl, retry.instanceId, retry.retryCount])),
+      { concurrency: 1 }
+    );
+
+  const ignoredThrice = [["ignored"], ["ignored"], ["ignored"]];
+
+  it.effect("ignores every termination event for the old fleet's idle and busy runners in both pools", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const instances = seedPools(world, oldFleetPools, 101);
+      const outcomes = yield* Effect.forEach(instances, driveTermination(world), { concurrency: 1 });
+      expect(outcomes).toStrictEqual(A.makeBy(4, () => ignoredThrice));
+      expect([world.deletedRunners, world.sent, runnerIds(world)]).toStrictEqual([[], [], [101, 102, 103, 104]]);
+    })
+  );
+
+  it.effect("deregisters an idle runner and queues a retry for a busy one in either new-fleet pool (control)", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const instances = seedPools(world, newFleetPools, 201);
+      const [, heavyBusy = "", , overflowBusy = ""] = instances;
+      const outcomes = yield* Effect.forEach(instances, driveTermination(world), { concurrency: 1 });
+      const idle = [["deregistered"], ["not-found"], ["not-found"]];
+      const busy = A.makeBy(3, () => ["retry-queued"]);
+      expect(outcomes).toStrictEqual([idle, busy, idle, busy]);
+      expect([world.deletedRunners, runnerIds(world)]).toStrictEqual([
+        [201, 203],
+        [202, 204],
+      ]);
+      const queued = yield* queuedRetries(world);
+      expect(queued).toStrictEqual(
+        A.flatMap([heavyBusy, overflowBusy], (instanceId) =>
+          A.makeBy(3, () => [liveConfig.deregisterRetryQueueUrl, instanceId, 0])
+        )
+      );
+    })
+  );
+
+  it.effect("ignores an idle or busy registered instance without a ghr:environment tag, or with no tags", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const environmentless = {
+        tags: { "ghr:Application": "github-action-runner", "ghr:Owner": "beep-effect", "ghr:Type": "Org" },
+        runnerName: (instanceId: string) => `beep-ci-${instanceId}`,
+      };
+      const untagged = { tags: {}, runnerName: (instanceId: string) => `beep-ci-${instanceId}` };
+      const instances = seedPools(world, [environmentless, untagged], 301);
+      const outcomes = yield* Effect.forEach(instances, driveTermination(world), { concurrency: 1 });
+      expect(outcomes).toStrictEqual(A.makeBy(4, () => ignoredThrice));
+      expect([world.deletedRunners, world.sent, runnerIds(world)]).toStrictEqual([[], [], [301, 302, 303, 304]]);
+    })
+  );
+
+  it.effect("ignores a deregister retry naming an old-fleet instance, idle or busy, and never re-queues it", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const instances = seedPools(world, oldFleetPools, 401);
+      const outcomes = yield* Effect.forEach(instances, retryOnce(world), { concurrency: 1 });
+      expect(outcomes).toStrictEqual(["ignored", "ignored", "ignored", "ignored"]);
+      expect([world.deletedRunners, world.sent, runnerIds(world)]).toStrictEqual([[], [], [401, 402, 403, 404]]);
+    })
+  );
+
+  it.effect("deregisters on a deregister retry and re-queues a still-busy one in either new-fleet pool (control)", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const instances = seedPools(world, newFleetPools, 501);
+      const [, heavyBusy = "", , overflowBusy = ""] = instances;
+      const outcomes = yield* Effect.forEach(instances, retryOnce(world), { concurrency: 1 });
+      expect(outcomes).toStrictEqual(["deregistered", "retry-queued", "deregistered", "retry-queued"]);
+      expect([world.deletedRunners, runnerIds(world)]).toStrictEqual([
+        [501, 503],
+        [502, 504],
+      ]);
+      const queued = yield* queuedRetries(world);
+      expect(queued).toStrictEqual([
+        [liveConfig.deregisterRetryQueueUrl, heavyBusy, 1],
+        [liveConfig.deregisterRetryQueueUrl, overflowBusy, 1],
+      ]);
+    })
+  );
+
+  it.effect("sweeps only the new fleet's instances, runners and tokens, never the old fleet's", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      // The old fleet: one registered runner per pool, its per-instance token and runner config under the module's
+      // `/github-action-runners/<prefix>/runners` paths, and the App parameters both fleets read.
+      const oldInstances = A.map(oldFleetPrefixes, (prefix, index) => {
+        const [instanceId = ""] = world.launch(1, oldFleetTags(prefix));
+        world.githubRunners.push(
+          SelfHostedRunner.make({
+            id: 601 + index,
+            name: oldFleetRunnerName(prefix)(instanceId),
+            status: "online",
+            busy: false,
+          })
+        );
+        world.ssm[`/github-action-runners/${prefix}/runners/tokens/${instanceId}`] = {
+          value: "jit",
+          modified: 0,
+          tags: { InstanceId: instanceId },
+        };
+        world.ssm[`/github-action-runners/${prefix}/runners/config/runner_group_id`] = {
+          value: "7",
+          modified: 0,
+          tags: {},
+        };
+        return instanceId;
+      });
+      world.ssm["/github-action-runners/app/github_app_id"] = { value: "1", modified: 0, tags: {} };
+      const oldParameters = R.keys(world.ssm);
+      const newPools = [liveHeavyPool, liveOverflowPool];
+      const newInstances = A.map(newPools, (pool, index) => {
+        const [instanceId = ""] = world.launch(1, newFleetTags(`beep-fleet-prod-${pool.name}`));
+        world.githubRunners.push(
+          SelfHostedRunner.make({
+            id: 701 + index,
+            name: `${pool.runnerNamePrefix}${instanceId}`,
+            status: "online",
+            busy: false,
+          })
+        );
+        world.ssm[`${poolTokenPath(liveSsmRoot, pool.name)}/${instanceId}`] = {
+          value: "jit",
+          modified: 0,
+          tags: { InstanceId: instanceId },
+        };
+        return instanceId;
+      });
+      const report = yield* sweepRunners({
+        environments: liveEnvironments,
+        tokenPaths: A.map(newPools, (pool) => poolTokenPath(liveSsmRoot, pool.name)),
+      }).pipe(Effect.provideContext(worldContext(world)));
+      expect([report.terminated, report.deregistered, report.tokensDeleted]).toStrictEqual([newInstances, 2, 2]);
+      expect([world.terminated, world.deletedRunners, runnerIds(world)]).toStrictEqual([
+        newInstances,
+        [701, 702],
+        [601, 602],
+      ]);
+      expect(
+        A.map(
+          A.filter(world.instances, (instance) => A.contains(oldInstances, instance.instanceId)),
+          (instance) => instance.state
+        )
+      ).toStrictEqual(["running", "running"]);
+      expect(R.keys(world.ssm)).toStrictEqual(oldParameters);
     })
   );
 });

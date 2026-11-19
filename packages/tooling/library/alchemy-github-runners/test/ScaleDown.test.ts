@@ -1,10 +1,20 @@
-import { handleScaleDown, RunnerPool, SelfHostedRunner } from "@beep/alchemy-github-runners";
+import { handleScaleDown, RunnerPool, RunnerTag, SelfHostedRunner } from "@beep/alchemy-github-runners";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as TestClock from "effect/testing/TestClock";
 import { World, worldContext } from "./support/FakeWorld.ts";
-import { heavyPool, poolConfig } from "./support/Fixtures.ts";
+import {
+  heavyPool,
+  liveHeavyPool,
+  liveOverflowPool,
+  livePoolConfig,
+  oldFleetPrefixes,
+  oldFleetRunnerName,
+  oldFleetTags,
+  poolConfig,
+} from "./support/Fixtures.ts";
+import type { PoolRuntimeConfig } from "@beep/alchemy-github-runners";
 
 const minute = 60_000;
 
@@ -142,5 +152,96 @@ describe("handleScaleDown", () => {
       ]);
       expect(world.terminated).toStrictEqual([]);
     })
+  );
+});
+
+describe("handleScaleDown across fleets during the cutover", () => {
+  // The live terraform-module fleet shares the account and the GitHub org. Per old pool it holds an idle registered
+  // runner (scale-down would deregister and terminate it), a runner-less instance past its boot time (it would be
+  // tagged ghr:orphan), an orphan whose runner is online (it would be un-tagged) and an orphan whose runner is
+  // offline and busy (it would be terminated). The pool under test holds one instance of each of the first three
+  // kinds: the positive control under the same live config.
+  const seedOldFleet = (world: World) =>
+    A.flatMap(oldFleetPrefixes, (prefix, index) => {
+      const base = 800 + 10 * index;
+      const tags = oldFleetTags(prefix);
+      const orphanTags = (runnerId: number) => ({
+        ...tags,
+        [RunnerTag.orphan]: "true",
+        [RunnerTag.githubRunnerId]: String(runnerId),
+      });
+      const [idle = "", runnerless = ""] = world.launch(2, tags, 0);
+      const [orphanOnline = ""] = world.launch(1, orphanTags(base + 1), 0);
+      const [orphanGone = ""] = world.launch(1, orphanTags(base + 2), 0);
+      world.githubRunners.push(
+        SelfHostedRunner.make({ id: base, name: oldFleetRunnerName(prefix)(idle), status: "online", busy: false }),
+        SelfHostedRunner.make({
+          id: base + 1,
+          name: oldFleetRunnerName(prefix)(orphanOnline),
+          status: "online",
+          busy: true,
+        }),
+        SelfHostedRunner.make({
+          id: base + 2,
+          name: oldFleetRunnerName(prefix)(orphanGone),
+          status: "offline",
+          busy: true,
+        })
+      );
+      return [idle, runnerless, orphanOnline, orphanGone];
+    });
+
+  const seedOwnPool = (world: World, config: PoolRuntimeConfig) => {
+    const tags = runnerTags({ "ghr:environment": config.environment });
+    const [idle = "", runnerless = ""] = world.launch(2, tags, 0);
+    const [orphan = ""] = world.launch(
+      1,
+      { ...tags, [RunnerTag.orphan]: "true", [RunnerTag.githubRunnerId]: "900" },
+      0
+    );
+    world.githubRunners.push(
+      SelfHostedRunner.make({
+        id: 901,
+        name: `${config.pool.runnerNamePrefix}${idle}`,
+        status: "online",
+        busy: false,
+      }),
+      SelfHostedRunner.make({ id: 900, name: `${config.pool.runnerNamePrefix}${orphan}`, status: "online", busy: true })
+    );
+    return { idle, runnerless, orphan };
+  };
+
+  A.forEach([liveHeavyPool, liveOverflowPool], (pool) =>
+    it.effect(`a ${pool.name} pass leaves the old fleet's heavy and overflow instances untouched`, () =>
+      Effect.gen(function* () {
+        const world = new World();
+        const config = livePoolConfig(pool);
+        const oldInstances = seedOldFleet(world);
+        const own = seedOwnPool(world, config);
+        const snapshot = () =>
+          A.map(
+            A.filter(world.instances, (instance) => A.contains(oldInstances, instance.instanceId)),
+            (instance) => [instance.instanceId, instance.state, { ...instance.tags }]
+          );
+        const before = snapshot();
+        yield* TestClock.adjust(60 * minute);
+        const decisions = yield* handleScaleDown(config).pipe(Effect.provideContext(worldContext(world)));
+        expect(config.environment).toBe(`beep-fleet-prod-${pool.name}`);
+        expect(A.map(decisions, (decision) => [decision.instanceId, decision.action])).toStrictEqual([
+          [own.orphan, "unorphaned"],
+          [own.idle, "terminated"],
+          [own.runnerless, "orphaned"],
+          [own.orphan, "busy"],
+        ]);
+        expect([world.deletedRunners, world.terminated, world.tagged, world.untagged]).toStrictEqual([
+          [901],
+          [own.idle],
+          [own.runnerless],
+          [own.orphan],
+        ]);
+        expect(A.map(world.githubRunners, (runner) => runner.id)).toStrictEqual([800, 801, 802, 810, 811, 812, 900]);
+        expect(snapshot()).toStrictEqual(before);
+      })
+    )
   );
 });
