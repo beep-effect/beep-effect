@@ -368,10 +368,17 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                         resources: [Output.interpolate`${tokenArn}/*`],
                         condition: { StringLike: { "ec2:SourceInstanceARN": "*/${aws:ResourceTag/InstanceId}" } },
                       }),
+                      // Decrypt only as Parameter Store serving one of this pool's own tokens. Tokens are SecureString
+                      // under the account's aws/ssm key (scale-up names no key), so the resource is any key of this
+                      // account and region; the encryption context is what holds it to the pool. The App parameters
+                      // sit under another path, so no context this statement admits can decrypt them.
                       allow({
                         actions: ["kms:Decrypt"],
-                        resources: ["*"],
-                        condition: { StringLike: { "kms:ViaService": "ssm.*.amazonaws.com" } },
+                        resources: [`arn:aws:kms:${region}:${accountId}:key/*`],
+                        condition: {
+                          StringEquals: { "kms:ViaService": `ssm.${region}.amazonaws.com` },
+                          StringLike: { "kms:EncryptionContext:PARAMETER_ARN": Output.interpolate`${tokenArn}/*` },
+                        },
                       }),
                       allow({
                         actions: ["s3:GetObject"],
