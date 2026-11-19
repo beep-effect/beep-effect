@@ -6,6 +6,8 @@
   "attributes": [],
   "instruments": [],
   "spans": [
+    {"name":"PackageLocation.inputFingerprint","owner":"@beep/repo-gate-record","family":"tooling","conforms":true},
+    {"name":"PackageLocation.locatePackage","owner":"@beep/repo-gate-record","family":"tooling","conforms":true},
     {"name":"RunId.makeRunId","owner":"@beep/repo-gate-record","family":"tooling","conforms":true}
   ]
 }

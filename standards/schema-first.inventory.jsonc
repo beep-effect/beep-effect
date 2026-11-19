@@ -1880,6 +1880,46 @@
       "reason": "Golden fingerprint test replays captured wire values from its __golden__ fixture; native Arbitrary seeds cannot reproduce the recorded fast-check samples, so schema-derived generation would invalidate the goldens."
     },
     {
+      "file": "packages/tooling/test-kit/repo-gate-vitest/src/internal/VitestShapes.ts",
+      "symbol": "VitestConsoleLog",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-gate-vitest",
+      "reason": "Structural view of an object Vitest hands the reporter (reported-task class instances with private fields, methods and getters that may throw, or the console log record), typed by shape so Vitest's own classes satisfy the Reporter interface; every field is read through a guarded accessor and never decoded, so it cannot be schema data. The adapter's own data (items, events, stray output) is the gate-report schemas."
+    },
+    {
+      "file": "packages/tooling/test-kit/repo-gate-vitest/src/internal/VitestShapes.ts",
+      "symbol": "VitestError",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-gate-vitest",
+      "reason": "Structural view of an object Vitest hands the reporter (reported-task class instances with private fields, methods and getters that may throw, or the console log record), typed by shape so Vitest's own classes satisfy the Reporter interface; every field is read through a guarded accessor and never decoded, so it cannot be schema data. The adapter's own data (items, events, stray output) is the gate-report schemas."
+    },
+    {
+      "file": "packages/tooling/test-kit/repo-gate-vitest/src/internal/VitestShapes.ts",
+      "symbol": "VitestModule",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-gate-vitest",
+      "reason": "Structural view of an object Vitest hands the reporter (reported-task class instances with private fields, methods and getters that may throw, or the console log record), typed by shape so Vitest's own classes satisfy the Reporter interface; every field is read through a guarded accessor and never decoded, so it cannot be schema data. The adapter's own data (items, events, stray output) is the gate-report schemas."
+    },
+    {
+      "file": "packages/tooling/test-kit/repo-gate-vitest/src/internal/VitestShapes.ts",
+      "symbol": "VitestSuite",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-gate-vitest",
+      "reason": "Structural view of an object Vitest hands the reporter (reported-task class instances with private fields, methods and getters that may throw, or the console log record), typed by shape so Vitest's own classes satisfy the Reporter interface; every field is read through a guarded accessor and never decoded, so it cannot be schema data. The adapter's own data (items, events, stray output) is the gate-report schemas."
+    },
+    {
+      "file": "packages/tooling/test-kit/repo-gate-vitest/src/internal/VitestShapes.ts",
+      "symbol": "VitestTestCase",
+      "kind": "exported-interface",
+      "status": "exception",
+      "owner": "@beep/repo-gate-vitest",
+      "reason": "Structural view of an object Vitest hands the reporter (reported-task class instances with private fields, methods and getters that may throw, or the console log record), typed by shape so Vitest's own classes satisfy the Reporter interface; every field is read through a guarded accessor and never decoded, so it cannot be schema data. The adapter's own data (items, events, stray output) is the gate-report schemas."
+    },
+    {
       "file": "packages/tooling/test-kit/test-utils/src/SqlTest.ts",
       "symbol": "PgliteTestcontainerResource",
       "kind": "exported-interface",

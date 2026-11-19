@@ -3,17 +3,17 @@
   "subject": "@beep/execution-authority-domain",
   "review": {
     "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 L0 identity lane, goals/text-knowledge-stack-rebuild-p1-l0-identity)",
-    "reason": "Record @beep/execution-authority-domain after the canonical JSON copy retirement dropped its @beep/epistemics dependency, removing the @beep/epistemics#build and #transit edges from build, check, lint:deprecated-apis and test. No qualification is granted.",
+    "reason": "Re-record the root, @beep/documents-domain and @beep/execution-authority-domain after merging origin/main e5b61d30932, which re-recorded them: the branch removes two upstream dependency edges and adds generated policy-fingerprint input paths. No qualification is granted.",
     "basis": {
-      "path": "docs/reports/canonical-json-cache-review-2026-11-19.md",
-      "sha256": "23e657a5bd7c59c53051f8e4202033a54899f098d886617a90c02abe2fcd1c57"
+      "path": "docs/reports/tksr-p1a-main-merge-cache-review-2026-11-19.md",
+      "sha256": "c7d5d7277bc7a37de58aa0b56d972511e96b7eafda6f336fbe9204d0b8dc0a01"
     }
   },
   "nodes": [
     {
       "computation": "@beep/execution-authority-domain#build",
       "command": "bun run beep:build",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/identity#build",
         "@beep/jsonc#build",
@@ -71,12 +71,13 @@
     },
     {
       "computation": "@beep/execution-authority-domain#check",
-      "command": "beep-cli quality check-probe && bun run beep:check",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "command": "beep-cli gate run check",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/execution-authority-domain#build",
         "@beep/identity#build",
         "@beep/jsonc#build",
+        "@beep/repo-gate-record#transit",
         "@beep/schema#build",
         "@beep/shared-domain#build",
         "@beep/test-runner#build",
@@ -94,6 +95,12 @@
           "!README.md",
           "../../../.bun-version",
           "../../../.nvmrc",
+          "../../../packages/tooling/library/repo-cli-kit/src/process/OutputBound.ts",
+          "../../../packages/tooling/library/repo-gate-run/src/**",
+          "../../../packages/tooling/library/repo-tsconfig/src/TsconfigLoader.ts",
+          "../../../packages/tooling/library/repo-tsconfig/src/internal/extendsTarget.ts",
+          "../../../packages/tooling/tool/cli/src/commands/Gate/**",
+          "../../../packages/tooling/tool/cli/src/commands/Quality/CheckProbe.ts",
           "../../../standards/root-package.projection.generated.json",
           "../../../tools/tsgo-shim/package.json",
           "../../../tools/tsgo-shim/tsgo.js",
@@ -106,8 +113,11 @@
         ],
         "env": [],
         "passThroughEnv": [],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/check/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-record#transit",
           "^build",
           "build"
         ],
@@ -120,7 +130,7 @@
     {
       "computation": "@beep/execution-authority-domain#coverage",
       "command": "bunx vitest run --coverage --exclude=test/integration/**",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/identity#build",
         "@beep/jsonc#build",
@@ -176,7 +186,7 @@
     {
       "computation": "@beep/execution-authority-domain#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/execution-authority-domain#transit",
         "@beep/repo-docgen#transit"
@@ -216,7 +226,7 @@
     {
       "computation": "@beep/execution-authority-domain#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -250,7 +260,7 @@
     {
       "computation": "@beep/execution-authority-domain#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/jsonc#transit",
@@ -321,7 +331,7 @@
     {
       "computation": "@beep/execution-authority-domain#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -351,7 +361,7 @@
     {
       "computation": "@beep/execution-authority-domain#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -407,7 +417,7 @@
     {
       "computation": "@beep/execution-authority-domain#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -453,7 +463,7 @@
     {
       "computation": "@beep/execution-authority-domain#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/jsonc#transit",
@@ -502,10 +512,11 @@
     {
       "computation": "@beep/execution-authority-domain#test",
       "command": "bun run beep:test",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/jsonc#transit",
+        "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
         "@beep/shared-domain#transit",
         "@beep/test-runner#transit",
@@ -545,8 +556,11 @@
           "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
           "GITHUB_STEP_SUMMARY"
         ],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/test/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-vitest#transit",
           "@beep/utils#transit",
           "^transit"
         ],
@@ -559,7 +573,7 @@
     {
       "computation": "@beep/execution-authority-domain#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/identity#build",
         "@beep/jsonc#build",

@@ -143,40 +143,48 @@ runs:
       if: inputs.native-pdf-tools == 'true'
       uses: ./.github/actions/fetch-beep-ci
 
-    - name: Ensure native PDF text extraction
+    - name: Probe native PDF text extraction
+      id: pdf-tools
       if: inputs.native-pdf-tools == 'true'
       shell: bash
       run: |
         set -euo pipefail
-        if ! command -v pdftotext >/dev/null 2>&1; then
-          privilege=()
-          if [[ "$EUID" -ne 0 ]]; then
-            privilege=(sudo -n)
-          fi
-          if command -v apt-get >/dev/null 2>&1; then
-            beep ci prune-apt
-            # Run timeout inside sudo so its signals also reach privileged
-            # package-manager children. Network retries alone do not bound
-            # mirror stalls, lock waits, or the complete operation.
-            apt_options=(
-              -o Acquire::Retries=2
-              -o Acquire::http::Timeout=20
-              -o Acquire::https::Timeout=20
-              -o DPkg::Lock::Timeout=30
-            )
-            "${privilege[@]}" timeout --signal=TERM --kill-after=15s 180s \
-              apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update
-            "${privilege[@]}" timeout --signal=TERM --kill-after=15s 300s \
-              apt-get "${apt_options[@]}" install -y --no-install-recommends poppler-utils
-          elif command -v dnf >/dev/null 2>&1; then
-            "${privilege[@]}" timeout --signal=TERM --kill-after=15s 300s \
-              dnf --setopt=timeout=20 --setopt=retries=2 --setopt=minrate=1000 \
-              install -y poppler-utils
-          else
-            echo "::error::pdftotext is required; this runner has no supported package manager."
-            exit 1
-          fi
+        if command -v pdftotext >/dev/null 2>&1; then
+          installer=none
+        elif command -v apt-get >/dev/null 2>&1; then
+          installer=apt
+        elif command -v dnf >/dev/null 2>&1; then
+          installer=dnf
+        else
+          echo "::error::pdftotext is required; this runner has no supported package manager."
+          exit 1
         fi
+        echo "installer=$installer" >> "$GITHUB_OUTPUT"
+
+    - name: Install native PDF text extraction (apt)
+      if: inputs.native-pdf-tools == 'true' && steps.pdf-tools.outputs.installer == 'apt'
+      uses: ./.github/actions/apt-install
+      with:
+        packages: poppler-utils
+
+    - name: Install native PDF text extraction (dnf)
+      if: inputs.native-pdf-tools == 'true' && steps.pdf-tools.outputs.installer == 'dnf'
+      shell: bash
+      run: |
+        set -euo pipefail
+        privilege=()
+        if [[ "$EUID" -ne 0 ]]; then
+          privilege=(sudo -n)
+        fi
+        "${privilege[@]}" timeout --signal=TERM --kill-after=15s 300s \
+          dnf --setopt=timeout=20 --setopt=retries=2 --setopt=minrate=1000 \
+          install -y poppler-utils
+
+    - name: Verify native PDF text extraction
+      if: inputs.native-pdf-tools == 'true'
+      shell: bash
+      run: |
+        set -euo pipefail
         command -v pdftotext
         pdftotext -v
 

@@ -1,0 +1,98 @@
+name: Apt install with retries
+description: >-
+  Keep only the Ubuntu archive, then run apt-get update and apt-get install as
+  one bounded, retried unit so a transient mirror failure does not fail the job.
+
+# Hosted Ubuntu mirrors fail for minutes at a time: `503 Service Unavailable`
+# and `Connection failed` on InRelease, or `File has unexpected size ...
+# Mirror sync in progress?` while a mirror resyncs. apt's own
+# Acquire::Retries re-fetches single files inside one run; it does not retry a
+# failed update as a whole. Each attempt here runs update (with
+# APT::Update::Error-Mode=any, so any failed index fails the attempt instead of
+# installing against a stale or partial index) and then install. A failed
+# attempt waits and starts again from update; after the last attempt the step
+# fails with an error annotation. Requires the beep CI binary on PATH
+# (./.github/actions/fetch-beep-ci) for `beep ci prune-apt`.
+
+inputs:
+  packages:
+    description: Whitespace-separated apt package names to install.
+    required: true
+  no-install-recommends:
+    description: Pass --no-install-recommends to apt-get install.
+    required: false
+    default: "true"
+  attempts:
+    description: Total update-and-install attempts before the step fails.
+    required: false
+    default: "3"
+  backoff-seconds:
+    description: Pause before the second attempt; each later pause doubles it.
+    required: false
+    default: "15"
+
+runs:
+  using: composite
+  steps:
+    - name: Install apt packages with retries
+      shell: bash
+      env:
+        APT_INSTALL_PACKAGES: ${{ inputs.packages }}
+        APT_INSTALL_NO_RECOMMENDS: ${{ inputs.no-install-recommends }}
+        APT_INSTALL_ATTEMPTS: ${{ inputs.attempts }}
+        APT_INSTALL_BACKOFF_SECONDS: ${{ inputs.backoff-seconds }}
+      run: |
+        set -euo pipefail
+        # -d '' reads every line, so a block-scalar package list works too.
+        read -r -d '' -a packages <<< "$APT_INSTALL_PACKAGES" || true
+        if (( ${#packages[@]} == 0 )); then
+          echo "::error::apt-install: no packages were given."
+          exit 1
+        fi
+        if [[ ! "$APT_INSTALL_ATTEMPTS" =~ ^[1-9][0-9]*$ || ! "$APT_INSTALL_BACKOFF_SECONDS" =~ ^[0-9]+$ ]]; then
+          echo "::error::apt-install: attempts must be a positive integer and backoff-seconds a non-negative integer."
+          exit 1
+        fi
+        privilege=()
+        if [[ "$EUID" -ne 0 ]]; then
+          privilege=(sudo -n)
+        fi
+        install_flags=(-y)
+        if [[ "$APT_INSTALL_NO_RECOMMENDS" == "true" ]]; then
+          install_flags+=(--no-install-recommends)
+        fi
+        # The image's third-party apt sources (Google Chrome, Microsoft) fail apt-get
+        # update with "Hash Sum mismatch" / "403 Forbidden" for minutes at a time;
+        # keep only the Ubuntu archive, which is where these packages come from.
+        beep ci prune-apt
+        # Run timeout inside sudo so its signals also reach privileged
+        # package-manager children. Network retries alone do not bound
+        # mirror stalls, lock waits, or the complete operation.
+        apt_options=(
+          -o Acquire::Retries=3
+          -o Acquire::http::Timeout=20
+          -o Acquire::https::Timeout=20
+          -o DPkg::Lock::Timeout=30
+        )
+        apt_update() {
+          "${privilege[@]}" timeout --signal=TERM --kill-after=15s 180s \
+            apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update
+        }
+        apt_install() {
+          "${privilege[@]}" timeout --signal=TERM --kill-after=15s 300s \
+            apt-get "${apt_options[@]}" install "${install_flags[@]}" "${packages[@]}"
+        }
+        backoff="$APT_INSTALL_BACKOFF_SECONDS"
+        for (( attempt = 1; attempt <= APT_INSTALL_ATTEMPTS; attempt++ )); do
+          if apt_update && apt_install; then
+            exit 0
+          fi
+          if (( attempt == APT_INSTALL_ATTEMPTS )); then
+            break
+          fi
+          echo "::warning::apt-install: attempt ${attempt} of ${APT_INSTALL_ATTEMPTS} failed; retrying update and install in ${backoff}s."
+          sleep "$backoff"
+          backoff=$(( backoff * 2 ))
+        done
+        echo "::error::apt-install: apt-get update and install failed after ${APT_INSTALL_ATTEMPTS} attempts (packages: ${packages[*]})."
+        exit 1

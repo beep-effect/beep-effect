@@ -1,3 +1,4 @@
+import { PACKAGE_CHECK_GATE_COMMAND, PACKAGE_CHECK_GATE_SCRIPT } from "@beep/repo-cli-kit/package-scripts/CheckGate";
 import {
   applyScaffoldRuleForTesting,
   buildServedCheck,
@@ -15,7 +16,6 @@ import {
   OWN_SOURCE_CHECK_COMMAND,
   OwnSourceCheckOverride,
   ownSourceCheckOverrides,
-  PACKAGE_CHECK_PROBE_COMMAND,
   PackageKind,
   PackageScriptsReportFromWire,
   RetiredScriptName,
@@ -102,9 +102,10 @@ describe("canonical package scripts schemas", () => {
     expect(HashMap.has(scripts, "beep:build")).toBe(false);
     expect(HashMap.size(scripts)).toBe(2);
   });
-  it("leads every generated check with the unbuilt-reference probe except infra's build-mode check", () => {
-    expect(scaffoldPackageScripts("library", []).check).toBe(`${PACKAGE_CHECK_PROBE_COMMAND} && bun run beep:check`);
-    expect(scaffoldPackageScripts("app", []).check).toBe("beep-cli quality check-probe && bun run beep:check");
+  it("makes every generated check the check gate except infra's build-mode check", () => {
+    expect(scaffoldPackageScripts("library", []).check).toBe(PACKAGE_CHECK_GATE_COMMAND);
+    expect(scaffoldPackageScripts("app", []).check).toBe("beep-cli gate run check");
+    expect(PACKAGE_CHECK_GATE_SCRIPT).toBe("beep:check");
     expect(scaffoldPackageScripts("infra", []).check).toBe("bun run beep:check");
     expect(
       renderTaskScriptBinding(TaskScriptBinding.cases.indirection.make({ impl: "beep:build", ifPresent: true }))

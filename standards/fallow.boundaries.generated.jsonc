@@ -1014,6 +1014,12 @@
         ]
       },
       {
+        "name": "@beep/repo-gate-vitest",
+        "patterns": [
+          "packages/tooling/test-kit/repo-gate-vitest/src/**"
+        ]
+      },
+      {
         "name": "@beep/repo-tsconfig",
         "patterns": [
           "packages/tooling/library/repo-tsconfig/src/**"
@@ -5009,6 +5015,7 @@
           "@beep/ffmpeg",
           "@beep/file-processing",
           "@beep/firecrawl",
+          "@beep/gate-report",
           "@beep/git",
           "@beep/github",
           "@beep/github-actions",
@@ -5046,6 +5053,7 @@
           "@beep/repo-cli-kit",
           "@beep/repo-configs",
           "@beep/repo-docgen",
+          "@beep/repo-gate-record",
           "@beep/repo-gate-run",
           "@beep/repo-tsconfig",
           "@beep/repo-utils",
@@ -5085,6 +5093,7 @@
           "@beep/ffmpeg",
           "@beep/file-processing",
           "@beep/firecrawl",
+          "@beep/gate-report",
           "@beep/git",
           "@beep/github",
           "@beep/github-actions",
@@ -5122,6 +5131,7 @@
           "@beep/repo-cli-kit",
           "@beep/repo-configs",
           "@beep/repo-docgen",
+          "@beep/repo-gate-record",
           "@beep/repo-gate-run",
           "@beep/repo-tsconfig",
           "@beep/repo-utils",
@@ -5293,6 +5303,19 @@
           "@beep/repo-gate-run",
           "@beep/runtime-env",
           "@beep/schema"
+        ]
+      },
+      {
+        "from": "@beep/repo-gate-vitest",
+        "allow": [
+          "@beep/gate-report",
+          "@beep/repo-gate-record",
+          "@beep/repo-gate-vitest"
+        ],
+        "allowTypeOnly": [
+          "@beep/gate-report",
+          "@beep/repo-gate-record",
+          "@beep/repo-gate-vitest"
         ]
       },
       {

@@ -16,7 +16,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Tuple from "effect/Tuple";
-import { mergeConfig } from "vitest/config";
+import { configDefaults, mergeConfig } from "vitest/config";
 import { BaseSequencer } from "vitest/node";
 import { appSourceAlias } from "./vite.shared.ts";
 import generatedAliasPaths from "./vitest.aliases.generated.json" with { type: "json" };
@@ -255,6 +255,14 @@ const rootTsconfigAliases = A.flatMap(
     A.map(replacements, (replacement) => toAliasEntry(find, replacement))
 );
 
+// The gate adapter writes the package's `test` record (`<package>/.beep/gates/test/`). It is appended
+// after Vitest's own default selection (which keeps the minimal reporter under an agent and the GitHub
+// reporter under Actions) and registered by package specifier, so this config imports none of its code.
+// Doctest and deep property-sweep runs share this config but must not overwrite the test record.
+// A command-line `--reporter` (the coverage planner) replaces the whole list, so coverage runs write none.
+const GATE_REPORTER = "@beep/repo-gate-vitest/Vitest.reporter";
+const gateReporterActive = !vitestDoctestActive && !fcDeepSweepActive;
+
 const config: ViteUserConfig = {
   plugins: [resolveUniformTypeScriptSourceSpecifiers(), ...(vitestDoctestActive ? [Doctest.plugin()] : [])],
   oxc: {
@@ -276,6 +284,7 @@ const config: ViteUserConfig = {
     },
   },
   test: {
+    ...(gateReporterActive ? { reporters: [...configDefaults.reporters, GATE_REPORTER] } : {}),
     // Tests run globally concurrent (see `sequence.concurrent` below), so a
     // full monorepo run (e.g. a many-package PR, or push-to-main) saturates the
     // CI runner's CPU and can starve otherwise-fast tests — property-based
