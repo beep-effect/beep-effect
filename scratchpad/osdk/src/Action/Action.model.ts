@@ -21,6 +21,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as R from "@beep/utils/Record";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
@@ -127,6 +128,26 @@ export class ObjectParameterType extends S.Opaque<ObjectParameterType, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link ObjectParameterType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectParameterType {
+  /**
+   * Encoded (wire) form of {@link ObjectParameterType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "object";
+    readonly objectApiName: ObjectTypeApiName.Encoded;
+    readonly objectTypeApiName: ObjectTypeApiName.Encoded;
+  }
+}
+
+/**
  * Type of a parameter or struct field that holds a set of objects, optionally of a known object type.
  *
  * @category models
@@ -149,6 +170,26 @@ export class ObjectSetParameterType extends S.Opaque<ObjectSetParameterType, { r
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ObjectSetParameterType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectSetParameterType {
+  /**
+   * Encoded (wire) form of {@link ObjectSetParameterType}: an unstated object type is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "objectSet";
+    readonly objectApiName?: ObjectTypeApiName.Encoded;
+    readonly objectTypeApiName?: ObjectTypeApiName.Encoded;
+  }
+}
 
 /**
  * One named field of a struct parameter.
@@ -183,7 +224,7 @@ export declare namespace StructParameterField {
    * @since 0.0.0
    */
   export interface Encoded {
-    readonly name: string;
+    readonly name: StructFieldApiName.Encoded;
     readonly fieldType: OntologyDataType.Encoded;
     readonly required: boolean;
   }
@@ -452,29 +493,29 @@ export declare namespace OntologyDataType {
    * @since 0.0.0
    */
   export type Encoded =
-    | (typeof BooleanType)["Encoded"]
-    | (typeof ByteType)["Encoded"]
-    | (typeof ShortType)["Encoded"]
-    | (typeof IntegerType)["Encoded"]
-    | (typeof LongType)["Encoded"]
-    | (typeof FloatType)["Encoded"]
-    | (typeof DoubleType)["Encoded"]
-    | (typeof DecimalType)["Encoded"]
-    | (typeof StringType)["Encoded"]
-    | (typeof DateType)["Encoded"]
-    | (typeof TimestampType)["Encoded"]
-    | (typeof BinaryType)["Encoded"]
-    | (typeof MarkingType)["Encoded"]
-    | (typeof CipherTextType)["Encoded"]
-    | (typeof MediaReferenceType)["Encoded"]
+    | BooleanType.Encoded
+    | ByteType.Encoded
+    | ShortType.Encoded
+    | IntegerType.Encoded
+    | LongType.Encoded
+    | FloatType.Encoded
+    | DoubleType.Encoded
+    | DecimalType.Encoded
+    | StringType.Encoded
+    | DateType.Encoded
+    | TimestampType.Encoded
+    | BinaryType.Encoded
+    | MarkingType.Encoded
+    | CipherTextType.Encoded
+    | MediaReferenceType.Encoded
     | OntologyArrayType.Encoded
     | OntologySetType.Encoded
     | OntologyMapType.Encoded
     | StructParameterType.Encoded
-    | (typeof ObjectParameterType)["Encoded"]
-    | (typeof ObjectSetParameterType)["Encoded"]
-    | (typeof AnyType)["Encoded"]
-    | (typeof UnsupportedType)["Encoded"];
+    | ObjectParameterType.Encoded
+    | ObjectSetParameterType.Encoded
+    | AnyType.Encoded
+    | UnsupportedType.Encoded;
 }
 
 // -----------------------------------------------------------------------------
@@ -549,6 +590,25 @@ export class InterfaceObjectParameterType extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link InterfaceObjectParameterType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceObjectParameterType {
+  /**
+   * Encoded (wire) form of {@link InterfaceObjectParameterType}: an unstated interface is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "interfaceObject";
+    readonly interfaceTypeApiName?: InterfaceTypeApiName.Encoded;
+  }
+}
 
 /**
  * Everything a parameter of an action can hold: 15 leaf types, lists, structs and five kinds of reference.
@@ -662,28 +722,28 @@ export declare namespace ActionParameterType {
    * @since 0.0.0
    */
   export type Encoded =
-    | (typeof BooleanType)["Encoded"]
-    | (typeof IntegerType)["Encoded"]
-    | (typeof LongType)["Encoded"]
-    | (typeof DoubleType)["Encoded"]
-    | (typeof DecimalType)["Encoded"]
-    | (typeof StringType)["Encoded"]
-    | (typeof DateType)["Encoded"]
-    | (typeof TimestampType)["Encoded"]
-    | (typeof MarkingType)["Encoded"]
-    | (typeof AttachmentType)["Encoded"]
-    | (typeof MediaReferenceType)["Encoded"]
-    | (typeof GeoShapeType)["Encoded"]
-    | (typeof GeohashType)["Encoded"]
-    | (typeof TimeSeriesReferenceType)["Encoded"]
-    | (typeof VectorType)["Encoded"]
+    | BooleanType.Encoded
+    | IntegerType.Encoded
+    | LongType.Encoded
+    | DoubleType.Encoded
+    | DecimalType.Encoded
+    | StringType.Encoded
+    | DateType.Encoded
+    | TimestampType.Encoded
+    | MarkingType.Encoded
+    | AttachmentType.Encoded
+    | MediaReferenceType.Encoded
+    | GeoShapeType.Encoded
+    | GeohashType.Encoded
+    | TimeSeriesReferenceType.Encoded
+    | VectorType.Encoded
     | ArrayParameterType.Encoded
     | StructParameterType.Encoded
-    | (typeof ObjectParameterType)["Encoded"]
-    | (typeof ObjectSetParameterType)["Encoded"]
-    | (typeof InterfaceObjectParameterType)["Encoded"]
-    | (typeof ObjectTypeReferenceType)["Encoded"]
-    | (typeof ScenarioReferenceType)["Encoded"];
+    | ObjectParameterType.Encoded
+    | ObjectSetParameterType.Encoded
+    | InterfaceObjectParameterType.Encoded
+    | ObjectTypeReferenceType.Encoded
+    | ScenarioReferenceType.Encoded;
 }
 
 // -----------------------------------------------------------------------------
@@ -704,6 +764,25 @@ export class StaticBound extends S.Opaque<StaticBound, { readonly brand: unique 
 ) {}
 
 /**
+ * Companion namespace for {@link StaticBound}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StaticBound {
+  /**
+   * Encoded (wire) form of {@link StaticBound}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "static";
+    readonly value: typeof S.Json.Encoded;
+  }
+}
+
+/**
  * A bound whose value is the number of elements of another list parameter.
  *
  * @category models
@@ -721,6 +800,25 @@ export class ParameterLengthBound extends S.Opaque<ParameterLengthBound, { reado
 ) {}
 
 /**
+ * Companion namespace for {@link ParameterLengthBound}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ParameterLengthBound {
+  /**
+   * Encoded (wire) form of {@link ParameterLengthBound}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "parameterLength";
+    readonly parameterId: ParameterId.Encoded;
+  }
+}
+
+/**
  * A bound whose value is the value of another parameter.
  *
  * @category models
@@ -736,6 +834,25 @@ export class ParameterValueBound extends S.Opaque<ParameterValueBound, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ParameterValueBound}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ParameterValueBound {
+  /**
+   * Encoded (wire) form of {@link ParameterValueBound}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "parameterValue";
+    readonly parameterId: ParameterId.Encoded;
+  }
+}
 
 /**
  * Where a configured bound takes its value from: a literal or another parameter of the same action.
@@ -785,6 +902,25 @@ export const ConstraintBound = ConstraintBoundKind.mapMembers(() =>
 export type ConstraintBound = typeof ConstraintBound.Type;
 
 /**
+ * Companion namespace for {@link ConstraintBound}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ConstraintBound {
+  /**
+   * Encoded (wire) form of {@link ConstraintBound}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | StaticBound.Encoded
+    | ParameterLengthBound.Encoded
+    | ParameterValueBound.Encoded;
+}
+
+/**
  * A date or timestamp bound equal to the moment the action is evaluated.
  *
  * @category models
@@ -797,6 +933,24 @@ export class NowBound extends S.Opaque<NowBound, { readonly brand: unique symbol
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link NowBound}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NowBound {
+  /**
+   * Encoded (wire) form of {@link NowBound}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "now";
+  }
+}
 
 /**
  * A date or timestamp bound fixed at configuration time or taken from another parameter.
@@ -816,6 +970,25 @@ export class FixedDatetimeBound extends S.Opaque<FixedDatetimeBound, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link FixedDatetimeBound}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FixedDatetimeBound {
+  /**
+   * Encoded (wire) form of {@link FixedDatetimeBound}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "fixed";
+    readonly value: ConstraintBound.Encoded;
+  }
+}
+
+/**
  * A date or timestamp bound expressed as an offset from the moment the action is evaluated.
  *
  * @category models
@@ -833,6 +1006,27 @@ export class RelativeDatetimeBound extends S.Opaque<RelativeDatetimeBound, { rea
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RelativeDatetimeBound}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RelativeDatetimeBound {
+  /**
+   * Encoded (wire) form of {@link RelativeDatetimeBound}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "relative";
+    readonly duration: string;
+    readonly unit: RelativeDatetimeUnit.Encoded;
+    readonly tense: RelativeDatetimeTense.Encoded;
+  }
+}
 
 /**
  * How a configured date or timestamp bound is expressed.
@@ -871,6 +1065,25 @@ export const DatetimeBound = DatetimeBoundKind.mapMembers(() =>
 export type DatetimeBound = typeof DatetimeBound.Type;
 
 /**
+ * Companion namespace for {@link DatetimeBound}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DatetimeBound {
+  /**
+   * Encoded (wire) form of {@link DatetimeBound}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | NowBound.Encoded
+    | FixedDatetimeBound.Encoded
+    | RelativeDatetimeBound.Encoded;
+}
+
+/**
  * One labelled choice of a parameter restricted to a fixed set of values.
  *
  * @category models
@@ -886,6 +1099,25 @@ export class AllowedValueOption extends S.Opaque<AllowedValueOption, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AllowedValueOption}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AllowedValueOption {
+  /**
+   * Encoded (wire) form of {@link AllowedValueOption}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly displayName: string;
+    readonly value: typeof S.Json.Encoded;
+  }
+}
 
 /**
  * Rule that a parameter's value must be one of a fixed set of labelled options.
@@ -906,6 +1138,26 @@ export class OneOfAllowedValues extends S.Opaque<OneOfAllowedValues, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link OneOfAllowedValues}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OneOfAllowedValues {
+  /**
+   * Encoded (wire) form of {@link OneOfAllowedValues}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "oneOf";
+    readonly options: ReadonlyArray<AllowedValueOption.Encoded>;
+    readonly otherValuesAllowed: boolean;
+  }
+}
 
 /**
  * Rule that a numeric parameter's value must fall within a range.
@@ -940,6 +1192,28 @@ export class RangeAllowedValues extends S.Opaque<RangeAllowedValues, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link RangeAllowedValues}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RangeAllowedValues {
+  /**
+   * Encoded (wire) form of {@link RangeAllowedValues}: each unconfigured bound is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "range";
+    readonly gt?: ConstraintBound.Encoded;
+    readonly gte?: ConstraintBound.Encoded;
+    readonly lt?: ConstraintBound.Encoded;
+    readonly lte?: ConstraintBound.Encoded;
+  }
+}
+
+/**
  * Rule that a date or timestamp parameter's value must fall within a range.
  *
  * @category models
@@ -970,6 +1244,28 @@ export class DatetimeAllowedValues extends S.Opaque<DatetimeAllowedValues, { rea
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DatetimeAllowedValues}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DatetimeAllowedValues {
+  /**
+   * Encoded (wire) form of {@link DatetimeAllowedValues}: each unconfigured bound is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "datetime";
+    readonly gt?: DatetimeBound.Encoded;
+    readonly gte?: DatetimeBound.Encoded;
+    readonly lt?: DatetimeBound.Encoded;
+    readonly lte?: DatetimeBound.Encoded;
+  }
+}
 
 /**
  * Rule that a string parameter's value must respect length bounds, a regular expression, or both.
@@ -1004,6 +1300,28 @@ export class TextAllowedValues extends S.Opaque<TextAllowedValues, { readonly br
 ) {}
 
 /**
+ * Companion namespace for {@link TextAllowedValues}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TextAllowedValues {
+  /**
+   * Encoded (wire) form of {@link TextAllowedValues}: each unconfigured rule is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "text";
+    readonly gte?: number;
+    readonly lte?: number;
+    readonly regex?: string;
+    readonly configuredFailureMessage?: string;
+  }
+}
+
+/**
  * Rule that a markdown parameter's value must respect length bounds.
  *
  * @category models
@@ -1028,6 +1346,26 @@ export class MarkdownAllowedValues extends S.Opaque<MarkdownAllowedValues, { rea
 ) {}
 
 /**
+ * Companion namespace for {@link MarkdownAllowedValues}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MarkdownAllowedValues {
+  /**
+   * Encoded (wire) form of {@link MarkdownAllowedValues}: each unconfigured bound is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "markdown";
+    readonly gte?: number;
+    readonly lte?: number;
+  }
+}
+
+/**
  * Rule that an attachment parameter's file must not exceed a size.
  *
  * @category models
@@ -1046,6 +1384,26 @@ export class AttachmentAllowedValues extends S.Opaque<AttachmentAllowedValues, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AttachmentAllowedValues}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AttachmentAllowedValues {
+  /**
+   * Encoded (wire) form of {@link AttachmentAllowedValues}: the size limit travels as decimal text and is an absent key
+   * when unconfigured.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "attachment";
+    readonly maxSizeBytes?: SizeBytes.Encoded;
+  }
+}
 
 /**
  * Rule that a parameter's value must conform to one version of a value type.
@@ -1067,6 +1425,27 @@ export class ValueTypeAllowedValues extends S.Opaque<ValueTypeAllowedValues, { r
 ) {}
 
 /**
+ * Companion namespace for {@link ValueTypeAllowedValues}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ValueTypeAllowedValues {
+  /**
+   * Encoded (wire) form of {@link ValueTypeAllowedValues}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "valueType";
+    readonly apiName: ValueTypeApiName.Encoded;
+    readonly rid: ValueTypeRid.Encoded;
+    readonly versionId: string;
+  }
+}
+
+/**
  * Rule that a parameter must be omitted or empty.
  *
  * @category models
@@ -1077,6 +1456,24 @@ export class MustBeEmptyAllowedValues extends S.Opaque<MustBeEmptyAllowedValues,
     $I.annoteSchema("MustBeEmptyAllowedValues", { description: "Rule that a parameter must be omitted or empty." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MustBeEmptyAllowedValues}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MustBeEmptyAllowedValues {
+  /**
+   * Encoded (wire) form of {@link MustBeEmptyAllowedValues}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "mustBeEmpty";
+  }
+}
 
 /**
  * The allowed-values rule an action type configures on one of its parameters.
@@ -1137,6 +1534,30 @@ export const AllowedValues = AllowedValuesKind.mapMembers(() =>
 export type AllowedValues = typeof AllowedValues.Type;
 
 /**
+ * Companion namespace for {@link AllowedValues}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AllowedValues {
+  /**
+   * Encoded (wire) form of {@link AllowedValues}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | OneOfAllowedValues.Encoded
+    | RangeAllowedValues.Encoded
+    | DatetimeAllowedValues.Encoded
+    | TextAllowedValues.Encoded
+    | MarkdownAllowedValues.Encoded
+    | AttachmentAllowedValues.Encoded
+    | ValueTypeAllowedValues.Encoded
+    | MustBeEmptyAllowedValues.Encoded;
+}
+
+/**
  * Inclusive bounds an action type configures on the number of elements of a list parameter.
  *
  * @category models
@@ -1158,6 +1579,25 @@ export class ArraySizeBounds extends S.Opaque<ArraySizeBounds, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ArraySizeBounds}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ArraySizeBounds {
+  /**
+   * Encoded (wire) form of {@link ArraySizeBounds}: each unconfigured bound is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly gte?: number;
+    readonly lte?: number;
+  }
+}
 
 /**
  * The constraints an action type configures on one parameter: which values, and for a list, how many.
@@ -1183,6 +1623,25 @@ export class ParameterConstraints extends S.Opaque<ParameterConstraints, { reado
 ) {}
 
 /**
+ * Companion namespace for {@link ParameterConstraints}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ParameterConstraints {
+  /**
+   * Encoded (wire) form of {@link ParameterConstraints}: each unconfigured constraint is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly allowedValues?: AllowedValues.Encoded;
+    readonly arraySize?: ArraySizeBounds.Encoded;
+  }
+}
+
+/**
  * Validation metadata an action type publishes for one parameter.
  *
  * **Details**
@@ -1205,6 +1664,24 @@ export class ParameterValidation extends S.Opaque<ParameterValidation, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ParameterValidation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ParameterValidation {
+  /**
+   * Encoded (wire) form of {@link ParameterValidation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly defaultValidation: ParameterConstraints.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Action types
@@ -1245,7 +1722,7 @@ export class ActionParameter extends S.Opaque<ActionParameter, { readonly brand:
     required: S.Boolean.annotateKey({ description: "Whether a request must supply an argument for it." }),
     typeClasses: S.Array(TypeClass).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<TypeClass>())),
-      S.withDecodingDefaultKey(Effect.succeed(A.empty<(typeof TypeClass)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(A.empty<TypeClass.Encoded>())),
       S.annotateKey({ description: "Free-form rendering and behavior hints for client applications." })
     ),
     validation: S.OptionFromOptionalKey(ParameterValidation).pipe(
@@ -1258,6 +1735,29 @@ export class ActionParameter extends S.Opaque<ActionParameter, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ActionParameter}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionParameter {
+  /**
+   * Encoded (wire) form of {@link ActionParameter}: `typeClasses` may be absent and then decodes as empty.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly displayName: string;
+    readonly description?: string;
+    readonly dataType: ActionParameterType.Encoded;
+    readonly required: boolean;
+    readonly typeClasses?: ReadonlyArray<TypeClass.Encoded>;
+    readonly validation?: ParameterValidation.Encoded;
+  }
+}
 
 /**
  * Declares that an action may create objects of one object type.
@@ -1277,6 +1777,25 @@ export class CreateObjectOperation extends S.Opaque<CreateObjectOperation, { rea
 ) {}
 
 /**
+ * Companion namespace for {@link CreateObjectOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CreateObjectOperation {
+  /**
+   * Encoded (wire) form of {@link CreateObjectOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "createObject";
+    readonly objectTypeApiName: ObjectTypeApiName.Encoded;
+  }
+}
+
+/**
  * Declares that an action may modify objects of one object type.
  *
  * @category models
@@ -1294,6 +1813,25 @@ export class ModifyObjectOperation extends S.Opaque<ModifyObjectOperation, { rea
 ) {}
 
 /**
+ * Companion namespace for {@link ModifyObjectOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ModifyObjectOperation {
+  /**
+   * Encoded (wire) form of {@link ModifyObjectOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "modifyObject";
+    readonly objectTypeApiName: ObjectTypeApiName.Encoded;
+  }
+}
+
+/**
  * Declares that an action may delete objects of one object type.
  *
  * @category models
@@ -1309,6 +1847,25 @@ export class DeleteObjectOperation extends S.Opaque<DeleteObjectOperation, { rea
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DeleteObjectOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DeleteObjectOperation {
+  /**
+   * Encoded (wire) form of {@link DeleteObjectOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "deleteObject";
+    readonly objectTypeApiName: ObjectTypeApiName.Encoded;
+  }
+}
 
 /**
  * Declares that an action may create links of one link type, named from both of its sides.
@@ -1331,6 +1888,28 @@ export class CreateLinkOperation extends S.Opaque<CreateLinkOperation, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link CreateLinkOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CreateLinkOperation {
+  /**
+   * Encoded (wire) form of {@link CreateLinkOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "createLink";
+    readonly linkTypeApiNameAtoB: LinkTypeApiName.Encoded;
+    readonly linkTypeApiNameBtoA: LinkTypeApiName.Encoded;
+    readonly aSideObjectTypeApiName: ObjectTypeApiName.Encoded;
+    readonly bSideObjectTypeApiName: ObjectTypeApiName.Encoded;
+  }
+}
+
+/**
  * Declares that an action may delete links of one link type, named from both of its sides.
  *
  * @category models
@@ -1351,6 +1930,28 @@ export class DeleteLinkOperation extends S.Opaque<DeleteLinkOperation, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link DeleteLinkOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DeleteLinkOperation {
+  /**
+   * Encoded (wire) form of {@link DeleteLinkOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "deleteLink";
+    readonly linkTypeApiNameAtoB: LinkTypeApiName.Encoded;
+    readonly linkTypeApiNameBtoA: LinkTypeApiName.Encoded;
+    readonly aSideObjectTypeApiName: ObjectTypeApiName.Encoded;
+    readonly bSideObjectTypeApiName: ObjectTypeApiName.Encoded;
+  }
+}
+
+/**
  * Declares that an action may create objects through one interface type.
  *
  * @category models
@@ -1369,6 +1970,25 @@ export class CreateInterfaceObjectOperation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link CreateInterfaceObjectOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CreateInterfaceObjectOperation {
+  /**
+   * Encoded (wire) form of {@link CreateInterfaceObjectOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "createInterfaceObject";
+    readonly interfaceTypeApiName: InterfaceTypeApiName.Encoded;
+  }
+}
 
 /**
  * Declares that an action may modify objects through one interface type.
@@ -1393,6 +2013,25 @@ export class ModifyInterfaceObjectOperation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link ModifyInterfaceObjectOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ModifyInterfaceObjectOperation {
+  /**
+   * Encoded (wire) form of {@link ModifyInterfaceObjectOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "modifyInterfaceObject";
+    readonly interfaceTypeApiName: InterfaceTypeApiName.Encoded;
+  }
+}
+
+/**
  * Declares that an action may delete objects through one interface type.
  *
  * @category models
@@ -1413,6 +2052,25 @@ export class DeleteInterfaceObjectOperation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link DeleteInterfaceObjectOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DeleteInterfaceObjectOperation {
+  /**
+   * Encoded (wire) form of {@link DeleteInterfaceObjectOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "deleteInterfaceObject";
+    readonly interfaceTypeApiName: InterfaceTypeApiName.Encoded;
+  }
+}
+
+/**
  * The link types of one object type that applying a scenario may edit.
  *
  * @category models
@@ -1428,6 +2086,25 @@ export class ScenarioLinkScope extends S.Opaque<ScenarioLinkScope, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ScenarioLinkScope}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ScenarioLinkScope {
+  /**
+   * Encoded (wire) form of {@link ScenarioLinkScope}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly objectTypeApiName: ObjectTypeApiName.Encoded;
+    readonly linkTypes: ReadonlyArray<LinkTypeApiName.Encoded>;
+  }
+}
 
 /**
  * Declares that an action merges the edits staged on a scenario into the ontology.
@@ -1455,6 +2132,27 @@ export class ApplyScenarioOperation extends S.Opaque<ApplyScenarioOperation, { r
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ApplyScenarioOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ApplyScenarioOperation {
+  /**
+   * Encoded (wire) form of {@link ApplyScenarioOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "applyScenario";
+    readonly scenarioParameter: ParameterId.Encoded;
+    readonly objectTypeApiNames: ReadonlyArray<ObjectTypeApiName.Encoded>;
+    readonly linkTypes: ReadonlyArray<ScenarioLinkScope.Encoded>;
+  }
+}
 
 /**
  * One effect an action type declares it may have: which object, link or interface types it touches, and how.
@@ -1506,6 +2204,31 @@ export const ActionOperation = ActionOperationKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type ActionOperation = typeof ActionOperation.Type;
+
+/**
+ * Companion namespace for {@link ActionOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionOperation {
+  /**
+   * Encoded (wire) form of {@link ActionOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | CreateObjectOperation.Encoded
+    | ModifyObjectOperation.Encoded
+    | DeleteObjectOperation.Encoded
+    | CreateLinkOperation.Encoded
+    | DeleteLinkOperation.Encoded
+    | CreateInterfaceObjectOperation.Encoded
+    | ModifyInterfaceObjectOperation.Encoded
+    | DeleteInterfaceObjectOperation.Encoded
+    | ApplyScenarioOperation.Encoded;
+}
 
 /**
  * An action type: a named, parameterised edit of the ontology.
@@ -1567,6 +2290,31 @@ export class ActionType extends S.Opaque<ActionType, { readonly brand: unique sy
   )
 ) {}
 
+/**
+ * Companion namespace for {@link ActionType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionType {
+  /**
+   * Encoded (wire) form of {@link ActionType}: each unstated name or description is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly apiName: ActionTypeApiName.Encoded;
+    readonly rid: ActionTypeRid.Encoded;
+    readonly displayName?: string;
+    readonly description?: string;
+    readonly toolDescription?: string;
+    readonly status: ReleaseStatus.Encoded;
+    readonly parameters: R.ReadonlyRecord<ParameterId.Encoded, ActionParameter.Encoded>;
+    readonly operations: ReadonlyArray<ActionOperation.Encoded>;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Requests
 // -----------------------------------------------------------------------------
@@ -1607,6 +2355,22 @@ export const ArgumentValue = S.Union([S.String, S.Finite, S.Boolean, S.Array(S.J
  * @since 0.0.0
  */
 export type ArgumentValue = typeof ArgumentValue.Type;
+
+/**
+ * Companion namespace for {@link ArgumentValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ArgumentValue {
+  /**
+   * Encoded (wire) form of {@link ArgumentValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ArgumentValue.Encoded;
+}
 
 /**
  * The arguments of one application of an action, by parameter identifier.
@@ -1663,6 +2427,23 @@ export const ActionArguments = S.Record(ParameterId, S.OptionFromNullOr(Argument
 export type ActionArguments = typeof ActionArguments.Type;
 
 /**
+ * Companion namespace for {@link ActionArguments}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionArguments {
+  /**
+   * Encoded (wire) form of {@link ActionArguments}: an untouched parameter is an absent key and a cleared one is
+   * `null`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = R.ReadonlyRecord<ParameterId.Encoded, ArgumentValue.Encoded | null>;
+}
+
+/**
  * How a single action should be applied: whether to execute it and which edits to report.
  *
  * **Details**
@@ -1691,12 +2472,12 @@ export class ApplyActionOptions extends S.Opaque<ApplyActionOptions, { readonly 
   S.Struct({
     mode: ApplyActionMode.pipe(
       S.withConstructorDefault(Effect.succeed<ApplyActionMode>("validateAndExecute")),
-      S.withDecodingDefaultKey(Effect.succeed<(typeof ApplyActionMode)["Encoded"]>("VALIDATE_AND_EXECUTE")),
+      S.withDecodingDefaultKey(Effect.succeed<ApplyActionMode.Encoded>("VALIDATE_AND_EXECUTE")),
       S.annotateKey({ description: "Whether to only validate the action or also execute it." })
     ),
     returnEdits: ReturnEditsMode.pipe(
       S.withConstructorDefault(Effect.succeed<ReturnEditsMode>("none")),
-      S.withDecodingDefaultKey(Effect.succeed<(typeof ReturnEditsMode)["Encoded"]>("NONE")),
+      S.withDecodingDefaultKey(Effect.succeed<ReturnEditsMode.Encoded>("NONE")),
       S.annotateKey({ description: "Which edits the response should list." })
     ),
   }).pipe(
@@ -1705,6 +2486,26 @@ export class ApplyActionOptions extends S.Opaque<ApplyActionOptions, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ApplyActionOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ApplyActionOptions {
+  /**
+   * Encoded (wire) form of {@link ApplyActionOptions}: either key may be absent and then decodes as its documented
+   * default.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly mode?: ApplyActionMode.Encoded;
+    readonly returnEdits?: ReturnEditsMode.Encoded;
+  }
+}
 
 /**
  * A request to apply one action.
@@ -1740,6 +2541,25 @@ export class ApplyActionRequest extends S.Opaque<ApplyActionRequest, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link ApplyActionRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ApplyActionRequest {
+  /**
+   * Encoded (wire) form of {@link ApplyActionRequest}: `options` may be absent and then decodes as the defaults.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly parameters: ActionArguments.Encoded;
+    readonly options?: ApplyActionOptions.Encoded;
+  }
+}
+
+/**
  * How a batch of actions should be applied: only which edits to report, since a batch cannot be validated alone.
  *
  * @category models
@@ -1749,7 +2569,7 @@ export class BatchApplyActionOptions extends S.Opaque<BatchApplyActionOptions, {
   S.Struct({
     returnEdits: BatchReturnEditsMode.pipe(
       S.withConstructorDefault(Effect.succeed<BatchReturnEditsMode>("none")),
-      S.withDecodingDefaultKey(Effect.succeed<(typeof BatchReturnEditsMode)["Encoded"]>("NONE")),
+      S.withDecodingDefaultKey(Effect.succeed<BatchReturnEditsMode.Encoded>("NONE")),
       S.annotateKey({ description: "Which edits the response should list." })
     ),
   }).pipe(
@@ -1758,6 +2578,25 @@ export class BatchApplyActionOptions extends S.Opaque<BatchApplyActionOptions, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link BatchApplyActionOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BatchApplyActionOptions {
+  /**
+   * Encoded (wire) form of {@link BatchApplyActionOptions}: `returnEdits` may be absent and then decodes as its
+   * documented default.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly returnEdits?: BatchReturnEditsMode.Encoded;
+  }
+}
 
 /**
  * One application within a batch: its arguments.
@@ -1770,6 +2609,24 @@ export class BatchApplyActionItem extends S.Opaque<BatchApplyActionItem, { reado
     parameters: ActionArguments.annotateKey({ description: "Arguments of this application." }),
   }).pipe($I.annoteSchema("BatchApplyActionItem", { description: "One application within a batch: its arguments." }))
 ) {}
+
+/**
+ * Companion namespace for {@link BatchApplyActionItem}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BatchApplyActionItem {
+  /**
+   * Encoded (wire) form of {@link BatchApplyActionItem}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly parameters: ActionArguments.Encoded;
+  }
+}
 
 /**
  * A request to apply the same action several times, each with its own arguments.
@@ -1812,6 +2669,25 @@ export class BatchApplyActionRequest extends S.Opaque<BatchApplyActionRequest, {
   )
 ) {}
 
+/**
+ * Companion namespace for {@link BatchApplyActionRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BatchApplyActionRequest {
+  /**
+   * Encoded (wire) form of {@link BatchApplyActionRequest}: `options` may be absent and then decodes as the defaults.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly requests: ReadonlyArray<BatchApplyActionItem.Encoded>;
+    readonly options?: BatchApplyActionOptions.Encoded;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Edits
 // -----------------------------------------------------------------------------
@@ -1840,6 +2716,25 @@ export class EditedObject extends S.Opaque<EditedObject, { readonly brand: uniqu
 ) {}
 
 /**
+ * Companion namespace for {@link EditedObject}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EditedObject {
+  /**
+   * Encoded (wire) form of {@link EditedObject}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly objectType: ObjectTypeApiName.Encoded;
+    readonly primaryKey: typeof S.Json.Encoded;
+  }
+}
+
+/**
  * Reports that an object was created.
  *
  * @category models
@@ -1852,6 +2747,26 @@ export class AddedObject extends S.Opaque<AddedObject, { readonly brand: unique 
     primaryKey: S.Json.annotateKey({ description: "Primary key of the created object, in its wire encoding." }),
   }).pipe($I.annoteSchema("AddedObject", { description: "Reports that an object was created." }))
 ) {}
+
+/**
+ * Companion namespace for {@link AddedObject}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AddedObject {
+  /**
+   * Encoded (wire) form of {@link AddedObject}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "addObject";
+    readonly objectType: ObjectTypeApiName.Encoded;
+    readonly primaryKey: typeof S.Json.Encoded;
+  }
+}
 
 /**
  * Reports that an object was modified.
@@ -1868,6 +2783,26 @@ export class ModifiedObject extends S.Opaque<ModifiedObject, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link ModifiedObject}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ModifiedObject {
+  /**
+   * Encoded (wire) form of {@link ModifiedObject}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "modifyObject";
+    readonly objectType: ObjectTypeApiName.Encoded;
+    readonly primaryKey: typeof S.Json.Encoded;
+  }
+}
+
+/**
  * Reports that an object was deleted.
  *
  * @category models
@@ -1880,6 +2815,26 @@ export class DeletedObject extends S.Opaque<DeletedObject, { readonly brand: uni
     primaryKey: S.Json.annotateKey({ description: "Primary key of the deleted object, in its wire encoding." }),
   }).pipe($I.annoteSchema("DeletedObject", { description: "Reports that an object was deleted." }))
 ) {}
+
+/**
+ * Companion namespace for {@link DeletedObject}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DeletedObject {
+  /**
+   * Encoded (wire) form of {@link DeletedObject}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "deleteObject";
+    readonly objectType: ObjectTypeApiName.Encoded;
+    readonly primaryKey: typeof S.Json.Encoded;
+  }
+}
 
 /**
  * Reports that a link was created between two objects.
@@ -1900,6 +2855,28 @@ export class AddedLink extends S.Opaque<AddedLink, { readonly brand: unique symb
 ) {}
 
 /**
+ * Companion namespace for {@link AddedLink}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AddedLink {
+  /**
+   * Encoded (wire) form of {@link AddedLink}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "addLink";
+    readonly linkTypeApiNameAtoB: LinkTypeApiName.Encoded;
+    readonly linkTypeApiNameBtoA: LinkTypeApiName.Encoded;
+    readonly aSideObject: EditedObject.Encoded;
+    readonly bSideObject: EditedObject.Encoded;
+  }
+}
+
+/**
  * Reports that a link between two objects was deleted.
  *
  * @category models
@@ -1916,6 +2893,28 @@ export class DeletedLink extends S.Opaque<DeletedLink, { readonly brand: unique 
     bSideObject: EditedObject,
   }).pipe($I.annoteSchema("DeletedLink", { description: "Reports that a link between two objects was deleted." }))
 ) {}
+
+/**
+ * Companion namespace for {@link DeletedLink}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DeletedLink {
+  /**
+   * Encoded (wire) form of {@link DeletedLink}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "deleteLink";
+    readonly linkTypeApiNameAtoB: LinkTypeApiName.Encoded;
+    readonly linkTypeApiNameBtoA: LinkTypeApiName.Encoded;
+    readonly aSideObject: EditedObject.Encoded;
+    readonly bSideObject: EditedObject.Encoded;
+  }
+}
 
 /**
  * One edit an applied action reports: an object or a link that was added, modified or deleted.
@@ -1963,6 +2962,27 @@ export const ObjectEdit = ObjectEditKind.mapMembers(() =>
 export type ObjectEdit = typeof ObjectEdit.Type;
 
 /**
+ * Companion namespace for {@link ObjectEdit}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectEdit {
+  /**
+   * Encoded (wire) form of {@link ObjectEdit}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | AddedObject.Encoded
+    | ModifiedObject.Encoded
+    | DeletedObject.Encoded
+    | AddedLink.Encoded
+    | DeletedLink.Encoded;
+}
+
+/**
  * One edit a batch of applied actions reports: the subset of {@link ObjectEdit} without deletions.
  *
  * **Example** (Reject a deletion in a batch result)
@@ -1997,6 +3017,25 @@ export const BatchObjectEdit = BatchObjectEditKind.mapMembers(() =>
 export type BatchObjectEdit = typeof BatchObjectEdit.Type;
 
 /**
+ * Companion namespace for {@link BatchObjectEdit}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BatchObjectEdit {
+  /**
+   * Encoded (wire) form of {@link BatchObjectEdit}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | AddedObject.Encoded
+    | ModifiedObject.Encoded
+    | AddedLink.Encoded;
+}
+
+/**
  * Every edit an applied action made, with how many of each kind there were.
  *
  * @category models
@@ -2017,6 +3056,30 @@ export class ObjectEdits extends S.Opaque<ObjectEdits, { readonly brand: unique 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ObjectEdits}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectEdits {
+  /**
+   * Encoded (wire) form of {@link ObjectEdits}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "edits";
+    readonly edits: ReadonlyArray<ObjectEdit.Encoded>;
+    readonly addedObjectCount: number;
+    readonly modifiedObjectsCount: number;
+    readonly deletedObjectsCount: number;
+    readonly addedLinksCount: number;
+    readonly deletedLinksCount: number;
+  }
+}
 
 /**
  * Every edit a batch of applied actions made, with how many of each kind there were.
@@ -2045,6 +3108,30 @@ export class BatchObjectEdits extends S.Opaque<BatchObjectEdits, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link BatchObjectEdits}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BatchObjectEdits {
+  /**
+   * Encoded (wire) form of {@link BatchObjectEdits}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "edits";
+    readonly edits: ReadonlyArray<BatchObjectEdit.Encoded>;
+    readonly addedObjectCount: number;
+    readonly modifiedObjectsCount: number;
+    readonly deletedObjectsCount: number;
+    readonly addedLinksCount: number;
+    readonly deletedLinksCount: number;
+  }
+}
+
+/**
  * The object types an action edited, reported when there are too many edits to list one by one.
  *
  * @category models
@@ -2060,6 +3147,25 @@ export class LargeScaleEdits extends S.Opaque<LargeScaleEdits, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link LargeScaleEdits}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LargeScaleEdits {
+  /**
+   * Encoded (wire) form of {@link LargeScaleEdits}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "largeScaleEdits";
+    readonly editedObjectTypes: ReadonlyArray<ObjectTypeApiName.Encoded>;
+  }
+}
 
 /**
  * What an applied action changed: either every edit, or only the edited object types when there are too many.
@@ -2104,6 +3210,24 @@ export const ActionEdits = ActionEditsKind.mapMembers(() => Tuple.make(ObjectEdi
 export type ActionEdits = typeof ActionEdits.Type;
 
 /**
+ * Companion namespace for {@link ActionEdits}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionEdits {
+  /**
+   * Encoded (wire) form of {@link ActionEdits}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ObjectEdits.Encoded
+    | LargeScaleEdits.Encoded;
+}
+
+/**
  * What a batch of applied actions changed: every edit, or only the edited object types when there are too many.
  *
  * **Example** (Decode a batch result that only names object types)
@@ -2136,6 +3260,24 @@ export const BatchActionEdits = ActionEditsKind.mapMembers(() => Tuple.make(Batc
  * @since 0.0.0
  */
 export type BatchActionEdits = typeof BatchActionEdits.Type;
+
+/**
+ * Companion namespace for {@link BatchActionEdits}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BatchActionEdits {
+  /**
+   * Encoded (wire) form of {@link BatchActionEdits}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | BatchObjectEdits.Encoded
+    | LargeScaleEdits.Encoded;
+}
 
 const touchedObjectTypes: (edit: ObjectEdit) => ReadonlyArray<ObjectTypeApiName> = ObjectEdit.match({
   addObject: ({ objectType }) => A.of(objectType),
@@ -2240,6 +3382,28 @@ export class ArraySizeConstraint extends S.Opaque<ArraySizeConstraint, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link ArraySizeConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ArraySizeConstraint {
+  /**
+   * Encoded (wire) form of {@link ArraySizeConstraint}: each bound the constraint lacks is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "arraySize";
+    readonly lt?: typeof S.Json.Encoded;
+    readonly lte?: typeof S.Json.Encoded;
+    readonly gt?: typeof S.Json.Encoded;
+    readonly gte?: typeof S.Json.Encoded;
+  }
+}
+
+/**
  * Constraint that the value is the user id of a member of one of the configured groups.
  *
  * @category models
@@ -2252,6 +3416,24 @@ export class GroupMemberConstraint extends S.Opaque<GroupMemberConstraint, { rea
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link GroupMemberConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GroupMemberConstraint {
+  /**
+   * Encoded (wire) form of {@link GroupMemberConstraint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "groupMember";
+  }
+}
 
 /**
  * Constraint that the value is a property value of an object found in an object set.
@@ -2271,6 +3453,24 @@ export class ObjectPropertyValueConstraint extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link ObjectPropertyValueConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectPropertyValueConstraint {
+  /**
+   * Encoded (wire) form of {@link ObjectPropertyValueConstraint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "objectPropertyValue";
+  }
+}
+
+/**
  * Constraint that the value is the primary key of an object found in an object set.
  *
  * @category models
@@ -2286,6 +3486,24 @@ export class ObjectQueryResultConstraint extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ObjectQueryResultConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectQueryResultConstraint {
+  /**
+   * Encoded (wire) form of {@link ObjectQueryResultConstraint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "objectQueryResult";
+  }
+}
 
 /**
  * One choice of a parameter evaluated against a fixed set of options.
@@ -2311,6 +3529,25 @@ export class ParameterOption extends S.Opaque<ParameterOption, { readonly brand:
 ) {}
 
 /**
+ * Companion namespace for {@link ParameterOption}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ParameterOption {
+  /**
+   * Encoded (wire) form of {@link ParameterOption}: an unstated label or value is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly displayName?: string;
+    readonly value?: typeof S.Json.Encoded;
+  }
+}
+
+/**
  * Constraint that the value is one of a fixed set of options, unless other values are allowed too.
  *
  * @category models
@@ -2331,6 +3568,26 @@ export class OneOfConstraint extends S.Opaque<OneOfConstraint, { readonly brand:
 ) {}
 
 /**
+ * Companion namespace for {@link OneOfConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OneOfConstraint {
+  /**
+   * Encoded (wire) form of {@link OneOfConstraint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "oneOf";
+    readonly options: ReadonlyArray<ParameterOption.Encoded>;
+    readonly otherValuesAllowed: boolean;
+  }
+}
+
+/**
  * Constraint that the value falls within a range.
  *
  * @category models
@@ -2341,6 +3598,28 @@ export class RangeConstraint extends S.Opaque<RangeConstraint, { readonly brand:
     $I.annoteSchema("RangeConstraint", { description: "Constraint that the value falls within a range." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RangeConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RangeConstraint {
+  /**
+   * Encoded (wire) form of {@link RangeConstraint}: each bound the constraint lacks is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "range";
+    readonly lt?: typeof S.Json.Encoded;
+    readonly lte?: typeof S.Json.Encoded;
+    readonly gt?: typeof S.Json.Encoded;
+    readonly gte?: typeof S.Json.Encoded;
+  }
+}
 
 /**
  * Constraint that the length of a string value falls within a range, which the platform always treats as inclusive.
@@ -2355,6 +3634,28 @@ export class StringLengthConstraint extends S.Opaque<StringLengthConstraint, { r
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link StringLengthConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StringLengthConstraint {
+  /**
+   * Encoded (wire) form of {@link StringLengthConstraint}: each bound the constraint lacks is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "stringLength";
+    readonly lt?: typeof S.Json.Encoded;
+    readonly lte?: typeof S.Json.Encoded;
+    readonly gt?: typeof S.Json.Encoded;
+    readonly gte?: typeof S.Json.Encoded;
+  }
+}
 
 /**
  * Constraint that a string value matches a regular expression.
@@ -2381,6 +3682,26 @@ export class StringRegexMatchConstraint extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link StringRegexMatchConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StringRegexMatchConstraint {
+  /**
+   * Encoded (wire) form of {@link StringRegexMatchConstraint}: an unconfigured failure message is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "stringRegexMatch";
+    readonly regex: string;
+    readonly configuredFailureMessage?: string;
+  }
+}
+
+/**
  * Marks a constraint that could not be evaluated because something it depends on is missing or invalid.
  *
  * **Details**
@@ -2398,6 +3719,24 @@ export class UnevaluableConstraint extends S.Opaque<UnevaluableConstraint, { rea
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link UnevaluableConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace UnevaluableConstraint {
+  /**
+   * Encoded (wire) form of {@link UnevaluableConstraint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "unevaluable";
+  }
+}
 
 /**
  * A constraint one field of a struct parameter was evaluated against.
@@ -2442,6 +3781,27 @@ export const StructFieldConstraint = StructFieldConstraintKind.mapMembers(() =>
 export type StructFieldConstraint = typeof StructFieldConstraint.Type;
 
 /**
+ * Companion namespace for {@link StructFieldConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructFieldConstraint {
+  /**
+   * Encoded (wire) form of {@link StructFieldConstraint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ObjectQueryResultConstraint.Encoded
+    | OneOfConstraint.Encoded
+    | RangeConstraint.Encoded
+    | StringLengthConstraint.Encoded
+    | StringRegexMatchConstraint.Encoded;
+}
+
+/**
  * The verdict on one field of a struct argument and the constraints it was evaluated against.
  *
  * @category models
@@ -2462,6 +3822,26 @@ export class StructFieldEvaluation extends S.Opaque<StructFieldEvaluation, { rea
 ) {}
 
 /**
+ * Companion namespace for {@link StructFieldEvaluation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructFieldEvaluation {
+  /**
+   * Encoded (wire) form of {@link StructFieldEvaluation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly result: ValidationResult.Encoded;
+    readonly evaluatedConstraints: ReadonlyArray<StructFieldConstraint.Encoded>;
+    readonly required: boolean;
+  }
+}
+
+/**
  * Evaluation of a struct argument, field by field.
  *
  * @category models
@@ -2475,6 +3855,25 @@ export class StructConstraint extends S.Opaque<StructConstraint, { readonly bran
     }),
   }).pipe($I.annoteSchema("StructConstraint", { description: "Evaluation of a struct argument, field by field." }))
 ) {}
+
+/**
+ * Companion namespace for {@link StructConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructConstraint {
+  /**
+   * Encoded (wire) form of {@link StructConstraint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "struct";
+    readonly structFields: R.ReadonlyRecord<StructFieldApiName.Encoded, StructFieldEvaluation.Encoded>;
+  }
+}
 
 /**
  * Evaluation of one entry of a list argument: today always the evaluation of a struct.
@@ -2517,6 +3916,23 @@ export const ArrayEntryConstraint = EvaluatedConstraintKind.pick(["struct"])
 export type ArrayEntryConstraint = typeof ArrayEntryConstraint.Type;
 
 /**
+ * Companion namespace for {@link ArrayEntryConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ArrayEntryConstraint {
+  /**
+   * Encoded (wire) form of {@link ArrayEntryConstraint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | StructConstraint.Encoded;
+}
+
+/**
  * Evaluation of a list argument, entry by entry.
  *
  * @category models
@@ -2528,6 +3944,25 @@ export class ArrayConstraint extends S.Opaque<ArrayConstraint, { readonly brand:
     entries: S.Array(ArrayEntryConstraint).annotateKey({ description: "Evaluation of each entry, in order." }),
   }).pipe($I.annoteSchema("ArrayConstraint", { description: "Evaluation of a list argument, entry by entry." }))
 ) {}
+
+/**
+ * Companion namespace for {@link ArrayConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ArrayConstraint {
+  /**
+   * Encoded (wire) form of {@link ArrayConstraint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "array";
+    readonly entries: ReadonlyArray<ArrayEntryConstraint.Encoded>;
+  }
+}
 
 /**
  * A constraint an argument was evaluated against when its action was validated.
@@ -2597,6 +4032,33 @@ export const EvaluatedConstraint = EvaluatedConstraintKind.mapMembers(() =>
 export type EvaluatedConstraint = typeof EvaluatedConstraint.Type;
 
 /**
+ * Companion namespace for {@link EvaluatedConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EvaluatedConstraint {
+  /**
+   * Encoded (wire) form of {@link EvaluatedConstraint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ArraySizeConstraint.Encoded
+    | GroupMemberConstraint.Encoded
+    | ObjectPropertyValueConstraint.Encoded
+    | ObjectQueryResultConstraint.Encoded
+    | OneOfConstraint.Encoded
+    | RangeConstraint.Encoded
+    | StringLengthConstraint.Encoded
+    | StringRegexMatchConstraint.Encoded
+    | UnevaluableConstraint.Encoded
+    | StructConstraint.Encoded
+    | ArrayConstraint.Encoded;
+}
+
+/**
  * The verdict on one submission criterion: a precondition configured on the action type as a whole.
  *
  * @category models
@@ -2615,6 +4077,25 @@ export class SubmissionCriterion extends S.Opaque<SubmissionCriterion, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link SubmissionCriterion}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SubmissionCriterion {
+  /**
+   * Encoded (wire) form of {@link SubmissionCriterion}: an unconfigured failure message is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly result: ValidationResult.Encoded;
+    readonly configuredFailureMessage?: string;
+  }
+}
 
 /**
  * The verdict on one argument and the constraints it was evaluated against.
@@ -2639,6 +4120,27 @@ export class ParameterEvaluation extends S.Opaque<ParameterEvaluation, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ParameterEvaluation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ParameterEvaluation {
+  /**
+   * Encoded (wire) form of {@link ParameterEvaluation}: a missing default value is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly result: ValidationResult.Encoded;
+    readonly evaluatedConstraints: ReadonlyArray<EvaluatedConstraint.Encoded>;
+    readonly required: boolean;
+    readonly defaultValue?: typeof S.Json.Encoded;
+  }
+}
 
 /**
  * The outcome of validating an action: an overall verdict, the submission criteria and every parameter's evaluation.
@@ -2690,6 +4192,26 @@ export class ActionValidation extends S.Opaque<ActionValidation, { readonly bran
   )
 ) {}
 
+/**
+ * Companion namespace for {@link ActionValidation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionValidation {
+  /**
+   * Encoded (wire) form of {@link ActionValidation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly result: ValidationResult.Encoded;
+    readonly submissionCriteria: ReadonlyArray<SubmissionCriterion.Encoded>;
+    readonly parameters: R.ReadonlyRecord<ParameterId.Encoded, ParameterEvaluation.Encoded>;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Responses
 // -----------------------------------------------------------------------------
@@ -2737,6 +4259,26 @@ export class ApplyActionResponse extends S.Opaque<ApplyActionResponse, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link ApplyActionResponse}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ApplyActionResponse {
+  /**
+   * Encoded (wire) form of {@link ApplyActionResponse}: each unreported part is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly operationId?: string;
+    readonly validation?: ActionValidation.Encoded;
+    readonly edits?: ActionEdits.Encoded;
+  }
+}
+
+/**
  * The response to applying a batch of actions: only edits, because a batch reports no validation.
  *
  * @category models
@@ -2754,3 +4296,21 @@ export class BatchApplyActionResponse extends S.Opaque<BatchApplyActionResponse,
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link BatchApplyActionResponse}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BatchApplyActionResponse {
+  /**
+   * Encoded (wire) form of {@link BatchApplyActionResponse}: unreported edits are an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly edits?: BatchActionEdits.Encoded;
+  }
+}

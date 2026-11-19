@@ -1,16 +1,17 @@
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import type { PlatformError } from "effect/PlatformError";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
+import { thunkEffectSucceedNone } from "@beep/utils"
 
 /**
  * A workspace package as the walker resolves it: its directory and its exact
@@ -93,14 +94,24 @@ const packageNameOf = (specifier: string): string => {
 /**
  * Every source file reachable from `entries` (absolute paths) through
  * relative imports and workspace package entries. Imports of packages
- * outside the workspace (`effect`, the library) are not followed.
+ * outside the workspace (`effect`, the library) are not followed. The
+ * entries come first, so a package's entry list pipes into
+ * `reachable(workspace)`.
  *
  * @category getters
  * @since 0.0.0
  */
-export const reachable = Effect.fn("ImportGraph.reachable")(function* (
-  workspace: HashMap.HashMap<string, WorkspacePackage>,
+export const reachable: {
+  (
+    workspace: HashMap.HashMap<string, WorkspacePackage>,
+  ): (entries: ReadonlyArray<string>) => Effect.Effect<Array<string>, UnlistedEntry | PlatformError, FileSystem.FileSystem | Path.Path>;
+  (
+    entries: ReadonlyArray<string>,
+    workspace: HashMap.HashMap<string, WorkspacePackage>,
+  ): Effect.Effect<Array<string>, UnlistedEntry | PlatformError, FileSystem.FileSystem | Path.Path>;
+} = dual(2, Effect.fn("ImportGraph.reachable")(function* (
   entries: ReadonlyArray<string>,
+  workspace: HashMap.HashMap<string, WorkspacePackage>,
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -109,7 +120,7 @@ export const reachable = Effect.fn("ImportGraph.reachable")(function* (
     Str.startsWith(".")(specifier)
       ? Effect.succeedSome(path.resolve(path.dirname(from), specifier))
       : O.match(HashMap.get(workspace, packageNameOf(specifier)), {
-          onNone: () => Effect.succeedNone,
+          onNone: thunkEffectSucceedNone,
           onSome: (pkg) => {
             const subpath = `.${Str.slice(pkg.name.length)(specifier)}`;
             return O.match(O.fromNullishOr(pkg.exports[subpath]), {
@@ -129,7 +140,7 @@ export const reachable = Effect.fn("ImportGraph.reachable")(function* (
         });
   yield* Effect.forEach(entries, visit, { concurrency: 1, discard: true });
   return A.sort(A.fromIterable(seen), Order.String);
-});
+}));
 
 /**
  * The absolute entry files a package's `exports` names.

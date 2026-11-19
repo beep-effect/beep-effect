@@ -8,22 +8,21 @@
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
-import * as A from "effect/Array";
-import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { KnowledgeGraph } from "../Domain/Model/Entity.ts";
 import { Entity, Relation, RelationObject } from "../Domain/Model/Entity.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
-import type { FindSimilarOptions } from "./EntityIndex.ts";
-import { EntityIndex } from "./EntityIndex.ts";
 import { PosInt } from "../Schema/PosInt.ts";
+import { EntityIndex, FindSimilarOptions } from "./EntityIndex.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/SubgraphExtractor");
 
@@ -44,12 +43,16 @@ const $I = $ScratchpadId.create("effect-ontology/Service/SubgraphExtractor");
  * @category models
  * @since 0.0.0
  */
-export class NodeDistance extends S.Opaque<NodeDistance, { readonly brand: unique symbol }>()(S.Struct({
+export class NodeDistance extends S.Opaque<NodeDistance, { readonly brand: unique symbol }>()(
+  S.Struct({
     entityId: EntityId.annotateKey({ description: "Entity whose breadth-first distance was measured." }),
     hops: S.Natural.annotateKey({ description: "Shortest number of traversed relations from any seed." }),
-  }).pipe($I.annoteSchema("NodeDistance", {
-    description: "Shortest breadth-first hop count from any accepted subgraph seed to one entity.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("NodeDistance", {
+      description: "Shortest breadth-first hop count from any accepted subgraph seed to one entity.",
+    })
+  )
+) {}
 
 /**
  * Schema-backed bounded view of a knowledge graph.
@@ -67,7 +70,8 @@ export class NodeDistance extends S.Opaque<NodeDistance, { readonly brand: uniqu
  * @category models
  * @since 0.0.0
  */
-export class Subgraph extends S.Opaque<Subgraph, { readonly brand: unique symbol }>()(S.Struct({
+export class Subgraph extends S.Opaque<Subgraph, { readonly brand: unique symbol }>()(
+  S.Struct({
     nodes: S.Array(Entity).annotateKey({ description: "Entities admitted by the traversal bound." }),
     edges: S.Array(Relation).annotateKey({ description: "Relations whose entity endpoints are both admitted." }),
     centerNodes: S.Array(EntityId).annotateKey({ description: "Valid seed IDs admitted before traversal began." }),
@@ -75,9 +79,12 @@ export class Subgraph extends S.Opaque<Subgraph, { readonly brand: unique symbol
     distances: S.Array(NodeDistance).annotateKey({
       description: "Shortest measured hop distance for every admitted entity.",
     }),
-  }).pipe($I.annoteSchema("Subgraph", {
-    description: "Bounded knowledge-graph view with exact seed distances and actual traversal depth.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("Subgraph", {
+      description: "Bounded knowledge-graph view with exact seed distances and actual traversal depth.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link Subgraph}.
@@ -103,22 +110,29 @@ const extractOptionsMaxNodesDefault = PosInt.make(50);
  * @category models
  * @since 0.0.0
  */
-export class ExtractOptions extends S.Opaque<ExtractOptions, { readonly brand: unique symbol }>()(S.Struct({
+export class ExtractOptions extends S.Opaque<ExtractOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
     maxNodes: PosInt.pipe(
-      S.withConstructorDefault(Effect.succeed(extractOptionsMaxNodesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractOptionsMaxNodesDefault)),
+      S.withConstructorDefault(Effect.succeed(extractOptionsMaxNodesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(extractOptionsMaxNodesDefault)),
       S.annotateKey({ description: "Maximum entities admitted, including seeds." })
     ),
     followOutgoing: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({ description: "Whether traversal follows entity-reference objects from each subject." })
     ),
     followIncoming: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({ description: "Whether traversal follows subjects of relations targeting each entity." })
     ),
-  }).pipe($I.annoteSchema("ExtractOptions", {
-    description: "Validated node bound and relation directions for breadth-first subgraph extraction.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExtractOptions", {
+      description: "Validated node bound and relation directions for breadth-first subgraph extraction.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link ExtractOptions}.
@@ -147,26 +161,34 @@ const extractRelevantOptionsFilterTypesDefault = A.empty<IRI>();
  * @category models
  * @since 0.0.0
  */
-export class ExtractRelevantOptions extends S.Opaque<ExtractRelevantOptions, { readonly brand: unique symbol }>()(S.Struct({
+export class ExtractRelevantOptions extends S.Opaque<ExtractRelevantOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
     topK: PosInt.pipe(
-      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsTopKDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractRelevantOptionsTopKDefault)),
+      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsTopKDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(extractRelevantOptionsTopKDefault)),
       S.annotateKey({ description: "Maximum embedding matches used as traversal seeds." })
     ),
     hops: S.Natural.pipe(
-      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsHopsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractRelevantOptionsHopsDefault)),
+      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsHopsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(extractRelevantOptionsHopsDefault)),
       S.annotateKey({ description: "Maximum breadth-first distance from a seed." })
     ),
     minSimilarity: Confidence.pipe(
-      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsMinSimilarityDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(extractRelevantOptionsMinSimilarityDefault)),
+      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsMinSimilarityDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(extractRelevantOptionsMinSimilarityDefault)),
       S.annotateKey({ description: "Minimum embedding similarity admitted as a seed." })
     ),
     filterTypes: S.Array(IRI).pipe(
-      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsFilterTypesDefault)), S.withDecodingDefaultType(Effect.succeed(extractRelevantOptionsFilterTypesDefault)),
+      S.withConstructorDefault(Effect.succeed(extractRelevantOptionsFilterTypesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(extractRelevantOptionsFilterTypesDefault)),
       S.annotateKey({ description: "Optional ontology classes restricting semantic seed candidates." })
     ),
-  }).pipe($I.annoteSchema("ExtractRelevantOptions", {
-    description: "Validated semantic seed count, score threshold, type filter, and traversal distance.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExtractRelevantOptions", {
+      description: "Validated semantic seed count, score threshold, type filter, and traversal distance.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link ExtractRelevantOptions}.
@@ -333,12 +355,7 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()($I`S
     const entityIndex = yield* EntityIndex;
 
     const extractImpl = Effect.fn("SubgraphExtractor.extract")(
-      (
-        graph: KnowledgeGraph,
-        seeds: ReadonlyArray<EntityId>,
-        hops: number,
-        optionsInput: ExtractOptionsInput
-      ) =>
+      (graph: KnowledgeGraph, seeds: ReadonlyArray<EntityId>, hops: number, optionsInput: ExtractOptionsInput) =>
         Effect.suspend(() => {
           const options = ExtractOptions.make(optionsInput);
           const traversal = traverseHops(graph, seeds, hops, options);
@@ -358,8 +375,8 @@ export class SubgraphExtractor extends Context.Service<SubgraphExtractor>()($I`S
       yield* entityIndex.index(graph);
       const findOptions: FindSimilarOptions =
         A.length(options.filterTypes) === 0
-          ? { minScore: options.minSimilarity }
-          : { minScore: options.minSimilarity, filterTypes: options.filterTypes };
+          ? FindSimilarOptions.make({ minScore: options.minSimilarity })
+          : FindSimilarOptions.make({ minScore: options.minSimilarity, filterTypes: options.filterTypes });
       const similar = yield* entityIndex.findSimilar(query, options.topK, findOptions);
       if (A.length(similar) === 0) {
         return emptySubgraph([]);

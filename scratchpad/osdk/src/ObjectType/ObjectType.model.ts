@@ -87,6 +87,22 @@ export const DatasourceRid = S.NonEmptyString.pipe(
 export type DatasourceRid = typeof DatasourceRid.Type;
 
 /**
+ * Companion namespace for {@link DatasourceRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DatasourceRid {
+  /**
+   * Encoded (wire) form of {@link DatasourceRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DatasourceRid.Encoded;
+}
+
+/**
  * Branch of a backing datasource, as the user named it.
  *
  * **Gotchas**
@@ -113,6 +129,22 @@ export const DatasourceBranchId = S.NonEmptyString.pipe(
 export type DatasourceBranchId = typeof DatasourceBranchId.Type;
 
 /**
+ * Companion namespace for {@link DatasourceBranchId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DatasourceBranchId {
+  /**
+   * Encoded (wire) form of {@link DatasourceBranchId}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DatasourceBranchId.Encoded;
+}
+
+/**
  * Resource identifier of a dataset.
  *
  * @category identifiers
@@ -130,6 +162,22 @@ export const DatasetRid = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type DatasetRid = typeof DatasetRid.Type;
+
+/**
+ * Companion namespace for {@link DatasetRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DatasetRid {
+  /**
+   * Encoded (wire) form of {@link DatasetRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DatasetRid.Encoded;
+}
 
 /**
  * Resource identifier of a table registered from an external system.
@@ -151,6 +199,22 @@ export const TableRid = S.NonEmptyString.pipe(
 export type TableRid = typeof TableRid.Type;
 
 /**
+ * Companion namespace for {@link TableRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TableRid {
+  /**
+   * Encoded (wire) form of {@link TableRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TableRid.Encoded;
+}
+
+/**
  * Resource identifier of a stream of records.
  *
  * @category identifiers
@@ -168,6 +232,22 @@ export const StreamRid = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type StreamRid = typeof StreamRid.Type;
+
+/**
+ * Companion namespace for {@link StreamRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StreamRid {
+  /**
+   * Encoded (wire) form of {@link StreamRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof StreamRid.Encoded;
+}
 
 /**
  * Resource identifier of a restricted view: a dataset filtered row by row to what each reader may see.
@@ -191,6 +271,22 @@ export const RestrictedViewRid = S.NonEmptyString.pipe(
 export type RestrictedViewRid = typeof RestrictedViewRid.Type;
 
 /**
+ * Companion namespace for {@link RestrictedViewRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RestrictedViewRid {
+  /**
+   * Encoded (wire) form of {@link RestrictedViewRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RestrictedViewRid.Encoded;
+}
+
+/**
  * Resource identifier of a direct-write source, which a writer fills without going through a dataset.
  *
  * @category identifiers
@@ -212,6 +308,22 @@ export const DirectSourceRid = S.NonEmptyString.pipe(
 export type DirectSourceRid = typeof DirectSourceRid.Type;
 
 /**
+ * Companion namespace for {@link DirectSourceRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DirectSourceRid {
+  /**
+   * Encoded (wire) form of {@link DirectSourceRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DirectSourceRid.Encoded;
+}
+
+/**
  * Name of a column in a tabular datasource.
  *
  * @category identifiers
@@ -229,6 +341,22 @@ export const ColumnName = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type ColumnName = typeof ColumnName.Type;
+
+/**
+ * Companion namespace for {@link ColumnName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ColumnName {
+  /**
+   * Encoded (wire) form of {@link ColumnName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ColumnName.Encoded;
+}
 
 /**
  * Name of a field inside a struct-typed column of a tabular datasource.
@@ -257,6 +385,22 @@ export const ColumnFieldName = S.NonEmptyString.pipe(
 export type ColumnFieldName = typeof ColumnFieldName.Type;
 
 /**
+ * Companion namespace for {@link ColumnFieldName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ColumnFieldName {
+  /**
+   * Encoded (wire) form of {@link ColumnFieldName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ColumnFieldName.Encoded;
+}
+
+/**
  * Name of an action slot an interface declares, which each implementing object type binds to one of its action types.
  *
  * @category identifiers
@@ -277,6 +421,22 @@ export const InterfaceActionConstraintApiName = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type InterfaceActionConstraintApiName = typeof InterfaceActionConstraintApiName.Type;
+
+/**
+ * Companion namespace for {@link InterfaceActionConstraintApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceActionConstraintApiName {
+  /**
+   * Encoded (wire) form of {@link InterfaceActionConstraintApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof InterfaceActionConstraintApiName.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Property mappings
@@ -300,6 +460,25 @@ export class ColumnPropertyMapping extends S.Opaque<ColumnPropertyMapping, { rea
 ) {}
 
 /**
+ * Companion namespace for {@link ColumnPropertyMapping}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ColumnPropertyMapping {
+  /**
+   * Encoded (wire) form of {@link ColumnPropertyMapping}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "column";
+    readonly column: ColumnName.Encoded;
+  }
+}
+
+/**
  * The struct property field that one field of a struct-typed column feeds.
  *
  * @category models
@@ -317,6 +496,24 @@ export class StructFieldPropertyMapping extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link StructFieldPropertyMapping}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructFieldPropertyMapping {
+  /**
+   * Encoded (wire) form of {@link StructFieldPropertyMapping}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly apiName: StructFieldApiName.Encoded;
+  }
+}
 
 /**
  * A struct property filled from one struct-typed column, field by field.
@@ -340,6 +537,26 @@ export class StructPropertyMapping extends S.Opaque<StructPropertyMapping, { rea
 ) {}
 
 /**
+ * Companion namespace for {@link StructPropertyMapping}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructPropertyMapping {
+  /**
+   * Encoded (wire) form of {@link StructPropertyMapping}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "struct";
+    readonly column: ColumnName.Encoded;
+    readonly fields: R.ReadonlyRecord<ColumnFieldName.Encoded, StructFieldPropertyMapping.Encoded>;
+  }
+}
+
+/**
  * A property that the datasource secures but never fills: its values come only from actions.
  *
  * @category models
@@ -352,6 +569,24 @@ export class EditOnlyPropertyMapping extends S.Opaque<EditOnlyPropertyMapping, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link EditOnlyPropertyMapping}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EditOnlyPropertyMapping {
+  /**
+   * Encoded (wire) form of {@link EditOnlyPropertyMapping}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "editOnly";
+  }
+}
 
 /**
  * How one property is bound to a tabular datasource: to a column, to a struct-typed column, or to nothing.
@@ -394,6 +629,25 @@ export const PropertyMapping = PropertyMappingKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type PropertyMapping = typeof PropertyMapping.Type;
+
+/**
+ * Companion namespace for {@link PropertyMapping}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyMapping {
+  /**
+   * Encoded (wire) form of {@link PropertyMapping}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ColumnPropertyMapping.Encoded
+    | StructPropertyMapping.Encoded
+    | EditOnlyPropertyMapping.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Datasources
@@ -443,6 +697,27 @@ export class DatasetDatasource extends S.Opaque<DatasetDatasource, { readonly br
 ) {}
 
 /**
+ * Companion namespace for {@link DatasetDatasource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DatasetDatasource {
+  /**
+   * Encoded (wire) form of {@link DatasetDatasource}: an absent `branch` stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "dataset";
+    readonly datasetRid: DatasetRid.Encoded;
+    readonly branch?: DatasourceBranchId.Encoded;
+    readonly propertyMapping: R.ReadonlyRecord<PropertyApiName.Encoded, PropertyMapping.Encoded>;
+  }
+}
+
+/**
  * Backing by a table registered from an external system.
  *
  * @category models
@@ -458,6 +733,27 @@ export class TableDatasource extends S.Opaque<TableDatasource, { readonly brand:
 ) {}
 
 /**
+ * Companion namespace for {@link TableDatasource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TableDatasource {
+  /**
+   * Encoded (wire) form of {@link TableDatasource}: an absent `branch` stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "table";
+    readonly tableRid: TableRid.Encoded;
+    readonly branch?: DatasourceBranchId.Encoded;
+    readonly propertyMapping: R.ReadonlyRecord<PropertyApiName.Encoded, PropertyMapping.Encoded>;
+  }
+}
+
+/**
  * Backing by a stream of records.
  *
  * @category models
@@ -471,6 +767,27 @@ export class StreamDatasource extends S.Opaque<StreamDatasource, { readonly bran
     propertyMapping: columnMappings,
   }).pipe($I.annoteSchema("StreamDatasource", { description: "Backing by a stream of records." }))
 ) {}
+
+/**
+ * Companion namespace for {@link StreamDatasource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StreamDatasource {
+  /**
+   * Encoded (wire) form of {@link StreamDatasource}: an absent `branch` stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "stream";
+    readonly streamRid: StreamRid.Encoded;
+    readonly branch?: DatasourceBranchId.Encoded;
+    readonly propertyMapping: R.ReadonlyRecord<PropertyApiName.Encoded, PropertyMapping.Encoded>;
+  }
+}
 
 /**
  * Backing by a restricted view, which filters rows to what each reader may see.
@@ -489,6 +806,26 @@ export class RestrictedViewDatasource extends S.Opaque<RestrictedViewDatasource,
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RestrictedViewDatasource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RestrictedViewDatasource {
+  /**
+   * Encoded (wire) form of {@link RestrictedViewDatasource}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "restrictedView";
+    readonly restrictedViewRid: RestrictedViewRid.Encoded;
+    readonly propertyMapping: R.ReadonlyRecord<PropertyApiName.Encoded, PropertyMapping.Encoded>;
+  }
+}
 
 /**
  * Backing by a direct-write source: some writer puts property values there without a dataset in between.
@@ -510,6 +847,26 @@ export class DirectDatasource extends S.Opaque<DirectDatasource, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link DirectDatasource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DirectDatasource {
+  /**
+   * Encoded (wire) form of {@link DirectDatasource}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "direct";
+    readonly directSourceRid: DirectSourceRid.Encoded;
+    readonly propertyMapping: R.ReadonlyRecord<PropertyApiName.Encoded, PropertyMapping.Encoded>;
+  }
+}
+
+/**
  * Backing of time series properties by a time series sync.
  *
  * @category models
@@ -526,6 +883,26 @@ export class TimeSeriesDatasource extends S.Opaque<TimeSeriesDatasource, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TimeSeriesDatasource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimeSeriesDatasource {
+  /**
+   * Encoded (wire) form of {@link TimeSeriesDatasource}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "timeSeries";
+    readonly timeSeriesSyncRid: TimeSeriesSyncRid.Encoded;
+    readonly properties: ReadonlyArray<PropertyApiName.Encoded>;
+  }
+}
 
 /**
  * Backing of geotime series reference properties by a geotime series integration.
@@ -548,6 +925,26 @@ export class GeotimeSeriesDatasource extends S.Opaque<GeotimeSeriesDatasource, {
 ) {}
 
 /**
+ * Companion namespace for {@link GeotimeSeriesDatasource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeotimeSeriesDatasource {
+  /**
+   * Encoded (wire) form of {@link GeotimeSeriesDatasource}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "geotimeSeries";
+    readonly geotimeSeriesIntegrationRid: GeotimeSeriesIntegrationRid.Encoded;
+    readonly properties: ReadonlyArray<PropertyApiName.Encoded>;
+  }
+}
+
+/**
  * Backing of media reference properties by a view over a media set.
  *
  * @category models
@@ -565,6 +962,27 @@ export class MediaSetViewDatasource extends S.Opaque<MediaSetViewDatasource, { r
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MediaSetViewDatasource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaSetViewDatasource {
+  /**
+   * Encoded (wire) form of {@link MediaSetViewDatasource}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "mediaSetView";
+    readonly mediaSetRid: MediaSetRid.Encoded;
+    readonly mediaSetViewRid: MediaSetViewRid.Encoded;
+    readonly properties: ReadonlyArray<PropertyApiName.Encoded>;
+  }
+}
 
 /**
  * Backing of a kind this version of the contract cannot describe; only its name and the properties it backs are known.
@@ -585,6 +1003,26 @@ export class UnsupportedDatasource extends S.Opaque<UnsupportedDatasource, { rea
 ) {}
 
 /**
+ * Companion namespace for {@link UnsupportedDatasource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace UnsupportedDatasource {
+  /**
+   * Encoded (wire) form of {@link UnsupportedDatasource}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "unsupported";
+    readonly unsupportedType: string;
+    readonly properties: ReadonlyArray<PropertyApiName.Encoded>;
+  }
+}
+
+/**
  * No backing source at all: every object and every value is created through actions.
  *
  * @category models
@@ -597,6 +1035,24 @@ export class EditsOnlyDatasource extends S.Opaque<EditsOnlyDatasource, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link EditsOnlyDatasource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EditsOnlyDatasource {
+  /**
+   * Encoded (wire) form of {@link EditsOnlyDatasource}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "editsOnly";
+  }
+}
 
 /**
  * What stands behind some of an object type's properties: one of ten kinds of source.
@@ -652,6 +1108,32 @@ export const DatasourceDefinition = DatasourceKind.mapMembers(() =>
 export type DatasourceDefinition = typeof DatasourceDefinition.Type;
 
 /**
+ * Companion namespace for {@link DatasourceDefinition}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DatasourceDefinition {
+  /**
+   * Encoded (wire) form of {@link DatasourceDefinition}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | DatasetDatasource.Encoded
+    | TableDatasource.Encoded
+    | StreamDatasource.Encoded
+    | RestrictedViewDatasource.Encoded
+    | DirectDatasource.Encoded
+    | TimeSeriesDatasource.Encoded
+    | GeotimeSeriesDatasource.Encoded
+    | MediaSetViewDatasource.Encoded
+    | UnsupportedDatasource.Encoded
+    | EditsOnlyDatasource.Encoded;
+}
+
+/**
  * One datasource of an object type: its identifier and what kind of source it is.
  *
  * **Details**
@@ -693,6 +1175,25 @@ export class ObjectTypeDatasource extends S.Opaque<ObjectTypeDatasource, { reado
   )
 ) {}
 
+/**
+ * Companion namespace for {@link ObjectTypeDatasource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectTypeDatasource {
+  /**
+   * Encoded (wire) form of {@link ObjectTypeDatasource}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly rid: DatasourceRid.Encoded;
+    readonly definition: DatasourceDefinition.Encoded;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Interface implementations
 // -----------------------------------------------------------------------------
@@ -711,6 +1212,25 @@ export class PropertyStructField extends S.Opaque<PropertyStructField, { readonl
     $I.annoteSchema("PropertyStructField", { description: "One field of one struct property of an object type." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link PropertyStructField}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyStructField {
+  /**
+   * Encoded (wire) form of {@link PropertyStructField}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly propertyApiName: PropertyApiName.Encoded;
+    readonly structFieldApiName: StructFieldApiName.Encoded;
+  }
+}
 
 const StructFieldSourceKind = LiteralKit(["property", "structFieldOfProperty"]);
 
@@ -732,6 +1252,25 @@ export class PropertySource extends S.Opaque<PropertySource, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link PropertySource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertySource {
+  /**
+   * Encoded (wire) form of {@link PropertySource}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "property";
+    readonly propertyApiName: PropertyApiName.Encoded;
+  }
+}
+
+/**
  * A field of an interface struct taken from one field of a struct property of the object type.
  *
  * @category models
@@ -751,6 +1290,26 @@ export class StructFieldOfPropertySource extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link StructFieldOfPropertySource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructFieldOfPropertySource {
+  /**
+   * Encoded (wire) form of {@link StructFieldOfPropertySource}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "structFieldOfProperty";
+    readonly propertyApiName: PropertyApiName.Encoded;
+    readonly structFieldApiName: StructFieldApiName.Encoded;
+  }
+}
 
 /**
  * Where one field of an interface struct property comes from on the implementing object type.
@@ -792,6 +1351,24 @@ export const StructFieldSource = StructFieldSourceKind.mapMembers(() =>
  */
 export type StructFieldSource = typeof StructFieldSource.Type;
 
+/**
+ * Companion namespace for {@link StructFieldSource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructFieldSource {
+  /**
+   * Encoded (wire) form of {@link StructFieldSource}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | PropertySource.Encoded
+    | StructFieldOfPropertySource.Encoded;
+}
+
 const ImplementationKind = LiteralKit([
   "localPropertyImplementation",
   "structFieldImplementation",
@@ -820,6 +1397,25 @@ export class LocalPropertyImplementation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link LocalPropertyImplementation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LocalPropertyImplementation {
+  /**
+   * Encoded (wire) form of {@link LocalPropertyImplementation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "localPropertyImplementation";
+    readonly propertyApiName: PropertyApiName.Encoded;
+  }
+}
+
+/**
  * An interface property implemented by one field of a struct property of the object type.
  *
  * @category models
@@ -839,6 +1435,25 @@ export class StructFieldImplementation extends S.Opaque<StructFieldImplementatio
 ) {}
 
 /**
+ * Companion namespace for {@link StructFieldImplementation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructFieldImplementation {
+  /**
+   * Encoded (wire) form of {@link StructFieldImplementation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "structFieldImplementation";
+    readonly structFieldOfProperty: PropertyStructField.Encoded;
+  }
+}
+
+/**
  * A struct interface property assembled field by field from the object type's properties and struct fields.
  *
  * @category models
@@ -856,6 +1471,25 @@ export class StructImplementation extends S.Opaque<StructImplementation, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link StructImplementation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructImplementation {
+  /**
+   * Encoded (wire) form of {@link StructImplementation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "structImplementation";
+    readonly mapping: R.ReadonlyRecord<StructFieldApiName.Encoded, StructFieldSource.Encoded>;
+  }
+}
 
 /**
  * The ways an object type can implement an interface property without reducing an array.
@@ -906,6 +1540,25 @@ export const UnreducedInterfacePropertyImplementation = ImplementationKind.pick(
 export type UnreducedInterfacePropertyImplementation = typeof UnreducedInterfacePropertyImplementation.Type;
 
 /**
+ * Companion namespace for {@link UnreducedInterfacePropertyImplementation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace UnreducedInterfacePropertyImplementation {
+  /**
+   * Encoded (wire) form of {@link UnreducedInterfacePropertyImplementation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | LocalPropertyImplementation.Encoded
+    | StructFieldImplementation.Encoded
+    | StructImplementation.Encoded;
+}
+
+/**
  * An interface property implemented by reducing an array-valued implementation to one element.
  *
  * @category models
@@ -926,6 +1579,25 @@ export class ReducedPropertyImplementation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ReducedPropertyImplementation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ReducedPropertyImplementation {
+  /**
+   * Encoded (wire) form of {@link ReducedPropertyImplementation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "reducedPropertyImplementation";
+    readonly implementation: UnreducedInterfacePropertyImplementation.Encoded;
+  }
+}
 
 /**
  * How an object type implements one property of an interface it claims.
@@ -979,6 +1651,26 @@ export const InterfacePropertyImplementation = ImplementationKind.mapMembers(() 
  * @since 0.0.0
  */
 export type InterfacePropertyImplementation = typeof InterfacePropertyImplementation.Type;
+
+/**
+ * Companion namespace for {@link InterfacePropertyImplementation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfacePropertyImplementation {
+  /**
+   * Encoded (wire) form of {@link InterfacePropertyImplementation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | LocalPropertyImplementation.Encoded
+    | StructFieldImplementation.Encoded
+    | StructImplementation.Encoded
+    | ReducedPropertyImplementation.Encoded;
+}
 
 /**
  * Everything an object type supplies to satisfy one interface: properties, links and actions.
@@ -1041,7 +1733,7 @@ export class InterfaceImplementation extends S.Opaque<InterfaceImplementation, {
     ),
     propertyImplementations: S.Record(InterfacePropertyApiName, InterfacePropertyImplementation).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<InterfacePropertyApiName, InterfacePropertyImplementation>())),
-      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, (typeof InterfacePropertyImplementation)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, InterfacePropertyImplementation.Encoded>())),
       S.annotateKey({ description: "For each interface property, how the object type implements it." })
     ),
     links: S.Record(InterfaceLinkTypeApiName, S.Array(LinkTypeApiName)).pipe(
@@ -1061,6 +1753,30 @@ export class InterfaceImplementation extends S.Opaque<InterfaceImplementation, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link InterfaceImplementation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceImplementation {
+  /**
+   * Encoded (wire) form of {@link InterfaceImplementation}: `sharedPropertyTypeMapping` and
+   * `propertyImplementations` travel as `properties` and `propertiesV2`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly apiName?: InterfaceTypeApiName.Encoded;
+    readonly rid?: InterfaceTypeRid.Encoded;
+    readonly properties?: R.ReadonlyRecord<SharedPropertyTypeApiName.Encoded, PropertyApiName.Encoded>;
+    readonly propertiesV2?: R.ReadonlyRecord<InterfacePropertyApiName.Encoded, InterfacePropertyImplementation.Encoded>;
+    readonly links?: R.ReadonlyRecord<InterfaceLinkTypeApiName.Encoded, ReadonlyArray<LinkTypeApiName.Encoded>>;
+    readonly actionTypes?: R.ReadonlyRecord<InterfaceActionConstraintApiName.Encoded, ActionTypeApiName.Encoded>;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Object type
@@ -1093,7 +1809,7 @@ const ObjectTypeRecord = S.Struct({
   ),
   datasources: S.Array(ObjectTypeDatasource).pipe(
     S.withConstructorDefault(Effect.succeed(A.empty<ObjectTypeDatasource>())),
-    S.withDecodingDefaultKey(Effect.succeed(A.empty<(typeof ObjectTypeDatasource)["Encoded"]>())),
+    S.withDecodingDefaultKey(Effect.succeed(A.empty<ObjectTypeDatasource.Encoded>())),
     S.annotateKey({ description: "The sources that together back the object type's properties." })
   ),
 });
@@ -1368,6 +2084,36 @@ export class ObjectType extends S.Class<ObjectType, { readonly brand: unique sym
     R.get(self.properties, self.titleProperty);
 }
 
+/**
+ * Companion namespace for {@link ObjectType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectType {
+  /**
+   * Encoded (wire) form of {@link ObjectType}: an absent `description` or `visibility` stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly apiName: ObjectTypeApiName.Encoded;
+    readonly displayName: string;
+    readonly pluralDisplayName: string;
+    readonly description?: string;
+    readonly status: ReleaseStatus.Encoded;
+    readonly visibility?: Visibility.Encoded;
+    readonly icon: Icon.Encoded;
+    readonly rid: ObjectTypeRid.Encoded;
+    readonly primaryKey: PropertyApiName.Encoded;
+    readonly titleProperty: PropertyApiName.Encoded;
+    readonly properties: R.ReadonlyRecord<PropertyApiName.Encoded, PropertyDefinition.Encoded>;
+    readonly aliases?: ReadonlyArray<string>;
+    readonly datasources?: ReadonlyArray<ObjectTypeDatasource.Encoded>;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Object type definition
 // -----------------------------------------------------------------------------
@@ -1439,7 +2185,7 @@ export class ObjectTypeDefinition extends S.Opaque<ObjectTypeDefinition, { reado
     objectType: ObjectType.annotateKey({ description: "The object type itself." }),
     linkTypes: S.Array(LinkTypeSide).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<LinkTypeSide>())),
-      S.withDecodingDefaultKey(Effect.succeed(A.empty<(typeof LinkTypeSide)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(A.empty<LinkTypeSide.Encoded>())),
       S.annotateKey({ description: "The link sides that start from the object type." })
     ),
     implementsInterfaces: S.Array(InterfaceTypeApiName).pipe(
@@ -1449,7 +2195,7 @@ export class ObjectTypeDefinition extends S.Opaque<ObjectTypeDefinition, { reado
     ),
     interfaceImplementations: S.Record(InterfaceTypeApiName, InterfaceImplementation).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<InterfaceTypeApiName, InterfaceImplementation>())),
-      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, (typeof InterfaceImplementation)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, InterfaceImplementation.Encoded>())),
       S.annotateKey({ description: "For each implemented interface, how the object type satisfies it." })
     ),
     sharedPropertyTypeMapping: S.Record(SharedPropertyTypeApiName, PropertyApiName).pipe(
@@ -1563,4 +2309,27 @@ export class ObjectTypeDefinition extends S.Opaque<ObjectTypeDefinition, { reado
     (self: ObjectTypeDefinition, name: InterfaceTypeApiName): O.Option<InterfaceImplementation> =>
       R.get(self.interfaceImplementations, name)
   );
+}
+
+/**
+ * Companion namespace for {@link ObjectTypeDefinition}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectTypeDefinition {
+  /**
+   * Encoded (wire) form of {@link ObjectTypeDefinition}: `interfaceImplementations` travels as
+   * `implementsInterfaces2`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly objectType: ObjectType.Encoded;
+    readonly linkTypes?: ReadonlyArray<LinkTypeSide.Encoded>;
+    readonly implementsInterfaces?: ReadonlyArray<InterfaceTypeApiName.Encoded>;
+    readonly implementsInterfaces2?: R.ReadonlyRecord<InterfaceTypeApiName.Encoded, InterfaceImplementation.Encoded>;
+    readonly sharedPropertyTypeMapping?: R.ReadonlyRecord<SharedPropertyTypeApiName.Encoded, PropertyApiName.Encoded>;
+  }
 }

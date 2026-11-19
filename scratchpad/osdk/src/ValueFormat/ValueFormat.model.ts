@@ -23,6 +23,7 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as R from "@beep/utils/Record";
 import * as Effect from "effect/Effect";
 import { constTrue } from "effect/Function";
 import * as O from "effect/Option";
@@ -65,6 +66,25 @@ export class StringConstant extends S.Opaque<StringConstant, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link StringConstant}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StringConstant {
+  /**
+   * Encoded (wire) form of {@link StringConstant}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "constant";
+    readonly value: string;
+  }
+}
+
+/**
  * Text read, at format time, from another property of the object being printed.
  *
  * **Details**
@@ -88,6 +108,25 @@ export class PropertyLookup extends S.Opaque<PropertyLookup, { readonly brand: u
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link PropertyLookup}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyLookup {
+  /**
+   * Encoded (wire) form of {@link PropertyLookup}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "propertyType";
+    readonly propertyApiName: PropertyApiName.Encoded;
+  }
+}
 
 /**
  * A piece of text a formatting rule needs: fixed, or read from a sibling property of the same object.
@@ -139,6 +178,24 @@ export const PropertyOrConstant = PropertyOrConstantKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type PropertyOrConstant = typeof PropertyOrConstant.Type;
+
+/**
+ * Companion namespace for {@link PropertyOrConstant}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyOrConstant {
+  /**
+   * Encoded (wire) form of {@link PropertyOrConstant}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | StringConstant.Encoded
+    | PropertyLookup.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Number settings
@@ -216,6 +273,33 @@ export class NumberFormatOptions extends S.Opaque<NumberFormatOptions, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link NumberFormatOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberFormatOptions {
+  /**
+   * Encoded (wire) form of {@link NumberFormatOptions}: an unset setting is an absent key and each enum is its
+   * upper-case wire literal.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly useGrouping?: boolean;
+    readonly convertNegativeToParenthesis?: boolean;
+    readonly minimumIntegerDigits?: number;
+    readonly minimumFractionDigits?: number;
+    readonly maximumFractionDigits?: number;
+    readonly minimumSignificantDigits?: number;
+    readonly maximumSignificantDigits?: number;
+    readonly notation?: NumberNotation.Encoded;
+    readonly roundingMode?: NumberRoundingMode.Encoded;
+  }
+}
 
 // Digit counts as a formatter accepts them: absent, or a whole number inside the engine's range.
 const IntegerDigitCount = S.Option(S.Int.check(S.isBetween({ minimum: 1, maximum: 21 })));
@@ -355,6 +439,25 @@ export class Affix extends S.Opaque<Affix, { readonly brand: unique symbol }>()(
   )
 ) {}
 
+/**
+ * Companion namespace for {@link Affix}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Affix {
+  /**
+   * Encoded (wire) form of {@link Affix}: an absent side is an absent key.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly prefix?: PropertyOrConstant.Encoded;
+    readonly postfix?: PropertyOrConstant.Encoded;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Durations
 // -----------------------------------------------------------------------------
@@ -382,6 +485,25 @@ export class HumanReadableDuration extends S.Opaque<HumanReadableDuration, { rea
 ) {}
 
 /**
+ * Companion namespace for {@link HumanReadableDuration}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace HumanReadableDuration {
+  /**
+   * Encoded (wire) form of {@link HumanReadableDuration}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "humanReadable";
+    readonly showFullUnits?: boolean;
+  }
+}
+
+/**
  * Duration printed as a clock-style timecode, such as "01:01:01".
  *
  * @category models
@@ -394,6 +516,24 @@ export class TimecodeDuration extends S.Opaque<TimecodeDuration, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TimecodeDuration}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimecodeDuration {
+  /**
+   * Encoded (wire) form of {@link TimecodeDuration}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "timecode";
+  }
+}
 
 /**
  * How the parts of a duration are laid out when it is printed.
@@ -431,6 +571,24 @@ export const DurationFormatStyle = DurationFormatStyleKind.mapMembers(() =>
  */
 export type DurationFormatStyle = typeof DurationFormatStyle.Type;
 
+/**
+ * Companion namespace for {@link DurationFormatStyle}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DurationFormatStyle {
+  /**
+   * Encoded (wire) form of {@link DurationFormatStyle}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | HumanReadableDuration.Encoded
+    | TimecodeDuration.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Number formats
 // -----------------------------------------------------------------------------
@@ -451,6 +609,25 @@ export class NumberFormatStandard extends S.Opaque<NumberFormatStandard, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link NumberFormatStandard}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberFormatStandard {
+  /**
+   * Encoded (wire) form of {@link NumberFormatStandard}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "standard";
+    readonly baseFormatOptions: NumberFormatOptions.Encoded;
+  }
+}
 
 const FixedValueKey = S.String.check(
   S.isPattern(
@@ -504,6 +681,26 @@ export class NumberFormatFixedValues extends S.Opaque<NumberFormatFixedValues, {
 ) {}
 
 /**
+ * Companion namespace for {@link NumberFormatFixedValues}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberFormatFixedValues {
+  /**
+   * Encoded (wire) form of {@link NumberFormatFixedValues}: the label table keyed by integers written as decimal
+   * strings.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "fixedValues";
+    readonly values: R.ReadonlyRecord<string, string>;
+  }
+}
+
+/**
  * Number printed as an amount of money in a currency.
  *
  * @category models
@@ -523,6 +720,27 @@ export class NumberFormatCurrency extends S.Opaque<NumberFormatCurrency, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link NumberFormatCurrency}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberFormatCurrency {
+  /**
+   * Encoded (wire) form of {@link NumberFormatCurrency}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "currency";
+    readonly baseFormatOptions: NumberFormatOptions.Encoded;
+    readonly style: CurrencyStyle.Encoded;
+    readonly currencyCode: PropertyOrConstant.Encoded;
+  }
+}
 
 /**
  * Number printed with a unit the locale knows how to write, such as `meter` or `celsius`.
@@ -545,6 +763,26 @@ export class NumberFormatStandardUnit extends S.Opaque<NumberFormatStandardUnit,
 ) {}
 
 /**
+ * Companion namespace for {@link NumberFormatStandardUnit}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberFormatStandardUnit {
+  /**
+   * Encoded (wire) form of {@link NumberFormatStandardUnit}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "standardUnit";
+    readonly baseFormatOptions: NumberFormatOptions.Encoded;
+    readonly unit: PropertyOrConstant.Encoded;
+  }
+}
+
+/**
  * Number printed with a free-text unit after it, such as "1,500 widgets".
  *
  * @category models
@@ -563,6 +801,26 @@ export class NumberFormatCustomUnit extends S.Opaque<NumberFormatCustomUnit, { r
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link NumberFormatCustomUnit}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberFormatCustomUnit {
+  /**
+   * Encoded (wire) form of {@link NumberFormatCustomUnit}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "customUnit";
+    readonly baseFormatOptions: NumberFormatOptions.Encoded;
+    readonly unit: PropertyOrConstant.Encoded;
+  }
+}
 
 /**
  * Number printed between arbitrary text.
@@ -587,6 +845,26 @@ export class NumberFormatAffix extends S.Opaque<NumberFormatAffix, { readonly br
     $I.annoteSchema("NumberFormatAffix", { description: "Number printed between arbitrary text." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link NumberFormatAffix}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberFormatAffix {
+  /**
+   * Encoded (wire) form of {@link NumberFormatAffix}: `decoration` travels as `affix`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "affix";
+    readonly baseFormatOptions: NumberFormatOptions.Encoded;
+    readonly affix: Affix.Encoded;
+  }
+}
 
 /**
  * Number that counts seconds or milliseconds, printed as a duration.
@@ -618,6 +896,27 @@ export class NumberFormatDuration extends S.Opaque<NumberFormatDuration, { reado
 ) {}
 
 /**
+ * Companion namespace for {@link NumberFormatDuration}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberFormatDuration {
+  /**
+   * Encoded (wire) form of {@link NumberFormatDuration}: `inputUnit` travels as `baseValue`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "duration";
+    readonly formatStyle: DurationFormatStyle.Encoded;
+    readonly precision?: DurationPrecision.Encoded;
+    readonly baseValue: DurationInputUnit.Encoded;
+  }
+}
+
+/**
  * Number divided by a power of ten and printed with a magnitude suffix, such as 1500 as "1.5K".
  *
  * @category models
@@ -636,6 +935,26 @@ export class NumberFormatScale extends S.Opaque<NumberFormatScale, { readonly br
 ) {}
 
 /**
+ * Companion namespace for {@link NumberFormatScale}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberFormatScale {
+  /**
+   * Encoded (wire) form of {@link NumberFormatScale}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "scale";
+    readonly scaleType: NumberScale.Encoded;
+    readonly baseFormatOptions: NumberFormatOptions.Encoded;
+  }
+}
+
+/**
  * Fraction multiplied up and printed as a proportion, such as 0.15 as "15%".
  *
  * @category models
@@ -652,6 +971,26 @@ export class NumberFormatRatio extends S.Opaque<NumberFormatRatio, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link NumberFormatRatio}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberFormatRatio {
+  /**
+   * Encoded (wire) form of {@link NumberFormatRatio}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "ratio";
+    readonly ratioType: NumberRatio.Encoded;
+    readonly baseFormatOptions: NumberFormatOptions.Encoded;
+  }
+}
 
 /**
  * How a number is printed: plain, as a label, with a unit, between text, as a duration, scaled or as a ratio.
@@ -724,6 +1063,31 @@ export const NumberFormat = NumberFormatKind.mapMembers(() =>
  */
 export type NumberFormat = typeof NumberFormat.Type;
 
+/**
+ * Companion namespace for {@link NumberFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberFormat {
+  /**
+   * Encoded (wire) form of {@link NumberFormat}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | NumberFormatStandard.Encoded
+    | NumberFormatFixedValues.Encoded
+    | NumberFormatCurrency.Encoded
+    | NumberFormatStandardUnit.Encoded
+    | NumberFormatCustomUnit.Encoded
+    | NumberFormatAffix.Encoded
+    | NumberFormatDuration.Encoded
+    | NumberFormatScale.Encoded
+    | NumberFormatRatio.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Dates and instants
 // -----------------------------------------------------------------------------
@@ -748,6 +1112,25 @@ export class DatetimeStringFormat extends S.Opaque<DatetimeStringFormat, { reado
 ) {}
 
 /**
+ * Companion namespace for {@link DatetimeStringFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DatetimeStringFormat {
+  /**
+   * Encoded (wire) form of {@link DatetimeStringFormat}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "stringFormat";
+    readonly pattern: string;
+  }
+}
+
+/**
  * Date or instant printed with one of the predefined, locale-aware presets.
  *
  * **Details**
@@ -769,6 +1152,25 @@ export class DatetimeLocalizedFormat extends S.Opaque<DatetimeLocalizedFormat, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DatetimeLocalizedFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DatetimeLocalizedFormat {
+  /**
+   * Encoded (wire) form of {@link DatetimeLocalizedFormat}: `preset` travels as `format`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "localizedFormat";
+    readonly format: DatetimePreset.Encoded;
+  }
+}
 
 /**
  * How a calendar date or an instant is printed: by a custom pattern or by a locale-aware preset.
@@ -810,6 +1212,24 @@ export const DatetimeFormat = DatetimeFormatKind.mapMembers(() =>
  */
 export type DatetimeFormat = typeof DatetimeFormat.Type;
 
+/**
+ * Companion namespace for {@link DatetimeFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DatetimeFormat {
+  /**
+   * Encoded (wire) form of {@link DatetimeFormat}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | DatetimeStringFormat.Encoded
+    | DatetimeLocalizedFormat.Encoded;
+}
+
 const DatetimeTimezoneKind = LiteralKit(["static", "user"]);
 
 /**
@@ -832,6 +1252,25 @@ export class StaticTimezone extends S.Opaque<StaticTimezone, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link StaticTimezone}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StaticTimezone {
+  /**
+   * Encoded (wire) form of {@link StaticTimezone}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "static";
+    readonly zoneId: PropertyOrConstant.Encoded;
+  }
+}
+
+/**
  * The time zone of whoever is looking at the value.
  *
  * @category models
@@ -842,6 +1281,24 @@ export class UserTimezone extends S.Opaque<UserTimezone, { readonly brand: uniqu
     $I.annoteSchema("UserTimezone", { description: "The time zone of whoever is looking at the value." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link UserTimezone}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace UserTimezone {
+  /**
+   * Encoded (wire) form of {@link UserTimezone}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "user";
+  }
+}
 
 /**
  * Time zone an instant is printed in: one fixed zone, or each viewer's own.
@@ -878,6 +1335,24 @@ export const DatetimeTimezone = DatetimeTimezoneKind.mapMembers(() => Tuple.make
  */
 export type DatetimeTimezone = typeof DatetimeTimezone.Type;
 
+/**
+ * Companion namespace for {@link DatetimeTimezone}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DatetimeTimezone {
+  /**
+   * Encoded (wire) form of {@link DatetimeTimezone}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | StaticTimezone.Encoded
+    | UserTimezone.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Value formats
 // -----------------------------------------------------------------------------
@@ -906,6 +1381,25 @@ export class NumberValueFormat extends S.Opaque<NumberValueFormat, { readonly br
 ) {}
 
 /**
+ * Companion namespace for {@link NumberValueFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberValueFormat {
+  /**
+   * Encoded (wire) form of {@link NumberValueFormat}: `format` travels as `numberType`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "number";
+    readonly numberType: NumberFormat.Encoded;
+  }
+}
+
+/**
  * Rule that prints an instant with a {@link DatetimeFormat} in a chosen time zone.
  *
  * @category models
@@ -924,6 +1418,26 @@ export class TimestampValueFormat extends S.Opaque<TimestampValueFormat, { reado
 ) {}
 
 /**
+ * Companion namespace for {@link TimestampValueFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimestampValueFormat {
+  /**
+   * Encoded (wire) form of {@link TimestampValueFormat}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "timestamp";
+    readonly format: DatetimeFormat.Encoded;
+    readonly displayTimezone: DatetimeTimezone.Encoded;
+  }
+}
+
+/**
  * Rule that prints a calendar date with a {@link DatetimeFormat}; a date has no time zone to choose.
  *
  * @category models
@@ -939,6 +1453,25 @@ export class DateValueFormat extends S.Opaque<DateValueFormat, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DateValueFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DateValueFormat {
+  /**
+   * Encoded (wire) form of {@link DateValueFormat}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "date";
+    readonly format: DatetimeFormat.Encoded;
+  }
+}
 
 /**
  * Rule that prints a boolean as one of two fixed texts.
@@ -959,6 +1492,26 @@ export class BooleanValueFormat extends S.Opaque<BooleanValueFormat, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link BooleanValueFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BooleanValueFormat {
+  /**
+   * Encoded (wire) form of {@link BooleanValueFormat}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "boolean";
+    readonly valueIfTrue: string;
+    readonly valueIfFalse: string;
+  }
+}
+
+/**
  * Rule that prints a string holding a platform identifier as the thing it identifies.
  *
  * @category models
@@ -974,6 +1527,25 @@ export class KnownTypeValueFormat extends S.Opaque<KnownTypeValueFormat, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link KnownTypeValueFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace KnownTypeValueFormat {
+  /**
+   * Encoded (wire) form of {@link KnownTypeValueFormat}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "knownType";
+    readonly knownType: KnownType.Encoded;
+  }
+}
 
 /**
  * The display-formatting rule of a property: how applications print its value.
@@ -1025,3 +1597,24 @@ export const ValueFormat = ValueFormatKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type ValueFormat = typeof ValueFormat.Type;
+
+/**
+ * Companion namespace for {@link ValueFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ValueFormat {
+  /**
+   * Encoded (wire) form of {@link ValueFormat}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | NumberValueFormat.Encoded
+    | TimestampValueFormat.Encoded
+    | DateValueFormat.Encoded
+    | BooleanValueFormat.Encoded
+    | KnownTypeValueFormat.Encoded;
+}

@@ -1,8 +1,8 @@
-import * as Effect from "effect/Effect";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/Arbitrary";
 import { BatchId, ContentHash, DocumentId, Namespace, OntologyName } from "../../Domain/Identity.ts";
 import {
   BatchCanonicalPath,
@@ -36,6 +36,7 @@ import {
   RunOutputPath,
   StoragePathSegment,
 } from "../../Domain/PathLayout.ts";
+
 const decodeRunChunkPathResult = S.decodeResult(RunChunkPath);
 const decodeUnknownRunOutputPathResult = S.decodeUnknownResult(RunOutputPath);
 
@@ -85,7 +86,7 @@ describe("effect-ontology storage path layout", () => {
           Arbitrary.checkEffect(
             Arbitrary.all([arbitrary]),
             ([value]) => {
-          expect(S.is(schema)(value)).toBe(true);
+              expect(S.is(schema)(value)).toBe(true);
 
               return true;
             },

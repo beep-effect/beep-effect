@@ -12,19 +12,20 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
+import * as Prompt from "effect/ai/Prompt";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
 import * as Base64 from "effect/encoding/Base64";
-import * as A from "effect/Array";
 import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import type { PlatformError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
-import type * as S from "effect/Schema";
-import * as Prompt from "effect/ai/Prompt";
 import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
-import type { ImageForPrompt, ImageRef } from "../Domain/Model/Image.ts";
+import type * as S from "effect/Schema";
+import type { ImageRef } from "../Domain/Model/Image.ts";
+import { ImageForPrompt } from "../Domain/Model/Image.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { ImageBlobStore } from "./ImageBlobStore.ts";
 import { StorageServiceLive } from "./Storage.ts";
@@ -169,15 +170,17 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
             }
 
             // Convert to ImageForPrompt
-            return O.some<ImageForPrompt>({
-              base64: toBase64(bytesOpt.value),
-              mediaType: asset.contentType,
-              alt: ref.alt,
-              caption: ref.caption,
-              context: ref.context,
-              position: O.some(ref.position),
-              assetHash: O.some(ref.assetHash),
-            });
+            return O.some<ImageForPrompt>(
+              ImageForPrompt.make({
+                base64: toBase64(bytesOpt.value),
+                mediaType: asset.contentType,
+                alt: ref.alt,
+                caption: ref.caption,
+                context: ref.context,
+                position: O.some(ref.position),
+                assetHash: O.some(ref.assetHash),
+              })
+            );
           }),
           { concurrency: 5 }
         ).pipe(
@@ -190,7 +193,7 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
         );
 
       const toPromptParts: ImagePromptAdapterService["toPromptParts"] = (images) =>
-        images.map((img, index) =>
+        A.map(images, (img, index) =>
           Prompt.makePart("file", {
             mediaType: img.mediaType,
             data: img.base64,
@@ -212,7 +215,10 @@ export class ImagePromptAdapter extends Context.Service<ImagePromptAdapter, Imag
           // Add image parts with context
           for (const img of images) {
             // Add context/caption as text before image if available
-            const imageContext = [img.alt, img.caption, img.context].filter(Boolean).join(" - ");
+            const imageContext = A.join(
+              A.filter(A.getSomes([img.alt, img.caption, img.context]), (value) => value.length > 0),
+              " - "
+            );
 
             if (P.isNotUndefined(imageContext)) {
               parts.push(Prompt.makePart("text", { text: `\n[Image ${img.position ?? 0}: ${imageContext}]` }));

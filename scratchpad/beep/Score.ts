@@ -95,7 +95,7 @@ export class DailyScore extends Model<DailyScore>("DailyScore")(
  * @since 0.0.0
  */
 export declare namespace DailyScore {
-  export type Encoded = S.Codec.Encoded<typeof DailyScore>;
+  export type Encoded = typeof DailyScore.Encoded;
 }
 
 /**
@@ -149,7 +149,7 @@ export class ScorePeriod extends Model<ScorePeriod>("ScorePeriod")(
  * @since 0.0.0
  */
 export declare namespace ScorePeriod {
-  export type Encoded = S.Codec.Encoded<typeof ScorePeriod>;
+  export type Encoded = typeof ScorePeriod.Encoded;
 }
 
 const periodColumn = (column: string) => ScorePeriod.pipe(pg.jsonb(), pg.columnName(column));
@@ -213,5 +213,5 @@ export class Scores extends Model<Scores>("Scores")(
  * @since 0.0.0
  */
 export declare namespace Scores {
-  export type Encoded = S.Codec.Encoded<typeof Scores>;
+  export type Encoded = typeof Scores.Encoded;
 }

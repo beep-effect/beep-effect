@@ -161,5 +161,5 @@ export class ScreenActivityCoverage extends Model<ScreenActivityCoverage>("Scree
  * @since 0.0.0
  */
 export declare namespace ScreenActivityCoverage {
-  export type Encoded = S.Codec.Encoded<typeof ScreenActivityCoverage>;
+  export type Encoded = typeof ScreenActivityCoverage.Encoded;
 }

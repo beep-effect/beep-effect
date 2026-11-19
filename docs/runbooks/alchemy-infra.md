@@ -891,6 +891,54 @@ step refuses, do not re-run or work around it: ask the CI goals driver through
 the orchestrator. A change that must replace or delete a resource is an
 operator-reviewed deploy, never the push job.
 
+Plan only, and a deploy held to a read plan. A dispatch with `plan_only` runs
+the plan step and stops: it prints one row per resource and the plan-rows
+digest (SHA-256 over the sorted rows; no property, secret or salt), and never
+reaches the deploy or webhook step. It needs no arming, so
+`CI_RUNNERS_DEPLOY_ARMED` stays the one switch for a write. Its log also
+prints `plan-check: head sha <sha>`. A deploy dispatched with
+`expect_plan_head` and `expect_plan_digest` set to those two values refuses
+unless it runs on the plan-only run's commit and prints the same rows digest
+(the digest is given as its 64 lower-case hex characters, with or without the
+`sha256:` prefix; any other value is refused):
+the head is compared before anything plans, the digest before any write. The
+two pins travel together (one without the other is refused), and a
+`bootstrap` or `default-security-group` dispatch is refused without them. A
+push carries neither and runs as routine. The rows and digest print before the
+check, so a refused plan is still read whole.
+
+A plan-only run holds the `alchemy-ci-runners-prod` concurrency group, and
+that group never cancels a run in progress but keeps only one pending run: a later run for the group
+cancels the one already waiting. So do not dispatch `plan_only` while
+`CI_RUNNERS_ROUTINE_ARMED` is set and a push run is pending, or one of the
+two is cancelled. The digest covers the rows, labels, bindings and stack
+actions, not the commit, so it stays the same across commits that plan the
+same rows; `expect_plan_head` is what binds the commit. Relay both runs' head
+SHA with the deploy run's `plan-rows digest` log line.
+
+Resuming a stopped bootstrap. A deploy that stops part-way leaves a state row
+`creating` for each resource it had started. The next plan shows such a row
+as `resumed create`, with the bindings the stopped run saved as `noop` or
+`update`. One row kind shows `resumed create (replace of an empty
+generation)`: an event-source mapping checkpointed before its queue existed,
+which Alchemy plans as a replace although no mapping was ever made. Step 1a
+takes these; every other expectation refuses the replace
+(`ResumeKind` in `src/CheckedDeploy.ts`). Before relaying such a plan, check
+that no mapping targets a `beep-fleet-prod-*` function and that CloudTrail
+shows no `CreateEventSourceMapping` since the stopped run. Never delete a
+state row by hand to change what the plan shows.
+
+Deploy role policy. The role holds the policy as customer managed policies
+`ci-runners-deploy-<n>` under `/beep-alchemy-deploy/`, because the document
+is longer than one inline policy. `bun deploy-role-policy.ts --out-dir <dir>
+[--vpc-arn <arn>]` writes them as `managed-<version>-<n>.json`, split in
+statement order at 6,144 characters (`managedPolicyDocuments`). Apply a
+version with `aws iam create-policy-version --set-as-default` on each, delete
+the oldest non-default version first when a policy already has five, then run
+the principal simulations on the live role. Which call needs which statement,
+and what is deliberately not granted:
+`goals/infra-alchemy-rebuild/research/p5-ci-runners-deploy-role-coverage.md`.
+
 User data. The post-install travels gzip-compressed and base64-encoded and is
 sourced by the user data shell (`packPostInstall`); inline it would push the
 rendered user data past EC2's 16 KiB limit. `test/RunnerBootstrap.test.ts`

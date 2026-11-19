@@ -5,17 +5,15 @@ import type { Invocation } from "@proto/kernel/Invocation";
 import { ReadmissionRefused } from "@proto/kernel/ReadmissionRefused.rejection";
 import { AcceptClaim } from "@proto/party-contract/Claim/AcceptClaim.command";
 import { AssertClaim } from "@proto/party-contract/Claim/AssertClaim.command";
-import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { PartyIntake, PartyReview } from "@proto/party-contract/Party.capabilities";
 import { MergeParties } from "@proto/party-contract/Party/MergeParties.command";
-import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { RegisterParty } from "@proto/party-contract/Party/RegisterParty.command";
 import { Proposition } from "@proto/party-contract/Proposition";
 import { Authority } from "@proto/party-model/Authority.external";
 import { Claim } from "@proto/party-model/Claim/Claim.aggregate";
 import { partyDirectoryLive } from "@proto/party-model/Directory/PartyDirectory.handler";
-import { MemoryPartyDirectoryStore, PartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
-import { switchWhenCaughtUp } from "@proto/party-model/Directory/RebuildDirectory";
+import { type DirectoryWrite, MemoryPartyDirectoryStore, PartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
+import { switchIfBehind, switchWhenCaughtUp } from "@proto/party-model/Directory/RebuildDirectory";
 import { ContactSource, MailboxUnavailable } from "@proto/party-model/Evidence/ContactSource.external";
 import { PartyFacts2 } from "@proto/party-model/Facts/PartyFacts2.stream";
 import { PartyHandlers } from "@proto/party-model/Party.handlers";
@@ -23,28 +21,55 @@ import { PartyModel } from "@proto/party-model/Party.model";
 import { Party } from "@proto/party-model/Party/Party.aggregate";
 import { Reasoner, ReasonerUnavailable } from "@proto/party-model/Review/Reasoner.external";
 import { ReviewRuns, RunRefused } from "@proto/party-model/Review/ReviewRuns.external";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Ref from "effect/Ref";
+import * as Order from "effect/Order";
 import * as Schedule from "effect/Schedule";
-import { acme, human, onOrg, twoSources } from "./fixtures.ts";
+import * as S from "effect/Schema";
+import * as Str from "@beep/utils/Str";
+import { Cast, rolesOf } from "./Cast.ts";
+import { member, twoSources } from "./fixtures.ts";
 
-const intake = human("p_intake", [onOrg("g_intake", PartyIntake, acme)]);
-const reviewer = human("p_rev", [onOrg("g_rev", PartyReview, acme)]);
 const as = (invocation: Invocation) => Effect.provideService(CurrentInvocation, invocation);
-const partyA = PartyId.make("party_a");
-const partyB = PartyId.make("party_b");
 const page = { after: undefined, take: 10 };
 
+// Each run deploys the model and waits out the directory's one-second batch, so these
+// properties run four times each, not the default hundred.
+const runs = { timeout: 120_000, arbitrary: { runs: 4 } };
+
+/** Who acts, and on what, in a rebuild over this cast: both parties share the family name the directory is searched for. */
+const sceneOf = (cast: Cast) => {
+  const roles = rolesOf(cast);
+  const named = (given: string) => `${given} ${cast.names.family}`;
+  return {
+    ...roles,
+    intake: member(roles.intake, roles.home, [PartyIntake]),
+    reviewer: member(roles.reviewer, roles.home, [PartyReview]),
+    survivorName: named(cast.names.survivor),
+    absorbedName: named(cast.names.absorbed),
+    text: Str.toLowerCase(cast.names.family),
+  };
+};
+type Scene = ReturnType<typeof sceneOf>;
+/** The directory has both parties, one of them merged into the other. */
+const merged = (found: { readonly entries: ReadonlyArray<{ readonly absorbed: ReadonlyArray<unknown> }> }) =>
+  found.entries.length === 2 && A.some(found.entries, (row) => row.absorbed.length === 1);
+
+/** What each port refuses with: generated, since no assertion reads it. */
+const Refusals = S.Struct({ readmission: ReadmissionRefused, run: RunRefused, reasoner: ReasonerUnavailable, mailbox: MailboxUnavailable });
+type Refusals = typeof Refusals.Type;
+
 /** Every port refuses, and counts the call: a rebuild must make none. */
-const countingPorts = (calls: Ref.Ref<number>) => {
+const countingPorts = (calls: Ref.Ref<number>, refusals: Refusals) => {
   const refuse = <E>(error: E) => Effect.andThen(Ref.update(calls, (n) => n + 1), Effect.fail(error));
-  const refused = RunRefused.make({ reason: "test" });
+  const refused = refusals.run;
   return Layer.mergeAll(
-    Authority.toLayer(Effect.succeed({ readmit: () => refuse(ReadmissionRefused.make({ reason: "lapsed", lapsed: [] })) })),
+    Authority.toLayer(Effect.succeed({ readmit: () => refuse(refusals.readmission) })),
     ReviewRuns.toLayer(
       Effect.succeed({
         open: () => refuse(refused),
@@ -57,8 +82,8 @@ const countingPorts = (calls: Ref.Ref<number>) => {
         refuse: () => refuse(refused),
       }),
     ),
-    Reasoner.toLayer(Effect.succeed({ assess: () => refuse(ReasonerUnavailable.make({ reason: "test" })) })),
-    ContactSource.toLayer(Effect.succeed({ observe: () => refuse(MailboxUnavailable.make({ mailbox: "test" })) })),
+    Reasoner.toLayer(Effect.succeed({ assess: () => refuse(refusals.reasoner) })),
+    ContactSource.toLayer(Effect.succeed({ observe: () => refuse(refusals.mailbox) })),
   );
 };
 
@@ -67,44 +92,46 @@ const deploy = (
   platform: ReturnType<typeof InMemory.make>,
   generation: number,
   store: Layer.Layer<PartyDirectoryStore>,
-  calls: Ref.Ref<number>,
+  ports: ReturnType<typeof countingPorts>,
 ) =>
   PartyModel.layer(Layer.merge(PartyHandlers, partyDirectoryLive(generation))).pipe(
-    Layer.provide(Layer.mergeAll(platform.layer, countingPorts(calls), store)),
+    Layer.provide(Layer.mergeAll(platform.layer, ports, store)),
   );
 
 const until = <A, E, R>(read: Effect.Effect<A, E, R>, done: (a: A) => boolean) =>
   read.pipe(Effect.repeat({ schedule: Schedule.spaced("25 millis"), until: done, times: 400 }));
 
 /** Two parties, one merged into the other, and a claim asserted (its review refused) and accepted. */
-const history = Effect.gen(function* () {
+const history = Effect.fnUntraced(function* (cast: Cast, scene: Scene) {
+  const { home, intake, reviewer, survivor, absorbed, claim } = scene;
   const parties = yield* Party;
   const claims = yield* Claim;
-  yield* as(intake)(parties.send(partyA, RegisterParty.make({ org: acme, name: "Dana A" })));
-  yield* as(intake)(parties.send(partyB, RegisterParty.make({ org: acme, name: "Dana B" })));
-  yield* as(reviewer)(parties.send(partyA, MergeParties.make({ absorbed: partyB })));
-  const proposition = Proposition.cases.HasIdentifier.make({ party: partyA, scheme: "email", value: "dana@acme.test" });
-  yield* as(intake)(claims.send(ClaimId.make("claim_1"), AssertClaim.make({ org: acme, proposition, signals: twoSources })));
-  yield* as(reviewer)(claims.send(ClaimId.make("claim_1"), AcceptClaim.make({})));
+  yield* as(intake)(parties.send(survivor, RegisterParty.make({ org: home, name: scene.survivorName })));
+  yield* as(intake)(parties.send(absorbed, RegisterParty.make({ org: home, name: scene.absorbedName })));
+  yield* as(reviewer)(parties.send(survivor, MergeParties.make({ absorbed })));
+  const proposition = Proposition.cases.HasIdentifier.make({ party: survivor, scheme: cast.identifier.scheme, value: cast.identifier.value });
+  yield* as(intake)(claims.send(claim, AssertClaim.make({ org: home, proposition, signals: twoSources(cast) })));
+  yield* as(reviewer)(claims.send(claim, AcceptClaim.make({})));
 });
 
-it.live("a rebuild writes a new generation beside the old one, with zero side effects, and switches once caught up", () =>
+it.live.prop("a rebuild writes a new generation beside the old one, with zero side effects, and switches once caught up", [Cast, Refusals], ([cast, refusals]) =>
   Effect.gen(function* () {
+    const scene = sceneOf(cast);
     const platform = InMemory.make();
     const calls = yield* Ref.make(0);
     const storeContext = yield* Layer.build(MemoryPartyDirectoryStore);
     const store = Layer.succeedContext(storeContext);
-    const directory = Effect.flatMap(Effect.service(PartyDirectoryStore), (s) => s.search(acme, "dana", page));
+    const directory = Effect.flatMap(Effect.service(PartyDirectoryStore), (s) => s.search(scene.home, scene.text, page));
     const facts = Effect.flatMap(Effect.service(PartyFacts2), (s) => s.list("claims"));
 
     // Generation 0: the history, its policy's port call, its published fact and its directory.
     // Each generation is one deployment: built in a scope of its own, torn down when it ends.
     const before = yield* Effect.scoped(
       Effect.gen(function* () {
-        const deployment = yield* Layer.build(Layer.merge(deploy(platform, 0, store, calls), store));
+        const deployment = yield* Layer.build(Layer.merge(deploy(platform, 0, store, countingPorts(calls, refusals)), store));
         return yield* Effect.gen(function* () {
-          yield* history;
-          const rows = yield* until(directory, (found) => found.entries.length === 2 && found.entries[0]!.absorbed.length === 1);
+          yield* history(cast, scene);
+          const rows = yield* until(directory, merged);
           const published = yield* until(facts, (page) => page.entries.length === 2);
           return { rows, published: published.entries };
         }).pipe(Effect.provideContext(deployment));
@@ -117,7 +144,7 @@ it.live("a rebuild writes a new generation beside the old one, with zero side ef
     // Generation 1: the same platform and store, the projection's version bumped.
     yield* Effect.scoped(
       Effect.gen(function* () {
-        const deployment = yield* Layer.build(Layer.merge(deploy(platform, 1, store, calls), store));
+        const deployment = yield* Layer.build(Layer.merge(deploy(platform, 1, store, countingPorts(calls, refusals)), store));
         yield* Effect.gen(function* () {
           const s = yield* PartyDirectoryStore;
           // Until the switch, queries read the old generation.
@@ -144,10 +171,67 @@ it.live("a rebuild writes a new generation beside the old one, with zero side ef
     expect(platform.control.deaths).toEqual([]);
     expect(platform.control.failures).toEqual([]);
   }).pipe(Effect.scoped),
+  runs,
 );
 
-it.live("a crash between the store write and the library's checkpoint: the replay leaves the same directory", () =>
+it.live.prop("a party registered while a generation is building is found before the switch, and after it", [Cast, Refusals], ([cast, refusals]) =>
   Effect.gen(function* () {
+    const scene = sceneOf(cast);
+    const platform = InMemory.make();
+    const calls = yield* Ref.make(0);
+    const storeContext = yield* Layer.build(MemoryPartyDirectoryStore);
+    const store = Layer.succeedContext(storeContext);
+    const directory = Effect.flatMap(Effect.service(PartyDirectoryStore), (s) => s.search(scene.home, scene.text, page));
+    const lateName = `${cast.names.elsewhere} ${cast.names.family}`;
+    const hasLate = (found: { readonly entries: ReadonlyArray<{ readonly partyId: string }> }) =>
+      A.some(found.entries, (row) => row.partyId === scene.elsewhere);
+
+    // Generation 0 holds the history.
+    yield* Effect.scoped(
+      Effect.gen(function* () {
+        const deployment = yield* Layer.build(Layer.merge(deploy(platform, 0, store, countingPorts(calls, refusals)), store));
+        yield* Effect.gen(function* () {
+          yield* history(cast, scene);
+          yield* until(directory, merged);
+        }).pipe(Effect.provideContext(deployment));
+      }),
+    );
+
+    // Generation 1 is building; only its projection runs now, and queries read generation 0.
+    yield* Effect.scoped(
+      Effect.gen(function* () {
+        const deployment = yield* Layer.build(Layer.merge(deploy(platform, 1, store, countingPorts(calls, refusals)), store));
+        yield* Effect.gen(function* () {
+          const s = yield* PartyDirectoryStore;
+          const parties = yield* Party;
+          yield* as(scene.intake)(parties.send(scene.elsewhere, RegisterParty.make({ org: scene.home, name: lateName })));
+          // The building generation forwards the registration to the one queries read.
+          const found = yield* until(directory, hasLate);
+          expect(found.entries).toContainEqual({ partyId: scene.elsewhere, org: scene.home, name: lateName, absorbed: [] });
+          expect(found.entries).toHaveLength(3);
+          // The host's own step: behind, so it switches; then on the active generation, so it changes nothing.
+          yield* switchIfBehind(1);
+          const activeAfter = yield* s.active;
+          expect(activeAfter).toEqual(O.some(1));
+          const after = yield* directory;
+          expect(after).toEqual(found);
+          yield* switchIfBehind(1);
+          const activeAgain = yield* s.active;
+          expect(activeAgain).toEqual(O.some(1));
+          const again = yield* directory;
+          expect(again).toEqual(found);
+        }).pipe(Effect.provideContext(deployment));
+      }),
+    );
+    expect(platform.control.deaths).toEqual([]);
+    expect(platform.control.failures).toEqual([]);
+  }).pipe(Effect.scoped),
+  runs,
+);
+
+it.live.prop("a crash between the store write and the library's checkpoint: the replay leaves the same directory", [Cast, Refusals], ([cast, refusals]) =>
+  Effect.gen(function* () {
+    const { home, intake, reviewer, survivor, absorbed, survivorName, absorbedName, text } = sceneOf(cast);
     const platform = InMemory.make();
     const calls = yield* Ref.make(0);
     const crashed = yield* Ref.make(false);
@@ -158,40 +242,46 @@ it.live("a crash between the store write and the library's checkpoint: the repla
       PartyDirectoryStore,
       Effect.map(Effect.service(PartyDirectoryStore), (inner) => ({
         ...inner,
-        apply: (generation: number, writes: Parameters<typeof inner.apply>[1]) =>
-          inner.apply(generation, writes).pipe(
+        apply: dual(2, (writes: ReadonlyArray<DirectoryWrite>, generation: number) =>
+          inner.apply(writes, generation).pipe(
             Effect.tap((applied) => Ref.update(applies, A.append({ writes: writes.length, applied }))),
             Effect.flatMap((applied) =>
               Effect.flatMap(Ref.getAndSet(crashed, true), (done) => (done ? Effect.succeed(applied) : Effect.die("crash"))),
             ),
           ),
+        ),
       })),
     ).pipe(Layer.provide(MemoryPartyDirectoryStore));
     const storeContext = yield* Layer.build(crashing);
     const store = Layer.succeedContext(storeContext);
     const rows = yield* Effect.scoped(
       Effect.gen(function* () {
-        const deployment = yield* Layer.build(Layer.merge(deploy(platform, 0, store, calls), store));
+        const deployment = yield* Layer.build(Layer.merge(deploy(platform, 0, store, countingPorts(calls, refusals)), store));
         return yield* Effect.gen(function* () {
           const parties = yield* Party;
-          yield* as(intake)(parties.send(partyA, RegisterParty.make({ org: acme, name: "Dana A" })));
+          yield* as(intake)(parties.send(survivor, RegisterParty.make({ org: home, name: survivorName })));
           yield* until(Ref.get(crashed), (done) => done);
           // The next event on the same key makes the library hand the unprocessed registration over again.
-          yield* as(intake)(parties.send(partyB, RegisterParty.make({ org: acme, name: "Dana B" })));
-          yield* as(reviewer)(parties.send(partyA, MergeParties.make({ absorbed: partyB })));
+          yield* as(intake)(parties.send(absorbed, RegisterParty.make({ org: home, name: absorbedName })));
+          yield* as(reviewer)(parties.send(survivor, MergeParties.make({ absorbed })));
           const s = yield* PartyDirectoryStore;
-          return yield* until(s.search(acme, "dana", page), (found) =>
-            found.entries.length === 2 && found.entries[0]!.absorbed.length === 1,
-          );
+          return yield* until(s.search(home, text, page), merged);
         }).pipe(Effect.provideContext(deployment));
       }),
     );
     // The registration was handed over again with the merge, and refused as already applied.
     const handed = yield* Ref.get(applies);
     expect(handed).toContainEqual({ writes: 2, applied: 1 });
-    expect(rows.entries).toEqual([
-      { partyId: partyA, org: acme, name: "Dana A", absorbed: [partyB] },
-      { partyId: partyB, org: acme, name: "Dana B", absorbed: [] },
-    ]);
+    // In party id order.
+    expect(rows.entries).toEqual(
+      A.sort(
+        [
+          { partyId: survivor, org: home, name: survivorName, absorbed: [absorbed] },
+          { partyId: absorbed, org: home, name: absorbedName, absorbed: [] },
+        ],
+        Order.mapInput(Order.String, (row: { readonly partyId: string }) => row.partyId),
+      ),
+    );
   }).pipe(Effect.scoped),
+  runs,
 );

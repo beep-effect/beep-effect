@@ -19,9 +19,9 @@ import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Schedule from "effect/Schedule";
-import * as Stream from "effect/Stream";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
+import * as Stream from "effect/Stream";
 import { EventBusService } from "../Service/EventBus.ts";
 import type { BroadcastEvent } from "./EventBroadcastRouter.ts";
 import { EventBroadcastHub } from "./EventBroadcastRouter.ts";
@@ -112,7 +112,9 @@ export class EventBridgeService extends Context.Service<EventBridgeService, Even
  * @category errors
  * @since 0.0.0
  */
-export class EventBridgeError extends S.TaggedError<EventBridgeError, { readonly brand: unique symbol }>($I`EventBridgeError`)(
+export class EventBridgeError extends S.TaggedError<EventBridgeError, { readonly brand: unique symbol }>(
+  $I`EventBridgeError`
+)(
   "EventBridgeError",
   {
     phase: LiteralKit(["setup", "runtime"]),

@@ -1,3 +1,4 @@
+import { pipe } from "effect/Function";
 /**
  * Voyage AI Embedding Provider
  *
@@ -19,24 +20,24 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Inspectable from "effect/Inspectable";
-import * as Layer from "effect/Layer";
-import * as Match from "effect/Match";
-import * as Num from "effect/Number";
-import * as Order from "effect/Order";
-import * as Redacted from "effect/Redacted";
-import * as Schedule from "effect/Schedule";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as Match from "effect/Match";
+import * as Num from "effect/Number";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as P from "effect/Predicate";
+import * as Redacted from "effect/Redacted";
+import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { Milliseconds } from "../Domain/Error/Base.ts";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import {
@@ -45,11 +46,11 @@ import {
   EmbeddingRateLimitError,
   EmbeddingTimeoutError,
 } from "../Domain/Error/Embedding.ts";
-import { ConfigService } from "./Config.ts";
-import type { EmbeddingProviderMethods, EmbeddingRequest, ProviderMetadata } from "./EmbeddingProvider.ts";
-import { cosineSimilarity, EmbeddingProvider } from "./EmbeddingProvider.ts";
-import { EmbeddingRateLimiter } from "./EmbeddingRateLimiter.ts";
 import { PosInt } from "../Schema/PosInt.ts";
+import { ConfigService } from "./Config.ts";
+import type { EmbeddingProviderMethods, EmbeddingRequest } from "./EmbeddingProvider.ts";
+import { cosineSimilarity, EmbeddingProvider, ProviderMetadata } from "./EmbeddingProvider.ts";
+import { EmbeddingRateLimiter } from "./EmbeddingRateLimiter.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/VoyageEmbeddingProvider");
 
@@ -336,13 +337,23 @@ const mapVoyageError = (error: unknown, timeout: Duration.Duration): AnyEmbeddin
  * @category configuration
  * @since 0.0.0
  */
-export class VoyageProviderConfig extends S.Opaque<VoyageProviderConfig, { readonly brand: unique symbol }>()(S.Struct({
+export class VoyageProviderConfig extends S.Opaque<VoyageProviderConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
     apiKey: S.Redacted(S.NonEmptyString),
-    model: VoyageModel.pipe(S.withConstructorDefault(Effect.succeed<typeof DEFAULT_VOYAGE_MODEL>(DEFAULT_VOYAGE_MODEL)), S.withDecodingDefaultTypeKey(Effect.succeed<typeof DEFAULT_VOYAGE_MODEL>(DEFAULT_VOYAGE_MODEL))),
-    timeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT)), S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT))),
-  }).pipe($I.annoteSchema("VoyageProviderConfig", {
-    description: "Secret API credential, supported model, and request timeout for Voyage embeddings.",
-  }))) {}
+    model: VoyageModel.pipe(
+      S.withConstructorDefault(Effect.succeed<typeof DEFAULT_VOYAGE_MODEL>(DEFAULT_VOYAGE_MODEL)),
+      S.withDecodingDefaultTypeKey(Effect.succeed<typeof DEFAULT_VOYAGE_MODEL>(DEFAULT_VOYAGE_MODEL))
+    ),
+    timeout: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(DEFAULT_TIMEOUT)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(DEFAULT_TIMEOUT))
+    ),
+  }).pipe(
+    $I.annoteSchema("VoyageProviderConfig", {
+      description: "Secret API credential, supported model, and request timeout for Voyage embeddings.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link VoyageProviderConfig}.
@@ -402,11 +413,11 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
   const timeoutMs = Duration.toMillis(timeout);
   const dimension = VOYAGE_MODELS[model];
 
-  const metadata: ProviderMetadata = {
+  const metadata: ProviderMetadata = ProviderMetadata.make({
     providerId: "voyage",
     modelId: model,
     dimension,
-  };
+  });
 
   /**
    * Map task type to Voyage input_type
@@ -435,17 +446,18 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
       // Success: parse with schema
       "2xx": (res) =>
         HttpClientResponse.schemaBodyJson(VoyageResponseSchema)(res).pipe(
-          Effect.map((parsed) => {
-            // Sort by index to maintain order (API may return out of order)
-            const sorted = A.sortWith(parsed.data, (datum) => datum.index, Order.Number);
-            return A.map(sorted, (datum) => datum.embedding);
-          }),
-          Effect.mapError((e) =>
-            EmbeddingInvalidResponseError.make({
-              message: `Invalid Voyage response: ${e.message}`,
-              provider: "voyage",
-            })
-          )
+          Effect.mapBoth({
+            onSuccess: (parsed) => {
+              // Sort by index to maintain order (API may return out of order)
+              const sorted = A.sortWith(parsed.data, (datum) => datum.index, Order.Number);
+              return A.map(sorted, (datum) => datum.embedding);
+            },
+            onFailure: (e) =>
+              EmbeddingInvalidResponseError.make({
+                message: `Invalid Voyage response: ${e.message}`,
+                provider: "voyage",
+              }),
+          })
         ),
 
       // Rate limit: parse error body and include retry-after
@@ -457,7 +469,7 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
               EmbeddingRateLimitError.make({
                 message: `Voyage API rate limit: ${O.getOrElse(errorBody.detail, () => "rate limit exceeded")}`,
                 provider: "voyage",
-                retryAfterMs: O.some(Milliseconds.make(Duration.toMillis(parseRetryAfter(res)))),
+                retryAfterMs: pipe(parseRetryAfter(res), Duration.toMillis, Milliseconds.make, O.some),
               })
             )
           )
@@ -512,7 +524,7 @@ export const makeVoyageProvider = Effect.fn("makeVoyageProvider")(function* (
             return [];
           }
 
-          const inputType = mapInputType(requests[0].taskType);
+          const inputType = mapInputType(A.getUnsafe(requests, 0).taskType);
           const texts = A.map(requests, (request) => request.text);
 
           // Build request (pure value, not Effect)

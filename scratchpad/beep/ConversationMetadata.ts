@@ -83,7 +83,7 @@ export class ConversationMetadata extends Model<ConversationMetadata>("Conversat
  * @since 0.0.0
  */
 export declare namespace ConversationMetadata {
-  export type Encoded = S.Codec.Encoded<typeof ConversationMetadata>;
+  export type Encoded = typeof ConversationMetadata.Encoded;
 }
 
 /**

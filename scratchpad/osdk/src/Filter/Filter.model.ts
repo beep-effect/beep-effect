@@ -30,6 +30,8 @@ import { RecursiveArraySizeHint } from "../internal/RecursionHint.ts";
 import { PropertyAddressed } from "../Property/Property.addressing.ts";
 import { ScalarValue } from "../Value/Value.model.ts";
 import type { Position } from "../Geo/Geo.model.ts";
+import type { PropertyApiName } from "../Identifier/Identifier.model.ts";
+import type { PropertySelector } from "../Property/Property.model.ts";
 
 const $I = $ScratchpadId.create("osdk/Filter/Filter.model");
 
@@ -78,6 +80,22 @@ export const TextAnalyzer = MappedLiteralKit([
 export type TextAnalyzer = typeof TextAnalyzer.Type;
 
 /**
+ * Companion namespace for {@link TextAnalyzer}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TextAnalyzer {
+  /**
+   * Encoded (wire) form of {@link TextAnalyzer}: the platform's literal, before it maps to the runtime one.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TextAnalyzer.Encoded;
+}
+
+/**
  * How a geospatial property must relate to a search geometry.
  *
  * **Example** (Decode the wire relation)
@@ -113,6 +131,22 @@ export const SpatialRelation = MappedLiteralKit([
  * @since 0.0.0
  */
 export type SpatialRelation = typeof SpatialRelation.Type;
+
+/**
+ * Companion namespace for {@link SpatialRelation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SpatialRelation {
+  /**
+   * Encoded (wire) form of {@link SpatialRelation}: the platform's literal, before it maps to the runtime one.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof SpatialRelation.Encoded;
+}
 
 /**
  * Calendar unit a relative date bound is counted in.
@@ -157,6 +191,22 @@ export const RelativeDateUnit = MappedLiteralKit([
  */
 export type RelativeDateUnit = typeof RelativeDateUnit.Type;
 
+/**
+ * Companion namespace for {@link RelativeDateUnit}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RelativeDateUnit {
+  /**
+   * Encoded (wire) form of {@link RelativeDateUnit}: the platform's literal, before it maps to the runtime one.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RelativeDateUnit.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Interval rules
 // -----------------------------------------------------------------------------
@@ -192,6 +242,27 @@ export class IntervalMatch extends S.Opaque<IntervalMatch, { readonly brand: uni
 ) {}
 
 /**
+ * Companion namespace for {@link IntervalMatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace IntervalMatch {
+  /**
+   * Encoded (wire) form of {@link IntervalMatch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "match";
+    readonly query: string;
+    readonly ordered: boolean;
+    readonly maxGaps?: number;
+  }
+}
+
+/**
  * Interval rule that matches every term exactly except the last, which matches as a prefix.
  *
  * @category models
@@ -207,6 +278,25 @@ export class IntervalPrefixMatch extends S.Opaque<IntervalPrefixMatch, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link IntervalPrefixMatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace IntervalPrefixMatch {
+  /**
+   * Encoded (wire) form of {@link IntervalPrefixMatch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "prefixOnLastToken";
+    readonly query: string;
+  }
+}
 
 /**
  * Interval rule satisfied when every sub-rule matches.
@@ -312,6 +402,26 @@ export class IntervalFuzzyMatch extends S.Opaque<IntervalFuzzyMatch, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link IntervalFuzzyMatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace IntervalFuzzyMatch {
+  /**
+   * Encoded (wire) form of {@link IntervalFuzzyMatch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "fuzzy";
+    readonly term: string;
+    readonly fuzziness?: number;
+  }
+}
+
+/**
  * A positional full-text rule over the analyzed form of a text property: where terms occur relative to each other.
  *
  * **Example** (Describe a nested interval rule)
@@ -366,11 +476,11 @@ export declare namespace IntervalRule {
    * @since 0.0.0
    */
   export type Encoded =
-    | (typeof IntervalMatch)["Encoded"]
-    | (typeof IntervalPrefixMatch)["Encoded"]
+    | IntervalMatch.Encoded
+    | IntervalPrefixMatch.Encoded
     | IntervalAllOf.Encoded
     | IntervalAnyOf.Encoded
-    | (typeof IntervalFuzzyMatch)["Encoded"];
+    | IntervalFuzzyMatch.Encoded;
 }
 
 // -----------------------------------------------------------------------------
@@ -410,6 +520,26 @@ export class RelativePoint extends S.Opaque<RelativePoint, { readonly brand: uni
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RelativePoint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RelativePoint {
+  /**
+   * Encoded (wire) form of {@link RelativePoint}: the unit is its upper-case wire literal.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "relativePoint";
+    readonly value: number;
+    readonly timeUnit: RelativeDateUnit.Encoded;
+  }
+}
 
 /**
  * A date range whose ends move with the clock: each bound is relative to the time the query runs.
@@ -457,6 +587,26 @@ export class RelativeDateRange extends S.Opaque<RelativeDateRange, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RelativeDateRange}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RelativeDateRange {
+  /**
+   * Encoded (wire) form of {@link RelativeDateRange}: an open bound is an absent key.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly relativeStartTime?: RelativePoint.Encoded;
+    readonly relativeEndTime?: RelativePoint.Encoded;
+    readonly timeZoneId: string;
+  }
+}
 
 /**
  * A rectangle on the globe given by its north-west and south-east corners.
@@ -507,6 +657,25 @@ export class BoundingBoxCorners extends S.Opaque<BoundingBoxCorners, { readonly 
 }
 
 /**
+ * Companion namespace for {@link BoundingBoxCorners}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BoundingBoxCorners {
+  /**
+   * Encoded (wire) form of {@link BoundingBoxCorners}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly topLeft: GeoPoint.Encoded;
+    readonly bottomRight: GeoPoint.Encoded;
+  }
+}
+
+/**
  * Everything within a distance of a point: the area a "within distance of" filter searches.
  *
  * **Example** (Describe five kilometres around a position)
@@ -550,6 +719,25 @@ export class CircularArea extends S.Opaque<CircularArea, { readonly brand: uniqu
   }
 }
 
+/**
+ * Companion namespace for {@link CircularArea}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CircularArea {
+  /**
+   * Encoded (wire) form of {@link CircularArea}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly center: GeoPoint.Encoded;
+    readonly distance: Distance.Encoded;
+  }
+}
+
 const SearchGeometryKind = LiteralKit(["envelope", "geoJson"]);
 
 /**
@@ -568,6 +756,26 @@ export class EnvelopeGeometry extends S.Opaque<EnvelopeGeometry, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link EnvelopeGeometry}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EnvelopeGeometry {
+  /**
+   * Encoded (wire) form of {@link EnvelopeGeometry}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "envelope";
+    readonly topLeft: GeoPoint.Encoded;
+    readonly bottomRight: GeoPoint.Encoded;
+  }
+}
+
+/**
  * Search geometry given as any GeoJSON geometry.
  *
  * **Details**
@@ -584,6 +792,25 @@ export class GeoJsonGeometry extends S.Opaque<GeoJsonGeometry, { readonly brand:
     geoJson: S.fromJsonString(Geometry).annotateKey({ description: "The geometry to compare with." }),
   }).pipe($I.annoteSchema("GeoJsonGeometry", { description: "Search geometry given as any GeoJSON geometry." }))
 ) {}
+
+/**
+ * Companion namespace for {@link GeoJsonGeometry}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeoJsonGeometry {
+  /**
+   * Encoded (wire) form of {@link GeoJsonGeometry}: the geometry travels as GeoJSON text inside a string.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "geoJson";
+    readonly geoJson: string;
+  }
+}
 
 /**
  * The shape a spatial-relation filter compares a geospatial property with.
@@ -620,6 +847,24 @@ export const SearchGeometry = SearchGeometryKind.mapMembers(() => Tuple.make(Env
  */
 export type SearchGeometry = typeof SearchGeometry.Type;
 
+/**
+ * Companion namespace for {@link SearchGeometry}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SearchGeometry {
+  /**
+   * Encoded (wire) form of {@link SearchGeometry}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | EnvelopeGeometry.Encoded
+    | GeoJsonGeometry.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Comparison, membership and null tests
 // -----------------------------------------------------------------------------
@@ -639,6 +884,27 @@ export class LessThan extends S.Opaque<LessThan, { readonly brand: unique symbol
 ) {}
 
 /**
+ * Companion namespace for {@link LessThan}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LessThan {
+  /**
+   * Encoded (wire) form of {@link LessThan}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "lt";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: ScalarValue.Encoded;
+  }
+}
+
+/**
  * Matches objects whose property is greater than a value.
  *
  * @category models
@@ -649,6 +915,27 @@ export class GreaterThan extends S.Opaque<GreaterThan, { readonly brand: unique 
     $I.annoteSchema("GreaterThan", { description: "Matches objects whose property is greater than a value." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link GreaterThan}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GreaterThan {
+  /**
+   * Encoded (wire) form of {@link GreaterThan}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "gt";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: ScalarValue.Encoded;
+  }
+}
 
 /**
  * Matches objects whose property is less than or equal to a value.
@@ -665,6 +952,27 @@ export class LessThanOrEqual extends S.Opaque<LessThanOrEqual, { readonly brand:
 ) {}
 
 /**
+ * Companion namespace for {@link LessThanOrEqual}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LessThanOrEqual {
+  /**
+   * Encoded (wire) form of {@link LessThanOrEqual}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "lte";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: ScalarValue.Encoded;
+  }
+}
+
+/**
  * Matches objects whose property is greater than or equal to a value.
  *
  * @category models
@@ -677,6 +985,28 @@ export class GreaterThanOrEqual extends S.Opaque<GreaterThanOrEqual, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link GreaterThanOrEqual}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GreaterThanOrEqual {
+  /**
+   * Encoded (wire) form of {@link GreaterThanOrEqual}: the property travels as `field` (by name) or
+   * `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "gte";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: ScalarValue.Encoded;
+  }
+}
 
 /**
  * Matches objects whose property equals a value.
@@ -697,6 +1027,27 @@ export class Equals extends S.Opaque<Equals, { readonly brand: unique symbol }>(
 ) {}
 
 /**
+ * Companion namespace for {@link Equals}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Equals {
+  /**
+   * Encoded (wire) form of {@link Equals}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "eq";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: ScalarValue.Encoded;
+  }
+}
+
+/**
  * Matches objects whose property equals any of the listed values.
  *
  * **Gotchas**
@@ -713,6 +1064,27 @@ export class OneOf extends S.Opaque<OneOf, { readonly brand: unique symbol }>()(
 ) {}
 
 /**
+ * Companion namespace for {@link OneOf}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OneOf {
+  /**
+   * Encoded (wire) form of {@link OneOf}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "in";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: ReadonlyArray<ScalarValue.Encoded>;
+  }
+}
+
+/**
  * Matches objects by whether their property has a value at all.
  *
  * @category models
@@ -727,6 +1099,27 @@ export class IsNull extends S.Opaque<IsNull, { readonly brand: unique symbol }>(
 ) {}
 
 /**
+ * Companion namespace for {@link IsNull}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace IsNull {
+  /**
+   * Encoded (wire) form of {@link IsNull}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "isNull";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: boolean;
+  }
+}
+
+/**
  * Matches objects whose array property contains a value.
  *
  * @category models
@@ -737,6 +1130,27 @@ export class Contains extends S.Opaque<Contains, { readonly brand: unique symbol
     value: ScalarValue.annotateKey({ description: "Value the array must contain." }),
   }).pipe($I.annoteSchema("Contains", { description: "Matches objects whose array property contains a value." }))
 ) {}
+
+/**
+ * Companion namespace for {@link Contains}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Contains {
+  /**
+   * Encoded (wire) form of {@link Contains}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "contains";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: ScalarValue.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Text search
@@ -792,6 +1206,28 @@ export class StartsWith extends S.Opaque<StartsWith, { readonly brand: unique sy
 ) {}
 
 /**
+ * Companion namespace for {@link StartsWith}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StartsWith {
+  /**
+   * Encoded (wire) form of {@link StartsWith}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "startsWith";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly analyzerSelection?: TextAnalyzer.Encoded;
+    readonly value: string;
+  }
+}
+
+/**
  * Matches objects whose text property matches a wildcard pattern.
  *
  * @category models
@@ -806,6 +1242,27 @@ export class MatchesWildcard extends S.Opaque<MatchesWildcard, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MatchesWildcard}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MatchesWildcard {
+  /**
+   * Encoded (wire) form of {@link MatchesWildcard}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "wildcard";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: string;
+  }
+}
 
 /**
  * Matches objects whose text property, in its stored form, matches a regular expression.
@@ -829,6 +1286,27 @@ export class MatchesRegex extends S.Opaque<MatchesRegex, { readonly brand: uniqu
 ) {}
 
 /**
+ * Companion namespace for {@link MatchesRegex}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MatchesRegex {
+  /**
+   * Encoded (wire) form of {@link MatchesRegex}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "regex";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: string;
+  }
+}
+
+/**
  * Matches objects whose text property contains at least one of the terms, in any order.
  *
  * @invariant Fuzzy matching is not requested together with the phonetic analyzer.
@@ -844,6 +1322,29 @@ export class ContainsAnyTerm extends S.Opaque<ContainsAnyTerm, { readonly brand:
       })
     )
 ) {}
+
+/**
+ * Companion namespace for {@link ContainsAnyTerm}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ContainsAnyTerm {
+  /**
+   * Encoded (wire) form of {@link ContainsAnyTerm}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "containsAnyTerm";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly analyzerSelection?: TextAnalyzer.Encoded;
+    readonly value: string;
+    readonly fuzzy?: boolean;
+  }
+}
 
 /**
  * Matches objects whose text property contains every term, in any order.
@@ -863,6 +1364,29 @@ export class ContainsAllTerms extends S.Opaque<ContainsAllTerms, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link ContainsAllTerms}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ContainsAllTerms {
+  /**
+   * Encoded (wire) form of {@link ContainsAllTerms}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "containsAllTerms";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly analyzerSelection?: TextAnalyzer.Encoded;
+    readonly value: string;
+    readonly fuzzy?: boolean;
+  }
+}
+
+/**
  * Matches objects whose text property contains the terms as a phrase: in order and adjacent.
  *
  * @category models
@@ -875,6 +1399,29 @@ export class ContainsAllTermsInOrder extends S.Opaque<ContainsAllTermsInOrder, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ContainsAllTermsInOrder}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ContainsAllTermsInOrder {
+  /**
+   * Encoded (wire) form of {@link ContainsAllTermsInOrder}: the property travels as `field` (by name) or
+   * `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "containsAllTermsInOrder";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly analyzerSelection?: TextAnalyzer.Encoded;
+    readonly value: string;
+  }
+}
 
 /**
  * Matches objects whose text property contains the terms as a phrase whose last term may be a prefix.
@@ -895,6 +1442,29 @@ export class ContainsAllTermsInOrderPrefixLastTerm extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link ContainsAllTermsInOrderPrefixLastTerm}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ContainsAllTermsInOrderPrefixLastTerm {
+  /**
+   * Encoded (wire) form of {@link ContainsAllTermsInOrderPrefixLastTerm}: the property travels as `field` (by name) or
+   * `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "containsAllTermsInOrderPrefixLastTerm";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly analyzerSelection?: TextAnalyzer.Encoded;
+    readonly value: string;
+  }
+}
+
+/**
  * Matches objects whose text property satisfies a positional interval rule.
  *
  * @category models
@@ -909,6 +1479,27 @@ export class MatchesInterval extends S.Opaque<MatchesInterval, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MatchesInterval}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MatchesInterval {
+  /**
+   * Encoded (wire) form of {@link MatchesInterval}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "interval";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly rule: IntervalRule.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Dates
@@ -927,6 +1518,30 @@ export class InRelativeDateRange extends S.Opaque<InRelativeDateRange, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link InRelativeDateRange}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InRelativeDateRange {
+  /**
+   * Encoded (wire) form of {@link InRelativeDateRange}: the property travels as `field` (by name) or
+   * `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "relativeDateRange";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly relativeStartTime?: RelativePoint.Encoded;
+    readonly relativeEndTime?: RelativePoint.Encoded;
+    readonly timeZoneId: string;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Geospatial
@@ -956,6 +1571,27 @@ export class WithinDistance extends S.Opaque<WithinDistance, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link WithinDistance}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace WithinDistance {
+  /**
+   * Encoded (wire) form of {@link WithinDistance}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "withinDistanceOf";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: CircularArea.Encoded;
+  }
+}
+
+/**
  * Matches objects whose geometry lies inside a rectangle.
  *
  * @category models
@@ -968,6 +1604,28 @@ export class WithinBoundingBox extends S.Opaque<WithinBoundingBox, { readonly br
 ) {}
 
 /**
+ * Companion namespace for {@link WithinBoundingBox}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace WithinBoundingBox {
+  /**
+   * Encoded (wire) form of {@link WithinBoundingBox}: the property travels as `field` (by name) or
+   * `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "withinBoundingBox";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: BoundingBoxCorners.Encoded;
+  }
+}
+
+/**
  * Matches objects whose geometry lies inside a polygon.
  *
  * @category models
@@ -978,6 +1636,27 @@ export class WithinPolygon extends S.Opaque<WithinPolygon, { readonly brand: uni
     $I.annoteSchema("WithinPolygon", { description: "Matches objects whose geometry lies inside a polygon." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link WithinPolygon}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace WithinPolygon {
+  /**
+   * Encoded (wire) form of {@link WithinPolygon}: the property travels as `field` (by name) or `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "withinPolygon";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: Polygon.Encoded;
+  }
+}
 
 /**
  * Matches objects whose geometry touches or overlaps a rectangle.
@@ -994,6 +1673,28 @@ export class IntersectsBoundingBox extends S.Opaque<IntersectsBoundingBox, { rea
 ) {}
 
 /**
+ * Companion namespace for {@link IntersectsBoundingBox}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace IntersectsBoundingBox {
+  /**
+   * Encoded (wire) form of {@link IntersectsBoundingBox}: the property travels as `field` (by name) or
+   * `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "intersectsBoundingBox";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: BoundingBoxCorners.Encoded;
+  }
+}
+
+/**
  * Matches objects whose geometry touches or overlaps a polygon.
  *
  * @category models
@@ -1006,6 +1707,28 @@ export class IntersectsPolygon extends S.Opaque<IntersectsPolygon, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link IntersectsPolygon}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace IntersectsPolygon {
+  /**
+   * Encoded (wire) form of {@link IntersectsPolygon}: the property travels as `field` (by name) or
+   * `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "intersectsPolygon";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: Polygon.Encoded;
+  }
+}
 
 /**
  * Matches objects whose geometry has no point in common with a rectangle.
@@ -1025,6 +1748,28 @@ export class DoesNotIntersectBoundingBox extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link DoesNotIntersectBoundingBox}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DoesNotIntersectBoundingBox {
+  /**
+   * Encoded (wire) form of {@link DoesNotIntersectBoundingBox}: the property travels as `field` (by name) or
+   * `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "doesNotIntersectBoundingBox";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: BoundingBoxCorners.Encoded;
+  }
+}
+
+/**
  * Matches objects whose geometry has no point in common with a polygon.
  *
  * @category models
@@ -1037,6 +1782,28 @@ export class DoesNotIntersectPolygon extends S.Opaque<DoesNotIntersectPolygon, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DoesNotIntersectPolygon}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DoesNotIntersectPolygon {
+  /**
+   * Encoded (wire) form of {@link DoesNotIntersectPolygon}: the property travels as `field` (by name) or
+   * `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "doesNotIntersectPolygon";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly value: Polygon.Encoded;
+  }
+}
 
 /**
  * Matches objects whose geopoint or geoshape stands in a chosen spatial relation to a geometry.
@@ -1060,6 +1827,29 @@ export class RelatesToGeometry extends S.Opaque<RelatesToGeometry, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RelatesToGeometry}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RelatesToGeometry {
+  /**
+   * Encoded (wire) form of {@link RelatesToGeometry}: the property travels as `field` (by name) or
+   * `propertyIdentifier`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "geoShapeV2";
+    readonly field?: PropertyApiName.Encoded;
+    readonly propertyIdentifier?: PropertySelector.Encoded;
+    readonly geometry: SearchGeometry.Encoded;
+    readonly spatialFilterMode: SpatialRelation.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Logical combinators
@@ -1291,6 +2081,47 @@ export const PropertyFilter = PropertyFilterKind.mapMembers(() =>
 export type PropertyFilter = typeof PropertyFilter.Type;
 
 /**
+ * Companion namespace for {@link PropertyFilter}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyFilter {
+  /**
+   * Encoded (wire) form of {@link PropertyFilter}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | LessThan.Encoded
+    | GreaterThan.Encoded
+    | LessThanOrEqual.Encoded
+    | GreaterThanOrEqual.Encoded
+    | Equals.Encoded
+    | OneOf.Encoded
+    | IsNull.Encoded
+    | Contains.Encoded
+    | StartsWith.Encoded
+    | MatchesWildcard.Encoded
+    | MatchesRegex.Encoded
+    | ContainsAnyTerm.Encoded
+    | ContainsAllTerms.Encoded
+    | ContainsAllTermsInOrder.Encoded
+    | ContainsAllTermsInOrderPrefixLastTerm.Encoded
+    | MatchesInterval.Encoded
+    | InRelativeDateRange.Encoded
+    | WithinDistance.Encoded
+    | WithinBoundingBox.Encoded
+    | WithinPolygon.Encoded
+    | IntersectsBoundingBox.Encoded
+    | IntersectsPolygon.Encoded
+    | DoesNotIntersectBoundingBox.Encoded
+    | DoesNotIntersectPolygon.Encoded
+    | RelatesToGeometry.Encoded;
+}
+
+/**
  * A predicate over the objects of one type: property tests combined with and, or and not.
  *
  * **Details**
@@ -1400,5 +2231,9 @@ export declare namespace ObjectFilter {
    * @category type-level
    * @since 0.0.0
    */
-  export type Encoded = (typeof PropertyFilter)["Encoded"] | And.Encoded | Or.Encoded | Not.Encoded;
+  export type Encoded =
+    | PropertyFilter.Encoded
+    | And.Encoded
+    | Or.Encoded
+    | Not.Encoded;
 }

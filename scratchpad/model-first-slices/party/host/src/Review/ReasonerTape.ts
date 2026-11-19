@@ -1,6 +1,6 @@
 import { Assessed, AssessRequest } from "@proto/party-model/Review/Reasoner.external";
 import { $PartyHostId } from "@proto/kernel/Identity";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
@@ -43,7 +43,8 @@ export class ReasonerTape extends Context.Service<
   ReasonerTape,
   {
     readonly record: (entry: TapeEntry) => Effect.Effect<void>;
-    readonly find: (promptVersion: string, idempotencyKey: string) => Effect.Effect<O.Option<TapeEntry>>;
+    /** The entry recorded for a request, by its prompt version and idempotency key. */
+    readonly find: (request: Pick<AssessRequest, "promptVersion" | "idempotencyKey">) => Effect.Effect<O.Option<TapeEntry>>;
     readonly entries: Effect.Effect<ReadonlyArray<TapeEntry>>;
   }
 >()($I`ReasonerTape`) {}
@@ -77,7 +78,7 @@ export const memoryTape = (entries: ReadonlyArray<TapeEntry> = []) =>
         record: Effect.fn("ReasonerTape.record")((entry: TapeEntry) =>
           Ref.update(tape, HashMap.set(keyOf(entry.request.promptVersion, entry.request.idempotencyKey), entry)),
         ),
-        find: Effect.fn("ReasonerTape.find")((promptVersion: string, idempotencyKey: string) =>
+        find: Effect.fn("ReasonerTape.find")(({ promptVersion, idempotencyKey }: Pick<AssessRequest, "promptVersion" | "idempotencyKey">) =>
           Effect.map(Ref.get(tape), HashMap.get(keyOf(promptVersion, idempotencyKey))),
         ),
         entries: Effect.map(Ref.get(tape), (map) => map.pipe(HashMap.values, A.fromIterable)),

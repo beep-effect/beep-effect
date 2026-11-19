@@ -115,7 +115,7 @@ export class ChatSessionResponse extends Model<ChatSessionResponse>("ChatSession
  * @since 0.0.0
  */
 export declare namespace ChatSessionResponse {
-  export type Encoded = S.Codec.Encoded<typeof ChatSessionResponse>;
+  export type Encoded = typeof ChatSessionResponse.Encoded;
 }
 
 const ChatSessionResponseWire = toWire(ChatSessionResponse);
@@ -206,7 +206,7 @@ export class SaveMessageResponse extends Model<SaveMessageResponse>("SaveMessage
  * @since 0.0.0
  */
 export declare namespace SaveMessageResponse {
-  export type Encoded = S.Codec.Encoded<typeof SaveMessageResponse>;
+  export type Encoded = typeof SaveMessageResponse.Encoded;
 }
 
 /**
@@ -241,7 +241,7 @@ export class DeleteMessagesResponse extends Model<DeleteMessagesResponse>("Delet
  * @since 0.0.0
  */
 export declare namespace DeleteMessagesResponse {
-  export type Encoded = S.Codec.Encoded<typeof DeleteMessagesResponse>;
+  export type Encoded = typeof DeleteMessagesResponse.Encoded;
 }
 
 /**
@@ -276,7 +276,7 @@ export class InitialMessageResponse extends Model<InitialMessageResponse>("Initi
  * @since 0.0.0
  */
 export declare namespace InitialMessageResponse {
-  export type Encoded = S.Codec.Encoded<typeof InitialMessageResponse>;
+  export type Encoded = typeof InitialMessageResponse.Encoded;
 }
 
 /**
@@ -310,5 +310,5 @@ export class GenerateTitleResponse extends Model<GenerateTitleResponse>("Generat
  * @since 0.0.0
  */
 export declare namespace GenerateTitleResponse {
-  export type Encoded = S.Codec.Encoded<typeof GenerateTitleResponse>;
+  export type Encoded = typeof GenerateTitleResponse.Encoded;
 }

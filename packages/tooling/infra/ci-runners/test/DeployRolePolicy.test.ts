@@ -5,9 +5,12 @@ import {
   defaultGroupStatement,
   deployRolePolicy,
   ec2CreateActions,
+  ec2CreatesInVpc,
   fleetBoundary,
   fleetBoundaryPolicyArn,
   fleetBoundaryPolicyArnFor,
+  managedPolicyDocuments,
+  managedPolicyLimit,
   wildcardResourceReasons,
 } from "@beep/infra-ci-runners/DeployRolePolicy";
 import { requireDistinctStage } from "@beep/infra-ci-runners/Guards";
@@ -20,6 +23,7 @@ import * as Exit from "effect/Exit";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type * as IAM from "@alchemy.run/aws/IAM";
 
@@ -48,7 +52,118 @@ describe("CiRunners deploy role policy chunks", () => {
   );
 });
 
+const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
+
+describe("CiRunners deploy role managed policies", () => {
+  it.effect("splits v1 and v2 into whole statements in source order, each document within the IAM limit", () =>
+    Effect.gen(function* () {
+      for (const policy of [v1, v2]) {
+        const documents = yield* managedPolicyDocuments(policy);
+        const lengths = yield* Effect.forEach(documents, (document) => Effect.map(encodeJson(document), Str.length), {
+          concurrency: 1,
+        });
+        assertTrue(A.every(lengths, (length) => length <= managedPolicyLimit));
+        // The role holds exactly two managed policies (ci-runners-deploy-1 and -2). A third document needs a new
+        // policy created and attached by hand before the role can use it, so growing past two must fail here first.
+        expect(documents.length).toBe(2);
+        // The union is the source: every statement once, whole, with its Sid, in the source order.
+        expect(A.flatMap(documents, (document) => document.Statement)).toStrictEqual(policy.Statement);
+        expect(A.dedupe(A.map(documents, (document) => document.Version))).toStrictEqual([policy.Version]);
+        assertTrue(A.every(documents, (document) => A.isReadonlyArrayNonEmpty(document.Statement)));
+        assertTrue(A.every(policy.Statement, (statement) => P.isString(statement.Sid)));
+        // Deterministic: the same source splits the same way.
+        const again = yield* managedPolicyDocuments(policy);
+        expect(again).toStrictEqual(documents);
+      }
+    })
+  );
+});
+
 describe("CiRunners deploy role policy", () => {
+  it.effect("grants the parent-VPC side of a create only on a VPC that carries the ownership tags", () =>
+    Effect.gen(function* () {
+      for (const policy of [v1, v2]) {
+        for (const action of ec2CreatesInVpc) {
+          const granting = A.filter(policy.Statement, (statement) => grants(statement, action));
+          expect(A.map(granting, (statement) => statement.Sid)).toStrictEqual([
+            "Ec2CreatesTagged",
+            "Ec2CreatesInOwnedVpc",
+          ]);
+        }
+        const [tagged] = A.filter(policy.Statement, (statement) => statement.Sid === "Ec2CreatesTagged");
+        const [inVpc] = A.filter(policy.Statement, (statement) => statement.Sid === "Ec2CreatesInOwnedVpc");
+        // The child-resource side is unchanged: every create still needs the request tags there.
+        expect(tagged?.Condition).toStrictEqual({
+          StringEquals: { "aws:RequestTag/alchemy::stack": "CiRunners", "aws:RequestTag/alchemy::stage": "prod" },
+        });
+        expect(actionsOf(tagged ?? { Effect: "Allow" })).toStrictEqual(ec2CreateActions);
+        // The VPC side names the VPC resource type only, never a literal VPC id, and needs the tags on that VPC.
+        expect(resourcesOf(inVpc ?? { Effect: "Allow" })).toStrictEqual(["arn:aws:ec2:us-east-1:832907639880:vpc/*"]);
+        expect(inVpc?.Condition).toStrictEqual({
+          StringEquals: { "aws:ResourceTag/alchemy::stack": "CiRunners", "aws:ResourceTag/alchemy::stage": "prod" },
+        });
+        expect(actionsOf(inVpc ?? { Effect: "Allow" })).toStrictEqual(ec2CreatesInVpc);
+        assertTrue(A.every(ec2CreatesInVpc, (action) => A.contains(ec2CreateActions, action)));
+        assertFalse(A.contains(ec2CreatesInVpc, "ec2:CreateVpc"));
+      }
+    })
+  );
+
+  it.effect("holds the reads and cleanup grants step 1a's failure showed to the fleet's own names", () =>
+    Effect.gen(function* () {
+      const only = (action: string) => A.filter(v2.Statement, (statement) => grants(statement, action));
+      const scope = (action: string) => A.map(only(action), (statement) => [statement.Sid, resourcesOf(statement)]);
+      const fleetFunctions = ["arn:aws:lambda:us-east-1:832907639880:function:beep-fleet-prod-*"];
+      expect(scope("lambda:GetFunctionConcurrency")).toStrictEqual([["LambdaFleetFunctions", fleetFunctions]]);
+      expect(scope("lambda:GetFunctionEventInvokeConfig")).toStrictEqual([["LambdaFleetFunctions", fleetFunctions]]);
+      const fleetPolicies = ["arn:aws:iam::832907639880:policy/beep-fleet/prod/*"];
+      expect(scope("iam:ListPolicyTags")).toStrictEqual([["IamFleetPolicies", fleetPolicies]]);
+      // The default-version write reaches the fleet's policies only: never the deploy role's own managed policies.
+      expect(scope("iam:SetDefaultPolicyVersion")).toStrictEqual([["IamFleetPolicies", fleetPolicies]]);
+      expect(scope("iam:UntagInstanceProfile")).toStrictEqual([
+        ["IamFleetProfiles", ["arn:aws:iam::832907639880:instance-profile/beep-fleet-prod-*"]],
+      ]);
+      expect(scope("ssm:GetParametersByPath")).toStrictEqual([
+        ["SsmFleetParameters", ["arn:aws:ssm:us-east-1:832907639880:parameter/beep-fleet/prod/*"]],
+      ]);
+      const binaries = [
+        "arn:aws:s3:::beep-fleet-prod-binaries-832907639880",
+        "arn:aws:s3:::beep-fleet-prod-binaries-832907639880/*",
+      ];
+      for (const action of [
+        "s3:ListBucketVersions",
+        "s3:ListBucketMultipartUploads",
+        "s3:AbortMultipartUpload",
+        "s3:DeleteObjectVersion",
+      ]) {
+        expect(scope(action)).toStrictEqual([["S3Binaries", binaries]]);
+      }
+      expect(scope("logs:PutLogGroupDeletionProtection")).toStrictEqual([
+        [
+          "LogsFleetGroups",
+          [
+            "arn:aws:logs:us-east-1:832907639880:log-group:/beep-fleet/prod/*",
+            "arn:aws:logs:us-east-1:832907639880:log-group:/aws/lambda/beep-fleet-prod-*",
+          ],
+        ],
+      ]);
+      // SQS gives ListQueues no resource type; it is the only SQS grant on "*", and it reads.
+      expect(scope("sqs:ListQueues")).toStrictEqual([["SqsList", ["*"]]]);
+      expect(A.flatMap(only("sqs:ListQueues"), actionsOf)).toStrictEqual(["sqs:ListQueues"]);
+    })
+  );
+
+  it.effect("never names the deploy role's own managed policies, and never removes a boundary", () =>
+    Effect.gen(function* () {
+      const allows = A.filter(v2.Statement, (statement) => statement.Effect === "Allow");
+      const text = yield* encodeJson(allows);
+      assertFalse(Str.includes("beep-alchemy-deploy")(text));
+      assertFalse(Str.includes("iam:DeleteRolePermissionsBoundary")(text));
+      // A fleet role's trust policy stays as created: no grant rewrites it.
+      assertFalse(Str.includes("iam:UpdateAssumeRolePolicy")(text));
+    })
+  );
+
   it.effect("binds every tag-on-create grant to ec2:CreateAction and the requested ownership tags", () =>
     Effect.sync(() => {
       const tagOnCreate = A.filter(v2.Statement, (statement) =>

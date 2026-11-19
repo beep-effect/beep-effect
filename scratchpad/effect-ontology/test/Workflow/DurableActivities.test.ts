@@ -8,9 +8,9 @@ import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Ref from "effect/Ref";
 import * as Result from "effect/Result";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as Workflow from "effect/workflow/Workflow";
@@ -19,6 +19,7 @@ import { WorkflowInstance } from "effect/workflow/WorkflowEngine";
 import { BatchId, GcsUri, Namespace, OntologyName } from "../../Domain/Identity.ts";
 import { EntityObservation, EvidenceSpan } from "../../Domain/Model/Entity.ts";
 import { PathLayout } from "../../Domain/PathLayout.ts";
+import { IngestionActivityInput } from "../../Domain/Schema/Batch.ts";
 import { ClaimId } from "../../Domain/Schema/KnowledgeModel.ts";
 import { ClaimPersistenceService, PersistenceResult } from "../../Service/ClaimPersistence.ts";
 import { ConfigServiceDefault } from "../../Service/Config.ts";
@@ -37,6 +38,7 @@ import {
   makeCrossBatchResolutionActivity,
   makeIngestionActivity,
 } from "../../Workflow/DurableActivities.ts";
+
 const decodeClaimPersistenceInput = S.decodeEffect(ClaimPersistenceInput);
 const decodeEvidenceSpan = S.decodeEffect(EvidenceSpan);
 const decodeObjectRef = S.decodeEffect(ObjectRef);
@@ -104,16 +106,20 @@ describe("durable activity boundaries", () => {
 
         yield* Effect.all(
           [
-            makeIngestionActivity({
-              batchId: BatchA,
-              validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)(`gs://test-bucket/${firstPath}`)),
-              targetNamespace: namespace,
-            }).execute,
-            makeIngestionActivity({
-              batchId: BatchB,
-              validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)(`gs://test-bucket/${secondPath}`)),
-              targetNamespace: namespace,
-            }).execute,
+            makeIngestionActivity(
+              IngestionActivityInput.make({
+                batchId: BatchA,
+                validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)(`gs://test-bucket/${firstPath}`)),
+                targetNamespace: namespace,
+              })
+            ).execute,
+            makeIngestionActivity(
+              IngestionActivityInput.make({
+                batchId: BatchB,
+                validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)(`gs://test-bucket/${secondPath}`)),
+                targetNamespace: namespace,
+              })
+            ).execute,
           ],
           { concurrency: "unbounded" }
         );
@@ -234,7 +240,8 @@ describe("durable activity boundaries", () => {
         );
 
         assert.strictEqual(output.claimsPersisted, 1);
-        assert.isTrue(Equal.equals(yield* Ref.get(persistedClaims), artifact.claims));
+        const storedClaims = yield* Ref.get(persistedClaims);
+        assert.isTrue(Equal.equals(storedClaims, artifact.claims));
       })
     );
 
@@ -277,7 +284,8 @@ describe("durable activity boundaries", () => {
           })
         ).execute.pipe(Effect.provideService(CrossBatchEntityResolver, resolver));
 
-        assert.strictEqual(yield* Ref.get(resolveCalls), 1);
+        const resolveCallCount = yield* Ref.get(resolveCalls);
+        assert.strictEqual(resolveCallCount, 1);
         assert.strictEqual(output.newCanonicals, 1);
       })
     );
@@ -288,15 +296,18 @@ describe("durable activity boundaries", () => {
       "stops interruption retries at the configured bound",
       Effect.fnUntraced(function* () {
         const attempts = yield* InterruptAttempts;
-        const fiber = yield* makeIngestionActivity({
-          batchId: BatchA,
-          validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/interrupted.ttl")),
-          targetNamespace: Namespace.make("interrupt-retry"),
-        }).execute.pipe(Effect.forkChild);
+        const fiber = yield* makeIngestionActivity(
+          IngestionActivityInput.make({
+            batchId: BatchA,
+            validatedGraphUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/interrupted.ttl")),
+            targetNamespace: Namespace.make("interrupt-retry"),
+          })
+        ).execute.pipe(Effect.forkChild);
 
         yield* TestClock.adjust(Duration.seconds(30));
 
-        assert.strictEqual(yield* Ref.get(attempts), 4);
+        const attemptCount = yield* Ref.get(attempts);
+        assert.strictEqual(attemptCount, 4);
         assert.isTrue(O.isSome(O.fromUndefinedOr(fiber.pollUnsafe())));
       })
     );

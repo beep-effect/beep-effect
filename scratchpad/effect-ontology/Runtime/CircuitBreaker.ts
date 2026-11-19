@@ -21,8 +21,8 @@ import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as N from "effect/Number";
-import * as Ref from "effect/Ref";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { CircuitOpenError } from "../Domain/Error/Circuit.ts";
 import { PosInt } from "../Schema/PosInt.ts";
@@ -95,13 +95,26 @@ const circuitBreakerConfigSuccessThresholdDefault = PosInt.make(2);
  * @category models
  * @since 0.0.0
  */
-export class CircuitBreakerConfig extends S.Opaque<CircuitBreakerConfig, { readonly brand: unique symbol }>()(S.Struct({
-    maxFailures: PosInt.pipe(S.withConstructorDefault(Effect.succeed(circuitBreakerConfigMaxFailuresDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigMaxFailuresDefault))),
-    resetTimeout: S.Duration.pipe(S.withConstructorDefault(Effect.succeed(circuitBreakerConfigResetTimeoutDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigResetTimeoutDefault))),
-    successThreshold: PosInt.pipe(S.withConstructorDefault(Effect.succeed(circuitBreakerConfigSuccessThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigSuccessThresholdDefault))),
-  }).pipe($I.annoteSchema("CircuitBreakerConfig", {
-    description: "Failure, recovery-delay, and recovery-success thresholds for a circuit breaker.",
-  }))) {}
+export class CircuitBreakerConfig extends S.Opaque<CircuitBreakerConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
+    maxFailures: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(circuitBreakerConfigMaxFailuresDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigMaxFailuresDefault))
+    ),
+    resetTimeout: S.Duration.pipe(
+      S.withConstructorDefault(Effect.succeed(circuitBreakerConfigResetTimeoutDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigResetTimeoutDefault))
+    ),
+    successThreshold: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(circuitBreakerConfigSuccessThresholdDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(circuitBreakerConfigSuccessThresholdDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("CircuitBreakerConfig", {
+      description: "Failure, recovery-delay, and recovery-success thresholds for a circuit breaker.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link CircuitBreakerConfig}.
@@ -131,14 +144,18 @@ export const DEFAULT_CIRCUIT_CONFIG = CircuitBreakerConfig.make({});
 /**
  * Circuit breaker internal state
  */
-class CircuitBreakerState extends S.Opaque<CircuitBreakerState, { readonly brand: unique symbol }>()(S.Struct({
+class CircuitBreakerState extends S.Opaque<CircuitBreakerState, { readonly brand: unique symbol }>()(
+  S.Struct({
     state: CircuitState,
     failureCount: NonNegativeCounter,
     successCount: NonNegativeCounter,
     lastFailureTime: NonNegativeCounter,
-  }).pipe($I.annoteSchema("CircuitBreakerState", {
-    description: "Mutable runtime counters and state held by a circuit breaker Ref.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("CircuitBreakerState", {
+      description: "Mutable runtime counters and state held by a circuit breaker Ref.",
+    })
+  )
+) {}
 
 /**
  * Create a circuit breaker
@@ -188,12 +205,15 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (inp
     if (current.state === "half_open") {
       const newSuccessCount = current.successCount + 1;
       if (newSuccessCount >= config.successThreshold) {
-        yield* Ref.set(stateRef, {
-          state: "closed",
-          failureCount: 0,
-          successCount: 0,
-          lastFailureTime: 0,
-        } satisfies CircuitBreakerState);
+        yield* Ref.set(
+          stateRef,
+          CircuitBreakerState.make({
+            state: "closed",
+            failureCount: 0,
+            successCount: 0,
+            lastFailureTime: 0,
+          })
+        );
         yield* Effect.logInfo("Circuit breaker closed after recovery", {
           successCount: newSuccessCount,
         });
@@ -220,22 +240,28 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (inp
     const now = yield* Clock.currentTimeMillis;
     const current = yield* getState;
     if (current.state === "half_open") {
-      yield* Ref.set(stateRef, {
-        state: "open",
-        failureCount: config.maxFailures,
-        successCount: 0,
-        lastFailureTime: Number(now),
-      } satisfies CircuitBreakerState);
+      yield* Ref.set(
+        stateRef,
+        CircuitBreakerState.make({
+          state: "open",
+          failureCount: config.maxFailures,
+          successCount: 0,
+          lastFailureTime: Number(now),
+        })
+      );
       yield* Effect.logWarning("Circuit breaker reopened after half-open failure");
     } else if (current.state === "closed") {
       const newFailureCount = current.failureCount + 1;
       if (newFailureCount >= config.maxFailures) {
-        yield* Ref.set(stateRef, {
-          state: "open",
-          failureCount: newFailureCount,
-          successCount: 0,
-          lastFailureTime: Number(now),
-        } satisfies CircuitBreakerState);
+        yield* Ref.set(
+          stateRef,
+          CircuitBreakerState.make({
+            state: "open",
+            failureCount: newFailureCount,
+            successCount: 0,
+            lastFailureTime: Number(now),
+          })
+        );
         yield* Effect.logWarning("Circuit breaker opened", {
           failureCount: newFailureCount,
           resetTimeoutMs: Duration.toMillis(config.resetTimeout),
@@ -301,12 +327,15 @@ export const makeCircuitBreaker = Effect.fn("makeCircuitBreaker")(function* (inp
       ),
     getState: () => Ref.get(stateRef).pipe(Effect.map((s) => s.state)),
     reset: () =>
-      Ref.set(stateRef, {
-        state: "closed",
-        failureCount: 0,
-        successCount: 0,
-        lastFailureTime: 0,
-      } satisfies CircuitBreakerState),
+      Ref.set(
+        stateRef,
+        CircuitBreakerState.make({
+          state: "closed",
+          failureCount: 0,
+          successCount: 0,
+          lastFailureTime: 0,
+        })
+      ),
   };
 });
 

@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
@@ -39,12 +40,18 @@ describe("Geolocation", () => {
     assert.strictEqual(O.some(wide).pipe(validatedGeolocationOrNone, O.isNone), true);
     const kept = decode(GeolocationInputWire, { latitude: 1, longitude: 2 });
     assert.strictEqual(O.some(kept).pipe(validatedGeolocationOrNone, O.isSome), true);
-    assert.strictEqual(geolocationFromPrivateHeader('{"latitude":1,"longitude":2}').pipe(Effect.runSync, O.isSome), true);
+    assert.strictEqual(
+      geolocationFromPrivateHeader('{"latitude":1,"longitude":2}').pipe(Effect.runSync, O.isSome),
+      true,
+    );
     assert.strictEqual(geolocationFromPrivateHeader("").pipe(Effect.runSync, O.isNone), true);
     assert.strictEqual(geolocationFromPrivateHeader(1).pipe(Effect.runSync, O.isNone), true);
     assert.strictEqual(geolocationFromPrivateHeader("{").pipe(Effect.runSync, O.isNone), true);
-    assert.strictEqual(geolocationFromPrivateHeader('{"latitude":1000,"longitude":0}').pipe(Effect.runSync, O.isNone), true);
-    assert.strictEqual(geolocationFromPrivateHeader("x".repeat(4097)).pipe(Effect.runSync, O.isNone), true);
+    assert.strictEqual(
+      geolocationFromPrivateHeader('{"latitude":1000,"longitude":0}').pipe(Effect.runSync, O.isNone),
+      true,
+    );
+    assert.strictEqual(geolocationFromPrivateHeader(Str.repeat(4097)("x")).pipe(Effect.runSync, O.isNone), true);
   });
 
   it("admits non-finite input coordinates and bounds them to None", () => {

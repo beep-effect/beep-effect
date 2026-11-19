@@ -13,8 +13,9 @@
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { URLStr } from "@beep/schema";
-import * as S from "effect/Schema";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Base");
 
 /**
@@ -461,7 +462,9 @@ export class BaseError extends S.TaggedError<BaseError, { readonly brand: unique
  * @category errors
  * @since 0.0.0
  */
-export class NotImplemented extends S.TaggedError<NotImplemented, { readonly brand: unique symbol }>($I`NotImplemented`)(
+export class NotImplemented extends S.TaggedError<NotImplemented, { readonly brand: unique symbol }>(
+  $I`NotImplemented`
+)(
   "NotImplemented",
   {
     message: ErrorMessage.annotateKey({

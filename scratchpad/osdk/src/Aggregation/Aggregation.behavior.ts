@@ -146,6 +146,22 @@ export const MetricKeyFromName = S.String.pipe(
  */
 export type MetricKeyFromName = typeof MetricKeyFromName.Type;
 
+/**
+ * Companion namespace for {@link MetricKeyFromName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MetricKeyFromName {
+  /**
+   * Encoded (wire) form of {@link MetricKeyFromName}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof MetricKeyFromName.Encoded;
+}
+
 const conventionalName = (key: MetricKey): MetricName => MetricName.make(formatMetricKey(key));
 
 const keyOfPropertyMetric = ({

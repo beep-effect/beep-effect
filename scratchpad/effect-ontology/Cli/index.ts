@@ -13,11 +13,11 @@
 import { BunRuntime, BunServices } from "@effect/platform-bun";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as Config from "effect/Config";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
-import * as Command from "effect/cli/Command";
-import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import { DatabaseReadyLive } from "../Runtime/Persistence/PostgresLayer.ts";
 import { makeLanguageModelLayer } from "../Runtime/ProductionRuntime.ts";
 import { ConfigServiceDefault } from "../Service/Config.ts";
@@ -118,10 +118,7 @@ const CliLive = Layer.mergeAll(
   WikidataClient.Default,
   JinaReaderClient.Default,
   LinkIngestionLayer
-).pipe(
-  Layer.provideMerge(ConfigServiceDefault),
-  Layer.provideMerge(Layer.merge(BunServices.layer, BunCrypto.layer))
-);
+).pipe(Layer.provideMerge(ConfigServiceDefault), Layer.provideMerge(Layer.merge(BunServices.layer, BunCrypto.layer)));
 
 // =============================================================================
 // Entry Point

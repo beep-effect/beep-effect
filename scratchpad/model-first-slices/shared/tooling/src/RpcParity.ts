@@ -1,4 +1,4 @@
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import { pipe } from "effect/Function";
 import * as Order from "effect/Order";
 import type * as Rpc from "effect/rpc/Rpc";

@@ -89,6 +89,22 @@ export const FauxErrorName = LiteralKit([
  */
 export type FauxErrorName = typeof FauxErrorName.Type;
 
+/**
+ * Companion namespace for {@link FauxErrorName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FauxErrorName {
+  /**
+   * Encoded (wire) form of {@link FauxErrorName}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof FauxErrorName.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // The world
 // -----------------------------------------------------------------------------
@@ -141,12 +157,12 @@ export class FauxWorld extends S.Opaque<FauxWorld, { readonly brand: unique symb
     ontology: OntologyDefinition,
     objects: S.Array(OntologyObject).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<OntologyObject>())),
-      S.withDecodingDefaultKey(Effect.succeed(A.empty<(typeof OntologyObject)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(A.empty<OntologyObject.Encoded>())),
       S.annotateKey({ description: "Every object of every type, in insertion order; each row names its type." })
     ),
     links: S.Array(Link).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<Link>())),
-      S.withDecodingDefaultKey(Effect.succeed(A.empty<(typeof Link)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(A.empty<Link.Encoded>())),
       S.annotateKey({
         description: "Every link between two objects, stored once under the side it was created through.",
       })
@@ -157,6 +173,26 @@ export class FauxWorld extends S.Opaque<FauxWorld, { readonly brand: unique symb
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link FauxWorld}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FauxWorld {
+  /**
+   * Encoded (wire) form of {@link FauxWorld}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly ontology: OntologyDefinition.Encoded;
+    readonly objects?: ReadonlyArray<OntologyObject.Encoded>;
+    readonly links?: ReadonlyArray<Link.Encoded>;
+  }
+}
 
 const sameLocator = S.toEquivalence(ObjectLocator);
 
@@ -367,3 +403,20 @@ export const OffsetFromPageToken = S.toType(PageToken).pipe(
  * @since 0.0.0
  */
 export type OffsetFromPageToken = typeof OffsetFromPageToken.Type;
+
+/**
+ * Companion namespace for {@link OffsetFromPageToken}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OffsetFromPageToken {
+  /**
+   * Encoded (wire) form of {@link OffsetFromPageToken}: the page token itself, branded, since the codec starts
+   * from its decoded side.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = PageToken;
+}

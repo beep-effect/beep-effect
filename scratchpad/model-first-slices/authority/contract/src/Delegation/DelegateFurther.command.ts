@@ -31,6 +31,7 @@ export class NotDelegationHolder extends S.TaggedError<NotDelegationHolder, { re
 export class DelegationExtended extends Domain.Event(
   "DelegationExtended",
   carry({ holder: RunId, grant: GrantId, child: DelegationId, to: RunId, terms: GrantTerms }),
+  { description: "The run holding this delegation passed narrower terms of it to another agent run." },
 ) {}
 
 /**

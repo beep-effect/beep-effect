@@ -15,6 +15,7 @@ import { makeObservationMaintenanceHttp } from "@beep/repo-ai-metrics/observatio
 import { makeObservationRuntime, renderObservationRuntimeMetrics } from "@beep/repo-ai-metrics/observation-runtime";
 import { makeObservationWorker } from "@beep/repo-ai-metrics/observation-worker";
 import { makeTranscriptDiscovery, TranscriptDiscoveryInput } from "@beep/repo-ai-metrics/transcript-discovery";
+import { HostProcessPlatform } from "@beep/utils";
 import * as BunHttpServer from "@effect/platform-bun/BunHttpServer";
 import * as SqliteClient from "@effect/sql-sqlite-bun/SqliteClient";
 import * as A from "effect/Array";
@@ -289,7 +290,8 @@ const prepareObservationStorage = Effect.fnUntraced(function* (directory: string
  */
 export const runObservationWorkerProcess = Effect.fn("AIMetrics.runObservationWorkerProcess")(
   function* (directory: string) {
-    if (process.platform !== "linux" || process.geteuid === undefined) {
+    const platform = yield* HostProcessPlatform;
+    if (platform !== "linux" || process.geteuid === undefined) {
       return yield* failure("resources");
     }
     const uid = process.geteuid();

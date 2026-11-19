@@ -2,7 +2,8 @@ import * as Domain from "@alchemy.run/domain";
 import { GrantTerms } from "@proto/kernel/Capability";
 import { DelegationId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { GrantRef, Provenance } from "@proto/kernel/Invocation";
-import * as S from "effect/Schema";
+import { Count, Text } from "@proto/kernel/Measure";
+import { HistoryBound } from "./HistoryBound.ts";
 import { RunEvent } from "./RunEvent.ts";
 import { RunVersions } from "./RunVersions.ts";
 import { SessionId } from "./Session.id.ts";
@@ -18,10 +19,10 @@ export class ChildRunOpened extends Domain.Event(
   "ChildRunOpened",
   RunEvent.fields({
     parent: RunId,
-    purpose: S.String,
+    purpose: Text,
     versions: RunVersions,
-    allowance: S.Int,
-    historyBound: S.Int,
+    allowance: Count,
+    historyBound: HistoryBound,
     source: GrantRef,
     terms: GrantTerms,
     delegation: DelegationId,
@@ -29,6 +30,7 @@ export class ChildRunOpened extends Domain.Event(
     requester: PrincipalId,
     runProvenance: Provenance,
   }),
+  { description: "A child run started with its share of its parent's budget and its own narrowed delegation." },
 ) {}
 
 /**
@@ -45,10 +47,10 @@ export class OpenChildRun extends Domain.Command(
     input: {
       session: SessionId,
       parent: RunId,
-      purpose: S.String,
+      purpose: Text,
       versions: RunVersions,
-      allowance: S.Int,
-      historyBound: S.Int,
+      allowance: Count,
+      historyBound: HistoryBound,
       source: GrantRef,
       terms: GrantTerms,
       delegation: DelegationId,

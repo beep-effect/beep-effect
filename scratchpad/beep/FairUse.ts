@@ -274,7 +274,7 @@ export class ClassifierEvidence extends Model<ClassifierEvidence>("ClassifierEvi
  * @since 0.0.0
  */
 export declare namespace ClassifierEvidence {
-  export type Encoded = S.Codec.Encoded<typeof ClassifierEvidence>;
+  export type Encoded = typeof ClassifierEvidence.Encoded;
 }
 
 /**
@@ -349,7 +349,7 @@ export class ClassifierResult extends Model<ClassifierResult>("ClassifierResult"
  * @since 0.0.0
  */
 export declare namespace ClassifierResult {
-  export type Encoded = S.Codec.Encoded<typeof ClassifierResult>;
+  export type Encoded = typeof ClassifierResult.Encoded;
 }
 
 /**
@@ -440,7 +440,7 @@ export class FairUseState extends Model<FairUseState>("FairUseState")(
  * @since 0.0.0
  */
 export declare namespace FairUseState {
-  export type Encoded = S.Codec.Encoded<typeof FairUseState>;
+  export type Encoded = typeof FairUseState.Encoded;
 }
 
 /**
@@ -564,7 +564,7 @@ export class FairUseEvent extends Model<FairUseEvent>("FairUseEvent")(
  * @since 0.0.0
  */
 export declare namespace FairUseEvent {
-  export type Encoded = S.Codec.Encoded<typeof FairUseEvent>;
+  export type Encoded = typeof FairUseEvent.Encoded;
 }
 
 /**
@@ -663,7 +663,7 @@ export class FairUseUserSummary extends Model<FairUseUserSummary>("FairUseUserSu
  * @since 0.0.0
  */
 export declare namespace FairUseUserSummary {
-  export type Encoded = S.Codec.Encoded<typeof FairUseUserSummary>;
+  export type Encoded = typeof FairUseUserSummary.Encoded;
 }
 
 /**

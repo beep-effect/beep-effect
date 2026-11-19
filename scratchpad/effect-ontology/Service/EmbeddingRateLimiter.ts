@@ -15,10 +15,10 @@ import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Ref from "effect/Ref";
-import * as Semaphore from "effect/Semaphore";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
 import { Milliseconds } from "../Domain/Error/Base.ts";
 import { EmbeddingRateLimitError } from "../Domain/Error/Embedding.ts";
 
@@ -52,13 +52,20 @@ interface RateLimiterState {
  * @category configuration
  * @since 0.0.0
  */
-export class EmbeddingRateLimiterConfig extends S.Opaque<EmbeddingRateLimiterConfig, { readonly brand: unique symbol }>()(S.Struct({
+export class EmbeddingRateLimiterConfig extends S.Opaque<
+  EmbeddingRateLimiterConfig,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
     provider: S.NonEmptyString,
     requestsPerMinute: S.Int.check(S.isGreaterThan(0, { message: "Requests per minute must be positive." })),
     maxConcurrent: S.Int.check(S.isGreaterThan(0, { message: "Maximum concurrency must be positive." })),
-  }).pipe($I.annoteSchema("EmbeddingRateLimiterConfig", {
-    description: "Positive request-rate and concurrency limits for one named embedding provider.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("EmbeddingRateLimiterConfig", {
+      description: "Positive request-rate and concurrency limits for one named embedding provider.",
+    })
+  )
+) {}
 
 /**
  * Default configuration for Voyage AI (100 RPM, 10 concurrent)
@@ -74,11 +81,11 @@ export class EmbeddingRateLimiterConfig extends S.Opaque<EmbeddingRateLimiterCon
  * @category constants
  * @since 0.0.0
  */
-export const VOYAGE_RATE_LIMITS: EmbeddingRateLimiterConfig = {
+export const VOYAGE_RATE_LIMITS: EmbeddingRateLimiterConfig = EmbeddingRateLimiterConfig.make({
   provider: "voyage",
   requestsPerMinute: 100,
   maxConcurrent: 10,
-};
+});
 
 /**
  * Default configuration for local models (effectively unlimited)
@@ -94,11 +101,11 @@ export const VOYAGE_RATE_LIMITS: EmbeddingRateLimiterConfig = {
  * @category constants
  * @since 0.0.0
  */
-export const LOCAL_RATE_LIMITS: EmbeddingRateLimiterConfig = {
+export const LOCAL_RATE_LIMITS: EmbeddingRateLimiterConfig = EmbeddingRateLimiterConfig.make({
   provider: "nomic",
   requestsPerMinute: 10000,
   maxConcurrent: 50,
-};
+});
 
 /**
  * EmbeddingRateLimiter service interface

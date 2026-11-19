@@ -13,15 +13,15 @@ import { IRI } from "@beep/rdf";
 import type { ProvRecord } from "@beep/rdf/Prov";
 import { ObjectRef, Activity as ProvActivity, ProvBundle, Entity as ProvEntity } from "@beep/rdf/Prov";
 import { LiteralKit } from "@beep/schema";
-import * as Hash from "effect/Hash";
-import * as SchemaGetter from "effect/SchemaGetter";
-import * as Tuple from "effect/Tuple";
-import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
 import { dual, pipe } from "effect/Function";
+import * as Hash from "effect/Hash";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
+import * as Tuple from "effect/Tuple";
 import { ChunkId, DocumentId, GcsUri } from "../Identity.ts";
 import { Attributes, EntityId } from "./shared.ts";
 
@@ -42,9 +42,13 @@ const EvidenceSpanShape = S.Struct({
   })
 );
 
-class EvidenceSpanModel extends S.Opaque<EvidenceSpanModel, { readonly brand: unique symbol }>()(S.Struct(EvidenceSpanShape.fields).pipe($I.annoteSchema("EvidenceSpanModel", {
-    description: "Canonical text anchor with optional experiment extraction confidence.",
-  }))) {}
+class EvidenceSpanModel extends S.Opaque<EvidenceSpanModel, { readonly brand: unique symbol }>()(
+  S.Struct(EvidenceSpanShape.fields).pipe(
+    $I.annoteSchema("EvidenceSpanModel", {
+      description: "Canonical text anchor with optional experiment extraction confidence.",
+    })
+  )
+) {}
 
 const CanonicalEvidenceSpan = EvidenceSpanModel.check(TextAnchorWidthCheck);
 
@@ -104,11 +108,11 @@ export const EvidenceSpan = LegacyEvidenceSpan.pipe(
       })
     ),
   }),
-    $I.annoteSchema("EvidenceSpan", {
-      description:
-        "Legacy text-field ingress codec decoding to a canonical TextAnchor-backed span with optional confidence.",
-    })
-  );
+  $I.annoteSchema("EvidenceSpan", {
+    description:
+      "Legacy text-field ingress codec decoding to a canonical TextAnchor-backed span with optional confidence.",
+  })
+);
 
 /**
  * Runtime value decoded by {@link EvidenceSpan}.
@@ -120,27 +124,39 @@ export type EvidenceSpan = typeof EvidenceSpan.Type;
 
 const GroundingStatus = LiteralKit(["NotEvaluated", "Supported", "Rejected"]);
 
-class GroundingNotEvaluated extends S.Opaque<GroundingNotEvaluated, { readonly brand: unique symbol }>()(S.Struct({ status: S.tag(GroundingStatus.Enum.NotEvaluated) }).pipe($I.annoteSchema("GroundingNotEvaluated", {
-    description: "Grounding decision was intentionally not evaluated.",
-  }))) {}
+class GroundingNotEvaluated extends S.Opaque<GroundingNotEvaluated, { readonly brand: unique symbol }>()(
+  S.Struct({ status: S.tag(GroundingStatus.Enum.NotEvaluated) }).pipe(
+    $I.annoteSchema("GroundingNotEvaluated", {
+      description: "Grounding decision was intentionally not evaluated.",
+    })
+  )
+) {}
 
-class GroundingSupported extends S.Opaque<GroundingSupported, { readonly brand: unique symbol }>()(S.Struct({
+class GroundingSupported extends S.Opaque<GroundingSupported, { readonly brand: unique symbol }>()(
+  S.Struct({
     status: S.tag(GroundingStatus.Enum.Supported),
     confidence: Confidence.annotateKey({
       description: "Verifier confidence that the source supports the extracted fact.",
     }),
-  }).pipe($I.annoteSchema("GroundingSupported", {
-    description: "Source context supports the extracted fact at the recorded confidence.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("GroundingSupported", {
+      description: "Source context supports the extracted fact at the recorded confidence.",
+    })
+  )
+) {}
 
-class GroundingRejected extends S.Opaque<GroundingRejected, { readonly brand: unique symbol }>()(S.Struct({
+class GroundingRejected extends S.Opaque<GroundingRejected, { readonly brand: unique symbol }>()(
+  S.Struct({
     status: S.tag(GroundingStatus.Enum.Rejected),
     confidence: Confidence.annotateKey({
       description: "Verifier confidence in rejecting the extracted fact.",
     }),
-  }).pipe($I.annoteSchema("GroundingRejected", {
-    description: "Source context does not support the extracted fact at the recorded confidence.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("GroundingRejected", {
+      description: "Source context does not support the extracted fact at the recorded confidence.",
+    })
+  )
+) {}
 
 /**
  * Grounding outcome attached to an extracted entity or relation.
@@ -206,7 +222,8 @@ const NotEvaluatedGrounding = GroundingDecision.cases.NotEvaluated.make({});
  * @category models
  * @since 0.0.0
  */
-export class EntityObservation extends S.Opaque<EntityObservation, { readonly brand: unique symbol }>()(S.Struct({
+export class EntityObservation extends S.Opaque<EntityObservation, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: ObjectRef.annotateKey({ description: "Deterministic identifier of this entity observation." }),
     provenance: ObjectRef.annotateKey({ description: "PROV entity record describing the observed artifact." }),
     activity: ObjectRef.annotateKey({ description: "PROV activity that produced the observation." }),
@@ -215,12 +232,16 @@ export class EntityObservation extends S.Opaque<EntityObservation, { readonly br
       description: "One or more source-text spans used to identify and ground the entity.",
     }),
     grounding: GroundingDecision.pipe(
-      S.withConstructorDefault(Effect.succeed(NotEvaluatedGrounding)), S.withDecodingDefaultTypeKey(Effect.succeed(NotEvaluatedGrounding)),
+      S.withConstructorDefault(Effect.succeed(NotEvaluatedGrounding)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(NotEvaluatedGrounding)),
       S.annotateKey({ description: "Grounding outcome for this occurrence." })
     ),
-  }).pipe($I.annoteSchema("EntityObservation", {
-    description: "One provenance-linked, evidence-anchored observation of an extracted entity.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("EntityObservation", {
+      description: "One provenance-linked, evidence-anchored observation of an extracted entity.",
+    })
+  )
+) {}
 
 /**
  * Source-grounded observation of one extracted relation occurrence.
@@ -244,7 +265,8 @@ export class EntityObservation extends S.Opaque<EntityObservation, { readonly br
  * @category models
  * @since 0.0.0
  */
-export class RelationObservation extends S.Opaque<RelationObservation, { readonly brand: unique symbol }>()(S.Struct({
+export class RelationObservation extends S.Opaque<RelationObservation, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: ObjectRef.annotateKey({ description: "Deterministic identifier of this relation observation." }),
     provenance: ObjectRef.annotateKey({ description: "PROV entity record describing the observed relation." }),
     activity: ObjectRef.annotateKey({ description: "PROV activity that produced the observation." }),
@@ -253,12 +275,16 @@ export class RelationObservation extends S.Opaque<RelationObservation, { readonl
       description: "One or more source-text spans used to ground the relation.",
     }),
     grounding: GroundingDecision.pipe(
-      S.withConstructorDefault(Effect.succeed(NotEvaluatedGrounding)), S.withDecodingDefaultTypeKey(Effect.succeed(NotEvaluatedGrounding)),
+      S.withConstructorDefault(Effect.succeed(NotEvaluatedGrounding)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(NotEvaluatedGrounding)),
       S.annotateKey({ description: "Grounding outcome for this occurrence." })
     ),
-  }).pipe($I.annoteSchema("RelationObservation", {
-    description: "One provenance-linked, evidence-anchored observation of an extracted relation.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("RelationObservation", {
+      description: "One provenance-linked, evidence-anchored observation of an extracted relation.",
+    })
+  )
+) {}
 
 /**
  * Constructs the canonical empty provenance bundle used by new graphs.
@@ -353,7 +379,8 @@ export class Entity extends S.Class<Entity, { readonly brand: unique symbol }>($
       description: "One or more ontology classes instantiated by the entity.",
     }),
     attributes: Attributes.pipe(
-      S.withConstructorDefault(Effect.succeed(entityAttributesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(entityAttributesDefault)),
+      S.withConstructorDefault(Effect.succeed(entityAttributesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(entityAttributesDefault)),
       S.annotateKey({
         description: "Ontology property values asserted for the entity.",
       })
@@ -383,15 +410,18 @@ export class Entity extends S.Class<Entity, { readonly brand: unique symbol }>($
       S.annotateKey({ description: "UTC domain instant described by the source when available." })
     ),
     mentions: S.Array(EvidenceSpan).pipe(
-      S.withConstructorDefault(Effect.succeed(entityMentionsDefault)), S.withDecodingDefaultType(Effect.succeed(entityMentionsDefault)),
+      S.withConstructorDefault(Effect.succeed(entityMentionsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(entityMentionsDefault)),
       S.annotateKey({ description: "All source spans supporting this entity." })
     ),
     grounding: GroundingDecision.pipe(
-      S.withConstructorDefault(Effect.succeed(NotEvaluatedGrounding)), S.withDecodingDefaultTypeKey(Effect.succeed(NotEvaluatedGrounding)),
+      S.withConstructorDefault(Effect.succeed(NotEvaluatedGrounding)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(NotEvaluatedGrounding)),
       S.annotateKey({ description: "Current aggregate grounding decision for the entity." })
     ),
     observations: S.Array(EntityObservation).pipe(
-      S.withConstructorDefault(Effect.succeed(entityObservationsDefault)), S.withDecodingDefaultType(Effect.succeed(entityObservationsDefault)),
+      S.withConstructorDefault(Effect.succeed(entityObservationsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(entityObservationsDefault)),
       S.annotateKey({ description: "All evidence-anchored observations retained for this entity." })
     ),
   },
@@ -528,11 +558,13 @@ export class Relation extends S.Class<Relation, { readonly brand: unique symbol 
       S.annotateKey({ description: "Source span supporting the relation when available." })
     ),
     grounding: GroundingDecision.pipe(
-      S.withConstructorDefault(Effect.succeed(NotEvaluatedGrounding)), S.withDecodingDefaultTypeKey(Effect.succeed(NotEvaluatedGrounding)),
+      S.withConstructorDefault(Effect.succeed(NotEvaluatedGrounding)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(NotEvaluatedGrounding)),
       S.annotateKey({ description: "Current aggregate grounding decision for the relation." })
     ),
     observations: S.Array(RelationObservation).pipe(
-      S.withConstructorDefault(Effect.succeed(relationObservationsDefault)), S.withDecodingDefaultType(Effect.succeed(relationObservationsDefault)),
+      S.withConstructorDefault(Effect.succeed(relationObservationsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(relationObservationsDefault)),
       S.annotateKey({ description: "All evidence-anchored observations retained for this relation." })
     ),
   },
@@ -564,27 +596,27 @@ export class Relation extends S.Class<Relation, { readonly brand: unique symbol 
   }
 
   /**
-     * Structural equality over the RDF-like subject-predicate-object signature.
-     *
-     * **Example** (Use return)
-     *
-     * ```ts
-     * import * as Equal from "effect/Equal";
-     * import * as O from "effect/Option"
-     * import * as S from "effect/Schema"
-     * import { Relation } from "@effect-ontology/Model/Entity"
-     *
-     * const relation = S.decodeUnknownOption(Relation)({
-     *   subjectId: "alice",
-     *   predicate: "https://schema.org/knows",
-     *   object: { _tag: "EntityReference", value: "bob" }
-     * })
-     * console.log(O.map(relation, (value) => Equal.equals(value, value))) // Some(true)
-     * ```
-     *
-     * @param that - Relation to compare with this value.
-     * @returns `true` when subject, predicate, and object are structurally equal.
-     */
+   * Structural equality over the RDF-like subject-predicate-object signature.
+   *
+   * **Example** (Use return)
+   *
+   * ```ts
+   * import * as Equal from "effect/Equal";
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { Relation } from "@effect-ontology/Model/Entity"
+   *
+   * const relation = S.decodeUnknownOption(Relation)({
+   *   subjectId: "alice",
+   *   predicate: "https://schema.org/knows",
+   *   object: { _tag: "EntityReference", value: "bob" }
+   * })
+   * console.log(O.map(relation, (value) => Equal.equals(value, value))) // Some(true)
+   * ```
+   *
+   * @param that - Relation to compare with this value.
+   * @returns `true` when subject, predicate, and object are structurally equal.
+   */
   [Eq.symbol](that: Relation): boolean {
     return (
       Eq.equals(this.subjectId, that.subjectId) &&
@@ -594,27 +626,27 @@ export class Relation extends S.Class<Relation, { readonly brand: unique symbol 
   }
 
   /**
-     * Structural hash over the RDF-like subject-predicate-object signature.
-     *
-     * **Example** (Inspect an empty graph)
-     *
-     * ```ts
-     * import * as Hash from "effect/Hash";
-     * import { N } from "@beep/utils"
-     * import * as O from "effect/Option"
-     * import * as S from "effect/Schema"
-     * import { Relation } from "@effect-ontology/Model/Entity"
-     *
-     * const relation = S.decodeUnknownOption(Relation)({
-     *   subjectId: "alice",
-     *   predicate: "https://schema.org/knows",
-     *   object: { _tag: "EntityReference", value: "bob" }
-     * })
-     * console.log(O.map(relation, (value) => N.isInteger(Hash.hash(value)))) // Some(true)
-     * ```
-     *
-     * @returns A deterministic hash consistent with relation equality.
-     */
+   * Structural hash over the RDF-like subject-predicate-object signature.
+   *
+   * **Example** (Inspect an empty graph)
+   *
+   * ```ts
+   * import * as Hash from "effect/Hash";
+   * import { N } from "@beep/utils"
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { Relation } from "@effect-ontology/Model/Entity"
+   *
+   * const relation = S.decodeUnknownOption(Relation)({
+   *   subjectId: "alice",
+   *   predicate: "https://schema.org/knows",
+   *   object: { _tag: "EntityReference", value: "bob" }
+   * })
+   * console.log(O.map(relation, (value) => N.isInteger(Hash.hash(value)))) // Some(true)
+   * ```
+   *
+   * @returns A deterministic hash consistent with relation equality.
+   */
   [Hash.symbol](): number {
     return pipe(
       Hash.hash(this.subjectId),
@@ -656,11 +688,13 @@ const knowledgeGraphRelationObservationsDefault = A.empty<RelationObservation>()
 export class KnowledgeGraph extends S.Class<KnowledgeGraph, { readonly brand: unique symbol }>($I`KnowledgeGraph`)(
   {
     entities: S.Array(Entity).pipe(
-      S.withConstructorDefault(Effect.succeed(knowledgeGraphEntitiesDefault)), S.withDecodingDefaultType(Effect.succeed(knowledgeGraphEntitiesDefault)),
+      S.withConstructorDefault(Effect.succeed(knowledgeGraphEntitiesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(knowledgeGraphEntitiesDefault)),
       S.annotateKey({ description: "All extracted entities." })
     ),
     relations: S.Array(Relation).pipe(
-      S.withConstructorDefault(Effect.succeed(knowledgeGraphRelationsDefault)), S.withDecodingDefaultType(Effect.succeed(knowledgeGraphRelationsDefault)),
+      S.withConstructorDefault(Effect.succeed(knowledgeGraphRelationsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(knowledgeGraphRelationsDefault)),
       S.annotateKey({ description: "All extracted ontology relations." })
     ),
     sourceText: S.OptionFromOptionalKey(S.String).pipe(
@@ -668,15 +702,18 @@ export class KnowledgeGraph extends S.Class<KnowledgeGraph, { readonly brand: un
       S.annotateKey({ description: "Original source text when retained for provenance." })
     ),
     provenance: ProvBundle.pipe(
-      S.withConstructorDefault(Effect.succeed(knowledgeGraphProvenanceDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(knowledgeGraphProvenanceDefault)),
+      S.withConstructorDefault(Effect.succeed(knowledgeGraphProvenanceDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(knowledgeGraphProvenanceDefault)),
       S.annotateKey({ description: "Canonical PROV records retained for graph-level audit." })
     ),
     entityObservations: S.Array(EntityObservation).pipe(
-      S.withConstructorDefault(Effect.succeed(knowledgeGraphEntityObservationsDefault)), S.withDecodingDefaultType(Effect.succeed(knowledgeGraphEntityObservationsDefault)),
+      S.withConstructorDefault(Effect.succeed(knowledgeGraphEntityObservationsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(knowledgeGraphEntityObservationsDefault)),
       S.annotateKey({ description: "Entity observations retained even when policy excludes their facts." })
     ),
     relationObservations: S.Array(RelationObservation).pipe(
-      S.withConstructorDefault(Effect.succeed(knowledgeGraphRelationObservationsDefault)), S.withDecodingDefaultType(Effect.succeed(knowledgeGraphRelationObservationsDefault)),
+      S.withConstructorDefault(Effect.succeed(knowledgeGraphRelationObservationsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(knowledgeGraphRelationObservationsDefault)),
       S.annotateKey({ description: "Relation observations retained even when policy excludes their facts." })
     ),
   },
@@ -753,7 +790,8 @@ export class KnowledgeGraph extends S.Class<KnowledgeGraph, { readonly brand: un
     return A.filter(
       this.relations,
       (relation) =>
-        RelationObject.guards.EntityReference(relation.object) && S.toEquivalence(EntityId)(relation.object.value, entityId)
+        RelationObject.guards.EntityReference(relation.object) &&
+        S.toEquivalence(EntityId)(relation.object.value, entityId)
     );
   }
 }

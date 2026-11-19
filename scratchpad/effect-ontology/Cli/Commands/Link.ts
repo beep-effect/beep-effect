@@ -10,22 +10,23 @@
  */
 
 import { IRI } from "@beep/rdf/Iri";
-import * as Console from "effect/Console";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as Result from "effect/Result";
 import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as Str from "effect/String";
+import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
-import { RdfBuilder } from "../../Service/Rdf.ts";
-import { WikidataApiError, WikidataClient, WikidataRateLimitError } from "../../Service/WikidataClient.ts";
-import { withErrorHandler } from "../ErrorHandler.ts";
-import type { ParsingFailed, RdfError, SerializationFailed } from "../../Domain/Error/Rdf.ts";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import * as O from "effect/Option";
 import type { PlatformError } from "effect/PlatformError";
-import { PosInt } from "../../Schema/PosInt.ts";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type { ParsingFailed, RdfError, SerializationFailed } from "../../Domain/Error/Rdf.ts";
+import { PosInt } from "../../Schema/PosInt.ts";
+import { RdfBuilder } from "../../Service/Rdf.ts";
+import type { WikidataApiError, WikidataRateLimitError } from "../../Service/WikidataClient.ts";
+import { WikidataClient } from "../../Service/WikidataClient.ts";
+import { withErrorHandler } from "../ErrorHandler.ts";
 
 // =============================================================================
 // Command Options
@@ -80,7 +81,11 @@ const linkHandler = Effect.fn("linkHandler")(function* (
   search: O.Option<string>,
   limit: number,
   dryRun: boolean
-): Effect.fn.Return<void, ParsingFailed | PlatformError | RdfError | SerializationFailed | WikidataApiError | WikidataRateLimitError, FileSystem.FileSystem | RdfBuilder | WikidataClient> {
+): Effect.fn.Return<
+  void,
+  ParsingFailed | PlatformError | RdfError | SerializationFailed | WikidataApiError | WikidataRateLimitError,
+  FileSystem.FileSystem | RdfBuilder | WikidataClient
+> {
   const wikidata = yield* WikidataClient;
   const rdf = yield* RdfBuilder;
   if (O.isSome(search)) {
@@ -93,7 +98,7 @@ const linkHandler = Effect.fn("linkHandler")(function* (
     }
     yield* Console.log(`Found ${candidates.length} candidates:\n`);
     for (const candidate of candidates) {
-      yield* Console.log(`  [${candidate.score.toFixed(0).padStart(3)}] ${candidate.qid}: ${candidate.label}`);
+      yield* Console.log(`  [${Str.padStart(3)(candidate.score.toFixed(0))}] ${candidate.qid}: ${candidate.label}`);
       if (O.isSome(candidate.description)) {
         yield* Console.log(`        ${candidate.description}`);
       }

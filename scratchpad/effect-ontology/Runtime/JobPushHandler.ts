@@ -13,12 +13,12 @@
 import { $ScratchpadId } from "@beep/identity";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as Inspectable from "effect/Inspectable";
-import * as Match from "effect/Match";
-import * as S from "effect/Schema";
 import * as HttpRouter from "effect/http/HttpRouter";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Inspectable from "effect/Inspectable";
+import * as Match from "effect/Match";
+import * as S from "effect/Schema";
 import { ErrorMessage } from "../Domain/Error/Base.ts";
 import { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
 
@@ -40,7 +40,10 @@ const PubSubPushMessage = S.Struct({
     data: S.String, // Base64 encoded
     messageId: S.String,
     publishTime: S.String,
-    attributes: S.Record(S.String, S.String).pipe(S.withConstructorDefault(Effect.succeed(pubSubPushMessageAttributesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(pubSubPushMessageAttributesDefault))),
+    attributes: S.Record(S.String, S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(pubSubPushMessageAttributesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(pubSubPushMessageAttributesDefault))
+    ),
   }),
   subscription: S.String,
 });
@@ -55,9 +58,10 @@ const BackgroundJobType = S.Union([
   BackgroundJob.cases.WebhookJob.fields._tag,
 ]);
 
-class JobProcessorNotImplementedError extends S.TaggedError<JobProcessorNotImplementedError, { readonly brand: unique symbol }>(
-  $I`JobProcessorNotImplementedError`
-)(
+class JobProcessorNotImplementedError extends S.TaggedError<
+  JobProcessorNotImplementedError,
+  { readonly brand: unique symbol }
+>($I`JobProcessorNotImplementedError`)(
   "JobProcessorNotImplementedError",
   {
     jobType: BackgroundJobType.annotateKey({
@@ -306,10 +310,11 @@ export const JobPushRouter = HttpRouter.addAll([
     "GET",
     "/v1/jobs/health",
     Effect.gen(function* () {
+      const healthCheckTime = yield* DateTime.now;
       return yield* HttpServerResponse.json({
         status: "healthy",
         service: "job-push-handler",
-        timestamp: DateTime.toDateUtc(yield* DateTime.now).toISOString(),
+        timestamp: DateTime.toDateUtc(healthCheckTime).toISOString(),
       });
     })
   ),

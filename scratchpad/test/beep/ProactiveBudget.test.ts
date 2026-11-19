@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
@@ -30,7 +31,12 @@ const decodeFails = (schema: S.Codec<unknown, unknown, never, unknown>, input: u
 
 const now = "2020-01-02T12:00:00Z";
 
-const state = (input: { readonly materializedAt?: ReadonlyArray<string>; readonly reservations?: ReadonlyArray<ProactiveBudgetReservation> } = {}) =>
+const state = (
+  input: {
+    readonly materializedAt?: ReadonlyArray<string>;
+    readonly reservations?: ReadonlyArray<ProactiveBudgetReservation>;
+  } = {},
+) =>
   ProactiveBudgetState.make({
     accountGeneration: 1,
     materializedAt: input.materializedAt ?? [],
@@ -64,7 +70,10 @@ describe("ProactiveBudget", () => {
     });
     assert.strictEqual(decoded.accountGeneration, 3);
     assert.strictEqual(decoded.reservations[0]?.intentId, "i1");
-    assert.strictEqual(decodeFails(ProactiveBudgetState, { accountGeneration: -1, materializedAt: [], reservations: [] }), true);
+    assert.strictEqual(
+      decodeFails(ProactiveBudgetState, { accountGeneration: -1, materializedAt: [], reservations: [] }),
+      true,
+    );
     assert.strictEqual(
       decodeFails(ProactiveBudgetState, {
         accountGeneration: 0,
@@ -95,7 +104,7 @@ describe("ProactiveBudget", () => {
     const normalized = normalizedBudgetState(input, now);
     assert.deepStrictEqual(normalized.materializedAt, ["2019-12-31T12:00:00Z", "2020-01-02T11:00:00Z"]);
     assert.deepStrictEqual(
-      normalized.reservations.map((entry) => entry.intentId),
+      A.map(normalized.reservations, (entry) => entry.intentId),
       ["live"],
     );
     assert.strictEqual(normalized.accountGeneration, 1);
@@ -126,7 +135,9 @@ describe("ProactiveBudget", () => {
       reservations: [reservation("r1", "2020-01-03T12:00:00Z")],
     });
     assert.strictEqual(budgetAllows(reservedDaily, now), false);
-    const yesterdayOnly = state({ materializedAt: Array.from({ length: 10 }, (_, index) => `2020-01-01T2${index % 3}:0${index}:00Z`) });
+    const yesterdayOnly = state({
+      materializedAt: Array.from({ length: 10 }, (_, index) => `2020-01-01T2${index % 3}:0${index}:00Z`),
+    });
     assert.strictEqual(budgetAllows(yesterdayOnly, now), true);
   });
 
@@ -165,7 +176,11 @@ describe("ProactiveBudget", () => {
     assert.deepStrictEqual(counted.materializedAt, [now]);
     const piped = pipe(reserved, accountMaterialization("i1", now));
     assert.deepStrictEqual(piped.materializedAt, [now]);
-    const late = accountMaterialization(state({ reservations: [reservation("other", "2020-01-03T12:00:00Z")] }), "missing", now);
+    const late = accountMaterialization(
+      state({ reservations: [reservation("other", "2020-01-03T12:00:00Z")] }),
+      "missing",
+      now,
+    );
     assert.strictEqual(late.reservations.length, 1);
     assert.deepStrictEqual(late.materializedAt, [now]);
   });

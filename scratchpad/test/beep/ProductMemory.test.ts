@@ -1,3 +1,5 @@
+import * as R from "effect/Record";
+import * as Str from "effect/String";
 // @effect-diagnostics nodeBuiltinImport:skip-file -- nodeBuiltinImport because Node's real createHash is the digest oracle the module is checked against. Owner: @beep/scratchpad. Exit: the beep lab graduates and its sources and tests move their digests to Effect Crypto.
 import { createHash } from "node:crypto";
 import { assert, describe, it } from "@effect/vitest";
@@ -123,7 +125,12 @@ const longTerm = {
   ledgerSequence: 7,
 };
 
-const ledgerV1 = { ...longTerm, ledgerSchemaVersion: "knowledge_ledger.v1", intentBacked: true, writeReason: "explicit_remember" };
+const ledgerV1 = {
+  ...longTerm,
+  ledgerSchemaVersion: "knowledge_ledger.v1",
+  intentBacked: true,
+  writeReason: "explicit_remember",
+};
 
 const item = (patch: Record<string, unknown> = {}): Effect.Effect<MemoryItem, MemoryItemRejected | S.SchemaError> =>
   decodeMemoryItem({ ...baseItem, ...patch });
@@ -180,12 +187,23 @@ describe("ProductMemory enums and constants", () => {
     ]) {
       assert.strictEqual(decode(LedgerWriteReason, reason), reason);
     }
-    for (const status of ["active", "superseded", "hidden", "tombstoned"]) assert.strictEqual(decode(MemoryItemStatus, status), status);
+    for (const status of ["active", "superseded", "hidden", "tombstoned"])
+      assert.strictEqual(decode(MemoryItemStatus, status), status);
     for (const state of ["pending", "processed", "blocked"]) assert.strictEqual(decode(ProcessingState, state), state);
-    for (const consumer of ["omi_chat", "agent", "third_party", "developer_api", "mcp", "admin_debug", "eval", "unknown"]) {
+    for (const consumer of [
+      "omi_chat",
+      "agent",
+      "third_party",
+      "developer_api",
+      "mcp",
+      "admin_debug",
+      "eval",
+      "unknown",
+    ]) {
       assert.strictEqual(decode(MemoryConsumer, consumer), consumer);
     }
-    for (const state of ["active", "missing", "tombstoned", "purged"]) assert.strictEqual(decode(SourceState, state), state);
+    for (const state of ["active", "missing", "tombstoned", "purged"])
+      assert.strictEqual(decode(SourceState, state), state);
   });
 });
 
@@ -198,7 +216,10 @@ describe("MemoryAccessPolicy and MemoryItemAlias", () => {
     const third = memoryAccessPolicyForThirdParty();
     assert.strictEqual(third.consumer, "third_party");
     assert.strictEqual(third.appHasDefaultMemoryGrant, false);
-    assert.strictEqual(memoryAccessPolicyForThirdParty({ appHasDefaultMemoryGrant: true, archiveCapability: true }).archiveCapability, true);
+    assert.strictEqual(
+      memoryAccessPolicyForThirdParty({ appHasDefaultMemoryGrant: true, archiveCapability: true }).archiveCapability,
+      true,
+    );
     const made = MemoryAccessPolicy.make({ consumer: "mcp" });
     assert.strictEqual(made.rawProvenanceCapability, false);
     const decoded = decode(MemoryAccessPolicy, {
@@ -237,7 +258,13 @@ describe("MemoryAccessPolicy and MemoryItemAlias", () => {
     const self = MemoryItemAlias.make({ ...alias, canonicalMemoryId: "mem_1" });
     assert.strictEqual(Effect.runSyncExit(assertMemoryItemAlias(self))._tag, "Failure");
     assert.strictEqual(
-      decodeFails(MemoryItemAlias, { oldMemoryId: "a", canonicalMemoryId: "b", uid: "u", reason: "r", createdAt: "2020-01-02T03:04:05" }),
+      decodeFails(MemoryItemAlias, {
+        oldMemoryId: "a",
+        canonicalMemoryId: "b",
+        uid: "u",
+        reason: "r",
+        createdAt: "2020-01-02T03:04:05",
+      }),
       true,
     );
   });
@@ -245,7 +272,13 @@ describe("MemoryAccessPolicy and MemoryItemAlias", () => {
 
 describe("MemoryItem decoding", () => {
   it("decodes present values and requires the content key", () => {
-    const decoded = decode(MemoryItem, { ...baseItem, canonicalMemoryId: "mem_0", ledgerSequence: 3, halfLifeDays: 1.5, promotion: { a: 1 } });
+    const decoded = decode(MemoryItem, {
+      ...baseItem,
+      canonicalMemoryId: "mem_0",
+      ledgerSequence: 3,
+      halfLifeDays: 1.5,
+      promotion: { a: 1 },
+    });
     assert.strictEqual(O.getOrNull(decoded.canonicalMemoryId), "mem_0");
     assert.strictEqual(O.getOrNull(decoded.ledgerSequence), 3);
     assert.strictEqual(O.getOrNull(decoded.halfLifeDays), 1.5);
@@ -290,7 +323,7 @@ describe("MemoryItem decoding", () => {
     assert.strictEqual(decodeFails(MemoryItem, { ...baseItem, curationWeight: 101 }), true);
     assert.strictEqual(decodeFails(MemoryItem, { ...baseItem, curationWeight: -101 }), true);
     assert.strictEqual(decodeFails(MemoryItem, { ...baseItem, tier: "context_only" }), true);
-    const hugeCondition = { key: "x".repeat(MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS) };
+    const hugeCondition = { key: Str.repeat(MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS)("x") };
     assert.strictEqual(decodeFails(MemoryItem, { ...baseItem, triggerCondition: hugeCondition }), true);
   });
 
@@ -339,95 +372,103 @@ describe("MemoryItem normalization", () => {
 
   it.effect("normalizedMemoryContentKey returns None for absent or blank content", () =>
     Effect.gen(function* () {
-      assert.strictEqual(O.isNone(yield* normalizedMemoryContentKey(O.none())), true);
-      assert.strictEqual(O.isNone(yield* normalizedMemoryContentKey(O.some("   "))), true);
-      assert.strictEqual(O.getOrNull(yield* normalizedMemoryContentKey(O.some("A  b"))), sha("a b"));
+      const result1 = yield* normalizedMemoryContentKey(O.none());
+      assert.strictEqual(O.isNone(result1), true);
+      const result2 = yield* normalizedMemoryContentKey(O.some("   "));
+      assert.strictEqual(O.isNone(result2), true);
+      const result3 = yield* normalizedMemoryContentKey(O.some("A  b"));
+      assert.strictEqual(O.getOrNull(result3), sha("a b"));
     }),
   );
 
   it.effect("rejects every lifecycle invariant with the Python message", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* rejection({ updatedAt: "2020-01-01T00:00:00Z" }), "updated_at must be >= captured_at");
-      assert.strictEqual(yield* rejection({ content: "   " }), "active memory requires content");
-      assert.strictEqual(yield* rejection({ content: null }), "active memory requires content");
-      assert.strictEqual(yield* rejection({ expiresAt: null }), "short_term memory requires expires_at");
-      assert.strictEqual(yield* rejection({ expiresAt: "2020-01-02T03:04:05Z" }), "short_term expires_at must be after captured_at");
-      assert.strictEqual(yield* rejection({ ...longTerm, ledgerCommitId: null }), "active long_term memory requires ledger_commit_id");
-      assert.strictEqual(yield* rejection({ ...longTerm, ledgerCommitId: "  " }), "active long_term memory requires ledger_commit_id");
-      assert.strictEqual(yield* rejection({ ...longTerm, ledgerSequence: null }), "active long_term memory requires ledger_sequence");
-      assert.strictEqual(
-        yield* rejection({ ...longTerm, processingState: "pending" }),
-        "active long_term memory requires processing_state=processed",
-      );
-      assert.strictEqual(
-        yield* rejection({ ...longTerm, promotion: { admission_receipt: { ok: true } } }),
-        "admitted long_term memory requires an atomic graph assertion",
-      );
-      assert.strictEqual(
-        yield* rejection({
-          ...longTerm,
-          promotion: { admission_receipt: { ok: true } },
-          graphReady: true,
-          graphAssertionId: "g1",
-          graphPlanHash: "h1",
-        }),
-        "accepted",
-      );
-      assert.strictEqual(yield* rejection({ ...longTerm, promotion: { admission_receipt: null } }), "accepted");
-      assert.strictEqual(yield* rejection({ evidence: [] }), "active source memory requires at least one active evidence record");
-      assert.strictEqual(
-        yield* rejection({ evidence: [{ sourceState: "missing" }] }),
-        "active source memory requires at least one active evidence record",
-      );
-      assert.strictEqual(yield* rejection({ evidence: [], userAsserted: true }), "accepted");
-      assert.strictEqual(
-        yield* rejection({ validFrom: "2020-01-05T00:00:00Z", validTo: "2020-01-04T00:00:00Z" }),
-        "valid_to must be >= valid_from",
-      );
-      assert.strictEqual(yield* rejection({ validTo: "2020-01-01T00:00:00Z" }), "valid_to must be >= valid_from");
-      assert.strictEqual(yield* rejection({ validTo: "2020-01-09T00:00:00Z" }), "accepted");
-      assert.strictEqual(yield* rejection({ kind: "document", slot: "s" }), "only fact ledger rows may define a slot");
-      assert.strictEqual(yield* rejection({ kind: "trigger" }), "trigger ledger rows require trigger_condition");
-      assert.strictEqual(
-        yield* rejection({ triggerCondition: { when: "always" } }),
-        "trigger_condition is only valid for trigger ledger rows",
-      );
-      assert.strictEqual(yield* rejection({ kind: "trigger", triggerCondition: { when: "always" } }), "accepted");
+      const result4 = yield* rejection({ updatedAt: "2020-01-01T00:00:00Z" });
+      assert.strictEqual(result4, "updated_at must be >= captured_at");
+      const result5 = yield* rejection({ content: "   " });
+      assert.strictEqual(result5, "active memory requires content");
+      const result6 = yield* rejection({ content: null });
+      assert.strictEqual(result6, "active memory requires content");
+      const result7 = yield* rejection({ expiresAt: null });
+      assert.strictEqual(result7, "short_term memory requires expires_at");
+      const result8 = yield* rejection({ expiresAt: "2020-01-02T03:04:05Z" });
+      assert.strictEqual(result8, "short_term expires_at must be after captured_at");
+      const result9 = yield* rejection({ ...longTerm, ledgerCommitId: null });
+      assert.strictEqual(result9, "active long_term memory requires ledger_commit_id");
+      const result10 = yield* rejection({ ...longTerm, ledgerCommitId: "  " });
+      assert.strictEqual(result10, "active long_term memory requires ledger_commit_id");
+      const result11 = yield* rejection({ ...longTerm, ledgerSequence: null });
+      assert.strictEqual(result11, "active long_term memory requires ledger_sequence");
+      const result12 = yield* rejection({ ...longTerm, processingState: "pending" });
+      assert.strictEqual(result12, "active long_term memory requires processing_state=processed");
+      const result13 = yield* rejection({ ...longTerm, promotion: { admission_receipt: { ok: true } } });
+      assert.strictEqual(result13, "admitted long_term memory requires an atomic graph assertion");
+      const result14 = yield* rejection({
+        ...longTerm,
+        promotion: { admission_receipt: { ok: true } },
+        graphReady: true,
+        graphAssertionId: "g1",
+        graphPlanHash: "h1",
+      });
+      assert.strictEqual(result14, "accepted");
+      const result15 = yield* rejection({ ...longTerm, promotion: { admission_receipt: null } });
+      assert.strictEqual(result15, "accepted");
+      const result16 = yield* rejection({ evidence: [] });
+      assert.strictEqual(result16, "active source memory requires at least one active evidence record");
+      const result17 = yield* rejection({ evidence: [{ sourceState: "missing" }] });
+      assert.strictEqual(result17, "active source memory requires at least one active evidence record");
+      const result18 = yield* rejection({ evidence: [], userAsserted: true });
+      assert.strictEqual(result18, "accepted");
+      const result19 = yield* rejection({ validFrom: "2020-01-05T00:00:00Z", validTo: "2020-01-04T00:00:00Z" });
+      assert.strictEqual(result19, "valid_to must be >= valid_from");
+      const result20 = yield* rejection({ validTo: "2020-01-01T00:00:00Z" });
+      assert.strictEqual(result20, "valid_to must be >= valid_from");
+      const result21 = yield* rejection({ validTo: "2020-01-09T00:00:00Z" });
+      assert.strictEqual(result21, "accepted");
+      const result22 = yield* rejection({ kind: "document", slot: "s" });
+      assert.strictEqual(result22, "only fact ledger rows may define a slot");
+      const result23 = yield* rejection({ kind: "trigger" });
+      assert.strictEqual(result23, "trigger ledger rows require trigger_condition");
+      const result24 = yield* rejection({ triggerCondition: { when: "always" } });
+      assert.strictEqual(result24, "trigger_condition is only valid for trigger ledger rows");
+      const result25 = yield* rejection({ kind: "trigger", triggerCondition: { when: "always" } });
+      assert.strictEqual(result25, "accepted");
     }),
   );
 
   it.effect("caps knowledge_ledger.v1 rows", () =>
     Effect.gen(function* () {
-      assert.strictEqual(yield* rejection(ledgerV1), "accepted");
-      assert.strictEqual(
-        yield* rejection({ ...ledgerV1, content: "x".repeat(MAX_LEDGER_CONTENT_CHARACTERS + 1) }),
-        "knowledge ledger content exceeds the ledger limit",
-      );
-      assert.strictEqual(
-        yield* rejection({ ...ledgerV1, slot: "s".repeat(MAX_LEDGER_SLOT_CHARACTERS + 1) }),
-        "knowledge ledger slot exceeds the ledger limit",
-      );
-      assert.strictEqual(yield* rejection({ ...ledgerV1, kind: "document" }), "ledger documents require a non-empty body");
-      assert.strictEqual(yield* rejection({ ...ledgerV1, kind: "document", body: "  " }), "ledger documents require a non-empty body");
-      assert.strictEqual(
-        yield* rejection({ ...ledgerV1, kind: "document", body: "b".repeat(MAX_LEDGER_PLAYBOOK_BODY_CHARACTERS + 1) }),
-        "ledger document body exceeds the ledger limit",
-      );
-      assert.strictEqual(yield* rejection({ ...ledgerV1, kind: "document", body: "playbook" }), "accepted");
-      assert.strictEqual(yield* rejection({ ...ledgerV1, body: "stray" }), "ledger body is only valid for document rows");
-      const manyKeys = Object.fromEntries(
+      const result26 = yield* rejection(ledgerV1);
+      assert.strictEqual(result26, "accepted");
+      const result27 = yield* rejection({ ...ledgerV1, content: Str.repeat(MAX_LEDGER_CONTENT_CHARACTERS + 1)("x") });
+      assert.strictEqual(result27, "knowledge ledger content exceeds the ledger limit");
+      const result28 = yield* rejection({ ...ledgerV1, slot: Str.repeat(MAX_LEDGER_SLOT_CHARACTERS + 1)("s") });
+      assert.strictEqual(result28, "knowledge ledger slot exceeds the ledger limit");
+      const result29 = yield* rejection({ ...ledgerV1, kind: "document" });
+      assert.strictEqual(result29, "ledger documents require a non-empty body");
+      const result30 = yield* rejection({ ...ledgerV1, kind: "document", body: "  " });
+      assert.strictEqual(result30, "ledger documents require a non-empty body");
+      const result31 = yield* rejection({
+        ...ledgerV1,
+        kind: "document",
+        body: Str.repeat(MAX_LEDGER_PLAYBOOK_BODY_CHARACTERS + 1)("b"),
+      });
+      assert.strictEqual(result31, "ledger document body exceeds the ledger limit");
+      const result32 = yield* rejection({ ...ledgerV1, kind: "document", body: "playbook" });
+      assert.strictEqual(result32, "accepted");
+      const result33 = yield* rejection({ ...ledgerV1, body: "stray" });
+      assert.strictEqual(result33, "ledger body is only valid for document rows");
+      const manyKeys = R.fromEntries(
         Array.from({ length: MAX_LEDGER_TRIGGER_CONDITION_KEYS + 1 }, (_, index) => [`k${index}`, index]),
       );
-      assert.strictEqual(
-        yield* rejection({ ...ledgerV1, kind: "trigger", triggerCondition: manyKeys }),
-        "ledger trigger condition exceeds the ledger key limit",
-      );
-      assert.strictEqual(yield* rejection({ ...ledgerV1, writeReason: null }), "knowledge ledger rows require an intent-backed write reason");
-      assert.strictEqual(
-        yield* rejection({ ...ledgerV1, intentBacked: false, writeReason: "onboarding" }),
-        "knowledge ledger rows require an intent-backed write reason",
-      );
-      assert.strictEqual(yield* rejection({ ...ledgerV1, intentBacked: false, writeReason: "legacy_migration" }), "accepted");
+      const result34 = yield* rejection({ ...ledgerV1, kind: "trigger", triggerCondition: manyKeys });
+      assert.strictEqual(result34, "ledger trigger condition exceeds the ledger key limit");
+      const result35 = yield* rejection({ ...ledgerV1, writeReason: null });
+      assert.strictEqual(result35, "knowledge ledger rows require an intent-backed write reason");
+      const result36 = yield* rejection({ ...ledgerV1, intentBacked: false, writeReason: "onboarding" });
+      assert.strictEqual(result36, "knowledge ledger rows require an intent-backed write reason");
+      const result37 = yield* rejection({ ...ledgerV1, intentBacked: false, writeReason: "legacy_migration" });
+      assert.strictEqual(result37, "accepted");
       const already = yield* item(ledgerV1);
       assert.strictEqual((yield* normalizeMemoryItem(already)).memoryId, "mem_1");
     }),
@@ -446,7 +487,8 @@ describe("MemoryItem helpers", () => {
       });
       assert.deepStrictEqual(sourceIds(projected), ["a", "b", "c"]);
       assert.strictEqual(memoryItemHasLifecycleMetadata(projected), false);
-      assert.strictEqual(memoryItemHasLifecycleMetadata(yield* item({ promotion: {} })), true);
+      const result38 = yield* item({ promotion: {} });
+      assert.strictEqual(memoryItemHasLifecycleMetadata(result38), true);
     }),
   );
 
@@ -456,11 +498,15 @@ describe("MemoryItem helpers", () => {
     const captured = utc("2020-01-02T03:04:05Z");
     assert.strictEqual(captured.pipe(defaultShortTermExpiry, DateTime.formatIso), "2020-01-04T03:04:05.000Z");
     assert.strictEqual(
-      DateTime.formatIso(effectiveShortTermExpiry({ capturedAt: captured, expiresAt: O.some(utc("2020-01-03T00:00:00Z")) })),
+      DateTime.formatIso(
+        effectiveShortTermExpiry({ capturedAt: captured, expiresAt: O.some(utc("2020-01-03T00:00:00Z")) }),
+      ),
       "2020-01-03T00:00:00.000Z",
     );
     assert.strictEqual(
-      DateTime.formatIso(effectiveShortTermExpiry({ capturedAt: captured, expiresAt: O.some(utc("2020-02-01T00:00:00Z")) })),
+      DateTime.formatIso(
+        effectiveShortTermExpiry({ capturedAt: captured, expiresAt: O.some(utc("2020-02-01T00:00:00Z")) }),
+      ),
       "2020-01-04T03:04:05.000Z",
     );
     assert.strictEqual(
@@ -482,37 +528,53 @@ describe("MemoryItem access decisions", () => {
       assert.strictEqual(isDefaultAccessEligible(current, omiChat, fresh).reason, "restricted_sensitivity");
       assert.strictEqual(
         isArchiveAccessEligible(archived, memoryAccessPolicyForOmiChat(true), fresh).reason,
-        "restricted_sensitivity"
+        "restricted_sensitivity",
       );
-    })
+    }),
   );
 
   it.effect("isDefaultAccessEligible walks every branch", () =>
     Effect.gen(function* () {
-      const reason = (patch: Record<string, unknown>, policy: MemoryAccessPolicy = omiChat, now: DateTime.Utc = fresh) =>
-        item(patch).pipe(Effect.map((decoded) => isDefaultAccessEligible(decoded, policy, now).reason));
+      const reason = (
+        patch: Record<string, unknown>,
+        policy: MemoryAccessPolicy = omiChat,
+        now: DateTime.Utc = fresh,
+      ) => item(patch).pipe(Effect.map((decoded) => isDefaultAccessEligible(decoded, policy, now).reason));
       const base = yield* item();
-      assert.strictEqual(yield* reason({}), "default_memory_allowed");
+      const result39 = yield* reason({});
+      assert.strictEqual(result39, "default_memory_allowed");
       assert.strictEqual(isDefaultAccessEligible(base, omiChat, fresh).allowed, true);
-      assert.strictEqual(yield* reason({ status: "superseded" }), "not_active");
-      assert.strictEqual(yield* reason({ processingState: "blocked" }), "processing_blocked");
-      assert.strictEqual(yield* reason({ sourceState: "tombstoned", userAsserted: true }), "source_not_active");
-      assert.strictEqual(yield* reason({ sourceState: "purged", userAsserted: true }), "source_not_active");
-      assert.strictEqual(yield* reason({}, MemoryAccessPolicy.make({ consumer: "unknown" })), "unknown_consumer");
-      assert.strictEqual(yield* reason({ sensitivityLabels: ["Health"] }), "restricted_sensitivity");
-      assert.strictEqual(yield* reason({ visibility: "friends" }), "unknown_visibility");
-      assert.strictEqual(yield* reason({ ...longTerm, tier: "archive" }), "archive_requires_explicit_query");
-      assert.strictEqual(yield* reason({}, memoryAccessPolicyForThirdParty()), "missing_default_memory_grant");
-      assert.strictEqual(yield* reason({}, MemoryAccessPolicy.make({ consumer: "developer_api" })), "missing_default_memory_grant");
-      assert.strictEqual(
-        yield* reason({}, MemoryAccessPolicy.make({ consumer: "mcp", appHasDefaultMemoryGrant: true })),
-        "default_memory_allowed",
-      );
-      assert.strictEqual(yield* reason({}, memoryAccessPolicyForThirdParty({ appHasDefaultMemoryGrant: true })), "default_memory_allowed");
-      assert.strictEqual(yield* reason({}, omiChat, later), "short_term_expired_pending_adjudication");
+      const result40 = yield* reason({ status: "superseded" });
+      assert.strictEqual(result40, "not_active");
+      const result41 = yield* reason({ processingState: "blocked" });
+      assert.strictEqual(result41, "processing_blocked");
+      const result42 = yield* reason({ sourceState: "tombstoned", userAsserted: true });
+      assert.strictEqual(result42, "source_not_active");
+      const result43 = yield* reason({ sourceState: "purged", userAsserted: true });
+      assert.strictEqual(result43, "source_not_active");
+      const result44 = yield* reason({}, MemoryAccessPolicy.make({ consumer: "unknown" }));
+      assert.strictEqual(result44, "unknown_consumer");
+      const result45 = yield* reason({ sensitivityLabels: ["Health"] });
+      assert.strictEqual(result45, "restricted_sensitivity");
+      const result46 = yield* reason({ visibility: "friends" });
+      assert.strictEqual(result46, "unknown_visibility");
+      const result47 = yield* reason({ ...longTerm, tier: "archive" });
+      assert.strictEqual(result47, "archive_requires_explicit_query");
+      const result48 = yield* reason({}, memoryAccessPolicyForThirdParty());
+      assert.strictEqual(result48, "missing_default_memory_grant");
+      const result49 = yield* reason({}, MemoryAccessPolicy.make({ consumer: "developer_api" }));
+      assert.strictEqual(result49, "missing_default_memory_grant");
+      const result50 = yield* reason({}, MemoryAccessPolicy.make({ consumer: "mcp", appHasDefaultMemoryGrant: true }));
+      assert.strictEqual(result50, "default_memory_allowed");
+      const result51 = yield* reason({}, memoryAccessPolicyForThirdParty({ appHasDefaultMemoryGrant: true }));
+      assert.strictEqual(result51, "default_memory_allowed");
+      const result52 = yield* reason({}, omiChat, later);
+      assert.strictEqual(result52, "short_term_expired_pending_adjudication");
       assert.strictEqual(isDefaultAccessEligible(base, omiChat, later).allowed, true);
-      assert.strictEqual(yield* reason(longTerm), "default_memory_allowed");
-      assert.strictEqual(yield* reason(longTerm, omiChat, later), "default_memory_allowed");
+      const result53 = yield* reason(longTerm);
+      assert.strictEqual(result53, "default_memory_allowed");
+      const result54 = yield* reason(longTerm, omiChat, later);
+      assert.strictEqual(result54, "default_memory_allowed");
       const piped = pipe(base, isDefaultAccessEligible(omiChat, fresh));
       assert.strictEqual(piped.reason, "default_memory_allowed");
       assert.strictEqual(typeof isDefaultAccessEligible(base, omiChat).allowed, "boolean");
@@ -527,8 +589,10 @@ describe("MemoryItem access decisions", () => {
       assert.strictEqual(isArchiveAccessEligible(archived, omiChat).reason, "missing_archive_capability");
       assert.strictEqual(isArchiveAccessEligible(archived, capable).reason, "archive_explicit_allowed");
       assert.strictEqual(isArchiveAccessEligible(archived, capable).allowed, true);
-      assert.strictEqual(isArchiveAccessEligible(yield* item(), capable).reason, "not_archive");
-      assert.strictEqual(isArchiveAccessEligible(yield* item({ ...archive, status: "hidden" }), capable).reason, "not_active");
+      const result55 = yield* item();
+      assert.strictEqual(isArchiveAccessEligible(result55, capable).reason, "not_archive");
+      const result56 = yield* item({ ...archive, status: "hidden" });
+      assert.strictEqual(isArchiveAccessEligible(result56, capable).reason, "not_active");
       const piped = pipe(archived, isArchiveAccessEligible(capable, fresh));
       assert.strictEqual(piped.reason, "archive_explicit_allowed");
     }),
@@ -542,7 +606,8 @@ describe("MemoryItem access decisions", () => {
       assert.strictEqual(derivedDefaultAccessAllowed(base, "bogus"), false);
       assert.strictEqual(derivedDefaultAccessAllowed(base, "unknown"), false);
       assert.strictEqual(pipe(base, derivedDefaultAccessAllowed("agent")), true);
-      assert.strictEqual(derivedDefaultAccessAllowed(yield* item({ status: "tombstoned" }), "omi_chat"), false);
+      const result57 = yield* item({ status: "tombstoned" });
+      assert.strictEqual(derivedDefaultAccessAllowed(result57, "omi_chat"), false);
     }),
   );
 });

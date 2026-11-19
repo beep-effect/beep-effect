@@ -1,3 +1,4 @@
+import { ProviderMetadata } from "./EmbeddingProvider.ts";
 /**
  * Embedding Fallback Service
  *
@@ -13,13 +14,13 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import * as Ref from "effect/Ref";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import { EmbeddingError } from "../Domain/Error/Embedding.ts";
 import { CircuitOpenError } from "../Runtime/CircuitBreaker.ts";
@@ -52,12 +53,16 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EmbeddingFallback");
  * @category configuration
  * @since 0.0.0
  */
-export class FallbackChainConfig extends S.Opaque<FallbackChainConfig, { readonly brand: unique symbol }>()(S.Struct({
+export class FallbackChainConfig extends S.Opaque<FallbackChainConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
     providers: S.Array(EmbeddingProviderId),
     logFallbacks: S.Boolean,
-  }).pipe($I.annoteSchema("FallbackChainConfig", {
-    description: "Ordered embedding providers and fallback-switch logging policy.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("FallbackChainConfig", {
+      description: "Ordered embedding providers and fallback-switch logging policy.",
+    })
+  )
+) {}
 
 /**
  * Active provider tracking for observability
@@ -75,13 +80,17 @@ export class FallbackChainConfig extends S.Opaque<FallbackChainConfig, { readonl
  * @category models
  * @since 0.0.0
  */
-export class ActiveProviderInfo extends S.Opaque<ActiveProviderInfo, { readonly brand: unique symbol }>()(S.Struct({
+export class ActiveProviderInfo extends S.Opaque<ActiveProviderInfo, { readonly brand: unique symbol }>()(
+  S.Struct({
     currentProvider: EmbeddingProviderId,
     fallbackCount: S.Int.check(S.isGreaterThanOrEqualTo(0, { message: "Fallback count must be non-negative." })),
     lastFallbackReason: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("ActiveProviderInfo", {
-    description: "Current embedding provider, fallback count, and optional last fallback reason.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ActiveProviderInfo", {
+      description: "Current embedding provider, fallback count, and optional last fallback reason.",
+    })
+  )
+) {}
 
 // =============================================================================
 // Default Configuration
@@ -208,11 +217,11 @@ export const EmbeddingProviderFallbackLive: Layer.Layer<
 
     // Create Nomic provider (wraps NomicNlpService)
     const nomicProvider: EmbeddingProviderMethods = {
-      metadata: {
+      metadata: ProviderMetadata.make({
         providerId: "nomic",
         modelId: "nomic-embed-text-v1.5",
         dimension: 768,
-      },
+      }),
       embedBatch: (requests: ReadonlyArray<EmbeddingRequest>) =>
         Effect.forEach(
           requests,

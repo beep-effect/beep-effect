@@ -1,20 +1,22 @@
 import * as DurableObjects from "@alchemy.run/domain/DurableObjects";
 import { RuntimeContext } from "alchemy/RuntimeContext";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Latch from "effect/Latch";
 import * as MutableHashMap from "effect/MutableHashMap";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Order from "effect/Order";
-import * as P from "effect/Predicate";
+import * as P from "@beep/utils/Predicate";
 import * as R from "effect/Record";
-import * as Schema from "effect/Schema";
+import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
 import * as Semaphore from "effect/Semaphore";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
+import { thunk0, thunkEmptyRecord } from "@beep/utils"
+import { dual } from "effect/Function"
 
 // An in-process Durable Object host for `@alchemy.run/domain/DurableObjects`, trimmed from
 // upstream's `packages/integration-tests/test/Domain/DurableObjects.test.ts` at 33c10dd. Each
@@ -34,7 +36,10 @@ export interface SimHost {
   /** Every instance id built so far. */
   readonly ids: () => ReadonlyArray<string>;
   /** Writes rows into a built instance's storage, as another event on it would. */
-  readonly write: (id: string, entries: Readonly<Record<string, unknown>>) => Effect.Effect<void>;
+  readonly write: {
+    (id: string, entries: Readonly<Record<string, unknown>>): Effect.Effect<void>,
+    (entries: Readonly<Record<string, unknown>>): (id: string) => Effect.Effect<void>
+  };
   /** Interrupts every instance's background work and alarm. */
   readonly close: Effect.Effect<void>;
   /**
@@ -58,9 +63,9 @@ export interface SimHost {
 }
 
 /** A call routed to a frozen runner: it fails in transit, and the caller retries it. */
-export class RunnerUnreachable extends Schema.TaggedError<RunnerUnreachable, { readonly brand: unique symbol }>()("RunnerUnreachable", {
-  runner: Schema.Int,
-  id: Schema.String,
+export class RunnerUnreachable extends S.TaggedError<RunnerUnreachable, { readonly brand: unique symbol }>()("RunnerUnreachable", {
+  runner: S.Int,
+  id: S.String,
 }) {}
 
 /**
@@ -75,16 +80,19 @@ export interface SimHostOptions {
   readonly args?: "clone" | "json" | "cluster";
 }
 
-const JsonArgs = Schema.fromJsonString(Schema.Unknown.pipe(Schema.Array));
-const decodeArgs = Schema.decodeUnknownEffect(JsonArgs);
-const encodeArgs = Schema.encodeEffect(JsonArgs);
+const JsonArgs = S.fromJsonString(S.Unknown.pipe(S.Array));
+const decodeArgs = S.decodeUnknownEffect(JsonArgs);
+const encodeArgs = S.encodeEffect(JsonArgs);
 
 /** A call's arguments as they arrive, per `SimHostOptions.args`. */
-const crossArgs = (mode: NonNullable<SimHostOptions["args"]>, args: ReadonlyArray<unknown>): Effect.Effect<ReadonlyArray<unknown>> =>
+const crossArgs: {
+  (mode: NonNullable<SimHostOptions["args"]>, args: ReadonlyArray<unknown>): Effect.Effect<ReadonlyArray<unknown>>,
+  (args: ReadonlyArray<unknown>): (mode: NonNullable<SimHostOptions["args"]>) => Effect.Effect<ReadonlyArray<unknown>>
+} = dual(2, (mode: NonNullable<SimHostOptions["args"]>, args: ReadonlyArray<unknown>): Effect.Effect<ReadonlyArray<unknown>> =>
   (mode === "clone"
     ? Effect.sync(() => structuredClone(args))
     : Effect.flatMap(mode === "json" ? encodeArgs(args) : Effect.sync(() => DurableObjects.encodeCallArgs(args)), decodeArgs)
-  ).pipe(Effect.orDie);
+  ).pipe(Effect.orDie));
 
 const readKey = (id: string, key: string) => `${id}#${key}`;
 
@@ -108,7 +116,7 @@ const makeStorage = (id: string, reads: MutableHashMap.MutableHashMap<string, nu
   const sortedKeys = () => data.pipe(MutableHashMap.keys, A.fromIterable, A.sort(Order.String));
   const count = (key: string) => {
     if (!endsWithLease(key)) return;
-    MutableHashMap.modifyAt(reads, readKey(id, key), (n) => O.some(O.getOrElse(n, () => 0) + 1));
+    MutableHashMap.modifyAt(reads, readKey(id, key), (n) => O.some(O.getOrElse(n, thunk0) + 1));
   };
   return {
     get: <T>(key: string) =>
@@ -353,14 +361,14 @@ export const makeSimHostWith = (options: SimHostOptions) => (seed: (id: string, 
           return namespace(name);
         }),
       lookup: (model, cls) => namespace(DurableObjects.className(model.modelName, cls)),
-      claimKey: Effect.sync(() => ({})),
+      claimKey: Effect.sync(thunkEmptyRecord),
     },
-    reads: (id, key) => O.getOrElse(MutableHashMap.get(reads, readKey(id, key)), () => 0),
+    reads: (id, key) => O.getOrElse(MutableHashMap.get(reads, readKey(id, key)), thunk0),
     ids: () => storages.pipe(MutableHashMap.keys, A.fromIterable),
-    write: (id, entries) =>
+    write: dual(2, (id, entries) =>
       Effect.flatMap(Effect.fromOption(MutableHashMap.get(storages, id)).pipe(Effect.orDie), (storage) =>
         storage.put(entries),
-      ),
+      )),
     close: Effect.forEach(scopes.pipe(MutableHashMap.values, A.fromIterable), (scope) => Scope.close(scope, Exit.void), {
       concurrency: 1,
       discard: true,

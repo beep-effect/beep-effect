@@ -114,6 +114,26 @@ export class FoundryConnectionSettings extends S.Opaque<FoundryConnectionSetting
 ) {}
 
 /**
+ * Companion namespace for {@link FoundryConnectionSettings}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FoundryConnectionSettings {
+  /**
+   * Encoded (wire) form of {@link FoundryConnectionSettings}: `baseUrl` as URL text and `token` as the plain
+   * token, which the codec refuses to encode.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly baseUrl: string;
+    readonly token: string;
+  }
+}
+
+/**
  * The Foundry stack a transport talks to, and the token it presents.
  *
  * **Details**
@@ -209,7 +229,9 @@ const refuseErrorAnswer = Effect.fnUntraced(function* (response: HttpClientRespo
   if (response.status >= 200 && response.status < 300) {
     return response;
   }
-  const [status, body] = yield* Effect.all([decodeStatus(response.status), decodeErrorBody(response)]).pipe(
+  const [status, body] = yield* Effect.all([decodeStatus(response.status), decodeErrorBody(response)], {
+    concurrency: 1,
+  }).pipe(
     Effect.mapError((error) =>
       TransportError.make({
         message: `The platform answered HTTP ${response.status} without an error body`,

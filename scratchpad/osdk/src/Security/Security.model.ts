@@ -51,6 +51,22 @@ export const ConjunctiveMarkings = S.Array(MarkingId).pipe(
 export type ConjunctiveMarkings = typeof ConjunctiveMarkings.Type;
 
 /**
+ * Companion namespace for {@link ConjunctiveMarkings}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ConjunctiveMarkings {
+  /**
+   * Encoded (wire) form of {@link ConjunctiveMarkings}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = ReadonlyArray<MarkingId.Encoded>;
+}
+
+/**
  * Marking requirement in conjunctive normal form: every inner set must be met, by holding any one of its markings.
  *
  * **Example** (Read a requirement in conjunctive normal form)
@@ -86,6 +102,22 @@ export const DisjunctiveMarkings = MarkingId.pipe(
  * @since 0.0.0
  */
 export type DisjunctiveMarkings = typeof DisjunctiveMarkings.Type;
+
+/**
+ * Companion namespace for {@link DisjunctiveMarkings}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DisjunctiveMarkings {
+  /**
+   * Encoded (wire) form of {@link DisjunctiveMarkings}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DisjunctiveMarkings.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Security outcomes
@@ -181,6 +213,28 @@ export class PropertyMarkings extends S.Opaque<PropertyMarkings, { readonly bran
 }
 
 /**
+ * Companion namespace for {@link PropertyMarkings}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyMarkings {
+  /**
+   * Encoded (wire) form of {@link PropertyMarkings}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "propertyMarkingSummary";
+    readonly conjunctive?: ConjunctiveMarkings.Encoded;
+    readonly disjunctive?: DisjunctiveMarkings.Encoded;
+    readonly containerConjunctive?: ConjunctiveMarkings.Encoded;
+    readonly containerDisjunctive?: DisjunctiveMarkings.Encoded;
+  }
+}
+
+/**
  * Outcome for a property backed by a restricted view, whose policy cannot be reported as markings.
  *
  * @category models
@@ -195,6 +249,24 @@ export class UnsupportedPolicy extends S.Opaque<UnsupportedPolicy, { readonly br
 ) {}
 
 /**
+ * Companion namespace for {@link UnsupportedPolicy}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace UnsupportedPolicy {
+  /**
+   * Encoded (wire) form of {@link UnsupportedPolicy}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "unsupportedPolicy";
+  }
+}
+
+/**
  * Outcome when the platform failed to load the security of a property value.
  *
  * @category models
@@ -207,6 +279,24 @@ export class ErrorComputingSecurity extends S.Opaque<ErrorComputingSecurity, { r
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ErrorComputingSecurity}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ErrorComputingSecurity {
+  /**
+   * Encoded (wire) form of {@link ErrorComputingSecurity}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "errorComputingSecurity";
+  }
+}
 
 /**
  * One security outcome for a property value: its markings, or the reason none could be reported.
@@ -252,6 +342,25 @@ export const PropertySecurity = PropertySecurityKind.mapMembers(() =>
 export type PropertySecurity = typeof PropertySecurity.Type;
 
 /**
+ * Companion namespace for {@link PropertySecurity}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertySecurity {
+  /**
+   * Encoded (wire) form of {@link PropertySecurity}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | PropertyMarkings.Encoded
+    | UnsupportedPolicy.Encoded
+    | ErrorComputingSecurity.Encoded;
+}
+
+/**
  * One entry of a response's security table: the alternative security outcomes of a property value.
  *
  * **Details**
@@ -290,6 +399,24 @@ export class PropertySecurities extends S.Opaque<PropertySecurities, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link PropertySecurities}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertySecurities {
+  /**
+   * Encoded (wire) form of {@link PropertySecurities}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly disjunction: ReadonlyArray<PropertySecurity.Encoded>;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Secured values

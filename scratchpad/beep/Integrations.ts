@@ -129,7 +129,7 @@ export class ConversationTimestampRange extends Model<ConversationTimestampRange
  * @since 0.0.0
  */
 export declare namespace ConversationTimestampRange {
-  export type Encoded = S.Codec.Encoded<typeof ConversationTimestampRange>;
+  export type Encoded = typeof ConversationTimestampRange.Encoded;
 }
 
 /**
@@ -174,7 +174,7 @@ export class ScreenPipeCreateConversation extends Model<ScreenPipeCreateConversa
  * @since 0.0.0
  */
 export declare namespace ScreenPipeCreateConversation {
-  export type Encoded = S.Codec.Encoded<typeof ScreenPipeCreateConversation>;
+  export type Encoded = typeof ScreenPipeCreateConversation.Encoded;
 }
 
 /**
@@ -214,7 +214,7 @@ export class ExternalIntegrationMemory extends Model<ExternalIntegrationMemory>(
  * @since 0.0.0
  */
 export declare namespace ExternalIntegrationMemory {
-  export type Encoded = S.Codec.Encoded<typeof ExternalIntegrationMemory>;
+  export type Encoded = typeof ExternalIntegrationMemory.Encoded;
 }
 
 /**
@@ -267,7 +267,7 @@ export class ExternalIntegrationCreateMemory extends Model<ExternalIntegrationCr
  * @since 0.0.0
  */
 export declare namespace ExternalIntegrationCreateMemory {
-  export type Encoded = S.Codec.Encoded<typeof ExternalIntegrationCreateMemory>;
+  export type Encoded = typeof ExternalIntegrationCreateMemory.Encoded;
 }
 
 /**
@@ -302,7 +302,7 @@ export class IntegrationNotificationResponse extends Model<IntegrationNotificati
  * @since 0.0.0
  */
 export declare namespace IntegrationNotificationResponse {
-  export type Encoded = S.Codec.Encoded<typeof IntegrationNotificationResponse>;
+  export type Encoded = typeof IntegrationNotificationResponse.Encoded;
 }
 
 /**
@@ -337,7 +337,7 @@ export class ConversationCreateResponse extends Model<ConversationCreateResponse
  * @since 0.0.0
  */
 export declare namespace ConversationCreateResponse {
-  export type Encoded = S.Codec.Encoded<typeof ConversationCreateResponse>;
+  export type Encoded = typeof ConversationCreateResponse.Encoded;
 }
 
 /**
@@ -382,7 +382,7 @@ export class IntegrationMemoryItem extends Model<IntegrationMemoryItem>("Integra
  * @since 0.0.0
  */
 export declare namespace IntegrationMemoryItem {
-  export type Encoded = S.Codec.Encoded<typeof IntegrationMemoryItem>;
+  export type Encoded = typeof IntegrationMemoryItem.Encoded;
 }
 
 const encodeEffectIntegrationMemoryItem = S.encodeEffect(IntegrationMemoryItem);
@@ -453,7 +453,7 @@ export class MemoriesResponse extends Model<MemoriesResponse>("MemoriesResponse"
  * @since 0.0.0
  */
 export declare namespace MemoriesResponse {
-  export type Encoded = S.Codec.Encoded<typeof MemoriesResponse>;
+  export type Encoded = typeof MemoriesResponse.Encoded;
 }
 
 /**
@@ -492,7 +492,7 @@ export class IntegrationActionItem extends Model<IntegrationActionItem>("Integra
  * @since 0.0.0
  */
 export declare namespace IntegrationActionItem {
-  export type Encoded = S.Codec.Encoded<typeof IntegrationActionItem>;
+  export type Encoded = typeof IntegrationActionItem.Encoded;
 }
 
 /**
@@ -562,7 +562,7 @@ export class IntegrationEvent extends Model<IntegrationEvent>("IntegrationEvent"
  * @since 0.0.0
  */
 export declare namespace IntegrationEvent {
-  export type Encoded = S.Codec.Encoded<typeof IntegrationEvent>;
+  export type Encoded = typeof IntegrationEvent.Encoded;
 }
 
 const encodeIntegrationEvent = S.encodeEffect(IntegrationEvent);
@@ -640,7 +640,7 @@ export class ConversationItemStructured extends Model<ConversationItemStructured
  * @since 0.0.0
  */
 export declare namespace ConversationItemStructured {
-  export type Encoded = S.Codec.Encoded<typeof ConversationItemStructured>;
+  export type Encoded = typeof ConversationItemStructured.Encoded;
 }
 
 /**
@@ -680,7 +680,7 @@ export class ConversationItemGeolocation extends Model<ConversationItemGeolocati
  * @since 0.0.0
  */
 export declare namespace ConversationItemGeolocation {
-  export type Encoded = S.Codec.Encoded<typeof ConversationItemGeolocation>;
+  export type Encoded = typeof ConversationItemGeolocation.Encoded;
 }
 
 /**
@@ -720,7 +720,7 @@ export class ConversationItemTranscriptSegment extends Model<ConversationItemTra
  * @since 0.0.0
  */
 export declare namespace ConversationItemTranscriptSegment {
-  export type Encoded = S.Codec.Encoded<typeof ConversationItemTranscriptSegment>;
+  export type Encoded = typeof ConversationItemTranscriptSegment.Encoded;
 }
 
 /**
@@ -786,7 +786,7 @@ export class ConversationItem extends Model<ConversationItem>("ConversationItem"
  * @since 0.0.0
  */
 export declare namespace ConversationItem {
-  export type Encoded = S.Codec.Encoded<typeof ConversationItem>;
+  export type Encoded = typeof ConversationItem.Encoded;
 }
 
 /**
@@ -819,7 +819,7 @@ export class ConversationsResponse extends Model<ConversationsResponse>("Convers
  * @since 0.0.0
  */
 export declare namespace ConversationsResponse {
-  export type Encoded = S.Codec.Encoded<typeof ConversationsResponse>;
+  export type Encoded = typeof ConversationsResponse.Encoded;
 }
 
 /**
@@ -864,7 +864,7 @@ export class SearchConversationsResponse extends Model<SearchConversationsRespon
  * @since 0.0.0
  */
 export declare namespace SearchConversationsResponse {
-  export type Encoded = S.Codec.Encoded<typeof SearchConversationsResponse>;
+  export type Encoded = typeof SearchConversationsResponse.Encoded;
 }
 
 /**
@@ -909,7 +909,7 @@ export class TaskItem extends Model<TaskItem>("TaskItem")(
  * @since 0.0.0
  */
 export declare namespace TaskItem {
-  export type Encoded = S.Codec.Encoded<typeof TaskItem>;
+  export type Encoded = typeof TaskItem.Encoded;
 }
 
 /**
@@ -942,5 +942,5 @@ export class TasksResponse extends Model<TasksResponse>("TasksResponse")(
  * @since 0.0.0
  */
 export declare namespace TasksResponse {
-  export type Encoded = S.Codec.Encoded<typeof TasksResponse>;
+  export type Encoded = typeof TasksResponse.Encoded;
 }

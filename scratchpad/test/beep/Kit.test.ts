@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import { assert, describe, it } from "@effect/vitest";
 import { getTableConfig, PgDialect } from "drizzle-orm/pg-core";
 import { toPgTable } from "@beep/effect-drizzle/pg";
@@ -122,7 +123,7 @@ describe("shared schemas", () => {
     assert.strictEqual(decodeFails(StableId, ""), true);
     assert.strictEqual(decodeFails(StableId, ".a"), true);
     assert.strictEqual(decodeFails(StableId, "has space"), true);
-    assert.strictEqual(decodeFails(StableId, "a".repeat(129)), true);
+    assert.strictEqual(decodeFails(StableId, Str.repeat(129)("a")), true);
   });
 
   it("accepts the closed unit interval and rejects outside values", () => {
@@ -210,16 +211,18 @@ describe("optional columns", () => {
   });
 
   it("decodes null and missing keys as None and encodes None as null", () => {
-    const fromNull = Effect.runSync(decodeOptionalRow({
-      parentId: null,
-      uid: null,
-      note: null,
-      summary: null,
-      updatedAt: null,
-      dueConfidence: null,
-      attempt: null,
-      archived: null,
-    }));
+    const fromNull = Effect.runSync(
+      decodeOptionalRow({
+        parentId: null,
+        uid: null,
+        note: null,
+        summary: null,
+        updatedAt: null,
+        dueConfidence: null,
+        attempt: null,
+        archived: null,
+      }),
+    );
     const fromMissing = Effect.runSync(decodeOptionalRow({}));
     const made = OptionalRow.make({});
     const encoded = Effect.runSync(encodeOptionalRow(made));
@@ -375,10 +378,16 @@ describe("sql metadata", () => {
     const requiredNames = A.map(required.checks, (check) => check.name);
     const optionalNames = A.map(optional.checks, (check) => check.name);
     for (const name of ["id_sid", "label_text", "confidence_unit", "attempt_nn", "account_generation_nn"]) {
-      assert.strictEqual(A.some(requiredNames, (candidate) => candidate === name), true);
+      assert.strictEqual(
+        A.some(requiredNames, (candidate) => candidate === name),
+        true,
+      );
     }
     for (const name of ["parent_id_sid", "summary_text", "due_confidence_unit", "attempt_nn"]) {
-      assert.strictEqual(A.some(optionalNames, (candidate) => candidate === name), true);
+      assert.strictEqual(
+        A.some(optionalNames, (candidate) => candidate === name),
+        true,
+      );
     }
     for (const check of [...required.checks, ...optional.checks]) {
       assert.deepStrictEqual(dialect.sqlToQuery(check.value).params, []);

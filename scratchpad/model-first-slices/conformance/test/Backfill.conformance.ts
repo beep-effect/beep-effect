@@ -1,7 +1,7 @@
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import type * as Scope from "effect/Scope";
 import { eventually, get, psql, record, registration, services } from "./Stack.ts";
 

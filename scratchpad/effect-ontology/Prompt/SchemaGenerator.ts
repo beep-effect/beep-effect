@@ -7,14 +7,14 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import * as Match from "effect/Match";
-import { pipe } from "effect/Function";
 import * as A from "effect/Array";
+import * as Eq from "effect/Equal";
+import { pipe } from "effect/Function";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as P from "effect/Predicate";
-import * as Eq from "effect/Equal";
 import { dual2 } from "../Utils/Dual.ts";
 import type { ExtractionRule, RuleCategory } from "./ExtractionRule.ts";
 import type { RuleSet } from "./RuleSet.ts";
@@ -205,7 +205,11 @@ export const getFieldValidationTemplate = dual2(
  * @category models
  * @since 0.0.0
  */
-export class GeneratedSchemaAnnotations extends S.Opaque<GeneratedSchemaAnnotations, { readonly brand: unique symbol }>()(S.Struct({
+export class GeneratedSchemaAnnotations extends S.Opaque<
+  GeneratedSchemaAnnotations,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
     /** Stable identifier consumed by Effect Schema tooling. */
     identifier: S.NonEmptyString.pipe(
       $I.annoteKey("GeneratedSchemaAnnotations.identifier", {
@@ -224,9 +228,12 @@ export class GeneratedSchemaAnnotations extends S.Opaque<GeneratedSchemaAnnotati
         description: "Rule-derived schema description.",
       })
     ),
-  }).pipe($I.annoteSchema("GeneratedSchemaAnnotations", {
-    description: "Identity, title, and rule-derived description for an extraction schema.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("GeneratedSchemaAnnotations", {
+      description: "Identity, title, and rule-derived description for an extraction schema.",
+    })
+  )
+) {}
 
 /**
  * Generates a complete annotation object from an extraction rule set.
@@ -295,5 +302,5 @@ export const findRulesByCategory = dual2(
  */
 export const findRuleById = dual2(
   (ruleSet: RuleSet, ruleId: string): O.Option<ExtractionRule> =>
-    A.findFirst(ruleSet.allRules, P.Struct({id: Eq.equals(ruleId)}))
+    A.findFirst(ruleSet.allRules, P.Struct({ id: Eq.equals(ruleId) }))
 );

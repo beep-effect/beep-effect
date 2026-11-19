@@ -1,14 +1,14 @@
 import { PgliteTestLayer } from "@beep/pglite";
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as PubSub from "effect/PubSub";
-import * as Stream from "effect/Stream";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
-import * as S from "effect/Schema";
+import * as PubSub from "effect/PubSub";
 import * as KeyValueStore from "effect/persistence/KeyValueStore";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import { BatchId, OntologyName } from "../../Domain/Identity.ts";
 import { BatchState } from "../../Domain/Model/BatchWorkflow.ts";
 import { PathLayout } from "../../Domain/PathLayout.ts";
@@ -17,6 +17,7 @@ import { BatchStateHub, BatchStateHubLayer, getBatchStateFromStore, publishState
 import { BatchStateBridge, BatchStateBridgeLive } from "../../Service/BatchStateBridge.ts";
 import { EventBusService, EventBusServiceMemory, EventBusServiceSqlLive } from "../../Service/EventBus.ts";
 import { StorageService, StorageServiceTest } from "../../Service/Storage.ts";
+
 const decodeBatchState = S.decodeEffect(BatchState);
 
 const makePendingState = Effect.fn("BatchStateEventBusTest.makePendingState")(function* (batchId: BatchId) {
@@ -161,11 +162,13 @@ describe("BatchStateBridge", () => {
         const eventBus = yield* EventBusService;
         const events = yield* eventBus.subscribeEvents;
 
-        assert.isTrue(yield* bridge.isRunning);
+        const runningAfterStart = yield* bridge.isRunning;
+        assert.isTrue(runningAfterStart);
         yield* PubSub.publish(hub, state);
         yield* PubSub.publish(hub, state);
         yield* Effect.repeat(Effect.yieldNow, { times: 4 });
-        assert.isTrue(yield* bridge.isRunning);
+        const runningAfterRestart = yield* bridge.isRunning;
+        assert.isTrue(runningAfterRestart);
 
         const entries = yield* Stream.runCollect(Stream.take(events, 2));
         const first = yield* A.head(entries).pipe(
@@ -187,7 +190,8 @@ describe("BatchStateBridge", () => {
 
         yield* PubSub.shutdown(hub);
         yield* Effect.repeat(Effect.yieldNow, { times: 4 });
-        assert.isFalse(yield* bridge.isRunning);
+        const runningAfterStop = yield* bridge.isRunning;
+        assert.isFalse(runningAfterStop);
       })
     );
   });
@@ -198,7 +202,8 @@ describe("EventBus queue backend parity", () => {
     it.effect(
       "tracks enqueue, take, and process lifecycle counts",
       Effect.fnUntraced(function* () {
-        assert.deepEqual(yield* queueLifecycle(), [1, 0, 1, 0]);
+        const memoryQueueSizes = yield* queueLifecycle();
+        assert.deepEqual(memoryQueueSizes, [1, 0, 1, 0]);
       })
     );
   });
@@ -207,7 +212,8 @@ describe("EventBus queue backend parity", () => {
     it.effect(
       "tracks enqueue, take, and process lifecycle counts",
       Effect.fnUntraced(function* () {
-        assert.deepEqual(yield* queueLifecycle(), [1, 0, 1, 0]);
+        const sqlQueueSizes = yield* queueLifecycle();
+        assert.deepEqual(sqlQueueSizes, [1, 0, 1, 0]);
       })
     );
   });

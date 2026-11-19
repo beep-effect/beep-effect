@@ -1,4 +1,4 @@
-import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
+import { StreamPin, StreamPins, StreamWriter } from "@proto/kernel/PublishedStream";
 
 /**
  * Party's published stream generations, pinned (D43, phase 9). Generation 1
@@ -16,18 +16,19 @@ import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
  * **Example** (Reading the open generation)
  * ```ts
  * import { partyStreamPins } from "@proto/party-model/Facts/StreamPins";
- * import * as A from "effect/Array";
+ * import { StreamPin } from "@proto/kernel/PublishedStream";
+ * import * as A from "@beep/utils/Array";
  *
- * const open = A.filter(partyStreamPins, (pin) => pin._tag === "Open");
+ * const open = A.filter(partyStreamPins, StreamPin.guards.Open);
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const partyStreamPins: ReadonlyArray<StreamPin> = [
+export const partyStreamPins: StreamPins = StreamPins.make([
   StreamPin.cases.Closed.make({ stream: "PartyFacts" }),
   StreamPin.cases.Open.make({
     stream: "PartyFacts2",
     writer: StreamWriter.make({ projection: "ClaimDecisions", generation: 0, sources: ["Claim"] }),
   }),
-];
+]);

@@ -275,8 +275,10 @@ describe("sharedCodec", () => {
       Effect.fnUntraced(function* () {
         const shared = A.filter(SharedValueKind.literals, (tag) => A.contains(tags, tag));
         strictEqual(A.length(shared), expected);
-        const projected = yield* Effect.forEach(shared, (tag) =>
-          Effect.map(S.decodeEffect(type)({ type: tag }), project)
+        const projected = yield* Effect.forEach(
+          shared,
+          (tag) => Effect.map(S.decodeEffect(type)({ type: tag }), project),
+          { concurrency: 1 }
         );
         deepStrictEqual(
           A.filter(A.zip(shared, projected), ([tag, codec]) => codec !== sharedCodec[tag]),
@@ -350,12 +352,15 @@ describe("sharedCodec", () => {
       const embedding = VectorOf(3);
       const exact = yield* S.decodeEffect(embedding)([0.1, 0.2, 0.3]);
       deepStrictEqual(exact, [0.1, 0.2, 0.3]);
-      const verdicts = yield* Effect.all([
-        rejects(embedding)([0.1, 0.2]),
-        rejects(embedding)([0.1, 0.2, 0.3, 0.4]),
-        rejects(embedding)([0.1, 0.2, "0.3"]),
-        refusesToEncode(embedding)([0.1, 0.2]),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(embedding)([0.1, 0.2]),
+          rejects(embedding)([0.1, 0.2, 0.3, 0.4]),
+          rejects(embedding)([0.1, 0.2, "0.3"]),
+          refusesToEncode(embedding)([0.1, 0.2]),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       const generated = yield* Arbitrary.sampleEffect(Arbitrary.schema(VectorOf(4)), { count: 30, seed: 4 });
       deepStrictEqual(A.dedupe(A.map(generated, A.length)), [4]);
@@ -415,14 +420,17 @@ describe("JSON encoding table, scalar rows", () => {
   it.effect(
     "extends neither leniency to date, timestamp, vector or string",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(DateValue)(20210501),
-        rejects(TimestampValue)(1609736400000),
-        rejects(VectorValue)(["0.1", "0.3"]),
-        rejects(VectorValue)("[0.1,0.3]"),
-        rejects(StringValue)(42),
-        rejects(StringValue)(true),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(DateValue)(20210501),
+          rejects(TimestampValue)(1609736400000),
+          rejects(VectorValue)(["0.1", "0.3"]),
+          rejects(VectorValue)("[0.1,0.3]"),
+          rejects(StringValue)(42),
+          rejects(StringValue)(true),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -438,16 +446,19 @@ describe("BooleanValue", () => {
   it.effect(
     "rejects every other spelling of truth",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(BooleanValue)("TRUE"),
-        rejects(BooleanValue)("True"),
-        rejects(BooleanValue)("yes"),
-        rejects(BooleanValue)("1"),
-        rejects(BooleanValue)(""),
-        rejects(BooleanValue)(1),
-        rejects(BooleanValue)(0),
-        rejects(BooleanValue)(null),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(BooleanValue)("TRUE"),
+          rejects(BooleanValue)("True"),
+          rejects(BooleanValue)("yes"),
+          rejects(BooleanValue)("1"),
+          rejects(BooleanValue)(""),
+          rejects(BooleanValue)(1),
+          rejects(BooleanValue)(0),
+          rejects(BooleanValue)(null),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       deepStrictEqual([S.is(BooleanValue)(true), S.is(BooleanValue)("true")], [true, false]);
     })
@@ -469,10 +480,17 @@ describe("ByteValue, ShortValue and IntegerValue", () => {
       const decodeByte = S.decodeEffect(ByteValue);
       const decodeShort = S.decodeEffect(ShortValue);
       const decodeInteger = S.decodeEffect(IntegerValue);
-      const bytes = yield* Effect.all(A.map([-128, 127, "-128", "127"], (wire) => decodeByte(wire)));
-      const shorts = yield* Effect.all(A.map([-32768, 32767, "-32768", "32767"], (wire) => decodeShort(wire)));
+      const bytes = yield* Effect.all(
+        A.map([-128, 127, "-128", "127"], (wire) => decodeByte(wire)),
+        { concurrency: 1 }
+      );
+      const shorts = yield* Effect.all(
+        A.map([-32768, 32767, "-32768", "32767"], (wire) => decodeShort(wire)),
+        { concurrency: 1 }
+      );
       const integers = yield* Effect.all(
-        A.map([-2147483648, 2147483647, "-2147483648", "2147483647"], (wire) => decodeInteger(wire))
+        A.map([-2147483648, 2147483647, "-2147483648", "2147483647"], (wire) => decodeInteger(wire)),
+        { concurrency: 1 }
       );
       deepStrictEqual(bytes, [-128, 127, -128, 127]);
       deepStrictEqual(shorts, [-32768, 32767, -32768, 32767]);
@@ -483,20 +501,23 @@ describe("ByteValue, ShortValue and IntegerValue", () => {
   it.effect(
     "rejects one past each end of each signed range, as numbers and as legacy strings",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(ByteValue)(-129),
-        rejects(ByteValue)(128),
-        rejects(ByteValue)("-129"),
-        rejects(ByteValue)("128"),
-        rejects(ShortValue)(-32769),
-        rejects(ShortValue)(32768),
-        rejects(ShortValue)("-32769"),
-        rejects(ShortValue)("32768"),
-        rejects(IntegerValue)(-2147483649),
-        rejects(IntegerValue)(2147483648),
-        rejects(IntegerValue)("-2147483649"),
-        rejects(IntegerValue)("2147483648"),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(ByteValue)(-129),
+          rejects(ByteValue)(128),
+          rejects(ByteValue)("-129"),
+          rejects(ByteValue)("128"),
+          rejects(ShortValue)(-32769),
+          rejects(ShortValue)(32768),
+          rejects(ShortValue)("-32769"),
+          rejects(ShortValue)("32768"),
+          rejects(IntegerValue)(-2147483649),
+          rejects(IntegerValue)(2147483648),
+          rejects(IntegerValue)("-2147483649"),
+          rejects(IntegerValue)("2147483648"),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       deepStrictEqual(
         [S.is(ByteValue)(128), S.is(ShortValue)(32768), S.is(IntegerValue)(2147483648), S.is(IntegerValue)(2147483647)],
@@ -524,7 +545,8 @@ describe("ByteValue, ShortValue and IntegerValue", () => {
         [1],
       ];
       const verdicts = yield* Effect.all(
-        A.flatMap(codecs, (codec) => A.map(counterExamples, (input) => rejects(codec)(input)))
+        A.flatMap(codecs, (codec) => A.map(counterExamples, (input) => rejects(codec)(input))),
+        { concurrency: 1 }
       );
       assertTrue(A.every(verdicts, identity));
     })
@@ -533,12 +555,15 @@ describe("ByteValue, ShortValue and IntegerValue", () => {
   it.effect(
     "refuses to encode a value outside the range",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        refusesToEncode(ByteValue)(128),
-        refusesToEncode(ShortValue)(-32769),
-        refusesToEncode(IntegerValue)(2147483648),
-        refusesToEncode(IntegerValue)(0.5),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          refusesToEncode(ByteValue)(128),
+          refusesToEncode(ShortValue)(-32769),
+          refusesToEncode(IntegerValue)(2147483648),
+          refusesToEncode(IntegerValue)(0.5),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -547,14 +572,17 @@ describe("ByteValue, ShortValue and IntegerValue", () => {
   it.effect(
     "numeric codecs: reject an empty or blank string instead of reading it as zero",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(ByteValue)(""),
-        rejects(ShortValue)(""),
-        rejects(IntegerValue)(""),
-        rejects(IntegerValue)(" "),
-        rejects(FloatValue)(""),
-        rejects(DoubleValue)(""),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(ByteValue)(""),
+          rejects(ShortValue)(""),
+          rejects(IntegerValue)(""),
+          rejects(IntegerValue)(" "),
+          rejects(FloatValue)(""),
+          rejects(DoubleValue)(""),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -563,13 +591,16 @@ describe("ByteValue, ShortValue and IntegerValue", () => {
   it.effect(
     "numeric codecs: reject hexadecimal, binary and octal spellings",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(ByteValue)("0x10"),
-        rejects(IntegerValue)("0x10"),
-        rejects(IntegerValue)("0b11"),
-        rejects(IntegerValue)("0o17"),
-        rejects(DoubleValue)("0x10"),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(ByteValue)("0x10"),
+          rejects(IntegerValue)("0x10"),
+          rejects(IntegerValue)("0b11"),
+          rejects(IntegerValue)("0o17"),
+          rejects(DoubleValue)("0x10"),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -605,7 +636,8 @@ describe("ByteValue, ShortValue and IntegerValue", () => {
         "١٢",
       ];
       const verdicts = yield* Effect.all(
-        A.flatMap(codecs, (codec) => A.map(outsideTheGrammar, (text) => rejects(codec)(text)))
+        A.flatMap(codecs, (codec) => A.map(outsideTheGrammar, (text) => rejects(codec)(text))),
+        { concurrency: 1 }
       );
       strictEqual(A.length(verdicts), 120);
       assertTrue(A.every(verdicts, identity));
@@ -619,23 +651,31 @@ describe("ByteValue, ShortValue and IntegerValue", () => {
       const decodeDouble = S.decodeEffect(DoubleValue);
       // Optional sign, digits, optional fraction (a bare trailing or leading point included), optional exponent.
       const integers = yield* Effect.all(
-        A.map(["31", "-31", "-0", "00031", "31.", "31.0", "3.1e1", "31E0", "310e-1"], (wire) => decodeInteger(wire))
+        A.map(["31", "-31", "-0", "00031", "31.", "31.0", "3.1e1", "31E0", "310e-1"], (wire) => decodeInteger(wire)),
+        { concurrency: 1 }
       );
       deepStrictEqual(integers, [31, -31, -0, 31, 31, 31, 31, 31, 31]);
       const doubles = yield* Effect.all(
-        A.map([".5", "-.5", "5.", "0.5", "-1.5E-3", "1e3", "1E+3", "2.50"], (wire) => decodeDouble(wire))
+        A.map([".5", "-.5", "5.", "0.5", "-1.5E-3", "1e3", "1E+3", "2.50"], (wire) => decodeDouble(wire)),
+        { concurrency: 1 }
       );
       deepStrictEqual(doubles, [0.5, -0.5, 5, 0.5, -0.0015, 1000, 1000, 2.5]);
-      const encoded = yield* Effect.all(A.map(doubles, (double) => S.encodeEffect(DoubleValue)(double)));
+      const encoded = yield* Effect.all(
+        A.map(doubles, (double) => S.encodeEffect(DoubleValue)(double)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(encoded, [0.5, -0.5, 5, 0.5, -0.0015, 1000, 1000, 2.5]);
       // The grammar admits the text; the numeric range and integrality checks still apply to what it spells.
-      const verdicts = yield* Effect.all([
-        rejects(IntegerValue)(".5"),
-        rejects(IntegerValue)("3.1"),
-        rejects(ByteValue)("1e3"),
-        rejects(DoubleValue)("1e400"),
-        rejects(FloatValue)("1e39"),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(IntegerValue)(".5"),
+          rejects(IntegerValue)("3.1"),
+          rejects(ByteValue)("1e3"),
+          rejects(DoubleValue)("1e400"),
+          rejects(FloatValue)("1e39"),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -656,7 +696,10 @@ describe("LongValue", () => {
       const beyondSafe = yield* S.decodeEffect(LongValue)("9007199254740993");
       deepStrictEqual([maximum, minimum, beyondSafe], [longMaximum, longMinimum, BigInt("9007199254740993")]);
       const encodeLong = S.encodeEffect(LongValue);
-      const encoded = yield* Effect.all(A.map([maximum, minimum, beyondSafe], (long) => encodeLong(long)));
+      const encoded = yield* Effect.all(
+        A.map([maximum, minimum, beyondSafe], (long) => encodeLong(long)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(encoded, ["9223372036854775807", "-9223372036854775808", "9007199254740993"]);
     })
   );
@@ -664,13 +707,16 @@ describe("LongValue", () => {
   it.effect(
     "rejects one past each end of the signed 64-bit range",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(LongValue)("9223372036854775808"),
-        rejects(LongValue)("-9223372036854775809"),
-        rejects(LongValue)("99999999999999999999999999"),
-        refusesToEncode(LongValue)(longMaximum + BigInt(1)),
-        refusesToEncode(LongValue)(longMinimum - BigInt(1)),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(LongValue)("9223372036854775808"),
+          rejects(LongValue)("-9223372036854775809"),
+          rejects(LongValue)("99999999999999999999999999"),
+          refusesToEncode(LongValue)(longMaximum + BigInt(1)),
+          refusesToEncode(LongValue)(longMinimum - BigInt(1)),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       deepStrictEqual(
         [S.is(LongValue)(longMaximum), S.is(LongValue)(longMaximum + BigInt(1)), S.is(LongValue)(12)],
@@ -702,7 +748,7 @@ describe("LongValue", () => {
         [12],
         { value: "12" },
       ];
-      const verdicts = yield* Effect.all(A.map(counterExamples, rejects(LongValue)));
+      const verdicts = yield* Effect.all(A.map(counterExamples, rejects(LongValue)), { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -715,7 +761,10 @@ describe("LongValue", () => {
       const decodeLong = S.decodeEffect(LongValue);
       const encodeLong = S.encodeEffect(LongValue);
       const wires = [12, -12, 0, -0, 58319870951433, Number.MAX_SAFE_INTEGER, Number.MIN_SAFE_INTEGER];
-      const decoded = yield* Effect.all(A.map(wires, (wire) => decodeLong(wire)));
+      const decoded = yield* Effect.all(
+        A.map(wires, (wire) => decodeLong(wire)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(decoded, [
         BigInt(12),
         BigInt(-12),
@@ -725,16 +774,11 @@ describe("LongValue", () => {
         BigInt("9007199254740991"),
         BigInt("-9007199254740991"),
       ]);
-      const encoded = yield* Effect.all(A.map(decoded, (long) => encodeLong(long)));
-      deepStrictEqual(encoded, [
-        "12",
-        "-12",
-        "0",
-        "0",
-        "58319870951433",
-        "9007199254740991",
-        "-9007199254740991",
-      ]);
+      const encoded = yield* Effect.all(
+        A.map(decoded, (long) => encodeLong(long)),
+        { concurrency: 1 }
+      );
+      deepStrictEqual(encoded, ["12", "-12", "0", "0", "58319870951433", "9007199254740991", "-9007199254740991"]);
       // A JSON number and the string that spells it decode to the same long.
       const fromText = yield* decodeLong("58319870951433");
       const fromNumber = yield* decodeLong(58319870951433);
@@ -745,18 +789,21 @@ describe("LongValue", () => {
   it.effect(
     "rejects a JSON number that is not an integer a double holds exactly",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(LongValue)(1.5),
-        rejects(LongValue)(-0.5),
-        rejects(LongValue)(Number.NaN),
-        rejects(LongValue)(Number.POSITIVE_INFINITY),
-        // One past the largest integer a double holds exactly: the digits were already lost in transit.
-        rejects(LongValue)(9007199254740992),
-        rejects(LongValue)(-9007199254740992),
-        rejects(LongValue)(1e20),
-        rejects(LongValue)(1e21),
-        rejects(LongValue)(9223372036854775807),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(LongValue)(1.5),
+          rejects(LongValue)(-0.5),
+          rejects(LongValue)(Number.NaN),
+          rejects(LongValue)(Number.POSITIVE_INFINITY),
+          // One past the largest integer a double holds exactly: the digits were already lost in transit.
+          rejects(LongValue)(9007199254740992),
+          rejects(LongValue)(-9007199254740992),
+          rejects(LongValue)(1e20),
+          rejects(LongValue)(1e21),
+          rejects(LongValue)(9223372036854775807),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       // The number is a wire spelling only: the domain value is always a bigint.
       deepStrictEqual([S.is(LongValue)(12), S.is(LongValue)("12"), S.is(LongValue)(BigInt(12))], [false, false, true]);
@@ -797,7 +844,8 @@ describe("FloatValue and DoubleValue", () => {
         [1.5],
       ];
       const verdicts = yield* Effect.all(
-        A.flatMap(codecs, (codec) => A.map(counterExamples, (input) => rejects(codec)(input)))
+        A.flatMap(codecs, (codec) => A.map(counterExamples, (input) => rejects(codec)(input))),
+        { concurrency: 1 }
       );
       assertTrue(A.every(verdicts, identity));
     })
@@ -809,12 +857,15 @@ describe("FloatValue and DoubleValue", () => {
   it.effect(
     "refuses the wire's string spellings of the non-finite doubles",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(DoubleValue)("NaN"),
-        rejects(DoubleValue)("Infinity"),
-        rejects(DoubleValue)("-Infinity"),
-        rejects(FloatValue)("NaN"),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(DoubleValue)("NaN"),
+          rejects(DoubleValue)("Infinity"),
+          rejects(DoubleValue)("-Infinity"),
+          rejects(FloatValue)("NaN"),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -840,24 +891,33 @@ describe("FloatValue and DoubleValue", () => {
       const decoded = yield* Effect.all(
         A.map([largest, -largest, "3.4028234663852886e38", "-3.4028234663852886e38", 0, -0, Number.MIN_VALUE], (wire) =>
           decodeFloat(wire)
-        )
+        ),
+        { concurrency: 1 }
       );
       deepStrictEqual(decoded, [largest, -largest, largest, -largest, 0, -0, Number.MIN_VALUE]);
-      const verdicts = yield* Effect.all([
-        rejects(FloatValue)(nextAbove),
-        rejects(FloatValue)(-nextAbove),
-        rejects(FloatValue)(3.4028235e38),
-        rejects(FloatValue)(1e39),
-        rejects(FloatValue)(-1e39),
-        rejects(FloatValue)(Number.MAX_VALUE),
-        rejects(FloatValue)("3.4028235e38"),
-        rejects(FloatValue)("1e39"),
-        refusesToEncode(FloatValue)(nextAbove),
-        refusesToEncode(FloatValue)(-1e39),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(FloatValue)(nextAbove),
+          rejects(FloatValue)(-nextAbove),
+          rejects(FloatValue)(3.4028235e38),
+          rejects(FloatValue)(1e39),
+          rejects(FloatValue)(-1e39),
+          rejects(FloatValue)(Number.MAX_VALUE),
+          rejects(FloatValue)("3.4028235e38"),
+          rejects(FloatValue)("1e39"),
+          refusesToEncode(FloatValue)(nextAbove),
+          refusesToEncode(FloatValue)(-1e39),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       deepStrictEqual(
-        [S.is(FloatValue)(largest), S.is(FloatValue)(-largest), S.is(FloatValue)(nextAbove), S.is(FloatValue)(-nextAbove)],
+        [
+          S.is(FloatValue)(largest),
+          S.is(FloatValue)(-largest),
+          S.is(FloatValue)(nextAbove),
+          S.is(FloatValue)(-nextAbove),
+        ],
         [true, true, false, false]
       );
       // The range is what separates the two codecs: a double keeps the magnitudes a float refuses.
@@ -915,11 +975,17 @@ describe("DecimalValue", () => {
       const plain = yield* decodeDecimal("12.5");
       assertTrue(decimalEquivalence(padded, plain));
       deepStrictEqual([padded.scale, plain.scale], [2, 1]);
-      const encoded = yield* Effect.all([encodeDecimal(padded), encodeDecimal(plain)]);
+      const encoded = yield* Effect.all([encodeDecimal(padded), encodeDecimal(plain)], { concurrency: 1 });
       deepStrictEqual(encoded, ["12.50", "12.5"]);
       const wires = ["0.00", "0", "-0.0", "100", "100.000", "-7.10", "0.000001", "1000000"];
-      const decoded = yield* Effect.all(A.map(wires, (wire) => decodeDecimal(wire)));
-      const written = yield* Effect.all(A.map(decoded, (decimal) => encodeDecimal(decimal)));
+      const decoded = yield* Effect.all(
+        A.map(wires, (wire) => decodeDecimal(wire)),
+        { concurrency: 1 }
+      );
+      const written = yield* Effect.all(
+        A.map(decoded, (decimal) => encodeDecimal(decimal)),
+        { concurrency: 1 }
+      );
       // Only the sign of a zero is not kept: "-0.0" is the number zero at scale one.
       deepStrictEqual(written, ["0.00", "0", "0.0", "100", "100.000", "-7.10", "0.000001", "1000000"]);
       deepStrictEqual(
@@ -927,12 +993,15 @@ describe("DecimalValue", () => {
         [2, 0, 1, 0, 3, 2, 6, 0]
       );
       // A domain value built by hand encodes with its own scale too.
-      const fromDomain = yield* Effect.all([
-        encodeDecimal(BigDecimal.make(BigInt(1250), 2)),
-        encodeDecimal(BigDecimal.make(BigInt(-5), 3)),
-        encodeDecimal(BigDecimal.make(BigInt(0), 2)),
-        encodeDecimal(BigDecimal.make(BigInt(-1), 0)),
-      ]);
+      const fromDomain = yield* Effect.all(
+        [
+          encodeDecimal(BigDecimal.make(BigInt(1250), 2)),
+          encodeDecimal(BigDecimal.make(BigInt(-5), 3)),
+          encodeDecimal(BigDecimal.make(BigInt(0), 2)),
+          encodeDecimal(BigDecimal.make(BigInt(-1), 0)),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(fromDomain, ["12.50", "-0.005", "0.00", "-1"]);
     })
   );
@@ -955,8 +1024,14 @@ describe("DecimalValue", () => {
   it.effect(
     "reads the plain-text spellings with a bare point or leading zeros and writes them in full",
     Effect.fnUntraced(function* () {
-      const decoded = yield* Effect.all(A.map([".5", "-.5", "5.", "00.10", "007"], (wire) => decodeDecimal(wire)));
-      const encoded = yield* Effect.all(A.map(decoded, (decimal) => encodeDecimal(decimal)));
+      const decoded = yield* Effect.all(
+        A.map([".5", "-.5", "5.", "00.10", "007"], (wire) => decodeDecimal(wire)),
+        { concurrency: 1 }
+      );
+      const encoded = yield* Effect.all(
+        A.map(decoded, (decimal) => encodeDecimal(decimal)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(encoded, ["0.5", "-0.5", "5", "0.10", "7"]);
     })
   );
@@ -987,7 +1062,7 @@ describe("DecimalValue", () => {
         ["2.5"],
         { value: "2.5" },
       ];
-      const verdicts = yield* Effect.all(A.map(counterExamples, rejects(DecimalValue)));
+      const verdicts = yield* Effect.all(A.map(counterExamples, rejects(DecimalValue)), { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -997,14 +1072,17 @@ describe("DecimalValue", () => {
   it.effect(
     "refuses exponent notation on decode",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(DecimalValue)("1.50e3"),
-        rejects(DecimalValue)("25e-4"),
-        rejects(DecimalValue)("1e3"),
-        rejects(DecimalValue)("1E3"),
-        rejects(DecimalValue)("1e+21"),
-        rejects(DecimalValue)("1e0"),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(DecimalValue)("1.50e3"),
+          rejects(DecimalValue)("25e-4"),
+          rejects(DecimalValue)("1e3"),
+          rejects(DecimalValue)("1E3"),
+          rejects(DecimalValue)("1e+21"),
+          rejects(DecimalValue)("1e0"),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1014,11 +1092,14 @@ describe("DecimalValue", () => {
     Effect.fnUntraced(function* () {
       const manyFractionDigits = yield* decodeDecimal("12345678901234567890.123456789012345678");
       const sixteenFractionDigits = yield* decodeDecimal("0.0000000000000001");
-      const encoded = yield* Effect.all([
-        encodeDecimal(manyFractionDigits),
-        encodeDecimal(sixteenFractionDigits),
-        encodeDecimal(BigDecimal.make(BigInt(1), -21)),
-      ]);
+      const encoded = yield* Effect.all(
+        [
+          encodeDecimal(manyFractionDigits),
+          encodeDecimal(sixteenFractionDigits),
+          encodeDecimal(BigDecimal.make(BigInt(1), -21)),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(encoded, [
         "12345678901234567890.123456789012345678",
         "0.0000000000000001",
@@ -1041,10 +1122,10 @@ describe("DecimalValue", () => {
   it.effect(
     "DecimalValue: writes zero as a single digit at a negative scale",
     Effect.fnUntraced(function* () {
-      const encoded = yield* Effect.all([
-        encodeDecimal(BigDecimal.make(BigInt(0), -3)),
-        encodeDecimal(BigDecimal.make(BigInt(0), -1)),
-      ]);
+      const encoded = yield* Effect.all(
+        [encodeDecimal(BigDecimal.make(BigInt(0), -3)), encodeDecimal(BigDecimal.make(BigInt(0), -1))],
+        { concurrency: 1 }
+      );
       deepStrictEqual(encoded, ["0", "0"]);
     })
   );
@@ -1073,14 +1154,17 @@ describe("DecimalValue", () => {
       const largest = yield* encodeDecimal(BigDecimal.make(BigInt(1), -4096));
       deepStrictEqual([Str.length(smallest), Str.length(largest)], [4098, 4097]);
       strictEqual(largest, `1${Str.repeat(4096)("0")}`);
-      const verdicts = yield* Effect.all([
-        rejects(DecimalValue)(beyondTheBound),
-        refusesToEncode(DecimalValue)(BigDecimal.make(BigInt(1), 4097)),
-        refusesToEncode(DecimalValue)(BigDecimal.make(BigInt(1), -4097)),
-        // The bound is checked before any digit is written: this would otherwise be a gigabyte of zeros.
-        refusesToEncode(DecimalValue)(BigDecimal.make(BigInt(1), 1_000_000_000)),
-        refusesToEncode(DecimalValue)(BigDecimal.make(BigInt(1), -1_000_000_000)),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(DecimalValue)(beyondTheBound),
+          refusesToEncode(DecimalValue)(BigDecimal.make(BigInt(1), 4097)),
+          refusesToEncode(DecimalValue)(BigDecimal.make(BigInt(1), -4097)),
+          // The bound is checked before any digit is written: this would otherwise be a gigabyte of zeros.
+          refusesToEncode(DecimalValue)(BigDecimal.make(BigInt(1), 1_000_000_000)),
+          refusesToEncode(DecimalValue)(BigDecimal.make(BigInt(1), -1_000_000_000)),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       deepStrictEqual(
         [
@@ -1110,7 +1194,10 @@ describe("DecimalValue", () => {
     "reads a finite JSON number as the decimal its shortest text spells and writes the plain string",
     Effect.fnUntraced(function* () {
       const wires = [2.5, -2.5, 0, -0, 100, 1.1, 2.718281828, 0.000001, 1e20, 0.1 + 0.2];
-      const decoded = yield* Effect.all(A.map(wires, (wire) => decodeDecimal(wire)));
+      const decoded = yield* Effect.all(
+        A.map(wires, (wire) => decodeDecimal(wire)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(
         A.map(decoded, (decimal) => [decimal.value, decimal.scale]),
         [
@@ -1126,7 +1213,10 @@ describe("DecimalValue", () => {
           [BigInt("30000000000000004"), 17],
         ]
       );
-      const encoded = yield* Effect.all(A.map(decoded, (decimal) => encodeDecimal(decimal)));
+      const encoded = yield* Effect.all(
+        A.map(decoded, (decimal) => encodeDecimal(decimal)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(encoded, [
         "2.5",
         "-2.5",
@@ -1143,14 +1233,20 @@ describe("DecimalValue", () => {
       const fromText = yield* decodeDecimal("2.718281828");
       const fromNumber = yield* decodeDecimal(2.718281828);
       assertTrue(decimalEquivalence(fromNumber, fromText));
-      const verdicts = yield* Effect.all([
-        rejects(DecimalValue)(Number.NaN),
-        rejects(DecimalValue)(Number.POSITIVE_INFINITY),
-        rejects(DecimalValue)(Number.NEGATIVE_INFINITY),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(DecimalValue)(Number.NaN),
+          rejects(DecimalValue)(Number.POSITIVE_INFINITY),
+          rejects(DecimalValue)(Number.NEGATIVE_INFINITY),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       // The number is a wire spelling only: the domain value is always a BigDecimal.
-      deepStrictEqual([S.is(DecimalValue)(2.5), S.is(DecimalValue)("2.5"), S.is(DecimalValue)(euler)], [false, false, true]);
+      deepStrictEqual(
+        [S.is(DecimalValue)(2.5), S.is(DecimalValue)("2.5"), S.is(DecimalValue)(euler)],
+        [false, false, true]
+      );
     })
   );
 
@@ -1161,7 +1257,7 @@ describe("DecimalValue", () => {
     Effect.fnUntraced(function* () {
       const tiny = yield* decodeDecimal(1e-7);
       const huge = yield* decodeDecimal(1e21);
-      const encoded = yield* Effect.all([encodeDecimal(tiny), encodeDecimal(huge)]);
+      const encoded = yield* Effect.all([encodeDecimal(tiny), encodeDecimal(huge)], { concurrency: 1 });
       deepStrictEqual(encoded, ["0.0000001", "1000000000000000000000"]);
     })
   );
@@ -1182,14 +1278,14 @@ describe("StringValue, MarkingValue, BinaryValue and VectorValue", () => {
     Effect.fnUntraced(function* () {
       const decodeString = S.decodeEffect(StringValue);
       const decoded = yield* Effect.all(
-        A.map(["", " ", "Call me Ishmael", "true", "42"], (wire) => decodeString(wire))
+        A.map(["", " ", "Call me Ishmael", "true", "42"], (wire) => decodeString(wire)),
+        { concurrency: 1 }
       );
       deepStrictEqual(decoded, ["", " ", "Call me Ishmael", "true", "42"]);
-      const verdicts = yield* Effect.all([
-        rejects(StringValue)(42),
-        rejects(StringValue)(null),
-        rejects(StringValue)([]),
-      ]);
+      const verdicts = yield* Effect.all(
+        [rejects(StringValue)(42), rejects(StringValue)(null), rejects(StringValue)([])],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1201,7 +1297,7 @@ describe("StringValue, MarkingValue, BinaryValue and VectorValue", () => {
       const encoded = yield* S.encodeEffect(MarkingValue)(marking);
       strictEqual(marking, MarkingId.make("8f6a6b3c-1c2d-4e5f-9a0b-1c2d3e4f5a6b"));
       strictEqual(encoded, "8f6a6b3c-1c2d-4e5f-9a0b-1c2d3e4f5a6b");
-      const verdicts = yield* Effect.all([rejects(MarkingValue)(""), rejects(MarkingValue)(7)]);
+      const verdicts = yield* Effect.all([rejects(MarkingValue)(""), rejects(MarkingValue)(7)], { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1215,12 +1311,15 @@ describe("StringValue, MarkingValue, BinaryValue and VectorValue", () => {
       strictEqual(encoded, "aGVsbG8=");
       const empty = yield* S.decodeEffect(BinaryValue)("");
       strictEqual(A.length(A.fromIterable(empty)), 0);
-      const verdicts = yield* Effect.all([
-        rejects(BinaryValue)("aGVsbG8"),
-        rejects(BinaryValue)("not base64!"),
-        rejects(BinaryValue)("aGVs bG8="),
-        rejects(BinaryValue)([104, 101]),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(BinaryValue)("aGVsbG8"),
+          rejects(BinaryValue)("not base64!"),
+          rejects(BinaryValue)("aGVs bG8="),
+          rejects(BinaryValue)([104, 101]),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1230,14 +1329,17 @@ describe("StringValue, MarkingValue, BinaryValue and VectorValue", () => {
     Effect.fnUntraced(function* () {
       const empty = yield* S.decodeEffect(VectorValue)([]);
       deepStrictEqual(empty, []);
-      const verdicts = yield* Effect.all([
-        rejects(VectorValue)([Number.NaN]),
-        rejects(VectorValue)([0.1, Number.POSITIVE_INFINITY]),
-        rejects(VectorValue)([0.1, null]),
-        rejects(VectorValue)(["0.1"]),
-        rejects(VectorValue)({ 0: 0.1 }),
-        rejects(VectorValue)(0.1),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(VectorValue)([Number.NaN]),
+          rejects(VectorValue)([0.1, Number.POSITIVE_INFINITY]),
+          rejects(VectorValue)([0.1, null]),
+          rejects(VectorValue)(["0.1"]),
+          rejects(VectorValue)({ 0: 0.1 }),
+          rejects(VectorValue)(0.1),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1256,7 +1358,8 @@ describe("DateValue", () => {
       const decodeDate = S.decodeEffect(DateValue);
       const encodeDate = S.encodeEffect(DateValue);
       const decoded = yield* Effect.all(
-        A.map(["2020-02-29", "2000-02-29", "0001-01-01", "9999-12-31"], (wire) => decodeDate(wire))
+        A.map(["2020-02-29", "2000-02-29", "0001-01-01", "9999-12-31"], (wire) => decodeDate(wire)),
+        { concurrency: 1 }
       );
       deepStrictEqual(
         A.map(decoded, (date) => [date.year, date.month, date.day]),
@@ -1267,7 +1370,10 @@ describe("DateValue", () => {
           [9999, 12, 31],
         ]
       );
-      const encoded = yield* Effect.all(A.map(decoded, (date) => encodeDate(date)));
+      const encoded = yield* Effect.all(
+        A.map(decoded, (date) => encodeDate(date)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(encoded, ["2020-02-29", "2000-02-29", "0001-01-01", "9999-12-31"]);
     })
   );
@@ -1293,7 +1399,7 @@ describe("DateValue", () => {
         "",
         null,
       ];
-      const verdicts = yield* Effect.all(A.map(counterExamples, rejects(DateValue)));
+      const verdicts = yield* Effect.all(A.map(counterExamples, rejects(DateValue)), { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1323,13 +1429,22 @@ describe("DateValue", () => {
       strictEqual(A.length(all), 24);
       const decodeDate = S.decodeEffect(DateValue);
       const encodeDate = S.encodeEffect(DateValue);
-      const decoded = yield* Effect.all(A.map(all, ({ last }) => decodeDate(last)));
-      const encoded = yield* Effect.all(A.map(decoded, (date) => encodeDate(date)));
+      const decoded = yield* Effect.all(
+        A.map(all, ({ last }) => decodeDate(last)),
+        { concurrency: 1 }
+      );
+      const encoded = yield* Effect.all(
+        A.map(decoded, (date) => encodeDate(date)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(
         encoded,
         A.map(all, ({ last }) => last)
       );
-      const refused = yield* Effect.all(A.map(all, ({ after }) => rejects(DateValue)(after)));
+      const refused = yield* Effect.all(
+        A.map(all, ({ after }) => rejects(DateValue)(after)),
+        { concurrency: 1 }
+      );
       assertTrue(A.every(refused, identity));
     })
   );
@@ -1340,15 +1455,24 @@ describe("DateValue", () => {
       const leapYears = ["2020", "2024", "2000", "2400", "1600", "0004"];
       const commonYears = ["2021", "2022", "2023", "1900", "2100", "2200", "0001"];
       const decodeDate = S.decodeEffect(DateValue);
-      const decoded = yield* Effect.all(A.map(leapYears, (year) => decodeDate(`${year}-02-29`)));
+      const decoded = yield* Effect.all(
+        A.map(leapYears, (year) => decodeDate(`${year}-02-29`)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(
         A.map(decoded, (date) => [date.month, date.day]),
         A.replicate([2, 29], 6)
       );
-      const refused = yield* Effect.all(A.map(commonYears, (year) => rejects(DateValue)(`${year}-02-29`)));
+      const refused = yield* Effect.all(
+        A.map(commonYears, (year) => rejects(DateValue)(`${year}-02-29`)),
+        { concurrency: 1 }
+      );
       assertTrue(A.every(refused, identity));
       // 28 February exists in every year.
-      const always = yield* Effect.all(A.map(commonYears, (year) => decodeDate(`${year}-02-28`)));
+      const always = yield* Effect.all(
+        A.map(commonYears, (year) => decodeDate(`${year}-02-28`)),
+        { concurrency: 1 }
+      );
       strictEqual(A.length(always), 7);
     })
   );
@@ -1364,7 +1488,7 @@ describe("DateValue", () => {
       ]);
       // `LocalDate` itself bounds the day by 31 only, so all four exist as values; the property value codec refuses them.
       strictEqual(A.length(impossible), 4);
-      const verdicts = yield* Effect.all(A.map(impossible, refusesToEncode(DateValue)));
+      const verdicts = yield* Effect.all(A.map(impossible, refusesToEncode(DateValue)), { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
       deepStrictEqual(A.map(impossible, S.is(DateValue)), [false, false, false, false]);
       const possible = A.getSomes([
@@ -1424,13 +1548,16 @@ describe("TimestampValue", () => {
   it.effect(
     "rejects an epoch number, the empty string and an impossible month",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(TimestampValue)(1609736400000),
-        rejects(TimestampValue)(""),
-        rejects(TimestampValue)("2021-13-01T00:00:00Z"),
-        rejects(TimestampValue)("not a timestamp"),
-        rejects(TimestampValue)(null),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(TimestampValue)(1609736400000),
+          rejects(TimestampValue)(""),
+          rejects(TimestampValue)("2021-13-01T00:00:00Z"),
+          rejects(TimestampValue)("not a timestamp"),
+          rejects(TimestampValue)(null),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       const isTimestamp = S.is(TimestampValue);
       deepStrictEqual(
@@ -1445,11 +1572,10 @@ describe("TimestampValue", () => {
   it.effect(
     "TimestampValue: rejects text that is not an ISO 8601 date-time",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(TimestampValue)("Jan 4 2021"),
-        rejects(TimestampValue)("2021-01-04"),
-        rejects(TimestampValue)("1"),
-      ]);
+      const verdicts = yield* Effect.all(
+        [rejects(TimestampValue)("Jan 4 2021"), rejects(TimestampValue)("2021-01-04"), rejects(TimestampValue)("1")],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1488,7 +1614,7 @@ describe("TimestampValue", () => {
         "-2021-01-04T05:00:00Z",
         "",
       ];
-      const verdicts = yield* Effect.all(A.map(outsideTheGrammar, rejects(TimestampValue)));
+      const verdicts = yield* Effect.all(A.map(outsideTheGrammar, rejects(TimestampValue)), { concurrency: 1 });
       strictEqual(A.length(verdicts), 24);
       assertTrue(A.every(verdicts, identity));
     })
@@ -1497,22 +1623,25 @@ describe("TimestampValue", () => {
   it.effect(
     "rejects fields the grammar admits but no clock or calendar has",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(TimestampValue)("2021-13-01T00:00:00Z"),
-        rejects(TimestampValue)("2021-00-01T00:00:00Z"),
-        rejects(TimestampValue)("2021-01-32T00:00:00Z"),
-        rejects(TimestampValue)("2021-01-00T00:00:00Z"),
-        rejects(TimestampValue)("2021-01-04T25:00:00Z"),
-        rejects(TimestampValue)("2021-01-04T05:60:00Z"),
-        rejects(TimestampValue)("2021-01-04T05:00:60Z"),
-        rejects(TimestampValue)("2021-01-04T05:00:00+24:00"),
-        rejects(TimestampValue)("2021-01-04T05:00:00+25:00"),
-        rejects(TimestampValue)("2021-01-04T05:00:00+02:60"),
-        // Negative zero is not a year, and the last representable instant is the end of the range.
-        rejects(TimestampValue)("-000000-01-01T00:00:00Z"),
-        rejects(TimestampValue)("+275760-09-13T00:00:00.001Z"),
-        rejects(TimestampValue)("-271821-04-19T23:59:59Z"),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(TimestampValue)("2021-13-01T00:00:00Z"),
+          rejects(TimestampValue)("2021-00-01T00:00:00Z"),
+          rejects(TimestampValue)("2021-01-32T00:00:00Z"),
+          rejects(TimestampValue)("2021-01-00T00:00:00Z"),
+          rejects(TimestampValue)("2021-01-04T25:00:00Z"),
+          rejects(TimestampValue)("2021-01-04T05:60:00Z"),
+          rejects(TimestampValue)("2021-01-04T05:00:60Z"),
+          rejects(TimestampValue)("2021-01-04T05:00:00+24:00"),
+          rejects(TimestampValue)("2021-01-04T05:00:00+25:00"),
+          rejects(TimestampValue)("2021-01-04T05:00:00+02:60"),
+          // Negative zero is not a year, and the last representable instant is the end of the range.
+          rejects(TimestampValue)("-000000-01-01T00:00:00Z"),
+          rejects(TimestampValue)("+275760-09-13T00:00:00.001Z"),
+          rejects(TimestampValue)("-271821-04-19T23:59:59Z"),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1536,9 +1665,15 @@ describe("TimestampValue", () => {
         "2021-01-05T04:59:00+23:59",
         "+002021-01-04T05:00:00Z",
       ];
-      const decoded = yield* Effect.all(A.map(spellings, (wire) => decodeTimestamp(wire)));
+      const decoded = yield* Effect.all(
+        A.map(spellings, (wire) => decodeTimestamp(wire)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(A.map(decoded, DateTime.toEpochMillis), A.replicate(1609736400000, 14));
-      const encoded = yield* Effect.all(A.map(decoded, (timestamp) => encodeTimestamp(timestamp)));
+      const encoded = yield* Effect.all(
+        A.map(decoded, (timestamp) => encodeTimestamp(timestamp)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(encoded, A.replicate("2021-01-04T05:00:00.000Z", 14));
     })
   );
@@ -1557,19 +1692,21 @@ describe("TimestampValue", () => {
         "+275760-09-13T00:00:00Z",
         "-271821-04-20T00:00:00Z",
       ];
-      const decoded = yield* Effect.all(A.map(wires, (wire) => decodeTimestamp(wire)));
-      deepStrictEqual(A.map(decoded, DateTime.toEpochMillis), [
-        -62167219200000,
-        -62135596800000,
-        -1,
-        0,
-        253402300799999,
-        253402300800000,
-        -62198755200000,
-        8640000000000000,
-        -8640000000000000,
-      ]);
-      const encoded = yield* Effect.all(A.map(decoded, (timestamp) => encodeTimestamp(timestamp)));
+      const decoded = yield* Effect.all(
+        A.map(wires, (wire) => decodeTimestamp(wire)),
+        { concurrency: 1 }
+      );
+      deepStrictEqual(
+        A.map(decoded, DateTime.toEpochMillis),
+        [
+          -62167219200000, -62135596800000, -1, 0, 253402300799999, 253402300800000, -62198755200000, 8640000000000000,
+          -8640000000000000,
+        ]
+      );
+      const encoded = yield* Effect.all(
+        A.map(decoded, (timestamp) => encodeTimestamp(timestamp)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(encoded, [
         "0000-01-01T00:00:00.000Z",
         "0001-01-01T00:00:00.000Z",
@@ -1582,7 +1719,10 @@ describe("TimestampValue", () => {
         "-271821-04-20T00:00:00.000Z",
       ]);
       // The canonical form of an expanded year is itself readable: decoding it gives the same instant back.
-      const again = yield* Effect.all(A.map(encoded, (wire) => decodeTimestamp(wire)));
+      const again = yield* Effect.all(
+        A.map(encoded, (wire) => decodeTimestamp(wire)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(A.map(again, DateTime.toEpochMillis), A.map(decoded, DateTime.toEpochMillis));
     })
   );
@@ -1604,11 +1744,14 @@ describe("TimestampValue", () => {
   it.effect(
     "TimestampValue: rejects a day its month does not have",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(TimestampValue)("2021-02-30T00:00:00Z"),
-        rejects(TimestampValue)("2021-02-29T00:00:00Z"),
-        rejects(TimestampValue)("2021-04-31T00:00:00Z"),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(TimestampValue)("2021-02-30T00:00:00Z"),
+          rejects(TimestampValue)("2021-02-29T00:00:00Z"),
+          rejects(TimestampValue)("2021-04-31T00:00:00Z"),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1666,9 +1809,9 @@ describe("ScalarValue", () => {
       const timestamp: ScalarValue = instant;
       deepStrictEqual<ReadonlyArray<unknown>>([long, decimal, date, timestamp], rich);
       deepStrictEqual(A.map(rich, S.is(ScalarValue)), [false, false, false, false]);
-      const refused = yield* Effect.all(A.map(rich, refusesToEncode(ScalarValue)));
+      const refused = yield* Effect.all(A.map(rich, refusesToEncode(ScalarValue)), { concurrency: 1 });
       deepStrictEqual(refused, [true, true, true, true]);
-      const rejected = yield* Effect.all(A.map(rich, rejects(ScalarValue)));
+      const rejected = yield* Effect.all(A.map(rich, rejects(ScalarValue)), { concurrency: 1 });
       deepStrictEqual(rejected, [true, true, true, true]);
     })
   );
@@ -1678,15 +1821,18 @@ describe("ScalarValue", () => {
   it.effect(
     "the codec of each rich type writes its one canonical wire spelling, and that spelling is a wire operand",
     Effect.fnUntraced(function* () {
-      const encoded = yield* Effect.all([
-        S.encodeEffect(StringValue)("Call me Ishmael"),
-        S.encodeEffect(DoubleValue)(3.5),
-        S.encodeEffect(BooleanValue)(true),
-        S.encodeEffect(LongValue)(longExample),
-        S.encodeEffect(DecimalValue)(BigDecimal.fromStringUnsafe("2.50")),
-        S.encodeEffect(DateValue)(mayFirst),
-        S.encodeEffect(TimestampValue)(instant),
-      ]);
+      const encoded = yield* Effect.all(
+        [
+          S.encodeEffect(StringValue)("Call me Ishmael"),
+          S.encodeEffect(DoubleValue)(3.5),
+          S.encodeEffect(BooleanValue)(true),
+          S.encodeEffect(LongValue)(longExample),
+          S.encodeEffect(DecimalValue)(BigDecimal.fromStringUnsafe("2.50")),
+          S.encodeEffect(DateValue)(mayFirst),
+          S.encodeEffect(TimestampValue)(instant),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(encoded, [
         "Call me Ishmael",
         3.5,
@@ -1698,7 +1844,10 @@ describe("ScalarValue", () => {
         "2021-01-04T05:00:00.000Z",
       ]);
       deepStrictEqual(A.map(encoded, S.is(ScalarValue)), [true, true, true, true, true, true, true]);
-      const operands = yield* Effect.all(A.map(encoded, (wire) => decodeScalar(wire)));
+      const operands = yield* Effect.all(
+        A.map(encoded, (wire) => decodeScalar(wire)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(operands, encoded);
     })
   );
@@ -1708,15 +1857,21 @@ describe("ScalarValue", () => {
   it.effect(
     "a rich operand is bounded by its own codec, and a JSON number stays a number on decode",
     Effect.fnUntraced(function* () {
-      const decoded = yield* Effect.all(A.map([58319870951433, 2.5, 1e21], (wire) => decodeScalar(wire)));
+      const decoded = yield* Effect.all(
+        A.map([58319870951433, 2.5, 1e21], (wire) => decodeScalar(wire)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(decoded, [58319870951433, 2.5, 1e21]);
       const impossibleDates = A.getSomes([LocalDate.makeOption({ year: 2021, month: 2, day: 30 })]);
       strictEqual(A.length(impossibleDates), 1);
-      const verdicts = yield* Effect.all([
-        refusesToEncode(DecimalValue)(BigDecimal.make(BigInt(1), 4097)),
-        refusesToEncode(LongValue)(longMinimum - BigInt(1)),
-        ...A.map(impossibleDates, refusesToEncode(DateValue)),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          refusesToEncode(DecimalValue)(BigDecimal.make(BigInt(1), 4097)),
+          refusesToEncode(LongValue)(longMinimum - BigInt(1)),
+          ...A.map(impossibleDates, refusesToEncode(DateValue)),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       deepStrictEqual(
         [
@@ -1738,9 +1893,15 @@ describe("ScalarValue", () => {
     "decodes a JSON string to text whatever it spells, a JSON number to a number and a JSON boolean to a boolean",
     Effect.fnUntraced(function* () {
       const texts = ["2021-05-01", "58319870951433", "2.718281828", "2021-01-04T05:00:00Z", "true", "31", ""];
-      const decodedTexts = yield* Effect.all(A.map(texts, (wire) => decodeScalar(wire)));
+      const decodedTexts = yield* Effect.all(
+        A.map(texts, (wire) => decodeScalar(wire)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(decodedTexts, texts);
-      const decodedNatives = yield* Effect.all(A.map([3.5, 238940, -0.25, true, false], (wire) => decodeScalar(wire)));
+      const decodedNatives = yield* Effect.all(
+        A.map([3.5, 238940, -0.25, true, false], (wire) => decodeScalar(wire)),
+        { concurrency: 1 }
+      );
       deepStrictEqual(decodedNatives, [3.5, 238940, -0.25, true, false]);
     })
   );
@@ -1763,19 +1924,22 @@ describe("ScalarValue", () => {
   it.effect(
     "rejects null, records, arrays and non-finite numbers, and refuses to encode a bigint of any size",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(ScalarValue)(null),
-        rejects(ScalarValue)(undefined),
-        rejects(ScalarValue)({}),
-        rejects(ScalarValue)([]),
-        rejects(ScalarValue)({ type: "stringValue", value: "x" }),
-        rejects(ScalarValue)(Number.NaN),
-        rejects(ScalarValue)(Number.POSITIVE_INFINITY),
-        refusesToEncode(ScalarValue)(longMaximum + BigInt(1)),
-        refusesToEncode(ScalarValue)(longMaximum),
-        refusesToEncode(ScalarValue)(Number.NaN),
-        refusesToEncode(ScalarValue)(null),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(ScalarValue)(null),
+          rejects(ScalarValue)(undefined),
+          rejects(ScalarValue)({}),
+          rejects(ScalarValue)([]),
+          rejects(ScalarValue)({ type: "stringValue", value: "x" }),
+          rejects(ScalarValue)(Number.NaN),
+          rejects(ScalarValue)(Number.POSITIVE_INFINITY),
+          refusesToEncode(ScalarValue)(longMaximum + BigInt(1)),
+          refusesToEncode(ScalarValue)(longMaximum),
+          refusesToEncode(ScalarValue)(Number.NaN),
+          refusesToEncode(ScalarValue)(null),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );

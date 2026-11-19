@@ -1,7 +1,5 @@
 import * as Domain from "@alchemy.run/domain";
-import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
-import { Session } from "@proto/kernel/Session.middleware";
-import { DirectoryRow, FindPartiesInput } from "@proto/party-contract/Directory/FindParties.read";
+import { FindPartiesAnnotations, FindPartiesParts } from "@proto/party-contract/Directory/FindParties.read";
 import { PartyDirectory } from "./PartyDirectory.projection.ts";
 
 /**
@@ -14,13 +12,6 @@ import { PartyDirectory } from "./PartyDirectory.projection.ts";
  */
 export class FindParties extends Domain.Query(
   "FindParties",
-  {
-    input: FindPartiesInput,
-    success: DirectoryRow,
-    paged: true,
-    waitsFor: [PartyDirectory],
-    middleware: [Session],
-    rejects: [MissingGrant],
-  },
-  { description: "Search an organization for parties by name." },
+  { ...FindPartiesParts, waitsFor: [PartyDirectory] },
+  FindPartiesAnnotations,
 ) {}

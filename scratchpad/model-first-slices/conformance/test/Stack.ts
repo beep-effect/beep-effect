@@ -1,9 +1,13 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
+import { expect } from "@effect/vitest";
 import { Credential, headersFor } from "@proto/authority-host/Boundary/FixtureCredential";
-import { PrincipalId } from "@proto/kernel/Ids";
+import { OrgId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { IntakeContract } from "@proto/party-contract/IntakeApi.contract";
 import { ReviewerContract } from "@proto/party-contract/ReviewerApi.contract";
-import * as A from "effect/Array";
+import type { PublicRunState } from "@proto/runs-contract/Run/RunState.read";
+import type { RunStatus } from "@proto/runs-contract/Run/RunStatus";
+import { RunsContract } from "@proto/runs-contract/RunsApi.contract";
+import * as A from "@beep/utils/Array";
 import * as Config from "effect/Config";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
@@ -12,17 +16,21 @@ import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
-import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
+import * as P from "@beep/utils/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import { ChildProcessSpawner } from "effect/process/ChildProcessSpawner";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 
 /** The deployed front (`CONFORMANCE_URL`), and the stage's service names (D37: one fixed stage). */
 export const url = Config.String("CONFORMANCE_URL").pipe(Config.withDefault("http://127.0.0.1:18640"));
 export const runnerService = "practice-mfs-conformance-default";
+/** The front's service: the host of the front's URL, which the driver reaches it by. */
+export const frontService = Effect.map(Effect.orDie(url), (front) => new URL(front).hostname);
 export const services = Layer.mergeAll(FetchHttpClient.layer, NodeServices.layer, SecureRandom.layerWebCrypto);
 /** The cluster's Postgres service (`POSTGRES_SERVICE`), which the deploy names. */
 const postgresService = Config.String("POSTGRES_SERVICE").pipe(Config.withDefault(""));
@@ -111,11 +119,14 @@ export const endBlocked = psql(
 /** End the lock session: its transaction rolls back, and the rows are free. */
 export const releaseLock = psql(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name = '${LOCK_APP}'`);
 
-/** GET a route of the front, as JSON. */
+/**
+ * GET a route of the front, as JSON. An answer outside 2xx is a failure: a failed handler answers
+ * with an empty body, which would otherwise read as `null`.
+ */
 export const get = Effect.fn("get")(function* <T>(path: string) {
   const client = yield* HttpClient.HttpClient;
   const front = yield* Effect.orDie(url);
-  const response = yield* client.get(`${front}${path}`);
+  const response = yield* Effect.flatMap(client.get(`${front}${path}`), HttpClientResponse.filterStatusOk);
   const json = yield* response.json;
   return json as T;
 });
@@ -133,8 +144,52 @@ export const revoke: {
   (grant: string, org: string): ReturnType<typeof get<{ readonly ok: boolean }>>;
 } = dual(2, (grant: string, org: string) => get<{ readonly ok: boolean }>(`/control/revoke?grant=${grant}&org=${org}`));
 
-/** A run's state, through the conformance-only read. */
-export const runState = (run: string) => get<{ readonly _tag: string; readonly outcome?: string }>(`/runs-state?run=${encodeURIComponent(run)}`);
+/** A fresh org with intake (and propose) for p_intake, review and read for p_rev. */
+export const setup = Effect.gen(function* () {
+  const r = yield* fresh("r");
+  const org = `org_${r}`;
+  const grants = yield* Effect.all([
+    issue(`g_intake_${r}`, "p_intake", "party.intake", org),
+    issue(`g_propose_${r}`, "p_intake", "party.propose", org),
+    issue(`g_review_${r}`, "p_rev", "party.review", org),
+    issue(`g_read_${r}`, "p_rev", "party.read", org),
+  ], { concurrency: 1 });
+  expect(A.every(grants, (g) => g.ok)).toBe(true);
+  // The boundary reads grants from the authority model's views; give them a moment.
+  yield* Effect.sleep("2 seconds");
+  return { r, org: OrgId.make(org) };
+});
+
+/** The runs contract's client, over the front. */
+export const runsClient = Effect.flatMap(Effect.orDie(url), (front) => RunsContract.clientHttp(`${front}/runs`));
+
+/**
+ * A run's status and outcome, read through the runs contract's `RunState` as `principal`, who
+ * must take part in the run's session. `None` while the
+ * session's view has not caught up with the run: until then `RunState` refuses the caller with
+ * `NotInSession`.
+ */
+const runStateFor = (run: string, principal: string) =>
+  Effect.flatMap(runsClient, (runs) => runs.RunState({ run: RunId.make(run) }, human(principal))).pipe(
+    Effect.asSome,
+    Effect.catchTag("NotInSession", () => Effect.succeed(O.none<PublicRunState>())),
+  );
+export const runStateAs: {
+  (principal: string): (run: string) => ReturnType<typeof runStateFor>;
+  (run: string, principal: string): ReturnType<typeof runStateFor>;
+} = dual(2, runStateFor);
+
+/** {@link runStateAs} the intake human, who takes part in every review run's session. */
+export const runState = (run: string) => runStateFor(run, "p_intake");
+
+/** Whether a run was read, and is at `status`. */
+export const hasStatus = (status: RunStatus) => (read: O.Option<PublicRunState>) => O.exists(read, (state) => state.status === status);
+
+/** The status a run was read at, or `not-in-session` when the caller was refused. */
+export const statusOf = (read: O.Option<PublicRunState>) => O.match(read, { onNone: () => "not-in-session" as const, onSome: (state) => state.status });
+
+/** What a run concluded, when it was read and has completed. */
+export const outcomeOf = O.flatMap((read: PublicRunState) => read.outcome);
 
 /** A poll gave up: `until` never held, and `last` is what it read last. */
 export class NeverHeld extends S.TaggedError<NeverHeld, { readonly brand: unique symbol }>()("NeverHeld", {

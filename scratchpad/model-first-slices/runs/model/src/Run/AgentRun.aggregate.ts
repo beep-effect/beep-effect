@@ -20,6 +20,7 @@ import { ChildRunRefused, RefuseChild } from "@proto/runs-contract/Run/RefuseChi
 import { RejectRun, RunRejected } from "@proto/runs-contract/Run/RejectRun.command";
 import { ReleaseReservation, ReservationReleased } from "@proto/runs-contract/Run/ReleaseReservation.command";
 import { RequestRun, RunAlreadyExists, HumanOnly, RunRequested } from "@proto/runs-contract/Run/RequestRun.command";
+import { HistoryBound } from "@proto/runs-contract/Run/HistoryBound";
 import { HeldReservation } from "@proto/runs-contract/Run/Reservation.id";
 import { BudgetReserved, ReserveBudget } from "@proto/runs-contract/Run/ReserveBudget.command";
 import { RunNotRunning } from "@proto/runs-contract/Run/RunNotRunning.rejection";
@@ -28,23 +29,48 @@ import { RunVersions } from "@proto/runs-contract/Run/RunVersions";
 import { SessionId } from "@proto/runs-contract/Run/Session.id";
 import { SettleUsage, UsageSettled } from "@proto/runs-contract/Run/SettleUsage.command";
 import { UnknownReservation } from "@proto/runs-contract/Run/UnknownReservation.rejection";
-import * as A from "effect/Array";
+import { UsageExceedsReservation } from "@proto/runs-contract/Run/UsageExceedsReservation.rejection";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
+import * as Initial from "@proto/kernel/Initial";
+import { Count, Text } from "@proto/kernel/Measure";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Struct from "effect/Struct";
+import { thunk0 } from "@beep/utils"
 
 /**
  * A run's budget, in units: what it was allowed, what is held by open
- * reservations, what it spent, and what it set aside for children.
+ * reservations, what it spent, and what it set aside for children. Each is
+ * a count, and together the three uses never pass the allowance, so what
+ * remains ({@link remaining}) is never negative.
+ *
+ * **Example** (A run that reserved 40 of 100 units)
+ * ```ts
+ * import { Budget, remaining } from "@proto/runs-model/Run/AgentRun.aggregate";
+ *
+ * const left = remaining(Budget.make({ allowance: 100, reserved: 40 }));
+ * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const Budget = S.Struct({ allowance: S.Int, reserved: S.Int, spent: S.Int, allocated: S.Int });
+export const Budget = S.Struct({
+  allowance: Count,
+  reserved: Count.pipe(Initial.of(0, { description: "Units held by open reservations; none at first." })),
+  spent: Count.pipe(Initial.of(0, { description: "Units settled; none at first." })),
+  allocated: Count.pipe(Initial.of(0, { description: "Units handed to child runs; none at first." })),
+}).check(
+  S.makeFilter(({ allowance, reserved, spent, allocated }) => reserved + spent + allocated <= allowance, {
+    identifier: "BudgetWithinAllowanceCheck",
+    title: "Within allowance",
+    description: "What is reserved, spent and allocated together is at most the allowance.",
+    message: "Expected reserved, spent and allocated to add up to at most the allowance",
+  }),
+);
 /**
  * @category models
  * @since 0.0.0
@@ -68,10 +94,10 @@ export type Budget = typeof Budget.Type;
 export const RunRecord = S.Struct({
   session: SessionId,
   lineage: RunId,
-  generation: S.Int,
+  generation: Count,
   parent: S.OptionFromNullOr(RunId),
   previous: S.OptionFromNullOr(RunId),
-  purpose: S.String,
+  purpose: Text,
   versions: RunVersions,
   requester: PrincipalId,
   accountable: PrincipalId,
@@ -80,9 +106,9 @@ export const RunRecord = S.Struct({
   delegation: DelegationId,
   provenance: Provenance,
   budget: Budget,
-  reservations: S.Array(HeldReservation),
-  steps: S.Int,
-  historyBound: S.Int,
+  reservations: Initial.empty(HeldReservation, { description: "The reservations still open; none at first." }),
+  steps: Count.pipe(Initial.of(0, { description: "Steps recorded so far; none at first." })),
+  historyBound: HistoryBound,
 });
 /**
  * @category models
@@ -126,12 +152,12 @@ export const AgentRunState = S.TaggedUnion({
   Requested: { run: RunRequest },
   Running: { run: RunRecord },
   AwaitingApproval: { run: RunRecord },
-  AwaitingChild: { run: RunRecord, child: RunId, allowance: S.Int },
-  Completed: { run: RunRecord, outcome: S.String },
-  Rejected: { session: SessionId, reason: S.String },
-  Refused: { run: RunRecord, reason: S.String },
-  Withdrawn: { run: RunRequest, reason: S.String },
-  Cancelled: { run: RunRecord, reason: S.String },
+  AwaitingChild: { run: RunRecord, child: RunId, allowance: Count },
+  Completed: { run: RunRecord, outcome: Text },
+  Rejected: { session: SessionId, reason: Text },
+  Refused: { run: RunRecord, reason: Text },
+  Withdrawn: { run: RunRequest, reason: Text },
+  Cancelled: { run: RunRecord, reason: Text },
   Exhausted: { run: RunRecord },
   Continued: { run: RunRecord, next: RunId },
 });
@@ -147,7 +173,7 @@ export type AgentRunState = typeof AgentRunState.Type;
  */
 const CancelledBeforeGrant = S.TaggedStruct("Cancelled", {
   run: RunRequest.mapFields(Struct.assign({ accountable: S.Null, delegation: S.Null, provenance: S.Null })),
-  reason: S.String,
+  reason: Text,
 }).pipe(
   S.decodeTo(
     S.toType(AgentRunState.cases.Withdrawn),
@@ -173,7 +199,20 @@ const CancelledBeforeGrant = S.TaggedStruct("Cancelled", {
  */
 export const StoredAgentRunState = S.Union([AgentRunState, CancelledBeforeGrant]);
 
-/** What remains to reserve or allocate. */
+/**
+ * What remains to reserve or allocate: the allowance less what is reserved,
+ * spent and allocated. A valid {@link Budget} never leaves it negative.
+ *
+ * **Example** (What a run that reserved 40 and spent 12 of 100 has left)
+ * ```ts
+ * import { Budget, remaining } from "@proto/runs-model/Run/AgentRun.aggregate";
+ *
+ * const left = remaining(Budget.make({ allowance: 100, reserved: 40, spent: 12 }));
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
 export const remaining = (budget: Budget): number => budget.allowance - budget.reserved - budget.spent - budget.allocated;
 
 /**
@@ -185,7 +224,22 @@ export const remaining = (budget: Budget): number => budget.allowance - budget.r
  */
 export const unspent = (budget: Budget): number => budget.allowance - budget.spent - budget.allocated;
 
-const statusOf = (state: AgentRunState): RunStatus =>
+/**
+ * Where a run is, as readers see it: a refused run reads as rejected, and a
+ * request withdrawn before its grant as cancelled. A run nobody requested
+ * reads as unrequested.
+ *
+ * **Example** (A run nobody requested)
+ * ```ts
+ * import { AgentRunState, statusOf } from "@proto/runs-model/Run/AgentRun.aggregate";
+ *
+ * const status = statusOf(AgentRunState.cases.Unrequested.make({}));
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const statusOf = (state: AgentRunState): RunStatus =>
   AgentRunState.match(state, {
     Unrequested: () => "unrequested" as const,
     Requested: () => "requested" as const,
@@ -247,8 +301,8 @@ const releaseAll = (run: RunRecord): RunRecord => ({ ...withBudget(run, { reserv
  */
 export const requestOf = (state: AgentRunState): O.Option<RunRequest> =>
   AgentRunState.match(state, {
-    Unrequested: () => O.none(),
-    Rejected: () => O.none(),
+    Unrequested: O.none<RunRequest>,
+    Rejected: O.none<RunRequest>,
     Requested: ({ run }) => O.some(run),
     Withdrawn: ({ run }) => O.some(run),
     Refused: ({ run }) => O.some(run),
@@ -270,10 +324,10 @@ export const requestOf = (state: AgentRunState): O.Option<RunRequest> =>
  */
 export const recordOf = (state: AgentRunState): O.Option<RunRecord> =>
   AgentRunState.match(state, {
-    Unrequested: () => O.none(),
-    Rejected: () => O.none(),
-    Requested: () => O.none(),
-    Withdrawn: () => O.none(),
+    Unrequested: O.none<RunRecord>,
+    Rejected: O.none<RunRecord>,
+    Requested: O.none<RunRecord>,
+    Withdrawn: O.none<RunRecord>,
     Refused: ({ run }) => O.some(run),
     Running: ({ run }) => O.some(run),
     AwaitingApproval: ({ run }) => O.some(run),
@@ -283,6 +337,15 @@ export const recordOf = (state: AgentRunState): O.Option<RunRecord> =>
     Exhausted: ({ run }) => O.some(run),
     Continued: ({ run }) => O.some(run),
   });
+
+/**
+ * What a completed run concluded; none in any other state.
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const outcomeOf = (state: AgentRunState): O.Option<Text> =>
+  AgentRunState.matchOrElse(state, { Completed: ({ outcome }) => O.some(outcome) }, O.none<Text>);
 
 /**
  * The session a run belongs to, from any state that knows it.
@@ -330,7 +393,7 @@ export class AgentRun extends Domain.Aggregate(
       RequestRun: Effect.fn(function* (state, command) {
         const invocation = yield* CurrentInvocation;
         if (!Root.guards.Human(invocation.root)) return yield* HumanOnly.make({});
-        if (state._tag !== "Unrequested") return yield* RunAlreadyExists.make({});
+        if (!AgentRunState.guards.Unrequested(state)) return yield* RunAlreadyExists.make({});
         return [
           RunRequested.make({
             session: command.session,
@@ -348,7 +411,7 @@ export class AgentRun extends Domain.Aggregate(
 
       // Internal: the runs model's own policy sends these with the provenance it acted on.
       ActivateRun: (state, command) =>
-        state._tag !== "Requested"
+        !AgentRunState.guards.Requested(state)
           ? []
           : [
               RunActivated.make({
@@ -366,7 +429,7 @@ export class AgentRun extends Domain.Aggregate(
           reason: command.reason,
           released: Match.value(state).pipe(
             Match.tag("Running", "AwaitingApproval", "AwaitingChild", ({ run }) => run.budget.reserved),
-            Match.orElse(() => 0),
+            Match.orElse(thunk0),
           ),
           provenance: command.provenance,
         }),
@@ -396,6 +459,9 @@ export class AgentRun extends Domain.Aggregate(
         const held = yield* Effect.fromOption(reservationOf(run, command.reservation)).pipe(
           Effect.mapError(() => UnknownReservation.make({ reservation: command.reservation })),
         );
+        // A settlement returns what the reservation did not use; it never spends past it.
+        if (command.units > held.units)
+          return yield* UsageExceedsReservation.make({ reservation: command.reservation, reserved: held.units, units: command.units });
         const after = withBudget(run, {
           reserved: run.budget.reserved - held.units,
           spent: run.budget.spent + command.units,
@@ -528,7 +594,7 @@ export class AgentRun extends Domain.Aggregate(
       }),
 
       OpenChildRun: (state, command) =>
-        state._tag !== "Unrequested"
+        !AgentRunState.guards.Unrequested(state)
           ? []
           : [
               ChildRunOpened.make({
@@ -549,7 +615,7 @@ export class AgentRun extends Domain.Aggregate(
             ],
 
       RefuseChild: (state, command) =>
-        state._tag !== "AwaitingChild" || state.child !== command.child
+        !AgentRunState.guards.AwaitingChild(state) || state.child !== command.child
           ? []
           : [
               ChildRunRefused.make({
@@ -562,7 +628,7 @@ export class AgentRun extends Domain.Aggregate(
             ],
 
       OpenContinuation: (state, command) =>
-        state._tag !== "Unrequested"
+        !AgentRunState.guards.Unrequested(state)
           ? []
           : [
               ContinuationOpened.make({
@@ -602,7 +668,7 @@ export class AgentRun extends Domain.Aggregate(
 
       // Internal: the runs model's own policy sends it when a child's lineage finished.
       ChildFinished: (state, command) =>
-        state._tag !== "AwaitingChild" || state.child !== command.child
+        !AgentRunState.guards.AwaitingChild(state) || state.child !== command.child
           ? []
           : [
               ChildRunFinished.make({
@@ -629,9 +695,7 @@ export class AgentRun extends Domain.Aggregate(
             requester: event.requester,
             source: event.source,
             terms: event.terms,
-            budget: { allowance: event.allowance, reserved: 0, spent: 0, allocated: 0 },
-            reservations: [],
-            steps: 0,
+            budget: Budget.make({ allowance: event.allowance }),
             historyBound: event.historyBound,
           }),
         }),
@@ -746,9 +810,7 @@ export class AgentRun extends Domain.Aggregate(
             terms: event.terms,
             delegation: event.delegation,
             provenance: event.runProvenance,
-            budget: { allowance: event.allowance, reserved: 0, spent: 0, allocated: 0 },
-            reservations: [],
-            steps: 0,
+            budget: Budget.make({ allowance: event.allowance }),
             historyBound: event.historyBound,
           }),
         }),
@@ -807,7 +869,7 @@ export class AgentRun extends Domain.Aggregate(
     },
     reply: {
       ReserveBudget: (state) => ({
-        remaining: O.match(requestOf(state), { onNone: () => 0, onSome: (run) => remaining(run.budget) }),
+        remaining: O.match(requestOf(state), { onNone: thunk0, onSome: (run) => remaining(run.budget) }),
       }),
     },
   },

@@ -1,4 +1,5 @@
 import * as S from "effect/Schema";
+import { IdText } from "@proto/kernel/Measure";
 
 /**
  * A party: a person or organization the practice deals with.
@@ -13,7 +14,7 @@ import * as S from "effect/Schema";
  * @category ids
  * @since 0.0.0
  */
-export const PartyId = S.String.pipe(S.brand("PartyId"));
+export const PartyId = IdText.pipe(S.brand("PartyId"));
 /**
  * @category ids
  * @since 0.0.0

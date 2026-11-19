@@ -67,7 +67,7 @@ const uuidV5 = Effect.fnUntraced(function* (
   view.setUint8(6, (view.getUint8(6) & 0x0f) | 0x50);
   view.setUint8(8, (view.getUint8(8) & 0x3f) | 0x80);
   const hex = Hex.encode(bytes);
-  return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
+  return `${Str.slice(0, 8)(hex)}-${Str.slice(8, 12)(hex)}-${Str.slice(12, 16)(hex)}-${Str.slice(16, 20)(hex)}-${Str.slice(20)(hex)}`;
 });
 
 /**
@@ -207,7 +207,7 @@ export type SpeakerIdentityStatus = typeof SpeakerIdentityStatus.Type;
  * @since 0.0.0
  */
 export declare namespace SpeakerIdentityStatus {
-  export type Encoded = S.Codec.Encoded<typeof SpeakerIdentityStatus>;
+  export type Encoded = typeof SpeakerIdentityStatus.Encoded;
 }
 
 /**
@@ -243,7 +243,7 @@ export class Translation extends Model<Translation>("Translation")(
  * @since 0.0.0
  */
 export declare namespace Translation {
-  export type Encoded = S.Codec.Encoded<typeof Translation>;
+  export type Encoded = typeof Translation.Encoded;
 }
 
 const finiteColumn = (column: string) => S.Finite.pipe(pg.doublePrecision(), pg.columnName(column));
@@ -319,7 +319,7 @@ export class TranscriptSegment extends Model<TranscriptSegment>("TranscriptSegme
  * @since 0.0.0
  */
 export declare namespace TranscriptSegment {
-  export type Encoded = S.Codec.Encoded<typeof TranscriptSegment>;
+  export type Encoded = typeof TranscriptSegment.Encoded;
 }
 
 /**
@@ -359,9 +359,9 @@ export interface PreparedTranscriptSegment {
 const absent = (value: string | number | null | undefined): boolean => value === null || value === undefined;
 
 const speakerNumber = (speaker: string): number => {
-  const pivot = speaker.indexOf("_");
+  const pivot = O.getOrElse(Str.indexOf("_")(speaker), () => -1);
   if (pivot < 0) return 0;
-  const suffix = speaker.slice(pivot + 1);
+  const suffix = Str.slice(pivot + 1)(speaker);
   if (!/^[0-9]+$/.test(suffix)) return 0;
   return Number(suffix);
 };
@@ -596,9 +596,9 @@ export const segmentsAsString: {
   people?: ReadonlyArray<TranscriptPerson>,
 ): string => {
   const name = userName === undefined || Str.isEmpty(userName) ? "User" : userName;
-  const peopleMap = HashMap.fromIterable(people === undefined ? [] : people.map((person) => [person.id, person.name]));
+  const peopleMap = HashMap.fromIterable(people === undefined ? [] : A.map(people, (person) => [person.id, person.name]));
   const showTime = includeTimestamps && canDisplaySeconds(segments);
-  const lines = segments.map((segment) => {
+  const lines = A.map(segments, (segment) => {
     const body = Str.trim(segment.text);
     const timestamp = showTime ? `[${getTimestampString(segment)}] ` : "";
     const speaker = segment.isUser
@@ -609,7 +609,7 @@ export const segmentsAsString: {
         );
     return `${timestamp}${speaker}: ${body}`;
   });
-  return Str.trim(lines.join("\n\n"));
+  return Str.trim(A.join(lines, "\n\n"));
 });
 
 /**
@@ -658,7 +658,7 @@ export class CombineSegmentsResult extends Model<CombineSegmentsResult>("Combine
  * @since 0.0.0
  */
 export declare namespace CombineSegmentsResult {
-  export type Encoded = S.Codec.Encoded<typeof CombineSegmentsResult>;
+  export type Encoded = typeof CombineSegmentsResult.Encoded;
 }
 
 /**
@@ -731,14 +731,15 @@ const splitSentences = (value: string): ReadonlyArray<string> => {
 const endsSentence = (value: string): boolean => {
   const trimmed = Str.trim(value);
   if (Str.isEmpty(trimmed)) return false;
-  return Str.includes(trimmed.charAt(trimmed.length - 1))(SENTENCE_ENDERS);
+  return Str.includes(O.getOrElse(Str.charAt(trimmed.length - 1)(trimmed), () => ""))(SENTENCE_ENDERS);
 };
 
 const startsWithLowercaseCased = (value: string): boolean => {
   const match = /\p{L}/u.exec(Str.trim(value));
   const char = match?.[0];
   if (char === undefined) return false;
-  return char === Str.toLowerCase(char) && char !== char.toUpperCase();
+  const upper = Str.toUpperCase(char);
+  return char === Str.toLowerCase(char) && !Equal.equals(char, upper);
 };
 
 const normalizeText = (value: string): string =>
@@ -825,7 +826,7 @@ export const combineSegments: {
       if (incomplete !== undefined) {
         const rightParts = splitSentences(right.text);
         const first = rightParts[0] ?? "";
-        const rest = Str.trim(rightParts.slice(1).join(" "));
+        const rest = Str.trim(A.join(rightParts.slice(1), " "));
         if (!Str.isEmpty(rest) && !Str.isEmpty(first) && first.length < incomplete.length) {
           left.text = Str.trim(`${left.text} ${first}`);
           right.text = rest;
@@ -843,7 +844,7 @@ export const combineSegments: {
         }
         if (incomplete.length < Str.trim(right.text).length) {
           right.text = Str.trim(`${incomplete} ${right.text}`);
-          const prefix = Str.trim(parts.slice(0, -1).join(" "));
+          const prefix = Str.trim(A.join(parts.slice(0, -1), " "));
           if (!Str.isEmpty(prefix)) {
             left.text = prefix;
             left.end = Math.min(left.end, right.start);
@@ -870,8 +871,8 @@ export const combineSegments: {
     return [left, right];
   };
 
-  const originals = segments.map(toDraft);
-  const incoming = newSegments.map(toDraft);
+  const originals = A.map(segments, toDraft);
+  const incoming = A.map(newSegments, toDraft);
   const tail = segments[segments.length - 1];
   const joined: Array<Draft> = tail === undefined ? [] : [toDraft(tail)];
   let droppedExistingTail = false;
@@ -897,13 +898,13 @@ export const combineSegments: {
     : joined[0] !== undefined && originals[originals.length - 1]?.id === joined[0].id
       ? originals.slice(0, -1)
       : originals;
-  const combined = [...kept, ...joined].map((draft) => {
+  const combined = A.map([...kept, ...joined], (draft) => {
     draft.text = normalizeText(draft.text);
     return toSegment(draft);
   });
   return CombineSegmentsResult.make({
     segments: combined,
-    joined: joined.map(toSegment),
+    joined: A.map(joined, toSegment),
     removedIds,
     absorbedInto: absorbed.pipe(HashMap.toEntries, Record.fromEntries),
   });
@@ -966,7 +967,7 @@ export class ImprovedTranscriptSegment extends Model<ImprovedTranscriptSegment>(
  * @since 0.0.0
  */
 export declare namespace ImprovedTranscriptSegment {
-  export type Encoded = S.Codec.Encoded<typeof ImprovedTranscriptSegment>;
+  export type Encoded = typeof ImprovedTranscriptSegment.Encoded;
 }
 
 /**
@@ -1001,5 +1002,5 @@ export class ImprovedTranscript extends Model<ImprovedTranscript>("ImprovedTrans
  * @since 0.0.0
  */
 export declare namespace ImprovedTranscript {
-  export type Encoded = S.Codec.Encoded<typeof ImprovedTranscript>;
+  export type Encoded = typeof ImprovedTranscript.Encoded;
 }

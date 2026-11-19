@@ -16,6 +16,7 @@ import { NotDelegator } from "./NotDelegator.rejection.ts";
 export class DelegationNarrowed extends Domain.Event(
   "DelegationNarrowed",
   carry({ holder: RunId, terms: GrantTerms }),
+  { description: "The delegation's terms now reach less far." },
 ) {}
 
 /**

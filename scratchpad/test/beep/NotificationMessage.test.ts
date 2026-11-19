@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
@@ -42,7 +43,13 @@ describe("NotificationMessage", () => {
   });
 
   it("decodes null and missing Option fields and keeps the Python text default", () => {
-    const nulls = decode(NotificationMessage, { ...base, pluginId: null, text: null, navigateTo: null, contentBlocks: null });
+    const nulls = decode(NotificationMessage, {
+      ...base,
+      pluginId: null,
+      text: null,
+      navigateTo: null,
+      contentBlocks: null,
+    });
     assert.strictEqual(O.isNone(nulls.pluginId), true);
     assert.strictEqual(O.isNone(nulls.text), true);
     assert.strictEqual(O.isNone(nulls.navigateTo), true);
@@ -82,7 +89,9 @@ describe("NotificationMessage", () => {
       notification_type: "plugin",
       text: "",
     });
-    const nullText = Effect.runSync(getMessageAsDict(decode(NotificationMessage, { ...base, text: null, contentBlocks: [] })));
+    const nullText = Effect.runSync(
+      getMessageAsDict(decode(NotificationMessage, { ...base, text: null, contentBlocks: [] })),
+    );
     assert.strictEqual(nullText.text, null);
     assert.strictEqual("content_blocks" in nullText, false);
   });
@@ -106,13 +115,13 @@ describe("NotificationMessage", () => {
   });
 
   it("getMessageAsDict drops an oversized card and keeps the message", () => {
-    const big = "x".repeat(MAX_CONTENT_BLOCKS_BYTES);
+    const big = Str.repeat(MAX_CONTENT_BLOCKS_BYTES)("x");
     const dict = Effect.runSync(
       getMessageAsDict(decode(NotificationMessage, { ...base, contentBlocks: [{ type: "text", text: big }] })),
     );
     assert.strictEqual("content_blocks" in dict, false);
     assert.strictEqual(dict.id, "n1");
-    const fits = "y".repeat(MAX_CONTENT_BLOCKS_BYTES - 40);
+    const fits = Str.repeat(MAX_CONTENT_BLOCKS_BYTES - 40)("y");
     const kept = Effect.runSync(
       getMessageAsDict(decode(NotificationMessage, { ...base, contentBlocks: [{ type: "text", text: fits }] })),
     );

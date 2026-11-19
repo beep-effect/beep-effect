@@ -10,6 +10,7 @@
  *
  * @since 0.0.0
  */
+import * as Result from "effect/Result";
 import { $ScratchpadId } from "@beep/identity";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -133,7 +134,7 @@ export class LedgerSlotDefinition extends Model<LedgerSlotDefinition>("LedgerSlo
  * @since 0.0.0
  */
 export declare namespace LedgerSlotDefinition {
-  export type Encoded = S.Codec.Encoded<typeof LedgerSlotDefinition>;
+  export type Encoded = typeof LedgerSlotDefinition.Encoded;
 }
 
 const slot = (name: string, rendererOrder: number, aliases: ReadonlyArray<string> = []) =>
@@ -241,7 +242,7 @@ export class UnsupportedLedgerSlot extends S.TaggedError<UnsupportedLedgerSlot, 
  * @since 0.0.0
  */
 export declare namespace UnsupportedLedgerSlot {
-  export type Encoded = S.Codec.Encoded<typeof UnsupportedLedgerSlot>;
+  export type Encoded = typeof UnsupportedLedgerSlot.Encoded;
 }
 
 /**
@@ -277,7 +278,7 @@ export class NegativeProfileBudget extends S.TaggedError<NegativeProfileBudget, 
  * @since 0.0.0
  */
 export declare namespace NegativeProfileBudget {
-  export type Encoded = S.Codec.Encoded<typeof NegativeProfileBudget>;
+  export type Encoded = typeof NegativeProfileBudget.Encoded;
 }
 
 /**
@@ -327,7 +328,12 @@ export const normalizePlaybookHandle = (value: unknown): string => {
   if (P.isString(value) || P.isNumber(value) || P.isBoolean(value)) {
     return A.join(" ")(A.filter(Str.split(/\s+/u)(String(value)), (part) => part.length > 0));
   }
-  return A.join(" ")(A.filter(Str.split(/\s+/u)(JSON.stringify(value)), (part) => part.length > 0));
+  return S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value).pipe(
+    Result.getOrThrow,
+    Str.split(/\s+/u),
+    A.filter((part) => part.length > 0),
+    A.join(" "),
+  );
 };
 
 const slotByName = A.reduce(LEDGER_SLOT_DEFINITIONS, Rec.empty<string, LedgerSlotDefinition>(), (acc, definition) =>
@@ -505,10 +511,7 @@ export const selectProfileSlotWinners = (rows: ReadonlyArray<object>): ReadonlyA
 const lineContent = (row: object): string => {
   const value = read(row, "content");
   const textValue = P.isString(value) ? value : "";
-  return A.join(" ")(A.filter(Str.split(/\s+/u)(textValue), (part) => part.length > 0)).slice(
-    0,
-    PROFILE_LINE_CHARACTER_LIMIT,
-  );
+  return Str.slice(0, PROFILE_LINE_CHARACTER_LIMIT)(A.join(" ")(A.filter(Str.split(/\s+/u)(textValue), (part) => part.length > 0)));
 };
 
 /**

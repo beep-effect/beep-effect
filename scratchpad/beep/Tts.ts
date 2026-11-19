@@ -107,7 +107,7 @@ export class TtsVoiceSettings extends Model<TtsVoiceSettings>("TtsVoiceSettings"
  * @since 0.0.0
  */
 export declare namespace TtsVoiceSettings {
-  export type Encoded = S.Codec.Encoded<typeof TtsVoiceSettings>;
+  export type Encoded = typeof TtsVoiceSettings.Encoded;
 }
 
 /**
@@ -157,5 +157,5 @@ export class TtsSynthesizeRequest extends Model<TtsSynthesizeRequest>("TtsSynthe
  * @since 0.0.0
  */
 export declare namespace TtsSynthesizeRequest {
-  export type Encoded = S.Codec.Encoded<typeof TtsSynthesizeRequest>;
+  export type Encoded = typeof TtsSynthesizeRequest.Encoded;
 }

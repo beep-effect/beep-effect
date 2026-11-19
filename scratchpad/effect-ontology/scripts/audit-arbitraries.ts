@@ -1,4 +1,5 @@
 import * as Arbitrary from "effect/Arbitrary";
+import * as A from "effect/Array";
 /**
  * Audits every public schema declaration in the quarantined Domain tree.
  *
@@ -19,20 +20,18 @@ import * as Arbitrary from "effect/Arbitrary";
  * @since 0.0.0
  */
 import * as Effect from "effect/Effect";
-import * as SchemaAST from "effect/SchemaAST";
-import * as A from "effect/Array";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaAST from "effect/SchemaAST";
 
 const sampleCount = 8;
 const baseSeed = 0x5eed;
 const domainRoot = new URL("../Domain/", import.meta.url);
 const domainModules = new Bun.Glob("**/*.ts");
 
-class ArbitraryAuditError extends S.TaggedError<ArbitraryAuditError, { readonly brand: unique symbol }>("effect-ontology/scripts/ArbitraryAuditError")(
-  "ArbitraryAuditError",
-  { message: S.String }
-) {}
+class ArbitraryAuditError extends S.TaggedError<ArbitraryAuditError, { readonly brand: unique symbol }>(
+  "effect-ontology/scripts/ArbitraryAuditError"
+)("ArbitraryAuditError", { message: S.String }) {}
 
 let auditedModules = 0;
 let auditedSchemas = 0;
@@ -71,7 +70,7 @@ for await (const relativePath of domainModules.scan({
     const samples = Effect.runSync(
       Arbitrary.sampleEffect(arbitrary, {
         count: sampleCount,
-      seed: baseSeed + auditedSchemas,
+        seed: baseSeed + auditedSchemas,
       })
     );
     auditedSamples += samples.length;

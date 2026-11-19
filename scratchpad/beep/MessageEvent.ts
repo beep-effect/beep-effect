@@ -143,7 +143,7 @@ export class MessageEvent extends Model<MessageEvent>("MessageEvent")(
  * @since 0.0.0
  */
 export declare namespace MessageEvent {
-  export type Encoded = S.Codec.Encoded<typeof MessageEvent>;
+  export type Encoded = typeof MessageEvent.Encoded;
 }
 
 const encodeMessageEvent = S.encodeEffect(MessageEvent);
@@ -199,7 +199,7 @@ export class ConversationEvent extends Model<ConversationEvent>("ConversationEve
  */
 export declare namespace ConversationEvent {
   /** Encoded form of {@link ConversationEvent}. */
-  export type Encoded = S.Codec.Encoded<typeof ConversationEvent>;
+  export type Encoded = typeof ConversationEvent.Encoded;
 }
 
 const encodeConversationEvent = S.encodeEffect(ConversationEvent);
@@ -241,7 +241,7 @@ export class NewConversationCreated extends Model<NewConversationCreated>("NewCo
  */
 export declare namespace NewConversationCreated {
   /** Encoded form of {@link NewConversationCreated}. */
-  export type Encoded = S.Codec.Encoded<typeof NewConversationCreated>;
+  export type Encoded = typeof NewConversationCreated.Encoded;
 }
 
 const encodeNewConversationCreated = S.encodeEffect(NewConversationCreated);
@@ -284,7 +284,7 @@ export class NewProcessingConversationCreated extends Model<NewProcessingConvers
  */
 export declare namespace NewProcessingConversationCreated {
   /** Encoded form of {@link NewProcessingConversationCreated}. */
-  export type Encoded = S.Codec.Encoded<typeof NewProcessingConversationCreated>;
+  export type Encoded = typeof NewProcessingConversationCreated.Encoded;
 }
 
 const encodeNewProcessingConversationCreated = S.encodeEffect(NewProcessingConversationCreated);
@@ -329,7 +329,7 @@ export class ProcessingConversationStatusChanged extends Model<ProcessingConvers
  */
 export declare namespace ProcessingConversationStatusChanged {
   /** Encoded form of {@link ProcessingConversationStatusChanged}. */
-  export type Encoded = S.Codec.Encoded<typeof ProcessingConversationStatusChanged>;
+  export type Encoded = typeof ProcessingConversationStatusChanged.Encoded;
 }
 
 const encodeProcessingConversationStatusChanged = S.encodeEffect(ProcessingConversationStatusChanged);
@@ -371,7 +371,7 @@ export class MemoryBackwardSycnedEvent extends Model<MemoryBackwardSycnedEvent>(
  */
 export declare namespace MemoryBackwardSycnedEvent {
   /** Encoded form of {@link MemoryBackwardSycnedEvent}. */
-  export type Encoded = S.Codec.Encoded<typeof MemoryBackwardSycnedEvent>;
+  export type Encoded = typeof MemoryBackwardSycnedEvent.Encoded;
 }
 
 const encodeMemoryBackwardSycnedEvent = S.encodeEffect(MemoryBackwardSycnedEvent);
@@ -424,7 +424,7 @@ export class MessageServiceStatusEvent extends Model<MessageServiceStatusEvent>(
  */
 export declare namespace MessageServiceStatusEvent {
   /** Encoded form of {@link MessageServiceStatusEvent}. */
-  export type Encoded = S.Codec.Encoded<typeof MessageServiceStatusEvent>;
+  export type Encoded = typeof MessageServiceStatusEvent.Encoded;
 }
 
 const encodeMessageServiceStatusEvent = S.encodeEffect(MessageServiceStatusEvent);
@@ -478,7 +478,7 @@ export class ConversationSessionEvent extends Model<ConversationSessionEvent>("C
  */
 export declare namespace ConversationSessionEvent {
   /** Encoded form of {@link ConversationSessionEvent}. */
-  export type Encoded = S.Codec.Encoded<typeof ConversationSessionEvent>;
+  export type Encoded = typeof ConversationSessionEvent.Encoded;
 }
 
 const encodeConversationSessionEvent = S.encodeEffect(ConversationSessionEvent);
@@ -517,7 +517,7 @@ export class PingEvent extends Model<PingEvent>("PingEvent")(
  */
 export declare namespace PingEvent {
   /** Encoded form of {@link PingEvent}. */
-  export type Encoded = S.Codec.Encoded<typeof PingEvent>;
+  export type Encoded = typeof PingEvent.Encoded;
 }
 
 const encodePingEvent = S.encodeEffect(PingEvent);
@@ -563,7 +563,7 @@ export class LastConversationEvent extends Model<LastConversationEvent>("LastCon
  */
 export declare namespace LastConversationEvent {
   /** Encoded form of {@link LastConversationEvent}. */
-  export type Encoded = S.Codec.Encoded<typeof LastConversationEvent>;
+  export type Encoded = typeof LastConversationEvent.Encoded;
 }
 
 const encodeLastConversationEvent = S.encodeEffect(LastConversationEvent);
@@ -607,7 +607,7 @@ export class TranslationEvent extends Model<TranslationEvent>("TranslationEvent"
  */
 export declare namespace TranslationEvent {
   /** Encoded form of {@link TranslationEvent}. */
-  export type Encoded = S.Codec.Encoded<typeof TranslationEvent>;
+  export type Encoded = typeof TranslationEvent.Encoded;
 }
 
 const encodeTranslationEvent = S.encodeEffect(TranslationEvent);
@@ -650,7 +650,7 @@ export class PhotoProcessingEvent extends Model<PhotoProcessingEvent>("PhotoProc
  */
 export declare namespace PhotoProcessingEvent {
   /** Encoded form of {@link PhotoProcessingEvent}. */
-  export type Encoded = S.Codec.Encoded<typeof PhotoProcessingEvent>;
+  export type Encoded = typeof PhotoProcessingEvent.Encoded;
 }
 
 const encodePhotoProcessingEvent = S.encodeEffect(PhotoProcessingEvent);
@@ -697,7 +697,7 @@ export class PhotoDescribedEvent extends Model<PhotoDescribedEvent>("PhotoDescri
  */
 export declare namespace PhotoDescribedEvent {
   /** Encoded form of {@link PhotoDescribedEvent}. */
-  export type Encoded = S.Codec.Encoded<typeof PhotoDescribedEvent>;
+  export type Encoded = typeof PhotoDescribedEvent.Encoded;
 }
 
 const encodePhotoDescribedEvent = S.encodeEffect(PhotoDescribedEvent);
@@ -751,7 +751,7 @@ export class SpeakerLabelSuggestionEvent extends Model<SpeakerLabelSuggestionEve
  */
 export declare namespace SpeakerLabelSuggestionEvent {
   /** Encoded form of {@link SpeakerLabelSuggestionEvent}. */
-  export type Encoded = S.Codec.Encoded<typeof SpeakerLabelSuggestionEvent>;
+  export type Encoded = typeof SpeakerLabelSuggestionEvent.Encoded;
 }
 
 const encodeSpeakerLabelSuggestionEvent = S.encodeEffect(SpeakerLabelSuggestionEvent);
@@ -808,7 +808,7 @@ export class FreemiumThresholdReachedEvent extends Model<FreemiumThresholdReache
  */
 export declare namespace FreemiumThresholdReachedEvent {
   /** Encoded form of {@link FreemiumThresholdReachedEvent}. */
-  export type Encoded = S.Codec.Encoded<typeof FreemiumThresholdReachedEvent>;
+  export type Encoded = typeof FreemiumThresholdReachedEvent.Encoded;
 }
 
 const encodeFreemiumThresholdReachedEvent = S.encodeEffect(FreemiumThresholdReachedEvent);
@@ -852,7 +852,7 @@ export class SegmentsDeletedEvent extends Model<SegmentsDeletedEvent>("SegmentsD
  */
 export declare namespace SegmentsDeletedEvent {
   /** Encoded form of {@link SegmentsDeletedEvent}. */
-  export type Encoded = S.Codec.Encoded<typeof SegmentsDeletedEvent>;
+  export type Encoded = typeof SegmentsDeletedEvent.Encoded;
 }
 
 const encodeSegmentsDeletedEvent = S.encodeEffect(SegmentsDeletedEvent);
@@ -898,7 +898,7 @@ export class ProactiveMessageEvent extends Model<ProactiveMessageEvent>("Proacti
  */
 export declare namespace ProactiveMessageEvent {
   /** Encoded form of {@link ProactiveMessageEvent}. */
-  export type Encoded = S.Codec.Encoded<typeof ProactiveMessageEvent>;
+  export type Encoded = typeof ProactiveMessageEvent.Encoded;
 }
 
 const encodeProactiveMessageEvent = S.encodeEffect(ProactiveMessageEvent);

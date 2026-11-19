@@ -58,6 +58,7 @@ const ASSERTION_PATTERN =
 const HUNK_HEADER_PATTERN = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/;
 const BUN_VITEST_PATTERN = /\bbunx?\s+--bun\s+vitest\b/;
 const VITEST_PATTERN = /\bvitest\b/;
+const CONFIG_FLAG_PATTERN = /(?:^|\s)(?:--config|-c)(?:=|\s+)(\S+)/;
 const parsePackageJson = manifestParser(["scripts"]);
 
 const isAssertionLine = (line: string): boolean => ASSERTION_PATTERN.test(line);
@@ -259,14 +260,25 @@ const segmentFileArguments = (segment: string): ReadonlyArray<string> =>
     A.map(Str.replace(/^\.\//, ""))
   );
 
-const scriptRunsTestOnBun = (script: string, testPath: string): boolean => {
+// The vitest segment that runs `testPath`: the one naming it, else the one
+// naming no file.
+const replaySegment = (script: string, testPath: string): O.Option<string> => {
   const vitestSegments = A.filter(Str.split(script, "&&"), (segment) => VITEST_PATTERN.test(segment));
   return pipe(
     A.findFirst(vitestSegments, (segment) => A.contains(segmentFileArguments(segment), testPath)),
-    O.orElse(() => A.findFirst(vitestSegments, flow(segmentFileArguments, A.isReadonlyArrayEmpty))),
-    O.exists((segment) => BUN_VITEST_PATTERN.test(segment))
+    O.orElse(() => A.findFirst(vitestSegments, flow(segmentFileArguments, A.isReadonlyArrayEmpty)))
   );
 };
+
+// A segment's `--config <file>` (or `--config=<file>`, `-c <file>`): without
+// it vitest falls back to the default config, whose `include` may not collect
+// the file at all, and "No test files found" exits 1 like a red test.
+const segmentConfigArguments = (segment: string): ReadonlyArray<string> =>
+  pipe(
+    O.fromNullishOr(CONFIG_FLAG_PATTERN.exec(segment)),
+    O.flatMap((match) => O.fromUndefinedOr(match[1])),
+    O.match({ onNone: A.empty<string>, onSome: (config) => ["--config", config] })
+  );
 
 /**
  * Build the `bunx` arguments that replay one test file on its package's own
@@ -279,7 +291,9 @@ const scriptRunsTestOnBun = (script: string, testPath: string): boolean => {
  * decides the runtime; when none names it, the vitest segment with no file
  * argument does. A segment that runs vitest under Bun (`bunx --bun vitest`
  * or `bun --bun vitest`) makes the replay pass `--bun`; anything else runs
- * plain `bunx vitest`, which uses Node.
+ * plain `bunx vitest`, which uses Node. The segment's `--config` (or `-c`)
+ * file is carried over, so the replay collects the file the way the package's
+ * own run does.
  *
  * **Example** (Replay a Bun-runtime package's test)
  *
@@ -307,10 +321,18 @@ export const vitestReplayArgs: {
     pipe(
       O.fromUndefinedOr(manifest.scripts),
       O.flatMap((scripts) => O.orElse(R.get(scripts, "beep:test"), () => R.get(scripts, "test"))),
-      O.exists((script) => scriptRunsTestOnBun(script, testPath))
+      O.flatMap((script) => replaySegment(script, testPath)),
+      O.match({
+        onNone: () => ["vitest", "run", testPath],
+        onSome: (segment) => [
+          ...(BUN_VITEST_PATTERN.test(segment) ? ["--bun"] : []),
+          "vitest",
+          "run",
+          ...segmentConfigArguments(segment),
+          testPath,
+        ],
+      })
     )
-      ? ["--bun", "vitest", "run", testPath]
-      : ["vitest", "run", testPath]
 );
 
 // The first rewrite of a file carries its merge-base path; files diffed in

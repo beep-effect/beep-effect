@@ -1,5 +1,5 @@
 {
-  "$schema": "https://v2-11-11.turborepo.dev/schema.json",
+  "$schema": "https://v2-11-13.turborepo.dev/schema.json",
   "agentGuidance": false,
   "futureFlags": {
     "affectedUsingTaskInputs": true,
@@ -807,6 +807,7 @@
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Entity.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/FastCheckRuns.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Layer.ts",
+        "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Registration.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Schema.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/SqlTest.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/SystemTemp.ts",
@@ -1406,6 +1407,7 @@
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Entity.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/FastCheckRuns.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Layer.ts",
+        "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Registration.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Schema.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/SqlTest.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/SystemTemp.ts",
@@ -2193,6 +2195,7 @@
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Entity.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/FastCheckRuns.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Layer.ts",
+        "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Registration.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Schema.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/SqlTest.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/SystemTemp.ts",
@@ -3717,6 +3720,7 @@
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Entity.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/FastCheckRuns.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Layer.ts",
+        "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Registration.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/Schema.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/SqlTest.ts",
         "$TURBO_ROOT$/packages/tooling/test-kit/test-utils/src/SystemTemp.ts",
@@ -6057,6 +6061,12 @@
         "packages/foundation/modeling/utils/src/**",
         "packages/foundation/primitive/types/package.json",
         "packages/foundation/primitive/types/src/**",
+        "packages/ecosystem/effect-drizzle/package.json",
+        "packages/ecosystem/effect-drizzle/src/**",
+        "packages/drivers/pglite/package.json",
+        "packages/drivers/pglite/src/**",
+        "packages/foundation/ui-system/ui/package.json",
+        "packages/foundation/ui-system/ui/src/**",
         "!**/node_modules/**"
       ]
     },

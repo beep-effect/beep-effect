@@ -11,8 +11,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import type * as Effect from "effect/Effect";
 import * as Context from "effect/Context";
+import type * as Effect from "effect/Effect";
 import type { ExtractionError } from "../Domain/Error/Extraction.ts";
 import type { RunConfig } from "../Domain/Model/ExtractionRun.ts";
 import type { ExtractionOutcome } from "../Domain/Model/ExtractionTelemetry.ts";

@@ -74,7 +74,7 @@ export const getPricing = (model: string): { input: number; output: number } | u
  */
 export const calculateCost = dual3((model: string, inputTokens: number, outputTokens: number): number => {
   const pricing = PRICING[model];
-  if (P.not(P.isTruthy)(pricing)) return 0;
+  if (P.isUndefined(pricing)) return 0;
 
   const inputCost = (inputTokens / 1_000_000) * pricing.input;
   const outputCost = (outputTokens / 1_000_000) * pricing.output;

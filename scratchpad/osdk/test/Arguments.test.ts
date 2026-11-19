@@ -188,13 +188,19 @@ const objectSetArgumentLaw = (universe: string, codec: S.Codec<unknown, unknown>
       deepStrictEqual(stored, ObjectSetRid.make(objectSetRid));
       assertTrue(S.is(ObjectSetRid)(stored) && !S.is(ObjectSet)(stored));
       assertTrue(S.is(ObjectSet)(inline) && inline.type === "filter");
-      const wire = yield* Effect.forEach([stored, inline], (value) => S.encodeUnknownEffect(codec)(value));
+      const wire = yield* Effect.forEach([stored, inline], (value) => S.encodeUnknownEffect(codec)(value), {
+        concurrency: 1,
+      });
       deepStrictEqual<unknown>(wire, [objectSetRid, inlineObjectSet]);
       const verdicts = yield* Effect.forEach(
         ["", 42, null, { type: "base" }, { type: "everything" }, { objectType: "Employee" }, [objectSetRid]],
-        rejects(codec)
+        rejects(codec),
+        { concurrency: 1 }
       );
-      deepStrictEqual(verdicts, A.map(verdicts, () => true));
+      deepStrictEqual(
+        verdicts,
+        A.map(verdicts, () => true)
+      );
     })
   );
 const scenarioRid = "ri.actions..scenario.cf2a8a49-8b56-446d-ab04-a6bc7fadef48";
@@ -433,10 +439,10 @@ describe("argument values", () => {
       const decimal = argumentCodec(parameterCases.decimal.make({}));
       const decodedLong = yield* S.decodeEffect(long)(58319870951433);
       const decodedDecimal = yield* S.decodeEffect(decimal)(2.5);
-      const wire = yield* Effect.all([
-        S.encodeUnknownEffect(long)(decodedLong),
-        S.encodeUnknownEffect(decimal)(decodedDecimal),
-      ]);
+      const wire = yield* Effect.all(
+        [S.encodeUnknownEffect(long)(decodedLong), S.encodeUnknownEffect(decimal)(decodedDecimal)],
+        { concurrency: 1 }
+      );
       deepStrictEqual(wire, ["58319870951433", "2.5"]);
     })
   );
@@ -453,8 +459,12 @@ describe("argument values", () => {
           templateVersion: "1",
         },
       ];
-      const decoded = yield* Effect.forEach(spellings, (spelling) => S.decodeEffect(codec)(spelling));
-      const encoded = yield* Effect.forEach(decoded, (reference) => S.encodeUnknownEffect(codec)(reference));
+      const decoded = yield* Effect.forEach(spellings, (spelling) => S.decodeEffect(codec)(spelling), {
+        concurrency: 1,
+      });
+      const encoded = yield* Effect.forEach(decoded, (reference) => S.encodeUnknownEffect(codec)(reference), {
+        concurrency: 1,
+      });
       deepStrictEqual(encoded, spellings);
     })
   );
@@ -468,7 +478,9 @@ describe("argument values", () => {
       const viaInterface = argumentCodec(
         parameterCases.interfaceObject.make({ interfaceTypeApiName: O.some(InterfaceTypeApiName.make("Worker")) })
       );
-      const keys = yield* Effect.forEach([10033123, "EMP1234"], (key) => S.decodeEffect(object)(key));
+      const keys = yield* Effect.forEach([10033123, "EMP1234"], (key) => S.decodeEffect(object)(key), {
+        concurrency: 1,
+      });
       deepStrictEqual(keys, [10033123, "EMP1234"]);
       const locator = yield* S.decodeEffect(viaInterface)(interfaceObject);
       deepStrictEqual(locator, ObjectLocator.make({ objectType: employee, primaryKey: "EMP1234" }));
@@ -481,7 +493,15 @@ describe("argument values", () => {
     "a vector must have exactly the declared number of components",
     Effect.fnUntraced(function* () {
       const refuses = rejects(argumentCodec(parameterCases.vector.make({ dimension: 3 })));
-      const verdicts = yield* Effect.forEach([[0.1, 0.2], [0.1, 0.2, 0.3], [0.1, 0.2, 0.3, 0.4]], refuses);
+      const verdicts = yield* Effect.forEach(
+        [
+          [0.1, 0.2],
+          [0.1, 0.2, 0.3],
+          [0.1, 0.2, 0.3, 0.4],
+        ],
+        refuses,
+        { concurrency: 1 }
+      );
       deepStrictEqual(verdicts, [true, false, true]);
     })
   );
@@ -513,7 +533,7 @@ describe("argument values", () => {
           fields: [structFieldNamed("home", fieldCases.struct.make({ fields: addressFields }), true)],
         })
       );
-      const verdicts = yield* Effect.forEach([{}, { city: "NYC" }, "NYC"], rejects(empty));
+      const verdicts = yield* Effect.forEach([{}, { city: "NYC" }, "NYC"], rejects(empty), { concurrency: 1 });
       deepStrictEqual(verdicts, [false, true, true]);
       const home = yield* S.decodeEffect(nested)({ home: { city: "NYC", state: "NY" } });
       deepStrictEqual(home, { home: { city: "NYC", state: "NY", zipcode: O.none() } });
@@ -619,8 +639,7 @@ const forActionType = (wire: typeof ActionType.Encoded, body: (actionType: Actio
     O.match(S.decodeOption(ActionType)(wire), {
       onNone: () => it("decodes its action type fixture", () => assertTrue(false, "the fixture did not decode")),
       onSome: body,
-    })
-  );
+    }));
 
 forActionType(promoteEmployeeObject, (actionType) => {
   const codec = argumentsCodec(actionType);
@@ -642,7 +661,8 @@ forActionType(promoteEmployeeObject, (actionType) => {
           { employee: 50030, newTitle: "Director", newCompensation: "a lot" },
           { employee: 50030, newTitle: "Director", newCompensation: 250000.5, newOffice: "NYC" },
         ],
-        rejects(codec)
+        rejects(codec),
+        { concurrency: 1 }
       );
       deepStrictEqual(verdicts, [true, true, true, true]);
       const unknownParameter = yield* failureOf(codec)({
@@ -712,7 +732,8 @@ forActionType(createStructPerson, (actionType) => {
           { name: "testMan", address: { city: "NYC", state: "NY", zipcode: "10001-0001" } },
           { address: { city: "NYC", state: "NY" } },
         ],
-        rejects(codec)
+        rejects(codec),
+        { concurrency: 1 }
       );
       deepStrictEqual(verdicts, [true, true, true]);
     })
@@ -724,16 +745,22 @@ forActionType(createStructPerson, (actionType) => {
 forActionType(actionTakesAttachment, (actionType) => {
   const codec = argumentsCodec(actionType);
 
-  wireFixture("an attachment argument is the attachment's identifier", codec, { attachment: attachmentRid }, {
-    attachment: attachmentRid,
-  });
+  wireFixture(
+    "an attachment argument is the attachment's identifier",
+    codec,
+    { attachment: attachmentRid },
+    {
+      attachment: attachmentRid,
+    }
+  );
 
   it.effect(
     "refuses an empty identifier and an upload that was never sent",
     Effect.fnUntraced(function* () {
       const verdicts = yield* Effect.forEach(
         [{ attachment: "" }, { attachment: { name: "report.pdf" } }, {}],
-        rejects(codec)
+        rejects(codec),
+        { concurrency: 1 }
       );
       deepStrictEqual(verdicts, [true, true, true]);
     })
@@ -745,14 +772,21 @@ forActionType(actionTakesAttachment, (actionType) => {
 forActionType(scheduleMeeting, (actionType) => {
   const codec = argumentsCodec(actionType);
 
-  wireFixture("a list argument is a list of its element type", codec, { invitees: ["alpha", "bravo", "charlie"] }, {
-    invitees: ["alpha", "bravo", "charlie"],
-  });
+  wireFixture(
+    "a list argument is a list of its element type",
+    codec,
+    { invitees: ["alpha", "bravo", "charlie"] },
+    {
+      invitees: ["alpha", "bravo", "charlie"],
+    }
+  );
 
   it.effect(
     "refuses a bare element and a list holding another type",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.forEach([{ invitees: "alpha" }, { invitees: ["alpha", 7] }], rejects(codec));
+      const verdicts = yield* Effect.forEach([{ invitees: "alpha" }, { invitees: ["alpha", 7] }], rejects(codec), {
+        concurrency: 1,
+      });
       deepStrictEqual(verdicts, [true, true]);
     })
   );
@@ -768,7 +802,9 @@ describe("argumentsCodec of an action without parameters", () => {
   it.effect(
     "refuses any key and anything that is not a record",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.forEach([{ officeId: "NYC" }, [], "NYC", null], rejects(codec));
+      const verdicts = yield* Effect.forEach([{ officeId: "NYC" }, [], "NYC", null], rejects(codec), {
+        concurrency: 1,
+      });
       deepStrictEqual(verdicts, [true, true, true, true]);
     })
   );
@@ -941,15 +977,20 @@ describe("query values", () => {
     Effect.fnUntraced(function* () {
       const nullFirst = dataCases.union.make({ unionTypes: [dataCases.null.make({}), dataCases.integer.make({})] });
       const codecs = A.map([optionalInteger, nullFirst], valueCodec(noReferences));
-      const decoded = yield* Effect.forEach(codecs, (codec) =>
-        Effect.forEach([42, null], (wire) => S.decodeEffect(codec)(wire))
+      const decoded = yield* Effect.forEach(
+        codecs,
+        (codec) => Effect.forEach([42, null], (wire) => S.decodeEffect(codec)(wire), { concurrency: 1 }),
+        { concurrency: 1 }
       );
       deepStrictEqual(decoded, [
         [O.some(42), O.none()],
         [O.some(42), O.none()],
       ]);
-      const encoded = yield* Effect.forEach(codecs, (codec) =>
-        Effect.forEach([O.some(42), O.none()], (value) => S.encodeUnknownEffect(codec)(value))
+      const encoded = yield* Effect.forEach(
+        codecs,
+        (codec) =>
+          Effect.forEach([O.some(42), O.none()], (value) => S.encodeUnknownEffect(codec)(value), { concurrency: 1 }),
+        { concurrency: 1 }
       );
       deepStrictEqual(encoded, [
         [42, null],
@@ -967,7 +1008,7 @@ describe("query values", () => {
         }),
         noReferences
       );
-      const decoded = yield* Effect.forEach([true, null], (wire) => S.decodeEffect(codec)(wire));
+      const decoded = yield* Effect.forEach([true, null], (wire) => S.decodeEffect(codec)(wire), { concurrency: 1 });
       deepStrictEqual(decoded, [O.some(true), O.none()]);
       const date = yield* S.decodeEffect(codec)("2021-05-01");
       assertTrue(O.isOption(date) && O.exists(date, isLocalDate));
@@ -1016,12 +1057,7 @@ describe("query values", () => {
         { key: "EMP1234", value: "58319870951433" },
         { key: "EMP4444", value: 7 },
       ]);
-      assertTrue(
-        Equal.equals(
-          decoded,
-          HashMap.make(["EMP1234", BigInt("58319870951433")], ["EMP4444", BigInt(7)])
-        )
-      );
+      assertTrue(Equal.equals(decoded, HashMap.make(["EMP1234", BigInt("58319870951433")], ["EMP4444", BigInt(7)])));
       const encoded = yield* S.encodeUnknownEffect(codec)(decoded);
       assertTrue(
         sameMembers(encoded, [
@@ -1079,7 +1115,8 @@ describe("query values", () => {
           { groups: [{ key: { startValue: "May" }, value: "2021-05-17T09:30:00.000Z" }] },
           { groups: [{ key: { startValue: "2021-05-01" }, value: 17 }] },
         ],
-        rejects(codec)
+        rejects(codec),
+        { concurrency: 1 }
       );
       deepStrictEqual(verdicts, [true, true, true]);
       const unbounded = yield* failureOf(codec)({ groups: [{ key: {}, value: "2021-05-17T09:30:00.000Z" }] });
@@ -1091,7 +1128,9 @@ describe("query values", () => {
     "void reads null or an absent value as the unit value and writes null",
     Effect.fnUntraced(function* () {
       const codec = valueCodec(dataCases.void.make({}), noReferences);
-      const decoded = yield* Effect.forEach([null, undefined], (wire) => S.decodeEffect(codec)(wire));
+      const decoded = yield* Effect.forEach([null, undefined], (wire) => S.decodeEffect(codec)(wire), {
+        concurrency: 1,
+      });
       deepStrictEqual(decoded, [undefined, undefined]);
       const encoded = yield* S.encodeUnknownEffect(codec)(undefined);
       strictEqual(encoded, null);
@@ -1106,10 +1145,7 @@ describe("type references", () => {
       dataCases.struct.make({
         fields: [
           queryFieldNamed("head", dataCases.integer.make({})),
-          queryFieldNamed(
-            "tail",
-            dataCases.union.make({ unionTypes: [referenceTo("list"), dataCases.null.make({})] })
-          ),
+          queryFieldNamed("tail", dataCases.union.make({ unionTypes: [referenceTo("list"), dataCases.null.make({})] })),
         ],
       }),
     ],
@@ -1154,8 +1190,10 @@ describe("type references", () => {
         ["ping", dataCases.union.make({ unionTypes: [referenceTo("pong"), dataCases.null.make({})] })],
         ["pong", referenceTo("ping")],
       ]);
-      const messages = yield* Effect.forEach(["self", "ping", "pong"], (name) =>
-        failureOf(valueCodec(referenceTo(name), circular))(1)
+      const messages = yield* Effect.forEach(
+        ["self", "ping", "pong"],
+        (name) => failureOf(valueCodec(referenceTo(name), circular))(1),
+        { concurrency: 1 }
       );
       deepStrictEqual(messages, [
         'Type reference "self" refers only to itself',
@@ -1325,8 +1363,7 @@ const forQueryType = (wire: typeof QueryType.Encoded, body: (queryType: QueryTyp
     O.match(S.decodeOption(QueryType)(wire), {
       onNone: () => it("decodes its query type fixture", () => assertTrue(false, "the fixture did not decode")),
       onSome: body,
-    })
-  );
+    }));
 
 forQueryType(complexStructFixture, (queryType) => {
   const parameters = parametersCodec(queryType);
@@ -1334,9 +1371,14 @@ forQueryType(complexStructFixture, (queryType) => {
   const person = { firstName: "John", lastName: "Doe", age: 42, object: 50030 };
   const ageless = { firstName: "Jane", lastName: "Doe", age: null, object: "EMP1234" };
 
-  wireFixture("a struct parameter holds each field in its own type", parameters, { person }, {
-    person: { firstName: "John", lastName: "Doe", age: O.some(42), object: 50030 },
-  });
+  wireFixture(
+    "a struct parameter holds each field in its own type",
+    parameters,
+    { person },
+    {
+      person: { firstName: "John", lastName: "Doe", age: O.some(42), object: 50030 },
+    }
+  );
 
   wireFixture("the output reads a null age as none", output, ageless, {
     firstName: "Jane",
@@ -1350,7 +1392,8 @@ forQueryType(complexStructFixture, (queryType) => {
     Effect.fnUntraced(function* () {
       const verdicts = yield* Effect.forEach(
         [{}, { person, manager: person }, { person: { ...person, age: "forty-two" } }],
-        rejects(parameters)
+        rejects(parameters),
+        { concurrency: 1 }
       );
       deepStrictEqual(verdicts, [true, true, true]);
       const unknownParameter = yield* failureOf(parameters)({ person, manager: person });
@@ -1418,7 +1461,8 @@ forQueryType(twoDimensionalFixture, (queryType) => {
       assertTrue(S.is(TwoDimensionalAggregation)(decoded));
       const verdicts = yield* Effect.forEach(
         [{ groups: [{ key: "Q-AFN", value: "many" }] }, { groups: [{ key: 7, value: 1 }] }, [groups]],
-        rejects(output)
+        rejects(output),
+        { concurrency: 1 }
       );
       deepStrictEqual(verdicts, [true, true, true]);
       const stray = yield* rejects(parameters)({ limit: 10 });
@@ -1483,9 +1527,14 @@ forQueryType(objectSetFixture, (queryType) => {
   const parameters = parametersCodec(queryType);
   const output = outputCodec(queryType);
 
-  wireFixture("an object set parameter may be a stored set's identifier", parameters, { objectSet: objectSetRid }, {
-    objectSet: objectSetRid,
-  });
+  wireFixture(
+    "an object set parameter may be a stored set's identifier",
+    parameters,
+    { objectSet: objectSetRid },
+    {
+      objectSet: objectSetRid,
+    }
+  );
   wireFixture("an object set output may be a stored set's identifier", output, objectSetRid, objectSetRid);
 
   it.effect(
@@ -1505,12 +1554,15 @@ forQueryType(objectSetFixture, (queryType) => {
   it.effect(
     "refuses an empty identifier and a record that defines no object set",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(parameters)({ objectSet: "" }),
-        rejects(output)(""),
-        rejects(parameters)({ objectSet: { type: "base" } }),
-        rejects(output)({ objectType: "Employee" }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(parameters)({ objectSet: "" }),
+          rejects(output)(""),
+          rejects(parameters)({ objectSet: { type: "base" } }),
+          rejects(output)({ objectType: "Employee" }),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(verdicts, [true, true, true, true]);
     })
   );
@@ -1545,7 +1597,9 @@ forQueryType(entrySetFixture, (queryType) => {
       assertTrue(Equal.equals(decoded, HashMap.make([50030, 1.5])));
       const encoded = yield* S.encodeUnknownEffect(output)(decoded);
       deepStrictEqual(encoded, wire);
-      const verdicts = yield* Effect.forEach([[{ key: 50030, value: "tall" }], { EMP1234: 1.5 }], rejects(output));
+      const verdicts = yield* Effect.forEach([[{ key: 50030, value: "tall" }], { EMP1234: 1.5 }], rejects(output), {
+        concurrency: 1,
+      });
       deepStrictEqual(verdicts, [true, true]);
     })
   );
@@ -1556,9 +1610,14 @@ forQueryType(interfaceFixture, (queryType) => {
   const output = outputCodec(queryType);
   const locator = ObjectLocator.make({ objectType: employee, primaryKey: "EMP1234" });
 
-  wireFixture("an interface object parameter names its concrete object type and key", parameters, { interfaceObject }, {
-    interfaceObject: locator,
-  });
+  wireFixture(
+    "an interface object parameter names its concrete object type and key",
+    parameters,
+    { interfaceObject },
+    {
+      interfaceObject: locator,
+    }
+  );
   wireFixture("an interface object output is an object locator", output, interfaceObject, locator);
 
   it.effect(
@@ -1593,7 +1652,9 @@ describe("parametersCodec of a query with an optional parameter", () => {
       const supplied = yield* decode({ since: "2021-05-01", limit: 10, cursor: null });
       deepStrictEqual([leftOut.limit, leftOut.cursor], [O.none(), O.none()]);
       deepStrictEqual([supplied.limit, supplied.cursor], [O.some(10), O.some(O.none())]);
-      const encoded = yield* Effect.forEach([leftOut, supplied], (args) => S.encodeUnknownEffect(codec)(args));
+      const encoded = yield* Effect.forEach([leftOut, supplied], (args) => S.encodeUnknownEffect(codec)(args), {
+        concurrency: 1,
+      });
       deepStrictEqual(encoded, [{ since: "2021-05-01" }, { since: "2021-05-01", limit: 10, cursor: null }]);
       const nullForNonNullable = yield* rejects(codec)({ since: "2021-05-01", limit: null });
       assertTrue(nullForNonNullable);

@@ -1,13 +1,13 @@
-import type { OrgId, RunId } from "@proto/kernel/Ids";
+import type { FactId, OrgId, RunId } from "@proto/kernel/Ids";
 import type { ClaimAccepted } from "@proto/party-contract/Claim/AcceptClaim.command";
 import type { ProposalApproved } from "@proto/party-contract/Claim/ApproveProposal.command";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import type { ClaimRetracted } from "@proto/party-contract/Claim/RetractClaim.command";
-import { ClaimDecidedV1, ClaimDecidedV2 } from "@proto/party-contract/Facts/ClaimDecided.fact";
-import * as A from "effect/Array";
+import { ClaimDecided, ClaimDecidedV1, ClaimDecidedV2 } from "@proto/party-contract/Facts/ClaimDecided.fact";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { Claim, ClaimState } from "../Claim/Claim.aggregate.ts";
 import { ClaimDecisions } from "./ClaimDecisions.projection.ts";
 import { PartyFacts } from "./PartyFacts.stream.ts";
@@ -40,7 +40,7 @@ const runsNamedBy = Match.type<Decision>().pipe(
 
 const orgOf = (state: ClaimState): O.Option<OrgId> =>
   ClaimState.match(state, {
-    Unasserted: () => O.none(),
+    Unasserted: O.none<OrgId>,
     Pending: (pending) => O.some(pending.org),
     Accepted: (accepted) => O.some(accepted.org),
     Retracted: (retracted) => O.some(retracted.org),
@@ -78,7 +78,7 @@ export const claimDecisionsLive = (version: number) =>
       const closed = yield* PartyFacts;
       const claims = yield* Claim;
 
-      const legacyScope = Effect.fn("ClaimDecisions.legacyScope")(function* (claim: ClaimId, factId: string, event: Decision) {
+      const legacyScope = Effect.fn("ClaimDecisions.legacyScope")(function* (claim: ClaimId, factId: FactId, event: Decision) {
         const published = yield* closed.list("claims", { where: { factId }, take: 1 }).pipe(Effect.map((page) => A.head(page.entries)));
         if (O.isSome(published)) {
           return { org: published.value.event.org, reviewRuns: published.value.event.reviewRuns } satisfies Scope;
@@ -96,7 +96,7 @@ export const claimDecisionsLive = (version: number) =>
       return Effect.fn(function* (batch) {
         for (const input of batch) {
           const claim = ClaimId.make(input.source.id);
-          const factId = `${claim}:decided`;
+          const factId = ClaimDecided.factIdOf(claim);
           const scope = yield* O.match(O.all({ org: input.event.org, reviewRuns: input.event.reviewRuns }), {
             onNone: () => legacyScope(claim, factId, input.event),
             onSome: Effect.succeed,

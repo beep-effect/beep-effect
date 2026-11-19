@@ -1,9 +1,10 @@
 import type * as Domain from "@alchemy.run/domain";
-import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
-import * as A from "effect/Array";
+import { Name } from "@proto/kernel/Measure";
+import { sameWriter, StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
@@ -14,7 +15,7 @@ import * as S from "effect/Schema";
  * @category models
  * @since 0.0.0
  */
-export const LiveStream = S.Struct({ stream: S.String, writer: S.Option(StreamWriter) });
+export const LiveStream = S.Struct({ stream: Name, writer: S.Option(StreamWriter) });
 /**
  * @category models
  * @since 0.0.0
@@ -38,11 +39,11 @@ export type LiveStream = typeof LiveStream.Type;
  * @since 0.0.0
  */
 export const StreamDrift = S.TaggedUnion({
-  Unpinned: { stream: S.String },
-  Changed: { stream: S.String, pinned: StreamWriter, live: StreamWriter },
-  Reopened: { stream: S.String, writer: StreamWriter },
-  Unwritten: { stream: S.String, pinned: StreamWriter },
-  Undeclared: { stream: S.String },
+  Unpinned: { stream: Name },
+  Changed: { stream: Name, pinned: StreamWriter, live: StreamWriter },
+  Reopened: { stream: Name, writer: StreamWriter },
+  Unwritten: { stream: Name, pinned: StreamWriter },
+  Undeclared: { stream: Name },
 });
 /**
  * @category models
@@ -61,28 +62,22 @@ export class PublishedStreamDrift extends S.TaggedError<PublishedStreamDrift, { 
   { drift: S.Array(StreamDrift) },
 ) {}
 
-const sameWriter = (a: StreamWriter, b: StreamWriter): boolean =>
-  a.projection === b.projection &&
-  a.generation === b.generation &&
-  A.length(a.sources) === A.length(b.sources) &&
-  A.every(a.sources, (source) => A.contains(b.sources, source));
-
 const driftOfLive = (pins: ReadonlyArray<StreamPin>) => (live: LiveStream): O.Option<StreamDrift> =>
   O.match(
     A.findFirst(pins, (pin) => pin.stream === live.stream),
     {
-      onNone: () => O.some(StreamDrift.cases.Unpinned.make({ stream: live.stream })),
+      onNone: () => StreamDrift.cases.Unpinned.makeOption({ stream: live.stream }),
       onSome: (pin) =>
         StreamPin.match(pin, {
           Closed: () => O.map(live.writer, (writer) => StreamDrift.cases.Reopened.make({ stream: live.stream, writer })),
           Retired: () => O.map(live.writer, (writer) => StreamDrift.cases.Reopened.make({ stream: live.stream, writer })),
           Open: ({ writer: pinned }) =>
             O.match(live.writer, {
-              onNone: () => O.some(StreamDrift.cases.Unwritten.make({ stream: live.stream, pinned })),
+              onNone: () => StreamDrift.cases.Unwritten.makeOption({ stream: live.stream, pinned }),
               onSome: (writer) =>
                 sameWriter(pinned, writer)
                   ? O.none()
-                  : O.some(StreamDrift.cases.Changed.make({ stream: live.stream, pinned, live: writer })),
+                  : StreamDrift.cases.Changed.makeOption({ stream: live.stream, pinned, live: writer }),
             }),
         }),
     },
@@ -97,7 +92,7 @@ const driftOfLive = (pins: ReadonlyArray<StreamPin>) => (live: LiveStream): O.Op
  * ```ts
  * import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
  * import { driftOf } from "@proto/tooling/PublishedStreams";
- * import * as O from "effect/Option";
+ * import * as O from "@beep/utils/Option";
  *
  * const opened = StreamWriter.make({ projection: "ClaimDecisions", generation: 0, sources: ["Claim"] });
  * const drift = driftOf(

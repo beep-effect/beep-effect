@@ -299,8 +299,10 @@ const equalsAny = Effect.fnUntraced(function* (
   operands: ReadonlyArray<ScalarValue>
 ) {
   const declared = yield* declaredProperty(subject.objectType, property);
-  const candidates = yield* Effect.forEach(operands, (operand) =>
-    decodeOperand(declared, operand, "InvalidPropertyFilterValue")
+  const candidates = yield* Effect.forEach(
+    operands,
+    (operand) => decodeOperand(declared, operand, "InvalidPropertyFilterValue"),
+    { concurrency: 1 }
   );
   const stored = yield* readStored(declared, subject.object);
   const same = S.toEquivalence(valueCodec(operandType(declared.type)));
@@ -623,8 +625,8 @@ const evaluateProperty = (subject: Subject): ((filter: PropertyFilter) => Evalua
 const matchesFilterImpl = (object: OntologyObject, objectType: ObjectType, filter: ObjectFilter): Evaluation<boolean> =>
   foldFilter<Evaluation<boolean>>(filter, {
     property: evaluateProperty({ objectType, object }),
-    and: (verdicts) => Effect.map(Effect.all(verdicts), (all) => A.every(all, identity)),
-    or: (verdicts) => Effect.map(Effect.all(verdicts), (all) => A.some(all, identity)),
+    and: (verdicts) => Effect.map(Effect.all(verdicts, { concurrency: 1 }), (all) => A.every(all, identity)),
+    or: (verdicts) => Effect.map(Effect.all(verdicts, { concurrency: 1 }), (all) => A.some(all, identity)),
     not: Effect.map(Bool.not),
   });
 
@@ -734,7 +736,9 @@ const keep = <Item>(
   holds: (item: Item) => Evaluation<boolean>
 ): Evaluation<ReadonlyArray<Item>> =>
   Effect.map(
-    Effect.forEach(items, (item) => Effect.map(holds(item), (kept) => (kept ? O.some(item) : O.none()))),
+    Effect.forEach(items, (item) => Effect.map(holds(item), (kept) => (kept ? O.some(item) : O.none())), {
+      concurrency: 1,
+    }),
     (kept) => A.getSomes(kept)
   );
 
@@ -831,13 +835,13 @@ const evaluateObjectSetImpl = (world: FauxWorld, objectSet: ObjectSet): Evaluati
         : Effect.fail(unsupported("objectSet.withProperties", "Derived properties are not computed")),
     // Every result keeps the order of the world, so set arithmetic answers in that order too.
     union: (operands) =>
-      Effect.map(Effect.all(operands), (sets) => {
+      Effect.map(Effect.all(operands, { concurrency: 1 }), (sets) => {
         const pooled = A.flatten(sets);
         return A.filter(world.objects, (object) => A.containsWith(sameObject)(pooled, object));
       }),
     intersect: (operands) =>
       Effect.map(
-        Effect.all(operands),
+        Effect.all(operands, { concurrency: 1 }),
         A.matchLeft({
           onEmpty: A.empty<OntologyObject>,
           onNonEmpty: (first, rest) =>
@@ -846,7 +850,7 @@ const evaluateObjectSetImpl = (world: FauxWorld, objectSet: ObjectSet): Evaluati
       ),
     subtract: (operands) =>
       Effect.map(
-        Effect.all(operands),
+        Effect.all(operands, { concurrency: 1 }),
         A.matchLeft({
           onEmpty: A.empty<OntologyObject>,
           onNonEmpty: (first, rest) => A.reduce(rest, first, (kept, next) => A.differenceWith(sameObject)(kept, next)),
@@ -984,11 +988,14 @@ const bySortKeys = (fields: ReadonlyArray<SortField>): Order.Order<Sortable> =>
 
 const sortByFields = (world: FauxWorld, objects: Objects, fields: ReadonlyArray<SortField>): Evaluation<Objects> =>
   Effect.map(
-    Effect.forEach(objects, (object) =>
-      Effect.map(
-        Effect.forEach(fields, (field) => sortKeyOf(world, object, field.property)),
-        (keys): Sortable => ({ object, keys })
-      )
+    Effect.forEach(
+      objects,
+      (object) =>
+        Effect.map(
+          Effect.forEach(fields, (field) => sortKeyOf(world, object, field.property), { concurrency: 1 }),
+          (keys): Sortable => ({ object, keys })
+        ),
+      { concurrency: 1 }
     ),
     (sortables) => A.map(A.sort(sortables, bySortKeys(fields)), ({ object }) => object)
   );
@@ -1030,7 +1037,9 @@ const pageOf = Effect.fnUntraced(function* (
 
 const project = Effect.fnUntraced(function* (world: FauxWorld, object: OntologyObject, request: LoadObjectsRequest) {
   const { objectType } = yield* subjectOf(world, object);
-  const selected = yield* Effect.forEach(request.selection, (selector) => declaredProperty(objectType, selector));
+  const selected = yield* Effect.forEach(request.selection, (selector) => declaredProperty(objectType, selector), {
+    concurrency: 1,
+  });
   const names = A.map(selected, ({ name }) => name);
   return OntologyObject.make({
     ...object,
@@ -1060,9 +1069,9 @@ const loadObjectsImpl = Effect.fn("Faux.loadObjects")(function* (world: FauxWorl
   const matching = yield* evaluateObjectSetImpl(world, request.objectSet);
   const ordered = yield* orderObjects(world, matching, request.orderBy);
   const page = yield* pageOf(ordered, request.pageSize, request.pageToken);
-  const data = yield* Effect.forEach(page.data, (object) =>
-    Effect.flatMap(project(world, object, request), recordOf)
-  );
+  const data = yield* Effect.forEach(page.data, (object) => Effect.flatMap(project(world, object, request), recordOf), {
+    concurrency: 1,
+  });
   return LoadObjectsResponse.make({
     data,
     nextPageToken: page.nextPageToken,
@@ -1177,7 +1186,7 @@ const readingsOf = (
   property: PropertySelector
 ): Evaluation<ReadonlyArray<Reading>> =>
   Effect.map(
-    Effect.forEach(objects, (object) => readIn(world, object, property)),
+    Effect.forEach(objects, (object) => readIn(world, object, property), { concurrency: 1 }),
     (readings) => A.getSomes(readings)
   );
 
@@ -1188,14 +1197,17 @@ const numbersOf = (
   property: PropertySelector
 ): Evaluation<ReadonlyArray<number>> =>
   Effect.flatMap(readingsOf(world, objects, property), (readings) =>
-    Effect.forEach(readings, ({ declared, value }) =>
-      Effect.fromOption(numberOf(value), () =>
-        invalid(
-          "PropertyBaseTypeNotSupported",
-          `The "${metric}" metric needs a numeric property, and "${declared.name}" is a ${declared.type.type}`,
-          { property: declared.name, propertyType: declared.type.type }
-        )
-      )
+    Effect.forEach(
+      readings,
+      ({ declared, value }) =>
+        Effect.fromOption(numberOf(value), () =>
+          invalid(
+            "PropertyBaseTypeNotSupported",
+            `The "${metric}" metric needs a numeric property, and "${declared.name}" is a ${declared.type.type}`,
+            { property: declared.name, propertyType: declared.type.type }
+          )
+        ),
+      { concurrency: 1 }
     )
   );
 
@@ -1331,8 +1343,10 @@ const valuedOf = (members: ReadonlyArray<Member>): ReadonlyArray<Valued> =>
   );
 
 const membersOf = (world: FauxWorld, objects: Objects, property: PropertySelector): Evaluation<ReadonlyArray<Member>> =>
-  Effect.forEach(objects, (object) =>
-    Effect.map(readIn(world, object, property), (reading): Member => ({ object, reading }))
+  Effect.forEach(
+    objects,
+    (object) => Effect.map(readIn(world, object, property), (reading): Member => ({ object, reading })),
+    { concurrency: 1 }
   );
 
 // Sorts by key and gathers the runs of equal keys; the sort is stable, so a group keeps the world's order.
@@ -1375,7 +1389,8 @@ const exactParts = Effect.fnUntraced(function* (world: FauxWorld, objects: Objec
               `An exact grouping needs a scalar property, and "${reading.declared.name}" is a ${reading.declared.type.type}`,
               { property: reading.declared.name, propertyType: reading.declared.type.type }
             )
-          )
+          ),
+    { concurrency: 1 }
   );
   const valued = partsOf(placed, byDecodedValue);
   const limited = O.match(grouping.maxGroupCount, {
@@ -1409,7 +1424,8 @@ const fixedWidthParts = Effect.fnUntraced(function* (world: FauxWorld, objects: 
           const start = Math.floor(number / grouping.width) * grouping.width;
           return Effect.succeed({ object, key: start, json: start });
         },
-      })
+      }),
+    { concurrency: 1 }
   );
   return partsOf(placed, Order.Number);
 });
@@ -1435,16 +1451,19 @@ const inRange = Effect.fnUntraced(function* (reading: Reading, range: Bounds) {
 // part is the range as it was asked for: its bounds are wire scalars already.
 const rangesParts = Effect.fnUntraced(function* (world: FauxWorld, objects: Objects, grouping: RangesGrouping) {
   const members = yield* membersOf(world, objects, grouping.property);
-  return yield* Effect.forEach(grouping.ranges, ({ startValue, endValue }) =>
-    Effect.map(
-      keep(members, ({ reading }) =>
-        O.match(reading, {
-          onNone: (): Evaluation<boolean> => Effect.succeed(false),
-          onSome: (present): Evaluation<boolean> => inRange(present, { startValue, endValue }),
-        })
+  return yield* Effect.forEach(
+    grouping.ranges,
+    ({ startValue, endValue }) =>
+      Effect.map(
+        keep(members, ({ reading }) =>
+          O.match(reading, {
+            onNone: (): Evaluation<boolean> => Effect.succeed(false),
+            onSome: (present): Evaluation<boolean> => inRange(present, { startValue, endValue }),
+          })
+        ),
+        (held): Part => ({ key: { startValue, endValue }, objects: A.map(held, ({ object }) => object) })
       ),
-      (held): Part => ({ key: { startValue, endValue }, objects: A.map(held, ({ object }) => object) })
-    )
+    { concurrency: 1 }
   );
 });
 
@@ -1472,10 +1491,13 @@ const divide = (
 ): Evaluation<ReadonlyArray<Bucket>> =>
   Effect.flatMap(groupKeyOf(grouping), (name) =>
     Effect.map(
-      Effect.forEach(buckets, (bucket) =>
-        Effect.map(partsBy(world, bucket.objects)(grouping), (parts) =>
-          A.map(parts, (part): Bucket => ({ group: R.set(bucket.group, name, part.key), objects: part.objects }))
-        )
+      Effect.forEach(
+        buckets,
+        (bucket) =>
+          Effect.map(partsBy(world, bucket.objects)(grouping), (parts) =>
+            A.map(parts, (part): Bucket => ({ group: R.set(bucket.group, name, part.key), objects: part.objects }))
+          ),
+        { concurrency: 1 }
       ),
       (divided) => A.flatten(divided)
     )
@@ -1504,10 +1526,13 @@ const rowOf = (
   bucket: Bucket
 ): Evaluation<AggregationRow> =>
   Effect.map(
-    Effect.forEach(aggregations, (aggregation) =>
-      Effect.map(metricOf(world, bucket.objects)(aggregation), (value) =>
-        MetricResult.make({ name: metricNameOf(aggregation), value })
-      )
+    Effect.forEach(
+      aggregations,
+      (aggregation) =>
+        Effect.map(metricOf(world, bucket.objects)(aggregation), (value) =>
+          MetricResult.make({ name: metricNameOf(aggregation), value })
+        ),
+      { concurrency: 1 }
     ),
     (metrics) => AggregationRow.make({ group: bucket.group, metrics })
   );
@@ -1551,7 +1576,9 @@ const aggregateObjectsImpl = Effect.fn("Faux.aggregateObjects")(function* (
 ) {
   const objects = yield* evaluateObjectSetImpl(world, request.objectSet);
   const buckets = yield* bucketsOf(world, objects, request.groupBy);
-  const rows = yield* Effect.forEach(buckets, (bucket) => rowOf(world, request.aggregations, bucket));
+  const rows = yield* Effect.forEach(buckets, (bucket) => rowOf(world, request.aggregations, bucket), {
+    concurrency: 1,
+  });
   return AggregateResponse.make({ accuracy: "accurate", data: orderRows(rows, request.aggregations) });
 });
 

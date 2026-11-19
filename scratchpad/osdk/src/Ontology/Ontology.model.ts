@@ -94,6 +94,27 @@ export class OntologyIdentity extends S.Opaque<OntologyIdentity, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link OntologyIdentity}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyIdentity {
+  /**
+   * Encoded (wire) form of {@link OntologyIdentity}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly apiName: OntologyApiName.Encoded;
+    readonly displayName: string;
+    readonly description: string;
+    readonly rid: OntologyRid.Encoded;
+  }
+}
+
+/**
  * The ontologies a caller can see, as the platform lists them.
  *
  * **Example** (Read the names out of a listing)
@@ -132,6 +153,24 @@ export class OntologyList extends S.Opaque<OntologyList, { readonly brand: uniqu
 ) {}
 
 /**
+ * Companion namespace for {@link OntologyList}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyList {
+  /**
+   * Encoded (wire) form of {@link OntologyList}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly data: ReadonlyArray<OntologyIdentity.Encoded>;
+  }
+}
+
+/**
  * The branch an ontology definition was read from.
  *
  * **Gotchas**
@@ -158,6 +197,24 @@ export class OntologyBranch extends S.Opaque<OntologyBranch, { readonly brand: u
     rid: FoundryBranch.annotateKey({ description: "Identifier of the branch: its resource identifier or its name." }),
   }).pipe($I.annoteSchema("OntologyBranch", { description: "The branch an ontology definition was read from." }))
 ) {}
+
+/**
+ * Companion namespace for {@link OntologyBranch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyBranch {
+  /**
+   * Encoded (wire) form of {@link OntologyBranch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly rid: FoundryBranch.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Versioned query names
@@ -190,6 +247,22 @@ export const VersionedQueryApiName = S.NonEmptyString.pipe(
 export type VersionedQueryApiName = typeof VersionedQueryApiName.Type;
 
 /**
+ * Companion namespace for {@link VersionedQueryApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VersionedQueryApiName {
+  /**
+   * Encoded (wire) form of {@link VersionedQueryApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof VersionedQueryApiName.Encoded;
+}
+
+/**
  * Which query, at which version. No version means the latest one.
  *
  * **Example** (Ask for the latest version by naming none)
@@ -219,6 +292,25 @@ export class QuerySelector extends S.Opaque<QuerySelector, { readonly brand: uni
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link QuerySelector}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QuerySelector {
+  /**
+   * Encoded (wire) form of {@link QuerySelector}: an absent `version` stands for `None`, the latest version.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly apiName: QueryApiName.Encoded;
+    readonly version?: FunctionVersion.Encoded;
+  }
+}
 
 const isFunctionVersion = S.is(FunctionVersion);
 
@@ -316,6 +408,23 @@ export const QuerySelectorFromVersionedApiName = S.NonEmptyString.pipe(
  */
 export type QuerySelectorFromVersionedApiName = typeof QuerySelectorFromVersionedApiName.Type;
 
+/**
+ * Companion namespace for {@link QuerySelectorFromVersionedApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QuerySelectorFromVersionedApiName {
+  /**
+   * Encoded (wire) form of {@link QuerySelectorFromVersionedApiName}: the name as text, `<apiName>`,
+   * `<apiName>:<version>` or `<apiName>:latest`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof QuerySelectorFromVersionedApiName.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // The ontology definition
 // -----------------------------------------------------------------------------
@@ -381,34 +490,34 @@ export class OntologyDefinition extends S.Opaque<OntologyDefinition, { readonly 
     identity: OntologyIdentity,
     objectTypes: S.Record(ObjectTypeApiName, ObjectTypeDefinition).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<ObjectTypeApiName, ObjectTypeDefinition>())),
-      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, (typeof ObjectTypeDefinition)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, ObjectTypeDefinition.Encoded>())),
       S.annotateKey({ description: "Every object type, with its link sides and interface implementations." })
     ),
     actionTypes: S.Record(ActionTypeApiName, ActionType).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<ActionTypeApiName, ActionType>())),
-      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, (typeof ActionType)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, ActionType.Encoded>())),
       S.annotateKey({ description: "Every action type, with the summary of what it may edit." })
     ),
     actionTypeDefinitions: S.Record(ActionTypeApiName, ActionTypeDefinition).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<ActionTypeApiName, ActionTypeDefinition>())),
-      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, (typeof ActionTypeDefinition)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, ActionTypeDefinition.Encoded>())),
       S.annotateKey({
         description: "Every action type with its logic rules; empty unless the request asked for them.",
       })
     ),
     queryTypes: S.Record(VersionedQueryApiName, QueryType).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<VersionedQueryApiName, QueryType>())),
-      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, (typeof QueryType)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, QueryType.Encoded>())),
       S.annotateKey({ description: "Every query type, filed under its name and, when pinned, its version." })
     ),
     interfaceTypes: S.Record(InterfaceTypeApiName, InterfaceType).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<InterfaceTypeApiName, InterfaceType>())),
-      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, (typeof InterfaceType)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, InterfaceType.Encoded>())),
       S.annotateKey({ description: "Every interface type." })
     ),
     sharedPropertyTypes: S.Record(SharedPropertyTypeApiName, SharedPropertyType).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<SharedPropertyTypeApiName, SharedPropertyType>())),
-      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, (typeof SharedPropertyType)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, SharedPropertyType.Encoded>())),
       S.annotateKey({ description: "Every property definition that object and interface types reuse." })
     ),
     branch: S.OptionFromOptionalKey(OntologyBranch).pipe(
@@ -417,7 +526,7 @@ export class OntologyDefinition extends S.Opaque<OntologyDefinition, { readonly 
     ),
     valueTypes: S.Record(ValueTypeApiName, OntologyValueType).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<ValueTypeApiName, OntologyValueType>())),
-      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, (typeof OntologyValueType)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, OntologyValueType.Encoded>())),
       S.annotateKey({ description: "Every value type that properties name to constrain their values." })
     ),
   }).pipe(
@@ -427,6 +536,33 @@ export class OntologyDefinition extends S.Opaque<OntologyDefinition, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link OntologyDefinition}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyDefinition {
+  /**
+   * Encoded (wire) form of {@link OntologyDefinition}: `identity` travels as `ontology` and
+   * `actionTypeDefinitions` as `actionTypesFullMetadata`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly ontology: OntologyIdentity.Encoded;
+    readonly objectTypes?: R.ReadonlyRecord<ObjectTypeApiName.Encoded, ObjectTypeDefinition.Encoded>;
+    readonly actionTypes?: R.ReadonlyRecord<ActionTypeApiName.Encoded, ActionType.Encoded>;
+    readonly actionTypesFullMetadata?: R.ReadonlyRecord<ActionTypeApiName.Encoded, ActionTypeDefinition.Encoded>;
+    readonly queryTypes?: R.ReadonlyRecord<VersionedQueryApiName.Encoded, QueryType.Encoded>;
+    readonly interfaceTypes?: R.ReadonlyRecord<InterfaceTypeApiName.Encoded, InterfaceType.Encoded>;
+    readonly sharedPropertyTypes?: R.ReadonlyRecord<SharedPropertyTypeApiName.Encoded, SharedPropertyType.Encoded>;
+    readonly branch?: OntologyBranch.Encoded;
+    readonly valueTypes?: R.ReadonlyRecord<ValueTypeApiName.Encoded, OntologyValueType.Encoded>;
+  }
+}
 
 /**
  * Which parts of an ontology to load: the types a caller names, and nothing else.
@@ -493,6 +629,30 @@ export class OntologySelection extends S.Opaque<OntologySelection, { readonly br
 ) {}
 
 /**
+ * Companion namespace for {@link OntologySelection}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologySelection {
+  /**
+   * Encoded (wire) form of {@link OntologySelection}: `includeActionTypeDefinitions` travels as
+   * `includeActionTypeFullMetadata`, absent for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly objectTypes: ReadonlyArray<ObjectTypeApiName.Encoded>;
+    readonly linkTypes: ReadonlyArray<LinkTypeApiName.Encoded>;
+    readonly actionTypes: ReadonlyArray<ActionTypeApiName.Encoded>;
+    readonly queryTypes: ReadonlyArray<VersionedQueryApiName.Encoded>;
+    readonly interfaceTypes: ReadonlyArray<InterfaceTypeApiName.Encoded>;
+    readonly includeActionTypeFullMetadata?: boolean;
+  }
+}
+
+/**
  * What a read of the whole ontology brings along besides the types themselves.
  *
  * **Details**
@@ -536,6 +696,25 @@ export class OntologyInclusions extends S.Opaque<OntologyInclusions, { readonly 
   )
 ) {}
 
+/**
+ * Companion namespace for {@link OntologyInclusions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyInclusions {
+  /**
+   * Encoded (wire) form of {@link OntologyInclusions}: an absent key stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly includeActionTypeDefinitions?: boolean;
+    readonly includeDatasources?: boolean;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // API namespaces
 // -----------------------------------------------------------------------------
@@ -569,3 +748,23 @@ export class ApiNameParts extends S.Opaque<ApiNameParts, { readonly brand: uniqu
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ApiNameParts}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ApiNameParts {
+  /**
+   * Encoded (wire) form of {@link ApiNameParts}: `namespace` stays an `Option`, because the schema declares it
+   * with `S.Option`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly namespace: O.Option<string>;
+    readonly localName: string;
+  }
+}

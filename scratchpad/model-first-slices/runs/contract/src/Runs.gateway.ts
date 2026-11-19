@@ -6,6 +6,8 @@ import * as Context from "effect/Context";
 import type * as Effect from "effect/Effect";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
+import { Count, IdText, Text } from "@proto/kernel/Measure";
+import { HistoryBound } from "./Run/HistoryBound.ts";
 import { ReservationId } from "./Run/Reservation.id.ts";
 import { RunStatus } from "./Run/RunStatus.ts";
 import { RunVersions } from "./Run/RunVersions.ts";
@@ -15,20 +17,22 @@ const $I = $RunsContractId.create("Runs.gateway");
 
 /**
  * What a product context reports to a run, as the run: budget, steps and
- * how it ended.
+ * how it ended. A step name is an id: two equal steps under one hop are
+ * one retried command. An outcome and a refusal's reason are text the
+ * product context wrote.
  *
  * @category models
  * @since 0.0.0
  */
 export const RunReport = S.TaggedUnion({
-  Reserve: { reservation: ReservationId, units: S.Int },
-  Settle: { reservation: ReservationId, units: S.Int },
+  Reserve: { reservation: ReservationId, units: Count },
+  Settle: { reservation: ReservationId, units: Count },
   Release: { reservation: ReservationId },
-  Step: { step: S.String },
+  Step: { step: IdText },
   AwaitApproval: {},
-  Complete: { outcome: S.String },
+  Complete: { outcome: Text },
   Exhausted: {},
-  Refused: { reason: S.String },
+  Refused: { reason: Text },
 });
 /**
  * @category models
@@ -47,10 +51,10 @@ export const RunRequest = S.Struct({
   hop: Hop,
   run: RunId,
   session: SessionId,
-  purpose: S.String,
+  purpose: Text,
   versions: RunVersions,
-  allowance: S.Int,
-  historyBound: S.Int,
+  allowance: Count,
+  historyBound: HistoryBound,
   source: GrantRef,
   terms: GrantTerms,
 });
@@ -74,23 +78,28 @@ export const CurrentRun = S.Struct({ run: RunId, provenance: Provenance });
 export type CurrentRun = typeof CurrentRun.Type;
 
 /**
- * The run could not be started, and why.
+ * The run could not be started, and why: the tag of the rejection that refused
+ * the request, the tag of the state it reached instead of running, or the
+ * reason the run was rejected with, which can be prose, so it is text.
  *
  * @category errors
  * @since 0.0.0
  */
 export class RunRequestRefused extends S.TaggedError<RunRequestRefused, { readonly brand: unique symbol }>()("RunRequestRefused", {
-  reason: S.String,
+  reason: Text,
 }) {}
 
 /**
- * A report was refused, and why.
+ * A report was refused, and why: a refusal code, never prose. It is the
+ * tag of the run's rejection, `readmission:` and the re-admission's reason,
+ * `continuation:` and the state of a continuation that could not be
+ * followed, or `unknown-run`.
  *
  * @category errors
  * @since 0.0.0
  */
 export class RunReportRefused extends S.TaggedError<RunReportRefused, { readonly brand: unique symbol }>()("RunReportRefused", {
-  reason: S.String,
+  reason: IdText,
 }) {}
 
 /**
@@ -102,7 +111,7 @@ export class RunReportRefused extends S.TaggedError<RunReportRefused, { readonly
  */
 export class RunBudgetExceeded extends S.TaggedError<RunBudgetExceeded, { readonly brand: unique symbol }>()(
   "RunBudgetExceeded",
-  { remaining: S.Int },
+  { remaining: Count },
 ) {}
 
 /**
@@ -114,6 +123,30 @@ export class RunBudgetExceeded extends S.TaggedError<RunBudgetExceeded, { readon
  * @since 0.0.0
  */
 export class RunEnded extends S.TaggedError<RunEnded, { readonly brand: unique symbol }>()("RunEnded", { status: RunStatus }) {}
+
+/**
+ * Why a report to a run was refused: refused outright, a reservation the
+ * remaining allowance cannot cover, or a run that has ended.
+ *
+ * **Example** (Telling an ended run apart)
+ * ```ts
+ * import { RunEnded, RunReportRefusal } from "@proto/runs-contract/Runs.gateway";
+ *
+ * const ended = RunReportRefusal.guards.RunEnded(RunEnded.make({ status: "completed" }));
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export const RunReportRefusal = S.Union([RunReportRefused, RunBudgetExceeded, RunEnded]).pipe(
+  $I.annoteSchema("RunReportRefusal", { description: "Why a report to a run was refused." }),
+  S.toTaggedUnion("_tag"),
+);
+/**
+ * @category errors
+ * @since 0.0.0
+ */
+export type RunReportRefusal = typeof RunReportRefusal.Type;
 
 /**
  * The statuses in which a run has ended.
@@ -146,6 +179,6 @@ export class RunsGateway extends Context.Service<
       readonly hop: Hop;
       readonly run: RunId;
       readonly report: RunReport;
-    }) => Effect.Effect<CurrentRun, RunReportRefused | RunBudgetExceeded | RunEnded>;
+    }) => Effect.Effect<CurrentRun, RunReportRefusal>;
   }
 >()($I`RunsGateway`) {}

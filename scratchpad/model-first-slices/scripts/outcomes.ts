@@ -1,16 +1,17 @@
+import type * as Aggregate from "@alchemy.run/domain/Aggregate";
 import * as NodeRuntime from "@effect/platform-node/NodeRuntime";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { AuthorityModel } from "@proto/authority-model/Authority.model";
 import { PartyModel } from "@proto/party-model/Party.model";
 import { RunsModel } from "@proto/runs-model/Runs.model";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { encodedTagOf } from "@proto/tooling/RejectionClass";
 import { uncoveredOutcomes } from "../proofs/Outcomes.allow.ts";
 
@@ -27,15 +28,11 @@ class OutcomeDrift extends S.TaggedError<OutcomeDrift, { readonly brand: unique 
 }) {}
 const keyOf = (row: typeof Row.Type) => `${row.aggregate}.${row.command}:${row.outcome}`;
 
-type AnyAggregate = {
-  readonly aggregateName: string;
-  readonly definition: {
-    readonly commands: ReadonlyArray<{ readonly tag: string; readonly rejects: ReadonlyArray<S.Top> }>;
-  };
-};
+/** A model's aggregates, widened from its tuple to the library's structural type. */
+const aggregatesOf = (model: { readonly aggregates: ReadonlyArray<Aggregate.Any> }) => model.aggregates;
 
 const required = A.flatMap([PartyModel, RunsModel, AuthorityModel], (model) =>
-  A.flatMap(model.aggregates as unknown as ReadonlyArray<AnyAggregate>, (aggregate) =>
+  A.flatMap(aggregatesOf(model), (aggregate) =>
     A.flatMap(aggregate.definition.commands, (command) =>
       A.map(["accepted", ...A.getSomes(A.map(command.rejects, encodedTagOf))], (outcome) => ({
         aggregate: aggregate.aggregateName,
@@ -50,7 +47,7 @@ const program = Effect.gen(function* () {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const dir = yield* path.fromFileUrl(new URL("../node_modules/.cache/proto-outcomes/", import.meta.url));
-  const files = yield* fs.readDirectory(dir).pipe(Effect.orElseSucceed(() => []));
+  const files = yield* fs.readDirectory(dir).pipe(Effect.orElseSucceed(A.empty));
   const lines = yield* Effect.forEach(files, (file) => fs.readFileString(path.join(dir, file)), { concurrency: 1 });
   const executed = yield* Effect.forEach(
     A.filter(A.flatMap(lines, Str.split("\n")), Str.isNonEmpty),

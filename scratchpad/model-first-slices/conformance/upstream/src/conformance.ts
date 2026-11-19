@@ -6,7 +6,7 @@
  * its own, unique to the run, so a retried or repeated run starts fresh.
  */
 import { expect } from "@effect/vitest";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -17,7 +17,7 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Socket from "effect/socket/Socket";
 import * as Stream from "effect/Stream";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { ConformanceApi } from "./model.ts";
 
 /** What every case reads from the runner, beside what the front's URL needs. */

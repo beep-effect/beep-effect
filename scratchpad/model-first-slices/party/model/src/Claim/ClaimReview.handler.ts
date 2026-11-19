@@ -4,9 +4,10 @@ import { ClaimReviewState } from "@proto/party-contract/Claim/ClaimReview.read";
 import { PartyRead } from "@proto/party-contract/Party.capabilities";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { claimIn } from "./Claim.rules.ts";
 import { ClaimReview } from "./ClaimReview.view.ts";
+import { thunkEffectVoid } from "@beep/utils/thunk"
 
 /**
  * Who may read a claim: an invocation with a `party.read` grant on its org
@@ -22,7 +23,7 @@ export const ClaimReviewLive = ClaimReview.toLayer(
       const now = yield* DateTime.now;
       const asserted = O.filter(O.fromNullishOr(review), (found) => !ClaimReviewState.guards.Unasserted(found));
       yield* O.match(O.map(asserted, (found) => found.org), {
-        onNone: () => Effect.void,
+        onNone: thunkEffectVoid,
         onSome: (org) =>
           requireGrant(PartyRead, ClaimReview.viewName, claimIn(org, streamOf(request.key)), now).pipe(Effect.asVoid),
       });

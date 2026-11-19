@@ -19,18 +19,18 @@ import { OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { RDF_NAMESPACE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 import type { RdfStore } from "./Rdf.ts";
 import { cloneRdfStore, rdfStoreApplyRules, rdfStoreSize } from "./Rdf.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Reasoner");
 
@@ -53,7 +53,9 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Reasoner");
  * @category errors
  * @since 0.0.0
  */
-export class ReasoningError extends S.TaggedError<ReasoningError, { readonly brand: unique symbol }>($I`ReasoningError`)(
+export class ReasoningError extends S.TaggedError<ReasoningError, { readonly brand: unique symbol }>(
+  $I`ReasoningError`
+)(
   "ReasoningError",
   {
     message: ErrorMessage.annotateKey({
@@ -88,7 +90,9 @@ export class ReasoningError extends S.TaggedError<ReasoningError, { readonly bra
  * @category errors
  * @since 0.0.0
  */
-export class RuleParseError extends S.TaggedError<RuleParseError, { readonly brand: unique symbol }>($I`RuleParseError`)(
+export class RuleParseError extends S.TaggedError<RuleParseError, { readonly brand: unique symbol }>(
+  $I`RuleParseError`
+)(
   "RuleParseError",
   {
     message: ErrorMessage.annotateKey({
@@ -156,13 +160,26 @@ const reasoningConfigMaxIterationsDefault = PosInt.make(100);
  * @category schemas
  * @since 0.0.0
  */
-export class ReasoningConfig extends S.Opaque<ReasoningConfig, { readonly brand: unique symbol }>()(S.Struct({
-    profile: ReasoningProfile.pipe(S.withConstructorDefault(Effect.succeed("rdfs" as const)), S.withDecodingDefaultTypeKey(Effect.succeed("rdfs" as const))),
-    customRules: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed(reasoningConfigCustomRulesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(reasoningConfigCustomRulesDefault))),
-    maxIterations: PosInt.pipe(S.withConstructorDefault(Effect.succeed(reasoningConfigMaxIterationsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(reasoningConfigMaxIterationsDefault))),
-  }).pipe($I.annoteSchema("ReasoningConfig", {
-    description: "Reasoning profile, optional custom rules, and iteration bound.",
-  }))) {
+export class ReasoningConfig extends S.Opaque<ReasoningConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
+    profile: ReasoningProfile.pipe(
+      S.withConstructorDefault(Effect.succeed("rdfs" as const)),
+      S.withDecodingDefaultTypeKey(Effect.succeed("rdfs" as const))
+    ),
+    customRules: S.Array(S.String).pipe(
+      S.withConstructorDefault(Effect.succeed(reasoningConfigCustomRulesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(reasoningConfigCustomRulesDefault))
+    ),
+    maxIterations: PosInt.pipe(
+      S.withConstructorDefault(Effect.succeed(reasoningConfigMaxIterationsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(reasoningConfigMaxIterationsDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("ReasoningConfig", {
+      description: "Reasoning profile, optional custom rules, and iteration bound.",
+    })
+  )
+) {
   /**
    * Create default RDFS reasoning config
    *

@@ -1,19 +1,26 @@
+import { Count, IdText, Name, Sequence } from "@proto/kernel/Measure";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
+import { ProposalDigest } from "@proto/party-contract/Claim/ProposalDigest";
 import { ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
 import { dual } from "effect/Function";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
+import * as Effect from "effect/Effect";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
 import { Receipt } from "../Bindings.ts";
-
+import { thunk0, thunkTrue } from "@beep/utils/thunk"
+import { LiteralKit } from "@beep/schema/LiteralKit";
+import { $ScratchpadId } from "@beep/identity/packages";
+import * as Tuple from "effect/Tuple";
+const $I = $ScratchpadId.create("model-first-slices/party/web/Claim/ClaimReview.machine")
 /** What every approval in flight carries: its command id, what it approves, the view revision it was made from, and how many times it was sent. */
 const inFlight = {
-  commandId: S.String,
-  digest: S.String,
-  evidenceRevision: S.Int,
-  baseRevision: S.Int,
-  attempts: S.Int,
+  commandId: IdText,
+  digest: ProposalDigest,
+  evidenceRevision: Sequence,
+  baseRevision: Count,
+  attempts: Sequence,
 };
 
 /**
@@ -23,9 +30,9 @@ const inFlight = {
  * @since 0.0.0
  */
 export const Notice = S.TaggedUnion({
-  Approved: { commandId: S.String },
-  Refused: { commandId: S.String, reason: S.String },
-  Denied: { commandId: S.String, reason: S.String },
+  Approved: { commandId: IdText },
+  Refused: { commandId: IdText, reason: Name },
+  Denied: { commandId: IdText, reason: Name },
 });
 /**
  * @category models
@@ -33,6 +40,21 @@ export const Notice = S.TaggedUnion({
  */
 export type Notice = typeof Notice.Type;
 
+export const ApprovalTag = LiteralKit(
+  [
+    "Idle",
+    "Sending",
+    "Committed",
+    "Noticed"
+  ]
+).pipe(
+  $I.annoteSchema("ApprovalTag", {
+    // TODO(kriegcloud): describe
+    description: ""
+  })
+)
+
+export type ApprovalTag = typeof ApprovalTag.Type;
 /**
  * Where the person's approval stands: nothing asked, sent and waiting for
  * its outcome, committed with its receipt and waiting for the view to catch
@@ -41,12 +63,19 @@ export type Notice = typeof Notice.Type;
  * @category models
  * @since 0.0.0
  */
-export const Approval = S.TaggedUnion({
-  Idle: {},
-  Sending: inFlight,
-  Committed: { ...inFlight, receipt: Receipt },
-  Noticed: { notice: Notice },
-});
+export const Approval = ApprovalTag.mapMembers(
+  Tuple.evolve([
+    () => S.TaggedStruct("Idle",{}),
+    () => S.TaggedStruct("Sending", inFlight),
+    () => S.TaggedStruct("Committed", { ...inFlight, receipt: Receipt }),
+    () => S.TaggedStruct("Noticed", { notice: Notice })
+  ])
+).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("Approval", {
+    description: ""
+  })
+)
 /**
  * @category models
  * @since 0.0.0
@@ -72,7 +101,7 @@ export type InFlight = typeof InFlight.Type;
  * @category models
  * @since 0.0.0
  */
-export const SeenView = S.Struct({ review: S.Option(ClaimReviewState), revision: S.Int, epoch: S.Int });
+export const SeenView = S.Struct({ review: S.Option(ClaimReviewState), revision: Count, epoch: Count });
 /**
  * @category models
  * @since 0.0.0
@@ -86,7 +115,17 @@ export type SeenView = typeof SeenView.Type;
  * @category models
  * @since 0.0.0
  */
-export const Screen = S.Struct({ claim: ClaimId, view: S.Option(SeenView), approval: Approval });
+export const Screen = S.Struct({
+  claim: ClaimId,
+  view: S.Option(SeenView).pipe(
+    S.annotateKey({ description: "What the screen last saw of the claim; nothing until the first snapshot." }),
+    S.withConstructorDefault(Effect.succeedNone),
+  ),
+  approval: Approval.pipe(
+    S.annotateKey({ description: "Where the reviewer's approval stands; idle at first." }),
+    S.withConstructorDefault(Effect.succeed(Approval.cases.Idle.make({}))),
+  ),
+});
 /**
  * @category models
  * @since 0.0.0
@@ -102,19 +141,19 @@ export type Screen = typeof Screen.Type;
  */
 export const Message = S.TaggedUnion({
   /** A state from the subscription. */
-  Snapshot: { review: S.Option(ClaimReviewState), revision: S.Int, epoch: S.Int },
+  Snapshot: { review: S.Option(ClaimReviewState), revision: Count, epoch: Count },
   /** The person pressed Approve; the controller minted the command id. */
-  ApproveClicked: { commandId: S.String },
+  ApproveClicked: { commandId: IdText },
   /** The command committed. */
-  Accepted: { commandId: S.String, receipt: Receipt },
+  Accepted: { commandId: IdText, receipt: Receipt },
   /** The model refused it with a declared rejection. */
-  Rejected: { commandId: S.String, reason: S.String },
+  Rejected: { commandId: IdText, reason: Name },
   /** Authority refused it. */
-  Denied: { commandId: S.String, reason: S.String },
+  Denied: { commandId: IdText, reason: Name },
   /** Nobody knows whether it committed. */
-  Unknown: { commandId: S.String },
+  Unknown: { commandId: IdText },
   /** A read that waited for the command's receipt returned. */
-  CaughtUp: { commandId: S.String, review: S.Option(ClaimReviewState), revision: S.Int },
+  CaughtUp: { commandId: IdText, review: S.Option(ClaimReviewState), revision: Count },
 });
 /**
  * @category models
@@ -130,9 +169,9 @@ export type Message = typeof Message.Type;
  */
 export const Intent = S.TaggedUnion({
   /** Send `ApproveProposal` under this command id (a retry reuses it). */
-  Approve: { commandId: S.String, digest: S.String, evidenceRevision: S.Int },
+  Approve: { commandId: IdText, digest: ProposalDigest, evidenceRevision: Sequence },
   /** Read the view once it has applied this receipt. */
-  ReadAfterWrite: { commandId: S.String, receipt: Receipt },
+  ReadAfterWrite: { commandId: IdText, receipt: Receipt },
 });
 /**
  * @category models
@@ -146,7 +185,7 @@ export type Intent = typeof Intent.Type;
  * @category constructors
  * @since 0.0.0
  */
-export const initial = (claim: ClaimId): Screen => ({ claim, view: O.none(), approval: Approval.cases.Idle.make({}) });
+export const initial = (claim: ClaimId): Screen => Screen.make({ claim });
 
 const emit = (screen: Screen, ...intents: ReadonlyArray<Intent>): readonly [Screen, ReadonlyArray<Intent>] => [
   screen,
@@ -158,7 +197,7 @@ const isInFlight = S.is(InFlight);
 const current = (screen: Screen, commandId: string): O.Option<InFlight> =>
   O.filter(O.liftPredicate(screen.approval, isInFlight), (approval) => approval.commandId === commandId);
 const newer = (screen: Screen, revision: number) =>
-  O.match(screen.view, { onNone: () => true, onSome: (view) => revision > view.revision });
+  O.match(screen.view, { onNone: thunkTrue, onSome: (view) => revision > view.revision });
 const noticed = (screen: Screen, notice: Notice): Screen => ({ ...screen, approval: Approval.cases.Noticed.make({ notice }) });
 
 /**
@@ -250,7 +289,7 @@ export const update: {
           : unchanged({
               ...noticed(screen, Notice.cases.Approved.make({ commandId })),
               view: newer(screen, revision)
-                ? O.some({ review, revision, epoch: O.match(screen.view, { onNone: () => 0, onSome: (view) => view.epoch }) })
+                ? O.some({ review, revision, epoch: O.match(screen.view, { onNone: thunk0, onSome: (view) => view.epoch }) })
                 : screen.view,
             }),
     }),

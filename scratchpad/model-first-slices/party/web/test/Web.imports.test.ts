@@ -1,12 +1,12 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
 import * as ImportGraph from "@proto/tooling/ImportGraph";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 
 /**
  * Screens that opt into `Aggregate.predict` (optimistic prediction with the model's own
@@ -35,7 +35,7 @@ const violations = Effect.fn("violations")(function* (
 ) {
   const { root, path, packages } = yield* workspace;
   return yield* Effect.forEach(entries, ({ entry, file }) =>
-    Effect.map(ImportGraph.reachable(packages, [file]), (files) => {
+    Effect.map(ImportGraph.reachable([file], packages), (files) => {
       const allowed = A.flatMap(exceptions, (exception) => (exception.entry === entry ? exception.allows : []));
       return {
         entry,

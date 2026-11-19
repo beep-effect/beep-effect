@@ -13,21 +13,21 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import * as Redacted from "effect/Redacted";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
+import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { HttpStatusCode, Milliseconds } from "../Domain/Error/Base.ts";
 import { JinaApiError, JinaParseError, JinaRateLimitError, JinaTimeoutError } from "../Domain/Error/Jina.ts";
 import { JinaContent } from "../Domain/Model/EnrichedContent.ts";
@@ -54,16 +54,29 @@ const $I = $ScratchpadId.create("effect-ontology/Service/JinaReaderClient");
  * @category configuration
  * @since 0.0.0
  */
-export class FetchOptions extends S.Opaque<FetchOptions, { readonly brand: unique symbol }>()(S.Struct({
-    includeImages: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
-    includeLinks: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
-    returnLinks: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
+export class FetchOptions extends S.Opaque<FetchOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
+    includeImages: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+    includeLinks: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+    returnLinks: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
     targetSelector: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     waitForSelector: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     timeout: S.Duration.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("FetchOptions", {
-    description: "Reader rendering switches, optional selectors, and optional request-timeout override.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("FetchOptions", {
+      description: "Reader rendering switches, optional selectors, and optional request-timeout override.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link FetchOptions}.
@@ -105,12 +118,16 @@ export type FetchOptionsInput = (typeof FetchOptions)["~type.make.in"];
  * @category models
  * @since 0.0.0
  */
-export class JinaResponse extends S.Opaque<JinaResponse, { readonly brand: unique symbol }>()(S.Struct({
+export class JinaResponse extends S.Opaque<JinaResponse, { readonly brand: unique symbol }>()(
+  S.Struct({
     content: JinaContent,
     links: S.Array(S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("JinaResponse", {
-    description: "Reader content and optional forward links discovered in the source page.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("JinaResponse", {
+      description: "Reader content and optional forward links discovered in the source page.",
+    })
+  )
+) {}
 
 // =============================================================================
 // Internal Response Schema
@@ -279,7 +296,7 @@ export class JinaReaderClient extends Context.Service<JinaReaderClient>()($I`Jin
       // Check for rate limiting response
       if (response.status === 429) {
         const retryAfter = response.headers["retry-after"];
-        const seconds = P.isTruthy(retryAfter) ? parseInt(retryAfter, 10) : 60;
+        const seconds = P.isString(retryAfter) && retryAfter.length > 0 ? parseInt(retryAfter, 10) : 60;
         return yield* JinaRateLimitError.make({
           retryAfterMs: Milliseconds.make(seconds * 1000),
         });

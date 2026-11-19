@@ -4,7 +4,7 @@ import { Internals } from "@alchemy.run/domain/Model";
 import { expect, it } from "@effect/vitest";
 import { CapabilityGrant, ResourceScope } from "@proto/kernel/Capability";
 import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
-import { GrantId, OrgId, PrincipalId } from "@proto/kernel/Ids";
+import { GrantId, type OrgId, type PrincipalId } from "@proto/kernel/Ids";
 import { Invocation, Root } from "@proto/kernel/Invocation";
 import { AcceptClaim, ClaimAccepted } from "@proto/party-contract/Claim/AcceptClaim.command";
 import { ProposalApproved } from "@proto/party-contract/Claim/ApproveProposal.command";
@@ -13,25 +13,23 @@ import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { type AssertedReview, ClaimReviewState } from "@proto/party-contract/Claim/ClaimReview.read";
 import { RequestReview } from "@proto/party-contract/Claim/RequestReview.command";
 import { ClaimRetracted } from "@proto/party-contract/Claim/RetractClaim.command";
-import { EvidenceSignal } from "@proto/party-contract/Evidence";
-import { ClaimDecidedV1, ClaimDecidedV2, ClaimFeed } from "@proto/party-contract/Facts/ClaimDecided.fact";
+import { ClaimDecided, ClaimDecidedV1, ClaimDecidedV2, ClaimFeed } from "@proto/party-contract/Facts/ClaimDecided.fact";
 import { PartyIntake, PartyReview } from "@proto/party-contract/Party.capabilities";
-import { PartyId } from "@proto/party-contract/Party/Party.id";
-import { Proposition } from "@proto/party-contract/Proposition";
-import { Claim } from "@proto/party-model/Claim/Claim.aggregate";
+import { Claim, ClaimState } from "@proto/party-model/Claim/Claim.aggregate";
 import { ClaimReviewLive } from "@proto/party-model/Claim/ClaimReview.handler";
 import { ClaimReview } from "@proto/party-model/Claim/ClaimReview.view";
 import { PartyFacts } from "@proto/party-model/Facts/PartyFacts.stream";
 import { backlogOf, type StoredRow, writerShapeOf } from "@proto/tooling/PublisherBacklog";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Schedule from "effect/Schedule";
+import { Cast } from "./Cast.ts";
 import { makeSimHost, type SimHost } from "./SimHost.ts";
 
 // Phase 11 (D50): the drain check's generic reader, which reads any writer's backlog from the
@@ -40,7 +38,8 @@ import { makeSimHost, type SimHost } from "./SimHost.ts";
 // host does. Phase 8's publisher is live and held; a claim with two review runs is decided; both
 // readers see one thing pending; once the publisher drains, both see none. The in-memory platform
 // keeps its deliveries and consumer logs out of reach, so the generic reader cannot run there
-// (notes/phase-11.md).
+// (notes/phase-11.md). The story is a property over a generated cast (`Cast.ts`): every org,
+// person, claim and signal it names comes from it, and each grant's id is derived from its holder.
 
 class ClaimFacts extends Domain.Projection("ClaimFacts", {
   from: [ClaimReview],
@@ -71,7 +70,7 @@ const claimFactsLive = (gate: Deferred.Deferred<void>) =>
               ProposalApproved: (approved) => ({ decision: approved.outcome, basis: "approval" as const, approval: O.some(approved.approval) }),
             }),
           );
-          const common = { factId: `${claim}:decided`, claim, org, reviewRuns: reviews };
+          const common = { factId: ClaimDecided.factIdOf(claim), claim, org, reviewRuns: reviews };
           yield* facts.append(input, ClaimDecidedV1.make({ ...common, outcome: decided.decision }), ClaimDecidedV2.make({ ...common, ...decided }));
         }
       });
@@ -80,23 +79,23 @@ const claimFactsLive = (gate: Deferred.Deferred<void>) =>
 
 class PartyPhase8 extends Domain.Model("Party", { aggregates: [Claim], views: [ClaimReview], projections: [ClaimFacts], streams: [PartyFacts] }) {}
 
-const acme = OrgId.make("org_acme");
-const grant = (id: string, capability: typeof PartyIntake) =>
-  CapabilityGrant.make({
-    grant: GrantId.make(id),
-    delegation: O.none(),
-    capability: capability.id,
-    operations: O.none(),
-    resource: ResourceScope.cases.Org.make({ org: acme }),
-    expires: O.none(),
+/** A person acting with an org-wide grant for one capability, its id derived from the person and the capability. */
+const person = (principal: PrincipalId, capability: typeof PartyIntake, org: OrgId) =>
+  Invocation.make({
+    root: Root.cases.Human.make({ principal }),
+    onBehalfOf: principal,
+    grants: [
+      CapabilityGrant.make({
+        grant: GrantId.make(`${principal}~${capability.id}`),
+        delegation: O.none(),
+        capability: capability.id,
+        operations: O.none(),
+        resource: ResourceScope.cases.Org.make({ org }),
+        expires: O.none(),
+      }),
+    ],
+    chain: [],
   });
-const person = (principal: string, grants: ReadonlyArray<CapabilityGrant>) =>
-  Invocation.make({ root: Root.cases.Human.make({ principal: PrincipalId.make(principal) }), onBehalfOf: PrincipalId.make(principal), grants: A.fromIterable(grants), chain: [] });
-const intake = person("p_intake", [grant("g_intake", PartyIntake)]);
-const reviewer = person("p_rev", [grant("g_rev", PartyReview)]);
-const claim = ClaimId.make("claim_1");
-const proposition = Proposition.cases.HasIdentifier.make({ party: PartyId.make("party_dana"), scheme: "email", value: "dana@acme.test" });
-const signals = [EvidenceSignal.make({ source: "mailbox:intake", quote: "dana@acme.test" }), EvidenceSignal.make({ source: "crm", quote: "dana@acme.test on file" })];
 
 /** Every row the in-process host stores, as the generic reader reads a host's rows. */
 const rowsOf = Effect.fn("rowsOf")(function* (sim: SimHost) {
@@ -110,8 +109,11 @@ const rowsOf = Effect.fn("rowsOf")(function* (sim: SimHost) {
   return A.flatten(all);
 });
 
-it.live("the generic backlog and Party's own query agree: one undelivered decision while the old publisher is held, none after it drains", () =>
+it.live.prop("the generic backlog and Party's own query agree: one undelivered decision while the old publisher is held, none after it drains", [Cast], ([cast]) =>
   Effect.gen(function* () {
+    const { org, people: [intakePerson, reviewerPerson], claims: [claim, probed], identifier, signals } = cast;
+    const intake = person(intakePerson, PartyIntake, org);
+    const reviewer = person(reviewerPerson, PartyReview, org);
     const sim = makeSimHost(() => ({}));
     const gate = yield* Deferred.make<void>();
     const context = yield* Layer.build(
@@ -127,17 +129,17 @@ it.live("the generic backlog and Party's own query agree: one undelivered decisi
       const generic = Effect.map(rowsOf(sim), (rows) => backlogOf(shape, rows));
       // The deploy's first call starts the publisher's backfill run; with nothing stored yet it
       // completes at once, and later decisions reach the publisher live.
-      yield* claims.get(ClaimId.make("claim_0"));
+      yield* claims.get(probed);
       yield* generic.pipe(Effect.repeat({ schedule: Schedule.spaced("50 millis"), until: (backlog) => backlog.runComplete, times: 200 }));
-      yield* claims.send(claim, AssertClaim.make({ org: acme, proposition, signals })).pipe(Effect.provideService(CurrentInvocation, intake));
+      yield* claims.send(claim, AssertClaim.make({ org, proposition: identifier, signals })).pipe(Effect.provideService(CurrentInvocation, intake));
       yield* claims.send(claim, RequestReview.make({})).pipe(Effect.provideService(CurrentInvocation, reviewer));
       yield* claims.send(claim, AcceptClaim.make({})).pipe(Effect.provideService(CurrentInvocation, reviewer));
       // Party's own query: a decided claim whose fact generation 1 lacks.
       const oracle = Effect.gen(function* () {
         const state = yield* claims.get(claim);
         const page = yield* Effect.flatMap(Effect.service(PartyFacts), (facts) => facts.list("claims"));
-        const decided = state._tag === "Accepted" || state._tag === "Retracted";
-        return decided && !A.some(page.entries, (entry) => entry.event.factId === `${claim}:decided`) ? 1 : 0;
+        const decided = ClaimState.isAnyOf(["Accepted", "Retracted"])(state);
+        return decided && !A.some(page.entries, (entry) => entry.event.factId === ClaimDecided.factIdOf(claim)) ? 1 : 0;
       });
       const held = yield* generic.pipe(Effect.repeat({ schedule: Schedule.spaced("50 millis"), until: (backlog) => backlog.pending >= 1, times: 100 }));
       const heldOracle = yield* oracle;
@@ -157,5 +159,5 @@ it.live("the generic backlog and Party's own query agree: one undelivered decisi
     expect(result.heldOracle).toBe(1);
     expect(result.drained.pending).toBe(0);
     expect(result.drainedOracle).toBe(0);
-  }),
+  }).pipe(Effect.scoped),
 );

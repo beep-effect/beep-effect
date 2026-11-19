@@ -15,13 +15,13 @@
 import { $ScratchpadId } from "@beep/identity";
 import { Percentage } from "@beep/schema/Percentage";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-import * as S from "effect/Schema";
 import * as Entity from "effect/cluster/Entity";
+import * as Effect from "effect/Effect";
 import * as Rpc from "effect/rpc/Rpc";
+import * as S from "effect/Schema";
 import { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { Entity as DomainEntity, Relation } from "../Domain/Model/Entity.ts";
-import * as Effect from "effect/Effect";
 import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Cluster/ExtractionEntity");
