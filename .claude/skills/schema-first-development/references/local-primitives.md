@@ -31,6 +31,12 @@ import { $SchemaId } from "@beep/identity/packages";
 const $I = $SchemaId.create("relative/path/to/file/from/package/src")
 ```
 
+Inside `@beep/schema`, `@beep/alchemy-github-runners` and
+`@beep/infra-ci-runners`, take the composer from the package's
+`src/internal/<Composer>.ts` leaf instead (for `@beep/schema`,
+`import { $SchemaId } from "../internal/SchemaId.ts"` at the right depth):
+deployed Lambda bundles load those modules and must not load the registry.
+
 Use `$I\`Name\`` for class or service identifiers. Annotation metadata comes
 from `.pipe($I.annoteSchema(...))` on non-class schemas and from `$I.annote(...)`
 as a class's trailing argument.
