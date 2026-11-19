@@ -86,6 +86,22 @@ export const OntologyDataTypeKind = DataTypeKind.pick([
  */
 export type OntologyDataTypeKind = typeof OntologyDataTypeKind.Type;
 
+/**
+ * Companion namespace for {@link OntologyDataTypeKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyDataTypeKind {
+  /**
+   * Encoded (wire) form of {@link OntologyDataTypeKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof OntologyDataTypeKind.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Operations and edits
 // -----------------------------------------------------------------------------
@@ -135,6 +151,22 @@ export const ActionOperationKind = LiteralKit([
 export type ActionOperationKind = typeof ActionOperationKind.Type;
 
 /**
+ * Companion namespace for {@link ActionOperationKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionOperationKind {
+  /**
+   * Encoded (wire) form of {@link ActionOperationKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ActionOperationKind.Encoded;
+}
+
+/**
  * Kinds of edit an applied action reports.
  *
  * **Details**
@@ -170,6 +202,22 @@ export const ObjectEditKind = LiteralKit(["addObject", "modifyObject", "deleteOb
 export type ObjectEditKind = typeof ObjectEditKind.Type;
 
 /**
+ * Companion namespace for {@link ObjectEditKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectEditKind {
+  /**
+   * Encoded (wire) form of {@link ObjectEditKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ObjectEditKind.Encoded;
+}
+
+/**
  * Kinds of edit a batch of applied actions reports: a batch never reports deletions.
  *
  * **Example** (Check that a batch cannot report a deletion)
@@ -199,6 +247,22 @@ export const BatchObjectEditKind = ObjectEditKind.pick(["addObject", "modifyObje
  * @since 0.0.0
  */
 export type BatchObjectEditKind = typeof BatchObjectEditKind.Type;
+
+/**
+ * Companion namespace for {@link BatchObjectEditKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BatchObjectEditKind {
+  /**
+   * Encoded (wire) form of {@link BatchObjectEditKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof BatchObjectEditKind.Encoded;
+}
 
 /**
  * The two forms in which an applied action reports what it changed.
@@ -235,6 +299,22 @@ export const ActionEditsKind = LiteralKit(["edits", "largeScaleEdits"]).pipe(
  * @since 0.0.0
  */
 export type ActionEditsKind = typeof ActionEditsKind.Type;
+
+/**
+ * Companion namespace for {@link ActionEditsKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionEditsKind {
+  /**
+   * Encoded (wire) form of {@link ActionEditsKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ActionEditsKind.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Logic rules
@@ -293,6 +373,22 @@ export const ActionLogicRuleKind = LiteralKit([
 export type ActionLogicRuleKind = typeof ActionLogicRuleKind.Type;
 
 /**
+ * Companion namespace for {@link ActionLogicRuleKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionLogicRuleKind {
+  /**
+   * Encoded (wire) form of {@link ActionLogicRuleKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ActionLogicRuleKind.Encoded;
+}
+
+/**
  * Kinds of source a logic rule can take a value from.
  *
  * **Example** (Tell which sources read a parameter)
@@ -340,6 +436,22 @@ export const LogicRuleArgumentKind = LiteralKit([
 export type LogicRuleArgumentKind = typeof LogicRuleArgumentKind.Type;
 
 /**
+ * Companion namespace for {@link LogicRuleArgumentKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LogicRuleArgumentKind {
+  /**
+   * Encoded (wire) form of {@link LogicRuleArgumentKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LogicRuleArgumentKind.Encoded;
+}
+
+/**
  * Kinds of source a logic rule can take one field of a struct property from.
  *
  * **Example** (Tell which source reads a list of structs)
@@ -372,6 +484,22 @@ export const StructFieldArgumentKind = LiteralKit(["structParameterFieldValue", 
  * @since 0.0.0
  */
 export type StructFieldArgumentKind = typeof StructFieldArgumentKind.Type;
+
+/**
+ * Companion namespace for {@link StructFieldArgumentKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructFieldArgumentKind {
+  /**
+   * Encoded (wire) form of {@link StructFieldArgumentKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof StructFieldArgumentKind.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Constraints
@@ -425,6 +553,22 @@ export const EvaluatedConstraintKind = LiteralKit([
 export type EvaluatedConstraintKind = typeof EvaluatedConstraintKind.Type;
 
 /**
+ * Companion namespace for {@link EvaluatedConstraintKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EvaluatedConstraintKind {
+  /**
+   * Encoded (wire) form of {@link EvaluatedConstraintKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof EvaluatedConstraintKind.Encoded;
+}
+
+/**
  * Kinds of constraint one field of a struct parameter can be evaluated against.
  *
  * **Example** (Check which constraints reach a struct field)
@@ -460,6 +604,22 @@ export const StructFieldConstraintKind = EvaluatedConstraintKind.pick([
  * @since 0.0.0
  */
 export type StructFieldConstraintKind = typeof StructFieldConstraintKind.Type;
+
+/**
+ * Companion namespace for {@link StructFieldConstraintKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructFieldConstraintKind {
+  /**
+   * Encoded (wire) form of {@link StructFieldConstraintKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof StructFieldConstraintKind.Encoded;
+}
 
 /**
  * Kinds of allowed-values rule an action type can configure on a parameter.
@@ -508,6 +668,22 @@ export const AllowedValuesKind = LiteralKit([
 export type AllowedValuesKind = typeof AllowedValuesKind.Type;
 
 /**
+ * Companion namespace for {@link AllowedValuesKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AllowedValuesKind {
+  /**
+   * Encoded (wire) form of {@link AllowedValuesKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AllowedValuesKind.Encoded;
+}
+
+/**
  * Where a configured bound takes its value from: a literal, another parameter's value or its length.
  *
  * **Example** (Tell which bounds depend on another parameter)
@@ -543,6 +719,22 @@ export const ConstraintBoundKind = LiteralKit(["static", "parameterLength", "par
 export type ConstraintBoundKind = typeof ConstraintBoundKind.Type;
 
 /**
+ * Companion namespace for {@link ConstraintBoundKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ConstraintBoundKind {
+  /**
+   * Encoded (wire) form of {@link ConstraintBoundKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ConstraintBoundKind.Encoded;
+}
+
+/**
  * How a configured date or timestamp bound is expressed: the evaluation time, a fixed instant or an offset from now.
  *
  * **Example** (Tell which datetime bounds move with the clock)
@@ -572,6 +764,22 @@ export const DatetimeBoundKind = LiteralKit(["now", "fixed", "relative"]).pipe(
  * @since 0.0.0
  */
 export type DatetimeBoundKind = typeof DatetimeBoundKind.Type;
+
+/**
+ * Companion namespace for {@link DatetimeBoundKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DatetimeBoundKind {
+  /**
+   * Encoded (wire) form of {@link DatetimeBoundKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DatetimeBoundKind.Encoded;
+}
 
 /**
  * Unit of an offset from the evaluation time.
@@ -617,6 +825,22 @@ export const RelativeDatetimeUnit = MappedLiteralKit([
 export type RelativeDatetimeUnit = typeof RelativeDatetimeUnit.Type;
 
 /**
+ * Companion namespace for {@link RelativeDatetimeUnit}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RelativeDatetimeUnit {
+  /**
+   * Encoded (wire) form of {@link RelativeDatetimeUnit}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RelativeDatetimeUnit.Encoded;
+}
+
+/**
  * Direction of an offset from the evaluation time.
  *
  * **Example** (Turn a tense into a sign)
@@ -649,6 +873,22 @@ export const RelativeDatetimeTense = MappedLiteralKit([
  * @since 0.0.0
  */
 export type RelativeDatetimeTense = typeof RelativeDatetimeTense.Type;
+
+/**
+ * Companion namespace for {@link RelativeDatetimeTense}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RelativeDatetimeTense {
+  /**
+   * Encoded (wire) form of {@link RelativeDatetimeTense}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RelativeDatetimeTense.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Request modes and verdicts
@@ -695,6 +935,22 @@ export const ApplyActionMode = MappedLiteralKit([
 export type ApplyActionMode = typeof ApplyActionMode.Type;
 
 /**
+ * Companion namespace for {@link ApplyActionMode}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ApplyActionMode {
+  /**
+   * Encoded (wire) form of {@link ApplyActionMode}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ApplyActionMode.Encoded;
+}
+
+/**
  * Which edits the response to an applied action should list.
  *
  * **Details**
@@ -737,6 +993,22 @@ export const ReturnEditsMode = MappedLiteralKit([
 export type ReturnEditsMode = typeof ReturnEditsMode.Type;
 
 /**
+ * Companion namespace for {@link ReturnEditsMode}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ReturnEditsMode {
+  /**
+   * Encoded (wire) form of {@link ReturnEditsMode}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ReturnEditsMode.Encoded;
+}
+
+/**
  * Which edits the response to a batch of applied actions should list.
  *
  * **Details**
@@ -773,6 +1045,22 @@ export const BatchReturnEditsMode = ReturnEditsMode.pick(["ALL", "NONE"]).pipe(
 export type BatchReturnEditsMode = typeof BatchReturnEditsMode.Type;
 
 /**
+ * Companion namespace for {@link BatchReturnEditsMode}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BatchReturnEditsMode {
+  /**
+   * Encoded (wire) form of {@link BatchReturnEditsMode}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof BatchReturnEditsMode.Encoded;
+}
+
+/**
  * Verdict of validating an action, one of its submission criteria or one of its parameters.
  *
  * **Example** (Fold a verdict to a boolean)
@@ -805,3 +1093,19 @@ export const ValidationResult = MappedLiteralKit([
  * @since 0.0.0
  */
 export type ValidationResult = typeof ValidationResult.Type;
+
+/**
+ * Companion namespace for {@link ValidationResult}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ValidationResult {
+  /**
+   * Encoded (wire) form of {@link ValidationResult}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ValidationResult.Encoded;
+}

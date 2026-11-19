@@ -1,7 +1,8 @@
 import * as Domain from "@alchemy.run/domain";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
+import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 
 /**
@@ -10,7 +11,7 @@ import * as S from "effect/Schema";
  * @category events
  * @since 0.0.0
  */
-export class Written extends Domain.Event("Written", { label: S.String, runner: S.String }) {}
+export class Written extends Domain.Event("Written", { label: S.String, runner: S.String }, { description: "A write landed on the slot, with the runner that decided it." }) {}
 
 /**
  * Write a label, holding `decide` for `holdMs` first: the slow command of the
@@ -31,10 +32,20 @@ export class Write extends Domain.Command("Write", {
  * @category aggregates
  * @since 0.0.0
  */
+/** A slot's labels, in the order written. */
+const SlotState = S.Struct({
+  labels: Initial.empty(S.String, { description: "Every label written to the slot; none at first." }),
+});
+
+/** How many writes any slot has taken. */
+const SlotTallyState = S.Struct({
+  writes: S.Int.pipe(Initial.of(0, { description: "Writes counted so far; none at first." })),
+});
+
 export class Slot extends Domain.Aggregate("Slot", {
   id: S.String,
-  state: S.Struct({ labels: S.Array(S.String) }),
-  initial: { labels: [] },
+  state: SlotState,
+  initial: SlotState.make({}),
   commands: [Write],
   decide: {
     Write: Effect.fn(function* (_, command) {
@@ -61,8 +72,8 @@ export class SlotTally extends Domain.View("SlotTally", {
   from: [Slot],
   key: S.Literal("all"),
   keyOf: { Slot: () => "all" as const },
-  state: S.Struct({ writes: S.Int }),
-  initial: { writes: 0 },
+  state: SlotTallyState,
+  initial: SlotTallyState.make({}),
   evolve: { Written: (tally) => ({ writes: tally.writes + 1 }) },
 }) {}
 

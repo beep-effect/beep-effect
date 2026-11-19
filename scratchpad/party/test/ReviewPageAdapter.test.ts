@@ -19,7 +19,8 @@ import {
 } from "../scripts/ReviewPageAdapter.ts";
 
 const fixture = Effect.gen(function* () {
-  const identifier = yield* Effect.fromOption(yield* identifierOfAddress("Dana@EXAMPLE.test"));
+  const result1 = yield* identifierOfAddress("Dana@EXAMPLE.test");
+  const identifier = yield* Effect.fromOption(result1);
   const current = yield* sealCase(
     CaseEvidence.make({
       name: "Dana Brooks",
@@ -34,7 +35,7 @@ const fixture = Effect.gen(function* () {
           span: O.some(ObservedSpan.make({ first: DateTime.makeUnsafe(0), last: DateTime.makeUnsafe(1000) })),
         }),
       ],
-    })
+    }),
   );
   return { identifier, current };
 });
@@ -44,7 +45,7 @@ describe("review page compatibility", () => {
     Effect.gen(function* () {
       const { identifier, current } = yield* fixture;
       const encoded = yield* encodeReviewPageCases(
-        ReviewPageInput.make({ cases: [current], identifiers: [identifier] })
+        ReviewPageInput.make({ cases: [current], identifiers: [identifier] }),
       );
       const json = yield* S.decodeEffect(S.fromJsonString(S.Unknown))(encoded);
       expect(json).toEqual([
@@ -65,23 +66,23 @@ describe("review page compatibility", () => {
           ],
         },
       ]);
-    })
+    }),
   );
   it.effect("rejects missing display evidence and mismatched identifier references", () =>
     Effect.gen(function* () {
       const { identifier, current } = yield* fixture;
       const missing = yield* encodeReviewPageCases(ReviewPageInput.make({ cases: [current], identifiers: [] })).pipe(
-        Effect.flip
+        Effect.flip,
       );
       expect(missing).toMatchObject({ reason: "missing-identifier" });
       const mismatch = yield* encodeReviewPageCases(
         ReviewPageInput.make({
           cases: [current],
           identifiers: [IngestIdentifier.make({ ...identifier, id: IdentifierId.make("party-ident:wrong") })],
-        })
+        }),
       ).pipe(Effect.flip);
       expect(mismatch).toMatchObject({ reason: "mismatched-identifier" });
-    })
+    }),
   );
   it.effect("enriches a page export with explicit validity and provenance without accepting its verdict", () =>
     Effect.gen(function* () {
@@ -107,6 +108,6 @@ describe("review page compatibility", () => {
       expect(adapted.anchor).toEqual(input.anchor);
       expect(adapted.reviewer).toBe("party-user:user%3Areviewer");
       expect(DateTime.toEpochMillis(adapted.reviewedAt)).toBe(DateTime.toEpochMillis(page.reviewedAt));
-    })
+    }),
   );
 });

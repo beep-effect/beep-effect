@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import { CalendarMutationResult, eventTitle, formatDeletedCalendarEvents } from "../../beep/CalendarMutation.ts";
@@ -21,15 +22,13 @@ describe("CalendarMutation", () => {
         succeeded: [{ summary: "Standup", start: { dateTime: "2020-01-02T03:04:05Z" } }],
       }),
     );
-    assert.strictEqual(timed.includes("Standup (2020-01-02 03:04)"), true);
+    assert.strictEqual(Str.includes("Standup (2020-01-02 03:04)")(timed), true);
     const untimed = formatDeletedCalendarEvents(
       CalendarMutationResult.make({ succeeded: [{ summary: "All day", start: {} }] }),
     );
-    assert.strictEqual(untimed.includes("All day ("), false);
-    assert.strictEqual(untimed.includes("All day"), true);
-    const failed = formatDeletedCalendarEvents(
-      CalendarMutationResult.make({ failed: [["Standup", "denied"]] }),
-    );
+    assert.strictEqual(Str.includes("All day (")(untimed), false);
+    assert.strictEqual(Str.includes("All day")(untimed), true);
+    const failed = formatDeletedCalendarEvents(CalendarMutationResult.make({ failed: [["Standup", "denied"]] }));
     assert.strictEqual(failed, "Error: Failed to delete events: Standup: denied");
     const mixed = formatDeletedCalendarEvents(
       CalendarMutationResult.make({
@@ -37,7 +36,7 @@ describe("CalendarMutation", () => {
         failed: [["Other", "missing"]],
       }),
     );
-    assert.strictEqual(mixed.includes("Successfully deleted 1"), true);
-    assert.strictEqual(mixed.includes("Failed to delete 1"), true);
+    assert.strictEqual(Str.includes("Successfully deleted 1")(mixed), true);
+    assert.strictEqual(Str.includes("Failed to delete 1")(mixed), true);
   });
 });

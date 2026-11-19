@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/infra-github",
   "review": {
-    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
-    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (slop-cleanup closeout lane, @slop/11-18-26)",
+    "reason": "//#check:model-first-slices gains the effect-drizzle and pglite manifests and sources the prototype now links; three packages gain a @beep/test-utils devDependency and tsconfig references for atRegistration. No command, cache flag, output or environment changed; no qualification granted.",
     "basis": {
-      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
-      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+      "path": "docs/reports/test-utils-registration-cache-review-2026-11-18.md",
+      "sha256": "ef9be88a5bb61ab589eaf67606a908c414cf831a3ddf82d883553d59b5b7caf4"
     }
   },
   "nodes": [
@@ -16,7 +16,8 @@
       "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#build",
-        "@beep/schema#build"
+        "@beep/schema#build",
+        "@beep/test-utils#build"
       ],
       "configuration": {
         "cache": true,
@@ -71,7 +72,8 @@
       "dependencies": [
         "@beep/identity#build",
         "@beep/infra-github#build",
-        "@beep/schema#build"
+        "@beep/schema#build",
+        "@beep/test-utils#build"
       ],
       "configuration": {
         "cache": true,
@@ -113,7 +115,8 @@
       "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#build",
-        "@beep/schema#build"
+        "@beep/schema#build",
+        "@beep/test-utils#build"
       ],
       "configuration": {
         "cache": false,
@@ -239,7 +242,8 @@
       "dependencies": [
         "@beep/identity#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
-        "@beep/schema#transit"
+        "@beep/schema#transit",
+        "@beep/test-utils#transit"
       ],
       "configuration": {
         "cache": true,
@@ -436,7 +440,8 @@
       "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#transit",
-        "@beep/schema#transit"
+        "@beep/schema#transit",
+        "@beep/test-utils#transit"
       ],
       "configuration": {
         "cache": false,
@@ -481,6 +486,7 @@
       "dependencies": [
         "@beep/identity#transit",
         "@beep/schema#transit",
+        "@beep/test-utils#transit",
         "@beep/utils#transit"
       ],
       "configuration": {
@@ -532,7 +538,8 @@
       "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#build",
-        "@beep/schema#build"
+        "@beep/schema#build",
+        "@beep/test-utils#build"
       ],
       "configuration": {
         "cache": false,

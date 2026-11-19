@@ -7,16 +7,16 @@
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
-import * as PrimaryKey from "effect/PrimaryKey";
-import * as Tuple from "effect/Tuple";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as PrimaryKey from "effect/PrimaryKey";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
+import { PosInt } from "../../Schema/PosInt.ts";
 import { ChunkId, DocumentId, IdempotencyKey, OntologyVersion } from "../Identity.ts";
 import { PathLayout } from "../PathLayout.ts";
 import { OntologyRef } from "./Ontology.ts";
 import { OutputType } from "./OutputType.ts";
-import * as A from "effect/Array";
-import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/ExtractionRun");
 
@@ -42,10 +42,10 @@ export const ErrorCode = LiteralKit([
   "cancelled",
   "unknown",
 ]).pipe(
-    $I.annoteSchema("ErrorCode", {
-      description: "Closed set of terminal extraction-run failure categories.",
-    })
-  );
+  $I.annoteSchema("ErrorCode", {
+    description: "Closed set of terminal extraction-run failure categories.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link ErrorCode}.
@@ -77,10 +77,10 @@ export type ErrorCode = typeof ErrorCode.Type;
  * @since 0.0.0
  */
 export const AuditEventType = LiteralKit(["started", "completed", "failed", "info", "warning"]).pipe(
-    $I.annoteSchema("AuditEventType", {
-      description: "Closed set of categories for extraction-run audit events.",
-    })
-  );
+  $I.annoteSchema("AuditEventType", {
+    description: "Closed set of categories for extraction-run audit events.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link AuditEventType}.
@@ -121,7 +121,8 @@ export type AuditEventType = typeof AuditEventType.Type;
  * @category models
  * @since 0.0.0
  */
-export class OutputMetadata extends S.Opaque<OutputMetadata, { readonly brand: unique symbol }>()(S.Struct({
+export class OutputMetadata extends S.Opaque<OutputMetadata, { readonly brand: unique symbol }>()(
+  S.Struct({
     type: OutputType.annotateKey({
       description: "Logical output artifact kind.",
     }),
@@ -137,9 +138,12 @@ export class OutputMetadata extends S.Opaque<OutputMetadata, { readonly brand: u
     savedAt: S.DateTimeUtcFromString.annotateKey({
       description: "UTC instant at which persistence completed.",
     }),
-  }).pipe($I.annoteSchema("OutputMetadata", {
-    description: "Typed output kind, path, integrity digest, size, and persistence time.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("OutputMetadata", {
+      description: "Typed output kind, path, integrity digest, size, and persistence time.",
+    })
+  )
+) {}
 
 const auditEventDataDefault = {};
 /**
@@ -160,13 +164,20 @@ const auditEventDataDefault = {};
  * @category domain-events
  * @since 0.0.0
  */
-export class AuditEvent extends S.Opaque<AuditEvent, { readonly brand: unique symbol }>()(S.Struct({
+export class AuditEvent extends S.Opaque<AuditEvent, { readonly brand: unique symbol }>()(
+  S.Struct({
     timestamp: S.DateTimeUtcFromString,
     type: AuditEventType,
-    data: S.Record(S.String, S.Json).pipe(S.withConstructorDefault(Effect.succeed(auditEventDataDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(auditEventDataDefault))),
-  }).pipe($I.annoteSchema("AuditEvent", {
-    description: "Timestamped audit event with a stable category and JSON-compatible data.",
-  }))) {}
+    data: S.Record(S.String, S.Json).pipe(
+      S.withConstructorDefault(Effect.succeed(auditEventDataDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(auditEventDataDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("AuditEvent", {
+      description: "Timestamped audit event with a stable category and JSON-compatible data.",
+    })
+  )
+) {}
 
 const auditErrorContextDefault = {};
 /**
@@ -188,14 +199,21 @@ const auditErrorContextDefault = {};
  * @category errors
  * @since 0.0.0
  */
-export class AuditError extends S.Opaque<AuditError, { readonly brand: unique symbol }>()(S.Struct({
+export class AuditError extends S.Opaque<AuditError, { readonly brand: unique symbol }>()(
+  S.Struct({
     timestamp: S.DateTimeUtcFromString,
     type: ErrorCode,
     message: S.NonEmptyString,
-    context: S.Record(S.String, S.Json).pipe(S.withConstructorDefault(Effect.succeed(auditErrorContextDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(auditErrorContextDefault))),
-  }).pipe($I.annoteSchema("AuditError", {
-    description: "Timestamped extraction failure with a stable code and JSON-compatible context.",
-  }))) {}
+    context: S.Record(S.String, S.Json).pipe(
+      S.withConstructorDefault(Effect.succeed(auditErrorContextDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(auditErrorContextDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("AuditError", {
+      description: "Timestamped extraction failure with a stable code and JSON-compatible context.",
+    })
+  )
+) {}
 
 /**
  * Canonical discriminated lifecycle state for an extraction run.
@@ -256,10 +274,10 @@ const ChunkSize = PosInt.check(
     })
   )
 ).pipe(
-    $I.annoteSchema("ChunkSize", {
-      description: "Maximum extraction chunk size measured in UTF-16 characters.",
-    })
-  );
+  $I.annoteSchema("ChunkSize", {
+    description: "Maximum extraction chunk size measured in UTF-16 characters.",
+  })
+);
 
 const SentenceOverlap = S.Natural.check(
   S.isBetween(
@@ -271,10 +289,10 @@ const SentenceOverlap = S.Natural.check(
     })
   )
 ).pipe(
-    $I.annoteSchema("SentenceOverlap", {
-      description: "Number of complete sentences repeated between adjacent extraction chunks.",
-    })
-  );
+  $I.annoteSchema("SentenceOverlap", {
+    description: "Number of complete sentences repeated between adjacent extraction chunks.",
+  })
+);
 
 const chunkingConfigMaxChunkSizeDefault = ChunkSize.make(4_000);
 const chunkingConfigOverlapSentencesDefault = SentenceOverlap.make(2);
@@ -293,13 +311,26 @@ const chunkingConfigOverlapSentencesDefault = SentenceOverlap.make(2);
  * @category configuration
  * @since 0.0.0
  */
-export class ChunkingConfig extends S.Opaque<ChunkingConfig, { readonly brand: unique symbol }>()(S.Struct({
-    maxChunkSize: ChunkSize.pipe(S.withConstructorDefault(Effect.succeed(chunkingConfigMaxChunkSizeDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(chunkingConfigMaxChunkSizeDefault))),
-    preserveSentences: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
-    overlapSentences: SentenceOverlap.pipe(S.withConstructorDefault(Effect.succeed(chunkingConfigOverlapSentencesDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(chunkingConfigOverlapSentencesDefault))),
-  }).pipe($I.annoteSchema("ChunkingConfig", {
-    description: "Bounded, schema-defaulted policy for extraction text chunking.",
-  }))) {
+export class ChunkingConfig extends S.Opaque<ChunkingConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
+    maxChunkSize: ChunkSize.pipe(
+      S.withConstructorDefault(Effect.succeed(chunkingConfigMaxChunkSizeDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(chunkingConfigMaxChunkSizeDefault))
+    ),
+    preserveSentences: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+    overlapSentences: SentenceOverlap.pipe(
+      S.withConstructorDefault(Effect.succeed(chunkingConfigOverlapSentencesDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(chunkingConfigOverlapSentencesDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("ChunkingConfig", {
+      description: "Bounded, schema-defaulted policy for extraction text chunking.",
+    })
+  )
+) {
   /**
    * Constructs the canonical chunking policy.
    *
@@ -328,10 +359,10 @@ const Temperature = S.Finite.check(
     })
   )
 ).pipe(
-    $I.annoteSchema("Temperature", {
-      description: "Finite model sampling temperature in the closed interval [0, 2].",
-    })
-  );
+  $I.annoteSchema("Temperature", {
+    description: "Finite model sampling temperature in the closed interval [0, 2].",
+  })
+);
 
 const LlmTimeout = PosInt.check(
   S.isBetween(
@@ -343,11 +374,11 @@ const LlmTimeout = PosInt.check(
     })
   )
 ).pipe(
-    S.decodeTo(S.DurationFromMillis),
-    $I.annoteSchema("LlmTimeout", {
-      description: "Bounded model-call timeout encoded in milliseconds and decoded as Duration.",
-    })
-  );
+  S.decodeTo(S.DurationFromMillis),
+  $I.annoteSchema("LlmTimeout", {
+    description: "Bounded model-call timeout encoded in milliseconds and decoded as Duration.",
+  })
+);
 
 /**
  * Model-execution policy captured by an extraction run.
@@ -370,14 +401,18 @@ const LlmTimeout = PosInt.check(
  * @category configuration
  * @since 0.0.0
  */
-export class LlmConfig extends S.Opaque<LlmConfig, { readonly brand: unique symbol }>()(S.Struct({
+export class LlmConfig extends S.Opaque<LlmConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
     model: S.NonEmptyString,
     temperature: Temperature,
     maxTokens: PosInt,
     timeout: LlmTimeout,
-  }).pipe($I.annoteSchema("LlmConfig", {
-    description: "Bounded model identifier, sampling, token, and timeout policy.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("LlmConfig", {
+      description: "Bounded model identifier, sampling, token, and timeout policy.",
+    })
+  )
+) {}
 
 const Concurrency = PosInt.check(
   S.isBetween(
@@ -389,32 +424,42 @@ const Concurrency = PosInt.check(
     })
   )
 ).pipe(
-    $I.annoteSchema("Concurrency", {
-      description: "Bounded extraction-run concurrency.",
-    })
-  );
+  $I.annoteSchema("Concurrency", {
+    description: "Bounded extraction-run concurrency.",
+  })
+);
 
 const GroundingMode = LiteralKit(["Disabled", "Enabled"]);
 
-class GroundingDisabled extends S.Opaque<GroundingDisabled, { readonly brand: unique symbol }>()(S.Struct({ mode: S.tag(GroundingMode.Enum.Disabled) }).pipe($I.annoteSchema("GroundingDisabled", {
-    description: "Grounding verification is disabled while observations remain explicitly not evaluated.",
-  }))) {}
+class GroundingDisabled extends S.Opaque<GroundingDisabled, { readonly brand: unique symbol }>()(
+  S.Struct({ mode: S.tag(GroundingMode.Enum.Disabled) }).pipe(
+    $I.annoteSchema("GroundingDisabled", {
+      description: "Grounding verification is disabled while observations remain explicitly not evaluated.",
+    })
+  )
+) {}
 
 const groundingEnabledThresholdDefault = Confidence.make(0.8);
 const groundingEnabledBatchSizeDefault = PosInt.make(5);
-class GroundingEnabled extends S.Opaque<GroundingEnabled, { readonly brand: unique symbol }>()(S.Struct({
+class GroundingEnabled extends S.Opaque<GroundingEnabled, { readonly brand: unique symbol }>()(
+  S.Struct({
     mode: S.tag(GroundingMode.Enum.Enabled),
     threshold: Confidence.pipe(
-      S.withConstructorDefault(Effect.succeed(groundingEnabledThresholdDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(groundingEnabledThresholdDefault)),
+      S.withConstructorDefault(Effect.succeed(groundingEnabledThresholdDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(groundingEnabledThresholdDefault)),
       S.annotateKey({ description: "Minimum verifier confidence required to publish a supported fact." })
     ),
     batchSize: PosInt.pipe(
-      S.withConstructorDefault(Effect.succeed(groundingEnabledBatchSizeDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(groundingEnabledBatchSizeDefault)),
+      S.withConstructorDefault(Effect.succeed(groundingEnabledBatchSizeDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(groundingEnabledBatchSizeDefault)),
       S.annotateKey({ description: "Positive maximum number of facts sent in one grounding request." })
     ),
-  }).pipe($I.annoteSchema("GroundingEnabled", {
-    description: "Enabled grounding policy with schema-owned confidence and batch-size bounds.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("GroundingEnabled", {
+      description: "Enabled grounding policy with schema-owned confidence and batch-size bounds.",
+    })
+  )
+) {}
 
 /**
  * Grounding policy captured with an extraction run.
@@ -493,18 +538,26 @@ const runConfigGroundingDefault = GroundingPolicy.cases.Enabled.make({});
  * @category configuration
  * @since 0.0.0
  */
-export class RunConfig extends S.Opaque<RunConfig, { readonly brand: unique symbol }>()(S.Struct({
+export class RunConfig extends S.Opaque<RunConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
     ontology: OntologyRef,
     chunking: ChunkingConfig,
     llm: LlmConfig,
-    concurrency: Concurrency.pipe(S.withConstructorDefault(Effect.succeed(runConfigConcurrencyDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(runConfigConcurrencyDefault))),
+    concurrency: Concurrency.pipe(
+      S.withConstructorDefault(Effect.succeed(runConfigConcurrencyDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(runConfigConcurrencyDefault))
+    ),
     grounding: GroundingPolicy.pipe(
-      S.withConstructorDefault(Effect.succeed(runConfigGroundingDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(runConfigGroundingDefault)),
+      S.withConstructorDefault(Effect.succeed(runConfigGroundingDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(runConfigGroundingDefault)),
       S.annotateKey({ description: "Grounding policy applied to extracted facts." })
     ),
-  }).pipe($I.annoteSchema("RunConfig", {
-    description: "Ontology, chunking, model, concurrency, and grounding snapshot for a run.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("RunConfig", {
+      description: "Ontology, chunking, model, concurrency, and grounding snapshot for a run.",
+    })
+  )
+) {}
 
 /**
  * Non-negative measurements collected during extraction.
@@ -530,7 +583,8 @@ export class RunConfig extends S.Opaque<RunConfig, { readonly brand: unique symb
  * @category models
  * @since 0.0.0
  */
-export class RunStats extends S.Opaque<RunStats, { readonly brand: unique symbol }>()(S.Struct({
+export class RunStats extends S.Opaque<RunStats, { readonly brand: unique symbol }>()(
+  S.Struct({
     chunkCount: S.Natural,
     entityCount: S.Natural,
     relationCount: S.Natural,
@@ -538,9 +592,12 @@ export class RunStats extends S.Opaque<RunStats, { readonly brand: unique symbol
     clusterCount: S.Natural,
     tokensUsed: S.Natural,
     duration: S.DurationFromMillis,
-  }).pipe($I.annoteSchema("RunStats", {
-    description: "Non-negative extraction counts, token use, and elapsed duration.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("RunStats", {
+      description: "Non-negative extraction counts, token use, and elapsed duration.",
+    })
+  )
+) {}
 
 const extractionRunOutputsDefault = A.empty<OutputMetadata>();
 const extractionRunEventsDefault = A.empty<AuditEvent>();
@@ -597,9 +654,18 @@ export class ExtractionRun extends S.Class<ExtractionRun, { readonly brand: uniq
     updatedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     outputDir: S.NonEmptyString,
     stats: S.OptionFromOptionalKey(RunStats).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    outputs: S.Array(OutputMetadata).pipe(S.withConstructorDefault(Effect.succeed(extractionRunOutputsDefault)), S.withDecodingDefaultType(Effect.succeed(extractionRunOutputsDefault))),
-    events: S.Array(AuditEvent).pipe(S.withConstructorDefault(Effect.succeed(extractionRunEventsDefault)), S.withDecodingDefaultType(Effect.succeed(extractionRunEventsDefault))),
-    errors: S.Array(AuditError).pipe(S.withConstructorDefault(Effect.succeed(extractionRunErrorsDefault)), S.withDecodingDefaultType(Effect.succeed(extractionRunErrorsDefault))),
+    outputs: S.Array(OutputMetadata).pipe(
+      S.withConstructorDefault(Effect.succeed(extractionRunOutputsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(extractionRunOutputsDefault))
+    ),
+    events: S.Array(AuditEvent).pipe(
+      S.withConstructorDefault(Effect.succeed(extractionRunEventsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(extractionRunEventsDefault))
+    ),
+    errors: S.Array(AuditError).pipe(
+      S.withConstructorDefault(Effect.succeed(extractionRunErrorsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(extractionRunErrorsDefault))
+    ),
   },
   $I.annote("ExtractionRun", {
     description: "Immutable extraction-run aggregate with status, config, outputs, audit, and paths.",
@@ -631,41 +697,41 @@ export class ExtractionRun extends S.Class<ExtractionRun, { readonly brand: uniq
   }
 
   /**
-     * Effect primary key used for aggregate identity and deduplication.
-     *
-     * **Example** (Read the primary key)
-     *
-     * ```ts
-     * import * as PrimaryKey from "effect/PrimaryKey";
-     * import * as O from "effect/Option"
-     * import * as S from "effect/Schema"
-     * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
-     *
-     * const run = S.decodeUnknownOption(ExtractionRun)({
-     *   id: "doc-abc123def456",
-     *   status: { _tag: "Pending" },
-     *   config: {
-     *     ontology: {
-     *       namespace: "football",
-     *       name: "premier-league",
-     *       contentHash: "a".repeat(64)
-     *     },
-     *     chunking: {},
-     *     llm: {
-     *       model: "gpt-5",
-     *       temperature: 0,
-     *       maxTokens: 4096,
-     *       timeout: 30_000
-     *     }
-     *   },
-     *   createdAt: "2026-07-25T10:00:00.000Z",
-     *   outputDir: "runs/doc-abc123def456/outputs"
-     * })
-     * console.log(O.map(run, (value) => value[PrimaryKey.symbol]())) // Some("doc-abc123def456")
-     * ```
-     *
-     * @returns This run's validated document identifier.
-     */
+   * Effect primary key used for aggregate identity and deduplication.
+   *
+   * **Example** (Read the primary key)
+   *
+   * ```ts
+   * import * as PrimaryKey from "effect/PrimaryKey";
+   * import * as O from "effect/Option"
+   * import * as S from "effect/Schema"
+   * import { ExtractionRun } from "@effect-ontology/Model/ExtractionRun"
+   *
+   * const run = S.decodeUnknownOption(ExtractionRun)({
+   *   id: "doc-abc123def456",
+   *   status: { _tag: "Pending" },
+   *   config: {
+   *     ontology: {
+   *       namespace: "football",
+   *       name: "premier-league",
+   *       contentHash: "a".repeat(64)
+   *     },
+   *     chunking: {},
+   *     llm: {
+   *       model: "gpt-5",
+   *       temperature: 0,
+   *       maxTokens: 4096,
+   *       timeout: 30_000
+   *     }
+   *   },
+   *   createdAt: "2026-07-25T10:00:00.000Z",
+   *   outputDir: "runs/doc-abc123def456/outputs"
+   * })
+   * console.log(O.map(run, (value) => value[PrimaryKey.symbol]())) // Some("doc-abc123def456")
+   * ```
+   *
+   * @returns This run's validated document identifier.
+   */
   [PrimaryKey.symbol](): DocumentId {
     return this.id;
   }

@@ -54,7 +54,7 @@ export class DailySummaryHighlight extends Model<DailySummaryHighlight>("DailySu
  * @since 0.0.0
  */
 export declare namespace DailySummaryHighlight {
-  export type Encoded = S.Codec.Encoded<typeof DailySummaryHighlight>;
+  export type Encoded = typeof DailySummaryHighlight.Encoded;
 }
 
 /**
@@ -95,7 +95,7 @@ export class DailySummaryQuestion extends Model<DailySummaryQuestion>("DailySumm
  * @since 0.0.0
  */
 export declare namespace DailySummaryQuestion {
-  export type Encoded = S.Codec.Encoded<typeof DailySummaryQuestion>;
+  export type Encoded = typeof DailySummaryQuestion.Encoded;
 }
 
 /**
@@ -131,7 +131,7 @@ export class DailySummaryDecision extends Model<DailySummaryDecision>("DailySumm
  * @since 0.0.0
  */
 export declare namespace DailySummaryDecision {
-  export type Encoded = S.Codec.Encoded<typeof DailySummaryDecision>;
+  export type Encoded = typeof DailySummaryDecision.Encoded;
 }
 
 /**
@@ -173,7 +173,7 @@ export class DailySummaryKnowledgeNugget extends Model<DailySummaryKnowledgeNugg
  * @since 0.0.0
  */
 export declare namespace DailySummaryKnowledgeNugget {
-  export type Encoded = S.Codec.Encoded<typeof DailySummaryKnowledgeNugget>;
+  export type Encoded = typeof DailySummaryKnowledgeNugget.Encoded;
 }
 
 /**
@@ -215,7 +215,7 @@ export class DailySummaryDayStatsPayload extends Model<DailySummaryDayStatsPaylo
  * @since 0.0.0
  */
 export declare namespace DailySummaryDayStatsPayload {
-  export type Encoded = S.Codec.Encoded<typeof DailySummaryDayStatsPayload>;
+  export type Encoded = typeof DailySummaryDayStatsPayload.Encoded;
 }
 
 /**
@@ -256,7 +256,7 @@ export class DailySummaryPayload extends Model<DailySummaryPayload>("DailySummar
  * @since 0.0.0
  */
 export declare namespace DailySummaryPayload {
-  export type Encoded = S.Codec.Encoded<typeof DailySummaryPayload>;
+  export type Encoded = typeof DailySummaryPayload.Encoded;
 }
 
 /**
@@ -308,5 +308,5 @@ export class LearnedMemoryRef extends Model<LearnedMemoryRef>("LearnedMemoryRef"
  * @since 0.0.0
  */
 export declare namespace LearnedMemoryRef {
-  export type Encoded = S.Codec.Encoded<typeof LearnedMemoryRef>;
+  export type Encoded = typeof LearnedMemoryRef.Encoded;
 }

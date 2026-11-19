@@ -1,19 +1,23 @@
 import type * as Domain from "@alchemy.run/domain";
 import { OrgId } from "@proto/kernel/Ids";
-import { DirectoryRow } from "@proto/party-contract/Directory/FindParties.read";
+import { Count, Sequence, StreamId } from "@proto/kernel/Measure";
+import { DirectoryRow, type DirectoryText } from "@proto/party-contract/Directory/FindParties.read";
+import { InvalidCursor } from "@proto/party-contract/Directory/InvalidCursor.rejection";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
+import { PartyName } from "@proto/party-contract/Party/PartyName";
 import { $PartyModelId } from "@proto/kernel/Identity";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Order from "effect/Order";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
+import { thunkEffectSucceedNone, thunkEffectSucceedNull } from "@beep/utils/thunk";
 
 const $I = $PartyModelId.create("Directory/PartyDirectory.store");
 
@@ -26,7 +30,7 @@ const $I = $PartyModelId.create("Directory/PartyDirectory.store");
  * @since 0.0.0
  */
 export const DirectoryChange = S.TaggedUnion({
-  Registered: { partyId: PartyId, org: OrgId, name: S.String },
+  Registered: { partyId: PartyId, org: OrgId, name: PartyName },
   Merged: { partyId: PartyId, absorbed: PartyId },
 });
 /**
@@ -42,7 +46,7 @@ export type DirectoryChange = typeof DirectoryChange.Type;
  * @category models
  * @since 0.0.0
  */
-export const DirectoryWrite = S.Struct({ stream: S.String, seq: S.Int, change: DirectoryChange });
+export const DirectoryWrite = S.Struct({ stream: StreamId, seq: Sequence, change: DirectoryChange });
 /**
  * @category models
  * @since 0.0.0
@@ -57,9 +61,101 @@ export type DirectoryWrite = typeof DirectoryWrite.Type;
  * @since 0.0.0
  */
 export class GenerationBehind extends S.TaggedError<GenerationBehind, { readonly brand: unique symbol }>()("GenerationBehind", {
-  generation: S.Int,
-  behind: S.Array(S.String),
+  generation: Count,
+  behind: S.Array(StreamId),
 }) {}
+
+/**
+ * A directory cursor's contents: the order the pages follow and the last
+ * party of the page it ends. Pages follow party id order, the only order the
+ * directory keeps.
+ */
+const CursorPosition = S.Struct({ order: S.tag("partyId"), partyId: PartyId });
+
+/**
+ * The cursor a directory page hands back, as the client sees it: the page's
+ * order and its last party, as JSON in base64url. Both stores issue and read
+ * cursors through it, so a cursor one issues the other reads, and text that
+ * does not decode is no cursor (`InvalidCursor`).
+ *
+ * **Example** (A page's cursor)
+ * ```ts
+ * import { DirectoryCursor } from "@proto/party-model/Directory/PartyDirectory.store";
+ * import { PartyId } from "@proto/party-contract/Party/Party.id";
+ * import * as S from "effect/Schema";
+ *
+ * const cursor = S.encodeSync(DirectoryCursor)({ order: "partyId", partyId: PartyId.make("party_1") });
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const DirectoryCursor = S.StringFromBase64Url.pipe(S.decodeTo(S.fromJsonString(CursorPosition)));
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type DirectoryCursor = typeof DirectoryCursor.Type;
+
+const decodeCursor = S.decodeEffect(DirectoryCursor);
+const encodeCursor = S.encodeEffect(DirectoryCursor);
+
+/**
+ * Where a page starts: after the party a cursor names, or at the first party
+ * when there is no cursor. A cursor the directory did not issue is refused
+ * with `InvalidCursor`, never read as a position.
+ *
+ * **Example** (The first page)
+ * ```ts
+ * import { resumeAfter } from "@proto/party-model/Directory/PartyDirectory.store";
+ *
+ * const first = resumeAfter(undefined);
+ * ```
+ *
+ * @category getters
+ * @since 0.0.0
+ */
+export const resumeAfter = (after: string | undefined): Effect.Effect<O.Option<PartyId>, InvalidCursor> =>
+  O.match(O.fromUndefinedOr(after), {
+    onNone: thunkEffectSucceedNone<PartyId>,
+    onSome: flow(
+      decodeCursor,
+      Effect.map((cursor) => O.some(cursor.partyId)),
+      Effect.mapError(() => InvalidCursor.make({})),
+    ),
+  });
+
+/**
+ * One page from the rows a search found from its start, in order: at most
+ * `take` of them, and, when more were found, the cursor that resumes after
+ * the last. A store finds `take + 1` rows, or all of them, and pages them
+ * here, so both stores page alike.
+ *
+ * **Example** (A first page of two)
+ * ```ts
+ * import { pageOf } from "@proto/party-model/Directory/PartyDirectory.store";
+ *
+ * const page = pageOf([], 2);
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const pageOf: {
+  (take: number): (found: ReadonlyArray<DirectoryRow>) => Effect.Effect<Domain.Query.Page<DirectoryRow>>;
+  (found: ReadonlyArray<DirectoryRow>, take: number): Effect.Effect<Domain.Query.Page<DirectoryRow>>;
+} = dual(2, (found: ReadonlyArray<DirectoryRow>, take: number) => {
+  const entries = A.take(found, take);
+  return Effect.map(
+    found.length > take
+      ? O.match(A.last(entries), {
+          onNone: thunkEffectSucceedNull,
+          onSome: (row) => encodeCursor({ order: "partyId", partyId: row.partyId }).pipe(Effect.orDie),
+        })
+      : thunkEffectSucceedNull(),
+    (cursor): Domain.Query.Page<DirectoryRow> => ({ entries, cursor }),
+  );
+});
 
 /**
  * Where the directory lives: a port the model declares. The projection
@@ -75,6 +171,18 @@ export class GenerationBehind extends S.TaggedError<GenerationBehind, { readonly
  * Queries read the active generation; a rebuild writes the next generation
  * beside it and `switchTo` makes it active once it has caught up.
  *
+ * While a newer generation is building, the store forwards its writes to the
+ * active generation, under the active generation's own checkpoints: what the
+ * active generation already applied is refused there, and what it has not
+ * seen lands in both. So a search that waited for a write finds it, before
+ * the switch as after it.
+ *
+ * **Gotchas**
+ *
+ * Forwarding applies one change to two generations. It holds only while a
+ * change means the same row in both; a generation that changes what a change
+ * means cannot be built beside the one it replaces this way.
+ *
  * @category ports
  * @since 0.0.0
  */
@@ -85,21 +193,30 @@ export class PartyDirectoryStore extends Context.Service<
      * Apply a generation's writes in order, each with its checkpoint in the
      * same write. Refused, and not counted: a write at or before the
      * generation's checkpoint for its stream, and every write of a generation
-     * older than the active one. Returns how many were applied.
+     * older than the active one. Returns how many were applied to that
+     * generation. A generation newer than the active one also forwards each
+     * write to the active generation, which applies it unless it already
+     * has. The writes come first, so a batch pipes into `apply(generation)`.
      */
-    readonly apply: (generation: number, writes: ReadonlyArray<DirectoryWrite>) => Effect.Effect<number>;
+    readonly apply: {
+      (generation: number): (writes: ReadonlyArray<DirectoryWrite>) => Effect.Effect<number>;
+      (writes: ReadonlyArray<DirectoryWrite>, generation: number): Effect.Effect<number>;
+    };
     /** The generation queries read; the first to write becomes active. */
     readonly active: Effect.Effect<O.Option<number>>;
     /** A generation's checkpoints: the last position applied, by source stream. */
     readonly checkpoints: (generation: number) => Effect.Effect<HashMap.HashMap<string, number>>;
     /** Make a generation the one queries read, once it has caught up; older generations are dropped. */
     readonly switchTo: (generation: number) => Effect.Effect<void, GenerationBehind>;
-    /** One page of an org's parties whose name contains `text`, ordered by party id, from the active generation. */
-    readonly search: (
-      org: OrgId,
-      text: string,
-      page: Domain.Query.PageRequest,
-    ) => Effect.Effect<Domain.Query.Page<DirectoryRow>>;
+    /**
+     * One page of an org's parties whose name contains `text`, ordered by
+     * party id, from the active generation. A cursor the store did not
+     * issue is refused with `InvalidCursor`.
+     */
+    readonly search: {
+      (text: DirectoryText, page: Domain.Query.PageRequest): (org: OrgId) => Effect.Effect<Domain.Query.Page<DirectoryRow>, InvalidCursor>;
+      (org: OrgId, text: DirectoryText, page: Domain.Query.PageRequest): Effect.Effect<Domain.Query.Page<DirectoryRow>, InvalidCursor>;
+    };
   }
 >()($I`PartyDirectoryStore`) {}
 
@@ -107,7 +224,7 @@ const byPartyId = Order.mapInput(Order.String, (row: DirectoryRow) => row.partyI
 
 const applyChange = (rows: HashMap.HashMap<PartyId, DirectoryRow>, change: DirectoryChange) =>
   DirectoryChange.match(change, {
-    Registered: ({ partyId, org, name }) => HashMap.set(rows, partyId, { partyId, org, name, absorbed: [] }),
+    Registered: ({ partyId, org, name }) => HashMap.set(rows, partyId, DirectoryRow.make({ partyId, org, name })),
     Merged: ({ partyId, absorbed }) =>
       HashMap.modify(rows, partyId, (row) =>
         A.contains(row.absorbed, absorbed) ? row : { ...row, absorbed: A.append(row.absorbed, absorbed) },
@@ -144,6 +261,10 @@ const applyWrite = (
         },
       ];
 
+/** Apply writes in order to one generation: how many it applied, and the generation after them. */
+const applyWrites = (generation: Generation, writes: ReadonlyArray<DirectoryWrite>) =>
+  A.reduce(writes, [0, generation] as const, applyWrite);
+
 /** The source streams where `candidate` has not applied what `active` has. */
 const behindOf = (active: Generation, candidate: Generation) =>
   pipe(
@@ -173,18 +294,26 @@ export const MemoryPartyDirectoryStore = Layer.effect(
   Effect.gen(function* () {
     const table = yield* Ref.make<Table>({ active: O.none(), generations: HashMap.empty() });
     return {
-      apply: Effect.fn("PartyDirectoryStore.apply")((generation: number, writes: ReadonlyArray<DirectoryWrite>) =>
-        Ref.modify(table, (current): readonly [number, Table] => {
-          if (O.exists(current.active, (active) => generation < active)) return [0, current];
-          const [applied, next] = A.reduce(writes, [0, generationOf(current, generation)] as const, applyWrite);
-          return [
-            applied,
-            {
-              active: O.orElse(current.active, () => O.some(generation)),
-              generations: HashMap.set(current.generations, generation, next),
-            },
-          ];
-        }),
+      apply: dual(
+        2,
+        Effect.fn("PartyDirectoryStore.apply")((writes: ReadonlyArray<DirectoryWrite>, generation: number) =>
+          Ref.modify(table, (current): readonly [number, Table] => {
+            if (O.exists(current.active, (active) => generation < active)) return [0, current];
+            const [applied, next] = applyWrites(generationOf(current, generation), writes);
+            const written = HashMap.set(current.generations, generation, next);
+            return [
+              applied,
+              {
+                active: O.orElse(current.active, () => O.some(generation)),
+                // A generation still building forwards to the one queries read.
+                generations: O.match(O.filter(current.active, (active) => active < generation), {
+                  onNone: () => written,
+                  onSome: (active) => HashMap.set(written, active, applyWrites(generationOf(current, active), writes)[1]),
+                }),
+              },
+            ];
+          }),
+        ),
       ),
       active: Effect.map(Ref.get(table), (current) => current.active),
       checkpoints: Effect.fn("PartyDirectoryStore.checkpoints")((generation: number) =>
@@ -195,7 +324,7 @@ export const MemoryPartyDirectoryStore = Layer.effect(
           Ref.modify(table, (current): readonly [ReadonlyArray<string>, Table] => {
             const candidate = generationOf(current, generation);
             const behind = O.match(current.active, {
-              onNone: () => [],
+              onNone: A.empty<string>,
               onSome: (active) => behindOf(generationOf(current, active), candidate),
             });
             return A.isReadonlyArrayEmpty(behind)
@@ -212,24 +341,23 @@ export const MemoryPartyDirectoryStore = Layer.effect(
             A.isReadonlyArrayEmpty(behind) ? Effect.void : Effect.fail(GenerationBehind.make({ generation, behind })),
         ),
       ),
-      search: Effect.fn("PartyDirectoryStore.search")((org: OrgId, text: string, { after, take }: Domain.Query.PageRequest) =>
-        Effect.map(Ref.get(table), (current) => {
+      search: dual(
+        3,
+        Effect.fn("PartyDirectoryStore.search")(function* (org: OrgId, text: DirectoryText, { after, take }: Domain.Query.PageRequest) {
+          const from = yield* resumeAfter(after);
+          const current = yield* Ref.get(table);
           const rows = O.match(current.active, {
             onNone: () => HashMap.empty<PartyId, DirectoryRow>(),
             onSome: (active) => generationOf(current, active).rows,
           });
-          const matching = rows.pipe(
+          return yield* rows.pipe(
             HashMap.values,
             A.fromIterable,
             A.filter((row) => row.org === org && pipe(Str.toLowerCase(row.name), Str.includes(Str.toLowerCase(text)))),
             A.sort(byPartyId),
-            A.filter((row) => after === undefined || row.partyId > after),
+            A.filter((row) => !O.exists(from, (at) => row.partyId <= at)),
+            pageOf(take),
           );
-          const entries = A.take(matching, take);
-          return {
-            entries,
-            cursor: matching.length > take ? O.getOrNull(O.map(A.last(entries), (row) => row.partyId)) : null,
-          };
         }),
       ),
     };

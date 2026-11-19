@@ -14,22 +14,22 @@ import { Subject } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL } from "@beep/rdf/Vocab/Rdfs";
 import { SCHEMA_NAME } from "@beep/rdf/Vocab/SchemaOrg";
+import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
 import * as Console from "effect/Console";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as MutableHashSet from "effect/MutableHashSet";
-import * as Order from "effect/Order";
-import * as PlatformError from "effect/PlatformError";
-import * as A from "effect/Array";
-import { pipe } from "effect/Function";
-import * as O from "effect/Option";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import type * as PlatformError from "effect/PlatformError";
 import type { KeyValueStoreError } from "effect/persistence/KeyValueStore";
+import type * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { ParsingFailed, RdfError } from "../../Domain/Error/Rdf.ts";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { RdfBuilder } from "../../Service/Rdf.ts";
@@ -112,7 +112,11 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   manifest: O.Option<string>,
   threshold: number,
   verbose: boolean
-): Effect.fn.Return<void, KeyValueStoreError | ParsingFailed | PlatformError.PlatformError | RdfError | S.SchemaError, FileSystem.FileSystem | RdfBuilder | StorageService> {
+): Effect.fn.Return<
+  void,
+  KeyValueStoreError | ParsingFailed | PlatformError.PlatformError | RdfError | S.SchemaError,
+  FileSystem.FileSystem | RdfBuilder | StorageService
+> {
   const storage = yield* StorageService;
   const rdf = yield* RdfBuilder;
   yield* Console.log(`Analyzing entities for batch: ${batchId}`);
@@ -201,8 +205,8 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
   }> = [];
   for (let i = 0; i < allEntities.length; i++) {
     for (let j = i + 1; j < allEntities.length; j++) {
-      const e1 = allEntities[i];
-      const e2 = allEntities[j];
+      const e1 = A.getUnsafe(allEntities, i);
+      const e2 = A.getUnsafe(allEntities, j);
       if (e1.iri === e2.iri) continue;
       const similarity = stringSimilarity(e1.label, e2.label);
       if (similarity >= threshold) {
@@ -239,10 +243,10 @@ const reconcileHandler = Effect.fn("reconcileHandler")(function* (
       );
       if (verbose) {
         yield* Console.log(`  Entity 1: ${pair.entity1.iri}`);
-        yield* Console.log(`    Types: ${pair.entity1.types.join(", ")}`);
+        yield* Console.log(`    Types: ${A.join(pair.entity1.types, ", ")}`);
         yield* Console.log(`    Source: ${pair.entity1.sourceDoc}`);
         yield* Console.log(`  Entity 2: ${pair.entity2.iri}`);
-        yield* Console.log(`    Types: ${pair.entity2.types.join(", ")}`);
+        yield* Console.log(`    Types: ${A.join(pair.entity2.types, ", ")}`);
         yield* Console.log(`    Source: ${pair.entity2.sourceDoc}`);
       }
     }

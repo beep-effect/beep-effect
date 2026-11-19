@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 /**
  * EntityLinker Service
  *
@@ -11,18 +12,19 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { flow, pipe } from "effect/Function";
 import * as Graph from "effect/Graph";
-import * as Result from "effect/Result";
-import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { MentionRecord } from "../Domain/Model/EntityResolution.ts";
 import { EREdge, ERNode } from "../Domain/Model/EntityResolution.ts";
 import type { EntityResolutionGraph } from "../Domain/Model/EntityResolutionGraph.ts";
 import { EntityId } from "../Domain/Model/shared.ts";
 import { dual2 } from "../Utils/Dual.ts";
-import * as S from "effect/Schema";
 
 /**
  * Get canonical ID for an entity
@@ -104,9 +106,10 @@ export const getCanonicalId = dual2((erg: EntityResolutionGraph, entityId: Entit
 export const getMentionsForEntity = dual2(
   (erg: EntityResolutionGraph, canonicalId: EntityId): ReadonlyArray<MentionRecord> => {
     // Find all entity IDs that map to this canonical ID
-    const matchingIds = R.toEntries(erg.canonicalMap)
-      .filter(([_, canonical]) => canonical === canonicalId)
-      .map(([entityId]) => Result.getOrThrow(S.decodeResult(EntityId)(entityId)));
+    const matchingIds = A.map(
+      A.filter(R.toEntries(erg.canonicalMap), ([_, canonical]) => canonical === canonicalId),
+      ([entityId]) => Result.getOrThrow(S.decodeResult(EntityId)(entityId))
+    );
 
     // Look up MentionRecord nodes in the graph
     const mentions: Array<MentionRecord> = [];
@@ -175,7 +178,7 @@ export const toMermaid = (erg: EntityResolutionGraph): string => {
     mention: string;
   }> = [];
 
-  for (const [idx, node] of Graph.entries(Graph.nodes(erg.graph))) {
+  for (const [idx, node] of pipe(erg.graph, Graph.nodes, Graph.entries)) {
     ERNode.match(node, {
       MentionRecord: (mention) => mentionNodes.push({ idx, node: mention }),
       ResolvedEntity: (resolved) =>
@@ -200,7 +203,7 @@ export const toMermaid = (erg: EntityResolutionGraph): string => {
   }
 
   // Add edges
-  for (const [_edgeIdx, edgeInfo] of Graph.entries(Graph.edges(erg.graph))) {
+  for (const [_edgeIdx, edgeInfo] of pipe(erg.graph, Graph.edges, Graph.entries)) {
     const { data, source, target } = edgeInfo;
 
     EREdge.match(data, {
@@ -212,7 +215,7 @@ export const toMermaid = (erg: EntityResolutionGraph): string => {
     });
   }
 
-  return lines.join("\n");
+  return A.join(lines, "\n");
 };
 
 /**
@@ -221,11 +224,11 @@ export const toMermaid = (erg: EntityResolutionGraph): string => {
  * @internal
  */
 const extractLocalName = (iri: string): string => {
-  const hashIdx = iri.lastIndexOf("#");
-  if (hashIdx !== -1) return iri.slice(hashIdx + 1);
+  const hashIdx = O.getOrElse(Str.lastIndexOf("#")(iri), () => -1);
+  if (hashIdx !== -1) return Str.slice(hashIdx + 1)(iri);
 
-  const slashIdx = iri.lastIndexOf("/");
-  if (slashIdx !== -1) return iri.slice(slashIdx + 1);
+  const slashIdx = O.getOrElse(Str.lastIndexOf("/")(iri), () => -1);
+  if (slashIdx !== -1) return Str.slice(slashIdx + 1)(iri);
 
   return iri;
 };

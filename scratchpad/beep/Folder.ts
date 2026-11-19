@@ -54,7 +54,7 @@ export class FolderContractError extends S.TaggedError<FolderContractError, { re
  * @since 0.0.0
  */
 export declare namespace FolderContractError {
-  export type Encoded = S.Codec.Encoded<typeof FolderContractError>;
+  export type Encoded = typeof FolderContractError.Encoded;
 }
 
 /**
@@ -151,7 +151,7 @@ export class Folder extends Model<Folder>("Folder")(
  * @since 0.0.0
  */
 export declare namespace Folder {
-  export type Encoded = S.Codec.Encoded<typeof Folder>;
+  export type Encoded = typeof Folder.Encoded;
 }
 
 /**
@@ -249,7 +249,7 @@ export class CreateFolderRequest extends Model<CreateFolderRequest>("CreateFolde
  * @since 0.0.0
  */
 export declare namespace CreateFolderRequest {
-  export type Encoded = S.Codec.Encoded<typeof CreateFolderRequest>;
+  export type Encoded = typeof CreateFolderRequest.Encoded;
 }
 
 /**
@@ -326,7 +326,7 @@ export class UpdateFolderRequest extends Model<UpdateFolderRequest>("UpdateFolde
  * @since 0.0.0
  */
 export declare namespace UpdateFolderRequest {
-  export type Encoded = S.Codec.Encoded<typeof UpdateFolderRequest>;
+  export type Encoded = typeof UpdateFolderRequest.Encoded;
 }
 
 /**
@@ -390,7 +390,7 @@ export class MoveConversationRequest extends Model<MoveConversationRequest>("Mov
  * @since 0.0.0
  */
 export declare namespace MoveConversationRequest {
-  export type Encoded = S.Codec.Encoded<typeof MoveConversationRequest>;
+  export type Encoded = typeof MoveConversationRequest.Encoded;
 }
 
 /**
@@ -457,7 +457,7 @@ export class BulkMoveConversationsRequest extends Model<BulkMoveConversationsReq
  * @since 0.0.0
  */
 export declare namespace BulkMoveConversationsRequest {
-  export type Encoded = S.Codec.Encoded<typeof BulkMoveConversationsRequest>;
+  export type Encoded = typeof BulkMoveConversationsRequest.Encoded;
 }
 
 /**
@@ -533,7 +533,7 @@ export class ReorderFoldersRequest extends Model<ReorderFoldersRequest>("Reorder
  * @since 0.0.0
  */
 export declare namespace ReorderFoldersRequest {
-  export type Encoded = S.Codec.Encoded<typeof ReorderFoldersRequest>;
+  export type Encoded = typeof ReorderFoldersRequest.Encoded;
 }
 
 /**
@@ -594,7 +594,7 @@ export class FolderMutationResponse extends Model<FolderMutationResponse>("Folde
  * @since 0.0.0
  */
 export declare namespace FolderMutationResponse {
-  export type Encoded = S.Codec.Encoded<typeof FolderMutationResponse>;
+  export type Encoded = typeof FolderMutationResponse.Encoded;
 }
 
 /**
@@ -635,7 +635,7 @@ export class BulkMoveConversationsResponse extends Model<BulkMoveConversationsRe
  * @since 0.0.0
  */
 export declare namespace BulkMoveConversationsResponse {
-  export type Encoded = S.Codec.Encoded<typeof BulkMoveConversationsResponse>;
+  export type Encoded = typeof BulkMoveConversationsResponse.Encoded;
 }
 
 /**

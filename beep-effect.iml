@@ -362,6 +362,7 @@
       <excludePattern pattern="dist" />
       <excludePattern pattern="storybook-static" />
       <excludePattern pattern="docs" />
+      <excludePattern pattern=".alchemy" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

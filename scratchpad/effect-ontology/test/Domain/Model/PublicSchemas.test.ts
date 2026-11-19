@@ -1,9 +1,9 @@
-import * as Effect from "effect/Effect";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/Arbitrary";
 import * as Model from "../../../Domain/Model/index.ts";
 
 const publicModelSchemas = A.filter(R.toEntries(Model), ([, value]) => S.isSchema(value));
@@ -19,7 +19,7 @@ describe("effect-ontology model schemas", () => {
           Arbitrary.checkEffect(
             Arbitrary.all([arbitrary]),
             ([value]) => {
-          expect(S.is(schema)(value)).toBe(true);
+              expect(S.is(schema)(value)).toBe(true);
 
               return true;
             },

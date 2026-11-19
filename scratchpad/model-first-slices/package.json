@@ -29,21 +29,28 @@
     "bindings": "bun run --cwd party/web bindings",
     "proofs": "bun scripts/proofs.ts",
     "outcomes": "bun scripts/outcomes.ts",
-    "generated:check": "bun run handlers:check && bun run --cwd party/web bindings --check && bun run --cwd apps/practice entries --check && bun scripts/proofs.ts --check",
+    "generated:check": "bun run handlers:check && bun run --cwd party/web bindings --check && bun run --cwd apps/practice entries --check && bun run migrations:check && bun scripts/proofs.ts --check",
+    "migrations": "bun run --cwd party/host migrations && bun run --cwd runs/host migrations",
+    "migrations:check": "bun run --cwd party/host migrations --check && bun run --cwd runs/host migrations --check",
     "conformance": "bun run --cwd conformance conformance",
     "entries": "bun run --cwd apps/practice entries"
   },
   "devDependencies": {
+    "@beep/effect-drizzle": "link:../../packages/ecosystem/effect-drizzle",
     "@beep/identity": "link:../../packages/foundation/modeling/identity",
     "@beep/schema": "link:../../packages/foundation/modeling/schema",
     "@effect/tsgo": "0.70.0",
     "@effect/vitest": "4.1.4",
     "@types/node": "26.6.5",
+    "drizzle-kit": "1.0.0-rc.5",
+    "drizzle-orm": "link:../../node_modules/drizzle-orm",
     "tsrs": "0.25.0-ts7.1.0-beta",
     "vitest": "5.0.4"
   },
   "overrides": {
-    "effect": "4.1.4"
+    "effect": "4.1.4",
+    "react": "link:../../node_modules/react",
+    "react-dom": "link:../../node_modules/react-dom"
   },
   "patchedDependencies": {
     "@alchemy.run/domain@2.0.0-beta.87": "patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch",

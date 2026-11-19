@@ -1,11 +1,11 @@
 import { URLStr } from "@beep/schema";
 import { ShaclValidationError } from "@beep/semantic-web/services/shacl-validation";
 import { describe, expect, it } from "@effect/vitest";
-import * as Effect from "effect/Effect";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/Arbitrary";
 import * as Activity from "../../../Domain/Error/Activity.ts";
 import * as Auth from "../../../Domain/Error/Auth.ts";
 import * as Base from "../../../Domain/Error/Base.ts";
@@ -21,6 +21,7 @@ import * as Ontology from "../../../Domain/Error/Ontology.ts";
 import * as Rdf from "../../../Domain/Error/Rdf.ts";
 import * as Shacl from "../../../Domain/Error/Shacl.ts";
 import * as Workflow from "../../../Domain/Error/Workflow.ts";
+
 const decodeBaseBaseError = S.decodeEffect(Base.BaseError);
 const decodeURLStr = S.decodeEffect(URLStr);
 
@@ -121,7 +122,7 @@ describe("effect-ontology domain errors", () => {
           Arbitrary.checkEffect(
             Arbitrary.all([arbitrary]),
             ([value]) => {
-          expect(S.is(schema)(value)).toBe(true);
+              expect(S.is(schema)(value)).toBe(true);
 
               return true;
             },

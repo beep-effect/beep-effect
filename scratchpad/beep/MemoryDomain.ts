@@ -309,7 +309,7 @@ export class MemoryDomainError extends S.TaggedError<MemoryDomainError, { readon
  * @since 0.0.0
  */
 export declare namespace MemoryDomainError {
-  export type Encoded = S.Codec.Encoded<typeof MemoryDomainError>;
+  export type Encoded = typeof MemoryDomainError.Encoded;
 }
 
 /**
@@ -620,7 +620,7 @@ export class MemoryDomainRecord extends Model<MemoryDomainRecord>("MemoryDomainR
  * @since 0.0.0
  */
 export declare namespace MemoryDomainRecord {
-  export type Encoded = S.Codec.Encoded<typeof MemoryDomainRecord>;
+  export type Encoded = typeof MemoryDomainRecord.Encoded;
 }
 
 const legalMemoryState = S.makeFilter(

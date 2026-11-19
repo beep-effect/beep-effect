@@ -17,6 +17,7 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, MappedLiteralKit } from "@beep/schema";
+import * as R from "@beep/utils/Record";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Tuple from "effect/Tuple";
@@ -75,6 +76,22 @@ export const MediaItemMetadataKind = LiteralKit([
 export type MediaItemMetadataKind = typeof MediaItemMetadataKind.Type;
 
 /**
+ * Companion namespace for {@link MediaItemMetadataKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaItemMetadataKind {
+  /**
+   * Encoded (wire) form of {@link MediaItemMetadataKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof MediaItemMetadataKind.Encoded;
+}
+
+/**
  * File formats the platform reads audio from.
  *
  * **Example** (Decode an audio format)
@@ -111,6 +128,22 @@ export const AudioDecodeFormat = MappedLiteralKit([
 export type AudioDecodeFormat = typeof AudioDecodeFormat.Type;
 
 /**
+ * Companion namespace for {@link AudioDecodeFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AudioDecodeFormat {
+  /**
+   * Encoded (wire) form of {@link AudioDecodeFormat}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AudioDecodeFormat.Encoded;
+}
+
+/**
  * Container formats the platform reads video from.
  *
  * **Example** (Decode a video container format)
@@ -142,6 +175,22 @@ export const VideoDecodeFormat = MappedLiteralKit([
  * @since 0.0.0
  */
 export type VideoDecodeFormat = typeof VideoDecodeFormat.Type;
+
+/**
+ * Companion namespace for {@link VideoDecodeFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoDecodeFormat {
+  /**
+   * Encoded (wire) form of {@link VideoDecodeFormat}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof VideoDecodeFormat.Encoded;
+}
 
 /**
  * File formats the platform reads documents from.
@@ -180,6 +229,22 @@ export const DocumentDecodeFormat = MappedLiteralKit([
 export type DocumentDecodeFormat = typeof DocumentDecodeFormat.Type;
 
 /**
+ * Companion namespace for {@link DocumentDecodeFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DocumentDecodeFormat {
+  /**
+   * Encoded (wire) form of {@link DocumentDecodeFormat}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DocumentDecodeFormat.Encoded;
+}
+
+/**
  * File formats the platform reads spreadsheets from.
  *
  * **Example** (Decode a spreadsheet format)
@@ -210,6 +275,22 @@ export const SpreadsheetDecodeFormat = MappedLiteralKit([
  * @since 0.0.0
  */
 export type SpreadsheetDecodeFormat = typeof SpreadsheetDecodeFormat.Type;
+
+/**
+ * Companion namespace for {@link SpreadsheetDecodeFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SpreadsheetDecodeFormat {
+  /**
+   * Encoded (wire) form of {@link SpreadsheetDecodeFormat}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof SpreadsheetDecodeFormat.Encoded;
+}
 
 /**
  * File formats the platform reads images from.
@@ -252,6 +333,22 @@ export const ImageryDecodeFormat = MappedLiteralKit([
 export type ImageryDecodeFormat = typeof ImageryDecodeFormat.Type;
 
 /**
+ * Companion namespace for {@link ImageryDecodeFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageryDecodeFormat {
+  /**
+   * Encoded (wire) form of {@link ImageryDecodeFormat}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ImageryDecodeFormat.Encoded;
+}
+
+/**
  * File formats the platform reads emails from.
  *
  * **Example** (Decode an email format)
@@ -279,6 +376,22 @@ export const EmailDecodeFormat = MappedLiteralKit([["EML", "eml"]]).pipe(
  * @since 0.0.0
  */
 export type EmailDecodeFormat = typeof EmailDecodeFormat.Type;
+
+/**
+ * Companion namespace for {@link EmailDecodeFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EmailDecodeFormat {
+  /**
+   * Encoded (wire) form of {@link EmailDecodeFormat}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof EmailDecodeFormat.Encoded;
+}
 
 /**
  * File formats the platform reads computer-aided design models from.
@@ -310,6 +423,22 @@ export const CadDecodeFormat = MappedLiteralKit([["STEP", "step"]]).pipe(
  * @since 0.0.0
  */
 export type CadDecodeFormat = typeof CadDecodeFormat.Type;
+
+/**
+ * Companion namespace for {@link CadDecodeFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CadDecodeFormat {
+  /**
+   * Encoded (wire) form of {@link CadDecodeFormat}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof CadDecodeFormat.Encoded;
+}
 
 /**
  * What a DICOM file holds: one image, a stack of frames, a video or a structured report.
@@ -348,6 +477,22 @@ export const DicomMediaType = MappedLiteralKit([
 export type DicomMediaType = typeof DicomMediaType.Type;
 
 /**
+ * Companion namespace for {@link DicomMediaType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DicomMediaType {
+  /**
+   * Encoded (wire) form of {@link DicomMediaType}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DicomMediaType.Encoded;
+}
+
+/**
  * File formats the platform reads three-dimensional models from.
  *
  * **Example** (Decode a 3D model format)
@@ -383,6 +528,22 @@ export const Model3dDecodeFormat = MappedLiteralKit([
 export type Model3dDecodeFormat = typeof Model3dDecodeFormat.Type;
 
 /**
+ * Companion namespace for {@link Model3dDecodeFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Model3dDecodeFormat {
+  /**
+   * Encoded (wire) form of {@link Model3dDecodeFormat}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof Model3dDecodeFormat.Encoded;
+}
+
+/**
  * How a three-dimensional model represents its surface: loose points or connected faces.
  *
  * **Example** (Decode a 3D surface representation)
@@ -415,6 +576,22 @@ export const Model3dType = MappedLiteralKit([
  * @since 0.0.0
  */
 export type Model3dType = typeof Model3dType.Type;
+
+/**
+ * Companion namespace for {@link Model3dType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Model3dType {
+  /**
+   * Encoded (wire) form of {@link Model3dType}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof Model3dType.Encoded;
+}
 
 /**
  * Numeric type of the samples in one band of a raster image.
@@ -460,6 +637,22 @@ export const BandDataType = MappedLiteralKit([
  * @since 0.0.0
  */
 export type BandDataType = typeof BandDataType.Type;
+
+/**
+ * Companion namespace for {@link BandDataType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BandDataType {
+  /**
+   * Encoded (wire) form of {@link BandDataType}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof BandDataType.Encoded;
+}
 
 /**
  * What the samples of an image band stand for: a colour channel, a palette index or a luminance component.
@@ -511,6 +704,22 @@ export const ColorInterpretation = MappedLiteralKit([
 export type ColorInterpretation = typeof ColorInterpretation.Type;
 
 /**
+ * Companion namespace for {@link ColorInterpretation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ColorInterpretation {
+  /**
+   * Encoded (wire) form of {@link ColorInterpretation}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ColorInterpretation.Encoded;
+}
+
+/**
  * Colour model the entries of an image band's palette are expressed in.
  *
  * **Example** (Decode a palette colour model)
@@ -546,6 +755,22 @@ export const PaletteInterpretation = MappedLiteralKit([
  * @since 0.0.0
  */
 export type PaletteInterpretation = typeof PaletteInterpretation.Type;
+
+/**
+ * Companion namespace for {@link PaletteInterpretation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PaletteInterpretation {
+  /**
+   * Encoded (wire) form of {@link PaletteInterpretation}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof PaletteInterpretation.Encoded;
+}
 
 /**
  * A clockwise quarter-turn rotation, or `unknown` when an image's orientation tag names no such rotation.
@@ -584,6 +809,22 @@ export const RotationAngle = MappedLiteralKit([
 export type RotationAngle = typeof RotationAngle.Type;
 
 /**
+ * Companion namespace for {@link RotationAngle}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RotationAngle {
+  /**
+   * Encoded (wire) form of {@link RotationAngle}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RotationAngle.Encoded;
+}
+
+/**
  * Axis an image is mirrored along, or `unknown` when its orientation tag names none.
  *
  * **Example** (Decode a flip axis)
@@ -617,6 +858,22 @@ export const FlipAxis = MappedLiteralKit([
  * @since 0.0.0
  */
 export type FlipAxis = typeof FlipAxis.Type;
+
+/**
+ * Companion namespace for {@link FlipAxis}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FlipAxis {
+  /**
+   * Encoded (wire) form of {@link FlipAxis}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof FlipAxis.Encoded;
+}
 
 /**
  * DICOM modality codes: the kind of equipment or process that produced a study.
@@ -743,6 +1000,22 @@ export const Modality = LiteralKit([
  */
 export type Modality = typeof Modality.Type;
 
+/**
+ * Companion namespace for {@link Modality}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Modality {
+  /**
+   * Encoded (wire) form of {@link Modality}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof Modality.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Size
 // -----------------------------------------------------------------------------
@@ -774,6 +1047,26 @@ export class AudioSpecification extends S.Opaque<AudioSpecification, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link AudioSpecification}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AudioSpecification {
+  /**
+   * Encoded (wire) form of {@link AudioSpecification}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly bitRate: number;
+    readonly durationSeconds: number;
+    readonly numberOfChannels?: number;
+  }
+}
+
+/**
  * Technical facts about a video stream.
  *
  * @category models
@@ -785,6 +1078,25 @@ export class VideoSpecification extends S.Opaque<VideoSpecification, { readonly 
     durationSeconds: S.Finite.annotateKey({ description: "Length of the video in seconds." }),
   }).pipe($I.annoteSchema("VideoSpecification", { description: "Technical facts about a video stream." }))
 ) {}
+
+/**
+ * Companion namespace for {@link VideoSpecification}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoSpecification {
+  /**
+   * Encoded (wire) form of {@link VideoSpecification}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly bitRate: number;
+    readonly durationSeconds: number;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Imagery
@@ -802,6 +1114,25 @@ export class Dimensions extends S.Opaque<Dimensions, { readonly brand: unique sy
     height: S.Finite.annotateKey({ description: "Height in pixels." }),
   }).pipe($I.annoteSchema("Dimensions", { description: "Width and height of an image in pixels." }))
 ) {}
+
+/**
+ * Companion namespace for {@link Dimensions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Dimensions {
+  /**
+   * Encoded (wire) form of {@link Dimensions}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly width: number;
+    readonly height: number;
+  }
+}
 
 /**
  * The unit of an image band's values, with the scale and offset that relate raw samples to it.
@@ -822,6 +1153,26 @@ export class UnitInterpretation extends S.Opaque<UnitInterpretation, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link UnitInterpretation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace UnitInterpretation {
+  /**
+   * Encoded (wire) form of {@link UnitInterpretation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly unit?: string;
+    readonly scale?: number;
+    readonly offset?: number;
+  }
+}
+
+/**
  * One band (channel) of a raster image and how to read its samples.
  *
  * @category models
@@ -837,6 +1188,27 @@ export class BandInfo extends S.Opaque<BandInfo, { readonly brand: unique symbol
     $I.annoteSchema("BandInfo", { description: "One band (channel) of a raster image and how to read its samples." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link BandInfo}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BandInfo {
+  /**
+   * Encoded (wire) form of {@link BandInfo}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly dataType?: BandDataType.Encoded;
+    readonly colorInterpretation?: ColorInterpretation.Encoded;
+    readonly paletteInterpretation?: PaletteInterpretation.Encoded;
+    readonly unitInterpretation?: UnitInterpretation.Encoded;
+  }
+}
 
 /**
  * The coordinate system a geo-referenced image is expressed in.
@@ -856,6 +1228,24 @@ export class CoordinateReferenceSystem extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link CoordinateReferenceSystem}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CoordinateReferenceSystem {
+  /**
+   * Encoded (wire) form of {@link CoordinateReferenceSystem}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly wkt?: string;
+  }
+}
 
 /**
  * The six coefficients that map a pixel position to a position in the image's coordinate system.
@@ -879,6 +1269,29 @@ export class AffineTransform extends S.Opaque<AffineTransform, { readonly brand:
 ) {}
 
 /**
+ * Companion namespace for {@link AffineTransform}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AffineTransform {
+  /**
+   * Encoded (wire) form of {@link AffineTransform}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly xTranslate?: number;
+    readonly xScale?: number;
+    readonly xShear?: number;
+    readonly yTranslate?: number;
+    readonly yShear?: number;
+    readonly yScale?: number;
+  }
+}
+
+/**
  * A pixel of an image paired with the projected position it shows.
  *
  * @category models
@@ -899,6 +1312,28 @@ export class GroundControlPoint extends S.Opaque<GroundControlPoint, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link GroundControlPoint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GroundControlPoint {
+  /**
+   * Encoded (wire) form of {@link GroundControlPoint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly pixX?: number;
+    readonly pixY?: number;
+    readonly projX?: number;
+    readonly projY?: number;
+    readonly projZ?: number;
+  }
+}
+
+/**
  * The ground control points that tie an image to the ground.
  *
  * @category models
@@ -913,6 +1348,24 @@ export class GroundControlPoints extends S.Opaque<GroundControlPoints, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link GroundControlPoints}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GroundControlPoints {
+  /**
+   * Encoded (wire) form of {@link GroundControlPoints}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly gcps: ReadonlyArray<GroundControlPoint.Encoded>;
+  }
+}
 
 /**
  * Where a camera was when it took an image, as recorded in the image's embedded tags.
@@ -933,6 +1386,26 @@ export class GpsMetadata extends S.Opaque<GpsMetadata, { readonly brand: unique 
 ) {}
 
 /**
+ * Companion namespace for {@link GpsMetadata}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GpsMetadata {
+  /**
+   * Encoded (wire) form of {@link GpsMetadata}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly latitude?: number;
+    readonly longitude?: number;
+    readonly altitude?: number;
+  }
+}
+
+/**
  * Everything an image embeds about where on Earth it lies.
  *
  * @category models
@@ -950,6 +1423,27 @@ export class GeoMetadata extends S.Opaque<GeoMetadata, { readonly brand: unique 
 ) {}
 
 /**
+ * Companion namespace for {@link GeoMetadata}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeoMetadata {
+  /**
+   * Encoded (wire) form of {@link GeoMetadata}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly crs?: CoordinateReferenceSystem.Encoded;
+    readonly geotransform?: AffineTransform.Encoded;
+    readonly gcpInfo?: GroundControlPoints.Encoded;
+    readonly gpsData?: GpsMetadata.Encoded;
+  }
+}
+
+/**
  * How an image must be turned and mirrored to be seen upright, as recorded in its embedded tags.
  *
  * @category models
@@ -965,6 +1459,25 @@ export class Orientation extends S.Opaque<Orientation, { readonly brand: unique 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link Orientation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Orientation {
+  /**
+   * Encoded (wire) form of {@link Orientation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly rotationAngle?: RotationAngle.Encoded;
+    readonly flipAxis?: FlipAxis.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // DICOM
@@ -990,6 +1503,27 @@ export class DicomFileMetaInformation extends S.Opaque<DicomFileMetaInformation,
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DicomFileMetaInformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DicomFileMetaInformation {
+  /**
+   * Encoded (wire) form of {@link DicomFileMetaInformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "v1";
+    readonly mediaStorageSop: string;
+    readonly mediaStorageSopInstance: string;
+    readonly transferSyntax: string;
+  }
+}
 
 /**
  * The meta information of a DICOM file, tagged by the version of its layout.
@@ -1034,6 +1568,23 @@ export const DicomMetaInformation = DicomMetaInformationKind.mapMembers(() =>
 export type DicomMetaInformation = typeof DicomMetaInformation.Type;
 
 /**
+ * Companion namespace for {@link DicomMetaInformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DicomMetaInformation {
+  /**
+   * Encoded (wire) form of {@link DicomMetaInformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | DicomFileMetaInformation.Encoded;
+}
+
+/**
  * The DICOM data elements most studies carry, lifted out of the element table.
  *
  * @category models
@@ -1056,6 +1607,31 @@ export class CommonDicomDataElements extends S.Opaque<CommonDicomDataElements, {
   )
 ) {}
 
+/**
+ * Companion namespace for {@link CommonDicomDataElements}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CommonDicomDataElements {
+  /**
+   * Encoded (wire) form of {@link CommonDicomDataElements}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly numberFrames?: number;
+    readonly modality?: Modality.Encoded;
+    readonly patientId?: string;
+    readonly studyId?: string;
+    readonly studyUid?: string;
+    readonly seriesUid?: string;
+    readonly studyTime?: string;
+    readonly seriesTime?: string;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Email
 // -----------------------------------------------------------------------------
@@ -1074,6 +1650,25 @@ const MailboxFields = S.Struct({
 export class Mailbox extends S.Opaque<Mailbox, { readonly brand: unique symbol }>()(
   MailboxFields.pipe($I.annoteSchema("Mailbox", { description: "One email mailbox: an address and its shown name." }))
 ) {}
+
+/**
+ * Companion namespace for {@link Mailbox}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Mailbox {
+  /**
+   * Encoded (wire) form of {@link Mailbox}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly displayName?: string;
+    readonly emailAddress: string;
+  }
+}
 
 const GroupFields = S.Struct({
   groupName: S.String.annotateKey({ description: "Name of the group." }),
@@ -1100,6 +1695,25 @@ export class MailboxRecipient extends S.Opaque<MailboxRecipient, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link MailboxRecipient}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MailboxRecipient {
+  /**
+   * Encoded (wire) form of {@link MailboxRecipient}: the fields nest under `mailbox`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "mailbox";
+    readonly mailbox: Mailbox.Encoded;
+  }
+}
+
+/**
  * A recipient that is a named group of mailboxes.
  *
  * @category models
@@ -1117,6 +1731,28 @@ export class GroupRecipient extends S.Opaque<GroupRecipient, { readonly brand: u
     $I.annoteSchema("GroupRecipient", { description: "A recipient that is a named group of mailboxes." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link GroupRecipient}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GroupRecipient {
+  /**
+   * Encoded (wire) form of {@link GroupRecipient}: the fields nest under `group`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "group";
+    readonly group: {
+      readonly groupName: string;
+      readonly mailboxes: ReadonlyArray<Mailbox.Encoded>;
+    };
+  }
+}
 
 const EmailRecipientKind = LiteralKit(["mailbox", "group"]);
 
@@ -1172,6 +1808,24 @@ export const EmailRecipient = EmailRecipientKind.mapMembers(() => Tuple.make(Mai
 export type EmailRecipient = typeof EmailRecipient.Type;
 
 /**
+ * Companion namespace for {@link EmailRecipient}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EmailRecipient {
+  /**
+   * Encoded (wire) form of {@link EmailRecipient}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | MailboxRecipient.Encoded
+    | GroupRecipient.Encoded;
+}
+
+/**
  * One file attached to an email.
  *
  * @category models
@@ -1186,6 +1840,26 @@ export class EmailAttachment extends S.Opaque<EmailAttachment, { readonly brand:
     mimeType: MediaType.annotateKey({ description: "MIME type of the attachment's content." }),
   }).pipe($I.annoteSchema("EmailAttachment", { description: "One file attached to an email." }))
 ) {}
+
+/**
+ * Companion namespace for {@link EmailAttachment}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EmailAttachment {
+  /**
+   * Encoded (wire) form of {@link EmailAttachment}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly attachmentIndex: number;
+    readonly fileName?: string;
+    readonly mimeType: MediaType.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // CAD
@@ -1206,6 +1880,24 @@ export class CadUnits extends S.Opaque<CadUnits, { readonly brand: unique symbol
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link CadUnits}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CadUnits {
+  /**
+   * Encoded (wire) form of {@link CadUnits}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly lengthUnit?: string;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Metadata records
@@ -1231,6 +1923,30 @@ export class DocumentMetadata extends S.Opaque<DocumentMetadata, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DocumentMetadata}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DocumentMetadata {
+  /**
+   * Encoded (wire) form of {@link DocumentMetadata}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "document";
+    readonly format: DocumentDecodeFormat.Encoded;
+    readonly pages?: number;
+    readonly sizeBytes: number;
+    readonly sizeBytesLong: SizeBytes.Encoded;
+    readonly title?: string;
+    readonly author?: string;
+  }
+}
 
 /**
  * Metadata of an image: its format, size in pixels, bands, embedded attributes and geo-referencing.
@@ -1260,6 +1976,34 @@ export class ImageryMetadata extends S.Opaque<ImageryMetadata, { readonly brand:
 ) {}
 
 /**
+ * Companion namespace for {@link ImageryMetadata}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageryMetadata {
+  /**
+   * Encoded (wire) form of {@link ImageryMetadata}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "imagery";
+    readonly format: ImageryDecodeFormat.Encoded;
+    readonly dimensions?: Dimensions.Encoded;
+    readonly bands: ReadonlyArray<BandInfo.Encoded>;
+    readonly attributes: R.ReadonlyRecord<string, R.ReadonlyRecord<string, string>>;
+    readonly iccProfile?: string;
+    readonly geo?: GeoMetadata.Encoded;
+    readonly pages?: number;
+    readonly orientation?: Orientation.Encoded;
+    readonly sizeBytes: number;
+    readonly sizeBytesLong: SizeBytes.Encoded;
+  }
+}
+
+/**
  * Metadata of an audio file: its format and stream facts.
  *
  * @category models
@@ -1273,6 +2017,28 @@ export class AudioMetadata extends S.Opaque<AudioMetadata, { readonly brand: uni
     ...sizeFields,
   }).pipe($I.annoteSchema("AudioMetadata", { description: "Metadata of an audio file: its format and stream facts." }))
 ) {}
+
+/**
+ * Companion namespace for {@link AudioMetadata}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AudioMetadata {
+  /**
+   * Encoded (wire) form of {@link AudioMetadata}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "audio";
+    readonly format: AudioDecodeFormat.Encoded;
+    readonly specification: AudioSpecification.Encoded;
+    readonly sizeBytes: number;
+    readonly sizeBytesLong: SizeBytes.Encoded;
+  }
+}
 
 /**
  * Metadata of a video file: its container format and stream facts.
@@ -1292,6 +2058,28 @@ export class VideoMetadata extends S.Opaque<VideoMetadata, { readonly brand: uni
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link VideoMetadata}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoMetadata {
+  /**
+   * Encoded (wire) form of {@link VideoMetadata}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "video";
+    readonly format: VideoDecodeFormat.Encoded;
+    readonly specification: VideoSpecification.Encoded;
+    readonly sizeBytes: number;
+    readonly sizeBytesLong: SizeBytes.Encoded;
+  }
+}
 
 /**
  * Metadata of a DICOM file: its meta information, what it holds and its data elements.
@@ -1315,6 +2103,30 @@ export class DicomMetadata extends S.Opaque<DicomMetadata, { readonly brand: uni
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DicomMetadata}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DicomMetadata {
+  /**
+   * Encoded (wire) form of {@link DicomMetadata}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "dicom";
+    readonly metaInformation: DicomMetaInformation.Encoded;
+    readonly mediaType: DicomMediaType.Encoded;
+    readonly commonDataElements: CommonDicomDataElements.Encoded;
+    readonly otherDataElements: R.ReadonlyRecord<string, typeof S.Json.Encoded>;
+    readonly sizeBytes: number;
+    readonly sizeBytesLong: SizeBytes.Encoded;
+  }
+}
 
 /**
  * Metadata of an email: its correspondents, subject and attachments.
@@ -1342,6 +2154,34 @@ export class EmailMetadata extends S.Opaque<EmailMetadata, { readonly brand: uni
 ) {}
 
 /**
+ * Companion namespace for {@link EmailMetadata}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EmailMetadata {
+  /**
+   * Encoded (wire) form of {@link EmailMetadata}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "email";
+    readonly format: EmailDecodeFormat.Encoded;
+    readonly sizeBytes: number;
+    readonly sizeBytesLong: SizeBytes.Encoded;
+    readonly sender: ReadonlyArray<Mailbox.Encoded>;
+    readonly date: string;
+    readonly attachmentCount: number;
+    readonly to: ReadonlyArray<EmailRecipient.Encoded>;
+    readonly cc: ReadonlyArray<EmailRecipient.Encoded>;
+    readonly subject?: string;
+    readonly attachments: ReadonlyArray<EmailAttachment.Encoded>;
+  }
+}
+
+/**
  * Metadata of a three-dimensional model: its format and surface representation.
  *
  * @category models
@@ -1359,6 +2199,28 @@ export class Model3dMetadata extends S.Opaque<Model3dMetadata, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link Model3dMetadata}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Model3dMetadata {
+  /**
+   * Encoded (wire) form of {@link Model3dMetadata}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "model3d";
+    readonly format: Model3dDecodeFormat.Encoded;
+    readonly modelType: Model3dType.Encoded;
+    readonly sizeBytes: number;
+    readonly sizeBytesLong: SizeBytes.Encoded;
+  }
+}
 
 /**
  * Metadata of a spreadsheet: its format, sheet names and declared title and author.
@@ -1382,6 +2244,30 @@ export class SpreadsheetMetadata extends S.Opaque<SpreadsheetMetadata, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link SpreadsheetMetadata}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SpreadsheetMetadata {
+  /**
+   * Encoded (wire) form of {@link SpreadsheetMetadata}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "spreadsheet";
+    readonly format: SpreadsheetDecodeFormat.Encoded;
+    readonly sheetNames: ReadonlyArray<string>;
+    readonly sizeBytes: number;
+    readonly sizeBytesLong: SizeBytes.Encoded;
+    readonly title?: string;
+    readonly author?: string;
+  }
+}
+
+/**
  * Metadata of an item the platform stores without recognising its type: only its size is known.
  *
  * @category models
@@ -1397,6 +2283,26 @@ export class UntypedMetadata extends S.Opaque<UntypedMetadata, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link UntypedMetadata}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace UntypedMetadata {
+  /**
+   * Encoded (wire) form of {@link UntypedMetadata}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "untyped";
+    readonly sizeBytes: number;
+    readonly sizeBytesLong: SizeBytes.Encoded;
+  }
+}
 
 /**
  * Metadata of a computer-aided design model: its format and declared units.
@@ -1416,6 +2322,28 @@ export class CadMetadata extends S.Opaque<CadMetadata, { readonly brand: unique 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link CadMetadata}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CadMetadata {
+  /**
+   * Encoded (wire) form of {@link CadMetadata}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "cad";
+    readonly format: CadDecodeFormat.Encoded;
+    readonly sizeBytes: number;
+    readonly sizeBytesLong: SizeBytes.Encoded;
+    readonly units?: CadUnits.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // The metadata union
@@ -1486,3 +2414,29 @@ export const MediaItemMetadata = MediaItemMetadataKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type MediaItemMetadata = typeof MediaItemMetadata.Type;
+
+/**
+ * Companion namespace for {@link MediaItemMetadata}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaItemMetadata {
+  /**
+   * Encoded (wire) form of {@link MediaItemMetadata}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | DocumentMetadata.Encoded
+    | ImageryMetadata.Encoded
+    | AudioMetadata.Encoded
+    | VideoMetadata.Encoded
+    | DicomMetadata.Encoded
+    | EmailMetadata.Encoded
+    | Model3dMetadata.Encoded
+    | SpreadsheetMetadata.Encoded
+    | UntypedMetadata.Encoded
+    | CadMetadata.Encoded;
+}

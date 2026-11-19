@@ -1,4 +1,5 @@
 import * as Domain from "@alchemy.run/domain";
+import { IdText } from "@proto/kernel/Measure";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { Proposition } from "@proto/party-contract/Proposition";
@@ -11,7 +12,7 @@ import * as S from "effect/Schema";
  * @since 0.0.0
  */
 export class MailboxUnavailable extends S.TaggedError<MailboxUnavailable, { readonly brand: unique symbol }>()("MailboxUnavailable", {
-  mailbox: S.String,
+  mailbox: IdText,
 }) {}
 
 /**
@@ -23,7 +24,7 @@ export class MailboxUnavailable extends S.TaggedError<MailboxUnavailable, { read
  * @since 0.0.0
  */
 export const SourceAssertion = S.Struct({
-  sourceId: S.String,
+  sourceId: IdText,
   claimId: ClaimId,
   proposition: Proposition,
   signals: S.Array(EvidenceSignal),
@@ -45,7 +46,7 @@ export class ContactSource extends Domain.ExternalSystem(
   "ContactSource",
   {
     observe: {
-      args: { mailbox: S.String, since: S.Finite },
+      args: { mailbox: IdText, since: S.Finite },
       success: { assertions: S.Array(SourceAssertion) },
       error: MailboxUnavailable,
     },

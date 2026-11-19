@@ -1,4 +1,5 @@
 import * as Digest from "effect/crypto/Digest";
+import { pipe } from "effect/Function";
 /**
  * Service: SHACL Validation
  *
@@ -26,6 +27,7 @@ import {
   ShaclValidationViolation,
 } from "@beep/semantic-web/services/shacl-validation";
 import { ShaclValidationServiceLive } from "@beep/shacl";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -33,10 +35,9 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Ref from "effect/Ref";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as N3 from "n3";
@@ -64,7 +65,7 @@ const hashStore = Effect.fn("Shacl.hashStore")(function* (store: N3.Store) {
   for (const quad of store) writer.addQuad(quad);
   let nquads = "";
   writer.end((_error, result) => {
-    nquads = result;
+    nquads = result ?? "";
   });
   return yield* sha256Sync(A.join(A.sort(Str.split("\n")(nquads), Order.String), "\n"));
 });
@@ -74,7 +75,7 @@ const serializeN3Store = (store: N3.Store): string => {
   writer.addQuads(A.fromIterable(store));
   let source = "";
   writer.end((_error, output) => {
-    source = output;
+    source = output ?? "";
   });
   return source;
 };
@@ -308,7 +309,7 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
           getShapesCacheStats: Ref.get(shapesCache).pipe(
             Effect.map((cache) => ({
               size: HashMap.size(cache),
-              keys: A.fromIterable(HashMap.keys(cache)),
+              keys: pipe(cache, HashMap.keys, A.fromIterable),
             }))
           ),
           validateWithPolicy: Effect.fn("ShaclService.validateWithPolicy")(function* (dataStore, shapesStore, policy) {
@@ -518,7 +519,7 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
                       store.addQuad(propertyShape, SH.path, propIri);
                       const rangeQuads = ontologyN3.getQuads(propIri, rdfsRange, null, null);
                       if (rangeQuads.length > 0) {
-                        store.addQuad(propertyShape, SH.class, rangeQuads[0].object);
+                        store.addQuad(propertyShape, SH.class, A.getUnsafe(rangeQuads, 0).object);
                       }
                       store.addQuad(propertyShape, SH.nodeKind, SH.IRI);
                       if (isFunctionalProp) {
@@ -531,7 +532,7 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
                       store.addQuad(propertyShape, SH.path, propIri);
                       const rangeQuads = ontologyN3.getQuads(propIri, rdfsRange, null, null);
                       if (rangeQuads.length > 0) {
-                        store.addQuad(propertyShape, SH.datatype, rangeQuads[0].object);
+                        store.addQuad(propertyShape, SH.datatype, A.getUnsafe(rangeQuads, 0).object);
                       } else {
                         store.addQuad(propertyShape, SH.datatype, xsdString);
                       }
@@ -549,7 +550,7 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
                     if (!isRestriction) continue;
                     const onPropertyQuads = ontologyN3.getQuads(restrictionNode, owlOnProperty, null, null);
                     if (onPropertyQuads.length === 0) continue;
-                    const restrictedPropIri = onPropertyQuads[0].object;
+                    const restrictedPropIri = A.getUnsafe(onPropertyQuads, 0).object;
                     const key = makeKey(classIri.value, restrictedPropIri.value);
                     const propertyShapeNode = O.getOrElse(MutableHashMap.get(propertyShapeMap, key), () => {
                       const propertyShape = N3.DataFactory.blankNode();
@@ -560,17 +561,17 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
                     });
                     const minCardQuads = ontologyN3.getQuads(restrictionNode, owlMinCardinality, null, null);
                     if (minCardQuads.length > 0) {
-                      const minValue = minCardQuads[0].object.value;
+                      const minValue = A.getUnsafe(minCardQuads, 0).object.value;
                       store.addQuad(propertyShapeNode, SH.minCount, N3.DataFactory.literal(minValue, xsdInteger));
                     }
                     const maxCardQuads = ontologyN3.getQuads(restrictionNode, owlMaxCardinality, null, null);
                     if (maxCardQuads.length > 0) {
-                      const maxValue = maxCardQuads[0].object.value;
+                      const maxValue = A.getUnsafe(maxCardQuads, 0).object.value;
                       store.addQuad(propertyShapeNode, SH.maxCount, N3.DataFactory.literal(maxValue, xsdInteger));
                     }
                     const exactCardQuads = ontologyN3.getQuads(restrictionNode, owlCardinality, null, null);
                     if (exactCardQuads.length > 0) {
-                      const exactValue = exactCardQuads[0].object.value;
+                      const exactValue = A.getUnsafe(exactCardQuads, 0).object.value;
                       store.addQuad(propertyShapeNode, SH.minCount, N3.DataFactory.literal(exactValue, xsdInteger));
                       store.addQuad(propertyShapeNode, SH.maxCount, N3.DataFactory.literal(exactValue, xsdInteger));
                     }
@@ -599,7 +600,7 @@ export class ShaclWorkflowService extends Context.Service<ShaclWorkflowService, 
           getShapesCacheStats: Ref.get(shapesCache).pipe(
             Effect.map((cache) => ({
               size: HashMap.size(cache),
-              keys: A.fromIterable(HashMap.keys(cache)),
+              keys: pipe(cache, HashMap.keys, A.fromIterable),
             }))
           ),
           validateWithPolicy: Effect.fn("ShaclService.validateWithPolicy")(function* (dataStore, shapesStore, policy) {

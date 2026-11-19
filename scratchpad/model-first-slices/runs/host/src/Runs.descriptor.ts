@@ -18,7 +18,6 @@ export const RunsDeployment = DeploymentDescriptor.make({
     { name: "RunsGateway", kind: "gateway" },
     { name: "ClaimDecidedInbox", kind: "inbox" },
   ],
-  publishes: [],
   consumes: [{ producer: ClaimDecided.producer, contract: ClaimDecided.contract, version: ClaimDecidedVersion }],
   cluster: {
     module: "@proto/runs-host/Runs.cluster",

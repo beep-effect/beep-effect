@@ -45,6 +45,22 @@ export const Filename = S.NonEmptyString.pipe(
 export type Filename = typeof Filename.Type;
 
 /**
+ * Companion namespace for {@link Filename}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Filename {
+  /**
+   * Encoded (wire) form of {@link Filename}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof Filename.Encoded;
+}
+
+/**
  * MIME type of a file's content, such as `application/pdf` or `image/jpeg`.
  *
  * **Details**
@@ -80,6 +96,22 @@ export const MediaType = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type MediaType = typeof MediaType.Type;
+
+/**
+ * Companion namespace for {@link MediaType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaType {
+  /**
+   * Encoded (wire) form of {@link MediaType}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof MediaType.Encoded;
+}
 
 /**
  * Size of a file in bytes, decoded from the wire's number-in-a-string into a non-negative `bigint`.
@@ -130,6 +162,22 @@ export const SizeBytes = S.BigIntFromString.check(
  */
 export type SizeBytes = typeof SizeBytes.Type;
 
+/**
+ * Companion namespace for {@link SizeBytes}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SizeBytes {
+  /**
+   * Encoded (wire) form of {@link SizeBytes}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof SizeBytes.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Attachment values
 // -----------------------------------------------------------------------------
@@ -171,6 +219,24 @@ export class AttachmentReference extends S.Opaque<AttachmentReference, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link AttachmentReference}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AttachmentReference {
+  /**
+   * Encoded (wire) form of {@link AttachmentReference}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly rid: AttachmentRid.Encoded;
+  }
+}
+
+/**
  * What the platform records about an uploaded attachment: its name, size and media type.
  *
  * **Example** (Decode attachment metadata)
@@ -209,6 +275,27 @@ export class AttachmentMetadata extends S.Opaque<AttachmentMetadata, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link AttachmentMetadata}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AttachmentMetadata {
+  /**
+   * Encoded (wire) form of {@link AttachmentMetadata}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly rid: AttachmentRid.Encoded;
+    readonly filename: Filename.Encoded;
+    readonly sizeBytes: SizeBytes.Encoded;
+    readonly mediaType: MediaType.Encoded;
+  }
+}
+
+/**
  * What accompanies the bytes of a file when it is uploaded as an attachment.
  *
  * **Details**
@@ -238,3 +325,21 @@ export class AttachmentUpload extends S.Opaque<AttachmentUpload, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AttachmentUpload}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AttachmentUpload {
+  /**
+   * Encoded (wire) form of {@link AttachmentUpload}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly filename: Filename.Encoded;
+  }
+}

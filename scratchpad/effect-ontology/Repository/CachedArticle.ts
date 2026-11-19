@@ -17,11 +17,11 @@ import * as P from "effect/Predicate";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/CachedArticle");
 
+import * as A from "effect/Array";
 import * as Cache from "effect/Cache";
 import * as Data from "effect/Data";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import type { ArticleId } from "./Article.ts";
 import { ArticleRepository } from "./Article.ts";
@@ -193,10 +193,13 @@ export class CachedArticleRepository extends Context.Service<CachedArticleReposi
           Effect.tap(() => Cache.invalidateAll(uriCache)),
           Effect.withSpan("CachedArticleRepository.invalidateAll")
         ),
-        cacheStats: Effect.all({
-          articleCacheSize: Cache.size(articleCache),
-          uriCacheSize: Cache.size(uriCache),
-        }).pipe(Effect.withSpan("CachedArticleRepository.cacheStats")),
+        cacheStats: Effect.all(
+          {
+            articleCacheSize: Cache.size(articleCache),
+            uriCacheSize: Cache.size(uriCache),
+          },
+          { concurrency: 1 }
+        ).pipe(Effect.withSpan("CachedArticleRepository.cacheStats")),
       };
     }),
   }

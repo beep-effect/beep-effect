@@ -1,3 +1,5 @@
+import * as Str from "effect/String";
+import { IngestedLinkFilter } from "../../Service/LinkIngestionService.ts";
 /**
  * CLI: Workflow Commands
  *
@@ -8,19 +10,21 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import type { DrizzleError } from "drizzle-orm";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Console from "effect/Console";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Command from "effect/cli/Command";
-import * as Flag from "effect/cli/Flag";
-import {LinkIngestionError, LinkIngestionService } from "../../Service/LinkIngestionService.ts";
+import type { LinkIngestionError } from "../../Service/LinkIngestionService.ts";
+import { LinkIngestionService } from "../../Service/LinkIngestionService.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
-import type {DrizzleError} from "drizzle-orm";
 
 // =============================================================================
 // Command Options
@@ -56,15 +60,20 @@ const dryRunOption = Flag.Boolean("dry-run").pipe(
 // Subcommand: list-pending
 // =============================================================================
 
-const listPendingHandler = Effect.fn("listPendingHandler")(function* (ontology: O.Option<string>, limit: number): Effect.fn.Return<void, DrizzleError, LinkIngestionService> {
+const listPendingHandler = Effect.fn("listPendingHandler")(function* (
+  ontology: O.Option<string>,
+  limit: number
+): Effect.fn.Return<void, DrizzleError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   yield* Console.log("Listing pending/failed links...");
   yield* Console.log("");
-  const links = yield* ingestion.list({
-    ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
-    status: "pending",
-    limit,
-  });
+  const links = yield* ingestion.list(
+    IngestedLinkFilter.make({
+      ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
+      status: "pending",
+      limit,
+    })
+  );
   if (A.isReadonlyArrayEmpty(links)) {
     yield* Console.log("No pending links found.");
     return;
@@ -103,13 +112,15 @@ const cleanupStaleHandler = Effect.fn("cleanupStaleHandler")(function* (
   if (dryRun) {
     yield* Console.log("(dry-run mode - no changes will be made)");
     yield* Console.log("");
-    const staleLinks = yield* ingestion.list({
-      ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
-      status: "pending",
-      limit: 1000,
-    });
+    const staleLinks = yield* ingestion.list(
+      IngestedLinkFilter.make({
+        ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
+        status: "pending",
+        limit: 1000,
+      })
+    );
     const cutoffDate = DateTime.toDateUtc(DateTime.makeUnsafe((yield* Clock.currentTimeMillis) - minutes * 60 * 1000));
-    const staleCandidates = staleLinks.filter((link) => link.updatedAt && link.updatedAt < cutoffDate);
+    const staleCandidates = A.filter(staleLinks, (link) => link.updatedAt !== null && link.updatedAt < cutoffDate);
     if (A.isReadonlyArrayEmpty(staleCandidates)) {
       yield* Console.log("No stale links would be cleaned up.");
       return;
@@ -142,7 +153,9 @@ const cleanupStaleCommand = Command.make(
 // Subcommand: re-enrich
 // =============================================================================
 
-const reEnrichHandler = Effect.fn("reEnrichHandler")(function* (linkId: string): Effect.fn.Return<void, LinkIngestionError, LinkIngestionService> {
+const reEnrichHandler = Effect.fn("reEnrichHandler")(function* (
+  linkId: string
+): Effect.fn.Return<void, LinkIngestionError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   yield* Console.log(`Re-enriching link: ${linkId}...`);
   const result = yield* ingestion.reEnrich(linkId);
@@ -155,8 +168,10 @@ const reEnrichHandler = Effect.fn("reEnrichHandler")(function* (linkId: string):
   yield* Console.log("");
   yield* Console.log(`  Status: ${link.status}`);
   yield* Console.log(`  Headline: ${link.headline}`);
-  yield* Console.log(`  Topics: ${link.topics?.join(", ") || "(none)"}`);
-  yield* Console.log(`  Key Entities: ${link.keyEntities?.join(", ") || "(none)"}`);
+  const topicsDisplay = link.topics !== null ? A.join(link.topics, ", ") : "";
+  const entitiesDisplay = link.keyEntities !== null ? A.join(link.keyEntities, ", ") : "";
+  yield* Console.log(`  Topics: ${Str.isEmpty(topicsDisplay) ? "(none)" : topicsDisplay}`);
+  yield* Console.log(`  Key Entities: ${Str.isEmpty(entitiesDisplay) ? "(none)" : entitiesDisplay}`);
 });
 
 const reEnrichCommand = Command.make("re-enrich", { linkId: linkIdOption }, ({ linkId }) =>
@@ -167,14 +182,19 @@ const reEnrichCommand = Command.make("re-enrich", { linkId: linkIdOption }, ({ l
 // Subcommand: re-enrich-all
 // =============================================================================
 
-const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (ontology: O.Option<string>, limit: number): Effect.fn.Return<void, DrizzleError, LinkIngestionService> {
+const reEnrichAllHandler = Effect.fn("reEnrichAllHandler")(function* (
+  ontology: O.Option<string>,
+  limit: number
+): Effect.fn.Return<void, DrizzleError, LinkIngestionService> {
   const ingestion = yield* LinkIngestionService;
   yield* Console.log("Finding failed links to re-enrich...");
-  const links = yield* ingestion.list({
-    ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
-    status: "failed",
-    limit,
-  });
+  const links = yield* ingestion.list(
+    IngestedLinkFilter.make({
+      ...(O.isSome(ontology) ? { ontologyId: ontology.value } : {}),
+      status: "failed",
+      limit,
+    })
+  );
   if (A.isReadonlyArrayEmpty(links)) {
     yield* Console.log("No failed links found.");
     return;

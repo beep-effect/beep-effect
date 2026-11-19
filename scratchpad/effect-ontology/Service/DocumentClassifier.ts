@@ -1,4 +1,5 @@
 import * as Digest from "effect/crypto/Digest";
+import * as Str from "effect/String";
 /**
  * Service: Document Classifier
  *
@@ -13,16 +14,16 @@ import * as Digest from "effect/crypto/Digest";
 
 import { $ScratchpadId } from "@beep/identity";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import * as A from "effect/Array";
+import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import * as LanguageModel from "effect/ai/LanguageModel";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import { ConfigService, ConfigServiceDefault } from "./Config.ts";
 import { generateObjectWithRetry } from "./LlmWithRetry.ts";
@@ -256,7 +257,9 @@ export type ClassifyBatchInput = typeof ClassifyBatchInput.Type;
  * @category errors
  * @since 0.0.0
  */
-export class ClassificationError extends S.TaggedError<ClassificationError, { readonly brand: unique symbol }>($I`ClassificationError`)(
+export class ClassificationError extends S.TaggedError<ClassificationError, { readonly brand: unique symbol }>(
+  $I`ClassificationError`
+)(
   "ClassificationError",
   {
     message: ErrorMessage.annotateKey({
@@ -284,7 +287,7 @@ const MAX_PREVIEW_SIZE = 1500;
  * Build classification prompt for a single document
  */
 const buildSinglePrompt = (preview: string, contentType?: string): string => {
-  const truncatedPreview = preview.slice(0, MAX_PREVIEW_SIZE);
+  const truncatedPreview = Str.slice(0, MAX_PREVIEW_SIZE)(preview);
   const typeHint = P.isNotUndefined(contentType) ? ` (${contentType})` : "";
 
   return `You are a document classification assistant. Analyze the following document preview and classify it.
@@ -316,12 +319,13 @@ const buildBatchPrompt = (
     contentType?: string;
   }>
 ): string => {
-  const docSummaries = documents
-    .map(({ contentType, index, preview }) => {
+  const docSummaries = A.join(
+    A.map(documents, ({ contentType, index, preview }) => {
       const typeHint = P.isNotUndefined(contentType) ? ` (${contentType})` : "";
-      return `Document ${index}${typeHint}:\n"""${preview.slice(0, MAX_PREVIEW_SIZE)}"""`;
-    })
-    .join("\n\n---\n\n");
+      return `Document ${index}${typeHint}:\n"""${Str.slice(0, MAX_PREVIEW_SIZE)(preview)}"""`;
+    }),
+    "\n\n---\n\n"
+  );
 
   return `You are a document classification assistant. Analyze the following document previews and classify each one.
 

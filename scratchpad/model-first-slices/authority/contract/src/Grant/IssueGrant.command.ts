@@ -27,7 +27,7 @@ export class GrantAlreadyIssued extends S.TaggedError<GrantAlreadyIssued, { read
  * @category events
  * @since 0.0.0
  */
-export class GrantIssued extends Domain.Event("GrantIssued", carry({ holder: PrincipalId, terms: GrantTerms })) {}
+export class GrantIssued extends Domain.Event("GrantIssued", carry({ holder: PrincipalId, terms: GrantTerms }), { description: "A principal now holds a capability on a resource, on these terms." }) {}
 
 /**
  * Issue a grant of a capability to a principal. The capability is named by

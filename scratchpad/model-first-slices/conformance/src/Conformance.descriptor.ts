@@ -12,13 +12,9 @@ import { TwoRunnersModel } from "./TwoRunners.model.ts";
 export const ConformanceDeployment = DeploymentDescriptor.make({
   context: "conformance",
   models: [Conformance.modelName, TwoRunnersModel.modelName],
-  processes: [],
-  publishes: [],
-  consumes: [],
   cluster: {
     module: "@proto/conformance/Conformance.cluster",
     export: "ConformanceCluster",
-    parts: [{ name: "Conformance", uses: [] }],
-    apis: [],
+    parts: [{ name: "Conformance" }],
   },
 });

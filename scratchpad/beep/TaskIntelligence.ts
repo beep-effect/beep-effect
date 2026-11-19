@@ -445,7 +445,7 @@ export class TaskIntelligenceRolloutDecision extends Model<TaskIntelligenceRollo
  * @since 0.0.0
  */
 export declare namespace TaskIntelligenceRolloutDecision {
-  export type Encoded = S.Codec.Encoded<typeof TaskIntelligenceRolloutDecision>;
+  export type Encoded = typeof TaskIntelligenceRolloutDecision.Encoded;
 }
 
 /**
@@ -531,7 +531,7 @@ export class TaskWorkflowControl extends Model<TaskWorkflowControl>("TaskWorkflo
  * @since 0.0.0
  */
 export declare namespace TaskWorkflowControl {
-  export type Encoded = S.Codec.Encoded<typeof TaskWorkflowControl>;
+  export type Encoded = typeof TaskWorkflowControl.Encoded;
 }
 
 /**
@@ -655,7 +655,7 @@ export class TaskIntelligenceAttributionEvent extends Model<TaskIntelligenceAttr
  * @since 0.0.0
  */
 export declare namespace TaskIntelligenceAttributionEvent {
-  export type Encoded = S.Codec.Encoded<typeof TaskIntelligenceAttributionEvent>;
+  export type Encoded = typeof TaskIntelligenceAttributionEvent.Encoded;
 }
 
 const hasSubject = (event: TaskIntelligenceAttributionEvent): boolean =>
@@ -761,7 +761,7 @@ export class TaskIntelligenceLinkageError extends S.TaggedError<TaskIntelligence
  * @since 0.0.0
  */
 export declare namespace TaskIntelligenceLinkageError {
-  export type Encoded = S.Codec.Encoded<typeof TaskIntelligenceLinkageError>;
+  export type Encoded = typeof TaskIntelligenceLinkageError.Encoded;
 }
 
 /**

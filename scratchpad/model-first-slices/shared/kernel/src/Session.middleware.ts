@@ -12,7 +12,11 @@ const $I = $KernelId.create("Session.middleware");
  * @category errors
  * @since 0.0.0
  */
-export class Unauthorized extends S.TaggedError<Unauthorized, { readonly brand: unique symbol }>()("Unauthorized", {}, { httpApiStatus: 401 }) {}
+export class Unauthorized extends S.TaggedError<Unauthorized, { readonly brand: unique symbol }>()(
+  "Unauthorized",
+  {},
+  $I.annote("Unauthorized", { httpApiStatus: 401, description: "The request carries no credential the boundary accepts. Sign in and send it again." }),
+) {}
 
 /**
  * The caller is an agent run with no live accountable human, so the boundary
@@ -24,7 +28,10 @@ export class Unauthorized extends S.TaggedError<Unauthorized, { readonly brand: 
 export class Unaccountable extends S.TaggedError<Unaccountable, { readonly brand: unique symbol }>()(
   "Unaccountable",
   { run: RunId },
-  { httpApiStatus: 403 },
+  $I.annote("Unaccountable", {
+    httpApiStatus: 403,
+    description: "The calling agent run has no live accountable human, so nothing it asks for is allowed until one is assigned.",
+  }),
 ) {}
 
 /**

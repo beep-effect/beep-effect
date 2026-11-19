@@ -26,27 +26,39 @@ describe("PythonFloat", () => {
   it.effect(
     "decodes NaN, both infinities, and finite numbers",
     Effect.fnUntraced(function* () {
-      assert.isNaN(yield* decodePythonFloat(Number.NaN));
-      assert.strictEqual(yield* decodePythonFloat(Number.POSITIVE_INFINITY), Number.POSITIVE_INFINITY);
-      assert.strictEqual(yield* decodePythonFloat(Number.NEGATIVE_INFINITY), Number.NEGATIVE_INFINITY);
-      assert.strictEqual(yield* decodePythonFloat(47.6), 47.6);
-      assert.strictEqual(yield* Effect.isFailure(decodePythonFloat("47.6")), true);
+      const result1 = yield* decodePythonFloat(Number.NaN);
+      assert.isNaN(result1);
+      const result2 = yield* decodePythonFloat(Number.POSITIVE_INFINITY);
+      assert.strictEqual(result2, Number.POSITIVE_INFINITY);
+      const result3 = yield* decodePythonFloat(Number.NEGATIVE_INFINITY);
+      assert.strictEqual(result3, Number.NEGATIVE_INFINITY);
+      const result4 = yield* decodePythonFloat(47.6);
+      assert.strictEqual(result4, 47.6);
+      const result5 = yield* Effect.isFailure(decodePythonFloat("47.6"));
+      assert.strictEqual(result5, true);
     }),
   );
 
   it.effect(
     "writes non-finite values by name in JSON and reads them back",
     Effect.fnUntraced(function* () {
-      assert.strictEqual(yield* encodePythonFloatJson(Number.NaN), "NaN");
-      assert.strictEqual(yield* encodePythonFloatJson(Number.POSITIVE_INFINITY), "Infinity");
-      assert.strictEqual(yield* encodePythonFloatJson(Number.NEGATIVE_INFINITY), "-Infinity");
-      assert.strictEqual(yield* encodePythonFloatJson(-122.3), -122.3);
-      assert.isNaN(yield* decodePythonFloatJson(yield* encodePythonFloatJson(Number.NaN)));
-      assert.strictEqual(
-        yield* decodePythonFloatJson(yield* encodePythonFloatJson(Number.NEGATIVE_INFINITY)),
-        Number.NEGATIVE_INFINITY,
-      );
-      assert.strictEqual(yield* decodePythonFloatJson(yield* encodePythonFloatJson(-122.3)), -122.3);
+      const result6 = yield* encodePythonFloatJson(Number.NaN);
+      assert.strictEqual(result6, "NaN");
+      const result7 = yield* encodePythonFloatJson(Number.POSITIVE_INFINITY);
+      assert.strictEqual(result7, "Infinity");
+      const result8 = yield* encodePythonFloatJson(Number.NEGATIVE_INFINITY);
+      assert.strictEqual(result8, "-Infinity");
+      const result9 = yield* encodePythonFloatJson(-122.3);
+      assert.strictEqual(result9, -122.3);
+      const result10 = yield* encodePythonFloatJson(Number.NaN);
+      const result11 = yield* decodePythonFloatJson(result10);
+      assert.isNaN(result11);
+      const result12 = yield* encodePythonFloatJson(Number.NEGATIVE_INFINITY);
+      const result13 = yield* decodePythonFloatJson(result12);
+      assert.strictEqual(result13, Number.NEGATIVE_INFINITY);
+      const result14 = yield* encodePythonFloatJson(-122.3);
+      const result15 = yield* decodePythonFloatJson(result14);
+      assert.strictEqual(result15, -122.3);
     }),
   );
 

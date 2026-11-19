@@ -5,12 +5,13 @@ import {
   type AssertedReview,
   ClaimNote,
   ClaimReviewInitial,
+  ClaimReviewRead,
   ClaimReviewState,
 } from "@proto/party-contract/Claim/ClaimReview.read";
 import { renderMergeRefusal } from "@proto/party-contract/Claim/RecordMergeRefused.command";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import { identity } from "effect/Function";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { Claim } from "./Claim.aggregate.ts";
 
 /** Change what an asserted claim's review shows, in whichever state it is; a claim not asserted yet keeps its review. */
@@ -49,9 +50,6 @@ export class ClaimReview extends Domain.View(
           org: event.org,
           proposition: event.proposition,
           sources: event.signals.length,
-          revision: 1,
-          reviews: [],
-          proposal: O.none(),
           notes: view.notes,
         }),
       ReviewRequested: (view, event) => whenAsserted(view, (review) => ({ ...review, reviews: A.append(review.reviews, event.run) })),
@@ -80,5 +78,5 @@ export class ClaimReview extends Domain.View(
       ReviewRefused: (view, event) => noted(view, ClaimNote.cases.ReviewRefused.make({ run: event.run, reason: event.reason })),
     },
   },
-  { description: "One claim as a reviewer sees it: the proposition, the agent's proposal, and its status." },
+  ClaimReviewRead.annotations,
 ) {}

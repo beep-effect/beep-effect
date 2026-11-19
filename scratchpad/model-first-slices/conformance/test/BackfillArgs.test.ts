@@ -1,14 +1,15 @@
 import * as Domain from "@alchemy.run/domain";
 import * as DurableObjects from "@alchemy.run/domain/DurableObjects";
 import { expect, it } from "@effect/vitest";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Schedule from "effect/Schedule";
-import * as Schema from "effect/Schema";
+import * as S from "effect/Schema";
 import { makeSimHostWith, type SimHostOptions } from "./SimHost.ts";
+import { thunk0 } from "@beep/utils"
 
 // Phase 10, patch 5 (D46): a consumer added by a deploy receives the history of the instances that
 // were there before it. Its backfill lists the directory, and the first page of a listing passes
@@ -17,15 +18,15 @@ import { makeSimHostWith, type SimHostOptions } from "./SimHost.ts";
 // listing is empty and the new view gets only what is committed after the deploy), and `cluster`,
 // with patch 5's `encodeCallArgs`.
 
-class Booked extends Domain.Event("Booked", { n: Schema.Finite }) {}
+class Booked extends Domain.Event("Booked", { n: S.Finite }) {}
 class BookMany extends Domain.Command("BookMany", {
-  target: Schema.String,
-  input: { count: Schema.Finite },
+  target: S.String,
+  input: { count: S.Finite },
   events: [Booked],
 }) {}
 class Ledger extends Domain.Aggregate("Ledger", {
-  id: Schema.String,
-  state: Schema.Struct({ count: Schema.Finite }),
+  id: S.String,
+  state: S.Struct({ count: S.Finite }),
   initial: { count: 0 },
   commands: [BookMany],
   decide: {
@@ -36,9 +37,9 @@ class Ledger extends Domain.Aggregate("Ledger", {
 /** Every booking of every ledger, under one key: a consumer the second deploy adds. */
 class Census extends Domain.View("Census", {
   from: [Ledger],
-  key: Schema.Literal("all"),
+  key: S.Literal("all"),
   keyOf: { Ledger: () => "all" as const },
-  state: Schema.Struct({ bookings: Schema.Finite }),
+  state: S.Struct({ bookings: S.Finite }),
   initial: { bookings: 0 },
   evolve: { Booked: (view) => ({ bookings: view.bookings + 1 }) },
 }) {}
@@ -68,7 +69,7 @@ const deployOverHistory = Effect.fn("deployOverHistory")(function* (args: SimHos
     const census = yield* Census;
     yield* ledgers.send("c", BookMany.make({ count: 1 }));
     // Until the backfill has brought the three earlier bookings, or eight seconds have passed.
-    const bookings = census.get("all").pipe(Effect.map(O.match({ onNone: () => 0, onSome: (view) => view.bookings })));
+    const bookings = census.get("all").pipe(Effect.map(O.match({ onNone: thunk0, onSome: (view) => view.bookings })));
     return yield* bookings.pipe(Effect.repeat({ schedule: Schedule.spaced("100 millis"), until: (n) => n >= 4, times: 80 }));
   }).pipe(Effect.ensuring(sim.close), Effect.provideContext(after));
 });

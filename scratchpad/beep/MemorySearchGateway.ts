@@ -180,7 +180,7 @@ export class SearchVectorHit extends Model<SearchVectorHit>("SearchVectorHit")(
  */
 export declare namespace SearchVectorHit {
   /** Encoded form of {@link SearchVectorHit}. */
-  export type Encoded = S.Codec.Encoded<typeof SearchVectorHit>;
+  export type Encoded = typeof SearchVectorHit.Encoded;
 }
 
 /**
@@ -218,7 +218,7 @@ export class HydratedSearchResult extends Model<HydratedSearchResult>("HydratedS
  */
 export declare namespace HydratedSearchResult {
   /** Encoded form of {@link HydratedSearchResult}. */
-  export type Encoded = S.Codec.Encoded<typeof HydratedSearchResult>;
+  export type Encoded = typeof HydratedSearchResult.Encoded;
 }
 
 /**
@@ -297,7 +297,7 @@ export class VectorRepairPurgeCandidate extends Model<VectorRepairPurgeCandidate
  */
 export declare namespace VectorRepairPurgeCandidate {
   /** Encoded form of {@link VectorRepairPurgeCandidate}. */
-  export type Encoded = S.Codec.Encoded<typeof VectorRepairPurgeCandidate>;
+  export type Encoded = typeof VectorRepairPurgeCandidate.Encoded;
 }
 
 /**
@@ -348,7 +348,7 @@ export class SearchGatewayResult extends Model<SearchGatewayResult>("SearchGatew
  */
 export declare namespace SearchGatewayResult {
   /** Encoded form of {@link SearchGatewayResult}. */
-  export type Encoded = S.Codec.Encoded<typeof SearchGatewayResult>;
+  export type Encoded = typeof SearchGatewayResult.Encoded;
 }
 
 const trimmed = (value: O.Option<string>): O.Option<string> =>

@@ -19,10 +19,12 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as R from "@beep/utils/Record";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
+import type * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import {
@@ -44,7 +46,7 @@ import {
 } from "../Identifier/Identifier.model.ts";
 import { ObjectRecord } from "../Object/Object.model.ts";
 import { ObjectSet, OrderBy } from "../ObjectSet/ObjectSet.model.ts";
-import { Page, PageRequest, TotalCount } from "../Page/Page.model.ts";
+import { Page, PageRequest, PageSize, PageToken, TotalCount } from "../Page/Page.model.ts";
 import { PropertyByName, PropertyLoadLevel, PropertySelector } from "../Property/Property.model.ts";
 import { PropertySecurities } from "../Security/Security.model.ts";
 
@@ -112,6 +114,28 @@ export class OntologyScope extends S.Opaque<OntologyScope, { readonly brand: uni
   )
 ) {}
 
+/**
+ * Companion namespace for {@link OntologyScope}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyScope {
+  /**
+   * Encoded (wire) form of {@link OntologyScope}: `transaction` and `scenario` travel as `transactionId` and
+   * `scenarioRid`, and an absent key stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly ontology: OntologyIdentifier.Encoded;
+    readonly branch?: FoundryBranch.Encoded;
+    readonly transactionId?: OntologyTransactionId.Encoded;
+    readonly scenarioRid?: OntologyScenarioRid.Encoded;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Loading the objects of an object set
 // -----------------------------------------------------------------------------
@@ -153,6 +177,24 @@ export class ReferenceSigningOptions extends S.Opaque<ReferenceSigningOptions, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ReferenceSigningOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ReferenceSigningOptions {
+  /**
+   * Encoded (wire) form of {@link ReferenceSigningOptions}: an absent `signMediaReferences` stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly signMediaReferences?: boolean;
+  }
+}
 
 // The wire asks the opposite question (`excludeRid`), so the two sides are each other's negation.
 const IncludeRid = S.Boolean.pipe(
@@ -243,6 +285,32 @@ export class FetchOptions extends S.Opaque<FetchOptions, { readonly brand: uniqu
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link FetchOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FetchOptions {
+  /**
+   * Encoded (wire) form of {@link FetchOptions}: the schema is its own decoded side, so it carries `Option` values
+   * rather than absent keys.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly selection: ReadonlyArray<PropertySelector>;
+    readonly orderBy: O.Option<OrderBy>;
+    readonly pageSize: O.Option<PageSize>;
+    readonly pageToken: O.Option<PageToken>;
+    readonly includeRid: boolean;
+    readonly snapshot: boolean;
+    readonly defaultLoadLevel: O.Option<PropertyLoadLevel>;
+    readonly loadOntologyDefinedDerivedProperties: O.Option<boolean>;
+  }
+}
 
 // Every field of a load request under its domain name. The request's own schema adds the wire's
 // legacy `select` key below.
@@ -358,6 +426,37 @@ export class LoadObjectsRequest extends S.Opaque<LoadObjectsRequest, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link LoadObjectsRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LoadObjectsRequest {
+  /**
+   * Encoded (wire) form of {@link LoadObjectsRequest}: `selection` travels as `selectV2` beside the legacy
+   * `select`, and `includeRid` as its negation `excludeRid`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly objectSet: ObjectSet.Encoded;
+    readonly selectV2?: ReadonlyArray<PropertySelector.Encoded>;
+    readonly orderBy?: OrderBy.Encoded;
+    readonly pageSize?: PageSize.Encoded;
+    readonly pageToken?: PageToken.Encoded;
+    readonly excludeRid?: boolean;
+    readonly snapshot?: boolean;
+    readonly defaultLoadLevel?: PropertyLoadLevel.Encoded;
+    readonly loadOntologyDefinedDerivedProperties?: boolean;
+    readonly loadPropertySecurities?: boolean;
+    readonly includeComputeUsage?: boolean;
+    readonly referenceSigningOptions?: ReferenceSigningOptions.Encoded;
+    readonly select?: ReadonlyArray<PropertyApiName.Encoded>;
+  }
+}
+
+/**
  * The concrete object types the platform touched while it evaluated an object set.
  *
  * **Details**
@@ -394,6 +493,24 @@ export class ObjectSetEntities extends S.Opaque<ObjectSetEntities, { readonly br
   )
 ) {}
 
+/**
+ * Companion namespace for {@link ObjectSetEntities}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectSetEntities {
+  /**
+   * Encoded (wire) form of {@link ObjectSetEntities}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly objectTypeApiNames: ReadonlyArray<ObjectTypeApiName.Encoded>;
+  }
+}
+
 const loadObjectsResponseImpl = <const Identifier extends string, Row extends S.Constraint>(
   identifier: Identifier,
   row: Row
@@ -406,7 +523,7 @@ const loadObjectsResponseImpl = <const Identifier extends string, Row extends S.
     totalCount: TotalCount.annotateKey({ description: "Number of objects in the whole object set." }),
     propertySecurities: S.Array(PropertySecurities).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<PropertySecurities>())),
-      S.withDecodingDefaultKey(Effect.succeed(A.empty<(typeof PropertySecurities)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(A.empty<PropertySecurities.Encoded>())),
       S.annotateKey({ description: "Security table that secured property values of this page point into." })
     ),
     computeUsage: S.OptionFromOptionalKey(S.Finite).pipe(
@@ -556,6 +673,30 @@ export class LoadObjectsResponse extends S.Opaque<LoadObjectsResponse, { readonl
   LoadObjectsResponseOf("LoadObjectsResponse", ObjectRecord)
 ) {}
 
+/**
+ * Companion namespace for {@link LoadObjectsResponse}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LoadObjectsResponse {
+  /**
+   * Encoded (wire) form of {@link LoadObjectsResponse}: `totalCount` is a decimal string, and an absent optional
+   * key stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly data: ReadonlyArray<ObjectRecord.Encoded>;
+    readonly nextPageToken?: PageToken.Encoded;
+    readonly totalCount: TotalCount.Encoded;
+    readonly propertySecurities?: ReadonlyArray<PropertySecurities.Encoded>;
+    readonly computeUsage?: number;
+    readonly objectSetEntities?: ObjectSetEntities.Encoded;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Aggregating an object set
 // -----------------------------------------------------------------------------
@@ -627,6 +768,28 @@ export class AggregateObjectSetRequest extends S.Opaque<AggregateObjectSetReques
 ) {}
 
 /**
+ * Companion namespace for {@link AggregateObjectSetRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AggregateObjectSetRequest {
+  /**
+   * Encoded (wire) form of {@link AggregateObjectSetRequest}: `aggregations` travels as `aggregation`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly objectSet: ObjectSet.Encoded;
+    readonly aggregation: ReadonlyArray<Aggregation.Encoded>;
+    readonly groupBy: ReadonlyArray<GroupBy.Encoded>;
+    readonly accuracy?: AccuracyRequirement.Encoded;
+    readonly includeComputeUsage?: boolean;
+  }
+}
+
+/**
  * One group of an aggregation, with its metrics regrouped into a lookup by property and metric.
  *
  * **Details**
@@ -666,6 +829,25 @@ export class AggregatedGroup extends S.Opaque<AggregatedGroup, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AggregatedGroup}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AggregatedGroup {
+  /**
+   * Encoded (wire) form of {@link AggregatedGroup}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly group: R.ReadonlyRecord<GroupKey.Encoded, typeof S.Json.Encoded>;
+    readonly metrics: MetricLookup.Encoded;
+  }
+}
 
 /**
  * What an aggregation found, group by group, and how much to trust it.
@@ -710,3 +892,23 @@ export class AggregationResult extends S.Opaque<AggregationResult, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AggregationResult}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AggregationResult {
+  /**
+   * Encoded (wire) form of {@link AggregationResult}: an absent `excludedItems` stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly accuracy: AggregationAccuracy.Encoded;
+    readonly excludedItems?: number;
+    readonly groups: ReadonlyArray<AggregatedGroup.Encoded>;
+  }
+}

@@ -7,6 +7,7 @@ import { TerminationCondition } from "../../../Domain/Model/Agent.ts";
 import { PostgresConfig } from "../../../Runtime/Persistence/PostgresLayer.ts";
 import { RefinementConfig, RefinementResult } from "../../../Service/Agent/types.ts";
 import { ReasoningConfig, ReasoningResult } from "../../../Service/Reasoner.ts";
+
 const decodeConfidenceResult = S.decodeResult(Confidence);
 const decodePostgresConfigResult = S.decodeResult(PostgresConfig);
 const decodeReasoningConfigResult = S.decodeResult(ReasoningConfig);

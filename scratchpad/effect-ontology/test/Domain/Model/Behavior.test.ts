@@ -5,6 +5,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import {
   BatchId,
   ContentHash,
@@ -33,6 +34,7 @@ import {
 } from "../../../Domain/Model/OntologyAgent.ts";
 import { OntologyEmbeddings } from "../../../Domain/Model/OntologyEmbeddings.ts";
 import { EntityId } from "../../../Domain/Model/shared.ts";
+
 const decodeEnhancedValidationReport = S.decodeEffect(EnhancedValidationReport);
 const decodeEvidenceSpan = S.decodeEffect(EvidenceSpan);
 const decodeExtractWithClaimsOptions = S.decodeEffect(ExtractWithClaimsOptions);
@@ -142,7 +144,7 @@ describe("effect-ontology model behavior", () => {
         ontologyVersion: OntologyVersion.fromParts(
           Namespace.make("football"),
           OntologyName.make("premier_league"),
-          ContentHash.make("a".repeat(64))
+          ContentHash.make(Str.repeat(64)("a"))
         ),
         createdAt: now,
         updatedAt: now,
@@ -240,7 +242,7 @@ describe("effect-ontology model behavior", () => {
   it("rejects ontology embedding artifacts with inconsistent dimensions", () => {
     const artifact = decodeOntologyEmbeddingsResult({
       ontologyUri: "gs://beep-ontology/ontology.ttl",
-      version: "a".repeat(64),
+      version: Str.repeat(64)("a"),
       model: "text-embedding-3-small",
       dimension: 2,
       createdAt: "2026-07-25T12:00:00.000Z",

@@ -27,7 +27,7 @@ export class MergeVetoed extends S.TaggedError<MergeVetoed, { readonly brand: un
  * @category events
  * @since 0.0.0
  */
-export class PartiesMerged extends Domain.Event("PartiesMerged", carry({ absorbed: PartyId })) {}
+export class PartiesMerged extends Domain.Event("PartiesMerged", carry({ absorbed: PartyId }), { description: "The absorbed party is now part of this one." }) {}
 
 /**
  * Merge another party into this one (the survivor).

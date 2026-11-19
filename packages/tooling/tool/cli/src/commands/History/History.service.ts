@@ -73,9 +73,10 @@ export interface HistoryNotesShape {
   ) => Effect.Effect<HistoryNotesCheckReport, HistoryMapError | HistoryGitError>;
   /**
    * Makes the clone at `root` fetch and display the overlay: adds
-   * `+refs/notes/history:refs/notes/history` to `remote.origin.fetch` and
-   * `refs/notes/history` to `notes.displayRef` when absent, then (with
-   * `fetch`) fetches the ref.
+   * `refs/notes/history` to `notes.displayRef` when absent, probes origin
+   * with `ls-remote`, adds `+refs/notes/history:refs/notes/history` to
+   * `remote.origin.fetch` only when origin publishes the ref, then (with
+   * `fetch`) fetches it.
    *
    * **Details**
    *
@@ -83,10 +84,23 @@ export interface HistoryNotesShape {
    * worktrees share their clone's config, so one run per clone suffices. A
    * clone without an `origin` remote gets only the display ref. A remote that
    * has not published the ref yet is a notice (`unpublished`), not a failure.
+   *
+   * **Gotchas**
+   *
+   * A configured refspec whose source ref the remote lacks makes every plain
+   * `git fetch` die with `couldn't find remote ref` (a fork whose origin
+   * never published the overlay). So the refspec is written only after the
+   * probe sees the ref, and an existing copy is removed (`removed`) when
+   * origin does not publish it; the key's other values are left alone.
+   *
+   * With `offline`, only local config is touched: no `ls-remote` probe and no
+   * fetch, and the origin refspec is left as configured (`unchecked`). Worktree
+   * creation uses this so a new lane never waits on the network.
    */
   readonly sync: (options: {
     readonly root: string;
     readonly fetch: boolean;
+    readonly offline?: boolean | undefined;
   }) => Effect.Effect<HistoryNotesSyncReport, HistoryGitError>;
   /**
    * Rebuilds `options.ref` from the map as one parentless notes commit with
@@ -296,39 +310,70 @@ const makeHistoryNotes = Effect.gen(function* () {
     });
   });
 
-  // Appends `value` to the multi-valued `key` unless some value already equals it.
-  const ensureConfigValue = Effect.fn("HistoryNotes.ensureConfigValue")(function* (
+  // Makes `value` present in (`wanted`) or absent from the multi-valued `key`,
+  // leaving the key's other values alone; reports what changed.
+  const reconcileConfigValue = Effect.fn("HistoryNotes.reconcileConfigValue")(function* (
     root: string,
     key: string,
-    value: string
+    value: string,
+    wanted: boolean
   ) {
     const values = yield* git.configGetAll(root, key).pipe(Effect.mapError(gitError("config", `Cannot read ${key}.`)));
-    if (A.contains(values, value)) return HistoryConfigChange.Enum.present;
+    const present = A.contains(values, value);
+    if (wanted && present) return HistoryConfigChange.Enum.present;
+    if (!wanted && !present) return HistoryConfigChange.Enum.skipped;
+    yield* (
+      wanted ? git.configSet(root, key, value, { add: true }) : git.configUnset(root, key, { all: true, value })
+    ).pipe(
+      Effect.mapError(
+        gitError("config", `Cannot ${wanted ? "add" : "remove"} ${value} ${wanted ? "to" : "from"} ${key}.`)
+      )
+    );
+    return wanted ? HistoryConfigChange.Enum.added : HistoryConfigChange.Enum.removed;
+  });
+
+  // Probes origin for the overlay ref, then reconciles the origin refspec and
+  // (with `fetch`) fetches the ref; an unpublished ref is a notice.
+  const syncOrigin = Effect.fn("HistoryNotes.syncOrigin")(function* (root: string, fetch: boolean) {
+    const published = yield* git.lsRemote(root, "origin", { patterns: [HISTORY_NOTES_REF] }).pipe(
+      Effect.mapBoth({
+        onFailure: gitError("ls-remote", `Cannot probe origin for ${HISTORY_NOTES_REF}.`),
+        onSuccess: A.some((entry) => entry.ref === HISTORY_NOTES_REF),
+      })
+    );
+    // A refspec for an unpublished ref would break every plain `git fetch`,
+    // so an unpublished ref drops any copy.
+    const fetchRefspec = yield* reconcileConfigValue(
+      root,
+      "remote.origin.fetch",
+      HISTORY_NOTES_FETCH_REFSPEC,
+      published
+    );
+    if (!fetch) return { fetchRefspec, fetch: HistoryNotesFetchOutcome.Enum.skipped };
+    if (!published) return { fetchRefspec, fetch: HistoryNotesFetchOutcome.Enum.unpublished };
     yield* git
-      .configSet(root, key, value, { add: true })
-      .pipe(Effect.mapError(gitError("config", `Cannot add ${value} to ${key}.`)));
-    return HistoryConfigChange.Enum.added;
+      .fetch(root, { remote: "origin", ref: HISTORY_NOTES_FETCH_REFSPEC, noTags: true })
+      .pipe(Effect.mapError(gitError("fetch", `Cannot fetch ${HISTORY_NOTES_REF} from origin.`)));
+    return { fetchRefspec, fetch: HistoryNotesFetchOutcome.Enum.fetched };
   });
 
   const sync: HistoryNotesShape["sync"] = Effect.fn("HistoryNotes.sync")(function* (options) {
-    yield* Effect.annotateCurrentSpan({ fetch: options.fetch });
+    const offline = options.offline ?? false;
+    yield* Effect.annotateCurrentSpan({ fetch: options.fetch, offline });
     const origin = yield* git
       .remoteUrl(options.root, { remote: "origin" })
       .pipe(Effect.mapBoth({ onFailure: gitError("config", "Cannot read the origin remote."), onSuccess: O.isSome }));
-    const fetchRefspec = origin
-      ? yield* ensureConfigValue(options.root, "remote.origin.fetch", HISTORY_NOTES_FETCH_REFSPEC)
-      : HistoryConfigChange.Enum.skipped;
-    const displayRef = yield* ensureConfigValue(options.root, "notes.displayRef", HISTORY_NOTES_REF);
-    const fetch =
-      origin && options.fetch
-        ? yield* git.fetch(options.root, { remote: "origin", ref: HISTORY_NOTES_FETCH_REFSPEC, noTags: true }).pipe(
-            Effect.as(HistoryNotesFetchOutcome.Enum.fetched),
-            // The remote has not published the ref yet: a notice, not a failure.
-            Effect.catchTag("UnknownRefError", () => Effect.succeed(HistoryNotesFetchOutcome.Enum.unpublished)),
-            Effect.mapError(gitError("fetch", `Cannot fetch ${HISTORY_NOTES_REF} from origin.`))
-          )
-        : HistoryNotesFetchOutcome.Enum.skipped;
-    return HistoryNotesSyncReport.make({ origin, fetchRefspec, displayRef, fetch });
+    const displayRef = yield* reconcileConfigValue(options.root, "notes.displayRef", HISTORY_NOTES_REF, true);
+    if (!origin || offline) {
+      return HistoryNotesSyncReport.make({
+        origin,
+        fetchRefspec: origin ? HistoryConfigChange.Enum.unchecked : HistoryConfigChange.Enum.skipped,
+        displayRef,
+        fetch: HistoryNotesFetchOutcome.Enum.skipped,
+      });
+    }
+    const outcome = yield* syncOrigin(options.root, options.fetch);
+    return HistoryNotesSyncReport.make({ origin, displayRef, ...outcome });
   });
 
   return HistoryNotes.of({ check, write, sync });
@@ -522,7 +567,17 @@ export const renderHistoryNotesWrite = (report: HistoryNotesWriteReport): Readon
  */
 export const renderHistoryNotesSync = (report: HistoryNotesSyncReport): ReadonlyArray<string> => [
   "history notes sync:",
-  `  remote.origin.fetch ${HISTORY_NOTES_FETCH_REFSPEC}: ${report.origin ? report.fetchRefspec : "skipped (no origin remote)"}`,
+  `  remote.origin.fetch ${HISTORY_NOTES_FETCH_REFSPEC}: ${
+    report.origin
+      ? HistoryConfigChange.match(report.fetchRefspec, {
+          added: () => "added",
+          present: () => "present",
+          removed: () => "removed (origin does not publish the ref)",
+          skipped: () => "skipped (origin does not publish the ref)",
+          unchecked: () => "unchecked (offline; run `beep history notes sync` to reconcile)",
+        })
+      : "skipped (no origin remote)"
+  }`,
   `  notes.displayRef ${HISTORY_NOTES_REF}: ${report.displayRef}`,
   `  fetch: ${HistoryNotesFetchOutcome.match(report.fetch, {
     fetched: () => `fetched ${HISTORY_NOTES_REF} from origin`,

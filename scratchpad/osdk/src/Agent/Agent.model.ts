@@ -16,6 +16,7 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import type * as R from "@beep/utils/Record";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -74,6 +75,22 @@ export const AgentApiName = S.NonEmptyString.pipe(
 export type AgentApiName = typeof AgentApiName.Type;
 
 /**
+ * Companion namespace for {@link AgentApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentApiName {
+  /**
+   * Encoded (wire) form of {@link AgentApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AgentApiName.Encoded;
+}
+
+/**
  * Resource identifier of an agent, stable across renames of its API name.
  *
  * @category identifiers
@@ -93,6 +110,22 @@ export const AgentRid = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type AgentRid = typeof AgentRid.Type;
+
+/**
+ * Companion namespace for {@link AgentRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentRid {
+  /**
+   * Encoded (wire) form of {@link AgentRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AgentRid.Encoded;
+}
 
 /**
  * Version of a published agent: `<major>.<minor>.<patch>` with an optional `-<tag>` suffix.
@@ -136,6 +169,22 @@ export const AgentVersion = S.NonEmptyString.check(
 export type AgentVersion = typeof AgentVersion.Type;
 
 /**
+ * Companion namespace for {@link AgentVersion}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentVersion {
+  /**
+   * Encoded (wire) form of {@link AgentVersion}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AgentVersion.Encoded;
+}
+
+/**
  * Identifier of one session opened against an agent.
  *
  * @category identifiers
@@ -153,6 +202,22 @@ export const AgentSessionId = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type AgentSessionId = typeof AgentSessionId.Type;
+
+/**
+ * Companion namespace for {@link AgentSessionId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentSessionId {
+  /**
+   * Encoded (wire) form of {@link AgentSessionId}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AgentSessionId.Encoded;
+}
 
 /**
  * Name of an input an agent accepts when a session is created.
@@ -176,6 +241,22 @@ export const AgentArgumentName = S.NonEmptyString.pipe(
 export type AgentArgumentName = typeof AgentArgumentName.Type;
 
 /**
+ * Companion namespace for {@link AgentArgumentName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentArgumentName {
+  /**
+   * Encoded (wire) form of {@link AgentArgumentName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AgentArgumentName.Encoded;
+}
+
+/**
  * Name of a kind of event an agent declares, which selects the payload type of events of that kind.
  *
  * @category identifiers
@@ -195,6 +276,22 @@ export const AgentEventType = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type AgentEventType = typeof AgentEventType.Type;
+
+/**
+ * Companion namespace for {@link AgentEventType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentEventType {
+  /**
+   * Encoded (wire) form of {@link AgentEventType}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AgentEventType.Encoded;
+}
 
 /**
  * Caller-generated idempotency key of an event.
@@ -224,6 +321,22 @@ export const AgentEventId = S.NonEmptyString.pipe(
 export type AgentEventId = typeof AgentEventId.Type;
 
 /**
+ * Companion namespace for {@link AgentEventId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentEventId {
+  /**
+   * Encoded (wire) form of {@link AgentEventId}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AgentEventId.Encoded;
+}
+
+/**
  * Name of a kind of context item an agent declares, which selects the data type of items of that kind.
  *
  * @category identifiers
@@ -245,6 +358,22 @@ export const AgentContextItemType = S.NonEmptyString.pipe(
 export type AgentContextItemType = typeof AgentContextItemType.Type;
 
 /**
+ * Companion namespace for {@link AgentContextItemType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentContextItemType {
+  /**
+   * Encoded (wire) form of {@link AgentContextItemType}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AgentContextItemType.Encoded;
+}
+
+/**
  * Identifier of one context item within a session.
  *
  * @category identifiers
@@ -262,6 +391,22 @@ export const AgentContextItemId = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type AgentContextItemId = typeof AgentContextItemId.Type;
+
+/**
+ * Companion namespace for {@link AgentContextItemId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentContextItemId {
+  /**
+   * Encoded (wire) form of {@link AgentContextItemId}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AgentContextItemId.Encoded;
+}
 
 /**
  * Opaque marker of a point in a session's observed state.
@@ -289,6 +434,22 @@ export const AgentConsistencyKey = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type AgentConsistencyKey = typeof AgentConsistencyKey.Type;
+
+/**
+ * Companion namespace for {@link AgentConsistencyKey}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentConsistencyKey {
+  /**
+   * Encoded (wire) form of {@link AgentConsistencyKey}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AgentConsistencyKey.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Data types
@@ -347,6 +508,22 @@ export const AgentDataTypeKind = LiteralKit([
  * @since 0.0.0
  */
 export type AgentDataTypeKind = typeof AgentDataTypeKind.Type;
+
+/**
+ * Companion namespace for {@link AgentDataTypeKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentDataTypeKind {
+  /**
+   * Encoded (wire) form of {@link AgentDataTypeKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AgentDataTypeKind.Encoded;
+}
 
 const suspendedAgentDataType = S.suspend((): S.Codec<AgentDataType, AgentDataType.Encoded> => AgentDataType);
 
@@ -679,6 +856,26 @@ export class AgentObjectType extends S.Opaque<AgentObjectType, { readonly brand:
 ) {}
 
 /**
+ * Companion namespace for {@link AgentObjectType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentObjectType {
+  /**
+   * Encoded (wire) form of {@link AgentObjectType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "object";
+    readonly ontologyApiName: OntologyApiName.Encoded;
+    readonly objectTypeApiName: ObjectTypeApiName.Encoded;
+  }
+}
+
+/**
  * Agent data type of a set of objects of a given object type, which travels as an object set RID.
  *
  * @category models
@@ -695,6 +892,26 @@ export class AgentObjectSetType extends S.Opaque<AgentObjectSetType, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AgentObjectSetType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentObjectSetType {
+  /**
+   * Encoded (wire) form of {@link AgentObjectSetType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "objectSet";
+    readonly ontologyApiName: OntologyApiName.Encoded;
+    readonly objectTypeApiName: ObjectTypeApiName.Encoded;
+  }
+}
 
 /**
  * Everything an agent can declare as the shape of an argument, an event payload, its state or a context item.
@@ -808,22 +1025,22 @@ export declare namespace AgentDataType {
    * @since 0.0.0
    */
   export type Encoded =
-    | (typeof BooleanType)["Encoded"]
-    | (typeof ShortType)["Encoded"]
-    | (typeof IntegerType)["Encoded"]
-    | (typeof LongType)["Encoded"]
-    | (typeof FloatType)["Encoded"]
-    | (typeof DoubleType)["Encoded"]
-    | (typeof StringType)["Encoded"]
-    | (typeof DateType)["Encoded"]
-    | (typeof TimestampType)["Encoded"]
+    | BooleanType.Encoded
+    | ShortType.Encoded
+    | IntegerType.Encoded
+    | LongType.Encoded
+    | FloatType.Encoded
+    | DoubleType.Encoded
+    | StringType.Encoded
+    | DateType.Encoded
+    | TimestampType.Encoded
     | AgentNullableType.Encoded
     | AgentListType.Encoded
     | AgentRecordType.Encoded
     | AgentStructType.Encoded
     | AgentDiscriminatedUnionType.Encoded
-    | (typeof AgentObjectType)["Encoded"]
-    | (typeof AgentObjectSetType)["Encoded"];
+    | AgentObjectType.Encoded
+    | AgentObjectSetType.Encoded;
 }
 
 // -----------------------------------------------------------------------------
@@ -853,6 +1070,25 @@ export class AgentParameter extends S.Opaque<AgentParameter, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link AgentParameter}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentParameter {
+  /**
+   * Encoded (wire) form of {@link AgentParameter}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly name: AgentArgumentName.Encoded;
+    readonly dataType: AgentDataType.Encoded;
+  }
+}
+
+/**
  * One kind of event an agent accepts: its name and the type of its payload.
  *
  * @category models
@@ -868,6 +1104,25 @@ export class AgentEventDefinition extends S.Opaque<AgentEventDefinition, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AgentEventDefinition}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentEventDefinition {
+  /**
+   * Encoded (wire) form of {@link AgentEventDefinition}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly eventType: AgentEventType.Encoded;
+    readonly payloadType: AgentDataType.Encoded;
+  }
+}
 
 /**
  * One kind of context item an agent produces: its name and the type of its data.
@@ -888,6 +1143,25 @@ export class AgentContextItemDefinition extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AgentContextItemDefinition}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentContextItemDefinition {
+  /**
+   * Encoded (wire) form of {@link AgentContextItemDefinition}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly contextItemType: AgentContextItemType.Encoded;
+    readonly dataType: AgentDataType.Encoded;
+  }
+}
 
 /**
  * A published version of an agent: what it accepts, what it can be told, and the shape of what it exposes.
@@ -979,6 +1253,30 @@ export class AgentDefinition extends S.Opaque<AgentDefinition, { readonly brand:
 ) {}
 
 /**
+ * Companion namespace for {@link AgentDefinition}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentDefinition {
+  /**
+   * Encoded (wire) form of {@link AgentDefinition}: `createdTime` as ISO 8601 text.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly version: AgentVersion.Encoded;
+    readonly createdTime: string;
+    readonly createdBy: PrincipalId.Encoded;
+    readonly argumentDefinitions: ReadonlyArray<AgentParameter.Encoded>;
+    readonly eventDefinitions: ReadonlyArray<AgentEventDefinition.Encoded>;
+    readonly agentStateType: AgentDataType.Encoded;
+    readonly contextItemDefinitions: ReadonlyArray<AgentContextItemDefinition.Encoded>;
+  }
+}
+
+/**
  * Which agent a caller means: its API name and the version to run.
  *
  * **Details**
@@ -1012,6 +1310,25 @@ export class AgentReference extends S.Opaque<AgentReference, { readonly brand: u
   )
 ) {}
 
+/**
+ * Companion namespace for {@link AgentReference}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentReference {
+  /**
+   * Encoded (wire) form of {@link AgentReference}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly apiName: AgentApiName.Encoded;
+    readonly version: AgentVersion.Encoded;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Sessions
 // -----------------------------------------------------------------------------
@@ -1036,6 +1353,25 @@ export class AgentApiNameIdentifier extends S.Opaque<AgentApiNameIdentifier, { r
 ) {}
 
 /**
+ * Companion namespace for {@link AgentApiNameIdentifier}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentApiNameIdentifier {
+  /**
+   * Encoded (wire) form of {@link AgentApiNameIdentifier}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly ontology: OntologyIdentifier.Encoded;
+    readonly agentApiName: AgentApiName.Encoded;
+  }
+}
+
+/**
  * How a request names the agent to open a session with.
  *
  * **Details**
@@ -1052,6 +1388,26 @@ export class AgentIdentifier extends S.Opaque<AgentIdentifier, { readonly brand:
     $I.annoteSchema("AgentIdentifier", { description: "How a request names the agent to open a session with." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AgentIdentifier}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentIdentifier {
+  /**
+   * Encoded (wire) form of {@link AgentIdentifier}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "agentApiName";
+    readonly ontology: OntologyIdentifier.Encoded;
+    readonly agentApiName: AgentApiName.Encoded;
+  }
+}
 
 /**
  * Request to open a session: which agent, which version, and the arguments it starts with.
@@ -1096,6 +1452,26 @@ export class CreateAgentSessionRequest extends S.Opaque<CreateAgentSessionReques
 ) {}
 
 /**
+ * Companion namespace for {@link CreateAgentSessionRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CreateAgentSessionRequest {
+  /**
+   * Encoded (wire) form of {@link CreateAgentSessionRequest}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly agent: AgentIdentifier.Encoded;
+    readonly arguments: R.ReadonlyRecord<AgentArgumentName.Encoded, typeof S.Json.Encoded>;
+    readonly agentVersion: AgentVersion.Encoded;
+  }
+}
+
+/**
  * A session opened against an agent: its identifier and the agent version it runs.
  *
  * **Details**
@@ -1122,6 +1498,27 @@ export class AgentSession extends S.Opaque<AgentSession, { readonly brand: uniqu
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AgentSession}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentSession {
+  /**
+   * Encoded (wire) form of {@link AgentSession}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly id: AgentSessionId.Encoded;
+    readonly agentRid: AgentRid.Encoded;
+    readonly agentApiNameIdentifier?: AgentApiNameIdentifier.Encoded;
+    readonly agentVersion: AgentVersion.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Events
@@ -1171,6 +1568,26 @@ export class AgentEvent extends S.Opaque<AgentEvent, { readonly brand: unique sy
 ) {}
 
 /**
+ * Companion namespace for {@link AgentEvent}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentEvent {
+  /**
+   * Encoded (wire) form of {@link AgentEvent}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly id: AgentEventId.Encoded;
+    readonly eventType: AgentEventType.Encoded;
+    readonly payload: typeof S.Json.Encoded;
+  }
+}
+
+/**
  * Request body that sends one event to a session.
  *
  * @category models
@@ -1181,6 +1598,24 @@ export class SendAgentEventRequest extends S.Opaque<SendAgentEventRequest, { rea
     $I.annoteSchema("SendAgentEventRequest", { description: "Request body that sends one event to a session." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link SendAgentEventRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SendAgentEventRequest {
+  /**
+   * Encoded (wire) form of {@link SendAgentEventRequest}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly event: AgentEvent.Encoded;
+  }
+}
 
 const AgentEventResultKind = LiteralKit(["accepted", "sessionNotReady"]);
 
@@ -1200,6 +1635,25 @@ export class AgentEventAccepted extends S.Opaque<AgentEventAccepted, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link AgentEventAccepted}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentEventAccepted {
+  /**
+   * Encoded (wire) form of {@link AgentEventAccepted}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "accepted";
+    readonly consistencyKey: AgentConsistencyKey.Encoded;
+  }
+}
+
+/**
  * The session has not started yet and cannot accept events; send the same event again after a short delay.
  *
  * @category models
@@ -1212,6 +1666,24 @@ export class AgentSessionNotReady extends S.Opaque<AgentSessionNotReady, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AgentSessionNotReady}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentSessionNotReady {
+  /**
+   * Encoded (wire) form of {@link AgentSessionNotReady}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "sessionNotReady";
+  }
+}
 
 /**
  * What happened to a sent event: accepted, or refused because the session is not ready.
@@ -1255,6 +1727,24 @@ export const AgentEventResult = AgentEventResultKind.mapMembers(() =>
 export type AgentEventResult = typeof AgentEventResult.Type;
 
 /**
+ * Companion namespace for {@link AgentEventResult}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentEventResult {
+  /**
+   * Encoded (wire) form of {@link AgentEventResult}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | AgentEventAccepted.Encoded
+    | AgentSessionNotReady.Encoded;
+}
+
+/**
  * Response body of sending one event to a session.
  *
  * @category models
@@ -1267,6 +1757,24 @@ export class SendAgentEventResponse extends S.Opaque<SendAgentEventResponse, { r
     $I.annoteSchema("SendAgentEventResponse", { description: "Response body of sending one event to a session." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link SendAgentEventResponse}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SendAgentEventResponse {
+  /**
+   * Encoded (wire) form of {@link SendAgentEventResponse}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly result: AgentEventResult.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Session state
@@ -1314,6 +1822,22 @@ export const AgentSessionStatus = LiteralKit(["live", "completed", "failed", "ca
 export type AgentSessionStatus = typeof AgentSessionStatus.Type;
 
 /**
+ * Companion namespace for {@link AgentSessionStatus}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentSessionStatus {
+  /**
+   * Encoded (wire) form of {@link AgentSessionStatus}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AgentSessionStatus.Encoded;
+}
+
+/**
  * Codec between the wire's status record and an {@link AgentSessionStatus}.
  *
  * **Details**
@@ -1358,6 +1882,24 @@ export const AgentSessionStatusFromRecord = S.Struct({ type: AgentSessionStatus 
 export type AgentSessionStatusFromRecord = typeof AgentSessionStatusFromRecord.Type;
 
 /**
+ * Companion namespace for {@link AgentSessionStatusFromRecord}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentSessionStatusFromRecord {
+  /**
+   * Encoded (wire) form of {@link AgentSessionStatusFromRecord}: the status as the `type` of an otherwise empty record.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: AgentSessionStatus.Encoded;
+  }
+}
+
+/**
  * The agent's own state within a session, wrapped as the wire wraps it.
  *
  * @category models
@@ -1372,6 +1914,24 @@ export class AgentState extends S.Opaque<AgentState, { readonly brand: unique sy
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AgentState}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentState {
+  /**
+   * Encoded (wire) form of {@link AgentState}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly data: typeof S.Json.Encoded;
+  }
+}
 
 /**
  * A unit of context in a session, such as a user message or a tool call.
@@ -1394,6 +1954,25 @@ export class AgentContextItem extends S.Opaque<AgentContextItem, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AgentContextItem}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentContextItem {
+  /**
+   * Encoded (wire) form of {@link AgentContextItem}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly contextItemType: AgentContextItemType.Encoded;
+    readonly data: typeof S.Json.Encoded;
+  }
+}
 
 const AgentStateResponseKind = LiteralKit(["available", "behind", "notReady"]);
 
@@ -1456,6 +2035,30 @@ export class AgentSessionState extends S.Opaque<AgentSessionState, { readonly br
 ) {}
 
 /**
+ * Companion namespace for {@link AgentSessionState}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentSessionState {
+  /**
+   * Encoded (wire) form of {@link AgentSessionState}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "available";
+    readonly arguments: R.ReadonlyRecord<AgentArgumentName.Encoded, typeof S.Json.Encoded>;
+    readonly consistencyKey: AgentConsistencyKey.Encoded;
+    readonly agentState: AgentState.Encoded;
+    readonly contextItems: R.ReadonlyRecord<AgentContextItemId.Encoded, AgentContextItem.Encoded>;
+    readonly contextItemOrder: ReadonlyArray<AgentContextItemId.Encoded>;
+    readonly status: AgentSessionStatusFromRecord.Encoded;
+  }
+}
+
+/**
  * The platform has not yet observed the requested consistency key; read again after a short delay.
  *
  * @category models
@@ -1470,6 +2073,24 @@ export class AgentStateBehind extends S.Opaque<AgentStateBehind, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link AgentStateBehind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentStateBehind {
+  /**
+   * Encoded (wire) form of {@link AgentStateBehind}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "behind";
+  }
+}
+
+/**
  * The session has not started yet, so it has no state to read; read again after a short delay.
  *
  * @category models
@@ -1482,6 +2103,24 @@ export class AgentStateNotReady extends S.Opaque<AgentStateNotReady, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AgentStateNotReady}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentStateNotReady {
+  /**
+   * Encoded (wire) form of {@link AgentStateNotReady}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "notReady";
+  }
+}
 
 /**
  * The answer to a state read: the state, or one of two reasons to read again.
@@ -1522,6 +2161,25 @@ export const AgentStateResponse = AgentStateResponseKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type AgentStateResponse = typeof AgentStateResponse.Type;
+
+/**
+ * Companion namespace for {@link AgentStateResponse}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentStateResponse {
+  /**
+   * Encoded (wire) form of {@link AgentStateResponse}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | AgentSessionState.Encoded
+    | AgentStateBehind.Encoded
+    | AgentStateNotReady.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Object references
@@ -1597,3 +2255,23 @@ export class AgentObjectReference extends S.Opaque<AgentObjectReference, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link AgentObjectReference}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AgentObjectReference {
+  /**
+   * Encoded (wire) form of {@link AgentObjectReference}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly ontologyRid: OntologyRid.Encoded;
+    readonly objectTypeApiName: ObjectTypeApiName.Encoded;
+    readonly primaryKey: R.ReadonlyRecord<PropertyApiName.Encoded, PrimaryKeyValue.Encoded>;
+  }
+}

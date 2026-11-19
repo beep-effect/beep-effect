@@ -4,6 +4,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Correction, correctionShouldApply } from "../../Service/Agent/CorrectorAgent.ts";
+
 const decodeUnknownCorrection = S.decodeUnknownEffect(Correction);
 
 describe("CorrectorAgent correction model", () => {

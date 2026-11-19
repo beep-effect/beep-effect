@@ -1,3 +1,4 @@
+import { ClaimFilter } from "../Repository/Claim.ts";
 /**
  * Public HTTP surface for timeline, search, extraction, health, ontology, and the merged API routers.
  *
@@ -9,31 +10,30 @@ import { DrizzleError } from "@beep/drizzle";
 import { IRI, makeLiteral, makeNamedNode } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import { flow } from "effect/Function";
 import * as HashSet from "effect/HashSet";
+import * as HttpRouter from "effect/http/HttpRouter";
+import * as HttpServerRequest from "effect/http/HttpServerRequest";
+import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
-import * as Random from "effect/Random";
-import * as Result from "effect/Result";
-import * as A from "effect/Array";
-import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as HttpRouter from "effect/http/HttpRouter";
-import * as HttpServerRequest from "effect/http/HttpServerRequest";
-import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import { BatchId, DocumentId, GcsUri, UUID } from "../Domain/Identity.ts";
 import { OntologyEmbeddings } from "../Domain/Model/OntologyEmbeddings.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
-import type { BatchWorkflowPayload } from "../Domain/Schema/Batch.ts";
-import { BatchManifest } from "../Domain/Schema/Batch.ts";
+import { BatchManifest, BatchWorkflowPayload } from "../Domain/Schema/Batch.ts";
 import type { PreprocessingOptions } from "../Domain/Schema/BatchRequest.ts";
 import { BatchRequest } from "../Domain/Schema/BatchRequest.ts";
 import { ClaimRank, TextSpan } from "../Domain/Schema/KnowledgeModel.ts";
@@ -71,6 +71,7 @@ import { ClaimRepository } from "../Repository/Claim.ts";
 import type { ConflictRecord } from "../Repository/Conflict.ts";
 import { ConflictRepository } from "../Repository/Conflict.ts";
 import type { ArticleRow, ClaimRow } from "../Repository/schema.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { OntologyService } from "../Service/Ontology.ts";
 import { StorageService } from "../Service/Storage.ts";
@@ -88,7 +89,6 @@ import {
 import { ImageRouter } from "./ImageRouter.ts";
 import { InferenceRouter } from "./InferenceRouter.ts";
 import { LinkIngestionRouter } from "./LinkIngestionRouter.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 type BatchWorkflowPayloadType = BatchWorkflowPayload;
 
@@ -98,11 +98,14 @@ const stripGsPrefix = (uri: string): string =>
 const resolveBucket = (config: { storage: { bucket: O.Option<string> } }) =>
   O.getOrElse(config.storage.bucket, () => "local-bucket");
 
-const randomIdFragment = Effect.all([
-  Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
-  Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
-]).pipe(
-  Effect.map(A.map((part) => part.toString(16).padStart(8, "0"))),
+const randomIdFragment = Effect.all(
+  [
+    Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
+    Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
+  ],
+  { concurrency: 1 }
+).pipe(
+  Effect.map(A.map((part) => Str.padStart(8, "0")(part.toString(16)))),
   Effect.map(A.join("")),
   Effect.map(Str.takeLeft(12))
 );
@@ -135,33 +138,36 @@ const createManifest = Effect.fn("HttpServer.createManifest")(function* (request
     onSome: Effect.succeed,
   });
 
-  const documents = yield* Effect.forEach(request.documents, (doc) =>
-    Effect.gen(function* () {
-      const documentId = yield* O.match(doc.documentId, {
-        onNone: () => generateDocumentId,
-        onSome: Effect.succeed,
-      });
+  const documents = yield* Effect.forEach(
+    request.documents,
+    (doc) =>
+      Effect.gen(function* () {
+        const documentId = yield* O.match(doc.documentId, {
+          onNone: () => generateDocumentId,
+          onSome: Effect.succeed,
+        });
 
-      const sizeBytes = yield* O.match(doc.sizeBytes, {
-        onSome: Effect.succeed,
-        onNone: () =>
-          storage.getOption(stripGsPrefix(doc.sourceUri)).pipe(
-            Effect.map((content) =>
-              O.getOrElse(
-                O.map(content, (value) => S.Natural.make(new TextEncoder().encode(value).length)),
-                () => S.Natural.make(0)
+        const sizeBytes = yield* O.match(doc.sizeBytes, {
+          onSome: Effect.succeed,
+          onNone: () =>
+            storage.getOption(stripGsPrefix(doc.sourceUri)).pipe(
+              Effect.map((content) =>
+                O.getOrElse(
+                  O.map(content, (value) => S.Natural.make(new TextEncoder().encode(value).length)),
+                  () => S.Natural.make(0)
+                )
               )
-            )
-          ),
-      });
+            ),
+        });
 
-      return {
-        documentId,
-        sourceUri: doc.sourceUri,
-        contentType: doc.contentType,
-        sizeBytes,
-      };
-    })
+        return {
+          documentId,
+          sourceUri: doc.sourceUri,
+          contentType: doc.contentType,
+          sizeBytes,
+        };
+      }),
+    { concurrency: 1 }
   );
 
   return BatchManifest.make({
@@ -200,7 +206,7 @@ const toPayload = (
     OntologyEmbeddings.storagePathFor(manifest.ontologyUri)
   );
 
-  return {
+  return BatchWorkflowPayload.make({
     batchId: manifest.batchId,
     ontologyId: manifest.ontologyId,
     manifestUri,
@@ -211,7 +217,7 @@ const toPayload = (
     documentIds: A.map(manifest.documents, (doc) => doc.documentId),
     ontologyEmbeddingsUri: O.some(embeddingsUri),
     preprocessing,
-  };
+  });
 };
 
 // =============================================================================
@@ -240,14 +246,15 @@ const claimRowToClaimWithRank = Effect.fn("HttpServer.claimRowToClaimWithRank")(
   const predicate = yield* S.decodeEffect(IRI)(claim.predicateIri);
   const rank = yield* ClaimRank.decodeEffect(claim.rank);
   const source = yield* articleRowToArticleSummary(article);
-  const object =
-    claim.objectType === "iri"
-      ? makeNamedNode(yield* S.decodeEffect(IRI)(claim.objectValue))
-      : makeLiteral(
+  const object = yield* claim.objectType === "iri"
+    ? S.decodeEffect(IRI)(claim.objectValue).pipe(Effect.map(makeNamedNode))
+    : Effect.succeed(
+        makeLiteral(
           claim.objectValue,
           claim.objectDatatype ?? XSD_STRING.value,
           P.isNull(claim.objectLanguage) ? {} : { language: claim.objectLanguage }
-        );
+        )
+      );
   const validTime =
     P.isNotNull(claim.validFrom) && P.isNotNull(claim.validTo)
       ? O.some({
@@ -302,8 +309,10 @@ const conflictRecordToClaimConflict = Effect.fn("HttpServer.conflictRecordToClai
         reason: "Conflict references a claim whose article is unavailable in the ontology scope.",
       })
     );
-  const claimA = yield* claimRowToClaimWithRank(record.claimA, yield* requireArticle(articleA, record.claimA.id));
-  const claimB = yield* claimRowToClaimWithRank(record.claimB, yield* requireArticle(articleB, record.claimB.id));
+  const requiredArticleA = yield* requireArticle(articleA, record.claimA.id);
+  const claimA = yield* claimRowToClaimWithRank(record.claimA, requiredArticleA);
+  const requiredArticleB = yield* requireArticle(articleB, record.claimB.id);
+  const claimB = yield* claimRowToClaimWithRank(record.claimB, requiredArticleB);
   const base = {
     id: record.conflict.id,
     ontologyId: record.conflict.ontologyId,
@@ -399,12 +408,14 @@ export const TimelineRouter = HttpRouter.addAll([
       const articleRepo = yield* ArticleRepository;
 
       // Get claims for this entity
-      const claims = yield* claimRepo.getClaims({
-        ontologyId: queryParams.ontologyId,
-        subjectIri: decodedIri,
-        includeDeprecated: queryParams.includeDeprecated,
-        limit: PosInt.make(100),
-      });
+      const claims = yield* claimRepo.getClaims(
+        ClaimFilter.make({
+          ontologyId: queryParams.ontologyId,
+          subjectIri: decodedIri,
+          includeDeprecated: queryParams.includeDeprecated,
+          limit: PosInt.make(100),
+        })
+      );
 
       // Get articles for each claim
       const claimsWithArticles = yield* Effect.forEach(
@@ -414,8 +425,10 @@ export const TimelineRouter = HttpRouter.addAll([
           if (O.isNone(articleOpt)) {
             return O.none<ClaimWithRank>();
           }
-          return O.some(yield* claimRowToClaimWithRank(claim, articleOpt.value));
-        })
+          const rankedClaim = yield* claimRowToClaimWithRank(claim, articleOpt.value);
+          return O.some(rankedClaim);
+        }),
+        { concurrency: 1 }
       );
 
       const validClaims = A.filter(A.getSomes(claimsWithArticles), (claim) => {
@@ -435,11 +448,13 @@ export const TimelineRouter = HttpRouter.addAll([
 
       const correctionSourceClaims = queryParams.includeDeprecated
         ? claims
-        : yield* claimRepo.getClaims({
-            ontologyId: queryParams.ontologyId,
-            subjectIri: decodedIri,
-            includeDeprecated: true,
-          });
+        : yield* claimRepo.getClaims(
+            ClaimFilter.make({
+              ontologyId: queryParams.ontologyId,
+              subjectIri: decodedIri,
+              includeDeprecated: true,
+            })
+          );
       const correctionEntries = yield* Effect.forEach(
         correctionSourceClaims,
         (claim) => claimRepo.getCorrectionChain(claim.id),
@@ -483,14 +498,16 @@ export const TimelineRouter = HttpRouter.addAll([
       const offset = queryParams.offset;
 
       // Get claims with filters
-      const claims = yield* claimRepo.getClaims({
-        ontologyId: queryParams.ontologyId,
-        ...(O.isSome(queryParams.subject) ? { subjectIri: queryParams.subject.value } : {}),
-        ...(O.isSome(queryParams.predicate) ? { predicateIri: queryParams.predicate.value } : {}),
-        ...(O.isSome(queryParams.rank) ? { rank: queryParams.rank.value } : {}),
-        limit: PosInt.make(limit + 1), // Fetch one extra to check hasMore
-        offset,
-      });
+      const claims = yield* claimRepo.getClaims(
+        ClaimFilter.make({
+          ontologyId: queryParams.ontologyId,
+          ...(O.isSome(queryParams.subject) ? { subjectIri: queryParams.subject.value } : {}),
+          ...(O.isSome(queryParams.predicate) ? { predicateIri: queryParams.predicate.value } : {}),
+          ...(O.isSome(queryParams.rank) ? { rank: queryParams.rank.value } : {}),
+          limit: PosInt.make(limit + 1), // Fetch one extra to check hasMore
+          offset,
+        })
+      );
 
       const hasMore = claims.length > limit;
       const claimResults = hasMore ? A.take(claims, limit) : claims;
@@ -507,19 +524,23 @@ export const TimelineRouter = HttpRouter.addAll([
           if (O.isSome(queryParams.source) && articleOpt.value.sourceName !== queryParams.source.value) {
             return O.none<ClaimWithRank>();
           }
-          return O.some(yield* claimRowToClaimWithRank(claim, articleOpt.value));
-        })
+          const rankedClaim = yield* claimRowToClaimWithRank(claim, articleOpt.value);
+          return O.some(rankedClaim);
+        }),
+        { concurrency: 1 }
       );
 
       const validClaims = A.getSomes(claimsWithArticles);
 
       // Get total count
-      const total = yield* claimRepo.countClaims({
-        ontologyId: queryParams.ontologyId,
-        ...(O.isSome(queryParams.subject) ? { subjectIri: queryParams.subject.value } : {}),
-        ...(O.isSome(queryParams.predicate) ? { predicateIri: queryParams.predicate.value } : {}),
-        ...(O.isSome(queryParams.rank) ? { rank: queryParams.rank.value } : {}),
-      });
+      const total = yield* claimRepo.countClaims(
+        ClaimFilter.make({
+          ontologyId: queryParams.ontologyId,
+          ...(O.isSome(queryParams.subject) ? { subjectIri: queryParams.subject.value } : {}),
+          ...(O.isSome(queryParams.predicate) ? { predicateIri: queryParams.predicate.value } : {}),
+          ...(O.isSome(queryParams.rank) ? { rank: queryParams.rank.value } : {}),
+        })
+      );
 
       return yield* HttpServerResponse.schemaJson(TimelineClaimsResponse)(
         TimelineClaimsResponse.make({
@@ -570,7 +591,9 @@ export const TimelineRouter = HttpRouter.addAll([
       const claims = yield* claimRepo.getClaimsByArticle(articleId, queryParams.ontologyId);
 
       // Transform claims
-      const claimsWithRank = yield* Effect.forEach(claims, (claim) => claimRowToClaimWithRank(claim, article));
+      const claimsWithRank = yield* Effect.forEach(claims, (claim) => claimRowToClaimWithRank(claim, article), {
+        concurrency: 1,
+      });
 
       // Count unique entities (subjects)
       const uniqueSubjects = HashSet.fromIterable(A.map(claims, (claim) => claim.subjectIri));
@@ -604,7 +627,7 @@ export const TimelineRouter = HttpRouter.addAll([
       const counts = yield* conflictRepo.counts(query);
       return yield* HttpServerResponse.schemaJson(ConflictsResponse)(
         ConflictsResponse.make({
-          conflicts: yield* Effect.forEach(records, conflictRecordToClaimConflict),
+          conflicts: yield* Effect.forEach(records, conflictRecordToClaimConflict, { concurrency: 1 }),
           total: S.Natural.make(counts.total),
           pendingCount: S.Natural.make(counts.pending),
         })
@@ -628,9 +651,8 @@ export const TimelineRouter = HttpRouter.addAll([
       const transitioned = yield* conflictRepo.transition(query.ontologyId, id, action, actor);
 
       if (O.isSome(transitioned)) {
-        return yield* HttpServerResponse.schemaJson(ClaimConflict)(
-          yield* conflictRecordToClaimConflict(transitioned.value)
-        );
+        const transitionedConflict = yield* conflictRecordToClaimConflict(transitioned.value);
+        return yield* HttpServerResponse.schemaJson(ClaimConflict)(transitionedConflict);
       }
 
       const existing = yield* conflictRepo.get(query.ontologyId, id);
@@ -699,11 +721,13 @@ export const SearchRouter = HttpRouter.addAll([
           // Get claims with filters
           // Note: Full-text search would require pg_trgm or ts_vector
           // For now, we do a simple query and filter in memory
-          const claims = yield* claimRepo.getClaims({
-            ontologyId: request.ontologyId,
-            ...(O.isSome(request.rank) ? { rank: request.rank.value } : {}),
-            includeDeprecated: false,
-          });
+          const claims = yield* claimRepo.getClaims(
+            ClaimFilter.make({
+              ontologyId: request.ontologyId,
+              ...(O.isSome(request.rank) ? { rank: request.rank.value } : {}),
+              includeDeprecated: false,
+            })
+          );
 
           const queryLower = Str.toLowerCase(request.query);
           const predicateSet = O.map(request.predicates, HashSet.fromIterable);
@@ -714,32 +738,36 @@ export const SearchRouter = HttpRouter.addAll([
             onSome: (predicates) => A.filter(textMatched, (claim) => HashSet.has(predicates, claim.predicateIri)),
           });
 
-          const claimsWithArticles = yield* Effect.forEach(predicateMatched, (claim) =>
-            Effect.gen(function* () {
-              const articleOpt = yield* articleRepo.getArticle(claim.articleId, claim.ontologyId);
-              if (O.isNone(articleOpt)) {
-                return O.none<ClaimWithRank>();
-              }
-              const article = articleOpt.value;
-              if (
-                O.isSome(sourceSet) &&
-                !HashSet.has(sourceSet.value, P.isNotNull(article.sourceName) ? article.sourceName : "")
-              ) {
-                return O.none<ClaimWithRank>();
-              }
-              if (O.isSome(request.dateRange)) {
-                const published = article.publishedAt?.getTime();
-                if (P.isUndefined(published)) {
+          const claimsWithArticles = yield* Effect.forEach(
+            predicateMatched,
+            (claim) =>
+              Effect.gen(function* () {
+                const articleOpt = yield* articleRepo.getArticle(claim.articleId, claim.ontologyId);
+                if (O.isNone(articleOpt)) {
                   return O.none<ClaimWithRank>();
                 }
-                const from = DateTime.toEpochMillis(request.dateRange.value.from);
-                const to = DateTime.toEpochMillis(request.dateRange.value.to);
-                if (published < from || published > to) {
+                const article = articleOpt.value;
+                if (
+                  O.isSome(sourceSet) &&
+                  !HashSet.has(sourceSet.value, P.isNotNull(article.sourceName) ? article.sourceName : "")
+                ) {
                   return O.none<ClaimWithRank>();
                 }
-              }
-              return O.some(yield* claimRowToClaimWithRank(claim, article));
-            })
+                if (O.isSome(request.dateRange)) {
+                  const published = article.publishedAt?.getTime();
+                  if (P.isUndefined(published)) {
+                    return O.none<ClaimWithRank>();
+                  }
+                  const from = DateTime.toEpochMillis(request.dateRange.value.from);
+                  const to = DateTime.toEpochMillis(request.dateRange.value.to);
+                  if (published < from || published > to) {
+                    return O.none<ClaimWithRank>();
+                  }
+                }
+                const rankedClaim = yield* claimRowToClaimWithRank(claim, article);
+                return O.some(rankedClaim);
+              }),
+            { concurrency: 1 }
           );
 
           const filteredClaims = A.getSomes(claimsWithArticles);
@@ -780,11 +808,13 @@ export const SearchRouter = HttpRouter.addAll([
           const limit = request.limit;
 
           // Get all claims to find unique subjects
-          const claims = yield* claimRepo.getClaims({
-            ontologyId: request.ontologyId,
-            includeDeprecated: false,
-            limit: PosInt.make(1000),
-          });
+          const claims = yield* claimRepo.getClaims(
+            ClaimFilter.make({
+              ontologyId: request.ontologyId,
+              includeDeprecated: false,
+              limit: PosInt.make(1000),
+            })
+          );
 
           // Group by subject and filter by query
           const queryLower = Str.toLowerCase(request.query);
@@ -830,19 +860,24 @@ export const SearchRouter = HttpRouter.addAll([
             ),
             limit
           );
-          const entities = yield* Effect.forEach(entityCandidates, (entity) =>
-            Effect.gen(function* () {
-              const iri = yield* S.decodeEffect(IRI)(entity.iri);
-              const types = yield* Effect.forEach(A.fromIterable(entity.types), (type) => S.decodeEffect(IRI)(type));
-              const label = O.filter(A.last(Str.split(/[#/]/)(entity.iri)), Str.isNonEmpty);
-              return EntitySearchResult.make({
-                iri,
-                label,
-                types,
-                claimCount: S.Natural.make(entity.claimCount),
-                topClaims: [],
-              });
-            })
+          const entities = yield* Effect.forEach(
+            entityCandidates,
+            (entity) =>
+              Effect.gen(function* () {
+                const iri = yield* S.decodeEffect(IRI)(entity.iri);
+                const types = yield* Effect.forEach(A.fromIterable(entity.types), (type) => S.decodeEffect(IRI)(type), {
+                  concurrency: 1,
+                });
+                const label = O.filter(A.last(Str.split(/[#/]/)(entity.iri)), Str.isNonEmpty);
+                return EntitySearchResult.make({
+                  iri,
+                  label,
+                  types,
+                  claimCount: S.Natural.make(entity.claimCount),
+                  topClaims: [],
+                });
+              }),
+            { concurrency: 1 }
           );
 
           return yield* HttpServerResponse.schemaJson(EntitySearchResponse)(
@@ -881,11 +916,13 @@ export const SearchRouter = HttpRouter.addAll([
       const limit = queryParams.limit;
 
       // Get claims and extract unique subjects
-      const claims = yield* claimRepo.getClaims({
-        ontologyId: queryParams.ontologyId,
-        includeDeprecated: false,
-        limit: PosInt.make(500),
-      });
+      const claims = yield* claimRepo.getClaims(
+        ClaimFilter.make({
+          ontologyId: queryParams.ontologyId,
+          includeDeprecated: false,
+          limit: PosInt.make(500),
+        })
+      );
 
       const prefixLower = Str.toLowerCase(queryParams.prefix);
       const seen = MutableHashSet.empty<string>();
@@ -903,17 +940,20 @@ export const SearchRouter = HttpRouter.addAll([
           });
         }
       }
-      const suggestionList = yield* Effect.forEach(suggestionIris, (suggestion) =>
-        S.decodeEffect(IRI)(suggestion.iri).pipe(
-          Effect.map((iri) =>
-            Suggestion.make({
-              label: suggestion.label,
-              iri,
-              type: O.none(),
-              description: O.none(),
-            })
-          )
-        )
+      const suggestionList = yield* Effect.forEach(
+        suggestionIris,
+        (suggestion) =>
+          S.decodeEffect(IRI)(suggestion.iri).pipe(
+            Effect.map((iri) =>
+              Suggestion.make({
+                label: suggestion.label,
+                iri,
+                type: O.none(),
+                description: O.none(),
+              })
+            )
+          ),
+        { concurrency: 1 }
       );
 
       return yield* HttpServerResponse.schemaJson(SuggestionsResponse)(
@@ -982,11 +1022,13 @@ export const SearchRouter = HttpRouter.addAll([
           const results = yield* Effect.forEach(
             page,
             Effect.fnUntraced(function* (article) {
-              const claims = yield* claimRepo.getClaims({
-                ontologyId: request.ontologyId,
-                articleId: article.id,
-                includeDeprecated: true,
-              });
+              const claims = yield* claimRepo.getClaims(
+                ClaimFilter.make({
+                  ontologyId: request.ontologyId,
+                  articleId: article.id,
+                  includeDeprecated: true,
+                })
+              );
               const conflictCounts = yield* conflictRepo.counts(
                 ConflictsQuery.make({
                   ontologyId: request.ontologyId,
@@ -999,7 +1041,8 @@ export const SearchRouter = HttpRouter.addAll([
                 claimCount: S.Natural.make(claims.length),
                 conflictCount: S.Natural.make(conflictCounts.total),
               });
-            })
+            }),
+            { concurrency: 1 }
           );
 
           const total = S.Natural.make(filtered.length);
@@ -1042,7 +1085,8 @@ const startExtraction = Effect.fn("startExtraction")(function* (request: BatchRe
 
 const extractionRouteHandler = Effect.gen(function* () {
   const request = yield* HttpServerRequest.HttpServerRequest;
-  const decoded = BatchRequest.decodeUnknownOption(yield* request.json);
+  const requestBody = yield* request.json;
+  const decoded = BatchRequest.decodeUnknownOption(requestBody);
   if (O.isNone(decoded)) {
     return yield* HttpServerResponse.json(
       { error: "VALIDATION_ERROR", message: "Invalid batch extraction request" },
@@ -1130,7 +1174,8 @@ export const HealthRouter = HttpRouter.addAll([
     "/health/live",
     Effect.gen(function* () {
       const health = yield* HealthCheckService;
-      return yield* HttpServerResponse.json(yield* health.liveness());
+      const liveness = yield* health.liveness();
+      return yield* HttpServerResponse.json(liveness);
     })
   ),
   HttpRouter.route(
@@ -1280,7 +1325,8 @@ const makeHttpServerLive = <A, E, R>(apiRouter: Layer.Layer<A, E, R>) =>
                 if (Cause.hasInterrupts(cause)) {
                   return yield* Effect.failCause(cause);
                 }
-                const requestId = Math.abs(yield* Random.nextInt).toString(16);
+                const requestRandomValue = yield* Random.nextInt;
+                const requestId = Math.abs(requestRandomValue).toString(16);
 
                 yield* Effect.logError("Unhandled error in HTTP handler", {
                   requestId,

@@ -83,7 +83,7 @@ export class KitFieldError extends S.TaggedError<KitFieldError, { readonly brand
  * @since 0.0.0
  */
 export declare namespace KitFieldError {
-  export type Encoded = S.Codec.Encoded<typeof KitFieldError>;
+  export type Encoded = typeof KitFieldError.Encoded;
 }
 
 /**

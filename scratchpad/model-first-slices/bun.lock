@@ -5,11 +5,14 @@
     "": {
       "name": "@proto/model-first-slices",
       "devDependencies": {
+        "@beep/effect-drizzle": "link:../../packages/ecosystem/effect-drizzle",
         "@beep/identity": "link:../../packages/foundation/modeling/identity",
         "@beep/schema": "link:../../packages/foundation/modeling/schema",
         "@effect/tsgo": "0.70.0",
         "@effect/vitest": "4.1.4",
         "@types/node": "26.6.5",
+        "drizzle-kit": "1.0.0-rc.5",
+        "drizzle-orm": "link:../../node_modules/drizzle-orm",
         "tsrs": "0.25.0-ts7.1.0-beta",
         "vitest": "5.0.4",
       },
@@ -147,6 +150,7 @@
         "effect": "4.1.4",
       },
       "devDependencies": {
+        "@beep/pglite": "link:../../../../packages/drivers/pglite",
         "@effect/platform-node": "4.1.4",
         "@effect/vitest": "4.1.4",
         "@proto/authority-contract": "workspace:*",
@@ -179,6 +183,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@alchemy.run/domain": "2.0.0-beta.87",
+        "@beep/ui": "link:../../../../packages/foundation/ui-system/ui",
         "@effect/atom-react": "4.1.4",
         "@proto/kernel": "workspace:*",
         "@proto/party-contract": "workspace:*",
@@ -232,10 +237,12 @@
         "effect": "4.1.4",
       },
       "devDependencies": {
+        "@beep/pglite": "link:../../../../packages/drivers/pglite",
         "@effect/platform-node": "4.1.4",
         "@effect/vitest": "4.1.4",
         "@proto/authority-host": "workspace:*",
         "@proto/authority-model": "workspace:*",
+        "@proto/tooling": "workspace:*",
         "vitest": "5.0.4",
       },
     },
@@ -278,6 +285,7 @@
         "@alchemy.run/domain": "2.0.0-beta.87",
         "@effect/platform-node": "4.1.4",
         "@proto/kernel": "workspace:*",
+        "drizzle-kit": "1.0.0-rc.5",
         "effect": "4.1.4",
       },
       "devDependencies": {
@@ -292,6 +300,8 @@
   },
   "overrides": {
     "effect": "4.1.4",
+    "react": "link:../../node_modules/react",
+    "react-dom": "link:../../node_modules/react-dom",
   },
   "packages": {
     "@alchemy.run/docker": ["@alchemy.run/docker@2.0.0-beta.87", "", { "dependencies": { "rolldown": "1.2.16" }, "peerDependencies": { "@effect/platform-bun": "^4.1.4", "alchemy": "2.0.0-beta.87", "effect": "^4.1.4" }, "optionalPeers": ["@effect/platform-bun"] }, "sha512-xs+5UV4FqvmeXf9aS2I66R11FJzGUKQtR6pIMdNIf5AYXO9gIBHSE6LSCjlUgcaJqiY98m4HyJQZi/2uREjOag=="],
@@ -310,9 +320,15 @@
 
     "@babel/runtime": ["@babel/runtime@7.29.14", "", {}, "sha512-Y5tqevQaUAZhhj82BpYMNC1ssvLQTVAfwKdm8iy8qwmhvC2/CpcAu8OC+QEtjM7pMk7knx83u1Qj8gzkicyelw=="],
 
+    "@beep/effect-drizzle": ["@beep/effect-drizzle@link:../../packages/ecosystem/effect-drizzle", {}],
+
     "@beep/identity": ["@beep/identity@link:../../packages/foundation/modeling/identity", {}],
 
+    "@beep/pglite": ["@beep/pglite@link:../../packages/drivers/pglite", {}],
+
     "@beep/schema": ["@beep/schema@link:../../packages/foundation/modeling/schema", {}],
+
+    "@beep/ui": ["@beep/ui@link:../../packages/foundation/ui-system/ui", {}],
 
     "@effect/atom-react": ["@effect/atom-react@4.1.4", "", { "peerDependencies": { "effect": "^4.1.4", "react": ">=19.0.0 <20.0.0", "scheduler": ">=0.25.0 <0.29.0" } }, "sha512-Xj58DcAzKsysHhzBCPaz2v1QAJq6NvMdGVmG7SV4zkw1RMiTZv8gaOXA1VqIRlpmvdspMwRe/BQ4eayuzRZTpQ=="],
 
@@ -502,6 +518,10 @@
 
     "dom-accessibility-api": ["dom-accessibility-api@0.5.16", "", {}, "sha512-X7BJ2yElsnOJ30pZF4uIIDfBEVgF4XEBxL9Bxhy6dnrm5hkzqmsWHGTiHqRiITNhMyFLyAiWndIJP7Z1NTteDg=="],
 
+    "drizzle-kit": ["drizzle-kit@1.0.0-rc.5", "", { "peerDependencies": { "drizzle-orm": ">=1.0.0-rc.5" }, "optionalPeers": ["drizzle-orm"], "bin": { "drizzle-kit": "bin.cjs" } }, "sha512-8glQN7iFK3e1aOIoRit1NtslcsqE/rnlqNw/1jUC5Ph4RFVh/E5Jricxd6Nu2ugj2HlFZlZ6O4006AwqJ9e24g=="],
+
+    "drizzle-orm": ["drizzle-orm@link:../../node_modules/drizzle-orm", {}],
+
     "effect": ["effect@4.1.4", "", {}, "sha512-Tgrv/9FN+TZYyOn8XSli+fVqAfwDrDAkiX5Uu9vztINb675VTQdhD0gWI5Kzvhlh9QqzjZvw72iugqw5pwoghQ=="],
 
     "entities": ["entities@7.0.1", "", {}, "sha512-TWrgLOFUQTH994YUyl1yT4uyavY5nNB5muff+RtWaqNVCAK408b5ZnnbNAUEWLTCpum9w6arT70i1XdQ4UeOPA=="],
@@ -564,9 +584,9 @@
 
     "pretty-format": ["pretty-format@27.5.1", "", { "dependencies": { "ansi-regex": "^5.0.1", "ansi-styles": "^5.0.0", "react-is": "^17.0.1" } }, "sha512-Qb1gy5OrP5+zDf2Bvnzdl3jsTf1qXVMazbvCoKhtKqVs4/YK4ozX4gKQJJVyNe+cajNPn0KoC0MC3FUmaHWEmQ=="],
 
-    "react": ["react@19.3.1", "", {}, "sha512-QNhWdt7nrgVWWQG58QuGsAR3jv3Hbe4mb4vz7w2csnHavciZJgda1CPNaldF6eVxv90ud3jUXpKlHL69gO38yw=="],
+    "react": ["react@link:../../node_modules/react", {}],
 
-    "react-dom": ["react-dom@19.3.1", "", { "dependencies": { "scheduler": "^0.28.0" }, "peerDependencies": { "react": "^19.3.1" } }, "sha512-Y0bARz53lhEC1NMCASs0/j+faB/zqt3R8hpvg1e8+61ZVJ4UL0UdC4cBbXfZMcIuhrfgeILTLe+ZeBCavQPtKQ=="],
+    "react-dom": ["react-dom@link:../../node_modules/react-dom", {}],
 
     "react-is": ["react-is@17.0.2", "", {}, "sha512-w2GsyukL62IJnlaff/nRegPQR94C/XXamvMWmSHRJ4y7Ts/4ocGRmTHvOs8PSE6pB3dWOrD/nueuU5sduBsQ4w=="],
 

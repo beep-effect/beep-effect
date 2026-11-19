@@ -1,3 +1,5 @@
+import { pipe } from "effect/Function";
+
 /**
  * Service: Entity Index
  *
@@ -9,6 +11,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -16,11 +20,10 @@ import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
-import * as Order from "effect/Order";
-import * as Ref from "effect/Ref";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { KnowledgeGraph } from "../Domain/Model/Entity.ts";
@@ -60,9 +63,10 @@ import { StorageService } from "./Storage.ts";
  * @category errors
  * @since 0.0.0
  */
-export class PersistentEntityIndexConfigError extends S.TaggedError<PersistentEntityIndexConfigError, { readonly brand: unique symbol }>(
-  $I`PersistentEntityIndexConfigError`
-)(
+export class PersistentEntityIndexConfigError extends S.TaggedError<
+  PersistentEntityIndexConfigError,
+  { readonly brand: unique symbol }
+>($I`PersistentEntityIndexConfigError`)(
   "PersistentEntityIndexConfigError",
   {
     message: S.NonEmptyString,
@@ -94,12 +98,16 @@ export class PersistentEntityIndexConfigError extends S.TaggedError<PersistentEn
  * @category models
  * @since 0.0.0
  */
-export class ScoredEntity extends S.Opaque<ScoredEntity, { readonly brand: unique symbol }>()(S.Struct({
+export class ScoredEntity extends S.Opaque<ScoredEntity, { readonly brand: unique symbol }>()(
+  S.Struct({
     entity: Entity,
     score: S.Finite,
-  }).pipe($I.annoteSchema("ScoredEntity", {
-    description: "Indexed entity paired with its finite cosine-similarity score.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ScoredEntity", {
+      description: "Indexed entity paired with its finite cosine-similarity score.",
+    })
+  )
+) {}
 
 /**
  * Options for similarity search
@@ -119,12 +127,16 @@ export class ScoredEntity extends S.Opaque<ScoredEntity, { readonly brand: uniqu
  * @category configuration
  * @since 0.0.0
  */
-export class FindSimilarOptions extends S.Opaque<FindSimilarOptions, { readonly brand: unique symbol }>()(S.Struct({
+export class FindSimilarOptions extends S.Opaque<FindSimilarOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
     filterTypes: S.Array(S.NonEmptyString).pipe(S.optionalKey),
     minScore: S.Finite.check(S.isBetween({ minimum: 0, maximum: 1 })).pipe(S.optionalKey),
-  }).pipe($I.annoteSchema("FindSimilarOptions", {
-    description: "Optional entity-type filter and minimum similarity threshold for index searches.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("FindSimilarOptions", {
+      description: "Optional entity-type filter and minimum similarity threshold for index searches.",
+    })
+  )
+) {}
 
 /**
  * Internal index state
@@ -262,7 +274,7 @@ const makeEntityIndexMethods = (
   findSimilar: Effect.fn("EntityIndex.findSimilar")(function* (
     query: string,
     k: number,
-    options: FindSimilarOptions = {}
+    options: FindSimilarOptions = FindSimilarOptions.make({})
   ) {
     const state = yield* Ref.get(stateRef);
     if (HashMap.size(state.entities) === 0) return [];
@@ -278,7 +290,7 @@ const makeEntityIndexMethods = (
         if (O.isSome(typeEntities)) candidateIds = HashSet.union(candidateIds, typeEntities.value);
       }
     } else {
-      candidateIds = HashSet.fromIterable(HashMap.keys(state.entities));
+      candidateIds = pipe(state.entities, HashMap.keys, HashSet.fromIterable);
     }
     const scored: Array<ScoredEntity> = [];
     const minScore = options.minScore ?? 0;
@@ -477,7 +489,7 @@ export interface PersistentEntityIndexService extends EntityIndexService {
   readonly stats: Effect.Effect<{
     readonly entityCount: number;
     readonly typeCount: number;
-    readonly lastPersistedAt: O.Option<S.Natural>;
+    readonly lastPersistedAt: O.Option<typeof S.Natural.Type>;
   }>;
 }
 
@@ -540,7 +552,7 @@ export const makePersistentEntityIndex = dual3(
     Effect.gen(function* () {
       // In-memory state
       const stateRef = yield* Ref.make<IndexState>(emptyState);
-      const lastPersistedRef = yield* Ref.make<O.Option<S.Natural>>(O.none());
+      const lastPersistedRef = yield* Ref.make<O.Option<typeof S.Natural.Type>>(O.none());
 
       const base = makeEntityIndexMethods(embedding, stateRef);
 
@@ -559,7 +571,8 @@ export const makePersistentEntityIndex = dual3(
             });
           }
         }
-        return { version: 1, indexedAt: S.Natural.make(yield* Clock.currentTimeMillis), entities };
+        const resolvedValue572_56 = yield* Clock.currentTimeMillis;
+        return { version: 1, indexedAt: S.Natural.make(resolvedValue572_56), entities };
       });
 
       const deserialize = Effect.fn("PersistentEntityIndex.deserialize")(function* (data: SerializedEntityIndex) {

@@ -3,6 +3,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { TsconfigSyncPlan } from "@beep/repo-cli/commands/TsconfigSync/TsconfigSync.plan";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
 import { FsUtilsLive, findRepoRoot, jsonStringifyPretty } from "@beep/repo-utils";
+import { atRegistration } from "@beep/test-utils/Registration";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { expect, it } from "@effect/vitest";
 import { assertNone, assertTrue } from "@effect/vitest/utils";
@@ -48,7 +49,7 @@ const CatalogMap = S.Record(S.String, S.String).pipe(
   $I.annoteSchema("CatalogMap", { description: "A root catalog: dependency name to version text." })
 );
 // A full tracked-tree copy and three whole-workspace dry runs are deliberately opt-in.
-const fullProofEnabled = Effect.runSync(Config.Boolean("BEEP_LAYER1_DRYRUN").pipe(Config.withDefault(false)));
+const fullProofEnabled = atRegistration(Config.Boolean("BEEP_LAYER1_DRYRUN").pipe(Config.withDefault(false)));
 const writeFile = Effect.fn("Layer1Test.writeFile")(function* (root: string, file: string, content: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;

@@ -143,7 +143,7 @@ export class ChangelogItem extends Model<ChangelogItem>("ChangelogItem")(
  * @since 0.0.0
  */
 export declare namespace ChangelogItem {
-  export type Encoded = S.Codec.Encoded<typeof ChangelogItem>;
+  export type Encoded = typeof ChangelogItem.Encoded;
 }
 
 /**
@@ -180,7 +180,7 @@ export class ChangelogContent extends Model<ChangelogContent>("ChangelogContent"
  * @since 0.0.0
  */
 export declare namespace ChangelogContent {
-  export type Encoded = S.Codec.Encoded<typeof ChangelogContent>;
+  export type Encoded = typeof ChangelogContent.Encoded;
 }
 
 const encodeChangelogContent = S.encodeEffect(ChangelogContent);
@@ -216,7 +216,7 @@ export class FeatureStep extends Model<FeatureStep>("FeatureStep")(
  * @since 0.0.0
  */
 export declare namespace FeatureStep {
-  export type Encoded = S.Codec.Encoded<typeof FeatureStep>;
+  export type Encoded = typeof FeatureStep.Encoded;
 }
 
 /**
@@ -253,7 +253,7 @@ export class FeatureContent extends Model<FeatureContent>("FeatureContent")(
  * @since 0.0.0
  */
 export declare namespace FeatureContent {
-  export type Encoded = S.Codec.Encoded<typeof FeatureContent>;
+  export type Encoded = typeof FeatureContent.Encoded;
 }
 
 const encodeFeatureContent = S.encodeEffect(FeatureContent);
@@ -293,7 +293,7 @@ export class AnnouncementContent extends Model<AnnouncementContent>("Announcemen
  * @since 0.0.0
  */
 export declare namespace AnnouncementContent {
-  export type Encoded = S.Codec.Encoded<typeof AnnouncementContent>;
+  export type Encoded = typeof AnnouncementContent.Encoded;
 }
 
 const encodeAnnouncementContent = S.encodeEffect(AnnouncementContent);
@@ -345,7 +345,7 @@ export class Targeting extends Model<Targeting>("Targeting")(
  * @since 0.0.0
  */
 export declare namespace Targeting {
-  export type Encoded = S.Codec.Encoded<typeof Targeting>;
+  export type Encoded = typeof Targeting.Encoded;
 }
 
 const decodeTargeting = S.decodeUnknownEffect(Targeting);
@@ -391,7 +391,7 @@ export class Display extends Model<Display>("Display")(
  * @since 0.0.0
  */
 export declare namespace Display {
-  export type Encoded = S.Codec.Encoded<typeof Display>;
+  export type Encoded = typeof Display.Encoded;
 }
 
 const decodeDisplay = S.decodeUnknownEffect(Display);
@@ -451,7 +451,7 @@ export class ChangelogAnnouncement extends Model<ChangelogAnnouncement>("Changel
  * @since 0.0.0
  */
 export declare namespace ChangelogAnnouncement {
-  export type Encoded = S.Codec.Encoded<typeof ChangelogAnnouncement>;
+  export type Encoded = typeof ChangelogAnnouncement.Encoded;
 }
 
 /**
@@ -494,7 +494,7 @@ export class FeatureAnnouncement extends Model<FeatureAnnouncement>("FeatureAnno
  * @since 0.0.0
  */
 export declare namespace FeatureAnnouncement {
-  export type Encoded = S.Codec.Encoded<typeof FeatureAnnouncement>;
+  export type Encoded = typeof FeatureAnnouncement.Encoded;
 }
 
 /**
@@ -534,7 +534,7 @@ export class NoticeAnnouncement extends Model<NoticeAnnouncement>("NoticeAnnounc
  * @since 0.0.0
  */
 export declare namespace NoticeAnnouncement {
-  export type Encoded = S.Codec.Encoded<typeof NoticeAnnouncement>;
+  export type Encoded = typeof NoticeAnnouncement.Encoded;
 }
 
 /**
@@ -623,7 +623,7 @@ export class AnnouncementContentMismatch extends S.TaggedError<AnnouncementConte
  * @since 0.0.0
  */
 export declare namespace AnnouncementContentMismatch {
-  export type Encoded = S.Codec.Encoded<typeof AnnouncementContentMismatch>;
+  export type Encoded = typeof AnnouncementContentMismatch.Encoded;
 }
 
 /**
@@ -912,7 +912,8 @@ export const announcementFromDict = Effect.fn("Announcement.fromDict")(function*
   const data: { [key: string]: unknown } = { ...input };
   const type: AnnouncementType = isAnnouncementType(data.type) ? data.type : "announcement";
   const id = P.isString(data.id) ? data.id : "";
-  const createdAt = DateTime.formatIso(yield* readCreatedAt(data.created_at));
+  const created = yield* readCreatedAt(data.created_at);
+  const createdAt = DateTime.formatIso(created);
   const active = yield* readActive(data.active);
   const targeting = yield* readTargeting(data.targeting);
   const display = yield* readDisplay(data.display);
@@ -1019,7 +1020,7 @@ export class ChangelogResponse extends Model<ChangelogResponse>("ChangelogRespon
  * @since 0.0.0
  */
 export declare namespace ChangelogResponse {
-  export type Encoded = S.Codec.Encoded<typeof ChangelogResponse>;
+  export type Encoded = typeof ChangelogResponse.Encoded;
 }
 
 /**
@@ -1052,7 +1053,7 @@ export class FeatureResponse extends Model<FeatureResponse>("FeatureResponse")(
  * @since 0.0.0
  */
 export declare namespace FeatureResponse {
-  export type Encoded = S.Codec.Encoded<typeof FeatureResponse>;
+  export type Encoded = typeof FeatureResponse.Encoded;
 }
 
 /**
@@ -1085,5 +1086,5 @@ export class AnnouncementListResponse extends Model<AnnouncementListResponse>("A
  * @since 0.0.0
  */
 export declare namespace AnnouncementListResponse {
-  export type Encoded = S.Codec.Encoded<typeof AnnouncementListResponse>;
+  export type Encoded = typeof AnnouncementListResponse.Encoded;
 }

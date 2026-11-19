@@ -398,25 +398,28 @@ describe("DataTypeKind", () => {
   it.effect(
     "rejects OSDK's renamed tags and tags of the wrong case",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(DataTypeKind)("datetime"),
-        rejects(DataTypeKind)("numericTimeseries"),
-        rejects(DataTypeKind)("stringTimeseries"),
-        rejects(DataTypeKind)("sensorTimeseries"),
-        rejects(DataTypeKind)("BOOLEAN"),
-        rejects(DataTypeKind)("timeSeries"),
-        rejects(DataTypeKind)(""),
-        rejects(PropertyTypeKind)("binary"),
-        rejects(PropertyTypeKind)("timeSeriesReference"),
-        rejects(ActionParameterTypeKind)("float"),
-        rejects(QueryDataTypeKind)("vector"),
-        rejects(ValueTypeKind)("attachment"),
-        rejects(PrimaryKeyKind)("decimal"),
-        rejects(PrimaryKeyKind)("float"),
-        rejects(NumericKind)("string"),
-        rejects(LegacyDataTypeKind)("attachment"),
-        rejects(LegacyDataTypeKind)("ANY"),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(DataTypeKind)("datetime"),
+          rejects(DataTypeKind)("numericTimeseries"),
+          rejects(DataTypeKind)("stringTimeseries"),
+          rejects(DataTypeKind)("sensorTimeseries"),
+          rejects(DataTypeKind)("BOOLEAN"),
+          rejects(DataTypeKind)("timeSeries"),
+          rejects(DataTypeKind)(""),
+          rejects(PropertyTypeKind)("binary"),
+          rejects(PropertyTypeKind)("timeSeriesReference"),
+          rejects(ActionParameterTypeKind)("float"),
+          rejects(QueryDataTypeKind)("vector"),
+          rejects(ValueTypeKind)("attachment"),
+          rejects(PrimaryKeyKind)("decimal"),
+          rejects(PrimaryKeyKind)("float"),
+          rejects(NumericKind)("string"),
+          rejects(LegacyDataTypeKind)("attachment"),
+          rejects(LegacyDataTypeKind)("ANY"),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -464,24 +467,54 @@ describe("literal domains carried by type tags", () => {
   it.effect(
     "decodes every wire literal to its domain literal and encodes it back",
     Effect.fnUntraced(function* () {
-      const markings = yield* Effect.all(A.map(MarkingKind.Pairs, ([wire]) => S.decodeEffect(MarkingKind)(wire)));
+      const markings = yield* Effect.all(
+        A.map(MarkingKind.Pairs, ([wire]) => S.decodeEffect(MarkingKind)(wire)),
+        { concurrency: 1 }
+      );
       const similarities = yield* Effect.all(
-        A.map(VectorSimilarity.Pairs, ([wire]) => S.decodeEffect(VectorSimilarity)(wire))
+        A.map(VectorSimilarity.Pairs, ([wire]) => S.decodeEffect(VectorSimilarity)(wire)),
+        { concurrency: 1 }
       );
       const models = yield* Effect.all(
-        A.map(HostedEmbeddingModel.Pairs, ([wire]) => S.decodeEffect(HostedEmbeddingModel)(wire))
+        A.map(HostedEmbeddingModel.Pairs, ([wire]) => S.decodeEffect(HostedEmbeddingModel)(wire)),
+        { concurrency: 1 }
       );
-      deepStrictEqual(markings, A.map(MarkingKind.Pairs, ([, domain]) => domain));
-      deepStrictEqual(similarities, A.map(VectorSimilarity.Pairs, ([, domain]) => domain));
-      deepStrictEqual(models, A.map(HostedEmbeddingModel.Pairs, ([, domain]) => domain));
-      const wireMarkings = yield* Effect.all(A.map(markings, (domain) => S.encodeEffect(MarkingKind)(domain)));
+      deepStrictEqual(
+        markings,
+        A.map(MarkingKind.Pairs, ([, domain]) => domain)
+      );
+      deepStrictEqual(
+        similarities,
+        A.map(VectorSimilarity.Pairs, ([, domain]) => domain)
+      );
+      deepStrictEqual(
+        models,
+        A.map(HostedEmbeddingModel.Pairs, ([, domain]) => domain)
+      );
+      const wireMarkings = yield* Effect.all(
+        A.map(markings, (domain) => S.encodeEffect(MarkingKind)(domain)),
+        { concurrency: 1 }
+      );
       const wireSimilarities = yield* Effect.all(
-        A.map(similarities, (domain) => S.encodeEffect(VectorSimilarity)(domain))
+        A.map(similarities, (domain) => S.encodeEffect(VectorSimilarity)(domain)),
+        { concurrency: 1 }
       );
-      const wireModels = yield* Effect.all(A.map(models, (domain) => S.encodeEffect(HostedEmbeddingModel)(domain)));
-      deepStrictEqual(wireMarkings, A.map(MarkingKind.Pairs, ([wire]) => wire));
-      deepStrictEqual(wireSimilarities, A.map(VectorSimilarity.Pairs, ([wire]) => wire));
-      deepStrictEqual(wireModels, A.map(HostedEmbeddingModel.Pairs, ([wire]) => wire));
+      const wireModels = yield* Effect.all(
+        A.map(models, (domain) => S.encodeEffect(HostedEmbeddingModel)(domain)),
+        { concurrency: 1 }
+      );
+      deepStrictEqual(
+        wireMarkings,
+        A.map(MarkingKind.Pairs, ([wire]) => wire)
+      );
+      deepStrictEqual(
+        wireSimilarities,
+        A.map(VectorSimilarity.Pairs, ([wire]) => wire)
+      );
+      deepStrictEqual(
+        wireModels,
+        A.map(HostedEmbeddingModel.Pairs, ([wire]) => wire)
+      );
     })
   );
 
@@ -511,16 +544,19 @@ describe("literal domains carried by type tags", () => {
   it.effect(
     "rejects domain literals on the wire and literals outside each domain",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(MarkingKind)("cbac"),
-        rejects(MarkingKind)("Mandatory"),
-        rejects(MarkingKind)("ORGANIZATION"),
-        rejects(VectorSimilarity)("cosine"),
-        rejects(VectorSimilarity)("COSINE"),
-        rejects(VectorSimilarity)("MANHATTAN_DISTANCE"),
-        rejects(HostedEmbeddingModel)("textEmbedding3Large"),
-        rejects(HostedEmbeddingModel)("TEXT_EMBEDDING_4"),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(MarkingKind)("cbac"),
+          rejects(MarkingKind)("Mandatory"),
+          rejects(MarkingKind)("ORGANIZATION"),
+          rejects(VectorSimilarity)("cosine"),
+          rejects(VectorSimilarity)("COSINE"),
+          rejects(VectorSimilarity)("MANHATTAN_DISTANCE"),
+          rejects(HostedEmbeddingModel)("textEmbedding3Large"),
+          rejects(HostedEmbeddingModel)("TEXT_EMBEDDING_4"),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -583,7 +619,8 @@ describe("payload-free tag records", () => {
           deepStrictEqual(encoded, wire);
           deepStrictEqual(fromDomain, wire);
           return decoded.type === tag && made.type === tag && S.toEquivalence(schema)(decoded, made);
-        })
+        }),
+        { concurrency: 1 }
       );
       assertTrue(A.every(results, identity));
     })
@@ -596,15 +633,17 @@ describe("payload-free tag records", () => {
         payloadFreeRecords,
         Effect.fnUntraced(function* ([tag, schema]) {
           const others = A.filter(DataTypeKind.literals, (other) => other !== tag);
-          const refusedTags = yield* Effect.all(A.map(others, (other) => rejects(schema)({ type: other })));
-          const refusedShapes = yield* Effect.all([
-            rejects(schema)({}),
-            rejects(schema)(tag),
-            rejects(schema)(null),
-            rejects(schema)([tag]),
-          ]);
+          const refusedTags = yield* Effect.all(
+            A.map(others, (other) => rejects(schema)({ type: other })),
+            { concurrency: 1 }
+          );
+          const refusedShapes = yield* Effect.all(
+            [rejects(schema)({}), rejects(schema)(tag), rejects(schema)(null), rejects(schema)([tag])],
+            { concurrency: 1 }
+          );
           return A.every(refusedTags, identity) && A.every(refusedShapes, identity);
-        })
+        }),
+        { concurrency: 1 }
       );
       assertTrue(A.every(results, identity));
     })
@@ -729,15 +768,18 @@ describe("DecimalType", () => {
   it.effect(
     "rejects a precision below one, a negative scale and fractional bounds",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(DecimalType)({ type: "decimal", precision: 0 }),
-        rejects(DecimalType)({ type: "decimal", precision: -3 }),
-        rejects(DecimalType)({ type: "decimal", precision: 1.5 }),
-        rejects(DecimalType)({ type: "decimal", scale: -1 }),
-        rejects(DecimalType)({ type: "decimal", scale: 0.5 }),
-        rejects(DecimalType)({ type: "decimal", precision: "38" }),
-        rejects(DecimalType)({ type: "decimal", precision: null }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(DecimalType)({ type: "decimal", precision: 0 }),
+          rejects(DecimalType)({ type: "decimal", precision: -3 }),
+          rejects(DecimalType)({ type: "decimal", precision: 1.5 }),
+          rejects(DecimalType)({ type: "decimal", scale: -1 }),
+          rejects(DecimalType)({ type: "decimal", scale: 0.5 }),
+          rejects(DecimalType)({ type: "decimal", precision: "38" }),
+          rejects(DecimalType)({ type: "decimal", precision: null }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       assertNone(DecimalType.makeOption({ precision: O.some(0) }));
       assertNone(DecimalType.makeOption({ scale: O.some(-1) }));
@@ -760,14 +802,19 @@ describe("DecimalType", () => {
       deepStrictEqual([atTheBound.precision, atTheBound.scale], [O.some(5), O.some(5)]);
       const encoded = yield* S.encodeEffect(DecimalType)(atTheBound);
       deepStrictEqual(encoded, { type: "decimal", precision: 5, scale: 5 });
-      const verdicts = yield* Effect.all([
-        rejects(DecimalType)({ type: "decimal", precision: 5, scale: 6 }),
-        rejects(DecimalType)({ type: "decimal", precision: 1, scale: 2 }),
-        Effect.map(
-          Effect.exit(S.encodeUnknownEffect(DecimalType)({ type: "decimal", precision: O.some(5), scale: O.some(6) })),
-          Exit.isFailure
-        ),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(DecimalType)({ type: "decimal", precision: 5, scale: 6 }),
+          rejects(DecimalType)({ type: "decimal", precision: 1, scale: 2 }),
+          Effect.map(
+            Effect.exit(
+              S.encodeUnknownEffect(DecimalType)({ type: "decimal", precision: O.some(5), scale: O.some(6) })
+            ),
+            Exit.isFailure
+          ),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       assertNone(DecimalType.makeOption({ precision: O.some(5), scale: O.some(6) }));
       assertSome(
@@ -834,12 +881,15 @@ describe("MarkingType", () => {
   it.effect(
     "rejects a subtype that is not the wire enum",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(MarkingType)({ type: "marking", markingType: "cbac" }),
-        rejects(MarkingType)({ type: "marking", markingType: "ORGANIZATION" }),
-        rejects(MarkingType)({ type: "marking", markingType: null }),
-        rejects(MarkingType)({ type: "markings" }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(MarkingType)({ type: "marking", markingType: "cbac" }),
+          rejects(MarkingType)({ type: "marking", markingType: "ORGANIZATION" }),
+          rejects(MarkingType)({ type: "marking", markingType: null }),
+          rejects(MarkingType)({ type: "markings" }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -870,11 +920,14 @@ describe("CipherTextType", () => {
   it.effect(
     "rejects an empty channel and the lower-case tag",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(CipherTextType)({ type: "cipherText", defaultCipherChannel: "" }),
-        rejects(CipherTextType)({ type: "cipherText", defaultCipherChannel: 7 }),
-        rejects(CipherTextType)({ type: "ciphertext" }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(CipherTextType)({ type: "cipherText", defaultCipherChannel: "" }),
+          rejects(CipherTextType)({ type: "cipherText", defaultCipherChannel: 7 }),
+          rejects(CipherTextType)({ type: "ciphertext" }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -965,14 +1018,17 @@ describe("TimeseriesType", () => {
   it.effect(
     "rejects a missing item type, OSDK's split tags and the domain key on the wire",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(TimeseriesType)({ type: "timeseries" }),
-        rejects(TimeseriesType)({ type: "timeseries", itemType: { type: "integer" } }),
-        rejects(TimeseriesType)({ type: "timeseries", itemType: "double" }),
-        rejects(TimeseriesType)({ type: "numericTimeseries" }),
-        rejects(TimeseriesType)({ type: "timeSeries", itemType: { type: "double" } }),
-        rejects(TimeSeriesItem)({ type: "numericOrNonNumeric", isNonNumericPropertyTypeId: "" }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(TimeseriesType)({ type: "timeseries" }),
+          rejects(TimeseriesType)({ type: "timeseries", itemType: { type: "integer" } }),
+          rejects(TimeseriesType)({ type: "timeseries", itemType: "double" }),
+          rejects(TimeseriesType)({ type: "numericTimeseries" }),
+          rejects(TimeseriesType)({ type: "timeSeries", itemType: { type: "double" } }),
+          rejects(TimeSeriesItem)({ type: "numericOrNonNumeric", isNonNumericPropertyTypeId: "" }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       // The domain key is not a wire key: it is ignored like any undeclared key, so the reference is lost.
       const decoded = yield* S.decodeUnknownEffect(SensorSeriesItem)({
@@ -1107,7 +1163,8 @@ describe("VectorType", () => {
           deepStrictEqual(decoded.supportsSearchWith, [domain]);
           deepStrictEqual(encoded, fixture);
           return true;
-        })
+        }),
+        { concurrency: 1 }
       );
       strictEqual(A.length(results), 3);
     })
@@ -1141,7 +1198,8 @@ describe("VectorType", () => {
             lms: ({ model }) => model === domain,
             foundryLiveDeployment: () => false,
           });
-        })
+        }),
+        { concurrency: 1 }
       );
       strictEqual(A.length(results), 6);
       assertTrue(A.every(results, identity));
@@ -1170,13 +1228,16 @@ describe("VectorType", () => {
   it.effect(
     "rejects a dimension that is not a positive integer",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(VectorType)({ type: "vector", dimension: 0, supportsSearchWith: [] }),
-        rejects(VectorType)({ type: "vector", dimension: -1, supportsSearchWith: [] }),
-        rejects(VectorType)({ type: "vector", dimension: 1.5, supportsSearchWith: [] }),
-        rejects(VectorType)({ type: "vector", dimension: "3", supportsSearchWith: [] }),
-        rejects(VectorType)({ type: "vector", supportsSearchWith: [] }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(VectorType)({ type: "vector", dimension: 0, supportsSearchWith: [] }),
+          rejects(VectorType)({ type: "vector", dimension: -1, supportsSearchWith: [] }),
+          rejects(VectorType)({ type: "vector", dimension: 1.5, supportsSearchWith: [] }),
+          rejects(VectorType)({ type: "vector", dimension: "3", supportsSearchWith: [] }),
+          rejects(VectorType)({ type: "vector", supportsSearchWith: [] }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
       assertNone(VectorType.makeOption({ dimension: 0 }));
       assertSome(
@@ -1194,32 +1255,40 @@ describe("VectorType", () => {
       deepStrictEqual(saved, VectorType.make({ dimension: 3 }));
       const canonical = yield* S.encodeEffect(VectorType)(saved);
       deepStrictEqual(canonical, { type: "vector", dimension: 3, supportsSearchWith: [] });
-      const verdicts = yield* Effect.all([
-        rejects(VectorType)({ type: "vector", dimension: 3, supportsSearchWith: {} }),
-        rejects(VectorType)({ type: "vector", dimension: 3, supportsSearchWith: ["COSINE_SIMILARITY"] }),
-        rejects(VectorType)({ type: "vector", dimension: 3, supportsSearchWith: [{ value: "cosine" }] }),
-        rejects(VectorType)({ type: "vector", dimension: 3, supportsSearchWith: [], embeddingModel: { type: "lms" } }),
-        rejects(VectorType)({
-          type: "vector",
-          dimension: 3,
-          supportsSearchWith: [],
-          embeddingModel: { type: "lms", value: "textEmbedding3Small" },
-        }),
-        rejects(VectorType)({
-          type: "vector",
-          dimension: 3,
-          supportsSearchWith: [],
-          embeddingModel: { type: "foundryLiveDeployment", rid: "" },
-        }),
-        rejects(VectorType)({
-          type: "vector",
-          dimension: 3,
-          supportsSearchWith: [],
-          embeddingModel: { type: "custom" },
-        }),
-        // The domain key `model` is not a wire key.
-        rejects(EmbeddingSource)({ type: "lms", model: "TEXT_EMBEDDING_3_SMALL" }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(VectorType)({ type: "vector", dimension: 3, supportsSearchWith: {} }),
+          rejects(VectorType)({ type: "vector", dimension: 3, supportsSearchWith: ["COSINE_SIMILARITY"] }),
+          rejects(VectorType)({ type: "vector", dimension: 3, supportsSearchWith: [{ value: "cosine" }] }),
+          rejects(VectorType)({
+            type: "vector",
+            dimension: 3,
+            supportsSearchWith: [],
+            embeddingModel: { type: "lms" },
+          }),
+          rejects(VectorType)({
+            type: "vector",
+            dimension: 3,
+            supportsSearchWith: [],
+            embeddingModel: { type: "lms", value: "textEmbedding3Small" },
+          }),
+          rejects(VectorType)({
+            type: "vector",
+            dimension: 3,
+            supportsSearchWith: [],
+            embeddingModel: { type: "foundryLiveDeployment", rid: "" },
+          }),
+          rejects(VectorType)({
+            type: "vector",
+            dimension: 3,
+            supportsSearchWith: [],
+            embeddingModel: { type: "custom" },
+          }),
+          // The domain key `model` is not a wire key.
+          rejects(EmbeddingSource)({ type: "lms", model: "TEXT_EMBEDDING_3_SMALL" }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -1259,12 +1328,15 @@ describe("UnsupportedType", () => {
   it.effect(
     "requires both wire keys and string-valued parameters",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(UnsupportedType)({ type: "unsupported", unsupportedType: "x" }),
-        rejects(UnsupportedType)({ type: "unsupported", params: {} }),
-        rejects(UnsupportedType)({ type: "unsupported", unsupportedType: "x", params: { rank: 3 } }),
-        rejects(UnsupportedType)({ type: "unsupported", unsupportedType: "x", params: [] }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(UnsupportedType)({ type: "unsupported", unsupportedType: "x" }),
+          rejects(UnsupportedType)({ type: "unsupported", params: {} }),
+          rejects(UnsupportedType)({ type: "unsupported", unsupportedType: "x", params: { rank: 3 } }),
+          rejects(UnsupportedType)({ type: "unsupported", unsupportedType: "x", params: [] }),
+        ],
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );

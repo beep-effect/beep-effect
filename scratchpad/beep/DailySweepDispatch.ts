@@ -109,7 +109,7 @@ export class MemoryExtractionFailure extends S.TaggedError<MemoryExtractionFailu
  * @since 0.0.0
  */
 export declare namespace MemoryExtractionFailure {
-  export type Encoded = S.Codec.Encoded<typeof MemoryExtractionFailure>;
+  export type Encoded = typeof MemoryExtractionFailure.Encoded;
 }
 
 const isMemoryExtractionFailure = S.is(MemoryExtractionFailure);
@@ -154,7 +154,7 @@ export class SweepPreDispatchError extends S.TaggedError<SweepPreDispatchError, 
  * @since 0.0.0
  */
 export declare namespace SweepPreDispatchError {
-  export type Encoded = S.Codec.Encoded<typeof SweepPreDispatchError>;
+  export type Encoded = typeof SweepPreDispatchError.Encoded;
 }
 
 const isSweepPreDispatchError = S.is(SweepPreDispatchError);
@@ -212,7 +212,7 @@ export class SweepDispatchTokenError extends S.TaggedError<SweepDispatchTokenErr
  * @since 0.0.0
  */
 export declare namespace SweepDispatchTokenError {
-  export type Encoded = S.Codec.Encoded<typeof SweepDispatchTokenError>;
+  export type Encoded = typeof SweepDispatchTokenError.Encoded;
 }
 
 /**
@@ -263,7 +263,7 @@ export class SweepDispatchScope extends Model<SweepDispatchScope>("SweepDispatch
  * @since 0.0.0
  */
 export declare namespace SweepDispatchScope {
-  export type Encoded = S.Codec.Encoded<typeof SweepDispatchScope>;
+  export type Encoded = typeof SweepDispatchScope.Encoded;
 }
 
 /**
@@ -554,7 +554,7 @@ export class CertifiedSweepFailure extends S.TaggedError<CertifiedSweepFailure, 
  * @since 0.0.0
  */
 export declare namespace CertifiedSweepFailure {
-  export type Encoded = S.Codec.Encoded<typeof CertifiedSweepFailure>;
+  export type Encoded = typeof CertifiedSweepFailure.Encoded;
 }
 
 /**

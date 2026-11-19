@@ -97,7 +97,7 @@ export class TaskRecommendationError extends S.TaggedError<TaskRecommendationErr
  * @since 0.0.0
  */
 export declare namespace TaskRecommendationError {
-  export type Encoded = S.Codec.Encoded<typeof TaskRecommendationError>;
+  export type Encoded = typeof TaskRecommendationError.Encoded;
 }
 
 /**
@@ -143,7 +143,7 @@ export type RecommendationSubjectKind = typeof RecommendationSubjectKind.Type;
  */
 export declare namespace RecommendationSubjectKind {
   /** @category type-level @since 0.0.0 */
-  export type Encoded = S.Codec.Encoded<typeof RecommendationSubjectKind>;
+  export type Encoded = typeof RecommendationSubjectKind.Encoded;
 }
 
 /**
@@ -187,7 +187,7 @@ export type FeedbackSubjectKind = typeof FeedbackSubjectKind.Type;
  * @since 0.0.0
  */
 export declare namespace FeedbackSubjectKind {
-  export type Encoded = S.Codec.Encoded<typeof FeedbackSubjectKind>;
+  export type Encoded = typeof FeedbackSubjectKind.Encoded;
 }
 
 /**
@@ -228,7 +228,7 @@ export type InterventionSurface = typeof InterventionSurface.Type;
  * @since 0.0.0
  */
 export declare namespace InterventionSurface {
-  export type Encoded = S.Codec.Encoded<typeof InterventionSurface>;
+  export type Encoded = typeof InterventionSurface.Encoded;
 }
 
 /**
@@ -274,7 +274,7 @@ export type ContextMatchSignal = typeof ContextMatchSignal.Type;
  * @since 0.0.0
  */
 export declare namespace ContextMatchSignal {
-  export type Encoded = S.Codec.Encoded<typeof ContextMatchSignal>;
+  export type Encoded = typeof ContextMatchSignal.Encoded;
 }
 
 /**
@@ -318,7 +318,7 @@ export type OpenLoopKind = typeof OpenLoopKind.Type;
  * @since 0.0.0
  */
 export declare namespace OpenLoopKind {
-  export type Encoded = S.Codec.Encoded<typeof OpenLoopKind>;
+  export type Encoded = typeof OpenLoopKind.Encoded;
 }
 
 /**
@@ -361,7 +361,7 @@ export type OpenLoopStatus = typeof OpenLoopStatus.Type;
  * @since 0.0.0
  */
 export declare namespace OpenLoopStatus {
-  export type Encoded = S.Codec.Encoded<typeof OpenLoopStatus>;
+  export type Encoded = typeof OpenLoopStatus.Encoded;
 }
 
 /**
@@ -406,7 +406,7 @@ export type TaskIntelligenceFeedbackAction = typeof TaskIntelligenceFeedbackActi
  * @since 0.0.0
  */
 export declare namespace TaskIntelligenceFeedbackAction {
-  export type Encoded = S.Codec.Encoded<typeof TaskIntelligenceFeedbackAction>;
+  export type Encoded = typeof TaskIntelligenceFeedbackAction.Encoded;
 }
 
 /**
@@ -448,7 +448,7 @@ export type TaskIntelligenceFeedbackReason = typeof TaskIntelligenceFeedbackReas
  * @since 0.0.0
  */
 export declare namespace TaskIntelligenceFeedbackReason {
-  export type Encoded = S.Codec.Encoded<typeof TaskIntelligenceFeedbackReason>;
+  export type Encoded = typeof TaskIntelligenceFeedbackReason.Encoded;
 }
 
 /**
@@ -493,7 +493,7 @@ export type TaskIntelligenceOutcomeCode = typeof TaskIntelligenceOutcomeCode.Typ
  * @since 0.0.0
  */
 export declare namespace TaskIntelligenceOutcomeCode {
-  export type Encoded = S.Codec.Encoded<typeof TaskIntelligenceOutcomeCode>;
+  export type Encoded = typeof TaskIntelligenceOutcomeCode.Encoded;
 }
 
 /**
@@ -539,7 +539,7 @@ export type EvidenceKind = typeof EvidenceKind.Type;
  * @since 0.0.0
  */
 export declare namespace EvidenceKind {
-  export type Encoded = S.Codec.Encoded<typeof EvidenceKind>;
+  export type Encoded = typeof EvidenceKind.Encoded;
 }
 
 /**
@@ -577,7 +577,7 @@ export type EvidenceScope = typeof EvidenceScope.Type;
  * @since 0.0.0
  */
 export declare namespace EvidenceScope {
-  export type Encoded = S.Codec.Encoded<typeof EvidenceScope>;
+  export type Encoded = typeof EvidenceScope.Encoded;
 }
 
 const optionalFinite = (column: string) =>
@@ -640,7 +640,7 @@ export class EvidenceRef extends Model<EvidenceRef>("EvidenceRef")(
  * @since 0.0.0
  */
 export declare namespace EvidenceRef {
-  export type Encoded = S.Codec.Encoded<typeof EvidenceRef>;
+  export type Encoded = typeof EvidenceRef.Encoded;
 }
 
 const evidenceMessage = (ref: EvidenceRef): O.Option<string> => {
@@ -725,7 +725,7 @@ export class DeterministicFacts extends Model<DeterministicFacts>("Deterministic
  * @since 0.0.0
  */
 export declare namespace DeterministicFacts {
-  export type Encoded = S.Codec.Encoded<typeof DeterministicFacts>;
+  export type Encoded = typeof DeterministicFacts.Encoded;
 }
 
 /**
@@ -795,7 +795,7 @@ export class ShortlistEligibility extends Model<ShortlistEligibility>("Shortlist
  * @since 0.0.0
  */
 export declare namespace ShortlistEligibility {
-  export type Encoded = S.Codec.Encoded<typeof ShortlistEligibility>;
+  export type Encoded = typeof ShortlistEligibility.Encoded;
 }
 
 /**
@@ -879,7 +879,7 @@ export class Recommendation extends Model<Recommendation>("Recommendation")(
  * @since 0.0.0
  */
 export declare namespace Recommendation {
-  export type Encoded = S.Codec.Encoded<typeof Recommendation>;
+  export type Encoded = typeof Recommendation.Encoded;
 }
 
 /**
@@ -932,7 +932,7 @@ export class WhatMattersNowProjection extends Model<WhatMattersNowProjection>("W
  * @since 0.0.0
  */
 export declare namespace WhatMattersNowProjection {
-  export type Encoded = S.Codec.Encoded<typeof WhatMattersNowProjection>;
+  export type Encoded = typeof WhatMattersNowProjection.Encoded;
 }
 
 /**
@@ -989,7 +989,7 @@ export class FeedbackCreate extends Model<FeedbackCreate>("FeedbackCreate")(
  * @since 0.0.0
  */
 export declare namespace FeedbackCreate {
-  export type Encoded = S.Codec.Encoded<typeof FeedbackCreate>;
+  export type Encoded = typeof FeedbackCreate.Encoded;
 }
 
 const needsIntervention = (action: TaskIntelligenceFeedbackAction): boolean =>
@@ -1080,7 +1080,7 @@ export class InterventionCreate extends Model<InterventionCreate>("InterventionC
  * @since 0.0.0
  */
 export declare namespace InterventionCreate {
-  export type Encoded = S.Codec.Encoded<typeof InterventionCreate>;
+  export type Encoded = typeof InterventionCreate.Encoded;
 }
 
 /**
@@ -1138,7 +1138,7 @@ export class InterventionRecord extends Model<InterventionRecord>("InterventionR
  * @since 0.0.0
  */
 export declare namespace InterventionRecord {
-  export type Encoded = S.Codec.Encoded<typeof InterventionRecord>;
+  export type Encoded = typeof InterventionRecord.Encoded;
 }
 
 /**
@@ -1202,7 +1202,7 @@ export class FeedbackRecord extends Model<FeedbackRecord>("FeedbackRecord")(
  * @since 0.0.0
  */
 export declare namespace FeedbackRecord {
-  export type Encoded = S.Codec.Encoded<typeof FeedbackRecord>;
+  export type Encoded = typeof FeedbackRecord.Encoded;
 }
 
 /**
@@ -1247,7 +1247,7 @@ export class OutcomeCreate extends Model<OutcomeCreate>("OutcomeCreate")(
  * @since 0.0.0
  */
 export declare namespace OutcomeCreate {
-  export type Encoded = S.Codec.Encoded<typeof OutcomeCreate>;
+  export type Encoded = typeof OutcomeCreate.Encoded;
 }
 
 /**
@@ -1298,7 +1298,7 @@ export class OutcomeRecord extends Model<OutcomeRecord>("OutcomeRecord")(
  * @since 0.0.0
  */
 export declare namespace OutcomeRecord {
-  export type Encoded = S.Codec.Encoded<typeof OutcomeRecord>;
+  export type Encoded = typeof OutcomeRecord.Encoded;
 }
 
 const matchSignals = S.Array(ContextMatchSignal)
@@ -1345,7 +1345,7 @@ export class NormalizedContextMatch extends Model<NormalizedContextMatch>("Norma
  * @since 0.0.0
  */
 export declare namespace NormalizedContextMatch {
-  export type Encoded = S.Codec.Encoded<typeof NormalizedContextMatch>;
+  export type Encoded = typeof NormalizedContextMatch.Encoded;
 }
 
 /**
@@ -1419,7 +1419,7 @@ export class NormalizedContextSnapshot extends Model<NormalizedContextSnapshot>(
  * @since 0.0.0
  */
 export declare namespace NormalizedContextSnapshot {
-  export type Encoded = S.Codec.Encoded<typeof NormalizedContextSnapshot>;
+  export type Encoded = typeof NormalizedContextSnapshot.Encoded;
 }
 
 /**
@@ -1473,7 +1473,7 @@ export class OpenLoopDescriptor extends Model<OpenLoopDescriptor>("OpenLoopDescr
  * @since 0.0.0
  */
 export declare namespace OpenLoopDescriptor {
-  export type Encoded = S.Codec.Encoded<typeof OpenLoopDescriptor>;
+  export type Encoded = typeof OpenLoopDescriptor.Encoded;
 }
 
 /**
@@ -1536,7 +1536,7 @@ export class OpenLoopSnapshot extends Model<OpenLoopSnapshot>("OpenLoopSnapshot"
  * @since 0.0.0
  */
 export declare namespace OpenLoopSnapshot {
-  export type Encoded = S.Codec.Encoded<typeof OpenLoopSnapshot>;
+  export type Encoded = typeof OpenLoopSnapshot.Encoded;
 }
 
 /**
@@ -1573,7 +1573,7 @@ export class EvaluationRequest extends Model<EvaluationRequest>("EvaluationReque
  * @since 0.0.0
  */
 export declare namespace EvaluationRequest {
-  export type Encoded = S.Codec.Encoded<typeof EvaluationRequest>;
+  export type Encoded = typeof EvaluationRequest.Encoded;
 }
 
 /**
@@ -1638,7 +1638,7 @@ export class DecisionRecord extends Model<DecisionRecord>("DecisionRecord")(
  * @since 0.0.0
  */
 export declare namespace DecisionRecord {
-  export type Encoded = S.Codec.Encoded<typeof DecisionRecord>;
+  export type Encoded = typeof DecisionRecord.Encoded;
 }
 
 /**
@@ -1672,7 +1672,7 @@ export class DecisionDebugProjection extends Model<DecisionDebugProjection>("Dec
  * @since 0.0.0
  */
 export declare namespace DecisionDebugProjection {
-  export type Encoded = S.Codec.Encoded<typeof DecisionDebugProjection>;
+  export type Encoded = typeof DecisionDebugProjection.Encoded;
 }
 
 /**
@@ -1719,5 +1719,5 @@ export class SnapshotReceipt extends Model<SnapshotReceipt>("SnapshotReceipt")(
  * @since 0.0.0
  */
 export declare namespace SnapshotReceipt {
-  export type Encoded = S.Codec.Encoded<typeof SnapshotReceipt>;
+  export type Encoded = typeof SnapshotReceipt.Encoded;
 }

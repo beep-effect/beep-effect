@@ -243,7 +243,7 @@ export type MemoryLayer = typeof MemoryLayer.Type;
  */
 export declare namespace MemoryLayer {
   /** Encoded form of {@link MemoryLayer}. */
-  export type Encoded = S.Codec.Encoded<typeof MemoryLayer>;
+  export type Encoded = typeof MemoryLayer.Encoded;
 }
 
 /**
@@ -505,7 +505,7 @@ const nonBlank = S.makeFilter((value: string) => (Str.isEmpty(Str.trim(value)) ?
 const triggerJson = S.fromJsonString(S.JsonObject);
 
 const triggerWithinLimit = S.makeFilter((value: typeof triggerJson.Type) =>
-  Str.length(Result.getOrThrow(S.encodeResult(triggerJson)(value))) > MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS
+  Str.length(S.encodeResult(triggerJson)(value).pipe(Result.getOrThrow)) > MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS
     ? "ledger trigger condition exceeds the serialized limit"
     : undefined,
 );
@@ -541,7 +541,7 @@ export class MemoryItemRejected extends S.TaggedError<MemoryItemRejected, { read
  */
 export declare namespace MemoryItemRejected {
   /** Encoded form of {@link MemoryItemRejected}. */
-  export type Encoded = S.Codec.Encoded<typeof MemoryItemRejected>;
+  export type Encoded = typeof MemoryItemRejected.Encoded;
 }
 
 /**
@@ -593,7 +593,7 @@ export class MemoryEvidenceLink extends Model<MemoryEvidenceLink>("MemoryEvidenc
  */
 export declare namespace MemoryEvidenceLink {
   /** Encoded form of {@link MemoryEvidenceLink}. */
-  export type Encoded = S.Codec.Encoded<typeof MemoryEvidenceLink>;
+  export type Encoded = typeof MemoryEvidenceLink.Encoded;
 }
 
 /**
@@ -630,7 +630,7 @@ export class AccessDecision extends Model<AccessDecision>("AccessDecision")(
  */
 export declare namespace AccessDecision {
   /** Encoded form of {@link AccessDecision}. */
-  export type Encoded = S.Codec.Encoded<typeof AccessDecision>;
+  export type Encoded = typeof AccessDecision.Encoded;
 }
 
 /**
@@ -683,7 +683,7 @@ export class MemoryAccessPolicy extends Model<MemoryAccessPolicy>("MemoryAccessP
  */
 export declare namespace MemoryAccessPolicy {
   /** Encoded form of {@link MemoryAccessPolicy}. */
-  export type Encoded = S.Codec.Encoded<typeof MemoryAccessPolicy>;
+  export type Encoded = typeof MemoryAccessPolicy.Encoded;
 }
 
 /**
@@ -778,7 +778,7 @@ export class MemoryItemAlias extends Model<MemoryItemAlias>("MemoryItemAlias")(
  */
 export declare namespace MemoryItemAlias {
   /** Encoded form of {@link MemoryItemAlias}. */
-  export type Encoded = S.Codec.Encoded<typeof MemoryItemAlias>;
+  export type Encoded = typeof MemoryItemAlias.Encoded;
 }
 
 /**
@@ -1024,7 +1024,7 @@ export class MemoryItem extends Model<MemoryItem>("MemoryItem")(
  */
 export declare namespace MemoryItem {
   /** Encoded form of {@link MemoryItem}. */
-  export type Encoded = S.Codec.Encoded<typeof MemoryItem>;
+  export type Encoded = typeof MemoryItem.Encoded;
 }
 
 const decodeUnknownEffectMemoryItem = S.decodeUnknownEffect(MemoryItem);
@@ -1082,9 +1082,10 @@ const sha256Hex = Effect.fn("ProductMemory.sha256Hex")(function* (payload: strin
  */
 export const normalizedMemoryContentKey = Effect.fn("normalizedMemoryContentKey")(function* (content: O.Option<string>) {
   if (O.isNone(content)) return O.none();
-  const collapsed = A.join(A.filter(Str.split(Str.toLowerCase(content.value.normalize("NFKC")), /\s+/u), Str.isNonEmpty), " ");
+  const collapsed = A.join(A.filter(Str.split(Str.toLowerCase(Str.normalize("NFKC")(content.value)), /\s+/u), Str.isNonEmpty), " ");
   if (Str.isEmpty(collapsed)) return O.none();
-  return O.some(yield* sha256Hex(collapsed));
+  const digest = yield* sha256Hex(collapsed);
+  return O.some(digest);
 });
 
 const reject = (reason: string) => MemoryItemRejected.make({ reason });
@@ -1253,7 +1254,8 @@ export const normalizeMemoryItem = Effect.fn("MemoryItem.normalizeMemoryItem")(f
  * @since 0.0.0
  */
 export const decodeMemoryItem = Effect.fn("MemoryItem.decodeMemoryItem")(function* (input: unknown) {
-  return yield* normalizeMemoryItem(yield* decodeUnknownEffectMemoryItem(input));
+  const item = yield* decodeUnknownEffectMemoryItem(input);
+  return yield* normalizeMemoryItem(item);
 });
 
 /**

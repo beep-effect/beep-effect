@@ -10,10 +10,10 @@
  */
 
 import type { IRI } from "@beep/rdf";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as Order from "effect/Order";
 import * as A from "effect/Array";
+import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import type { Entity } from "../Domain/Model/Entity.ts";
 import { ENTITY_ID_PATTERN } from "../Domain/Model/shared.ts";
@@ -83,9 +83,10 @@ export const mergeEntityFields = (entities: A.NonEmptyReadonlyArray<Entity>) => 
   }
 
   const threshold = Math.ceil(entities.length / 2);
-  const mergedTypes = A.fromIterable(typeFrequency)
-    .filter(([_, count]) => count >= threshold)
-    .map(([type]) => type);
+  const mergedTypes = A.map(
+    A.filter(A.fromIterable(typeFrequency), ([_, count]) => count >= threshold),
+    ([type]) => type
+  );
   const types = A.match(mergedTypes, {
     onEmpty: () => canonical.types,
     onNonEmpty: (values) => A.prepend(values, canonical.types[0]),

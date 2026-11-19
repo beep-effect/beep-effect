@@ -68,6 +68,22 @@ export const SeriesId = S.NonEmptyString.pipe(
 export type SeriesId = typeof SeriesId.Type;
 
 /**
+ * Companion namespace for {@link SeriesId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SeriesId {
+  /**
+   * Encoded (wire) form of {@link SeriesId}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof SeriesId.Encoded;
+}
+
+/**
  * Resource identifier of a time series sync, the ingestion that feeds a series.
  *
  * @category identifiers
@@ -87,6 +103,22 @@ export const TimeSeriesSyncRid = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type TimeSeriesSyncRid = typeof TimeSeriesSyncRid.Type;
+
+/**
+ * Companion namespace for {@link TimeSeriesSyncRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimeSeriesSyncRid {
+  /**
+   * Encoded (wire) form of {@link TimeSeriesSyncRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TimeSeriesSyncRid.Encoded;
+}
 
 /**
  * Resource identifier of a template whose formula resolves to a derived series.
@@ -110,6 +142,22 @@ export const TimeSeriesTemplateRid = S.NonEmptyString.pipe(
 export type TimeSeriesTemplateRid = typeof TimeSeriesTemplateRid.Type;
 
 /**
+ * Companion namespace for {@link TimeSeriesTemplateRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimeSeriesTemplateRid {
+  /**
+   * Encoded (wire) form of {@link TimeSeriesTemplateRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TimeSeriesTemplateRid.Encoded;
+}
+
+/**
  * Version of a derived-series template, such as `"0.0.0"`.
  *
  * @category identifiers
@@ -129,6 +177,22 @@ export const TimeSeriesTemplateVersion = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type TimeSeriesTemplateVersion = typeof TimeSeriesTemplateVersion.Type;
+
+/**
+ * Companion namespace for {@link TimeSeriesTemplateVersion}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimeSeriesTemplateVersion {
+  /**
+   * Encoded (wire) form of {@link TimeSeriesTemplateVersion}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TimeSeriesTemplateVersion.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Units
@@ -184,6 +248,22 @@ export const TimeUnit = MappedLiteralKit([
 export type TimeUnit = typeof TimeUnit.Type;
 
 /**
+ * Companion namespace for {@link TimeUnit}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimeUnit {
+  /**
+   * Encoded (wire) form of {@link TimeUnit}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TimeUnit.Encoded;
+}
+
+/**
  * Units a relative time of a series read may be counted in: every {@link TimeUnit} except quarters.
  *
  * **Example** (Quarters are not a series unit)
@@ -212,6 +292,22 @@ export const SeriesTimeUnit = TimeUnit.omit(["QUARTERS"]).pipe(
  * @since 0.0.0
  */
 export type SeriesTimeUnit = typeof SeriesTimeUnit.Type;
+
+/**
+ * Companion namespace for {@link SeriesTimeUnit}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SeriesTimeUnit {
+  /**
+   * Encoded (wire) form of {@link SeriesTimeUnit}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof SeriesTimeUnit.Encoded;
+}
 
 /**
  * Fixed-width units of duration: a day is always 24 hours and a week is always 7 days.
@@ -257,6 +353,22 @@ export const PreciseTimeUnit = MappedLiteralKit([
  */
 export type PreciseTimeUnit = typeof PreciseTimeUnit.Type;
 
+/**
+ * Companion namespace for {@link PreciseTimeUnit}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PreciseTimeUnit {
+  /**
+   * Encoded (wire) form of {@link PreciseTimeUnit}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof PreciseTimeUnit.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Relative time and time ranges
 // -----------------------------------------------------------------------------
@@ -295,6 +407,22 @@ export const RelativeTimeRelation = MappedLiteralKit([
  * @since 0.0.0
  */
 export type RelativeTimeRelation = typeof RelativeTimeRelation.Type;
+
+/**
+ * Companion namespace for {@link RelativeTimeRelation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RelativeTimeRelation {
+  /**
+   * Encoded (wire) form of {@link RelativeTimeRelation}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RelativeTimeRelation.Encoded;
+}
 
 /**
  * A moment named by its distance from now, such as "3 days before" or "2 hours after".
@@ -340,6 +468,26 @@ export class RelativeTime extends S.Opaque<RelativeTime, { readonly brand: uniqu
   }
 }
 
+/**
+ * Companion namespace for {@link RelativeTime}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RelativeTime {
+  /**
+   * Encoded (wire) form of {@link RelativeTime}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly when: RelativeTimeRelation.Encoded;
+    readonly value: number;
+    readonly unit: SeriesTimeUnit.Encoded;
+  }
+}
+
 const TimeRangeKind = LiteralKit(["absolute", "relative"]);
 
 /**
@@ -367,6 +515,26 @@ export class AbsoluteTimeRange extends S.Opaque<AbsoluteTimeRange, { readonly br
 ) {}
 
 /**
+ * Companion namespace for {@link AbsoluteTimeRange}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AbsoluteTimeRange {
+  /**
+   * Encoded (wire) form of {@link AbsoluteTimeRange}: each bound an ISO-8601 instant carried as text.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "absolute";
+    readonly startTime?: string;
+    readonly endTime?: string;
+  }
+}
+
+/**
  * Range whose bounds are distances from the moment the read executes.
  *
  * @category models
@@ -389,6 +557,26 @@ export class RelativeTimeRange extends S.Opaque<RelativeTimeRange, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RelativeTimeRange}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RelativeTimeRange {
+  /**
+   * Encoded (wire) form of {@link RelativeTimeRange}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "relative";
+    readonly startTime?: RelativeTime.Encoded;
+    readonly endTime?: RelativeTime.Encoded;
+  }
+}
 
 /**
  * The window of time a series read covers, given as fixed instants or as distances from now.
@@ -459,6 +647,24 @@ export const TimeRange = TimeRangeKind.mapMembers(() => Tuple.make(AbsoluteTimeR
  */
 export type TimeRange = typeof TimeRange.Type;
 
+/**
+ * Companion namespace for {@link TimeRange}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimeRange {
+  /**
+   * Encoded (wire) form of {@link TimeRange}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | AbsoluteTimeRange.Encoded
+    | RelativeTimeRange.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Points
 // -----------------------------------------------------------------------------
@@ -492,6 +698,22 @@ export const PointValue = S.Union([S.Finite, S.String]).pipe(
  * @since 0.0.0
  */
 export type PointValue = typeof PointValue.Type;
+
+/**
+ * Companion namespace for {@link PointValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PointValue {
+  /**
+   * Encoded (wire) form of {@link PointValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof PointValue.Encoded;
+}
 
 /**
  * One observation of a series: an instant and the value recorded at it.
@@ -529,6 +751,25 @@ export class TimeSeriesPoint extends S.Opaque<TimeSeriesPoint, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TimeSeriesPoint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimeSeriesPoint {
+  /**
+   * Encoded (wire) form of {@link TimeSeriesPoint}: the instant carried as ISO-8601 text.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly time: string;
+    readonly value: PointValue.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Aggregation
@@ -578,6 +819,22 @@ export const TimeSeriesAggregationMethod = MappedLiteralKit([
 export type TimeSeriesAggregationMethod = typeof TimeSeriesAggregationMethod.Type;
 
 /**
+ * Companion namespace for {@link TimeSeriesAggregationMethod}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimeSeriesAggregationMethod {
+  /**
+   * Encoded (wire) form of {@link TimeSeriesAggregationMethod}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TimeSeriesAggregationMethod.Encoded;
+}
+
+/**
  * Edge of a periodic window whose timestamp labels the aggregated point.
  *
  * **Example** (Decode a window edge)
@@ -611,6 +868,22 @@ export const WindowEdge = MappedLiteralKit([
  */
 export type WindowEdge = typeof WindowEdge.Type;
 
+/**
+ * Companion namespace for {@link WindowEdge}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace WindowEdge {
+  /**
+   * Encoded (wire) form of {@link WindowEdge}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof WindowEdge.Encoded;
+}
+
 const preciseDurationFields = {
   value: S.Finite.annotateKey({ description: "How many units the duration spans." }),
   unit: PreciseTimeUnit.annotateKey({ description: "Fixed-width unit the span is counted in." }),
@@ -643,6 +916,25 @@ export class PreciseDuration extends S.Opaque<PreciseDuration, { readonly brand:
   )
 ) {}
 
+/**
+ * Companion namespace for {@link PreciseDuration}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PreciseDuration {
+  /**
+   * Encoded (wire) form of {@link PreciseDuration}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly value: number;
+    readonly unit: PreciseTimeUnit.Encoded;
+  }
+}
+
 const RollingWindowKind = LiteralKit(["duration", "pointsCount"]);
 
 /**
@@ -658,6 +950,26 @@ export class DurationWindow extends S.Opaque<DurationWindow, { readonly brand: u
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DurationWindow}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DurationWindow {
+  /**
+   * Encoded (wire) form of {@link DurationWindow}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "duration";
+    readonly value: number;
+    readonly unit: PreciseTimeUnit.Encoded;
+  }
+}
 
 /**
  * Rolling window that holds a fixed number of the most recent points.
@@ -676,6 +988,25 @@ export class PointsCountWindow extends S.Opaque<PointsCountWindow, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link PointsCountWindow}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PointsCountWindow {
+  /**
+   * Encoded (wire) form of {@link PointsCountWindow}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "pointsCount";
+    readonly count: number;
+  }
+}
 
 /**
  * Size of a rolling window, measured in time or in points.
@@ -715,6 +1046,24 @@ export const RollingWindow = RollingWindowKind.mapMembers(() => Tuple.make(Durat
  */
 export type RollingWindow = typeof RollingWindow.Type;
 
+/**
+ * Companion namespace for {@link RollingWindow}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RollingWindow {
+  /**
+   * Encoded (wire) form of {@link RollingWindow}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | DurationWindow.Encoded
+    | PointsCountWindow.Encoded;
+}
+
 const AggregationStrategyKind = LiteralKit(["cumulative", "rolling", "periodic"]);
 
 /**
@@ -732,6 +1081,24 @@ export class CumulativeAggregate extends S.Opaque<CumulativeAggregate, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link CumulativeAggregate}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CumulativeAggregate {
+  /**
+   * Encoded (wire) form of {@link CumulativeAggregate}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "cumulative";
+  }
+}
+
+/**
  * Aggregates, for each point, the points inside a window that ends at it.
  *
  * @category models
@@ -747,6 +1114,25 @@ export class RollingAggregate extends S.Opaque<RollingAggregate, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RollingAggregate}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RollingAggregate {
+  /**
+   * Encoded (wire) form of {@link RollingAggregate}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "rolling";
+    readonly windowSize: RollingWindow.Encoded;
+  }
+}
 
 /**
  * Aggregates the series into consecutive windows of one fixed width, which downsamples it.
@@ -773,6 +1159,27 @@ export class PeriodicAggregate extends S.Opaque<PeriodicAggregate, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link PeriodicAggregate}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PeriodicAggregate {
+  /**
+   * Encoded (wire) form of {@link PeriodicAggregate}: the alignment instant carried as ISO-8601 text.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "periodic";
+    readonly windowSize: PreciseDuration.Encoded;
+    readonly alignmentTimestamp?: string;
+    readonly windowType: WindowEdge.Encoded;
+  }
+}
 
 /**
  * How the points of a series are grouped into windows before a method reduces each window.
@@ -829,6 +1236,25 @@ export const TimeSeriesAggregationStrategy = AggregationStrategyKind.mapMembers(
 export type TimeSeriesAggregationStrategy = typeof TimeSeriesAggregationStrategy.Type;
 
 /**
+ * Companion namespace for {@link TimeSeriesAggregationStrategy}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimeSeriesAggregationStrategy {
+  /**
+   * Encoded (wire) form of {@link TimeSeriesAggregationStrategy}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | CumulativeAggregate.Encoded
+    | RollingAggregate.Encoded
+    | PeriodicAggregate.Encoded;
+}
+
+/**
  * An aggregation of a series: how to window its points and how to reduce each window.
  *
  * **Example** (Downsample a series to hourly means)
@@ -866,6 +1292,25 @@ export class TimeSeriesAggregation extends S.Opaque<TimeSeriesAggregation, { rea
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TimeSeriesAggregation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimeSeriesAggregation {
+  /**
+   * Encoded (wire) form of {@link TimeSeriesAggregation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly method: TimeSeriesAggregationMethod.Encoded;
+    readonly strategy: TimeSeriesAggregationStrategy.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Reads
@@ -908,6 +1353,22 @@ export const StreamingOutputFormat = MappedLiteralKit([
  * @since 0.0.0
  */
 export type StreamingOutputFormat = typeof StreamingOutputFormat.Type;
+
+/**
+ * Companion namespace for {@link StreamingOutputFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StreamingOutputFormat {
+  /**
+   * Encoded (wire) form of {@link StreamingOutputFormat}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof StreamingOutputFormat.Encoded;
+}
 
 /**
  * Body of a read that streams the points of a time series property.
@@ -965,6 +1426,25 @@ export class StreamPointsRequest extends S.Opaque<StreamPointsRequest, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link StreamPointsRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StreamPointsRequest {
+  /**
+   * Encoded (wire) form of {@link StreamPointsRequest}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly range?: TimeRange.Encoded;
+    readonly aggregate?: TimeSeriesAggregation.Encoded;
+  }
+}
+
+/**
  * Body of a read that streams the entries of a value bank, such as the positions behind a geotime series.
  *
  * **Example** (Stream the entries since an instant)
@@ -998,6 +1478,24 @@ export class StreamValuesRequest extends S.Opaque<StreamValuesRequest, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link StreamValuesRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StreamValuesRequest {
+  /**
+   * Encoded (wire) form of {@link StreamValuesRequest}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly range?: TimeRange.Encoded;
+  }
+}
 
 /**
  * Points answered by a stream read, in the order the server produced them.
@@ -1035,6 +1533,24 @@ export class StreamPointsResponse extends S.Opaque<StreamPointsResponse, { reado
   )
 ) {}
 
+/**
+ * Companion namespace for {@link StreamPointsResponse}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StreamPointsResponse {
+  /**
+   * Encoded (wire) form of {@link StreamPointsResponse}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly data: ReadonlyArray<TimeSeriesPoint.Encoded>;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Series references
 // -----------------------------------------------------------------------------
@@ -1066,6 +1582,22 @@ export class SeriesReference extends S.Opaque<SeriesReference, { readonly brand:
 ) {}
 
 /**
+ * Companion namespace for {@link SeriesReference}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SeriesReference {
+  /**
+   * Encoded (wire) form of {@link SeriesReference}: the bare series identifier string, with no `type` tag.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof SeriesReference.Encoded;
+}
+
+/**
  * Reference to a series fed by several syncs, which names the sync as well as the series.
  *
  * @category models
@@ -1089,6 +1621,25 @@ export class QualifiedSeriesReference extends S.Opaque<QualifiedSeriesReference,
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link QualifiedSeriesReference}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QualifiedSeriesReference {
+  /**
+   * Encoded (wire) form of {@link QualifiedSeriesReference}: a record with no `type` tag.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly seriesId: string;
+    readonly syncRid: string;
+  }
+}
 
 /**
  * Reference to a derived series, computed by a template's formula rather than stored.
@@ -1117,6 +1668,25 @@ export class TemplateSeriesReference extends S.Opaque<TemplateSeriesReference, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TemplateSeriesReference}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TemplateSeriesReference {
+  /**
+   * Encoded (wire) form of {@link TemplateSeriesReference}: a record with no `type` tag.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly templateRid: string;
+    readonly templateVersion?: string;
+  }
+}
 
 /**
  * Which series a time series property points at, decoded from the three untagged shapes the wire uses.
@@ -1183,6 +1753,25 @@ export const TimeSeriesReference = TimeSeriesReferenceKind.mapMembers(() =>
  */
 export type TimeSeriesReference = typeof TimeSeriesReference.Type;
 
+/**
+ * Companion namespace for {@link TimeSeriesReference}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimeSeriesReference {
+  /**
+   * Encoded (wire) form of {@link TimeSeriesReference}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | SeriesReference.Encoded
+    | QualifiedSeriesReference.Encoded
+    | TemplateSeriesReference.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Geotime series
 // -----------------------------------------------------------------------------
@@ -1231,3 +1820,23 @@ export class GeotimeSeriesValue extends S.Opaque<GeotimeSeriesValue, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link GeotimeSeriesValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeotimeSeriesValue {
+  /**
+   * Encoded (wire) form of {@link GeotimeSeriesValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "geotimeSeriesValue";
+    readonly position: Position.Encoded;
+    readonly timestamp: TimestampValue.Encoded;
+  }
+}

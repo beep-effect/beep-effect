@@ -13,6 +13,7 @@ import { RunEvent } from "./RunEvent.ts";
 export class RunActivated extends Domain.Event(
   "RunActivated",
   RunEvent.fields({ delegation: DelegationId, accountable: PrincipalId, runProvenance: Provenance }),
+  { description: "The run's delegation is open and a human answers for it. The run acts under `runProvenance`: an agent root with its delegation as its only grant." },
 ) {}
 
 /**

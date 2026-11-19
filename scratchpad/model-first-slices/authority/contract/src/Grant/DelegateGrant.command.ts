@@ -31,6 +31,7 @@ export class NotHolder extends S.TaggedError<NotHolder, { readonly brand: unique
 export class GrantDelegated extends Domain.Event(
   "GrantDelegated",
   carry({ holder: PrincipalId, delegation: DelegationId, to: RunId, terms: GrantTerms }),
+  { description: "The holder delegated narrower terms of this grant to an agent run." },
 ) {}
 
 /**

@@ -1,12 +1,12 @@
 import * as Domain from "@alchemy.run/domain";
 import * as DurableObjects from "@alchemy.run/domain/DurableObjects";
 import { expect, it } from "@effect/vitest";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
-import * as Schema from "effect/Schema";
+import * as O from "@beep/utils/Option";
+import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import { makeSimHost, type SimHost } from "./SimHost.ts";
 
@@ -17,15 +17,15 @@ import { makeSimHost, type SimHost } from "./SimHost.ts";
 // Without the patch all three cases fail: every drain that finds the lease held returns without
 // scheduling anything, so the rows stay staged after the lease has expired.
 
-class Booked extends Domain.Event("Booked", { n: Schema.Finite }) {}
+class Booked extends Domain.Event("Booked", { n: S.Finite }) {}
 class BookMany extends Domain.Command("BookMany", {
-  target: Schema.String,
-  input: { count: Schema.Finite },
+  target: S.String,
+  input: { count: S.Finite },
   events: [Booked],
 }) {}
 class Ledger extends Domain.Aggregate("Ledger", {
-  id: Schema.String,
-  state: Schema.Struct({ count: Schema.Finite }),
+  id: S.String,
+  state: S.Struct({ count: S.Finite }),
   initial: { count: 0 },
   commands: [BookMany],
   decide: {
@@ -36,11 +36,11 @@ class Ledger extends Domain.Aggregate("Ledger", {
 class Totals extends Domain.View("Totals", {
   from: [Ledger],
   key: Ledger,
-  state: Schema.Struct({ count: Schema.Finite }),
+  state: S.Struct({ count: S.Finite }),
   initial: { count: 0 },
   evolve: { Booked: (_, e) => ({ count: e.n }) },
 }) {}
-class Line extends Domain.Event("Line", { n: Schema.Finite }) {}
+class Line extends Domain.Event("Line", { n: S.Finite }) {}
 class Lines extends Domain.Stream("Lines", { key: Ledger, entries: [Line] }) {}
 class LinesWriter extends Domain.Projection("LinesWriter", {
   from: [Ledger],

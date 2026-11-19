@@ -25,10 +25,10 @@ const OutputTypeDefinition = LiteralKit([
   "entities",
   "relations",
 ]).pipe(
-    $I.annoteSchema("OutputType", {
-      description: "Finite set of artifacts produced by an ontology extraction run.",
-    })
-  );
+  $I.annoteSchema("OutputType", {
+    description: "Finite set of artifacts produced by an ontology extraction run.",
+  })
+);
 
 type OutputTypeValue = typeof OutputTypeDefinition.Type;
 
@@ -57,10 +57,10 @@ export const OutputFilename = LiteralKit([
   "entities.json",
   "relations.json",
 ]).pipe(
-    $I.annoteSchema("OutputFilename", {
-      description: "Stable persisted filename assigned to an extraction-run output artifact.",
-    })
-  );
+  $I.annoteSchema("OutputFilename", {
+    description: "Stable persisted filename assigned to an extraction-run output artifact.",
+  })
+);
 
 /**
  * Runtime value decoded by {@link OutputFilename}. {@inheritDoc OutputFilename}

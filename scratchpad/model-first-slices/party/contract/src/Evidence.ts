@@ -1,6 +1,7 @@
-import * as Effect from "effect/Effect";
-import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as S from "effect/Schema";
+import { Text } from "@proto/kernel/Measure"
+import * as Effect from "effect/Effect"
+import { LiteralKit } from "@beep/schema/LiteralKit"
+import * as S from "effect/Schema"
 
 /**
  * How far a signal's source is trusted.
@@ -8,7 +9,7 @@ import * as S from "effect/Schema";
  * @category models
  * @since 0.0.0
  */
-export const Trust = LiteralKit(["low", "normal", "high"]);
+export const Trust = LiteralKit(["low", "normal", "high"])
 /**
  * @category models
  * @since 0.0.0
@@ -37,13 +38,18 @@ export type Trust = typeof Trust.Type;
  * @since 0.0.0
  */
 export const EvidenceSignal = S.Struct({
-  source: S.String,
-  quote: S.String,
-  trust: Trust.pipe(
-    S.withDecodingDefaultKey(Effect.succeed("normal" as const)),
-    S.withConstructorDefault(Effect.succeed("normal" as const)),
-  ),
-}).pipe(S.encodeKeys({ quote: "excerpt" }));
+  // A signal names the source it came from: an empty source is no source.
+  source: S.NonEmptyString,
+  quote: Text,
+  trust: Trust.pipe((self) => {
+      const defaultValue = Effect.succeed(Trust.Enum.normal)
+      return self.pipe(
+        S.withDecodingDefaultKey(defaultValue),
+        S.withConstructorDefault(defaultValue)
+      )
+    }
+  )
+}).pipe(S.encodeKeys({ quote: "excerpt" }))
 /**
  * @category models
  * @since 0.0.0

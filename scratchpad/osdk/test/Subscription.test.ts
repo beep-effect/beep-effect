@@ -328,20 +328,23 @@ describe("Subscription: identifiers and literal domains", () => {
   it.effect(
     "rejects empty identifiers and literals outside each domain",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all({
-        emptyRequestId: rejects(RequestId)(""),
-        emptySubscriptionId: rejects(SubscriptionId)(""),
-        emptyBranch: rejects(FoundryBranch)(""),
-        emptyErrorName: rejects(ErrorName)(""),
-        numericRequestId: rejects(RequestId)(1),
-        unknownObjectState: rejects(ObjectState)("CHANGED"),
-        domainObjectStateOnTheWire: rejects(ObjectState)("addedOrUpdated"),
-        unknownClosureReason: rejects(ClosureReason)("SERVER_CLOSED"),
-        unknownLinkState: rejects(LinkState)("UPDATED"),
-        domainLinkStateOnTheWire: rejects(LinkState)("added"),
-        unknownStatus: rejects(SubscriptionStatus)("closed"),
-        nonJsonKeyValue: rejects(PrimaryKeyRecord)({ employeeId: BigInt(1) }),
-      });
+      const verdicts = yield* Effect.all(
+        {
+          emptyRequestId: rejects(RequestId)(""),
+          emptySubscriptionId: rejects(SubscriptionId)(""),
+          emptyBranch: rejects(FoundryBranch)(""),
+          emptyErrorName: rejects(ErrorName)(""),
+          numericRequestId: rejects(RequestId)(1),
+          unknownObjectState: rejects(ObjectState)("CHANGED"),
+          domainObjectStateOnTheWire: rejects(ObjectState)("addedOrUpdated"),
+          unknownClosureReason: rejects(ClosureReason)("SERVER_CLOSED"),
+          unknownLinkState: rejects(LinkState)("UPDATED"),
+          domainLinkStateOnTheWire: rejects(LinkState)("added"),
+          unknownStatus: rejects(SubscriptionStatus)("closed"),
+          nonJsonKeyValue: rejects(PrimaryKeyRecord)({ employeeId: BigInt(1) }),
+        },
+        { concurrency: 1 }
+      );
       deepStrictEqual(accepted(verdicts), []);
     })
   );
@@ -417,33 +420,36 @@ describe("Subscription: subscribe message", () => {
   it.effect(
     "rejects a request that lacks one of its required lists or its object set",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all({
-        noReferenceSet: rejects(ObjectSetSubscribeRequest)({ objectSet: allEmployees, propertySet: [] }),
-        noPropertySet: rejects(ObjectSetSubscribeRequest)({ objectSet: allEmployees, referenceSet: [] }),
-        noObjectSet: rejects(ObjectSetSubscribeRequest)({ propertySet: [], referenceSet: [] }),
-        objectSetOfUnknownKind: rejects(ObjectSetSubscribeRequest)({
-          objectSet: { type: "everything" },
-          propertySet: [],
-          referenceSet: [],
-        }),
-        objectSetWithoutItsType: rejects(ObjectSetSubscribeRequest)({
-          objectSet: { type: "base" },
-          propertySet: [],
-          referenceSet: [],
-        }),
-        objectSetAsRid: rejects(ObjectSetSubscribeRequest)({
-          objectSet: "ri.object-set.main.object-set.1",
-          propertySet: [],
-          referenceSet: [],
-        }),
-        emptyPropertyName: rejects(ObjectSetSubscribeRequest)({
-          objectSet: allEmployees,
-          propertySet: [""],
-          referenceSet: [],
-        }),
-        ridsFlagAsText: rejects(ObjectLoadingOptions)({ shouldLoadObjectRids: "true" }),
-        noId: rejects(ObjectSetSubscribeRequests)({ requests: [] }),
-      });
+      const verdicts = yield* Effect.all(
+        {
+          noReferenceSet: rejects(ObjectSetSubscribeRequest)({ objectSet: allEmployees, propertySet: [] }),
+          noPropertySet: rejects(ObjectSetSubscribeRequest)({ objectSet: allEmployees, referenceSet: [] }),
+          noObjectSet: rejects(ObjectSetSubscribeRequest)({ propertySet: [], referenceSet: [] }),
+          objectSetOfUnknownKind: rejects(ObjectSetSubscribeRequest)({
+            objectSet: { type: "everything" },
+            propertySet: [],
+            referenceSet: [],
+          }),
+          objectSetWithoutItsType: rejects(ObjectSetSubscribeRequest)({
+            objectSet: { type: "base" },
+            propertySet: [],
+            referenceSet: [],
+          }),
+          objectSetAsRid: rejects(ObjectSetSubscribeRequest)({
+            objectSet: "ri.object-set.main.object-set.1",
+            propertySet: [],
+            referenceSet: [],
+          }),
+          emptyPropertyName: rejects(ObjectSetSubscribeRequest)({
+            objectSet: allEmployees,
+            propertySet: [""],
+            referenceSet: [],
+          }),
+          ridsFlagAsText: rejects(ObjectLoadingOptions)({ shouldLoadObjectRids: "true" }),
+          noId: rejects(ObjectSetSubscribeRequests)({ requests: [] }),
+        },
+        { concurrency: 1 }
+      );
       deepStrictEqual(accepted(verdicts), []);
     })
   );
@@ -533,18 +539,21 @@ describe("Subscription: answers to a subscribe message", () => {
   it.effect(
     "rejects answers that are not one of the three kinds or lack their payload",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all({
-        unknownKind: rejects(SubscribeResponse)({ type: "pending" }),
-        successWithoutId: rejects(SubscribeResponse)({ type: "success" }),
-        successWithEmptyId: rejects(SubscribeResponse)({ type: "success", id: "" }),
-        errorWithoutErrors: rejects(SubscribeResponse)({ type: "error" }),
-        httpErrorBody: rejects(SubscribeResponse)({
-          type: "error",
-          errors: [{ errorCode: "NOT_FOUND", errorName: "ObjectTypeNotFound", errorInstanceId: "1", parameters: {} }],
-        }),
-        failureArgumentWithoutValue: rejects(StreamFailure)({ error: "ObjectTypeNotFound", args: [{ name: "x" }] }),
-        responsesWithoutId: rejects(SubscribeResponses)({ type: "subscribeResponses", responses: [] }),
-      });
+      const verdicts = yield* Effect.all(
+        {
+          unknownKind: rejects(SubscribeResponse)({ type: "pending" }),
+          successWithoutId: rejects(SubscribeResponse)({ type: "success" }),
+          successWithEmptyId: rejects(SubscribeResponse)({ type: "success", id: "" }),
+          errorWithoutErrors: rejects(SubscribeResponse)({ type: "error" }),
+          httpErrorBody: rejects(SubscribeResponse)({
+            type: "error",
+            errors: [{ errorCode: "NOT_FOUND", errorName: "ObjectTypeNotFound", errorInstanceId: "1", parameters: {} }],
+          }),
+          failureArgumentWithoutValue: rejects(StreamFailure)({ error: "ObjectTypeNotFound", args: [{ name: "x" }] }),
+          responsesWithoutId: rejects(SubscribeResponses)({ type: "subscribeResponses", responses: [] }),
+        },
+        { concurrency: 1 }
+      );
       deepStrictEqual(accepted(verdicts), []);
     })
   );
@@ -668,39 +677,42 @@ describe("Subscription: updates to a watched object set", () => {
     "rejects updates of another kind, with an unknown state, or whose object cannot be located",
     Effect.fnUntraced(function* () {
       const located = { __apiName: "Employee", __primaryKey: 1 };
-      const verdicts = yield* Effect.all({
-        unknownKind: rejects(ObjectSetUpdate)({ type: "link", object: located, state: "REMOVED" }),
-        unknownState: rejects(ObjectSetUpdate)({ type: "object", object: located, state: "CHANGED" }),
-        domainState: rejects(ObjectSetUpdate)({ type: "object", object: located, state: "removed" }),
-        // The stub objects of OSDK's own websocket test carry no `__primaryKey`; such an object has no locator.
-        objectWithoutPrimaryKey: rejects(ObjectSetUpdate)({
-          type: "object",
-          object: { __apiName: "Employee", employeeId: 1 },
-          state: "ADDED_OR_UPDATED",
-        }),
-        referenceOfUnknownKind: rejects(ObjectSetUpdate)({
-          type: "reference",
-          objectType: "Employee",
-          primaryKey: { employeeId: 1 },
-          property: "employeeLocation",
-          value: { type: "timeSeriesValue", value: 1 },
-        }),
-        referenceWithBareKey: rejects(ObjectSetUpdate)({
-          type: "reference",
-          objectType: "Employee",
-          primaryKey: 1,
-          property: "employeeLocation",
-          value: { type: "geotimeSeriesValue", position: [100, 20], timestamp: "2021-01-04T05:00:00.000Z" },
-        }),
-        referenceWithTextTimestamp: rejects(ObjectSetUpdate)({
-          type: "reference",
-          objectType: "Employee",
-          primaryKey: { employeeId: 1 },
-          property: "employeeLocation",
-          value: { type: "geotimeSeriesValue", position: [100, 20], timestamp: "yesterday" },
-        }),
-        updatesWithoutSubscription: rejects(ObjectSetUpdates)({ type: "objectSetChanged", updates: [] }),
-      });
+      const verdicts = yield* Effect.all(
+        {
+          unknownKind: rejects(ObjectSetUpdate)({ type: "link", object: located, state: "REMOVED" }),
+          unknownState: rejects(ObjectSetUpdate)({ type: "object", object: located, state: "CHANGED" }),
+          domainState: rejects(ObjectSetUpdate)({ type: "object", object: located, state: "removed" }),
+          // The stub objects of OSDK's own websocket test carry no `__primaryKey`; such an object has no locator.
+          objectWithoutPrimaryKey: rejects(ObjectSetUpdate)({
+            type: "object",
+            object: { __apiName: "Employee", employeeId: 1 },
+            state: "ADDED_OR_UPDATED",
+          }),
+          referenceOfUnknownKind: rejects(ObjectSetUpdate)({
+            type: "reference",
+            objectType: "Employee",
+            primaryKey: { employeeId: 1 },
+            property: "employeeLocation",
+            value: { type: "timeSeriesValue", value: 1 },
+          }),
+          referenceWithBareKey: rejects(ObjectSetUpdate)({
+            type: "reference",
+            objectType: "Employee",
+            primaryKey: 1,
+            property: "employeeLocation",
+            value: { type: "geotimeSeriesValue", position: [100, 20], timestamp: "2021-01-04T05:00:00.000Z" },
+          }),
+          referenceWithTextTimestamp: rejects(ObjectSetUpdate)({
+            type: "reference",
+            objectType: "Employee",
+            primaryKey: { employeeId: 1 },
+            property: "employeeLocation",
+            value: { type: "geotimeSeriesValue", position: [100, 20], timestamp: "yesterday" },
+          }),
+          updatesWithoutSubscription: rejects(ObjectSetUpdates)({ type: "objectSetChanged", updates: [] }),
+        },
+        { concurrency: 1 }
+      );
       deepStrictEqual(accepted(verdicts), []);
     })
   );
@@ -725,11 +737,7 @@ describe("Subscription: refresh and closure", () => {
           args: [{ name: "objectSetRid", value: "ri.object-set.main.object-set.1" }],
         },
       };
-      yield* decodesTo(
-        StreamMessage,
-        refresh,
-        RefreshObjectSet.make({ id: subscriptionId, objectType: employeeType })
-      );
+      yield* decodesTo(StreamMessage, refresh, RefreshObjectSet.make({ id: subscriptionId, objectType: employeeType }));
       yield* decodesTo(
         StreamMessage,
         closedByUser,
@@ -793,17 +801,20 @@ describe("Subscription: refresh and closure", () => {
   it.effect(
     "rejects messages of the link stream, unknown causes and notices without their subject",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all({
-        linkUpdates: rejects(StreamMessage)({ type: "updates", id: "sub-1", updates: [] }),
-        linkRefresh: rejects(StreamMessage)({ type: "refresh", id: "sub-1", linkTypes: ["lead"] }),
-        unknownKind: rejects(StreamMessage)({ type: "heartbeat", id: "sub-1" }),
-        untagged: rejects(StreamMessage)({ id: "sub-1", objectType: "Employee" }),
-        refreshWithoutObjectType: rejects(StreamMessage)({ type: "refreshObjectSet", id: "sub-1" }),
-        closedWithoutCause: rejects(StreamMessage)({ type: "subscriptionClosed", id: "sub-1" }),
-        unknownCause: rejects(SubscriptionClosureCause)({ type: "timeout" }),
-        unknownReason: rejects(SubscriptionClosureCause)({ type: "reason", reason: "SERVER_CLOSED" }),
-        failureWithoutArgs: rejects(SubscriptionClosureCause)({ type: "error", error: "ObjectSetNotFound" }),
-      });
+      const verdicts = yield* Effect.all(
+        {
+          linkUpdates: rejects(StreamMessage)({ type: "updates", id: "sub-1", updates: [] }),
+          linkRefresh: rejects(StreamMessage)({ type: "refresh", id: "sub-1", linkTypes: ["lead"] }),
+          unknownKind: rejects(StreamMessage)({ type: "heartbeat", id: "sub-1" }),
+          untagged: rejects(StreamMessage)({ id: "sub-1", objectType: "Employee" }),
+          refreshWithoutObjectType: rejects(StreamMessage)({ type: "refreshObjectSet", id: "sub-1" }),
+          closedWithoutCause: rejects(StreamMessage)({ type: "subscriptionClosed", id: "sub-1" }),
+          unknownCause: rejects(SubscriptionClosureCause)({ type: "timeout" }),
+          unknownReason: rejects(SubscriptionClosureCause)({ type: "reason", reason: "SERVER_CLOSED" }),
+          failureWithoutArgs: rejects(SubscriptionClosureCause)({ type: "error", error: "ObjectSetNotFound" }),
+        },
+        { concurrency: 1 }
+      );
       deepStrictEqual(accepted(verdicts), []);
     })
   );
@@ -824,10 +835,7 @@ describe("Link: the paged listing", () => {
       Equals<keyof typeof LoadLinksRequest.Encoded, "objectSet" | "links" | "pageToken" | "includeComputeUsage">,
       Equals<LoadLinksRequest["linkTypes"], ReadonlyArray<LinkTypeApiName>>,
       Equals<BulkLink["targetObjectType"], O.Option<ObjectTypeApiName>>,
-      Equals<
-        keyof typeof BulkLink.Encoded,
-        "object" | "linkApiName" | "otherObjectApiName" | "otherObjectPk"
-      >,
+      Equals<keyof typeof BulkLink.Encoded, "object" | "linkApiName" | "otherObjectApiName" | "otherObjectPk">,
     ] = [true, true, true, true, true, true, true, true, true];
     assertTrue(A.every(facts, identity));
   });
@@ -957,37 +965,40 @@ describe("Link: the paged listing", () => {
     Effect.fnUntraced(function* () {
       const source = { __apiName: "Employee", __primaryKey: 1 };
       const target = { __apiName: "Office", __primaryKey: "NYC" };
-      const verdicts = yield* Effect.all({
-        rowWithoutSource: rejects(LinksFromSourceRows)([
-          { linkedObjects: [{ targetObject: target, linkType: "officeLink" }] },
-        ]),
-        emptyRowWithoutSource: rejects(LinksFromSourceRows)([{ linkedObjects: [] }]),
-        linkedObjectWithoutTarget: rejects(LinksFromSourceRows)([
-          { sourceObject: source, linkedObjects: [{ linkType: "officeLink" }] },
-        ]),
-        linkedObjectWithoutLinkType: rejects(LinksFromSourceRows)([
-          { sourceObject: source, linkedObjects: [{ targetObject: target }] },
-        ]),
-        emptyLinkType: rejects(LinksFromSourceRows)([
-          { sourceObject: source, linkedObjects: [{ targetObject: target, linkType: "" }] },
-        ]),
-        sourceWithoutPrimaryKey: rejects(LinksFromSourceRows)([
-          {
-            sourceObject: { __apiName: "Employee" },
-            linkedObjects: [{ targetObject: target, linkType: "officeLink" }],
-          },
-        ]),
-        rowWithoutLinkedObjects: rejects(LinksFromSourceRows)([{ sourceObject: source }]),
-        flatLinksOnTheWire: rejects(LinksFromSourceRows)([
-          {
-            source: { objectType: "Employee", primaryKey: 1 },
-            target: { objectType: "Office", primaryKey: "NYC" },
-            linkType: "officeLink",
-          },
-        ]),
-        pageWithoutData: rejects(LinkPage)({ nextPageToken: "v1.next" }),
-        pageWithEmptyCursor: rejects(LinkPage)({ data: [], nextPageToken: "" }),
-      });
+      const verdicts = yield* Effect.all(
+        {
+          rowWithoutSource: rejects(LinksFromSourceRows)([
+            { linkedObjects: [{ targetObject: target, linkType: "officeLink" }] },
+          ]),
+          emptyRowWithoutSource: rejects(LinksFromSourceRows)([{ linkedObjects: [] }]),
+          linkedObjectWithoutTarget: rejects(LinksFromSourceRows)([
+            { sourceObject: source, linkedObjects: [{ linkType: "officeLink" }] },
+          ]),
+          linkedObjectWithoutLinkType: rejects(LinksFromSourceRows)([
+            { sourceObject: source, linkedObjects: [{ targetObject: target }] },
+          ]),
+          emptyLinkType: rejects(LinksFromSourceRows)([
+            { sourceObject: source, linkedObjects: [{ targetObject: target, linkType: "" }] },
+          ]),
+          sourceWithoutPrimaryKey: rejects(LinksFromSourceRows)([
+            {
+              sourceObject: { __apiName: "Employee" },
+              linkedObjects: [{ targetObject: target, linkType: "officeLink" }],
+            },
+          ]),
+          rowWithoutLinkedObjects: rejects(LinksFromSourceRows)([{ sourceObject: source }]),
+          flatLinksOnTheWire: rejects(LinksFromSourceRows)([
+            {
+              source: { objectType: "Employee", primaryKey: 1 },
+              target: { objectType: "Office", primaryKey: "NYC" },
+              linkType: "officeLink",
+            },
+          ]),
+          pageWithoutData: rejects(LinkPage)({ nextPageToken: "v1.next" }),
+          pageWithEmptyCursor: rejects(LinkPage)({ data: [], nextPageToken: "" }),
+        },
+        { concurrency: 1 }
+      );
       deepStrictEqual(accepted(verdicts), []);
     })
   );
@@ -1063,11 +1074,14 @@ describe("Link: the bulk listing", () => {
       assertTrue(S.toEquivalence(BulkLink)(fromNull, fromAbsent));
       const encoded = yield* S.encodeEffect(BulkLink)(fromNull);
       deepStrictEqual<unknown>(encoded, base);
-      const verdicts = yield* Effect.all({
-        withoutObject: rejects(BulkLink)({ linkApiName: "officeLink", otherObjectPk: 7 }),
-        withoutFarKey: rejects(BulkLink)({ object: base.object, linkApiName: "officeLink" }),
-        domainKeys: rejects(BulkLink)({ source: base.object, linkType: "officeLink", targetPrimaryKey: 7 }),
-      });
+      const verdicts = yield* Effect.all(
+        {
+          withoutObject: rejects(BulkLink)({ linkApiName: "officeLink", otherObjectPk: 7 }),
+          withoutFarKey: rejects(BulkLink)({ object: base.object, linkApiName: "officeLink" }),
+          domainKeys: rejects(BulkLink)({ source: base.object, linkType: "officeLink", targetPrimaryKey: 7 }),
+        },
+        { concurrency: 1 }
+      );
       deepStrictEqual(accepted(verdicts), []);
     })
   );
@@ -1234,29 +1248,36 @@ describe("Link: the link stream", () => {
     Effect.fnUntraced(function* () {
       const selected = { objectType: "Employee", primaryKey: { employeeId: 1 } };
       const linked = { objectType: "Employee", primaryKey: { employeeId: 2 } };
-      const verdicts = yield* Effect.all({
-        objectSetChanged: rejects(LinkStreamMessage)({ type: "objectSetChanged", id: "sub-1", updates: [] }),
-        refreshObjectSet: rejects(LinkStreamMessage)({ type: "refreshObjectSet", id: "sub-1", objectType: "Employee" }),
-        unknownKind: rejects(LinkStreamMessage)({ type: "heartbeat", id: "sub-1" }),
-        refreshWithoutLinkTypes: rejects(LinkStreamMessage)({ type: "refresh", id: "sub-1" }),
-        domainKeys: rejects(LinkUpdate)({ source: selected, linkType: "lead", target: linked, state: "ADDED" }),
-        updateWithoutLinkedSide: rejects(LinkUpdate)({ selectedSide: selected, linkType: "lead", state: "ADDED" }),
-        updateWithUnknownState: rejects(LinkUpdate)({
-          selectedSide: selected,
-          linkType: "lead",
-          linkedSide: linked,
-          state: "UPDATED",
-        }),
-        updateWithBareKey: rejects(LinkUpdate)({
-          selectedSide: { objectType: "Employee", primaryKey: 1 },
-          linkType: "lead",
-          linkedSide: linked,
-          state: "ADDED",
-        }),
-        locatorWithoutObjectType: rejects(KeyedObjectLocator)({ primaryKey: { employeeId: 1 } }),
-        requestWithoutLinkTypes: rejects(LinkSubscribeRequest)({ selectedObjects: [selected] }),
-        requestsWithoutId: rejects(LinkSubscribeRequests)({ requests: [] }),
-      });
+      const verdicts = yield* Effect.all(
+        {
+          objectSetChanged: rejects(LinkStreamMessage)({ type: "objectSetChanged", id: "sub-1", updates: [] }),
+          refreshObjectSet: rejects(LinkStreamMessage)({
+            type: "refreshObjectSet",
+            id: "sub-1",
+            objectType: "Employee",
+          }),
+          unknownKind: rejects(LinkStreamMessage)({ type: "heartbeat", id: "sub-1" }),
+          refreshWithoutLinkTypes: rejects(LinkStreamMessage)({ type: "refresh", id: "sub-1" }),
+          domainKeys: rejects(LinkUpdate)({ source: selected, linkType: "lead", target: linked, state: "ADDED" }),
+          updateWithoutLinkedSide: rejects(LinkUpdate)({ selectedSide: selected, linkType: "lead", state: "ADDED" }),
+          updateWithUnknownState: rejects(LinkUpdate)({
+            selectedSide: selected,
+            linkType: "lead",
+            linkedSide: linked,
+            state: "UPDATED",
+          }),
+          updateWithBareKey: rejects(LinkUpdate)({
+            selectedSide: { objectType: "Employee", primaryKey: 1 },
+            linkType: "lead",
+            linkedSide: linked,
+            state: "ADDED",
+          }),
+          locatorWithoutObjectType: rejects(KeyedObjectLocator)({ primaryKey: { employeeId: 1 } }),
+          requestWithoutLinkTypes: rejects(LinkSubscribeRequest)({ selectedObjects: [selected] }),
+          requestsWithoutId: rejects(LinkSubscribeRequests)({ requests: [] }),
+        },
+        { concurrency: 1 }
+      );
       deepStrictEqual(accepted(verdicts), []);
     })
   );

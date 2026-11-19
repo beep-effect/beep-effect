@@ -14,6 +14,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity/packages";
+import * as R from "@beep/utils/Record";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
@@ -55,6 +56,25 @@ export class ParameterArgument extends S.Opaque<ParameterArgument, { readonly br
 ) {}
 
 /**
+ * Companion namespace for {@link ParameterArgument}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ParameterArgument {
+  /**
+   * Encoded (wire) form of {@link ParameterArgument}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "parameterId";
+    readonly parameterId: ParameterId.Encoded;
+  }
+}
+
+/**
  * Takes a value fixed when the action type was configured.
  *
  * @category models
@@ -68,6 +88,25 @@ export class StaticArgument extends S.Opaque<StaticArgument, { readonly brand: u
     $I.annoteSchema("StaticArgument", { description: "Takes a value fixed when the action type was configured." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link StaticArgument}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StaticArgument {
+  /**
+   * Encoded (wire) form of {@link StaticArgument}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "staticValue";
+    readonly value: typeof S.Json.Encoded;
+  }
+}
 
 /**
  * Takes the value of a property of the object passed in an object parameter.
@@ -86,6 +125,26 @@ export class ObjectPropertyArgument extends S.Opaque<ObjectPropertyArgument, { r
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ObjectPropertyArgument}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectPropertyArgument {
+  /**
+   * Encoded (wire) form of {@link ObjectPropertyArgument}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "objectParameterPropertyValue";
+    readonly parameterId: ParameterId.Encoded;
+    readonly propertyTypeApiName: PropertyApiName.Encoded;
+  }
+}
 
 /**
  * Takes the value of a shared property of the object passed in an interface object parameter.
@@ -108,6 +167,26 @@ export class InterfacePropertyArgument extends S.Opaque<InterfacePropertyArgumen
 ) {}
 
 /**
+ * Companion namespace for {@link InterfacePropertyArgument}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfacePropertyArgument {
+  /**
+   * Encoded (wire) form of {@link InterfacePropertyArgument}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "interfaceParameterPropertyValue";
+    readonly parameterId: ParameterId.Encoded;
+    readonly sharedPropertyTypeRid: SharedPropertyTypeRid.Encoded;
+  }
+}
+
+/**
  * Takes the identifier of the user applying the action.
  *
  * @category models
@@ -120,6 +199,24 @@ export class CurrentUserArgument extends S.Opaque<CurrentUserArgument, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link CurrentUserArgument}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CurrentUserArgument {
+  /**
+   * Encoded (wire) form of {@link CurrentUserArgument}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "currentUser";
+  }
+}
+
+/**
  * Takes the moment the action is applied.
  *
  * @category models
@@ -130,6 +227,24 @@ export class CurrentTimeArgument extends S.Opaque<CurrentTimeArgument, { readonl
     $I.annoteSchema("CurrentTimeArgument", { description: "Takes the moment the action is applied." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link CurrentTimeArgument}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CurrentTimeArgument {
+  /**
+   * Encoded (wire) form of {@link CurrentTimeArgument}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "currentTime";
+  }
+}
 
 /**
  * Takes a fresh unique identifier generated when the action is applied.
@@ -157,6 +272,25 @@ export class UniqueIdentifierArgument extends S.Opaque<UniqueIdentifierArgument,
 ) {}
 
 /**
+ * Companion namespace for {@link UniqueIdentifierArgument}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace UniqueIdentifierArgument {
+  /**
+   * Encoded (wire) form of {@link UniqueIdentifierArgument}: an unshared identifier has no `linkId` key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "uniqueIdentifier";
+    readonly linkId?: string;
+  }
+}
+
+/**
  * Takes one output of the webhook the action calls before it writes.
  *
  * @category models
@@ -172,6 +306,25 @@ export class WebhookOutputArgument extends S.Opaque<WebhookOutputArgument, { rea
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link WebhookOutputArgument}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace WebhookOutputArgument {
+  /**
+   * Encoded (wire) form of {@link WebhookOutputArgument}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "synchronousWebhookOutput";
+    readonly webhookOutputParamName: string;
+  }
+}
 
 /**
  * Where a logic rule takes one value from: a parameter, a constant, a passed object or the context of the application.
@@ -228,6 +381,30 @@ export const LogicRuleArgument = LogicRuleArgumentKind.mapMembers(() =>
 export type LogicRuleArgument = typeof LogicRuleArgument.Type;
 
 /**
+ * Companion namespace for {@link LogicRuleArgument}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LogicRuleArgument {
+  /**
+   * Encoded (wire) form of {@link LogicRuleArgument}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ParameterArgument.Encoded
+    | StaticArgument.Encoded
+    | ObjectPropertyArgument.Encoded
+    | InterfacePropertyArgument.Encoded
+    | CurrentUserArgument.Encoded
+    | CurrentTimeArgument.Encoded
+    | UniqueIdentifierArgument.Encoded
+    | WebhookOutputArgument.Encoded;
+}
+
+/**
  * Takes the value of one field of a struct parameter.
  *
  * @category models
@@ -244,6 +421,26 @@ export class StructFieldValueArgument extends S.Opaque<StructFieldValueArgument,
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link StructFieldValueArgument}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructFieldValueArgument {
+  /**
+   * Encoded (wire) form of {@link StructFieldValueArgument}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "structParameterFieldValue";
+    readonly parameterId: ParameterId.Encoded;
+    readonly structParameterFieldApiName: StructFieldApiName.Encoded;
+  }
+}
 
 /**
  * Takes the values of one field across every entry of a list-of-structs parameter.
@@ -265,6 +462,26 @@ export class StructListFieldValueArgument extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link StructListFieldValueArgument}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructListFieldValueArgument {
+  /**
+   * Encoded (wire) form of {@link StructListFieldValueArgument}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "structListParameterFieldValue";
+    readonly parameterId: ParameterId.Encoded;
+    readonly structParameterFieldApiName: StructFieldApiName.Encoded;
+  }
+}
 
 /**
  * Where a logic rule takes the value of one field of a struct property from.
@@ -307,6 +524,24 @@ export const StructFieldArgument = StructFieldArgumentKind.mapMembers(() =>
  */
 export type StructFieldArgument = typeof StructFieldArgument.Type;
 
+/**
+ * Companion namespace for {@link StructFieldArgument}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructFieldArgument {
+  /**
+   * Encoded (wire) form of {@link StructFieldArgument}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | StructFieldValueArgument.Encoded
+    | StructListFieldValueArgument.Encoded;
+}
+
 const PropertyArguments = S.Record(PropertyApiName, LogicRuleArgument);
 const StructPropertyArguments = S.Record(PropertyApiName, S.Record(StructFieldApiName, StructFieldArgument));
 const SharedPropertyArguments = S.Record(SharedPropertyTypeApiName, LogicRuleArgument);
@@ -341,6 +576,30 @@ export class CreateObjectRule extends S.Opaque<CreateObjectRule, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link CreateObjectRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CreateObjectRule {
+  /**
+   * Encoded (wire) form of {@link CreateObjectRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "createObject";
+    readonly objectTypeApiName: ObjectTypeApiName.Encoded;
+    readonly propertyArguments: R.ReadonlyRecord<PropertyApiName.Encoded, LogicRuleArgument.Encoded>;
+    readonly structPropertyArguments: R.ReadonlyRecord<
+      PropertyApiName.Encoded,
+      R.ReadonlyRecord<StructFieldApiName.Encoded, StructFieldArgument.Encoded>
+    >;
+  }
+}
+
+/**
  * Modifies the object passed in a parameter.
  *
  * @category models
@@ -356,6 +615,30 @@ export class ModifyObjectRule extends S.Opaque<ModifyObjectRule, { readonly bran
     }),
   }).pipe($I.annoteSchema("ModifyObjectRule", { description: "Modifies the object passed in a parameter." }))
 ) {}
+
+/**
+ * Companion namespace for {@link ModifyObjectRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ModifyObjectRule {
+  /**
+   * Encoded (wire) form of {@link ModifyObjectRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "modifyObject";
+    readonly objectToModify: ParameterId.Encoded;
+    readonly propertyArguments: R.ReadonlyRecord<PropertyApiName.Encoded, LogicRuleArgument.Encoded>;
+    readonly structPropertyArguments: R.ReadonlyRecord<
+      PropertyApiName.Encoded,
+      R.ReadonlyRecord<StructFieldApiName.Encoded, StructFieldArgument.Encoded>
+    >;
+  }
+}
 
 /**
  * Creates an object of a fixed object type, or modifies it when it already exists.
@@ -377,6 +660,30 @@ export class CreateOrModifyObjectRule extends S.Opaque<CreateOrModifyObjectRule,
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link CreateOrModifyObjectRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CreateOrModifyObjectRule {
+  /**
+   * Encoded (wire) form of {@link CreateOrModifyObjectRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "createOrModifyObject";
+    readonly objectTypeApiName: ObjectTypeApiName.Encoded;
+    readonly propertyArguments: R.ReadonlyRecord<PropertyApiName.Encoded, LogicRuleArgument.Encoded>;
+    readonly structPropertyArguments: R.ReadonlyRecord<
+      PropertyApiName.Encoded,
+      R.ReadonlyRecord<StructFieldApiName.Encoded, StructFieldArgument.Encoded>
+    >;
+  }
+}
 
 /**
  * Creates the object a parameter refers to, or modifies it when it already exists.
@@ -409,6 +716,30 @@ export class CreateOrModifyObjectParameterRule extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link CreateOrModifyObjectParameterRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CreateOrModifyObjectParameterRule {
+  /**
+   * Encoded (wire) form of {@link CreateOrModifyObjectParameterRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "createOrModifyObjectV2";
+    readonly objectToModify: ParameterId.Encoded;
+    readonly propertyArguments: R.ReadonlyRecord<PropertyApiName.Encoded, LogicRuleArgument.Encoded>;
+    readonly structPropertyArguments: R.ReadonlyRecord<
+      PropertyApiName.Encoded,
+      R.ReadonlyRecord<StructFieldApiName.Encoded, StructFieldArgument.Encoded>
+    >;
+  }
+}
+
+/**
  * Deletes the object passed in a parameter.
  *
  * @category models
@@ -420,6 +751,25 @@ export class DeleteObjectRule extends S.Opaque<DeleteObjectRule, { readonly bran
     objectToDelete: ParameterId.annotateKey({ description: "Parameter that carries the object to delete." }),
   }).pipe($I.annoteSchema("DeleteObjectRule", { description: "Deletes the object passed in a parameter." }))
 ) {}
+
+/**
+ * Companion namespace for {@link DeleteObjectRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DeleteObjectRule {
+  /**
+   * Encoded (wire) form of {@link DeleteObjectRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "deleteObject";
+    readonly objectToDelete: ParameterId.Encoded;
+  }
+}
 
 /**
  * Creates a link of one link type between the objects passed in two parameters.
@@ -441,6 +791,27 @@ export class CreateLinkRule extends S.Opaque<CreateLinkRule, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link CreateLinkRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CreateLinkRule {
+  /**
+   * Encoded (wire) form of {@link CreateLinkRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "createLink";
+    readonly linkTypeApiName: LinkTypeApiName.Encoded;
+    readonly sourceObject: ParameterId.Encoded;
+    readonly targetObject: ParameterId.Encoded;
+  }
+}
+
+/**
  * Deletes the link of one link type between the objects passed in two parameters.
  *
  * @category models
@@ -458,6 +829,27 @@ export class DeleteLinkRule extends S.Opaque<DeleteLinkRule, { readonly brand: u
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DeleteLinkRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DeleteLinkRule {
+  /**
+   * Encoded (wire) form of {@link DeleteLinkRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "deleteLink";
+    readonly linkTypeApiName: LinkTypeApiName.Encoded;
+    readonly sourceObject: ParameterId.Encoded;
+    readonly targetObject: ParameterId.Encoded;
+  }
+}
 
 /**
  * Creates an object through an interface, with the concrete object type chosen by a parameter.
@@ -482,6 +874,31 @@ export class CreateInterfaceRule extends S.Opaque<CreateInterfaceRule, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link CreateInterfaceRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CreateInterfaceRule {
+  /**
+   * Encoded (wire) form of {@link CreateInterfaceRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "createInterface";
+    readonly interfaceTypeApiName: InterfaceTypeApiName.Encoded;
+    readonly objectType: ParameterId.Encoded;
+    readonly sharedPropertyArguments: R.ReadonlyRecord<SharedPropertyTypeApiName.Encoded, LogicRuleArgument.Encoded>;
+    readonly structPropertyArguments: R.ReadonlyRecord<
+      SharedPropertyTypeApiName.Encoded,
+      R.ReadonlyRecord<StructFieldApiName.Encoded, StructFieldArgument.Encoded>
+    >;
+  }
+}
 
 /**
  * Modifies, through an interface, the object passed in a parameter.
@@ -509,6 +926,30 @@ export class ModifyInterfaceRule extends S.Opaque<ModifyInterfaceRule, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link ModifyInterfaceRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ModifyInterfaceRule {
+  /**
+   * Encoded (wire) form of {@link ModifyInterfaceRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "modifyInterface";
+    readonly interfaceObjectToModify: ParameterId.Encoded;
+    readonly sharedPropertyArguments: R.ReadonlyRecord<SharedPropertyTypeApiName.Encoded, LogicRuleArgument.Encoded>;
+    readonly structPropertyArguments: R.ReadonlyRecord<
+      SharedPropertyTypeApiName.Encoded,
+      R.ReadonlyRecord<StructFieldApiName.Encoded, StructFieldArgument.Encoded>
+    >;
+  }
+}
+
+/**
  * Creates a link declared on an interface between the objects passed in two parameters.
  *
  * @category models
@@ -529,6 +970,28 @@ export class CreateInterfaceLinkRule extends S.Opaque<CreateInterfaceLinkRule, {
 ) {}
 
 /**
+ * Companion namespace for {@link CreateInterfaceLinkRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CreateInterfaceLinkRule {
+  /**
+   * Encoded (wire) form of {@link CreateInterfaceLinkRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "createInterfaceLink";
+    readonly interfaceTypeApiName: InterfaceTypeApiName.Encoded;
+    readonly interfaceLinkTypeApiName: InterfaceLinkTypeApiName.Encoded;
+    readonly sourceObject: ParameterId.Encoded;
+    readonly targetObject: ParameterId.Encoded;
+  }
+}
+
+/**
  * Deletes a link declared on an interface between the objects passed in two parameters.
  *
  * @category models
@@ -547,6 +1010,28 @@ export class DeleteInterfaceLinkRule extends S.Opaque<DeleteInterfaceLinkRule, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DeleteInterfaceLinkRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DeleteInterfaceLinkRule {
+  /**
+   * Encoded (wire) form of {@link DeleteInterfaceLinkRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "deleteInterfaceLink";
+    readonly interfaceTypeApiName: InterfaceTypeApiName.Encoded;
+    readonly interfaceLinkTypeApiName: InterfaceLinkTypeApiName.Encoded;
+    readonly sourceObject: ParameterId.Encoded;
+    readonly targetObject: ParameterId.Encoded;
+  }
+}
 
 // A function rule and the payload a batched function rule nests (the same record without its tag).
 const functionCallFields = {
@@ -572,6 +1057,27 @@ export class FunctionRule extends S.Opaque<FunctionRule, { readonly brand: uniqu
 ) {}
 
 /**
+ * Companion namespace for {@link FunctionRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FunctionRule {
+  /**
+   * Encoded (wire) form of {@link FunctionRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "function";
+    readonly functionRid: FunctionRid.Encoded;
+    readonly functionVersion: FunctionVersion.Encoded;
+    readonly functionInputValues: R.ReadonlyRecord<string, LogicRuleArgument.Encoded>;
+  }
+}
+
+/**
  * Which function a batched rule runs and where its inputs come from.
  *
  * @category models
@@ -584,6 +1090,26 @@ export class FunctionCall extends S.Opaque<FunctionCall, { readonly brand: uniqu
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link FunctionCall}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FunctionCall {
+  /**
+   * Encoded (wire) form of {@link FunctionCall}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly functionRid: FunctionRid.Encoded;
+    readonly functionVersion: FunctionVersion.Encoded;
+    readonly functionInputValues: R.ReadonlyRecord<string, LogicRuleArgument.Encoded>;
+  }
+}
 
 /**
  * Runs a function once for a whole batch of applications, with one input receiving the batch as an object set.
@@ -614,6 +1140,26 @@ export class BatchedFunctionRule extends S.Opaque<BatchedFunctionRule, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link BatchedFunctionRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BatchedFunctionRule {
+  /**
+   * Encoded (wire) form of {@link BatchedFunctionRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "batchedFunction";
+    readonly objectSetRidInputName: string;
+    readonly functionRule: FunctionCall.Encoded;
+  }
+}
+
+/**
  * Merges the edits staged on the scenario passed in a parameter into the ontology.
  *
  * @category models
@@ -633,6 +1179,27 @@ export class ApplyScenarioRule extends S.Opaque<ApplyScenarioRule, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ApplyScenarioRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ApplyScenarioRule {
+  /**
+   * Encoded (wire) form of {@link ApplyScenarioRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "applyScenario";
+    readonly scenarioParameter: ParameterId.Encoded;
+    readonly objectTypeApiNames: ReadonlyArray<ObjectTypeApiName.Encoded>;
+    readonly linkTypes: ReadonlyArray<ScenarioLinkScope.Encoded>;
+  }
+}
 
 /**
  * One step of what an action does, with the source of every value it writes.
@@ -703,6 +1270,36 @@ export const ActionLogicRule = ActionLogicRuleKind.mapMembers(() =>
 export type ActionLogicRule = typeof ActionLogicRule.Type;
 
 /**
+ * Companion namespace for {@link ActionLogicRule}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionLogicRule {
+  /**
+   * Encoded (wire) form of {@link ActionLogicRule}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | CreateObjectRule.Encoded
+    | ModifyObjectRule.Encoded
+    | CreateOrModifyObjectRule.Encoded
+    | CreateOrModifyObjectParameterRule.Encoded
+    | DeleteObjectRule.Encoded
+    | CreateLinkRule.Encoded
+    | DeleteLinkRule.Encoded
+    | CreateInterfaceRule.Encoded
+    | ModifyInterfaceRule.Encoded
+    | CreateInterfaceLinkRule.Encoded
+    | DeleteInterfaceLinkRule.Encoded
+    | FunctionRule.Encoded
+    | BatchedFunctionRule.Encoded
+    | ApplyScenarioRule.Encoded;
+}
+
+/**
  * An action type together with its logic rules: everything the platform publishes about one action.
  *
  * **Example** (Decode an action type with its rules)
@@ -753,3 +1350,22 @@ export class ActionTypeDefinition extends S.Opaque<ActionTypeDefinition, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ActionTypeDefinition}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionTypeDefinition {
+  /**
+   * Encoded (wire) form of {@link ActionTypeDefinition}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly actionType: ActionType.Encoded;
+    readonly fullLogicRules: ReadonlyArray<ActionLogicRule.Encoded>;
+  }
+}

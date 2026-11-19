@@ -1,6 +1,6 @@
 import { Reasoner, ReasonerUnavailable } from "@proto/party-model/Review/Reasoner.external";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { ReasonerTape } from "./ReasonerTape.ts";
 
 /**
@@ -14,7 +14,7 @@ import { ReasonerTape } from "./ReasonerTape.ts";
 export const ReplayReasoner = Reasoner.toLayer(
   Effect.map(Effect.service(ReasonerTape), (tape) => ({
     assess: (request) =>
-      Effect.flatMap(tape.find(request.promptVersion, request.idempotencyKey), (recorded) =>
+      Effect.flatMap(tape.find(request), (recorded) =>
         O.match(recorded, {
           onSome: (entry) => Effect.succeed(entry.result),
           onNone: () =>

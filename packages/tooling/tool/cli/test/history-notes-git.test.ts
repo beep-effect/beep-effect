@@ -155,32 +155,43 @@ it.layer(TestLayer, { timeout: "60 seconds" })("history notes over real git", (i
     })
   );
 
-  it.effect("sync configures once, tolerates an unpublished ref, then fetches and displays it", () =>
+  it.effect("sync skips the refspec while origin lacks the ref, then configures once, fetches and displays it", () =>
     Effect.gen(function* () {
       const { origin, work, third } = yield* fixture();
       const history = yield* HistoryNotes;
+      const countRefspec = Effect.map(
+        raw(work, "config", "--get-all", "remote.origin.fetch"),
+        (specs) => A.filter(Str.split("\n")(specs), (spec) => spec === HISTORY_NOTES_FETCH_REFSPEC).length
+      );
 
       const firstSync = yield* history.sync({ root: work, fetch: true });
       assert.deepStrictEqual(
         [firstSync.origin, firstSync.fetchRefspec, firstSync.displayRef, firstSync.fetch],
-        [true, "added", "added", "unpublished"]
+        [true, "skipped", "added", "unpublished"]
       );
-      const secondSync = yield* history.sync({ root: work, fetch: false });
-      assert.deepStrictEqual(
-        [secondSync.fetchRefspec, secondSync.displayRef, secondSync.fetch],
-        ["present", "present", "skipped"]
-      );
-      const fetchSpecs = yield* raw(work, "config", "--get-all", "remote.origin.fetch");
-      assert.strictEqual(
-        A.filter(Str.split("\n")(fetchSpecs), (spec) => spec === HISTORY_NOTES_FETCH_REFSPEC).length,
-        1
-      );
-      const displayRefs = yield* raw(work, "config", "--get-all", "notes.displayRef");
-      assert.strictEqual(displayRefs, "refs/notes/history\n");
+      const afterFirstSync = yield* countRefspec;
+      assert.strictEqual(afterFirstSync, 0);
+      // A plain fetch still works: no refspec names a ref origin lacks.
+      yield* raw(work, "fetch");
+
+      // A stale refspec from an earlier sync is removed; origin's other refspecs stay.
+      yield* raw(work, "config", "--add", "remote.origin.fetch", HISTORY_NOTES_FETCH_REFSPEC);
+      const repair = yield* history.sync({ root: work, fetch: false });
+      assert.deepStrictEqual([repair.fetchRefspec, repair.displayRef, repair.fetch], ["removed", "present", "skipped"]);
+      const afterRepair = yield* countRefspec;
+      assert.strictEqual(afterRepair, 0);
+      const remaining = yield* raw(work, "config", "--get-all", "remote.origin.fetch");
+      assert.isTrue(Str.includes("refs/heads/")(remaining));
 
       yield* raw(origin, "notes", "--ref=refs/notes/history", "add", "-m", "chore(repo): merge main", third);
+      const configured = yield* history.sync({ root: work, fetch: false });
+      assert.deepStrictEqual([configured.fetchRefspec, configured.fetch], ["added", "skipped"]);
       const thirdSync = yield* history.sync({ root: work, fetch: true });
-      assert.strictEqual(thirdSync.fetch, "fetched");
+      assert.deepStrictEqual([thirdSync.fetchRefspec, thirdSync.fetch], ["present", "fetched"]);
+      const afterPublish = yield* countRefspec;
+      assert.strictEqual(afterPublish, 1);
+      const displayRefs = yield* raw(work, "config", "--get-all", "notes.displayRef");
+      assert.strictEqual(displayRefs, "refs/notes/history\n");
       // No --notes flag: the configured notes.displayRef alone makes git log show the overlay.
       const log = yield* raw(work, "log", "-1", third);
       assert.isTrue(Str.includes("Notes (history):\n    chore(repo): merge main")(log));

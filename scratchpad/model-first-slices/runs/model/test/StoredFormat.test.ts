@@ -18,7 +18,7 @@ import { RunsHandlers } from "@proto/runs-model/Runs.handlers";
 import { RunsModel } from "@proto/runs-model/Runs.model";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 
@@ -93,7 +93,7 @@ it.layer(NodeServices.layer)((it) => {
         view(SessionRuns, SessionId.make("session_1"), {
           runs: [
             { run: RunId.make("run_1"), previous: O.none(), parent: O.none(), status: "continued" },
-            { run: RunId.make("run_1~1"), previous: O.some(RunId.make("run_1")), parent: O.none(), status: "completed" },
+            { run: RunId.make("run_1~1"), previous: RunId.makeOption("run_1"), parent: O.none(), status: "completed" },
           ],
         }),
       );

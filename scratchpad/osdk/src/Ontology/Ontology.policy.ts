@@ -109,6 +109,22 @@ export const OntologyFindingKind = LiteralKit([
 export type OntologyFindingKind = typeof OntologyFindingKind.Type;
 
 /**
+ * Companion namespace for {@link OntologyFindingKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyFindingKind {
+  /**
+   * Encoded (wire) form of {@link OntologyFindingKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof OntologyFindingKind.Encoded;
+}
+
+/**
  * A link side points at an object type the ontology does not define.
  *
  * @category models
@@ -126,6 +142,27 @@ export class LinkTargetMissing extends S.Opaque<LinkTargetMissing, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link LinkTargetMissing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkTargetMissing {
+  /**
+   * Encoded (wire) form of {@link LinkTargetMissing}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "linkTargetMissing";
+    readonly objectType: ObjectTypeApiName.Encoded;
+    readonly linkType: LinkTypeApiName.Encoded;
+    readonly targetObjectType: ObjectTypeApiName.Encoded;
+  }
+}
 
 /**
  * A link side has no answering side: its target holds no side of the same link type that leads back.
@@ -147,6 +184,27 @@ export class LinkReverseMissing extends S.Opaque<LinkReverseMissing, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link LinkReverseMissing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkReverseMissing {
+  /**
+   * Encoded (wire) form of {@link LinkReverseMissing}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "linkReverseMissing";
+    readonly objectType: ObjectTypeApiName.Encoded;
+    readonly linkType: LinkTypeApiName.Encoded;
+    readonly targetObjectType: ObjectTypeApiName.Encoded;
+  }
+}
+
+/**
  * An interface extends an interface the ontology does not define.
  *
  * @category models
@@ -163,6 +221,26 @@ export class InterfaceParentMissing extends S.Opaque<InterfaceParentMissing, { r
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link InterfaceParentMissing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceParentMissing {
+  /**
+   * Encoded (wire) form of {@link InterfaceParentMissing}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "interfaceParentMissing";
+    readonly interfaceType: InterfaceTypeApiName.Encoded;
+    readonly parent: InterfaceTypeApiName.Encoded;
+  }
+}
 
 /**
  * Interfaces extend one another in a circle, so each of them is its own ancestor.
@@ -184,6 +262,25 @@ export class InterfaceExtensionCycle extends S.Opaque<InterfaceExtensionCycle, {
 ) {}
 
 /**
+ * Companion namespace for {@link InterfaceExtensionCycle}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceExtensionCycle {
+  /**
+   * Encoded (wire) form of {@link InterfaceExtensionCycle}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "interfaceExtensionCycle";
+    readonly interfaceTypes: readonly [InterfaceTypeApiName.Encoded, ...Array<InterfaceTypeApiName.Encoded>];
+  }
+}
+
+/**
  * An object type claims to implement an interface the ontology does not define.
  *
  * @category models
@@ -200,6 +297,26 @@ export class ClaimedInterfaceMissing extends S.Opaque<ClaimedInterfaceMissing, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ClaimedInterfaceMissing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ClaimedInterfaceMissing {
+  /**
+   * Encoded (wire) form of {@link ClaimedInterfaceMissing}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "claimedInterfaceMissing";
+    readonly objectType: ObjectTypeApiName.Encoded;
+    readonly interfaceType: InterfaceTypeApiName.Encoded;
+  }
+}
 
 /**
  * An interface lists an implementer that does not claim it: the object type is undefined, or names neither the
@@ -219,6 +336,26 @@ export class ImplementerNotClaiming extends S.Opaque<ImplementerNotClaiming, { r
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ImplementerNotClaiming}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImplementerNotClaiming {
+  /**
+   * Encoded (wire) form of {@link ImplementerNotClaiming}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "implementerNotClaiming";
+    readonly interfaceType: InterfaceTypeApiName.Encoded;
+    readonly objectType: ObjectTypeApiName.Encoded;
+  }
+}
 
 /**
  * An object type implements an interface property with a property it does not declare.
@@ -244,6 +381,28 @@ export class ImplementedPropertyMissing extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link ImplementedPropertyMissing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImplementedPropertyMissing {
+  /**
+   * Encoded (wire) form of {@link ImplementedPropertyMissing}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "implementedPropertyMissing";
+    readonly objectType: ObjectTypeApiName.Encoded;
+    readonly interfaceType: InterfaceTypeApiName.Encoded;
+    readonly interfaceProperty: InterfacePropertyApiName.Encoded;
+    readonly property: PropertyApiName.Encoded;
+  }
+}
+
+/**
  * A link an interface declares points at an object type or interface the ontology does not define.
  *
  * @category models
@@ -266,6 +425,27 @@ export class InterfaceLinkTargetMissing extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link InterfaceLinkTargetMissing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceLinkTargetMissing {
+  /**
+   * Encoded (wire) form of {@link InterfaceLinkTargetMissing}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "interfaceLinkTargetMissing";
+    readonly interfaceType: InterfaceTypeApiName.Encoded;
+    readonly link: InterfaceLinkTypeApiName.Encoded;
+    readonly missing: LinkedEntity.Encoded;
+  }
+}
+
+/**
  * The type of an action parameter refers to an object type or interface the ontology does not define.
  *
  * @category models
@@ -286,6 +466,27 @@ export class ActionParameterTypeMissing extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ActionParameterTypeMissing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionParameterTypeMissing {
+  /**
+   * Encoded (wire) form of {@link ActionParameterTypeMissing}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "actionParameterTypeMissing";
+    readonly actionType: ActionTypeApiName.Encoded;
+    readonly parameter: ParameterId.Encoded;
+    readonly missing: LinkedEntity.Encoded;
+  }
+}
 
 /**
  * An operation an action declares edits an object type or interface the ontology does not define.
@@ -312,6 +513,27 @@ export class ActionOperationTypeMissing extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link ActionOperationTypeMissing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActionOperationTypeMissing {
+  /**
+   * Encoded (wire) form of {@link ActionOperationTypeMissing}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "actionOperationTypeMissing";
+    readonly actionType: ActionTypeApiName.Encoded;
+    readonly operation: number;
+    readonly missing: LinkedEntity.Encoded;
+  }
+}
+
+/**
  * A query's parameters, output or named types refer to an object type or interface the ontology does not define.
  *
  * @category models
@@ -330,6 +552,26 @@ export class QueryReferenceMissing extends S.Opaque<QueryReferenceMissing, { rea
 ) {}
 
 /**
+ * Companion namespace for {@link QueryReferenceMissing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryReferenceMissing {
+  /**
+   * Encoded (wire) form of {@link QueryReferenceMissing}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "queryReferenceMissing";
+    readonly query: VersionedQueryApiName.Encoded;
+    readonly missing: LinkedEntity.Encoded;
+  }
+}
+
+/**
  * A query refers by name to a data type its own table of named types does not hold.
  *
  * @category models
@@ -346,6 +588,26 @@ export class TypeReferenceDangling extends S.Opaque<TypeReferenceDangling, { rea
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TypeReferenceDangling}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TypeReferenceDangling {
+  /**
+   * Encoded (wire) form of {@link TypeReferenceDangling}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "typeReferenceDangling";
+    readonly query: VersionedQueryApiName.Encoded;
+    readonly typeId: TypeReferenceId.Encoded;
+  }
+}
 
 /**
  * A property names a value type the ontology does not define.
@@ -367,6 +629,27 @@ export class PropertyValueTypeMissing extends S.Opaque<PropertyValueTypeMissing,
 ) {}
 
 /**
+ * Companion namespace for {@link PropertyValueTypeMissing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyValueTypeMissing {
+  /**
+   * Encoded (wire) form of {@link PropertyValueTypeMissing}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "propertyValueTypeMissing";
+    readonly objectType: ObjectTypeApiName.Encoded;
+    readonly property: PropertyApiName.Encoded;
+    readonly valueType: ValueTypeApiName.Encoded;
+  }
+}
+
+/**
  * An object type says a property carries a shared property type the ontology does not define.
  *
  * @category models
@@ -386,6 +669,27 @@ export class SharedPropertyTypeMissing extends S.Opaque<SharedPropertyTypeMissin
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link SharedPropertyTypeMissing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SharedPropertyTypeMissing {
+  /**
+   * Encoded (wire) form of {@link SharedPropertyTypeMissing}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "sharedPropertyTypeMissing";
+    readonly objectType: ObjectTypeApiName.Encoded;
+    readonly property: PropertyApiName.Encoded;
+    readonly sharedPropertyType: SharedPropertyTypeApiName.Encoded;
+  }
+}
 
 /**
  * One thing wrong with an ontology taken as a whole, with the names that locate it.
@@ -449,6 +753,36 @@ export const OntologyFinding = OntologyFindingKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type OntologyFinding = typeof OntologyFinding.Type;
+
+/**
+ * Companion namespace for {@link OntologyFinding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyFinding {
+  /**
+   * Encoded (wire) form of {@link OntologyFinding}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | LinkTargetMissing.Encoded
+    | LinkReverseMissing.Encoded
+    | InterfaceParentMissing.Encoded
+    | InterfaceExtensionCycle.Encoded
+    | ClaimedInterfaceMissing.Encoded
+    | ImplementerNotClaiming.Encoded
+    | ImplementedPropertyMissing.Encoded
+    | InterfaceLinkTargetMissing.Encoded
+    | ActionParameterTypeMissing.Encoded
+    | ActionOperationTypeMissing.Encoded
+    | QueryReferenceMissing.Encoded
+    | TypeReferenceDangling.Encoded
+    | PropertyValueTypeMissing.Encoded
+    | SharedPropertyTypeMissing.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // What a definition mentions

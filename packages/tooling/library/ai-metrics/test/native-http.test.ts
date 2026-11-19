@@ -1,4 +1,4 @@
-import * as Zlib from "node:zlib";
+import * as NodeZlib from "node:zlib";
 import { DeliveryLedgerConfig } from "@beep/repo-ai-metrics/delivery-ledger";
 import {
   encodeManagedControllerObservation,
@@ -196,7 +196,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
           ],
         })
         .finish();
-      const partial = yield* post(Zlib.gzipSync(encoded), "application/x-protobuf", "gzip");
+      const partial = yield* post(NodeZlib.gzipSync(encoded), "application/x-protobuf", "gzip");
       expect(partial.status).toBe(200);
       const response = responseType.lookupType("ExportTraceServiceResponse");
       expect(response.toObject(response.decode(partial.bytes), { longs: String })).toEqual({
@@ -206,7 +206,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
         },
       });
       const spanBody8 = yield* spanBody();
-      const json = yield* post(Zlib.gzipSync(spanBody8), "application/json; charset=utf-8", "gzip");
+      const json = yield* post(NodeZlib.gzipSync(spanBody8), "application/json; charset=utf-8", "gzip");
       expect(json.status).toBe(200);
       expect(json.text).toBe("{}");
       const stats9 = yield* journal.stats;
@@ -226,7 +226,7 @@ it.layer(Layer.fresh(sqlLayer), { timeout: "30 seconds", excludeTestServices: tr
       expect((yield* post("{}", "application/json", "identity", `${url}/unsupported`)).status).toBe(404);
       expect((yield* post("{}", "application/json", "identity", url, "GET")).status).toBe(405);
       expect((yield* post(Str.repeat(262145)(" "))).status).toBe(413);
-      expect((yield* post(Zlib.gzipSync(Str.repeat(1_048_576)(" ")), "application/json", "gzip")).status).toBe(413);
+      expect((yield* post(NodeZlib.gzipSync(Str.repeat(1_048_576)(" ")), "application/json", "gzip")).status).toBe(413);
       const invalidProto = yield* post(new Uint8Array([255]), "application/x-protobuf");
       expect((yield* health).counts).toMatchObject({ malformed: 3, unsupported: 2, oversized: 2 });
       expect(invalidProto.status).toBe(400);

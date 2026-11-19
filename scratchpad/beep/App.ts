@@ -169,7 +169,7 @@ export class AppReview extends Model<AppReview>("AppReview")(
  * @since 0.0.0
  */
 export declare namespace AppReview {
-  export type Encoded = S.Codec.Encoded<typeof AppReview>;
+  export type Encoded = typeof AppReview.Encoded;
 }
 
 const decodeAppReview = S.decodeUnknownEffect(AppReview);
@@ -249,7 +249,7 @@ export class AuthStep extends Model<AuthStep>("AuthStep")(
  * @since 0.0.0
  */
 export declare namespace AuthStep {
-  export type Encoded = S.Codec.Encoded<typeof AuthStep>;
+  export type Encoded = typeof AuthStep.Encoded;
 }
 
 /**
@@ -329,7 +329,7 @@ export class Action extends Model<Action>("Action")(
  * @since 0.0.0
  */
 export declare namespace Action {
-  export type Encoded = S.Codec.Encoded<typeof Action>;
+  export type Encoded = typeof Action.Encoded;
 }
 
 const jsonObjectFromString = S.fromJsonString(S.JsonObject);
@@ -388,7 +388,7 @@ export class ChatTool extends Model<ChatTool>("ChatTool")(
  * @since 0.0.0
  */
 export declare namespace ChatTool {
-  export type Encoded = S.Codec.Encoded<typeof ChatTool>;
+  export type Encoded = typeof ChatTool.Encoded;
 }
 
 const decodeUnknownEffectChatTool = S.decodeUnknownEffect(ChatTool);
@@ -508,7 +508,7 @@ export class ExternalIntegration extends Model<ExternalIntegration>("ExternalInt
  * @since 0.0.0
  */
 export declare namespace ExternalIntegration {
-  export type Encoded = S.Codec.Encoded<typeof ExternalIntegration>;
+  export type Encoded = typeof ExternalIntegration.Encoded;
 }
 
 const encodeExternalIntegration = S.encodeEffect(ExternalIntegration);
@@ -544,7 +544,7 @@ export class ProactiveNotification extends Model<ProactiveNotification>("Proacti
  * @since 0.0.0
  */
 export declare namespace ProactiveNotification {
-  export type Encoded = S.Codec.Encoded<typeof ProactiveNotification>;
+  export type Encoded = typeof ProactiveNotification.Encoded;
 }
 
 /**
@@ -582,7 +582,7 @@ export class ApiKey extends Model<ApiKey>("ApiKey")(
  * @since 0.0.0
  */
 export declare namespace ApiKey {
-  export type Encoded = S.Codec.Encoded<typeof ApiKey>;
+  export type Encoded = typeof ApiKey.Encoded;
 }
 
 const baseFields = {
@@ -679,7 +679,7 @@ export class AppBaseModel extends Model<AppBaseModel>("AppBaseModel")(
  * @since 0.0.0
  */
 export declare namespace AppBaseModel {
-  export type Encoded = S.Codec.Encoded<typeof AppBaseModel>;
+  export type Encoded = typeof AppBaseModel.Encoded;
 }
 
 /**
@@ -739,7 +739,7 @@ export class App extends Model<App>("App")(
  * @since 0.0.0
  */
 export declare namespace App {
-  export type Encoded = S.Codec.Encoded<typeof App>;
+  export type Encoded = typeof App.Encoded;
 }
 
 /**
@@ -1272,7 +1272,7 @@ export class AppCatalogItem extends Model<AppCatalogItem>("AppCatalogItem")(
  * @since 0.0.0
  */
 export declare namespace AppCatalogItem {
-  export type Encoded = S.Codec.Encoded<typeof AppCatalogItem>;
+  export type Encoded = typeof AppCatalogItem.Encoded;
 }
 
 /**
@@ -1340,7 +1340,7 @@ export class AppCreate extends Model<AppCreate>("AppCreate")(
  * @since 0.0.0
  */
 export declare namespace AppCreate {
-  export type Encoded = S.Codec.Encoded<typeof AppCreate>;
+  export type Encoded = typeof AppCreate.Encoded;
 }
 
 /**
@@ -1401,7 +1401,7 @@ export class AppUpdate extends Model<AppUpdate>("AppUpdate")(
  * @since 0.0.0
  */
 export declare namespace AppUpdate {
-  export type Encoded = S.Codec.Encoded<typeof AppUpdate>;
+  export type Encoded = typeof AppUpdate.Encoded;
 }
 
 /**
@@ -1480,5 +1480,5 @@ export class UsageHistoryItem extends Model<UsageHistoryItem>("UsageHistoryItem"
  * @since 0.0.0
  */
 export declare namespace UsageHistoryItem {
-  export type Encoded = S.Codec.Encoded<typeof UsageHistoryItem>;
+  export type Encoded = typeof UsageHistoryItem.Encoded;
 }

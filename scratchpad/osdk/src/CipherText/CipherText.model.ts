@@ -47,6 +47,22 @@ export const CipherChannelRid = S.NonEmptyString.pipe(
 export type CipherChannelRid = typeof CipherChannelRid.Type;
 
 /**
+ * Companion namespace for {@link CipherChannelRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CipherChannelRid {
+  /**
+   * Encoded (wire) form of {@link CipherChannelRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof CipherChannelRid.Encoded;
+}
+
+/**
  * Which cipher channel re-encrypts a value when it is updated: the one it already uses or the property's default.
  *
  * **Details**
@@ -96,6 +112,22 @@ export const CipherChannelStrategy = MappedLiteralKit([
  * @since 0.0.0
  */
 export type CipherChannelStrategy = typeof CipherChannelStrategy.Type;
+
+/**
+ * Companion namespace for {@link CipherChannelStrategy}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CipherChannelStrategy {
+  /**
+   * Encoded (wire) form of {@link CipherChannelStrategy}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof CipherChannelStrategy.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Envelope
@@ -167,6 +199,22 @@ export class CipherText extends S.Opaque<CipherText, { readonly brand: unique sy
   )
 ) {}
 
+/**
+ * Companion namespace for {@link CipherText}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CipherText {
+  /**
+   * Encoded (wire) form of {@link CipherText}: the single `CIPHER::<channel>::<payload>::CIPHER` envelope string.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof CipherText.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Encryption and decryption
 // -----------------------------------------------------------------------------
@@ -211,6 +259,22 @@ export const Plaintext = S.RedactedFromValue(S.String).pipe(
 export type Plaintext = typeof Plaintext.Type;
 
 /**
+ * Companion namespace for {@link Plaintext}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Plaintext {
+  /**
+   * Encoded (wire) form of {@link Plaintext}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof Plaintext.Encoded;
+}
+
+/**
  * Request to encrypt a value with a cipher channel.
  *
  * **Example** (Encode an encryption request)
@@ -234,6 +298,24 @@ export class EncryptionRequest extends S.Opaque<EncryptionRequest, { readonly br
     plaintext: Plaintext.annotateKey({ description: "The value to encrypt." }),
   }).pipe($I.annoteSchema("EncryptionRequest", { description: "Request to encrypt a value with a cipher channel." }))
 ) {}
+
+/**
+ * Companion namespace for {@link EncryptionRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EncryptionRequest {
+  /**
+   * Encoded (wire) form of {@link EncryptionRequest}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly plaintext: Plaintext.Encoded;
+  }
+}
 
 /**
  * Result of an encryption: the cipher text to store on a property.
@@ -269,6 +351,24 @@ export class EncryptionResult extends S.Opaque<EncryptionResult, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link EncryptionResult}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EncryptionResult {
+  /**
+   * Encoded (wire) form of {@link EncryptionResult}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly ciphertext: CipherText.Encoded;
+  }
+}
+
+/**
  * Result of a decryption: the original value.
  *
  * **Details**
@@ -296,3 +396,21 @@ export class DecryptionResult extends S.Opaque<DecryptionResult, { readonly bran
     plaintext: Plaintext.annotateKey({ description: "The decrypted value." }),
   }).pipe($I.annoteSchema("DecryptionResult", { description: "Result of a decryption: the original value." }))
 ) {}
+
+/**
+ * Companion namespace for {@link DecryptionResult}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DecryptionResult {
+  /**
+   * Encoded (wire) form of {@link DecryptionResult}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly plaintext: Plaintext.Encoded;
+  }
+}

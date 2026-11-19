@@ -23,6 +23,7 @@
     "./Claim/RetractClaim.command": "./src/Claim/RetractClaim.command.ts",
     "./Claim/ReviewRequested.event": "./src/Claim/ReviewRequested.event.ts",
     "./Directory/FindParties.read": "./src/Directory/FindParties.read.ts",
+    "./Directory/InvalidCursor.rejection": "./src/Directory/InvalidCursor.rejection.ts",
     "./Disposition": "./src/Disposition.ts",
     "./Evidence": "./src/Evidence.ts",
     "./Facts/ClaimDecided.fact": "./src/Facts/ClaimDecided.fact.ts",
@@ -33,6 +34,7 @@
     "./Party/EffectiveParty.read": "./src/Party/EffectiveParty.read.ts",
     "./Party/MergeParties.command": "./src/Party/MergeParties.command.ts",
     "./Party/Party.id": "./src/Party/Party.id.ts",
+    "./Party/PartyName": "./src/Party/PartyName.ts",
     "./Party/RegisterParty.command": "./src/Party/RegisterParty.command.ts",
     "./Proposition": "./src/Proposition.ts",
     "./ReviewerApi.contract": "./src/ReviewerApi.contract.ts"

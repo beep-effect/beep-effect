@@ -12,15 +12,15 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf";
+import type { IRI } from "@beep/rdf";
+import * as A from "effect/Array";
+import { dual, flow, pipe } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as N from "effect/Number";
-import * as SchemaGetter from "effect/SchemaGetter";
-import * as A from "effect/Array";
-import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
 
 const $I = $ScratchpadId.create("effect-ontology/Utils/Iri");
@@ -258,7 +258,8 @@ export const makeLocalNameSchema: {
  * @category models
  * @since 0.0.0
  */
-export class LocalNameMapResult extends S.Opaque<LocalNameMapResult, { readonly brand: unique symbol }>()(S.Struct({
+export class LocalNameMapResult extends S.Opaque<LocalNameMapResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     map: S.declare(MutableHashMap.isMutableHashMap<string, IRI>, { expected: "MutableHashMap" }).annotateKey({
       description: "Case-insensitive local-name mapping; the last IRI wins when names collide.",
     }),
@@ -268,9 +269,12 @@ export class LocalNameMapResult extends S.Opaque<LocalNameMapResult, { readonly 
       description: "All IRIs associated with each colliding local name.",
     }),
     hasCollisions: S.Boolean.annotateKey({ description: "Whether any local-name collision was detected." }),
-  }).pipe($I.annoteSchema("LocalNameMapResult", {
-    description: "Mutable local-name lookup state and its collision inventory.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("LocalNameMapResult", {
+      description: "Mutable local-name lookup state and its collision inventory.",
+    })
+  )
+) {}
 
 /**
  * Build a case-insensitive local name to IRI map with collision detection.
@@ -318,7 +322,7 @@ export const buildLocalNameToIriMapSafe = (iris: ReadonlyArray<IRI>): LocalNameM
   const allByLocalName = MutableHashMap.empty<string, Array<IRI>>();
 
   for (const iri of iris) {
-    const localName = extractLocalNameFromIri(iri).toLowerCase();
+    const localName = Str.toLowerCase(extractLocalNameFromIri(iri));
 
     // Track all IRIs for this local name
     const existing = MutableHashMap.get(allByLocalName, localName).pipe(O.getOrElse(A.empty<IRI>));
@@ -337,11 +341,11 @@ export const buildLocalNameToIriMapSafe = (iris: ReadonlyArray<IRI>): LocalNameM
     }
   }
 
-  return {
+  return LocalNameMapResult.make({
     map,
     collisions,
     hasCollisions: MutableHashMap.size(collisions) > 0,
-  };
+  });
 };
 
 /**

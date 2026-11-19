@@ -3,6 +3,7 @@ import * as Rdf from "@beep/rdf/Rdf";
 import { SparqlQueryRequest, SparqlQueryService } from "@beep/semantic-web/services/sparql-query";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
+
 describe("canonical SPARQL adapter", () => {
   it.layer(OxigraphSparqlQueryServiceLive)("with the canonical Oxigraph adapter", (it) => {
     it.effect(

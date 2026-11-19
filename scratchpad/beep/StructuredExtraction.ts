@@ -187,7 +187,7 @@ export class ExtractedActionItem extends Model<ExtractedActionItem>("ExtractedAc
  * @since 0.0.0
  */
 export declare namespace ExtractedActionItem {
-  export type Encoded = S.Codec.Encoded<typeof ExtractedActionItem>;
+  export type Encoded = typeof ExtractedActionItem.Encoded;
 }
 
 /**
@@ -316,7 +316,7 @@ export class ActionItemsExtraction extends Model<ActionItemsExtraction>("ActionI
  * @since 0.0.0
  */
 export declare namespace ActionItemsExtraction {
-  export type Encoded = S.Codec.Encoded<typeof ActionItemsExtraction>;
+  export type Encoded = typeof ActionItemsExtraction.Encoded;
 }
 
 /**
@@ -512,7 +512,7 @@ export class ConversationStructureExtraction extends Model<ConversationStructure
  * @since 0.0.0
  */
 export declare namespace ConversationStructureExtraction {
-  export type Encoded = S.Codec.Encoded<typeof ConversationStructureExtraction>;
+  export type Encoded = typeof ConversationStructureExtraction.Encoded;
 }
 
 /**
@@ -603,7 +603,7 @@ export class ExtractedEvent extends Model<ExtractedEvent>("ExtractedEvent")(
  * @since 0.0.0
  */
 export declare namespace ExtractedEvent {
-  export type Encoded = S.Codec.Encoded<typeof ExtractedEvent>;
+  export type Encoded = typeof ExtractedEvent.Encoded;
 }
 
 /**
@@ -726,7 +726,7 @@ export class ExtractedSection extends Model<ExtractedSection>("ExtractedSection"
  * @since 0.0.0
  */
 export declare namespace ExtractedSection {
-  export type Encoded = S.Codec.Encoded<typeof ExtractedSection>;
+  export type Encoded = typeof ExtractedSection.Encoded;
 }
 
 /**
@@ -800,7 +800,7 @@ export class StructuredExtraction extends Model<StructuredExtraction>("Structure
  * @since 0.0.0
  */
 export declare namespace StructuredExtraction {
-  export type Encoded = S.Codec.Encoded<typeof StructuredExtraction>;
+  export type Encoded = typeof StructuredExtraction.Encoded;
 }
 
 /**

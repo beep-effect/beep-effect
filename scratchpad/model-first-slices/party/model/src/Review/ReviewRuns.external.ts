@@ -1,7 +1,9 @@
 import * as Domain from "@alchemy.run/domain";
 import { GrantTerms } from "@proto/kernel/Capability";
+import { Count, IdText, Text } from "@proto/kernel/Measure";
 import { RunId } from "@proto/kernel/Ids";
 import { GrantRef, Hop, Provenance } from "@proto/kernel/Invocation";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as S from "effect/Schema";
 
 /**
@@ -10,7 +12,20 @@ import * as S from "effect/Schema";
  * @category errors
  * @since 0.0.0
  */
-export class RunRefused extends S.TaggedError<RunRefused, { readonly brand: unique symbol }>()("RunRefused", { reason: S.String }) {}
+export class RunRefused extends S.TaggedError<RunRefused, { readonly brand: unique symbol }>()("RunRefused", { reason: Text }) {}
+
+/**
+ * The statuses in which a run has ended, as the runs context reports them.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const RunEndedStatus = LiteralKit(["completed", "cancelled", "exhausted", "rejected"]);
+/**
+ * @category models
+ * @since 0.0.0
+ */
+export type RunEndedStatus = typeof RunEndedStatus.Type;
 
 /**
  * The run has ended (completed, cancelled, exhausted or rejected), for
@@ -19,7 +34,7 @@ export class RunRefused extends S.TaggedError<RunRefused, { readonly brand: uniq
  * @category errors
  * @since 0.0.0
  */
-export class RunEnded extends S.TaggedError<RunEnded, { readonly brand: unique symbol }>()("RunEnded", { status: S.String }) {}
+export class RunEnded extends S.TaggedError<RunEnded, { readonly brand: unique symbol }>()("RunEnded", { status: RunEndedStatus }) {}
 
 /**
  * The run's remaining allowance cannot cover the reservation.
@@ -27,7 +42,7 @@ export class RunEnded extends S.TaggedError<RunEnded, { readonly brand: unique s
  * @category errors
  * @since 0.0.0
  */
-export class BudgetRefused extends S.TaggedError<BudgetRefused, { readonly brand: unique symbol }>()("BudgetRefused", { remaining: S.Int }) {}
+export class BudgetRefused extends S.TaggedError<BudgetRefused, { readonly brand: unique symbol }>()("BudgetRefused", { remaining: Count }) {}
 
 /**
  * The versions a review run records: prompt, model and tool contract.
@@ -35,7 +50,7 @@ export class BudgetRefused extends S.TaggedError<BudgetRefused, { readonly brand
  * @category models
  * @since 0.0.0
  */
-export const ReviewVersions = S.Struct({ prompt: S.String, model: S.String, tools: S.String });
+export const ReviewVersions = S.Struct({ prompt: IdText, model: IdText, tools: IdText });
 /**
  * @category models
  * @since 0.0.0
@@ -77,11 +92,11 @@ export class ReviewRuns extends Domain.ExternalSystem(
     open: {
       args: {
         ...call,
-        session: S.String,
-        purpose: S.String,
+        session: IdText,
+        purpose: Text,
         versions: ReviewVersions,
-        allowance: S.Int,
-        historyBound: S.Int,
+        allowance: Count,
+        historyBound: Count,
         source: GrantRef,
         terms: GrantTerms,
       },
@@ -89,16 +104,16 @@ export class ReviewRuns extends Domain.ExternalSystem(
       error: RunRefused,
     },
     reserve: {
-      args: { ...call, reservation: S.String, units: S.Int },
+      args: { ...call, reservation: IdText, units: Count },
       success: LiveRun,
       error: [RunRefused, BudgetRefused, RunEnded],
     },
-    settle: { args: { ...call, reservation: S.String, units: S.Int }, success: LiveRun, error: [RunRefused, RunEnded] },
-    release: { args: { ...call, reservation: S.String }, success: LiveRun, error: [RunRefused, RunEnded] },
-    step: { args: { ...call, step: S.String }, success: LiveRun, error: [RunRefused, RunEnded] },
+    settle: { args: { ...call, reservation: IdText, units: Count }, success: LiveRun, error: [RunRefused, RunEnded] },
+    release: { args: { ...call, reservation: IdText }, success: LiveRun, error: [RunRefused, RunEnded] },
+    step: { args: { ...call, step: IdText }, success: LiveRun, error: [RunRefused, RunEnded] },
     awaitApproval: { args: call, success: LiveRun, error: [RunRefused, RunEnded] },
     exhaust: { args: call, success: LiveRun, error: [RunRefused, RunEnded] },
-    refuse: { args: { ...call, reason: S.String }, success: LiveRun, error: [RunRefused, RunEnded] },
+    refuse: { args: { ...call, reason: Text }, success: LiveRun, error: [RunRefused, RunEnded] },
   },
   { description: "Opens review runs and reports their budget, steps and outcome to the runs context." },
 ) {}

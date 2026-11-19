@@ -1,5 +1,5 @@
 import * as Domain from "@alchemy.run/domain";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import type * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { allows, type Capability, type ResourceScope } from "./Capability.ts";

@@ -1,9 +1,10 @@
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import { dual, pipe } from "effect/Function";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import { CapabilityGrant } from "./Capability.ts";
-import { DelegationId, GrantId, PrincipalId, RunId } from "./Ids.ts";
+import { DelegationId, FactId, GrantId, PrincipalId, RunId } from "./Ids.ts";
+import { IdText, Name, Sequence, StreamId } from "./Measure.ts";
 
 /**
  * Where an invocation's authority starts: a human principal, or an agent run
@@ -39,7 +40,7 @@ export type Root = typeof Root.Type;
  * @since 0.0.0
  */
 export const Relayer = S.TaggedUnion({
-  Process: { process: S.String },
+  Process: { process: Name },
   Agent: { run: RunId },
 });
 /**
@@ -57,10 +58,10 @@ export type Relayer = typeof Relayer.Type;
  * @since 0.0.0
  */
 export const Cause = S.TaggedUnion({
-  Event: { stream: S.String, seq: S.Int, event: S.String },
-  SagaStep: { saga: S.String, key: S.String, step: S.String },
-  Session: { scheme: S.String },
-  Fact: { producer: S.String, contract: S.String, version: S.Int, fact: S.String },
+  Event: { stream: StreamId, seq: Sequence, event: Name },
+  SagaStep: { saga: Name, key: IdText, step: IdText },
+  Session: { scheme: Name },
+  Fact: { producer: Name, contract: Name, version: Sequence, fact: FactId },
 });
 /**
  * @category models
@@ -120,7 +121,7 @@ export type Invocation = typeof Invocation.Type;
 export const Operator = S.TaggedUnion({
   Human: { principal: PrincipalId },
   Agent: { run: RunId },
-  Process: { process: S.String },
+  Process: { process: Name },
 });
 /**
  * @category models
@@ -256,7 +257,7 @@ export const extend: {
  * import { carry } from "@proto/kernel/Invocation";
  * import * as S from "effect/Schema";
  *
- * export class ClaimRetracted extends Domain.Event("ClaimRetracted", carry({ reason: S.String })) {}
+ * export class ClaimRetracted extends Domain.Event("ClaimRetracted", carry({ reason: S.String }), { description: "A pending claim was withdrawn, and why, with the org and review runs the decision covers." }) {}
  * ```
  *
  * @category constructors
@@ -302,12 +303,26 @@ export const eventCause = (trigger: {
   Cause.cases.Event.make({ stream: trigger.envelope.stream, seq: trigger.envelope.seq, event: trigger.event._tag });
 
 /**
- * The cause of a hop a saga step makes.
+ * The cause of a hop a saga step makes. The saga is the subject; its key
+ * and step are both strings, so they are named rather than positional.
+ *
+ * **Example** (A review saga's propose step)
+ * ```ts
+ * import { sagaStep } from "@proto/kernel/Invocation";
+ * import { pipe } from "effect/Function";
+ *
+ * const cause = sagaStep("ReviewAssist", { key: "review:claim_1:1", step: "propose" });
+ * const same = pipe("ReviewAssist", sagaStep({ key: "review:claim_1:1", step: "propose" }));
+ * ```
  *
  * @category constructors
  * @since 0.0.0
  */
 export const sagaStep: {
-  (key: string, step: string): (saga: string) => Cause;
-  (saga: string, key: string, step: string): Cause;
-} = dual(3, (saga: string, key: string, step: string): Cause => Cause.cases.SagaStep.make({ saga, key, step }));
+  (at: { readonly key: string; readonly step: string }): (saga: string) => Cause;
+  (saga: string, at: { readonly key: string; readonly step: string }): Cause;
+} = dual(
+  2,
+  (saga: string, { key, step }: { readonly key: string; readonly step: string }): Cause =>
+    Cause.cases.SagaStep.make({ saga, key, step }),
+);

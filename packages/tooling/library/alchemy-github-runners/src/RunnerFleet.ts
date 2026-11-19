@@ -486,7 +486,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                 ...pin("functionName", (names) => names.scaleUp),
               });
               yield* Lambda.EventSourceMapping("ScaleUpSource", {
-                functionName: scaleUp.functionName,
+                functionName: scaleUp.functionArn,
                 eventSourceArn: buildQueue.queueArn,
                 batchSize: 10,
                 functionResponseTypes: ["ReportBatchItemFailures"],
@@ -532,7 +532,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                   pin("functionName", (names) => names.jobRetry)
                 );
                 yield* Lambda.EventSourceMapping("JobRetrySource", {
-                  functionName: jobRetry.functionName,
+                  functionName: jobRetry.functionArn,
                   eventSourceArn: jobRetryQueue.value.queueArn,
                   batchSize: 10,
                   functionResponseTypes: ["ReportBatchItemFailures"],
@@ -729,7 +729,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         env: { [runtimeConfigEnvName]: watcherConfig },
       });
       yield* Lambda.EventSourceMapping("DeregisterRetrySource", {
-        functionName: watcher.functionName,
+        functionName: watcher.functionArn,
         eventSourceArn: deregisterRetry.queueArn,
         batchSize: 1,
         functionResponseTypes: ["ReportBatchItemFailures"],

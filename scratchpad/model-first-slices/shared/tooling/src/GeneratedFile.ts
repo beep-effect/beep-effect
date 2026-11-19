@@ -1,9 +1,10 @@
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual } from "effect/Function";
 import type { PlatformError } from "effect/PlatformError";
 import * as S from "effect/Schema";
+import { thunkEmptyStr } from "@beep/utils/thunk"
 
 /**
  * A generated file on disk is not what its generator produces now; `message`
@@ -51,7 +52,7 @@ export const generatedFile: {
     const fs = yield* FileSystem.FileSystem;
     const expected = yield* render;
     if (!A.contains(argv, "--check")) return yield* fs.writeFileString(file, expected);
-    const actual = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(() => ""));
+    const actual = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(thunkEmptyStr));
     return yield* actual === expected
       ? Effect.void
       : Effect.fail(GeneratedDrift.make({ file, message: `${file} is not what its generator produces; run it without --check` }));

@@ -14,8 +14,9 @@ import { provenanceOf, Root } from "@proto/kernel/Invocation";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
+import { thunkEffectVoid } from "@beep/utils"
 
 /**
  * A grant's lifecycle: issued and active with its current terms, then
@@ -51,7 +52,7 @@ const orgOf = (terms: GrantTerms) => ResourceScope.cases.Org.make({ org: terms.r
 
 const requireNarrower = (current: GrantTerms, next: GrantTerms): Effect.Effect<void, TermsWiden> =>
   O.match(widens(current, next), {
-    onNone: () => Effect.void,
+    onNone: thunkEffectVoid,
     onSome: (dimension) => Effect.fail(TermsWiden.make({ dimension })),
   });
 
@@ -73,7 +74,7 @@ export class Grant extends Domain.Aggregate(
       IssueGrant: Effect.fn(function* (state, command, { now }) {
         // The org is the command's, so the grant is checked before existence is revealed.
         const invocation = yield* requireGrant(AuthorityGrants, command._tag, orgOf(command.terms), now);
-        if (state._tag !== "Unissued") return yield* GrantAlreadyIssued.make({});
+        if (!GrantState.guards.Unissued(state)) return yield* GrantAlreadyIssued.make({});
         return [GrantIssued.make({ holder: command.holder, terms: command.terms, provenance: provenanceOf(invocation) })];
       }),
 

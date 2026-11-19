@@ -9,6 +9,8 @@
  *
  * @since 0.0.0
  */
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 import type { PatchedField } from "@beep/effect-drizzle";
 import type { Jsonb } from "@beep/effect-drizzle/pg";
 import type { ExtraConfigColumn } from "drizzle-orm/pg-core";
@@ -22,7 +24,7 @@ import * as R from "effect/Record";
 import * as P from "effect/Predicate";
 import { Model, Table, optionalNull, pg } from "./Kit.ts";
 
-const snakeKey = (key: string): string => key.replace(/[A-Z]/g, (letter) => `_${letter.toLowerCase()}`);
+const snakeKey = (key: string): string => A.join(A.map(Str.split(/([A-Z])/g)(key), (part, index) => index % 2 === 1 ? `_${Str.toLowerCase(part)}` : part), "");
 
 /**
  * True for a non-null, non-array object.

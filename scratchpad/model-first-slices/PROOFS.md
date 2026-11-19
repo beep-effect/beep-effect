@@ -3,7 +3,7 @@
 <!-- Generated from proofs/Proofs.data.ts by scripts/proofs.ts. Do not edit: `bun run proofs`
      rewrites it, and `bun run proofs --check` fails on drift. -->
 
-Every invariant this prototype enforces (D8): 41 entries. Mechanical laws run in
+Every invariant this prototype enforces (D8): 44 entries. Mechanical laws run in
 `bun run check`, `bun run test` and `bun run generated:check`; semantic questions stay with a
 reviewer who did not write the change.
 
@@ -183,11 +183,21 @@ A saga run in flight finishes on the version it started while new runs start on 
 
 The directory sink applies each source stream's changes once, in order, and refuses stale application, writes and checkpoints together.
 
-- **Checker:** `party/model/test/PartyDirectory.sink.test.ts`, `party/model/test/Rebuild.test.ts`
-- **Reads:** The store's apply and checkpoints; a crash injected between the write and the library's checkpoint.
-- **Assumes:** One store write is atomic (it is, in memory).
-- **Gaps:** A real database needs the same transaction; not shown.
+- **Checker:** `party/model/test/Rebuild.test.ts`, `party/host/test/PartyDirectoryStore.laws.test.ts`
+- **Reads:** The store's apply, checkpoints, switch and search; a crash injected between the write and the library's checkpoint; one set of laws over generated scenes, held by the in-memory store and by the Postgres adapter on PGlite (one row table per generation, one positions table).
+- **Assumes:** One store write is atomic: in memory one update, in Postgres one transaction around the batch. PGlite is one connection, so the position row lock (`FOR UPDATE`) that serialises two runners is never contended in a test.
+- **Gaps:** Two runners applying one stream at once are shown only on the cluster. Names are ASCII in the laws: `lower()` follows the database's locale beyond ASCII, and a NUL in a name cannot be stored.
 - **Left to a reviewer:** Nothing beyond the store's transaction boundary.
+
+### derived-tables
+
+Every SQL table a host owns is derived from a row schema, and its migrations are generated from those schemas and checked: a schema change no committed migration holds fails `bun run generated:check`, and the directory's row model reads as the read contract.
+
+- **Checker:** `shared/tooling/src/Migrations.ts`, `party/host/test/PartyDirectory.table.test.ts`, `party/host/test/ClusterSql.test.ts`, `runs/host/test/ClusterSql.test.ts`
+- **Reads:** Each host's schema module (`Party.schema.ts`, `Runs.schema.ts`) through drizzle-kit, diffed against the committed `migrations/` snapshots; the generated migrations module; the row model's json form beside `DirectoryRow`; the declared row tables per generation; the migrations a fresh PGlite records.
+- **Assumes:** drizzle-kit's diff is the schema's DDL. A runner applies `<Host>.migrations.ts` once per connection with `effect/sql/Migrator`, in its own migrations table.
+- **Gaps:** A database created by the old `CREATE TABLE IF NOT EXISTS` adapters is not migrated in place; the cluster starts from an empty database. Retiring a generation's row table is a migration the owner generates after the switch.
+- **Left to a reviewer:** Whether a new migration drops or rewrites what a running generation still reads.
 
 ### rebuild-no-side-effects
 
@@ -213,10 +223,10 @@ The library answers a reused command id from its receipt before any check (pinne
 
 The inbox acts on each fact once: duplicates change nothing, a crash before the checkpoint is safe, a v1 consumer survives v2.
 
-- **Checker:** `runs/host/test/RunsHost.test.ts`
-- **Reads:** Commit counts on the target run across redeliveries.
-- **Assumes:** The inbox store's commit is atomic.
-- **Gaps:** In process; a durable inbox store is cluster work.
+- **Checker:** `runs/host/test/RunsHost.test.ts`, `runs/host/test/InboxStore.laws.test.ts`
+- **Reads:** Commit counts on the target run across redeliveries; the inbox store's laws (checkpoint is the highest committed position, a key is seen once committed, order and redelivery do not matter), held by the in-memory store and by the Postgres adapter on PGlite.
+- **Assumes:** The inbox store's commit is atomic: one transaction in Postgres.
+- **Gaps:** The inbox over the Postgres store runs on the cluster only; in process it runs over memory.
 - **Left to a reviewer:** What a fact-started command may do (D32).
 
 ### screen-causality
@@ -276,7 +286,7 @@ No commit is acknowledged from a runner whose own lock session does not hold the
 - **Checker:** `conformance/test/FencedCommit.test.ts`, `conformance/test/RunnerPool.test.ts`, `conformance/test/Own.conformance.ts`, `conformance/test/ShardOwnership.ts`, `conformance/test/RecoveryBound.ts`, `conformance/test/RecoveryBound.test.ts`, `patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch`, `patches/@alchemy.run%2Feffect-cluster@2.0.0-beta.87.patch`
 - **Reads:** In process: two runners on one instance, the host refusing a transaction whose runner no longer serves the instance at commit. On the cluster: the shard lock's holder by session name in pg_locks and pg_stat_activity, sampled while paused and every half second after the unpause; the paused runner's open transaction; the stored events and the fence's log lines; every session holding a lock in the cluster's namespace.
 - **Assumes:** Effect Cluster holds each shard as a session-level advisory lock on one connection reserved from the runner's pool (SqlRunnerStorage.ts); the runner bootstrap names that pool effect-cluster:<host>:<port> from the runner address (patch 6), and the fence computes the same name. Since phase 12 a runner checks at start, from its configuration, that it has an address and that its bootstrap declared that name (checkRunnerPool), and fails to start otherwise.
-- **Gaps:** Phase 11, six attempts on one build: the invariant held in all six; four counted by the case's rule (a write queued at once reached the paused runner after the move) and the other two had a write sent after the move reach it. Refused writes landed once, the last 12.03 s after the unpause (bound 33 s, derived in RecoveryBound.ts). Holders after the unpause are sampled, not traced. The start check ran in process only, against Effect's ShardingConfig; the bootstrap declaring the name and a runner failing to start were not exercised, and it cannot see a pooler that drops application_name (notes/phase-12.md).
+- **Gaps:** Phase 11, six attempts on one build: the invariant held in all six; four counted by the case's rule (a write queued at once reached the paused runner after the move) and the other two had a write sent after the move reach it. Refused writes landed once, the last 12.03 s after the unpause (bound 33 s, derived in RecoveryBound.ts). Holders after the unpause are sampled, not traced. The start check first ran on a cluster in phase 16, where it stopped every runner until the bootstrap gave launched Layers the sharding config (notes/upstream/11); with that both runners pass it and start, and the invariant held again (shard moved 34.6 s into the pause, last write 12.0 s after the unpause). A runner failing the check for a misnamed pool was exercised in process only, and it cannot see a pooler that drops application_name (notes/phase-12.md).
 - **Left to a reviewer:** Whether to send patches 07 and 08 together, with a startup error for an unnamed pool.
 - **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 
@@ -287,7 +297,7 @@ A write sent to a frozen runner completes or fails within the caller's retry bud
 - **Checker:** `conformance/test/FrozenRunner.test.ts`, `conformance/test/SimHost.ts`, `conformance/test/SlotModel.ts`, `conformance/test/RecoveryBound.ts`, `conformance/test/RecoveryBound.test.ts`, `conformance/test/Own.conformance.ts`
 - **Reads:** In process: a runner frozen on the in-process host (calls routed to it fail in transit; its running work stops at its next storage operation), the caller's answer and the virtual time it took, the slot's commits by runner and its stored labels, and each retry's receipt. On the cluster (not run since): the same for a runner paused in decide, through the slot route with a command id.
 - **Assumes:** The budget is TRANSIT_RETRY's 35 delays, 63.1 s, pinned by the canary against the installed library; the cluster bound adds a 5 s allowance for the attempts themselves. In process a call to a frozen runner fails in transit, as a call to an unreachable runner does.
-- **Gaps:** Phase 11 saw a write sent to a paused runner wait for it for over 60 s on the cluster instead of failing in transit; whether the rewritten cluster case holds is unknown until it runs. The in-process freeze stops storage operations only, not the decide's own clock.
+- **Gaps:** Phase 11 saw a write sent to a paused runner wait for it for over 60 s on the cluster instead of failing in transit; the rewritten cluster case first ran in phase 16 and held: a write sent 45 s into the pause was answered in 21 ms by the runner that had taken the shard, the write in flight on the paused runner was answered with a 503 and its retry got a receipt, and each was stored once (notes/phase-16.md). The in-process freeze stops storage operations only, not the decide's own clock.
 - **Left to a reviewer:** Whether a call held by a frozen runner should time out in transit.
 
 ### call-arguments
@@ -387,7 +397,7 @@ On the cluster, a command sent twice, or retried after a lost response, under on
 A runner killed after a commit, a projection batch cut by a crash, a grant revoked mid-chain and a run waiting across a restart each end correctly: stored results, reactions once, refusals recorded, completion after approval.
 
 - **Checker:** `conformance/test/Own.conformance.ts`
-- **Reads:** The front's Apis, the runs-state route, and the cluster database through `docker exec psql`.
+- **Reads:** The front's Apis (a run through the runs contract's `RunState`), and the cluster database through `docker exec psql`.
 - **Assumes:** `docker kill` of every runner models a crash. The projection crash and the revocation are placed by a row lock held from a session of the conformance's own (phase 6); the kill after a commit is not timed.
 - **Gaps:** Since phase 9 (D42) the kill-after-commit case asserts the guarantee as ruled: every reaction once, all within RECOVERY_BOUND_MS (the library's 60 s lease plus two 10 s message polls, checked against the installed sources by conformance/test/RecoveryBound.test.ts) of the kill; phase 9 measured 66.8 s. Recovery is still bounded by the lease, not by shard ownership (notes/upstream/04).
 - **Left to a reviewer:** Whether each fault was really exercised (the evidence log says).
@@ -424,6 +434,28 @@ State in the forms earlier phases stored decodes on the cluster under today's de
 - **Assumes:** The object and key names are the cluster storage's as observed (Practice/<Context>.<Class>/<id>, meta, snapshot).
 - **Gaps:** Phase 11: generation 2 holds every decision, the one phase 6 made republished identical to generation 1's, and consumers saw each fact once. Generation 1 is still served; the retirement check allows retiring it (generation-retirement).
 - **Left to a reviewer:** As generation-retirement.
+- **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
+
+### cluster-directory
+
+On the cluster's own Postgres the directory behaves as its laws say on PGlite: both hosts' migrations are each recorded once when both runners and the front first use the database in the same instant; a batch waits while another session holds its stream's position row and applies once; pages follow the store's cursors in bytewise order; a cursor the store did not issue is refused as InvalidCursor over the contract and with 400 over plain HTTP; search ignores case for letters outside ASCII.
+
+- **Checker:** `conformance/test/Directory.conformance.ts`, `party/host/test/ReviewerHttp.test.ts`
+- **Reads:** The front's Apis, the reviewer Api as plain HTTP JSON under /reviewer-http, the migrations, row and position tables through `docker exec psql`, and the runners' and the front's logs.
+- **Assumes:** A session of the conformance's own holding the position row stands in for a second runner applying the same stream. The first case is a first use only on a fresh deploy, run before any other case (its evidence records what the migrations table held before).
+- **Gaps:** The stack's Postgres is the official Alpine image (musl libc, en_US.utf8), which folds the letters the case uses; a database created with the C locale folds ASCII only and is not run. Letters whose lower case differs between JavaScript and the database (dotted capital I, sharp s) are not covered.
+- **Left to a reviewer:** Whether the first case really was the database's first use (the evidence log says).
+- **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
+
+### cluster-directory-rebuild
+
+A directory rebuild on the cluster keeps read-your-own-write and ends by itself: while the build that writes the next generation replays the history, a new write is found at once through the generation queries still read, and is stored in both; each runner switches once the new generation has everything the old one has; after the switch a write goes to the new generation alone.
+
+- **Checker:** `conformance/test/Rebuild.conformance.ts`, `party/model/test/Rebuild.test.ts`, `party/host/test/PartyDirectoryStore.laws.test.ts`
+- **Reads:** The front's Apis, and the pointer, row and position tables through `docker exec psql`, around a deploy of a build with the generation bumped.
+- **Assumes:** The switch is held back by a row lock on the pointer, taken before the deploy from a session of the conformance's own, so the write provably lands while the new generation is building. The next-generation build is a copy of the tree with the generation bumped, its row table declared and its migration generated; it is not committed.
+- **Gaps:** One change must mean the same row in both generations (a rebuild that changes the row's meaning needs its own forwarding rule). A history large enough for the replay to take minutes was not run: 24 rows.
+- **Left to a reviewer:** Nothing mechanical.
 - **Needs a live stack:** run against a deployed stage, from the conformance driver on the stack's network (README).
 
 ## Outcome coverage gaps

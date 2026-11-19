@@ -144,9 +144,18 @@ index cdbdf953270349a4ff7a84a2a81383592e62c4c9..4931a17839c0b95e8a70dddc42991430
  //# sourceMappingURL=Host.js.map
 \ No newline at end of file
 diff --git a/lib/internal/Bootstrap.js b/lib/internal/Bootstrap.js
-index 461ff1825e4867daa8bc7d43c6a823144501c1dc..26f179eff52c9733b2bbd0ac2ca2300013b82de4 100644
+index 461ff1825e4867daa8bc7d43c6a823144501c1dc..baa39336f205601b3d11f5b626fcbab611b82bd1 100644
 --- a/lib/internal/Bootstrap.js
 +++ b/lib/internal/Bootstrap.js
+@@ -14,7 +14,7 @@ import { NodeClusterHttp, NodeHttpServer, NodeServices } from "@effect/platform-
+ import { PgClient } from "@effect/sql-pg";
+ import { reifyBoundConfigProvider } from "alchemy/Runtime";
+ import { entrypointLayer, entrypointTag, runProcess, stackFromEnv, } from "alchemy/Runtime/Bootstrap";
+-import { ClusterCron, ClusterSchema, ClusterWorkflowEngine, Entity as EffectEntity, RunnerAddress, Singleton, } from "effect/cluster";
++import { ClusterCron, ClusterSchema, ClusterWorkflowEngine, Entity as EffectEntity, RunnerAddress, ShardingConfig, Singleton, } from "effect/cluster";
+ import * as ConfigProvider from "effect/ConfigProvider";
+ import * as Context from "effect/Context";
+ import * as Data from "effect/Data";
 @@ -29,7 +29,7 @@ import * as Path from "effect/Path";
  import * as Redacted from "effect/Redacted";
  import * as Ref from "effect/Ref";
@@ -178,11 +187,27 @@ index 461ff1825e4867daa8bc7d43c6a823144501c1dc..26f179eff52c9733b2bbd0ac2ca23000
          const group = env("CLUSTER_SHARD_GROUPS") ?? "default";
          // Every hosted entity lives in this pool's own shard group.
          const placed = hosted
-@@ -218,7 +222,12 @@ export const bootstrap = (definitions) => {
-                 runnerListenAddress: Option.some(RunnerAddress.make(env("CLUSTER_LISTEN_HOST") ?? "0.0.0.0", RUNNER_PORT)),
-                 ...shardGroupsConfig(),
-             },
+@@ -209,16 +213,22 @@ export const bootstrap = (definitions) => {
+         })
+             // So does the entity itself: its RPCs' middleware is provided to its Layer.
+             .pipe(Layer.provide(Layer.succeedContext(entry.context))));
++        const shardingConfig = {
++            runnerAddress: Option.some(RunnerAddress.make(host, RUNNER_PORT)),
++            // Fly's private network is IPv6 only.
++            runnerListenAddress: Option.some(RunnerAddress.make(env("CLUSTER_LISTEN_HOST") ?? "0.0.0.0", RUNNER_PORT)),
++            ...shardGroupsConfig(),
++        };
+         const cluster = NodeClusterHttp.layer({
+             transport: "http",
+             storage: "sql",
+-            shardingConfig: {
+-                runnerAddress: Option.some(RunnerAddress.make(host, RUNNER_PORT)),
+-                // Fly's private network is IPv6 only.
+-                runnerListenAddress: Option.some(RunnerAddress.make(env("CLUSTER_LISTEN_HOST") ?? "0.0.0.0", RUNNER_PORT)),
+-                ...shardGroupsConfig(),
+-            },
 -        }).pipe(Layer.provide(PgClient.layer({ url: Redacted.make(env("CLUSTER_DATABASE_URL")) })));
++            shardingConfig,
 +        }).pipe(
 +        // Named after the runner, so its shard-lock session can be told apart (`runnerPoolName`).
 +        Layer.provide(PgClient.layer({
@@ -192,6 +217,18 @@ index 461ff1825e4867daa8bc7d43c6a823144501c1dc..26f179eff52c9733b2bbd0ac2ca23000
          // Singletons and crons run in this pool's shard group too, each with
          // the services its Construction phase had.
          const scheduled = hosted.flatMap((entry) => entry.kind === "singleton"
+@@ -250,7 +260,10 @@ export const bootstrap = (definitions) => {
+         // What the classes' Construction phases handed the runner.
+         ...launched, gateway).pipe(
+         // Workflows run on Effect Cluster's own engine, over the cluster.
+-        Layer.provide(ClusterWorkflowEngine.layer), Layer.provide(cluster)));
++        Layer.provide(ClusterWorkflowEngine.layer), Layer.provide(cluster), 
++        // The cluster Layer keeps its sharding config to itself; what a hosted model launches
++        // beside its entities reads the runner's address from it (`checkRunnerPool`).
++        Layer.provide(Layer.orDie(ShardingConfig.layerFromEnv(shardingConfig)))));
+     }).pipe(Effect.provide(platform), Effect.scoped);
+     return runProcess("Effect Cluster runner", program);
+ };
 diff --git a/src/Host.ts b/src/Host.ts
 index f19a5426c933201bb3d2537322e34bc789fecaa8..0c2b51dad04942bc46a2162f791536c2c8415b0c 100644
 --- a/src/Host.ts
@@ -295,10 +332,18 @@ index f19a5426c933201bb3d2537322e34bc789fecaa8..0c2b51dad04942bc46a2162f791536c2
 +    return Effect.void;
 +  });
 diff --git a/src/internal/Bootstrap.ts b/src/internal/Bootstrap.ts
-index f16f6f36c8567af41f7b698dd1af54aa43200755..3e2633c5b7570e19193b3c65234aefa682c6f44b 100644
+index f16f6f36c8567af41f7b698dd1af54aa43200755..9cd1b6501711b38d5708256e470fdbd6d6afbbf8 100644
 --- a/src/internal/Bootstrap.ts
 +++ b/src/internal/Bootstrap.ts
-@@ -44,7 +44,7 @@ import type { Rpc, RpcGroup } from "effect/rpc";
+@@ -25,6 +25,7 @@ import {
+   ClusterWorkflowEngine,
+   Entity as EffectEntity,
+   RunnerAddress,
++  ShardingConfig,
+   Singleton,
+ } from "effect/cluster";
+ import * as ConfigProvider from "effect/ConfigProvider";
+@@ -44,7 +45,7 @@ import type { Rpc, RpcGroup } from "effect/rpc";
  import type { Workflow as EffectWorkflow } from "effect/workflow";
  import type { HostedCron } from "../Cron.ts";
  import { PlatformDeclaration, type HostedEntity } from "../Entity.ts";
@@ -307,7 +352,7 @@ index f16f6f36c8567af41f7b698dd1af54aa43200755..3e2633c5b7570e19193b3c65234aefa6
  import type { HostedSingleton } from "../Singleton.ts";
  import type { HostedWorkflow } from "../Workflow.ts";
  import { GATEWAY_PORT, RUNNER_PORT, gatewayLayer } from "./Gateway.ts";
-@@ -230,12 +230,17 @@ export const bootstrap = (
+@@ -230,12 +231,17 @@ export const bootstrap = (
            ? all
            : [...all, built],
        );
@@ -325,7 +370,7 @@ index f16f6f36c8567af41f7b698dd1af54aa43200755..3e2633c5b7570e19193b3c65234aefa6
      });
      for (const entrypoint of entrypoints) {
        const declaration =
-@@ -262,7 +267,6 @@ export const bootstrap = (
+@@ -262,7 +268,6 @@ export const bootstrap = (
      const hosted = yield* Ref.get(hostedRef);
      const launched = yield* Ref.get(launchedRef);
  
@@ -333,11 +378,31 @@ index f16f6f36c8567af41f7b698dd1af54aa43200755..3e2633c5b7570e19193b3c65234aefa6
      const group = env("CLUSTER_SHARD_GROUPS") ?? "default";
      // Every hosted entity lives in this pool's own shard group.
      const placed = hosted
-@@ -309,7 +313,15 @@ export const bootstrap = (
-         ),
-         ...shardGroupsConfig(),
-       },
+@@ -298,18 +303,27 @@ export const bootstrap = (
+         // So does the entity itself: its RPCs' middleware is provided to its Layer.
+         .pipe(Layer.provide(Layer.succeedContext(entry.context))),
+     );
++    const shardingConfig = {
++      runnerAddress: Option.some(RunnerAddress.make(host, RUNNER_PORT)),
++      // Fly's private network is IPv6 only.
++      runnerListenAddress: Option.some(
++        RunnerAddress.make(env("CLUSTER_LISTEN_HOST") ?? "0.0.0.0", RUNNER_PORT),
++      ),
++      ...shardGroupsConfig(),
++    };
+     const cluster = NodeClusterHttp.layer({
+       transport: "http",
+       storage: "sql",
+-      shardingConfig: {
+-        runnerAddress: Option.some(RunnerAddress.make(host, RUNNER_PORT)),
+-        // Fly's private network is IPv6 only.
+-        runnerListenAddress: Option.some(
+-          RunnerAddress.make(env("CLUSTER_LISTEN_HOST") ?? "0.0.0.0", RUNNER_PORT),
+-        ),
+-        ...shardGroupsConfig(),
+-      },
 -    }).pipe(Layer.provide(PgClient.layer({ url: Redacted.make(env("CLUSTER_DATABASE_URL")!) })));
++      shardingConfig,
 +    }).pipe(
 +      // Named after the runner, so its shard-lock session can be told apart (`runnerPoolName`).
 +      Layer.provide(
@@ -350,3 +415,13 @@ index f16f6f36c8567af41f7b698dd1af54aa43200755..3e2633c5b7570e19193b3c65234aefa6
      // Singletons and crons run in this pool's shard group too, each with
      // the services its Construction phase had.
      const scheduled = hosted.flatMap((entry) =>
+@@ -360,6 +374,9 @@ export const bootstrap = (
+         // Workflows run on Effect Cluster's own engine, over the cluster.
+         Layer.provide(ClusterWorkflowEngine.layer),
+         Layer.provide(cluster),
++        // The cluster Layer keeps its sharding config to itself; what a hosted model launches
++        // beside its entities reads the runner's address from it (`checkRunnerPool`).
++        Layer.provide(Layer.orDie(ShardingConfig.layerFromEnv(shardingConfig))),
+       ),
+     );
+   }).pipe(Effect.provide(platform), Effect.scoped);

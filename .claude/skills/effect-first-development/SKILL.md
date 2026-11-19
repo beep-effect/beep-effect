@@ -98,6 +98,7 @@ Additional checks with no law counterpart below:
 56. At logging/recovery boundaries, render causes with `Cause.pretty(...)` or `Cause.prettyErrors(...)` instead of ad-hoc `String(error)` fallback chains.
 57. Prefer the tersest equivalent helper form when behavior is unchanged: direct helper refs over trivial wrapper lambdas, `flow(...)` for passthrough `pipe(...)` callbacks, and shared thunk helpers when already in scope.
 58. Where upstream covers a `foundation/modeling` concept's intent, its covered facets retire in the same PR that migrates their consumers, with no alias; the whole concept retires unless the lines reading its uncovered members outnumber the lines using its covered facets (ADAPT, per the facet census). Do not add a concept upstream already covers (`standards/architecture/DECISIONS.md` "Upstream-First Foundation/Modeling"; effect-laws-v1 law 24).
+59. Build an `Option` of a schema value with the constructor's own `X.makeOption(...)` (also `X.cases.Y.makeOption(...)` on a tagged union), never `O.some(X.make(...))`. `makeOption` returns `O.none()` where `make` throws, so use it only where an absent value is a legal outcome; keep a refused input typed with `makeEffect` or a decode (EF-35b).
 
 ## Always / Never Examples (load on demand)
 

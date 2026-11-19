@@ -7,9 +7,9 @@ import { hostAuthority } from "@proto/authority-host/Host";
 import { SessionLive } from "@proto/authority-host/Session.adapter";
 import { Grant } from "@proto/authority-model/Grant/Grant.aggregate";
 import { HolderGrants } from "@proto/authority-model/Grant/HolderGrants.view";
-import { type Capability, ResourceScope } from "@proto/kernel/Capability";
+import { Capability, ResourceScope } from "@proto/kernel/Capability";
 import { CurrentInvocation } from "@proto/kernel/CurrentInvocation.context";
-import { GrantId, type OrgId, PrincipalId, RunId } from "@proto/kernel/Ids";
+import { GrantId, OrgId, PrincipalId, type RunId } from "@proto/kernel/Ids";
 import { PartyFactsFeedLive } from "@proto/party-host/Facts/PartyFactsFeed.adapter";
 import { hostParty } from "@proto/party-host/Host";
 import { MemoryPartyDirectoryStore } from "@proto/party-model/Directory/PartyDirectory.store";
@@ -19,13 +19,14 @@ import { ClaimDecidedInboxLive, ClaimDecidedInboxPoller } from "@proto/runs-host
 import { MemoryInboxStore } from "@proto/runs-host/Inbox/Inbox.store";
 import { AgentRun, type AgentRunState } from "@proto/runs-model/Run/AgentRun.aggregate";
 import { $PartyHostId } from "@proto/kernel/Identity";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
 
 const $I = $PartyHostId.create("test/World");
 
@@ -44,14 +45,19 @@ export const RunsInbox = ClaimDecidedInboxPoller.pipe(
   Layer.provide(Layer.mergeAll(RunsWorld, PartyFeed, MemoryInboxStore)),
 );
 
+/** A grant to issue: its id, its holder, the capability on an org, and the org's owner who issues it. */
+export const GrantToIssue = S.Struct({ id: GrantId, holder: PrincipalId, capability: Capability, org: OrgId, owner: PrincipalId });
+/** A grant to issue. */
+export type GrantToIssue = typeof GrantToIssue.Type;
+
 /** Test-side access to the authority and runs models, without their `Model.Internals` reaching the Party context. */
 export class Access extends Context.Service<
   Access,
   {
     /** Issue a grant on an org as the org's owner, at bootstrap, and wait until the boundary's index lists it. */
-    readonly issue: (id: string, holder: string, capability: Capability, org: OrgId) => Effect.Effect<void>;
+    readonly issue: (grant: GrantToIssue) => Effect.Effect<void>;
     /** A run's state, once `until` holds. */
-    readonly run: (run: string, until: (state: AgentRunState) => boolean) => Effect.Effect<AgentRunState>;
+    readonly run: (run: RunId, until: (state: AgentRunState) => boolean) => Effect.Effect<AgentRunState>;
   }
 >()($I`Access`) {}
 
@@ -65,27 +71,25 @@ const AuthorityAccess = Layer.effect(
     const holderGrants = yield* HolderGrants;
     const runs = yield* AgentRun;
     return {
-      issue: Effect.fn("Access.issue")((id: string, holder: string, capability: Capability, org: OrgId) =>
+      issue: Effect.fn("Access.issue")(({ id, holder, capability, org, owner }: GrantToIssue) =>
         pipe(
           grants.send(
-            GrantId.make(id),
+            id,
             IssueGrant.make({
-              holder: PrincipalId.make(holder),
+              holder,
               terms: { capability: capability.id, operations: O.none(), resource: ResourceScope.cases.Org.make({ org }), expires: O.none() },
             }),
           ),
-          Effect.provideService(CurrentInvocation, bootstrap(PrincipalId.make("p_owner"), org)),
+          Effect.provideService(CurrentInvocation, bootstrap(owner, org)),
           Effect.andThen(
-            settled(holderGrants.get(PrincipalId.make(holder)), O.exists((view) => A.contains(view.grants, GrantId.make(id)))),
+            settled(holderGrants.get(holder), O.exists((view) => A.contains(view.grants, id))),
           ),
           Effect.asVoid,
           // A grant the owner cannot issue fails the test that asked for it.
           Effect.orDie,
         ),
       ),
-      run: Effect.fn("Access.run")((run: string, until: (state: AgentRunState) => boolean) =>
-        settled(runs.get(RunId.make(run)), until),
-      ),
+      run: Effect.fn("Access.run")((run: RunId, until: (state: AgentRunState) => boolean) => settled(runs.get(run), until)),
     };
   }),
   // Both models' outputs meet only here, where no Api is called in process.
@@ -99,9 +103,18 @@ const AuthorityAccess = Layer.effect(
 export const World = Layer.mergeAll(Session, AuthorityAccess, RunsInbox).pipe(Layer.provideMerge(PartyWorld));
 
 /** The headers a human presents. */
-export const asHuman = (principal: string) => ({
-  headers: headersFor(Credential.cases.Human.make({ principal: PrincipalId.make(principal) })),
-});
+export const asHuman = (principal: PrincipalId) => ({ headers: headersFor(Credential.cases.Human.make({ principal })) });
 
 /** The headers an agent run presents. */
-export const asAgent = (run: string) => ({ headers: headersFor(Credential.cases.Agent.make({ run: RunId.make(run) })) });
+export const asAgent = (run: RunId) => ({ headers: headersFor(Credential.cases.Agent.make({ run })) });
+
+/**
+ * A story in a world of its own: the world is built for the story and closed
+ * with it, so one property run never sees another run's claims or grants.
+ */
+export const inWorld = <A, E, R>(story: Effect.Effect<A, E, R>) =>
+  World.pipe(
+    Layer.build,
+    Effect.flatMap((context) => Effect.provideContext(story, context)),
+    Effect.scoped,
+  );

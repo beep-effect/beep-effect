@@ -1,10 +1,11 @@
-import * as Effect from "effect/Effect";
 import { SafePnLocal } from "@beep/identity";
 import * as CanonicalRdf from "@beep/rdf";
 import { describe, expect, it } from "@effect/vitest";
-import * as S from "effect/Schema";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { Triple } from "../../../Domain/Rdf/Types.ts";
+
 const isSafePnLocal = S.is(SafePnLocal);
 
 const { BlankNode, Literal, makeBlankNode, makeLiteral, makeNamedNode, NamedNode, Quad } = CanonicalRdf;
@@ -23,7 +24,7 @@ describe("effect-ontology RDF types", () => {
           Arbitrary.checkEffect(
             Arbitrary.all([arbitrary]),
             ([value]) => {
-          expect(S.is(schema)(value)).toBe(true);
+              expect(S.is(schema)(value)).toBe(true);
 
               return true;
             },

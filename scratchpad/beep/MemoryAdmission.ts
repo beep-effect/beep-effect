@@ -8,7 +8,8 @@
  *
  * @since 0.0.0
  */
-import { createHash } from "node:crypto";
+import * as Hex from "effect/encoding/Hex";
+import { sha256 as sha256Bytes } from "@noble/hashes/sha2.js";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as P from "effect/Predicate";
@@ -61,7 +62,7 @@ export const REQUIRED_PROCESSOR_ID = "canonical_required_memory";
  */
 export const REQUIRED_PROCESSOR_VERSION = "v1";
 
-const sha256Hex = (content: string): string => createHash("sha256").update(content, "utf8").digest("hex");
+const sha256Hex = (content: string): string => Hex.encode(sha256Bytes(new TextEncoder().encode(content)));
 
 const isRecord = (value: unknown): value is Record<string, unknown> =>
   P.isObject(value);

@@ -12,27 +12,34 @@
 import { getSomesStruct } from "@beep/utils/Option";
 import { thunkEmptyStr } from "@beep/utils/thunk";
 import type { DrizzleError } from "drizzle-orm";
+import * as A from "effect/Array";
 import * as Console from "effect/Console";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as A from "effect/Array";
 import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import type { PlatformError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Argument from "effect/cli/Argument";
-import * as Command from "effect/cli/Command";
-import * as Flag from "effect/cli/Flag";
 import type { JinaApiError, JinaParseError, JinaRateLimitError, JinaTimeoutError } from "../../Domain/Error/Jina.ts";
 import { LinkStatus } from "../../Domain/Schema/LinkIngestion.ts";
 import { ContentEnrichmentAgent } from "../../Service/ContentEnrichmentAgent.ts";
 import { JinaReaderClient } from "../../Service/JinaReaderClient.ts";
 import type { IngestResult } from "../../Service/LinkIngestionService.ts";
-import { LinkIngestionError, LinkIngestionService } from "../../Service/LinkIngestionService.ts";
+import {
+  BulkIngestOptions,
+  IngestedLinkFilter,
+  IngestOptions,
+  LinkIngestionError,
+  LinkIngestionService,
+} from "../../Service/LinkIngestionService.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
+
 const decodeUnknownLinkStatus = S.decodeUnknownEffect(LinkStatus);
 
 // =============================================================================
@@ -77,11 +84,11 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
       `  Title: ${content.title}`,
       ...(O.isSome(content.siteName) ? [`  Site: ${content.siteName.value}`] : []),
       ...(O.isSome(content.publishedDate) ? [`  Published: ${content.publishedDate.value}`] : []),
-      ...(O.isSome(content.description) ? [`  Description: ${content.description.value.slice(0, 100)}...`] : []),
+      ...(O.isSome(content.description) ? [`  Description: ${Str.slice(0, 100)(content.description.value)}...`] : []),
       `  Word count: ${content.wordCount}`,
       "---",
     ];
-    yield* Console.log(metadataLines.join("\n"));
+    yield* Console.log(A.join(metadataLines, "\n"));
   }
   if (enrich) {
     yield* Console.log("Running AI enrichment...\n(Note: Enrichment requires LLM service to be configured)");
@@ -109,19 +116,19 @@ const fetchHandler = Effect.fn("fetchHandler")(function* (
         ...(O.isSome(enriched.author) ? [`  Author: ${enriched.author.value}`] : []),
         ...(O.isSome(enriched.organization) ? [`  Organization: ${enriched.organization.value}`] : []),
         ...(O.isSome(enriched.publishedAt) ? [`  Published: ${DateTime.formatIso(enriched.publishedAt.value)}`] : []),
-        `  Key entities: ${enriched.keyEntities.join(", ")}`,
-        `  Topics: ${enriched.topics.join(", ")}`,
+        `  Key entities: ${A.join(enriched.keyEntities, ", ")}`,
+        `  Topics: ${A.join(enriched.topics, ", ")}`,
         `  Language: ${enriched.language}`,
         `  Word count: ${enriched.wordCount}`,
         "---",
       ];
-      yield* Console.log(enrichedLines.join("\n"));
+      yield* Console.log(A.join(enrichedLines, "\n"));
     } else {
       yield* Console.log("  Enrichment service not available. Configure LLM to enable.\n---");
     }
   }
   const maxLength = O.getOrElse(truncate, () => content.content.length);
-  const displayContent = content.content.slice(0, maxLength);
+  const displayContent = Str.slice(0, maxLength)(content.content);
   const truncated = content.content.length > maxLength;
   const contentOutput = truncated
     ? `Content:\n${displayContent}\n\n... [truncated, ${content.content.length - maxLength} more chars]`
@@ -205,12 +212,15 @@ const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
 
   yield* Console.log(`Ingesting: ${url} (ontology: ${ontologyId})`);
 
-  const result = yield* ingestion.ingestUrl(url, {
-    ontologyId,
-    enrich: !skipEnrich,
-    ...getSomesStruct({ sourceType }),
-    skipDuplicates: !allowDuplicates,
-  });
+  const result = yield* ingestion.ingestUrl(
+    url,
+    IngestOptions.make({
+      ontologyId,
+      enrich: !skipEnrich,
+      ...getSomesStruct({ sourceType }),
+      skipDuplicates: !allowDuplicates,
+    })
+  );
 
   const outputLines = result.duplicate
     ? ["Content already exists (duplicate)", `  ID: ${result.id}`, `  Hash: ${result.contentHash}`]
@@ -223,7 +233,7 @@ const ingestLinkHandler = Effect.fn("FetchCommand.ingestLink")(function* (
         ...(P.isNotUndefined(result.wordCount) ? [`  Word count: ${result.wordCount}`] : []),
       ];
 
-  yield* Console.log(outputLines.join("\n"));
+  yield* Console.log(A.join(outputLines, "\n"));
 });
 
 /**
@@ -304,11 +314,13 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
     onNone: () => Effect.succeedNone,
     onSome: flow(decodeUnknownLinkStatus, Effect.map(O.some)),
   });
-  const documents = yield* ingestion.list({
-    ...getSomesStruct({ status: canonicalStatus, sourceType }),
-    limit,
-    offset,
-  });
+  const documents = yield* ingestion.list(
+    IngestedLinkFilter.make({
+      ...getSomesStruct({ status: canonicalStatus, sourceType }),
+      limit,
+      offset,
+    })
+  );
   if (jsonOutput) {
     const output = A.map(documents, (doc) => ({
       id: doc.id,
@@ -330,14 +342,14 @@ const documentsHandler = Effect.fn("documentsHandler")(function* (
         `  Hash: ${Str.slice(0, 12)(doc.contentHash)}...`,
         ...(P.isNotNull(doc.sourceUri) ? [`  URL: ${doc.sourceUri}`] : []),
         ...(P.isNotNull(doc.headline)
-          ? [`  Title: ${doc.headline.slice(0, 60)}${doc.headline.length > 60 ? "..." : ""}`]
+          ? [`  Title: ${Str.slice(0, 60)(doc.headline)}${doc.headline.length > 60 ? "..." : ""}`]
           : []),
         ...(P.isNotNull(doc.sourceType) ? [`  Type: ${doc.sourceType}`] : []),
         ...(P.isNotNull(doc.organization) ? [`  Org: ${doc.organization}`] : []),
         ...(P.isNotNull(doc.wordCount) ? [`  Words: ${doc.wordCount}`] : []),
         "",
       ];
-      return lines.join("\n");
+      return A.join(lines, "\n");
     };
     const formattedDocs = A.map(documents, formatDocument);
     const output = A.join([`Ingested documents (${documents.length}):`, "", ...formattedDocs], "\n");
@@ -407,31 +419,38 @@ const ingestBatchHandler = Effect.fn("ingestBatchHandler")(function* (
     A.filter(P.and(Str.isNonEmpty, P.not(Str.startsWith("#"))))
   );
   yield* Console.log(`Ingesting ${urls.length} URLs with concurrency ${concurrency} (ontology: ${ontologyId})\n`);
-  const results = yield* ingestion.ingestUrls(urls, {
-    ontologyId,
-    concurrency,
-    enrich: !skipEnrich,
-    continueOnError: true,
-  });
-  const resultLines = yield* Effect.forEach(results, (result) => {
-    if (LinkIngestionError.is(result)) {
-      return Effect.succeed(`[ERROR] ${result.url ?? "unknown"}: ${result.message}`);
-    } else {
-      const ingestResult = result;
-      if (ingestResult.duplicate) {
-        return Effect.succeed(`[SKIP] ${Str.slice(0, 12)(ingestResult.contentHash)}... (duplicate)`);
+  const results = yield* ingestion.ingestUrls(
+    urls,
+    BulkIngestOptions.make({
+      ontologyId,
+      concurrency,
+      enrich: !skipEnrich,
+      continueOnError: true,
+    })
+  );
+  const resultLines = yield* Effect.forEach(
+    results,
+    (result) => {
+      if (LinkIngestionError.is(result)) {
+        return Effect.succeed(`[ERROR] ${result.url ?? "unknown"}: ${result.message}`);
       } else {
-        return Effect.succeed(
-          `[OK] ${Str.slice(0, 12)(ingestResult.contentHash)}... ${O.fromNullishOr(ingestResult.headline).pipe(
-            O.match({
-              onNone: thunkEmptyStr,
-              onSome: Str.slice(0, 40),
-            })
-          )}`
-        );
+        const ingestResult = result;
+        if (ingestResult.duplicate) {
+          return Effect.succeed(`[SKIP] ${Str.slice(0, 12)(ingestResult.contentHash)}... (duplicate)`);
+        } else {
+          return Effect.succeed(
+            `[OK] ${Str.slice(0, 12)(ingestResult.contentHash)}... ${O.fromNullishOr(ingestResult.headline).pipe(
+              O.match({
+                onNone: thunkEmptyStr,
+                onSome: Str.slice(0, 40),
+              })
+            )}`
+          );
+        }
       }
-    }
-  });
+    },
+    { concurrency: 1 }
+  );
   const errors = A.filter(results, LinkIngestionError.is);
   const successes = A.filter(results, (result): result is IngestResult => !LinkIngestionError.is(result));
   const counts = {

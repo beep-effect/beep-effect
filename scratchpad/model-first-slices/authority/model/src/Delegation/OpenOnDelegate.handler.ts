@@ -3,9 +3,10 @@ import { DelegationId, GrantId } from "@proto/kernel/Ids";
 import { byProcess, eventCause, extend } from "@proto/kernel/Invocation";
 import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { Delegation } from "./Delegation.aggregate.ts";
 import { OpenOnDelegate } from "./OpenOnDelegate.policy.ts";
+import { thunkEffectVoid } from "@beep/utils"
 
 /**
  * Sends `OpenDelegation` with the delegating side's provenance extended by
@@ -37,7 +38,7 @@ export const OpenOnDelegateLive = OpenOnDelegate.toLayer(
             id: event.child,
             command: OpenDelegation.make({
               parent: event.grant,
-              parentDelegation: O.some(DelegationId.make(trigger.source.id)),
+              parentDelegation: DelegationId.makeOption(trigger.source.id),
               holder: event.to,
               delegator: event.provenance.onBehalfOf,
               terms: event.terms,
@@ -48,7 +49,7 @@ export const OpenOnDelegateLive = OpenOnDelegate.toLayer(
       );
       yield* delegations
         .send(opening.id, opening.command)
-        .pipe(Effect.catchTag("DelegationAlreadyOpen", () => Effect.void), Effect.asVoid);
+        .pipe(Effect.catchTag("DelegationAlreadyOpen", thunkEffectVoid), Effect.asVoid);
     });
   }),
 );

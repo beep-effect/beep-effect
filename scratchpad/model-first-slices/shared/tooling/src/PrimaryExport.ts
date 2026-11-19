@@ -1,12 +1,12 @@
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Context from "effect/Context";
 import { dual, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
+import * as O from "@beep/utils/Option";
+import * as P from "@beep/utils/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { isRejectionClass } from "./RejectionClass.ts";
 
 /**
@@ -107,6 +107,9 @@ export const rules: Readonly<Record<string, Rule>> = {
   screen: { name: noun("Screen"), is: isFunction },
   bindings: { name: noun("Bindings"), is: isObject },
   runtime: { name: (n) => `${lowerFirst(n)}Runtime`, is: isObject },
+  // A host's SQL tables, derived from its row models; and the generated record of its committed migrations.
+  table: { name: noun("Tables"), is: isObject },
+  migrations: { name: noun("Migrations"), is: isObject },
 };
 
 /**
@@ -118,6 +121,7 @@ export const rules: Readonly<Record<string, Rule>> = {
  */
 export const exempt: Readonly<Record<string, string>> = {
   rules: "a bag of pure guard functions `decide` composes; no one of them is the file's subject",
+  schema: "a host's Drizzle schema module: drizzle-kit reads every table it exports by name, and no one table is the file's subject",
 };
 
 /**

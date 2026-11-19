@@ -5,12 +5,13 @@ import {
   ShaclValidationViolation,
 } from "@beep/semantic-web/services/shacl-validation";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/Arbitrary";
 import { ShaclValidationReport, ValidationPolicy } from "../../../Domain/Schema/Shacl.ts";
+
 const decodeShaclValidationReport = S.decodeEffect(ShaclValidationReport);
 const decodeValidationPolicy = S.decodeEffect(ValidationPolicy);
 const decodeShaclValidationReportResult = S.decodeResult(ShaclValidationReport);
@@ -51,7 +52,7 @@ describe("effect-ontology SHACL schemas", () => {
           Arbitrary.checkEffect(
             Arbitrary.all([arbitrary]),
             ([value]) => {
-          expect(S.is(schema)(value)).toBe(true);
+              expect(S.is(schema)(value)).toBe(true);
 
               return true;
             },

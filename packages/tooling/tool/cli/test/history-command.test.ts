@@ -1,5 +1,5 @@
 import { TestTerminal } from "@beep/cli-kit/testing";
-import { Git, GitCommandError, UnknownRefError } from "@beep/git/Git";
+import { Git, GitCommandError, LsRemoteEntry } from "@beep/git/Git";
 import {
   HISTORY_COMMIT_MESSAGE_MAP_PATH,
   HistoryNotesCheckError,
@@ -147,6 +147,7 @@ describe("beep history notes", () => {
         remoteUrl: () => Effect.succeedSome("git@example.com:repo.git"),
         configGetAll: () => Effect.succeed([]),
         configSet: () => Effect.void,
+        lsRemote: () => Effect.succeed([LsRemoteEntry.make({ sha: Str.repeat(40)("a"), ref: "refs/notes/history" })]),
         fetch: () => Effect.void,
       });
       assertExitSuccess(exit, undefined);
@@ -159,7 +160,7 @@ describe("beep history notes", () => {
     })
   );
 
-  it.effect("sync reports an unpublished remote ref as a notice", () =>
+  it.effect("sync reports an unpublished remote ref as a notice and drops its stale refspec", () =>
     Effect.gen(function* () {
       const { exit, lines } = yield* run(["notes", "sync"], {
         remoteUrl: () => Effect.succeedSome("git@example.com:repo.git"),
@@ -167,10 +168,15 @@ describe("beep history notes", () => {
           Effect.succeed(
             key === "notes.displayRef" ? ["refs/notes/history"] : ["+refs/notes/history:refs/notes/history"]
           ),
-        fetch: (cwd, options) => Effect.fail(UnknownRefError.make({ cwd, ref: options.ref ?? "" })),
+        lsRemote: () => Effect.succeed([]),
+        configUnset: () => Effect.void,
       });
       assertExitSuccess(exit, undefined);
       assert.include(lines, "  fetch: origin has not published refs/notes/history yet");
+      assert.include(
+        lines,
+        "  remote.origin.fetch +refs/notes/history:refs/notes/history: removed (origin does not publish the ref)"
+      );
       assert.include(lines, "  notes.displayRef refs/notes/history: present");
     })
   );
@@ -182,6 +188,7 @@ describe("beep history notes", () => {
         remoteUrl: () => Effect.succeedSome("git@example.com:repo.git"),
         configGetAll: () => Effect.succeed([]),
         configSet: () => Effect.void,
+        lsRemote: () => Effect.succeed([LsRemoteEntry.make({ sha: Str.repeat(40)("a"), ref: "refs/notes/history" })]),
         fetch: (cwd) =>
           Effect.fail(GitCommandError.make({ kind: "failed", args: ["fetch"], cwd, stderr: "must not fetch" })).pipe(
             Effect.tap(() => Effect.sync(() => fetched.push(cwd)))

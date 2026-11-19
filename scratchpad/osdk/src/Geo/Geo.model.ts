@@ -76,6 +76,22 @@ export const Longitude = S.Finite.check(
 export type Longitude = typeof Longitude.Type;
 
 /**
+ * Companion namespace for {@link Longitude}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Longitude {
+  /**
+   * Encoded (wire) form of {@link Longitude}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof Longitude.Encoded;
+}
+
+/**
  * North-south angle of a position in WGS 84 decimal degrees, positive north of the equator.
  *
  * **Example** (Reject a latitude past the pole)
@@ -118,6 +134,22 @@ export const Latitude = S.Finite.check(
 export type Latitude = typeof Latitude.Type;
 
 /**
+ * Companion namespace for {@link Latitude}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Latitude {
+  /**
+   * Encoded (wire) form of {@link Latitude}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof Latitude.Encoded;
+}
+
+/**
  * Height of a position in metres above the WGS 84 ellipsoid.
  *
  * **Example** (Accept a height below the ellipsoid)
@@ -147,6 +179,22 @@ export const Altitude = S.Finite.pipe(
  * @since 0.0.0
  */
 export type Altitude = typeof Altitude.Type;
+
+/**
+ * Companion namespace for {@link Altitude}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Altitude {
+  /**
+   * Encoded (wire) form of {@link Altitude}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof Altitude.Encoded;
+}
 
 // Generation follows the specification's "should not exceed three elements"; decoding follows its
 // "must have two or more", so the predicate always passes.
@@ -214,6 +262,22 @@ export const Position = PositionElements.pipe(
  * @since 0.0.0
  */
 export type Position = typeof Position.Type;
+
+/**
+ * Companion namespace for {@link Position}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Position {
+  /**
+   * Encoded (wire) form of {@link Position}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = readonly [Longitude.Encoded, Latitude.Encoded, ...Array<Altitude.Encoded>];
+}
 
 // -----------------------------------------------------------------------------
 // Bounding box
@@ -290,6 +354,31 @@ export const BoundingBox = S.Union([FlatBoundingBox, SolidBoundingBox]).pipe(
  */
 export type BoundingBox = typeof BoundingBox.Type;
 
+/**
+ * Companion namespace for {@link BoundingBox}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BoundingBox {
+  /**
+   * Encoded (wire) form of {@link BoundingBox}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | readonly [Longitude.Encoded, Latitude.Encoded, Longitude.Encoded, Latitude.Encoded]
+    | readonly [
+        Longitude.Encoded,
+        Latitude.Encoded,
+        Altitude.Encoded,
+        Longitude.Encoded,
+        Latitude.Encoded,
+        Altitude.Encoded,
+      ];
+}
+
 const BoundingBoxField = S.OptionFromOptionalKey(BoundingBox).pipe(
   S.withConstructorDefault(Effect.succeedNone),
   S.annotateKey({ description: "Extent of the object, when its producer included one." })
@@ -342,6 +431,22 @@ export const LineStringCoordinates = S.Array(Position)
  * @since 0.0.0
  */
 export type LineStringCoordinates = typeof LineStringCoordinates.Type;
+
+/**
+ * Companion namespace for {@link LineStringCoordinates}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LineStringCoordinates {
+  /**
+   * Encoded (wire) form of {@link LineStringCoordinates}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = ReadonlyArray<Position.Encoded>;
+}
 
 const RingPositions = S.Array(Position);
 
@@ -454,6 +559,22 @@ export const LinearRing = S.declareConstructor<ReadonlyArray<Position>>()(
  */
 export type LinearRing = typeof LinearRing.Type;
 
+/**
+ * Companion namespace for {@link LinearRing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinearRing {
+  /**
+   * Encoded (wire) form of {@link LinearRing}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = ReadonlyArray<Position.Encoded>;
+}
+
 // -----------------------------------------------------------------------------
 // Geometry
 // -----------------------------------------------------------------------------
@@ -498,6 +619,22 @@ export const GeoJsonKind = LiteralKit([
 export type GeoJsonKind = typeof GeoJsonKind.Type;
 
 /**
+ * Companion namespace for {@link GeoJsonKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeoJsonKind {
+  /**
+   * Encoded (wire) form of {@link GeoJsonKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof GeoJsonKind.Encoded;
+}
+
+/**
  * The `type` tags that name a geometry: every GeoJSON tag except the two feature tags.
  *
  * **Example** (Tell a geometry tag from a feature tag)
@@ -537,6 +674,22 @@ export const GeometryKind = GeoJsonKind.pick([
 export type GeometryKind = typeof GeometryKind.Type;
 
 /**
+ * Companion namespace for {@link GeometryKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeometryKind {
+  /**
+   * Encoded (wire) form of {@link GeometryKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof GeometryKind.Encoded;
+}
+
+/**
  * A single position on the globe; the value of a geopoint property.
  *
  * @category models
@@ -551,6 +704,26 @@ export class GeoPoint extends S.Opaque<GeoPoint, { readonly brand: unique symbol
 ) {}
 
 /**
+ * Companion namespace for {@link GeoPoint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeoPoint {
+  /**
+   * Encoded (wire) form of {@link GeoPoint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "Point";
+    readonly coordinates: Position.Encoded;
+    readonly bbox?: BoundingBox.Encoded;
+  }
+}
+
+/**
  * A set of unconnected positions.
  *
  * @category models
@@ -563,6 +736,26 @@ export class MultiPoint extends S.Opaque<MultiPoint, { readonly brand: unique sy
     bbox: BoundingBoxField,
   }).pipe($I.annoteSchema("MultiPoint", { description: "A set of unconnected positions." }))
 ) {}
+
+/**
+ * Companion namespace for {@link MultiPoint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MultiPoint {
+  /**
+   * Encoded (wire) form of {@link MultiPoint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "MultiPoint";
+    readonly coordinates: ReadonlyArray<Position.Encoded>;
+    readonly bbox?: BoundingBox.Encoded;
+  }
+}
 
 /**
  * An open path through two or more positions.
@@ -587,6 +780,26 @@ export class LineString extends S.Opaque<LineString, { readonly brand: unique sy
 ) {}
 
 /**
+ * Companion namespace for {@link LineString}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LineString {
+  /**
+   * Encoded (wire) form of {@link LineString}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "LineString";
+    readonly coordinates?: LineStringCoordinates.Encoded;
+    readonly bbox?: BoundingBox.Encoded;
+  }
+}
+
+/**
  * A set of open paths.
  *
  * @category models
@@ -599,6 +812,26 @@ export class MultiLineString extends S.Opaque<MultiLineString, { readonly brand:
     bbox: BoundingBoxField,
   }).pipe($I.annoteSchema("MultiLineString", { description: "A set of open paths." }))
 ) {}
+
+/**
+ * Companion namespace for {@link MultiLineString}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MultiLineString {
+  /**
+   * Encoded (wire) form of {@link MultiLineString}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "MultiLineString";
+    readonly coordinates: ReadonlyArray<LineStringCoordinates.Encoded>;
+    readonly bbox?: BoundingBox.Encoded;
+  }
+}
 
 const PolygonRings = S.Array(LinearRing);
 
@@ -621,6 +854,26 @@ export class Polygon extends S.Opaque<Polygon, { readonly brand: unique symbol }
 ) {}
 
 /**
+ * Companion namespace for {@link Polygon}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Polygon {
+  /**
+   * Encoded (wire) form of {@link Polygon}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "Polygon";
+    readonly coordinates: ReadonlyArray<LinearRing.Encoded>;
+    readonly bbox?: BoundingBox.Encoded;
+  }
+}
+
+/**
  * A set of polygons.
  *
  * @category models
@@ -635,6 +888,26 @@ export class MultiPolygon extends S.Opaque<MultiPolygon, { readonly brand: uniqu
     bbox: BoundingBoxField,
   }).pipe($I.annoteSchema("MultiPolygon", { description: "A set of polygons." }))
 ) {}
+
+/**
+ * Companion namespace for {@link MultiPolygon}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MultiPolygon {
+  /**
+   * Encoded (wire) form of {@link MultiPolygon}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "MultiPolygon";
+    readonly coordinates: ReadonlyArray<ReadonlyArray<LinearRing.Encoded>>;
+    readonly bbox?: BoundingBox.Encoded;
+  }
+}
 
 const GeometryMember = S.suspend((): S.Codec<Geometry.Type, Geometry.Encoded> => Geometry);
 
@@ -806,6 +1079,28 @@ export class Feature extends S.Opaque<Feature, { readonly brand: unique symbol }
 ) {}
 
 /**
+ * Companion namespace for {@link Feature}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Feature {
+  /**
+   * Encoded (wire) form of {@link Feature}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "Feature";
+    readonly geometry?: Geometry.Encoded;
+    readonly properties: typeof S.JsonObject.Encoded;
+    readonly id?: typeof S.Json.Encoded;
+    readonly bbox?: BoundingBox.Encoded;
+  }
+}
+
+/**
  * A list of features.
  *
  * @category models
@@ -818,6 +1113,26 @@ export class FeatureCollection extends S.Opaque<FeatureCollection, { readonly br
     bbox: BoundingBoxField,
   }).pipe($I.annoteSchema("FeatureCollection", { description: "A list of features." }))
 ) {}
+
+/**
+ * Companion namespace for {@link FeatureCollection}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FeatureCollection {
+  /**
+   * Encoded (wire) form of {@link FeatureCollection}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "FeatureCollection";
+    readonly features: ReadonlyArray<Feature.Encoded>;
+    readonly bbox?: BoundingBox.Encoded;
+  }
+}
 
 /**
  * Any GeoJSON object: a geometry, a feature or a feature collection; the value of a geoshape property.
@@ -881,6 +1196,31 @@ export const GeoJsonObject = GeoJsonKind.mapMembers(() =>
  */
 export type GeoJsonObject = typeof GeoJsonObject.Type;
 
+/**
+ * Companion namespace for {@link GeoJsonObject}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeoJsonObject {
+  /**
+   * Encoded (wire) form of {@link GeoJsonObject}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | GeoPoint.Encoded
+    | MultiPoint.Encoded
+    | LineString.Encoded
+    | MultiLineString.Encoded
+    | Polygon.Encoded
+    | MultiPolygon.Encoded
+    | GeometryCollection.Encoded
+    | Feature.Encoded
+    | FeatureCollection.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Distance
 // -----------------------------------------------------------------------------
@@ -925,6 +1265,22 @@ export const DistanceUnit = MappedLiteralKit([
  * @since 0.0.0
  */
 export type DistanceUnit = typeof DistanceUnit.Type;
+
+/**
+ * Companion namespace for {@link DistanceUnit}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DistanceUnit {
+  /**
+   * Encoded (wire) form of {@link DistanceUnit}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DistanceUnit.Encoded;
+}
 
 /**
  * A length with its unit: the radius of a "within distance of" filter.
@@ -1074,5 +1430,24 @@ export class Distance extends S.Opaque<Distance, { readonly brand: unique symbol
    */
   static nauticalMiles(value: number): Distance {
     return Distance.of(value, "nauticalMiles");
+  }
+}
+
+/**
+ * Companion namespace for {@link Distance}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Distance {
+  /**
+   * Encoded (wire) form of {@link Distance}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly value: number;
+    readonly unit: DistanceUnit.Encoded;
   }
 }

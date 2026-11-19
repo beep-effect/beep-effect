@@ -1,4 +1,6 @@
 import * as S from "effect/Schema";
+import { FactId } from "./Ids.ts";
+import { Name, Sequence } from "./Measure.ts";
 
 /**
  * An integration fact as it crosses between contexts (D11): which producer
@@ -25,11 +27,11 @@ import * as S from "effect/Schema";
  * @since 0.0.0
  */
 export const FactEnvelope = S.Struct({
-  producer: S.String,
-  contract: S.String,
-  version: S.Int,
-  factId: S.String,
-  seq: S.Int,
+  producer: Name,
+  contract: Name,
+  version: Sequence,
+  factId: FactId,
+  seq: Sequence,
   payload: S.Unknown,
 });
 /**
@@ -45,5 +47,5 @@ export type FactEnvelope = typeof FactEnvelope.Type;
  * @category getters
  * @since 0.0.0
  */
-export const inboxKey = (fact: { readonly producer: string; readonly factId: string; readonly version: number }) =>
+export const inboxKey = (fact: { readonly producer: string; readonly factId: FactId; readonly version: number }) =>
   `${fact.producer}:${fact.factId}:v${fact.version}`;

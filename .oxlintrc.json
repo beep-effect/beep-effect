@@ -34,6 +34,8 @@
     "docs/generated/**",
     "**/scripts/**",
     "goals/**",
+    // Deliberate Semgrep positive/negative cases; see the header of .semgrep/first-party.ts.
+    ".semgrep/**",
     "explorations/**"
   ],
   "rules": {
