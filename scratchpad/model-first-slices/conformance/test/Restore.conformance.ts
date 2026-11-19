@@ -11,10 +11,9 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
-import * as P from "@beep/utils/Predicate";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
-import { clients, eventually, fresh, get, human, issue, registration, runState, services } from "./Stack.ts";
+import { clients, eventually, fresh, get, hasStatus, human, issue, outcomeOf, registration, runState, services } from "./Stack.ts";
 
 // Backup and restore (D16), in two halves around `pg_dump`, destroy, deploy and restore, which
 // the operator runs by hand (README). RESTORE_PHASE=before seeds and records; =after checks.
@@ -51,7 +50,7 @@ if (O.contains(registration.restorePhase, "before")) {
     const { intake, reviewer } = yield* clients;
     const claim = ClaimId.make(`claim_${r}`);
     yield* intake.AssertClaim(claim, { org: OrgId.make(org), proposition, signals }, human("p_intake"));
-    yield* eventually(runState(`review:${claim}:1`), P.isTagged("AwaitingApproval"));
+    yield* eventually(runState(`review:${claim}:1`), hasStatus("awaiting-approval"));
     const party = PartyId.make(`party_${r}`);
     const partyReceipt = yield* intake.RegisterParty(party, { org: OrgId.make(org), name: `Dana ${r}` }, { ...human("p_intake"), commandId: `reg_${r}` });
     yield* eventually(reviewer.FindParties({ org: OrgId.make(org), text: r }, human("p_rev")), (page) => page.entries.length === 1);
@@ -95,10 +94,10 @@ if (O.contains(registration.restorePhase, "after")) {
     const hold = yield* eventually(get<{ readonly status: string }>(`/hold/${seeded.hold}`), (h) => h.status === "expired", 60);
     expect(hold.status).toBe("expired");
     // The waiting run: approval completes it, through Party's fact and the runs inbox.
-    yield* eventually(runState(`review:${claim}:1`), P.isTagged("AwaitingApproval"), 60);
+    yield* eventually(runState(`review:${claim}:1`), hasStatus("awaiting-approval"), 60);
     const { digest } = O.getOrThrow(O.flatMap(O.fromNullOr(seeded.claimView), proposalOf));
     yield* reviewer.ApproveProposal(claim, { digest, evidenceRevision: 1 }, human("p_rev"));
-    const run = yield* eventually(runState(`review:${claim}:1`), P.isTagged("Completed"), 120);
-    expect(run.outcome).toBe("accepted");
+    const run = yield* eventually(runState(`review:${claim}:1`), hasStatus("completed"), 120);
+    expect(outcomeOf(run)).toEqual(O.some("accepted"));
   }));
 }

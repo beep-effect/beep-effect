@@ -4,7 +4,6 @@ import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { SessionId } from "@proto/runs-contract/Run/Session.id";
-import { RunsContract } from "@proto/runs-contract/RunsApi.contract";
 import * as A from "@beep/utils/Array";
 import * as Config from "effect/Config";
 import * as DateTime from "effect/DateTime";
@@ -13,12 +12,11 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
-import * as P from "@beep/utils/Predicate";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
 import * as Str from "@beep/utils/Str";
-import { clients, eventually, fresh, get, human, psql, registration, runState, services, url } from "./Stack.ts";
+import { clients, eventually, fresh, get, hasStatus, human, outcomeOf, psql, registration, runsClient, runState, runStateAs, services, statusOf } from "./Stack.ts";
 
 // Phase 8: state stored in the forms earlier phases wrote, read by the phase 7 code on the cluster.
 // The first case writes rows straight into the cluster's object storage; the second, with
@@ -41,8 +39,9 @@ const log = Effect.fn("log")(function* (label: string, value: unknown) {
 const live = <E>(name: string, body: Effect.Effect<void, E, Layer.Success<typeof services> | Scope.Scope>) =>
   it.live(name, () => Effect.flatMap(Layer.build(services), (context) => Effect.provideContext(body, context)), 600_000);
 
-/** The runs contract's client, over the front. */
-const runsClient = Effect.flatMap(Effect.orDie(url), (front) => RunsContract.clientHttp(`${front}/runs`));
+/** The tag of a run's stored state, read straight from the cluster's storage: `RunState` answers a status, not the stored form. */
+const storedTag = (run: string) =>
+  psql(`SELECT value::jsonb->'state'->>'_tag' FROM alchemy_domain_objects WHERE object = 'Practice/Runs.AgentRunAggregate/${run}' AND key = 'meta'`);
 
 /** A frozen run state fixture (runs/model/test/stored), with this case's session and run ids in it. */
 const storedRun = Effect.fn("storedRun")(function* (name: string, session: string, run: string) {
@@ -93,15 +92,19 @@ live("a run and a session view stored in phase 6's forms decode on the cluster, 
   const receipt = yield* runs.CancelRun(RunId.make(requested), { reason: "no longer needed" }, human("p_req"));
   // The one stored as phase 6's cancelled-before-grant form reads as withdrawn: a second cancel is refused.
   const refused = yield* Effect.flip(runs.CancelRun(RunId.make(withdrawn), { reason: "again" }, human("p_req")));
-  const states = yield* Effect.all([runState(requested), runState(withdrawn)], { concurrency: 1 });
+  // Both read as cancelled to their requester; in storage the first is today's `Withdrawn`, and the
+  // second, which took no command, is still the form phase 6 wrote.
+  const states = yield* Effect.all([runStateAs(requested, "p_req"), runStateAs(withdrawn, "p_req")], { concurrency: 1 });
+  const tags = yield* Effect.all([storedTag(requested), storedTag(withdrawn)], { concurrency: 1 });
   const read = yield* runs.SessionRuns.get(SessionId.make(session), { ...human("p_req"), atLeast: receipt });
   const stored = yield* psql(
     `SELECT value FROM alchemy_domain_objects WHERE object = 'Practice/Runs.AgentRunAggregate/${requested}' AND key = 'meta'`,
   );
-  yield* log("stored-forms", { receipt, refused, states, read, stored });
+  yield* log("stored-forms", { receipt, refused, states: A.map(states, statusOf), tags, read, stored });
   expect(receipt.version).toBe(2);
   expect(refused).toMatchObject({ _tag: "RunNotRunning", status: "cancelled" });
-  expect(A.map(states, (state) => state._tag)).toEqual(["Withdrawn", "Withdrawn"]);
+  expect(A.map(states, statusOf)).toEqual(["cancelled", "cancelled"]);
+  expect(tags[0]).toBe("Withdrawn");
   expect(read).toMatchObject({
     runs: [
       { run: requested, previous: O.none(), parent: O.none(), status: "cancelled" },
@@ -150,8 +153,8 @@ if (O.contains(registration.restorePhase, "across")) {
       { ...human("p_intake"), commandId: `reg_${seeded.r}` },
     );
     const hold = yield* get<{ readonly status: string }>(`/hold/${seeded.hold}`);
-    yield* log("across-before-approval", { waiting, review, party, page, retried, hold });
-    expect(waiting._tag).toBe("AwaitingApproval");
+    yield* log("across-before-approval", { waiting: statusOf(waiting), review, party, page, retried, hold });
+    expect(statusOf(waiting)).toBe("awaiting-approval");
     expect(O.map(proposalIn(review), (proposal) => proposal.digest)).toEqual(O.some(seeded.claimView.proposal.digest));
     expect(party).toMatchObject({ _tag: "Registered", name: `Dana ${seeded.r}` });
     expect(A.map(page.entries, (row) => row.partyId)).toEqual([seeded.party]);
@@ -159,10 +162,10 @@ if (O.contains(registration.restorePhase, "across")) {
     expect(hold.status).toBe("expired");
     // Approving the proposal phase 6 left completes the run through the fact and the runs inbox.
     yield* reviewer.ApproveProposal(claim, { digest: seeded.claimView.proposal.digest, evidenceRevision: 1 }, human("p_rev"));
-    const completed = yield* eventually(runState(`review:${claim}:1`), P.isTagged("Completed"), 120);
+    const completed = yield* eventually(runState(`review:${claim}:1`), hasStatus("completed"), 120);
     const decided = yield* eventually(reviewer.ClaimReview.get(claim, human("p_rev")), ClaimReviewState.guards.Accepted, 60);
-    yield* log("across-after-approval", { completed, decided });
-    expect(completed.outcome).toBe("accepted");
+    yield* log("across-after-approval", { completed: O.getOrNull(completed), decided });
+    expect(outcomeOf(completed)).toEqual(O.some("accepted"));
     expect(decided?._tag).toBe("Accepted");
   }));
 }

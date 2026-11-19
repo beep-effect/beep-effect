@@ -397,7 +397,7 @@ On the cluster, a command sent twice, or retried after a lost response, under on
 A runner killed after a commit, a projection batch cut by a crash, a grant revoked mid-chain and a run waiting across a restart each end correctly: stored results, reactions once, refusals recorded, completion after approval.
 
 - **Checker:** `conformance/test/Own.conformance.ts`
-- **Reads:** The front's Apis, the runs-state route, and the cluster database through `docker exec psql`.
+- **Reads:** The front's Apis (a run through the runs contract's `RunState`), and the cluster database through `docker exec psql`.
 - **Assumes:** `docker kill` of every runner models a crash. The projection crash and the revocation are placed by a row lock held from a session of the conformance's own (phase 6); the kill after a commit is not timed.
 - **Gaps:** Since phase 9 (D42) the kill-after-commit case asserts the guarantee as ruled: every reaction once, all within RECOVERY_BOUND_MS (the library's 60 s lease plus two 10 s message polls, checked against the installed sources by conformance/test/RecoveryBound.test.ts) of the kill; phase 9 measured 66.8 s. Recovery is still bounded by the lease, not by shard ownership (notes/upstream/04).
 - **Left to a reviewer:** Whether each fault was really exercised (the evidence log says).

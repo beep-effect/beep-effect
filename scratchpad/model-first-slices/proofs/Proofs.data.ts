@@ -383,7 +383,7 @@ export const proofs: ReadonlyArray<Proof> = [
     id: "cluster-faults",
     invariant: "A runner killed after a commit, a projection batch cut by a crash, a grant revoked mid-chain and a run waiting across a restart each end correctly: stored results, reactions once, refusals recorded, completion after approval.",
     checkers: ["conformance/test/Own.conformance.ts"],
-    reads: "The front's Apis, the runs-state route, and the cluster database through `docker exec psql`.",
+    reads: "The front's Apis (a run through the runs contract's `RunState`), and the cluster database through `docker exec psql`.",
     assumptions: "`docker kill` of every runner models a crash. The projection crash and the revocation are placed by a row lock held from a session of the conformance's own (phase 6); the kill after a commit is not timed.",
     gaps: "Since phase 9 (D42) the kill-after-commit case asserts the guarantee as ruled: every reaction once, all within RECOVERY_BOUND_MS (the library's 60 s lease plus two 10 s message polls, checked against the installed sources by conformance/test/RecoveryBound.test.ts) of the kill; phase 9 measured 66.8 s. Recovery is still bounded by the lease, not by shard ownership (notes/upstream/04).",
     reviewer: "Whether each fault was really exercised (the evidence log says).",

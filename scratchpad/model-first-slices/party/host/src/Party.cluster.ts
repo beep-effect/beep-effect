@@ -6,11 +6,13 @@ import * as Layer from "effect/Layer";
 import { PgPartyDirectoryStore } from "./Directory/PgPartyDirectoryStore.adapter.ts";
 import { PartyFactsFeedLive } from "./Facts/PartyFactsFeed.adapter.ts";
 import { hostParty } from "./Host.ts";
+import { reviewerFetchAt } from "./ReviewerApi.http.ts";
 
 /**
  * The Party context on a cluster (D13, D39): its model hosted once on the
  * pool's platform with the directory in Postgres; the fact feed the runs
- * inbox reads; and its Apis for the front.
+ * inbox reads; and its Apis for the front, the reviewer's also as plain
+ * HTTP JSON under `reviewer-http`.
  *
  * @category cluster
  * @since 0.0.0
@@ -28,6 +30,7 @@ export const PartyCluster = <ROut, E, R>(platform: Layer.Layer<ROut, E, R>) => {
           reviewer: (yield* ReviewerApi).fetch,
           intake: (yield* IntakeApi).fetch,
           agent: (yield* AgentApi).fetch,
+          "reviewer-http": yield* reviewerFetchAt("/reviewer-http"),
         };
       }).pipe(Effect.provideContext(context));
     }),
