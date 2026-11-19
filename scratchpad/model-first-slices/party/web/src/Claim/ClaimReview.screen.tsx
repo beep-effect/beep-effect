@@ -5,6 +5,8 @@ import * as O from "@beep/utils/Option";
 import * as AsyncResult from "effect/reactivity/AsyncResult";
 import { approveClaim, claimReviewScreen } from "./ClaimReview.controller.ts";
 import { Approval, Notice, type Screen } from "./ClaimReview.machine.ts";
+import { Button } from "@beep/ui/components/button"
+import { thunkNull } from "@beep/utils/thunk"
 
 /** What the screen last told the person, once an approval is over. */
 const noticeText = (screen: Screen): O.Option<string> =>
@@ -55,12 +57,12 @@ export const ClaimReviewScreen = ({ claim }: { readonly claim: ClaimId }) => {
       return (
         <section aria-label="Claim review">
           <p>Status: {O.match(review, { onNone: () => "unknown", onSome: standing })}</p>
-          {O.match(proposal, { onNone: () => null, onSome: ({ disposition }) => <p>Proposal: {disposition}</p> })}
-          <button type="button" disabled={inFlight || O.isNone(proposal)} onClick={() => approve()}>
+          {O.match(proposal, { onNone: thunkNull, onSome: ({ disposition }) => <p>Proposal: {disposition}</p> })}
+          <Button type="button" disabled={inFlight || O.isNone(proposal)} onClick={() => approve()}>
             Approve
-          </button>
+          </Button>
           {Approval.guards.Committed(screen.approval) ? <p role="status">Committed</p> : null}
-          {O.match(noticeText(screen), { onNone: () => null, onSome: (text) => <p role="status">{text}</p> })}
+          {O.match(noticeText(screen), { onNone: thunkNull, onSome: (text) => <p role="status">{text}</p> })}
         </section>
       );
     },

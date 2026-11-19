@@ -419,6 +419,26 @@ export const proofs: ReadonlyArray<Proof> = [
     reviewer: "As generation-retirement.",
     live: true,
   }),
+  Proof.make({
+    id: "cluster-directory",
+    invariant: "On the cluster's own Postgres the directory behaves as its laws say on PGlite: both hosts' migrations are each recorded once when both runners and the front first use the database in the same instant; a batch waits while another session holds its stream's position row and applies once; pages follow the store's cursors in bytewise order; a cursor the store did not issue is refused as InvalidCursor over the contract and with 400 over plain HTTP; search ignores case for letters outside ASCII.",
+    checkers: ["conformance/test/Directory.conformance.ts", "party/host/test/ReviewerHttp.test.ts"],
+    reads: "The front's Apis, the reviewer Api as plain HTTP JSON under /reviewer-http, the migrations, row and position tables through `docker exec psql`, and the runners' and the front's logs.",
+    assumptions: "A session of the conformance's own holding the position row stands in for a second runner applying the same stream. The first case is a first use only on a fresh deploy, run before any other case (its evidence records what the migrations table held before).",
+    gaps: "The stack's Postgres is the official Alpine image (musl libc, en_US.utf8), which folds the letters the case uses; a database created with the C locale folds ASCII only and is not run. Letters whose lower case differs between JavaScript and the database (dotted capital I, sharp s) are not covered.",
+    reviewer: "Whether the first case really was the database's first use (the evidence log says).",
+    live: true,
+  }),
+  Proof.make({
+    id: "cluster-directory-rebuild",
+    invariant: "A directory rebuild on the cluster keeps read-your-own-write and ends by itself: while the build that writes the next generation replays the history, a new write is found at once through the generation queries still read, and is stored in both; each runner switches once the new generation has everything the old one has; after the switch a write goes to the new generation alone.",
+    checkers: ["conformance/test/Rebuild.conformance.ts", "party/model/test/Rebuild.test.ts", "party/host/test/PartyDirectoryStore.laws.test.ts"],
+    reads: "The front's Apis, and the pointer, row and position tables through `docker exec psql`, around a deploy of a build with the generation bumped.",
+    assumptions: "The switch is held back by a row lock on the pointer, taken before the deploy from a session of the conformance's own, so the write provably lands while the new generation is building. The next-generation build is a copy of the tree with the generation bumped, its row table declared and its migration generated; it is not committed.",
+    gaps: "One change must mean the same row in both generations (a rebuild that changes the row's meaning needs its own forwarding rule). A history large enough for the replay to take minutes was not run: 24 rows.",
+    reviewer: "Nothing mechanical.",
+    live: true,
+  }),
 ];
 
 /** The semantic questions that stay with a reviewer who did not write the change (D8). */

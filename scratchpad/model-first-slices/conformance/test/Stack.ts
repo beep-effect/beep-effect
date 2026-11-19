@@ -16,6 +16,7 @@ import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
+import * as HttpClientResponse from "effect/http/HttpClientResponse";
 import * as Layer from "effect/Layer";
 import * as O from "@beep/utils/Option";
 import * as P from "@beep/utils/Predicate";
@@ -118,11 +119,14 @@ export const endBlocked = psql(
 /** End the lock session: its transaction rolls back, and the rows are free. */
 export const releaseLock = psql(`SELECT pg_terminate_backend(pid) FROM pg_stat_activity WHERE application_name = '${LOCK_APP}'`);
 
-/** GET a route of the front, as JSON. */
+/**
+ * GET a route of the front, as JSON. An answer outside 2xx is a failure: a failed handler answers
+ * with an empty body, which would otherwise read as `null`.
+ */
 export const get = Effect.fn("get")(function* <T>(path: string) {
   const client = yield* HttpClient.HttpClient;
   const front = yield* Effect.orDie(url);
-  const response = yield* client.get(`${front}${path}`);
+  const response = yield* Effect.flatMap(client.get(`${front}${path}`), HttpClientResponse.filterStatusOk);
   const json = yield* response.json;
   return json as T;
 });

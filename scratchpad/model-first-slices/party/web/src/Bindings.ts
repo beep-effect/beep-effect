@@ -1,21 +1,22 @@
-import type * as Command from "@alchemy.run/domain/Command";
-import type * as Read from "@alchemy.run/domain/Read";
-import type * as View from "@alchemy.run/domain/View";
-import * as A from "@beep/utils/Array";
-import { Sequence } from "@proto/kernel/Measure";
-import * as Cause from "effect/Cause";
-import type * as Context from "effect/Context";
-import * as SecureRandom from "effect/crypto/SecureRandom";
-import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
-import * as HashSet from "effect/HashSet";
-import * as P from "@beep/utils/Predicate";
-import type * as Headers from "effect/http/Headers";
-import * as Ref from "effect/Ref";
-import * as Schedule from "effect/Schedule";
-import * as S from "effect/Schema";
-import * as Stream from "effect/Stream";
-import { Credentials } from "./Credentials.context.ts";
+import type * as Command from "@alchemy.run/domain/Command"
+import type * as Read from "@alchemy.run/domain/Read"
+import type * as View from "@alchemy.run/domain/View"
+import * as A from "@beep/utils/Array"
+import { Sequence } from "@proto/kernel/Measure"
+import * as Cause from "effect/Cause"
+import type * as Context from "effect/Context"
+import * as SecureRandom from "effect/crypto/SecureRandom"
+import * as Effect from "effect/Effect"
+import { dual, pipe } from "effect/Function"
+import * as HashSet from "effect/HashSet"
+import * as P from "@beep/utils/Predicate"
+import type * as Headers from "effect/http/Headers"
+import * as Ref from "effect/Ref"
+import * as Schedule from "effect/Schedule"
+import * as S from "effect/Schema"
+import * as Stream from "effect/Stream"
+import { Credentials } from "./Credentials.context.ts"
+import * as Data from "effect/Data"
 
 /**
  * Where a committed command sits: its stream and the version it reached.
@@ -24,7 +25,10 @@ import { Credentials } from "./Credentials.context.ts";
  * @category models
  * @since 0.0.0
  */
-export const Receipt = S.Struct({ stream: S.NonEmptyString, version: Sequence });
+export const Receipt = S.Struct({
+  stream: S.NonEmptyString,
+  version: Sequence
+})
 /**
  * @category models
  * @since 0.0.0
@@ -55,14 +59,21 @@ export interface Revisioned<S> {
  * @category models
  * @since 0.0.0
  */
-export type CommandOutcome<Rejection> =
-  | { readonly _tag: "Accepted"; readonly commandId: string; readonly receipt: Receipt }
-  | { readonly _tag: "Rejected"; readonly commandId: string; readonly rejection: Rejection }
-  | { readonly _tag: "Denied"; readonly commandId: string; readonly reason: string }
-  | { readonly _tag: "Unknown"; readonly commandId: string; readonly reason: string };
+export type CommandOutcome<Rejection> = Data.TaggedEnum<{
+  Accepted: { readonly commandId: string; readonly receipt: Receipt }
+  Rejected: { readonly commandId: string; readonly rejection: Rejection }
+  Denied: { readonly commandId: string; readonly reason: string }
+  Unknown: { readonly commandId: string; readonly reason: string }
+}>
+
+export interface CommandOutcomeDef extends Data.TaggedEnum.WithGenerics<1> {
+  readonly taggedEnum: CommandOutcome<this["A"]>
+}
+
+export const CommandOutcome = Data.taggedEnum<CommandOutcomeDef>()
 
 /** Failures that mean "not allowed", whichever command declares them. */
-const deniedTags = HashSet.make("MissingGrant", "Unauthorized", "Unaccountable");
+const deniedTags = HashSet.make("MissingGrant", "Unauthorized", "Unaccountable")
 
 /** What every binding needs: the Api client, the caller's credentials, and ids. */
 export type BindingServices<Id> = Id | Credentials | SecureRandom.SecureRandom;
@@ -109,57 +120,63 @@ export interface CommandBinding<Id, Target, Input, Rejection> {
 export const command: {
   <Id, Client, C extends Command.Any, Target, Input, E>(
     cls: C,
-    select: CommandSelect<Client, Target, Input, E>,
+    select: CommandSelect<Client, Target, Input, E>
   ): (api: ContractApi<Id, Client>) => CommandBinding<Id, Target, Input, InstanceType<C["rejects"][number]>>;
   <Id, Client, C extends Command.Any, Target, Input, E>(
     api: ContractApi<Id, Client>,
     cls: C,
-    select: CommandSelect<Client, Target, Input, E>,
+    select: CommandSelect<Client, Target, Input, E>
   ): CommandBinding<Id, Target, Input, InstanceType<C["rejects"][number]>>;
 } = dual(3, <Id, Client, C extends Command.Any, Target, Input, E>(
   api: ContractApi<Id, Client>,
   cls: C,
-  select: CommandSelect<Client, Target, Input, E>,
+  select: CommandSelect<Client, Target, Input, E>
 ): CommandBinding<Id, Target, Input, InstanceType<C["rejects"][number]>> => {
   type Rejection = InstanceType<C["rejects"][number]>;
   // One of the command's declared rejections, matched by its schema as the library's Foldkit binding does.
-  const isDeclared = (error: unknown): error is Rejection => A.some(cls.rejects, (rejection) => S.is(rejection)(error));
+  const isDeclared = (error: unknown): error is Rejection => A.some(cls.rejects, (rejection) => S.is(rejection)(error))
   const classify = (commandId: string, error: unknown): CommandOutcome<Rejection> => {
-    const tag = (error as { readonly _tag?: unknown } | null)?._tag;
+    const tag = (error as { readonly _tag?: unknown } | null)?._tag
     return !P.isString(tag)
-      ? { _tag: "Unknown", commandId, reason: String(error) }
+      ? CommandOutcome.Unknown({ commandId, reason: String(error) })
       : HashSet.has(deniedTags, tag)
-        ? { _tag: "Denied", commandId, reason: tag }
+        ? CommandOutcome.Denied({ commandId, reason: tag })
         : isDeclared(error)
-          ? { _tag: "Rejected", commandId, rejection: error }
-          : { _tag: "Unknown", commandId, reason: tag };
-  };
+          ? CommandOutcome.Rejected({ commandId, rejection: error })
+          : CommandOutcome.Unknown({ commandId, reason: tag })
+  }
   return {
     tag: cls.tag,
-    send: Effect.fn(`Bindings.command.${cls.tag}`)(function* ({
-      target,
-      input,
-      commandId,
-    }: Parameters<CommandBinding<Id, Target, Input, Rejection>["send"]>[0]) {
-        const random = yield* SecureRandom.SecureRandom;
-        const id = commandId ?? (yield* random.uuidV4());
-        const client = yield* Effect.service(api.Client);
-        const credentials = yield* Credentials;
-        const headers = yield* credentials.headers;
-        return yield* select(client)(target, input, { commandId: id, headers }).pipe(
-          Effect.map((receipt): CommandOutcome<Rejection> => ({
-            _tag: "Accepted",
+    send: Effect.fn(`Bindings.command.${cls.tag}`)(function* (
+      {
+        target,
+        input,
+        commandId
+      }: Parameters<CommandBinding<Id, Target, Input, Rejection>["send"]>[0]) {
+      const random = yield* SecureRandom.SecureRandom
+      const id = commandId ?? (yield* random.uuidV4())
+      const client = yield* Effect.service(api.Client)
+      const credentials = yield* Credentials
+      const headers = yield* credentials.headers
+      return yield* select(client)(target, input, {
+        commandId: id,
+        headers
+      }).pipe(
+        Effect.map((receipt): CommandOutcome<Rejection> => CommandOutcome.Accepted(({
+          commandId: id,
+          receipt: { stream: receipt.stream, version: receipt.version }
+        }))),
+        Effect.catch((error) => Effect.succeed(classify(id, error))),
+        Effect.catchCause((cause) =>
+          Effect.succeed<CommandOutcome<Rejection>>(CommandOutcome.Unknown({
             commandId: id,
-            receipt: { stream: receipt.stream, version: receipt.version },
-          })),
-          Effect.catch((error) => Effect.succeed(classify(id, error))),
-          Effect.catchCause((cause) =>
-            Effect.succeed<CommandOutcome<Rejection>>({ _tag: "Unknown", commandId: id, reason: Cause.pretty(cause) }),
-          ),
-        );
-    }),
-  };
-});
+            reason: Cause.pretty(cause)
+          }))
+        )
+      )
+    })
+  }
+})
 
 /** A contract Api, as a binding needs it: the key of its typed client. */
 interface ContractApi<Id, Client> {
@@ -168,22 +185,22 @@ interface ContractApi<Id, Client> {
 
 /** Picks a command's call off a contract's client. */
 type CommandSelect<Client, Target, Input, E> = (
-  client: Client,
+  client: Client
 ) => (
   target: Target,
   input: Input,
-  options?: { readonly commandId?: string; readonly headers?: Headers.Input },
+  options?: { readonly commandId?: string; readonly headers?: Headers.Input }
 ) => Effect.Effect<Receipt, E>;
 
 /** The two reads a view binding uses, as the library's view client declares them. */
 interface ViewReads<Key, S, Ev, E> {
   readonly snapshot: (
     key: Key,
-    options?: { readonly headers?: Headers.Input; readonly atLeast?: Receipt },
+    options?: { readonly headers?: Headers.Input; readonly atLeast?: Receipt }
   ) => Effect.Effect<Read.Snapshot<S>, E | View.ConsistencyTimeout>;
   readonly events: (
     key: Key,
-    options?: { readonly headers?: Headers.Input; readonly after?: number },
+    options?: { readonly headers?: Headers.Input; readonly after?: number }
   ) => Stream.Stream<View.Entry<NonNullable<S>, Ev, Key> | Read.CaughtUp, E>;
 }
 
@@ -198,7 +215,7 @@ interface ViewReads<Key, S, Ev, E> {
 export interface ViewBinding<Id, Key, S, E> {
   readonly read: (
     key: Key,
-    atLeast?: Receipt,
+    atLeast?: Receipt
   ) => Effect.Effect<Revisioned<S>, E | View.ConsistencyTimeout, BindingServices<Id>>;
   readonly subscribe: (key: Key) => Stream.Stream<Revisioned<S>, E | View.ConsistencyTimeout, BindingServices<Id>>;
 }
@@ -228,50 +245,57 @@ export interface ViewBinding<Id, Key, S, E> {
  */
 export const view: {
   <Id, Client, Key, St, Ev, E>(
-    select: (client: Client) => ViewReads<Key, St, Ev, E>,
+    select: (client: Client) => ViewReads<Key, St, Ev, E>
   ): (api: ContractApi<Id, Client>) => ViewBinding<Id, Key, St, E>;
   <Id, Client, Key, St, Ev, E>(
     api: ContractApi<Id, Client>,
-    select: (client: Client) => ViewReads<Key, St, Ev, E>,
+    select: (client: Client) => ViewReads<Key, St, Ev, E>
   ): ViewBinding<Id, Key, St, E>;
 } = dual(2, <Id, Client, Key, St, Ev, E>(
   api: ContractApi<Id, Client>,
-  select: (client: Client) => ViewReads<Key, St, Ev, E>,
+  select: (client: Client) => ViewReads<Key, St, Ev, E>
 ): ViewBinding<Id, Key, St, E> => {
-  const reads = Effect.map(Effect.service(api.Client), select);
-  const headers = Effect.flatMap(Effect.service(Credentials), (credentials) => credentials.headers);
+  const reads = Effect.map(Effect.service(api.Client), select)
+  const headers = Effect.flatMap(Effect.service(Credentials), (credentials) => credentials.headers)
   return {
     read: Effect.fn("Bindings.view.read")(function* (key: Key, atLeast?: Receipt) {
-      const view = yield* reads;
-      const auth = yield* headers;
-      const snapshot = yield* view.snapshot(key, { headers: auth, ...(atLeast !== undefined ? { atLeast } : {}) });
-      return { state: snapshot.state, revision: snapshot.cursor, epoch: 0 };
+      const view = yield* reads
+      const auth = yield* headers
+      const snapshot = yield* view.snapshot(key, { headers: auth, ...(atLeast !== undefined ? { atLeast } : {}) })
+      return { state: snapshot.state, revision: snapshot.cursor, epoch: 0 }
     }),
     subscribe: (key) =>
       Stream.unwrap(
         Effect.map(Ref.make(0), (epochs) =>
           Stream.unwrap(
             Effect.gen(function* () {
-              const epoch = yield* Ref.getAndUpdate(epochs, (n) => n + 1);
-              const view = yield* reads;
-              const auth = yield* headers;
-              const snapshot = yield* view.snapshot(key, { headers: auth });
-              const live = view.events(key, { headers: auth, after: snapshot.cursor }).pipe(
+              const epoch = yield* Ref.getAndUpdate(epochs, (n) => n + 1)
+              const view = yield* reads
+              const auth = yield* headers
+              const snapshot = yield* view.snapshot(key, { headers: auth })
+              const live = view.events(key, {
+                headers: auth,
+                after: snapshot.cursor
+              }).pipe(
                 Stream.filter((entry): entry is View.Entry<NonNullable<St>, Ev, Key> => "envelope" in entry),
                 Stream.map((entry): Revisioned<St> => ({
                   state: entry.state as St,
                   revision: entry.envelope.seq,
-                  epoch,
-                })),
-              );
-              const first: Revisioned<St> = { state: snapshot.state, revision: snapshot.cursor, epoch };
-              return pipe(Stream.succeed(first), Stream.concat(live));
-            }),
-          ).pipe(Stream.retry(Schedule.max([Schedule.exponential("50 millis"), Schedule.recurs(5)]))),
-        ),
-      ),
-  };
-});
+                  epoch
+                }))
+              )
+              const first: Revisioned<St> = {
+                state: snapshot.state,
+                revision: snapshot.cursor,
+                epoch
+              }
+              return pipe(Stream.succeed(first), Stream.concat(live))
+            })
+          ).pipe(Stream.retry(Schedule.max([Schedule.exponential("50 millis"), Schedule.recurs(5)])))
+        )
+      )
+  }
+})
 
 /**
  * Bind one query of a contract Api: ask it, optionally after one receipt or
@@ -288,12 +312,12 @@ export const query: {
   2,
   <Id, Client, Input, Result, E>(api: ContractApi<Id, Client>, select: QuerySelect<Client, Input, Result, E>): QueryBinding<Id, Input, Result, E> =>
     Effect.fn("Bindings.query")(function* (input: Input, options?: QueryAsk) {
-      const client = yield* Effect.service(api.Client);
-      const credentials = yield* Credentials;
-      const headers = yield* credentials.headers;
-      return yield* select(client)(input, { ...options, headers });
-    }),
-);
+      const client = yield* Effect.service(api.Client)
+      const credentials = yield* Credentials
+      const headers = yield* credentials.headers
+      return yield* select(client)(input, { ...options, headers })
+    })
+)
 
 /** How a binding asks a query: after the receipts of the caller's own commands, from a page's cursor, for a page size. */
 type QueryAsk = {
@@ -304,8 +328,10 @@ type QueryAsk = {
 
 /** Picks a query's call off a contract's client. */
 type QuerySelect<Client, Input, Result, E> = (
-  client: Client,
-) => (input: Input, options?: QueryAsk & { readonly headers?: Headers.Input }) => Effect.Effect<Result, E>;
+  client: Client
+) => (input: Input, options?: QueryAsk & {
+  readonly headers?: Headers.Input
+}) => Effect.Effect<Result, E>;
 
 /** A query's binding: ask it, optionally after receipts, from a cursor, or for a page size. */
 type QueryBinding<Id, Input, Result, E> = (input: Input, options?: QueryAsk) => Effect.Effect<Result, E, Id | Credentials>;

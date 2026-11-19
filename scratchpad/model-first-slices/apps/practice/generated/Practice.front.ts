@@ -14,7 +14,6 @@ import * as R from "effect/Record";
 import * as Str from "@beep/utils/Str";
 import { Database } from "../src/Cluster.ts";
 import { AuthorityGateway, RunsGateway, Session, authority, conformance, party, runs } from "./Practice.entry.ts";
-import { thunkEmptyStr } from "@beep/utils"
 
 /** The front: every context's Apis by first path segment; the conformance app at the root. */
 export default class PracticeFront extends Docker.Service<PracticeFront>()(
@@ -48,7 +47,7 @@ export default class PracticeFront extends Docker.Service<PracticeFront>()(
     return {
       fetch: Effect.gen(function* () {
         const request = yield* HttpServerRequest;
-        const segment = pipe(new URL(request.url, "http://front").pathname, Str.split("/"), A.get(1), O.getOrElse(thunkEmptyStr));
+        const segment = pipe(new URL(request.url, "http://front").pathname, Str.split("/"), A.get(1), O.getOrElse(() => ""));
         // A path no context serves goes to the root app; with none, it is not found.
         return yield* O.match(O.orElse(R.get(routes, segment), () => R.get(routes, "")), {
           onNone: () => Effect.succeed(HttpServerResponse.empty({ status: 404 })),
