@@ -36,15 +36,15 @@ const REGISTRY_FIXTURE = A.join(
   [
     'const composers = $I.compose("alpha", "target-pkg", "langextract");',
     LAB_COMPOSERS_START_MARKER,
-    'const generatedLabComposers = $I.compose("gamma-lab");',
+    'const generatedLabComposers = /*#__PURE__*/ $I.compose("gamma-lab");',
     LAB_COMPOSERS_END_MARKER,
     'const labComposers = $I.compose("gamma");',
-    "export const $AlphaId = composers.$AlphaId;",
-    'export const $TargetPkgId: Identity.IdentityComposer<"@beep/target-pkg"> = composers.$TargetPkgId;',
-    'export const $LangExtractId: Identity.IdentityComposer<"@beep/langextract"> = composers.$LangextractId;',
-    "export const $GammaId = composers.$GammaId;",
+    'export const $AlphaId: Identity.IdentityComposer<"@beep/alpha"> = /*#__PURE__*/ $I.create("alpha");',
+    'export const $TargetPkgId: Identity.IdentityComposer<"@beep/target-pkg"> = /*#__PURE__*/ $I.create("target-pkg");',
+    'export const $LangExtractId: Identity.IdentityComposer<"@beep/langextract"> = /*#__PURE__*/ $I.create("langextract");',
+    'export const $GammaId: Identity.IdentityComposer<"@beep/gamma"> = /*#__PURE__*/ $I.create("gamma");',
     LAB_EXPORTS_START_MARKER,
-    'export const $GammaLabId: Identity.IdentityComposer<"@beep/gamma-lab"> = composers.$GammaLabId;',
+    'export const $GammaLabId: Identity.IdentityComposer<"@beep/gamma-lab"> = /*#__PURE__*/ $I.create("gamma-lab");',
     LAB_EXPORTS_END_MARKER,
     "const internalNote = buildInternalNote();",
     "export const registryHelpers = buildRegistryHelpers();",
@@ -81,8 +81,8 @@ const runRemoval = (packageName: string) => removeFrom(REGISTRY_FIXTURE, package
 const PREFIX_SIBLING_REGISTRY = A.join(
   [
     'const composers = $I.compose("courtlistener", "courtlistener-identity");',
-    'export const $CourtlistenerId: Identity.IdentityComposer<"@beep/courtlistener"> = composers.$CourtlistenerId;',
-    'export const $CourtlistenerIdentityId: Identity.IdentityComposer<"@beep/courtlistener-identity"> = composers.$CourtlistenerIdentityId;',
+    'export const $CourtlistenerId: Identity.IdentityComposer<"@beep/courtlistener"> = /*#__PURE__*/ $I.create("courtlistener");',
+    'export const $CourtlistenerIdentityId: Identity.IdentityComposer<"@beep/courtlistener-identity"> = /*#__PURE__*/ $I.create("courtlistener-identity");',
     "",
   ],
   "\n"
@@ -118,7 +118,55 @@ describe("identity registration removal", () => {
         A.join(
           [
             'const composers = $I.compose("courtlistener-identity");',
-            'export const $CourtlistenerIdentityId: Identity.IdentityComposer<"@beep/courtlistener-identity"> = composers.$CourtlistenerIdentityId;',
+            'export const $CourtlistenerIdentityId: Identity.IdentityComposer<"@beep/courtlistener-identity"> = /*#__PURE__*/ $I.create("courtlistener-identity");',
+            "",
+          ],
+          "\n"
+        )
+      );
+    })
+  );
+
+  it.effect("removes an untyped accessor-named leaf by its name and a legacy composers read by its token", () =>
+    Effect.gen(function* () {
+      const registry = A.join(
+        [
+          'const generatedComposers = /*#__PURE__*/ $I.compose("courtlistener", "courtlistener-identity", "beta");',
+          'export const $CourtListenerId = /*#__PURE__*/ $I.create("courtlistener");',
+          'export const $CourtlistenerIdentityId = /*#__PURE__*/ $I.create("courtlistener-identity");',
+          "export const $BetaAliasId = composers.$BetaId;",
+          "",
+        ],
+        "\n"
+      );
+      const withoutCourtlistener = yield* removeFrom(registry, "courtlistener");
+      expect(Str.includes("$CourtListenerId")(withoutCourtlistener)).toBe(false);
+      expect(Str.includes("$CourtlistenerIdentityId")(withoutCourtlistener)).toBe(true);
+      const withoutBeta = yield* removeFrom(registry, "beta");
+      expect(Str.includes("$BetaAliasId")(withoutBeta)).toBe(false);
+      expect(Str.includes("$CourtListenerId")(withoutBeta)).toBe(true);
+    })
+  );
+
+  it.effect("keeps a vocabulary composer whose $I.create literal equals the deleted package slug", () =>
+    Effect.gen(function* () {
+      const registry = A.join(
+        [
+          'const generatedComposers = /*#__PURE__*/ $I.compose("alpha", "epistemic");',
+          'export const $AlphaId: Identity.IdentityComposer<"@beep/alpha"> = /*#__PURE__*/ $I.create("alpha");',
+          'export const $EpistemicId: Identity.IdentityComposer<"@beep/epistemic"> = /*#__PURE__*/ $I.create("epistemic");',
+          'export const $EpistemicVocabularyId = /*#__PURE__*/ $I.create("epistemic");',
+          "",
+        ],
+        "\n"
+      );
+      const next = yield* removeFrom(registry, "epistemic");
+      expect(next).toBe(
+        A.join(
+          [
+            'const generatedComposers = /*#__PURE__*/ $I.compose("alpha");',
+            'export const $AlphaId: Identity.IdentityComposer<"@beep/alpha"> = /*#__PURE__*/ $I.create("alpha");',
+            'export const $EpistemicVocabularyId = /*#__PURE__*/ $I.create("epistemic");',
             "",
           ],
           "\n"
@@ -137,7 +185,7 @@ describe("identity registration removal", () => {
       const siblingOnly = A.join(
         [
           'const composers = $I.compose("courtlistener", "courtlistener-identity");',
-          "export const $CourtlistenerIdentityId = composers.$CourtlistenerIdentityId;",
+          'export const $CourtlistenerIdentityId: Identity.IdentityComposer<"@beep/courtlistener-identity"> = /*#__PURE__*/ $I.create("courtlistener-identity");',
           "",
         ],
         "\n"

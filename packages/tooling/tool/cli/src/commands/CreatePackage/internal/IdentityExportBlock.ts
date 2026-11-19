@@ -30,6 +30,43 @@ import { Str, Text } from "@beep/utils";
 export const toIdentityAccessorName = (packageName: string): string => `$${Str.pascalCase(packageName)}Id`;
 
 /**
+ * Pure-annotation comment that lets bundlers drop an unused identity leaf.
+ *
+ * **Example** (Reference the pure annotation)
+ *
+ * ```ts
+ * import { PURE_ANNOTATION } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityExportBlock"
+ *
+ * console.log(PURE_ANNOTATION) // the bundler pure-annotation comment
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const PURE_ANNOTATION = "/*#__PURE__*/";
+
+/**
+ * Render the initializer of one registry leaf: an independent, pure-annotated
+ * `$I.create("<slug>")` call, so a bundle keeps only the leaves it reads.
+ *
+ * **Example** (Render a leaf initializer)
+ *
+ * ```ts
+ * import { identityLeafInitializer } from "@beep/repo-cli/commands/CreatePackage/internal/IdentityExportBlock"
+ *
+ * const result = identityLeafInitializer("repo-cli")
+ * console.log(result) // rendered leaf initializer
+ * ```
+ *
+ * @param packageName - Workspace package slug the leaf composes from the root.
+ * @returns The leaf initializer text.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const identityLeafInitializer = (packageName: string): string =>
+  `${PURE_ANNOTATION} $I.create("${packageName}")`;
+
+/**
  * Render the typed identity composer export block for a package.
  *
  * **Example** (Render typed export block)
@@ -67,6 +104,6 @@ export const typedIdentityExportBlock = (packageName: string): string => {
     " * @category configuration",
     " * @since 0.0.0",
     " */",
-    `export const ${accessorName}: Identity.IdentityComposer<"@beep/${packageName}"> = composers.${accessorName};`,
+    `export const ${accessorName}: Identity.IdentityComposer<"@beep/${packageName}"> = ${identityLeafInitializer(packageName)};`,
   ]);
 };

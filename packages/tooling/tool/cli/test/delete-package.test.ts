@@ -767,7 +767,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             A.join(
               [
                 'const composers = $I.compose("courtlistener");',
-                "export const $CourtlistenerId = composers.$CourtlistenerId;",
+                'export const $CourtlistenerId: Identity.IdentityComposer<"@beep/courtlistener"> = /*#__PURE__*/ $I.create("courtlistener");',
                 "",
               ],
               "\n"
@@ -1490,8 +1490,8 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             A.join(
               [
                 'const composers = $I.compose("courtlistener", "courtlistener-identity");',
-                "export const $CourtlistenerId = composers.$CourtlistenerId;",
-                "export const $CourtlistenerIdentityId = composers.$CourtlistenerIdentityId;",
+                'export const $CourtlistenerId: Identity.IdentityComposer<"@beep/courtlistener"> = /*#__PURE__*/ $I.create("courtlistener");',
+                'export const $CourtlistenerIdentityId: Identity.IdentityComposer<"@beep/courtlistener-identity"> = /*#__PURE__*/ $I.create("courtlistener-identity");',
                 "",
               ],
               "\n"
@@ -1529,7 +1529,7 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             A.join(
               [
                 'const composers = $I.compose("courtlistener-identity");',
-                "export const $CourtlistenerIdentityId = composers.$CourtlistenerIdentityId;",
+                'export const $CourtlistenerIdentityId: Identity.IdentityComposer<"@beep/courtlistener-identity"> = /*#__PURE__*/ $I.create("courtlistener-identity");',
                 "",
               ],
               "\n"
