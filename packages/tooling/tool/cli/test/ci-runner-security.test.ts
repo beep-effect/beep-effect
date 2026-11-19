@@ -198,6 +198,15 @@ const assertPrunesAptSourcesBefore = (run: string, command: string): void => {
   );
 };
 
+// Hosted apt installs go through the one retrying composite action
+// (.github/actions/apt-install), which prunes the third-party sources itself.
+const APT_INSTALL_ACTION = "./.github/actions/apt-install";
+const assertUsesAptInstall = (step: WorkflowStep, packages: ReadonlyArray<string>): void => {
+  assert.strictEqual(step.uses, APT_INSTALL_ACTION, step.name);
+  assert.isUndefined(step.run, step.name);
+  assert.deepStrictEqual(Str.split(Str.trim(String(step.with?.packages ?? "")), /\s+/u), [...packages], step.name);
+};
+
 const PRODUCER_BUILD_TOOL_PIN_KEYS = [
   "ZIG_VERSION",
   "ZIG_URL",
@@ -1432,7 +1441,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.include(workflowText, "run: cargo check --locked");
       assert.include(workflowText, "run: cargo clippy --locked -- -D warnings");
       assert.include(workflowText, "working-directory: apps/professional-desktop/src-tauri");
-      assertPrunesAptSourcesBefore(stepRun(steps, "Install Tauri Linux system dependencies"), "sudo apt-get update");
+      assertUsesAptInstall(stepByName(steps, "Install Tauri Linux system dependencies"), [
+        "libwebkit2gtk-4.1-dev",
+        "libgtk-3-dev",
+        "librsvg2-dev",
+        "libayatana-appindicator3-dev",
+        "libssl-dev",
+        "build-essential",
+        "pkg-config",
+      ]);
       // The fetched binary is on PATH before the lane gate and the apt pruning.
       assert.strictEqual(stepByName(steps, "Fetch beep CI binary").uses, FETCH_BEEP_CI_ACTION);
       assert.isBelow(
@@ -1627,12 +1644,140 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const steps = jobSteps(workflowJobs13, "release-desktop");
       const install = "Install Tauri Linux system dependencies";
       assert.strictEqual(stepByName(steps, install).if, "runner.os == 'Linux'");
-      assertPrunesAptSourcesBefore(stepRun(steps, install), "sudo apt-get update");
+      assertUsesAptInstall(stepByName(steps, install), [
+        "libwebkit2gtk-4.1-dev",
+        "libgtk-3-dev",
+        "librsvg2-dev",
+        "patchelf",
+        "libayatana-appindicator3-dev",
+        "build-essential",
+        "curl",
+        "wget",
+        "file",
+        "libssl-dev",
+      ]);
+      assert.strictEqual(stepByName(steps, install).with?.["no-install-recommends"], "false");
       const checkoutIndex = O.getOrThrowWith(
         A.findFirstIndex(steps, (step) => Str.startsWith("actions/checkout@")(step.uses ?? "")),
         () => new Error("Job release-desktop declares no checkout step.")
       );
       assert.isBelow(checkoutIndex, stepIndexByName(steps, install));
+    })
+  );
+
+  // Hosted Ubuntu mirrors return 503 / "Connection failed" on InRelease and
+  // "File has unexpected size ... Mirror sync in progress?" for minutes at a
+  // time (Check run 44521813535). The shared action retries update and install
+  // as one unit a fixed number of times and fails loudly after the last one.
+  it.effect(
+    "retries apt update and install a bounded number of times through the shared action",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const repoRoot = yield* findRepoRoot();
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const actionText = yield* fs.readFileString(`${repoRoot}/.github/actions/apt-install/action.yml`);
+      const action = parseWorkflowYaml(actionText);
+      const actionSteps = yield* decodeWorkflowSteps(yamlAt(action, ["runs", "steps"]));
+      const script = stepRun(actionSteps, "Install apt packages with retries");
+      assertPrunesAptSourcesBefore(script, 'apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update');
+      assert.include(script, "-o Acquire::Retries=3");
+
+      // setup-monorepo-ci installs poppler-utils through the same action.
+      const setupText = yield* fs.readFileString(`${repoRoot}/.github/actions/setup-monorepo-ci/action.yml`);
+      const setup = parseWorkflowYaml(setupText);
+      const setupSteps = yield* decodeWorkflowSteps(yamlAt(setup, ["runs", "steps"]));
+      assertUsesAptInstall(stepByName(setupSteps, "Install native PDF text extraction (apt)"), ["poppler-utils"]);
+
+      const runCase = Effect.fnUntraced(function* (failUpdates: number, failInstalls: number, recommends: string) {
+        const directory = yield* fs.makeTempDirectoryScoped();
+        const work = yield* fs.realPath(directory);
+        const stubs = `${work}/bin`;
+        yield* fs.makeDirectory(stubs, { recursive: true });
+        const stub = (name: string, body: string) =>
+          Effect.andThen(fs.writeFileString(`${stubs}/${name}`, `#!/usr/bin/bash\n${body}\n`), () =>
+            fs.chmod(`${stubs}/${name}`, 0o755)
+          );
+        yield* stub("beep", 'echo "beep $*" >> "$APT_LOG"');
+        yield* stub("sudo", '[[ "$1" == "-n" ]] && shift\nexec "$@"');
+        yield* stub("sleep", 'echo "sleep $*" >> "$APT_LOG"');
+        yield* stub(
+          "apt-get",
+          A.join(
+            [
+              'echo "apt-get $*" >> "$APT_LOG"',
+              'for arg in "$@"; do case "$arg" in update) phase=update ;; install) phase=install ;; esac; done',
+              'count_file="$APT_STATE/$phase"',
+              'count=$(( $(cat "$count_file" 2>/dev/null || echo 0) + 1 ))',
+              'echo "$count" > "$count_file"',
+              'limit=APT_FAIL_UPDATES; [[ "$phase" == install ]] && limit=APT_FAIL_INSTALLS',
+              '(( count > ${!limit} )) || { echo "E: Failed to fetch InRelease  503  Service Unavailable" >&2; exit 100; }',
+            ],
+            "\n"
+          )
+        );
+        const child = yield* spawner.spawn(
+          ChildProcess.make("/usr/bin/bash", ["--noprofile", "--norc", "-eo", "pipefail", "-c", script], {
+            cwd: work,
+            env: {
+              PATH: `${stubs}:/usr/bin:/bin`,
+              APT_LOG: `${work}/log`,
+              APT_STATE: work,
+              APT_FAIL_UPDATES: String(failUpdates),
+              APT_FAIL_INSTALLS: String(failInstalls),
+              APT_INSTALL_PACKAGES: "  poppler-utils\n  libssl-dev\n",
+              APT_INSTALL_NO_RECOMMENDS: recommends,
+              APT_INSTALL_ATTEMPTS: "3",
+              APT_INSTALL_BACKOFF_SECONDS: "15",
+            },
+            extendEnv: false,
+            stdout: "pipe",
+            stderr: "pipe",
+          })
+        );
+        const [status, stdout] = yield* Effect.all(
+          [child.exitCode, child.stdout.pipe(Stream.decodeText(), Stream.mkString)],
+          { concurrency: "unbounded" }
+        );
+        const logText = yield* fs.readFileString(`${work}/log`);
+        const log = A.filter(Str.split(logText, "\n"), Str.isNonEmpty);
+        return { status: Number(status), stdout, log };
+      });
+      const updates = (log: ReadonlyArray<string>) => A.filter(log, Str.endsWith(" update")).length;
+      const installs = (log: ReadonlyArray<string>) => A.filter(log, Str.includes(" install ")).length;
+      const sleeps = (log: ReadonlyArray<string>) => A.filter(log, Str.startsWith("sleep "));
+
+      // Two mirror failures on update, then success: three updates, one install, doubling pauses.
+      const recovered = yield* runCase(2, 0, "true");
+      assert.strictEqual(recovered.status, 0);
+      assert.strictEqual(recovered.log[0], "beep ci prune-apt");
+      assert.strictEqual(updates(recovered.log), 3);
+      assert.strictEqual(installs(recovered.log), 1);
+      assert.deepStrictEqual(sleeps(recovered.log), ["sleep 15", "sleep 30"]);
+      assert.include(
+        A.findFirst(recovered.log, Str.includes(" install ")).pipe(O.getOrElse(constant(""))),
+        "install -y --no-install-recommends poppler-utils libssl-dev"
+      );
+      assert.include(recovered.stdout, "::warning::apt-install: attempt 2 of 3 failed");
+
+      // A failed install starts the next attempt from update, and the recommends flag is optional.
+      const reinstalled = yield* runCase(0, 1, "false");
+      assert.strictEqual(reinstalled.status, 0);
+      assert.strictEqual(updates(reinstalled.log), 2);
+      assert.strictEqual(installs(reinstalled.log), 2);
+      assertTrue(
+        A.every(
+          A.filter(reinstalled.log, Str.includes(" install ")),
+          (line) => !Str.includes("--no-install-recommends")(line)
+        )
+      );
+
+      // A mirror that never recovers fails the step after exactly three attempts, with an error annotation.
+      const exhausted = yield* runCase(99, 0, "true");
+      assert.strictEqual(exhausted.status, 1);
+      assert.strictEqual(updates(exhausted.log), 3);
+      assert.strictEqual(installs(exhausted.log), 0);
+      assert.deepStrictEqual(sleeps(exhausted.log), ["sleep 15", "sleep 30"]);
+      assert.include(exhausted.stdout, "::error::apt-install: apt-get update and install failed after 3 attempts");
     })
   );
 
