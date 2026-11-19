@@ -39,7 +39,8 @@ export const runtimeConfigEnvName = "BEEP_RUNNER_CONFIG";
 
 /**
  * EC2 error codes scale-up treats as retryable when `CreateFleet` returns them
- * per instance, as upstream's default `scale_errors`.
+ * per instance or for the whole request: upstream's default `scale_errors`
+ * plus `VcpuLimitExceeded`.
  *
  * **Example** (Is a capacity error retryable?)
  *
@@ -61,6 +62,8 @@ export const defaultScaleErrors: ReadonlyArray<string> = [
   "MaxSpotFleetRequestCountExceeded",
   "InsufficientInstanceCapacity",
   "InsufficientCapacityOnHost",
+  // The account's vCPU quota for the instance family, beyond upstream's list.
+  "VcpuLimitExceeded",
 ];
 
 /**
@@ -127,7 +130,8 @@ export class PoolMatcher extends S.Opaque<PoolMatcher, { readonly brand: unique 
  *
  * **Details**
  *
- * An empty `repositoryAllowList` admits every repository.
+ * The webhook dispatches only events from a repository in
+ * `repositoryAllowList`: an empty list admits none (upstream admits every one).
  *
  * **Example** (One pool, one repository)
  *
@@ -247,8 +251,10 @@ export class HousekeeperRuntimeConfig extends S.Opaque<HousekeeperRuntimeConfig,
  *
  * **Details**
  *
- * An instance is the watcher's only when its `ghr:environment` tag starts with
- * `environmentPrefix`, the upstream tag-filter rule. A busy runner is retried
+ * An instance is the watcher's only when its `ghr:environment` tag equals one
+ * of `environments`, the fleet's own pool environments. Upstream matches a
+ * prefix; an exact match keeps one stage's watcher off another stage whose
+ * fleet name extends its own (`beep-fleet-dev-a` and `beep-fleet-dev-a-b`). A busy runner is retried
  * through `deregisterRetryQueueUrl` after `retryDelaySeconds`, at most
  * `maxDeregisterRetries` times (default 5); after that the record fails, SQS
  * redelivers it up to the queue's `maxReceiveCount` and its DLQ takes it.
@@ -260,7 +266,7 @@ export class HousekeeperRuntimeConfig extends S.Opaque<HousekeeperRuntimeConfig,
  * import * as S from "effect/Schema"
  *
  * const config = S.decodeUnknownSync(TerminationWatcherRuntimeConfig)({
- *   environmentPrefix: "beep-ci",
+ *   environments: ["beep-ci-heavy"],
  *   app: { id: "/r/app/github_app_id", keyBase64: "/r/app/github_app_key_base64", webhookSecret: "/r/app/github_app_webhook_secret" },
  *   deregisterRetryQueueUrl: "https://sqs.us-east-1.amazonaws.com/1/deregister-retry",
  * })
@@ -275,7 +281,7 @@ export class TerminationWatcherRuntimeConfig extends S.Opaque<
   { readonly brand: unique symbol }
 >()(
   S.Struct({
-    environmentPrefix: S.String,
+    environments: S.NonEmptyArray(S.String),
     app: AppParameterNames,
     deregisterRetryQueueUrl: S.String,
     retryDelaySeconds: S.Int.pipe(

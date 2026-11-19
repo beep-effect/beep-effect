@@ -443,6 +443,7 @@
         "packages/shared/domain/package.json",
         "packages/shared/tables/package.json",
         "packages/shared/use-cases/package.json",
+        "packages/tooling/infra/ci-runners/package.json",
         "packages/tooling/infra/cost-controls/package.json",
         "packages/tooling/infra/github/package.json",
         "packages/tooling/infra/infra-hosts/package.json",

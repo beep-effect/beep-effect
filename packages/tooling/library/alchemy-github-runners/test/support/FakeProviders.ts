@@ -3,6 +3,7 @@
  * declares, plus the real RunnerSweep provider over the in-memory world.
  */
 
+import { AWSEnvironment } from "@alchemy.run/aws/Environment";
 import * as EventBridge from "@alchemy.run/aws/EventBridge";
 import * as IAM from "@alchemy.run/aws/IAM";
 import * as KMS from "@alchemy.run/aws/KMS";
@@ -16,6 +17,7 @@ import * as Provider from "alchemy/Provider";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
 import { worldContext } from "./FakeWorld.ts";
 import type { RunnerLaunchTemplate as RunnerLaunchTemplateResource } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate";
@@ -186,5 +188,19 @@ export const fakeProviders = ({ recorder, world }: { readonly recorder: Recorder
         tags: news.tags ?? {},
       })) as never
     ),
-    RunnerSweepProvider.pipe(Layer.provide(Layer.succeedContext(worldContext(world))))
+    RunnerSweepProvider.pipe(Layer.provide(Layer.succeedContext(worldContext(world)))),
+    // The composite scopes its own ARNs to the stage's account and region.
+    Layer.succeed(
+      AWSEnvironment,
+      Effect.succeed({
+        accountId: "123456789012",
+        region: "us-east-1",
+        credentials: Effect.succeed({
+          accessKeyId: Redacted.make("test"),
+          secretAccessKey: Redacted.make("test"),
+          sessionToken: undefined,
+          region: "us-east-1",
+        }),
+      }) as never
+    )
   );

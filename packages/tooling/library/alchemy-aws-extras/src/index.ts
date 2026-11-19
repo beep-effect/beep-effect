@@ -23,6 +23,11 @@ export * as CostAllocationTag from "./CostAllocationTag.ts";
  */
 export * as CostOptimizationHubEnrollment from "./CostOptimizationHubEnrollment.ts";
 /**
+ * @category guards
+ * @since 0.0.0
+ */
+export * as DeployTarget from "./DeployTarget.ts";
+/**
  * @category models
  * @since 0.0.0
  */

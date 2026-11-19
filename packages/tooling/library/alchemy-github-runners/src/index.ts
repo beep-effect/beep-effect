@@ -99,6 +99,13 @@ export * from "./RunnerFleet.errors.ts";
  */
 export * from "./RunnerFleet.ts";
 /**
+ * Pinned physical names of a fleet.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./RunnerFleetNames.ts";
+/**
  * Runner EC2 tag vocabulary and inventory models.
  *
  * @category models

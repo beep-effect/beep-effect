@@ -1,0 +1,136 @@
+diff --git a/lib/Lambda/Function.d.ts b/lib/Lambda/Function.d.ts
+index 9811fc523722b7e3293a403435a3962dc906b955..b0a5cc22c3206b089b71dc398a3864ebb689e47a 100644
+--- a/lib/Lambda/Function.d.ts
++++ b/lib/Lambda/Function.d.ts
+@@ -110,6 +110,13 @@ export interface FunctionUrlConfig {
+     invokeMode?: Lambda.InvokeMode;
+ }
+ export interface FunctionCommonProps extends PlatformProps {
++    /**
++     * ARN of a managed policy set as the permissions boundary of the execution
++     * role Alchemy creates for this function. It is applied when the role is
++     * created, and put on an existing role whose boundary differs, before any
++     * policy is attached or written. Unset leaves the role without one.
++     */
++    permissionsBoundary?: string;
+     /**
+      * Whether to create a Lambda function URL, or its configuration.
+      *
+diff --git a/lib/Lambda/Function.js b/lib/Lambda/Function.js
+index cab6d567c49d4ee27cfbccb7ce4fb48687dbae6d..92ea6edefdb03c7f60404442cddb2ebca9fe7bd6 100644
+--- a/lib/Lambda/Function.js
++++ b/lib/Lambda/Function.js
+@@ -986,7 +986,7 @@ export const FunctionProvider = () => Provider.effect(Function, Effect.gen(funct
+                 .pipe(Effect.catchTag("NoSuchEntityException", () => Effect.void));
+         }
+     });
+-    const createRoleIfNotExists = Effect.fn(function* ({ id, roleName, vpc, }) {
++    const createRoleIfNotExists = Effect.fn(function* ({ id, roleName, vpc, permissionsBoundary, }) {
+         yield* Effect.logDebug(`creating role ${id}`);
+         const tags = yield* createInternalTags(id);
+         // Observe before ensure. Reconcile calls this even with persisted
+@@ -1016,9 +1016,17 @@ export const FunctionProvider = () => Provider.effect(Function, Effect.gen(funct
+                     ],
+                 }),
+                 Tags: createTagsList(tags),
++                ...(permissionsBoundary === undefined ? {} : { PermissionsBoundary: permissionsBoundary }),
+             })
+                 .pipe(Effect.catchTag("EntityAlreadyExistsException", () => iam.getRole({ RoleName: roleName })));
+         }
++        if (permissionsBoundary !== undefined &&
++            role.Role.PermissionsBoundary?.PermissionsBoundaryArn !== permissionsBoundary) {
++            yield* iam.putRolePermissionsBoundary({
++                RoleName: roleName,
++                PermissionsBoundary: permissionsBoundary,
++            });
++        }
+         yield* Effect.logDebug(`attaching policy ${id}`);
+         yield* iam
+             .attachRolePolicy({
+@@ -1930,6 +1938,7 @@ export const FunctionProvider = () => Provider.effect(Function, Effect.gen(funct
+                 id,
+                 roleName,
+                 vpc: news.vpc,
++                permissionsBoundary: news.permissionsBoundary,
+             });
+             yield* syncLogGroupGuard({ roleName, functionName });
+             yield* ensureLogGroup({ id, functionName, retention: news.logging?.retention });
+@@ -1992,6 +2001,7 @@ export const FunctionProvider = () => Provider.effect(Function, Effect.gen(funct
+                 id,
+                 roleName,
+                 vpc: news.vpc,
++                permissionsBoundary: news.permissionsBoundary,
+             });
+             const roleArn = ensuredRole.Role.Arn ?? output?.roleArn;
+             yield* syncLogGroupGuard({ roleName, functionName });
+diff --git a/src/Lambda/Function.ts b/src/Lambda/Function.ts
+index 1c0404234cfb4880397f018b2f7f7c43248c8fff..eda66e9bc5711c98fe38cdc2884512acf951eda5 100644
+--- a/src/Lambda/Function.ts
++++ b/src/Lambda/Function.ts
+@@ -219,6 +219,13 @@ export interface FunctionUrlConfig {
+ }
+ 
+ export interface FunctionCommonProps extends PlatformProps {
++  /**
++   * ARN of a managed policy set as the permissions boundary of the execution
++   * role Alchemy creates for this function. It is applied when the role is
++   * created, and put on an existing role whose boundary differs, before any
++   * policy is attached or written. Unset leaves the role without one.
++   */
++  permissionsBoundary?: string;
+   /**
+    * Whether to create a Lambda function URL, or its configuration.
+    *
+@@ -1712,10 +1719,12 @@ export const FunctionProvider = () =>
+         id,
+         roleName,
+         vpc,
++        permissionsBoundary,
+       }: {
+         id: string;
+         roleName: string;
+         vpc?: FunctionProps["vpc"];
++        permissionsBoundary?: string;
+       }) {
+         yield* Effect.logDebug(`creating role ${id}`);
+         const tags = yield* createInternalTags(id);
+@@ -1746,6 +1755,7 @@ export const FunctionProvider = () =>
+                 ],
+               }),
+               Tags: createTagsList(tags),
++              ...(permissionsBoundary === undefined ? {} : { PermissionsBoundary: permissionsBoundary }),
+             })
+             .pipe(
+               Effect.catchTag("EntityAlreadyExistsException", () =>
+@@ -1753,6 +1763,15 @@ export const FunctionProvider = () =>
+               ),
+             );
+         }
++        if (
++          permissionsBoundary !== undefined &&
++          role.Role.PermissionsBoundary?.PermissionsBoundaryArn !== permissionsBoundary
++        ) {
++          yield* iam.putRolePermissionsBoundary({
++            RoleName: roleName,
++            PermissionsBoundary: permissionsBoundary,
++          });
++        }
+ 
+         yield* Effect.logDebug(`attaching policy ${id}`);
+         yield* iam
+@@ -3075,6 +3094,7 @@ export const FunctionProvider = () =>
+             id,
+             roleName,
+             vpc: news.vpc,
++            permissionsBoundary: news.permissionsBoundary,
+           });
+           yield* syncLogGroupGuard({ roleName, functionName });
+           yield* ensureLogGroup({ id, functionName, retention: news.logging?.retention });
+@@ -3143,6 +3163,7 @@ export const FunctionProvider = () =>
+             id,
+             roleName,
+             vpc: news.vpc,
++            permissionsBoundary: news.permissionsBoundary,
+           });
+           const roleArn = ensuredRole.Role.Arn ?? output?.roleArn;
+           yield* syncLogGroupGuard({ roleName, functionName });

@@ -362,6 +362,90 @@ to the gap between the reference checkout (main) and the pinned release.
   environment layer, awsJson `HttpClient` from a route table, typed scratch-stack view, failure
   helpers) that every `@beep/alchemy-*` and `@beep/infra-*` package imports.
 
+## 2026-11-14: `Lambda.FunctionProvider` needs a `Docker` service for zip functions
+
+- **Doing:** P5 ci-runners stack (lane `goals/infra-alchemy-rebuild-p5-ci-runners`), building a provider layer
+  with only the providers the stack declares, as cost-controls does.
+- **Evidence:** `alchemy.run.ts` failed typecheck with `Type 'Docker' is not assignable to type 'StackServices'`:
+  `FunctionProvider` builds `makeFunctionImage` up front, which requires `@alchemy.run/docker`'s `Docker`
+  service even though every function is a bundled zip. The stack now provides `DockerLive` (lazy; it never runs
+  `docker`), which needed a new root catalog entry `@alchemy.run/docker`.
+- **Would have prevented it:** `FunctionProvider` resolving `Docker` only for image functions, or the runbook's
+  "Adding an infra package" listing the layers a Lambda-declaring stack must provide.
+
+## 2026-11-14: the termination watcher's prefix filter makes the fleet name a fence
+
+- **Doing:** the same lane, choosing physical names for the new fleet.
+- **Evidence:** `TerminationWatcher.program.ts` `matchesEnvironment` acts on every instance whose
+  `ghr:environment` starts with the fleet name. The obvious name `beep-ci` would have matched the live
+  `beep-ci` pool's instances; `beep-fleet` for `prod` and `beep-fleet-dev-...` for personal stages would make
+  the `prod` watcher act on personal runners. The stack now names fleets `beep-fleet-<stage>` and a guard
+  refuses names that overlap the live prefixes.
+- **Would have prevented it:** matching `<name>-<pool>` exactly (the composite knows every pool), not a prefix.
+
+## 2026-11-14: `lint deprecated-apis --full` refuses TypeScript under `test/fixtures/`
+
+- **Doing:** the same lane, running the package-scoped gates before reporting.
+- **Evidence:** `lint deprecated-apis: TypeScript files have no tsconfig owner: .../test/fixtures/PersonalPlan.ts`
+  although `tsconfig.test.json` includes `test`. Moving the file to `test/support/` passed.
+- **Would have prevented it:** the owner check using the package's own tsconfig includes, or the message naming
+  the excluded directory.
+
+## 2026-11-14: Alchemy beta.87 has no command that prints a stack output
+
+- **Doing:** the same lane, drafting the deploy workflow's post-deploy check of the webhook URL.
+- **Evidence:** `node_modules/alchemy/src/Cli/commands/` has no `output` command; the draft greps the URL out of
+  the deploy log instead, an assumption to confirm on the first deploy.
+- **Would have prevented it:** an `alchemy output --stage <s> <key>` command, or the runbook naming the
+  supported way to read an output in CI.
+
+## 2026-11-14: `observability catalog --write` rewrites a sibling package's stale shard
+
+- **Doing:** the same lane, regenerating its own instrumentation shard.
+- **Evidence:** the writer also added seven spans (`RunnerFleet.*`, `RunnerSweep.*`) to
+  `standards/instrumentation-catalog/@beep/alchemy-github-runners.generated.jsonc`: `main` carries that shard
+  without the spans #3314 added, so `observability catalog --check` is inherited-red there. The lane reverted
+  the sibling shard and left it to a fix on `main`.
+- **Would have prevented it:** the catalog check in the PR's required set for every package that adds a span,
+  or a `--package` filter on `--write`.
+
+## 2026-11-14: receipts owed from the runners lane (#3314), carried here
+
+- Hosted Commitlint lints every commit in the PR range; pushed `wip(...)` commits cannot be fixed without a
+  force push, so #3313 was replaced by squashed #3314. Prevent: a lane-local commit-type check, or `yeet open`
+  refusing a range with disallowed types.
+- With repo-wide gates skipped under the disk rule, each of these cost a push: schema-first D1 (S.Opaque data
+  models; an untracked advisory also exits 1), the JSDoc ratchet (titled Example per exported schema), a
+  semantic-delta probe reading a backticked branch name under `goals/` as a missing path, and oxlint
+  `beep(no-inline-schema-compile)` in test code (#3320). Prevent: a cheap package-scoped law-check bundle
+  allowed under constrained compute.
+- Looks-like-passing traps: `bunx turbo run lint:schema-first --filter=<pkg>` runs zero tasks and succeeds;
+  `jsdoc:ratchet:check` reads a stale untracked `.beep/ci` inventory until it is regenerated.
+- `yeet open` titled a new PR from the first non-merge commit in the range, a sibling PR's commit (#3313 got
+  #3291's title).
+- A cache baseline re-record demanded review of `//` drift that came only from `main` (#3317).
+- `standards/cache-qualification-baseline.json` is one file every package-adding PR rewrites: two unrelated
+  merges (#3322, #3299) put three open packet PRs (#3323, #3324, #3325) into base conflict on that file alone.
+  Prevent: per-subject baseline files, or a merge driver that unions disjoint subjects.
+- Root law tasks that package-scoped pre-push lists miss (`lint:effect-vitest`, `laws schema-tag-idioms`,
+  `lint:shadcn` reading a bracketed log timestamp as a Tailwind value, Fallow introduced complexity,
+  `beep(no-inline-schema-compile)`) each cost a push on #3320, #3323, #3324. Prevent:
+  `beep quality package-verify --laws` running every root law task filtered to the changed files.
+- Operator approval of a workflow file pinned to a blob is invalidated by any review-driven edit to that file;
+  #3323 and #3324 each needed a second ask. Prevent: ask after the first review round, not at open.
+
+## 2026-11-14: `Lambda.Function` cannot pin its execution role's name
+
+- **Doing:** P5 ci-runners stack (lane `goals/infra-alchemy-rebuild-p5-ci-runners`), pinning every `prod`
+  physical name so a lost or moved state cannot mint a second fleet (the #3133 lesson).
+- **Evidence:** Alchemy 2.0.0-beta.87 `Lambda.Function` names its own role with
+  `createPhysicalName({ id, maxLength: 64 })` (`CiRunners-<logical id>-prod-<instance suffix>`) and its props
+  take no `role`, `roleArn` or `roleName`. Functions, queues, runner roles, profiles, templates, rules and the
+  bucket are pinned through `RunnerFleetProps.namePrefix`; the nine execution roles stay generated, and the
+  deploy role keeps a `role/CiRunners-*-prod-*` allowance for them. Accepted by the packet gate: the pinned
+  function names collide after a state loss, so no second fleet appears.
+- **Would have prevented it:** an optional `roleName` prop on `Lambda.Function` (used instead of the generated
+  name when set). Proposed upstream under D14 (in-repo first, upstream when stable); no bun patch in this packet.
 ## 2026-11-14: no conditional update on GitHub rulesets leaves one GET-to-PUT round-trip open
 
 - **Doing:** P3 GitHub stack, review round 2 on #3324: the write guard re-reads ruleset 10240248 just before the

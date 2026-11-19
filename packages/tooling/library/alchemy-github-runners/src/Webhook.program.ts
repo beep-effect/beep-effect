@@ -32,7 +32,30 @@ const decodeWorkflowJobEvent = S.decodeUnknownEffect(S.fromJsonString(WorkflowJo
 const encodeActionRequest = S.encodeEffect(S.fromJsonString(ActionRequestMessage));
 
 /**
+ * The webhook secret a fleet stores when it has no real App credentials. It
+ * is a known literal, so {@link verifySignature} refuses every delivery
+ * while it is the configured secret, even one signed with it.
+ *
+ * **Example** (Read the placeholder)
+ *
+ * ```ts
+ * import { placeholderWebhookSecret } from "@beep/alchemy-github-runners/Webhook.program"
+ *
+ * console.log(placeholderWebhookSecret) // "unset"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const placeholderWebhookSecret = "unset";
+
+/**
  * Verifies GitHub's `x-hub-signature-256` header over the raw body.
+ *
+ * **Details**
+ *
+ * A configured secret equal to {@link placeholderWebhookSecret} fails every
+ * delivery with 401: a signature made with a published literal proves nothing.
  *
  * **Example** (Reject a missing signature)
  *
@@ -47,7 +70,7 @@ const encodeActionRequest = S.encodeEffect(S.fromJsonString(ActionRequestMessage
  * ```
  *
  * @param input - The webhook secret, the raw body and the header value when present.
- * @returns Success when the signature matches; `WebhookRejected` with status 401 otherwise.
+ * @returns Success when the signature matches a real secret; `WebhookRejected` with status 401 otherwise.
  * @category use-cases
  * @since 0.0.0
  */
@@ -57,6 +80,9 @@ export const verifySignature = Effect.fn("Webhook.verifySignature")(function* (i
   readonly signature: O.Option<string>;
 }) {
   const rejected = WebhookRejected.make({ statusCode: 401, message: "Unable to verify signature!" });
+  if (Redacted.value(input.secret) === placeholderWebhookSecret) {
+    return yield* rejected;
+  }
   const signature = yield* Effect.fromOption(input.signature).pipe(Effect.mapError(() => rejected));
   const expected = `sha256=${yield* hmacSha256Hex(Redacted.value(input.secret), input.body)}`;
   if (!constantTimeEqual(expected, signature)) {
@@ -149,7 +175,7 @@ const respond = (statusCode: number, body: string) => WebhookResponse.make({ sta
  *
  * Order matches upstream: signature first (401), then event type (202 for
  * anything but `workflow_job`), payload decode (400), repository allow list
- * (403), action (201 and no dispatch unless `queued`), label match (202 when
+ * (403; an empty list admits no repository, unlike upstream), action (201 and no dispatch unless `queued`), label match (202 when
  * no pool accepts), then one SQS message to the selected pool (201). Queue
  * failures surface as `AwsApiError`; the Lambda boundary answers 500.
  *
@@ -186,7 +212,8 @@ export const handleWebhook = Effect.fn("Webhook.handle")(function* (input: {
       Effect.mapError(() => WebhookRejected.make({ statusCode: 400, message: "Malformed workflow_job payload" }))
     );
     const repository = event.repository.full_name;
-    if (A.isReadonlyArrayNonEmpty(config.repositoryAllowList) && !A.contains(config.repositoryAllowList, repository)) {
+    // Fail closed: an empty allow list admits no repository (upstream admits every one).
+    if (!A.contains(config.repositoryAllowList, repository)) {
       return yield* WebhookRejected.make({
         statusCode: 403,
         message: `Received event from unauthorized repository ${repository}`,

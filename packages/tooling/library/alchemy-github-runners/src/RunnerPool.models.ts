@@ -261,8 +261,10 @@ export class JobRetryPolicy extends S.Opaque<JobRetryPolicy, { readonly brand: u
  */
 export class RunnerPool extends S.Opaque<RunnerPool, { readonly brand: unique symbol }>()(
   S.Struct({
-    name: S.String.check(S.isPattern(/^[a-z][a-z0-9-]{0,23}$/u)).annotateKey({
-      description: "Pool name: resource ids, queue names and the ghr:environment suffix.",
+    // No "-": with dash-free pool names, `<prefix>-<pool>` is unique per (prefix, pool), so no two pools derive one name.
+    name: S.String.check(S.isPattern(/^[a-z][a-z0-9]{0,23}$/u)).annotateKey({
+      description:
+        "Pool name (lower-case letters and digits): resource ids, queue names and the ghr:environment suffix.",
     }),
     instanceTypes: S.NonEmptyArray(S.String).annotateKey({
       description: "Interchangeable instance types; every type is crossed with every subnet.",

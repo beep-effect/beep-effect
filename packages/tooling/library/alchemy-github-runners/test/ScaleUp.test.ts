@@ -1,5 +1,6 @@
 import {
   AwsApiError,
+  Ec2Fleet,
   FleetLaunchResult,
   handleScaleUp,
   RunnerPool,
@@ -9,10 +10,12 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as TestClock from "effect/testing/TestClock";
 import { World, worldContext } from "./support/FakeWorld.ts";
 import { heavyPool, poolConfig, queued } from "./support/Fixtures.ts";
 import type { PoolRuntimeConfig } from "@beep/alchemy-github-runners";
@@ -114,6 +117,116 @@ describe("handleScaleUp", () => {
     })
   );
 
+  it.effect("refuses to launch and returns every message for retry when the runner count cannot be read", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const base = worldContext(world);
+      const fleet = Context.get(base, Ec2Fleet);
+      const failing = Ec2Fleet.of({
+        ...fleet,
+        listRunners: Effect.fn("FailingEc2.listRunners")(function* () {
+          return yield* AwsApiError.make({
+            service: "ec2",
+            operation: "describeInstances",
+            code: O.some("RequestLimitExceeded"),
+            retryable: true,
+            message: "throttled",
+          });
+        }),
+      });
+      const retry = yield* handleScaleUp({ config: poolConfig(), batch: [queued({ id: 1 }), queued({ id: 2 })] }).pipe(
+        Effect.provideContext(Context.add(base, Ec2Fleet, failing))
+      );
+      expect(retry).toStrictEqual(["m-1", "m-2"]);
+      expect(world.fleetRequests).toStrictEqual([]);
+      expect(world.sent).toStrictEqual([]);
+    })
+  );
+
+  it.effect("counts a launch EC2 does not show yet through its unconsumed JIT config, and retries past the cap", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      // The previous invocation launched i-unseen and wrote its JIT config; EC2's filtered read does not show it yet.
+      world.ssm["/beep-ci/heavy/tokens/i-unseen"] = { value: "jit", modified: 0, tags: { InstanceId: "i-unseen" } };
+      const retry = yield* run(
+        world,
+        [queued({ id: 1 })],
+        poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 1 }))
+      );
+      expect(world.fleetRequests).toStrictEqual([]);
+      expect(retry).toStrictEqual(["m-1"]);
+    })
+  );
+
+  const heavyRunnerTags = {
+    "ghr:Application": "github-action-runner",
+    "ghr:environment": "beep-ci-heavy",
+    "ghr:Type": "Org",
+    "ghr:Owner": "beep-effect",
+  };
+
+  it.effect("counts a runner that boots right after the EC2 read: its config was already read first", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.ssm["/beep-ci/heavy/tokens/i-booting"] = { value: "jit", modified: 0, tags: { InstanceId: "i-booting" } };
+      const base = worldContext(world);
+      const fleet = Context.get(base, Ec2Fleet);
+      // i-booting boots right after EC2 is read: its config is deleted and EC2 starts to show it. Read EC2 first and
+      // the count is 0, so it launches past the cap; read Parameter Store first and its config holds the slot.
+      const booting = Ec2Fleet.of({
+        ...fleet,
+        listRunners: Effect.fn("BootingEc2.listRunners")(function* (filter) {
+          const listed = yield* fleet.listRunners(filter);
+          world.ssm = R.remove(world.ssm, "/beep-ci/heavy/tokens/i-booting");
+          world.instances.push({
+            instanceId: "i-booting",
+            launchTime: 0,
+            state: "running",
+            tags: { ...heavyRunnerTags },
+          });
+          return listed;
+        }),
+      });
+      const retry = yield* handleScaleUp({
+        config: poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 1 })),
+        batch: [queued({ id: 1 })],
+      }).pipe(Effect.provideContext(Context.add(base, Ec2Fleet, booting)));
+      expect(world.fleetRequests).toStrictEqual([]);
+      expect(retry).toStrictEqual(["m-1"]);
+    })
+  );
+
+  it.effect("counts a runner seen by both reads once, by instance id", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.ssm["/beep-ci/heavy/tokens/i-seen"] = { value: "jit", modified: 0, tags: { InstanceId: "i-seen" } };
+      world.instances.push({ instanceId: "i-seen", launchTime: 0, state: "running", tags: { ...heavyRunnerTags } });
+      // Cap 2 with one runner counted once leaves one slot; counted twice it would leave none.
+      const retry = yield* run(
+        world,
+        [queued({ id: 1 })],
+        poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 2 }))
+      );
+      expect(world.fleetRequests[0]?.targetCapacity).toBe(1);
+      expect(retry).toStrictEqual([]);
+    })
+  );
+
+  it.effect("ignores a JIT config older than the in-flight window, so a runner that never booted holds no slot", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.ssm["/beep-ci/heavy/tokens/i-stale"] = { value: "jit", modified: 0, tags: { InstanceId: "i-stale" } };
+      yield* TestClock.adjust("16 minutes");
+      const retry = yield* run(
+        world,
+        [queued({ id: 1 })],
+        poolConfig(RunnerPool.make({ ...heavyPool, maximumCount: 1 }))
+      );
+      expect(world.fleetRequests[0]?.targetCapacity).toBe(1);
+      expect(retry).toStrictEqual([]);
+    })
+  );
+
   it.effect("launches nothing at the cap and publishes nothing for redelivered messages", () =>
     Effect.gen(function* () {
       const world = new World();
@@ -144,6 +257,59 @@ describe("handleScaleUp", () => {
       const dropped = yield* run(denied, [queued({ id: 1 })]);
       expect(dropped).toStrictEqual([]);
       expect(A.map(denied.sent, (sent) => sent.queueUrl)).toStrictEqual([
+        "https://sqs.us-east-1.amazonaws.com/1/heavy-job-retry",
+      ]);
+    })
+  );
+
+  it.effect(
+    "returns every message as a batch item failure when CreateFleet itself fails with a quota or capacity code",
+    () =>
+      Effect.gen(function* () {
+        for (const code of [
+          "MaxSpotInstanceCountExceeded",
+          "VcpuLimitExceeded",
+          "InsufficientInstanceCapacity",
+          "UnfulfillableCapacity",
+        ]) {
+          const world = new World();
+          // The request itself fails, as the live layer reports it: the code is not a transport retry.
+          world.fleetAnswers = [
+            AwsApiError.make({
+              service: "ec2",
+              operation: "createFleet",
+              code: O.some(code),
+              retryable: false,
+              message: code,
+            }),
+          ];
+          const retried = yield* run(world, [queued({ id: 1 }), queued({ id: 2 })]);
+          // Exactly one retry path: both messages come back to the build queue, nothing goes to the job-retry queue.
+          expect([code, retried, world.sent.length, world.instances.length]).toStrictEqual([
+            code,
+            ["m-1", "m-2"],
+            0,
+            0,
+          ]);
+        }
+      })
+  );
+
+  it.effect("keeps a non-quota request-level CreateFleet failure on the job-retry path, as before", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.fleetAnswers = [
+        AwsApiError.make({
+          service: "ec2",
+          operation: "createFleet",
+          code: O.some("UnauthorizedOperation"),
+          retryable: false,
+          message: "denied",
+        }),
+      ];
+      const retried = yield* run(world, [queued({ id: 1 })]);
+      expect(retried).toStrictEqual([]);
+      expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([
         "https://sqs.us-east-1.amazonaws.com/1/heavy-job-retry",
       ]);
     })
