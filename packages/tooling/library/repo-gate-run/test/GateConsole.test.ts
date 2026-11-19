@@ -1,7 +1,7 @@
 import { ConsoleBudget, RecordPaths, RunDelta } from "@beep/gate-report/ConsoleDocument";
 import { GateReport } from "@beep/gate-report/GateReport";
 import { reduceEvents } from "@beep/gate-report/Reducer";
-import { buildClosureCommand, WORKSPACE_SUBJECT } from "@beep/repo-gate-run/ConsoleDefaults";
+import { buildClosureCommand, foldFixesFor, WORKSPACE_SUBJECT } from "@beep/repo-gate-run/ConsoleDefaults";
 import {
   ConsoleRequest,
   ConsoleSettings,
@@ -132,6 +132,12 @@ describe("GateConsole", () => {
     );
     assert.strictEqual(lines[1], "history not read: late");
     assert.strictEqual(buildClosureCommand(WORKSPACE_SUBJECT), "bun x turbo run build");
+    assert.strictEqual(buildClosureCommand("@beep/glob"), "bun x turbo run build --filter=@beep/glob^...");
+    assert.strictEqual(buildClosureCommand("glob"), "bun x turbo run build --filter=glob^...");
+    assert.strictEqual(
+      foldFixesFor("packages/foundation/modeling/glob").TS6305,
+      "bun x turbo run build --filter=./packages/foundation/modeling/glob^..."
+    );
   });
 
   it("paints every verdict word and every line kind", () => {

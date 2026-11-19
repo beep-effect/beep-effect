@@ -10,8 +10,8 @@
  */
 import { formatDuration } from "@beep/gate-report/Format";
 import { GateEvent } from "@beep/gate-report/GateEvent";
-import { GateReport } from "@beep/gate-report/GateReport";
-import { DurationMs } from "@beep/gate-report/Scalars";
+import { GateReport, Totals } from "@beep/gate-report/GateReport";
+import { DurationMs, Text } from "@beep/gate-report/Scalars";
 import { $RepoGateRunId } from "@beep/identity/packages";
 import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
 import * as A from "effect/Array";
@@ -21,9 +21,10 @@ import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
-import { flow, pipe } from "effect/Function";
+import { constant, dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { WORKSPACE_SUBJECT } from "./ConsoleDefaults.ts";
@@ -58,7 +59,9 @@ export const DEFAULT_RECORD_DEADLINE_MS = 10_000;
  * One finished tool run to report: whose record, what the run produced, the
  * exit code the tool returned, how long to wait for the record and log
  * writes (10 s by default) and how long to wait for history (250 ms by
- * default).
+ * default). `subject` is the package name, which the caller
+ * knows; it states the run when the events do not, and without it a package
+ * run is stated by its directory.
  *
  * **Example** (Describe a finished run)
  *
@@ -85,6 +88,7 @@ export class GateRunRequest extends S.Opaque<GateRunRequest, { readonly brand: u
     exitCode: S.Int,
     historyDeadlineMs: DurationMs.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_HISTORY_DEADLINE_MS))),
     recordDeadlineMs: DurationMs.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_RECORD_DEADLINE_MS))),
+    subject: S.OptionFromOptionalKey(Text).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("GateRunRequest", {
       description:
@@ -130,52 +134,110 @@ export class GateRunResult extends S.Opaque<GateRunResult, { readonly brand: uni
   )
 ) {}
 
-const subjectOf: (target: RecordTarget) => string = RecordTarget.match({
-  PackageTarget: (target) => target.packageDir,
-  RootTarget: () => WORKSPACE_SUBJECT,
-});
+const subjectOf = (request: GateRunRequest): string =>
+  O.getOrElse(
+    request.subject,
+    RecordTarget.match(request.target, {
+      PackageTarget: (target) => constant(target.packageDir),
+      RootTarget: () => constant(WORKSPACE_SUBJECT),
+    })
+  );
 
 const runIdOf: (target: RecordTarget) => string = RecordTarget.match({
   PackageTarget: () => "unrecorded",
   RootTarget: (target) => target.runId,
 });
 
-// Events that do not describe a whole run still get a console: a missing start is stated from the
-// target, and a missing end is an errored finish carrying the tool's exit code. A whole run is
-// left as it is.
+// What a run states about itself when its events do not: taken from the request.
+const statedRun = (request: GateRunRequest, startedAt: DateTime.Utc) => ({
+  runId: runIdOf(request.target),
+  gate: request.target.gate,
+  subject: subjectOf(request),
+  itemKind: "step" as const,
+  startedAt,
+  inputFingerprint: "unrecorded",
+});
+
+/**
+ * The least report a gate run can render: errored, with no unit or item,
+ * stated from the request's target, subject and run id.
+ *
+ * **Details**
+ *
+ * The run entry falls back to it when a run's events, even completed, do not
+ * reduce, so a console prints whatever the events held.
+ *
+ * **Example** (State a report from the request)
+ *
+ * ```ts
+ * import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
+ * import { RunSource } from "@beep/repo-gate-run/GateRecorder";
+ * import { GateRunRequest, fallbackReport } from "@beep/repo-gate-run/GateRun";
+ * import * as DateTime from "effect/DateTime";
+ *
+ * const request = GateRunRequest.make({
+ *   target: RecordTarget.cases.PackageTarget.make({ packageDir: "packages/glob", gate: "test" }),
+ *   source: RunSource.cases.RunEvents.make({ events: [] }),
+ *   exitCode: 1,
+ * });
+ * console.log(fallbackReport(request, DateTime.makeUnsafe(0)).reason); // errored
+ * ```
+ *
+ * @param request - the finished run whose events did not reduce
+ * @param startedAt - when the entry settled the run, the report's start
+ * @returns an errored report with no item, of the request's gate and subject
+ * @category constructors
+ * @since 0.0.0
+ */
+export const fallbackReport: {
+  (request: GateRunRequest, startedAt: DateTime.Utc): GateReport;
+  (startedAt: DateTime.Utc): (request: GateRunRequest) => GateReport;
+} = dual(
+  2,
+  (request: GateRunRequest, startedAt: DateTime.Utc): GateReport =>
+    GateReport.make({
+      ...statedRun(request, startedAt),
+      durationMs: 0,
+      reason: "errored",
+      outcome: "some-fail",
+      units: [],
+      items: [],
+      totals: Totals.make({}),
+    })
+);
+
+const isEnd = (event: GateEvent): boolean =>
+  GateEvent.guards.RunFinished(event) || GateEvent.guards.RunCancelled(event);
+
+// The reducer resets on every `RunStarted`, so only the events from the last start describe the
+// run: a missing start is stated from the request, and a run with no end after its last start
+// (a rerun cut off when the tool exited) gets an errored finish carrying the tool's exit code.
 const completeEvents = (
   request: GateRunRequest,
   events: ReadonlyArray<GateEvent>,
   startedAt: DateTime.Utc
-): ReadonlyArray<GateEvent> => [
-  ...(A.some(events, GateEvent.guards.RunStarted)
-    ? []
-    : [
-        GateEvent.cases.RunStarted.make({
-          runId: runIdOf(request.target),
-          gate: request.target.gate,
-          subject: subjectOf(request.target),
-          itemKind: "step",
-          startedAt,
-          inputFingerprint: "unrecorded",
-        }),
-      ]),
-  ...events,
-  ...(A.some(events, (event) => GateEvent.guards.RunFinished(event) || GateEvent.guards.RunCancelled(event))
-    ? []
-    : [GateEvent.cases.RunFinished.make({ durationMs: 0, reason: "errored", exitCode: O.some(request.exitCode) })]),
-];
+): ReadonlyArray<GateEvent> => {
+  const lastStart = A.findLastIndex(events, GateEvent.guards.RunStarted);
+  const lastRun = O.match(lastStart, { onNone: () => events, onSome: (index) => A.drop(events, index) });
+  return [
+    ...(O.isSome(lastStart) ? [] : [GateEvent.cases.RunStarted.make(statedRun(request, startedAt))]),
+    ...events,
+    ...(A.some(lastRun, isEnd)
+      ? []
+      : [GateEvent.cases.RunFinished.make({ durationMs: 0, reason: "errored", exitCode: O.some(request.exitCode) })]),
+  ];
+};
 
 // The record step failed, hung or died: settle the report here, with no excerpt, and name the
-// record and log as unavailable: a write may have landed, but nothing confirmed it. The completed events always reduce, so the console always has a
-// report.
+// record and log as unavailable: a write may have landed, but nothing confirmed it. Completed
+// events reduce; should they not, the fallback report still gives the console a verdict.
 const unrecorded = Effect.fnUntraced(function* (request: GateRunRequest, reason: string) {
   const startedAt = yield* DateTime.now;
   const source = RunSource.match(request.source, {
     RunEvents: (run) => RunSource.cases.RunEvents.make({ events: completeEvents(request, run.events, startedAt) }),
     FinishedReport: (finished) => finished,
   });
-  const report = yield* settleSource(source, O.none()).pipe(Effect.fromResult, Effect.orDie);
+  const report = Result.getOrElse(settleSource(source, O.none()), constant(fallbackReport(request, startedAt)));
   return Recorded.make({
     report,
     omissions: [Omission.make({ part: "record", reason }), Omission.make({ part: "log", reason })],
@@ -240,7 +302,8 @@ const readHistory = (history: GateHistoryShape, report: GateReport, deadlineMs: 
         onSome: (answer): HistoryRead => ({ answer, omission: O.none() }),
       })
     ),
-    Effect.catchTag("HistoryReadError", (error) => Effect.succeed(withoutHistory(error.message)))
+    // A history failure or a defect alike leaves the console without labels and delta.
+    Effect.catchCause(flow(causeReason, withoutHistory, Effect.succeed))
   );
 
 /**
@@ -254,8 +317,12 @@ const readHistory = (history: GateHistoryShape, report: GateReport, deadlineMs: 
  * the deadline passing) the report is settled here instead and the console
  * names the record and log as not written; the path line only ever names
  * files the recorder confirmed. Events missing their start or end are
- * completed from the target and the tool's exit code, so they render as an
- * errored run. History is read only after the report is settled and is given
+ * completed from the request (its subject, else the package directory) and
+ * the tool's exit code, and only the events after the last `RunStarted`
+ * count, so a rerun cut off by the tool's exit renders as an errored run; if
+ * completed events still do not reduce, {@link fallbackReport} is rendered.
+ * A history failure or defect, or a late answer, renders without labels and
+ * delta. History is read only after the report is settled and is given
  * its own deadline: a late or failed read renders without labels and delta
  * and adds one line saying so. The console is printed with one
  * `Console.log`, always, and the exit code returned is the tool's, whatever
