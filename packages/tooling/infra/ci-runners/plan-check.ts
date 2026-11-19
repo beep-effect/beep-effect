@@ -37,7 +37,7 @@ import {
   checkEnginePlan,
   newSecretSalt,
   PlanExpectation,
-  planRowLine,
+  planDigestLines,
   planRowsDigest,
   readEnginePlan,
   readSourceTree,
@@ -45,7 +45,7 @@ import {
 } from "./src/CheckedDeploy.ts";
 import { placeholderCredentials, requireSigningAppKey, stageCredentials } from "./src/Credentials.ts";
 import { checkPlan, mustEscalate, PlanViolation, readPlanLog } from "./src/PlanCheck.ts";
-import type { CheckedPlan, CheckedResource, PlanDigestMismatch, PlanDrift } from "./src/CheckedDeploy.ts";
+import type { CheckedPlan, PlanDigestMismatch, PlanDrift } from "./src/CheckedDeploy.ts";
 import type { PlannedResource, PlanRefused } from "./src/PlanCheck.ts";
 
 const listResource = (resource: PlannedResource) =>
@@ -59,8 +59,6 @@ const listResource = (resource: PlannedResource) =>
       " | "
     )
   );
-
-const listChecked = (resource: CheckedResource) => Console.log(planRowLine(resource));
 
 const explain = PlanViolation.match({
   DestructiveAction: (v) => `${v.fqn}: ${v.action} is never deployed by this job`,
@@ -153,7 +151,8 @@ const planStage = Effect.fn("CiRunners.planStage")(function* (input: {
     Effect.tapError((unbound) => Console.error(`REFUSED ${unbound.reason}`))
   );
   const checked = yield* readEnginePlan({ stage: stageName, plan: snapshot.native, salt, expectation, sourceTree });
-  yield* Effect.forEach(checked.resources, listChecked, { concurrency: 1, discard: true });
+  // Exactly the lines the digest hashes, in hashed order (stack actions included), so the log rebuilds it.
+  yield* Effect.forEach(planDigestLines(checked), (line) => Console.log(line), { concurrency: 1, discard: true });
   // Rows only (FQN, action, binding actions, changed property names): no property value, secret or salt, so it is
   // stable across runs.
   // Printed before the check, so a refused plan is still read whole with its digest.

@@ -10,6 +10,7 @@ import {
   inferredCodeChange,
   newSecretSalt,
   planDifferences,
+  planDigestLines,
   planRowLine,
   planRowsDigest,
   readEnginePlan,
@@ -640,7 +641,7 @@ describe("CiRunners plan-row changed properties", () => {
 
   it.effect("lists no key from the incomplete checkpoint of a stopped create a replace rebuilds", () =>
     Effect.gen(function* () {
-      const replaceOf = (state: unknown) =>
+      const replaceOf = (state: unknown, node: Partial<Parameters<typeof engineNode>[1]> = {}) =>
         enginePlan({
           Source: engineNode("Runners/Source", {
             action: "replace",
@@ -648,16 +649,86 @@ describe("CiRunners plan-row changed properties", () => {
             deleteFirst: false,
             props: { functionName: "scale-up", eventSourceArn: "arn:aws:sqs:us-east-1:000000000000:q", batchSize: 10 },
             state,
+            ...node,
           }),
         });
-      const checkpoint = { status: "creating", props: { batchSize: 10 }, attr: { uuid: "0000" } };
-      const incomplete = yield* rowOf(replaceOf({ ...checkpoint, propsIncomplete: true }));
-      expect(incomplete).toStrictEqual([
-        [["(incomplete checkpoint)"], "[Runners/Source] replace | changes (incomplete checkpoint)"],
+      // Alchemy marks a checkpoint incomplete only while it has no outputs (Apply, propsIncomplete).
+      const incomplete = { status: "creating", props: { batchSize: 10 }, propsIncomplete: true };
+      // The mapping step 1a resumes is a resumed create and lists nothing.
+      const resumed = yield* rowOf(replaceOf(incomplete));
+      expect(resumed).toStrictEqual([[[], "[Runners/Source] resumed create (replace of an empty generation)"]]);
+      // The same checkpoint on a replace that is not that resume: delete-first, or another type.
+      const noted = yield* Effect.forEach(
+        [replaceOf(incomplete, { deleteFirst: true }), replaceOf(incomplete, { type: "AWS.SQS.Queue" })],
+        rowOf,
+        { concurrency: 1 }
+      );
+      expect(noted).toStrictEqual([
+        [[["(incomplete checkpoint)"], "[Runners/Source] replace | changes (incomplete checkpoint)"]],
+        [[["(incomplete checkpoint)"], "[Runners/Source] replace | changes (incomplete checkpoint)"]],
       ]);
-      const complete = yield* rowOf(replaceOf(checkpoint));
+      // A stopped create with outputs is never marked incomplete, so its keys are compared.
+      const complete = yield* rowOf(
+        replaceOf({ status: "creating", props: { batchSize: 10 }, attr: { uuid: "0000" } })
+      );
       expect(A.map(complete, ([changed]) => changed)).toStrictEqual([["eventSourceArn", "functionName"]]);
     })
+  );
+
+  it.effect("reads a replace from a replaced or updating state against the props the docs name", () =>
+    Effect.gen(function* () {
+      const next = { name: "flow", cidr: "10.1.0.0/16", retention: 30 };
+      const replaceFrom = (state: unknown) => rowOf(single({ action: "replace", props: next, state }));
+      // A replaced row is read against the replacement generation's props, not the old generation's.
+      const replaced = yield* replaceFrom({
+        status: "replaced",
+        props: { name: "flow", cidr: "10.0.0.0/16", retention: 30 },
+        old: { status: "created", props: { name: "old", cidr: "10.9.0.0/16", retention: 7 } },
+      });
+      expect(replaced).toStrictEqual([[["cidr"], "[Vpc] replace | changes cidr"]]);
+      // An interrupted update is read against the props it last applied, kept under `old`.
+      const updating = yield* replaceFrom({
+        status: "updating",
+        props: next,
+        old: { status: "created", props: { name: "flow", cidr: "10.0.0.0/16", retention: 7 } },
+      });
+      expect(updating).toStrictEqual([[["cidr", "retention"], "[Vpc] replace | changes cidr | changes retention"]]);
+    })
+  );
+
+  it.effect("infers a code change from a function last updated, the state every function is in after a deploy", () =>
+    Effect.gen(function* () {
+      const props = { functionName: "beep-fleet-prod-webhook", env: { CONFIG: "{}" } };
+      const settled = { status: "updated", props, old: { status: "created", props: { functionName: "older" } } };
+      const rows = yield* rowOf(webhookWith(props, settled));
+      expect(rows).toStrictEqual([
+        [[inferredCodeChange], `[Runners/Webhook] update | ${noopBinding} | changes code (bundle hash, inferred)`],
+      ]);
+      const changed = yield* rowOf(webhookWith({ ...props, timeout: 30 }, settled));
+      expect(A.map(changed, ([names]) => names)).toStrictEqual([["timeout"]]);
+    })
+  );
+
+  it.effect("hashes exactly the lines the plan step prints, stack actions included", () =>
+    Effect.gen(function* () {
+      const plan = CheckedPlan.make({
+        ...planWith(resource("Vpc", { action: "update", changedProperties: ["retention"] }), resource("Reaper")),
+        actions: [
+          CheckedAction.make({ fqn: "Seed", action: "run" }),
+          CheckedAction.make({ fqn: "Arm", action: "run" }),
+        ],
+      });
+      const lines = planDigestLines(plan);
+      expect(lines).toStrictEqual([
+        "[Reaper] create",
+        "[Vpc] update | changes retention",
+        "[Arm] action run",
+        "[Seed] action run",
+      ]);
+      const digest = yield* planRowsDigest(plan);
+      const rebuilt = yield* hexDigest.digestHex(Digest.sha256, new TextEncoder().encode(A.join(lines, "\n")));
+      expect(digest).toBe(rebuilt);
+    }).pipe(sha256)
   );
 
   it.effect("infers nothing for an update of another type that changes no declared property", () =>

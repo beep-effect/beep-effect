@@ -901,7 +901,10 @@ changed property and no binding change reads
 `changes code (bundle hash, inferred)`, because the plan does not carry the
 bundle hash; the inference assumes the plan was made without `--force`, which
 the plan step never passes. These names are part of the plan-rows digest and
-of the drift comparison. The job never runs `alchemy deploy`. If either
+of the drift comparison. The digest is over the printed lines: the plan step
+prints every resource row, sorted bytewise, then one `[fqn] action <verb>`
+line per stack action, sorted bytewise, and the digest is SHA-256 over those
+lines in that order, joined with a line feed and no trailing one. The job never runs `alchemy deploy`. If either
 step refuses, do not re-run or work around it: ask the CI goals driver through
 the orchestrator. A change that must replace or delete a resource is an
 operator-reviewed deploy, never the push job.

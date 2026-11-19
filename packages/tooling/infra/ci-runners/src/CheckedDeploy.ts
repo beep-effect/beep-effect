@@ -109,7 +109,12 @@ export type ResumeKind = typeof ResumeKind.Type;
  * is the replacement generation's.
  *
  * A key listed as `<name> (unresolved)` does not claim a change: its new value
- * holds an Output known only after apply, so the plan cannot compare it. Each
+ * holds an Output known only after apply, so the plan cannot compare it. It
+ * also appears for a property holding a whole resource that is itself updated
+ * in place, where Alchemy compared that resource's known values and found no
+ * change: this reading compares the declared props, not the materialised view
+ * the engine diffs, so it lists the key and withholds the inferred code label.
+ * Each
  * key is compared with Alchemy's generic comparison (`alchemy/Diff`
  * `havePropsChanged`), not a provider's own: the Lambda provider compares
  * `layers` and `functionUrl` normalised, so a layer named once by resource and
@@ -120,7 +125,10 @@ export type ResumeKind = typeof ResumeKind.Type;
  * (`(continues an interrupted update)`, `(finishes a pending replacement)`,
  * `(renamed from a former FQN)`, `(repairs drift)`) before any changed key, and
  * a replace of a stopped create whose checkpoint is incomplete reads
- * `(incomplete checkpoint)` alone. Only an update with none of those notes,
+ * `(incomplete checkpoint)` alone. Alchemy marks a checkpoint incomplete only
+ * while it has no recorded outputs, and the one such replace step 1a resumes
+ * (an event-source mapping, {@link ResumeKind}) prints as a resumed create
+ * with no changes; the note is what any other such replace prints. Only an update with none of those notes,
  * no changed key and no binding change, of a Lambda function, reads
  * {@link inferredCodeChange}. It defaults to empty, which every create, noop
  * and resumed row keeps.
@@ -993,8 +1001,41 @@ export const planRowLine = (resource: CheckedResource): string =>
   );
 
 /**
- * The plan-rows digest: SHA-256 over the sorted plan rows, one per line, the
- * resources' ({@link planRowLine}) and then the stack actions'.
+ * Every line the plan-rows digest hashes, in the order it hashes them: the
+ * resources' rows ({@link planRowLine}) sorted, then one
+ * `[fqn] action <verb>` line per stack action, sorted.
+ *
+ * **Details**
+ *
+ * The plan step prints exactly these lines in this order, so the digest can
+ * be rebuilt from the log: SHA-256 over the lines joined with a line feed and
+ * no trailing one. Each group is sorted by UTF-16 code unit, which for these
+ * ASCII lines is bytewise order.
+ *
+ * **Example** (A plan with one stack action)
+ *
+ * ```ts
+ * import { CheckedAction, CheckedPlan, planDigestLines } from "@beep/infra-ci-runners/CheckedDeploy"
+ *
+ * const plan = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [], actions: [CheckedAction.make({ fqn: "Seed", action: "run" })] })
+ * console.log(planDigestLines(plan)) // ["[Seed] action run"]
+ * ```
+ *
+ * @param plan - A checked plan.
+ * @returns The hashed lines, in hashed order.
+ * @category validation
+ * @since 0.0.0
+ */
+export const planDigestLines = (plan: CheckedPlan): ReadonlyArray<string> => [
+  ...A.sort(A.map(plan.resources, planRowLine), Order.String),
+  ...A.sort(
+    A.map(plan.actions, (action) => `[${action.fqn}] action ${action.action}`),
+    Order.String
+  ),
+];
+
+/**
+ * The plan-rows digest: SHA-256 over {@link planDigestLines}, one per line.
  *
  * **Details**
  *
@@ -1022,14 +1063,7 @@ export const planRowLine = (resource: CheckedResource): string =>
  */
 export const planRowsDigest = Effect.fn("CiRunners.planRowsDigest")(function* (plan: CheckedPlan) {
   const digest = yield* Digest.Digest;
-  const rows = [
-    ...A.sort(A.map(plan.resources, planRowLine), Order.String),
-    ...A.sort(
-      A.map(plan.actions, (action) => `[${action.fqn}] action ${action.action}`),
-      Order.String
-    ),
-  ];
-  return yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(A.join(rows, "\n")));
+  return yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(A.join(planDigestLines(plan), "\n")));
 });
 
 /**
