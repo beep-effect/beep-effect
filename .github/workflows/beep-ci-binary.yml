@@ -255,13 +255,16 @@ jobs:
       # Once a bump merges, the pin equals the newest release, and a skipped
       # closure or a byte-identical re-record cuts no new release, so neither
       # opens anything. Nothing runs on a verify_reproducible dispatch or off the
-      # default branch. The rewrite is the tested `beep ci binary-pin` command;
-      # the pull request is opened by the knowledge-mint App (its token is
-      # minted in the step right before the pull-request step and used there
-      # only), because a pull request opened with github.token starts no
-      # workflows and could never pass its own Check. The App needs no
-      # `workflows` permission: the pin is a composite action, not a workflow
-      # file. The pull request is never auto-merged.
+      # default branch. The rewrite is the tested `beep ci binary-pin` command,
+      # and keeping an open pin-bump branch mergeable with main is the tested
+      # `beep ci binary-pin-sync` command. The pull request is opened, and a
+      # merge of main is pushed, by the knowledge-mint App (its token is minted
+      # in the step right before those steps and used there only), because a
+      # pull request or push made with github.token starts no workflows and
+      # could never pass its own Check. The App has no `workflows` permission:
+      # the pin is a composite action, not a workflow file, but a merge of main
+      # that changes a workflow file cannot be pushed (see the push step). The
+      # pull request is never auto-merged.
       - name: Rewrite the pin to the newest release
         id: pin
         if: >-
@@ -275,21 +278,34 @@ jobs:
           DEFAULT_BRANCH: ${{ github.event.repository.default_branch }}
         run: |
           set -euo pipefail
-          tag="$(gh release list --limit 100 --json tagName,createdAt \
-            --jq '[.[] | select(.tagName | startswith("beep-ci-"))] | sort_by(.createdAt) | last | .tagName // ""')"
+          releases="${RUNNER_TEMP}/beep-ci-releases.json"
+          gh release list --limit 100 --json tagName,createdAt \
+            --jq '[.[] | select(.tagName | startswith("beep-ci-"))]' > "$releases"
+          tag="$(jq -r 'sort_by(.createdAt) | last | .tagName // ""' "$releases")"
           if [[ -z "$tag" ]]; then
             echo "changed=false" >> "$GITHUB_OUTPUT"
             echo "No beep-ci-* release exists; nothing to pin."
             exit 0
           fi
-          newest="${RUNNER_TEMP}/newest-release"
-          gh release download "$tag" --pattern beep-linux-x64.sha256 --dir "$newest" --clobber
-          sha256="$(cut -d' ' -f1 "$newest/beep-linux-x64.sha256")"
-          digest="none recorded"
-          if gh release download "$tag" --pattern beep-linux-x64.closure.json --dir "$newest" --clobber >/dev/null 2>&1; then
-            digest="$(jq -r .digest "$newest/beep-linux-x64.closure.json")"
+          # Two releases created at the same instant have no order: fail closed
+          # instead of picking one.
+          newest_count="$(jq '(map(.createdAt) | max) as $at | [.[] | select(.createdAt == $at)] | length' "$releases")"
+          if [[ "$newest_count" -gt 1 ]]; then
+            echo "::error::Beep CI pin bump: ${newest_count} beep-ci-* releases share the newest creation time, so the newest release is ambiguous; nothing was pinned."
+            exit 1
           fi
-          target="$(gh release view "$tag" --json targetCommitish --jq .targetCommitish)"
+          # The sha256 always comes from the release asset, never from a branch.
+          release_facts() {
+            local dir="${RUNNER_TEMP}/release-$1"
+            gh release download "$1" --pattern beep-linux-x64.sha256 --dir "$dir" --clobber
+            sha256="$(cut -d' ' -f1 "$dir/beep-linux-x64.sha256")"
+            digest="none recorded"
+            if gh release download "$1" --pattern beep-linux-x64.closure.json --dir "$dir" --clobber >/dev/null 2>&1; then
+              digest="$(jq -r .digest "$dir/beep-linux-x64.closure.json")"
+            fi
+            target="$(gh release view "$1" --json targetCommitish --jq .targetCommitish)"
+          }
+          release_facts "$tag"
           bun run beep ci binary-pin --tag "$tag" --sha256 "$sha256" --write
           # Decide only from state actually read: a failed lookup fails the step
           # (no push, no pull request) instead of reading as "nothing there".
@@ -328,46 +344,170 @@ jobs:
             if pins_release "$pin_text"; then changed=false; fi
           fi
           # The newest release T is read from state, in this order (#3299 review):
-          # - a CLOSED, unmerged pin-bump pull request titled for T: the bump was
-          #   declined on purpose, so it stays parked (no push, no reopen) until a
-          #   newer release, which is a new bump;
-          # - the branch pins T's tag and sha256 AND an open pull request titled
-          #   for T carries ready-for-heavy: done, no push and no edit, so a main
-          #   push alone never restarts that pull request's heavy Check
-          #   (create-pull-request resets an existing branch whenever main moved);
-          # - anything else (no branch, a stale branch, no pull request because
-          #   creation failed after the push, a missing label, a re-run after a
-          #   failed pull-request step): run the pull-request step, which opens or
+          # - a CLOSED, unmerged pin-bump pull request titled for T that a person
+          #   closed (no `superseded` label): the bump was declined on purpose, so
+          #   it stays parked (no push, no reopen) until a newer release, which is
+          #   a new bump. One this workflow closed as `superseded` does not park;
+          # - the branch exists (whether or not its pin parses): `beep ci
+          #   binary-pin-sync` decides from the branch head; an unparseable pin is
+          #   stale. It never moves a pin backwards (an
+          #   older or unlisted branch tag never reads as newer; an unlisted one
+          #   fails). `current`: nothing to do. `merged`: main merged in with the
+          #   pin file resolved to main's text and only the two pinned lines set;
+          #   the push step pushes it without force, so the pull request keeps its
+          #   number and review history. `supersede`: the merge, or the
+          #   create-pull-request update of a stale branch, would carry workflow
+          #   files, which the pin-bump App (no `workflows` permission) cannot push
+          #   onto an existing branch, and the branch holds only the pin: the pull
+          #   request is labelled `superseded`, its branch deleted, and the
+          #   pull-request step opens a fresh one from main with the branch's pin
+          #   (the newest release, for a stale branch). `blocked`: the sync cannot
+          #   heal the branch (for a stale one, the reason names the newer release
+          #   that is waiting); it is reported once on the pull request and as a
+          #   warning, and the job stays green. `stale`: a newer release whose
+          #   update carries no workflow file, which the pull-request step bumps;
+          # - anything else (no branch, a pull request missing or unlabelled
+          #   because creation failed after the push, a re-run after a failed
+          #   pull-request step): run the pull-request step, which opens or
           #   repairs the pull request and its label.
           # Only pull requests from this repository into the default branch count:
           # a fork can use the same branch name and title (this repository is
           # public), and --head matches by branch name alone.
           bump=false
           parked=false
+          push=false
+          supersede=false
+          report=false
+          relabel=false
+          missing_pr=false
+          sync="none"
+          reason=""
+          branch_tag=""
+          branch_pull=""
+          branch_head=""
+          worktree="${RUNNER_TEMP}/pin-bump-branch"
           if [[ "$changed" == "true" ]]; then
             title="ci: bump the beep CI binary pin to ${tag}"
             pulls="$(gh pr list --head "$PIN_BRANCH" --base "$DEFAULT_BRANCH" --state all --limit 1000 \
               --json number,state,title,labels,isCrossRepository,baseRefName)" \
               || lookup_failed "the pin-bump pull request lookup"
             own='.[] | select(.isCrossRepository == false and .baseRefName == $base and .title == $title)'
+            labelled='select(.state == "OPEN" and any(.labels[]; .name == "ready-for-heavy"))'
+            declined='select(.state == "CLOSED" and (any(.labels[]; .name == "superseded") | not))'
             closed="$(jq --arg title "$title" --arg base "$DEFAULT_BRANCH" \
-              "[${own} | select(.state == \"CLOSED\")] | length" <<<"$pulls")"
-            open_labelled="$(jq --arg title "$title" --arg base "$DEFAULT_BRANCH" \
-              "[${own} | select(.state == \"OPEN\" and any(.labels[]; .name == \"ready-for-heavy\"))] | length" \
-              <<<"$pulls")"
+              "[${own} | ${declined}] | length" <<<"$pulls")"
             read_pin "$PIN_BRANCH" "the pin-bump branch read" allow-missing
-            branch_current=false
-            if pins_release "$pin_text"; then branch_current=true; fi
+            # Whether the bot branch exists is read from its ref: a missing or empty pin
+            # file on an existing branch reads as an empty pin_text too, and that branch
+            # still goes through the sync (as an unparseable pin), never a blind reset.
+            branch_exists=true
+            if ! gh api "repos/${GH_REPO}/git/ref/heads/${PIN_BRANCH}" --jq .object.sha >/dev/null 2>"$read_error"; then
+              if grep -q "HTTP 404" "$read_error"; then
+                branch_exists=false
+              else
+                cat "$read_error" >&2
+                lookup_failed "the pin-bump branch ref lookup"
+              fi
+            fi
+            branch_tag="$(grep -E '^[[:space:]]*BEEP_CI_RELEASE_TAG:[[:space:]]*beep-ci-[0-9a-f]{12}[[:space:]]*$' <<<"$pin_text" \
+              | grep -Eo 'beep-ci-[0-9a-f]{12}' | head -n 1 || true)"
+            branch_open_labelled=0
+            if [[ -n "$branch_tag" ]]; then
+              branch_title="ci: bump the beep CI binary pin to ${branch_tag}"
+              branch_open_labelled="$(jq --arg title "$branch_title" --arg base "$DEFAULT_BRANCH" \
+                "[${own} | ${labelled}] | length" <<<"$pulls")"
+            fi
+            # The open pull request on the bot branch, whatever its title (the branch's
+            # pin may not parse), is the one a supersede closes or a report comments on.
+            branch_pull="$(jq -r --arg base "$DEFAULT_BRANCH" \
+              '[.[] | select(.isCrossRepository == false and .baseRefName == $base and .state == "OPEN")] | first | .number // ""' \
+              <<<"$pulls")"
             if [[ "$closed" -ge 1 ]]; then
               parked=true
-            elif [[ "$branch_current" != "true" || "$open_labelled" -lt 1 ]]; then
+            elif [[ "$branch_exists" != "true" ]]; then
+              # No bot branch: the pull-request step creates it from main.
               bump=true
+            else
+              # The checkout is shallow; a merge needs both histories.
+              git fetch --no-tags --unshallow origin \
+                "+refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}" \
+                "+refs/heads/${PIN_BRANCH}:refs/remotes/origin/${PIN_BRANCH}"
+              branch_head="$(git rev-parse "refs/remotes/origin/${PIN_BRANCH}")"
+              git worktree add --detach "$worktree" "$branch_head"
+              git -C "$worktree" config user.name "beep-ci-pin-bump"
+              git -C "$worktree" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git -C "$worktree" config pull.rebase false
+              sync_output="${RUNNER_TEMP}/pin-sync.out"
+              # The base is this run's own main commit (the checkout create-pull-request
+              # builds from), not the fetched tip, so a supersede and its replacement
+              # are decided against the same main.
+              bun run beep ci binary-pin-sync --cwd "$worktree" --base "$GITHUB_SHA" \
+                --tag "$tag" --sha256 "$sha256" --releases "$releases" --output "$sync_output"
+              sync="$(grep -m 1 '^outcome=' "$sync_output" | cut -d = -f 2 || true)"
+              kept_tag="$(grep -m 1 '^tag=' "$sync_output" | cut -d = -f 2 || true)"
+              reason="$(grep -m 1 '^reason=' "$sync_output" | cut -d = -f 2- || true)"
+              pin_only="$(grep -m 1 '^pin_only=' "$sync_output" | cut -d = -f 2 || true)"
+              case "$sync" in
+                stale) bump=true ;;
+                current | merged)
+                  # Decide from the pin the sync read at the checked head (kept_tag), not
+                  # from the earlier contents read, which the branch may have moved past.
+                  kept_title="ci: bump the beep CI binary pin to ${kept_tag}"
+                  kept_labelled="$(jq --arg title "$kept_title" --arg base "$DEFAULT_BRANCH" \
+                    "[${own} | ${labelled}] | length" <<<"$pulls")"
+                  kept_open="$(jq -r --arg title "$kept_title" --arg base "$DEFAULT_BRANCH" \
+                    "[${own} | select(.state == \"OPEN\")] | first | .number // \"\"" <<<"$pulls")"
+                  if [[ "$sync" == "merged" ]]; then push=true; fi
+                  if [[ "$kept_labelled" -lt 1 && -n "$kept_open" ]]; then
+                    # The pull request is open but unlabelled: a metadata-only repair,
+                    # so the branch (and the merge pushed below) is kept as it is.
+                    relabel=true
+                    branch_pull="$kept_open"
+                  elif [[ "$kept_labelled" -lt 1 && "$kept_tag" == "$tag" && "$pin_only" == "true" ]]; then
+                    # No pull request for T: the pull-request step opens it. The branch holds
+                    # only the pin, so its rebuild from main loses nothing.
+                    bump=true
+                    push=false
+                  elif [[ "$kept_labelled" -lt 1 && "$kept_tag" == "$tag" ]]; then
+                    report=true
+                    missing_pr=true
+                    reason="the pin-bump pull request for ${tag} is missing and ${PIN_BRANCH} holds changes besides the pin, which opening it with create-pull-request would discard; open the pull request by hand"
+                    echo "::warning::Beep CI pin bump: ${reason}."
+                  fi
+                  ;;
+                supersede)
+                  supersede=true
+                  bump=true
+                  # A newer release the branch already held stays the pin; its
+                  # facts are read from that release, never from the branch.
+                  if [[ -n "$kept_tag" && "$kept_tag" != "$tag" ]]; then
+                    tag="$kept_tag"
+                    release_facts "$tag"
+                    bun run beep ci binary-pin --tag "$tag" --sha256 "$sha256" --write
+                  fi
+                  ;;
+                blocked)
+                  report=true
+                  echo "::warning::Beep CI pin bump: ${PIN_BRANCH} cannot be brought up to date with ${DEFAULT_BRANCH}: ${reason}. Bring it up to date by hand."
+                  ;;
+                *) echo "::error::beep ci binary-pin-sync reported no outcome."; exit 1 ;;
+              esac
             fi
           fi
           {
             echo "changed=$changed"
             echo "bump=$bump"
             echo "parked=$parked"
+            echo "push=$push"
+            echo "supersede=$supersede"
+            echo "report=$report"
+            echo "relabel=$relabel"
+            echo "missing_pr=$missing_pr"
+            echo "reason=$reason"
+            echo "pull=$branch_pull"
+            echo "branch_tag=$branch_tag"
+            echo "branch_head=$branch_head"
+            echo "worktree=$worktree"
             echo "tag=$tag"
             echo "sha256=$sha256"
             echo "digest=$digest"
@@ -376,7 +516,7 @@ jobs:
           {
             echo "### Beep CI binary pin"
             echo ""
-            echo "- newest release: \`$tag\` (sha256 \`$sha256\`, closure digest \`$digest\`, built from \`$target\`)"
+            echo "- pinned release: \`$tag\` (sha256 \`$sha256\`, closure digest \`$digest\`, built from \`$target\`)"
             if [[ "$changed" != "true" ]]; then
               echo "- main already pins it (checked against live \`$DEFAULT_BRANCH\`): no pin-bump pull request."
               exit 0
@@ -385,9 +525,31 @@ jobs:
               echo "- main pins an older release, and a pin-bump pull request for \`$tag\` was closed unmerged: parked until a newer release; no push, no reopen."
               exit 0
             fi
-            if [[ "$bump" != "true" ]]; then
-              echo "- main pins an older release, and \`$PIN_BRANCH\` already pins \`$tag\` and its sha256 with an open \`ready-for-heavy\` pull request: no push, no pull-request edit."
+            if [[ "$report" == "true" && "$push" == "true" ]]; then
+              echo "- \`$PIN_BRANCH\`: ${reason}. Main was merged in, and the push step below pushes that merge without force; only the step above needs a hand, and it is reported once."
               exit 0
+            fi
+            if [[ "$report" == "true" && "$missing_pr" == "true" ]]; then
+              echo "- \`$PIN_BRANCH\` (pinning \`$kept_tag\`) is current with \`$DEFAULT_BRANCH\`; nothing was pushed: ${reason}. That is the only step that needs a hand, and it is reported once."
+              exit 0
+            fi
+            if [[ "$report" == "true" ]]; then
+              echo "- \`$PIN_BRANCH\` (pinning \`$branch_tag\`) cannot be brought up to date with \`$DEFAULT_BRANCH\`: ${reason}. Nothing was pushed; it is reported once on the pin-bump pull request. Bring it up to date by hand."
+              exit 0
+            fi
+            if [[ "$relabel" == "true" ]]; then
+              echo "- the pin-bump pull request #${branch_pull} for \`$kept_tag\` lost \`ready-for-heavy\`: the label is restored without rewriting \`$PIN_BRANCH\`."
+            fi
+            if [[ "$push" == "true" ]]; then
+              echo "- \`$PIN_BRANCH\` (pinning \`$branch_tag\`) was behind \`$DEFAULT_BRANCH\` or in conflict with it: \`beep ci binary-pin-sync\` merged \`$DEFAULT_BRANCH\` in; the push step below pushes it."
+              exit 0
+            fi
+            if [[ "$bump" != "true" ]]; then
+              echo "- main pins an older release, and \`$PIN_BRANCH\` already pins \`$branch_tag\` and contains \`$DEFAULT_BRANCH\` (sync: \`$sync\`): no push, no pull-request edit."
+              exit 0
+            fi
+            if [[ "$supersede" == "true" ]]; then
+              echo "- bringing \`$PIN_BRANCH\` up to date with \`$DEFAULT_BRANCH\` would carry workflow files, which the pin-bump App cannot push onto an existing branch, and the branch holds only the pin: the open pull request is closed as \`superseded\` and a fresh one is opened for \`$tag\`."
             fi
             echo "- main pins an older release: open or update the pin-bump pull request on \`$PIN_BRANCH\`."
             echo ""
@@ -404,7 +566,10 @@ jobs:
       # Fail closed: without the App credential the only token left is
       # github.token, whose pull request would start no Check run.
       - name: Check the pin-bump App credential
-        if: steps.pin.outputs.bump == 'true'
+        if: >-
+          steps.pin.outputs.bump == 'true' || steps.pin.outputs.push == 'true'
+          || steps.pin.outputs.supersede == 'true' || steps.pin.outputs.report == 'true'
+          || steps.pin.outputs.relabel == 'true'
         shell: bash
         env:
           APP_CLIENT_ID: ${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}
@@ -419,7 +584,10 @@ jobs:
 
       - name: Create pin-bump App token
         id: app-token
-        if: steps.pin.outputs.bump == 'true'
+        if: >-
+          steps.pin.outputs.bump == 'true' || steps.pin.outputs.push == 'true'
+          || steps.pin.outputs.supersede == 'true' || steps.pin.outputs.report == 'true'
+          || steps.pin.outputs.relabel == 'true'
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}
@@ -429,12 +597,129 @@ jobs:
           # create-pull-request applies `ready-for-heavy` through the Issues labels API.
           permission-issues: write
 
+      # `supersede`: the pin step found that merging main into the branch, or
+      # updating a stale branch to main, would carry workflow files (the App
+      # has no `workflows` permission, so it cannot push them onto the existing
+      # branch) and that the branch holds only the pin. Label the
+      # open pull request `superseded` (a closed `superseded` pull request does
+      # not park its release), say why, and delete the branch, which closes the
+      # pull request; the pull-request step below then opens a fresh one from
+      # main. The branch is deleted by a lease-protected push (the one forced
+      # form this workflow allows), so only the head the sync checked is ever
+      # deleted, and a failed delete takes the label off again. `relabel`: the
+      # pull request for the branch's pin is open but lost `ready-for-heavy`;
+      # restore the label without rewriting the branch. `report`: the sync cannot
+      # heal the branch; comment once per branch head on the pull request (the pin
+      # step already wrote the warning and the summary), and keep the job green.
+      - name: Supersede or report on the pin-bump pull request
+        if: >-
+          steps.pin.outputs.supersede == 'true' || steps.pin.outputs.report == 'true'
+          || steps.pin.outputs.relabel == 'true'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
+          GH_REPO: ${{ github.repository }}
+          PIN_BRANCH: ci/beep-ci-pin-bump
+          PULL: ${{ steps.pin.outputs.pull }}
+          BRANCH_HEAD: ${{ steps.pin.outputs.branch_head }}
+          PIN_TAG: ${{ steps.pin.outputs.tag }}
+          REASON: ${{ steps.pin.outputs.reason }}
+          SUPERSEDE: ${{ steps.pin.outputs.supersede }}
+          RELABEL: ${{ steps.pin.outputs.relabel }}
+          MISSING_PR: ${{ steps.pin.outputs.missing_pr }}
+          PUSHED: ${{ steps.pin.outputs.push }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -euo pipefail
+          if [[ "$SUPERSEDE" == "true" ]]; then
+            if [[ ! "$BRANCH_HEAD" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "::error::The checked ${PIN_BRANCH} head '${BRANCH_HEAD}' is not a full sha; nothing was superseded."
+              exit 1
+            fi
+            live="$(gh api "repos/${GH_REPO}/git/ref/heads/${PIN_BRANCH}" --jq .object.sha)"
+            if [[ "$live" != "$BRANCH_HEAD" ]]; then
+              echo "::error::${PIN_BRANCH} moved from ${BRANCH_HEAD} to ${live} after the sync checked it; nothing was superseded. Re-run the job."
+              exit 1
+            fi
+            # Label first, so the close the deletion causes is never read as a person's decline. If
+            # the deletion fails, the label comes off again: a `superseded` label on a still-open pull
+            # request would otherwise stop a later manual close from parking the release.
+            if [[ -n "$PULL" ]]; then
+              gh api -X POST "repos/${GH_REPO}/issues/${PULL}/labels" -f 'labels[]=superseded' >/dev/null
+            fi
+            # A conditional delete: the server deletes the branch only while it still points at the
+            # head the sync checked, so a push after the check above is never deleted.
+            if ! git -c core.hooksPath=/dev/null push --force-with-lease="refs/heads/${PIN_BRANCH}:${BRANCH_HEAD}" \
+              "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" ":refs/heads/${PIN_BRANCH}"; then
+              if [[ -n "$PULL" ]]; then
+                gh api -X DELETE "repos/${GH_REPO}/issues/${PULL}/labels/superseded" >/dev/null || true
+              fi
+              echo "::error::Deleting ${PIN_BRANCH} at ${BRANCH_HEAD} failed (it may have moved); nothing was superseded. Re-run the job."
+              exit 1
+            fi
+            if [[ -n "$PULL" ]]; then
+              gh api -X POST "repos/${GH_REPO}/issues/${PULL}/comments" -f body="Superseded by [this run](${RUN_URL}): bringing \`${PIN_BRANCH}\` up to date with main would carry workflow-file changes, which the pin-bump App (no \`workflows\` permission) cannot push onto an existing branch. The branch held only the pin, so it is deleted and a fresh pin-bump pull request for \`${PIN_TAG}\` is opened from main." >/dev/null \
+                || echo "::warning::The superseded comment on #${PULL} failed; the branch is deleted and the fresh pull request still opens."
+            fi
+            echo "- superseded the pin-bump pull request ${PULL:+#${PULL} }and deleted \`${PIN_BRANCH}\`." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [[ "$RELABEL" == "true" ]]; then
+            gh api -X POST "repos/${GH_REPO}/issues/${PULL}/labels" -f 'labels[]=ready-for-heavy' >/dev/null
+            echo "- restored \`ready-for-heavy\` on #${PULL} without touching \`${PIN_BRANCH}\`." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [[ -z "$PULL" ]]; then
+            echo "- no open pin-bump pull request to comment on." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          marker="<!-- beep-ci-pin-sync blocked ${BRANCH_HEAD} -->"
+          seen="$(gh api --paginate "repos/${GH_REPO}/issues/${PULL}/comments" \
+            --jq "[.[] | select(.body | contains(\"${marker}\"))] | length" | jq -s add)"
+          if [[ "${seen:-0}" -ge 1 ]]; then
+            echo "- already reported on #${PULL} for \`${BRANCH_HEAD}\`." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          # Say what this run does: when the merge is pushed too, only the reported step needs a hand.
+          done_text="Nothing was pushed. Bring the branch up to date by hand"
+          if [[ "$PUSHED" == "true" ]]; then
+            done_text="This run merged main in and pushes that merge without force; only the step above needs a hand"
+          fi
+          if [[ "$MISSING_PR" == "true" && "$PUSHED" != "true" ]]; then
+            done_text="The branch is current with main and nothing was pushed; only the step above needs a hand"
+          fi
+          gh api -X POST "repos/${GH_REPO}/issues/${PULL}/comments" -f body="${marker}
+          The pin-bump workflow ([run](${RUN_URL})) reports for \`${PIN_BRANCH}\`: ${REASON}. ${done_text}; this is reported once per branch head." >/dev/null
+          echo "- reported on #${PULL}." >> "$GITHUB_STEP_SUMMARY"
+
+      # `merged`: the pin step merged main into the pin-bump branch (it was
+      # behind or in conflict, and the merge carries no workflow file). Push that
+      # merge with the same App token create-pull-request uses, so CI runs on the
+      # new head; never force, so the pull request keeps its number and review
+      # history. A branch that moved since the fetch makes this a
+      # non-fast-forward push, which fails. The token is used here only, on an
+      # explicit URL; it never enters git config.
+      - name: Push main merged into the pin-bump branch
+        if: steps.pin.outputs.push == 'true'
+        shell: bash
+        env:
+          PIN_BRANCH: ci/beep-ci-pin-bump
+          PUSH_TOKEN: ${{ steps.app-token.outputs.token }}
+          WORKTREE: ${{ steps.pin.outputs.worktree }}
+          BRANCH_TAG: ${{ steps.pin.outputs.branch_tag }}
+        run: |
+          set -euo pipefail
+          git -C "$WORKTREE" -c core.hooksPath=/dev/null push \
+            "https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${PIN_BRANCH}"
+          echo "- pushed main merged into \`${PIN_BRANCH}\` (pinning \`${BRANCH_TAG}\`) without force at \`$(git -C "$WORKTREE" rev-parse HEAD)\`; no pull-request edit." >> "$GITHUB_STEP_SUMMARY"
+
       # One fixed branch: this step runs only when the bump for the newest release
       # is neither done nor parked (see the pin step), so an open pin-bump pull
       # request is force-updated (and its title and body refreshed) by a newer
       # release or a repair only, never by a main push alone, and a second one is
-      # never opened. A pin-bump pull request closed unmerged parks that release
-      # until a newer one. The repo's lefthook hooks are for people.
+      # never opened. After a supersede the branch is gone, so this opens a fresh
+      # pull request from main. A pin-bump pull request a person closed unmerged
+      # parks that release until a newer one. The repo's lefthook hooks are for people.
       - name: Open or update the pin-bump pull request
         if: steps.pin.outputs.bump == 'true'
         env:

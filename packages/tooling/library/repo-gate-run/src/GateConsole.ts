@@ -10,7 +10,15 @@
  */
 import { Doc } from "@beep/cli-kit/Doc";
 import { Render } from "@beep/cli-kit/Render";
-import { ConsoleBudget, ConsoleEntry, PointerTable, RecordPaths, RunDelta } from "@beep/gate-report/ConsoleDocument";
+import {
+  CapLine,
+  ConsoleBudget,
+  ConsoleDocument,
+  ConsoleEntry,
+  PointerTable,
+  RecordPaths,
+  RunDelta,
+} from "@beep/gate-report/ConsoleDocument";
 import { ConsoleInput, dispatch } from "@beep/gate-report/Dispatch";
 import { formatDuration } from "@beep/gate-report/Format";
 import { GateReport } from "@beep/gate-report/GateReport";
@@ -33,7 +41,6 @@ import { ProjectionKind, projectionFor } from "./GateAudience.ts";
 import { Omission, omissionLines } from "./Omission.ts";
 import { repoPointerTable } from "./RepoPointers.ts";
 import type { TokenName } from "@beep/cli-kit/Token";
-import type { ConsoleDocument } from "@beep/gate-report/ConsoleDocument";
 
 const $I = $RepoGateRunId.create("GateConsole");
 
@@ -257,21 +264,45 @@ const fitNotice =
     return line.length <= budget.maxLineChars ? line : `${Str.takeLeft(line, budget.maxLineChars - 3)}...`;
   };
 
-const reserveFor = (budget: ConsoleBudget, notices: ReadonlyArray<string>): ConsoleBudget =>
-  pipe(
-    ConsoleBudget.makeOption({
-      ...budget,
-      maxChars: budget.maxChars - A.reduce(notices, 0, (total, notice) => total + notice.length + 1),
-    }),
-    O.getOrElse(() => budget)
-  );
+const sizeOf = (lines: ReadonlyArray<string>): number => A.reduce(lines, 0, (total, line) => total + line.length + 1);
+
+type Fit = { readonly document: ConsoleDocument; readonly budget: ConsoleBudget };
+
+// The body goes, the frame stays: a dispatched document carries no cap, so the cap counts the
+// failure entries and folds dropped here. The frame (two verdict lines, cap, delta, path and
+// pointer) and the two notices are eight lines, which every budget holds.
+const frameOnly = (document: ConsoleDocument): ConsoleDocument => {
+  const dropped = A.filter(document.entries, ConsoleEntry.guards.FailureEntry).length + document.folds.length;
+  return ConsoleDocument.make({
+    ...document,
+    entries: [],
+    folds: [],
+    cap: dropped > 0 ? CapLine.makeOption({ dropped }) : O.none(),
+  });
+};
+
+// The notices are never dropped: their lines, and the closing verdict a lone verdict line gains
+// beside them, are taken off the budget before the body is fitted. When the rest is too small to
+// be a budget, the body goes instead.
+const reservedFit = (document: ConsoleDocument, budget: ConsoleBudget, notices: ReadonlyArray<string>): Fit =>
+  A.isReadonlyArrayEmpty(notices)
+    ? { document, budget }
+    : pipe(
+        ConsoleBudget.makeOption({
+          ...budget,
+          maxChars: budget.maxChars - sizeOf(notices) - (budget.maxLineChars + 1),
+        }),
+        O.match({
+          onSome: (reserved): Fit => ({ document, budget: reserved }),
+          onNone: (): Fit => ({ document: frameOnly(document), budget }),
+        })
+      );
 
 type TonedLine = { readonly text: string; readonly tone: Tone };
 
 const consoleLines = (settings: ConsoleSettings, request: ConsoleRequest): ReadonlyArray<TonedLine> => {
   const notices = A.map(omissionLines(request.omissions), fitNotice(settings.budget));
-  const budget = reserveFor(settings.budget, notices);
-  const document = dispatch(
+  const dispatched = dispatch(
     ConsoleInput.make({
       report: request.report,
       pointers: O.getOrElse(request.pointers, () => settings.pointers),
@@ -280,6 +311,7 @@ const consoleLines = (settings: ConsoleSettings, request: ConsoleRequest): Reado
       delta: request.delta,
     })
   );
+  const { document, budget } = reservedFit(dispatched, settings.budget, notices);
   const lines = projectLines({ document, budget });
   const verdict: TonedLine = { text: lines[0] ?? "", tone: verdictTone(request.report.reason) };
   const body = A.zipWith(

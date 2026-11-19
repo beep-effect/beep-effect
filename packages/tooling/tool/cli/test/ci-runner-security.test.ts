@@ -473,6 +473,33 @@ const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: bool
   assert.strictEqual(inputs["app-secrets"], appSecrets ? "true" : undefined, jobId);
 };
 
+// The beep-ci-binary workflow's push allow-list: every `git push` in any of its run scripts must be exactly
+// one of these two commands (shell line continuations joined), so no forced form can hide in a variable,
+// a quoted `+` refspec, a bundled short flag or a second, unleased delete. The first is the plain merge
+// push; the second is the supersede step's conditional delete, a lease on the full ref at the checked
+// head (validated as a 40-character sha before it runs) with a delete refspec.
+const ALLOWED_PIN_PUSHES = [
+  'git -C "$WORKTREE" -c core.hooksPath=/dev/null push "https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${PIN_BRANCH}"',
+  'git -c core.hooksPath=/dev/null push --force-with-lease="refs/heads/${PIN_BRANCH}:${BRANCH_HEAD}" "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" ":refs/heads/${PIN_BRANCH}"',
+];
+
+const joinContinuations = Str.replace(/\s*\\\n\s*/gu, " ");
+
+const gitPushCommands = (script: string): ReadonlyArray<string> =>
+  A.map(A.fromIterable(Str.matchAll(/\bgit\s[^\n;|&]*?\bpush\b[^\n;|&]*/gu)(joinContinuations(script))), (match) =>
+    Str.trim(match[0])
+  );
+
+// Every push that is not on the allow-list, and every `gh api` call that writes a git ref (a ref rewrite
+// through the API can force just as a push can; the workflow only reads `git/ref/heads/...`).
+const pinPushViolations = (script: string): ReadonlyArray<string> => [
+  ...A.filter(gitPushCommands(script), (command) => !A.contains(ALLOWED_PIN_PUSHES, command)),
+  ...A.filter(
+    A.map(A.fromIterable(Str.matchAll(/\bgh\s+api\b[^\n]*/gu)(joinContinuations(script))), (match) => match[0]),
+    (call) => /git\/refs\b/u.test(call) || (/git\/ref\b/u.test(call) && /(-X|--method)\s*\w/u.test(call))
+  ),
+];
+
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (it) => {
   it.effect("requires a real apt-pruning command before refreshing package indexes", () =>
     Effect.sync(() => {
@@ -2484,6 +2511,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "Rewrite the pin to the newest release",
         "Check the pin-bump App credential",
         "Create pin-bump App token",
+        "Supersede or report on the pin-bump pull request",
+        "Push main merged into the pin-bump branch",
         "Open or update the pin-bump pull request",
       ];
       expect(A.map(A.drop(steps, publish + 1), (step) => step.name)).toEqual(pinSteps);
@@ -2498,15 +2527,25 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       for (const fragment of ["steps.publish", "steps.closure", "steps.bytes"]) {
         expect(pinStepText).not.toContain(fragment);
       }
-      for (const name of A.drop(pinSteps, 1)) {
-        expect(stepByName(steps, name).if).toBe("steps.pin.outputs.bump == 'true'");
+      // The App credential and token serve every writer: the pull-request step (bump), the push of a main
+      // merge (push), and the supersede or report step (supersede, report).
+      for (const name of ["Check the pin-bump App credential", "Create pin-bump App token"]) {
+        expect(stepByName(steps, name).if).toBe(
+          "steps.pin.outputs.bump == 'true' || steps.pin.outputs.push == 'true' || steps.pin.outputs.supersede == 'true' || steps.pin.outputs.report == 'true' || steps.pin.outputs.relabel == 'true'"
+        );
       }
+      expect(stepByName(steps, "Supersede or report on the pin-bump pull request").if).toBe(
+        "steps.pin.outputs.supersede == 'true' || steps.pin.outputs.report == 'true' || steps.pin.outputs.relabel == 'true'"
+      );
+      expect(stepByName(steps, "Push main merged into the pin-bump branch").if).toBe(
+        "steps.pin.outputs.push == 'true'"
+      );
+      expect(stepByName(steps, "Open or update the pin-bump pull request").if).toBe("steps.pin.outputs.bump == 'true'");
       // The newest release is chosen exactly as the closure comparison chooses it, the rewrite is the
       // tested command (not a text edit in shell), and the decision is whether it changed the pin.
       const rewrite = stepRun(steps, "Rewrite the pin to the newest release");
-      expect(rewrite).toContain(
-        `--jq '[.[] | select(.tagName | startswith("beep-ci-"))] | sort_by(.createdAt) | last | .tagName // ""'`
-      );
+      expect(rewrite).toContain(`--jq '[.[] | select(.tagName | startswith("beep-ci-"))]' > "$releases"`);
+      expect(rewrite).toContain(`jq -r 'sort_by(.createdAt) | last | .tagName // ""' "$releases"`);
       expect(stepRun(steps, "Compare the closure digest with the latest release")).toContain(
         `--jq '[.[] | select(.tagName | startswith("beep-ci-"))] | sort_by(.createdAt) | last | .tagName // ""'`
       );
@@ -2527,7 +2566,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "own='.[] | select(.isCrossRepository == false and .baseRefName == $base and .title == $title)'",
         'elif [[ "$3" == "allow-missing" ]] && grep -q "HTTP 404" "$read_error"; then',
         'read_pin "$PIN_BRANCH" "the pin-bump branch read" allow-missing',
-        'elif [[ "$branch_current" != "true" || "$open_labelled" -lt 1 ]]; then',
+        'bun run beep ci binary-pin-sync --cwd "$worktree" --base "$GITHUB_SHA"',
+        '--tag "$tag" --sha256 "$sha256" --releases "$releases" --output "$sync_output"',
+        'echo "push=$push"',
+        'echo "supersede=$supersede"',
+        'echo "report=$report"',
+        `declined='select(.state == "CLOSED" and (any(.labels[]; .name == "superseded") | not))'`,
         'echo "parked=$parked"',
       ]) {
         expect(rewrite).toContain(fragment);
@@ -2576,7 +2620,69 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       // The App token reaches the pull-request step alone; the private key reaches the mint alone.
       const tokenReaders = yield* stepsReferencing(jobs, "steps.app-token.outputs.token");
       const secretReaders = yield* stepsReferencing(jobs, "secrets.");
-      expect(tokenReaders).toEqual(["publish/Open or update the pin-bump pull request"]);
+      expect(tokenReaders).toEqual([
+        "publish/Supersede or report on the pin-bump pull request",
+        "publish/Push main merged into the pin-bump branch",
+        "publish/Open or update the pin-bump pull request",
+      ]);
+      // The merge push is a plain fast-forward push on an explicit URL: never forced, so the pull request
+      // keeps its number and review history, and the token never enters git config.
+      const push = stepRun(steps, "Push main merged into the pin-bump branch");
+      expect(push).toContain(
+        '"https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${PIN_BRANCH}"'
+      );
+      // The success line is written by the push step itself, after the push.
+      expect(push).toMatch(/HEAD:refs\/heads\/\$\{PIN_BRANCH\}"[\s\S]*pushed main merged into/u);
+      expect(rewrite).not.toContain("pushed without force");
+      // Supersede labels the pull request `superseded` first and takes the label off again if the delete
+      // fails; a report is posted once per branch head.
+      const settle = stepRun(steps, "Supersede or report on the pin-bump pull request");
+      for (const fragment of [
+        'if [[ ! "$BRANCH_HEAD" =~ ^[0-9a-f]{40}$ ]]; then',
+        'if [[ "$live" != "$BRANCH_HEAD" ]]; then',
+        "-f 'labels[]=superseded'",
+        'gh api -X DELETE "repos/${GH_REPO}/issues/${PULL}/labels/superseded"',
+        'marker="<!-- beep-ci-pin-sync blocked ${BRANCH_HEAD} -->"',
+        "-f 'labels[]=ready-for-heavy'",
+      ]) {
+        expect(settle).toContain(fragment);
+      }
+      expect(settle).toMatch(/labels\[\]=superseded[\s\S]*--force-with-lease=/u);
+      // The allow-list holds across EVERY run script of the workflow, and each permitted push appears once:
+      // the merge push in the push step, the leased delete in the supersede step.
+      const scripts = A.flatMap(R.values(jobs), (job) =>
+        A.getSomes(A.map(job.steps ?? [], (step) => O.fromUndefinedOr(step.run)))
+      );
+      expect(A.flatMap(scripts, pinPushViolations)).toStrictEqual([]);
+      expect(A.sort(A.flatMap(scripts, gitPushCommands), Str.Order)).toStrictEqual(
+        A.sort(ALLOWED_PIN_PUSHES, Str.Order)
+      );
+      expect(gitPushCommands(push)).toStrictEqual([ALLOWED_PIN_PUSHES[0]]);
+      expect(gitPushCommands(settle)).toStrictEqual([ALLOWED_PIN_PUSHES[1]]);
+      // ...and the allow-list refuses every other form, each way the forced push could be hidden.
+      for (const [text, violates] of [
+        [
+          `git -C "$WORKTREE" -c core.hooksPath=/dev/null push \\\n  "https://x-access-token:\${PUSH_TOKEN}@github.com/\${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/\${PIN_BRANCH}"`,
+          false,
+        ],
+        [
+          `if ! git -c core.hooksPath=/dev/null push --force-with-lease="refs/heads/\${PIN_BRANCH}:\${BRANCH_HEAD}" \\\n  "https://x-access-token:\${GH_TOKEN}@github.com/\${GH_REPO}.git" ":refs/heads/\${PIN_BRANCH}"; then`,
+          false,
+        ],
+        ['git push "$url" "$spec"', true],
+        ["git push origin '+HEAD:refs/heads/x'", true],
+        ["git push -qf origin HEAD", true],
+        ["git push --force origin HEAD", true],
+        ["git push --mirror origin", true],
+        ['git push --force-with-lease "$url" HEAD:refs/heads/x', true],
+        ['git push "$url" ":refs/heads/${PIN_BRANCH}"', true],
+        [`${ALLOWED_PIN_PUSHES[1]}\ngit push "$url" ":refs/heads/\${PIN_BRANCH}"`, true],
+        ['gh api -X PATCH "repos/o/r/git/refs/heads/x" -F force=true -f sha="$sha"', true],
+        ['gh api --method DELETE "repos/o/r/git/ref/heads/x"', true],
+        ['gh api "repos/${GH_REPO}/git/ref/heads/${PIN_BRANCH}" --jq .object.sha', false],
+      ] as const) {
+        expect(A.isReadonlyArrayNonEmpty(pinPushViolations(text))).toBe(violates);
+      }
       expect(secretReaders).toEqual(["publish/Create pin-bump App token"]);
     })
   );
@@ -2633,12 +2739,30 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         pulls: string,
         options: {
           readonly newest?: { readonly tag: string; readonly sha: string };
-          readonly failing?: "none" | "pulls" | "branch" | "main";
+          readonly failing?: "none" | "pulls" | "branch" | "main" | "tie";
           readonly liveMain?: string;
+          readonly sync?: "stale" | "current" | "merged" | "supersede" | "blocked";
+          readonly syncTag?: string;
+          readonly syncReason?: string;
+          readonly releases?: string;
+          readonly branchExists?: boolean;
+          readonly pinOnly?: "true" | "false";
         } = {}
       ) {
-        const newest = options.newest ?? { tag: newTag, sha: newSha };
-        const failing = options.failing ?? "none";
+        // One defaults object instead of a fallback per option keeps this helper's branch count flat.
+        const settings = {
+          newest: { tag: newTag, sha: newSha },
+          failing: "none",
+          liveMain: mainPin,
+          sync: "stale",
+          syncTag: newTag,
+          syncReason: "",
+          releases: "",
+          branchExists: O.isSome(branchPin),
+          pinOnly: "true",
+          ...options,
+        };
+        const { newest, failing } = settings;
         const directory = yield* fs.makeTempDirectoryScoped();
         const work = yield* fs.realPath(directory);
         const repo = `${work}/repo`;
@@ -2648,20 +2772,21 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         yield* fs.writeFileString(`${repo}/.github/actions/fetch-beep-ci/action.yml`, mainPin);
         if (O.isSome(branchPin)) yield* fs.writeFileString(`${work}/branch-action.yml`, branchPin.value);
         // Live main pins what the checkout pins unless a case says main has moved since.
-        yield* fs.writeFileString(`${work}/main-action.yml`, options.liveMain ?? mainPin);
+        yield* fs.writeFileString(`${work}/main-action.yml`, settings.liveMain);
         yield* fs.writeFileString(
           `${stubs}/gh`,
           A.join(
             [
               "#!/usr/bin/env bash",
               'case "$1 $2" in',
-              '  "release list") echo "$NEWEST_TAG" ;;',
+              `  "release list") if [ -n "$RELEASES_JSON" ]; then printf '%s\\n' "$RELEASES_JSON"; else printf '[{"tagName":"%s","createdAt":"2026-11-18T00:00:00Z"}]\\n' "$NEWEST_TAG"; fi ;;`,
               '  "release download")',
               '    shift 3; pattern=""; dir=""',
               '    while [ $# -gt 0 ]; do case "$1" in --pattern) pattern="$2"; shift 2 ;; --dir) dir="$2"; shift 2 ;; *) shift ;; esac; done',
               '    [ "$pattern" = beep-linux-x64.sha256 ] || exit 1',
               '    mkdir -p "$dir"; printf "%s  beep-linux-x64\\n" "$NEWEST_SHA" > "$dir/$pattern" ;;',
               '  "release view") echo "$NEWEST_TARGET" ;;',
+              '  "api repos/"*"/git/ref/heads/"*) if [ "$BRANCH_EXISTS" = 1 ]; then echo 0123456789abcdef0123456789abcdef0badbeef; else echo "gh: Not Found (HTTP 404)" >&2; exit 1; fi ;;',
               '  "api repos/"*)',
               '    case "$2" in *"ref=$DEFAULT_BRANCH") side=main; file="$MAIN_PIN_FILE" ;; *) side=branch; file="$BRANCH_PIN_FILE" ;; esac',
               '    if [ "$FAILING" = "$side" ]; then echo "gh: Server Error (HTTP 502)" >&2; exit 1; fi',
@@ -2679,6 +2804,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           A.join(
             [
               "#!/usr/bin/env bash",
+              'if [ "$4" = binary-pin-sync ]; then',
+              '  echo "$*" > "$RUNNER_TEMP/sync-args"',
+              '  while [ $# -gt 0 ]; do case "$1" in --output) o="$2"; shift 2 ;; *) shift ;; esac; done',
+              '  echo "outcome=$SYNC_OUTCOME" >> "$o"',
+              '  if [ -n "$SYNC_TAG" ]; then echo "tag=$SYNC_TAG" >> "$o"; fi',
+              '  if [ -n "$SYNC_REASON" ]; then echo "reason=$SYNC_REASON" >> "$o"; fi',
+              '  echo "pin_only=$SYNC_PIN_ONLY" >> "$o"',
+              "  exit 0",
+              "fi",
               'while [ $# -gt 0 ]; do case "$1" in --tag) t="$2"; shift 2 ;; --sha256) s="$2"; shift 2 ;; *) shift ;; esac; done',
               'sed -i -E "s/^( *BEEP_CI_RELEASE_TAG: ).*/\\1$t/; s/^( *BEEP_CI_SHA256: ).*/\\1$s/" .github/actions/fetch-beep-ci/action.yml',
               "",
@@ -2687,6 +2821,23 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           )
         );
         yield* fs.chmod(`${stubs}/gh`, 0o755);
+        // The sync path fetches and adds a worktree of the pin-bump branch; the fixture has no remote, so
+        // those are recorded no-ops and `beep ci binary-pin-sync` (stubbed above) decides the outcome.
+        yield* fs.writeFileString(
+          `${stubs}/git`,
+          A.join(
+            [
+              "#!/usr/bin/env bash",
+              'case "$1" in fetch | worktree) echo "$*" >> "$RUNNER_TEMP/git-calls"; exit 0 ;; esac',
+              'case "$1 $2" in "rev-parse refs/remotes/"*) echo 0123456789abcdef0123456789abcdef0badbeef; exit 0 ;; esac',
+              'if [ "$1" = -C ] && [ "$3" = config ]; then exit 0; fi',
+              'PATH="${PATH#*:}" exec git "$@"',
+              "",
+            ],
+            "\n"
+          )
+        );
+        yield* fs.chmod(`${stubs}/git`, 0o755);
         yield* fs.chmod(`${stubs}/bun`, 0o755);
         const setup = yield* runBash(
           repo,
@@ -2714,6 +2865,13 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           FAILING: failing,
           DEFAULT_BRANCH: "main",
           MAIN_PIN_FILE: `${work}/main-action.yml`,
+          SYNC_OUTCOME: settings.sync,
+          SYNC_TAG: settings.syncTag,
+          SYNC_REASON: settings.syncReason,
+          RELEASES_JSON: settings.releases,
+          BRANCH_EXISTS: `${Number(settings.branchExists)}`,
+          SYNC_PIN_ONLY: settings.pinOnly,
+          GITHUB_SHA: "0123456789abcdef0123456789abcdef01234567",
         });
         if (failing === "none") expect(run).toEqual({ status: 0, stderr: "" });
         const summary = yield* fs.readFileString(summaryPath);
@@ -2725,7 +2883,18 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           })
         );
         return {
-          decision: { changed: outputs.changed, bump: outputs.bump, parked: outputs.parked },
+          decision: {
+            changed: outputs.changed,
+            bump: outputs.bump,
+            parked: outputs.parked,
+            push: outputs.push,
+            supersede: outputs.supersede,
+            report: outputs.report,
+            relabel: outputs.relabel,
+          },
+          outputs,
+          syncArgs: yield* fs.readFileString(`${work}/sync-args`).pipe(Effect.orElseSucceed(() => "")),
+          workDir: work,
           status: run.status,
           stderr: run.stderr,
           summary,
@@ -2739,23 +2908,193 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const pulls = (...entries: ReadonlyArray<string>) => `[${A.join(entries, ",")}]`;
       const mainOld = pinText(oldTag, oldSha);
       const branchNew = O.some(pinText(newTag, newSha));
-      const bumps = { changed: "true", bump: "true", parked: "false" };
-      const idle = { changed: "true", bump: "false", parked: "false" };
+      const bumps = {
+        changed: "true",
+        bump: "true",
+        parked: "false",
+        push: "false",
+        supersede: "false",
+        report: "false",
+        relabel: "false",
+      };
+      const idle = {
+        changed: "true",
+        bump: "false",
+        parked: "false",
+        push: "false",
+        supersede: "false",
+        report: "false",
+        relabel: "false",
+      };
+      const pushes = {
+        changed: "true",
+        bump: "false",
+        parked: "false",
+        push: "true",
+        supersede: "false",
+        report: "false",
+        relabel: "false",
+      };
       // Re-run after a failed pull-request step: the branch was never created, so the step bumps.
       const rerun = yield* runCase(mainOld, O.none(), pulls());
       expect(rerun.decision).toEqual(bumps);
+      expect(rerun.syncArgs).toBe("");
       // Done: the branch pins the newest tag and sha256 and an open PR for it carries ready-for-heavy.
-      const done = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"])));
+      // binary-pin-sync finds it contains main: no push, no pull-request edit.
+      const done = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"])), {
+        sync: "current",
+      });
       expect(done.decision).toEqual(idle);
+      // Done, but main moved on and the branch is behind it or in conflict with it: binary-pin-sync merges
+      // main in with the release's own sha256, and the push step pushes it without force; no pull-request
+      // edit (observed on #3405, where the branch otherwise stayed DIRTY with no signal).
+      const behind = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"])), {
+        sync: "merged",
+      });
+      expect(behind.decision).toEqual(pushes);
+      expect(behind.syncArgs).toContain(
+        `ci binary-pin-sync --cwd ${behind.workDir}/pin-bump-branch --base 0123456789abcdef0123456789abcdef01234567 --tag ${newTag} --sha256 ${newSha} --releases ${behind.workDir}/beep-ci-releases.json`
+      );
+      // The pin step only announces the push; the push step reports it after it succeeds.
+      expect(behind.summary).toContain("the push step below pushes it");
+      expect(behind.summary).not.toContain("pushed without force");
+      // The branch pins a release created after the one resolved: only ever merged with main, never bumped
+      // back, whether or not its pull request is open and labelled.
+      const newerBranch = O.some(pinText("beep-ci-fedcba987654", newSha));
+      const newerPull = pulls(pull("OPEN", "beep-ci-fedcba987654", ["ready-for-heavy"]));
+      expect(
+        (yield* runCase(mainOld, newerBranch, newerPull, { sync: "merged", syncTag: "beep-ci-fedcba987654" })).decision
+      ).toEqual(pushes);
+      expect(
+        (yield* runCase(mainOld, newerBranch, newerPull, { sync: "current", syncTag: "beep-ci-fedcba987654" })).decision
+      ).toEqual(idle);
+      expect(
+        (yield* runCase(mainOld, newerBranch, pulls(), { sync: "current", syncTag: "beep-ci-fedcba987654" })).decision
+      ).toEqual(idle);
+      // Merging main would carry workflow files the pin-bump App cannot push onto the existing branch,
+      // and the branch holds only the pin: supersede it. The pull-request step then runs (bump) and the
+      // supersede step gets the pull request number and the checked branch head.
+      const superseding = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"])), {
+        sync: "supersede",
+        syncTag: newTag,
+      });
+      expect(superseding.decision).toEqual({ ...bumps, supersede: "true" });
+      expect(superseding.outputs.pull).toBe("7");
+      expect(superseding.outputs.branch_head).toBe("0123456789abcdef0123456789abcdef0badbeef");
+      expect(superseding.outputs.tag).toBe(newTag);
+      expect(superseding.summary).toContain("closed as `superseded`");
+      // A branch holding a newer release supersedes with that release, its facts read from the release.
+      const supersedingNewer = yield* runCase(mainOld, newerBranch, newerPull, {
+        sync: "supersede",
+        syncTag: "beep-ci-fedcba987654",
+      });
+      expect(supersedingNewer.decision).toEqual({ ...bumps, supersede: "true" });
+      expect(supersedingNewer.outputs.tag).toBe("beep-ci-fedcba987654");
+      // A stale branch (an older release) whose create-pull-request update would carry workflow files:
+      // a pin-only branch is superseded and the fresh pull request carries the NEWEST release...
+      const staleOlder = pulls(pull("OPEN", oldTag, ["ready-for-heavy"]));
+      const staleSuperseded = yield* runCase(mainOld, O.some(mainOld), staleOlder, {
+        sync: "supersede",
+        syncTag: newTag,
+      });
+      expect(staleSuperseded.decision).toEqual({ ...bumps, supersede: "true" });
+      expect(staleSuperseded.outputs.tag).toBe(newTag);
+      expect(staleSuperseded.outputs.sha256).toBe(newSha);
+      expect(staleSuperseded.outputs.pull).toBe("7");
+      // ...and a branch holding more is blocked: reported once, the job green, nothing bumped, and the
+      // report says a newer release is waiting.
+      const staleBlocked = yield* runCase(mainOld, O.some(mainOld), staleOlder, {
+        sync: "blocked",
+        syncReason: `a newer release ${newTag} is waiting, but updating the branch to it carries workflow changes`,
+      });
+      expect(staleBlocked.status).toBe(0);
+      expect(staleBlocked.decision).toEqual({ ...idle, report: "true" });
+      expect(staleBlocked.summary).toContain(`a newer release ${newTag} is waiting`);
+      // A stale branch whose update carries no workflow file keeps today's path: the pull-request step.
+      const staleOnly = yield* runCase(mainOld, O.some(mainOld), staleOlder, { sync: "stale" });
+      expect(staleOnly.decision).toEqual(bumps);
+      // A bot branch whose pin line does not parse still exists, so the sync decides it like a stale one
+      // (create-pull-request would update it too); the open pull request is found by branch, not title.
+      const unparseable = O.some(pinText("beep-ci-PENDING", oldSha));
+      const unparseableSuperseded = yield* runCase(mainOld, unparseable, pulls(pull("OPEN", "beep-ci-PENDING", [])), {
+        sync: "supersede",
+        syncTag: newTag,
+      });
+      expect(unparseableSuperseded.decision).toEqual({ ...bumps, supersede: "true" });
+      expect(unparseableSuperseded.outputs.pull).toBe("7");
+      expect(unparseableSuperseded.syncArgs).toContain("ci binary-pin-sync");
+      // An EXISTING bot branch whose pin file was deleted (the contents read 404s, like a missing branch)
+      // is found by its ref and goes through the sync as an unparseable pin, never a blind reset.
+      const noPinFile = yield* runCase(mainOld, O.none(), pulls(pull("OPEN", newTag, ["ready-for-heavy"])), {
+        branchExists: true,
+        sync: "supersede",
+        syncTag: newTag,
+      });
+      expect(noPinFile.decision).toEqual({ ...bumps, supersede: "true" });
+      expect(noPinFile.syncArgs).toContain("ci binary-pin-sync");
+      expect(noPinFile.outputs.pull).toBe("7");
+      // A branch the sync cannot heal is reported (warning, summary, one comment) and the job stays green.
+      const blocked = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"])), {
+        sync: "blocked",
+        syncTag: newTag,
+        syncReason: "merging origin/main conflicts outside the pin file: docs/notes.md",
+      });
+      expect(blocked.status).toBe(0);
+      expect(blocked.decision).toEqual({ ...idle, report: "true" });
+      expect(blocked.outputs.reason).toBe("merging origin/main conflicts outside the pin file: docs/notes.md");
+      expect(blocked.summary).toContain("cannot be brought up to date");
+      // A pull request this workflow closed as `superseded` does not park the release...
+      const supersededClosed = yield* runCase(mainOld, O.none(), pulls(pull("CLOSED", newTag, ["superseded"])));
+      expect(supersededClosed.decision).toEqual(bumps);
+      // ...and two releases created at the same instant have no order: the step fails closed.
+      const tie = yield* runCase(mainOld, O.none(), pulls(), {
+        failing: "tie",
+        releases: `[{"tagName":"${newTag}","createdAt":"2026-11-18T00:00:00Z"},{"tagName":"beep-ci-fedcba987654","createdAt":"2026-11-18T00:00:00Z"}]`,
+      });
+      expect(tie.status).not.toBe(0);
+      expect(tie.decision.bump).toBeUndefined();
       // The branch is current but no PR exists for the release (creation failed after the push).
-      const noPull = yield* runCase(mainOld, branchNew, pulls());
+      const noPull = yield* runCase(mainOld, branchNew, pulls(), { sync: "current" });
       expect(noPull.decision).toEqual(bumps);
-      // The branch is current and the PR is open but unlabelled (labelling failed): repair it.
-      const unlabelled = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ci"])));
-      expect(unlabelled.decision).toEqual(bumps);
-      // A PR for the release was closed unmerged: parked on purpose, no push and no reopen.
+      // The branch merged main and its pull request is open but unlabelled: push the merge and restore the
+      // label without create-pull-request, which would rebuild the branch and drop anything else on it.
+      const unlabelled = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ci"])), { sync: "merged" });
+      expect(unlabelled.decision).toEqual({ ...idle, push: "true", relabel: "true" });
+      expect(unlabelled.outputs.pull).toBe("7");
+      // The contents read saw T, but the branch moved to a newer U before the fetch: the decision follows the
+      // pin the sync read at the checked head (U), so no T pull request is opened over it.
+      const movedOn = yield* runCase(mainOld, branchNew, pulls(), { sync: "merged", syncTag: "beep-ci-fedcba987654" });
+      expect(movedOn.decision).toEqual(pushes);
+      // No pull request for T and the branch holds more than the pin: report instead of a rebuild that would
+      // discard it, and still push the merge.
+      const notPinOnly = yield* runCase(mainOld, branchNew, pulls(), {
+        sync: "merged",
+        syncTag: newTag,
+        pinOnly: "false",
+      });
+      expect(notPinOnly.status).toBe(0);
+      expect(notPinOnly.decision).toEqual({ ...idle, push: "true", report: "true" });
+      expect(notPinOnly.summary).toContain("holds changes besides the pin");
+      // The same with the branch already current: it is up to date, so the summary says so and names only
+      // the hand step the reason gives (opening the pull request), never "Bring it up to date by hand".
+      const currentNoPull = yield* runCase(mainOld, branchNew, pulls(), { sync: "current", pinOnly: "false" });
+      expect(currentNoPull.decision).toEqual({ ...idle, report: "true" });
+      expect(currentNoPull.summary).toContain("is current with `main`; nothing was pushed");
+      expect(currentNoPull.summary).toContain("open the pull request by hand");
+      expect(currentNoPull.summary).not.toContain("cannot be brought up to date");
+      expect(currentNoPull.summary).not.toContain("Bring it up to date by hand");
+      // A PR for the release a person closed unmerged (no `superseded` label): parked on purpose, no push
+      // and no reopen.
       const closed = yield* runCase(mainOld, branchNew, pulls(pull("CLOSED", newTag, ["ready-for-heavy"])));
-      expect(closed.decision).toEqual({ changed: "true", bump: "false", parked: "true" });
+      expect(closed.decision).toEqual({
+        changed: "true",
+        bump: "false",
+        parked: "true",
+        push: "false",
+        supersede: "false",
+        report: "false",
+        relabel: "false",
+      });
       // Closed for that release, then a newer release T2: a new bump opens normally.
       const newerTag = "beep-ci-fedcba987654";
       const newerSha = A.join(A.replicate("3", 64), "");
@@ -2775,7 +3114,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(older.decision).toEqual(bumps);
       // Main already pins the newest release (a bump merged): nothing to do.
       const merged = yield* runCase(pinText(newTag, newSha), branchNew, pulls(pull("MERGED", newTag, [])));
-      expect(merged.decision).toEqual({ changed: "false", bump: "false", parked: "false" });
+      expect(merged.decision).toEqual({
+        changed: "false",
+        bump: "false",
+        parked: "false",
+        push: "false",
+        supersede: "false",
+        report: "false",
+        relabel: "false",
+      });
       // A failed pull-request lookup is unknown state, never "no PR": the step fails and reports it,
       // and writes no decision, so nothing is pushed and no PR is opened (#3299 review).
       const pullsDown = yield* runCase(mainOld, branchNew, pulls(pull("CLOSED", newTag, ["ready-for-heavy"])), {
@@ -2801,7 +3148,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const staleCheckout = yield* runCase(mainOld, branchNew, pulls(pull("MERGED", newTag, [])), {
         liveMain: pinText(newTag, newSha),
       });
-      expect(staleCheckout.decision).toEqual({ changed: "false", bump: "false", parked: "false" });
+      expect(staleCheckout.decision).toEqual({
+        changed: "false",
+        bump: "false",
+        parked: "false",
+        push: "false",
+        supersede: "false",
+        report: "false",
+        relabel: "false",
+      });
       // A failed live-main read is unknown state: the step fails and reports it, and nothing is bumped.
       const mainDown = yield* runCase(mainOld, branchNew, pulls(), { failing: "main" });
       expect(mainDown.status).not.toBe(0);
@@ -2811,8 +3166,150 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       // labelled fork PR does not count as done (#3299 review).
       const forkClosed = yield* runCase(mainOld, O.none(), pulls(pull("CLOSED", newTag, ["ready-for-heavy"], true)));
       expect(forkClosed.decision).toEqual(bumps);
-      const forkOpen = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"], true)));
+      const forkOpen = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"], true)), {
+        sync: "current",
+      });
       expect(forkOpen.decision).toEqual(bumps);
+    })
+  );
+
+  // The supersede-or-report step's own script, run against a stub `gh` that records every write: a
+  // supersede labels, comments and only then deletes the branch, and only while the branch still points
+  // at the head the sync checked; a report comments once per branch head and never fails the job.
+  it.effect("runs the supersede-or-report step: ordered supersede, head guard, report once", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const workflowText = yield* fs.readFileString(`${root}/.github/workflows/beep-ci-binary.yml`);
+      const jobs = yield* workflowJobs(parseWorkflowYaml(workflowText));
+      const script = stepRun(jobSteps(jobs, "publish"), "Supersede or report on the pin-bump pull request");
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const head = "0123456789abcdef0123456789abcdef0badbeef";
+      const runSettle = Effect.fnUntraced(function* (env: Readonly<Record<string, string>>) {
+        const scratch = yield* fs.makeTempDirectoryScoped();
+        const work = yield* fs.realPath(scratch);
+        yield* fs.makeDirectory(`${work}/bin`);
+        yield* fs.writeFileString(
+          `${work}/bin/gh`,
+          A.join(
+            [
+              "#!/usr/bin/env bash",
+              'case "$*" in',
+              '  *"git/ref/heads/"*) echo "$LIVE_HEAD" ;;',
+              '  *"--paginate"*) echo "$SEEN" ;;',
+              '  *) echo "$*" >> "$CALLS" ;;',
+              "esac",
+              "",
+            ],
+            "\n"
+          )
+        );
+        yield* fs.chmod(`${work}/bin/gh`, 0o755);
+        // `git push` is the lease-protected delete; it records its argv and fails when GIT_FAIL is set.
+        yield* fs.writeFileString(
+          `${work}/bin/git`,
+          A.join(
+            ["#!/usr/bin/env bash", 'echo "git $*" >> "$CALLS"', 'if [ "$GIT_FAIL" = 1 ]; then exit 1; fi', ""],
+            "\n"
+          )
+        );
+        yield* fs.chmod(`${work}/bin/git`, 0o755);
+        yield* fs.writeFileString(`${work}/calls`, "");
+        yield* fs.writeFileString(`${work}/summary.md`, "");
+        const searchPath = yield* Config.String("PATH");
+        const child = yield* spawner.spawn(
+          ChildProcess.make("/usr/bin/bash", ["--noprofile", "--norc", "-eo", "pipefail", "-c", script], {
+            cwd: work,
+            env: {
+              PATH: `${work}/bin:${searchPath}`,
+              CALLS: `${work}/calls`,
+              GITHUB_STEP_SUMMARY: `${work}/summary.md`,
+              GH_REPO: "fixture/repo",
+              PIN_BRANCH: "ci/beep-ci-pin-bump",
+              PULL: "7",
+              BRANCH_HEAD: head,
+              PIN_TAG: "beep-ci-0123456789ab",
+              REASON: "merging origin/main conflicts outside the pin file: docs/notes.md",
+              RUN_URL: "https://example.invalid/run",
+              LIVE_HEAD: head,
+              SEEN: "0",
+              SUPERSEDE: "false",
+              RELABEL: "false",
+              PUSHED: "false",
+              MISSING_PR: "false",
+              GIT_FAIL: "0",
+              GH_TOKEN: "app-token",
+              ...env,
+            },
+            extendEnv: true,
+            stdout: "pipe",
+            stderr: "pipe",
+          })
+        );
+        const status = yield* child.exitCode;
+        const calls = yield* fs.readFileString(`${work}/calls`);
+        // One entry per gh write; a multi-line comment body continues on the following lines.
+        return {
+          status: Number(status),
+          calls: A.filter(
+            Str.split(calls, "\n"),
+            (line) => Str.startsWith("api ")(line) || Str.startsWith("git ")(line)
+          ),
+          text: calls,
+        };
+      });
+      // Supersede: label, then the lease-protected delete at the checked 40-character head, then the comment.
+      const superseded = yield* runSettle({ SUPERSEDE: "true" });
+      expect(superseded.status).toBe(0);
+      expect(A.map(superseded.calls, (call) => A.join(A.take(Str.split(call, " "), 4), " "))).toStrictEqual([
+        "api -X POST repos/fixture/repo/issues/7/labels",
+        "git -c core.hooksPath=/dev/null push",
+        "api -X POST repos/fixture/repo/issues/7/comments",
+      ]);
+      expect(superseded.calls[1]).toBe(
+        `git -c core.hooksPath=/dev/null push --force-with-lease=refs/heads/ci/beep-ci-pin-bump:${head} https://x-access-token:app-token@github.com/fixture/repo.git :refs/heads/ci/beep-ci-pin-bump`
+      );
+      // The delete fails (the branch moved after the check): the label comes off again and the step fails,
+      // so a still-open pull request never keeps a `superseded` label.
+      const failedDelete = yield* runSettle({ SUPERSEDE: "true", GIT_FAIL: "1" });
+      expect(failedDelete.status).not.toBe(0);
+      expect(A.map(failedDelete.calls, (call) => A.join(A.take(Str.split(call, " "), 4), " "))).toStrictEqual([
+        "api -X POST repos/fixture/repo/issues/7/labels",
+        "git -c core.hooksPath=/dev/null push",
+        "api -X DELETE repos/fixture/repo/issues/7/labels/superseded",
+      ]);
+      // A head that is not a full sha is refused before any write.
+      const shortHead = yield* runSettle({ SUPERSEDE: "true", BRANCH_HEAD: "0badbeef" });
+      expect(shortHead.status).not.toBe(0);
+      expect(shortHead.calls).toStrictEqual([]);
+      // Relabel: one label write, no branch write.
+      const relabelled = yield* runSettle({ RELABEL: "true" });
+      expect(relabelled.status).toBe(0);
+      expect(relabelled.calls).toHaveLength(1);
+      expect(relabelled.calls[0]).toContain("labels[]=ready-for-heavy");
+      // The branch moved after the sync checked it: nothing is superseded and the step fails.
+      const moved = yield* runSettle({ SUPERSEDE: "true", LIVE_HEAD: A.join(A.replicate("f", 40), "") });
+      expect(moved.status).not.toBe(0);
+      expect(moved.calls).toStrictEqual([]);
+      // Report: one comment for an unseen head, none once that head was reported; green both times.
+      const first = yield* runSettle({});
+      expect(first.status).toBe(0);
+      expect(first.calls).toHaveLength(1);
+      expect(first.calls[0]).toContain("api -X POST repos/fixture/repo/issues/7/comments");
+      expect(first.calls[0]).toContain(`<!-- beep-ci-pin-sync blocked ${head} -->`);
+      const again = yield* runSettle({ SEEN: "1" });
+      expect(again.status).toBe(0);
+      expect(again.calls).toStrictEqual([]);
+      // The comment says what the run does: "Nothing was pushed" only when nothing is pushed.
+      expect(first.text).toContain("Nothing was pushed");
+      const pushedToo = yield* runSettle({ PUSHED: "true" });
+      expect(pushedToo.status).toBe(0);
+      expect(pushedToo.text).not.toContain("Nothing was pushed");
+      expect(pushedToo.text).toContain("This run merged main in and pushes that merge without force");
+      const currentToo = yield* runSettle({ MISSING_PR: "true" });
+      expect(currentToo.status).toBe(0);
+      expect(currentToo.text).toContain("The branch is current with main and nothing was pushed");
+      expect(currentToo.text).not.toContain("Bring the branch up to date by hand");
     })
   );
 

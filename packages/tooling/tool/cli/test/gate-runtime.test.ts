@@ -11,9 +11,12 @@ import {
   CapturedRun,
   captureRun,
   consoleSettings,
+  EventRun,
   exitWithTool,
+  GateServicesConfig,
   GateToolExit,
   PackageRun,
+  recordEventRun,
   renderStoredRecord,
   splitAudienceArgs,
   summaryPathOf,
@@ -306,6 +309,25 @@ it.layer(NodeServices.layer)("on disk", (it) => {
       const record = yield* renderStoredRecord(repoRoot, target, ConsoleSettings.make({ audience: "agent" }));
       assert.strictEqual(record.report.subject, "@beep/a");
       assert.isTrue(CapturedRun.make({ exitCode: 0, output: new Uint8Array() }).exitCode === 0);
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+
+  it.effect("states a package run with no start event by its name, errored, with the exit code kept", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const repoRoot = yield* fs.makeTempDirectoryScoped({ prefix: "gate-unstarted-" });
+      const target = RecordTarget.cases.PackageTarget.make({ packageDir: "packages/a", gate: "check" });
+      const config = GateServicesConfig.make({ repoRoot, settings: ConsoleSettings.make({ audience: "agent" }) });
+      const named = yield* recordEventRun(config)(
+        EventRun.make({ target, events: [], exitCode: 0, output: new Uint8Array(), subject: O.some("@beep/a") })
+      );
+      const unnamed = yield* recordEventRun(config)(
+        EventRun.make({ target, events: [], exitCode: 0, output: new Uint8Array() })
+      );
+      assert.strictEqual(named.report.reason, "errored");
+      assert.strictEqual(named.exitCode, 0);
+      assert.isTrue(Str.startsWith("check @beep/a: ERRORED")(named.output.text), named.output.text);
+      assert.isTrue(Str.startsWith("check packages/a: ERRORED")(unnamed.output.text), unnamed.output.text);
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 });

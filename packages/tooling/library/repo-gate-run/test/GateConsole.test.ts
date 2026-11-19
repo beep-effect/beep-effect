@@ -1,7 +1,7 @@
 import { ConsoleBudget, RecordPaths, RunDelta } from "@beep/gate-report/ConsoleDocument";
 import { GateReport } from "@beep/gate-report/GateReport";
 import { reduceEvents } from "@beep/gate-report/Reducer";
-import { buildClosureCommand, WORKSPACE_SUBJECT } from "@beep/repo-gate-run/ConsoleDefaults";
+import { buildClosureCommand, foldFixesFor, WORKSPACE_SUBJECT } from "@beep/repo-gate-run/ConsoleDefaults";
 import {
   ConsoleRequest,
   ConsoleSettings,
@@ -132,6 +132,33 @@ describe("GateConsole", () => {
     );
     assert.strictEqual(lines[1], "history not read: late");
     assert.strictEqual(buildClosureCommand(WORKSPACE_SUBJECT), "bun x turbo run build");
+    assert.strictEqual(buildClosureCommand("@beep/glob"), "bun x turbo run build --filter=@beep/glob^...");
+    assert.strictEqual(buildClosureCommand("glob"), "bun x turbo run build --filter=glob^...");
+    assert.strictEqual(
+      foldFixesFor("packages/foundation/modeling/glob").TS6305,
+      "bun x turbo run build --filter=./packages/foundation/modeling/glob^..."
+    );
+  });
+
+  it("keeps the whole console, omission lines included, within a minimum budget", () => {
+    const minimum = ConsoleBudget.make({ maxChars: 328, maxLineChars: 40, maxDiffLines: 0 });
+    const tight = makeGateConsole(ConsoleSettings.make({ audience: "agent", budget: minimum }));
+    const omissions = A.map(["record", "log", "history"] as const, (part) =>
+      Omission.make({ part, reason: Str.repeat(80)("r") })
+    );
+    const text = tight.render(
+      ConsoleRequest.make({
+        report: reportOf(testRunEvents(["adds", "subtracts", "divides"])),
+        paths: O.some(paths),
+        omissions,
+      })
+    ).text;
+    const lines = linesOf(text);
+    assert.isAtMost(text.length + 1, minimum.maxChars);
+    assert.isTrue(A.some(lines, Str.startsWith("record and raw log unavailable: ")));
+    assert.isTrue(A.some(lines, Str.startsWith("history not read: ")));
+    assert.include(lines, "... 3 more in the record");
+    assert.strictEqual(lines[0], A.lastNonEmpty(lines));
   });
 
   it("paints every verdict word and every line kind", () => {

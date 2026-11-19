@@ -253,6 +253,14 @@ export const QueryMiss = LiteralKit(["no-runs", "no-item"]).pipe(
 );
 
 /**
+ * Type of {@link QueryMiss}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type QueryMiss = typeof QueryMiss.Type;
+
+/**
  * A gate query found nothing to show.
  *
  * **Example** (Build the error)
@@ -343,8 +351,9 @@ export const itemLines = (item: Item): ReadonlyArray<string> => [
 ];
 
 /**
- * The items a run lists, in record order: every item that did not pass. An
- * item selector's position counts among these.
+ * The items a run lists, in record order: the failing and warning ones, as
+ * the console lists them. An item selector's position counts among these, so
+ * skipped and passed items never shift a position.
  *
  * **Example** (List a run with no items)
  *
@@ -363,12 +372,12 @@ export const itemLines = (item: Item): ReadonlyArray<string> => [
  * ```
  *
  * @param record - The run's record.
- * @returns Its failed, warned and skipped items; a position selector counts from 1 among them.
+ * @returns Its failed and warned items; a position selector counts from 1 among them.
  * @category utilities
  * @since 0.0.0
  */
 export const listedItems = (record: GateRecord): ReadonlyArray<Item> =>
-  A.filter(record.report.items, (item) => !ItemOutcome.is.passed(item.outcome));
+  A.filter(record.report.items, (item) => ItemOutcome.is.failed(item.outcome) || ItemOutcome.is.warned(item.outcome));
 
 const select = (record: GateRecord, selector: ItemSelector): O.Option<Item> =>
   ItemSelector.match(selector, {

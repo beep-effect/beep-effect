@@ -32,6 +32,7 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import { makeDeclarationIndexCache, missingReferenceOutputs, unbuiltReferenceLine } from "../Quality/CheckProbe.ts";
 import {
   captureRun,
@@ -155,6 +156,7 @@ export const runCheckGate = Effect.fn("Gate.runCheckGate")(function* (dir: strin
       events: outcome.events(run),
       exitCode: outcome.exitCode,
       output: outcome.log,
+      subject: O.some(location.subject),
     })
   );
   return yield* exitWithTool(

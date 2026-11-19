@@ -119,6 +119,17 @@ describe("projectLines", () => {
     assert.deepStrictEqual(A.take(A.drop(lines, 3), 2), ["  + received", "  link"]);
   });
 
+  it("strips an escape with intermediate bytes, such as a character-set designation", () => {
+    const designated = FailureEntry.make({
+      unit: "src/a.test.ts",
+      path: [],
+      name: "charset",
+      message: O.some("\u001b(Bred\u001b7 saved\u001bc"),
+      diff: [],
+    });
+    assert.strictEqual(projectLines({ document: red([designated]), budget: agentBudget })[2], "  red saved");
+  });
+
   it("prints a note's lines and a fold line in order before the tail", () => {
     const fold = FoldLine.make({ code: "TS6305", count: 3, cause: "upstream declarations are not built" });
     const lines = projectLines({
@@ -162,6 +173,26 @@ describe("fitDocument and the cap", () => {
     );
     assert.include(lines, `... ${dropped} more in the record`);
     assert.isAtMost(size(lines), tight.maxChars);
+    assert.strictEqual(lines[0], lines[lines.length - 1]);
+  });
+
+  it("reserves both verdict lines when only a note is kept beside a tailless frame", () => {
+    // The reviewer's case: a 40-character verdict and a note of seven 40-character lines.
+    const minimal = ConsoleBudget.make({ maxChars: 328, maxLineChars: 40, maxDiffLines: 0 });
+    const verdict40 = VerdictLine.make({
+      gate: "t",
+      scope: Str.repeat(12)("s"),
+      reason: "failed",
+      counts: "0/1 passed",
+      durationMs: 5,
+    });
+    const note = NoteEntry.make({
+      lines: [Str.repeat(40)("a"), ...A.makeBy(6, () => Str.repeat(40)("n"))],
+    });
+    const document = ConsoleDocument.make({ verdict: verdict40, entries: [note], folds: [] });
+    const lines = projectLines({ document, budget: minimal });
+    assert.strictEqual(lines[0]?.length, 40);
+    assert.isAtMost(size(lines), minimal.maxChars);
     assert.strictEqual(lines[0], lines[lines.length - 1]);
   });
 

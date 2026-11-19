@@ -4,6 +4,7 @@
 // on the verdict when the recorder or history fails.
 import { RunDelta } from "@beep/gate-report/ConsoleDocument";
 import { formatBytes } from "@beep/gate-report/Format";
+import { GateEvent } from "@beep/gate-report/GateEvent";
 import { fingerprint } from "@beep/gate-report/ItemKey";
 import { HistoryLabel } from "@beep/gate-report/Vocabulary";
 import { $RepoGateRunId } from "@beep/identity/packages";
@@ -13,11 +14,12 @@ import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
 import { ConsoleSettings, GateConsole } from "@beep/repo-gate-run/GateConsole";
 import { GateHistory, HistoryAnswer } from "@beep/repo-gate-run/GateHistory";
 import { GateRecorder, RunSource } from "@beep/repo-gate-run/GateRecorder";
-import { GateRunRequest, runGate } from "@beep/repo-gate-run/GateRun";
+import { fallbackReport, GateRunRequest, runGate } from "@beep/repo-gate-run/GateRun";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
@@ -32,7 +34,6 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
 import { eventsSource, failedTest, linesOf, packageTarget, testRunEvents } from "./support/fixtures.ts";
-import type { GateEvent } from "@beep/gate-report/GateEvent";
 import type { GateRecorderShape } from "@beep/repo-gate-run/GateRecorder";
 
 const $I = $RepoGateRunId.create("test/GateRun");
@@ -235,6 +236,97 @@ describe("runGate", () => {
       );
     }
   );
+
+  it.layer(services(GateHistory.layerNone), { timeout: "30 seconds" })(
+    "review round 1: a cut-off rerun and the stated subject",
+    (it) => {
+      it.effect("a rerun cut off after its start renders as an errored run of that rerun", () =>
+        Effect.gen(function* () {
+          const rerun = GateEvent.cases.RunStarted.make({
+            runId: "rerun-2",
+            gate: "test",
+            subject: "@beep/glob",
+            itemKind: "test",
+            startedAt: DateTime.makeUnsafe(0),
+            inputFingerprint: "fingerprint",
+          });
+          const events = [...testRunEvents([]), rerun, GateEvent.cases.ItemFinished.make({ item: failedTest("adds") })];
+          const result = yield* runGate(request(events, 1), log);
+          const lines = linesOf(result.output.text);
+          opensAndClosesOnVerdict(lines);
+          assert.include(lines[0], ": ERRORED,");
+          assert.strictEqual(result.report.runId, "rerun-2");
+          assert.strictEqual(result.exitCode, 1);
+        })
+      );
+
+      it.effect("a passed run whose start is missing was not observed whole: errored, items kept", () =>
+        Effect.gen(function* () {
+          const result = yield* runGate(request(A.drop(testRunEvents([]), 1), 0), log);
+          assert.strictEqual(result.report.reason, "errored");
+          assert.strictEqual(result.report.totals.passed, 3);
+          assert.include(linesOf(result.output.text)[0], ": ERRORED,");
+          assert.strictEqual(result.exitCode, 0);
+        })
+      );
+
+      it.effect("a run with no start is stated by its package name when the caller gives one", () =>
+        Effect.gen(function* () {
+          const named = yield* runGate(GateRunRequest.make({ ...request([], 1), subject: O.some("@beep/glob") }), log);
+          const unnamed = yield* runGate(request([], 1), log);
+          assert.isTrue(Str.startsWith("test @beep/glob: ERRORED,")(named.output.text));
+          assert.isTrue(Str.startsWith("test packages/foundation/primitive/glob: ERRORED,")(unnamed.output.text));
+        })
+      );
+    }
+  );
+
+  it.layer(
+    Layer.mergeAll(
+      agent,
+      memoryRecorder,
+      Layer.succeed(
+        GateHistory,
+        GateHistory.of({
+          read: Effect.fn("test.read")(function* () {
+            return yield* Effect.die("history store corrupt");
+          }),
+        })
+      )
+    ),
+    { timeout: "30 seconds" }
+  )("review round 1: with a history read that dies with a defect", (it) => {
+    it.effect("renders without labels and names the history as not read", () =>
+      Effect.gen(function* () {
+        const result = yield* runGate(red, log);
+        const lines = linesOf(result.output.text);
+        opensAndClosesOnVerdict(lines);
+        assert.include(lines, "history not read: history store corrupt");
+        assert.isTrue(A.some(lines, Str.startsWith("record: ")));
+        assert.strictEqual(result.exitCode, 1);
+      })
+    );
+  });
+
+  it("the fallback report is an errored report of the request's gate and subject", () => {
+    const stated = fallbackReport(
+      GateRunRequest.make({ ...request([], 1), subject: O.some("@beep/glob") }),
+      DateTime.makeUnsafe(0)
+    );
+    const root = fallbackReport(DateTime.makeUnsafe(0))(
+      GateRunRequest.make({
+        target: RecordTarget.cases.RootTarget.make({ gate: "check", runId: "run-9" }),
+        source: eventsSource([]),
+        exitCode: 2,
+      })
+    );
+    assert.deepStrictEqual(
+      [stated.gate, stated.subject, stated.reason, stated.items.length],
+      ["test", "@beep/glob", "errored", 0]
+    );
+    assert.deepStrictEqual([root.subject, root.runId], ["workspace", "run-9"]);
+  });
+
   it.layer(
     services(
       GateHistory.layerNone,

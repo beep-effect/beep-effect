@@ -14,7 +14,7 @@ import { GateRecord } from "@beep/gate-report/GateRecord";
 import { GateReport } from "@beep/gate-report/GateReport";
 import { reduceEvents } from "@beep/gate-report/Reducer";
 import { $RepoGateRunId } from "@beep/identity/packages";
-import { boundedChunkReducer, emptyBoundedOutput, OutputBound } from "@beep/repo-cli-kit/process/OutputBound";
+import { boundedChunkReducer, emptyBoundedOutput } from "@beep/repo-cli-kit/process/OutputBound";
 import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
 import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
 import * as A from "effect/Array";
@@ -30,8 +30,10 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { excerptBound } from "./Excerpt.ts";
 import { Omission } from "./Omission.ts";
 import type { IncompleteRunError } from "@beep/gate-report/Reducer";
+import type { OutputBound } from "@beep/repo-cli-kit/process/OutputBound";
 import type { GateRecordWriteError } from "@beep/repo-gate-record/GateRecordFile";
 import type { GateRecordStoreShape, WrittenFile } from "@beep/repo-gate-record/GateRecordStore";
 
@@ -207,26 +209,6 @@ export class GateRecorderError extends S.TaggedError<GateRecorderError, { readon
     description: "The gate recorder could not run at all.",
   })
 ) {}
-
-/**
- * The excerpt bound: 8 KiB, keeping the head and the tail of the stream.
- *
- * **Example** (Read the bound)
- *
- * ```ts
- * import { excerptBound } from "@beep/repo-gate-run/GateRecorder";
- *
- * console.log(excerptBound.maxChars); // 8192
- * ```
- *
- * @category constants
- * @since 0.0.0
- */
-export const excerptBound: OutputBound = OutputBound.make({
-  maxChars: 8 * 1024,
-  truncatedNotice: "\n[gate] log excerpt truncated; the full stream is in the log file\n",
-  retention: "head-tail",
-});
 
 /**
  * The recorder's operations.

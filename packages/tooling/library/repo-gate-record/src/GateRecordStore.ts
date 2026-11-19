@@ -124,7 +124,9 @@ const makeStore = (files: RecordFiles): GateRecordStoreShape => {
 
   const removeRun = (gate: GateName) => (runId: RunId) => {
     const location = recordLocation(RecordTarget.cases.RootTarget.make({ gate, runId }));
-    return Effect.andThen(files.remove(location.record), files.remove(location.log));
+    // The log goes first: runs are found by their record, so a record left behind by a failed
+    // removal marks the run for the next prune to retry.
+    return Effect.andThen(files.remove(location.log), files.remove(location.record));
   };
 
   // Retention is housekeeping after the record is on disk: a failure to list or remove expired

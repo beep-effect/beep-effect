@@ -425,7 +425,8 @@ export const exitWithTool = Effect.fn("Gate.exitWithTool")(function* (failure: G
 
 /**
  * One finished tool run to record: whose record, the gate events its
- * adapter emitted, the tool's exit code and its whole output.
+ * adapter emitted, the tool's exit code, its whole output, and for a package
+ * record the package name, which states the run when its events do not.
  *
  * **Example** (Describe an empty run)
  *
@@ -451,9 +452,10 @@ export class EventRun extends S.Opaque<EventRun, { readonly brand: unique symbol
     events: S.Array(GateEvent),
     exitCode: S.Int,
     output: S.Uint8Array,
+    subject: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("EventRun", {
-      description: "A finished tool run to record: its target, gate events, exit code and whole output.",
+      description: "A finished tool run to record: its target, gate events, exit code, whole output and package name.",
     })
   )
 ) {}
@@ -494,6 +496,7 @@ export const recordEventRun = (config: GateServicesConfig) => (run: EventRun) =>
       source: RunSource.cases.RunEvents.make({ events: run.events }),
       exitCode: run.exitCode,
       pointers: O.some(repoPointerTableFor(run.target)),
+      subject: run.subject,
     }),
     Stream.make(run.output)
   ).pipe(withGateServices(config));

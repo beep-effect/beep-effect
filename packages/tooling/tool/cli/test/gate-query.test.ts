@@ -147,7 +147,7 @@ const logText = Effect.map(TestConsole.logLines, (lines) =>
 
 describe("gate queries", { concurrent: false }, () => {
   it.layer(NodeServices.layer, { timeout: "60 seconds" })("on disk", (it) => {
-    it.effect("shows a package record: verdict, units, numbered listed items and paths", () =>
+    it.effect("shows a package record: verdict, units, numbered failing items (a skipped one unlisted) and paths", () =>
       Effect.gen(function* () {
         const { packageRoot } = yield* queryRepo();
         const lines = yield* showRunLines("test", QueryWhere.make({ dir: O.some(packageRoot), run: O.none() }));
@@ -157,9 +157,8 @@ describe("gate queries", { concurrent: false }, () => {
           "units: 2",
           "  @beep/demo (package, 1 files)",
           "  @beep/empty (package)",
-          "listed items: 2",
+          "listed items: 1",
           "  1. test/a.test.ts > math > adds [failed, assertion]",
-          "  2. test/a.test.ts > math > later [skipped]",
           "record: packages/demo/.beep/gates/test/report.json",
           "log: packages/demo/.beep/gates/test/report.log",
         ]);

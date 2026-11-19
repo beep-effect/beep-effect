@@ -13,7 +13,9 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import type { Vitest } from "@effect/vitest";
@@ -48,6 +50,15 @@ const runIds = (count: number) => A.makeBy(count, (index) => `run-${index + 10}`
 
 const LOG_TEXT = "line one\nline two ✓\n";
 const logStream = Stream.make(encoder.encode("line one\n"), encoder.encode("line two ✓\n"));
+
+// A name source that draws the given values in turn, then repeats the last.
+const drawing = (values: A.NonEmptyReadonlyArray<number>): Random.Random => {
+  let drawn = 0;
+  return {
+    nextDoubleUnsafe: () => A.getUnsafe(values, Math.min(drawn++, values.length - 1)),
+    nextIntUnsafe: () => drawn,
+  };
+};
 
 const sameRecord = S.toEquivalence(GateRecord);
 
@@ -136,6 +147,93 @@ describe("GateRecordStore", () => {
   it.layer(liveStore, { timeout: "30 seconds" })("on the file system", storeRules);
 
   it.layer(platform, { timeout: "30 seconds" })("on a file system that refuses", (it) => {
+    it.effect("a taken temporary name is redrawn: both writes complete and leave the holder's file alone", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const store = yield* GateRecordStore.make("/repo-collide");
+        const dir = "/repo-collide/packages/glob/.beep/gates/test";
+        // The name source draws the same candidate first every time, so each write collides once.
+        const taken = yield* Random.nextIntBetween(0, 0x7fffffff).pipe(
+          Effect.provideService(Random.Random, drawing([0.5]))
+        );
+        const holder = `${dir}/report.json.${taken.toString(36)}.tmp`;
+        yield* fs.makeDirectory(dir, { recursive: true });
+        yield* fs.writeFileString(holder, "a writer's unfinished contents");
+        yield* store
+          .writeRecord(packageTarget("glob"), record("r1"))
+          .pipe(Effect.provideService(Random.Random, drawing([0.5, 0.5, 0.25])));
+        const first = yield* store.readRecord(packageTarget("glob"));
+        yield* store
+          .writeRecord(packageTarget("glob"), record("r2"))
+          .pipe(Effect.provideService(Random.Random, drawing([0.5, 0.75])));
+        const second = yield* store.readRecord(packageTarget("glob"));
+        // A name source that only ever draws the taken name runs out of attempts.
+        const exhausted = yield* Effect.flip(
+          store
+            .writeRecord(packageTarget("glob"), record("r3"))
+            .pipe(Effect.provideService(Random.Random, drawing([0.5])))
+        );
+        const held = yield* fs.readFileString(holder);
+        const names = yield* fs.readDirectory(dir);
+        assert.strictEqual(first.report.runId, "r1");
+        assert.strictEqual(second.report.runId, "r2");
+        assert.strictEqual(held, "a writer's unfinished contents");
+        assert.instanceOf(exhausted, GateRecordWriteError);
+        assert.include(exhausted.message, "AlreadyExists");
+        assert.deepStrictEqual(
+          A.sort(names, Order.String),
+          A.sort(["report.json", `report.json.${taken.toString(36)}.tmp`], Order.String)
+        );
+      })
+    );
+    it.effect("overlapping writes of one record each publish whole contents and leave no temporary file", () =>
+      Effect.gen(function* () {
+        const store = yield* GateRecordStore.make("/repo-overlap");
+        const target = packageTarget("glob");
+        const written = yield* Effect.all(
+          A.map(["r1", "r2", "r3"], (runId) => store.writeRecord(target, record(runId))),
+          { concurrency: "unbounded" }
+        );
+        const read = yield* store.readRecord(target);
+        const fs = yield* FileSystem.FileSystem;
+        const names = yield* fs.readDirectory("/repo-overlap/packages/glob/.beep/gates/test");
+        assert.strictEqual(written.length, 3);
+        assert.isTrue(A.contains(["r1", "r2", "r3"], read.report.runId));
+        assert.deepStrictEqual(names, ["report.json"]);
+      })
+    );
+
+    it.effect("a write that cannot be renamed into place removes its temporary file", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const store = yield* GateRecordStore.make("/repo-blocked");
+        const dir = "/repo-blocked/packages/glob/.beep/gates/test";
+        yield* fs.makeDirectory(`${dir}/report.json/held`, { recursive: true });
+        const failure = yield* Effect.flip(store.writeRecord(packageTarget("glob"), record("r1")));
+        const names = yield* fs.readDirectory(dir);
+        assert.instanceOf(failure, GateRecordWriteError);
+        assert.deepStrictEqual(names, ["report.json"]);
+      })
+    );
+
+    it.effect("a run whose log cannot be removed keeps its record, so the next prune retries it", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = "/repo-retry";
+        const store = yield* GateRecordStore.make(root);
+        yield* store.writeRecord(rootTarget("run-00"), record("run-00"));
+        yield* fs.makeDirectory(`${root}/.beep/gates/test/run-00.log/held`, { recursive: true });
+        yield* Effect.forEach(runIds(ROOT_RUNS_KEPT), (runId) => store.writeRecord(rootTarget(runId), record(runId)), {
+          concurrency: 1,
+        });
+        const blocked = yield* store.listRuns("test");
+        yield* fs.remove(`${root}/.beep/gates/test/run-00.log`, { recursive: true });
+        yield* store.writeRecord(rootTarget("run-30"), record("run-30"));
+        const retried = yield* store.listRuns("test");
+        assert.isTrue(A.contains(blocked, "run-00"));
+        assert.isFalse(A.contains(retried, "run-00"));
+      })
+    );
     it.effect("tells an unreadable record from a missing or invalid one", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

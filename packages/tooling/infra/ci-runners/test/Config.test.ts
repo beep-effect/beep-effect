@@ -1,14 +1,22 @@
 import {
   decodeCiRunnersConfig,
   effectiveCap,
+  PoolName,
   personalConfig,
   productionConfig,
+  productionStage,
   RehearsalRepository,
   resolveStageConfig,
   spotVcpuCommitted,
 } from "@beep/infra-ci-runners/Config";
 import { AppCredentials, requireSigningAppKey, stageCredentials } from "@beep/infra-ci-runners/Credentials";
-import { liveFleetOverlaps, physicalNames, poolEnvironment, touchesLiveFleet } from "@beep/infra-ci-runners/Names";
+import {
+  liveFleetOverlaps,
+  liveFleetPrefixes,
+  physicalNames,
+  poolEnvironment,
+  touchesLiveFleet,
+} from "@beep/infra-ci-runners/Names";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -16,12 +24,41 @@ import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { fakeWebhookSecret, productionCredentialEnv } from "./support/Credentials.ts";
 
 const isRehearsalRepository = S.is(RehearsalRepository);
+
+/**
+ * The live fleet's own instance selection, ported from `tagFilter` in
+ * `lambdas/functions/termination-watcher/src/ec2.ts` of
+ * github-aws-runners/terraform-aws-github-runner v7.10.1: an instance is
+ * selected when, for every configured tag filter, it carries that tag with a
+ * value that STARTS WITH the filter value.
+ *
+ * The tests below model only the module's default filter,
+ * `{ "ghr:environment": <prefix> }`. That holds only while the live fleet sets
+ * no override: `infra/src/CiFleetController.ts` passes
+ * `instance_termination_watcher` without tag filters, and the generated
+ * `@pulumi/gharunners` 7.10.1 bridge has no input to carry one. This package
+ * cannot import that Pulumi program (`@beep/infra` is not a dependency, and
+ * reading its source from here would sit outside this package's cache
+ * inputs), so the pin lives where the program is importable under Pulumi
+ * mocks: `infra/test/CiShardOverflowPool.test.ts` asserts that both live
+ * controllers' watcher inputs carry exactly `enable`,
+ * `enable_runner_deregistration`, `features` and `zip`, and that no module
+ * input names a tag filter.
+ */
+const upstreamTagFilter = (
+  instanceTags: Readonly<Record<string, string>>,
+  tagFilters: Readonly<Record<string, string>>
+): boolean =>
+  A.every(R.toEntries(tagFilters), ([key, prefix]) =>
+    O.exists(O.fromUndefinedOr(instanceTags[key]), Str.startsWith(prefix))
+  );
 const environmentOf = (values: Record<string, string>) =>
   Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(values));
 
@@ -147,6 +184,37 @@ describe("CiRunners physical names", () => {
       assertTrue(touchesLiveFleet("/github-action-runners/app/github_app_id"));
       assertTrue(touchesLiveFleet("beep-"));
       assertFalse(touchesLiveFleet("beep-fleet-prod-heavy"));
+    })
+  );
+
+  it.effect("keeps both production pool environments clear of the live fleet", () =>
+    Effect.sync(() => {
+      const environments = A.map(PoolName.literals, (pool) => poolEnvironment(productionStage, pool));
+      expect(environments).toStrictEqual(["beep-fleet-prod-heavy", "beep-fleet-prod-overflow"]);
+      expect(A.map(environments, touchesLiveFleet)).toStrictEqual([false, false]);
+    })
+  );
+
+  it.effect("keeps both production pool environments outside the live watchers' prefix tag filters", () =>
+    Effect.sync(() => {
+      // The live fleet's `ghr:environment` values are its two module prefixes; its termination watchers select by
+      // `{ "ghr:environment": <prefix> }` with startsWith semantics.
+      const liveEnvironments = A.filter(liveFleetPrefixes, (prefix) => !Str.includes("/")(prefix));
+      expect(liveEnvironments).toStrictEqual(["beep-ci", "beep-ovf"]);
+      const prodEnvironments = A.map(PoolName.literals, (pool) => poolEnvironment(productionStage, pool));
+      const selects = (environment: string) =>
+        A.map(liveEnvironments, (prefix) =>
+          upstreamTagFilter({ "ghr:environment": environment }, { "ghr:environment": prefix })
+        );
+      expect(A.map(prodEnvironments, selects)).toStrictEqual([
+        [false, false],
+        [false, false],
+      ]);
+      // Positive control: each live watcher selects its own pool's instances.
+      expect(A.map(liveEnvironments, selects)).toStrictEqual([
+        [true, false],
+        [false, true],
+      ]);
     })
   );
 

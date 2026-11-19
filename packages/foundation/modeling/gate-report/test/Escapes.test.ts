@@ -11,8 +11,8 @@ describe("stripEscapes", () => {
     assert.strictEqual(stripEscapes("\u001b]8;;https://x.dev\u0007a\u001b]8;;\u001b\\"), "a");
   });
 
-  it("removes cursor moves, screen clears and the ESC c full reset", () => {
-    assert.strictEqual(stripEscapes("\u001bc\u001b[3J\u001b[?25lx\u001bM"), "x");
+  it("removes cursor moves, screen clears, a character-set designation and the ESC c full reset", () => {
+    assert.strictEqual(stripEscapes("\u001bc\u001b[3J\u001b[?25lx\u001bM\u001b7\u001b(B"), "x");
   });
 
   it("keeps other control characters and plain text", () => {

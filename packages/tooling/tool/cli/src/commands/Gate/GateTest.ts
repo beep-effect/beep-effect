@@ -73,7 +73,13 @@ const recordCapturedRun = Effect.fnUntraced(function* (input: {
     }),
   ];
   yield* recordEventRun(GateServicesConfig.make({ repoRoot: input.location.repoRoot, settings: input.settings }))(
-    EventRun.make({ target: input.target, events, exitCode: input.captured.exitCode, output: input.captured.output })
+    EventRun.make({
+      target: input.target,
+      events,
+      exitCode: input.captured.exitCode,
+      output: input.captured.output,
+      subject: O.some(input.location.subject),
+    })
   );
 });
 

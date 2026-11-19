@@ -21,8 +21,9 @@ const $I = $RepoGateRecordId.create("PackageLocation");
 
 /**
  * The file that marks the repository root: Turbo's root configuration. A
- * package may carry its own `turbo.json`, which extends the root's (`"extends":
- * ["//"]`), so only a `turbo.json` that extends nothing marks the root.
+ * package may carry its own `turbo.json`, which extends the root's
+ * (`"extends": ["//"]`), so only a `turbo.json` that extends nothing marks
+ * the root.
  *
  * **Example** (Read the marker)
  *

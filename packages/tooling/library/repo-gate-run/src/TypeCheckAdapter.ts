@@ -18,6 +18,7 @@ import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { boundedExcerpt } from "./Excerpt.ts";
 import { DiagnosticSeverity, parseDiagnosticLine, TsDiagnostic } from "./TsDiagnostic.ts";
 
 const $I = $RepoGateRunId.create("TypeCheckAdapter");
@@ -195,6 +196,7 @@ const runEvents = (input: {
   readonly items: ReadonlyArray<Item>;
   readonly exitCode: number;
   readonly unitsChecked: number;
+  readonly logExcerpt: O.Option<string>;
 }): ReadonlyArray<GateEvent> => [
   GateEvent.cases.RunStarted.make({
     runId: input.run.runId,
@@ -213,6 +215,7 @@ const runEvents = (input: {
     reason: input.exitCode === 0 ? "passed" : "failed",
     exitCode: O.some(input.exitCode),
     collected: O.some(input.unitsChecked),
+    logExcerpt: input.logExcerpt,
   }),
 ];
 
@@ -225,8 +228,9 @@ const runEvents = (input: {
  * error fails, a warning warns. Colour codes are stripped first and lines
  * that are not diagnostics (continuations, summaries) are skipped. A
  * diagnostic printed without a file is keyed on the run's project file. A
- * nonzero exit with no diagnostic reduces to an errored run carrying the log
- * excerpt.
+ * nonzero exit with no diagnostic reduces to an errored run carrying an
+ * excerpt of the output, under the recorder's 8 KiB bound; an empty output
+ * carries none, so the recorder's excerpt of the raw log is used instead.
  *
  * **Example** (Read one diagnostic)
  *
@@ -246,18 +250,23 @@ const runEvents = (input: {
  * @category adapters
  * @since 0.0.0
  */
-export const compilerEvents = (compiler: CompilerRun): ReadonlyArray<GateEvent> =>
-  runEvents({
+export const compilerEvents = (compiler: CompilerRun): ReadonlyArray<GateEvent> => {
+  const items = pipe(
+    Str.split(stripAnsi(compiler.output), /\r?\n/u),
+    A.map(flow(Str.trim, parseDiagnosticLine)),
+    A.getSomes,
+    A.map(compilerItem(compiler.run.project))
+  );
+  // Only an unexplained failure carries an excerpt; it is bounded as the recorder bounds its own.
+  const unexplained = compiler.exitCode !== 0 && A.isReadonlyArrayEmpty(items);
+  return runEvents({
     run: compiler.run,
     exitCode: compiler.exitCode,
     unitsChecked: compiler.unitsChecked,
-    items: pipe(
-      Str.split(stripAnsi(compiler.output), /\r?\n/u),
-      A.map(flow(Str.trim, parseDiagnosticLine)),
-      A.getSomes,
-      A.map(compilerItem(compiler.run.project))
-    ),
+    items,
+    logExcerpt: unexplained ? boundedExcerpt(compiler.output) : O.none(),
   });
+};
 
 /**
  * Turn the unbuilt-reference probe's finding into the events of a `check`
@@ -290,6 +299,7 @@ export const unbuiltReferenceEvents = (probe: UnbuiltProbe): ReadonlyArray<GateE
     run: probe.run,
     exitCode: 1,
     unitsChecked: 1,
+    logExcerpt: O.none(),
     // A probe finding has no location, so each is keyed on its reference to
     // stay a distinct item; the package's project file is the unit.
     items: A.map(probe.missing, (missing) =>
