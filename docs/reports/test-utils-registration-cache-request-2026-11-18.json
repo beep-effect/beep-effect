@@ -1,0 +1,25 @@
+{
+  "previous": {
+    "//": "2181371710b13a335af649537aa1a45ddc23d5b1fac0c79f5471bfac34a80e6b",
+    "@beep/alchemy-aws-extras": "00db2c71fd607b470f41023056678e95069570699adbbcb217e57cb32fc2f8e5",
+    "@beep/alchemy-postgres": "dd67cbafbd3b3a1a2f2c96ed7e98ff20bb6f89dee83fc3aedd8b4a6039718ea6",
+    "@beep/infra-github": "81e0233cdd950ebbd87559c7a61aca368fa3460380ca7beb4d6ca6d97bb0c5f7"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (slop-cleanup closeout lane, @slop/11-18-26)",
+    "reason": "//#check:model-first-slices gains the effect-drizzle and pglite manifests and sources the prototype now links; three packages gain a @beep/test-utils devDependency and tsconfig references for atRegistration. No command, cache flag, output or environment changed; no qualification granted.",
+    "basis": {
+      "path": "docs/reports/test-utils-registration-cache-review-2026-11-18.md",
+      "sha256": "80798e279b6dfc1a6ae68aa9dba04cade5214fcb06bff580976b5401d3e36a49"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/alchemy-aws-extras",
+    "@beep/alchemy-postgres",
+    "@beep/infra-github"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
