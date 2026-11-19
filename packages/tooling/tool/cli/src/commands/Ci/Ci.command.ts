@@ -28,6 +28,7 @@ import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { ciAdmissionCommand } from "./CiAdmission.ts";
 import { ciBinaryClosureCommand } from "./CiBinaryClosure.ts";
 import { ciBinaryPinCommand } from "./CiBinaryPin.ts";
+import { ciBinaryPinSyncCommand } from "./CiBinaryPinSync.ts";
 import { ciBootstrapCommands } from "./CiBootstrap.command.ts";
 import { writeCacheLocalSummary } from "./CiCacheLocalSummary.ts";
 import { runCachePilotInputs } from "./CiCachePilotInputs.ts";
@@ -403,6 +404,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     "- bun run beep ci change-profile [base] [head] (BEEP_CI_PR_BASE_SHA/BEEP_CI_PR_HEAD_SHA win)",
     "- bun run beep ci binary-closure [--out <path>] [--list]",
     "- bun run beep ci binary-pin --tag <beep-ci-...> --sha256 <hex> [--check|--write] [--file <path>]",
+    "- bun run beep ci binary-pin-sync --cwd <checkout> --tag <beep-ci-...> --sha256 <hex> --releases <json> [--base <ref>] [--output <file>]",
     "- bun run beep ci compile-binary --outfile <path> [--target bun-linux-x64]",
     "- bun run beep ci dependency-review --base <sha> --head <sha>",
     "- bun run beep ci ruleset [--capture|--check]",
@@ -434,6 +436,7 @@ export const ciCommand = Command.make("ci", {}, () =>
     cachePilotInputsCommand,
     ciBinaryClosureCommand,
     ciBinaryPinCommand,
+    ciBinaryPinSyncCommand,
     ciCompileBinaryCommand,
     ...ciGovernanceCommands,
     ciAdmissionCommand,

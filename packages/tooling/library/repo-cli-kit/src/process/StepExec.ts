@@ -44,6 +44,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { JsonStringCodec } from "../schema/JsonCodec.ts";
 import { PosInt } from "../schema/PosInt.ts";
+import { BoundedOutput, boundedChunkReducer, emptyBoundedOutput, OutputBound, OutputRetention } from "./OutputBound.ts";
 import type * as PlatformError from "effect/PlatformError";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 
@@ -74,70 +75,15 @@ export type StepStdio = "inherit" | "pipe" | "ignore";
  */
 export type CaptureSource = "all" | "merge" | "stdout";
 
-const OutputRetention = LiteralKit(["head", "head-tail"]).pipe(
-  $I.annoteSchema("OutputRetention", { description: "Retain the leading output or both bounded edges." })
-);
-
 /**
- * A character cap, truncation notice and output-retention policy.
- *
- * **Details**
- * Head retention is the compatible default. Head-tail retention shares the
- * same character cap between the beginning and the rolling end of the output;
- * the notice is inserted between those ranges.
- *
- * **Example** (Cap captured output at 4 KiB)
- *
- * ```ts
- * import { OutputBound } from "@beep/repo-cli-kit/process/StepExec"
- *
- * const bound = OutputBound.make({ maxChars: 4096, truncatedNotice: "\n[cli] truncated" })
- * console.log(bound.maxChars)
- * ```
+ * The output bound, the bounded accumulator, its empty
+ * seed and the fold step, re-exported from `@beep/repo-cli-kit/process/OutputBound`,
+ * the platform-free leaf that owns them.
  *
  * @category models
  * @since 0.0.0
  */
-export class OutputBound extends S.Opaque<OutputBound, { readonly brand: unique symbol }>()(
-  S.Struct({
-    maxChars: S.Finite,
-    truncatedNotice: S.String,
-    retention: OutputRetention.pipe(
-      S.withDecodingDefaultKey(Effect.succeed(OutputRetention.Enum.head)),
-      S.withConstructorDefault(Effect.succeed(OutputRetention.Enum.head))
-    ),
-  }).pipe(
-    $I.annoteSchema("OutputBound", {
-      description: "Character cap, truncation notice and backward-compatible output retention policy.",
-    })
-  )
-) {}
-
-/**
- * Accumulator produced by the bounded output fold.
- *
- * **Example** (Seed a fold accumulator)
- *
- * ```ts
- * import { BoundedOutput } from "@beep/repo-cli-kit/process/StepExec"
- *
- * const state = BoundedOutput.make({ text: "captured", truncated: false })
- * console.log(state.truncated)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class BoundedOutput extends S.Opaque<BoundedOutput, { readonly brand: unique symbol }>()(
-  S.Struct({
-    text: S.String,
-    truncated: S.Boolean,
-  }).pipe(
-    $I.annoteSchema("BoundedOutput", {
-      description: "Accumulator produced by the bounded subprocess output fold.",
-    })
-  )
-) {}
+export { BoundedOutput, boundedChunkReducer, emptyBoundedOutput, OutputBound } from "./OutputBound.ts";
 
 /**
  * Combined captured subprocess result.
@@ -275,25 +221,6 @@ export class QualityTaskStep extends S.Opaque<QualityTaskStep, { readonly brand:
 ) {}
 
 /**
- * Empty bounded-output accumulator seed.
- *
- * **Example** (Start a fold from the untruncated seed)
- *
- * ```ts
- * import { emptyBoundedOutput } from "@beep/repo-cli-kit/process/StepExec"
- *
- * console.log(emptyBoundedOutput.truncated)
- * ```
- *
- * @category constructors
- * @since 0.0.0
- */
-export const emptyBoundedOutput = BoundedOutput.make({
-  text: "",
-  truncated: false,
-});
-
-/**
  * The 512 KiB repo-run output bound, retaining leading and final failure context.
  *
  * **Details**
@@ -341,74 +268,6 @@ export const qualityStepOutputBound = OutputBound.make({
   maxChars: QUALITY_STEP_OUTPUT_MAX_CHARS,
   truncatedNotice: `\n[beep-cli] output truncated after ${QUALITY_STEP_OUTPUT_MAX_CHARS} characters`,
 });
-
-/**
- * Reducer that appends a decoded chunk while enforcing an output bound.
- *
- * **Details**
- *
- * Head retention appends the notice once the cap is exceeded and ignores later
- * chunks. Head-tail retention keeps the leading half and rolls the remaining
- * budget over the latest output, preserving final diagnostics without growing
- * the retained text. An empty chunk does not truncate head-tail output.
- *
- * **Example** (Overflow a four-character bound)
- *
- * ```ts
- * import { boundedChunkReducer, emptyBoundedOutput, OutputBound } from "@beep/repo-cli-kit/process/StepExec"
- *
- * const step = boundedChunkReducer(OutputBound.make({ maxChars: 4, truncatedNotice: "!" }))
- * console.log(step(emptyBoundedOutput, "abcdef"))
- * ```
- *
- * @param bound - Character cap and truncation notice to enforce.
- * @returns A fold step over `(state, chunk)`.
- * @category folding
- * @since 0.0.0
- */
-export const boundedChunkReducer = (bound: OutputBound) => {
-  if (bound.retention === OutputRetention.Enum["head-tail"]) {
-    return (state: BoundedOutput, chunk: string): BoundedOutput => {
-      if (Str.isEmpty(chunk)) return state;
-      const combined = `${state.text}${chunk}`;
-      if (!state.truncated && Str.length(combined) <= bound.maxChars) {
-        return BoundedOutput.make({ text: combined, truncated: false });
-      }
-      const head = Str.takeLeft(bound.maxChars / 2)(combined);
-      const tail = Str.takeRight(bound.maxChars - Str.length(head))(combined);
-      return BoundedOutput.make({
-        text: `${head}${bound.truncatedNotice}${tail}`,
-        truncated: true,
-      });
-    };
-  }
-
-  return (state: BoundedOutput, chunk: string): BoundedOutput => {
-    if (state.truncated) {
-      return state;
-    }
-
-    const remaining = bound.maxChars - Str.length(state.text);
-    if (remaining <= 0) {
-      return BoundedOutput.make({
-        text: `${state.text}${bound.truncatedNotice}`,
-        truncated: true,
-      });
-    }
-
-    if (Str.length(chunk) <= remaining) {
-      return BoundedOutput.make({
-        text: `${state.text}${chunk}`,
-        truncated: false,
-      });
-    }
-
-    return BoundedOutput.make({
-      text: `${state.text}${Str.slice(0, remaining)(chunk)}${bound.truncatedNotice}`,
-      truncated: true,
-    });
-  };
-};
 
 /**
  * Fold a byte stream into decoded text bounded by a character cap.

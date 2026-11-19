@@ -354,6 +354,7 @@
       <excludeFolder url="file://$MODULE_DIR$/goals/python-free-repo" />
       <excludeFolder url="file://$MODULE_DIR$/goals/repo-cli-gh-git-consolidation" />
       <excludeFolder url="file://$MODULE_DIR$/goals/session-route-resolver" />
+      <excludeFolder url="file://$MODULE_DIR$/goals/gate-output-switch-on" />
       <excludePattern pattern=".beep" />
       <excludePattern pattern=".next" />
       <excludePattern pattern=".turbo" />

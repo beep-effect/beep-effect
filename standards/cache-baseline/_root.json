@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core P1 lane, feat/gate-report-core)",
-    "reason": "Re-record the root subject after merging main at 0d9ee895239, which changed it independently. The lane's own root change is unchanged: the one manifest input the policy fingerprint added to //#lint:policy-fingerprint for the new @beep/gate-report package. No qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-report-core P2 lane, feat/gate-report-services)",
+    "reason": "Record the two new libraries' tasks (generated library scripts, root task definitions, no override), the repo CLI tasks whose configuration changed with its new dependency on the gate-run library, and the inputs the policy fingerprint added to the root. No qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-report-cache-review-2026-11-19.md",
-      "sha256": "39300e400686c32a28f42e92022fa0cb609fb5b47be2646574997652930caf80"
+      "path": "docs/reports/gate-run-libraries-cache-review-2026-11-19.md",
+      "sha256": "bbbc45f4f8d6f8888e8781843104af37ac3229ad9b70a731aa7634bd3ff26c80"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "0542921fc02fd4b49f06874403bac83a6fe736d1586eb902956c39922a36aa85"
+      "sha256": "d2661d46fd5e91ccc215095fe4b8677c11837a503bbba70855a0ad714e4bcc5c"
     }
   ],
   "nodes": [
@@ -2281,6 +2281,9 @@
           "packages/tooling/library/qa-capture/src/**",
           "packages/tooling/library/repo-cli-kit/package.json",
           "packages/tooling/library/repo-cli-kit/src/**",
+          "packages/tooling/library/repo-gate-record/package.json",
+          "packages/tooling/library/repo-gate-run/package.json",
+          "packages/tooling/library/repo-gate-run/src/**",
           "packages/tooling/library/repo-tsconfig/package.json",
           "packages/tooling/library/repo-tsconfig/src/**",
           "packages/tooling/library/repo-utils/package.json",

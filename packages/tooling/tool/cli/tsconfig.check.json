@@ -192,6 +192,9 @@
       "path": "../../library/repo-cli-kit/tsconfig.json"
     },
     {
+      "path": "../../library/repo-gate-run/tsconfig.json"
+    },
+    {
       "path": "../../library/repo-tsconfig/tsconfig.json"
     },
     {

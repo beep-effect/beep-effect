@@ -382,6 +382,29 @@ describe("reduceEvents — diagnostic occurrences", () => {
     ]);
     assert.strictEqual(report.totals.failed, 1);
   });
+
+  it("keeps location-less diagnostics of one shape apart by their raw messages", () => {
+    const notFound = (name: string) =>
+      Item.make({
+        ...diagnosticAt({ file: "tsconfig.json", code: "TS6053", message: `File '${name}' not found.`, line: 1 }),
+        location: O.none(),
+      });
+    const report = reduce([
+      runStarted({ itemKind: "diagnostic" }),
+      finished(notFound("a.ts")),
+      finished(notFound("b.ts")),
+      finished(notFound("c.ts")),
+      finished(notFound("a.ts")),
+      runFinished({ reason: "failed", collected: O.some(1) }),
+    ]);
+    assert.strictEqual(report.totals.failed, 3);
+    assert.deepStrictEqual(occurrences(report), [null, 2, 3]);
+    assert.isTrue(
+      A.every(report.items, (item) =>
+        ItemKey.guards.DiagnosticKey(item.key) ? item.key.shape === "File <s> not found." : false
+      )
+    );
+  });
 });
 
 describe("reduceEvents — timeouts and unit faults (build-report retargeted)", () => {
@@ -396,21 +419,42 @@ describe("reduceEvents — timeouts and unit faults (build-report retargeted)", 
     assert.strictEqual(report.outcome, "some-fail");
   });
 
-  it("a load failure with zero items is surfaced as its own total and fails the run", () => {
-    const report = reduce([
-      runStarted(),
-      E.UnitFaulted.make({
-        unit: FILE,
-        kind: "load",
-        name: "load",
-        detail: ItemDetail.make({ message: "Cannot find module './missing'" }),
-      }),
-      runFinished({ reason: "failed", collected: O.some(1) }),
-    ]);
+  // The Vitest adapter reports a module that failed to load as `UnitCollected { items: 0 }`
+  // and a `UnitFaulted` load, with no collected count on `RunFinished`.
+  const loadFailure = (unit: string) => [
+    E.UnitCollected.make({ unit, items: 0 }),
+    E.UnitFaulted.make({
+      unit,
+      kind: "load",
+      name: "load",
+      detail: ItemDetail.make({ message: "Cannot find module './missing'" }),
+    }),
+  ];
+
+  it("a load failure of the only module is surfaced as its own total and fails the run", () => {
+    const report = reduce([runStarted(), ...loadFailure(FILE), runFinished({ reason: "failed", exitCode: O.some(1) })]);
+    assert.strictEqual(report.totals.collected, 0);
     assert.strictEqual(report.totals.loadFailed, 1);
     assert.strictEqual(report.totals.failed, 0);
     assert.strictEqual(report.reason, "failed");
     assert.strictEqual(report.outcome, "some-fail");
+  });
+
+  it("a load failure beside a module that collected renders the same verdict", () => {
+    const report = reduce([
+      runStarted(),
+      ...loadFailure("src/broken.test.ts"),
+      E.UnitCollected.make({ unit: FILE, items: 1 }),
+      finished(testItem({ name: "adds", outcome: "passed" })),
+      runFinished({ reason: "failed", exitCode: O.some(1) }),
+    ]);
+    assert.strictEqual(report.totals.collected, 1);
+    assert.strictEqual(report.reason, "failed");
+  });
+
+  it("nothing collected with no load fault to explain it stays errored", () => {
+    const report = reduce([runStarted(), E.UnitCollected.make({ unit: FILE, items: 0 }), runFinished()]);
+    assert.strictEqual(report.reason, "errored");
   });
 
   it("an afterAll hook that threw fails the unit though every item passed", () => {

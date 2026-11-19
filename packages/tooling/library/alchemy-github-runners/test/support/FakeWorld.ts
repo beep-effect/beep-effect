@@ -52,6 +52,9 @@ export class World {
   /** Scripted CreateFleet answers, consumed in order; default launches everything. */
   fleetAnswers: Array<FleetLaunchResult | AwsApiError> = [];
   terminated: Array<string> = [];
+  /** Instance ids passed to `tag` and `untag`, in call order. */
+  tagged: Array<string> = [];
+  untagged: Array<string> = [];
   ssm: Record<string, { value: string; modified: number; tags: Record<string, string> }> = {};
   sent: Array<SentMessage> = [];
   githubRunners: Array<SelfHostedRunner> = [];
@@ -148,11 +151,13 @@ export const worldContext = (world: World) =>
           }
         }),
         tag: Effect.fn("FakeEc2.tag")(function* (instanceId, tags) {
+          world.tagged.push(instanceId);
           for (const instance of O.toArray(world.instance(instanceId))) {
             instance.tags = { ...instance.tags, ...tags };
           }
         }),
         untag: Effect.fn("FakeEc2.untag")(function* (instanceId, keys) {
+          world.untagged.push(instanceId);
           for (const instance of O.toArray(world.instance(instanceId))) {
             instance.tags = R.filter(instance.tags, (_value, key) => !A.contains(keys, key));
           }

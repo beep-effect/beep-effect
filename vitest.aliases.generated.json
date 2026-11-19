@@ -2393,5 +2393,15 @@
   "@beep/gate-report": [
     "./packages/foundation/modeling/gate-report/src/index.ts"
   ],
-  "@beep/gate-report/*": ["./packages/foundation/modeling/gate-report/src/*"]
+  "@beep/gate-report/*": ["./packages/foundation/modeling/gate-report/src/*"],
+  "@beep/repo-gate-record": [
+    "./packages/tooling/library/repo-gate-record/src/index.ts"
+  ],
+  "@beep/repo-gate-record/*": [
+    "./packages/tooling/library/repo-gate-record/src/*"
+  ],
+  "@beep/repo-gate-run": [
+    "./packages/tooling/library/repo-gate-run/src/index.ts"
+  ],
+  "@beep/repo-gate-run/*": ["./packages/tooling/library/repo-gate-run/src/*"]
 }
