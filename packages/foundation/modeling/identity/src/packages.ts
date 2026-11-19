@@ -267,7 +267,8 @@ const generatedComposers = $I.compose(
   "infra-ci-runners",
   "gate-report",
   "repo-gate-record",
-  "repo-gate-run"
+  "repo-gate-run",
+  "repo-gate-vitest"
 );
 
 // GENERATED LAB COMPOSERS START — synced from apps/labs/* workspace manifests by beep; do not edit by hand. On merge conflict, rerun `bun run beep lint identity-registry --fix`.
@@ -4024,3 +4025,20 @@ export const $RepoGateRecordId: Identity.IdentityComposer<"@beep/repo-gate-recor
  * @since 0.0.0
  */
 export const $RepoGateRunId: Identity.IdentityComposer<"@beep/repo-gate-run"> = composers.$RepoGateRunId;
+
+/**
+ * Identity composer for `@beep/repo-gate-vitest`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $RepoGateVitestId } from "@beep/identity/packages"
+ *
+ * const id = $RepoGateVitestId.make("RepoGateVitest")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $RepoGateVitestId: Identity.IdentityComposer<"@beep/repo-gate-vitest"> = composers.$RepoGateVitestId;

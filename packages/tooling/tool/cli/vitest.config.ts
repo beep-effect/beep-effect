@@ -72,6 +72,7 @@ const isolatedSuites = [
   "test/explore-graduate-write.test.ts",
   "test/files-command.test.ts",
   "test/frozen-grant-set.test.ts",
+  "test/gate-task-path.test.ts",
   "test/github-app-mint-serve.test.ts",
   "test/goals-bootstrap-plan.test.ts",
   "test/goals-closeout-check.test.ts",

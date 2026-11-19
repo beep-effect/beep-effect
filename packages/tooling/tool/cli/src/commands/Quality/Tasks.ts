@@ -69,7 +69,6 @@ import * as S from "effect/Schema";
 import * as Semaphore from "effect/Semaphore";
 import { isHeavyDocsOnlyPath } from "../Ci/CiOperational.schemas.ts";
 import { discoverEffectImportSourceFiles, EffectImportRulesOptions } from "../Laws/EffectImports.ts";
-import { checkPackageReferencesBuilt } from "./CheckProbe.ts";
 import { coverageEnvironment } from "./internal/CoverageEnvironment.ts";
 import { defaultJSDocTotalsBaselinePath } from "./internal/JSDocRatchet.ts";
 import { readJsonc } from "./internal/QualityArtifactSupport.ts";
@@ -78,7 +77,7 @@ import type { LsTreeEntry } from "@beep/git/Git";
 export { coverageProducerEnvironment } from "./internal/CoverageEnvironment.ts";
 
 import { manifestParser } from "@beep/repo-cli-kit/ManifestRead";
-import { PACKAGE_CHECK_PROBE_COMMAND } from "@beep/repo-cli-kit/package-scripts/PackageScripts.schemas";
+import { PACKAGE_CHECK_GATE_COMMAND } from "@beep/repo-cli-kit/package-scripts/CheckGate";
 import {
   CapturedStep,
   formatCommandLine,
@@ -93,6 +92,10 @@ import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../internal/repo-run/ChangedFiles.ts";
 import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.step.ts";
+import { runCheckGate } from "../Gate/GateCheck.ts";
+import { recordRootRun } from "../Gate/GateRoot.ts";
+import { captureRun, GateToolExit, splitAudienceArgs } from "../Gate/GateRuntime.ts";
+import { runTestGate } from "../Gate/GateTest.ts";
 import { CoverageProducerIdentity, resolveCoverageProducerIdentity } from "./internal/CoverageArtifacts.ts";
 import {
   cleanCoverageRegressionOutputs,
@@ -173,6 +176,7 @@ import {
   ReportOnlyInertLaneId,
   RootAuditMode,
 } from "./Quality.schemas.ts";
+import type { AudienceFlagInput } from "@beep/cli-kit/CliAudience";
 import type { GitShape } from "@beep/git/Git";
 import type { GlobPatternError } from "@beep/glob/GlobPattern";
 import type { LenientManifest } from "@beep/package-json/LenientManifest";
@@ -183,6 +187,7 @@ import type { PgliteTestcontainerResource } from "@beep/test-utils";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type * as Scope from "effect/Scope";
+import type { PackageGateError } from "../Gate/GateTest.ts";
 import type { CheckProbeReadError, UnbuiltReferenceOutputs } from "./CheckProbe.ts";
 import type { CoverageSnapshotEntry } from "./internal/CoverageRegression.ts";
 import type { CoverageAffectedScope, CoverageBaselineRowDelta, CoverageScopeMode } from "./internal/CoverageScope.ts";
@@ -5167,19 +5172,32 @@ const readPackageJson = Effect.fn("QualityTasks.readPackageJson")(function* (pac
 // there is no separate `beep:audit` script (see `rootAuditSteps`).
 const packageAuditTasks: ReadonlyArray<QualityTaskName> = ["build", "check", "test", "lint"];
 
-// `beep:check` runs `tsrs -p`, which prints one TS6305 per reference whose
-// declarations are unbuilt; the filesystem probe prints one line instead.
-// The task path probes exactly when the package's generated `check` does: the
-// generator leaves the probe off a kind whose `beep:check` builds the
-// referenced projects itself (`tsrs -b`, the infra kind).
-const probeBeforePackageCheck = (
+// `test` and `check` are gates on the package task path: they print the console
+// from the record, not the tool's stream. `check` runs the gate in process
+// exactly when the package's generated `check` script is the gate (the infra
+// kind keeps its own `tsrs -b` check); `test` runs the package's `test` script
+// and renders the record the Vitest adapter wrote. Audience flags select the
+// console and never reach the tool.
+const packageGate = (
   packageDir: string,
-  task: QualityTaskInvocation["task"],
+  invocation: QualityTaskInvocation,
   scripts: { readonly [name: string]: string }
-): Effect.Effect<void, CheckProbeReadError | UnbuiltReferenceOutputs, FileSystem.FileSystem | Path.Path> =>
-  QualityTaskName.is.check(task) && pipe(scripts, R.get("check"), O.exists(Str.startsWith(PACKAGE_CHECK_PROBE_COMMAND)))
-    ? checkPackageReferencesBuilt(packageDir)
-    : Effect.void;
+) => {
+  const { flags, rest } = splitAudienceArgs(invocationArgs(invocation));
+  const checkGate = O.as(
+    O.filter(
+      R.get(scripts, "check"),
+      (script) => QualityTaskName.is.check(invocation.task) && script === PACKAGE_CHECK_GATE_COMMAND
+    ),
+    runCheckGate(packageDir, flags)
+  );
+  return O.orElse(checkGate, () =>
+    O.as(
+      O.liftPredicate(invocation.task, QualityTaskName.is.test),
+      runTestGate(packageDir, profileByTask.test.script, rest, flags)
+    )
+  );
+};
 
 const runPackageTask: (
   packageDir: string,
@@ -5210,30 +5228,79 @@ const runPackageTask: (
       return;
     }
 
-    yield* probeBeforePackageCheck(packageDir, invocation.task, scripts);
-
-    yield* runStep(
-      QualityTaskStep.make({
-        label: `${packageName} ${script}`,
-        command: "bun",
-        args: ["run", script, ...args],
-        cwd: packageDir,
-      })
+    yield* O.getOrElse(packageGate(packageDir, invocation, scripts), () =>
+      runStep(
+        QualityTaskStep.make({
+          label: `${packageName} ${script}`,
+          command: "bun",
+          args: ["run", script, ...args],
+          cwd: packageDir,
+        })
+      )
     );
   }
 );
+
+// A gate at the root: Turbo's output goes to the root log, not the terminal, and
+// one console is printed from the records of the packages that ran. The run
+// summary (`--summarize`) names them and says which the cache served.
+const TURBO_SUMMARIZE_ARG = "--summarize";
+
+const runRootGateStep = Effect.fn("QualityTasks.runRootGateStep")(function* (
+  repoRoot: string,
+  gate: "test" | "check",
+  step: QualityTaskStep,
+  flags: AudienceFlagInput
+) {
+  const resolved = yield* withTurboSecretSession(step);
+  const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args, Bun.env);
+  const runtime = cacheRuntimeStep(resolved);
+  const startedAt = yield* DateTime.now;
+  const captured = yield* captureRun({
+    command: runtime.command,
+    args: runtime.args,
+    cwd: resolved.cwd,
+    env: { ...envOverrides, ...(resolved.env ?? {}) },
+    extendEnv: turboEnvExtendsAmbient(resolved.command, resolved.args),
+  });
+  const report = yield* recordRootRun({ repoRoot, gate, startedAt, captured, flags });
+  return O.as(
+    O.liftPredicate(captured.exitCode, (code) => code !== 0),
+    GateToolExit.make({ gate, subject: report.subject, exitCode: captured.exitCode })
+  );
+});
+
+const runRootGateSteps = (
+  repoRoot: string,
+  gate: "test" | "check",
+  steps: ReadonlyArray<QualityTaskStep>,
+  flags: AudienceFlagInput
+) =>
+  Effect.map(
+    Effect.forEach(steps, (step) => runRootGateStep(repoRoot, gate, step, flags), { concurrency: 1 }),
+    flow(A.getSomes, A.head)
+  );
+
+// The unit lane printed its own console, so its failure adds no summary; a
+// failed integration lane reports as before.
+const failRootTestLanes = (unitExit: O.Option<GateToolExit>, integrationFailures: ReadonlyArray<QualityTaskFailed>) =>
+  A.isReadonlyArrayNonEmpty(integrationFailures)
+    ? failQualityTaskFailures("test", integrationFailures)
+    : O.match(unitExit, { onNone: () => Effect.void, onSome: Effect.fail });
 
 const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
   repoRoot: string,
   args: ReadonlyArray<string>
 ) {
-  const lanes = parseTestLaneSelection(args);
+  const { flags, rest } = splitAudienceArgs(args);
+  const lanes = parseTestLaneSelection(rest);
   const plan = yield* qualityConcurrencyPlan;
   const unitSteps = optionalQualityTaskStep({
     enabled: lanes.unit,
-    step: () => turboStep(repoRoot, "test:unit", ["test"], boundedRootTurboArgs(lanes.args, plan)),
+    step: () =>
+      turboStep(repoRoot, "test:unit", ["test"], boundedRootTurboArgs([...lanes.args, TURBO_SUMMARIZE_ARG], plan)),
   });
-  const unitFailures = yield* collectStreamingStepFailures("test", unitSteps);
+  const unitExit = yield* runRootGateSteps(repoRoot, "test", unitSteps, flags);
   let integrationFailures = A.empty<QualityTaskFailed>();
   if (lanes.integration) {
     const parallelArgs = yield* workspaceTaskArgs(repoRoot, "test:integration:parallel", lanes.args);
@@ -5263,7 +5330,7 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
     integrationFailures = A.appendAll(parallelFailures, serialFailures);
   }
 
-  yield* failQualityTaskFailures("test", A.appendAll(unitFailures, integrationFailures));
+  yield* failRootTestLanes(unitExit, integrationFailures);
 });
 
 const runRootTask = Effect.fn("QualityTasks.runRootTask")(function* (
@@ -5307,6 +5374,7 @@ const runRootTask = Effect.fn("QualityTasks.runRootTask")(function* (
 type QualityTaskError =
   | DomainError
   | NoSuchFileError
+  | PackageGateError
   | QualityTaskConfigurationError
   | QualityTaskFailed
   | QualityTaskGroupFailed

@@ -122,6 +122,9 @@
       "path": "../../../../foundation/modeling/epistemics/tsconfig.json"
     },
     {
+      "path": "../../../../foundation/modeling/gate-report/tsconfig.json"
+    },
+    {
       "path": "../../../../foundation/modeling/github-commands/tsconfig.json"
     },
     {
@@ -198,6 +201,9 @@
     },
     {
       "path": "../../../library/repo-cli-kit/tsconfig.json"
+    },
+    {
+      "path": "../../../library/repo-gate-record/tsconfig.json"
     },
     {
       "path": "../../../library/repo-gate-run/tsconfig.json"
