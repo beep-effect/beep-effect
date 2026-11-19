@@ -2588,6 +2588,12 @@
       "@beep/infra-ci-runners/*": ["./packages/tooling/infra/ci-runners/src/*"],
       "@beep/infra-ci-runners/internal/*": [
         "./packages/tooling/infra/ci-runners/src/internal/*"
+      ],
+      "@beep/gate-report": [
+        "./packages/foundation/modeling/gate-report/src/index.ts"
+      ],
+      "@beep/gate-report/*": [
+        "./packages/foundation/modeling/gate-report/src/*"
       ]
     }
   }

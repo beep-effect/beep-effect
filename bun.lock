@@ -2790,6 +2790,21 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/foundation/modeling/gate-report": {
+      "name": "@beep/gate-report",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/fc-runs": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/foundation/modeling/github-commands": {
       "name": "@beep/github-commands",
       "version": "0.0.0",
@@ -5367,6 +5382,8 @@
     "@beep/firecrawl": ["@beep/firecrawl@workspace:packages/drivers/firecrawl"],
 
     "@beep/freshbooks": ["@beep/freshbooks@workspace:packages/drivers/freshbooks"],
+
+    "@beep/gate-report": ["@beep/gate-report@workspace:packages/foundation/modeling/gate-report"],
 
     "@beep/git": ["@beep/git@workspace:packages/drivers/git"],
 

@@ -369,6 +369,7 @@
         "packages/foundation/modeling/contract-kit/package.json",
         "packages/foundation/modeling/epistemics/package.json",
         "packages/foundation/modeling/epistemics/src/**",
+        "packages/foundation/modeling/gate-report/package.json",
         "packages/foundation/modeling/github-commands/package.json",
         "packages/foundation/modeling/github-commands/src/**",
         "packages/foundation/modeling/github-references/package.json",
