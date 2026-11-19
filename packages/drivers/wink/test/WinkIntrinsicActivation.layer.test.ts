@@ -10,17 +10,17 @@ import { vi } from "vitest";
 const observed = vi.hoisted(() => ({ constructorCalls: 0 }));
 // A protocol-negative SDK deliberately ignores the supplied adapter. The real
 // pinned SDK/model still construct once; the owner must reject the uncaptured core.
-vi.mock("wink-nlp", async () => {
-  const actual = await vi.importActual<typeof import("wink-nlp")>("wink-nlp");
-  const { default: model } = await import("wink-eng-lite-web-model");
-  return {
-    ...actual,
-    default: () => {
-      observed.constructorCalls++;
-      return actual.default(model);
-    },
-  };
-});
+vi.mock("wink-nlp", (importOriginal) =>
+  Promise.all([importOriginal<typeof import("wink-nlp")>(), import("wink-eng-lite-web-model")]).then(
+    ([actual, { default: model }]) => ({
+      ...actual,
+      default: () => {
+        observed.constructorCalls++;
+        return actual.default(model);
+      },
+    })
+  )
+);
 
 it.effect("the actual live engine layer preserves an uncaptured-core activation refusal", () =>
   Effect.gen(function* () {

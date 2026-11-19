@@ -82,11 +82,19 @@ const runGitleaks = Effect.fn("GitleaksObservationDigestTest.run")(function* (
   return exitCode;
 }, Effect.scoped);
 
+// Build the platform services into a Context and provide that at this registration entry point,
+// keeping scope lifetimes correct and satisfying effect(strictEffectProvide).
 const gitleaksOnPath = await atRegistrationAsync(
-  runGitleaks(["version"], ".").pipe(
-    Effect.map((exitCode) => exitCode === 0),
-    Effect.orElseSucceed(() => false),
-    Effect.provide(NodeServices.layer)
+  NodeServices.layer.pipe(
+    Layer.build,
+    Effect.flatMap((context) =>
+      runGitleaks(["version"], ".").pipe(
+        Effect.map((exitCode) => exitCode === 0),
+        Effect.orElseSucceed(() => false),
+        Effect.provide(context)
+      )
+    ),
+    Effect.scoped
   )
 );
 
