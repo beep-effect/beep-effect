@@ -14,10 +14,10 @@ import {
   TextMimeTypeValues,
   VideoMimeTypeValues,
 } from "@beep/data/MimeTypes";
-import { $SchemaId } from "@beep/identity/packages";
 import { A, Struct } from "@beep/utils";
 import * as Fn from "effect/Function";
 import { flow, pipe } from "effect/Function";
+import { $SchemaId } from "./internal/SchemaId.ts";
 import { LiteralKit } from "./LiteralKit/index.ts";
 import type { LiteralKit as LiteralKitSchema } from "./LiteralKit/index.ts";
 

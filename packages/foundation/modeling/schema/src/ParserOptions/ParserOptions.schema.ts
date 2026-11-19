@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as Match from "effect/Match";
@@ -18,6 +17,7 @@ import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Struct from "effect/Struct";
 import { BuffEncoding } from "../BufferEncoding.ts";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { alwaysEquivalent } from "../SchemaUtils/toEquivalence.ts";
 import { HeaderArray, HeaderTransformFunction } from "./ParserOptions.types.ts";

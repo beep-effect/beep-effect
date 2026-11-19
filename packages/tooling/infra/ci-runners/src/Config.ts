@@ -10,7 +10,6 @@
 
 import { AwsAccountId } from "@beep/alchemy-aws-extras/DeployTarget";
 import { RunnerType } from "@beep/alchemy-github-runners/RunnerPool.models";
-import { $InfraCiRunnersId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -20,6 +19,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { $InfraCiRunnersId } from "./internal/InfraCiRunnersId.ts";
 
 const $I = $InfraCiRunnersId.create("Config");
 

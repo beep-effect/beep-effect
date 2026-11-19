@@ -9,10 +9,10 @@
  * @packageDocumentation
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as BigDecimal from "effect/BigDecimal";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
+import { $SchemaId } from "../internal/SchemaId.ts";
 
 const $I = $SchemaId.create("EthAmount");
 

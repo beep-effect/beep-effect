@@ -6,8 +6,8 @@
  */
 
 import { Territories as TerritoriesData } from "@beep/data";
-import { $SchemaId } from "@beep/identity";
 import { Struct } from "@beep/utils";
+import { $SchemaId } from "./internal/SchemaId.ts";
 import { LiteralKit } from "./LiteralKit/index.ts";
 import { MappedLiteralKit } from "./MappedLiteralKit/index.ts";
 

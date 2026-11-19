@@ -12,7 +12,6 @@
  * @since 0.0.0
  */
 
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -22,6 +21,7 @@ import * as Str from "effect/String";
 import { Ec2Fleet } from "./Ec2Fleet.service.ts";
 import { GitHubRunners } from "./GitHubApp.service.ts";
 import { RunnerOwner } from "./GitHubRunners.models.ts";
+import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import { installationTokenFor } from "./internal/Installation.ts";
 import { MessageQueue } from "./MessageQueue.service.ts";
 import { GitHubApiError } from "./RunnerFleet.errors.ts";

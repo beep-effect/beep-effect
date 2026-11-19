@@ -23,7 +23,6 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
@@ -32,6 +31,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FileExtension } from "./FileExtension.ts";
 import { HasNullByte, UsesPosixSeparator, UsesWindowsSeparator } from "./FilePath/index.ts";
+import { $SchemaId } from "./internal/SchemaId.ts";
 
 const $I = $SchemaId.create("FileName");
 

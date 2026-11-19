@@ -4,10 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $SchemaId } from "@beep/identity";
+
 import { pipe } from "effect/Function";
 import * as S from "effect/Schema";
 import { Fn } from "../Fn/index.ts";
+import { $SchemaId } from "../internal/SchemaId.ts";
 
 const $I = $SchemaId.create("ParserOptions");
 

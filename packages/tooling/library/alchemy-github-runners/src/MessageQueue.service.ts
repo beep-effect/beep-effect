@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as Context from "effect/Context";
+import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import type * as Effect from "effect/Effect";
 import type * as O from "effect/Option";
 import type { AwsApiError } from "./RunnerFleet.errors.ts";
