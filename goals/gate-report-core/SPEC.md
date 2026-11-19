@@ -369,7 +369,8 @@ reports from the report schema's arbitrary.
   Fixture: the TS6305 cascade a package-local `check` prints on a fresh lane with unbuilt
   dependencies (701 lines for one cause in the census; the fixture is regenerated from the
   repository, never from transcript text) renders as one fold line with the count, the cause and
-  the fix command, and the whole projection is at most 5 lines.
+  the fix command, and the whole projection is at most 5 lines; diagnostics that share a file, a
+  code and a message shape remain distinct items.
 - [ ] **AC-L8 A path with its size.** Every non-green projection has one line naming the raw log
   and the record by repository-relative path with the log's size; a test reads both files back at
   those paths and checks the size.
@@ -556,6 +557,14 @@ Lane feat/gate-report-core
 
 Reverse: Make the task path exit non-zero when a record's reason is errored.
 
+### A failed record or log write is an omission, never an error, 2026-11-19
+
+The recorder returns what it could not write as omissions beside the report. The console prints one line naming them before the closing verdict, and the exit code stays the tool's. The raw stream is read once: if the log write fails partway, the in-memory excerpt holds what was read before the failure.
+
+Lane feat/gate-report-services
+
+Reverse: Make the recorder fail on a write error and catch it in the run entry.
+
 ### Seven fixtures, each generated from the repository, 2026-11-19
 
 The fixture set: a green test run of `@beep/glob`; a red test run with an assertion diff; a test timeout; a module that fails to load; an empty run; a check run with two diagnostics; and the TS6305 cascade a package check prints with unbuilt upstream declarations. Each is produced by running the real tool on repository code or on a small fixture package and capturing its events or output; none is copied from a session transcript. The cascade fixture is captured from a fixture package, never by removing declarations from the working tree: a compiler run on an unbuilt tree overwrites the package's own declarations.
@@ -563,6 +572,14 @@ The fixture set: a green test run of `@beep/glob`; a red test run with an assert
 Lane feat/gate-report-core
 
 Reverse: Replace a generated fixture with a hand-written one and note why in the test.
+
+### The history read deadline belongs to the caller, 2026-11-19
+
+The history contract answers labels and a delta for a report; it carries no deadline of its own. The gate run request names how long to wait (250 ms by default) and the run entry enforces it, because a service shape holds operations, not data. A history that fails or misses the deadline costs one omission line and nothing else.
+
+Lane feat/gate-report-services
+
+Reverse: Put the deadline back on the history service shape and record a schema-first exception.
 
 ### Reason precedence: cancelled, errored, failed, passed; a fallback item explains an unexplained failure, 2026-11-19
 
@@ -582,7 +599,7 @@ Reverse: Change the interchange mapping module.
 
 ### The item key is a three-way union with an injective fingerprint and occurrence ordinals, 2026-11-19
 
-An item key is one of test (file and full name), diagnostic (file, code or rule, normalized message shape) or fault (a load, hook or unhandled failure of a unit). Its fingerprint is the tag followed by each field with its length in front, so for any two keys the schema accepts the fingerprints are equal exactly when the keys are equal, whatever characters the fields contain. A diagnostic that repeats a file, code and message shape at another location in the same run gets an occurrence ordinal from the reducer, starting at 2 and absent on the first, so each occurrence is its own item and the key stays free of line numbers. The failure signature hashes with FNV-1a 64 instead of a SHA-256 prefix, which keeps the model synchronous and free of a crypto dependency; the function-boundary line is an optional input an adapter may supply.
+An item key is one of test (file and full name), diagnostic (file, code or rule, normalized message shape) or fault (a load, hook or unhandled failure of a unit). Its fingerprint is the tag followed by each field with its length in front, so for any two keys the schema accepts the fingerprints are equal exactly when the keys are equal, whatever characters the fields contain. A diagnostic that repeats a file, code and message shape at another location in the same run gets an occurrence ordinal from the reducer, starting at 2 and absent on the first, so each occurrence is its own item and the key stays free of line numbers. An ordinal is a position among same-shape diagnostics in one run, not an identity: when one of several is fixed, the highest ordinal disappears and the others keep the lower keys, so a history over the keys counts fixed and still failing correctly for that shape and cannot say which one it was. Telling them apart across runs would need the line number the key leaves out on purpose; a closer match by location is left to `goals/gate-run-history`. The failure signature hashes with FNV-1a 64 instead of a SHA-256 prefix, which keeps the model synchronous and free of a crypto dependency; the function-boundary line is an optional input an adapter may supply.
 
 Lane feat/gate-report-core
 
@@ -620,9 +637,25 @@ Lane feat/gate-report-core
 
 Reverse: Move the projection module into the gate-run library and test the laws there.
 
-### The first slice lands as two pull requests: the model, then the services and wiring, 2026-11-19
+### OutputBound lives in a leaf that does not load the Bun platform, 2026-11-19
 
-The plan lands P1 through P3 as one pull request. It is split so each is reviewable and green alone: first `@beep/gate-report` complete (schemas, reducer, classifiers, counts, signature, folding table, dispatch cells and the law tests that need no service), then the record and gate-run libraries, the Vitest adapter and the `test` and `check` wiring for `@beep/glob`. P4, P5 and the closeout follow as the third. The packet allows three open pull requests; these are sequential.
+The output bound and its chunk reducer moved to their own leaf of the repo CLI kit; the step-execution module re-exports them, so no existing import changes. The gate-run library imports the leaf, which cut its cold start from about 0.28 seconds to about 0.15, on a path every package check takes. The check probe takes its build-closure command from the library instead of repeating it, at a measured cost of at most 10 ms.
+
+Lane feat/gate-report-services
+
+Reverse: Import the bound from the step-execution module again and delete the leaf.
+
+### Pointer commands are marked planned until the gate queries exist, 2026-11-19
+
+The pointer table names the two planned queries of the gate command family and marks them planned. A test fails as soon as one is marked live without the check against the real command tree, which is the seam for law 9; the wiring slice adds the commands and flips the mark.
+
+Lane feat/gate-report-services
+
+Reverse: Mark the two query commands live and add the command-tree check.
+
+### The goal lands as four sequential pull requests, 2026-11-19
+
+The plan lands P1 through P3 as one pull request. It is split so each is reviewable and green alone: first `@beep/gate-report` complete (schemas, reducer, classifiers, counts, signature, folding table, dispatch cells and the law tests that need no service), then the record and gate-run libraries, then the Vitest adapter with the `test` and `check` wiring and the gate queries, then the port review and the closeout. The wiring rewrites every package manifest, so it stays apart from the libraries. The packet allows three open pull requests; these are sequential.
 
 Lane feat/gate-report-core
 
@@ -635,6 +668,14 @@ Location, code, rule and severity sit on the item, where the item key reads them
 Lane feat/gate-report-core
 
 Reverse: Restore the earlier wording in the spec.
+
+### Diagnostic parsing is a leaf of its own; a probe finding is a failed item, 2026-11-19
+
+The TypeScript diagnostic parser moved out of the Yeet issue parser into a leaf of the gate-run library that does not import the report model, so the repo CLI can parse diagnostics without loading the model. The type-check adapter builds on it and emits each diagnostic with its plain key and location; the reducer numbers repeats. An unbuilt-reference probe finding is keyed on the reference it names and counts as one unit checked, so the run reads FAILED with the TS6305 fold line and not as an empty run.
+
+Lane feat/gate-report-services
+
+Reverse: Fold the parser back into the type-check adapter and count a probe finding as nothing checked.
 
 ### The Vitest adapter is a new test kit, @beep/repo-gate-vitest, loaded lazily and registered by specifier, 2026-11-19
 

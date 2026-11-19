@@ -18,10 +18,11 @@ import * as S from "effect/Schema";
 import { classifyOutcome, tally } from "./Classify.ts";
 import { GateEvent } from "./GateEvent.ts";
 import { GateReport, Unit } from "./GateReport.ts";
-import { Item, ItemDetail, Location } from "./Item.ts";
+import { Item, ItemDetail } from "./Item.ts";
 import { fingerprint, ItemKey } from "./ItemKey.ts";
 import { PolicyRenderState } from "./Policy.ts";
 import { ItemOutcome, RunReason } from "./Vocabulary.ts";
+import type { Location } from "./Item.ts";
 import type { PolicyBreach } from "./Policy.ts";
 import type { StrayOutput } from "./StrayOutput.ts";
 import type { FailureKind } from "./Vocabulary.ts";
@@ -61,11 +62,12 @@ type Indexed<V> = { readonly order: number; readonly value: V };
 
 type DiagnosticKey = typeof ItemKey.cases.DiagnosticKey.Type;
 
-type Occurrence = { readonly ordinal: number; readonly location: O.Option<Location> };
+// Ordinals of one diagnostic key's occurrences in this run, by where each was reported.
+type Occurrences = HashMap.HashMap<string, number>;
 
 type RunState = {
   readonly start: O.Option<RunStarted>;
-  readonly occurrences: HashMap.HashMap<string, ReadonlyArray<Occurrence>>;
+  readonly occurrences: HashMap.HashMap<string, Occurrences>;
   readonly units: HashMap.HashMap<string, Indexed<Unit>>;
   readonly items: HashMap.HashMap<string, Indexed<Item>>;
   readonly collected: O.Option<number>;
@@ -111,21 +113,18 @@ const putItem = (state: RunState, item: Item): RunState => ({
   items: upsert(state.items, fingerprint(item.key), item),
 });
 
-const sameLocation = O.makeEquivalence(S.toEquivalence(Location));
+// Line and column are integers, so the first two colons delimit them whatever the file holds;
+// a diagnostic with no location has the empty place.
+const placeOf = (location: O.Option<Location>): string =>
+  O.match(location, { onNone: () => "", onSome: (at) => `${at.line}:${at.column}:${at.file}` });
 
 const placeOccurrence = (state: RunState, item: Item, key: DiagnosticKey): RunState => {
   const base = ItemKey.cases.DiagnosticKey.make({ file: key.file, code: key.code, shape: key.shape });
   const id = fingerprint(base);
-  const seen = O.getOrElse(HashMap.get(state.occurrences, id), (): ReadonlyArray<Occurrence> => []);
-  const ordinal = pipe(
-    A.findFirst(seen, (occurrence) => sameLocation(occurrence.location, item.location)),
-    O.map((occurrence) => occurrence.ordinal),
-    O.getOrElse(() => seen.length + 1)
-  );
-  const occurrences =
-    ordinal > seen.length
-      ? HashMap.set(state.occurrences, id, A.append(seen, { ordinal, location: item.location }))
-      : state.occurrences;
+  const place = placeOf(item.location);
+  const seen = O.getOrElse(HashMap.get(state.occurrences, id), (): Occurrences => HashMap.empty());
+  const ordinal = O.getOrElse(HashMap.get(seen, place), () => HashMap.size(seen) + 1);
+  const occurrences = HashMap.set(state.occurrences, id, HashMap.set(seen, place, ordinal));
   const placed = ItemKey.cases.DiagnosticKey.make({
     file: key.file,
     code: key.code,
