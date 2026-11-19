@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "bun run beep:build",
-    "check": "beep-cli quality check-probe && bun run beep:check",
+    "check": "beep-cli gate run check",
     "codegen": "bun run scripts/sync-migration-bundle.ts --write",
     "coverage": "bunx vitest run --config vitest.coverage.config.ts --coverage",
     "docgen": "bun run beep:docgen",

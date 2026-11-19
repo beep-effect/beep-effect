@@ -607,13 +607,7 @@ describe("Turbo lane digests", () => {
           yield* fs.utimes(summaryPath, writtenAtMillis / 1_000, writtenAtMillis / 1_000);
           const step = pipe(ciLaneStepsForTesting(root, "labs", labsLaneOptions), A.head, O.getOrThrow);
           const ledger = path.join(root, "lane-labs", "ledger.jsonl");
-          const declared = yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), {
-            durationMs: 1,
-            startedAt: startedAtIso,
-            endedAt: "2026-09-16T14:05:00.000Z",
-            failure: O.none(),
-            step,
-          });
+          const declared = yield* recordTurboLaneLedgerRowForTesting(O.some(ledger), { startedAt: startedAtIso, step });
           yield* closeTurboLaneLedger(ledger, 1);
           return { declared, digest: yield* readTurboLaneLedger(ledger) };
         });

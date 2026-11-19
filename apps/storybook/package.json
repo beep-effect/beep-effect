@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "bun run beep:build",
-    "check": "beep-cli quality check-probe && bun run beep:check",
+    "check": "beep-cli gate run check",
     "lint": "bun run beep:lint",
     "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
     "lint:fix": "bun run beep:lint:fix",

@@ -4,20 +4,24 @@ import { FoldResult } from "@beep/gate-report/CauseFold";
 import { CellContext, ConsoleInput, dispatchTable } from "@beep/gate-report/Dispatch";
 import { GateReport, Totals } from "@beep/gate-report/GateReport";
 import { RunOutcome, RunShape } from "@beep/gate-report/Vocabulary";
-import { ConsoleRequest } from "@beep/repo-gate-run/GateConsole";
+import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
+import { ConsoleRequest, ConsoleSettings, makeGateConsole } from "@beep/repo-gate-run/GateConsole";
 import {
   CommandStatus,
   commandText,
   PointerLineError,
   repoCommands,
   repoGateCommands,
+  repoGateCommandsFor,
   repoPointerTable,
+  repoPointerTableFor,
   verifyPointerLine,
 } from "@beep/repo-gate-run/RepoPointers";
 import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertSuccess } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
 import { agentConsole, epoch, failedTest, linesOf } from "./support/fixtures.ts";
@@ -99,14 +103,45 @@ describe("AC-L9: next steps are commands", () => {
     assert.isFalse(A.some(texts, (text) => A.some(upstreamTools, (tool) => Str.includes(tool)(text))));
   });
 
-  // Seam for the live command-tree check: the `gate` command family is not
-  // built, so every command is `planned`. When one is marked `live`, this test
-  // fails until it is replaced by a check that resolves each live command in
-  // the repo CLI's command tree.
-  it("every pointer command is still planned, pending the live command-tree check", () => {
+  // Every pointer command is built; the repo CLI's `gate-pointers` test resolves
+  // each one in its real command tree.
+  it("every pointer command is live", () => {
     assert.deepStrictEqual(
-      A.filter(repoCommands, (command) => CommandStatus.is.live(command.status)),
+      A.filter(repoCommands, (command) => CommandStatus.is.planned(command.status)),
       A.empty<RepoCommand>()
+    );
+  });
+});
+
+describe("pointers pinned to a record", () => {
+  const packageTarget = RecordTarget.cases.PackageTarget.make({
+    packageDir: "packages/foundation/modeling/glob",
+    gate: "check",
+  });
+  const rootTarget = RecordTarget.cases.RootTarget.make({ gate: "test", runId: "20261119T000000000Z-0001" });
+
+  it("names a package record by --dir and a root run by --run", () => {
+    assert.strictEqual(
+      commandText(repoGateCommandsFor(packageTarget).showRun),
+      "bun run beep gate show check --dir packages/foundation/modeling/glob"
+    );
+    assert.strictEqual(
+      commandText(repoGateCommandsFor(rootTarget).showItem),
+      "bun run beep gate item test 1 --run 20261119T000000000Z-0001"
+    );
+    assert.deepStrictEqual(R.keys(repoPointerTableFor(rootTarget)), ["test"]);
+  });
+
+  it("a console request's own pointer table replaces the settings' one", () => {
+    const text = makeGateConsole(ConsoleSettings.make({ audience: "agent" })).render(
+      ConsoleRequest.make({ report: reportFor("check"), pointers: O.some(repoPointerTableFor(packageTarget)) })
+    ).text;
+    const pointer = A.filter(linesOf(text), Str.startsWith("next: "));
+    assert.deepStrictEqual(pointer, ["next: bun run beep gate show check --dir packages/foundation/modeling/glob"]);
+    const commands = repoGateCommandsFor(packageTarget);
+    assertSuccess(
+      Result.map(verifyPointerLine(A.getUnsafe(pointer, 0), [commands.showRun, commands.showItem]), A.length),
+      1
     );
   });
 });

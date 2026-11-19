@@ -178,6 +178,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("test and docgen Turbo cache 
       });
       yield* writeJson(root, "packages/helper/package.json", { name: "@fixture/helper" });
       yield* writeJson(root, "packages/utils/package.json", { name: "@beep/utils" });
+      // `test` depends on the gate adapter's transit task, as on `@beep/utils`'s.
+      yield* writeJson(root, "packages/gate-vitest/package.json", { name: "@beep/repo-gate-vitest" });
       yield* writeJson(root, "turbo.json", {
         futureFlags: { globalConfiguration: true },
         global: config.global,
@@ -328,6 +330,8 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("CLI Turbo configuration cons
         });
       }
       yield* writeJson(root, "packages/utils/package.json", { name: "@beep/utils" });
+      // `test` depends on the gate adapter's transit task, as on `@beep/utils`'s.
+      yield* writeJson(root, "packages/gate-vitest/package.json", { name: "@beep/repo-gate-vitest" });
       yield* writeFile(root, "packages/cli/turbo.json", override);
       const writeConfiguration = (inputs: ReadonlyArray<string>) =>
         writeJson(root, "turbo.json", {

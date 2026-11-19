@@ -5,9 +5,11 @@
  *
  * The root `lint --fix` no-op path intentionally stays in this tiny module so
  * clean worktrees do not pay the startup cost of loading the full Effect CLI.
- * So does `quality check-probe`, which leads every package's generated `check`
- * script: it loads the filesystem probe alone (about 0.1 s, against about 1 s
- * for the full CLI).
+ * So does `gate run check`, every package's generated `check` script: it loads
+ * the check gate and the four platform services it needs (measured on a built
+ * `@beep/glob`: 323 ms for the whole check against 176 ms for the compiler
+ * alone, and against about 1 s more for the full CLI). `quality check-probe`,
+ * the probe alone, keeps its own slim path.
  *
  * @internal
  * @packageDocumentation
@@ -17,6 +19,12 @@
 const rawArgv = Bun.argv.slice(2);
 let handledLintFixNoop = false;
 const isCheckProbe = rawArgv.length === 2 && rawArgv[0] === "quality" && rawArgv[1] === "check-probe";
+// One audience flag may follow (`beep-cli gate run check --agent`); anything else goes to the full CLI.
+const isGateRunCheck =
+  rawArgv[0] === "gate" &&
+  rawArgv[1] === "run" &&
+  rawArgv[2] === "check" &&
+  (rawArgv.length === 3 || (rawArgv.length === 4 && /^--(agent|human|ci|audience=[a-z]+)$/.test(rawArgv[3] ?? "")));
 
 if (isCheckProbe) {
   const [{ runMain }, BunFileSystem, BunPath, Effect, Layer, { checkPackageReferencesBuilt }] = await Promise.all([
@@ -33,6 +41,42 @@ if (isCheckProbe) {
     Layer.merge(BunFileSystem.layer, BunPath.layer).pipe(
       Layer.build,
       Effect.flatMap((context) => Effect.provide(checkPackageReferencesBuilt(process.cwd()), context)),
+      Effect.scoped
+    )
+  );
+}
+
+if (isGateRunCheck) {
+  const [
+    { runMain },
+    BunChildProcessSpawner,
+    BunFileSystem,
+    BunPath,
+    BunStdio,
+    Effect,
+    Layer,
+    { runCheckGate },
+    { splitAudienceArgs },
+  ] = await Promise.all([
+    import("@effect/platform-bun/BunRuntime"),
+    import("@effect/platform-bun/BunChildProcessSpawner"),
+    import("@effect/platform-bun/BunFileSystem"),
+    import("@effect/platform-bun/BunPath"),
+    import("@effect/platform-bun/BunStdio"),
+    import("effect/Effect"),
+    import("effect/Layer"),
+    import("./commands/Gate/GateCheck.ts"),
+    import("./commands/Gate/GateRuntime.ts"),
+  ]);
+  // The gate prints its own console and fails with the compiler's exit code. It
+  // needs the file system, paths, a process spawner and standard output only.
+  runMain(
+    BunChildProcessSpawner.layer.pipe(
+      Layer.provideMerge(Layer.mergeAll(BunFileSystem.layer, BunPath.layer, BunStdio.layer)),
+      Layer.build,
+      Effect.flatMap((context) =>
+        Effect.provide(runCheckGate(process.cwd(), splitAudienceArgs(rawArgv.slice(3)).flags), context)
+      ),
       Effect.scoped
     )
   );
@@ -72,7 +116,7 @@ if (rawArgv.length === 2 && rawArgv[0] === "lint" && rawArgv[1] === "--fix") {
   }
 }
 
-if (!handledLintFixNoop && !isCheckProbe) {
+if (!handledLintFixNoop && !isCheckProbe && !isGateRunCheck) {
   const fullCliModule = new URL("./bin-main.js", import.meta.url).href;
   await import(fullCliModule);
 }

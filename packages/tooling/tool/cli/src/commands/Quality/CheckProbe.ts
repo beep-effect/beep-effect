@@ -339,6 +339,34 @@ const readPackageName = Effect.fn("CheckProbe.readPackageName")(function* (
 });
 
 /**
+ * The one line a package check prints when referenced projects have no
+ * declaration index: the missing count, the first missing output and the
+ * build-closure command.
+ *
+ * **Example** (Name an unbuilt upstream)
+ *
+ * ```ts
+ * import { MissingReferenceOutput, unbuiltReferenceLine } from "@beep/repo-cli/commands/Quality/CheckProbe"
+ *
+ * const missing = MissingReferenceOutput.make({
+ *   package: "@beep/data",
+ *   reference: "../utils",
+ *   declarationFile: "../utils/dist/index.d.ts",
+ * })
+ * console.log(unbuiltReferenceLine("@beep/data")([missing]).startsWith("[beep-cli] @beep/data check")) // true
+ * ```
+ *
+ * @param name - The package name.
+ * @returns The line for every missing declaration index, the first named, without a newline.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const unbuiltReferenceLine =
+  (name: string) =>
+  (missing: A.NonEmptyReadonlyArray<MissingReferenceOutput>): string =>
+    `[beep-cli] ${name} check: unbuilt upstream declarations: ${A.length(missing)} missing (first: ${A.headNonEmpty(missing).declarationFile}); build them with: ${packageBuildClosureCommand(name)}`;
+
+/**
  * Stop a package check before its compiler when a referenced project has no
  * declaration index, printing one line instead of one TS6305 per reference.
  *
@@ -371,17 +399,15 @@ export const checkPackageReferencesBuilt = Effect.fn("CheckProbe.checkPackageRef
   const name = yield* readPackageName(packageDir);
   const declarationIndexes = yield* makeDeclarationIndexCache;
   const missing = yield* missingReferenceOutputs(packageDir, { name, dir: packageDir }, declarationIndexes);
-  const first = A.head(missing);
-
-  if (O.isSome(first)) {
+  if (A.isReadonlyArrayNonEmpty(missing)) {
     const buildCommand = packageBuildClosureCommand(name);
-    const message = `[beep-cli] ${name} check: unbuilt upstream declarations: ${A.length(missing)} missing (first: ${first.value.declarationFile}); build them with: ${buildCommand}`;
+    const message = unbuiltReferenceLine(name)(missing);
     yield* Console.error(message);
     return yield* UnbuiltReferenceOutputs.make({
       message,
       package: name,
       missing: A.length(missing),
-      firstOutput: first.value.declarationFile,
+      firstOutput: A.headNonEmpty(missing).declarationFile,
       buildCommand,
     });
   }
