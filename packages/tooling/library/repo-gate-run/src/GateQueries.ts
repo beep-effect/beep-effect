@@ -253,6 +253,14 @@ export const QueryMiss = LiteralKit(["no-runs", "no-item"]).pipe(
 );
 
 /**
+ * Type of {@link QueryMiss}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type QueryMiss = typeof QueryMiss.Type;
+
+/**
  * A gate query found nothing to show.
  *
  * **Example** (Build the error)
