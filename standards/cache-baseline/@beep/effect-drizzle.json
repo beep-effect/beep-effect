@@ -3,17 +3,17 @@
   "subject": "@beep/effect-drizzle",
   "review": {
     "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the gate wiring: the generated check of every non-infra package is now beep-cli gate run check, which re-keys the scripts digest of every task of the rewritten packages; the test and check tasks declare their gate directory as an output and depend on the transit task of the code that writes the record; the new @beep/repo-gate-vitest package's tasks are new subjects. No qualification is granted.",
+    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-2026-11-19.md",
-      "sha256": "68c0801ecc71b547f442eb2f11647553050570891eca83cf655bd143dc71fd7e"
+      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
+      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
     }
   },
   "nodes": [
     {
       "computation": "@beep/effect-drizzle#build",
       "command": "bun run beep:build",
-      "commandDigest": "fa7106018d9b1c6570af483c2a0fcbb7f27d3a9020292c43e8b443480db946fa",
+      "commandDigest": "682610f2ba00f385d95c135b62e5a274c82c3ded420390e400e3eaacb6d56f63",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/markdown#build",
@@ -70,7 +70,7 @@
     {
       "computation": "@beep/effect-drizzle#check",
       "command": "beep-cli gate run check",
-      "commandDigest": "fa7106018d9b1c6570af483c2a0fcbb7f27d3a9020292c43e8b443480db946fa",
+      "commandDigest": "682610f2ba00f385d95c135b62e5a274c82c3ded420390e400e3eaacb6d56f63",
       "dependencies": [
         "@beep/effect-drizzle#build",
         "@beep/fc-runs#build",
@@ -91,6 +91,12 @@
           "!README.md",
           "../../../.bun-version",
           "../../../.nvmrc",
+          "../../../packages/tooling/library/repo-cli-kit/src/process/OutputBound.ts",
+          "../../../packages/tooling/library/repo-gate-run/src/**",
+          "../../../packages/tooling/library/repo-tsconfig/src/TsconfigLoader.ts",
+          "../../../packages/tooling/library/repo-tsconfig/src/internal/extendsTarget.ts",
+          "../../../packages/tooling/tool/cli/src/commands/Gate/**",
+          "../../../packages/tooling/tool/cli/src/commands/Quality/CheckProbe.ts",
           "../../../standards/root-package.projection.generated.json",
           "../../../tools/tsgo-shim/package.json",
           "../../../tools/tsgo-shim/tsgo.js",
@@ -120,7 +126,7 @@
     {
       "computation": "@beep/effect-drizzle#coverage",
       "command": "bunx vitest run --coverage --exclude=test/integration/**",
-      "commandDigest": "fa7106018d9b1c6570af483c2a0fcbb7f27d3a9020292c43e8b443480db946fa",
+      "commandDigest": "682610f2ba00f385d95c135b62e5a274c82c3ded420390e400e3eaacb6d56f63",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/markdown#build",
@@ -174,7 +180,7 @@
     {
       "computation": "@beep/effect-drizzle#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "fa7106018d9b1c6570af483c2a0fcbb7f27d3a9020292c43e8b443480db946fa",
+      "commandDigest": "682610f2ba00f385d95c135b62e5a274c82c3ded420390e400e3eaacb6d56f63",
       "dependencies": [
         "@beep/effect-drizzle#transit",
         "@beep/repo-docgen#transit"
@@ -214,7 +220,7 @@
     {
       "computation": "@beep/effect-drizzle#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "fa7106018d9b1c6570af483c2a0fcbb7f27d3a9020292c43e8b443480db946fa",
+      "commandDigest": "682610f2ba00f385d95c135b62e5a274c82c3ded420390e400e3eaacb6d56f63",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -248,7 +254,7 @@
     {
       "computation": "@beep/effect-drizzle#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "fa7106018d9b1c6570af483c2a0fcbb7f27d3a9020292c43e8b443480db946fa",
+      "commandDigest": "682610f2ba00f385d95c135b62e5a274c82c3ded420390e400e3eaacb6d56f63",
       "dependencies": [
         "@beep/fc-runs#transit",
         "@beep/markdown#transit",
@@ -317,7 +323,7 @@
     {
       "computation": "@beep/effect-drizzle#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "fa7106018d9b1c6570af483c2a0fcbb7f27d3a9020292c43e8b443480db946fa",
+      "commandDigest": "682610f2ba00f385d95c135b62e5a274c82c3ded420390e400e3eaacb6d56f63",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -373,7 +379,7 @@
     {
       "computation": "@beep/effect-drizzle#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "fa7106018d9b1c6570af483c2a0fcbb7f27d3a9020292c43e8b443480db946fa",
+      "commandDigest": "682610f2ba00f385d95c135b62e5a274c82c3ded420390e400e3eaacb6d56f63",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -419,7 +425,7 @@
     {
       "computation": "@beep/effect-drizzle#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "fa7106018d9b1c6570af483c2a0fcbb7f27d3a9020292c43e8b443480db946fa",
+      "commandDigest": "682610f2ba00f385d95c135b62e5a274c82c3ded420390e400e3eaacb6d56f63",
       "dependencies": [
         "@beep/fc-runs#transit",
         "@beep/markdown#transit",
@@ -466,7 +472,7 @@
     {
       "computation": "@beep/effect-drizzle#test",
       "command": "bun run beep:test",
-      "commandDigest": "fa7106018d9b1c6570af483c2a0fcbb7f27d3a9020292c43e8b443480db946fa",
+      "commandDigest": "682610f2ba00f385d95c135b62e5a274c82c3ded420390e400e3eaacb6d56f63",
       "dependencies": [
         "@beep/fc-runs#transit",
         "@beep/markdown#transit",
@@ -525,7 +531,7 @@
     {
       "computation": "@beep/effect-drizzle#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "fa7106018d9b1c6570af483c2a0fcbb7f27d3a9020292c43e8b443480db946fa",
+      "commandDigest": "682610f2ba00f385d95c135b62e5a274c82c3ded420390e400e3eaacb6d56f63",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/markdown#build",
@@ -569,7 +575,7 @@
     {
       "computation": "@beep/effect-drizzle#test:integration:parallel",
       "command": "bun run beep:test:integration",
-      "commandDigest": "fa7106018d9b1c6570af483c2a0fcbb7f27d3a9020292c43e8b443480db946fa",
+      "commandDigest": "682610f2ba00f385d95c135b62e5a274c82c3ded420390e400e3eaacb6d56f63",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/markdown#build",

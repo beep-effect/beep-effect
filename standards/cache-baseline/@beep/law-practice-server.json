@@ -3,17 +3,17 @@
   "subject": "@beep/law-practice-server",
   "review": {
     "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the gate wiring: the generated check of every non-infra package is now beep-cli gate run check, which re-keys the scripts digest of every task of the rewritten packages; the test and check tasks declare their gate directory as an output and depend on the transit task of the code that writes the record; the new @beep/repo-gate-vitest package's tasks are new subjects. No qualification is granted.",
+    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-2026-11-19.md",
-      "sha256": "68c0801ecc71b547f442eb2f11647553050570891eca83cf655bd143dc71fd7e"
+      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
+      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
     }
   },
   "nodes": [
     {
       "computation": "@beep/law-practice-server#build",
       "command": "bun run beep:build",
-      "commandDigest": "2c61728439cb1a55dfd29026b235ef2a7b2d2a548c24b3d801af14b6085dac03",
+      "commandDigest": "b679899ecb2f56ec03c0833f4f18a42434d622a99f7ecaa3d273530951ba2ee2",
       "dependencies": [
         "@beep/box#build",
         "@beep/duckdb#build",
@@ -98,7 +98,7 @@
     {
       "computation": "@beep/law-practice-server#check",
       "command": "beep-cli gate run check",
-      "commandDigest": "2c61728439cb1a55dfd29026b235ef2a7b2d2a548c24b3d801af14b6085dac03",
+      "commandDigest": "b679899ecb2f56ec03c0833f4f18a42434d622a99f7ecaa3d273530951ba2ee2",
       "dependencies": [
         "@beep/box#build",
         "@beep/duckdb#build",
@@ -147,6 +147,12 @@
           "!README.md",
           "../../../.bun-version",
           "../../../.nvmrc",
+          "../../../packages/tooling/library/repo-cli-kit/src/process/OutputBound.ts",
+          "../../../packages/tooling/library/repo-gate-run/src/**",
+          "../../../packages/tooling/library/repo-tsconfig/src/TsconfigLoader.ts",
+          "../../../packages/tooling/library/repo-tsconfig/src/internal/extendsTarget.ts",
+          "../../../packages/tooling/tool/cli/src/commands/Gate/**",
+          "../../../packages/tooling/tool/cli/src/commands/Quality/CheckProbe.ts",
           "../../../standards/root-package.projection.generated.json",
           "../../../tools/tsgo-shim/package.json",
           "../../../tools/tsgo-shim/tsgo.js",
@@ -176,7 +182,7 @@
     {
       "computation": "@beep/law-practice-server#coverage",
       "command": "bunx --bun vitest run --coverage --exclude=test/integration/** --exclude=test/PartyContactSource.boundary.test.ts",
-      "commandDigest": "2c61728439cb1a55dfd29026b235ef2a7b2d2a548c24b3d801af14b6085dac03",
+      "commandDigest": "b679899ecb2f56ec03c0833f4f18a42434d622a99f7ecaa3d273530951ba2ee2",
       "dependencies": [
         "@beep/box#build",
         "@beep/duckdb#build",
@@ -258,7 +264,7 @@
     {
       "computation": "@beep/law-practice-server#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "2c61728439cb1a55dfd29026b235ef2a7b2d2a548c24b3d801af14b6085dac03",
+      "commandDigest": "b679899ecb2f56ec03c0833f4f18a42434d622a99f7ecaa3d273530951ba2ee2",
       "dependencies": [
         "@beep/law-practice-server#transit",
         "@beep/repo-docgen#transit"
@@ -298,7 +304,7 @@
     {
       "computation": "@beep/law-practice-server#doctest",
       "command": "bun run beep:doctest",
-      "commandDigest": "2c61728439cb1a55dfd29026b235ef2a7b2d2a548c24b3d801af14b6085dac03",
+      "commandDigest": "b679899ecb2f56ec03c0833f4f18a42434d622a99f7ecaa3d273530951ba2ee2",
       "dependencies": [
         "@beep/box#transit",
         "@beep/duckdb#transit",
@@ -379,7 +385,7 @@
     {
       "computation": "@beep/law-practice-server#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "2c61728439cb1a55dfd29026b235ef2a7b2d2a548c24b3d801af14b6085dac03",
+      "commandDigest": "b679899ecb2f56ec03c0833f4f18a42434d622a99f7ecaa3d273530951ba2ee2",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -413,7 +419,7 @@
     {
       "computation": "@beep/law-practice-server#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "2c61728439cb1a55dfd29026b235ef2a7b2d2a548c24b3d801af14b6085dac03",
+      "commandDigest": "b679899ecb2f56ec03c0833f4f18a42434d622a99f7ecaa3d273530951ba2ee2",
       "dependencies": [
         "@beep/box#transit",
         "@beep/duckdb#transit",
@@ -510,7 +516,7 @@
     {
       "computation": "@beep/law-practice-server#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "2c61728439cb1a55dfd29026b235ef2a7b2d2a548c24b3d801af14b6085dac03",
+      "commandDigest": "b679899ecb2f56ec03c0833f4f18a42434d622a99f7ecaa3d273530951ba2ee2",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -540,7 +546,7 @@
     {
       "computation": "@beep/law-practice-server#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "2c61728439cb1a55dfd29026b235ef2a7b2d2a548c24b3d801af14b6085dac03",
+      "commandDigest": "b679899ecb2f56ec03c0833f4f18a42434d622a99f7ecaa3d273530951ba2ee2",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -596,7 +602,7 @@
     {
       "computation": "@beep/law-practice-server#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "2c61728439cb1a55dfd29026b235ef2a7b2d2a548c24b3d801af14b6085dac03",
+      "commandDigest": "b679899ecb2f56ec03c0833f4f18a42434d622a99f7ecaa3d273530951ba2ee2",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -642,7 +648,7 @@
     {
       "computation": "@beep/law-practice-server#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "2c61728439cb1a55dfd29026b235ef2a7b2d2a548c24b3d801af14b6085dac03",
+      "commandDigest": "b679899ecb2f56ec03c0833f4f18a42434d622a99f7ecaa3d273530951ba2ee2",
       "dependencies": [
         "@beep/box#transit",
         "@beep/duckdb#transit",
@@ -717,7 +723,7 @@
     {
       "computation": "@beep/law-practice-server#test",
       "command": "bun run beep:test",
-      "commandDigest": "2c61728439cb1a55dfd29026b235ef2a7b2d2a548c24b3d801af14b6085dac03",
+      "commandDigest": "b679899ecb2f56ec03c0833f4f18a42434d622a99f7ecaa3d273530951ba2ee2",
       "dependencies": [
         "@beep/box#transit",
         "@beep/duckdb#transit",
@@ -804,7 +810,7 @@
     {
       "computation": "@beep/law-practice-server#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "2c61728439cb1a55dfd29026b235ef2a7b2d2a548c24b3d801af14b6085dac03",
+      "commandDigest": "b679899ecb2f56ec03c0833f4f18a42434d622a99f7ecaa3d273530951ba2ee2",
       "dependencies": [
         "@beep/box#build",
         "@beep/duckdb#build",
@@ -876,7 +882,7 @@
     {
       "computation": "@beep/law-practice-server#test:integration:parallel",
       "command": "bun run beep:test:integration",
-      "commandDigest": "2c61728439cb1a55dfd29026b235ef2a7b2d2a548c24b3d801af14b6085dac03",
+      "commandDigest": "b679899ecb2f56ec03c0833f4f18a42434d622a99f7ecaa3d273530951ba2ee2",
       "dependencies": [
         "@beep/box#build",
         "@beep/duckdb#build",

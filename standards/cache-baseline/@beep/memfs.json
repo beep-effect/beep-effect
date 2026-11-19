@@ -3,17 +3,17 @@
   "subject": "@beep/memfs",
   "review": {
     "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the gate wiring: the generated check of every non-infra package is now beep-cli gate run check, which re-keys the scripts digest of every task of the rewritten packages; the test and check tasks declare their gate directory as an output and depend on the transit task of the code that writes the record; the new @beep/repo-gate-vitest package's tasks are new subjects. No qualification is granted.",
+    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-2026-11-19.md",
-      "sha256": "68c0801ecc71b547f442eb2f11647553050570891eca83cf655bd143dc71fd7e"
+      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
+      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
     }
   },
   "nodes": [
     {
       "computation": "@beep/memfs#build",
       "command": "bun run beep:build",
-      "commandDigest": "4b44c7146a331f95731986303bb7484e112d73362d03182f0250e78d38af9318",
+      "commandDigest": "b445aa4b0042aeb2cdc93bbe387eb823df6ac8397a388d4972d21d9b407f19ad",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/identity#build",
@@ -69,7 +69,7 @@
     {
       "computation": "@beep/memfs#check",
       "command": "beep-cli gate run check",
-      "commandDigest": "4b44c7146a331f95731986303bb7484e112d73362d03182f0250e78d38af9318",
+      "commandDigest": "b445aa4b0042aeb2cdc93bbe387eb823df6ac8397a388d4972d21d9b407f19ad",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/identity#build",
@@ -89,6 +89,12 @@
           "!README.md",
           "../../../../.bun-version",
           "../../../../.nvmrc",
+          "../../../../packages/tooling/library/repo-cli-kit/src/process/OutputBound.ts",
+          "../../../../packages/tooling/library/repo-gate-run/src/**",
+          "../../../../packages/tooling/library/repo-tsconfig/src/TsconfigLoader.ts",
+          "../../../../packages/tooling/library/repo-tsconfig/src/internal/extendsTarget.ts",
+          "../../../../packages/tooling/tool/cli/src/commands/Gate/**",
+          "../../../../packages/tooling/tool/cli/src/commands/Quality/CheckProbe.ts",
           "../../../../standards/root-package.projection.generated.json",
           "../../../../tools/tsgo-shim/package.json",
           "../../../../tools/tsgo-shim/tsgo.js",
@@ -118,7 +124,7 @@
     {
       "computation": "@beep/memfs#coverage",
       "command": "bunx vitest run --coverage --exclude=test/integration/**",
-      "commandDigest": "4b44c7146a331f95731986303bb7484e112d73362d03182f0250e78d38af9318",
+      "commandDigest": "b445aa4b0042aeb2cdc93bbe387eb823df6ac8397a388d4972d21d9b407f19ad",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/identity#build",
@@ -171,7 +177,7 @@
     {
       "computation": "@beep/memfs#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "4b44c7146a331f95731986303bb7484e112d73362d03182f0250e78d38af9318",
+      "commandDigest": "b445aa4b0042aeb2cdc93bbe387eb823df6ac8397a388d4972d21d9b407f19ad",
       "dependencies": [
         "@beep/memfs#transit",
         "@beep/repo-docgen#transit"
@@ -211,7 +217,7 @@
     {
       "computation": "@beep/memfs#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "4b44c7146a331f95731986303bb7484e112d73362d03182f0250e78d38af9318",
+      "commandDigest": "b445aa4b0042aeb2cdc93bbe387eb823df6ac8397a388d4972d21d9b407f19ad",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -245,7 +251,7 @@
     {
       "computation": "@beep/memfs#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "4b44c7146a331f95731986303bb7484e112d73362d03182f0250e78d38af9318",
+      "commandDigest": "b445aa4b0042aeb2cdc93bbe387eb823df6ac8397a388d4972d21d9b407f19ad",
       "dependencies": [
         "@beep/fc-runs#transit",
         "@beep/identity#transit",
@@ -313,7 +319,7 @@
     {
       "computation": "@beep/memfs#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "4b44c7146a331f95731986303bb7484e112d73362d03182f0250e78d38af9318",
+      "commandDigest": "b445aa4b0042aeb2cdc93bbe387eb823df6ac8397a388d4972d21d9b407f19ad",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -343,7 +349,7 @@
     {
       "computation": "@beep/memfs#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "4b44c7146a331f95731986303bb7484e112d73362d03182f0250e78d38af9318",
+      "commandDigest": "b445aa4b0042aeb2cdc93bbe387eb823df6ac8397a388d4972d21d9b407f19ad",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -399,7 +405,7 @@
     {
       "computation": "@beep/memfs#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "4b44c7146a331f95731986303bb7484e112d73362d03182f0250e78d38af9318",
+      "commandDigest": "b445aa4b0042aeb2cdc93bbe387eb823df6ac8397a388d4972d21d9b407f19ad",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -445,7 +451,7 @@
     {
       "computation": "@beep/memfs#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "4b44c7146a331f95731986303bb7484e112d73362d03182f0250e78d38af9318",
+      "commandDigest": "b445aa4b0042aeb2cdc93bbe387eb823df6ac8397a388d4972d21d9b407f19ad",
       "dependencies": [
         "@beep/fc-runs#transit",
         "@beep/identity#transit",
@@ -491,7 +497,7 @@
     {
       "computation": "@beep/memfs#test",
       "command": "bun run beep:test",
-      "commandDigest": "4b44c7146a331f95731986303bb7484e112d73362d03182f0250e78d38af9318",
+      "commandDigest": "b445aa4b0042aeb2cdc93bbe387eb823df6ac8397a388d4972d21d9b407f19ad",
       "dependencies": [
         "@beep/fc-runs#transit",
         "@beep/identity#transit",
@@ -549,7 +555,7 @@
     {
       "computation": "@beep/memfs#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "4b44c7146a331f95731986303bb7484e112d73362d03182f0250e78d38af9318",
+      "commandDigest": "b445aa4b0042aeb2cdc93bbe387eb823df6ac8397a388d4972d21d9b407f19ad",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/identity#build",
