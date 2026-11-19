@@ -888,12 +888,20 @@ added, removed or changed resource, binding, property digest or action stops
 it with `PlanDrift` before any write (`src/CheckedDeploy.ts`, tested in
 `test/CheckedDeploy.test.ts`). Each `update` or `replace` row also names what
 it changes, as `changes <name>` segments after its bindings: the top-level
-declared properties whose new value differs from the applied one (never a
-value), with `(unresolved)` on a property known only after apply. A Lambda
-function update that changes no declared property and no binding reads
+declared properties whose new value differs from the row's prior props (never
+a value). The prior props are the state's props, except for an interrupted
+update (state `updating`), which is read against the props it last applied,
+kept under `old`. A property known only after apply reads `(unresolved)` and
+claims no change. A parenthesised segment is a fixed note: an update that
+continues an interrupted update, finishes a pending replacement, follows a
+rename or repairs drift names that first, and a replace of a stopped create
+with an incomplete checkpoint reads `changes (incomplete checkpoint)` alone. A
+Lambda function update from a settled state with none of those notes, no
+changed property and no binding change reads
 `changes code (bundle hash, inferred)`, because the plan does not carry the
-bundle hash; these names are part of the plan-rows digest and of the drift
-comparison. The job never runs `alchemy deploy`. If either
+bundle hash; the inference assumes the plan was made without `--force`, which
+the plan step never passes. These names are part of the plan-rows digest and
+of the drift comparison. The job never runs `alchemy deploy`. If either
 step refuses, do not re-run or work around it: ask the CI goals driver through
 the orchestrator. A change that must replace or delete a resource is an
 operator-reviewed deploy, never the push job.

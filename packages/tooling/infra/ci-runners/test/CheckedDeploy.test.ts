@@ -124,11 +124,15 @@ const engineNode = (
     readonly state?: unknown;
     readonly type?: string;
     readonly deleteFirst?: boolean;
+    readonly renamedFrom?: ReadonlyArray<string>;
+    readonly drift?: unknown;
   }
 ) => ({
   resource: { FQN: fqn, LogicalId: fqn, Type: node.type ?? "Test.Resource" },
   action: node.action,
   ...(node.deleteFirst === undefined ? {} : { deleteFirst: node.deleteFirst }),
+  ...(node.renamedFrom === undefined ? {} : { renamedFrom: node.renamedFrom }),
+  ...(node.drift === undefined ? {} : { drift: node.drift }),
   props: node.props,
   bindings: node.bindings ?? [],
   state: node.state ?? { status: "created" },
@@ -507,16 +511,24 @@ describe("CiRunners plan-row changed properties", () => {
     );
   // A resource the plan has not created yet: its attribute is an Output until apply.
   const queue = { Type: "AWS.SQS.Queue", FQN: "Runners/Queue", LogicalId: "Queue" } as unknown as ResourceLike;
-  const webhook = (props: unknown, applied: unknown, bindingAction = "noop") =>
+  const webhookWith = (props: unknown, state: unknown, node: Partial<Parameters<typeof engineNode>[1]> = {}) =>
     enginePlan({
       Webhook: engineNode("Runners/Webhook", {
         action: "update",
         type: "AWS.Lambda.Function",
         props,
-        bindings: [{ sid: "Webhook", action: bindingAction, data: { policy: 1 } }],
-        state: { status: "created", props: applied },
+        bindings: [{ sid: "Webhook", action: "noop", data: { policy: 1 } }],
+        state,
+        ...node,
       }),
     });
+  const webhook = (props: unknown, applied: unknown, bindingAction = "noop") =>
+    webhookWith(
+      props,
+      { status: "created", props: applied },
+      { bindings: [{ sid: "Webhook", action: bindingAction, data: { policy: 1 } }] }
+    );
+  const noopBinding = "binding Runners/Webhook/Webhook noop";
 
   it.effect("names the one declared property an update changes, never its value", () =>
     Effect.gen(function* () {
@@ -569,6 +581,82 @@ describe("CiRunners plan-row changed properties", () => {
       expect(rows).toStrictEqual([
         [["env"], "[Runners/Webhook] update | binding Runners/Webhook/Webhook noop | changes env"],
       ]);
+    })
+  );
+
+  it.effect("reads an interrupted update against the props it last applied and never infers code for it", () =>
+    Effect.gen(function* () {
+      const applied = { functionName: "f", env: { CONFIG: '{"b":1}' } };
+      const next = { functionName: "f", env: { CONFIG: '{"b":2}' } };
+      // Alchemy has already committed the in-flight props as `props`; the ones last applied sit under `old`.
+      const interrupted = (props: unknown) => ({
+        status: "updating",
+        props,
+        old: { status: "created", props: applied },
+      });
+      const changedEnv = yield* rowOf(webhookWith(next, interrupted(next)));
+      expect(changedEnv).toStrictEqual([
+        [
+          ["(continues an interrupted update)", "env"],
+          `[Runners/Webhook] update | ${noopBinding} | changes (continues an interrupted update) | changes env`,
+        ],
+      ]);
+      const unchanged = yield* rowOf(webhookWith(applied, interrupted(applied)));
+      expect(unchanged).toStrictEqual([
+        [
+          ["(continues an interrupted update)"],
+          `[Runners/Webhook] update | ${noopBinding} | changes (continues an interrupted update)`,
+        ],
+      ]);
+      // Without the `old` snapshot the row is read against its own props, and is still not called code.
+      const bare = yield* rowOf(webhookWith(next, { status: "updating", props: applied }));
+      expect(A.map(bare, ([changed]) => changed)).toStrictEqual([["(continues an interrupted update)", "env"]]);
+      assertFalse(A.some([...changedEnv, ...unchanged, ...bare], ([, line]) => Str.includes("CONFIG")(String(line))));
+    })
+  );
+
+  it.effect("names why a pending replacement, a rename or a drift repair runs, in place of the code label", () =>
+    Effect.gen(function* () {
+      const props = { functionName: "f" };
+      const settled = { status: "created", props };
+      const notes = yield* Effect.forEach(
+        [
+          webhookWith(props, { status: "replaced", props }),
+          webhookWith(props, settled, { renamedFrom: ["Runners/OldWebhook"] }),
+          webhookWith(props, settled, { drift: { expected: {}, actual: {} } }),
+          webhookWith(props, settled, { renamedFrom: [] }),
+        ],
+        (plan) => Effect.map(readWith(plan), (checked) => A.map(checked.resources, (row) => row.changedProperties)),
+        { concurrency: 1 }
+      );
+      expect(notes).toStrictEqual([
+        [["(finishes a pending replacement)"]],
+        [["(renamed from a former FQN)"]],
+        [["(repairs drift)"]],
+        [[inferredCodeChange]],
+      ]);
+    })
+  );
+
+  it.effect("lists no key from the incomplete checkpoint of a stopped create a replace rebuilds", () =>
+    Effect.gen(function* () {
+      const replaceOf = (state: unknown) =>
+        enginePlan({
+          Source: engineNode("Runners/Source", {
+            action: "replace",
+            type: "AWS.Lambda.EventSourceMapping",
+            deleteFirst: false,
+            props: { functionName: "scale-up", eventSourceArn: "arn:aws:sqs:us-east-1:000000000000:q", batchSize: 10 },
+            state,
+          }),
+        });
+      const checkpoint = { status: "creating", props: { batchSize: 10 }, attr: { uuid: "0000" } };
+      const incomplete = yield* rowOf(replaceOf({ ...checkpoint, propsIncomplete: true }));
+      expect(incomplete).toStrictEqual([
+        [["(incomplete checkpoint)"], "[Runners/Source] replace | changes (incomplete checkpoint)"],
+      ]);
+      const complete = yield* rowOf(replaceOf(checkpoint));
+      expect(A.map(complete, ([changed]) => changed)).toStrictEqual([["eventSourceArn", "functionName"]]);
     })
   );
 
