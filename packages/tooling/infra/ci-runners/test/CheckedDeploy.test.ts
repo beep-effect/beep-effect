@@ -7,16 +7,20 @@ import {
   CheckedResource,
   checkEnginePlan,
   expectationViolations,
+  inferredCodeChange,
   newSecretSalt,
   planDifferences,
+  planDigestLines,
   planRowLine,
   planRowsDigest,
   readEnginePlan,
   requirePlanDigest,
+  toReading,
 } from "@beep/infra-ci-runners/CheckedDeploy";
 import { program } from "@beep/infra-ci-runners/CiRunners";
 import { describe, expect, it } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";
+import * as Output from "alchemy/Output";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
@@ -34,6 +38,7 @@ import { fakeAppKeyBase64, fakeWebhookSecret, productionCredentialEnv } from "./
 import * as Fakes from "./support/Fakes.ts";
 import type { PlanExpectation } from "@beep/infra-ci-runners/CheckedDeploy";
 import type { Plan } from "alchemy/Plan";
+import type { ResourceLike } from "alchemy/Resource";
 
 const productionEnvironment = Effect.provideService(
   ConfigProvider.ConfigProvider,
@@ -120,11 +125,15 @@ const engineNode = (
     readonly state?: unknown;
     readonly type?: string;
     readonly deleteFirst?: boolean;
+    readonly renamedFrom?: ReadonlyArray<string>;
+    readonly drift?: unknown;
   }
 ) => ({
   resource: { FQN: fqn, LogicalId: fqn, Type: node.type ?? "Test.Resource" },
   action: node.action,
   ...(node.deleteFirst === undefined ? {} : { deleteFirst: node.deleteFirst }),
+  ...(node.renamedFrom === undefined ? {} : { renamedFrom: node.renamedFrom }),
+  ...(node.drift === undefined ? {} : { drift: node.drift }),
   props: node.props,
   bindings: node.bindings ?? [],
   state: node.state ?? { status: "created" },
@@ -489,6 +498,284 @@ describe("CiRunners plan-rows digest", () => {
       expect(outcome).toBe("PlanDigestMismatch");
       const wrote = yield* Ref.get(written);
       assertFalse(wrote);
+    }).pipe(sha256)
+  );
+});
+
+describe("CiRunners plan-row changed properties", () => {
+  const sha256 = Effect.provideService(Digest.Digest, hexDigest);
+  const updated = (props: unknown, applied: unknown, node: Partial<Parameters<typeof engineNode>[1]> = {}) =>
+    single({ action: "update", props, state: { status: "created", props: applied }, ...node });
+  const rowOf = (plan: Plan) =>
+    Effect.map(readWith(plan), (checked) =>
+      A.map(checked.resources, (row) => [row.changedProperties, planRowLine(row)])
+    );
+  // A resource the plan has not created yet: its attribute is an Output until apply.
+  const queue = { Type: "AWS.SQS.Queue", FQN: "Runners/Queue", LogicalId: "Queue" } as unknown as ResourceLike;
+  const webhookWith = (props: unknown, state: unknown, node: Partial<Parameters<typeof engineNode>[1]> = {}) =>
+    enginePlan({
+      Webhook: engineNode("Runners/Webhook", {
+        action: "update",
+        type: "AWS.Lambda.Function",
+        props,
+        bindings: [{ sid: "Webhook", action: "noop", data: { policy: 1 } }],
+        state,
+        ...node,
+      }),
+    });
+  const webhook = (props: unknown, applied: unknown, bindingAction = "noop") =>
+    webhookWith(
+      props,
+      { status: "created", props: applied },
+      { bindings: [{ sid: "Webhook", action: bindingAction, data: { policy: 1 } }] }
+    );
+  const noopBinding = "binding Runners/Webhook/Webhook noop";
+
+  it.effect("names the one declared property an update changes, never its value", () =>
+    Effect.gen(function* () {
+      const rows = yield* rowOf(updated({ retention: 30, name: "flow" }, { retention: 7, name: "flow" }));
+      expect(rows).toStrictEqual([[["retention"], "[Vpc] update | changes retention"]]);
+      assertFalse(A.some(rows, ([, line]) => Str.includes("30")(String(line))));
+    })
+  );
+
+  it.effect("sorts several changed properties, a dropped one included", () =>
+    Effect.gen(function* () {
+      const rows = yield* rowOf(updated({ zeta: 2, same: 1, alpha: 3 }, { zeta: 1, same: 1, alpha: 1, dropped: true }));
+      expect(rows).toStrictEqual([
+        [["alpha", "dropped", "zeta"], "[Vpc] update | changes alpha | changes dropped | changes zeta"],
+      ]);
+    })
+  );
+
+  it.effect("labels a property whose new value is known only after apply", () =>
+    Effect.gen(function* () {
+      const rows = yield* rowOf(
+        updated({ queueUrl: Output.of(queue), name: "flow" }, { queueUrl: "https://queue", name: "flow" })
+      );
+      expect(rows).toStrictEqual([[["queueUrl (unresolved)"], "[Vpc] update | changes queueUrl (unresolved)"]]);
+    })
+  );
+
+  it.effect("infers a code change for a Lambda update that changes no declared property and no binding", () =>
+    Effect.gen(function* () {
+      const props = { functionName: "beep-fleet-prod-webhook", env: { CONFIG: "{}" }, timeout: Duration.seconds(30) };
+      const rows = yield* rowOf(webhook(props, props));
+      expect(rows).toStrictEqual([
+        [
+          [inferredCodeChange],
+          "[Runners/Webhook] update | binding Runners/Webhook/Webhook noop | changes code (bundle hash, inferred)",
+        ],
+      ]);
+      assertTrue(Str.includes("inferred")(inferredCodeChange));
+      // A binding that changes is the attribution, so no code change is inferred.
+      const rebound = yield* rowOf(webhook(props, props, "update"));
+      expect(rebound).toStrictEqual([[[], "[Runners/Webhook] update | binding Runners/Webhook/Webhook update"]]);
+    })
+  );
+
+  it.effect("names a changed Lambda env key and infers no code change", () =>
+    Effect.gen(function* () {
+      const rows = yield* rowOf(
+        webhook({ functionName: "f", env: { CONFIG: '{"b":2}' } }, { functionName: "f", env: { CONFIG: '{"b":1}' } })
+      );
+      expect(rows).toStrictEqual([
+        [["env"], "[Runners/Webhook] update | binding Runners/Webhook/Webhook noop | changes env"],
+      ]);
+    })
+  );
+
+  it.effect("reads an interrupted update against the props it last applied and never infers code for it", () =>
+    Effect.gen(function* () {
+      const applied = { functionName: "f", env: { CONFIG: '{"b":1}' } };
+      const next = { functionName: "f", env: { CONFIG: '{"b":2}' } };
+      // Alchemy has already committed the in-flight props as `props`; the ones last applied sit under `old`.
+      const interrupted = (props: unknown) => ({
+        status: "updating",
+        props,
+        old: { status: "created", props: applied },
+      });
+      const changedEnv = yield* rowOf(webhookWith(next, interrupted(next)));
+      expect(changedEnv).toStrictEqual([
+        [
+          ["(continues an interrupted update)", "env"],
+          `[Runners/Webhook] update | ${noopBinding} | changes (continues an interrupted update) | changes env`,
+        ],
+      ]);
+      const unchanged = yield* rowOf(webhookWith(applied, interrupted(applied)));
+      expect(unchanged).toStrictEqual([
+        [
+          ["(continues an interrupted update)"],
+          `[Runners/Webhook] update | ${noopBinding} | changes (continues an interrupted update)`,
+        ],
+      ]);
+      // Without the `old` snapshot the row is read against its own props, and is still not called code.
+      const bare = yield* rowOf(webhookWith(next, { status: "updating", props: applied }));
+      expect(A.map(bare, ([changed]) => changed)).toStrictEqual([["(continues an interrupted update)", "env"]]);
+      assertFalse(A.some([...changedEnv, ...unchanged, ...bare], ([, line]) => Str.includes("CONFIG")(String(line))));
+    })
+  );
+
+  it.effect("names why a pending replacement, a rename or a drift repair runs, in place of the code label", () =>
+    Effect.gen(function* () {
+      const props = { functionName: "f" };
+      const settled = { status: "created", props };
+      const notes = yield* Effect.forEach(
+        [
+          webhookWith(props, { status: "replaced", props }),
+          webhookWith(props, settled, { renamedFrom: ["Runners/OldWebhook"] }),
+          webhookWith(props, settled, { drift: { expected: {}, actual: {} } }),
+          webhookWith(props, settled, { renamedFrom: [] }),
+        ],
+        (plan) => Effect.map(readWith(plan), (checked) => A.map(checked.resources, (row) => row.changedProperties)),
+        { concurrency: 1 }
+      );
+      expect(notes).toStrictEqual([
+        [["(finishes a pending replacement)"]],
+        [["(renamed from a former FQN)"]],
+        [["(repairs drift)"]],
+        [[inferredCodeChange]],
+      ]);
+    })
+  );
+
+  it.effect("lists no key from the incomplete checkpoint of a stopped create a replace rebuilds", () =>
+    Effect.gen(function* () {
+      const replaceOf = (state: unknown, node: Partial<Parameters<typeof engineNode>[1]> = {}) =>
+        enginePlan({
+          Source: engineNode("Runners/Source", {
+            action: "replace",
+            type: "AWS.Lambda.EventSourceMapping",
+            deleteFirst: false,
+            props: { functionName: "scale-up", eventSourceArn: "arn:aws:sqs:us-east-1:000000000000:q", batchSize: 10 },
+            state,
+            ...node,
+          }),
+        });
+      // Alchemy marks a checkpoint incomplete only while it has no outputs (Apply, propsIncomplete).
+      const incomplete = { status: "creating", props: { batchSize: 10 }, propsIncomplete: true };
+      // The mapping step 1a resumes is a resumed create and lists nothing.
+      const resumed = yield* rowOf(replaceOf(incomplete));
+      expect(resumed).toStrictEqual([[[], "[Runners/Source] resumed create (replace of an empty generation)"]]);
+      // The same checkpoint on a replace that is not that resume: delete-first, or another type.
+      const noted = yield* Effect.forEach(
+        [replaceOf(incomplete, { deleteFirst: true }), replaceOf(incomplete, { type: "AWS.SQS.Queue" })],
+        rowOf,
+        { concurrency: 1 }
+      );
+      expect(noted).toStrictEqual([
+        [[["(incomplete checkpoint)"], "[Runners/Source] replace | changes (incomplete checkpoint)"]],
+        [[["(incomplete checkpoint)"], "[Runners/Source] replace | changes (incomplete checkpoint)"]],
+      ]);
+      // A stopped create with outputs is never marked incomplete, so its keys are compared.
+      const complete = yield* rowOf(
+        replaceOf({ status: "creating", props: { batchSize: 10 }, attr: { uuid: "0000" } })
+      );
+      expect(A.map(complete, ([changed]) => changed)).toStrictEqual([["eventSourceArn", "functionName"]]);
+    })
+  );
+
+  it.effect("reads a replace from a replaced or updating state against the props the docs name", () =>
+    Effect.gen(function* () {
+      const next = { name: "flow", cidr: "10.1.0.0/16", retention: 30 };
+      const replaceFrom = (state: unknown) => rowOf(single({ action: "replace", props: next, state }));
+      // A replaced row is read against the replacement generation's props, not the old generation's.
+      const replaced = yield* replaceFrom({
+        status: "replaced",
+        props: { name: "flow", cidr: "10.0.0.0/16", retention: 30 },
+        old: { status: "created", props: { name: "old", cidr: "10.9.0.0/16", retention: 7 } },
+      });
+      expect(replaced).toStrictEqual([[["cidr"], "[Vpc] replace | changes cidr"]]);
+      // An interrupted update is read against the props it last applied, kept under `old`.
+      const updating = yield* replaceFrom({
+        status: "updating",
+        props: next,
+        old: { status: "created", props: { name: "flow", cidr: "10.0.0.0/16", retention: 7 } },
+      });
+      expect(updating).toStrictEqual([[["cidr", "retention"], "[Vpc] replace | changes cidr | changes retention"]]);
+    })
+  );
+
+  it.effect("infers a code change from a function last updated, the state every function is in after a deploy", () =>
+    Effect.gen(function* () {
+      const props = { functionName: "beep-fleet-prod-webhook", env: { CONFIG: "{}" } };
+      const settled = { status: "updated", props, old: { status: "created", props: { functionName: "older" } } };
+      const rows = yield* rowOf(webhookWith(props, settled));
+      expect(rows).toStrictEqual([
+        [[inferredCodeChange], `[Runners/Webhook] update | ${noopBinding} | changes code (bundle hash, inferred)`],
+      ]);
+      const changed = yield* rowOf(webhookWith({ ...props, timeout: 30 }, settled));
+      expect(A.map(changed, ([names]) => names)).toStrictEqual([["timeout"]]);
+    })
+  );
+
+  it.effect("hashes exactly the lines the plan step prints, stack actions included", () =>
+    Effect.gen(function* () {
+      const plan = CheckedPlan.make({
+        ...planWith(resource("Vpc", { action: "update", changedProperties: ["retention"] }), resource("Reaper")),
+        actions: [
+          CheckedAction.make({ fqn: "Seed", action: "run" }),
+          CheckedAction.make({ fqn: "Arm", action: "run" }),
+        ],
+      });
+      const lines = planDigestLines(plan);
+      expect(lines).toStrictEqual([
+        "[Reaper] create",
+        "[Vpc] update | changes retention",
+        "[Arm] action run",
+        "[Seed] action run",
+      ]);
+      const digest = yield* planRowsDigest(plan);
+      const rebuilt = yield* hexDigest.digestHex(Digest.sha256, new TextEncoder().encode(A.join(lines, "\n")));
+      expect(digest).toBe(rebuilt);
+    }).pipe(sha256)
+  );
+
+  it.effect("infers nothing for an update of another type that changes no declared property", () =>
+    Effect.gen(function* () {
+      const rows = yield* rowOf(updated({ name: "flow" }, { name: "flow" }));
+      expect(rows).toStrictEqual([[[], "[Vpc] update"]]);
+    })
+  );
+
+  it.effect("keeps create and noop rows as they print today", () =>
+    Effect.gen(function* () {
+      const created = yield* rowOf(single({ action: "create", props: { retention: 30 } }));
+      const quiet = yield* rowOf(
+        single({ action: "noop", props: { retention: 30 }, state: { status: "created", props: { retention: 7 } } })
+      );
+      const fn = yield* rowOf(
+        enginePlan({
+          Webhook: engineNode("Runners/Webhook", { action: "create", type: "AWS.Lambda.Function", props: {} }),
+        })
+      );
+      expect([created, quiet, fn]).toStrictEqual([
+        [[[], "[Vpc] create"]],
+        [[[], "[Vpc] noop"]],
+        [[[], "[Runners/Webhook] create"]],
+      ]);
+    })
+  );
+
+  it.effect("moves the digest and the drift signature with the changed-properties list", () =>
+    Effect.gen(function* () {
+      const changing = (...changedProperties: ReadonlyArray<string>) =>
+        planWith(resource("Vpc", { action: "update", changedProperties }));
+      const none = changing();
+      const retention = changing("retention");
+      const timeout = changing("timeout");
+      const both = changing("retention", "timeout");
+      const digests = yield* Effect.forEach([none, retention, timeout, both], planRowsDigest, { concurrency: 1 });
+      expect(A.dedupe(digests).length).toBe(4);
+      expect([planDifferences(none, retention).changed, planDifferences(retention, timeout).changed]).toStrictEqual([
+        ["Vpc"],
+        ["Vpc"],
+      ]);
+      expect(planDifferences(retention, changing("retention"))).toStrictEqual({ added: [], removed: [], changed: [] });
+      // The reading the plan check takes carries the same names.
+      expect(A.map(toReading(both).resources, (row) => row.changedProperties)).toStrictEqual([
+        ["retention", "timeout"],
+      ]);
     }).pipe(sha256)
   );
 });
