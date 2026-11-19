@@ -14371,6 +14371,50 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The reporter class loads its implementation and writes real record files in a scoped temporary repository, as Vitest drives it, so the native filesystem is the subject. Owner: @beep/repo-gate-vitest. Exit: retire when the reporter takes an injected record store."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/check-gate-flake.test.ts:19:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/check-gate-flake.test.ts",
+      "line": 19,
+      "endLine": 19,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The flake cases read check-gate logs from a scoped workspace on disk and rerun scripted lane steps through the real process spawner, the same path the root check takes, so the native filesystem and spawner are the subject. Owner: @beep/repo-cli. Exit: retire when the quarantine reruns take a recorded spawner and the logs come from a memory filesystem."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/gate-query.test.ts:23:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/gate-query.test.ts",
+      "line": 23,
+      "endLine": 23,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The gate query cases read real records through the platform record store in a scoped temporary repository and resolve paths against the working directory, so the native filesystem and path services are the subject. Owner: @beep/repo-cli. Exit: retire when the query commands take an injected record store and the record store cases move to its memory layer."
     }
   ]
 }

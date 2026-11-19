@@ -101,6 +101,8 @@ const writtenLine = (omissions: ReadonlyArray<Omission>): O.Option<string> => {
  * // ["record and raw log not written: disk full"]
  * ```
  *
+ * @param omissions - What a gate run could not write or read.
+ * @returns At most two lines: what was not written, and history not read.
  * @category projections
  * @since 0.0.0
  */

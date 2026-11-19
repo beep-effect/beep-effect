@@ -5768,7 +5768,7 @@
       ]
     },
     "check": {
-      "dependsOn": ["^build", "build"],
+      "dependsOn": ["^build", "build", "@beep/repo-gate-record#transit"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "!README.md",

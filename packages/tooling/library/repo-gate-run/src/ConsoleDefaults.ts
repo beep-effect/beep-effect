@@ -36,6 +36,8 @@ export const WORKSPACE_SUBJECT = "workspace";
  * console.log(buildClosureCommand("@beep/glob")); // bun x turbo run build --filter=@beep/glob^...
  * ```
  *
+ * @param subject - A package name, or `workspace` for a root run.
+ * @returns The Turbo command that builds the subject's upstream closure.
  * @category utilities
  * @since 0.0.0
  */
@@ -54,6 +56,8 @@ export const buildClosureCommand = (subject: string): string =>
  * console.log(foldFixesFor("@beep/glob").TS6305); // bun x turbo run build --filter=@beep/glob^...
  * ```
  *
+ * @param subject - A package name, or `workspace` for a root run.
+ * @returns The fix command per folded diagnostic code: the build closure for TS6305.
  * @category utilities
  * @since 0.0.0
  */

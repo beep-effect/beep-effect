@@ -505,6 +505,9 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "90 seconds" })("check onc
       const members = yield* checkGraphMembers(repoRoot);
       expect(root).toContain(UPSTREAM_BUILD_EDGE);
       expect(root).toContain(OWN_BUILD_EDGE);
+      // The check gate writes its record through the record library, so the record
+      // format is part of every cached check.
+      expect(root).toContain("@beep/repo-gate-record#transit");
       expect(A.filter(members, (member) => member.hasCheck && buildsDeclarationOnly(member)).length).toBeGreaterThan(
         100
       );

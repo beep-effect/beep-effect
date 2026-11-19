@@ -20,6 +20,13 @@ export * from "./Gate.command.ts";
  */
 export * from "./GateCheck.ts";
 /**
+ * The gate query commands: a run's record and one item in full.
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./GateQuery.ts";
+/**
  * The root gate: package records folded into one workspace console.
  *
  * @category use-cases

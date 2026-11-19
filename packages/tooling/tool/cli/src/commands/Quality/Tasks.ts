@@ -54,7 +54,7 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
-import { dual, flow, identity, pipe } from "effect/Function";
+import { constant, dual, flow, identity, pipe } from "effect/Function";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
@@ -88,13 +88,14 @@ import {
   runCaptured,
   runToExit,
 } from "@beep/repo-cli-kit/process/index";
+import { boundedChunkReducer, emptyBoundedOutput } from "@beep/repo-cli-kit/process/OutputBound";
 import { JsonStringCodec } from "@beep/repo-cli-kit/schema/JsonCodec";
 import { PosInt } from "@beep/repo-cli-kit/schema/PosInt";
 import { collectChangedFiles, collectDirtyWorktreeFiles } from "../../internal/repo-run/ChangedFiles.ts";
 import { assertCacheRuntimeKeyUnspecified, cacheRuntimeStep } from "../Cache/Cache.runtime.step.ts";
 import { runCheckGate } from "../Gate/GateCheck.ts";
 import { recordRootRun } from "../Gate/GateRoot.ts";
-import { captureRun, GateToolExit, splitAudienceArgs } from "../Gate/GateRuntime.ts";
+import { CapturedRun, captureRun, GateToolExit, splitAudienceArgs } from "../Gate/GateRuntime.ts";
 import { runTestGate } from "../Gate/GateTest.ts";
 import { CoverageProducerIdentity, resolveCoverageProducerIdentity } from "./internal/CoverageArtifacts.ts";
 import {
@@ -119,6 +120,7 @@ import {
   FlakeQuarantineArtifact,
   FlakeQuarantineArtifactJson,
   FlakeQuarantineIncident,
+  failedTurboTasks,
   flakeQuarantineOutputBound,
   laneQuarantineRerunStep,
   MAX_QUARANTINED_TASKS_PER_LANE,
@@ -1824,6 +1826,60 @@ const runStepCaptured = Effect.fn("QualityTasks.runStepCaptured")(function* (
   };
 });
 
+// A package `check` is the check gate: Turbo shows its console, and the
+// compiler's own lines go to the package's raw log. The no-location TS2589
+// signature is read from the compiler's lines, so every failed `check` task's
+// log joins the lane output, each line prefixed as Turbo prefixes task output.
+// The detector then sees the same diagnostics it read before the gate.
+const CHECK_GATE_LOG = ".beep/gates/check/report.log";
+
+const checkGateLogText = (owner: WorkspaceTaskOwner) =>
+  Effect.flatMap(Path.Path, (path) =>
+    Effect.flatMap(FileSystem.FileSystem, (fs) =>
+      fs.readFileString(path.join(owner.packageDir, CHECK_GATE_LOG)).pipe(
+        Effect.map(
+          flow(
+            Str.split(/\r?\n/u),
+            A.map((line) => `${owner.packageName}:check: ${line}`),
+            A.join("\n")
+          )
+        ),
+        Effect.orElseSucceed(() => "")
+      )
+    )
+  );
+
+const withCheckGateLogs = Effect.fn("QualityTasks.withCheckGateLogs")(function* (repoRoot: string, output: string) {
+  const failedChecks = A.filter(failedTurboTasks(output), (task) => task.task === "check");
+  if (A.isReadonlyArrayEmpty(failedChecks)) return output;
+  // Without a readable workspace the output is scanned as it is.
+  const owners = yield* workspaceTaskOwners(repoRoot).pipe(Effect.orElseSucceed(A.empty<WorkspaceTaskOwner>));
+  const logs = yield* Effect.forEach(
+    A.filter(owners, (owner) => A.some(failedChecks, (task) => task.packageName === owner.packageName)),
+    checkGateLogText,
+    { concurrency: 1 }
+  );
+  return A.join([output, ...logs], "\n");
+});
+
+/**
+ * Join the raw logs of a lane's failed `check` tasks to its output, as the
+ * flake detector reads it. Exposed for focused unit tests.
+ *
+ * **Example** (Leave a green lane alone)
+ *
+ * ```ts
+ * import { withCheckGateLogsForTesting } from "@beep/repo-cli/commands/Quality/Tasks"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(withCheckGateLogsForTesting("/repo", "Tasks: 1 successful"))) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const withCheckGateLogsForTesting = withCheckGateLogs;
+
 const selectFlakeQuarantineWave = Effect.fn("QualityTasks.selectFlakeQuarantineWave")(function* (
   step: QualityTaskStep,
   attempt: QuarantineStepAttempt,
@@ -1834,7 +1890,8 @@ const selectFlakeQuarantineWave = Effect.fn("QualityTasks.selectFlakeQuarantineW
     return O.none<QuarantineWave>();
   }
 
-  const detected = detectNoLocationTs2589Flake(attempt.output);
+  const scanned = yield* withCheckGateLogs(step.cwd, attempt.output);
+  const detected = detectNoLocationTs2589Flake(scanned);
   if (O.isNone(detected)) {
     yield* Console.log(
       `[flake-quarantine] ${step.label}: failure does not match the no-location TS2589 flake signature; keeping failure hard`
@@ -5246,6 +5303,57 @@ const runPackageTask: (
 // summary (`--summarize`) names them and says which the cache served.
 const TURBO_SUMMARIZE_ARG = "--summarize";
 
+// The flake quarantine of a captured gate step: the attempt it judges is the
+// same bounded output the streaming runner captured, so detection, the
+// standalone and lane reruns, and the artifact behave as they did there. A
+// quarantined lane counts as green.
+const quarantineAttemptOf = (step: QualityTaskStep, captured: CapturedRun): QuarantineStepAttempt => {
+  const bounded = boundedChunkReducer(flakeQuarantineOutputBound)(
+    emptyBoundedOutput,
+    new TextDecoder().decode(captured.output)
+  );
+  return {
+    exitCode: captured.exitCode,
+    output: bounded.text,
+    truncated: bounded.truncated,
+    label: step.label,
+    command: commandText(step.command, step.args),
+  };
+};
+
+const settleQuarantine = Effect.fn("QualityTasks.settleQuarantine")(function* (
+  step: QualityTaskStep,
+  captured: CapturedRun
+) {
+  const policy = step.flakeQuarantine;
+  if (policy === undefined || isCiSync()) return captured.exitCode;
+  yield* removeStaleFlakeQuarantineArtifact(step.cwd);
+  if (captured.exitCode === 0) return 0;
+  const incidents = yield* runFlakeQuarantineWaves(step, quarantineAttemptOf(step, captured), policy);
+  yield* writeFlakeQuarantineArtifact(step.cwd, incidents);
+  return A.isReadonlyArrayEmpty(incidents) ? captured.exitCode : 0;
+});
+
+/**
+ * Settle a captured gate step's flake quarantine. Exposed for focused unit
+ * tests.
+ *
+ * **Example** (Settle a step without a policy)
+ *
+ * ```ts
+ * import { CapturedRun } from "@beep/repo-cli/commands/Gate"
+ * import { QualityTaskStep, settleQuarantineForTesting } from "@beep/repo-cli/commands/Quality/Tasks"
+ * import * as Effect from "effect/Effect"
+ *
+ * const step = QualityTaskStep.make({ label: "check", command: "true", args: [], cwd: "/repo" })
+ * console.log(Effect.isEffect(settleQuarantineForTesting(step, CapturedRun.make({ exitCode: 0, output: new Uint8Array() })))) // true
+ * ```
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export const settleQuarantineForTesting = settleQuarantine;
+
 const runRootGateStep = Effect.fn("QualityTasks.runRootGateStep")(function* (
   repoRoot: string,
   gate: "test" | "check",
@@ -5263,10 +5371,12 @@ const runRootGateStep = Effect.fn("QualityTasks.runRootGateStep")(function* (
     env: { ...envOverrides, ...(resolved.env ?? {}) },
     extendEnv: turboEnvExtendsAmbient(resolved.command, resolved.args),
   });
-  const report = yield* recordRootRun({ repoRoot, gate, startedAt, captured, flags });
+  const exitCode = yield* settleQuarantine(step, captured);
+  const settled = CapturedRun.make({ exitCode, output: captured.output });
+  const report = yield* recordRootRun({ repoRoot, gate, startedAt, captured: settled, flags });
   return O.as(
-    O.liftPredicate(captured.exitCode, (code) => code !== 0),
-    GateToolExit.make({ gate, subject: report.subject, exitCode: captured.exitCode })
+    O.liftPredicate(exitCode, (code) => code !== 0),
+    GateToolExit.make({ gate, subject: report.subject, exitCode })
   );
 });
 
@@ -5281,12 +5391,38 @@ const runRootGateSteps = (
     flow(A.getSomes, A.head)
   );
 
-// The unit lane printed its own console, so its failure adds no summary; a
-// failed integration lane reports as before.
-const failRootTestLanes = (unitExit: O.Option<GateToolExit>, integrationFailures: ReadonlyArray<QualityTaskFailed>) =>
-  A.isReadonlyArrayNonEmpty(integrationFailures)
-    ? failQualityTaskFailures("test", integrationFailures)
-    : O.match(unitExit, { onNone: () => Effect.void, onSome: Effect.fail });
+// The gate step printed its own console, so its failure adds no summary; a
+// failed step that streamed (an integration lane, the tsgo smoke) reports as before.
+const failRootGateLanes = (
+  label: string,
+  gateExit: O.Option<GateToolExit>,
+  streamedFailures: ReadonlyArray<QualityTaskFailed>
+) =>
+  A.isReadonlyArrayNonEmpty(streamedFailures)
+    ? failQualityTaskFailures(label, streamedFailures)
+    : O.match(gateExit, { onNone: constant(Effect.void), onSome: Effect.fail });
+
+// `check` at the root is a gate: its Turbo step runs captured, the flake
+// quarantine settles on that output, the package records fold into one
+// console, and any repo-wide step (the tsgo smoke) streams as before.
+const runRootCheckTask = Effect.fn("QualityTasks.runRootCheckTask")(function* (
+  repoRoot: string,
+  args: ReadonlyArray<string>
+) {
+  const { flags, rest } = splitAudienceArgs(args);
+  const plan = yield* qualityConcurrencyPlan;
+  const [gateStep, ...others] = rootCheckSteps(repoRoot, rest, plan);
+  const gateExit = yield* runRootGateSteps(
+    repoRoot,
+    "check",
+    A.map(O.toArray(O.fromUndefinedOr(gateStep)), (step) =>
+      QualityTaskStep.make({ ...step, args: [...step.args, TURBO_SUMMARIZE_ARG] })
+    ),
+    flags
+  );
+  const streamedFailures = yield* collectStreamingStepFailures("check", others);
+  yield* failRootGateLanes("check", gateExit, streamedFailures);
+});
 
 const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
   repoRoot: string,
@@ -5330,25 +5466,26 @@ const runRootTestTask = Effect.fn("QualityTasks.runRootTestTask")(function* (
     integrationFailures = A.appendAll(parallelFailures, serialFailures);
   }
 
-  yield* failRootTestLanes(unitExit, integrationFailures);
+  yield* failRootGateLanes("test", unitExit, integrationFailures);
 });
+
+// The root tasks with a runner of their own instead of a static step plan.
+const dedicatedRootRunner = (repoRoot: string, invocation: QualityTaskInvocation) =>
+  Match.type<QualityTaskName>().pipe(
+    Match.when("test", () => O.some(runRootTestTask(repoRoot, invocationArgs(invocation)))),
+    Match.when("check", () => O.some(runRootCheckTask(repoRoot, invocationArgs(invocation)))),
+    Match.when("lint", () => O.some(runRootLintTask(repoRoot, invocationArgs(invocation), invocationFix(invocation)))),
+    Match.when("coverage", () => O.some(runRootCoverageTask(repoRoot, invocationArgs(invocation)))),
+    Match.orElse(() => O.none())
+  )(invocation.task);
 
 const runRootTask = Effect.fn("QualityTasks.runRootTask")(function* (
   repoRoot: string,
   invocation: QualityTaskInvocation
 ) {
-  if (invocation.task === "test") {
-    yield* runRootTestTask(repoRoot, invocationArgs(invocation));
-    return;
-  }
-
-  if (invocation.task === "lint") {
-    yield* runRootLintTask(repoRoot, invocationArgs(invocation), invocationFix(invocation));
-    return;
-  }
-
-  if (invocation.task === "coverage") {
-    yield* runRootCoverageTask(repoRoot, invocationArgs(invocation));
+  const dedicated = dedicatedRootRunner(repoRoot, invocation);
+  if (O.isSome(dedicated)) {
+    yield* dedicated.value;
     return;
   }
 

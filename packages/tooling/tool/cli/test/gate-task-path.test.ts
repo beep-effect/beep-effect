@@ -150,6 +150,8 @@ describe("package gates", { concurrent: false }, () => {
         const text = yield* logText;
         assert.isTrue(Str.startsWith("check @beep/demo")(text));
         assert.isTrue(Str.includes("TS2322")(text));
+        // The pointer is pinned to the record this run wrote.
+        assert.isTrue(Str.includes("next: bun run beep gate show check --dir packages/demo")(text), text);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
@@ -263,6 +265,20 @@ describe("package gates", { concurrent: false }, () => {
           flags: agent,
         });
         assert.strictEqual(bare.totals.collected, 0);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("runs the root check as one gate console, and streams the repo-wide smoke as before", () =>
+      Effect.gen(function* () {
+        const { repoRoot } = yield* tempRepo({});
+        yield* pinCwd(repoRoot);
+        const filtered = yield* Effect.flip(runQualityTask(invocation(["check", "--filter=@beep/demo", "--agent"])));
+        assert.strictEqual(filtered._tag, "GateToolExit");
+        const text = yield* logText;
+        // Outside CI the quarantine may name its verdict on a red lane before the console.
+        assert.isTrue(Str.includes("check workspace: ERRORED")(text), `console: ${text}`);
+        const whole = yield* Effect.flip(runQualityTask(invocation(["check", "--agent"])));
+        assert.strictEqual(whole._tag, "QualityTaskGroupFailed");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 

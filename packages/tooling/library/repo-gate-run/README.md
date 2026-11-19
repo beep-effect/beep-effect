@@ -43,7 +43,7 @@ export const program = runGate(
 - `GateAudience`: the audience (the one audience flag given, else the detected `Audience`: agent beats CI beats human) and the projection it gets. CI renders the agent projection until the CI projection exists.
 - `GateHistory`: the history slot contract (labels by item key fingerprint and a run delta, under a read deadline) with a no-op layer and fixed, failing and slow test layers. The real service is the history goal's.
 - `TypeCheckAdapter`: compiler output (pretty, plain and location-less forms) and the unbuilt-reference probe's finding as `check` gate events. Every diagnostic is emitted under its plain key with its location, and the reducer numbers repeats; a probe finding, which has no location, is keyed on its reference.
-- `GateQueries`: show a run's record and show one item in full, the services behind the planned `gate` command family.
+- `GateQueries`: show a run's record and show one item in full, the services behind `beep gate show` and `beep gate item`.
 - `RepoPointers`, `ConsoleDefaults`, `Omission`: the pointer table as data with the check every pointer line must pass, the TS6305 fix command (a model-free leaf the package-check probe shares), and the line naming what could not be written or read. The agent budget (8,000 characters, 240 per line, 12 diff lines) is `GateConsole.agentBudget`.
 
 ## Development

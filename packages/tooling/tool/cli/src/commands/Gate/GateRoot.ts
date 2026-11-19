@@ -291,6 +291,9 @@ const reasonRank = Order.mapInput(Order.Number, (reason: RunReason) =>
  * package counts one), and its duration the sum of the package durations, so
  * the console of a cache hit equals the console of the run it restores.
  *
+ * @param input - The root run's identity, Turbo's exit code and the package runs.
+ * @returns The events that reduce to the workspace report.
+ *
  * @category folding
  * @since 0.0.0
  */

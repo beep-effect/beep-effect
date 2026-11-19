@@ -23,6 +23,7 @@ import { ConsoleRequest, ConsoleSettings, GateConsole, makeGateConsole } from "@
 import { GateHistory } from "@beep/repo-gate-run/GateHistory";
 import { GateRecorder, RunSource } from "@beep/repo-gate-run/GateRecorder";
 import { GateRunRequest, runGate } from "@beep/repo-gate-run/GateRun";
+import { repoPointerTableFor } from "@beep/repo-gate-run/RepoPointers";
 import { Audience, AudienceKind } from "@beep/runtime-env/Audience";
 import { CurrentRuntimeEnv } from "@beep/runtime-env/RuntimeEnv";
 import { TerminalEnv } from "@beep/runtime-env/TerminalEnv";
@@ -67,7 +68,11 @@ export class GateToolExit extends S.TaggedError<GateToolExit, { readonly brand: 
     description: "A gate's tool exited non-zero after its console was printed.",
   })
 ) {
-  /** The process exits with the tool's own code. */
+  /**
+   * The process exits with the tool's own code.
+   *
+   * @returns The exit code the tool returned.
+   */
   override get [Runtime.errorExitCode](): number {
     return this.exitCode;
   }
@@ -155,6 +160,8 @@ export class AudienceArgs extends S.Opaque<AudienceArgs, { readonly brand: uniqu
  * console.log(split.flags.agent, split.rest) // [ true ] [ "--bail=1" ]
  * ```
  *
+ * @param args - The task's arguments after its name, as typed.
+ * @returns The audience flags given and the arguments for the tool.
  * @category utilities
  * @since 0.0.0
  */
@@ -388,6 +395,7 @@ export const renderStoredRecord = Effect.fn("Gate.renderStoredRecord")(function*
       paths: O.map(logBytes, (bytes) =>
         RecordPaths.make({ record: location.record, log: location.log, logBytes: bytes })
       ),
+      pointers: O.some(repoPointerTableFor(target)),
     })
   );
   yield* Console.log(output.text);
@@ -453,7 +461,8 @@ export class EventRun extends S.Opaque<EventRun, { readonly brand: unique symbol
 /**
  * Record a finished tool run and print its console with the gate services
  * for the configuration: the whole output goes to the raw log, the events to
- * the record.
+ * the record. Its pointer line names the query pinned to that record:
+ * `--dir <package>` for a package record, `--run <run id>` for a root run.
  *
  * **Example** (Record a run)
  *
@@ -484,6 +493,7 @@ export const recordEventRun = (config: GateServicesConfig) => (run: EventRun) =>
       target: run.target,
       source: RunSource.cases.RunEvents.make({ events: run.events }),
       exitCode: run.exitCode,
+      pointers: O.some(repoPointerTableFor(run.target)),
     }),
     Stream.make(run.output)
   ).pipe(withGateServices(config));

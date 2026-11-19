@@ -264,6 +264,8 @@ const field = (label: string, value: O.Option<string>): ReadonlyArray<string> =>
  * console.log(itemLines(item)[1]); // outcome: passed
  * ```
  *
+ * @param item - The item to print.
+ * @returns Its lines: header, outcome, the fields it carries, then message, diff and stack.
  * @category projections
  * @since 0.0.0
  */
@@ -298,14 +300,39 @@ export const itemLines = (item: Item): ReadonlyArray<string> => [
   ),
 ];
 
-const listed = (record: GateRecord): ReadonlyArray<Item> =>
+/**
+ * The items a run lists, in record order: every item that did not pass. An
+ * item selector's position counts among these.
+ *
+ * **Example** (List a run with no items)
+ *
+ * ```ts
+ * import { GateRecord } from "@beep/gate-report/GateRecord";
+ * import { GateReport, Totals } from "@beep/gate-report/GateReport";
+ * import { listedItems } from "@beep/repo-gate-run/GateQueries";
+ * import * as DateTime from "effect/DateTime";
+ *
+ * const report = GateReport.make({
+ *   gate: "test", subject: "@beep/glob", itemKind: "test", runId: "r1",
+ *   startedAt: DateTime.makeUnsafe(0), durationMs: 0, inputFingerprint: "x",
+ *   reason: "passed", outcome: "all-pass", units: [], items: [], totals: Totals.make({ collected: 1, passed: 1 }),
+ * });
+ * console.log(listedItems(GateRecord.make({ generatedAt: DateTime.makeUnsafe(0), report })).length); // 0
+ * ```
+ *
+ * @param record - The run's record.
+ * @returns Its failed, warned and skipped items; a position selector counts from 1 among them.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const listedItems = (record: GateRecord): ReadonlyArray<Item> =>
   A.filter(record.report.items, (item) => !ItemOutcome.is.passed(item.outcome));
 
 const select = (record: GateRecord, selector: ItemSelector): O.Option<Item> =>
   ItemSelector.match(selector, {
-    ByPosition: (byPosition) => A.get(listed(record), byPosition.position - 1),
+    ByPosition: (byPosition) => A.get(listedItems(record), byPosition.position - 1),
     ByText: (byText) =>
-      A.findFirst(listed(record), (item) =>
+      A.findFirst(listedItems(record), (item) =>
         A.some([titleOf(item), item.unit], (text) => Str.includes(byText.text)(text))
       ),
   });

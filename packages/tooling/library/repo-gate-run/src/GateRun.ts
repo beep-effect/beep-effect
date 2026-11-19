@@ -8,6 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { PointerTable } from "@beep/gate-report/ConsoleDocument";
 import { formatDuration } from "@beep/gate-report/Format";
 import { GateReport } from "@beep/gate-report/GateReport";
 import { DurationMs } from "@beep/gate-report/Scalars";
@@ -31,8 +32,9 @@ const $I = $RepoGateRunId.create("GateRun");
 
 /**
  * One finished tool run to report: whose record, what the run produced, the
- * exit code the tool returned, and how long to wait for history (250 ms by
- * default).
+ * exit code the tool returned, how long to wait for history (250 ms by
+ * default), and the pointer table to print with instead of the console's
+ * own, when the caller pins the next step to this run's record.
  *
  * **Example** (Describe a finished run)
  *
@@ -58,10 +60,11 @@ export class GateRunRequest extends S.Opaque<GateRunRequest, { readonly brand: u
     source: RunSource,
     exitCode: S.Int,
     historyDeadlineMs: DurationMs.pipe(S.withConstructorDefault(Effect.succeed(DEFAULT_HISTORY_DEADLINE_MS))),
+    pointers: S.OptionFromOptionalKey(PointerTable).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("GateRunRequest", {
       description:
-        "A finished tool run: whose record, its events or report, the tool's exit code, the history deadline.",
+        "A finished tool run: whose record, its events or report, the tool's exit code, the history deadline and pointers.",
     })
   )
 ) {}
@@ -188,6 +191,7 @@ export const runGate = Effect.fn("GateRun.runGate")(function* <E, R>(
       paths: recorded.paths,
       delta: read.answer.delta,
       omissions: [...recorded.omissions, ...O.toArray(read.omission)],
+      pointers: request.pointers,
     })
   );
   yield* Console.log(output.text);
