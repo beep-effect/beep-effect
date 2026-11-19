@@ -274,6 +274,49 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
     );
 
     it.effect(
+      "reads an untyped leaf of a listed slug and a legacy read no slug matches as registry exports",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget", "gadget"] });
+            const registryContent = yield* fs.readFileString(IDENTITY_REGISTRY_PATH);
+            // An untyped leaf whose literal is a listed slug, an untyped vocabulary leaf over a segment no group
+            // lists, and a legacy read whose name is the accessor of no listed slug.
+            const untyped = Str.replace(
+              'export const $WidgetId: Identity.IdentityComposer<"@beep/widget"> = /*#__PURE__*/ $I.create("widget");',
+              'export const $WidgetId = /*#__PURE__*/ $I.create("widget");'
+            )(registryContent);
+            yield* fs.writeFileString(
+              IDENTITY_REGISTRY_PATH,
+              `${untyped}\nexport const $QaId = /*#__PURE__*/ $I.create("qa");\nexport const $OrphanThingId = composers.$OrphanThingId;\n`
+            );
+
+            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+
+            expectReportedExit(exit);
+            const errorLines = yield* TestConsole.errorLines;
+            const leafRow = (subject: string) =>
+              A.findFirst(
+                errorLines,
+                (line): line is string =>
+                  P.isString(line) && Str.startsWith(`${subject} [registry-leaf-mismatch]`)(line)
+              );
+            const widgetRow = O.getOrThrow(leafRow("@beep/widget"));
+            expect(widgetRow).toContain('it is not typed `Identity.IdentityComposer<"@beep/widget">`');
+            expect(widgetRow).not.toContain("its initializer is not");
+            // The legacy read is attributed to the slug its own name spells.
+            const orphanRow = O.getOrThrow(leafRow("@beep/orphan-thing"));
+            expect(orphanRow).toContain('its initializer is not `$I.create("orphan-thing")`');
+            assertNone(leafRow("@beep/qa"));
+            assertNone(leafRow("@beep/gadget"));
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
       "reports an export-only orphan whose compose slug is already gone",
       () =>
         Effect.andThen(
