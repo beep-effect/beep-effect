@@ -209,12 +209,20 @@ const headingOf = (value: XlsxValue): O.Option<string> =>
       ? O.some(renderGeneral(value.value))
       : O.none();
 
+/** The headings of a header row: by column for lookup, and in column order, which a hash map does not keep. */
+type Headings = {
+  readonly byColumn: HashMap.HashMap<number, string>;
+  readonly inOrder: ReadonlyArray<string>;
+};
+
+const byColumn = Order.mapInput(Order.Number, (entry: readonly [number, string]) => entry[0]);
+
 /** The headings of a header row by column, each once. */
 const headingsOf = (
   header: XlsxRow,
   sheet: XlsxSheetName,
   bytes: Uint8Array
-): Result.Result<HashMap.HashMap<number, string>, SchemaIssue.Issue> => {
+): Result.Result<Headings, SchemaIssue.Issue> => {
   const start: Result.Result<
     { readonly byColumn: HashMap.HashMap<number, string>; readonly used: HashSet.HashSet<string> },
     SchemaIssue.Issue
@@ -237,7 +245,10 @@ const headingsOf = (
         })
       )
     ),
-    (found) => found.byColumn
+    (found) => ({
+      byColumn: found.byColumn,
+      inOrder: A.map(A.sort(HashMap.toEntries(found.byColumn), byColumn), ([, heading]) => heading),
+    })
   );
 };
 
@@ -246,12 +257,12 @@ const blank = XlsxBlank.make({});
 /** One data row as a record, or the issue of its first cell with a value and no heading. */
 const recordOf = (
   row: XlsxRow,
-  headings: HashMap.HashMap<number, string>,
+  headings: Headings,
   sheet: XlsxSheetName,
   bytes: Uint8Array
 ): Result.Result<XlsxRecord, SchemaIssue.Issue> =>
   O.match(
-    A.findFirst(row.cells, (cell) => cell.value.kind !== "Blank" && !HashMap.has(headings, cell.column)),
+    A.findFirst(row.cells, (cell) => cell.value.kind !== "Blank" && !HashMap.has(headings.byColumn, cell.column)),
     {
       onSome: (cell) =>
         Result.fail(
@@ -263,9 +274,9 @@ const recordOf = (
       onNone: () => {
         // crispen: own properties set one by one, so a heading such as `__proto__` stays an own property.
         const record: { [heading: string]: XlsxValue } = {};
-        for (const [, heading] of headings) setOwnProperty(record, heading, blank);
+        for (const heading of headings.inOrder) setOwnProperty(record, heading, blank);
         for (const cell of row.cells) {
-          const heading = HashMap.get(headings, cell.column);
+          const heading = HashMap.get(headings.byColumn, cell.column);
           if (O.isSome(heading)) setOwnProperty(record, heading.value, cell.value);
         }
         return Result.succeed(record);

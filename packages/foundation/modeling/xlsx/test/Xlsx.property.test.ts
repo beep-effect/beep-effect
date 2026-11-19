@@ -293,6 +293,29 @@ describe("the codecs", () => {
     })
   );
 
+  it.effect("records keep column order past the 32 columns a hash map iterates in order", () =>
+    Effect.gen(function* () {
+      const names = A.makeBy(40, (column) => `h${column}`);
+      const row = (value: (column: number) => XlsxText) =>
+        A.map(names, (_, column) => XlsxCell.make({ column, value: value(column) }));
+      const bytes = yield* Xlsx.stringify(
+        XlsxWorkbook.make({
+          sheets: [
+            XlsxWorksheet.make({
+              info: XlsxSheetInfo.make({ name: "S" }),
+              rows: [
+                XlsxRow.make({ number: 1, cells: row((column) => XlsxText.make({ text: `h${column}` })) }),
+                XlsxRow.make({ number: 2, cells: row(() => XlsxText.make({ text: "v" })) }),
+              ],
+            }),
+          ],
+        })
+      );
+      const records = yield* S.decodeEffect(Xlsx.recordsFromBytes({ sheet: "S", header: "first" }))(bytes);
+      expect(A.map(records, R.keys)).toEqual([names]);
+    })
+  );
+
   it.effect("records keep a heading that would be a property of every object as an own property", () =>
     Effect.gen(function* () {
       const codec = Xlsx.recordsFromBytes({ sheet: "S", header: "first" });
