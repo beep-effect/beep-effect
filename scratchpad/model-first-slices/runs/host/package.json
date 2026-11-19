@@ -6,12 +6,17 @@
   "sideEffects": false,
   "exports": {
     "./Authority.adapter": "./src/Authority.adapter.ts",
+    "./ClusterSql": "./src/ClusterSql.ts",
     "./Host": "./src/Host.ts",
     "./Inbox/ClaimDecided.inbox": "./src/Inbox/ClaimDecided.inbox.ts",
     "./Inbox/Inbox.store": "./src/Inbox/Inbox.store.ts",
+    "./Inbox/Inbox.table": "./src/Inbox/Inbox.table.ts",
+    "./Inbox/PgInboxStore.adapter": "./src/Inbox/PgInboxStore.adapter.ts",
     "./Lineage": "./src/Lineage.ts",
     "./Runs.cluster": "./src/Runs.cluster.ts",
     "./Runs.descriptor": "./src/Runs.descriptor.ts",
+    "./Runs.migrations": "./src/Runs.migrations.ts",
+    "./Runs.schema": "./src/Runs.schema.ts",
     "./RunsGateway.adapter": "./src/RunsGateway.adapter.ts"
   },
   "dependencies": {
@@ -25,13 +30,16 @@
     "effect": "4.1.4"
   },
   "scripts": {
+    "migrations": "bun scripts/migrations.ts",
     "test": "vitest run"
   },
   "devDependencies": {
+    "@beep/pglite": "link:../../../../packages/drivers/pglite",
     "@effect/platform-node": "4.1.4",
     "@effect/vitest": "4.1.4",
     "@proto/authority-host": "workspace:*",
     "@proto/authority-model": "workspace:*",
+    "@proto/tooling": "workspace:*",
     "vitest": "5.0.4"
   }
 }

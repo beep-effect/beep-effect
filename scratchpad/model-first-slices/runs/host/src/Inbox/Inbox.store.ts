@@ -1,12 +1,14 @@
 import * as Context from "effect/Context";
 import { $RunsHostId } from "@proto/kernel/Identity";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as N from "effect/Number";
+import * as O from "@beep/utils/Option";
 import * as Ref from "effect/Ref";
+import { thunk0 } from "@beep/utils"
 
 const $I = $RunsHostId.create("Inbox/Inbox.store");
 
@@ -25,8 +27,11 @@ export class InboxStore extends Context.Service<
     readonly checkpoint: (producer: string) => Effect.Effect<number>;
     /** Whether a fact with this inbox key was acted on. */
     readonly seen: (key: string) => Effect.Effect<boolean>;
-    /** Record the fact acted on and move the checkpoint, in one write. */
-    readonly commit: (producer: string, key: O.Option<string>, seq: number) => Effect.Effect<void>;
+    /** Record the fact acted on and move the checkpoint, in one write. The checkpoint only moves forward: a lower `seq` leaves it. */
+    readonly commit: {
+      (key: O.Option<string>, seq: number): (producer: string) => Effect.Effect<void>;
+      (producer: string, key: O.Option<string>, seq: number): Effect.Effect<void>;
+    };
   }
 >()($I`InboxStore`) {}
 
@@ -51,13 +56,14 @@ export const MemoryInboxStore = Layer.effect(
     Ref.make({ checkpoints: HashMap.empty<string, number>(), seen: HashSet.empty<string>() }),
     (table) => ({
       checkpoint: (producer) =>
-        Effect.map(Ref.get(table), ({ checkpoints }) => O.getOrElse(HashMap.get(checkpoints, producer), () => 0)),
+        Effect.map(Ref.get(table), ({ checkpoints }) => O.getOrElse(HashMap.get(checkpoints, producer), thunk0)),
       seen: (key) => Effect.map(Ref.get(table), ({ seen }) => HashSet.has(seen, key)),
-      commit: (producer, key, seq) =>
+      commit: dual(3, (producer: string, key: O.Option<string>, seq: number) =>
         Ref.update(table, ({ checkpoints, seen }) => ({
-          checkpoints: HashMap.set(checkpoints, producer, seq),
+          checkpoints: HashMap.set(checkpoints, producer, N.max(O.getOrElse(HashMap.get(checkpoints, producer), thunk0), seq)),
           seen: O.match(key, { onNone: () => seen, onSome: (handled) => pipe(seen, HashSet.add(handled)) }),
         })),
+      ),
     }),
   ),
 );

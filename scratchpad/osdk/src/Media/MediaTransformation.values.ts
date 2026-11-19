@@ -71,6 +71,22 @@ export const MediaTransformationKind = LiteralKit([
  */
 export type MediaTransformationKind = typeof MediaTransformationKind.Type;
 
+/**
+ * Companion namespace for {@link MediaTransformationKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaTransformationKind {
+  /**
+   * Encoded (wire) form of {@link MediaTransformationKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof MediaTransformationKind.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Output encodings
 // -----------------------------------------------------------------------------
@@ -103,6 +119,22 @@ export const ImageryEncodingKind = LiteralKit(["jpg", "png", "tiff", "webp"]).pi
 export type ImageryEncodingKind = typeof ImageryEncodingKind.Type;
 
 /**
+ * Companion namespace for {@link ImageryEncodingKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageryEncodingKind {
+  /**
+   * Encoded (wire) form of {@link ImageryEncodingKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ImageryEncodingKind.Encoded;
+}
+
+/**
  * Video container formats a transformation can write.
  *
  * **Example** (List the video output containers)
@@ -128,6 +160,22 @@ export const VideoEncodingKind = LiteralKit(["mp4", "mov", "mkv", "ts"]).pipe(
  * @since 0.0.0
  */
 export type VideoEncodingKind = typeof VideoEncodingKind.Type;
+
+/**
+ * Companion namespace for {@link VideoEncodingKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoEncodingKind {
+  /**
+   * Encoded (wire) form of {@link VideoEncodingKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof VideoEncodingKind.Encoded;
+}
 
 /**
  * Audio formats a transformation can write; only `wav` takes further settings.
@@ -159,6 +207,22 @@ export const AudioEncodingKind = LiteralKit(["mp3", "wav", "ts"]).pipe(
 export type AudioEncodingKind = typeof AudioEncodingKind.Type;
 
 /**
+ * Companion namespace for {@link AudioEncodingKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AudioEncodingKind {
+  /**
+   * Encoded (wire) form of {@link AudioEncodingKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof AudioEncodingKind.Encoded;
+}
+
+/**
  * Archive formats a transformation can bundle many outputs into.
  *
  * **Example** (List the archive output formats)
@@ -188,6 +252,22 @@ export const ArchiveEncodingKind = LiteralKit(["tar"]).pipe(
 export type ArchiveEncodingKind = typeof ArchiveEncodingKind.Type;
 
 /**
+ * Companion namespace for {@link ArchiveEncodingKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ArchiveEncodingKind {
+  /**
+   * Encoded (wire) form of {@link ArchiveEncodingKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ArchiveEncodingKind.Encoded;
+}
+
+/**
  * Document formats a transformation can write.
  *
  * **Example** (List the document output formats)
@@ -213,6 +293,22 @@ export const DocumentEncodingKind = LiteralKit(["pdf"]).pipe(
  * @since 0.0.0
  */
 export type DocumentEncodingKind = typeof DocumentEncodingKind.Type;
+
+/**
+ * Companion namespace for {@link DocumentEncodingKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DocumentEncodingKind {
+  /**
+   * Encoded (wire) form of {@link DocumentEncodingKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DocumentEncodingKind.Encoded;
+}
 
 /**
  * What optical character recognition returns: `hocr` keeps layout and positions, `text` is the words alone.
@@ -242,6 +338,22 @@ export const OcrOutputFormatKind = LiteralKit(["hocr", "text"]).pipe(
  * @since 0.0.0
  */
 export type OcrOutputFormatKind = typeof OcrOutputFormatKind.Type;
+
+/**
+ * Companion namespace for {@link OcrOutputFormatKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OcrOutputFormatKind {
+  /**
+   * Encoded (wire) form of {@link OcrOutputFormatKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof OcrOutputFormatKind.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Operation settings
@@ -280,6 +392,22 @@ export const PerformanceMode = MappedLiteralKit([
 export type PerformanceMode = typeof PerformanceMode.Type;
 
 /**
+ * Companion namespace for {@link PerformanceMode}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PerformanceMode {
+  /**
+   * Encoded (wire) form of {@link PerformanceMode}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof PerformanceMode.Encoded;
+}
+
+/**
  * How readily scene detection declares a new scene in a video.
  *
  * **Example** (Decode a scene detection sensitivity)
@@ -313,6 +441,22 @@ export const SceneScore = MappedLiteralKit([
 export type SceneScore = typeof SceneScore.Type;
 
 /**
+ * Companion namespace for {@link SceneScore}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SceneScore {
+  /**
+   * Encoded (wire) form of {@link SceneScore}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof SceneScore.Encoded;
+}
+
+/**
  * Which rendering of an email body to extract.
  *
  * **Example** (Decode an email body format)
@@ -341,6 +485,22 @@ export const EmailBodyFormat = MappedLiteralKit([
  * @since 0.0.0
  */
 export type EmailBodyFormat = typeof EmailBodyFormat.Type;
+
+/**
+ * Companion namespace for {@link EmailBodyFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EmailBodyFormat {
+  /**
+   * Encoded (wire) form of {@link EmailBodyFormat}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof EmailBodyFormat.Encoded;
+}
 
 /**
  * Markup in which extracted text is returned.
@@ -372,6 +532,22 @@ export const TextOutputFormat = MappedLiteralKit([
  * @since 0.0.0
  */
 export type TextOutputFormat = typeof TextOutputFormat.Type;
+
+/**
+ * Companion namespace for {@link TextOutputFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TextOutputFormat {
+  /**
+   * Encoded (wire) form of {@link TextOutputFormat}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TextOutputFormat.Encoded;
+}
 
 /**
  * How text extraction treats a page: read its embedded text, recognise it as a scan, or decide automatically.
@@ -409,6 +585,22 @@ export const OcrMode = MappedLiteralKit([
 export type OcrMode = typeof OcrMode.Type;
 
 /**
+ * Companion namespace for {@link OcrMode}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OcrMode {
+  /**
+   * Encoded (wire) form of {@link OcrMode}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof OcrMode.Encoded;
+}
+
+/**
  * How a page image is sized before a vision model sees it: scaled freely, or fitted inside a box.
  *
  * **Example** (Decode a page resizing mode)
@@ -441,6 +633,22 @@ export const ResizingMode = MappedLiteralKit([
  * @since 0.0.0
  */
 export type ResizingMode = typeof ResizingMode.Type;
+
+/**
+ * Companion namespace for {@link ResizingMode}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ResizingMode {
+  /**
+   * Encoded (wire) form of {@link ResizingMode}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ResizingMode.Encoded;
+}
 
 /**
  * Markup a vision language model returns extracted text in.
@@ -479,6 +687,22 @@ export const VlmOutputFormat = MappedLiteralKit([["MARKDOWN", "markdown"]]).pipe
 export type VlmOutputFormat = typeof VlmOutputFormat.Type;
 
 /**
+ * Companion namespace for {@link VlmOutputFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VlmOutputFormat {
+  /**
+   * Encoded (wire) form of {@link VlmOutputFormat}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof VlmOutputFormat.Encoded;
+}
+
+/**
  * Models that can turn an image into an embedding vector.
  *
  * **Example** (Decode an embedding model identifier)
@@ -506,6 +730,22 @@ export const EmbeddingModelId = MappedLiteralKit([["GOOGLE_SIGLIP_2", "googleSig
  * @since 0.0.0
  */
 export type EmbeddingModelId = typeof EmbeddingModelId.Type;
+
+/**
+ * Companion namespace for {@link EmbeddingModelId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EmbeddingModelId {
+  /**
+   * Encoded (wire) form of {@link EmbeddingModelId}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof EmbeddingModelId.Encoded;
+}
 
 /**
  * Where a transformation job stands: still running, ended in failure, or ended with a result to fetch.
@@ -546,6 +786,22 @@ export const TransformationJobStatus = MappedLiteralKit([
  * @since 0.0.0
  */
 export type TransformationJobStatus = typeof TransformationJobStatus.Type;
+
+/**
+ * Companion namespace for {@link TransformationJobStatus}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TransformationJobStatus {
+  /**
+   * Encoded (wire) form of {@link TransformationJobStatus}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TransformationJobStatus.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Languages and scripts
@@ -717,6 +973,22 @@ export const OcrLanguage = LiteralKit([
 export type OcrLanguage = typeof OcrLanguage.Type;
 
 /**
+ * Companion namespace for {@link OcrLanguage}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OcrLanguage {
+  /**
+   * Encoded (wire) form of {@link OcrLanguage}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof OcrLanguage.Encoded;
+}
+
+/**
  * Writing systems optical character recognition can be told to expect when the language is not known.
  *
  * **Example** (Count the OCR scripts)
@@ -783,6 +1055,22 @@ export const OcrScript = LiteralKit([
  * @since 0.0.0
  */
 export type OcrScript = typeof OcrScript.Type;
+
+/**
+ * Companion namespace for {@link OcrScript}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OcrScript {
+  /**
+   * Encoded (wire) form of {@link OcrScript}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof OcrScript.Encoded;
+}
 
 /**
  * Languages a transcription can be told the audio is spoken in.
@@ -1039,3 +1327,19 @@ export const TranscriptionLanguage = LiteralKit([
  * @since 0.0.0
  */
 export type TranscriptionLanguage = typeof TranscriptionLanguage.Type;
+
+/**
+ * Companion namespace for {@link TranscriptionLanguage}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TranscriptionLanguage {
+  /**
+   * Encoded (wire) form of {@link TranscriptionLanguage}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TranscriptionLanguage.Encoded;
+}

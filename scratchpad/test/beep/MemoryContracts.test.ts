@@ -1,3 +1,5 @@
+import * as R from "effect/Record";
+import * as A from "effect/Array";
 // @effect-diagnostics nodeBuiltinImport:skip-file -- nodeBuiltinImport because Node's real createHash is the digest oracle the module is checked against. Owner: @beep/scratchpad. Exit: the beep lab graduates and its sources and tests move their digests to Effect Crypto.
 import { createHash } from "node:crypto";
 import { assert, describe, it } from "@effect/vitest";
@@ -149,7 +151,10 @@ describe("constants and literals", () => {
 describe("canonicalJson and deterministicContractId", () => {
   it("sorts keys, escapes strings, and drops non-finite numbers", () => {
     assert.strictEqual(canonicalJson({ b: 1, a: [true, null, "x"] }), '{"a":[true,null,"x"],"b":1}');
-    assert.strictEqual(canonicalJson("quote\" back\\ nl\n tab\t é 😀"), '"quote\\" back\\\\ nl\\n tab\\t \\u00e9 \\ud83d\\ude00"');
+    assert.strictEqual(
+      canonicalJson('quote" back\\ nl\n tab\t é 😀'),
+      '"quote\\" back\\\\ nl\\n tab\\t \\u00e9 \\ud83d\\ude00"',
+    );
     assert.strictEqual(canonicalJson(Number.POSITIVE_INFINITY), "null");
     assert.strictEqual(canonicalJson(null), "null");
     assert.strictEqual(canonicalJson(false), "false");
@@ -211,7 +216,13 @@ describe("EvidenceRef", () => {
       artifactRef: { uri: "gs://x" },
     });
     assert.strictEqual(O.getOrNull(full.quote), "hi");
-    const nulled = decode(EvidenceRef, { evidenceId: "ev-1", sourceId: null, sourceType: null, quote: null, artifactRef: {} });
+    const nulled = decode(EvidenceRef, {
+      evidenceId: "ev-1",
+      sourceId: null,
+      sourceType: null,
+      quote: null,
+      artifactRef: {},
+    });
     assert.strictEqual(O.isNone(nulled.sourceId), true);
     const missing = decode(EvidenceRef, { evidenceId: "ev-1", artifactRef: {} });
     assert.strictEqual(O.isNone(missing.sourceType), true);
@@ -325,22 +336,25 @@ describe("L1MemoryArchiveItem", () => {
     const tokyo = build({ archiveId: "b", text: "Trip to Tokyo", evidenceQuotes: ["tokyo hotel"] });
     const kyoto = build({ archiveId: "a", text: "Trip to Kyoto", evidenceQuotes: [] });
     const secret = build({ archiveId: "c", text: "Trip to Tokyo", riskFlags: ["secret"] });
-    const blocked = L1MemoryArchiveItem.make({ ...build({ archiveId: "d", text: "Trip to Tokyo" }), normalSearchAllowed: false });
+    const blocked = L1MemoryArchiveItem.make({
+      ...build({ archiveId: "d", text: "Trip to Tokyo" }),
+      normalSearchAllowed: false,
+    });
     const all = [kyoto, tokyo, secret, blocked];
     assert.deepStrictEqual(
-      filterL1ArchiveForNormalSearch(all).map((item) => item.archiveId),
+      A.map(filterL1ArchiveForNormalSearch(all), (item) => item.archiveId),
       ["a", "b"],
     );
     assert.deepStrictEqual(
-      filterL1ArchiveForNormalSearch(all, "  ").map((item) => item.archiveId),
+      A.map(filterL1ArchiveForNormalSearch(all, "  "), (item) => item.archiveId),
       ["a", "b"],
     );
     assert.deepStrictEqual(
-      filterL1ArchiveForNormalSearch(all, "trip tokyo").map((item) => item.archiveId),
+      A.map(filterL1ArchiveForNormalSearch(all, "trip tokyo"), (item) => item.archiveId),
       ["b", "a"],
     );
     assert.deepStrictEqual(
-      filterL1ArchiveForNormalSearch(all, "trip").map((item) => item.archiveId),
+      A.map(filterL1ArchiveForNormalSearch(all, "trip"), (item) => item.archiveId),
       ["b", "a"],
     );
     assert.deepStrictEqual(filterL1ArchiveForNormalSearch(all, "mars"), []);
@@ -410,8 +424,14 @@ describe("WorkingMemoryObservation", () => {
     assert.strictEqual(observation.interpretationLevel, "literal");
     const passthrough = decode(WorkingMemoryObservation, { ...observationWire, subject: "Marathon training" });
     assert.strictEqual(passthrough.subject, "Marathon training");
-    assert.strictEqual(decode(WorkingMemoryObservation, { ...observationWire, subject: "project" }).subject, "owned_project");
-    assert.strictEqual(decode(WorkingMemoryObservation, { ...observationWire, sourceMode: "OCR" }).sourceMode, "ui_or_ocr");
+    assert.strictEqual(
+      decode(WorkingMemoryObservation, { ...observationWire, subject: "project" }).subject,
+      "owned_project",
+    );
+    assert.strictEqual(
+      decode(WorkingMemoryObservation, { ...observationWire, sourceMode: "OCR" }).sourceMode,
+      "ui_or_ocr",
+    );
   });
 
   it("missing Option fields decode to None, defaults apply, and None encodes as null", () => {
@@ -508,12 +528,16 @@ describe("SourceBackedMemoryCandidate", () => {
   });
 
   it("normalizeSourceBackedCandidate rewrites non-archive tiers and keeps archive", () => {
-    const rewritten = Effect.runSync(normalizeSourceBackedCandidate(decode(SourceBackedMemoryCandidate, candidateWire)));
+    const rewritten = Effect.runSync(
+      normalizeSourceBackedCandidate(decode(SourceBackedMemoryCandidate, candidateWire)),
+    );
     assert.strictEqual(rewritten.initialTier, "short_term");
     assert.strictEqual(O.isNone(rewritten.archiveId), true);
     assert.strictEqual(rewritten.defaultAccessCandidate, true);
     const secret = Effect.runSync(
-      normalizeSourceBackedCandidate(decode(SourceBackedMemoryCandidate, { ...candidateWire, riskFlags: ["security_sensitive"] })),
+      normalizeSourceBackedCandidate(
+        decode(SourceBackedMemoryCandidate, { ...candidateWire, riskFlags: ["security_sensitive"] }),
+      ),
     );
     assert.strictEqual(secret.defaultAccessCandidate, false);
     const archive = Effect.runSync(
@@ -536,9 +560,18 @@ describe("L2 search contracts", () => {
     const request = decode(L2SearchRequest, { query: " tea ", reason: "why", searchType: "semantic", maxResults: 3 });
     assert.strictEqual(request.query, "tea");
     assert.strictEqual(request.maxResults, 3);
-    assert.strictEqual(decodeFails(L2SearchRequest, { query: "q", reason: "r", searchType: "semantic", maxResults: 0 }), true);
-    assert.strictEqual(decodeFails(L2SearchRequest, { query: "q", reason: "r", searchType: "semantic", maxResults: 6 }), true);
-    assert.strictEqual(decodeFails(L2SearchRequest, { query: " ", reason: "r", searchType: "semantic", maxResults: 1 }), true);
+    assert.strictEqual(
+      decodeFails(L2SearchRequest, { query: "q", reason: "r", searchType: "semantic", maxResults: 0 }),
+      true,
+    );
+    assert.strictEqual(
+      decodeFails(L2SearchRequest, { query: "q", reason: "r", searchType: "semantic", maxResults: 6 }),
+      true,
+    );
+    assert.strictEqual(
+      decodeFails(L2SearchRequest, { query: " ", reason: "r", searchType: "semantic", maxResults: 1 }),
+      true,
+    );
     const made = L2SearchRequest.make({ query: "q", reason: "r" });
     assert.strictEqual(made.searchType, "semantic");
     assert.strictEqual(made.maxResults, 5);
@@ -555,7 +588,13 @@ describe("L2 search contracts", () => {
       metadata: { k: 1 },
     });
     assert.strictEqual(O.getOrNull(hit.score), 0.5);
-    const bare = decode(L2SearchResult, { resultId: "r1", contentHash: "h", status: "review", source: "vector", metadata: {} });
+    const bare = decode(L2SearchResult, {
+      resultId: "r1",
+      contentHash: "h",
+      status: "review",
+      source: "vector",
+      metadata: {},
+    });
     assert.strictEqual(O.isNone(bare.score), true);
     assert.strictEqual(O.isNone(bare.content), true);
     const encoded = Effect.runSync(encodeL2SearchResult(bare));
@@ -577,8 +616,14 @@ describe("L2 search contracts", () => {
     const plan = decode(L2SearchPlan, wire);
     assert.strictEqual(l2SearchPlanIssue(plan), undefined);
     const single = decode(L2SearchRequest, search);
-    assert.strictEqual(l2SearchPlanIssue(L2SearchPlan.make({ ...plan, searches: [single, single] })), "searches exceed search_budget");
-    assert.strictEqual(l2SearchPlanIssue(L2SearchPlan.make({ ...plan, sameUserOnly: false })), "same_user_only must be true");
+    assert.strictEqual(
+      l2SearchPlanIssue(L2SearchPlan.make({ ...plan, searches: [single, single] })),
+      "searches exceed search_budget",
+    );
+    assert.strictEqual(
+      l2SearchPlanIssue(L2SearchPlan.make({ ...plan, sameUserOnly: false })),
+      "same_user_only must be true",
+    );
     assert.strictEqual(l2SearchPlanIssue(L2SearchPlan.make({ ...plan, readOnly: false })), "read_only must be true");
     assert.strictEqual(decodeFails(L2SearchPlan, { ...wire, searchBudget: 4 }), true);
     assert.strictEqual(decodeFails(L2SearchPlan, { ...wire, packetId: " " }), true);
@@ -598,7 +643,12 @@ describe("L2MemoryRoute tagged union", () => {
   const routeBase = { schemaVersion: "l2_memory_route.v1", confidence: "medium", reason: "because" };
 
   it("decodes every member on route", () => {
-    const durable = decode(L2MemoryRoute, { ...routeBase, route: "durable", memoryText: " text ", evidenceQuotes: ["q"] });
+    const durable = decode(L2MemoryRoute, {
+      ...routeBase,
+      route: "durable",
+      memoryText: " text ",
+      evidenceQuotes: ["q"],
+    });
     assert.strictEqual(durable.route, "durable");
     assert.strictEqual(isL2MemoryRouteDurable(durable), true);
     assert.strictEqual(durable.memoryText, "text");
@@ -631,10 +681,22 @@ describe("L2MemoryRoute tagged union", () => {
   });
 
   it("rejects an unknown route and shape violations per member", () => {
-    assert.strictEqual(decodeFails(L2MemoryRoute, { ...routeBase, route: "keep", memoryText: "t", evidenceQuotes: ["q"] }), true);
-    assert.strictEqual(decodeFails(L2MemoryRoute, { ...routeBase, route: "durable", memoryText: "t", evidenceQuotes: [] }), true);
-    assert.strictEqual(decodeFails(L2MemoryRoute, { ...routeBase, route: "review", memoryText: " ", evidenceQuotes: ["q"] }), true);
-    assert.strictEqual(decodeFails(L2MemoryRoute, { ...routeBase, route: "discard", evidenceQuotes: [], dropReason: "nope" }), true);
+    assert.strictEqual(
+      decodeFails(L2MemoryRoute, { ...routeBase, route: "keep", memoryText: "t", evidenceQuotes: ["q"] }),
+      true,
+    );
+    assert.strictEqual(
+      decodeFails(L2MemoryRoute, { ...routeBase, route: "durable", memoryText: "t", evidenceQuotes: [] }),
+      true,
+    );
+    assert.strictEqual(
+      decodeFails(L2MemoryRoute, { ...routeBase, route: "review", memoryText: " ", evidenceQuotes: ["q"] }),
+      true,
+    );
+    assert.strictEqual(
+      decodeFails(L2MemoryRoute, { ...routeBase, route: "discard", evidenceQuotes: [], dropReason: "nope" }),
+      true,
+    );
     assert.strictEqual(
       decodeFails(L2MemoryRoute, { ...routeBase, route: "hidden", evidenceQuotes: [], dropReason: "duplicate" }),
       true,
@@ -775,12 +837,15 @@ describe("DurableMemoryPatch", () => {
     }
     assert.strictEqual(issue({ memoryText: null }), "add decisions require memory_text or new_memory_id");
     assert.strictEqual(issue({ memoryText: null, newMemoryId: "mem-9" }), undefined);
-    assert.strictEqual(issue({ evidenceIds: [] }), "active/review patches require exact supporting evidence ids or refs");
-    assert.strictEqual(issue({ evidenceIds: [], resultStatus: "review" }), "active/review patches require exact supporting evidence ids or refs");
     assert.strictEqual(
-      issue({ evidenceIds: [], evidenceRefs: [{ evidenceId: "ev-1", artifactRef: {} }] }),
-      undefined,
+      issue({ evidenceIds: [] }),
+      "active/review patches require exact supporting evidence ids or refs",
     );
+    assert.strictEqual(
+      issue({ evidenceIds: [], resultStatus: "review" }),
+      "active/review patches require exact supporting evidence ids or refs",
+    );
+    assert.strictEqual(issue({ evidenceIds: [], evidenceRefs: [{ evidenceId: "ev-1", artifactRef: {} }] }), undefined);
     assert.strictEqual(issue({ evidenceIds: [], resultStatus: "rejected", decision: "reject" }), undefined);
   });
 
@@ -794,38 +859,47 @@ describe("DurableMemoryPatch", () => {
       ledgerIssue({ decision: "update", targetMemoryId: "mem-1", targetTier: "short_term" }),
       "knowledge ledger updates may not enter the short_term lifecycle",
     );
-    assert.strictEqual(ledgerIssue({ decision: "update", targetMemoryId: "mem-1", targetTier: "long_term" }), undefined);
-    assert.strictEqual(ledgerIssue({ writeReason: null }), "knowledge ledger rows require an intent-backed write reason");
+    assert.strictEqual(
+      ledgerIssue({ decision: "update", targetMemoryId: "mem-1", targetTier: "long_term" }),
+      undefined,
+    );
+    assert.strictEqual(
+      ledgerIssue({ writeReason: null }),
+      "knowledge ledger rows require an intent-backed write reason",
+    );
     assert.strictEqual(
       ledgerIssue({ intentBacked: false }),
       "knowledge ledger rows require an intent-backed write reason",
     );
     assert.strictEqual(ledgerIssue({ intentBacked: false, writeReason: "legacy_migration" }), undefined);
     assert.strictEqual(
-      ledgerIssue({ memoryText: "x".repeat(MAX_LEDGER_CONTENT_CHARACTERS + 1) }),
+      ledgerIssue({ memoryText: Str.repeat(MAX_LEDGER_CONTENT_CHARACTERS + 1)("x") }),
       "knowledge ledger content exceeds the ledger limit",
     );
     assert.strictEqual(
-      ledgerIssue({ slot: "s".repeat(MAX_LEDGER_SLOT_CHARACTERS + 1) }),
+      ledgerIssue({ slot: Str.repeat(MAX_LEDGER_SLOT_CHARACTERS + 1)("s") }),
       "knowledge ledger slot exceeds the ledger limit",
     );
-    assert.strictEqual(ledgerIssue({ slot: "s".repeat(MAX_LEDGER_SLOT_CHARACTERS) }), undefined);
+    assert.strictEqual(ledgerIssue({ slot: Str.repeat(MAX_LEDGER_SLOT_CHARACTERS)("s") }), undefined);
     assert.strictEqual(ledgerIssue({ kind: "document" }), "ledger documents require a non-empty body");
     assert.strictEqual(ledgerIssue({ kind: "document", body: "  " }), "ledger documents require a non-empty body");
     assert.strictEqual(
-      ledgerIssue({ kind: "document", body: "b".repeat(MAX_LEDGER_PLAYBOOK_BODY_CHARACTERS + 1) }),
+      ledgerIssue({ kind: "document", body: Str.repeat(MAX_LEDGER_PLAYBOOK_BODY_CHARACTERS + 1)("b") }),
       "ledger document body exceeds the ledger limit",
     );
     assert.strictEqual(ledgerIssue({ kind: "document", body: "playbook" }), undefined);
     assert.strictEqual(ledgerIssue({ body: "stray" }), "ledger body is only valid for document rows");
-    assert.strictEqual(ledgerIssue({ kind: "document", body: "b", slot: "s" }), "only fact ledger rows may define a slot");
+    assert.strictEqual(
+      ledgerIssue({ kind: "document", body: "b", slot: "s" }),
+      "only fact ledger rows may define a slot",
+    );
     assert.strictEqual(ledgerIssue({ kind: "trigger" }), "trigger ledger rows require trigger_condition");
     assert.strictEqual(ledgerIssue({ kind: "trigger", triggerCondition: { when: "morning" } }), undefined);
     assert.strictEqual(
       ledgerIssue({ triggerCondition: { when: "morning" } }),
       "trigger_condition is only valid for trigger ledger rows",
     );
-    const manyKeys = Object.fromEntries(
+    const manyKeys = R.fromEntries(
       Array.from({ length: MAX_LEDGER_TRIGGER_CONDITION_KEYS + 1 }, (_, index) => [`k${index}`, index]),
     );
     assert.strictEqual(
@@ -833,7 +907,10 @@ describe("DurableMemoryPatch", () => {
       "ledger trigger condition exceeds the ledger key limit",
     );
     assert.strictEqual(
-      ledgerIssue({ kind: "trigger", triggerCondition: { big: "x".repeat(MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS) } }),
+      ledgerIssue({
+        kind: "trigger",
+        triggerCondition: { big: Str.repeat(MAX_LEDGER_TRIGGER_CONDITION_CHARACTERS)("x") },
+      }),
       "ledger trigger condition exceeds the serialized limit",
     );
   });

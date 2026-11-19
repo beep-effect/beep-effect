@@ -16,23 +16,23 @@ import type { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
+import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
 import * as Clock from "effect/Clock";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
-import * as Random from "effect/Random";
-import * as Ref from "effect/Ref";
-import * as Stream from "effect/Stream";
-import * as A from "effect/Array";
-import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import type { PlatformError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import type { BackpressureConfigInput } from "../Contract/ProgressStreaming.ts";
 import {
   BackpressureConfig,
@@ -50,8 +50,8 @@ import {
   RelationFoundEvent,
 } from "../Contract/ProgressStreaming.ts";
 import { ExtractionRunId, UUID } from "../Domain/Identity.ts";
-import { dual2 } from "../Utils/Dual.ts";
 import { PosInt } from "../Schema/PosInt.ts";
+import { dual2 } from "../Utils/Dual.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/ProgressStreaming");
 const ProgressStreamingFailureReason = LiteralKit(["BackpressureTimeout", "QueueOverflow"]).pipe(
@@ -85,7 +85,9 @@ const ProgressStreamingFailureReason = LiteralKit(["BackpressureTimeout", "Queue
  * @category errors
  * @since 0.0.0
  */
-export class ProgressStreamingError extends S.TaggedError<ProgressStreamingError, { readonly brand: unique symbol }>($I`ProgressStreamingError`)(
+export class ProgressStreamingError extends S.TaggedError<ProgressStreamingError, { readonly brand: unique symbol }>(
+  $I`ProgressStreamingError`
+)(
   "ProgressStreamingError",
   {
     reason: ProgressStreamingFailureReason.annotateKey({
@@ -127,14 +129,18 @@ export class ProgressStreamingError extends S.TaggedError<ProgressStreamingError
  * @category models
  * @since 0.0.0
  */
-export class ProgressBuilderState extends S.Opaque<ProgressBuilderState, { readonly brand: unique symbol }>()(S.Struct({
+export class ProgressBuilderState extends S.Opaque<ProgressBuilderState, { readonly brand: unique symbol }>()(
+  S.Struct({
     runId: ExtractionRunId,
     totalChunks: PosInt,
     processedChunks: S.Natural,
     currentPhaseProgress: Percentage,
-  }).pipe($I.annoteSchema("ProgressBuilderState", {
-    description: "Extraction run identity, chunk counts, and current phase progress held by the event builder.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ProgressBuilderState", {
+      description: "Extraction run identity, chunk counts, and current phase progress held by the event builder.",
+    })
+  )
+) {}
 
 // =============================================================================
 // Progress Event Builder (Functional)
@@ -246,7 +252,9 @@ export const createExtractionStarted: {
     characterCount: PosInt;
     estimatedAvgChunkSize: PosInt;
     contentType?: string;
-  }): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionStartedEvent, PlatformError, SecureRandom.SecureRandom>;
+  }): (
+    ref: Ref.Ref<ProgressBuilderState>
+  ) => Effect.Effect<ExtractionStartedEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   2,
   Effect.fn("ProgressStreaming.createExtractionStarted")(function* (
@@ -258,11 +266,13 @@ export const createExtractionStarted: {
     }
   ): Effect.fn.Return<ExtractionStartedEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue273_37 = yield* DateTime.now;
     return ExtractionStartedEvent.make({
       _tag: "extraction_started",
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue273_37),
       overallProgress: Percentage.make(0),
       totalChunks: state.totalChunks,
       textMetadata: {
@@ -317,7 +327,9 @@ export const createChunkingProgress: {
     chunksCompleted: number,
     chunksProcessing: number,
     avgChunkSize: PosInt
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkingProgressEvent, PlatformError, SecureRandom.SecureRandom>;
+  ): (
+    ref: Ref.Ref<ProgressBuilderState>
+  ) => Effect.Effect<ChunkingProgressEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   4,
   Effect.fn("ProgressStreaming.createChunkingProgress")(function* (
@@ -327,11 +339,13 @@ export const createChunkingProgress: {
     avgChunkSize: PosInt
   ): Effect.fn.Return<ChunkingProgressEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue344_37 = yield* DateTime.now;
     return ChunkingProgressEvent.make({
       _tag: "chunking_progress",
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue344_37),
       overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       chunksCompleted,
       chunksProcessing,
@@ -383,7 +397,9 @@ export const createChunkProcessingStarted: {
     chunkIndex: number,
     chunkTextLength: PosInt,
     textPreview: string
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingStartedEvent, PlatformError, SecureRandom.SecureRandom>;
+  ): (
+    ref: Ref.Ref<ProgressBuilderState>
+  ) => Effect.Effect<ChunkProcessingStartedEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   4,
   Effect.fn("ProgressStreaming.createChunkProcessingStarted")(function* (
@@ -393,11 +409,13 @@ export const createChunkProcessingStarted: {
     textPreview: string
   ): Effect.fn.Return<ChunkProcessingStartedEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue412_37 = yield* DateTime.now;
     return ChunkProcessingStartedEvent.make({
       _tag: "chunk_processing_started",
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue412_37),
       overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       chunkIndex,
       chunkTextLength,
@@ -466,11 +484,13 @@ export const createEntityFound: {
     confidence?: Confidence
   ): Effect.fn.Return<EntityFoundEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue485_37 = yield* DateTime.now;
     return EntityFoundEvent.make({
       _tag: "entity_found",
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue485_37),
       overallProgress: Percentage.make(calculateOverallProgress(state, 40)),
       chunkIndex,
       entityId,
@@ -532,7 +552,9 @@ export const createRelationFound: {
     object: string | number | boolean,
     isEntityReference: boolean,
     confidence?: Confidence
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<RelationFoundEvent, PlatformError, SecureRandom.SecureRandom>;
+  ): (
+    ref: Ref.Ref<ProgressBuilderState>
+  ) => Effect.Effect<RelationFoundEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   isRefFirst,
   Effect.fn("ProgressStreaming.createRelationFound")(function* (
@@ -545,11 +567,13 @@ export const createRelationFound: {
     confidence?: Confidence
   ): Effect.fn.Return<RelationFoundEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue566_37 = yield* DateTime.now;
     return RelationFoundEvent.make({
       _tag: "relation_found",
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue566_37),
       overallProgress: Percentage.make(calculateOverallProgress(state, 60)),
       chunkIndex,
       subjectId,
@@ -609,7 +633,9 @@ export const createChunkProcessingComplete: {
     relationCount: number,
     durationMs: PosInt,
     errors?: Array<{ readonly phase: string; readonly message: string }>
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ChunkProcessingCompleteEvent, PlatformError, SecureRandom.SecureRandom>;
+  ): (
+    ref: Ref.Ref<ProgressBuilderState>
+  ) => Effect.Effect<ChunkProcessingCompleteEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   isRefFirst,
   Effect.fn("ProgressStreaming.createChunkProcessingComplete")(function* (
@@ -621,11 +647,13 @@ export const createChunkProcessingComplete: {
     errors?: Array<{ readonly phase: string; readonly message: string }>
   ): Effect.fn.Return<ChunkProcessingCompleteEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue644_37 = yield* DateTime.now;
     return ChunkProcessingCompleteEvent.make({
       _tag: "chunk_processing_complete",
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue644_37),
       overallProgress: Percentage.make(calculateOverallProgress(state, 100)),
       chunkIndex,
       entityCount,
@@ -688,7 +716,9 @@ export const createExtractionComplete: {
     totalDurationMs: PosInt,
     successfulChunks: number,
     failedChunks: number
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionCompleteEvent, PlatformError, SecureRandom.SecureRandom>;
+  ): (
+    ref: Ref.Ref<ProgressBuilderState>
+  ) => Effect.Effect<ExtractionCompleteEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   7,
   Effect.fn("ProgressStreaming.createExtractionComplete")(function* (
@@ -701,11 +731,13 @@ export const createExtractionComplete: {
     failedChunks: number
   ): Effect.fn.Return<ExtractionCompleteEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue726_37 = yield* DateTime.now;
     return ExtractionCompleteEvent.make({
       _tag: "extraction_complete",
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue726_37),
       overallProgress: Percentage.make(100),
       totalEntities,
       totalRelations,
@@ -773,7 +805,9 @@ export const createExtractionFailed: {
     errorMessage: string,
     isRecoverable: boolean,
     options?: CreateExtractionFailedOptions
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<ExtractionFailedEvent, PlatformError, SecureRandom.SecureRandom>;
+  ): (
+    ref: Ref.Ref<ProgressBuilderState>
+  ) => Effect.Effect<ExtractionFailedEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   isRefFirst,
   Effect.fn("ProgressStreaming.createExtractionFailed")(function* (
@@ -784,10 +818,12 @@ export const createExtractionFailed: {
     options?: CreateExtractionFailedOptions
   ): Effect.fn.Return<ExtractionFailedEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue810_37 = yield* DateTime.now;
     return ExtractionFailedEvent.make({
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue810_37),
       overallProgress: Percentage.make(calculateOverallProgress(state, 0)),
       errorType,
       errorMessage,
@@ -854,7 +890,9 @@ export const createRecoverableError: {
     errorMessage: string,
     phase: string,
     recoveryAction: string
-  ): (ref: Ref.Ref<ProgressBuilderState>) => Effect.Effect<RecoverableErrorEvent, PlatformError, SecureRandom.SecureRandom>;
+  ): (
+    ref: Ref.Ref<ProgressBuilderState>
+  ) => Effect.Effect<RecoverableErrorEvent, PlatformError, SecureRandom.SecureRandom>;
 } = dual(
   6,
   Effect.fn("ProgressStreaming.createRecoverableError")(function* (
@@ -866,10 +904,12 @@ export const createRecoverableError: {
     recoveryAction: string
   ): Effect.fn.Return<RecoverableErrorEvent, PlatformError, SecureRandom.SecureRandom> {
     const state = yield* Ref.get(ref);
+    const eventId = yield* nextEventId;
+    const resolvedValue894_37 = yield* DateTime.now;
     return RecoverableErrorEvent.make({
-      eventId: yield* nextEventId,
+      eventId: eventId,
       runId: state.runId,
-      timestamp: DateTime.formatIso(yield* DateTime.now),
+      timestamp: DateTime.formatIso(resolvedValue894_37),
       overallProgress: Percentage.make(calculateOverallProgress(state, 50)),
       chunkIndex,
       errorType,
@@ -973,15 +1013,19 @@ export const setPhaseProgress = dual2(
  * @category models
  * @since 0.0.0
  */
-export class BackpressureState extends S.Opaque<BackpressureState, { readonly brand: unique symbol }>()(S.Struct({
+export class BackpressureState extends S.Opaque<BackpressureState, { readonly brand: unique symbol }>()(
+  S.Struct({
     config: BackpressureConfig,
     eventQueue: S.Array(ProgressEvent),
     lastWarnTime: S.Finite.check(
       S.isGreaterThanOrEqualTo(0, { message: "Expected a non-negative backpressure warning timestamp" })
     ),
-  }).pipe($I.annoteSchema("BackpressureState", {
-    description: "Resolved queue policy, queued progress events, and the last warning timestamp.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("BackpressureState", {
+      description: "Resolved queue policy, queued progress events, and the last warning timestamp.",
+    })
+  )
+) {}
 
 /**
  * Create backpressure handler state
@@ -1130,18 +1174,30 @@ export const enqueueEvent: {
   (
     ref: Ref.Ref<BackpressureState>,
     event: ProgressEvent
-  ): Effect.Effect<O.Option<BackpressureWarningEvent>, ProgressStreamingError | PlatformError, SecureRandom.SecureRandom>;
+  ): Effect.Effect<
+    O.Option<BackpressureWarningEvent>,
+    ProgressStreamingError | PlatformError,
+    SecureRandom.SecureRandom
+  >;
   (
     event: ProgressEvent
   ): (
     ref: Ref.Ref<BackpressureState>
-  ) => Effect.Effect<O.Option<BackpressureWarningEvent>, ProgressStreamingError | PlatformError, SecureRandom.SecureRandom>;
+  ) => Effect.Effect<
+    O.Option<BackpressureWarningEvent>,
+    ProgressStreamingError | PlatformError,
+    SecureRandom.SecureRandom
+  >;
 } = dual(
   2,
   Effect.fn("ProgressStreaming.enqueueEvent")(function* (
     ref: Ref.Ref<BackpressureState>,
     event: ProgressEvent
-  ): Effect.fn.Return<O.Option<BackpressureWarningEvent>, ProgressStreamingError | PlatformError, SecureRandom.SecureRandom> {
+  ): Effect.fn.Return<
+    O.Option<BackpressureWarningEvent>,
+    ProgressStreamingError | PlatformError,
+    SecureRandom.SecureRandom
+  > {
     const state = yield* Ref.get(ref);
 
     // Check sampling
@@ -1167,12 +1223,14 @@ export const enqueueEvent: {
           eventQueue: newQueue,
           lastWarnTime: now,
         }));
+        const eventId = yield* nextEventId;
+        const resolvedValue1213_43 = yield* DateTime.now;
         return O.some(
           BackpressureWarningEvent.make({
             _tag: "backpressure_warning",
-            eventId: yield* nextEventId,
+            eventId: eventId,
             runId: event.runId,
-            timestamp: DateTime.formatIso(yield* DateTime.now),
+            timestamp: DateTime.formatIso(resolvedValue1213_43),
             overallProgress: event.overallProgress,
             queuedEvents: PosInt.make(queueSize),
             maxQueueSize: PosInt.make(state.config.maxQueueSize),
@@ -1372,21 +1430,29 @@ export const withBackpressure: {
  * @category type-level
  * @since 0.0.0
  */
-class ResumablePartialResults extends S.Opaque<ResumablePartialResults, { readonly brand: unique symbol }>()(S.Struct({
+class ResumablePartialResults extends S.Opaque<ResumablePartialResults, { readonly brand: unique symbol }>()(
+  S.Struct({
     entityCount: S.Natural,
     relationCount: S.Natural,
-  }).pipe($I.annoteSchema("ResumablePartialResults", {
-    description: "Entity and relation counts retained at an extraction pause point.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ResumablePartialResults", {
+      description: "Entity and relation counts retained at an extraction pause point.",
+    })
+  )
+) {}
 
-class PauseReason extends S.Opaque<PauseReason, { readonly brand: unique symbol }>()(S.Struct({
+class PauseReason extends S.Opaque<PauseReason, { readonly brand: unique symbol }>()(
+  S.Struct({
     errorType: S.NonEmptyString,
     message: S.NonEmptyString,
     isRecoverable: S.Boolean,
     retryAfter: S.Duration.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("PauseReason", {
-    description: "Failure and optional retry delay that caused extraction to pause.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("PauseReason", {
+      description: "Failure and optional retry delay that caused extraction to pause.",
+    })
+  )
+) {}
 
 /**
  * Checkpoint and recovery context retained for a resumable extraction.
@@ -1410,15 +1476,19 @@ class PauseReason extends S.Opaque<PauseReason, { readonly brand: unique symbol 
  * @category models
  * @since 0.0.0
  */
-export class ResumableExtractionState extends S.Opaque<ResumableExtractionState, { readonly brand: unique symbol }>()(S.Struct({
+export class ResumableExtractionState extends S.Opaque<ResumableExtractionState, { readonly brand: unique symbol }>()(
+  S.Struct({
     runId: ExtractionRunId,
     lastSuccessfulChunkIndex: S.Natural,
     partialResults: ResumablePartialResults,
     pausedAt: S.Date,
     pauseReason: PauseReason.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("ResumableExtractionState", {
-    description: "Checkpoint, partial counts, pause time, and recovery reason for a resumable extraction.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ResumableExtractionState", {
+      description: "Checkpoint, partial counts, pause time, and recovery reason for a resumable extraction.",
+    })
+  )
+) {}
 
 /**
  * Extract resumable state from ExtractionFailedEvent

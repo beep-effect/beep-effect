@@ -10,16 +10,16 @@
  * @since 0.0.0
  */
 
-import { DrizzleError } from "@beep/drizzle";
+import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
 import { getSomesStruct } from "@beep/utils/Option";
-import * as Context from "effect/Context";
-import * as DateTime from "effect/DateTime";
-import * as Layer from "effect/Layer";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Context from "effect/Context";
+import * as DateTime from "effect/DateTime";
 import { dual } from "effect/Function";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -42,13 +42,11 @@ const normalizeQueryError = normalizeDrizzleError("execute");
 const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 
 const ArticleSelectRows = Articles.select.pipe(S.Array, S.mutable);
-const decodeArticleRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(ArticleSelectRows)(rows));
+const decodeArticleRows = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(ArticleSelectRows)(rows));
 
 const ArticleCountRows = S.Tuple([ArticleCountDatabaseRow]);
 
-const decodeArticleCountRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(ArticleCountRows)(rows));
+const decodeArticleCountRows = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(ArticleCountRows)(rows));
 
 // =============================================================================
 // Types
@@ -209,9 +207,9 @@ export class ArticleRepository extends Context.Service<ArticleRepository, Articl
       const insertArticle: ArticleRepositoryShape["insertArticle"] = Effect.fn("insertArticle")(function* (
         article: ArticleInsertRow
       ) {
-        const [result] = yield* decodeArticleRows(
-          yield* normalizeQueryError(drizzle.insert(articles).values(article).returning())
-        );
+        const insertedArticleRows = yield* normalizeQueryError(drizzle.insert(articles).values(article).returning());
+        const [result] = yield* decodeArticleRows(insertedArticleRows);
+        if (result === undefined) return yield* Effect.die("INSERT RETURNING produced no row");
         return result;
       });
 
@@ -221,15 +219,14 @@ export class ArticleRepository extends Context.Service<ArticleRepository, Articl
       const getArticle: ArticleRepositoryShape["getArticle"] = dual(
         2,
         Effect.fn("getArticle")(function* (id: ArticleId, ontologyId: string) {
-          const [result] = yield* decodeArticleRows(
-            yield* normalizeQueryError(
-              drizzle
-                .select()
-                .from(articles)
-                .where(and(eq(articles.id, id), eq(articles.ontologyId, ontologyId)))
-                .limit(1)
-            )
+          const articleRowsById = yield* normalizeQueryError(
+            drizzle
+              .select()
+              .from(articles)
+              .where(and(eq(articles.id, id), eq(articles.ontologyId, ontologyId)))
+              .limit(1)
           );
+          const [result] = yield* decodeArticleRows(articleRowsById);
           return O.fromNullishOr(result);
         })
       );
@@ -240,15 +237,14 @@ export class ArticleRepository extends Context.Service<ArticleRepository, Articl
       const getArticleByUri: ArticleRepositoryShape["getArticleByUri"] = dual(
         2,
         Effect.fn("getArticleByUri")(function* (uri: string, ontologyId: string) {
-          const [result] = yield* decodeArticleRows(
-            yield* normalizeQueryError(
-              drizzle
-                .select()
-                .from(articles)
-                .where(and(eq(articles.uri, uri), eq(articles.ontologyId, ontologyId)))
-                .limit(1)
-            )
+          const articleRowsByUri = yield* normalizeQueryError(
+            drizzle
+              .select()
+              .from(articles)
+              .where(and(eq(articles.uri, uri), eq(articles.ontologyId, ontologyId)))
+              .limit(1)
           );
+          const [result] = yield* decodeArticleRows(articleRowsByUri);
           return O.fromNullishOr(result);
         })
       );
@@ -276,15 +272,15 @@ export class ArticleRepository extends Context.Service<ArticleRepository, Articl
           ontologyId: string,
           updates: Omit<Partial<ArticleInsertRow>, "ontologyId">
         ) {
-          const [result] = yield* decodeArticleRows(
-            yield* normalizeQueryError(
-              drizzle
-                .update(articles)
-                .set({ ...updates, updatedAt: DateTime.toDateUtc(yield* DateTime.now) })
-                .where(and(eq(articles.id, id), eq(articles.ontologyId, ontologyId)))
-                .returning()
-            )
+          const updatedAt = yield* DateTime.now;
+          const updatedArticleRows = yield* normalizeQueryError(
+            drizzle
+              .update(articles)
+              .set({ ...updates, updatedAt: DateTime.toDateUtc(updatedAt) })
+              .where(and(eq(articles.id, id), eq(articles.ontologyId, ontologyId)))
+              .returning()
           );
+          const [result] = yield* decodeArticleRows(updatedArticleRows);
           return O.fromNullishOr(result);
         })
       );
@@ -351,7 +347,8 @@ export class ArticleRepository extends Context.Service<ArticleRepository, Articl
         if (P.isNotUndefined(filter.offset)) {
           query = query.offset(filter.offset);
         }
-        return yield* decodeArticleRows(yield* normalizeQueryError(query));
+        const matchingArticleRows = yield* normalizeQueryError(query);
+        return yield* decodeArticleRows(matchingArticleRows);
       });
 
       /**
@@ -396,7 +393,8 @@ export class ArticleRepository extends Context.Service<ArticleRepository, Articl
         if (conditions.length > 0) {
           query = query.where(and(...conditions));
         }
-        const [result] = yield* decodeArticleCountRows(yield* normalizeQueryError(query));
+        const articleCountRows = yield* normalizeQueryError(query);
+        const [result] = yield* decodeArticleCountRows(articleCountRows);
         return result.count;
       });
 
@@ -410,9 +408,10 @@ export class ArticleRepository extends Context.Service<ArticleRepository, Articl
       const insertArticlesBatch: ArticleRepositoryShape["insertArticlesBatch"] = Effect.fn("insertArticlesBatch")(
         function* (articleList: Array<ArticleInsertRow>) {
           if (A.isReadonlyArrayEmpty(articleList)) return [];
-          return yield* decodeArticleRows(
-            yield* normalizeQueryError(drizzle.insert(articles).values(articleList).returning())
+          const insertedArticleRows = yield* normalizeQueryError(
+            drizzle.insert(articles).values(articleList).returning()
           );
+          return yield* decodeArticleRows(insertedArticleRows);
         }
       );
 

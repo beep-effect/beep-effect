@@ -1,17 +1,18 @@
 import { expect, it } from "@effect/vitest";
 import { AuthorityDeployment } from "@proto/authority-host/Authority.descriptor";
 import { ConformanceDeployment } from "@proto/conformance/Conformance.descriptor";
+import { FactId } from "@proto/kernel/Ids";
 import { StreamPin } from "@proto/kernel/PublishedStream";
 import { ClaimDecided } from "@proto/party-contract/Facts/ClaimDecided.fact";
 import { PartyDeployment } from "@proto/party-host/Party.descriptor";
 import { partyStreamPins } from "@proto/party-model/Facts/StreamPins";
 import { RunsDeployment } from "@proto/runs-host/Runs.descriptor";
 import { checkGenerationRetirement, RetirementRefusal } from "@proto/tooling/GenerationRetirement";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Num from "effect/Number";
-import * as O from "effect/Option";
+import * as N from "effect/Number";
+import * as O from "@beep/utils/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
@@ -29,7 +30,7 @@ const entriesOf = (stream: string) => `SELECT coalesce(json_agg(json_build_objec
 
 const StoredEntry = S.Struct({ position: S.Int, event: S.Unknown });
 const decodeEntries = S.Array(StoredEntry).pipe(S.fromJsonString, S.decodeEffect);
-const decodeFact = S.decodeUnknownOption(S.Struct({ _tag: S.String, factId: S.String }));
+const decodeFact = S.decodeUnknownOption(S.Struct({ _tag: S.String, factId: FactId }));
 
 /** The fact version an event's tag names (`ClaimDecided.versions`). */
 const versionOf = (tag: string): O.Option<number> =>
@@ -52,7 +53,7 @@ const generation = Effect.fn("generation")(function* (stream: string) {
       ),
     ),
   );
-  const length = A.reduce(stored, 0, (last, entry) => Num.max(last, entry.position));
+  const length = A.reduce(stored, 0, (last, entry) => N.max(last, entry.position));
   return { live: { stream, entries }, length, unreadable: A.length(stored) - A.length(entries) };
 });
 
@@ -96,6 +97,6 @@ if (O.contains(registration.restorePhase, "retirement")) {
     expect(A.filter(verdict.refusals, (refusal) => RetirementRefusal.guards.Unread(refusal))).toEqual([]);
     expect(A.length(gen1.entries)).toBeGreaterThan(0);
     // Generation 1 is still served: the deployed pins keep it closed.
-    expect(A.findFirst(partyStreamPins, (pin) => pin.stream === "PartyFacts")).toEqual(O.some(StreamPin.cases.Closed.make({ stream: "PartyFacts" })));
+    expect(A.findFirst(partyStreamPins, (pin) => pin.stream === "PartyFacts")).toEqual(StreamPin.cases.Closed.makeOption({ stream: "PartyFacts" }));
   }));
 }

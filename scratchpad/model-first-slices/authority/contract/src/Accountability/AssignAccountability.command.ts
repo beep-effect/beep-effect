@@ -28,6 +28,7 @@ export class AccountabilityAlreadyAssigned extends S.TaggedError<AccountabilityA
 export class AccountabilityAssigned extends Domain.Event(
   "AccountabilityAssigned",
   carry({ run: RunId, accountable: PrincipalId, onBehalfOf: PrincipalId }),
+  { description: "A human now answers for everything the agent run does and for whom it acts." },
 ) {}
 
 /**

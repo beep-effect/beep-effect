@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { CurrentInvocation, requireGrant } from "@proto/kernel/CurrentInvocation.context";
+import { Count, Sequence, Text } from "@proto/kernel/Measure";
 import { OrgId } from "@proto/kernel/Ids";
 import { Operator, operatorOf, provenanceOf, Root } from "@proto/kernel/Invocation";
 import { AcceptClaim, ClaimAccepted } from "@proto/party-contract/Claim/AcceptClaim.command";
@@ -29,10 +30,11 @@ import { ReviewRequested } from "@proto/party-contract/Claim/ReviewRequested.eve
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { PartyIntake, PartyPropose, PartyReview } from "@proto/party-contract/Party.capabilities";
 import { Proposition } from "@proto/party-contract/Proposition";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
-import { identity } from "effect/Function";
+import * as O from "@beep/utils/Option";
+import { flow, identity } from "effect/Function";
+import * as Initial from "@proto/kernel/Initial";
 import * as S from "effect/Schema";
 import { reviewRun } from "../Review/ReviewPlan.ts";
 import { admission, claimIn, requireAdmission, requireGranted, requirePending, scopeOf } from "./Claim.rules.ts";
@@ -51,12 +53,12 @@ export const ClaimState = S.TaggedUnion({
     org: OrgId,
     proposition: Proposition,
     signals: S.Array(EvidenceSignal),
-    revision: S.Int,
-    reviews: S.Int,
-    proposal: S.OptionFromNullOr(ProposalView),
+    revision: Sequence.pipe(Initial.of(1, { description: "The evidence revision; an asserted claim starts at 1." })),
+    reviews: Count.pipe(Initial.of(0, { description: "How many reviews were requested; none at first." })),
+    proposal: Initial.none(ProposalView, { description: "The latest proposal still standing; absent until a review proposes one." }),
   },
   Accepted: { org: OrgId, proposition: Proposition },
-  Retracted: { org: OrgId, reason: S.String },
+  Retracted: { org: OrgId, reason: Text },
 });
 /**
  * @category models
@@ -98,7 +100,7 @@ export class Claim extends Domain.Aggregate(
       AssertClaim: Effect.fn(function* (state, command, { id, stream, now }) {
         // The org is the command's, so the grant is checked before existence is revealed.
         const invocation = yield* requireGrant(PartyIntake, command._tag, claimIn(command.org, stream), now);
-        if (state._tag !== "Unasserted") return yield* ClaimAlreadyAsserted.make({});
+        if (!ClaimState.guards.Unasserted(state)) return yield* ClaimAlreadyAsserted.make({});
         const provenance = provenanceOf(invocation);
         return [
           ClaimAsserted.make({ org: command.org, proposition: command.proposition, signals: command.signals, provenance }),
@@ -224,9 +226,6 @@ export class Claim extends Domain.Aggregate(
           org: event.org,
           proposition: event.proposition,
           signals: event.signals,
-          revision: 1,
-          reviews: 0,
-          proposal: O.none(),
         }),
       ReviewRequested: (state) =>
         ClaimState.matchOrElse(
@@ -300,7 +299,7 @@ export class Claim extends Domain.Aggregate(
     reply: {
       // The review run the assertion asked for, so a caller can follow it.
       AssertClaim: (_, events) => ({
-        reviewRun: A.findFirst(events, (event) => (event._tag === "ReviewRequested" ? O.some(event.run) : O.none())),
+        reviewRun: A.findFirst(events, flow(O.liftPredicate(S.is(ReviewRequested)), O.map((requested) => requested.run))),
       }),
     },
   },

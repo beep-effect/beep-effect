@@ -1,11 +1,11 @@
 import { StreamPin, StreamWriter } from "@proto/kernel/PublishedStream";
 import { backlogOf, StoredRow, type WriterShape } from "@proto/tooling/PublisherBacklog";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { psql } from "./Stack.ts";
 
 // Phase 11 (D50): the drain check's inputs on the cluster, shared by the handover and upgrade cases.

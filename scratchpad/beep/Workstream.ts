@@ -107,7 +107,7 @@ export class WorkstreamContractError extends S.TaggedError<WorkstreamContractErr
  * @since 0.0.0
  */
 export declare namespace WorkstreamContractError {
-  export type Encoded = S.Codec.Encoded<typeof WorkstreamContractError>;
+  export type Encoded = typeof WorkstreamContractError.Encoded;
 }
 
 /**
@@ -149,7 +149,7 @@ export type WorkstreamStatus = typeof WorkstreamStatus.Type;
  * @since 0.0.0
  */
 export declare namespace WorkstreamStatus {
-  export type Encoded = S.Codec.Encoded<typeof WorkstreamStatus>;
+  export type Encoded = typeof WorkstreamStatus.Encoded;
 }
 
 /**
@@ -197,7 +197,7 @@ export type WorkstreamEventKind = typeof WorkstreamEventKind.Type;
  * @since 0.0.0
  */
 export declare namespace WorkstreamEventKind {
-  export type Encoded = S.Codec.Encoded<typeof WorkstreamEventKind>;
+  export type Encoded = typeof WorkstreamEventKind.Encoded;
 }
 
 /**
@@ -238,7 +238,7 @@ export type WorkstreamSensitivity = typeof WorkstreamSensitivity.Type;
  * @since 0.0.0
  */
 export declare namespace WorkstreamSensitivity {
-  export type Encoded = S.Codec.Encoded<typeof WorkstreamSensitivity>;
+  export type Encoded = typeof WorkstreamSensitivity.Encoded;
 }
 
 /**
@@ -281,7 +281,7 @@ export type ArtifactStatus = typeof ArtifactStatus.Type;
  * @since 0.0.0
  */
 export declare namespace ArtifactStatus {
-  export type Encoded = S.Codec.Encoded<typeof ArtifactStatus>;
+  export type Encoded = typeof ArtifactStatus.Encoded;
 }
 
 /**
@@ -330,7 +330,7 @@ export class WorkstreamCreate extends Model<WorkstreamCreate>("WorkstreamCreate"
  * @since 0.0.0
  */
 export declare namespace WorkstreamCreate {
-  export type Encoded = S.Codec.Encoded<typeof WorkstreamCreate>;
+  export type Encoded = typeof WorkstreamCreate.Encoded;
 }
 
 const patchTitle = S.OptionFromOptionalKey(S.String.check(S.isMinLength(1), S.isMaxLength(256))).pipe(
@@ -423,7 +423,7 @@ export class WorkstreamUpdate extends Model<WorkstreamUpdate>("WorkstreamUpdate"
  * @since 0.0.0
  */
 export declare namespace WorkstreamUpdate {
-  export type Encoded = S.Codec.Encoded<typeof WorkstreamUpdate>;
+  export type Encoded = typeof WorkstreamUpdate.Encoded;
 }
 
 const patchIsSet = (patch: WorkstreamUpdate): boolean =>
@@ -557,7 +557,7 @@ export class Workstream extends Model<Workstream>("Workstream")(
  * @since 0.0.0
  */
 export declare namespace Workstream {
-  export type Encoded = S.Codec.Encoded<typeof Workstream>;
+  export type Encoded = typeof Workstream.Encoded;
 }
 
 /**
@@ -607,7 +607,7 @@ export class WorkstreamEventCreate extends Model<WorkstreamEventCreate>("Workstr
  * @since 0.0.0
  */
 export declare namespace WorkstreamEventCreate {
-  export type Encoded = S.Codec.Encoded<typeof WorkstreamEventCreate>;
+  export type Encoded = typeof WorkstreamEventCreate.Encoded;
 }
 
 /**
@@ -659,7 +659,7 @@ export class WorkstreamEvent extends Model<WorkstreamEvent>("WorkstreamEvent")(
  * @since 0.0.0
  */
 export declare namespace WorkstreamEvent {
-  export type Encoded = S.Codec.Encoded<typeof WorkstreamEvent>;
+  export type Encoded = typeof WorkstreamEvent.Encoded;
 }
 
 const artifactDescriptorCreateFields = {
@@ -737,7 +737,7 @@ export class ArtifactDescriptorCreate extends Model<ArtifactDescriptorCreate>("A
  * @since 0.0.0
  */
 export declare namespace ArtifactDescriptorCreate {
-  export type Encoded = S.Codec.Encoded<typeof ArtifactDescriptorCreate>;
+  export type Encoded = typeof ArtifactDescriptorCreate.Encoded;
 }
 
 /**
@@ -795,7 +795,7 @@ export class ArtifactDescriptor extends Model<ArtifactDescriptor>("ArtifactDescr
  * @since 0.0.0
  */
 export declare namespace ArtifactDescriptor {
-  export type Encoded = S.Codec.Encoded<typeof ArtifactDescriptor>;
+  export type Encoded = typeof ArtifactDescriptor.Encoded;
 }
 
 /**
@@ -835,7 +835,7 @@ export class ArtifactStatusTransitionRequest extends Model<ArtifactStatusTransit
  * @since 0.0.0
  */
 export declare namespace ArtifactStatusTransitionRequest {
-  export type Encoded = S.Codec.Encoded<typeof ArtifactStatusTransitionRequest>;
+  export type Encoded = typeof ArtifactStatusTransitionRequest.Encoded;
 }
 
 const continuationCheckpointUpsertFields = {
@@ -892,7 +892,7 @@ export class ContinuationCheckpointUpsert extends Model<ContinuationCheckpointUp
  * @since 0.0.0
  */
 export declare namespace ContinuationCheckpointUpsert {
-  export type Encoded = S.Codec.Encoded<typeof ContinuationCheckpointUpsert>;
+  export type Encoded = typeof ContinuationCheckpointUpsert.Encoded;
 }
 
 /**
@@ -937,7 +937,7 @@ export class ContinuationCheckpoint extends Model<ContinuationCheckpoint>("Conti
  * @since 0.0.0
  */
 export declare namespace ContinuationCheckpoint {
-  export type Encoded = S.Codec.Encoded<typeof ContinuationCheckpoint>;
+  export type Encoded = typeof ContinuationCheckpoint.Encoded;
 }
 
 const optionalBoundedPatchText = (column: string, maxLength: number) =>
@@ -992,7 +992,7 @@ export class TaskOriginWorkIntent extends Model<TaskOriginWorkIntent>("TaskOrigi
  * @since 0.0.0
  */
 export declare namespace TaskOriginWorkIntent {
-  export type Encoded = S.Codec.Encoded<typeof TaskOriginWorkIntent>;
+  export type Encoded = typeof TaskOriginWorkIntent.Encoded;
 }
 
 /**
@@ -1045,7 +1045,7 @@ export class GoalOriginWorkIntent extends Model<GoalOriginWorkIntent>("GoalOrigi
  * @since 0.0.0
  */
 export declare namespace GoalOriginWorkIntent {
-  export type Encoded = S.Codec.Encoded<typeof GoalOriginWorkIntent>;
+  export type Encoded = typeof GoalOriginWorkIntent.Encoded;
 }
 
 /**
@@ -1104,7 +1104,7 @@ export type WorkIntentRequest = typeof WorkIntentRequest.Type;
  * @since 0.0.0
  */
 export declare namespace WorkIntentRequest {
-  export type Encoded = S.Codec.Encoded<typeof WorkIntentRequest>;
+  export type Encoded = typeof WorkIntentRequest.Encoded;
 }
 
 /**
@@ -1165,7 +1165,7 @@ export class WorkIntentReceipt extends Model<WorkIntentReceipt>("WorkIntentRecei
  * @since 0.0.0
  */
 export declare namespace WorkIntentReceipt {
-  export type Encoded = S.Codec.Encoded<typeof WorkIntentReceipt>;
+  export type Encoded = typeof WorkIntentReceipt.Encoded;
 }
 
 /**
@@ -1206,7 +1206,7 @@ export class GoalDetailProjection extends Model<GoalDetailProjection>("GoalDetai
  * @since 0.0.0
  */
 export declare namespace GoalDetailProjection {
-  export type Encoded = S.Codec.Encoded<typeof GoalDetailProjection>;
+  export type Encoded = typeof GoalDetailProjection.Encoded;
 }
 
 /**
@@ -1247,7 +1247,7 @@ export class WorkstreamDetailProjection extends Model<WorkstreamDetailProjection
  * @since 0.0.0
  */
 export declare namespace WorkstreamDetailProjection {
-  export type Encoded = S.Codec.Encoded<typeof WorkstreamDetailProjection>;
+  export type Encoded = typeof WorkstreamDetailProjection.Encoded;
 }
 
 /**
@@ -1284,7 +1284,7 @@ export class TaskGoalLinkImport extends Model<TaskGoalLinkImport>("TaskGoalLinkI
  * @since 0.0.0
  */
 export declare namespace TaskGoalLinkImport {
-  export type Encoded = S.Codec.Encoded<typeof TaskGoalLinkImport>;
+  export type Encoded = typeof TaskGoalLinkImport.Encoded;
 }
 
 /**
@@ -1325,7 +1325,7 @@ export class TaskGoalLinkImportRequest extends Model<TaskGoalLinkImportRequest>(
  * @since 0.0.0
  */
 export declare namespace TaskGoalLinkImportRequest {
-  export type Encoded = S.Codec.Encoded<typeof TaskGoalLinkImportRequest>;
+  export type Encoded = typeof TaskGoalLinkImportRequest.Encoded;
 }
 
 /**
@@ -1370,5 +1370,5 @@ export class TaskGoalLinkImportReport extends Model<TaskGoalLinkImportReport>("T
  * @since 0.0.0
  */
 export declare namespace TaskGoalLinkImportReport {
-  export type Encoded = S.Codec.Encoded<typeof TaskGoalLinkImportReport>;
+  export type Encoded = typeof TaskGoalLinkImportReport.Encoded;
 }

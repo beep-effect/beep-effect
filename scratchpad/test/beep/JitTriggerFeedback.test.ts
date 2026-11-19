@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
@@ -25,8 +26,8 @@ const decodeFails = (schema: S.Codec<unknown, unknown, never, unknown>, input: u
 
 const failsWith = <A, E>(effect: Effect.Effect<A, E>): boolean => Effect.runSyncExit(effect)._tag === "Failure";
 
-const hash = "a".repeat(64);
-const otherHash = "b".repeat(64);
+const hash = Str.repeat(64)("a");
+const otherHash = Str.repeat(64)("b");
 
 const base = {
   schemaVersion: "jit_trigger_feedback.v1",
@@ -89,10 +90,7 @@ describe("JitTriggerFeedback", () => {
       decodeFails(JitUsefulFeedbackReceipt, { ...base, action: "useful", recordedAt: "2026-09-22T10:00:00" }),
       true,
     );
-    assert.strictEqual(
-      decodeFails(JitUsefulFeedbackReceipt, { ...base, action: "useful", schemaVersion: "v0" }),
-      true,
-    );
+    assert.strictEqual(decodeFails(JitUsefulFeedbackReceipt, { ...base, action: "useful", schemaVersion: "v0" }), true);
   });
 
   it("decodes every tagged-union member on action", () => {

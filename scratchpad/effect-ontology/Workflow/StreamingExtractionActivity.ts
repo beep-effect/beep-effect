@@ -21,13 +21,13 @@
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { provBundleToDataset } from "@beep/rdf/ProvRdf";
+import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
 import * as Hex from "effect/encoding/Hex";
-import * as A from "effect/Array";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -39,6 +39,7 @@ import { ChunkingConfig, GroundingPolicy, LlmConfig, RunConfig } from "../Domain
 import { OntologyRef } from "../Domain/Model/Ontology.ts";
 import { PathLayout } from "../Domain/PathLayout.ts";
 import type { ExtractionActivityInput } from "../Domain/Schema/Batch.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 // Note: ClaimPersistenceService removed - claims persist only after validation
 // via makeClaimPersistenceActivity in WorkflowOrchestrator
 import { ConfigService } from "../Service/Config.ts";
@@ -54,7 +55,6 @@ import {
 } from "../Utils/ClaimFactory.ts";
 import { dual3 } from "../Utils/Dual.ts";
 import { makeProvenanceUri } from "../Utils/Provenance.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Workflow/StreamingExtractionActivity");
 const isActivityError = S.is(ActivityError);

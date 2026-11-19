@@ -798,10 +798,13 @@ describe("the codecs of a typed operation, on the wire", () => {
           { city: "NYC", zipcode: null }
         ),
       ];
-      yield* Effect.forEach(rows, ({ spec, type, wire, canonical }) =>
-        Effect.flatMap(S.decodeUnknownEffect(ActionParameterType)(type), (parameterType) =>
-          equals(agree(spec, argumentCodec(parameterType), wire), canonical)
-        )
+      yield* Effect.forEach(
+        rows,
+        ({ spec, type, wire, canonical }) =>
+          Effect.flatMap(S.decodeUnknownEffect(ActionParameterType)(type), (parameterType) =>
+            equals(agree(spec, argumentCodec(parameterType), wire), canonical)
+          ),
+        { concurrency: 1 }
       );
       // What the projection refuses, the spec refuses: a vector of another dimension, an empty identifier,
       // a key that is not of the model's key type.
@@ -858,10 +861,13 @@ describe("the codecs of a typed operation, on the wire", () => {
           { type: "interfaceBase", interfaceType: "Located" }
         ),
       ];
-      yield* Effect.forEach(rows, ({ spec, type, wire, canonical }) =>
-        Effect.flatMap(S.decodeUnknownEffect(QueryDataType)(type), (dataType) =>
-          equals(agree(spec, valueCodec(dataType, {}), wire), canonical)
-        )
+      yield* Effect.forEach(
+        rows,
+        ({ spec, type, wire, canonical }) =>
+          Effect.flatMap(S.decodeUnknownEffect(QueryDataType)(type), (dataType) =>
+            equals(agree(spec, valueCodec(dataType, {}), wire), canonical)
+          ),
+        { concurrency: 1 }
       );
     })
   );

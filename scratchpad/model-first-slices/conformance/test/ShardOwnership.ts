@@ -1,10 +1,11 @@
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
-import * as O from "effect/Option";
-import * as Str from "effect/String";
+import * as O from "@beep/utils/Option";
+import * as Str from "@beep/utils/Str";
 import { containersOf, docker, psql, runnerService } from "./Stack.ts";
+import { thunk0 } from "@beep/utils"
 
 // Phase 10 (D45): who owns a shard on the stack, read the way Effect Cluster 4.1.4 records it. Its
 // SQL runner storage holds each shard as a session-level PostgreSQL advisory lock,
@@ -22,7 +23,7 @@ import { containersOf, docker, psql, runnerService } from "./Stack.ts";
  */
 const hashString = (value: string): number => {
   let h = 5381;
-  for (let i = value.length - 1; i >= 0; i--) h = (h * 33) ^ O.getOrElse(Str.charCodeAt(value, i), () => 0);
+  for (let i = value.length - 1; i >= 0; i--) h = (h * 33) ^ O.getOrElse(Str.charCodeAt(value, i), thunk0);
   return (h & 0xbfffffff) | ((h >>> 1) & 0x40000000);
 };
 
@@ -111,5 +112,12 @@ const loggingOf = (line: string, since: string) =>
     ),
   );
 
-/** The runners table's health flags. */
-export const runnerHealth = psql("SELECT address, healthy FROM cluster_runners ORDER BY address");
+/**
+ * The health flags of the runners the cluster counts: those whose last heartbeat is inside the
+ * shard lock's expiry (35 s, `ShardingConfig.shardLockExpiration`), which is how the cluster's own
+ * storage reads the table. A killed runner's row stays, flagged healthy, until some runner
+ * unregisters; nothing reads it once its heartbeat is that old.
+ */
+export const runnerHealth = psql(
+  "SELECT address, healthy FROM cluster_runners WHERE last_heartbeat > now() - INTERVAL '35 seconds' ORDER BY address",
+);

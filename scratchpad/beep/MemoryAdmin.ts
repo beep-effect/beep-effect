@@ -79,7 +79,7 @@ export class ReadRolloutCapabilities extends Model<ReadRolloutCapabilities>("Rea
  * @since 0.0.0
  */
 export declare namespace ReadRolloutCapabilities {
-  export type Encoded = S.Codec.Encoded<typeof ReadRolloutCapabilities>;
+  export type Encoded = typeof ReadRolloutCapabilities.Encoded;
 }
 
 /**
@@ -174,7 +174,7 @@ export class ReadRolloutConsumerObservability extends Model<ReadRolloutConsumerO
  * @since 0.0.0
  */
 export declare namespace ReadRolloutConsumerObservability {
-  export type Encoded = S.Codec.Encoded<typeof ReadRolloutConsumerObservability>;
+  export type Encoded = typeof ReadRolloutConsumerObservability.Encoded;
 }
 
 /**
@@ -256,5 +256,5 @@ export class ShortTermLifecycleRunResponse extends Model<ShortTermLifecycleRunRe
  * @since 0.0.0
  */
 export declare namespace ShortTermLifecycleRunResponse {
-  export type Encoded = S.Codec.Encoded<typeof ShortTermLifecycleRunResponse>;
+  export type Encoded = typeof ShortTermLifecycleRunResponse.Encoded;
 }

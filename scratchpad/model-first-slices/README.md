@@ -322,7 +322,7 @@ call (`09`). `notes/upstream/README.md` lists them in the order to read them; no
 upstream (D54). `notes/phase-6.md`, `notes/phase-9.md`,
 `notes/phase-10.md` and `notes/phase-11.md` have the details.
 
-## Cluster stage and conformance (phases 5, 6, 8, 9, 10 and 11)
+## Cluster stage and conformance (phases 5, 6, 8, 9, 10, 11 and 16)
 
 Only with the owner's approval: the stack creates Docker swarm services for Postgres (with a
 volume), a pool of two runners and the front, on one overlay network. Since phase 6 the front
@@ -392,6 +392,26 @@ verdict for generation 1; it retires nothing. `RESTORE_PHASE=upgrade-decide` and
 run the decide half with `RESTORE_FILE` set, copy that tree's `apps/practice/.alchemy/state/` into this
 one's, deploy this code over it, and run the after half. A consumer's backfill run starts on the first
 call its model receives after a deploy, so the after half reads the claim first.
+
+Phase 16 adds two files and removes a route. A run is read through the runs contract's `RunState`
+query as someone in its session (`runState` in `conformance/test/Stack.ts`); the conformance-only
+`/runs-state` route is gone. `test/Directory.conformance.ts` runs the directory against the
+cluster's own Postgres: run it first on a fresh deploy, by itself, because its first case is the
+database's first use by both runners and the front at once. The front also serves the reviewer Api
+as plain HTTP JSON under `/reviewer-http` (a query is `QUERY /reviewer-http/<Query>` with a JSON
+body), which that file uses for the bad-cursor case.
+
+`test/Rebuild.conformance.ts` is a directory rebuild in two halves. Run `RESTORE_PHASE=rebuild-before`
+with `RESTORE_FILE` set. Take the pointer's row from a session of your own, so the switch waits:
+`docker exec -d -e PGAPPNAME=mfs-lock <postgres container> psql -U postgres -d cluster -c "BEGIN;
+SELECT slot FROM party_directory_active FOR UPDATE; SELECT pg_sleep(1500); ROLLBACK;"`. Make the
+next-generation build under `~/.cache/beep/`: a copy of this directory (without `node_modules` and
+`.alchemy`) at the same depth, with `packages/`, `node_modules/` and `tsconfig.base.json` linked
+beside it; there, set `PartyDirectoryGeneration` to 1, declare `PartyDirectoryRowsV1` and add it to
+`PartyDirectoryRowTables` and `Party.schema.ts`, then `bun install --frozen-lockfile` and
+`bun run --cwd party/host migrations`. Copy this tree's `apps/practice/.alchemy/state/` into the
+copy, `bun run deploy` there, and run `RESTORE_PHASE=rebuild-during` from this tree: it releases
+the row itself. Destroy from the copy, which then holds the state.
 
 Teardown, always: `(cd apps/practice && bun run destroy)`, check that no `practice-*` or driver
 service, container, network, volume or image remains, remove the image the deploy pulled by digest

@@ -1,4 +1,5 @@
 import * as S from "effect/Schema";
+import { Count } from "@proto/kernel/Measure";
 import { $RunsContractId } from "@proto/kernel/Identity";
 
 const $I = $RunsContractId.create("Run/BudgetExceeded.rejection");
@@ -11,6 +12,6 @@ const $I = $RunsContractId.create("Run/BudgetExceeded.rejection");
  */
 export class BudgetExceeded extends S.TaggedError<BudgetExceeded, { readonly brand: unique symbol }>()(
   "BudgetExceeded",
-  { requested: S.Int, remaining: S.Int },
+  { requested: Count, remaining: Count },
   $I.annote("BudgetExceeded", { httpApiStatus: 409, description: "The run's remaining allowance does not cover this." }),
 ) {}

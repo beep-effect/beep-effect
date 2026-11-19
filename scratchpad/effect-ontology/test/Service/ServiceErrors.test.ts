@@ -20,6 +20,7 @@ import { SparqlCorrectionError, SparqlGenerationError, SparqlSyntaxError } from 
 import { GenerationMismatchError } from "../../Service/Storage.ts";
 import { ExplanationError } from "../../Service/ViolationExplainer.ts";
 import { WikidataApiError, WikidataRateLimitError } from "../../Service/WikidataClient.ts";
+
 const decodeExtractionRunError = S.decodeEffect(ExtractionRunError);
 
 describe("schema-backed service errors", () => {

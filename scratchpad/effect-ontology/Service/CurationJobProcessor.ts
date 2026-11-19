@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 /**
  * Curation Job Processor
  *
@@ -13,17 +14,17 @@
 
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import type * as Fiber from "effect/Fiber";
-import type * as Scope from "effect/Scope";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import type * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
-import * as Schedule from "effect/Schedule";
 import * as O from "effect/Option";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
+import type * as Scope from "effect/Scope";
 import type { AnyEmbeddingError } from "../Domain/Error/Embedding.ts";
 import type { EventBusError } from "../Domain/Error/EventBus.ts";
 import type { BackgroundJob } from "../Domain/Schema/JobSchema.ts";
@@ -69,13 +70,17 @@ export type JobProcessorError = DrizzleError | AnyEmbeddingError | EventBusError
  * @category models
  * @since 0.0.0
  */
-export class JobProcessingStats extends S.Opaque<JobProcessingStats, { readonly brand: unique symbol }>()(S.Struct({
+export class JobProcessingStats extends S.Opaque<JobProcessingStats, { readonly brand: unique symbol }>()(
+  S.Struct({
     jobsProcessed: S.Int.check(S.isGreaterThanOrEqualTo(0, { message: "Processed jobs must be non-negative." })),
     errors: S.Int.check(S.isGreaterThanOrEqualTo(0, { message: "Job errors must be non-negative." })),
     durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0, { message: "Job duration must be non-negative." })),
-  }).pipe($I.annoteSchema("JobProcessingStats", {
-    description: "Non-negative processed-job, error, and elapsed-millisecond counters.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("JobProcessingStats", {
+      description: "Non-negative processed-job, error, and elapsed-millisecond counters.",
+    })
+  )
+) {}
 
 type JobMeta = { readonly id: string; readonly attempts: number };
 
@@ -143,8 +148,8 @@ export class CurationJobProcessor extends Context.Service<CurationJobProcessor>(
           const aliases = yield* entityRegistry.getAliasesForCanonical(j.ontologyId, canonicalEntityId);
 
           // Combine mention and aliases for embedding
-          const allMentions = [entity.canonicalMention, ...aliases.map((a) => a.mention)];
-          const combinedText = `${j.ontologyId}: ${allMentions.join(" | ")}`;
+          const allMentions = [entity.canonicalMention, ...A.map(aliases, (a) => a.mention)];
+          const combinedText = `${j.ontologyId}: ${A.join(allMentions, " | ")}`;
 
           // Generate new embedding
           const embedding = yield* embeddingService.embed(combinedText);
@@ -296,11 +301,11 @@ export class CurationJobProcessor extends Context.Service<CurationJobProcessor>(
         });
       }
 
-      return {
+      return JobProcessingStats.make({
         jobsProcessed,
         errors,
         durationMs,
-      };
+      });
     });
 
     // -------------------------------------------------------------------------

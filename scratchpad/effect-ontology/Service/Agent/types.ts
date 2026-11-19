@@ -13,9 +13,9 @@
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as A from "effect/Array";
 import type * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -25,10 +25,10 @@ import { AgentId, CheckpointConfig, PipelineState, TerminationCondition } from "
 import { KnowledgeGraph } from "../../Domain/Model/Entity.ts";
 import { OntologyContext, OntologyRef } from "../../Domain/Model/Ontology.ts";
 import { OntologyAgentConfig, ViolationExplanation } from "../../Domain/Model/OntologyAgent.ts";
+import { PosInt } from "../../Schema/PosInt.ts";
 import type { RdfStore } from "../Rdf.ts";
 import { isRdfStore } from "../Rdf.ts";
 import { ShaclValidationReport } from "../Shacl.ts";
-import { PosInt } from "../../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Agent/types");
 const RdfStoreFromSelf: S.Codec<RdfStore> = S.declare(isRdfStore).annotate({
@@ -107,105 +107,110 @@ export type AgentGraph = typeof AgentGraph.Type;
  * @category schemas
  * @since 0.0.0
  */
-class AgentTaskModel extends S.Opaque<AgentTaskModel, { readonly brand: unique symbol }>()(S.Struct({
-  /**
-   * Unique task identifier
-   */
-  taskId: S.String.annotate({
-    title: "Task ID",
-    description: "Unique identifier for this task",
-  }),
+class AgentTaskModel extends S.Opaque<AgentTaskModel, { readonly brand: unique symbol }>()(
+  S.Struct({
+    /**
+     * Unique task identifier
+     */
+    taskId: S.String.annotate({
+      title: "Task ID",
+      description: "Unique identifier for this task",
+    }),
 
-  /**
-   * Ontology ID for scoping (e.g., "seattle")
-   */
-  ontologyId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Ontology ID for scoping (e.g., "seattle")
+     */
+    ontologyId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Source text to process (for extraction tasks)
-   */
-  text: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Source text to process (for extraction tasks)
+     */
+    text: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Source URL to ingest (for ingestion tasks)
-   */
-  sourceUrl: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Source URL to ingest (for ingestion tasks)
+     */
+    sourceUrl: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Optional ontology agent config override (for extraction tasks)
-   */
-  agentConfig: OntologyAgentConfig.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Optional ontology agent config override (for extraction tasks)
+     */
+    agentConfig: OntologyAgentConfig.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Ingestion options (implementation-specific)
-   */
-  ingestionOptions: S.Unknown.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Ingestion options (implementation-specific)
+     */
+    ingestionOptions: S.Unknown.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Ingestion result metadata (implementation-specific)
-   */
-  ingestionResult: S.Unknown.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Ingestion result metadata (implementation-specific)
+     */
+    ingestionResult: S.Unknown.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Input knowledge graph (legacy; prefer knowledgeGraph/rdfStore/turtle)
-   */
-  graph: AgentGraph.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Input knowledge graph (legacy; prefer knowledgeGraph/rdfStore/turtle)
+     */
+    graph: AgentGraph.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Extracted knowledge graph
-   */
-  knowledgeGraph: KnowledgeGraph.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Extracted knowledge graph
+     */
+    knowledgeGraph: KnowledgeGraph.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * RDF store for validation/correction
-   */
-  rdfStore: RdfStoreFromSelf.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * RDF store for validation/correction
+     */
+    rdfStore: RdfStoreFromSelf.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Serialized RDF graph (Turtle)
-   */
-  turtle: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Serialized RDF graph (Turtle)
+     */
+    turtle: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Ontology context used for extraction/correction
-   */
-  ontologyContext: OntologyContext.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Ontology context used for extraction/correction
+     */
+    ontologyContext: OntologyContext.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Ontology reference used for extraction
-   */
-  ontologyRef: OntologyRef.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Ontology reference used for extraction
+     */
+    ontologyRef: OntologyRef.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Validation report (for correction tasks)
-   */
-  validationReport: ShaclValidationReport.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Validation report (for correction tasks)
+     */
+    validationReport: ShaclValidationReport.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Human-readable validation explanations
-   */
-  validationExplanations: S.Array(ViolationExplanation).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Human-readable validation explanations
+     */
+    validationExplanations: S.Array(ViolationExplanation).pipe(
+      S.OptionFromOptionalKey,
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
 
-  /**
-   * Correction result metadata (implementation-specific)
-   */
-  correctionResult: S.Unknown.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Correction result metadata (implementation-specific)
+     */
+    correctionResult: S.Unknown.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Source document ID for provenance
-   */
-  documentId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Source document ID for provenance
+     */
+    documentId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Additional context for agents
-   */
-  context: S.Record(S.String, S.Json).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Additional context for agents
+     */
+    context: S.Record(S.String, S.Json).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Priority (lower = higher priority)
-   */
-  priority: S.Natural.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-}).pipe($I.annoteSchema("AgentTask"))) {
+    /**
+     * Priority (lower = higher priority)
+     */
+    priority: S.Natural.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  }).pipe($I.annoteSchema("AgentTask"))
+) {
   /**
    * Create a text extraction task
    *
@@ -364,44 +369,48 @@ export const AgentTask = AgentTaskModel;
  * @category schemas
  * @since 0.0.0
  */
-export class PipelineConfig extends S.Opaque<PipelineConfig, { readonly brand: unique symbol }>()(S.Struct({
-  /**
-   * Unique pipeline identifier
-   */
-  pipelineId: S.String,
+export class PipelineConfig extends S.Opaque<PipelineConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
+    /**
+     * Unique pipeline identifier
+     */
+    pipelineId: S.String,
 
-  /**
-   * Execution mode (sequential, loop, parallel, graph)
-   */
-  mode: S.Literals(["sequential", "loop", "parallel", "graph"]),
+    /**
+     * Execution mode (sequential, loop, parallel, graph)
+     */
+    mode: S.Literals(["sequential", "loop", "parallel", "graph"]),
 
-  /**
-   * Ordered list of agents to execute (for sequential/loop modes)
-   */
-  agentSequence: S.Array(S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Ordered list of agents to execute (for sequential/loop modes)
+     */
+    agentSequence: S.Array(S.String).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Termination condition (for loop mode)
-   */
-  termination: TerminationCondition.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Termination condition (for loop mode)
+     */
+    termination: TerminationCondition.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Checkpoint configuration
-   */
-  checkpoint: CheckpointConfig.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Checkpoint configuration
+     */
+    checkpoint: CheckpointConfig.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Maximum concurrency (for parallel mode)
-   */
-  concurrency: PosInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Maximum concurrency (for parallel mode)
+     */
+    concurrency: PosInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Enable detailed tracing
-   */
-  tracing: S.Boolean.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("PipelineConfig", {
-    description: "Execution mode, agent sequence, and termination policy for a multi-agent pipeline.",
-  }))) {
+    /**
+     * Enable detailed tracing
+     */
+    tracing: S.Boolean.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+  }).pipe(
+    $I.annoteSchema("PipelineConfig", {
+      description: "Execution mode, agent sequence, and termination policy for a multi-agent pipeline.",
+    })
+  )
+) {
   /**
    * Create a simple sequential pipeline
    *
@@ -475,11 +484,12 @@ export class PipelineConfig extends S.Opaque<PipelineConfig, { readonly brand: u
  * @category models
  * @since 0.0.0
  */
-export class HumanApprove extends S.Opaque<HumanApprove, { readonly brand: unique symbol }>()(S.TaggedStruct("HumanApprove",
-  {
+export class HumanApprove extends S.Opaque<HumanApprove, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("HumanApprove", {
     reviewerId: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     comment: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("HumanApprove", { description: "Human approval of the current pipeline state." }))) {}
+  }).pipe($I.annoteSchema("HumanApprove", { description: "Human approval of the current pipeline state." }))
+) {}
 
 /**
  * Human rejection of the current pipeline checkpoint.
@@ -496,11 +506,12 @@ export class HumanApprove extends S.Opaque<HumanApprove, { readonly brand: uniqu
  * @category models
  * @since 0.0.0
  */
-export class HumanReject extends S.Opaque<HumanReject, { readonly brand: unique symbol }>()(S.TaggedStruct("HumanReject",
-  {
+export class HumanReject extends S.Opaque<HumanReject, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("HumanReject", {
     reason: S.NonEmptyString,
     reviewerId: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("HumanReject", { description: "Human rejection of the current pipeline state." }))) {}
+  }).pipe($I.annoteSchema("HumanReject", { description: "Human rejection of the current pipeline state." }))
+) {}
 
 /**
  * Human-provided modifications to the current pipeline state.
@@ -521,12 +532,15 @@ export class HumanReject extends S.Opaque<HumanReject, { readonly brand: unique 
  * @category models
  * @since 0.0.0
  */
-export class HumanModify extends S.Opaque<HumanModify, { readonly brand: unique symbol }>()(S.TaggedStruct("HumanModify",
-  {
+export class HumanModify extends S.Opaque<HumanModify, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("HumanModify", {
     changes: S.Json,
     reviewerId: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     comment: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("HumanModify", { description: "Human-provided modifications to the current pipeline state." }))) {}
+  }).pipe(
+    $I.annoteSchema("HumanModify", { description: "Human-provided modifications to the current pipeline state." })
+  )
+) {}
 
 /**
  * Human request to skip one pipeline agent.
@@ -548,12 +562,13 @@ export class HumanModify extends S.Opaque<HumanModify, { readonly brand: unique 
  * @category models
  * @since 0.0.0
  */
-export class HumanSkip extends S.Opaque<HumanSkip, { readonly brand: unique symbol }>()(S.TaggedStruct("HumanSkip",
-  {
+export class HumanSkip extends S.Opaque<HumanSkip, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("HumanSkip", {
     agentId: AgentId,
     reason: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
     reviewerId: S.NonEmptyString.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("HumanSkip", { description: "Human request to skip one pipeline agent." }))) {}
+  }).pipe($I.annoteSchema("HumanSkip", { description: "Human request to skip one pipeline agent." }))
+) {}
 
 /**
  * Feedback supplied by a human reviewer at an orchestration checkpoint.
@@ -607,51 +622,53 @@ export type HumanFeedback = typeof HumanFeedback.Type;
  * @category schemas
  * @since 0.0.0
  */
-export class RefinementConfig extends S.Class<RefinementConfig, { readonly brand: unique symbol }>($I`RefinementConfig`)(
+export class RefinementConfig extends S.Class<RefinementConfig, { readonly brand: unique symbol }>(
+  $I`RefinementConfig`
+)(
   {
-  /**
-   * Maximum number of correction iterations
-   */
-  maxIterations: PosInt.annotate({
-    default: PosInt.make(5),
-  }),
+    /**
+     * Maximum number of correction iterations
+     */
+    maxIterations: PosInt.annotate({
+      default: PosInt.make(5),
+    }),
 
-  /**
-   * Stop when validation report conforms
-   */
-  stopOnConformance: S.Boolean.annotate({
-    default: true,
-  }),
+    /**
+     * Stop when validation report conforms
+     */
+    stopOnConformance: S.Boolean.annotate({
+      default: true,
+    }),
 
-  /**
-   * Minimum confidence threshold - stop if correction confidence drops below this
-   */
-  minConfidence: Confidence.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Minimum confidence threshold - stop if correction confidence drops below this
+     */
+    minConfidence: Confidence.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Emit checkpoint every N iterations
-   */
-  checkpointInterval: PosInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Emit checkpoint every N iterations
+     */
+    checkpointInterval: PosInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Timeout for the entire refinement loop in milliseconds
-   */
-  timeoutMs: PosInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Timeout for the entire refinement loop in milliseconds
+     */
+    timeoutMs: PosInt.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Whether to save intermediate states for resume
-   */
-  enableResume: S.Boolean.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Whether to save intermediate states for resume
+     */
+    enableResume: S.Boolean.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Agent ID for the validator
-   */
-  validatorId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Agent ID for the validator
+     */
+    validatorId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Agent ID for the corrector
-   */
-  correctorId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Agent ID for the corrector
+     */
+    correctorId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("RefinementConfig", {
     description: "Iteration, timeout, and conformance bounds for the validation-correction loop.",
@@ -764,42 +781,44 @@ export type RefinementStatus =
  * @category schemas
  * @since 0.0.0
  */
-export class RefinementResult extends S.Class<RefinementResult, { readonly brand: unique symbol }>($I`RefinementResult`)(
+export class RefinementResult extends S.Class<RefinementResult, { readonly brand: unique symbol }>(
+  $I`RefinementResult`
+)(
   {
-  /**
-   * Final knowledge graph
-   */
-  graph: AgentGraph,
+    /**
+     * Final knowledge graph
+     */
+    graph: AgentGraph,
 
-  /**
-   * Number of refinement iterations
-   */
-  iterations: S.Natural,
+    /**
+     * Number of refinement iterations
+     */
+    iterations: S.Natural,
 
-  /**
-   * How the loop terminated
-   */
-  status: S.Literals(["conformant", "max-iterations", "timeout", "confidence-threshold", "human-rejected", "error"]),
+    /**
+     * How the loop terminated
+     */
+    status: S.Literals(["conformant", "max-iterations", "timeout", "confidence-threshold", "human-rejected", "error"]),
 
-  /**
-   * Final validation report
-   */
-  validationReport: ShaclValidationReport.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Final validation report
+     */
+    validationReport: ShaclValidationReport.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Total duration in milliseconds
-   */
-  durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
+    /**
+     * Total duration in milliseconds
+     */
+    durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
 
-  /**
-   * Error message if status is "error"
-   */
-  error: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Error message if status is "error"
+     */
+    error: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
 
-  /**
-   * Violations fixed per iteration
-   */
-  violationsFixed: S.Array(S.Natural).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
+    /**
+     * Violations fixed per iteration
+     */
+    violationsFixed: S.Array(S.Natural).pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
   },
   $I.annote("RefinementResult", {
     description: "Final graph, iteration count, and termination status of a refinement loop.",
@@ -812,7 +831,7 @@ export class RefinementResult extends S.Class<RefinementResult, { readonly brand
    *
    * ```ts
    * import * as S from "effect/Schema"
- * import * as O from "effect/Option"
+   * import * as O from "effect/Option"
    * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
    * import { RefinementResult } from "@effect-ontology/Service/Agent/types"
    *
@@ -836,7 +855,7 @@ export class RefinementResult extends S.Class<RefinementResult, { readonly brand
    *
    * ```ts
    * import * as S from "effect/Schema"
- * import * as O from "effect/Option"
+   * import * as O from "effect/Option"
    * import { KnowledgeGraph } from "@effect-ontology/Model/Entity"
    * import { RefinementResult } from "@effect-ontology/Service/Agent/types"
    *
@@ -936,7 +955,8 @@ export type AgentRegistry = HashMap.HashMap<AgentIdType, RegisteredAgent>;
  * @category schemas
  * @since 0.0.0
  */
-export class ExecutionContext extends S.Opaque<ExecutionContext, { readonly brand: unique symbol }>()(S.Struct({
+export class ExecutionContext extends S.Opaque<ExecutionContext, { readonly brand: unique symbol }>()(
+  S.Struct({
     /**
      * Current pipeline state
      */
@@ -961,9 +981,12 @@ export class ExecutionContext extends S.Opaque<ExecutionContext, { readonly bran
      * Correlation ID for request tracking
      */
     correlationId: S.String.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("ExecutionContext", {
-    description: "Pipeline snapshot, iteration, and tracing identifiers supplied to executing agents.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExecutionContext", {
+      description: "Pipeline snapshot, iteration, and tracing identifiers supplied to executing agents.",
+    })
+  )
+) {}
 
 // =============================================================================
 // Error Types
@@ -988,13 +1011,18 @@ export class ExecutionContext extends S.Opaque<ExecutionContext, { readonly bran
  * @category errors
  * @since 0.0.0
  */
-export class AgentExecutionError extends S.TaggedError<AgentExecutionError, { readonly brand: unique symbol }>($I`AgentExecutionError`)(
+export class AgentExecutionError extends S.TaggedError<AgentExecutionError, { readonly brand: unique symbol }>(
+  $I`AgentExecutionError`
+)(
   "AgentExecutionError",
   {
     agentId: AgentId,
     message: S.NonEmptyString,
     cause: OptionalErrorCause,
-    retryable: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
+    retryable: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
   },
   $I.annote("AgentExecutionError", { description: "Failure while executing a single orchestration agent." })
 ) {
@@ -1029,7 +1057,9 @@ export class AgentExecutionError extends S.TaggedError<AgentExecutionError, { re
  * @category errors
  * @since 0.0.0
  */
-export class PipelineExecutionError extends S.TaggedError<PipelineExecutionError, { readonly brand: unique symbol }>($I`PipelineExecutionError`)(
+export class PipelineExecutionError extends S.TaggedError<PipelineExecutionError, { readonly brand: unique symbol }>(
+  $I`PipelineExecutionError`
+)(
   "PipelineExecutionError",
   {
     pipelineId: S.NonEmptyString,
@@ -1060,7 +1090,9 @@ export class PipelineExecutionError extends S.TaggedError<PipelineExecutionError
  * @category errors
  * @since 0.0.0
  */
-export class AgentNotFoundError extends S.TaggedError<AgentNotFoundError, { readonly brand: unique symbol }>($I`AgentNotFoundError`)(
+export class AgentNotFoundError extends S.TaggedError<AgentNotFoundError, { readonly brand: unique symbol }>(
+  $I`AgentNotFoundError`
+)(
   "AgentNotFoundError",
   {
     agentId: AgentId,
@@ -1089,7 +1121,9 @@ export class AgentNotFoundError extends S.TaggedError<AgentNotFoundError, { read
  * @category errors
  * @since 0.0.0
  */
-export class CheckpointTimeoutError extends S.TaggedError<CheckpointTimeoutError, { readonly brand: unique symbol }>($I`CheckpointTimeoutError`)(
+export class CheckpointTimeoutError extends S.TaggedError<CheckpointTimeoutError, { readonly brand: unique symbol }>(
+  $I`CheckpointTimeoutError`
+)(
   "CheckpointTimeoutError",
   {
     pipelineId: S.NonEmptyString,

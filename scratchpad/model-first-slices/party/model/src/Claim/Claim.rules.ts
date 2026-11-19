@@ -7,13 +7,13 @@ import { AdmissionGateUnmet, type AdmissionGate } from "@proto/party-contract/Cl
 import type { ClaimId } from "@proto/party-contract/Claim/Claim.id";
 import { ClaimNotPending } from "@proto/party-contract/Claim/ClaimNotPending.rejection";
 import { Proposition } from "@proto/party-contract/Proposition";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import type * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { dual, flow } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { reviewRun } from "../Review/ReviewPlan.ts";
 // Type-only back-edge: the aggregate imports these guards as values.
 import type { ClaimState, Pending } from "./Claim.aggregate.ts";
@@ -128,7 +128,7 @@ export type DecisionScope = { readonly org: O.Option<OrgId>; readonly reviewRuns
  * import { OrgId } from "@proto/kernel/Ids";
  * import { Proposition } from "@proto/party-contract/Proposition";
  * import { PartyId } from "@proto/party-contract/Party/Party.id";
- * import * as O from "effect/Option";
+ * import * as O from "@beep/utils/Option";
  *
  * const pending = ClaimState.cases.Pending.make({
  *   org: OrgId.make("org_acme"),

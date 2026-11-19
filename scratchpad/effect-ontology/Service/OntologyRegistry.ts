@@ -17,10 +17,10 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -51,7 +51,9 @@ const OntologyIdentifierType = LiteralKit(["id", "iri"]).pipe(
  * @category errors
  * @since 0.0.0
  */
-export class RegistryNotFoundError extends S.TaggedError<RegistryNotFoundError, { readonly brand: unique symbol }>($I`RegistryNotFoundError`)(
+export class RegistryNotFoundError extends S.TaggedError<RegistryNotFoundError, { readonly brand: unique symbol }>(
+  $I`RegistryNotFoundError`
+)(
   "RegistryNotFoundError",
   {
     path: S.String.annotateKey({
@@ -83,7 +85,9 @@ export class RegistryNotFoundError extends S.TaggedError<RegistryNotFoundError, 
  * @category errors
  * @since 0.0.0
  */
-export class RegistryParseError extends S.TaggedError<RegistryParseError, { readonly brand: unique symbol }>($I`RegistryParseError`)(
+export class RegistryParseError extends S.TaggedError<RegistryParseError, { readonly brand: unique symbol }>(
+  $I`RegistryParseError`
+)(
   "RegistryParseError",
   {
     path: S.String.annotateKey({
@@ -118,7 +122,9 @@ export class RegistryParseError extends S.TaggedError<RegistryParseError, { read
  * @category errors
  * @since 0.0.0
  */
-export class OntologyNotFoundError extends S.TaggedError<OntologyNotFoundError, { readonly brand: unique symbol }>($I`OntologyNotFoundError`)(
+export class OntologyNotFoundError extends S.TaggedError<OntologyNotFoundError, { readonly brand: unique symbol }>(
+  $I`OntologyNotFoundError`
+)(
   "OntologyNotFoundError",
   {
     identifier: S.String.annotateKey({

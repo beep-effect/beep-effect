@@ -1,87 +1,130 @@
+import { consumerClass, runClass } from "@alchemy.run/domain/DurableObjects";
 import { expect, it } from "@effect/vitest";
-import { backlogOf, type StoredRow, type WriterShape } from "@proto/tooling/PublisherBacklog";
-import * as Effect from "effect/Effect";
+import { Count, Name, Sequence } from "@proto/kernel/Measure";
+import {
+  Backlog,
+  backlogOf,
+  type ConsumerRef,
+  KeyProgress,
+  RunPhase,
+  StagedDelivery,
+  StoredRow,
+  ViewApplied,
+  WriterShape,
+} from "@proto/tooling/PublisherBacklog";
+import * as A from "@beep/utils/Array";
+import * as S from "effect/Schema";
 
 // Phase 11 (D50): a publisher's backlog read from its host's own records, for any writer.
+// Every value below is generated from a schema. A scene says what waits for a generated writer;
+// the rows are built from it the way the Durable Object platform stores them, so each count is
+// known by construction.
 
-/** Phase 6's publisher: generation 0, reading the review view, generation 0. */
-const shape: WriterShape = {
-  model: "Party",
-  projection: { name: "ClaimFacts", generation: 0, classGeneration: 0 },
-  on: ["ClaimAccepted", "ClaimRetracted", "ProposalApproved"],
-  views: [{ name: "ClaimReview", generation: 0, classGeneration: 0 }],
+/** One input on its way to a consumer's key: where it came from, and whether the key already took it in. */
+const Input = S.Struct({ key: Name, source: Name, seq: Sequence, taken: S.Boolean });
+type Input = typeof Input.Type;
+
+/** What a writer's key has accepted and not handled, beside the input that reached it. */
+const Arrival = S.Struct({ ...Input.fields, handled: Count, unhandled: Count });
+
+/** A host's records about one writer: its app, what waits in outboxes for it, and what waits behind each view it reads. */
+const Scene = S.Struct({
+  app: Name,
+  shape: WriterShape,
+  toWriter: S.Array(Arrival),
+  throughViews: S.Array(S.Struct({ ...Input.fields, view: Count, tag: Count })),
+});
+type Scene = typeof Scene.Type;
+
+const objectOf = (app: string, model: string, cls: string, key: string) => `${app}/${model}.${cls}/${key}`;
+const targetOf = (kind: "view" | "projection", ref: ConsumerRef) => ({ kind, name: ref.name, generation: ref.generation });
+/** One entry per key: a key holds one record of what it took in. */
+const perKey = <Entry extends Input>(entries: ReadonlyArray<Entry>) => A.dedupeWith(entries, (a, b) => a.key === b.key);
+const taken = (input: Input) => (input.taken ? { [input.source]: input.seq } : {});
+
+/** The inputs staged for the writer itself, each with its key's progress. */
+const writerRows = ({ app, shape, toWriter }: Scene): ReadonlyArray<StoredRow> => {
+  const keys = consumerClass("projection", shape.projection.name, shape.projection.classGeneration);
+  return A.flatMap(perKey(toWriter), (arrival, index) => [
+    StoredRow.make({
+      object: objectOf(app, shape.model, "Source", arrival.key),
+      key: `outbox:writer:${index}`,
+      value: StagedDelivery.make({ target: targetOf("projection", shape.projection), key: arrival.key, source: arrival.source, seq: arrival.seq, tag: "Any" }),
+    }),
+    StoredRow.make({
+      object: objectOf(app, shape.model, keys, arrival.key),
+      key: "meta",
+      value: KeyProgress.make({ accepted: arrival.handled + arrival.unhandled, processed: arrival.handled, intake: taken(arrival) }),
+    }),
+  ]);
 };
-const row = (object: string, key: string, value: unknown): StoredRow => ({ object, key, value });
-const delivery = (kind: string, name: string, tag: string, generation?: number, seq = 1, key = "k") => ({
-  target: generation === undefined ? { kind, name } : { kind, name, generation },
-  tag,
-  key,
-  source: "s",
-  seq,
+
+/** The events the writer consumes, staged for a view it reads, each with that view key's snapshot. */
+const viewRows = ({ app, shape, throughViews }: Scene): ReadonlyArray<StoredRow> => {
+  const { views, on } = shape;
+  if (!A.isReadonlyArrayNonEmpty(views) || !A.isReadonlyArrayNonEmpty(on)) return [];
+  return A.flatMap(perKey(throughViews), (input, index) => {
+    const view = views[input.view % views.length] ?? A.headNonEmpty(views);
+    const tag = on[input.tag % on.length] ?? A.headNonEmpty(on);
+    return [
+      StoredRow.make({
+        object: objectOf(app, shape.model, "Source", input.key),
+        key: `outbox:view:${index}`,
+        value: StagedDelivery.make({ target: targetOf("view", view), key: input.key, source: input.source, seq: input.seq, tag }),
+      }),
+      StoredRow.make({
+        object: objectOf(app, shape.model, consumerClass("view", view.name, view.classGeneration), input.key),
+        key: "snapshot",
+        value: ViewApplied.make({ checkpoints: taken(input) }),
+      }),
+    ];
+  });
+};
+
+const rowsOf = (scene: Scene) => [...writerRows(scene), ...viewRows(scene)];
+const waiting = <Entry extends Input>(entries: ReadonlyArray<Entry>) => A.filter(perKey(entries), (entry) => !entry.taken).length;
+
+it.prop("any records give a backlog whose pending is the sum of what waits", [WriterShape, S.Array(StoredRow)], ([shape, rows]) => {
+  const backlog = backlogOf(shape, rows);
+  expect(S.is(Backlog)(backlog)).toBe(true);
+  expect(backlog.pending).toBe(backlog.staged + backlog.throughViews + backlog.unprocessed + (backlog.runComplete ? 0 : 1));
 });
 
-it.effect("a drained writer has nothing pending", () =>
-  Effect.gen(function* () {
-    const drained = backlogOf(shape, [
-      row("Practice/Party.ClaimFactsProjection/claims", "meta", { accepted: 1, processed: 1, intake: {} }),
-      row("Practice/Party.ClaimFactsProjectionRun/~run", "run:projection%3AClaimFacts", { phase: "complete" }),
-    ]);
-    expect(drained).toEqual({ staged: 0, throughViews: 0, unprocessed: 0, runComplete: true, pending: 0 });
-  }),
-);
+it.prop("each input is counted once, where it now waits", [Scene], ([scene]) => {
+  const viewsRead = A.isReadonlyArrayNonEmpty(scene.shape.views) && A.isReadonlyArrayNonEmpty(scene.shape.on);
+  expect(backlogOf(scene.shape, rowsOf(scene))).toEqual({
+    staged: waiting(scene.toWriter),
+    throughViews: viewsRead ? waiting(scene.throughViews) : 0,
+    unprocessed: A.reduce(perKey(scene.toWriter), 0, (sum, arrival) => sum + arrival.unhandled),
+    runComplete: true,
+    pending:
+      waiting(scene.toWriter) +
+      (viewsRead ? waiting(scene.throughViews) : 0) +
+      A.reduce(perKey(scene.toWriter), 0, (sum, arrival) => sum + arrival.unhandled),
+  });
+});
 
-it.effect("deliveries staged to the writer, consumed events on their way through a view, and accepted inputs not handled are pending", () =>
-  Effect.gen(function* () {
-    const backlog = backlogOf(shape, [
-      row("Practice/Party.ClaimReviewView/c1", "outbox:000000000001", delivery("projection", "ClaimFacts", "ClaimAccepted")),
-      row("Practice/Party.ClaimAggregate/c2", "outbox:000000000003", delivery("view", "ClaimReview", "ProposalApproved")),
-      // Not the writer's: an event it does not consume, another generation, another consumer.
-      row("Practice/Party.ClaimAggregate/c2", "outbox:000000000004", delivery("view", "ClaimReview", "EvidenceAdded")),
-      row("Practice/Party.ClaimAggregate/c3", "outbox:000000000001", delivery("view", "ClaimReview", "ClaimAccepted", 1)),
-      row("Practice/Party.ClaimAggregate/c3", "outbox:000000000002", delivery("policy", "MergeOnSameParty", "ClaimAccepted")),
-      row("Practice/Party.ClaimFactsProjection/claims", "meta", { accepted: 3, processed: 1, intake: {} }),
-      // Another model's key of the same class name.
-      row("Practice/Runs.ClaimFactsProjection/claims", "meta", { accepted: 9, processed: 0, intake: {} }),
-    ]);
-    expect(backlog).toEqual({ staged: 1, throughViews: 1, unprocessed: 2, runComplete: true, pending: 4 });
-  }),
-);
+it.prop("the order of the records does not matter", [Scene], ([scene]) => {
+  const rows = rowsOf(scene);
+  expect(backlogOf(scene.shape, A.reverse(rows))).toEqual(backlogOf(scene.shape, rows));
+});
 
-it.effect("a delivery the consumer already took in, whose outbox row is not yet deleted, is counted once, where it now waits", () =>
-  Effect.gen(function* () {
-    const backlog = backlogOf(shape, [
-      // Taken into the writer's log (intake s: 2), not yet handled.
-      row("Practice/Party.ClaimReviewView/c1", "outbox:000000000002", delivery("projection", "ClaimFacts", "ClaimAccepted", undefined, 2, "claims")),
-      row("Practice/Party.ClaimFactsProjection/claims", "meta", { accepted: 2, processed: 1, intake: { s: 2 } }),
-      // Applied by the view (checkpoint s: 5), its own delivery to the writer not yet staged.
-      row("Practice/Party.ClaimAggregate/c1", "outbox:000000000005", delivery("view", "ClaimReview", "ClaimAccepted", undefined, 5, "c1")),
-      row("Practice/Party.ClaimReviewView/c1", "snapshot", { checkpoints: { s: 5 }, state: null, version: 5, seq: 5 }),
-    ]);
-    expect(backlog).toEqual({ staged: 0, throughViews: 0, unprocessed: 1, runComplete: true, pending: 1 });
-  }),
-);
+it.prop("another model's records are not the writer's, even one whose name ends with the writer's", [Scene, Scene, Name], ([scene, other, prefix]) => {
+  const foreign = rowsOf({ ...other, app: scene.app, shape: { ...scene.shape, model: `${prefix}${scene.shape.model}` } });
+  const rows = rowsOf(scene);
+  expect(backlogOf(scene.shape, [...rows, ...foreign])).toEqual(backlogOf(scene.shape, rows));
+});
 
-it.effect("a view rebuilt in place is read from its kept storage, while deliveries to it carry its generation", () =>
-  Effect.gen(function* () {
-    // Phase 8's shape: the review view at version 1, rebuilt in place (storage generation 0).
-    const phase8 = { ...shape, projection: { name: "ClaimFacts", generation: 1, classGeneration: 1 }, views: [{ name: "ClaimReview", generation: 1, classGeneration: 0 }] };
-    const backlog = backlogOf(phase8, [
-      row("Practice/Party.ClaimAggregate/c1", "outbox:000000000004", delivery("view", "ClaimReview", "ClaimAccepted", 1, 4, "c1")),
-      row("Practice/Party.ClaimAggregate/c2", "outbox:000000000002", delivery("view", "ClaimReview", "ClaimAccepted", 1, 2, "c2")),
-      // c1 applied its delivery already; c2 has not.
-      row("Practice/Party.ClaimReviewView/c1", "snapshot", { checkpoints: { s: 4 }, state: null, version: 4, seq: 4 }),
-      row("Practice/Party.ClaimFactsProjectionV1/claims", "meta", { accepted: 1, processed: 0, intake: {} }),
-    ]);
-    expect(backlog).toEqual({ staged: 0, throughViews: 1, unprocessed: 1, runComplete: true, pending: 2 });
-  }),
-);
-
-it.effect("a writer whose backfill run is not complete counts as pending", () =>
-  Effect.gen(function* () {
-    const running = backlogOf(
-      { ...shape, projection: { name: "ClaimFacts", generation: 1, classGeneration: 1 } },
-      [row("Practice/Party.ClaimFactsProjectionV1Run/~run", "run:projection%3AClaimFacts%231", { phase: "discover" })],
-    );
-    expect(running).toEqual({ staged: 0, throughViews: 0, unprocessed: 0, runComplete: false, pending: 1 });
-  }),
-);
+it.prop("a backfill run that is not complete counts as one pending", [Scene, RunPhase], ([scene, run]) => {
+  const { app, shape } = scene;
+  const keys = consumerClass("projection", shape.projection.name, shape.projection.classGeneration);
+  const target = `projection:${shape.projection.name}${shape.projection.generation > 0 ? `#${shape.projection.generation}` : ""}`;
+  const rows = rowsOf(scene);
+  const withRun = backlogOf(shape, [
+    ...rows,
+    StoredRow.make({ object: objectOf(app, shape.model, runClass(keys), "~run"), key: `run:${encodeURIComponent(target)}`, value: run }),
+  ]);
+  const complete = run.phase === "complete";
+  expect(withRun.runComplete).toBe(complete);
+  expect(withRun.pending).toBe(backlogOf(shape, rows).pending + (complete ? 0 : 1));
+});

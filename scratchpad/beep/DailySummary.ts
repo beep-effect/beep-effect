@@ -104,7 +104,7 @@ export class DailySummaryActionItem extends Model<DailySummaryActionItem>("Daily
  * @since 0.0.0
  */
 export declare namespace DailySummaryActionItem {
-  export type Encoded = S.Codec.Encoded<typeof DailySummaryActionItem>;
+  export type Encoded = typeof DailySummaryActionItem.Encoded;
 }
 
 /**
@@ -176,7 +176,7 @@ export class DailySummaryTopicHighlight extends Model<DailySummaryTopicHighlight
  * @since 0.0.0
  */
 export declare namespace DailySummaryTopicHighlight {
-  export type Encoded = S.Codec.Encoded<typeof DailySummaryTopicHighlight>;
+  export type Encoded = typeof DailySummaryTopicHighlight.Encoded;
 }
 
 /**
@@ -250,7 +250,7 @@ export class DailySummaryUnresolvedQuestion extends Model<DailySummaryUnresolved
  * @since 0.0.0
  */
 export declare namespace DailySummaryUnresolvedQuestion {
-  export type Encoded = S.Codec.Encoded<typeof DailySummaryUnresolvedQuestion>;
+  export type Encoded = typeof DailySummaryUnresolvedQuestion.Encoded;
 }
 
 /**
@@ -320,7 +320,7 @@ export class DailySummaryDecisionMade extends Model<DailySummaryDecisionMade>("D
  * @since 0.0.0
  */
 export declare namespace DailySummaryDecisionMade {
-  export type Encoded = S.Codec.Encoded<typeof DailySummaryDecisionMade>;
+  export type Encoded = typeof DailySummaryDecisionMade.Encoded;
 }
 
 /**
@@ -395,7 +395,7 @@ export class DailySummaryKnowledgeNugget extends Model<DailySummaryKnowledgeNugg
  * @since 0.0.0
  */
 export declare namespace DailySummaryKnowledgeNugget {
-  export type Encoded = S.Codec.Encoded<typeof DailySummaryKnowledgeNugget>;
+  export type Encoded = typeof DailySummaryKnowledgeNugget.Encoded;
 }
 
 /**
@@ -471,7 +471,7 @@ export class DailySummaryDayStats extends Model<DailySummaryDayStats>("DailySumm
  * @since 0.0.0
  */
 export declare namespace DailySummaryDayStats {
-  export type Encoded = S.Codec.Encoded<typeof DailySummaryDayStats>;
+  export type Encoded = typeof DailySummaryDayStats.Encoded;
 }
 
 /**
@@ -554,7 +554,7 @@ export class DailySummaryLocationPin extends Model<DailySummaryLocationPin>("Dai
  * @since 0.0.0
  */
 export declare namespace DailySummaryLocationPin {
-  export type Encoded = S.Codec.Encoded<typeof DailySummaryLocationPin>;
+  export type Encoded = typeof DailySummaryLocationPin.Encoded;
 }
 
 /**
@@ -631,7 +631,7 @@ export class LearnedMemoryRef extends Model<LearnedMemoryRef>("LearnedMemoryRef"
  * @since 0.0.0
  */
 export declare namespace LearnedMemoryRef {
-  export type Encoded = S.Codec.Encoded<typeof LearnedMemoryRef>;
+  export type Encoded = typeof LearnedMemoryRef.Encoded;
 }
 
 /**
@@ -744,7 +744,7 @@ export class DailySummaryResponse extends Model<DailySummaryResponse>("DailySumm
  * @since 0.0.0
  */
 export declare namespace DailySummaryResponse {
-  export type Encoded = S.Codec.Encoded<typeof DailySummaryResponse>;
+  export type Encoded = typeof DailySummaryResponse.Encoded;
 }
 
 /**
@@ -937,5 +937,5 @@ export class DailySummariesResponse extends Model<DailySummariesResponse>("Daily
  * @since 0.0.0
  */
 export declare namespace DailySummariesResponse {
-  export type Encoded = S.Codec.Encoded<typeof DailySummariesResponse>;
+  export type Encoded = typeof DailySummariesResponse.Encoded;
 }

@@ -7,6 +7,7 @@ import type * as Headers from "effect/http/Headers";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import { MailboxPoller } from "./MailboxPoller.singleton.ts";
+import { thunkEffectVoid } from "@beep/utils/thunk"
 
 /**
  * The poller: every minute, read the mailbox through the port the model
@@ -57,7 +58,7 @@ export const mailboxPollerLive = (options: {
                 { org, proposition: found.proposition, signals: found.signals },
                 { commandId: found.sourceId, headers: options.credential },
               )
-              .pipe(Effect.catchTag("ClaimAlreadyAsserted", () => Effect.void)),
+              .pipe(Effect.catchTag("ClaimAlreadyAsserted", thunkEffectVoid)),
           { concurrency: 1, discard: true },
         );
         yield* Ref.set(lastSeen, now);

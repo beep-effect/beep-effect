@@ -16,9 +16,10 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, MappedLiteralKit } from "@beep/schema";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
+import * as R from "@beep/utils/Record"
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
 import {
@@ -39,6 +40,7 @@ import { ValueTypeKind } from "../DataType/DataType.values.ts";
 import { PropertyApiName, ValueTypeApiName, ValueTypeRid } from "../Identifier/Identifier.model.ts";
 import { RecursiveArraySizeHint } from "../internal/RecursionHint.ts";
 import { ScalarValue } from "../Value/Value.model.ts";
+
 
 const $I = $ScratchpadId.create("osdk/ValueType/ValueType.model");
 
@@ -91,6 +93,22 @@ export const StructFieldName = S.NonEmptyString.pipe(
 export type StructFieldName = typeof StructFieldName.Type;
 
 /**
+ * Companion namespace for {@link StructFieldName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructFieldName {
+  /**
+   * Encoded (wire) form of {@link StructFieldName}: the field name as plain, unbranded text.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof StructFieldName.Encoded;
+}
+
+/**
  * Version label of a value type.
  *
  * **Details**
@@ -128,6 +146,22 @@ export const ValueTypeVersion = S.NonEmptyString.pipe(
 export type ValueTypeVersion = typeof ValueTypeVersion.Type;
 
 /**
+ * Companion namespace for {@link ValueTypeVersion}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ValueTypeVersion {
+  /**
+   * Encoded (wire) form of {@link ValueTypeVersion}: the version label as plain, unbranded text.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ValueTypeVersion.Encoded;
+}
+
+/**
  * Whether a value type is in normal use or scheduled for removal.
  *
  * **Example** (Decode the wire status into its literal)
@@ -161,6 +195,22 @@ export const ValueTypeStatus = MappedLiteralKit([
  */
 export type ValueTypeStatus = typeof ValueTypeStatus.Type;
 
+/**
+ * Companion namespace for {@link ValueTypeStatus}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ValueTypeStatus {
+  /**
+   * Encoded (wire) form of {@link ValueTypeStatus}: the platform's upper-case status literal.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ValueTypeStatus.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Base types declared by the value-type universe
 // -----------------------------------------------------------------------------
@@ -184,6 +234,24 @@ export class ValueTypeDecimal extends S.Opaque<ValueTypeDecimal, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ValueTypeDecimal}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ValueTypeDecimal {
+  /**
+   * Encoded (wire) form of {@link ValueTypeDecimal}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "decimal";
+  }
+}
 
 /**
  * Base type of a homogeneous list.
@@ -450,6 +518,24 @@ export class ValueTypeReference extends S.Opaque<ValueTypeReference, { readonly 
   )
 ) {}
 
+/**
+ * Companion namespace for {@link ValueTypeReference}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ValueTypeReference {
+  /**
+   * Encoded (wire) form of {@link ValueTypeReference}: a bare tag with no target.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "reference";
+  }
+}
+
 // -----------------------------------------------------------------------------
 // The base type union
 // -----------------------------------------------------------------------------
@@ -548,24 +634,24 @@ export declare namespace ValueTypeFieldType {
    * @since 0.0.0
    */
   export type Encoded =
-    | (typeof BooleanType)["Encoded"]
-    | (typeof ByteType)["Encoded"]
-    | (typeof ShortType)["Encoded"]
-    | (typeof IntegerType)["Encoded"]
-    | (typeof LongType)["Encoded"]
-    | (typeof FloatType)["Encoded"]
-    | (typeof DoubleType)["Encoded"]
-    | (typeof ValueTypeDecimal)["Encoded"]
-    | (typeof StringType)["Encoded"]
-    | (typeof DateType)["Encoded"]
-    | (typeof TimestampType)["Encoded"]
-    | (typeof BinaryType)["Encoded"]
+    | BooleanType.Encoded
+    | ByteType.Encoded
+    | ShortType.Encoded
+    | IntegerType.Encoded
+    | LongType.Encoded
+    | FloatType.Encoded
+    | DoubleType.Encoded
+    | ValueTypeDecimal.Encoded
+    | StringType.Encoded
+    | DateType.Encoded
+    | TimestampType.Encoded
+    | BinaryType.Encoded
     | ValueTypeArray.Encoded
     | ValueTypeMap.Encoded
     | ValueTypeStruct.Encoded
     | ValueTypeUnion.Encoded
     | ValueTypeOptional.Encoded
-    | (typeof ValueTypeReference)["Encoded"];
+    | ValueTypeReference.Encoded;
 }
 
 // -----------------------------------------------------------------------------
@@ -612,6 +698,22 @@ export const ValueTypeConstraintKind = LiteralKit([
 export type ValueTypeConstraintKind = typeof ValueTypeConstraintKind.Type;
 
 /**
+ * Companion namespace for {@link ValueTypeConstraintKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ValueTypeConstraintKind {
+  /**
+   * Encoded (wire) form of {@link ValueTypeConstraintKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ValueTypeConstraintKind.Encoded;
+}
+
+/**
  * Requires each named field of a struct to conform to a value type of its own.
  *
  * **Details**
@@ -636,6 +738,25 @@ export class StructConstraint extends S.Opaque<StructConstraint, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link StructConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructConstraint {
+  /**
+   * Encoded (wire) form of {@link StructConstraint}: field names keyed to value type API names, as plain text.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "struct";
+    readonly properties: R.ReadonlyRecord<PropertyApiName.Encoded, ValueTypeApiName.Encoded>;
+  }
+}
+
+/**
  * Requires text to match a regular expression, wholly or in part.
  *
  * @category models
@@ -654,6 +775,26 @@ export class RegexConstraint extends S.Opaque<RegexConstraint, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RegexConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RegexConstraint {
+  /**
+   * Encoded (wire) form of {@link RegexConstraint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "regex";
+    readonly pattern: string;
+    readonly partialMatch: boolean;
+  }
+}
 
 /**
  * Bounds how many elements a list holds, whether they repeat, and what each element must satisfy.
@@ -788,6 +929,26 @@ export class LengthConstraint extends S.Opaque<LengthConstraint, { readonly bran
 }
 
 /**
+ * Companion namespace for {@link LengthConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LengthConstraint {
+  /**
+   * Encoded (wire) form of {@link LengthConstraint}: each absent bound is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "length";
+    readonly minimumLength?: number;
+    readonly maximumLength?: number;
+  }
+}
+
+/**
  * Bounds a value from below, from above or both, each end inclusive.
  *
  * **Details**
@@ -877,6 +1038,26 @@ export class ValueRangeConstraint extends S.Opaque<ValueRangeConstraint, { reado
 }
 
 /**
+ * Companion namespace for {@link ValueRangeConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ValueRangeConstraint {
+  /**
+   * Encoded (wire) form of {@link ValueRangeConstraint}: each absent bound is an absent key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "range";
+    readonly minimumValue?: ScalarValue.Encoded;
+    readonly maximumValue?: ScalarValue.Encoded;
+  }
+}
+
+/**
  * Requires text to be a well-formed resource identifier.
  *
  * @category models
@@ -887,6 +1068,24 @@ export class RidConstraint extends S.Opaque<RidConstraint, { readonly brand: uni
     $I.annoteSchema("RidConstraint", { description: "Requires text to be a well-formed resource identifier." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RidConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RidConstraint {
+  /**
+   * Encoded (wire) form of {@link RidConstraint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "rid";
+  }
+}
 
 /**
  * Requires text to be a well-formed universally unique identifier.
@@ -901,6 +1100,24 @@ export class UuidConstraint extends S.Opaque<UuidConstraint, { readonly brand: u
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link UuidConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace UuidConstraint {
+  /**
+   * Encoded (wire) form of {@link UuidConstraint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "uuid";
+  }
+}
 
 /**
  * Requires a value to be one of a fixed list of options.
@@ -926,6 +1143,25 @@ export class EnumConstraint extends S.Opaque<EnumConstraint, { readonly brand: u
     $I.annoteSchema("EnumConstraint", { description: "Requires a value to be one of a fixed list of options." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link EnumConstraint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EnumConstraint {
+  /**
+   * Encoded (wire) form of {@link EnumConstraint}: an allowed absence travels as `null`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "enum";
+    readonly options: ReadonlyArray<ScalarValue.Encoded | null>;
+  }
+}
 
 /**
  * A rule a value type places on values of its base type.
@@ -1021,15 +1257,15 @@ export declare namespace ValueTypeConstraint {
    * @since 0.0.0
    */
   export type Encoded =
-    | (typeof StructConstraint)["Encoded"]
-    | (typeof RegexConstraint)["Encoded"]
-    | (typeof UnsupportedType)["Encoded"]
+    | StructConstraint.Encoded
+    | RegexConstraint.Encoded
+    | UnsupportedType.Encoded
     | ArrayConstraint.Encoded
-    | (typeof LengthConstraint)["Encoded"]
-    | (typeof ValueRangeConstraint)["Encoded"]
-    | (typeof RidConstraint)["Encoded"]
-    | (typeof UuidConstraint)["Encoded"]
-    | (typeof EnumConstraint)["Encoded"];
+    | LengthConstraint.Encoded
+    | ValueRangeConstraint.Encoded
+    | RidConstraint.Encoded
+    | UuidConstraint.Encoded
+    | EnumConstraint.Encoded;
 }
 
 // -----------------------------------------------------------------------------
@@ -1098,3 +1334,29 @@ export class OntologyValueType extends S.Opaque<OntologyValueType, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link OntologyValueType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyValueType {
+  /**
+   * Encoded (wire) form of {@link OntologyValueType}: an unstated description or status is an absent key, while
+   * `constraints` is always present (its default applies only when constructing).
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly apiName: ValueTypeApiName.Encoded;
+    readonly displayName: string;
+    readonly description?: string;
+    readonly rid: ValueTypeRid.Encoded;
+    readonly status?: ValueTypeStatus.Encoded;
+    readonly fieldType: ValueTypeFieldType.Encoded;
+    readonly version: ValueTypeVersion.Encoded;
+    readonly constraints: ReadonlyArray<ValueTypeConstraint.Encoded>;
+  }
+}

@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { RunId } from "@proto/kernel/Ids";
+import { Count, IdText, Text } from "@proto/kernel/Measure";
 import { Disposition } from "@proto/party-contract/Disposition";
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { Proposition } from "@proto/party-contract/Proposition";
@@ -14,7 +15,7 @@ import * as S from "effect/Schema";
  * @since 0.0.0
  */
 export class ReasonerUnavailable extends S.TaggedError<ReasonerUnavailable, { readonly brand: unique symbol }>()("ReasonerUnavailable", {
-  reason: S.String,
+  reason: Text,
 }) {}
 
 /**
@@ -23,7 +24,7 @@ export class ReasonerUnavailable extends S.TaggedError<ReasonerUnavailable, { re
  * @category models
  * @since 0.0.0
  */
-export const Assessment = S.Struct({ disposition: Disposition, rationale: S.String });
+export const Assessment = S.Struct({ disposition: Disposition, rationale: Text });
 /**
  * @category models
  * @since 0.0.0
@@ -37,9 +38,9 @@ export type Assessment = typeof Assessment.Type;
  * @since 0.0.0
  */
 export const Usage = S.Struct({
-  units: S.Int,
+  units: Count,
   // Added in phase 4 (D35): stored results and tapes without it read 0.
-  cachedUnits: S.Int.pipe(S.withDecodingDefaultKey(Effect.succeed(0)), S.withConstructorDefault(Effect.succeed(0))),
+  cachedUnits: Count.pipe(S.withDecodingDefaultKey(Effect.succeed(0)), S.withConstructorDefault(Effect.succeed(0))),
 });
 
 /**
@@ -49,7 +50,7 @@ export const Usage = S.Struct({
  * @category models
  * @since 0.0.0
  */
-export const ReasonerReceipt = S.Struct({ idempotencyKey: S.String, promptVersion: S.String, model: S.String });
+export const ReasonerReceipt = S.Struct({ idempotencyKey: IdText, promptVersion: IdText, model: IdText });
 
 /**
  * An assessment with its usage and receipt.
@@ -73,10 +74,10 @@ export type Assessed = typeof Assessed.Type;
  */
 export const AssessRequest = S.Struct({
   run: RunId,
-  step: S.String,
-  idempotencyKey: S.String,
-  promptVersion: S.String,
-  maxAllowance: S.Int,
+  step: IdText,
+  idempotencyKey: IdText,
+  promptVersion: IdText,
+  maxAllowance: Count,
   proposition: Proposition,
   signals: S.Array(EvidenceSignal),
 });

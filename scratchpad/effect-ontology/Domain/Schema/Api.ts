@@ -12,10 +12,11 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { HttpsUrl, LiteralKit } from "@beep/schema";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { RunConfig } from "../Model/ExtractionRun.ts";
 import { BackgroundJobId } from "./JobSchema.ts";
-import * as Effect from "effect/Effect";
+
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Api");
 
 const SubmitJobSourceDefinition = S.TaggedUnion({
@@ -97,7 +98,8 @@ export type SubmitJobSource = typeof SubmitJobSource.Type;
  * @category dtos
  * @since 0.0.0
  */
-export class SubmitJobRequest extends S.Opaque<SubmitJobRequest, { readonly brand: unique symbol }>()(S.Struct({
+export class SubmitJobRequest extends S.Opaque<SubmitJobRequest, { readonly brand: unique symbol }>()(
+  S.Struct({
     source: SubmitJobSource.annotateKey({
       description: "The single validated source from which extraction reads content.",
     }),
@@ -107,9 +109,12 @@ export class SubmitJobRequest extends S.Opaque<SubmitJobRequest, { readonly bran
         description: "Optional run-configuration override; absence delegates policy to the server.",
       })
     ),
-  }).pipe($I.annoteSchema("SubmitJobRequest", {
-    description: "Extraction submission containing one discriminated source and an optional configuration override.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("SubmitJobRequest", {
+      description: "Extraction submission containing one discriminated source and an optional configuration override.",
+    })
+  )
+) {
   /**
    * Decodes and validates an untrusted request.
    *
@@ -152,10 +157,10 @@ export class SubmitJobRequest extends S.Opaque<SubmitJobRequest, { readonly bran
  * @since 0.0.0
  */
 export const JobStatus = LiteralKit(["pending", "running", "completed", "failed", "cancelled"]).pipe(
-    $I.annoteSchema("JobStatus", {
-      description: "Closed lifecycle states reported by the extraction API.",
-    })
-  );
+  $I.annoteSchema("JobStatus", {
+    description: "Closed lifecycle states reported by the extraction API.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link JobStatus}.
@@ -187,10 +192,10 @@ export type JobStatus = typeof JobStatus.Type;
  * @since 0.0.0
  */
 export const JobErrorType = LiteralKit(["expected", "defect", "interrupted", "timeout", "unknown"]).pipe(
-    $I.annoteSchema("JobErrorType", {
-      description: "Closed coarse categories for terminal extraction-job failures.",
-    })
-  );
+  $I.annoteSchema("JobErrorType", {
+    description: "Closed coarse categories for terminal extraction-job failures.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link JobErrorType}.
@@ -230,7 +235,8 @@ export type JobErrorType = typeof JobErrorType.Type;
  * @category dtos
  * @since 0.0.0
  */
-export class JobProgress extends S.Opaque<JobProgress, { readonly brand: unique symbol }>()(S.Struct({
+export class JobProgress extends S.Opaque<JobProgress, { readonly brand: unique symbol }>()(
+  S.Struct({
     chunksTotal: S.Natural.annotateKey({
       description: "Total chunks planned for the job.",
     }),
@@ -243,20 +249,27 @@ export class JobProgress extends S.Opaque<JobProgress, { readonly brand: unique 
     relationsExtracted: S.Natural.annotateKey({
       description: "Relations extracted so far.",
     }),
-  }).pipe($I.annoteSchema("JobProgress", {
-    description: "Non-negative chunk, entity, and relation progress counters for one extraction job.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("JobProgress", {
+      description: "Non-negative chunk, entity, and relation progress counters for one extraction job.",
+    })
+  )
+) {}
 
-class JobFailure extends S.Opaque<JobFailure, { readonly brand: unique symbol }>()(S.Struct({
+class JobFailure extends S.Opaque<JobFailure, { readonly brand: unique symbol }>()(
+  S.Struct({
     message: S.NonEmptyString.annotateKey({
       description: "Non-empty human-readable explanation of the terminal failure.",
     }),
     type: JobErrorType.annotateKey({
       description: "Coarse origin category for the terminal failure.",
     }),
-  }).pipe($I.annoteSchema("JobFailure", {
-    description: "Nested diagnostic available only on a failed extraction job.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("JobFailure", {
+      description: "Nested diagnostic available only on a failed extraction job.",
+    })
+  )
+) {}
 
 const JobResponseCommonFields = {
   jobId: BackgroundJobId.annotateKey({

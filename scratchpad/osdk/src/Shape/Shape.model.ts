@@ -31,6 +31,7 @@
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
+import * as R from "@beep/utils/Record";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -86,6 +87,22 @@ export const TransformName = S.NonEmptyString.pipe(
 export type TransformName = typeof TransformName.Type;
 
 /**
+ * Companion namespace for {@link TransformName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TransformName {
+  /**
+   * Encoded (wire) form of {@link TransformName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TransformName.Encoded;
+}
+
+/**
  * Name a shape gives to one of its derived links: the key the linked objects come back under.
  *
  * **Example** (Name a derived link)
@@ -115,6 +132,22 @@ export const DerivedLinkName = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type DerivedLinkName = typeof DerivedLinkName.Type;
+
+/**
+ * Companion namespace for {@link DerivedLinkName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DerivedLinkName {
+  /**
+   * Encoded (wire) form of {@link DerivedLinkName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DerivedLinkName.Encoded;
+}
 
 /**
  * A value that replaces a null property: any JSON value except `null`.
@@ -154,6 +187,22 @@ export const DefaultValue = S.Union([S.String, S.Finite, S.Boolean, S.Array(S.Js
 export type DefaultValue = typeof DefaultValue.Type;
 
 /**
+ * Companion namespace for {@link DefaultValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DefaultValue {
+  /**
+   * Encoded (wire) form of {@link DefaultValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DefaultValue.Encoded;
+}
+
+/**
  * The most linked objects a derived link asks for: a positive whole number.
  *
  * **Example** (Reject a limit of zero)
@@ -182,6 +231,22 @@ export const LinkLimit = S.Int.check(S.isGreaterThan(0)).pipe(
  * @since 0.0.0
  */
 export type LinkLimit = typeof LinkLimit.Type;
+
+/**
+ * Companion namespace for {@link LinkLimit}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkLimit {
+  /**
+   * Encoded (wire) form of {@link LinkLimit}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LinkLimit.Encoded;
+}
 
 /**
  * Identity of a shape definition: the SHA-256 digest of its canonical JSON, as 64 lower-case hex characters.
@@ -224,6 +289,22 @@ export const ShapeId = Sha256Hex.pipe(
  */
 export type ShapeId = typeof ShapeId.Type;
 
+/**
+ * Companion namespace for {@link ShapeId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ShapeId {
+  /**
+   * Encoded (wire) form of {@link ShapeId}: the digest as plain, unbranded hex text.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ShapeId.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Null policies
 // -----------------------------------------------------------------------------
@@ -243,6 +324,24 @@ export class SelectPolicy extends S.Opaque<SelectPolicy, { readonly brand: uniqu
 ) {}
 
 /**
+ * Companion namespace for {@link SelectPolicy}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SelectPolicy {
+  /**
+   * Encoded (wire) form of {@link SelectPolicy}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "select";
+  }
+}
+
+/**
  * Insists the property has a value: a null is a violation of the shape.
  *
  * @category models
@@ -255,6 +354,24 @@ export class RequirePolicy extends S.Opaque<RequirePolicy, { readonly brand: uni
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RequirePolicy}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RequirePolicy {
+  /**
+   * Encoded (wire) form of {@link RequirePolicy}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "require";
+  }
+}
 
 /**
  * Leaves the whole object out when the property is null, without treating that as an error.
@@ -271,6 +388,24 @@ export class DropIfNullPolicy extends S.Opaque<DropIfNullPolicy, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link DropIfNullPolicy}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DropIfNullPolicy {
+  /**
+   * Encoded (wire) form of {@link DropIfNullPolicy}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "dropIfNull";
+  }
+}
+
+/**
  * Replaces a null with a fixed value.
  *
  * @category models
@@ -282,6 +417,25 @@ export class DefaultPolicy extends S.Opaque<DefaultPolicy, { readonly brand: uni
     defaultValue: DefaultValue.annotateKey({ description: "Value the property takes when it is null." }),
   }).pipe($I.annoteSchema("DefaultPolicy", { description: "Replaces a null with a fixed value." }))
 ) {}
+
+/**
+ * Companion namespace for {@link DefaultPolicy}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DefaultPolicy {
+  /**
+   * Encoded (wire) form of {@link DefaultPolicy}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "withDefault";
+    readonly defaultValue: DefaultValue.Encoded;
+  }
+}
 
 /**
  * Passes the property, null or not, through a named transform function.
@@ -306,6 +460,25 @@ export class TransformPolicy extends S.Opaque<TransformPolicy, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TransformPolicy}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TransformPolicy {
+  /**
+   * Encoded (wire) form of {@link TransformPolicy}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "withTransform";
+    readonly transform: TransformName.Encoded;
+  }
+}
 
 /**
  * What a shape does with one property, and in particular with its null.
@@ -354,6 +527,27 @@ export const NullPolicy = NullPolicyKind.mapMembers(() =>
  */
 export type NullPolicy = typeof NullPolicy.Type;
 
+/**
+ * Companion namespace for {@link NullPolicy}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NullPolicy {
+  /**
+   * Encoded (wire) form of {@link NullPolicy}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | SelectPolicy.Encoded
+    | RequirePolicy.Encoded
+    | DropIfNullPolicy.Encoded
+    | DefaultPolicy.Encoded
+    | TransformPolicy.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Link sets
 // -----------------------------------------------------------------------------
@@ -380,6 +574,24 @@ export class TraversalSegment extends S.Opaque<TraversalSegment, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TraversalSegment}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TraversalSegment {
+  /**
+   * Encoded (wire) form of {@link TraversalSegment}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly link: LinkTypeApiName.Encoded;
+  }
+}
 
 /**
  * How two link sets combine: pooled, narrowed to what they share, or the first without the second.
@@ -414,6 +626,22 @@ export const LinkSetOperator = LiteralKit(["union", "intersect", "subtract"]).pi
  */
 export type LinkSetOperator = typeof LinkSetOperator.Type;
 
+/**
+ * Companion namespace for {@link LinkSetOperator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkSetOperator {
+  /**
+   * Encoded (wire) form of {@link LinkSetOperator}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LinkSetOperator.Encoded;
+}
+
 const suspendedLinkSet = S.suspend((): S.ConstraintCodec<ShapeLinkSet, ShapeLinkSet.Encoded> => ShapeLinkSet);
 
 /**
@@ -441,13 +669,13 @@ export class LinkSetOperation extends S.Opaque<LinkSetOperation, { readonly bran
  */
 export declare namespace LinkSetOperation {
   /**
-   * Encoded form of {@link LinkSetOperation}, declared explicitly because link sets are recursive.
+   * Encoded (wire) form of {@link LinkSetOperation}, declared explicitly because link sets are recursive.
    *
    * @category type-level
    * @since 0.0.0
    */
   export interface Encoded {
-    readonly operator: LinkSetOperator;
+    readonly operator: LinkSetOperator.Encoded;
     readonly other: ShapeLinkSet.Encoded;
   }
 }
@@ -540,16 +768,16 @@ export class ShapeLinkSet extends S.Opaque<ShapeLinkSet, { readonly brand: uniqu
  */
 export declare namespace ShapeLinkSet {
   /**
-   * Encoded form of {@link ShapeLinkSet}, declared explicitly because link sets are recursive.
+   * Encoded (wire) form of {@link ShapeLinkSet}, declared explicitly because link sets are recursive.
    *
    * @category type-level
    * @since 0.0.0
    */
   export interface Encoded {
-    readonly segments: ReadonlyArray<(typeof TraversalSegment)["Encoded"]>;
+    readonly segments: ReadonlyArray<TraversalSegment.Encoded>;
     readonly where?: ObjectFilter.Encoded;
-    readonly order?: (typeof OrderBy)["Encoded"];
-    readonly limit?: number;
+    readonly order?: OrderBy.Encoded;
+    readonly limit?: LinkLimit.Encoded;
     readonly distinct?: boolean;
     readonly operations?: ReadonlyArray<LinkSetOperation.Encoded>;
   }
@@ -595,7 +823,7 @@ export class DerivedLink extends S.Opaque<DerivedLink, { readonly brand: unique 
  */
 export declare namespace DerivedLink {
   /**
-   * Encoded form of {@link DerivedLink}, declared explicitly because shapes are recursive.
+   * Encoded (wire) form of {@link DerivedLink}, declared explicitly because shapes are recursive.
    *
    * @category type-level
    * @since 0.0.0
@@ -674,15 +902,15 @@ export class ShapeDefinition extends S.Opaque<ShapeDefinition, { readonly brand:
  */
 export declare namespace ShapeDefinition {
   /**
-   * Encoded form of {@link ShapeDefinition}, declared explicitly because shapes are recursive.
+   * Encoded (wire) form of {@link ShapeDefinition}, declared explicitly because shapes are recursive.
    *
    * @category type-level
    * @since 0.0.0
    */
   export interface Encoded {
-    readonly objectType: string;
-    readonly properties: { readonly [property: string]: (typeof NullPolicy)["Encoded"] };
-    readonly links?: { readonly [name: string]: DerivedLink.Encoded };
+    readonly objectType: ObjectTypeApiName.Encoded;
+    readonly properties: R.ReadonlyRecord<PropertyApiName.Encoded, NullPolicy.Encoded>;
+    readonly links?: R.ReadonlyRecord<DerivedLinkName.Encoded, DerivedLink.Encoded>;
   }
 }
 
@@ -750,6 +978,25 @@ export class RequiredPropertyNull extends S.Opaque<RequiredPropertyNull, { reado
 ) {}
 
 /**
+ * Companion namespace for {@link RequiredPropertyNull}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RequiredPropertyNull {
+  /**
+   * Encoded (wire) form of {@link RequiredPropertyNull}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "requiredPropertyNull";
+    readonly property: PropertyApiName.Encoded;
+  }
+}
+
+/**
  * The shape names a transform for a property, and no function was supplied under that name.
  *
  * @category models
@@ -768,6 +1015,26 @@ export class TransformMissing extends S.Opaque<TransformMissing, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link TransformMissing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TransformMissing {
+  /**
+   * Encoded (wire) form of {@link TransformMissing}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "transformMissing";
+    readonly property: PropertyApiName.Encoded;
+    readonly transform: TransformName.Encoded;
+  }
+}
+
+/**
  * A transform function threw while computing a property.
  *
  * @category models
@@ -781,6 +1048,27 @@ export class TransformFailed extends S.Opaque<TransformFailed, { readonly brand:
     message: S.String.annotateKey({ description: "What was thrown, rendered as text." }),
   }).pipe($I.annoteSchema("TransformFailed", { description: "A transform function threw while computing a property." }))
 ) {}
+
+/**
+ * Companion namespace for {@link TransformFailed}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TransformFailed {
+  /**
+   * Encoded (wire) form of {@link TransformFailed}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "transformFailed";
+    readonly property: PropertyApiName.Encoded;
+    readonly transform: TransformName.Encoded;
+    readonly message: string;
+  }
+}
 
 /**
  * One way an object fails to fit a shape, naming the property at fault.
@@ -827,6 +1115,25 @@ export const ShapeViolation = ShapeViolationKind.mapMembers(() =>
  */
 export type ShapeViolation = typeof ShapeViolation.Type;
 
+/**
+ * Companion namespace for {@link ShapeViolation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ShapeViolation {
+  /**
+   * Encoded (wire) form of {@link ShapeViolation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | RequiredPropertyNull.Encoded
+    | TransformMissing.Encoded
+    | TransformFailed.Encoded;
+}
+
 const ShapeRejectionKind = LiteralKit(["dropped", "violated"]);
 
 /**
@@ -849,6 +1156,25 @@ export class DroppedByShape extends S.Opaque<DroppedByShape, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link DroppedByShape}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DroppedByShape {
+  /**
+   * Encoded (wire) form of {@link DroppedByShape}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "dropped";
+    readonly properties: readonly [PropertyApiName.Encoded, ...Array<PropertyApiName.Encoded>];
+  }
+}
+
+/**
  * The object does not fit the shape, with every violation found.
  *
  * @category models
@@ -866,6 +1192,25 @@ export class ViolatedShape extends S.Opaque<ViolatedShape, { readonly brand: uni
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ViolatedShape}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ViolatedShape {
+  /**
+   * Encoded (wire) form of {@link ViolatedShape}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "violated";
+    readonly violations: readonly [ShapeViolation.Encoded, ...Array<ShapeViolation.Encoded>];
+  }
+}
 
 /**
  * Why applying a shape produced no shaped object: the shape drops it, or the object violates the shape.
@@ -904,3 +1249,21 @@ export const ShapeRejection = ShapeRejectionKind.mapMembers(() => Tuple.make(Dro
  * @since 0.0.0
  */
 export type ShapeRejection = typeof ShapeRejection.Type;
+
+/**
+ * Companion namespace for {@link ShapeRejection}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ShapeRejection {
+  /**
+   * Encoded (wire) form of {@link ShapeRejection}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | DroppedByShape.Encoded
+    | ViolatedShape.Encoded;
+}

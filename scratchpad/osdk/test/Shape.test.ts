@@ -986,7 +986,7 @@ describe("canonicalJson", () => {
   it.effect(
     "is the same text whatever order properties, links and default-value fields were written in",
     Effect.fnUntraced(function* () {
-      const texts = yield* Effect.forEach([reordered.one, reordered.other], textOf);
+      const texts = yield* Effect.forEach([reordered.one, reordered.other], textOf, { concurrency: 1 });
       strictEqual(A.length(A.dedupe(texts)), 1);
     })
   );
@@ -999,7 +999,8 @@ describe("canonicalJson", () => {
           pipe(shape("Employee"), deriveLink("far", linkSet(["lead", "peers"]), nameOnly)),
           pipe(shape("Employee"), deriveLink("far", linkSet(["peers", "lead"]), nameOnly)),
         ],
-        textOf
+        textOf,
+        { concurrency: 1 }
       );
       strictEqual(A.length(A.dedupe(texts)), 2);
     })
@@ -1049,8 +1050,8 @@ describe("shapeId", () => {
         const lyon = pipe(shape("Employee"), require(["fullName"]), withDefault("office", "Lyon"));
         const zero = pipe(shape("Employee"), require(["fullName"]), withDefault("office", 0));
         const zeroText = pipe(shape("Employee"), require(["fullName"]), withDefault("office", "0"));
-        const ids = yield* Effect.forEach([remote, lyon, zero, zeroText], idOf);
-        const again = yield* Effect.forEach([remote, lyon, zero, zeroText], idOf);
+        const ids = yield* Effect.forEach([remote, lyon, zero, zeroText], idOf, { concurrency: 1 });
+        const again = yield* Effect.forEach([remote, lyon, zero, zeroText], idOf, { concurrency: 1 });
         strictEqual(A.length(A.dedupe(ids)), 4);
         deepStrictEqual(again, ids);
       })
@@ -1059,8 +1060,10 @@ describe("shapeId", () => {
     it.effect(
       "key order does not matter: properties, links and default-value fields",
       Effect.fnUntraced(function* () {
-        const ids = yield* Effect.forEach([reordered.one, reordered.other], idOf);
-        const cardIds = yield* Effect.forEach([reversed(card.definition), card.definition], shapeId);
+        const ids = yield* Effect.forEach([reordered.one, reordered.other], idOf, { concurrency: 1 });
+        const cardIds = yield* Effect.forEach([reversed(card.definition), card.definition], shapeId, {
+          concurrency: 1,
+        });
         strictEqual(A.length(A.dedupe(ids)), 1);
         strictEqual(A.length(A.dedupe(cardIds)), 1);
       })
@@ -1095,7 +1098,7 @@ describe("shapeId", () => {
             )
           ),
         ];
-        const ids = yield* Effect.forEach(variants, idOf);
+        const ids = yield* Effect.forEach(variants, idOf, { concurrency: 1 });
         strictEqual(A.length(A.dedupe(ids)), A.length(variants));
       })
     );
@@ -1120,7 +1123,7 @@ describe("shapeId", () => {
       "a stored definition keeps its id",
       Effect.fnUntraced(function* () {
         const restored = yield* decodeDefinition(storedCard);
-        const ids = yield* Effect.forEach([restored, card.definition], shapeId);
+        const ids = yield* Effect.forEach([restored, card.definition], shapeId, { concurrency: 1 });
         strictEqual(A.length(A.dedupe(ids)), 1);
       })
     );

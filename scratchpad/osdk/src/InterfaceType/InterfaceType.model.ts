@@ -67,7 +67,7 @@ const valueFormattingField = S.OptionFromOptionalKey(ValueFormat).pipe(
 
 const typeClassesField = S.Array(TypeClass).pipe(
   S.withConstructorDefault(Effect.succeed(A.empty<TypeClass>())),
-  S.withDecodingDefaultKey(Effect.succeed(A.empty<(typeof TypeClass)["Encoded"]>())),
+  S.withDecodingDefaultKey(Effect.succeed(A.empty<TypeClass.Encoded>())),
   S.annotateKey({ description: "Free-form rendering and behavior hints for client applications." })
 );
 
@@ -111,6 +111,33 @@ export class InterfaceSharedPropertyType extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link InterfaceSharedPropertyType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceSharedPropertyType {
+  /**
+   * Encoded (wire) form of {@link InterfaceSharedPropertyType}: `requireImplementation` travels as `required`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "interfaceSharedPropertyType";
+    readonly rid: SharedPropertyTypeRid.Encoded;
+    readonly apiName: SharedPropertyTypeApiName.Encoded;
+    readonly displayName: string;
+    readonly description?: string;
+    readonly dataType: PropertyType.Encoded;
+    readonly valueTypeApiName?: ValueTypeApiName.Encoded;
+    readonly valueFormatting?: ValueFormat.Encoded;
+    readonly typeClasses?: ReadonlyArray<TypeClass.Encoded>;
+    readonly required: boolean;
+  }
+}
+
+/**
  * An interface property declared on the interface itself, with no shared property type behind it.
  *
  * @category models
@@ -133,6 +160,32 @@ export class InterfaceDefinedPropertyType extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link InterfaceDefinedPropertyType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceDefinedPropertyType {
+  /**
+   * Encoded (wire) form of {@link InterfaceDefinedPropertyType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "interfaceDefinedPropertyType";
+    readonly rid: InterfacePropertyTypeRid.Encoded;
+    readonly apiName: InterfacePropertyApiName.Encoded;
+    readonly displayName: string;
+    readonly description?: string;
+    readonly dataType: PropertyType.Encoded;
+    readonly valueTypeApiName?: ValueTypeApiName.Encoded;
+    readonly typeClasses?: ReadonlyArray<TypeClass.Encoded>;
+    readonly requireImplementation: boolean;
+  }
+}
 
 const InterfacePropertyTypeKind = LiteralKit(["interfaceDefinedPropertyType", "interfaceSharedPropertyType"]);
 
@@ -180,6 +233,24 @@ export const InterfacePropertyType = InterfacePropertyTypeKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type InterfacePropertyType = typeof InterfacePropertyType.Type;
+
+/**
+ * Companion namespace for {@link InterfacePropertyType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfacePropertyType {
+  /**
+   * Encoded (wire) form of {@link InterfacePropertyType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | InterfaceDefinedPropertyType.Encoded
+    | InterfaceSharedPropertyType.Encoded;
+}
 
 /**
  * The untagged wire record of a shared-property-backed interface property, decoded to the tagged class.
@@ -253,6 +324,31 @@ export class ResolvedInterfacePropertyType extends S.Opaque<
   )
 ) {}
 
+/**
+ * Companion namespace for {@link ResolvedInterfacePropertyType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ResolvedInterfacePropertyType {
+  /**
+   * Encoded (wire) form of {@link ResolvedInterfacePropertyType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly rid: InterfacePropertyTypeRid.Encoded;
+    readonly apiName: InterfacePropertyApiName.Encoded;
+    readonly displayName: string;
+    readonly description?: string;
+    readonly dataType: PropertyType.Encoded;
+    readonly valueTypeApiName?: ValueTypeApiName.Encoded;
+    readonly valueFormatting?: ValueFormat.Encoded;
+    readonly requireImplementation: boolean;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Interface links
 // -----------------------------------------------------------------------------
@@ -299,6 +395,22 @@ export const InterfaceLinkCardinality = MappedLiteralKit([
  */
 export type InterfaceLinkCardinality = typeof InterfaceLinkCardinality.Type;
 
+/**
+ * Companion namespace for {@link InterfaceLinkCardinality}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceLinkCardinality {
+  /**
+   * Encoded (wire) form of {@link InterfaceLinkCardinality}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof InterfaceLinkCardinality.Encoded;
+}
+
 const LinkedEntityKind = LiteralKit(["objectTypeApiName", "interfaceTypeApiName"]);
 
 /**
@@ -319,6 +431,25 @@ export class LinkedObjectType extends S.Opaque<LinkedObjectType, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link LinkedObjectType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkedObjectType {
+  /**
+   * Encoded (wire) form of {@link LinkedObjectType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "objectTypeApiName";
+    readonly apiName: ObjectTypeApiName.Encoded;
+  }
+}
+
+/**
  * An interface link whose targets are objects of any type that implements one interface.
  *
  * @category models
@@ -334,6 +465,25 @@ export class LinkedInterfaceType extends S.Opaque<LinkedInterfaceType, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link LinkedInterfaceType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkedInterfaceType {
+  /**
+   * Encoded (wire) form of {@link LinkedInterfaceType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "interfaceTypeApiName";
+    readonly apiName: InterfaceTypeApiName.Encoded;
+  }
+}
 
 /**
  * What an interface link points at: an object type, or an interface type.
@@ -378,6 +528,24 @@ export const LinkedEntity = LinkedEntityKind.mapMembers(() => Tuple.make(LinkedO
  * @since 0.0.0
  */
 export type LinkedEntity = typeof LinkedEntity.Type;
+
+/**
+ * Companion namespace for {@link LinkedEntity}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkedEntity {
+  /**
+   * Encoded (wire) form of {@link LinkedEntity}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | LinkedObjectType.Encoded
+    | LinkedInterfaceType.Encoded;
+}
 
 /**
  * A link an interface promises: implementing object types supply the concrete link types behind it.
@@ -436,6 +604,31 @@ export class InterfaceLinkType extends S.Opaque<InterfaceLinkType, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link InterfaceLinkType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceLinkType {
+  /**
+   * Encoded (wire) form of {@link InterfaceLinkType}: `linkedEntity` travels as `linkedEntityApiName` and
+   * `requireImplementation` as `required`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly rid: InterfaceLinkTypeRid.Encoded;
+    readonly apiName: InterfaceLinkTypeApiName.Encoded;
+    readonly displayName: string;
+    readonly description?: string;
+    readonly linkedEntityApiName: LinkedEntity.Encoded;
+    readonly cardinality: InterfaceLinkCardinality.Encoded;
+    readonly required: boolean;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // The interface type
@@ -528,7 +721,7 @@ export class InterfaceType extends S.Opaque<InterfaceType, { readonly brand: uni
     ownSharedProperties: S.Record(SharedPropertyTypeApiName, InterfaceSharedPropertyTypeFromUntagged).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<SharedPropertyTypeApiName, InterfaceSharedPropertyType>())),
       S.withDecodingDefaultKey(
-        Effect.succeed(R.empty<string, (typeof InterfaceSharedPropertyTypeFromUntagged)["Encoded"]>())
+        Effect.succeed(R.empty<string, Omit<InterfaceSharedPropertyType.Encoded, "type">>())
       ),
       S.annotateKey({
         description: "Own properties backed by a shared property type, keyed by that shared property type's API name.",
@@ -537,7 +730,7 @@ export class InterfaceType extends S.Opaque<InterfaceType, { readonly brand: uni
     inheritedAndOwnSharedProperties: S.Record(SharedPropertyTypeApiName, InterfaceSharedPropertyTypeFromUntagged).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<SharedPropertyTypeApiName, InterfaceSharedPropertyType>())),
       S.withDecodingDefaultKey(
-        Effect.succeed(R.empty<string, (typeof InterfaceSharedPropertyTypeFromUntagged)["Encoded"]>())
+        Effect.succeed(R.empty<string, Omit<InterfaceSharedPropertyType.Encoded, "type">>())
       ),
       S.annotateKey({
         description: "Shared-property-backed properties of this interface and of every interface it extends.",
@@ -545,14 +738,14 @@ export class InterfaceType extends S.Opaque<InterfaceType, { readonly brand: uni
     ),
     ownProperties: S.Record(InterfacePropertyApiName, InterfacePropertyType).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<InterfacePropertyApiName, InterfacePropertyType>())),
-      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, (typeof InterfacePropertyType)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, InterfacePropertyType.Encoded>())),
       S.annotateKey({
         description: "Every own property, whether backed by a shared property type or defined on the interface.",
       })
     ),
     inheritedAndOwnProperties: S.Record(InterfacePropertyApiName, ResolvedInterfacePropertyType).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<InterfacePropertyApiName, ResolvedInterfacePropertyType>())),
-      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, (typeof ResolvedInterfacePropertyType)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, ResolvedInterfacePropertyType.Encoded>())),
       S.annotateKey({
         description: "Every property an implementer sees: this interface's and those of all it extends, flattened.",
       })
@@ -574,12 +767,12 @@ export class InterfaceType extends S.Opaque<InterfaceType, { readonly brand: uni
     ),
     ownLinks: S.Record(InterfaceLinkTypeApiName, InterfaceLinkType).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<InterfaceLinkTypeApiName, InterfaceLinkType>())),
-      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, (typeof InterfaceLinkType)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, InterfaceLinkType.Encoded>())),
       S.annotateKey({ description: "Links this interface declares itself." })
     ),
     inheritedAndOwnLinks: S.Record(InterfaceLinkTypeApiName, InterfaceLinkType).pipe(
       S.withConstructorDefault(Effect.succeed(R.empty<InterfaceLinkTypeApiName, InterfaceLinkType>())),
-      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, (typeof InterfaceLinkType)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(R.empty<string, InterfaceLinkType.Encoded>())),
       S.annotateKey({
         description: "Links of this interface and of every interface it extends, directly or indirectly.",
       })
@@ -599,3 +792,43 @@ export class InterfaceType extends S.Opaque<InterfaceType, { readonly brand: uni
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link InterfaceType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceType {
+  /**
+   * Encoded (wire) form of {@link InterfaceType}: the maps and lists under the platform's names
+   * (`properties`, `propertiesV2`, `allLinks`, ...), each optional, shared properties untagged.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly rid: InterfaceTypeRid.Encoded;
+    readonly apiName: InterfaceTypeApiName.Encoded;
+    readonly displayName: string;
+    readonly description?: string;
+    readonly properties?: R.ReadonlyRecord<
+      SharedPropertyTypeApiName.Encoded,
+      Omit<InterfaceSharedPropertyType.Encoded, "type">
+    >;
+    readonly allProperties?: R.ReadonlyRecord<
+      SharedPropertyTypeApiName.Encoded,
+      Omit<InterfaceSharedPropertyType.Encoded, "type">
+    >;
+    readonly propertiesV2?: R.ReadonlyRecord<InterfacePropertyApiName.Encoded, InterfacePropertyType.Encoded>;
+    readonly allPropertiesV2?: R.ReadonlyRecord<
+      InterfacePropertyApiName.Encoded,
+      ResolvedInterfacePropertyType.Encoded
+    >;
+    readonly extendsInterfaces?: ReadonlyArray<InterfaceTypeApiName.Encoded>;
+    readonly allExtendsInterfaces?: ReadonlyArray<InterfaceTypeApiName.Encoded>;
+    readonly implementedByObjectTypes?: ReadonlyArray<ObjectTypeApiName.Encoded>;
+    readonly links?: R.ReadonlyRecord<InterfaceLinkTypeApiName.Encoded, InterfaceLinkType.Encoded>;
+    readonly allLinks?: R.ReadonlyRecord<InterfaceLinkTypeApiName.Encoded, InterfaceLinkType.Encoded>;
+  }
+}

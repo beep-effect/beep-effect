@@ -4,8 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import * as HashSet from "effect/HashSet";
+
 import * as A from "effect/Array";
+import * as HashSet from "effect/HashSet";
 import * as Str from "effect/String";
 import { dual2 } from "./Dual.ts";
 
@@ -112,10 +113,7 @@ export const tokenizeMentionForBlocking = (mention: string): Array<string> =>
  * @since 0.0.0
  */
 export const splitCamelCase = (text: string): string =>
-  text
-    .replace(/([a-z])([A-Z])/g, "$1 $2") // Insert space before capital letters
-    .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2") // Handle consecutive capitals
-    .trim();
+  Str.trim(Str.replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")(Str.replace(/([a-z])([A-Z])/g, "$1 $2")(text))); // Handle consecutive capitals
 
 // =============================================================================
 // N-Gram Generation
@@ -151,7 +149,7 @@ export const generateNGrams = dual2((tokens: ReadonlyArray<string>, n: number): 
 
   const ngrams: Array<string> = [];
   for (let i = 0; i <= tokens.length - n; i++) {
-    ngrams.push(tokens.slice(i, i + n).join(" "));
+    ngrams.push(A.join(tokens.slice(i, i + n), " "));
   }
   return ngrams;
 });
@@ -188,10 +186,7 @@ export const enhanceTextForSearch = dual2((text: string, ngramSize: number): str
   const camelCaseSplit = splitCamelCase(text);
 
   // Tokenize (split on whitespace and normalize)
-  const tokens = camelCaseSplit
-    .toLowerCase()
-    .split(/\s+/)
-    .filter((t) => t.length > 0);
+  const tokens = A.filter(Str.split(/\s+/)(Str.toLowerCase(camelCaseSplit)), (t) => t.length > 0);
 
   // Generate n-grams
   const ngrams = generateNGrams(tokens, ngramSize);
@@ -204,5 +199,5 @@ export const enhanceTextForSearch = dual2((text: string, ngramSize: number): str
     }
   }
 
-  return parts.join(" ");
+  return A.join(parts, " ");
 });

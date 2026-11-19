@@ -10,6 +10,7 @@
     "./GenerationRetirement": "./src/GenerationRetirement.ts",
     "./HandlerRegistry": "./src/HandlerRegistry.ts",
     "./ImportGraph": "./src/ImportGraph.ts",
+    "./Migrations": "./src/Migrations.ts",
     "./PrimaryExport": "./src/PrimaryExport.ts",
     "./PublishedStreams": "./src/PublishedStreams.ts",
     "./PublisherBacklog": "./src/PublisherBacklog.ts",
@@ -22,6 +23,7 @@
     "@alchemy.run/domain": "2.0.0-beta.87",
     "@effect/platform-node": "4.1.4",
     "@proto/kernel": "workspace:*",
+    "drizzle-kit": "1.0.0-rc.5",
     "effect": "4.1.4"
   },
   "scripts": {

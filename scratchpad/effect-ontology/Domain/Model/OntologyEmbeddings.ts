@@ -1,4 +1,3 @@
-import * as Arbitrary from "effect/Arbitrary";
 /**
  * Versioned ontology-embedding artifacts.
  *
@@ -8,13 +7,14 @@ import * as Arbitrary from "effect/Arbitrary";
 import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/rdf";
 import { SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
-import * as Effect from "effect/Effect";
-import * as N from "effect/Number";
-import * as Result from "effect/Result";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { ContentHash, GcsUri } from "../Identity.ts";
@@ -24,10 +24,10 @@ const utf8Encoder = new TextEncoder();
 const encodeUtf8 = (text: string): Uint8Array => utf8Encoder.encode(text);
 
 const EmbeddingVector = S.NonEmptyArray(S.Finite).pipe(
-    $I.annoteSchema("EmbeddingVector", {
-      description: "Non-empty finite numeric vector produced by an embedding model.",
-    })
-  );
+  $I.annoteSchema("EmbeddingVector", {
+    description: "Non-empty finite numeric vector produced by an embedding model.",
+  })
+);
 
 /**
  * Embedding and source text for one ontology class or property.
@@ -50,7 +50,8 @@ const EmbeddingVector = S.NonEmptyArray(S.Finite).pipe(
  * @category models
  * @since 0.0.0
  */
-export class ElementEmbedding extends S.Opaque<ElementEmbedding, { readonly brand: unique symbol }>()(S.Struct({
+export class ElementEmbedding extends S.Opaque<ElementEmbedding, { readonly brand: unique symbol }>()(
+  S.Struct({
     iri: IRI.annotateKey({
       description: "IRI of the embedded ontology class or property.",
     }),
@@ -60,9 +61,12 @@ export class ElementEmbedding extends S.Opaque<ElementEmbedding, { readonly bran
     embedding: EmbeddingVector.annotateKey({
       description: "Finite vector returned by the embedding model.",
     }),
-  }).pipe($I.annoteSchema("ElementEmbedding", {
-    description: "Semantic text and finite embedding vector for one ontology element.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("ElementEmbedding", {
+      description: "Semantic text and finite embedding vector for one ontology element.",
+    })
+  )
+) {
   /** Schema-derived guard for ontology-element embeddings. */
   static readonly is = S.is(ElementEmbedding);
 
@@ -105,7 +109,11 @@ export class ElementEmbedding extends S.Opaque<ElementEmbedding, { readonly bran
 
 const ontologyEmbeddingsFieldsModelClassesDefault = A.empty<ElementEmbedding>();
 const ontologyEmbeddingsFieldsModelPropertiesDefault = A.empty<ElementEmbedding>();
-class OntologyEmbeddingsFieldsModel extends S.Opaque<OntologyEmbeddingsFieldsModel, { readonly brand: unique symbol }>()(S.Struct({
+class OntologyEmbeddingsFieldsModel extends S.Opaque<
+  OntologyEmbeddingsFieldsModel,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
     ontologyUri: GcsUri.annotateKey({
       description: "Canonical GCS URI of the ontology represented by this artifact.",
     }),
@@ -116,11 +124,14 @@ class OntologyEmbeddingsFieldsModel extends S.Opaque<OntologyEmbeddingsFieldsMod
       description: "Embedding-model identifier used to compute every vector.",
     }),
     dimension: S.Natural.check(
-      S.isGreaterThan(0, $I.annote("EmbeddingDimensionPositiveCheck", {
-        title: "Positive Embedding Dimension",
-        description: "An embedding dimension must be a positive integer.",
-        message: "Embedding dimension must be greater than zero.",
-      }))
+      S.isGreaterThan(
+        0,
+        $I.annote("EmbeddingDimensionPositiveCheck", {
+          title: "Positive Embedding Dimension",
+          description: "An embedding dimension must be a positive integer.",
+          message: "Embedding dimension must be greater than zero.",
+        })
+      )
     ).annotateKey({
       description: "Expected vector length for every embedded element.",
     }),
@@ -128,16 +139,21 @@ class OntologyEmbeddingsFieldsModel extends S.Opaque<OntologyEmbeddingsFieldsMod
       description: "UTC instant at which the artifact was computed.",
     }),
     classes: S.Array(ElementEmbedding).pipe(
-      S.withConstructorDefault(Effect.succeed(ontologyEmbeddingsFieldsModelClassesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyEmbeddingsFieldsModelClassesDefault)),
+      S.withConstructorDefault(Effect.succeed(ontologyEmbeddingsFieldsModelClassesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(ontologyEmbeddingsFieldsModelClassesDefault)),
       S.annotateKey({ description: "Embeddings for ontology class definitions." })
     ),
     properties: S.Array(ElementEmbedding).pipe(
-      S.withConstructorDefault(Effect.succeed(ontologyEmbeddingsFieldsModelPropertiesDefault)), S.withDecodingDefaultType(Effect.succeed(ontologyEmbeddingsFieldsModelPropertiesDefault)),
+      S.withConstructorDefault(Effect.succeed(ontologyEmbeddingsFieldsModelPropertiesDefault)),
+      S.withDecodingDefaultType(Effect.succeed(ontologyEmbeddingsFieldsModelPropertiesDefault)),
       S.annotateKey({ description: "Embeddings for ontology property definitions." })
     ),
-  }).pipe($I.annoteSchema("OntologyEmbeddingsFieldsModel", {
-    description: "Internal field model for a versioned ontology-embedding artifact.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("OntologyEmbeddingsFieldsModel", {
+      description: "Internal field model for a versioned ontology-embedding artifact.",
+    })
+  )
+) {}
 
 const hasConsistentEmbeddingDimension = (artifact: OntologyEmbeddingsFieldsModel): boolean =>
   A.every(A.appendAll(artifact.classes, artifact.properties), (element) =>
@@ -145,11 +161,14 @@ const hasConsistentEmbeddingDimension = (artifact: OntologyEmbeddingsFieldsModel
   );
 
 const OntologyEmbeddingsDefinition = OntologyEmbeddingsFieldsModel.check(
-  S.makeFilter(hasConsistentEmbeddingDimension, $I.annote("ConsistentEmbeddingDimensionCheck", {
-    title: "Consistent Embedding Dimension",
-    description: "Every class and property vector has the artifact's declared dimension.",
-    message: "Every embedding vector must match the declared embedding dimension.",
-  }))
+  S.makeFilter(
+    hasConsistentEmbeddingDimension,
+    $I.annote("ConsistentEmbeddingDimensionCheck", {
+      title: "Consistent Embedding Dimension",
+      description: "Every class and property vector has the artifact's declared dimension.",
+      message: "Every embedding vector must match the declared embedding dimension.",
+    })
+  )
 );
 
 const computeOntologyVersion = flow(
@@ -159,10 +178,14 @@ const computeOntologyVersion = flow(
 );
 
 const embeddingsPathFromOntology = (ontologyUri: GcsUri): GcsUri =>
-  Result.getOrThrow(S.decodeUnknownResult(GcsUri)(Bool.match(Str.endsWith(".ttl")(ontologyUri), {
-      onFalse: () => `${ontologyUri}-embeddings.json`,
-      onTrue: () => Str.replace(/\.ttl$/, "-embeddings.json")(ontologyUri),
-    })));
+  Result.getOrThrow(
+    S.decodeUnknownResult(GcsUri)(
+      Bool.match(Str.endsWith(".ttl")(ontologyUri), {
+        onFalse: () => `${ontologyUri}-embeddings.json`,
+        onTrue: () => Str.replace(/\.ttl$/, "-embeddings.json")(ontologyUri),
+      })
+    )
+  );
 
 /**
  * Versioned embedding artifact for one ontology.

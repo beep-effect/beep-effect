@@ -2,15 +2,19 @@ import * as Domain from "@alchemy.run/domain";
 import { GrantTerms } from "@proto/kernel/Capability";
 import { DelegationId, PrincipalId, RunId } from "@proto/kernel/Ids";
 import { GrantRef, Hop, Provenance } from "@proto/kernel/Invocation";
+import { IdText } from "@proto/kernel/Measure";
 import * as S from "effect/Schema";
 
 /**
- * The authority context refused the run's grant, and why.
+ * The authority context refused the run's grant, and why: a refusal code,
+ * never prose. It is the reason the authority context refused the grant
+ * with, or `readmission:` and the reason the requester's hop was not
+ * re-admitted.
  *
  * @category errors
  * @since 0.0.0
  */
-export class GrantDenied extends S.TaggedError<GrantDenied, { readonly brand: unique symbol }>()("GrantDenied", { reason: S.String }) {}
+export class GrantDenied extends S.TaggedError<GrantDenied, { readonly brand: unique symbol }>()("GrantDenied", { reason: IdText }) {}
 
 /**
  * The runs context's port to the authority context: grant a run a narrowed

@@ -6,26 +6,32 @@
  */
 import { BunRuntime } from "@effect/platform-bun";
 import * as BunServices from "@effect/platform-bun/BunServices";
+import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import * as A from "effect/Array";
-import * as S from "effect/Schema";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as S from "effect/Schema";
 
-class MigrationsDriftError extends S.TaggedError<MigrationsDriftError, { readonly brand: unique symbol }>()("MigrationsDriftError", {
-  message: S.String,
-  newFolders: S.Array(S.String),
-}) {}
+class MigrationsDriftError extends S.TaggedError<MigrationsDriftError, { readonly brand: unique symbol }>()(
+  "MigrationsDriftError",
+  {
+    message: S.String,
+    newFolders: S.Array(S.String),
+  }
+) {}
 
-class MigrationGenerationError extends S.TaggedError<MigrationGenerationError, { readonly brand: unique symbol }>()("MigrationGenerationError", {
-  exitCode: S.Int,
-  message: S.String,
-}) {}
+class MigrationGenerationError extends S.TaggedError<MigrationGenerationError, { readonly brand: unique symbol }>()(
+  "MigrationGenerationError",
+  {
+    exitCode: S.Int,
+    message: S.String,
+  }
+) {}
 
 const program = Effect.scoped(
   Effect.gen(function* () {
@@ -37,7 +43,8 @@ const program = Effect.scoped(
     const scratchRoot = yield* fs.makeTempDirectoryScoped({ prefix: "effect-ontology-migrations-drift-" });
     const scratch = path.join(scratchRoot, "migrations");
     yield* fs.copy(migrationsFolder, scratch);
-    const before = HashSet.fromIterable(yield* fs.readDirectory(scratch));
+    const existingEntries = yield* fs.readDirectory(scratch);
+    const before = HashSet.fromIterable(existingEntries);
 
     const exitCode = yield* spawner.exitCode(
       ChildProcess.make(
@@ -63,15 +70,17 @@ const program = Effect.scoped(
       });
     }
 
-    const newFolders = A.filter(yield* fs.readDirectory(scratch), (entry) => !HashSet.has(before, entry));
+    const generatedEntries = yield* fs.readDirectory(scratch);
+    const newFolders = A.filter(generatedEntries, (entry) => !HashSet.has(before, entry));
     if (A.isReadonlyArrayNonEmpty(newFolders)) {
       yield* Effect.forEach(
         newFolders,
         Effect.fnUntraced(function* (folder) {
           yield* Console.error(`--- pending migration ${folder} ---`);
-          yield* Console.error(yield* fs.readFileString(path.join(scratch, folder, "migration.sql")));
+          const migrationSql = yield* fs.readFileString(path.join(scratch, folder, "migration.sql"));
+          yield* Console.error(migrationSql);
         }),
-        { discard: true }
+        { concurrency: 1, discard: true }
       );
       return yield* MigrationsDriftError.make({
         message:
@@ -82,6 +91,6 @@ const program = Effect.scoped(
   })
 );
 
-const main = Effect.scoped(Layer.build(Layer.effectDiscard(program).pipe(Layer.provide(BunServices.layer))));
+const main = program.pipe(Layer.effectDiscard, Layer.provide(BunServices.layer), Layer.build, Effect.scoped);
 
 BunRuntime.runMain(main);

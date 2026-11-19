@@ -8,8 +8,8 @@ import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as Inspectable from "effect/Inspectable";
-import * as Result from "effect/Result";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 
 /**
  * Format a cause into a human-readable error message

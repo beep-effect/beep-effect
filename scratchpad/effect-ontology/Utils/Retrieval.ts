@@ -13,17 +13,17 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
-import * as Order from "effect/Order";
-import * as Tuple from "effect/Tuple";
-import * as Effect from "effect/Effect";
-import * as A from "effect/Array";
-import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import * as Tuple from "effect/Tuple";
 import { dual2, dual3 } from "./Dual.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Utils/Retrieval");
@@ -233,7 +233,8 @@ const queryExpansionOptionsHierarchyWeightDefault = UnitInterval.make(0.5);
  * @category configuration
  * @since 0.0.0
  */
-export class QueryExpansionOptions extends S.Opaque<QueryExpansionOptions, { readonly brand: unique symbol }>()(S.Struct({
+export class QueryExpansionOptions extends S.Opaque<QueryExpansionOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
     includeAltLabels: SchemaUtils.BoolKeyDefaultTrue.annotateKey({
       description: "Whether SKOS alternate labels contribute synonym terms.",
     }),
@@ -244,20 +245,26 @@ export class QueryExpansionOptions extends S.Opaque<QueryExpansionOptions, { rea
       description: "Whether narrower ontology concepts contribute specialized terms.",
     }),
     originalWeight: UnitInterval.pipe(
-      S.withConstructorDefault(Effect.succeed(queryExpansionOptionsOriginalWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(queryExpansionOptionsOriginalWeightDefault)),
+      S.withConstructorDefault(Effect.succeed(queryExpansionOptionsOriginalWeightDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(queryExpansionOptionsOriginalWeightDefault)),
       S.annotateKey({ description: "Weight assigned to the original query term." })
     ),
     synonymWeight: UnitInterval.pipe(
-      S.withConstructorDefault(Effect.succeed(queryExpansionOptionsSynonymWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(queryExpansionOptionsSynonymWeightDefault)),
+      S.withConstructorDefault(Effect.succeed(queryExpansionOptionsSynonymWeightDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(queryExpansionOptionsSynonymWeightDefault)),
       S.annotateKey({ description: "Weight assigned to alternate-label synonyms." })
     ),
     hierarchyWeight: UnitInterval.pipe(
-      S.withConstructorDefault(Effect.succeed(queryExpansionOptionsHierarchyWeightDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(queryExpansionOptionsHierarchyWeightDefault)),
+      S.withConstructorDefault(Effect.succeed(queryExpansionOptionsHierarchyWeightDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(queryExpansionOptionsHierarchyWeightDefault)),
       S.annotateKey({ description: "Weight assigned to broader and narrower concepts." })
     ),
-  }).pipe($I.annoteSchema("QueryExpansionOptions", {
-    description: "Schema-defaulted ontology query-expansion policy with bounded weights.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("QueryExpansionOptions", {
+      description: "Schema-defaulted ontology query-expansion policy with bounded weights.",
+    })
+  )
+) {}
 
 /** @internal */
 type QueryExpansionOptionsInput = (typeof QueryExpansionOptions)["~type.make.in"];

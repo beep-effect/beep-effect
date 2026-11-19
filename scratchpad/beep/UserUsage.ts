@@ -66,7 +66,7 @@ export type UsagePeriod = typeof UsagePeriod.Type;
  * @since 0.0.0
  */
 export declare namespace UsagePeriod {
-  export type Encoded = S.Codec.Encoded<typeof UsagePeriod>;
+  export type Encoded = typeof UsagePeriod.Encoded;
 }
 
 /**
@@ -140,7 +140,7 @@ export class UsageStats extends Model<UsageStats>("UsageStats")(
  * @since 0.0.0
  */
 export declare namespace UsageStats {
-  export type Encoded = S.Codec.Encoded<typeof UsageStats>;
+  export type Encoded = typeof UsageStats.Encoded;
 }
 
 /**
@@ -193,7 +193,7 @@ export class UsageHistoryPoint extends Model<UsageHistoryPoint>("UsageHistoryPoi
  * @since 0.0.0
  */
 export declare namespace UsageHistoryPoint {
-  export type Encoded = S.Codec.Encoded<typeof UsageHistoryPoint>;
+  export type Encoded = typeof UsageHistoryPoint.Encoded;
 }
 
 /**
@@ -248,7 +248,7 @@ export class UserUsageResponse extends Model<UserUsageResponse>("UserUsageRespon
  * @since 0.0.0
  */
 export declare namespace UserUsageResponse {
-  export type Encoded = S.Codec.Encoded<typeof UserUsageResponse>;
+  export type Encoded = typeof UserUsageResponse.Encoded;
 }
 
 const hourPart = (column: string) => S.Int.pipe(pg.integer(), pg.columnName(column));
@@ -303,5 +303,5 @@ export class HourlyUsage extends Model<HourlyUsage>("HourlyUsage")(
  * @since 0.0.0
  */
 export declare namespace HourlyUsage {
-  export type Encoded = S.Codec.Encoded<typeof HourlyUsage>;
+  export type Encoded = typeof HourlyUsage.Encoded;
 }

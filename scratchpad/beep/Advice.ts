@@ -91,5 +91,5 @@ export class Advice extends Model<Advice>("Advice")(
  * @since 0.0.0
  */
 export declare namespace Advice {
-  export type Encoded = S.Codec.Encoded<typeof Advice>;
+  export type Encoded = typeof Advice.Encoded;
 }

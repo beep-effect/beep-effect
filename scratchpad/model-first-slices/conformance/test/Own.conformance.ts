@@ -1,29 +1,29 @@
 import { expect, it } from "@effect/vitest";
-import { OrgId } from "@proto/kernel/Ids";
+import type { OrgId } from "@proto/kernel/Ids";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
-import { type ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
+import { ClaimReviewEvent, type ClaimReviewState, proposalOf } from "@proto/party-contract/Claim/ClaimReview.read";
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { PartyId } from "@proto/party-contract/Party/Party.id";
 import { Proposition } from "@proto/party-contract/Proposition";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Clock from "effect/Clock";
 import * as Config from "effect/Config";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import * as Equal from "effect/Equal";
+import * as Eq from "effect/Equal";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
-import * as Num from "effect/Number";
-import * as O from "effect/Option";
+import * as N from "effect/Number";
+import * as O from "@beep/utils/Option";
 import * as Ref from "effect/Ref";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import type * as Scope from "effect/Scope";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import {
   blockedByLock,
   clients,
@@ -33,18 +33,21 @@ import {
   eventually,
   fresh,
   get,
+  hasStatus,
   holdLock,
   human,
-  issue,
   killRunners,
   killRunnersThen,
   lockHeld,
+  outcomeOf,
   psql,
   releaseLock,
   revoke,
   runnerService,
   runState,
   services,
+  setup,
+  statusOf,
 } from "./Stack.ts";
 import { FROZEN_WRITE_BOUND_MS, RECOVERY_BOUND_MS, REFUSED_WRITE_BOUND_MS } from "./RecoveryBound.ts";
 import {
@@ -56,6 +59,7 @@ import {
   shardOf,
   slotEntity,
 } from "./ShardOwnership.ts";
+import { thunkFalse, thunkTrue } from "@beep/utils"
 
 // The prototype's own conformance cases (phase 5, D5, D16), against the deployed stack over its
 // Apis. Each case records its evidence with console.log; a failure is a finding, not a retry.
@@ -73,22 +77,6 @@ const log = Effect.fn("log")(function* (label: string, value: unknown) {
   yield* fs.writeFileString(file, `${DateTime.formatIso(now)} ${label}: ${json}\n`, { flag: "a" });
 }, Effect.orDie);
 
-/** A fresh org with intake (and propose) for p_intake, review and read for p_rev. */
-const setup = Effect.gen(function* () {
-  const r = yield* fresh("r");
-  const org = `org_${r}`;
-  const grants = yield* Effect.all([
-    issue(`g_intake_${r}`, "p_intake", "party.intake", org),
-    issue(`g_propose_${r}`, "p_intake", "party.propose", org),
-    issue(`g_review_${r}`, "p_rev", "party.review", org),
-    issue(`g_read_${r}`, "p_rev", "party.read", org),
-  ], { concurrency: 1 });
-  expect(A.every(grants, (g) => g.ok)).toBe(true);
-  // The boundary reads grants from the authority model's views; give them a moment.
-  yield* Effect.sleep("2 seconds");
-  return { r, org: OrgId.make(org) };
-});
-
 const assertion = (org: OrgId) => ({
   org,
   proposition: Proposition.cases.HasIdentifier.make({ party: PartyId.make("party_dana"), scheme: "email", value: "dana@acme.test" }),
@@ -101,7 +89,7 @@ const assertion = (org: OrgId) => ({
 const asserted = Effect.fn("asserted")(function* (claim: ClaimId, receipt: { readonly stream: string; readonly version: number }) {
   const { reviewer } = yield* clients;
   const page = yield* reviewer.ClaimReview.list(claim, { ...human("p_rev"), atLeast: receipt, take: 100 });
-  return A.filter(page.entries, (entry) => entry.event._tag === "ClaimAsserted").length;
+  return A.filter(page.entries, (entry) => ClaimReviewEvent.isAnyOf(["ClaimAsserted"])(entry.event)).length;
 });
 
 /** A case against the deployed stack, with the stack's clients built into the case's scope. */
@@ -119,10 +107,10 @@ live("a command sent twice under one id commits once, and its reaction happens o
   expect(second.version).toBe(first.version);
   const assertions = yield* asserted(claim, first);
   expect(assertions).toBe(1);
-  const run1 = yield* eventually(runState(`review:${claim}:1`), (s) => s._tag === "AwaitingApproval");
+  const run1 = yield* eventually(runState(`review:${claim}:1`), hasStatus("awaiting-approval"));
   const run2 = yield* runState(`review:${claim}:2`);
-  yield* log("runs", { run1: run1._tag, run2: run2._tag });
-  expect(run2._tag).toBe("Unrequested");
+  yield* log("runs", { run1: statusOf(run1), run2: statusOf(run2) });
+  expect(statusOf(run2)).toBe("unrequested");
 }));
 
 live("a lost response, retried under the same id, gets the stored result", Effect.gen(function* () {
@@ -168,12 +156,12 @@ live("a runner killed right after a commit: every reaction happens once, within 
     run: storedTags(`Practice/Runs.AgentRunAggregate/review:${claim}:1`),
     review: reviewer.ClaimReview.get(claim, human("p_rev")).pipe(
       Effect.map((found) => O.isSome(proposalIn(found))),
-      Effect.orElseSucceed(() => false),
+      Effect.orElseSucceed(thunkFalse),
     ),
   }, { concurrency: 1 });
   const done = (seen: Effect.Success<typeof reactions>) => seen.claim === claimReactions && seen.run === runReactions && seen.review;
   const deadline = killedAt + RECOVERY_BOUND_MS;
-  const remaining = Effect.map(Clock.currentTimeMillis, (now) => Num.max(deadline - now, 0));
+  const remaining = Effect.map(Clock.currentTimeMillis, (now) => N.max(deadline - now, 0));
   const untilDone = yield* remaining;
   const atDone = yield* reactions.pipe(
     Effect.repeat({ schedule: Schedule.spaced("1 second"), until: done }),
@@ -193,12 +181,12 @@ live("a runner killed right after a commit: every reaction happens once, within 
     doneAfterMs: O.map(atDone, () => doneAt - killedAt),
     atDone,
     atBound,
-    run2: run2._tag,
+    run2: statusOf(run2),
   });
   expect(O.map(atDone, done)).toEqual(O.some(true));
   expect(doneAt - killedAt).toBeLessThanOrEqual(RECOVERY_BOUND_MS);
   expect(atBound).toEqual({ claim: claimReactions, run: runReactions, review: true });
-  expect(run2._tag).toBe("Unrequested");
+  expect(statusOf(run2)).toBe("unrequested");
 }));
 
 live("a projection batch cut by a runner crash is redelivered and the Postgres directory is right", Effect.gen(function* () {
@@ -214,7 +202,7 @@ live("a projection batch cut by a runner crash is redelivered and the Postgres d
   const registered = yield* intake.RegisterParty(party, { org, name: `Dana ${r}` }, { ...human("p_intake"), commandId: `reg_${r}` });
   const window = yield* eventually(
     Effect.all({
-      rows: psql(`SELECT count(*) FROM party_directory_rows WHERE party_id = '${party}'`).pipe(Effect.orElseSucceed(() => "no table yet")),
+      rows: psql(`SELECT count(*) FROM party_directory_rows_v_0 WHERE party_id = '${party}'`).pipe(Effect.orElseSucceed(() => "no table yet")),
       blocked: blockedByLock,
       meta: psql(`SELECT left(value, 160) ${meta}`),
     }, { concurrency: 1 }),
@@ -229,7 +217,7 @@ live("a projection batch cut by a runner crash is redelivered and the Postgres d
     reviewer.FindParties({ org, text: r }, { ...human("p_rev"), atLeast: registered }).pipe(Effect.orElseSucceed(() => ({ entries: [] as ReadonlyArray<unknown> }))),
     (page) => page.entries.length === 1,
   );
-  const rows = yield* psql(`SELECT party_id, name, absorbed FROM party_directory_rows WHERE party_id = '${party}'`);
+  const rows = yield* psql(`SELECT party_id, name, absorbed FROM party_directory_rows_v_0 WHERE party_id = '${party}'`);
   const positions = yield* psql(`SELECT stream, seq FROM party_directory_positions WHERE stream = 'Party/${party}'`);
   yield* log("projection", { rowsAtKill, found: found.entries, rows, positions });
   expect(pipe(rows, Str.split("\n")).length).toBe(1);
@@ -260,7 +248,7 @@ live("a grant revoked while a chain is in flight: the next hop is refused and re
     60,
   );
   const run1 = yield* runState(`review:${claim}:1`);
-  yield* log("revocation", { revoked, notes: view?.notes, proposal: O.getOrNull(proposalIn(view)), run: run1 });
+  yield* log("revocation", { revoked, notes: view?.notes, proposal: O.getOrNull(proposalIn(view)), run: statusOf(run1) });
   expect(view?.notes.length ?? 0).toBeGreaterThan(0);
 }));
 
@@ -269,14 +257,14 @@ live("a run waiting for approval survives a runner restart and completes after a
   const { intake, reviewer } = yield* clients;
   const claim = ClaimId.make(`claim_wait_${r}`);
   yield* intake.AssertClaim(claim, assertion(org), human("p_intake"));
-  yield* eventually(runState(`review:${claim}:1`), (s) => s._tag === "AwaitingApproval");
+  yield* eventually(runState(`review:${claim}:1`), hasStatus("awaiting-approval"));
   yield* killRunners;
   const view = yield* eventually(reviewer.ClaimReview.get(claim, human("p_rev")), (v) => O.isSome(proposalIn(v)));
   const { digest } = O.getOrThrow(proposalIn(view));
   const approved = yield* reviewer.ApproveProposal(claim, { digest, evidenceRevision: 1 }, human("p_rev"));
-  const run = yield* eventually(runState(`review:${claim}:1`), (s) => s._tag === "Completed", 120);
-  yield* log("waiting-run", { approved, run });
-  expect(run.outcome).toBe("accepted");
+  const run = yield* eventually(runState(`review:${claim}:1`), hasStatus("completed"), 120);
+  yield* log("waiting-run", { approved, run: O.getOrNull(run) });
+  expect(outcomeOf(run)).toEqual(O.some("accepted"));
 }));
 
 // Phase 12 (D55), the stale runner paused in `decide` past its shard lock, judged by the guarantee
@@ -332,7 +320,7 @@ live("two runners on one instance (D38, D55): a write sent to a frozen runner is
   const firstB = Exit.isSuccess(quick) ? O.some(receiptOf(quick.value)) : O.none();
   const firstA = Exit.isSuccess(slowResult) && Exit.isSuccess(slowResult.value) ? O.some(receiptOf(slowResult.value.value)) : O.none();
   const sameReceipt = (first: O.Option<ReturnType<typeof receiptOf>>, retry: O.Option<ReturnType<typeof receiptOf>>) =>
-    O.match(first, { onNone: () => true, onSome: (receipt) => Equal.equals(O.some(receipt), retry) });
+    O.match(first, { onNone: thunkTrue, onSome: (receipt) => Eq.equals(O.some(receipt), retry) });
   expect(sameReceipt(firstB, O.map(retriedB, receiptOf))).toBe(true);
   expect(sameReceipt(firstA, O.map(retriedA, receiptOf))).toBe(true);
 }));

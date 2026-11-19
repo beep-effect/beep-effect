@@ -312,12 +312,11 @@ it.layer(process.versions.bun === undefined ? citationNativeNodeTestPlatform : c
         Effect.provideService(CitationNativeProcessAdmission, admission),
         Effect.provideService(ChildProcessSpawner, observed.spawner)
       );
-      const services = yield* Effect.context<never>();
       let leaked = O.none<typeof lane.start>();
       const outcome = yield* lane
         .withUse((start): Effect.Effect<void> => {
           leaked = O.some(start);
-          return Effect.runSyncWith(services)(Effect.die("synchronous callback defect"));
+          throw new Error("synchronous callback defect");
         })
         .pipe(Effect.exit);
       expect(Exit.hasDies(outcome)).toBe(true);

@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 
-import * as Net from "node:net";
+import * as NodeNet from "node:net";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
@@ -184,7 +184,7 @@ const makeTask = (live: Live) =>
   );
 
 const reserveLoopbackPort = Effect.callback<number, CacheCommandError>((resume) => {
-  const server = Net.createServer();
+  const server = NodeNet.createServer();
   server.once("error", (cause) => resume(Effect.fail(CacheCommandError.new("Cannot reserve a loopback port.", cause))));
   server.listen(0, "127.0.0.1", () => {
     const address = server.address();

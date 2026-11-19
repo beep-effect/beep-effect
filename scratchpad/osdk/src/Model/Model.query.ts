@@ -478,6 +478,26 @@ export class QueryNameMismatch extends S.Opaque<QueryNameMismatch, { readonly br
 ) {}
 
 /**
+ * Companion namespace for {@link QueryNameMismatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryNameMismatch {
+  /**
+   * Encoded (wire) form of {@link QueryNameMismatch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "queryNameMismatch";
+    readonly declared: QueryApiName.Encoded;
+    readonly served: QueryApiName.Encoded;
+  }
+}
+
+/**
  * The model pins another version of the function than the served signature belongs to.
  *
  * @category models
@@ -494,6 +514,26 @@ export class QueryVersionMismatch extends S.Opaque<QueryVersionMismatch, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link QueryVersionMismatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryVersionMismatch {
+  /**
+   * Encoded (wire) form of {@link QueryVersionMismatch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "queryVersionMismatch";
+    readonly declared: string;
+    readonly served: FunctionVersion.Encoded;
+  }
+}
 
 const QueryFindingKind = LiteralKit([
   "queryNameMismatch",
@@ -570,6 +610,30 @@ export const QueryFinding = QueryFindingKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type QueryFinding = typeof QueryFinding.Type;
+
+/**
+ * Companion namespace for {@link QueryFinding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace QueryFinding {
+  /**
+   * Encoded (wire) form of {@link QueryFinding}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | QueryNameMismatch.Encoded
+    | QueryVersionMismatch.Encoded
+    | MissingParameter.Encoded
+    | UndeclaredRequiredParameter.Encoded
+    | RequiredMismatch.Encoded
+    | ValueTagMismatch.Encoded
+    | MissingValueField.Encoded
+    | ReferenceTargetMismatch.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // The comparison

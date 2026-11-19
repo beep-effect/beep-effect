@@ -1,3 +1,5 @@
+import { pipe } from "effect/Function";
+
 /**
  * Service: AgentCoordinator
  *
@@ -25,8 +27,9 @@
 import { $ScratchpadId } from "@beep/identity";
 import { Percentage } from "@beep/schema/Percentage";
 import { thunk0 } from "@beep/utils/thunk";
-import type * as Config from "effect/Config";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
+import type * as Config from "effect/Config";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
@@ -35,11 +38,10 @@ import * as HashMap from "effect/HashMap";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
-import * as Ref from "effect/Ref";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { Agent, AgentId as AgentIdType, AgentType } from "../../Domain/Model/Agent.ts";
@@ -70,6 +72,7 @@ import {
   PipelineExecutionError,
   RefinementResult,
 } from "./types.ts";
+
 const decodeAgentTaskType = S.decodeEffect(S.toType(AgentTask));
 
 const $I = $ScratchpadId.create("effect-ontology/Service/Agent/AgentCoordinator");
@@ -93,16 +96,23 @@ const $I = $ScratchpadId.create("effect-ontology/Service/Agent/AgentCoordinator"
  * @category schemas
  * @since 0.0.0
  */
-export class ExecutionPolicy extends S.Opaque<ExecutionPolicy, { readonly brand: unique symbol }>()(S.Struct({
+export class ExecutionPolicy extends S.Opaque<ExecutionPolicy, { readonly brand: unique symbol }>()(
+  S.Struct({
     agentTimeout: S.Duration.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotateKey({
       description: "Maximum duration allowed for one agent execution.",
     }),
-    continueOnError: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))).annotateKey({
+    continueOnError: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ).annotateKey({
       description: "Whether the pipeline should continue after an agent fails.",
     }),
-  }).pipe($I.annoteSchema("ExecutionPolicy", {
-    description: "Timeout and failure-continuation policy shared by agent pipeline execution modes.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExecutionPolicy", {
+      description: "Timeout and failure-continuation policy shared by agent pipeline execution modes.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link ExecutionPolicy}.
@@ -207,11 +217,17 @@ const resolveExecutionOptions = (options?: ExecutionOptions): ResolvedExecutionO
  * @category models
  * @since 0.0.0
  */
-export class ExecutionResult extends S.Opaque<ExecutionResult, { readonly brand: unique symbol }>()(S.Struct({
+export class ExecutionResult extends S.Opaque<ExecutionResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     state: PipelineState,
     events: S.Array(AgentEvent),
     outputs: S.HashMap(AgentId, S.Unknown),
-  }).pipe($I.annoteSchema("ExecutionResult", { description: "Validated state, events, and outputs from one pipeline execution." }))) {}
+  }).pipe(
+    $I.annoteSchema("ExecutionResult", {
+      description: "Validated state, events, and outputs from one pipeline execution.",
+    })
+  )
+) {}
 
 interface AgentCoordinatorShape {
   readonly register: <E>(agent: Agent<AgentTask, AgentTask, E>, agentType?: AgentType) => Effect.Effect<void>;
@@ -318,9 +334,10 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
             )
           ),
       };
+      const resolvedValue337_46 = yield* DateTime.now;
       const registered: RegisteredAgent<AgentTask, AgentTask, AgentExecutionError> = {
         agent: normalizedAgent,
-        registeredAt: DateTime.toEpochMillis(yield* DateTime.now),
+        registeredAt: DateTime.toEpochMillis(resolvedValue337_46),
         agentType,
         enabled: true,
       };
@@ -350,7 +367,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       const agent = HashMap.get(registry, agentId);
 
       if (O.isNone(agent)) {
-        const registeredIds = A.fromIterable(HashMap.keys(registry));
+        const registeredIds = pipe(registry, HashMap.keys, A.fromIterable);
         return yield* AgentNotFoundError.make({
           agentId,
           registeredAgents: registeredIds,
@@ -365,7 +382,11 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
      */
     const listAgents: Effect.Effect<ReadonlyArray<AgentMetadata>> = Effect.gen(function* () {
       const registry = yield* Ref.get(registryRef);
-      return A.map(A.fromIterable(HashMap.values(registry)), (registered) => registered.agent.metadata);
+      return pipe(
+        HashMap.values(registry),
+        A.fromIterable,
+        A.map((registered) => registered.agent.metadata)
+      );
     });
 
     /**
@@ -445,7 +466,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
               agentId,
               failedAt,
               duration: DateTime.distance(startTime, failedAt),
-              error: `Validation failed: ${validation.errors?.join(", ")}`,
+              error: `Validation failed: ${A.join(validation.errors, ", ")}`,
               retryable: false,
             });
             yield* Ref.update(eventsRef, (events) => [...events, failedEvent]);
@@ -453,7 +474,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
 
             return yield* AgentExecutionError.make({
               agentId,
-              message: `Validation failed: ${validation.errors?.join(", ")}`,
+              message: `Validation failed: ${A.join(validation.errors, ", ")}`,
               retryable: false,
             });
           }
@@ -588,7 +609,7 @@ export class AgentCoordinator extends Context.Service<AgentCoordinator, AgentCoo
       let currentInput = task;
 
       for (let i = 0; i < agents.length; i++) {
-        const registered = agents[i];
+        const registered = A.getUnsafe(agents, i);
         const agent = registered.agent;
         const agentId = agent.metadata.id;
 

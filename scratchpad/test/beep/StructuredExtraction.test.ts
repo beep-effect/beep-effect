@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 import { describe, expect, it } from "@effect/vitest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -35,13 +36,15 @@ const record = (value: unknown): { readonly [key: string]: unknown } => (P.isObj
 
 describe("StructuredExtraction", () => {
   it("normalizes vocabulary, names, and unusable tokens", () => {
-    const mixed = record(dropOutOfVocabularyLiterals({
-      captureKind: "Explicit_Command",
-      captureOwner: "Ada",
-      ownerName: "",
-      dueCertainty: "nope",
-      candidateAction: 12,
-    }));
+    const mixed = record(
+      dropOutOfVocabularyLiterals({
+        captureKind: "Explicit_Command",
+        captureOwner: "Ada",
+        ownerName: "",
+        dueCertainty: "nope",
+        candidateAction: 12,
+      }),
+    );
     expect(mixed.captureKind).toBe("explicit_command");
     expect(mixed.captureOwner).toBe("other");
     expect(mixed.ownerName).toBe("Ada");
@@ -56,19 +59,20 @@ describe("StructuredExtraction", () => {
   });
 
   it("drops bad elements and null summary text", () => {
-    const kept = Effect.runSync(usableElements(
-      [{ description: "Send the notes" }, { description: 1 }],
-      ExtractedActionItem,
-      "actionItems",
-    ));
-    expect(Array.isArray(kept) && kept).toHaveLength(1);
+    const kept = Effect.runSync(
+      usableElements([{ description: "Send the notes" }, { description: 1 }], ExtractedActionItem, "actionItems"),
+    );
+    expect(A.isArray(kept) && kept).toHaveLength(1);
     expect(Effect.runSync(usableElements("not-a-list", ExtractedActionItem, "actionItems"))).toBe("not-a-list");
-    const cleared = keepUsableContent({
-      title: null,
-      actionItems: [{ description: "Send the notes" }, { nope: true }],
-    }, { actionItems: ExtractedActionItem }).pipe(Effect.runSync, record);
+    const cleared = keepUsableContent(
+      {
+        title: null,
+        actionItems: [{ description: "Send the notes" }, { nope: true }],
+      },
+      { actionItems: ExtractedActionItem },
+    ).pipe(Effect.runSync, record);
     expect(Rec.has(cleared, "title")).toBe(false);
-    expect(Array.isArray(cleared.actionItems) && cleared.actionItems).toHaveLength(1);
+    expect(A.isArray(cleared.actionItems) && cleared.actionItems).toHaveLength(1);
     const removed = keepUsableContent({ sections: null }, { sections: ExtractedSection }).pipe(Effect.runSync, record);
     expect(Rec.has(removed, "sections")).toBe(false);
     expect(Effect.runSync(keepUsableContent("nope", {}))).toBe("nope");
@@ -94,10 +98,12 @@ describe("StructuredExtraction", () => {
     expect(fractional.duration).toBe(15);
     expect(fails(ExtractedEvent, { title: "Standup", start: "2020-01-02T03:04:05.000Z", duration: 15.9 })).toBe(true);
     expect(decode(ExtractedEvent, { title: "Standup", start: "2020-01-02T03:04:05.000Z" }).duration).toBe(30);
-    const copied = toEvent(ExtractedEvent.make({
-      title: "Standup",
-      start: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
-    }));
+    const copied = toEvent(
+      ExtractedEvent.make({
+        title: "Standup",
+        start: DateTime.makeUnsafe("2020-01-02T03:04:05.000Z"),
+      }),
+    );
     expect(copied.created).toBe(false);
     expect(copied.duration).toBe(30);
     const item = toActionItem(ExtractedActionItem.make({ description: "Send the notes", dueAt: O.none() }));
@@ -128,11 +134,13 @@ describe("StructuredExtraction", () => {
       sourceSegmentIds: ["seg-1"],
     });
     expect(present.captureOwner).toEqual(O.some("other"));
-    expect(fails(ExtractedActionItem, {
-      description: "Send the notes",
-      captureConfidence: 2,
-      sourceSegmentIds: [],
-    })).toBe(true);
+    expect(
+      fails(ExtractedActionItem, {
+        description: "Send the notes",
+        captureConfidence: 2,
+        sourceSegmentIds: [],
+      }),
+    ).toBe(true);
     expect(ActionItemsExtraction.make({}).actionItems).toHaveLength(0);
   });
 

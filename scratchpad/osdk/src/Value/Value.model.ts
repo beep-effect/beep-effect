@@ -102,6 +102,22 @@ export const BooleanValue = S.Union([
  */
 export type BooleanValue = typeof BooleanValue.Type;
 
+/**
+ * Companion namespace for {@link BooleanValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BooleanValue {
+  /**
+   * Encoded (wire) form of {@link BooleanValue}: a JSON boolean or the legacy `"true"`/`"false"` text.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof BooleanValue.Encoded;
+}
+
 const ByteRange = S.Int.check(
   S.isBetween(
     { minimum: -128, maximum: 127 },
@@ -141,6 +157,22 @@ export const ByteValue = acceptingNumericString(ByteRange).pipe(
  * @since 0.0.0
  */
 export type ByteValue = typeof ByteValue.Type;
+
+/**
+ * Companion namespace for {@link ByteValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ByteValue {
+  /**
+   * Encoded (wire) form of {@link ByteValue}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ByteValue.Encoded;
+}
 
 const ShortRange = S.Int.check(
   S.isBetween(
@@ -185,6 +217,22 @@ export const ShortValue = acceptingNumericString(ShortRange).pipe(
  */
 export type ShortValue = typeof ShortValue.Type;
 
+/**
+ * Companion namespace for {@link ShortValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ShortValue {
+  /**
+   * Encoded (wire) form of {@link ShortValue}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ShortValue.Encoded;
+}
+
 const Int32 = S.Int.check(S.isInt32());
 
 /**
@@ -215,6 +263,22 @@ export const IntegerValue = acceptingNumericString(Int32).pipe(
  * @since 0.0.0
  */
 export type IntegerValue = typeof IntegerValue.Type;
+
+/**
+ * Companion namespace for {@link IntegerValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace IntegerValue {
+  /**
+   * Encoded (wire) form of {@link IntegerValue}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof IntegerValue.Encoded;
+}
 
 const Int64FromString = S.BigIntFromString.check(
   S.isBetweenBigInt(
@@ -269,6 +333,22 @@ export const LongValue = S.Union([
  */
 export type LongValue = typeof LongValue.Type;
 
+/**
+ * Companion namespace for {@link LongValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LongValue {
+  /**
+   * Encoded (wire) form of {@link LongValue}: a decimal string, or a JSON integer.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LongValue.Encoded;
+}
+
 const Float32Range = S.Finite.check(
   S.isBetween(
     { minimum: -3.4028234663852886e38, maximum: 3.4028234663852886e38 },
@@ -315,6 +395,22 @@ export const FloatValue = acceptingNumericString(Float32Range).pipe(
 export type FloatValue = typeof FloatValue.Type;
 
 /**
+ * Companion namespace for {@link FloatValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FloatValue {
+  /**
+   * Encoded (wire) form of {@link FloatValue}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof FloatValue.Encoded;
+}
+
+/**
  * Value of a `double` property: a finite 64-bit floating point number.
  *
  * **Example** (Read an exponent from text but refuse hexadecimal)
@@ -347,6 +443,22 @@ export const DoubleValue = acceptingNumericString(S.Finite).pipe(
  * @since 0.0.0
  */
 export type DoubleValue = typeof DoubleValue.Type;
+
+/**
+ * Companion namespace for {@link DoubleValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DoubleValue {
+  /**
+   * Encoded (wire) form of {@link DoubleValue}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DoubleValue.Encoded;
+}
 
 // `BigDecimal.format` normalises the scale and switches to exponent notation for large scales; the wire
 // wants every digit, so decimals are written from the unscaled value and the scale directly.
@@ -455,6 +567,22 @@ export const DecimalValue = S.Union([
 export type DecimalValue = typeof DecimalValue.Type;
 
 /**
+ * Companion namespace for {@link DecimalValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DecimalValue {
+  /**
+   * Encoded (wire) form of {@link DecimalValue}: a plain decimal string, or a JSON number.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DecimalValue.Encoded;
+}
+
+/**
  * Value of a `string` property.
  *
  * **Example** (Accept empty text and refuse a number)
@@ -482,6 +610,22 @@ export const StringValue = S.String.pipe(
  * @since 0.0.0
  */
 export type StringValue = typeof StringValue.Type;
+
+/**
+ * Companion namespace for {@link StringValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StringValue {
+  /**
+   * Encoded (wire) form of {@link StringValue}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof StringValue.Encoded;
+}
 
 /**
  * Value of a `date` property: a calendar date decoded from its `YYYY-MM-DD` wire form.
@@ -531,6 +675,22 @@ export const DateValue = LocalDateFromString.check(
  * @since 0.0.0
  */
 export type DateValue = typeof DateValue.Type;
+
+/**
+ * Companion namespace for {@link DateValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DateValue {
+  /**
+   * Encoded (wire) form of {@link DateValue}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DateValue.Encoded;
+}
 
 // The JavaScript date parser rolls a day its month does not have into the next month
 // ("2021-02-30" becomes 2 March). The grammar bounds widths only, so the date part is checked here.
@@ -599,6 +759,22 @@ export const TimestampValue = S.String.check(
 export type TimestampValue = typeof TimestampValue.Type;
 
 /**
+ * Companion namespace for {@link TimestampValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimestampValue {
+  /**
+   * Encoded (wire) form of {@link TimestampValue}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TimestampValue.Encoded;
+}
+
+/**
  * Value of a `binary` value type: bytes that travel as base64 text.
  *
  * **Example** (Decode base64 text into bytes and write it back)
@@ -629,6 +805,22 @@ export const BinaryValue = S.Uint8ArrayFromBase64.pipe(
  * @since 0.0.0
  */
 export type BinaryValue = typeof BinaryValue.Type;
+
+/**
+ * Companion namespace for {@link BinaryValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BinaryValue {
+  /**
+   * Encoded (wire) form of {@link BinaryValue}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof BinaryValue.Encoded;
+}
 
 /**
  * Value of a `marking` property: the identifier of one security marking.
@@ -662,6 +854,22 @@ export const MarkingValue = MarkingId.pipe(
 export type MarkingValue = typeof MarkingValue.Type;
 
 /**
+ * Companion namespace for {@link MarkingValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MarkingValue {
+  /**
+   * Encoded (wire) form of {@link MarkingValue}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof MarkingValue.Encoded;
+}
+
+/**
  * Value of a `vector` property: the components of one embedding.
  *
  * **Example** (Check the components but not the dimension)
@@ -689,6 +897,22 @@ export const VectorValue = S.Array(S.Finite).pipe(
  * @since 0.0.0
  */
 export type VectorValue = typeof VectorValue.Type;
+
+/**
+ * Companion namespace for {@link VectorValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VectorValue {
+  /**
+   * Encoded (wire) form of {@link VectorValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof VectorValue.Encoded;
+}
 
 /**
  * Value of a `vector` property with exactly `dimension` components.
@@ -763,3 +987,19 @@ export const ScalarValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
  * @since 0.0.0
  */
 export type ScalarValue = typeof ScalarValue.Type;
+
+/**
+ * Companion namespace for {@link ScalarValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ScalarValue {
+  /**
+   * Encoded (wire) form of {@link ScalarValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ScalarValue.Encoded;
+}

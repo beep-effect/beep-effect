@@ -15,6 +15,7 @@
 
 import { IRI } from "@beep/rdf";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import type { EvidenceSpan as EvidenceSpanValue } from "../Domain/Model/Entity.ts";
@@ -23,7 +24,7 @@ import type { PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { partitionPropertiesByRangeType } from "../Domain/Model/Ontology.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { extractLocalNameFromIri, makeLocalNameSchema } from "../Utils/Iri.ts";
-import * as Effect from "effect/Effect";
+
 /**
  * Coerce string array to IRI array.
  *

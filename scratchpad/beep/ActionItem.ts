@@ -93,7 +93,7 @@ export type TaskStatus = typeof TaskStatus.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type TaskStatusEncoded = S.Codec.Encoded<typeof TaskStatus>;
+export type TaskStatusEncoded = typeof TaskStatus.Encoded;
 
 /**
  * Who owns a task.
@@ -132,7 +132,7 @@ export type TaskOwner = typeof TaskOwner.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type TaskOwnerEncoded = S.Codec.Encoded<typeof TaskOwner>;
+export type TaskOwnerEncoded = typeof TaskOwner.Encoded;
 
 /**
  * Relative priority of a task.
@@ -171,7 +171,7 @@ export type TaskPriority = typeof TaskPriority.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type TaskPriorityEncoded = S.Codec.Encoded<typeof TaskPriority>;
+export type TaskPriorityEncoded = typeof TaskPriority.Encoded;
 
 /**
  * Kind of evidence attached to a Workflow task.
@@ -220,7 +220,7 @@ export type EvidenceKind = typeof EvidenceKind.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type EvidenceKindEncoded = S.Codec.Encoded<typeof EvidenceKind>;
+export type EvidenceKindEncoded = typeof EvidenceKind.Encoded;
 
 /**
  * Where an evidence id is resolved.
@@ -261,7 +261,7 @@ export type EvidenceScope = typeof EvidenceScope.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type EvidenceScopeEncoded = S.Codec.Encoded<typeof EvidenceScope>;
+export type EvidenceScopeEncoded = typeof EvidenceScope.Encoded;
 
 const awarePattern =
   /^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}(:[0-9]{2}(\.[0-9]+)?)?(Z|[+-][0-9]{2}:[0-9]{2})$/;
@@ -419,7 +419,7 @@ export class EvidenceRef extends Model<EvidenceRef>("EvidenceRef")(
  * @since 0.0.0
  */
 export declare namespace EvidenceRef {
-  export type Encoded = S.Codec.Encoded<typeof EvidenceRef>;
+  export type Encoded = typeof EvidenceRef.Encoded;
 }
 
 /**
@@ -522,7 +522,7 @@ export class TaskFieldConflict extends S.TaggedError<TaskFieldConflict, { readon
  * @since 0.0.0
  */
 export declare namespace TaskFieldConflict {
-  export type Encoded = S.Codec.Encoded<typeof TaskFieldConflict>;
+  export type Encoded = typeof TaskFieldConflict.Encoded;
 }
 
 const evidenceWire = (ref: EvidenceRef) => ({
@@ -658,7 +658,7 @@ export class CanonicalTaskCreate extends Model<CanonicalTaskCreate>("CanonicalTa
  * @since 0.0.0
  */
 export declare namespace CanonicalTaskCreate {
-  export type Encoded = S.Codec.Encoded<typeof CanonicalTaskCreate>;
+  export type Encoded = typeof CanonicalTaskCreate.Encoded;
 }
 
 /**
@@ -864,7 +864,7 @@ export class CanonicalTaskUpdate extends Model<CanonicalTaskUpdate>("CanonicalTa
  * @since 0.0.0
  */
 export declare namespace CanonicalTaskUpdate {
-  export type Encoded = S.Codec.Encoded<typeof CanonicalTaskUpdate>;
+  export type Encoded = typeof CanonicalTaskUpdate.Encoded;
 }
 
 /**
@@ -979,7 +979,7 @@ export class ActionItemCreateRequest extends Model<ActionItemCreateRequest>("Act
  * @since 0.0.0
  */
 export declare namespace ActionItemCreateRequest {
-  export type Encoded = S.Codec.Encoded<typeof ActionItemCreateRequest>;
+  export type Encoded = typeof ActionItemCreateRequest.Encoded;
 }
 
 /**
@@ -1044,7 +1044,7 @@ export class ActionItemUpdateRequest extends Model<ActionItemUpdateRequest>("Act
  * @since 0.0.0
  */
 export declare namespace ActionItemUpdateRequest {
-  export type Encoded = S.Codec.Encoded<typeof ActionItemUpdateRequest>;
+  export type Encoded = typeof ActionItemUpdateRequest.Encoded;
 }
 
 /**
@@ -1163,7 +1163,7 @@ export class ActionItemResponse extends Model<ActionItemResponse>("ActionItemRes
  * @since 0.0.0
  */
 export declare namespace ActionItemResponse {
-  export type Encoded = S.Codec.Encoded<typeof ActionItemResponse>;
+  export type Encoded = typeof ActionItemResponse.Encoded;
 }
 
 const decodeActionItemResponse = S.decodeUnknownEffect(ActionItemResponse);
@@ -1263,7 +1263,7 @@ export class ActionItemsResponse extends Model<ActionItemsResponse>("ActionItems
  * @since 0.0.0
  */
 export declare namespace ActionItemsResponse {
-  export type Encoded = S.Codec.Encoded<typeof ActionItemsResponse>;
+  export type Encoded = typeof ActionItemsResponse.Encoded;
 }
 
 /**
@@ -1300,7 +1300,7 @@ export class ActionItemsSearchResponse extends Model<ActionItemsSearchResponse>(
  * @since 0.0.0
  */
 export declare namespace ActionItemsSearchResponse {
-  export type Encoded = S.Codec.Encoded<typeof ActionItemsSearchResponse>;
+  export type Encoded = typeof ActionItemsSearchResponse.Encoded;
 }
 
 /**
@@ -1343,7 +1343,7 @@ export class ConversationActionItemsResponse extends Model<ConversationActionIte
  * @since 0.0.0
  */
 export declare namespace ConversationActionItemsResponse {
-  export type Encoded = S.Codec.Encoded<typeof ConversationActionItemsResponse>;
+  export type Encoded = typeof ConversationActionItemsResponse.Encoded;
 }
 
 /**
@@ -1379,7 +1379,7 @@ export class PendingSyncResponse extends Model<PendingSyncResponse>("PendingSync
  * @since 0.0.0
  */
 export declare namespace PendingSyncResponse {
-  export type Encoded = S.Codec.Encoded<typeof PendingSyncResponse>;
+  export type Encoded = typeof PendingSyncResponse.Encoded;
 }
 
 /**
@@ -1430,7 +1430,7 @@ export class TaskCreatePayload extends Model<TaskCreatePayload>("TaskCreatePaylo
  * @since 0.0.0
  */
 export declare namespace TaskCreatePayload {
-  export type Encoded = S.Codec.Encoded<typeof TaskCreatePayload>;
+  export type Encoded = typeof TaskCreatePayload.Encoded;
 }
 
 /**
@@ -1481,7 +1481,7 @@ export class TaskChangePayload extends Model<TaskChangePayload>("TaskChangePaylo
  * @since 0.0.0
  */
 export declare namespace TaskChangePayload {
-  export type Encoded = S.Codec.Encoded<typeof TaskChangePayload>;
+  export type Encoded = typeof TaskChangePayload.Encoded;
 }
 
 /**

@@ -1,6 +1,7 @@
 import * as S from "effect/Schema";
 import { $KernelId } from "./Identity.ts";
 import { CapabilityId } from "./Ids.ts";
+import { Name } from "./Measure.ts";
 
 const $I = $KernelId.create("MissingGrant.rejection");
 
@@ -22,7 +23,7 @@ const $I = $KernelId.create("MissingGrant.rejection");
  */
 export class MissingGrant extends S.TaggedError<MissingGrant, { readonly brand: unique symbol }>()(
   "MissingGrant",
-  { capability: CapabilityId, operation: S.String },
+  { capability: CapabilityId, operation: Name },
   $I.annote("MissingGrant", {
     httpApiStatus: 403,
     description: "No grant on the invocation covers this operation on this resource.",

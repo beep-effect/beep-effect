@@ -1,5 +1,5 @@
 import * as Digest from "effect/crypto/Digest";
-import { flow } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 /**
  * Public effect-ontology APIs for service/storage.
  *
@@ -16,26 +16,26 @@ import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { SqliteClient } from "@effect/sql-sqlite-bun";
 import { Storage } from "@google-cloud/storage";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Eq from "effect/Equal";
 import * as FileSystem from "effect/FileSystem";
 import * as Inspectable from "effect/Inspectable";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as MutableHashMap from "effect/MutableHashMap";
-import * as Path from "effect/Path";
-import * as Schedule from "effect/Schedule";
-import * as A from "effect/Array";
-import * as Eq from "effect/Equal";
 import * as O from "effect/Option";
+import * as Path from "effect/Path";
 import type { PlatformError } from "effect/PlatformError";
 import { SystemError } from "effect/PlatformError";
 import * as P from "effect/Predicate";
+import * as KeyValueStore from "effect/persistence/KeyValueStore";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as KeyValueStore from "effect/persistence/KeyValueStore";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlError from "effect/sql/SqlError";
 import { sha256SyncFull as sha256SyncFullEffect } from "../Utils/Hash.ts";
@@ -54,21 +54,30 @@ const localStorageMutationRetryAttempts = 200;
 const LocalStorageKey = S.NonEmptyString.check(
   S.makeFilterGroup(
     [
-      S.makeFilter((value: string) => !localStorageAbsoluteKeyPattern.test(value), $I.annote("LocalStorageKeyRelativeCheck", {
-        title: "Local Storage Key Is Relative",
-        description: "A local storage key without a POSIX, UNC, or Windows drive root.",
-        message: "Local storage key must be relative to the configured storage root.",
-      })),
-      S.makeFilter((value: string) => !localStorageDotSegmentPattern.test(value), $I.annote("LocalStorageKeyDotSegmentCheck", {
-        title: "Local Storage Key Has No Dot Segments",
-        description: "A local storage key without current-directory or parent-directory path segments.",
-        message: 'Local storage key must not contain "." or ".." path segments.',
-      })),
-      S.makeFilter((value: string) => !localStorageMetadataSegmentPattern.test(value), $I.annote("LocalStorageKeyMetadataCheck", {
-        title: "Local Storage Key Is Outside Metadata Namespace",
-        description: "A local storage key that does not use the storage service's reserved metadata directory.",
-        message: `Local storage key must not contain the reserved "${localStorageMetadataDirectoryName}" segment.`,
-      })),
+      S.makeFilter(
+        (value: string) => !localStorageAbsoluteKeyPattern.test(value),
+        $I.annote("LocalStorageKeyRelativeCheck", {
+          title: "Local Storage Key Is Relative",
+          description: "A local storage key without a POSIX, UNC, or Windows drive root.",
+          message: "Local storage key must be relative to the configured storage root.",
+        })
+      ),
+      S.makeFilter(
+        (value: string) => !localStorageDotSegmentPattern.test(value),
+        $I.annote("LocalStorageKeyDotSegmentCheck", {
+          title: "Local Storage Key Has No Dot Segments",
+          description: "A local storage key without current-directory or parent-directory path segments.",
+          message: 'Local storage key must not contain "." or ".." path segments.',
+        })
+      ),
+      S.makeFilter(
+        (value: string) => !localStorageMetadataSegmentPattern.test(value),
+        $I.annote("LocalStorageKeyMetadataCheck", {
+          title: "Local Storage Key Is Outside Metadata Namespace",
+          description: "A local storage key that does not use the storage service's reserved metadata directory.",
+          message: `Local storage key must not contain the reserved "${localStorageMetadataDirectoryName}" segment.`,
+        })
+      ),
     ],
     $I.annote("LocalStorageKeyChecks", {
       title: "Local Storage Key",
@@ -82,11 +91,14 @@ const LocalStorageKey = S.NonEmptyString.check(
 );
 
 const GcsGeneration = S.String.check(
-  S.isPattern(/^(?:0|[1-9][0-9]*)$/u, $I.annote("GcsGenerationPatternCheck", {
-    title: "GCS Generation",
-    description: "A canonical non-negative decimal GCS generation string.",
-    message: "GCS generation must be zero or a non-zero decimal integer without leading zeros.",
-  }))
+  S.isPattern(
+    /^(?:0|[1-9][0-9]*)$/u,
+    $I.annote("GcsGenerationPatternCheck", {
+      title: "GCS Generation",
+      description: "A canonical non-negative decimal GCS generation string.",
+      message: "GCS generation must be zero or a non-zero decimal integer without leading zeros.",
+    })
+  )
 ).pipe(
   $I.annoteSchema("GcsGeneration", {
     description: "A canonical decimal GCS generation preserved as text for exact 64-bit preconditions.",
@@ -138,12 +150,16 @@ const isLocalStorageKey = S.is(LocalStorageKey);
  * @category models
  * @since 0.0.0
  */
-export class ObjectWithGeneration extends S.Opaque<ObjectWithGeneration, { readonly brand: unique symbol }>()(S.Struct({
+export class ObjectWithGeneration extends S.Opaque<ObjectWithGeneration, { readonly brand: unique symbol }>()(
+  S.Struct({
     content: S.String,
     generation: S.NonEmptyString,
-  }).pipe($I.annoteSchema("ObjectWithGeneration", {
-    description: "Stored text together with the backend generation used for optimistic locking.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ObjectWithGeneration", {
+      description: "Stored text together with the backend generation used for optimistic locking.",
+    })
+  )
+) {}
 
 /**
  * Error thrown when setIfGenerationMatch fails due to concurrent modification
@@ -165,7 +181,9 @@ export class ObjectWithGeneration extends S.Opaque<ObjectWithGeneration, { reado
  * @category errors
  * @since 0.0.0
  */
-export class GenerationMismatchError extends S.TaggedError<GenerationMismatchError, { readonly brand: unique symbol }>($I`GenerationMismatchError`)(
+export class GenerationMismatchError extends S.TaggedError<GenerationMismatchError, { readonly brand: unique symbol }>(
+  $I`GenerationMismatchError`
+)(
   "GenerationMismatchError",
   {
     key: S.NonEmptyString.annotateKey({
@@ -335,14 +353,18 @@ export type StorageBackend = typeof StorageBackend.Type;
  * @category models
  * @since 0.0.0
  */
-export class StorageConfigValue extends S.Opaque<StorageConfigValue, { readonly brand: unique symbol }>()(S.Struct({
+export class StorageConfigValue extends S.Opaque<StorageConfigValue, { readonly brand: unique symbol }>()(
+  S.Struct({
     type: StorageBackend,
     bucketName: S.optionalKey(S.NonEmptyString),
     localPath: S.optionalKey(S.NonEmptyString),
     pathPrefix: S.optionalKey(S.String),
-  }).pipe($I.annoteSchema("StorageConfigValue", {
-    description: "Backend selection and backend-specific object-storage location settings.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("StorageConfigValue", {
+      description: "Backend selection and backend-specific object-storage location settings.",
+    })
+  )
+) {}
 
 /**
  * Provides the storage config service capability.
@@ -384,7 +406,7 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
   const storage = new Storage();
   const bucket = storage.bucket(config.bucketName);
   const prefix = config.pathPrefix ?? "";
-  const toPath = (key: string) => `${prefix}/${key}`.replace(/\/+/g, "/").replace(/^\//, "");
+  const toPath = (key: string) => Str.replace(/^\//, "")(Str.replace(/\/+/g, "/")(`${prefix}/${key}`));
   const systemErrorReason = Match.type<number | undefined>().pipe(
     Match.when(404, (): SystemError["_tag"] => "NotFound"),
     Match.when(403, (): SystemError["_tag"] => "PermissionDenied"),
@@ -464,6 +486,11 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
     clear: tryKvPromise("clear", prefix, () => bucket.deleteFiles(P.isTruthy(prefix) ? { prefix } : {})).pipe(
       Effect.asVoid
     ),
+    keys: tryKvPromise("keys", prefix, () => bucket.getFiles(P.isTruthy(prefix) ? { prefix } : {})).pipe(
+      Effect.map(([files]) =>
+        A.map(files, (file) => Str.replace(P.isTruthy(prefix) ? `${prefix}/` : "", "")(file.name))
+      )
+    ),
     size: tryKvPromise("size", prefix, () => bucket.getFiles(P.isTruthy(prefix) ? { prefix } : {})).pipe(
       Effect.map(([files]) => files.length)
     ),
@@ -473,7 +500,9 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
     getOption: (key) => impl.get(key).pipe(Effect.map(O.fromUndefinedOr)),
     list: (listPrefix) =>
       tryStoragePromise("list", listPrefix, () => bucket.getFiles({ prefix: toPath(listPrefix) })).pipe(
-        Effect.map(([files]) => files.map((file) => file.name.replace(P.isTruthy(prefix) ? `${prefix}/` : "", "")))
+        Effect.map(([files]) =>
+          A.map(files, (file) => Str.replace(P.isTruthy(prefix) ? `${prefix}/` : "", "")(file.name))
+        )
       ),
     getWithGeneration: Effect.fn("Storage.gcs.getWithGeneration")(function* (key) {
       const file = bucket.file(toPath(key));
@@ -482,10 +511,12 @@ const makeGcsStore = Effect.fn("makeGcsStore")(function* (config: StorageConfigV
       const [[content], [metadata]] = yield* tryStoragePromise("getWithGeneration", key, () =>
         Promise.all([file.download(), file.getMetadata()])
       );
-      return O.some({
-        content: content.toString("utf-8"),
-        generation: Inspectable.toStringUnknown(metadata.generation),
-      });
+      return O.some(
+        ObjectWithGeneration.make({
+          content: content.toString("utf-8"),
+          generation: Inspectable.toStringUnknown(metadata.generation),
+        })
+      );
     }),
     setIfGenerationMatch: Effect.fn("Storage.gcs.setIfGenerationMatch")(function* (
       key: string,
@@ -645,7 +676,7 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
     }).pipe(
       Effect.provideService(FileSystem.FileSystem, fs),
       Effect.provideService(Path.Path, path),
-      Effect.catchTag("PathSafetyError", (cause) => Effect.fail(localPathError(method, key)(cause)))
+      Effect.catchTag("PathSafetyError", (cause) => pipe(cause, localPathError(method, key), Effect.fail))
     );
   });
   const generationDirectory = yield* resolveContainedPath(path.join(localStorageMetadataDirectoryName, "generations"));
@@ -701,9 +732,10 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
     );
     if (!(yield* fs.exists(resolved))) return O.none<LocalGenerationRecord>();
     const encoded = yield* fs.readFileString(resolved);
-    return O.some(
-      yield* decodeLocalGenerationRecord(encoded).pipe(Effect.mapError((cause) => metadataDecodeError(key, cause)))
+    const resolvedValue727_7 = yield* decodeLocalGenerationRecord(encoded).pipe(
+      Effect.mapError((cause) => metadataDecodeError(key, cause))
     );
+    return O.some(resolvedValue727_7);
   });
   const writeGenerationRecord = Effect.fnUntraced(function* (key: string, record: LocalGenerationRecord) {
     const candidate = yield* generationRecordCandidate(key);
@@ -717,7 +749,9 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
     }).pipe(
       Effect.provideService(FileSystem.FileSystem, fs),
       Effect.provideService(Path.Path, path),
-      Effect.catchTag("PathSafetyError", (cause) => Effect.fail(localPathError("writeGenerationRecord", key)(cause)))
+      Effect.catchTag("PathSafetyError", (cause) =>
+        pipe(cause, localPathError("writeGenerationRecord", key), Effect.fail)
+      )
     );
   });
   const generationOfRecord = (record: LocalGenerationRecord): string =>
@@ -731,30 +765,36 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
     previous: O.Option<LocalGenerationRecord>,
     content: string
   ) {
-    const contentHash = Sha256Hex.make(yield* sha256SyncFull(content));
+    const resolvedValue756_40 = yield* sha256SyncFull(content);
+    const contentHash = Sha256Hex.make(resolvedValue756_40);
+    const resolvedValue759_34 = yield* sha256SyncFull(`${previousGeneration(previous)}:present:${contentHash}`);
     return LocalGenerationRecord.cases.Present.make({
       contentHash,
-      generation: Sha256Hex.make(yield* sha256SyncFull(`${previousGeneration(previous)}:present:${contentHash}`)),
+      generation: Sha256Hex.make(resolvedValue759_34),
     });
   });
   const makeAbsentGeneration = Effect.fnUntraced(function* (previous: O.Option<LocalGenerationRecord>) {
+    const resolvedValue764_34 = yield* sha256SyncFull(`${previousGeneration(previous)}:absent`);
     return LocalGenerationRecord.cases.Absent.make({
-      generation: Sha256Hex.make(yield* sha256SyncFull(`${previousGeneration(previous)}:absent`)),
+      generation: Sha256Hex.make(resolvedValue764_34),
     });
   });
   const advancePresentGeneration = Effect.fnUntraced(function* (key: string, content: string) {
-    const record = yield* makePresentGeneration(yield* readGenerationRecord(key), content);
+    const resolvedValue768_49 = yield* readGenerationRecord(key);
+    const record = yield* makePresentGeneration(resolvedValue768_49, content);
     yield* writeGenerationRecord(key, record);
     return record;
   });
   const advanceAbsentGeneration = Effect.fnUntraced(function* (key: string) {
-    const record = yield* makeAbsentGeneration(yield* readGenerationRecord(key));
+    const resolvedValue773_48 = yield* readGenerationRecord(key);
+    const record = yield* makeAbsentGeneration(resolvedValue773_48);
     yield* writeGenerationRecord(key, record);
     return record;
   });
   const reconcilePresentGeneration = Effect.fnUntraced(function* (key: string, content: string) {
     const previous = yield* readGenerationRecord(key);
-    const contentHash = Sha256Hex.make(yield* sha256SyncFull(content));
+    const resolvedValue779_40 = yield* sha256SyncFull(content);
+    const contentHash = Sha256Hex.make(resolvedValue779_40);
     const matching = previous.pipe(
       O.filter(LocalGenerationRecord.guards.Present),
       O.filter((present) => Eq.equals(present.contentHash, contentHash))
@@ -840,7 +880,8 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
         }
         const files = yield* walkDirRecursive(checkedRoot, "");
         for (const file of files) {
-          yield* fs.remove(yield* resolvePath(file));
+          const resolvedValue865_28 = yield* resolvePath(file);
+          yield* fs.remove(resolvedValue865_28);
           yield* advanceAbsentGeneration(file);
         }
         const entries = yield* fs.readDirectory(checkedRoot);
@@ -852,13 +893,19 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
         }
       })
     ).pipe(Effect.mapError(localKvError("clear", globalPrefix))),
+    keys: Effect.gen(function* () {
+      const checkedRoot = yield* resolveContainedPath(".");
+      if (!(yield* fs.exists(checkedRoot))) return [];
+      return yield* walkDirRecursive(checkedRoot, "");
+    }).pipe(Effect.mapError(localKvError("keys", globalPrefix))),
     size: Effect.gen(function* () {
       const checkedRoot = yield* resolveContainedPath(".");
       if (!(yield* fs.exists(checkedRoot))) return 0;
       const files = yield* walkDirRecursive(checkedRoot, "");
       let totalSize = 0;
       for (const file of files) {
-        const stat = yield* fs.stat(yield* resolvePath(file));
+        const resolvedValue883_37 = yield* resolvePath(file);
+        const stat = yield* fs.stat(resolvedValue883_37);
         totalSize += Number(stat.size);
       }
       return totalSize;
@@ -884,7 +931,7 @@ const makeLocalStore = Effect.fn("makeLocalStore")(function* (config: StorageCon
           if (!(yield* fs.exists(resolved))) return O.none();
           const content = yield* fs.readFileString(resolved);
           const record = yield* reconcilePresentGeneration(key, content);
-          return O.some({ content, generation: record.generation });
+          return O.some(ObjectWithGeneration.make({ content, generation: record.generation }));
         })
       );
     }),
@@ -970,6 +1017,7 @@ const makeMemoryStore = Effect.sync(() => {
       }
       MutableHashMap.clear(store);
     }),
+    keys: Effect.sync(() => pipe(store, MutableHashMap.keys, A.fromIterable)),
     size: Effect.sync(() => MutableHashMap.size(store)),
   });
 
@@ -983,7 +1031,7 @@ const makeMemoryStore = Effect.sync(() => {
         const val = O.getOrUndefined(MutableHashMap.get(store, key));
         if (P.isUndefined(val)) return O.none();
         const content = P.isString(val) ? val : new TextDecoder().decode(val);
-        return O.some({ content, generation: getGeneration(key) });
+        return O.some(ObjectWithGeneration.make({ content, generation: getGeneration(key) }));
       }),
     setIfGenerationMatch: (key, value, expectedGeneration) =>
       Effect.suspend(() => {

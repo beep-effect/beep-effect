@@ -91,6 +91,22 @@ export const TransformationJobId = S.NonEmptyString.pipe(
 export type TransformationJobId = typeof TransformationJobId.Type;
 
 /**
+ * Companion namespace for {@link TransformationJobId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TransformationJobId {
+  /**
+   * Encoded (wire) form of {@link TransformationJobId}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TransformationJobId.Encoded;
+}
+
+/**
  * Resource identifier of the cipher license used to encrypt or decrypt regions of an image.
  *
  * **Example** (Brand a cipher license identifier)
@@ -123,6 +139,22 @@ export const CipherLicenseRid = S.NonEmptyString.pipe(
 export type CipherLicenseRid = typeof CipherLicenseRid.Type;
 
 /**
+ * Companion namespace for {@link CipherLicenseRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CipherLicenseRid {
+  /**
+   * Encoded (wire) form of {@link CipherLicenseRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof CipherLicenseRid.Encoded;
+}
+
+/**
  * API name of a language model the platform hosts.
  *
  * **Example** (Brand a language model API name)
@@ -151,6 +183,22 @@ export const LanguageModelApiName = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type LanguageModelApiName = typeof LanguageModelApiName.Type;
+
+/**
+ * Companion namespace for {@link LanguageModelApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LanguageModelApiName {
+  /**
+   * Encoded (wire) form of {@link LanguageModelApiName}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LanguageModelApiName.Encoded;
+}
 
 /**
  * Resource identifier of a language model registered by its owner.
@@ -183,6 +231,22 @@ export const RegisteredModelRid = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type RegisteredModelRid = typeof RegisteredModelRid.Type;
+
+/**
+ * Companion namespace for {@link RegisteredModelRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RegisteredModelRid {
+  /**
+   * Encoded (wire) form of {@link RegisteredModelRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RegisteredModelRid.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Output encodings
@@ -235,6 +299,24 @@ export const ImageryEncoding = S.Struct({ type: ImageryEncodingKind }).pipe(
 export type ImageryEncoding = typeof ImageryEncoding.Type;
 
 /**
+ * Companion namespace for {@link ImageryEncoding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageryEncoding {
+  /**
+   * Encoded (wire) form of {@link ImageryEncoding}: the format name wrapped in a `{ type }` record.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: ImageryEncodingKind.Encoded;
+  }
+}
+
+/**
  * Video container format a transformation writes, as the bare format name.
  *
  * **Example** (Encode a video output format)
@@ -269,6 +351,24 @@ export const VideoEncoding = S.Struct({ type: VideoEncodingKind }).pipe(
  * @since 0.0.0
  */
 export type VideoEncoding = typeof VideoEncoding.Type;
+
+/**
+ * Companion namespace for {@link VideoEncoding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoEncoding {
+  /**
+   * Encoded (wire) form of {@link VideoEncoding}: the format name wrapped in a `{ type }` record.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: VideoEncodingKind.Encoded;
+  }
+}
 
 /**
  * Archive format a transformation bundles many outputs into, as the bare format name.
@@ -307,6 +407,24 @@ export const ArchiveEncoding = S.Struct({ type: ArchiveEncodingKind }).pipe(
 export type ArchiveEncoding = typeof ArchiveEncoding.Type;
 
 /**
+ * Companion namespace for {@link ArchiveEncoding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ArchiveEncoding {
+  /**
+   * Encoded (wire) form of {@link ArchiveEncoding}: the format name wrapped in a `{ type }` record.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: ArchiveEncodingKind.Encoded;
+  }
+}
+
+/**
  * Document format a transformation writes, as the bare format name.
  *
  * **Example** (Encode a document output format)
@@ -342,6 +460,24 @@ export const DocumentEncoding = S.Struct({ type: DocumentEncodingKind }).pipe(
  */
 export type DocumentEncoding = typeof DocumentEncoding.Type;
 
+/**
+ * Companion namespace for {@link DocumentEncoding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DocumentEncoding {
+  /**
+   * Encoded (wire) form of {@link DocumentEncoding}: the format name wrapped in a `{ type }` record.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: DocumentEncodingKind.Encoded;
+  }
+}
+
 const AudioChannelLayoutKind = LiteralKit(["numberOfChannels"]);
 
 /**
@@ -360,6 +496,25 @@ export class NumberOfChannels extends S.Opaque<NumberOfChannels, { readonly bran
     $I.annoteSchema("NumberOfChannels", { description: "An audio channel layout given as a plain channel count." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link NumberOfChannels}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberOfChannels {
+  /**
+   * Encoded (wire) form of {@link NumberOfChannels}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "numberOfChannels";
+    readonly numberOfChannels: number;
+  }
+}
 
 /**
  * How the channels of written audio are laid out.
@@ -391,6 +546,23 @@ export const AudioChannelLayout = AudioChannelLayoutKind.mapMembers(() => Tuple.
 export type AudioChannelLayout = typeof AudioChannelLayout.Type;
 
 /**
+ * Companion namespace for {@link AudioChannelLayout}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AudioChannelLayout {
+  /**
+   * Encoded (wire) form of {@link AudioChannelLayout}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | NumberOfChannels.Encoded;
+}
+
+/**
  * Audio written as MP3.
  *
  * @category models
@@ -399,6 +571,24 @@ export type AudioChannelLayout = typeof AudioChannelLayout.Type;
 export class Mp3Encoding extends S.Opaque<Mp3Encoding, { readonly brand: unique symbol }>()(
   S.Struct({ type: S.tag("mp3") }).pipe($I.annoteSchema("Mp3Encoding", { description: "Audio written as MP3." }))
 ) {}
+
+/**
+ * Companion namespace for {@link Mp3Encoding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Mp3Encoding {
+  /**
+   * Encoded (wire) form of {@link Mp3Encoding}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "mp3";
+  }
+}
 
 /**
  * Audio written as WAV, optionally resampled and re-laid-out.
@@ -417,6 +607,26 @@ export class WavEncoding extends S.Opaque<WavEncoding, { readonly brand: unique 
 ) {}
 
 /**
+ * Companion namespace for {@link WavEncoding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace WavEncoding {
+  /**
+   * Encoded (wire) form of {@link WavEncoding}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "wav";
+    readonly sampleRate?: number;
+    readonly audioChannelLayout?: AudioChannelLayout.Encoded;
+  }
+}
+
+/**
  * Audio written into an MPEG transport stream.
  *
  * @category models
@@ -427,6 +637,24 @@ export class TsAudioEncoding extends S.Opaque<TsAudioEncoding, { readonly brand:
     $I.annoteSchema("TsAudioEncoding", { description: "Audio written into an MPEG transport stream." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TsAudioEncoding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TsAudioEncoding {
+  /**
+   * Encoded (wire) form of {@link TsAudioEncoding}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "ts";
+  }
+}
 
 /**
  * Audio format a transformation writes.
@@ -471,6 +699,25 @@ export const AudioEncoding = AudioEncodingKind.mapMembers(() =>
  */
 export type AudioEncoding = typeof AudioEncoding.Type;
 
+/**
+ * Companion namespace for {@link AudioEncoding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AudioEncoding {
+  /**
+   * Encoded (wire) form of {@link AudioEncoding}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | Mp3Encoding.Encoded
+    | WavEncoding.Encoded
+    | TsAudioEncoding.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Text recognition settings
 // -----------------------------------------------------------------------------
@@ -491,6 +738,25 @@ export class PageRange extends S.Opaque<PageRange, { readonly brand: unique symb
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link PageRange}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PageRange {
+  /**
+   * Encoded (wire) form of {@link PageRange}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly startPageInclusive?: number;
+    readonly endPageExclusive?: number;
+  }
+}
 
 /**
  * What optical character recognition returns, as the bare format name.
@@ -528,6 +794,24 @@ export const OcrOutputFormat = S.Struct({ type: OcrOutputFormatKind }).pipe(
  */
 export type OcrOutputFormat = typeof OcrOutputFormat.Type;
 
+/**
+ * Companion namespace for {@link OcrOutputFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OcrOutputFormat {
+  /**
+   * Encoded (wire) form of {@link OcrOutputFormat}: the format name wrapped in a `{ type }` record.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: OcrOutputFormatKind.Encoded;
+  }
+}
+
 const OcrLanguageOrScriptKind = LiteralKit(["language", "script"]);
 
 /**
@@ -546,6 +830,25 @@ export class OcrLanguageHint extends S.Opaque<OcrLanguageHint, { readonly brand:
 ) {}
 
 /**
+ * Companion namespace for {@link OcrLanguageHint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OcrLanguageHint {
+  /**
+   * Encoded (wire) form of {@link OcrLanguageHint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "language";
+    readonly language: OcrLanguage.Encoded;
+  }
+}
+
+/**
  * A hint that the text to recognise uses one writing system, whatever its language.
  *
  * @category models
@@ -561,6 +864,25 @@ export class OcrScriptHint extends S.Opaque<OcrScriptHint, { readonly brand: uni
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link OcrScriptHint}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OcrScriptHint {
+  /**
+   * Encoded (wire) form of {@link OcrScriptHint}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "script";
+    readonly script: OcrScript.Encoded;
+  }
+}
 
 /**
  * What text recognition is told to expect: a language, or only a writing system.
@@ -603,6 +925,24 @@ export const OcrLanguageOrScript = OcrLanguageOrScriptKind.mapMembers(() =>
 export type OcrLanguageOrScript = typeof OcrLanguageOrScript.Type;
 
 /**
+ * Companion namespace for {@link OcrLanguageOrScript}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OcrLanguageOrScript {
+  /**
+   * Encoded (wire) form of {@link OcrLanguageOrScript}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | OcrLanguageHint.Encoded
+    | OcrScriptHint.Encoded;
+}
+
+/**
  * Settings of optical character recognition: what to return and what text to expect.
  *
  * @category models
@@ -622,6 +962,25 @@ export class OcrParameters extends S.Opaque<OcrParameters, { readonly brand: uni
 ) {}
 
 /**
+ * Companion namespace for {@link OcrParameters}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OcrParameters {
+  /**
+   * Encoded (wire) form of {@link OcrParameters}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly outputFormat: OcrOutputFormat.Encoded;
+    readonly languages: ReadonlyArray<OcrLanguageOrScript.Encoded>;
+  }
+}
+
+/**
  * Settings of the older layout-aware extraction, which takes languages only.
  *
  * @category models
@@ -639,6 +998,24 @@ export class LayoutAwareExtractionParameters extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link LayoutAwareExtractionParameters}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LayoutAwareExtractionParameters {
+  /**
+   * Encoded (wire) form of {@link LayoutAwareExtractionParameters}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly languages: ReadonlyArray<OcrLanguage.Encoded>;
+  }
+}
 
 const TextExtractionConfigFields = S.Struct({
   format: absent(TextOutputFormat, "Markup to return the text in."),
@@ -671,6 +1048,26 @@ export class DocumentTextExtractionConfig extends S.Opaque<
   )
 ) {}
 
+/**
+ * Companion namespace for {@link DocumentTextExtractionConfig}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DocumentTextExtractionConfig {
+  /**
+   * Encoded (wire) form of {@link DocumentTextExtractionConfig}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly format?: TextOutputFormat.Encoded;
+    readonly mode?: OcrMode.Encoded;
+    readonly languages: ReadonlyArray<OcrLanguageOrScript.Encoded>;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Transcription output
 // -----------------------------------------------------------------------------
@@ -695,6 +1092,25 @@ export class PlainTextNoSegmentData extends S.Opaque<PlainTextNoSegmentData, { r
 ) {}
 
 /**
+ * Companion namespace for {@link PlainTextNoSegmentData}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PlainTextNoSegmentData {
+  /**
+   * Encoded (wire) form of {@link PlainTextNoSegmentData}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "plainTextNoSegmentData";
+    readonly addTimestamps: boolean;
+  }
+}
+
+/**
  * A transcript returned as JSON segments.
  *
  * @category models
@@ -707,6 +1123,24 @@ export class TranscribeJson extends S.Opaque<TranscribeJson, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link TranscribeJson}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TranscribeJson {
+  /**
+   * Encoded (wire) form of {@link TranscribeJson}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "json";
+  }
+}
+
+/**
  * A transcript returned in the platform's timed-text markup.
  *
  * @category models
@@ -717,6 +1151,24 @@ export class Pttml extends S.Opaque<Pttml, { readonly brand: unique symbol }>()(
     $I.annoteSchema("Pttml", { description: "A transcript returned in the platform's timed-text markup." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link Pttml}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Pttml {
+  /**
+   * Encoded (wire) form of {@link Pttml}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "pttml";
+  }
+}
 
 /**
  * The form a transcript is returned in.
@@ -751,6 +1203,25 @@ export const TranscribeOutputFormat = TranscribeOutputFormatKind.mapMembers(() =
  */
 export type TranscribeOutputFormat = typeof TranscribeOutputFormat.Type;
 
+/**
+ * Companion namespace for {@link TranscribeOutputFormat}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TranscribeOutputFormat {
+  /**
+   * Encoded (wire) form of {@link TranscribeOutputFormat}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | PlainTextNoSegmentData.Encoded
+    | TranscribeJson.Encoded
+    | Pttml.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Vision language model extraction
 // -----------------------------------------------------------------------------
@@ -773,6 +1244,25 @@ export class ModelByApiName extends S.Opaque<ModelByApiName, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link ModelByApiName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ModelByApiName {
+  /**
+   * Encoded (wire) form of {@link ModelByApiName}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "apiName";
+    readonly apiName: LanguageModelApiName.Encoded;
+  }
+}
+
+/**
  * A language model its owner registered, named by its resource identifier.
  *
  * @category models
@@ -788,6 +1278,25 @@ export class ModelByRegisteredRid extends S.Opaque<ModelByRegisteredRid, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ModelByRegisteredRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ModelByRegisteredRid {
+  /**
+   * Encoded (wire) form of {@link ModelByRegisteredRid}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "registeredModelRid";
+    readonly registeredModelRid: RegisteredModelRid.Encoded;
+  }
+}
 
 /**
  * Which language model to call.
@@ -828,6 +1337,24 @@ export const LanguageModelLocator = LanguageModelLocatorKind.mapMembers(() =>
  */
 export type LanguageModelLocator = typeof LanguageModelLocator.Type;
 
+/**
+ * Companion namespace for {@link LanguageModelLocator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LanguageModelLocator {
+  /**
+   * Encoded (wire) form of {@link LanguageModelLocator}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ModelByApiName.Encoded
+    | ModelByRegisteredRid.Encoded;
+}
+
 const ChatLlmSpecFields = S.Struct({
   modelLocator: LanguageModelLocator.annotateKey({ description: "Model to call." }),
   systemPrompt: S.String.annotateKey({ description: "System prompt the model receives." }),
@@ -857,6 +1384,30 @@ export class ChatLlmSpec extends S.Opaque<ChatLlmSpec, { readonly brand: unique 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ChatLlmSpec}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ChatLlmSpec {
+  /**
+   * Encoded (wire) form of {@link ChatLlmSpec}: the settings nested under a `chat` key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "chat";
+    readonly chat: {
+      readonly modelLocator: LanguageModelLocator.Encoded;
+      readonly systemPrompt: string;
+      readonly userPrompt: string;
+      readonly maxTokens?: number;
+    };
+  }
+}
 
 /**
  * How a language model is called during extraction.
@@ -900,6 +1451,23 @@ export const LlmSpec = LlmSpecKind.mapMembers(() => Tuple.make(ChatLlmSpec)).pip
 export type LlmSpec = typeof LlmSpec.Type;
 
 /**
+ * Companion namespace for {@link LlmSpec}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LlmSpec {
+  /**
+   * Encoded (wire) form of {@link LlmSpec}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ChatLlmSpec.Encoded;
+}
+
+/**
  * Settings for cropping tables out of a page before a language model reads them.
  *
  * @category models
@@ -914,6 +1482,24 @@ export class CropConfig extends S.Opaque<CropConfig, { readonly brand: unique sy
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link CropConfig}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CropConfig {
+  /**
+   * Encoded (wire) form of {@link CropConfig}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly tablePrompt: string;
+  }
+}
 
 const LayoutAwarePreprocessingFields = S.Struct({
   transformationConfig: DocumentTextExtractionConfig,
@@ -944,6 +1530,28 @@ export class LayoutAwarePreprocessing extends S.Opaque<LayoutAwarePreprocessing,
 ) {}
 
 /**
+ * Companion namespace for {@link LayoutAwarePreprocessing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LayoutAwarePreprocessing {
+  /**
+   * Encoded (wire) form of {@link LayoutAwarePreprocessing}: the settings nested under a `layoutAware` key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "layoutAware";
+    readonly layoutAware: {
+      readonly transformationConfig: DocumentTextExtractionConfig.Encoded;
+      readonly cropConfig?: CropConfig.Encoded;
+    };
+  }
+}
+
+/**
  * Preprocessing that first extracts each page's plain text and hands it to the model with the page image.
  *
  * @category models
@@ -963,6 +1571,29 @@ export class ExtractTextPreprocessing extends S.Opaque<ExtractTextPreprocessing,
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ExtractTextPreprocessing}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractTextPreprocessing {
+  /**
+   * Encoded (wire) form of {@link ExtractTextPreprocessing}: the settings nested under an `extractText` key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractText";
+    readonly extractText: {
+      readonly format?: TextOutputFormat.Encoded;
+      readonly mode?: OcrMode.Encoded;
+      readonly languages: ReadonlyArray<OcrLanguageOrScript.Encoded>;
+    };
+  }
+}
 
 /**
  * What is extracted from a page before a vision language model reads it.
@@ -1007,6 +1638,24 @@ export const VlmPreprocessingConfig = VlmPreprocessingKind.mapMembers(() =>
 export type VlmPreprocessingConfig = typeof VlmPreprocessingConfig.Type;
 
 /**
+ * Companion namespace for {@link VlmPreprocessingConfig}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VlmPreprocessingConfig {
+  /**
+   * Encoded (wire) form of {@link VlmPreprocessingConfig}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | LayoutAwarePreprocessing.Encoded
+    | ExtractTextPreprocessing.Encoded;
+}
+
+/**
  * How a document page is rendered to an image before a vision language model sees it.
  *
  * @category models
@@ -1026,6 +1675,27 @@ export class ImageSpec extends S.Opaque<ImageSpec, { readonly brand: unique symb
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ImageSpec}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageSpec {
+  /**
+   * Encoded (wire) form of {@link ImageSpec}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly resizingMode: ResizingMode.Encoded;
+    readonly height?: number;
+    readonly width?: number;
+    readonly mimeType: ImageryDecodeFormat.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Image annotation, contrast and regions
@@ -1047,6 +1717,27 @@ export class Color extends S.Opaque<Color, { readonly brand: unique symbol }>()(
     $I.annoteSchema("Color", { description: "A colour as red, green and blue components with an optional opacity." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link Color}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Color {
+  /**
+   * Encoded (wire) form of {@link Color}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly r: number;
+    readonly g: number;
+    readonly b: number;
+    readonly a?: number;
+  }
+}
 
 const BoundingBoxFields = S.Struct({
   left: S.Finite.annotateKey({ description: "Distance of the box from the left edge of the image, in pixels." }),
@@ -1077,6 +1768,30 @@ export class BoundingBoxGeometry extends S.Opaque<BoundingBoxGeometry, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link BoundingBoxGeometry}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BoundingBoxGeometry {
+  /**
+   * Encoded (wire) form of {@link BoundingBoxGeometry}: the box nested under a `boundingBox` key.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "boundingBox";
+    readonly boundingBox: {
+      readonly left: number;
+      readonly top: number;
+      readonly width: number;
+      readonly height: number;
+    };
+  }
+}
 
 /**
  * The shape an annotation draws.
@@ -1116,6 +1831,23 @@ export const AnnotateGeometry = AnnotateGeometryKind.mapMembers(() => Tuple.make
 export type AnnotateGeometry = typeof AnnotateGeometry.Type;
 
 /**
+ * Companion namespace for {@link AnnotateGeometry}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AnnotateGeometry {
+  /**
+   * Encoded (wire) form of {@link AnnotateGeometry}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | BoundingBoxGeometry.Encoded;
+}
+
+/**
  * One mark drawn on an image: a shape, and optionally a label and how to stroke it.
  *
  * @category models
@@ -1135,6 +1867,28 @@ export class Annotation extends S.Opaque<Annotation, { readonly brand: unique sy
   )
 ) {}
 
+/**
+ * Companion namespace for {@link Annotation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Annotation {
+  /**
+   * Encoded (wire) form of {@link Annotation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly geometry: AnnotateGeometry.Encoded;
+    readonly label?: string;
+    readonly color?: Color.Encoded;
+    readonly thickness?: number;
+    readonly fontSize?: number;
+  }
+}
+
 const ContrastKind = LiteralKit(["equalize", "rayleigh", "binarize"]);
 
 /**
@@ -1150,6 +1904,24 @@ export class ContrastEqualize extends S.Opaque<ContrastEqualize, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ContrastEqualize}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ContrastEqualize {
+  /**
+   * Encoded (wire) form of {@link ContrastEqualize}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "equalize";
+  }
+}
 
 /**
  * Contrast adjustment that reshapes pixel intensities to a Rayleigh distribution.
@@ -1169,6 +1941,25 @@ export class ContrastRayleigh extends S.Opaque<ContrastRayleigh, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link ContrastRayleigh}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ContrastRayleigh {
+  /**
+   * Encoded (wire) form of {@link ContrastRayleigh}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "rayleigh";
+    readonly sigma: number;
+  }
+}
+
+/**
  * Contrast adjustment that turns every pixel black or white around a threshold.
  *
  * @category models
@@ -1184,6 +1975,25 @@ export class ContrastBinarize extends S.Opaque<ContrastBinarize, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ContrastBinarize}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ContrastBinarize {
+  /**
+   * Encoded (wire) form of {@link ContrastBinarize}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "binarize";
+    readonly threshold?: number;
+  }
+}
 
 /**
  * How the contrast of an image is adjusted.
@@ -1229,6 +2039,25 @@ export const ContrastType = ContrastKind.mapMembers(() =>
 export type ContrastType = typeof ContrastType.Type;
 
 /**
+ * Companion namespace for {@link ContrastType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ContrastType {
+  /**
+   * Encoded (wire) form of {@link ContrastType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ContrastEqualize.Encoded
+    | ContrastRayleigh.Encoded
+    | ContrastBinarize.Encoded;
+}
+
+/**
  * A pixel position on an image, measured from its top-left corner.
  *
  * @category models
@@ -1244,6 +2073,25 @@ export class ImagePixelCoordinate extends S.Opaque<ImagePixelCoordinate, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ImagePixelCoordinate}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImagePixelCoordinate {
+  /**
+   * Encoded (wire) form of {@link ImagePixelCoordinate}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly x: number;
+    readonly y: number;
+  }
+}
 
 /**
  * A region of an image outlined by its corners; the last corner joins the first.
@@ -1278,6 +2126,22 @@ export const ImageRegionPolygon = S.Array(ImagePixelCoordinate).pipe(
  * @since 0.0.0
  */
 export type ImageRegionPolygon = typeof ImageRegionPolygon.Type;
+
+/**
+ * Companion namespace for {@link ImageRegionPolygon}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageRegionPolygon {
+  /**
+   * Encoded (wire) form of {@link ImageRegionPolygon}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = ReadonlyArray<ImagePixelCoordinate.Encoded>;
+}
 
 // -----------------------------------------------------------------------------
 // Image operations
@@ -1316,6 +2180,27 @@ export class ResizeImageOperation extends S.Opaque<ResizeImageOperation, { reado
 ) {}
 
 /**
+ * Companion namespace for {@link ResizeImageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ResizeImageOperation {
+  /**
+   * Encoded (wire) form of {@link ResizeImageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "resize";
+    readonly height?: number;
+    readonly width?: number;
+    readonly autoOrient?: boolean;
+  }
+}
+
+/**
  * Scales an image to the largest size that fits inside a box, keeping its aspect ratio.
  *
  * @category models
@@ -1337,6 +2222,26 @@ export class ResizeToFitBoundingBoxOperation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link ResizeToFitBoundingBoxOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ResizeToFitBoundingBoxOperation {
+  /**
+   * Encoded (wire) form of {@link ResizeToFitBoundingBoxOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "resizeToFitBoundingBox";
+    readonly width: number;
+    readonly height: number;
+  }
+}
+
+/**
  * Turns an image clockwise by a quarter-turn angle.
  *
  * @category models
@@ -1350,6 +2255,25 @@ export class RotateImageOperation extends S.Opaque<RotateImageOperation, { reado
     $I.annoteSchema("RotateImageOperation", { description: "Turns an image clockwise by a quarter-turn angle." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RotateImageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RotateImageOperation {
+  /**
+   * Encoded (wire) form of {@link RotateImageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "rotate";
+    readonly angle: RotationAngle.Encoded;
+  }
+}
 
 /**
  * Cuts a rectangular window out of an image.
@@ -1368,6 +2292,28 @@ export class CropImageOperation extends S.Opaque<CropImageOperation, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link CropImageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CropImageOperation {
+  /**
+   * Encoded (wire) form of {@link CropImageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "crop";
+    readonly xOffset: number;
+    readonly yOffset: number;
+    readonly width: number;
+    readonly height: number;
+  }
+}
+
+/**
  * Converts an image to shades of grey.
  *
  * @category models
@@ -1378,6 +2324,24 @@ export class GrayscaleImageOperation extends S.Opaque<GrayscaleImageOperation, {
     $I.annoteSchema("GrayscaleImageOperation", { description: "Converts an image to shades of grey." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link GrayscaleImageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GrayscaleImageOperation {
+  /**
+   * Encoded (wire) form of {@link GrayscaleImageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "grayscale";
+  }
+}
 
 /**
  * Renders one web-map tile of a geo-referenced image.
@@ -1403,6 +2367,27 @@ export class TileImageOperation extends S.Opaque<TileImageOperation, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link TileImageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TileImageOperation {
+  /**
+   * Encoded (wire) form of {@link TileImageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "tile";
+    readonly zoom: number;
+    readonly x: number;
+    readonly y: number;
+  }
+}
+
+/**
  * Draws shapes and labels on an image.
  *
  * @category models
@@ -1416,6 +2401,25 @@ export class AnnotateImageOperation extends S.Opaque<AnnotateImageOperation, { r
 ) {}
 
 /**
+ * Companion namespace for {@link AnnotateImageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AnnotateImageOperation {
+  /**
+   * Encoded (wire) form of {@link AnnotateImageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "annotate";
+    readonly annotations: ReadonlyArray<Annotation.Encoded>;
+  }
+}
+
+/**
  * Adjusts the contrast of an image.
  *
  * @category models
@@ -1427,6 +2431,25 @@ export class ContrastImageOperation extends S.Opaque<ContrastImageOperation, { r
     contrastType: ContrastType.annotateKey({ description: "Adjustment to apply." }),
   }).pipe($I.annoteSchema("ContrastImageOperation", { description: "Adjusts the contrast of an image." }))
 ) {}
+
+/**
+ * Companion namespace for {@link ContrastImageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ContrastImageOperation {
+  /**
+   * Encoded (wire) form of {@link ContrastImageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "contrast";
+    readonly contrastType: ContrastType.Encoded;
+  }
+}
 
 /**
  * Encrypts regions of an image with a commutative encryption algorithm.
@@ -1447,6 +2470,26 @@ export class EncryptImageOperation extends S.Opaque<EncryptImageOperation, { rea
 ) {}
 
 /**
+ * Companion namespace for {@link EncryptImageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EncryptImageOperation {
+  /**
+   * Encoded (wire) form of {@link EncryptImageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "encrypt";
+    readonly polygons: ReadonlyArray<ImageRegionPolygon.Encoded>;
+    readonly cipherLicenseRid: CipherLicenseRid.Encoded;
+  }
+}
+
+/**
  * Decrypts regions of an image that were encrypted with a commutative encryption algorithm.
  *
  * @category models
@@ -1463,6 +2506,26 @@ export class DecryptImageOperation extends S.Opaque<DecryptImageOperation, { rea
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DecryptImageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DecryptImageOperation {
+  /**
+   * Encoded (wire) form of {@link DecryptImageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "decrypt";
+    readonly polygons: ReadonlyArray<ImageRegionPolygon.Encoded>;
+    readonly cipherLicenseRid: CipherLicenseRid.Encoded;
+  }
+}
 
 /**
  * One step of an image-to-image transformation.
@@ -1513,6 +2576,32 @@ export const ImageOperation = ImageOperationKind.mapMembers(() =>
  */
 export type ImageOperation = typeof ImageOperation.Type;
 
+/**
+ * Companion namespace for {@link ImageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageOperation {
+  /**
+   * Encoded (wire) form of {@link ImageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ResizeImageOperation.Encoded
+    | ResizeToFitBoundingBoxOperation.Encoded
+    | RotateImageOperation.Encoded
+    | CropImageOperation.Encoded
+    | GrayscaleImageOperation.Encoded
+    | TileImageOperation.Encoded
+    | AnnotateImageOperation.Encoded
+    | ContrastImageOperation.Encoded
+    | EncryptImageOperation.Encoded
+    | DecryptImageOperation.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Video and audio operations
 // -----------------------------------------------------------------------------
@@ -1534,6 +2623,24 @@ export class TranscodeOperation extends S.Opaque<TranscodeOperation, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link TranscodeOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TranscodeOperation {
+  /**
+   * Encoded (wire) form of {@link TranscodeOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "transcode";
+  }
+}
+
+/**
  * Returns one fixed-length segment of a video; the final segment may be shorter.
  *
  * @category models
@@ -1550,6 +2657,26 @@ export class VideoChunkOperation extends S.Opaque<VideoChunkOperation, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link VideoChunkOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoChunkOperation {
+  /**
+   * Encoded (wire) form of {@link VideoChunkOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "chunk";
+    readonly chunkDurationMilliseconds: number;
+    readonly chunkIndex: number;
+  }
+}
 
 /**
  * What a video-to-video transformation does.
@@ -1584,6 +2711,24 @@ export const VideoOperation = VideoOperationKind.mapMembers(() =>
  */
 export type VideoOperation = typeof VideoOperation.Type;
 
+/**
+ * Companion namespace for {@link VideoOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoOperation {
+  /**
+   * Encoded (wire) form of {@link VideoOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | TranscodeOperation.Encoded
+    | VideoChunkOperation.Encoded;
+}
+
 const AudioOperationKind = LiteralKit(["channel", "chunk", "convert"]);
 
 /**
@@ -1603,6 +2748,26 @@ export class AudioChannelOperation extends S.Opaque<AudioChannelOperation, { rea
 ) {}
 
 /**
+ * Companion namespace for {@link AudioChannelOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AudioChannelOperation {
+  /**
+   * Encoded (wire) form of {@link AudioChannelOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "channel";
+    readonly encodeFormat: AudioEncoding.Encoded;
+    readonly channel: number;
+  }
+}
+
+/**
  * Returns one fixed-length segment of an audio file.
  *
  * @category models
@@ -1620,6 +2785,27 @@ export class AudioChunkOperation extends S.Opaque<AudioChunkOperation, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link AudioChunkOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AudioChunkOperation {
+  /**
+   * Encoded (wire) form of {@link AudioChunkOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "chunk";
+    readonly chunkDurationMilliseconds: number;
+    readonly encodeFormat: AudioEncoding.Encoded;
+    readonly chunkIndex: number;
+  }
+}
+
+/**
  * Re-encodes a whole audio file into another format.
  *
  * @category models
@@ -1633,6 +2819,25 @@ export class ConvertAudioOperation extends S.Opaque<ConvertAudioOperation, { rea
     $I.annoteSchema("ConvertAudioOperation", { description: "Re-encodes a whole audio file into another format." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ConvertAudioOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ConvertAudioOperation {
+  /**
+   * Encoded (wire) form of {@link ConvertAudioOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "convert";
+    readonly encodeFormat: AudioEncoding.Encoded;
+  }
+}
 
 /**
  * What an audio-to-audio transformation does.
@@ -1672,6 +2877,25 @@ export const AudioOperation = AudioOperationKind.mapMembers(() =>
  */
 export type AudioOperation = typeof AudioOperation.Type;
 
+/**
+ * Companion namespace for {@link AudioOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AudioOperation {
+  /**
+   * Encoded (wire) form of {@link AudioOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | AudioChannelOperation.Encoded
+    | AudioChunkOperation.Encoded
+    | ConvertAudioOperation.Encoded;
+}
+
 const VideoToAudioOperationKind = LiteralKit(["extractAudio"]);
 
 /**
@@ -1685,6 +2909,24 @@ export class ExtractAudioOperation extends S.Opaque<ExtractAudioOperation, { rea
     $I.annoteSchema("ExtractAudioOperation", { description: "Takes the first audio stream out of a video." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ExtractAudioOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractAudioOperation {
+  /**
+   * Encoded (wire) form of {@link ExtractAudioOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractAudio";
+  }
+}
 
 /**
  * What a video-to-audio transformation does.
@@ -1716,6 +2958,23 @@ export const VideoToAudioOperation = VideoToAudioOperationKind.mapMembers(() =>
  */
 export type VideoToAudioOperation = typeof VideoToAudioOperation.Type;
 
+/**
+ * Companion namespace for {@link VideoToAudioOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoToAudioOperation {
+  /**
+   * Encoded (wire) form of {@link VideoToAudioOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ExtractAudioOperation.Encoded;
+}
+
 const AudioToTextOperationKind = LiteralKit(["transcribe", "waveform"]);
 
 /**
@@ -1737,6 +2996,28 @@ export class TranscribeOperation extends S.Opaque<TranscribeOperation, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link TranscribeOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TranscribeOperation {
+  /**
+   * Encoded (wire) form of {@link TranscribeOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "transcribe";
+    readonly language?: TranscriptionLanguage.Encoded;
+    readonly diarize?: boolean;
+    readonly outputFormat?: TranscribeOutputFormat.Encoded;
+    readonly performanceMode?: PerformanceMode.Encoded;
+  }
+}
+
+/**
  * Samples the loudness of an audio file over time, as JSON amplitudes between 0 and 1.
  *
  * @category models
@@ -1752,6 +3033,25 @@ export class WaveformOperation extends S.Opaque<WaveformOperation, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link WaveformOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace WaveformOperation {
+  /**
+   * Encoded (wire) form of {@link WaveformOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "waveform";
+    readonly peaksPerSecond: number;
+  }
+}
 
 /**
  * What an audio-to-text transformation does.
@@ -1791,6 +3091,24 @@ export const AudioToTextOperation = AudioToTextOperationKind.mapMembers(() =>
  */
 export type AudioToTextOperation = typeof AudioToTextOperation.Type;
 
+/**
+ * Companion namespace for {@link AudioToTextOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AudioToTextOperation {
+  /**
+   * Encoded (wire) form of {@link AudioToTextOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | TranscribeOperation.Encoded
+    | WaveformOperation.Encoded;
+}
+
 const VideoToArchiveOperationKind = LiteralKit(["extractSceneFrames"]);
 
 /**
@@ -1813,6 +3131,26 @@ export class ExtractSceneFramesOperation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ExtractSceneFramesOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractSceneFramesOperation {
+  /**
+   * Encoded (wire) form of {@link ExtractSceneFramesOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractSceneFrames";
+    readonly encoding: ImageryEncoding.Encoded;
+    readonly sceneScore?: SceneScore.Encoded;
+  }
+}
 
 /**
  * What a video-to-archive transformation does.
@@ -1851,6 +3189,23 @@ export const VideoToArchiveOperation = VideoToArchiveOperationKind.mapMembers(()
  */
 export type VideoToArchiveOperation = typeof VideoToArchiveOperation.Type;
 
+/**
+ * Companion namespace for {@link VideoToArchiveOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoToArchiveOperation {
+  /**
+   * Encoded (wire) form of {@link VideoToArchiveOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ExtractSceneFramesOperation.Encoded;
+}
+
 const VideoToTextOperationKind = LiteralKit(["getTimestampsForSceneFrames"]);
 
 /**
@@ -1872,6 +3227,25 @@ export class GetTimestampsForSceneFramesOperation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link GetTimestampsForSceneFramesOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GetTimestampsForSceneFramesOperation {
+  /**
+   * Encoded (wire) form of {@link GetTimestampsForSceneFramesOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "getTimestampsForSceneFrames";
+    readonly sceneScore?: SceneScore.Encoded;
+  }
+}
 
 /**
  * What a video-to-text transformation does.
@@ -1905,6 +3279,23 @@ export const VideoToTextOperation = VideoToTextOperationKind.mapMembers(() =>
  */
 export type VideoToTextOperation = typeof VideoToTextOperation.Type;
 
+/**
+ * Companion namespace for {@link VideoToTextOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoToTextOperation {
+  /**
+   * Encoded (wire) form of {@link VideoToTextOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | GetTimestampsForSceneFramesOperation.Encoded;
+}
+
 const VideoToImageOperationKind = LiteralKit(["extractFirstFrame", "extractFramesAtTimestamps"]);
 
 /**
@@ -1925,6 +3316,26 @@ export class ExtractFirstFrameOperation extends S.Opaque<
     $I.annoteSchema("ExtractFirstFrameOperation", { description: "Returns the first frame of a video as an image." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ExtractFirstFrameOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractFirstFrameOperation {
+  /**
+   * Encoded (wire) form of {@link ExtractFirstFrameOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractFirstFrame";
+    readonly height?: number;
+    readonly width?: number;
+  }
+}
 
 /**
  * Returns the frame of a video at one point in time as an image.
@@ -1951,6 +3362,27 @@ export class ExtractFramesAtTimestampsOperation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ExtractFramesAtTimestampsOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractFramesAtTimestampsOperation {
+  /**
+   * Encoded (wire) form of {@link ExtractFramesAtTimestampsOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractFramesAtTimestamps";
+    readonly height?: number;
+    readonly width?: number;
+    readonly timestamp: number;
+  }
+}
 
 /**
  * What a video-to-image transformation does.
@@ -1985,6 +3417,24 @@ export const VideoToImageOperation = VideoToImageOperationKind.mapMembers(() =>
  */
 export type VideoToImageOperation = typeof VideoToImageOperation.Type;
 
+/**
+ * Companion namespace for {@link VideoToImageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoToImageOperation {
+  /**
+   * Encoded (wire) form of {@link VideoToImageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ExtractFirstFrameOperation.Encoded
+    | ExtractFramesAtTimestampsOperation.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Email and spreadsheet operations
 // -----------------------------------------------------------------------------
@@ -2005,6 +3455,25 @@ export class GetEmailBodyOperation extends S.Opaque<GetEmailBodyOperation, { rea
     $I.annoteSchema("GetEmailBodyOperation", { description: "Returns the body of an email as plain text or HTML." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link GetEmailBodyOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GetEmailBodyOperation {
+  /**
+   * Encoded (wire) form of {@link GetEmailBodyOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "getEmailBody";
+    readonly outputFormat: EmailBodyFormat.Encoded;
+  }
+}
 
 /**
  * What an email-to-text transformation does.
@@ -2039,6 +3508,23 @@ export const EmailToTextOperation = EmailToTextOperationKind.mapMembers(() =>
  */
 export type EmailToTextOperation = typeof EmailToTextOperation.Type;
 
+/**
+ * Companion namespace for {@link EmailToTextOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EmailToTextOperation {
+  /**
+   * Encoded (wire) form of {@link EmailToTextOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | GetEmailBodyOperation.Encoded;
+}
+
 const EmailToAttachmentOperationKind = LiteralKit(["getEmailAttachment"]);
 
 /**
@@ -2061,6 +3547,26 @@ export class GetEmailAttachmentOperation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link GetEmailAttachmentOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GetEmailAttachmentOperation {
+  /**
+   * Encoded (wire) form of {@link GetEmailAttachmentOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "getEmailAttachment";
+    readonly mimeType: MediaType.Encoded;
+    readonly attachmentIndex: number;
+  }
+}
 
 /**
  * What an email-to-attachment transformation does.
@@ -2101,6 +3607,23 @@ export const EmailToAttachmentOperation = EmailToAttachmentOperationKind.mapMemb
  */
 export type EmailToAttachmentOperation = typeof EmailToAttachmentOperation.Type;
 
+/**
+ * Companion namespace for {@link EmailToAttachmentOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EmailToAttachmentOperation {
+  /**
+   * Encoded (wire) form of {@link EmailToAttachmentOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | GetEmailAttachmentOperation.Encoded;
+}
+
 const SpreadsheetToTextOperationKind = LiteralKit(["convertSheetToJson"]);
 
 /**
@@ -2122,6 +3645,25 @@ export class ConvertSheetToJsonOperation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ConvertSheetToJsonOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ConvertSheetToJsonOperation {
+  /**
+   * Encoded (wire) form of {@link ConvertSheetToJsonOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "convertSheetToJson";
+    readonly sheetName: string;
+  }
+}
 
 /**
  * What a spreadsheet-to-text transformation does.
@@ -2157,6 +3699,23 @@ export const SpreadsheetToTextOperation = SpreadsheetToTextOperationKind.mapMemb
  * @since 0.0.0
  */
 export type SpreadsheetToTextOperation = typeof SpreadsheetToTextOperation.Type;
+
+/**
+ * Companion namespace for {@link SpreadsheetToTextOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SpreadsheetToTextOperation {
+  /**
+   * Encoded (wire) form of {@link SpreadsheetToTextOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ConvertSheetToJsonOperation.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Image-to-other operations
@@ -2196,6 +3755,25 @@ export class ImageExtractLayoutAwareContentOperation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link ImageExtractLayoutAwareContentOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageExtractLayoutAwareContentOperation {
+  /**
+   * Encoded (wire) form of {@link ImageExtractLayoutAwareContentOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractLayoutAwareContent";
+    readonly parameters: LayoutAwareExtractionParameters.Encoded;
+  }
+}
+
+/**
  * Recognises the text in an image.
  *
  * @category models
@@ -2207,6 +3785,25 @@ export class ImageOcrOperation extends S.Opaque<ImageOcrOperation, { readonly br
     parameters: OcrParameters,
   }).pipe($I.annoteSchema("ImageOcrOperation", { description: "Recognises the text in an image." }))
 ) {}
+
+/**
+ * Companion namespace for {@link ImageOcrOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageOcrOperation {
+  /**
+   * Encoded (wire) form of {@link ImageOcrOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "ocr";
+    readonly parameters: OcrParameters.Encoded;
+  }
+}
 
 /**
  * Extracts the text of an image as structured JSON blocks with their positions.
@@ -2232,6 +3829,26 @@ export class ExtractImageLayoutAwareTextOperation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link ExtractImageLayoutAwareTextOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractImageLayoutAwareTextOperation {
+  /**
+   * Encoded (wire) form of {@link ExtractImageLayoutAwareTextOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractLayoutAwareTextV2";
+    readonly format?: TextOutputFormat.Encoded;
+    readonly languages: ReadonlyArray<OcrLanguageOrScript.Encoded>;
+  }
+}
+
+/**
  * Extracts the text of an image as plain text, Markdown or HTML, without positions.
  *
  * @category models
@@ -2250,6 +3867,26 @@ export class ExtractImageTextOperation extends S.Opaque<ExtractImageTextOperatio
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ExtractImageTextOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractImageTextOperation {
+  /**
+   * Encoded (wire) form of {@link ExtractImageTextOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractTextV2";
+    readonly format?: TextOutputFormat.Encoded;
+    readonly languages: ReadonlyArray<OcrLanguageOrScript.Encoded>;
+  }
+}
 
 /**
  * What an image-to-text transformation does.
@@ -2297,6 +3934,26 @@ export const ImageToTextOperation = ImageToTextOperationKind.mapMembers(() =>
  */
 export type ImageToTextOperation = typeof ImageToTextOperation.Type;
 
+/**
+ * Companion namespace for {@link ImageToTextOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageToTextOperation {
+  /**
+   * Encoded (wire) form of {@link ImageToTextOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ImageExtractLayoutAwareContentOperation.Encoded
+    | ImageOcrOperation.Encoded
+    | ExtractImageLayoutAwareTextOperation.Encoded
+    | ExtractImageTextOperation.Encoded;
+}
+
 const ImageToDocumentOperationKind = LiteralKit(["createPdf"]);
 
 /**
@@ -2310,6 +3967,24 @@ export class CreatePdfOperation extends S.Opaque<CreatePdfOperation, { readonly 
     $I.annoteSchema("CreatePdfOperation", { description: "Converts an image to a PDF document." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link CreatePdfOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CreatePdfOperation {
+  /**
+   * Encoded (wire) form of {@link CreatePdfOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "createPdf";
+  }
+}
 
 /**
  * What an image-to-document transformation does.
@@ -2341,6 +4016,23 @@ export const ImageToDocumentOperation = ImageToDocumentOperationKind.mapMembers(
  */
 export type ImageToDocumentOperation = typeof ImageToDocumentOperation.Type;
 
+/**
+ * Companion namespace for {@link ImageToDocumentOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageToDocumentOperation {
+  /**
+   * Encoded (wire) form of {@link ImageToDocumentOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | CreatePdfOperation.Encoded;
+}
+
 const ImageToEmbeddingOperationKind = LiteralKit(["generateEmbedding"]);
 
 /**
@@ -2362,6 +4054,25 @@ export class GenerateEmbeddingOperation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link GenerateEmbeddingOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GenerateEmbeddingOperation {
+  /**
+   * Encoded (wire) form of {@link GenerateEmbeddingOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "generateEmbedding";
+    readonly modelId: EmbeddingModelId.Encoded;
+  }
+}
 
 /**
  * What an image-to-embedding transformation does.
@@ -2396,6 +4107,23 @@ export const ImageToEmbeddingOperation = ImageToEmbeddingOperationKind.mapMember
  */
 export type ImageToEmbeddingOperation = typeof ImageToEmbeddingOperation.Type;
 
+/**
+ * Companion namespace for {@link ImageToEmbeddingOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageToEmbeddingOperation {
+  /**
+   * Encoded (wire) form of {@link ImageToEmbeddingOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | GenerateEmbeddingOperation.Encoded;
+}
+
 const DicomToImageOperationKind = LiteralKit(["renderImageLayer"]);
 
 /**
@@ -2416,6 +4144,27 @@ export class RenderImageLayerOperation extends S.Opaque<RenderImageLayerOperatio
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RenderImageLayerOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RenderImageLayerOperation {
+  /**
+   * Encoded (wire) form of {@link RenderImageLayerOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "renderImageLayer";
+    readonly layerNumber?: number;
+    readonly height?: number;
+    readonly width?: number;
+  }
+}
 
 /**
  * What a DICOM-to-image transformation does.
@@ -2451,6 +4200,23 @@ export const DicomToImageOperation = DicomToImageOperationKind.mapMembers(() =>
  */
 export type DicomToImageOperation = typeof DicomToImageOperation.Type;
 
+/**
+ * Companion namespace for {@link DicomToImageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DicomToImageOperation {
+  /**
+   * Encoded (wire) form of {@link DicomToImageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | RenderImageLayerOperation.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Document operations
 // -----------------------------------------------------------------------------
@@ -2475,6 +4241,27 @@ export class SlicePdfRangeOperation extends S.Opaque<SlicePdfRangeOperation, { r
 ) {}
 
 /**
+ * Companion namespace for {@link SlicePdfRangeOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SlicePdfRangeOperation {
+  /**
+   * Encoded (wire) form of {@link SlicePdfRangeOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "slicePdfRange";
+    readonly startPageInclusive: number;
+    readonly endPageExclusive: number;
+    readonly strictlyEnforceEndPage?: boolean;
+  }
+}
+
+/**
  * Converts a document of another format to PDF.
  *
  * @category models
@@ -2485,6 +4272,24 @@ export class ConvertDocumentOperation extends S.Opaque<ConvertDocumentOperation,
     $I.annoteSchema("ConvertDocumentOperation", { description: "Converts a document of another format to PDF." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ConvertDocumentOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ConvertDocumentOperation {
+  /**
+   * Encoded (wire) form of {@link ConvertDocumentOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "convertDocument";
+  }
+}
 
 /**
  * What a document-to-document transformation does.
@@ -2524,6 +4329,24 @@ export const DocumentToDocumentOperation = DocumentToDocumentOperationKind.mapMe
  */
 export type DocumentToDocumentOperation = typeof DocumentToDocumentOperation.Type;
 
+/**
+ * Companion namespace for {@link DocumentToDocumentOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DocumentToDocumentOperation {
+  /**
+   * Encoded (wire) form of {@link DocumentToDocumentOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | SlicePdfRangeOperation.Encoded
+    | ConvertDocumentOperation.Encoded;
+}
+
 const DocumentToImageOperationKind = LiteralKit(["renderPage", "renderPageToFitBoundingBox"]);
 
 /**
@@ -2546,6 +4369,27 @@ export class RenderPageOperation extends S.Opaque<RenderPageOperation, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link RenderPageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RenderPageOperation {
+  /**
+   * Encoded (wire) form of {@link RenderPageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "renderPage";
+    readonly pageNumber?: number;
+    readonly height?: number;
+    readonly width?: number;
+  }
+}
+
+/**
  * Renders one page of a document as the largest image that fits inside a box, keeping its aspect ratio.
  *
  * @category models
@@ -2566,6 +4410,27 @@ export class RenderPageToFitBoundingBoxOperation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link RenderPageToFitBoundingBoxOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RenderPageToFitBoundingBoxOperation {
+  /**
+   * Encoded (wire) form of {@link RenderPageToFitBoundingBoxOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "renderPageToFitBoundingBox";
+    readonly pageNumber?: number;
+    readonly width: number;
+    readonly height: number;
+  }
+}
 
 /**
  * What a document-to-image transformation does.
@@ -2600,6 +4465,24 @@ export const DocumentToImageOperation = DocumentToImageOperationKind.mapMembers(
  */
 export type DocumentToImageOperation = typeof DocumentToImageOperation.Type;
 
+/**
+ * Companion namespace for {@link DocumentToImageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DocumentToImageOperation {
+  /**
+   * Encoded (wire) form of {@link DocumentToImageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | RenderPageOperation.Encoded
+    | RenderPageToFitBoundingBoxOperation.Encoded;
+}
+
 const DocumentToTextOperationKind = LiteralKit([
   "extractAllText",
   "extractTableOfContents",
@@ -2630,6 +4513,24 @@ export class ExtractAllTextOperation extends S.Opaque<ExtractAllTextOperation, {
 ) {}
 
 /**
+ * Companion namespace for {@link ExtractAllTextOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractAllTextOperation {
+  /**
+   * Encoded (wire) form of {@link ExtractAllTextOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractAllText";
+  }
+}
+
+/**
  * Extracts the table of contents a document declares.
  *
  * @category models
@@ -2645,6 +4546,24 @@ export class ExtractTableOfContentsOperation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ExtractTableOfContentsOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractTableOfContentsOperation {
+  /**
+   * Encoded (wire) form of {@link ExtractTableOfContentsOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractTableOfContents";
+  }
+}
 
 /**
  * Lists, as JSON, the width and height of every page of a PDF in points.
@@ -2664,6 +4583,24 @@ export class GetPdfPageDimensionsOperation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link GetPdfPageDimensionsOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GetPdfPageDimensionsOperation {
+  /**
+   * Encoded (wire) form of {@link GetPdfPageDimensionsOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "getPdfPageDimensions";
+  }
+}
+
+/**
  * Extracts the form field data of a PDF.
  *
  * @category models
@@ -2679,6 +4616,24 @@ export class ExtractFormFieldsOperation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ExtractFormFieldsOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractFormFieldsOperation {
+  /**
+   * Encoded (wire) form of {@link ExtractFormFieldsOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractFormFields";
+  }
+}
 
 /**
  * Extracts the unstructured text of one page.
@@ -2699,6 +4654,25 @@ export class ExtractUnstructuredTextFromPageOperation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ExtractUnstructuredTextFromPageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractUnstructuredTextFromPageOperation {
+  /**
+   * Encoded (wire) form of {@link ExtractUnstructuredTextFromPageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractUnstructuredTextFromPage";
+    readonly pageNumber: number;
+  }
+}
 
 /**
  * Extracts the text of a span of pages as a list of strings.
@@ -2722,6 +4696,26 @@ export class ExtractTextFromPagesToArrayOperation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link ExtractTextFromPagesToArrayOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractTextFromPagesToArrayOperation {
+  /**
+   * Encoded (wire) form of {@link ExtractTextFromPagesToArrayOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractTextFromPagesToArray";
+    readonly startPage?: number;
+    readonly endPage?: number;
+  }
+}
+
+/**
  * Recognises the text on one page of a document.
  *
  * @category models
@@ -2734,6 +4728,26 @@ export class OcrOnPageOperation extends S.Opaque<OcrOnPageOperation, { readonly 
     parameters: OcrParameters,
   }).pipe($I.annoteSchema("OcrOnPageOperation", { description: "Recognises the text on one page of a document." }))
 ) {}
+
+/**
+ * Companion namespace for {@link OcrOnPageOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OcrOnPageOperation {
+  /**
+   * Encoded (wire) form of {@link OcrOnPageOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "ocrOnPage";
+    readonly pageNumber: number;
+    readonly parameters: OcrParameters.Encoded;
+  }
+}
 
 /**
  * Creates access patterns for recognising text across the pages of a document.
@@ -2756,6 +4770,26 @@ export class OcrOnPagesOperation extends S.Opaque<OcrOnPagesOperation, { readonl
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link OcrOnPagesOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OcrOnPagesOperation {
+  /**
+   * Encoded (wire) form of {@link OcrOnPagesOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "ocrOnPages";
+    readonly parameters: OcrParameters.Encoded;
+    readonly pageNumber: number;
+  }
+}
 
 /**
  * Extracts the text of a document together with its layout, in the older result format.
@@ -2784,6 +4818,25 @@ export class DocumentExtractLayoutAwareContentOperation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link DocumentExtractLayoutAwareContentOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DocumentExtractLayoutAwareContentOperation {
+  /**
+   * Encoded (wire) form of {@link DocumentExtractLayoutAwareContentOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractLayoutAwareContent";
+    readonly parameters: LayoutAwareExtractionParameters.Encoded;
+  }
+}
+
+/**
  * Extracts the text of PDF pages as structured JSON blocks with their positions.
  *
  * @category models
@@ -2805,6 +4858,26 @@ export class ExtractDocumentLayoutAwareTextOperation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link ExtractDocumentLayoutAwareTextOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractDocumentLayoutAwareTextOperation {
+  /**
+   * Encoded (wire) form of {@link ExtractDocumentLayoutAwareTextOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractLayoutAwareTextV2";
+    readonly pageRange?: PageRange.Encoded;
+    readonly config: DocumentTextExtractionConfig.Encoded;
+  }
+}
+
+/**
  * Extracts the text of PDF pages, page by page, as plain text, Markdown or HTML.
  *
  * @category models
@@ -2824,6 +4897,26 @@ export class ExtractDocumentTextOperation extends S.Opaque<
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ExtractDocumentTextOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractDocumentTextOperation {
+  /**
+   * Encoded (wire) form of {@link ExtractDocumentTextOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractTextV2";
+    readonly pageRange?: PageRange.Encoded;
+    readonly config: DocumentTextExtractionConfig.Encoded;
+  }
+}
 
 /**
  * Has a vision language model read the pages of a document and write out their text.
@@ -2848,6 +4941,29 @@ export class ExtractVlmTextOperation extends S.Opaque<ExtractVlmTextOperation, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ExtractVlmTextOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExtractVlmTextOperation {
+  /**
+   * Encoded (wire) form of {@link ExtractVlmTextOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "extractVlmText";
+    readonly llmSpec: LlmSpec.Encoded;
+    readonly preprocessingConfiguration?: VlmPreprocessingConfig.Encoded;
+    readonly imageSpec?: ImageSpec.Encoded;
+    readonly outputFormat: VlmOutputFormat.Encoded;
+    readonly pageRange?: PageRange.Encoded;
+  }
+}
 
 /**
  * What a document-to-text transformation does.
@@ -2901,6 +5017,34 @@ export const DocumentToTextOperation = DocumentToTextOperationKind.mapMembers(()
  */
 export type DocumentToTextOperation = typeof DocumentToTextOperation.Type;
 
+/**
+ * Companion namespace for {@link DocumentToTextOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DocumentToTextOperation {
+  /**
+   * Encoded (wire) form of {@link DocumentToTextOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ExtractAllTextOperation.Encoded
+    | ExtractTableOfContentsOperation.Encoded
+    | GetPdfPageDimensionsOperation.Encoded
+    | ExtractFormFieldsOperation.Encoded
+    | ExtractUnstructuredTextFromPageOperation.Encoded
+    | ExtractTextFromPagesToArrayOperation.Encoded
+    | OcrOnPageOperation.Encoded
+    | OcrOnPagesOperation.Encoded
+    | DocumentExtractLayoutAwareContentOperation.Encoded
+    | ExtractDocumentLayoutAwareTextOperation.Encoded
+    | ExtractDocumentTextOperation.Encoded
+    | ExtractVlmTextOperation.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Transformations
 // -----------------------------------------------------------------------------
@@ -2924,6 +5068,26 @@ export class ImageTransformation extends S.Opaque<ImageTransformation, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link ImageTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageTransformation {
+  /**
+   * Encoded (wire) form of {@link ImageTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "image";
+    readonly encoding: ImageryEncoding.Encoded;
+    readonly operations: ReadonlyArray<ImageOperation.Encoded>;
+  }
+}
+
+/**
  * Derives a video from a video.
  *
  * @category models
@@ -2936,6 +5100,26 @@ export class VideoTransformation extends S.Opaque<VideoTransformation, { readonl
     operation: VideoOperation.annotateKey({ description: "What to do to the video." }),
   }).pipe($I.annoteSchema("VideoTransformation", { description: "Derives a video from a video." }))
 ) {}
+
+/**
+ * Companion namespace for {@link VideoTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoTransformation {
+  /**
+   * Encoded (wire) form of {@link VideoTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "video";
+    readonly encoding: VideoEncoding.Encoded;
+    readonly operation: VideoOperation.Encoded;
+  }
+}
 
 /**
  * Derives audio from audio; the operation names the format to write.
@@ -2955,6 +5139,25 @@ export class AudioTransformation extends S.Opaque<AudioTransformation, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link AudioTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AudioTransformation {
+  /**
+   * Encoded (wire) form of {@link AudioTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "audio";
+    readonly operation: AudioOperation.Encoded;
+  }
+}
+
+/**
  * Derives text from an email.
  *
  * @category models
@@ -2966,6 +5169,25 @@ export class EmailToTextTransformation extends S.Opaque<EmailToTextTransformatio
     operation: EmailToTextOperation.annotateKey({ description: "What to read from the email." }),
   }).pipe($I.annoteSchema("EmailToTextTransformation", { description: "Derives text from an email." }))
 ) {}
+
+/**
+ * Companion namespace for {@link EmailToTextTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EmailToTextTransformation {
+  /**
+   * Encoded (wire) form of {@link EmailToTextTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "emailToText";
+    readonly operation: EmailToTextOperation.Encoded;
+  }
+}
 
 /**
  * Derives text from a spreadsheet.
@@ -2982,6 +5204,25 @@ export class SpreadsheetToTextTransformation extends S.Opaque<
     operation: SpreadsheetToTextOperation.annotateKey({ description: "What to read from the spreadsheet." }),
   }).pipe($I.annoteSchema("SpreadsheetToTextTransformation", { description: "Derives text from a spreadsheet." }))
 ) {}
+
+/**
+ * Companion namespace for {@link SpreadsheetToTextTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SpreadsheetToTextTransformation {
+  /**
+   * Encoded (wire) form of {@link SpreadsheetToTextTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "spreadsheetToText";
+    readonly operation: SpreadsheetToTextOperation.Encoded;
+  }
+}
 
 /**
  * Derives audio from a video.
@@ -3001,6 +5242,26 @@ export class VideoToAudioTransformation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link VideoToAudioTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoToAudioTransformation {
+  /**
+   * Encoded (wire) form of {@link VideoToAudioTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "videoToAudio";
+    readonly encoding: AudioEncoding.Encoded;
+    readonly operation: VideoToAudioOperation.Encoded;
+  }
+}
+
+/**
  * Derives text from audio.
  *
  * @category models
@@ -3012,6 +5273,25 @@ export class AudioToTextTransformation extends S.Opaque<AudioToTextTransformatio
     operation: AudioToTextOperation.annotateKey({ description: "What to read from the audio." }),
   }).pipe($I.annoteSchema("AudioToTextTransformation", { description: "Derives text from audio." }))
 ) {}
+
+/**
+ * Companion namespace for {@link AudioToTextTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AudioToTextTransformation {
+  /**
+   * Encoded (wire) form of {@link AudioToTextTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "audioToText";
+    readonly operation: AudioToTextOperation.Encoded;
+  }
+}
 
 /**
  * Takes an attached file out of an email.
@@ -3030,6 +5310,25 @@ export class EmailToAttachmentTransformation extends S.Opaque<
     $I.annoteSchema("EmailToAttachmentTransformation", { description: "Takes an attached file out of an email." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link EmailToAttachmentTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EmailToAttachmentTransformation {
+  /**
+   * Encoded (wire) form of {@link EmailToAttachmentTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "emailToAttachment";
+    readonly operation: EmailToAttachmentOperation.Encoded;
+  }
+}
 
 /**
  * Derives an archive of files from a video.
@@ -3051,6 +5350,26 @@ export class VideoToArchiveTransformation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link VideoToArchiveTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoToArchiveTransformation {
+  /**
+   * Encoded (wire) form of {@link VideoToArchiveTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "videoToArchive";
+    readonly encoding: ArchiveEncoding.Encoded;
+    readonly operation: VideoToArchiveOperation.Encoded;
+  }
+}
+
+/**
  * Derives text from a video.
  *
  * @category models
@@ -3064,6 +5383,25 @@ export class VideoToTextTransformation extends S.Opaque<VideoToTextTransformatio
 ) {}
 
 /**
+ * Companion namespace for {@link VideoToTextTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoToTextTransformation {
+  /**
+   * Encoded (wire) form of {@link VideoToTextTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "videoToText";
+    readonly operation: VideoToTextOperation.Encoded;
+  }
+}
+
+/**
  * Derives text from an image.
  *
  * @category models
@@ -3075,6 +5413,25 @@ export class ImageToTextTransformation extends S.Opaque<ImageToTextTransformatio
     operation: ImageToTextOperation.annotateKey({ description: "How to read the image." }),
   }).pipe($I.annoteSchema("ImageToTextTransformation", { description: "Derives text from an image." }))
 ) {}
+
+/**
+ * Companion namespace for {@link ImageToTextTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageToTextTransformation {
+  /**
+   * Encoded (wire) form of {@link ImageToTextTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "imageToText";
+    readonly operation: ImageToTextOperation.Encoded;
+  }
+}
 
 /**
  * Derives an image from a video.
@@ -3094,6 +5451,26 @@ export class VideoToImageTransformation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link VideoToImageTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VideoToImageTransformation {
+  /**
+   * Encoded (wire) form of {@link VideoToImageTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "videoToImage";
+    readonly encoding: ImageryEncoding.Encoded;
+    readonly operation: VideoToImageOperation.Encoded;
+  }
+}
+
+/**
  * Derives a document from an image.
  *
  * @category models
@@ -3108,6 +5485,25 @@ export class ImageToDocumentTransformation extends S.Opaque<
     operation: ImageToDocumentOperation.annotateKey({ description: "How to build the document." }),
   }).pipe($I.annoteSchema("ImageToDocumentTransformation", { description: "Derives a document from an image." }))
 ) {}
+
+/**
+ * Companion namespace for {@link ImageToDocumentTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageToDocumentTransformation {
+  /**
+   * Encoded (wire) form of {@link ImageToDocumentTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "imageToDocument";
+    readonly operation: ImageToDocumentOperation.Encoded;
+  }
+}
 
 /**
  * Derives an image from a DICOM file.
@@ -3125,6 +5521,26 @@ export class DicomToImageTransformation extends S.Opaque<
     operation: DicomToImageOperation.annotateKey({ description: "What to render." }),
   }).pipe($I.annoteSchema("DicomToImageTransformation", { description: "Derives an image from a DICOM file." }))
 ) {}
+
+/**
+ * Companion namespace for {@link DicomToImageTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DicomToImageTransformation {
+  /**
+   * Encoded (wire) form of {@link DicomToImageTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "dicomToImage";
+    readonly encoding: ImageryEncoding.Encoded;
+    readonly operation: DicomToImageOperation.Encoded;
+  }
+}
 
 /**
  * Derives a document from a document.
@@ -3146,6 +5562,26 @@ export class DocumentToDocumentTransformation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link DocumentToDocumentTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DocumentToDocumentTransformation {
+  /**
+   * Encoded (wire) form of {@link DocumentToDocumentTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "documentToDocument";
+    readonly encoding: DocumentEncoding.Encoded;
+    readonly operation: DocumentToDocumentOperation.Encoded;
+  }
+}
+
+/**
  * Derives an image from a document.
  *
  * @category models
@@ -3161,6 +5597,26 @@ export class DocumentToImageTransformation extends S.Opaque<
     operation: DocumentToImageOperation.annotateKey({ description: "Which page to render, and how large." }),
   }).pipe($I.annoteSchema("DocumentToImageTransformation", { description: "Derives an image from a document." }))
 ) {}
+
+/**
+ * Companion namespace for {@link DocumentToImageTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DocumentToImageTransformation {
+  /**
+   * Encoded (wire) form of {@link DocumentToImageTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "documentToImage";
+    readonly encoding: ImageryEncoding.Encoded;
+    readonly operation: DocumentToImageOperation.Encoded;
+  }
+}
 
 /**
  * Derives an embedding vector from an image.
@@ -3181,6 +5637,25 @@ export class ImageToEmbeddingTransformation extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link ImageToEmbeddingTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ImageToEmbeddingTransformation {
+  /**
+   * Encoded (wire) form of {@link ImageToEmbeddingTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "imageToEmbedding";
+    readonly operation: ImageToEmbeddingOperation.Encoded;
+  }
+}
+
+/**
  * Derives text from a document.
  *
  * @category models
@@ -3195,6 +5670,25 @@ export class DocumentToTextTransformation extends S.Opaque<
     operation: DocumentToTextOperation.annotateKey({ description: "How to read the document." }),
   }).pipe($I.annoteSchema("DocumentToTextTransformation", { description: "Derives text from a document." }))
 ) {}
+
+/**
+ * Companion namespace for {@link DocumentToTextTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DocumentToTextTransformation {
+  /**
+   * Encoded (wire) form of {@link DocumentToTextTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "documentToText";
+    readonly operation: DocumentToTextOperation.Encoded;
+  }
+}
 
 /**
  * A request to derive new content from a stored media item: 18 conversions between kinds of media.
@@ -3274,6 +5768,40 @@ export const MediaTransformation = MediaTransformationKind.mapMembers(() =>
  */
 export type MediaTransformation = typeof MediaTransformation.Type;
 
+/**
+ * Companion namespace for {@link MediaTransformation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaTransformation {
+  /**
+   * Encoded (wire) form of {@link MediaTransformation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ImageTransformation.Encoded
+    | VideoTransformation.Encoded
+    | AudioTransformation.Encoded
+    | EmailToTextTransformation.Encoded
+    | SpreadsheetToTextTransformation.Encoded
+    | VideoToAudioTransformation.Encoded
+    | AudioToTextTransformation.Encoded
+    | EmailToAttachmentTransformation.Encoded
+    | VideoToArchiveTransformation.Encoded
+    | VideoToTextTransformation.Encoded
+    | ImageToTextTransformation.Encoded
+    | VideoToImageTransformation.Encoded
+    | ImageToDocumentTransformation.Encoded
+    | DicomToImageTransformation.Encoded
+    | DocumentToDocumentTransformation.Encoded
+    | DocumentToImageTransformation.Encoded
+    | ImageToEmbeddingTransformation.Encoded
+    | DocumentToTextTransformation.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Transformation jobs
 // -----------------------------------------------------------------------------
@@ -3315,6 +5843,24 @@ export class TransformMediaItemRequest extends S.Opaque<TransformMediaItemReques
 ) {}
 
 /**
+ * Companion namespace for {@link TransformMediaItemRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TransformMediaItemRequest {
+  /**
+   * Encoded (wire) form of {@link TransformMediaItemRequest}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly transformation: MediaTransformation.Encoded;
+  }
+}
+
+/**
  * A transformation job as the platform reports it: its identifier and where it stands.
  *
  * **Details**
@@ -3352,6 +5898,25 @@ export class TransformationJob extends S.Opaque<TransformationJob, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TransformationJob}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TransformationJob {
+  /**
+   * Encoded (wire) form of {@link TransformationJob}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly status: TransformationJobStatus.Encoded;
+    readonly jobId: TransformationJobId.Encoded;
+  }
+}
 
 /**
  * How long a client waits between two status requests for a transformation job unless told otherwise.

@@ -145,7 +145,7 @@ export class Geolocation extends Model<Geolocation>("Geolocation")(
  * @since 0.0.0
  */
 export declare namespace Geolocation {
-  export type Encoded = S.Codec.Encoded<typeof Geolocation>;
+  export type Encoded = typeof Geolocation.Encoded;
 }
 
 /**
@@ -229,7 +229,7 @@ export class GeolocationInput extends Model<GeolocationInput>("GeolocationInput"
  * @since 0.0.0
  */
 export declare namespace GeolocationInput {
-  export type Encoded = S.Codec.Encoded<typeof GeolocationInput>;
+  export type Encoded = typeof GeolocationInput.Encoded;
 }
 
 /**

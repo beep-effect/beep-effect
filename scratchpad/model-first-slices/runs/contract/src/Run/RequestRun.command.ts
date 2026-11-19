@@ -4,6 +4,8 @@ import { PrincipalId, RunId } from "@proto/kernel/Ids";
 import { GrantRef } from "@proto/kernel/Invocation";
 import { Session } from "@proto/kernel/Session.middleware";
 import * as S from "effect/Schema";
+import { Count, Text } from "@proto/kernel/Measure";
+import { HistoryBound } from "./HistoryBound.ts";
 import { RunEvent } from "./RunEvent.ts";
 import { RunVersions } from "./RunVersions.ts";
 import { SessionId } from "./Session.id.ts";
@@ -45,14 +47,15 @@ export class HumanOnly extends S.TaggedError<HumanOnly, { readonly brand: unique
 export class RunRequested extends Domain.Event(
   "RunRequested",
   RunEvent.fields({
-    purpose: S.String,
+    purpose: Text,
     versions: RunVersions,
-    allowance: S.Int,
-    historyBound: S.Int,
+    allowance: Count,
+    historyBound: HistoryBound,
     source: GrantRef,
     terms: GrantTerms,
     requester: PrincipalId,
   }),
+  { description: "A person asked for a run, delegating these narrowed terms of a grant they hold, with this budget in units and this history bound." },
 ) {}
 
 /**
@@ -70,10 +73,10 @@ export class RequestRun extends Domain.Command(
     middleware: [Session],
     input: {
       session: SessionId,
-      purpose: S.String,
+      purpose: Text,
       versions: RunVersions,
-      allowance: S.Int,
-      historyBound: S.Int,
+      allowance: Count,
+      historyBound: HistoryBound,
       source: GrantRef,
       terms: GrantTerms,
     },

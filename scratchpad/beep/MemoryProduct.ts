@@ -160,7 +160,7 @@ export class ProductMemorySearchItem extends Model<ProductMemorySearchItem>("Pro
  * @since 0.0.0
  */
 export declare namespace ProductMemorySearchItem {
-  export type Encoded = S.Codec.Encoded<typeof ProductMemorySearchItem>;
+  export type Encoded = typeof ProductMemorySearchItem.Encoded;
 }
 
 const decodeUnknownEffectProductMemorySearchItem = S.decodeUnknownEffect(ProductMemorySearchItem);
@@ -343,7 +343,7 @@ export class MemorySearchPolicyPayload extends Model<MemorySearchPolicyPayload>(
  * @since 0.0.0
  */
 export declare namespace MemorySearchPolicyPayload {
-  export type Encoded = S.Codec.Encoded<typeof MemorySearchPolicyPayload>;
+  export type Encoded = typeof MemorySearchPolicyPayload.Encoded;
 }
 
 /**
@@ -398,7 +398,7 @@ export class MemoryGlobalReadGateObservability extends Model<MemoryGlobalReadGat
  * @since 0.0.0
  */
 export declare namespace MemoryGlobalReadGateObservability {
-  export type Encoded = S.Codec.Encoded<typeof MemoryGlobalReadGateObservability>;
+  export type Encoded = typeof MemoryGlobalReadGateObservability.Encoded;
 }
 
 /**
@@ -481,7 +481,7 @@ export class ProductRolloutObservability extends Model<ProductRolloutObservabili
  * @since 0.0.0
  */
 export declare namespace ProductRolloutObservability {
-  export type Encoded = S.Codec.Encoded<typeof ProductRolloutObservability>;
+  export type Encoded = typeof ProductRolloutObservability.Encoded;
 }
 
 const searchPageFields = {
@@ -556,7 +556,7 @@ export class ProductMemorySearchResponse extends Model<ProductMemorySearchRespon
  * @since 0.0.0
  */
 export declare namespace ProductMemorySearchResponse {
-  export type Encoded = S.Codec.Encoded<typeof ProductMemorySearchResponse>;
+  export type Encoded = typeof ProductMemorySearchResponse.Encoded;
 }
 
 /**
@@ -612,7 +612,7 @@ export class ArchiveProductMemorySearchResponse extends Model<ArchiveProductMemo
  * @since 0.0.0
  */
 export declare namespace ArchiveProductMemorySearchResponse {
-  export type Encoded = S.Codec.Encoded<typeof ArchiveProductMemorySearchResponse>;
+  export type Encoded = typeof ArchiveProductMemorySearchResponse.Encoded;
 }
 
 /**
@@ -747,5 +747,5 @@ export class VectorMemorySearchResponse extends Model<VectorMemorySearchResponse
  * @since 0.0.0
  */
 export declare namespace VectorMemorySearchResponse {
-  export type Encoded = S.Codec.Encoded<typeof VectorMemorySearchResponse>;
+  export type Encoded = typeof VectorMemorySearchResponse.Encoded;
 }

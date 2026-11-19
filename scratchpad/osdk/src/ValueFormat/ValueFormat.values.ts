@@ -58,6 +58,22 @@ export const ValueFormatKind = LiteralKit(["number", "timestamp", "date", "boole
 export type ValueFormatKind = typeof ValueFormatKind.Type;
 
 /**
+ * Companion namespace for {@link ValueFormatKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ValueFormatKind {
+  /**
+   * Encoded (wire) form of {@link ValueFormatKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ValueFormatKind.Encoded;
+}
+
+/**
  * The ways a number can be printed.
  *
  * **Example** (Pick the number formats that carry a unit)
@@ -96,6 +112,22 @@ export const NumberFormatKind = LiteralKit([
  * @since 0.0.0
  */
 export type NumberFormatKind = typeof NumberFormatKind.Type;
+
+/**
+ * Companion namespace for {@link NumberFormatKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberFormatKind {
+  /**
+   * Encoded (wire) form of {@link NumberFormatKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof NumberFormatKind.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Number settings
@@ -144,6 +176,22 @@ export const NumberNotation = MappedLiteralKit([
 export type NumberNotation = typeof NumberNotation.Type;
 
 /**
+ * Companion namespace for {@link NumberNotation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberNotation {
+  /**
+   * Encoded (wire) form of {@link NumberNotation}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof NumberNotation.Encoded;
+}
+
+/**
  * Which way a number is rounded when it has more digits than the format shows.
  *
  * **Details**
@@ -188,6 +236,22 @@ export const NumberRoundingMode = MappedLiteralKit([
 export type NumberRoundingMode = typeof NumberRoundingMode.Type;
 
 /**
+ * Companion namespace for {@link NumberRoundingMode}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberRoundingMode {
+  /**
+   * Encoded (wire) form of {@link NumberRoundingMode}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof NumberRoundingMode.Encoded;
+}
+
+/**
  * How a currency amount is abbreviated.
  *
  * **Details**
@@ -226,6 +290,22 @@ export const CurrencyStyle = MappedLiteralKit([
  * @since 0.0.0
  */
 export type CurrencyStyle = typeof CurrencyStyle.Type;
+
+/**
+ * Companion namespace for {@link CurrencyStyle}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CurrencyStyle {
+  /**
+   * Encoded (wire) form of {@link CurrencyStyle}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof CurrencyStyle.Encoded;
+}
 
 /**
  * Power of ten a number is divided by before it is printed with a magnitude suffix.
@@ -271,6 +351,22 @@ export const NumberScale = MappedLiteralKit([
 export type NumberScale = typeof NumberScale.Type;
 
 /**
+ * Companion namespace for {@link NumberScale}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberScale {
+  /**
+   * Encoded (wire) form of {@link NumberScale}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof NumberScale.Encoded;
+}
+
+/**
  * Proportion a fraction is printed as.
  *
  * **Details**
@@ -313,6 +409,22 @@ export const NumberRatio = MappedLiteralKit([
  * @since 0.0.0
  */
 export type NumberRatio = typeof NumberRatio.Type;
+
+/**
+ * Companion namespace for {@link NumberRatio}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NumberRatio {
+  /**
+   * Encoded (wire) form of {@link NumberRatio}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof NumberRatio.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Durations
@@ -361,6 +473,22 @@ export const DurationPrecision = MappedLiteralKit([
 export type DurationPrecision = typeof DurationPrecision.Type;
 
 /**
+ * Companion namespace for {@link DurationPrecision}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DurationPrecision {
+  /**
+   * Encoded (wire) form of {@link DurationPrecision}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DurationPrecision.Encoded;
+}
+
+/**
  * Unit the stored number of a duration property is counted in.
  *
  * **Example** (Convert a stored duration to milliseconds)
@@ -392,6 +520,22 @@ export const DurationInputUnit = MappedLiteralKit([
  * @since 0.0.0
  */
 export type DurationInputUnit = typeof DurationInputUnit.Type;
+
+/**
+ * Companion namespace for {@link DurationInputUnit}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DurationInputUnit {
+  /**
+   * Encoded (wire) form of {@link DurationInputUnit}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DurationInputUnit.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Dates and instants
@@ -449,6 +593,22 @@ export const DatetimePreset = MappedLiteralKit([
  */
 export type DatetimePreset = typeof DatetimePreset.Type;
 
+/**
+ * Companion namespace for {@link DatetimePreset}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DatetimePreset {
+  /**
+   * Encoded (wire) form of {@link DatetimePreset}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DatetimePreset.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Platform identifiers
 // -----------------------------------------------------------------------------
@@ -494,3 +654,19 @@ export const KnownType = MappedLiteralKit([
  * @since 0.0.0
  */
 export type KnownType = typeof KnownType.Type;
+
+/**
+ * Companion namespace for {@link KnownType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace KnownType {
+  /**
+   * Encoded (wire) form of {@link KnownType}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof KnownType.Encoded;
+}

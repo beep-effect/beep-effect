@@ -7,8 +7,8 @@ import * as Layer from "effect/Layer";
 
 /**
  * The ReviewerApi as plain HTTP for internal tools: a command is
- * `POST /<Command>`, a view read is `GET /<View>/<key>`. Only the listed
- * calls are published.
+ * `POST /<Command>`, a view read is `GET /<View>/<key>`, a query is
+ * `QUERY /<Query>` with a JSON body. Only the listed calls are published.
  *
  * **Example** (The OpenAPI group)
  * ```ts
@@ -43,3 +43,27 @@ export const reviewerFetch = HttpRouter.toHttpEffect(
     Layer.provide(Http.Platform),
   ),
 );
+
+/**
+ * The same `fetch` with every path under `prefix`, for a front that routes
+ * by first path segment and passes the request on unchanged.
+ *
+ * **Example** (Under the front's `reviewer-http` segment)
+ * ```ts
+ * import { reviewerFetchAt } from "@proto/party-host/ReviewerApi.http";
+ *
+ * const fetch = reviewerFetchAt("/reviewer-http");
+ * ```
+ *
+ * @category http
+ * @since 0.0.0
+ */
+export const reviewerFetchAt = (prefix: `/${string}`) => {
+  const api = ReviewerHttp.api.prefix(prefix);
+  return HttpRouter.toHttpEffect(
+    HttpApiBuilder.layer(api, { openapiPath: `${prefix}/openapi.json` }).pipe(
+      Layer.provide(ReviewerHttp.layerFor(api)),
+      Layer.provide(Http.Platform),
+    ),
+  );
+};

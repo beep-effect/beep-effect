@@ -176,7 +176,7 @@ const invalidLedgerKinds = (): InvalidLedgerKinds =>
  * @since 0.0.0
  */
 export declare namespace InvalidLedgerKinds {
-  export type Encoded = S.Codec.Encoded<typeof InvalidLedgerKinds>;
+  export type Encoded = typeof InvalidLedgerKinds.Encoded;
 }
 
 const read = (row: object, key: string): unknown => (key in row ? Reflect.get(row, key) : undefined);

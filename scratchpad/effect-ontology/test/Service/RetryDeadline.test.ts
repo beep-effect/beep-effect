@@ -13,7 +13,10 @@ import { RetryPolicy, retryEffect } from "../../Service/Retry.ts";
 const PosInt = S.Int.check(S.isGreaterThan(0, { message: "Expected a positive integer" }));
 const decodeRetryPolicyResult = S.decodeResult(RetryPolicy);
 
-class TransientFailure extends S.TaggedError<TransientFailure, { readonly brand: unique symbol }>()("TransientFailure", {}) {}
+class TransientFailure extends S.TaggedError<TransientFailure, { readonly brand: unique symbol }>()(
+  "TransientFailure",
+  {}
+) {}
 
 const retryPolicy = RetryPolicy.make({
   attemptTimeout: Duration.seconds(1),
@@ -43,8 +46,10 @@ describe("RetryPolicy", () => {
       );
       yield* TestClock.adjust(Duration.seconds(2));
 
-      assert.strictEqual(yield* Fiber.join(dataFirstFiber), 3);
-      assert.strictEqual(yield* Ref.get(dataFirstAttempts), 3);
+      const dataFirstResult = yield* Fiber.join(dataFirstFiber);
+      assert.strictEqual(dataFirstResult, 3);
+      const dataFirstAttemptCount = yield* Ref.get(dataFirstAttempts);
+      assert.strictEqual(dataFirstAttemptCount, 3);
 
       const dataLastAttempts = yield* Ref.make(0);
       const dataLastFiber = yield* succeedOnThirdAttempt(dataLastAttempts).pipe(
@@ -53,8 +58,10 @@ describe("RetryPolicy", () => {
       );
       yield* TestClock.adjust(Duration.seconds(2));
 
-      assert.strictEqual(yield* Fiber.join(dataLastFiber), 3);
-      assert.strictEqual(yield* Ref.get(dataLastAttempts), 3);
+      const dataLastResult = yield* Fiber.join(dataLastFiber);
+      assert.strictEqual(dataLastResult, 3);
+      const dataLastAttemptCount = yield* Ref.get(dataLastAttempts);
+      assert.strictEqual(dataLastAttemptCount, 3);
     })
   );
 
@@ -81,7 +88,8 @@ describe("RetryPolicy", () => {
 
       const error = yield* Fiber.join(fiber);
       assert.isTrue(Cause.isTimeoutError(error));
-      assert.strictEqual(yield* Ref.get(attempts), 2);
+      const attemptCount = yield* Ref.get(attempts);
+      assert.strictEqual(attemptCount, 2);
     })
   );
 
@@ -101,7 +109,8 @@ describe("RetryPolicy", () => {
 
       assert.isTrue(Result.isFailure(result));
       assert.isTrue(S.isSchemaError(error));
-      assert.strictEqual(yield* Ref.get(attempts), 0);
+      const attemptCount = yield* Ref.get(attempts);
+      assert.strictEqual(attemptCount, 0);
     })
   );
 });
@@ -125,7 +134,8 @@ describe("StageTimeoutService", () => {
           .pipe(Effect.flip, Effect.forkChild);
 
         yield* TestClock.adjust(Duration.seconds(1));
-        assert.isTrue(yield* Ref.get(softWarningObserved));
+        const warningObserved = yield* Ref.get(softWarningObserved);
+        assert.isTrue(warningObserved);
 
         yield* TestClock.adjust(Duration.seconds(1));
         const error = yield* Fiber.join(fiber);
@@ -146,9 +156,12 @@ describe("StageTimeoutService", () => {
         yield* TestClock.adjust(Duration.seconds(2));
 
         assert.strictEqual(result, "complete");
-        assert.isFalse(yield* Ref.get(softWarningObserved));
-        assert.isFalse(yield* timeouts.wouldTimeout("chunking", Duration.seconds(2)));
-        assert.isTrue(yield* timeouts.wouldTimeout("chunking", Duration.millis(2001)));
+        const warningObserved = yield* Ref.get(softWarningObserved);
+        assert.isFalse(warningObserved);
+        const atBudgetTimeout = yield* timeouts.wouldTimeout("chunking", Duration.seconds(2));
+        assert.isFalse(atBudgetTimeout);
+        const overBudgetTimeout = yield* timeouts.wouldTimeout("chunking", Duration.millis(2001));
+        assert.isTrue(overBudgetTimeout);
       })
     );
   });

@@ -8,9 +8,9 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
-import * as Inspectable from "effect/Inspectable";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -126,7 +126,8 @@ export type RuleSeverity = typeof RuleSeverity.Type;
  * @category models
  * @since 0.0.0
  */
-export class RuleExample extends S.Opaque<RuleExample, { readonly brand: unique symbol }>()(S.Struct({
+export class RuleExample extends S.Opaque<RuleExample, { readonly brand: unique symbol }>()(
+  S.Struct({
     /** Source context or scenario to which the example applies. */
     input: S.String.pipe(
       $I.annoteKey("RuleExample.input", {
@@ -145,9 +146,12 @@ export class RuleExample extends S.Opaque<RuleExample, { readonly brand: unique 
         description: "Concise explanation connecting the input to the output.",
       })
     ),
-  }).pipe($I.annoteSchema("RuleExample", {
-    description: "One input, output, and explanation used to teach an extraction rule.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("RuleExample", {
+      description: "One input, output, and explanation used to teach an extraction rule.",
+    })
+  )
+) {}
 
 /**
  * Atomic extraction constraint that drives prompt instructions, schema metadata,

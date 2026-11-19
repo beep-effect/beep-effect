@@ -1,5 +1,6 @@
 import * as Domain from "@alchemy.run/domain";
 import { RunId } from "@proto/kernel/Ids";
+import { Sequence, Text } from "@proto/kernel/Measure";
 import { Provenance } from "@proto/kernel/Invocation";
 import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { ClaimId } from "@proto/party-contract/Claim/Claim.id";
@@ -7,11 +8,12 @@ import { ClaimNotPending } from "@proto/party-contract/Claim/ClaimNotPending.rej
 import { NotAnAgent, ProposalStale } from "@proto/party-contract/Claim/ProposeDisposition.command";
 import { EvidenceSignal } from "@proto/party-contract/Evidence";
 import { Proposition } from "@proto/party-contract/Proposition";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { Assessed, ReasonerUnavailable } from "./Reasoner.external.ts";
 import { LiveRun, RunEnded, RunRefused } from "./ReviewRuns.external.ts";
+import { thunkNull } from "@beep/utils/thunk"
 
 /**
  * The executor of one review run, keyed by the run: reserve budget, assess
@@ -31,7 +33,7 @@ export class ReviewAssist extends Domain.Saga(
       claim: ClaimId,
       proposition: Proposition,
       signals: S.Array(EvidenceSignal),
-      evidenceRevision: S.Int,
+      evidenceRevision: Sequence,
       provenance: Provenance,
     },
     rejects: [ReasonerUnavailable, RunRefused, ClaimNotPending, MissingGrant, NotAnAgent, ProposalStale],
@@ -66,7 +68,7 @@ const StoredReservation = S.NullOr(LiveRun).pipe(
           onNone: () => Reservation.cases.OutOfBudget.make({}),
           onSome: (live) => Reservation.cases.Reserved.make({ live }),
         }),
-      encode: Reservation.match({ OutOfBudget: () => null, Reserved: ({ live }) => live }),
+      encode: Reservation.match({ OutOfBudget: thunkNull, Reserved: ({ live }) => live }),
     }),
   ),
 );
@@ -78,7 +80,7 @@ const StoredReservation = S.NullOr(LiveRun).pipe(
  * @category models
  * @since 0.0.0
  */
-export const ProposalSent = S.TaggedUnion({ Made: {}, Refused: { refusal: S.String } });
+export const ProposalSent = S.TaggedUnion({ Made: {}, Refused: { refusal: Text } });
 /**
  * @category models
  * @since 0.0.0
@@ -86,7 +88,7 @@ export const ProposalSent = S.TaggedUnion({ Made: {}, Refused: { refusal: S.Stri
 export type ProposalSent = typeof ProposalSent.Type;
 
 /** Stored as phases 2 to 6 stored it (D35): `null` when made, the refusal's text when refused. */
-const StoredProposalSent = S.NullOr(S.String).pipe(
+const StoredProposalSent = S.NullOr(Text).pipe(
   S.decodeTo(
     S.toType(ProposalSent),
     SchemaTransformation.transform({
@@ -95,7 +97,7 @@ const StoredProposalSent = S.NullOr(S.String).pipe(
           onNone: () => ProposalSent.cases.Made.make({}),
           onSome: (refusal) => ProposalSent.cases.Refused.make({ refusal }),
         }),
-      encode: ProposalSent.match({ Made: () => null, Refused: ({ refusal }) => refusal }),
+      encode: ProposalSent.match({ Made: thunkNull, Refused: ({ refusal }) => refusal }),
     }),
   ),
 );

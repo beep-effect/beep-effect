@@ -14,6 +14,7 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import * as R from "@beep/utils/Record";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { constTrue, pipe } from "effect/Function";
@@ -52,6 +53,24 @@ export class BooleanType extends S.Opaque<BooleanType, { readonly brand: unique 
 ) {}
 
 /**
+ * Companion namespace for {@link BooleanType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BooleanType {
+  /**
+   * Encoded (wire) form of {@link BooleanType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "boolean";
+  }
+}
+
+/**
  * Tag of a signed 8-bit integer.
  *
  * @category models
@@ -62,6 +81,24 @@ export class ByteType extends S.Opaque<ByteType, { readonly brand: unique symbol
     $I.annoteSchema("ByteType", { description: "Type tag of a signed 8-bit integer." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ByteType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ByteType {
+  /**
+   * Encoded (wire) form of {@link ByteType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "byte";
+  }
+}
 
 /**
  * Tag of a signed 16-bit integer.
@@ -76,6 +113,24 @@ export class ShortType extends S.Opaque<ShortType, { readonly brand: unique symb
 ) {}
 
 /**
+ * Companion namespace for {@link ShortType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ShortType {
+  /**
+   * Encoded (wire) form of {@link ShortType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "short";
+  }
+}
+
+/**
  * Tag of a signed 32-bit integer.
  *
  * @category models
@@ -86,6 +141,24 @@ export class IntegerType extends S.Opaque<IntegerType, { readonly brand: unique 
     $I.annoteSchema("IntegerType", { description: "Type tag of a signed 32-bit integer." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link IntegerType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace IntegerType {
+  /**
+   * Encoded (wire) form of {@link IntegerType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "integer";
+  }
+}
 
 /**
  * Tag of a signed 64-bit integer, which travels as a string because JSON numbers cannot hold it.
@@ -102,6 +175,24 @@ export class LongType extends S.Opaque<LongType, { readonly brand: unique symbol
 ) {}
 
 /**
+ * Companion namespace for {@link LongType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LongType {
+  /**
+   * Encoded (wire) form of {@link LongType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "long";
+  }
+}
+
+/**
  * Tag of a 32-bit floating point number.
  *
  * @category models
@@ -114,6 +205,24 @@ export class FloatType extends S.Opaque<FloatType, { readonly brand: unique symb
 ) {}
 
 /**
+ * Companion namespace for {@link FloatType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FloatType {
+  /**
+   * Encoded (wire) form of {@link FloatType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "float";
+  }
+}
+
+/**
  * Tag of a 64-bit floating point number.
  *
  * @category models
@@ -124,6 +233,24 @@ export class DoubleType extends S.Opaque<DoubleType, { readonly brand: unique sy
     $I.annoteSchema("DoubleType", { description: "Type tag of a 64-bit floating point number." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DoubleType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DoubleType {
+  /**
+   * Encoded (wire) form of {@link DoubleType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "double";
+  }
+}
 
 /**
  * Tag of an arbitrary-precision decimal, optionally bounded by precision and scale.
@@ -165,6 +292,26 @@ export class DecimalType extends S.Opaque<DecimalType, { readonly brand: unique 
 ) {}
 
 /**
+ * Companion namespace for {@link DecimalType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DecimalType {
+  /**
+   * Encoded (wire) form of {@link DecimalType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "decimal";
+    readonly precision?: number;
+    readonly scale?: number;
+  }
+}
+
+/**
  * Tag of Unicode text.
  *
  * @category models
@@ -173,6 +320,24 @@ export class DecimalType extends S.Opaque<DecimalType, { readonly brand: unique 
 export class StringType extends S.Opaque<StringType, { readonly brand: unique symbol }>()(
   S.Struct({ type: S.tag("string") }).pipe($I.annoteSchema("StringType", { description: "Type tag of Unicode text." }))
 ) {}
+
+/**
+ * Companion namespace for {@link StringType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StringType {
+  /**
+   * Encoded (wire) form of {@link StringType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "string";
+  }
+}
 
 /**
  * Tag of a calendar date with no time of day and no zone.
@@ -187,6 +352,24 @@ export class DateType extends S.Opaque<DateType, { readonly brand: unique symbol
 ) {}
 
 /**
+ * Companion namespace for {@link DateType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DateType {
+  /**
+   * Encoded (wire) form of {@link DateType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "date";
+  }
+}
+
+/**
  * Tag of an instant on the UTC timeline.
  *
  * @category models
@@ -199,6 +382,24 @@ export class TimestampType extends S.Opaque<TimestampType, { readonly brand: uni
 ) {}
 
 /**
+ * Companion namespace for {@link TimestampType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimestampType {
+  /**
+   * Encoded (wire) form of {@link TimestampType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "timestamp";
+  }
+}
+
+/**
  * Tag of raw bytes.
  *
  * @category models
@@ -207,6 +408,24 @@ export class TimestampType extends S.Opaque<TimestampType, { readonly brand: uni
 export class BinaryType extends S.Opaque<BinaryType, { readonly brand: unique symbol }>()(
   S.Struct({ type: S.tag("binary") }).pipe($I.annoteSchema("BinaryType", { description: "Type tag of raw bytes." }))
 ) {}
+
+/**
+ * Companion namespace for {@link BinaryType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BinaryType {
+  /**
+   * Encoded (wire) form of {@link BinaryType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "binary";
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Security and references
@@ -233,6 +452,25 @@ export class MarkingType extends S.Opaque<MarkingType, { readonly brand: unique 
 ) {}
 
 /**
+ * Companion namespace for {@link MarkingType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MarkingType {
+  /**
+   * Encoded (wire) form of {@link MarkingType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "marking";
+    readonly markingType?: MarkingKind.Encoded;
+  }
+}
+
+/**
  * Tag of an encrypted string, optionally naming the cipher channel used for new values.
  *
  * @category models
@@ -253,6 +491,25 @@ export class CipherTextType extends S.Opaque<CipherTextType, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link CipherTextType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CipherTextType {
+  /**
+   * Encoded (wire) form of {@link CipherTextType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "cipherText";
+    readonly defaultCipherChannel?: string;
+  }
+}
+
+/**
  * Tag of a reference to an uploaded file attachment.
  *
  * @category models
@@ -265,6 +522,24 @@ export class AttachmentType extends S.Opaque<AttachmentType, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link AttachmentType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AttachmentType {
+  /**
+   * Encoded (wire) form of {@link AttachmentType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "attachment";
+  }
+}
+
+/**
  * Tag of a reference to an item in a media set.
  *
  * @category models
@@ -275,6 +550,24 @@ export class MediaReferenceType extends S.Opaque<MediaReferenceType, { readonly 
     $I.annoteSchema("MediaReferenceType", { description: "Type tag of a reference to an item in a media set." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MediaReferenceType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaReferenceType {
+  /**
+   * Encoded (wire) form of {@link MediaReferenceType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "mediaReference";
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Geospatial and series
@@ -293,6 +586,24 @@ export class GeoPointType extends S.Opaque<GeoPointType, { readonly brand: uniqu
 ) {}
 
 /**
+ * Companion namespace for {@link GeoPointType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeoPointType {
+  /**
+   * Encoded (wire) form of {@link GeoPointType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "geopoint";
+  }
+}
+
+/**
  * Tag of an arbitrary geometry on the globe.
  *
  * @category models
@@ -303,6 +614,24 @@ export class GeoShapeType extends S.Opaque<GeoShapeType, { readonly brand: uniqu
     $I.annoteSchema("GeoShapeType", { description: "Type tag of an arbitrary geometry on the globe." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link GeoShapeType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeoShapeType {
+  /**
+   * Encoded (wire) form of {@link GeoShapeType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "geoshape";
+  }
+}
 
 /**
  * Tag of a point supplied to an action, which the platform stores as a geohash.
@@ -317,6 +646,24 @@ export class GeohashType extends S.Opaque<GeohashType, { readonly brand: unique 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link GeohashType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeohashType {
+  /**
+   * Encoded (wire) form of {@link GeohashType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "geohash";
+  }
+}
 
 /**
  * Tag of a reference to a geotime series: positions of one tracked entity over time.
@@ -336,6 +683,24 @@ export class GeotimeSeriesReferenceType extends S.Opaque<
 ) {}
 
 /**
+ * Companion namespace for {@link GeotimeSeriesReferenceType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeotimeSeriesReferenceType {
+  /**
+   * Encoded (wire) form of {@link GeotimeSeriesReferenceType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "geotimeSeriesReference";
+  }
+}
+
+/**
  * Tag of a reference to a time series supplied to an action.
  *
  * @category models
@@ -348,6 +713,24 @@ export class TimeSeriesReferenceType extends S.Opaque<TimeSeriesReferenceType, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TimeSeriesReferenceType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimeSeriesReferenceType {
+  /**
+   * Encoded (wire) form of {@link TimeSeriesReferenceType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "timeSeriesReference";
+  }
+}
 
 const TimeSeriesItemKind = LiteralKit(["string", "double", "numericOrNonNumeric"]);
 
@@ -377,6 +760,25 @@ export class SensorSeriesItem extends S.Opaque<SensorSeriesItem, { readonly bran
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link SensorSeriesItem}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SensorSeriesItem {
+  /**
+   * Encoded (wire) form of {@link SensorSeriesItem}: `isNonNumericProperty` travels as `isNonNumericPropertyTypeId`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "numericOrNonNumeric";
+    readonly isNonNumericPropertyTypeId?: PropertyTypeRid.Encoded;
+  }
+}
 
 /**
  * What the points of a time series property hold.
@@ -419,6 +821,25 @@ export const TimeSeriesItem = TimeSeriesItemKind.mapMembers(() =>
 export type TimeSeriesItem = typeof TimeSeriesItem.Type;
 
 /**
+ * Companion namespace for {@link TimeSeriesItem}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimeSeriesItem {
+  /**
+   * Encoded (wire) form of {@link TimeSeriesItem}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | StringType.Encoded
+    | DoubleType.Encoded
+    | SensorSeriesItem.Encoded;
+}
+
+/**
  * Tag of a time series property, which holds a reference to a series rather than the points themselves.
  *
  * @category models
@@ -434,6 +855,25 @@ export class TimeseriesType extends S.Opaque<TimeseriesType, { readonly brand: u
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TimeseriesType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimeseriesType {
+  /**
+   * Encoded (wire) form of {@link TimeseriesType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "timeseries";
+    readonly itemType: TimeSeriesItem.Encoded;
+  }
+}
 
 const EmbeddingSourceKind = LiteralKit(["lms", "foundryLiveDeployment"]);
 
@@ -452,6 +892,25 @@ export class HostedEmbedding extends S.Opaque<HostedEmbedding, { readonly brand:
     $I.annoteSchema("HostedEmbedding", { description: "Embedding produced by a platform-hosted language model." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link HostedEmbedding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace HostedEmbedding {
+  /**
+   * Encoded (wire) form of {@link HostedEmbedding}: `model` travels as `value`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "lms";
+    readonly value: HostedEmbeddingModel.Encoded;
+  }
+}
 
 /**
  * Embedding produced by a model the user deployed, addressed by its deployment.
@@ -480,6 +939,27 @@ export class DeployedEmbedding extends S.Opaque<DeployedEmbedding, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DeployedEmbedding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DeployedEmbedding {
+  /**
+   * Encoded (wire) form of {@link DeployedEmbedding}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "foundryLiveDeployment";
+    readonly rid?: string;
+    readonly inputParamName?: string;
+    readonly outputParamName?: string;
+  }
+}
 
 /**
  * Where the vectors of a vector property come from.
@@ -516,6 +996,24 @@ export const EmbeddingSource =EmbeddingSourceKind.mapMembers(() => Tuple.make(Ho
  * @since 0.0.0
  */
 export type EmbeddingSource = typeof EmbeddingSource.Type;
+
+/**
+ * Companion namespace for {@link EmbeddingSource}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EmbeddingSource {
+  /**
+   * Encoded (wire) form of {@link EmbeddingSource}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | HostedEmbedding.Encoded
+    | DeployedEmbedding.Encoded;
+}
 
 // The wire wraps each similarity function as `{ value?: ENUM }`; the domain keeps the bare literal
 // and drops wrappers whose value the server omitted.
@@ -560,6 +1058,27 @@ export class VectorType extends S.Opaque<VectorType, { readonly brand: unique sy
   )
 ) {}
 
+/**
+ * Companion namespace for {@link VectorType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VectorType {
+  /**
+   * Encoded (wire) form of {@link VectorType}: each similarity function wrapped as `{ value }`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "vector";
+    readonly dimension: number;
+    readonly supportsSearchWith?: ReadonlyArray<{ readonly value?: VectorSimilarity.Encoded }>;
+    readonly embeddingModel?: EmbeddingSource.Encoded;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Unit and escape tags
 // -----------------------------------------------------------------------------
@@ -577,6 +1096,24 @@ export class NullType extends S.Opaque<NullType, { readonly brand: unique symbol
 ) {}
 
 /**
+ * Companion namespace for {@link NullType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace NullType {
+  /**
+   * Encoded (wire) form of {@link NullType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "null";
+  }
+}
+
+/**
  * Tag of a query output that returns nothing.
  *
  * @category models
@@ -587,6 +1124,24 @@ export class VoidType extends S.Opaque<VoidType, { readonly brand: unique symbol
     $I.annoteSchema("VoidType", { description: "Type tag of a query output that returns nothing." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link VoidType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VoidType {
+  /**
+   * Encoded (wire) form of {@link VoidType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "void";
+  }
+}
 
 /**
  * Tag of a value of any type, found only in the legacy ontology data types.
@@ -603,6 +1158,24 @@ export class AnyType extends S.Opaque<AnyType, { readonly brand: unique symbol }
 ) {}
 
 /**
+ * Companion namespace for {@link AnyType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace AnyType {
+  /**
+   * Encoded (wire) form of {@link AnyType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "any";
+  }
+}
+
+/**
  * Tag of an action parameter that names an object type rather than an object.
  *
  * @category models
@@ -617,6 +1190,24 @@ export class ObjectTypeReferenceType extends S.Opaque<ObjectTypeReferenceType, {
 ) {}
 
 /**
+ * Companion namespace for {@link ObjectTypeReferenceType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectTypeReferenceType {
+  /**
+   * Encoded (wire) form of {@link ObjectTypeReferenceType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "objectType";
+  }
+}
+
+/**
  * Tag of an action parameter that names a scenario, an isolated what-if overlay of edits.
  *
  * @category models
@@ -629,6 +1220,24 @@ export class ScenarioReferenceType extends S.Opaque<ScenarioReferenceType, { rea
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ScenarioReferenceType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ScenarioReferenceType {
+  /**
+   * Encoded (wire) form of {@link ScenarioReferenceType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "scenarioReference";
+  }
+}
 
 /**
  * Tag of a type the platform knows but this contract does not model, kept so decoding never loses it.
@@ -650,3 +1259,23 @@ export class UnsupportedType extends S.Opaque<UnsupportedType, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link UnsupportedType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace UnsupportedType {
+  /**
+   * Encoded (wire) form of {@link UnsupportedType}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "unsupported";
+    readonly unsupportedType: string;
+    readonly params: R.ReadonlyRecord<string, string>;
+  }
+}

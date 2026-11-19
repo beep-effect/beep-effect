@@ -15,6 +15,7 @@ import { inMemoryState } from "alchemy/State/InMemoryState";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
@@ -154,8 +155,25 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
 
     const source = O.getOrThrow(recorder.byFqn("Runners/Poolheavy/ScaleUpSource"));
     expect([source.news.functionName, source.news.functionResponseTypes]).toStrictEqual([
-      "Runners-Poolheavy-ScaleUp",
+      // By ARN, so lambda:FunctionArn in the deploy role policy reads the same value on every mapping call.
+      "arn:aws:lambda:us-east-1:123456789012:function-Runners-Poolheavy-ScaleUp",
       ["ReportBatchItemFailures"],
+    ]);
+
+    // Every mapping names its function by ARN, not only the scale-up one.
+    const mappingFunctions = A.map(recorder.ofType("Lambda.EventSourceMapping"), (entry) => [
+      entry.fqn,
+      entry.news.functionName,
+    ]);
+    expect(
+      A.sort(
+        mappingFunctions,
+        Order.mapInput(Order.String, ([fqn]: ReadonlyArray<unknown>) => String(fqn))
+      )
+    ).toStrictEqual([
+      ["Runners/DeregisterRetrySource", "arn:aws:lambda:us-east-1:123456789012:function-Runners-TerminationWatcher"],
+      ["Runners/Poolheavy/JobRetrySource", "arn:aws:lambda:us-east-1:123456789012:function-Runners-Poolheavy-JobRetry"],
+      ["Runners/Poolheavy/ScaleUpSource", "arn:aws:lambda:us-east-1:123456789012:function-Runners-Poolheavy-ScaleUp"],
     ]);
 
     const sources = A.map(recorder.ofType("Lambda.EventSourceMapping"), (entry) => entry.news.functionResponseTypes);

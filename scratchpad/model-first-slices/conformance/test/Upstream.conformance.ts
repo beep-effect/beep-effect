@@ -2,7 +2,7 @@ import { it } from "@effect/vitest";
 import { conformance } from "@proto/conformance-upstream/conformance";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as Layer from "effect/Layer";
 import * as Socket from "effect/socket/Socket";

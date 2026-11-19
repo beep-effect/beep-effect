@@ -6,13 +6,12 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { UnitInterval } from "@beep/schema/UnitInterval";
-
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { Entity } from "./Entity.ts";
 import { EREdge, ERNode, ResolutionMethod } from "./EntityResolution.ts";
 import { EntityId } from "./shared.ts";
-import * as Effect from "effect/Effect";
-import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/EntityResolutionGraph");
 
@@ -49,16 +48,20 @@ export { ResolutionMethod } from "./EntityResolution.ts";
  * @category models
  * @since 0.0.0
  */
-export class SimilarityEdge extends S.Opaque<SimilarityEdge, { readonly brand: unique symbol }>()(S.Struct({
+export class SimilarityEdge extends S.Opaque<SimilarityEdge, { readonly brand: unique symbol }>()(
+  S.Struct({
     similarity: UnitInterval.annotateKey({
       description: "Normalized similarity score between the two candidate entities.",
     }),
     method: ResolutionMethod.annotateKey({
       description: "Evidence strategy that produced the similarity edge.",
     }),
-  }).pipe($I.annoteSchema("SimilarityEdge", {
-    description: "Normalized similarity edge used by entity clustering.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("SimilarityEdge", {
+      description: "Normalized similarity edge used by entity clustering.",
+    })
+  )
+) {}
 
 /**
  * Explanation of how one extracted entity resolved to its canonical form.
@@ -80,7 +83,8 @@ export class SimilarityEdge extends S.Opaque<SimilarityEdge, { readonly brand: u
  * @category models
  * @since 0.0.0
  */
-export class EntityResolutionInfo extends S.Opaque<EntityResolutionInfo, { readonly brand: unique symbol }>()(S.Struct({
+export class EntityResolutionInfo extends S.Opaque<EntityResolutionInfo, { readonly brand: unique symbol }>()(
+  S.Struct({
     entityId: EntityId.annotateKey({
       description: "Identifier of the original extracted entity.",
     }),
@@ -90,9 +94,12 @@ export class EntityResolutionInfo extends S.Opaque<EntityResolutionInfo, { reado
     method: ResolutionMethod.annotateKey({
       description: "Evidence strategy that selected the canonical entity.",
     }),
-  }).pipe($I.annoteSchema("EntityResolutionInfo", {
-    description: "Resolution evidence linking one extracted entity to its canonical entity.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("EntityResolutionInfo", {
+      description: "Resolution evidence linking one extracted entity to its canonical entity.",
+    })
+  )
+) {}
 
 /**
  * Non-empty cluster of extracted entities representing one canonical entity.
@@ -125,7 +132,8 @@ export class EntityResolutionInfo extends S.Opaque<EntityResolutionInfo, { reado
  * @category models
  * @since 0.0.0
  */
-export class EntityCluster extends S.Opaque<EntityCluster, { readonly brand: unique symbol }>()(S.Struct({
+export class EntityCluster extends S.Opaque<EntityCluster, { readonly brand: unique symbol }>()(
+  S.Struct({
     entities: S.NonEmptyArray(Entity).annotateKey({
       description: "Non-empty set of extracted entities assigned to the cluster.",
     }),
@@ -135,9 +143,12 @@ export class EntityCluster extends S.Opaque<EntityCluster, { readonly brand: uni
     methods: S.NonEmptyArray(ResolutionMethod).annotateKey({
       description: "Resolution methods that contributed to the cluster.",
     }),
-  }).pipe($I.annoteSchema("EntityCluster", {
-    description: "Non-empty cluster of extracted entities assigned to one canonical identity.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("EntityCluster", {
+      description: "Non-empty cluster of extracted entities assigned to one canonical identity.",
+    })
+  )
+) {}
 
 const clusteringResultClustersDefault = A.empty<EntityCluster>();
 /**
@@ -155,17 +166,22 @@ const clusteringResultClustersDefault = A.empty<EntityCluster>();
  * @category models
  * @since 0.0.0
  */
-export class ClusteringResult extends S.Opaque<ClusteringResult, { readonly brand: unique symbol }>()(S.Struct({
+export class ClusteringResult extends S.Opaque<ClusteringResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     clusters: S.Array(EntityCluster).pipe(
-      S.withConstructorDefault(Effect.succeed(clusteringResultClustersDefault)), S.withDecodingDefaultType(Effect.succeed(clusteringResultClustersDefault)),
+      S.withConstructorDefault(Effect.succeed(clusteringResultClustersDefault)),
+      S.withDecodingDefaultType(Effect.succeed(clusteringResultClustersDefault)),
       S.annotateKey({ description: "Entity clusters produced by the resolver." })
     ),
     embeddingMap: S.HashMap(EntityId, S.NonEmptyArray(S.Finite)).annotateKey({
       description: "Finite embedding vector indexed by extracted entity identifier.",
     }),
-  }).pipe($I.annoteSchema("ClusteringResult", {
-    description: "Entity clusters and the finite vectors used by the clustering pass.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ClusteringResult", {
+      description: "Entity clusters and the finite vectors used by the clustering pass.",
+    })
+  )
+) {}
 
 /**
  * Cardinality summary for an entity-resolution graph.
@@ -188,7 +204,8 @@ export class ClusteringResult extends S.Opaque<ClusteringResult, { readonly bran
  * @category models
  * @since 0.0.0
  */
-export class EntityResolutionStats extends S.Opaque<EntityResolutionStats, { readonly brand: unique symbol }>()(S.Struct({
+export class EntityResolutionStats extends S.Opaque<EntityResolutionStats, { readonly brand: unique symbol }>()(
+  S.Struct({
     mentionCount: S.Natural.annotateKey({
       description: "Number of immutable mention nodes.",
     }),
@@ -201,9 +218,12 @@ export class EntityResolutionStats extends S.Opaque<EntityResolutionStats, { rea
     clusterCount: S.Natural.annotateKey({
       description: "Number of clusters produced by resolution.",
     }),
-  }).pipe($I.annoteSchema("EntityResolutionStats", {
-    description: "Non-negative cardinality summary for an entity-resolution graph.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("EntityResolutionStats", {
+      description: "Non-negative cardinality summary for an entity-resolution graph.",
+    })
+  )
+) {}
 
 const ResolutionGraph = S.toCodecJson(S.Graph("directed", ERNode, EREdge)).pipe(
   $I.annoteSchema("ResolutionGraph", {
@@ -249,7 +269,8 @@ const ResolutionGraph = S.toCodecJson(S.Graph("directed", ERNode, EREdge)).pipe(
  * @category models
  * @since 0.0.0
  */
-export class EntityResolutionGraph extends S.Opaque<EntityResolutionGraph, { readonly brand: unique symbol }>()(S.Struct({
+export class EntityResolutionGraph extends S.Opaque<EntityResolutionGraph, { readonly brand: unique symbol }>()(
+  S.Struct({
     graph: ResolutionGraph.annotateKey({
       description: "Immutable two-tier mention-to-canonical graph.",
     }),
@@ -265,9 +286,12 @@ export class EntityResolutionGraph extends S.Opaque<EntityResolutionGraph, { rea
     stats: EntityResolutionStats.annotateKey({
       description: "Cardinality summary for the graph snapshot.",
     }),
-  }).pipe($I.annoteSchema("EntityResolutionGraph", {
-    description: "Indexed immutable graph snapshot produced by entity resolution.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("EntityResolutionGraph", {
+      description: "Indexed immutable graph snapshot produced by entity resolution.",
+    })
+  )
+) {
   /** Schema-derived graph-snapshot guard. */
   static readonly is = S.is(EntityResolutionGraph);
 }

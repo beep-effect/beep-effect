@@ -1,8 +1,9 @@
-import * as Effect from "effect/Effect";
 import { describe, expect, it } from "@effect/vitest";
-import * as S from "effect/Schema";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
 import { OutputFilename, OutputType, OutputTypeRegistry } from "../../../Domain/Model/OutputType.ts";
+
 const isOutputFilename = S.is(OutputFilename);
 
 describe("effect-ontology output artifact taxonomy", () => {
@@ -14,7 +15,7 @@ describe("effect-ontology output artifact taxonomy", () => {
           Arbitrary.checkEffect(
             Arbitrary.all([arbitrary]),
             ([value]) => {
-          expect(S.is(schema)(value)).toBe(true);
+              expect(S.is(schema)(value)).toBe(true);
 
               return true;
             },

@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 /**
  * Telemetry: Prometheus Metrics Service
  *
@@ -15,11 +16,12 @@ import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
+
 const $I = $ScratchpadId.create("effect-ontology/Telemetry/Metrics");
 
 import * as Effect from "effect/Effect";
-import * as Ref from "effect/Ref";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -46,15 +48,19 @@ import * as Str from "effect/String";
  * @category models
  * @since 0.0.0
  */
-export class ExtractionMetrics extends S.Opaque<ExtractionMetrics, { readonly brand: unique symbol }>()(S.Struct({
+export class ExtractionMetrics extends S.Opaque<ExtractionMetrics, { readonly brand: unique symbol }>()(
+  S.Struct({
     duration: S.Duration,
     entityCount: S.Natural,
     relationCount: S.Natural,
     chunkCount: S.Natural,
     success: S.Boolean,
-  }).pipe($I.annoteSchema("ExtractionMetrics", {
-    description: "Duration, output counts, and outcome of one extraction run.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExtractionMetrics", {
+      description: "Duration, output counts, and outcome of one extraction run.",
+    })
+  )
+) {}
 
 /**
  * Provider identity, latency, token counts, and outcome of one language-model
@@ -81,16 +87,20 @@ export class ExtractionMetrics extends S.Opaque<ExtractionMetrics, { readonly br
  * @category models
  * @since 0.0.0
  */
-export class LlmCallMetrics extends S.Opaque<LlmCallMetrics, { readonly brand: unique symbol }>()(S.Struct({
+export class LlmCallMetrics extends S.Opaque<LlmCallMetrics, { readonly brand: unique symbol }>()(
+  S.Struct({
     provider: S.NonEmptyString,
     model: S.NonEmptyString,
     duration: S.Duration,
     tokensIn: S.Natural,
     tokensOut: S.Natural,
     success: S.Boolean,
-  }).pipe($I.annoteSchema("LlmCallMetrics", {
-    description: "Provider identity, latency, token counts, and outcome of one language-model call.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("LlmCallMetrics", {
+      description: "Provider identity, latency, token counts, and outcome of one language-model call.",
+    })
+  )
+) {}
 
 /**
  * Hit and miss counts plus measured cache latency for embedding lookups.
@@ -113,13 +123,17 @@ export class LlmCallMetrics extends S.Opaque<LlmCallMetrics, { readonly brand: u
  * @category models
  * @since 0.0.0
  */
-export class EmbeddingCacheMetrics extends S.Opaque<EmbeddingCacheMetrics, { readonly brand: unique symbol }>()(S.Struct({
+export class EmbeddingCacheMetrics extends S.Opaque<EmbeddingCacheMetrics, { readonly brand: unique symbol }>()(
+  S.Struct({
     hits: S.Natural,
     misses: S.Natural,
     latency: S.Duration,
-  }).pipe($I.annoteSchema("EmbeddingCacheMetrics", {
-    description: "Hit and miss counts plus measured cache latency.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("EmbeddingCacheMetrics", {
+      description: "Hit and miss counts plus measured cache latency.",
+    })
+  )
+) {}
 
 /**
  * Internal metrics state
@@ -379,7 +393,7 @@ export class MetricsService extends Context.Service<MetricsService>()($I`Metrics
         lines.push("# TYPE embedding_cache_latency_ms_sum counter");
         lines.push(`embedding_cache_latency_ms_sum ${state.embeddingCache.latencySumMs}`);
 
-        return lines.join("\n");
+        return A.join(lines, "\n");
       }),
 
       /**

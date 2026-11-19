@@ -160,7 +160,7 @@ export type PlanType = typeof PlanType.Type;
  * @since 0.0.0
  */
 export declare namespace PlanType {
-  export type Encoded = S.Codec.Encoded<typeof PlanType>;
+  export type Encoded = typeof PlanType.Encoded;
 }
 
 /**
@@ -192,7 +192,7 @@ export class UsersError extends S.TaggedError<UsersError, { readonly brand: uniq
  * @since 0.0.0
  */
 export declare namespace UsersError {
-  export type Encoded = S.Codec.Encoded<typeof UsersError>;
+  export type Encoded = typeof UsersError.Encoded;
 }
 
 /**
@@ -271,7 +271,7 @@ export type WebhookType = typeof WebhookType.Type;
  * @since 0.0.0
  */
 export declare namespace WebhookType {
-  export type Encoded = S.Codec.Encoded<typeof WebhookType>;
+  export type Encoded = typeof WebhookType.Encoded;
 }
 
 /**
@@ -347,7 +347,7 @@ export type LocationContextConsentStatus = typeof LocationContextConsentStatus.T
  * @since 0.0.0
  */
 export declare namespace LocationContextConsentStatus {
-  export type Encoded = S.Codec.Encoded<typeof LocationContextConsentStatus>;
+  export type Encoded = typeof LocationContextConsentStatus.Encoded;
 }
 
 /**
@@ -464,7 +464,7 @@ export class LocationContextConsent extends Model<LocationContextConsent>("Locat
  * @since 0.0.0
  */
 export declare namespace LocationContextConsent {
-  export type Encoded = S.Codec.Encoded<typeof LocationContextConsent>;
+  export type Encoded = typeof LocationContextConsent.Encoded;
 }
 
 /**
@@ -506,7 +506,7 @@ export class LocationContextConsentUpdate extends Model<LocationContextConsentUp
  * @since 0.0.0
  */
 export declare namespace LocationContextConsentUpdate {
-  export type Encoded = S.Codec.Encoded<typeof LocationContextConsentUpdate>;
+  export type Encoded = typeof LocationContextConsentUpdate.Encoded;
 }
 
 /**
@@ -550,7 +550,7 @@ export class LocationContextConsentResponse extends Model<LocationContextConsent
  * @since 0.0.0
  */
 export declare namespace LocationContextConsentResponse {
-  export type Encoded = S.Codec.Encoded<typeof LocationContextConsentResponse>;
+  export type Encoded = typeof LocationContextConsentResponse.Encoded;
 }
 
 /**
@@ -591,7 +591,7 @@ export type SubscriptionStatus = typeof SubscriptionStatus.Type;
  * @since 0.0.0
  */
 export declare namespace SubscriptionStatus {
-  export type Encoded = S.Codec.Encoded<typeof SubscriptionStatus>;
+  export type Encoded = typeof SubscriptionStatus.Encoded;
 }
 
 const optionalInt = (column: string) => optionalNull(S.Int).pipe(pg.integer(), pg.columnName(column));
@@ -637,7 +637,7 @@ export class PlanLimits extends Model<PlanLimits>("PlanLimits")(
  * @since 0.0.0
  */
 export declare namespace PlanLimits {
-  export type Encoded = S.Codec.Encoded<typeof PlanLimits>;
+  export type Encoded = typeof PlanLimits.Encoded;
 }
 
 /**
@@ -678,7 +678,7 @@ export type ChatQuotaUnit = typeof ChatQuotaUnit.Type;
  * @since 0.0.0
  */
 export declare namespace ChatQuotaUnit {
-  export type Encoded = S.Codec.Encoded<typeof ChatQuotaUnit>;
+  export type Encoded = typeof ChatQuotaUnit.Encoded;
 }
 
 /**
@@ -730,7 +730,7 @@ export class ChatUsageQuota extends Model<ChatUsageQuota>("ChatUsageQuota")(
  * @since 0.0.0
  */
 export declare namespace ChatUsageQuota {
-  export type Encoded = S.Codec.Encoded<typeof ChatUsageQuota>;
+  export type Encoded = typeof ChatUsageQuota.Encoded;
 }
 
 const ReleasedPlan = releasedWire.pipe(aliasReleasedPro, S.withConstructorDefault(Effect.succeed("basic")));
@@ -782,7 +782,7 @@ export class Subscription extends Model<Subscription>("Subscription")(
  * @since 0.0.0
  */
 export declare namespace Subscription {
-  export type Encoded = S.Codec.Encoded<typeof Subscription>;
+  export type Encoded = typeof Subscription.Encoded;
 }
 
 /**
@@ -823,7 +823,7 @@ export class PricingOption extends Model<PricingOption>("PricingOption")(
  * @since 0.0.0
  */
 export declare namespace PricingOption {
-  export type Encoded = S.Codec.Encoded<typeof PricingOption>;
+  export type Encoded = typeof PricingOption.Encoded;
 }
 
 /**
@@ -864,7 +864,7 @@ export class SubscriptionPlan extends Model<SubscriptionPlan>("SubscriptionPlan"
  * @since 0.0.0
  */
 export declare namespace SubscriptionPlan {
-  export type Encoded = S.Codec.Encoded<typeof SubscriptionPlan>;
+  export type Encoded = typeof SubscriptionPlan.Encoded;
 }
 
 /**
@@ -904,7 +904,7 @@ export class TrialMetadata extends Model<TrialMetadata>("TrialMetadata")(
  * @since 0.0.0
  */
 export declare namespace TrialMetadata {
-  export type Encoded = S.Codec.Encoded<typeof TrialMetadata>;
+  export type Encoded = typeof TrialMetadata.Encoded;
 }
 
 /**
@@ -949,7 +949,7 @@ export class PhoneCallQuota extends Model<PhoneCallQuota>("PhoneCallQuota")(
  * @since 0.0.0
  */
 export declare namespace PhoneCallQuota {
-  export type Encoded = S.Codec.Encoded<typeof PhoneCallQuota>;
+  export type Encoded = typeof PhoneCallQuota.Encoded;
 }
 
 /**
@@ -998,7 +998,7 @@ export class TranscriptionAllowanceSnapshot extends Model<TranscriptionAllowance
  * @since 0.0.0
  */
 export declare namespace TranscriptionAllowanceSnapshot {
-  export type Encoded = S.Codec.Encoded<typeof TranscriptionAllowanceSnapshot>;
+  export type Encoded = typeof TranscriptionAllowanceSnapshot.Encoded;
 }
 
 /**
@@ -1058,7 +1058,7 @@ export class UserSubscriptionResponse extends Model<UserSubscriptionResponse>("U
  * @since 0.0.0
  */
 export declare namespace UserSubscriptionResponse {
-  export type Encoded = S.Codec.Encoded<typeof UserSubscriptionResponse>;
+  export type Encoded = typeof UserSubscriptionResponse.Encoded;
 }
 
 /**
@@ -1094,7 +1094,7 @@ export class AvailableLanguage extends Model<AvailableLanguage>("AvailableLangua
  * @since 0.0.0
  */
 export declare namespace AvailableLanguage {
-  export type Encoded = S.Codec.Encoded<typeof AvailableLanguage>;
+  export type Encoded = typeof AvailableLanguage.Encoded;
 }
 
 /**
@@ -1129,5 +1129,5 @@ export class AvailableLanguagesResponse extends Model<AvailableLanguagesResponse
  * @since 0.0.0
  */
 export declare namespace AvailableLanguagesResponse {
-  export type Encoded = S.Codec.Encoded<typeof AvailableLanguagesResponse>;
+  export type Encoded = typeof AvailableLanguagesResponse.Encoded;
 }

@@ -5,6 +5,11 @@
  * characters, statements kept whole (`chunkByLength`). The policy only allows,
  * so the chunks evaluate together exactly as the whole document does.
  *
+ * It also writes the documents of the managed policies the role holds,
+ * `managed-<version>-<n>.json` for `ci-runners-deploy-<n>` (from 1), each at
+ * most 6,144 characters, statements whole and in source order
+ * (`managedPolicyDocuments`).
+ *
  * `--vpc-arn <arn>` writes v2 (`policy-v2.json`, `v2-<n>.json`); without it,
  * v1. Either run also writes `fleet-boundary.json`, the document of the prod
  * bootstrap boundary policy. The gate runs it from the operator workstation;
@@ -24,7 +29,13 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import { chunkByLength, deployRolePolicy, fleetBoundary } from "./src/DeployRolePolicy.ts";
+import {
+  chunkByLength,
+  deployRolePolicy,
+  fleetBoundary,
+  managedPolicyDocuments,
+  managedPolicyLimit,
+} from "./src/DeployRolePolicy.ts";
 import type * as IAM from "@alchemy.run/aws/IAM";
 
 const encode = S.encodeEffect(S.fromJsonString(S.Unknown));
@@ -64,7 +75,20 @@ const write = Command.make(
       }),
       { concurrency: 1, discard: true }
     );
+    const managed = yield* managedPolicyDocuments(policy);
+    const managedLengths = yield* Effect.forEach(
+      managed,
+      Effect.fnUntraced(function* (document, index) {
+        const body = yield* encode(document);
+        yield* fs.writeFileString(path.join(outDir, `managed-${version}-${index + 1}.json`), body);
+        return body.length;
+      }),
+      { concurrency: 1 }
+    );
     yield* Console.log(`${version}: ${text.length} characters, ${groups.length} chunks in ${outDir}`);
+    yield* Console.log(
+      `${version}: ${managed.length} managed policies of ${A.join(A.map(managedLengths, String), ", ")} characters (limit ${managedPolicyLimit})`
+    );
   })
 ).pipe(Command.withDescription("Write the CiRunners deploy role policy and its simulation chunks."));
 

@@ -1,31 +1,25 @@
 import type { Hop, Provenance } from "@proto/kernel/Invocation";
 import type { RunId } from "@proto/kernel/Ids";
-import { BudgetRefused, ReviewRuns, RunEnded, RunRefused } from "@proto/party-model/Review/ReviewRuns.external";
+import { BudgetRefused, ReviewRuns, RunEnded, RunEndedStatus, RunRefused } from "@proto/party-model/Review/ReviewRuns.external";
 import { ReservationId } from "@proto/runs-contract/Run/Reservation.id";
 import { SessionId } from "@proto/runs-contract/Run/Session.id";
-import {
-  type RunBudgetExceeded,
-  type RunEnded as RunsRunEnded,
-  RunReport,
-  type RunReportRefused,
-  RunsGateway,
-} from "@proto/runs-contract/Runs.gateway";
+import { RunReport, RunReportRefusal, RunsGateway } from "@proto/runs-contract/Runs.gateway";
 import * as Effect from "effect/Effect";
-import * as Match from "effect/Match";
+import * as S from "effect/Schema";
+
+const isEndedStatus = S.is(RunEndedStatus);
 
 /**
  * A run that ended is Party's `RunEnded`; any other refusal, a budget one
- * outside a reservation included, is `RunRefused`.
+ * outside a reservation included, is `RunRefused`. The runs contract types
+ * an ended run's status as any run status; one that is not an ended status
+ * is no ended run, so it is `RunRefused`, with the status as its reason.
  */
-const refusedAs: (refused: RunReportRefused | RunBudgetExceeded | RunsRunEnded) => RunRefused | RunEnded = Match.type<
-  RunReportRefused | RunBudgetExceeded | RunsRunEnded
->().pipe(
-  Match.tagsExhaustive({
-    RunEnded: ({ status }) => RunEnded.make({ status }),
-    RunBudgetExceeded: () => RunRefused.make({ reason: "budget" }),
-    RunReportRefused: ({ reason }) => RunRefused.make({ reason }),
-  }),
-);
+const refusedAs: (refused: RunReportRefusal) => RunRefused | RunEnded = RunReportRefusal.match({
+  RunEnded: ({ status }) => (isEndedStatus(status) ? RunEnded.make({ status }) : RunRefused.make({ reason: status })),
+  RunBudgetExceeded: () => RunRefused.make({ reason: "budget" }),
+  RunReportRefused: ({ reason }) => RunRefused.make({ reason }),
+});
 
 /**
  * Party's review-run port over the runs context's gateway: Party's words
@@ -57,8 +51,8 @@ export const PartyReviewRuns = ReviewRuns.toLayer(
             report: RunReport.cases.Reserve.make({ reservation: ReservationId.make(reservation), units }),
           })
           .pipe(
-            Effect.mapError((refused) =>
-              refused._tag === "RunBudgetExceeded" ? BudgetRefused.make({ remaining: refused.remaining }) : refusedAs(refused),
+            Effect.mapError(
+              RunReportRefusal.matchOrElse({ RunBudgetExceeded: ({ remaining }) => BudgetRefused.make({ remaining }) }, refusedAs),
             ),
           ),
       settle: ({ reservation, units, ...call }) =>

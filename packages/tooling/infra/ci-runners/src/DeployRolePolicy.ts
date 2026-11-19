@@ -9,6 +9,11 @@
  * fleet VPC that cutover step 1a created. `deploy-role-policy.ts` writes either
  * version as JSON, plus the chunks `aws iam simulate-custom-policy` needs.
  *
+ * The document is longer than one role's 10,240 inline characters, so the role
+ * holds it as customer managed policies, `ci-runners-deploy-<n>` under
+ * `/beep-alchemy-deploy/`: {@link managedPolicyDocuments} splits it in
+ * statement order into documents of at most 6,144 characters each.
+ *
  * Ownership is the pair of tags Alchemy stamps on every resource it creates,
  * `alchemy::stack = CiRunners` and `alchemy::stage = prod`. A request can set
  * them only while creating a resource (`ec2:CreateAction`); a direct
@@ -21,7 +26,9 @@
  */
 
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { stageSlug } from "./Names.ts";
 import type * as IAM from "@alchemy.run/aws/IAM";
@@ -54,6 +61,32 @@ export const ec2CreateActions: ReadonlyArray<string> = [
   "ec2:CreateSecurityGroup",
   "ec2:CreateFlowLogs",
   "ec2:CreateLaunchTemplate",
+];
+
+/**
+ * The EC2 creates that EC2 also authorizes against the parent VPC. On that
+ * resource the request tags are absent (the Service Authorization Reference
+ * lists `aws:ResourceTag` and `ec2:ResourceTag` for `vpc`, not
+ * `aws:RequestTag`), so `Ec2CreatesTagged` alone can never allow them:
+ * cutover step 1a failed there. `Ec2CreatesInOwnedVpc` grants the VPC side,
+ * held to a VPC that carries the ownership tags.
+ *
+ * **Example** (A subnet is created in a VPC)
+ *
+ * ```ts
+ * import { ec2CreatesInVpc } from "@beep/infra-ci-runners/DeployRolePolicy"
+ *
+ * console.log(ec2CreatesInVpc.includes("ec2:CreateSubnet")) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const ec2CreatesInVpc: ReadonlyArray<string> = [
+  "ec2:CreateSubnet",
+  "ec2:CreateRouteTable",
+  "ec2:CreateSecurityGroup",
+  "ec2:CreateFlowLogs",
 ];
 
 /**
@@ -91,6 +124,15 @@ const ec2Statements: ReadonlyArray<IAM.PolicyStatement> = [
     Action: [...ec2CreateActions],
     Resource: ["*"],
     Condition: { StringEquals: requested },
+  },
+  // The parent-VPC side of a create inside the fleet VPC. It names only the VPC resource type, so it adds nothing
+  // to the check on the subnet, route table, group or flow log being created: that one still needs the request tags.
+  {
+    Sid: "Ec2CreatesInOwnedVpc",
+    Effect: "Allow",
+    Action: [...ec2CreatesInVpc],
+    Resource: [`arn:aws:ec2:${region}:${account}:vpc/*`],
+    Condition: { StringEquals: owned },
   },
   {
     Sid: "Ec2TagOnCreate",
@@ -505,6 +547,9 @@ const iamStatements: ReadonlyArray<IAM.PolicyStatement> = [
       "iam:ListPolicyVersions",
       "iam:CreatePolicyVersion",
       "iam:DeletePolicyVersion",
+      // Alchemy sets the default again after a new version, and reads the tags after every create and on every plan.
+      "iam:SetDefaultPolicyVersion",
+      "iam:ListPolicyTags",
       "iam:TagPolicy",
       "iam:UntagPolicy",
     ],
@@ -518,6 +563,7 @@ const iamStatements: ReadonlyArray<IAM.PolicyStatement> = [
       "iam:DeleteInstanceProfile",
       "iam:GetInstanceProfile",
       "iam:TagInstanceProfile",
+      "iam:UntagInstanceProfile",
       "iam:AddRoleToInstanceProfile",
       "iam:RemoveRoleFromInstanceProfile",
     ],
@@ -574,6 +620,9 @@ const serviceStatements: ReadonlyArray<IAM.PolicyStatement> = [
       "lambda:GetFunctionUrlConfig",
       "lambda:PutFunctionConcurrency",
       "lambda:DeleteFunctionConcurrency",
+      // Reads Alchemy makes after every create and on every plan of a function it is still creating.
+      "lambda:GetFunctionConcurrency",
+      "lambda:GetFunctionEventInvokeConfig",
       "lambda:TagResource",
       "lambda:UntagResource",
       "lambda:ListTags",
@@ -636,6 +685,8 @@ const serviceStatements: ReadonlyArray<IAM.PolicyStatement> = [
     ],
     Resource: [`arn:aws:sqs:${region}:${account}:beep-fleet-prod-*`],
   },
+  // A queue delete confirms the queue is gone by listing; SQS gives the list no resource type.
+  { Sid: "SqsList", Effect: "Allow", Action: ["sqs:ListQueues"], Resource: ["*"] },
   {
     Sid: "SsmFleetParameters",
     Effect: "Allow",
@@ -643,6 +694,8 @@ const serviceStatements: ReadonlyArray<IAM.PolicyStatement> = [
       "ssm:PutParameter",
       "ssm:GetParameter",
       "ssm:GetParameters",
+      // RunnerSweep lists the fleet token path when the fleet is destroyed.
+      "ssm:GetParametersByPath",
       "ssm:DeleteParameter",
       "ssm:AddTagsToResource",
       "ssm:RemoveTagsFromResource",
@@ -725,6 +778,11 @@ const serviceStatements: ReadonlyArray<IAM.PolicyStatement> = [
       "s3:DeleteObject",
       "s3:GetObject",
       "s3:ListBucket",
+      // The bucket delete empties it first: versions and unfinished uploads included.
+      "s3:ListBucketVersions",
+      "s3:ListBucketMultipartUploads",
+      "s3:AbortMultipartUpload",
+      "s3:DeleteObjectVersion",
     ],
     Resource: [
       `arn:aws:s3:::beep-fleet-prod-binaries-${account}`,
@@ -754,6 +812,8 @@ const serviceStatements: ReadonlyArray<IAM.PolicyStatement> = [
       "logs:CreateLogGroup",
       "logs:DeleteLogGroup",
       "logs:PutRetentionPolicy",
+      // A log group delete first switches deletion protection off.
+      "logs:PutLogGroupDeletionProtection",
       "logs:TagResource",
       "logs:UntagResource",
       "logs:ListTagsForResource",
@@ -886,3 +946,70 @@ export const chunkByLength = (input: {
   );
   return A.map(groups, (group) => group.members);
 };
+
+const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
+
+/**
+ * The most characters IAM takes in one customer managed policy document.
+ *
+ * **Example** (The IAM quota)
+ *
+ * ```ts
+ * import { managedPolicyLimit } from "@beep/infra-ci-runners/DeployRolePolicy"
+ *
+ * console.log(managedPolicyLimit) // 6144
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const managedPolicyLimit = 6144;
+
+/**
+ * The deploy role's policy as the managed policy documents the role holds:
+ * the statements in their source order, each whole and with its `Sid`, split
+ * by {@link chunkByLength} so every encoded document stays within
+ * {@link managedPolicyLimit}.
+ *
+ * **Details**
+ *
+ * The split depends only on the statements and their order, so the same
+ * source always gives the same documents and document `n` is always managed
+ * policy `ci-runners-deploy-<n + 1>`. The policy only allows, apart from one
+ * deny by ARN, so the documents attached together evaluate exactly as the
+ * whole one does.
+ *
+ * **Example** (Split v1)
+ *
+ * ```ts
+ * import { deployRolePolicy, managedPolicyDocuments } from "@beep/infra-ci-runners/DeployRolePolicy"
+ * import * as Effect from "effect/Effect"
+ * import * as O from "effect/Option"
+ *
+ * const documents = await Effect.runPromise(managedPolicyDocuments(deployRolePolicy(O.none())))
+ * console.log(documents.length >= 2) // true
+ * ```
+ *
+ * @param policy - The whole policy document.
+ * @returns One document per managed policy, in order.
+ * @category configuration
+ * @since 0.0.0
+ */
+export const managedPolicyDocuments = Effect.fn("CiRunners.managedPolicyDocuments")(function* (
+  policy: IAM.PolicyDocument
+) {
+  const encoded = yield* Effect.forEach(policy.Statement, (statement) => encodeJson(statement), { concurrency: 1 });
+  const empty = yield* encodeJson({ Version: policy.Version, Statement: [] });
+  const groups = chunkByLength({
+    lengths: A.map(encoded, (statement) => statement.length),
+    limit: managedPolicyLimit,
+    overhead: empty.length,
+  });
+  return A.map(
+    groups,
+    (group): IAM.PolicyDocument => ({
+      Version: policy.Version,
+      Statement: A.flatMap(group, (member) => O.toArray(A.get(policy.Statement, member))),
+    })
+  );
+});

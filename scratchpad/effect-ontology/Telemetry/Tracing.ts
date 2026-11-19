@@ -12,10 +12,11 @@
 
 import { $ScratchpadId } from "@beep/identity";
 import { URLStr } from "@beep/schema";
-import * as Layer from "effect/Layer";
 import * as Effect from "effect/Effect";
-import * as S from "effect/Schema";
+import * as Layer from "effect/Layer";
 import * as OtlpTracer from "effect/observability/OtlpTracer";
+import * as S from "effect/Schema";
+
 const $I = $ScratchpadId.create("effect-ontology/Telemetry/Tracing");
 
 const tracingConfigOtlpEndpointDefault = URLStr.make("https://localhost:4318/v1/traces");
@@ -37,13 +38,23 @@ const tracingConfigOtlpEndpointDefault = URLStr.make("https://localhost:4318/v1/
  * @category configuration
  * @since 0.0.0
  */
-export class TracingConfig extends S.Opaque<TracingConfig, { readonly brand: unique symbol }>()(S.Struct({
+export class TracingConfig extends S.Opaque<TracingConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
     serviceName: S.NonEmptyString,
-    otlpEndpoint: URLStr.pipe(S.withConstructorDefault(Effect.succeed(tracingConfigOtlpEndpointDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(tracingConfigOtlpEndpointDefault))),
-    enabled: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
-  }).pipe($I.annoteSchema("TracingConfig", {
-    description: "Service identity, OTLP trace endpoint, and tracing enablement policy.",
-  }))) {}
+    otlpEndpoint: URLStr.pipe(
+      S.withConstructorDefault(Effect.succeed(tracingConfigOtlpEndpointDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(tracingConfigOtlpEndpointDefault))
+    ),
+    enabled: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+  }).pipe(
+    $I.annoteSchema("TracingConfig", {
+      description: "Service identity, OTLP trace endpoint, and tracing enablement policy.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link TracingConfig}.

@@ -1,3 +1,5 @@
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 /**
  * Service: Claim
  *
@@ -22,10 +24,10 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as Random from "effect/Random";
-import * as Result from "effect/Result";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { CLAIMS } from "../Domain/Rdf/Constants.ts";
 import type { ClaimFilter } from "../Repository/Claim.ts";
@@ -38,15 +40,21 @@ import { RdfBuilder, rdfStoreAddQuad } from "./Rdf.ts";
 const $I = $ScratchpadId.create("effect-ontology/Service/Claim");
 const XSD_DATE_TIME = makeCanonicalNamedNode(`${XSD_NAMESPACE}dateTime`);
 
-const randomUuid = Effect.all([
-  Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
-  Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
-  Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
-  Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
-]).pipe(
+const randomUuid = Effect.all(
+  [
+    Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
+    Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
+    Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
+    Random.nextIntBetween(0, 0x1_0000_0000, { halfOpen: true }),
+  ],
+  { concurrency: 1 }
+).pipe(
   Effect.map((parts) => {
-    const hex = parts.map((part) => part.toString(16).padStart(8, "0")).join("");
-    return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20)}`;
+    const hex = A.join(
+      A.map(parts, (part) => Str.padStart(8, "0")(part.toString(16))),
+      ""
+    );
+    return `${Str.slice(0, 8)(hex)}-${Str.slice(8, 12)(hex)}-4${Str.slice(13, 16)(hex)}-a${Str.slice(17, 20)(hex)}-${Str.slice(20)(hex)}`;
   })
 );
 
@@ -78,7 +86,8 @@ const randomUuid = Effect.all([
  * @category models
  * @since 0.0.0
  */
-export class CreateClaimInput extends S.Opaque<CreateClaimInput, { readonly brand: unique symbol }>()(S.Struct({
+export class CreateClaimInput extends S.Opaque<CreateClaimInput, { readonly brand: unique symbol }>()(
+  S.Struct({
     subjectIri: S.NonEmptyString,
     predicateIri: S.NonEmptyString,
     objectValue: S.String,
@@ -95,9 +104,12 @@ export class CreateClaimInput extends S.Opaque<CreateClaimInput, { readonly bran
     ),
     validFrom: S.optionalKey(S.Date),
     validTo: S.optionalKey(S.Date),
-  }).pipe($I.annoteSchema("CreateClaimInput", {
-    description: "Validated claim creation payload with optional evidence and temporal bounds.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("CreateClaimInput", {
+      description: "Validated claim creation payload with optional evidence and temporal bounds.",
+    })
+  )
+) {}
 
 /**
  * Result of deprecating a claim
@@ -118,14 +130,18 @@ export class CreateClaimInput extends S.Opaque<CreateClaimInput, { readonly bran
  * @category models
  * @since 0.0.0
  */
-export class DeprecationResult extends S.Opaque<DeprecationResult, { readonly brand: unique symbol }>()(S.Struct({
+export class DeprecationResult extends S.Opaque<DeprecationResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     claimId: S.NonEmptyString,
     deprecatedAt: S.Date,
     reason: S.NonEmptyString,
     correctionId: S.optionalKey(S.NonEmptyString),
-  }).pipe($I.annoteSchema("DeprecationResult", {
-    description: "Claim deprecation outcome with an optional correcting claim identifier.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("DeprecationResult", {
+      description: "Claim deprecation outcome with an optional correcting claim identifier.",
+    })
+  )
+) {}
 
 interface ClaimServiceShape {
   readonly createClaim: (input: CreateClaimInput) => ReturnType<ClaimRepository["Service"]["insertClaim"]>;
@@ -259,12 +275,12 @@ export class ClaimService extends Context.Service<ClaimService, ClaimServiceShap
       const resolvedCorrectionId = P.isUndefined(correctionId) ? yield* randomUuid : correctionId;
       yield* repo.deprecateClaim(claimId, resolvedCorrectionId, ontologyId);
 
-      return {
+      return DeprecationResult.make({
         claimId,
         deprecatedAt: DateTime.toDate(now),
         reason,
         ...(P.isUndefined(correctionId) ? {} : { correctionId }),
-      };
+      });
     });
 
     /**

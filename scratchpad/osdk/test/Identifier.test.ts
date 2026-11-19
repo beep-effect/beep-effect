@@ -187,7 +187,10 @@ describe("kind brands", () => {
       const encoded = yield* S.encodeEffect(ObjectTypeRid)(rid);
       strictEqual(rid, ObjectTypeRid.make(wire));
       strictEqual(encoded, wire);
-      const verdicts = yield* Effect.all(A.map(kindBrands, ([, schema]) => rejects(schema)("")));
+      const verdicts = yield* Effect.all(
+        A.map(kindBrands, ([, schema]) => rejects(schema)("")),
+        { concurrency: 1 }
+      );
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -255,11 +258,17 @@ describe("ResourceIdentifier", () => {
   lawful("ResourceIdentifier", ResourceIdentifier);
 
   it("accepts canonical identifiers, including an empty instance and a dotted locator", () => {
-    deepStrictEqual(A.map(canonicalRids, S.is(ResourceIdentifier)), A.map(canonicalRids, () => true));
+    deepStrictEqual(
+      A.map(canonicalRids, S.is(ResourceIdentifier)),
+      A.map(canonicalRids, () => true)
+    );
   });
 
   it("rejects each malformed segment", () => {
-    deepStrictEqual(A.map(malformedRids, S.is(ResourceIdentifier)), A.map(malformedRids, () => false));
+    deepStrictEqual(
+      A.map(malformedRids, S.is(ResourceIdentifier)),
+      A.map(malformedRids, () => false)
+    );
   });
 
   it("is stricter than the kind brands, which accept the loose identifiers real payloads carry", () => {
@@ -277,7 +286,7 @@ describe("ResourceIdentifier", () => {
       const encoded = yield* S.encodeEffect(ResourceIdentifier)(decoded);
       strictEqual(decoded, ResourceIdentifier.make(wire));
       strictEqual(encoded, wire);
-      const verdicts = yield* Effect.all(A.map(malformedRids, rejects(ResourceIdentifier)));
+      const verdicts = yield* Effect.all(A.map(malformedRids, rejects(ResourceIdentifier)), { concurrency: 1 });
       assertTrue(A.every(verdicts, identity));
     })
   );
@@ -317,8 +326,8 @@ describe("ResourceIdentifierParts", () => {
   it.effect(
     "accepts exactly the strings ResourceIdentifier accepts",
     Effect.fnUntraced(function* () {
-      const accepted = yield* Effect.all(A.map(canonicalRids, rejects(ResourceIdentifierParts)));
-      const refused = yield* Effect.all(A.map(malformedRids, rejects(ResourceIdentifierParts)));
+      const accepted = yield* Effect.all(A.map(canonicalRids, rejects(ResourceIdentifierParts)), { concurrency: 1 });
+      const refused = yield* Effect.all(A.map(malformedRids, rejects(ResourceIdentifierParts)), { concurrency: 1 });
       assertFalse(A.some(accepted, identity));
       assertTrue(A.every(refused, identity));
     })
@@ -380,7 +389,10 @@ describe("ResourceIdentifierParts", () => {
     "ResourceIdentifierParts: encode then decode is equivalent to the original",
     Effect.fnUntraced(function* () {
       const samples = yield* Arbitrary.sampleEffect(Arbitrary.schema(ResourceIdentifierParts), { count: 50, seed: 1 });
-      const exits = yield* Effect.all(A.map(samples, (parts) => Effect.exit(encodeParts(parts))));
+      const exits = yield* Effect.all(
+        A.map(samples, (parts) => Effect.exit(encodeParts(parts))),
+        { concurrency: 1 }
+      );
       assertTrue(A.every(exits, Exit.isSuccess));
       const returned = yield* Effect.forEach(
         samples,
@@ -388,7 +400,8 @@ describe("ResourceIdentifierParts", () => {
           const encoded = yield* encodeParts(parts);
           const decoded = yield* decodeParts(encoded);
           return partsEquivalence(decoded, parts);
-        })
+        }),
+        { concurrency: 1 }
       );
       strictEqual(A.length(returned), 50);
       assertTrue(A.every(returned, identity));
@@ -430,8 +443,10 @@ describe("OntologyIdentifier", () => {
       deepStrictEqual([isApiName(rid), isApiName(apiName)], [true, true]);
       deepStrictEqual([S.is(ResourceIdentifier)(rid), S.is(ResourceIdentifier)(apiName)], [true, false]);
       // Loose text that only looks like a resource identifier is an API name: `ri.a.b.c.d` has the form, `rid` not.
-      const loose = yield* Effect.forEach(["ri.a.b.c.d", "rid", "ri.ontology", "RI.ontology.main.ontology.x"], (text) =>
-        decode(text)
+      const loose = yield* Effect.forEach(
+        ["ri.a.b.c.d", "rid", "ri.ontology", "RI.ontology.main.ontology.x"],
+        (text) => decode(text),
+        { concurrency: 1 }
       );
       deepStrictEqual(A.map(loose, S.is(ResourceIdentifier)), [true, false, false, false]);
     })
@@ -441,14 +456,19 @@ describe("OntologyIdentifier", () => {
     "encodes either brand to its bare text and refuses the empty string in both directions",
     Effect.fnUntraced(function* () {
       const encode = S.encodeEffect(OntologyIdentifier);
-      const wire = yield* Effect.all([
-        encode(OntologyRid.make(ontologyRid)),
-        encode(OntologyApiName.make("default-ontology")),
-        // The bare brand is as loose as the wire: a resource identifier that is not canonical still encodes.
-        encode(OntologyRid.make("rid")),
-      ]);
+      const wire = yield* Effect.all(
+        [
+          encode(OntologyRid.make(ontologyRid)),
+          encode(OntologyApiName.make("default-ontology")),
+          // The bare brand is as loose as the wire: a resource identifier that is not canonical still encodes.
+          encode(OntologyRid.make("rid")),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(wire, [ontologyRid, "default-ontology", "rid"]);
-      const verdicts = yield* Effect.all([rejects(OntologyIdentifier)(""), rejects(OntologyIdentifier)(7)]);
+      const verdicts = yield* Effect.all([rejects(OntologyIdentifier)(""), rejects(OntologyIdentifier)(7)], {
+        concurrency: 1,
+      });
       deepStrictEqual(verdicts, [true, true]);
       assertFalse(S.is(OntologyIdentifier)(""));
     })
@@ -473,7 +493,10 @@ describe("FunctionVersion", () => {
   it("accepts release versions and versions with a tag suffix", () => {
     // `1.2.3` and `1.2.3-rc1` are the two examples the wire contract documents.
     const versions = ["1.2.3", "1.2.3-rc1", "0.0.0", "10.200.3000", "1.2.3-rc.1-x", "1.2.3-SNAPSHOT", "01.02.03"];
-    deepStrictEqual(A.map(versions, S.is(FunctionVersion)), A.map(versions, () => true));
+    deepStrictEqual(
+      A.map(versions, S.is(FunctionVersion)),
+      A.map(versions, () => true)
+    );
   });
 
   it("rejects everything that is not major.minor.patch with an optional tag", () => {
@@ -495,7 +518,10 @@ describe("FunctionVersion", () => {
       "1.-2.3",
       "१.२.३",
     ];
-    deepStrictEqual(A.map(counterExamples, S.is(FunctionVersion)), A.map(counterExamples, () => false));
+    deepStrictEqual(
+      A.map(counterExamples, S.is(FunctionVersion)),
+      A.map(counterExamples, () => false)
+    );
   });
 
   it.effect(

@@ -5,6 +5,7 @@ import { ContinueAtBoundLive } from "./Run/ContinueAtBound.handler.ts";
 import { GrantOnRequestLive } from "./Run/GrantOnRequest.handler.ts";
 import { OpenChildOnRequestLive } from "./Run/OpenChildOnRequest.handler.ts";
 import { ResumeParentLive } from "./Run/ResumeParent.handler.ts";
+import { RunStateLive } from "./Run/RunState.handler.ts";
 import { SessionRunsLive } from "./Run/SessionRuns.handler.ts";
 
 /**
@@ -19,4 +20,5 @@ export const RunsHandlers = Layer.mergeAll(
   OpenChildOnRequestLive,
   ContinueAtBoundLive,
   ResumeParentLive,
+  RunStateLive,
 );

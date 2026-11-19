@@ -46,13 +46,17 @@ const ApiKey = ApiKeyDefinition.pipe(
  * @category dtos
  * @since 0.0.0
  */
-export class TicketRequest extends S.Opaque<TicketRequest, { readonly brand: unique symbol }>()(S.Struct({
+export class TicketRequest extends S.Opaque<TicketRequest, { readonly brand: unique symbol }>()(
+  S.Struct({
     ontologyId: S.NonEmptyString.annotateKey({
       description: "Ontology registry identifier to which the ticket grants access.",
     }),
-  }).pipe($I.annoteSchema("TicketRequest", {
-    description: "Request for a single-use WebSocket ticket scoped to one ontology.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("TicketRequest", {
+      description: "Request for a single-use WebSocket ticket scoped to one ontology.",
+    })
+  )
+) {
   static readonly decodeUnknownEffect = S.decodeUnknownEffect(TicketRequest);
 }
 
@@ -84,7 +88,8 @@ export class TicketRequest extends S.Opaque<TicketRequest, { readonly brand: uni
  * @category dtos
  * @since 0.0.0
  */
-export class TicketResponse extends S.Opaque<TicketResponse, { readonly brand: unique symbol }>()(S.Struct({
+export class TicketResponse extends S.Opaque<TicketResponse, { readonly brand: unique symbol }>()(
+  S.Struct({
     ticket: TicketToken.annotateKey({
       description: "Single-use bearer ticket, decoded into a redacted value.",
     }),
@@ -94,9 +99,12 @@ export class TicketResponse extends S.Opaque<TicketResponse, { readonly brand: u
     ttlSeconds: PosInt.annotateKey({
       description: "Positive ticket lifetime in whole seconds.",
     }),
-  }).pipe($I.annoteSchema("TicketResponse", {
-    description: "Issued redacted WebSocket ticket with its absolute expiration and positive TTL.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("TicketResponse", {
+      description: "Issued redacted WebSocket ticket with its absolute expiration and positive TTL.",
+    })
+  )
+) {
   static readonly is = S.is(TicketResponse);
 
   static readonly decodeUnknownEffect = S.decodeUnknownEffect(TicketResponse);
@@ -132,7 +140,8 @@ export class TicketResponse extends S.Opaque<TicketResponse, { readonly brand: u
  * @category models
  * @since 0.0.0
  */
-export class TicketRecord extends S.Opaque<TicketRecord, { readonly brand: unique symbol }>()(S.Struct({
+export class TicketRecord extends S.Opaque<TicketRecord, { readonly brand: unique symbol }>()(
+  S.Struct({
     ticket: TicketToken.annotateKey({
       description: "Single-use bearer ticket retained in redacted form.",
     }),
@@ -148,9 +157,12 @@ export class TicketRecord extends S.Opaque<TicketRecord, { readonly brand: uniqu
     expiresAt: S.DateTimeUtcFromMillis.annotateKey({
       description: "UTC expiration instant encoded as Unix epoch milliseconds.",
     }),
-  }).pipe($I.annoteSchema("TicketRecord", {
-    description: "Credential-safe persistence record for one scoped, single-use authentication ticket.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("TicketRecord", {
+      description: "Credential-safe persistence record for one scoped, single-use authentication ticket.",
+    })
+  )
+) {
   static readonly is = S.is(TicketRecord);
   static readonly decodeOption = S.decodeUnknownOption(TicketRecord);
 }

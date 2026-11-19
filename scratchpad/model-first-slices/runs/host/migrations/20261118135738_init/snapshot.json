@@ -1,0 +1,122 @@
+{
+  "type": "base",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "d0879ef6-9251-4312-96cc-596d4147ecdf",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "runs_inbox_checkpoints"
+      ],
+      "writes": [
+        "s|tbl|public.runs_inbox_checkpoints",
+        "n|tbl|public.runs_inbox_checkpoints",
+        "e|tbl|public.runs_inbox_checkpoints",
+        "n|rel|public.runs_inbox_checkpoints",
+        "n|type|public.runs_inbox_checkpoints",
+        "n|rel|public.runs_inbox_checkpoints_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "runs_inbox_seen"
+      ],
+      "writes": [
+        "s|tbl|public.runs_inbox_seen",
+        "n|tbl|public.runs_inbox_seen",
+        "e|tbl|public.runs_inbox_seen",
+        "n|rel|public.runs_inbox_seen",
+        "n|type|public.runs_inbox_seen",
+        "n|rel|public.runs_inbox_seen_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    }
+  ],
+  "ddl": [
+    {
+      "schema": "public",
+      "name": "runs_inbox_checkpoints",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "runs_inbox_seen",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "table": "runs_inbox_checkpoints",
+      "name": "producer",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "runs_inbox_checkpoints",
+      "name": "seq",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "runs_inbox_seen",
+      "name": "key",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "runs_inbox_checkpoints",
+      "name": "runs_inbox_checkpoints_pkey",
+      "columns": [
+        "producer"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "runs_inbox_seen",
+      "name": "runs_inbox_seen_pkey",
+      "columns": [
+        "key"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    }
+  ]
+}

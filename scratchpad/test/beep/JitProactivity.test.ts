@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
@@ -36,8 +37,8 @@ const decodeFails = (schema: S.Codec<unknown, unknown, never, unknown>, input: u
 
 const failure = <A, E>(effect: Effect.Effect<A, E>): E => effect.pipe(Effect.flip, Effect.runSync);
 
-const hash = "0".repeat(63) + "1";
-const parent = "f".repeat(64);
+const hash = Str.repeat(63)("0") + "1";
+const parent = Str.repeat(64)("f");
 
 const base = {
   schemaVersion: "jit_proactivity_event.v1",
@@ -121,7 +122,7 @@ describe("JitProactivity", () => {
   it("rejects out-of-bound fields", () => {
     const ambient = { ...base, operation: "ambient_notification" };
     assert.strictEqual(decodeFails(JitAmbientNotificationReceipt, { ...ambient, uid: "a/b" }), true);
-    assert.strictEqual(decodeFails(JitAmbientNotificationReceipt, { ...ambient, uid: "x".repeat(129) }), true);
+    assert.strictEqual(decodeFails(JitAmbientNotificationReceipt, { ...ambient, uid: Str.repeat(129)("x") }), true);
     assert.strictEqual(decodeFails(JitAmbientNotificationReceipt, { ...ambient, eventId: "short" }), true);
     assert.strictEqual(decodeFails(JitAmbientNotificationReceipt, { ...ambient, accountGeneration: -1 }), true);
     assert.strictEqual(decodeFails(JitAmbientNotificationReceipt, { ...ambient, budgetDay: "2026-9-2" }), true);
@@ -179,7 +180,13 @@ describe("JitProactivity", () => {
     );
     assert.strictEqual(isJitTriggerPairInvalid(revisionOnly), true);
     const excess = failure(
-      decodeJitProactivityEventReceipt({ ...base, operation: "planned_notification", triggerMemoryId: "t", triggerRevision: 1, parentEventId: parent }),
+      decodeJitProactivityEventReceipt({
+        ...base,
+        operation: "planned_notification",
+        triggerMemoryId: "t",
+        triggerRevision: 1,
+        parentEventId: parent,
+      }),
     );
     assert.strictEqual(isJitTriggerPairInvalid(excess), false);
   });
@@ -240,7 +247,7 @@ describe("JitProactivity", () => {
       { triggerCondition: { action: { type: "webhook", prompt: "x" } } },
       { triggerCondition: { action: { type: "agent_prompt" } } },
       { triggerCondition: { action: { type: "agent_prompt", prompt: "   " } } },
-      { triggerCondition: { action: { type: "agent_prompt", prompt: "x".repeat(2001) } } },
+      { triggerCondition: { action: { type: "agent_prompt", prompt: Str.repeat(2001)("x") } } },
     ];
     for (const patch of broken) {
       assert.strictEqual(isJitTriggerPaidAuthority({ item: { ...item, ...patch }, at }), false);

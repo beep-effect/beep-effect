@@ -156,7 +156,7 @@ const rejects =
 
 const expectRejected = <T, E>(schema: S.Codec<T, E>) =>
   Effect.fnUntraced(function* (inputs: ReadonlyArray<unknown>) {
-    const verdicts = yield* Effect.forEach(inputs, rejects(schema));
+    const verdicts = yield* Effect.forEach(inputs, rejects(schema), { concurrency: 1 });
     deepStrictEqual(
       verdicts,
       A.map(inputs, () => true)
@@ -369,10 +369,7 @@ describe("EntityType", () => {
     ];
     const tags: ReadonlyArray<string> = EntityType.discriminants;
     deepStrictEqual(
-      A.map(
-        samples,
-        EntityType.match({ object: ({ type }): string => type, interface: ({ type }): string => type })
-      ),
+      A.map(samples, EntityType.match({ object: ({ type }): string => type, interface: ({ type }): string => type })),
       tags
     );
     deepStrictEqual(A.map(samples, EntityType.guards.object), [true, false]);
@@ -600,7 +597,7 @@ describe("SelectedPropertyOperation", () => {
         { type: "collectList", selectedPropertyApiName: "salary", limit: 10 },
         { type: "collectSet", selectedPropertyApiName: "salary", limit: 20 },
       ];
-      yield* Effect.forEach(A.zip(wires, samples), ([wire, sample]) => fixture(wire, sample));
+      yield* Effect.forEach(A.zip(wires, samples), ([wire, sample]) => fixture(wire, sample), { concurrency: 1 });
     })
   );
 
@@ -1241,19 +1238,22 @@ describe("folds", () => {
     });
     strictEqual(depth(leadName), 1);
     strictEqual(depth(pipe(own("a"), minus(leadName), abs, negate, plus(own("b")))), 5);
-    strictEqual(foldDerivedProperty(extractPart(own("startDate"), "years"), {
-      property: ({ apiName }): string => apiName,
-      selection: () => "linked",
-      add: A.join("+"),
-      subtract: (left, right) => `${left}-${right}`,
-      multiply: A.join("*"),
-      divide: (left, right) => `${left}/${right}`,
-      absoluteValue: identity,
-      negate: identity,
-      least: A.join("<"),
-      greatest: A.join(">"),
-      extract: (operand, { part }) => `${part} of ${operand}`,
-    }), "years of startDate");
+    strictEqual(
+      foldDerivedProperty(extractPart(own("startDate"), "years"), {
+        property: ({ apiName }): string => apiName,
+        selection: () => "linked",
+        add: A.join("+"),
+        subtract: (left, right) => `${left}-${right}`,
+        multiply: A.join("*"),
+        divide: (left, right) => `${left}/${right}`,
+        absoluteValue: identity,
+        negate: identity,
+        least: A.join("<"),
+        greatest: A.join(">"),
+        extract: (operand, { part }) => `${part} of ${operand}`,
+      }),
+      "years of startDate"
+    );
   });
 });
 
@@ -1266,8 +1266,10 @@ describe("baseType", () => {
   const personType = InterfaceEntityType.make({ apiName: InterfaceTypeApiName.make("Person") });
   const offices = objectType("Office");
 
-  const is = (expected: EntityType) => (set: ObjectSet): boolean =>
-    O.match(baseType(set), { onNone: () => false, onSome: (actual) => sameEntityType(actual, expected) });
+  const is =
+    (expected: EntityType) =>
+    (set: ObjectSet): boolean =>
+      O.match(baseType(set), { onNone: () => false, onSome: (actual) => sameEntityType(actual, expected) });
 
   const unknown = (set: ObjectSet): boolean => O.isNone(baseType(set));
 
@@ -1485,7 +1487,9 @@ describe("ObjectSetArgument", () => {
       const inline = yield* S.decodeUnknownEffect(ObjectSetArgument)(inlineWire);
       deepStrictEqual(stored, ObjectSetRid.make(storedRid));
       deepStrictEqual(inline, ObjectSet.cases.filter.make({ objectSet: employees, where: isNull("lead") }));
-      const wire = yield* Effect.forEach([stored, inline], (value) => S.encodeEffect(ObjectSetArgument)(value));
+      const wire = yield* Effect.forEach([stored, inline], (value) => S.encodeEffect(ObjectSetArgument)(value), {
+        concurrency: 1,
+      });
       deepStrictEqual<unknown>(wire, [storedRid, inlineWire]);
     })
   );
@@ -1502,9 +1506,13 @@ describe("ObjectSetArgument", () => {
     Effect.fnUntraced(function* () {
       const verdicts = yield* Effect.forEach(
         ["", 7, null, [storedRid], { type: "base" }, { type: "everything" }, { rid: storedRid }],
-        rejects(ObjectSetArgument)
+        rejects(ObjectSetArgument),
+        { concurrency: 1 }
       );
-      deepStrictEqual(verdicts, A.map(verdicts, () => true));
+      deepStrictEqual(
+        verdicts,
+        A.map(verdicts, () => true)
+      );
     })
   );
 });

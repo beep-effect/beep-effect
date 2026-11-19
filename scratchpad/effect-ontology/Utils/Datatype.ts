@@ -42,12 +42,16 @@ const $I = $ScratchpadId.create("effect-ontology/Utils/Datatype");
  * @category models
  * @since 0.0.0
  */
-export class NormalizedValue extends S.Opaque<NormalizedValue, { readonly brand: unique symbol }>()(S.Struct({
+export class NormalizedValue extends S.Opaque<NormalizedValue, { readonly brand: unique symbol }>()(
+  S.Struct({
     value: S.String.annotateKey({ description: "Normalized string representation of the value." }),
     datatype: IRI.annotateKey({ description: "XSD datatype IRI describing the normalized value." }),
-  }).pipe($I.annoteSchema("NormalizedValue", {
-    description: "Normalized lexical value paired with its XSD datatype IRI.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("NormalizedValue", {
+      description: "Normalized lexical value paired with its XSD datatype IRI.",
+    })
+  )
+) {}
 
 // -----------------------------------------------------------------------------
 // Regex patterns for datatype detection
@@ -127,48 +131,48 @@ const SCIENTIFIC_PATTERN = /^-?\d+(?:\.\d+)?[eE][+-]?\d+$/;
 export const normalizeDatatype = dual2((value: string, expectedType: IRI | undefined): NormalizedValue => {
   // If expected type provided, use it with minimal validation
   if (P.isNotUndefined(expectedType)) {
-    return { value, datatype: expectedType };
+    return NormalizedValue.make({ value, datatype: expectedType });
   }
 
   const trimmed = Str.trim(value);
 
   // Empty string → xsd:string
   if (trimmed === "") {
-    return { value: trimmed, datatype: XSD_STRING.value };
+    return NormalizedValue.make({ value: trimmed, datatype: XSD_STRING.value });
   }
 
   // DateTime check (must come before date check)
   if (ISO_DATETIME_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD_DATE_TIME.value };
+    return NormalizedValue.make({ value: trimmed, datatype: XSD_DATE_TIME.value });
   }
 
   // Date check
   if (ISO_DATE_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD_DATE.value };
+    return NormalizedValue.make({ value: trimmed, datatype: XSD_DATE.value });
   }
 
   // Boolean check (case-insensitive, normalize to lowercase)
   if (BOOLEAN_PATTERN.test(trimmed)) {
-    return { value: Str.toLowerCase(trimmed), datatype: XSD_BOOLEAN.value };
+    return NormalizedValue.make({ value: Str.toLowerCase(trimmed), datatype: XSD_BOOLEAN.value });
   }
 
   // Scientific notation → xsd:double
   if (SCIENTIFIC_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD_DOUBLE.value };
+    return NormalizedValue.make({ value: trimmed, datatype: XSD_DOUBLE.value });
   }
 
   // Decimal check (must come before integer check)
   if (DECIMAL_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD_DECIMAL.value };
+    return NormalizedValue.make({ value: trimmed, datatype: XSD_DECIMAL.value });
   }
 
   // Integer check
   if (INTEGER_PATTERN.test(trimmed)) {
-    return { value: trimmed, datatype: XSD_INTEGER.value };
+    return NormalizedValue.make({ value: trimmed, datatype: XSD_INTEGER.value });
   }
 
   // Default to string
-  return { value: trimmed, datatype: XSD_STRING.value };
+  return NormalizedValue.make({ value: trimmed, datatype: XSD_STRING.value });
 });
 
 /**

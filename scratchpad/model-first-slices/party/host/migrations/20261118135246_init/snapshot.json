@@ -1,0 +1,284 @@
+{
+  "type": "base",
+  "version": "9",
+  "dialect": "postgres",
+  "id": "e0bf8b96-85b9-40a4-b10f-43e985ccc00b",
+  "prevIds": [
+    "00000000-0000-0000-0000-000000000000"
+  ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "party_directory_active"
+      ],
+      "writes": [
+        "s|tbl|public.party_directory_active",
+        "n|tbl|public.party_directory_active",
+        "e|tbl|public.party_directory_active",
+        "n|rel|public.party_directory_active",
+        "n|type|public.party_directory_active",
+        "n|rel|public.party_directory_active_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "party_directory_positions"
+      ],
+      "writes": [
+        "s|tbl|public.party_directory_positions",
+        "n|tbl|public.party_directory_positions",
+        "e|tbl|public.party_directory_positions",
+        "n|rel|public.party_directory_positions",
+        "n|type|public.party_directory_positions",
+        "n|rel|public.party_directory_positions_pk"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "party_directory_rows_v_0"
+      ],
+      "writes": [
+        "s|tbl|public.party_directory_rows_v_0",
+        "n|tbl|public.party_directory_rows_v_0",
+        "e|tbl|public.party_directory_rows_v_0",
+        "n|rel|public.party_directory_rows_v_0",
+        "n|type|public.party_directory_rows_v_0",
+        "n|rel|public.party_directory_rows_v_0_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "party_directory_rows_v_0",
+        "party_directory_rows_v_0_org_btree_idx"
+      ],
+      "writes": [
+        "s|idx|public.party_directory_rows_v_0_org_btree_idx",
+        "n|idx|public.party_directory_rows_v_0_org_btree_idx",
+        "e|idx|public.party_directory_rows_v_0_org_btree_idx",
+        "n|rel|public.party_directory_rows_v_0_org_btree_idx"
+      ],
+      "reads": [
+        "n|tbl|public.party_directory_rows_v_0",
+        "n|sch|public",
+        "n|col|public.party_directory_rows_v_0.org"
+      ]
+    }
+  ],
+  "ddl": [
+    {
+      "schema": "public",
+      "name": "party_directory_active",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "party_directory_positions",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "name": "party_directory_rows_v_0",
+      "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
+      "table": "party_directory_active",
+      "name": "slot",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "party_directory_active",
+      "name": "generation",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "party_directory_positions",
+      "name": "generation",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "party_directory_positions",
+      "name": "stream",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "party_directory_positions",
+      "name": "seq",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "party_directory_rows_v_0",
+      "name": "party_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "party_directory_rows_v_0",
+      "name": "org",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "party_directory_rows_v_0",
+      "name": "name",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "party_directory_rows_v_0",
+      "name": "absorbed",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 1,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "party_directory_rows_v_0",
+      "name": "party_directory_rows_v_0_org_btree_idx",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "org",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "party_directory_positions",
+      "name": "party_directory_positions_pk",
+      "columns": [
+        "generation",
+        "stream"
+      ],
+      "nameExplicit": true,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "party_directory_active",
+      "name": "party_directory_active_pkey",
+      "columns": [
+        "slot"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "party_directory_rows_v_0",
+      "name": "party_directory_rows_v_0_pkey",
+      "columns": [
+        "party_id"
+      ],
+      "nameExplicit": false,
+      "entityType": "pks"
+    },
+    {
+      "schema": "public",
+      "table": "party_directory_active",
+      "name": "party_directory_active_single_row",
+      "value": "\"slot\" = 1",
+      "entityType": "checks"
+    }
+  ]
+}

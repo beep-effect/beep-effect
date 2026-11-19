@@ -1,4 +1,5 @@
 import * as Digest from "effect/crypto/Digest";
+import { StructuredPrompt } from "../Prompt/PromptGenerator.ts";
 /**
  * Service: Content Enrichment Agent
  *
@@ -16,16 +17,16 @@ import * as Digest from "effect/crypto/Digest";
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
+import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as LanguageModel from "effect/ai/LanguageModel";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
 import type { JinaContent } from "../Domain/Model/EnrichedContent.ts";
 import { EnrichedContent } from "../Domain/Model/EnrichedContent.ts";
@@ -57,7 +58,9 @@ const $I = $ScratchpadId.create("effect-ontology/Service/ContentEnrichmentAgent"
  * @category errors
  * @since 0.0.0
  */
-export class ContentEnrichmentError extends S.TaggedError<ContentEnrichmentError, { readonly brand: unique symbol }>($I`ContentEnrichmentError`)(
+export class ContentEnrichmentError extends S.TaggedError<ContentEnrichmentError, { readonly brand: unique symbol }>(
+  $I`ContentEnrichmentError`
+)(
   "ContentEnrichmentError",
   {
     message: ErrorMessage.annotateKey({
@@ -142,7 +145,7 @@ Be accurate and conservative - use null for uncertain fields rather than guessin
 
 const buildEnrichmentPrompt = (content: string, url?: string): string => {
   const urlContext = P.isNotUndefined(url) ? `\nSource URL: ${url}\n` : "";
-  const truncatedContent = content.length > 8000 ? `${content.slice(0, 8000)}\n\n[Content truncated...]` : content;
+  const truncatedContent = content.length > 8000 ? `${Str.slice(0, 8000)(content)}\n\n[Content truncated...]` : content;
 
   return `${urlContext}
 Content to analyze:
@@ -213,10 +216,10 @@ export class ContentEnrichmentAgent extends Context.Service<ContentEnrichmentAge
       // Calculate word count from content
       const wordCount = A.length(A.filter(Str.split(/\s+/)(content), (word) => Str.length(word) > 0));
 
-      const prompt = {
+      const prompt = StructuredPrompt.make({
         systemMessage: ENRICHMENT_SYSTEM_PROMPT,
         userMessage: buildEnrichmentPrompt(content, url),
-      };
+      });
 
       const response = yield* generateObjectWithRetry({
         prompt,
