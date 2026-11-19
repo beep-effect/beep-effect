@@ -1,0 +1,8 @@
+---
+title: "P0 item 11: the matter wall is one authority port checked at seven access paths; the two-matter test composes a widened law-practice server test layer"
+date: 2026-11-19
+lane: "goals/text-knowledge-stack-rebuild-p0-design"
+reversal: "Split the two-matter fixture into one test file per owning layer, by a decision file before P6 opens; the P6 exit criterion is edited in the same change."
+---
+
+The access-path map is in research/consumer-census.md. Its findings: the law-practice server layer reaches only source retrieval and the office-action review path; the Practice KG, citation engine, mailbox and record repositories are outside it; scope is compared between two caller-supplied values at anchor resolution and is absent at graph query, full-text search, citation caches and draft assembly; law-practice has no vector index and no provenance traversal. Decision for P6: one MatterAuthority port in the law-practice slice answers whether a principal may act in a scope, and each of the seven paths calls it with a caller-independent principal. MatterWall.two-matter.test.ts in the law-practice server tests composes the real server layer widened with the Practice KG host, the citation engine layer, the notice mailbox over the fake mailbox and the record repositories over PGlite, loads identical bytes into two matters with distinct decisions, and makes one assertion per path. The search path is asserted on the full-text index that exists; a vector index gets the same check when one is added. Provenance traversal is built in P6 over annotation attribution and admissions, owned by the law-practice server, and is authorized like the other six.

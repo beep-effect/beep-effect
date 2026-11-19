@@ -43,8 +43,9 @@ Workflow:
    every Effect API against `.repos/effect`.
 4. Each catalogue row is a test titled with its ledger id, or a `deleted` row
    with its reason, in `research/law-test-plan.md`.
-5. Breaking changes are accepted: re-mint changed preimages by migration in the
-   same PR, delete legacy carriers, ship majors; never add a shim.
+5. Breaking changes are accepted: a changed preimage bumps its domain tag;
+   stored rows convert on read (stored-format law); delete legacy carriers,
+   ship majors; never add a shim.
 6. New packages only via `bun run beep create-package` after the routing
    decision; retirements per chapter 11 with consumers migrated in the same PR
    and a row in `research/consumer-census.md`.

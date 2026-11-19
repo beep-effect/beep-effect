@@ -2,9 +2,9 @@
 
 ## Status
 
-Lifecycle: `paused`
+Lifecycle: `active`
 
-**Paused by operator ruling (finish board, 2026-11-13).** Very large ten-phase program with no implementation started; set to paused until resourced rather than leaving active. No lane is working on it; resume with `bun run beep goals set-status text-knowledge-stack-rebuild active` when it is picked up. Decision: [`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md).
+Resumed 2026-11-19 on the operator's `/goal` launch, which reverses the 2026-11-13 finish-board pause ([`decisions/2026-11-13-finish-board-ruling-pause.md`](./decisions/2026-11-13-finish-board-ruling-pause.md)) by the route that ruling names.
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -67,17 +67,26 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Design and grill, not started. Next action: run `/grill-with-docs` over
-`SPEC.md` "Resolved Questions and P0 Design Items", confirm or reverse each
-resolved question by decision file, write `research/consumer-census.md`, and
-rewrite the section 4 schema sketches as a `tsrs`-checked module.
+P0 Design and grill, in review. The resolved questions and the eleven design
+items are confirmed or reversed in `decisions/2026-11-19-*.md`;
+`research/consumer-census.md` is the work list; the design module under
+`ops/design/` type-checks; the ledger names every test; chapter 16, the ten
+`DECISIONS.md` entries and the glossary entries are drafted. Next action after
+the P0 PR merges: P1 (L0 identity).
 
 ## Latest Evidence
+
+2026-11-19: packet resumed (`active`). P0 ran from the live tree at
+`f9982f3b5e6`: the census and `research/2026-11-19-p0-design-facts.md`
+corrected the report on eighteen points (canonical JSON already has one owner
+in `@beep/jsonc`; no table stores a `cm1:` value; the status vocabularies are
+eight sites; `@beep/schema-org` has no consumer), and the decisions follow the
+facts. No package code has changed.
 
 2026-11-09: PR #2993 reviewed by CodeRabbit and an eight-role, three-provider
 reviewer panel (Codex, Grok, Claude); the design corrections and packet fixes
 are recorded in the report's revision-3 note, `research/OPPORTUNITIES.md` and
-the decision files. No package code has changed.
+the decision files.
 
 ## Notes
 

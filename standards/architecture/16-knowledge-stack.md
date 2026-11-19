@@ -1,0 +1,654 @@
+# The Knowledge Stack
+
+Prose comes in; proof goes out. Retrieval proposes, fallibly. Logic proves,
+soundly. Between them is one boundary, and the boundary is admission with two
+witnesses: a grounding witness a machine can verify, and a governance token a
+person grants. Every object the stack names (source text, anchor, annotation,
+term, claim, activity) has one denotation, one owner, and lawful arrows to its
+neighbours.
+
+This chapter states target doctrine. The code reaches it over phases P1 to P7
+of the goal packet `goals/text-knowledge-stack-rebuild`, which tracks each
+phase, its exit criteria and its law tests. A rule marked **Pending Pn** is
+the target that phase n makes true; new code follows the target, and existing
+code is brought to it by the named phase. A rule with no marker holds at the
+packet's P0 base. The decisions behind the chapter are the 2026-11-19 entries
+in [`DECISIONS.md`](DECISIONS.md); the vocabulary is in
+[`GLOSSARY.md`](GLOSSARY.md).
+
+Nothing here reopens the 2026-10-21 ruling "Epistemic Vocabulary Is
+Foundation; Party Is A Product Slice; Propositions Are Slice-Owned", the
+`ClaimLifecycle` promotion to `shared/domain`, or the verdict law
+([`GLOSSARY.md`](GLOSSARY.md), "Verdict family"). The stack gives those
+rulings content.
+
+## 1. Purpose
+
+The stack exists so that an attorney-facing artifact can say, for every
+sentence it emits, where the sentence came from and who approved it for what
+use. Three statements carry that purpose:
+
+- **Nothing is asserted without a source.** An occurrence in a pinned text
+  capture is the provenance link, and an absent, ambiguous, stale or
+  unverifiable anchor fails closed.
+- **Machine output has no authority of its own.** Extractors, models and
+  agents produce proposed records. Only an admission makes a record usable for
+  a stated purpose, and only with a verified grounding witness.
+- **The file is canonical; the graph indexes it.** Graphs, RDF datasets and
+  search indexes are projections. They are generated, disposable and never a
+  second writer.
+
+## 2. The eight layers
+
+The layer numbers name roles, not a linear order; the real constraint is the
+dependency DAG in section 3. Six layers are `foundation/modeling` packages,
+one is an existing `foundation/capability` package, and L7 is a contract
+across all of them. Laws are cited by their ledger id in
+`goals/text-knowledge-stack-rebuild/research/law-test-plan.md`; each id's test
+lands in the phase of its layer.
+
+| Layer | Role | Owner | Lands |
+| --- | --- | --- | --- |
+| L0 | Identity | `@beep/identity`, `@beep/schema` (digest), `@beep/jsonc` (canonical JSON) | Pending P1 |
+| L1 | Text identity and anchoring | `@beep/text`, replacing `@beep/provenance` | Pending P2 |
+| L2 | Annotation | `@beep/annotation` (new, `foundation/modeling`) | Pending P3 |
+| L3 | Taxonomy and alignments | `@beep/ontology` | Pending P5 |
+| L4 | Claims | `@beep/epistemics` | Pending P4 |
+| L5 | Operations | `@beep/nlp-processing` (capability) | Pending P6 |
+| L6 | Interchange | `@beep/rdf`, plus an adapter subpath in each owner | Pending P5 |
+| L7 | Agent surface | a contract, not a package | Pending P6 |
+
+### L0 · Identity
+
+**Owners.** `@beep/identity` owns terms, namespaces, the vocabulary registry,
+the `TermBinding` table and the term-stability snapshot, and receives the
+RFC 3987 `IRI` schemas from `@beep/rdf` (Pending P1). `@beep/schema` owns the
+digest primitive (`Sha256PrefixedDigest`, `sha256:` plus 64 hex). `@beep/jsonc`
+owns canonical JSON (RFC 8785, `JsoncFingerprint`) and the one minting function
+that hashes a versioned, domain-tagged preimage (Pending P1). L0 is a layer, not
+one package, because `@beep/identity` depends only on `effect` and every other
+L0 owner depends on it.
+
+**Denotes.** Two identity regimes joined by minting (section 4), one
+closed-world vocabulary registry, one digest format, and the activity id other
+layers reference.
+
+**Objects.** `ContentHash`, a brand over the prefixed digest; one domain brand
+per minted identifier (`OccurrenceId`, `AnnotationId`, `RunEntityId`,
+`ActivityId`, `ClaimId`); `TermIri`; `TermBinding` (code id, term, since);
+`Namespace` (prefix, IRI, pinned source, license, version, digest); `Term`
+(IRI, namespace, local name, optional class-level gUFO typing, optional
+deprecation). The gUFO typing is an optional record of three fields: the type
+of type (`Kind`, `SubKind`, `Role`, `Phase`, `Category`, `Mixin`, `RoleMixin`,
+`PhaseMixin`), the category of its instances (`Object`, `Relator`, `Mode`,
+`Quality`, `Event`), and, for a `Relator`, the set of role terms it mediates.
+`ActivityId` is minted from what is known when a run starts: `activity/v1`,
+the operation term, the agent or engine pin, the prompt digest when there is
+one, the sorted ids the run used, and its start time. What the run generated
+and when it ended are fields of the activity record, outside the id, because
+an output id that contains the activity id cannot also be inside it. Pending
+P1.
+
+**Arrows.** CURIE expansion and contraction over every namespace the repo
+speaks (`prov:`, `oa:`, `nif:`, `xsd:`, `gufo:` and `as:` included); code id to term
+IRI through the binding table, never through a module path; record to digest
+through canonical JSON and the minting function. Graph canonicalization lives
+in `@beep/rdf`, which owns the RDF data model; `@beep/identity` never imports
+`@beep/rdf`.
+
+**Laws.** `L0-1` (expand after contract is the identity on registered terms),
+`L0-2` (equivalent records hash alike, with set-valued fields sorted on the
+preimage), `L0-3` (acceptance: the published term set changes only with a
+deprecation record, module-derived IRIs included).
+
+### L1 · Text identity and anchoring
+
+**Owner.** `@beep/text`, created with `bun run beep create-package` as a
+`foundation/modeling` package; `@beep/provenance` is retired in the same PR
+with every consumer migrated (Pending P2). The package is text identity and
+anchoring, not PROV; PROV-O stays in `@beep/rdf`.
+
+**Denotes.** What a source text is and how to point into it with proof. It
+carries no semantics, no confidence and no PROV, and it stays rdf-free so a
+slice's `domain` can import anchors without the semantic-web stack.
+
+**Objects.** `SourceTextIdentity` (artifact digest, extracted-text digest,
+extractor, normalization version, scope and locator); `TextAnchor` and
+`VerifiedTextAnchor`, which keep their shapes; the powerless
+`TextAnchorVerificationReceipt`; `OffsetUnit` (`utf16-code-unit`,
+`unicode-code-point`, `utf8-byte`; no grapheme clusters in identity-bearing
+positions); `OccurrenceId`; `QuoteKey` (a grouping key over the normalized
+quote, explicitly not injective); `Selector` with the cases `Position`,
+`Quote`, `Fragment`, `Refined` and `Range`; `Resolution` with `Unique`,
+`Ambiguous` and `NotFound`; `Reanchoring` with `Exact`, `Widened` and
+`Unmapped`; `Anchored`, an `S.Opaque` that holds a receipt and reads range and
+quote from the receipt's anchor. The canonical stored unit is
+`utf16-code-unit`, which `TextAnchor`'s width check already assumes. The new
+objects are Pending P2.
+
+**Arrows.** `resolve` from a text capture and a selector to a `Resolution`;
+`reanchor` from two captures and a locator map to a `Reanchoring`, which is lax
+because normalization is many-to-one; unit conversion between the three units;
+verification from a receipt and the source text to a `VerifiedTextAnchor`;
+`TextAnchor` to and from `oa:TextPositionSelector` plus `oa:TextQuoteSelector`,
+implemented in `@beep/rdf` beside the selector codecs it already has
+(`packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts`), whose
+offsets are Unicode code points on the wire, so that codec and the NIF codec
+convert from and to the stored `utf16-code-unit` through this unit conversion
+and fail closed on a split surrogate; source maps
+from `@beep/md`, `@beep/pandoc-ast`, `@beep/lexical-schema` and `@beep/html` nodes to
+anchors, each owned by its AST package. Pending P2.
+
+**Laws.** `L1-1` (slicing the text at the position yields the quote), `L1-2`
+(unit conversion is a bijection on valid boundaries; a split surrogate fails
+closed), `L1-3` (reanchoring is lax-functorial, exact and natural on `Exact`,
+tested with NFKC and de-hyphenation), `L1-4` (`OccurrenceId` is distinct across
+repeated boilerplate and stable under serialization), `L1-5` (`resolve` returns
+`Ambiguous` for a repeated passage), `L1-6` (acceptance: a receipt never
+becomes a `VerifiedTextAnchor` without re-verification).
+
+### L2 · Annotation
+
+**Owner.** `@beep/annotation`, a `foundation/modeling` package created in P3
+with `bun run beep create-package`. Its named consumers at creation are the
+langextract handoff (`@beep/langextract`), the semantica projection
+(`apps/labs/semantica`) and the law-practice office-action flow
+(`packages/law-practice/use-cases`). Its OA and NIF codec lives in an adapter
+subpath so the base entry stays rdf-free. Pending P3.
+
+**Denotes.** One standoff annotation model over one text capture for every
+annotation layer: document structure, segmentation, mentions, chunks and
+extractor candidates. Content is kept apart from attribution.
+
+**Objects.** `makeAnnotationDocument`, a builder over a caller-supplied kind
+registry (the pattern `makeClaimEnvelope` set), whose document holds the text
+capture, an `anchors` table from `OccurrenceId` to `Anchored`, an
+`annotations` map from `AnnotationId` to content, and an `attribution` map from
+`AnnotationId` to a set of `Generation` records. An annotation's content is its
+deduplicated sorted targets, its kind and its body. Kinds come in groups:
+structure (`Section`, `Paragraph`, `Title`, `Figure`, bound to DoCO terms),
+segmentation (`Sentence`, `Word`, bound to NIF terms for export), and
+extraction (`Mention`, `Chunk`, `RelationCandidate`, `CorefCandidate`). Each
+kind declares the kinds its body may reference and a function from a body to
+the annotation ids it references; the document check requires every referenced
+id to resolve to an annotation of an allowed kind in the same document.
+Annotation and anchor records carry no id field: the map key is the hash of
+the value. Typed
+refusals are values: `RestrictionNotClosed`, `GenerationTimeConflict`,
+`CaptureMismatch`. Patent structure (claim numbers, dependencies, rejection
+coverage, pinpoints) is not a generic kind; it is a law-practice profile.
+
+**Arrows.** `merge`, the pointwise join over compatible documents (same
+capture, no time conflict); `restrict` to a kind set, which refuses unless the
+set is closed under the references each kind declares, and `closure`, which
+computes the closed set; containment derived from strict range inclusion; an
+effectful `verify` that every decode path calls, checking that each anchors key
+equals the occurrence hash of its value; the OA and NIF codec for the declared
+profile (section 10).
+
+**Laws.** `L2-1` (merge over one capture is idempotent, commutative and
+associative on content, and attribution unions), `L2-2` (the annotation hash is
+invariant under target permutation and duplication), `L2-3` (every annotation
+has non-empty attribution, and each annotation and activity pair is one
+generation), `L2-4` (referential integrity of targets and body references
+survives merge and restriction), `L2-5` (containment is a strict order with a kind tie-break on equal spans),
+`L2-6` (the codec round-trips a document exactly, maps third-party input to
+its normalized form, and preserves `resolve`).
+
+### L3 · Taxonomy and alignments
+
+**Owner.** `@beep/ontology`. OWL authoring with a reasoner remains the
+ontology slice (`packages/ontology`).
+
+**Denotes.** Knowledge organization systems and their alignments: SKOS concept
+schemes, classification registries with pinned editions, SSSOM mapping sets,
+and the assembly fold that emits RDFS and OWL declarations.
+
+**Objects.** `ConceptScheme` and `Concept` (SKOS); classification editions
+(the existing IPC, CPC and Nice pins, with no `latest`); `MappingSet` (SSSOM:
+subject, predicate, object, justification, and confidence as a typed field);
+the optional three-field gUFO typing on an L0 `Term`, which the audit rules of
+`L3-3` read and which an untyped term skips. `MappingSet` and the gUFO typing
+are Pending P5.
+
+**Arrows.** The fold to an RDF `Dataset` as the only serialization path
+(Pending P5); `align` from two terms to a mapping set with a coherence check
+(Pending P5); `audit` over the typed subset of terms, run as a lint on any
+term an agent proposes (Pending P5). The legal seeds and their seed data files
+move to the law-practice asset pack and
+load through `packages/foundation/modeling/ontology/src/TaxonomyLoader.ts`; the
+FOLIO HTTP DTOs and their data are deleted (Pending P5).
+
+**Laws.** `L3-1` (profile: `skos:broader` is acyclic in repo-owned schemes, and
+an imported cycle is recorded), `L3-2` (profile: mapping sets are coherent and
+consistent), `L3-3` (the audit is sound on the typed subset and silent on
+untyped terms), `L3-4` (acceptance: a pinned edition is immutable).
+
+### L4 · Claims
+
+**Owner.** `@beep/epistemics`, with a nanopublication codec in an adapter
+subpath. The epistemic slice keeps its product records, tables and
+`ClaimLifecycle.advance`; `ClaimLifecycle` stays in `shared/domain`.
+
+**Denotes.** Tenant-free vocabulary for what someone asserts, on what evidence,
+with what stance and when: an immutable hashed core plus records that point at
+it.
+
+**Objects.** `makeClaimCore`, a builder that takes one options object (as
+`makeClaimEnvelope` does today) with a slice-supplied proposition and id schemas,
+whose core holds the proposition, the logical key, the set of `OccurrenceId`
+supporting it at creation, the set of `ClaimId` it was derived from, an
+optional `supersedes` naming the `ClaimId` it supersedes, the generating
+`ActivityId`, the asserting agent (`AgentRef`: a software agent with its model
+pin, a person or an organization), the valid time (the existing `ValidTime`,
+unknown or an interval), the knowledge start and the slice-supplied scope. A
+record's knowledge interval ends at the knowledge start of the record that
+supersedes it and is open otherwise, so several unsuperseded records of one
+partition may be current at once, with disjoint valid intervals.
+Set-valued fields that enter a preimage use one shared codec: a `HashSet` when
+decoded, a deduplicated array sorted by the encoded string when encoded.
+Records that point at a core: `Stance`, `Challenge` (cycles allowed),
+`Admission`, and a retraction record (claim, actor, reason, time). The actor
+of an admission, of a challenge by a person and of a retraction is the
+slice-supplied principal id, not an `AgentRef`. `makeClaimEnvelope` and its
+`ClaimVersion` retire in P4, with every consumer migrated to `makeClaimCore`
+plus the separate records; rows that store a `ClaimVersion` keep their bytes
+behind a declared read-time transform. `EvidenceSignals` (built by
+`makeClaimEnvelope`), the five typed signals, each present or
+`Absent{reason}`, hold today; the present-or-absent
+carrier and its reasons (`makeSignal`, `AbsenceReason`, `Measurement`) move
+from `@beep/epistemics` to `@beep/schema` in P4, so `@beep/ontology` can type a
+mapping confidence without depending on the claims layer. `makeAssessments`
+builds the owner-declared coordinate carrier (section 9). Pending P4 except
+`EvidenceSignals`.
+
+**Arrows.** `promote` from candidate annotations, verified anchors, a
+proposition and an activity to a core with stance `proposed`; `admit` from a
+core, a grounding witness and a human token to an `Admission`; the nanopub
+codec; a pure checker over a log for the partition clauses below. The Postgres
+exclusion constraint in the epistemic server remains the enforcement of
+valid-time overlap.
+
+**Laws.** `L4-1` (the log is prefix-monotone and the as-of view never changes
+after its time; per `(scope, logicalKey)` partition, supersession is acyclic by
+hash construction, a record is superseded at most once and a second superseder
+is a reported fork, a superseder never starts earlier than the record it
+supersedes or than its own generation time, and the records not yet superseded
+have pairwise disjoint valid intervals), `L4-2` (an admission requires
+non-empty grounding that verifies against the current text digest), `L4-3`
+(derivation is acyclic by construction: the `ClaimId` changes when
+`derivedFrom` changes, and every log built through the minting function has an
+acyclic derivation graph; challenges may cycle; the support half of the
+original row is deleted, because neither `supportAtCreation` nor an admission's
+grounding forms a graph over claims), `L4-4` (a claim whose `derivedFrom` is non-empty and wholly
+retracted is flagged, transitively), `L4-5` (equivalent propositions have equal
+keys, with an instance in every owning slice), `L4-6` (refusal is a no-op,
+independent coordinates commute, gates are monotone and never pass on
+unassessed), `L4-7` (acceptance: `Absent{reason}` never coerces to a number).
+
+### L5 · Operations
+
+**Owner.** `@beep/nlp-processing`, an existing `foundation/capability`
+package. It absorbs `nlp/Operations`, the `nlp/Algebra` instances an
+`effect/Combiner` and `effect/Reducer` census leaves uncovered and a consumer
+uses, and the linguistic engine contract `nlp/Core`; its own duplicated
+operation modules merge into one (Pending P6).
+
+**Denotes.** Effectful transformations as arrows, with provenance recorded by
+construction.
+
+**Objects.** `Operation`, a named run from an input to an effect with fixed
+error and requirement channels per pipeline; an activity log of
+`prov:Activity` records.
+
+**Arrows.** `compose`, sequential `product` (claiming interchange needs a
+commutation witness), `traverse`, aggregation over `effect/Combiner` and
+`effect/Reducer` where the census shows coverage, and `withActivity`, which
+records used and generated ids and the engine or model pin for operations
+whose inputs and outputs carry ids. The activity id is minted at start, from
+what is known then (section 2, L0).
+
+**Laws.** `L5-1` (Kleisli identity and associativity for fixed channels under a
+declared observation), `L5-2` (only `Pure` operations commute with every
+operation; the throwing `sync` counterexample is the acceptance case), `L5-3`
+(`generated` is never earlier than `used`, and every output is attributed).
+
+### L6 · Interchange
+
+**Owner.** `@beep/rdf` for the RDF data model, serializations and vendored
+vocabularies. Each codec lives with the owner of its source shape: `TextAnchor`
+to `oa:` in `@beep/rdf`, which imports `@beep/text`; the annotation codec in
+`@beep/annotation`'s adapter subpath; the nanopub codec in `@beep/epistemics`'s
+adapter subpath; the fold in `@beep/ontology`.
+
+**Denotes.** The RDF data model at the interchange boundary and the codecs
+into it.
+
+**Objects.** `Dataset`, a set of quads with equality up to blank-node
+isomorphism and a digest on the canonical form; `Literal` with the cases
+`Simple`, `Typed` and `LangTagged`; the `prov:Entity` projection of
+`SourceTextIdentity` through `packages/foundation/modeling/rdf/src/Prov.ts`.
+The `@beep/rdf` to `@beep/md` edge is removed. Pending P5.
+
+**Laws.** `L6-1` (dataset equality up to blank-node isomorphism; digest on the
+canonical form), `L6-2` (a projection is deterministic and its kept fields
+satisfy GetPut and PutGet).
+
+### L7 · Agent surface
+
+L7 is a contract across every layer, stated in section 12. It has no
+catalogue row; its acceptance test is the write-tool test named there.
+
+## 3. The dependency DAG
+
+Edges are compile-time imports. Every edge below is legal under the
+`foundation` kind table and, for the wink driver, the `drivers` family rule in
+[`../ARCHITECTURE.md`](../ARCHITECTURE.md) (Family And Kind Dependency Rules):
+`modeling` depends only on `primitive` and `modeling`, and `capability` on
+`primitive`, `modeling` and `capability`.
+
+Legal edges:
+
+- `@beep/schema` and `@beep/jsonc` to `@beep/identity`.
+- `@beep/text` to the L0 packages.
+- `@beep/annotation` (base entry) to `@beep/text` and the L0 packages.
+- `@beep/epistemics` (base entry) to `@beep/annotation`, `@beep/text` and the
+  L0 packages.
+- `@beep/rdf` to `@beep/text` and the L0 packages.
+- `@beep/ontology` to `@beep/rdf` and the L0 packages.
+- The adapter subpaths of `@beep/annotation` and `@beep/epistemics` to
+  `@beep/rdf`. A slice that needs no RDF never imports them.
+- `@beep/md`, `@beep/pandoc-ast`, `@beep/lexical-schema` and `@beep/html` to
+  `@beep/text`, for source maps.
+- `@beep/nlp-processing` to `@beep/annotation`, `@beep/epistemics`,
+  `@beep/ontology`, `@beep/text` and the L0 packages.
+- `@beep/langextract` to `@beep/text`, `@beep/annotation`, `@beep/epistemics`
+  and `@beep/nlp-processing`.
+- The wink driver (`@beep/wink`) to `@beep/nlp-processing`.
+
+Forbidden edges: `@beep/identity` to anything but `effect`; any base entry of
+`@beep/text`, `@beep/annotation` or `@beep/epistemics` to `@beep/rdf`;
+`@beep/rdf` to `@beep/md` (Pending P5); any `foundation/modeling` package to a
+capability; a slice's `domain` or model package to a capability. Pending P2 to
+P6, as each package lands.
+
+## 4. Identity regimes
+
+Identity has two regimes joined by minting.
+
+- **Kinds** have compile-checked identity. A published term IRI is declared in
+  the registry under the [identity authority](GLOSSARY.md#identity-authority)
+  `https://beep-effect.com/ns/` and pinned to code through `TermBinding`. It is
+  never derived from a package or file path, so a module rename changes no
+  published IRI. Today's path-derived IRIs are re-published from the registry,
+  not frozen beside it. Pending P1.
+- **Instances** have content-addressed identity. A layer-minted identifier is
+  the digest of a preimage that names its domain and version (`occurrence/v1`,
+  `annotation/v1`, `generation/v1`, `citation-mention/v2`). Canonical JSON sorts
+  object keys only, so every set-valued field is sorted on the preimage before
+  hashing. Pending P1 to P4, per brand.
+- **One digest format** binds identifiers minted by the eight layers:
+  `sha256:` plus 64 lowercase hex, one brand per domain. The bare hex primitive
+  used elsewhere in the repository is out of scope for this rule.
+- **A changed preimage re-mints.** When a preimage changes, its domain tag
+  changes version. For an encoding with no stored rows, the old version is
+  refused at decode where the module already works that way, and fixtures and
+  golden vectors are regenerated; inside this program, the 2026-11-19 scoped
+  amendment in [`DECISIONS.md`](DECISIONS.md) allows that against chapter 11
+  rule 5 for the packages it names. Where rows are stored, the stored-format
+  law governs: bytes are not rewritten, and an incompatible change is a
+  declared read-time transform proved by a frozen old-format fixture. Citation
+  document receipts take that route. So do the stored anchor columns and the
+  stored node events: `epistemic_evidence.span` stores an `EvidenceSpan`
+  (anchor fields plus confidence) and keeps its bytes, and the epistemic tables
+  package keeps a read-time transform from its current and legacy shapes to
+  the text position plus an extractor-confidence signal (Pending P4); the
+  `@beep/agent-memory-store` node events store an `OccurrenceAnchor` and keep
+  their bytes, and P2 derives `OccurrenceId` from it at read time, mapping its
+  `utf16` unit literal to `utf16-code-unit`. A parallel encoding kept beside
+  the new one is not allowed. Canonical JSON for every preimage stays in
+  `@beep/jsonc`.
+
+## 5. Occurrence identity
+
+An occurrence is one place in one text capture. `OccurrenceId` is the digest of
+the versioned tuple: scope, source reference, locator, source digest, text
+digest, extractor name and version, normalization version, offset unit, start,
+end and quote. It is the only text-occurrence identity in the repository. The
+five non-canonical anchor encodings are deleted in the phase that owns each:
+the `@beep/rdf` selector schemas and the `TextSpan` case of the party-domain
+`EvidenceAnchor` in P2, the `@beep/nlp` Handoff and Graph spans in P3, and
+`EvidenceSpan` in P4. The cli knowledge-base `Selector` has a text-quote case
+and is kept, because it is repo tooling with no consumer in the stack; P7
+re-checks it. Pending P2 to P4.
+
+The stack is occurrence-first, not quote-first, because legal text repeats
+itself. Claim language, examiner boilerplate and headers share quote and
+context. A quote answers "does this string exist here"; an identity must answer
+"which occurrence". So:
+
+- Quotes locate and verify; ranges identify.
+- `resolve` returns `Ambiguous` when a quote matches more than once; it never
+  returns the first hit (`L1-5`).
+- Re-anchoring across two captures is a recorded `Exact`, `Widened` or
+  `Unmapped` map with its own receipt, never an invariant of a hash (`L1-3`).
+- A detection that adds meaning to an occurrence derives its identity over the
+  `OccurrenceId`. The citation mention id is the digest of
+  `citation-mention/v2`, the engine artifact, the semantic kind and the
+  `OccurrenceId`: two engines or two citation kinds at one occurrence stay two
+  mentions that share one occurrence. Pending P2.
+
+## 6. Content and attribution
+
+What a record says and who produced it are kept apart.
+
+- An annotation's id is the hash of its content alone. Two runs that produce
+  the same content produce one annotation and two `Generation` records.
+- A `Generation` is a run-specific entity (`RunEntityId`, the hash of
+  `generation/v1`, the content id and the activity id) that is a
+  `prov:specializationOf` the content entity. Attribution is unique per content
+  and activity pair, its time is canonical per pair, and merging two records
+  for one pair with different times is a typed refusal. Pending P3.
+- Third-party input with no stated creator, generator or generating activity
+  is attributed to the import activity, a `prov:Activity` whose id is
+  deterministic: the hash of `import-activity/v1` and the source document
+  digest. The import time is a field of its record outside the id, so the
+  normalized form of an input is a function of the input and its source digest
+  (`L2-6`). Pending P3.
+- A claim core records only what is true at creation. Stance, challenges,
+  admissions and retractions are separate records that point at the core
+  (`L4-1`). What a record supersedes is known at creation, so `supersedes`
+  is in the hashed core and the knowledge interval it closes is derived, never
+  stored. Pending P4.
+
+## 7. Stance and admission
+
+`Stance` is the admission workflow position of a claim record: `verbatim`
+(what the source says), `proposed` (what a machine or a person put forward)
+and `admitted`. It is not the epistemic `SemanticStance` stem of the verdict
+law, and it does not decide whether two claims may be compared; that question
+belongs to `explorations/citation-grounding-hallucination-guard`. Pending P4.
+
+An admission is approval for a stated use, not truth. Its actor is the
+slice-supplied principal id. It is bound to that actor, the action, the
+revision and the scope, and it exists only with both witnesses:
+
+- a non-empty grounding witness whose anchors verify against the current text
+  digest at admission time (`L4-2`), and
+- a human token bound to the same actor, action, revision and scope.
+
+Admission is the governance half of the boundary with the grounding half as a
+required argument. A refused admission and a failed re-verification are typed
+values, not errors. Proposed and admitted worlds are produced on export as
+views over the records; they are not the storage model. Pending P4.
+
+## 8. Signals and triage policies
+
+The five typed evidence signals stay as they are, each present or
+`Absent{reason}`. Absence is information: it never coerces to a number, and no
+signal has a default (`L4-7`, Pending P4 for the regression guards on the lab
+`1` and the office-action `0.9`). There is no algebra across signals: no
+blended score, no default combination, and no provenance semiring outside a
+bounded derivation query with a stored provenance term.
+
+Any ranking an interface needs is a **triage policy**: named, versioned,
+tested on unknowns and ties, and unable to cross an admission gate or write
+authority. `goals/belief-view-engine` remains the selection policy over
+contention sets and consumes L4 under this rule.
+
+## 9. Assessments as owner-declared coordinates
+
+Claim status is not one state machine. `makeAssessments` takes a record from
+coordinate name to a caller-supplied value schema and returns a total carrier:
+every coordinate is present, as `Assessed` with a value or `Unassessed` with a
+reason. A missing coordinate is a decode failure; unassessed is a value a gate
+must handle. A gate is an owner-defined predicate over the carrier. The
+foundation supplies the law harness (`L4-6`); each owner supplies its
+coordinates, value schemas, order per coordinate and transitions. Pending P4.
+
+The status census covers eight sites. `ReviewState`,
+`ClaimDispositionStatus`, `ClaimEvidenceReviewStatus` and `ClaimLifecycle` are
+coordinates; `ReviewTag` is a projection of `ReviewState`; `StructuralVerdict`
+duplicates `ClaimGateResult` and folds into it under the verdict law;
+`ReviewerDisposition` is the value schema of the reviewer signal, not a status.
+The packet's status census at P4 is final. `ClaimLifecycle` stays in
+`shared/domain`, its transitions stay in the epistemic slice, and
+`ClaimDispositionStatus` keeps its bytes.
+
+## 10. External vocabularies
+
+Upstream-first extends beyond Effect to pinned external vocabularies (OA,
+PROV-O, NIF, DoCO, SKOS, gUFO, LKIF, ELI). Each enters as a registry
+`Namespace` with source pin, license and digest, and as an adapter at the
+interchange boundary. Internal kinds stay repo-stable; nothing internal is
+renamed to an external vocabulary until a decision names the kind and its
+consumer. Pending P1 for the registry entries: P1 registers six namespaces
+(`prov:`, `oa:`, `nif:`, `xsd:`, `gufo:` and ActivityStreams `as:`) and adds
+source pin, license and digest to the existing `skos:` and `doco:` entries;
+LKIF and ELI are candidate entries with no commitment, like OntoLex
+`lexicog`, and enter when a decision names their first consumer. P5 for the
+license and digest test.
+
+The annotation codec supports one declared OA profile and nothing else.
+Decoding third-party input returns the annotation document, a table of
+imported activities, and a residual dataset that holds every triple outside
+the profile; residual triples are never stored in the document and never
+dropped silently. NIF is export-only for the `Sentence` and `Word` kinds. OA
+and NIF offsets are Unicode code points on the wire; the codec converts them
+from and to the stored `utf16-code-unit` through the `@beep/text` unit
+conversion and fails closed on a split surrogate, and `L2-6` includes an
+astral-plane fixture. Pending P3.
+
+## 11. Matter walls
+
+A matter wall is authorization, not a graph name. One authority port in the
+law-practice slice answers whether a principal may act in a scope, and every
+access path calls it with a caller-independent principal:
+
+1. source retrieval,
+2. anchor resolution,
+3. graph query,
+4. search and vector filtering,
+5. cache lookup,
+6. draft assembly,
+7. provenance traversal.
+
+Identical bytes in two matters never grant cross-matter access. Comparing two
+caller-supplied scope values is a consistency check, not authorization. The
+proof is a two-matter adversarial test in the law-practice server tests that
+composes the real server layer widened to reach all seven paths, loads
+identical bytes into two matters with distinct decisions, and makes one
+assertion per path. Pending P6.
+
+## 12. The agent surface contract
+
+- **Schemas are the tool contract.** MCP tool input and output schemas are the
+  same Effect schemas the layers export; `@beep/mcp-kit` derives tool JSON
+  Schema from them. Prompts render from schema annotations, not hand-written
+  prose beside the schema (Pending P6).
+- **Write tools emit proposed records only.** A tool may write a `proposed`
+  record; it never mints an admission. The first claim-writing tool is defined
+  in the law-practice use-cases package, its success schema is a proposed-only
+  record schema exported by `@beep/epistemics`, and the test that write tools
+  emit proposed records lives in the law-practice use-cases tests. The
+  `TierGate` in `@beep/mcp-kit` stays the dispatch gate (Pending P6).
+- **Proposed terms are linted.** The L3 audit runs on any term an agent
+  proposes (Pending P5).
+- **Attorney-facing output.** Every emitted quotation and citation has
+  verified source evidence; every attributed factual assertion has evidence or
+  a visible unresolved flag; original argument is labelled as proposed with
+  its authorities and review status; approval binds to a versioned draft
+  revision (Pending P6).
+
+## 13. What counts as a law
+
+The stack keeps three kinds of statement apart.
+
+| Kind | Meaning | Test form |
+| --- | --- | --- |
+| law | a property of this repository's functions that a test can falsify | property test (`it.prop` or `it.effect.prop` from `@effect/vitest`) over production schemas and minting functions |
+| profile | a local constraint stricter than the upstream standard | example test over repo-owned data with planted violations |
+| acceptance | an operational scenario | scenario or snapshot test over synthetic fixtures |
+
+Rules:
+
+- **Every structural claim links the test that falsifies it.** A README or
+  chapter that states a structural property cites the ledger id, and the test's
+  title starts with that id.
+- **A law with no named bug is deleted.** Each ledger row names the defect its
+  test would catch. A row that cannot name one is deleted with its reason in
+  the ledger, not kept as decoration.
+- **A property test is falsification, not proof.** Generators come from the
+  production schemas (`Arbitrary.schema`), dependent values are built through
+  the production minting functions, and the run floor and seed come from
+  `@beep/fc-runs` ([`08-testing.md`](08-testing.md)).
+- **Library behaviour is not a law of this repository.** Union laws on
+  `HashSet`, transitivity of a graph library's path query and similar
+  statements test the dependency, not the stack, and are not catalogued.
+- **Laws are stated under a declared observation.** An effectful law names
+  what it compares (`Exit` plus a recorded trace, for example) and what it
+  excludes (defects, tracing, interruption).
+
+## 14. The categorical narrative
+
+`packages/foundation/modeling/nlp/THEORY.md` described `@beep/nlp` as algebra
+over a typed text graph and claimed "full categorical fidelity". The stack
+keeps category theory only where it predicts a law a test can falsify. That
+file is deleted with its package in P7; what stays true of it is below.
+
+| Kept claim | Restated as | Ledger |
+| --- | --- | --- |
+| Operations are arrows in the Kleisli category of `Effect`; identity is the unit and composition is associative. | Only for fixed error and requirement channels, and only under a declared observation. | `L5-1` |
+| `product` is the monoidal tensor of the pipeline category. | `product` is sequential; interchange needs a commutation witness, and only `Pure` operations are central. | `L5-2` |
+| Merging independent annotation passes is order-independent. | `merge` is a join over one text capture: idempotent, commutative and associative on content, with attribution unioned. Merging across captures is a refusal. | `L2-1` |
+| Text strata are distinct typed objects that operations cannot confuse. | Kinds come from a caller-supplied registry; containment between annotations is a strict order derived from range inclusion with a kind tie-break, not a closure over kinds. | `L2-5` |
+| Provenance is stamped by construction, from `Clock`, never from the wall clock. | Every run emits a `prov:Activity`; `generated` is never earlier than `used`, and every output is attributed. | `L5-3` |
+| Graph theory comes from Effect's `Graph` module, not a local re-derivation. | The duplicate graph-operation module retires; acyclicity of derivation is checked with `effect/Graph`. | `L4-3` |
+
+Withdrawn claims:
+
+- **The handoff IR as a free object.** The handoff's `Entity`, `Relation` and
+  `Provenance` types are deleted. Candidates are annotations; the consuming
+  slice promotes them into its own proposition union, as the 2026-10-21 ruling
+  requires. No universal property is claimed, and the downstream owner the
+  file named no longer exists.
+- **Monoid and typeclass laws as stack laws.** They test the carrier, not this
+  repository's functions; surviving instances are judged by the
+  `effect/Combiner` and `effect/Reducer` census.
+- **Triangle identities for structure and projection and for query and
+  index.** No catalogue row names a defect they would catch.
+- **Confidence inside provenance.** A single confidence value with a default is
+  replaced by the five typed signals with `Absent{reason}`.
+
+## See also
+
+- `goals/text-knowledge-stack-rebuild/SPEC.md`: the program, its phases and
+  acceptance rows
+- `goals/text-knowledge-stack-rebuild/research/law-test-plan.md`: the ledger
+  of law, profile and acceptance rows
+- `07-non-slice-families.md`: the specific-home-first routing the layer homes
+  follow
+- `08-testing.md`: property tests over production schemas
+- `11-evolution-and-deprecation.md`: retirement procedure and the scoped
+  persisted-bytes amendment
+- `12-observability.md`: span names for packages that gain spans

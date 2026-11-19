@@ -18,9 +18,10 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
 2. One text identity: `OccurrenceId` (scope, source ref, locator, the whole
    `SourceTextIdentity` with its extractor and normalization pins, unit, range,
    quote) is the only occurrence identity in the repository. The citation
-   `cm1:` preimage is re-expressed as an occurrence preimage and existing
-   records are re-minted by a migration; the five non-canonical anchor
-   encodings are deleted. `Selector` is the one selector union beside the
+   mention identifier is re-expressed over it (`citation-mention/v2` hashes
+   engine artifact, semantic kind and the `OccurrenceId`; no table stores the
+   old `cm1:` values, and citation receipts convert on read); the five
+   non-canonical anchor encodings are deleted. `Selector` is the one selector union beside the
    canonical `TextAnchor`; quotes locate and verify, ranges identify;
    re-anchoring across captures is a recorded `Exact | Widened | Unmapped` map
    and `resolve` returns `Unique | Ambiguous | NotFound`.
@@ -45,7 +46,7 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
 5. Term IRIs declared in the registry, never derived from code paths: a
    `TermBinding` table and a stability snapshot that only a deprecation record
    may change; the registry expands every namespace the repo speaks (`prov:`,
-   `oa:`, `nif:`, `xsd:`, `gufo:` included); today's path-derived IRIs are
+   `oa:`, `nif:`, `xsd:`, `gufo:` and `as:` included); today's path-derived IRIs are
    re-published, not pinned.
 6. Codecs at every boundary, each in an adapter subpath so the base packages
    stay rdf-free: `TextAnchor <-> oa:` selectors in `rdf/src/Adapters/WebAnnotation.ts`,
@@ -74,7 +75,7 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
 10. Package topology is executed, not deferred: `@beep/text` replaces
     `@beep/provenance`, `@beep/annotation` exists, `@beep/nlp-processing`
     absorbs `nlp/Operations` and `nlp/Algebra`, `@beep/nlp` is retired, and
-    every `@beep/schema-org` facet is rehomed or deleted, each through
+    `@beep/schema-org` is retired whole (census: no consumer), each through
     `bun run beep create-package` and the retirement procedure with the
     consumer migration in the same PR.
 
@@ -91,7 +92,7 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
   Its lexicog competency question (OntoLex `lexicog` as a mention-class
   vocabulary) is absorbed into P0's registry census as a candidate external
   vocabulary under the adapter rule, with no commitment to adopt it.
-- `goals/belief-view-engine` (paused) stays the selection policy over
+- `goals/belief-view-engine` (superseded 2026-11-13; re-openable) stays the selection policy over
   contention sets and becomes a downstream consumer of L4; triage policies
   here never cross an admission gate and never write authority.
 - `explorations/citation-grounding-hallucination-guard` (parked) carries
@@ -99,9 +100,9 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
   minimum qualifiers before two claims may be compared. L4 `Stance` here is the
   admission workflow (`verbatim | proposed | admitted`) and does not decide
   Q7; that question reopens with that exploration's guard gate.
-- `goals/citation-extraction-engine` (active) remains the owner of the
-  citation identity module; P2 changes its preimage to the occurrence form and
-  migrates its records in one PR with that lane's review.
+- `goals/citation-extraction-engine` (completed-retained) owned the citation
+  identity module; P2 re-expresses the mention id over `OccurrenceId`, converts
+  receipts on read, and records the change in that packet's history.
 - `goals/spar-document-annotation-wire` (completed-retained) shipped the OA/PROV
   document annotations and the Markdown-to-DOCO section fold; L2 and L6 extend
   those codecs rather than replacing them.
@@ -129,8 +130,8 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
   persisted encodings, no projections kept alive for deleted carriers.
   Breaking public API or wire changes still ship with a major changeset.
 - Local-only or on-device architecture language. Hosted providers are
-  welcome; the 2026-08-17 revision of the confidentiality rule withdrew the
-  local-first framing.
+  welcome; the operator withdrew the local-first framing, and this entry
+  records that ruling.
 - Corpus or client material in the repository. Fixtures are synthetic or
   public; authorized private material runs only in the operational
   environment.
@@ -173,8 +174,10 @@ and the phase order is `PLAN.md`), this file is normative.
 
 ## Target Surfaces
 
-- `packages/foundation/modeling/identity` (L0: registry, `TermBinding`,
-  `ContentHash`, `ActivityId`, canonical JSON).
+- `packages/foundation/modeling/identity` (L0: registry, `TermBinding`, the
+  IRI schemas), with the L0 digest brands over the primitive in
+  `packages/foundation/modeling/schema` and canonical JSON plus the one
+  minting function in `packages/foundation/modeling/jsonc`.
 - `packages/foundation/modeling/provenance`, becoming `@beep/text` in P2 (L1:
   `Selector`, `OccurrenceId`, `QuoteKey`, `Resolution`, `Reanchoring`, unit
   conversion; `TextAnchor` and `VerifiedTextAnchor` keep their shapes; created
@@ -194,22 +197,22 @@ and the phase order is `PLAN.md`), this file is normative.
   `Challenge`, `Admission`, `Assessments<K>`, `epistemics/rdf` adapter).
 - `packages/foundation/modeling/ontology` (L3: SKOS schemes, editions, SSSOM
   `MappingSet`, `fold -> Dataset`, optional gUFO class typing; legal seeds and
-  FOLIO DTOs move out to the law-practice asset pack through
-  `ontology/src/TaxonomyLoader.ts`).
+  their seed data files move to the law-practice asset pack through
+  `ontology/src/TaxonomyLoader.ts`; the FOLIO DTOs are deleted).
 - `packages/foundation/modeling/rdf` (L6: `Dataset` quotient and digest,
   `Literal` cases, `TextAnchor <-> oa:` in `src/Adapters/WebAnnotation.ts`,
   `prov:Entity` projection through `src/Prov.ts`, registry-backed `prov:`,
   `oa:`, `nif:`, `xsd:`; the `rdf -> md` edge removed).
 - `packages/foundation/modeling/md`, `pandoc-ast`, `lexical`, `html`: AST
   source maps that import `@beep/text`.
-- `packages/foundation/modeling/schema-org`: every facet rehomed or deleted in P7.
+- `packages/foundation/modeling/schema-org`: retired whole in P7 (census: no consumer).
 - `packages/foundation/capability/langextract/src/Handoff` (verified receipts
   first, lossless handoff), `apps/labs/semantica/src/layers` (projection and
   the `1` default), `packages/law-practice/use-cases` (`OfficeActionReview`
   `0.9`, `DocketIntake/DocketReview.policy.ts` unavailable-text check,
   `IrToLaw` ports), `packages/law-practice/server/src/internal/Citation` and
   `packages/law-practice/domain/src/values/Citation` (the `cm1:` preimage and
-  its migration), the law-practice asset pack that receives the legal seeds.
+  the receipt read-time transform), the law-practice asset pack that receives the legal seeds.
 - `packages/tooling/test-kit/test-runner` pinned `test-utils` IRIs
   (re-published from the registry).
 - `standards/architecture/` (new knowledge-stack chapter, `DECISIONS.md`
@@ -221,7 +224,7 @@ and the phase order is `PLAN.md`), this file is normative.
 
 ## Constraints
 
-- Effect v4 against the installed `effect` (validate every API in
+- Effect v4 against the installed `effect` (4.1.4 at P0; validate every API in
   `.repos/effect`, never from priors). Schema first: plain data as branded
   `S.Opaque` with `$I` annotations, finite cases as discriminated unions
   (`S.TaggedUnion` for canonical `_tag` unions, `S.toTaggedUnion` for other
@@ -237,13 +240,16 @@ and the phase order is `PLAN.md`), this file is normative.
   packages import modeling, never the reverse. A new foundation package needs
   the specific-home-first decision and the capability negative-gate clauses
   recorded before `create-package` runs.
-- Identity: one digest format (`sha256:<64 hex>`) with one brand per domain
-  and a versioned domain tag in every preimage; canonical JSON (RFC 8785) sorts
+- Identity: one digest format (`sha256:<64 hex>`) for identifiers the eight
+  layers mint (the bare `Sha256Hex` primitive is out of scope) with one brand
+  per domain and a versioned domain tag in every preimage; canonical JSON (RFC 8785) sorts
   object keys only, so every set-valued field (`HashSet` targets, members,
   `supportAtCreation`) is sorted on the preimage before hashing and `L0-2`
   tests that two orderings of one set hash alike; the public authority is
-  `https://beep-effect.com/ns/`; a changed preimage re-mints existing records
-  by a migration in the same PR, never by a parallel encoding.
+  `https://beep-effect.com/ns/`; a changed preimage bumps its domain tag in
+  the same PR, never kept beside a parallel encoding; where rows are stored
+  the stored-format law of `standards/ARCHITECTURE.md` governs and the change
+  is a read-time transform.
 - Upstream first with a facet census before any local construct. Retirement
   follows `standards/architecture/11-evolution-and-deprecation.md` per facet,
   with the consumer migration in the same PR. The persisted-bytes clause of
@@ -266,9 +272,10 @@ and the phase order is `PLAN.md`), this file is normative.
   resolution, graph query, search, cache, draft assembly, provenance
   traversal), never graph names; identical bytes in two matters never grant
   cross-matter access.
-- External vocabularies (OA, PROV-O, NIF, DoCO, SKOS, gUFO, LKIF, ELI) enter
-  as registry entries with source pin, license and digest, and as adapters;
-  internal kinds stay repo-stable.
+- External vocabularies enter as registry entries with source pin, license and
+  digest, and as adapters: P1 registers prov, oa, nif, xsd, gufo and as, and
+  pins the existing skos and doco entries; LKIF and ELI are candidates with no
+  commitment. Internal kinds stay repo-stable.
 - Every structural claim in a README or chapter links the law test that
   falsifies it; a law without a named bug is deleted, not kept. Tests use
   `@effect/vitest` (`it.prop` and `it.effect.prop` for law rows), import package
@@ -302,10 +309,10 @@ decision file) and the law-test ledger:
 
 1. The `cm1:` to `OccurrenceId` relation: the full citation tuple, which
    fields are occurrence identity and which are retained detection metadata,
-   and the migration that re-mints existing records.
+   and the version step for receipts and fixtures that carry it.
 2. `Assessments<K>`: the caller-supplied coordinate-to-value-schema registry,
    partial versus total carriers, absent and unknown semantics, owner-defined
-   gates, and the census of the seven status vocabularies (coordinate,
+   gates, and the census of the eight status vocabularies (coordinate,
    duplicate, projection).
 3. The temporal partition for the interval law: owner binding, scope and
    `logicalKey`; half-open bounds; successor ordering; where local bound
@@ -363,16 +370,17 @@ decision file) and the law-test ledger:
       until it is.
 - [ ] L0: `TermBinding` and the term-stability snapshot exist; a test renames
       a module and proves no published IRI changes; the registry expands and
-      contracts `prov:`, `oa:`, `nif:`, `xsd:` and `gufo:` CURIEs; one
+      contracts `prov:`, `oa:`, `nif:`, `xsd:`, `gufo:` and `as:` CURIEs; one
       canonical JSON implementation; path-derived IRIs are gone and the
       test-runner's pinned IRIs are re-published from the registry; `L0-1` to
       `L0-3` are green.
 - [ ] L1: `@beep/text` exists and `@beep/provenance` is retired with every
       consumer migrated; `Selector`, `OccurrenceId`, `QuoteKey`, `Resolution`,
       `Reanchoring` and unit conversion are exported from `@beep/text`; the
-      `cm1:` preimage is the occurrence preimage and existing records are
-      re-minted by the migration; the five non-canonical anchor encodings are
-      deleted; `TextAnchor <-> oa:` round-trips in `@beep/rdf`; `L1-1` to
+      citation mention identifier is minted over `OccurrenceId` and a frozen
+      v3 receipt converts on read to the new identifiers; the rdf selectors and
+      the party `TextSpan` case are deleted (the other three non-canonical
+      encodings go in P3 and P4); `TextAnchor <-> oa:` round-trips in `@beep/rdf`; `L1-1` to
       `L1-6` are green, including the repeated-boilerplate, NFKC,
       de-hyphenation and split-surrogate fixtures.
 - [ ] L2: `@beep/annotation` exists with `makeAnnotationDocument` (anchors
@@ -380,16 +388,19 @@ decision file) and the law-test ledger:
       containment; the langextract handoff mints verified receipts and emits
       annotations with both digests, scope, extractor and normalization pins,
       producer, attributes and typed `RelationCandidate`/`CorefCandidate`
-      records; the handoff's `Entity`, `Relation` and `Provenance` types are
-      deleted; `IrToLaw` and the semantica projection read the annotation
-      document; the OA/NIF adapter round-trips the declared profile and
+      records; the handoff's `Entity`, `Relation` and `Provenance` types and
+      the nlp Handoff and Graph spans are deleted; `IrToLaw` and the semantica
+      projection read the annotation document; the OA/NIF adapter round-trips the declared profile and
       attributes unattributed input to the import activity; P3 creates
       `OfficeActionReview.flow.test.ts` in the law-practice use-cases tests
       over the annotation document on synthetic fixtures (P4 adds the signal
       assertions, P6 the law-owned structure, assessment profiles and
       admission); `L2-1` to `L2-6` are green.
 - [ ] L4: `makeClaimCore`, `Stance`, `Challenge`, `Admission` and
-      `Assessments<K>` exist; the `1` and `0.9` defaults are deleted and
+      `Assessments<K>` exist; `makeClaimEnvelope`, `ClaimVersion` and
+      `EvidenceSpan` are retired with every consumer migrated, and stored
+      `epistemic_evidence.span` and `ClaimVersion` rows keep their bytes behind
+      declared read-time transforms proved by frozen old-row fixtures; the `1` and `0.9` defaults are deleted and
       guarded by `OfficeActionReview.signals.test.ts` in the law-practice use-cases
       tests and `Extractor.signals.test.ts` beside `Extractor.test.ts` in the
       semantica lab tests; the docket
@@ -401,15 +412,16 @@ decision file) and the law-test ledger:
       beside `DocketReview.policy.test.ts` in the law-practice use-cases tests;
       the nanopub adapter round-trips in `NanopubAdapter.test.ts` under
       `packages/foundation/modeling/epistemics/test`;
-      the status census names each of the seven vocabularies as coordinate,
+      the status census names each of the eight vocabularies as coordinate,
       duplicate or projection; the absorbed attributed-span proof passes: two
       claims anchored on one verified occurrence pass through the claim gate with
       accepted and rejected evidence retained per claim, in
       `ClaimGate.two-claims-one-occurrence.test.ts` in the law-practice use-cases
       tests (the proof `goals/attributed-multi-claim-span` promised); `L4-1` to
       `L4-7` are green.
-- [ ] L3 and L6: legal seeds and FOLIO DTOs are out of `@beep/ontology` with
-      IRIs and approval metadata preserved and every consumer migrated;
+- [ ] L3 and L6: legal seeds and their seed data files move to the
+      law-practice asset pack with IRIs and approval metadata preserved and
+      every consumer migrated; the FOLIO DTOs are deleted;
       `fold -> Dataset` is the only serialization path; `Dataset` equality is a
       quotient with a canonical digest and the semantica gold fixture is
       regenerated; `Literal` has three cases; `rdf` no longer imports `md`;
@@ -430,9 +442,9 @@ decision file) and the law-test ledger:
       assertion per access path listed in Constraints) passes and P6's goal
       includes the authorization work the P0 access-path map scopes; `L5-1` to
       `L5-3` are green.
-- [ ] Cut-over: `@beep/nlp` is retired and every `@beep/schema-org` facet is
-      rehomed or deleted through the retirement procedure with consumers
-      migrated in the same PR; `research/consumer-census.md` records each
+- [ ] Cut-over: `@beep/nlp` is retired and `@beep/schema-org` is retired
+      whole (census: no consumer) through the retirement procedure with
+      consumers migrated in the same PR; `research/consumer-census.md` records each
       disposition; every package under `packages/foundation/modeling` and
       `packages/foundation/capability` passes `bun run beep lint package-scripts`
       and `bun run beep lint identity-registry` (the create-package contract);
@@ -513,7 +525,7 @@ Reverse: Reinstate the compatibility hedges by decision file before the affected
 
 ### Open questions 1-5 resolved toward the clean core; P0 confirms or reverses, 2026-11-09
 
-Resolved under the breaking-changes ruling and the round-1 review of PR #2993, which found the open questions contradicting the fixed acceptance criteria (R10-03, SPEC thread on line 198). (1) Annotation home: @beep/annotation is created in P3 through bun run beep create-package, with the specific-home-first routing decision and the capability negative-gate clauses recorded in P0 (consumers: the langextract handoff, the semantica projection, the law-practice office-action flow); the L2 contract is not landed inside @beep/nlp first. (2) Status: Assessments<K> owner-declared coordinates are the foundation shape; P0 defines the caller-supplied value schemas per coordinate and the census of the seven vocabularies; ClaimLifecycle stays in shared/domain and its transitions stay in the epistemic slice. (3) External vocabularies (NIF, DoCO, gUFO, OA, PROV-O, SKOS) enter as registry entries and adapters; internal kinds stay repo-stable. (4) OccurrenceId is the one text identity: the cm1: preimage is re-expressed as an occurrence preimage (whole SourceTextIdentity, unit, range, quote) and existing cm1: records are re-minted by a migration in the P2 PR; citation-extraction-engine remains the owner of the citation identity module. (5) One packet; a phase splits into a child packet only when it needs more than three concurrent PRs, and a child requires only independently completed capabilities. Also resolved: @beep/provenance is renamed to @beep/text in P2 (it is text identity and anchoring, not PROV), via create-package plus retirement of the old name with the consumer migration in the same PR; @beep/nlp-processing already exists and absorbs nlp/Operations and nlp/Algebra in P6 instead of being created.
+Resolved under the breaking-changes ruling and the round-1 review of PR #2993, which found the open questions contradicting the fixed acceptance criteria (R10-03, SPEC thread on line 198). (1) Annotation home: @beep/annotation is created in P3 through bun run beep create-package, with the specific-home-first routing decision and the capability negative-gate clauses recorded in P0 (consumers: the langextract handoff, the semantica projection, the law-practice office-action flow); the L2 contract is not landed inside @beep/nlp first. (2) Status: Assessments<K> owner-declared coordinates are the foundation shape; P0 defines the caller-supplied value schemas per coordinate and the census of the seven vocabularies; ClaimLifecycle stays in shared/domain and its transitions stay in the epistemic slice. (3) External vocabularies (NIF, DoCO, gUFO, OA, PROV-O, SKOS) enter as registry entries and adapters; internal kinds stay repo-stable. (4) OccurrenceId is the one text identity: the cm1: preimage is re-expressed as an occurrence preimage (whole SourceTextIdentity, unit, range, quote) and existing cm1: records are re-minted by a migration in the P2 PR; citation-extraction-engine remains the owner of the citation identity module. (5) One packet; a phase splits into a child packet only when it needs more than three concurrent PRs, and a child requires only independently completed capabilities. Also resolved: @beep/provenance is renamed to @beep/text in P2 (it is text identity and anchoring, not PROV), via create-package plus retirement of the old name with the consumer migration in the same PR; @beep/nlp-processing already exists and absorbs nlp/Operations and nlp/Algebra in P6 instead of being created. P0 amends (2) and (4): the status census covers eight sites (decision p0-rq2-assessments-confirmed-total-carrier-eight-sites), and no SQL migration is written, since citation document receipts convert v3 to v4 on read (decisions p0-rq4-occurrence-id-confirmed-mention-id-derives-from-it and p0-chapter-11-amendment-yields-to-the-stored-format-law).
 
 Lane goals/text-knowledge-stack-rebuild · PR #2993
 
@@ -530,6 +542,166 @@ No lane is working on it. Resume with `bun run beep goals set-status text-knowle
 Lane chore/finish-board-pause-b2
 
 Reverse: goals set-status text-knowledge-stack-rebuild active when it is picked up
+
+### P0 census dispositions: every facet the program moves, renames or deletes, with its consumer sums, 2026-11-19
+
+Sums are consumer usage lines and files outside the owning package at base f9982f3b5e6, from research/consumer-census.md, where covered and uncovered sums per facet are tabulated. @beep/provenance: adapt by rename to @beep/text in P2, 1,100 usage lines in 156 files, 18 package.json dependents; no semantic change except that the SourceTextIdentity string fields, which admit lone surrogates today, are constrained to well-formed text, since RFC 8785 canonicalization rejects lone surrogates. @beep/nlp (404 usage lines in 45 files; covered 3, uncovered 257, neutral construction 168) is ADAPT under rule 2 of chapter 11, since its uncovered sum exceeds its covered sum, and this file logs that flip as rule 4 requires: the package name retires once its facets are rehomed, and only the covered UnitInterval re-export (24 lines, covered 3) retires to its upstream, @beep/schema/UnitInterval. Handoff contract is rehomed into @beep/annotation in P3 (40 lines in 10 files; covered 0; Entity, Relation and Provenance deleted); Graph Schema adapts into @beep/annotation kinds in P3 (147 lines in 10 files; the float Span is deleted); GraphOps retires in P6 as a duplicate of the nlp-processing graph layer over effect/Graph (0 consumers); Ontology Kind folds into the @beep/annotation kind registry in P3 (0 consumers); Operations adapt into @beep/nlp-processing in P6 (0 consumers), merged with that package's own makeOperation and Operation modules into one; Algebra retires in P6 except instances the Combiner and Reducer census leaves uncovered and a P6 consumer uses (0 consumers today). The facets the SPEC did not route: Core (Document, Sentence, Token, CharPosition, Similarity, Vectorization, Pattern; 217 lines in 33 files, mostly the wink driver and nlp-processing) moves to @beep/nlp-processing in P6, since it is the linguistic engine contract that capability already consumes and the wink driver already depends on that package; langextract's use of it is re-expressed on @beep/text positions in P3 where it is an offset and imports nlp-processing otherwise; CharPosition is deleted in favour of the text position. IdentifierText, PathText, QueryText and VariantText have no consumer and are deleted in P7. THEORY.md is absorbed by the chapter and deleted with the package. @beep/schema-org: retire the whole package in P7; it has no importer and no package.json dependent, so no facet is rehomed. @beep/ontology: legal seeds and the six seed data files under src/seed move to the law-practice asset pack and the FOLIO DTOs and their data are deleted in P5 (0 consumers each, covered 0, uncovered 0); the fold adapts to Dataset output (covered 0, uncovered 4) and the cli research library is migrated to it in the same PR; SkosMappingKind adapts in P5 into the SSSOM MappingPredicate (0 consumers outside the package, covered 0, uncovered 0). @beep/rdf: Dataset becomes a set with quotient equality and Literal three cases in P5 (341 import lines in 91 files touch the package; covered 0 for every adapt facet; uncovered Dataset 96, Dataset equality 4, Literal 8, hand-written prov, oa and xsd constants 80, namespace literals 74 (URI literals 52, CURIE literals 22), IRI schema 85; 347 in all; construction 393); the rdf to md edge is removed with its one test moved. Anchor encodings deleted: the rdf TextQuoteSelector and TextPositionSelector schemas in Evidence.ts are replaced by the @beep/text Selector (0 outside consumers); epistemics EvidenceSpan (22 lines in 10 files; covered 0, uncovered 13) in P4, where the stored epistemic_evidence.span bytes are kept and the epistemic tables package reads them (current and legacy shapes) through a declared read-time transform to the text position plus an extractor-confidence signal, proved by a frozen old-row fixture; the nlp Handoff Span (20 lines in 9 files; covered 0, uncovered 4) and Graph Span (0 direct consumers) in P3; the TextSpan case of party-domain EvidenceAnchor in P2 (10 lines in 4 files; covered 0, uncovered 4), whose three non-text cases keep a non-text locator. No anchor encoding has upstream coverage, so each uncovered sum is its usage less its construction lines, as the census tabulates. Also re-expressed on the text position in P2 and P3: langextract TextOffsetRange and Utf16TextRange, law-practice TextQuote, SourceRef and SourceQuote as projections of an occurrence. The cli knowledge-base Selector has a TextQuote case that is a text anchor (quote plus UTF-16 offsets); it is kept outside the program's scope because it is repo tooling with no consumer in the stack, and P7 re-checks it. @beep/epistemics: the Present or Absent carrier (makeSignal, AbsenceReason, Measurement) adapts by moving to @beep/schema in P4; StructuralVerdict folds into ClaimGateResult in P4 under the verdict law; EvidenceSpan retires as above; makeClaimEnvelope and its ClaimVersion retire in P4 with every consumer migrated to makeClaimCore plus the separate records, and rows that store a ClaimVersion keep their bytes behind a read-time transform. The covered and uncovered sums of these facets are in the census @beep/epistemics section. Identity (census section g): path-derived IRIs adapt in P1, re-published from the registry (3,263 usage lines in 3,117 files; covered 0, uncovered 46, construction 3,217); the duplicate Curie types (2 lines; covered 2, uncovered 0) and the three CURIE parsers (15 lines; covered 15, uncovered 0) retire in P1 into the one registry codec; the slice-local canonical-JSON re-export copies retire in P1 (7 lines; covered 7, uncovered 0); the pinned historical encoders are kept (39 lines; covered 33, uncovered 4, construction 2). S31: the per-inventory counts at the base commit are in the census and are the ceiling for every phase head.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Change a disposition by a decision file before the PR that executes it opens, with the re-measured sums from research/consumer-census.md.
+
+### P0: the scoped chapter-11 amendment covers encodings with no stored rows; where rows are stored, the stored-format law governs and bytes convert on read, 2026-11-19
+
+The 2026-11-18 ruling added the stored-format law to standards/ARCHITECTURE.md: stored bytes are never rewritten and an incompatible change is one declared read-time transform per version step, proved by frozen old-format fixtures. A standard outranks this packet, so the amendment drafted earlier today is narrowed to agree with it. The scoped amendment to rule 5 of chapter 11 now allows, in a PR of this program, a changed encoding for identifiers, wire shapes and fixtures that have no stored rows: bump the version tag, refuse the old version at decode where the module already works that way, regenerate fixtures and golden vectors. That covers the citation mention and authority identifiers (no table stores them), the rdf Dataset and Literal shapes, the handoff contract and the gold projection fixture. Where rows are stored the amendment grants nothing: the four persisted anchor columns keep their bytes, the SQL-pinned ClaimDispositionStatus and the stored LogicalEdgeIdentity key keep theirs, and any later change to a stored format is a read-time transform under the stored-format law. For citation document receipts held outside the database, P2 writes the v3 to v4 step as a declared read-time transform that recomputes the identifiers from the receipt's own source, anchor, engine artifact and kind, with a frozen v3 fixture, instead of refusing v3; CitationMentionMigration.test.ts proves that transform. This supersedes the refusal wording in the decisions p0-rq4 and p0-chapter-11-scoped-amendment-ships-with-p0. The amendment names its packages: identity, provenance (text), annotation, nlp, nlp-processing, epistemics, ontology, rdf, schema-org, md, pandoc-ast, lexical, html, langextract, the semantica lab, party-domain, agent-memory-store, and the law-practice domain, use-cases and server packages.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Widen the amendment to allow rewriting stored rows, by a DECISIONS.md entry that amends the 2026-11-18 stored-format law for the named table, before the PR that needs it opens.
+
+### P0: the scoped chapter-11 amendment and the knowledge-stack doctrine ship in the P0 PR, 2026-11-19
+
+The amendment is a dated standards/architecture/DECISIONS.md entry that amends rule 5 of the upstream-first retirement procedure (persisted and served bytes do not change in a retirement PR) for the packages this program names and for no other work: a PR of this program may change a persisted or served encoding when the same PR carries the migration, meaning a bumped version tag in the preimage or wire schema, refusal of the old version at decode, regenerated fixtures and golden vectors, and a tested reversal path where stored rows change. The promoted-contract V2 protection stays operative. The entry expires when this packet reaches completed-retained. It merges with the P0 PR together with the knowledge-stack chapter (chapter 16), the nine rulings of the report's section 7 as dated entries with reversal clauses, and the glossary entries of section 5. Doctrine text describes the target; where the code has not caught up yet the chapter marks the rule as pending the phase that lands it.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Split the amendment into its own PR if review of the chapter delays it; P2 still holds until the amendment is on origin/main.
+
+### P0 design module: goals ops home confirmed, checked on effect 4.1.4, with the Effect diagnostics run by a second config, 2026-11-19
+
+The section 4 sketches become a module under this packet's ops/design directory, registered file by file in the manifest's opsScripts and checked by bunx tsrs -p goals/tsconfig.ops.json --noEmit, which resolves @beep/* aliases to package sources and passes on this checkout (design-facts section 8). The installed effect is 4.1.4, not the 4.1.2 the SPEC and the report name; every API is validated against 4.1.4 and the SPEC text is corrected. The ops tsconfig sets no compiler plugins, so the Effect language-service diagnostics do not run there. The design module is held to the same bar as package source, so P0 adds a second tsconfig beside the module that turns the diagnostics on and is run as a named verification command; it must report zero diagnostics. The module is a design artifact: each phase moves its part into the owning package and deletes it from ops/design in the same PR, so it is empty at P7.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Move the design module to a scratchpad workspace package and drop the ops registration, by a decision file; nothing imports the module.
+
+### P0 design module rulings, round two: supersession stays in its partition, unknown valid time, structure kinds carry containment levels, 2026-11-19
+
+(1) A record may supersede only a record of its own partition (scope, logicalKey); the log checker reports a cross-partition supersession as a violation, because a superseder that changed the key would end a knowledge interval in a partition it does not belong to. (2) A record whose valid time is Unknown asserts no interval and is left out of the valid-time disjointness clause; it still takes part in supersession. (3) Containment is defined between structure kinds only. The generic structure and segmentation kinds (Section, Paragraph, Title, Figure, Sentence, Word) are declared in the annotation package with a containment level each, and L2-5 is tested over them: strict range inclusion orders two annotations, and on equal spans the lower level contains the higher (a one-sentence paragraph contains its sentence). Extraction kinds (Mention, Chunk, the candidates) declare no level and are never contained or containing.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Reverse any one by a decision file before P3 (kinds) or P4 (log checker) opens; the design module is edited in the same change.
+
+### P0 design module rulings: activity identity, body references, gUFO typing, admission actor, canonical sets, the absent-value carrier, 2026-11-19
+
+Rulings on the questions the type-checked design module raised. (1) ActivityId is the hash of what is known when a run starts: (activity/v1, operation term, agent or engine pin, prompt digest when there is one, the sorted ids it used, start time). What it generated and when it ended are fields of the activity record, outside the id, because an output id that contained the activity id could not also be inside it. (2) A kind declares, beside the kinds its body may reference, a function from a body to the annotation ids it references. The document check requires every referenced id to resolve to an annotation of an allowed kind in the same document; merge and restrict preserve it, and L2-4 tests it. (3) gUFO class typing on a term is an optional record of three fields: the type of type (Kind, SubKind, Role, Phase, Category, Mixin, RoleMixin, PhaseMixin), the category of its instances (Object, Relator, Mode, Quality, Event), and for a Relator the set of role terms it mediates. The audit rules of L3-3 read those fields; an untyped term is skipped. (4) The actor of an Admission, a Challenge by a person and a Retraction is the slice-supplied principal id; AgentRef (software agent with model pin, person, organization) describes who asserted or generated a record. An admission token is bound to that principal. (5) Set-valued fields that enter a preimage (annotation targets, supportAtCreation, derivedFrom, coreference members) use one shared codec: a HashSet when decoded, a deduplicated array sorted by the encoded string when encoded, so the encoded form is canonical without a separate sort step. Annotation and anchor records carry no id field; the map key is the hash of the value. makeClaimCore and the other builders take one options object, matching makeClaimEnvelope. valid is the existing ValidTime (Unknown or Interval). (6) The Present or Absent{reason} carrier and its reasons (makeSignal, AbsenceReason, Measurement) move from @beep/epistemics to @beep/schema in P4, so @beep/ontology can type a mapping confidence in P5 without depending on the claims layer; until then the design module imports them from epistemics. (7) Law-test generators produce well-formed text only (no lone surrogates) and ranges on valid boundaries, so a generated receipt would also pass re-verification; split surrogates are a negative fixture for L1-2, not generator noise.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Reverse any one by a decision file before the phase that implements it; the design module file for that layer is edited in the same change.
+
+### P0 item 10: derivedFrom lives in the hashed core; L4-3 loses its support half; retraction is its own record, 2026-11-19
+
+What a claim was derived from is true at creation and never changes, so derivedFrom is a set of ClaimId in the immutable core, sorted on the preimage. Because a ClaimId is the hash of a preimage that contains its derivedFrom ids, a core cannot name itself or any later core: derivation is acyclic by construction. supportAtCreation is a set of OccurrenceId and an admission's grounding is a list of anchor receipts, so neither forms a graph over claims and the support half of L4-3 is deleted from the ledger with that reason. L4-3 is restated: the ClaimId changes when derivedFrom changes; every log built through the minting function has an acyclic derivation graph (checked with effect/Graph isAcyclic on generated logs); a Challenge cycle is accepted by the log. Retraction is a record that points at a core (claim, actor, reason, time), like Challenge and Admission, never a mutation; L4-4 is stated over it: a claim whose derivedFrom is non-empty and wholly retracted is flagged by the closure, transitively.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Move derivedFrom to a separate Derivation record with an explicit acyclicity check over the log, by a decision file before P4 opens; L4-3 is restated over that graph in the same change.
+
+### P0 item 11: the matter wall is one authority port checked at seven access paths; the two-matter test composes a widened law-practice server test layer, 2026-11-19
+
+The access-path map is in research/consumer-census.md. Its findings: the law-practice server layer reaches only source retrieval and the office-action review path; the Practice KG, citation engine, mailbox and record repositories are outside it; scope is compared between two caller-supplied values at anchor resolution and is absent at graph query, full-text search, citation caches and draft assembly; law-practice has no vector index and no provenance traversal. Decision for P6: one MatterAuthority port in the law-practice slice answers whether a principal may act in a scope, and each of the seven paths calls it with a caller-independent principal. MatterWall.two-matter.test.ts in the law-practice server tests composes the real server layer widened with the Practice KG host, the citation engine layer, the notice mailbox over the fake mailbox and the record repositories over PGlite, loads identical bytes into two matters with distinct decisions, and makes one assertion per path. The search path is asserted on the full-text index that exists; a vector index gets the same check when one is added. Provenance traversal is built in P6 over annotation attribution and admissions, owned by the law-practice server, and is authorized like the other six.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Split the two-matter fixture into one test file per owning layer, by a decision file before P6 opens; the P6 exit criterion is edited in the same change.
+
+### P0 item 3 amended: a knowledge interval ends at the record that supersedes it, so several current records per key are allowed, 2026-11-19
+
+The first P0 decision on item 3 ended a record's knowledge interval at the next record of its partition. The design module showed the consequence: only one record per (scope, logicalKey) is ever current, which makes the valid-time disjointness clause vacuous and contradicts the database, where several unexpired rows of one logical key coexist with disjoint valid ranges. Amended: the claim core names the record it supersedes (an optional ClaimId in the hashed preimage, as ClaimVersion.supersedes is today). A record's knowledge interval ends at the knowledgeStart of the record that supersedes it and is open otherwise. The pure log checker tests, per partition (scope, logicalKey): supersession is acyclic by hash construction; a record is superseded at most once, and a second superseder is a reported fork; a superseder never starts earlier than the record it supersedes or than its own generation time; and the records not yet superseded have pairwise disjoint valid intervals, which mirrors the Postgres exclusion constraint. The rest of the first decision stands (half-open bounds, Instant, partition key, where the checks live).
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Return to one current record per (scope, logicalKey) by a decision file before P4 opens; the valid-time clause of L4-1 is then deleted as vacuous.
+
+### P0 item 3: the interval laws partition by (scope, logicalKey); knowledge intervals are disjoint by construction; a pure checker mirrors the database constraint, 2026-11-19
+
+Facts (design-facts section 3): ValidInterval and KnowledgeInterval are half-open with local order checks in the schema; overlap is refused only by a Postgres exclusion constraint on valid time per logical_key among unexpired rows; nothing checks knowledge time. Decision: the partition key is the pair (scope, logicalKey), where scope is the slice-supplied id schema of the claim core builder. All bounds are half-open, inclusive start and exclusive end, and Instant is S.DateTimeUtcFromMillis (item 9), matching the millisecond int8range in storage. The core stores knowledgeStart only; the end of a record's knowledge interval is the knowledgeStart of its successor in the same partition, so knowledge intervals are disjoint by construction and the law to test is that the derivation is total and ordered: successors sort by knowledgeStart and then by ClaimId, and a successor never starts earlier than its predecessor or than its own generation time. Valid-time disjointness among current records of one partition is a second clause. Local bound checks stay in the schema checks; both partition-level clauses live in a pure function over a log in @beep/epistemics, which is what L4-1 property-tests; the Postgres constraint remains the enforcement in the epistemic server and its existing integration test is unchanged.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Drop the pure checker and state L4-1 over the Postgres constraint in the epistemic server integration tests only, by a decision file before P4 opens.
+
+### P0 item 7: the declared OA profile, the residual dataset, and imported activities, 2026-11-19
+
+The codec in the @beep/annotation rdf adapter subpath supports this profile and nothing else. Classes: oa:Annotation, oa:SpecificResource, oa:TextPositionSelector, oa:TextQuoteSelector, prov:Activity. Properties: oa:hasTarget, oa:hasSource, oa:hasSelector, oa:hasBody, oa:start, oa:end, oa:exact, oa:prefix, oa:suffix, rdf:type, dcterms:creator, dcterms:created, as:generator, prov:wasGeneratedBy, prov:specializationOf, prov:generatedAtTime. NIF is export-only for the Sentence and Word kinds (nif:Sentence, nif:Word, nif:beginIndex, nif:endIndex, nif:anchorOf, nif:referenceContext). OA and NIF offsets are Unicode code points on the wire: the codec converts the stored utf16-code-unit offsets to unicode-code-point on encode and back on decode through the @beep/text unit conversion (L1-2), and fails closed on a split surrogate. Decoding third-party input returns three things: the annotation document, a table of imported activities, and a residual dataset holding every triple outside the profile. Residual triples are never stored in the document and never dropped silently. An activity named in the input by IRI gets ActivityId = hash of (imported-activity/v1, IRI) and its record keeps the original IRI and the stated time when one is given; an annotation with no dcterms:creator, as:generator or prov:wasGeneratedBy is attributed to the import activity, which is a prov:Activity over the source document digest with a deterministic id, the hash of (import-activity/v1, source document digest); the import time is a field of its record outside the id, so normalize(s) is a function of s and the source digest. normalize(s) is defined as: project s to the profile, add the import attribution to unattributed annotations, and take the canonical form of the dataset quotient. Law L2-6: for document d, decode(encode(d)) equals d; for third-party input s, encode(decode(s)) equals normalize(s) on the dataset quotient; and resolve gives the same result before and after the round trip; an astral-plane fixture checks the code-point conversion.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Widen or narrow the profile by a decision file before P3 opens; ledger row L2-6 is edited in the same change.
+
+### P0 items 4, 6 and 9: target canonicalization, restrict as a closed selection, Generation identity, and Anchored as a receipt, 2026-11-19
+
+Item 4. A target set is minted from an array: deduplicate, sort by the OccurrenceId string, then hash; the carrier is a HashSet and, because S.HashSet and S.HashMap encode in iteration order, every preimage sorts its set-valued fields explicitly (design-facts section 7). A document names one text capture (SourceTextIdentity); every row of the anchors table must carry a receipt whose source equals that capture, and its key must equal the occurrence hash of its value. The key check is effectful by choice, so the Digest service stays the one hash backend (the repository does have synchronous hashing, for example the JsoncFingerprint sync twins); it runs in the effectful constructor and in an effectful verify function that every decode path calls; the pure schema check covers resolution (every target has an anchors row), attribution (every annotation has a non-empty Generation set) and capture equality. Restriction: each kind in the registry declares the kinds its body references. restrict takes a kind set and refuses with a typed RestrictionNotClosed{missing} value when the set is not closed under those references; closure computes the closed set. A restriction never silently drops dependents and never silently widens; anchors and attribution are restricted to what the kept annotations use, so referential integrity holds by construction and L2-4 tests it. Item 6, confirmed as stated in the SPEC: RunEntityId is its own brand, the hash of (generation/v1, AnnotationId, ActivityId); attribution is unique per (content, activity) pair; time is canonical per pair; merging two records for one pair with different times returns a typed GenerationTimeConflict refusal; merge over two documents with different captures returns a typed CaptureMismatch refusal; the join laws of L2-1 are stated over compatible documents (same capture, no time conflict). Item 9, confirmed with one simplification: the canonical stored unit is utf16-code-unit, which is what TextAnchor's width check already assumes, and the occurrence preimage names the unit explicitly. Anchored is an S.Opaque holding the powerless TextAnchorVerificationReceipt, with range and quote read from the receipt's anchor rather than stored a second time, since two copies would need an equality check that one copy does not. A decoded Anchored grants no proof; only verification against the source text yields a VerifiedTextAnchor. Instant is S.DateTimeUtcFromMillis.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Change any one of the four by a decision file before P3 opens; the design module and ledger rows L2-1 to L2-4 are edited in the same change.
+
+### P0 item 8 and L0 homes: the IRI schema moves into @beep/identity; canonical JSON stays in @beep/jsonc; ContentHash brands the existing prefixed digest (reverses SPEC wording that put canonical JSON in identity), 2026-11-19
+
+Dependency facts (design-facts sections 5 and 6): @beep/identity depends on effect only; @beep/utils, @beep/schema and @beep/jsonc depend on identity directly; @beep/data depends on it through @beep/utils. So identity can use an IRI schema only if it owns it, and it cannot import the one RFC 8785 implementation, which already has a single owner in @beep/jsonc (JsoncFingerprint, from the completed canonical-digest-owner goal). Decision: (1) The RFC 3987 schemas (IRI, IRIReference, RelativeIRIReference, AbsoluteIRI) move from rdf/src/Iri.ts to @beep/identity, with their @beep/utils helper calls rewritten to effect/Array and effect/String; @beep/rdf imports them from identity and keeps canonicalizeSchemaOrgIri; every importer (ontology, ontology client, documents domain, the scratchpad workspace) is migrated in the P1 PR and no re-export is left behind. (2) L0 is a layer, not one package: @beep/identity owns terms, namespaces, the registry, TermBinding and the stability snapshot; @beep/schema owns the digest primitive; @beep/jsonc owns canonical JSON and the one minting function that hashes a versioned, domain-tagged preimage. The SPEC criterion of one canonical JSON implementation is met by the existing owner; P1 removes the two slice-local re-export copies and leaves the pinned historical encoders (party key v1, eyecite parity, the pipe-joined LogicalEdgeIdentity key that is stored in SQL) recorded as pinned. (3) ContentHash is a brand over the existing Sha256PrefixedDigest (sha256: plus 64 hex) and each domain adds its own brand (OccurrenceId, AnnotationId, RunEntityId, ActivityId, ClaimId). The one-digest-format rule binds identifiers minted by the eight layers; the bare Sha256Hex primitive (2,370 lines in 439 files repo-wide) is not migrated by this program. SPEC Objective item 5, Target Surfaces and Constraints are edited to match.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Move the RFC 8785 core below @beep/identity into a new effect-only primitive package and re-point @beep/jsonc at it, by a decision file before P1 opens.
+
+### P0 review round one: rulings on the confirmed findings, 2026-11-19
+
+A five-dimension review with independent verification confirmed 46 findings against the P0 artifacts; the text fixes are applied in the same PR and these are the rulings they needed. (1) Stored anchor columns: epistemic_evidence.span stores an EvidenceSpan (anchor fields plus confidence), not a bare TextAnchor. When P4 deletes EvidenceSpan as an in-memory encoding, the column keeps its bytes and the epistemic tables package keeps a declared read-time transform from the stored shapes (current and legacy) to the text position plus an extractor-confidence signal, proved by a frozen old-row fixture. The same holds for the agent-memory-store node events, which store an OccurrenceAnchor: the events keep their bytes and P2 derives OccurrenceId from the stored anchor at read time, mapping its utf16 unit literal to utf16-code-unit. (2) The scoped chapter-11 amendment also names @beep/party-domain and @beep/agent-memory-store. (3) OA and NIF offsets are Unicode code points on the wire; the codec converts from and to the stored utf16-code-unit through the @beep/text unit conversion and fails closed on a split surrogate; L2-6 gains an astral-plane fixture. (4) The import activity has a deterministic id, the hash of (import-activity/v1, source document digest); the import time is a field of its record outside the id, so normalize(s) is a function of s and the source digest and L2-6 is well posed. (5) P1 registers six namespaces, the five named before plus ActivityStreams (as:), and adds source pin, license and digest to the skos and doco entries that exist; LKIF and ELI are candidates with no commitment, like OntoLex lexicog. (6) The anchor key check is effectful by choice, so the Digest service stays the one hash backend; the repository does have synchronous hashing and the earlier wording that it does not was wrong. (7) Under rule 2 of chapter 11 the @beep/nlp concept is ADAPT, not retire: uncovered 257 against covered 3. The package name retires after its facets are rehomed (Handoff contract, Graph Schema and Kind to @beep/annotation; Core and Operations to @beep/nlp-processing); only the covered UnitInterval re-export retires to its upstream. (8) The five non-canonical anchor encodings are deleted in the phase that owns each: the rdf selectors and the party TextSpan case in P2, the nlp Handoff and Graph spans in P3, EvidenceSpan in P4; the P2 exit criterion and the SPEC L1 bullet are narrowed and the P3 and P4 rows gain theirs. The cli knowledge-base Selector has a text-quote case; it is kept because it is repo tooling with no consumer in the stack, and P7 re-checks it. (9) makeClaimEnvelope and its ClaimVersion retire in P4 with every consumer migrated to makeClaimCore plus the separate records; rows that store a ClaimVersion keep their bytes behind a read-time transform. The glossary entry is headed Claim (core). (10) The census gains an @beep/epistemics section (the absent-value carrier move, the StructuralVerdict fold, the EvidenceSpan and ClaimVersion retirements), sums on every retire or adapt row, and one disposition per row. (11) The ontology seed data files move with the seeds to the law-practice asset pack; the FOLIO DTO data is deleted in P5.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Reverse any one ruling by a decision file before the phase it names opens; the SPEC, PLAN and census rows it changed are edited back in the same change.
+
+### P0 routing: @beep/annotation is foundation/modeling; the legal seeds become a law-practice asset pack; law-practice use-cases hosts the first claim-writing tool, 2026-11-19
+
+Specific-home-first test (standards/ARCHITECTURE.md, routing table and the foundation/capability gate) applied to @beep/annotation: it carries no product semantics (kinds are supplied by the caller through a kind registry, and patent structure stays a law-practice profile); it wraps no external engine, SDK or service; it is not repo-operational tooling; it is not a UI primitive. It is repo-owned, domain-agnostic schema and pure behavior, so it is foundation/modeling, created with create-package (family foundation, kind modeling). The capability negative-gate clauses are recorded although the package is not a capability: named consumers at creation are the langextract handoff (packages/foundation/capability/langextract), the semantica projection (apps/labs/semantica) and the law-practice office-action flow (packages/law-practice/use-cases); the README lists them. Law-practice asset pack: the legal seeds in @beep/ontology (Vocabulary.seed.ts, SemanticFoundation.seed.ts and the six files under src/seed) have no consumer outside the package and no law-practice asset pack exists. They are product vocabulary, so the specific home is the law-practice slice: a manifested, digest-pinned data pack owned by the law-practice domain package and loaded through ontology/src/TaxonomyLoader.ts, with seed IRIs and approval metadata preserved; P5 fixes the directory when it reads the loader protocol. The FOLIO HTTP DTOs have no consumer either and are deleted in P5 rather than moved. Write-tool host for the L7 acceptance: no MCP tool writes a claim or an annotation today. The first one is defined in packages/law-practice/use-cases beside the existing ReviewHub and claim tools; its success schema is a proposed-only record schema exported by @beep/epistemics, and the test that write tools emit proposed records only lives in the law-practice use-cases tests. The mcp-kit TierGate stays the dispatch gate and is not changed.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Re-route any of the three by a decision file before its phase opens (P3 for the package, P5 for the asset pack, P6 for the tool host); no code exists at any of the three homes yet.
+
+### P0 confirms RQ1: @beep/annotation is created in P3 as a foundation/modeling package, 2026-11-19
+
+Confirmed against the live tree at f9982f3b5e6. The census (research/consumer-census.md, group b) shows the handoff contract has 40 consumer lines in 10 files, all in langextract and the semantica lab, and that neither IrToLaw nor the semantica projection reads AnnotatedDocument today, so there is no reader to keep compatible and no reason to land the contract inside a package that P7 retires. The package is pure schemas and pure functions over them (document, merge, restrict, containment), which is foundation/modeling; its OA and NIF codec lives in an adapter subpath so the base stays rdf-free. The routing proof is the separate decision p0-routing-annotation-asset-pack-and-write-tool-host.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Land the L2 contract inside @beep/nlp-processing instead, by a decision file before P3 opens; the SPEC L2 acceptance row is edited in the same change.
+
+### P0 confirms RQ2: Assessments<K> is a total, owner-declared carrier; the status census covers eight sites, not seven, 2026-11-19
+
+Confirmed with two corrections from research/2026-11-19-p0-design-facts.md section 2. (1) The cited vocabularies are eight sites: ReviewTag, ReviewState, ReviewerDisposition, StructuralVerdict, ClaimDispositionStatus, ClaimGateResult, ClaimEvidenceReviewStatus and ClaimLifecycle. Working classification, final in research/status-census.md at P4: ReviewState, ClaimDispositionStatus, ClaimEvidenceReviewStatus and ClaimLifecycle are coordinates; ReviewTag is a projection of ReviewState; StructuralVerdict duplicates ClaimGateResult and is folded into it under the verdict law; ReviewerDisposition is the value schema of the reviewer signal, not a status. SPEC text that says seven now says eight. (2) Shape: makeAssessments takes a record from coordinate name to a caller-supplied value schema and returns a struct with every coordinate present, each Assessed{value} or Unassessed{reason}, the same pattern makeSignal already uses. The carrier is total so a missing coordinate is a decode failure, and unknown is a value a gate must handle. A gate is an owner-defined predicate over the struct; the foundation supplies the law harness (refusal is a no-op, independent coordinates commute, a gate never passes on Unassessed and is monotone under the owner's declared order per coordinate). ClaimLifecycle stays in shared/domain and its transitions stay in the epistemic slice. ClaimDispositionStatus is pinned by a SQL CHECK and keeps its bytes.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Keep the single ClaimLifecycle and add nothing in foundation, by a decision file before P4 opens; delete rows L4-6 and the Assessments acceptance text in the same change.
+
+### P0 confirms RQ3: external vocabularies enter as registry entries and adapters, 2026-11-19
+
+Confirmed. The census found no nif: or gufo: term anywhere in code and prov:, oa: and xsd: only as hand-written constants outside the CURIE registry, so P1 adds six namespaces to the registry (prov, oa, nif, xsd, gufo and ActivityStreams as:, which the OA profile needs for as:generator), each with source pin, license and digest, adds source pin, license and digest to the existing skos and doco entries, and migrates the constants; nothing internal is renamed to an external vocabulary. The OntoLex lexicog question absorbed from attributed-multi-claim-span, LKIF and ELI are recorded as candidate registry entries with no commitment to adopt them.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Adopt an external vocabulary as an internal kind by a decision file naming the kind and its consumer; nothing persisted depends on the choice until a kind ships.
+
+### P0 confirms RQ4 with a changed shape: the citation mention id is derived over OccurrenceId, and the re-mint is a receipt-version bump, not a SQL migration, 2026-11-19
+
+Facts (design-facts section 1, census correction 2 and 3): the cm1 preimage is already scope, source ref, locator, both digests, extractor name and version, normalization version, UTF-16 range and quote, plus two detection fields (engine artifact digest and semantic kind) and no offset unit. No table, column or migration stores a cm1 value; it lives in citation document receipts (citation-document-receipt/v3, citation-mention-receipt/v1), one golden vector and fixtures. Decision: OccurrenceId in @beep/text is the hash of the versioned tuple (occurrence/v1, scopeRef, sourceRef, locator, sourceDigest, textDigest, extractor name, extractor version, normalizationVersion, unit, start, end, quote). The citation mention id becomes the hash of (citation-mention/v2, engineArtifact, semanticKind, OccurrenceId): two engines or two citation kinds at one occurrence stay two mentions that share one occurrence, so nothing is lost and the occurrence is identified once. Every identifier whose preimage contains a mention id (the case-occurrence authority id and the cl and cg ids sliced from it) is re-minted with a bumped domain tag; P2 fixes the display prefixes with golden vectors that pin v1 and v2 side by side. Citation document receipts convert v3 to v4 on read through a declared transform that recomputes the identifiers from the receipt's own source, anchor, engine artifact and kind, and CitationMentionMigration.test.ts proves it on a frozen v3 fixture (decision p0-chapter-11-amendment-yields-to-the-stored-format-law). The four persisted anchor columns (epistemic_evidence.span, epistemic_evidence_verification.verified_anchor and the two law-practice grounding columns) hold EvidenceSpan (TextAnchor fields plus confidence), VerifiedTextAnchor and TextAnchorVerificationReceipt shapes whose bytes do not change, so no SQL migration is written; when P4 deletes EvidenceSpan as an in-memory encoding, the epistemic tables package keeps a declared read-time transform from the stored epistemic_evidence.span shapes (current and legacy) to the text position plus an extractor-confidence signal, proved by a frozen old-row fixture. The citation-extraction-engine goal is completed-retained with no open PR, so P2 edits its module directly and records the change in that packet's history. The name OccurrenceId is reserved for @beep/text: party-domain's party-occ identifier is renamed in P2 (it identifies a party record occurrence, not a text occurrence), and the agent-memory-store OccurrenceAnchor preimage is re-expressed on OccurrenceId in P2, sequenced after that goal's open lane merges. Its stored node events keep their bytes: P2 derives OccurrenceId from the stored OccurrenceAnchor at read time, mapping its utf16 unit literal to utf16-code-unit, and any change to the event shape is a declared read-time transform proved by a frozen old-event fixture under the stored-format law.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Keep citation-mention/v1 frozen and treat OccurrenceId as a sibling identity, by a decision file before P2 opens; the L1 acceptance row loses its cm1 clause in the same change.
+
+### P0 confirms RQ5: one packet, one PR or stack per phase, P0 does not split up front, 2026-11-19
+
+Confirmed. The census puts the largest single move (the @beep/provenance rename) at 156 consumer files, which is one mechanical PR, and no two phases need to run in parallel because the DAG orders them. The decomposition rule in PLAN.md stands for later phases.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design
+
+Reverse: Bootstrap a child packet for any phase that needs more than three open PRs, with a checkpoint naming it in PLAN.md.
 
 <!-- beep:decisions:end -->
 

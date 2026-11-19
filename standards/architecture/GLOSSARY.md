@@ -45,10 +45,42 @@ Protocol handlers, clients, and UI code may branch on action errors. Port,
 driver, and domain failures must be translated before they become action
 errors.
 
+## Admission
+
+In the [knowledge stack](./16-knowledge-stack.md), a record that approves a claim
+for a stated use. Its actor is the slice-supplied principal id, and it is
+bound to that actor, an action, a revision and a scope,
+and it exists only with two witnesses: a non-empty grounding witness whose
+anchors verify against the current text digest, and a human token. Admission is
+not truth, and a refused admission is a value, not an error. It is owned by
+`@beep/epistemics` as vocabulary and by the slice that grants it as a record. It
+is not [Re-admission](#re-admission), which rebuilds an Invocation at a hop.
+
+## Agent (prov:Agent Versus Principal Versus Party)
+
+Three different things. A `prov:Agent` is whatever a provenance record says
+produced or asserted something: a software agent with its model or engine pin,
+a person or an organization. A principal is who an action runs under, which the
+[authority context](#authority-context) owns. A party is a person, organization
+or collective agent as a product record in the party slice. A claim names its
+asserting `prov:Agent`; an admission names its actor as a principal; neither
+makes the other a party.
+
 ## Anemic Domain Model
 
 A domain model that only describes data shape and maybe validation. An anemic
 model does not own meaningful behavior.
+
+## Annotation
+
+A standoff record over one text capture: a kind from a caller-supplied
+registry, a body, and a set of [occurrence](#occurrence) targets. Its id is the
+hash of its content (deduplicated sorted targets, kind and body). Its kind
+declares which annotations its body may reference, and the document check
+resolves every reference in the same document. Who produced
+it is kept apart as [Generation](#generation-attribution) records. The model
+lives in `@beep/annotation` (`foundation/modeling`), with its RDF codec in an
+adapter subpath.
 
 ## App Layer Helper
 
@@ -57,6 +89,16 @@ An app-local Layer composition module, usually
 one application. It is not a monorepo package family and must not own product
 policy, handlers, repositories, schedules, workflows, or cross-slice
 orchestration.
+
+## Assessment Coordinate
+
+One owner-declared axis of a claim's status, with a caller-supplied value
+schema. `makeAssessments` in `@beep/epistemics` builds a total carrier over a
+set of coordinates: each is assessed with a value or unassessed with a reason,
+and a missing coordinate is a decode failure. Gates are owner-defined
+predicates over the carrier. Coordinates and their transitions stay with their
+owners, per the verdict law; `ClaimLifecycle` is one coordinate and stays in
+`shared/domain`.
 
 ## Authority Context
 
@@ -82,12 +124,35 @@ may depend on it, never the reverse, so a brand-neutral component library stays
 consumable by apps carrying another identity. Doctrine:
 [07-non-slice-families.md](./07-non-slice-families.md).
 
+## Candidate
+
+An extractor's reading recorded as an annotation, such as a
+`RelationCandidate` or `CorefCandidate`, with attribution and no claim status.
+A candidate is not a claim: the consuming slice promotes it into its own
+proposition union with stance `proposed`. It is not the epistemic slice's
+`CandidateClaim` entity, which is a product record.
+
 ## Catalog (contract)
 
 The aggregate-free declaration a contract package's `Domain.Api` is built over:
 the context's commands, view read contracts and queries, shaped like a Model with
 no aggregate. A parity test asserts each contract Api's RPC group equals the
 model Api's. It is deleted once upstream splits the Api from the model.
+
+## Claim (core)
+
+What someone asserts, as a hashed, immutable core over a slice-owned
+[proposition](#proposition): its logical key, the occurrences supporting it at
+creation, the claims it was derived from, the record it supersedes if any, the
+generating activity, the asserting agent, the valid time, the knowledge start
+and the scope. Its knowledge interval ends at the knowledge start of the
+record that supersedes it, so several unsuperseded records of one partition
+may be current, with disjoint valid intervals. Stance,
+challenges, admissions and retractions are separate records that point at the
+core. The core is built by `makeClaimCore` in `@beep/epistemics` (Pending
+P4), which replaces `makeClaimEnvelope` and its `ClaimVersion` in P4; a patent
+claim, a Hohfeld legal position and a review verdict are not claims in this
+sense.
 
 ## Client Package
 
@@ -146,6 +211,13 @@ Membership.commands.ts
 Membership.event-handlers.ts
 Membership.command-client.ts
 ```
+
+## Concept Scheme
+
+A SKOS concept scheme: a named set of concepts with broader and narrower links
+and labels, owned by `@beep/ontology` or loaded from a pinned edition. In
+repo-owned schemes `skos:broader` is acyclic; an imported scheme's cycle is
+recorded, since SKOS permits it.
 
 ## Config Contract
 
@@ -254,6 +326,13 @@ needs. Events are the system of record for an event-sourced slice; each stored
 event carries a schema version (a static on its class, default 1), upcasters
 run at read, and stored events are never rewritten.
 
+## Evidence (role)
+
+A role a claim gives an occurrence, not a kind of object. An occurrence is
+evidence for a claim when the claim's core or an admission's grounding names
+it. Evidence weight is carried by the five typed signals, each present or
+absent with a reason, never by a default number.
+
 ## Enforcement Lane
 
 The way an architecture rule becomes real. Canonical lanes are `Doctrine`,
@@ -277,6 +356,14 @@ It needs multiple real consumers or explicit platform-capability rationale.
 A service declared in a provider's contract (`.gateway.ts`) that other contexts
 call synchronously. A consumer calls it only through a port it declares in its
 own model and implements in its host.
+
+## Generation (attribution)
+
+The record that one activity produced one annotation's content at one time:
+a run-specific entity, hashed from the content id and the activity id, that is
+a `prov:specializationOf` the content entity. Attribution is unique per content
+and activity pair, and two records for one pair with different times are a
+typed refusal on merge. It is not a [Stream Generation](#stream-generation).
 
 ## God Layer
 
@@ -368,6 +455,13 @@ run if any, and the grants in force. Only the [authority context](#authority-con
 builds one; the kernel holds its schema and the pure grant-check language.
 Events store [provenance](#provenance-event-sourced), never an Invocation.
 
+## Knowledge Graph
+
+A projection of claims, annotations and terms into a graph store or RDF
+dataset for query. It is generated, disposable and never a second writer; the
+files and records it indexes stay canonical. A graph name never grants access:
+[matter walls](#matter-wall) are enforced at query.
+
 ## Lab App
 
 A private, law-abiding experimental application under `apps/labs/*`. A lab app
@@ -378,12 +472,40 @@ is not the law-relaxed, throwaway Scratchpad Lane. Product slices and public
 package surfaces must not import a lab app; promotion moves earned work into its
 lawful durable home. Doctrine: [15-lab-apps.md](./15-lab-apps.md).
 
+## Layer (knowledge stack)
+
+One of the eight roles L0 to L7 of the text-knowledge stack (identity, text,
+annotation, taxonomy, claims, operations, interchange, agent surface), each
+with an owner package, objects, arrows and laws
+([16-knowledge-stack.md](./16-knowledge-stack.md)). Layer numbers name roles,
+not a linear order; the dependency DAG is the constraint.
+
+**Terminology caveat:** this is not an Effect `Layer`, the service-construction
+value that [God Layer](#god-layer) and [App Layer Helper](#app-layer-helper)
+refer to.
+
 ## Legacy Seven-Package Shape
 
 The slice package family before the model-first shape: domain, use-cases,
 config, server, client, tables and UI. Existing slices keep it until their own
 migration under the checkers' baselines; no new slice and no new migration to
 `@alchemy.run/domain` starts on it.
+
+## Matter Wall
+
+Authorization that keeps one matter's material out of another's. One authority
+port in the law-practice slice answers whether a principal may act in a scope,
+and every access path calls it: source retrieval, anchor resolution, graph
+query, search and vector filtering, cache lookup, draft assembly and provenance
+traversal. Identical bytes in two matters never grant cross-matter access, and
+comparing two caller-supplied scope values is a consistency check, not a wall.
+
+## Mention
+
+An annotation kind for a span the extractor read as naming something, with its
+class. A mention identifies text, not the thing named; the thing is a
+[referent](#referent). A detection that adds meaning to an occurrence, such as
+a citation mention, derives its id over the `OccurrenceId`.
 
 ## Model (event-sourced)
 
@@ -414,6 +536,30 @@ A folder in a model-first package that holds one consistency boundary, process
 or read model (`<Module>/<Noun>.<kind>.ts`). The same Module name appears in the
 contract and the model. Modules replace domain-kind and subdomain folders.
 
+## Namespace
+
+A registered vocabulary prefix in `@beep/identity`: prefix, IRI, pinned
+source, license, version and digest. Every namespace the repo speaks, external
+ones included (`prov:`, `oa:`, `nif:`, `xsd:`, `gufo:`, `as:`), is registered, so
+CURIEs expand and contract closed-world.
+
+## Occurrence
+
+One place in one text capture. `OccurrenceId` (`@beep/text`) is the digest of
+the versioned tuple of scope, source reference, locator, source and text
+digests, extractor and normalization pins, offset unit, range and quote. It is
+the only text-occurrence identity in the repository. Quotes locate and verify;
+ranges identify.
+
+## Ontology (OWL) Versus Taxonomy (SKOS)
+
+An ontology states classes, properties and axioms a reasoner can check (OWL);
+authoring one with a reasoner is the ontology slice (`packages/ontology`). A taxonomy
+organizes concepts by broader and narrower links for navigation and
+classification (SKOS); concept schemes, editions and mapping sets are
+`@beep/ontology` in foundation, whose fold also emits RDFS and OWL
+declarations. A SKOS hierarchy is not a subclass axiom.
+
 ## Proof Inventory
 
 The generated list of a context's invariants, each with its checker, inputs,
@@ -421,11 +567,27 @@ assumptions, known gaps and evidence, checked for drift. Mechanical laws run
 automatically; story coverage counts executed outcomes; semantic questions go to
 a reviewer that did not write the change.
 
+## Proposition
+
+The content of a claim, as a value of a slice-owned union (the party slice's
+`IdentifierOf` and `SameParty`, for example). No central proposition
+union exists in `shared`, per the 2026-10-21 ruling; the foundation claim core
+is generic over the proposition schema.
+
 ## Provenance (event-sourced)
 
 What an event stores about the authority it was decided under: the root, on
 whose behalf, the causal chain and grant ids, never grant terms. Each hop
 re-admits it through the [authority context](#authority-context).
+
+## Provenance (PROV) Versus Source Identity
+
+PROV-O provenance records which activity, using what, produced an entity and
+who was associated; its model lives in `@beep/rdf`. Source identity is what a
+text capture is (`SourceTextIdentity`: artifact digest, extracted-text digest,
+extractor and normalization pins) and lives in L1 with the anchors. Neither is
+[event provenance](#provenance-event-sourced), the authority an event was
+decided under.
 
 ## Provenance Anchor
 
@@ -436,7 +598,11 @@ quoted substring, re-sliceable as `text.slice(startChar, endChar)`. It is pure
 provenance substrate — no confidence, claim, or domain semantics — and lives in
 `foundation/modeling` so any slice's `domain` can ground knowledge in a source
 span without depending on another slice. Consuming slices wrap it (e.g.
-epistemic `EvidenceSpan` = `TextAnchor` fields + a `Confidence`).
+epistemic `EvidenceSpan` = `TextAnchor` fields + a `Confidence`). Beside it,
+`@beep/text`, which replaces `@beep/provenance` in P2 of
+`goals/text-knowledge-stack-rebuild`, adds the
+[`Selector`](#selector) union and [`OccurrenceId`](#occurrence), the one
+text-occurrence identity.
 
 ## Published Stream
 
@@ -575,6 +741,12 @@ rebuild an Invocation from a stored provenance and live grants. It never adds a
 grant and passes those still in force; a command that needs a lapsed one is
 refused and the refusal recorded.
 
+## Referent
+
+The thing a mention names, as distinct from the text that names it. Referents
+and relations between them are slice-owned claims; coreference is a versioned
+partition claim with a stable referent id, not a property of the annotation.
+
 ## Reflection / Reflection Artifact
 
 A reflection is a structured, evidence-grounded retrospective written at goal
@@ -613,6 +785,14 @@ The filename suffix that states a module's role. Examples include `.model.ts`,
 Server-only secret configuration represented with redacted values. Secret config
 must live behind explicit secret/server-only modules and must not be exported
 through `/public` or any other browser-safe surface.
+
+## Selector
+
+The one selector union of `@beep/text`, after Web Annotation's: `Position`
+(unit, start, end), `Quote` (exact, prefix, suffix), `Fragment`, `Refined` and
+`Range`. `resolve` maps a capture and a selector to `Unique`, `Ambiguous` or
+`NotFound`; an ambiguous quote never resolves to its first hit. `TextAnchor`
+keeps its wire shape beside it.
 
 ## Server Config
 
@@ -692,6 +872,13 @@ slices and public package exports must not import it. Promotion re-enters
 through the smallest legal slice shape. The lawful next step for an experiment
 that outgrows the lane is a [Lab App](#lab-app).
 
+## Stance
+
+The admission workflow position of a claim record: `verbatim` (what the source
+says), `proposed` (what a machine or person put forward) or `admitted`. It is
+owned by `@beep/epistemics`. It is not the verdict law's `SemanticStance` stem,
+which says whether evidence supports or contradicts a claim.
+
 ## Stored-Format Law
 
 Stored bytes are never rewritten; schemas convert on read. It covers events,
@@ -714,12 +901,28 @@ The slice package that owns product-specific persistence schema and mapping.
 Tables are the slice-local persistence adapter surface for product schema and
 mappings. They are not domain and they are not generic driver wrappers.
 
+## Term
+
+A registered vocabulary term: IRI, namespace, local name, an optional
+class-level gUFO typing (type of type, category of instances, and for a
+relator the role terms it mediates) and an optional deprecation. A published term IRI is
+declared in the `@beep/identity` registry and bound to code through
+`TermBinding`, never derived from a code path; the published set changes only
+with a deprecation record.
+
 ## Tooling Package
 
 A code-bearing package in the `tooling` family. Canonical kinds are `library`,
 `tool`, `policy-pack`, `test-kit`, and `infra` (Alchemy stacks for repo-platform
 infrastructure). Tooling packages support development and operations;
 product/runtime code does not depend on them.
+
+## Triage Policy
+
+A named, versioned ranking over claims or review items for an interface, such
+as deadline proximity or unresolved review. It is tested on unknowns and ties,
+keeps uncertain items visible, never crosses an admission gate and never writes
+authority. It replaces any default algebra over evidence signals.
 
 ## Use-Case Package
 
@@ -756,6 +959,13 @@ view-security tests pass.
 with a `.machine.ts` and `.controller.ts` where a screen's interaction state
 earns them. It imports its own model only for a listed `Aggregate.predict`
 screen.
+
+## Work, Expression And Manifestation (profile)
+
+The LRMoo distinction between an abstract work, a realization of it and a
+physical or digital embodiment, used as a profile at the interoperability
+boundary, not as internal kinds: no internal record is typed as a work, an
+expression or a manifestation.
 
 ## Workflow
 

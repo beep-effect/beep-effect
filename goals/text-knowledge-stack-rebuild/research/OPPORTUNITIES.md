@@ -54,3 +54,24 @@ home paths with `~`, drop session and machine ids.
   first SPEC draft missed it because the inventory of foundation packages was
   rebuilt by hand. **Would have prevented it:** a `bun run beep architecture`
   listing of packages by family and kind cited in the knowledge-stack chapter.
+
+## 2026-11-19 — P0 design and grill
+
+- **Doing:** confirming the SPEC's resolved questions against the live tree.
+  **Evidence:** the packet text was eleven days old and wrong on eighteen
+  points the census lists (canonical JSON placed in a package that cannot
+  import its owner; a SQL migration planned for identifiers no table stores;
+  seven status vocabularies that are eight; `effect` 4.1.2 where 4.1.4 is
+  installed). **Would have prevented it:** a `goals doctor --facts` pass that
+  re-runs a packet's cited `rg` evidence when the packet is resumed.
+- **Doing:** drafting the chapter-11 amendment. **Evidence:** the stored-format
+  law landed in `standards/ARCHITECTURE.md` on 2026-11-18, after the packet
+  was written, and the first amendment draft contradicted it (refuse old
+  receipts at decode versus convert on read); a reviewer child caught it.
+  **Would have prevented it:** resuming a paused packet lists the
+  `DECISIONS.md` entries dated after the packet's `updated` field.
+- **Doing:** type-checking the design module under `ops/`. **Evidence:**
+  `goals/tsconfig.ops.json` sets `"plugins": []`, so the Effect diagnostics do
+  not run on ops files; a second tsconfig beside the module was needed to hold
+  it to the package bar. **Would have prevented it:** an opt-in
+  `opsScripts[].strict` flag that the ops typecheck honours.
