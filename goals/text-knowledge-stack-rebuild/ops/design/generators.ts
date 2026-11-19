@@ -49,9 +49,9 @@ import {
   ActivityStart,
   activityPreimage,
   mintContentHashResult,
-  TermIri,
   WellFormedText,
-} from "./L0.identity.ts";
+} from "./L0.digest.ts";
+import { TermIri } from "./L0.identity.ts";
 import { Anchored, OccurrenceDomainTag, OccurrenceId, occurrencePreimage } from "./L1.text.ts";
 import {
   AnnotationContent,

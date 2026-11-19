@@ -37,7 +37,7 @@ import {
   DomainTag,
   Instant,
   mintContentHash,
-} from "./L0.identity.ts";
+} from "./L0.digest.ts";
 import { OccurrenceId } from "./L1.text.ts";
 import type { FieldSchema, IdCodec } from "@beep/epistemics/Factory";
 import type { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";

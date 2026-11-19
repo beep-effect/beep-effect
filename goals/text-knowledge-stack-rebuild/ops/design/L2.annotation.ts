@@ -30,9 +30,9 @@ import {
   Instant,
   mintContentHash,
   sortedMembers,
-  TermIri,
   WellFormedText,
-} from "./L0.identity.ts";
+} from "./L0.digest.ts";
+import { TermIri } from "./L0.identity.ts";
 import { Anchored, mintOccurrenceId, OccurrenceId } from "./L1.text.ts";
 import type { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
 import type * as Digest from "effect/crypto/Digest";

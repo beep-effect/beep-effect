@@ -2772,11 +2772,18 @@ Decision:
 
 The text-knowledge stack is eight layers with fixed owners, recorded in
 `16-knowledge-stack.md` section 2. L0 identity is realized by three packages:
-`@beep/identity` (terms, namespaces, the registry, `TermBinding`, the
-term-stability snapshot, and the RFC 3987 `IRI` schemas, which move there from
-`@beep/rdf`), `@beep/schema` (the prefixed digest primitive) and `@beep/jsonc`
-(RFC 8785 canonical JSON and the one minting function over a versioned,
-domain-tagged preimage). L1 is `@beep/text`, which replaces `@beep/provenance`
+`@beep/identity` (the RFC 3987 `IRI` schemas, which move there from
+`@beep/rdf`, `Namespace` as prefix and IRI, `Term`, `TermBinding`, the
+`Deprecation` record and the term-stability snapshot), `@beep/schema` (the
+prefixed digest primitive, under `ContentHash` and its domain brands) and
+`@beep/jsonc` (RFC 8785 canonical JSON and the one minting function over a
+versioned, domain-tagged preimage). The registry is split along the dependency
+line: `@beep/identity` imports `effect` only, so its version field is a string
+with a local pattern check and its literal domains use `S.Literals`, and
+records that need `@beep/schema` primitives live above it. An external
+namespace's pin (source, license, version, digest) is `NamespacePin` in
+`@beep/rdf`; the gUFO class typing is a record keyed by term IRI in
+`@beep/ontology`. L1 is `@beep/text`, which replaces `@beep/provenance`
 by `bun run beep create-package` plus retirement of the old name with every
 consumer migrated in the same PR. L2 is `@beep/annotation`, a
 `foundation/modeling` package. L3 is `@beep/ontology`, L4 `@beep/epistemics`,
@@ -2982,10 +2989,12 @@ the move (P3 for annotation, P6 for operations, P7 for the retirement).
 Decision:
 
 Upstream-first covers pinned external vocabularies as well as Effect. They
-enter as registry `Namespace` entries with source pin, license and digest, and
-as adapters at the interchange boundary. P1 registers six namespaces (`prov:`,
-`oa:`, `nif:`, `xsd:`, `gufo:` and ActivityStreams `as:`) and adds source pin,
-license and digest to the existing `skos:` and `doco:` entries; LKIF and ELI
+enter as registry `Namespace` entries in `@beep/identity`, as `NamespacePin`
+records (source, license, version, digest) keyed by prefix in `@beep/rdf`
+beside the vendored vocabularies, and as adapters at the interchange boundary.
+The license-and-digest assertion is tested in `@beep/rdf`. P1 registers six
+namespaces (`prov:`, `oa:`, `nif:`, `xsd:`, `gufo:` and ActivityStreams
+`as:`) and adds pins for the existing `skos:` and `doco:` entries; LKIF and ELI
 are candidate entries with no commitment, and enter when a decision names
 their first consumer. Internal kinds stay repo-stable: nothing internal is
 renamed to an external term until a decision names the kind and its consumer.

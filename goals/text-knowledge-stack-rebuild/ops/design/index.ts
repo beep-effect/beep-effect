@@ -30,7 +30,9 @@
  * Layer edges used here: L1 -> L0; L2 -> L0, L1; L3 -> L0 and
  * `@beep/epistemics` (`makeSignal`, `Measurement`), an ontology -> epistemics
  * edge that ruling 6 removes in P4 by moving them to `@beep/schema`; L4 -> L0, L1; L5 -> L0; L6 -> L0, L2.
- * L0 reads `IRI` from `@beep/rdf/Iri` until P1 moves it into `@beep/identity`.
+ * L0 is split by dependency: `L0.identity.ts` imports only effect and
+ * `@beep/identity` (plus `@beep/rdf/Iri` until P1 moves IRI into identity);
+ * `L0.digest.ts` may import `@beep/schema` and `@beep/jsonc`.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -38,7 +40,9 @@
 
 /** Composed `Arbitrary` prototypes for the annotation document and the claim log. */
 export * as Generators from "./generators.ts";
-/** L0 identity: digests, domain tags, the minting function, terms, namespaces, bindings, the snapshot. */
+/** L0 digest (`@beep/schema`, `@beep/jsonc`): digest brands, the set codec, minting, the activity id. */
+export * as L0Digest from "./L0.digest.ts";
+/** L0 identity (`@beep/identity`): term IRIs, code ids, namespaces, terms, bindings, deprecations, the snapshot. */
 export * as L0 from "./L0.identity.ts";
 /** L1 text: occurrence identity, selectors, resolution, re-anchoring, `Anchored`. */
 export * as L1 from "./L1.text.ts";

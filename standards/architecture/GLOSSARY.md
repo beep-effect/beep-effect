@@ -538,10 +538,12 @@ contract and the model. Modules replace domain-kind and subdomain folders.
 
 ## Namespace
 
-A registered vocabulary prefix in `@beep/identity`: prefix, IRI, pinned
-source, license, version and digest. Every namespace the repo speaks, external
-ones included (`prov:`, `oa:`, `nif:`, `xsd:`, `gufo:`, `as:`), is registered, so
-CURIEs expand and contract closed-world.
+A registered vocabulary prefix in `@beep/identity`: prefix and IRI. Every
+namespace the repo speaks, external ones included (`prov:`, `oa:`, `nif:`,
+`xsd:`, `gufo:`, `as:`), is registered, so CURIEs expand and contract
+closed-world. An external namespace's pin (source, license, version, digest)
+is a `NamespacePin` keyed by prefix in `@beep/rdf`, because `@beep/identity`
+imports `effect` only.
 
 ## Occurrence
 
@@ -903,10 +905,12 @@ mappings. They are not domain and they are not generic driver wrappers.
 
 ## Term
 
-A registered vocabulary term: IRI, namespace, local name, an optional
-class-level gUFO typing (type of type, category of instances, and for a
-relator the role terms it mediates) and an optional deprecation. A published term IRI is
-declared in the `@beep/identity` registry and bound to code through
+A registered vocabulary term in `@beep/identity`: IRI, namespace and local
+name, with deprecations as separate `Deprecation` records (term, since,
+replacement). Optional gUFO class typing (type of type, category of
+instances, and for a relator the role terms it mediates) is a record keyed by
+term IRI in `@beep/ontology`. A published term IRI is declared in the
+`@beep/identity` registry and bound to code through
 `TermBinding`, never derived from a code path; the published set changes only
 with a deprecation record.
 

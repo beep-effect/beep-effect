@@ -3,22 +3,26 @@
  * with a canonical digest and isomorphism equality, and the declared OA
  * profile with the result type of decoding third-party OA input.
  *
- * Target homes: `Literal`, `Dataset`, `DatasetDigest` in `@beep/rdf`; the OA
+ * Owner packages: `Literal`, `Dataset`, `DatasetDigest` and `NamespacePin` in
+ * `@beep/rdf` (the pin by decision p0-l0-split-by-dependency); the OA
  * profile and import result in the `@beep/annotation/rdf` adapter subpath
  * (decision 2026-11-19-p0-item7-oa-profile).
  *
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { SafePnPrefix } from "@beep/identity/PnLocal";
 import { $RepoCliId } from "@beep/identity/packages";
 import { IRI } from "@beep/rdf/Iri";
 import * as Rdf from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
+import { SpdxExpression } from "@beep/spdx/SpdxExpression";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
-import { ActivityId, ContentHash, DomainTag, Instant, mintContentHash } from "./L0.identity.ts";
+import { ActivityId, ContentHash, DomainTag, Instant, mintContentHash } from "./L0.digest.ts";
 import { AnnotationDocumentChecks, AnnotationDocumentView } from "./L2.annotation.ts";
 import type { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
 import type * as Digest from "effect/crypto/Digest";
@@ -26,6 +30,36 @@ import type * as Result from "effect/Result";
 import type { KindRegistry } from "./L2.annotation.ts";
 
 const $I = $RepoCliId.create("goals/text-knowledge-stack-rebuild/ops/design/L6.interchange");
+
+/** Where a pinned vocabulary was fetched from and at which revision. */
+export class PinnedSource extends S.Opaque<PinnedSource, { readonly brand: unique symbol }>()(
+  S.Struct({
+    location: IRI.annotateKey({ description: "Retrieval IRI of the vocabulary artifact." }),
+    revision: S.NonEmptyString.annotateKey({ description: "Upstream revision, tag or edition the pin names." }),
+  }).pipe($I.annoteSchema("PinnedSource", { description: "Retrieval location and revision of a pinned vocabulary." }))
+) {}
+
+/** The pin of an external namespace: source, SPDX license, upstream version and artifact digest. */
+export class NamespacePin extends S.Opaque<NamespacePin, { readonly brand: unique symbol }>()(
+  S.Struct({
+    source: PinnedSource,
+    license: SpdxExpression.FromString.annotateKey({ description: "License of the vocabulary artifact (@beep/spdx)." }),
+    version: S.NonEmptyString.annotateKey({ description: "Vocabulary version as published upstream." }),
+    digest: Sha256PrefixedDigest.annotateKey({ description: "Digest of the pinned vocabulary artifact bytes." }),
+  }).pipe($I.annoteSchema("NamespacePin", { description: "Pin of one external registry namespace." }))
+) {}
+
+/**
+ * The namespace pins keyed by registry prefix, beside the vendored
+ * vocabularies they describe; the rdf test asserts a license and digest for
+ * every external namespace of the identity registry.
+ */
+export const NamespacePins = S.HashMap(SafePnPrefix, NamespacePin).pipe(
+  $I.annoteSchema("NamespacePins", { description: "Namespace pins keyed by registry prefix." })
+);
+
+/** Decoded type of {@link NamespacePins}. */
+export type NamespacePins = typeof NamespacePins.Type;
 
 /** A simple literal: a string with neither datatype nor language (it is the xsd:string literal). */
 export class SimpleLiteral extends S.Opaque<SimpleLiteral, { readonly brand: unique symbol }>()(

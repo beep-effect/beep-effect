@@ -47,7 +47,11 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
    `TermBinding` table and a stability snapshot that only a deprecation record
    may change; the registry expands every namespace the repo speaks (`prov:`,
    `oa:`, `nif:`, `xsd:`, `gufo:` and `as:` included); today's path-derived IRIs are
-   re-published, not pinned.
+   re-published, not pinned. `@beep/identity` stays effect-only: it holds
+   `Namespace` (prefix, IRI), `Term`, `TermBinding` and `Deprecation`; each
+   external namespace's pin (source, license, version, digest) is a
+   `NamespacePin` in `@beep/rdf`, and gUFO class typing is a record keyed by
+   term IRI in `@beep/ontology`.
 6. Codecs at every boundary, each in an adapter subpath so the base packages
    stay rdf-free: `TextAnchor <-> oa:` selectors in `rdf/src/Adapters/WebAnnotation.ts`,
    `AnnotationDocument <-> OA/NIF` for a declared OA profile (unattributed
@@ -174,8 +178,9 @@ and the phase order is `PLAN.md`), this file is normative.
 
 ## Target Surfaces
 
-- `packages/foundation/modeling/identity` (L0: registry, `TermBinding`, the
-  IRI schemas), with the L0 digest brands over the primitive in
+- `packages/foundation/modeling/identity` (L0, effect-only: registry with
+  `Namespace` as prefix and IRI, `Term`, `TermBinding`, `Deprecation`, the
+  stability snapshot, the IRI schemas), with the L0 digest brands over the primitive in
   `packages/foundation/modeling/schema` and canonical JSON plus the one
   minting function in `packages/foundation/modeling/jsonc`.
 - `packages/foundation/modeling/provenance`, becoming `@beep/text` in P2 (L1:
@@ -196,13 +201,15 @@ and the phase order is `PLAN.md`), this file is normative.
 - `packages/foundation/modeling/epistemics` (L4: immutable core, `Stance`,
   `Challenge`, `Admission`, `Assessments<K>`, `epistemics/rdf` adapter).
 - `packages/foundation/modeling/ontology` (L3: SKOS schemes, editions, SSSOM
-  `MappingSet`, `fold -> Dataset`, optional gUFO class typing; legal seeds and
+  `MappingSet`, `fold -> Dataset`, optional gUFO class typing as a record
+  keyed by term IRI; legal seeds and
   their seed data files move to the law-practice asset pack through
   `ontology/src/TaxonomyLoader.ts`; the FOLIO DTOs are deleted).
 - `packages/foundation/modeling/rdf` (L6: `Dataset` quotient and digest,
   `Literal` cases, `TextAnchor <-> oa:` in `src/Adapters/WebAnnotation.ts`,
   `prov:Entity` projection through `src/Prov.ts`, registry-backed `prov:`,
-  `oa:`, `nif:`, `xsd:`; the `rdf -> md` edge removed).
+  `oa:`, `nif:`, `xsd:`, `NamespacePin` (source, license, version, digest)
+  for every external namespace; the `rdf -> md` edge removed).
 - `packages/foundation/modeling/md`, `pandoc-ast`, `lexical`, `html`: AST
   source maps that import `@beep/text`.
 - `packages/foundation/modeling/schema-org`: retired whole in P7 (census: no consumer).
@@ -370,7 +377,8 @@ decision file) and the law-test ledger:
       until it is.
 - [ ] L0: `TermBinding` and the term-stability snapshot exist; a test renames
       a module and proves no published IRI changes; the registry expands and
-      contracts `prov:`, `oa:`, `nif:`, `xsd:`, `gufo:` and `as:` CURIEs; one
+      contracts `prov:`, `oa:`, `nif:`, `xsd:`, `gufo:` and `as:` CURIEs;
+      `@beep/identity` still depends on `effect` only; one
       canonical JSON implementation; path-derived IRIs are gone and the
       test-runner's pinned IRIs are re-published from the registry; `L0-1` to
       `L0-3` are green.
@@ -426,8 +434,9 @@ decision file) and the law-test ledger:
       quotient with a canonical digest and the semantica gold fixture is
       regenerated; `Literal` has three cases; `rdf` no longer imports `md`;
       `MappingSet` has a coherence check; `SourceTextIdentity` projects to
-      `prov:Entity` through `rdf/src/Prov.ts` with a round-trip test; the
-      registry test asserts license and digest on every external namespace;
+      `prov:Entity` through `rdf/src/Prov.ts` with a round-trip test; a test in
+      `@beep/rdf` asserts license and digest on every external namespace's
+      `NamespacePin`; the gUFO class typing is a record in `@beep/ontology`;
       `L3-1` to `L3-4` and `L6-1` to `L6-2` are green.
 - [ ] L5 and L7: `@beep/nlp-processing` holds `Operation` with
       `withActivity`, Kleisli laws hold under the declared observation, every
@@ -646,6 +655,14 @@ Dependency facts (design-facts sections 5 and 6): @beep/identity depends on effe
 Lane goals/text-knowledge-stack-rebuild-p0-design
 
 Reverse: Move the RFC 8785 core below @beep/identity into a new effect-only primitive package and re-point @beep/jsonc at it, by a decision file before P1 opens.
+
+### P0 review: L0 objects are split by dependency so @beep/identity stays effect-only, 2026-11-19
+
+The reviewer of PR #3420 found that the design module typed identity-owned objects with primitives from @beep/schema (the prefixed digest, the semantic version, LiteralKit), which depends on @beep/identity, so P1 could not move them as written. Ruling: the registry is split along the dependency line. @beep/identity, which imports effect only, owns what expansion and binding need: the IRI schemas, Namespace as prefix and IRI, Term as IRI, namespace and local name, TermBinding (code id, term, since), the Deprecation record (term, since, replacement) and the term-stability snapshot. Its version field is a string with a local pattern check and its literal domains use S.Literals, the standing exception for the bottom package that @beep/schema itself depends on; the registry test cross-checks both against the @beep/schema schemas as a test dependency. The pin of an external namespace (source, license, version, digest) is a NamespacePin record keyed by prefix in @beep/rdf, beside the vendored vocabularies it describes, where the digest and SPDX schemas are importable. The optional gUFO class typing is a record keyed by term IRI in @beep/ontology, where the L3 audit reads it. ContentHash and its domain brands stay over the @beep/schema digest and the minting function stays in @beep/jsonc, as already decided. L0-1 and L0-3 are tested in identity; the license-and-digest assertion on every external namespace is tested in rdf.
+
+Lane goals/text-knowledge-stack-rebuild-p0-design · PR #3420
+
+Reverse: Move the digest, version and literal-kit primitives below @beep/identity into a new effect-only primitive package and reunite the registry record, by a decision file before P1 opens.
 
 ### P0 review round one: rulings on the confirmed findings, 2026-11-19
 

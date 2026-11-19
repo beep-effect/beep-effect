@@ -15,8 +15,9 @@ import * as Effect from "effect/Effect";
 import { dual, flow } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
-import { ActivityStartFields, CanonicalHashSet, ContentHash, Instant } from "./L0.identity.ts";
-import type { ActivityPin, TermIri } from "./L0.identity.ts";
+import { ActivityStartFields, CanonicalHashSet, ContentHash, Instant } from "./L0.digest.ts";
+import type { ActivityPin } from "./L0.digest.ts";
+import type { TermIri } from "./L0.identity.ts";
 
 const $I = $RepoCliId.create("goals/text-knowledge-stack-rebuild/ops/design/L5.operations");
 

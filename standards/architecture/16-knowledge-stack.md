@@ -60,9 +60,16 @@ lands in the phase of its layer.
 
 ### L0 · Identity
 
-**Owners.** `@beep/identity` owns terms, namespaces, the vocabulary registry,
-the `TermBinding` table and the term-stability snapshot, and receives the
-RFC 3987 `IRI` schemas from `@beep/rdf` (Pending P1). `@beep/schema` owns the
+**Owners.** `@beep/identity` imports `effect` only and owns what expansion and
+binding need: the RFC 3987 `IRI` schemas, which it receives from `@beep/rdf`,
+`Namespace`, `Term`, `TermBinding`, the `Deprecation` record and the
+term-stability snapshot (Pending P1). Its version field is a string with a
+local pattern check and its literal domains use `S.Literals`, the standing
+exception for the bottom package that `@beep/schema` itself depends on; the
+registry test cross-checks both against the `@beep/schema` schemas as a test
+dependency. Records that need `@beep/schema` primitives sit above it: an
+external namespace's pin is `NamespacePin` in `@beep/rdf` (L6) and the gUFO
+class typing is a record in `@beep/ontology` (L3). `@beep/schema` owns the
 digest primitive (`Sha256PrefixedDigest`, `sha256:` plus 64 hex). `@beep/jsonc`
 owns canonical JSON (RFC 8785, `JsoncFingerprint`) and the one minting function
 that hashes a versioned, domain-tagged preimage (Pending P1). L0 is a layer, not
@@ -75,14 +82,9 @@ layers reference.
 
 **Objects.** `ContentHash`, a brand over the prefixed digest; one domain brand
 per minted identifier (`OccurrenceId`, `AnnotationId`, `RunEntityId`,
-`ActivityId`, `ClaimId`); `TermIri`; `TermBinding` (code id, term, since);
-`Namespace` (prefix, IRI, pinned source, license, version, digest); `Term`
-(IRI, namespace, local name, optional class-level gUFO typing, optional
-deprecation). The gUFO typing is an optional record of three fields: the type
-of type (`Kind`, `SubKind`, `Role`, `Phase`, `Category`, `Mixin`, `RoleMixin`,
-`PhaseMixin`), the category of its instances (`Object`, `Relator`, `Mode`,
-`Quality`, `Event`), and, for a `Relator`, the set of role terms it mediates.
-`ActivityId` is minted from what is known when a run starts: `activity/v1`,
+`ActivityId`, `ClaimId`), all over the `@beep/schema` digest; `TermIri`;
+`Namespace` (prefix, IRI); `Term` (IRI, namespace, local name); `TermBinding`
+(code id, term, since); `Deprecation` (term, since, replacement). `ActivityId` is minted from what is known when a run starts: `activity/v1`,
 the operation term, the agent or engine pin, the prompt digest when there is
 one, the sorted ids the run used, and its start time. What the run generated
 and when it ended are fields of the activity record, outside the id, because
@@ -96,7 +98,8 @@ through canonical JSON and the minting function. Graph canonicalization lives
 in `@beep/rdf`, which owns the RDF data model; `@beep/identity` never imports
 `@beep/rdf`.
 
-**Laws.** `L0-1` (expand after contract is the identity on registered terms),
+**Laws.** `L0-1` and `L0-3` are tested in `@beep/identity`, `L0-2` in
+`@beep/jsonc`. `L0-1` (expand after contract is the identity on registered terms),
 `L0-2` (equivalent records hash alike, with set-valued fields sorted on the
 preimage), `L0-3` (acceptance: the published term set changes only with a
 deprecation record, module-derived IRIs included).
@@ -207,9 +210,12 @@ and the assembly fold that emits RDFS and OWL declarations.
 **Objects.** `ConceptScheme` and `Concept` (SKOS); classification editions
 (the existing IPC, CPC and Nice pins, with no `latest`); `MappingSet` (SSSOM:
 subject, predicate, object, justification, and confidence as a typed field);
-the optional three-field gUFO typing on an L0 `Term`, which the audit rules of
-`L3-3` read and which an untyped term skips. `MappingSet` and the gUFO typing
-are Pending P5.
+the optional gUFO class typing, a record keyed by term IRI with three fields:
+the type of type (`Kind`, `SubKind`, `Role`, `Phase`, `Category`, `Mixin`,
+`RoleMixin`, `PhaseMixin`), the category of its instances (`Object`,
+`Relator`, `Mode`, `Quality`, `Event`), and, for a `Relator`, the set of role
+terms it mediates. The audit rules of `L3-3` read it, and an untyped term is
+skipped. `MappingSet` and the gUFO typing are Pending P5.
 
 **Arrows.** The fold to an RDF `Dataset` as the only serialization path
 (Pending P5); `align` from two terms to a mapping set with a coherence check
@@ -327,12 +333,15 @@ into it.
 **Objects.** `Dataset`, a set of quads with equality up to blank-node
 isomorphism and a digest on the canonical form; `Literal` with the cases
 `Simple`, `Typed` and `LangTagged`; the `prov:Entity` projection of
-`SourceTextIdentity` through `packages/foundation/modeling/rdf/src/Prov.ts`.
-The `@beep/rdf` to `@beep/md` edge is removed. Pending P5.
+`SourceTextIdentity` through `packages/foundation/modeling/rdf/src/Prov.ts`;
+`NamespacePin` (source, license, version, digest), keyed by prefix, beside the
+vendored vocabularies it describes. The `@beep/rdf` to `@beep/md` edge is
+removed. Pending P5, except `NamespacePin`, Pending P1.
 
 **Laws.** `L6-1` (dataset equality up to blank-node isomorphism; digest on the
 canonical form), `L6-2` (a projection is deterministic and its kept fields
-satisfy GetPut and PutGet).
+satisfy GetPut and PutGet). The license-and-digest assertion on every external
+namespace's pin is tested in `@beep/rdf`.
 
 ### L7 · Agent surface
 
@@ -366,7 +375,9 @@ Legal edges:
   and `@beep/nlp-processing`.
 - The wink driver (`@beep/wink`) to `@beep/nlp-processing`.
 
-Forbidden edges: `@beep/identity` to anything but `effect`; any base entry of
+Forbidden edges: `@beep/identity` to anything but `effect`, including
+`@beep/schema` (which depends on it), so no identity-owned object is typed
+with a `@beep/schema` primitive; any base entry of
 `@beep/text`, `@beep/annotation` or `@beep/epistemics` to `@beep/rdf`;
 `@beep/rdf` to `@beep/md` (Pending P5); any `foundation/modeling` package to a
 capability; a slice's `domain` or model package to a capability. Pending P2 to
@@ -519,15 +530,16 @@ The packet's status census at P4 is final. `ClaimLifecycle` stays in
 
 Upstream-first extends beyond Effect to pinned external vocabularies (OA,
 PROV-O, NIF, DoCO, SKOS, gUFO, LKIF, ELI). Each enters as a registry
-`Namespace` with source pin, license and digest, and as an adapter at the
+`Namespace` in `@beep/identity`, a `NamespacePin` with source, license,
+version and digest in `@beep/rdf`, and an adapter at the
 interchange boundary. Internal kinds stay repo-stable; nothing internal is
 renamed to an external vocabulary until a decision names the kind and its
 consumer. Pending P1 for the registry entries: P1 registers six namespaces
 (`prov:`, `oa:`, `nif:`, `xsd:`, `gufo:` and ActivityStreams `as:`) and adds
-source pin, license and digest to the existing `skos:` and `doco:` entries;
+pins to the existing `skos:` and `doco:` entries;
 LKIF and ELI are candidate entries with no commitment, like OntoLex
 `lexicog`, and enter when a decision names their first consumer. P5 for the
-license and digest test.
+license and digest test in `@beep/rdf`.
 
 The annotation codec supports one declared OA profile and nothing else.
 Decoding third-party input returns the annotation document, a table of

@@ -18,7 +18,7 @@ import { PosixPath } from "@beep/schema/PosixPath";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { ContentHash, DomainTag, mintContentHash } from "./L0.identity.ts";
+import { ContentHash, DomainTag, mintContentHash } from "./L0.digest.ts";
 import type { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
 import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import type * as Digest from "effect/crypto/Digest";
