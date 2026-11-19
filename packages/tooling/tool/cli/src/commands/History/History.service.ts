@@ -332,6 +332,31 @@ const makeHistoryNotes = Effect.gen(function* () {
     return wanted ? HistoryConfigChange.Enum.added : HistoryConfigChange.Enum.removed;
   });
 
+  // Probes origin for the overlay ref, then reconciles the origin refspec and
+  // (with `fetch`) fetches the ref; an unpublished ref is a notice.
+  const syncOrigin = Effect.fn("HistoryNotes.syncOrigin")(function* (root: string, fetch: boolean) {
+    const published = yield* git.lsRemote(root, "origin", { patterns: [HISTORY_NOTES_REF] }).pipe(
+      Effect.mapBoth({
+        onFailure: gitError("ls-remote", `Cannot probe origin for ${HISTORY_NOTES_REF}.`),
+        onSuccess: A.some((entry) => entry.ref === HISTORY_NOTES_REF),
+      })
+    );
+    // A refspec for an unpublished ref would break every plain `git fetch`,
+    // so an unpublished ref drops any copy.
+    const fetchRefspec = yield* reconcileConfigValue(
+      root,
+      "remote.origin.fetch",
+      HISTORY_NOTES_FETCH_REFSPEC,
+      published
+    );
+    if (!fetch) return { fetchRefspec, fetch: HistoryNotesFetchOutcome.Enum.skipped };
+    if (!published) return { fetchRefspec, fetch: HistoryNotesFetchOutcome.Enum.unpublished };
+    yield* git
+      .fetch(root, { remote: "origin", ref: HISTORY_NOTES_FETCH_REFSPEC, noTags: true })
+      .pipe(Effect.mapError(gitError("fetch", `Cannot fetch ${HISTORY_NOTES_REF} from origin.`)));
+    return { fetchRefspec, fetch: HistoryNotesFetchOutcome.Enum.fetched };
+  });
+
   const sync: HistoryNotesShape["sync"] = Effect.fn("HistoryNotes.sync")(function* (options) {
     const offline = options.offline ?? false;
     yield* Effect.annotateCurrentSpan({ fetch: options.fetch, offline });
@@ -347,43 +372,8 @@ const makeHistoryNotes = Effect.gen(function* () {
         fetch: HistoryNotesFetchOutcome.Enum.skipped,
       });
     }
-    const published = yield* git.lsRemote(options.root, "origin", { patterns: [HISTORY_NOTES_REF] }).pipe(
-      Effect.mapBoth({
-        onFailure: gitError("ls-remote", `Cannot probe origin for ${HISTORY_NOTES_REF}.`),
-        onSuccess: A.some((entry) => entry.ref === HISTORY_NOTES_REF),
-      })
-    );
-    if (!published) {
-      // The remote has not published the ref yet: a notice, not a failure. A
-      // refspec for it would break every plain `git fetch`, so drop any copy.
-      const fetchRefspec = yield* reconcileConfigValue(
-        options.root,
-        "remote.origin.fetch",
-        HISTORY_NOTES_FETCH_REFSPEC,
-        false
-      );
-      return HistoryNotesSyncReport.make({
-        origin,
-        fetchRefspec,
-        displayRef,
-        fetch: options.fetch ? HistoryNotesFetchOutcome.Enum.unpublished : HistoryNotesFetchOutcome.Enum.skipped,
-      });
-    }
-    const fetchRefspec = yield* reconcileConfigValue(
-      options.root,
-      "remote.origin.fetch",
-      HISTORY_NOTES_FETCH_REFSPEC,
-      true
-    );
-    const fetch = options.fetch
-      ? yield* git
-          .fetch(options.root, { remote: "origin", ref: HISTORY_NOTES_FETCH_REFSPEC, noTags: true })
-          .pipe(
-            Effect.as(HistoryNotesFetchOutcome.Enum.fetched),
-            Effect.mapError(gitError("fetch", `Cannot fetch ${HISTORY_NOTES_REF} from origin.`))
-          )
-      : HistoryNotesFetchOutcome.Enum.skipped;
-    return HistoryNotesSyncReport.make({ origin, fetchRefspec, displayRef, fetch });
+    const outcome = yield* syncOrigin(options.root, options.fetch);
+    return HistoryNotesSyncReport.make({ origin, displayRef, ...outcome });
   });
 
   return HistoryNotes.of({ check, write, sync });
