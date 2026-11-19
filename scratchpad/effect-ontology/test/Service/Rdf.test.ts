@@ -1,5 +1,5 @@
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import { assert, describe, it } from "@effect/vitest";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";

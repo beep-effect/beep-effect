@@ -1,4 +1,5 @@
-import { IRI, makeDataset } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
+import { makeDataset } from "@beep/rdf";
 import { assert, describe, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

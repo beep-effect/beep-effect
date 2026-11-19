@@ -1,3 +1,4 @@
+import { IRIReference } from "@beep/identity/Iri";
 import {
   OntologyAssemblyError,
   TaxonomyConceptNotFound,
@@ -11,7 +12,6 @@ import {
   VendorSliceReadError,
   VendorSliceUnvetted,
 } from "@beep/ontology";
-import { IRIReference } from "@beep/rdf";
 import { it } from "@beep/test-runner";
 import { describe } from "@effect/vitest";
 import { assertFalse, assertTrue } from "@effect/vitest/utils";

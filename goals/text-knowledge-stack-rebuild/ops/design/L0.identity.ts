@@ -4,8 +4,8 @@
  *
  * Owner package: `@beep/identity`, which depends on effect only (decision
  * 2026-11-19-p0-l0-split-by-dependency). This file therefore imports only
- * `effect/*` and `@beep/identity/*`, plus `@beep/rdf/Iri` until P1 moves the
- * IRI schemas into identity. The version field is a branded string with a
+ * `effect/*` and `@beep/identity/*`, the RFC 3987 schemas included
+ * (`@beep/identity/Iri`). The version field is a branded string with a
  * local pattern check, and any literal domain here uses `S.Literals`, the
  * standing exception for the bottom package the schema package itself depends
  * on; the registry test cross-checks both against the schema package's
@@ -15,10 +15,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { IRI } from "@beep/identity/Iri";
 import { SafePnLocal, SafePnPrefix } from "@beep/identity/PnLocal";
 import { $RepoCliId } from "@beep/identity/packages";
-// P1 moves the RFC 3987 schemas into @beep/identity; the design module reads them from their current home.
-import { IRI } from "@beep/rdf/Iri";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";

@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
+import { IRIReference } from "@beep/identity/Iri";
 import { $I as $BeepId } from "@beep/identity/packages";
-import { IRIReference } from "@beep/rdf";
 import { ValidWindowsPlainPathSegment } from "@beep/schema/FilePath";
 import * as A from "effect/Array";
 import { FolioAlignment, LegalDocumentTaxonomy, LegalDocumentTaxonomyConcept } from "./Taxonomy.model.ts";

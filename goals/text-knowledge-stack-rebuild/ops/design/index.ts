@@ -31,7 +31,7 @@
  * `@beep/epistemics` (`makeSignal`, `Measurement`), an ontology -> epistemics
  * edge that decision 2026-11-19-p0-census-dispositions removes in P4 by moving them to `@beep/schema`; L4 -> L0, L1; L5 -> L0; L6 -> L0, L2.
  * L0 is split by dependency: `L0.identity.ts` imports only effect and
- * `@beep/identity` (plus `@beep/rdf/Iri` until P1 moves IRI into identity);
+ * `@beep/identity` (the RFC 3987 schemas included, `@beep/identity/Iri`);
  * `L0.digest.ts` may import `@beep/schema` and `@beep/jsonc`.
  *
  * @packageDocumentation

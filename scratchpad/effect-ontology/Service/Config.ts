@@ -6,7 +6,7 @@
  */
 
 import { $ScratchpadId, CoreVocab } from "@beep/identity";
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";

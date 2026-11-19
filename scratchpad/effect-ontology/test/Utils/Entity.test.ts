@@ -1,4 +1,4 @@
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import { describe, expect, it } from "@effect/vitest";
 import { Entity } from "../../Domain/Model/Entity.ts";
 import { EntityId } from "../../Domain/Model/shared.ts";

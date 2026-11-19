@@ -4,30 +4,30 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $RdfId } from "@beep/identity/packages";
-import { A, Str } from "@beep/utils";
+import * as A from "effect/Array";
 import { pipe } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { SCHEMA_ORG_NAMESPACE } from "./Vocab/generated/SchemaOrg.terms.ts";
+import * as Str from "effect/String";
+import { $IdentityId } from "./packages.ts";
 
-const $I = $RdfId.create("iri");
+const $I = $IdentityId.create("Iri");
 
 /**
  * RFC 3987 coverage notes:
  *
  * - The schemas below encode the generic RFC 3987 section 2.2 syntax directly.
  * - RFC 3987 section 4.1's bidi-formatting prohibition is also enforced because
- *
+ *   those characters are directly checkable at the code-point level.
  * - Section 3 IRI-to-URI mapping is intentionally not performed here because it
- *
- *
+ *   depends on source encoding, UTF-8 percent-encoding, and scheme-specific
+ *   `ireg-name` handling.
  * - The remaining guidance in sections 4, 5, 6, and 8 covers bidi presentation,
- *
- *
- *
- *
+ *   normalization/comparison, transport/runtime constraints, and security
+ *   behavior. Those requirements are caller-visible but are not pure syntax
+ *   checks, so they remain documented rather than being silently baked into
+ *   schema decoding.
  */
 
 type ParseEnd = number | undefined;
@@ -207,7 +207,7 @@ const scanComponent = (
   while (index < Str.length(input)) {
     const codePoint = codePointAt(input, index);
 
-    /* istanbul ignore next -- loop bounds keep the code point lookup in range. Owner: @beep/rdf. Exit: the scanner iterates code points with a total iterator instead of an index lookup. */
+    /* istanbul ignore next -- loop bounds keep the code point lookup in range. Owner: @beep/identity. Exit: the scanner iterates code points with a total iterator instead of an index lookup. */
     if (codePoint === undefined) {
       return undefined;
     }
@@ -240,12 +240,12 @@ const scanComponent = (
     consumed += width;
   }
 
-  /* istanbul ignore else -- callers gate required-empty segments before scanning. Owner: @beep/rdf. Exit: scanComponent drops minimumLength once every caller gates empty segments itself. */
+  /* istanbul ignore else -- callers gate required-empty segments before scanning. Owner: @beep/identity. Exit: scanComponent drops minimumLength once every caller gates empty segments itself. */
   if (consumed >= minimumLength) {
     return index;
   }
 
-  /* istanbul ignore next -- callers gate required-empty segments before scanning. Owner: @beep/rdf. Exit: scanComponent drops minimumLength once every caller gates empty segments itself. */
+  /* istanbul ignore next -- callers gate required-empty segments before scanning. Owner: @beep/identity. Exit: scanComponent drops minimumLength once every caller gates empty segments itself. */
   return undefined;
 };
 
@@ -705,55 +705,6 @@ const isRelativeIriReference = (input: string): boolean => parseRelativeIriRefer
 
 const isIriReference = (input: string): boolean => isIri(input) || isRelativeIriReference(input);
 
-const SCHEMA_ORG_CANONICAL_ORIGIN = slice(SCHEMA_ORG_NAMESPACE, 0, Str.length(SCHEMA_ORG_NAMESPACE) - 1);
-
-const nonCanonicalSchemaOrgOrigins = ["http://schema.org", "http://www.schema.org", "https://www.schema.org"] as const;
-
-const schemaOrgOriginDelimiters = ["/", "?", "#"] as const;
-
-const startsWithinOrigin = (value: string, origin: string): boolean =>
-  value === origin ||
-  pipe(
-    schemaOrgOriginDelimiters,
-    A.some((delimiter) => pipe(value, Str.startsWith(`${origin}${delimiter}`)))
-  );
-
-/**
- * Rewrite legacy schema.org namespace spellings to the canonical
- * `https://schema.org/` form, leaving every other IRI untouched.
- *
- * **Details**
- *
- * Schema.org treats `http://schema.org/…` and `https://schema.org/…` as the
- * same vocabulary, but RDF IRI equality is codepoint-strict, so mixed forms
- * silently break joins, SPARQL matches, and SHACL paths. The consumer owns
- * canonicalization: this helper implements the lossless `http -> https`
- * rewrite (including the stray `www.schema.org` host) at schema.org-aware
- * boundaries. Generic IRI codecs preserve codepoint identity; other
- * vocabularies are never scheme-rewritten.
- *
- * **Example** (Canonicalize a legacy schema.org IRI)
- *
- * ```ts import.meta.vitest name="Canonicalize a legacy schema.org IRI"
- * import { canonicalizeSchemaOrgIri } from "@beep/rdf/Iri"
- *
- * canonicalizeSchemaOrgIri("http://schema.org/name") // => "https://schema.org/name"
- * canonicalizeSchemaOrgIri("http://purl.org/dc/terms/creator") // => "http://purl.org/dc/terms/creator"
- * ```
- *
- * @category utilities
- * @since 0.0.0
- */
-export const canonicalizeSchemaOrgIri = (value: string): string =>
-  pipe(
-    nonCanonicalSchemaOrgOrigins,
-    A.findFirst((origin) => startsWithinOrigin(value, origin)),
-    O.match({
-      onNone: () => value,
-      onSome: (origin) => `${SCHEMA_ORG_CANONICAL_ORIGIN}${slice(value, Str.length(origin))}`,
-    })
-  );
-
 const makeTrimmedSyntaxChecks = (
   identifier: string,
   title: string,
@@ -780,7 +731,7 @@ const makeTrimmedSyntaxChecks = (
         message,
         arbitraryConstraint: {
           patterns: [
-            Str.startsWith(identifier, "Relative")
+            pipe(identifier, Str.startsWith("Relative"))
               ? /^[a-z][a-z0-9/]{0,30}$/
               : /^https:\/\/example\.org\/[a-z0-9]{1,30}$/,
           ],
@@ -861,7 +812,7 @@ const iriChecks = makeNonEmptyReferenceChecks("IRI", "IRI", "An RFC 3987 IRI.", 
  *
  * ```ts import.meta.vitest name="Decode absolute IRI reference"
  * import * as S from "effect/Schema"
- * import { IRIReference } from "@beep/rdf/Iri"
+ * import { IRIReference } from "@beep/identity/Iri"
  *
  * const decoded = S.decodeUnknownSync(IRIReference)("https://example.org/resource")
  * decoded // => "https://example.org/resource"
@@ -884,7 +835,7 @@ export const IRIReference = S.String.pipe(
  * **Example** (Accept IRIReference type)
  *
  * ```ts
- * import type { IRIReference } from "@beep/rdf/Iri"
+ * import type { IRIReference } from "@beep/identity/Iri"
  *
  * const acceptIRIReference = (value: IRIReference) => value
  * console.log(acceptIRIReference)
@@ -902,7 +853,7 @@ export type IRIReference = typeof IRIReference.Type;
  *
  * ```ts import.meta.vitest name="Decode relative IRI path"
  * import * as S from "effect/Schema"
- * import { RelativeIRIReference } from "@beep/rdf/Iri"
+ * import { RelativeIRIReference } from "@beep/identity/Iri"
  *
  * const decoded = S.decodeUnknownSync(RelativeIRIReference)("/path/to/resource")
  * decoded // => "/path/to/resource"
@@ -924,7 +875,7 @@ export const RelativeIRIReference = S.String.check(relativeIriReferenceChecks).p
  * **Example** (Accept RelativeIRIReference type)
  *
  * ```ts
- * import type { RelativeIRIReference } from "@beep/rdf/Iri"
+ * import type { RelativeIRIReference } from "@beep/identity/Iri"
  *
  * const acceptRelativeIRIReference = (value: RelativeIRIReference) => value
  * console.log(acceptRelativeIRIReference)
@@ -942,7 +893,7 @@ export type RelativeIRIReference = typeof RelativeIRIReference.Type;
  *
  * ```ts import.meta.vitest name="Decode absolute IRI"
  * import * as S from "effect/Schema"
- * import { AbsoluteIRI } from "@beep/rdf/Iri"
+ * import { AbsoluteIRI } from "@beep/identity/Iri"
  *
  * const decoded = S.decodeUnknownSync(AbsoluteIRI)("https://example.org")
  * decoded // => "https://example.org"
@@ -965,7 +916,7 @@ export const AbsoluteIRI = S.String.pipe(
  * **Example** (Accept AbsoluteIRI type)
  *
  * ```ts
- * import type { AbsoluteIRI } from "@beep/rdf/Iri"
+ * import type { AbsoluteIRI } from "@beep/identity/Iri"
  *
  * const acceptAbsoluteIRI = (value: AbsoluteIRI) => value
  * console.log(acceptAbsoluteIRI)
@@ -983,7 +934,7 @@ export type AbsoluteIRI = typeof AbsoluteIRI.Type;
  *
  * ```ts import.meta.vitest name="Decode IRI with fragment"
  * import * as S from "effect/Schema"
- * import { IRI } from "@beep/rdf/Iri"
+ * import { IRI } from "@beep/identity/Iri"
  *
  * const decoded = S.decodeUnknownSync(IRI)("https://example.org/page#section")
  * decoded // => "https://example.org/page#section"
@@ -1006,7 +957,7 @@ export const IRI = S.String.pipe(
  * **Example** (Accept IRI type)
  *
  * ```ts
- * import type { IRI } from "@beep/rdf/Iri"
+ * import type { IRI } from "@beep/identity/Iri"
  *
  * const acceptIRI = (value: IRI) => value
  * console.log(acceptIRI)

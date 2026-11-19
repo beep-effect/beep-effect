@@ -2,15 +2,16 @@
 
 Domain-safe RDF and linked-data modeling primitives.
 
-`@beep/rdf` owns pure value models for IRI/URI identifiers, RDF/JS-aligned
+`@beep/rdf` owns pure value models for URI identifiers, RDF/JS-aligned
 terms and datasets, bounded JSON-LD value shapes, and core vocabulary constants.
 It is a `foundation/modeling` package so domain schemas can import it without
-taking a dependency on `@beep/semantic-web`.
+taking a dependency on `@beep/semantic-web`. The RFC 3987 IRI schemas live in
+`@beep/identity/Iri`.
 
 ## Canonical Imports
 
 ```ts
-import { IRI } from "@beep/rdf/Iri"
+import { IRI } from "@beep/identity/Iri"
 import { NamedNode, makeNamedNode } from "@beep/rdf/Rdf"
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd"
 ```

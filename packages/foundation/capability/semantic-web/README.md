@@ -26,7 +26,8 @@ import { SparqlQueryService } from "@beep/semantic-web/services/sparql-query"
 import { ShaclValidationService } from "@beep/semantic-web/services/shacl-validation"
 import { CanonicalizationService } from "@beep/semantic-web/services/canonicalization"
 import { entriesToDataset, projectShapes } from "@beep/semantic-web"
-import { ProvBundle, EvidenceAnchor, makeQuad, IRI } from "@beep/rdf"
+import { IRI } from "@beep/identity/Iri"
+import { ProvBundle, EvidenceAnchor, makeQuad } from "@beep/rdf"
 ```
 
 ## Consumers

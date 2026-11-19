@@ -10,7 +10,8 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { IRI, URI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
+import { URI } from "@beep/rdf";
 import { FilePath } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "./Base.ts";

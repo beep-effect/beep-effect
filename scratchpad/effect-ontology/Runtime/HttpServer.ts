@@ -7,7 +7,8 @@ import { ClaimFilter } from "../Repository/Claim.ts";
  */
 
 import { DrizzleError } from "@beep/drizzle";
-import { IRI, makeLiteral, makeNamedNode } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
+import { makeLiteral, makeNamedNode } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as A from "effect/Array";

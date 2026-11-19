@@ -13,7 +13,7 @@
  */
 
 import { CoreVocab, expand, expandOption, expandPredicate } from "@beep/identity";
-import { IRI } from "@beep/rdf/Iri";
+import { IRI } from "@beep/identity/Iri";
 import { LanguageTag } from "@beep/rdf/Rdf";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

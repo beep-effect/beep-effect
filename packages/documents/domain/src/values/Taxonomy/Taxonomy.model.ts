@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
+import { IRIReference } from "@beep/identity/Iri";
 import { $DocumentsDomainId } from "@beep/identity/packages";
-import { IRIReference } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
 import { ValidWindowsPlainPathSegment } from "@beep/schema/FilePath";
 import * as S from "effect/Schema";

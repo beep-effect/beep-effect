@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/documents-domain",
   "review": {
-    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
-    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 L0 identity lane, goals/text-knowledge-stack-rebuild-p1-l0-identity)",
+    "reason": "Record @beep/documents-domain after the IRI schema move dropped its @beep/rdf dependency, removing the @beep/rdf#build and #transit edges from build, check, lint:deprecated-apis and test. No qualification is granted.",
     "basis": {
-      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
-      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+      "path": "docs/reports/iri-move-cache-review-2026-11-19.md",
+      "sha256": "1d6e816d42ff497cb262d80c809337858a11c2b8bdddb19056237c9b55dc8721"
     }
   },
   "nodes": [
@@ -17,7 +17,6 @@
       "dependencies": [
         "@beep/effect-drizzle#build",
         "@beep/identity#build",
-        "@beep/rdf#build",
         "@beep/schema#build",
         "@beep/shared-domain#build",
         "@beep/test-runner#build",
@@ -78,7 +77,6 @@
         "@beep/documents-domain#build",
         "@beep/effect-drizzle#build",
         "@beep/identity#build",
-        "@beep/rdf#build",
         "@beep/schema#build",
         "@beep/shared-domain#build",
         "@beep/test-runner#build",
@@ -126,7 +124,6 @@
       "dependencies": [
         "@beep/effect-drizzle#build",
         "@beep/identity#build",
-        "@beep/rdf#build",
         "@beep/schema#build",
         "@beep/shared-domain#build",
         "@beep/test-runner#build",
@@ -257,7 +254,6 @@
       "dependencies": [
         "@beep/effect-drizzle#transit",
         "@beep/identity#transit",
-        "@beep/rdf#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
         "@beep/schema#transit",
         "@beep/shared-domain#transit",
@@ -461,7 +457,6 @@
       "dependencies": [
         "@beep/effect-drizzle#transit",
         "@beep/identity#transit",
-        "@beep/rdf#transit",
         "@beep/schema#transit",
         "@beep/shared-domain#transit",
         "@beep/test-runner#transit",
@@ -511,7 +506,6 @@
       "dependencies": [
         "@beep/effect-drizzle#transit",
         "@beep/identity#transit",
-        "@beep/rdf#transit",
         "@beep/schema#transit",
         "@beep/shared-domain#transit",
         "@beep/test-runner#transit",
@@ -569,7 +563,6 @@
       "dependencies": [
         "@beep/effect-drizzle#build",
         "@beep/identity#build",
-        "@beep/rdf#build",
         "@beep/schema#build",
         "@beep/shared-domain#build",
         "@beep/test-runner#build",

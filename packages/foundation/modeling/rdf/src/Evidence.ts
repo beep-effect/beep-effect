@@ -6,11 +6,11 @@
  * @packageDocumentation
  */
 
+import { IRIReference } from "@beep/identity/Iri";
 import { $RdfId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { IRIReference } from "./Iri.ts";
 import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";
 
 const $I = $RdfId.create("evidence");

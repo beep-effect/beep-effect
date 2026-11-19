@@ -3,8 +3,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { IRIReference } from "@beep/identity/Iri";
 import { $SemanticFoundationId } from "@beep/identity/packages";
-import { IRIReference } from "@beep/rdf";
 import { VocabularyConcept, VocabularySeed } from "./Vocabulary.models.ts";
 
 const DocketingVocabularyScheme = $SemanticFoundationId.create("vocabulary/docketing");

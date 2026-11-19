@@ -13,8 +13,8 @@
  */
 
 import { CoreVocab, expandOption, expandPredicate } from "@beep/identity";
+import { IRI } from "@beep/identity/Iri";
 import { $OntologyId } from "@beep/identity/packages";
-import { IRI } from "@beep/rdf/Iri";
 import { LanguageTag } from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "effect/Option";

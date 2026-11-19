@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import { LiteralKit } from "@beep/schema";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import * as A from "effect/Array";

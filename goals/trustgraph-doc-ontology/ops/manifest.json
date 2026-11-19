@@ -37,7 +37,6 @@
     "ontologyKey": "beep-effect-doc-ontology-probe-2026-04-04"
   },
   "rerun": {
-    "build": "bun goals/trustgraph-doc-ontology/scripts/build-artifacts.ts",
     "verify": "bun goals/trustgraph-doc-ontology/scripts/verify-artifacts.ts"
   },
   "spec": "trustgraph-doc-ontology",

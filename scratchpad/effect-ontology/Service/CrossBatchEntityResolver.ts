@@ -13,7 +13,7 @@
 
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as A from "effect/Array";
@@ -111,7 +111,7 @@ export class CrossBatchResolutionResult extends S.Opaque<
  * **Example** (Create a resolved entity)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { Entity } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"

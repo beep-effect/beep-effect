@@ -79,6 +79,14 @@
         "count": 1
       }
     },
+    "packages/foundation/modeling/identity/src/Iri.ts": {
+      "complexity_moderate": {
+        "count": 5
+      },
+      "crap_moderate": {
+        "count": 4
+      }
+    },
     "packages/foundation/modeling/identity/src/PnLocal.ts": {
       "crap_high": {
         "count": 1
@@ -90,14 +98,6 @@
       },
       "crap_moderate": {
         "count": 1
-      }
-    },
-    "packages/foundation/modeling/rdf/src/Iri.ts": {
-      "complexity_moderate": {
-        "count": 5
-      },
-      "crap_moderate": {
-        "count": 4
       }
     },
     "packages/foundation/modeling/schema/src/AtURI.ts": {

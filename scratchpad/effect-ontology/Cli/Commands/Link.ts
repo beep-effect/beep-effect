@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 
-import { IRI } from "@beep/rdf/Iri";
+import { IRI } from "@beep/identity/Iri";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";

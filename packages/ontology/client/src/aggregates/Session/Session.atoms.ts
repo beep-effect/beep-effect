@@ -8,6 +8,7 @@
 import { chatProtocolLayerAtom, HttpChatProtocolLive } from "@beep/agents-client";
 import { CosmosGraphProjection, renderCosmosGraph } from "@beep/cosmos";
 import { Graph3DProjection, Graph3DRenderOptions, renderGraph3D } from "@beep/graph-3d/browser";
+import { IRI } from "@beep/identity/Iri";
 import { $OntologyClientId } from "@beep/identity/packages";
 import { LogRedactedCauseOptions, logRedactedCause, redactCauseForClient } from "@beep/observability";
 import {
@@ -46,7 +47,6 @@ import {
   WorkerCommand,
   WorkerResult,
 } from "@beep/ontology-use-cases/aggregates/Session";
-import { IRI } from "@beep/rdf/Iri";
 import { makeLiteral, makeNamedNode, makeQuad, serializeQuad } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema";

@@ -16433,6 +16433,18 @@
             "functions": 0
           }
         },
+        "packages/foundation/modeling/identity/src/Iri.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/modeling/identity/src/PnLocal.ts": {
           "lines": 95.14,
           "statements": 96,
@@ -36321,18 +36333,6 @@
           }
         },
         "packages/foundation/modeling/rdf/src/Evidence.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/rdf/src/Iri.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

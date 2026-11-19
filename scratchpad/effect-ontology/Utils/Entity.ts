@@ -9,7 +9,7 @@
  * @since 0.0.0
  */
 
-import type { IRI } from "@beep/rdf";
+import type { IRI } from "@beep/identity/Iri";
 import * as A from "effect/Array";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as O from "effect/Option";
@@ -52,7 +52,7 @@ export const isEntityReference = (value: string): boolean => ENTITY_ID_PATTERN.t
  * **Example** (Merge one entity)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Entity } from "@effect-ontology/Domain/Model/Entity"
  * import { EntityId } from "@effect-ontology/Domain/Model/shared"
  * import { mergeEntityFields } from "@effect-ontology/Utils/Entity"

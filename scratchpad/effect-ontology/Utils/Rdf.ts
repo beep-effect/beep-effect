@@ -6,8 +6,10 @@ import { MakeQuadOptionsInput } from "@beep/rdf/Rdf";
  * @since 0.0.0
  */
 
-import type { GraphTerm, IRI as IriValue, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
-import { IRI, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
+import type { IRI as IriValue } from "@beep/identity/Iri";
+import { IRI } from "@beep/identity/Iri";
+import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
+import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
@@ -44,7 +46,7 @@ export const buildIri = dual2(
  * **Example** (Create a named node)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { canonicalNamedNode } from "@effect-ontology/Utils/Rdf"
  * import * as S from "effect/Schema"
  *
@@ -91,7 +93,7 @@ export const canonicalLiteral = (input: {
  * **Example** (Create a quad in the default graph)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { canonicalQuad } from "@effect-ontology/Utils/Rdf"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"

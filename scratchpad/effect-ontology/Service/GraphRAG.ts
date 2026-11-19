@@ -8,7 +8,7 @@ import { FindSimilarOptions } from "./EntityIndex.ts";
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import * as A from "effect/Array";
 import type * as AiError from "effect/ai/AiError";
 import type * as LanguageModel from "effect/ai/LanguageModel";
@@ -108,7 +108,7 @@ const GenerationOptionsShape = S.Struct({
  * ```ts
  * import * as S from "effect/Schema"
  * import { Confidence } from "@beep/epistemics/EvidenceSpan"
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Entity } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { ScoredNode } from "@effect-ontology/Service/GraphRAG"
@@ -227,7 +227,7 @@ export type RetrievalOptionsInput = (typeof RetrievalOptions)["~type.make.in"];
  * ```ts
  * import * as S from "effect/Schema"
  * import { Confidence } from "@beep/epistemics/EvidenceSpan"
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Entity } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { RetrievalResult, RetrievalStats, ScoredNode } from "@effect-ontology/Service/GraphRAG"
@@ -414,7 +414,7 @@ export type FormatContextOptionsInput = (typeof FormatContextOptions)["~type.mak
  * ```ts
  * import * as S from "effect/Schema"
  * import { Confidence } from "@beep/epistemics/EvidenceSpan"
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Entity } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { GroundedAnswer, RetrievalResult, RetrievalStats, ScoredNode } from "@effect-ontology/Service/GraphRAG"
@@ -485,7 +485,7 @@ export class GroundedAnswer extends S.Opaque<GroundedAnswer, { readonly brand: u
  * **Example** (Walk one authorship step)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Entity, Relation, RelationObject } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { ReasoningStep } from "@effect-ontology/Service/GraphRAG"
@@ -537,7 +537,7 @@ export class ReasoningStep extends S.Opaque<ReasoningStep, { readonly brand: uni
  *
  * ```ts
  * import { Confidence } from "@beep/epistemics/EvidenceSpan"
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Entity, Relation, RelationObject } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { ReasoningStep, ReasoningTrace } from "@effect-ontology/Service/GraphRAG"

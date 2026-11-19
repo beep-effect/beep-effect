@@ -12,9 +12,9 @@
  * @since 0.0.0
  */
 
+import { IRI } from "@beep/identity/Iri";
 import { SafePnPrefix } from "@beep/identity/PnLocal";
 import { $RepoCliId } from "@beep/identity/packages";
-import { IRI } from "@beep/rdf/Iri";
 import * as Rdf from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
