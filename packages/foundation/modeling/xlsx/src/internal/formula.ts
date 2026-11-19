@@ -2,8 +2,8 @@
 // gets the first cell's text with its relative references moved by the distance between the two cells, as Excel
 // shows it. A reference is a cell (`B2`), a whole-column range (`A:C`) or a whole-row range (`2:5`); each relative
 // part moves along its own axis and each `$` part stays. Text in double quotes is a string constant, text in single
-// quotes a sheet name and text in brackets a workbook index or a table's column: none of them holds a reference, so
-// each is copied as it is written.
+// quotes a sheet name, text in brackets a workbook index or a table's column, and the sheets a 3D reference spans
+// (`JAN:DEC!`) are sheet names: none of them holds a reference, so each is copied as it is written.
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
@@ -11,16 +11,17 @@ import { columnFromLetters, columnLetters, MAX_COLUMN, MAX_ROW } from "../XlsxAd
 
 // The pieces a formula's text is read as, the first that fits at each place: a quoted or bracketed piece, kept
 // whole (a doubled quote is a quote inside it, and a table's column may sit in a second pair of brackets), then a
-// whole-column range, a whole-row range or a cell. A reference stands apart from a name or a number on both sides.
+// whole-column range, a whole-row range or a cell. A reference stands apart from a name or a number on both sides,
+// letters of either case included, and is never followed by `!`: what is (`JAN:DEC!B2`, `A:C!B2`) names sheets.
 const piece = new RegExp(
   A.join(
     [
       String.raw`(?<kept>"(?:[^"]|"")*"?|'(?:[^']|'')*'?|\[(?:[^[\]]|\[[^[\]]*\])*\]?)`,
-      "(?<![._A-Z0-9])(?:" +
+      "(?<![._A-Za-z0-9])(?:" +
         String.raw`(?<fromColumnFixed>\$?)(?<fromColumn>[A-Z]{1,3}):(?<toColumnFixed>\$?)(?<toColumn>[A-Z]{1,3})` +
         String.raw`|(?<fromRowFixed>\$?)(?<fromRow>\d{1,7}):(?<toRowFixed>\$?)(?<toRow>\d{1,7})` +
         String.raw`|(?<columnFixed>\$?)(?<column>[A-Z]{1,3})(?<rowFixed>\$?)(?<row>\d{1,7})` +
-        ")(?![_.(A-Za-z0-9])",
+        ")(?![_.(A-Za-z0-9!])",
     ],
     "|"
   ),

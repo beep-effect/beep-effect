@@ -624,6 +624,8 @@ export class Xlsx {
    * Writes a workbook's values as .xlsx bytes, in its canonical form. An Effect, because deflating uses the
    * runtime's `CompressionStream`; a runtime without one dies (as `effect/encoding/Zip` does), so write with
    * `compression: "store"` there. A failure of the zip writer is an `XlsxStringifyError` carrying it as its cause.
+   * Sheet names are written as the schema holds them and are not checked against Excel's rules: a name another
+   * program wrote comes back as it was, and a workbook meant for Excel should pass `fitsExcel` for each sheet first.
    */
   static readonly stringify = Effect.fn("Xlsx.stringify")(
     (workbook: Pick<XlsxWorkbook, "dateSystem" | "sheets">, options: XlsxWriteOptions = XlsxWriteOptions.default) =>

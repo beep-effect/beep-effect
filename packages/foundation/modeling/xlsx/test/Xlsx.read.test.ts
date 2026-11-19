@@ -4,11 +4,12 @@
 
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
 import { columnLetters, XlsxRange } from "@beep/xlsx/XlsxAddress.schema";
-import { MAX_CELL_CHARS, XlsxCell, XlsxText, XlsxValue } from "@beep/xlsx/XlsxCell.schema";
+import { MAX_CELL_CHARS, XlsxCell, XlsxErrorCode, XlsxText, XlsxValue } from "@beep/xlsx/XlsxCell.schema";
 import { XlsxFirstSheet, XlsxLimits, XlsxNamedSheets, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema";
 import { XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as MutableHashSet from "effect/MutableHashSet";
@@ -208,6 +209,30 @@ describe("cells", () => {
       ]);
       expect(findings(found)).toEqual(A.map(written, () => "UnreadableCell"));
     })
+  );
+
+  // What a file wrote where no value can be read is kept as written, an error code's text included: `#N/A` in a
+  // number cell is the text `#N/A`, which canonical form and a write give back as that text and no other.
+  const Garbled = S.Union([XlsxErrorCode, S.String.check(S.isPattern(/^[#A-Za-z][A-Za-z !/#?]{0,10}$/))]);
+  it.effect.prop(
+    "keeps what a number cell wrote that is no number as the text it wrote, error codes included",
+    [Arbitrary.schema(Garbled)],
+    ([written]) =>
+      Effect.gen(function* () {
+        const found = yield* readOf({
+          sheets: [{ name: "S", xml: sheet(`<row r="1"><c r="A1"><v>${written}</v></c></row>`) }],
+        });
+        expect(grid(first(found))).toEqual([[1, `0:unreadable "${written}"`]]);
+        expect(findings(found)).toEqual(["UnreadableCell"]);
+        const canonical = O.map(O.fromNullishOr(first(found).rows[0]?.cells[0]), (cell) =>
+          XlsxCell.canonical(cell, "1900")
+        );
+        assertSome(
+          O.map(canonical, (cell) => cell.value),
+          XlsxText.make({ text: written })
+        );
+      }),
+    { arbitrary: { runs: 100 } }
   );
 
   // The cap on a cell's characters is on the text the cell holds, its `_xHHHH_` escapes read: a cell of carriage

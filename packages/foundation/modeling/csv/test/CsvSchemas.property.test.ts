@@ -1,7 +1,8 @@
 // Each listed schema generates only values it accepts (schema-first rule SF-7): the roots, whose fields hold every
-// other exported schema, the header row, and the engine's own schemas.
+// other exported schema, the header row, the parse error, and the engine's own schemas.
 
 import { CsvDiagnostic } from "@beep/csv/CsvDiagnostic.schema";
+import { CsvParseError } from "@beep/csv/CsvError.errors";
 import { CsvCodecOptions, CsvReadOptions, CsvWriteOptions } from "@beep/csv/CsvOptions.schema";
 import { CsvByteOffset, CsvIndex, CsvTextSpan } from "@beep/csv/CsvPosition.schema";
 import { CsvRead } from "@beep/csv/CsvRead.schema";
@@ -27,6 +28,7 @@ const schemas = {
   CsvWriteOptions,
   CsvCodecOptions,
   CsvRead,
+  CsvParseError,
   MachineConfig,
   MachineModeName,
   MachineState,

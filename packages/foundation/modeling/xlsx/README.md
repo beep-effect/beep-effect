@@ -40,10 +40,21 @@ const program = (bytes: Uint8Array) =>
 Cell values and their kinds, formula text with the result the file saved, each cell's number format, the date
 system, sheet names with their order and state, merged ranges, hidden rows and columns. Everything else a file holds
 (fonts, charts, comments, macros and so on) is named in `workbook.dropped` and not written back. No formula is
-evaluated. `.xls`, `.xlsb`, `.ods` and encrypted workbooks are recognised (`Xlsx.container`) and refused.
+evaluated. `.xls`, `.xlsb`, `.ods` and encrypted workbooks are recognised (`Xlsx.container`) and refused. A cell that
+shares a formula gets the first cell's text with its relative references (cells, whole columns, whole rows) moved, as
+Excel shows it; string constants, quoted sheet names, bracketed pieces and the sheets a 3D reference spans
+(`JAN:DEC!B2`) are left as written.
 
 The laws are about values and hold up to `XlsxWorkbook.canonical`, the form a file gives a workbook back in: a
-workbook written and read back is its canonical form, and that form does not move under a second pass.
+workbook written and read back is its canonical form, and that form does not move under a second pass. Excel has no
+cell for a value it cannot read, so an `Unreadable` value is written, and read back, as `Text` holding exactly what
+the file wrote (an error code's text such as `#N/A` in a number cell included); `canonical` makes that step. Only an
+`Error` value is written as an error cell. Text a formula gave is written as a `str` cell with its saved value.
+
+`Xlsx.stringify` writes sheet names as the schema holds them, which admits names other programs write and Excel would
+not take (longer than 31 characters, an apostrophe at either end, `History`). It does not refuse them, so a name read
+from a file comes back as it was; `fitsExcel` says whether Excel would take a name, and a workbook meant for Excel
+should pass it for every sheet before it is written.
 
 ## What it trusts
 
@@ -104,8 +115,11 @@ before its first entry, such as a self-extractor, is `NotAWorkbook`.
 
 `XlsxCell.shown` gives the text Excel would display for the General format, date and time formats, zero-padding
 (`00000`) and one plain number pattern (fixed decimals, thousands separators, a percent sign, literal text around).
-Any other format gives none, and the read reports it (`FormatNotShown`). The General rule and the date tokens follow
-what SheetJS's formatter displayed, which this package's oracle test compares it with.
+Any other format gives none, and the read reports it (`FormatNotShown`); a date format with a condition, such as
+`[>=2]yyyy-mm-dd;dd/mm/yyyy`, is one of those, since showing its first section would show the wrong one. The General
+rule and the date tokens follow what SheetJS's formatter displayed, which this package's oracle test compares it with,
+with one departure: SheetJS calls a lowercase `general` a date, and this package reads General in any case as the
+General format, never a date.
 
 Notice: the number-format behaviour follows SheetJS (Apache License 2.0), which is also this package's test oracle.
 

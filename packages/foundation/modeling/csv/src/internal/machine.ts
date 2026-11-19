@@ -113,8 +113,8 @@ export class MachineState extends S.Opaque<MachineState, { readonly brand: uniqu
       S.withConstructorDefault(Effect.succeed(0))
     ),
     emitted: point.pipe(S.annotateKey({ description: "Records emitted" }), S.withConstructorDefault(Effect.succeed(0))),
-    cellsEmitted: point.pipe(
-      S.annotateKey({ description: "Cells in the records emitted, padding included, at most the cells cap" }),
+    paddingEmitted: point.pipe(
+      S.annotateKey({ description: "Empty cells padding has added to the records emitted, at most the padding cap" }),
       S.withConstructorDefault(Effect.succeed(0))
     ),
     width: S.Option(CsvIndex).pipe(
@@ -463,29 +463,29 @@ export class Machine {
     return this.config.ragged === "pad" ? Num.max(width, cells.length) : cells.length;
   }
 
-  /** Fails the read, and says so, when the record is one past the record cap or its cells would pass the cells cap. */
-  private passesCountCap(completed: Completed, width: number): boolean {
-    const { maxCells, maxRecords } = this.config.limits;
+  /**
+   * Fails the read, and says so, when the record is one past the record cap or its `padding` empty cells would pass
+   * the padding cap. Cells read from text never count against the padding cap; the text caps bound them.
+   */
+  private passesCountCap(completed: Completed, padding: number): boolean {
+    const { maxPaddingCells, maxRecords } = this.config.limits;
     if (this.s.emitted > maxRecords) this.limit("records", maxRecords, CsvTextSpan.make(completed.span, built));
-    else if (this.s.cellsEmitted + width > maxCells)
-      this.limit("cells", maxCells, CsvTextSpan.make(completed.span, built));
+    else if (this.s.paddingEmitted + padding > maxPaddingCells)
+      this.limit("paddingCells", maxPaddingCells, CsvTextSpan.make(completed.span, built));
     return this.s.stopped;
   }
 
   /**
    * Hands over a completed record with `width` cells, padded when it has fewer, or fails the read when it is one
-   * past the record cap or its cells would pass the cells cap. The caps are checked before the record is padded.
+   * past the record cap or its padding would pass the padding cap. The caps are checked before the record is padded.
    */
   private emit(completed: Completed, width: number): void {
-    this.s.emitted += 1;
-    if (this.passesCountCap(completed, width)) return;
-    this.s.cellsEmitted += width;
     const { cells } = completed;
-    this.records.push(
-      width > cells.length
-        ? { ...completed, cells: A.appendAll(cells, A.replicate("", width - cells.length)) }
-        : completed
-    );
+    const padding = Num.max(0, width - cells.length);
+    this.s.emitted += 1;
+    if (this.passesCountCap(completed, padding)) return;
+    this.s.paddingEmitted += padding;
+    this.records.push(padding > 0 ? { ...completed, cells: A.appendAll(cells, A.replicate("", padding)) } : completed);
   }
 
   startRecordIfNeeded(): void {

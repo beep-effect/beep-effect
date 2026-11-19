@@ -40,20 +40,23 @@ Csv.stringify(read.table); // canonical: commas, CRLF, minimal quoting
 ## What it trusts and what it does not
 
 - Input is untrusted. Every cap (`CsvLimits`: records, cells per record,
-  cells in all with padding counted, cell and record length, text length,
-  input bytes) ends a read as a typed `CsvParseError` with
-  the finding and its position, never as a defect or a stack overflow. The
-  byte cap bounds byte input, streams included (a channel fails as soon as its
-  running count passes it); text input is bounded by the text caps, and
-  `maxTextLength` (`MAX_TEXT_UNITS` by default and at most) bounds the whole
-  text of any read, a stream's included, so every reported position is valid. A lenient
-  read keeps at most `maxWarnings` warnings (1,000 by default) and counts the
-  rest in one closing `WarningsTruncated`, so a hostile file cannot fill
-  memory with them, and `maxCells` (100,000,000 by default) bounds what
-  `ragged: "pad"` makes out of no text. The caps never change the detected
-  delimiter: a read under them fails at the cap it passes. A read costs time linear in its input, however it is cut
-  into chunks; a stream holds at most its detect window (64 KiB by default,
-  256 MiB at most) and its delimiter-detection window before it reads on.
+  padding cells, cell and record length, text length, input bytes) ends a
+  read as a typed `CsvParseError` with the finding and its position, never as
+  a defect or a stack overflow. The byte cap bounds byte input, streams
+  included (a channel fails as soon as its running count passes it); text
+  input is bounded by the text caps, and `maxTextLength` (`MAX_TEXT_UNITS` by
+  default and at most) bounds the whole text of any read, a stream's
+  included, so every reported position is valid. A lenient read keeps at most
+  `maxWarnings` warnings (1,000 by default) and counts the rest in one closing
+  `WarningsTruncated`, so a hostile file cannot fill memory with them.
+  `maxPaddingCells` (10,000,000 by default, one per record at the default
+  record cap) bounds the empty cells `ragged: "pad"` makes out of no text; it
+  counts padding only, so it never refuses an input that an unpadded read
+  accepts. The caps never change the detected delimiter: a read under them
+  fails at the cap it passes. A read costs time linear in its input, however
+  it is cut into chunks; a stream holds at most its detect window (64 KiB by
+  default, 256 MiB at most) and its delimiter-detection window before it
+  reads on.
 - Bytes are decoded by their byte-order mark, else as UTF-8 when valid, else
   as Windows-1252 (what Excel writes). The decision and the first invalid byte
   are recorded in `CsvRead.source`.
@@ -88,8 +91,9 @@ Csv.stringify(read.table); // canonical: commas, CRLF, minimal quoting
   And a channel reports the first fatal finding in input order, after the
   records before it, however the input is cut, where a whole read checks the
   byte cap and the encoding before it parses: bytes past a passed text cap
-  that the encoding or the byte cap refuses fail the two differently. An upstream failure passes through a channel unchanged, with
-  nothing flushed before it.
+  that the encoding or the byte cap refuses fail the two differently. An
+  upstream failure passes through a channel unchanged, with nothing flushed
+  before it.
 - Strict mode agrees with Effect's `effect/encoding/Csv`: on RFC 4180 text both
   read the same records, on misplaced quotes both refuse, and each reads the
   other's output back unchanged. Effect's module covers strict streaming of one
@@ -113,14 +117,15 @@ bun run beep:test
 (every channel fed one piece per batch, under fixed, detected, `sep=` and
 tight-cap reads), `test/oracle.property.test.ts` the agreement with
 `effect/encoding/Csv`, `test/CsvSchemas.property.test.ts` that the root
-schemas (whose fields hold every other exported one), the header row and the
-engine's schemas generate only values they accept,
+schemas (whose fields hold every other exported one), the header row, the
+parse error and the engine's schemas generate only values they accept,
 `test/brands.test.ts` that Opaque-typed fields keep their nominal types,
-`test/encoding.test.ts` byte decoding, the byte cap and failing upstreams, `test/header.test.ts`
-the header view, `test/lenient.test.ts` the findings a lenient read reports and
-a strict read refuses, `test/write.test.ts` the formula guard, write options and
-writing channels, and `test/hostile.test.ts` the caps and linear cost (by structure and
-machine counts, not wall-clock bounds).
+`test/encoding.test.ts` byte decoding, the byte cap and failing upstreams,
+`test/header.test.ts` the header view, `test/lenient.test.ts` the findings a
+lenient read reports and a strict read refuses, `test/write.test.ts` the
+formula guard, write options and writing channels, and
+`test/hostile.test.ts` the caps and linear cost (by structure and machine
+counts, not wall-clock bounds).
 Generators come from the schemas through `effect/Arbitrary`. Tests import
 package source through `@beep/csv/...` aliases.
 

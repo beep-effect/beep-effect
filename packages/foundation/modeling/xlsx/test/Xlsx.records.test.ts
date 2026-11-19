@@ -8,11 +8,12 @@ import {
   XlsxCodecOptions,
   XlsxFirstSheet,
   XlsxLimits,
-  XlsxNamedSheets,
   XlsxReadOptions,
+  XlsxSheetChoice,
 } from "@beep/xlsx/XlsxOptions.schema";
 import { describe, expect, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
@@ -40,18 +41,20 @@ const summaryThenItems = workbook({
 const item = { SKU: XlsxText.make({ text: "BRK-040" }), Quantity: XlsxNumber.make({ value: 120 }) };
 
 describe("records under a header row", () => {
-  it.effect("are read from the sheet the codec names, whichever sheets its read options choose", () =>
-    Effect.gen(function* () {
-      const bytes = yield* summaryThenItems;
-      const choices = [
-        XlsxFirstSheet.make({}),
-        XlsxNamedSheets.make({ names: ["Summary"] }),
-        XlsxReadOptions.default.sheets,
-      ];
-      for (const sheets of choices) {
+  it.effect.prop(
+    "are read from the sheet the codec names, whichever sheets its read options choose",
+    [Arbitrary.schema(XlsxSheetChoice)],
+    ([sheets]) =>
+      Effect.gen(function* () {
+        const bytes = yield* summaryThenItems;
         const found = yield* S.decodeEffect(records(XlsxReadOptions.make({ sheets })))(bytes);
         expect(found).toEqual([item]);
-      }
+      })
+  );
+
+  it.effect("an empty named sheet gives no records, even when the read options choose another sheet", () =>
+    Effect.gen(function* () {
+      const bytes = yield* summaryThenItems;
       const empty = Xlsx.recordsFromBytes(
         { sheet: "Empty", header: "first" },
         XlsxCodecOptions.make({ read: XlsxReadOptions.make({ sheets: XlsxFirstSheet.make({}) }) })

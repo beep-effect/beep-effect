@@ -320,6 +320,11 @@ export class XlsxDate extends S.Opaque<XlsxDate, { readonly brand: unique symbol
 /**
  * What a file wrote where no value can be read: a text index that points nowhere, text where a number belongs.
  *
+ * **Details**
+ *
+ * `raw` is the text exactly as the file wrote it, its `_xHHHH_` escapes read. An error code's text is kept as it is:
+ * `#N/A` in a number cell is not an error cell, and its canonical form is the text `#N/A`.
+ *
  * **Example** (What counts as unreadable)
  *
  * ```ts import.meta.vitest name="What counts as unreadable"
@@ -327,7 +332,7 @@ export class XlsxDate extends S.Opaque<XlsxDate, { readonly brand: unique symbol
  * import * as S from "effect/Schema"
  *
  * S.is(XlsxUnreadable)({ kind: "Unreadable", raw: "abc" }) // => true
- * S.is(XlsxUnreadable)({ kind: "Unreadable", raw: "#N/A" }) // => false
+ * S.is(XlsxUnreadable)({ kind: "Unreadable", raw: "#N/A" }) // => true
  * holdsSomething(XlsxUnreadable.make({ raw: "abc" })) // => false
  * ```
  *
@@ -337,9 +342,7 @@ export class XlsxDate extends S.Opaque<XlsxDate, { readonly brand: unique symbol
 export class XlsxUnreadable extends S.Opaque<XlsxUnreadable, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("Unreadable"),
-    raw: cellText
-      .check(S.makeFilter((raw: string) => !S.is(XlsxErrorCode)(raw), { expected: "text that is not an error code" }))
-      .pipe(S.annotateKey({ description: "What the file wrote in the cell" })),
+    raw: cellText.pipe(S.annotateKey({ description: "What the file wrote in the cell" })),
   }).pipe($I.annoteSchema("XlsxUnreadable", { description: "A cell the file itself got wrong" }))
 ) {}
 

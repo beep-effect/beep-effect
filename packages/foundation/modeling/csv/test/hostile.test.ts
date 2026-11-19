@@ -127,17 +127,18 @@ describe("the record-length cap counts a record's text, not its line break", () 
 });
 
 describe("every cap, read at once, in one-character pieces and through both channels", () => {
+  // Every record is as wide as the first except in the padding row, so padding the reads changes only that row.
   for (const [name, limits, text] of [
     ["records", { maxRecords: 10 }, Str.repeat(11)("a,b\n")],
     ["fieldsPerRecord", { maxFieldsPerRecord: 5 }, "a,b,c,d,e,f\n"],
     ["fieldLength", { maxFieldLength: 10 }, `a,${Str.repeat(11)("x")}\n`],
     ["recordLength", { maxRecordLength: 20 }, `${A.join(A.replicate("abcd", 6), ",")}\n`],
     ["textLength", { maxTextLength: 20 }, Str.repeat(7)("a,b\n")],
-    ["cells", { maxCells: 10 }, Str.repeat(6)("a,b\n")],
+    ["paddingCells", { maxPaddingCells: 10 }, `a,b,c\n${Str.repeat(6)("a\n")}`],
   ] as const) {
     it.effect(`${name} fails the same everywhere`, () =>
       Effect.gen(function* () {
-        const options = limited(limits);
+        const options = readWithRules(",", { ragged: "pad", limits: CsvLimits.make(limits) });
         const whole = outcomeOfRead(Csv.parseResult(text, options));
         assertFailure(failedWith(whole), [`LimitExceeded:${name}`]);
         const bytes = utf8(text);
@@ -156,21 +157,50 @@ describe("every cap, read at once, in one-character pieces and through both chan
   }
 });
 
-// Padding makes cells out of no text, so the cells cap, not the text caps, bounds what a padded read holds.
-describe("the cells cap bounds padding", () => {
-  const padded = (maxCells: number) => readWithRules(",", { ragged: "pad", limits: CsvLimits.make({ maxCells }) });
+// Padding makes cells out of no text, so the padding cap, not the text caps, bounds what a padded read holds. It
+// counts the padding alone, so it never refuses what an unpadded read of the same cells accepts.
+describe("the padding cap bounds padding and nothing else", () => {
+  const padded = (maxPaddingCells: number) =>
+    readWithRules(",", { ragged: "pad", limits: CsvLimits.make({ maxPaddingCells }) });
   const text = `${A.join(A.replicate("h", 1000), ",")}\n${Str.repeat(10)("x\n")}`;
 
   it("short records are padded within the cap and refused past it, at the record that passes it", () => {
     assertSuccess(
-      Result.map(outcomeOfRead(Csv.parseResult(text, padded(11_000))), A.map(A.length)),
+      Result.map(outcomeOfRead(Csv.parseResult(text, padded(9_990))), A.map(A.length)),
       A.replicate(1000, 11)
     );
-    const refused = Csv.parseResult(text, padded(5_000)).pipe(outcomeOfRead, fatalFindings);
+    const refused = Csv.parseResult(text, padded(3_996)).pipe(outcomeOfRead, fatalFindings);
     assertFailure(refused, [
-      LimitExceeded.make({ limit: "cells", maximum: 5000, at: CsvTextSpan.locate(text, 2008, 2) }),
+      LimitExceeded.make({ limit: "paddingCells", maximum: 3996, at: CsvTextSpan.locate(text, 2008, 2) }),
     ]);
   });
+
+  it.effect("cells read from text never count: a read of more cells than the cap, none padded, passes", () =>
+    Effect.gen(function* () {
+      const unpadded = Str.repeat(6)("a,b\n");
+      const options = padded(1);
+      const whole = outcomeOfRead(Csv.parseResult(unpadded, options));
+      assertSuccess(whole, A.replicate(["a", "b"], 6));
+      const units = pieces(unpadded.length, A.replicate(1, unpadded.length), (from, to) =>
+        Str.slice(from, to)(unpadded)
+      );
+      const streamed = yield* streamText(units, options);
+      deepStrictEqual(streamed, whole);
+    })
+  );
+
+  it.prop(
+    "a read that does not pad reads the same under the smallest padding cap as under the default",
+    [messyText, Arbitrary.schema(S.Literals(["keep", "reject"]))],
+    ([text, ragged]) => {
+      const tightest = readWithRules(",", { ragged, limits: CsvLimits.make({ maxPaddingCells: 1 }) });
+      deepStrictEqual(
+        outcomeOfRead(Csv.parseResult(text, tightest)),
+        outcomeOfRead(Csv.parseResult(text, readWithRules(",", { ragged })))
+      );
+    },
+    runs
+  );
 });
 
 // A stream has no length of its own, so the text-length cap is what keeps its positions valid `CsvIndex` values.

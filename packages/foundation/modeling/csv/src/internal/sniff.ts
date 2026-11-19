@@ -25,7 +25,7 @@ const PREVIEW_LIMITS = CsvLimits.make({
   maxFieldsPerRecord: MAX_FIELDS,
   maxFieldLength: MAX_TEXT_UNITS,
   maxRecordLength: MAX_TEXT_UNITS,
-  maxCells: MAX_TEXT_UNITS,
+  maxPaddingCells: MAX_TEXT_UNITS,
 });
 
 const PREVIEW = 10;

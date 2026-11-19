@@ -59,13 +59,13 @@ describe("the writer", () => {
     Effect.gen(function* () {
       const workbook = bookOf([
         XlsxCell.make({ column: 0, value: XlsxUnreadable.make({ raw: " not a number " }) }),
-        XlsxCell.make({ column: 1, value: XlsxUnreadable.make({ raw: "'#N/A" }), formula: O.some("1/0") }),
+        XlsxCell.make({ column: 1, value: XlsxUnreadable.make({ raw: "#N/A" }), formula: O.some("1/0") }),
         XlsxCell.make({ column: 2, value: XlsxError.make({ code: "#DIV/0!" }), formula: O.some("1/0") }),
       ]);
       const bytes = yield* Xlsx.stringify(workbook, stored);
       expect(cellsOf(bytes)).toEqual([
         '<c r="A1" t="inlineStr"><is><t xml:space="preserve"> not a number </t></is></c>',
-        `<c r="B1" t="str"><f>1/0</f><v>'#N/A</v></c>`,
+        '<c r="B1" t="str"><f>1/0</f><v>#N/A</v></c>',
         '<c r="C1" t="e"><f>1/0</f><v>#DIV/0!</v></c>',
       ]);
       const read = yield* Xlsx.parse(bytes);

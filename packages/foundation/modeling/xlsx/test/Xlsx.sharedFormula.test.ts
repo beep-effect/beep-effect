@@ -73,6 +73,32 @@ describe("a shared formula", () => {
     )
   );
 
+  // A sheet span (`JAN:DEC!`) names sheets, not columns: a reference is never followed by `!`. A run of capitals
+  // inside a longer name (`MyJAN`, `myA1`) is part of that name, whatever case the name's other letters are in.
+  it.effect("leaves the sheets of a 3D reference and a name holding capitals and digits as they are", () =>
+    Effect.gen(function* () {
+      yield* expectShared("SUM(JAN:DEC!B2)", ["D3"], ["SUM(JAN:DEC!B2)", "SUM(JAN:DEC!C3)"]);
+      yield* expectShared("SUM(A:C!B2)+A1!B2", ["D3"], ["SUM(A:C!B2)+A1!B2", "SUM(A:C!C3)+A1!C3"]);
+      yield* expectShared(
+        "SUM(MyJAN:DEC!B2)+myA1*2+xA:C",
+        ["D3"],
+        ["SUM(MyJAN:DEC!B2)+myA1*2+xA:C", "SUM(MyJAN:DEC!C3)+myA1*2+xA:C"]
+      );
+    })
+  );
+
+  // Whatever two sheets a 3D reference spans, a dependent cell gets the same span and only the cell moves.
+  const SheetName = S.String.check(S.isPattern(/^[A-Za-z]{1,6}$/));
+  it.effect.prop(
+    "gives every cell the sheet span of a 3D reference unchanged",
+    [Arbitrary.schema(SheetName), Arbitrary.schema(SheetName)],
+    ([from, to]) => {
+      const span = `${from}:${to}!`;
+      return expectShared(`SUM(${span}B2)`, ["D3"], [`SUM(${span}B2)`, `SUM(${span}C3)`]);
+    },
+    { arbitrary: { runs: 100 } }
+  );
+
   // Whatever a string constant holds, references among them, a dependent cell gets it unchanged.
   const Constant = S.String.check(S.isPattern(/^(?:[A-Z0-9:$! ]|"")*$/), S.isMaxLength(24));
   it.effect.prop(

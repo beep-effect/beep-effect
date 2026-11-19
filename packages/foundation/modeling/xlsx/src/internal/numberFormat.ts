@@ -1,7 +1,9 @@
 // What a number format code means, as far as this package reads one: whether it shows a date or time, and the text
 // Excel would display for the formats decision X3 covers (dates and times, zero-padding, one plain number pattern,
-// and General). A code it does not render is refused, never guessed. The General rule and the date tokens follow
-// what the reader this package replaced (SheetJS SSF) displayed, so a swap changes no displayed text.
+// and General). A code it does not render is refused, never guessed, and a date format with a condition (`[>=2]`) is
+// one of them. The General rule and the date tokens follow what the reader this package replaced (SheetJS SSF)
+// displayed, with one departure: SheetJS calls a lowercase `general` a date, and this package reads General in any
+// case as General, as Excel does.
 //
 // Notice: the format behaviour here follows SheetJS (https://sheetjs.com, Apache License 2.0), which is also this
 // package's test oracle (test/oracle.property.test.ts). The code is this package's own.

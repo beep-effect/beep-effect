@@ -627,8 +627,7 @@ export class SheetReader {
 
   private unreadable(raw: string, reason: UnreadableCell["reason"], address: () => XlsxAddress): XlsxValue {
     this.warn(UnreadableCell.make({ sheet: this.sheet, address: address(), reason }));
-    const written = unescaped(raw);
-    return XlsxUnreadable.make({ raw: detached(isErrorCode(written) ? `'${written}` : written) }, checked);
+    return XlsxUnreadable.make({ raw: detached(unescaped(raw)) }, checked);
   }
 
   private sharedString(raw: string, unreadable: Unreadable): XlsxValue {

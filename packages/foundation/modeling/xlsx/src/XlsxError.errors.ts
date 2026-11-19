@@ -63,8 +63,9 @@ export class XlsxParseError extends S.TaggedError<XlsxParseError, { readonly bra
  * **Gotchas**
  *
  * The writer names every part itself, so the zip writer's refusals (a path it cannot hold) are not reached by any
- * workbook the schema admits. A runtime without `CompressionStream` is not this error: `effect/encoding/Zip` dies on
- * it, as on any compressor failure; write with `compression: "store"` there.
+ * workbook the schema admits. A sheet name Excel would not take (see `fitsExcel`) is not this error either: it is
+ * written as the schema holds it. A runtime without `CompressionStream` is not this error: `effect/encoding/Zip` dies
+ * on it, as on any compressor failure; write with `compression: "store"` there.
  *
  * **Example** (Handle a failed write)
  *

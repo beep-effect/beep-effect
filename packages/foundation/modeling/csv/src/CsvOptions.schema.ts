@@ -399,15 +399,17 @@ const count = (cap: { readonly maximum: number; readonly fallback: number; reado
  *
  * **Details**
  *
- * Defaults: 10,000,000 records, 100,000 cells per record, 100,000,000 cells in all, 16 Mi units per cell, 64 Mi units
- * per record, 1,000 kept warnings, `MAX_TEXT_UNITS` units of text in all and 256 MiB of input. Every count is an
- * integer of at least 1: records at most 2,147,483,647, cells per record at most `MAX_FIELDS`, and cells in all,
+ * Defaults: 10,000,000 records, 100,000 cells per record, 10,000,000 padding cells, 16 Mi units per cell, 64 Mi
+ * units per record, 1,000 kept warnings, `MAX_TEXT_UNITS` units of text in all and 256 MiB of input. Every count is
+ * an integer of at least 1: records at most 2,147,483,647, cells per record at most `MAX_FIELDS`, and padding cells,
  * lengths and warnings at most `MAX_TEXT_UNITS`.
  *
- * `maxCells` counts the cells of every record a read emits, padding included. Text makes at most about one cell per
- * unit, but `ragged: "pad"` makes cells out of no text: a wide first record and many one-cell records after it would
- * otherwise pad to far more cells than the input holds. A read fails with `LimitExceeded` `cells` at the record
- * that would pass the cap, before that record is padded.
+ * `maxPaddingCells` counts only the empty cells `ragged: "pad"` adds to short records, across the whole read, a
+ * stream's included. Cells read from text never count: the text and byte caps already bound them, so the cap rejects
+ * no input that an unpadded read accepts. Padding makes cells out of no text, so without it a wide first record and
+ * many one-cell records after it would pad to far more cells than the input holds. The default allows one padded
+ * cell per record at the default record cap. A read fails with `LimitExceeded` `paddingCells` at the record whose
+ * padding would pass the cap, before that record is padded.
  *
  * `maxTextLength` bounds the whole text a read takes in, the units after a byte-order mark and a `sep=` line, so
  * every position a read reports is a valid `CsvIndex`. A stream has no other length bound: past the cap it fails
@@ -429,7 +431,7 @@ const count = (cap: { readonly maximum: number; readonly fallback: number; reado
  * const limits = CsvLimits.make({ maxRecords: 1000 })
  * limits.maxRecords // => 1000
  * limits.maxFieldsPerRecord // => 100000
- * limits.maxCells // => 100000000
+ * limits.maxPaddingCells // => 10000000
  * limits.maxWarnings // => 1000
  * limits.maxTextLength // => MAX_TEXT_UNITS
  * limits.maxInputBytes // => ByteSize.mebibytes(256)
@@ -442,10 +444,10 @@ export class CsvLimits extends S.Opaque<CsvLimits, { readonly brand: unique symb
   S.Struct({
     maxRecords: count({ maximum: 2_147_483_647, fallback: 10_000_000, description: "Most records read" }),
     maxFieldsPerRecord: count({ maximum: MAX_FIELDS, fallback: 100_000, description: "Most cells in one record" }),
-    maxCells: count({
+    maxPaddingCells: count({
       maximum: MAX_TEXT_UNITS,
-      fallback: 100_000_000,
-      description: "Most cells in every record read, padding included",
+      fallback: 10_000_000,
+      description: "Most empty cells padding adds to short records, across every record read",
     }),
     maxFieldLength: count({
       maximum: MAX_TEXT_UNITS,
