@@ -2484,6 +2484,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "Rewrite the pin to the newest release",
         "Check the pin-bump App credential",
         "Create pin-bump App token",
+        "Push main merged into the pin-bump branch",
         "Open or update the pin-bump pull request",
       ];
       expect(A.map(A.drop(steps, publish + 1), (step) => step.name)).toEqual(pinSteps);
@@ -2498,15 +2499,20 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       for (const fragment of ["steps.publish", "steps.closure", "steps.bytes"]) {
         expect(pinStepText).not.toContain(fragment);
       }
-      for (const name of A.drop(pinSteps, 1)) {
-        expect(stepByName(steps, name).if).toBe("steps.pin.outputs.bump == 'true'");
+      // The App credential and token serve both writers: the pull-request step (bump) and the push of a
+      // main merge into an open pin-bump branch that was behind or in conflict (push).
+      for (const name of ["Check the pin-bump App credential", "Create pin-bump App token"]) {
+        expect(stepByName(steps, name).if).toBe("steps.pin.outputs.bump == 'true' || steps.pin.outputs.push == 'true'");
       }
+      expect(stepByName(steps, "Push main merged into the pin-bump branch").if).toBe(
+        "steps.pin.outputs.push == 'true'"
+      );
+      expect(stepByName(steps, "Open or update the pin-bump pull request").if).toBe("steps.pin.outputs.bump == 'true'");
       // The newest release is chosen exactly as the closure comparison chooses it, the rewrite is the
       // tested command (not a text edit in shell), and the decision is whether it changed the pin.
       const rewrite = stepRun(steps, "Rewrite the pin to the newest release");
-      expect(rewrite).toContain(
-        `--jq '[.[] | select(.tagName | startswith("beep-ci-"))] | sort_by(.createdAt) | last | .tagName // ""'`
-      );
+      expect(rewrite).toContain(`--jq '[.[] | select(.tagName | startswith("beep-ci-"))]' > "$releases"`);
+      expect(rewrite).toContain(`jq -r 'sort_by(.createdAt) | last | .tagName // ""' "$releases"`);
       expect(stepRun(steps, "Compare the closure digest with the latest release")).toContain(
         `--jq '[.[] | select(.tagName | startswith("beep-ci-"))] | sort_by(.createdAt) | last | .tagName // ""'`
       );
@@ -2527,7 +2533,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "own='.[] | select(.isCrossRepository == false and .baseRefName == $base and .title == $title)'",
         'elif [[ "$3" == "allow-missing" ]] && grep -q "HTTP 404" "$read_error"; then',
         'read_pin "$PIN_BRANCH" "the pin-bump branch read" allow-missing',
-        'elif [[ "$branch_current" != "true" || "$open_labelled" -lt 1 ]]; then',
+        'bun run beep ci binary-pin-sync --cwd "$worktree" --base "origin/${DEFAULT_BRANCH}"',
+        '--tag "$tag" --sha256 "$sha256" --releases "$releases" --output "$sync_output"',
+        'echo "push=$push"',
         'echo "parked=$parked"',
       ]) {
         expect(rewrite).toContain(fragment);
@@ -2576,7 +2584,18 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       // The App token reaches the pull-request step alone; the private key reaches the mint alone.
       const tokenReaders = yield* stepsReferencing(jobs, "steps.app-token.outputs.token");
       const secretReaders = yield* stepsReferencing(jobs, "secrets.");
-      expect(tokenReaders).toEqual(["publish/Open or update the pin-bump pull request"]);
+      expect(tokenReaders).toEqual([
+        "publish/Push main merged into the pin-bump branch",
+        "publish/Open or update the pin-bump pull request",
+      ]);
+      // The merge push is a plain fast-forward push on an explicit URL: never forced, so the pull request
+      // keeps its number and review history, and the token never enters git config.
+      const push = stepRun(steps, "Push main merged into the pin-bump branch");
+      expect(push).toContain(
+        '"https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${PIN_BRANCH}"'
+      );
+      expect(push).not.toMatch(/--force|\s\+HEAD/u);
+      expect(push).toContain("-- .github/workflows");
       expect(secretReaders).toEqual(["publish/Create pin-bump App token"]);
     })
   );
@@ -2635,6 +2654,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           readonly newest?: { readonly tag: string; readonly sha: string };
           readonly failing?: "none" | "pulls" | "branch" | "main";
           readonly liveMain?: string;
+          readonly sync?: "stale" | "current" | "merged";
         } = {}
       ) {
         const newest = options.newest ?? { tag: newTag, sha: newSha };
@@ -2655,7 +2675,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
             [
               "#!/usr/bin/env bash",
               'case "$1 $2" in',
-              '  "release list") echo "$NEWEST_TAG" ;;',
+              `  "release list") printf '[{"tagName":"%s","createdAt":"2026-11-18T00:00:00Z"}]\\n' "$NEWEST_TAG" ;;`,
               '  "release download")',
               '    shift 3; pattern=""; dir=""',
               '    while [ $# -gt 0 ]; do case "$1" in --pattern) pattern="$2"; shift 2 ;; --dir) dir="$2"; shift 2 ;; *) shift ;; esac; done',
@@ -2679,6 +2699,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           A.join(
             [
               "#!/usr/bin/env bash",
+              'if [ "$4" = binary-pin-sync ]; then',
+              '  echo "$*" > "$RUNNER_TEMP/sync-args"',
+              '  while [ $# -gt 0 ]; do case "$1" in --output) o="$2"; shift 2 ;; *) shift ;; esac; done',
+              '  echo "outcome=$SYNC_OUTCOME" >> "$o"; exit 0',
+              "fi",
               'while [ $# -gt 0 ]; do case "$1" in --tag) t="$2"; shift 2 ;; --sha256) s="$2"; shift 2 ;; *) shift ;; esac; done',
               'sed -i -E "s/^( *BEEP_CI_RELEASE_TAG: ).*/\\1$t/; s/^( *BEEP_CI_SHA256: ).*/\\1$s/" .github/actions/fetch-beep-ci/action.yml',
               "",
@@ -2687,6 +2712,22 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           )
         );
         yield* fs.chmod(`${stubs}/gh`, 0o755);
+        // The sync path fetches and adds a worktree of the pin-bump branch; the fixture has no remote, so
+        // those are recorded no-ops and `beep ci binary-pin-sync` (stubbed above) decides the outcome.
+        yield* fs.writeFileString(
+          `${stubs}/git`,
+          A.join(
+            [
+              "#!/usr/bin/env bash",
+              'case "$1" in fetch | worktree) echo "$*" >> "$RUNNER_TEMP/git-calls"; exit 0 ;; esac',
+              'if [ "$1" = -C ] && [ "$3" = config ]; then exit 0; fi',
+              'PATH="${PATH#*:}" exec git "$@"',
+              "",
+            ],
+            "\n"
+          )
+        );
+        yield* fs.chmod(`${stubs}/git`, 0o755);
         yield* fs.chmod(`${stubs}/bun`, 0o755);
         const setup = yield* runBash(
           repo,
@@ -2714,6 +2755,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           FAILING: failing,
           DEFAULT_BRANCH: "main",
           MAIN_PIN_FILE: `${work}/main-action.yml`,
+          SYNC_OUTCOME: options.sync ?? "stale",
         });
         if (failing === "none") expect(run).toEqual({ status: 0, stderr: "" });
         const summary = yield* fs.readFileString(summaryPath);
@@ -2725,7 +2767,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           })
         );
         return {
-          decision: { changed: outputs.changed, bump: outputs.bump, parked: outputs.parked },
+          decision: { changed: outputs.changed, bump: outputs.bump, parked: outputs.parked, push: outputs.push },
+          syncArgs: yield* fs.readFileString(`${work}/sync-args`).pipe(Effect.orElseSucceed(() => "")),
+          workDir: work,
           status: run.status,
           stderr: run.stderr,
           summary,
@@ -2739,23 +2783,46 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const pulls = (...entries: ReadonlyArray<string>) => `[${A.join(entries, ",")}]`;
       const mainOld = pinText(oldTag, oldSha);
       const branchNew = O.some(pinText(newTag, newSha));
-      const bumps = { changed: "true", bump: "true", parked: "false" };
-      const idle = { changed: "true", bump: "false", parked: "false" };
+      const bumps = { changed: "true", bump: "true", parked: "false", push: "false" };
+      const idle = { changed: "true", bump: "false", parked: "false", push: "false" };
+      const pushes = { changed: "true", bump: "false", parked: "false", push: "true" };
       // Re-run after a failed pull-request step: the branch was never created, so the step bumps.
       const rerun = yield* runCase(mainOld, O.none(), pulls());
       expect(rerun.decision).toEqual(bumps);
+      expect(rerun.syncArgs).toBe("");
       // Done: the branch pins the newest tag and sha256 and an open PR for it carries ready-for-heavy.
-      const done = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"])));
+      // binary-pin-sync finds it contains main: no push, no pull-request edit.
+      const done = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"])), {
+        sync: "current",
+      });
       expect(done.decision).toEqual(idle);
+      // Done, but main moved on and the branch is behind it or in conflict with it: binary-pin-sync merges
+      // main in with the release's own sha256, and the push step pushes it without force; no pull-request
+      // edit (observed on #3405, where the branch otherwise stayed DIRTY with no signal).
+      const behind = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"])), {
+        sync: "merged",
+      });
+      expect(behind.decision).toEqual(pushes);
+      expect(behind.syncArgs).toContain(
+        `ci binary-pin-sync --cwd ${behind.workDir}/pin-bump-branch --base origin/main --tag ${newTag} --sha256 ${newSha} --releases ${behind.workDir}/beep-ci-releases.json`
+      );
+      expect(behind.summary).toContain("pushed without force");
+      // The branch pins a release created after the one resolved: only ever merged with main, never bumped
+      // back, whether or not its pull request is open and labelled.
+      const newerBranch = O.some(pinText("beep-ci-fedcba987654", newSha));
+      const newerPull = pulls(pull("OPEN", "beep-ci-fedcba987654", ["ready-for-heavy"]));
+      expect((yield* runCase(mainOld, newerBranch, newerPull, { sync: "merged" })).decision).toEqual(pushes);
+      expect((yield* runCase(mainOld, newerBranch, newerPull, { sync: "current" })).decision).toEqual(idle);
+      expect((yield* runCase(mainOld, newerBranch, pulls(), { sync: "current" })).decision).toEqual(idle);
       // The branch is current but no PR exists for the release (creation failed after the push).
-      const noPull = yield* runCase(mainOld, branchNew, pulls());
+      const noPull = yield* runCase(mainOld, branchNew, pulls(), { sync: "current" });
       expect(noPull.decision).toEqual(bumps);
       // The branch is current and the PR is open but unlabelled (labelling failed): repair it.
-      const unlabelled = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ci"])));
+      const unlabelled = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ci"])), { sync: "merged" });
       expect(unlabelled.decision).toEqual(bumps);
       // A PR for the release was closed unmerged: parked on purpose, no push and no reopen.
       const closed = yield* runCase(mainOld, branchNew, pulls(pull("CLOSED", newTag, ["ready-for-heavy"])));
-      expect(closed.decision).toEqual({ changed: "true", bump: "false", parked: "true" });
+      expect(closed.decision).toEqual({ changed: "true", bump: "false", parked: "true", push: "false" });
       // Closed for that release, then a newer release T2: a new bump opens normally.
       const newerTag = "beep-ci-fedcba987654";
       const newerSha = A.join(A.replicate("3", 64), "");
@@ -2775,7 +2842,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(older.decision).toEqual(bumps);
       // Main already pins the newest release (a bump merged): nothing to do.
       const merged = yield* runCase(pinText(newTag, newSha), branchNew, pulls(pull("MERGED", newTag, [])));
-      expect(merged.decision).toEqual({ changed: "false", bump: "false", parked: "false" });
+      expect(merged.decision).toEqual({ changed: "false", bump: "false", parked: "false", push: "false" });
       // A failed pull-request lookup is unknown state, never "no PR": the step fails and reports it,
       // and writes no decision, so nothing is pushed and no PR is opened (#3299 review).
       const pullsDown = yield* runCase(mainOld, branchNew, pulls(pull("CLOSED", newTag, ["ready-for-heavy"])), {
@@ -2801,7 +2868,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const staleCheckout = yield* runCase(mainOld, branchNew, pulls(pull("MERGED", newTag, [])), {
         liveMain: pinText(newTag, newSha),
       });
-      expect(staleCheckout.decision).toEqual({ changed: "false", bump: "false", parked: "false" });
+      expect(staleCheckout.decision).toEqual({ changed: "false", bump: "false", parked: "false", push: "false" });
       // A failed live-main read is unknown state: the step fails and reports it, and nothing is bumped.
       const mainDown = yield* runCase(mainOld, branchNew, pulls(), { failing: "main" });
       expect(mainDown.status).not.toBe(0);
@@ -2811,7 +2878,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       // labelled fork PR does not count as done (#3299 review).
       const forkClosed = yield* runCase(mainOld, O.none(), pulls(pull("CLOSED", newTag, ["ready-for-heavy"], true)));
       expect(forkClosed.decision).toEqual(bumps);
-      const forkOpen = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"], true)));
+      const forkOpen = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"], true)), {
+        sync: "current",
+      });
       expect(forkOpen.decision).toEqual(bumps);
     })
   );
