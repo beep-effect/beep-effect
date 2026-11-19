@@ -438,6 +438,12 @@
         ]
       },
       {
+        "name": "@beep/gate-report",
+        "patterns": [
+          "packages/foundation/modeling/gate-report/src/**"
+        ]
+      },
+      {
         "name": "@beep/git",
         "patterns": [
           "packages/drivers/git/src/**"
@@ -2861,6 +2867,21 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/gate-report",
+        "allow": [
+          "@beep/fc-runs",
+          "@beep/gate-report",
+          "@beep/identity",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/fc-runs",
+          "@beep/gate-report",
+          "@beep/identity",
+          "@beep/schema"
         ]
       },
       {

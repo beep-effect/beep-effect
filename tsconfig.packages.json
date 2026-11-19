@@ -364,6 +364,9 @@
       "path": "packages/foundation/modeling/epistemics"
     },
     {
+      "path": "packages/foundation/modeling/gate-report"
+    },
+    {
       "path": "packages/foundation/modeling/github-commands"
     },
     {

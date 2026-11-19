@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research and homes — not started. P1 through P3 are the first vertical slice.
+P0 is complete: four package homes are confirmed by decision file. P1 is complete: the model package `@beep/gate-report` is built with its law tests. P2 (service contracts) is next; P1 through P3 are the first vertical slice.
 
 ## Latest Evidence
 

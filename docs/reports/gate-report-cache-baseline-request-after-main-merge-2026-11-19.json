@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "//": "f54c2d1e522d31c4e760e43da40de1a4b7a00d6f2c4074550ce8c7381b99cdc0"
+  },
+  "review": {
+    "reviewer": "Claude Fable 5.2 (gate-report-core P1 lane, feat/gate-report-core)",
+    "reason": "Re-record the root subject after merging main at 0d9ee895239, which changed it independently. The lane's own root change is unchanged: the one manifest input the policy fingerprint added to //#lint:policy-fingerprint for the new @beep/gate-report package. No qualification is granted.",
+    "basis": {
+      "path": "docs/reports/gate-report-cache-review-2026-11-19.md",
+      "sha256": "39300e400686c32a28f42e92022fa0cb609fb5b47be2646574997652930caf80"
+    }
+  },
+  "subjects": ["//"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
