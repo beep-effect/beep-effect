@@ -87,6 +87,7 @@ back here for the rationale once the shape clicks.
 | [`13-onboarding-the-minimum-viable-slice.md`](./13-onboarding-the-minimum-viable-slice.md) | Scratchpad lane, the smallest model-first slice, the first fact another context reads, slice-path reading guide. |
 | [`14-ecosystem-packages.md`](./14-ecosystem-packages.md) | Why publishable repo-authored libraries get their own flat family: inverted `@beep/*` gate, style-law scoping, artifact/peer policy, release lane, gate profile, promotion/demotion. |
 | [`15-lab-apps.md`](./15-lab-apps.md) | Why law-abiding experiments get `apps/labs/*`: full code law with path-scoped ceremony exemption, zero-root-churn registration geometry, manifest/disposition lifecycle, promotion runbook, pre-v1 retirement class. |
+| [`16-knowledge-stack.md`](./16-knowledge-stack.md) | The text-knowledge stack: eight layers and their DAG, identity regimes, occurrence-first anchoring, admission with two witnesses, assessments, matter walls, the agent surface, and what counts as a law. |
 
 ## Known Unknowns
 

@@ -160,7 +160,11 @@ this repository, so nobody waits on a window. The rules:
    keep byte-identical encodings, using an upstream variant or a consumer-local composition of
    upstream codecs that reproduces the bytes. Only in-memory shapes may change. A persisted or
    served boundary whose upstream default differs and that no such codec reproduces is a separate
-   migration goal; it leaves the retirement PR.
+   migration goal; it leaves the retirement PR. For the PRs and named packages of
+   `goals/text-knowledge-stack-rebuild` only, `DECISIONS.md` "Scoped Amendment To Chapter 11
+   Persisted-Bytes Rule For The Text-Knowledge Stack Rebuild" (2026-11-19) amends this rule for
+   encodings with no stored rows, until that packet reaches `completed-retained`; stored rows
+   stay under the stored-format law.
 6. **A replacement that changes meaning gets its own row.** When the upstream replacement for a
    facet changes what consumers' code means, not only how it is spelled, the facet needs its own
    decision row that states the semantic loss, whatever its site count and whether or not rule 4's
