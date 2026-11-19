@@ -2940,6 +2940,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       // A stale branch whose update carries no workflow file keeps today's path: the pull-request step.
       const staleOnly = yield* runCase(mainOld, O.some(mainOld), staleOlder, { sync: "stale" });
       expect(staleOnly.decision).toEqual(bumps);
+      // A bot branch whose pin line does not parse still exists, so the sync decides it like a stale one
+      // (create-pull-request would update it too); the open pull request is found by branch, not title.
+      const unparseable = O.some(pinText("beep-ci-PENDING", oldSha));
+      const unparseableSuperseded = yield* runCase(mainOld, unparseable, pulls(pull("OPEN", "beep-ci-PENDING", [])), {
+        sync: "supersede",
+        syncTag: newTag,
+      });
+      expect(unparseableSuperseded.decision).toEqual({ ...bumps, supersede: "true" });
+      expect(unparseableSuperseded.outputs.pull).toBe("7");
+      expect(unparseableSuperseded.syncArgs).toContain("ci binary-pin-sync");
       // A branch the sync cannot heal is reported (warning, summary, one comment) and the job stays green.
       const blocked = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"])), {
         sync: "blocked",

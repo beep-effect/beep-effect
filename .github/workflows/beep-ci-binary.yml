@@ -348,8 +348,9 @@ jobs:
           #   closed (no `superseded` label): the bump was declined on purpose, so
           #   it stays parked (no push, no reopen) until a newer release, which is
           #   a new bump. One this workflow closed as `superseded` does not park;
-          # - the branch exists and pins a release: `beep ci binary-pin-sync`
-          #   decides from the branch head. It never moves a pin backwards (an
+          # - the branch exists (whether or not its pin parses): `beep ci
+          #   binary-pin-sync` decides from the branch head; an unparseable pin is
+          #   stale. It never moves a pin backwards (an
           #   older or unlisted branch tag never reads as newer; an unlisted one
           #   fails). `current`: nothing to do. `merged`: main merged in with the
           #   pin file resolved to main's text and only the two pinned lines set;
@@ -401,12 +402,16 @@ jobs:
               branch_title="ci: bump the beep CI binary pin to ${branch_tag}"
               branch_open_labelled="$(jq --arg title "$branch_title" --arg base "$DEFAULT_BRANCH" \
                 "[${own} | ${labelled}] | length" <<<"$pulls")"
-              branch_pull="$(jq -r --arg title "$branch_title" --arg base "$DEFAULT_BRANCH" \
-                "[${own} | select(.state == \"OPEN\")] | first | .number // \"\"" <<<"$pulls")"
             fi
+            # The open pull request on the bot branch, whatever its title (the branch's
+            # pin may not parse), is the one a supersede closes or a report comments on.
+            branch_pull="$(jq -r --arg base "$DEFAULT_BRANCH" \
+              '[.[] | select(.isCrossRepository == false and .baseRefName == $base and .state == "OPEN")] | first | .number // ""' \
+              <<<"$pulls")"
             if [[ "$closed" -ge 1 ]]; then
               parked=true
-            elif [[ -z "$branch_tag" ]]; then
+            elif [[ -z "$pin_text" ]]; then
+              # No bot branch: the pull-request step creates it from main.
               bump=true
             else
               # The checkout is shallow; a merge needs both histories.

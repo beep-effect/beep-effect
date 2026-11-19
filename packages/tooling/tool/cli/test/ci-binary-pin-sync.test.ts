@@ -279,26 +279,72 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
       })
     );
 
-    // The branch's pin file differs from main outside the two pinned lines (a stray edit); the merge is
-    // clean, and the sync still leaves main's text with only the two pinned lines changed.
-    it.effect(
-      "a clean merge where the branch's pin file differs from main outside the pin lines keeps only the pin",
-      () =>
-        Effect.gen(function* () {
-          const stray = `${actionText(NEW)}# a stray line on the branch\n`;
-          const repo = yield* fixture(NEW, O.some(unrelated), releaseRows, O.some(stray));
-          const main = yield* gitOutput(repo.root, ["rev-parse", "main"]);
-          const outcome = yield* sync(repo);
-          const pin = yield* pinFileText(repo);
-          const changed = yield* gitOutput(repo.root, ["diff", "--name-only", "main", "HEAD"]);
-          const merge = yield* gitOutput(repo.root, ["rev-list", "--parents", "-n", "1", "HEAD~1"]);
-          const status = yield* gitOutput(repo.root, ["status", "--porcelain"]);
-          expect(outcome).toStrictEqual(decided("merged", O.some(NEW)));
-          expect(pin).toBe(actionText(NEW));
-          expect(changed).toBe(PIN_FILE);
-          expect(A.drop(Str.split(merge, " "), 1)).toStrictEqual([repo.before, main]);
-          expect(status).toBe("");
-        })
+    // A human edit to the pin file outside the two pinned lines must never be overwritten by the merge
+    // resolution or deleted by a supersede: the branch's pin file is compared with its merge-base version.
+    it.effect("merged path: a pin file edited outside the pin lines is blocked and changes nothing", () =>
+      Effect.gen(function* () {
+        const stray = `${actionText(NEW)}# a human edit on the branch\n`;
+        const repo = yield* fixture(NEW, O.some(unrelated), releaseRows, O.some(stray));
+        const outcome = yield* sync(repo);
+        const after = yield* head(repo.root);
+        const pin = yield* pinFileText(repo);
+        expect(outcome).toStrictEqual([
+          ...decided("blocked", O.some(NEW)),
+          `reason=${PIN_FILE} differs from its merge-base version outside the two pinned lines`,
+        ]);
+        expect(after).toBe(repo.before);
+        expect(pin).toBe(stray);
+      })
+    );
+
+    it.effect("supersede path: a pin file edited outside the pin lines is blocked and changes nothing", () =>
+      Effect.gen(function* () {
+        const stray = `${actionText(NEW)}# a human edit on the branch\n`;
+        const repo = yield* fixture(NEW, O.some(mainWorkflow), releaseRows, O.some(stray));
+        const outcome = yield* sync(repo);
+        const after = yield* head(repo.root);
+        expect(A.take(outcome, 3)).toStrictEqual(decided("blocked", O.some(NEW)));
+        expect(outcome[3]).toContain("differs from its merge-base version outside the two pinned lines");
+        expect(after).toBe(repo.before);
+      })
+    );
+
+    // A bot branch whose pin lines do not parse is stale: create-pull-request would update it too.
+    it.effect("an unparseable branch pin with a workflow-carrying update supersedes to the newest release", () =>
+      Effect.gen(function* () {
+        const pending = Str.replace(OLD.tag, "beep-ci-PENDING")(actionText(OLD));
+        const repo = yield* fixture(OLD, O.some(mainWorkflow), releaseRows, O.some(pending));
+        const outcome = yield* sync(repo);
+        expect(outcome).toStrictEqual(decided("supersede", O.some(NEW)));
+      })
+    );
+
+    it.effect("a branch pin file missing its pin lines is stale, or blocked when the update carries workflows", () =>
+      Effect.gen(function* () {
+        const lineless = "runs:\n  using: composite\n";
+        const quiet = yield* fixture(OLD, O.some(unrelated), releaseRows, O.some(lineless));
+        const quietOutcome = yield* sync(quiet);
+        expect(quietOutcome).toStrictEqual(decided("stale", O.none()));
+        const loud = yield* fixture(OLD, O.some(mainWorkflow), releaseRows, O.some(lineless));
+        const loudOutcome = yield* sync(loud);
+        expect(A.take(loudOutcome, 1)).toStrictEqual(decided("blocked", O.none()));
+        expect(loudOutcome[1]).toContain("differs from its merge-base version outside the two pinned lines");
+      })
+    );
+
+    it.effect("refuses a checkout with local changes and touches nothing", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repo = yield* fixture(NEW, O.some(mainRepins));
+        const edited = `${actionText(NEW)}# uncommitted\n`;
+        yield* fs.writeFileString(`${repo.root}/${PIN_FILE}`, edited);
+        const failure = yield* Effect.flip(sync(repo));
+        const after = yield* head(repo.root);
+        const pin = yield* pinFileText(repo);
+        expect(`${failure}`).toContain("has local changes");
+        expect(after).toBe(repo.before);
+        expect(pin).toBe(edited);
+      })
     );
 
     it.effect("a failure after the merge started restores the pre-merge head with no MERGE_HEAD", () =>
@@ -417,7 +463,7 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
         const repo = yield* fixture(MID, O.some(mainWorkflow), releaseRows, O.some(stray));
         const outcome = yield* sync(repo);
         expect(A.take(outcome, 1)).toStrictEqual(decided("blocked", O.none()));
-        expect(outcome[1]).toContain(`${PIN_FILE} beyond the two pinned lines`);
+        expect(outcome[1]).toContain("differs from its merge-base version outside the two pinned lines");
       })
     );
 
@@ -447,7 +493,7 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
           before,
         });
         expect(A.take(outcome, 1)).toStrictEqual(decided("blocked", O.none()));
-        expect(outcome[1]).toContain(`${PIN_FILE} beyond the two pinned lines`);
+        expect(outcome[1]).toContain("differs from its merge-base version outside the two pinned lines");
       })
     );
 
