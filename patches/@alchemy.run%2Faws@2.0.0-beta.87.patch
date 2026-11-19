@@ -1,5 +1,5 @@
 diff --git a/lib/Lambda/Function.d.ts b/lib/Lambda/Function.d.ts
-index 9811fc523722b7e3293a403435a3962dc906b955..b0a5cc22c3206b089b71dc398a3864ebb689e47a 100644
+index 9811fc523722b7e3293a403435a3962dc906b955..c0599c1d5380c9c7d0fc539a9487aabec8b21ed4 100644
 --- a/lib/Lambda/Function.d.ts
 +++ b/lib/Lambda/Function.d.ts
 @@ -110,6 +110,13 @@ export interface FunctionUrlConfig {
@@ -16,11 +16,276 @@ index 9811fc523722b7e3293a403435a3962dc906b955..b0a5cc22c3206b089b71dc398a3864eb
      /**
       * Whether to create a Lambda function URL, or its configuration.
       *
+@@ -1153,5 +1160,77 @@ export declare const normalizeFunctionUrl: (url?: FunctionProps["functionUrl"])
+  * @resource
+  */
+ export declare const Function: Platform<Function, FunctionServices, FunctionShape, FunctionContext, {}, FunctionZipProps> & LookupMethod<Function>;
++/** Sid of the statement that lets anyone call the function URL. */
++export declare const FunctionUrlPublicAccessStatementId = "FunctionURLAllowPublicAccess";
++/** Sid of the statement that lets a function URL request invoke the function. */
++export declare const FunctionUrlPublicInvokeStatementId = "FunctionURLAllowPublicInvoke";
++/**
++ * One resource policy statement a function URL needs: the `AddPermission`
++ * request that writes it (without the function and qualifier) and the
++ * statement Lambda stores for that request, without its `Resource`.
++ */
++export interface FunctionUrlPermission {
++    readonly request: Omit<Lambda.AddPermissionRequest, "FunctionName" | "Qualifier">;
++    readonly statement: {
++        readonly Sid: string;
++        readonly Effect: "Allow";
++        readonly Principal: string;
++        readonly Action: string;
++        readonly Condition: Readonly<Record<string, Readonly<Record<string, string | boolean>>>>;
++    };
++}
++/** The two statements a function URL with auth `NONE` needs. */
++export declare const publicFunctionUrlPermissions: ReadonlyArray<FunctionUrlPermission>;
++/** One permission write the function URL reconcile makes, by statement id. */
++export type FunctionUrlPermissionCall = {
++    readonly _tag: "AddPermission";
++    readonly statementId: string;
++} | {
++    readonly _tag: "RemovePermission";
++    readonly statementId: string;
++};
++/**
++ * The statements of a `GetPolicy` document, or `undefined` when the policy is
++ * not JSON with a statement list (or a single statement).
++ */
++export declare const functionPolicyStatements: (policy: string | undefined) => ReadonlyArray<unknown> | undefined;
++/**
++ * The ordered permission writes that bring a function's resource policy to
++ * the declared statements, given the statements it holds now.
++ *
++ * **Details**
++ *
++ * A statement already held unchanged needs no call. A missing one needs one
++ * `AddPermission`. A statement held under the declared Sid but with other
++ * content is removed and then added: Lambda keeps one statement per Sid, so
++ * the new one cannot be written beside the old one, and the URL refuses the
++ * calls that statement allows between the two writes. Statements with other
++ * Sids are left alone.
++ */
++export declare const planFunctionUrlPermissionCalls: ({ current, declared, functionName, qualifier, }: {
++    readonly current: ReadonlyArray<unknown>;
++    readonly declared: ReadonlyArray<FunctionUrlPermission>;
++    readonly functionName: string;
++    readonly qualifier: string | undefined;
++}) => ReadonlyArray<FunctionUrlPermissionCall>;
++/**
++ * Bring a function's (or alias's) resource policy to `declared`: read it
++ * with `GetPolicy`, plan the writes with
++ * {@link planFunctionUrlPermissionCalls}, and make them in plan order.
++ *
++ * **Details**
++ *
++ * A policy that is not found is an empty one. A policy that cannot be parsed
++ * is treated as empty too, and each `AddPermission` keeps the provider's
++ * fallback: a statement that turns out to exist (Lambda answers
++ * `ResourceConflictException`) is removed and added again. `retry` is the
++ * provider's retry for function mutations; it wraps every call.
++ */
++export declare const reconcileFunctionUrlPermissions: ({ functionName, qualifier, declared, retry, }: {
++    readonly functionName: string;
++    readonly qualifier: string | undefined;
++    readonly declared: ReadonlyArray<FunctionUrlPermission>;
++    readonly retry: <A, R, Err>(self: Effect.Effect<A, Err, R>) => Effect.Effect<A, Err, R>;
++}) => Effect.Effect<ReadonlyArray<FunctionUrlPermissionCall>, Lambda.GetPolicyError | Lambda.AddPermissionError | Lambda.RemovePermissionError, Credentials | HttpClient>;
+ export declare const FunctionProvider: () => Layer.Layer<Provider.Provider<Function>, never, AWSEnvironment | Credentials | import("@alchemy.run/docker/Docker").Docker | HttpClient | Region | Stack | Stage | (import("effect/process/ChildProcessSpawner").ChildProcessSpawner | import("effect/FileSystem").FileSystem | import("effect/Path").Path)>;
+ //# sourceMappingURL=Function.d.ts.map
+\ No newline at end of file
 diff --git a/lib/Lambda/Function.js b/lib/Lambda/Function.js
-index cab6d567c49d4ee27cfbccb7ce4fb48687dbae6d..92ea6edefdb03c7f60404442cddb2ebca9fe7bd6 100644
+index cab6d567c49d4ee27cfbccb7ce4fb48687dbae6d..d44c891a16a24e4ab131873ef3d0e39ca8499bb3 100644
 --- a/lib/Lambda/Function.js
 +++ b/lib/Lambda/Function.js
-@@ -986,7 +986,7 @@ export const FunctionProvider = () => Provider.effect(Function, Effect.gen(funct
+@@ -882,6 +882,185 @@ export const Function = Platform(FunctionTypeId, {
+         return ctx;
+     },
+ });
++// beep patch: a function URL with auth NONE needs two resource policy statements. The provider used to add each one
++// on every reconcile and, on the conflict an existing statement raises, remove and re-add it, so every deploy left
++// the URL answering 403 between the two calls. The reconcile now reads the policy first and writes only what differs.
++// Everything below is plain functions and literals, so a bundle that does not call them drops them.
++/** Sid of the statement that lets anyone call the function URL. */
++export const FunctionUrlPublicAccessStatementId = "FunctionURLAllowPublicAccess";
++/** Sid of the statement that lets a function URL request invoke the function. */
++export const FunctionUrlPublicInvokeStatementId = "FunctionURLAllowPublicInvoke";
++/** The two statements a function URL with auth `NONE` needs. */
++export const publicFunctionUrlPermissions = [
++    {
++        request: {
++            StatementId: FunctionUrlPublicAccessStatementId,
++            Action: "lambda:InvokeFunctionUrl",
++            Principal: "*",
++            FunctionUrlAuthType: "NONE",
++        },
++        statement: {
++            Sid: FunctionUrlPublicAccessStatementId,
++            Effect: "Allow",
++            Principal: "*",
++            Action: "lambda:InvokeFunctionUrl",
++            Condition: { StringEquals: { "lambda:FunctionUrlAuthType": "NONE" } },
++        },
++    },
++    {
++        request: {
++            StatementId: FunctionUrlPublicInvokeStatementId,
++            Action: "lambda:InvokeFunction",
++            Principal: "*",
++            InvokedViaFunctionUrl: true,
++        },
++        statement: {
++            Sid: FunctionUrlPublicInvokeStatementId,
++            Effect: "Allow",
++            Principal: "*",
++            Action: "lambda:InvokeFunction",
++            Condition: { Bool: { "lambda:InvokedViaFunctionUrl": true } },
++        },
++    },
++];
++/**
++ * The statements of a `GetPolicy` document, or `undefined` when the policy is
++ * not JSON with a statement list (or a single statement).
++ */
++export const functionPolicyStatements = (policy) => {
++    if (policy === undefined)
++        return [];
++    let document;
++    try {
++        document = JSON.parse(policy);
++    }
++    catch {
++        return undefined;
++    }
++    if (typeof document !== "object" || document === null || Array.isArray(document))
++        return undefined;
++    const statement = document.Statement;
++    if (statement === undefined)
++        return [];
++    if (Array.isArray(statement))
++        return statement;
++    return typeof statement === "object" && statement !== null ? [statement] : undefined;
++};
++/**
++ * AWS's stored form of a policy value, made comparable: keys in sorted order,
++ * a one-element list as its element, the other lists as sorted sets, and
++ * booleans and numbers as the strings IAM stores them as.
++ */
++const canonicalPolicyValue = (value) => {
++    if (Array.isArray(value)) {
++        const items = value.map(canonicalPolicyValue);
++        return items.length === 1 ? items[0] : items.map((item) => JSON.stringify(item)).sort();
++    }
++    if (typeof value === "object" && value !== null) {
++        return Object.fromEntries(Object.keys(value)
++            .sort()
++            .map((key) => [key, canonicalPolicyValue(value[key])]));
++    }
++    return typeof value === "boolean" || typeof value === "number" ? String(value) : value;
++};
++/** `{ AWS: "*" }` and `"*"` are the same principal. */
++const canonicalPrincipal = (principal) => {
++    const canonical = canonicalPolicyValue(principal);
++    return typeof canonical === "object" &&
++        canonical !== null &&
++        Object.keys(canonical).length === 1 &&
++        canonical.AWS === "*"
++        ? "*"
++        : canonical;
++};
++/** The function name and qualifier a Lambda function ARN (or bare name) names. */
++const functionTarget = (nameOrArn) => {
++    const parts = nameOrArn.split(":");
++    return parts[0] === "arn" && parts[2] === "lambda" && parts[5] === "function"
++        ? { name: parts[6] ?? "", qualifier: parts[7] }
++        : { name: nameOrArn };
++};
++/**
++ * Whether a stored statement is the declared one: the same Sid, Effect,
++ * Principal, Action, Condition and nothing else, on this function (and
++ * qualifier). The Resource is the function's ARN, which the plan compares by
++ * name and qualifier, so the account and region it carries do not matter.
++ */
++const isDeclaredStatement = (current, declared, functionName, qualifier) => {
++    if (typeof current !== "object" || current === null || Array.isArray(current))
++        return false;
++    const { Resource, Principal, ...rest } = current;
++    const resource = canonicalPolicyValue(Resource);
++    if (typeof resource !== "string")
++        return false;
++    const target = functionTarget(resource);
++    const wanted = functionTarget(functionName);
++    if (target.name !== wanted.name || target.qualifier !== (qualifier ?? wanted.qualifier))
++        return false;
++    const { Principal: declaredPrincipal, ...declaredRest } = declared;
++    return (canonicalPrincipal(Principal) === canonicalPrincipal(declaredPrincipal) &&
++        JSON.stringify(canonicalPolicyValue(rest)) === JSON.stringify(canonicalPolicyValue(declaredRest)));
++};
++/**
++ * The ordered permission writes that bring a function's resource policy to
++ * the declared statements, given the statements it holds now.
++ *
++ * **Details**
++ *
++ * A statement already held unchanged needs no call. A missing one needs one
++ * `AddPermission`. A statement held under the declared Sid but with other
++ * content is removed and then added: Lambda keeps one statement per Sid, so
++ * the new one cannot be written beside the old one, and the URL refuses the
++ * calls that statement allows between the two writes. Statements with other
++ * Sids are left alone.
++ */
++export const planFunctionUrlPermissionCalls = ({ current, declared, functionName, qualifier, }) => declared.flatMap(({ statement }) => {
++    const held = current.filter((candidate) => typeof candidate === "object" &&
++        candidate !== null &&
++        candidate.Sid === statement.Sid);
++    if (held.length === 0)
++        return [{ _tag: "AddPermission", statementId: statement.Sid }];
++    if (held.length === 1 && isDeclaredStatement(held[0], statement, functionName, qualifier))
++        return [];
++    return [
++        { _tag: "RemovePermission", statementId: statement.Sid },
++        { _tag: "AddPermission", statementId: statement.Sid },
++    ];
++});
++/**
++ * Bring a function's (or alias's) resource policy to `declared`: read it
++ * with `GetPolicy`, plan the writes with
++ * {@link planFunctionUrlPermissionCalls}, and make them in plan order.
++ *
++ * **Details**
++ *
++ * A policy that is not found is an empty one. A policy that cannot be parsed
++ * is treated as empty too, and each `AddPermission` keeps the provider's
++ * fallback: a statement that turns out to exist (Lambda answers
++ * `ResourceConflictException`) is removed and added again. `retry` is the
++ * provider's retry for function mutations; it wraps every call.
++ */
++export const reconcileFunctionUrlPermissions = ({ functionName, qualifier, declared, retry, }) => Effect.gen(function* () {
++    const { Policy } = yield* Lambda.getPolicy({ FunctionName: functionName, Qualifier: qualifier }).pipe(
++    // A function or alias without a resource policy is reported as not found.
++    Effect.catchTag("ResourceNotFoundException", () => Effect.succeed({ Policy: undefined })), retry);
++    const current = functionPolicyStatements(Policy) ?? [];
++    const calls = planFunctionUrlPermissionCalls({ current, declared, functionName, qualifier });
++    const requestOf = (statementId) => ({
++        ...declared.find((permission) => permission.request.StatementId === statementId).request,
++        FunctionName: functionName,
++        Qualifier: qualifier,
++    });
++    const remove = (statementId) => Lambda.removePermission({ FunctionName: functionName, Qualifier: qualifier, StatementId: statementId }).pipe(Effect.catchTag("ResourceNotFoundException", () => Effect.void));
++    const add = (statementId) => Lambda.addPermission(requestOf(statementId)).pipe(Effect.catchTag("ResourceConflictException", () => Effect.gen(function* () {
++        yield* remove(statementId);
++        yield* Lambda.addPermission(requestOf(statementId));
++    })));
++    // In plan order, one at a time: a remove must land before the add for its Sid, and concurrent writes to one
++    // policy conflict with each other.
++    yield* Effect.forEach(calls, (call) => retry(call._tag === "AddPermission" ? add(call.statementId) : remove(call.statementId)), { discard: true });
++    return calls;
++});
+ export const FunctionProvider = () => Provider.effect(Function, Effect.gen(function* () {
+     const stack = yield* Stack;
+     // Code bundling lives in FunctionBundle.ts so the floci local
+@@ -986,7 +1165,7 @@ export const FunctionProvider = () => Provider.effect(Function, Effect.gen(funct
                  .pipe(Effect.catchTag("NoSuchEntityException", () => Effect.void));
          }
      });
@@ -29,7 +294,7 @@ index cab6d567c49d4ee27cfbccb7ce4fb48687dbae6d..92ea6edefdb03c7f60404442cddb2ebc
          yield* Effect.logDebug(`creating role ${id}`);
          const tags = yield* createInternalTags(id);
          // Observe before ensure. Reconcile calls this even with persisted
-@@ -1016,9 +1016,17 @@ export const FunctionProvider = () => Provider.effect(Function, Effect.gen(funct
+@@ -1016,9 +1195,17 @@ export const FunctionProvider = () => Provider.effect(Function, Effect.gen(funct
                      ],
                  }),
                  Tags: createTagsList(tags),
@@ -47,7 +312,50 @@ index cab6d567c49d4ee27cfbccb7ce4fb48687dbae6d..92ea6edefdb03c7f60404442cddb2ebc
          yield* Effect.logDebug(`attaching policy ${id}`);
          yield* iam
              .attachRolePolicy({
-@@ -1930,6 +1938,7 @@ export const FunctionProvider = () => Provider.effect(Function, Effect.gen(funct
+@@ -1503,33 +1690,16 @@ export const FunctionProvider = () => Provider.effect(Function, Effect.gen(funct
+             }).pipe(Effect.catchTag("ResourceNotFoundException", () => Effect.void)),
+         ], { concurrency: "unbounded" });
+     });
+-    const upsertPermission = (permission) => Lambda.addPermission(permission).pipe(Effect.catchTag("ResourceConflictException", () => Effect.gen(function* () {
+-        yield* Lambda.removePermission({
+-            FunctionName: permission.FunctionName,
+-            Qualifier: permission.Qualifier,
+-            StatementId: permission.StatementId,
+-        }).pipe(Effect.catchTag("ResourceNotFoundException", () => Effect.void));
+-        yield* Lambda.addPermission(permission);
+-    })), retryFunctionMutation);
++    // beep patch: write only the statements the policy does not already hold unchanged (see
++    // reconcileFunctionUrlPermissions); re-adding both on every reconcile left the URL refusing requests between
++    // each remove and add.
+     const upsertPublicFunctionUrlPermissions = Effect.fn(function* (functionName, qualifier) {
+-        yield* Effect.all([
+-            upsertPermission({
+-                FunctionName: functionName,
+-                Qualifier: qualifier,
+-                StatementId: publicUrlAccessStatementId,
+-                Action: "lambda:InvokeFunctionUrl",
+-                Principal: "*",
+-                FunctionUrlAuthType: "NONE",
+-            }),
+-            upsertPermission({
+-                FunctionName: functionName,
+-                Qualifier: qualifier,
+-                StatementId: publicUrlInvokeStatementId,
+-                Action: "lambda:InvokeFunction",
+-                Principal: "*",
+-                InvokedViaFunctionUrl: true,
+-            }),
+-        ], { concurrency: "unbounded" });
++        yield* reconcileFunctionUrlPermissions({
++            functionName,
++            qualifier,
++            declared: publicFunctionUrlPermissions,
++            retry: retryFunctionMutation,
++        });
+     });
+     const deleteFunctionUrl = Effect.fn(function* (functionName, qualifier) {
+         yield* Effect.logDebug(`deleting function url config ${functionName}`);
+@@ -1930,6 +2100,7 @@ export const FunctionProvider = () => Provider.effect(Function, Effect.gen(funct
                  id,
                  roleName,
                  vpc: news.vpc,
@@ -55,7 +363,7 @@ index cab6d567c49d4ee27cfbccb7ce4fb48687dbae6d..92ea6edefdb03c7f60404442cddb2ebc
              });
              yield* syncLogGroupGuard({ roleName, functionName });
              yield* ensureLogGroup({ id, functionName, retention: news.logging?.retention });
-@@ -1992,6 +2001,7 @@ export const FunctionProvider = () => Provider.effect(Function, Effect.gen(funct
+@@ -1992,6 +2163,7 @@ export const FunctionProvider = () => Provider.effect(Function, Effect.gen(funct
                  id,
                  roleName,
                  vpc: news.vpc,
@@ -64,7 +372,7 @@ index cab6d567c49d4ee27cfbccb7ce4fb48687dbae6d..92ea6edefdb03c7f60404442cddb2ebc
              const roleArn = ensuredRole.Role.Arn ?? output?.roleArn;
              yield* syncLogGroupGuard({ roleName, functionName });
 diff --git a/src/Lambda/Function.ts b/src/Lambda/Function.ts
-index 1c0404234cfb4880397f018b2f7f7c43248c8fff..eda66e9bc5711c98fe38cdc2884512acf951eda5 100644
+index 1c0404234cfb4880397f018b2f7f7c43248c8fff..7eca115f76ff628c514b1ae6bc66b6e78baf4367 100644
 --- a/src/Lambda/Function.ts
 +++ b/src/Lambda/Function.ts
 @@ -219,6 +219,13 @@ export interface FunctionUrlConfig {
@@ -81,7 +389,262 @@ index 1c0404234cfb4880397f018b2f7f7c43248c8fff..eda66e9bc5711c98fe38cdc2884512ac
    /**
     * Whether to create a Lambda function URL, or its configuration.
     *
-@@ -1712,10 +1719,12 @@ export const FunctionProvider = () =>
+@@ -1561,6 +1568,254 @@ export const Function: Platform<
+   },
+ });
+ 
++// beep patch: a function URL with auth NONE needs two resource policy statements. The provider used to add each one
++// on every reconcile and, on the conflict an existing statement raises, remove and re-add it, so every deploy left
++// the URL answering 403 between the two calls. The reconcile now reads the policy first and writes only what differs.
++// Everything below is plain functions and literals, so a bundle that does not call them drops them.
++
++/** Sid of the statement that lets anyone call the function URL. */
++export const FunctionUrlPublicAccessStatementId = "FunctionURLAllowPublicAccess";
++/** Sid of the statement that lets a function URL request invoke the function. */
++export const FunctionUrlPublicInvokeStatementId = "FunctionURLAllowPublicInvoke";
++
++/**
++ * One resource policy statement a function URL needs: the `AddPermission`
++ * request that writes it (without the function and qualifier) and the
++ * statement Lambda stores for that request, without its `Resource`.
++ */
++export interface FunctionUrlPermission {
++  readonly request: Omit<Lambda.AddPermissionRequest, "FunctionName" | "Qualifier">;
++  readonly statement: {
++    readonly Sid: string;
++    readonly Effect: "Allow";
++    readonly Principal: string;
++    readonly Action: string;
++    readonly Condition: Readonly<Record<string, Readonly<Record<string, string | boolean>>>>;
++  };
++}
++
++/** The two statements a function URL with auth `NONE` needs. */
++export const publicFunctionUrlPermissions: ReadonlyArray<FunctionUrlPermission> = [
++  {
++    request: {
++      StatementId: FunctionUrlPublicAccessStatementId,
++      Action: "lambda:InvokeFunctionUrl",
++      Principal: "*",
++      FunctionUrlAuthType: "NONE",
++    },
++    statement: {
++      Sid: FunctionUrlPublicAccessStatementId,
++      Effect: "Allow",
++      Principal: "*",
++      Action: "lambda:InvokeFunctionUrl",
++      Condition: { StringEquals: { "lambda:FunctionUrlAuthType": "NONE" } },
++    },
++  },
++  {
++    request: {
++      StatementId: FunctionUrlPublicInvokeStatementId,
++      Action: "lambda:InvokeFunction",
++      Principal: "*",
++      InvokedViaFunctionUrl: true,
++    },
++    statement: {
++      Sid: FunctionUrlPublicInvokeStatementId,
++      Effect: "Allow",
++      Principal: "*",
++      Action: "lambda:InvokeFunction",
++      Condition: { Bool: { "lambda:InvokedViaFunctionUrl": true } },
++    },
++  },
++];
++
++/** One permission write the function URL reconcile makes, by statement id. */
++export type FunctionUrlPermissionCall =
++  | { readonly _tag: "AddPermission"; readonly statementId: string }
++  | { readonly _tag: "RemovePermission"; readonly statementId: string };
++
++/**
++ * The statements of a `GetPolicy` document, or `undefined` when the policy is
++ * not JSON with a statement list (or a single statement).
++ */
++export const functionPolicyStatements = (policy: string | undefined): ReadonlyArray<unknown> | undefined => {
++  if (policy === undefined) return [];
++  let document: unknown;
++  try {
++    document = JSON.parse(policy);
++  } catch {
++    return undefined;
++  }
++  if (typeof document !== "object" || document === null || Array.isArray(document)) return undefined;
++  const statement = (document as { readonly Statement?: unknown }).Statement;
++  if (statement === undefined) return [];
++  if (Array.isArray(statement)) return statement;
++  return typeof statement === "object" && statement !== null ? [statement] : undefined;
++};
++
++/**
++ * AWS's stored form of a policy value, made comparable: keys in sorted order,
++ * a one-element list as its element, the other lists as sorted sets, and
++ * booleans and numbers as the strings IAM stores them as.
++ */
++const canonicalPolicyValue = (value: unknown): unknown => {
++  if (Array.isArray(value)) {
++    const items = value.map(canonicalPolicyValue);
++    return items.length === 1 ? items[0] : items.map((item) => JSON.stringify(item)).sort();
++  }
++  if (typeof value === "object" && value !== null) {
++    return Object.fromEntries(
++      Object.keys(value)
++        .sort()
++        .map((key) => [key, canonicalPolicyValue((value as Record<string, unknown>)[key])]),
++    );
++  }
++  return typeof value === "boolean" || typeof value === "number" ? String(value) : value;
++};
++
++/** `{ AWS: "*" }` and `"*"` are the same principal. */
++const canonicalPrincipal = (principal: unknown): unknown => {
++  const canonical = canonicalPolicyValue(principal);
++  return typeof canonical === "object" &&
++    canonical !== null &&
++    Object.keys(canonical).length === 1 &&
++    (canonical as Record<string, unknown>).AWS === "*"
++    ? "*"
++    : canonical;
++};
++
++/** The function name and qualifier a Lambda function ARN (or bare name) names. */
++const functionTarget = (nameOrArn: string): { readonly name: string; readonly qualifier?: string } => {
++  const parts = nameOrArn.split(":");
++  return parts[0] === "arn" && parts[2] === "lambda" && parts[5] === "function"
++    ? { name: parts[6] ?? "", qualifier: parts[7] }
++    : { name: nameOrArn };
++};
++
++/**
++ * Whether a stored statement is the declared one: the same Sid, Effect,
++ * Principal, Action, Condition and nothing else, on this function (and
++ * qualifier). The Resource is the function's ARN, which the plan compares by
++ * name and qualifier, so the account and region it carries do not matter.
++ */
++const isDeclaredStatement = (
++  current: unknown,
++  declared: FunctionUrlPermission["statement"],
++  functionName: string,
++  qualifier: string | undefined,
++): boolean => {
++  if (typeof current !== "object" || current === null || Array.isArray(current)) return false;
++  const { Resource, Principal, ...rest } = current as Record<string, unknown>;
++  const resource = canonicalPolicyValue(Resource);
++  if (typeof resource !== "string") return false;
++  const target = functionTarget(resource);
++  const wanted = functionTarget(functionName);
++  if (target.name !== wanted.name || target.qualifier !== (qualifier ?? wanted.qualifier)) return false;
++  const { Principal: declaredPrincipal, ...declaredRest } = declared;
++  return (
++    canonicalPrincipal(Principal) === canonicalPrincipal(declaredPrincipal) &&
++    JSON.stringify(canonicalPolicyValue(rest)) === JSON.stringify(canonicalPolicyValue(declaredRest))
++  );
++};
++
++/**
++ * The ordered permission writes that bring a function's resource policy to
++ * the declared statements, given the statements it holds now.
++ *
++ * **Details**
++ *
++ * A statement already held unchanged needs no call. A missing one needs one
++ * `AddPermission`. A statement held under the declared Sid but with other
++ * content is removed and then added: Lambda keeps one statement per Sid, so
++ * the new one cannot be written beside the old one, and the URL refuses the
++ * calls that statement allows between the two writes. Statements with other
++ * Sids are left alone.
++ */
++export const planFunctionUrlPermissionCalls = ({
++  current,
++  declared,
++  functionName,
++  qualifier,
++}: {
++  readonly current: ReadonlyArray<unknown>;
++  readonly declared: ReadonlyArray<FunctionUrlPermission>;
++  readonly functionName: string;
++  readonly qualifier: string | undefined;
++}): ReadonlyArray<FunctionUrlPermissionCall> =>
++  declared.flatMap(({ statement }): ReadonlyArray<FunctionUrlPermissionCall> => {
++    const held = current.filter(
++      (candidate) =>
++        typeof candidate === "object" &&
++        candidate !== null &&
++        (candidate as { readonly Sid?: unknown }).Sid === statement.Sid,
++    );
++    if (held.length === 0) return [{ _tag: "AddPermission", statementId: statement.Sid }];
++    if (held.length === 1 && isDeclaredStatement(held[0], statement, functionName, qualifier)) return [];
++    return [
++      { _tag: "RemovePermission", statementId: statement.Sid },
++      { _tag: "AddPermission", statementId: statement.Sid },
++    ];
++  });
++
++/**
++ * Bring a function's (or alias's) resource policy to `declared`: read it
++ * with `GetPolicy`, plan the writes with
++ * {@link planFunctionUrlPermissionCalls}, and make them in plan order.
++ *
++ * **Details**
++ *
++ * A policy that is not found is an empty one. A policy that cannot be parsed
++ * is treated as empty too, and each `AddPermission` keeps the provider's
++ * fallback: a statement that turns out to exist (Lambda answers
++ * `ResourceConflictException`) is removed and added again. `retry` is the
++ * provider's retry for function mutations; it wraps every call.
++ */
++export const reconcileFunctionUrlPermissions = ({
++  functionName,
++  qualifier,
++  declared,
++  retry,
++}: {
++  readonly functionName: string;
++  readonly qualifier: string | undefined;
++  readonly declared: ReadonlyArray<FunctionUrlPermission>;
++  readonly retry: <A, R, Err>(self: Effect.Effect<A, Err, R>) => Effect.Effect<A, Err, R>;
++}) =>
++  Effect.gen(function* () {
++    const { Policy } = yield* Lambda.getPolicy({ FunctionName: functionName, Qualifier: qualifier }).pipe(
++      // A function or alias without a resource policy is reported as not found.
++      Effect.catchTag("ResourceNotFoundException", () => Effect.succeed({ Policy: undefined })),
++      retry,
++    );
++    const current = functionPolicyStatements(Policy) ?? [];
++    const calls = planFunctionUrlPermissionCalls({ current, declared, functionName, qualifier });
++    const requestOf = (statementId: string): Lambda.AddPermissionRequest => ({
++      ...declared.find((permission) => permission.request.StatementId === statementId)!.request,
++      FunctionName: functionName,
++      Qualifier: qualifier,
++    });
++    const remove = (statementId: string) =>
++      Lambda.removePermission({ FunctionName: functionName, Qualifier: qualifier, StatementId: statementId }).pipe(
++        Effect.catchTag("ResourceNotFoundException", () => Effect.void),
++      );
++    const add = (statementId: string) =>
++      Lambda.addPermission(requestOf(statementId)).pipe(
++        Effect.catchTag("ResourceConflictException", () =>
++          Effect.gen(function* () {
++            yield* remove(statementId);
++            yield* Lambda.addPermission(requestOf(statementId));
++          }),
++        ),
++      );
++    // In plan order, one at a time: a remove must land before the add for its Sid, and concurrent writes to one
++    // policy conflict with each other.
++    yield* Effect.forEach(
++      calls,
++      (call) => retry(call._tag === "AddPermission" ? add(call.statementId) : remove(call.statementId)),
++      { discard: true },
++    );
++    return calls;
++  });
++
+ export const FunctionProvider = () =>
+   Provider.effect(
+     Function,
+@@ -1712,10 +1967,12 @@ export const FunctionProvider = () =>
          id,
          roleName,
          vpc,
@@ -94,7 +657,7 @@ index 1c0404234cfb4880397f018b2f7f7c43248c8fff..eda66e9bc5711c98fe38cdc2884512ac
        }) {
          yield* Effect.logDebug(`creating role ${id}`);
          const tags = yield* createInternalTags(id);
-@@ -1746,6 +1755,7 @@ export const FunctionProvider = () =>
+@@ -1746,6 +2003,7 @@ export const FunctionProvider = () =>
                  ],
                }),
                Tags: createTagsList(tags),
@@ -102,7 +665,7 @@ index 1c0404234cfb4880397f018b2f7f7c43248c8fff..eda66e9bc5711c98fe38cdc2884512ac
              })
              .pipe(
                Effect.catchTag("EntityAlreadyExistsException", () =>
-@@ -1753,6 +1763,15 @@ export const FunctionProvider = () =>
+@@ -1753,6 +2011,15 @@ export const FunctionProvider = () =>
                ),
              );
          }
@@ -118,7 +681,63 @@ index 1c0404234cfb4880397f018b2f7f7c43248c8fff..eda66e9bc5711c98fe38cdc2884512ac
  
          yield* Effect.logDebug(`attaching policy ${id}`);
          yield* iam
-@@ -3075,6 +3094,7 @@ export const FunctionProvider = () =>
+@@ -2508,46 +2775,19 @@ export const FunctionProvider = () =>
+         );
+       });
+ 
+-      const upsertPermission = (permission: Lambda.AddPermissionRequest) =>
+-        Lambda.addPermission(permission).pipe(
+-          Effect.catchTag("ResourceConflictException", () =>
+-            Effect.gen(function* () {
+-              yield* Lambda.removePermission({
+-                FunctionName: permission.FunctionName,
+-                Qualifier: permission.Qualifier,
+-                StatementId: permission.StatementId,
+-              }).pipe(Effect.catchTag("ResourceNotFoundException", () => Effect.void));
+-              yield* Lambda.addPermission(permission);
+-            }),
+-          ),
+-          retryFunctionMutation,
+-        );
+-
++      // beep patch: write only the statements the policy does not already hold unchanged (see
++      // reconcileFunctionUrlPermissions); re-adding both on every reconcile left the URL refusing requests between
++      // each remove and add.
+       const upsertPublicFunctionUrlPermissions = Effect.fn(function* (
+         functionName: string,
+         qualifier: string | undefined,
+       ) {
+-        yield* Effect.all(
+-          [
+-            upsertPermission({
+-              FunctionName: functionName,
+-              Qualifier: qualifier,
+-              StatementId: publicUrlAccessStatementId,
+-              Action: "lambda:InvokeFunctionUrl",
+-              Principal: "*",
+-              FunctionUrlAuthType: "NONE",
+-            }),
+-            upsertPermission({
+-              FunctionName: functionName,
+-              Qualifier: qualifier,
+-              StatementId: publicUrlInvokeStatementId,
+-              Action: "lambda:InvokeFunction",
+-              Principal: "*",
+-              InvokedViaFunctionUrl: true,
+-            }),
+-          ],
+-          { concurrency: "unbounded" },
+-        );
++        yield* reconcileFunctionUrlPermissions({
++          functionName,
++          qualifier,
++          declared: publicFunctionUrlPermissions,
++          retry: retryFunctionMutation,
++        });
+       });
+ 
+       const deleteFunctionUrl = Effect.fn(function* (
+@@ -3075,6 +3315,7 @@ export const FunctionProvider = () =>
              id,
              roleName,
              vpc: news.vpc,
@@ -126,7 +745,7 @@ index 1c0404234cfb4880397f018b2f7f7c43248c8fff..eda66e9bc5711c98fe38cdc2884512ac
            });
            yield* syncLogGroupGuard({ roleName, functionName });
            yield* ensureLogGroup({ id, functionName, retention: news.logging?.retention });
-@@ -3143,6 +3163,7 @@ export const FunctionProvider = () =>
+@@ -3143,6 +3384,7 @@ export const FunctionProvider = () =>
              id,
              roleName,
              vpc: news.vpc,
