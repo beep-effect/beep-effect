@@ -16,20 +16,20 @@ import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Inspectable from "effect/Inspectable";
-import * as Layer from "effect/Layer";
-import * as Queue from "effect/Queue";
-import * as Ref from "effect/Ref";
-import * as Stream from "effect/Stream";
-import { pipe } from "effect/Function";
-import * as O from "effect/Option";
-import * as R from "effect/Record";
-import * as S from "effect/Schema";
 import type * as Event from "effect/eventlog/Event";
 import type * as EventGroup from "effect/eventlog/EventGroup";
 import * as EventJournal from "effect/eventlog/EventJournal";
 import * as SqlEventJournal from "effect/eventlog/SqlEventJournal";
+import { pipe } from "effect/Function";
+import * as Inspectable from "effect/Inspectable";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as PersistedQueue from "effect/persistence/PersistedQueue";
+import * as Queue from "effect/Queue";
+import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as SqlClient from "effect/sql/SqlClient";
 import * as SqlSchema from "effect/sql/SqlSchema";
 import { EventBusError } from "../Domain/Error/EventBus.ts";
@@ -74,13 +74,17 @@ const $I = $ScratchpadId.create("effect-ontology/Service/EventBus");
  * @category models
  * @since 0.0.0
  */
-export class JobWithMetadata extends S.Opaque<JobWithMetadata, { readonly brand: unique symbol }>()(S.Struct({
+export class JobWithMetadata extends S.Opaque<JobWithMetadata, { readonly brand: unique symbol }>()(
+  S.Struct({
     job: BackgroundJob,
     id: S.NonEmptyString,
     attempts: S.Int.check(S.isGreaterThanOrEqualTo(0, { message: "Queue attempts must be non-negative." })),
-  }).pipe($I.annoteSchema("JobWithMetadata", {
-    description: "A schema-backed background job paired with queue identity and retry attempts.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("JobWithMetadata", {
+      description: "A schema-backed background job paired with queue identity and retry attempts.",
+    })
+  )
+) {}
 
 /**
  * Runtime schema for a canonical event entry from the journal.
@@ -414,11 +418,11 @@ export const EventBusServiceMemory = Layer.effect(
       function* (job) {
         const sequence = yield* Ref.updateAndGet(jobIdCounter, (value) => value + 1);
         const id = `job_${sequence}_${yield* Clock.currentTimeMillis}`;
-        const jobWithMeta: JobWithMetadata = {
+        const jobWithMeta: JobWithMetadata = JobWithMetadata.make({
           job,
           id,
           attempts: 0,
-        };
+        });
         yield* Queue.offer(jobQueue, jobWithMeta);
         yield* Effect.logDebug("Job enqueued", { id, type: job._tag });
         return id;
@@ -433,19 +437,19 @@ export const EventBusServiceMemory = Layer.effect(
     );
 
     const takeJob: EventBusServiceMethods["takeJob"] = Queue.poll(jobQueue).pipe(
-      Effect.map((opt) =>
-        O.map(opt, (jwm) => ({
-          ...jwm,
-          attempts: jwm.attempts + 1,
-        }))
-      ),
-      Effect.mapError((cause) =>
-        EventBusError.make({
-          method: "takeJob",
-          message: "Failed to take job",
-          cause,
-        })
-      )
+      Effect.mapBoth({
+        onSuccess: (opt) =>
+          O.map(opt, (jwm) => ({
+            ...jwm,
+            attempts: jwm.attempts + 1,
+          })),
+        onFailure: (cause) =>
+          EventBusError.make({
+            method: "takeJob",
+            message: "Failed to take job",
+            cause,
+          }),
+      })
     );
 
     const processJob: EventBusServiceMethods["processJob"] = Effect.fn("processJob")(function* (handler, options) {
@@ -459,7 +463,7 @@ export const EventBusServiceMemory = Layer.effect(
         Effect.catch((error) =>
           Effect.gen(function* () {
             if (attempts < maxAttempts) {
-              yield* Queue.offer(jobQueue, { job, id, attempts });
+              yield* Queue.offer(jobQueue, JobWithMetadata.make({ job, id, attempts }));
               yield* Effect.logWarning("Job failed, retrying", {
                 id,
                 attempts,
@@ -654,7 +658,7 @@ export const EventBusServiceSql = Layer.effect(
     );
 
     const takeJob: EventBusServiceMethods["takeJob"] = jobQueue
-      .take((job, { attempts, id }) => Effect.succeed({ attempts, id, job }))
+      .take((job, { attempts, id }) => Effect.succeed(JobWithMetadata.make({ attempts, id, job })))
       .pipe(
         Effect.timeoutOption(Duration.millis(10)),
         Effect.mapError((cause) =>
@@ -671,9 +675,9 @@ export const EventBusServiceSql = Layer.effect(
         const maxAttempts = options?.maxAttempts ?? 5;
         const processingQueue = yield* queueFactory.make({ name: JOBS_QUEUE_NAME, schema: BackgroundJob, maxAttempts });
         return yield* processingQueue.take((job, { attempts, id }) =>
-            handler(job, {
-              id,
-              attempts,
+          handler(job, {
+            id,
+            attempts,
           }).pipe(Effect.asSome)
         );
       },
@@ -729,14 +733,15 @@ export const EventBusServiceSql = Layer.effect(
       `,
     });
     const pendingJobCount: EventBusServiceMethods["pendingJobCount"] = readPendingJobCount(undefined).pipe(
-      Effect.map((row) => row.count),
-      Effect.mapError((cause) =>
-        EventBusError.make({
-          method: "pendingJobCount",
-          message: "Failed to count pending persisted jobs",
-          cause: O.some(cause),
-        })
-      )
+      Effect.mapBoth({
+        onSuccess: (row) => row.count,
+        onFailure: (cause) =>
+          EventBusError.make({
+            method: "pendingJobCount",
+            message: "Failed to count pending persisted jobs",
+            cause: O.some(cause),
+          }),
+      })
     );
 
     const shutdown: EventBusServiceMethods["shutdown"] = Effect.logInfo("EventBusService SQL shutdown");

@@ -97,6 +97,22 @@ export const PrimaryKeyValue = ScalarValue.pipe(
  */
 export type PrimaryKeyValue = typeof PrimaryKeyValue.Type;
 
+/**
+ * Companion namespace for {@link PrimaryKeyValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PrimaryKeyValue {
+  /**
+   * Encoded (wire) form of {@link PrimaryKeyValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = ScalarValue.Encoded;
+}
+
 const TypedPrimaryKeyKind = LiteralKit([
   "dateValue",
   "stringValue",
@@ -121,6 +137,25 @@ export class DateKeyValue extends S.Opaque<DateKeyValue, { readonly brand: uniqu
 ) {}
 
 /**
+ * Companion namespace for {@link DateKeyValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DateKeyValue {
+  /**
+   * Encoded (wire) form of {@link DateKeyValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "dateValue";
+    readonly value: DateValue.Encoded;
+  }
+}
+
+/**
  * A primary key that is text.
  *
  * @category models
@@ -132,6 +167,25 @@ export class StringKeyValue extends S.Opaque<StringKeyValue, { readonly brand: u
     value: StringValue.annotateKey({ description: "The text that is the key." }),
   }).pipe($I.annoteSchema("StringKeyValue", { description: "A primary key that is text." }))
 ) {}
+
+/**
+ * Companion namespace for {@link StringKeyValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StringKeyValue {
+  /**
+   * Encoded (wire) form of {@link StringKeyValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "stringValue";
+    readonly value: StringValue.Encoded;
+  }
+}
 
 /**
  * A primary key that is an instant.
@@ -147,6 +201,25 @@ export class TimestampKeyValue extends S.Opaque<TimestampKeyValue, { readonly br
 ) {}
 
 /**
+ * Companion namespace for {@link TimestampKeyValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TimestampKeyValue {
+  /**
+   * Encoded (wire) form of {@link TimestampKeyValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "timestampValue";
+    readonly value: TimestampValue.Encoded;
+  }
+}
+
+/**
  * A primary key that is a boolean.
  *
  * @category models
@@ -158,6 +231,25 @@ export class BooleanKeyValue extends S.Opaque<BooleanKeyValue, { readonly brand:
     value: BooleanValue.annotateKey({ description: "The boolean that is the key." }),
   }).pipe($I.annoteSchema("BooleanKeyValue", { description: "A primary key that is a boolean." }))
 ) {}
+
+/**
+ * Companion namespace for {@link BooleanKeyValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace BooleanKeyValue {
+  /**
+   * Encoded (wire) form of {@link BooleanKeyValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "booleanValue";
+    readonly value: BooleanValue.Encoded;
+  }
+}
 
 /**
  * A primary key that is a signed 32-bit integer.
@@ -173,6 +265,25 @@ export class IntegerKeyValue extends S.Opaque<IntegerKeyValue, { readonly brand:
 ) {}
 
 /**
+ * Companion namespace for {@link IntegerKeyValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace IntegerKeyValue {
+  /**
+   * Encoded (wire) form of {@link IntegerKeyValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "integerValue";
+    readonly value: IntegerValue.Encoded;
+  }
+}
+
+/**
  * A primary key that is a finite floating point number.
  *
  * @category models
@@ -184,6 +295,25 @@ export class DoubleKeyValue extends S.Opaque<DoubleKeyValue, { readonly brand: u
     value: DoubleValue.annotateKey({ description: "The number that is the key." }),
   }).pipe($I.annoteSchema("DoubleKeyValue", { description: "A primary key that is a finite floating point number." }))
 ) {}
+
+/**
+ * Companion namespace for {@link DoubleKeyValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DoubleKeyValue {
+  /**
+   * Encoded (wire) form of {@link DoubleKeyValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "doubleValue";
+    readonly value: DoubleValue.Encoded;
+  }
+}
 
 /**
  * A primary key that is a signed 64-bit integer, sent as a decimal string.
@@ -201,6 +331,25 @@ export class LongKeyValue extends S.Opaque<LongKeyValue, { readonly brand: uniqu
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link LongKeyValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LongKeyValue {
+  /**
+   * Encoded (wire) form of {@link LongKeyValue}: the 64-bit key as a decimal string.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "longValue";
+    readonly value: LongValue.Encoded;
+  }
+}
 
 /**
  * A primary key value that says which scalar type it is, so it decodes to its rich value without an ontology.
@@ -256,6 +405,29 @@ export const TypedPrimaryKeyValue = TypedPrimaryKeyKind.mapMembers(() =>
  */
 export type TypedPrimaryKeyValue = typeof TypedPrimaryKeyValue.Type;
 
+/**
+ * Companion namespace for {@link TypedPrimaryKeyValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TypedPrimaryKeyValue {
+  /**
+   * Encoded (wire) form of {@link TypedPrimaryKeyValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | DateKeyValue.Encoded
+    | StringKeyValue.Encoded
+    | TimestampKeyValue.Encoded
+    | BooleanKeyValue.Encoded
+    | IntegerKeyValue.Encoded
+    | DoubleKeyValue.Encoded
+    | LongKeyValue.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Which object
 // -----------------------------------------------------------------------------
@@ -303,6 +475,25 @@ export class ObjectLocator extends S.Opaque<ObjectLocator, { readonly brand: uni
 ) {}
 
 /**
+ * Companion namespace for {@link ObjectLocator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectLocator {
+  /**
+   * Encoded (wire) form of {@link ObjectLocator}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly objectType: ObjectTypeApiName.Encoded;
+    readonly primaryKey: PrimaryKeyValue.Encoded;
+  }
+}
+
+/**
  * Codec between the `"<objectType>:<primaryKey>"` string and an {@link ObjectLocator}.
  *
  * **Details**
@@ -334,7 +525,7 @@ export class ObjectLocator extends S.Opaque<ObjectLocator, { readonly brand: uni
 export const ObjectSpecifier = S.String.pipe(
   S.decodeTo(
     ObjectLocator,
-    SchemaTransformation.transformEffect<typeof ObjectLocator.Encoded, string>({
+    SchemaTransformation.transformEffect<ObjectLocator.Encoded, string>({
       decode: (text, options) =>
         pipe(
           Str.indexOf(":")(text),
@@ -372,6 +563,22 @@ export const ObjectSpecifier = S.String.pipe(
  * @since 0.0.0
  */
 export type ObjectSpecifier = typeof ObjectSpecifier.Type;
+
+/**
+ * Companion namespace for {@link ObjectSpecifier}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectSpecifier {
+  /**
+   * Encoded (wire) form of {@link ObjectSpecifier}: the value as the platform carries it.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ObjectSpecifier.Encoded;
+}
 
 /**
  * Codec between the `{ objectTypeApiName, primaryKeyValue }` record and an {@link ObjectLocator}.
@@ -415,6 +622,26 @@ export const InterfaceObjectLocator = ObjectLocator.pipe(
  * @since 0.0.0
  */
 export type InterfaceObjectLocator = typeof InterfaceObjectLocator.Type;
+
+/**
+ * Companion namespace for {@link InterfaceObjectLocator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace InterfaceObjectLocator {
+  /**
+   * Encoded (wire) form of {@link InterfaceObjectLocator}: the keys renamed to `objectTypeApiName` and
+   * `primaryKeyValue`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly objectTypeApiName: ObjectTypeApiName.Encoded;
+    readonly primaryKeyValue: PrimaryKeyValue.Encoded;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Objects
@@ -485,6 +712,29 @@ export const ObjectRecord = S.StructWithRest(
  * @since 0.0.0
  */
 export type ObjectRecord = typeof ObjectRecord.Type;
+
+/**
+ * Companion namespace for {@link ObjectRecord}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectRecord {
+  /**
+   * Encoded (wire) form of {@link ObjectRecord}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly __apiName: string;
+    readonly __primaryKey: PrimaryKeyValue.Encoded;
+    readonly __rid?: string | null;
+    readonly __title?: string | null;
+    readonly __score?: number | null;
+    readonly [key: string]: typeof S.Json.Encoded;
+  }
+}
 
 // The same facts with identity and properties apart. Its encoded side is what the transformation
 // below produces from, and flattens back into, the wire record.
@@ -599,3 +849,19 @@ export class OntologyObject extends S.Opaque<OntologyObject, { readonly brand: u
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link OntologyObject}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OntologyObject {
+  /**
+   * Encoded (wire) form of {@link OntologyObject}: one flat record, the reserved `__` keys beside the property keys.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = ObjectRecord.Encoded;
+}

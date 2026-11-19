@@ -118,7 +118,7 @@ export type AccountCutoverState = typeof AccountCutoverState.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type AccountCutoverStateEncoded = S.Codec.Encoded<typeof AccountCutoverState>;
+export type AccountCutoverStateEncoded = typeof AccountCutoverState.Encoded;
 
 const stateColumn = (column: string, value: AccountCutoverState) =>
   AccountCutoverState.pipe(S.withConstructorDefault(Effect.succeed(value)), pg.text(), pg.columnName(column));
@@ -169,7 +169,7 @@ export type OfflineQueueInstruction = typeof OfflineQueueInstruction.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type OfflineQueueInstructionEncoded = S.Codec.Encoded<typeof OfflineQueueInstruction>;
+export type OfflineQueueInstructionEncoded = typeof OfflineQueueInstruction.Encoded;
 
 const queueColumn = (column: string, value: OfflineQueueInstruction) =>
   OfflineQueueInstruction.pipe(S.withConstructorDefault(Effect.succeed(value)), pg.text(), pg.columnName(column));
@@ -216,7 +216,7 @@ export type AccountCutoverClientAction = typeof AccountCutoverClientAction.Type;
  * @category type-level
  * @since 0.0.0
  */
-export type AccountCutoverClientActionEncoded = S.Codec.Encoded<typeof AccountCutoverClientAction>;
+export type AccountCutoverClientActionEncoded = typeof AccountCutoverClientAction.Encoded;
 
 /**
  * Forward-migration checkpoint phases on the legacy-side seam.
@@ -268,7 +268,7 @@ export type AccountCutoverCheckpointPhase = typeof AccountCutoverCheckpointPhase
  * @category type-level
  * @since 0.0.0
  */
-export type AccountCutoverCheckpointPhaseEncoded = S.Codec.Encoded<typeof AccountCutoverCheckpointPhase>;
+export type AccountCutoverCheckpointPhaseEncoded = typeof AccountCutoverCheckpointPhase.Encoded;
 
 const phaseColumn = (column: string, value: AccountCutoverCheckpointPhase) =>
   AccountCutoverCheckpointPhase.pipe(
@@ -321,7 +321,7 @@ export class PlatformMinimumBuild extends Model<PlatformMinimumBuild>("PlatformM
  * @since 0.0.0
  */
 export declare namespace PlatformMinimumBuild {
-  export type Encoded = S.Codec.Encoded<typeof PlatformMinimumBuild>;
+  export type Encoded = typeof PlatformMinimumBuild.Encoded;
 }
 
 /**
@@ -368,7 +368,7 @@ export class AccountCutoverManifestSummary extends Model<AccountCutoverManifestS
  * @since 0.0.0
  */
 export declare namespace AccountCutoverManifestSummary {
-  export type Encoded = S.Codec.Encoded<typeof AccountCutoverManifestSummary>;
+  export type Encoded = typeof AccountCutoverManifestSummary.Encoded;
 }
 
 /**
@@ -428,7 +428,7 @@ export class AccountCutoverRecord extends Model<AccountCutoverRecord>("AccountCu
  * @since 0.0.0
  */
 export declare namespace AccountCutoverRecord {
-  export type Encoded = S.Codec.Encoded<typeof AccountCutoverRecord>;
+  export type Encoded = typeof AccountCutoverRecord.Encoded;
 }
 
 /**
@@ -564,7 +564,7 @@ export class AccountCutoverControl extends Model<AccountCutoverControl>("Account
  * @since 0.0.0
  */
 export declare namespace AccountCutoverControl {
-  export type Encoded = S.Codec.Encoded<typeof AccountCutoverControl>;
+  export type Encoded = typeof AccountCutoverControl.Encoded;
 }
 
 /**
@@ -629,5 +629,5 @@ export class AccountCutoverTransitionRequest extends Model<AccountCutoverTransit
  * @since 0.0.0
  */
 export declare namespace AccountCutoverTransitionRequest {
-  export type Encoded = S.Codec.Encoded<typeof AccountCutoverTransitionRequest>;
+  export type Encoded = typeof AccountCutoverTransitionRequest.Encoded;
 }

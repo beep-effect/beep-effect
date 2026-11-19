@@ -29,6 +29,13 @@ export * from "./FastCheckRuns.ts";
  */
 export * from "./Layer.ts";
 /**
+ * Registration-time value helpers for suite gates and per-run fixtures.
+ *
+ * @category testing
+ * @since 0.0.0
+ */
+export * from "./Registration.ts";
+/**
  * Schema property-test helper exports.
  *
  * @category schema

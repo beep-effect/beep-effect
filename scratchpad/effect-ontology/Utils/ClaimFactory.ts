@@ -17,16 +17,16 @@ import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { Str as BeepStr } from "@beep/utils";
+import * as A from "effect/Array";
+import * as Bool from "effect/Boolean";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
 import * as Hash from "effect/Hash";
 import * as MutableHashMap from "effect/MutableHashMap";
-import * as Result from "effect/Result";
-import * as A from "effect/Array";
-import * as Bool from "effect/Boolean";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { Entity, EvidenceSpan, GroundingDecision, Relation } from "../Domain/Model/Entity.ts";
@@ -122,17 +122,22 @@ const claimFactoryOptionsDefaultConfidenceDefault = Confidence.make(0.85);
  * @category models
  * @since 0.0.0
  */
-export class ClaimFactoryOptions extends S.Opaque<ClaimFactoryOptions, { readonly brand: unique symbol }>()(S.Struct({
+export class ClaimFactoryOptions extends S.Opaque<ClaimFactoryOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
     baseNamespace: S.NonEmptyString.annotateKey({ description: "Base namespace used to construct entity IRIs." }),
     documentId: S.NonEmptyString.annotateKey({ description: "Source document identifier stored as the article ID." }),
     ontologyId: S.NonEmptyString.annotateKey({ description: "Ontology scope assigned to generated claims." }),
     defaultConfidence: Confidence.pipe(
-      S.withConstructorDefault(Effect.succeed(claimFactoryOptionsDefaultConfidenceDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(claimFactoryOptionsDefaultConfidenceDefault)),
+      S.withConstructorDefault(Effect.succeed(claimFactoryOptionsDefaultConfidenceDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(claimFactoryOptionsDefaultConfidenceDefault)),
       S.annotateKey({ description: "Confidence used when source evidence has no score." })
     ),
-  }).pipe($I.annoteSchema("ClaimFactoryOptions", {
-    description: "Schema-defaulted namespace, provenance, and confidence policy for generated claims.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ClaimFactoryOptions", {
+      description: "Schema-defaulted namespace, provenance, and confidence policy for generated claims.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link ClaimFactoryOptions}.
@@ -143,14 +148,18 @@ export class ClaimFactoryOptions extends S.Opaque<ClaimFactoryOptions, { readonl
  */
 export type ClaimFactoryOptionsInput = (typeof ClaimFactoryOptions)["~type.make.in"];
 
-class IriCollisionEntity extends S.Opaque<IriCollisionEntity, { readonly brand: unique symbol }>()(S.Struct({
+class IriCollisionEntity extends S.Opaque<IriCollisionEntity, { readonly brand: unique symbol }>()(
+  S.Struct({
     mention: S.NonEmptyString,
     types: S.Array(IRI),
     documentId: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     chunkIndex: S.OptionFromOptionalKey(S.Natural).pipe(S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("IriCollisionEntity", {
-    description: "Entity details retained when multiple extracted entities map to the same IRI.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("IriCollisionEntity", {
+      description: "Entity details retained when multiple extracted entities map to the same IRI.",
+    })
+  )
+) {}
 
 /**
  * IRI collision warning - two entities would produce the same IRI
@@ -177,15 +186,19 @@ class IriCollisionEntity extends S.Opaque<IriCollisionEntity, { readonly brand: 
  * @category models
  * @since 0.0.0
  */
-export class IriCollisionWarning extends S.Opaque<IriCollisionWarning, { readonly brand: unique symbol }>()(S.Struct({
+export class IriCollisionWarning extends S.Opaque<IriCollisionWarning, { readonly brand: unique symbol }>()(
+  S.Struct({
     entityId: S.NonEmptyString.annotateKey({ description: "Entity identifier shared by colliding records." }),
     iri: IRI.annotateKey({ description: "IRI produced for the colliding entity identifier." }),
     entities: S.Array(IriCollisionEntity).annotateKey({
       description: "Entity records that produced the same IRI.",
     }),
-  }).pipe($I.annoteSchema("IriCollisionWarning", {
-    description: "Entity records that would silently collapse to the same generated IRI.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("IriCollisionWarning", {
+      description: "Entity records that would silently collapse to the same generated IRI.",
+    })
+  )
+) {}
 
 /**
  * Result of IRI collision detection
@@ -207,7 +220,9 @@ export class IriCollisionWarning extends S.Opaque<IriCollisionWarning, { readonl
  * @category models
  * @since 0.0.0
  */
-export class IriCollisionReport extends S.Class<IriCollisionReport, { readonly brand: unique symbol }>($I`IriCollisionReport`)(
+export class IriCollisionReport extends S.Class<IriCollisionReport, { readonly brand: unique symbol }>(
+  $I`IriCollisionReport`
+)(
   {
     collisions: S.Array(IriCollisionWarning).annotateKey({ description: "Detected IRI collisions." }),
     totalEntities: S.Natural.annotateKey({ description: "Entity count before deduplication." }),
@@ -268,12 +283,16 @@ export class IriCollisionReport extends S.Class<IriCollisionReport, { readonly b
  * @category models
  * @since 0.0.0
  */
-export class ClaimData extends S.Opaque<ClaimData, { readonly brand: unique symbol }>()(S.Struct({
+export class ClaimData extends S.Opaque<ClaimData, { readonly brand: unique symbol }>()(
+  S.Struct({
     ...CreateClaimInput.fields,
     claimId: ClaimId.annotateKey({ description: "Generated claim identifier." }),
-  }).pipe($I.annoteSchema("ClaimData", {
-    description: "Validated claim creation payload paired with its generated identifier.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ClaimData", {
+      description: "Validated claim creation payload paired with its generated identifier.",
+    })
+  )
+) {}
 
 /**
  * Exact schema-backed payload persisted with one extracted document graph.
@@ -294,13 +313,17 @@ export class ClaimData extends S.Opaque<ClaimData, { readonly brand: unique symb
  * @category models
  * @since 0.0.0
  */
-export class ClaimExtractionArtifact extends S.Opaque<ClaimExtractionArtifact, { readonly brand: unique symbol }>()(S.Struct({
+export class ClaimExtractionArtifact extends S.Opaque<ClaimExtractionArtifact, { readonly brand: unique symbol }>()(
+  S.Struct({
     claims: S.Array(ClaimData),
     entityObservations: S.Array(EntityObservation),
     relationObservations: S.Array(RelationObservation),
-  }).pipe($I.annoteSchema("ClaimExtractionArtifact", {
-    description: "Exact durable claims and grounding observations for one extracted document graph.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ClaimExtractionArtifact", {
+      description: "Exact durable claims and grounding observations for one extracted document graph.",
+    })
+  )
+) {}
 
 const ClaimExtractionArtifactJson = S.fromJsonString(ClaimExtractionArtifact).pipe(
   $I.annoteSchema("ClaimExtractionArtifactJson", {
@@ -362,16 +385,20 @@ export const detectIriCollisions = dual2((entities: Iterable<Entity>, baseNamesp
       );
 
       if (isDifferent) {
-        collisions.push({
-          entityId,
-          iri: buildIri(baseNamespace, entityId),
-          entities: A.map(entityList, (e) => ({
-            mention: e.mention,
-            types: e.types,
-            documentId: e.documentId,
-            chunkIndex: e.chunkIndex,
-          })),
-        });
+        collisions.push(
+          IriCollisionWarning.make({
+            entityId,
+            iri: buildIri(baseNamespace, entityId),
+            entities: A.map(entityList, (e) =>
+              IriCollisionEntity.make({
+                mention: e.mention,
+                types: e.types,
+                documentId: e.documentId,
+                chunkIndex: e.chunkIndex,
+              })
+            ),
+          })
+        );
       }
     }
   }
@@ -460,7 +487,7 @@ export const generateClaimId = dual4(
   (subjectIri: string, predicateIri: string, objectValue: string, articleId: string): ClaimId => {
     // Create deterministic hash from claim content
     const contentKey = `${subjectIri}|${predicateIri}|${objectValue}|${articleId}`;
-    const hash = Math.abs(Hash.string(contentKey)).toString(16).padStart(12, "0");
+    const hash = Str.padStart(12, "0")(Math.abs(Hash.string(contentKey)).toString(16));
     return ClaimId.make(`claim-${hash}`);
   }
 );
@@ -536,17 +563,19 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
   for (const typeIri of entity.types) {
     const claimId = generateClaimId(subjectIri, RDF_TYPE.value, typeIri, documentId);
 
-    claims.push({
-      claimId,
-      subjectIri,
-      predicateIri: RDF_TYPE.value,
-      objectValue: typeIri,
-      objectType: "iri",
-      articleId: documentId,
-      ontologyId,
-      confidence,
-      ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
-    });
+    claims.push(
+      ClaimData.make({
+        claimId,
+        subjectIri,
+        predicateIri: RDF_TYPE.value,
+        objectValue: typeIri,
+        objectType: "iri",
+        articleId: documentId,
+        ontologyId,
+        confidence,
+        ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
+      })
+    );
   }
 
   // 2. Create claims for each attribute
@@ -560,17 +589,19 @@ export const entityToClaims = dual2((entity: Entity, options: ClaimFactoryOption
 
     const claimId = generateClaimId(subjectIri, predicateIri, objectValue, documentId);
 
-    claims.push({
-      claimId,
-      subjectIri,
-      predicateIri,
-      objectValue,
-      objectType,
-      articleId: documentId,
-      ontologyId,
-      confidence,
-      ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
-    });
+    claims.push(
+      ClaimData.make({
+        claimId,
+        subjectIri,
+        predicateIri,
+        objectValue,
+        objectType,
+        articleId: documentId,
+        ontologyId,
+        confidence,
+        ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
+      })
+    );
   }
 
   return claims;
@@ -648,7 +679,7 @@ export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryO
 
   const claimId = generateClaimId(subjectIri, relation.predicate, objectValue, documentId);
 
-  return {
+  return ClaimData.make({
     claimId,
     subjectIri,
     predicateIri: relation.predicate,
@@ -658,7 +689,7 @@ export const relationToClaim = dual2((relation: Relation, options: ClaimFactoryO
     ontologyId,
     confidence,
     ...(O.isSome(evidence) ? { evidence: evidence.value } : {}),
-  };
+  });
 });
 
 // =============================================================================
@@ -846,7 +877,9 @@ export const claimDataToQuads = dual3(
 
     // RDF reification: rdf:object (IRI or Literal)
     const objectTerm =
-      claim.objectType === "iri" ? Result.getOrThrow(S.decodeResult(IRI)(claim.objectValue)) : claimLiteral({ value: claim.objectValue });
+      claim.objectType === "iri"
+        ? Result.getOrThrow(S.decodeResult(IRI)(claim.objectValue))
+        : claimLiteral({ value: claim.objectValue });
 
     quads.push(
       claimQuad({
@@ -1094,5 +1127,6 @@ export const claimExtractionArtifactFromQuads = Effect.fn("ClaimFactory.claimExt
     O.getOrElse(() => "")
   );
 
-  return O.some(yield* S.decodeEffect(ClaimExtractionArtifactJson)(payload));
+  const extractionArtifact = yield* S.decodeEffect(ClaimExtractionArtifactJson)(payload);
+  return O.some(extractionArtifact);
 });

@@ -13,10 +13,10 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
-import * as Result from "effect/Result";
-import * as Tuple from "effect/Tuple";
 import { pipe } from "effect/Function";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Tuple from "effect/Tuple";
 import { BatchId, ContentHash, DocumentId, Namespace, OntologyName } from "./Identity.ts";
 import { OutputFilename, OutputType } from "./Model/OutputType.ts";
 
@@ -26,10 +26,10 @@ const annotateStoragePath =
   (name: string, description: string) =>
   <Schema extends S.Schema<string>>(schema: Schema) =>
     schema.pipe(
-        $I.annoteSchema(name, {
-          description,
-        })
-      );
+      $I.annoteSchema(name, {
+        description,
+      })
+    );
 
 const annotateParser =
   (name: string, description: string) =>
@@ -37,36 +37,37 @@ const annotateParser =
     const decodeResult = S.decodeUnknownResult(schema);
 
     return schema.pipe(
-        $I.annoteSchema(name, {
-          description,
-        }),
-        SchemaUtils.withStatics(() => ({
-          decodeResult,
-        }))
-      );
+      $I.annoteSchema(name, {
+        description,
+      }),
+      SchemaUtils.withStatics(() => ({
+        decodeResult,
+      }))
+    );
   };
 
 const makeBatchPathSchema = <const Name extends string, const Suffix extends string>(
-  name: Name,
+  name: Parameters<typeof S.brand<Name>>[0],
   suffix: Suffix,
   description: string
 ) =>
   S.TemplateLiteral(["batches/", BatchId, `/${suffix}`]).pipe(
     annotateStoragePath(name, description),
-    S.brand(name),
+    S.brand<Name>(name),
     SchemaUtils.withStatics((schema) => ({
-      fromBatch: (batchId: BatchId): typeof schema.Type => Result.getOrThrow(S.decodeUnknownResult(schema)(`batches/${batchId}/${suffix}`)),
+      fromBatch: (batchId: BatchId): typeof schema.Type =>
+        Result.getOrThrow(S.decodeUnknownResult(schema)(`batches/${batchId}/${suffix}`)),
     }))
   );
 
 const makeDocumentPathSchema = <const Name extends string, const Suffix extends string>(
-  name: Name,
+  name: Parameters<typeof S.brand<Name>>[0],
   suffix: Suffix,
   description: string
 ) =>
   S.TemplateLiteral(["documents/", DocumentId, `/${suffix}`]).pipe(
     annotateStoragePath(name, description),
-    S.brand(name),
+    S.brand<Name>(name),
     SchemaUtils.withStatics((schema) => ({
       fromDocument: (documentId: DocumentId): typeof schema.Type =>
         Result.getOrThrow(S.decodeUnknownResult(schema)(`documents/${documentId}/${suffix}`)),
@@ -74,26 +75,27 @@ const makeDocumentPathSchema = <const Name extends string, const Suffix extends 
   );
 
 const makeImageHashPathSchema = <const Name extends string, const Suffix extends string>(
-  name: Name,
+  name: Parameters<typeof S.brand<Name>>[0],
   suffix: Suffix,
   description: string
 ) =>
   S.TemplateLiteral(["assets/images/", ContentHash, `/${suffix}`]).pipe(
     annotateStoragePath(name, description),
-    S.brand(name),
+    S.brand<Name>(name),
     SchemaUtils.withStatics((schema) => ({
-      fromHash: (hash: ContentHash): typeof schema.Type => Result.getOrThrow(S.decodeUnknownResult(schema)(`assets/images/${hash}/${suffix}`)),
+      fromHash: (hash: ContentHash): typeof schema.Type =>
+        Result.getOrThrow(S.decodeUnknownResult(schema)(`assets/images/${hash}/${suffix}`)),
     }))
   );
 
 const makeImageOwnerPathSchema = <const Name extends string, const Suffix extends string>(
-  name: Name,
+  name: Parameters<typeof S.brand<Name>>[0],
   suffix: Suffix,
   description: string
 ) =>
   S.TemplateLiteral(["assets/owners/", ImageOwnerType, "/", StoragePathSegment, `/images${suffix}`]).pipe(
     annotateStoragePath(name, description),
-    S.brand(name),
+    S.brand<Name>(name),
     SchemaUtils.withStatics((schema) => ({
       fromParts: (ownerType: ImageOwnerType, ownerId: StoragePathSegment): typeof schema.Type =>
         Result.getOrThrow(S.decodeUnknownResult(schema)(`assets/owners/${ownerType}/${ownerId}/images${suffix}`)),
@@ -123,18 +125,21 @@ const makeImageOwnerPathSchema = <const Name extends string, const Suffix extend
  * @since 0.0.0
  */
 export const StoragePathSegment = S.String.check(
-  S.isPattern(/^[A-Za-z0-9][A-Za-z0-9._:@-]{0,127}$/, $I.annote("StoragePathSegmentPatternCheck", {
-    title: "Storage Path Segment",
-    description: "A non-empty storage-key segment without path separators, traversal syntax, or control characters.",
-    message:
-      "Storage path segment must begin with a letter or digit and contain at most 128 letters, digits, dots, underscores, colons, at-signs, or dashes.",
-  }))
-).pipe(
-    S.brand("StoragePathSegment"),
-    $I.annoteSchema("StoragePathSegment", {
-      description: "Traversal-safe single segment for a storage object key.",
+  S.isPattern(
+    /^[A-Za-z0-9][A-Za-z0-9._:@-]{0,127}$/,
+    $I.annote("StoragePathSegmentPatternCheck", {
+      title: "Storage Path Segment",
+      description: "A non-empty storage-key segment without path separators, traversal syntax, or control characters.",
+      message:
+        "Storage path segment must begin with a letter or digit and contain at most 128 letters, digits, dots, underscores, colons, at-signs, or dashes.",
     })
-  );
+  )
+).pipe(
+  S.brand("StoragePathSegment"),
+  $I.annoteSchema("StoragePathSegment", {
+    description: "Traversal-safe single segment for a storage object key.",
+  })
+);
 
 /**
  * Runtime value decoded by {@link StoragePathSegment}.
@@ -723,12 +728,15 @@ export type RunInputPath = typeof RunInputPath.Type;
 
 const runChunkPathPattern = /^runs\/doc-[0-9a-f]{12}\/input\/chunks\/chunk-(?:0|[1-9][0-9]*)\.txt$/;
 
-const RunChunkCanonicalIndexCheck = S.isPattern(runChunkPathPattern, $I.annote("RunChunkCanonicalIndexCheck", {
-  title: "Canonical Run Chunk Index",
-  description:
-    "A run chunk path whose non-negative decimal index has no sign, fraction, exponent, or redundant leading zero.",
-  message: "Run chunk path must end with a canonical non-negative decimal index such as chunk-0.txt or chunk-12.txt.",
-}));
+const RunChunkCanonicalIndexCheck = S.isPattern(
+  runChunkPathPattern,
+  $I.annote("RunChunkCanonicalIndexCheck", {
+    title: "Canonical Run Chunk Index",
+    description:
+      "A run chunk path whose non-negative decimal index has no sign, fraction, exponent, or redundant leading zero.",
+    message: "Run chunk path must end with a canonical non-negative decimal index such as chunk-0.txt or chunk-12.txt.",
+  })
+);
 
 const RunChunkPathParts = S.TemplateLiteralParser([
   "runs/",
@@ -865,10 +873,10 @@ export type RunOutputPath = typeof RunOutputPath.Type;
  * @since 0.0.0
  */
 export const ImageVariantSize = LiteralKit(["thumb", "medium"]).pipe(
-    $I.annoteSchema("ImageVariantSize", {
-      description: "Finite size label for a derived image variant.",
-    })
-  );
+  $I.annoteSchema("ImageVariantSize", {
+    description: "Finite size label for a derived image variant.",
+  })
+);
 
 /**
  * Runtime value decoded by {@link ImageVariantSize}.
@@ -900,10 +908,10 @@ export type ImageVariantSize = typeof ImageVariantSize.Type;
  * @since 0.0.0
  */
 export const ImageOwnerType = LiteralKit(["link", "document"]).pipe(
-    $I.annoteSchema("ImageOwnerType", {
-      description: "Finite owner kind used to partition image manifests.",
-    })
-  );
+  $I.annoteSchema("ImageOwnerType", {
+    description: "Finite owner kind used to partition image manifests.",
+  })
+);
 
 /**
  * Runtime value decoded by {@link ImageOwnerType}.

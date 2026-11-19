@@ -44,6 +44,22 @@ export const GeotimeSeriesId = S.NonEmptyString.pipe(
 export type GeotimeSeriesId = typeof GeotimeSeriesId.Type;
 
 /**
+ * Companion namespace for {@link GeotimeSeriesId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeotimeSeriesId {
+  /**
+   * Encoded (wire) form of {@link GeotimeSeriesId}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof GeotimeSeriesId.Encoded;
+}
+
+/**
  * Resource identifier of a geotime series integration, the feed of positions over time.
  *
  * **Details**
@@ -70,6 +86,22 @@ export const GeotimeSeriesIntegrationRid = S.NonEmptyString.pipe(
  */
 export type GeotimeSeriesIntegrationRid = typeof GeotimeSeriesIntegrationRid.Type;
 
+/**
+ * Companion namespace for {@link GeotimeSeriesIntegrationRid}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeotimeSeriesIntegrationRid {
+  /**
+   * Encoded (wire) form of {@link GeotimeSeriesIntegrationRid}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof GeotimeSeriesIntegrationRid.Encoded;
+}
+
 const GeotimeSeriesReferenceKind = LiteralKit(["series", "integratedSeries", "geotimeSeriesValue"]);
 
 /**
@@ -95,6 +127,22 @@ export class GeotimeSeriesById extends S.Opaque<GeotimeSeriesById, { readonly br
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link GeotimeSeriesById}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeotimeSeriesById {
+  /**
+   * Encoded (wire) form of {@link GeotimeSeriesById}: the bare series identifier string, with no `type` tag.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof GeotimeSeriesById.Encoded;
+}
 
 /**
  * Reference to a geotime series together with the integration that feeds it.
@@ -124,6 +172,25 @@ export class IntegratedGeotimeSeries extends S.Opaque<IntegratedGeotimeSeries, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link IntegratedGeotimeSeries}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace IntegratedGeotimeSeries {
+  /**
+   * Encoded (wire) form of {@link IntegratedGeotimeSeries}: a record with no `type` tag, the integration under `geotimeSeriesIntegrationRid`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly geotimeSeriesId: string;
+    readonly geotimeSeriesIntegrationRid: string;
+  }
+}
 
 /**
  * What a geotime series reference property holds: a reference to the series, or its latest resolved position.
@@ -165,3 +232,22 @@ export const GeotimeSeriesReference = GeotimeSeriesReferenceKind.mapMembers(() =
  * @since 0.0.0
  */
 export type GeotimeSeriesReference = typeof GeotimeSeriesReference.Type;
+
+/**
+ * Companion namespace for {@link GeotimeSeriesReference}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace GeotimeSeriesReference {
+  /**
+   * Encoded (wire) form of {@link GeotimeSeriesReference}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | GeotimeSeriesById.Encoded
+    | IntegratedGeotimeSeries.Encoded
+    | GeotimeSeriesValue.Encoded;
+}

@@ -75,6 +75,22 @@ export const ReservedKeyword = LiteralKit([
  */
 export type ReservedKeyword = typeof ReservedKeyword.Type;
 
+/**
+ * Companion namespace for {@link ReservedKeyword}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ReservedKeyword {
+  /**
+   * Encoded (wire) form of {@link ReservedKeyword}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ReservedKeyword.Encoded;
+}
+
 const isReservedKeyword: P.Predicate<string> = flow(Str.toLowerCase, S.is(ReservedKeyword));
 
 const reservedWords = "ontology, object, property, link, relation, rid, primarykey, typeid, ontologyobject";

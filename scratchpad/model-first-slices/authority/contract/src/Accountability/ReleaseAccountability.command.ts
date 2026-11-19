@@ -29,6 +29,7 @@ export class NotAccountable extends S.TaggedError<NotAccountable, { readonly bra
 export class AccountabilityReleased extends Domain.Event(
   "AccountabilityReleased",
   carry({ run: RunId, accountable: PrincipalId }),
+  { description: "The human no longer answers for the agent run, so the boundary stops admitting it." },
 ) {}
 
 /**

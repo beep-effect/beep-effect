@@ -4,8 +4,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import * as MutableHashSet from "effect/MutableHashSet";
+
 import * as A from "effect/Array";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as Str from "effect/String";

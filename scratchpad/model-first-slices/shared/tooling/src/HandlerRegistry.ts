@@ -1,14 +1,15 @@
 import * as Domain from "@alchemy.run/domain";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
+import { thunkEmptyStr } from "@beep/utils"
 
 /**
  * A model member needs a handler and no `<Member>.handler.ts` exists.
@@ -174,7 +175,7 @@ export const check = Effect.fn("HandlerRegistry.check")(function* (options: Opti
   const path = yield* Path.Path;
   const file = path.join(options.srcDir, options.output);
   const expected = yield* plan(options);
-  const actual = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(() => ""));
+  const actual = yield* fs.readFileString(file).pipe(Effect.orElseSucceed(thunkEmptyStr));
   return yield* actual === expected ? Effect.void : Effect.fail(RegistryDrift.make({ file: options.output }));
 });
 

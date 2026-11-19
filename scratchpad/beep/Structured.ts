@@ -375,7 +375,7 @@ export class ActionItem extends Model<ActionItem>("ActionItem")(
  * @since 0.0.0
  */
 export declare namespace ActionItem {
-  export type Encoded = S.Codec.Encoded<typeof ActionItem>;
+  export type Encoded = typeof ActionItem.Encoded;
 }
 
 const joinWith = (lines: ReadonlyArray<string>, separator: string): string => {
@@ -488,7 +488,7 @@ export class Event extends Model<Event>("Event")(
  * @since 0.0.0
  */
 export declare namespace Event {
-  export type Encoded = S.Codec.Encoded<typeof Event>;
+  export type Encoded = typeof Event.Encoded;
 }
 
 /**
@@ -604,7 +604,7 @@ export class Section extends Model<Section>("Section")(
  * @since 0.0.0
  */
 export declare namespace Section {
-  export type Encoded = S.Codec.Encoded<typeof Section>;
+  export type Encoded = typeof Section.Encoded;
 }
 
 const emptySections: Array<Section> = [];
@@ -662,7 +662,7 @@ export class Structured extends Model<Structured>("Structured")(
  * @since 0.0.0
  */
 export declare namespace Structured {
-  export type Encoded = S.Codec.Encoded<typeof Structured>;
+  export type Encoded = typeof Structured.Encoded;
 }
 
 /**

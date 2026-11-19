@@ -10,22 +10,22 @@ import { $ScratchpadId } from "@beep/identity";
 import { PostgresDrizzle } from "@beep/postgres";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import { aliasedTable, and, count, desc, eq, or } from "drizzle-orm";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import { dual } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
-import * as Order from "effect/Order";
-import * as A from "effect/Array";
-import { dual } from "effect/Function";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
+import { UUID } from "../Domain/Identity.ts";
 import type { ConflictActor, ConflictKind, ConflictsQuery, ConflictTransition } from "../Domain/Schema/Timeline.ts";
 import { normalizeDrizzleError } from "../Utils/Sql.ts";
 import type { ConflictInsertRow } from "./schema.ts";
 import { Claims, Conflicts, claims, conflicts } from "./schema.ts";
-import { UUID } from "../Domain/Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Repository/Conflict");
 const UUIDString = UUID.pipe(S.decodeTo(S.String));
@@ -127,7 +127,8 @@ type ConflictComparableClaim = {
   readonly validTo?: Date | null | undefined;
 };
 
-class ConflictUpdate extends S.Opaque<ConflictUpdate, { readonly brand: unique symbol }>()(S.Struct({
+class ConflictUpdate extends S.Opaque<ConflictUpdate, { readonly brand: unique symbol }>()(
+  S.Struct({
     status: S.Literals(["ignored", "resolved"]),
     resolutionStrategy: S.NullOr(S.String),
     acceptedClaimId: S.NullOr(UUIDString),
@@ -135,9 +136,12 @@ class ConflictUpdate extends S.Opaque<ConflictUpdate, { readonly brand: unique s
     resolvedByFingerprint: S.NullOr(Sha256Hex.pipe(S.decodeTo(S.String))),
     resolvedAt: S.Date,
     resolutionNotes: S.NullOr(S.String),
-  }).pipe($I.annoteSchema("ConflictUpdate", {
-    description: "Validated terminal conflict-state columns written atomically by the repository.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ConflictUpdate", {
+      description: "Validated terminal conflict-state columns written atomically by the repository.",
+    })
+  )
+) {}
 
 /**
  * Signals that a persisted claim was paired with itself.
@@ -157,7 +161,9 @@ class ConflictUpdate extends S.Opaque<ConflictUpdate, { readonly brand: unique s
  * @category errors
  * @since 0.0.0
  */
-export class EqualConflictPairError extends S.TaggedError<EqualConflictPairError, { readonly brand: unique symbol }>($I`EqualConflictPairError`)(
+export class EqualConflictPairError extends S.TaggedError<EqualConflictPairError, { readonly brand: unique symbol }>(
+  $I`EqualConflictPairError`
+)(
   "EqualConflictPairError",
   { claimId: UUIDString },
   $I.annote("EqualConflictPairError", {
@@ -169,12 +175,10 @@ const normalizeDecodedRows = normalizeDrizzleError("decodeRows");
 const normalizeQueryError = normalizeDrizzleError("execute");
 
 const ConflictRecordRows = ConflictRecord.pipe(S.Array, S.mutable);
-const decodeConflictRecords = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(ConflictRecordRows)(rows));
+const decodeConflictRecords = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(ConflictRecordRows)(rows));
 
 const ConflictSelectRows = Conflicts.select.pipe(S.Array, S.mutable);
-const decodeConflictRows = (rows: unknown) =>
-  normalizeDecodedRows(S.decodeUnknownEffect(ConflictSelectRows)(rows));
+const decodeConflictRows = (rows: unknown) => normalizeDecodedRows(S.decodeUnknownEffect(ConflictSelectRows)(rows));
 
 const CountRows = S.Tuple([CountRow]);
 
@@ -372,7 +376,8 @@ export class ConflictRepository extends Context.Service<ConflictRepository, Conf
               .where(and(eq(conflicts.ontologyId, ontologyId), eq(conflicts.id, id)))
               .limit(1)
           );
-          return A.head(yield* decodeConflictRecords(rows));
+          const conflictRecords = yield* decodeConflictRecords(rows);
+          return A.head(conflictRecords);
         })
       );
 
@@ -414,7 +419,8 @@ export class ConflictRepository extends Context.Service<ConflictRepository, Conf
               })
               .returning()
           );
-          return A.head(yield* decodeConflictRows(rows));
+          const conflictRows = yield* decodeConflictRows(rows);
+          return A.head(conflictRows);
         }
       );
 
@@ -426,7 +432,8 @@ export class ConflictRepository extends Context.Service<ConflictRepository, Conf
           action: ConflictTransition,
           actor: ConflictActor
         ) {
-          const now = DateTime.toDate(yield* DateTime.now);
+          const transitionTime = yield* DateTime.now;
+          const now = DateTime.toDate(transitionTime);
           const existing = yield* get(ontologyId, id);
           if (O.isNone(existing) || !Equal.equals(existing.value.conflict.status, "pending")) {
             return O.none<ConflictRecord>();
@@ -472,7 +479,8 @@ export class ConflictRepository extends Context.Service<ConflictRepository, Conf
               .where(and(eq(conflicts.ontologyId, ontologyId), eq(conflicts.id, id), eq(conflicts.status, "pending")))
               .returning()
           );
-          if (A.isReadonlyArrayEmpty(yield* decodeConflictRows(updated))) {
+          const updatedConflictRows = yield* decodeConflictRows(updated);
+          if (A.isReadonlyArrayEmpty(updatedConflictRows)) {
             return O.none<ConflictRecord>();
           }
           return yield* get(ontologyId, id);

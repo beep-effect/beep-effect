@@ -3,15 +3,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { createServer } from "node:net";
+import * as NodeNet from "node:net";
 import * as A from "effect/Array";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { failure } from "../internal/cursor-lifecycle-schemas.ts";
-import type { Socket } from "node:net";
 
-const destroySocket = (socket: Socket) => socket.destroy();
+const destroySocket = (socket: NodeNet.Socket) => socket.destroy();
 
 /**
  * Accept one bounded synthetic callback and return the configured test ACK.
@@ -35,10 +34,10 @@ export const makeLifecycleAckServer = Effect.fn("LifecycleTest.syntheticAckServe
   const seen = yield* Deferred.make<void>();
   let received = "";
   let receivedBytes = 0;
-  let sockets: ReadonlyArray<Socket> = [];
+  let sockets: ReadonlyArray<NodeNet.Socket> = [];
   const server = yield* Effect.acquireRelease(
     Effect.sync(() =>
-      createServer({ allowHalfOpen: true }, (socket) => {
+      NodeNet.createServer({ allowHalfOpen: true }, (socket) => {
         sockets = A.append(sockets, socket);
         socket.on("data", (chunk: Uint8Array) => {
           receivedBytes += chunk.byteLength;

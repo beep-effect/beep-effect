@@ -1,3 +1,4 @@
+import { EmbeddingRequest } from "./EmbeddingProvider.ts";
 /**
  * Batched Request Resolver for Embeddings
  *
@@ -9,11 +10,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Request from "effect/Request";
 import * as RequestResolver from "effect/RequestResolver";
-import * as A from "effect/Array";
 import { dual2 } from "../Utils/Dual.ts";
 import type { EmbeddingProviderMethods, EmbeddingTaskType } from "./EmbeddingProvider.ts";
 import type { EmbedTextRequest } from "./EmbeddingRequest.ts";
@@ -78,7 +80,10 @@ export const makeEmbeddingResolver = dual2(
     RequestResolver.makeGrouped<EmbedTextRequest, EmbeddingTaskType>({
       key: (entry) => entry.request.taskType,
       resolver: (entries) =>
-        Effect.forEach(A.chunksOf(entries, maxBatchSize), (chunk) => processChunk(provider, chunk), { discard: true }),
+        Effect.forEach(A.chunksOf(entries, maxBatchSize), (chunk) => processChunk(provider, chunk), {
+          discard: true,
+          concurrency: 1,
+        }),
     }).pipe(RequestResolver.batchN(maxBatchSize))
 );
 
@@ -93,16 +98,24 @@ const processChunk = (
 ): Effect.Effect<void> =>
   provider
     .embedBatch(
-      A.map(chunk, (entry) => ({
-        text: entry.request.text,
-        taskType: entry.request.taskType,
-      }))
+      A.map(chunk, (entry) =>
+        EmbeddingRequest.make({
+          text: entry.request.text,
+          taskType: entry.request.taskType,
+        })
+      )
     )
     .pipe(
       Effect.matchEffect({
         onSuccess: (embeddings) =>
-          Effect.forEach(chunk, (entry, i) => Request.complete(entry, Exit.succeed(embeddings[i])), { discard: true }),
+          Effect.forEach(chunk, (entry, i) => Request.complete(entry, Exit.succeed(A.getUnsafe(embeddings, i))), {
+            discard: true,
+            concurrency: 1,
+          }),
         onFailure: (error) =>
-          Effect.forEach(chunk, (entry) => Request.complete(entry, Exit.fail(error)), { discard: true }),
+          Effect.forEach(chunk, (entry) => Request.complete(entry, Exit.fail(error)), {
+            discard: true,
+            concurrency: 1,
+          }),
       })
     );

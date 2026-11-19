@@ -27,20 +27,20 @@ import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as FiberMap from "effect/FiberMap";
-import * as Layer from "effect/Layer";
-import * as MutableHashMap from "effect/MutableHashMap";
-import * as PubSub from "effect/PubSub";
-import * as Random from "effect/Random";
-import * as Schedule from "effect/Schedule";
-import * as Stream from "effect/Stream";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as S from "effect/Schema";
-import type * as Scope from "effect/Scope";
-import * as Str from "effect/String";
 import * as HttpRouter from "effect/http/HttpRouter";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Layer from "effect/Layer";
+import * as MutableHashMap from "effect/MutableHashMap";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as PubSub from "effect/PubSub";
+import * as Random from "effect/Random";
+import * as Schedule from "effect/Schedule";
+import * as S from "effect/Schema";
+import type * as Scope from "effect/Scope";
+import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 import type * as Socket from "effect/socket/Socket";
 import { OntologyName } from "../Domain/Identity.ts";
 import { OntologyEventEntry } from "../Domain/Schema/EventSchema.ts";
@@ -291,7 +291,9 @@ export class EventBroadcastHub extends Context.Service<EventBroadcastHub, EventB
 /**
  * Configuration for Cloud Pub/Sub event subscription
  */
-class PubSubSubscriptionError extends S.TaggedError<PubSubSubscriptionError, { readonly brand: unique symbol }>($I`PubSubSubscriptionError`)(
+class PubSubSubscriptionError extends S.TaggedError<PubSubSubscriptionError, { readonly brand: unique symbol }>(
+  $I`PubSubSubscriptionError`
+)(
   "PubSubSubscriptionError",
   {
     message: S.NonEmptyString,
@@ -304,7 +306,9 @@ class PubSubSubscriptionError extends S.TaggedError<PubSubSubscriptionError, { r
 
 const isSubscriptionAlreadyExists = S.is(S.Struct({ code: S.tag(6) }));
 
-class PubSubCreateError extends S.TaggedError<PubSubCreateError, { readonly brand: unique symbol }>($I`PubSubCreateError`)("PubSubCreateError", {
+class PubSubCreateError extends S.TaggedError<PubSubCreateError, { readonly brand: unique symbol }>(
+  $I`PubSubCreateError`
+)("PubSubCreateError", {
   alreadyExists: S.Boolean,
   cause: S.Defect({ includeStack: true }),
 }) {}
@@ -406,7 +410,8 @@ const makeEventBroadcastHubMemory = Effect.gen(function* () {
  */
 const makeEventBroadcastHubPubSub = Effect.gen(function* () {
   const config = yield* EventBroadcastConfig;
-  const runFork = Effect.runForkWith(yield* Effect.context());
+  const broadcastContext = yield* Effect.context();
+  const runFork = Effect.runForkWith(broadcastContext);
 
   // Initialize Cloud Pub/Sub client
   const pubsub = new GCloudPubSub({ projectId: config.projectId });
@@ -688,13 +693,15 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
   const hub = yield* EventBroadcastHub;
   const writer = yield* socket.writer;
   const serverId = (yield* Random.nextIntBetween(0, 0x7fffffff)).toString(16);
+  const connectedAtMillis = yield* Clock.currentTimeMillis;
   const connected: ServerMessage = {
     type: "connected",
     ontologyId,
     serverId,
-    timestamp: S.Natural.make(yield* Clock.currentTimeMillis),
+    timestamp: S.Natural.make(connectedAtMillis),
   };
-  yield* writer.write(new TextEncoder().encode(yield* encodeServerMessage(connected)));
+  const connectedJson = yield* encodeServerMessage(connected);
+  yield* writer.write(new TextEncoder().encode(connectedJson));
   yield* Effect.logInfo("WebSocket client connected", { ontologyId });
   const eventQueue = yield* hub.subscribe(ontologyId);
   const fibers = yield* FiberMap.make<string>();
@@ -702,11 +709,13 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
     fibers,
     "events"
   )(
-    Stream.fromSubscription(eventQueue).pipe(
+    eventQueue.pipe(
+      Stream.fromSubscription,
       Stream.tap(
         Effect.fnUntraced(function* (event) {
           const message: ServerMessage = { ...event, type: "event" };
-          yield* writer.write(new TextEncoder().encode(yield* encodeServerMessage(message)));
+          const messageJson = yield* encodeServerMessage(message);
+          yield* writer.write(new TextEncoder().encode(messageJson));
         })
       ),
       Stream.runDrain
@@ -717,8 +726,10 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
     "ping"
   )(
     Effect.gen(function* () {
-      const ping: ServerMessage = { type: "ping", timestamp: S.Natural.make(yield* Clock.currentTimeMillis) };
-      yield* writer.write(new TextEncoder().encode(yield* encodeServerMessage(ping)));
+      const pingAtMillis = yield* Clock.currentTimeMillis;
+      const ping: ServerMessage = { type: "ping", timestamp: S.Natural.make(pingAtMillis) };
+      const pingJson = yield* encodeServerMessage(ping);
+      yield* writer.write(new TextEncoder().encode(pingJson));
     }).pipe(Effect.delay("30 seconds"), Effect.forever, Effect.ignore)
   );
   const reader = yield* socket.reader;
@@ -772,11 +783,12 @@ const handleWebSocket = Effect.fn("handleWebSocket")(function* (socket: Socket.S
 export const broadcastDomainEvent = Effect.fn("broadcastDomainEvent")(function* (event: EventEntry) {
   const hub = yield* EventBroadcastHub;
   const ontologyId = event.payload.ontologyId;
+  const broadcastAtMillis = yield* Clock.currentTimeMillis;
   const broadcastEvent: BroadcastEvent = {
     type: "event",
     entry: event,
     ontologyId,
-    timestamp: S.Natural.make(yield* Clock.currentTimeMillis),
+    timestamp: S.Natural.make(broadcastAtMillis),
   };
   yield* hub.broadcast(ontologyId, broadcastEvent);
 });

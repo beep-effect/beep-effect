@@ -7,8 +7,8 @@
 
 import type { DrizzleOperation } from "@beep/drizzle";
 import { DrizzleError } from "@beep/drizzle";
-import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 
 /**
  * Maps any Effect failure at a Drizzle boundary onto `DrizzleError` tagged

@@ -8,8 +8,8 @@
 import { $ScratchpadId } from "@beep/identity";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
-import * as Ref from "effect/Ref";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { ExtractionTelemetry, ProviderTokenUsage } from "../Domain/Model/ExtractionTelemetry.ts";
 import { PosInt } from "../Schema/PosInt.ts";
@@ -18,7 +18,8 @@ export { ExtractionTelemetry, ProviderTokenUsage } from "../Domain/Model/Extract
 
 const $I = $ScratchpadId.create("effect-ontology/Telemetry/ExtractionTelemetry");
 
-class UsageState extends S.Opaque<UsageState, { readonly brand: unique symbol }>()(S.Struct({
+class UsageState extends S.Opaque<UsageState, { readonly brand: unique symbol }>()(
+  S.Struct({
     chunkCount: S.Natural,
     attemptCount: S.Natural,
     recordedAttempts: S.Natural,
@@ -26,9 +27,12 @@ class UsageState extends S.Opaque<UsageState, { readonly brand: unique symbol }>
     completeAttempts: S.Natural,
     inputTokens: S.Natural,
     outputTokens: S.Natural,
-  }).pipe($I.annoteSchema("UsageState", {
-    description: "Mutable-ref payload used to aggregate provider usage within one extraction request.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("UsageState", {
+      description: "Mutable-ref payload used to aggregate provider usage within one extraction request.",
+    })
+  )
+) {}
 
 const emptyUsageState = (): UsageState =>
   UsageState.make({
@@ -97,10 +101,7 @@ export class ExtractionTelemetryCollector extends Context.Service<
   ExtractionTelemetryCollector,
   {
     readonly startAttempt: Effect.Effect<void>;
-    readonly recordUsage: (
-      inputTokens: O.Option<number>,
-      outputTokens: O.Option<number>
-    ) => Effect.Effect<void>;
+    readonly recordUsage: (inputTokens: O.Option<number>, outputTokens: O.Option<number>) => Effect.Effect<void>;
     readonly recordChunkCount: (chunkCount: number) => Effect.Effect<void>;
     readonly snapshot: Effect.Effect<ExtractionTelemetry>;
   }
@@ -215,10 +216,7 @@ export const recordProviderUsage = (usage: {
       O.match({
         onNone: () => Effect.void,
         onSome: (telemetry) =>
-          telemetry.recordUsage(
-            decodeUnknownNatural(usage.inputTokens),
-            decodeUnknownNatural(usage.outputTokens)
-          ),
+          telemetry.recordUsage(decodeUnknownNatural(usage.inputTokens), decodeUnknownNatural(usage.outputTokens)),
       })
     )
   );

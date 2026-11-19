@@ -1,4 +1,5 @@
 import * as Digest from "effect/crypto/Digest";
+import { ChunkingConfig, LlmConfig, RunConfig, RunStats } from "../Domain/Model/ExtractionRun.ts";
 /**
  * Extraction Entity Handler
  *
@@ -16,7 +17,9 @@ import { $ScratchpadId } from "@beep/identity";
 import { Percentage } from "@beep/schema/Percentage";
 import type { UnitInterval } from "@beep/schema/UnitInterval";
 import { thunk0 } from "@beep/utils/thunk";
+import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
+import type * as ClusterEntity from "effect/cluster/Entity";
 import * as DateTime from "effect/DateTime";
 import * as Deferred from "effect/Deferred";
 import * as Duration from "effect/Duration";
@@ -24,20 +27,19 @@ import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Inspectable from "effect/Inspectable";
-import * as Random from "effect/Random";
-import * as Ref from "effect/Ref";
-import * as Stream from "effect/Stream";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
-import type * as ClusterEntity from "effect/cluster/Entity";
 import { ProgressEvent } from "../Contract/ProgressStreaming.ts";
 import { ExtractionError } from "../Domain/Error/Extraction.ts";
 import { ContentHash, IdempotencyKey, Namespace, OntologyName } from "../Domain/Identity.ts";
 import { GroundingPolicy, RunStatus } from "../Domain/Model/ExtractionRun.ts";
 import { OntologyRef } from "../Domain/Model/Ontology.ts";
+import { PosInt } from "../Schema/PosInt.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { EntityExtractor, RelationExtractor } from "../Service/Extraction.ts";
 import { ExtractionRunService, getRunIdFromText } from "../Service/ExtractionRun.ts";
@@ -54,27 +56,23 @@ import type {
   KnowledgeGraphResult,
 } from "./ExtractionEntity.ts";
 import { ExtractionStatus, KnowledgeGraphExtractor } from "./ExtractionEntity.ts";
-import { PosInt } from "../Schema/PosInt.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Cluster/ExtractionEntityHandler");
 
-class ExtractionStats extends S.Opaque<ExtractionStats, { readonly brand: unique symbol }>()(S.Struct({
+class ExtractionStats extends S.Opaque<ExtractionStats, { readonly brand: unique symbol }>()(
+  S.Struct({
     totalEntities: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
       description: "Total entities extracted across completed chunks.",
     }),
     totalRelations: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
       description: "Total relations extracted across completed chunks.",
     }),
-    verifiedRelations: S.Natural.pipe(
-      S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))
-    ).annotateKey({
+    verifiedRelations: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
       description: "Extracted relations accepted by grounding.",
     }),
-    successfulChunks: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey(
-      {
-        description: "Chunks that completed extraction successfully.",
-      }
-    ),
+    successfulChunks: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
+      description: "Chunks that completed extraction successfully.",
+    }),
     failedChunks: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
       description: "Chunks whose extraction failed.",
     }),
@@ -86,9 +84,12 @@ class ExtractionStats extends S.Opaque<ExtractionStats, { readonly brand: unique
     tokensUsed: S.Natural.pipe(S.withConstructorDefault(Effect.succeed(S.Natural.make(0)))).annotateKey({
       description: "Estimated language-model tokens consumed.",
     }),
-  }).pipe($I.annoteSchema("ExtractionStats", {
-    description: "Running extraction counters with schema-owned empty defaults.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ExtractionStats", {
+      description: "Running extraction counters with schema-owned empty defaults.",
+    })
+  )
+) {}
 
 const emptyStats = ExtractionStats.make({});
 
@@ -109,7 +110,8 @@ const makeEvent = Effect.fn("ExtractionEntityHandler.makeEvent")(function* (
   extra: Record<string, unknown> = {}
 ) {
   const eventNumber = yield* Random.nextInt;
-  const timestamp = DateTime.formatIso(yield* DateTime.now);
+  const eventTime = yield* DateTime.now;
+  const timestamp = DateTime.formatIso(eventTime);
   return yield* S.decodeUnknownEffect(ProgressEvent)({
     _tag,
     eventId: `evt-${eventNumber}`,
@@ -175,8 +177,8 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
   const cancellationRegistry = yield* Ref.make(HashMap.empty<IdempotencyKey, CancellationSignal>());
 
   const ontology = yield* ontologyService.ontology;
-  const datatypeProperties = ontology.properties.filter((property) => property.rangeType === "datatype");
-  const objectProperties = ontology.properties.filter((property) => property.rangeType === "object");
+  const datatypeProperties = A.filter(ontology.properties, (property) => property.rangeType === "datatype");
+  const objectProperties = A.filter(ontology.properties, (property) => property.rangeType === "object");
 
   const acquireRateLimit = Effect.fn("ExtractionEntityHandler.acquireRateLimit")(
     function* (estimatedTokens: number) {
@@ -195,11 +197,13 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
   const extractFromText = Effect.fn("ExtractionEntityHandler.extractFromText")(
     function* (envelope: ClusterEntity.Request<typeof ExtractFromTextRpc>) {
       const { ontologyId, ontologyVersion, params, text } = envelope.payload;
-      const idempotencyKey = IdempotencyKey.make(
-        yield* computeIdempotencyKey(text, ontologyId, ontologyVersion, toExtractionParams(params)).pipe(
-          Effect.provideService(Digest.Digest, crypto)
-        )
-      );
+      const idempotencyDigest = yield* computeIdempotencyKey(
+        text,
+        ontologyId,
+        ontologyVersion,
+        toExtractionParams(params)
+      ).pipe(Effect.provideService(Digest.Digest, crypto));
+      const idempotencyKey = IdempotencyKey.make(idempotencyDigest);
       const runId = yield* getRunIdFromText(text).pipe(Effect.provideService(Digest.Digest, crypto));
       const keyString = idempotencyKey;
       const startTime = yield* DateTime.now;
@@ -209,16 +213,15 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       const existingRun = yield* runService.getByKey(idempotencyKey);
       if (O.isSome(existingRun) && RunStatus.guards.Complete(existingRun.value.status)) {
         const stats = O.getOrElse(existingRun.value.stats, () => emptyStats);
-        return Stream.make(
-          yield* makeEvent(runId, "extraction_complete", 100, {
-            totalEntities: "entityCount" in stats ? stats.entityCount : stats.totalEntities,
-            totalRelations: "relationCount" in stats ? stats.relationCount : stats.verifiedRelations,
-            uniqueEntityTypes: 0,
-            totalDurationMs: "duration" in stats ? Duration.toMillis(stats.duration) : 0,
-            successfulChunks: "chunkCount" in stats ? stats.chunkCount : stats.successfulChunks,
-            failedChunks: 0,
-          })
-        );
+        const cachedCompletionEvent = yield* makeEvent(runId, "extraction_complete", 100, {
+          totalEntities: "entityCount" in stats ? stats.entityCount : stats.totalEntities,
+          totalRelations: "relationCount" in stats ? stats.relationCount : stats.verifiedRelations,
+          uniqueEntityTypes: 0,
+          totalDurationMs: "duration" in stats ? Duration.toMillis(stats.duration) : 0,
+          successfulChunks: "chunkCount" in stats ? stats.chunkCount : stats.successfulChunks,
+          failedChunks: 0,
+        });
+        return Stream.make(cachedCompletionEvent);
       }
 
       yield* tokenBudget.reset(config.llm.maxTokens);
@@ -246,8 +249,10 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         );
 
       const ontologyParts = Str.includes("/")(ontologyId) ? Str.split("/")(ontologyId) : ["default", ontologyId];
-      const namespace = yield* S.decodeEffect(Namespace)(ontologyParts[0]);
-      const name = yield* S.decodeEffect(OntologyName)(ontologyParts[1] ?? ontologyParts[0]);
+      const namespace = yield* S.decodeEffect(Namespace)(A.getUnsafe(ontologyParts, 0));
+      const name = yield* S.decodeEffect(OntologyName)(
+        O.getOrElse(A.get(ontologyParts, 1), () => A.getUnsafe(ontologyParts, 0))
+      );
       const ontologyRef = OntologyRef.make({
         namespace,
         name,
@@ -256,42 +261,45 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
 
       yield* runService.createRun(
         text,
-        {
-          chunking: {
+        RunConfig.make({
+          chunking: ChunkingConfig.make({
             maxChunkSize: PosInt.make(500),
             preserveSentences: true,
             overlapSentences: S.Natural.make(0),
-          },
-          llm: {
+          }),
+          llm: LlmConfig.make({
             model: config.llm.model,
             temperature: config.llm.temperature,
             maxTokens: PosInt.make(config.llm.maxTokens),
             timeout: config.llm.retryPolicy.attemptTimeout,
-          },
+          }),
           concurrency: PosInt.make(config.runtime.concurrency),
           ontology: ontologyRef,
           grounding: config.grounder.enabled
             ? GroundingPolicy.cases.Enabled.make({})
             : GroundingPolicy.cases.Disabled.make({}),
-        },
+        }),
         { idempotencyKey, ontologyVersion }
       );
       yield* runService.setStatus(runId, RunStatus.cases.Running.make({ startedAt: yield* DateTime.now }));
 
       const statsRef = yield* Ref.make(emptyStats);
+      const extractionStartedEvent = yield* makeEvent(runId, "extraction_started", 0, {
+        totalChunks: chunks.length,
+        textMetadata: {
+          characterCount: text.length,
+          estimatedAvgChunkSize: Math.round(text.length / Math.max(chunks.length, 1)),
+          contentType: "text/plain",
+        },
+      });
+      const chunkingStartedEvent = yield* makeEvent(runId, "stage_started", 5, { stage: "chunking" });
+      const chunkingCompletedAt = yield* DateTime.now;
       const initialEvents = [
-        yield* makeEvent(runId, "extraction_started", 0, {
-          totalChunks: chunks.length,
-          textMetadata: {
-            characterCount: text.length,
-            estimatedAvgChunkSize: Math.round(text.length / Math.max(chunks.length, 1)),
-            contentType: "text/plain",
-          },
-        }),
-        yield* makeEvent(runId, "stage_started", 5, { stage: "chunking" }),
+        extractionStartedEvent,
+        chunkingStartedEvent,
         yield* makeEvent(runId, "stage_completed", 10, {
           stage: "chunking",
-          durationMs: DateTime.distance(chunkingStart, yield* DateTime.now).pipe(Duration.toMillis),
+          durationMs: DateTime.distance(chunkingStart, chunkingCompletedAt).pipe(Duration.toMillis),
           itemCount: chunks.length,
         }),
       ];
@@ -327,7 +335,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
               }));
 
           const entityArray = Chunk.toReadonlyArray(entities);
-          const entityTypes = HashSet.fromIterable(entityArray.flatMap((entity) => entity.types));
+          const entityTypes = HashSet.fromIterable(A.flatMap(entityArray, (entity) => entity.types));
           yield* tokenBudget.recordUsage("entity_extraction", estimatedTokens);
           yield* Ref.update(statsRef, (stats) =>
             ExtractionStats.make({
@@ -342,29 +350,32 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
           );
           yield* rateLimiter.release(estimatedTokens, true);
 
-          events.push(
-            yield* makeEvent(runId, "chunk_processing_complete", chunkProgress + 5, {
-              chunkIndex: chunk.index,
-              entityCount: entityArray.length,
-              relationCount: verifiedRelations.length,
-            })
-          );
+          const chunkCompletedEvent = yield* makeEvent(runId, "chunk_processing_complete", chunkProgress + 5, {
+            chunkIndex: chunk.index,
+            entityCount: entityArray.length,
+            relationCount: verifiedRelations.length,
+          });
+          events.push(chunkCompletedEvent);
           return events;
         }),
         { concurrency: config.runtime.concurrency }
       );
 
       const stats = yield* Ref.get(statsRef);
-      const totalDuration = DateTime.distance(startTime, yield* DateTime.now).pipe(Duration.toMillis);
-      yield* runService.updateStats(runId, {
-        chunkCount: S.Natural.make(chunks.length),
-        entityCount: S.Natural.make(stats.totalEntities),
-        relationCount: S.Natural.make(stats.verifiedRelations),
-        resolvedCount: S.Natural.make(0),
-        clusterCount: S.Natural.make(0),
-        tokensUsed: S.Natural.make(stats.tokensUsed),
-        duration: Duration.millis(totalDuration),
-      });
+      const extractionCompletedAt = yield* DateTime.now;
+      const totalDuration = DateTime.distance(startTime, extractionCompletedAt).pipe(Duration.toMillis);
+      yield* runService.updateStats(
+        runId,
+        RunStats.make({
+          chunkCount: S.Natural.make(chunks.length),
+          entityCount: S.Natural.make(stats.totalEntities),
+          relationCount: S.Natural.make(stats.verifiedRelations),
+          resolvedCount: S.Natural.make(0),
+          clusterCount: S.Natural.make(0),
+          tokensUsed: S.Natural.make(stats.tokensUsed),
+          duration: Duration.millis(totalDuration),
+        })
+      );
       yield* runService.completeRun(runId);
 
       const completion = yield* makeEvent(runId, "extraction_complete", 100, {
@@ -388,21 +399,22 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
             const text = envelope.payload.text;
             const runId = yield* getRunIdFromText(text).pipe(Effect.provideService(Digest.Digest, crypto));
             const { ontologyId, ontologyVersion, params } = envelope.payload;
-            const idempotencyKey = IdempotencyKey.make(
-              yield* computeIdempotencyKey(text, ontologyId, ontologyVersion, toExtractionParams(params)).pipe(
-                Effect.provideService(Digest.Digest, crypto)
-              )
-            );
+            const failedIdempotencyDigest = yield* computeIdempotencyKey(
+              text,
+              ontologyId,
+              ontologyVersion,
+              toExtractionParams(params)
+            ).pipe(Effect.provideService(Digest.Digest, crypto));
+            const idempotencyKey = IdempotencyKey.make(failedIdempotencyDigest);
             const extractionError = toExtractionError(error);
             yield* runService.failRun(runId, "llm_error", extractionError.message).pipe(Effect.ignore);
             yield* Ref.update(cancellationRegistry, HashMap.remove(idempotencyKey));
-            return Stream.make(
-              yield* makeEvent(runId, "extraction_failed", 0, {
-                errorType: "extraction_error",
-                errorMessage: extractionError.message,
-                isRecoverable: false,
-              })
-            );
+            const extractionFailedEvent = yield* makeEvent(runId, "extraction_failed", 0, {
+              errorType: "extraction_error",
+              errorMessage: extractionError.message,
+              isRecoverable: false,
+            });
+            return Stream.make(extractionFailedEvent);
           })
         ),
         Effect.mapError(toExtractionError)
@@ -440,7 +452,8 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
       if (O.isNone(run)) return yield* ExtractionError.make({ message: "Extraction not found" });
       if (P.isTagged(run.value.status, "Complete") || P.isTagged(run.value.status, "Failed")) return false;
 
-      const signal = HashMap.get(yield* Ref.get(cancellationRegistry), key);
+      const cancellationSignals = yield* Ref.get(cancellationRegistry);
+      const signal = HashMap.get(cancellationSignals, key);
       if (O.isSome(signal)) {
         yield* Deferred.succeed(signal.value, void 0);
         yield* Ref.update(cancellationRegistry, HashMap.remove(key));
@@ -467,7 +480,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
         });
       }
       const completedAt = P.isTagged(run.value.status, "Complete")
-        ? O.some(DateTime.formatIso(run.value.status.completedAt))
+        ? run.value.status.completedAt.pipe(DateTime.formatIso, O.some)
         : O.none();
       const error = P.isTagged(run.value.status, "Failed") ? O.some(run.value.status.error.message) : O.none();
       const fields = {
@@ -476,7 +489,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
             P.isTagged(run.value.status, "Complete") ? 100 : P.isTagged(run.value.status, "Running") ? 50 : 0
           )
         ),
-        startedAt: O.some(DateTime.formatIso(run.value.createdAt)),
+        startedAt: run.value.createdAt.pipe(DateTime.formatIso, O.some),
         completedAt,
         error,
       };
@@ -492,7 +505,7 @@ export const makeExtractionEntityHandler = Effect.gen(function* () {
 
   return {
     ExtractFromText: (envelope: ClusterEntity.Request<typeof ExtractFromTextRpc>) =>
-      Stream.unwrap(extractFromText(envelope)),
+      envelope.pipe(extractFromText, Stream.unwrap),
     GetCachedResult: getCachedResult,
     CancelExtraction: cancelExtraction,
     GetExtractionStatus: getExtractionStatus,

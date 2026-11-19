@@ -1,7 +1,7 @@
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { expect, it } from "@effect/vitest";
 import * as SourceScan from "@proto/tooling/SourceScan";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
 
@@ -34,10 +34,10 @@ it.layer(NodeServices.layer)((it) => {
     Effect.gen(function* () {
       const path = yield* Path.Path;
       const root = yield* path.fromFileUrl(new URL("../../../", import.meta.url));
-      const everywhere = yield* SourceScan.scan(root, packages, []);
+      const everywhere = yield* SourceScan.scan(root, { packageDirs: packages, allowed: [] });
       // The boundary itself is found, so the scan is not vacuous.
       expect(A.map(everywhere, (violation) => violation.file)).toEqual(expect.arrayContaining(boundary));
-      const outside = yield* SourceScan.scan(root, packages, boundary);
+      const outside = yield* SourceScan.scan(root, { packageDirs: packages, allowed: boundary });
       expect(outside).toEqual([]);
     }),
   );
@@ -49,7 +49,7 @@ it("negative control: the scan flags a forged root and an invocation no re-admis
     "effect.pipe(Effect.provideService(CurrentInvocation, someInvocation));",
     "Effect.provideService(effect, CurrentInvocation, { ...invocation, chain: [] });",
   ];
-  expect(A.map(SourceScan.scanText("forged.ts", A.join(forged, "\n")), (violation) => violation.rule)).toEqual([
+  expect(A.map(SourceScan.scanText(A.join(forged, "\n"), { file: "forged.ts" }), (violation) => violation.rule)).toEqual([
     "builds a root",
     "builds an invocation",
     "provides an invocation no re-admission produced",
@@ -57,5 +57,5 @@ it("negative control: the scan flags a forged root and an invocation no re-admis
   ]);
   // A file that sends under what its authority port's readmit returned passes.
   const readmitted = "authority.readmit({ provenance, hop }).pipe(Effect.flatMap((invocation) => send.pipe(Effect.provideService(CurrentInvocation, invocation))))";
-  expect(SourceScan.scanText("ok.ts", readmitted)).toEqual([]);
+  expect(SourceScan.scanText(readmitted, { file: "ok.ts" })).toEqual([]);
 });

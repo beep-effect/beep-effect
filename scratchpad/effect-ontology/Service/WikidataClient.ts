@@ -14,23 +14,23 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import * as Order from "effect/Order";
-import * as Ref from "effect/Ref";
-import * as Semaphore from "effect/Semaphore";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as R from "effect/Record";
-import * as S from "effect/Schema";
-import * as Str from "effect/String";
 import * as FetchHttpClient from "effect/http/FetchHttpClient";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientRequest from "effect/http/HttpClientRequest";
+import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import * as P from "effect/Predicate";
+import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
+import * as Semaphore from "effect/Semaphore";
+import * as Str from "effect/String";
 import { ErrorMessage, OptionalErrorCause, OptionalHttpStatusCode } from "../Domain/Error/Base.ts";
 import { PosInt } from "../Schema/PosInt.ts";
 
@@ -57,7 +57,9 @@ const $I = $ScratchpadId.create("effect-ontology/Service/WikidataClient");
  * @category errors
  * @since 0.0.0
  */
-export class WikidataApiError extends S.TaggedError<WikidataApiError, { readonly brand: unique symbol }>($I`WikidataApiError`)(
+export class WikidataApiError extends S.TaggedError<WikidataApiError, { readonly brand: unique symbol }>(
+  $I`WikidataApiError`
+)(
   "WikidataApiError",
   {
     message: ErrorMessage.annotateKey({
@@ -95,7 +97,9 @@ export class WikidataApiError extends S.TaggedError<WikidataApiError, { readonly
  * @category errors
  * @since 0.0.0
  */
-export class WikidataRateLimitError extends S.TaggedError<WikidataRateLimitError, { readonly brand: unique symbol }>($I`WikidataRateLimitError`)(
+export class WikidataRateLimitError extends S.TaggedError<WikidataRateLimitError, { readonly brand: unique symbol }>(
+  $I`WikidataRateLimitError`
+)(
   "WikidataRateLimitError",
   {
     retryAfter: S.Duration.annotateKey({
@@ -259,14 +263,30 @@ const searchOptionsLimitDefault = PosInt.make(10);
  * @category models
  * @since 0.0.0
  */
-export class SearchOptions extends S.Opaque<SearchOptions, { readonly brand: unique symbol }>()(S.Struct({
-    language: S.NonEmptyString.pipe(S.withConstructorDefault(Effect.succeed("en")), S.withDecodingDefaultTypeKey(Effect.succeed("en"))),
-    limit: WikidataSearchLimit.pipe(S.withConstructorDefault(Effect.succeed(searchOptionsLimitDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(searchOptionsLimitDefault))),
-    type: WikidataEntityType.pipe(S.withConstructorDefault(Effect.succeed(WikidataEntityType.Enum.item)), S.withDecodingDefaultTypeKey(Effect.succeed(WikidataEntityType.Enum.item))),
-    strictLanguage: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
-  }).pipe($I.annoteSchema("SearchOptions", {
-    description: "Language, bounded result count, entity family, and language-matching policy for Wikidata search.",
-  }))) {}
+export class SearchOptions extends S.Opaque<SearchOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
+    language: S.NonEmptyString.pipe(
+      S.withConstructorDefault(Effect.succeed("en")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("en"))
+    ),
+    limit: WikidataSearchLimit.pipe(
+      S.withConstructorDefault(Effect.succeed(searchOptionsLimitDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(searchOptionsLimitDefault))
+    ),
+    type: WikidataEntityType.pipe(
+      S.withConstructorDefault(Effect.succeed(WikidataEntityType.Enum.item)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(WikidataEntityType.Enum.item))
+    ),
+    strictLanguage: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+  }).pipe(
+    $I.annoteSchema("SearchOptions", {
+      description: "Language, bounded result count, entity family, and language-matching policy for Wikidata search.",
+    })
+  )
+) {}
 
 /**
  * Constructor input accepted by {@link SearchOptions}.
@@ -363,7 +383,7 @@ const calculateScore = (
       baseScore = 100; // Exact label match
     } else if (Str.startsWith(queryLower)(labelLower)) {
       baseScore = 90; // Label prefix match
-    } else if (labelLower.includes(queryLower)) {
+    } else if (Str.includes(queryLower)(labelLower)) {
       baseScore = 80; // Label contains query
     } else {
       baseScore = 70; // Other label match
@@ -428,7 +448,8 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
         if (remaining > 0) {
           yield* Effect.sleep(Duration.millis(remaining));
         }
-        yield* Ref.set(lastRequestTime, yield* Clock.currentTimeMillis);
+        const resolvedValue451_41 = yield* Clock.currentTimeMillis;
+        yield* Ref.set(lastRequestTime, resolvedValue451_41);
       })
     );
 
@@ -470,7 +491,7 @@ export class WikidataClient extends Context.Service<WikidataClient>()($I`Wikidat
       // Check for rate limiting
       if (res.status === 429) {
         const retryAfter = res.headers["retry-after"];
-        const seconds = P.isTruthy(retryAfter) ? parseInt(retryAfter, 10) : 60;
+        const seconds = P.isString(retryAfter) && retryAfter.length > 0 ? parseInt(retryAfter, 10) : 60;
         return yield* WikidataRateLimitError.make({
           retryAfter: Duration.seconds(seconds),
         });

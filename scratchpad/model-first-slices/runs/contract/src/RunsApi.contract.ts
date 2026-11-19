@@ -2,6 +2,7 @@ import * as Domain from "@alchemy.run/domain";
 import * as Catalog from "@proto/contract-kit/Catalog";
 import { CancelRun } from "./Run/CancelRun.command.ts";
 import { RequestRun } from "./Run/RequestRun.command.ts";
+import { RunStateRead } from "./Run/RunState.read.ts";
 import { SessionRunsRead } from "./Run/SessionRuns.read.ts";
 
 /**
@@ -14,7 +15,7 @@ export const RunsCatalog = Catalog.make({
   name: "Runs",
   commands: [RequestRun, CancelRun],
   views: [SessionRunsRead],
-  queries: [],
+  queries: [RunStateRead],
 });
 
 /**
@@ -25,6 +26,6 @@ export const RunsCatalog = Catalog.make({
  */
 export class RunsContract extends Domain.Api(
   "RunsContract",
-  { model: RunsCatalog, commands: ["RequestRun", "CancelRun"], views: ["SessionRuns"], queries: [], streams: [] },
-  { description: "Request and cancel agent runs, and read a session's chain of runs." },
+  { model: RunsCatalog, commands: ["RequestRun", "CancelRun"], views: ["SessionRuns"], queries: ["RunState"], streams: [] },
+  { description: "Request and cancel agent runs, read a session's chain of runs, and read a run's status." },
 ) {}

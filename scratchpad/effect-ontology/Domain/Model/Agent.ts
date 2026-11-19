@@ -8,10 +8,10 @@ import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { Percentage } from "@beep/schema/Percentage";
+import * as A from "effect/Array";
+import * as DateTime from "effect/DateTime";
 import type * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
-import * as DateTime from "effect/DateTime";
-import * as A from "effect/Array";
 import type * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { PosInt } from "../../Schema/PosInt.ts";
@@ -38,18 +38,21 @@ const agentIdPattern = /^[a-z][a-z0-9_-]*$/;
  * @since 0.0.0
  */
 export const AgentId = S.String.check(
-  S.isPattern(agentIdPattern, $I.annote("AgentIdPatternCheck", {
-    title: "Agent Identifier",
-    description: "A lowercase agent identifier with optional digits, dashes, and underscores.",
-    message:
-      "Agent identifier must start with a lowercase letter and contain only lowercase letters, digits, dashes, or underscores.",
-  }))
-).pipe(
-    S.brand("AgentId"),
-    $I.annoteSchema("AgentId", {
-      description: "Stable lowercase identifier assigned to an agent implementation.",
+  S.isPattern(
+    agentIdPattern,
+    $I.annote("AgentIdPatternCheck", {
+      title: "Agent Identifier",
+      description: "A lowercase agent identifier with optional digits, dashes, and underscores.",
+      message:
+        "Agent identifier must start with a lowercase letter and contain only lowercase letters, digits, dashes, or underscores.",
     })
-  );
+  )
+).pipe(
+  S.brand("AgentId"),
+  $I.annoteSchema("AgentId", {
+    description: "Stable lowercase identifier assigned to an agent implementation.",
+  })
+);
 
 /**
  * Runtime value decoded by {@link AgentId}.
@@ -80,18 +83,11 @@ export type AgentId = typeof AgentId.Type;
  * @category schemas
  * @since 0.0.0
  */
-export const AgentType = LiteralKit([
-  "extractor",
-  "validator",
-  "resolver",
-  "corrector",
-  "reasoner",
-  "ingestor",
-]).pipe(
-    $I.annoteSchema("AgentType", {
-      description: "Closed set of functional roles supported by the ontology pipeline.",
-    })
-  );
+export const AgentType = LiteralKit(["extractor", "validator", "resolver", "corrector", "reasoner", "ingestor"]).pipe(
+  $I.annoteSchema("AgentType", {
+    description: "Closed set of functional roles supported by the ontology pipeline.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link AgentType}.
@@ -128,7 +124,8 @@ export type AgentType = typeof AgentType.Type;
  * @category models
  * @since 0.0.0
  */
-export class AgentMetadata extends S.Opaque<AgentMetadata, { readonly brand: unique symbol }>()(S.Struct({
+export class AgentMetadata extends S.Opaque<AgentMetadata, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: AgentId.annotateKey({
       description: "Stable implementation identifier.",
     }),
@@ -145,9 +142,12 @@ export class AgentMetadata extends S.Opaque<AgentMetadata, { readonly brand: uni
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Implementation version when independently versioned." })
     ),
-  }).pipe($I.annoteSchema("AgentMetadata", {
-    description: "Stable identity and human-readable metadata for an executable agent.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("AgentMetadata", {
+      description: "Stable identity and human-readable metadata for an executable agent.",
+    })
+  )
+) {}
 
 const validationResultErrorsDefault = A.empty<string>();
 const validationResultWarningsDefault = A.empty<string>();
@@ -172,14 +172,18 @@ const validationResultWarningsDefault = A.empty<string>();
  * @category validation
  * @since 0.0.0
  */
-export class ValidationResult extends S.Class<ValidationResult, { readonly brand: unique symbol }>($I`ValidationResult`)(
+export class ValidationResult extends S.Class<ValidationResult, { readonly brand: unique symbol }>(
+  $I`ValidationResult`
+)(
   {
     errors: S.Array(S.NonEmptyString).pipe(
-      S.withConstructorDefault(Effect.succeed(validationResultErrorsDefault)), S.withDecodingDefaultType(Effect.succeed(validationResultErrorsDefault)),
+      S.withConstructorDefault(Effect.succeed(validationResultErrorsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(validationResultErrorsDefault)),
       S.annotateKey({ description: "Blocking validation diagnostics." })
     ),
     warnings: S.Array(S.NonEmptyString).pipe(
-      S.withConstructorDefault(Effect.succeed(validationResultWarningsDefault)), S.withDecodingDefaultType(Effect.succeed(validationResultWarningsDefault)),
+      S.withConstructorDefault(Effect.succeed(validationResultWarningsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(validationResultWarningsDefault)),
       S.annotateKey({ description: "Non-blocking validation diagnostics." })
     ),
   },
@@ -446,7 +450,8 @@ export type PipelineStatus = typeof PipelineStatus.Type;
  * @category models
  * @since 0.0.0
  */
-export class IntermediateResult extends S.Opaque<IntermediateResult, { readonly brand: unique symbol }>()(S.Struct({
+export class IntermediateResult extends S.Opaque<IntermediateResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     agentId: AgentId.annotateKey({
       description: "Agent that produced the result.",
     }),
@@ -459,9 +464,12 @@ export class IntermediateResult extends S.Opaque<IntermediateResult, { readonly 
     duration: S.DurationFromMillis.annotateKey({
       description: "Non-negative execution duration encoded as milliseconds.",
     }),
-  }).pipe($I.annoteSchema("IntermediateResult", {
-    description: "Checkpoint-safe JSON output and timing from one completed agent.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("IntermediateResult", {
+      description: "Checkpoint-safe JSON output and timing from one completed agent.",
+    })
+  )
+) {}
 
 const pipelineStateCompletedAgentsDefault = A.empty<AgentId>();
 const pipelineStateIntermediateResultsDefault = A.empty<IntermediateResult>();
@@ -495,11 +503,13 @@ export class PipelineState extends S.Class<PipelineState, { readonly brand: uniq
       S.annotateKey({ description: "Agent currently executing, when any." })
     ),
     completedAgents: S.Array(AgentId).pipe(
-      S.withConstructorDefault(Effect.succeed(pipelineStateCompletedAgentsDefault)), S.withDecodingDefaultType(Effect.succeed(pipelineStateCompletedAgentsDefault)),
+      S.withConstructorDefault(Effect.succeed(pipelineStateCompletedAgentsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(pipelineStateCompletedAgentsDefault)),
       S.annotateKey({ description: "Agents that completed successfully." })
     ),
     intermediateResults: S.Array(IntermediateResult).pipe(
-      S.withConstructorDefault(Effect.succeed(pipelineStateIntermediateResultsDefault)), S.withDecodingDefaultType(Effect.succeed(pipelineStateIntermediateResultsDefault)),
+      S.withConstructorDefault(Effect.succeed(pipelineStateIntermediateResultsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(pipelineStateIntermediateResultsDefault)),
       S.annotateKey({ description: "Checkpoint-safe outputs from completed agents." })
     ),
     startedAt: S.DateTimeUtcFromString.annotateKey({
@@ -509,7 +519,8 @@ export class PipelineState extends S.Class<PipelineState, { readonly brand: uniq
       description: "Canonical discriminated pipeline status.",
     }),
     iterationCount: S.Natural.pipe(
-      S.withConstructorDefault(Effect.succeed(pipelineStateIterationCountDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(pipelineStateIterationCountDefault)),
+      S.withConstructorDefault(Effect.succeed(pipelineStateIterationCountDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(pipelineStateIterationCountDefault)),
       S.annotateKey({ description: "Completed loop iterations." })
     ),
   },
@@ -518,76 +529,76 @@ export class PipelineState extends S.Class<PipelineState, { readonly brand: uniq
   })
 ) {
   /**
-     * Finds the retained result produced by an agent.
-     *
-     * **Example** (Use getResult)
-     *
-     * ```ts
-     * import * as DateTime from "effect/DateTime";
-     * import * as O from "effect/Option"
-     * import { AgentId, PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
-     *
-     * const state = PipelineState.make({
-     *   pipelineId: "pipeline-123",
-     *   startedAt: DateTime.nowUnsafe(),
-     *   status: PipelineStatus.cases.Running.make({})
-     * })
-     * console.log(O.isNone(state.getResult(AgentId.make("validator")))) // true
-     * ```
-     *
-     * @param agentId - Stable identifier of the producing agent.
-     * @returns The retained intermediate result, or `Option.none()` when absent.
-     */
+   * Finds the retained result produced by an agent.
+   *
+   * **Example** (Use getResult)
+   *
+   * ```ts
+   * import * as DateTime from "effect/DateTime";
+   * import * as O from "effect/Option"
+   * import { AgentId, PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
+   *
+   * const state = PipelineState.make({
+   *   pipelineId: "pipeline-123",
+   *   startedAt: DateTime.nowUnsafe(),
+   *   status: PipelineStatus.cases.Running.make({})
+   * })
+   * console.log(O.isNone(state.getResult(AgentId.make("validator")))) // true
+   * ```
+   *
+   * @param agentId - Stable identifier of the producing agent.
+   * @returns The retained intermediate result, or `Option.none()` when absent.
+   */
   getResult(agentId: AgentId): O.Option<IntermediateResult> {
     return A.findFirst(this.intermediateResults, (result) => S.is(AgentId)(agentId) && result.agentId === agentId);
   }
 
   /**
-     * Whether the named agent appears in the completed-agent set.
-     *
-     * **Example** (Use hasCompleted)
-     *
-     * ```ts
-     * import * as DateTime from "effect/DateTime";
-     * import { AgentId, PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
-     *
-     * const state = PipelineState.make({
-     *   pipelineId: "pipeline-123",
-     *   startedAt: DateTime.nowUnsafe(),
-     *   status: PipelineStatus.cases.Running.make({})
-     * })
-     * console.log(state.hasCompleted(AgentId.make("validator"))) // false
-     * ```
-     *
-     * @param agentId - Stable identifier of the agent to inspect.
-     * @returns `true` when the agent has completed in this snapshot.
-     */
+   * Whether the named agent appears in the completed-agent set.
+   *
+   * **Example** (Use hasCompleted)
+   *
+   * ```ts
+   * import * as DateTime from "effect/DateTime";
+   * import { AgentId, PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
+   *
+   * const state = PipelineState.make({
+   *   pipelineId: "pipeline-123",
+   *   startedAt: DateTime.nowUnsafe(),
+   *   status: PipelineStatus.cases.Running.make({})
+   * })
+   * console.log(state.hasCompleted(AgentId.make("validator"))) // false
+   * ```
+   *
+   * @param agentId - Stable identifier of the agent to inspect.
+   * @returns `true` when the agent has completed in this snapshot.
+   */
   hasCompleted(agentId: AgentId): boolean {
     return A.contains(this.completedAgents, agentId);
   }
 
   /**
-     * Elapsed execution duration at the supplied clock instant.
-     *
-     * **Example** (Use getElapsed)
-     *
-     * ```ts
-     * import * as DateTime from "effect/DateTime";
-     * import * as Duration from "effect/Duration";
-     * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
-     *
-     * const now = DateTime.nowUnsafe()
-     * const state = PipelineState.make({
-     *   pipelineId: "pipeline-123",
-     *   startedAt: now,
-     *   status: PipelineStatus.cases.Running.make({})
-     * })
-     * console.log(Duration.toMillis(state.getElapsed(now))) // 0
-     * ```
-     *
-     * @param now - Current UTC instant used for active or paused pipelines.
-     * @returns Duration from pipeline start to the terminal or supplied instant.
-     */
+   * Elapsed execution duration at the supplied clock instant.
+   *
+   * **Example** (Use getElapsed)
+   *
+   * ```ts
+   * import * as DateTime from "effect/DateTime";
+   * import * as Duration from "effect/Duration";
+   * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
+   *
+   * const now = DateTime.nowUnsafe()
+   * const state = PipelineState.make({
+   *   pipelineId: "pipeline-123",
+   *   startedAt: now,
+   *   status: PipelineStatus.cases.Running.make({})
+   * })
+   * console.log(Duration.toMillis(state.getElapsed(now))) // 0
+   * ```
+   *
+   * @param now - Current UTC instant used for active or paused pipelines.
+   * @returns Duration from pipeline start to the terminal or supplied instant.
+   */
   getElapsed(now: DateTime.Utc): Duration.Duration {
     const end = PipelineStatus.match(this.status, {
       Pending: () => now,
@@ -600,23 +611,23 @@ export class PipelineState extends S.Class<PipelineState, { readonly brand: uniq
   }
 
   /**
-     * Whether the pipeline has completed or failed.
-     *
-     * **Example** (Inspect a running pipeline)
-     * ```ts
-     * import * as DateTime from "effect/DateTime";
-     * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
-     *
-     * const state = PipelineState.make({
-     *   pipelineId: "pipeline-123",
-     *   startedAt: DateTime.nowUnsafe(),
-     *   status: PipelineStatus.cases.Running.make({})
-     * })
-     * console.log(state.isTerminal) // false
-     * ```
-     *
-     * @returns `true` for completed or failed status variants.
-     */
+   * Whether the pipeline has completed or failed.
+   *
+   * **Example** (Inspect a running pipeline)
+   * ```ts
+   * import * as DateTime from "effect/DateTime";
+   * import { PipelineState, PipelineStatus } from "@effect-ontology/Model/Agent"
+   *
+   * const state = PipelineState.make({
+   *   pipelineId: "pipeline-123",
+   *   startedAt: DateTime.nowUnsafe(),
+   *   status: PipelineStatus.cases.Running.make({})
+   * })
+   * console.log(state.isTerminal) // false
+   * ```
+   *
+   * @returns `true` for completed or failed status variants.
+   */
   get isTerminal(): boolean {
     return PipelineStatus.isAnyOf(["Completed", "Failed"])(this.status);
   }
@@ -638,13 +649,16 @@ const terminationConditionMaxIterationsDefault = PosInt.make(5);
  * @category policies
  * @since 0.0.0
  */
-export class TerminationCondition extends S.Opaque<TerminationCondition, { readonly brand: unique symbol }>()(S.Struct({
+export class TerminationCondition extends S.Opaque<TerminationCondition, { readonly brand: unique symbol }>()(
+  S.Struct({
     maxIterations: PosInt.pipe(
-      S.withConstructorDefault(Effect.succeed(terminationConditionMaxIterationsDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(terminationConditionMaxIterationsDefault)),
+      S.withConstructorDefault(Effect.succeed(terminationConditionMaxIterationsDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(terminationConditionMaxIterationsDefault)),
       S.annotateKey({ description: "Maximum completed iterations before forced termination." })
     ),
     stopOnConformance: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({ description: "Whether validation conformance terminates the loop." })
     ),
     minConfidence: S.OptionFromOptionalKey(Confidence).pipe(
@@ -655,9 +669,12 @@ export class TerminationCondition extends S.Opaque<TerminationCondition, { reado
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional execution timeout encoded as milliseconds." })
     ),
-  }).pipe($I.annoteSchema("TerminationCondition", {
-    description: "Schema-defaulted stop policy for iterative agent pipelines.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("TerminationCondition", {
+      description: "Schema-defaulted stop policy for iterative agent pipelines.",
+    })
+  )
+) {
   /**
    * Constructs the canonical default loop-termination policy.
    *
@@ -692,9 +709,11 @@ const checkpointConfigAfterAgentsDefault = A.empty<AgentId>();
  * @category configuration
  * @since 0.0.0
  */
-export class CheckpointConfig extends S.Opaque<CheckpointConfig, { readonly brand: unique symbol }>()(S.Struct({
+export class CheckpointConfig extends S.Opaque<CheckpointConfig, { readonly brand: unique symbol }>()(
+  S.Struct({
     afterAgents: S.Array(AgentId).pipe(
-      S.withConstructorDefault(Effect.succeed(checkpointConfigAfterAgentsDefault)), S.withDecodingDefaultType(Effect.succeed(checkpointConfigAfterAgentsDefault)),
+      S.withConstructorDefault(Effect.succeed(checkpointConfigAfterAgentsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(checkpointConfigAfterAgentsDefault)),
       S.annotateKey({ description: "Agents whose completion triggers a checkpoint." })
     ),
     everyNIterations: S.OptionFromOptionalKey(PosInt).pipe(
@@ -702,16 +721,20 @@ export class CheckpointConfig extends S.Opaque<CheckpointConfig, { readonly bran
       S.annotateKey({ description: "Optional periodic checkpoint interval for loop mode." })
     ),
     requireApproval: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({ description: "Whether a human must approve checkpoint continuation." })
     ),
     approvalTimeout: S.OptionFromOptionalKey(S.DurationFromMillis).pipe(
       S.withConstructorDefault(Effect.succeedNone),
       S.annotateKey({ description: "Optional approval timeout encoded as milliseconds." })
     ),
-  }).pipe($I.annoteSchema("CheckpointConfig", {
-    description: "Schema-defaulted policy for pipeline checkpoint timing and approval.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("CheckpointConfig", {
+      description: "Schema-defaulted policy for pipeline checkpoint timing and approval.",
+    })
+  )
+) {
   /**
    * Constructs the canonical default checkpoint policy.
    *
@@ -748,14 +771,17 @@ export class CheckpointConfig extends S.Opaque<CheckpointConfig, { readonly bran
  * @category domain-events
  * @since 0.0.0
  */
-export class AgentStarted extends S.Opaque<AgentStarted, { readonly brand: unique symbol }>()(S.TaggedStruct("AgentStarted",
-  {
+export class AgentStarted extends S.Opaque<AgentStarted, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("AgentStarted", {
     agentId: AgentId,
     startedAt: S.DateTimeUtcFromString,
     inputSummary: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("AgentStarted", {
-    description: "Lifecycle event recording the start of one agent execution.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("AgentStarted", {
+      description: "Lifecycle event recording the start of one agent execution.",
+    })
+  )
+) {}
 
 /**
  * Progress update emitted during agent execution.
@@ -777,15 +803,18 @@ export class AgentStarted extends S.Opaque<AgentStarted, { readonly brand: uniqu
  * @category domain-events
  * @since 0.0.0
  */
-export class AgentProgress extends S.Opaque<AgentProgress, { readonly brand: unique symbol }>()(S.TaggedStruct("AgentProgress",
-  {
+export class AgentProgress extends S.Opaque<AgentProgress, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("AgentProgress", {
     agentId: AgentId,
     progress: Percentage,
     message: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     timestamp: S.DateTimeUtcFromString,
-  }).pipe($I.annoteSchema("AgentProgress", {
-    description: "Bounded percentage progress reported by an executing agent.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("AgentProgress", {
+      description: "Bounded percentage progress reported by an executing agent.",
+    })
+  )
+) {}
 
 /**
  * Event emitted after successful agent execution.
@@ -807,15 +836,18 @@ export class AgentProgress extends S.Opaque<AgentProgress, { readonly brand: uni
  * @category domain-events
  * @since 0.0.0
  */
-export class AgentCompleted extends S.Opaque<AgentCompleted, { readonly brand: unique symbol }>()(S.TaggedStruct("AgentCompleted",
-  {
+export class AgentCompleted extends S.Opaque<AgentCompleted, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("AgentCompleted", {
     agentId: AgentId,
     completedAt: S.DateTimeUtcFromString,
     duration: S.DurationFromMillis,
     outputSummary: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("AgentCompleted", {
-    description: "Lifecycle event recording successful agent completion and duration.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("AgentCompleted", {
+      description: "Lifecycle event recording successful agent completion and duration.",
+    })
+  )
+) {}
 
 /**
  * Event emitted after failed agent execution.
@@ -838,16 +870,22 @@ export class AgentCompleted extends S.Opaque<AgentCompleted, { readonly brand: u
  * @category domain-events
  * @since 0.0.0
  */
-export class AgentFailed extends S.Opaque<AgentFailed, { readonly brand: unique symbol }>()(S.TaggedStruct("AgentFailed",
-  {
+export class AgentFailed extends S.Opaque<AgentFailed, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("AgentFailed", {
     agentId: AgentId,
     failedAt: S.DateTimeUtcFromString,
     duration: S.DurationFromMillis,
     error: S.NonEmptyString,
-    retryable: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
-  }).pipe($I.annoteSchema("AgentFailed", {
-    description: "Lifecycle event recording typed failure information for one agent execution.",
-  }))) {}
+    retryable: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ),
+  }).pipe(
+    $I.annoteSchema("AgentFailed", {
+      description: "Lifecycle event recording typed failure information for one agent execution.",
+    })
+  )
+) {}
 
 /**
  * Reason a pipeline checkpoint was written.
@@ -863,10 +901,10 @@ export class AgentFailed extends S.Opaque<AgentFailed, { readonly brand: unique 
  * @since 0.0.0
  */
 export const CheckpointReason = LiteralKit(["scheduled", "agent-completed", "manual", "error-recovery"]).pipe(
-    $I.annoteSchema("CheckpointReason", {
-      description: "Closed set of reasons for persisting pipeline state.",
-    })
-  );
+  $I.annoteSchema("CheckpointReason", {
+    description: "Closed set of reasons for persisting pipeline state.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link CheckpointReason}.
@@ -908,14 +946,17 @@ export type CheckpointReason = typeof CheckpointReason.Type;
  * @category domain-events
  * @since 0.0.0
  */
-export class PipelineCheckpoint extends S.Opaque<PipelineCheckpoint, { readonly brand: unique symbol }>()(S.TaggedStruct("PipelineCheckpoint",
-  {
+export class PipelineCheckpoint extends S.Opaque<PipelineCheckpoint, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("PipelineCheckpoint", {
     state: PipelineState,
     reason: CheckpointReason,
     timestamp: S.DateTimeUtcFromString,
-  }).pipe($I.annoteSchema("PipelineCheckpoint", {
-    description: "Lifecycle event carrying an immutable pipeline-state checkpoint.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("PipelineCheckpoint", {
+      description: "Lifecycle event carrying an immutable pipeline-state checkpoint.",
+    })
+  )
+) {}
 
 const AgentEventDefinition = S.Union([
   AgentStarted,

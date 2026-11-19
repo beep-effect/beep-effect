@@ -122,6 +122,22 @@ export const EquatableKind = PropertyTypeKind.pick([
 export type EquatableKind = typeof EquatableKind.Type;
 
 /**
+ * Companion namespace for {@link EquatableKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace EquatableKind {
+  /**
+   * Encoded (wire) form of {@link EquatableKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof EquatableKind.Encoded;
+}
+
+/**
  * Tags whose values have an order, so they admit less-than and greater-than.
  *
  * **Example** (Booleans and markings have no order)
@@ -164,6 +180,22 @@ export const OrderedKind = PropertyTypeKind.pick([
 export type OrderedKind = typeof OrderedKind.Type;
 
 /**
+ * Companion namespace for {@link OrderedKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OrderedKind {
+  /**
+   * Encoded (wire) form of {@link OrderedKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof OrderedKind.Encoded;
+}
+
+/**
  * Tags whose values are searchable text.
  *
  * **Example** (Only strings are searchable text)
@@ -190,6 +222,22 @@ export const TextKind = PropertyTypeKind.pick(["string"]).pipe(
 export type TextKind = typeof TextKind.Type;
 
 /**
+ * Companion namespace for {@link TextKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TextKind {
+  /**
+   * Encoded (wire) form of {@link TextKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof TextKind.Encoded;
+}
+
+/**
  * Tags whose values are lists, so they admit a test for one element.
  *
  * **Example** (Only arrays hold elements)
@@ -214,6 +262,22 @@ export const ArrayKind = PropertyTypeKind.pick(["array"]).pipe(
  * @since 0.0.0
  */
 export type ArrayKind = typeof ArrayKind.Type;
+
+/**
+ * Companion namespace for {@link ArrayKind}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ArrayKind {
+  /**
+   * Encoded (wire) form of {@link ArrayKind}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ArrayKind.Encoded;
+}
 
 /**
  * The tag families the typed constructors are grouped by.
@@ -257,6 +321,22 @@ export const OperatorFamily = LiteralKit([
  * @since 0.0.0
  */
 export type OperatorFamily = typeof OperatorFamily.Type;
+
+/**
+ * Companion namespace for {@link OperatorFamily}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OperatorFamily {
+  /**
+   * Encoded (wire) form of {@link OperatorFamily}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof OperatorFamily.Encoded;
+}
 
 /**
  * The tags of each family: which properties a family's constructors accept.

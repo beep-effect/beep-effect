@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "//": "db8e9d9ef2355447ddd7a6c2805f0301da2adac24d95578619d926adefefa902"
+  },
+  "review": {
+    "reviewer": "Claude Fable 5.2 (model-first-slices lane, @slop/11-18-26)",
+    "reason": "//#check:model-first-slices gains the @beep/ui manifest and sources, which the prototype's party/web now links for its Button and which the check reads. No command, cache flag, output or environment changed; no qualification granted.",
+    "basis": {
+      "path": "docs/reports/model-first-slices-ui-link-cache-review-2026-11-18.md",
+      "sha256": "d1ad6a4ac84b19050baa8a0465d4cfec40438719fcfdb3136b263bdd229000b3"
+    }
+  },
+  "subjects": ["//"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

@@ -6,16 +6,16 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Formatter from "effect/Formatter";
+import { flow, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as Inspectable from "effect/Inspectable";
-import * as SchemaIssue from "effect/SchemaIssue";
-import * as Effect from "effect/Effect";
-import { flow, pipe } from "effect/Function";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as Str from "effect/String";
 import { dual2 } from "../Utils/Dual.ts";
 import type { PromptDoc } from "./Doc.ts";
@@ -44,7 +44,8 @@ const formatIssue = SchemaIssue.makeFormatterDefault();
  * @category models
  * @since 0.0.0
  */
-export class Violation extends S.Opaque<Violation, { readonly brand: unique symbol }>()(S.Struct({
+export class Violation extends S.Opaque<Violation, { readonly brand: unique symbol }>()(
+  S.Struct({
     /** Formatted path to the rejected field or collection element. */
     path: S.NonEmptyString.pipe(
       $I.annoteKey("Violation.path", {
@@ -65,9 +66,12 @@ export class Violation extends S.Opaque<Violation, { readonly brand: unique symb
         description: "Optional rejected input retained when schema decoding enabled input reporting.",
       })
     ),
-  }).pipe($I.annoteSchema("Violation", {
-    description: "Flattened Effect Schema violation used by extraction feedback.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("Violation", {
+      description: "Flattened Effect Schema violation used by extraction feedback.",
+    })
+  )
+) {}
 
 /**
  * Flattens an Effect v4 `SchemaError` into deterministic path/message records.

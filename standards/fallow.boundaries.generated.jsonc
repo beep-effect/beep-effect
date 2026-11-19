@@ -1502,12 +1502,14 @@
           "@beep/alchemy-aws-extras",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/alchemy-aws-extras",
           "@beep/identity",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -1535,6 +1537,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -1544,6 +1547,7 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/schema",
+          "@beep/test-utils",
           "@beep/utils"
         ]
       },
@@ -3178,12 +3182,14 @@
         "allow": [
           "@beep/identity",
           "@beep/infra-github",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/infra-github",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/test-utils"
         ]
       },
       {

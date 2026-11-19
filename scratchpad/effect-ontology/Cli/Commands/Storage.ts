@@ -8,22 +8,23 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import * as Console from "effect/Console";
-import * as Effect from "effect/Effect";
-import * as MutableHashSet from "effect/MutableHashSet";
-import * as Order from "effect/Order";
+
 import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as Str from "effect/String";
+import * as Console from "effect/Console";
 import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
+import * as Effect from "effect/Effect";
+import * as MutableHashSet from "effect/MutableHashSet";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
+import type { PlatformError, SystemError } from "effect/PlatformError";
+import * as P from "effect/Predicate";
+import type * as KeyValueStore from "effect/persistence/KeyValueStore";
+import * as Str from "effect/String";
 import { BatchManifest } from "../../Domain/Schema/Batch.ts";
 import { StorageService } from "../../Service/Storage.ts";
 import { withErrorHandler } from "../ErrorHandler.ts";
-import type { PlatformError, SystemError} from "effect/PlatformError";
-import * as KeyValueStore from "effect/persistence/KeyValueStore";
 
 // =============================================================================
 // Subcommands
@@ -36,7 +37,9 @@ const listPrefix = Argument.String("prefix").pipe(
   Argument.withDescription("Path prefix to list (default: root)")
 );
 
-const listHandler = Effect.fn("listHandler")(function* (prefix: O.Option<string>): Effect.fn.Return<void, PlatformError | SystemError, StorageService> {
+const listHandler = Effect.fn("listHandler")(function* (
+  prefix: O.Option<string>
+): Effect.fn.Return<void, PlatformError | SystemError, StorageService> {
   const storage = yield* StorageService;
   const effectivePrefix = O.getOrElse(prefix, () => "");
   yield* Console.log(`Listing: ${effectivePrefix || "(root)"}`);
@@ -84,7 +87,10 @@ const catLinesOption = Flag.Int("lines").pipe(
   Flag.withDescription("Limit output to N lines (0 = all)")
 );
 
-const catHandler = Effect.fn("catHandler")(function* (path: string, lines: number): Effect.fn.Return<void, KeyValueStore.KeyValueStoreError, StorageService> {
+const catHandler = Effect.fn("catHandler")(function* (
+  path: string,
+  lines: number
+): Effect.fn.Return<void, KeyValueStore.KeyValueStoreError, StorageService> {
   const storage = yield* StorageService;
   const contentOpt = yield* storage.getOption(path);
   if (O.isNone(contentOpt)) {
@@ -104,7 +110,11 @@ const catCommand = Command.make("cat", { path: catPath, lines: catLinesOption },
 
 // --- Batches Command ---
 
-const batchesHandler = Effect.fn("batchesHandler")(function* (): Effect.fn.Return<void, KeyValueStore.KeyValueStoreError | PlatformError | SystemError, StorageService> {
+const batchesHandler = Effect.fn("batchesHandler")(function* (): Effect.fn.Return<
+  void,
+  KeyValueStore.KeyValueStoreError | PlatformError | SystemError,
+  StorageService
+> {
   const storage = yield* StorageService;
   yield* Console.log("Batch Manifests:");
   yield* Console.log("");
@@ -141,7 +151,11 @@ const batchesCommand = Command.make("batches", {}, () => withErrorHandler(batche
 
 // --- Info Command ---
 
-const infoHandler = Effect.fn("infoHandler")(function* (): Effect.fn.Return<void, KeyValueStore.KeyValueStoreError | PlatformError | SystemError, StorageService> {
+const infoHandler = Effect.fn("infoHandler")(function* (): Effect.fn.Return<
+  void,
+  KeyValueStore.KeyValueStoreError | PlatformError | SystemError,
+  StorageService
+> {
   const storage = yield* StorageService;
   yield* Console.log("Storage Configuration:");
   yield* Console.log("");

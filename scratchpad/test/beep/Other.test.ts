@@ -1,3 +1,5 @@
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
@@ -33,7 +35,12 @@ const decodeFails = (schema: S.Codec<unknown, unknown, never, unknown>, input: u
 
 const rejectedReason = (exit: Exit.Exit<string, TimeZoneRejected>): string =>
   Exit.match(exit, {
-    onFailure: (cause) => cause.pipe(Cause.findErrorOption, O.map((error) => error.reason), O.getOrElse(() => "no-fail")),
+    onFailure: (cause) =>
+      cause.pipe(
+        Cause.findErrorOption,
+        O.map((error) => error.reason),
+        O.getOrElse(() => "no-fail"),
+      ),
     onSuccess: () => "success",
   });
 
@@ -67,12 +74,15 @@ describe("Other", () => {
   it("bounds CreatePerson.name to 2 through 40 characters", () => {
     assert.strictEqual(decode(CreatePerson, { name: "Al" }).name, "Al");
     assert.strictEqual(decodeFails(CreatePerson, { name: "A" }), true);
-    assert.strictEqual(decodeFails(CreatePerson, { name: "x".repeat(41) }), true);
+    assert.strictEqual(decodeFails(CreatePerson, { name: Str.repeat(41)("x") }), true);
   });
 
   it("validateTimeZone strips, rejects empty, and rejects unknown zones", () => {
     assert.strictEqual(Effect.runSync(validateTimeZone("  Europe/Berlin ")), "Europe/Berlin");
-    assert.strictEqual(validateTimeZone("   ").pipe(Effect.runSyncExit, rejectedReason), "time_zone must be a non-empty IANA timezone");
+    assert.strictEqual(
+      validateTimeZone("   ").pipe(Effect.runSyncExit, rejectedReason),
+      "time_zone must be a non-empty IANA timezone",
+    );
     assert.strictEqual(
       validateTimeZone("Mars/Olympus").pipe(Effect.runSyncExit, rejectedReason),
       "time_zone must be a valid IANA timezone",
@@ -80,7 +90,10 @@ describe("Other", () => {
   });
 
   it("SyncUserTimeZoneRequest applies the same rule on decode", () => {
-    assert.strictEqual(decode(SyncUserTimeZoneRequest, { timeZone: " America/New_York " }).timeZone, "America/New_York");
+    assert.strictEqual(
+      decode(SyncUserTimeZoneRequest, { timeZone: " America/New_York " }).timeZone,
+      "America/New_York",
+    );
     assert.strictEqual(decodeFails(SyncUserTimeZoneRequest, { timeZone: "" }), true);
     assert.strictEqual(decodeFails(SyncUserTimeZoneRequest, { timeZone: "Mars/Olympus" }), true);
   });
@@ -102,7 +115,10 @@ describe("Other", () => {
     assert.strictEqual(voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 2 }), "unknown");
     assert.strictEqual(voiceReadiness({ speech_samples: ["s1"], speech_samples_version: true }), "unknown");
     assert.strictEqual(voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 3.5 }), "unknown");
-    assert.strictEqual(voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 3 }), "saved_sample_awaiting_embedding");
+    assert.strictEqual(
+      voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 3 }),
+      "saved_sample_awaiting_embedding",
+    );
     assert.strictEqual(
       voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 3, speaker_embedding: null }),
       "saved_sample_awaiting_embedding",
@@ -111,15 +127,34 @@ describe("Other", () => {
       voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 3, speaker_embedding: [] }),
       "saved_sample_awaiting_embedding",
     );
-    assert.strictEqual(voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 3, speaker_embedding: "v" }), "unknown");
-    assert.strictEqual(voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 3, speaker_embedding: [0, 0] }), "unknown");
-    assert.strictEqual(voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 3, speaker_embedding: [1, true] }), "unknown");
     assert.strictEqual(
-      voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 3, speaker_embedding: [1, Number.POSITIVE_INFINITY] }),
+      voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 3, speaker_embedding: "v" }),
       "unknown",
     );
-    assert.strictEqual(voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 3, speaker_embedding: [0.2, -1] }), "ready");
-    assert.strictEqual(voiceReadiness({ speechSamples: ["s1"], speechSamplesVersion: 4, speakerEmbedding: [1] }), "ready");
+    assert.strictEqual(
+      voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 3, speaker_embedding: [0, 0] }),
+      "unknown",
+    );
+    assert.strictEqual(
+      voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 3, speaker_embedding: [1, true] }),
+      "unknown",
+    );
+    assert.strictEqual(
+      voiceReadiness({
+        speech_samples: ["s1"],
+        speech_samples_version: 3,
+        speaker_embedding: [1, Number.POSITIVE_INFINITY],
+      }),
+      "unknown",
+    );
+    assert.strictEqual(
+      voiceReadiness({ speech_samples: ["s1"], speech_samples_version: 3, speaker_embedding: [0.2, -1] }),
+      "ready",
+    );
+    assert.strictEqual(
+      voiceReadiness({ speechSamples: ["s1"], speechSamplesVersion: 4, speakerEmbedding: [1] }),
+      "ready",
+    );
   });
 
   it("decodes Person with present, null, and missing Option fields", () => {
@@ -145,7 +180,13 @@ describe("Other", () => {
 
   it("decodePerson derives voice readiness from snake_case stored records", () => {
     const derived = Effect.runSync(
-      decodePerson({ id: "p1", name: "Ada", speech_samples: ["s1"], speech_samples_version: 3, speaker_embedding: [0.5] }),
+      decodePerson({
+        id: "p1",
+        name: "Ada",
+        speech_samples: ["s1"],
+        speech_samples_version: 3,
+        speaker_embedding: [0.5],
+      }),
     );
     assert.strictEqual(derived.voiceReadiness, "ready");
     assert.deepStrictEqual(derived.speechSamples, ["s1"]);
@@ -153,13 +194,17 @@ describe("Other", () => {
     assert.strictEqual(legacy.voiceReadiness, "unknown");
     assert.strictEqual(legacy.speechSamplesVersion, 3);
     assert.strictEqual(legacy.createdAt.pipe(O.getOrThrow, DateTime.formatIso), "2020-01-02T03:04:05.000Z");
-    const claimedKept = Effect.runSync(decodePerson({ id: "p1", name: "Ada", voice_readiness: "ready", speech_samples: [] }));
+    const claimedKept = Effect.runSync(
+      decodePerson({ id: "p1", name: "Ada", voice_readiness: "ready", speech_samples: [] }),
+    );
     assert.strictEqual(claimedKept.voiceReadiness, "ready");
     const claimedRecomputed = Effect.runSync(
       decodePerson({ id: "p1", name: "Ada", voice_readiness: "ready", speech_samples: [], speaker_embedding: [1] }),
     );
     assert.strictEqual(claimedRecomputed.voiceReadiness, "not_learned");
-    const invalidClaim = Effect.runSync(decodePerson({ id: "p1", name: "Ada", voice_readiness: "bogus", speech_samples: [] }));
+    const invalidClaim = Effect.runSync(
+      decodePerson({ id: "p1", name: "Ada", voice_readiness: "bogus", speech_samples: [] }),
+    );
     assert.strictEqual(invalidClaim.voiceReadiness, "not_learned");
     assert.strictEqual(Effect.runSyncExit(decodePerson({ id: "p1" }))._tag, "Failure");
     assert.strictEqual(Effect.runSyncExit(decodePerson("nope"))._tag, "Failure");
@@ -176,7 +221,7 @@ describe("Other", () => {
       ),
     );
     assert.deepStrictEqual(
-      people.map((person) => person.id),
+      A.map(people, (person) => person.id),
       ["p1", "p3"],
     );
     assert.strictEqual(people[1]?.voiceReadiness, "not_learned");

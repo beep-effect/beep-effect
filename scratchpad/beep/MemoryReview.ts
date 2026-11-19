@@ -8,6 +8,7 @@
  *
  * @since 0.0.0
  */
+import * as Result from "effect/Result";
 import { $ScratchpadId } from "@beep/identity";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -42,7 +43,7 @@ const veracityText = (fact: { readonly [key: string]: S.Json }): O.Option<string
   const value = fact.veracity;
   if (value === null) return O.none();
   if (P.isString(value)) return O.some(value);
-  return O.some(JSON.stringify(value));
+  return O.some(S.encodeUnknownResult(S.fromJsonString(S.Unknown))(value).pipe(Result.getOrThrow));
 };
 
 /**
@@ -78,7 +79,7 @@ export class MemoryReviewRejected extends S.TaggedError<MemoryReviewRejected, { 
  * @since 0.0.0
  */
 export declare namespace MemoryReviewRejected {
-  export type Encoded = S.Codec.Encoded<typeof MemoryReviewRejected>;
+  export type Encoded = typeof MemoryReviewRejected.Encoded;
 }
 
 /**
@@ -188,7 +189,7 @@ export class MemoryReviewConflict extends Model<MemoryReviewConflict>("MemoryRev
  * @since 0.0.0
  */
 export declare namespace MemoryReviewConflict {
-  export type Encoded = S.Codec.Encoded<typeof MemoryReviewConflict>;
+  export type Encoded = typeof MemoryReviewConflict.Encoded;
 }
 
 const isAwareInstantString = S.is(S.String.check(S.isPattern(awareInstant)));

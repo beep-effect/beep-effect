@@ -1,4 +1,3 @@
-import * as Result from "effect/Result";
 /**
  * Chat messages, sessions, and the document types a chat file may carry.
  *
@@ -10,6 +9,7 @@ import * as Result from "effect/Result";
  *
  * @since 0.0.0
  */
+import * as Result from "effect/Result";
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as Arr from "effect/Array";
@@ -327,11 +327,11 @@ export const CHAT_FILE_DOCUMENT_MIME_TYPES = HashSet.fromIterable([
 ]);
 
 const fileExtension = (name: string): string => {
-  const slash = Math.max(name.lastIndexOf("/"), name.lastIndexOf("\\"));
-  const file = slash >= 0 ? name.slice(slash + 1) : name;
-  const dot = file.lastIndexOf(".");
+  const slash = Math.max(O.getOrElse(Str.lastIndexOf("/")(name), () => -1), O.getOrElse(Str.lastIndexOf("\\")(name), () => -1));
+  const file = slash >= 0 ? Str.slice(slash + 1)(name) : name;
+  const dot = O.getOrElse(Str.lastIndexOf(".")(file), () => -1);
   if (dot <= 0) return "";
-  return Str.toLowerCase(file.slice(dot + 1));
+  return Str.toLowerCase(Str.slice(dot + 1)(file));
 };
 
 /**
@@ -485,7 +485,7 @@ export class MessageConversationStructured extends Model<MessageConversationStru
  * @since 0.0.0
  */
 export declare namespace MessageConversationStructured {
-  export type Encoded = S.Codec.Encoded<typeof MessageConversationStructured>;
+  export type Encoded = typeof MessageConversationStructured.Encoded;
 }
 
 /**
@@ -525,7 +525,7 @@ export class MessageConversation extends Model<MessageConversation>("MessageConv
  * @since 0.0.0
  */
 export declare namespace MessageConversation {
-  export type Encoded = S.Codec.Encoded<typeof MessageConversation>;
+  export type Encoded = typeof MessageConversation.Encoded;
 }
 
 /**
@@ -571,7 +571,7 @@ export class FileChat extends Model<FileChat>("FileChat")(
  * @since 0.0.0
  */
 export declare namespace FileChat {
-  export type Encoded = S.Codec.Encoded<typeof FileChat>;
+  export type Encoded = typeof FileChat.Encoded;
 }
 
 /**
@@ -691,7 +691,7 @@ export class ChartDataPoint extends Model<ChartDataPoint>("ChartDataPoint")(
  * @since 0.0.0
  */
 export declare namespace ChartDataPoint {
-  export type Encoded = S.Codec.Encoded<typeof ChartDataPoint>;
+  export type Encoded = typeof ChartDataPoint.Encoded;
 }
 
 /**
@@ -732,7 +732,7 @@ export class ChartDataset extends Model<ChartDataset>("ChartDataset")(
  * @since 0.0.0
  */
 export declare namespace ChartDataset {
-  export type Encoded = S.Codec.Encoded<typeof ChartDataset>;
+  export type Encoded = typeof ChartDataset.Encoded;
 }
 
 /**
@@ -773,7 +773,7 @@ export class ChartData extends Model<ChartData>("ChartData")(
  * @since 0.0.0
  */
 export declare namespace ChartData {
-  export type Encoded = S.Codec.Encoded<typeof ChartData>;
+  export type Encoded = typeof ChartData.Encoded;
 }
 
 const evidenceKinds = HashSet.fromIterable([
@@ -928,10 +928,10 @@ export class ChatEvidenceReference extends Model<ChatEvidenceReference>("ChatEvi
  * @since 0.0.0
  */
 export declare namespace ChatEvidenceReference {
-  export type Encoded = S.Codec.Encoded<typeof ChatEvidenceReference>;
+  export type Encoded = typeof ChatEvidenceReference.Encoded;
 }
 
-const jsonSize = (value: S.JsonObject): number => JSON.stringify(value).length;
+const jsonSize = (value: S.JsonObject): number => S.encodeResult(S.fromJsonString(S.JsonObject))(value).pipe(Result.getOrThrow).length;
 
 /**
  * Identity rules for one evidence reference.
@@ -1049,7 +1049,7 @@ export class ChatEvidenceEnvelope extends Model<ChatEvidenceEnvelope>("ChatEvide
  * @since 0.0.0
  */
 export declare namespace ChatEvidenceEnvelope {
-  export type Encoded = S.Codec.Encoded<typeof ChatEvidenceEnvelope>;
+  export type Encoded = typeof ChatEvidenceEnvelope.Encoded;
 }
 
 /**
@@ -1070,7 +1070,7 @@ export declare namespace ChatEvidenceEnvelope {
  * @since 0.0.0
  */
 export const evidenceEnvelopeIssue = (envelope: ChatEvidenceEnvelope): O.Option<string> => {
-  const ids = envelope.references.map((reference) => reference.id);
+  const ids = Arr.map(envelope.references, (reference) => reference.id);
   if (HashSet.size(HashSet.fromIterable(ids)) !== ids.length) return O.some("evidence reference ids must be unique");
   return O.none();
 };
@@ -1099,9 +1099,8 @@ export const settleEvidenceEnvelope = (envelope: ChatEvidenceEnvelope): ChatEvid
   if (envelope.schemaVersion === 1) return envelope;
   return ChatEvidenceEnvelope.make({
     ...envelope,
-    references: envelope.references.map((reference) =>
-      ChatEvidenceReference.make({ ...reference, kind: "unknown", state: "unknown" }),
-    ),
+    references: Arr.map(envelope.references, (reference) =>
+      ChatEvidenceReference.make({ ...reference, kind: "unknown", state: "unknown" })),
   });
 };
 
@@ -1210,13 +1209,13 @@ export class Message extends Model<Message>("Message")(
  * @since 0.0.0
  */
 export declare namespace Message {
-  export type Encoded = S.Codec.Encoded<typeof Message>;
+  export type Encoded = typeof Message.Encoded;
 }
 
 const decodeUnknownEffectMessage = S.decodeUnknownEffect(Message);
 
 const camelKey = (key: string): string =>
-  key.replace(/_([a-z])/g, (_all, letter: string) => letter.toUpperCase());
+  Arr.join(Arr.map(Str.split(/_([a-z])/g)(key), (part, index) => index % 2 === 1 ? Str.toUpperCase(part) : part), "");
 
 const camelizeTop = (input: unknown): unknown => {
   if (!isRecord(input)) return input;
@@ -1280,10 +1279,11 @@ export const repairMessageRecord = (input: unknown): unknown => {
     const metadata = data.metadata;
     if (P.isString(metadata)) {
       // Legacy metadata that is not JSON stays a string.
-      Result.getOrElse(Result.try(() => {
-        const parsed: unknown = JSON.parse(metadata);
-        if (isRecord(parsed) && Arr.isArray(parsed.content_blocks)) data.contentBlocks = parsed.content_blocks;
-      }), () => undefined);
+      S.decodeResult(S.fromJsonString(S.Unknown))(metadata).pipe(
+        Result.map((parsed) => {
+          if (isRecord(parsed) && Arr.isArray(parsed.content_blocks)) data.contentBlocks = parsed.content_blocks;
+        }),
+      );
     }
   }
   return data;
@@ -1465,16 +1465,14 @@ export const messagesAsString: {
     void useUserNameIfAvailable;
     const names: { [key: string]: string | null } = {};
     const sorted = Arr.sort(messages, Order.mapInput(DateTime.Order, (message: Message) => message.createdAt));
-    return sorted
-      .map((message) => {
+    return Arr.join(Arr.map(sorted, (message) => {
         const sender = resolveSenderName(message, usePluginName, names, resolver);
         let line = `(${formatChatStamp(message.createdAt)}) ${sender}: ${message.text}`;
         if (includeFileInfo && message.filesId.length > 0) {
-          line = `${line} [Files attached: ${message.filesId.length} file(s), IDs: ${message.filesId.join(", ")}]`;
+          line = `${line} [Files attached: ${message.filesId.length} file(s), IDs: ${Arr.join(message.filesId, ", ")}]`;
         }
         return line;
-      })
-      .join("\n");
+      }), "\n");
   },
 );
 
@@ -1533,25 +1531,23 @@ export const messagesAsXml: {
     void useUserNameIfAvailable;
     const names: { [key: string]: string | null } = {};
     const sorted = Arr.sort(messages, Order.mapInput(DateTime.Order, (message: Message) => message.createdAt));
-    return sorted
-      .map((message) => {
+    return Arr.join(Arr.map(sorted, (message) => {
         let fileSection = "";
         if (includeFileInfo && message.files.length > 0) {
-          const rows = message.files.map((file) => `  <file id="${file.id}" name="${file.name}" type="${file.mimeType}"/>`);
-          fileSection = `<attachments>\n${rows.join("\n")}\n</attachments>`;
+          const rows = Arr.map(message.files, (file) => `  <file id="${file.id}" name="${file.name}" type="${file.mimeType}"/>`);
+          fileSection = `<attachments>\n${Arr.join(rows, "\n")}\n</attachments>`;
         } else if (includeFileInfo && message.filesId.length > 0) {
-          fileSection = `<attachments>\n${message.filesId.map((id) => `  <file id="${id}"/>`).join("\n")}\n</attachments>`;
+          fileSection = `<attachments>\n${Arr.join(Arr.map(message.filesId, (id) => `  <file id="${id}"/>`), "\n")}\n</attachments>`;
         } else if (message.files.length > 0) {
-          fileSection = `<attachments>${message.files.map((file) => `<file>${file.name}</file>`).join("")}</attachments>`;
+          fileSection = `<attachments>${Arr.join(Arr.map(message.files, (file) => `<file>${file.name}</file>`), "")}</attachments>`;
         }
-        return `<message>
+        return Str.trim(`<message>
 <created_at>${formatChatStamp(message.createdAt)}</created_at>
 <sender>${resolveSenderName(message, usePluginName, names, resolver)}</sender>
 <content>${message.text}</content>
 ${fileSection}
-</message>`.trim();
-      })
-      .join("\n");
+</message>`);
+      }), "\n");
   },
 );
 
@@ -1594,7 +1590,7 @@ export class ResponseMessage extends Model<ResponseMessage>("ResponseMessage")(
  * @since 0.0.0
  */
 export declare namespace ResponseMessage {
-  export type Encoded = S.Codec.Encoded<typeof ResponseMessage>;
+  export type Encoded = typeof ResponseMessage.Encoded;
 }
 
 const awareScopeDate = S.NullOr(S.String).pipe(
@@ -1607,8 +1603,8 @@ const awareScopeDate = S.NullOr(S.String).pipe(
             if (value === null) return O.some(O.none());
             const stripped = Str.trim(value);
             if (stripped.length === 0) return O.some(O.none());
-            const parsed = DateTime.make(stripped.split("Z").join("+00:00"));
-            if (O.isNone(parsed) || !Str.includes("T")(stripped) || (!Str.includes("Z")(stripped) && !Str.includes("+")(stripped) && !Str.includes("-")(stripped.slice(10)))) {
+            const parsed = DateTime.make(Arr.join(Str.split("Z")(stripped), "+00:00"));
+            if (O.isNone(parsed) || !Str.includes("T")(stripped) || (!Str.includes("Z")(stripped) && !Str.includes("+")(stripped) && !Str.includes("-")(Str.slice(10)(stripped)))) {
               return O.none();
             }
             return O.some(O.some(stripped));
@@ -1668,7 +1664,7 @@ export class PageContext extends Model<PageContext>("PageContext")(
  * @since 0.0.0
  */
 export declare namespace PageContext {
-  export type Encoded = S.Codec.Encoded<typeof PageContext>;
+  export type Encoded = typeof PageContext.Encoded;
 }
 
 /**
@@ -1719,7 +1715,7 @@ export class SendMessageRequest extends Model<SendMessageRequest>("SendMessageRe
  * @since 0.0.0
  */
 export declare namespace SendMessageRequest {
-  export type Encoded = S.Codec.Encoded<typeof SendMessageRequest>;
+  export type Encoded = typeof SendMessageRequest.Encoded;
 }
 
 /**
@@ -1759,7 +1755,7 @@ export class GenerateReplyTurn extends Model<GenerateReplyTurn>("GenerateReplyTu
  * @since 0.0.0
  */
 export declare namespace GenerateReplyTurn {
-  export type Encoded = S.Codec.Encoded<typeof GenerateReplyTurn>;
+  export type Encoded = typeof GenerateReplyTurn.Encoded;
 }
 
 /**
@@ -1818,7 +1814,7 @@ export class GenerateReplyRequest extends Model<GenerateReplyRequest>("GenerateR
  * @since 0.0.0
  */
 export declare namespace GenerateReplyRequest {
-  export type Encoded = S.Codec.Encoded<typeof GenerateReplyRequest>;
+  export type Encoded = typeof GenerateReplyRequest.Encoded;
 }
 
 /**
@@ -1851,7 +1847,7 @@ export class GenerateReplyResponse extends Model<GenerateReplyResponse>("Generat
  * @since 0.0.0
  */
 export declare namespace GenerateReplyResponse {
-  export type Encoded = S.Codec.Encoded<typeof GenerateReplyResponse>;
+  export type Encoded = typeof GenerateReplyResponse.Encoded;
 }
 
 /**
@@ -1889,7 +1885,7 @@ export class RateMessageRequest extends Model<RateMessageRequest>("RateMessageRe
  * @since 0.0.0
  */
 export declare namespace RateMessageRequest {
-  export type Encoded = S.Codec.Encoded<typeof RateMessageRequest>;
+  export type Encoded = typeof RateMessageRequest.Encoded;
 }
 
 /**
@@ -1921,7 +1917,7 @@ export class ShareChatMessagesRequest extends Model<ShareChatMessagesRequest>("S
  * @since 0.0.0
  */
 export declare namespace ShareChatMessagesRequest {
-  export type Encoded = S.Codec.Encoded<typeof ShareChatMessagesRequest>;
+  export type Encoded = typeof ShareChatMessagesRequest.Encoded;
 }
 
 /**
@@ -1967,7 +1963,7 @@ export class ChatSession extends Model<ChatSession>("ChatSession")(
  * @since 0.0.0
  */
 export declare namespace ChatSession {
-  export type Encoded = S.Codec.Encoded<typeof ChatSession>;
+  export type Encoded = typeof ChatSession.Encoded;
 }
 
 const decodeChatSession = S.decodeUnknownEffect(ChatSession);

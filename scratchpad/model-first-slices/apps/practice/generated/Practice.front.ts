@@ -3,15 +3,15 @@
 import * as Docker from "@alchemy.run/docker";
 import * as Cluster from "@alchemy.run/effect-cluster";
 import type { HttpEffect } from "alchemy/Http";
-import * as A from "effect/Array";
+import * as A from "@beep/utils/Array";
 import * as Effect from "effect/Effect";
-import { pipe } from "effect/Function";
+import { pipe, identity } from "effect/Function";
 import { HttpServerRequest } from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as R from "effect/Record";
-import * as Str from "effect/String";
+import * as Str from "@beep/utils/Str";
 import { Database } from "../src/Cluster.ts";
 import { AuthorityGateway, RunsGateway, Session, authority, conformance, party, runs } from "./Practice.entry.ts";
 
@@ -51,7 +51,7 @@ export default class PracticeFront extends Docker.Service<PracticeFront>()(
         // A path no context serves goes to the root app; with none, it is not found.
         return yield* O.match(O.orElse(R.get(routes, segment), () => R.get(routes, "")), {
           onNone: () => Effect.succeed(HttpServerResponse.empty({ status: 404 })),
-          onSome: (route) => route,
+          onSome: identity,
         });
       }),
     };

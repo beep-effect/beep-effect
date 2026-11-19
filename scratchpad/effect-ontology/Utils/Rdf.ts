@@ -1,3 +1,4 @@
+import { MakeQuadOptionsInput } from "@beep/rdf/Rdf";
 /**
  * Pure RDF term and quad construction helpers.
  *
@@ -10,9 +11,9 @@ import { IRI, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import { dual2 } from "./Dual.ts";
-import * as S from "effect/Schema";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
+import { dual2 } from "./Dual.ts";
 /**
  * Concatenates a namespace and local identifier, then validates the result as
  * an IRI.
@@ -33,7 +34,8 @@ import * as Result from "effect/Result";
  * @since 0.0.0
  */
 export const buildIri = dual2(
-  (baseNamespace: string, localName: string): IriValue => Result.getOrThrow(S.decodeResult(IRI)(`${baseNamespace}${localName}`))
+  (baseNamespace: string, localName: string): IriValue =>
+    Result.getOrThrow(S.decodeResult(IRI)(`${baseNamespace}${localName}`))
 );
 
 /**
@@ -120,7 +122,7 @@ export const canonicalQuad = (input: {
     O.map(input.graph, (value) => (P.isString(value) ? makeNamedNode(value) : value)),
     {
       onNone: () => makeQuad(subject, predicate, object),
-      onSome: (graph) => makeQuad(subject, predicate, { object, graph }),
+      onSome: (graph) => makeQuad(subject, predicate, MakeQuadOptionsInput.make({ object, graph })),
     }
   );
 };

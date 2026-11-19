@@ -429,12 +429,15 @@ export const PrProvenanceModel = S.NonEmptyString.check(
  * @since 0.0.0
  */
 export type PrProvenanceModel = typeof PrProvenanceModel.Type;
+// `isPattern` (not a bare `makeFilter`) so derived arbitraries generate matching names
+// instead of discarding random strings until a property exhausts.
 const GitHubName = S.NonEmptyString.check(
-  S.makeFilter<string>(
-    (value) => /^[A-Za-z0-9_.-]+$/u.test(value) || { path: [], issue: "Expected a GitHub name" },
+  S.isPattern(
+    /^[A-Za-z0-9_.-]+$/,
     $I.annote("GitHubNameCheck", {
       title: "GitHub name",
       description: "GitHub owner or repository name.",
+      message: "Expected a GitHub name",
     })
   )
 );

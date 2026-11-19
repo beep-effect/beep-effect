@@ -1,11 +1,11 @@
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import { EvidenceSpan } from "../Domain/Model/Entity.ts";
 import type { ClassDefinition, PropertyDefinition } from "../Domain/Model/Ontology.ts";
 import { dual2 } from "../Utils/Dual.ts";
 import { extractLocalNameFromIri, makeLocalNameSchema } from "../Utils/Iri.ts";
-import * as Effect from "effect/Effect";
 /**
  * Creates Effect Schema for entity extraction (Stage 1)
  *
@@ -122,9 +122,11 @@ export const makeEntitySchema = dual2(
             "Array of class names (e.g., 'Player', 'Team') - use local names, not full URIs (at least one required)",
         })
       ),
-      attributes: AttributesSchema.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotate({
-        description: `Entity attributes - use allowed property names${propList}`,
-      }),
+      attributes: AttributesSchema.pipe(S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone)).annotate(
+        {
+          description: `Entity attributes - use allowed property names${propList}`,
+        }
+      ),
       mentions: S.Array(EvidenceSpan)
         .pipe(S.check(S.isNonEmpty()), S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone))
         .annotate({

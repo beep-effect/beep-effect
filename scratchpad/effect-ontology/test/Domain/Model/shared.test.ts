@@ -1,10 +1,11 @@
-import * as Effect from "effect/Effect";
 import { describe, expect, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import * as Arbitrary from "effect/Arbitrary";
 import { Attributes, AttributeValue, EntityId, OptionalConfidence } from "../../../Domain/Model/shared.ts";
+
 const decodeOptionalConfidenceResult = S.decodeResult(OptionalConfidence);
 
 const sharedSchemas: ReadonlyArray<S.Constraint> = [AttributeValue, Attributes, OptionalConfidence, EntityId];
@@ -18,7 +19,7 @@ describe("effect-ontology shared model schemas", () => {
           Arbitrary.checkEffect(
             Arbitrary.all([arbitrary]),
             ([value]) => {
-          expect(S.is(schema)(value)).toBe(true);
+              expect(S.is(schema)(value)).toBe(true);
 
               return true;
             },

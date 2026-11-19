@@ -10,9 +10,10 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause, OptionalErrorMessage } from "./Base.ts";
-import * as Effect from "effect/Effect";
+
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Workflow");
 
 /**
@@ -68,7 +69,9 @@ export class WorkflowError extends S.TaggedError<WorkflowError, { readonly brand
  * @category errors
  * @since 0.0.0
  */
-export class WorkflowNotFoundError extends S.TaggedError<WorkflowNotFoundError, { readonly brand: unique symbol }>($I`WorkflowNotFoundError`)(
+export class WorkflowNotFoundError extends S.TaggedError<WorkflowNotFoundError, { readonly brand: unique symbol }>(
+  $I`WorkflowNotFoundError`
+)(
   "WorkflowNotFoundError",
   {
     message: ErrorMessage.annotateKey({
@@ -108,7 +111,9 @@ export class WorkflowNotFoundError extends S.TaggedError<WorkflowNotFoundError, 
  * @category errors
  * @since 0.0.0
  */
-export class WorkflowSuspendedError extends S.TaggedError<WorkflowSuspendedError, { readonly brand: unique symbol }>($I`WorkflowSuspendedError`)(
+export class WorkflowSuspendedError extends S.TaggedError<WorkflowSuspendedError, { readonly brand: unique symbol }>(
+  $I`WorkflowSuspendedError`
+)(
   "WorkflowSuspendedError",
   {
     message: ErrorMessage.annotateKey({
@@ -117,7 +122,10 @@ export class WorkflowSuspendedError extends S.TaggedError<WorkflowSuspendedError
     cause: OptionalErrorMessage.annotateKey({
       description: "Optional suspension reason, normalized to Option.",
     }),
-    isResumable: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))).annotateKey({
+    isResumable: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false))
+    ).annotateKey({
       description: "Whether the suspended execution may be resumed.",
     }),
   },

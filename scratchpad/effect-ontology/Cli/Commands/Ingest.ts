@@ -1,4 +1,15 @@
+import * as A from "effect/Array";
+import * as Console from "effect/Console";
+import * as Argument from "effect/cli/Argument";
+import * as Command from "effect/cli/Command";
+import * as Flag from "effect/cli/Flag";
 import type * as Digest from "effect/crypto/Digest";
+import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
+import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as O from "effect/Option";
+import * as Path from "effect/Path";
 /**
  * CLI: Ingest Command
  *
@@ -10,22 +21,11 @@ import type * as Digest from "effect/crypto/Digest";
  * @since 0.0.0
  */
 import type * as PlatformError from "effect/PlatformError";
-import * as Console from "effect/Console";
-import * as DateTime from "effect/DateTime";
-import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
-import * as Path from "effect/Path";
-import * as Random from "effect/Random";
-import * as A from "effect/Array";
-import { pipe } from "effect/Function";
-import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import type * as KeyValueStore from "effect/persistence/KeyValueStore";
+import * as Random from "effect/Random";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import * as Argument from "effect/cli/Argument";
-import * as Command from "effect/cli/Command";
-import * as Flag from "effect/cli/Flag";
-import type * as KeyValueStore from "effect/persistence/KeyValueStore";
 import {
   BatchId,
   ContentHash,
@@ -36,8 +36,7 @@ import {
   OntologyName,
   OntologyVersion,
 } from "../../Domain/Identity.ts";
-import type { ManifestDocument } from "../../Domain/Schema/Batch.ts";
-import { BatchManifest } from "../../Domain/Schema/Batch.ts";
+import { BatchManifest, ManifestDocument } from "../../Domain/Schema/Batch.ts";
 import { ConfigService } from "../../Service/Config.ts";
 import { StorageService } from "../../Service/Storage.ts";
 import { sha256SyncFull } from "../../Utils/Hash.ts";
@@ -102,8 +101,8 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
   const path = yield* Path.Path;
   const storage = yield* StorageService;
   const config = yield* ConfigService;
-  const randomA = (yield* Random.nextIntBetween(0, 16_777_216)).toString(16).padStart(6, "0");
-  const randomB = (yield* Random.nextIntBetween(0, 16_777_216)).toString(16).padStart(6, "0");
+  const randomA = Str.padStart(6, "0")((yield* Random.nextIntBetween(0, 16_777_216)).toString(16));
+  const randomB = Str.padStart(6, "0")((yield* Random.nextIntBetween(0, 16_777_216)).toString(16));
   const effectiveBatchId = yield* O.match(batchId, {
     onNone: () => Effect.succeed(BatchId.make(`batch-${randomA}${randomB}`)),
     onSome: S.decodeUnknownEffect(BatchId),
@@ -131,7 +130,8 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
     const filePath = path.join(dir, file);
     const stat = yield* fs.stat(filePath);
     const content = yield* fs.readFileString(filePath);
-    const docId = DocumentId.fromContentHash(ContentHash.make(yield* sha256SyncFull(content)));
+    const documentDigest = yield* sha256SyncFull(content);
+    const docId = DocumentId.fromContentHash(ContentHash.make(documentDigest));
     const storageKey = `${storagePrefix}/documents/${docId}`;
     yield* storage.set(storageKey, content);
     const contentType = Str.endsWith(".json")(file)
@@ -142,18 +142,21 @@ const ingestHandler = Effect.fn("ingestHandler")(function* (
           ? "text/markdown"
           : "text/plain";
     const sourceUri = yield* S.decodeUnknownEffect(GcsUri)(`gs://${bucket}/${storageKey}`);
-    documents.push({
-      documentId: docId,
-      sourceUri,
-      contentType,
-      sizeBytes: S.Natural.make(Number(stat.size)),
-    });
+    documents.push(
+      ManifestDocument.make({
+        documentId: docId,
+        sourceUri,
+        contentType,
+        sizeBytes: S.Natural.make(Number(stat.size)),
+      })
+    );
     yield* Console.log(`  Uploaded: ${file} -> ${storageKey}`);
   }
   const ontologyContent = yield* fs.readFileString(ontology);
   const ontologyName = yield* S.decodeEffect(OntologyName)(ontologyId);
   const targetNamespace = yield* S.decodeEffect(Namespace)(namespace);
-  const ontologyHash = ContentHash.make(yield* sha256SyncFull(ontologyContent));
+  const ontologyDigest = yield* sha256SyncFull(ontologyContent);
+  const ontologyHash = ContentHash.make(ontologyDigest);
   const ontologyFilename = path.basename(ontology);
   const ontologyKey = `${storagePrefix}/ontology/${ontologyFilename}`;
   yield* storage.set(ontologyKey, ontologyContent);

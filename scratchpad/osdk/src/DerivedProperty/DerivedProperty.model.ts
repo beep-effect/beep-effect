@@ -81,6 +81,22 @@ export const DatePart = MappedLiteralKit([
  */
 export type DatePart = typeof DatePart.Type;
 
+/**
+ * Companion namespace for {@link DatePart}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DatePart {
+  /**
+   * Encoded (wire) form of {@link DatePart}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof DatePart.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Operations over a linked object set
 // -----------------------------------------------------------------------------
@@ -140,6 +156,25 @@ export class SelectedValue extends S.Opaque<SelectedValue, { readonly brand: uni
 }
 
 /**
+ * Companion namespace for {@link SelectedValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SelectedValue {
+  /**
+   * Encoded (wire) form of {@link SelectedValue}: the property under `selectedPropertyApiName`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "get";
+    readonly selectedPropertyApiName: PropertyApiName.Encoded;
+  }
+}
+
+/**
  * Counts the linked objects.
  *
  * @category models
@@ -150,6 +185,24 @@ export class SelectedCount extends S.Opaque<SelectedCount, { readonly brand: uni
     $I.annoteSchema("SelectedCount", { description: "Counts the linked objects." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link SelectedCount}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SelectedCount {
+  /**
+   * Encoded (wire) form of {@link SelectedCount}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "count";
+  }
+}
 
 /**
  * Adds up a numeric property over the linked objects.
@@ -175,6 +228,25 @@ export class SelectedSum extends S.Opaque<SelectedSum, { readonly brand: unique 
 }
 
 /**
+ * Companion namespace for {@link SelectedSum}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SelectedSum {
+  /**
+   * Encoded (wire) form of {@link SelectedSum}: the property under `selectedPropertyApiName`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "sum";
+    readonly selectedPropertyApiName: PropertyApiName.Encoded;
+  }
+}
+
+/**
  * Averages a numeric property over the linked objects.
  *
  * @category models
@@ -194,6 +266,25 @@ export class SelectedAverage extends S.Opaque<SelectedAverage, { readonly brand:
    */
   static of(property: string): SelectedAverage {
     return SelectedAverage.make({ property: PropertyApiName.make(property) });
+  }
+}
+
+/**
+ * Companion namespace for {@link SelectedAverage}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SelectedAverage {
+  /**
+   * Encoded (wire) form of {@link SelectedAverage}: the property under `selectedPropertyApiName`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "avg";
+    readonly selectedPropertyApiName: PropertyApiName.Encoded;
   }
 }
 
@@ -223,6 +314,25 @@ export class SelectedMin extends S.Opaque<SelectedMin, { readonly brand: unique 
 }
 
 /**
+ * Companion namespace for {@link SelectedMin}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SelectedMin {
+  /**
+   * Encoded (wire) form of {@link SelectedMin}: the property under `selectedPropertyApiName`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "min";
+    readonly selectedPropertyApiName: PropertyApiName.Encoded;
+  }
+}
+
+/**
  * Takes the largest value of a property over the linked objects.
  *
  * @category models
@@ -244,6 +354,25 @@ export class SelectedMax extends S.Opaque<SelectedMax, { readonly brand: unique 
    */
   static of(property: string): SelectedMax {
     return SelectedMax.make({ property: PropertyApiName.make(property) });
+  }
+}
+
+/**
+ * Companion namespace for {@link SelectedMax}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SelectedMax {
+  /**
+   * Encoded (wire) form of {@link SelectedMax}: the property under `selectedPropertyApiName`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "max";
+    readonly selectedPropertyApiName: PropertyApiName.Encoded;
   }
 }
 
@@ -276,6 +405,25 @@ export class SelectedApproximateDistinct extends S.Opaque<
 }
 
 /**
+ * Companion namespace for {@link SelectedApproximateDistinct}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SelectedApproximateDistinct {
+  /**
+   * Encoded (wire) form of {@link SelectedApproximateDistinct}: the property under `selectedPropertyApiName`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "approximateDistinct";
+    readonly selectedPropertyApiName: PropertyApiName.Encoded;
+  }
+}
+
+/**
  * Counts exactly how many distinct values a property takes over the linked objects.
  *
  * **Details**
@@ -301,6 +449,25 @@ export class SelectedExactDistinct extends S.Opaque<SelectedExactDistinct, { rea
    */
   static of(property: string): SelectedExactDistinct {
     return SelectedExactDistinct.make({ property: PropertyApiName.make(property) });
+  }
+}
+
+/**
+ * Companion namespace for {@link SelectedExactDistinct}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SelectedExactDistinct {
+  /**
+   * Encoded (wire) form of {@link SelectedExactDistinct}: the property under `selectedPropertyApiName`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "exactDistinct";
+    readonly selectedPropertyApiName: PropertyApiName.Encoded;
   }
 }
 
@@ -345,6 +512,27 @@ export class SelectedApproximatePercentile extends S.Opaque<
   }
 }
 
+/**
+ * Companion namespace for {@link SelectedApproximatePercentile}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SelectedApproximatePercentile {
+  /**
+   * Encoded (wire) form of {@link SelectedApproximatePercentile}: the property under `selectedPropertyApiName`,
+   * the percentile under `approximatePercentile`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "approximatePercentile";
+    readonly selectedPropertyApiName: PropertyApiName.Encoded;
+    readonly approximatePercentile: number;
+  }
+}
+
 const collectLimit = S.Int.annotateKey({
   description: "Most values to collect; the platform accepts at most 100.",
 });
@@ -381,6 +569,26 @@ export class SelectedList extends S.Opaque<SelectedList, { readonly brand: uniqu
 }
 
 /**
+ * Companion namespace for {@link SelectedList}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SelectedList {
+  /**
+   * Encoded (wire) form of {@link SelectedList}: the property under `selectedPropertyApiName`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "collectList";
+    readonly selectedPropertyApiName: PropertyApiName.Encoded;
+    readonly limit: number;
+  }
+}
+
+/**
  * Collects the distinct non-null values of a property over the linked objects.
  *
  * @category models
@@ -403,6 +611,26 @@ export class SelectedSet extends S.Opaque<SelectedSet, { readonly brand: unique 
    */
   static of(property: string, limit: number): SelectedSet {
     return SelectedSet.make({ property: PropertyApiName.make(property), limit });
+  }
+}
+
+/**
+ * Companion namespace for {@link SelectedSet}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SelectedSet {
+  /**
+   * Encoded (wire) form of {@link SelectedSet}: the property under `selectedPropertyApiName`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "collectSet";
+    readonly selectedPropertyApiName: PropertyApiName.Encoded;
+    readonly limit: number;
   }
 }
 
@@ -473,6 +701,33 @@ export const SelectedPropertyOperation = SelectedPropertyOperationKind.mapMember
  */
 export type SelectedPropertyOperation = typeof SelectedPropertyOperation.Type;
 
+/**
+ * Companion namespace for {@link SelectedPropertyOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SelectedPropertyOperation {
+  /**
+   * Encoded (wire) form of {@link SelectedPropertyOperation}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | SelectedValue.Encoded
+    | SelectedCount.Encoded
+    | SelectedSum.Encoded
+    | SelectedAverage.Encoded
+    | SelectedMin.Encoded
+    | SelectedMax.Encoded
+    | SelectedApproximateDistinct.Encoded
+    | SelectedExactDistinct.Encoded
+    | SelectedApproximatePercentile.Encoded
+    | SelectedList.Encoded
+    | SelectedSet.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Derived property definitions
 // -----------------------------------------------------------------------------
@@ -507,6 +762,25 @@ export class OwnProperty extends S.Opaque<OwnProperty, { readonly brand: unique 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link OwnProperty}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace OwnProperty {
+  /**
+   * Encoded (wire) form of {@link OwnProperty}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "property";
+    readonly apiName: PropertyApiName.Encoded;
+  }
+}
 
 /**
  * A value read through an object set that starts at the current object.
@@ -551,7 +825,7 @@ export declare namespace LinkedSelection {
   export interface Encoded {
     readonly type: "selection";
     readonly objectSet: ObjectSet.Encoded;
-    readonly operation: (typeof SelectedPropertyOperation)["Encoded"];
+    readonly operation: SelectedPropertyOperation.Encoded;
   }
 }
 
@@ -902,7 +1176,7 @@ export declare namespace DatePartExtraction {
   export interface Encoded {
     readonly type: "extract";
     readonly property: DerivedProperty.Encoded;
-    readonly part: (typeof DatePart)["Encoded"];
+    readonly part: DatePart.Encoded;
   }
 }
 
@@ -1001,7 +1275,7 @@ export declare namespace DerivedProperty {
    * @since 0.0.0
    */
   export type Encoded =
-    | (typeof OwnProperty)["Encoded"]
+    | OwnProperty.Encoded
     | LinkedSelection.Encoded
     | Addition.Encoded
     | Subtraction.Encoded

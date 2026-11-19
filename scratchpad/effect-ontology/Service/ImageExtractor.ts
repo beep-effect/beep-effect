@@ -1,3 +1,4 @@
+import * as A from "effect/Array";
 /**
  * ImageExtractor Service
  *
@@ -141,7 +142,8 @@ const parseMarkdownImages = (markdown: string, sourceUrl: string, startOrder: nu
 
   let match = MARKDOWN_IMAGE_PATTERN.exec(markdown);
   while (match !== null) {
-    const [, alt, rawUrl, title] = match;
+    const [, alt, , title] = match;
+    const rawUrl = A.getUnsafe(match, 2);
     const normalizedUrl = normalizeImageUrl(rawUrl, sourceUrl);
 
     const referrerUrl = decodeUrlOption(sourceUrl);

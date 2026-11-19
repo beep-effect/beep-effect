@@ -20,6 +20,7 @@
  */
 import { $ScratchpadId } from "@beep/identity/packages";
 import { LiteralKit, MappedLiteralKit } from "@beep/schema";
+import * as R from "@beep/utils/Record";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
@@ -62,6 +63,22 @@ export const RequestId = S.NonEmptyString.pipe(
 export type RequestId = typeof RequestId.Type;
 
 /**
+ * Companion namespace for {@link RequestId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RequestId {
+  /**
+   * Encoded (wire) form of {@link RequestId}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof RequestId.Encoded;
+}
+
+/**
  * Identifier the server gives one live subscription; every later message about the subscription carries it.
  *
  * @category identifiers
@@ -81,6 +98,22 @@ export const SubscriptionId = S.NonEmptyString.pipe(
  * @since 0.0.0
  */
 export type SubscriptionId = typeof SubscriptionId.Type;
+
+/**
+ * Companion namespace for {@link SubscriptionId}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SubscriptionId {
+  /**
+   * Encoded (wire) form of {@link SubscriptionId}: the same text, unbranded.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof SubscriptionId.Encoded;
+}
 
 /**
  * A primary key written as a record from each key property's name to its value.
@@ -122,6 +155,22 @@ export const PrimaryKeyRecord = S.Record(PropertyApiName, S.Json).pipe(
  */
 export type PrimaryKeyRecord = typeof PrimaryKeyRecord.Type;
 
+/**
+ * Companion namespace for {@link PrimaryKeyRecord}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PrimaryKeyRecord {
+  /**
+   * Encoded (wire) form of {@link PrimaryKeyRecord}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = R.ReadonlyRecord<PropertyApiName.Encoded, typeof S.Json.Encoded>;
+}
+
 // -----------------------------------------------------------------------------
 // Client to server
 // -----------------------------------------------------------------------------
@@ -151,6 +200,24 @@ export class ObjectLoadingOptions extends S.Opaque<ObjectLoadingOptions, { reado
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ObjectLoadingOptions}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectLoadingOptions {
+  /**
+   * Encoded (wire) form of {@link ObjectLoadingOptions}: an absent `shouldLoadObjectRids` stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly shouldLoadObjectRids?: boolean;
+  }
+}
 
 /**
  * One object set a client wants to watch, and which of its properties to deliver.
@@ -197,6 +264,29 @@ export class ObjectSetSubscribeRequest extends S.Opaque<ObjectSetSubscribeReques
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ObjectSetSubscribeRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectSetSubscribeRequest {
+  /**
+   * Encoded (wire) form of {@link ObjectSetSubscribeRequest}: an absent optional key stands for `None`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly objectSet: ObjectSet.Encoded;
+    readonly branch?: FoundryBranch.Encoded;
+    readonly scenarioRid?: OntologyScenarioRid.Encoded;
+    readonly propertySet: ReadonlyArray<PropertyApiName.Encoded>;
+    readonly referenceSet: ReadonlyArray<PropertyApiName.Encoded>;
+    readonly objectLoadingResponseOptions?: ObjectLoadingOptions.Encoded;
+  }
+}
 
 /**
  * The message a client sends: the complete list of object sets it wants to be subscribed to from now on.
@@ -260,6 +350,25 @@ export class ObjectSetSubscribeRequests extends S.Opaque<
   )
 ) {}
 
+/**
+ * Companion namespace for {@link ObjectSetSubscribeRequests}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectSetSubscribeRequests {
+  /**
+   * Encoded (wire) form of {@link ObjectSetSubscribeRequests}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly id: RequestId.Encoded;
+    readonly requests: ReadonlyArray<ObjectSetSubscribeRequest.Encoded>;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Failures reported over a stream
 // -----------------------------------------------------------------------------
@@ -276,6 +385,25 @@ export class StreamFailureArgument extends S.Opaque<StreamFailureArgument, { rea
     value: S.String.annotateKey({ description: "The detail, rendered as text." }),
   }).pipe($I.annoteSchema("StreamFailureArgument", { description: "One named detail of a stream failure." }))
 ) {}
+
+/**
+ * Companion namespace for {@link StreamFailureArgument}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StreamFailureArgument {
+  /**
+   * Encoded (wire) form of {@link StreamFailureArgument}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly name: string;
+    readonly value: string;
+  }
+}
 
 /**
  * A failure as the subscription streams report it: its name and its named details.
@@ -301,6 +429,25 @@ export class StreamFailure extends S.Opaque<StreamFailure, { readonly brand: uni
   )
 ) {}
 
+/**
+ * Companion namespace for {@link StreamFailure}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StreamFailure {
+  /**
+   * Encoded (wire) form of {@link StreamFailure}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly error: ErrorName.Encoded;
+    readonly args: ReadonlyArray<StreamFailureArgument.Encoded>;
+  }
+}
+
 // -----------------------------------------------------------------------------
 // Answers to a subscribe message
 // -----------------------------------------------------------------------------
@@ -325,6 +472,25 @@ export class SubscribeSuccess extends S.Opaque<SubscribeSuccess, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link SubscribeSuccess}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SubscribeSuccess {
+  /**
+   * Encoded (wire) form of {@link SubscribeSuccess}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "success";
+    readonly id: SubscriptionId.Encoded;
+  }
+}
+
+/**
  * The request was refused, with the failures that explain why.
  *
  * @category models
@@ -342,6 +508,25 @@ export class SubscribeFailure extends S.Opaque<SubscribeFailure, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link SubscribeFailure}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SubscribeFailure {
+  /**
+   * Encoded (wire) form of {@link SubscribeFailure}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "error";
+    readonly errors: ReadonlyArray<StreamFailure.Encoded>;
+  }
+}
+
+/**
  * The node cannot serve the request for quality-of-service reasons: retry on another node.
  *
  * @category models
@@ -354,6 +539,24 @@ export class SubscribeQosRejection extends S.Opaque<SubscribeQosRejection, { rea
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link SubscribeQosRejection}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SubscribeQosRejection {
+  /**
+   * Encoded (wire) form of {@link SubscribeQosRejection}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "qos";
+  }
+}
 
 /**
  * The server's answer to one request of a subscribe message.
@@ -409,6 +612,25 @@ export const SubscribeResponse = SubscribeResponseKind.mapMembers(() =>
  */
 export type SubscribeResponse = typeof SubscribeResponse.Type;
 
+/**
+ * Companion namespace for {@link SubscribeResponse}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SubscribeResponse {
+  /**
+   * Encoded (wire) form of {@link SubscribeResponse}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | SubscribeSuccess.Encoded
+    | SubscribeFailure.Encoded
+    | SubscribeQosRejection.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Updates to a watched object set
 // -----------------------------------------------------------------------------
@@ -453,6 +675,22 @@ export const ObjectState = MappedLiteralKit([
  * @since 0.0.0
  */
 export type ObjectState = typeof ObjectState.Type;
+
+/**
+ * Companion namespace for {@link ObjectState}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectState {
+  /**
+   * Encoded (wire) form of {@link ObjectState}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ObjectState.Encoded;
+}
 
 const ReferenceValueKind = LiteralKit(["geotimeSeriesValue"]);
 
@@ -501,6 +739,22 @@ export const ReferenceValue = ReferenceValueKind.mapMembers(() => Tuple.make(Geo
  */
 export type ReferenceValue = typeof ReferenceValue.Type;
 
+/**
+ * Companion namespace for {@link ReferenceValue}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ReferenceValue {
+  /**
+   * Encoded (wire) form of {@link ReferenceValue}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = GeotimeSeriesValue.Encoded;
+}
+
 const ObjectSetUpdateKind = LiteralKit(["object", "reference"]);
 
 /**
@@ -526,6 +780,26 @@ export class ObjectUpdate extends S.Opaque<ObjectUpdate, { readonly brand: uniqu
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ObjectUpdate}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectUpdate {
+  /**
+   * Encoded (wire) form of {@link ObjectUpdate}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "object";
+    readonly object: OntologyObject.Encoded;
+    readonly state: ObjectState.Encoded;
+  }
+}
 
 /**
  * The value behind one object's external reference changed, such as the position of a tracked entity.
@@ -554,6 +828,28 @@ export class ReferenceUpdate extends S.Opaque<ReferenceUpdate, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ReferenceUpdate}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ReferenceUpdate {
+  /**
+   * Encoded (wire) form of {@link ReferenceUpdate}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "reference";
+    readonly objectType: ObjectTypeApiName.Encoded;
+    readonly primaryKey: PrimaryKeyRecord.Encoded;
+    readonly property: PropertyApiName.Encoded;
+    readonly value: ReferenceValue.Encoded;
+  }
+}
 
 /**
  * One change to a watched object set: an object changed, or the value behind an object's reference did.
@@ -602,6 +898,24 @@ export const ObjectSetUpdate = ObjectSetUpdateKind.mapMembers(() => Tuple.make(O
  */
 export type ObjectSetUpdate = typeof ObjectSetUpdate.Type;
 
+/**
+ * Companion namespace for {@link ObjectSetUpdate}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectSetUpdate {
+  /**
+   * Encoded (wire) form of {@link ObjectSetUpdate}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ObjectUpdate.Encoded
+    | ReferenceUpdate.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Why a subscription closed
 // -----------------------------------------------------------------------------
@@ -641,6 +955,22 @@ export const ClosureReason = MappedLiteralKit([
  */
 export type ClosureReason = typeof ClosureReason.Type;
 
+/**
+ * Companion namespace for {@link ClosureReason}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ClosureReason {
+  /**
+   * Encoded (wire) form of {@link ClosureReason}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ClosureReason.Encoded;
+}
+
 const ClosureCauseKind = LiteralKit(["reason", "error"]);
 
 /**
@@ -659,6 +989,25 @@ export class ClosedForReason extends S.Opaque<ClosedForReason, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ClosedForReason}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ClosedForReason {
+  /**
+   * Encoded (wire) form of {@link ClosedForReason}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "reason";
+    readonly reason: ClosureReason.Encoded;
+  }
+}
 
 /**
  * The subscription was closed by a failure it could not recover from.
@@ -682,6 +1031,26 @@ export class ClosedByFailure extends S.Opaque<ClosedByFailure, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ClosedByFailure}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ClosedByFailure {
+  /**
+   * Encoded (wire) form of {@link ClosedByFailure}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "error";
+    readonly error: ErrorName.Encoded;
+    readonly args: ReadonlyArray<StreamFailureArgument.Encoded>;
+  }
+}
 
 /**
  * Why the server closed a subscription: a deliberate reason, or a failure.
@@ -727,6 +1096,24 @@ export const SubscriptionClosureCause = ClosureCauseKind.mapMembers(() =>
  */
 export type SubscriptionClosureCause = typeof SubscriptionClosureCause.Type;
 
+/**
+ * Companion namespace for {@link SubscriptionClosureCause}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SubscriptionClosureCause {
+  /**
+   * Encoded (wire) form of {@link SubscriptionClosureCause}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ClosedForReason.Encoded
+    | ClosedByFailure.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Server to client
 // -----------------------------------------------------------------------------
@@ -770,6 +1157,26 @@ export class SubscribeResponses extends S.Opaque<SubscribeResponses, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link SubscribeResponses}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SubscribeResponses {
+  /**
+   * Encoded (wire) form of {@link SubscribeResponses}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "subscribeResponses";
+    readonly id: RequestId.Encoded;
+    readonly responses: ReadonlyArray<SubscribeResponse.Encoded>;
+  }
+}
+
+/**
  * A batch of changes to one watched object set.
  *
  * @category models
@@ -782,6 +1189,26 @@ export class ObjectSetUpdates extends S.Opaque<ObjectSetUpdates, { readonly bran
     updates: S.Array(ObjectSetUpdate).annotateKey({ description: "The changes, in wire order." }),
   }).pipe($I.annoteSchema("ObjectSetUpdates", { description: "A batch of changes to one watched object set." }))
 ) {}
+
+/**
+ * Companion namespace for {@link ObjectSetUpdates}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectSetUpdates {
+  /**
+   * Encoded (wire) form of {@link ObjectSetUpdates}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "objectSetChanged";
+    readonly id: SubscriptionId.Encoded;
+    readonly updates: ReadonlyArray<ObjectSetUpdate.Encoded>;
+  }
+}
 
 /**
  * Notice that changes of one object type cannot be listed: the client must load the object set again in full.
@@ -802,6 +1229,26 @@ export class RefreshObjectSet extends S.Opaque<RefreshObjectSet, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link RefreshObjectSet}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace RefreshObjectSet {
+  /**
+   * Encoded (wire) form of {@link RefreshObjectSet}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "refreshObjectSet";
+    readonly id: SubscriptionId.Encoded;
+    readonly objectType: ObjectTypeApiName.Encoded;
+  }
+}
+
+/**
  * Notice that the server ended a subscription for good.
  *
  * **Details**
@@ -820,6 +1267,26 @@ export class SubscriptionClosed extends S.Opaque<SubscriptionClosed, { readonly 
     $I.annoteSchema("SubscriptionClosed", { description: "Notice that the server ended a subscription for good." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link SubscriptionClosed}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SubscriptionClosed {
+  /**
+   * Encoded (wire) form of {@link SubscriptionClosed}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "subscriptionClosed";
+    readonly id: SubscriptionId.Encoded;
+    readonly cause: SubscriptionClosureCause.Encoded;
+  }
+}
 
 /**
  * Everything the server sends over the object-set subscription websocket.
@@ -869,6 +1336,26 @@ export const StreamMessage = StreamMessageKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type StreamMessage = typeof StreamMessage.Type;
+
+/**
+ * Companion namespace for {@link StreamMessage}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StreamMessage {
+  /**
+   * Encoded (wire) form of {@link StreamMessage}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | SubscribeResponses.Encoded
+    | ObjectSetUpdates.Encoded
+    | RefreshObjectSet.Encoded
+    | SubscriptionClosed.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Client-side lifecycle
@@ -932,3 +1419,19 @@ export const SubscriptionStatus = LiteralKit([
  * @since 0.0.0
  */
 export type SubscriptionStatus = typeof SubscriptionStatus.Type;
+
+/**
+ * Companion namespace for {@link SubscriptionStatus}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SubscriptionStatus {
+  /**
+   * Encoded (wire) form of {@link SubscriptionStatus}: the same literals as the runtime type.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof SubscriptionStatus.Encoded;
+}

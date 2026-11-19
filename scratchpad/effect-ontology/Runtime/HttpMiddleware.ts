@@ -13,20 +13,20 @@ import { flow } from "effect/Function";
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
-import * as Inspectable from "effect/Inspectable";
-import * as Random from "effect/Random";
-import * as Redacted from "effect/Redacted";
-import * as A from "effect/Array";
-import * as O from "effect/Option";
-import * as P from "effect/Predicate";
-import * as Str from "effect/String";
 import * as HttpMiddleware from "effect/http/HttpMiddleware";
 import * as HttpServerRequest from "effect/http/HttpServerRequest";
 import * as HttpServerResponse from "effect/http/HttpServerResponse";
+import * as Inspectable from "effect/Inspectable";
+import * as O from "effect/Option";
+import * as P from "effect/Predicate";
+import * as Random from "effect/Random";
+import * as Redacted from "effect/Redacted";
+import * as Str from "effect/String";
 import { ConflictActor } from "../Domain/Schema/Timeline.ts";
 import { ConfigService } from "../Service/Config.ts";
 import { sha256 as sha256Effect } from "../Utils/Hash.ts";
@@ -159,7 +159,7 @@ export const makeAuthMiddleware = Effect.gen(function* () {
       const apiKey = A.isArray(apiKeyHeader) ? apiKeyHeader[0] : apiKeyHeader;
 
       // Validate API key
-      if (P.not(P.isTruthy)(apiKey) || !HashSet.has(apiKeys, apiKey)) {
+      if (apiKey === undefined || apiKey === "" || !HashSet.has(apiKeys, apiKey)) {
         yield* Effect.logWarning("Unauthorized request", {
           path,
           hasKey: !P.not(P.isTruthy)(apiKey),
@@ -257,9 +257,8 @@ export const makeLoggingMiddleware = Effect.sync(() =>
     Effect.gen(function* () {
       const request = yield* HttpServerRequest.HttpServerRequest;
       const start = yield* Clock.currentTimeMillis;
-      const requestId = Math.abs(yield* Random.nextInt)
-        .toString(16)
-        .slice(0, 8);
+      const requestRandomValue = yield* Random.nextInt;
+      const requestId = Str.slice(0, 8)(Math.abs(requestRandomValue).toString(16));
 
       const path = request.url;
       const method = request.method;

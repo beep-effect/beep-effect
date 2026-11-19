@@ -16,7 +16,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import * as SecureRandom from "effect/crypto/SecureRandom";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import * as Stream from "effect/Stream";
 import { afterEach } from "vitest";
 
@@ -31,7 +31,7 @@ const review = (standing: "Pending" | "Accepted"): ClaimReviewState => ({
   sources: 2,
   revision: 1,
   reviews: [RunId.make("review:claim_1:1")],
-  proposal: O.some({ disposition: "accept", rationale: "two sources", run: RunId.make("review:claim_1:1"), evidenceRevision: 1, digest: "d1" }),
+  proposal: O.some({ disposition: "accept", rationale: "two sources", run: RunId.make("review:claim_1:1"), evidenceRevision: 1, digest: "pd1" }),
   notes: [],
 });
 

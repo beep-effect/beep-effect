@@ -13,13 +13,13 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit, MimeType, SchemaUtils } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
 import * as Match from "effect/Match";
 import * as N from "effect/Number";
-import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { BatchId, DocumentId, GcsUri, Namespace, OntologyVersion } from "../Identity.ts";
-import * as A from "effect/Array";
 import { PosInt } from "../../Schema/PosInt.ts";
+import { BatchId, DocumentId, GcsUri, Namespace, OntologyVersion } from "../Identity.ts";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/DocumentMetadata");
 
@@ -47,10 +47,10 @@ export const DocumentType = LiteralKit([
   "structured",
   "unknown",
 ]).pipe(
-    $I.annoteSchema("DocumentType", {
-      description: "Finite structural classifications used to select document-processing behavior.",
-    })
-  );
+  $I.annoteSchema("DocumentType", {
+    description: "Finite structural classifications used to select document-processing behavior.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link DocumentType}.
@@ -82,10 +82,10 @@ export type DocumentType = typeof DocumentType.Type;
  * @since 0.0.0
  */
 export const EntityDensity = LiteralKit(["sparse", "moderate", "dense"]).pipe(
-    $I.annoteSchema("EntityDensity", {
-      description: "Sparse, moderate, or dense entity distribution used by adaptive chunking.",
-    })
-  );
+  $I.annoteSchema("EntityDensity", {
+    description: "Sparse, moderate, or dense entity distribution used by adaptive chunking.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link EntityDensity}.
@@ -168,16 +168,22 @@ export const ChunkingStrategy = ChunkingStrategyDefinition.pipe(
 const ChunkSize = PosInt.check(
   S.makeFilterGroup(
     [
-      S.isGreaterThan(0, $I.annote("ChunkSizePositiveCheck", {
-        title: "Positive Chunk Size",
-        description: "A chunk size strictly greater than zero.",
-        message: "Chunk size must be positive.",
-      })),
-      S.isLessThanOrEqualTo(10_000, $I.annote("ChunkSizeMaximumCheck", {
-        title: "Maximum Chunk Size",
-        description: "A positive chunk size no larger than ten thousand characters.",
-        message: "Chunk size must not exceed 10,000 characters.",
-      })),
+      S.isGreaterThan(
+        0,
+        $I.annote("ChunkSizePositiveCheck", {
+          title: "Positive Chunk Size",
+          description: "A chunk size strictly greater than zero.",
+          message: "Chunk size must be positive.",
+        })
+      ),
+      S.isLessThanOrEqualTo(
+        10_000,
+        $I.annote("ChunkSizeMaximumCheck", {
+          title: "Maximum Chunk Size",
+          description: "A positive chunk size no larger than ten thousand characters.",
+          message: "Chunk size must not exceed 10,000 characters.",
+        })
+      ),
     ],
     $I.annote("ChunkSizeChecks", {
       title: "Chunk Size",
@@ -185,25 +191,31 @@ const ChunkSize = PosInt.check(
     })
   )
 ).pipe(
-    S.brand("ChunkSize"),
-    $I.annoteSchema("ChunkSize", {
-      description: "Positive target chunk size from one through ten thousand characters.",
-    })
-  );
+  S.brand("ChunkSize"),
+  $I.annoteSchema("ChunkSize", {
+    description: "Positive target chunk size from one through ten thousand characters.",
+  })
+);
 
 const SentenceOverlap = S.Natural.check(
   S.makeFilterGroup(
     [
-      S.isGreaterThanOrEqualTo(0, $I.annote("SentenceOverlapLowerBoundCheck", {
-        title: "Non-Negative Sentence Overlap",
-        description: "A sentence-overlap count greater than or equal to zero.",
-        message: "Sentence overlap must be non-negative.",
-      })),
-      S.isLessThanOrEqualTo(10, $I.annote("SentenceOverlapMaximumCheck", {
-        title: "Maximum Sentence Overlap",
-        description: "A non-negative sentence-overlap count no larger than ten.",
-        message: "Sentence overlap must not exceed ten.",
-      })),
+      S.isGreaterThanOrEqualTo(
+        0,
+        $I.annote("SentenceOverlapLowerBoundCheck", {
+          title: "Non-Negative Sentence Overlap",
+          description: "A sentence-overlap count greater than or equal to zero.",
+          message: "Sentence overlap must be non-negative.",
+        })
+      ),
+      S.isLessThanOrEqualTo(
+        10,
+        $I.annote("SentenceOverlapMaximumCheck", {
+          title: "Maximum Sentence Overlap",
+          description: "A non-negative sentence-overlap count no larger than ten.",
+          message: "Sentence overlap must not exceed ten.",
+        })
+      ),
     ],
     $I.annote("SentenceOverlapChecks", {
       title: "Sentence Overlap",
@@ -211,11 +223,11 @@ const SentenceOverlap = S.Natural.check(
     })
   )
 ).pipe(
-    S.brand("SentenceOverlap"),
-    $I.annoteSchema("SentenceOverlap", {
-      description: "Non-negative sentence-overlap count from zero through ten.",
-    })
-  );
+  S.brand("SentenceOverlap"),
+  $I.annoteSchema("SentenceOverlap", {
+    description: "Non-negative sentence-overlap count from zero through ten.",
+  })
+);
 
 /**
  * Concrete parameters for one chunking strategy.
@@ -237,7 +249,8 @@ const SentenceOverlap = S.Natural.check(
  * @category models
  * @since 0.0.0
  */
-export class ChunkingParams extends S.Opaque<ChunkingParams, { readonly brand: unique symbol }>()(S.Struct({
+export class ChunkingParams extends S.Opaque<ChunkingParams, { readonly brand: unique symbol }>()(
+  S.Struct({
     chunkSize: ChunkSize.annotateKey({
       description: "Target chunk size in characters.",
     }),
@@ -245,14 +258,18 @@ export class ChunkingParams extends S.Opaque<ChunkingParams, { readonly brand: u
       description: "Number of sentences repeated across neighboring chunks.",
     }),
     preserveSentences: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({
         description: "Whether chunks preserve sentence boundaries; defaults to true.",
       })
     ),
-  }).pipe($I.annoteSchema("ChunkingParams", {
-    description: "Bounded chunk-size and sentence-overlap parameters with an explicit boundary-preservation default.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("ChunkingParams", {
+      description: "Bounded chunk-size and sentence-overlap parameters with an explicit boundary-preservation default.",
+    })
+  )
+) {
   static readonly is = S.is(ChunkingParams);
 }
 
@@ -301,16 +318,22 @@ export const defaultChunkingParams: Readonly<Record<ChunkingStrategy, ChunkingPa
 const ClassificationBatchSize = PosInt.check(
   S.makeFilterGroup(
     [
-      S.isGreaterThan(0, $I.annote("ClassificationBatchSizePositiveCheck", {
-        title: "Positive Classification Batch Size",
-        description: "A classification batch size strictly greater than zero.",
-        message: "Classification batch size must be positive.",
-      })),
-      S.isLessThanOrEqualTo(50, $I.annote("ClassificationBatchSizeMaximumCheck", {
-        title: "Maximum Classification Batch Size",
-        description: "A positive classification batch size no larger than fifty documents.",
-        message: "Classification batch size must not exceed fifty documents.",
-      })),
+      S.isGreaterThan(
+        0,
+        $I.annote("ClassificationBatchSizePositiveCheck", {
+          title: "Positive Classification Batch Size",
+          description: "A classification batch size strictly greater than zero.",
+          message: "Classification batch size must be positive.",
+        })
+      ),
+      S.isLessThanOrEqualTo(
+        50,
+        $I.annote("ClassificationBatchSizeMaximumCheck", {
+          title: "Maximum Classification Batch Size",
+          description: "A positive classification batch size no larger than fifty documents.",
+          message: "Classification batch size must not exceed fifty documents.",
+        })
+      ),
     ],
     $I.annote("ClassificationBatchSizeChecks", {
       title: "Classification Batch Size",
@@ -318,11 +341,11 @@ const ClassificationBatchSize = PosInt.check(
     })
   )
 ).pipe(
-    S.brand("ClassificationBatchSize"),
-    $I.annoteSchema("ClassificationBatchSize", {
-      description: "Positive document-classification batch size from one through fifty.",
-    })
-  );
+  S.brand("ClassificationBatchSize"),
+  $I.annoteSchema("ClassificationBatchSize", {
+    description: "Positive document-classification batch size from one through fifty.",
+  })
+);
 
 const preprocessingOptionsClassificationBatchSizeDefault = ClassificationBatchSize.make(10);
 /**
@@ -345,19 +368,38 @@ const preprocessingOptionsClassificationBatchSizeDefault = ClassificationBatchSi
  * @category configuration
  * @since 0.0.0
  */
-export class PreprocessingOptions extends S.Opaque<PreprocessingOptions, { readonly brand: unique symbol }>()(S.Struct({
-    enabled: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
-    classifyDocuments: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
-    adaptiveChunking: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
-    priorityOrdering: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true))),
-    chunkingStrategyOverride: S.OptionFromOptionalKey(ChunkingStrategy).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    classificationBatchSize: ClassificationBatchSize.pipe(
-      S.withConstructorDefault(Effect.succeed(preprocessingOptionsClassificationBatchSizeDefault)), S.withDecodingDefaultTypeKey(Effect.succeed(preprocessingOptionsClassificationBatchSizeDefault))
+export class PreprocessingOptions extends S.Opaque<PreprocessingOptions, { readonly brand: unique symbol }>()(
+  S.Struct({
+    enabled: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
     ),
-  }).pipe($I.annoteSchema("PreprocessingOptions", {
-    description:
-      "Complete preprocessing feature controls with schema-owned defaults and an Option-normalized override.",
-  }))) {
+    classifyDocuments: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+    adaptiveChunking: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+    priorityOrdering: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true))
+    ),
+    chunkingStrategyOverride: S.OptionFromOptionalKey(ChunkingStrategy).pipe(
+      S.withConstructorDefault(Effect.succeedNone)
+    ),
+    classificationBatchSize: ClassificationBatchSize.pipe(
+      S.withConstructorDefault(Effect.succeed(preprocessingOptionsClassificationBatchSizeDefault)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(preprocessingOptionsClassificationBatchSizeDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("PreprocessingOptions", {
+      description:
+        "Complete preprocessing feature controls with schema-owned defaults and an Option-normalized override.",
+    })
+  )
+) {
   static readonly is = S.is(PreprocessingOptions);
 }
 
@@ -400,17 +442,20 @@ const languageCodePattern = /^[a-z]{2}$/;
  * @since 0.0.0
  */
 export const LanguageCode = S.String.check(
-  S.isPattern(languageCodePattern, $I.annote("LanguageCodePatternCheck", {
-    title: "Language Code",
-    description: "A two-letter lowercase ISO 639-1 representation.",
-    message: "Language code must contain exactly two lowercase ASCII letters.",
-  }))
-).pipe(
-    S.brand("LanguageCode"),
-    $I.annoteSchema("LanguageCode", {
-      description: "Two-letter lowercase language-code representation.",
+  S.isPattern(
+    languageCodePattern,
+    $I.annote("LanguageCodePatternCheck", {
+      title: "Language Code",
+      description: "A two-letter lowercase ISO 639-1 representation.",
+      message: "Language code must contain exactly two lowercase ASCII letters.",
     })
-  );
+  )
+).pipe(
+  S.brand("LanguageCode"),
+  $I.annoteSchema("LanguageCode", {
+    description: "Two-letter lowercase language-code representation.",
+  })
+);
 
 /**
  * Runtime value decoded by {@link LanguageCode}.
@@ -536,7 +581,8 @@ const documentMetadataDomainTagsDefault = A.empty<string>();
  * @category models
  * @since 0.0.0
  */
-export class DocumentMetadata extends S.Opaque<DocumentMetadata, { readonly brand: unique symbol }>()(S.Struct({
+export class DocumentMetadata extends S.Opaque<DocumentMetadata, { readonly brand: unique symbol }>()(
+  S.Struct({
     documentId: DocumentId,
     sourceUri: GcsUri,
     contentType: MimeType,
@@ -549,7 +595,10 @@ export class DocumentMetadata extends S.Opaque<DocumentMetadata, { readonly bran
     language: LanguageCode,
     estimatedTokens: S.Natural,
     documentType: DocumentType,
-    domainTags: S.Array(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(documentMetadataDomainTagsDefault)), S.withDecodingDefaultType(Effect.succeed(documentMetadataDomainTagsDefault))),
+    domainTags: S.Array(S.NonEmptyString).pipe(
+      S.withConstructorDefault(Effect.succeed(documentMetadataDomainTagsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(documentMetadataDomainTagsDefault))
+    ),
     complexityScore: ComplexityScore,
     entityDensityHint: EntityDensity,
     chunkingStrategy: ChunkingStrategy,
@@ -557,9 +606,12 @@ export class DocumentMetadata extends S.Opaque<DocumentMetadata, { readonly bran
     suggestedOverlap: SentenceOverlap,
     priority: S.Natural,
     estimatedExtractionCost: S.Natural,
-  }).pipe($I.annoteSchema("DocumentMetadata", {
-    description: "Validated source, temporal, classification, chunking, and scheduling metadata for one document.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("DocumentMetadata", {
+      description: "Validated source, temporal, classification, chunking, and scheduling metadata for one document.",
+    })
+  )
+) {
   static readonly is = S.is(DocumentMetadata);
 
   /**
@@ -675,7 +727,8 @@ export class DocumentMetadata extends S.Opaque<DocumentMetadata, { readonly bran
  * @category models
  * @since 0.0.0
  */
-export class PreprocessingStats extends S.Opaque<PreprocessingStats, { readonly brand: unique symbol }>()(S.Struct({
+export class PreprocessingStats extends S.Opaque<PreprocessingStats, { readonly brand: unique symbol }>()(
+  S.Struct({
     totalDocuments: S.Natural,
     classifiedCount: S.Natural,
     failedCount: S.Natural,
@@ -683,9 +736,12 @@ export class PreprocessingStats extends S.Opaque<PreprocessingStats, { readonly 
     preprocessingDurationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
     averageComplexity: ComplexityScore,
     documentTypeDistribution: S.Record(S.String, S.Natural),
-  }).pipe($I.annoteSchema("PreprocessingStats", {
-    description: "Non-negative aggregate counts, token estimate, duration, complexity, and type distribution.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("PreprocessingStats", {
+      description: "Non-negative aggregate counts, token estimate, duration, complexity, and type distribution.",
+    })
+  )
+) {
   static readonly is = S.is(PreprocessingStats);
 }
 
@@ -722,19 +778,26 @@ const enrichedManifestDocumentsDefault = A.empty<DocumentMetadata>();
  * @category models
  * @since 0.0.0
  */
-export class EnrichedManifest extends S.Opaque<EnrichedManifest, { readonly brand: unique symbol }>()(S.Struct({
+export class EnrichedManifest extends S.Opaque<EnrichedManifest, { readonly brand: unique symbol }>()(
+  S.Struct({
     batchId: BatchId,
     ontologyUri: GcsUri,
     ontologyVersion: OntologyVersion,
     shaclUri: S.OptionFromOptionalKey(GcsUri).pipe(S.withConstructorDefault(Effect.succeedNone)),
     targetNamespace: Namespace,
-    documents: S.Array(DocumentMetadata).pipe(S.withConstructorDefault(Effect.succeed(enrichedManifestDocumentsDefault)), S.withDecodingDefaultType(Effect.succeed(enrichedManifestDocumentsDefault))),
+    documents: S.Array(DocumentMetadata).pipe(
+      S.withConstructorDefault(Effect.succeed(enrichedManifestDocumentsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(enrichedManifestDocumentsDefault))
+    ),
     createdAt: S.DateTimeUtcFromString,
     preprocessedAt: S.DateTimeUtcFromString,
     preprocessingStats: PreprocessingStats,
-  }).pipe($I.annoteSchema("EnrichedManifest", {
-    description: "Versioned batch manifest containing normalized document metadata and preprocessing statistics.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("EnrichedManifest", {
+      description: "Versioned batch manifest containing normalized document metadata and preprocessing statistics.",
+    })
+  )
+) {
   static readonly decodeFromString = S.decodeEffect(S.fromJsonString(this));
 
   static readonly encodeEffectFromJsonStringFormatted = S.encodeEffect(
@@ -768,13 +831,23 @@ export class EnrichedManifest extends S.Opaque<EnrichedManifest, { readonly bran
  * @category dtos
  * @since 0.0.0
  */
-export class PreprocessingActivityInput extends S.Opaque<PreprocessingActivityInput, { readonly brand: unique symbol }>()(S.Struct({
+export class PreprocessingActivityInput extends S.Opaque<
+  PreprocessingActivityInput,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
     batchId: BatchId,
     manifestUri: GcsUri,
-    preprocessing: PreprocessingOptions.pipe(S.withConstructorDefault(Effect.succeed(defaultPreprocessingOptions)), S.withDecodingDefaultTypeKey(Effect.succeed(defaultPreprocessingOptions))),
-  }).pipe($I.annoteSchema("PreprocessingActivityInput", {
-    description: "Preprocessing activity input with a complete schema-defaulted configuration.",
-  }))) {}
+    preprocessing: PreprocessingOptions.pipe(
+      S.withConstructorDefault(Effect.succeed(defaultPreprocessingOptions)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(defaultPreprocessingOptions))
+    ),
+  }).pipe(
+    $I.annoteSchema("PreprocessingActivityInput", {
+      description: "Preprocessing activity input with a complete schema-defaulted configuration.",
+    })
+  )
+) {}
 
 /**
  * Output produced by the document-preprocessing activity.
@@ -804,10 +877,18 @@ export class PreprocessingActivityInput extends S.Opaque<PreprocessingActivityIn
  * @category dtos
  * @since 0.0.0
  */
-export class PreprocessingActivityOutput extends S.Opaque<PreprocessingActivityOutput, { readonly brand: unique symbol }>()(S.Struct({
+export class PreprocessingActivityOutput extends S.Opaque<
+  PreprocessingActivityOutput,
+  { readonly brand: unique symbol }
+>()(
+  S.Struct({
     enrichedManifestUri: GcsUri,
     stats: PreprocessingStats,
     durationMs: S.Finite.check(S.isGreaterThanOrEqualTo(0)),
-  }).pipe($I.annoteSchema("PreprocessingActivityOutput", {
-    description: "Preprocessing activity output with its enriched manifest location, statistics, and finite duration.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("PreprocessingActivityOutput", {
+      description:
+        "Preprocessing activity output with its enriched manifest location, statistics, and finite duration.",
+    })
+  )
+) {}

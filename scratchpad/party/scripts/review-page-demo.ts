@@ -17,7 +17,6 @@ import * as Command from "effect/cli/Command";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { renderReviewPage } from "./ReviewPage.ts";
@@ -29,9 +28,10 @@ const demo = Effect.fn("review-page-demo")(function* (out: string) {
     email: string,
     domain: string,
     from: number,
-    to: number
+    to: number,
   ) {
-    const identifier = yield* Effect.fromOption(yield* identifierOfAddress(email));
+    const result1 = yield* identifierOfAddress(email);
+    const identifier = yield* Effect.fromOption(result1);
     identifiers.push(identifier);
     const ids = MailboxAnchorInput.make({ identifiers: [identifier.id] });
     return CaseMailbox.make({
@@ -42,7 +42,7 @@ const demo = Effect.fn("review-page-demo")(function* (out: string) {
         ObservedSpan.make({
           first: DateTime.makeUnsafe(`${from}-01-01T00:00:00Z`),
           last: DateTime.makeUnsafe(`${to}-01-01T00:00:00Z`),
-        })
+        }),
       ),
     });
   });
@@ -81,7 +81,8 @@ const demo = Effect.fn("review-page-demo")(function* (out: string) {
         outcome: "unresolved",
       });
       return yield* sealCase(evidence);
-    })
+    }),
+    { concurrency: 1 },
   );
   const fs = yield* FileSystem.FileSystem;
   const json = yield* encodeReviewPageCases(ReviewPageInput.make({ cases, identifiers }));
@@ -91,7 +92,6 @@ const demo = Effect.fn("review-page-demo")(function* (out: string) {
 
 const command = Command.make("review-page-demo", { out: Argument.String("out.html") }, ({ out }) => demo(out));
 Command.run(command, { version: "0.0.0" }).pipe(
-  // @effect-diagnostics-next-line strictEffectProvide:off -- platform and memory-ledger layers are provided once at the script entry point. Owner: @beep/scratchpad. Exit: never while this is a Bun entry script.
-  Effect.provide(Layer.mergeAll(BunServices.layer, PartyLedgerMemory)),
-  BunRuntime.runMain
+  Effect.provide([BunServices.layer, PartyLedgerMemory]),
+  BunRuntime.runMain,
 );

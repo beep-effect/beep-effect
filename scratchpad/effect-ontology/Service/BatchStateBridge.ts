@@ -31,11 +31,11 @@ import * as Exit from "effect/Exit";
 import * as Layer from "effect/Layer";
 import * as PubSub from "effect/PubSub";
 import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import { OntologyName } from "../Domain/Identity.ts";
 import { BatchStateHub } from "./BatchState.ts";
 import { EventBusService } from "./EventBus.ts";
-import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/Service/BatchStateBridge");
 

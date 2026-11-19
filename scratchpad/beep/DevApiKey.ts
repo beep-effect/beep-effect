@@ -72,7 +72,7 @@ export class DevApiKey extends Model<DevApiKey>("DevApiKey")(
  * @since 0.0.0
  */
 export declare namespace DevApiKey {
-  export type Encoded = S.Codec.Encoded<typeof DevApiKey>;
+  export type Encoded = typeof DevApiKey.Encoded;
 }
 
 /**
@@ -165,7 +165,7 @@ export class DevApiKeyDb extends Model<DevApiKeyDb>("DevApiKeyDb")(
  * @since 0.0.0
  */
 export declare namespace DevApiKeyDb {
-  export type Encoded = S.Codec.Encoded<typeof DevApiKeyDb>;
+  export type Encoded = typeof DevApiKeyDb.Encoded;
 }
 
 /**
@@ -235,7 +235,7 @@ export class DevApiKeyCreate extends Model<DevApiKeyCreate>("DevApiKeyCreate")(
  * @since 0.0.0
  */
 export declare namespace DevApiKeyCreate {
-  export type Encoded = S.Codec.Encoded<typeof DevApiKeyCreate>;
+  export type Encoded = typeof DevApiKeyCreate.Encoded;
 }
 
 /**
@@ -312,7 +312,7 @@ export class DevApiKeyCreated extends Model<DevApiKeyCreated>("DevApiKeyCreated"
  * @since 0.0.0
  */
 export declare namespace DevApiKeyCreated {
-  export type Encoded = S.Codec.Encoded<typeof DevApiKeyCreated>;
+  export type Encoded = typeof DevApiKeyCreated.Encoded;
 }
 
 /**

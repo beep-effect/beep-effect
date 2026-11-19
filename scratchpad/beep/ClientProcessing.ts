@@ -300,7 +300,7 @@ export class ClientSection extends Model<ClientSection>("ClientSection")(
  * @since 0.0.0
  */
 export declare namespace ClientSection {
-  export type Encoded = S.Codec.Encoded<typeof ClientSection>;
+  export type Encoded = typeof ClientSection.Encoded;
 }
 
 /**
@@ -334,7 +334,7 @@ export class ClientActionItem extends Model<ClientActionItem>("ClientActionItem"
  * @since 0.0.0
  */
 export declare namespace ClientActionItem {
-  export type Encoded = S.Codec.Encoded<typeof ClientActionItem>;
+  export type Encoded = typeof ClientActionItem.Encoded;
 }
 
 /**
@@ -384,7 +384,7 @@ export class ClientEvent extends Model<ClientEvent>("ClientEvent")(
  * @since 0.0.0
  */
 export declare namespace ClientEvent {
-  export type Encoded = S.Codec.Encoded<typeof ClientEvent>;
+  export type Encoded = typeof ClientEvent.Encoded;
 }
 
 /**
@@ -418,7 +418,7 @@ export class ClientMemory extends Model<ClientMemory>("ClientMemory")(
  * @since 0.0.0
  */
 export declare namespace ClientMemory {
-  export type Encoded = S.Codec.Encoded<typeof ClientMemory>;
+  export type Encoded = typeof ClientMemory.Encoded;
 }
 
 /**
@@ -458,7 +458,7 @@ export class ClientSummary extends Model<ClientSummary>("ClientSummary")(
  * @since 0.0.0
  */
 export declare namespace ClientSummary {
-  export type Encoded = S.Codec.Encoded<typeof ClientSummary>;
+  export type Encoded = typeof ClientSummary.Encoded;
 }
 
 /**
@@ -568,7 +568,7 @@ export class ClientProcessing extends Model<ClientProcessing>("ClientProcessing"
  * @since 0.0.0
  */
 export declare namespace ClientProcessing {
-  export type Encoded = S.Codec.Encoded<typeof ClientProcessing>;
+  export type Encoded = typeof ClientProcessing.Encoded;
 }
 
 /**

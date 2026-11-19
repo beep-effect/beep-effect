@@ -15,7 +15,6 @@
  */
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import * as S from "effect/Schema";
 import { atLeastCheck, betweenCheck, intAtLeast, intBetween, Model, pg } from "./Port.ts";
 
 const $I = $ScratchpadId.create("beep/ChatFirstE2e");
@@ -161,7 +160,7 @@ export class ChatFirstE2EPrepareRequest extends Model<ChatFirstE2EPrepareRequest
  * @since 0.0.0
  */
 export declare namespace ChatFirstE2EPrepareRequest {
-  export type Encoded = S.Codec.Encoded<typeof ChatFirstE2EPrepareRequest>;
+  export type Encoded = typeof ChatFirstE2EPrepareRequest.Encoded;
 }
 
 /**
@@ -203,7 +202,7 @@ export class ChatFirstE2EAdvanceRequest extends Model<ChatFirstE2EAdvanceRequest
  * @since 0.0.0
  */
 export declare namespace ChatFirstE2EAdvanceRequest {
-  export type Encoded = S.Codec.Encoded<typeof ChatFirstE2EAdvanceRequest>;
+  export type Encoded = typeof ChatFirstE2EAdvanceRequest.Encoded;
 }
 
 /**
@@ -273,5 +272,5 @@ export class ChatFirstE2EFixtureSnapshot extends Model<ChatFirstE2EFixtureSnapsh
  * @since 0.0.0
  */
 export declare namespace ChatFirstE2EFixtureSnapshot {
-  export type Encoded = S.Codec.Encoded<typeof ChatFirstE2EFixtureSnapshot>;
+  export type Encoded = typeof ChatFirstE2EFixtureSnapshot.Encoded;
 }

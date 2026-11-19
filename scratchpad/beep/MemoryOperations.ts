@@ -194,7 +194,7 @@ export class MemoryOperationError extends S.TaggedError<MemoryOperationError, { 
  * @since 0.0.0
  */
 export declare namespace MemoryOperationError {
-  export type Encoded = S.Codec.Encoded<typeof MemoryOperationError>;
+  export type Encoded = typeof MemoryOperationError.Encoded;
 }
 
 /**
@@ -265,7 +265,7 @@ export class MemoryLedgerReopenReceipt extends Model<MemoryLedgerReopenReceipt>(
  * @since 0.0.0
  */
 export declare namespace MemoryLedgerReopenReceipt {
-  export type Encoded = S.Codec.Encoded<typeof MemoryLedgerReopenReceipt>;
+  export type Encoded = typeof MemoryLedgerReopenReceipt.Encoded;
 }
 
 /**
@@ -319,7 +319,7 @@ export class OperationLogicalPayload extends Model<OperationLogicalPayload>("Ope
  * @since 0.0.0
  */
 export declare namespace OperationLogicalPayload {
-  export type Encoded = S.Codec.Encoded<typeof OperationLogicalPayload>;
+  export type Encoded = typeof OperationLogicalPayload.Encoded;
 }
 
 const isOperationLogicalPayload = S.is(OperationLogicalPayload);
@@ -606,7 +606,7 @@ export class MemoryOperation extends Model<MemoryOperation>("MemoryOperation")(
  * @since 0.0.0
  */
 export declare namespace MemoryOperation {
-  export type Encoded = S.Codec.Encoded<typeof MemoryOperation>;
+  export type Encoded = typeof MemoryOperation.Encoded;
 }
 
 /**

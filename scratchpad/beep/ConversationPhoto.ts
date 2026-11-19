@@ -172,7 +172,7 @@ export class ConversationPhoto extends Model<ConversationPhoto>("ConversationPho
  * @since 0.0.0
  */
 export declare namespace ConversationPhoto {
-  export type Encoded = S.Codec.Encoded<typeof ConversationPhoto>;
+  export type Encoded = typeof ConversationPhoto.Encoded;
 }
 
 /**
@@ -229,6 +229,6 @@ export const photosAsString: {
       lines.push(`- ${timestamp}"${description}"`);
     }
     if (lines.length === 0) return "None";
-    return lines.join("\n");
+    return A.join(lines, "\n");
   },
 );

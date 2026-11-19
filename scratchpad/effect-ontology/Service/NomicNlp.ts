@@ -13,10 +13,10 @@
 import { $ScratchpadId } from "@beep/identity";
 import { LiteralKit } from "@beep/schema";
 import { pipeline } from "@xenova/transformers";
+import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause } from "../Domain/Error/Base.ts";
@@ -79,12 +79,7 @@ export class NomicNlpError extends S.TaggedError<NomicNlpError, { readonly brand
  * @category schemas
  * @since 0.0.0
  */
-export const NomicTaskType = LiteralKit([
-  "search_query",
-  "search_document",
-  "clustering",
-  "classification",
-]).pipe(
+export const NomicTaskType = LiteralKit(["search_query", "search_document", "clustering", "classification"]).pipe(
   $I.annoteSchema("NomicTaskType", {
     description: "Finite Nomic embedding task modes supported by the local runtime.",
   })
@@ -323,9 +318,9 @@ export const NomicNlpServiceLive = Layer.effect(
       let vector = A.fromIterable(output.data);
       if (dimensionality < 768 && dimensionality > 0) {
         vector = vector.slice(0, dimensionality);
-        const norm = Math.sqrt(vector.reduce((sum, val) => sum + val * val, 0));
+        const norm = Math.sqrt(A.reduce(vector, 0, (sum, val) => sum + val * val));
         if (norm > 0) {
-          vector = vector.map((val) => val / norm);
+          vector = A.map(vector, (val) => val / norm);
         }
       }
       return vector;

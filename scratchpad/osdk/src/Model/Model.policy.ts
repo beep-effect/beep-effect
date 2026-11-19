@@ -68,6 +68,24 @@ export class ElementStep extends S.Opaque<ElementStep, { readonly brand: unique 
 ) {}
 
 /**
+ * Companion namespace for {@link ElementStep}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ElementStep {
+  /**
+   * Encoded (wire) form of {@link ElementStep}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "element";
+  }
+}
+
+/**
  * A step from a struct type to the type of one of its fields.
  *
  * @category models
@@ -79,6 +97,25 @@ export class FieldStep extends S.Opaque<FieldStep, { readonly brand: unique symb
     name: StructFieldApiName.annotateKey({ description: "Name of the field stepped into." }),
   }).pipe($I.annoteSchema("FieldStep", { description: "A step from a struct type to the type of one of its fields." }))
 ) {}
+
+/**
+ * Companion namespace for {@link FieldStep}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace FieldStep {
+  /**
+   * Encoded (wire) form of {@link FieldStep}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "field";
+    readonly name: StructFieldApiName.Encoded;
+  }
+}
 
 /**
  * One step into a nested property type: into an array's elements, or into a struct's field.
@@ -122,6 +159,24 @@ export const TypePathStep = TypePathStepKind.mapMembers(() => Tuple.make(Element
  */
 export type TypePathStep = typeof TypePathStep.Type;
 
+/**
+ * Companion namespace for {@link TypePathStep}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TypePathStep {
+  /**
+   * Encoded (wire) form of {@link TypePathStep}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ElementStep.Encoded
+    | FieldStep.Encoded;
+}
+
 const propertyField = PropertyApiName.annotateKey({ description: "The property the finding is about." });
 const pathField = S.Array(TypePathStep).annotateKey({
   description: "Steps from the property's own type down to the place that disagrees; empty for the type itself.",
@@ -163,6 +218,26 @@ export class ObjectTypeMismatch extends S.Opaque<ObjectTypeMismatch, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link ObjectTypeMismatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ObjectTypeMismatch {
+  /**
+   * Encoded (wire) form of {@link ObjectTypeMismatch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "objectTypeMismatch";
+    readonly declared: ObjectTypeApiName.Encoded;
+    readonly served: ObjectTypeApiName.Encoded;
+  }
+}
+
+/**
  * The model and the served object type disagree on which property is the primary key.
  *
  * @category models
@@ -181,6 +256,26 @@ export class PrimaryKeyMismatch extends S.Opaque<PrimaryKeyMismatch, { readonly 
 ) {}
 
 /**
+ * Companion namespace for {@link PrimaryKeyMismatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PrimaryKeyMismatch {
+  /**
+   * Encoded (wire) form of {@link PrimaryKeyMismatch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "primaryKeyMismatch";
+    readonly declared: PropertyApiName.Encoded;
+    readonly served: PropertyApiName.Encoded;
+  }
+}
+
+/**
  * The model declares a property the served object type does not have.
  *
  * @category models
@@ -196,6 +291,25 @@ export class MissingProperty extends S.Opaque<MissingProperty, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MissingProperty}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MissingProperty {
+  /**
+   * Encoded (wire) form of {@link MissingProperty}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "missingProperty";
+    readonly property: PropertyApiName.Encoded;
+  }
+}
 
 /**
  * A property, an array element or a struct field has another type tag on the server than in the model.
@@ -219,6 +333,28 @@ export class TagMismatch extends S.Opaque<TagMismatch, { readonly brand: unique 
 ) {}
 
 /**
+ * Companion namespace for {@link TagMismatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TagMismatch {
+  /**
+   * Encoded (wire) form of {@link TagMismatch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "tagMismatch";
+    readonly property: PropertyApiName.Encoded;
+    readonly path: ReadonlyArray<TypePathStep.Encoded>;
+    readonly declared: PropertyTypeKind.Encoded;
+    readonly served: PropertyTypeKind.Encoded;
+  }
+}
+
+/**
  * The model declares a struct field the served struct type does not have.
  *
  * @category models
@@ -236,6 +372,27 @@ export class MissingStructField extends S.Opaque<MissingStructField, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MissingStructField}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MissingStructField {
+  /**
+   * Encoded (wire) form of {@link MissingStructField}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "missingStructField";
+    readonly property: PropertyApiName.Encoded;
+    readonly path: ReadonlyArray<TypePathStep.Encoded>;
+    readonly field: StructFieldApiName.Encoded;
+  }
+}
 
 /**
  * The model declares a vector dimension other than the one the server stores, so its codec rejects the stored vectors.
@@ -257,6 +414,27 @@ export class VectorDimensionMismatch extends S.Opaque<VectorDimensionMismatch, {
 ) {}
 
 /**
+ * Companion namespace for {@link VectorDimensionMismatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace VectorDimensionMismatch {
+  /**
+   * Encoded (wire) form of {@link VectorDimensionMismatch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "vectorDimensionMismatch";
+    readonly property: PropertyApiName.Encoded;
+    readonly path: ReadonlyArray<TypePathStep.Encoded>;
+    readonly served: number;
+  }
+}
+
+/**
  * The model declares a link the served object type does not have.
  *
  * @category models
@@ -270,6 +448,25 @@ export class MissingLink extends S.Opaque<MissingLink, { readonly brand: unique 
     $I.annoteSchema("MissingLink", { description: "The model declares a link the served object type does not have." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MissingLink}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MissingLink {
+  /**
+   * Encoded (wire) form of {@link MissingLink}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "missingLink";
+    readonly link: LinkTypeApiName.Encoded;
+  }
+}
 
 /**
  * A link reaches another number of objects on the server than the model declares.
@@ -291,6 +488,28 @@ export class CardinalityMismatch extends S.Opaque<CardinalityMismatch, { readonl
 ) {}
 
 /**
+ * Companion namespace for {@link CardinalityMismatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace CardinalityMismatch {
+  /**
+   * Encoded (wire) form of {@link CardinalityMismatch}: the cardinalities keep their decoded literals, not the
+   * platform's upper-case ones.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "cardinalityMismatch";
+    readonly link: LinkTypeApiName.Encoded;
+    readonly declared: LinkCardinality;
+    readonly served: LinkCardinality;
+  }
+}
+
+/**
  * A link leads to another object type on the server than the model declares.
  *
  * @category models
@@ -308,6 +527,27 @@ export class TargetMismatch extends S.Opaque<TargetMismatch, { readonly brand: u
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link TargetMismatch}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TargetMismatch {
+  /**
+   * Encoded (wire) form of {@link TargetMismatch}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "targetMismatch";
+    readonly link: LinkTypeApiName.Encoded;
+    readonly declared: ObjectTypeApiName.Encoded;
+    readonly served: ObjectTypeApiName.Encoded;
+  }
+}
 
 /**
  * One way a model disagrees with the object type the platform serves.
@@ -372,6 +612,31 @@ export const ConformanceFinding = ConformanceFindingKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type ConformanceFinding = typeof ConformanceFinding.Type;
+
+/**
+ * Companion namespace for {@link ConformanceFinding}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ConformanceFinding {
+  /**
+   * Encoded (wire) form of {@link ConformanceFinding}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ObjectTypeMismatch.Encoded
+    | PrimaryKeyMismatch.Encoded
+    | MissingProperty.Encoded
+    | TagMismatch.Encoded
+    | MissingStructField.Encoded
+    | VectorDimensionMismatch.Encoded
+    | MissingLink.Encoded
+    | CardinalityMismatch.Encoded
+    | TargetMismatch.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // The comparison

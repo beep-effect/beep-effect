@@ -154,5 +154,5 @@ export class ConversationSourceReplacementReceipt extends Model<ConversationSour
  * @since 0.0.0
  */
 export declare namespace ConversationSourceReplacementReceipt {
-  export type Encoded = S.Codec.Encoded<typeof ConversationSourceReplacementReceipt>;
+  export type Encoded = typeof ConversationSourceReplacementReceipt.Encoded;
 }

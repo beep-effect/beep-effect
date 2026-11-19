@@ -102,7 +102,7 @@ export class StagedTask extends Model<StagedTask>("StagedTask")(
  * @since 0.0.0
  */
 export declare namespace StagedTask {
-  export type Encoded = S.Codec.Encoded<typeof StagedTask>;
+  export type Encoded = typeof StagedTask.Encoded;
 }
 
 /**
@@ -147,7 +147,7 @@ export class StagedTaskListResponse extends Model<StagedTaskListResponse>("Stage
  * @since 0.0.0
  */
 export declare namespace StagedTaskListResponse {
-  export type Encoded = S.Codec.Encoded<typeof StagedTaskListResponse>;
+  export type Encoded = typeof StagedTaskListResponse.Encoded;
 }
 
 /**
@@ -207,7 +207,7 @@ export class PromoteStagedTaskResponse extends Model<PromoteStagedTaskResponse>(
  * @since 0.0.0
  */
 export declare namespace PromoteStagedTaskResponse {
-  export type Encoded = S.Codec.Encoded<typeof PromoteStagedTaskResponse>;
+  export type Encoded = typeof PromoteStagedTaskResponse.Encoded;
 }
 
 /**
@@ -269,7 +269,7 @@ export class MigrateConversationItemsResponse extends Model<MigrateConversationI
  * @since 0.0.0
  */
 export declare namespace MigrateConversationItemsResponse {
-  export type Encoded = S.Codec.Encoded<typeof MigrateConversationItemsResponse>;
+  export type Encoded = typeof MigrateConversationItemsResponse.Encoded;
 }
 
 /**
@@ -326,5 +326,5 @@ export class RestoreLegacyConversationItemsResponse extends Model<RestoreLegacyC
  * @since 0.0.0
  */
 export declare namespace RestoreLegacyConversationItemsResponse {
-  export type Encoded = S.Codec.Encoded<typeof RestoreLegacyConversationItemsResponse>;
+  export type Encoded = typeof RestoreLegacyConversationItemsResponse.Encoded;
 }

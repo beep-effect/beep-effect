@@ -65,6 +65,22 @@ export const MediaItemReadToken = S.RedactedFromValue(S.NonEmptyString).pipe(
  */
 export type MediaItemReadToken = typeof MediaItemReadToken.Type;
 
+/**
+ * Companion namespace for {@link MediaItemReadToken}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaItemReadToken {
+  /**
+   * Encoded (wire) form of {@link MediaItemReadToken}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof MediaItemReadToken.Encoded;
+}
+
 // -----------------------------------------------------------------------------
 // Locators
 // -----------------------------------------------------------------------------
@@ -134,6 +150,30 @@ export class MediaSetViewItem extends S.Opaque<MediaSetViewItem, { readonly bran
 ) {}
 
 /**
+ * Companion namespace for {@link MediaSetViewItem}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaSetViewItem {
+  /**
+   * Encoded (wire) form of {@link MediaSetViewItem}: the fields nest under `mediaSetViewItem`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "mediaSetViewItem";
+    readonly mediaSetViewItem: {
+      readonly mediaSetRid: MediaSetRid.Encoded;
+      readonly mediaSetViewRid: MediaSetViewRid.Encoded;
+      readonly mediaItemRid: MediaItemRid.Encoded;
+      readonly token?: MediaItemReadToken.Encoded;
+    };
+  }
+}
+
+/**
  * Where a media item lives.
  *
  * **Details**
@@ -174,6 +214,23 @@ export const MediaItemLocator = MediaItemLocatorKind.mapMembers(() => Tuple.make
  * @since 0.0.0
  */
 export type MediaItemLocator = typeof MediaItemLocator.Type;
+
+/**
+ * Companion namespace for {@link MediaItemLocator}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaItemLocator {
+  /**
+   * Encoded (wire) form of {@link MediaItemLocator}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | MediaSetViewItem.Encoded;
+}
 
 // -----------------------------------------------------------------------------
 // Media values
@@ -221,6 +278,25 @@ export class MediaReference extends S.Opaque<MediaReference, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link MediaReference}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaReference {
+  /**
+   * Encoded (wire) form of {@link MediaReference}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly mimeType: MediaType.Encoded;
+    readonly reference: MediaItemLocator.Encoded;
+  }
+}
+
+/**
  * What accompanies the bytes of a file when it is uploaded as media.
  *
  * **Details**
@@ -251,3 +327,21 @@ export class MediaUploadRequest extends S.Opaque<MediaUploadRequest, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link MediaUploadRequest}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace MediaUploadRequest {
+  /**
+   * Encoded (wire) form of {@link MediaUploadRequest}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly filename: Filename.Encoded;
+  }
+}

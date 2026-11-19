@@ -1,4 +1,5 @@
 import * as S from "effect/Schema";
+import { IdText } from "@proto/kernel/Measure";
 
 /**
  * A session: a conversation or standing assignment that holds a chain of
@@ -14,7 +15,7 @@ import * as S from "effect/Schema";
  * @category ids
  * @since 0.0.0
  */
-export const SessionId = S.String.pipe(S.brand("SessionId"));
+export const SessionId = IdText.pipe(S.brand("SessionId"));
 /**
  * @category ids
  * @since 0.0.0

@@ -20,14 +20,14 @@ import { makeDrizzleLayer } from "@beep/postgres";
 import { Port } from "@beep/schema/Port";
 import { PgClient } from "@effect/sql-pg";
 import * as Config from "effect/Config";
-import * as Effect from "effect/Effect";
-import * as Layer from "effect/Layer";
-import * as S from "effect/Schema";
 import * as ShardingConfig from "effect/cluster/ShardingConfig";
 import * as SqlMessageStorage from "effect/cluster/SqlMessageStorage";
 import * as SqlRunnerStorage from "effect/cluster/SqlRunnerStorage";
+import * as Effect from "effect/Effect";
+import { flow } from "effect/Function";
+import * as Layer from "effect/Layer";
+import * as S from "effect/Schema";
 import { databaseReady } from "./DatabaseReady.ts";
-import {flow} from "effect/Function";
 
 const $I = $ScratchpadId.create("effect-ontology/Runtime/Persistence/PostgresLayer");
 
@@ -72,7 +72,10 @@ export const PostgresConfig = S.Struct({
   database: S.String,
   username: S.String,
   password: S.Redacted(S.NonEmptyString),
-  ssl: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false))),
+  ssl: S.Boolean.pipe(
+    S.withConstructorDefault(Effect.succeed(false)),
+    S.withDecodingDefaultTypeKey(Effect.succeed(false))
+  ),
 }).pipe(
   $I.annoteSchema("PostgresConfig", {
     description: "PostgreSQL host, port, database, username, redacted password, and optional TLS flag.",
@@ -91,7 +94,10 @@ export type PostgresConfig = typeof PostgresConfig.Type;
 const PostgresPortConfig = Config.Number("POSTGRES_PORT").pipe(
   Config.withDefault(5432),
   Config.mapEffect(
-    flow(S.decodeEffect(Port), Effect.mapError((error) => new Config.ConfigError(error)))
+    flow(
+      S.decodeEffect(Port),
+      Effect.mapError((error) => new Config.ConfigError(error))
+    )
   )
 );
 
@@ -149,7 +155,10 @@ export const PostgresConfigFromEnv = Config.all({
   ssl: Config.Boolean("POSTGRES_SSL").pipe(Config.withDefault(false)),
 }).pipe(
   Config.mapEffect(
-    flow(S.decodeEffect(PostgresConfig), Effect.mapError((error) => new Config.ConfigError(error)))
+    flow(
+      S.decodeEffect(PostgresConfig),
+      Effect.mapError((error) => new Config.ConfigError(error))
+    )
   )
 );
 

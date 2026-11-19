@@ -101,7 +101,9 @@ const StageTimeoutInvariantCheck = S.makeFilter(
  * @category models
  * @since 0.0.0
  */
-export class StageTimeoutConfig extends S.Class<StageTimeoutConfig, { readonly brand: unique symbol }>($I`StageTimeoutConfig`)(
+export class StageTimeoutConfig extends S.Class<StageTimeoutConfig, { readonly brand: unique symbol }>(
+  $I`StageTimeoutConfig`
+)(
   S.Struct({
     softTimeout: S.Duration.annotateKey({ description: "Delay before the soft-timeout callback runs." }),
     hardTimeout: S.Duration.annotateKey({ description: "Deadline after which the stage fails." }),
@@ -179,22 +181,22 @@ export class TimeoutError extends S.TaggedError<TimeoutError, { readonly brand: 
   static readonly is = S.is(this);
 
   /**
-     * Human-readable stage deadline diagnostic.
-     *
-     * **Example** (Read a stage timeout message)
-     *
-     * ```ts
-     * import * as Duration from "effect/Duration";
-     * import { TimeoutError } from "@effect-ontology/Service/LlmControl/StageTimeout"
-     *
-     * const error = TimeoutError.make({ stage: "chunking", timeout: Duration.seconds(5) })
-     * console.log(error.message)
-     * ```
-     *
-     * @returns A stable diagnostic derived from the stage and hard deadline.
-     * @category errors
-     * @since 0.0.0
-     */
+   * Human-readable stage deadline diagnostic.
+   *
+   * **Example** (Read a stage timeout message)
+   *
+   * ```ts
+   * import * as Duration from "effect/Duration";
+   * import { TimeoutError } from "@effect-ontology/Service/LlmControl/StageTimeout"
+   *
+   * const error = TimeoutError.make({ stage: "chunking", timeout: Duration.seconds(5) })
+   * console.log(error.message)
+   * ```
+   *
+   * @returns A stable diagnostic derived from the stage and hard deadline.
+   * @category errors
+   * @since 0.0.0
+   */
   override get message(): string {
     return `Stage "${this.stage}" timed out after ${Duration.format(this.timeout)}`;
   }

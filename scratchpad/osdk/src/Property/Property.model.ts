@@ -104,6 +104,22 @@ export const ArrayReducerDirection = MappedLiteralKit([
 export type ArrayReducerDirection = typeof ArrayReducerDirection.Type;
 
 /**
+ * Companion namespace for {@link ArrayReducerDirection}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ArrayReducerDirection {
+  /**
+   * Encoded (wire) form of {@link ArrayReducerDirection}: the platform's literal, before it maps to the runtime one.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof ArrayReducerDirection.Encoded;
+}
+
+/**
  * Rule that reduces an array property to a single representative element.
  *
  * @category models
@@ -124,6 +140,25 @@ export class ArrayReducer extends S.Opaque<ArrayReducer, { readonly brand: uniqu
 ) {}
 
 /**
+ * Companion namespace for {@link ArrayReducer}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ArrayReducer {
+  /**
+   * Encoded (wire) form of {@link ArrayReducer}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly direction: ArrayReducerDirection.Encoded;
+    readonly field?: StructFieldApiName.Encoded;
+  }
+}
+
+/**
  * Property type of a homogeneous list.
  *
  * **Details**
@@ -141,7 +176,7 @@ export class ArrayType extends S.Opaque<ArrayType, { readonly brand: unique symb
     elementType: suspendedPropertyType.annotateKey({ description: "Property type of every element." }),
     reducers: S.Array(ArrayReducer).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<ArrayReducer>())),
-      S.withDecodingDefaultKey(Effect.succeed(A.empty<(typeof ArrayReducer)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(A.empty<ArrayReducer.Encoded>())),
       S.annotateKey({ description: "Rules that reduce the array to one element when a load level asks for it." })
     ),
   }).pipe(
@@ -166,7 +201,7 @@ export declare namespace ArrayType {
   export interface Encoded {
     readonly type: "array";
     readonly subType: PropertyType.Encoded;
-    readonly reducers?: ReadonlyArray<(typeof ArrayReducer)["Encoded"]>;
+    readonly reducers?: ReadonlyArray<ArrayReducer.Encoded>;
   }
 }
 
@@ -183,7 +218,7 @@ export class StructFieldType extends S.Opaque<StructFieldType, { readonly brand:
     dataType: suspendedPropertyType.annotateKey({ description: "Property type of the field's value." }),
     typeClasses: S.Array(TypeClass).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<TypeClass>())),
-      S.withDecodingDefaultKey(Effect.succeed(A.empty<(typeof TypeClass)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(A.empty<TypeClass.Encoded>())),
       S.annotateKey({ description: "Free-form rendering and behavior hints for client applications." })
     ),
   }).pipe($I.annoteSchema("StructFieldType", { description: "One named field of a struct property." }))
@@ -203,10 +238,10 @@ export declare namespace StructFieldType {
    * @since 0.0.0
    */
   export interface Encoded {
-    readonly apiName: string;
-    readonly rid: string;
+    readonly apiName: StructFieldApiName.Encoded;
+    readonly rid: StructFieldTypeRid.Encoded;
     readonly dataType: PropertyType.Encoded;
-    readonly typeClasses?: ReadonlyArray<(typeof TypeClass)["Encoded"]>;
+    readonly typeClasses?: ReadonlyArray<TypeClass.Encoded>;
   }
 }
 
@@ -242,7 +277,7 @@ export declare namespace StructMainValue {
    */
   export interface Encoded {
     readonly mainValueType: PropertyType.Encoded;
-    readonly fields: ReadonlyArray<string>;
+    readonly fields: ReadonlyArray<StructFieldApiName.Encoded>;
   }
 }
 
@@ -403,26 +438,26 @@ export declare namespace PropertyType {
    * @since 0.0.0
    */
   export type Encoded =
-    | (typeof BooleanType)["Encoded"]
-    | (typeof ByteType)["Encoded"]
-    | (typeof ShortType)["Encoded"]
-    | (typeof IntegerType)["Encoded"]
-    | (typeof LongType)["Encoded"]
-    | (typeof FloatType)["Encoded"]
-    | (typeof DoubleType)["Encoded"]
-    | (typeof DecimalType)["Encoded"]
-    | (typeof StringType)["Encoded"]
-    | (typeof DateType)["Encoded"]
-    | (typeof TimestampType)["Encoded"]
-    | (typeof MarkingType)["Encoded"]
-    | (typeof CipherTextType)["Encoded"]
-    | (typeof AttachmentType)["Encoded"]
-    | (typeof MediaReferenceType)["Encoded"]
-    | (typeof GeoPointType)["Encoded"]
-    | (typeof GeoShapeType)["Encoded"]
-    | (typeof GeotimeSeriesReferenceType)["Encoded"]
-    | (typeof TimeseriesType)["Encoded"]
-    | (typeof VectorType)["Encoded"]
+    | BooleanType.Encoded
+    | ByteType.Encoded
+    | ShortType.Encoded
+    | IntegerType.Encoded
+    | LongType.Encoded
+    | FloatType.Encoded
+    | DoubleType.Encoded
+    | DecimalType.Encoded
+    | StringType.Encoded
+    | DateType.Encoded
+    | TimestampType.Encoded
+    | MarkingType.Encoded
+    | CipherTextType.Encoded
+    | AttachmentType.Encoded
+    | MediaReferenceType.Encoded
+    | GeoPointType.Encoded
+    | GeoShapeType.Encoded
+    | GeotimeSeriesReferenceType.Encoded
+    | TimeseriesType.Encoded
+    | VectorType.Encoded
     | ArrayType.Encoded
     | StructType.Encoded;
 }
@@ -446,6 +481,24 @@ export class ActiveProperty extends S.Opaque<ActiveProperty, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link ActiveProperty}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ActiveProperty {
+  /**
+   * Encoded (wire) form of {@link ActiveProperty}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "active";
+  }
+}
+
+/**
  * A property that may still change shape or disappear.
  *
  * @category models
@@ -456,6 +509,24 @@ export class ExperimentalProperty extends S.Opaque<ExperimentalProperty, { reado
     $I.annoteSchema("ExperimentalProperty", { description: "A property that may still change shape or disappear." })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ExperimentalProperty}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExperimentalProperty {
+  /**
+   * Encoded (wire) form of {@link ExperimentalProperty}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "experimental";
+  }
+}
 
 /**
  * A property that exists to demonstrate the ontology rather than to carry real data.
@@ -470,6 +541,24 @@ export class ExampleProperty extends S.Opaque<ExampleProperty, { readonly brand:
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link ExampleProperty}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace ExampleProperty {
+  /**
+   * Encoded (wire) form of {@link ExampleProperty}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "example";
+  }
+}
 
 /**
  * A property scheduled for removal, with the reason, the deadline and its replacement when one exists.
@@ -494,6 +583,27 @@ export class DeprecatedProperty extends S.Opaque<DeprecatedProperty, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link DeprecatedProperty}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace DeprecatedProperty {
+  /**
+   * Encoded (wire) form of {@link DeprecatedProperty}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "deprecated";
+    readonly message: string;
+    readonly deadline: string;
+    readonly replacedBy?: PropertyTypeRid.Encoded;
+  }
+}
 
 /**
  * Lifecycle status of a property.
@@ -526,6 +636,26 @@ export const PropertyStatus = PropertyStatusKind.mapMembers(() =>
  * @since 0.0.0
  */
 export type PropertyStatus = typeof PropertyStatus.Type;
+
+/**
+ * Companion namespace for {@link PropertyStatus}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyStatus {
+  /**
+   * Encoded (wire) form of {@link PropertyStatus}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded =
+    | ActiveProperty.Encoded
+    | ExperimentalProperty.Encoded
+    | ExampleProperty.Encoded
+    | DeprecatedProperty.Encoded;
+}
 
 /**
  * Whether values written through a datasource or an action may be null.
@@ -565,6 +695,22 @@ export const Nullability = MappedLiteralKit([
 export type Nullability = typeof Nullability.Type;
 
 /**
+ * Companion namespace for {@link Nullability}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace Nullability {
+  /**
+   * Encoded (wire) form of {@link Nullability}: the platform's literal, before it maps to the runtime one.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof Nullability.Encoded;
+}
+
+/**
  * Constraints the platform enforces on a property's values when they are written.
  *
  * **Gotchas**
@@ -588,6 +734,24 @@ export class PropertyDataConstraints extends S.Opaque<PropertyDataConstraints, {
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link PropertyDataConstraints}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyDataConstraints {
+  /**
+   * Encoded (wire) form of {@link PropertyDataConstraints}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly nullability?: Nullability.Encoded;
+  }
+}
 
 /**
  * A property as declared on an object type: its type plus everything that describes it.
@@ -646,7 +810,7 @@ export class PropertyDefinition extends S.Opaque<PropertyDefinition, { readonly 
     ),
     typeClasses: S.Array(TypeClass).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<TypeClass>())),
-      S.withDecodingDefaultKey(Effect.succeed(A.empty<(typeof TypeClass)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(A.empty<TypeClass.Encoded>())),
       S.annotateKey({ description: "Free-form rendering and behavior hints for client applications." })
     ),
     dataConstraints: S.OptionFromOptionalKey(PropertyDataConstraints).pipe(
@@ -659,6 +823,34 @@ export class PropertyDefinition extends S.Opaque<PropertyDefinition, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link PropertyDefinition}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyDefinition {
+  /**
+   * Encoded (wire) form of {@link PropertyDefinition}: an unstated attribute is an absent key, and an absent
+   * `typeClasses` decodes to an empty list.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly dataType: PropertyType.Encoded;
+    readonly rid: PropertyTypeRid.Encoded;
+    readonly displayName?: string;
+    readonly description?: string;
+    readonly status?: PropertyStatus.Encoded;
+    readonly visibility?: Visibility.Encoded;
+    readonly valueTypeApiName?: ValueTypeApiName.Encoded;
+    readonly valueFormatting?: ValueFormat.Encoded;
+    readonly typeClasses?: ReadonlyArray<TypeClass.Encoded>;
+    readonly dataConstraints?: PropertyDataConstraints.Encoded;
+  }
+}
 
 /**
  * A property definition reused across object and interface types.
@@ -686,7 +878,7 @@ export class SharedPropertyType extends S.Opaque<SharedPropertyType, { readonly 
     ),
     typeClasses: S.Array(TypeClass).pipe(
       S.withConstructorDefault(Effect.succeed(A.empty<TypeClass>())),
-      S.withDecodingDefaultKey(Effect.succeed(A.empty<(typeof TypeClass)["Encoded"]>())),
+      S.withDecodingDefaultKey(Effect.succeed(A.empty<TypeClass.Encoded>())),
       S.annotateKey({ description: "Free-form rendering and behavior hints for client applications." })
     ),
   }).pipe(
@@ -695,6 +887,32 @@ export class SharedPropertyType extends S.Opaque<SharedPropertyType, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link SharedPropertyType}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace SharedPropertyType {
+  /**
+   * Encoded (wire) form of {@link SharedPropertyType}: an unstated attribute is an absent key, and an absent
+   * `typeClasses` decodes to an empty list.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly rid: SharedPropertyTypeRid.Encoded;
+    readonly apiName: SharedPropertyTypeApiName.Encoded;
+    readonly displayName: string;
+    readonly description?: string;
+    readonly dataType: PropertyType.Encoded;
+    readonly valueTypeApiName?: ValueTypeApiName.Encoded;
+    readonly valueFormatting?: ValueFormat.Encoded;
+    readonly typeClasses?: ReadonlyArray<TypeClass.Encoded>;
+  }
+}
 
 // -----------------------------------------------------------------------------
 // Property selectors
@@ -746,6 +964,24 @@ export const PropertyLoadLevel = S.Struct({ type: LoadLevelKind }).pipe(
  */
 export type PropertyLoadLevel = typeof PropertyLoadLevel.Type;
 
+/**
+ * Companion namespace for {@link PropertyLoadLevel}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyLoadLevel {
+  /**
+   * Encoded (wire) form of {@link PropertyLoadLevel}: the level is wrapped in a record tagged on `type`.
+.   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "noLoadLevel" | "applyReducers" | "extractMainValue" | "applyReducersAndExtractMainValue";
+  }
+}
+
 const PropertySelectorKind = LiteralKit([
   "property",
   "structField",
@@ -768,6 +1004,25 @@ export class PropertyByName extends S.Opaque<PropertyByName, { readonly brand: u
 ) {}
 
 /**
+ * Companion namespace for {@link PropertyByName}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PropertyByName {
+  /**
+   * Encoded (wire) form of {@link PropertyByName}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "property";
+    readonly apiName: PropertyApiName.Encoded;
+  }
+}
+
+/**
  * Selects one field of a struct property.
  *
  * @category models
@@ -780,6 +1035,26 @@ export class StructFieldOfProperty extends S.Opaque<StructFieldOfProperty, { rea
     structFieldApiName: StructFieldApiName.annotateKey({ description: "Name of the field within the struct." }),
   }).pipe($I.annoteSchema("StructFieldOfProperty", { description: "Selects one field of a struct property." }))
 ) {}
+
+/**
+ * Companion namespace for {@link StructFieldOfProperty}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace StructFieldOfProperty {
+  /**
+   * Encoded (wire) form of {@link StructFieldOfProperty}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "structField";
+    readonly propertyApiName: PropertyApiName.Encoded;
+    readonly structFieldApiName: StructFieldApiName.Encoded;
+  }
+}
 
 /**
  * Selects a property and says how much of it to load.
@@ -816,7 +1091,7 @@ export declare namespace PropertyAtLoadLevel {
   export interface Encoded {
     readonly type: "propertyWithLoadLevel";
     readonly propertyIdentifier: PropertySelector.Encoded;
-    readonly loadLevel: (typeof PropertyLoadLevel)["Encoded"];
+    readonly loadLevel: PropertyLoadLevel.Encoded;
   }
 }
 
@@ -833,6 +1108,24 @@ export class TitleProperty extends S.Opaque<TitleProperty, { readonly brand: uni
 ) {}
 
 /**
+ * Companion namespace for {@link TitleProperty}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace TitleProperty {
+  /**
+   * Encoded (wire) form of {@link TitleProperty}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "titleProperty";
+  }
+}
+
+/**
  * Selects whichever property is the object type's primary key.
  *
  * @category models
@@ -845,6 +1138,24 @@ export class PrimaryKeyProperty extends S.Opaque<PrimaryKeyProperty, { readonly 
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link PrimaryKeyProperty}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace PrimaryKeyProperty {
+  /**
+   * Encoded (wire) form of {@link PrimaryKeyProperty}.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly type: "primaryKeyProperty";
+  }
+}
 
 /**
  * Addresses a property, a struct field, or a role (title, primary key) in filters, ordering, selection and aggregation.
@@ -909,9 +1220,9 @@ export declare namespace PropertySelector {
    * @since 0.0.0
    */
   export type Encoded =
-    | (typeof PropertyByName)["Encoded"]
-    | (typeof StructFieldOfProperty)["Encoded"]
+    | PropertyByName.Encoded
+    | StructFieldOfProperty.Encoded
     | PropertyAtLoadLevel.Encoded
-    | (typeof TitleProperty)["Encoded"]
-    | (typeof PrimaryKeyProperty)["Encoded"];
+    | TitleProperty.Encoded
+    | PrimaryKeyProperty.Encoded;
 }

@@ -12,10 +12,10 @@
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
 import { ShaclValidationResult, ShaclValidationViolation } from "@beep/semantic-web/services/shacl-validation";
-import * as Duration from "effect/Duration";
-import * as Effect from "effect/Effect";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
+import * as Duration from "effect/Duration";
+import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -25,18 +25,22 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/Shacl");
 const isValidValidationDuration = P.every([Duration.isFinite, Duration.isGreaterThanOrEqualTo(Duration.zero)]);
 
 const ValidationDurationMs = S.DurationFromMillis.check(
-  S.makeFilter(isValidValidationDuration, $I.annote("FiniteValidationDurationCheck", {
-    title: "Finite Validation Duration",
-    description: "A measured validation duration that is finite and non-negative.",
-    message: "Validation duration must be finite and non-negative.",
-  }))
-).pipe(
-    $I.annoteSchema("ValidationDurationMs", {
-      description: "Finite, non-negative validation duration encoded as milliseconds.",
+  S.makeFilter(
+    isValidValidationDuration,
+    $I.annote("FiniteValidationDurationCheck", {
+      title: "Finite Validation Duration",
+      description: "A measured validation duration that is finite and non-negative.",
+      message: "Validation duration must be finite and non-negative.",
     })
-  );
+  )
+).pipe(
+  $I.annoteSchema("ValidationDurationMs", {
+    description: "Finite, non-negative validation duration encoded as milliseconds.",
+  })
+);
 
-class ShaclValidationReportFields extends S.Opaque<ShaclValidationReportFields, { readonly brand: unique symbol }>()(S.Struct({
+class ShaclValidationReportFields extends S.Opaque<ShaclValidationReportFields, { readonly brand: unique symbol }>()(
+  S.Struct({
     validation: ShaclValidationResult.annotateKey({
       description: "Canonical SHACL validation result produced by the semantic-web capability.",
     }),
@@ -52,9 +56,12 @@ class ShaclValidationReportFields extends S.Opaque<ShaclValidationReportFields, 
     durationMs: ValidationDurationMs.annotateKey({
       description: "Finite elapsed validation duration encoded as milliseconds.",
     }),
-  }).pipe($I.annoteSchema("ShaclValidationReportFields", {
-    description: "Experiment execution metadata wrapped around the canonical SHACL validation result.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ShaclValidationReportFields", {
+      description: "Experiment execution metadata wrapped around the canonical SHACL validation result.",
+    })
+  )
+) {}
 
 /**
  * Complete normalized report for one SHACL validation run.
@@ -116,28 +123,35 @@ export const ShaclValidationReport = ShaclValidationReportFields.pipe(
  */
 export type ShaclValidationReport = typeof ShaclValidationReport.Type;
 
-class ValidationPolicyFields extends S.Opaque<ValidationPolicyFields, { readonly brand: unique symbol }>()(S.Struct({
+class ValidationPolicyFields extends S.Opaque<ValidationPolicyFields, { readonly brand: unique symbol }>()(
+  S.Struct({
     failOnViolation: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(true)), S.withDecodingDefaultTypeKey(Effect.succeed(true)),
+      S.withConstructorDefault(Effect.succeed(true)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(true)),
       S.annotateKey({
         description: "Whether Violation-level results fail the workflow when logOnly is false.",
       })
     ),
     failOnWarning: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({
         description: "Whether Warning-level results fail the workflow when logOnly is false.",
       })
     ),
     logOnly: S.Boolean.pipe(
-      S.withConstructorDefault(Effect.succeed(false)), S.withDecodingDefaultTypeKey(Effect.succeed(false)),
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(false)),
       S.annotateKey({
         description: "Whether all validation results are logged without failing the workflow.",
       })
     ),
-  }).pipe($I.annoteSchema("ValidationPolicyFields", {
-    description: "Internal field model for SHACL workflow failure policy.",
-  }))) {}
+  }).pipe(
+    $I.annoteSchema("ValidationPolicyFields", {
+      description: "Internal field model for SHACL workflow failure policy.",
+    })
+  )
+) {}
 
 /**
  * Workflow policy that maps SHACL result severities to failure behavior.

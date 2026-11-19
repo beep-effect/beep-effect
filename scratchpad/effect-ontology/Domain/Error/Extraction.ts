@@ -11,17 +11,18 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { ErrorMessage, OptionalErrorCause, OptionalErrorMessage, OptionalNonNegativeInt } from "./Base.ts";
-import * as Effect from "effect/Effect";
+
 const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Extraction");
 
 const OptionalExtractionJson = S.OptionFromNullishOr(S.Json).pipe(
   S.withConstructorDefault(Effect.succeedNone),
-    $I.annoteSchema("OptionalExtractionJson", {
-      description: "Optional serializable extraction payload normalized to an Effect Option.",
-    })
-  );
+  $I.annoteSchema("OptionalExtractionJson", {
+    description: "Optional serializable extraction payload normalized to an Effect Option.",
+  })
+);
 
 const ExtractionJsonArrayDefinition = S.Json.pipe(S.Array);
 
@@ -33,10 +34,10 @@ const ExtractionJsonArray = ExtractionJsonArrayDefinition.pipe(
 
 const OptionalExtractionJsonArray = S.OptionFromNullishOr(ExtractionJsonArray).pipe(
   S.withConstructorDefault(Effect.succeedNone),
-    $I.annoteSchema("OptionalExtractionJsonArray", {
-      description: "Optional collection of partial extraction payloads normalized to an Effect Option.",
-    })
-  );
+  $I.annoteSchema("OptionalExtractionJsonArray", {
+    description: "Optional collection of partial extraction payloads normalized to an Effect Option.",
+  })
+);
 
 const extractionFields = {
   message: ErrorMessage.annotateKey({
@@ -67,7 +68,9 @@ const extractionFields = {
  * @category errors
  * @since 0.0.0
  */
-export class ExtractionError extends S.TaggedError<ExtractionError, { readonly brand: unique symbol }>($I`ExtractionError`)(
+export class ExtractionError extends S.TaggedError<ExtractionError, { readonly brand: unique symbol }>(
+  $I`ExtractionError`
+)(
   "ExtractionError",
   extractionFields,
   $I.annote("ExtractionError", {
@@ -94,7 +97,9 @@ export class ExtractionError extends S.TaggedError<ExtractionError, { readonly b
  * @category errors
  * @since 0.0.0
  */
-export class MentionExtractionFailed extends S.TaggedError<MentionExtractionFailed, { readonly brand: unique symbol }>($I`MentionExtractionFailed`)(
+export class MentionExtractionFailed extends S.TaggedError<MentionExtractionFailed, { readonly brand: unique symbol }>(
+  $I`MentionExtractionFailed`
+)(
   "MentionExtractionFailed",
   extractionFields,
   $I.annote("MentionExtractionFailed", {
@@ -119,7 +124,9 @@ export class MentionExtractionFailed extends S.TaggedError<MentionExtractionFail
  * @category errors
  * @since 0.0.0
  */
-export class EntityExtractionFailed extends S.TaggedError<EntityExtractionFailed, { readonly brand: unique symbol }>($I`EntityExtractionFailed`)(
+export class EntityExtractionFailed extends S.TaggedError<EntityExtractionFailed, { readonly brand: unique symbol }>(
+  $I`EntityExtractionFailed`
+)(
   "EntityExtractionFailed",
   extractionFields,
   $I.annote("EntityExtractionFailed", {
@@ -144,7 +151,10 @@ export class EntityExtractionFailed extends S.TaggedError<EntityExtractionFailed
  * @category errors
  * @since 0.0.0
  */
-export class RelationExtractionFailed extends S.TaggedError<RelationExtractionFailed, { readonly brand: unique symbol }>($I`RelationExtractionFailed`)(
+export class RelationExtractionFailed extends S.TaggedError<
+  RelationExtractionFailed,
+  { readonly brand: unique symbol }
+>($I`RelationExtractionFailed`)(
   "RelationExtractionFailed",
   {
     ...extractionFields,
@@ -174,7 +184,9 @@ export class RelationExtractionFailed extends S.TaggedError<RelationExtractionFa
  * @category errors
  * @since 0.0.0
  */
-export class SchemaGenerationFailed extends S.TaggedError<SchemaGenerationFailed, { readonly brand: unique symbol }>($I`SchemaGenerationFailed`)(
+export class SchemaGenerationFailed extends S.TaggedError<SchemaGenerationFailed, { readonly brand: unique symbol }>(
+  $I`SchemaGenerationFailed`
+)(
   "SchemaGenerationFailed",
   {
     message: ErrorMessage.annotateKey({
@@ -206,7 +218,9 @@ export class SchemaGenerationFailed extends S.TaggedError<SchemaGenerationFailed
  * @category errors
  * @since 0.0.0
  */
-export class ValidationFailed extends S.TaggedError<ValidationFailed, { readonly brand: unique symbol }>($I`ValidationFailed`)(
+export class ValidationFailed extends S.TaggedError<ValidationFailed, { readonly brand: unique symbol }>(
+  $I`ValidationFailed`
+)(
   "ValidationFailed",
   {
     message: ErrorMessage.annotateKey({
@@ -248,7 +262,9 @@ export class ValidationFailed extends S.TaggedError<ValidationFailed, { readonly
  * @category errors
  * @since 0.0.0
  */
-export class EntityValidationFailed extends S.TaggedError<EntityValidationFailed, { readonly brand: unique symbol }>($I`EntityValidationFailed`)(
+export class EntityValidationFailed extends S.TaggedError<EntityValidationFailed, { readonly brand: unique symbol }>(
+  $I`EntityValidationFailed`
+)(
   "EntityValidationFailed",
   {
     reason: ErrorMessage.annotateKey({
@@ -290,7 +306,10 @@ export class EntityValidationFailed extends S.TaggedError<EntityValidationFailed
  * @category errors
  * @since 0.0.0
  */
-export class RelationValidationFailed extends S.TaggedError<RelationValidationFailed, { readonly brand: unique symbol }>($I`RelationValidationFailed`)(
+export class RelationValidationFailed extends S.TaggedError<
+  RelationValidationFailed,
+  { readonly brand: unique symbol }
+>($I`RelationValidationFailed`)(
   "RelationValidationFailed",
   {
     reason: ErrorMessage.annotateKey({

@@ -52,11 +52,15 @@ const SimilarityMethod = LiteralKit(["exact", "similarity", "containment", "neig
  * @category models
  * @since 0.0.0
  */
-export class SimilarityResult extends S.Opaque<SimilarityResult, { readonly brand: unique symbol }>()(S.Struct({
+export class SimilarityResult extends S.Opaque<SimilarityResult, { readonly brand: unique symbol }>()(
+  S.Struct({
     score: UnitInterval,
     method: SimilarityMethod,
     shouldMerge: S.Boolean,
-  }).pipe($I.annoteSchema("SimilarityResult", { description: "Validated entity similarity score and resolution decision." }))) {}
+  }).pipe(
+    $I.annoteSchema("SimilarityResult", { description: "Validated entity similarity score and resolution decision." })
+  )
+) {}
 
 /**
  * Cached entity-similarity scorer backed by {@link NomicNlpService}.

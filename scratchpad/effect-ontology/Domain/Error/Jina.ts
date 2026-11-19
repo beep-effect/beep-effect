@@ -60,7 +60,10 @@ const JinaRateLimitErrorFields = {
   retryAfterMs: Milliseconds.annotateKey({
     description: "Provider-directed retry delay in milliseconds.",
   }),
-  message: ErrorMessage.pipe(S.withConstructorDefault(Effect.succeed("Jina API rate limit exceeded")), S.withDecodingDefaultTypeKey(Effect.succeed("Jina API rate limit exceeded"))).annotateKey({
+  message: ErrorMessage.pipe(
+    S.withConstructorDefault(Effect.succeed("Jina API rate limit exceeded")),
+    S.withDecodingDefaultTypeKey(Effect.succeed("Jina API rate limit exceeded"))
+  ).annotateKey({
     description: "Human-readable rate-limit diagnostic with a schema-owned default.",
   }),
 } satisfies S.Struct.Fields;
@@ -83,15 +86,13 @@ const JinaRateLimitErrorFields = {
  * @category errors
  * @since 0.0.0
  */
-export class JinaRateLimitError extends S.TaggedError<JinaRateLimitError, { readonly brand: unique symbol }>($I`JinaRateLimitError`)(
-  "JinaRateLimitError",
-  JinaRateLimitErrorFields,
-  {
-    ...$I.annote("JinaRateLimitError", {
-      description: "Jina Reader request rejected because the API quota was exhausted.",
-    }),
-  }
-) {
+export class JinaRateLimitError extends S.TaggedError<JinaRateLimitError, { readonly brand: unique symbol }>(
+  $I`JinaRateLimitError`
+)("JinaRateLimitError", JinaRateLimitErrorFields, {
+  ...$I.annote("JinaRateLimitError", {
+    description: "Jina Reader request rejected because the API quota was exhausted.",
+  }),
+}) {
   /**
    * Provider-directed retry delay as an Effect `Duration`.
    *
@@ -129,7 +130,9 @@ export class JinaRateLimitError extends S.TaggedError<JinaRateLimitError, { read
  * @category errors
  * @since 0.0.0
  */
-export class JinaParseError extends S.TaggedError<JinaParseError, { readonly brand: unique symbol }>($I`JinaParseError`)(
+export class JinaParseError extends S.TaggedError<JinaParseError, { readonly brand: unique symbol }>(
+  $I`JinaParseError`
+)(
   "JinaParseError",
   {
     message: ErrorMessage.annotateKey({
@@ -167,7 +170,9 @@ export class JinaParseError extends S.TaggedError<JinaParseError, { readonly bra
  * @category errors
  * @since 0.0.0
  */
-export class JinaTimeoutError extends S.TaggedError<JinaTimeoutError, { readonly brand: unique symbol }>($I`JinaTimeoutError`)(
+export class JinaTimeoutError extends S.TaggedError<JinaTimeoutError, { readonly brand: unique symbol }>(
+  $I`JinaTimeoutError`
+)(
   "JinaTimeoutError",
   {
     url: URLStr.annotateKey({
@@ -176,7 +181,10 @@ export class JinaTimeoutError extends S.TaggedError<JinaTimeoutError, { readonly
     timeoutMs: Milliseconds.annotateKey({
       description: "Configured Jina request deadline in milliseconds.",
     }),
-    message: ErrorMessage.pipe(S.withConstructorDefault(Effect.succeed("Jina API request timed out")), S.withDecodingDefaultTypeKey(Effect.succeed("Jina API request timed out"))).annotateKey({
+    message: ErrorMessage.pipe(
+      S.withConstructorDefault(Effect.succeed("Jina API request timed out")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("Jina API request timed out"))
+    ).annotateKey({
       description: "Human-readable timeout diagnostic with a schema-owned default.",
     }),
   },

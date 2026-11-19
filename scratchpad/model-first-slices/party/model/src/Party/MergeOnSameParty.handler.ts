@@ -4,11 +4,12 @@ import { MergeRefusal, RecordMergeRefused } from "@proto/party-contract/Claim/Re
 import { MergeParties } from "@proto/party-contract/Party/MergeParties.command";
 import { Proposition } from "@proto/party-contract/Proposition";
 import * as Effect from "effect/Effect";
-import * as O from "effect/Option";
+import * as O from "@beep/utils/Option";
 import { Authority } from "../Authority.external.ts";
 import { Claim } from "../Claim/Claim.aggregate.ts";
-import { MergeOnSameParty } from "./MergeOnSameParty.policy.ts";
+import { MergeOnSameParty, MergeOnSamePartyTrigger } from "./MergeOnSameParty.policy.ts";
 import { Party } from "./Party.aggregate.ts";
+import { thunkEffectVoid, thunkTrue } from "@beep/utils/thunk"
 
 /**
  * Asks the authority context to re-admit the accepting provenance for this
@@ -27,7 +28,10 @@ export const MergeOnSamePartyLive = MergeOnSameParty.toLayer(
     const authority = yield* Authority;
     return Effect.fn(function* (trigger) {
       const { event } = trigger;
-      const accepted = event._tag === "ClaimAccepted" || event.outcome === "accepted";
+      const accepted = MergeOnSamePartyTrigger.match(event, {
+        ClaimAccepted: thunkTrue,
+        ProposalApproved: ({ outcome }) => outcome === "accepted",
+      });
       if (!accepted) return;
       const hop = byProcess(MergeOnSameParty.policyName, eventCause(trigger));
       const refusal = yield* Proposition.match(event.proposition, {
@@ -46,7 +50,7 @@ export const MergeOnSamePartyLive = MergeOnSameParty.toLayer(
         HasIdentifier: () => Effect.succeed(O.none<MergeRefusal>()),
       });
       yield* O.match(refusal, {
-        onNone: () => Effect.void,
+        onNone: thunkEffectVoid,
         onSome: (reason) =>
           claims
             .send(trigger.source, RecordMergeRefused.make({ reason, provenance: extend(event.provenance, hop) }))

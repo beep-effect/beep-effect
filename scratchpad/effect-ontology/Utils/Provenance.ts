@@ -1,3 +1,6 @@
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as Str from "effect/String";
 /**
  * Provenance URI generation utilities
  *
@@ -137,13 +140,16 @@ export const parseProvenanceUri = (
   documentId: string;
   chunkIndex?: number;
 } | null => {
-  const match = uri.match(/^urn:provenance:batch\/(batch-[a-f0-9]{12})\/doc\/(doc-[a-f0-9]{12})(?:\/chunk\/(\d+))?$/);
-  if (P.isNull(match)) return null;
+  const match = Str.match(/^urn:provenance:batch\/(batch-[a-f0-9]{12})\/doc\/(doc-[a-f0-9]{12})(?:\/chunk\/(\d+))?$/)(
+    uri
+  );
+  if (O.isNone(match)) return null;
+  const groups = match.value;
 
   return {
-    batchId: match[1],
-    documentId: match[2],
-    ...(P.isUndefined(match[3]) ? {} : { chunkIndex: Number.parseInt(match[3], 10) }),
+    batchId: A.getUnsafe(groups, 1),
+    documentId: A.getUnsafe(groups, 2),
+    ...(P.isUndefined(groups[3]) ? {} : { chunkIndex: Number.parseInt(groups[3], 10) }),
   };
 };
 

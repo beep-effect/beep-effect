@@ -9,6 +9,7 @@ import { EntityId } from "../../Domain/Model/shared.ts";
 import { ClassificationError } from "../../Service/DocumentClassifier.ts";
 import { CachedExtractionResult } from "../../Service/ExtractionCache.ts";
 import { ExplanationContext } from "../../Service/ViolationExplainer.ts";
+
 const decodeCachedExtractionResult = S.decodeEffect(CachedExtractionResult);
 const decodeEntityId = S.decodeEffect(EntityId);
 const decodeIRI = S.decodeEffect(IRI);

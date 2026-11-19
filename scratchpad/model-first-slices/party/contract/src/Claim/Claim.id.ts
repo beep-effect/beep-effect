@@ -1,4 +1,5 @@
 import * as S from "effect/Schema";
+import { IdText } from "@proto/kernel/Measure";
 
 /**
  * A claim: one proposition about parties, with the evidence for it.
@@ -13,7 +14,7 @@ import * as S from "effect/Schema";
  * @category ids
  * @since 0.0.0
  */
-export const ClaimId = S.String.pipe(S.brand("ClaimId"));
+export const ClaimId = IdText.pipe(S.brand("ClaimId"));
 /**
  * @category ids
  * @since 0.0.0

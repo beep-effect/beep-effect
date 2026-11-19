@@ -148,18 +148,21 @@ describe("Attachment", () => {
   it.effect(
     "rejects sizes that are negative, fractional or not numbers, and empty descriptors",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(SizeBytes)("-1"),
-        rejects(SizeBytes)("12.5"),
-        rejects(SizeBytes)("large"),
-        rejects(SizeBytes)(393469),
-        rejects(Filename)(""),
-        rejects(MediaType)(""),
-        rejects(AttachmentReference)({ rid: "" }),
-        rejects(AttachmentReference)(attachmentRid),
-        rejects(AttachmentMetadata)({ rid: attachmentRid, filename: "a.txt", sizeBytes: 1, mediaType: "text/plain" }),
-        rejects(AttachmentUpload)({ name: "a.txt" }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(SizeBytes)("-1"),
+          rejects(SizeBytes)("12.5"),
+          rejects(SizeBytes)("large"),
+          rejects(SizeBytes)(393469),
+          rejects(Filename)(""),
+          rejects(MediaType)(""),
+          rejects(AttachmentReference)({ rid: "" }),
+          rejects(AttachmentReference)(attachmentRid),
+          rejects(AttachmentMetadata)({ rid: attachmentRid, filename: "a.txt", sizeBytes: 1, mediaType: "text/plain" }),
+          rejects(AttachmentUpload)({ name: "a.txt" }),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(verdicts, [true, true, true, true, true, true, true, true, true, true]);
     })
   );
@@ -262,23 +265,26 @@ describe("Media", () => {
   it.effect(
     "rejects the flattened shape on the wire, unknown locator kinds, empty identifiers and empty tokens",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(MediaSetViewItem)({ type: "mediaSetViewItem", mediaSetRid, mediaSetViewRid, mediaItemRid }),
-        rejects(MediaItemLocator)({ type: "mediaItem", mediaItem: { mediaItemRid } }),
-        rejects(MediaSetViewItem)({
-          type: "mediaSetViewItem",
-          mediaSetViewItem: { mediaSetRid: "", mediaSetViewRid, mediaItemRid },
-        }),
-        rejects(MediaSetViewItem)({
-          type: "mediaSetViewItem",
-          mediaSetViewItem: { mediaSetRid, mediaSetViewRid, mediaItemRid, token: "" },
-        }),
-        rejects(MediaSetViewItem)({ type: "mediaSetViewItem", mediaSetViewItem: { mediaSetRid, mediaSetViewRid } }),
-        rejects(MediaReference)({ mimeType: "", reference: mediaReferenceWire.reference }),
-        rejects(MediaReference)({ mimeType: "application/pdf" }),
-        rejects(MediaItemReadToken)(""),
-        rejects(MediaUploadRequest)({ fileName: "scan.png" }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(MediaSetViewItem)({ type: "mediaSetViewItem", mediaSetRid, mediaSetViewRid, mediaItemRid }),
+          rejects(MediaItemLocator)({ type: "mediaItem", mediaItem: { mediaItemRid } }),
+          rejects(MediaSetViewItem)({
+            type: "mediaSetViewItem",
+            mediaSetViewItem: { mediaSetRid: "", mediaSetViewRid, mediaItemRid },
+          }),
+          rejects(MediaSetViewItem)({
+            type: "mediaSetViewItem",
+            mediaSetViewItem: { mediaSetRid, mediaSetViewRid, mediaItemRid, token: "" },
+          }),
+          rejects(MediaSetViewItem)({ type: "mediaSetViewItem", mediaSetViewItem: { mediaSetRid, mediaSetViewRid } }),
+          rejects(MediaReference)({ mimeType: "", reference: mediaReferenceWire.reference }),
+          rejects(MediaReference)({ mimeType: "application/pdf" }),
+          rejects(MediaItemReadToken)(""),
+          rejects(MediaUploadRequest)({ fileName: "scan.png" }),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(verdicts, [true, true, true, true, true, true, true, true, true]);
     })
   );
@@ -338,16 +344,19 @@ describe("CipherText", () => {
   it.effect(
     "rejects strings that are not an envelope, an empty channel, an empty payload and a channel with a colon",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(CipherText)("AAAAkdB7Zm9vYmFy"),
-        rejects(CipherText)(`CIPHER::${cipherChannelRid}::AAAAkdB7`),
-        rejects(CipherText)(`${cipherChannelRid}::AAAAkdB7::CIPHER`),
-        rejects(CipherText)("CIPHER::::AAAAkdB7::CIPHER"),
-        rejects(CipherText)(`CIPHER::${cipherChannelRid}::::CIPHER`),
-        rejects(CipherText)(`cipher::${cipherChannelRid}::AAAAkdB7::cipher`),
-        rejects(CipherText)({ channel: cipherChannelRid, ciphertext: "AAAAkdB7" }),
-        rejects(CipherChannelRid)(""),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(CipherText)("AAAAkdB7Zm9vYmFy"),
+          rejects(CipherText)(`CIPHER::${cipherChannelRid}::AAAAkdB7`),
+          rejects(CipherText)(`${cipherChannelRid}::AAAAkdB7::CIPHER`),
+          rejects(CipherText)("CIPHER::::AAAAkdB7::CIPHER"),
+          rejects(CipherText)(`CIPHER::${cipherChannelRid}::::CIPHER`),
+          rejects(CipherText)(`cipher::${cipherChannelRid}::AAAAkdB7::cipher`),
+          rejects(CipherText)({ channel: cipherChannelRid, ciphertext: "AAAAkdB7" }),
+          rejects(CipherChannelRid)(""),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(verdicts, [true, true, true, true, true, true, true, true]);
       assertFalse(S.is(CipherText)({ channel: "ri.bellaso:main", ciphertext: "AAAAkdB7" }));
       assertFalse(S.is(CipherText)({ channel: cipherChannelRid, ciphertext: "" }));
@@ -528,16 +537,19 @@ describe("Security", () => {
   it.effect(
     "rejects the generated client's renamed tag, a nested summary, unknown outcomes and malformed markings",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(PropertySecurity)({ type: "propertyMarkings", conjunctive: ["secret"] }),
-        rejects(PropertySecurity)({ type: "allowed" }),
-        rejects(PropertySecurity)({ conjunctive: ["secret"] }),
-        rejects(PropertyMarkings)({ type: "propertyMarkingSummary", conjunctive: [""] }),
-        rejects(PropertyMarkings)({ type: "propertyMarkingSummary", conjunctive: [["secret"]] }),
-        rejects(PropertyMarkings)({ type: "propertyMarkingSummary", disjunctive: ["secret"] }),
-        rejects(PropertySecurities)({ disjunction: { type: "unsupportedPolicy" } }),
-        rejects(PropertySecurities)({}),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(PropertySecurity)({ type: "propertyMarkings", conjunctive: ["secret"] }),
+          rejects(PropertySecurity)({ type: "allowed" }),
+          rejects(PropertySecurity)({ conjunctive: ["secret"] }),
+          rejects(PropertyMarkings)({ type: "propertyMarkingSummary", conjunctive: [""] }),
+          rejects(PropertyMarkings)({ type: "propertyMarkingSummary", conjunctive: [["secret"]] }),
+          rejects(PropertyMarkings)({ type: "propertyMarkingSummary", disjunctive: ["secret"] }),
+          rejects(PropertySecurities)({ disjunction: { type: "unsupportedPolicy" } }),
+          rejects(PropertySecurities)({}),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(verdicts, [true, true, true, true, true, true, true, true]);
     })
   );
@@ -620,12 +632,15 @@ describe("Security", () => {
   it.effect(
     "rejects an index that is negative or fractional and a value its codec rejects",
     Effect.fnUntraced(function* () {
-      const verdicts = yield* Effect.all([
-        rejects(SecuredCount)({ value: 10, propertySecurityIndex: -1 }),
-        rejects(SecuredCount)({ value: 10, propertySecurityIndex: 1.5 }),
-        rejects(SecuredCount)({ value: "10", propertySecurityIndex: 5 }),
-        rejects(SecuredAttachment)({ value: { rid: "" }, propertySecurityIndex: 5 }),
-      ]);
+      const verdicts = yield* Effect.all(
+        [
+          rejects(SecuredCount)({ value: 10, propertySecurityIndex: -1 }),
+          rejects(SecuredCount)({ value: 10, propertySecurityIndex: 1.5 }),
+          rejects(SecuredCount)({ value: "10", propertySecurityIndex: 5 }),
+          rejects(SecuredAttachment)({ value: { rid: "" }, propertySecurityIndex: 5 }),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(verdicts, [true, true, true, true]);
     })
   );
@@ -649,9 +664,7 @@ describe("fields that hold another class", () => {
   // Law: a field whose schema is a class is typed as that class, so its value can be handed to anything that asks
   // for the class. Annotating the key of a class would silently type the field as the class's un-branded record.
   it("are typed as the class and never as its un-branded record", () => {
-    const facts: readonly [
-      SameType<EncryptionResult["ciphertext"], CipherText>,
-    ] = [true];
+    const facts: readonly [SameType<EncryptionResult["ciphertext"], CipherText>] = [true];
     assertTrue(A.every(facts, (fact) => fact));
   });
 });

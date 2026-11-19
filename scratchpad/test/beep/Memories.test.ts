@@ -1,3 +1,5 @@
+import * as A from "effect/Array";
+import * as Str from "effect/String";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as DateTime from "effect/DateTime";
@@ -183,14 +185,14 @@ describe("Memory models", () => {
       ...memoryWire,
       captureContext: { sourceType: "conversation", quoteRefs: [], attribution: "user_spoken" },
     });
-    assert.strictEqual(O.map(present.captureContext, (c) => O.getOrNull(c.attribution)).pipe(O.getOrNull), "user_spoken");
+    assert.strictEqual(
+      O.map(present.captureContext, (c) => O.getOrNull(c.attribution)).pipe(O.getOrNull),
+      "user_spoken",
+    );
   });
 
   it("bounds the capture context", () => {
-    assert.strictEqual(
-      decodeFails(MemoryCaptureContext, { sourceType: "x".repeat(65), quoteRefs: [] }),
-      true,
-    );
+    assert.strictEqual(decodeFails(MemoryCaptureContext, { sourceType: Str.repeat(65)("x"), quoteRefs: [] }), true);
     assert.strictEqual(
       decodeFails(MemoryCaptureContext, { sourceType: "conversation", quoteRefs: [{}, {}, {}, {}, {}, {}] }),
       true,
@@ -330,7 +332,9 @@ describe("Memories helpers", () => {
       0.53,
     );
     assert.strictEqual(
-      Number(computeVeracity({ evidence: [evidence({ captureConfidence: 0.4 })], subjectAttribution: "user" }).toFixed(2)),
+      Number(
+        computeVeracity({ evidence: [evidence({ captureConfidence: 0.4 })], subjectAttribution: "user" }).toFixed(2),
+      ),
       0.33,
     );
     assert.strictEqual(
@@ -338,12 +342,15 @@ describe("Memories helpers", () => {
       0.37,
     );
     const two = computeVeracity({
-      evidence: [evidence({ evidenceId: "a", independenceGroup: "g1" }), evidence({ evidenceId: "b", independenceGroup: "g2" })],
+      evidence: [
+        evidence({ evidenceId: "a", independenceGroup: "g1" }),
+        evidence({ evidenceId: "b", independenceGroup: "g2" }),
+      ],
       subjectAttribution: "user",
     });
     assert.strictEqual(Number(two.toFixed(2)), 0.67);
     const many = computeVeracity({
-      evidence: ["a", "b", "c", "d"].map((group) => evidence({ evidenceId: group, independenceGroup: group })),
+      evidence: A.map(["a", "b", "c", "d"], (group) => evidence({ evidenceId: group, independenceGroup: group })),
       subjectAttribution: "user",
     });
     assert.strictEqual(many, 0.98);
@@ -381,7 +388,11 @@ describe("Memories helpers", () => {
       existingCaptureConfidence: O.none(),
     });
     assert.strictEqual(fromEvidence.captureConfidence, 0.9);
-    const fallback = confidenceFieldsForEvidence({ evidence: [], subjectAttribution: "user", existingCaptureConfidence: O.none() });
+    const fallback = confidenceFieldsForEvidence({
+      evidence: [],
+      subjectAttribution: "user",
+      existingCaptureConfidence: O.none(),
+    });
     assert.strictEqual(fallback.captureConfidence, 0.5);
     const typed = confidenceFieldsForEvidence({
       evidence: [Evidence.make({ ...evidenceWire, capturedAt: now, captureConfidence: 0.8 })],
@@ -394,7 +405,11 @@ describe("Memories helpers", () => {
   it("merges evidence sets by id and revives tombstoned duplicates", () => {
     const merged = mergeEvidenceSets({
       existing: [evidence({ evidenceId: "a", redactionStatus: "tombstoned" }), evidence({ evidenceId: "b" })],
-      incoming: [evidence({ evidenceId: "a" }), evidence({ evidenceId: "b", captureConfidence: 0.1 }), { note: "no id" }],
+      incoming: [
+        evidence({ evidenceId: "a" }),
+        evidence({ evidenceId: "b", captureConfidence: 0.1 }),
+        { note: "no id" },
+      ],
     });
     assert.strictEqual(merged.length, 3);
     assert.strictEqual(merged[0]?.redactionStatus, "active");
@@ -413,13 +428,20 @@ describe("Memories helpers", () => {
     assert.strictEqual(O.getOrNull(lives.predicate), "resides_in");
     assert.deepStrictEqual(lives.arguments, { location: "Seattle" });
     assert.strictEqual(O.getOrNull(lives.subjectEntityId), "user");
-    assert.strictEqual(O.getOrNull(propositionize({ content: "I moved to Austin", category: O.none() }).predicate), "resides_in");
+    assert.strictEqual(
+      O.getOrNull(propositionize({ content: "I moved to Austin", category: O.none() }).predicate),
+      "resides_in",
+    );
     const works = propositionize({ content: "She works at Acme Corp", category: O.some("interesting") });
     assert.strictEqual(O.getOrNull(works.predicate), "works_at");
     assert.deepStrictEqual(works.arguments, { organization: "Acme Corp" });
     assert.strictEqual(O.isNone(works.subjectEntityId), true);
-    assert.deepStrictEqual(propositionize({ content: "They love jazz", category: O.none() }).arguments, { thing: "jazz" });
-    assert.deepStrictEqual(propositionize({ content: "He owns a boat", category: O.none() }).arguments, { object: "a boat" });
+    assert.deepStrictEqual(propositionize({ content: "They love jazz", category: O.none() }).arguments, {
+      thing: "jazz",
+    });
+    assert.deepStrictEqual(propositionize({ content: "He owns a boat", category: O.none() }).arguments, {
+      object: "a boat",
+    });
     const age = propositionize({ content: "I am 42 years old", category: O.some("manual") });
     assert.strictEqual(O.getOrNull(age.predicate), "age_years");
     assert.deepStrictEqual(age.arguments, { years: 42 });
@@ -431,14 +453,23 @@ describe("Memories helpers", () => {
 
   it("renders memories from predicates or content", () => {
     assert.strictEqual(renderMemory({ content: "The user lives in Seattle" }), "Lives in Seattle");
-    assert.strictEqual(renderMemory({ content: "x", predicate: "works_at", arguments: { organization: "Acme" } }), "Works at Acme");
+    assert.strictEqual(
+      renderMemory({ content: "x", predicate: "works_at", arguments: { organization: "Acme" } }),
+      "Works at Acme",
+    );
     assert.strictEqual(
       renderMemory({ content: "x", predicate: O.some("works_at"), arguments: { organization: "Acme", role: "CTO" } }),
       "Works at Acme as CTO",
     );
-    assert.strictEqual(renderMemory({ content: "x", predicate: "prefers", arguments: { thing: "tea" } }), "Prefers tea");
+    assert.strictEqual(
+      renderMemory({ content: "x", predicate: "prefers", arguments: { thing: "tea" } }),
+      "Prefers tea",
+    );
     assert.strictEqual(renderMemory({ content: "x", predicate: "has", arguments: { object: "a dog" } }), "Has a dog");
-    assert.strictEqual(renderMemory({ content: "x", predicate: "age_years", arguments: { years: 42 } }), "Is 42 years old");
+    assert.strictEqual(
+      renderMemory({ content: "x", predicate: "age_years", arguments: { years: 42 } }),
+      "Is 42 years old",
+    );
     assert.strictEqual(renderMemory({ content: "x", predicate: "custom", arguments: {} }), "x");
     assert.strictEqual(renderMemory({ content: "x", predicate: "has", arguments: { thing: "no object" } }), "x");
     assert.strictEqual(renderMemory({ content: "Quiet mornings" }), "Quiet mornings");
@@ -458,7 +489,10 @@ describe("Memories helpers", () => {
       structurallyConflicts({ left: { content: "I live in Seattle" }, right: { content: "I work at Acme" } }),
       false,
     );
-    assert.strictEqual(structurallyConflicts({ left: { content: "random" }, right: { content: "I live in Austin" } }), false);
+    assert.strictEqual(
+      structurallyConflicts({ left: { content: "random" }, right: { content: "I live in Austin" } }),
+      false,
+    );
     assert.strictEqual(
       structurallyConflicts({
         left: { content: "I am 40 years old", category: "system" },
@@ -470,8 +504,14 @@ describe("Memories helpers", () => {
 
   it("calculates the legacy score string", () => {
     assert.strictEqual(calculateScore({ category: "core", manuallyAdded: true, createdAt: now }), "01_998_1790071200");
-    assert.strictEqual(calculateScore({ category: "system", manuallyAdded: false, createdAt: now }), "00_999_1790071200");
-    assert.strictEqual(calculateScore({ category: "mystery", manuallyAdded: false, createdAt: now }), "00_00_1790071200");
+    assert.strictEqual(
+      calculateScore({ category: "system", manuallyAdded: false, createdAt: now }),
+      "00_999_1790071200",
+    );
+    assert.strictEqual(
+      calculateScore({ category: "mystery", manuallyAdded: false, createdAt: now }),
+      "00_00_1790071200",
+    );
   });
 
   it("builds stored and short-term rows from a memory", () => {
@@ -538,10 +578,7 @@ describe("Memories helpers", () => {
     assert.strictEqual(withContext.evidence[0]?.sourceSignal, "integration");
     assert.strictEqual(withContext.evidence[0]?.independenceGroup, "thread-1");
     assert.strictEqual(O.getOrNull(withContext.evidence[0]?.lineageId ?? O.none()), "thread-1");
-    assert.strictEqual(
-      DateTime.formatIso(withContext.evidence[0]?.capturedAt ?? now),
-      "2026-09-20T00:00:00.000Z",
-    );
+    assert.strictEqual(DateTime.formatIso(withContext.evidence[0]?.capturedAt ?? now), "2026-09-20T00:00:00.000Z");
     assert.deepStrictEqual(withContext.uncertaintyReasons, ["single_source", "third_party_subject"]);
 
     const short = shortTermFromMemory({

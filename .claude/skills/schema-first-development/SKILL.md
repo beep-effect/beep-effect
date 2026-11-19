@@ -108,6 +108,11 @@ Keep `Schema` as the source of truth for pure data models.
   `bun run beep laws schema-tag-idioms --check` enforces it.
 - Prefer schema-derived tagged-union helpers (`.cases`, `.guards`, `.isAnyOf`,
   `.match`) when constructing, guarding, or branching on a schema tagged union.
+- Build an `Option` of a schema value with the constructor's own
+  `X.makeOption(...)`, never `O.some(X.make(...))`. Every schema, class, brand
+  and tagged-union case (`X.cases.Y.makeOption(...)`) has it. It returns
+  `O.none()` on input the schema refuses, where `make` throws, so use it only
+  where an absent value is a legal outcome of that branch (EF-35b).
 - Use `S.OptionFromNullOr`, `S.OptionFromNullishOr` and
   `S.OptionFromOptionalKey` for absence at the boundary. Optional fields use
   exact keys (EF-40): `S.optionalKey`, `S.withDecodingDefaultKey`,
@@ -122,6 +127,17 @@ Keep `Schema` as the source of truth for pure data models.
 - Use `S.withConstructorDefault(...)`, `S.withDecodingDefaultKey(...)`, and
   `S.decodeTo(...)` with `SchemaTransformation` for normalization and fallback
   behavior.
+- Ask of every field what it starts as and what it is when the input leaves it
+  out. When one value answers both (an empty collection, a zero counter, an
+  absent link), put it on the field as a constructor default plus a decoding
+  default (`S.withDecodingDefaultTypeKey`), and write the owner's `initial` as
+  `State.make({})`. Describe the key with `S.annotateKey({ description })`
+  first in the pipe: placed after a decoding default or after
+  `S.OptionFromOptionalKey` it is dropped from generated JSON Schema. An
+  optional field that starts absent is
+  `X.pipe(S.annotateKey({ description }), S.OptionFromOptionalKey, S.withConstructorDefault(Effect.succeedNone))`.
+  Give no default to identity, authority, provenance or money, or to a field
+  whose empty value is the widest one (EF-34).
 - Prefer built-in schema constructors and checks before `S.makeFilter(...)`.
 - Treat broad exported/domain/boundary primitives such as `S.String`,
   `S.Number`, and unbounded arrays as prompts to ask whether the schema should

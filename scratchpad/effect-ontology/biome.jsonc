@@ -5,7 +5,13 @@
     "enabled": false
   },
   "files": {
-    "includes": ["**", "!!effect-ontology/docs", "!!effect-ontology/node_modules"]
+    "includes": [
+      "**",
+      "!!effect-ontology/docs",
+      "!!effect-ontology/node_modules",
+      // drizzle-kit owns the snapshot bytes; migrations:check:effect-ontology compares them.
+      "!!effect-ontology/Runtime/Persistence/migrations/**/snapshot.json"
+    ]
   },
   "formatter": {
     "enabled": true,

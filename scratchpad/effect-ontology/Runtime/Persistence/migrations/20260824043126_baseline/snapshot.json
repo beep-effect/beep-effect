@@ -1,96 +1,1881 @@
 {
-  "version": "8",
+  "type": "base",
+  "version": "9",
   "dialect": "postgres",
   "id": "cfc68f98-cdc5-47de-87d9-9f1d4b8e69f2",
   "prevIds": [
     "00000000-0000-0000-0000-000000000000"
   ],
+  "footprints": [
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "articles"
+      ],
+      "writes": [
+        "s|tbl|public.articles",
+        "n|tbl|public.articles",
+        "e|tbl|public.articles",
+        "n|rel|public.articles",
+        "n|type|public.articles",
+        "n|rel|public.articles_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "batch_runs"
+      ],
+      "writes": [
+        "s|tbl|public.batch_runs",
+        "n|tbl|public.batch_runs",
+        "e|tbl|public.batch_runs",
+        "n|rel|public.batch_runs",
+        "n|type|public.batch_runs",
+        "n|rel|public.batch_runs_pkey",
+        "n|rel|public.batch_runs_batch_id_key"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "canonical_entities"
+      ],
+      "writes": [
+        "s|tbl|public.canonical_entities",
+        "n|tbl|public.canonical_entities",
+        "e|tbl|public.canonical_entities",
+        "n|rel|public.canonical_entities",
+        "n|type|public.canonical_entities",
+        "n|rel|public.canonical_entities_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "claims"
+      ],
+      "writes": [
+        "s|tbl|public.claims",
+        "n|tbl|public.claims",
+        "e|tbl|public.claims",
+        "n|rel|public.claims",
+        "n|type|public.claims",
+        "n|rel|public.claims_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "conflicts"
+      ],
+      "writes": [
+        "s|tbl|public.conflicts",
+        "n|tbl|public.conflicts",
+        "e|tbl|public.conflicts",
+        "n|rel|public.conflicts",
+        "n|type|public.conflicts",
+        "n|rel|public.conflicts_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "correction_claims"
+      ],
+      "writes": [
+        "s|tbl|public.correction_claims",
+        "n|tbl|public.correction_claims",
+        "e|tbl|public.correction_claims",
+        "n|rel|public.correction_claims",
+        "n|type|public.correction_claims",
+        "n|rel|public.correction_claims_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "corrections"
+      ],
+      "writes": [
+        "s|tbl|public.corrections",
+        "n|tbl|public.corrections",
+        "e|tbl|public.corrections",
+        "n|rel|public.corrections",
+        "n|type|public.corrections",
+        "n|rel|public.corrections_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "embeddings"
+      ],
+      "writes": [
+        "s|tbl|public.embeddings",
+        "n|tbl|public.embeddings",
+        "e|tbl|public.embeddings",
+        "n|rel|public.embeddings",
+        "n|type|public.embeddings",
+        "n|rel|public.embeddings_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "entity_aliases"
+      ],
+      "writes": [
+        "s|tbl|public.entity_aliases",
+        "n|tbl|public.entity_aliases",
+        "e|tbl|public.entity_aliases",
+        "n|rel|public.entity_aliases",
+        "n|type|public.entity_aliases",
+        "n|rel|public.entity_aliases_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "entity_blocking_tokens"
+      ],
+      "writes": [
+        "s|tbl|public.entity_blocking_tokens",
+        "n|tbl|public.entity_blocking_tokens",
+        "e|tbl|public.entity_blocking_tokens",
+        "n|rel|public.entity_blocking_tokens",
+        "n|type|public.entity_blocking_tokens",
+        "n|rel|public.entity_blocking_tokens_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "ingested_links"
+      ],
+      "writes": [
+        "s|tbl|public.ingested_links",
+        "n|tbl|public.ingested_links",
+        "e|tbl|public.ingested_links",
+        "n|rel|public.ingested_links",
+        "n|type|public.ingested_links",
+        "n|rel|public.ingested_links_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "link_batch_items"
+      ],
+      "writes": [
+        "s|tbl|public.link_batch_items",
+        "n|tbl|public.link_batch_items",
+        "e|tbl|public.link_batch_items",
+        "n|rel|public.link_batch_items",
+        "n|type|public.link_batch_items",
+        "n|rel|public.link_batch_items_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "link_batches"
+      ],
+      "writes": [
+        "s|tbl|public.link_batches",
+        "n|tbl|public.link_batches",
+        "e|tbl|public.link_batches",
+        "n|rel|public.link_batches",
+        "n|type|public.link_batches",
+        "n|rel|public.link_batches_pkey",
+        "n|rel|public.link_batches_batch_id_key"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_table",
+      "statementTarget": [
+        "table",
+        "public",
+        "llm_examples"
+      ],
+      "writes": [
+        "s|tbl|public.llm_examples",
+        "n|tbl|public.llm_examples",
+        "e|tbl|public.llm_examples",
+        "n|rel|public.llm_examples",
+        "n|type|public.llm_examples",
+        "n|rel|public.llm_examples_pkey"
+      ],
+      "reads": [
+        "n|sch|public"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "articles",
+        "articles_ontology_uri_unique"
+      ],
+      "writes": [
+        "s|idx|public.articles_ontology_uri_unique",
+        "n|idx|public.articles_ontology_uri_unique",
+        "e|idx|public.articles_ontology_uri_unique",
+        "n|rel|public.articles_ontology_uri_unique"
+      ],
+      "reads": [
+        "n|tbl|public.articles",
+        "n|sch|public",
+        "n|col|public.articles.ontology_id",
+        "n|col|public.articles.uri"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "articles",
+        "idx_articles_uri"
+      ],
+      "writes": [
+        "s|idx|public.idx_articles_uri",
+        "n|idx|public.idx_articles_uri",
+        "e|idx|public.idx_articles_uri",
+        "n|rel|public.idx_articles_uri"
+      ],
+      "reads": [
+        "n|tbl|public.articles",
+        "n|sch|public",
+        "n|col|public.articles.uri"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "articles",
+        "idx_articles_source"
+      ],
+      "writes": [
+        "s|idx|public.idx_articles_source",
+        "n|idx|public.idx_articles_source",
+        "e|idx|public.idx_articles_source",
+        "n|rel|public.idx_articles_source"
+      ],
+      "reads": [
+        "n|tbl|public.articles",
+        "n|sch|public",
+        "n|col|public.articles.source_name"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "articles",
+        "idx_articles_published"
+      ],
+      "writes": [
+        "s|idx|public.idx_articles_published",
+        "n|idx|public.idx_articles_published",
+        "e|idx|public.idx_articles_published",
+        "n|rel|public.idx_articles_published"
+      ],
+      "reads": [
+        "n|tbl|public.articles",
+        "n|sch|public",
+        "n|col|public.articles.published_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "articles",
+        "idx_articles_ontology_id"
+      ],
+      "writes": [
+        "s|idx|public.idx_articles_ontology_id",
+        "n|idx|public.idx_articles_ontology_id",
+        "e|idx|public.idx_articles_ontology_id",
+        "n|rel|public.idx_articles_ontology_id"
+      ],
+      "reads": [
+        "n|tbl|public.articles",
+        "n|sch|public",
+        "n|col|public.articles.ontology_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "articles",
+        "idx_articles_ontology_source"
+      ],
+      "writes": [
+        "s|idx|public.idx_articles_ontology_source",
+        "n|idx|public.idx_articles_ontology_source",
+        "e|idx|public.idx_articles_ontology_source",
+        "n|rel|public.idx_articles_ontology_source"
+      ],
+      "reads": [
+        "n|tbl|public.articles",
+        "n|sch|public",
+        "n|col|public.articles.ontology_id",
+        "n|col|public.articles.source_name"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "articles",
+        "idx_articles_ontology_published"
+      ],
+      "writes": [
+        "s|idx|public.idx_articles_ontology_published",
+        "n|idx|public.idx_articles_ontology_published",
+        "e|idx|public.idx_articles_ontology_published",
+        "n|rel|public.idx_articles_ontology_published"
+      ],
+      "reads": [
+        "n|tbl|public.articles",
+        "n|sch|public",
+        "n|col|public.articles.ontology_id",
+        "n|col|public.articles.published_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "batch_runs",
+        "idx_batch_runs_batch_id"
+      ],
+      "writes": [
+        "s|idx|public.idx_batch_runs_batch_id",
+        "n|idx|public.idx_batch_runs_batch_id",
+        "e|idx|public.idx_batch_runs_batch_id",
+        "n|rel|public.idx_batch_runs_batch_id"
+      ],
+      "reads": [
+        "n|tbl|public.batch_runs",
+        "n|sch|public",
+        "n|col|public.batch_runs.batch_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "batch_runs",
+        "idx_batch_runs_status"
+      ],
+      "writes": [
+        "s|idx|public.idx_batch_runs_status",
+        "n|idx|public.idx_batch_runs_status",
+        "e|idx|public.idx_batch_runs_status",
+        "n|rel|public.idx_batch_runs_status"
+      ],
+      "reads": [
+        "n|tbl|public.batch_runs",
+        "n|sch|public",
+        "n|col|public.batch_runs.status"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "canonical_entities",
+        "canonical_entities_ontology_iri_unique"
+      ],
+      "writes": [
+        "s|idx|public.canonical_entities_ontology_iri_unique",
+        "n|idx|public.canonical_entities_ontology_iri_unique",
+        "e|idx|public.canonical_entities_ontology_iri_unique",
+        "n|rel|public.canonical_entities_ontology_iri_unique"
+      ],
+      "reads": [
+        "n|tbl|public.canonical_entities",
+        "n|sch|public",
+        "n|col|public.canonical_entities.ontology_id",
+        "n|col|public.canonical_entities.iri"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "canonical_entities",
+        "idx_canonical_entities_iri"
+      ],
+      "writes": [
+        "s|idx|public.idx_canonical_entities_iri",
+        "n|idx|public.idx_canonical_entities_iri",
+        "e|idx|public.idx_canonical_entities_iri",
+        "n|rel|public.idx_canonical_entities_iri"
+      ],
+      "reads": [
+        "n|tbl|public.canonical_entities",
+        "n|sch|public",
+        "n|col|public.canonical_entities.iri"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "canonical_entities",
+        "idx_canonical_entities_ontology_id"
+      ],
+      "writes": [
+        "s|idx|public.idx_canonical_entities_ontology_id",
+        "n|idx|public.idx_canonical_entities_ontology_id",
+        "e|idx|public.idx_canonical_entities_ontology_id",
+        "n|rel|public.idx_canonical_entities_ontology_id"
+      ],
+      "reads": [
+        "n|tbl|public.canonical_entities",
+        "n|sch|public",
+        "n|col|public.canonical_entities.ontology_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "canonical_entities",
+        "idx_canonical_entities_ontology_iri"
+      ],
+      "writes": [
+        "s|idx|public.idx_canonical_entities_ontology_iri",
+        "n|idx|public.idx_canonical_entities_ontology_iri",
+        "e|idx|public.idx_canonical_entities_ontology_iri",
+        "n|rel|public.idx_canonical_entities_ontology_iri"
+      ],
+      "reads": [
+        "n|tbl|public.canonical_entities",
+        "n|sch|public",
+        "n|col|public.canonical_entities.ontology_id",
+        "n|col|public.canonical_entities.iri"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "claims",
+        "idx_claims_natural_key"
+      ],
+      "writes": [
+        "s|idx|public.idx_claims_natural_key",
+        "n|idx|public.idx_claims_natural_key",
+        "e|idx|public.idx_claims_natural_key",
+        "n|rel|public.idx_claims_natural_key"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.claims.article_id",
+        "n|col|public.claims.subject_iri",
+        "n|col|public.claims.predicate_iri",
+        "n|col|public.claims.object_value"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "claims",
+        "idx_claims_article"
+      ],
+      "writes": [
+        "s|idx|public.idx_claims_article",
+        "n|idx|public.idx_claims_article",
+        "e|idx|public.idx_claims_article",
+        "n|rel|public.idx_claims_article"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.claims.article_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "claims",
+        "idx_claims_subject"
+      ],
+      "writes": [
+        "s|idx|public.idx_claims_subject",
+        "n|idx|public.idx_claims_subject",
+        "e|idx|public.idx_claims_subject",
+        "n|rel|public.idx_claims_subject"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.claims.subject_iri"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "claims",
+        "idx_claims_predicate"
+      ],
+      "writes": [
+        "s|idx|public.idx_claims_predicate",
+        "n|idx|public.idx_claims_predicate",
+        "e|idx|public.idx_claims_predicate",
+        "n|rel|public.idx_claims_predicate"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.claims.predicate_iri"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "claims",
+        "idx_claims_rank"
+      ],
+      "writes": [
+        "s|idx|public.idx_claims_rank",
+        "n|idx|public.idx_claims_rank",
+        "e|idx|public.idx_claims_rank",
+        "n|rel|public.idx_claims_rank"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.claims.rank"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "claims",
+        "idx_claims_valid_period"
+      ],
+      "writes": [
+        "s|idx|public.idx_claims_valid_period",
+        "n|idx|public.idx_claims_valid_period",
+        "e|idx|public.idx_claims_valid_period",
+        "n|rel|public.idx_claims_valid_period"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.claims.valid_from",
+        "n|col|public.claims.valid_to"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "claims",
+        "idx_claims_deprecated"
+      ],
+      "writes": [
+        "s|idx|public.idx_claims_deprecated",
+        "n|idx|public.idx_claims_deprecated",
+        "e|idx|public.idx_claims_deprecated",
+        "n|rel|public.idx_claims_deprecated"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.claims.deprecated_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "claims",
+        "idx_claims_derived_at"
+      ],
+      "writes": [
+        "s|idx|public.idx_claims_derived_at",
+        "n|idx|public.idx_claims_derived_at",
+        "e|idx|public.idx_claims_derived_at",
+        "n|rel|public.idx_claims_derived_at"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.claims.derived_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "claims",
+        "idx_claims_subject_predicate"
+      ],
+      "writes": [
+        "s|idx|public.idx_claims_subject_predicate",
+        "n|idx|public.idx_claims_subject_predicate",
+        "e|idx|public.idx_claims_subject_predicate",
+        "n|rel|public.idx_claims_subject_predicate"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.claims.subject_iri",
+        "n|col|public.claims.predicate_iri"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "claims",
+        "idx_claims_ontology_id"
+      ],
+      "writes": [
+        "s|idx|public.idx_claims_ontology_id",
+        "n|idx|public.idx_claims_ontology_id",
+        "e|idx|public.idx_claims_ontology_id",
+        "n|rel|public.idx_claims_ontology_id"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.claims.ontology_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "claims",
+        "idx_claims_ontology_subject"
+      ],
+      "writes": [
+        "s|idx|public.idx_claims_ontology_subject",
+        "n|idx|public.idx_claims_ontology_subject",
+        "e|idx|public.idx_claims_ontology_subject",
+        "n|rel|public.idx_claims_ontology_subject"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.claims.ontology_id",
+        "n|col|public.claims.subject_iri"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "claims",
+        "idx_claims_ontology_predicate"
+      ],
+      "writes": [
+        "s|idx|public.idx_claims_ontology_predicate",
+        "n|idx|public.idx_claims_ontology_predicate",
+        "e|idx|public.idx_claims_ontology_predicate",
+        "n|rel|public.idx_claims_ontology_predicate"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.claims.ontology_id",
+        "n|col|public.claims.predicate_iri"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "claims",
+        "idx_claims_ontology_subject_predicate"
+      ],
+      "writes": [
+        "s|idx|public.idx_claims_ontology_subject_predicate",
+        "n|idx|public.idx_claims_ontology_subject_predicate",
+        "e|idx|public.idx_claims_ontology_subject_predicate",
+        "n|rel|public.idx_claims_ontology_subject_predicate"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.claims.ontology_id",
+        "n|col|public.claims.subject_iri",
+        "n|col|public.claims.predicate_iri"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conflicts",
+        "idx_conflicts_ontology_status"
+      ],
+      "writes": [
+        "s|idx|public.idx_conflicts_ontology_status",
+        "n|idx|public.idx_conflicts_ontology_status",
+        "e|idx|public.idx_conflicts_ontology_status",
+        "n|rel|public.idx_conflicts_ontology_status"
+      ],
+      "reads": [
+        "n|tbl|public.conflicts",
+        "n|sch|public",
+        "n|col|public.conflicts.ontology_id",
+        "n|col|public.conflicts.status"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conflicts",
+        "idx_conflicts_claims"
+      ],
+      "writes": [
+        "s|idx|public.idx_conflicts_claims",
+        "n|idx|public.idx_conflicts_claims",
+        "e|idx|public.idx_conflicts_claims",
+        "n|rel|public.idx_conflicts_claims"
+      ],
+      "reads": [
+        "n|tbl|public.conflicts",
+        "n|sch|public",
+        "n|col|public.conflicts.claim_a_id",
+        "n|col|public.conflicts.claim_b_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "conflicts",
+        "conflicts_ontology_claim_pair_unique"
+      ],
+      "writes": [
+        "s|idx|public.conflicts_ontology_claim_pair_unique",
+        "n|idx|public.conflicts_ontology_claim_pair_unique",
+        "e|idx|public.conflicts_ontology_claim_pair_unique",
+        "n|rel|public.conflicts_ontology_claim_pair_unique"
+      ],
+      "reads": [
+        "n|tbl|public.conflicts",
+        "n|sch|public",
+        "n|col|public.conflicts.ontology_id",
+        "n|col|public.conflicts.claim_a_id",
+        "n|col|public.conflicts.claim_b_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "correction_claims",
+        "idx_correction_claims_original"
+      ],
+      "writes": [
+        "s|idx|public.idx_correction_claims_original",
+        "n|idx|public.idx_correction_claims_original",
+        "e|idx|public.idx_correction_claims_original",
+        "n|rel|public.idx_correction_claims_original"
+      ],
+      "reads": [
+        "n|tbl|public.correction_claims",
+        "n|sch|public",
+        "n|col|public.correction_claims.original_claim_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "correction_claims",
+        "idx_correction_claims_new"
+      ],
+      "writes": [
+        "s|idx|public.idx_correction_claims_new",
+        "n|idx|public.idx_correction_claims_new",
+        "e|idx|public.idx_correction_claims_new",
+        "n|rel|public.idx_correction_claims_new"
+      ],
+      "reads": [
+        "n|tbl|public.correction_claims",
+        "n|sch|public",
+        "n|col|public.correction_claims.new_claim_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "corrections",
+        "idx_corrections_type"
+      ],
+      "writes": [
+        "s|idx|public.idx_corrections_type",
+        "n|idx|public.idx_corrections_type",
+        "e|idx|public.idx_corrections_type",
+        "n|rel|public.idx_corrections_type"
+      ],
+      "reads": [
+        "n|tbl|public.corrections",
+        "n|sch|public",
+        "n|col|public.corrections.correction_type"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "corrections",
+        "idx_corrections_source"
+      ],
+      "writes": [
+        "s|idx|public.idx_corrections_source",
+        "n|idx|public.idx_corrections_source",
+        "e|idx|public.idx_corrections_source",
+        "n|rel|public.idx_corrections_source"
+      ],
+      "reads": [
+        "n|tbl|public.corrections",
+        "n|sch|public",
+        "n|col|public.corrections.source_article_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "corrections",
+        "idx_corrections_date"
+      ],
+      "writes": [
+        "s|idx|public.idx_corrections_date",
+        "n|idx|public.idx_corrections_date",
+        "e|idx|public.idx_corrections_date",
+        "n|rel|public.idx_corrections_date"
+      ],
+      "reads": [
+        "n|tbl|public.corrections",
+        "n|sch|public",
+        "n|col|public.corrections.correction_date"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "embeddings",
+        "idx_embeddings_ontology_entity_unique"
+      ],
+      "writes": [
+        "s|idx|public.idx_embeddings_ontology_entity_unique",
+        "n|idx|public.idx_embeddings_ontology_entity_unique",
+        "e|idx|public.idx_embeddings_ontology_entity_unique",
+        "n|rel|public.idx_embeddings_ontology_entity_unique"
+      ],
+      "reads": [
+        "n|tbl|public.embeddings",
+        "n|sch|public",
+        "n|col|public.embeddings.ontology_id",
+        "n|col|public.embeddings.entity_type",
+        "n|col|public.embeddings.entity_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "embeddings",
+        "idx_embeddings_entity_type_idx"
+      ],
+      "writes": [
+        "s|idx|public.idx_embeddings_entity_type_idx",
+        "n|idx|public.idx_embeddings_entity_type_idx",
+        "e|idx|public.idx_embeddings_entity_type_idx",
+        "n|rel|public.idx_embeddings_entity_type_idx"
+      ],
+      "reads": [
+        "n|tbl|public.embeddings",
+        "n|sch|public",
+        "n|col|public.embeddings.entity_type"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "embeddings",
+        "idx_embeddings_ontology_type_idx"
+      ],
+      "writes": [
+        "s|idx|public.idx_embeddings_ontology_type_idx",
+        "n|idx|public.idx_embeddings_ontology_type_idx",
+        "e|idx|public.idx_embeddings_ontology_type_idx",
+        "n|rel|public.idx_embeddings_ontology_type_idx"
+      ],
+      "reads": [
+        "n|tbl|public.embeddings",
+        "n|sch|public",
+        "n|col|public.embeddings.ontology_id",
+        "n|col|public.embeddings.entity_type"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "entity_aliases",
+        "idx_entity_aliases_ontology_mention"
+      ],
+      "writes": [
+        "s|idx|public.idx_entity_aliases_ontology_mention",
+        "n|idx|public.idx_entity_aliases_ontology_mention",
+        "e|idx|public.idx_entity_aliases_ontology_mention",
+        "n|rel|public.idx_entity_aliases_ontology_mention"
+      ],
+      "reads": [
+        "n|tbl|public.entity_aliases",
+        "n|sch|public",
+        "n|col|public.entity_aliases.ontology_id",
+        "n|col|public.entity_aliases.mention_normalized"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "entity_aliases",
+        "idx_entity_aliases_canonical"
+      ],
+      "writes": [
+        "s|idx|public.idx_entity_aliases_canonical",
+        "n|idx|public.idx_entity_aliases_canonical",
+        "e|idx|public.idx_entity_aliases_canonical",
+        "n|rel|public.idx_entity_aliases_canonical"
+      ],
+      "reads": [
+        "n|tbl|public.entity_aliases",
+        "n|sch|public",
+        "n|col|public.entity_aliases.canonical_entity_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "entity_aliases",
+        "idx_entity_aliases_ontology"
+      ],
+      "writes": [
+        "s|idx|public.idx_entity_aliases_ontology",
+        "n|idx|public.idx_entity_aliases_ontology",
+        "e|idx|public.idx_entity_aliases_ontology",
+        "n|rel|public.idx_entity_aliases_ontology"
+      ],
+      "reads": [
+        "n|tbl|public.entity_aliases",
+        "n|sch|public",
+        "n|col|public.entity_aliases.ontology_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "entity_blocking_tokens",
+        "idx_blocking_tokens_token"
+      ],
+      "writes": [
+        "s|idx|public.idx_blocking_tokens_token",
+        "n|idx|public.idx_blocking_tokens_token",
+        "e|idx|public.idx_blocking_tokens_token",
+        "n|rel|public.idx_blocking_tokens_token"
+      ],
+      "reads": [
+        "n|tbl|public.entity_blocking_tokens",
+        "n|sch|public",
+        "n|col|public.entity_blocking_tokens.token"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "entity_blocking_tokens",
+        "idx_blocking_tokens_entity"
+      ],
+      "writes": [
+        "s|idx|public.idx_blocking_tokens_entity",
+        "n|idx|public.idx_blocking_tokens_entity",
+        "e|idx|public.idx_blocking_tokens_entity",
+        "n|rel|public.idx_blocking_tokens_entity"
+      ],
+      "reads": [
+        "n|tbl|public.entity_blocking_tokens",
+        "n|sch|public",
+        "n|col|public.entity_blocking_tokens.canonical_entity_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "entity_blocking_tokens",
+        "idx_blocking_tokens_ontology_token"
+      ],
+      "writes": [
+        "s|idx|public.idx_blocking_tokens_ontology_token",
+        "n|idx|public.idx_blocking_tokens_ontology_token",
+        "e|idx|public.idx_blocking_tokens_ontology_token",
+        "n|rel|public.idx_blocking_tokens_ontology_token"
+      ],
+      "reads": [
+        "n|tbl|public.entity_blocking_tokens",
+        "n|sch|public",
+        "n|col|public.entity_blocking_tokens.ontology_id",
+        "n|col|public.entity_blocking_tokens.token"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "entity_blocking_tokens",
+        "idx_blocking_tokens_composite"
+      ],
+      "writes": [
+        "s|idx|public.idx_blocking_tokens_composite",
+        "n|idx|public.idx_blocking_tokens_composite",
+        "e|idx|public.idx_blocking_tokens_composite",
+        "n|rel|public.idx_blocking_tokens_composite"
+      ],
+      "reads": [
+        "n|tbl|public.entity_blocking_tokens",
+        "n|sch|public",
+        "n|col|public.entity_blocking_tokens.ontology_id",
+        "n|col|public.entity_blocking_tokens.token",
+        "n|col|public.entity_blocking_tokens.canonical_entity_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "ingested_links",
+        "idx_ingested_links_status"
+      ],
+      "writes": [
+        "s|idx|public.idx_ingested_links_status",
+        "n|idx|public.idx_ingested_links_status",
+        "e|idx|public.idx_ingested_links_status",
+        "n|rel|public.idx_ingested_links_status"
+      ],
+      "reads": [
+        "n|tbl|public.ingested_links",
+        "n|sch|public",
+        "n|col|public.ingested_links.status"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "ingested_links",
+        "idx_ingested_links_source_uri"
+      ],
+      "writes": [
+        "s|idx|public.idx_ingested_links_source_uri",
+        "n|idx|public.idx_ingested_links_source_uri",
+        "e|idx|public.idx_ingested_links_source_uri",
+        "n|rel|public.idx_ingested_links_source_uri"
+      ],
+      "reads": [
+        "n|tbl|public.ingested_links",
+        "n|sch|public",
+        "n|col|public.ingested_links.source_uri"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "ingested_links",
+        "idx_ingested_links_fetched_at"
+      ],
+      "writes": [
+        "s|idx|public.idx_ingested_links_fetched_at",
+        "n|idx|public.idx_ingested_links_fetched_at",
+        "e|idx|public.idx_ingested_links_fetched_at",
+        "n|rel|public.idx_ingested_links_fetched_at"
+      ],
+      "reads": [
+        "n|tbl|public.ingested_links",
+        "n|sch|public",
+        "n|col|public.ingested_links.fetched_at"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "ingested_links",
+        "idx_ingested_links_source_type"
+      ],
+      "writes": [
+        "s|idx|public.idx_ingested_links_source_type",
+        "n|idx|public.idx_ingested_links_source_type",
+        "e|idx|public.idx_ingested_links_source_type",
+        "n|rel|public.idx_ingested_links_source_type"
+      ],
+      "reads": [
+        "n|tbl|public.ingested_links",
+        "n|sch|public",
+        "n|col|public.ingested_links.source_type"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "ingested_links",
+        "idx_ingested_links_organization"
+      ],
+      "writes": [
+        "s|idx|public.idx_ingested_links_organization",
+        "n|idx|public.idx_ingested_links_organization",
+        "e|idx|public.idx_ingested_links_organization",
+        "n|rel|public.idx_ingested_links_organization"
+      ],
+      "reads": [
+        "n|tbl|public.ingested_links",
+        "n|sch|public",
+        "n|col|public.ingested_links.organization"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "ingested_links",
+        "idx_ingested_links_ontology_id"
+      ],
+      "writes": [
+        "s|idx|public.idx_ingested_links_ontology_id",
+        "n|idx|public.idx_ingested_links_ontology_id",
+        "e|idx|public.idx_ingested_links_ontology_id",
+        "n|rel|public.idx_ingested_links_ontology_id"
+      ],
+      "reads": [
+        "n|tbl|public.ingested_links",
+        "n|sch|public",
+        "n|col|public.ingested_links.ontology_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "ingested_links",
+        "idx_ingested_links_ontology_status"
+      ],
+      "writes": [
+        "s|idx|public.idx_ingested_links_ontology_status",
+        "n|idx|public.idx_ingested_links_ontology_status",
+        "e|idx|public.idx_ingested_links_ontology_status",
+        "n|rel|public.idx_ingested_links_ontology_status"
+      ],
+      "reads": [
+        "n|tbl|public.ingested_links",
+        "n|sch|public",
+        "n|col|public.ingested_links.ontology_id",
+        "n|col|public.ingested_links.status"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "ingested_links",
+        "idx_ingested_links_ontology_content_unique"
+      ],
+      "writes": [
+        "s|idx|public.idx_ingested_links_ontology_content_unique",
+        "n|idx|public.idx_ingested_links_ontology_content_unique",
+        "e|idx|public.idx_ingested_links_ontology_content_unique",
+        "n|rel|public.idx_ingested_links_ontology_content_unique"
+      ],
+      "reads": [
+        "n|tbl|public.ingested_links",
+        "n|sch|public",
+        "n|col|public.ingested_links.ontology_id",
+        "n|col|public.ingested_links.content_hash"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "link_batch_items",
+        "idx_link_batch_items_link"
+      ],
+      "writes": [
+        "s|idx|public.idx_link_batch_items_link",
+        "n|idx|public.idx_link_batch_items_link",
+        "e|idx|public.idx_link_batch_items_link",
+        "n|rel|public.idx_link_batch_items_link"
+      ],
+      "reads": [
+        "n|tbl|public.link_batch_items",
+        "n|sch|public",
+        "n|col|public.link_batch_items.link_id"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "link_batch_items",
+        "idx_link_batch_items_status"
+      ],
+      "writes": [
+        "s|idx|public.idx_link_batch_items_status",
+        "n|idx|public.idx_link_batch_items_status",
+        "e|idx|public.idx_link_batch_items_status",
+        "n|rel|public.idx_link_batch_items_status"
+      ],
+      "reads": [
+        "n|tbl|public.link_batch_items",
+        "n|sch|public",
+        "n|col|public.link_batch_items.status"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "link_batches",
+        "idx_link_batches_status"
+      ],
+      "writes": [
+        "s|idx|public.idx_link_batches_status",
+        "n|idx|public.idx_link_batches_status",
+        "e|idx|public.idx_link_batches_status",
+        "n|rel|public.idx_link_batches_status"
+      ],
+      "reads": [
+        "n|tbl|public.link_batches",
+        "n|sch|public",
+        "n|col|public.link_batches.status"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "llm_examples",
+        "idx_llm_examples_ontology_type"
+      ],
+      "writes": [
+        "s|idx|public.idx_llm_examples_ontology_type",
+        "n|idx|public.idx_llm_examples_ontology_type",
+        "e|idx|public.idx_llm_examples_ontology_type",
+        "n|rel|public.idx_llm_examples_ontology_type"
+      ],
+      "reads": [
+        "n|tbl|public.llm_examples",
+        "n|sch|public",
+        "n|col|public.llm_examples.ontology_id",
+        "n|col|public.llm_examples.example_type"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "llm_examples",
+        "idx_llm_examples_ontology_active"
+      ],
+      "writes": [
+        "s|idx|public.idx_llm_examples_ontology_active",
+        "n|idx|public.idx_llm_examples_ontology_active",
+        "e|idx|public.idx_llm_examples_ontology_active",
+        "n|rel|public.idx_llm_examples_ontology_active"
+      ],
+      "reads": [
+        "n|tbl|public.llm_examples",
+        "n|sch|public",
+        "n|col|public.llm_examples.ontology_id",
+        "n|col|public.llm_examples.is_active"
+      ]
+    },
+    {
+      "statementType": "create_index",
+      "statementTarget": [
+        "index",
+        "public",
+        "llm_examples",
+        "idx_llm_examples_is_negative"
+      ],
+      "writes": [
+        "s|idx|public.idx_llm_examples_is_negative",
+        "n|idx|public.idx_llm_examples_is_negative",
+        "e|idx|public.idx_llm_examples_is_negative",
+        "n|rel|public.idx_llm_examples_is_negative"
+      ],
+      "reads": [
+        "n|tbl|public.llm_examples",
+        "n|sch|public",
+        "n|col|public.llm_examples.is_negative"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "claims"
+      ],
+      "writes": [
+        "s|fk|public.claims.claims_article_id_articles_id_fkey",
+        "n|fk|public.claims.claims_article_id_articles_id_fkey",
+        "e|fk|public.claims.claims_article_id_articles_id_fkey",
+        "n|con|public.claims.claims_article_id_articles_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|tbl|public.articles",
+        "n|sch|public",
+        "n|col|public.claims.article_id",
+        "n|col|public.articles.id",
+        "e|uniqueness|public.articles.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "claims"
+      ],
+      "writes": [
+        "s|fk|public.claims.claims_deprecated_by_corrections_id_fkey",
+        "n|fk|public.claims.claims_deprecated_by_corrections_id_fkey",
+        "e|fk|public.claims.claims_deprecated_by_corrections_id_fkey",
+        "n|con|public.claims.claims_deprecated_by_corrections_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|tbl|public.corrections",
+        "n|sch|public",
+        "n|col|public.claims.deprecated_by",
+        "n|col|public.corrections.id",
+        "e|uniqueness|public.corrections.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conflicts"
+      ],
+      "writes": [
+        "s|fk|public.conflicts.conflicts_claim_a_id_claims_id_fkey",
+        "n|fk|public.conflicts.conflicts_claim_a_id_claims_id_fkey",
+        "e|fk|public.conflicts.conflicts_claim_a_id_claims_id_fkey",
+        "n|con|public.conflicts.conflicts_claim_a_id_claims_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conflicts",
+        "n|sch|public",
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.conflicts.claim_a_id",
+        "n|col|public.claims.id",
+        "e|uniqueness|public.claims.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conflicts"
+      ],
+      "writes": [
+        "s|fk|public.conflicts.conflicts_claim_b_id_claims_id_fkey",
+        "n|fk|public.conflicts.conflicts_claim_b_id_claims_id_fkey",
+        "e|fk|public.conflicts.conflicts_claim_b_id_claims_id_fkey",
+        "n|con|public.conflicts.conflicts_claim_b_id_claims_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conflicts",
+        "n|sch|public",
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.conflicts.claim_b_id",
+        "n|col|public.claims.id",
+        "e|uniqueness|public.claims.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "conflicts"
+      ],
+      "writes": [
+        "s|fk|public.conflicts.conflicts_accepted_claim_id_claims_id_fkey",
+        "n|fk|public.conflicts.conflicts_accepted_claim_id_claims_id_fkey",
+        "e|fk|public.conflicts.conflicts_accepted_claim_id_claims_id_fkey",
+        "n|con|public.conflicts.conflicts_accepted_claim_id_claims_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.conflicts",
+        "n|sch|public",
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.conflicts.accepted_claim_id",
+        "n|col|public.claims.id",
+        "e|uniqueness|public.claims.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "correction_claims"
+      ],
+      "writes": [
+        "s|fk|public.correction_claims.correction_claims_correction_id_corrections_id_fkey",
+        "n|fk|public.correction_claims.correction_claims_correction_id_corrections_id_fkey",
+        "e|fk|public.correction_claims.correction_claims_correction_id_corrections_id_fkey",
+        "n|con|public.correction_claims.correction_claims_correction_id_corrections_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.correction_claims",
+        "n|sch|public",
+        "n|tbl|public.corrections",
+        "n|sch|public",
+        "n|col|public.correction_claims.correction_id",
+        "n|col|public.corrections.id",
+        "e|uniqueness|public.corrections.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "correction_claims"
+      ],
+      "writes": [
+        "s|fk|public.correction_claims.correction_claims_original_claim_id_claims_id_fkey",
+        "n|fk|public.correction_claims.correction_claims_original_claim_id_claims_id_fkey",
+        "e|fk|public.correction_claims.correction_claims_original_claim_id_claims_id_fkey",
+        "n|con|public.correction_claims.correction_claims_original_claim_id_claims_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.correction_claims",
+        "n|sch|public",
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.correction_claims.original_claim_id",
+        "n|col|public.claims.id",
+        "e|uniqueness|public.claims.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "correction_claims"
+      ],
+      "writes": [
+        "s|fk|public.correction_claims.correction_claims_new_claim_id_claims_id_fkey",
+        "n|fk|public.correction_claims.correction_claims_new_claim_id_claims_id_fkey",
+        "e|fk|public.correction_claims.correction_claims_new_claim_id_claims_id_fkey",
+        "n|con|public.correction_claims.correction_claims_new_claim_id_claims_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.correction_claims",
+        "n|sch|public",
+        "n|tbl|public.claims",
+        "n|sch|public",
+        "n|col|public.correction_claims.new_claim_id",
+        "n|col|public.claims.id",
+        "e|uniqueness|public.claims.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "corrections"
+      ],
+      "writes": [
+        "s|fk|public.corrections.corrections_source_article_id_articles_id_fkey",
+        "n|fk|public.corrections.corrections_source_article_id_articles_id_fkey",
+        "e|fk|public.corrections.corrections_source_article_id_articles_id_fkey",
+        "n|con|public.corrections.corrections_source_article_id_articles_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.corrections",
+        "n|sch|public",
+        "n|tbl|public.articles",
+        "n|sch|public",
+        "n|col|public.corrections.source_article_id",
+        "n|col|public.articles.id",
+        "e|uniqueness|public.articles.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "entity_aliases"
+      ],
+      "writes": [
+        "s|fk|public.entity_aliases.entity_aliases_canonical_entity_id_canonical_entities_id_fkey",
+        "n|fk|public.entity_aliases.entity_aliases_canonical_entity_id_canonical_entities_id_fkey",
+        "e|fk|public.entity_aliases.entity_aliases_canonical_entity_id_canonical_entities_id_fkey",
+        "n|con|public.entity_aliases.entity_aliases_canonical_entity_id_canonical_entities_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.entity_aliases",
+        "n|sch|public",
+        "n|tbl|public.canonical_entities",
+        "n|sch|public",
+        "n|col|public.entity_aliases.canonical_entity_id",
+        "n|col|public.canonical_entities.id",
+        "e|uniqueness|public.canonical_entities.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "entity_aliases"
+      ],
+      "writes": [
+        "s|fk|public.entity_aliases.entity_aliases_source_article_id_articles_id_fkey",
+        "n|fk|public.entity_aliases.entity_aliases_source_article_id_articles_id_fkey",
+        "e|fk|public.entity_aliases.entity_aliases_source_article_id_articles_id_fkey",
+        "n|con|public.entity_aliases.entity_aliases_source_article_id_articles_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.entity_aliases",
+        "n|sch|public",
+        "n|tbl|public.articles",
+        "n|sch|public",
+        "n|col|public.entity_aliases.source_article_id",
+        "n|col|public.articles.id",
+        "e|uniqueness|public.articles.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "entity_blocking_tokens"
+      ],
+      "writes": [
+        "s|fk|public.entity_blocking_tokens.entity_blocking_tokens_Sx4xpmtdQjTC_fkey",
+        "n|fk|public.entity_blocking_tokens.entity_blocking_tokens_Sx4xpmtdQjTC_fkey",
+        "e|fk|public.entity_blocking_tokens.entity_blocking_tokens_Sx4xpmtdQjTC_fkey",
+        "n|con|public.entity_blocking_tokens.entity_blocking_tokens_Sx4xpmtdQjTC_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.entity_blocking_tokens",
+        "n|sch|public",
+        "n|tbl|public.canonical_entities",
+        "n|sch|public",
+        "n|col|public.entity_blocking_tokens.canonical_entity_id",
+        "n|col|public.canonical_entities.id",
+        "e|uniqueness|public.canonical_entities.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "link_batch_items"
+      ],
+      "writes": [
+        "s|fk|public.link_batch_items.link_batch_items_batch_id_link_batches_id_fkey",
+        "n|fk|public.link_batch_items.link_batch_items_batch_id_link_batches_id_fkey",
+        "e|fk|public.link_batch_items.link_batch_items_batch_id_link_batches_id_fkey",
+        "n|con|public.link_batch_items.link_batch_items_batch_id_link_batches_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.link_batch_items",
+        "n|sch|public",
+        "n|tbl|public.link_batches",
+        "n|sch|public",
+        "n|col|public.link_batch_items.batch_id",
+        "n|col|public.link_batches.id",
+        "e|uniqueness|public.link_batches.id"
+      ]
+    },
+    {
+      "statementType": "create_fk",
+      "statementTarget": [
+        "table",
+        "public",
+        "link_batch_items"
+      ],
+      "writes": [
+        "s|fk|public.link_batch_items.link_batch_items_link_id_ingested_links_id_fkey",
+        "n|fk|public.link_batch_items.link_batch_items_link_id_ingested_links_id_fkey",
+        "e|fk|public.link_batch_items.link_batch_items_link_id_ingested_links_id_fkey",
+        "n|con|public.link_batch_items.link_batch_items_link_id_ingested_links_id_fkey"
+      ],
+      "reads": [
+        "n|tbl|public.link_batch_items",
+        "n|sch|public",
+        "n|tbl|public.ingested_links",
+        "n|sch|public",
+        "n|col|public.link_batch_items.link_id",
+        "n|col|public.ingested_links.id",
+        "e|uniqueness|public.ingested_links.id"
+      ]
+    }
+  ],
   "ddl": [
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "articles",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "batch_runs",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "canonical_entities",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "claims",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "conflicts",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "correction_claims",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "corrections",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "embeddings",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "entity_aliases",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "entity_blocking_tokens",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "ingested_links",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "link_batch_items",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
-      "isRlsEnabled": false,
+      "schema": "public",
       "name": "link_batches",
-      "entityType": "tables",
-      "schema": "public"
-    },
-    {
       "isRlsEnabled": false,
+      "entityType": "tables"
+    },
+    {
+      "schema": "public",
       "name": "llm_examples",
-      "entityType": "tables",
-      "schema": "public"
+      "isRlsEnabled": false,
+      "entityType": "tables"
     },
     {
+      "schema": "public",
+      "table": "articles",
+      "name": "id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -98,25 +1883,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "articles"
+      "entityType": "columns"
     },
     {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "articles",
       "name": "uri",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "articles"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -124,25 +1896,25 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "articles",
       "name": "ontology_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "articles"
-    },
-    {
       "type": "text",
       "typeSchema": null,
-      "notNull": false,
+      "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "articles",
       "name": "source_name",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "articles"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -150,51 +1922,51 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "articles",
       "name": "headline",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "articles"
-    },
-    {
-      "type": "timestamp with time zone",
+      "type": "text",
       "typeSchema": null,
-      "notNull": true,
+      "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "articles",
       "name": "published_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "articles"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": "now()",
+      "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "articles",
       "name": "ingested_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "articles"
-    },
-    {
-      "type": "text",
+      "type": "timestamp with time zone",
       "typeSchema": null,
-      "notNull": false,
+      "notNull": true,
       "dimensions": 0,
-      "default": null,
+      "default": "now()",
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "articles",
       "name": "graph_uri",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "articles"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -202,25 +1974,25 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "articles",
       "name": "content_hash",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "articles"
-    },
-    {
-      "type": "timestamp with time zone",
+      "type": "text",
       "typeSchema": null,
-      "notNull": true,
+      "notNull": false,
       "dimensions": 0,
-      "default": "now()",
+      "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "articles",
       "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "articles"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -228,12 +2000,25 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "articles"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "articles",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "batch_runs",
+      "name": "id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -241,12 +2026,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "batch_runs"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "batch_runs",
+      "name": "batch_id",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -254,12 +2039,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "batch_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "batch_runs"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "batch_runs",
+      "name": "status",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -267,25 +2052,12 @@
       "default": "'pending'",
       "generated": null,
       "identity": null,
-      "name": "status",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "batch_runs"
+      "entityType": "columns"
     },
     {
-      "type": "integer",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": "0",
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "batch_runs",
       "name": "documents_total",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "batch_runs"
-    },
-    {
       "type": "integer",
       "typeSchema": null,
       "notNull": false,
@@ -293,12 +2065,12 @@
       "default": "0",
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "batch_runs",
       "name": "documents_processed",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "batch_runs"
-    },
-    {
       "type": "integer",
       "typeSchema": null,
       "notNull": false,
@@ -306,12 +2078,12 @@
       "default": "0",
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "batch_runs",
       "name": "claims_extracted",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "batch_runs"
-    },
-    {
       "type": "integer",
       "typeSchema": null,
       "notNull": false,
@@ -319,25 +2091,25 @@
       "default": "0",
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "batch_runs",
       "name": "conflicts_detected",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "batch_runs"
-    },
-    {
-      "type": "timestamp with time zone",
+      "type": "integer",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
-      "default": null,
+      "default": "0",
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "batch_runs",
       "name": "started_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "batch_runs"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -345,12 +2117,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "completed_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "batch_runs"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "batch_runs",
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "batch_runs",
+      "name": "error_message",
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -358,12 +2143,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "error_message",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "batch_runs"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "batch_runs",
+      "name": "error_details",
       "type": "jsonb",
       "typeSchema": null,
       "notNull": false,
@@ -371,12 +2156,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "error_details",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "batch_runs"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "batch_runs",
+      "name": "created_at",
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -384,12 +2169,12 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "batch_runs"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "canonical_entities",
+      "name": "id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -397,12 +2182,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "canonical_entities"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "canonical_entities",
+      "name": "ontology_id",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -410,25 +2195,12 @@
       "default": "'default'",
       "generated": null,
       "identity": null,
-      "name": "ontology_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "canonical_entities"
+      "entityType": "columns"
     },
     {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "canonical_entities",
       "name": "iri",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "canonical_entities"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -436,12 +2208,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "canonical_mention",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "canonical_entities"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "canonical_entities",
+      "name": "canonical_mention",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "canonical_entities",
+      "name": "types",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -449,12 +2234,12 @@
       "default": "'{}'",
       "generated": null,
       "identity": null,
-      "name": "types",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "canonical_entities"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "canonical_entities",
+      "name": "embedding",
       "type": "vector(768)",
       "typeSchema": null,
       "notNull": true,
@@ -462,12 +2247,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "embedding",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "canonical_entities"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "canonical_entities",
+      "name": "merge_count",
       "type": "integer",
       "typeSchema": null,
       "notNull": false,
@@ -475,12 +2260,12 @@
       "default": "1",
       "generated": null,
       "identity": null,
-      "name": "merge_count",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "canonical_entities"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "canonical_entities",
+      "name": "confidence_avg",
       "type": "numeric(4,3)",
       "typeSchema": null,
       "notNull": false,
@@ -488,25 +2273,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "confidence_avg",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "canonical_entities"
+      "entityType": "columns"
     },
     {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "canonical_entities",
       "name": "first_seen_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "canonical_entities"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -514,12 +2286,12 @@
       "default": "now()",
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "canonical_entities",
       "name": "last_seen_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "canonical_entities"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -527,12 +2299,12 @@
       "default": "now()",
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "canonical_entities",
       "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "canonical_entities"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -540,12 +2312,25 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "canonical_entities"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "canonical_entities",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "claims",
+      "name": "id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -553,12 +2338,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "article_id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -566,25 +2351,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "article_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "columns"
     },
     {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "claims",
       "name": "ontology_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -592,12 +2364,12 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "claims",
       "name": "subject_iri",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -605,12 +2377,12 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "claims",
       "name": "predicate_iri",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -618,12 +2390,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "object_value",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "object_value",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "claims",
+      "name": "object_type",
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -631,25 +2416,12 @@
       "default": "'iri'",
       "generated": null,
       "identity": null,
-      "name": "object_type",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "columns"
     },
     {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "claims",
       "name": "object_datatype",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -657,12 +2429,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "object_language",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "object_language",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "claims",
+      "name": "rank",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -670,25 +2455,12 @@
       "default": "'normal'",
       "generated": null,
       "identity": null,
-      "name": "rank",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "columns"
     },
     {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "claims",
       "name": "valid_from",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -696,12 +2468,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "valid_to",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "valid_to",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "claims",
+      "name": "asserted_at",
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -709,25 +2494,12 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "asserted_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "columns"
     },
     {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "claims",
       "name": "derived_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -735,12 +2507,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "deprecated_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "deprecated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "claims",
+      "name": "deprecated_by",
       "type": "uuid",
       "typeSchema": null,
       "notNull": false,
@@ -748,12 +2533,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "deprecated_by",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "confidence_score",
       "type": "numeric(4,3)",
       "typeSchema": null,
       "notNull": false,
@@ -761,12 +2546,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "confidence_score",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "evidence_text",
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -774,25 +2559,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "evidence_text",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "columns"
     },
     {
-      "type": "integer",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "claims",
       "name": "evidence_start_offset",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
-    },
-    {
       "type": "integer",
       "typeSchema": null,
       "notNull": false,
@@ -800,12 +2572,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "evidence_end_offset",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "evidence_end_offset",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conflicts",
+      "name": "id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -813,25 +2598,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "conflicts"
+      "entityType": "columns"
     },
     {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "conflicts",
       "name": "ontology_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "conflicts"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -839,25 +2611,25 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conflicts",
       "name": "conflict_type",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "conflicts"
-    },
-    {
-      "type": "uuid",
+      "type": "text",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conflicts",
       "name": "claim_a_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "conflicts"
-    },
-    {
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -865,12 +2637,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "claim_b_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "conflicts"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "conflicts",
+      "name": "claim_b_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conflicts",
+      "name": "status",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -878,51 +2663,38 @@
       "default": "'pending'",
       "generated": null,
       "identity": null,
-      "name": "status",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "conflicts"
+      "entityType": "columns"
     },
     {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "conflicts",
       "name": "resolution_strategy",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "conflicts"
-    },
-    {
-      "type": "uuid",
+      "type": "text",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conflicts",
       "name": "accepted_claim_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "conflicts"
-    },
-    {
-      "type": "text",
+      "type": "uuid",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conflicts",
       "name": "resolved_by",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "conflicts"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -930,64 +2702,64 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conflicts",
       "name": "resolved_by_fingerprint",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "conflicts"
-    },
-    {
-      "type": "timestamp with time zone",
+      "type": "text",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conflicts",
       "name": "resolved_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "conflicts"
-    },
-    {
-      "type": "text",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conflicts",
       "name": "resolution_notes",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "conflicts"
-    },
-    {
-      "type": "timestamp with time zone",
+      "type": "text",
       "typeSchema": null,
-      "notNull": true,
+      "notNull": false,
       "dimensions": 0,
-      "default": "now()",
+      "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "conflicts",
       "name": "detected_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "conflicts"
-    },
-    {
-      "type": "uuid",
+      "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": null,
+      "default": "now()",
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "correction_claims",
       "name": "correction_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "correction_claims"
-    },
-    {
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -995,12 +2767,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "original_claim_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "correction_claims"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "correction_claims",
+      "name": "original_claim_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "correction_claims",
+      "name": "new_claim_id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": false,
@@ -1008,12 +2793,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "new_claim_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "correction_claims"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "corrections",
+      "name": "id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -1021,12 +2806,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "corrections"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "corrections",
+      "name": "correction_type",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -1034,12 +2819,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "correction_type",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "corrections"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "corrections",
+      "name": "source_article_id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": false,
@@ -1047,12 +2832,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "source_article_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "corrections"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "corrections",
+      "name": "reason",
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -1060,12 +2845,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "reason",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "corrections"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "corrections",
+      "name": "correction_date",
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -1073,12 +2858,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "correction_date",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "corrections"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "corrections",
+      "name": "created_at",
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -1086,12 +2871,12 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "corrections"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "corrections",
+      "name": "processed_at",
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -1099,12 +2884,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "processed_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "corrections"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "embeddings",
+      "name": "id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -1112,12 +2897,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "embeddings"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "embeddings",
+      "name": "entity_type",
       "type": "varchar(20)",
       "typeSchema": null,
       "notNull": true,
@@ -1125,12 +2910,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "entity_type",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "embeddings"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "embeddings",
+      "name": "entity_id",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -1138,12 +2923,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "entity_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "embeddings"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "embeddings",
+      "name": "ontology_id",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -1151,12 +2936,12 @@
       "default": "'default'",
       "generated": null,
       "identity": null,
-      "name": "ontology_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "embeddings"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "embeddings",
+      "name": "embedding",
       "type": "vector(768)",
       "typeSchema": null,
       "notNull": true,
@@ -1164,12 +2949,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "embedding",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "embeddings"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "embeddings",
+      "name": "content_text",
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -1177,12 +2962,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "content_text",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "embeddings"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "embeddings",
+      "name": "model",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -1190,25 +2975,12 @@
       "default": "'nomic-embed-text-v1.5'",
       "generated": null,
       "identity": null,
-      "name": "model",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "embeddings"
+      "entityType": "columns"
     },
     {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "embeddings",
       "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "embeddings"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -1216,12 +2988,25 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "updated_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "embeddings"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "embeddings",
+      "name": "updated_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "entity_aliases",
+      "name": "id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -1229,12 +3014,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_aliases"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "entity_aliases",
+      "name": "ontology_id",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -1242,12 +3027,12 @@
       "default": "'default'",
       "generated": null,
       "identity": null,
-      "name": "ontology_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_aliases"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "entity_aliases",
+      "name": "canonical_entity_id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -1255,25 +3040,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "canonical_entity_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_aliases"
+      "entityType": "columns"
     },
     {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "entity_aliases",
       "name": "mention",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_aliases"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -1281,12 +3053,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "mention_normalized",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_aliases"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "entity_aliases",
+      "name": "mention_normalized",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "entity_aliases",
+      "name": "embedding",
       "type": "vector(768)",
       "typeSchema": null,
       "notNull": false,
@@ -1294,12 +3079,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "embedding",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_aliases"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "entity_aliases",
+      "name": "resolution_method",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -1307,12 +3092,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "resolution_method",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_aliases"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "entity_aliases",
+      "name": "resolution_confidence",
       "type": "numeric(4,3)",
       "typeSchema": null,
       "notNull": true,
@@ -1320,12 +3105,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "resolution_confidence",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_aliases"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "entity_aliases",
+      "name": "first_batch_id",
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -1333,12 +3118,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "first_batch_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_aliases"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "entity_aliases",
+      "name": "source_article_id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": false,
@@ -1346,12 +3131,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "source_article_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_aliases"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "entity_aliases",
+      "name": "created_at",
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -1359,12 +3144,12 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_aliases"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "entity_blocking_tokens",
+      "name": "id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -1372,12 +3157,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_blocking_tokens"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "entity_blocking_tokens",
+      "name": "ontology_id",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -1385,12 +3170,12 @@
       "default": "'default'",
       "generated": null,
       "identity": null,
-      "name": "ontology_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_blocking_tokens"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "entity_blocking_tokens",
+      "name": "canonical_entity_id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -1398,12 +3183,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "canonical_entity_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_blocking_tokens"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "entity_blocking_tokens",
+      "name": "token",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -1411,12 +3196,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "token",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_blocking_tokens"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "entity_blocking_tokens",
+      "name": "token_type",
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -1424,12 +3209,12 @@
       "default": "'mention'",
       "generated": null,
       "identity": null,
-      "name": "token_type",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "entity_blocking_tokens"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -1437,12 +3222,12 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "content_hash",
       "type": "varchar(64)",
       "typeSchema": null,
       "notNull": true,
@@ -1450,12 +3235,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "content_hash",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "ontology_id",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -1463,12 +3248,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "ontology_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "source_uri",
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -1476,12 +3261,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "source_uri",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "source_type",
       "type": "varchar(32)",
       "typeSchema": null,
       "notNull": false,
@@ -1489,25 +3274,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "source_type",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "ingested_links",
       "name": "headline",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -1515,12 +3287,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "description",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "description",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "published_at",
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -1528,25 +3313,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "published_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "ingested_links",
       "name": "author",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -1554,12 +3326,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "organization",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "organization",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "language",
       "type": "varchar(8)",
       "typeSchema": null,
       "notNull": false,
@@ -1567,25 +3352,12 @@
       "default": "'en'",
       "generated": null,
       "identity": null,
-      "name": "language",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
-      "type": "jsonb",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": "'[]'",
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "ingested_links",
       "name": "topics",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
-    },
-    {
       "type": "jsonb",
       "typeSchema": null,
       "notNull": false,
@@ -1593,12 +3365,25 @@
       "default": "'[]'",
       "generated": null,
       "identity": null,
-      "name": "key_entities",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "key_entities",
+      "type": "jsonb",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "'[]'",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "storage_uri",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -1606,12 +3391,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "storage_uri",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "status",
       "type": "varchar(16)",
       "typeSchema": null,
       "notNull": true,
@@ -1619,12 +3404,12 @@
       "default": "'pending'",
       "generated": null,
       "identity": null,
-      "name": "status",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "fetched_at",
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": true,
@@ -1632,25 +3417,12 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "fetched_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "ingested_links",
       "name": "enriched_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -1658,12 +3430,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "processed_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "processed_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "error_message",
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -1671,12 +3456,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "error_message",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "word_count",
       "type": "integer",
       "typeSchema": null,
       "notNull": false,
@@ -1684,12 +3469,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "word_count",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "metadata",
       "type": "jsonb",
       "typeSchema": null,
       "notNull": false,
@@ -1697,25 +3482,12 @@
       "default": "'{}'",
       "generated": null,
       "identity": null,
-      "name": "metadata",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "columns"
     },
     {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": "now()",
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "ingested_links",
       "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -1723,207 +3495,12 @@
       "default": "now()",
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "ingested_links",
       "name": "updated_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "ingested_links"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "batch_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batch_items"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "link_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batch_items"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "'pending'",
-      "generated": null,
-      "identity": null,
-      "name": "status",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batch_items"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "extraction_run_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batch_items"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "article_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batch_items"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "started_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batch_items"
-    },
-    {
-      "type": "timestamp with time zone",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "completed_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batch_items"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "error_message",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batch_items"
-    },
-    {
-      "type": "uuid",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "gen_random_uuid()",
-      "generated": null,
-      "identity": null,
-      "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batches"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "batch_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batches"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": "'pending'",
-      "generated": null,
-      "identity": null,
-      "name": "status",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batches"
-    },
-    {
-      "type": "integer",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": "0",
-      "generated": null,
-      "identity": null,
-      "name": "links_total",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batches"
-    },
-    {
-      "type": "integer",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": "0",
-      "generated": null,
-      "identity": null,
-      "name": "links_processed",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batches"
-    },
-    {
-      "type": "integer",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": "0",
-      "generated": null,
-      "identity": null,
-      "name": "links_failed",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batches"
-    },
-    {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": false,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
-      "name": "ontology_uri",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batches"
-    },
-    {
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -1931,38 +3508,51 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batches"
+      "entityType": "columns"
     },
     {
-      "type": "timestamp with time zone",
+      "schema": "public",
+      "table": "link_batch_items",
+      "name": "batch_id",
+      "type": "uuid",
       "typeSchema": null,
-      "notNull": false,
+      "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "started_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batches"
+      "entityType": "columns"
     },
     {
-      "type": "timestamp with time zone",
+      "schema": "public",
+      "table": "link_batch_items",
+      "name": "link_id",
+      "type": "uuid",
       "typeSchema": null,
-      "notNull": false,
+      "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "completed_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batches"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "link_batch_items",
+      "name": "status",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'pending'",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batch_items",
+      "name": "extraction_run_id",
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -1970,12 +3560,64 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "error_message",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "link_batches"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "link_batch_items",
+      "name": "article_id",
+      "type": "uuid",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batch_items",
+      "name": "started_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batch_items",
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batch_items",
+      "name": "error_message",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batches",
+      "name": "id",
       "type": "uuid",
       "typeSchema": null,
       "notNull": true,
@@ -1983,25 +3625,155 @@
       "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batches",
+      "name": "batch_id",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batches",
+      "name": "status",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": "'pending'",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batches",
+      "name": "links_total",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batches",
+      "name": "links_processed",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batches",
+      "name": "links_failed",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "0",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batches",
+      "name": "ontology_uri",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batches",
+      "name": "created_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": "now()",
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batches",
+      "name": "started_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batches",
+      "name": "completed_at",
+      "type": "timestamp with time zone",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "link_batches",
+      "name": "error_message",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "llm_examples",
       "name": "id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
-    },
-    {
-      "type": "text",
+      "type": "uuid",
       "typeSchema": null,
       "notNull": true,
       "dimensions": 0,
-      "default": null,
+      "default": "gen_random_uuid()",
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "llm_examples",
       "name": "ontology_id",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -2009,12 +3781,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "example_type",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "example_type",
+      "type": "text",
+      "typeSchema": null,
+      "notNull": true,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "source",
       "type": "text",
       "typeSchema": null,
       "notNull": true,
@@ -2022,38 +3807,25 @@
       "default": "'manual'",
       "generated": null,
       "identity": null,
-      "name": "source",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "columns"
     },
     {
-      "type": "text",
-      "typeSchema": null,
-      "notNull": true,
-      "dimensions": 0,
-      "default": null,
-      "generated": null,
-      "identity": null,
+      "schema": "public",
+      "table": "llm_examples",
       "name": "input_text",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
-    },
-    {
       "type": "text",
       "typeSchema": null,
-      "notNull": false,
+      "notNull": true,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "llm_examples",
       "name": "target_class",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -2061,12 +3833,12 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "llm_examples",
       "name": "target_predicate",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
-    },
-    {
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -2074,25 +3846,25 @@
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "llm_examples",
       "name": "evidence_text",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
-    },
-    {
-      "type": "integer",
+      "type": "text",
       "typeSchema": null,
       "notNull": false,
       "dimensions": 0,
       "default": null,
       "generated": null,
       "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "llm_examples",
       "name": "evidence_start_offset",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
-    },
-    {
       "type": "integer",
       "typeSchema": null,
       "notNull": false,
@@ -2100,12 +3872,25 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "evidence_end_offset",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "evidence_end_offset",
+      "type": "integer",
+      "typeSchema": null,
+      "notNull": false,
+      "dimensions": 0,
+      "default": null,
+      "generated": null,
+      "identity": null,
+      "entityType": "columns"
+    },
+    {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "expected_output",
       "type": "jsonb",
       "typeSchema": null,
       "notNull": true,
@@ -2113,12 +3898,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "expected_output",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "prompt_messages",
       "type": "jsonb",
       "typeSchema": null,
       "notNull": false,
@@ -2126,12 +3911,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "prompt_messages",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "explanation",
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -2139,12 +3924,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "explanation",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "embedding",
       "type": "vector(768)",
       "typeSchema": null,
       "notNull": true,
@@ -2152,12 +3937,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "embedding",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "is_negative",
       "type": "boolean",
       "typeSchema": null,
       "notNull": true,
@@ -2165,12 +3950,12 @@
       "default": "false",
       "generated": null,
       "identity": null,
-      "name": "is_negative",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "negative_pattern",
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -2178,12 +3963,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "negative_pattern",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "usage_count",
       "type": "integer",
       "typeSchema": null,
       "notNull": false,
@@ -2191,12 +3976,12 @@
       "default": "0",
       "generated": null,
       "identity": null,
-      "name": "usage_count",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "success_rate",
       "type": "numeric(4,3)",
       "typeSchema": null,
       "notNull": false,
@@ -2204,12 +3989,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "success_rate",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "created_at",
       "type": "timestamp with time zone",
       "typeSchema": null,
       "notNull": false,
@@ -2217,12 +4002,12 @@
       "default": "now()",
       "generated": null,
       "identity": null,
-      "name": "created_at",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "created_by",
       "type": "text",
       "typeSchema": null,
       "notNull": false,
@@ -2230,12 +4015,12 @@
       "default": null,
       "generated": null,
       "identity": null,
-      "name": "created_by",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "is_active",
       "type": "boolean",
       "typeSchema": null,
       "notNull": true,
@@ -2243,12 +4028,12 @@
       "default": "true",
       "generated": null,
       "identity": null,
-      "name": "is_active",
-      "entityType": "columns",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "columns"
     },
     {
+      "schema": "public",
+      "table": "articles",
+      "name": "articles_ontology_uri_unique",
       "nameExplicit": true,
       "columns": [
         {
@@ -2271,12 +4056,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "articles_ontology_uri_unique",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "articles"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "articles",
+      "name": "idx_articles_uri",
       "nameExplicit": true,
       "columns": [
         {
@@ -2292,33 +4077,33 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_articles_uri",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "articles"
+      "entityType": "indexes"
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "source_name",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
+      "schema": "public",
+      "table": "articles",
       "name": "idx_articles_source",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "articles"
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "source_name",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "articles",
+      "name": "idx_articles_published",
       "nameExplicit": true,
       "columns": [
         {
@@ -2334,12 +4119,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_articles_published",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "articles"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "articles",
+      "name": "idx_articles_ontology_id",
       "nameExplicit": true,
       "columns": [
         {
@@ -2355,12 +4140,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_articles_ontology_id",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "articles"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "articles",
+      "name": "idx_articles_ontology_source",
       "nameExplicit": true,
       "columns": [
         {
@@ -2383,12 +4168,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_articles_ontology_source",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "articles"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "articles",
+      "name": "idx_articles_ontology_published",
       "nameExplicit": true,
       "columns": [
         {
@@ -2411,12 +4196,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_articles_ontology_published",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "articles"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "batch_runs",
+      "name": "idx_batch_runs_batch_id",
       "nameExplicit": true,
       "columns": [
         {
@@ -2432,12 +4217,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_batch_runs_batch_id",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "batch_runs"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "batch_runs",
+      "name": "idx_batch_runs_status",
       "nameExplicit": true,
       "columns": [
         {
@@ -2453,12 +4238,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_batch_runs_status",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "batch_runs"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "canonical_entities",
+      "name": "canonical_entities_ontology_iri_unique",
       "nameExplicit": true,
       "columns": [
         {
@@ -2481,12 +4266,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "canonical_entities_ontology_iri_unique",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "canonical_entities"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "canonical_entities",
+      "name": "idx_canonical_entities_iri",
       "nameExplicit": true,
       "columns": [
         {
@@ -2502,12 +4287,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_canonical_entities_iri",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "canonical_entities"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "canonical_entities",
+      "name": "idx_canonical_entities_ontology_id",
       "nameExplicit": true,
       "columns": [
         {
@@ -2523,12 +4308,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_canonical_entities_ontology_id",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "canonical_entities"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "canonical_entities",
+      "name": "idx_canonical_entities_ontology_iri",
       "nameExplicit": true,
       "columns": [
         {
@@ -2551,12 +4336,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_canonical_entities_ontology_iri",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "canonical_entities"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "idx_claims_natural_key",
       "nameExplicit": true,
       "columns": [
         {
@@ -2593,12 +4378,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_claims_natural_key",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "idx_claims_article",
       "nameExplicit": true,
       "columns": [
         {
@@ -2614,12 +4399,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_claims_article",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "idx_claims_subject",
       "nameExplicit": true,
       "columns": [
         {
@@ -2635,12 +4420,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_claims_subject",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "idx_claims_predicate",
       "nameExplicit": true,
       "columns": [
         {
@@ -2656,12 +4441,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_claims_predicate",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "idx_claims_rank",
       "nameExplicit": true,
       "columns": [
         {
@@ -2677,12 +4462,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_claims_rank",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "idx_claims_valid_period",
       "nameExplicit": true,
       "columns": [
         {
@@ -2705,12 +4490,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_claims_valid_period",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "idx_claims_deprecated",
       "nameExplicit": true,
       "columns": [
         {
@@ -2726,12 +4511,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_claims_deprecated",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "idx_claims_derived_at",
       "nameExplicit": true,
       "columns": [
         {
@@ -2747,44 +4532,23 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_claims_derived_at",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "indexes"
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "subject_iri",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "predicate_iri",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
+      "schema": "public",
+      "table": "claims",
       "name": "idx_claims_subject_predicate",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "claims"
-    },
-    {
       "nameExplicit": true,
       "columns": [
         {
-          "value": "ontology_id",
+          "value": "subject_iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "predicate_iri",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -2796,23 +4560,16 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "claims",
       "name": "idx_claims_ontology_id",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "claims"
-    },
-    {
       "nameExplicit": true,
       "columns": [
         {
           "value": "ontology_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        },
-        {
-          "value": "subject_iri",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -2824,12 +4581,40 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "claims",
       "name": "idx_claims_ontology_subject",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "claims"
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "ontology_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        },
+        {
+          "value": "subject_iri",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "idx_claims_ontology_predicate",
       "nameExplicit": true,
       "columns": [
         {
@@ -2852,12 +4637,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_claims_ontology_predicate",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "idx_claims_ontology_subject_predicate",
       "nameExplicit": true,
       "columns": [
         {
@@ -2887,12 +4672,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_claims_ontology_subject_predicate",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "conflicts",
+      "name": "idx_conflicts_ontology_status",
       "nameExplicit": true,
       "columns": [
         {
@@ -2915,12 +4700,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_conflicts_ontology_status",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "conflicts"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "conflicts",
+      "name": "idx_conflicts_claims",
       "nameExplicit": true,
       "columns": [
         {
@@ -2943,12 +4728,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_conflicts_claims",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "conflicts"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "conflicts",
+      "name": "conflicts_ontology_claim_pair_unique",
       "nameExplicit": true,
       "columns": [
         {
@@ -2978,12 +4763,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "conflicts_ontology_claim_pair_unique",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "conflicts"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "correction_claims",
+      "name": "idx_correction_claims_original",
       "nameExplicit": true,
       "columns": [
         {
@@ -2999,12 +4784,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_correction_claims_original",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "correction_claims"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "correction_claims",
+      "name": "idx_correction_claims_new",
       "nameExplicit": true,
       "columns": [
         {
@@ -3020,12 +4805,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_correction_claims_new",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "correction_claims"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "corrections",
+      "name": "idx_corrections_type",
       "nameExplicit": true,
       "columns": [
         {
@@ -3041,12 +4826,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_corrections_type",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "corrections"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "corrections",
+      "name": "idx_corrections_source",
       "nameExplicit": true,
       "columns": [
         {
@@ -3062,12 +4847,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_corrections_source",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "corrections"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "corrections",
+      "name": "idx_corrections_date",
       "nameExplicit": true,
       "columns": [
         {
@@ -3083,12 +4868,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_corrections_date",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "corrections"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "embeddings",
+      "name": "idx_embeddings_ontology_entity_unique",
       "nameExplicit": true,
       "columns": [
         {
@@ -3118,12 +4903,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_embeddings_ontology_entity_unique",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "embeddings"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "embeddings",
+      "name": "idx_embeddings_entity_type_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -3139,12 +4924,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_embeddings_entity_type_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "embeddings"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "embeddings",
+      "name": "idx_embeddings_ontology_type_idx",
       "nameExplicit": true,
       "columns": [
         {
@@ -3167,12 +4952,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_embeddings_ontology_type_idx",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "embeddings"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "entity_aliases",
+      "name": "idx_entity_aliases_ontology_mention",
       "nameExplicit": true,
       "columns": [
         {
@@ -3195,37 +4980,16 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_entity_aliases_ontology_mention",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "entity_aliases"
+      "entityType": "indexes"
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "canonical_entity_id",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
+      "schema": "public",
+      "table": "entity_aliases",
       "name": "idx_entity_aliases_canonical",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "entity_aliases"
-    },
-    {
       "nameExplicit": true,
       "columns": [
         {
-          "value": "ontology_id",
+          "value": "canonical_entity_id",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -3237,16 +5001,16 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "entity_aliases",
       "name": "idx_entity_aliases_ontology",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "entity_aliases"
-    },
-    {
       "nameExplicit": true,
       "columns": [
         {
-          "value": "token",
+          "value": "ontology_id",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -3258,16 +5022,16 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "entity_blocking_tokens",
       "name": "idx_blocking_tokens_token",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "entity_blocking_tokens"
-    },
-    {
       "nameExplicit": true,
       "columns": [
         {
-          "value": "canonical_entity_id",
+          "value": "token",
           "isExpression": false,
           "asc": true,
           "nullsFirst": false,
@@ -3279,12 +5043,33 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "entity_blocking_tokens",
       "name": "idx_blocking_tokens_entity",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "entity_blocking_tokens"
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "canonical_entity_id",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "entity_blocking_tokens",
+      "name": "idx_blocking_tokens_ontology_token",
       "nameExplicit": true,
       "columns": [
         {
@@ -3307,12 +5092,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_blocking_tokens_ontology_token",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "entity_blocking_tokens"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "entity_blocking_tokens",
+      "name": "idx_blocking_tokens_composite",
       "nameExplicit": true,
       "columns": [
         {
@@ -3342,12 +5127,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_blocking_tokens_composite",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "entity_blocking_tokens"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "idx_ingested_links_status",
       "nameExplicit": true,
       "columns": [
         {
@@ -3363,12 +5148,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_ingested_links_status",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "idx_ingested_links_source_uri",
       "nameExplicit": true,
       "columns": [
         {
@@ -3384,12 +5169,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_ingested_links_source_uri",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "idx_ingested_links_fetched_at",
       "nameExplicit": true,
       "columns": [
         {
@@ -3405,12 +5190,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_ingested_links_fetched_at",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "idx_ingested_links_source_type",
       "nameExplicit": true,
       "columns": [
         {
@@ -3426,12 +5211,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_ingested_links_source_type",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "idx_ingested_links_organization",
       "nameExplicit": true,
       "columns": [
         {
@@ -3447,12 +5232,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_ingested_links_organization",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "idx_ingested_links_ontology_id",
       "nameExplicit": true,
       "columns": [
         {
@@ -3468,12 +5253,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_ingested_links_ontology_id",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "idx_ingested_links_ontology_status",
       "nameExplicit": true,
       "columns": [
         {
@@ -3496,12 +5281,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_ingested_links_ontology_status",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "idx_ingested_links_ontology_content_unique",
       "nameExplicit": true,
       "columns": [
         {
@@ -3524,12 +5309,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_ingested_links_ontology_content_unique",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "ingested_links"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "link_batch_items",
+      "name": "idx_link_batch_items_link",
       "nameExplicit": true,
       "columns": [
         {
@@ -3545,33 +5330,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_link_batch_items_link",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "link_batch_items"
+      "entityType": "indexes"
     },
     {
-      "nameExplicit": true,
-      "columns": [
-        {
-          "value": "status",
-          "isExpression": false,
-          "asc": true,
-          "nullsFirst": false,
-          "opclass": null
-        }
-      ],
-      "isUnique": false,
-      "where": null,
-      "with": "",
-      "method": "btree",
-      "concurrently": false,
+      "schema": "public",
+      "table": "link_batch_items",
       "name": "idx_link_batch_items_status",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "link_batch_items"
-    },
-    {
       "nameExplicit": true,
       "columns": [
         {
@@ -3587,12 +5351,33 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_link_batches_status",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "link_batches"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "link_batches",
+      "name": "idx_link_batches_status",
+      "nameExplicit": true,
+      "columns": [
+        {
+          "value": "status",
+          "isExpression": false,
+          "asc": true,
+          "nullsFirst": false,
+          "opclass": null
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "with": "",
+      "method": "btree",
+      "concurrently": false,
+      "entityType": "indexes"
+    },
+    {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "idx_llm_examples_ontology_type",
       "nameExplicit": true,
       "columns": [
         {
@@ -3615,12 +5400,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_llm_examples_ontology_type",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "idx_llm_examples_ontology_active",
       "nameExplicit": true,
       "columns": [
         {
@@ -3643,12 +5428,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_llm_examples_ontology_active",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "llm_examples",
+      "name": "idx_llm_examples_is_negative",
       "nameExplicit": true,
       "columns": [
         {
@@ -3664,12 +5449,12 @@
       "with": "",
       "method": "btree",
       "concurrently": false,
-      "name": "idx_llm_examples_is_negative",
-      "entityType": "indexes",
-      "schema": "public",
-      "table": "llm_examples"
+      "entityType": "indexes"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "claims_article_id_articles_id_fkey",
       "nameExplicit": false,
       "columns": [
         "article_id"
@@ -3681,12 +5466,12 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "claims_article_id_articles_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "claims",
+      "name": "claims_deprecated_by_corrections_id_fkey",
       "nameExplicit": false,
       "columns": [
         "deprecated_by"
@@ -3698,12 +5483,12 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "claims_deprecated_by_corrections_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "claims"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "conflicts",
+      "name": "conflicts_claim_a_id_claims_id_fkey",
       "nameExplicit": false,
       "columns": [
         "claim_a_id"
@@ -3715,12 +5500,12 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "conflicts_claim_a_id_claims_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "conflicts"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "conflicts",
+      "name": "conflicts_claim_b_id_claims_id_fkey",
       "nameExplicit": false,
       "columns": [
         "claim_b_id"
@@ -3732,12 +5517,12 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "conflicts_claim_b_id_claims_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "conflicts"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "conflicts",
+      "name": "conflicts_accepted_claim_id_claims_id_fkey",
       "nameExplicit": false,
       "columns": [
         "accepted_claim_id"
@@ -3749,12 +5534,12 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "conflicts_accepted_claim_id_claims_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "conflicts"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "correction_claims",
+      "name": "correction_claims_correction_id_corrections_id_fkey",
       "nameExplicit": false,
       "columns": [
         "correction_id"
@@ -3766,12 +5551,12 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "correction_claims_correction_id_corrections_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "correction_claims"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "correction_claims",
+      "name": "correction_claims_original_claim_id_claims_id_fkey",
       "nameExplicit": false,
       "columns": [
         "original_claim_id"
@@ -3783,12 +5568,12 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "correction_claims_original_claim_id_claims_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "correction_claims"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "correction_claims",
+      "name": "correction_claims_new_claim_id_claims_id_fkey",
       "nameExplicit": false,
       "columns": [
         "new_claim_id"
@@ -3800,12 +5585,12 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "correction_claims_new_claim_id_claims_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "correction_claims"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "corrections",
+      "name": "corrections_source_article_id_articles_id_fkey",
       "nameExplicit": false,
       "columns": [
         "source_article_id"
@@ -3817,12 +5602,12 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "corrections_source_article_id_articles_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "corrections"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "entity_aliases",
+      "name": "entity_aliases_canonical_entity_id_canonical_entities_id_fkey",
       "nameExplicit": false,
       "columns": [
         "canonical_entity_id"
@@ -3834,12 +5619,12 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "entity_aliases_canonical_entity_id_canonical_entities_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "entity_aliases"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "entity_aliases",
+      "name": "entity_aliases_source_article_id_articles_id_fkey",
       "nameExplicit": false,
       "columns": [
         "source_article_id"
@@ -3851,12 +5636,12 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "NO ACTION",
-      "name": "entity_aliases_source_article_id_articles_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "entity_aliases"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "entity_blocking_tokens",
+      "name": "entity_blocking_tokens_Sx4xpmtdQjTC_fkey",
       "nameExplicit": true,
       "columns": [
         "canonical_entity_id"
@@ -3868,12 +5653,12 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "entity_blocking_tokens_Sx4xpmtdQjTC_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "entity_blocking_tokens"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "link_batch_items",
+      "name": "link_batch_items_batch_id_link_batches_id_fkey",
       "nameExplicit": true,
       "columns": [
         "batch_id"
@@ -3885,12 +5670,12 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "link_batch_items_batch_id_link_batches_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "link_batch_items"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "link_batch_items",
+      "name": "link_batch_items_link_id_ingested_links_id_fkey",
       "nameExplicit": true,
       "columns": [
         "link_id"
@@ -3902,252 +5687,248 @@
       ],
       "onUpdate": "NO ACTION",
       "onDelete": "CASCADE",
-      "name": "link_batch_items_link_id_ingested_links_id_fkey",
-      "entityType": "fks",
-      "schema": "public",
-      "table": "link_batch_items"
+      "entityType": "fks"
     },
     {
+      "schema": "public",
+      "table": "correction_claims",
+      "name": "correction_claims_pkey",
       "columns": [
         "correction_id",
         "original_claim_id"
       ],
       "nameExplicit": true,
-      "name": "correction_claims_pkey",
-      "entityType": "pks",
-      "schema": "public",
-      "table": "correction_claims"
+      "entityType": "pks"
     },
     {
+      "schema": "public",
+      "table": "link_batch_items",
+      "name": "link_batch_items_pkey",
       "columns": [
         "batch_id",
         "link_id"
       ],
       "nameExplicit": true,
-      "name": "link_batch_items_pkey",
-      "entityType": "pks",
-      "schema": "public",
-      "table": "link_batch_items"
+      "entityType": "pks"
     },
     {
-      "columns": [
-        "id"
-      ],
-      "nameExplicit": false,
-      "name": "articles_pkey",
       "schema": "public",
       "table": "articles",
-      "entityType": "pks"
-    },
-    {
+      "name": "articles_pkey",
       "columns": [
         "id"
       ],
       "nameExplicit": false,
-      "name": "batch_runs_pkey",
+      "entityType": "pks"
+    },
+    {
       "schema": "public",
       "table": "batch_runs",
-      "entityType": "pks"
-    },
-    {
+      "name": "batch_runs_pkey",
       "columns": [
         "id"
       ],
       "nameExplicit": false,
-      "name": "canonical_entities_pkey",
+      "entityType": "pks"
+    },
+    {
       "schema": "public",
       "table": "canonical_entities",
-      "entityType": "pks"
-    },
-    {
+      "name": "canonical_entities_pkey",
       "columns": [
         "id"
       ],
       "nameExplicit": false,
-      "name": "claims_pkey",
+      "entityType": "pks"
+    },
+    {
       "schema": "public",
       "table": "claims",
-      "entityType": "pks"
-    },
-    {
+      "name": "claims_pkey",
       "columns": [
         "id"
       ],
       "nameExplicit": false,
-      "name": "conflicts_pkey",
+      "entityType": "pks"
+    },
+    {
       "schema": "public",
       "table": "conflicts",
-      "entityType": "pks"
-    },
-    {
+      "name": "conflicts_pkey",
       "columns": [
         "id"
       ],
       "nameExplicit": false,
-      "name": "corrections_pkey",
+      "entityType": "pks"
+    },
+    {
       "schema": "public",
       "table": "corrections",
-      "entityType": "pks"
-    },
-    {
+      "name": "corrections_pkey",
       "columns": [
         "id"
       ],
       "nameExplicit": false,
-      "name": "embeddings_pkey",
+      "entityType": "pks"
+    },
+    {
       "schema": "public",
       "table": "embeddings",
-      "entityType": "pks"
-    },
-    {
+      "name": "embeddings_pkey",
       "columns": [
         "id"
       ],
       "nameExplicit": false,
-      "name": "entity_aliases_pkey",
+      "entityType": "pks"
+    },
+    {
       "schema": "public",
       "table": "entity_aliases",
-      "entityType": "pks"
-    },
-    {
+      "name": "entity_aliases_pkey",
       "columns": [
         "id"
       ],
       "nameExplicit": false,
-      "name": "entity_blocking_tokens_pkey",
+      "entityType": "pks"
+    },
+    {
       "schema": "public",
       "table": "entity_blocking_tokens",
-      "entityType": "pks"
-    },
-    {
+      "name": "entity_blocking_tokens_pkey",
       "columns": [
         "id"
       ],
       "nameExplicit": false,
-      "name": "ingested_links_pkey",
+      "entityType": "pks"
+    },
+    {
       "schema": "public",
       "table": "ingested_links",
-      "entityType": "pks"
-    },
-    {
+      "name": "ingested_links_pkey",
       "columns": [
         "id"
       ],
       "nameExplicit": false,
-      "name": "link_batches_pkey",
+      "entityType": "pks"
+    },
+    {
       "schema": "public",
       "table": "link_batches",
-      "entityType": "pks"
-    },
-    {
+      "name": "link_batches_pkey",
       "columns": [
         "id"
       ],
       "nameExplicit": false,
-      "name": "llm_examples_pkey",
+      "entityType": "pks"
+    },
+    {
       "schema": "public",
       "table": "llm_examples",
+      "name": "llm_examples_pkey",
+      "columns": [
+        "id"
+      ],
+      "nameExplicit": false,
       "entityType": "pks"
     },
     {
-      "nameExplicit": false,
-      "columns": [
-        "batch_id"
-      ],
-      "nullsNotDistinct": false,
-      "name": "batch_runs_batch_id_key",
       "schema": "public",
       "table": "batch_runs",
-      "entityType": "uniques"
-    },
-    {
+      "name": "batch_runs_batch_id_key",
       "nameExplicit": false,
       "columns": [
         "batch_id"
       ],
       "nullsNotDistinct": false,
-      "name": "link_batches_batch_id_key",
-      "schema": "public",
-      "table": "link_batches",
       "entityType": "uniques"
     },
     {
-      "value": "\"status\" IN ('pending', 'running', 'completed', 'failed')",
+      "schema": "public",
+      "table": "link_batches",
+      "name": "link_batches_batch_id_key",
+      "nameExplicit": false,
+      "columns": [
+        "batch_id"
+      ],
+      "nullsNotDistinct": false,
+      "entityType": "uniques"
+    },
+    {
+      "schema": "public",
+      "table": "batch_runs",
       "name": "batch_runs_status_check",
-      "entityType": "checks",
-      "schema": "public",
-      "table": "batch_runs"
-    },
-    {
-      "value": "\"rank\" IN ('preferred', 'normal', 'deprecated')",
-      "name": "claims_rank_check",
-      "entityType": "checks",
-      "schema": "public",
-      "table": "claims"
-    },
-    {
-      "value": "\"conflict_type\" IN ('position', 'temporal')",
-      "name": "conflicts_conflict_type_check",
-      "entityType": "checks",
-      "schema": "public",
-      "table": "conflicts"
-    },
-    {
-      "value": "\"status\" IN ('pending', 'resolved', 'ignored')",
-      "name": "conflicts_status_check",
-      "entityType": "checks",
-      "schema": "public",
-      "table": "conflicts"
-    },
-    {
-      "value": "\"claim_a_id\" < \"claim_b_id\"",
-      "name": "conflicts_canonical_claim_pair_check",
-      "entityType": "checks",
-      "schema": "public",
-      "table": "conflicts"
-    },
-    {
-      "value": "(\n        (\"status\" = 'pending'\n          AND \"resolution_strategy\" IS NULL\n          AND \"accepted_claim_id\" IS NULL\n          AND \"resolved_by\" IS NULL\n          AND \"resolved_by_fingerprint\" IS NULL\n          AND \"resolved_at\" IS NULL\n          AND \"resolution_notes\" IS NULL)\n        OR (\"status\" = 'ignored'\n          AND \"resolution_strategy\" IS NULL\n          AND \"accepted_claim_id\" IS NULL\n          AND \"resolved_by\" IS NOT NULL\n          AND \"resolved_at\" IS NOT NULL)\n        OR (\"status\" = 'resolved'\n          AND \"resolution_strategy\" IS NOT NULL\n          AND \"accepted_claim_id\" IS NOT NULL\n          AND \"resolved_by\" IS NOT NULL\n          AND \"resolved_at\" IS NOT NULL)\n      )",
-      "name": "conflicts_resolution_state_check",
-      "entityType": "checks",
-      "schema": "public",
-      "table": "conflicts"
-    },
-    {
-      "value": "\"correction_type\" IN ('retraction', 'clarification', 'update', 'amendment')",
-      "name": "corrections_correction_type_check",
-      "entityType": "checks",
-      "schema": "public",
-      "table": "corrections"
-    },
-    {
-      "value": "\"entity_type\" IN ('class', 'entity', 'claim', 'example')",
-      "name": "embeddings_entity_type_check",
-      "entityType": "checks",
-      "schema": "public",
-      "table": "embeddings"
-    },
-    {
-      "value": "\"status\" IN ('pending', 'enriched', 'processing', 'processed', 'failed', 'skipped')",
-      "name": "ingested_links_status_check",
-      "entityType": "checks",
-      "schema": "public",
-      "table": "ingested_links"
-    },
-    {
-      "value": "\"status\" IN ('pending', 'processing', 'completed', 'failed')",
-      "name": "link_batch_items_status_check",
-      "entityType": "checks",
-      "schema": "public",
-      "table": "link_batch_items"
-    },
-    {
       "value": "\"status\" IN ('pending', 'running', 'completed', 'failed')",
-      "name": "link_batches_status_check",
-      "entityType": "checks",
+      "entityType": "checks"
+    },
+    {
       "schema": "public",
-      "table": "link_batches"
+      "table": "claims",
+      "name": "claims_rank_check",
+      "value": "\"rank\" IN ('preferred', 'normal', 'deprecated')",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "conflicts",
+      "name": "conflicts_conflict_type_check",
+      "value": "\"conflict_type\" IN ('position', 'temporal')",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "conflicts",
+      "name": "conflicts_status_check",
+      "value": "\"status\" IN ('pending', 'resolved', 'ignored')",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "conflicts",
+      "name": "conflicts_canonical_claim_pair_check",
+      "value": "\"claim_a_id\" < \"claim_b_id\"",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "conflicts",
+      "name": "conflicts_resolution_state_check",
+      "value": "(\n        (\"status\" = 'pending'\n          AND \"resolution_strategy\" IS NULL\n          AND \"accepted_claim_id\" IS NULL\n          AND \"resolved_by\" IS NULL\n          AND \"resolved_by_fingerprint\" IS NULL\n          AND \"resolved_at\" IS NULL\n          AND \"resolution_notes\" IS NULL)\n        OR (\"status\" = 'ignored'\n          AND \"resolution_strategy\" IS NULL\n          AND \"accepted_claim_id\" IS NULL\n          AND \"resolved_by\" IS NOT NULL\n          AND \"resolved_at\" IS NOT NULL)\n        OR (\"status\" = 'resolved'\n          AND \"resolution_strategy\" IS NOT NULL\n          AND \"accepted_claim_id\" IS NOT NULL\n          AND \"resolved_by\" IS NOT NULL\n          AND \"resolved_at\" IS NOT NULL)\n      )",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "corrections",
+      "name": "corrections_correction_type_check",
+      "value": "\"correction_type\" IN ('retraction', 'clarification', 'update', 'amendment')",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "embeddings",
+      "name": "embeddings_entity_type_check",
+      "value": "\"entity_type\" IN ('class', 'entity', 'claim', 'example')",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "ingested_links",
+      "name": "ingested_links_status_check",
+      "value": "\"status\" IN ('pending', 'enriched', 'processing', 'processed', 'failed', 'skipped')",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "link_batch_items",
+      "name": "link_batch_items_status_check",
+      "value": "\"status\" IN ('pending', 'processing', 'completed', 'failed')",
+      "entityType": "checks"
+    },
+    {
+      "schema": "public",
+      "table": "link_batches",
+      "name": "link_batches_status_check",
+      "value": "\"status\" IN ('pending', 'running', 'completed', 'failed')",
+      "entityType": "checks"
     }
-  ],
-  "renames": []
+  ]
 }

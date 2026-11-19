@@ -10,10 +10,10 @@ import { SessionId } from "./Session.id.ts";
  * **Example** (A run event)
  * ```ts
  * import * as Domain from "@alchemy.run/domain";
+ * import { Text } from "@proto/kernel/Measure";
  * import { RunEvent } from "@proto/runs-contract/Run/RunEvent";
- * import * as S from "effect/Schema";
  *
- * export class RunCompleted extends Domain.Event("RunCompleted", RunEvent.fields({ outcome: S.String })) {}
+ * export class RunCompleted extends Domain.Event("RunCompleted", RunEvent.fields({ outcome: Text }), { description: "The run finished with this outcome. `released` is the units its open reservations held, now returned." }) {}
  * ```
  *
  * @category constructors

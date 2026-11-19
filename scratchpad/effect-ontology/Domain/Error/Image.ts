@@ -38,7 +38,9 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Error/Image");
  * @category errors
  * @since 0.0.0
  */
-export class ImageFetchError extends S.TaggedError<ImageFetchError, { readonly brand: unique symbol }>($I`ImageFetchError`)(
+export class ImageFetchError extends S.TaggedError<ImageFetchError, { readonly brand: unique symbol }>(
+  $I`ImageFetchError`
+)(
   "ImageFetchError",
   {
     message: ErrorMessage.annotateKey({
@@ -66,7 +68,10 @@ const ImageTimeoutErrorFields = {
   timeoutMs: Milliseconds.annotateKey({
     description: "Configured image-fetch deadline in milliseconds.",
   }),
-  message: ErrorMessage.pipe(S.withConstructorDefault(Effect.succeed("Image fetch timed out")), S.withDecodingDefaultTypeKey(Effect.succeed("Image fetch timed out"))).annotateKey({
+  message: ErrorMessage.pipe(
+    S.withConstructorDefault(Effect.succeed("Image fetch timed out")),
+    S.withDecodingDefaultTypeKey(Effect.succeed("Image fetch timed out"))
+  ).annotateKey({
     description: "Human-readable timeout diagnostic with a schema-owned default.",
   }),
 } satisfies S.Struct.Fields;
@@ -93,15 +98,13 @@ const ImageTimeoutErrorFields = {
  * @category errors
  * @since 0.0.0
  */
-export class ImageTimeoutError extends S.TaggedError<ImageTimeoutError, { readonly brand: unique symbol }>($I`ImageTimeoutError`)(
-  "ImageTimeoutError",
-  ImageTimeoutErrorFields,
-  {
-    ...$I.annote("ImageTimeoutError", {
-      description: "Image download that exceeded its configured deadline.",
-    }),
-  }
-) {
+export class ImageTimeoutError extends S.TaggedError<ImageTimeoutError, { readonly brand: unique symbol }>(
+  $I`ImageTimeoutError`
+)("ImageTimeoutError", ImageTimeoutErrorFields, {
+  ...$I.annote("ImageTimeoutError", {
+    description: "Image download that exceeded its configured deadline.",
+  }),
+}) {
   /**
    * Configured deadline represented as an Effect `Duration`.
    *
@@ -151,7 +154,9 @@ export class ImageTimeoutError extends S.TaggedError<ImageTimeoutError, { readon
  * @category errors
  * @since 0.0.0
  */
-export class ImageTooLargeError extends S.TaggedError<ImageTooLargeError, { readonly brand: unique symbol }>($I`ImageTooLargeError`)(
+export class ImageTooLargeError extends S.TaggedError<ImageTooLargeError, { readonly brand: unique symbol }>(
+  $I`ImageTooLargeError`
+)(
   "ImageTooLargeError",
   {
     url: URLStr.annotateKey({
@@ -163,7 +168,10 @@ export class ImageTooLargeError extends S.TaggedError<ImageTooLargeError, { read
     maxBytes: S.Natural.annotateKey({
       description: "Maximum permitted image size in bytes.",
     }),
-    message: ErrorMessage.pipe(S.withConstructorDefault(Effect.succeed("Image exceeds maximum size limit")), S.withDecodingDefaultTypeKey(Effect.succeed("Image exceeds maximum size limit"))).annotateKey({
+    message: ErrorMessage.pipe(
+      S.withConstructorDefault(Effect.succeed("Image exceeds maximum size limit")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("Image exceeds maximum size limit"))
+    ).annotateKey({
       description: "Human-readable size-limit diagnostic with a schema-owned default.",
     }),
   },
@@ -196,7 +204,9 @@ export class ImageTooLargeError extends S.TaggedError<ImageTooLargeError, { read
  * @category errors
  * @since 0.0.0
  */
-export class ImageInvalidTypeError extends S.TaggedError<ImageInvalidTypeError, { readonly brand: unique symbol }>($I`ImageInvalidTypeError`)(
+export class ImageInvalidTypeError extends S.TaggedError<ImageInvalidTypeError, { readonly brand: unique symbol }>(
+  $I`ImageInvalidTypeError`
+)(
   "ImageInvalidTypeError",
   {
     url: URLStr.annotateKey({
@@ -208,7 +218,10 @@ export class ImageInvalidTypeError extends S.TaggedError<ImageInvalidTypeError, 
     allowedTypes: S.NonEmptyArray(S.NonEmptyString).annotateKey({
       description: "Non-empty set of accepted image media types.",
     }),
-    message: ErrorMessage.pipe(S.withConstructorDefault(Effect.succeed("Image has unsupported content type")), S.withDecodingDefaultTypeKey(Effect.succeed("Image has unsupported content type"))).annotateKey({
+    message: ErrorMessage.pipe(
+      S.withConstructorDefault(Effect.succeed("Image has unsupported content type")),
+      S.withDecodingDefaultTypeKey(Effect.succeed("Image has unsupported content type"))
+    ).annotateKey({
       description: "Human-readable media-type diagnostic with a schema-owned default.",
     }),
   },

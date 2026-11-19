@@ -69,5 +69,5 @@ export class AudioFile extends Model<AudioFile>("AudioFile")(
  * @since 0.0.0
  */
 export declare namespace AudioFile {
-  export type Encoded = S.Codec.Encoded<typeof AudioFile>;
+  export type Encoded = typeof AudioFile.Encoded;
 }

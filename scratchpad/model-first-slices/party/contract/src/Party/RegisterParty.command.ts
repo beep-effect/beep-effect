@@ -5,6 +5,7 @@ import { MissingGrant } from "@proto/kernel/MissingGrant.rejection";
 import { Session } from "@proto/kernel/Session.middleware";
 import * as S from "effect/Schema";
 import { PartyId } from "./Party.id.ts";
+import { PartyName } from "./PartyName.ts";
 import { $PartyContractId } from "@proto/kernel/Identity";
 
 const $I = $PartyContractId.create("Party/RegisterParty.command");
@@ -27,7 +28,7 @@ export class PartyAlreadyRegistered extends S.TaggedError<PartyAlreadyRegistered
  * @category events
  * @since 0.0.0
  */
-export class PartyRegistered extends Domain.Event("PartyRegistered", carry({ org: OrgId, name: S.String })) {}
+export class PartyRegistered extends Domain.Event("PartyRegistered", carry({ org: OrgId, name: PartyName }), { description: "A party now exists in an org." }) {}
 
 /**
  * Register a party, by name, in an org.
@@ -40,7 +41,7 @@ export class RegisterParty extends Domain.Command(
   {
     target: PartyId,
     middleware: [Session],
-    input: { org: OrgId, name: S.String },
+    input: { org: OrgId, name: PartyName },
     events: [PartyRegistered],
     rejects: [PartyAlreadyRegistered, MissingGrant],
   },

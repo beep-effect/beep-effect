@@ -369,7 +369,7 @@ export class FeedbackContractError extends S.TaggedError<FeedbackContractError, 
  * @since 0.0.0
  */
 export declare namespace FeedbackContractError {
-  export type Encoded = S.Codec.Encoded<typeof FeedbackContractError>;
+  export type Encoded = typeof FeedbackContractError.Encoded;
 }
 
 /**
@@ -504,7 +504,7 @@ export class FeedbackEvent extends Model<FeedbackEvent>("FeedbackEvent")(
  * @since 0.0.0
  */
 export declare namespace FeedbackEvent {
-  export type Encoded = S.Codec.Encoded<typeof FeedbackEvent>;
+  export type Encoded = typeof FeedbackEvent.Encoded;
 }
 
 /**
@@ -636,7 +636,7 @@ export class MobileFeedbackRequest extends Model<MobileFeedbackRequest>("MobileF
  * @since 0.0.0
  */
 export declare namespace MobileFeedbackRequest {
-  export type Encoded = S.Codec.Encoded<typeof MobileFeedbackRequest>;
+  export type Encoded = typeof MobileFeedbackRequest.Encoded;
 }
 
 /**
@@ -808,7 +808,7 @@ export class MobileFeedbackReceipt extends Model<MobileFeedbackReceipt>("MobileF
  * @since 0.0.0
  */
 export declare namespace MobileFeedbackReceipt {
-  export type Encoded = S.Codec.Encoded<typeof MobileFeedbackReceipt>;
+  export type Encoded = typeof MobileFeedbackReceipt.Encoded;
 }
 
 /**
@@ -903,7 +903,7 @@ export class MemoryUseFeedback extends Model<MemoryUseFeedback>("MemoryUseFeedba
  * @since 0.0.0
  */
 export declare namespace MemoryUseFeedback {
-  export type Encoded = S.Codec.Encoded<typeof MemoryUseFeedback>;
+  export type Encoded = typeof MemoryUseFeedback.Encoded;
 }
 
 /**
@@ -1034,7 +1034,7 @@ export class FeedbackContextTurn extends Model<FeedbackContextTurn>("FeedbackCon
  * @since 0.0.0
  */
 export declare namespace FeedbackContextTurn {
-  export type Encoded = S.Codec.Encoded<typeof FeedbackContextTurn>;
+  export type Encoded = typeof FeedbackContextTurn.Encoded;
 }
 
 /**
@@ -1133,7 +1133,7 @@ export class FeedbackContextPointer extends Model<FeedbackContextPointer>("Feedb
  * @since 0.0.0
  */
 export declare namespace FeedbackContextPointer {
-  export type Encoded = S.Codec.Encoded<typeof FeedbackContextPointer>;
+  export type Encoded = typeof FeedbackContextPointer.Encoded;
 }
 
 /**
@@ -1235,7 +1235,7 @@ export class FeedbackReportEntry extends Model<FeedbackReportEntry>("FeedbackRep
  * @since 0.0.0
  */
 export declare namespace FeedbackReportEntry {
-  export type Encoded = S.Codec.Encoded<typeof FeedbackReportEntry>;
+  export type Encoded = typeof FeedbackReportEntry.Encoded;
 }
 
 /**
@@ -1339,7 +1339,7 @@ export class FeedbackReport extends Model<FeedbackReport>("FeedbackReport")(
  * @since 0.0.0
  */
 export declare namespace FeedbackReport {
-  export type Encoded = S.Codec.Encoded<typeof FeedbackReport>;
+  export type Encoded = typeof FeedbackReport.Encoded;
 }
 
 /**
@@ -1431,7 +1431,7 @@ export class FeedbackContextTurnText extends Model<FeedbackContextTurnText>("Fee
  * @since 0.0.0
  */
 export declare namespace FeedbackContextTurnText {
-  export type Encoded = S.Codec.Encoded<typeof FeedbackContextTurnText>;
+  export type Encoded = typeof FeedbackContextTurnText.Encoded;
 }
 
 /**
@@ -1530,7 +1530,7 @@ export class FeedbackContextHydrated extends Model<FeedbackContextHydrated>("Fee
  * @since 0.0.0
  */
 export declare namespace FeedbackContextHydrated {
-  export type Encoded = S.Codec.Encoded<typeof FeedbackContextHydrated>;
+  export type Encoded = typeof FeedbackContextHydrated.Encoded;
 }
 
 /**

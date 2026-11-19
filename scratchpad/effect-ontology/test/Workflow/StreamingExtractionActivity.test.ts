@@ -4,14 +4,15 @@ import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
-import * as Result from "effect/Result";
 import * as O from "effect/Option";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as TestClock from "effect/testing/TestClock";
 import * as Workflow from "effect/workflow/Workflow";
 import * as WorkflowEngine from "effect/workflow/WorkflowEngine";
 import { WorkflowInstance } from "effect/workflow/WorkflowEngine";
 import { BatchId, DocumentId, GcsUri, Namespace, OntologyName } from "../../Domain/Identity.ts";
+import { ExtractionActivityInput } from "../../Domain/Schema/Batch.ts";
 import { defaultChunkingParams } from "../../Domain/Schema/DocumentMetadata.ts";
 import { ConfigServiceDefault } from "../../Service/Config.ts";
 import { ExtractionWorkflow } from "../../Service/ExtractionWorkflow.ts";
@@ -51,20 +52,22 @@ describe("streaming extraction activity boundaries", () => {
     it.effect(
       "preserves the typed failure without applying interruption retries",
       Effect.fnUntraced(function* () {
-        const fiber = yield* makeStreamingExtractionActivity({
-          batchId: BatchId.make("batch-00000000000a"),
-          documentId: DocumentId.make("doc-00000000000a"),
-          sourceUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/missing.txt")),
-          ontologyUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/ontology.ttl")),
-          ontologyId: OntologyName.make("test_ontology"),
-          targetNamespace: Namespace.make("test-ontology"),
-          ontologyEmbeddingsUri: O.none(),
-          chunking: defaultChunkingParams.standard,
-          eventTime: O.none(),
-          publishedAt: O.none(),
-          title: O.none(),
-          language: O.none(),
-        }).execute.pipe(Effect.flip, Effect.forkChild);
+        const fiber = yield* makeStreamingExtractionActivity(
+          ExtractionActivityInput.make({
+            batchId: BatchId.make("batch-00000000000a"),
+            documentId: DocumentId.make("doc-00000000000a"),
+            sourceUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/missing.txt")),
+            ontologyUri: Result.getOrThrow(S.decodeResult(GcsUri)("gs://test-bucket/ontology.ttl")),
+            ontologyId: OntologyName.make("test_ontology"),
+            targetNamespace: Namespace.make("test-ontology"),
+            ontologyEmbeddingsUri: O.none(),
+            chunking: defaultChunkingParams.standard,
+            eventTime: O.none(),
+            publishedAt: O.none(),
+            title: O.none(),
+            language: O.none(),
+          })
+        ).execute.pipe(Effect.flip, Effect.forkChild);
 
         yield* TestClock.adjust(Duration.zero);
 

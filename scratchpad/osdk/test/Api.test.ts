@@ -373,11 +373,14 @@ describe("the declared routes", () => {
       strictEqual(Redacted.value(settings.token), token);
       strictEqual(settings.baseUrl.origin, origin);
       assertFalse(mentionsToken(Formatter.format(settings)));
-      const refusals = yield* Effect.all([
-        Effect.flip(encodeSettings(settings)),
-        Effect.flip(decodeSettings({ baseUrl: "not a url", token })),
-        Effect.flip(decodeSettings({ baseUrl: origin, token: "" })),
-      ]);
+      const refusals = yield* Effect.all(
+        [
+          Effect.flip(encodeSettings(settings)),
+          Effect.flip(decodeSettings({ baseUrl: "not a url", token })),
+          Effect.flip(decodeSettings({ baseUrl: origin, token: "" })),
+        ],
+        { concurrency: 1 }
+      );
       deepStrictEqual(
         A.map(refusals, (refusal) => refusal._tag),
         ["SchemaError", "SchemaError", "SchemaError"]
@@ -749,11 +752,14 @@ it.layer(transportIn(everywhere))("the HTTP transport, fully scoped", (it) => {
         assertNone(failure.errorDescription);
       }
       // The status is the response's, whichever it is: the declaration files the body under one status only.
-      const statuses = yield* Effect.forEach([400, 409, 429, 500, 503], (status) =>
-        Effect.map(
-          exchange(json(status, notFoundWire), (transport) => Effect.flip(transport.loadOntology(O.none()))),
-          ([refusal]) => (refusal._tag === "ApiError" ? refusal.status : refusal._tag)
-        )
+      const statuses = yield* Effect.forEach(
+        [400, 409, 429, 500, 503],
+        (status) =>
+          Effect.map(
+            exchange(json(status, notFoundWire), (transport) => Effect.flip(transport.loadOntology(O.none()))),
+            ([refusal]) => (refusal._tag === "ApiError" ? refusal.status : refusal._tag)
+          ),
+        { concurrency: 1 }
       );
       deepStrictEqual(statuses, [400, 409, 429, 500, 503]);
     })
@@ -830,8 +836,10 @@ it.layer(transportIn(everywhere))("the HTTP transport, fully scoped", (it) => {
         json(200, { data: "not a list" }),
         unreachable,
       ];
-      const outcomes = yield* Effect.forEach(replies, (reply) =>
-        exchange(reply, (transport) => Effect.flip(transport.loadObjects(loadRequest)))
+      const outcomes = yield* Effect.forEach(
+        replies,
+        (reply) => exchange(reply, (transport) => Effect.flip(transport.loadObjects(loadRequest))),
+        { concurrency: 1 }
       );
       deepStrictEqual(
         A.map(outcomes, ([failure, sent]) => [failure._tag, sent.authorization]),
@@ -843,7 +851,7 @@ it.layer(transportIn(everywhere))("the HTTP transport, fully scoped", (it) => {
           ["TransportError", authorization],
         ]
       );
-      const texts = yield* Effect.forEach(outcomes, ([failure]) => rendered(failure));
+      const texts = yield* Effect.forEach(outcomes, ([failure]) => rendered(failure), { concurrency: 1 });
       deepStrictEqual(A.map(texts, mentionsToken), [false, false, false, false, false]);
       // No failure keeps the HTTP error it came from, because that error holds the request and its headers.
       deepStrictEqual(

@@ -19,13 +19,13 @@ import { $ScratchpadId } from "@beep/identity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { AbsoluteIRI, NamedNode, ObjectTerm } from "@beep/rdf";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
+import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
-import * as SchemaGetter from "effect/SchemaGetter";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import * as SchemaGetter from "effect/SchemaGetter";
 import { GcsUri, withContentHashIdStatics } from "../Identity.ts";
 import { EventId as CanonicalEventId } from "../Model/CoreOntology.ts";
-import * as A from "effect/Array";
 
 const $I = $ScratchpadId.create("effect-ontology/Domain/Schema/KnowledgeModel");
 
@@ -51,18 +51,21 @@ const ruleIdPattern = /^rule-[a-z0-9]+(?:-[a-z0-9]+)*$/;
  * @since 0.0.0
  */
 export const ClaimId = S.String.check(
-  S.isPattern(claimIdPattern, $I.annote("ClaimIdPatternCheck", {
-    title: "Claim Identifier",
-    description: "A claim- prefix followed by exactly twelve lowercase hexadecimal characters.",
-    message: "Claim ID must use claim- followed by exactly twelve lowercase hexadecimal characters.",
-  }))
+  S.isPattern(
+    claimIdPattern,
+    $I.annote("ClaimIdPatternCheck", {
+      title: "Claim Identifier",
+      description: "A claim- prefix followed by exactly twelve lowercase hexadecimal characters.",
+      message: "Claim ID must use claim- followed by exactly twelve lowercase hexadecimal characters.",
+    })
+  )
 ).pipe(
-    S.brand("ClaimId"),
-    $I.annoteSchema("ClaimId", {
-      description: "Deterministic compact identifier for one extracted claim.",
-    }),
-    withContentHashIdStatics("claim")
-  );
+  S.brand("ClaimId"),
+  $I.annoteSchema("ClaimId", {
+    description: "Deterministic compact identifier for one extracted claim.",
+  }),
+  withContentHashIdStatics("claim")
+);
 
 /**
  * Runtime value decoded by {@link ClaimId}.
@@ -97,18 +100,21 @@ export type ClaimId = typeof ClaimId.Type;
  * @since 0.0.0
  */
 export const AssertionId = S.String.check(
-  S.isPattern(assertionIdPattern, $I.annote("AssertionIdPatternCheck", {
-    title: "Assertion Identifier",
-    description: "An assertion- prefix followed by exactly twelve lowercase hexadecimal characters.",
-    message: "Assertion ID must use assertion- followed by exactly twelve lowercase hexadecimal characters.",
-  }))
+  S.isPattern(
+    assertionIdPattern,
+    $I.annote("AssertionIdPatternCheck", {
+      title: "Assertion Identifier",
+      description: "An assertion- prefix followed by exactly twelve lowercase hexadecimal characters.",
+      message: "Assertion ID must use assertion- followed by exactly twelve lowercase hexadecimal characters.",
+    })
+  )
 ).pipe(
-    S.brand("AssertionId"),
-    $I.annoteSchema("AssertionId", {
-      description: "Deterministic compact identifier for one curated assertion.",
-    }),
-    withContentHashIdStatics("assertion")
-  );
+  S.brand("AssertionId"),
+  $I.annoteSchema("AssertionId", {
+    description: "Deterministic compact identifier for one curated assertion.",
+  }),
+  withContentHashIdStatics("assertion")
+);
 
 /**
  * Runtime value decoded by {@link AssertionId}.
@@ -143,18 +149,21 @@ export type AssertionId = typeof AssertionId.Type;
  * @since 0.0.0
  */
 export const DerivedAssertionId = S.String.check(
-  S.isPattern(derivedAssertionIdPattern, $I.annote("DerivedAssertionIdPatternCheck", {
-    title: "Derived Assertion Identifier",
-    description: "A derived- prefix followed by exactly twelve lowercase hexadecimal characters.",
-    message: "Derived assertion ID must use derived- followed by exactly twelve lowercase hexadecimal characters.",
-  }))
+  S.isPattern(
+    derivedAssertionIdPattern,
+    $I.annote("DerivedAssertionIdPatternCheck", {
+      title: "Derived Assertion Identifier",
+      description: "A derived- prefix followed by exactly twelve lowercase hexadecimal characters.",
+      message: "Derived assertion ID must use derived- followed by exactly twelve lowercase hexadecimal characters.",
+    })
+  )
 ).pipe(
-    S.brand("DerivedAssertionId"),
-    $I.annoteSchema("DerivedAssertionId", {
-      description: "Deterministic compact identifier for one rule-derived assertion.",
-    }),
-    withContentHashIdStatics("derived")
-  );
+  S.brand("DerivedAssertionId"),
+  $I.annoteSchema("DerivedAssertionId", {
+    description: "Deterministic compact identifier for one rule-derived assertion.",
+  }),
+  withContentHashIdStatics("derived")
+);
 
 /**
  * Runtime value decoded by {@link DerivedAssertionId}.
@@ -192,17 +201,20 @@ export type DerivedAssertionId = typeof DerivedAssertionId.Type;
  * @since 0.0.0
  */
 export const RuleId = S.String.check(
-  S.isPattern(ruleIdPattern, $I.annote("RuleIdPatternCheck", {
-    title: "Reasoning Rule Identifier",
-    description: "A rule- prefix followed by lowercase alphanumeric hyphen-separated segments.",
-    message: "Rule ID must use rule- followed by lowercase alphanumeric segments separated by single hyphens.",
-  }))
-).pipe(
-    S.brand("RuleId"),
-    $I.annoteSchema("RuleId", {
-      description: "Canonical lowercase identifier for a reasoning rule.",
+  S.isPattern(
+    ruleIdPattern,
+    $I.annote("RuleIdPatternCheck", {
+      title: "Reasoning Rule Identifier",
+      description: "A rule- prefix followed by lowercase alphanumeric hyphen-separated segments.",
+      message: "Rule ID must use rule- followed by lowercase alphanumeric segments separated by single hyphens.",
     })
-  );
+  )
+).pipe(
+  S.brand("RuleId"),
+  $I.annoteSchema("RuleId", {
+    description: "Canonical lowercase identifier for a reasoning rule.",
+  })
+);
 
 /**
  * Runtime value decoded by {@link RuleId}.
@@ -329,7 +341,8 @@ const EvidenceSource = EvidenceSourceDefinition.pipe(
  * @category value-objects
  * @since 0.0.0
  */
-export class Evidence extends S.Opaque<Evidence, { readonly brand: unique symbol }>()(S.Struct({
+export class Evidence extends S.Opaque<Evidence, { readonly brand: unique symbol }>()(
+  S.Struct({
     source: EvidenceSource.annotateKey({
       description: "Discriminated source location for the supporting document.",
     }),
@@ -342,9 +355,12 @@ export class Evidence extends S.Opaque<Evidence, { readonly brand: unique symbol
         description: "Optional section or paragraph context.",
       })
     ),
-  }).pipe($I.annoteSchema("Evidence", {
-    description: "Claim provenance with a tagged source, non-empty text spans, and optional context.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("Evidence", {
+      description: "Claim provenance with a tagged source, non-empty text spans, and optional context.",
+    })
+  )
+) {
   static readonly is = S.is(Evidence);
 }
 
@@ -507,7 +523,8 @@ const TemporalInterval = TemporalIntervalDefinition.pipe(
  * @category entities
  * @since 0.0.0
  */
-export class Claim extends S.Opaque<Claim, { readonly brand: unique symbol }>()(S.Struct({
+export class Claim extends S.Opaque<Claim, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: ClaimId,
     subject: NamedNode,
     predicate: NamedNode,
@@ -516,11 +533,17 @@ export class Claim extends S.Opaque<Claim, { readonly brand: unique symbol }>()(
     evidence: Evidence,
     extractedAt: S.DateTimeUtcFromString,
     confidence: Confidence,
-    rank: ClaimRank.pipe(S.withConstructorDefault(Effect.succeed(ClaimRank.Enum.normal)), S.withDecodingDefaultTypeKey(Effect.succeed(ClaimRank.Enum.normal))),
+    rank: ClaimRank.pipe(
+      S.withConstructorDefault(Effect.succeed(ClaimRank.Enum.normal)),
+      S.withDecodingDefaultTypeKey(Effect.succeed(ClaimRank.Enum.normal))
+    ),
     validity: S.OptionFromOptionalKey(TemporalInterval).pipe(S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("Claim", {
-    description: "Provenance-bearing reported RDF fact with confidence, rank, and optional ordered validity.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("Claim", {
+      description: "Provenance-bearing reported RDF fact with confidence, rank, and optional ordered validity.",
+    })
+  )
+) {
   static readonly is = S.is(Claim);
 }
 
@@ -538,10 +561,10 @@ export class Claim extends S.Opaque<Claim, { readonly brand: unique symbol }>()(
  * @since 0.0.0
  */
 export const AssertionStatus = LiteralKit(["accepted", "rejected", "pending"]).pipe(
-    $I.annoteSchema("AssertionStatus", {
-      description: "Accepted, rejected, or pending curation status of an assertion.",
-    })
-  );
+  $I.annoteSchema("AssertionStatus", {
+    description: "Accepted, rejected, or pending curation status of an assertion.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link AssertionStatus}.
@@ -592,7 +615,8 @@ export type AssertionStatus = typeof AssertionStatus.Type;
  * @category assertions
  * @since 0.0.0
  */
-export class Assertion extends S.Opaque<Assertion, { readonly brand: unique symbol }>()(S.Struct({
+export class Assertion extends S.Opaque<Assertion, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: AssertionId,
     subject: NamedNode,
     predicate: NamedNode,
@@ -601,9 +625,12 @@ export class Assertion extends S.Opaque<Assertion, { readonly brand: unique symb
     derivedFrom: ClaimId.pipe(S.NonEmptyArray),
     status: AssertionStatus,
     validity: S.OptionFromOptionalKey(TemporalInterval).pipe(S.withConstructorDefault(Effect.succeedNone)),
-  }).pipe($I.annoteSchema("Assertion", {
-    description: "Curated RDF fact supported by one or more claims and carrying explicit curation status.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("Assertion", {
+      description: "Curated RDF fact supported by one or more claims and carrying explicit curation status.",
+    })
+  )
+) {
   static readonly is = S.is(Assertion);
 }
 
@@ -645,15 +672,19 @@ export class Assertion extends S.Opaque<Assertion, { readonly brand: unique symb
  * @category assertions
  * @since 0.0.0
  */
-export class DerivedAssertion extends S.Opaque<DerivedAssertion, { readonly brand: unique symbol }>()(S.Struct({
+export class DerivedAssertion extends S.Opaque<DerivedAssertion, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: DerivedAssertionId,
     assertion: Assertion,
     ruleId: RuleId,
     supportingFacts: AssertionId.pipe(S.NonEmptyArray),
     derivedAt: S.DateTimeUtcFromString,
-  }).pipe($I.annoteSchema("DerivedAssertion", {
-    description: "Rule-derived assertion with a non-empty set of supporting curated facts.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("DerivedAssertion", {
+      description: "Rule-derived assertion with a non-empty set of supporting curated facts.",
+    })
+  )
+) {
   static readonly is = S.is(DerivedAssertion);
 }
 
@@ -713,10 +744,10 @@ export const EventType = LiteralKit([
   "PublicMeeting",
   "Generic",
 ]).pipe(
-    $I.annoteSchema("EventType", {
-      description: "Finite event categories used for timeline grouping and presentation.",
-    })
-  );
+  $I.annoteSchema("EventType", {
+    description: "Finite event categories used for timeline grouping and presentation.",
+  })
+);
 
 /**
  * Runtime value accepted by {@link EventType}.
@@ -751,7 +782,8 @@ export type EventType = typeof EventType.Type;
  * @category events
  * @since 0.0.0
  */
-export class EntityRef extends S.Opaque<EntityRef, { readonly brand: unique symbol }>()(S.Struct({
+export class EntityRef extends S.Opaque<EntityRef, { readonly brand: unique symbol }>()(
+  S.Struct({
     entity: NamedNode.annotateKey({
       description: "Canonical RDF/JS named node identifying the participant.",
     }),
@@ -767,9 +799,12 @@ export class EntityRef extends S.Opaque<EntityRef, { readonly brand: unique symb
         description: "Optional display label.",
       })
     ),
-  }).pipe($I.annoteSchema("EntityRef", {
-    description: "Event-participant reference backed by a canonical named node and Option-normalized metadata.",
-  }))) {
+  }).pipe(
+    $I.annoteSchema("EntityRef", {
+      description: "Event-participant reference backed by a canonical named node and Option-normalized metadata.",
+    })
+  )
+) {
   static readonly is = S.is(EntityRef);
 }
 
@@ -804,20 +839,34 @@ const eventTagsDefault = A.empty<string>();
  * @category events
  * @since 0.0.0
  */
-export class Event extends S.Opaque<Event, { readonly brand: unique symbol }>()(S.Struct({
+export class Event extends S.Opaque<Event, { readonly brand: unique symbol }>()(
+  S.Struct({
     id: EventId,
     type: EventType,
     title: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     eventTime: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
     publishedAt: S.DateTimeUtcFromString,
     ingestedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromString).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    participants: S.Array(EntityRef).pipe(S.withConstructorDefault(Effect.succeed(eventParticipantsDefault)), S.withDecodingDefaultType(Effect.succeed(eventParticipantsDefault))),
-    factGroup: S.Array(AssertionId).pipe(S.withConstructorDefault(Effect.succeed(eventFactGroupDefault)), S.withDecodingDefaultType(Effect.succeed(eventFactGroupDefault))),
+    participants: S.Array(EntityRef).pipe(
+      S.withConstructorDefault(Effect.succeed(eventParticipantsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(eventParticipantsDefault))
+    ),
+    factGroup: S.Array(AssertionId).pipe(
+      S.withConstructorDefault(Effect.succeed(eventFactGroupDefault)),
+      S.withDecodingDefaultType(Effect.succeed(eventFactGroupDefault))
+    ),
     sourceDocuments: GcsUri.pipe(S.NonEmptyArray),
     summary: S.OptionFromOptionalKey(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeedNone)),
-    tags: S.Array(S.NonEmptyString).pipe(S.withConstructorDefault(Effect.succeed(eventTagsDefault)), S.withDecodingDefaultType(Effect.succeed(eventTagsDefault))),
-  }).pipe($I.annoteSchema("Event", {
-    description: "First-class timeline event with validated time, participants, curated facts, and source provenance.",
-  }))) {
+    tags: S.Array(S.NonEmptyString).pipe(
+      S.withConstructorDefault(Effect.succeed(eventTagsDefault)),
+      S.withDecodingDefaultType(Effect.succeed(eventTagsDefault))
+    ),
+  }).pipe(
+    $I.annoteSchema("Event", {
+      description:
+        "First-class timeline event with validated time, participants, curated facts, and source provenance.",
+    })
+  )
+) {
   static readonly is = S.is(Event);
 }

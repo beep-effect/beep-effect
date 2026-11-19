@@ -1,5 +1,6 @@
 import { $ScratchpadId } from "@beep/identity";
 import { assert, describe, it } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -7,10 +8,10 @@ import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as Fiber from "effect/Fiber";
 import * as Layer from "effect/Layer";
-import * as PubSub from "effect/PubSub";
-import * as Scope from "effect/Scope";
-import * as A from "effect/Array";
 import * as O from "effect/Option";
+import * as PubSub from "effect/PubSub";
+import * as S from "effect/Schema";
+import * as Scope from "effect/Scope";
 import { OntologyName } from "../../Domain/Identity.ts";
 import { OntologyEventEntry } from "../../Domain/Schema/EventSchema.ts";
 import { InferenceRunResponse } from "../../Domain/Schema/Inference.ts";
@@ -18,7 +19,6 @@ import { EventBridgeLive, EventBridgeService } from "../../Runtime/EventBridge.t
 import { BroadcastEvent, EventBroadcastHub, EventBroadcastHubMemory } from "../../Runtime/EventBroadcastRouter.ts";
 import { InferenceJobStore, InferenceJobStoreLive } from "../../Runtime/InferenceRouter.ts";
 import { EventBusService, EventBusServiceMemory } from "../../Service/EventBus.ts";
-import * as S from "effect/Schema";
 
 const $I = $ScratchpadId.create("effect-ontology/test/Runtime/RuntimeEventServices.test");
 
@@ -55,15 +55,18 @@ describe("InferenceJobStore", () => {
         const retained = InferenceRunResponse.make({ jobId: "job-retained", status: "processing" });
         yield* first.put(retained);
 
-        assert.isTrue(O.isNone(yield* second.get(retained.jobId)));
+        const expiredJob = yield* second.get(retained.jobId);
+        assert.isTrue(O.isNone(expiredJob));
 
         yield* Effect.forEach(
           A.range(0, 256),
           (index) => first.put(InferenceRunResponse.make({ jobId: `job-${index}`, status: "processing" })),
           { concurrency: 1, discard: true }
         );
-        assert.isTrue(O.isNone(yield* first.get("job-retained")));
-        assert.isTrue(O.isSome(yield* first.get("job-256")));
+        const evictedJob = yield* first.get("job-retained");
+        assert.isTrue(O.isNone(evictedJob));
+        const recentJob = yield* first.get("job-256");
+        assert.isTrue(O.isSome(recentJob));
       })
     );
   });
@@ -83,7 +86,8 @@ describe("EventBridge", () => {
         const clientScope = yield* Scope.make();
         const subscription = yield* hub.subscribe(ontologyId).pipe(Effect.provideService(Scope.Scope, clientScope));
 
-        assert.strictEqual(yield* hub.getClientCount(ontologyId), 1);
+        const connectedClientCount = yield* hub.getClientCount(ontologyId);
+        assert.strictEqual(connectedClientCount, 1);
 
         const createdAt = yield* DateTime.now;
         const entry = yield* S.decodeEffect(OntologyEventEntry)({
@@ -104,10 +108,12 @@ describe("EventBridge", () => {
         });
 
         yield* hub.broadcast(ontologyId, event);
-        assert.deepStrictEqual(yield* PubSub.take(subscription), event);
+        const deliveredEvent = yield* PubSub.take(subscription);
+        assert.deepStrictEqual(deliveredEvent, event);
 
         yield* Scope.close(clientScope, Exit.void);
-        assert.strictEqual(yield* hub.getClientCount(ontologyId), 0);
+        const disconnectedClientCount = yield* hub.getClientCount(ontologyId);
+        assert.strictEqual(disconnectedClientCount, 0);
       })
     );
 

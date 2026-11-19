@@ -318,6 +318,30 @@ describe("vitestReplayArgs", () => {
     ]);
     expect(vitestReplayArgs(manifestWith({}), file)).toEqual(["vitest", "run", file]);
   });
+
+  // A package whose default config collects only `*.conformance.ts` runs its unit tests through
+  // `--config vitest.memory.config.ts`; without it the replay found no test files and exited 1.
+  it.each([
+    ["vitest run --config vitest.memory.config.ts", ["vitest", "run", "--config", "vitest.memory.config.ts", file]],
+    ["bunx --bun vitest run --config=vitest.unit.ts", ["--bun", "vitest", "run", "--config", "vitest.unit.ts", file]],
+    ["vitest run -c ./vitest.memory.config.ts", ["vitest", "run", "--config", "./vitest.memory.config.ts", file]],
+  ])("carries the replayed segment's config file: %s", (script, expected) => {
+    expect(vitestReplayArgs(manifestWith({ test: script }), file)).toEqual(expected);
+  });
+
+  it("takes the config of the segment that runs the file, not another segment's", () => {
+    const manifest = manifestWith({
+      test: "vitest run --config vitest.unit.ts && vitest run test/a.test.ts --config vitest.a.ts",
+    });
+    expect(vitestReplayArgs(manifest, file)).toEqual(["vitest", "run", "--config", "vitest.a.ts", file]);
+    expect(vitestReplayArgs(manifest, "test/b.test.ts")).toEqual([
+      "vitest",
+      "run",
+      "--config",
+      "vitest.unit.ts",
+      "test/b.test.ts",
+    ]);
+  });
 });
 
 describe("planFinalCheckSteps", () => {

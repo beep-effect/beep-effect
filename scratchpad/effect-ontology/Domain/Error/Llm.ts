@@ -148,7 +148,9 @@ export class LlmRateLimit extends S.TaggedError<LlmRateLimit, { readonly brand: 
  * @category errors
  * @since 0.0.0
  */
-export class LlmInvalidResponse extends S.TaggedError<LlmInvalidResponse, { readonly brand: unique symbol }>($I`LlmInvalidResponse`)(
+export class LlmInvalidResponse extends S.TaggedError<LlmInvalidResponse, { readonly brand: unique symbol }>(
+  $I`LlmInvalidResponse`
+)(
   "LlmInvalidResponse",
   {
     message: ErrorMessage.annotateKey({

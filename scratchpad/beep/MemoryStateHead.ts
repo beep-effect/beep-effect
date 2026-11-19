@@ -137,7 +137,7 @@ export class TrustedMemoryStateHead extends Model<TrustedMemoryStateHead>("Trust
  * @since 0.0.0
  */
 export declare namespace TrustedMemoryStateHead {
-  export type Encoded = S.Codec.Encoded<typeof TrustedMemoryStateHead>;
+  export type Encoded = typeof TrustedMemoryStateHead.Encoded;
 }
 
 /**

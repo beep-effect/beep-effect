@@ -63,6 +63,22 @@ export const LinkCardinality = MappedLiteralKit([
 export type LinkCardinality = typeof LinkCardinality.Type;
 
 /**
+ * Companion namespace for {@link LinkCardinality}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkCardinality {
+  /**
+   * Encoded (wire) form of {@link LinkCardinality}: the platform's literal, before it maps to the runtime one.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export type Encoded = typeof LinkCardinality.Encoded;
+}
+
+/**
  * One direction of a link type, as listed under the object type it starts from.
  *
  * **Details**
@@ -127,3 +143,28 @@ export class LinkTypeSide extends S.Opaque<LinkTypeSide, { readonly brand: uniqu
     })
   )
 ) {}
+
+/**
+ * Companion namespace for {@link LinkTypeSide}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export declare namespace LinkTypeSide {
+  /**
+   * Encoded (wire) form of {@link LinkTypeSide}: `targetObjectType` travels as `objectTypeApiName` and
+   * `foreignKeyProperty` as `foreignKeyPropertyApiName`.
+   *
+   * @category type-level
+   * @since 0.0.0
+   */
+  export interface Encoded {
+    readonly apiName: LinkTypeApiName.Encoded;
+    readonly displayName: string;
+    readonly status: ReleaseStatus.Encoded;
+    readonly objectTypeApiName: ObjectTypeApiName.Encoded;
+    readonly cardinality: LinkCardinality.Encoded;
+    readonly foreignKeyPropertyApiName?: PropertyApiName.Encoded;
+    readonly linkTypeRid: LinkTypeRid.Encoded;
+  }
+}

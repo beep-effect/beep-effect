@@ -14,8 +14,9 @@
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
 import { SchemaUtils } from "@beep/schema";
-import * as S from "effect/Schema";
 import * as Effect from "effect/Effect";
+import * as S from "effect/Schema";
+
 const $I = $ScratchpadId.create("effect-ontology/Domain/Model/shared");
 
 /**
@@ -40,10 +41,10 @@ const $I = $ScratchpadId.create("effect-ontology/Domain/Model/shared");
  * @since 0.0.0
  */
 export const AttributeValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
-    $I.annoteSchema("AttributeValue", {
-      description: "JSON-safe scalar attribute value consisting of a string, boolean, or finite number.",
-    })
-  );
+  $I.annoteSchema("AttributeValue", {
+    description: "JSON-safe scalar attribute value consisting of a string, boolean, or finite number.",
+  })
+);
 
 /**
  * Runtime value decoded by {@link AttributeValue}. {@inheritDoc AttributeValue}
@@ -86,13 +87,13 @@ export type AttributeValue = typeof AttributeValue.Type;
  * @since 0.0.0
  */
 export const Attributes = S.Record(S.String, AttributeValue).pipe(
-    $I.annoteSchema("Attributes", {
-      description: "Open string-keyed attribute record whose values are JSON-safe scalars.",
-    }),
-    SchemaUtils.withStatics(() => ({
-      empty: (): Attributes => ({}),
-    }))
-  );
+  $I.annoteSchema("Attributes", {
+    description: "Open string-keyed attribute record whose values are JSON-safe scalars.",
+  }),
+  SchemaUtils.withStatics(() => ({
+    empty: (): Attributes => ({}),
+  }))
+);
 
 /**
  * Runtime value decoded by {@link Attributes}. {@inheritDoc Attributes}
@@ -135,11 +136,11 @@ export type Attributes = typeof Attributes.Type;
  * @since 0.0.0
  */
 export const OptionalConfidence = S.OptionFromNullishOr(Confidence).pipe(
-    S.withConstructorDefault(Effect.succeedNone),
-    $I.annoteSchema("OptionalConfidence", {
-      description: "Optional confidence normalized from nullish input to an Effect Option.",
-    })
-  );
+  S.withConstructorDefault(Effect.succeedNone),
+  $I.annoteSchema("OptionalConfidence", {
+    description: "Optional confidence normalized from nullish input to an Effect Option.",
+  })
+);
 
 /**
  * Runtime value decoded by {@link OptionalConfidence}. {@inheritDoc OptionalConfidence}
@@ -200,18 +201,22 @@ export const ENTITY_ID_PATTERN = /^[a-z][a-z0-9_]*$/;
  * @since 0.0.0
  */
 export const EntityId = S.String.check(
-  S.isPattern(ENTITY_ID_PATTERN, $I.annote("EntityIdPatternCheck", {
-    title: "Entity Identifier",
-    description:
-      "A local entity identifier beginning with a lowercase ASCII letter and continuing with lowercase letters, digits, or underscores.",
-    message: "Entity ID must begin with a lowercase letter and contain only lowercase letters, digits, or underscores.",
-  }))
-).pipe(
-    S.brand("EntityId"),
-    $I.annoteSchema("EntityId", {
-      description: "Validated snake-case local identifier for an extracted or resolved entity.",
+  S.isPattern(
+    ENTITY_ID_PATTERN,
+    $I.annote("EntityIdPatternCheck", {
+      title: "Entity Identifier",
+      description:
+        "A local entity identifier beginning with a lowercase ASCII letter and continuing with lowercase letters, digits, or underscores.",
+      message:
+        "Entity ID must begin with a lowercase letter and contain only lowercase letters, digits, or underscores.",
     })
-  );
+  )
+).pipe(
+  S.brand("EntityId"),
+  $I.annoteSchema("EntityId", {
+    description: "Validated snake-case local identifier for an extracted or resolved entity.",
+  })
+);
 
 /**
  * Runtime value decoded by {@link EntityId}. {@inheritDoc EntityId}

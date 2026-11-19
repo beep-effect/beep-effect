@@ -3,6 +3,7 @@ import * as InMemory from "@alchemy.run/domain/InMemory";
 import { expect, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as P from "@beep/utils/Predicate";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Activity from "effect/workflow/Activity";
@@ -40,7 +41,7 @@ class Before extends Domain.Model("Work", { aggregates: [], sagas: [WorkV1] }) {
 class After extends Domain.Model("Work", { aggregates: [], sagas: [WorkV1, WorkV2] }) {}
 
 const waitRunning = (status: Effect.Effect<{ readonly _tag: string }>) =>
-  status.pipe(Effect.repeat({ schedule: Schedule.spaced("20 millis"), until: (s) => s._tag === "Running", times: 100 }));
+  status.pipe(Effect.repeat({ schedule: Schedule.spaced("20 millis"), until: P.isTagged("Running"), times: 100 }));
 
 it.live("a run in flight finishes on the saga version it started, while new runs start on the next version", () =>
   Effect.gen(function* () {

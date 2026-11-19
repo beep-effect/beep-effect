@@ -8,6 +8,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { $ScratchpadId } from "@beep/identity";
 import { ActivityId } from "@beep/party-domain/Ids";
 import { emptyCensus, observe, recordDecodeFailure, summarize } from "@beep/party-server/MailCensus";
 import { adaptMailRecord, MailIndexInput, MailIndexRecord } from "@beep/party-server/MailIndex";
@@ -26,10 +27,28 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { ContentBoundMailRecord } from "./MailInput.ts";
 
+const $I = $ScratchpadId.create("party/scripts/mail-census");
+
+class MailCensusFilterError extends S.TaggedError<MailCensusFilterError, { readonly brand: unique symbol }>(
+  $I`MailCensusFilterError`,
+)(
+  "MailCensusFilterError",
+  { cause: S.Defect({ includeStack: true }) },
+  $I.annoteError<MailCensusFilterError>("MailCensusFilterError", {
+    description: "The mail census filter is not a valid regular expression.",
+  }),
+) {}
+
 const decodeRow = S.decodeUnknownEffect(S.fromJsonString(ContentBoundMailRecord));
 const program = Effect.fn("mail-census")(function* (out: string, filterText: string, inputs: ReadonlyArray<string>) {
   const fs = yield* FileSystem.FileSystem;
-  const filter = filterText === "-" ? O.none() : O.some(yield* Effect.try(() => new RegExp(filterText, "i")));
+  const filter =
+    filterText === "-"
+      ? O.none()
+      : yield* Effect.try({
+          try: () => new RegExp(filterText, "i"),
+          catch: (cause) => MailCensusFilterError.make({ cause }),
+        }).pipe(Effect.asSome);
   let census = emptyCensus();
   const producedBy = ActivityId.make("party-act:mail-index-adapter@0.0.0");
   const observedAt = yield* DateTime.now;
@@ -39,7 +58,7 @@ const program = Effect.fn("mail-census")(function* (out: string, filterText: str
       Stream.splitLines,
       Stream.filter(
         (line) =>
-          Str.isNonEmpty(line) && O.match(filter, { onNone: () => true, onSome: (pattern) => pattern.test(line) })
+          Str.isNonEmpty(line) && O.match(filter, { onNone: () => true, onSome: (pattern) => pattern.test(line) }),
       ),
       Stream.runForEach((line) =>
         decodeRow(line).pipe(
@@ -56,13 +75,13 @@ const program = Effect.fn("mail-census")(function* (out: string, filterText: str
                   side: "client-file",
                   producedBy,
                   observedAt,
-                })
+                }),
               );
               census = observe(census, ingest);
             }),
-          })
-        )
-      )
+          }),
+        ),
+      ),
     );
   }
   const summary = { inputs: A.length(inputs), filtered: O.isSome(filter), ...summarize(census) };
@@ -77,8 +96,7 @@ const command = Command.make(
     filter: Argument.String("filter-regex"),
     inputs: Argument.String("index.jsonl").pipe(Argument.atLeast(1)),
   },
-  ({ out, filter, inputs }) => program(out, filter, inputs)
+  ({ out, filter, inputs }) => program(out, filter, inputs),
 );
 
-// @effect-diagnostics-next-line strictEffectProvide:off -- platform services are provided once at the script entry point. Owner: @beep/scratchpad. Exit: never while this is a Bun entry script.
 Command.run(command, { version: "0.0.0" }).pipe(Effect.provide(BunServices.layer), BunRuntime.runMain);

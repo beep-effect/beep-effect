@@ -1,3 +1,4 @@
+import * as Str from "effect/String";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
@@ -81,13 +82,24 @@ const failureMessage = (exit: Exit.Exit<unknown, unknown>): string =>
 
 describe("WorkstreamAssociation", () => {
   it("decodes AssociationEvidence and enforces the ref bounds", () => {
-    const evidence = decode(AssociationEvidence, { evidenceId: "e1", summary: "Talked about launch", evidenceRefs: [evidenceRef] });
+    const evidence = decode(AssociationEvidence, {
+      evidenceId: "e1",
+      summary: "Talked about launch",
+      evidenceRefs: [evidenceRef],
+    });
     assert.strictEqual(evidence.evidenceRefs.length, 1);
     assert.strictEqual(evidence.evidenceRefs[0]?.kind, "conversation");
     assert.strictEqual(decodeFails(AssociationEvidence, { evidenceId: "e1", summary: "x", evidenceRefs: [] }), true);
-    assert.strictEqual(decodeFails(AssociationEvidence, { evidenceId: "e1", summary: "", evidenceRefs: [evidenceRef] }), true);
     assert.strictEqual(
-      decodeFails(AssociationEvidence, { evidenceId: "e1", summary: "x".repeat(2001), evidenceRefs: [evidenceRef] }),
+      decodeFails(AssociationEvidence, { evidenceId: "e1", summary: "", evidenceRefs: [evidenceRef] }),
+      true,
+    );
+    assert.strictEqual(
+      decodeFails(AssociationEvidence, {
+        evidenceId: "e1",
+        summary: Str.repeat(2001)("x"),
+        evidenceRefs: [evidenceRef],
+      }),
       true,
     );
   });
@@ -95,7 +107,10 @@ describe("WorkstreamAssociation", () => {
   it("decodes AssociationCandidateView with an empty summary and caps its length", () => {
     const view = decode(AssociationCandidateView, candidate);
     assert.strictEqual(view.currentStateSummary, "");
-    assert.strictEqual(decodeFails(AssociationCandidateView, { ...candidate, currentStateSummary: "x".repeat(4001) }), true);
+    assert.strictEqual(
+      decodeFails(AssociationCandidateView, { ...candidate, currentStateSummary: Str.repeat(4001)("x") }),
+      true,
+    );
     assert.strictEqual(decodeFails(AssociationCandidateView, { ...candidate, objective: "" }), true);
   });
 
@@ -113,7 +128,15 @@ describe("WorkstreamAssociation", () => {
       candidates: [candidate],
     });
     assert.strictEqual(decoded.candidates.length, 1);
-    assert.strictEqual(decodeFails(AssociationAdjudicationInput, { schemaVersion: 2, policyVersion: "association.v1", evidenceSummary: "L", candidates: [candidate] }), true);
+    assert.strictEqual(
+      decodeFails(AssociationAdjudicationInput, {
+        schemaVersion: 2,
+        policyVersion: "association.v1",
+        evidenceSummary: "L",
+        candidates: [candidate],
+      }),
+      true,
+    );
     assert.strictEqual(
       decodeFails(AssociationAdjudicationInput, {
         schemaVersion: 1,
@@ -124,7 +147,12 @@ describe("WorkstreamAssociation", () => {
       true,
     );
     assert.strictEqual(
-      decodeFails(AssociationAdjudicationInput, { schemaVersion: 1, policyVersion: "association.v1", evidenceSummary: "L", candidates: [] }),
+      decodeFails(AssociationAdjudicationInput, {
+        schemaVersion: 1,
+        policyVersion: "association.v1",
+        evidenceSummary: "L",
+        candidates: [],
+      }),
       true,
     );
   });
@@ -173,23 +201,41 @@ describe("WorkstreamAssociation", () => {
     });
     assert.strictEqual(O.isNone(nulls.workstreamId), true);
     assert.strictEqual(O.isNone(nulls.eventSummary), true);
-    const missing = decode(AssociationJudgment, { schemaVersion: 1, policyVersion: "association.v1", material: false, reason: "no_match" });
+    const missing = decode(AssociationJudgment, {
+      schemaVersion: 1,
+      policyVersion: "association.v1",
+      material: false,
+      reason: "no_match",
+    });
     assert.strictEqual(O.isNone(missing.workstreamId), true);
     const encoded = Effect.runSync(encodeAssociationJudgment(missing));
     assert.strictEqual(encoded.workstreamId, null);
     assert.strictEqual(encoded.eventSummary, null);
     assert.strictEqual(encoded.policyVersion, "association.v1");
     const versions = { schemaVersion: 1, policyVersion: "association.v1" };
-    assert.strictEqual(decodeFails(AssociationJudgment, { ...versions, material: false, reason: "no_match", eventSummary: "" }), true);
     assert.strictEqual(
-      decodeFails(AssociationJudgment, { ...versions, material: false, reason: "no_match", eventSummary: "x".repeat(501) }),
+      decodeFails(AssociationJudgment, { ...versions, material: false, reason: "no_match", eventSummary: "" }),
+      true,
+    );
+    assert.strictEqual(
+      decodeFails(AssociationJudgment, {
+        ...versions,
+        material: false,
+        reason: "no_match",
+        eventSummary: Str.repeat(501)("x"),
+      }),
       true,
     );
     assert.strictEqual(decodeFails(AssociationJudgment, { material: false, reason: "no_match" }), true);
   });
 
   it("validateAssociationJudgment accepts the legal pairings", () => {
-    const material = AssociationJudgment.make({ material: true, reason: "selected", workstreamId: O.some("w1"), eventSummary: O.some("s") });
+    const material = AssociationJudgment.make({
+      material: true,
+      reason: "selected",
+      workstreamId: O.some("w1"),
+      eventSummary: O.some("s"),
+    });
     assert.strictEqual(Effect.runSync(validateAssociationJudgment(material)), material);
     for (const reason of ["no_match", "ambiguous", "model_unavailable"] as const) {
       const judgment = AssociationJudgment.make({ material: false, reason });
@@ -200,20 +246,31 @@ describe("WorkstreamAssociation", () => {
   });
 
   it("validateAssociationJudgment rejects each illegal pairing with the Python message", () => {
-    const run = (judgment: AssociationJudgment) => validateAssociationJudgment(judgment).pipe(Effect.runSyncExit, failureMessage);
+    const run = (judgment: AssociationJudgment) =>
+      validateAssociationJudgment(judgment).pipe(Effect.runSyncExit, failureMessage);
     assert.strictEqual(
       run(AssociationJudgment.make({ material: true, reason: "selected", eventSummary: O.some("s") })),
       "material association requires workstream_id",
     );
     assert.strictEqual(
-      run(AssociationJudgment.make({ material: true, reason: "ambiguous", workstreamId: O.some("w1"), eventSummary: O.some("s") })),
+      run(
+        AssociationJudgment.make({
+          material: true,
+          reason: "ambiguous",
+          workstreamId: O.some("w1"),
+          eventSummary: O.some("s"),
+        }),
+      ),
       "material association requires selected reason",
     );
     assert.strictEqual(
       run(AssociationJudgment.make({ material: true, reason: "selected", workstreamId: O.some("w1") })),
       "material association requires a minimized event_summary",
     );
-    assert.strictEqual(run(AssociationJudgment.make({ material: false, reason: "selected" })), "selected reason requires material association");
+    assert.strictEqual(
+      run(AssociationJudgment.make({ material: false, reason: "selected" })),
+      "selected reason requires material association",
+    );
     assert.strictEqual(
       run(AssociationJudgment.make({ material: false, reason: "no_match", eventSummary: O.some("s") })),
       "non-material association must not emit an event_summary",
@@ -222,20 +279,35 @@ describe("WorkstreamAssociation", () => {
       run(AssociationJudgment.make({ material: false, reason: "no_match", workstreamId: O.some("w1") })),
       "a non-material workstream selection requires immaterial reason",
     );
-    assert.strictEqual(run(AssociationJudgment.make({ material: false, reason: "immaterial" })), "immaterial reason requires a workstream selection");
+    assert.strictEqual(
+      run(AssociationJudgment.make({ material: false, reason: "immaterial" })),
+      "immaterial reason requires a workstream selection",
+    );
   });
 
   it("decodeAssociationJudgment decodes then validates", () => {
     const versions = { schemaVersion: 1, policyVersion: "association.v1" };
     const ok = Effect.runSync(
-      decodeAssociationJudgment({ ...versions, material: true, reason: "selected", workstreamId: "w1", eventSummary: "Launch" }),
+      decodeAssociationJudgment({
+        ...versions,
+        material: true,
+        reason: "selected",
+        workstreamId: "w1",
+        eventSummary: "Launch",
+      }),
     );
     assert.strictEqual(ok.material, true);
     assert.strictEqual(
-      decodeAssociationJudgment({ ...versions, material: true, reason: "selected" }).pipe(Effect.runSyncExit, failureMessage),
+      decodeAssociationJudgment({ ...versions, material: true, reason: "selected" }).pipe(
+        Effect.runSyncExit,
+        failureMessage,
+      ),
       "material association requires workstream_id",
     );
-    assert.strictEqual(Effect.runSyncExit(decodeAssociationJudgment({ ...versions, material: "yes", reason: "selected" }))._tag, "Failure");
+    assert.strictEqual(
+      Effect.runSyncExit(decodeAssociationJudgment({ ...versions, material: "yes", reason: "selected" }))._tag,
+      "Failure",
+    );
   });
 
   it("decodes AssociationOutcome with defaults, present values, and null Option fields", () => {
@@ -302,11 +374,23 @@ describe("WorkstreamAssociation", () => {
     });
     assert.deepStrictEqual(decoded.failedWorkstreamIds, ["w3"]);
     assert.strictEqual(
-      decodeFails(WorkstreamIndexRebuildReport, { uid: "u1", indexVersion: "workstream-association-v1", sourceCount: 0, indexedCount: 0, failedWorkstreamIds: [] }),
+      decodeFails(WorkstreamIndexRebuildReport, {
+        uid: "u1",
+        indexVersion: "workstream-association-v1",
+        sourceCount: 0,
+        indexedCount: 0,
+        failedWorkstreamIds: [],
+      }),
       true,
     );
     assert.strictEqual(
-      decodeFails(WorkstreamIndexRebuildReport, { uid: "u1", indexVersion: "workstream-association-v2", sourceCount: -1, indexedCount: 0, failedWorkstreamIds: [] }),
+      decodeFails(WorkstreamIndexRebuildReport, {
+        uid: "u1",
+        indexVersion: "workstream-association-v2",
+        sourceCount: -1,
+        indexedCount: 0,
+        failedWorkstreamIds: [],
+      }),
       true,
     );
   });
@@ -319,7 +403,12 @@ describe("WorkstreamAssociation", () => {
       idempotencyKey: "key-1",
     });
     assert.strictEqual(O.getOrNull(present.candidateId), "cand-1");
-    const nulls = decode(RecurrenceConsumptionOutcome, { outcome: "would_create", signalId: "sig-1", candidateId: null, idempotencyKey: null });
+    const nulls = decode(RecurrenceConsumptionOutcome, {
+      outcome: "would_create",
+      signalId: "sig-1",
+      candidateId: null,
+      idempotencyKey: null,
+    });
     assert.strictEqual(O.isNone(nulls.candidateId), true);
     const missing = decode(RecurrenceConsumptionOutcome, { outcome: "workflow_disabled", signalId: "sig-1" });
     assert.strictEqual(O.isNone(missing.idempotencyKey), true);
@@ -352,7 +441,10 @@ describe("WorkstreamAssociation", () => {
     assert.strictEqual(decodeFails(RecurrenceInboxReceipt, { ...receiptInput, attempts: -1 }), true);
     assert.strictEqual(decodeFails(RecurrenceInboxReceipt, { ...receiptInput, accountGeneration: -1 }), true);
     assert.strictEqual(decodeFails(RecurrenceInboxReceipt, { ...receiptInput, status: "failed" }), true);
-    assert.strictEqual(decodeFails(RecurrenceInboxReceipt, { ...receiptInput, signal: { ...signal, evidenceRefs: [] } }), true);
+    assert.strictEqual(
+      decodeFails(RecurrenceInboxReceipt, { ...receiptInput, signal: { ...signal, evidenceRefs: [] } }),
+      true,
+    );
   });
 
   it("derives arbitraries for every model", () => {
