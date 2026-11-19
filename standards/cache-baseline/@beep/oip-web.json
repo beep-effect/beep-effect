@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/oip-web",
   "review": {
-    "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p4-oip-web)",
-    "reason": "Re-record @beep/oip-web on main's baseline after merging origin/main at 6d366333e22 (#3325): the Alchemy stack adds stack sources, stack tests, the Alchemy dev dependencies and the @beep/alchemy-vercel edge; no command, output or environment changes, no qualification granted.",
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
+    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-oip-web-alchemy-stack.md",
-      "sha256": "ced8760c628a97c755807815852b0732b18a23782a8eb97e1dcb815f72b0af23"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/oip-web#build",
       "command": "bun run beep:build",
-      "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
+      "commandDigest": "250e191f0eecb14a7ac9719a69d98e5e2200c159dd36b12aef148067a8f6f3ec",
       "dependencies": [
         "@beep/alchemy-vercel#build",
         "@beep/hubspot#build",
@@ -89,8 +89,8 @@
     },
     {
       "computation": "@beep/oip-web#check",
-      "command": "bun run beep:check",
-      "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "250e191f0eecb14a7ac9719a69d98e5e2200c159dd36b12aef148067a8f6f3ec",
       "dependencies": [
         "@beep/alchemy-vercel#build",
         "@beep/hubspot#build",
@@ -140,7 +140,7 @@
     {
       "computation": "@beep/oip-web#coverage",
       "command": "bunx vitest run --coverage",
-      "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
+      "commandDigest": "250e191f0eecb14a7ac9719a69d98e5e2200c159dd36b12aef148067a8f6f3ec",
       "dependencies": [
         "@beep/alchemy-vercel#build",
         "@beep/hubspot#build",
@@ -200,7 +200,7 @@
     {
       "computation": "@beep/oip-web#dev",
       "command": "NEXT_DISABLE_PWA=1 portless oip-web.beep next dev --turbopack",
-      "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
+      "commandDigest": "250e191f0eecb14a7ac9719a69d98e5e2200c159dd36b12aef148067a8f6f3ec",
       "dependencies": [
         "@beep/alchemy-vercel#build",
         "@beep/hubspot#build",
@@ -240,7 +240,7 @@
     {
       "computation": "@beep/oip-web#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
+      "commandDigest": "250e191f0eecb14a7ac9719a69d98e5e2200c159dd36b12aef148067a8f6f3ec",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -274,7 +274,7 @@
     {
       "computation": "@beep/oip-web#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
+      "commandDigest": "250e191f0eecb14a7ac9719a69d98e5e2200c159dd36b12aef148067a8f6f3ec",
       "dependencies": [
         "@beep/alchemy-vercel#transit",
         "@beep/hubspot#transit",
@@ -349,7 +349,7 @@
     {
       "computation": "@beep/oip-web#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
+      "commandDigest": "250e191f0eecb14a7ac9719a69d98e5e2200c159dd36b12aef148067a8f6f3ec",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -379,7 +379,7 @@
     {
       "computation": "@beep/oip-web#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
+      "commandDigest": "250e191f0eecb14a7ac9719a69d98e5e2200c159dd36b12aef148067a8f6f3ec",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -435,7 +435,7 @@
     {
       "computation": "@beep/oip-web#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
+      "commandDigest": "250e191f0eecb14a7ac9719a69d98e5e2200c159dd36b12aef148067a8f6f3ec",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -481,7 +481,7 @@
     {
       "computation": "@beep/oip-web#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
+      "commandDigest": "250e191f0eecb14a7ac9719a69d98e5e2200c159dd36b12aef148067a8f6f3ec",
       "dependencies": [
         "@beep/alchemy-vercel#transit",
         "@beep/hubspot#transit",
@@ -534,7 +534,7 @@
     {
       "computation": "@beep/oip-web#test",
       "command": "bun run beep:test",
-      "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
+      "commandDigest": "250e191f0eecb14a7ac9719a69d98e5e2200c159dd36b12aef148067a8f6f3ec",
       "dependencies": [
         "@beep/alchemy-vercel#transit",
         "@beep/hubspot#transit",
@@ -595,7 +595,7 @@
     {
       "computation": "@beep/oip-web#test:property",
       "command": "bun run beep:test",
-      "commandDigest": "f44476c6ee8a852683bcf044dbace0bd1dec30e9ac3e7a74dade06024c71d38c",
+      "commandDigest": "250e191f0eecb14a7ac9719a69d98e5e2200c159dd36b12aef148067a8f6f3ec",
       "dependencies": [
         "@beep/alchemy-vercel#transit",
         "@beep/hubspot#transit",

@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "build": "bun run beep:build",
-    "check": "bun run beep:check",
+    "check": "beep-cli quality check-probe && bun run beep:check",
     "codegen": "bun run ./scripts/GenerateEffectLawsAllowlistSnapshot.ts",
     "coverage": "bunx vitest run --coverage",
     "docgen": "bun run beep:docgen",

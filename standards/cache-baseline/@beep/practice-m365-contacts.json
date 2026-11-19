@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/practice-m365-contacts",
   "review": {
-    "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-    "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
+    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-      "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/practice-m365-contacts#build",
       "command": "bun run beep:build",
-      "commandDigest": "be2319646152e0551117fbe38530e99da43310bf366597cdd17278d0342a6d66",
+      "commandDigest": "708265d238b6e23a9d08b3255383cd012855655129de7a54b3017b02ff31b7dc",
       "dependencies": [
         "@beep/identity#build",
         "@beep/law-practice-server#build",
@@ -58,8 +58,8 @@
     },
     {
       "computation": "@beep/practice-m365-contacts#check",
-      "command": "bun run beep:check",
-      "commandDigest": "be2319646152e0551117fbe38530e99da43310bf366597cdd17278d0342a6d66",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "708265d238b6e23a9d08b3255383cd012855655129de7a54b3017b02ff31b7dc",
       "dependencies": [
         "@beep/identity#build",
         "@beep/law-practice-server#build",
@@ -105,7 +105,7 @@
     {
       "computation": "@beep/practice-m365-contacts#coverage",
       "command": "bunx vitest run --coverage",
-      "commandDigest": "be2319646152e0551117fbe38530e99da43310bf366597cdd17278d0342a6d66",
+      "commandDigest": "708265d238b6e23a9d08b3255383cd012855655129de7a54b3017b02ff31b7dc",
       "dependencies": [
         "@beep/identity#build",
         "@beep/law-practice-server#build",
@@ -161,7 +161,7 @@
     {
       "computation": "@beep/practice-m365-contacts#dev",
       "command": "portless practice-m365-contacts.beep sh -c 'bun --watch src/main.ts'",
-      "commandDigest": "be2319646152e0551117fbe38530e99da43310bf366597cdd17278d0342a6d66",
+      "commandDigest": "708265d238b6e23a9d08b3255383cd012855655129de7a54b3017b02ff31b7dc",
       "dependencies": [
         "@beep/identity#build",
         "@beep/law-practice-server#build",
@@ -197,7 +197,7 @@
     {
       "computation": "@beep/practice-m365-contacts#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "be2319646152e0551117fbe38530e99da43310bf366597cdd17278d0342a6d66",
+      "commandDigest": "708265d238b6e23a9d08b3255383cd012855655129de7a54b3017b02ff31b7dc",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -231,7 +231,7 @@
     {
       "computation": "@beep/practice-m365-contacts#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "be2319646152e0551117fbe38530e99da43310bf366597cdd17278d0342a6d66",
+      "commandDigest": "708265d238b6e23a9d08b3255383cd012855655129de7a54b3017b02ff31b7dc",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/law-practice-server#transit",
@@ -302,7 +302,7 @@
     {
       "computation": "@beep/practice-m365-contacts#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "be2319646152e0551117fbe38530e99da43310bf366597cdd17278d0342a6d66",
+      "commandDigest": "708265d238b6e23a9d08b3255383cd012855655129de7a54b3017b02ff31b7dc",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -332,7 +332,7 @@
     {
       "computation": "@beep/practice-m365-contacts#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "be2319646152e0551117fbe38530e99da43310bf366597cdd17278d0342a6d66",
+      "commandDigest": "708265d238b6e23a9d08b3255383cd012855655129de7a54b3017b02ff31b7dc",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -388,7 +388,7 @@
     {
       "computation": "@beep/practice-m365-contacts#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "be2319646152e0551117fbe38530e99da43310bf366597cdd17278d0342a6d66",
+      "commandDigest": "708265d238b6e23a9d08b3255383cd012855655129de7a54b3017b02ff31b7dc",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -434,7 +434,7 @@
     {
       "computation": "@beep/practice-m365-contacts#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "be2319646152e0551117fbe38530e99da43310bf366597cdd17278d0342a6d66",
+      "commandDigest": "708265d238b6e23a9d08b3255383cd012855655129de7a54b3017b02ff31b7dc",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/law-practice-server#transit",
@@ -483,7 +483,7 @@
     {
       "computation": "@beep/practice-m365-contacts#test",
       "command": "bun run beep:test",
-      "commandDigest": "be2319646152e0551117fbe38530e99da43310bf366597cdd17278d0342a6d66",
+      "commandDigest": "708265d238b6e23a9d08b3255383cd012855655129de7a54b3017b02ff31b7dc",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/law-practice-server#transit",

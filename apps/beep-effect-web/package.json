@@ -12,22 +12,22 @@
     "directory": "apps/beep-effect-web"
   },
   "scripts": {
-    "beep:build": "vite build",
-    "beep:check": "tsrs -p tsconfig.check.json",
-    "beep:lint": "biome check .",
-    "beep:lint:fix": "biome check . --write",
-    "beep:test": "bunx --bun vitest run",
     "build": "bun run beep:build",
-    "check": "bun run beep:check",
+    "check": "beep-cli quality check-probe && bun run beep:check",
     "coverage": "bunx vitest run --coverage",
-    "dev": "portless beep-effect-web.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'",
     "lint": "bun run beep:lint",
     "lint:deprecated-apis": "beep-cli lint deprecated-apis --package .",
     "lint:fix": "bun run beep:lint:fix",
     "lint:jsdoc": "beep-cli lint jsdoc --package .",
     "lint:laws": "beep-cli lint laws --package .",
     "package-test-typecheck": "beep-cli quality test-tsgo-package",
-    "test": "bun run beep:test"
+    "test": "bun run beep:test",
+    "beep:build": "vite build",
+    "beep:check": "tsrs -p tsconfig.check.json",
+    "beep:lint": "biome check .",
+    "beep:lint:fix": "biome check . --write",
+    "beep:test": "bunx --bun vitest run",
+    "dev": "portless beep-effect-web.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'"
   },
   "dependencies": {
     "@beep/public-site": "workspace:^",

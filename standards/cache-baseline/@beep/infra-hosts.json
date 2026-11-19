@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/infra-hosts",
   "review": {
-    "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p4-hosts)",
-    "reason": "Record the new @beep/infra-hosts subject with its generated scripts, re-record @beep/infra after it gains one workspace dependency on @beep/infra-hosts, and the root subject for the new workspace member and its @alchemy.run/docker catalog pin; no command, output or environment changes, no qualification granted.",
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
+    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-hosts.md",
-      "sha256": "a9155c262f04ad7f2d780857dfd5757200de818ebf00b7a236cf4d0fc61f1217"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/infra-hosts#build",
       "command": "bun run beep:build",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#build",
         "@beep/memfs#build",
@@ -71,8 +71,8 @@
     },
     {
       "computation": "@beep/infra-hosts#check",
-      "command": "bun run beep:check",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#build",
         "@beep/infra-hosts#build",
@@ -120,7 +120,7 @@
     {
       "computation": "@beep/infra-hosts#coverage",
       "command": "bunx vitest run --coverage --exclude=test/integration/**",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#build",
         "@beep/memfs#build",
@@ -176,7 +176,7 @@
     {
       "computation": "@beep/infra-hosts#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/infra-hosts#transit",
         "@beep/repo-docgen#transit"
@@ -216,7 +216,7 @@
     {
       "computation": "@beep/infra-hosts#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -250,7 +250,7 @@
     {
       "computation": "@beep/infra-hosts#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/memfs#transit",
@@ -321,7 +321,7 @@
     {
       "computation": "@beep/infra-hosts#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -351,7 +351,7 @@
     {
       "computation": "@beep/infra-hosts#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -407,7 +407,7 @@
     {
       "computation": "@beep/infra-hosts#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -453,7 +453,7 @@
     {
       "computation": "@beep/infra-hosts#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/memfs#transit",
@@ -502,7 +502,7 @@
     {
       "computation": "@beep/infra-hosts#test",
       "command": "bun run beep:test",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/memfs#transit",
@@ -559,7 +559,7 @@
     {
       "computation": "@beep/infra-hosts#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "c92f28282e8aaa84d89d29d1afa6d608f4d40de292e8eaede717a1498d9884ca",
+      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
       "dependencies": [
         "@beep/identity#build",
         "@beep/memfs#build",
