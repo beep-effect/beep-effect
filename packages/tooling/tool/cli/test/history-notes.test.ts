@@ -1,4 +1,4 @@
-import { Git, GitCommandError, NoteEntry, UnknownRefError } from "@beep/git/Git";
+import { Git, GitCommandError, LsRemoteEntry, NoteEntry, UnknownRefError } from "@beep/git/Git";
 import {
   decodeHistoryCommitMessageMap,
   HistoryCommitMessage,
@@ -7,6 +7,7 @@ import {
   HistoryNotes,
   HistoryNotesCheckOptions,
   HistoryNotesLive,
+  HistoryNotesSyncReport,
   HistoryNotesWriteReport,
   historyNoteBody,
   historyNotesCheckProblems,
@@ -28,6 +29,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import type { GitStubs } from "@beep/git/Git";
+import type { HistoryConfigChange } from "@beep/repo-cli/commands/History";
 
 const sha = (digit: string): string => Str.repeat(40)(digit);
 const SHA_A = sha("a");
@@ -277,11 +279,11 @@ describe("renderHistoryNotesCheck", () => {
 });
 
 describe("HistoryNotes.sync", () => {
-  const runSync = (stubs: Partial<GitStubs>, fetch: boolean) =>
+  const runSync = (stubs: Partial<GitStubs>, fetch: boolean, offline?: boolean) =>
     Layer.build(historyLayer("{}", stubs)).pipe(
       Effect.flatMap((context) =>
         Effect.provideContext(
-          HistoryNotes.use((history) => history.sync({ root: "/repo", fetch })),
+          HistoryNotes.use((history) => history.sync({ root: "/repo", fetch, offline })),
           context
         )
       )
@@ -312,6 +314,86 @@ describe("HistoryNotes.sync", () => {
     })
   );
 
+  it.effect("offline sync touches only the display ref and never probes origin", () =>
+    Effect.gen(function* () {
+      const added: Array<string> = [];
+      const report = yield* runSync(
+        {
+          remoteUrl: () => Effect.succeedSome("git@example.com:repo.git"),
+          configGetAll: () => Effect.succeed([]),
+          configSet: (_cwd, key, value) => Effect.sync(() => added.push(`${key}=${value}`)),
+          lsRemote: () => Effect.die("offline sync must not probe origin"),
+          fetch: () => Effect.die("offline sync must not fetch"),
+        },
+        true,
+        true
+      );
+      assert.deepStrictEqual(
+        [report.origin, report.fetchRefspec, report.displayRef, report.fetch],
+        [true, "unchecked", "added", "skipped"]
+      );
+      assert.deepStrictEqual(added, ["notes.displayRef=refs/notes/history"]);
+    })
+  );
+
+  it("renders every refspec outcome for a clone with an origin remote", () => {
+    const line = (fetchRefspec: HistoryConfigChange) =>
+      renderHistoryNotesSync(
+        HistoryNotesSyncReport.make({ origin: true, fetchRefspec, displayRef: "present", fetch: "skipped" })
+      )[1];
+    assert.deepStrictEqual(A.map(["added", "present", "removed", "skipped", "unchecked"] as const, line), [
+      "  remote.origin.fetch +refs/notes/history:refs/notes/history: added",
+      "  remote.origin.fetch +refs/notes/history:refs/notes/history: present",
+      "  remote.origin.fetch +refs/notes/history:refs/notes/history: removed (origin does not publish the ref)",
+      "  remote.origin.fetch +refs/notes/history:refs/notes/history: skipped (origin does not publish the ref)",
+      "  remote.origin.fetch +refs/notes/history:refs/notes/history: unchecked (offline; run `beep history notes sync` to reconcile)",
+    ]);
+  });
+
+  it.effect("an unpublished ref removes a stale origin refspec and renders why", () =>
+    Effect.gen(function* () {
+      const removed: Array<string> = [];
+      const report = yield* runSync(
+        {
+          remoteUrl: () => Effect.succeedSome("git@example.com:fork.git"),
+          configGetAll: (_cwd, key) =>
+            Effect.succeed(
+              key === "notes.displayRef"
+                ? ["refs/notes/history"]
+                : ["+refs/heads/*:refs/remotes/origin/*", "+refs/notes/history:refs/notes/history"]
+            ),
+          lsRemote: () => Effect.succeed([]),
+          configUnset: (_cwd, key, options) => Effect.sync(() => removed.push(`${key}=${options?.value}`)),
+        },
+        true
+      );
+      assert.deepStrictEqual([report.fetchRefspec, report.fetch], ["removed", "unpublished"]);
+      assert.deepStrictEqual(removed, ["remote.origin.fetch=+refs/notes/history:refs/notes/history"]);
+      assert.strictEqual(
+        renderHistoryNotesSync(report)[1],
+        "  remote.origin.fetch +refs/notes/history:refs/notes/history: removed (origin does not publish the ref)"
+      );
+    })
+  );
+
+  it.effect("a failing origin probe fails as HistoryGitError", () =>
+    Effect.gen(function* () {
+      const failure = yield* Effect.flip(
+        runSync(
+          {
+            remoteUrl: () => Effect.succeedSome("git@example.com:repo.git"),
+            configGetAll: () => Effect.succeed(["refs/notes/history"]),
+            lsRemote: (cwd) =>
+              Effect.fail(GitCommandError.make({ kind: "failed", args: ["ls-remote"], cwd, stderr: "network down" })),
+          },
+          false
+        )
+      );
+      assertInstanceOf(failure, HistoryGitError);
+      assert.strictEqual(failure.operation, "ls-remote");
+    })
+  );
+
   it.effect("a failing fetch other than an unpublished ref fails as HistoryGitError", () =>
     Effect.gen(function* () {
       const failure = yield* Effect.flip(
@@ -322,6 +404,7 @@ describe("HistoryNotes.sync", () => {
               Effect.succeed(
                 key === "notes.displayRef" ? ["refs/notes/history"] : ["+refs/notes/history:refs/notes/history"]
               ),
+            lsRemote: () => Effect.succeed([LsRemoteEntry.make({ sha: SHA_A, ref: "refs/notes/history" })]),
             fetch: (cwd) =>
               Effect.fail(GitCommandError.make({ kind: "failed", args: ["fetch"], cwd, stderr: "network down" })),
           },

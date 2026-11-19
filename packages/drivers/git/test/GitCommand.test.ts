@@ -1067,7 +1067,7 @@ describe("GitCommand", () => {
       assert.isFalse(S.is(GitConfigScope)("merged"));
     });
 
-    it("configUnset picks --unset or --unset-all", () => {
+    it("configUnset picks --unset or --unset-all and pins a fixed value", () => {
       assertGitCommand(GitCommand.configUnset("a.b"), ["config", "--unset", "a.b"]);
       assertGitCommand(GitCommand.configUnset("a.b", ".gitmodules", true), [
         "config",
@@ -1076,6 +1076,11 @@ describe("GitCommand", () => {
         "--unset-all",
         "a.b",
       ]);
+      assertGitCommand(
+        GitCommand.configUnset("a.b", undefined, true, "+x:y"),
+        ["config", "--unset-all", "--fixed-value", "a.b", "+x:y"],
+        ["config", "--unset-all", "--fixed-value", "a.b", "<redacted>"]
+      );
     });
 
     it("configRemoveSection places --remove-section ahead of the section, after an optional -f", () => {

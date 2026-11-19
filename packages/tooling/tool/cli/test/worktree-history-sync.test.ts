@@ -24,7 +24,7 @@ const runHook = Effect.fnUntraced(function* (sync: HistoryNotes["Service"]["sync
 });
 
 describe("syncHistoryNotesConfig", () => {
-  it.effect("configures without fetching and logs the sync report", () =>
+  it.effect("configures offline and logs the sync report", () =>
     Effect.gen(function* () {
       const calls: Array<SyncOptions> = [];
       const lines = yield* runHook(
@@ -32,13 +32,13 @@ describe("syncHistoryNotesConfig", () => {
           calls.push(options);
           return HistoryNotesSyncReport.make({
             origin: true,
-            fetchRefspec: "added",
+            fetchRefspec: "unchecked",
             displayRef: "added",
             fetch: "skipped",
           });
         })
       );
-      assert.deepStrictEqual(calls, [{ root: "/lane", fetch: false }]);
+      assert.deepStrictEqual(calls, [{ root: "/lane", fetch: false, offline: true }]);
       assert.isAbove(lines.length, 0);
     })
   );

@@ -896,9 +896,10 @@ export const linkReferences = Effect.fn("Worktree.linkReferences")(
  *
  * **Details**
  *
- * Sets the `refs/notes/history` fetch refspec and display ref without
- * fetching. Linked worktrees share their clone's config, so this is
- * idempotent across lanes. It is never fatal: any failure becomes a warning
+ * Sets the `refs/notes/history` display ref offline: no `ls-remote` probe
+ * and no fetch, and the origin fetch refspec is left as configured
+ * (`beep history notes sync` reconciles it). Linked worktrees share their
+ * clone's config, so this is idempotent across lanes. It is never fatal: any failure becomes a warning
  * and worktree creation carries on.
  *
  * **Example** (Configure the overlay for a new lane)
@@ -914,7 +915,7 @@ export const linkReferences = Effect.fn("Worktree.linkReferences")(
  * @since 0.0.0
  */
 export const syncHistoryNotesConfig = Effect.fn("Worktree.syncHistoryNotesConfig")(function* (targetPath: string) {
-  yield* HistoryNotes.use((history) => history.sync({ root: targetPath, fetch: false })).pipe(
+  yield* HistoryNotes.use((history) => history.sync({ root: targetPath, fetch: false, offline: true })).pipe(
     Effect.flatMap((report) => Console.log(A.join(renderHistoryNotesSync(report), "\n"))),
     Effect.catchCause((cause) =>
       Console.warn(`history notes sync skipped (worktree creation continues): ${Cause.pretty(cause)}`)
