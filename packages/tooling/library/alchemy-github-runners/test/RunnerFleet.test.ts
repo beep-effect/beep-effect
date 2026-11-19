@@ -26,6 +26,13 @@ import type * as Core from "@alchemy.run/test/Core";
 import type { Input } from "alchemy/Input";
 import type { StackServices } from "alchemy/Stack";
 
+interface Statement {
+  readonly Action: ReadonlyArray<string>;
+  readonly Condition?: Record<string, Record<string, string>>;
+  readonly Effect: string;
+  readonly Resource: ReadonlyArray<string>;
+}
+
 /** One harness per test: its own recorder, world, in-memory state and stage. */
 const harness = (stage: string) => {
   const recorder = new Recorder();
@@ -235,6 +242,31 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
     expect(Str.includes("ghr:token_path")(String(template.news.userData))).toBe(true);
     const role = O.getOrThrow(recorder.byFqn("Runners/Poolheavy/RunnerRole"));
     expect(role.news.managedPolicyArns).toStrictEqual(["arn:aws:iam::123456789012:policy/beep-ci-runner-imds-disable"]);
+    // A runner decrypts only through Parameter Store, in its region, for a token of its own pool. The App
+    // parameters live under <root>/app, so no context this statement admits reaches them, on any key.
+    const runnerPolicy = (role.news.inlinePolicies as Record<string, { readonly Statement: ReadonlyArray<Statement> }>)
+      .runner;
+    const decrypts = A.filter(runnerPolicy?.Statement ?? [], (statement) =>
+      A.contains(statement.Action, "kms:Decrypt")
+    );
+    expect(decrypts).toStrictEqual([
+      {
+        Effect: "Allow",
+        Action: ["kms:Decrypt"],
+        Resource: ["arn:aws:kms:us-east-1:123456789012:key/*"],
+        Condition: {
+          StringEquals: { "kms:ViaService": "ssm.us-east-1.amazonaws.com" },
+          StringLike: {
+            "kms:EncryptionContext:PARAMETER_ARN":
+              "arn:aws:ssm:us-east-1:123456789012:parameter/beep-ci/heavy/tokens/*",
+          },
+        },
+      },
+    ]);
+    const kmsEverywhere = A.filter(runnerPolicy?.Statement ?? [], (statement) =>
+      A.some(statement.Action, Str.startsWith("kms:"))
+    );
+    expect(kmsEverywhere).toStrictEqual(decrypts);
     const secrets = A.map(recorder.ofType("SSM.Parameter"), (parameter) => [parameter.news.name, parameter.news.type]);
     expect(secrets).toStrictEqual([
       ["/beep-ci/app/github_app_id", "SecureString"],

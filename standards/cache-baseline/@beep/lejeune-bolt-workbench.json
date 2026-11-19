@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/lejeune-bolt-workbench",
   "review": {
-    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
-    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
+    "reason": "Record the gate wiring: the generated check of every non-infra package is now beep-cli gate run check, which re-keys the scripts digest of every task of the rewritten packages; the test and check tasks declare their gate directory as an output and depend on the transit task of the code that writes the record; the new @beep/repo-gate-vitest package's tasks are new subjects. No qualification is granted.",
     "basis": {
-      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
-      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+      "path": "docs/reports/gate-wiring-cache-review-2026-11-19.md",
+      "sha256": "68c0801ecc71b547f442eb2f11647553050570891eca83cf655bd143dc71fd7e"
     }
   },
   "nodes": [
     {
       "computation": "@beep/lejeune-bolt-workbench#build",
       "command": "bun run beep:build",
-      "commandDigest": "20cfb519b8e70d9830f55dfb22bab8b139e1dae9cce62865d8562b57891b5aa0",
+      "commandDigest": "84798f3119ada96941f06eccd80672b945c18fcd53ee41de6d666438a6ecf81d",
       "dependencies": [
         "@beep/anthropic#build",
         "@beep/doc-text#build",
@@ -81,8 +81,8 @@
     },
     {
       "computation": "@beep/lejeune-bolt-workbench#check",
-      "command": "beep-cli quality check-probe && bun run beep:check",
-      "commandDigest": "20cfb519b8e70d9830f55dfb22bab8b139e1dae9cce62865d8562b57891b5aa0",
+      "command": "beep-cli gate run check",
+      "commandDigest": "84798f3119ada96941f06eccd80672b945c18fcd53ee41de6d666438a6ecf81d",
       "dependencies": [
         "@beep/anthropic#build",
         "@beep/doc-text#build",
@@ -124,7 +124,9 @@
         ],
         "env": [],
         "passThroughEnv": [],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/check/**"
+        ],
         "dependsOn": [
           "^build"
         ],
@@ -137,7 +139,7 @@
     {
       "computation": "@beep/lejeune-bolt-workbench#coverage",
       "command": "bun run beep:coverage",
-      "commandDigest": "20cfb519b8e70d9830f55dfb22bab8b139e1dae9cce62865d8562b57891b5aa0",
+      "commandDigest": "84798f3119ada96941f06eccd80672b945c18fcd53ee41de6d666438a6ecf81d",
       "dependencies": [
         "@beep/anthropic#build",
         "@beep/doc-text#build",
@@ -202,7 +204,7 @@
     {
       "computation": "@beep/lejeune-bolt-workbench#dev",
       "command": "portless lejeune-bolt-workbench.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-5173}\" --strictPort'",
-      "commandDigest": "20cfb519b8e70d9830f55dfb22bab8b139e1dae9cce62865d8562b57891b5aa0",
+      "commandDigest": "84798f3119ada96941f06eccd80672b945c18fcd53ee41de6d666438a6ecf81d",
       "dependencies": [
         "@beep/anthropic#build",
         "@beep/doc-text#build",
@@ -247,7 +249,7 @@
     {
       "computation": "@beep/lejeune-bolt-workbench#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "20cfb519b8e70d9830f55dfb22bab8b139e1dae9cce62865d8562b57891b5aa0",
+      "commandDigest": "84798f3119ada96941f06eccd80672b945c18fcd53ee41de6d666438a6ecf81d",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -281,7 +283,7 @@
     {
       "computation": "@beep/lejeune-bolt-workbench#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "20cfb519b8e70d9830f55dfb22bab8b139e1dae9cce62865d8562b57891b5aa0",
+      "commandDigest": "84798f3119ada96941f06eccd80672b945c18fcd53ee41de6d666438a6ecf81d",
       "dependencies": [
         "@beep/anthropic#transit",
         "@beep/doc-text#transit",
@@ -361,7 +363,7 @@
     {
       "computation": "@beep/lejeune-bolt-workbench#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "20cfb519b8e70d9830f55dfb22bab8b139e1dae9cce62865d8562b57891b5aa0",
+      "commandDigest": "84798f3119ada96941f06eccd80672b945c18fcd53ee41de6d666438a6ecf81d",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -391,7 +393,7 @@
     {
       "computation": "@beep/lejeune-bolt-workbench#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "20cfb519b8e70d9830f55dfb22bab8b139e1dae9cce62865d8562b57891b5aa0",
+      "commandDigest": "84798f3119ada96941f06eccd80672b945c18fcd53ee41de6d666438a6ecf81d",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -437,7 +439,7 @@
     {
       "computation": "@beep/lejeune-bolt-workbench#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "20cfb519b8e70d9830f55dfb22bab8b139e1dae9cce62865d8562b57891b5aa0",
+      "commandDigest": "84798f3119ada96941f06eccd80672b945c18fcd53ee41de6d666438a6ecf81d",
       "dependencies": [
         "@beep/anthropic#transit",
         "@beep/doc-text#transit",
@@ -495,7 +497,7 @@
     {
       "computation": "@beep/lejeune-bolt-workbench#test",
       "command": "bun run beep:test",
-      "commandDigest": "20cfb519b8e70d9830f55dfb22bab8b139e1dae9cce62865d8562b57891b5aa0",
+      "commandDigest": "84798f3119ada96941f06eccd80672b945c18fcd53ee41de6d666438a6ecf81d",
       "dependencies": [
         "@beep/anthropic#transit",
         "@beep/doc-text#transit",
@@ -508,6 +510,7 @@
         "@beep/pglite#transit",
         "@beep/provenance#transit",
         "@beep/rdf#transit",
+        "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
         "@beep/semantic-web#transit",
         "@beep/test-runner#transit",
@@ -547,8 +550,11 @@
           "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
           "GITHUB_STEP_SUMMARY"
         ],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/test/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-vitest#transit",
           "@beep/utils#transit",
           "^transit"
         ],

@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/identity",
   "review": {
-    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
-    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
+    "reason": "Record the gate wiring: the generated check of every non-infra package is now beep-cli gate run check, which re-keys the scripts digest of every task of the rewritten packages; the test and check tasks declare their gate directory as an output and depend on the transit task of the code that writes the record; the new @beep/repo-gate-vitest package's tasks are new subjects. No qualification is granted.",
     "basis": {
-      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
-      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+      "path": "docs/reports/gate-wiring-cache-review-2026-11-19.md",
+      "sha256": "68c0801ecc71b547f442eb2f11647553050570891eca83cf655bd143dc71fd7e"
     }
   },
   "nodes": [
     {
       "computation": "@beep/identity#build",
       "command": "bun run beep:build",
-      "commandDigest": "141607c7f3005c5b1f43227beac162e8de254cd31dd9956647dc45154c83d131",
+      "commandDigest": "f9ef8e18ed6aa35deaddcfcbc5ccd07fd6110cab76b7176c381f12511f39ee14",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/test-runner#build",
@@ -67,11 +67,12 @@
     },
     {
       "computation": "@beep/identity#check",
-      "command": "beep-cli quality check-probe && bun run beep:check",
-      "commandDigest": "141607c7f3005c5b1f43227beac162e8de254cd31dd9956647dc45154c83d131",
+      "command": "beep-cli gate run check",
+      "commandDigest": "f9ef8e18ed6aa35deaddcfcbc5ccd07fd6110cab76b7176c381f12511f39ee14",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/identity#build",
+        "@beep/repo-gate-record#transit",
         "@beep/test-runner#build",
         "@beep/types#build"
       ],
@@ -98,8 +99,11 @@
         ],
         "env": [],
         "passThroughEnv": [],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/check/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-record#transit",
           "^build",
           "build"
         ],
@@ -112,7 +116,7 @@
     {
       "computation": "@beep/identity#codegen",
       "command": "beep-cli codegen barrel",
-      "commandDigest": "141607c7f3005c5b1f43227beac162e8de254cd31dd9956647dc45154c83d131",
+      "commandDigest": "f9ef8e18ed6aa35deaddcfcbc5ccd07fd6110cab76b7176c381f12511f39ee14",
       "dependencies": [
         "@beep/fc-runs#codegen",
         "@beep/test-runner#codegen",
@@ -146,7 +150,7 @@
     {
       "computation": "@beep/identity#coverage",
       "command": "bunx vitest run --coverage",
-      "commandDigest": "141607c7f3005c5b1f43227beac162e8de254cd31dd9956647dc45154c83d131",
+      "commandDigest": "f9ef8e18ed6aa35deaddcfcbc5ccd07fd6110cab76b7176c381f12511f39ee14",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/test-runner#build",
@@ -198,7 +202,7 @@
     {
       "computation": "@beep/identity#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "141607c7f3005c5b1f43227beac162e8de254cd31dd9956647dc45154c83d131",
+      "commandDigest": "f9ef8e18ed6aa35deaddcfcbc5ccd07fd6110cab76b7176c381f12511f39ee14",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/repo-docgen#transit"
@@ -238,7 +242,7 @@
     {
       "computation": "@beep/identity#doctest",
       "command": "bun run beep:doctest",
-      "commandDigest": "141607c7f3005c5b1f43227beac162e8de254cd31dd9956647dc45154c83d131",
+      "commandDigest": "f9ef8e18ed6aa35deaddcfcbc5ccd07fd6110cab76b7176c381f12511f39ee14",
       "dependencies": [
         "@beep/fc-runs#transit",
         "@beep/test-runner#transit",
@@ -289,7 +293,7 @@
     {
       "computation": "@beep/identity#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "141607c7f3005c5b1f43227beac162e8de254cd31dd9956647dc45154c83d131",
+      "commandDigest": "f9ef8e18ed6aa35deaddcfcbc5ccd07fd6110cab76b7176c381f12511f39ee14",
       "dependencies": [
         "@beep/fc-runs#lint",
         "@beep/test-runner#lint",
@@ -348,7 +352,7 @@
     {
       "computation": "@beep/identity#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "141607c7f3005c5b1f43227beac162e8de254cd31dd9956647dc45154c83d131",
+      "commandDigest": "f9ef8e18ed6aa35deaddcfcbc5ccd07fd6110cab76b7176c381f12511f39ee14",
       "dependencies": [
         "@beep/fc-runs#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
@@ -415,7 +419,7 @@
     {
       "computation": "@beep/identity#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "141607c7f3005c5b1f43227beac162e8de254cd31dd9956647dc45154c83d131",
+      "commandDigest": "f9ef8e18ed6aa35deaddcfcbc5ccd07fd6110cab76b7176c381f12511f39ee14",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -445,7 +449,7 @@
     {
       "computation": "@beep/identity#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "141607c7f3005c5b1f43227beac162e8de254cd31dd9956647dc45154c83d131",
+      "commandDigest": "f9ef8e18ed6aa35deaddcfcbc5ccd07fd6110cab76b7176c381f12511f39ee14",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -501,7 +505,7 @@
     {
       "computation": "@beep/identity#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "141607c7f3005c5b1f43227beac162e8de254cd31dd9956647dc45154c83d131",
+      "commandDigest": "f9ef8e18ed6aa35deaddcfcbc5ccd07fd6110cab76b7176c381f12511f39ee14",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -547,7 +551,7 @@
     {
       "computation": "@beep/identity#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "141607c7f3005c5b1f43227beac162e8de254cd31dd9956647dc45154c83d131",
+      "commandDigest": "f9ef8e18ed6aa35deaddcfcbc5ccd07fd6110cab76b7176c381f12511f39ee14",
       "dependencies": [
         "@beep/fc-runs#transit",
         "@beep/test-runner#transit",
@@ -592,9 +596,10 @@
     {
       "computation": "@beep/identity#test",
       "command": "bun run beep:test",
-      "commandDigest": "141607c7f3005c5b1f43227beac162e8de254cd31dd9956647dc45154c83d131",
+      "commandDigest": "f9ef8e18ed6aa35deaddcfcbc5ccd07fd6110cab76b7176c381f12511f39ee14",
       "dependencies": [
         "@beep/fc-runs#transit",
+        "@beep/repo-gate-vitest#transit",
         "@beep/test-runner#transit",
         "@beep/types#transit",
         "@beep/utils#transit"
@@ -631,8 +636,11 @@
           "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
           "GITHUB_STEP_SUMMARY"
         ],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/test/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-vitest#transit",
           "@beep/utils#transit",
           "^transit"
         ],
@@ -645,7 +653,7 @@
     {
       "computation": "@beep/identity#test:property",
       "command": "bun run beep:test",
-      "commandDigest": "141607c7f3005c5b1f43227beac162e8de254cd31dd9956647dc45154c83d131",
+      "commandDigest": "f9ef8e18ed6aa35deaddcfcbc5ccd07fd6110cab76b7176c381f12511f39ee14",
       "dependencies": [
         "@beep/fc-runs#transit",
         "@beep/test-runner#transit",

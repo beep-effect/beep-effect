@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/semver",
   "review": {
-    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
-    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
+    "reason": "Record the gate wiring: the generated check of every non-infra package is now beep-cli gate run check, which re-keys the scripts digest of every task of the rewritten packages; the test and check tasks declare their gate directory as an output and depend on the transit task of the code that writes the record; the new @beep/repo-gate-vitest package's tasks are new subjects. No qualification is granted.",
     "basis": {
-      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
-      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+      "path": "docs/reports/gate-wiring-cache-review-2026-11-19.md",
+      "sha256": "68c0801ecc71b547f442eb2f11647553050570891eca83cf655bd143dc71fd7e"
     }
   },
   "nodes": [
     {
       "computation": "@beep/semver#build",
       "command": "bun run beep:build",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/identity#build",
@@ -67,11 +67,12 @@
     },
     {
       "computation": "@beep/semver#check",
-      "command": "beep-cli quality check-probe && bun run beep:check",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "command": "beep-cli gate run check",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/identity#build",
+        "@beep/repo-gate-record#transit",
         "@beep/schema#build",
         "@beep/semver#build"
       ],
@@ -98,8 +99,11 @@
         ],
         "env": [],
         "passThroughEnv": [],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/check/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-record#transit",
           "^build",
           "build"
         ],
@@ -112,7 +116,7 @@
     {
       "computation": "@beep/semver#coverage",
       "command": "bunx vitest run --coverage --exclude=test/integration/**",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/identity#build",
@@ -164,7 +168,7 @@
     {
       "computation": "@beep/semver#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/repo-docgen#transit",
         "@beep/semver#transit"
@@ -204,7 +208,7 @@
     {
       "computation": "@beep/semver#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -238,7 +242,7 @@
     {
       "computation": "@beep/semver#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/fc-runs#transit",
         "@beep/identity#transit",
@@ -305,7 +309,7 @@
     {
       "computation": "@beep/semver#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -335,7 +339,7 @@
     {
       "computation": "@beep/semver#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -391,7 +395,7 @@
     {
       "computation": "@beep/semver#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -437,7 +441,7 @@
     {
       "computation": "@beep/semver#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/fc-runs#transit",
         "@beep/identity#transit",
@@ -482,10 +486,11 @@
     {
       "computation": "@beep/semver#test",
       "command": "bun run beep:test",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/fc-runs#transit",
         "@beep/identity#transit",
+        "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
         "@beep/utils#transit"
       ],
@@ -521,8 +526,11 @@
           "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
           "GITHUB_STEP_SUMMARY"
         ],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/test/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-vitest#transit",
           "@beep/utils#transit",
           "^transit"
         ],
@@ -535,7 +543,7 @@
     {
       "computation": "@beep/semver#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "8d8d4ef49ce2ea4d40413fea59e1f2abb741f096756490747492a7e8778630c3",
+      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
         "@beep/fc-runs#build",
         "@beep/identity#build",

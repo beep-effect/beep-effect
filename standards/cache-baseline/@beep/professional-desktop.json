@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/professional-desktop",
   "review": {
-    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
-    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
+    "reason": "Record the gate wiring: the generated check of every non-infra package is now beep-cli gate run check, which re-keys the scripts digest of every task of the rewritten packages; the test and check tasks declare their gate directory as an output and depend on the transit task of the code that writes the record; the new @beep/repo-gate-vitest package's tasks are new subjects. No qualification is granted.",
     "basis": {
-      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
-      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+      "path": "docs/reports/gate-wiring-cache-review-2026-11-19.md",
+      "sha256": "68c0801ecc71b547f442eb2f11647553050570891eca83cf655bd143dc71fd7e"
     }
   },
   "nodes": [
     {
       "computation": "@beep/professional-desktop#build",
       "command": "bun run beep:build",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [
         "@beep/agents-client#build",
         "@beep/agents-domain#build",
@@ -121,8 +121,8 @@
     },
     {
       "computation": "@beep/professional-desktop#check",
-      "command": "beep-cli quality check-probe && bun run beep:check",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "command": "beep-cli gate run check",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [
         "@beep/agents-client#build",
         "@beep/agents-domain#build",
@@ -203,7 +203,9 @@
         ],
         "env": [],
         "passThroughEnv": [],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/check/**"
+        ],
         "dependsOn": [
           "^build"
         ],
@@ -216,7 +218,7 @@
     {
       "computation": "@beep/professional-desktop#codegen",
       "command": "bun run scripts/sync-migration-bundle.ts --write",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [
         "@beep/agents-client#codegen",
         "@beep/agents-domain#codegen",
@@ -300,7 +302,7 @@
     {
       "computation": "@beep/professional-desktop#coverage",
       "command": "bunx vitest run --config vitest.coverage.config.ts --coverage",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [
         "@beep/agents-client#build",
         "@beep/agents-domain#build",
@@ -402,7 +404,7 @@
     {
       "computation": "@beep/professional-desktop#dev",
       "command": "portless professional-desktop.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1421}\" --strictPort'",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [
         "@beep/agents-client#build",
         "@beep/agents-domain#build",
@@ -484,7 +486,7 @@
     {
       "computation": "@beep/professional-desktop#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [
         "@beep/professional-desktop#transit",
         "@beep/repo-docgen#transit"
@@ -524,7 +526,7 @@
     {
       "computation": "@beep/professional-desktop#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -558,7 +560,7 @@
     {
       "computation": "@beep/professional-desktop#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [
         "@beep/agents-client#transit",
         "@beep/agents-domain#transit",
@@ -675,7 +677,7 @@
     {
       "computation": "@beep/professional-desktop#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -705,7 +707,7 @@
     {
       "computation": "@beep/professional-desktop#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -761,7 +763,7 @@
     {
       "computation": "@beep/professional-desktop#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -807,7 +809,7 @@
     {
       "computation": "@beep/professional-desktop#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [
         "@beep/agents-client#transit",
         "@beep/agents-domain#transit",
@@ -902,7 +904,7 @@
     {
       "computation": "@beep/professional-desktop#test",
       "command": "bun run beep:test",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [
         "@beep/agents-client#transit",
         "@beep/agents-domain#transit",
@@ -947,6 +949,7 @@
         "@beep/postgres#transit",
         "@beep/provenance#transit",
         "@beep/rdf#transit",
+        "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
         "@beep/shared-domain#transit",
         "@beep/test-runner#transit",
@@ -991,8 +994,11 @@
           "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
           "GITHUB_STEP_SUMMARY"
         ],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/test/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-vitest#transit",
           "@beep/utils#transit",
           "^transit"
         ],
@@ -1005,7 +1011,7 @@
     {
       "computation": "@beep/professional-desktop#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [
         "@beep/agents-client#build",
         "@beep/agents-domain#build",
@@ -1097,7 +1103,7 @@
     {
       "computation": "@beep/professional-desktop#test:integration:parallel",
       "command": "bun run beep:test:integration",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [
         "@beep/agents-client#build",
         "@beep/agents-domain#build",
@@ -1189,7 +1195,7 @@
     {
       "computation": "@beep/professional-desktop#test:property",
       "command": "bun run beep:test",
-      "commandDigest": "59396860148402d1a2b8436a264c7c6791fa472fe3369d794ad0709af04f61bf",
+      "commandDigest": "deb8db6376ec7b0068c4ce795828d121e590a8f0f2cd428e56010666fb169659",
       "dependencies": [
         "@beep/agents-client#transit",
         "@beep/agents-domain#transit",

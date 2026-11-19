@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/practice-identify",
   "review": {
-    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
-    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
+    "reason": "Record the gate wiring: the generated check of every non-infra package is now beep-cli gate run check, which re-keys the scripts digest of every task of the rewritten packages; the test and check tasks declare their gate directory as an output and depend on the transit task of the code that writes the record; the new @beep/repo-gate-vitest package's tasks are new subjects. No qualification is granted.",
     "basis": {
-      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
-      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+      "path": "docs/reports/gate-wiring-cache-review-2026-11-19.md",
+      "sha256": "68c0801ecc71b547f442eb2f11647553050570891eca83cf655bd143dc71fd7e"
     }
   },
   "nodes": [
     {
       "computation": "@beep/practice-identify#build",
       "command": "bun run beep:build",
-      "commandDigest": "3d81867081fac246c2f85a07d13de81e82882e35a5f8c5cb49176582c5af28f9",
+      "commandDigest": "4fc1f0ed9032a89b5828dbda0f1942afbcbf30a56820e538b6bb6833347fa150",
       "dependencies": [
         "@beep/identity#build",
         "@beep/law-practice-server#build",
@@ -57,8 +57,8 @@
     },
     {
       "computation": "@beep/practice-identify#check",
-      "command": "beep-cli quality check-probe && bun run beep:check",
-      "commandDigest": "3d81867081fac246c2f85a07d13de81e82882e35a5f8c5cb49176582c5af28f9",
+      "command": "beep-cli gate run check",
+      "commandDigest": "4fc1f0ed9032a89b5828dbda0f1942afbcbf30a56820e538b6bb6833347fa150",
       "dependencies": [
         "@beep/identity#build",
         "@beep/law-practice-server#build",
@@ -90,7 +90,9 @@
         ],
         "env": [],
         "passThroughEnv": [],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/check/**"
+        ],
         "dependsOn": [
           "^build"
         ],
@@ -103,7 +105,7 @@
     {
       "computation": "@beep/practice-identify#coverage",
       "command": "bunx vitest run --coverage",
-      "commandDigest": "3d81867081fac246c2f85a07d13de81e82882e35a5f8c5cb49176582c5af28f9",
+      "commandDigest": "4fc1f0ed9032a89b5828dbda0f1942afbcbf30a56820e538b6bb6833347fa150",
       "dependencies": [
         "@beep/identity#build",
         "@beep/law-practice-server#build",
@@ -158,7 +160,7 @@
     {
       "computation": "@beep/practice-identify#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "3d81867081fac246c2f85a07d13de81e82882e35a5f8c5cb49176582c5af28f9",
+      "commandDigest": "4fc1f0ed9032a89b5828dbda0f1942afbcbf30a56820e538b6bb6833347fa150",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -192,7 +194,7 @@
     {
       "computation": "@beep/practice-identify#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "3d81867081fac246c2f85a07d13de81e82882e35a5f8c5cb49176582c5af28f9",
+      "commandDigest": "4fc1f0ed9032a89b5828dbda0f1942afbcbf30a56820e538b6bb6833347fa150",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/law-practice-server#transit",
@@ -262,7 +264,7 @@
     {
       "computation": "@beep/practice-identify#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "3d81867081fac246c2f85a07d13de81e82882e35a5f8c5cb49176582c5af28f9",
+      "commandDigest": "4fc1f0ed9032a89b5828dbda0f1942afbcbf30a56820e538b6bb6833347fa150",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -292,7 +294,7 @@
     {
       "computation": "@beep/practice-identify#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "3d81867081fac246c2f85a07d13de81e82882e35a5f8c5cb49176582c5af28f9",
+      "commandDigest": "4fc1f0ed9032a89b5828dbda0f1942afbcbf30a56820e538b6bb6833347fa150",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -348,7 +350,7 @@
     {
       "computation": "@beep/practice-identify#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "3d81867081fac246c2f85a07d13de81e82882e35a5f8c5cb49176582c5af28f9",
+      "commandDigest": "4fc1f0ed9032a89b5828dbda0f1942afbcbf30a56820e538b6bb6833347fa150",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -394,7 +396,7 @@
     {
       "computation": "@beep/practice-identify#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "3d81867081fac246c2f85a07d13de81e82882e35a5f8c5cb49176582c5af28f9",
+      "commandDigest": "4fc1f0ed9032a89b5828dbda0f1942afbcbf30a56820e538b6bb6833347fa150",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/law-practice-server#transit",
@@ -442,12 +444,13 @@
     {
       "computation": "@beep/practice-identify#test",
       "command": "bun run beep:test",
-      "commandDigest": "3d81867081fac246c2f85a07d13de81e82882e35a5f8c5cb49176582c5af28f9",
+      "commandDigest": "4fc1f0ed9032a89b5828dbda0f1942afbcbf30a56820e538b6bb6833347fa150",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/law-practice-server#transit",
         "@beep/law-practice-use-cases#transit",
         "@beep/memfs#transit",
+        "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
         "@beep/uspto#transit",
         "@beep/utils#transit"
@@ -484,8 +487,11 @@
           "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
           "GITHUB_STEP_SUMMARY"
         ],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/test/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-vitest#transit",
           "@beep/utils#transit",
           "^transit"
         ],

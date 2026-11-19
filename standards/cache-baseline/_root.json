@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core P2 lane, feat/gate-report-services)",
-    "reason": "Record the two new libraries' tasks (generated library scripts, root task definitions, no override), the repo CLI tasks whose configuration changed with its new dependency on the gate-run library, and the inputs the policy fingerprint added to the root. No qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
+    "reason": "Record the gate wiring: the generated check of every non-infra package is now beep-cli gate run check, which re-keys the scripts digest of every task of the rewritten packages; the test and check tasks declare their gate directory as an output and depend on the transit task of the code that writes the record; the new @beep/repo-gate-vitest package's tasks are new subjects. No qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-run-libraries-cache-review-2026-11-19.md",
-      "sha256": "bbbc45f4f8d6f8888e8781843104af37ac3229ad9b70a731aa7634bd3ff26c80"
+      "path": "docs/reports/gate-wiring-cache-review-2026-11-19.md",
+      "sha256": "68c0801ecc71b547f442eb2f11647553050570891eca83cf655bd143dc71fd7e"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "d2661d46fd5e91ccc215095fe4b8677c11837a503bbba70855a0ad714e4bcc5c"
+      "sha256": "b44a9ac5d0d14bb9e2d010d34506eb7e65d753a03135e69a65d80fde7fd69f3d"
     }
   ],
   "nodes": [
@@ -2187,6 +2187,7 @@
           "packages/foundation/modeling/epistemics/package.json",
           "packages/foundation/modeling/epistemics/src/**",
           "packages/foundation/modeling/gate-report/package.json",
+          "packages/foundation/modeling/gate-report/src/**",
           "packages/foundation/modeling/github-commands/package.json",
           "packages/foundation/modeling/github-commands/src/**",
           "packages/foundation/modeling/github-references/package.json",
@@ -2282,6 +2283,7 @@
           "packages/tooling/library/repo-cli-kit/package.json",
           "packages/tooling/library/repo-cli-kit/src/**",
           "packages/tooling/library/repo-gate-record/package.json",
+          "packages/tooling/library/repo-gate-record/src/**",
           "packages/tooling/library/repo-gate-run/package.json",
           "packages/tooling/library/repo-gate-run/src/**",
           "packages/tooling/library/repo-tsconfig/package.json",
@@ -2296,6 +2298,7 @@
           "packages/tooling/test-kit/fc-runs/package.json",
           "packages/tooling/test-kit/fc-runs/src/**",
           "packages/tooling/test-kit/memfs/package.json",
+          "packages/tooling/test-kit/repo-gate-vitest/package.json",
           "packages/tooling/test-kit/test-runner/package.json",
           "packages/tooling/test-kit/test-utils/package.json",
           "packages/tooling/test-kit/test-utils/src/**",

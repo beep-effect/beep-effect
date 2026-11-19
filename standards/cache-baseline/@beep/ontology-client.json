@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/ontology-client",
   "review": {
-    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
-    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
+    "reason": "Record the gate wiring: the generated check of every non-infra package is now beep-cli gate run check, which re-keys the scripts digest of every task of the rewritten packages; the test and check tasks declare their gate directory as an output and depend on the transit task of the code that writes the record; the new @beep/repo-gate-vitest package's tasks are new subjects. No qualification is granted.",
     "basis": {
-      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
-      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+      "path": "docs/reports/gate-wiring-cache-review-2026-11-19.md",
+      "sha256": "68c0801ecc71b547f442eb2f11647553050570891eca83cf655bd143dc71fd7e"
     }
   },
   "nodes": [
     {
       "computation": "@beep/ontology-client#build",
       "command": "bun run beep:build",
-      "commandDigest": "b38cd5e216134ed483344f0296ba86ba871bb868b130a444537400660d00d532",
+      "commandDigest": "75173b613f1cc693eba6c618b4c82cb4613a295b4e1e8f4740e23e896da4e6e1",
       "dependencies": [
         "@beep/agents-client#build",
         "@beep/cosmos#build",
@@ -76,8 +76,8 @@
     },
     {
       "computation": "@beep/ontology-client#check",
-      "command": "beep-cli quality check-probe && bun run beep:check",
-      "commandDigest": "b38cd5e216134ed483344f0296ba86ba871bb868b130a444537400660d00d532",
+      "command": "beep-cli gate run check",
+      "commandDigest": "75173b613f1cc693eba6c618b4c82cb4613a295b4e1e8f4740e23e896da4e6e1",
       "dependencies": [
         "@beep/agents-client#build",
         "@beep/cosmos#build",
@@ -87,6 +87,7 @@
         "@beep/ontology-domain#build",
         "@beep/ontology-use-cases#build",
         "@beep/rdf#build",
+        "@beep/repo-gate-record#transit",
         "@beep/schema#build",
         "@beep/semantic-web#build",
         "@beep/test-runner#build",
@@ -116,8 +117,11 @@
         ],
         "env": [],
         "passThroughEnv": [],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/check/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-record#transit",
           "^build",
           "build"
         ],
@@ -130,7 +134,7 @@
     {
       "computation": "@beep/ontology-client#coverage",
       "command": "bunx vitest run --coverage --exclude=test/integration/**",
-      "commandDigest": "b38cd5e216134ed483344f0296ba86ba871bb868b130a444537400660d00d532",
+      "commandDigest": "75173b613f1cc693eba6c618b4c82cb4613a295b4e1e8f4740e23e896da4e6e1",
       "dependencies": [
         "@beep/agents-client#build",
         "@beep/cosmos#build",
@@ -191,7 +195,7 @@
     {
       "computation": "@beep/ontology-client#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "b38cd5e216134ed483344f0296ba86ba871bb868b130a444537400660d00d532",
+      "commandDigest": "75173b613f1cc693eba6c618b4c82cb4613a295b4e1e8f4740e23e896da4e6e1",
       "dependencies": [
         "@beep/ontology-client#transit",
         "@beep/repo-docgen#transit"
@@ -231,7 +235,7 @@
     {
       "computation": "@beep/ontology-client#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "b38cd5e216134ed483344f0296ba86ba871bb868b130a444537400660d00d532",
+      "commandDigest": "75173b613f1cc693eba6c618b4c82cb4613a295b4e1e8f4740e23e896da4e6e1",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -265,7 +269,7 @@
     {
       "computation": "@beep/ontology-client#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "b38cd5e216134ed483344f0296ba86ba871bb868b130a444537400660d00d532",
+      "commandDigest": "75173b613f1cc693eba6c618b4c82cb4613a295b4e1e8f4740e23e896da4e6e1",
       "dependencies": [
         "@beep/agents-client#transit",
         "@beep/cosmos#transit",
@@ -341,7 +345,7 @@
     {
       "computation": "@beep/ontology-client#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "b38cd5e216134ed483344f0296ba86ba871bb868b130a444537400660d00d532",
+      "commandDigest": "75173b613f1cc693eba6c618b4c82cb4613a295b4e1e8f4740e23e896da4e6e1",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -371,7 +375,7 @@
     {
       "computation": "@beep/ontology-client#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "b38cd5e216134ed483344f0296ba86ba871bb868b130a444537400660d00d532",
+      "commandDigest": "75173b613f1cc693eba6c618b4c82cb4613a295b4e1e8f4740e23e896da4e6e1",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -427,7 +431,7 @@
     {
       "computation": "@beep/ontology-client#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "b38cd5e216134ed483344f0296ba86ba871bb868b130a444537400660d00d532",
+      "commandDigest": "75173b613f1cc693eba6c618b4c82cb4613a295b4e1e8f4740e23e896da4e6e1",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -473,7 +477,7 @@
     {
       "computation": "@beep/ontology-client#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "b38cd5e216134ed483344f0296ba86ba871bb868b130a444537400660d00d532",
+      "commandDigest": "75173b613f1cc693eba6c618b4c82cb4613a295b4e1e8f4740e23e896da4e6e1",
       "dependencies": [
         "@beep/agents-client#transit",
         "@beep/cosmos#transit",
@@ -527,7 +531,7 @@
     {
       "computation": "@beep/ontology-client#test",
       "command": "bun run beep:test",
-      "commandDigest": "b38cd5e216134ed483344f0296ba86ba871bb868b130a444537400660d00d532",
+      "commandDigest": "75173b613f1cc693eba6c618b4c82cb4613a295b4e1e8f4740e23e896da4e6e1",
       "dependencies": [
         "@beep/agents-client#transit",
         "@beep/cosmos#transit",
@@ -536,6 +540,7 @@
         "@beep/ontology-domain#transit",
         "@beep/ontology-use-cases#transit",
         "@beep/rdf#transit",
+        "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
         "@beep/semantic-web#transit",
         "@beep/test-runner#transit",
@@ -575,8 +580,11 @@
           "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
           "GITHUB_STEP_SUMMARY"
         ],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/test/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-vitest#transit",
           "@beep/utils#transit",
           "^transit"
         ],
@@ -589,7 +597,7 @@
     {
       "computation": "@beep/ontology-client#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "b38cd5e216134ed483344f0296ba86ba871bb868b130a444537400660d00d532",
+      "commandDigest": "75173b613f1cc693eba6c618b4c82cb4613a295b4e1e8f4740e23e896da4e6e1",
       "dependencies": [
         "@beep/agents-client#build",
         "@beep/cosmos#build",

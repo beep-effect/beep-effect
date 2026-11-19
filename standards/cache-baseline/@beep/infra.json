@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/infra",
   "review": {
-    "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p4-hosts)",
-    "reason": "Record the new @beep/infra-hosts subject with its generated scripts, re-record @beep/infra after it gains one workspace dependency on @beep/infra-hosts, and the root subject for the new workspace member and its @alchemy.run/docker catalog pin; no command, output or environment changes, no qualification granted.",
+    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
+    "reason": "Record the gate wiring: the generated check of every non-infra package is now beep-cli gate run check, which re-keys the scripts digest of every task of the rewritten packages; the test and check tasks declare their gate directory as an output and depend on the transit task of the code that writes the record; the new @beep/repo-gate-vitest package's tasks are new subjects. No qualification is granted.",
     "basis": {
-      "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-hosts.md",
-      "sha256": "a9155c262f04ad7f2d780857dfd5757200de818ebf00b7a236cf4d0fc61f1217"
+      "path": "docs/reports/gate-wiring-cache-review-2026-11-19.md",
+      "sha256": "68c0801ecc71b547f442eb2f11647553050570891eca83cf655bd143dc71fd7e"
     }
   },
   "nodes": [
@@ -95,7 +95,9 @@
         ],
         "env": [],
         "passThroughEnv": [],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/check/**"
+        ],
         "dependsOn": [
           "^build"
         ],
@@ -499,6 +501,7 @@
         "@beep/infra-hosts#transit",
         "@beep/openclaw#transit",
         "@beep/repo-ai-metrics#transit",
+        "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
@@ -537,8 +540,11 @@
           "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
           "GITHUB_STEP_SUMMARY"
         ],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/test/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-vitest#transit",
           "@beep/utils#transit",
           "^transit"
         ],

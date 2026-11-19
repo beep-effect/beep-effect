@@ -244,7 +244,12 @@ export class CiBinaryPinSyncRequest extends S.Opaque<CiBinaryPinSyncRequest, { r
   }).pipe($I.annoteSchema("CiBinaryPinSyncRequest", { description: "The inputs of one pin-bump branch sync." }))
 ) {}
 
-const gitFailure = (request: CiBinaryPinSyncRequest) => CiCommandError.new(`git failed in ${request.cwd}.`);
+// A git (or file system) failure keeps what went wrong: GitCommandError's message names the redacted argv
+// (a URL's userinfo never survives it), the exit code and git's stderr, and the sync sends no URL at all.
+const gitFailure =
+  (request: CiBinaryPinSyncRequest) =>
+  (cause: { readonly message: string }): CiCommandError =>
+    CiCommandError.make({ cause, message: `git failed in ${request.cwd}: ${cause.message}` });
 
 // The checkout's pin file, or none when the branch deleted it.
 const readPinFile = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
