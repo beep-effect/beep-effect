@@ -155,6 +155,9 @@ describe("GateConsole", () => {
     ).text;
     const lines = linesOf(text);
     assert.isAtMost(text.length + 1, minimum.maxChars);
+    assert.isTrue(A.some(lines, Str.startsWith("record and raw log unavailable: ")));
+    assert.isTrue(A.some(lines, Str.startsWith("history not read: ")));
+    assert.include(lines, "... 3 more in the record");
     assert.strictEqual(lines[0], A.lastNonEmpty(lines));
   });
 

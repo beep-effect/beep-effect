@@ -12,4 +12,5 @@ Gate run services: the recorder, the agent and terminal console projections, aud
 - Import only the `process/OutputBound` leaf of `@beep/repo-cli-kit` (no platform layer), never its root, and no test kit at runtime.
 - Command trees stay in the repo CLI; this package holds the services they call.
 - Persistence and history never stop or change the console: any failure or missed deadline there becomes an `Omission` line, the path line names only confirmed files, and `runGate` returns the tool's exit code and never fails.
+- Omission lines are never dropped to fit the budget: they are reserved before the body, which shrinks or goes instead.
 - Before handing back a change, run `bun run beep quality package-verify @beep/repo-gate-run` from the repository root. Use `--quick` only for a justified lint+check subset; a failure arms the checkout's shared P0 inbox.
