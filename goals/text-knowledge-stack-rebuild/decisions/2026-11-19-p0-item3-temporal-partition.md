@@ -1,0 +1,8 @@
+---
+title: "P0 item 3: the interval laws partition by (scope, logicalKey); knowledge intervals are disjoint by construction; a pure checker mirrors the database constraint"
+date: 2026-11-19
+lane: "goals/text-knowledge-stack-rebuild-p0-design"
+reversal: "Drop the pure checker and state L4-1 over the Postgres constraint in the epistemic server integration tests only, by a decision file before P4 opens."
+---
+
+Facts (design-facts section 3): ValidInterval and KnowledgeInterval are half-open with local order checks in the schema; overlap is refused only by a Postgres exclusion constraint on valid time per logical_key among unexpired rows; nothing checks knowledge time. Decision: the partition key is the pair (scope, logicalKey), where scope is the slice-supplied id schema of the claim core builder. All bounds are half-open, inclusive start and exclusive end, and Instant is S.DateTimeUtcFromMillis (item 9), matching the millisecond int8range in storage. The core stores knowledgeStart only; the end of a record's knowledge interval is the knowledgeStart of its successor in the same partition, so knowledge intervals are disjoint by construction and the law to test is that the derivation is total and ordered: successors sort by knowledgeStart and then by ClaimId, and a successor never starts earlier than its predecessor or than its own generation time. Valid-time disjointness among current records of one partition is a second clause. Local bound checks stay in the schema checks; both partition-level clauses live in a pure function over a log in @beep/epistemics, which is what L4-1 property-tests; the Postgres constraint remains the enforcement in the epistemic server and its existing integration test is unchanged.
