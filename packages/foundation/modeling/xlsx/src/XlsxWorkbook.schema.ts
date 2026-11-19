@@ -3,6 +3,7 @@
  * hidden rows and columns, and the names of the parts it saw and does not model.
  *
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $XlsxId } from "@beep/identity/packages";
@@ -26,16 +27,34 @@ const $I = $XlsxId.create("XlsxWorkbook");
 /**
  * Whether a sheet is shown, hidden, or hidden so that only a macro can show it.
  *
+ * **Example** (Hide a sheet from Excel's tabs)
+ *
+ * ```ts
+ * import { XlsxSheetInfo, XlsxSheetState, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * const workbook = XlsxWorkbook.make({
+ *   sheets: [
+ *     XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "Report" }) }),
+ *     XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "Lookup", state: "veryHidden" }) })
+ *   ]
+ * })
+ * XlsxWorkbook.visible(workbook).map((sheet) => sheet.info.name) // => ["Report"]
+ * S.is(XlsxSheetState)("collapsed") // => false
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxSheetState = LiteralKit(["visible", "hidden", "veryHidden"]).pipe(
   $I.annoteSchema("XlsxSheetState", { description: "Whether a sheet is shown, hidden, or hidden from the menus too" })
 );
 
 /**
- * Runtime type of {@link XlsxSheetState}.
+ * `"visible"`, `"hidden"` or `"veryHidden"`; the type {@link XlsxSheetState} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxSheetState = typeof XlsxSheetState.Type;
 
@@ -52,7 +71,27 @@ const uniqueBy = <T>(key: (value: T) => unknown, expected: string) =>
  * One row of a sheet: its number, whether it is hidden, and the cells that hold something, no column twice. The
  * reader hands the cells in rising column order.
  *
+ * **Example** (Find a cell in a row)
+ *
+ * ```ts
+ * import { XlsxCell, XlsxRow, XlsxText } from "@beep/xlsx"
+ * import * as O from "effect/Option"
+ *
+ * const row = XlsxRow.make({
+ *   number: 2,
+ *   cells: [
+ *     XlsxCell.make({ column: 0, value: XlsxText.make({ text: "A-1" }) }),
+ *     XlsxCell.make({ column: 2, value: XlsxText.make({ text: "" }) })
+ *   ]
+ * })
+ * O.isSome(XlsxRow.cellAt(row, 0)) // => true
+ * O.isNone(XlsxRow.cellAt(row, 1)) // => true
+ * XlsxRow.isBlank(row) // => false
+ * row.hidden // => false
+ * ```
+ *
  * @category models
+ * @since 0.0.0
  */
 export class XlsxRow extends S.Opaque<XlsxRow, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -84,7 +123,18 @@ export class XlsxRow extends S.Opaque<XlsxRow, { readonly brand: unique symbol }
  * a file's sheet is still read, so the schema asks only for a name XML can carry. `fitsExcel` says whether Excel
  * would take it.
  *
+ * **Example** (Names a file may carry)
+ *
+ * ```ts
+ * import { XlsxSheetName } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxSheetName)("Q1/Q2 sales") // => true
+ * S.is(XlsxSheetName)("") // => false
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxSheetName = S.String.check(
   S.isMinLength(1),
@@ -97,14 +147,26 @@ const forbiddenInName = /[:\\/?*[\]]/;
 /**
  * Whether Excel itself would accept a sheet name: at most 31 characters and none of `: \ / ? * [ ]`.
  *
- * @category utilities
+ * **Example** (Names Excel takes)
+ *
+ * ```ts
+ * import { fitsExcel } from "@beep/xlsx"
+ *
+ * fitsExcel("Q1 sales") // => true
+ * fitsExcel("Q1/Q2 sales") // => false
+ * fitsExcel("A name that runs past thirty-one characters") // => false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const fitsExcel = (name: XlsxSheetName): boolean => name.length <= 31 && !forbiddenInName.test(name);
 
 /**
- * Runtime type of {@link XlsxSheetName}.
+ * A sheet's name as a file may carry it, not always one Excel would take; the type {@link XlsxSheetName} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxSheetName = typeof XlsxSheetName.Type;
 
@@ -112,7 +174,19 @@ export type XlsxSheetName = typeof XlsxSheetName.Type;
  * What the workbook part alone says of a sheet. `declared` is the extent the file claims for it, kept as a claim and
  * never used to decide where the data ends.
  *
+ * **Example** (A sheet's starting info)
+ *
+ * ```ts
+ * import { XlsxSheetInfo } from "@beep/xlsx"
+ * import * as O from "effect/Option"
+ *
+ * const info = XlsxSheetInfo.make({ name: "Items" })
+ * info.state // => "visible"
+ * O.isNone(info.declared) // => true
+ * ```
+ *
  * @category models
+ * @since 0.0.0
  */
 export class XlsxSheetInfo extends S.Opaque<XlsxSheetInfo, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -137,7 +211,27 @@ const count = (maximum: number, description: string) =>
  * What one pass over a sheet learns without keeping it: how many rows it writes, how many of them and how many
  * cells hold something, and its last such row.
  *
+ * **Example** (Count a sheet built by hand)
+ *
+ * ```ts
+ * import { XlsxCell, XlsxNumber, XlsxRow, XlsxSheetInfo, XlsxText, XlsxWorksheet } from "@beep/xlsx"
+ * import * as O from "effect/Option"
+ *
+ * const count = XlsxWorksheet.count({
+ *   info: XlsxSheetInfo.make({ name: "Items" }),
+ *   rows: [
+ *     XlsxRow.make({ number: 1, cells: [XlsxCell.make({ column: 0, value: XlsxText.make({ text: "qty" }) })] }),
+ *     XlsxRow.make({ number: 2, cells: [XlsxCell.make({ column: 0, value: XlsxText.make({ text: "" }) })] }),
+ *     XlsxRow.make({ number: 3, cells: [XlsxCell.make({ column: 0, value: XlsxNumber.make({ value: 4 }) })] })
+ *   ]
+ * })
+ * count.rows // => 3
+ * count.rowsWithValues // => 2
+ * count.lastRow // => O.some(3)
+ * ```
+ *
  * @category models
+ * @since 0.0.0
  */
 export class XlsxSheetCount extends S.Opaque<XlsxSheetCount, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -154,7 +248,26 @@ export class XlsxSheetCount extends S.Opaque<XlsxSheetCount, { readonly brand: u
 /**
  * The first id a workbook's own number formats take; lower ids are Excel's.
  *
+ * **Example** (A custom code gets the first free id)
+ *
+ * ```ts
+ * import { FIRST_CUSTOM_FORMAT, XlsxCell, XlsxNumber, XlsxNumberFormat, XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
+ *
+ * const cell = XlsxCell.make({
+ *   column: 0,
+ *   value: XlsxNumber.make({ value: 7 }),
+ *   format: XlsxNumberFormat.make({ id: 900, code: "000" })
+ * })
+ * const workbook = XlsxWorkbook.canonical({
+ *   dateSystem: "1900",
+ *   sheets: [XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "Items" }), rows: [XlsxRow.make({ number: 1, cells: [cell] })] })]
+ * })
+ * workbook.sheets[0].rows[0]?.cells[0]?.format.id // => FIRST_CUSTOM_FORMAT
+ * FIRST_CUSTOM_FORMAT // => 164
+ * ```
+ *
  * @category constants
+ * @since 0.0.0
  */
 export const FIRST_CUSTOM_FORMAT = 164;
 
@@ -169,7 +282,25 @@ const byColumn = Order.mapInput(Order.Number, (cell: { readonly column: number }
 /**
  * One sheet with its rows. No row number is used twice; the reader hands rows in rising order.
  *
+ * **Example** (Where a sheet's data lies)
+ *
+ * ```ts
+ * import { XlsxCell, XlsxNumber, XlsxRange, XlsxRow, XlsxSheetInfo, XlsxWorksheet } from "@beep/xlsx"
+ * import * as O from "effect/Option"
+ *
+ * const sheet = XlsxWorksheet.make({
+ *   info: XlsxSheetInfo.make({ name: "Items" }),
+ *   rows: [
+ *     XlsxRow.make({ number: 2, cells: [XlsxCell.make({ column: 1, value: XlsxNumber.make({ value: 1 }) })] }),
+ *     XlsxRow.make({ number: 5, cells: [XlsxCell.make({ column: 3, value: XlsxNumber.make({ value: 2 }) })] })
+ *   ]
+ * })
+ * O.map(XlsxWorksheet.extent(sheet), XlsxRange.format) // => O.some("B2:D5")
+ * sheet.merges.length // => 0
+ * ```
+ *
  * @category models
+ * @since 0.0.0
  */
 export class XlsxWorksheet extends S.Opaque<XlsxWorksheet, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -266,7 +397,18 @@ export class XlsxWorksheet extends S.Opaque<XlsxWorksheet, { readonly brand: uni
 /**
  * What kind of part a workbook held that this package does not model.
  *
+ * **Example** (Known kinds of part)
+ *
+ * ```ts
+ * import { XlsxDroppedKind } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxDroppedKind)("pivot") // => true
+ * S.is(XlsxDroppedKind)("sheet") // => false
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxDroppedKind = LiteralKit([
   "theme",
@@ -283,16 +425,27 @@ export const XlsxDroppedKind = LiteralKit([
 ]).pipe($I.annoteSchema("XlsxDroppedKind", { description: "What kind of part was read past" }));
 
 /**
- * Runtime type of {@link XlsxDroppedKind}.
+ * The kind of a part read past, such as `"chart"`; the type {@link XlsxDroppedKind} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxDroppedKind = typeof XlsxDroppedKind.Type;
 
 /**
  * A part the workbook held that this package does not model, and so does not write back.
  *
+ * **Example** (A chart read past)
+ *
+ * ```ts
+ * import { XlsxDroppedPart } from "@beep/xlsx"
+ *
+ * const part = XlsxDroppedPart.make({ path: "xl/charts/chart1.xml", kind: "chart" })
+ * part.kind // => "chart"
+ * ```
+ *
  * @category models
+ * @since 0.0.0
  */
 export class XlsxDroppedPart extends S.Opaque<XlsxDroppedPart, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -304,7 +457,32 @@ export class XlsxDroppedPart extends S.Opaque<XlsxDroppedPart, { readonly brand:
 /**
  * A workbook: the decoded side of every codec of this package. Sheet names are unique without regard to case.
  *
+ * **Example** (Build a workbook and look up a sheet)
+ *
+ * ```ts
+ * import { XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
+ * import * as O from "effect/Option"
+ *
+ * const workbook = XlsxWorkbook.make({
+ *   sheets: [XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "Items" }) })]
+ * })
+ * workbook.dateSystem // => "1900"
+ * O.map(XlsxWorkbook.sheet(workbook, "ITEMS"), (sheet) => sheet.info.name) // => O.some("Items")
+ * O.isNone(XlsxWorkbook.sheet(workbook, "Notes")) // => true
+ * ```
+ *
+ * **Example** (Sheet names clash whatever the case)
+ *
+ * ```ts
+ * import { XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
+ * import * as O from "effect/Option"
+ *
+ * const sheet = (name: string) => XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name }) })
+ * O.isNone(XlsxWorkbook.makeOption({ sheets: [sheet("Items"), sheet("items")] })) // => true
+ * ```
+ *
  * @category models
+ * @since 0.0.0
  */
 export class XlsxWorkbook extends S.Opaque<XlsxWorkbook, { readonly brand: unique symbol }>()(
   S.Struct({

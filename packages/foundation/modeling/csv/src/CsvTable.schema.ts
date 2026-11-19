@@ -128,8 +128,8 @@ export type CsvRecord = typeof CsvRecord.Type;
  *
  * **Gotchas**
  *
- * A quoted empty cell (`""` on its own line) reads as the same record, so this cannot tell the two apart; the read
- * options decide which of them are kept.
+ * A quoted empty cell (`""` on its own line) reads as the same record, so this cannot tell the two apart. Blank-line
+ * skipping is decided by the reader, which still sees the quotes, not by this predicate.
  *
  * **Example** (Tell a blank line from a record)
  *
@@ -149,17 +149,25 @@ export const isBlankRecord = (record: CsvRecord): boolean => record.length === 1
 /**
  * The records of a CSV file in file order: the canonical decoded side of every codec.
  *
- * **Example** (A table and its width)
+ * **Details**
  *
- * ```ts
- * import { CsvTable } from "@beep/csv/CsvTable"
+ * `CsvTable.width` is the first record's cell count (`O.none()` for an empty table), and `CsvTable.ragged` lists the
+ * 0-based indexes of the records whose width differs from it.
+ *
+ * **Example** (Measure a table and find its ragged records)
+ *
+ * ```ts import.meta.vitest name="Measure a table and find its ragged records"
+ * import { CsvTable } from "@beep/csv/CsvTable.schema"
  * import * as O from "effect/Option"
  *
- * const table = CsvTable.make({ records: [["SKU", "Name"], ["BRK-040", "Bracket"]] })
- * O.getOrElse(CsvTable.width(table), () => 0) // => 2
+ * const table = CsvTable.make({ records: [["SKU", "Name"], ["BRK-040", "Bracket"], ["BLT-010"]] })
+ * CsvTable.width(table) // => O.some(2)
+ * CsvTable.ragged(table) // => [2]
+ * CsvTable.width(CsvTable.make({ records: [] })) // => O.none()
  * ```
  *
  * @category models
+ * @since 0.0.0
  */
 export class CsvTable extends S.Opaque<CsvTable, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -184,7 +192,24 @@ export class CsvTable extends S.Opaque<CsvTable, { readonly brand: unique symbol
 /**
  * One row of the header view: the first record's headings as keys, this record's cells as values.
  *
- * @category models
+ * **Details**
+ *
+ * The schema only states the shape, a record of strings to strings; that the keys are the headings, unique and
+ * non-empty, is the header view's job when it builds the row.
+ *
+ * **Example** (Decode a header row)
+ *
+ * ```ts import.meta.vitest name="Decode a header row"
+ * import { CsvHeaderRow } from "@beep/csv/CsvTable.schema"
+ * import * as S from "effect/Schema"
+ *
+ * const row = S.decodeUnknownSync(CsvHeaderRow)({ SKU: "BRK-040", Name: "Bracket" })
+ * row.Name // => "Bracket"
+ * S.is(CsvHeaderRow)({ SKU: 40 }) // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
  */
 export const CsvHeaderRow = S.Record(S.String, S.String).pipe(
   $I.annoteSchema("CsvHeaderRow", {
@@ -193,16 +218,35 @@ export const CsvHeaderRow = S.Record(S.String, S.String).pipe(
 );
 
 /**
- * Runtime type of {@link CsvHeaderRow}.
+ * A decoded {@link CsvHeaderRow}: cell text keyed by heading.
  *
  * @category models
+ * @since 0.0.0
  */
 export type CsvHeaderRow = typeof CsvHeaderRow.Type;
 
 /**
- * One record in a stream, with where it was and how it ended.
+ * One record in a stream, with where it was and how it ended, so a consumer can report a position without holding
+ * the whole table.
+ *
+ * **Example** (Describe a streamed record)
+ *
+ * ```ts import.meta.vitest name="Describe a streamed record"
+ * import { CsvTextSpan } from "@beep/csv/CsvPosition.schema"
+ * import { CsvRecordSlice } from "@beep/csv/CsvTable.schema"
+ *
+ * const text = "SKU,Name\r\nBRK-040,Bracket\r\n"
+ * const slice = CsvRecordSlice.make({
+ *   cells: ["BRK-040", "Bracket"],
+ *   record: 1,
+ *   span: CsvTextSpan.locate(text, 10, 15),
+ *   end: "CRLF",
+ * })
+ * CsvTextSpan.render(slice.span) // => "2:1"
+ * ```
  *
  * @category models
+ * @since 0.0.0
  */
 export class CsvRecordSlice extends S.Opaque<CsvRecordSlice, { readonly brand: unique symbol }>()(
   S.Struct({

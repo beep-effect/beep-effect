@@ -2,7 +2,9 @@
  * An Excel workbook as an Effect Schema codec.
  *
  * @packageDocumentation
+ * @since 0.0.0
  */
+export * from "./Xlsx.codec.ts";
 export * from "./XlsxAddress.schema.ts";
 export * from "./XlsxCell.schema.ts";
 export * from "./XlsxDiagnostic.schema.ts";

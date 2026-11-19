@@ -3,6 +3,7 @@
  * range such as `A1:C3`. Every position is bounded by what a worksheet can hold, so a generated one is real.
  *
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $XlsxId } from "@beep/identity/packages";
@@ -15,46 +16,92 @@ const $I = $XlsxId.create("XlsxAddress");
 /**
  * The last column a worksheet has, 0-based: `XFD`.
  *
+ * **Example** (The last column's letters)
+ *
+ * ```ts
+ * import { columnLetters, MAX_COLUMN } from "@beep/xlsx"
+ *
+ * MAX_COLUMN // => 16383
+ * columnLetters(MAX_COLUMN) // => "XFD"
+ * ```
+ *
  * @category constants
+ * @since 0.0.0
  */
 export const MAX_COLUMN = 16_383;
 
 /**
  * The last row a worksheet has.
  *
+ * **Example** (A row past the last one)
+ *
+ * ```ts
+ * import { MAX_ROW, XlsxRowNumber } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxRowNumber)(MAX_ROW) // => true
+ * S.is(XlsxRowNumber)(MAX_ROW + 1) // => false
+ * ```
+ *
  * @category constants
+ * @since 0.0.0
  */
 export const MAX_ROW = 1_048_576;
 
 /**
  * A 0-based column of a worksheet, `A` being 0 and `XFD` 16,383.
  *
+ * **Example** (Check a column)
+ *
+ * ```ts
+ * import { XlsxColumn } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxColumn)(0) // => true
+ * S.is(XlsxColumn)(16_384) // => false
+ * S.is(XlsxColumn)(1.5) // => false
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxColumn = S.Int.check(S.isBetween({ minimum: 0, maximum: MAX_COLUMN })).pipe(
   $I.annoteSchema("XlsxColumn", { description: "A 0-based worksheet column, A being 0 and XFD 16,383" })
 );
 
 /**
- * Runtime type of {@link XlsxColumn}.
+ * A column of a worksheet as a number, 0 for `A`; the type {@link XlsxColumn} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxColumn = typeof XlsxColumn.Type;
 
 /**
  * A row of a worksheet as Excel numbers it, from 1.
  *
+ * **Example** (Rows start at 1)
+ *
+ * ```ts
+ * import { XlsxRowNumber } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxRowNumber)(1) // => true
+ * S.is(XlsxRowNumber)(0) // => false
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxRowNumber = S.Int.check(S.isBetween({ minimum: 1, maximum: MAX_ROW })).pipe(
   $I.annoteSchema("XlsxRowNumber", { description: "A worksheet row as Excel numbers it, from 1 to 1,048,576" })
 );
 
 /**
- * Runtime type of {@link XlsxRowNumber}.
+ * A row of a worksheet as Excel numbers it, from 1; the type {@link XlsxRowNumber} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxRowNumber = typeof XlsxRowNumber.Type;
 
@@ -64,13 +111,16 @@ export type XlsxRowNumber = typeof XlsxRowNumber.Type;
  * **Example** (Letters of a column)
  *
  * ```ts
- * import { columnLetters } from "@beep/xlsx/XlsxAddress"
+ * import { columnLetters } from "@beep/xlsx"
  *
  * columnLetters(0) // => "A"
+ * columnLetters(25) // => "Z"
  * columnLetters(27) // => "AB"
  * ```
  *
- * @category utilities
+ * @see {@link columnFromLetters} for the reverse direction.
+ * @category formatting
+ * @since 0.0.0
  */
 export const columnLetters = (column: XlsxColumn): string => {
   let n = column + 1;
@@ -89,13 +139,17 @@ export const columnLetters = (column: XlsxColumn): string => {
  * **Example** (Column of letters)
  *
  * ```ts
- * import { columnFromLetters } from "@beep/xlsx/XlsxAddress"
+ * import { columnFromLetters } from "@beep/xlsx"
+ * import * as O from "effect/Option"
  *
- * columnFromLetters("AB") // => Option.some(27)
- * columnFromLetters("XFE") // => Option.none()
+ * columnFromLetters("AB") // => O.some(27)
+ * columnFromLetters("ab") // => O.some(27)
+ * columnFromLetters("XFE") // => O.none()
  * ```
  *
- * @category utilities
+ * @see {@link columnLetters} for the reverse direction.
+ * @category parsing
+ * @since 0.0.0
  */
 export const columnFromLetters = (letters: string): O.Option<XlsxColumn> => {
   if (letters.length === 0 || letters.length > 3) return O.none();
@@ -118,13 +172,17 @@ const rangePattern = /^([^:]+)(?::([^:]+))?$/;
  * **Example** (Parse and format)
  *
  * ```ts
- * import { XlsxAddress } from "@beep/xlsx/XlsxAddress"
+ * import { XlsxAddress } from "@beep/xlsx"
  * import * as O from "effect/Option"
  *
- * O.map(XlsxAddress.parse("$B$7"), XlsxAddress.format) // => Option.some("B7")
+ * const address = XlsxAddress.make({ column: 1, row: 7 })
+ * XlsxAddress.format(address) // => "B7"
+ * O.map(XlsxAddress.parse("$B$7"), XlsxAddress.format) // => O.some("B7")
+ * O.isNone(XlsxAddress.parse("B0")) // => true
  * ```
  *
  * @category models
+ * @since 0.0.0
  */
 export class XlsxAddress extends S.Opaque<XlsxAddress, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -153,14 +211,18 @@ export class XlsxAddress extends S.Opaque<XlsxAddress, { readonly brand: unique 
  * **Example** (Parse a range)
  *
  * ```ts
- * import { XlsxRange } from "@beep/xlsx/XlsxAddress"
+ * import { XlsxAddress, XlsxRange } from "@beep/xlsx"
  * import * as O from "effect/Option"
  *
- * O.map(XlsxRange.parse("A1:C3"), XlsxRange.format) // => Option.some("A1:C3")
- * O.map(XlsxRange.parse("B2"), XlsxRange.format) // => Option.some("B2:B2")
+ * O.map(XlsxRange.parse("C3:A1"), XlsxRange.format) // => O.some("A1:C3")
+ * O.map(XlsxRange.parse("B2"), XlsxRange.format) // => O.some("B2:B2")
+ * O.exists(XlsxRange.parse("A1:C3"), (range) =>
+ *   XlsxRange.contains(range, XlsxAddress.make({ column: 1, row: 2 }))
+ * ) // => true
  * ```
  *
  * @category models
+ * @since 0.0.0
  */
 export class XlsxRange extends S.Opaque<XlsxRange, { readonly brand: unique symbol }>()(
   S.Struct({

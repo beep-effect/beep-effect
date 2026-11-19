@@ -4,6 +4,7 @@
  * back as data; only this file builds the two errors.
  *
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { setOwnProperty } from "@beep/utils/Record";
@@ -23,17 +24,17 @@ import * as Str from "effect/String";
 import { bodiesOf, capsOf, sniffContainer, stop } from "./internal/container.ts";
 import { renderGeneral } from "./internal/numberFormat.ts";
 import { eventsOf } from "./internal/ooxml.ts";
-import { SheetReader, toRow } from "./internal/sheet.ts";
+import { SheetReader } from "./internal/sheet.ts";
 import { trusted } from "./internal/trusted.ts";
 import { open } from "./internal/workbookPart.ts";
 import { archiveOf, partsOf } from "./internal/writer.ts";
 import { XlsxBlank, XlsxCell, XlsxNumberFormat, XlsxText, XlsxValue } from "./XlsxCell.schema.ts";
 import { MissingPart } from "./XlsxDiagnostic.schema.ts";
 import { XlsxParseError, XlsxStringifyError } from "./XlsxError.errors.ts";
-import { XlsxCodecOptions, XlsxReadOptions, XlsxWriteOptions } from "./XlsxOptions.schema.ts";
+import { XlsxCodecOptions, XlsxReadOptions, XlsxSheetChoice, XlsxWriteOptions } from "./XlsxOptions.schema.ts";
 import { XlsxOutline, XlsxSheetOutline } from "./XlsxRead.schema.ts";
 import { XlsxRow, XlsxSheetCount, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "./XlsxWorkbook.schema.ts";
-import type { ReadRow, SheetLayout } from "./internal/sheet.ts";
+import type { SheetLayout } from "./internal/sheet.ts";
 import type { Opened, SheetEntry } from "./internal/workbookPart.ts";
 import type { XlsxContainer, XlsxFatal, XlsxWarning } from "./XlsxDiagnostic.schema.ts";
 import type { XlsxRead } from "./XlsxRead.schema.ts";
@@ -46,14 +47,42 @@ type CodecOptions = XlsxCodecOptions | { readonly read: ReadOptions; readonly wr
 /**
  * One row of a sheet under its first row's headings: each heading an own property, each value what the cell holds.
  *
+ * **Details**
+ *
+ * A heading that would be a property of every object, such as `constructor`, is still an own property. A cell the
+ * row lacks under a heading reads as {@link XlsxBlank}.
+ *
+ * @see {@link Xlsx.recordsFromBytes} for the codec that reads and writes records.
  * @category models
+ * @since 0.0.0
  */
 export type XlsxRecord = { readonly [heading: string]: XlsxValue };
 
 /**
  * A codec bound to a target schema, with its two directions as functions.
  *
+ * **Example** (Round-trip a workbook through a bound codec)
+ *
+ * ```ts
+ * import { Xlsx, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
+ * import * as Effect from "effect/Effect"
+ *
+ * const codec = Xlsx.bind(Xlsx.XlsxFromBytes)
+ * const workbook = XlsxWorkbook.make({ sheets: [XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "Items" }) })] })
+ *
+ * const program = Effect.gen(function* () {
+ *   const bytes = yield* codec.encode(workbook)
+ *   const back = yield* codec.decode(bytes)
+ *   return back.sheets[0].info.name
+ * })
+ *
+ * const name = await Effect.runPromise(program)
+ * name // => "Items"
+ * ```
+ *
+ * @see {@link Xlsx.bind} for the constructor.
  * @category models
+ * @since 0.0.0
  */
 export interface XlsxBoundCodec<T> {
   readonly decode: (bytes: Uint8Array) => Effect.Effect<T, S.SchemaError>;
@@ -61,10 +90,10 @@ export interface XlsxBoundCodec<T> {
   readonly schema: S.Codec<T, Uint8Array>;
 }
 
-const byNumber = Order.mapInput(Order.Number, (row: ReadRow) => row.number);
+const byNumber = Order.mapInput(Order.Number, (row: XlsxRow) => row.number);
 
 /** The rows of a sheet in rising order with no number twice, whatever order the file wrote them in. */
-const settled = (rows: Array<ReadRow>, unordered: boolean): ReadonlyArray<ReadRow> =>
+const settled = (rows: Array<XlsxRow>, unordered: boolean): ReadonlyArray<XlsxRow> =>
   unordered ? A.dedupeAdjacentWith(A.sort(rows, byNumber), (a, b) => a.number === b.number) : rows;
 
 const readerOf = (opened: Opened, entry: SheetEntry): SheetReader =>
@@ -80,7 +109,7 @@ const readerOf = (opened: Opened, entry: SheetEntry): SheetReader =>
 interface SheetRead {
   layout: O.Option<SheetLayout>;
   readonly reader: SheetReader;
-  readonly rows: Array<ReadRow>;
+  readonly rows: Array<XlsxRow>;
 }
 
 /** Reads the XML of the wanted sheets in one pass over the archive, keeping their rows when asked to. */
@@ -121,19 +150,15 @@ const readSheets = Effect.fnUntraced(function* (input: {
   return reads;
 });
 
-const chosen = (opened: Opened, options: ReadOptions): ReadonlyArray<SheetEntry> => {
-  const choice = options.sheets;
-  switch (choice.kind) {
-    case "All":
-      return opened.sheets;
-    case "First":
-      return A.take(opened.sheets, 1);
-    case "Named": {
+const chosen = (opened: Opened, options: ReadOptions): ReadonlyArray<SheetEntry> =>
+  XlsxSheetChoice.match(options.sheets, {
+    All: () => opened.sheets,
+    First: () => A.take(opened.sheets, 1),
+    Named: (choice) => {
       const names = MutableHashSet.fromIterable(A.map(choice.names, Str.toLowerCase));
       return A.filter(opened.sheets, (sheet) => MutableHashSet.has(names, Str.toLowerCase(sheet.name)));
-    }
-  }
-};
+    },
+  });
 
 const infoOf = (entry: SheetEntry, layout: O.Option<SheetLayout>): XlsxSheetInfo =>
   XlsxSheetInfo.make({
@@ -155,12 +180,9 @@ const readWorkbook = Effect.fnUntraced(function* (bytes: Uint8Array, options: Re
       rows: O.match(read, {
         onNone: () => [],
         onSome: (found) =>
-          A.map(
-            settled(
-              found.rows,
-              O.exists(found.layout, (l) => l.unordered)
-            ),
-            toRow
+          settled(
+            found.rows,
+            O.exists(found.layout, (l) => l.unordered)
           ),
       }),
       merges: O.match(layout, { onNone: () => [], onSome: (found) => found.merges }),
@@ -278,20 +300,130 @@ const fromRecords = (records: ReadonlyArray<XlsxRecord>, name: XlsxSheetName): X
 /**
  * An Excel workbook, read and written.
  *
- * **Example** (Read a workbook and list its sheets)
+ * **When to use**
+ *
+ * Use to read .xlsx bytes into an {@link XlsxWorkbook} with its warnings (`parse`, `parseResult`), to look at a
+ * workbook without keeping its rows (`container`, `outline`, `sheets`, `sheetLayout`), to stream one sheet's
+ * rows (`rows`), to write a workbook back (`stringify`), or to treat the round trip as an `effect/Schema` codec
+ * (`fromBytes`, `recordsFromBytes`, `sheetFromBytes`, `bind`).
+ *
+ * **Details**
+ *
+ * Every read fails with {@link XlsxParseError}, which carries the finding that stopped it. The codecs report the
+ * same failure as a schema issue and drop the warnings a read went past; `parse` keeps them.
+ *
+ * **Example** (Write a workbook and read it back)
  *
  * ```ts
- * import { Xlsx } from "@beep/xlsx/Xlsx"
+ * import { Xlsx, XlsxCell, XlsxNumber, XlsxRow, XlsxSheetInfo, XlsxText, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
  * import * as Effect from "effect/Effect"
  *
- * const program = Effect.gen(function* () {
- *   const bytes = new Uint8Array(0) // the bytes of an .xlsx file
- *   const read = yield* Xlsx.parse(bytes)
- *   return read.workbook.sheets.length
+ * const header = XlsxRow.make({
+ *   number: 1,
+ *   cells: [
+ *     XlsxCell.make({ column: 0, value: XlsxText.make({ text: "SKU" }) }),
+ *     XlsxCell.make({ column: 1, value: XlsxText.make({ text: "Quantity" }) })
+ *   ]
  * })
+ * const line = XlsxRow.make({
+ *   number: 2,
+ *   cells: [
+ *     XlsxCell.make({ column: 0, value: XlsxText.make({ text: "BRK-040" }) }),
+ *     XlsxCell.make({ column: 1, value: XlsxNumber.make({ value: 120 }) })
+ *   ]
+ * })
+ * const workbook = XlsxWorkbook.make({
+ *   sheets: [XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "Items" }), rows: [header, line] })]
+ * })
+ *
+ * const program = Effect.gen(function* () {
+ *   const bytes = yield* Xlsx.stringify(workbook)
+ *   const read = yield* Xlsx.parse(bytes)
+ *   const counts = yield* Xlsx.sheets(bytes)
+ *   return {
+ *     container: Xlsx.container(bytes),
+ *     rows: read.workbook.sheets[0].rows.length,
+ *     cells: counts[0]?.cellsWithValues
+ *   }
+ * })
+ *
+ * const summary = await Effect.runPromise(program)
+ * summary // => { container: "workbook", rows: 2, cells: 4 }
+ * ```
+ *
+ * **Example** (Decode a sheet through a row schema)
+ *
+ * ```ts
+ * import { Xlsx, XlsxNumber, XlsxText } from "@beep/xlsx"
+ * import * as Effect from "effect/Effect"
+ * import * as S from "effect/Schema"
+ *
+ * const Item = S.Struct({ SKU: S.toType(XlsxText), Quantity: S.toType(XlsxNumber) })
+ * const codec = Xlsx.bind(Xlsx.sheetFromBytes(Item, { sheet: "Items", header: "first" }))
+ *
+ * const program = Effect.gen(function* () {
+ *   const bytes = yield* codec.encode([
+ *     { SKU: XlsxText.make({ text: "BRK-040" }), Quantity: XlsxNumber.make({ value: 120 }) },
+ *     { SKU: XlsxText.make({ text: "HB-M8-30" }), Quantity: XlsxNumber.make({ value: 1500 }) }
+ *   ])
+ *   const items = yield* codec.decode(bytes)
+ *   return items.map((item) => `${item.SKU.text} x${item.Quantity.value}`)
+ * })
+ *
+ * const lines = await Effect.runPromise(program)
+ * lines // => ["BRK-040 x120", "HB-M8-30 x1500"]
+ * ```
+ *
+ * **Example** (Stream one sheet's rows)
+ *
+ * ```ts
+ * import { Xlsx, XlsxCell, XlsxNumber, XlsxRow, XlsxSheetInfo, XlsxText, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx"
+ * import * as Effect from "effect/Effect"
+ * import * as Stream from "effect/Stream"
+ *
+ * const header = XlsxRow.make({
+ *   number: 1,
+ *   cells: [
+ *     XlsxCell.make({ column: 0, value: XlsxText.make({ text: "SKU" }) }),
+ *     XlsxCell.make({ column: 1, value: XlsxText.make({ text: "Quantity" }) })
+ *   ]
+ * })
+ * const line = XlsxRow.make({
+ *   number: 2,
+ *   cells: [
+ *     XlsxCell.make({ column: 0, value: XlsxText.make({ text: "BRK-040" }) }),
+ *     XlsxCell.make({ column: 1, value: XlsxNumber.make({ value: 120 }) })
+ *   ]
+ * })
+ * const workbook = XlsxWorkbook.make({
+ *   sheets: [XlsxWorksheet.make({ info: XlsxSheetInfo.make({ name: "Items" }), rows: [header, line] })]
+ * })
+ *
+ * const program = Effect.gen(function* () {
+ *   const bytes = yield* Xlsx.stringify(workbook)
+ *   const rows = yield* Stream.runCollect(Xlsx.rows(bytes, "items"))
+ *   const missing = yield* Effect.flip(Stream.runCollect(Xlsx.rows(bytes, "Notes")))
+ *   return { numbers: rows.map((row) => row.number), missing: missing.fatal.finding.kind }
+ * })
+ *
+ * const streamed = await Effect.runPromise(program)
+ * streamed // => { numbers: [1, 2], missing: "MissingPart" }
+ * ```
+ *
+ * **Example** (Read without running an Effect)
+ *
+ * ```ts
+ * import { Xlsx } from "@beep/xlsx"
+ * import * as Result from "effect/Result"
+ *
+ * const result = Xlsx.parseResult(new Uint8Array([0x50, 0x4b, 0x03, 0x04]))
+ * Result.isFailure(result) // => true
+ * const kind = Result.match(result, { onSuccess: () => "read", onFailure: (error) => error.fatal.finding.kind })
+ * kind // => "NotAWorkbook"
  * ```
  *
  * @category codecs
+ * @since 0.0.0
  */
 export class Xlsx {
   private constructor() {}
@@ -376,7 +508,6 @@ export class Xlsx {
             () => reader,
             (state, event) => [state, state.push(event)] as const
           ),
-          Stream.map(toRow),
           Stream.concat(
             Stream.suspend(() => O.match(reader.failed, { onNone: () => Stream.empty, onSome: Stream.fail }))
           )

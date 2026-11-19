@@ -19,7 +19,7 @@ import {
   XlsxText,
   XlsxValue,
 } from "@beep/xlsx/XlsxCell.schema";
-import { XlsxDiagnostic } from "@beep/xlsx/XlsxDiagnostic.schema";
+import { XlsxContainer, XlsxDiagnostic } from "@beep/xlsx/XlsxDiagnostic.schema";
 import {
   XlsxCodecOptions,
   XlsxLimits,
@@ -27,7 +27,7 @@ import {
   XlsxSheetChoice,
   XlsxWriteOptions,
 } from "@beep/xlsx/XlsxOptions.schema";
-import { XlsxContainer, XlsxOutline, XlsxRead, XlsxSheetOutline } from "@beep/xlsx/XlsxRead.schema";
+import { XlsxOutline, XlsxRead, XlsxSheetOutline } from "@beep/xlsx/XlsxRead.schema";
 import { XlsxCalendar, XlsxDateSystem, XlsxSerial } from "@beep/xlsx/XlsxSerial.schema";
 import {
   XlsxDroppedPart,

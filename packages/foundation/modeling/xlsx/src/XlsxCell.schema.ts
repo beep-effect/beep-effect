@@ -3,6 +3,7 @@
  * format that says how the value is displayed.
  *
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $XlsxId } from "@beep/identity/packages";
@@ -32,28 +33,72 @@ const $I = $XlsxId.create("XlsxCell");
 /**
  * The most characters one cell holds.
  *
+ * **Example** (Text past the cap)
+ *
+ * ```ts
+ * import { MAX_CELL_CHARS, XlsxText } from "@beep/xlsx"
+ * import * as O from "effect/Option"
+ *
+ * O.isSome(XlsxText.makeOption({ text: "x".repeat(MAX_CELL_CHARS) })) // => true
+ * O.isNone(XlsxText.makeOption({ text: "x".repeat(MAX_CELL_CHARS + 1) })) // => true
+ * ```
+ *
  * @category constants
+ * @since 0.0.0
  */
 export const MAX_CELL_CHARS = 32_767;
 
 /**
  * The most characters a formula has.
  *
+ * **Example** (A formula past the cap)
+ *
+ * ```ts
+ * import { MAX_FORMULA_CHARS, XlsxBlank, XlsxCell } from "@beep/xlsx"
+ * import * as O from "effect/Option"
+ *
+ * const tooLong = O.some("1+".repeat(MAX_FORMULA_CHARS))
+ * O.isNone(XlsxCell.makeOption({ column: 0, value: XlsxBlank.make({}), formula: tooLong })) // => true
+ * ```
+ *
  * @category constants
+ * @since 0.0.0
  */
 export const MAX_FORMULA_CHARS = 8192;
 
 /**
  * The most characters a number format code has.
  *
+ * **Example** (A format code past the cap)
+ *
+ * ```ts
+ * import { MAX_FORMAT_CHARS, XlsxNumberFormat } from "@beep/xlsx"
+ * import * as O from "effect/Option"
+ *
+ * O.isNone(XlsxNumberFormat.makeOption({ id: 164, code: "0".repeat(MAX_FORMAT_CHARS + 1) })) // => true
+ * ```
+ *
  * @category constants
+ * @since 0.0.0
  */
 export const MAX_FORMAT_CHARS = 255;
 
 /**
  * An error a cell can hold in place of a value.
  *
+ * **Example** (Known error codes)
+ *
+ * ```ts
+ * import { XlsxErrorCode } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxErrorCode)("#DIV/0!") // => true
+ * S.is(XlsxErrorCode)("#OOPS") // => false
+ * XlsxErrorCode.literals.length // => 8
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxErrorCode = LiteralKit([
   "#NULL!",
@@ -67,9 +112,10 @@ export const XlsxErrorCode = LiteralKit([
 ]).pipe($I.annoteSchema("XlsxErrorCode", { description: "An error a cell holds in place of a value" }));
 
 /**
- * Runtime type of {@link XlsxErrorCode}.
+ * One of the error codes a cell can hold, such as `"#N/A"`; the type {@link XlsxErrorCode} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxErrorCode = typeof XlsxErrorCode.Type;
 
@@ -77,21 +123,64 @@ const xmlSafe = S.makeFilter((text: string) => isXmlSafe(text), {
   expected: "text without control characters or lone surrogates",
 });
 
-/** A format whose number is shown by Excel's default rule. */
+/**
+ * A format whose number is shown by Excel's default rule.
+ *
+ * **Example** (Read the General code)
+ *
+ * ```ts
+ * import { XlsxGeneralFormat, XlsxNumberFormat } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxGeneralFormat)(XlsxNumberFormat.kind({ code: "General" })) // => true
+ * XlsxGeneralFormat.make({}).kind // => "General"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class XlsxGeneralFormat extends S.Opaque<XlsxGeneralFormat, { readonly brand: unique symbol }>()(
   S.Struct({ kind: S.tag("General") }).pipe(
     $I.annoteSchema("XlsxGeneralFormat", { description: "The default format: as many digits as fit" })
   )
 ) {}
 
-/** A format that shows its number as a date or a time. */
+/**
+ * A format that shows its number as a date or a time.
+ *
+ * **Example** (Read a date code)
+ *
+ * ```ts
+ * import { XlsxDateFormat, XlsxNumberFormat } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxDateFormat)(XlsxNumberFormat.kind({ code: "yyyy-mm-dd" })) // => true
+ * S.is(XlsxDateFormat)(XlsxNumberFormat.kind({ code: "0.00" })) // => false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class XlsxDateFormat extends S.Opaque<XlsxDateFormat, { readonly brand: unique symbol }>()(
   S.Struct({ kind: S.tag("Date") }).pipe(
     $I.annoteSchema("XlsxDateFormat", { description: "A format that shows a date or a time" })
   )
 ) {}
 
-/** A format of zeros only: the number padded to that many digits, as a code such as 00123 is kept. */
+/**
+ * A format of zeros only: the number padded to that many digits, as a code such as 00123 is kept.
+ *
+ * **Example** (Read a zero-padded code)
+ *
+ * ```ts
+ * import { XlsxNumberFormat, XlsxZeroPaddedFormat } from "@beep/xlsx"
+ *
+ * XlsxNumberFormat.kind({ code: "00000" }) // => XlsxZeroPaddedFormat.make({ width: 5 })
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class XlsxZeroPaddedFormat extends S.Opaque<XlsxZeroPaddedFormat, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("ZeroPadded"),
@@ -101,7 +190,20 @@ export class XlsxZeroPaddedFormat extends S.Opaque<XlsxZeroPaddedFormat, { reado
   }).pipe($I.annoteSchema("XlsxZeroPaddedFormat", { description: "A format of zeros: the number padded with zeros" }))
 ) {}
 
-/** A plain number pattern: fixed decimals, optional thousands separators and percent sign, literal text around. */
+/**
+ * A plain number pattern: fixed decimals, optional thousands separators and percent sign, literal text around.
+ *
+ * **Example** (Read a thousands pattern)
+ *
+ * ```ts
+ * import { XlsxFixedFormat, XlsxNumberFormat } from "@beep/xlsx"
+ *
+ * XlsxNumberFormat.kind({ code: "#,##0.00" }) // => XlsxFixedFormat.make({ decimals: 2, thousands: true, percent: false, prefix: "", suffix: "" })
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class XlsxFixedFormat extends S.Opaque<XlsxFixedFormat, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("Fixed"),
@@ -115,7 +217,24 @@ export class XlsxFixedFormat extends S.Opaque<XlsxFixedFormat, { readonly brand:
   }).pipe($I.annoteSchema("XlsxFixedFormat", { description: "A plain number pattern with fixed decimals" }))
 ) {}
 
-/** A format this package does not render: fractions, exponents, sections, colours, conditions. */
+/**
+ * A format this package does not render: fractions, exponents, sections, colours, conditions.
+ *
+ * **Example** (An exponent code is not rendered)
+ *
+ * ```ts
+ * import { XlsxCell, XlsxNumber, XlsxNumberFormat, XlsxOtherFormat } from "@beep/xlsx"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ *
+ * const scientific = XlsxNumberFormat.make({ id: 11, code: "0.00E+00" })
+ * S.is(XlsxOtherFormat)(XlsxNumberFormat.kind(scientific)) // => true
+ * XlsxCell.shown({ value: XlsxNumber.make({ value: 1200 }), format: scientific }, "1900") // => O.none()
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class XlsxOtherFormat extends S.Opaque<XlsxOtherFormat, { readonly brand: unique symbol }>()(
   S.Struct({ kind: S.tag("Other") }).pipe(
     $I.annoteSchema("XlsxOtherFormat", { description: "A format whose displayed text is not worked out" })
@@ -125,7 +244,18 @@ export class XlsxOtherFormat extends S.Opaque<XlsxOtherFormat, { readonly brand:
 /**
  * What a number format is, as far as displayed text is worked out for it.
  *
+ * **Example** (Branch on a format's kind)
+ *
+ * ```ts
+ * import { XlsxFormatKind, XlsxNumberFormat } from "@beep/xlsx"
+ *
+ * const kind = XlsxNumberFormat.kind({ code: "0.0%" })
+ * XlsxFormatKind.guards.Fixed(kind) // => true
+ * XlsxFormatKind.guards.Date(kind) // => false
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxFormatKind = LiteralKit(["General", "Date", "ZeroPadded", "Fixed", "Other"])
   .mapMembers(() =>
@@ -134,9 +264,10 @@ export const XlsxFormatKind = LiteralKit(["General", "Date", "ZeroPadded", "Fixe
   .pipe(S.toTaggedUnion("kind"), $I.annoteSchema("XlsxFormatKind", { description: "What a number format is" }));
 
 /**
- * Runtime type of {@link XlsxFormatKind}.
+ * One of the five format kinds, told apart by `kind`; the type {@link XlsxFormatKind} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxFormatKind = typeof XlsxFormatKind.Type;
 
@@ -160,13 +291,17 @@ const formatKindOf = Match.type<RawFormatKind>().pipe(
  * **Example** (What a code is)
  *
  * ```ts
- * import { XlsxNumberFormat } from "@beep/xlsx/XlsxCell"
+ * import { XlsxNumberFormat } from "@beep/xlsx"
+ * import * as O from "effect/Option"
  *
- * XlsxNumberFormat.kind({ code: "00000" }) // => { kind: "ZeroPadded", width: 5 }
+ * XlsxNumberFormat.general.code // => "General"
+ * O.map(XlsxNumberFormat.builtin(14), (format) => format.code) // => O.some("m/d/yy")
+ * XlsxNumberFormat.isDate({ code: "yyyy-mm-dd" }) // => true
  * XlsxNumberFormat.kind({ code: "yyyy-mm-dd" }).kind // => "Date"
  * ```
  *
  * @category models
+ * @since 0.0.0
  */
 export class XlsxNumberFormat extends S.Opaque<XlsxNumberFormat, { readonly brand: unique symbol }>()(
   S.Struct({
@@ -199,12 +334,41 @@ export class XlsxNumberFormat extends S.Opaque<XlsxNumberFormat, { readonly bran
 
 const cellText = S.String.check(S.isMaxLength(MAX_CELL_CHARS));
 
-/** A cell that holds nothing: only a formula with no saved result has one. */
+/**
+ * A cell that holds nothing: only a formula with no saved result has one.
+ *
+ * **Example** (A cell waiting for its formula)
+ *
+ * ```ts
+ * import { holdsSomething, XlsxBlank, XlsxCell } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * const cell = XlsxCell.blank(2)
+ * S.is(XlsxBlank)(cell.value) // => true
+ * holdsSomething(cell.value) // => false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class XlsxBlank extends S.Opaque<XlsxBlank, { readonly brand: unique symbol }>()(
   S.Struct({ kind: S.tag("Blank") }).pipe($I.annoteSchema("XlsxBlank", { description: "No value" }))
 ) {}
 
-/** Text, as written. */
+/**
+ * Text, as written.
+ *
+ * **Example** (Text keeps its spaces)
+ *
+ * ```ts
+ * import { XlsxText } from "@beep/xlsx"
+ *
+ * XlsxText.make({ text: " 007 " }).text // => " 007 "
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class XlsxText extends S.Opaque<XlsxText, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("Text"),
@@ -212,7 +376,22 @@ export class XlsxText extends S.Opaque<XlsxText, { readonly brand: unique symbol
   }).pipe($I.annoteSchema("XlsxText", { description: "Text" }))
 ) {}
 
-/** A number that is not shown as a date. */
+/**
+ * A number that is not shown as a date.
+ *
+ * **Example** (A number under the General format)
+ *
+ * ```ts
+ * import { XlsxCell, XlsxNumber } from "@beep/xlsx"
+ * import * as O from "effect/Option"
+ *
+ * const cell = XlsxCell.make({ column: 0, value: XlsxNumber.make({ value: 1234.5 }) })
+ * XlsxCell.shown(cell, "1900") // => O.some("1234.5")
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class XlsxNumber extends S.Opaque<XlsxNumber, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("Number"),
@@ -220,7 +399,22 @@ export class XlsxNumber extends S.Opaque<XlsxNumber, { readonly brand: unique sy
   }).pipe($I.annoteSchema("XlsxNumber", { description: "A number" }))
 ) {}
 
-/** TRUE or FALSE. */
+/**
+ * TRUE or FALSE.
+ *
+ * **Example** (A boolean value)
+ *
+ * ```ts
+ * import { XlsxBoolean, XlsxValue } from "@beep/xlsx"
+ *
+ * const value = XlsxBoolean.make({ value: true })
+ * XlsxValue.guards.Boolean(value) // => true
+ * value.value // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class XlsxBoolean extends S.Opaque<XlsxBoolean, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("Boolean"),
@@ -228,7 +422,22 @@ export class XlsxBoolean extends S.Opaque<XlsxBoolean, { readonly brand: unique 
   }).pipe($I.annoteSchema("XlsxBoolean", { description: "TRUE or FALSE" }))
 ) {}
 
-/** An error in place of a value. */
+/**
+ * An error in place of a value.
+ *
+ * **Example** (A division error)
+ *
+ * ```ts
+ * import { XlsxError } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * XlsxError.make({ code: "#DIV/0!" }).code // => "#DIV/0!"
+ * S.is(XlsxError)({ kind: "Error", code: "#OOPS" }) // => false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class XlsxError extends S.Opaque<XlsxError, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("Error"),
@@ -236,7 +445,26 @@ export class XlsxError extends S.Opaque<XlsxError, { readonly brand: unique symb
   }).pipe($I.annoteSchema("XlsxError", { description: "A spreadsheet error such as #N/A" }))
 ) {}
 
-/** A number whose format shows a date or a time. */
+/**
+ * A number whose format shows a date or a time.
+ *
+ * **Example** (A date shown under its format)
+ *
+ * ```ts
+ * import { XlsxCell, XlsxDate, XlsxNumberFormat } from "@beep/xlsx"
+ * import * as O from "effect/Option"
+ *
+ * const cell = XlsxCell.make({
+ *   column: 0,
+ *   value: XlsxDate.make({ serial: 45_000 }),
+ *   format: XlsxNumberFormat.make({ id: 164, code: "yyyy-mm-dd" })
+ * })
+ * XlsxCell.shown(cell, "1900") // => O.some("2023-03-15")
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class XlsxDate extends S.Opaque<XlsxDate, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("Date"),
@@ -244,7 +472,23 @@ export class XlsxDate extends S.Opaque<XlsxDate, { readonly brand: unique symbol
   }).pipe($I.annoteSchema("XlsxDate", { description: "A date or a time, as its serial" }))
 ) {}
 
-/** What a file wrote where no value can be read: a text index that points nowhere, text where a number belongs. */
+/**
+ * What a file wrote where no value can be read: a text index that points nowhere, text where a number belongs.
+ *
+ * **Example** (What counts as unreadable)
+ *
+ * ```ts
+ * import { holdsSomething, XlsxUnreadable } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxUnreadable)({ kind: "Unreadable", raw: "abc" }) // => true
+ * S.is(XlsxUnreadable)({ kind: "Unreadable", raw: "#N/A" }) // => false
+ * holdsSomething(XlsxUnreadable.make({ raw: "abc" })) // => false
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
 export class XlsxUnreadable extends S.Opaque<XlsxUnreadable, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("Unreadable"),
@@ -257,23 +501,46 @@ export class XlsxUnreadable extends S.Opaque<XlsxUnreadable, { readonly brand: u
 /**
  * What a cell holds.
  *
+ * **Example** (Decode and test a value)
+ *
+ * ```ts
+ * import { XlsxValue } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * const value = S.decodeUnknownSync(XlsxValue)({ kind: "Number", value: 42 })
+ * XlsxValue.guards.Number(value) // => true
+ * XlsxValue.guards.Text(value) // => false
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxValue = LiteralKit(["Blank", "Text", "Number", "Boolean", "Error", "Date", "Unreadable"])
   .mapMembers(() => Tuple.make(XlsxBlank, XlsxText, XlsxNumber, XlsxBoolean, XlsxError, XlsxDate, XlsxUnreadable))
   .pipe(S.toTaggedUnion("kind"), $I.annoteSchema("XlsxValue", { description: "What a cell holds" }));
 
 /**
- * Runtime type of {@link XlsxValue}.
+ * One of the seven things a cell holds, told apart by `kind`; the type {@link XlsxValue} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxValue = typeof XlsxValue.Type;
 
 /**
  * Whether a value is something a person would count as data: not blank, not empty text, not unreadable.
  *
- * @category utilities
+ * **Example** (Zero counts, empty text does not)
+ *
+ * ```ts
+ * import { holdsSomething, XlsxNumber, XlsxText } from "@beep/xlsx"
+ *
+ * holdsSomething(XlsxNumber.make({ value: 0 })) // => true
+ * holdsSomething(XlsxText.make({ text: "" })) // => false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
  */
 export const holdsSomething = (value: XlsxValue): boolean =>
   !(value.kind === "Blank" || value.kind === "Unreadable" || (value.kind === "Text" && value.text === ""));
@@ -286,17 +553,28 @@ export const holdsSomething = (value: XlsxValue): boolean =>
  * **Example** (Displayed text)
  *
  * ```ts
- * import { XlsxCell, XlsxNumber, XlsxNumberFormat } from "@beep/xlsx/XlsxCell"
+ * import { XlsxCell, XlsxNumber, XlsxNumberFormat } from "@beep/xlsx"
+ * import * as O from "effect/Option"
  *
  * const sku = XlsxCell.make({
  *   column: 0,
  *   value: XlsxNumber.make({ value: 123 }),
  *   format: XlsxNumberFormat.make({ id: 164, code: "00000" })
  * })
- * XlsxCell.shown(sku, "1900") // => Option.some("00123")
+ * XlsxCell.shown(sku, "1900") // => O.some("00123")
+ * ```
+ *
+ * **Example** (Canonical form of a hand-built date)
+ *
+ * ```ts
+ * import { XlsxCell, XlsxDate } from "@beep/xlsx"
+ *
+ * const built = XlsxCell.make({ column: 0, value: XlsxDate.make({ serial: 45_000 }) })
+ * XlsxCell.canonical(built).format.code // => "m/d/yy"
  * ```
  *
  * @category models
+ * @since 0.0.0
  */
 export class XlsxCell extends S.Opaque<XlsxCell, { readonly brand: unique symbol }>()(
   S.Struct({

@@ -41,13 +41,12 @@ import { isTrue, localName, unescaped } from "./ooxml.ts";
 import { serialOf } from "./serial.ts";
 import { isXmlSafe } from "./text.ts";
 import { detached, trusted } from "./trusted.ts";
-import { styleOf } from "./workbookPart.ts";
+import { StyleFormat, styleOf } from "./workbookPart.ts";
 import type { XlsxCell, XlsxDate, XlsxNumber, XlsxText, XlsxUnreadable, XlsxValue } from "../XlsxCell.schema.ts";
 import type { XlsxFatal, XlsxLimit } from "../XlsxDiagnostic.schema.ts";
 import type { XlsxRow } from "../XlsxWorkbook.schema.ts";
 import type { Caps } from "./container.ts";
 import type { XmlEvent } from "./ooxml.ts";
-import type { StyleFormat } from "./workbookPart.ts";
 
 const $I = $XlsxId.create("internal/sheet");
 
@@ -85,7 +84,7 @@ const none: ReadonlyArray<XlsxRow> = [];
 const byColumn = Order.mapInput(Order.Number, (cell: XlsxCell) => cell.column);
 const numberText = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
 const isoDate = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?Z?)?$/;
-const general: StyleFormat = { format: XlsxNumberFormat.general, dated: false, notShown: false };
+const general = StyleFormat.general;
 const shortDate: StyleFormat = styleOf(XlsxNumberFormat.make({ id: 14, code: "m/d/yy" }));
 const blank = XlsxBlank.make({});
 const yes = XlsxBoolean.make({ value: true });
@@ -532,6 +531,3 @@ export class SheetReader {
     MutableHashMap.set(this.notShown, code, O.getOrElse(MutableHashMap.get(this.notShown, code), () => 0) + 1);
   }
 }
-
-/** A read row as the `XlsxRow` it is. */
-export const toRow = (row: ReadRow): XlsxRow => trusted<XlsxRow>(row);

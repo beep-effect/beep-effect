@@ -10,6 +10,7 @@ import * as O from "effect/Option";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { columnLetters, XlsxAddress, XlsxRange } from "../XlsxAddress.schema.ts";
+import { XlsxValue } from "../XlsxCell.schema.ts";
 import { FIRST_CUSTOM_FORMAT } from "../XlsxWorkbook.schema.ts";
 import type { XlsxWorkbook } from "../XlsxWorkbook.schema.ts";
 
@@ -71,23 +72,16 @@ const cellXml = (cell: Cell, row: number, styleOf: (id: number) => number): stri
   const style = styleOf(cell.format.id);
   const open = `<c r="${reference}"${style === 0 ? "" : ` s="${style}"`}`;
   const formula = O.match(cell.formula, { onNone: () => "", onSome: (text) => `<f>${escaped(text, false)}</f>` });
-  const value = cell.value;
-  switch (value.kind) {
-    case "Blank":
-      return `${open}>${formula}</c>`;
-    case "Text":
-      return `${open} t="inlineStr">${formula}<is><t xml:space="preserve">${escaped(value.text, true)}</t></is></c>`;
-    case "Number":
-      return `${open}>${formula}<v>${numberText(value.value)}</v></c>`;
-    case "Date":
-      return `${open}>${formula}<v>${numberText(value.serial)}</v></c>`;
-    case "Boolean":
-      return `${open} t="b">${formula}<v>${value.value ? "1" : "0"}</v></c>`;
-    case "Error":
-      return `${open} t="e">${formula}<v>${escaped(value.code, false)}</v></c>`;
-    case "Unreadable":
-      return `${open} t="e">${formula}<v xml:space="preserve">${escaped(value.raw, true)}</v></c>`;
-  }
+  return XlsxValue.match(cell.value, {
+    Blank: () => `${open}>${formula}</c>`,
+    Text: (value) =>
+      `${open} t="inlineStr">${formula}<is><t xml:space="preserve">${escaped(value.text, true)}</t></is></c>`,
+    Number: (value) => `${open}>${formula}<v>${numberText(value.value)}</v></c>`,
+    Date: (value) => `${open}>${formula}<v>${numberText(value.serial)}</v></c>`,
+    Boolean: (value) => `${open} t="b">${formula}<v>${value.value ? "1" : "0"}</v></c>`,
+    Error: (value) => `${open} t="e">${formula}<v>${escaped(value.code, false)}</v></c>`,
+    Unreadable: (value) => `${open} t="e">${formula}<v xml:space="preserve">${escaped(value.raw, true)}</v></c>`,
+  });
 };
 
 const sheetXml = (sheet: Sheet, styleOf: (id: number) => number): string => {

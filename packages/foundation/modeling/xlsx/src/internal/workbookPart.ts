@@ -1,19 +1,22 @@
 // The workbook part and what hangs off it: the sheets with their names, states and paths, the date system, the
 // number format of every style, the shared text table, and the names of the parts that are not modelled.
+import { $XlsxId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as HashMap from "effect/HashMap";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { MAX_FORMAT_CHARS, XlsxNumberFormat } from "../XlsxCell.schema.ts";
 import { DamagedXml, LimitExceeded, MissingPart, NoSheets, NotAWorkbook } from "../XlsxDiagnostic.schema.ts";
-import { XlsxDroppedPart, XlsxSheetName } from "../XlsxWorkbook.schema.ts";
-import { census, collect, sniffContainer, stop } from "./container.ts";
+import { XlsxDateSystem } from "../XlsxSerial.schema.ts";
+import { XlsxDroppedPart, XlsxSheetName, XlsxSheetState } from "../XlsxWorkbook.schema.ts";
+import { Caps, census, collect, sniffContainer, stop } from "./container.ts";
 import { builtinFormats, classify, isDateFormat, renderDate } from "./numberFormat.ts";
 import {
   attribute,
@@ -28,51 +31,64 @@ import {
   unescaped,
 } from "./ooxml.ts";
 import { isXmlSafe } from "./text.ts";
-import { detached } from "./trusted.ts";
-import type { XlsxDateSystem } from "../XlsxSerial.schema.ts";
-import type { XlsxDroppedKind, XlsxSheetState } from "../XlsxWorkbook.schema.ts";
-import type { Caps } from "./container.ts";
-import type { Relationship, XmlEvent } from "./ooxml.ts";
+import { detached, trusted } from "./trusted.ts";
+import type { XlsxDroppedKind } from "../XlsxWorkbook.schema.ts";
+import type { Relationship, XmlElement, XmlEvent } from "./ooxml.ts";
+
+const $I = $XlsxId.create("internal/workbookPart");
 
 /** A sheet as the workbook part names it, and where its XML is. */
-export interface SheetEntry {
-  readonly name: XlsxSheetName;
-  readonly path: string;
-  readonly state: XlsxSheetState;
-}
+export class SheetEntry extends S.Opaque<SheetEntry, { readonly brand: unique symbol }>()(
+  S.Struct({
+    name: XlsxSheetName.pipe(S.annotateKey({ description: "The sheet's name" })),
+    path: S.String.pipe(S.annotateKey({ description: "Where the sheet's XML is in the archive" })),
+    state: XlsxSheetState.pipe(S.annotateKey({ description: "Whether the sheet is shown" })),
+  }).pipe($I.annoteSchema("SheetEntry", { description: "A sheet as the workbook part names it" }))
+) {}
 
 /** A style's number format, with what the sheet reader asks of it worked out once. */
-export interface StyleFormat {
-  /** Whether a number under it is a date. */
-  readonly dated: boolean;
-  readonly format: XlsxNumberFormat;
-  /** Whether a number or a date under it has no displayed text worked out. */
-  readonly notShown: boolean;
+export class StyleFormat extends S.Opaque<StyleFormat, { readonly brand: unique symbol }>()(
+  S.Struct({
+    dated: S.Boolean.pipe(S.annotateKey({ description: "Whether a number under it is a date" })),
+    format: XlsxNumberFormat.pipe(S.annotateKey({ description: "The number format" })),
+    notShown: S.Boolean.pipe(
+      S.annotateKey({ description: "Whether a number or a date under it has no displayed text worked out" })
+    ),
+  }).pipe($I.annoteSchema("StyleFormat", { description: "A style's number format as the sheet reader asks of it" }))
+) {
+  /** The General format, which a cell with no style or an unknown one is read under. */
+  static readonly general: StyleFormat = StyleFormat.make({
+    format: XlsxNumberFormat.general,
+    dated: false,
+    notShown: false,
+  });
 }
 
 /** A workbook opened: everything but its sheets' rows. */
-export interface Opened {
-  readonly bytes: Uint8Array;
-  readonly caps: Caps;
-  readonly dateSystem: XlsxDateSystem;
-  readonly dropped: ReadonlyArray<XlsxDroppedPart>;
-  readonly sheets: ReadonlyArray<SheetEntry>;
-  readonly strings: ReadonlyArray<string>;
-  readonly styles: ReadonlyArray<StyleFormat>;
-}
+export class Opened extends S.Opaque<Opened, { readonly brand: unique symbol }>()(
+  S.Struct({
+    bytes: S.Uint8Array.pipe(S.annotateKey({ description: "The file's bytes, for the passes that read the sheets" })),
+    caps: Caps,
+    dateSystem: XlsxDateSystem.pipe(S.annotateKey({ description: "The day the workbook's date serials count from" })),
+    dropped: S.Array(XlsxDroppedPart).pipe(S.annotateKey({ description: "Parts the file held that are not modelled" })),
+    sheets: S.Array(SheetEntry).pipe(S.annotateKey({ description: "The sheets, in the workbook's order" })),
+    strings: S.Array(S.String).pipe(S.annotateKey({ description: "The shared text table" })),
+    styles: S.Array(StyleFormat).pipe(S.annotateKey({ description: "The number format of each style index" })),
+  }).pipe($I.annoteSchema("Opened", { description: "A workbook opened: everything but its sheets' rows" }))
+) {}
 
-const general: StyleFormat = { format: XlsxNumberFormat.general, dated: false, notShown: false };
+const general = StyleFormat.general;
 
 /** What the sheet reader needs to know of a number format. */
 export const styleOf = (format: XlsxNumberFormat): StyleFormat => {
   const dated = isDateFormat(format.code);
-  return {
+  return StyleFormat.make({
     format,
     dated,
     notShown: dated
-      ? renderDate({ code: format.code, serial: 1, date1904: false }) === undefined
+      ? O.isNone(renderDate({ code: format.code, serial: 1, date1904: false }))
       : classify(format.code).kind === "Other",
-  };
+  });
 };
 
 const malformed = (path: string, reason: string) =>
@@ -88,14 +104,15 @@ const stylesOf = Effect.fnUntraced(function* (input: {
 }) {
   const root = yield* rootOf({ path: input.path, bytes: input.bytes, cellChars: input.caps.cellChars });
   let codes = HashMap.empty<number, string>();
-  const numFmts = child({ of: root, name: "numFmts" });
-  if (numFmts !== undefined) {
-    for (const numFmt of children({ of: numFmts, name: "numFmt" })) {
-      const id = Number(numFmt.attributes.numFmtId);
-      const code = numFmt.attributes.formatCode ?? "";
-      if (Number.isInteger(id) && id >= 0 && id <= 65_535 && code.length <= MAX_FORMAT_CHARS && isXmlSafe(code)) {
-        codes = HashMap.set(codes, id, code);
-      }
+  const numFmts = O.match(child({ of: root, name: "numFmts" }), {
+    onNone: A.empty<XmlElement>,
+    onSome: (of) => children({ of, name: "numFmt" }),
+  });
+  for (const numFmt of numFmts) {
+    const id = Number(numFmt.attributes.numFmtId);
+    const code = numFmt.attributes.formatCode ?? "";
+    if (Number.isInteger(id) && id >= 0 && id <= 65_535 && code.length <= MAX_FORMAT_CHARS && isXmlSafe(code)) {
+      codes = HashMap.set(codes, id, code);
     }
   }
   const formats = MutableHashMap.empty<number, StyleFormat>();
@@ -110,15 +127,19 @@ const stylesOf = Effect.fnUntraced(function* (input: {
     MutableHashMap.set(formats, id, made);
     return made;
   };
-  const cellXfs = child({ of: root, name: "cellXfs" });
-  const styles = A.map(cellXfs === undefined ? [] : children({ of: cellXfs, name: "xf" }), (xf) => {
+  const xfs = O.match(child({ of: root, name: "cellXfs" }), {
+    onNone: A.empty<XmlElement>,
+    onSome: (of) => children({ of, name: "xf" }),
+  });
+  const styles = A.map(xfs, (xf) => {
     const id = Number(xf.attributes.numFmtId ?? "0");
     return Number.isInteger(id) && id >= 0 && id <= 65_535 ? formatOf(id) : general;
   });
-  const countOf = (name: string): number => {
-    const element = child({ of: root, name });
-    return element === undefined ? 0 : A.length(A.filter(element.children, (c) => typeof c !== "string"));
-  };
+  const countOf = (name: string): number =>
+    O.match(child({ of: root, name }), {
+      onNone: () => 0,
+      onSome: (element) => A.length(A.filter(element.children, P.not(P.isString))),
+    });
   const more = countOf("fonts") > 1 || countOf("fills") > 2 || countOf("borders") > 1 || countOf("dxfs") > 0;
   return { styles, more };
 });
@@ -262,16 +283,21 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
     bytes: yield* partOf({ kept: second, path: workbookPath }),
     cellChars: caps.cellChars,
   });
-  const properties = child({ of: root, name: "workbookPr" });
-  const dateSystem: XlsxDateSystem =
-    properties !== undefined && isTrue(properties.attributes.date1904) ? "1904" : "1900";
-  const listed = child({ of: root, name: "sheets" });
+  const dateSystem: XlsxDateSystem = O.exists(child({ of: root, name: "workbookPr" }), (properties) =>
+    isTrue(properties.attributes.date1904)
+  )
+    ? "1904"
+    : "1900";
+  const listed = O.match(child({ of: root, name: "sheets" }), {
+    onNone: A.empty<XmlElement>,
+    onSome: (of) => children({ of, name: "sheet" }),
+  });
   const sheets: Array<SheetEntry> = [];
   const names = MutableHashSet.empty<string>();
   const read = MutableHashSet.make(workbookPath, ...O.toArray(stylesPath), ...O.toArray(stringsPath));
-  for (const sheet of listed === undefined ? [] : children({ of: listed, name: "sheet" })) {
+  for (const sheet of listed) {
     const id = attribute({ attributes: sheet.attributes, name: "id" });
-    const link = A.findFirst(links, (r) => r.id === id);
+    const link = A.findFirst(links, (r) => O.contains(id, r.id));
     if (O.isNone(link))
       return yield* Effect.fail(malformed(workbookPath, "a sheet names a relationship the workbook lacks"));
     if (!endsWith(link.value.type, "worksheet")) continue;
@@ -285,12 +311,10 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
       return yield* Effect.fail(malformed(workbookPath, "two sheets have one name"));
     }
     MutableHashSet.add(names, Str.toLowerCase(name));
-    const state = sheet.attributes.state;
-    sheets.push({
-      name,
-      state: state === "hidden" ? "hidden" : state === "veryHidden" ? "veryHidden" : "visible",
-      path: link.value.path,
-    });
+    const state = sheet.attributes.state ?? "visible";
+    sheets.push(
+      SheetEntry.make({ name, state: S.is(XlsxSheetState)(state) ? state : "visible", path: link.value.path })
+    );
     MutableHashSet.add(read, link.value.path);
     if (sheets.length > caps.sheets) return yield* Effect.fail(stop(LimitExceeded.make({ limit: "sheets", path: "" })));
   }
@@ -318,6 +342,6 @@ export const open = Effect.fnUntraced(function* (input: { readonly bytes: Uint8A
     }
     dropped.push(XlsxDroppedPart.make({ path, kind: droppedKindOf(path) }));
   }
-  const opened: Opened = { bytes, caps, dateSystem, sheets, styles: styled.styles, strings, dropped };
-  return opened;
+  // Built without `make`: the shared text table can hold millions of entries, each already checked as it was read.
+  return trusted<Opened>({ bytes, caps, dateSystem, sheets, styles: styled.styles, strings, dropped });
 });

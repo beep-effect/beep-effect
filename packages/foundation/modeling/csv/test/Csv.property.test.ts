@@ -2,29 +2,33 @@
 // and reading in pieces, split anywhere, gives what reading at once gives.
 
 import { Csv } from "@beep/csv/Csv.codec";
-import { CsvFixedDelimiter, CsvReadOptions, CsvWriteOptions } from "@beep/csv/CsvOptions.schema";
+import {
+  CsvDelimiter,
+  CsvFixedDelimiter,
+  CsvReadOptions,
+  CsvTerminator,
+  CsvWriteOptions,
+} from "@beep/csv/CsvOptions.schema";
 import { CsvTable } from "@beep/csv/CsvTable.schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import { constVoid } from "effect/Function";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
 const runs = { arbitrary: { runs: 200 } };
-const delimiters = [",", ";", "\t", "|"] as const;
-
-const readWith = (delimiter: (typeof delimiters)[number]) =>
-  CsvReadOptions.make({ delimiter: CsvFixedDelimiter.make({ delimiter }) });
+const readWith = (delimiter: CsvDelimiter) => CsvReadOptions.make({ delimiter: CsvFixedDelimiter.make({ delimiter }) });
 
 // Text over the characters that matter to CSV, so quotes, delimiters and line breaks meet often.
 const messyText = Arbitrary.schema(S.Literals(['"', ",", "\r", "\n", " ", "a", "é", "😀", ";"]).pipe(S.Array));
 
 describe("round trip", () => {
-  for (const delimiter of delimiters) {
-    for (const terminator of ["CRLF", "LF"] as const) {
+  for (const delimiter of CsvDelimiter.literals) {
+    for (const terminator of CsvTerminator.literals) {
       it.prop(
         `decode(encode(t)) = t, ${delimiter === "\t" ? "tab" : delimiter} ${terminator}`,
         [Arbitrary.schema(CsvTable)],
@@ -62,7 +66,7 @@ describe("chunk invariance", () => {
       const text = A.join(chars, "");
       const bytes = new TextEncoder().encode(text);
       const whole = Csv.parseBytesResult(bytes, readWith(","));
-      const pieces = Csv.parseBytesInPiecesResult(bytes, { options: readWith(","), pieceChars, onPiece: () => {} });
+      const pieces = Csv.parseBytesInPiecesResult(bytes, { options: readWith(","), pieceChars, onPiece: constVoid });
       expect(pieces).toEqual(whole);
     },
     runs

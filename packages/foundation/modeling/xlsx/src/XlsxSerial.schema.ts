@@ -4,6 +4,7 @@
  * day no calendar has.
  *
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $XlsxId } from "@beep/identity/packages";
@@ -19,39 +20,75 @@ const $I = $XlsxId.create("XlsxSerial");
  * Which day a workbook counts from: 1900 (serial 1 is 1 January 1900, and serial 60 is 29 February 1900, a day that
  * never was) or 1904 (serial 0 is 1 January 1904).
  *
+ * **Example** (One serial in both systems)
+ *
+ * ```ts
+ * import { XlsxCalendar, XlsxDateSystem } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxDateSystem)("1904") // => true
+ * XlsxCalendar.fromSerial(1, "1900").year // => 1900
+ * XlsxCalendar.fromSerial(1, "1904").year // => 1904
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxDateSystem = LiteralKit(["1900", "1904"]).pipe(
   $I.annoteSchema("XlsxDateSystem", { description: "The day a workbook's date serials count from" })
 );
 
 /**
- * Runtime type of {@link XlsxDateSystem}.
+ * The year a workbook's date serials count from, `"1900"` or `"1904"`; the type {@link XlsxDateSystem} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxDateSystem = typeof XlsxDateSystem.Type;
 
 /**
  * The last moment Excel shows: the end of 31 December 9999.
  *
+ * **Example** (The last day Excel shows)
+ *
+ * ```ts
+ * import { MAX_SERIAL, XlsxCalendar } from "@beep/xlsx"
+ *
+ * XlsxCalendar.fromSerial(MAX_SERIAL, "1900").year // => 9999
+ * XlsxCalendar.fromSerial(MAX_SERIAL, "1900").day // => 31
+ * ```
+ *
  * @category constants
+ * @since 0.0.0
  */
 export const MAX_SERIAL = 2_958_465.999;
 
 /**
  * A date or time as a count of days, the time of day its fraction.
  *
+ * **Example** (Serials in range)
+ *
+ * ```ts
+ * import { XlsxSerial } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxSerial)(45_292.5) // => true
+ * S.is(XlsxSerial)(-1) // => false
+ * S.is(XlsxSerial)(3_000_000) // => false
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxSerial = S.Finite.check(S.isBetween({ minimum: 0, maximum: MAX_SERIAL })).pipe(
   $I.annoteSchema("XlsxSerial", { description: "A date or time as a count of days; the fraction is the time of day" })
 );
 
 /**
- * Runtime type of {@link XlsxSerial}.
+ * A date or time as a count of days from the workbook's starting day; the type {@link XlsxSerial} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxSerial = typeof XlsxSerial.Type;
 
@@ -65,13 +102,19 @@ const field = (minimum: number, maximum: number, description: string) =>
  * **Example** (The day that never was)
  *
  * ```ts
- * import { XlsxCalendar } from "@beep/xlsx/XlsxSerial"
+ * import { XlsxCalendar } from "@beep/xlsx"
+ * import * as O from "effect/Option"
  *
- * XlsxCalendar.fromSerial(60, "1900") // => { year: 1900, month: 2, day: 29, hour: 0, minute: 0, second: 0 }
+ * const leap = XlsxCalendar.fromSerial(60, "1900")
+ * leap.month // => 2
+ * leap.day // => 29
  * XlsxCalendar.fromSerial(61, "1900").day // => 1
+ * O.isNone(XlsxCalendar.toDateTime(60, "1900")) // => true
+ * XlsxCalendar.toSerial({ year: 2024, month: 1, day: 1, hour: 12, minute: 0, second: 0 }, "1900") // => O.some(45292.5)
  * ```
  *
  * @category models
+ * @since 0.0.0
  */
 export class XlsxCalendar extends S.Opaque<XlsxCalendar, { readonly brand: unique symbol }>()(
   S.Struct({

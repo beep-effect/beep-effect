@@ -3,7 +3,7 @@
 
 import { Csv } from "@beep/csv/Csv.codec";
 import { CsvFixedDelimiter, CsvReadOptions } from "@beep/csv/CsvOptions.schema";
-import { CsvTable } from "@beep/csv/CsvTable.schema";
+import { CsvRecord, CsvTable } from "@beep/csv/CsvTable.schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -20,7 +20,7 @@ const effectRead = (text: string) =>
   Stream.make(text).pipe(
     Stream.pipeThroughChannel(EffectCsv.decodeString()),
     Stream.runCollect,
-    Effect.map((rows) => A.map(rows, (row) => [...(row as ReadonlyArray<string>)])),
+    Effect.map((rows) => A.map(rows, (row) => [...row])),
     Effect.result
   );
 
@@ -32,7 +32,7 @@ const effectWrite = (records: ReadonlyArray<ReadonlyArray<string>>) =>
   );
 
 // Records without blank lines: Effect reads a blank line differently only in what it counts.
-const Records = S.Array(S.NonEmptyArray(S.String).check(S.isMinLength(2)));
+const Records = S.Array(CsvRecord.check(S.isMinLength(2)));
 const quotey = Arbitrary.schema(S.Literals(['"', ",", "\n", "a", "b"]).pipe(S.Array));
 
 describe("strict mode agrees with effect/encoding/Csv", () => {
@@ -57,7 +57,7 @@ describe("strict mode agrees with effect/encoding/Csv", () => {
     [Arbitrary.schema(Records)],
     ([records]) =>
       Effect.gen(function* () {
-        const text = Csv.stringify(CsvTable.make({ records: records }));
+        const text = Csv.stringify(CsvTable.make({ records }));
         const theirs = yield* effectRead(text);
         expect(Result.isSuccess(theirs)).toBe(true);
         if (Result.isSuccess(theirs)) expect(theirs.success).toEqual(records);

@@ -3,6 +3,7 @@
  * knows, a cell its sheet and address, a part its path, so none has a field that may be missing.
  *
  * @packageDocumentation
+ * @since 0.0.0
  */
 
 import { $XlsxId } from "@beep/identity/packages";
@@ -25,7 +26,18 @@ const whole = (description: string) =>
 /**
  * What the first bytes and the names inside say a file is.
  *
+ * **Example** (Sniff a file before reading it)
+ *
+ * ```ts
+ * import { Xlsx, XlsxContainer } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * Xlsx.container(new Uint8Array([1, 2, 3])) // => "notAnArchive"
+ * S.is(XlsxContainer)("legacyXls") // => true
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxContainer = LiteralKit([
   "workbook",
@@ -41,13 +53,27 @@ export const XlsxContainer = LiteralKit([
 ]).pipe($I.annoteSchema("XlsxContainer", { description: "What a file is, from its first bytes and the names inside" }));
 
 /**
- * Runtime type of {@link XlsxContainer}.
+ * What a file is, such as `"workbook"` or `"encrypted"`; the type {@link XlsxContainer} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxContainer = typeof XlsxContainer.Type;
 
-/** The file is not a workbook this package reads. */
+/**
+ * The file is not a workbook this package reads.
+ *
+ * **Example** (A legacy .xls file)
+ *
+ * ```ts
+ * import { describeFinding, NotAWorkbook } from "@beep/xlsx"
+ *
+ * describeFinding(NotAWorkbook.make({ container: "legacyXls" })) // => "the file is not an .xlsx workbook (legacyXls)"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class NotAWorkbook extends S.Opaque<NotAWorkbook, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("NotAWorkbook"),
@@ -55,14 +81,40 @@ export class NotAWorkbook extends S.Opaque<NotAWorkbook, { readonly brand: uniqu
   }).pipe($I.annoteSchema("NotAWorkbook", { description: "The file is not an .xlsx workbook" }))
 ) {}
 
-/** A part a workbook must have is not in the archive. */
+/**
+ * A part a workbook must have is not in the archive.
+ *
+ * **Example** (A missing workbook part)
+ *
+ * ```ts
+ * import { describeFinding, MissingPart } from "@beep/xlsx"
+ *
+ * describeFinding(MissingPart.make({ path: "xl/workbook.xml" })) // => "the part xl/workbook.xml is missing"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class MissingPart extends S.Opaque<MissingPart, { readonly brand: unique symbol }>()(
   S.Struct({ kind: S.tag("MissingPart"), path }).pipe(
     $I.annoteSchema("MissingPart", { description: "A part the workbook names is not in the archive" })
   )
 ) {}
 
-/** The archive holds one path twice, so two readers could be shown two different workbooks. */
+/**
+ * The archive holds one path twice, so two readers could be shown two different workbooks.
+ *
+ * **Example** (A path held twice)
+ *
+ * ```ts
+ * import { describeFinding, DuplicatePart } from "@beep/xlsx"
+ *
+ * describeFinding(DuplicatePart.make({ path: "xl/workbook.xml" })) // => "the archive holds xl/workbook.xml twice"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class DuplicatePart extends S.Opaque<DuplicatePart, { readonly brand: unique symbol }>()(
   S.Struct({ kind: S.tag("DuplicatePart"), path }).pipe(
     $I.annoteSchema("DuplicatePart", { description: "The archive holds one path twice" })
@@ -72,7 +124,18 @@ export class DuplicatePart extends S.Opaque<DuplicatePart, { readonly brand: uni
 /**
  * How an archive is damaged, in the words of Effect's zip reader.
  *
+ * **Example** (Known kinds of damage)
+ *
+ * ```ts
+ * import { XlsxArchiveDamage } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxArchiveDamage)("Truncated") // => true
+ * S.is(XlsxArchiveDamage)("Corrupt") // => false
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxArchiveDamage = LiteralKit([
   "InvalidHeader",
@@ -84,7 +147,21 @@ export const XlsxArchiveDamage = LiteralKit([
   "BodyConsumed",
 ]).pipe($I.annoteSchema("XlsxArchiveDamage", { description: "How the archive is damaged" }));
 
-/** The archive itself is damaged, cut short, or uses something this package does not read, such as encryption. */
+/**
+ * The archive itself is damaged, cut short, or uses something this package does not read, such as encryption.
+ *
+ * **Example** (A truncated archive)
+ *
+ * ```ts
+ * import { DamagedArchive, describeFinding } from "@beep/xlsx"
+ *
+ * const finding = DamagedArchive.make({ damage: "Truncated", reason: "unexpected end of data" })
+ * describeFinding(finding) // => "the archive is damaged (Truncated): unexpected end of data"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class DamagedArchive extends S.Opaque<DamagedArchive, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("DamagedArchive"),
@@ -93,7 +170,21 @@ export class DamagedArchive extends S.Opaque<DamagedArchive, { readonly brand: u
   }).pipe($I.annoteSchema("DamagedArchive", { description: "The archive is damaged or cut short" }))
 ) {}
 
-/** A part is not well-formed XML. */
+/**
+ * A part is not well-formed XML.
+ *
+ * **Example** (Malformed sheet XML)
+ *
+ * ```ts
+ * import { DamagedXml, describeFinding } from "@beep/xlsx"
+ *
+ * const finding = DamagedXml.make({ path: "xl/worksheets/sheet1.xml", line: 3, column: 14, reason: "unclosed tag" })
+ * describeFinding(finding) // => "xl/worksheets/sheet1.xml is not well-formed at 3:14: unclosed tag"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class DamagedXml extends S.Opaque<DamagedXml, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("DamagedXml"),
@@ -107,7 +198,18 @@ export class DamagedXml extends S.Opaque<DamagedXml, { readonly brand: unique sy
 /**
  * Which cap a read ran into.
  *
+ * **Example** (Known caps)
+ *
+ * ```ts
+ * import { XlsxLimit } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxLimit)("inflatedBytes") // => true
+ * S.is(XlsxLimit)("time") // => false
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxLimit = LiteralKit([
   "inputBytes",
@@ -123,13 +225,28 @@ export const XlsxLimit = LiteralKit([
 ]).pipe($I.annoteSchema("XlsxLimit", { description: "Which cap a read ran into" }));
 
 /**
- * Runtime type of {@link XlsxLimit}.
+ * The name of one cap, such as `"inflatedBytes"`; the type {@link XlsxLimit} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxLimit = typeof XlsxLimit.Type;
 
-/** The file went past one of its caps. */
+/**
+ * The file went past one of its caps.
+ *
+ * **Example** (A file over its byte cap)
+ *
+ * ```ts
+ * import { describeFinding, LimitExceeded } from "@beep/xlsx"
+ *
+ * const finding = LimitExceeded.make({ limit: "inputBytes", path: "the file" })
+ * describeFinding(finding) // => "the file went past its cap on inputBytes in the file"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class LimitExceeded extends S.Opaque<LimitExceeded, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("LimitExceeded"),
@@ -138,7 +255,20 @@ export class LimitExceeded extends S.Opaque<LimitExceeded, { readonly brand: uni
   }).pipe($I.annoteSchema("LimitExceeded", { description: "The file went past one of its caps" }))
 ) {}
 
-/** The workbook names no sheet. */
+/**
+ * The workbook names no sheet.
+ *
+ * **Example** (A workbook with no sheet)
+ *
+ * ```ts
+ * import { describeFinding, NoSheets } from "@beep/xlsx"
+ *
+ * describeFinding(NoSheets.make({})) // => "the workbook has no sheet"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class NoSheets extends S.Opaque<NoSheets, { readonly brand: unique symbol }>()(
   S.Struct({ kind: S.tag("NoSheets") }).pipe($I.annoteSchema("NoSheets", { description: "The workbook has no sheet" }))
 ) {}
@@ -146,13 +276,42 @@ export class NoSheets extends S.Opaque<NoSheets, { readonly brand: unique symbol
 /**
  * Why a cell could not be read.
  *
+ * **Example** (Known reasons)
+ *
+ * ```ts
+ * import { XlsxUnreadableReason } from "@beep/xlsx"
+ * import * as S from "effect/Schema"
+ *
+ * S.is(XlsxUnreadableReason)("sharedString") // => true
+ * S.is(XlsxUnreadableReason)("formula") // => false
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxUnreadableReason = LiteralKit(["sharedString", "number", "boolean", "errorCode", "date"]).pipe(
   $I.annoteSchema("XlsxUnreadableReason", { description: "What kind of value the cell failed to be" })
 );
 
-/** A cell the file itself gets wrong: a text index that points nowhere, text where a number belongs. */
+/**
+ * A cell the file itself gets wrong: a text index that points nowhere, text where a number belongs.
+ *
+ * **Example** (A shared text index that points nowhere)
+ *
+ * ```ts
+ * import { describeFinding, UnreadableCell, XlsxAddress } from "@beep/xlsx"
+ *
+ * const finding = UnreadableCell.make({
+ *   sheet: "Items",
+ *   address: XlsxAddress.make({ column: 2, row: 5 }),
+ *   reason: "sharedString"
+ * })
+ * describeFinding(finding) // => 'C5 on "Items" could not be read as a sharedString'
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class UnreadableCell extends S.Opaque<UnreadableCell, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("UnreadableCell"),
@@ -162,7 +321,20 @@ export class UnreadableCell extends S.Opaque<UnreadableCell, { readonly brand: u
   }).pipe($I.annoteSchema("UnreadableCell", { description: "A cell the file itself gets wrong" }))
 ) {}
 
-/** A cell or a row whose reference cannot be read, or that repeats one; it was placed after the one before it. */
+/**
+ * A cell or a row whose reference cannot be read, or that repeats one; it was placed after the one before it.
+ *
+ * **Example** (An unreadable reference)
+ *
+ * ```ts
+ * import { BadAddress, describeFinding } from "@beep/xlsx"
+ *
+ * describeFinding(BadAddress.make({ sheet: "Items", row: 4, raw: "ZZZZ4" })) // => 'a reference in row 4 of "Items" cannot be used: ZZZZ4'
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class BadAddress extends S.Opaque<BadAddress, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("BadAddress"),
@@ -172,7 +344,20 @@ export class BadAddress extends S.Opaque<BadAddress, { readonly brand: unique sy
   }).pipe($I.annoteSchema("BadAddress", { description: "A reference that cannot be read or repeats another" }))
 ) {}
 
-/** A row numbered lower than the one before it; it was put in its place. */
+/**
+ * A row numbered lower than the one before it; it was put in its place.
+ *
+ * **Example** (A row written late)
+ *
+ * ```ts
+ * import { describeFinding, RowOutOfOrder } from "@beep/xlsx"
+ *
+ * describeFinding(RowOutOfOrder.make({ sheet: "Items", row: 2 })) // => 'row 2 of "Items" was written after a later row'
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class RowOutOfOrder extends S.Opaque<RowOutOfOrder, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("RowOutOfOrder"),
@@ -181,14 +366,42 @@ export class RowOutOfOrder extends S.Opaque<RowOutOfOrder, { readonly brand: uni
   }).pipe($I.annoteSchema("RowOutOfOrder", { description: "A row written after a later one" }))
 ) {}
 
-/** A cell names a style the workbook does not have; it was read as General. */
+/**
+ * A cell names a style the workbook does not have; it was read as General.
+ *
+ * **Example** (A style index past the table)
+ *
+ * ```ts
+ * import { describeFinding, UnknownStyle, XlsxAddress } from "@beep/xlsx"
+ *
+ * const finding = UnknownStyle.make({ sheet: "Items", address: XlsxAddress.make({ column: 0, row: 1 }), style: 99 })
+ * describeFinding(finding) // => 'A1 on "Items" names style 99, which the workbook does not have'
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class UnknownStyle extends S.Opaque<UnknownStyle, { readonly brand: unique symbol }>()(
   S.Struct({ kind: S.tag("UnknownStyle"), sheet, address, style: whole("The style index the cell names") }).pipe(
     $I.annoteSchema("UnknownStyle", { description: "A cell names a style the workbook does not have" })
   )
 ) {}
 
-/** A number format whose displayed text is not worked out, and how many cells of a sheet have it. */
+/**
+ * A number format whose displayed text is not worked out, and how many cells of a sheet have it.
+ *
+ * **Example** (Cells under an unrendered format)
+ *
+ * ```ts
+ * import { describeFinding, FormatNotShown } from "@beep/xlsx"
+ *
+ * const finding = FormatNotShown.make({ sheet: "Items", code: "0.00E+00", cells: 12 })
+ * describeFinding(finding) // => '12 cells of "Items" have the format 0.00E+00, which is not rendered'
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class FormatNotShown extends S.Opaque<FormatNotShown, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("FormatNotShown"),
@@ -198,21 +411,68 @@ export class FormatNotShown extends S.Opaque<FormatNotShown, { readonly brand: u
   }).pipe($I.annoteSchema("FormatNotShown", { description: "A format whose displayed text is not worked out" }))
 ) {}
 
-/** A formula with no saved result: the cell reads as blank. */
+/**
+ * A formula with no saved result: the cell reads as blank.
+ *
+ * **Example** (A formula never calculated)
+ *
+ * ```ts
+ * import { describeFinding, FormulaWithoutResult, XlsxAddress } from "@beep/xlsx"
+ *
+ * const finding = FormulaWithoutResult.make({ sheet: "Items", address: XlsxAddress.make({ column: 3, row: 2 }) })
+ * describeFinding(finding) // => 'the formula in D2 on "Items" has no saved result'
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class FormulaWithoutResult extends S.Opaque<FormulaWithoutResult, { readonly brand: unique symbol }>()(
   S.Struct({ kind: S.tag("FormulaWithoutResult"), sheet, address }).pipe(
     $I.annoteSchema("FormulaWithoutResult", { description: "A formula the file saved no result for" })
   )
 ) {}
 
-/** A date cell holds serial 60 of the 1900 system: 29 February 1900, a day that never was. */
+/**
+ * A date cell holds serial 60 of the 1900 system: 29 February 1900, a day that never was.
+ *
+ * **Example** (The leap day that never was)
+ *
+ * ```ts
+ * import { describeFinding, FictitiousLeapDay, XlsxAddress } from "@beep/xlsx"
+ *
+ * const finding = FictitiousLeapDay.make({ sheet: "Items", address: XlsxAddress.make({ column: 1, row: 4 }) })
+ * describeFinding(finding) // => 'B4 on "Items" holds 29 February 1900, a day that never was'
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class FictitiousLeapDay extends S.Opaque<FictitiousLeapDay, { readonly brand: unique symbol }>()(
   S.Struct({ kind: S.tag("FictitiousLeapDay"), sheet, address }).pipe(
     $I.annoteSchema("FictitiousLeapDay", { description: "A date cell holds 29 February 1900" })
   )
 ) {}
 
-/** The extent a sheet declares is not the extent of its cells. */
+/**
+ * The extent a sheet declares is not the extent of its cells.
+ *
+ * **Example** (A declared extent larger than the data)
+ *
+ * ```ts
+ * import { DeclaredExtentWrong, describeFinding, XlsxRange } from "@beep/xlsx"
+ * import * as O from "effect/Option"
+ *
+ * const finding = DeclaredExtentWrong.make({
+ *   sheet: "Items",
+ *   declared: O.getOrThrow(XlsxRange.parse("A1:Z100")),
+ *   found: XlsxRange.parse("A1:B2")
+ * })
+ * describeFinding(finding) // => '"Items" declares A1:Z100 and holds A1:B2'
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class DeclaredExtentWrong extends S.Opaque<DeclaredExtentWrong, { readonly brand: unique symbol }>()(
   S.Struct({
     kind: S.tag("DeclaredExtentWrong"),
@@ -225,7 +485,18 @@ export class DeclaredExtentWrong extends S.Opaque<DeclaredExtentWrong, { readonl
 /**
  * What a read goes past.
  *
+ * **Example** (Branch on a warning finding)
+ *
+ * ```ts
+ * import { RowOutOfOrder, XlsxWarningFinding } from "@beep/xlsx"
+ *
+ * const finding = RowOutOfOrder.make({ sheet: "Items", row: 2 })
+ * XlsxWarningFinding.guards.RowOutOfOrder(finding) // => true
+ * XlsxWarningFinding.guards.BadAddress(finding) // => false
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxWarningFinding = LiteralKit([
   "UnreadableCell",
@@ -252,16 +523,28 @@ export const XlsxWarningFinding = LiteralKit([
   .pipe(S.toTaggedUnion("kind"), $I.annoteSchema("XlsxWarningFinding", { description: "What a read goes past" }));
 
 /**
- * Runtime type of {@link XlsxWarningFinding}.
+ * One of the oddities a read goes past, told apart by `kind`; the type {@link XlsxWarningFinding} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxWarningFinding = typeof XlsxWarningFinding.Type;
 
 /**
  * What stops a read.
  *
+ * **Example** (Branch on a fatal finding)
+ *
+ * ```ts
+ * import { NoSheets, XlsxFatalFinding } from "@beep/xlsx"
+ *
+ * const finding = NoSheets.make({})
+ * XlsxFatalFinding.guards.NoSheets(finding) // => true
+ * XlsxFatalFinding.guards.MissingPart(finding) // => false
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxFatalFinding = LiteralKit([
   "NotAWorkbook",
@@ -278,13 +561,29 @@ export const XlsxFatalFinding = LiteralKit([
   .pipe(S.toTaggedUnion("kind"), $I.annoteSchema("XlsxFatalFinding", { description: "What stops a read" }));
 
 /**
- * Runtime type of {@link XlsxFatalFinding}.
+ * One of the problems that stop a read, told apart by `kind`; the type {@link XlsxFatalFinding} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxFatalFinding = typeof XlsxFatalFinding.Type;
 
-/** An oddity the read went past. */
+/**
+ * An oddity the read went past.
+ *
+ * **Example** (Wrap a finding as a warning)
+ *
+ * ```ts
+ * import { RowOutOfOrder, XlsxWarning } from "@beep/xlsx"
+ *
+ * const warning = XlsxWarning.make({ finding: RowOutOfOrder.make({ sheet: "Items", row: 2 }) })
+ * warning.severity // => "warning"
+ * warning.finding.kind // => "RowOutOfOrder"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class XlsxWarning extends S.Opaque<XlsxWarning, { readonly brand: unique symbol }>()(
   S.Struct({
     severity: S.tag("warning"),
@@ -292,7 +591,26 @@ export class XlsxWarning extends S.Opaque<XlsxWarning, { readonly brand: unique 
   }).pipe($I.annoteSchema("XlsxWarning", { description: "An oddity the read went past" }))
 ) {}
 
-/** A problem that stopped the read. */
+/**
+ * A problem that stopped the read.
+ *
+ * **Example** (The fatal finding of a failed read)
+ *
+ * ```ts
+ * import { Xlsx } from "@beep/xlsx"
+ * import * as Result from "effect/Result"
+ *
+ * const result = Xlsx.parseResult(new Uint8Array([1, 2, 3]))
+ * const fatal = Result.match(result, {
+ *   onSuccess: () => "read",
+ *   onFailure: (error) => `${error.fatal.severity}: ${error.fatal.finding.kind}`
+ * })
+ * fatal // => "fatal: NotAWorkbook"
+ * ```
+ *
+ * @category diagnostics
+ * @since 0.0.0
+ */
 export class XlsxFatal extends S.Opaque<XlsxFatal, { readonly brand: unique symbol }>()(
   S.Struct({
     severity: S.tag("fatal"),
@@ -303,16 +621,30 @@ export class XlsxFatal extends S.Opaque<XlsxFatal, { readonly brand: unique symb
 /**
  * One finding and how serious it is.
  *
+ * **Example** (Tell warnings from fatal problems)
+ *
+ * ```ts
+ * import { NoSheets, RowOutOfOrder, XlsxDiagnostic, XlsxFatal, XlsxWarning } from "@beep/xlsx"
+ *
+ * const findings = [
+ *   XlsxWarning.make({ finding: RowOutOfOrder.make({ sheet: "Items", row: 2 }) }),
+ *   XlsxFatal.make({ finding: NoSheets.make({}) })
+ * ]
+ * findings.filter(XlsxDiagnostic.guards.fatal).length // => 1
+ * ```
+ *
  * @category schemas
+ * @since 0.0.0
  */
 export const XlsxDiagnostic = LiteralKit(["warning", "fatal"])
   .mapMembers(() => Tuple.make(XlsxWarning, XlsxFatal))
   .pipe(S.toTaggedUnion("severity"), $I.annoteSchema("XlsxDiagnostic", { description: "One finding and how serious" }));
 
 /**
- * Runtime type of {@link XlsxDiagnostic}.
+ * A warning or a fatal finding, told apart by `severity`; the type {@link XlsxDiagnostic} decodes to.
  *
- * @category models
+ * @category type-level
+ * @since 0.0.0
  */
 export type XlsxDiagnostic = typeof XlsxDiagnostic.Type;
 
@@ -323,7 +655,16 @@ const at = (finding: { readonly sheet: string; readonly address: Pick<XlsxAddres
  * A finding in one sentence that names the part or the cell. For logs and tests: an app writes its own sentences for
  * the person.
  *
- * @category utilities
+ * **Example** (Log a finding)
+ *
+ * ```ts
+ * import { describeFinding, MissingPart } from "@beep/xlsx"
+ *
+ * describeFinding(MissingPart.make({ path: "xl/styles.xml" })) // => "the part xl/styles.xml is missing"
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
  */
 export const describeFinding: (finding: XlsxWarningFinding | XlsxFatalFinding) => string = Match.type<
   XlsxWarningFinding | XlsxFatalFinding

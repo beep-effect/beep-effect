@@ -74,6 +74,9 @@
     {"file":"packages/foundation/modeling/xlsx/src/internal/container.ts","symbol":"Caps","kind":"struct-const","owner":"@beep/xlsx","identity":"Caps","description":"The caps of a read as plain numbers"},
     {"file":"packages/foundation/modeling/xlsx/src/internal/ooxml.ts","symbol":"Relationship","kind":"struct-const","owner":"@beep/xlsx","identity":"Relationship","description":"One relationship of an OOXML part"},
     {"file":"packages/foundation/modeling/xlsx/src/internal/serial.ts","symbol":"SerialParts","kind":"struct-const","owner":"@beep/xlsx","identity":"SerialParts","description":"A serial's calendar fields, with what rendering needs"},
-    {"file":"packages/foundation/modeling/xlsx/src/internal/sheet.ts","symbol":"SheetLayout","kind":"struct-const","owner":"@beep/xlsx","identity":"SheetLayout","description":"What a sheet's XML says beside its rows"}
+    {"file":"packages/foundation/modeling/xlsx/src/internal/sheet.ts","symbol":"SheetLayout","kind":"struct-const","owner":"@beep/xlsx","identity":"SheetLayout","description":"What a sheet's XML says beside its rows"},
+    {"file":"packages/foundation/modeling/xlsx/src/internal/workbookPart.ts","symbol":"Opened","kind":"struct-const","owner":"@beep/xlsx","identity":"Opened","description":"A workbook opened: everything but its sheets' rows"},
+    {"file":"packages/foundation/modeling/xlsx/src/internal/workbookPart.ts","symbol":"SheetEntry","kind":"struct-const","owner":"@beep/xlsx","identity":"SheetEntry","description":"A sheet as the workbook part names it"},
+    {"file":"packages/foundation/modeling/xlsx/src/internal/workbookPart.ts","symbol":"StyleFormat","kind":"struct-const","owner":"@beep/xlsx","identity":"StyleFormat","description":"A style's number format as the sheet reader asks of it"}
   ]
 }
