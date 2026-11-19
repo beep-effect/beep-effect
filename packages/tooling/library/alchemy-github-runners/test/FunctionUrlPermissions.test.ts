@@ -365,4 +365,25 @@ describe("planFunctionUrlPermissionCalls", () => {
     expect(functionPolicyStatements("[]")).toBeUndefined();
     expect(functionPolicyStatements('{"Statement":"x"}')).toBeUndefined();
   });
+
+  // The calls above drive the exported reconcile. This pins that the provider's own URL path is the one calling it:
+  // a patch regenerated without that hunk would keep every test above green and bring the gap back.
+  it.effect("is what the installed provider runs for a public function URL", () =>
+    Effect.gen(function* () {
+      const provider = new URL("./Function.ts", import.meta.resolve("@alchemy.run/aws/Lambda"));
+      const source = yield* Effect.promise(() => Bun.file(provider).text());
+      const body = pipe(
+        source,
+        Str.split("const upsertPublicFunctionUrlPermissions = Effect.fn("),
+        A.get(1),
+        O.map(Str.split("const deleteFunctionUrl = ")),
+        O.flatMap(A.head),
+        O.getOrElse(() => "")
+      );
+      expect(Str.includes("yield* reconcileFunctionUrlPermissions({")(body)).toBe(true);
+      expect(Str.includes("declared: publicFunctionUrlPermissions")(body)).toBe(true);
+      expect(Str.includes("removePermission")(body)).toBe(false);
+      expect(Str.includes("yield* upsertPublicFunctionUrlPermissions(functionName, qualifier)")(source)).toBe(true);
+    })
+  );
 });
