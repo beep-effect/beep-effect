@@ -395,6 +395,18 @@ jobs:
             closed="$(jq --arg title "$title" --arg base "$DEFAULT_BRANCH" \
               "[${own} | ${declined}] | length" <<<"$pulls")"
             read_pin "$PIN_BRANCH" "the pin-bump branch read" allow-missing
+            # Whether the bot branch exists is read from its ref: a missing or empty pin
+            # file on an existing branch reads as an empty pin_text too, and that branch
+            # still goes through the sync (as an unparseable pin), never a blind reset.
+            branch_exists=true
+            if ! gh api "repos/${GH_REPO}/git/ref/heads/${PIN_BRANCH}" --jq .object.sha >/dev/null 2>"$read_error"; then
+              if grep -q "HTTP 404" "$read_error"; then
+                branch_exists=false
+              else
+                cat "$read_error" >&2
+                lookup_failed "the pin-bump branch ref lookup"
+              fi
+            fi
             branch_tag="$(grep -E '^[[:space:]]*BEEP_CI_RELEASE_TAG:[[:space:]]*beep-ci-[0-9a-f]{12}[[:space:]]*$' <<<"$pin_text" \
               | grep -Eo 'beep-ci-[0-9a-f]{12}' | head -n 1 || true)"
             branch_open_labelled=0
@@ -410,7 +422,7 @@ jobs:
               <<<"$pulls")"
             if [[ "$closed" -ge 1 ]]; then
               parked=true
-            elif [[ -z "$pin_text" ]]; then
+            elif [[ "$branch_exists" != "true" ]]; then
               # No bot branch: the pull-request step creates it from main.
               bump=true
             else

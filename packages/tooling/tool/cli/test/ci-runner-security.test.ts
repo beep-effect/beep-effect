@@ -2691,6 +2691,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           readonly syncTag?: string;
           readonly syncReason?: string;
           readonly releases?: string;
+          readonly branchExists?: boolean;
         } = {}
       ) {
         // One defaults object instead of a fallback per option keeps this helper's branch count flat.
@@ -2702,6 +2703,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           syncTag: "",
           syncReason: "",
           releases: "",
+          branchExists: O.isSome(branchPin),
           ...options,
         };
         const { newest, failing } = settings;
@@ -2728,6 +2730,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
               '    [ "$pattern" = beep-linux-x64.sha256 ] || exit 1',
               '    mkdir -p "$dir"; printf "%s  beep-linux-x64\\n" "$NEWEST_SHA" > "$dir/$pattern" ;;',
               '  "release view") echo "$NEWEST_TARGET" ;;',
+              '  "api repos/"*"/git/ref/heads/"*) if [ "$BRANCH_EXISTS" = 1 ]; then echo 0123456789abcdef0123456789abcdef0badbeef; else echo "gh: Not Found (HTTP 404)" >&2; exit 1; fi ;;',
               '  "api repos/"*)',
               '    case "$2" in *"ref=$DEFAULT_BRANCH") side=main; file="$MAIN_PIN_FILE" ;; *) side=branch; file="$BRANCH_PIN_FILE" ;; esac',
               '    if [ "$FAILING" = "$side" ]; then echo "gh: Server Error (HTTP 502)" >&2; exit 1; fi',
@@ -2809,6 +2812,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           SYNC_TAG: settings.syncTag,
           SYNC_REASON: settings.syncReason,
           RELEASES_JSON: settings.releases,
+          BRANCH_EXISTS: `${Number(settings.branchExists)}`,
         });
         if (failing === "none") expect(run).toEqual({ status: 0, stderr: "" });
         const summary = yield* fs.readFileString(summaryPath);
@@ -2950,6 +2954,16 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(unparseableSuperseded.decision).toEqual({ ...bumps, supersede: "true" });
       expect(unparseableSuperseded.outputs.pull).toBe("7");
       expect(unparseableSuperseded.syncArgs).toContain("ci binary-pin-sync");
+      // An EXISTING bot branch whose pin file was deleted (the contents read 404s, like a missing branch)
+      // is found by its ref and goes through the sync as an unparseable pin, never a blind reset.
+      const noPinFile = yield* runCase(mainOld, O.none(), pulls(pull("OPEN", newTag, ["ready-for-heavy"])), {
+        branchExists: true,
+        sync: "supersede",
+        syncTag: newTag,
+      });
+      expect(noPinFile.decision).toEqual({ ...bumps, supersede: "true" });
+      expect(noPinFile.syncArgs).toContain("ci binary-pin-sync");
+      expect(noPinFile.outputs.pull).toBe("7");
       // A branch the sync cannot heal is reported (warning, summary, one comment) and the job stays green.
       const blocked = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ready-for-heavy"])), {
         sync: "blocked",

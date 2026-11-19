@@ -497,6 +497,66 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
       })
     );
 
+    // The merge base already pinned the newest release R2 and main then moved its pin lines back to R1:
+    // the clean merge takes main's lines, so the sync rewrites them to R2 instead of pushing R1 under a
+    // pull request titled for R2.
+    it.effect("a clean merge that takes main's older pin lines is rewritten to the branch's release", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
+        yield* gitOutput(root, ["init", "-q", "-b", "main"]);
+        yield* gitOutput(root, ["config", "user.email", "pin-sync@example.test"]);
+        yield* gitOutput(root, ["config", "user.name", "Pin Sync Test"]);
+        yield* gitOutput(root, ["config", "commit.gpgsign", "false"]);
+        yield* gitOutput(root, ["config", "pull.rebase", "false"]);
+        yield* commitFile(root, { file: PIN_FILE, text: actionText(NEW), message: "pin R2" });
+        yield* gitOutput(root, ["branch", "pin"]);
+        yield* commitFile(root, { file: PIN_FILE, text: actionText(MID), message: "pin R1" });
+        yield* gitOutput(root, ["checkout", "-q", "pin"]);
+        const scratch = yield* fs.makeTempDirectoryScoped();
+        const rows = yield* decodeReleaseRows(releaseRows);
+        const releasesText = yield* encodeReleases(rows);
+        yield* fs.writeFileString(`${scratch}/releases.json`, releasesText);
+        const before = yield* head(root);
+        const repo = { root, releases: `${scratch}/releases.json`, output: `${scratch}/output`, before };
+        const outcome = yield* sync(repo);
+        const pin = yield* pinFileText(repo);
+        const contains = yield* gitOutput(root, ["merge-base", "--is-ancestor", "main", "HEAD"]);
+        const status = yield* gitOutput(root, ["status", "--porcelain"]);
+        expect(outcome).toStrictEqual(decided("merged", O.some(NEW)));
+        expect(pin).toBe(actionText(NEW));
+        expect(contains).toBe("");
+        expect(status).toBe("");
+      })
+    );
+
+    // An existing bot branch whose pin file was deleted or emptied is the pin, broken: stale, and when its
+    // update carries workflow files it is superseded with the newest release (it holds nothing else).
+    it.effect(
+      "an existing branch with a deleted pin file is stale, or supersedes when the update carries workflows",
+      () =>
+        Effect.gen(function* () {
+          const quiet = yield* fixture(MID, O.some(unrelated));
+          yield* gitOutput(quiet.root, ["rm", "-q", PIN_FILE]);
+          yield* gitOutput(quiet.root, ["commit", "-q", "--no-verify", "-m", "drop the pin file"]);
+          const quietOutcome = yield* sync(quiet);
+          expect(quietOutcome).toStrictEqual(decided("stale", O.none()));
+          const loud = yield* fixture(MID, O.some(mainWorkflow));
+          yield* gitOutput(loud.root, ["rm", "-q", PIN_FILE]);
+          yield* gitOutput(loud.root, ["commit", "-q", "--no-verify", "-m", "drop the pin file"]);
+          const loudOutcome = yield* sync(loud);
+          expect(loudOutcome).toStrictEqual(decided("supersede", O.some(NEW)));
+        })
+    );
+
+    it.effect("an existing branch with an empty pin file supersedes when the update carries workflows", () =>
+      Effect.gen(function* () {
+        const repo = yield* fixture(OLD, O.some(mainWorkflow), releaseRows, O.some(""));
+        const outcome = yield* sync(repo);
+        expect(outcome).toStrictEqual(decided("supersede", O.some(NEW)));
+      })
+    );
+
     // GitHub refuses a push by the pin-bump App (no `workflows` permission) that updates an existing
     // branch with workflow-file changes, so such a merge cannot be pushed. A branch that holds nothing
     // but the pin is superseded by a fresh pull request from main; anything more stops.

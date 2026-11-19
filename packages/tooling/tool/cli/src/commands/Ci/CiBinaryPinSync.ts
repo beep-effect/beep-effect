@@ -31,6 +31,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { CI_BINARY_PIN_FILE, CiBinaryPin, decodeCiBinaryPinFlags, rewriteCiBinaryPin } from "./CiBinaryPin.ts";
 
@@ -229,11 +230,17 @@ export class CiBinaryPinSyncRequest extends S.Opaque<CiBinaryPinSyncRequest, { r
 
 const gitFailure = (request: CiBinaryPinSyncRequest) => CiCommandError.new(`git failed in ${request.cwd}.`);
 
+// The checkout's pin file, or none when the branch deleted it.
 const readPinFile = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const file = path.resolve(request.cwd, request.file);
-  return yield* fs.readFileString(file).pipe(Effect.mapError(CiCommandError.new(`Failed to read ${file}.`)));
+  const present = yield* fs.exists(file).pipe(Effect.mapError(CiCommandError.new(`Failed to read ${file}.`)));
+  if (!present) {
+    return O.none<string>();
+  }
+  const text = yield* fs.readFileString(file).pipe(Effect.mapError(CiCommandError.new(`Failed to read ${file}.`)));
+  return O.some(text);
 });
 
 // The resolved release when the branch pins it exactly; the branch's own pin when it is a newer
@@ -241,8 +248,12 @@ const readPinFile = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest
 // the release list does not hold, or a tied creation time, fails: nothing is changed.
 const resolveSyncTarget = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
   const branchText = yield* readPinFile(request);
-  // A pin file whose two lines do not parse holds no release to keep: it is stale like an older one.
-  const branch = yield* rewriteCiBinaryPin(branchText, request.pin).pipe(Effect.option);
+  // A missing pin file, or one whose two lines do not parse, holds no release to keep: it is stale like
+  // an older one.
+  if (O.isNone(branchText)) {
+    return O.none<CiBinaryPin>();
+  }
+  const branch = yield* rewriteCiBinaryPin(branchText.value, request.pin).pipe(Effect.option);
   if (O.isNone(branch)) {
     return O.none<CiBinaryPin>();
   }
@@ -275,17 +286,15 @@ const mergeBase = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) 
   return { conflicted, outside: A.map(outside, (entry) => entry.path) };
 });
 
-// After a conflict, set the pin file to the base's text with only the two pinned lines changed and
-// conclude the merge commit. A clean merge needs nothing: the branch's pin file was checked to equal
-// its merge-base text plus the two pinned lines, so the three-way merge already yields that result.
+// Set the pin file to the base's text with only the two pinned lines set to the target. After a conflict
+// this concludes the merge commit. A clean merge can still leave other pin lines: when the branch's pin
+// lines equal its merge base's and main then changed them, the merge takes main's (older) pin, so it
+// is rewritten and committed. Pin-only was checked first, so those two lines are the only difference.
 const commitResolvedPin = Effect.fnUntraced(function* (
   request: CiBinaryPinSyncRequest,
   target: CiBinaryPin,
   conflicted: boolean
 ) {
-  if (!conflicted) {
-    return;
-  }
   const git = yield* Git;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -294,10 +303,16 @@ const commitResolvedPin = Effect.fnUntraced(function* (
     return yield* CiCommandError.make({ message: `${request.base} has no ${request.file}.` });
   }
   const resolved = yield* rewriteCiBinaryPin(baseFile.value, target);
+  const merged = yield* readPinFile(request);
+  if (!conflicted && O.exists(merged, (text) => text === resolved.text)) {
+    return;
+  }
   const file = path.resolve(request.cwd, request.file);
   yield* fs.writeFileString(file, resolved.text).pipe(Effect.mapError(CiCommandError.new(`Failed to write ${file}.`)));
   yield* git.add(request.cwd, [request.file]).pipe(Effect.mapError(gitFailure(request)));
-  const message = `Merge ${request.base} into the pin-bump branch, keeping the pin at ${target.tag}`;
+  const message = conflicted
+    ? `Merge ${request.base} into the pin-bump branch, keeping the pin at ${target.tag}`
+    : `ci: keep the beep CI binary pin at ${target.tag}`;
   yield* git.commit(request.cwd, message, { noVerify: true }).pipe(Effect.mapError(gitFailure(request)));
 });
 
@@ -308,13 +323,18 @@ const pinFileBeyondPinLines = Effect.fnUntraced(function* (request: CiBinaryPinS
   const git = yield* Git;
   const forkPoint = yield* git.mergeBase(request.cwd, request.base, "HEAD").pipe(Effect.mapError(gitFailure(request)));
   const forkText = yield* git.show(request.cwd, forkPoint, request.file).pipe(Effect.mapError(gitFailure(request)));
-  const branchText = yield* readPinFile(request);
+  const branchFile = yield* readPinFile(request);
+  // A deleted or empty pin file is the pin itself, broken: it holds nothing beyond the pin.
+  const branchText = O.filter(branchFile, (text) => Str.isNonEmpty(Str.trim(text)));
+  if (O.isNone(branchText)) {
+    return false;
+  }
   const pinned = (text: string) =>
     rewriteCiBinaryPin(text, request.pin).pipe(
       Effect.map((rewritten) => rewritten.text),
       Effect.option
     );
-  const branchPinned = yield* pinned(branchText);
+  const branchPinned = yield* pinned(branchText.value);
   const forkPinned = yield* O.match(forkText, { onNone: () => Effect.succeedNone, onSome: pinned });
   return !O.exists(O.all([forkPinned, branchPinned]), ([fork, branch]) => fork === branch);
 });
