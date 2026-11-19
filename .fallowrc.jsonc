@@ -16,10 +16,14 @@
     "infra/src/internal/*-entry.ts",
     // Alchemy stacks of the tooling `infra` kind: the CLI loads alchemy.run.ts;
     // the turbo cache's token handoff command is run by operators (runbook);
-    // the cost-controls deploy workflow runs plan-check.ts between plan and deploy.
+    // the cost-controls deploy workflow runs plan-check.ts between plan and deploy;
+    // the ci-runners deploy workflow runs plan-check.ts as its checked plan and deploy steps;
+    // the gate runs deploy-role-policy.ts to write the deploy role policy.
     "packages/tooling/infra/*/alchemy.run.ts",
     "packages/tooling/infra/turbo-cache/token.ts",
     "packages/tooling/infra/cost-controls/plan-check.ts",
+    "packages/tooling/infra/ci-runners/plan-check.ts",
+    "packages/tooling/infra/ci-runners/deploy-role-policy.ts",
     // The infra-github deploy workflow runs ruleset-guard.ts before and after the deploy.
     "packages/tooling/infra/github/ruleset-guard.ts",
     // A second Alchemy entry file the CLI loads by path (`alchemy deploy <file>`),

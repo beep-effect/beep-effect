@@ -32,6 +32,16 @@ const optionField = <Field extends S.Constraint>(schema: Field) =>
   S.OptionFromNullOr(schema).pipe(S.withDecodingDefaultTypeKey(Effect.succeedNone));
 
 /**
+ * The environment variables whose presence marks an AI agent: the std-env agent table's presence keys, in its
+ * declared order. `AI_AGENT`, and the `PATH` and `EDITOR` patterns of the `pi` and `devin` rows, also decide
+ * {@link RuntimeEnv} `agent`; a tool forwarding the agent signal to children forwards those three as well.
+ *
+ * @public
+ * @category schemas
+ * @since 0.0.0
+ */
+export { AgentEnvKey } from "./internal/agentCi.ts";
+/**
  * The CI providers a {@link RuntimeEnv} names: `github-actions` when `GITHUB_ACTIONS` is set, `generic` for any other
  * CI signal (`CI`, `CONTINUOUS_INTEGRATION`).
  *

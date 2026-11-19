@@ -9,7 +9,7 @@ Status: `pending`
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
 | P0 Research | pending | Re-verify the six sites against the current head and settle the two open choices: which entry carries the unbuilt-dependency probe (the generated `check` script or a `beep-cli` route), and where the GitHub-check report's durable file lives. | Each site's state matches `SPEC.md` Target Surfaces or the spec is corrected; one decision file per choice. |
-| P1 Agent signal through Turbo | pending | Fixes 1 and 2: export the agent keys from `@beep/runtime-env`, add them to `turbo.json`, set `AGENT=1` and `--output-logs=errors-only` in `turboStep`/`turboRunArgs` under a detected agent, and re-record the cache baseline. | AC1 to AC4 and AC9 hold; the two measured numbers are written to `history/`. |
+| P1 Agent signal through Turbo | complete | Fixes 1 and 2: export the agent keys from `@beep/runtime-env`, add them to `turbo.json`, set `AGENT=1` and `--output-logs=errors-only` in `turboStep`/`turboRunArgs` under a detected agent, and re-record the cache baseline. | AC1 to AC4 and AC9 hold; the two measured numbers are written to `history/`. |
 | P2 Quiet surfaces | complete | Fixes 3, 4 and 5: formatter options on `CliColor.formatterLayer` and `globalFlags: "summary"` in the repo CLI; envelopes off stdout when the artifact env is set, with a durable GitHub-check report; the submit step on the split executor. | AC5 to AC7 hold. |
 | P3 Unbuilt-dependency probe | pending | Fix 6: the one-line probe on both package-local check entry points, reusing `missingReferenceOutputs`. | AC8 holds; a fresh lane's package check prints one line where it printed one TS6305 per reference. |
 | P4 Verify | pending | Run `bun run beep quality package-verify` for every touched package and `bun run beep cache audit`; record the before and after character counts. | AC9 and AC10 hold; evidence is under `history/`. |
@@ -74,6 +74,14 @@ git diff --check -- goals/gate-output-switch-on
 
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug gate-output-switch-on`; add a `kind: checkpoint` file there, never edit this block._
+
+### P1 agent signal through Turbo built, 2026-11-18
+
+Fixes 1 and 2 are implemented with tests. AC1: a test fails when the agent table gains a key Turbo's pass-through lacks. AC2: 820 characters under either agent marker, from 14,238. AC3: nine tests over the step builder and the real task path. AC4: a cache hit through the task path prints 1,098 characters and no test summary; a caller's own log setting wins. AC9: the cache audit reports no blocking finding after the re-record.
+
+Lane fix/gate-output-switch-on
+
+Reverse: Revert the three commits on the lane and restore the previous root cache baseline.
 
 ### P2 quiet surfaces built, 2026-11-18
 

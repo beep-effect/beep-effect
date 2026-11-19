@@ -522,6 +522,12 @@
         ]
       },
       {
+        "name": "@beep/infra-ci-runners",
+        "patterns": [
+          "packages/tooling/infra/ci-runners/src/**"
+        ]
+      },
+      {
         "name": "@beep/infra-cost-controls",
         "patterns": [
           "packages/tooling/infra/cost-controls/src/**"
@@ -3137,6 +3143,23 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/infra-ci-runners",
+        "allow": [
+          "@beep/alchemy-aws-extras",
+          "@beep/alchemy-github-runners",
+          "@beep/identity",
+          "@beep/infra-ci-runners",
+          "@beep/schema"
+        ],
+        "allowTypeOnly": [
+          "@beep/alchemy-aws-extras",
+          "@beep/alchemy-github-runners",
+          "@beep/identity",
+          "@beep/infra-ci-runners",
+          "@beep/schema"
         ]
       },
       {

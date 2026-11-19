@@ -497,7 +497,7 @@ Reverse: Return the catalog entry to the vercel release that matches whatever @d
 
 ### Runner Lambdas port terraform-aws-github-runner v7.10.1 without the features the live fleet leaves off, 2026-11-13
 
-The handlers port `lambdas/functions/{webhook,control-plane,termination-watcher,gh-agent-syncer}` at v7.10.1, the version `infra/ci-runners/Pulumi.yaml` pins, as Effect programs over six service contracts (`GitHubAppAuth`, `GitHubRunners`, `Ec2Fleet`, `SsmStore`, `MessageQueue`, `RunnerBinaries`). Wire shapes stay upstream's: the SQS `ActionRequestMessage`, the `ghr:*` EC2 tags and the SSM token layout. Left out because the live fleet does not use them: dynamic `ghr-*` labels, dedicated hosts (`RunInstances`), the warm pool (`adjustPool`), the EventBridge webhook mode and queue-selection strategies other than first match, the AMI housekeeper, GitHub Enterprise base URLs in registration-token mode, and Powertools metrics and X-Ray. `jobQueuedCheck` defaults to false (the live value; upstream's default is true). Partial-launch, cap and retry semantics match upstream, including the on-demand failover for configured `CreateFleet` error codes.
+The handlers port `lambdas/functions/{webhook,control-plane,termination-watcher,gh-agent-syncer}` at v7.10.1, the version `infra/ci-runners/Pulumi.yaml` pins, as Effect programs over six service contracts (`GitHubAppAuth`, `GitHubRunners`, `Ec2Fleet`, `SsmStore`, `MessageQueue`, `RunnerBinaries`). Wire shapes stay upstream's: the SQS `ActionRequestMessage`, the `ghr:*` EC2 tags and the SSM token layout. Left out because the live fleet does not use them: dynamic `ghr-*` labels, dedicated hosts (`RunInstances`), the warm pool (`adjustPool`), the EventBridge webhook mode and queue-selection strategies other than first match, the AMI housekeeper, GitHub Enterprise base URLs in registration-token mode, and Powertools metrics and X-Ray. `jobQueuedCheck` defaults to false (the live value; upstream's default is true). Partial-launch, cap and retry semantics match upstream, including the on-demand failover for configured `CreateFleet` error codes. Two deliberate departures (amended 2026-11-18, #3386, 7aad2de4a2a). `defaultScaleErrors` adds `VcpuLimitExceeded` to upstream's `scale_errors`. A request-level `CreateFleet` failure whose code is in `scaleErrors` is retryable like the same code per instance, so the group's messages return to the build queue as batch item failures instead of going to the job-retry queue. Scale-up's cap count also departs: it reads unconsumed JIT config parameters before EC2 (cutover decision, "Overlap caps against EC2's read lag").
 
 Lane goals/infra-alchemy-rebuild-p2-github-runners
 
@@ -654,6 +654,616 @@ Window-5 requirements 1 and 3 (window-5 owner via the packet gate, 2026-11-14). 
 Lane goals/infra-alchemy-rebuild-p3-github
 
 Reverse: Delete the Check the ruleset before deploy and after deploy steps from deploy-infra-github.yml and remove ruleset-guard.ts and src/RulesetGuard.ts.
+
+### The AWS account and region guard lives in @beep/alchemy-aws-extras; the stack provides DockerLive, 2026-11-14
+
+`@beep/alchemy-aws-extras` gains `DeployTarget` (`AwsAccountId`, the `DeployTarget` model and `requireDeployTarget`), and `@beep/infra-ci-runners` uses it instead of a copy of the cost-controls account schema and guard. Fallow's new-code duplication gate flagged the copy; the shared module is the single home a third AWS stack will need too. The guard compares the resolved `AWSEnvironment` account and region with the target and fails with a `ConfigError` naming the stack and target, never the credentials. `@beep/infra-cost-controls` keeps its own guard for now: changing it would run that stack's push-to-main deploy during the window-5 measurement; adopting the shared module there is a small later PR.
+
+Also: `Lambda.FunctionProvider` needs a `Docker` service (it supports container-image functions), so the stack's provider layer provides `DockerLive` from `@alchemy.run/docker`, added to the root catalog at the same `2.0.0-beta.87` as the other `@alchemy.run/*` pins (D13). The layer is lazy: nothing runs `docker` unless a function is built from an image, and none is.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: Inline requireDeployTarget back into packages/tooling/infra/ci-runners/src/Guards.ts and delete DeployTarget.ts from aws-extras.
+
+### CI runners cutover from the Pulumi fleet: deploy beside, prove, move workflows, a day green, then destroy, 2026-11-14
+
+Executable procedure for replacing the Pulumi fleet (`beep-ci-runners/production`) with the `CiRunners` stack, amended 2026-11-14 with the packet gate's rulings. Nothing here runs before the gate releases P5 on the window-5 verdict (2026-11-20T20:10Z; on a denial, window 6). Owners: **gate** = the packet gate session; **operator** = the human, only where an org or App setting or a workflow merge needs them; **lane** = the session the gate names; **orchestrator** = the coordinating session. Every AWS check is a single read, never a loop over instances.
+
+**Preconditions (before any deploy).**
+
+- Freeze: `beep-ci-runners/production` is frozen; no `pulumi preview` or `pulumi up` of it until the cost-controls component-removal PR has merged (cost-controls cutover decision). Nothing in steps 0 to 5 runs Pulumi.
+- Spot arithmetic, which the orchestrator confirms against its live heavy burst cap before the first deploy: the account's Spot quota is 512 vCPU; the new fleet's `overlap` caps commit 32 vCPU (heavy 1 × 16 + overflow 2 × 8) and the schema reserves 480 for the live fleet at the agreed burst cap (heavy 6 × 16 + overflow 48 × 8), 512 in all (amended 2026-11-18 from a 416 reserve at the live default caps, which under-counted the burst). The schema's budget check refuses any `overlap` cap that would pass 512, and a personal stage reserves the live fleet plus the production overlap (480 + 32 = 512), so no rehearsal launches while the overlap lasts. The live burst cap of 8 alone fills the quota with the live overflow pool at 48, so a burst to 8 with new-fleet runners up makes `CreateFleet` fail with `MaxSpotInstanceCountExceeded` on whichever fleet asks last. If the orchestrator's burst cap is above 6, lower it (or the live overflow cap) first, or deploy with the new caps at 0 until the move.
+- Step-1 precondition, binding (packet gate ruling 2026-11-18): live heavy bursts stay at 6 VMs or fewer for as long as both fleets exist (512 of 512 Spot vCPU committed). The gate relays it to the orchestrator, and the orchestrator and CI goals driver set `BEEP_HEAVY_BURST_MAX` in the burst tooling's template outside the repo; no lane edits that template. No `pulumi up` of `beep-ci-runners/production` while any heavy burst is active (`systemctl --user list-timers | rg ci-burst`), and nothing applies before the freeze-end preview of that stack is clean.
+
+**Agreed with the CI goals driver (2026-11-18): burst cap, start sequence, window 6, reporting.**
+
+- (a) Burst cap: before step 1 the packet gate tells the orchestrator, and the driver lowers `BEEP_HEAVY_BURST_MAX` to 6. It stays at 6 until drain and destroy (step 6) complete, and the gate reports that completion to the orchestrator as well. The control is the orchestrator-owned burst template outside the repo, `~/.cache/beep/ci-burst/TEMPLATE/set-cap.sh`, whose `BEEP_HEAVY_BURST_MAX` defaults to 6 and refuses a higher cap. The driver raises it back to 8 only after step 6d (drain and destroy) is reported, never at step 4 or 5 while the live fleet still exists; no lane edits that template (amended 2026-11-18, #3386 review).
+- (b) Start sequence, strictly in order: the active cap-8 burst ends (its guard fires at or after 2026-11-18T05:19:25Z), then the freeze-end preview of `beep-ci-runners/production` comes back clean, then the first P5 deploy (step 1) runs.
+- (c) Window 6 of the CI measurement starts when drain and destroy complete. The gate reports the time of each cutover milestone to the orchestrator as it happens: deploy beside (step 1), webhook overlap (step 2), per-pool proof (step 3), traffic move (step 4), green day (step 5), App webhook switch (step 6b), drain (step 6a), destroy (step 6d).
+
+**Binding driver conditions (CI goals driver, 2026-11-18).**
+
+- (d) The deploy applies exactly the checked change set. `deploy-ci-runners.yml` runs `plan-check.ts plan`, which plans `prod`, runs the plan check and saves the checked plan (each resource's action, binding actions, a SHA-256 digest of its redacted declared properties, a SHA-256 digest of each binding's payload, an HMAC-SHA256 fingerprint of its declared secret values keyed by a random per-plan salt saved with the plan (never the values), and whether an update would finish a pending replacement; plus every stack action and the cutover expectation). The deploy step runs `plan-check.ts deploy`, which plans again under the stage lease, runs the plan check again, compares that plan with the saved one and applies that same plan object only when they are equal (`applyIfUnchanged` in `src/CheckedDeploy.ts`). Any added, removed or changed resource, binding, digest, action or stage fails with `PlanDrift` before any write; `alchemy deploy` is never called. Proof: `test/CheckedDeploy.test.ts` moves the state between the check and the deploy and simulates each kind of drift; every case refuses and the apply stand-in never runs.
+- (e) A real launch per pool before the traffic move. Step 3 passes only when every new pool, heavy and overflow, has launched a runner that picked up and completed a real job. That launch is the proof that the rendered user data fits under EC2's 16 KiB limit and boots; a passing plan is not. The static size test stays as well (`test/RunnerBootstrap.test.ts`: the rendered user data with the packed post-install is under 16,384 bytes, and the inline post-install is over it).
+
+**Step 0, bootstrap (gate).** Create the deploy role, `ci-runners-prod` environment, variable and three secrets (deploy-role decision). Check: the `aws iam simulate-principal-policy` results listed there.
+
+**Routine arm (amended 2026-11-18, #3386 r4617469519).** `CI_RUNNERS_DEPLOY_ARMED` admits only the two cutover dispatches. A `routine` run, every push included, also needs `CI_RUNNERS_ROUTINE_ARMED = true`. The gate sets that only after step 1b succeeds, so no push can update the reaper or reconcile the default group between 1a and 1b. Rollback: unset `CI_RUNNERS_ROUTINE_ARMED`.
+
+**Overlap caps against EC2's read lag (amended 2026-11-18, #3386 r4617469584, r4620847603).** The overlap budget is an exact fit (512 vCPU), and scale-up's cap count must not lag a fresh launch. Scale-up counts a pool's runners in two reads, Parameter Store first and then EC2. The first read takes the unconsumed JIT config parameters from the last 15 minutes: a runner's config exists from its configuration until the runner reads and deletes it at boot. The second read takes the runners the tag-filtered `DescribeInstances` shows. A runner in both reads counts once, by instance id. If either read fails, the group launches nothing and every message returns to SQS as a batch item failure. Residual (corrected 2026-11-18, #3386 r4620945601 and r4620950042). Accepted (a′), driver re-ruling 2026-11-18; (b) and (c) rejected.
+
+- Overcounts only mean fewer launches. Undercounts can happen in two ways: an EC2 read lag longer than a boot, or a token older than 15 minutes.
+- Bound (wording corrected 2026-11-18, #3386 r4621054872): one invocation requests at most `cap − counted` runners, which is at most the cap. So each invocation launches at most min(runners missed by both reads, cap) runners beyond the true cap. The bound is on additional launches, not on missed runners: once overshoots accumulate, the runners missed can exceed the cap (with cap 2, four can be missed). The total overshoot accumulates across invocations while EC2's tag-filtered read lag outlasts runner boot. The hard ceiling is the 512 vCPU account Spot quota, shared with the live fleet. Past it, CreateFleet fails retryably and the message redelivers.
+- Why accepted: the precondition (EC2's read lag outlasting a boot) is improbable. The harm is delay plus quota-capped spend: every extra runner serves a real queued job and is ephemeral, and the overlap ends at the drain.
+- Rejected: (b), a cap margin of 1, does not bound a k-miss overshoot. (c), new alarm resources, would add IAM, simulations and another review cycle for a harm that is time-bounded and only causes delay.
+- Tripwire, replacing the after-the-fact check:
+  1. Report each pool's peak concurrent runners against its cap, from EC2 `DescribeInstances` plus CloudTrail `CreateFleet`/`RunInstances`, never from the Lambda's own count.
+  2. Take that reading at each mapping check (after 1a, after 1b, before the drain) and again in the window-6 census.
+  3. A pool that shows an observed overshoot of k has its cap cut by k, not a fixed 1, for the rest of the overlap. The driver re-rules the same day.
+
+**Live-fleet mapping guard (amended 2026-11-18, `DenyLiveFleetMappings`).** The deploy role is denied every tag, untag, update and delete on the live fleet's six event-source mappings, by ARN. The rules while it holds:
+
+- No `pulumi up` on the live fleet stack during the overlap, and never during a burst: a Pulumi replace would mint new mapping UUIDs outside the deny.
+- Re-run the read-only `aws lambda list-event-source-mappings` immediately before step 1b and again before the drain, as part of the mapping check below. If any live UUID differs from the six in `DeployRolePolicy.ts`, HOLD and push the new ARNs first.
+- The deny is removed in the P5 drain-and-destroy PR, together with the live fleet.
+
+**Mapping check after 1a, after 1b and before the drain, each before any traffic move (amended 2026-11-18, #3386 r4614022089).** Read-only; every STOP holds the cutover at that step.
+
+- (a) Run `aws lambda list-event-source-mappings` (us-east-1) and select by target, not by name or tag: count every mapping whose `FunctionArn` is a `function:beep-fleet-prod-*` function. For each, `aws lambda list-tags --resource <mapping arn>` must show `alchemy::stack=CiRunners` and `alchemy::stage=prod`; that proves tag on create worked and catches a mapping a foreign principal attached to a fleet function. STOP if any such mapping lacks either tag or carries a foreign `alchemy::` tag.
+- (b) In the same run, the six live mapping UUIDs must equal the six in `DeployRolePolicy.ts`. STOP if any changed, and push the new ARNs first.
+- (c) Report each run's fleet-target count, the UUIDs and the STOP/pass verdict to the orchestrator, and record them in the cutover record.
+- (d) In the same run, take each pool's peak concurrent runners against its cap, from EC2 `DescribeInstances` plus CloudTrail `CreateFleet`/`RunInstances`, never from the Lambda's own count. Record it with (c). An observed overshoot of k cuts that pool's cap by k for the rest of the overlap (residual tripwire above).
+
+There is no mutating direct-tag test against live resources. The simulations prove the policy, and check (a) proves the stack's real tagging.
+
+**Step 1, deploy beside the live fleet (lane, through the workflow), in two dispatches (amended 2026-11-18).** 1a: with the deploy role on policy v1, a `workflow_dispatch` with `mode: bootstrap` deploys everything except `DefaultSecurityGroup` (`--exclude DefaultSecurityGroup` on both the plan and the deploy step; the filtered deploy prints no stack output, so the webhook check waits for 1b). The gate then reads the new VPC id with one `describe-vpcs`, writes policy v2 scoped to that VPC, re-runs the deploy-role simulations and updates the role. 1b: a dispatch with `mode: default-security-group` plans the full stack, which adds only `DefaultSecurityGroup`, and deploys it. Nothing merges to the workflow's paths between 1a and 1b; if a push runs there anyway, its `DefaultSecurityGroup` revoke is denied and the run fails before any other write, with no effect on the rest. Both dispatches deploy `prod` in `overlap` (heavy cap 1, overflow cap 2, new labels, every composite name pinned under `beep-fleet-prod-`; physical-names decision) through the shipped `deploy-ci-runners.yml`, which lands disarmed with the P5 PR and is armed by the gate only for these dispatches. Expected plans, as `plan-check.ts plan` lists them (amended 2026-11-18, #3386 review):
+
+- 1a (`mode: bootstrap`): only creates (amended 2026-11-18, #3386 r4617469528: a re-run after a partial bootstrap also takes, as `noop` with only `noop` bindings, the resources the failed run created; an update, replace, delete or adoption still stops it, so repeating the dispatch finishes the bootstrap and nothing else). `plan-check.ts` enforces this expectation on both steps and refuses anything else as `UnexpectedChange`. It contains every stack resource except `DefaultSecurityGroup`: the personal plan's 66 creates minus `DefaultSecurityGroup`, plus what `prod` adds (the job-retry queues, their dead-letter queues and the job-retry functions with their event-source mappings), each with its binding creates. There are no updates, no stack actions and nothing outside the stack. The deploy applies exactly that checked plan (condition d). Because the plan is filtered, it prints no stack output, so the webhook check is skipped.
+- 1b (`mode: default-security-group`): exactly one `DefaultSecurityGroup` row with no bindings, planned `adopted` (amended 2026-11-18, #3386 r4617469574: beta.87 reads the AWS-made default group before it has a state row and adopts it; `create` is accepted too). Only 1b may adopt: a `routine` plan refuses any `adopted` row. The adopted row is still in the checked plan and drift-compared. Every other resource is `noop` with no binding change. `plan-check.ts` accepts it (one create plus noops), the deploy applies exactly that checked plan, and the webhook then answers 401 to the unsigned request.
+
+Anything else in either plan stops the step before any write: the two modes refuse an update, any binding change in 1b, a second create in 1b or a `DefaultSecurityGroup` in 1a as `UnexpectedChange` on both the plan and the deploy step. A different plan means the state moved or the program changed. Ask the CI goals driver through the orchestrator. Checks: one `aws lambda get-function --function-name beep-fleet-prod-webhook` succeeds; one `aws lambda get-function --function-name beep-ci-scale-up` shows the live function's unchanged `LastModified`. Rollback (amended 2026-11-18, #3386 r4617469539): the workflow has no destroy mode, and the deploy role has no key-deletion or key-policy grant, so the destroy is a gate step on the operator workstation with the account's admin credentials through aws-vault, never the deploy role. Disarm first (`CI_RUNNERS_DEPLOY_ARMED` unset) so no run overlaps it. Then, from `packages/tooling/infra/ci-runners` at the commit that deployed, run `AWS_PROFILE=elpresidank-vault CI=true bunx alchemy destroy --stage prod` (App credentials from the `ci-runners-prod` environment's 1Password items, `op run`); the `RunnerSweep` finds no runners and the stack goes in dependency order. Check: no `beep-fleet-prod-*` Lambda, queue or role remains, the fleet VPC is gone, and the live fleet's `beep-ci-scale-up` `LastModified` is unchanged. The KMS key enters its 30-day pending deletion. Nothing live depends on the stack yet.
+
+**Step 2, overlap delivery path (operator, outside IaC).** Add a repository webhook on `beep-effect/beep-effect`: events `workflow_job` only, content type JSON, URL = the stack's webhook function URL, secret = the fleet's webhook secret. The live App's webhook stays untouched and keeps delivering to the live heavy controller (the live overflow pool keeps its own repository webhook), so both fleets hear every job and each acts only on its own labels: the live controllers on `beep-ec2-heavy` / `beep-shard-overflow`, the new webhook on `beep-fleet-heavy` / `beep-fleet-overflow`. Secret: the new function verifies one secret, `/beep-fleet/prod/app/github_app_webhook_secret`, and at the end state the App's webhook must sign with that same value; so `CI_RUNNERS_GITHUB_WEBHOOK_SECRET` is the live App's webhook secret value (its 1Password item, `op://<vault>/<item>/<webhook secret field>`, located by the operator at bootstrap), and the repository webhook is configured with it too. No second secret is needed, nothing in the stack changes, and step 6's URL move needs no secret rotation. (A distinct overlap secret would work for the repository webhook but force an App secret rotation at step 6, briefly breaking signature checks on the live fleet if it still existed.) Checks: the repository webhook's recent deliveries show a 2xx from the new URL for the next `workflow_job` event, and the webhook function's log shows it dropped for labels; one `aws sqs get-queue-attributes --queue-url <beep-fleet-prod-heavy-build URL> --attribute-names ApproximateNumberOfMessages` shows 0. Rollback: delete the repository webhook.
+
+**Step 3, prove one job per pool (lane, one PR, operator merge since it touches `.github/`).** Run one heavy job and one shard-overflow job on the new labels: a `workflow_dispatch` job copied from `heavy.yml` with `runs-on: beep-fleet-heavy`, and one from `shard-overflow.yml` with `runs-on: beep-fleet-overflow`, in workflows on the groups' allowed-workflow lists (the operator adds them; both groups are `restricted_to_workflows`). Also repoint `fleet-shadow-check.yml` to the new labels (`runs-on: beep-fleet-heavy`, SSM reads under `/beep-fleet/prod/app/`) as extra per-pool proof during the overlap (ruling 2026-11-18). Pass condition (condition e, binding): each of the two pools launches a runner that picks up and completes its job, conclusion `success`; a pool that never launches, or a runner that never registers (user data over 16 KiB, or a boot failure), fails step 3 and blocks step 4. Checks: each job is picked up within the live pickup p50 + 2 minutes; runner names start `beep-fleet-heavy-` / `beep-fleet-ovf-`; afterwards the instance is gone (one `describe-instances` by instance id) and the runner is deregistered (`gh api orgs/beep-effect/actions/runners` lists no new-fleet runner); the reaper and termination-watcher logs show their passes. Rollback: delete the copied workflow.
+
+**Step 4, move the workflows (lane PRs, operator merge).** Order (amended 2026-11-18): first the workflow PR applies the reader inventory below (option A), while `prod` stays in `overlap`; from its merge no workflow targets the live labels, and jobs queue on the new pools' overlap caps (heavy 1, overflow 2) until the phase PR lands. Then a stack PR sets `phase: "primary"`; its plan must be updates only (pool caps in the runtime configs). Spot: `primary` lets the new pools use the whole quota, which is safe only with the live fleet idle, so the phase never moves while a workflow still targets the live labels. Before the phase PR merges (amended 2026-11-18, #3386 review), all three hold: (i) old-label jobs have drained: no run created before the workflow PR merged is unfinished. For each nonterminal status (`queued`, `in_progress`, `waiting`, `pending`, `requested`), `gh api --paginate "repos/beep-effect/beep-effect/actions/runs?status=<status>&created=<=<merge time>&per_page=100" --jq '.total_count'` returns 0; that is one paged read per status, and `total_count` covers the whole result, so no page limit hides a run. Also, `gh api orgs/beep-effect/actions/runners` lists no busy `beep-ci-` or `beep-ovf-` runner; (ii) no heavy burst is active: `systemctl --user list-timers | rg ci-burst` shows no burst timer; (iii) the live fleet is empty: step 6a's single `describe-instances` returns no `pending` or `running` live runner. Empty instances alone do not count, since a queued old-label job or a burst can launch one a minute later. Check: the next pushes run every heavy and overflow job on the new fleet and the live scale-up Lambdas log no launches.
+
+Rollback, in reverse order and drained at each step (amended 2026-11-18, #3386 review). Each scale-up function reads its pool caps from its environment when its handler is created (`RunnerRuntime`), so an invocation already running under the `primary` caps can launch a runner after the phase revert has deployed. Scale-up is therefore paused, and the pause drained, before anything is counted. The pause disables each scale-up function's SQS event-source mapping (`ScaleUpSource`), so build-queue messages stay in the queue untouched. Reserved concurrency 0 would not hold them: the mapping keeps polling, throttled batches come back after the 2-minute visibility timeout, and after 5 receives (`maxReceiveCount`, about 10 minutes) they go to the build DLQ, so new-label jobs would be lost during a pause that can last 90 minutes. The stack declares the mapping without an `enabled` value, so the pause still comes after the phase revert's deploy, and nothing deploys `prod` while it holds. The gate runs these steps from the operator workstation (`AWS_PROFILE=elpresidank-vault`, one call each). The function names are pinned: `beep-fleet-prod-heavy-scale-up` and `beep-fleet-prod-overflow-scale-up`.
+
+1. Revert the phase PR and wait for its deploy to complete, so the scale-up configuration carries the overlap caps again. Rollback of this step: revert the revert, which needs the drain conditions above again.
+2. Pause new-fleet scale-up. `aws lambda list-event-source-mappings --function-name beep-fleet-prod-heavy-scale-up --query 'EventSourceMappings[].UUID'` gives the mapping UUID; then `aws lambda update-event-source-mapping --uuid <uuid> --no-enabled`. Do the same for `beep-fleet-prod-overflow-scale-up`. Check: `aws lambda get-event-source-mapping --uuid <uuid>` reports `Disabled` for both; record the two UUIDs for step 6. No push to the workflow's paths merges while the pause holds; if a deploy runs anyway, read the mappings again and repeat this step and step 3. Rollback of this step: step 6's command.
+3. Drain: wait at least the scale-up timeout (60 s) after both mappings report `Disabled`, so that no invocation, warm or not, is still running. Then wait until one `describe-instances` on `ghr:environment` `beep-fleet-prod-heavy` / `beep-fleet-prod-overflow` returns no `pending` instance, so every launch has settled. Rollback of this step: none needed (it only reads).
+4. Check the caps: the same single read returns at most 1 heavy and 2 overflow `running` instances. If there are more, keep scale-up paused and wait for their jobs to finish (the reaper's 90-minute TTL bounds every runner), then read again. Rollback of this step: none needed (it only reads).
+5. Only then revert the workflow PR, which sends jobs back to the live fleet (burst cap still 6). Rollback of this step: revert the revert.
+6. Re-enable scale-up, now that the overlap configuration is live (step 1) and step 4 has passed: `aws lambda update-event-source-mapping --uuid <uuid> --enabled` for each of the two UUIDs from step 2. Check: `get-event-source-mapping` reports `Enabled` for both, and the build queues drain. Safety check: `aws sqs get-queue-attributes --queue-url <beep-fleet-prod-{heavy,overflow}-build-dlq URL> --attribute-names ApproximateNumberOfMessages` shows 0 on each build DLQ. If it is not 0, redrive the DLQ into its build queue (`aws sqs start-message-move-task --source-arn <dlq arn> --destination-arn <build queue arn>`) once scale-up is enabled. Rollback of this step: step 2's command.
+
+Both fleets keep running throughout.
+
+**Step 5, a full day green (gate).** 24 hours of `main` and PR traffic on the new fleet with no fleet-attributable red (lost runner, pickup over the window-5 baseline, Spot capacity failure the live fleet did not have). The live fleet stays deployed and idle as the rollback. Check: the CI goals driver's census over that day. Rollback: step 4's reverts.
+
+**Step 6, drain and destroy the old fleet; end-state delivery (gate, operator workstation, YubiKey route).**
+
+(a) Confirm the live fleet is idle: one `aws ec2 describe-instances --filters Name=tag:ghr:environment,Values=beep-ci,beep-ovf Name=instance-state-name,Values=pending,running` returns none, and `gh api orgs/beep-effect/actions/runners` lists no `beep-ci-` / `beep-ovf-` runner.
+(b) Move the App's webhook URL to the new function URL with `beep github app` (secret unchanged, step 2). Check: the App's recent deliveries show a 2xx from the new URL. Then delete the overlap repository webhook and the live overflow pool's repository webhook. Check: no repository or App webhook still targets an `execute-api` URL of the old controllers (`gh api repos/beep-effect/beep-effect/hooks` and the App's hook config list only the function URL), and the next deliveries leave no failed delivery to a dead URL. Rollback: follow the ordered procedure below ("If step 6b ran, restore the delivery paths in this order"). The overlap repository webhook comes back first, on the new fleet's function URL, and the App webhook moves back only after its 2xx.
+(c) Freeze lifted: the cost-controls component-removal PR has merged. Take a fresh export outside the repo, `pulumi stack export --stack production` to `~/.local/state/beep/infra-archives/pulumi-exports/beep-ci-runners-production-<date>.json`, size and sha256 in a decision, with the program's commit sha; the passphrase only through `op run` from `op://BEEP_SECRETS/BEEP_SECRETS/PULUMI_ENCRYPTION_PASSPHRASE`. Older exports do not count.
+(d) Decide then, from a `pulumi preview --destroy`, between a whole-stack destroy (if only fleet, network, reaper, controller and AWS turbo-cache leftovers remain and the turbo cache has moved to the Worker) and a targeted destroy (`--target` per fleet URN, no `--target-dependents`) if anything else still lives in the stack. Record the choice and the preview's resource count in a decision, then destroy.
+(e) One PR deletes the program and its readers (inventory below): `infra/ci-runners/`, `infra/src/CiRunners.ts`, `CiFleetController.ts`, `CiRunnerPool.ts`, `CiShardOverflowPool.ts`, `infra/src/internal/ci-runners-entry.ts` and their tests, which also removes the duplicated post-install scripts.
+(f) The operator decides whether to delete the old SSM App parameters under `/github-action-runners/`, the key behind `alias/beep-ci-github-app` (schedule deletion, 30 days) and `beep-ci-fleet-boundary`.
+Rollback before (d), in order (amended 2026-11-18, #3386 review).
+
+If step 6b ran, restore the delivery paths in this order before any job is sent back to the old labels (amended 2026-11-18, #3386 r4620414302 and r4620549657). Step 6b deleted the overlap repository webhook, and jobs still run on the `beep-fleet-*` labels until step 4's workflow revert, so the new fleet's delivery comes back first:
+
+1. Re-create the overlap repository webhook on the new fleet's webhook function URL (step 2), and verify a 2xx delivery from it.
+2. Point the App webhook back at the live controller's URL recorded before 6b.
+3. Re-create the live overflow pool's repository webhook on its recorded live URL.
+4. Check that the next App and live-overflow deliveries show a 2xx from the live controllers.
+5. Only then run step 4's rollback (phase revert, paused and drained scale-up, workflow revert).
+6. Once the workflow revert has moved every job off the `beep-fleet-*` labels and the new fleet's queues are drained, delete the overlap repository webhook.
+
+Rollback after (d). `pulumi stack import` of the archive restores state only, and that state still lists the fleet the destroy removed. A recreated API Gateway endpoint gets a new host, so the URLs recorded before 6b no longer deliver (amended 2026-11-18, #3386 r4617469545). In order:
+
+1. Re-create the overlap repository webhook on the new fleet's webhook function URL, and verify a 2xx delivery from it, since 6b deleted it and jobs still run on the `beep-fleet-*` labels.
+2. Run `pulumi preview --refresh`, which must show the missing fleet resources as creates, and only then `pulumi up --refresh` from the archived commit.
+3. Read the recreated `controllerWebhook` and `shardOverflowWebhook` stack outputs (`pulumi stack output`). Point the App webhook at `controllerWebhook` with `beep github app`, and re-create the live-overflow repository webhook on `shardOverflowWebhook`, secrets unchanged.
+4. Verify the recreated endpoints: the controllers answer, and the App and live-overflow webhooks deliver with a 2xx.
+5. Run step 4's workflow revert.
+6. Delete the overlap repository webhook only after the revert has moved every job off the `beep-fleet-*` labels.
+
+**Readers of the live fleet's labels, groups, tags and paths (git grep of the tree, 2026-11-14), with the edit each needs.**
+
+| Reader | Uses | Edit at step 4 (option A) | At step 6 |
+| --- | --- | --- | --- |
+| `.github/workflows/heavy.yml` | `runs-on: beep-ec2-heavy`, 9 jobs | `beep-fleet-heavy` | — |
+| `.github/workflows/cache-warm.yml` | `runs-on: beep-ec2-heavy` | `beep-fleet-heavy` | — |
+| `.github/workflows/shard-overflow.yml` (called from `check.yml`) | `runs-on: beep-shard-overflow`; comment on the group | `beep-fleet-overflow`; comment | — |
+| `.github/workflows/check.yml` | comment naming the overflow label; `beep runners bake --check --manifest infra/ci-runners/runner-image.json` | comment | bake check reads the stack config instead (AMI item) |
+| `.github/workflows/fleet-shadow-check.yml` | `runs-on: beep-ec2-heavy`; reads SSM `/github-action-runners/app/<parameter>` to prove the runner cannot read App secrets | `beep-fleet-heavy` and `/beep-fleet/prod/app/<parameter>`, if kept | delete with the old fleet unless the denial proof is wanted for the new fleet (then keep it, repointed) |
+| `.github/workflows/fleet-lane-probe.yml` | default input `beep-ec2-heavy` (the shadow-fleet probe) | default `beep-fleet-heavy`, if kept | delete with the old fleet (it probed the live shadow pool) |
+| `.github/workflows/rerun-runner-loss.yml` | comment on `beep-ec2-heavy` Spot evictions | comment | — |
+| `packages/foundation/capability/config-file/test/fixtures/codec-corpus/yaml/fleet-lane-probe.yml` | a YAML fixture copy | none (fixture text) | keep, or drop with the probe |
+| `packages/tooling/tool/cli/src/commands/Ci/CiShardOverflow.ts` | `SHARD_OVERFLOW_RUNNER_LABEL = "beep-shard-overflow"`, used by the routing plan and `CiShardOverflowPreflight.ts` as label and group name | split into label `beep-fleet-overflow` and group `beep-shard-overflow` | — |
+| `packages/tooling/tool/cli/src/commands/Ci/CiShardOverflowPreflight.ts` | group name, webhook URL check against the overflow controller endpoint | expect the fleet function URL | — |
+| `packages/tooling/tool/cli/src/commands/Ci/LaneTimings.ts` | `MANAGED_RUNNER_LABEL_PATTERN = /^(?:self-hosted\|beep-)/` | none: `beep-fleet-*` still classifies as managed | — |
+| `Ci/Certainty.ts`, `Certainty.schemas.ts`, `CiLane.ts`, `Quality/Quality.plan.ts`, `Quality/Tasks.ts` | prose and report labels naming `beep-ec2-heavy` | wording | — |
+| `packages/tooling/tool/cli/src/commands/Runners/Runners.schemas.ts`, `Runners.service.ts`, `Runners.command.ts` | `RUNNER_AMI_PIN_PARAMETER = /beep-ci/controller/runner-ami-id`, `ciFleetController:amiId` check, `pulumiPinCommand`, image name `beep-ci-runners-<sha>` | — | AMI item below |
+| `packages/tooling/tool/cli/test/ci-runner-security.test.ts` | asserts `runs-on: beep-ec2-heavy` for `producer-inspect`, `producer-prepare`, `local-pilot-observe` | new label | add the deploy workflow's exemption line (workflow decision) |
+| `ci-shard-overflow.test.ts`, `ci-certainty.test.ts`, `ci-lane-timings.test.ts`, `ci-rerun-runner-loss.test.ts`, `ci-docs-job-admission.test.ts`, `runners-bake.test.ts` and the `ci-certainty` fixtures | label strings, bake receipts | follow the source edits; fixtures recorded before the move keep the old label | bake tests follow the AMI change |
+| `docs/runbooks/ci-runner-reliability.md` | the live pool table (prefixes, groups, labels, webhook secrets, roles) and overflow procedures | rewrite for the new fleet | drop the old-fleet rows |
+| `docs/runbooks/aws-cost-operations.md` | `runner-image.json`, `ciFleetController:amiId`, cost tag keys `beep-ci`, `ghr:environment` | — | AMI procedure; tag keys stay (cost allocation keys are account settings) |
+| `docs/runbooks/alchemy-infra.md` | stack and cutover text | the move | the destroy |
+
+Live `ghr:environment` values (`beep-ci`, `beep-ovf`) are read only by the Pulumi program, the live Lambdas and the runbook table; `/github-action-runners/shard-overflow/*` is read only by the Pulumi program (gate's grep); `/github-action-runners/app/*` is read by the program, the live Lambdas and `fleet-shadow-check.yml`.
+
+**Labels after the old fleet is gone (CI-affecting; the gate settles it with the orchestrator at release).**
+
+- Option A, the workflows end on the new names. Cost: one reviewed edit at step 4 across the readers above (9 heavy jobs, cache warm, overflow, the CLI overflow constant, security and CLI tests, runbooks), done once; label names then differ from the runner-group names (`beep-fleet-heavy` in group `beep-ec2-heavy`), which the overflow preflight must model as two constants; rollback is one revert. Measurements keep working (`beep-` prefix classifies as managed), but per-label history in census and timing reports splits at the move date.
+- Option B, relabel the pools back to the live names after step 6. Cost: workflows move twice (to `beep-fleet-*` at step 4, back to `beep-ec2-heavy` / `beep-shard-overflow` after the destroy), or they never move and the new pools take the live labels while the old fleet still exists, which makes both fleets launch a runner for every job until the destroy (double Spot use against a quota the live fleet alone can fill, and double cost). Done after the destroy, the relabel is a stack update (webhook matchers and runner registration labels; runners are ephemeral, so no re-registration of live runners) plus the workflow revert, and leaves names, groups and history continuous with today.
+
+**AMI ownership (cutover PR, not now).** After the cutover `beep runners bake` stays manual and attended, but writes the stack's typed config instead of Pulumi: it edits `productionConfig.image.amiId` in `packages/tooling/infra/ci-runners/src/Config.ts`, and the pin's merge deploys it through the workflow. Files: `packages/tooling/tool/cli/src/commands/Runners/Runners.service.ts` (the `ciFleetController:amiId` check and `pulumiPinCommand`, the read of `/beep-ci/controller/runner-ami-id`), `Runners.schemas.ts` (`RUNNER_AMI_PIN_PARAMETER`, the `pulumiPinCommand` field), `Runners.command.ts` (the printed pin line), `packages/tooling/tool/cli/test/runners-bake.test.ts`, the bake receipt `infra/ci-runners/runner-image.json` (moves to the package, for example beside `src/Config.ts`, or into a `goals/` record), `.github/workflows/check.yml`'s `bake --check --manifest` step, and the AMI procedure in `docs/runbooks/aws-cost-operations.md`.
+
+**Spot quota and cost while both fleets exist.** See the precondition above. Double-running cost is bounded: the new fleet runs only the proof jobs during the overlap (no other job carries its labels), at most 3 VMs, each reaped within 90 minutes; idle cost is the Lambdas, the SQS pairs, the KMS key (1 USD a month), flow logs and no NAT. After step 4 the live fleet is idle at zero instances.
+
+**Rulings recorded (packet gate, 2026-11-14).** 1: repository webhook for the overlap, App webhook moved and repository webhook deleted at the end (steps 2 and 6b); one shared secret. 2: reuse the live App (D10, no minting from IaC); its `op://` items are located by the operator at bootstrap. 3: `beep-fleet-heavy` / `beep-fleet-overflow` for the overlap; end state option A or B settled at release. 4: the bake change above, in the cutover PR. 5: every composite name pinned in `prod` (physical-names decision). 6: the state role and OIDC provider stay bootstrap singletons (state-role decision). 7: no reader of `/github-action-runners/shard-overflow/*` outside the program; `/github-action-runners/app/*` is covered in the inventory.
+
+Settled 2026-11-18 (packet gate): option A, the workflows end on `beep-fleet-*` (decision "CI runners workflows end on the beep-fleet labels"); `fleet-shadow-check.yml` is repointed during the overlap and deleted in the step-6 cleanup PR with the Pulumi program (decision "fleet-shadow-check is repointed for the overlap and deleted at the Pulumi cleanup"); the live heavy burst cap stays at 6 or fewer while both fleets exist (decision "Live heavy bursts stay at 6 or fewer while both runner fleets exist").
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: Before the Pulumi destroy: restore the old delivery paths if step 6b ran, then revert the phase PR and the workflow move (step 4 rollback). After it: pulumi stack import of the archived export, pulumi preview --refresh showing the missing fleet as creates, then pulumi up --refresh from the archived program commit.
+
+### CI runners deploy through a stack-scoped OIDC role, beep-alchemy-ci-runners-deploy (proposed), 2026-11-14
+
+Proposed, not created. The packet gate session creates these when it releases P5 (after the window-5 verdict), from the commands below, and records the receipts in a follow-up decision. This lane created nothing.
+
+GitHub environment `ci-runners-prod`, deployment branch policy `main` only. Variable `CI_RUNNERS_DEPLOY_ROLE_ARN = arn:aws:iam::832907639880:role/beep-alchemy-ci-runners-deploy`. Secrets, set from 1Password by reference without printing (`op read ... | gh secret set <name> --env ci-runners-prod --repo beep-effect/beep-effect`): `CI_RUNNERS_GITHUB_APP_ID`, `CI_RUNNERS_GITHUB_APP_KEY_BASE64`, `CI_RUNNERS_GITHUB_WEBHOOK_SECRET`. The live App is reused (gate ruling 2026-11-14, D10): `CI_RUNNERS_GITHUB_APP_ID` from `op://<vault>/<app item>/<app id field>`, `CI_RUNNERS_GITHUB_APP_KEY_BASE64` from `op://<vault>/<app item>/<base64 private key field>`, `CI_RUNNERS_GITHUB_WEBHOOK_SECRET` from `op://<vault>/<app item>/<webhook secret field>` (the live App's webhook secret: the overlap repository webhook and, at the end state, the App webhook sign with it; cutover step 2). The operator fills in the item and field names at bootstrap; the live values in SSM are never read back.
+
+Role `beep-alchemy-ci-runners-deploy`: trusted by the existing provider `token.actions.githubusercontent.com`, audience `sts.amazonaws.com`, subject exactly `repo:beep-effect/beep-effect:environment:ci-runners-prod`, one-hour sessions. Inline policy `ci-runners-deploy`. Since the gate ruling of 2026-11-14 every name the stack and the composite choose in `prod` is pinned under `beep-fleet-prod-` (physical-names decision), so the policy is scoped by those names; EC2 network objects, launch templates and KMS keys have AWS-assigned ids and stay scoped by the ownership tags Alchemy stamps (`alchemy::stack = CiRunners`, `alchemy::stage = prod`). The one generated-name exception is the nine Lambda execution roles, which `Lambda.Function` names `CiRunners-<logical id>-prod-<suffix>` with no prop to pin them:
+
+- State: `s3:ListBucket`, `s3:GetBucketLocation`, `s3:GetBucketVersioning`, `s3:GetBucketOwnershipControls`, `s3:GetBucketPublicAccessBlock`, `s3:GetEncryptionConfiguration` on `arn:aws:s3:::alchemy-state-832907639880-us-east-1-an`; `s3:GetObject`, `s3:PutObject`, `s3:DeleteObject` on `arn:aws:s3:::alchemy-state-832907639880-us-east-1-an/CiRunners/*` only.
+- EC2 reads: `ec2:Describe*` on `*`.
+- EC2 creates (VPC, subnet, internet gateway, route table, security group `beep-fleet-prod-runner`, flow log, launch templates `beep-fleet-prod-{heavy,overflow}`): `ec2:CreateVpc`, `ec2:CreateSubnet`, `ec2:CreateInternetGateway`, `ec2:CreateRouteTable`, `ec2:CreateSecurityGroup`, `ec2:CreateFlowLogs`, `ec2:CreateLaunchTemplate` with `aws:RequestTag/alchemy::stack = CiRunners` and `aws:RequestTag/alchemy::stage = prod`. `ec2:CreateTags` in two statements only (amended 2026-11-18): tag-on-create, with `ec2:CreateAction` in exactly those seven create actions plus the same two request tags (Alchemy's EC2 providers tag through `TagSpecifications` on create); and direct `CreateTags` only on a resource that already carries `aws:ResourceTag/alchemy::stack = CiRunners` and `aws:ResourceTag/alchemy::stage = prod` (tag updates of the stack's own resources). A request tag alone never grants `CreateTags`: otherwise the role could stamp `alchemy::stack = CiRunners` on a live-fleet resource and gain every tag-scoped mutation and delete below on it.
+- EC2 mutations and deletes on resources tagged `alchemy::stack = CiRunners` and `alchemy::stage = prod`: `ec2:ModifyVpcAttribute`, `ec2:AttachInternetGateway`, `ec2:DetachInternetGateway`, `ec2:CreateRoute`, `ec2:ReplaceRoute`, `ec2:DeleteRoute`, `ec2:AssociateRouteTable`, `ec2:DisassociateRouteTable`, `ec2:ModifySubnetAttribute`, `ec2:AuthorizeSecurityGroupEgress`, `ec2:RevokeSecurityGroupEgress`, `ec2:CreateLaunchTemplateVersion`, `ec2:ModifyLaunchTemplate`, `ec2:DeleteLaunchTemplateVersions`, `ec2:DeleteLaunchTemplate`, `ec2:DeleteFlowLogs`, `ec2:DeleteSecurityGroup`, `ec2:DeleteSubnet`, `ec2:DeleteRouteTable`, `ec2:DeleteInternetGateway`, `ec2:DeleteVpc`, `ec2:DeleteTags`. The new VPC's default security group carries no Alchemy tag: AWS creates it with the VPC, and `DefaultSecurityGroup` only empties its rules. Its two revokes are therefore granted positively, scoped to the new fleet VPC, in a second policy version (amended 2026-11-18, #3386 review). v1, created at step 0, has no default-group grant. v2 adds `ec2:RevokeSecurityGroupIngress` and `ec2:RevokeSecurityGroupEgress` on `security-group/*` with `ArnEquals ec2:Vpc` = the new fleet VPC's ARN. That ARN exists only once cutover step 1a has deployed the VPC, so the gate writes v2 after 1a (one `describe-vpcs` filtered on both `tag:alchemy::stack=CiRunners` and `tag:alchemy::stage=prod`, which must return exactly one VPC; zero or several stops the step, so a personal stage's VPC can never be scoped instead), re-runs the simulations below and only then dispatches the full deploy (step 1b). No grant reaches a security group in any other VPC. The sweep on destroy: `ec2:TerminateInstances` on instances whose `ghr:environment` starts with `beep-fleet-prod-` (`StringLike`).
+- IAM (amended 2026-11-18, #3386 P1 r4613002543). Every write to a fleet role's permissions is held to the fleet boundary. `iam:CreateRole`, `iam:PutRolePolicy`, `iam:DeleteRolePolicy`, `iam:DetachRolePolicy` and `iam:PutRolePermissionsBoundary` on `role/beep-fleet-prod-*` and `role/CiRunners-*-prod-*` require `iam:PermissionsBoundary` = `arn:aws:iam::832907639880:policy/beep-fleet-boundary/fleet-boundary-prod` (StringEquals). `iam:AttachRolePolicy` requires the same plus `ArnLike iam:PolicyARN` in `policy/beep-fleet/prod/*` or `arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole`, the one AWS-managed policy, named because Alchemy attaches it to every Lambda execution role. `iam:DeleteRolePermissionsBoundary` and `iam:UpdateAssumeRolePolicy` are granted nowhere; Alchemy calls the latter only when a role's trust document changes, which this stack never does, so such a change would be an operator deploy. Reads (`GetRole`, `GetRolePolicy`, `ListRolePolicies`, `ListAttachedRolePolicies`, `ListRoleTags`) and metadata (`TagRole`, `UntagRole`, `UpdateRole`, `DeleteRole`) stay on the fleet roles. Policy CRUD and versions apply only on `policy/beep-fleet/prod/*`. A policy written there is capped by the boundary of the role it is attached to, so authoring one grants nothing beyond the boundary. Instance-profile CRUD and `AddRoleToInstanceProfile`/`RemoveRoleFromInstanceProfile` apply on `instance-profile/beep-fleet-prod-*`. `iam:PassRole` applies on the fleet roles with `iam:PassedToService` in `lambda.amazonaws.com`, `ec2.amazonaws.com` or `vpc-flow-logs.amazonaws.com`.
+- Fleet boundary (bootstrap object per stage, not a stack resource; per stage since 2026-11-18, #3386 r4613663137). Its document is `fleetBoundary(stage)` in `DeployRolePolicy.ts`, published at `fleetBoundaryPolicyArnFor(stage)` = `arn:aws:iam::832907639880:policy/beep-fleet-boundary/fleet-boundary-<slug>`, and every role a stage creates carries that stage's boundary: the runner roles, every Lambda execution role, the flow-logs role and the reaper's role. The deploy role's role grants accept only `fleet-boundary-prod`. A test enumerates every planned prod role and Lambda execution role and checks that each carries `fleet-boundary-prod`. A personal stage needs its own boundary created the same way before its first deploy. Alchemy beta.87's `Lambda.Function` set no boundary, so the repo patches `@alchemy.run/aws` (`patchedDependencies`) to add `permissionsBoundary`, which is set on `CreateRole` and put on an existing role before any policy is attached. The gate creates the boundary out of band with aws-vault at step 0, at its own path outside `policy/beep-fleet/prod/*`: `aws iam create-policy --policy-name fleet-boundary-prod --path /beep-fleet-boundary/ --policy-document file://$D/fleet-boundary.json` (the prod document `deploy-role-policy.ts` writes). The deploy role has no grant at all on any `policy/beep-fleet-boundary/*` ARN (tested) (no CreatePolicy, CreatePolicyVersion, SetDefaultPolicyVersion, DeletePolicyVersion or DeletePolicy), so a run cannot rewrite the ceiling it is held to. If the stack owned the boundary, updating it would need CreatePolicyVersion, which is exactly the escalation. The boundary's allows are scoped to its one stage (amended 2026-11-18, driver P1 on the boundary ceiling and r4613663137): the prod boundary is no wider than the deploy role's own reach, and it matches no name, ARN or tag value of another stage (a test generates the `dev-alice` names with the stack's own name helpers and matches every prod pattern against them). For `prod`: SSM actions apply on `parameter/beep-fleet/prod/*`. KMS `Decrypt`, `Encrypt` and `GenerateDataKey` apply only with `kms:ViaService` = `ssm.us-east-1.amazonaws.com` and `kms:EncryptionContext:PARAMETER_ARN` under `parameter/beep-fleet/prod/*`, which covers both the fleet key and `aws/ssm` (the runner tokens), and only for fleet parameters. S3 object actions apply on the binaries buckets (`beep-fleet-prod-binaries-*`, and `cirunners-*-prod-*` for Alchemy-generated names), never the Alchemy state bucket. Logs apply on `/beep-fleet/prod/*`, `/aws/lambda/beep-fleet-prod-*` and `/aws/lambda/CiRunners-*-prod-*`. SQS message actions apply on `beep-fleet-prod-*` and `CiRunners-*-prod-*` queues. `lambda:InvokeFunction` applies on `function:beep-fleet-prod-*` and `function:CiRunners-*-prod-*`. EC2 has no service wildcard. `CreateFleet`/`RunInstances` create instances, volumes and EC2 Fleets only with `aws:RequestTag/ghr:environment` like `beep-fleet-prod-*`, and a launch is allowed only when its subnet and security group are tagged `alchemy::stack=CiRunners` and `alchemy::stage=prod` (a launch template, when the request names one, must be stack-owned too). AMIs, snapshots, network interfaces and Spot requests are read or created by the launch untagged, and they have no other grant. `CreateTags` is allowed on launch (`ec2:CreateAction`) or on fleet-tagged instances. `DeleteTags`, `TerminateInstances` and `ModifyInstanceMetadataOptions` apply only on instances whose `ghr:environment` is like `beep-fleet-prod-*`. There is no `CreateSnapshot`, `ModifySnapshotAttribute`, `CreateImage`, `ModifyImageAttribute` or `ModifyInstanceAttribute` grant. `Resource: "*"` appears only on the read-only `ec2:DescribeInstances`, `ec2:DescribeTags`, `ec2:DescribeLaunchTemplateVersions`, `ssm:DescribeParameters`, `logs:DescribeLogGroups` and `sts:GetCallerIdentity` (`boundaryWildcardReasons`). `iam:PassRole` applies on the stage's roles. It explicitly denies every IAM write, passing or assuming any role outside `role/beep-fleet-prod-*` and `role/CiRunners-*-prod-*`, `organizations:*`, `account:*`, `aws-portal:*` and `billing:*`, plus the IMDS re-enable. A capped Lambda or EC2 role therefore cannot create an uncapped role. The stack's former `RunnerBoundaryPolicy` resource is gone.
+- Lambda: function CRUD, configuration, code, URL config, concurrency, tags, permissions and event-source mappings on `arn:aws:lambda:us-east-1:832907639880:function:beep-fleet-prod-*` only (eleven functions: `beep-fleet-prod-webhook`, `-ssm-housekeeper`, `-binaries-syncer`, `-termination-watcher`, `-reaper`, and per pool `-{heavy,overflow}-scale-up`, `-job-retry`, `-scale-down`); `lambda:CreateEventSourceMapping` on `*` (a mapping has no ARN until it exists), with `ArnLike lambda:FunctionArn` = `arn:aws:lambda:us-east-1:832907639880:function:beep-fleet-prod-*` plus both `aws:RequestTag/alchemy::` ownership tags, which Alchemy stamps on every mapping it creates. `lambda:TagResource` on `event-source-mapping:*` applies with those request tags only, and only for the three keys `alchemy::stack`, `alchemy::stage` and `alchemy::id` (`ForAllValues:StringEquals aws:TagKeys`); the Service Authorization Reference lists `lambda:TagResource` as a dependent action of `CreateEventSourceMapping` with tags, and tag on create carries no create-action key, so this is the narrowest grant the create needs. `UpdateEventSourceMapping` and `DeleteEventSourceMapping` on `event-source-mapping:*` require both `ArnLike lambda:FunctionArn` = the fleet functions (the reference lists that key on both actions) and `aws:ResourceTag/alchemy::stack = CiRunners` with `aws:ResourceTag/alchemy::stage = prod` (amended 2026-11-18, r4613039446 and r4613411045). The owned-tag condition alone does not protect an unowned mapping, because a direct `TagResource` can satisfy it (r4613657296). The protection is that `CreateEventSourceMapping` on fleet functions is granted only to this deploy role, so no other principal in the account manages fleet functions or their mappings, and that the live fleet's six mappings are denied explicitly (`DenyLiveFleetMappings`, decision "Deny the live fleet's event-source mappings until the P5 drain"). Simulations #21 to #28 were run by the gate (51/51 PASS). Tag on create is checked read-only after step 1a by the by-target tag check, once the stack has created its mappings with tags. No `lambda:UntagResource` is granted on mappings. `ListEventSourceMappings`, `GetEventSourceMapping` and `ListTags` apply on `*`.
+- SQS: queue CRUD, attributes and tags on `arn:aws:sqs:us-east-1:832907639880:beep-fleet-prod-*` (ten queues: per pool `-build`, `-build-dlq`, `-job-retry`, `-job-retry-dlq`; fleet `-deregister-retry`, `-deregister-retry-dlq`).
+- SSM: parameter put/get/delete/describe/tags on `arn:aws:ssm:us-east-1:832907639880:parameter/beep-fleet/prod/*`; `ssm:DescribeParameters` on `*`.
+- KMS (amended 2026-11-18, #3386 r4617469606, r4617469616, r4617469632, against beta.87 `KMS/Key.ts` and `KMS/Alias.ts`).
+  - `kms:CreateKey` and `kms:TagResource` require both ownership request tags, and `aws:TagKeys` limited to the three `alchemy::` keys. The KMS developer guide requires tag on create to be granted by "an IAM policy that isn't restricted to particular KMS keys", so the tag grant cannot be held to the new key, and a request can tag an existing IAM-delegated key with the ownership tags.
+  - A tag therefore confers nothing that matters. Keys tagged `CiRunners`/`prod` get only `DescribeKey`, `GetKeyPolicy`, `GetKeyRotationStatus`, `ListResourceTags`, `EnableKeyRotation`, and key-side `CreateAlias`/`UpdateAlias`/`DeleteAlias` (an alias write is checked on the alias and on its target key).
+  - No `PutKeyPolicy`, `ScheduleKeyDeletion`, `DisableKey` or `UntagResource` is granted: Alchemy calls `PutKeyPolicy` only for a declared policy, which the fleet key has none of, and deletion is the operator-workstation destroy, never this role.
+  - `kms:Encrypt`, `Decrypt` and `GenerateDataKey` apply only through SSM (`kms:ViaService`) with `kms:EncryptionContext:PARAMETER_ARN` under `parameter/beep-fleet/prod/*`, so no key, tagged or not, serves this role outside fleet parameters.
+  - `kms:ListAliases` on `*`, which takes no resource-level scope, because `KMS.Alias` lists aliases before it creates one.
+  - `kms:CreateAlias`, `UpdateAlias` and `DeleteAlias` on `alias/beep-fleet-prod-*`.
+- S3 binaries bucket: bucket CRUD, public-access block, tags and object put/delete on `arn:aws:s3:::beep-fleet-prod-binaries-832907639880` and its objects only, plus the reads beta.87 `S3/Bucket.ts` makes on every reconcile (amended 2026-11-18, #3386 r4617469641): `GetBucketLocation` (existence; called before the create too), `GetBucketPolicy`, `GetEncryptionConfiguration` with `PutEncryptionConfiguration` (written when the observed default rule differs) and `GetBucketNotification`.
+- EventBridge: rule and target CRUD and tags on `arn:aws:events:us-east-1:832907639880:rule/beep-fleet-prod-*` (seven rules: per pool `-scale-down`; `-ssm-housekeeper`, `-binaries-syncer`, `-spot-interruption`, `-instance-state-change`, `-reaper`).
+- CloudWatch Logs: log group CRUD, retention and tags on `/beep-fleet/prod/*` and `/aws/lambda/beep-fleet-prod-*` (Lambda log groups follow the pinned function names).
+- STS: `sts:GetCallerIdentity`.
+
+No assets bucket: the provider layer registers no `Assets` service, so each bundle uploads inline with `CreateFunction`/`UpdateFunctionCode` and the role needs no access to an `alchemy::assets-bucket`. No `ec2:RunInstances`/`CreateFleet`: the deploy never launches a runner; scale-up's own role does.
+
+Policy JSON (amended 2026-11-18). The policy is code: `packages/tooling/infra/ci-runners/src/DeployRolePolicy.ts` builds `deployRolePolicy(vpcArn)` (v1 without a VPC, v2 with the prod fleet VPC) and `fleetBoundaryDocument`. Its unit tests assert the security properties of the generated documents:
+
+- every tag-on-create grant carries `ec2:CreateAction` and both request tags;
+- a direct `ec2:CreateTags` needs both ownership tags on the target;
+- the default-group revoke is `ArnEquals ec2:Vpc` to the given VPC only;
+- every role permission write carries the boundary condition, `AttachRolePolicy` is limited by policy ARN, and `PassRole` carries `PassedToService`;
+- no `iam:*` wildcard and no `DeleteRolePermissionsBoundary` is granted;
+- the boundary lies outside every policy path the role can write, and no version or delete grant reaches it;
+- the boundary denies IAM writes, roles outside the fleet, and Organizations, account and billing actions;
+- the boundary names `Resource: "*"` only on read-only actions listed in `boundaryWildcardReasons`; holds every EC2 write to fleet tags or the stack's launch inputs; grants no snapshot, image or instance-attribute write; serves KMS only through SSM for a fleet parameter; scopes SSM, S3, logs, SQS and Lambda to fleet ARNs; and keeps every action the fleet's own role policies grant;
+- a mutating EC2 action on `Resource: "*"` appears only in the four statements whose reason `wildcardResourceReasons` records;
+- every event-source mapping write is held by `lambda:FunctionArn`; later writes also need the ownership tags; mapping tagging is limited to the ownership keys and values;
+- every planned role ARN, Lambda execution roles included, matches both the deploy role's role grants and the boundary's fleet-role patterns (`CiRunners.test.ts`).
+
+`bun deploy-role-policy.ts --out-dir <dir> [--vpc-arn <arn>]`, run from that package, writes the policy, its chunks for `simulate-custom-policy` (each under 2,000 characters; the policy only allows, so the chunks evaluate together as the whole; its one deny, `DenyLiveFleetMappings`, applies from whichever chunk holds it) and `fleet-boundary.json`.
+
+Simulations (this list is the record; placeholder ARNs stand in for the new VPC, a live-fleet object and a fleet role `beep-fleet-prod-x`). They are run against the generated JSON before arming, and again on v2 with the real VPC ARN between cutover steps 1a and 1b:
+
+1. v2, default-group revokes in the new VPC (`ec2:Vpc` = new): allowed.
+2. v2, the same in an unrelated VPC: implicitDeny.
+3. v1, the same in the new VPC: implicitDeny (why step 1a excludes `DefaultSecurityGroup`).
+4. `ec2:CreateTags` on the live VPC with both ownership request tags and no `ec2:CreateAction`: implicitDeny.
+5. `ec2:CreateTags` with `ec2:CreateAction=CreateVpc` and both request tags: allowed.
+6. `ec2:DeleteVpc` on a VPC tagged `alchemy::stack=CiRunners`, `alchemy::stage=prod`: allowed.
+7. `ec2:DeleteVpc` on the live VPC: implicitDeny.
+8. `lambda:UpdateFunctionCode` on `beep-ci-scale-up`: implicitDeny.
+9. A direct `ec2:CreateTags` on a live-fleet security group without an `alchemy::stack` tag, requesting both ownership tags, no `ec2:CreateAction`: implicitDeny.
+10. The same on a VPC tagged `alchemy::stack=Other`: implicitDeny.
+11. `ec2:RevokeSecurityGroupEgress` on a live-fleet security group (`ec2:Vpc` = live): implicitDeny.
+12. `iam:CreateRole` on `beep-fleet-prod-x` without `iam:PermissionsBoundary`: implicitDeny.
+13. The same with the fleet boundary: allowed.
+14. `iam:AttachRolePolicy` of `AdministratorAccess` on `beep-fleet-prod-x`, with the boundary: implicitDeny.
+15. `iam:PutRolePolicy` on `beep-fleet-prod-x` without the boundary: implicitDeny.
+16. `iam:PassRole` of `beep-fleet-prod-x` to `iam.amazonaws.com`: implicitDeny.
+17. `iam:DeleteRolePermissionsBoundary` on `beep-fleet-prod-x`: implicitDeny.
+18. `iam:CreatePolicyVersion` on the boundary ARN (`fleet-boundary-prod`): implicitDeny.
+19. `iam:PutRolePermissionsBoundary` naming a different boundary ARN: implicitDeny.
+20. Effective permissions: a `*:*` identity policy under the fleet boundary (`--permissions-boundary-policy-input-list`) is denied `iam:CreateRole`, `iam:AttachRolePolicy`, `sts:AssumeRole` of a non-fleet role and `organizations:LeaveOrganization`, and is allowed `ec2:DescribeInstances`. Extended 2026-11-18 (boundary ceiling), cases in `sim20-cases.json`:
+    - Denied: `ssm:GetParameter` on `parameter/other/x`; `s3:GetObject` on `alchemy-state-832907639880-us-east-1-an/OtherStack/x` and on another bucket; `kms:Decrypt` on a non-fleet key; `ec2:TerminateInstances` and `ec2:ModifyInstanceAttribute` on an untagged instance; `ec2:ModifySnapshotAttribute`; `sqs:SendMessage` to a non-fleet queue; `lambda:InvokeFunction` on `beep-ci-scale-up`.
+    - Allowed: `ec2:RunInstances` with the fleet tags from a stack launch template, subnet and security group; `ssm:GetParameter` on `parameter/beep-fleet/prod/x`; `kms:Decrypt` through SSM for a fleet parameter; SQS message actions on `beep-fleet-prod-*`; logs on the fleet groups; `ec2:TerminateInstances` on an instance tagged `ghr:environment=beep-fleet-prod-heavy`.
+21. `lambda:CreateEventSourceMapping` to a fleet function with both request tags: allowed.
+22. The same to `beep-ci-scale-up`: implicitDeny.
+23. `lambda:UpdateEventSourceMapping` and `lambda:DeleteEventSourceMapping` on a mapping tagged `CiRunners`/`prod`: allowed.
+24. The same on a mapping tagged `alchemy::stack=Other`: implicitDeny.
+25. `lambda:UpdateEventSourceMapping` and `lambda:DeleteEventSourceMapping` on a mapping tagged `CiRunners`/`prod` whose `lambda:FunctionArn` is `beep-ci-scale-up`: implicitDeny.
+25b. Under the fleet boundary, `sqs:ReceiveMessage` and `sqs:DeleteMessage` on `arn:aws:sqs:us-east-1:832907639880:beep-ci-build` (a non-fleet queue): implicitDeny.
+26. `lambda:TagResource` on a foreign mapping with the ownership request tags: allowed by the allow statements. The vector: tag a foreign mapping with the ownership tags, then call `UpdateEventSourceMapping` with `FunctionName` set to a fleet function, which retargets it; whether `lambda:FunctionArn` evaluates the requested or the current target is not documented. The bound: the boundary denies every fleet role reading or deleting a non-fleet queue's messages (#25b), so the worst case is disrupting a foreign consumer, not reading its data. The account holds six such mappings (the live fleet's `beep-ci-*` and `beep-ovf-*`), so `DenyLiveFleetMappings` closes it for them until the P5 drain and destroy (#29a–d). With an extra tag key (`aws:TagKeys` includes `team`): implicitDeny. With `alchemy::stack=Other`: implicitDeny.
+27. Tag on create: `lambda:TagResource` on `event-source-mapping:new` with both ownership request tags and keys `alchemy::stack`, `alchemy::stage`, `alchemy::id`: allowed.
+28. `iam:CreateRole`, `iam:PutRolePolicy` and `iam:PassRole` on a role with a path (`role/beep-fleet/prod/beep-fleet-prod-flow-logs`), with the boundary: implicitDeny. This is the convention test: no fleet role may carry a path.
+29a–d. `lambda:TagResource`, `lambda:UntagResource`, `lambda:UpdateEventSourceMapping` and `lambda:DeleteEventSourceMapping` on the live `beep-ci-scale-up` mapping (`event-source-mapping:e93fcf22-bfe9-4da4-92e7-a124812ac31b`), with both ownership request and resource tags and `lambda:FunctionArn` = a fleet function in the context: explicitDeny (`DenyLiveFleetMappings`).
+30. KMS ownership by tag (r4617469606): `kms:PutKeyPolicy`, `kms:ScheduleKeyDeletion` and `kms:Decrypt` (with no `kms:ViaService`) on a key tagged `alchemy::stack=CiRunners`, `alchemy::stage=prod`: implicitDeny. `kms:Decrypt` through SSM (`kms:ViaService=ssm.us-east-1.amazonaws.com`, `PARAMETER_ARN` = a fleet parameter): allowed. The same with `PARAMETER_ARN=parameter/other/x`: implicitDeny.
+31. `kms:TagResource` with both ownership request tags and `aws:TagKeys` = the three ownership keys: allowed. With an extra key `team`: implicitDeny.
+32. `kms:ListAliases` on `*`: allowed. `kms:CreateAlias` on `alias/beep-fleet-prod-github-app` and on a key tagged `CiRunners`/`prod`: allowed. On an untagged key: implicitDeny.
+33. `s3:GetBucketLocation`, `s3:GetBucketNotification`, `s3:GetBucketPolicy`, `s3:GetEncryptionConfiguration` and `s3:PutEncryptionConfiguration` on `arn:aws:s3:::beep-fleet-prod-binaries-832907639880`: allowed. The same on another bucket: implicitDeny.
+20t–v. Under the prod boundary with the `*:*` identity: `ssm:GetParameter` on `parameter/beep-fleet/dev-alice/x`, `lambda:InvokeFunction` on `beep-fleet-dev-alice-heavy-scale-up`, `sqs:ReceiveMessage` on `beep-fleet-dev-alice-heavy-build` and `ec2:TerminateInstances` on an instance tagged `ghr:environment=beep-fleet-dev-alice-heavy`: implicitDeny.
+
+Results. Simulations 1 to 11 passed on 2026-11-18 (packet gate session, `aws iam simulate-custom-policy`, account 832907639880, us-east-1) on the chunks generated before the IAM boundary change. Simulations 9 and 10 cover the CWE-863 bypass path: a direct `ec2:CreateTags` that sets the ownership tags on a resource without them is refused. On the chunks of a2c68248391, 51 of 51 simulations passed on 2026-11-18 (packet gate session, same account and region): #1 to #19, #20 with the extended cases 20a to 20s, #21 to #24, #25, #26a to #26c, #27 and #28, plus #25b: `sqs:ReceiveMessage` and `sqs:DeleteMessage` on the non-fleet `beep-ci-build` queue under the boundary, both implicitDeny.
+
+Results at 8e3b3a45301 (2026-11-18, packet gate session, same account and region, #3386 r4613848496): 59 of 59 passed, plus #25b.
+
+- #1 to #19 and #21 to #28 passed.
+- #29a to #29d were all explicitDeny on the live `beep-ci-scale-up` mapping, even with the ownership tags and a fleet `lambda:FunctionArn` in the context.
+- #20 base passed, and so did 20a to 20s, both the deny half and the allow half.
+- 20t to 20w (dev-alice resources under the prod boundary) were all denied.
+- #25b was implicitDeny.
+
+Mapping inventory. The gate's read-only `aws lambda list-event-source-mappings` (us-east-1, 2026-11-18 about 11:4xZ) returned exactly the six ARNs `DenyLiveFleetMappings` denies. All six were `Enabled`, all target live-fleet functions, and no fleet mapping existed yet. The cutover decision re-reads the list before step 1b and before the drain.
+
+Principal-access assumption. Only this deploy role can call `CreateEventSourceMapping` on `beep-fleet-prod-*` functions. No other principal in the account manages fleet functions or their mappings, which is what makes the owned-tag condition sufficient for the stack's own mappings.
+
+Live validation (corrected 2026-11-18, #3386 r4614163550). Steps 1a and 1b run read-only checks only: the by-target tag check proves tag on create, and the six live UUIDs are confirmed unchanged (cutover decision, mapping check). For the direct-tag, update and delete sequences, the policy's answers are proven by simulations #23 to #29. Which function ARN AWS evaluates on a retargeting Update is unverified, so the live mappings are covered by `DenyLiveFleetMappings` and the by-target live check, not by that condition. By decision there is no mutating live test: no separate fixture account exists, and a fixture in the prod account would add risk without adding coverage. The results go into the cutover record before the traffic move.
+
+Commands, run by the gate from the operator workstation (`AWS_PROFILE=elpresidank-vault`), after the policy JSON is generated and reviewed: `aws iam create-role --role-name beep-alchemy-ci-runners-deploy --assume-role-policy-document file://$D/trust.json --max-session-duration 3600 --tags Key=beep:owner,Value=infra-alchemy-rebuild`, `aws iam put-role-policy --role-name beep-alchemy-ci-runners-deploy --policy-name ci-runners-deploy --policy-document file://$D/policy-v1.json` (v2 at step 1a/1b, same command), `gh api -X PUT repos/beep-effect/beep-effect/environments/ci-runners-prod` with the `main` branch policy, `gh variable set CI_RUNNERS_DEPLOY_ROLE_ARN --env ci-runners-prod`, and the three `gh secret set` pipes. Checks: `aws iam simulate-principal-policy` must say `allowed` for `ec2:DeleteVpc` on a VPC tagged `alchemy::stack=CiRunners` and `implicitDeny` on the live `beep-ci-runners-vpc`; `implicitDeny` for `ec2:CreateTags` on the live `beep-ci-runners-vpc` (foreign tags, no `ec2:CreateAction`) even with request tags `alchemy::stack=CiRunners` and `alchemy::stage=prod`, and `allowed` for `ec2:CreateTags` with `ec2:CreateAction=CreateVpc` and those request tags; `implicitDeny` for `ec2:RevokeSecurityGroupIngress` on a security group in the live VPC; and `implicitDeny` for `lambda:UpdateFunctionCode` on `beep-ci-scale-up`.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: aws iam delete-role-policy --role-name beep-alchemy-ci-runners-deploy --policy-name ci-runners-deploy; aws iam delete-role --role-name beep-alchemy-ci-runners-deploy; gh api -X DELETE repos/beep-effect/beep-effect/environments/ci-runners-prod.
+
+### CI runners deploy workflow drafted, not wired, until the window-5 release, 2026-11-14
+
+Drafted here, not as a `.github` file: the window-5 measurement forbids any `.github/` change until the gate releases P5, and every workflow PR of this packet is disclosed to the orchestrator and merged by the operator. When released, the gate (or the lane it names) adds the workflow `deploy-ci-runners.yml` (in the repository workflows directory) with this content (synced 2026-11-18 to the shipped file: App secrets on the two steps that run the stack program only, and the checked deploy of the cutover decision's condition d), adds its line to the `ci-runner-security` exemption test as cost-controls did, and asks the operator for the merge:
+
+```yaml
+name: Deploy CI runners
+
+# Deploys the `prod` stage of the CiRunners Alchemy stack in
+# packages/tooling/infra/ci-runners: the runner fleet network, the heavy and
+# shard-overflow pools (RunnerFleet), the runner IAM policies and the reaper,
+# built beside the Pulumi beep-ci-runners/production fleet under new names
+# (goals/infra-alchemy-rebuild P5). State lives in the shared S3 state store;
+# its stage lease plus this concurrency group serialize prod deploys and never
+# cancel one mid-apply.
+#
+# The job is DISARMED: it runs only while the repository variable
+# CI_RUNNERS_DEPLOY_ARMED is `true`. Unarmed, the job is skipped before any
+# step, so merging this workflow deploys nothing, and neither does a push or a
+# manual dispatch. The packet gate arms it for cutover step 1 only after the
+# orchestrator confirms the CI goals driver lowered the heavy burst cap to 6
+# (decision "CI runners cutover from the Pulumi fleet").
+# Armed, only the two cutover dispatches run (`bootstrap`, then
+# `default-security-group`): a `routine` run, every push included, also needs
+# CI_RUNNERS_ROUTINE_ARMED = `true`, which the gate sets only after step 1b
+# succeeds. So no push can reconcile the stack between 1a and 1b.
+#
+# The plan step plans the stage, runs the plan check (src/PlanCheck.ts) and
+# saves the checked plan; it stops the job on a replace, delete or orphan, a
+# destructive binding change, a foreign resource or a stack action. The deploy
+# step plans again under the stage lease, checks again and applies that same
+# plan object only when it equals the saved one (src/CheckedDeploy.ts,
+# applyIfUnchanged); any drift between the two stops it before a write. The
+# dispatch input `mode` names the cutover expectation both steps enforce:
+# `bootstrap` (step 1a) and `default-security-group` (step 1b) refuse any other
+# change; pushes run as `routine`.
+# Credentials: the stack-scoped OIDC role vars.CI_RUNNERS_DEPLOY_ROLE_ARN on
+# the ci-runners-prod environment; App credentials are that environment's
+# secrets, passed only to the plan and deploy steps, and stay Redacted to SSM.
+# Runbook: docs/runbooks/alchemy-infra.md.
+on:
+  push:
+    branches: [main]
+    paths:
+      - packages/tooling/infra/ci-runners/**
+      - packages/tooling/library/alchemy-github-runners/src/**
+      - packages/tooling/library/alchemy-aws-extras/src/**
+      - bun.lock
+      - .github/workflows/deploy-ci-runners.yml
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "routine; bootstrap (cutover step 1a: creates only, no DefaultSecurityGroup); default-security-group (step 1b: that one create)"
+        type: choice
+        options: [routine, bootstrap, default-security-group]
+        default: routine
+
+concurrency:
+  group: alchemy-ci-runners-prod
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy CI runners (prod)
+    if: >-
+      vars.CI_RUNNERS_DEPLOY_ARMED == 'true' &&
+      (vars.CI_RUNNERS_ROUTINE_ARMED == 'true' ||
+      (github.event_name == 'workflow_dispatch' && inputs.mode != 'routine'))
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    environment:
+      name: ci-runners-prod
+    permissions:
+      contents: read
+      id-token: write
+    env:
+      CI: "true"
+      ALCHEMY_TELEMETRY_DISABLED: "1"
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup monorepo CI
+        uses: ./.github/actions/setup-monorepo-ci
+
+      - name: Configure AWS credentials (ci-runners deploy role)
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          role-to-assume: ${{ vars.CI_RUNNERS_DEPLOY_ROLE_ARN }}
+          role-session-name: alchemy-ci-runners-prod
+          aws-region: us-east-1
+
+      # Plans prod, prints resources, actions and bindings (never a value), runs
+      # the plan check and saves the checked plan for the deploy step.
+      - name: Plan and check the prod stage
+        working-directory: packages/tooling/infra/ci-runners
+        # The App secrets reach only the two steps that run the stack program.
+        env:
+          CI_RUNNERS_GITHUB_APP_ID: ${{ secrets.CI_RUNNERS_GITHUB_APP_ID }}
+          CI_RUNNERS_GITHUB_APP_KEY_BASE64: ${{ secrets.CI_RUNNERS_GITHUB_APP_KEY_BASE64 }}
+          CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
+          # A push carries no inputs, so it plans as routine.
+          MODE: ${{ inputs.mode || 'routine' }}
+          EXCLUDE: ${{ inputs.mode == 'bootstrap' && 'DefaultSecurityGroup' || '' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          bun plan-check.ts plan --stage prod --expect "$MODE" ${EXCLUDE:+--exclude "$EXCLUDE"} \
+            --out "$RUNNER_TEMP/ci-runners-checked-plan.json"
+
+      # Applies only the checked change set: plans again, checks again, and
+      # refuses before any write when the plan differs from the saved one.
+      - name: Deploy the checked plan
+        working-directory: packages/tooling/infra/ci-runners
+        shell: bash
+        # The App secrets reach only the two steps that run the stack program.
+        env:
+          CI_RUNNERS_GITHUB_APP_ID: ${{ secrets.CI_RUNNERS_GITHUB_APP_ID }}
+          CI_RUNNERS_GITHUB_APP_KEY_BASE64: ${{ secrets.CI_RUNNERS_GITHUB_APP_KEY_BASE64 }}
+          CI_RUNNERS_GITHUB_WEBHOOK_SECRET: ${{ secrets.CI_RUNNERS_GITHUB_WEBHOOK_SECRET }}
+          MODE: ${{ inputs.mode || 'routine' }}
+          EXCLUDE: ${{ inputs.mode == 'bootstrap' && 'DefaultSecurityGroup' || '' }}
+        run: |
+          set -euo pipefail
+          bun plan-check.ts deploy --stage prod --expect "$MODE" ${EXCLUDE:+--exclude "$EXCLUDE"} \
+            --checked "$RUNNER_TEMP/ci-runners-checked-plan.json" \
+            | tee "$RUNNER_TEMP/ci-runners-deploy.log"
+
+      # One unsigned request to the webhook: the handler must answer and refuse
+      # it with 401. A 403 is Lambda refusing to invoke the function URL, so
+      # GitHub could not deliver either: it fails the job. No AWS describe call, so the check adds nothing to the
+      # account's EC2 API rate the live scale-up shares.
+      # A bootstrap deploy is filtered, so it prints no stack output; the next full deploy checks the webhook.
+      - name: Verify the webhook answers and refuses an unsigned event
+        if: ${{ inputs.mode != 'bootstrap' }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          url="$(grep -o -E '^webhookUrl=https://[a-z0-9]+\.lambda-url\.us-east-1\.on\.aws/' "$RUNNER_TEMP/ci-runners-deploy.log" | tail -n 1 | cut -d= -f2- || true)"
+          if [[ -z "$url" ]]; then
+            echo "::error::the deploy log names no webhook function URL"
+            exit 1
+          fi
+          status="$(curl -s -o /dev/null -w '%{http_code}' -X POST -H 'content-type: application/json' -d '{}' "$url")"
+          echo "webhook status=${status}"
+          [[ "$status" == "401" ]]
+```
+
+Open points in the draft for the releasing lane: `plan-check.ts deploy` prints the stack output's webhook URL as one `webhookUrl=<url>` line, which the last step reads (beta.87 has no `alchemy output` command); the unsigned probe passes only on the handler's 401 from `Webhook.program.ts`; a 403 means Lambda refused to invoke the function URL (missing invoke permission), so GitHub could not deliver either, and it fails the job (amended 2026-11-18); the `mode` dispatch input runs cutover step 1a (`bootstrap`: `--exclude DefaultSecurityGroup` on both commands, creates only, no probe) and step 1b (`default-security-group`: exactly that one create); the `paths` filter redeploys the fleet on every library source change, which is intended (the Lambdas are bundled from that source) but means every `@beep/alchemy-github-runners` PR deploys runner code on merge, so those PRs need the same review bar as this package.
+
+Added at the packet gate's GO (2026-11-18), disarmed: the workflow ships in the P5 PR with its job gated on `if: vars.CI_RUNNERS_DEPLOY_ARMED == 'true'`, the pattern `deploy-infra-github.yml` uses, so merging it, a later push and a manual dispatch all skip the job before any step while the variable is unset. The gate sets the variable for cutover step 1, only after the deploy role and environment exist and the orchestrator confirms `BEEP_HEAVY_BURST_MAX=6`; unsetting it disarms again. Its `ci-runner-security` exemption line is added in the same PR.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: Do not add the drafted workflow; deploy prod from a gate-run dispatch instead.
+
+### The ci-runners stack does not adopt the shared state role or the GitHub OIDC provider, 2026-11-14
+
+SPEC says `@beep/infra-ci-runners` adopts the GitHub OIDC provider and the shared state role `beep-alchemy-state-rw` (D20, one decision per object). This lane does not declare them. Adopting the state role means declaring its trust policy, and that policy's subjects are added by each stack's bootstrap (`beep-effect-web-prod`, `storybook-prod` and the others as they land); a declaration in this stack would overwrite whichever subjects the declaring lane did not know about, and its `prod` deploy would run with the power to lock every other stack out of the state store. The OIDC provider is an account singleton every deploy role trusts. Both stay bootstrap singletons until one stack owns the list of deploy environments, which is `@beep/infra-github` (D10, it owns the environments) or a small bootstrap stack; the gate decides which. No resource of either kind is in the plan.
+
+Closed by the packet gate ruling of 2026-11-14: the shared state role and the GitHub OIDC provider stay bootstrap singletons outside IaC, as SPEC records them; no stack adopts them, and the SPEC line that had `@beep/infra-ci-runners` adopting them is superseded by this decision.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: Declare both in the ci-runners stack with adopt(true), listing every deploy environment subject in the role's trust policy.
+
+### Runners keep the live IMDS post-install; the runner permissions boundary is new and narrowed, 2026-11-14
+
+Runners keep the live fleet's post-install unchanged: the toolbelt fallback (git, unzip, zip, jq on an unbaked image), the per-job `ACTIONS_RUNNER_HOOK_JOB_STARTED` IMDS hook, and the fail-closed IMDS workload boundary that wraps `/opt/actions-runner/run.sh`, disables IMDS on the instance before the runner accepts a job and powers the instance off when the runner exits. `src/RunnerBootstrap.ts` holds the three scripts byte for byte as `infra/src/CiFleetController.ts` defines them, before that file's Terraform HCL escaping (the composite passes the script through unescaped). The composite's user data has the same order the module had (extract runner, post-install, fetch the JIT config from SSM while IMDS still works, delete it, start `run.sh` as `ec2-user`), so the shim lands where it did. Because IMDS is off once the runner starts, the composite's exit trap cannot terminate the instance through the API; the shim's power-off and the template's `terminate` shutdown behaviour do it, as on the live fleet.
+
+IAM on each pool's runner role:
+
+- Managed policy `beep-fleet-<stage>-runner-imds-disable`: the live document, `ec2:ModifyInstanceMetadataOptions` on the caller's own instance only while its endpoint is enabled.
+- Permissions boundary `beep-fleet-<stage>-runner-boundary`, new and owned by the stack instead of reusing the operator-made `beep-ci-fleet-boundary`: allow `ec2:*`, `ssm:GetParameter`, `ssm:DeleteParameter`, `s3:GetObject`, `kms:Decrypt`, `sts:GetCallerIdentity`; deny `iam:Create*`, `iam:Put*`, `iam:Attach*`, `iam:Delete*`, `iam:Update*`; deny `ec2:ModifyInstanceMetadataOptions` once the endpoint is disabled. The live boundary was a ceiling for every module role (Lambdas included: logs, SQS, events, DynamoDB, metrics, `iam:PassRole` to `beep-ci`/`beep-ovf` roles); in the composite the Lambda roles get least-privilege `bind` policies of their own, so the boundary only needs to cover the runner, and drops `iam:PassRole`, which a runner never uses.
+
+The scripts duplicate the Pulumi source until the old program is deleted at cutover; the duplicate goes away with `infra/`.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: Drop postInstall and the two runner policies from declareCiRunners, or point runnerPermissionsBoundaryArn at beep-ci-fleet-boundary.
+
+### New runner labels beep-fleet-heavy and beep-fleet-overflow; the live runner groups are reused, 2026-11-14
+
+The new pools register with new labels, `beep-fleet-heavy` and `beep-fleet-overflow`, and the live runner names are not reused (`beep-fleet-heavy-`, `beep-fleet-ovf-` prefixes). With bidirectional label matching a job reaches a pool only when its `runs-on` labels equal the pool's, so during the overlap no existing job can be picked up by the new fleet, the live fleet never sees a new-label job, and no job launches two runners. Moving a workflow to the new fleet is then one reviewed `runs-on` edit per job (cutover decision), and moving it back is the revert of that edit.
+
+The runner groups are the live org groups, `beep-ec2-heavy` and `beep-shard-overflow` (both exist, `restricted_to_workflows: true`, visibility `selected`, read 2026-11-14 with `gh api orgs/beep-effect/actions/runner-groups`). They stay outside IaC (decision of 2026-11-09). Because they are restricted to selected workflows, a proof job on the new fleet must run in a workflow already on each group's allowed list, or the operator adds the proof workflow to the list; that is an org setting the operator owns.
+
+End state (gate ruling 2026-11-14): the new labels stand for the overlap; whether the workflows end on them (option A) or the pools are relabelled to the live names after the old fleet is destroyed (option B) is settled with the orchestrator at release. Both options, their costs and the full list of label readers are in the cutover decision.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: Set PoolSettings.label back to beep-ec2-heavy and beep-shard-overflow in productionConfig.
+
+### Personal ci-runners stages launch nothing and register repository runners only, 2026-11-14
+
+A personal stage (`dev-$USER`; since 2026-11-18 the stage name must be canonical, so `dev_$USER` is refused by `requireDistinctStage`) deploys the same graph as `prod` under its own names, but by default it cannot run or register a runner anywhere:
+
+- Every pool cap is 0, so scale-up never launches; the webhook's repository allow list is empty, so it drops every event.
+- Runners register as repository runners (`runnerType: "Repo"`), never organization runners, so even a rehearsal cannot put a runner into the org groups `beep-ec2-heavy` or `beep-shard-overflow` that production jobs use.
+- The App credentials are placeholders (`unset`) whatever the environment holds; `stageCredentials` reads the three `CI_RUNNERS_GITHUB_*` variables only for `prod` and for a rehearsal, so a stray variable on a workstation never reaches a personal fleet.
+- The names are fenced from the live fleet (physical-names decision). The reaper and the termination watcher both match the stage's own pool environments exactly (`beep-fleet-<slug>-heavy`, `beep-fleet-<slug>-overflow`). The watcher matched by prefix until 2026-11-18, which would have let `dev-a`'s watcher act on `dev-a-b`'s runners; it now takes the exact list, and its retry path re-reads the instance and checks the same list before deregistering.
+- The account guard (`requireDeployTarget`) and the `CI` guard on `prod` run first.
+
+Rehearsals that launch runners are deferred (amended 2026-11-18). During the overlap the Spot budget reserves the whole quota (live fleet at burst cap 6 plus the `prod` overlap caps), so a launching rehearsal is refused at decode, and the procedure below cannot run until an approved configuration explicitly allocates rehearsal capacity, after the live fleet is destroyed. The no-rehearsal plan (`bunx alchemy plan --stage "dev-$USER"`) stays available. When enabled, a rehearsal opts in with `CI_RUNNERS_REHEARSAL_REPOSITORY=<owner>/<repo>`, a sandbox repository other than `beep-effect/beep-effect` (the schema refuses that one). It then needs the App credentials, each pool may launch one repository runner for that repository alone, and the Spot budget still reserves the live fleet and the `prod` overlap caps. The credentials come only through `op run` from references, never files or arguments, for example:
+
+```sh
+eval "$(aws configure export-credentials --profile elpresidank-vault --format env)"
+export AWS_REGION=us-east-1
+cd packages/tooling/infra/ci-runners
+CI_RUNNERS_REHEARSAL_REPOSITORY=<owner>/<sandbox> \
+CI_RUNNERS_GITHUB_APP_ID=op://<vault>/<item>/<app-id field> \
+CI_RUNNERS_GITHUB_APP_KEY_BASE64=op://<vault>/<item>/<base64 key field> \
+CI_RUNNERS_GITHUB_WEBHOOK_SECRET=op://<vault>/<item>/<rehearsal webhook secret field> \
+  op run -- bunx alchemy deploy --stage "dev-$USER" --env-file /dev/null
+```
+
+The App must be installed on the sandbox repository, and the sandbox needs a repository webhook (`workflow_job`) pointing at the stage's function URL with the rehearsal secret. Which App and which references to use is an open question for the gate (cutover decision); no rehearsal was run by this lane.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: Give personalConfig the production caps, runnerType Org and allow list, and let stageCredentials read the environment in every stage.
+
+### CI runners personal-stage plan: 66 to create, 9 binding changes, no EC2 reads, 2026-11-14
+
+Personal-stage plan, read-only, run once (budget: at most two) from `packages/tooling/infra/ci-runners` on 2026-11-14 with the aws-vault session exported and no `CI_RUNNERS_*` variable set: `bunx alchemy plan --stage "dev_$USER" --env-file /dev/null`. No deploy, no `--yes`.
+
+Result: exit 0 in 3.6 s, `Plan: 66 to create, 9 binding changes`; 0 update, 0 replace, 0 delete, 0 orphan, 0 adopt. The 66 creates by area: network 18 (VPC, default security group, internet gateway, route table, default route, 5 subnets, 5 route-table associations, runner security group, flow log, log group), flow-logs role 1, runner policies 2, reaper 3 (function, schedule, permission), fleet composite 42 (KMS key and alias, 3 App parameters, binaries bucket, 2 launch templates, 2 runner roles, 2 instance profiles, 6 queues, 8 functions, 3 event-source mappings, 6 rules, 6 permissions, the sweep). The 9 bindings are the inline policies of the nine functions, the reaper included. Every line of the output passed the pre-deploy gate (`test/support/PersonalPlan.ts` is this log with the stage renamed and timestamps zeroed).
+
+AWS reads: a fresh stage has no state, so the plan read only the credentials resolution and the state bucket; it made no EC2 describe call, in line with the window-5 owner's budget. A plan of an existing stage reads each resource back once per plan (about 25 EC2 describes for the network, templates and security group); the deploy job should plan once per run.
+
+Not verified without a deploy: provider behaviour against real AWS (bundling of the nine Effect Lambdas, the function URL, IAM eventual consistency, flow-log delivery, `CreateFleet` against the launch template), and the destroy ordering beyond the in-memory test.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: None needed: the plan changed nothing; delete this record if it is superseded by a later plan.
+
+### CI runners physical names are beep-fleet-<stage>, fenced from the live beep-ci and beep-ovf objects, 2026-11-14
+
+Every name the `CiRunners` stack pins derives from the stage: `prod` is `beep-fleet-prod`, a personal stage `dev-alice` is `beep-fleet-dev-alice` (stage names must equal their slug since 2026-11-18, so no two stages share names, and neither `beep-fleet-<slug>` nor `beep-fleet-prod` may prefix the other) (`physicalNames` in `packages/tooling/infra/ci-runners/src/Names.ts`). Production names, all new (D12), none adopted:
+
+| Object | Production name |
+| --- | --- |
+| `RunnerFleet` name, pool `ghr:environment` | `beep-fleet-prod`, `beep-fleet-prod-heavy`, `beep-fleet-prod-overflow` |
+| SSM root (App parameters, token and config paths) | `/beep-fleet/prod` |
+| KMS alias of the App-secrets key | `alias/beep-fleet-prod-github-app` |
+| VPC, internet gateway, route table `Name` tags | `beep-fleet-prod-vpc`, `beep-fleet-prod-igw`, `beep-fleet-prod-public` |
+| Subnets (`Name` tags) | `beep-fleet-prod-public-us-east-1{a,b,c,d,f}` |
+| Runner security group | `beep-fleet-prod-runner` |
+| Flow logs: log group, role (default path `/`, amended 2026-11-18 r4613433026), flow log | `/beep-fleet/prod/vpc-flow-logs`, `beep-fleet-prod-flow-logs`, `beep-fleet-prod-flow-log` |
+| Reaper Lambda | `beep-fleet-prod-reaper` |
+| Runner IAM policy (path `/beep-fleet/prod/`) | `beep-fleet-prod-runner-imds-disable` (the runner boundary policy is gone: every role carries the bootstrap fleet boundary instead) |
+
+Why these cannot collide: the live fleet's names all start with `beep-ci`, `beep-ovf`, `/beep-ci`, `/beep-ovf`, `/github-action-runners` or `alias/beep-ci` (terraform prefixes, SSM roots, KMS alias, IAM paths, Lambda names, groundwork `beep-ci-runners-*`). `requireFencedNames` refuses any stage whose names start with one of those prefixes or are a prefix of one, before any resource is declared; a test runs it over `prod` and several personal stages. The prefix rule mattered for the composite's termination watcher, which until 2026-11-18 acted on every instance whose `ghr:environment` started with the fleet name: `beep-ci` as a fleet name would have matched the live `beep-ci` environment. Since 2026-11-18 the watcher matches the fleet's pool environments exactly, on both its event path and its queued-retry path. One stage's watcher therefore never acts on another stage's runners, even when one slug prefixes another (`dev-al` and `dev-alice`). Pool names are also dash-free, so `<prefix>-<pool>` names never collide across (prefix, pool) pairs.
+
+Composite names, pinned (gate ruling 2026-11-14): generated names derive from the state's instance ids, so a lost or moved state would mint a second fleet beside the first (the #3133 lesson), and every other `prod` stack of this packet pins its names. `RunnerFleet` gained an optional `namePrefix` (`@beep/alchemy-github-runners/RunnerFleetNames`, lower case, at most 28 characters so the longest name fits Lambda and EventBridge 64, IAM role 64, SQS 80 and S3 63 with a 24-character pool name). `prod` sets it to `beep-fleet-prod`; personal stages leave it unset and keep Alchemy's generated names. Production composite names:
+
+| Resource | Name |
+| --- | --- |
+| Lambdas (log groups `/aws/lambda/<name>` follow) | `beep-fleet-prod-webhook`, `-ssm-housekeeper`, `-binaries-syncer`, `-termination-watcher`; per pool `beep-fleet-prod-{heavy,overflow}-scale-up`, `-job-retry`, `-scale-down`; the stack's `beep-fleet-prod-reaper` |
+| SQS queues | per pool `-build`, `-build-dlq`, `-job-retry`, `-job-retry-dlq`; `beep-fleet-prod-deregister-retry`, `-deregister-retry-dlq` |
+| Runner roles and instance profiles | `beep-fleet-prod-{heavy,overflow}-runner` |
+| Launch templates | `beep-fleet-prod-{heavy,overflow}` |
+| EventBridge rules | per pool `-scale-down`; `beep-fleet-prod-ssm-housekeeper`, `-binaries-syncer`, `-spot-interruption`, `-instance-state-change`, `-reaper` |
+| Binaries bucket | `beep-fleet-prod-binaries-832907639880` (S3 names are global, so the account id is appended) |
+
+A test asserts all 40 production names (`test/CiRunners.test.ts`, "pins every production physical name"); library tests cover the prefix, the length limits and the unprefixed default.
+
+Still generated, and why that is safe: the nine Lambda execution roles. `Lambda.Function` (Alchemy 2.0.0-beta.87) names its own role `CiRunners-<logical id>-prod-<instance suffix>` and takes no role or role-name prop. After a state loss a redeploy would create new roles, but every function name is pinned, so the create collides with the existing function instead of standing up a second fleet. Pinning the roles needs a `roleName` prop on `Lambda.Function` (an upstream Alchemy change or a bun patch; candidate for D14). Other ids are AWS-assigned (VPC, subnets, security-group rules, KMS key, event-source mappings, permission statement ids) or already pinned by the stack (SSM paths, KMS alias, policies, flow logs).
+
+Accepted (packet gate ruling, 2026-11-14): the Lambda execution roles stay generated, with no bun patch; the deploy role keeps its `role/CiRunners-*-prod-*` allowance for those nine roles only. The `roleName` prop on `Lambda.Function` is proposed upstream under D14 (in-repo first, upstream when stable) in the packet friction ledger.
+
+Role paths (amended 2026-11-18, #3386 r4613433026). Every fleet role sits at the default path `/`: the runner roles, the flow-logs role and every Lambda execution role. The deploy role's grants and the fleet boundary name roles by prefix (`role/beep-fleet-*`, `role/CiRunners-*`), and an ARN with a path (`role/beep-fleet/prod/beep-fleet-prod-flow-logs`) matches neither, so the flow-logs role lost its `path`. A test enumerates every planned role ARN and every Lambda execution role ARN and checks each against both pattern sets. Only the IMDS policy keeps the path `/beep-fleet/prod/`, which is where `policy/beep-fleet/prod/*` grants reach.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: Change physicalNames in packages/tooling/infra/ci-runners/src/Names.ts and redeploy each stage (every pinned name replaces).
+
+### CI runners pre-deploy gate refuses every replace, delete, orphan and unreadable plan line, 2026-11-14
+
+`plan-check.ts` (tested logic in `src/PlanCheck.ts`) is the pre-deploy gate the future deploy job runs between `alchemy plan` and `alchemy deploy`, mirroring the cost-controls `PlanCheck` but failing closed on reading as well as on content:
+
+- It reads the plain plan output (the `[hh:mm:ss.mmm] LEVEL:` prefix and ANSI colours stripped). Lines before the single `Plan:` header are progress and skipped; every non-empty line after it must be a resource line `[fqn] <action>` (optionally with `(mode)` or `(renamed from ...)` notes), a binding line `[fqn/sid] <action|unbind>` directly after its resource, a task line `[fqn] run|drop [action]`, or an indented property line. Anything else is an `UnreadableLine`; zero or several headers is a `MissingPlan`.
+- It refuses every `replace`, `delete` and `orphaned` on any resource (`DestructiveAction`), every binding `replace`, `unbind` or `delete` (`DestructiveBinding`, added 2026-11-18), every root id outside the stack's declared roots (`ForeignResource`) and every action task (`ActionTask`). Only `ActionTask` alone does not escalate; every other refusal stops the job for the CI goals driver through the orchestrator.
+- It lists each resource with its action, bindings and changed property names, never values.
+
+Amended 2026-11-18 (#3386 review): the gate no longer sits between `alchemy plan` and `alchemy deploy` over a log, because a deploy that re-plans after the check could apply a change set nobody checked. The workflow now runs the checked deploy. `plan-check.ts plan` plans the stage through the Alchemist API, runs these rules on the structured plan and saves the checked plan (per resource: action, binding actions and a SHA-256 of the redacted declared properties; plus stack actions). `plan-check.ts deploy` re-plans under the stage lease, re-checks, and applies that same plan object only when it equals the saved plan; otherwise it fails with `PlanDrift` and writes nothing (`applyIfUnchanged`, `src/CheckedDeploy.ts`). The saved plan also carries, per resource, a SHA-256 of each binding's payload, an HMAC-SHA256 fingerprint of the declared secret values under a random per-plan salt (a changed secret drifts while no secret is stored), and whether an update would finish a pending replacement (refused as `PendingReplacement`). It also carries the cutover expectation (`routine`, `bootstrap`, `default-security-group`), which refuses any change the step does not allow (`UnexpectedChange`). The log reader refuses a log whose rows do not account for the summary counts (`IncompletePlan`), and it reads an indented line only as a property or a continuation inside one (amended 2026-11-18). The log reader stays for personal-stage rehearsals as `plan-check.ts log <file>`. Cutover decision, condition (d).
+
+
+Summary grammar (amended 2026-11-18). The log reader accepts only Alchemy beta.87's `formatPlanLines` summary: `no resources`, `no changes`, or `, `-joined `N to <action>`, `N binding changes` and `N tasks` parts, each count checked against the rows. The next alchemy bump re-checks beta.87 `formatPlanLines`; a summary grammar change makes the plan check fail closed and blocks deploys until PlanCheck matches it.
+
+Bundle source and starting state (amended 2026-11-18, #3386 r4617469553). Alchemy beta.87 computes a Lambda bundle's hash only inside the provider's `diff` and keeps it out of the plan, so the checked plan cannot carry it. It carries `sourceTree` instead: the git tree id of the checkout, which `readSourceTree` requires to be clean (no uncommitted or untracked file), so `plan` and `deploy` provably bundle the same sources and a different tree is `PlanDrift`. Write `plan --out` outside the checkout (the workflow uses `$RUNNER_TEMP`): a checked plan saved inside it is an untracked file, and the deploy then refuses with "uncommitted changes", by design. Each resource also carries `baselineDigest`, an HMAC under the plan's salt of the state an update or delete starts from (the props last applied and the attributes last observed). Two plans that declare the same props from different starting points therefore differ: a retention change 7 -> 30 is not the same checked operation as 90 -> 30.
+
+App key signing (amended 2026-11-18, #3386 r4617469594). Before planning, `plan-check.ts` signs a GitHub App JWT with the loaded key through the runtime's own signer (distilled GitHub `App.appJwt`, via `appKeyCanSign`), for every stage that holds real credentials. A key that passes the format checks but cannot sign fails with the `ConfigError` "App key cannot sign a GitHub App JWT"; neither the key nor its length appears.
+
+Secret fingerprint (amended 2026-11-18, #3386 driver review). The saved plan carries the random salt and the HMAC-SHA256 fingerprints together, so anyone holding the plan can test guesses offline. That is acceptable only because the production credential loader (`appCredentials` in `src/Credentials.ts`) refuses low-entropy secrets before any plan is computed. Both `plan-check.ts plan` and `plan-check.ts deploy` decode through that one loader, so neither can fingerprint an unchecked value. Its checks:
+
+- The webhook secret has at least 32 characters (`minimumWebhookSecretLength`) from the hex, base64 and base64url alphabet, with at least 10 distinct characters, and does not contain the placeholder. The required format is a generated secret in hex, base64 or base64url (`[A-Za-z0-9+/=_-]`). The assumed alphabet is hex, the narrowest the check admits (16 symbols, 4 bits each), so a generated secret of 32 characters carries 128 bits, and a base64 one of the same length 192. The check cannot measure entropy. It refuses the patterns a non-generated value shows, so the 128 bits rest on the secret having been generated (by GitHub or `openssl rand`). A run of one character, a padded or repeated placeholder, and a value with spaces are refused.
+- The App key must decode from base64 to a PEM private-key block of at least 1,000 characters; a 2048-bit RSA key is about 1,700.
+- The App id must be a number.
+
+A failure is a `ConfigError` whose message says only "webhook secret is a placeholder", "webhook secret has characters outside [A-Za-z0-9+/=_-]", "webhook secret too weak" (short, or too few distinct characters), "App key is not a PEM private key" or "App id is not a number", never the value or its length.
+
+The App id is low-entropy, so no resource is fingerprinted by it alone. Each resource's HMAC message carries the plan's whole sorted secret material before its own entries, so guessing the App id parameter's fingerprint also needs the App key and the webhook secret. A test over the planned `prod` resources changes only the webhook secret and shows that every fingerprint moves, `Runners/AppId` included.
+
+Residual (a): a `Redacted` value inside a class instance or an Output expression is not fingerprinted (`redactedEntries` walks plain records and arrays only). No secret enters the stack that way today: the App credentials reach the composite as plain `Redacted` props.
+
+Why no destructive allowlist: the network objects and the pools carry live runners and the webhook function URL is the App's delivery target, so a replace or delete is always an operator-reviewed deploy, not a push deploy. Cost-controls allows exactly one rollback delete; this stack has none to allow. Tests run the gate over the recorded personal-stage plan (66 creates, 9 bindings) and over synthetic replace, delete, orphan, unreadable, header and foreign-resource cases.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: Replace the workflow's plan and deploy steps with plain alchemy plan and alchemy deploy, then delete src/CheckedDeploy.ts, plan-check.ts and src/PlanCheck.ts.
+
+### The ci-runners reaper keys on the fleet's ghr:environment tags with the live 90-minute TTL, 2026-11-14
+
+The live groundwork stack's reaper (`infra/src/CiRunners.ts`) terminates every instance tagged `beep-ci=runner` older than `ciRunners:reaperTtlMinutes` (90) on a five-minute schedule, as a backstop the guest cannot cancel. The new stack keeps the behaviour and the TTL but ports it to an Effect program over the composite's `Ec2Fleet` service (`src/Reaper.ts`, bundled by Alchemy from `src/internal/lambda/reaper.ts`), D19's pattern, and changes what it keys on:
+
+- It lists instances by `ghr:environment` (the tag scale-up stamps on every runner), one listing per pool environment of its own fleet (`beep-fleet-prod-heavy`, `beep-fleet-prod-overflow`), in states pending, running, stopping and stopped, and terminates those launched more than 90 minutes ago. An instance without a launch time is kept; a failed termination is logged and the pass continues.
+- Its role may describe instances and terminate only instances whose `ghr:environment` is one of those values. The live reaper's `beep-ci=runner` filter is not used: composite runners carry only `ghr:*` instance tags, and keying on `ghr:environment` means neither reaper can touch the other fleet's instances during the overlap.
+- One pass costs two `DescribeInstances` pages every five minutes (the live reaper costs one); scale-down already lists each pool every minute.
+
+The reaper's function name is pinned (`beep-fleet-<stage>-reaper`) in every stage; in `prod` its schedule rule is pinned too (`beep-fleet-prod-reaper`); the invoke permission is a statement inside the function's own policy.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: Remove declareReaper from src/CiRunners.ts and redeploy; scale-down and the termination watcher remain.
+
+### CI runners typed configuration carries the live pool values and a Spot vCPU budget the schema enforces, 2026-11-14
+
+`CiRunnersConfig` (`src/Config.ts`) is the stack's typed configuration, decoded before any resource and carrying the live values as `productionConfig`:
+
+- Pools, from `infra/src/CiRunnerPool.ts` and `infra/src/CiFleetController.ts`: heavy, seven 64 GiB types (`r7a.2xlarge`, `r7i.2xlarge`, `r6i.2xlarge`, `m7a/m7i/m6a/m6i.4xlarge`), cap 2, runner group `beep-ec2-heavy`; shard overflow, the three 8-vCPU types, cap 48, group `beep-shard-overflow`. Both Spot only, `capacity-optimized`, bidirectional label match, ephemeral JIT runners, job-queued check off, job retry 2 attempts / 120 s / backoff 2, minimum running time 5 minutes (the `RunnerPool` defaults already equal the live module inputs).
+- Image: the baked AL2023 AMI `ami-07af50c345b5ba065` (`ciFleetController:amiId` in `infra/ci-runners/Pulumi.production.yaml`, last written by `beep runners bake` per `infra/ci-runners/runner-image.json`), root `/dev/xvda`, 100 GB gp3, 3000 IOPS, 250 MB/s, encrypted, EBS-optimized, public IP, run as `ec2-user`. The id is pinned in source, not read from an SSM parameter, so an unrelated deploy never moves the image; the live `/beep-ci/controller/runner-ami-id` parameter is not carried over.
+- Network: a new VPC `10.89.0.0/16` (live is `10.88.0.0/16`), five `/20` public subnets in the live zones `us-east-1a,b,c,d,f`, flow-log retention 14 days.
+- Reaper TTL 90 minutes; region `us-east-1`; account `832907639880`.
+- Spot budget: the schema refuses a stage whose worst-case Spot vCPU exceeds the account quota (512, "All Standard Spot Instance Requests", read 2026-11-14). A phase field chooses the caps: `overlap` (beside the live fleet) runs heavy at 1 and overflow at 2 and reserves 416 vCPU for the live fleet (heavy 2 × 16 + overflow 48 × 8), committing 448; `primary` (after the workflows move) runs the live caps and reserves nothing. `prod` starts in `overlap`. The 64 vCPU left in the overlap means a live heavy burst may go to at most 6 VMs until the move; the live burst cap of 8 is already the whole quota with the live overflow pool at 48. Amended 2026-11-18 (review of #3386): the reserve is now 480, the live fleet at the agreed burst cap of 6 (heavy 6 × 16 + overflow 48 × 8), so the overlap commits exactly 512 and the budget check itself refuses a larger overlap cap; a personal stage reserves 480 + 32 = 512, so a rehearsal that launches anything is refused (a `ConfigError`) while the overlap lasts.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: Edit productionConfig in src/Config.ts; drop the Spot budget check by removing the S.check on CiRunnersConfig.
 
 ### Cost controls adopts nine account singletons (D20), 2026-11-14
 
@@ -1494,6 +2104,14 @@ Lane goals/infra-alchemy-rebuild-p4-oip-web
 
 Reverse: Remove valueFrom and valueDigest from @beep/alchemy-vercel EnvVar and pass secrets as value again, accepting plain text in the KMS-encrypted state bucket.
 
+### CI runners workflows end on the beep-fleet labels, 2026-11-18
+
+Packet gate ruling, 2026-11-18, on the end-state label question of the cutover decision: option A. At cutover step 4 the workflows move to the new labels `beep-fleet-heavy` and `beep-fleet-overflow` (every reader in the cutover decision's inventory: `heavy.yml`'s nine jobs, `cache-warm.yml`, `shard-overflow.yml`, the CLI overflow label constant, which splits into label and group, and the tests and runbooks that name the label) and stay there. Reason: label isolation is what makes the overlap safe (each fleet's webhook acts only on its own labels, so no job launches two runners), and a rollback of the move is a plain revert of the workflow PR. The runner groups keep their live names, so the overflow preflight models label and group as two constants. Census and timing reports keep classifying the new labels as managed (`beep-` prefix); per-label history splits at the move date.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: Relabel the pools to the live names (beep-ec2-heavy, beep-shard-overflow) in a later PR once the old fleet is gone, and revert the workflow runs-on edits.
+
 ### Seed coverage baseline rows for the seven packages the packet added, 2026-11-18
 
 `standards/coverage.regression-baseline.jsonc` had no rows for seven packages this packet added: `@beep/alchemy-aws-extras`, `@beep/alchemy-github-runners`, `@beep/alchemy-vercel`, `@beep/infra-cost-controls`, `@beep/infra-github`, `@beep/infra-hosts` and `@beep/infra-turbo-cache`. The hosted Heavy / Coverage Regression job reported them as missing only on full-matrix runs (PR #3367 job 134497133455, PR #3369 job 134501277702).
@@ -1522,6 +2140,22 @@ All seven rows clear the tiered minimum, so none needs a `follow_ups` entry. Thi
 Lane goals/infra-alchemy-rebuild-coverage-baseline-rows
 
 Reverse: remove the 7 rows from standards/coverage.regression-baseline.jsonc
+
+### Deny the live fleet's event-source mappings until the P5 drain, 2026-11-18
+
+The deploy role grants `lambda:TagResource` on event-source mappings for tag on create, and Update/Delete need only the ownership tags plus `lambda:FunctionArn` on a fleet function. Whether `lambda:FunctionArn` evaluates the requested or the current target is not documented, so a tagged foreign mapping could be retargeted to a fleet function. The account holds six foreign mappings: the live Pulumi fleet's `beep-ci-*` and `beep-ovf-*` scale-up, job-retry and deregister-retry. A stalled live scale-up stalls production CI, so the driver ruled option B (2026-11-18). `DenyLiveFleetMappings` in `DeployRolePolicy.ts` denies `lambda:TagResource`, `UntagResource`, `UpdateEventSourceMapping` and `DeleteEventSourceMapping` on exactly those six mapping ARNs, read with `aws lambda list-event-source-mappings`. It is keyed on the resource ARNs alone, with no condition, because the `lambda:FunctionArn` form is ambiguous on update and `TagResource` does not document the key. Tag on create for the stack's own mappings is unchanged. The cutover decision re-reads the mappings before step 1b and before the drain, and holds if a UUID changes. Simulations #29a to #29d.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners · PR #3386
+
+Reverse: remove DenyLiveFleetMappings in the P5 drain+destroy PR
+
+### fleet-shadow-check is repointed for the overlap and deleted at the Pulumi cleanup, 2026-11-18
+
+Packet gate ruling, 2026-11-18. During the overlap `fleet-shadow-check.yml` is repointed to the new fleet (`runs-on: beep-fleet-heavy`, and its App-secret denial probe reads `/beep-fleet/prod/app/<parameter>` instead of `/github-action-runners/app/<parameter>`), as extra per-pool proof in cutover step 3 that a runner cannot read the App key or webhook secret. It is deleted in the cutover step-6 cleanup PR together with the Pulumi program, `fleet-lane-probe.yml` and the other old-fleet readers. Both edits are `.github/` changes and ride the lane PRs the operator merges.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: Restore .github/workflows/fleet-shadow-check.yml from git.
 
 ### infra-github is armed: beep-infra-github App 5808968, first deploy adopted ruleset 10240248 with no write, 2026-11-18
 
@@ -1566,6 +2200,14 @@ Root fix for #3380's review thread on the schedule- and dispatch-only callers, l
 Lane goals/infra-alchemy-rebuild-job-env-scheduled-read
 
 Reverse: Revert this PR: job-env again treats schedule and workflow_dispatch as local-only; push and pull-request output never changed.
+
+### Live heavy bursts stay at 6 or fewer while both runner fleets exist, 2026-11-18
+
+Packet gate ruling, 2026-11-18, recorded as a binding precondition of cutover step 1. The account's Spot quota is 512 vCPU; the new fleet's overlap caps commit 32 (heavy 1 x 16, overflow 2 x 8) and the live fleet at its default caps holds 416 (heavy 2 x 16, overflow 48 x 8), 448 in all. While both fleets exist a live heavy burst may therefore reach at most 6 VMs (6 x 16 + 384 + 32 = 512); at 8 the two fleets would ask for more than the quota and `CreateFleet` would fail on whichever asks last. The cap binds the CI goals driver, so the gate relays it to the orchestrator; `BEEP_HEAVY_BURST_MAX` lives in the burst tooling's template outside the repo and is set by the orchestrator and driver, never by this lane. The schema's Spot budget in `CiRunnersConfig` enforces the new fleet's side of the same arithmetic: since the #3386 review it reserves 480 vCPU for the live fleet at this cap (6 x 16 + 48 x 8), so the overlap commits exactly 512 and any larger new-fleet cap is refused at decode.
+
+Lane goals/infra-alchemy-rebuild-p5-ci-runners
+
+Reverse: Lift the cap to 8 once the old fleet is drained and destroyed (cutover step 6d). Earlier, only if the new fleet holds no Spot: its overlap caps deployed at 0, its scale-up paused and drained (no invocation in flight), and both new pools with no pending or running instance. If the new fleet is already primary, first bring it back to overlap (cutover step 4 rollback) instead of relying on the overlap caps.
 
 ### Turbo-cache follow-on: the schedule and dispatch callers read the Worker cache again, 2026-11-18
 

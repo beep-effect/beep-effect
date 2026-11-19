@@ -1,4 +1,6 @@
 import {
+  AppSigningKey,
+  appKeyCanSign,
   appParameterNames,
   GitHubAppAuth,
   GitHubLiveOptions,
@@ -163,6 +165,24 @@ describe("live GitHub layers over distilled", () => {
         )
       );
       expect(error._tag).toBe("GitHubAppAuthError");
+    })
+  );
+});
+
+describe("appKeyCanSign", () => {
+  it.effect("signs with a real RSA key and refuses a PEM-shaped key that cannot sign", () =>
+    Effect.gen(function* () {
+      const pem = yield* generatePrivateKeyPem;
+      const real = yield* appKeyCanSign(AppSigningKey.make({ appId: "12345", privateKeyPem: Redacted.make(pem) }));
+      expect(real).toBe(true);
+      const label = A.join(["PRIVATE", "KEY"], " ");
+      const shaped = `-----BEGIN ${label}-----\n${Str.repeat(64)("A")}\n-----END ${label}-----\n`;
+      const fake = yield* appKeyCanSign(AppSigningKey.make({ appId: "12345", privateKeyPem: Redacted.make(shaped) }));
+      expect(fake).toBe(false);
+      const none = yield* appKeyCanSign(
+        AppSigningKey.make({ appId: "12345", privateKeyPem: Redacted.make("not a key") })
+      );
+      expect(none).toBe(false);
     })
   );
 });

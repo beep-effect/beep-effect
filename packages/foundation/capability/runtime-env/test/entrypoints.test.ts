@@ -9,6 +9,7 @@ describe("the @beep/runtime-env entrypoint", () => {
   it.effect("exports exactly the public runtime surface", () =>
     Effect.sync(() => {
       assert.deepStrictEqual(A.sort(R.keys(Main), Str.Order), [
+        "AgentEnvKey",
         "Audience",
         "CurrentRuntimeEnv",
         "EnvOverride",

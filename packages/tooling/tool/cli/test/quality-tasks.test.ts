@@ -173,6 +173,7 @@ import {
   testTsgoPlanningForTesting,
   turboLaneDigestFromSummary,
   turboSecretSessionStepForTesting,
+  turboStepForTesting,
   turboStepLocalEnvForTesting,
   unsplitIntegrationTaskArgsForTesting,
   validateCoverageTaskArgsForTesting,
@@ -199,6 +200,7 @@ import {
 import { DEFAULT_GATE_ORDER_SEED, WaveOrder } from "@beep/repo-cli/test/Yeet";
 import { workspaceSubject } from "@beep/repo-cli-kit/CheckoutSubject";
 import { DomainError, findRepoRoot } from "@beep/repo-utils";
+import { AgentEnvKey } from "@beep/runtime-env/RuntimeEnv";
 import { Percentage } from "@beep/schema/Percentage";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -207,7 +209,7 @@ import { NodeChildProcessSpawner } from "@effect/platform-node";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
 import * as NodePath from "@effect/platform-node/NodePath";
-import { assert, describe, expect, vi } from "@effect/vitest";
+import { afterAll, assert, beforeAll, describe, expect, vi } from "@effect/vitest";
 import { assertDefined, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as Cause from "effect/Cause";
@@ -467,6 +469,23 @@ const withoutCiEffect = <Out, E, R>(use: Effect.Effect<Out, E, R>): Effect.Effec
     undefined,
     withEnvVarEffect("GITHUB_ACTIONS", undefined, withEnvVarEffect("CONTINUOUS_INTEGRATION", undefined, use))
   );
+
+// The task path reads its audience from the live environment, so an agent shell
+// would add `AGENT=1` and `--output-logs=errors-only` to every Turbo step this
+// file builds. The file pins a human run; the agent tests set the audience
+// themselves. `EDITOR` is the `devin` pattern row's variable.
+const agentSignalKeys: ReadonlyArray<string> = [...AgentEnvKey.literals, "AI_AGENT", "EDITOR"];
+const ambientAgentSignal = R.fromEntries(A.map(agentSignalKeys, (key) => [key, Bun.env[key]] as const));
+
+beforeAll(() => {
+  for (const key of agentSignalKeys) delete Bun.env[key];
+});
+
+afterAll(() => {
+  for (const [key, value] of R.toEntries(ambientAgentSignal)) {
+    if (value !== undefined) Bun.env[key] = value;
+  }
+});
 
 const withEnvVarsEffect = <Out, E, Req>(
   values: Readonly<Record<string, string | undefined>>,
@@ -11677,6 +11696,80 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         rootQualityStepsForTesting("/repo", getInvocation(["audit", "--filter=@beep/schema"]))
       );
       expect(argsOf(audit[0])).not.toContain(LABS_EXCLUDE_FILTER);
+    });
+  });
+
+  describe("agent audience on Turbo steps", () => {
+    const callerArgs = ["--affected", "--summarize"];
+
+    it("exports AGENT=1 and replays errors only under an agent", () => {
+      const step = turboStepForTesting("/repo", "check", ["check"], callerArgs, "agent");
+
+      expect(step.env).toEqual({ AGENT: "1" });
+      expect(step.args).toEqual([
+        "turbo",
+        "run",
+        "check",
+        ...expectedTurboCacheArgs(callerArgs),
+        "--output-logs=errors-only",
+        ...callerArgs,
+      ]);
+    });
+
+    it("leaves human and CI steps exactly as before", () => {
+      for (const audience of ["human", "ci"] as const) {
+        const step = turboStepForTesting("/repo", "check", ["check"], callerArgs, audience);
+        expect(step).not.toHaveProperty("env");
+        expect(step.args).toEqual(expectedTurboArgs("check", callerArgs));
+      }
+    });
+
+    it("keeps the secret-session choice of a human run", () => {
+      const agent = turboStepForTesting("/repo", "check", ["check"], callerArgs, "agent");
+      const human = turboStepForTesting("/repo", "check", ["check"], callerArgs, "human");
+      expect(agent.useLocalEnv).toBe(human.useLocalEnv);
+    });
+
+    it("lets a caller's own --output-logs win", () => {
+      for (const own of [["--output-logs=full"], ["--output-logs", "hash-only"]]) {
+        const step = turboStepForTesting("/repo", "check", ["check"], own, "agent");
+        expect(step.args).not.toContain("--output-logs=errors-only");
+        expect(step.args).toEqual(expect.arrayContaining(own));
+        expect(step.env).toEqual({ AGENT: "1" });
+      }
+    });
+
+    it("does not read an --output-logs after the passthrough delimiter as the caller's", () => {
+      const step = turboStepForTesting("/repo", "test", ["test"], ["--", "--output-logs=full"], "agent");
+      expect(step.args).toContain("--output-logs=errors-only");
+      expect(A.drop(step.args, A.length(step.args) - 2)).toEqual(["--", "--output-logs=full"]);
+    });
+
+    it("merges AGENT=1 into a coverage step's own environment", () => {
+      const step = turboStepForTesting("/repo", "coverage", ["coverage"], [], "agent");
+      expect(step.env).toMatchObject({ AGENT: "1" });
+      expect(R.size(step.env ?? {})).toBeGreaterThan(1);
+    });
+
+    for (const [marker, value] of [
+      ["CLAUDECODE", "1"],
+      ["CODEX_THREAD_ID", "thread-fixture"],
+    ] as const) {
+      it(`reads the audience through @beep/runtime-env on the task path (${marker})`, () => {
+        const steps = withoutCi(() =>
+          withEnvVar(marker, value, () => rootQualityStepsForTesting("/repo", getInvocation(["check"])))
+        );
+        const check = O.getOrThrow(A.head(steps));
+        expect(check.env).toMatchObject({ AGENT: "1" });
+        expect(check.args).toContain("--output-logs=errors-only");
+      });
+    }
+
+    it("builds no agent signal when no agent is detected on the task path", () => {
+      const steps = withoutCi(() => rootQualityStepsForTesting("/repo", getInvocation(["check"])));
+      const check = O.getOrThrow(A.head(steps));
+      expect(check.env?.AGENT).toBeUndefined();
+      expect(check.args).not.toContain("--output-logs=errors-only");
     });
   });
 

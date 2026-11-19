@@ -22,7 +22,7 @@ import * as TestClock from "effect/testing/TestClock";
 import { World, worldContext } from "./support/FakeWorld.ts";
 
 const config = TerminationWatcherRuntimeConfig.make({
-  environmentPrefix: "beep-ci",
+  environments: ["beep-ci-heavy"],
   app: appParameterNames("/beep-ci"),
   deregisterRetryQueueUrl: "https://sqs/deregister-retry",
 });
@@ -95,11 +95,13 @@ describe("handleTerminationEvent", () => {
     Effect.gen(function* () {
       const world = new World();
       const foreign = seed(world, { ...tags, "ghr:environment": "someone-else" });
+      // Exact match only: an environment that merely extends the fleet's pool environment is another fleet's.
+      const extended = seed(world, { ...tags, "ghr:environment": "beep-ci-heavy2" });
       const ownerless = seed(world, { "ghr:environment": "beep-ci-heavy" });
       const run = (instanceId: string) =>
         handleTerminationEvent({ config, event: warning(instanceId) }).pipe(Effect.provideContext(worldContext(world)));
-      const outcomes = yield* Effect.forEach([foreign, ownerless, "i-unknown"], run, { concurrency: 1 });
-      expect(outcomes).toStrictEqual([["ignored"], ["ignored"], []]);
+      const outcomes = yield* Effect.forEach([foreign, extended, ownerless, "i-unknown"], run, { concurrency: 1 });
+      expect(outcomes).toStrictEqual([["ignored"], ["ignored"], ["ignored"], []]);
       expect(world.deletedRunners).toStrictEqual([]);
     })
   );
@@ -117,6 +119,27 @@ describe("handleTerminationEvent", () => {
 });
 
 describe("handleDeregisterRetry", () => {
+  it.effect("ignores a retry for an instance outside the fleet's pools, or no longer known to EC2", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const foreign = seed(world, { ...tags, "ghr:environment": "beep-ci-heavy-other" });
+      const retry = (instanceId: string) =>
+        handleDeregisterRetry({
+          config,
+          message: DeregisterRetryMessage.make({
+            instanceId,
+            owner: "beep-effect",
+            runnerType: "Org",
+            runnerId: 0,
+            retryCount: 0,
+          }),
+        }).pipe(Effect.provideContext(worldContext(world)));
+      const outcomes = yield* Effect.forEach([foreign, "i-unknown"], retry, { concurrency: 1 });
+      expect(outcomes).toStrictEqual(["ignored", "ignored"]);
+      expect(world.deletedRunners).toStrictEqual([]);
+    })
+  );
+
   it.effect("fails the record once the busy-retry cap is reached so SQS can dead-letter it", () =>
     Effect.gen(function* () {
       const world = new World();

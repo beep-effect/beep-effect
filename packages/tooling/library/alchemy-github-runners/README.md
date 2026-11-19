@@ -127,6 +127,13 @@ Fleet
 
 There is no autoscaling group: Spot capacity is a runtime `CreateFleet` call.
 
+Names: without `namePrefix` every resource takes Alchemy's generated name, which derives from the
+stack state. With `namePrefix` (lower case, at most 28 characters) the composite pins every name it
+chooses (functions and so their log groups, queues, runner roles, instance profiles, launch templates,
+rules, the bucket as `<prefix>-binaries-<account id>`; `RunnerFleetNames.ts`), so a lost or moved
+state cannot mint a second fleet. Lambda execution roles stay generated: `Lambda.Function` takes no
+role name.
+
 ## Out of scope here
 
 The org runner group and the GitHub App webhook URL stay outside IaC (packet decision

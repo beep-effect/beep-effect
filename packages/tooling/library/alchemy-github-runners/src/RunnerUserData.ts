@@ -164,15 +164,23 @@ export const renderRunnerUserData = (input: RunnerUserDataInput): string => {
       "tar xzf actions-runner.tar.gz && rm -f actions-runner.tar.gz",
       'if [ "$os_family" = apt ]; then ./bin/installdependencies.sh; else install_with_retry libicu; fi',
       'chown -R "$run_as":"$run_as" /opt/actions-runner /opt/hostedtoolcache',
-      input.postInstall,
+      // The EXIT trap is installed before the post-install runs, so a post-install failure under `bash -e` still terminates the
+      // instance. The post-install runs in this shell, so an EXIT trap it sets would replace this one: while it runs, `trap`
+      // is shadowed to queue EXIT handlers in an array, which cleanup runs first, each on its own so one failing
+      // handler never skips the next, and the shadow is removed afterwards.
+      "hook_exit_traps=()",
       "cleanup() {",
       "  status=$?",
+      '  for hook_exit_trap in ${hook_exit_traps[@]+"${hook_exit_traps[@]}"}; do eval "$hook_exit_trap" || true; done',
       '  echo "runner exited with status $status"',
       input.ephemeral
         ? '  aws ec2 terminate-instances --instance-ids "$instance_id" --region "$region" || true'
         : '  if [ "$status" -ne 0 ]; then aws ec2 terminate-instances --instance-ids "$instance_id" --region "$region" || true; fi',
       "}",
       "trap cleanup EXIT",
+      'trap() { if [ "$#" -ge 2 ] && [ "${!#}" = EXIT ]; then hook_exit_traps+=("$1"); else builtin trap "$@"; fi; }',
+      input.postInstall,
+      "unset -f trap",
       'config=""',
       'until [ -n "$config" ]; do',
       '  config="$(aws ssm get-parameter --name "$token_path/$instance_id" --with-decryption --region "$region" --query Parameter.Value --output text 2>/dev/null || true)"',

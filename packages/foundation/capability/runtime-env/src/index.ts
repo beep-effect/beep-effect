@@ -24,7 +24,7 @@
 
 export { Audience } from "./Audience.ts";
 export { EnvOverride } from "./EnvOverride.ts";
-export { CurrentRuntimeEnv, RuntimeEnv } from "./RuntimeEnv.ts";
+export { AgentEnvKey, CurrentRuntimeEnv, RuntimeEnv } from "./RuntimeEnv.ts";
 export { TerminalEnv } from "./TerminalEnv.ts";
 export type { AudienceKind, AudienceOptions, AudienceShape } from "./Audience.ts";
 export type { ColorLevel } from "./ColorLevel.ts";
