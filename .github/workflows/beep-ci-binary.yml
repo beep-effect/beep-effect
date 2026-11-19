@@ -378,6 +378,7 @@ jobs:
           push=false
           supersede=false
           report=false
+          relabel=false
           sync="none"
           reason=""
           branch_tag=""
@@ -436,19 +437,40 @@ jobs:
               git -C "$worktree" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
               git -C "$worktree" config pull.rebase false
               sync_output="${RUNNER_TEMP}/pin-sync.out"
-              bun run beep ci binary-pin-sync --cwd "$worktree" --base "origin/${DEFAULT_BRANCH}" \
+              # The base is this run's own main commit (the checkout create-pull-request
+              # builds from), not the fetched tip, so a supersede and its replacement
+              # are decided against the same main.
+              bun run beep ci binary-pin-sync --cwd "$worktree" --base "$GITHUB_SHA" \
                 --tag "$tag" --sha256 "$sha256" --releases "$releases" --output "$sync_output"
               sync="$(grep -m 1 '^outcome=' "$sync_output" | cut -d = -f 2 || true)"
               kept_tag="$(grep -m 1 '^tag=' "$sync_output" | cut -d = -f 2 || true)"
               reason="$(grep -m 1 '^reason=' "$sync_output" | cut -d = -f 2- || true)"
+              pin_only="$(grep -m 1 '^pin_only=' "$sync_output" | cut -d = -f 2 || true)"
               case "$sync" in
                 stale) bump=true ;;
                 current | merged)
-                  if [[ "$branch_tag" == "$tag" && "$branch_open_labelled" -lt 1 ]]; then
-                    # The branch pins T but its pull request is missing or unlabelled: repair it.
+                  # Decide from the pin the sync read at the checked head (kept_tag), not
+                  # from the earlier contents read, which the branch may have moved past.
+                  kept_title="ci: bump the beep CI binary pin to ${kept_tag}"
+                  kept_labelled="$(jq --arg title "$kept_title" --arg base "$DEFAULT_BRANCH" \
+                    "[${own} | ${labelled}] | length" <<<"$pulls")"
+                  kept_open="$(jq -r --arg title "$kept_title" --arg base "$DEFAULT_BRANCH" \
+                    "[${own} | select(.state == \"OPEN\")] | first | .number // \"\"" <<<"$pulls")"
+                  if [[ "$sync" == "merged" ]]; then push=true; fi
+                  if [[ "$kept_labelled" -lt 1 && -n "$kept_open" ]]; then
+                    # The pull request is open but unlabelled: a metadata-only repair,
+                    # so the branch (and the merge pushed below) is kept as it is.
+                    relabel=true
+                    branch_pull="$kept_open"
+                  elif [[ "$kept_labelled" -lt 1 && "$kept_tag" == "$tag" && "$pin_only" == "true" ]]; then
+                    # No pull request for T: the pull-request step opens it. The branch holds
+                    # only the pin, so its rebuild from main loses nothing.
                     bump=true
-                  elif [[ "$sync" == "merged" ]]; then
-                    push=true
+                    push=false
+                  elif [[ "$kept_labelled" -lt 1 && "$kept_tag" == "$tag" ]]; then
+                    report=true
+                    reason="the pin-bump pull request for ${tag} is missing and ${PIN_BRANCH} holds changes besides the pin, which opening it with create-pull-request would discard; open the pull request by hand"
+                    echo "::warning::Beep CI pin bump: ${reason}."
                   fi
                   ;;
                 supersede)
@@ -477,6 +499,7 @@ jobs:
             echo "push=$push"
             echo "supersede=$supersede"
             echo "report=$report"
+            echo "relabel=$relabel"
             echo "reason=$reason"
             echo "pull=$branch_pull"
             echo "branch_tag=$branch_tag"
@@ -502,6 +525,9 @@ jobs:
             if [[ "$report" == "true" ]]; then
               echo "- \`$PIN_BRANCH\` (pinning \`$branch_tag\`) cannot be brought up to date with \`$DEFAULT_BRANCH\`: ${reason}. Nothing was pushed; it is reported once on the pin-bump pull request. Bring it up to date by hand."
               exit 0
+            fi
+            if [[ "$relabel" == "true" ]]; then
+              echo "- the pin-bump pull request #${branch_pull} for \`$kept_tag\` lost \`ready-for-heavy\`: the label is restored without rewriting \`$PIN_BRANCH\`."
             fi
             if [[ "$push" == "true" ]]; then
               echo "- \`$PIN_BRANCH\` (pinning \`$branch_tag\`) was behind \`$DEFAULT_BRANCH\` or in conflict with it: \`beep ci binary-pin-sync\` merged \`$DEFAULT_BRANCH\` in; the push step below pushes it."
@@ -532,6 +558,7 @@ jobs:
         if: >-
           steps.pin.outputs.bump == 'true' || steps.pin.outputs.push == 'true'
           || steps.pin.outputs.supersede == 'true' || steps.pin.outputs.report == 'true'
+          || steps.pin.outputs.relabel == 'true'
         shell: bash
         env:
           APP_CLIENT_ID: ${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}
@@ -549,6 +576,7 @@ jobs:
         if: >-
           steps.pin.outputs.bump == 'true' || steps.pin.outputs.push == 'true'
           || steps.pin.outputs.supersede == 'true' || steps.pin.outputs.report == 'true'
+          || steps.pin.outputs.relabel == 'true'
         uses: actions/create-github-app-token@64ab729a6294000f5aa4a4bc0b73d1f32bc45510 # v3.3.0
         with:
           client-id: ${{ vars.KNOWLEDGE_MINT_APP_CLIENT_ID }}
@@ -565,12 +593,17 @@ jobs:
       # open pull request `superseded` (a closed `superseded` pull request does
       # not park its release), say why, and delete the branch, which closes the
       # pull request; the pull-request step below then opens a fresh one from
-      # main. The branch is deleted only while it still points at the head the
-      # sync checked. `report`: the sync cannot heal the branch; comment once per
-      # branch head on the pull request (the pin step already wrote the warning
-      # and the summary), and keep the job green.
+      # main. The branch is deleted by a lease-protected push (the one forced
+      # form this workflow allows), so only the head the sync checked is ever
+      # deleted, and a failed delete takes the label off again. `relabel`: the
+      # pull request for the branch's pin is open but lost `ready-for-heavy`;
+      # restore the label without rewriting the branch. `report`: the sync cannot
+      # heal the branch; comment once per branch head on the pull request (the pin
+      # step already wrote the warning and the summary), and keep the job green.
       - name: Supersede or report on the pin-bump pull request
-        if: steps.pin.outputs.supersede == 'true' || steps.pin.outputs.report == 'true'
+        if: >-
+          steps.pin.outputs.supersede == 'true' || steps.pin.outputs.report == 'true'
+          || steps.pin.outputs.relabel == 'true'
         shell: bash
         env:
           GH_TOKEN: ${{ steps.app-token.outputs.token }}
@@ -581,21 +614,46 @@ jobs:
           PIN_TAG: ${{ steps.pin.outputs.tag }}
           REASON: ${{ steps.pin.outputs.reason }}
           SUPERSEDE: ${{ steps.pin.outputs.supersede }}
+          RELABEL: ${{ steps.pin.outputs.relabel }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
           if [[ "$SUPERSEDE" == "true" ]]; then
+            if [[ ! "$BRANCH_HEAD" =~ ^[0-9a-f]{40}$ ]]; then
+              echo "::error::The checked ${PIN_BRANCH} head '${BRANCH_HEAD}' is not a full sha; nothing was superseded."
+              exit 1
+            fi
             live="$(gh api "repos/${GH_REPO}/git/ref/heads/${PIN_BRANCH}" --jq .object.sha)"
             if [[ "$live" != "$BRANCH_HEAD" ]]; then
               echo "::error::${PIN_BRANCH} moved from ${BRANCH_HEAD} to ${live} after the sync checked it; nothing was superseded. Re-run the job."
               exit 1
             fi
+            # Label first, so the close the deletion causes is never read as a person's decline. If
+            # the deletion fails, the label comes off again: a `superseded` label on a still-open pull
+            # request would otherwise stop a later manual close from parking the release.
             if [[ -n "$PULL" ]]; then
               gh api -X POST "repos/${GH_REPO}/issues/${PULL}/labels" -f 'labels[]=superseded' >/dev/null
-              gh api -X POST "repos/${GH_REPO}/issues/${PULL}/comments" -f body="Superseded by [this run](${RUN_URL}): bringing \`${PIN_BRANCH}\` up to date with main would carry workflow-file changes, which the pin-bump App (no \`workflows\` permission) cannot push onto an existing branch. The branch held only the pin, so it is deleted and a fresh pin-bump pull request for \`${PIN_TAG}\` is opened from main." >/dev/null
             fi
-            gh api -X DELETE "repos/${GH_REPO}/git/refs/heads/${PIN_BRANCH}"
+            # A conditional delete: the server deletes the branch only while it still points at the
+            # head the sync checked, so a push after the check above is never deleted.
+            if ! git -c core.hooksPath=/dev/null push --force-with-lease="refs/heads/${PIN_BRANCH}:${BRANCH_HEAD}" \
+              "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" ":refs/heads/${PIN_BRANCH}"; then
+              if [[ -n "$PULL" ]]; then
+                gh api -X DELETE "repos/${GH_REPO}/issues/${PULL}/labels/superseded" >/dev/null || true
+              fi
+              echo "::error::Deleting ${PIN_BRANCH} at ${BRANCH_HEAD} failed (it may have moved); nothing was superseded. Re-run the job."
+              exit 1
+            fi
+            if [[ -n "$PULL" ]]; then
+              gh api -X POST "repos/${GH_REPO}/issues/${PULL}/comments" -f body="Superseded by [this run](${RUN_URL}): bringing \`${PIN_BRANCH}\` up to date with main would carry workflow-file changes, which the pin-bump App (no \`workflows\` permission) cannot push onto an existing branch. The branch held only the pin, so it is deleted and a fresh pin-bump pull request for \`${PIN_TAG}\` is opened from main." >/dev/null \
+                || echo "::warning::The superseded comment on #${PULL} failed; the branch is deleted and the fresh pull request still opens."
+            fi
             echo "- superseded the pin-bump pull request ${PULL:+#${PULL} }and deleted \`${PIN_BRANCH}\`." >> "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          if [[ "$RELABEL" == "true" ]]; then
+            gh api -X POST "repos/${GH_REPO}/issues/${PULL}/labels" -f 'labels[]=ready-for-heavy' >/dev/null
+            echo "- restored \`ready-for-heavy\` on #${PULL} without touching \`${PIN_BRANCH}\`." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
           if [[ -z "$PULL" ]]; then

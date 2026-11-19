@@ -473,6 +473,35 @@ const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: bool
   assert.strictEqual(inputs["app-secrets"], appSecrets ? "true" : undefined, jobId);
 };
 
+// Forced push forms the pin-bump workflow must never use, checked inside each `git push` command
+// (continuation lines included) so other tools' flags (`gh api -f`) are not mistaken for them.
+const FORCED_PUSH_FORMS = [
+  /--force(?!-with-lease)/u,
+  /(^|\s)-f(\s|$)/mu,
+  /--force-with-lease/u,
+  /--mirror/u,
+  /["\s]\+[A-Za-z]*HEAD/u,
+  /["\s]\+refs\//u,
+];
+
+// The one forced form allowed: the supersede step's lease-protected delete of the bot branch, a lease on
+// the full ref at the checked head (validated as a 40-character sha) with a delete refspec.
+const LEASED_DELETE =
+  /--force-with-lease="refs\/heads\/\$\{PIN_BRANCH\}:\$\{BRANCH_HEAD\}" "https:\/\/x-access-token:\$\{GH_TOKEN\}@github\.com\/\$\{GH_REPO\}\.git" ":refs\/heads\/\$\{PIN_BRANCH\}"/u;
+
+// Shell line continuations are joined first, so each push command is checked whole.
+const forcedPushViolations = (text: string): ReadonlyArray<string> =>
+  A.flatMap(
+    A.fromIterable(Str.matchAll(/\bgit\b[^\n]*\bpush\b[^\n]*/gu)(Str.replace(/\s*\\\n\s*/gu, " ")(text))),
+    (match) => {
+      const command = Str.replace(LEASED_DELETE, "")(match[0]);
+      return A.map(
+        A.filter(FORCED_PUSH_FORMS, (form) => form.test(command)),
+        (form) => `${form.source} in: ${match[0]}`
+      );
+    }
+  );
+
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (it) => {
   it.effect("requires a real apt-pruning command before refreshing package indexes", () =>
     Effect.sync(() => {
@@ -2504,11 +2533,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       // merge (push), and the supersede or report step (supersede, report).
       for (const name of ["Check the pin-bump App credential", "Create pin-bump App token"]) {
         expect(stepByName(steps, name).if).toBe(
-          "steps.pin.outputs.bump == 'true' || steps.pin.outputs.push == 'true' || steps.pin.outputs.supersede == 'true' || steps.pin.outputs.report == 'true'"
+          "steps.pin.outputs.bump == 'true' || steps.pin.outputs.push == 'true' || steps.pin.outputs.supersede == 'true' || steps.pin.outputs.report == 'true' || steps.pin.outputs.relabel == 'true'"
         );
       }
       expect(stepByName(steps, "Supersede or report on the pin-bump pull request").if).toBe(
-        "steps.pin.outputs.supersede == 'true' || steps.pin.outputs.report == 'true'"
+        "steps.pin.outputs.supersede == 'true' || steps.pin.outputs.report == 'true' || steps.pin.outputs.relabel == 'true'"
       );
       expect(stepByName(steps, "Push main merged into the pin-bump branch").if).toBe(
         "steps.pin.outputs.push == 'true'"
@@ -2539,7 +2568,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         "own='.[] | select(.isCrossRepository == false and .baseRefName == $base and .title == $title)'",
         'elif [[ "$3" == "allow-missing" ]] && grep -q "HTTP 404" "$read_error"; then',
         'read_pin "$PIN_BRANCH" "the pin-bump branch read" allow-missing',
-        'bun run beep ci binary-pin-sync --cwd "$worktree" --base "origin/${DEFAULT_BRANCH}"',
+        'bun run beep ci binary-pin-sync --cwd "$worktree" --base "$GITHUB_SHA"',
         '--tag "$tag" --sha256 "$sha256" --releases "$releases" --output "$sync_output"',
         'echo "push=$push"',
         'echo "supersede=$supersede"',
@@ -2604,31 +2633,51 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(push).toContain(
         '"https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${PIN_BRANCH}"'
       );
-      for (const forced of [
-        /--force/u,
-        /(^|\s)-f(\s|$)/mu,
-        /--force-with-lease/u,
-        /--mirror/u,
-        /["\s]\+[A-Za-z]*HEAD/u,
-        /["\s]\+refs\//u,
-      ]) {
+      for (const forced of FORCED_PUSH_FORMS) {
         expect(push).not.toMatch(forced);
       }
       // The success line is written by the push step itself, after the push.
       expect(push).toMatch(/HEAD:refs\/heads\/\$\{PIN_BRANCH\}"[\s\S]*pushed main merged into/u);
       expect(rewrite).not.toContain("pushed without force");
-      // Supersede deletes the branch only while it still points at the head the sync checked, and labels
-      // the pull request `superseded` first; a report is posted once per branch head.
+      // Supersede deletes the branch with the one forced form this workflow allows: a lease on the full ref
+      // at the 40-character head the sync checked, with a delete refspec. It labels the pull request
+      // `superseded` first and takes the label off again if the delete fails; a report is posted once
+      // per branch head.
       const settle = stepRun(steps, "Supersede or report on the pin-bump pull request");
       for (const fragment of [
+        'if [[ ! "$BRANCH_HEAD" =~ ^[0-9a-f]{40}$ ]]; then',
         'if [[ "$live" != "$BRANCH_HEAD" ]]; then',
         "-f 'labels[]=superseded'",
-        'gh api -X DELETE "repos/${GH_REPO}/git/refs/heads/${PIN_BRANCH}"',
+        'gh api -X DELETE "repos/${GH_REPO}/issues/${PULL}/labels/superseded"',
         'marker="<!-- beep-ci-pin-sync blocked ${BRANCH_HEAD} -->"',
+        "-f 'labels[]=ready-for-heavy'",
       ]) {
         expect(settle).toContain(fragment);
       }
-      expect(settle).toMatch(/labels\[\]=superseded[\s\S]*-X DELETE/u);
+      expect(settle).toMatch(/labels\[\]=superseded[\s\S]*--force-with-lease=/u);
+      expect(forcedPushViolations(settle)).toStrictEqual([]);
+      expect(Str.replace(/\s*\\\n\s*/gu, " ")(settle)).toMatch(LEASED_DELETE);
+      expect(forcedPushViolations(rewrite)).toStrictEqual([]);
+      // ...and the checker refuses every other forced form, an imitation of the lease included.
+      for (const [text, violates] of [
+        [
+          `git push --force-with-lease="refs/heads/\${PIN_BRANCH}:\${BRANCH_HEAD}" \\\n  "https://x-access-token:\${GH_TOKEN}@github.com/\${GH_REPO}.git" ":refs/heads/\${PIN_BRANCH}"`,
+          false,
+        ],
+        ['git push --force-with-lease "$url" HEAD:refs/heads/x', true],
+        ['git push --force-with-lease=refs/heads/x "$url" :refs/heads/x', true],
+        [
+          'git push --force-with-lease="refs/heads/${PIN_BRANCH}:${BRANCH_HEAD}" "$url" "HEAD:refs/heads/${PIN_BRANCH}"',
+          true,
+        ],
+        ["git push -f origin HEAD", true],
+        ["git push --force origin HEAD", true],
+        ["git push --mirror origin", true],
+        ['git push origin "+HEAD:refs/heads/x"', true],
+        ["git push origin +refs/heads/a:refs/heads/b", true],
+      ] as const) {
+        expect(A.isReadonlyArrayNonEmpty(forcedPushViolations(text))).toBe(violates);
+      }
       expect(secretReaders).toEqual(["publish/Create pin-bump App token"]);
     })
   );
@@ -2692,6 +2741,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           readonly syncReason?: string;
           readonly releases?: string;
           readonly branchExists?: boolean;
+          readonly pinOnly?: "true" | "false";
         } = {}
       ) {
         // One defaults object instead of a fallback per option keeps this helper's branch count flat.
@@ -2700,10 +2750,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           failing: "none",
           liveMain: mainPin,
           sync: "stale",
-          syncTag: "",
+          syncTag: newTag,
           syncReason: "",
           releases: "",
           branchExists: O.isSome(branchPin),
+          pinOnly: "true",
           ...options,
         };
         const { newest, failing } = settings;
@@ -2754,6 +2805,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
               '  echo "outcome=$SYNC_OUTCOME" >> "$o"',
               '  if [ -n "$SYNC_TAG" ]; then echo "tag=$SYNC_TAG" >> "$o"; fi',
               '  if [ -n "$SYNC_REASON" ]; then echo "reason=$SYNC_REASON" >> "$o"; fi',
+              '  echo "pin_only=$SYNC_PIN_ONLY" >> "$o"',
               "  exit 0",
               "fi",
               'while [ $# -gt 0 ]; do case "$1" in --tag) t="$2"; shift 2 ;; --sha256) s="$2"; shift 2 ;; *) shift ;; esac; done',
@@ -2813,6 +2865,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           SYNC_REASON: settings.syncReason,
           RELEASES_JSON: settings.releases,
           BRANCH_EXISTS: `${Number(settings.branchExists)}`,
+          SYNC_PIN_ONLY: settings.pinOnly,
+          GITHUB_SHA: "0123456789abcdef0123456789abcdef01234567",
         });
         if (failing === "none") expect(run).toEqual({ status: 0, stderr: "" });
         const summary = yield* fs.readFileString(summaryPath);
@@ -2831,6 +2885,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
             push: outputs.push,
             supersede: outputs.supersede,
             report: outputs.report,
+            relabel: outputs.relabel,
           },
           outputs,
           syncArgs: yield* fs.readFileString(`${work}/sync-args`).pipe(Effect.orElseSucceed(() => "")),
@@ -2855,6 +2910,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         push: "false",
         supersede: "false",
         report: "false",
+        relabel: "false",
       };
       const idle = {
         changed: "true",
@@ -2863,6 +2919,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         push: "false",
         supersede: "false",
         report: "false",
+        relabel: "false",
       };
       const pushes = {
         changed: "true",
@@ -2871,6 +2928,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         push: "true",
         supersede: "false",
         report: "false",
+        relabel: "false",
       };
       // Re-run after a failed pull-request step: the branch was never created, so the step bumps.
       const rerun = yield* runCase(mainOld, O.none(), pulls());
@@ -2890,7 +2948,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       });
       expect(behind.decision).toEqual(pushes);
       expect(behind.syncArgs).toContain(
-        `ci binary-pin-sync --cwd ${behind.workDir}/pin-bump-branch --base origin/main --tag ${newTag} --sha256 ${newSha} --releases ${behind.workDir}/beep-ci-releases.json`
+        `ci binary-pin-sync --cwd ${behind.workDir}/pin-bump-branch --base 0123456789abcdef0123456789abcdef01234567 --tag ${newTag} --sha256 ${newSha} --releases ${behind.workDir}/beep-ci-releases.json`
       );
       // The pin step only announces the push; the push step reports it after it succeeds.
       expect(behind.summary).toContain("the push step below pushes it");
@@ -2899,9 +2957,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       // back, whether or not its pull request is open and labelled.
       const newerBranch = O.some(pinText("beep-ci-fedcba987654", newSha));
       const newerPull = pulls(pull("OPEN", "beep-ci-fedcba987654", ["ready-for-heavy"]));
-      expect((yield* runCase(mainOld, newerBranch, newerPull, { sync: "merged" })).decision).toEqual(pushes);
-      expect((yield* runCase(mainOld, newerBranch, newerPull, { sync: "current" })).decision).toEqual(idle);
-      expect((yield* runCase(mainOld, newerBranch, pulls(), { sync: "current" })).decision).toEqual(idle);
+      expect(
+        (yield* runCase(mainOld, newerBranch, newerPull, { sync: "merged", syncTag: "beep-ci-fedcba987654" })).decision
+      ).toEqual(pushes);
+      expect(
+        (yield* runCase(mainOld, newerBranch, newerPull, { sync: "current", syncTag: "beep-ci-fedcba987654" })).decision
+      ).toEqual(idle);
+      expect(
+        (yield* runCase(mainOld, newerBranch, pulls(), { sync: "current", syncTag: "beep-ci-fedcba987654" })).decision
+      ).toEqual(idle);
       // Merging main would carry workflow files the pin-bump App cannot push onto the existing branch,
       // and the branch holds only the pin: supersede it. The pull-request step then runs (bump) and the
       // supersede step gets the pull request number and the checked branch head.
@@ -2987,9 +3051,25 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       // The branch is current but no PR exists for the release (creation failed after the push).
       const noPull = yield* runCase(mainOld, branchNew, pulls(), { sync: "current" });
       expect(noPull.decision).toEqual(bumps);
-      // The branch is current and the PR is open but unlabelled (labelling failed): repair it.
+      // The branch merged main and its pull request is open but unlabelled: push the merge and restore the
+      // label without create-pull-request, which would rebuild the branch and drop anything else on it.
       const unlabelled = yield* runCase(mainOld, branchNew, pulls(pull("OPEN", newTag, ["ci"])), { sync: "merged" });
-      expect(unlabelled.decision).toEqual(bumps);
+      expect(unlabelled.decision).toEqual({ ...idle, push: "true", relabel: "true" });
+      expect(unlabelled.outputs.pull).toBe("7");
+      // The contents read saw T, but the branch moved to a newer U before the fetch: the decision follows the
+      // pin the sync read at the checked head (U), so no T pull request is opened over it.
+      const movedOn = yield* runCase(mainOld, branchNew, pulls(), { sync: "merged", syncTag: "beep-ci-fedcba987654" });
+      expect(movedOn.decision).toEqual(pushes);
+      // No pull request for T and the branch holds more than the pin: report instead of a rebuild that would
+      // discard it, and still push the merge.
+      const notPinOnly = yield* runCase(mainOld, branchNew, pulls(), {
+        sync: "merged",
+        syncTag: newTag,
+        pinOnly: "false",
+      });
+      expect(notPinOnly.status).toBe(0);
+      expect(notPinOnly.decision).toEqual({ ...idle, push: "true", report: "true" });
+      expect(notPinOnly.summary).toContain("holds changes besides the pin");
       // A PR for the release a person closed unmerged (no `superseded` label): parked on purpose, no push
       // and no reopen.
       const closed = yield* runCase(mainOld, branchNew, pulls(pull("CLOSED", newTag, ["ready-for-heavy"])));
@@ -3000,6 +3080,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         push: "false",
         supersede: "false",
         report: "false",
+        relabel: "false",
       });
       // Closed for that release, then a newer release T2: a new bump opens normally.
       const newerTag = "beep-ci-fedcba987654";
@@ -3027,6 +3108,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         push: "false",
         supersede: "false",
         report: "false",
+        relabel: "false",
       });
       // A failed pull-request lookup is unknown state, never "no PR": the step fails and reports it,
       // and writes no decision, so nothing is pushed and no PR is opened (#3299 review).
@@ -3060,6 +3142,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         push: "false",
         supersede: "false",
         report: "false",
+        relabel: "false",
       });
       // A failed live-main read is unknown state: the step fails and reports it, and nothing is bumped.
       const mainDown = yield* runCase(mainOld, branchNew, pulls(), { failing: "main" });
@@ -3109,6 +3192,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           )
         );
         yield* fs.chmod(`${work}/bin/gh`, 0o755);
+        // `git push` is the lease-protected delete; it records its argv and fails when GIT_FAIL is set.
+        yield* fs.writeFileString(
+          `${work}/bin/git`,
+          A.join(
+            ["#!/usr/bin/env bash", 'echo "git $*" >> "$CALLS"', 'if [ "$GIT_FAIL" = 1 ]; then exit 1; fi', ""],
+            "\n"
+          )
+        );
+        yield* fs.chmod(`${work}/bin/git`, 0o755);
         yield* fs.writeFileString(`${work}/calls`, "");
         yield* fs.writeFileString(`${work}/summary.md`, "");
         const searchPath = yield* Config.String("PATH");
@@ -3129,6 +3221,9 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
               LIVE_HEAD: head,
               SEEN: "0",
               SUPERSEDE: "false",
+              RELABEL: "false",
+              GIT_FAIL: "0",
+              GH_TOKEN: "app-token",
               ...env,
             },
             extendEnv: true,
@@ -3139,16 +3234,43 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         const status = yield* child.exitCode;
         const calls = yield* fs.readFileString(`${work}/calls`);
         // One entry per gh write; a multi-line comment body continues on the following lines.
-        return { status: Number(status), calls: A.filter(Str.split(calls, "\n"), Str.startsWith("api ")) };
+        return {
+          status: Number(status),
+          calls: A.filter(
+            Str.split(calls, "\n"),
+            (line) => Str.startsWith("api ")(line) || Str.startsWith("git ")(line)
+          ),
+        };
       });
-      // Supersede: label, then comment, then delete the branch, in that order.
+      // Supersede: label, then the lease-protected delete at the checked 40-character head, then the comment.
       const superseded = yield* runSettle({ SUPERSEDE: "true" });
       expect(superseded.status).toBe(0);
       expect(A.map(superseded.calls, (call) => A.join(A.take(Str.split(call, " "), 4), " "))).toStrictEqual([
         "api -X POST repos/fixture/repo/issues/7/labels",
+        "git -c core.hooksPath=/dev/null push",
         "api -X POST repos/fixture/repo/issues/7/comments",
-        "api -X DELETE repos/fixture/repo/git/refs/heads/ci/beep-ci-pin-bump",
       ]);
+      expect(superseded.calls[1]).toBe(
+        `git -c core.hooksPath=/dev/null push --force-with-lease=refs/heads/ci/beep-ci-pin-bump:${head} https://x-access-token:app-token@github.com/fixture/repo.git :refs/heads/ci/beep-ci-pin-bump`
+      );
+      // The delete fails (the branch moved after the check): the label comes off again and the step fails,
+      // so a still-open pull request never keeps a `superseded` label.
+      const failedDelete = yield* runSettle({ SUPERSEDE: "true", GIT_FAIL: "1" });
+      expect(failedDelete.status).not.toBe(0);
+      expect(A.map(failedDelete.calls, (call) => A.join(A.take(Str.split(call, " "), 4), " "))).toStrictEqual([
+        "api -X POST repos/fixture/repo/issues/7/labels",
+        "git -c core.hooksPath=/dev/null push",
+        "api -X DELETE repos/fixture/repo/issues/7/labels/superseded",
+      ]);
+      // A head that is not a full sha is refused before any write.
+      const shortHead = yield* runSettle({ SUPERSEDE: "true", BRANCH_HEAD: "0badbeef" });
+      expect(shortHead.status).not.toBe(0);
+      expect(shortHead.calls).toStrictEqual([]);
+      // Relabel: one label write, no branch write.
+      const relabelled = yield* runSettle({ RELABEL: "true" });
+      expect(relabelled.status).toBe(0);
+      expect(relabelled.calls).toHaveLength(1);
+      expect(relabelled.calls[0]).toContain("labels[]=ready-for-heavy");
       // The branch moved after the sync checked it: nothing is superseded and the step fails.
       const moved = yield* runSettle({ SUPERSEDE: "true", LIVE_HEAD: A.join(A.replicate("f", 40), "") });
       expect(moved.status).not.toBe(0);

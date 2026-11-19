@@ -144,7 +144,7 @@ const fixture = Effect.fn("CiBinaryPinSyncTest.fixture")(function* (
   return repo;
 });
 
-const sync = Effect.fn("CiBinaryPinSyncTest.sync")(function* (repo: Repo) {
+const syncLines = Effect.fn("CiBinaryPinSyncTest.syncLines")(function* (repo: Repo) {
   const fs = yield* FileSystem.FileSystem;
   yield* fs.remove(repo.output, { force: true });
   yield* runSync([
@@ -163,6 +163,12 @@ const sync = Effect.fn("CiBinaryPinSyncTest.sync")(function* (repo: Repo) {
   ]);
   const text = yield* fs.readFileString(repo.output);
   return A.filter(Str.split(text, "\n"), Str.isNonEmpty);
+});
+
+// The decision lines without the trailing `pin_only=` record, which tests assert on its own.
+const sync = Effect.fn("CiBinaryPinSyncTest.sync")(function* (repo: Repo) {
+  const lines = yield* syncLines(repo);
+  return A.filter(lines, (line) => !Str.startsWith("pin_only=")(line));
 });
 
 // The output lines of one run: the outcome, then the pin the branch keeps.
@@ -319,12 +325,13 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
       })
     );
 
-    it.effect("a branch pin file missing its pin lines is stale, or blocked when the update carries workflows", () =>
+    it.effect("a branch pin file missing its pin lines is blocked, with or without workflow changes", () =>
       Effect.gen(function* () {
         const lineless = "runs:\n  using: composite\n";
         const quiet = yield* fixture(OLD, O.some(unrelated), releaseRows, O.some(lineless));
         const quietOutcome = yield* sync(quiet);
-        expect(quietOutcome).toStrictEqual(decided("stale", O.none()));
+        expect(A.take(quietOutcome, 1)).toStrictEqual(decided("blocked", O.none()));
+        expect(quietOutcome[1]).toContain(`a newer release ${NEW.tag} is waiting`);
         const loud = yield* fixture(OLD, O.some(mainWorkflow), releaseRows, O.some(lineless));
         const loudOutcome = yield* sync(loud);
         expect(A.take(loudOutcome, 1)).toStrictEqual(decided("blocked", O.none()));
@@ -451,9 +458,36 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
         const after = yield* head(repo.root);
         expect(A.take(outcome, 1)).toStrictEqual(decided("blocked", O.none()));
         expect(outcome[1]).toContain(`reason=a newer release ${NEW.tag} is waiting`);
-        expect(outcome[1]).toContain("carries workflow changes (.github/workflows/ci.yml)");
-        expect(outcome[1]).toContain("holds changes besides the pin (docs/fix.md)");
+        expect(outcome[1]).toContain("holds changes besides the pin (docs/fix.md), which bumping it would discard");
         expect(after).toBe(before);
+      })
+    );
+
+    // Revised ruling: a stale branch holding anything beyond the pin is blocked even when its update
+    // carries no workflow file, because the create-pull-request rebuild would discard it.
+    it.effect("a stale branch with an extra commit and no workflow change is blocked and changes nothing", () =>
+      Effect.gen(function* () {
+        const repo = yield* fixture(MID, O.some(unrelated));
+        yield* commitFile(repo.root, { file: "docs/fix.md", text: "# a hand fix\n", message: "hand fix" });
+        const before = yield* head(repo.root);
+        const outcome = yield* sync(repo);
+        const after = yield* head(repo.root);
+        expect(A.take(outcome, 1)).toStrictEqual(decided("blocked", O.none()));
+        expect(outcome[1]).toContain(`reason=a newer release ${NEW.tag} is waiting`);
+        expect(outcome[1]).toContain("docs/fix.md");
+        expect(after).toBe(before);
+      })
+    );
+
+    it.effect("a stale branch with a pin-file edit outside the pin lines and no workflow change is blocked", () =>
+      Effect.gen(function* () {
+        const stray = `${actionText(MID)}# a human edit\n`;
+        const repo = yield* fixture(MID, O.some(unrelated), releaseRows, O.some(stray));
+        const outcome = yield* sync(repo);
+        const after = yield* head(repo.root);
+        expect(A.take(outcome, 1)).toStrictEqual(decided("blocked", O.none()));
+        expect(outcome[1]).toContain("differs from its merge-base version outside the two pinned lines");
+        expect(after).toBe(repo.before);
       })
     );
 
@@ -554,6 +588,113 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
         const repo = yield* fixture(OLD, O.some(mainWorkflow), releaseRows, O.some(""));
         const outcome = yield* sync(repo);
         expect(outcome).toStrictEqual(decided("supersede", O.some(NEW)));
+      })
+    );
+
+    // CodeRabbit round on 1455ed30cb97.
+    it.effect("an exact pin match still requires the resolved release in the release list", () =>
+      Effect.gen(function* () {
+        const repo = yield* fixture(NEW, O.some(unrelated), []);
+        const failure = yield* Effect.flip(sync(repo));
+        const after = yield* head(repo.root);
+        expect(`${failure}`).toContain(`${NEW.tag} is not in the release list`);
+        expect(after).toBe(repo.before);
+      })
+    );
+
+    it.effect("a ./-prefixed --file names the same pin file, so a pin-only branch still supersedes", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repo = yield* fixture(MID, O.some(mainWorkflow));
+        yield* runSync([
+          "--cwd",
+          repo.root,
+          "--base",
+          "main",
+          "--tag",
+          NEW.tag,
+          "--sha256",
+          NEW.sha256,
+          "--releases",
+          repo.releases,
+          "--file",
+          `./${PIN_FILE}`,
+          "--output",
+          repo.output,
+        ]);
+        const text = yield* fs.readFileString(repo.output);
+        expect(A.take(A.filter(Str.split(text, "\n"), Str.isNonEmpty), 3)).toStrictEqual(
+          decided("supersede", O.some(NEW))
+        );
+      })
+    );
+
+    it.effect("refuses an ignored file at a path the merge would add, and keeps it", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repo = yield* fixture(NEW, O.some(unrelated));
+        yield* fs.writeFileString(`${repo.root}/.git/info/exclude`, "docs/\n");
+        yield* fs.makeDirectory(`${repo.root}/docs`, { recursive: true });
+        yield* fs.writeFileString(`${repo.root}/docs/notes.md`, "LOCAL\n");
+        const failure = yield* Effect.flip(sync(repo));
+        const kept = yield* fs.readFileString(`${repo.root}/docs/notes.md`);
+        const after = yield* head(repo.root);
+        expect(`${failure}`).toContain("untracked or ignored files at paths the merge would add (docs/notes.md)");
+        expect(kept).toBe("LOCAL\n");
+        expect(after).toBe(repo.before);
+      })
+    );
+
+    it.effect("a merge failure whose restore also fails reports both", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repo = yield* fixture(NEW, O.some(mainRepins));
+        // A held index lock fails the merge, and then the reset that would restore the head.
+        yield* fs.writeFileString(`${repo.root}/.git/index.lock`, "");
+        const failure = yield* Effect.flip(sync(repo));
+        expect(`${failure}`).toContain(`Restoring ${repo.before} also failed`);
+      })
+    );
+
+    it.effect("a failed --output write after a merge restores the pre-merge head", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repo = yield* fixture(NEW, O.some(unrelated));
+        const directory = `${repo.output}.d`;
+        yield* fs.makeDirectory(directory, { recursive: true });
+        const failure = yield* Effect.flip(
+          runSync([
+            "--cwd",
+            repo.root,
+            "--base",
+            "main",
+            "--tag",
+            NEW.tag,
+            "--sha256",
+            NEW.sha256,
+            "--releases",
+            repo.releases,
+            "--output",
+            directory,
+          ])
+        );
+        const after = yield* head(repo.root);
+        const merging = yield* mergeInProgress(repo.root);
+        expect(`${failure}`).toContain(`Failed to write ${directory}`);
+        expect(after).toBe(repo.before);
+        expect(merging).toBe(false);
+      })
+    );
+
+    it.effect("reports pin_only: true for a pin-only branch, false when it holds another change", () =>
+      Effect.gen(function* () {
+        const clean = yield* fixture(NEW, O.none());
+        const cleanLines = yield* syncLines(clean);
+        expect(cleanLines).toContain("pin_only=true");
+        const extra = yield* fixture(NEW, O.some(unrelated));
+        yield* commitFile(extra.root, { file: "docs/fix.md", text: "# a hand fix\n", message: "hand fix" });
+        const extraLines = yield* syncLines(extra);
+        expect(extraLines).toStrictEqual([...decided("merged", O.some(NEW)), "pin_only=false"]);
       })
     );
 
