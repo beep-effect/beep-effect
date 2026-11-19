@@ -36,6 +36,8 @@ export const WORKSPACE_SUBJECT = "workspace";
  * console.log(buildClosureCommand("@beep/glob")); // bun x turbo run build --filter=@beep/glob^...
  * ```
  *
+ * @param subject - the run's subject: a package name or the workspace
+ * @returns the turbo command that builds the declarations the subject's check reads
  * @category utilities
  * @since 0.0.0
  */
@@ -54,6 +56,8 @@ export const buildClosureCommand = (subject: string): string =>
  * console.log(foldFixesFor("@beep/glob").TS6305); // bun x turbo run build --filter=@beep/glob^...
  * ```
  *
+ * @param subject - the run's subject: a package name or the workspace
+ * @returns the fix command of each folded code, TS6305 today
  * @category utilities
  * @since 0.0.0
  */

@@ -97,8 +97,10 @@ describe("console laws", () => {
           O.map(document.cap, (cap) => cap.dropped),
           () => 0
         );
+        const records = (entries: ReadonlyArray<ConsoleEntry>) =>
+          A.filter(entries, ConsoleEntry.guards.FailureEntry).length;
         const dropped =
-          prior + document.entries.length + document.folds.length - fitted.entries.length - fitted.folds.length;
+          prior + records(document.entries) + document.folds.length - records(fitted.entries) - fitted.folds.length;
         assert.isAtMost(size(lines), budget.maxChars);
         for (const line of lines) {
           assert.isAtMost(line.length, budget.maxLineChars);

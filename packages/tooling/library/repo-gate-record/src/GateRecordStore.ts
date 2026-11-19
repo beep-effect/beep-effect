@@ -64,7 +64,9 @@ export class WrittenFile extends S.Opaque<WrittenFile, { readonly brand: unique 
  * `writeLog` writes the whole raw stream and counts its bytes; a stream
  * failure is returned as it is, a file failure as
  * {@link GateRecordWriteError}. `writeRecord` writes the record file whole
- * and, for a root run, then removes the gate's runs past the newest twenty.
+ * and, for a root run, then removes the gate's runs past the newest twenty;
+ * that removal is best effort: when it fails, the record still counts as
+ * written and the next root write removes what is left.
  * `readRecord` returns the record as written, its run id included, so a
  * restored record is recognizable as a replay. `listRuns` names a gate's
  * root runs, newest first.
@@ -125,15 +127,17 @@ const makeStore = (files: RecordFiles): GateRecordStoreShape => {
     return Effect.andThen(files.remove(location.record), files.remove(location.log));
   };
 
+  // Retention is housekeeping after the record is on disk: a failure to list or remove expired
+  // runs leaves them for the next root write to remove and never reports the record unwritten.
   const prune = (gate: GateName) =>
     files.listNames(rootGateDir(gate)).pipe(
       Effect.flatMap((names) =>
         Effect.forEach(expiredRuns(runIdsOf(names)), removeRun(gate), { concurrency: 1, discard: true })
       ),
-      Effect.mapError(writeFailure(rootGateDir(gate), `could not remove the ${gate} gate's expired runs`))
+      Effect.ignore
     );
 
-  const retain: (target: RecordTarget) => Effect.Effect<void, GateRecordWriteError> = RecordTarget.match({
+  const retain: (target: RecordTarget) => Effect.Effect<void> = RecordTarget.match({
     PackageTarget: () => Effect.void,
     RootTarget: (root) => prune(root.gate),
   });

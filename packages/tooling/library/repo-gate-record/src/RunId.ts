@@ -71,6 +71,8 @@ export const makeRunId: Effect.Effect<RunId> = Effect.gen(function* () {
  * // 20261120T100000000Z-0001
  * ```
  *
+ * @param runIds - the run ids to order, as minted by makeRunId
+ * @returns the same ids with the latest first
  * @category utilities
  * @since 0.0.0
  */
@@ -91,6 +93,8 @@ export const newestFirst = (runIds: ReadonlyArray<RunId>): ReadonlyArray<RunId> 
  * console.log(expiredRuns(ids)); // ["run-10"]
  * ```
  *
+ * @param runIds - the root run ids of one gate, in any order
+ * @returns the ids past the newest twenty, oldest last, which retention removes
  * @category utilities
  * @since 0.0.0
  */

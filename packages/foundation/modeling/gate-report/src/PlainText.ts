@@ -6,12 +6,13 @@
  * @since 0.0.0
  */
 import * as A from "effect/Array";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Str from "effect/String";
 import { verdictWord } from "./Classify.ts";
 import { CapLine, ConsoleDocument, ConsoleEntry } from "./ConsoleDocument.ts";
 import { formatBytes, formatDuration } from "./Format.ts";
+import { stripEscapes } from "./internal/escapes.ts";
 import type {
   ConsoleBudget,
   FailureEntry,
@@ -25,7 +26,8 @@ import type { Location } from "./Item.ts";
 
 const ELLIPSIS = "...";
 
-const oneLine: (text: string) => string = Str.replace(/[\u0000-\u001f\u007f]/gu, " ");
+// Escapes go first, so what they styled is what counts against the line and the budget.
+const oneLine: (text: string) => string = flow(stripEscapes, Str.replace(/[\u0000-\u001f\u007f]/gu, " "));
 
 const cut = (text: string, room: number): string =>
   text.length <= room ? text : `${Str.takeLeft(text, room - ELLIPSIS.length)}${ELLIPSIS}`;
@@ -198,12 +200,19 @@ const keepPrefix = <V>(values: ReadonlyArray<V>, sizes: ReadonlyArray<number>, r
   return A.take(values, count);
 };
 
+// What the cap counts: failure entries and folds, the blocks that stand for items in the record.
+// A note (an empty-run warning, a breach, stray output) is not in the record, so dropping one
+// adds nothing to the cap.
+const recordBlocks = (blocks: Kept): number =>
+  A.filter(blocks.entries, ConsoleEntry.guards.FailureEntry).length + blocks.folds.length;
+
 const capOf = (dropped: number): O.Option<CapLine> => (dropped > 0 ? CapLine.makeOption({ dropped }) : O.none());
 
 /**
  * Fit a document to a budget: keep the longest prefix of folds that fits,
  * then the longest prefix of entries that fits in the room left, and record
- * how many were dropped in the cap.
+ * in the cap how many failure entries and folds were dropped. A dropped note
+ * is not counted: it stands for nothing in the record.
  *
  * **Details**
  *
@@ -245,14 +254,10 @@ export const fitDocument = (input: {
   );
   const document = ConsoleDocument.make({ ...input.document, cap: capOf(prior) });
   if (size(render(document, budget)) <= budget.maxChars) return document;
-  const blocks = document.entries.length + document.folds.length;
+  const blocks = recordBlocks(document);
   const frame = ConsoleDocument.make({ ...document, entries: [], folds: [], cap: capOf(prior + blocks) });
   const kept = keepWithin(document, budget, budget.maxChars - size(render(frame, budget)));
-  return ConsoleDocument.make({
-    ...document,
-    ...kept,
-    cap: capOf(prior + blocks - kept.entries.length - kept.folds.length),
-  });
+  return ConsoleDocument.make({ ...document, ...kept, cap: capOf(prior + blocks - recordBlocks(kept)) });
 };
 
 /**

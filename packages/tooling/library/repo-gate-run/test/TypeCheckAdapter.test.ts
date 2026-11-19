@@ -189,6 +189,22 @@ describe("parsing compiler output", () => {
     assert.strictEqual(A.dedupe(A.map(report.items, (item) => fingerprint(item.key))).length, 2);
   });
 
+  it("keeps three location-less diagnostics of one shape apart by their messages", () => {
+    const report = reportOf(
+      compilerEvents(
+        CompilerRun.make({
+          run: checkRun,
+          exitCode: 2,
+          output: A.join(
+            A.map(["a.ts", "b.ts", "c.ts", "a.ts"], (name) => `error TS6053: File '${name}' not found.`),
+            "\n"
+          ),
+        })
+      )
+    );
+    assert.strictEqual(report.totals.failed, 3);
+  });
+
   it("history labels a repeated diagnostic by the key the reducer recorded, ordinal included", () => {
     const report = reportOf(
       compilerEvents(

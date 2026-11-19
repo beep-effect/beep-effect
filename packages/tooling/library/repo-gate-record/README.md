@@ -38,7 +38,7 @@ export const program = Effect.gen(function* () {
 - `GatePaths`: the gate name, run id and package directory schemas, the `RecordTarget` union and `recordLocation`. A package gate writes `<package>/.beep/gates/<gate>/report.json` and `report.log`, overwritten each run; a root run writes `.beep/gates/<gate>/<run-id>.json` and `<run-id>.log`.
 - `RunId`: `makeRunId` (the UTC instant to the millisecond plus four random hex digits, so ids sort by time), `newestFirst`, `expiredRuns` and `ROOT_RUNS_KEPT` (20).
 - `GateRecordFile`: the indented JSON record codec, the write and read errors, and `recordProvenance`: a restored record keeps the run id of the run that wrote it, so a Turbo cache replay is recognizable.
-- `GateRecordStore`: the service. `writeLog` writes the whole stream and counts its bytes; `writeRecord` writes the record whole (through a sibling `.tmp` file) and, for a root run, removes the runs past the newest twenty; `readRecord`; `listRuns`. Layers: `layer(repoRoot)` over the platform file system, `layerMemory` for tests, and `layerFailingWrites(reason)` for tests of what a caller does when nothing can be written.
+- `GateRecordStore`: the service. `writeLog` writes the whole stream and counts its bytes; `writeRecord` writes the record whole (through a sibling `.tmp` file) and, for a root run, removes the runs past the newest twenty, best effort (a failed removal leaves them for the next root write and never fails the record); `readRecord`; `listRuns`. Layers: `layer(repoRoot)` over the platform file system, `layerMemory` for tests, and `layerFailingWrites(reason)` for tests of what a caller does when nothing can be written.
 
 ## Development
 
@@ -62,7 +62,7 @@ This package belongs to the port of the MIT project vitest-agent by C. Spencer B
 
 ### Deviations
 
-Upstream persists runs to SQLite under an XDG data directory shared by every worktree and writes report files only as reporter outputs. Here a run is two plain files inside the checkout: one record and one raw log per package gate, overwritten each run so Turbo can cache and restore them, and run-keyed files at the root with newest-twenty retention in place of the database's retention migration. History series are not stored here.
+Upstream persists runs to SQLite under an XDG data directory shared by every worktree and writes report files only as reporter outputs. Here a run is two plain files inside the checkout: one record and one raw log per package gate, overwritten each run so Turbo can cache and restore them, and run-keyed files at the root with newest-twenty retention in place of the database's retention migration. Retention is best effort: a failure to list or remove expired runs leaves them for the next root write and never reports the record as unwritten. History series are not stored here.
 
 ## License
 
