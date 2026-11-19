@@ -1,7 +1,7 @@
 import { Git } from "@beep/git/Git";
 import { BeepCiRelease, ciBinaryPinSyncCommand } from "@beep/repo-cli/commands/Ci/CiBinaryPinSync";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
-import { describe, expect, layer } from "@effect/vitest";
+import { afterAll, beforeAll, describe, expect, layer, vi } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
@@ -18,6 +18,16 @@ import { NodeTestLayer } from "./support/CommandTest.ts";
 // branch, then pushes a `merged` head with the pin-bump App token (no force push, so the pull
 // request keeps its number and review history). Each fixture is a real repository: `main` and a
 // `pin` branch cut from it.
+
+// Hermetic git: no global or system config (a global pull.ff=only, hooks path or signing setup would
+// change the merges under test). Every git process here, the command's included, inherits this.
+beforeAll(() => {
+  vi.stubEnv("GIT_CONFIG_GLOBAL", "/dev/null");
+  vi.stubEnv("GIT_CONFIG_NOSYSTEM", "1");
+});
+afterAll(() => {
+  vi.unstubAllEnvs();
+});
 
 const testLayer = Layer.mergeAll(NodeTestLayer, TestConsole.layer);
 const runSync = Command.runWith(ciBinaryPinSyncCommand, { version: "0.0.0" });
@@ -94,9 +104,16 @@ const commitFile = Effect.fn("CiBinaryPinSyncTest.commitFile")(function* (root: 
 const unrelated: Commit = { file: "docs/notes.md", text: "# notes\n", message: "unrelated" };
 // main took another pin (and touched the step name) after the branch was cut.
 const mainRepins: Commit = { file: PIN_FILE, text: actionText(MID, "moved"), message: "pin MID" };
+// main changed a workflow file after the branch was cut.
+const mainWorkflow: Commit = { file: ".github/workflows/ci.yml", text: "on: push\n", message: "workflow change" };
 
 // `main` pins OLD; the `pin` branch is cut from it and pins `branchPin`, then `main` takes `advance`.
-const fixture = Effect.fn("CiBinaryPinSyncTest.fixture")(function* (branchPin: Pin, advance: O.Option<Commit>) {
+const fixture = Effect.fn("CiBinaryPinSyncTest.fixture")(function* (
+  branchPin: Pin,
+  advance: O.Option<Commit>,
+  listed: ReadonlyArray<{ readonly tagName: string; readonly createdAt: string }> = releaseRows,
+  branchText: O.Option<string> = O.none()
+) {
   const fs = yield* FileSystem.FileSystem;
   const root = yield* fs.makeTempDirectoryScoped();
   yield* gitOutput(root, ["init", "-q", "-b", "main"]);
@@ -106,7 +123,11 @@ const fixture = Effect.fn("CiBinaryPinSyncTest.fixture")(function* (branchPin: P
   yield* gitOutput(root, ["config", "pull.rebase", "false"]);
   yield* commitFile(root, { file: PIN_FILE, text: actionText(OLD), message: "pin OLD" });
   yield* gitOutput(root, ["checkout", "-q", "-b", "pin"]);
-  yield* commitFile(root, { file: PIN_FILE, text: actionText(branchPin), message: "bump the pin" });
+  yield* commitFile(root, {
+    file: PIN_FILE,
+    text: O.getOrElse(branchText, () => actionText(branchPin)),
+    message: "bump the pin",
+  });
   yield* gitOutput(root, ["checkout", "-q", "main"]);
   if (O.isSome(advance)) {
     yield* commitFile(root, advance.value);
@@ -114,7 +135,7 @@ const fixture = Effect.fn("CiBinaryPinSyncTest.fixture")(function* (branchPin: P
   yield* gitOutput(root, ["checkout", "-q", "pin"]);
   const scratch = yield* fs.makeTempDirectoryScoped();
   const releases = `${scratch}/releases.json`;
-  const rows = yield* decodeReleaseRows(releaseRows);
+  const rows = yield* decodeReleaseRows(listed);
   const releasesText = yield* encodeReleases(rows);
   yield* fs.writeFileString(releases, releasesText);
   const before = yield* head(root);
@@ -124,6 +145,7 @@ const fixture = Effect.fn("CiBinaryPinSyncTest.fixture")(function* (branchPin: P
 
 const sync = Effect.fn("CiBinaryPinSyncTest.sync")(function* (repo: Repo) {
   const fs = yield* FileSystem.FileSystem;
+  yield* fs.remove(repo.output, { force: true });
   yield* runSync([
     "--cwd",
     repo.root,
@@ -138,11 +160,23 @@ const sync = Effect.fn("CiBinaryPinSyncTest.sync")(function* (repo: Repo) {
     "--output",
     repo.output,
   ]);
-  return yield* fs.readFileString(repo.output);
+  const text = yield* fs.readFileString(repo.output);
+  return A.filter(Str.split(text, "\n"), Str.isNonEmpty);
 });
+
+// The output lines of one run: the outcome, then the pin the branch keeps.
+const decided = (outcome: string, pin: O.Option<Pin>) => [
+  `outcome=${outcome}`,
+  ...O.match(pin, { onNone: () => [], onSome: (kept) => [`tag=${kept.tag}`, `sha256=${kept.sha256}`] }),
+];
 
 const parents = (root: string) =>
   Effect.map(gitOutput(root, ["rev-list", "--parents", "-n", "1", "HEAD"]), (line) => A.drop(Str.split(line, " "), 1));
+
+const mergeInProgress = Effect.fn("CiBinaryPinSyncTest.mergeInProgress")(function* (root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  return yield* fs.exists(`${root}/.git/MERGE_HEAD`);
+});
 
 const pinFileText = Effect.fn("CiBinaryPinSyncTest.pinFileText")(function* (repo: Repo) {
   const fs = yield* FileSystem.FileSystem;
@@ -156,7 +190,7 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
         const repo = yield* fixture(NEW, O.none());
         const outcome = yield* sync(repo);
         const after = yield* head(repo.root);
-        expect(outcome).toBe("outcome=current\n");
+        expect(outcome).toStrictEqual(decided("current", O.some(NEW)));
         expect(after).toBe(repo.before);
       })
     );
@@ -171,7 +205,7 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
         const pin = yield* pinFileText(repo);
         const notes = yield* fs.readFileString(`${repo.root}/docs/notes.md`);
         const status = yield* gitOutput(repo.root, ["status", "--porcelain"]);
-        expect(outcome).toBe("outcome=merged\n");
+        expect(outcome).toStrictEqual(decided("merged", O.some(NEW)));
         expect(merge).toStrictEqual([repo.before, main]);
         expect(pin).toBe(actionText(NEW));
         expect(notes).toBe("# notes\n");
@@ -187,13 +221,13 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
         const merge = yield* parents(repo.root);
         const pin = yield* pinFileText(repo);
         const status = yield* gitOutput(repo.root, ["status", "--porcelain"]);
-        expect(outcome).toBe("outcome=merged\n");
+        expect(outcome).toStrictEqual(decided("merged", O.some(NEW)));
         expect(merge).toStrictEqual([repo.before, main]);
         expect(pin).toBe(actionText(NEW, "moved"));
         expect(status).toBe("");
         // A second run finds the merged head current.
         const again = yield* sync(repo);
-        expect(again).toBe("outcome=merged\noutcome=current\n");
+        expect(again).toStrictEqual(decided("current", O.some(NEW)));
       })
     );
 
@@ -202,8 +236,13 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
         const repo = yield* fixture(NEWER, O.some(mainRepins));
         const outcome = yield* sync(repo);
         const pin = yield* pinFileText(repo);
-        expect(outcome).toBe("outcome=merged\n");
+        const merge = yield* parents(repo.root);
+        const status = yield* gitOutput(repo.root, ["status", "--porcelain"]);
+        const main = yield* gitOutput(repo.root, ["rev-parse", "main"]);
+        expect(outcome).toStrictEqual(decided("merged", O.some(NEWER)));
         expect(pin).toBe(actionText(NEWER, "moved"));
+        expect(merge).toStrictEqual([repo.before, main]);
+        expect(status).toBe("");
       })
     );
 
@@ -212,23 +251,131 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
         const older = yield* fixture(MID, O.some(unrelated));
         const olderOutcome = yield* sync(older);
         const olderHead = yield* head(older.root);
-        expect(olderOutcome).toBe("outcome=stale\n");
+        expect(olderOutcome).toStrictEqual(decided("stale", O.none()));
         expect(olderHead).toBe(older.before);
         const resigned = yield* fixture({ tag: NEW.tag, sha256: MID.sha256 }, O.none());
         const resignedOutcome = yield* sync(resigned);
-        expect(resignedOutcome).toBe("outcome=stale\n");
+        expect(resignedOutcome).toStrictEqual(decided("stale", O.none()));
       })
     );
 
-    it.effect("a conflict outside the pin file fails and commits nothing", () =>
+    it.effect("a conflict outside the pin file is blocked, resets the checkout and commits nothing", () =>
       Effect.gen(function* () {
         const repo = yield* fixture(NEW, O.some({ file: "docs/notes.md", text: "# main\n", message: "main notes" }));
         yield* commitFile(repo.root, { file: "docs/notes.md", text: "# branch\n", message: "branch notes" });
         const before = yield* head(repo.root);
+        const outcome = yield* sync(repo);
+        const after = yield* head(repo.root);
+        const status = yield* gitOutput(repo.root, ["status", "--porcelain"]);
+        expect(A.take(outcome, 3)).toStrictEqual(decided("blocked", O.some(NEW)));
+        expect(outcome[3]).toBe(
+          "reason=merging main conflicts outside .github/actions/fetch-beep-ci/action.yml: docs/notes.md"
+        );
+        const merging = yield* mergeInProgress(repo.root);
+        expect(after).toBe(before);
+        expect(status).toBe("");
+        expect(merging).toBe(false);
+      })
+    );
+
+    // The branch's pin file differs from main outside the two pinned lines (a stray edit); the merge is
+    // clean, and the sync still leaves main's text with only the two pinned lines changed.
+    it.effect(
+      "a clean merge where the branch's pin file differs from main outside the pin lines keeps only the pin",
+      () =>
+        Effect.gen(function* () {
+          const stray = `${actionText(NEW)}# a stray line on the branch\n`;
+          const repo = yield* fixture(NEW, O.some(unrelated), releaseRows, O.some(stray));
+          const main = yield* gitOutput(repo.root, ["rev-parse", "main"]);
+          const outcome = yield* sync(repo);
+          const pin = yield* pinFileText(repo);
+          const changed = yield* gitOutput(repo.root, ["diff", "--name-only", "main", "HEAD"]);
+          const merge = yield* gitOutput(repo.root, ["rev-list", "--parents", "-n", "1", "HEAD~1"]);
+          const status = yield* gitOutput(repo.root, ["status", "--porcelain"]);
+          expect(outcome).toStrictEqual(decided("merged", O.some(NEW)));
+          expect(pin).toBe(actionText(NEW));
+          expect(changed).toBe(PIN_FILE);
+          expect(A.drop(Str.split(merge, " "), 1)).toStrictEqual([repo.before, main]);
+          expect(status).toBe("");
+        })
+    );
+
+    it.effect("a failure after the merge started restores the pre-merge head with no MERGE_HEAD", () =>
+      Effect.gen(function* () {
+        // main deleted the pin file: the merge stops on it, and resolving it finds no base text.
+        const repo = yield* fixture(NEW, O.none());
+        yield* gitOutput(repo.root, ["checkout", "-q", "main"]);
+        yield* gitOutput(repo.root, ["rm", "-q", PIN_FILE]);
+        yield* gitOutput(repo.root, ["commit", "-q", "--no-verify", "-m", "drop the pin file"]);
+        yield* gitOutput(repo.root, ["checkout", "-q", "pin"]);
         const failure = yield* Effect.flip(sync(repo));
         const after = yield* head(repo.root);
-        expect(`${failure}`).toContain("conflicts outside");
-        expect(`${failure}`).toContain("docs/notes.md");
+        const status = yield* gitOutput(repo.root, ["status", "--porcelain"]);
+        const merging = yield* mergeInProgress(repo.root);
+        expect(`${failure}`).toContain(`main has no ${PIN_FILE}`);
+        expect(after).toBe(repo.before);
+        expect(status).toBe("");
+        expect(merging).toBe(false);
+      })
+    );
+
+    it.effect("a branch tag the release list does not hold fails and changes nothing", () =>
+      Effect.gen(function* () {
+        const unlisted = A.filter(releaseRows, (row) => row.tagName !== NEWER.tag);
+        const repo = yield* fixture(NEWER, O.some(mainRepins), unlisted);
+        const failure = yield* Effect.flip(sync(repo));
+        const after = yield* head(repo.root);
+        expect(`${failure}`).toContain(`${NEWER.tag} is not in the release list`);
+        expect(after).toBe(repo.before);
+      })
+    );
+
+    it.effect("a branch release created at the same time as the newest fails and changes nothing", () =>
+      Effect.gen(function* () {
+        const tied = A.map(releaseRows, (row) =>
+          row.tagName === NEWER.tag ? { tagName: row.tagName, createdAt: "2026-11-10T00:00:00Z" } : row
+        );
+        const repo = yield* fixture(NEWER, O.some(mainRepins), tied);
+        const failure = yield* Effect.flip(sync(repo));
+        const after = yield* head(repo.root);
+        expect(`${failure}`).toContain("shares its creation time");
+        expect(after).toBe(repo.before);
+      })
+    );
+
+    // GitHub refuses a push by the pin-bump App (no `workflows` permission) that updates an existing
+    // branch with workflow-file changes, so such a merge cannot be pushed. A branch that holds nothing
+    // but the pin is superseded by a fresh pull request from main; anything more stops.
+    it.effect("a workflow-carrying merge onto a pin-only branch supersedes and resets the checkout", () =>
+      Effect.gen(function* () {
+        const repo = yield* fixture(NEW, O.some(mainWorkflow));
+        const outcome = yield* sync(repo);
+        const after = yield* head(repo.root);
+        const status = yield* gitOutput(repo.root, ["status", "--porcelain"]);
+        expect(outcome).toStrictEqual(decided("supersede", O.some(NEW)));
+        expect(after).toBe(repo.before);
+        expect(status).toBe("");
+      })
+    );
+
+    it.effect("a workflow-carrying merge onto a branch pinning a newer release supersedes with that pin", () =>
+      Effect.gen(function* () {
+        const repo = yield* fixture(NEWER, O.some(mainWorkflow));
+        const outcome = yield* sync(repo);
+        expect(outcome).toStrictEqual(decided("supersede", O.some(NEWER)));
+      })
+    );
+
+    it.effect("a workflow-carrying merge onto a branch with an extra commit is blocked and changes nothing", () =>
+      Effect.gen(function* () {
+        const repo = yield* fixture(NEW, O.some(mainWorkflow));
+        yield* commitFile(repo.root, { file: "docs/fix.md", text: "# a hand fix\n", message: "hand fix" });
+        const before = yield* head(repo.root);
+        const outcome = yield* sync(repo);
+        const after = yield* head(repo.root);
+        expect(A.take(outcome, 3)).toStrictEqual(decided("blocked", O.some(NEW)));
+        expect(outcome[3]).toContain("carries workflow changes (.github/workflows/ci.yml)");
+        expect(outcome[3]).toContain("holds changes besides the pin (docs/fix.md)");
         expect(after).toBe(before);
       })
     );

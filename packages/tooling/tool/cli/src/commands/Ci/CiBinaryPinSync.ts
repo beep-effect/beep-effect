@@ -11,7 +11,9 @@
  * branch head. It merges main into the branch and resolves the pin file to
  * main's text with exactly the two pinned lines (`BEEP_CI_RELEASE_TAG`,
  * `BEEP_CI_SHA256`) set. The workflow then pushes the result without force,
- * so the pull request keeps its number and its review history.
+ * so the pull request keeps its number and its review history. A merge that
+ * would carry workflow files cannot be pushed by the pin-bump App, so a
+ * branch holding only the pin is superseded by a fresh pull request instead.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -35,7 +37,7 @@ import { CI_BINARY_PIN_FILE, CiBinaryPin, decodeCiBinaryPinFlags, rewriteCiBinar
 const $I = $RepoCliId.create("commands/Ci/CiBinaryPinSync");
 
 /**
- * What `beep ci binary-pin-sync` did to the pin-bump branch checkout.
+ * What `beep ci binary-pin-sync` decided for the pin-bump branch checkout.
  *
  * **Details**
  *
@@ -46,22 +48,31 @@ const $I = $RepoCliId.create("commands/Ci/CiBinaryPinSync");
  *   release (or a newer one). Nothing changed and nothing is pushed.
  * - `merged`: the branch was behind main or in conflict with it. Main is now
  *   merged in with the pin resolved, and the workflow pushes the new head.
+ * - `supersede`: merging main would carry `.github/workflows` changes, which
+ *   the pin-bump App (no `workflows` permission) may not push onto an existing
+ *   branch, and the branch holds nothing but the pin. The checkout is reset;
+ *   the workflow closes the pull request as superseded and opens a fresh one
+ *   from main with the same pin.
+ * - `blocked`: the sync cannot heal the branch (a conflict outside the pin
+ *   file, or a workflow-carrying merge onto a branch that holds more than the
+ *   pin). The checkout is reset and the workflow reports it once.
  *
  * **Example** (Check an outcome)
  *
  * ```ts
  * import { CiBinaryPinSyncOutcome } from "@beep/repo-cli/commands/Ci/CiBinaryPinSync"
  *
- * console.log(CiBinaryPinSyncOutcome.is.merged("merged")) // true
+ * console.log(CiBinaryPinSyncOutcome.is.supersede("supersede")) // true
  * ```
  *
  * @category models
  * @since 0.0.0
  */
-export const CiBinaryPinSyncOutcome = LiteralKit(["stale", "current", "merged"]).pipe(
+export const CiBinaryPinSyncOutcome = LiteralKit(["stale", "current", "merged", "supersede", "blocked"]).pipe(
   $I.annoteSchema("CiBinaryPinSyncOutcome", {
     title: "CI Binary Pin Sync Outcome",
-    description: "What the pin-bump branch sync did: nothing (stale or current) or a merge of main.",
+    description:
+      "What the pin-bump branch sync decided: nothing, a merge of main, a superseding pull request, or a block.",
   })
 );
 
@@ -72,6 +83,41 @@ export const CiBinaryPinSyncOutcome = LiteralKit(["stale", "current", "merged"])
  * @since 0.0.0
  */
 export type CiBinaryPinSyncOutcome = typeof CiBinaryPinSyncOutcome.Type;
+
+/**
+ * The decision of one pin-bump branch sync: the outcome, the pin the branch keeps, and why it is blocked.
+ *
+ * **Example** (Build a result)
+ *
+ * ```ts
+ * import { CiBinaryPinSyncResult } from "@beep/repo-cli/commands/Ci/CiBinaryPinSync"
+ * import * as O from "effect/Option"
+ *
+ * const result = CiBinaryPinSyncResult.make({ outcome: "stale", pin: O.none(), reason: O.none() })
+ * console.log(result.outcome) // "stale"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiBinaryPinSyncResult extends S.Opaque<CiBinaryPinSyncResult, { readonly brand: unique symbol }>()(
+  S.Struct({
+    outcome: CiBinaryPinSyncOutcome,
+    pin: S.Option(CiBinaryPin).pipe(
+      $I.annoteKey("CiBinaryPinSyncResult.pin", {
+        description: "The pin the branch keeps: the resolved release, or a newer one the branch already held.",
+      })
+    ),
+    reason: S.Option(S.String).pipe(
+      $I.annoteKey("CiBinaryPinSyncResult.reason", { description: "Why a blocked branch cannot be healed." })
+    ),
+  }).pipe($I.annoteSchema("CiBinaryPinSyncResult", { description: "The decision of one pin-bump branch sync." }))
+) {}
+
+const syncResult = (outcome: CiBinaryPinSyncOutcome, pin: O.Option<CiBinaryPin>, reason = O.none<string>()) =>
+  CiBinaryPinSyncResult.make({ outcome, pin, reason });
+
+const WORKFLOWS_PATH = ".github/workflows";
 
 /**
  * One row of `gh release list --json tagName,createdAt`.
@@ -114,12 +160,30 @@ const createdAt = (releases: ReadonlyArray<BeepCiRelease>, tag: string) =>
     (release) => release.createdAt
   );
 
-// A pin is newer only when both releases are listed and the branch's was created later.
-const isNewerRelease = (releases: ReadonlyArray<BeepCiRelease>, candidate: string, than: string): boolean =>
-  O.match(O.all([createdAt(releases, candidate), createdAt(releases, than)]), {
-    onNone: () => false,
-    onSome: ([candidateAt, thanAt]) => DateTime.isGreaterThan(candidateAt, thanAt),
-  });
+// The creation time of a listed release. An unlisted tag, or a creation time another release shares,
+// cannot be ordered, so it fails closed instead of reading as "older" (which would let a reset move a
+// pin backwards).
+const orderedAt = Effect.fnUntraced(function* (releases: ReadonlyArray<BeepCiRelease>, tag: string) {
+  const at = createdAt(releases, tag);
+  if (O.isNone(at)) {
+    return yield* CiCommandError.make({
+      message: `${tag} is not in the release list, so whether it is newer cannot be decided; nothing was changed.`,
+    });
+  }
+  const ties = A.filter(
+    releases,
+    (release) => release.tagName !== tag && DateTime.Equivalence(release.createdAt, at.value)
+  );
+  if (A.isReadonlyArrayNonEmpty(ties)) {
+    return yield* CiCommandError.make({
+      message: `${tag} shares its creation time with ${A.join(
+        A.map(ties, (release) => release.tagName),
+        ", "
+      )}, so the release order is ambiguous; nothing was changed.`,
+    });
+  }
+  return at.value;
+});
 
 // `git status` porcelain codes for an unmerged path: either side `U`, or both added / both deleted.
 const isUnmerged = (entry: { readonly x: string; readonly y: string }): boolean =>
@@ -169,7 +233,8 @@ const readPinFile = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest
 });
 
 // The resolved release when the branch pins it exactly; the branch's own pin when it is a newer
-// release (the sync then only merges main under it); otherwise none, which is `stale`.
+// release (the sync then only merges main under it); otherwise none, which is `stale`. A branch tag
+// the release list does not hold, or a tied creation time, fails: nothing is changed.
 const resolveSyncTarget = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
   const branchText = yield* readPinFile(request);
   const branch = yield* rewriteCiBinaryPin(branchText, request.pin);
@@ -179,10 +244,16 @@ const resolveSyncTarget = Effect.fnUntraced(function* (request: CiBinaryPinSyncR
   const branchPin = yield* decodeCiBinaryPin({ tag: branch.previousTag, sha256: branch.previousSha256 }).pipe(
     Effect.option
   );
-  return O.filter(branchPin, (pin) => isNewerRelease(request.releases, pin.tag, request.pin.tag));
+  const newestAt = yield* orderedAt(request.releases, request.pin.tag);
+  if (O.isNone(branchPin) || branchPin.value.tag === request.pin.tag) {
+    return O.none<CiBinaryPin>();
+  }
+  const branchAt = yield* orderedAt(request.releases, branchPin.value.tag);
+  return DateTime.isGreaterThan(branchAt, newestAt) ? branchPin : O.none<CiBinaryPin>();
 });
 
-// Merge the base ref in; true when the merge stopped on conflicts, which must all be in the pin file.
+// Merge the base ref in. Returns whether the merge stopped on conflicts and the conflicted paths
+// outside the pin file, which the sync cannot resolve.
 const mergeBase = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) {
   const git = yield* Git;
   const path = yield* Path.Path;
@@ -193,17 +264,8 @@ const mergeBase = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest) 
   );
   const status = conflicted ? yield* git.status(request.cwd).pipe(Effect.mapError(gitFailure(request))) : [];
   const pinFile = path.resolve(request.cwd, request.file);
-  const others = A.filter(status, (entry) => isUnmerged(entry) && path.resolve(request.cwd, entry.path) !== pinFile);
-  if (A.isReadonlyArrayNonEmpty(others)) {
-    const paths = A.join(
-      A.map(others, (entry) => entry.path),
-      ", "
-    );
-    return yield* CiCommandError.make({
-      message: `Merging ${request.base} conflicts outside ${request.file}: ${paths}. Nothing was committed; resolve the pin-bump branch by hand.`,
-    });
-  }
-  return conflicted;
+  const outside = A.filter(status, (entry) => isUnmerged(entry) && path.resolve(request.cwd, entry.path) !== pinFile);
+  return { conflicted, outside: A.map(outside, (entry) => entry.path) };
 });
 
 // Set the pin file to the base's text with only the two pinned lines changed, and commit when that
@@ -234,6 +296,49 @@ const commitResolvedPin = Effect.fnUntraced(function* (
   yield* git.commit(request.cwd, message, { noVerify: true }).pipe(Effect.mapError(gitFailure(request)));
 });
 
+// After the merge: a merge that carries no workflow file is pushed as is. One that does can only
+// replace the branch, which is safe only while the branch holds nothing but the pin.
+const classifyMerge = Effect.fnUntraced(function* (request: CiBinaryPinSyncRequest, before: string, pin: CiBinaryPin) {
+  const git = yield* Git;
+  const workflows = yield* git
+    .changedFiles(request.cwd, { base: before, head: "HEAD", twoDot: true, pathspec: [WORKFLOWS_PATH] })
+    .pipe(Effect.mapError(gitFailure(request)));
+  if (A.isReadonlyArrayEmpty(workflows)) {
+    return syncResult("merged", O.some(pin));
+  }
+  const changed = yield* git
+    .changedFiles(request.cwd, { base: request.base, head: "HEAD", twoDot: true })
+    .pipe(Effect.mapError(gitFailure(request)));
+  const extra = A.filter(changed, (file) => file !== request.file);
+  return A.isReadonlyArrayEmpty(extra)
+    ? syncResult("supersede", O.some(pin))
+    : syncResult(
+        "blocked",
+        O.some(pin),
+        O.some(
+          `merging ${request.base} carries workflow changes (${A.join(workflows, ", ")}), which the pin-bump App cannot push, and the branch holds changes besides the pin (${A.join(extra, ", ")}), so it cannot be superseded`
+        )
+      );
+});
+
+// Merge the base in and decide; a conflict outside the pin file is `blocked` before anything commits.
+const mergeAndClassify = Effect.fnUntraced(function* (
+  request: CiBinaryPinSyncRequest,
+  before: string,
+  target: CiBinaryPin
+) {
+  const merge = yield* mergeBase(request);
+  if (A.isReadonlyArrayNonEmpty(merge.outside)) {
+    return syncResult(
+      "blocked",
+      O.some(target),
+      O.some(`merging ${request.base} conflicts outside ${request.file}: ${A.join(merge.outside, ", ")}`)
+    );
+  }
+  yield* commitResolvedPin(request, target, merge.conflicted);
+  return yield* classifyMerge(request, before, target);
+});
+
 /**
  * Merge `base` into a pin-bump branch checkout when it is behind or in conflict, never moving the pin backwards.
  *
@@ -243,10 +348,16 @@ const commitResolvedPin = Effect.fnUntraced(function* (
  * sha256) is kept. A newer release (by creation time) is kept as it is, so
  * the sync only merges main. Anything else is `stale` and nothing changes.
  * When `base` is already an ancestor of `HEAD` the result is `current`.
- * Otherwise `git pull . <base>` merges it. A conflict is resolved only in the
- * pin file: the merged file is `base`'s text with the two pinned lines set to
- * the target. A conflict in any other path fails with a `CiCommandError` and
- * nothing is committed. The checkout needs `pull.rebase=false`, a committer
+ * Otherwise `git pull . <base>` merges it, and the pin file becomes `base`'s
+ * text with the two pinned lines set to the target. A merge that carries no
+ * `.github/workflows` file is `merged` and left to push. One that does is
+ * `supersede` when the merged branch differs from `base` only in the pin
+ * file, and `blocked` otherwise; a conflict outside the pin file is
+ * `blocked` too. `supersede` and `blocked` reset the checkout to its
+ * pre-merge head, and so does every failure after the merge starts, so no
+ * conflict markers or `MERGE_HEAD` are left behind. A branch tag the release
+ * list does not hold, or one sharing its creation time with another
+ * release, fails before anything changes: its order cannot be decided. The checkout needs `pull.rebase=false`, a committer
  * identity, and enough history for a merge base.
  *
  * **Example** (Sync a branch checkout)
@@ -258,7 +369,7 @@ const commitResolvedPin = Effect.fnUntraced(function* (
  * ```
  *
  * @param request - The checkout, base ref, resolved release and release list.
- * @returns The outcome; `merged` leaves a new local head to push.
+ * @returns The decision; `merged` leaves a new local head to push.
  * @category use-cases
  * @since 0.0.0
  */
@@ -266,18 +377,37 @@ export const syncCiBinaryPinBranch = Effect.fn("Ci.syncCiBinaryPinBranch")(funct
   const git = yield* Git;
   const target = yield* resolveSyncTarget(request);
   if (O.isNone(target)) {
-    return "stale" satisfies CiBinaryPinSyncOutcome;
+    return syncResult("stale", O.none());
   }
   const containsBase = yield* git
     .isAncestor(request.cwd, request.base, "HEAD")
     .pipe(Effect.mapError(gitFailure(request)));
   if (containsBase) {
-    return "current" satisfies CiBinaryPinSyncOutcome;
+    return syncResult("current", target);
   }
-  const conflicted = yield* mergeBase(request);
-  yield* commitResolvedPin(request, target.value, conflicted);
-  return "merged" satisfies CiBinaryPinSyncOutcome;
+  const before = yield* git.revParse(request.cwd, "HEAD").pipe(Effect.mapError(gitFailure(request)));
+  // `reset --hard` to the pre-merge head also ends an unfinished merge (conflict markers, MERGE_HEAD).
+  const restore = git.reset(request.cwd, { mode: "hard", ref: before }).pipe(Effect.mapError(gitFailure(request)));
+  const result = yield* mergeAndClassify(request, before, target.value).pipe(
+    Effect.onError(() => Effect.ignore(restore))
+  );
+  if (result.outcome !== "merged") {
+    yield* restore;
+  }
+  return result;
 });
+
+// `key=value` lines for the workflow step; the pin is the one a superseding pull request carries.
+const renderSyncOutput = (result: CiBinaryPinSyncResult): string =>
+  A.join(
+    [
+      `outcome=${result.outcome}`,
+      ...O.match(result.pin, { onNone: () => [], onSome: (pin) => [`tag=${pin.tag}`, `sha256=${pin.sha256}`] }),
+      ...O.match(result.reason, { onNone: () => [], onSome: (reason) => [`reason=${reason}`] }),
+      "",
+    ],
+    "\n"
+  );
 
 const runBinaryPinSync = Effect.fn("Ci.binaryPinSync")(function* (options: {
   readonly tag: string;
@@ -297,17 +427,17 @@ const runBinaryPinSync = Effect.fn("Ci.binaryPinSync")(function* (options: {
       S.is(CiCommandError)(error) ? error : CiCommandError.make({ message: `Invalid release list: ${error.message}` })
     )
   );
-  const outcome = yield* syncCiBinaryPinBranch(
+  const result = yield* syncCiBinaryPinBranch(
     CiBinaryPinSyncRequest.make({ cwd: options.cwd, base: options.base, pin, releases, file: options.file })
   );
   yield* O.match(options.output, {
     onNone: () => Effect.void,
     onSome: (output) =>
       fs
-        .writeFileString(output, `outcome=${outcome}\n`, { flag: "a" })
+        .writeFileString(output, renderSyncOutput(result), { flag: "a" })
         .pipe(Effect.mapError(CiCommandError.new(`Failed to write ${output}.`))),
   });
-  yield* Console.log(`${options.cwd}: pin-bump branch sync against ${options.base}: ${outcome}.`);
+  yield* Console.log(`${options.cwd}: pin-bump branch sync against ${options.base}: ${result.outcome}.`);
 });
 
 /**
@@ -315,9 +445,11 @@ const runBinaryPinSync = Effect.fn("Ci.binaryPinSync")(function* (options: {
  *
  * **Details**
  *
- * Runs {@link syncCiBinaryPinBranch} and appends `outcome=<stale|current|merged>`
- * to `--output` (the step's `$GITHUB_OUTPUT` style file) when given. It never
- * pushes; the workflow pushes a `merged` head with the pin-bump App token.
+ * Runs {@link syncCiBinaryPinBranch} and appends `outcome=<...>`, the kept
+ * pin (`tag=`, `sha256=`) and a blocked `reason=` to `--output` (a
+ * `$GITHUB_OUTPUT` style file) when given. It never pushes: the workflow
+ * pushes a `merged` head with the pin-bump App token, and supersedes or
+ * reports the other outcomes.
  *
  * **Example** (Register the command)
  *
@@ -346,7 +478,7 @@ export const ciBinaryPinSyncCommand = Command.make(
     ),
     output: Flag.String("output").pipe(
       Flag.optional,
-      Flag.withDescription("File to append outcome=<stale|current|merged> to")
+      Flag.withDescription("File to append outcome=, tag=, sha256= and reason= lines to")
     ),
   },
   (options) => runBinaryPinSync(options).pipe(Effect.catchTag("CiCommandError", reportCiCommandError))
