@@ -2693,8 +2693,18 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           readonly releases?: string;
         } = {}
       ) {
-        const newest = options.newest ?? { tag: newTag, sha: newSha };
-        const failing = options.failing ?? "none";
+        // One defaults object instead of a fallback per option keeps this helper's branch count flat.
+        const settings = {
+          newest: { tag: newTag, sha: newSha },
+          failing: "none",
+          liveMain: mainPin,
+          sync: "stale",
+          syncTag: "",
+          syncReason: "",
+          releases: "",
+          ...options,
+        };
+        const { newest, failing } = settings;
         const directory = yield* fs.makeTempDirectoryScoped();
         const work = yield* fs.realPath(directory);
         const repo = `${work}/repo`;
@@ -2704,7 +2714,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         yield* fs.writeFileString(`${repo}/.github/actions/fetch-beep-ci/action.yml`, mainPin);
         if (O.isSome(branchPin)) yield* fs.writeFileString(`${work}/branch-action.yml`, branchPin.value);
         // Live main pins what the checkout pins unless a case says main has moved since.
-        yield* fs.writeFileString(`${work}/main-action.yml`, options.liveMain ?? mainPin);
+        yield* fs.writeFileString(`${work}/main-action.yml`, settings.liveMain);
         yield* fs.writeFileString(
           `${stubs}/gh`,
           A.join(
@@ -2795,10 +2805,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           FAILING: failing,
           DEFAULT_BRANCH: "main",
           MAIN_PIN_FILE: `${work}/main-action.yml`,
-          SYNC_OUTCOME: options.sync ?? "stale",
-          SYNC_TAG: options.syncTag ?? "",
-          SYNC_REASON: options.syncReason ?? "",
-          RELEASES_JSON: options.releases ?? "",
+          SYNC_OUTCOME: settings.sync,
+          SYNC_TAG: settings.syncTag,
+          SYNC_REASON: settings.syncReason,
+          RELEASES_JSON: settings.releases,
         });
         if (failing === "none") expect(run).toEqual({ status: 0, stderr: "" });
         const summary = yield* fs.readFileString(summaryPath);
