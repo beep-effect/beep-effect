@@ -6,6 +6,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -16,8 +17,24 @@ import * as Str from "effect/String";
 // Handler-reachable modules take their composer from a package-local leaf instead; this test
 // builds every handler entry the stack deploys, as Alchemy does, and fails if the registry is back.
 
-const REGISTRY_SOURCE = "foundation/modeling/identity/src/packages.ts";
-const IDENTITY_CORE_SOURCE = "foundation/modeling/identity/src/Id.ts";
+const IDENTITY_SOURCE_PREFIX = "foundation/modeling/identity/src/";
+const IDENTITY_CORE_SOURCE = "Id.ts";
+// The only @beep/identity sources a handler's map may embed: the identity core, the registry-free
+// root and the schema statics they load. The registry, the barrel or any other identity module in a
+// map would change every function's code hash whenever an unrelated package is registered.
+const ALLOWED_IDENTITY_SOURCES = ["Id.ts", "Root.ts", "internal/schemaStatics.ts"];
+
+// Each source-map source under @beep/identity's src, as a path relative to that directory.
+const identitySources = (sources: ReadonlyArray<string>): ReadonlyArray<string> =>
+  A.sort(
+    A.dedupe(
+      A.filterMap(sources, (source) => {
+        const at = source.lastIndexOf(IDENTITY_SOURCE_PREFIX);
+        return at < 0 ? Result.failVoid : Result.succeed(source.slice(at + IDENTITY_SOURCE_PREFIX.length));
+      })
+    ),
+    Str.Order
+  );
 
 // The handler entries the stack deploys: `RunnerFleet` (the library) points its Lambda functions at
 // `internal/lambda/<entry>` and `Reaper` points the reaper at this package's own handler.
@@ -136,7 +153,7 @@ it.layer(BunServices.layer, { timeout: "240 seconds" })((it) => {
       })
     );
 
-    it.effect("never embed the identity registry in a handler's source map", () =>
+    it.effect("embed no identity module in a handler's source map but the core, the root and its statics", () =>
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const libraryDirectory = path.resolve(
@@ -160,16 +177,19 @@ it.layer(BunServices.layer, { timeout: "240 seconds" })((it) => {
         const report = yield* Effect.forEach(
           mains,
           (main) =>
-            Effect.map(bundleSources(main), (sources) => ({
-              entry: path.basename(main),
-              loadsIdentityCore: A.some(sources, Str.endsWith(IDENTITY_CORE_SOURCE)),
-              registry: A.filter(sources, Str.endsWith(REGISTRY_SOURCE)),
-            })),
+            Effect.map(bundleSources(main), (sources) => {
+              const identity = identitySources(sources);
+              return {
+                entry: path.basename(main),
+                loadsIdentityCore: A.contains(identity, IDENTITY_CORE_SOURCE),
+                outsideAllowed: A.filter(identity, (source) => !A.contains(ALLOWED_IDENTITY_SOURCES, source)),
+              };
+            }),
           { concurrency: 1 }
         );
 
         expect(report).toStrictEqual(
-          A.map(mains, (main) => ({ entry: path.basename(main), loadsIdentityCore: true, registry: [] }))
+          A.map(mains, (main) => ({ entry: path.basename(main), loadsIdentityCore: true, outsideAllowed: [] }))
         );
       })
     );
