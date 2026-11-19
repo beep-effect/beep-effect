@@ -2615,7 +2615,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         expect(push).not.toMatch(forced);
       }
       // The success line is written by the push step itself, after the push.
-      expect(push.indexOf("pushed main merged into")).toBeGreaterThan(push.indexOf("HEAD:refs/heads/${PIN_BRANCH}"));
+      expect(push).toMatch(/HEAD:refs\/heads\/\$\{PIN_BRANCH\}"[\s\S]*pushed main merged into/u);
       expect(rewrite).not.toContain("pushed without force");
       // Supersede deletes the branch only while it still points at the head the sync checked, and labels
       // the pull request `superseded` first; a report is posted once per branch head.
@@ -2628,7 +2628,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       ]) {
         expect(settle).toContain(fragment);
       }
-      expect(settle.indexOf("labels[]=superseded")).toBeLessThan(settle.indexOf("-X DELETE"));
+      expect(settle).toMatch(/labels\[\]=superseded[\s\S]*-X DELETE/u);
       expect(secretReaders).toEqual(["publish/Create pin-bump App token"]);
     })
   );
@@ -3033,7 +3033,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
       const head = "0123456789abcdef0123456789abcdef0badbeef";
       const runSettle = Effect.fnUntraced(function* (env: Readonly<Record<string, string>>) {
-        const work = yield* fs.realPath(yield* fs.makeTempDirectoryScoped());
+        const scratch = yield* fs.makeTempDirectoryScoped();
+        const work = yield* fs.realPath(scratch);
         yield* fs.makeDirectory(`${work}/bin`);
         yield* fs.writeFileString(
           `${work}/bin/gh`,

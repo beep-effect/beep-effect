@@ -3,6 +3,7 @@ import { BeepCiRelease, ciBinaryPinSyncCommand } from "@beep/repo-cli/commands/C
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
 import { afterAll, beforeAll, describe, expect, layer, vi } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -339,6 +340,46 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
         const failure = yield* Effect.flip(sync(repo));
         const after = yield* head(repo.root);
         expect(`${failure}`).toContain("shares its creation time");
+        expect(after).toBe(repo.before);
+      })
+    );
+
+    it.effect("without --output it only logs the outcome", () =>
+      Effect.gen(function* () {
+        const repo = yield* fixture(NEW, O.none());
+        yield* runSync([
+          "--cwd",
+          repo.root,
+          "--base",
+          "main",
+          "--tag",
+          NEW.tag,
+          "--sha256",
+          NEW.sha256,
+          "--releases",
+          repo.releases,
+        ]);
+        const lines = yield* TestConsole.logLines;
+        expect(lines).toStrictEqual([`${repo.root}: pin-bump branch sync against main: current.`]);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect.each([
+      ["a missing release list", O.none<string>(), "Failed to read"],
+      ["an invalid release list", O.some('[{"tagName": 1}]'), "Invalid release list"],
+    ] as const)("refuses %s and changes nothing", ([, text, message]) =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repo = yield* fixture(NEW, O.some(unrelated));
+        const releases = `${repo.releases}.broken`;
+        if (O.isSome(text)) {
+          yield* fs.writeFileString(releases, text.value);
+        }
+        const failure = yield* Effect.flip(
+          runSync(["--cwd", repo.root, "--tag", NEW.tag, "--sha256", NEW.sha256, "--releases", releases])
+        );
+        const after = yield* head(repo.root);
+        expect(`${failure}`).toContain(message);
         expect(after).toBe(repo.before);
       })
     );

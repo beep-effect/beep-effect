@@ -185,9 +185,10 @@ const orderedAt = Effect.fnUntraced(function* (releases: ReadonlyArray<BeepCiRel
   return at.value;
 });
 
-// `git status` porcelain codes for an unmerged path: either side `U`, or both added / both deleted.
+// The `git status` porcelain XY codes of an unmerged path (git-status(1), "Unmerged").
+const isUnmergedCode = S.is(S.Literals(["DD", "AU", "UD", "UA", "DU", "AA", "UU"]));
 const isUnmerged = (entry: { readonly x: string; readonly y: string }): boolean =>
-  entry.x === "U" || entry.y === "U" || (entry.x === entry.y && (entry.x === "A" || entry.x === "D"));
+  isUnmergedCode(`${entry.x}${entry.y}`);
 
 /**
  * The inputs of one pin-bump branch sync.
