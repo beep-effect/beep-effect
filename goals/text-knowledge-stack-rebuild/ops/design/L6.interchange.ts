@@ -242,17 +242,18 @@ export const mintImportedActivityId = Effect.fn("ImportedActivity.mint")(functio
   return ActivityId.make(hash);
 });
 
-/**
- * The result of decoding third-party OA input over a caller's document
- * schema: the document, the imported activities, the import activity, and
- * the residual dataset holding every triple outside the profile.
- */
+/** The fields the OA import result and the OA encoder input share. */
 const oaDocumentFields = <Document extends S.Top>(document: Document) => ({
   document,
   importedActivities: S.HashMap(ActivityId, ImportedActivity),
   importActivity: ImportActivity,
 });
 
+/**
+ * The result of decoding third-party OA input over a caller's document
+ * schema: the document, the imported activities, the import activity, and
+ * the residual dataset holding every triple outside the profile.
+ */
 export const makeOaImport = <Document extends S.Top>(document: Document) =>
   S.Struct({ ...oaDocumentFields(document), residual: Dataset });
 
