@@ -113,6 +113,10 @@ export class MachineState extends S.Opaque<MachineState, { readonly brand: uniqu
       S.withConstructorDefault(Effect.succeed(0))
     ),
     emitted: point.pipe(S.annotateKey({ description: "Records emitted" }), S.withConstructorDefault(Effect.succeed(0))),
+    cellsEmitted: point.pipe(
+      S.annotateKey({ description: "Cells in the records emitted, padding included, at most the cells cap" }),
+      S.withConstructorDefault(Effect.succeed(0))
+    ),
     width: S.Option(CsvIndex).pipe(
       S.annotateKey({ description: "Cells in the first record" }),
       S.withConstructorDefault(Effect.succeedNone)
@@ -230,8 +234,18 @@ export class Machine {
     const text = chunk.length > room ? Str.slice(0, room)(chunk) : chunk;
     let i = 0;
     while (i < text.length && !this.s.stopped) i = nextStep(this)(this, text, i);
-    if (text.length < chunk.length && !this.s.stopped) this.limit("textLength", maxTextLength, this.here(0));
+    if (text.length < chunk.length && !this.s.stopped) this.passTextCap(chunk[text.length]);
     return this;
+  }
+
+  /**
+   * Fails the read at the first unit past the text-length cap. A record held at a carriage return inside the cap
+   * ends there unless that unit is the line feed that would join it, so it is emitted first, as a line feed's
+   * record is; a CRLF whose line feed is past the cap is not read.
+   */
+  private passTextCap(next: string | undefined): void {
+    if (this.s.held && next !== "\n") this.releaseHeld(false);
+    if (!this.s.stopped) this.limit("textLength", this.config.limits.maxTextLength, this.here(0));
   }
 
   /** Ends the input: flushes the last record, and notes how many warnings went past the cap. */
@@ -386,9 +400,9 @@ export class Machine {
     this.s.record += 1;
     this.noteTerminator(end, span);
     if (this.skipsBlank(cells) || !A.isArrayNonEmpty(cells)) return;
-    const row = this.fitWidth(cells, record, span);
+    const width = this.fitWidth(cells, record, span);
     if (this.s.stopped) return;
-    this.emit({ cells: row, record, span, end });
+    this.emit({ cells, record, span, end }, width);
   }
 
   /** Finishes the record's last field before the record is emitted. */
@@ -424,18 +438,21 @@ export class Machine {
     return this.config.blankLines === "skip" && cells.length === 1 && cells[0] === "" && !this.s.lastQuoted;
   }
 
-  /** The record's cells held to the first record's width: the first record sets it, a ragged one is judged. */
-  private fitWidth(cells: CsvRecord, record: number, span: Completed["span"]): CsvRecord {
+  /**
+   * How many cells the record is emitted with: the first record sets the width, a ragged one is judged, and a short
+   * one is padded to the width when the read pads.
+   */
+  private fitWidth(cells: CsvRecord, record: number, span: Completed["span"]): number {
     return O.match(this.s.width, {
       onNone: () => {
         this.s.width = O.some(cells.length);
-        return cells;
+        return cells.length;
       },
-      onSome: (width) => (cells.length === width ? cells : this.judgeWidth(cells, width, record, span)),
+      onSome: (width) => (cells.length === width ? width : this.judgeWidth(cells, width, record, span)),
     });
   }
 
-  private judgeWidth(cells: CsvRecord, width: number, record: number, span: Completed["span"]): CsvRecord {
+  private judgeWidth(cells: CsvRecord, width: number, record: number, span: Completed["span"]): number {
     if (this.config.ragged === "reject" || this.keepWarning())
       this.report(
         judgeRagged(
@@ -443,20 +460,32 @@ export class Machine {
           RaggedRecord.make({ at: CsvTextSpan.make(span, built), record, expected: width, actual: cells.length })
         )
       );
-    return this.config.ragged === "pad" && cells.length < width
-      ? A.appendAll(cells, A.replicate("", width - cells.length))
-      : cells;
+    return this.config.ragged === "pad" ? Num.max(width, cells.length) : cells.length;
   }
 
-  /** Hands over a completed record, or fails the read when it is one past the record cap. */
-  private emit(completed: Completed): void {
+  /** Fails the read, and says so, when the record is one past the record cap or its cells would pass the cells cap. */
+  private passesCountCap(completed: Completed, width: number): boolean {
+    const { maxCells, maxRecords } = this.config.limits;
+    if (this.s.emitted > maxRecords) this.limit("records", maxRecords, CsvTextSpan.make(completed.span, built));
+    else if (this.s.cellsEmitted + width > maxCells)
+      this.limit("cells", maxCells, CsvTextSpan.make(completed.span, built));
+    return this.s.stopped;
+  }
+
+  /**
+   * Hands over a completed record with `width` cells, padded when it has fewer, or fails the read when it is one
+   * past the record cap or its cells would pass the cells cap. The caps are checked before the record is padded.
+   */
+  private emit(completed: Completed, width: number): void {
     this.s.emitted += 1;
-    const { maxRecords } = this.config.limits;
-    if (this.s.emitted > maxRecords) {
-      this.limit("records", maxRecords, CsvTextSpan.make(completed.span, built));
-      return;
-    }
-    this.records.push(completed);
+    if (this.passesCountCap(completed, width)) return;
+    this.s.cellsEmitted += width;
+    const { cells } = completed;
+    this.records.push(
+      width > cells.length
+        ? { ...completed, cells: A.appendAll(cells, A.replicate("", width - cells.length)) }
+        : completed
+    );
   }
 
   startRecordIfNeeded(): void {

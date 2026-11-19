@@ -9,7 +9,7 @@ import {
   StrayQuote,
   TextAfterClosingQuote,
 } from "@beep/csv/CsvDiagnostic.schema";
-import { CsvReadOptions } from "@beep/csv/CsvOptions.schema";
+import { CsvLimits, CsvReadOptions } from "@beep/csv/CsvOptions.schema";
 import { CsvTextSpan } from "@beep/csv/CsvPosition.schema";
 import {
   CsvClean,
@@ -19,10 +19,11 @@ import {
   CsvRead,
 } from "@beep/csv/CsvRead.schema";
 import { describe, it } from "@effect/vitest";
-import { assertFailure, assertSuccess } from "@effect/vitest/utils";
+import { assertFailure, assertSome, assertSuccess, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Result from "effect/Result";
-import { fatalFindings, outcomeOfRead, readWith, readWithRules } from "./support.ts";
+import * as S from "effect/Schema";
+import { fatalFindings, messyText, outcomeOfRead, readWith, readWithRules } from "./support.ts";
 import type { CsvWarningFinding } from "@beep/csv/CsvDiagnostic.schema";
 
 const at = (offset: number, length: number, line: number, character: number) =>
@@ -59,6 +60,17 @@ describe("line breaks", () => {
       readOf("a\r\nb\nc\r\nd\n"),
       read([["a"], ["b"], ["c"], ["d"]], [MixedTerminators.make({ at: at(3, 2, 1, 0), first: "CRLF", other: "LF" })])
     );
+  });
+
+  it("a span located between the CR and LF of a CRLF is at the start of the next line, as the machine counts", () => {
+    assertSuccess(Result.succeed(CsvTextSpan.locate("a\r\nb", 2, 1)), at(2, 1, 1, 0));
+    assertSuccess(Result.succeed(CsvTextSpan.locate("a,b\r\nc", 5, 1)), at(5, 1, 1, 0));
+  });
+
+  it.prop("a span located at any offset of any text is a valid span", [messyText], ([text]) => {
+    for (let offset = 0; offset <= text.length; offset += 1) {
+      assertTrue(S.is(CsvTextSpan)(CsvTextSpan.locate(text, offset, 0)));
+    }
   });
 
   it("a line break inside quotes is cell text", () => {
@@ -161,6 +173,18 @@ describe("delimiters", () => {
     assertSuccess(
       Result.map(Csv.parseResult("abc\ndef\n"), (done) => done.delimiter),
       CsvDelimiterFallback.make({})
+    );
+  });
+
+  it("a cap does not change the detected delimiter: the read fails at the cap instead", () => {
+    const options = CsvReadOptions.make({ limits: CsvLimits.make({ maxFieldsPerRecord: 2 }) });
+    assertSome(Csv.sniff("a;b;c\nd;e;f\n", options), ";");
+    assertFailure(
+      Result.mapError(
+        findingsOf("a;b;c\nd;e;f\n", options),
+        A.map((finding) => finding.kind)
+      ),
+      ["LimitExceeded"]
     );
   });
 

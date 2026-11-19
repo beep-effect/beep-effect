@@ -39,8 +39,9 @@ Csv.stringify(read.table); // canonical: commas, CRLF, minimal quoting
 
 ## What it trusts and what it does not
 
-- Input is untrusted. Every cap (`CsvLimits`: records, cells per record, cell
-  and record length, text length, input bytes) ends a read as a typed `CsvParseError` with
+- Input is untrusted. Every cap (`CsvLimits`: records, cells per record,
+  cells in all with padding counted, cell and record length, text length,
+  input bytes) ends a read as a typed `CsvParseError` with
   the finding and its position, never as a defect or a stack overflow. The
   byte cap bounds byte input, streams included (a channel fails as soon as its
   running count passes it); text input is bounded by the text caps, and
@@ -48,7 +49,9 @@ Csv.stringify(read.table); // canonical: commas, CRLF, minimal quoting
   text of any read, a stream's included, so every reported position is valid. A lenient
   read keeps at most `maxWarnings` warnings (1,000 by default) and counts the
   rest in one closing `WarningsTruncated`, so a hostile file cannot fill
-  memory with them. A read costs time linear in its input, however it is cut
+  memory with them, and `maxCells` (100,000,000 by default) bounds what
+  `ragged: "pad"` makes out of no text. The caps never change the detected
+  delimiter: a read under them fails at the cap it passes. A read costs time linear in its input, however it is cut
   into chunks; a stream holds at most its detect window (64 KiB by default,
   256 MiB at most) and its delimiter-detection window before it reads on.
 - Bytes are decoded by their byte-order mark, else as UTF-8 when valid, else
@@ -76,15 +79,16 @@ Csv.stringify(read.table); // canonical: commas, CRLF, minimal quoting
 - Chunk invariance: reading in pieces, or through a channel split anywhere
   (inside a BOM, a `sep=` line, a UTF-8 sequence or a CRLF), gives what
   reading at once gives, findings and their positions included. Two exceptions,
-  both in a byte channel. A detected encoding settles once the bytes held pass
-  `CsvDetectEncoding.window` by more than three, so a later byte that breaks
-  UTF-8 fails the channel with `InvalidUtf8`, where the whole read falls back
-  to Windows-1252; input that ends within the window, or at most three bytes
-  past it, reads the same both ways.
-  And a channel reports the first fatal finding in input order, where a whole
-  read checks the byte cap and the encoding before it parses: bytes past a
-  passed text cap that the encoding or the byte cap refuses fail the two
-  differently. An upstream failure passes through a channel unchanged, with
+  both in a byte channel. A detected encoding settles on the first
+  `CsvDetectEncoding.window` bytes (and the three after them, only to finish
+  a UTF-8 sequence that starts inside the window), however the input is cut,
+  so a later byte that breaks UTF-8 fails the channel with `InvalidUtf8`,
+  where the whole read falls back to Windows-1252; input that ends within the
+  window, or at most three bytes past it, reads the same both ways.
+  And a channel reports the first fatal finding in input order, after the
+  records before it, however the input is cut, where a whole read checks the
+  byte cap and the encoding before it parses: bytes past a passed text cap
+  that the encoding or the byte cap refuses fail the two differently. An upstream failure passes through a channel unchanged, with
   nothing flushed before it.
 - Strict mode agrees with Effect's `effect/encoding/Csv`: on RFC 4180 text both
   read the same records, on misplaced quotes both refuse, and each reads the
@@ -108,8 +112,9 @@ bun run beep:test
 `test/Csv.property.test.ts` holds the round-trip and chunk-invariance laws
 (every channel fed one piece per batch, under fixed, detected, `sep=` and
 tight-cap reads), `test/oracle.property.test.ts` the agreement with
-`effect/encoding/Csv`, `test/CsvSchemas.property.test.ts` that every exported
-schema (and the machine's state) generates only values it accepts,
+`effect/encoding/Csv`, `test/CsvSchemas.property.test.ts` that the root
+schemas (whose fields hold every other exported one), the header row and the
+engine's schemas generate only values they accept,
 `test/brands.test.ts` that Opaque-typed fields keep their nominal types,
 `test/encoding.test.ts` byte decoding, the byte cap and failing upstreams, `test/header.test.ts`
 the header view, `test/lenient.test.ts` the findings a lenient read reports and

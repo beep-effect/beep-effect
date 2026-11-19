@@ -265,6 +265,7 @@ export class DuplicateHeader extends S.Opaque<DuplicateHeader, { readonly brand:
 export const CsvTextLimit = LiteralKit([
   "records",
   "fieldsPerRecord",
+  "cells",
   "fieldLength",
   "recordLength",
   "textLength",

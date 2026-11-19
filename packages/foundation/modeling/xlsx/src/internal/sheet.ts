@@ -42,7 +42,7 @@ import { maxSerial, XlsxCalendar } from "../XlsxSerial.schema.ts";
 import { XlsxHiddenColumns, XlsxMerges } from "../XlsxWorkbook.schema.ts";
 import { stop } from "./container.ts";
 import { shifted } from "./formula.ts";
-import { isTrue, localName, unescaped } from "./ooxml.ts";
+import { isTrue, localName, longerThan, unescaped } from "./ooxml.ts";
 import { detached, isXmlSafe } from "./text.ts";
 import { StyleFormat, styleOf } from "./workbookPart.ts";
 import type { XlsxValue } from "../XlsxCell.schema.ts";
@@ -96,6 +96,8 @@ const numberText = /^[+-]?(?:\d+\.?\d*|\.\d+)(?:[eE][+-]?\d+)?$/;
 const isoDate = /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(\.\d+)?)?Z?)?$/;
 /** A style index as a cell may write one: digits only, nine at most, so it is read exactly and names a style or none. */
 const styleIndex = /^\d{1,9}$/;
+/** A shared text index as a cell may write one: digits only, so no other text (`0x1`, `1e0`, nothing) names an entry. */
+const sharedIndex = /^\d{1,15}$/;
 const general = StyleFormat.general;
 const shortDate: StyleFormat = styleOf(XlsxNumberFormat.shortDate);
 const blank = XlsxBlank.make({});
@@ -228,7 +230,10 @@ export class SheetReader {
   private rowsWithValues = 0;
   private cellsWithValues = 0;
   private lastRowWithValues = 0;
+  /** The highest row number seen, which tells a row written out of order. */
   private previousRow = 0;
+  /** The number of the row written last, which a row that names none follows. */
+  private precedingRow = 0;
   private unordered = false;
   private firstColumn = Number.MAX_SAFE_INTEGER;
   private lastColumn = -1;
@@ -239,7 +244,10 @@ export class SheetReader {
   private rowHidden = false;
   private cells: Array<CellInput> = [];
   private cellsSorted = true;
+  /** The highest column kept in the row, which tells a cell written out of order. */
   private lastCellColumn = -1;
+  /** The column of the cell written last in the row, blank or not, which a cell that names none follows. */
+  private precedingColumn = -1;
   private held = 0;
 
   private inCell = false;
@@ -450,9 +458,9 @@ export class SheetReader {
     this.targetDepth = this.depth;
   }
 
-  /** The row a `<row>` names, or the one after the last when it names none it can read. */
+  /** The row a `<row>` names, or the one after the row written before it when it names none it can read. */
   private rowNumberOf(written: string | undefined): number {
-    const next = this.previousRow + 1;
+    const next = this.precedingRow + 1;
     if (written === undefined) return next;
     const parsed = Number(written);
     if (Number.isInteger(parsed) && parsed >= 1) return parsed;
@@ -462,6 +470,7 @@ export class SheetReader {
 
   private startRow(attributes: Readonly<Record<string, string>>): void {
     const number = this.rowNumberOf(attributes.r);
+    this.precedingRow = number;
     this.rowCount += 1;
     if (number > MAX_ROW || this.rowCount > this.caps.rows) {
       this.fail("rows");
@@ -477,6 +486,7 @@ export class SheetReader {
     this.cells = [];
     this.cellsSorted = true;
     this.lastCellColumn = -1;
+    this.precedingColumn = -1;
     this.held = 0;
     this.budget.nextRow();
   }
@@ -494,9 +504,9 @@ export class SheetReader {
     return [{ number: this.rowNumber, hidden: this.rowHidden, cells: this.cells }];
   }
 
-  /** The column a `<c>` names, or the one after the last when it names none it can read. */
+  /** The column a `<c>` names, or the one after the cell written before it when it names none it can read. */
   private cellColumnOf(written: string | undefined): number {
-    const next = this.lastCellColumn + 1;
+    const next = this.precedingColumn + 1;
     if (written === undefined) return next;
     const parsed = columnOf(written);
     if (parsed >= 0) return parsed;
@@ -507,6 +517,7 @@ export class SheetReader {
   private startCell(attributes: Readonly<Record<string, string>>): void {
     const written = attributes.r;
     const column = this.cellColumnOf(written);
+    this.precedingColumn = column;
     if (column >= this.caps.columns) {
       this.fail("columns");
       return;
@@ -548,7 +559,7 @@ export class SheetReader {
     if (O.isSome(this.failed)) return;
     const style = this.styleFormat(address);
     const raw = this.hasInline ? this.inlineText : this.valueText;
-    if (raw.length > this.caps.cellChars) {
+    if (longerThan(raw, this.caps.cellChars)) {
       this.fail("cellChars");
       return;
     }
@@ -621,8 +632,8 @@ export class SheetReader {
   }
 
   private sharedString(raw: string, unreadable: Unreadable): XlsxValue {
-    const index = Number(Str.trim(raw));
-    const shared = Number.isInteger(index) && index >= 0 ? this.strings[index] : undefined;
+    const written = Str.trim(raw);
+    const shared = sharedIndex.test(written) ? this.strings[Number(written)] : undefined;
     return shared === undefined ? unreadable("sharedString") : textValue(shared);
   }
 

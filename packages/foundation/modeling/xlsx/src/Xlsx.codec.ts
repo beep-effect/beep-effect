@@ -34,7 +34,13 @@ import { MAX_COLUMN, MAX_ROW } from "./XlsxAddress.schema.ts";
 import { XlsxBlank, XlsxCell, XlsxNumberFormat, XlsxText } from "./XlsxCell.schema.ts";
 import { MissingPart } from "./XlsxDiagnostic.schema.ts";
 import { XlsxParseError, XlsxStringifyError } from "./XlsxError.errors.ts";
-import { XlsxCodecOptions, XlsxReadOptions, XlsxSheetChoice, XlsxWriteOptions } from "./XlsxOptions.schema.ts";
+import {
+  XlsxCodecOptions,
+  XlsxNamedSheets,
+  XlsxReadOptions,
+  XlsxSheetChoice,
+  XlsxWriteOptions,
+} from "./XlsxOptions.schema.ts";
 import { XlsxOutline, XlsxRead, XlsxSheetOutline } from "./XlsxRead.schema.ts";
 import {
   XlsxRecord,
@@ -190,6 +196,13 @@ const readWorkbook = Effect.fnUntraced(function* (bytes: Uint8Array, options: Xl
 
 const parseError = (fatal: XlsxFatal): XlsxParseError => XlsxParseError.make({ fatal });
 
+/**
+ * Read options that read the one sheet a records codec names, under the caps given. A codec's records come from
+ * its sheet's rows, which a choice of other sheets would leave unread, so the choice in `read.sheets` is not used.
+ */
+const onlySheet = (read: XlsxReadOptions, sheet: XlsxSheetName): XlsxReadOptions =>
+  XlsxReadOptions.make({ limits: read.limits, sheets: XlsxNamedSheets.make({ names: [sheet] }) });
+
 const issue = (error: { readonly message: string }, actual: unknown): SchemaIssue.Issue =>
   new SchemaIssue.InvalidValue({ message: error.message }, actual);
 
@@ -285,19 +298,45 @@ const recordOf = (
   );
 
 /**
+ * The headings of a header row, if the records under them hold no more values than `maxRecordValues`: one per
+ * heading per row below it, a blank where a row lacks a heading's cell. Counted before any record is built.
+ */
+const withinRecordValues = (
+  headings: Headings,
+  sheet: XlsxWorksheet,
+  input: { readonly bytes: Uint8Array; readonly maxRecordValues: number }
+): Result.Result<Headings, SchemaIssue.Issue> => {
+  const values = headings.inOrder.length * (sheet.rows.length - 1);
+  return values > input.maxRecordValues
+    ? Result.fail(
+        issue(
+          {
+            message: `the records of "${sheet.info.name}" would hold ${values} values, more than the ${input.maxRecordValues} of maxRecordValues`,
+          },
+          input.bytes
+        )
+      )
+    : Result.succeed(headings);
+};
+
+/**
  * A sheet's rows under the headings of its first row. A heading that is empty, missing or used twice stops the
  * read: a heading that is not text, a heading written twice, and a cell with a value in a column whose heading cell
- * the header row lacks, which would otherwise be read past without a word.
+ * the header row lacks, which would otherwise be read past without a word. So do records that would hold more values
+ * than `maxRecordValues`.
  */
 const toRecords = (
   sheet: XlsxWorksheet,
-  bytes: Uint8Array
+  input: { readonly bytes: Uint8Array; readonly maxRecordValues: number }
 ): Result.Result<ReadonlyArray<XlsxRecord>, SchemaIssue.Issue> =>
   O.match(A.head(sheet.rows), {
     onNone: () => Result.succeed([]),
     onSome: (header) =>
-      Result.flatMap(headingsOf(header, sheet.info.name, bytes), (headings) =>
-        Result.all(A.map(A.drop(sheet.rows, 1), (row) => recordOf(row, headings, sheet.info.name, bytes)))
+      headingsOf(header, sheet.info.name, input.bytes).pipe(
+        Result.flatMap((headings) => withinRecordValues(headings, sheet, input)),
+        Result.flatMap((headings) =>
+          Result.all(A.map(A.drop(sheet.rows, 1), (row) => recordOf(row, headings, sheet.info.name, input.bytes)))
+        )
       ),
   });
 
@@ -618,7 +657,9 @@ export class Xlsx {
   /**
    * One sheet as records under the headings of its first row, each heading an own property and each value what the
    * cell holds. Writing puts the records on one sheet of that name. A header row with a heading that is not text or
-   * is used twice, or a cell with a value in a column the header row has no heading for, fails the decode.
+   * is used twice, or a cell with a value in a column the header row has no heading for, fails the decode, as do
+   * records that would hold more values than `read.limits.maxRecordValues`, blanks included. The named sheet is the
+   * one read, whatever `read.sheets` chooses; a sheet that holds no rows gives no records.
    */
   static recordsFromBytes(
     input: { readonly sheet: XlsxSheetName; readonly header: "first" },
@@ -630,11 +671,16 @@ export class Xlsx {
         SchemaTransformation.transformEffect({
           decode: (bytes: Uint8Array) =>
             Effect.flatMap(
-              Effect.mapError(readWorkbook(bytes, options.read), (fatal) => issue(parseError(fatal), bytes)),
+              Effect.mapError(readWorkbook(bytes, onlySheet(options.read, input.sheet)), (fatal) =>
+                issue(parseError(fatal), bytes)
+              ),
               (read) =>
                 O.match(XlsxWorkbook.sheet(read.workbook, input.sheet), {
                   onNone: () => Effect.fail(issue({ message: `the workbook has no sheet ${input.sheet}` }, bytes)),
-                  onSome: (sheet) => Effect.fromResult(toRecords(sheet, bytes)),
+                  onSome: (sheet) =>
+                    Effect.fromResult(
+                      toRecords(sheet, { bytes, maxRecordValues: options.read.limits.maxRecordValues })
+                    ),
                 })
             ),
           encode: (records: ReadonlyArray<XlsxRecord>) =>

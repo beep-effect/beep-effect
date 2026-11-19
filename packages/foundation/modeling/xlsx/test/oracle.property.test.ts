@@ -45,6 +45,7 @@ const Value = S.Union([
   S.Struct({ kind: S.tag("error"), code: XlsxErrorCode }),
   S.Struct({ kind: S.tag("date"), day: S.Int.check(S.isBetween({ minimum: 1, maximum: 80_000 })) }),
   S.Struct({ kind: S.tag("formula"), hundredths: Decimal }),
+  S.Struct({ kind: S.tag("textFormula"), text: Words }),
 ]);
 const Table = S.Array(S.Array(Value).check(S.isMaxLength(8))).check(S.isMaxLength(12));
 // Each name gets its place in the workbook after it, so no two are the same.
@@ -88,6 +89,12 @@ const ours = (book: typeof Book.Type): XlsxWorkbook =>
                       column,
                       value: XlsxNumber.make({ value: cell.hundredths / 100 }),
                       formula: O.some(`${cell.hundredths}/100`),
+                    });
+                  case "textFormula":
+                    return XlsxCell.make({
+                      column,
+                      value: XlsxText.make({ text: cell.text }),
+                      formula: O.some('TRIM(" x ")'),
                     });
                 }
               }),
@@ -206,6 +213,8 @@ describe("the package reads what SheetJS writes", () => {
                   return { t: "n", v: cell.day, z: "yyyy-mm-dd" };
                 case "formula":
                   return { t: "n", v: cell.hundredths / 100, f: `${cell.hundredths}/100` };
+                case "textFormula":
+                  return { t: "s", v: cell.text, f: 'TRIM(" x ")' };
               }
             })
           );

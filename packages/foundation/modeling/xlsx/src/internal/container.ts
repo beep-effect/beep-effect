@@ -4,16 +4,17 @@
 // opens a file by, so a file could show the two readers two workbooks. Two checks close that: one part name met twice
 // is refused (`DuplicatePart`), part names compared as OPC compares them, without regard to ASCII case; and when the
 // file ends with a directory, that directory must name exactly the entries the walk read, each where the one before
-// it ends, from the first byte to the directory itself (`DirectoryMismatch`). An archive updated by appending, an
-// entry the directory leaves out and a directory that names an entry the walk never reached are all refused by the
-// second. Caps are counted as bytes are inflated, never taken from the sizes a file declares.
+// it ends, from the first byte to the directory itself, and by the name its local header gives it (`DirectoryMismatch`).
+// An archive updated by appending, an entry the directory leaves out or gives another name, and a directory that names
+// an entry the walk never reached are all refused by the second. Caps are counted as bytes are inflated, never taken
+// from the sizes a file declares, a directory entry's body included.
 import { $XlsxId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
 import * as Bytes from "effect/Bytes";
 import * as Effect from "effect/Effect";
 import * as Zip from "effect/encoding/Zip";
-import { dual } from "effect/Function";
+import { dual, identity } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
@@ -163,10 +164,25 @@ const FLAG_DESCRIPTOR = 0x0008;
 /** The lengths a data descriptor may have: with or without its signature, with 32-bit or 64-bit sizes. */
 const descriptorLengths = [12, 16, 20, 24];
 
+const FLAG_UTF8 = 0x0800;
+/** The Info-ZIP Unicode path field, which a zip reader may take an entry's name from in place of the name itself. */
+const UNICODE_PATH = 0x7075;
+
+/** A run of a file's bytes: where it starts and how long it is. */
+interface Span {
+  readonly at: number;
+  readonly length: number;
+}
+
 /** One entry as the central directory names it. */
 interface Listed {
   readonly compressed: number;
   readonly descriptor: boolean;
+  /** The extra fields of the entry's directory record. */
+  readonly extras: Span;
+  readonly flags: number;
+  /** The name the directory record gives the entry, as its bytes. */
+  readonly name: Span;
   readonly offset: number;
 }
 
@@ -214,6 +230,10 @@ class LittleEndian {
 
   private inside(at: number, width: number): boolean {
     return Number.isSafeInteger(at) && at >= 0 && at + width <= this.length;
+  }
+
+  u8(at: number): number {
+    return this.inside(at, 1) ? this.view.getUint8(at) : -1;
   }
 
   u16(at: number): number {
@@ -312,8 +332,16 @@ const entryAt = (
   }
   const { compressed, offset } = sizesOf(file, at, at + 46 + names, extras);
   if (compressed < 0 || offset < 0) return Result.fail(`the directory's entry ${ordinal} has no 64-bit size or offset`);
+  const flags = file.u16(at + 8);
   return Result.succeed({
-    listed: { compressed, descriptor: (file.u16(at + 8) & FLAG_DESCRIPTOR) !== 0, offset },
+    listed: {
+      compressed,
+      descriptor: (flags & FLAG_DESCRIPTOR) !== 0,
+      extras: { at: at + 46 + names, length: extras },
+      flags,
+      name: { at: at + 46, length: names },
+      offset,
+    },
     end,
   });
 };
@@ -361,9 +389,8 @@ const orderMismatch = (file: LittleEndian, listed: ReadonlyArray<Listed>, start:
   const sorted = A.sort(listed, byOffset);
   let expected = 0;
   for (const [n, entry] of sorted.entries()) {
-    if (entry.offset !== expected || file.u32(entry.offset) !== LOCAL) {
-      return O.some(`the directory names an entry at byte ${entry.offset}, where the walk reached ${expected}`);
-    }
+    const mismatch = entryMismatch(file, entry, expected);
+    if (O.isSome(mismatch)) return mismatch;
     expected = entryEnd(
       file,
       entry,
@@ -375,6 +402,64 @@ const orderMismatch = (file: LittleEndian, listed: ReadonlyArray<Listed>, start:
     : O.some(`the directory starts at byte ${start}, where the entries it names end at ${expected}`);
 };
 
+/** Where a listed entry and the local header the walk reached part ways: its place, or the name it is given. */
+const entryMismatch = (file: LittleEndian, entry: Listed, expected: number): O.Option<string> => {
+  if (entry.offset !== expected || file.u32(entry.offset) !== LOCAL) {
+    return O.some(`the directory names an entry at byte ${entry.offset}, where the walk reached ${expected}`);
+  }
+  return sameName(file, entry)
+    ? O.none()
+    : O.some(`the directory names the entry at byte ${entry.offset} otherwise than its local header does`);
+};
+
+/** An ASCII capital as its small letter, as OPC folds a part name; every other byte as it is. */
+const folded = (byte: number): number => (byte >= 0x41 && byte <= 0x5a ? byte + 0x20 : byte);
+
+/** Whether two runs of bytes are the same, compared through `fold`. */
+const sameBytes = (file: LittleEndian, a: Span, b: Span, fold: (byte: number) => number): boolean => {
+  if (a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i += 1) if (fold(file.u8(a.at + i)) !== fold(file.u8(b.at + i))) return false;
+  return true;
+};
+
+/** Whether a run of bytes is all ASCII, which reads the same under every name encoding a zip may use. */
+const isAscii = (file: LittleEndian, span: Span): boolean => {
+  for (let i = 0; i < span.length; i += 1) if (file.u8(span.at + i) >= 0x80) return false;
+  return true;
+};
+
+/** The Unicode path field among the extra fields of a run, its payload's span; none when the run has none. */
+const unicodePathOf = (file: LittleEndian, extras: Span): O.Option<Span> => {
+  const end = extras.at + extras.length;
+  for (let field = extras.at; field + 4 <= end; field += 4 + file.u16(field + 2)) {
+    if (file.u16(field) === UNICODE_PATH) return O.some({ at: field + 4, length: file.u16(field + 2) });
+  }
+  return O.none();
+};
+
+/**
+ * Whether the local header at a listed entry's offset gives it the name its directory record does, as OPC compares
+ * names: the same bytes without regard to ASCII case, read under the same encoding when any is not ASCII, and the
+ * same Unicode path field, or none in either, since a zip reader may take the name from that field instead.
+ */
+const sameName = (file: LittleEndian, entry: Listed): boolean => {
+  const local: Span = { at: entry.offset + 30, length: file.u16(entry.offset + 26) };
+  const localExtras: Span = { at: local.at + local.length, length: file.u16(entry.offset + 28) };
+  const encoded = (file.u16(entry.offset + 6) & FLAG_UTF8) === (entry.flags & FLAG_UTF8) || isAscii(file, local);
+  return (
+    encoded &&
+    sameBytes(file, local, entry.name, folded) &&
+    sameField(file, unicodePathOf(file, localExtras), unicodePathOf(file, entry.extras))
+  );
+};
+
+/** Whether two optional extra fields are both absent or hold the same bytes. */
+const sameField = (file: LittleEndian, a: O.Option<Span>, b: O.Option<Span>): boolean =>
+  O.match(a, {
+    onNone: () => O.isNone(b),
+    onSome: (field) => O.exists(b, (other) => sameBytes(file, field, other, identity)),
+  });
+
 /** Where a listed entry ends, its data descriptor included, given where the next entry or the directory starts. */
 const entryEnd = (file: LittleEndian, entry: Listed, next: number): number => {
   const dataEnd = entry.offset + 30 + file.u16(entry.offset + 26) + file.u16(entry.offset + 28) + entry.compressed;
@@ -383,9 +468,38 @@ const entryEnd = (file: LittleEndian, entry: Listed, next: number): number => {
 };
 
 /**
+ * One entry's body inflated to its end, each chunk counted against the cap on one part and, through `total`, on the
+ * whole archive, and held in `held` when it is given.
+ */
+const inflate = (input: {
+  readonly body: Stream.Stream<Uint8Array, Zip.ZipError>;
+  readonly path: string;
+  readonly caps: Caps;
+  readonly total: { inflated: number };
+  readonly held: O.Option<Array<Uint8Array>>;
+}): Effect.Effect<void, XlsxFatal> => {
+  const { caps, total, held } = input;
+  const exceeded = (limit: "partBytes" | "inflatedBytes") =>
+    Effect.fail(stop(LimitExceeded.make({ limit, path: Str.slice(0, 1024)(input.path) })));
+  let size = 0;
+  return input.body.pipe(
+    Stream.mapError(damaged),
+    Stream.mapEffect((chunk) => {
+      size += chunk.length;
+      total.inflated += chunk.length;
+      if (size > caps.partBytes) return exceeded("partBytes");
+      if (total.inflated > caps.inflatedBytes) return exceeded("inflatedBytes");
+      if (O.isSome(held)) held.value.push(chunk);
+      return Effect.void;
+    }),
+    Stream.runDrain
+  );
+};
+
+/**
  * The first pass: every part inflated and counted against the caps, every path checked for a repeat, the parts
  * `keep` asks for held (by their `partKey`), and the directory checked against what the pass read. A part that is
- * not kept is inflated and let go.
+ * not kept is inflated and let go, and so is the body of a directory entry, counted as a part's is.
  */
 export const census = Effect.fnUntraced(function* (input: {
   readonly bytes: Uint8Array;
@@ -398,40 +512,24 @@ export const census = Effect.fnUntraced(function* (input: {
   const paths: Array<string> = [];
   const seen = MutableHashSet.empty<string>();
   const kept = MutableHashMap.empty<string, Uint8Array>();
-  let inflated = 0;
+  const total = { inflated: 0 };
   yield* entriesOf(input.bytes).pipe(
     Stream.mapError(damaged),
     Stream.mapEffect((entry) => {
       const path = entry.header.path;
-      if (entry.header.type === "Directory") return Effect.void;
+      // The zip reader takes a name ending with `/` for a directory whatever its body holds, and inflates that body
+      // when it moves on; the body is counted as any part's is, and a directory is never a part.
+      if (entry.header.type === "Directory") return inflate({ body: entry.body, path, caps, total, held: O.none() });
       const key = partKey(path);
       if (MutableHashSet.has(seen, key))
         return Effect.fail(stop(DuplicatePart.make({ path: Str.slice(0, 1024)(path) })));
       MutableHashSet.add(seen, key);
       paths.push(path);
       if (paths.length > caps.parts) return Effect.fail(stop(LimitExceeded.make({ limit: "parts", path: "" })));
-      const held: Array<Uint8Array> = [];
-      const wanted = keep(key);
-      let size = 0;
-      return entry.body.pipe(
-        Stream.mapError(damaged),
-        Stream.mapEffect((chunk) => {
-          size += chunk.length;
-          inflated += chunk.length;
-          if (size > caps.partBytes) {
-            return Effect.fail(stop(LimitExceeded.make({ limit: "partBytes", path: Str.slice(0, 1024)(path) })));
-          }
-          if (inflated > caps.inflatedBytes) {
-            return Effect.fail(stop(LimitExceeded.make({ limit: "inflatedBytes", path: Str.slice(0, 1024)(path) })));
-          }
-          if (wanted) held.push(chunk);
-          return Effect.void;
-        }),
-        Stream.runDrain,
-        Effect.map(() => {
-          if (wanted) MutableHashMap.set(kept, key, Bytes.concat(held));
-        })
-      );
+      const held: O.Option<Array<Uint8Array>> = keep(key) ? O.some([]) : O.none();
+      return Effect.map(inflate({ body: entry.body, path, caps, total, held }), () => {
+        if (O.isSome(held)) MutableHashMap.set(kept, key, Bytes.concat(held.value));
+      });
     }),
     Stream.runDrain
   );

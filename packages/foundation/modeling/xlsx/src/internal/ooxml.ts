@@ -190,3 +190,20 @@ export const unescaped = (text: string): string => {
   }
   return out + Str.slice(at)(text);
 };
+
+/** The most characters of a file's text one character of a cell takes: its escape `_xHHHH_`. */
+const escapeWidth = 7;
+
+/**
+ * Whether a cell's text, as the file writes it, is longer than `cap` once its `_xHHHH_` escapes are read. A cap on
+ * characters is on the text a cell holds, so a cell of carriage returns, each written as `_x000D_`, is held to its
+ * own length. Text more than seven times the cap is longer whatever it escapes, and is not read to tell.
+ */
+export const longerThan: {
+  (cap: number): (written: string) => boolean;
+  (written: string, cap: number): boolean;
+} = dual(
+  2,
+  (written: string, cap: number): boolean =>
+    written.length > cap && (written.length > cap * escapeWidth || unescaped(written).length > cap)
+);

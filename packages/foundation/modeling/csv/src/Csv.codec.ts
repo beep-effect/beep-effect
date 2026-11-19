@@ -572,15 +572,18 @@ export class Csv {
    *
    * **Gotchas**
    *
-   * Under a detected encoding the channel decides from the bytes it holds once they pass its window by more than
-   * three (an unfinished UTF-8 sequence that starts inside the window is then finished or broken), so it can differ
-   * from {@link Csv.parseBytesResult}: bytes valid as UTF-8 in what it held and not after it fail the channel with
-   * `InvalidUtf8`, where the whole read falls back to Windows-1252. Input that ends within the window, or at most
-   * three bytes past it, is decided on all of its bytes, as the whole read decides it.
+   * Under a detected encoding the channel decides once more than three bytes past its window have arrived, on the
+   * window's bytes alone (a UTF-8 sequence that starts inside the window is checked to its end), so the decision does
+   * not depend on how the input is cut, but it can differ from {@link Csv.parseBytesResult}: bytes valid as UTF-8 in
+   * the window and not after it fail the channel with `InvalidUtf8`, where the whole read falls back to
+   * Windows-1252. Input that ends within the window, or at most three bytes past it, is decided on all of its bytes,
+   * as the whole read decides it.
    *
-   * The channel fails on the first fatal finding in input order, where the whole read checks the byte cap and the
-   * encoding before it parses: when a text cap is passed before bytes that the cap or a fixed UTF-8 refuses, the
-   * channel fails with the `LimitExceeded` and the whole read with `TooManyBytes` or `InvalidUtf8`.
+   * The channel fails on the first fatal finding in input order, after the records before it, however the input is
+   * cut: the bytes before an invalid UTF-8 byte, or before the byte cap, are read first, and a record they leave open
+   * is not emitted. The whole read checks the byte cap and the encoding before it parses: when a text cap is passed
+   * before bytes that the cap or a fixed UTF-8 refuses, the channel fails with the `LimitExceeded` and the whole read
+   * with `TooManyBytes` or `InvalidUtf8`.
    */
   static decode<IE = never, Done = unknown>(
     options: CsvReadOptions = CsvReadOptions.default
@@ -634,7 +637,10 @@ export class Csv {
     return encodeStringChannel<IE, Done>(options).pipe(Channel.map(A.map(encodeUtf8)));
   }
 
-  /** The delimiter detected from a sample, or none. */
+  /**
+   * The delimiter detected from a sample among the options' candidates (a fixed delimiter is the only candidate), or
+   * none. The options' caps do not change the delimiter: a read under them fails at the cap it passes instead.
+   */
   static sniff(sample: string, options: CsvReadOptions = CsvReadOptions.default): O.Option<CsvDelimiter> {
     return sniffDelimiter({
       sample: Str.slice(0, SNIFF_WINDOW)(sample),
@@ -642,7 +648,6 @@ export class Csv {
         detect: ({ candidates }) => candidates,
         fixed: ({ delimiter }) => [delimiter],
       }),
-      limits: options.limits,
     });
   }
 }

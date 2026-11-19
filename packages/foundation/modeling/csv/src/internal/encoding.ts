@@ -64,24 +64,30 @@ export type DetectedEncoding = CsvEncodingFromBom | CsvEncodingValidUtf8 | CsvEn
 
 /**
  * The encoding the bytes are read in when it is detected: a byte-order mark names UTF-8 or UTF-16; otherwise the
- * first `checked` bytes (all of them when left out) are UTF-8 when valid, and Windows-1252 when not.
+ * bytes are UTF-8 unless a UTF-8 sequence that starts before `within` (all of them when left out) is invalid, and
+ * Windows-1252 when one is. A sequence that starts before `within` is checked to its end, past `within` too.
  */
-export const detectEncoding = (input: { readonly bytes: Uint8Array; readonly checked?: number }): DetectedEncoding => {
-  const { bytes, checked = bytes.length } = input;
+export const detectEncoding = (input: { readonly bytes: Uint8Array; readonly within?: number }): DetectedEncoding => {
+  const { bytes, within = bytes.length } = input;
   const mark = bomOf(bytes);
   if (O.isSome(mark) && mark.value !== "utf-8") return CsvEncodingFromBom.make({ encoding: mark.value });
-  return O.match(firstInvalidUtf8(bytes.subarray(0, checked)), {
-    onSome: (firstInvalidByte): DetectedEncoding => CsvEncodingFallback.make({ firstInvalidByte }),
-    onNone: () => (O.isSome(mark) ? CsvEncodingFromBom.make({ encoding: "utf-8" }) : CsvEncodingValidUtf8.make({})),
-  });
+  return O.match(
+    O.filter(firstInvalidUtf8(bytes), (offset) => offset < within),
+    {
+      onSome: (firstInvalidByte): DetectedEncoding => CsvEncodingFallback.make({ firstInvalidByte }),
+      onNone: () => (O.isSome(mark) ? CsvEncodingFromBom.make({ encoding: "utf-8" }) : CsvEncodingValidUtf8.make({})),
+    }
+  );
 };
 
 /**
- * A decoder that keeps every U+FEFF it decodes. `TextDecoder` drops a leading one by default, and a stream decodes
+ * A decoder that keeps every U+FEFF it decodes. A UTF decoder drops a leading one by default, and a stream decodes
  * piece by piece, so the default would drop a U+FEFF that starts a piece of cell data. The one byte-order mark at the
- * start of the input is stripped from the text instead, once, by the reader.
+ * start of the input is stripped from the text instead, once, by the reader. Windows-1252 has no byte-order mark, so
+ * its decoder is not asked to keep one: Node 22's whole-buffer Windows-1252 decoder, asked to, drops a leading 0xFF.
  */
-export const decoderFor = (encoding: CsvEncodingName): TextDecoder => new TextDecoder(encoding, { ignoreBOM: true });
+export const decoderFor = (encoding: CsvEncodingName): TextDecoder =>
+  new TextDecoder(encoding, { ignoreBOM: encoding !== "windows-1252" });
 
 /** Decodes bytes in an encoding, keeping a leading byte-order mark as text (see `decoderFor`). */
 export const decodeBytes = (input: { readonly bytes: Uint8Array; readonly encoding: CsvEncodingName }): string =>

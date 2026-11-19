@@ -99,6 +99,8 @@ const past =
 /** The steps of `isDateFormat` for each character that opens something other than a single letter. */
 const dateMarkSteps: { readonly [character: string]: Step } = {
   G: (code, at) => (isGeneralAt(code, at) ? at + 7 : at + 1),
+  // The word General is read without regard to case, as `classify` reads it; a lone `g` is an era, so a date.
+  g: (code, at) => (isGeneralAt(code, at) ? at + 7 : DATED),
   '"': (code, at) => quoteAt(code, at + 1) + 1,
   "\\": past(2),
   _: past(2),
@@ -347,19 +349,25 @@ const sectionStep: Step = (code, at) => {
   return at + 1;
 };
 
-/** The first section of a format code: what a positive number is shown with. */
-const firstSection = (code: string): readonly [section: string, sections: number] => {
-  let i = 0;
+/** Whether a condition block such as `[>=2]` opens at `at`. */
+const isConditionAt = (code: string, at: number): boolean =>
+  code[at] === "[" && Str.includes(code[at + 1] ?? " ")("<>=");
+
+/**
+ * The first section of a format code (what a positive number is shown with), how many sections the code has, and
+ * whether any section has a condition, which chooses the section by the number instead.
+ */
+const firstSection = (code: string): readonly [section: string, sections: number, conditional: boolean] => {
   let cut = -1;
   let sections = 1;
-  while (i < code.length) {
-    if (code[i] === ";") {
-      cut = cut === -1 ? i : cut;
-      sections += 1;
-    }
-    i = sectionStep(code, i);
+  let conditional = false;
+  for (let i = 0; i < code.length; i = sectionStep(code, i)) {
+    conditional = conditional || isConditionAt(code, i);
+    if (code[i] !== ";") continue;
+    if (cut === -1) cut = i;
+    sections += 1;
   }
-  return [cut === -1 ? code : Str.slice(0, cut)(code), sections];
+  return [cut === -1 ? code : Str.slice(0, cut)(code), sections, conditional];
 };
 
 /** What a step of `DateScan` returns when the section holds something this package does not render. */
@@ -513,15 +521,15 @@ const tokenText = (parts: SerialParts, twelve: boolean): ((token: DateToken) => 
 
 /**
  * A serial as a date format shows it, none for a format this package does not render (elapsed time, fractions of a
- * second, eras, or a zero under a format with a section of its own for zero) and none past the system's last
- * serial, where Excel shows `#####`.
+ * second, eras, a condition such as `[>=2]` that chooses the section by the serial, or a zero under a format with a
+ * section of its own for zero) and none past the system's last serial, where Excel shows `#####`.
  */
 export const renderDate: {
   (serial: number, system: XlsxDateSystem): (code: string) => O.Option<string>;
   (code: string, serial: number, system: XlsxDateSystem): O.Option<string>;
 } = dual(3, (code: string, serial: number, system: XlsxDateSystem): O.Option<string> => {
-  const [section, sections] = firstSection(code);
-  if (serial > maxSerial(system) || (sections >= 3 && serial === 0)) return O.none();
+  const [section, sections, conditional] = firstSection(code);
+  if (conditional || serial > maxSerial(system) || (sections >= 3 && serial === 0)) return O.none();
   return O.flatMap(dateTokens(section), (tokens) => {
     const timed = A.some(tokens, (token) => token.t === "h" || token.t === "M" || token.t === "s");
     const twelve = A.some(tokens, (token) => token.t === "ampm");

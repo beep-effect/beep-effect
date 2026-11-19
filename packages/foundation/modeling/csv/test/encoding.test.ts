@@ -25,6 +25,7 @@ import * as Result from "effect/Result";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import {
+  emittedFromBytes,
   fatalFindings,
   outcomeOfRead,
   pieces,
@@ -47,6 +48,9 @@ const bytesOf = (...parts: ReadonlyArray<ReadonlyArray<number> | string>): Uint8
   Uint8Array.from(A.flatMap(parts, (part) => (P.isString(part) ? [...utf8(part)] : part)));
 const fixed = (encoding: CsvFixedEncoding["encoding"]) =>
   CsvReadOptions.make({ encoding: CsvFixedEncoding.make({ encoding }) });
+const fixedUtf8Comma = readWithRules(",", { encoding: CsvFixedEncoding.make({ encoding: "utf-8" }) });
+const detectWindow = (size: bigint) =>
+  readWithRules(",", { encoding: CsvDetectEncoding.make({ window: ByteSize.bytes(size) }) });
 
 describe("encoding detection", () => {
   it("a UTF-8 BOM names UTF-8 and is not part of the text", () => {
@@ -89,6 +93,60 @@ describe("encoding detection", () => {
   });
 });
 
+describe("Windows-1252", () => {
+  // Node 22's whole-buffer Windows-1252 decoder drops a leading 0xFF when it is asked to keep byte-order marks; a
+  // single-byte encoding has no byte-order mark, so the decoder must not be asked.
+  it.effect("a leading 0xFF reads as ÿ, whole or streamed, fixed or detected, in one chunk or split", () =>
+    Effect.gen(function* () {
+      const bytes = bytesOf([0xff], "a,b\n");
+      const expected: ReadonlyArray<CsvRecord> = [["ÿa", "b"]];
+      for (const options of [fixed("windows-1252"), CsvReadOptions.default, detectWindow(1n)]) {
+        assertSuccess(outcomeOfRead(Csv.parseBytesResult(bytes, options)), expected);
+        const oneChunk = yield* streamBytes([bytes], options);
+        assertSuccess(oneChunk, expected);
+        const split = yield* streamBytes([bytes.subarray(0, 1), bytes.subarray(1)], options);
+        assertSuccess(split, expected);
+      }
+      assertSuccess(outcomeOfRead(Csv.parseBytesResult(bytesOf([0xff]), fixed("windows-1252"))), [["ÿ"]]);
+    })
+  );
+});
+
+describe("the detect window", () => {
+  it.effect("decides on the same leading bytes however the input is cut", () =>
+    Effect.gen(function* () {
+      // The window is one byte; the invalid byte is past it and past the three bytes that may finish a sequence.
+      const bytes = bytesOf("aaaaa", [0xe9], "\n");
+      const oneChunk = yield* streamBytes([bytes], detectWindow(1n));
+      assertFailure(fatalFindings(oneChunk), [InvalidUtf8.make({ byteOffset: 5 })]);
+      for (const at of [1, 4, 5, 6]) {
+        const split = yield* streamBytes([bytes.subarray(0, at), bytes.subarray(at)], detectWindow(1n));
+        deepStrictEqual(split, oneChunk);
+      }
+    })
+  );
+
+  it.effect("a byte that breaks UTF-8 inside the window falls back to Windows-1252 however the input is cut", () =>
+    Effect.gen(function* () {
+      const bytes = bytesOf("Caf", [0xe9], ",1\nabc\n");
+      const expected: ReadonlyArray<CsvRecord> = [["Café", "1"], ["abc"]];
+      const oneChunk = yield* streamBytes([bytes], detectWindow(4n));
+      assertSuccess(oneChunk, expected);
+      const split = yield* streamBytes([bytes.subarray(0, 8), bytes.subarray(8)], detectWindow(4n));
+      assertSuccess(split, expected);
+    })
+  );
+
+  it.effect("a sequence that starts inside the window is checked whole", () =>
+    Effect.gen(function* () {
+      const valid = yield* streamBytes([bytesOf("a", [0xc3, 0xa9], "bcdefg\n")], detectWindow(2n));
+      assertSuccess(valid, [["aébcdefg"]]);
+      const broken = yield* streamBytes([bytesOf("a", [0xc3, 0x28], "bcdefg\n")], detectWindow(2n));
+      assertSuccess(broken, [["aÃ(bcdefg"]]);
+    })
+  );
+});
+
 describe("the byte cap", () => {
   const capped = CsvReadOptions.make({ limits: CsvLimits.make({ maxInputBytes: ByteSize.bytes(10n) }) });
   const bytes = utf8(Str.repeat(100)("a,b\n"));
@@ -106,6 +164,26 @@ describe("the byte cap", () => {
       assertFailure(fatalFindings(streamed), [
         TooManyBytes.make({ maximum: ByteSize.bytes(10n), actual: ByteSize.bytes(12n) }),
       ]);
+    })
+  );
+
+  it.effect("the chunk that passes the cap is read up to the cap first, its findings included", () =>
+    Effect.gen(function* () {
+      const cappedAt = (rules: Partial<CsvLimits>) =>
+        readWithRules(",", {
+          encoding: CsvFixedEncoding.make({ encoding: "utf-8" }),
+          limits: CsvLimits.make({ maxInputBytes: ByteSize.bytes(4n), ...rules }),
+        });
+      const tooMany = TooManyBytes.make({ maximum: ByteSize.bytes(4n), actual: ByteSize.bytes(7n) });
+      const emitted = yield* emittedFromBytes([utf8("a\nb\nxyz")], cappedAt({}));
+      deepStrictEqual(emitted, [
+        Result.succeed<CsvRecord>(["a"]),
+        Result.succeed<CsvRecord>(["b"]),
+        Result.fail([tooMany]),
+      ]);
+      const recordsFirst = yield* emittedFromBytes([utf8("a\nb\nxyz")], cappedAt({ maxRecords: 1 }));
+      const kinds = A.map(recordsFirst, Result.mapError(A.map((finding) => finding.kind)));
+      deepStrictEqual(kinds, [Result.succeed<CsvRecord>(["a"]), Result.fail(A.of("LimitExceeded" as const))]);
     })
   );
 
@@ -133,7 +211,9 @@ describe("streaming bytes", () => {
     Effect.gen(function* () {
       const bytes = utf8("é,😀\n");
       const chunks = pieces(bytes.length, A.replicate(1, bytes.length), (from, to) => bytes.subarray(from, to));
-      const streamed = yield* streamBytes(chunks, readWith(","));
+      // A fixed UTF-8 decodes each byte as it comes, so every sequence is carried across decoder calls; a detected
+      // encoding would hold this short input in its window and decode it whole.
+      const streamed = yield* streamBytes(chunks, fixedUtf8Comma);
       assertSuccess(streamed, [["é", "😀"]]);
     })
   );
@@ -252,6 +332,16 @@ describe("a failing upstream", () => {
     })
   );
 
+  it.effect("bytes UTF-8 refuses fail the bytes channel after the records before them in the same chunk", () =>
+    Effect.gen(function* () {
+      const emitted = yield* emittedFromBytes([bytesOf("a\n", [0xff], "\n")], fixedUtf8Comma);
+      deepStrictEqual(emitted, [Result.succeed<CsvRecord>(["a"]), Result.fail([InvalidUtf8.make({ byteOffset: 2 })])]);
+      // The open record is not flushed ahead of the failure.
+      const open = yield* emittedFromBytes([bytesOf("a\nb", [0xff], "\n")], fixedUtf8Comma);
+      deepStrictEqual(open, [Result.succeed<CsvRecord>(["a"]), Result.fail([InvalidUtf8.make({ byteOffset: 3 })])]);
+    })
+  );
+
   it.effect("bytes UTF-8 refuses, split after an open quote, fail with InvalidUtf8 at their offset", () =>
     Effect.gen(function* () {
       const streamed = yield* streamBytes([bytesOf(',"'), bytesOf([0xa9])], fixed("utf-8"));
@@ -271,11 +361,13 @@ describe("the order of fatal findings", () => {
       assertFailure(Csv.parseBytesResult(bytesOf("a\nb\nc\n", [0xff]), options).pipe(outcomeOfRead, fatalFindings), [
         InvalidUtf8.make({ byteOffset: 6 }),
       ]);
-      const streamed = yield* streamBytes([text, bytesOf([0xff])], options);
-      assertTrue(
-        Result.isFailure(streamed) && A.every(streamed.failure, (fatal) => fatal.finding.kind === "LimitExceeded"),
-        "the stream fails with the records cap"
-      );
+      for (const chunks of [[text, bytesOf([0xff])], [bytesOf("a\nb\nc\n", [0xff])]]) {
+        const streamed = yield* streamBytes(chunks, options);
+        assertTrue(
+          Result.isFailure(streamed) && A.every(streamed.failure, (fatal) => fatal.finding.kind === "LimitExceeded"),
+          "the stream fails with the records cap, split or in one chunk"
+        );
+      }
     })
   );
 });

@@ -158,6 +158,10 @@ const size = (fallback: () => ByteSize.ByteSize, description: string) =>
  * `maxSharedFormulas`) are each counted once across the whole read: what goes past one is dropped and counted, and
  * the read ends with one `ListTruncated` warning per such list saying how many.
  *
+ * `maxRecordValues` holds a records codec (`Xlsx.recordsFromBytes`, `Xlsx.sheetFromBytes`) to the values its
+ * records would hold: one per heading per row below the header, blanks included. A sheet past it fails the decode
+ * with a schema issue before any record is built, since a wide header over many empty rows is a small file.
+ *
  * **Gotchas**
  *
  * - The `ListTruncated` warnings come after the `maxWarnings` kept, so a read may return up to five warnings more
@@ -173,6 +177,7 @@ const size = (fallback: () => ByteSize.ByteSize, description: string) =>
  *
  * const limits = XlsxLimits.make({ maxInputBytes: ByteSize.kibibytes(512) })
  * limits.maxSheets // => 1000
+ * limits.maxRecordValues // => 16777216
  * const options = XlsxReadOptions.make({ limits })
  * options.limits.maxInputBytes // => ByteSize.kibibytes(512)
  * ```
@@ -209,6 +214,11 @@ export class XlsxLimits extends S.Opaque<XlsxLimits, { readonly brand: unique sy
       "Most hidden columns the spans expand to over the whole read, each sheet's columns once"
     ),
     maxSharedFormulas: count(10_000_000, 100_000, "Most shared formulas kept over the whole read"),
+    maxRecordValues: count(
+      1_073_741_824,
+      16_777_216,
+      "Most values the records of one sheet may hold, a heading's blank in a row that lacks it included"
+    ),
   }).pipe($I.annoteSchema("XlsxLimits", { description: "The caps a read holds a file to" }))
 ) {
   /** The starting caps: 3 MiB of file, 64 MiB inflated, a worksheet's own bounds. */

@@ -50,7 +50,12 @@ workbook written and read back is its canonical form, and that form does not mov
 Nothing a file declares. Caps (`XlsxLimits`) are counted as bytes are inflated, a declared extent is kept as a
 claim, and a cell the file gets wrong is kept as `Unreadable` with what was written, and reported: an ISO date with
 an impossible time such as `T99:99:99`, or day 0, among them. A style index that is not a whole number is reported as
-written (`UnknownStyle`) and read as General; no attribute, whatever it holds, makes a read die.
+written (`UnknownStyle`) and read as General; no attribute, whatever it holds, makes a read die. A cell or row that
+names no place, or one it cannot read, goes after the one written just before it, as Excel places it: a blank cell
+moves the place on, and so does one written out of order. A shared text index is read only as decimal digits, so an
+empty `<v/>` names no entry. `maxCellChars` is on the text a cell holds once its `_xHHHH_` escapes are read, so a
+cell of carriage returns, which the writer escapes to seven characters each, reads back under the cap it was written
+under.
 
 The work a file can ask for is bounded by what it holds. A hidden `<col>` span is kept as its two ends and each column
 comes out once, however many spans name it; each sheet's relationship is one lookup in an index built once; a repeated
@@ -58,10 +63,14 @@ column in a row is found in one step whatever order the cells come in; and the t
 cells that share it is counted against `maxSharedFormulaChars`. A part that several sheets name is read once, and its
 findings name the first of them. The lists a read keeps beside the rows (warnings, merged ranges, hidden spans, hidden
 columns, shared formulas) each have one cap for the whole read, not one per sheet: what goes past it is dropped and
-counted, and the warnings end with a `ListTruncated` saying how many. A range merged twice is kept once.
+counted, and the warnings end with a `ListTruncated` saying how many. A range merged twice is kept once. The shared
+text table is handed to the XML reader in 64 KiB slices, so a table past `maxSharedStrings` stops within a slice of
+the cap rather than at the end of the part.
 
 When records are read under a header row, a cell with a value in a column the header row has no heading for stops the
-read, as an empty or repeated heading does. Writing records refuses, as a schema issue, what such a read could not give
+read, as an empty or repeated heading does. The sheet a records codec names is the one it reads, whatever sheets its
+read options choose, and its records are held to `maxRecordValues` (one value per heading per row below the header,
+blanks included) before any is built: a full header over many empty rows is a file of a few kilobytes. Writing records refuses, as a schema issue, what such a read could not give
 back: an empty heading, one longer than a cell, more headings than a sheet has columns, and records with no heading
 at all (an empty header row, which reads back as no records).
 
@@ -72,12 +81,17 @@ directory, which is what Excel opens a file by. Two checks keep the two from sho
 - A part name met twice stops the read (`DuplicatePart`). Names are compared as OPC compares them, without regard to
   ASCII case, and a relationship finds its part the same way.
 - When the file ends with a central directory, that directory must name exactly the entries the walk read, each
-  where the one before it ends, from the first byte up to the directory (`DirectoryMismatch`). An archive updated by
+  where the one before it ends, from the first byte up to the directory, and by the name its local header gives it
+  as OPC compares names, its Info-ZIP Unicode path field included (`DirectoryMismatch`). An archive updated by
   appending, whose last directory names entries the walk never reached, is refused; so is an entry the directory
   leaves out. The directory is found from the last end record whose fields name a directory ending at it, so an end
   record copied into the archive comment is passed over, and a 64-bit end record is used whenever its locator is
   there. Every offset and count the directory gives is checked against the file's length before it is read: damage
   there is a `DirectoryMismatch`, never a defect.
+
+The zip reader takes an entry whose name ends with `/` for a directory whatever its body holds, and inflates that body
+when it moves on. Such a body is counted against `maxPartBytes` and `maxInflatedBytes` as a part's is, and a directory
+is never looked up as a part.
 
 A file cut short inside its directory, after the last entry, still reads: it has no directory to disagree with, and
 every entry it holds was checked against its checksum.

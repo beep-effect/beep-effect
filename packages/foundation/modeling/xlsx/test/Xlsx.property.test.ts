@@ -166,9 +166,9 @@ describe("a workbook written and read back", () => {
       ).toEqual(A.reverse(numbers));
       expect(first.merges).toEqual([{ first: { column: 1, row: 2 }, last: { column: 3, row: 4 } }]);
       expect(first.hiddenColumns).toEqual([2, 5]);
+      // What a file got wrong is written as the text it wrote, so it reads back as text, with nothing to report.
       expect(A.map(read.warnings, (warning) => warning.finding.kind)).toEqual([
         "FormulaWithoutResult",
-        "UnreadableCell",
         "FormatNotShown",
       ]);
     })
@@ -180,6 +180,10 @@ describe("a workbook written and read back", () => {
     expect(XlsxWorkbook.canonical(canonical)).toEqual(canonical);
   });
 });
+
+/** A value as a file gives it back: what a file got wrong comes back as the text it wrote. */
+const asWritten = (value: XlsxCell["value"]): XlsxCell["value"] =>
+  XlsxCell.canonical(XlsxCell.make({ column: 0, value }), "1900").value;
 
 describe("the codecs", () => {
   it.effect.prop(
@@ -364,7 +368,8 @@ describe("the codecs", () => {
           R.fromEntries(
             A.map(
               headings,
-              (heading) => [heading, R.get(record, heading).pipe(O.getOrElse(() => XlsxBlank.make({})))] as const
+              (heading) =>
+                [heading, asWritten(R.get(record, heading).pipe(O.getOrElse(() => XlsxBlank.make({}))))] as const
             )
           )
         );

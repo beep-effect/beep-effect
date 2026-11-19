@@ -1,7 +1,9 @@
 // A workbook written as the parts of an .xlsx archive: content types, relationships, the workbook part, the styles
-// that carry the number formats, and one part per sheet. Only values are written (decision X2): text goes inline in
-// its cell, so there is no shared text table, and a cell's style says its number format and nothing else. The
-// workbook must be in canonical form (`XlsxWorkbook.canonical`), which gives every format code one id.
+// that carry the number formats, and one part per sheet. Only values are written (decision X2): text goes in its
+// cell, inline or as a formula's saved result, so there is no shared text table, and a cell's style says its number
+// format and nothing else. The workbook must be in canonical form (`XlsxWorkbook.canonical`), which gives every
+// format code one id and turns what a file got wrong into the text it wrote. A sheet's name is written as the
+// schema holds it, whether or not Excel would take it (`fitsExcel`).
 import * as A from "effect/Array";
 import * as Bytes from "effect/Bytes";
 import * as Effect from "effect/Effect";
@@ -96,15 +98,25 @@ const cellXml = (cell: XlsxCell, row: number, styleOf: (id: number) => number): 
   });
   return XlsxValue.match(cell.value, {
     Blank: () => `${open}>${formula}</c>`,
-    Text: (value) =>
-      `${open} t="inlineStr">${formula}<is><t xml:space="preserve">${escaped(value.text, true)}</t></is></c>`,
+    Text: (value) => textXml(open, formula, value.text),
     Number: (value) => `${open}>${formula}<v>${numberText(value.value)}</v></c>`,
     Date: (value) => `${open}>${formula}<v>${numberText(value.serial)}</v></c>`,
     Boolean: (value) => `${open} t="b">${formula}<v>${value.value ? "1" : "0"}</v></c>`,
     Error: (value) => `${open} t="e">${formula}<v>${escaped(value.code, false)}</v></c>`,
-    Unreadable: (value) => `${open} t="e">${formula}<v xml:space="preserve">${escaped(value.raw, true)}</v></c>`,
+    // An error cell holds one of Excel's error codes and nothing else, so what a file wrote where no value could be
+    // read is written as the text it is (`XlsxCell.canonical` reads it back so).
+    Unreadable: (value) => textXml(open, formula, value.raw),
   });
 };
+
+/**
+ * A text cell. A formula's text result is a `str` cell, its text the saved `<v>` beside the `<f>`, since an inline
+ * text cell holds its `<is>` and nothing else; text with no formula is written inline.
+ */
+const textXml = (open: string, formula: string, text: string): string =>
+  formula === ""
+    ? `${open} t="inlineStr"><is><t xml:space="preserve">${escaped(text, true)}</t></is></c>`
+    : `${open} t="str">${formula}<v>${escaped(text, true)}</v></c>`;
 
 // crispen: `push` into one piece list per sheet, then one join; a sheet of a million cells would otherwise build a
 // million intermediate strings.

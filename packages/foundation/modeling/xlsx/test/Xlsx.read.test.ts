@@ -3,22 +3,23 @@
 // skipped (`make` with `disableChecks`).
 
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
-import { XlsxRange } from "@beep/xlsx/XlsxAddress.schema";
-import { XlsxCell, XlsxValue } from "@beep/xlsx/XlsxCell.schema";
-import { XlsxFirstSheet, XlsxNamedSheets, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema";
-import { XlsxWorkbook } from "@beep/xlsx/XlsxWorkbook.schema";
+import { columnLetters, XlsxRange } from "@beep/xlsx/XlsxAddress.schema";
+import { MAX_CELL_CHARS, XlsxCell, XlsxText, XlsxValue } from "@beep/xlsx/XlsxCell.schema";
+import { XlsxFirstSheet, XlsxLimits, XlsxNamedSheets, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema";
+import { XlsxRow, XlsxSheetInfo, XlsxWorkbook, XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { archive, partsOf, sheet, sheetWith, strict, strings, styles, workbook } from "./support/workbooks.ts";
 import type { XlsxRead } from "@beep/xlsx/XlsxRead.schema";
-import type { XlsxWorksheet } from "@beep/xlsx/XlsxWorkbook.schema";
 import type { Recipe } from "./support/workbooks.ts";
 
 const read = (bytes: Uint8Array, options?: XlsxReadOptions) =>
@@ -54,6 +55,7 @@ const grid = (found: XlsxWorksheet) =>
     ),
   ]);
 const findings = (found: XlsxRead) => A.map(found.warnings, (warning) => warning.finding.kind);
+const byFirst = Order.mapInput(Order.Number, (pair: readonly [number, number]) => pair[0]);
 
 describe("cells", () => {
   it.effect("reads shared, inline and formula text, joins formatted runs and leaves phonetic ones out", () =>
@@ -187,6 +189,79 @@ describe("cells", () => {
     })
   );
 
+  // A shared text index is written in decimal digits. An empty value, or one JavaScript's `Number` would read as some
+  // other index (`0x0`, `1e0`, ` `), names no entry, so it never reads as the table's first entry.
+  it.effect("keeps a shared text index that is not written in decimal digits as unreadable", () =>
+    Effect.gen(function* () {
+      const written = ["", " ", "0x0", "1e0", "0.0", "+0"];
+      const cells = A.join(
+        A.map(written, (index, i) => `<c r="${columnLetters(i)}1" t="s"><v>${index}</v></c>`),
+        ""
+      );
+      const rows = `<row r="1">${cells}<c r="G1" t="s"><v>0</v></c><c r="H1" t="s"><v> 1 </v></c></row>`;
+      const found = yield* readOf({
+        sheets: [{ name: "S", xml: sheet(rows) }],
+        sharedStrings: strings(["<t>zero</t>", "<t>one</t>"]),
+      });
+      expect(grid(first(found))).toEqual([
+        [1, ...A.map(written, (index, i) => `${i}:unreadable "${index}"`), '6:"zero"', '7:"one"'],
+      ]);
+      expect(findings(found)).toEqual(A.map(written, () => "UnreadableCell"));
+    })
+  );
+
+  // The cap on a cell's characters is on the text the cell holds, its `_xHHHH_` escapes read: a cell of carriage
+  // returns, each written as `_x000D_`, takes seven times its length in the file and still reads under the cap.
+  it.effect("holds a cell's text to the cap on characters once its escapes are read", () =>
+    Effect.gen(function* () {
+      const returns = Str.repeat(5000)("_x000D_");
+      const rows = `<row r="1"><c r="A1" t="inlineStr"><is><t>${returns}</t></is></c><c r="B1" t="s"><v>0</v></c></row>`;
+      const recipe: Recipe = {
+        sheets: [{ name: "S", xml: sheet(rows) }],
+        sharedStrings: strings([`<t>${returns}</t>`]),
+      };
+      const limits = XlsxLimits.make({ maxCellChars: 5000 });
+      const found = yield* readOf(recipe, XlsxReadOptions.make({ limits }));
+      const cells = A.map(first(found).rows[0]?.cells ?? [], (cell) => cell.value);
+      expect(cells).toEqual([
+        XlsxText.make({ text: Str.repeat(5000)("\r") }),
+        XlsxText.make({ text: Str.repeat(5000)("\r") }),
+      ]);
+      const tighter = XlsxReadOptions.make({ limits: XlsxLimits.make({ maxCellChars: 4999 }) });
+      const inline = yield* Effect.flip(readOf({ sheets: recipe.sheets }, tighter));
+      expect(inline.fatal.finding).toMatchObject({ kind: "LimitExceeded", limit: "cellChars" });
+      const shared = yield* Effect.flip(readOf(recipe, tighter));
+      expect(shared.fatal.finding).toMatchObject({
+        kind: "LimitExceeded",
+        limit: "cellChars",
+        path: "xl/sharedStrings.xml",
+      });
+    })
+  );
+
+  it.effect.prop(
+    "reads back a text cell of carriage returns and underscores written at the cap on characters",
+    [S.Array(S.Literals(["\r", "_", "a", "_x0041_"])).check(S.isMinLength(1), S.isMaxLength(8))],
+    ([pieces]) =>
+      Effect.gen(function* () {
+        const text = Str.repeat(Math.floor(MAX_CELL_CHARS / A.join(pieces, "").length))(A.join(pieces, ""));
+        const original = XlsxWorkbook.make({
+          sheets: [
+            XlsxWorksheet.make({
+              info: XlsxSheetInfo.make({ name: "S" }),
+              rows: [
+                XlsxRow.make({ number: 1, cells: [XlsxCell.make({ column: 0, value: XlsxText.make({ text }) })] }),
+              ],
+            }),
+          ],
+        });
+        const bytes = yield* Xlsx.stringify(original);
+        const back = yield* read(bytes);
+        expect(first(back).rows[0]?.cells[0]?.value).toEqual(XlsxText.make({ text }));
+      }),
+    { arbitrary: { runs: 20 } }
+  );
+
   // An ISO cell's time is held to the calendar: an hour past 23 or a minute or second past 59 is not carried into a
   // later day. ISO's 24:00:00 for the end of a day is refused the same way.
   it.effect("keeps an ISO date with an impossible time as unreadable, and reports it", () =>
@@ -282,6 +357,89 @@ describe("layout", () => {
         [6, "0:5"],
       ]);
     })
+  );
+
+  // A cell or row that names no place goes after the one written before it, whatever that one held and wherever it
+  // was: a blank cell still moves the place on, and a row or cell written out of order is the one before.
+  it.effect("places a cell or row that names no place after the one written just before it", () =>
+    Effect.gen(function* () {
+      const rows =
+        '<row r="1"><c r="C1"/><c><v>7</v></c></row>' +
+        '<row r="2"><c r="E2"><v>1</v></c><c r="B2"><v>2</v></c><c><v>3</v></c></row>' +
+        '<row r="9"><c><v>9</v></c></row><row r="4"><c><v>4</v></c></row><row><c><v>5</v></c></row>';
+      const found = yield* readOf({ sheets: [{ name: "S", xml: sheet(rows) }] });
+      expect(grid(first(found))).toEqual([
+        [1, "3:7"],
+        [2, "1:2", "2:3", "4:1"],
+        [4, "0:4"],
+        [5, "0:5"],
+        [9, "0:9"],
+      ]);
+    })
+  );
+
+  const Placed = S.Struct({ at: S.Option(S.Int.check(S.isBetween({ minimum: 0, maximum: 30 }))), blank: S.Boolean });
+  it.effect.prop(
+    "places every cell that names no column after the cell written before it",
+    [S.Array(Placed).check(S.isMaxLength(12))],
+    ([cells]) =>
+      Effect.gen(function* () {
+        const xml = A.join(
+          A.map(cells, (cell, i) => {
+            const at = O.match(cell.at, { onNone: () => "", onSome: (column) => ` r="${columnLetters(column)}1"` });
+            return cell.blank ? `<c${at}/>` : `<c${at}><v>${i}</v></c>`;
+          }),
+          ""
+        );
+        const found = yield* readOf({ sheets: [{ name: "S", xml: sheet(`<row r="1">${xml}</row>`) }] });
+        // The model: each cell is at the column it names, else one past the cell before; the first value kept.
+        const kept = MutableHashSet.empty<number>();
+        const expected: Array<readonly [number, number]> = [];
+        let preceding = -1;
+        for (const [i, cell] of cells.entries()) {
+          const column = O.getOrElse(cell.at, () => preceding + 1);
+          preceding = column;
+          if (cell.blank || MutableHashSet.has(kept, column)) continue;
+          MutableHashSet.add(kept, column);
+          expected.push([column, i]);
+        }
+        const placed = A.map(A.sort(expected, byFirst), ([column, i]) => `${column}:${i}`);
+        expect(grid(first(found))).toEqual(A.isArrayNonEmpty(placed) ? [[1, ...placed]] : [[1]]);
+      }),
+    { arbitrary: { runs: 60 } }
+  );
+
+  it.effect.prop(
+    "numbers every row that names no number after the row written before it",
+    [
+      S.Int.check(S.isBetween({ minimum: 1, maximum: 40 }))
+        .pipe(S.Option, S.Array)
+        .check(S.isMaxLength(12)),
+    ],
+    ([rows]) =>
+      Effect.gen(function* () {
+        const xml = A.join(
+          A.map(rows, (at, i) => {
+            const number = O.match(at, { onNone: () => "", onSome: (n) => ` r="${n}"` });
+            return `<row${number}><c><v>${i}</v></c></row>`;
+          }),
+          ""
+        );
+        const found = yield* readOf({ sheets: [{ name: "S", xml: sheet(xml) }] });
+        // The model: each row is the number it names, else one past the row before; the first row of a number kept.
+        const kept = MutableHashSet.empty<number>();
+        const expected: Array<readonly [number, number]> = [];
+        let preceding = 0;
+        for (const [i, at] of rows.entries()) {
+          const number = O.getOrElse(at, () => preceding + 1);
+          preceding = number;
+          if (MutableHashSet.has(kept, number)) continue;
+          MutableHashSet.add(kept, number);
+          expected.push([number, i]);
+        }
+        expect(grid(first(found))).toEqual(A.map(A.sort(expected, byFirst), ([number, i]) => [number, `0:${i}`]));
+      }),
+    { arbitrary: { runs: 60 } }
   );
 
   it.effect("puts rows and cells written out of order in their place, and says a row came late", () =>

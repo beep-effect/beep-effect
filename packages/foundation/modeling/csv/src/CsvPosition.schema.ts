@@ -105,8 +105,10 @@ export type CsvByteOffset = typeof CsvByteOffset.Type;
  * **Details**
  *
  * `CsvTextSpan.locate` builds a span from the text it points into, counting `\n`, `\r` and `\r\n` each as one line
- * break; `CsvTextSpan.render` gives the 1-based `line:column` a person sees in an editor. A span a stream reports
- * counts its offset and line across every chunk of the stream, so it is bounded by `CsvLimits.maxTextLength`.
+ * break, from the text before the offset alone, so an offset between the `\r` and `\n` of a CRLF is at the start of
+ * the next line, as a read counts it; `CsvTextSpan.render` gives the 1-based `line:column` a person sees in an editor.
+ * A span a stream reports counts its offset and line across every chunk of the stream, so it is bounded by
+ * `CsvLimits.maxTextLength`.
  *
  * **Example** (Locate an offset)
  *
@@ -117,6 +119,7 @@ export type CsvByteOffset = typeof CsvByteOffset.Type;
  * span.line // => 1
  * span.character // => 0
  * CsvTextSpan.render(span) // => "2:1"
+ * CsvTextSpan.render(CsvTextSpan.locate("a,b\r\nc", 4, 1)) // => "2:1"
  * ```
  *
  * @category models
@@ -130,9 +133,12 @@ export class CsvTextSpan extends S.Opaque<CsvTextSpan, { readonly brand: unique 
     character: CsvIndex.pipe(S.annotateKey({ description: "0-based unit of the first unit within its line" })),
   }).pipe($I.annoteSchema("CsvTextSpan", { description: "Where something is in the decoded text" }))
 ) {
-  /** The span at `offset`, its line and character counted from `text` (`\n`, `\r` and `\r\n` each break a line). */
+  /**
+   * The span at `offset`, its line and character counted from `text` before it (`\n`, `\r` and `\r\n` each break a
+   * line). An offset between the `\r` and `\n` of a CRLF is at the start of the next line, as a read counts it.
+   */
   static readonly locate = (text: string, offset: number, length: number): CsvTextSpan => {
-    const at = lineCharacterAt(text, offset);
+    const at = lineCharacterAt(text, offset, { crlfLookahead: "prefix" });
     return CsvTextSpan.make({ offset, length, line: at.line, character: at.character });
   };
 

@@ -100,9 +100,8 @@ const settleDelimiter = (text: string, options: CsvReadOptions): CsvDelimiterFou
     fixed: ({ delimiter }) => CsvDelimiterGiven.make({ delimiter }),
     detect: ({ candidates }) =>
       O.getOrElse(
-        O.map(
-          sniffDelimiter({ sample: Str.slice(0, SNIFF_WINDOW)(text), candidates, limits: options.limits }),
-          (delimiter) => CsvDelimiterDetected.make({ delimiter })
+        O.map(sniffDelimiter({ sample: Str.slice(0, SNIFF_WINDOW)(text), candidates }), (delimiter) =>
+          CsvDelimiterDetected.make({ delimiter })
         ),
         () => CsvDelimiterFallback.make({})
       ),

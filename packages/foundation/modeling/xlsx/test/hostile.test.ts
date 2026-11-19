@@ -84,6 +84,16 @@ const sharing = (input: {
     ],
   ]);
 const late = (rows: number) => sheet(Str.repeat(rows)('<row r="1"/>'));
+/** The bytes with a name of the same length written over another: at every place it is, or at its last (the directory). */
+const renamed = (bytes: Uint8Array, from: string, to: string, where: "every" | "last"): Uint8Array => {
+  const [source, target] = [new TextEncoder().encode(from), new TextEncoder().encode(to)];
+  const places = A.filter(A.range(0, bytes.length - source.length), (at) =>
+    A.every(A.fromIterable(source), (byte, i) => bytes[at + i] === byte)
+  );
+  const out = bytes.slice();
+  for (const at of where === "every" ? places : A.takeRight(places, 1)) out.set(target, at);
+  return out;
+};
 const escaped = (text: string): string =>
   Str.replace(/"/g, "&quot;")(Str.replace(/</g, "&lt;")(Str.replace(/&/g, "&amp;")(text)));
 
@@ -533,6 +543,69 @@ describe("hostile files", () => {
       expect(read.workbook.sheets[0].rows[0]?.cells[0]?.value).toMatchObject({ kind: "Number", value: 3 });
     })
   );
+  // The zip reader takes an entry whose name ends with `/` for a directory, whatever its body holds, and inflates
+  // that body whole when it moves to the next entry. The body is counted against the caps as any part's is.
+  it.effect("a directory entry whose body inflates past the cap on inflated bytes", () =>
+    Effect.gen(function* () {
+      const bytes = yield* archive([...partsOf(one(sheet(""))), ["xl/padX", Str.repeat(8 * 1024 * 1024)(" ")]]);
+      const directory = renamed(bytes, "xl/padX", "xl/pad/", "every");
+      const finding = yield* findingOf(directory, { ...big, maxInflatedBytes: ByteSize.mebibytes(1) });
+      expect(finding).toMatchObject({ kind: "LimitExceeded", limit: "inflatedBytes", path: "xl/pad/" });
+      const part = yield* findingOf(directory, { ...big, maxPartBytes: ByteSize.mebibytes(1) });
+      expect(part).toMatchObject({ kind: "LimitExceeded", limit: "partBytes", path: "xl/pad/" });
+      const empty = yield* archive([
+        ...partsOf(one(sheet('<row r="1"><c r="A1"><v>1</v></c></row>'))),
+        ["xl/padX", ""],
+      ]);
+      const read = yield* Xlsx.parse(renamed(empty, "xl/padX", "xl/pad/", "every"));
+      expect(read.workbook.sheets[0].rows[0]?.cells[0]?.value).toMatchObject({ kind: "Number", value: 1 });
+    })
+  );
+
+  // Excel finds a part by the name its directory record gives; the reader here by the name its local header gives.
+  // The two must name one part, as OPC compares names: a directory that gives an entry another name is refused.
+  it.effect("a directory that names an entry otherwise than its local header does", () =>
+    Effect.gen(function* () {
+      const bytes = yield* workbook(one(sheet('<row r="1"><c r="A1"><v>1</v></c></row>')));
+      const other = renamed(bytes, "xl/worksheets/sheet1.xml", "xl/worksheets/sheet2.xml", "last");
+      const finding = yield* findingOf(other);
+      expect(finding).toMatchObject({ kind: "DirectoryMismatch" });
+      const cased = renamed(bytes, "xl/worksheets/sheet1.xml", "XL/Worksheets/SHEET1.xml", "last");
+      const read = yield* Xlsx.parse(cased);
+      expect(read.workbook.sheets[0].rows[0]?.cells[0]?.value).toMatchObject({ kind: "Number", value: 1 });
+    })
+  );
+
+  // The shared text table is handed to the XML reader in slices, so a read that passes the cap on entries stops
+  // within a slice of it. A slice ends anywhere: inside a tag, inside an entry, inside a character's UTF-8 bytes.
+  it.effect.prop(
+    "a shared text table read in slices that end anywhere, inside tags, entries and characters",
+    [S.Int.check(S.isBetween({ minimum: 0, maximum: 23 }))],
+    ([shift]) =>
+      Effect.gen(function* () {
+        const entries = A.map(A.range(0, 5), (n) => `${Str.repeat(shift + n)("é")}${Str.repeat(6000)("é€😀x")}`);
+        const cells = A.join(
+          A.map(entries, (_, n) => `<c r="${columnLetters(n)}1" t="s"><v>${n}</v></c>`),
+          ""
+        );
+        const bytes = yield* workbook({
+          ...one(sheet(`<row r="1">${cells}</row>`)),
+          sharedStrings: strings(A.map(entries, (entry) => `<t>${entry}</t>`)),
+        });
+        const read = yield* Xlsx.parse(bytes, limited({}));
+        expect(A.map(read.workbook.sheets[0].rows[0]?.cells ?? [], (found) => found.value)).toEqual(
+          A.map(entries, (text) => ({ kind: "Text", text }))
+        );
+        const table = `<sst xmlns="x">${Str.repeat(200_000)("<si><t>a</t></si>")}</sst>`;
+        const finding = yield* builtFindingOf(
+          { ...one(sheet("")), sharedStrings: table },
+          { ...big, maxSharedStrings: 10 + shift }
+        );
+        expect(finding).toMatchObject({ kind: "LimitExceeded", limit: "sharedStrings" });
+      }),
+    { arbitrary: { runs: 8 } }
+  );
+
   // The directory is found from the back, so an end-record signature can sit anywhere: here at byte 14, the CRC field
   // of a streamed entry's local header, counting 0xFFFF entries, so the reader looks for a 64-bit locator 20 bytes
   // before it. That read lies before the file's first byte, and it is refused, not thrown.

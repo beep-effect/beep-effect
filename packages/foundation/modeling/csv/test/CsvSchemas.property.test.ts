@@ -1,12 +1,12 @@
-// Every exported schema, the engine's internal ones included, generates only values it accepts (schema-first
-// rule SF-7).
+// Each listed schema generates only values it accepts (schema-first rule SF-7): the roots, whose fields hold every
+// other exported schema, the header row, and the engine's own schemas.
 
 import { CsvDiagnostic } from "@beep/csv/CsvDiagnostic.schema";
 import { CsvCodecOptions, CsvReadOptions, CsvWriteOptions } from "@beep/csv/CsvOptions.schema";
 import { CsvByteOffset, CsvIndex, CsvTextSpan } from "@beep/csv/CsvPosition.schema";
 import { CsvRead } from "@beep/csv/CsvRead.schema";
-import { CsvRecordSlice, CsvTable } from "@beep/csv/CsvTable.schema";
-import { MachineState } from "@beep/csv/internal/machine";
+import { CsvHeaderRow, CsvRecordSlice, CsvTable } from "@beep/csv/CsvTable.schema";
+import { MachineConfig, MachineModeName, MachineState } from "@beep/csv/internal/machine";
 import { Prepared, Start } from "@beep/csv/internal/start";
 import { describe, it } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -21,17 +21,20 @@ const schemas = {
   CsvTextSpan,
   CsvTable,
   CsvRecordSlice,
+  CsvHeaderRow,
   CsvDiagnostic,
   CsvReadOptions,
   CsvWriteOptions,
   CsvCodecOptions,
   CsvRead,
+  MachineConfig,
+  MachineModeName,
   MachineState,
   Start,
   Prepared,
 };
 
-describe("every schema generates only valid values", () => {
+describe("each listed schema generates only valid values", () => {
   for (const [name, schema] of R.toEntries(schemas)) {
     it.prop(
       name,

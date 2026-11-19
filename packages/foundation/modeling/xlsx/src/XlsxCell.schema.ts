@@ -420,6 +420,15 @@ export const holdsSomething = (value: XlsxValue): boolean =>
  * XlsxCell.canonical(late, "1904").value.kind // => "Number"
  * ```
  *
+ * **Example** (Canonical form of an unreadable value)
+ *
+ * ```ts import.meta.vitest name="Canonical form of an unreadable value"
+ * import { XlsxCell, XlsxUnreadable } from "@beep/xlsx/XlsxCell.schema"
+ *
+ * const wrong = XlsxCell.make({ column: 0, value: XlsxUnreadable.make({ raw: "twelve" }) })
+ * XlsxCell.canonical(wrong, "1900").value.kind // => "Text"
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -444,13 +453,16 @@ export class XlsxCell extends S.Opaque<XlsxCell, { readonly brand: unique symbol
    * The cell as a file in a date system gives it back: a date past the system's last serial is the number it is
    * written as, a date under a format that is not a date format gets Excel's short date (`m/d/yy`), and a number in
    * the system's range of dates under a date format is the date it would be read as. An empty formula, which a read
-   * gives the cells of a shared formula it dropped, is no formula: it is not written, so it does not come back.
+   * gives the cells of a shared formula it dropped, is no formula: it is not written, so it does not come back. An
+   * `Unreadable` value is the text the file wrote there: Excel has no cell for a value it cannot read, so it is
+   * written, and read back, as that text.
    */
   static readonly canonical = (written: XlsxCell, system: XlsxDateSystem): XlsxCell => {
     const cell = O.exists(written.formula, Str.isEmpty) ? XlsxCell.make({ ...written, formula: O.none() }) : written;
     const value = cell.value;
     if (value.kind === "Date") return canonicalDate(cell, value.serial, system);
     if (value.kind === "Number") return canonicalNumber(cell, value.value, system);
+    if (value.kind === "Unreadable") return XlsxCell.make({ ...cell, value: XlsxText.make({ text: value.raw }) });
     return cell;
   };
 

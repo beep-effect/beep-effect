@@ -187,8 +187,9 @@ export const MAX_DETECT_WINDOW: ByteSize.ByteSize = ByteSize.mebibytes(256);
  * The window matters only to streams, which must settle the encoding before the input ends. A whole byte input is
  * checked in full, and bytes that are not UTF-8 are read as Windows-1252. A stream holds its window, and the chunk
  * that carries it more than three bytes past it, in memory until it decides, so the window is at most
- * `MAX_DETECT_WINDOW` (256 MiB, the default byte cap); 64 KiB by default. Input that ends sooner is decided on all of
- * its bytes, as a whole read decides it.
+ * `MAX_DETECT_WINDOW` (256 MiB, the default byte cap); 64 KiB by default. It decides on the window's bytes alone,
+ * reading the three after it only to finish a UTF-8 sequence that starts inside it, so the decision does not depend
+ * on how the input is cut. Input that ends sooner is decided on all of its bytes, as a whole read decides it.
  *
  * **Example** (Detect within the default window)
  *
@@ -398,10 +399,15 @@ const count = (cap: { readonly maximum: number; readonly fallback: number; reado
  *
  * **Details**
  *
- * Defaults: 10,000,000 records, 100,000 cells per record, 16 Mi units per cell, 64 Mi units per record, 1,000 kept
- * warnings, `MAX_TEXT_UNITS` units of text in all and 256 MiB of input. Every count is an integer of at least 1:
- * records at most 2,147,483,647, cells per record at most `MAX_FIELDS`, and lengths and warnings at most
- * `MAX_TEXT_UNITS`.
+ * Defaults: 10,000,000 records, 100,000 cells per record, 100,000,000 cells in all, 16 Mi units per cell, 64 Mi units
+ * per record, 1,000 kept warnings, `MAX_TEXT_UNITS` units of text in all and 256 MiB of input. Every count is an
+ * integer of at least 1: records at most 2,147,483,647, cells per record at most `MAX_FIELDS`, and cells in all,
+ * lengths and warnings at most `MAX_TEXT_UNITS`.
+ *
+ * `maxCells` counts the cells of every record a read emits, padding included. Text makes at most about one cell per
+ * unit, but `ragged: "pad"` makes cells out of no text: a wide first record and many one-cell records after it would
+ * otherwise pad to far more cells than the input holds. A read fails with `LimitExceeded` `cells` at the record
+ * that would pass the cap, before that record is padded.
  *
  * `maxTextLength` bounds the whole text a read takes in, the units after a byte-order mark and a `sep=` line, so
  * every position a read reports is a valid `CsvIndex`. A stream has no other length bound: past the cap it fails
@@ -423,6 +429,7 @@ const count = (cap: { readonly maximum: number; readonly fallback: number; reado
  * const limits = CsvLimits.make({ maxRecords: 1000 })
  * limits.maxRecords // => 1000
  * limits.maxFieldsPerRecord // => 100000
+ * limits.maxCells // => 100000000
  * limits.maxWarnings // => 1000
  * limits.maxTextLength // => MAX_TEXT_UNITS
  * limits.maxInputBytes // => ByteSize.mebibytes(256)
@@ -435,6 +442,11 @@ export class CsvLimits extends S.Opaque<CsvLimits, { readonly brand: unique symb
   S.Struct({
     maxRecords: count({ maximum: 2_147_483_647, fallback: 10_000_000, description: "Most records read" }),
     maxFieldsPerRecord: count({ maximum: MAX_FIELDS, fallback: 100_000, description: "Most cells in one record" }),
+    maxCells: count({
+      maximum: MAX_TEXT_UNITS,
+      fallback: 100_000_000,
+      description: "Most cells in every record read, padding included",
+    }),
     maxFieldLength: count({
       maximum: MAX_TEXT_UNITS,
       fallback: 16 * 1024 * 1024,

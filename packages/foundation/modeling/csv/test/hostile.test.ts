@@ -133,6 +133,7 @@ describe("every cap, read at once, in one-character pieces and through both chan
     ["fieldLength", { maxFieldLength: 10 }, `a,${Str.repeat(11)("x")}\n`],
     ["recordLength", { maxRecordLength: 20 }, `${A.join(A.replicate("abcd", 6), ",")}\n`],
     ["textLength", { maxTextLength: 20 }, Str.repeat(7)("a,b\n")],
+    ["cells", { maxCells: 10 }, Str.repeat(6)("a,b\n")],
   ] as const) {
     it.effect(`${name} fails the same everywhere`, () =>
       Effect.gen(function* () {
@@ -153,6 +154,23 @@ describe("every cap, read at once, in one-character pieces and through both chan
       })
     );
   }
+});
+
+// Padding makes cells out of no text, so the cells cap, not the text caps, bounds what a padded read holds.
+describe("the cells cap bounds padding", () => {
+  const padded = (maxCells: number) => readWithRules(",", { ragged: "pad", limits: CsvLimits.make({ maxCells }) });
+  const text = `${A.join(A.replicate("h", 1000), ",")}\n${Str.repeat(10)("x\n")}`;
+
+  it("short records are padded within the cap and refused past it, at the record that passes it", () => {
+    assertSuccess(
+      Result.map(outcomeOfRead(Csv.parseResult(text, padded(11_000))), A.map(A.length)),
+      A.replicate(1000, 11)
+    );
+    const refused = Csv.parseResult(text, padded(5_000)).pipe(outcomeOfRead, fatalFindings);
+    assertFailure(refused, [
+      LimitExceeded.make({ limit: "cells", maximum: 5000, at: CsvTextSpan.locate(text, 2008, 2) }),
+    ]);
+  });
 });
 
 // A stream has no length of its own, so the text-length cap is what keeps its positions valid `CsvIndex` values.
@@ -190,6 +208,34 @@ describe("the text-length cap bounds every position a read reports", () => {
           ]),
         ]
       );
+    })
+  );
+
+  it.effect("a record ended by a lone CR inside the cap is emitted before the cap fails; a CRLF past it is not", () =>
+    Effect.gen(function* () {
+      const cappedAtTwo = limited({ maxTextLength: 2 });
+      const emitted = (
+        chunks: ReadonlyArray<string>
+      ): Effect.Effect<ReadonlyArray<Result.Result<CsvRecord, ReadonlyArray<string>>>> =>
+        untilFailure(streamPieces(chunks).pipe(Stream.pipeThroughChannel(Csv.decodeString(cappedAtTwo)))).pipe(
+          Effect.map(
+            A.map(
+              Result.mapBoth({
+                onSuccess: (slice) => slice.cells,
+                onFailure: (error) => A.map(error.diagnostics, (fatal) => summary(fatal.finding)),
+              })
+            )
+          )
+        );
+      for (const chunks of [["a\rX"], ["a\r", "X"], ["a", "\r", "X"]]) {
+        const read = yield* emitted(chunks);
+        deepStrictEqual(read, [Result.succeed<CsvRecord>(["a"]), Result.fail(["LimitExceeded:textLength"])]);
+      }
+      for (const chunks of [["a\r\n"], ["a\r", "\n"]]) {
+        const read = yield* emitted(chunks);
+        deepStrictEqual(read, [Result.fail(["LimitExceeded:textLength"])]);
+      }
+      assertSuccess(outcomeOfRead(Csv.parseResult("a\r", cappedAtTwo)), [["a"]]);
     })
   );
 

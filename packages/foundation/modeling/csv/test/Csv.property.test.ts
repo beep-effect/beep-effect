@@ -6,6 +6,8 @@ import { Csv } from "@beep/csv/Csv.codec";
 import {
   CsvDelimiter,
   CsvDetectEncoding,
+  CsvFixedEncoding,
+  CsvLimits,
   CsvReadOptions,
   CsvTerminator,
   CsvWriteOptions,
@@ -29,6 +31,7 @@ import * as Str from "effect/String";
 import {
   byteConfigs,
   cuts,
+  emittedFromBytes,
   messyText,
   outcomeOfRead,
   pieces,
@@ -42,6 +45,7 @@ import {
   utf8,
 } from "./support.ts";
 import type { CsvParseError } from "@beep/csv/CsvError.errors";
+import type { Emitted } from "./support.ts";
 
 const tables = Arbitrary.schema(CsvTable);
 const streamRows = <Row extends S.Top & { readonly DecodingServices: never }>(row: Row, text: string) =>
@@ -271,6 +275,46 @@ describe("chunk invariance", () => {
       runs
     );
   }
+
+  // A channel stops at its first fatal finding, so what it emitted before it is part of its result. The decoding, the
+  // detect window, the byte cap and the record cap all meet raw bytes here; the byte cap's `actual` is the count when
+  // the cap was passed, so only that field may depend on the cuts.
+  const channelRules = Arbitrary.schema(
+    S.Struct({
+      utf8: S.Boolean,
+      window: S.Int.check(S.isBetween({ minimum: 1, maximum: 8 })),
+      maxInputBytes: S.Int.check(S.isBetween({ minimum: 1, maximum: 48 })),
+      maxRecords: S.Int.check(S.isBetween({ minimum: 1, maximum: 4 })),
+    })
+  );
+  const withoutCount = A.map((emitted: Emitted[number]) =>
+    Result.mapError(
+      emitted,
+      A.map((finding) => (finding.kind === "TooManyBytes" ? finding.kind : finding))
+    )
+  );
+  it.effect.prop(
+    "the bytes channel emits the same records, then the same failure, however its bytes are cut",
+    [channelRules, rawBytes, cuts],
+    ([rules, bytes, cutLengths]) =>
+      Effect.gen(function* () {
+        const read = readWithRules(",", {
+          encoding: rules.utf8
+            ? CsvFixedEncoding.make({ encoding: "utf-8" })
+            : CsvDetectEncoding.make({ window: ByteSize.bytes(BigInt(rules.window)) }),
+          limits: CsvLimits.make({
+            maxInputBytes: ByteSize.bytes(BigInt(rules.maxInputBytes)),
+            maxRecords: rules.maxRecords,
+          }),
+        });
+        const chunks = pieces(bytes.length, cutLengths, (from, to) => bytes.subarray(from, to));
+        const cut = yield* emittedFromBytes(chunks, read);
+        const whole = yield* emittedFromBytes([bytes], read);
+        deepStrictEqual(withoutCount(cut), withoutCount(whole));
+      }),
+    // More runs than the other laws: the cuts that matter are the few that land beside a cap or an invalid byte.
+    { arbitrary: { runs: 1000 } }
+  );
 
   it.effect("a sep= line split across chunks is still the sep= line", () =>
     Effect.gen(function* () {

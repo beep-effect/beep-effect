@@ -30,6 +30,7 @@ import {
 import { XlsxOutline, XlsxRead, XlsxSheetOutline } from "@beep/xlsx/XlsxRead.schema";
 import { MAX_SERIAL, maxSerial, XlsxCalendar, XlsxDateSystem, XlsxSerial } from "@beep/xlsx/XlsxSerial.schema";
 import {
+  fitsExcel,
   XlsxDroppedPart,
   XlsxHeading,
   XlsxHiddenColumns,
@@ -44,7 +45,7 @@ import {
   XlsxWorksheet,
 } from "@beep/xlsx/XlsxWorkbook.schema";
 import { describe, expect, it } from "@effect/vitest";
-import { assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -181,8 +182,20 @@ describe("serials", () => {
           system
         );
       assertSome(shown(serial), "9999-12-31 23:59:59");
-      deepStrictEqual(shown(Math.min(maxSerial(system) + 1, MAX_SERIAL)), system === "1904" ? O.none() : shown(serial));
+      assertSome(shown(maxSerial(system)), "9999-12-31 23:59:59");
     }
+    // The serial schema ends at the 1900 system's last serial, so only a 1904 serial can pass its system's last.
+    const past1904 = maxSerial("1904") + 1;
+    expect(past1904).toBeLessThanOrEqual(MAX_SERIAL);
+    assertNone(
+      XlsxCell.shown(
+        {
+          value: XlsxDate.make({ serial: past1904 }),
+          format: XlsxNumberFormat.make({ id: 164, code: "yyyy-mm-dd hh:mm:ss" }),
+        },
+        "1904"
+      )
+    );
     // A 1904 serial past the system's last day was shown as the year 0002.
     const late = XlsxDate.make({ serial: 2_958_000 });
     assertNone(XlsxCell.shown({ value: late, format: XlsxNumberFormat.make({ id: 164, code: "yyyy-mm-dd" }) }, "1904"));
@@ -351,6 +364,64 @@ describe("displayed text", () => {
     const wide = XlsxNumberFormat.make({ id: 164, code: `0.${Str.repeat(31)("0")}` });
     expect(XlsxNumberFormat.kind(wide).kind).toBe("Other");
     assertNone(XlsxCell.shown({ value: XlsxNumber.make({ value: 0 }), format: wide }, "1900"));
+  });
+  // The word General is read without regard to case, by `kind` and `isDate` alike, so a number under it stays a
+  // number (SheetJS called `general` a date for its lowercase g). A lone g is an era mark, and a date.
+  const caseMix = S.Array(S.Boolean).check(S.isMinLength(7), S.isMaxLength(7));
+  it.prop("calls General in any case General, and never a date", [Arbitrary.schema(caseMix)], ([upper]) => {
+    const code = A.join(
+      A.map(Str.split("")("general"), (letter, i) => (upper[i] === true ? Str.toUpperCase(letter) : letter)),
+      ""
+    );
+    expect(XlsxNumberFormat.kind({ code }).kind).toBe("General");
+    expect(XlsxNumberFormat.isDate({ code })).toBe(false);
+    expect(XlsxNumberFormat.isDate({ code: `${code} "x"` })).toBe(false);
+    expect(XlsxCell.canonical(number(42, code), "1900").value).toMatchObject({ kind: "Number", value: 42 });
+    assertSome(XlsxCell.shown(number(42, code), "1900"), "42");
+  });
+  it("calls a lone g an era mark, and so a date", () => {
+    expect(XlsxNumberFormat.isDate({ code: "g" })).toBe(true);
+    expect(XlsxNumberFormat.isDate({ code: "ggg yyyy" })).toBe(true);
+  });
+  // A condition chooses a section by the serial; this package does not choose, so it shows nothing rather than the
+  // first section's text, for any condition in any section. A format with none is still shown.
+  const Condition = S.Struct({
+    operator: S.Literals(["<", ">", "=", "<=", ">=", "<>"]),
+    bound: S.Int.check(S.isBetween({ minimum: 0, maximum: 99_999 })),
+    second: S.Boolean,
+    serial: S.Int.check(S.isBetween({ minimum: 0, maximum: 99_999 })),
+  });
+  it.prop("shows nothing for a date format with a condition", [Arbitrary.schema(Condition)], ([condition]) => {
+    const block = `[${condition.operator}${condition.bound}]`;
+    const code = condition.second ? `yyyy-mm-dd;${block}dd/mm/yyyy` : `${block}yyyy-mm-dd;dd/mm/yyyy`;
+    assertNone(XlsxCell.shown(date(condition.serial, code), "1900"));
+    assertTrue(XlsxNumberFormat.isDate({ code }));
+  });
+  it("shows a date format whose brackets hold no condition", () => {
+    assertNone(XlsxCell.shown(date(1, "[>=2]yyyy-mm-dd;dd/mm/yyyy"), "1900"));
+    assertSome(XlsxCell.shown(date(1, "[$-409]yyyy-mm-dd;dd/mm/yyyy"), "1900"), "1900-01-01");
+    assertSome(XlsxCell.shown(date(1, '"[>=2]"yyyy-mm-dd'), "1900"), "[>=2]1900-01-01");
+  });
+});
+
+describe("sheet names Excel takes", () => {
+  it("refuses each name Excel refuses", () => {
+    for (const name of ["Q1/Q2", "a:b", "a\\b", "a?b", "a*b", "a[b", "a]b", "'lead", "trail'", "History", "HISTORY"]) {
+      expect([name, fitsExcel(name)]).toEqual([name, false]);
+    }
+    for (const name of ["Q1 sales", "it's here", "Histories", Str.repeat(31)("x"), "Ünïcödé"]) {
+      expect([name, fitsExcel(name)]).toEqual([name, true]);
+    }
+    expect(fitsExcel(Str.repeat(32)("x"))).toBe(false);
+  });
+  it.prop("takes a name only when it keeps every rule", [Arbitrary.schema(XlsxSheetName)], ([name]) => {
+    const keepsRules =
+      name.length <= 31 &&
+      A.every(Str.split("")(":\\/?*[]"), (letter) => !Str.includes(letter)(name)) &&
+      name[0] !== "'" &&
+      name[name.length - 1] !== "'" &&
+      Str.toLowerCase(name) !== "history";
+    expect(fitsExcel(name)).toBe(keepsRules);
   });
 });
 

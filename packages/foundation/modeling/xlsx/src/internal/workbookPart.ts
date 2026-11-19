@@ -25,6 +25,7 @@ import {
   eventsOf,
   isTrue,
   localName,
+  longerThan,
   relationshipsOf,
   relationshipsPath,
   rootOf,
@@ -161,6 +162,20 @@ const stylesOf = Effect.fnUntraced(function* (input: {
   return { styles, more: stylesMore(root) };
 });
 
+/** How many bytes of a held part the XML reader is handed at a time. */
+const sliceBytes = 65_536;
+
+/**
+ * A held part's bytes as a stream of slices, each a view into the part and each its own pull. The XML reader hands
+ * on every event a slice completes before the reader can stop, so a whole part in one piece would be read to its end
+ * before a cap on its entries could stop it; in slices, a read stops within a slice of the cap.
+ */
+const slicesOf = (bytes: Uint8Array): Stream.Stream<Uint8Array> =>
+  Stream.fromIterable(
+    A.makeBy(Math.ceil(bytes.length / sliceBytes), (i) => bytes.subarray(i * sliceBytes, (i + 1) * sliceBytes)),
+    { chunkSize: 1 }
+  );
+
 /** The shared text table: each entry's text, its formatted runs joined and its phonetic runs left out. */
 const stringsOf = Effect.fnUntraced(function* (input: {
   readonly path: string;
@@ -189,7 +204,7 @@ const stringsOf = Effect.fnUntraced(function* (input: {
   const endEntry = (): void => {
     entryAt = -1;
     if (strings.length >= input.caps.sharedStrings) failed = O.some("sharedStrings");
-    else if (text.length > input.caps.cellChars) failed = O.some("cellChars");
+    else if (longerThan(text, input.caps.cellChars)) failed = O.some("cellChars");
     else strings.push(detached(unescaped(text)));
   };
   const endElement = (): void => {
@@ -203,7 +218,7 @@ const stringsOf = Effect.fnUntraced(function* (input: {
     else if (event._tag === "EndElement") endElement();
     else if (event._tag === "Text" && textAt !== -1) text += event.text;
   };
-  yield* eventsOf({ path: input.path, body: Stream.make(input.bytes), cellChars: input.caps.cellChars }).pipe(
+  yield* eventsOf({ path: input.path, body: slicesOf(input.bytes), cellChars: input.caps.cellChars }).pipe(
     Stream.takeWhile(() => O.isNone(failed)),
     Stream.runForEachArray((events) =>
       Effect.sync(() => {

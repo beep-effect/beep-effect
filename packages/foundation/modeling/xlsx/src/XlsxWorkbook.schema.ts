@@ -230,7 +230,14 @@ export const XlsxSheetName = S.String.check(S.isMinLength(1), S.isMaxLength(255)
 const forbiddenInName = /[:\\/?*[\]]/;
 
 /**
- * Whether Excel itself would accept a sheet name: at most 31 characters and none of `: \ / ? * [ ]`.
+ * Whether Excel itself would accept a sheet name: at most 31 characters, none of `: \ / ? * [ ]`, no apostrophe at
+ * either end, and not `History`, in any case, which Excel keeps for its change history.
+ *
+ * **Gotchas**
+ *
+ * `Xlsx.stringify` writes a name as the schema holds it and does not ask this; a workbook meant for Excel should
+ * pass it for every sheet before it is written. Two names that differ only in case are already refused by the
+ * `XlsxWorkbook` schema.
  *
  * **Example** (Names Excel takes)
  *
@@ -238,14 +245,22 @@ const forbiddenInName = /[:\\/?*[\]]/;
  * import { fitsExcel } from "@beep/xlsx/XlsxWorkbook.schema"
  *
  * fitsExcel("Q1 sales") // => true
+ * fitsExcel("Q1's sales") // => true
  * fitsExcel("Q1/Q2 sales") // => false
  * fitsExcel("A name that runs past thirty-one characters") // => false
+ * fitsExcel("'quoted'") // => false
+ * fitsExcel("history") // => false
  * ```
  *
  * @category predicates
  * @since 0.0.0
  */
-export const fitsExcel = (name: XlsxSheetName): boolean => name.length <= 31 && !forbiddenInName.test(name);
+export const fitsExcel = (name: XlsxSheetName): boolean =>
+  name.length <= 31 &&
+  !forbiddenInName.test(name) &&
+  !Str.startsWith("'")(name) &&
+  !Str.endsWith("'")(name) &&
+  Str.toLowerCase(name) !== "history";
 
 /**
  * A sheet's name as a file may carry it, not always one Excel would take; the type {@link XlsxSheetName} decodes to.

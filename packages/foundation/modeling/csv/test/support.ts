@@ -166,6 +166,26 @@ export const rawBytes = RawByte.pipe(
 export const untilFailure = <A, E>(stream: Stream.Stream<A, E>): Effect.Effect<Array<Result.Result<A, E>>> =>
   stream.pipe(Stream.map(Result.succeed<A>), Stream.catch(flow(Result.fail<E>, Stream.make)), Stream.runCollect);
 
+/** What a channel emitted before it stopped: each record's cells, then the fatal findings it failed with. */
+export type Emitted = ReadonlyArray<Result.Result<CsvRecord, ReadonlyArray<CsvFatal["finding"]>>>;
+
+/** The bytes channel's records over the pieces, in order, then the findings it failed with, if it failed. */
+export const emittedFromBytes: {
+  (options: CsvReadOptions): (chunks: ReadonlyArray<Uint8Array>) => Effect.Effect<Emitted>;
+  (chunks: ReadonlyArray<Uint8Array>, options: CsvReadOptions): Effect.Effect<Emitted>;
+} = dual(2, (chunks: ReadonlyArray<Uint8Array>, options: CsvReadOptions) =>
+  untilFailure(streamPieces(chunks).pipe(Stream.pipeThroughChannel(Csv.decode(options)))).pipe(
+    Effect.map(
+      A.map(
+        Result.mapBoth({
+          onSuccess: (slice: CsvRecordSlice) => slice.cells,
+          onFailure: (error: CsvParseError) => findingsOfFatals(error.diagnostics),
+        })
+      )
+    )
+  )
+);
+
 /** A stream of `values`, then the caller's own failure, as an upstream that breaks mid-input. */
 export const thenFail: {
   (error: string): <A>(values: ReadonlyArray<A>) => Stream.Stream<A, string>;

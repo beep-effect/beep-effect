@@ -1,6 +1,7 @@
 // The reading channels' state, one chunk at a time. Text: the first text is held until its start is decided and,
 // when the delimiter is detected, until it fills the detection window; then one machine reads every chunk. Bytes: the
-// detect window and up to three bytes past it are held, then the decided decoding turns each chunk into text. Held input is kept as
+// detect window and up to three bytes past it are held, the encoding is decided on those bytes alone, however they
+// were cut, and the decided decoding turns each chunk into text. Held input is kept as
 // the chunks that came, appended in place and joined once, so a chunk costs time in its own length. A step returns
 // fatal findings as schema values; the `Csv` facade turns them into the `CsvParseError` the channel fails with.
 import * as A from "effect/Array";
@@ -230,6 +231,9 @@ const incompleteTail = (bytes: Uint8Array): number => {
   return sequenceLength(bytes[bytes.length - back] ?? 0) > back ? back : 0;
 };
 
+/** A decoded piece, when it is not empty. */
+const textOf = (text: string): ReadonlyArray<DecodedText> => (Str.isNonEmpty(text) ? [Result.succeed(text)] : []);
+
 const fixedStep = (decoder: TextDecoder, bytes: Uint8Array): DecodingStep => [
   { phase: "fixed", decoder },
   [Result.succeed(decoder.decode(bytes, { stream: true }))],
@@ -244,36 +248,39 @@ const utf8Step = (carry: Uint8Array, at: number, decoder: TextDecoder, chunk: Ui
   const keep = incompleteTail(bytes);
   const whole = bytes.subarray(0, bytes.length - keep);
   return O.match(firstInvalidUtf8(whole), {
+    // The valid bytes before the invalid one are read first, so the records they finish, and a finding among them,
+    // come as they would had the chunk ended at the invalid byte.
     onSome: (invalid): DecodingStep => [
       { phase: "utf8", carry: new Uint8Array(0), at, decoder },
-      [failWith(InvalidUtf8.make({ byteOffset: at + invalid }))],
+      [...textOf(decoder.decode(whole.subarray(0, invalid))), failWith(InvalidUtf8.make({ byteOffset: at + invalid }))],
     ],
-    onNone: () => {
-      const text = decoder.decode(whole);
-      return [
-        { phase: "utf8", carry: bytes.slice(bytes.length - keep), at: at + whole.length, decoder },
-        Str.isNonEmpty(text) ? [Result.succeed(text)] : [],
-      ];
-    },
+    onNone: (): DecodingStep => [
+      { phase: "utf8", carry: bytes.slice(bytes.length - keep), at: at + whole.length, decoder },
+      textOf(decoder.decode(whole)),
+    ],
   });
 };
 
 const startUtf8 = (bytes: Uint8Array): DecodingStep => utf8Step(new Uint8Array(0), 0, decoderFor("utf-8"), bytes);
 
-/**
- * Decides the encoding from the held bytes by the whole read's rule (`detectEncoding`). A byte-order mark stays in
- * the decoded text; the text reader strips it, as it does for a whole read. Before the end of the input an unfinished
- * UTF-8 sequence at the end of the held bytes may still be completed, so it is not checked; it starts past the
- * window, because the window is decided only once more than `UTF8_TAIL` bytes past it have arrived. At the end of
- * the input every held byte is checked, as a whole read checks them.
- */
-const decideWindow = (bytes: Uint8Array, final: boolean): DecodingStep => {
-  const encoding = detectEncoding({ bytes, checked: final ? bytes.length : bytes.length - incompleteTail(bytes) });
-  return encoding.encoding === "utf-8" ? startUtf8(bytes) : fixedStep(decoderFor(encoding.encoding), bytes);
-};
-
 /** The most bytes of an unfinished UTF-8 sequence: a four-byte one missing its last byte. */
 const UTF8_TAIL = 3;
+
+/**
+ * Decides the encoding by the whole read's rule (`detectEncoding`), then decodes every held byte in it. A byte-order
+ * mark stays in the decoded text; the text reader strips it, as it does for a whole read. Before the end of the
+ * input the decision reads the first `window` bytes and the `UTF8_TAIL` after them, which finish a sequence that
+ * starts inside the window, and nothing else, so it does not depend on how the held bytes were cut. At the end of the
+ * input, which comes before more than `UTF8_TAIL` bytes past the window, every held byte is checked, as a whole read
+ * checks them.
+ */
+const decideWindow = (bytes: Uint8Array, window: O.Option<number>): DecodingStep => {
+  const encoding = O.match(window, {
+    onNone: () => detectEncoding({ bytes }),
+    onSome: (within) => detectEncoding({ bytes: bytes.subarray(0, within + UTF8_TAIL), within }),
+  });
+  return encoding.encoding === "utf-8" ? startUtf8(bytes) : fixedStep(decoderFor(encoding.encoding), bytes);
+};
 
 /** Fills the detect window, or decodes at once when the options fix the encoding. */
 const windowStep = (window: Window, options: CsvReadOptions): DecodingStep =>
@@ -284,7 +291,7 @@ const windowStep = (window: Window, options: CsvReadOptions): DecodingStep =>
     },
     detect: (detect): DecodingStep =>
       ByteSize.isGreaterThan(ByteSize.bytes(BigInt(Num.max(0, window.size - UTF8_TAIL))), detect.window)
-        ? decideWindow(concatBytes(window.pieces), false)
+        ? decideWindow(concatBytes(window.pieces), O.some(Number(detect.window)))
         : [window, []],
   });
 
@@ -313,26 +320,37 @@ const haltDecoding: (decoding: Decoding) => ReadonlyArray<DecodedText> = Match.t
     utf8: ({ carry, at }): ReadonlyArray<DecodedText> =>
       carry.length > 0 ? [failWith(InvalidUtf8.make({ byteOffset: at }))] : [],
     window: ({ pieces }): ReadonlyArray<DecodedText> => {
-      const [next, texts] = decideWindow(concatBytes(pieces), true);
+      const [next, texts] = decideWindow(concatBytes(pieces), O.none());
       return [...texts, ...haltDecoding(next)];
     },
   })
 );
 
+type BytesStep = readonly [BytesPending, ReadonlyArray<DecodedText>];
+
+/**
+ * The chunk that passes the byte cap: its bytes up to the cap are decoded first, as they would be had the chunk ended
+ * at the cap, so the records and findings before the cap come as they would; then the cap fails the stream with the
+ * count so far. The decoding is not finished, so a record left open is not flushed.
+ */
+const passCap = (pending: BytesPending, chunk: Uint8Array, seen: number, options: CsvReadOptions): BytesStep => {
+  const { maxInputBytes } = options.limits;
+  const [decoding, texts] = stepDecoding(pending.decoding)(
+    chunk.subarray(0, Number(maxInputBytes) - pending.seen),
+    options
+  );
+  return [
+    { decoding, seen, over: true },
+    [...texts, failWith(TooManyBytes.make({ maximum: maxInputBytes, actual: ByteSize.bytes(BigInt(seen)) }))],
+  ];
+};
+
 /** One byte chunk: counted against the byte cap first, so a stream fails as soon as it has read past the cap. */
-const stepChunk = (
-  pending: BytesPending,
-  chunk: Uint8Array,
-  options: CsvReadOptions
-): readonly [BytesPending, ReadonlyArray<DecodedText>] => {
+const stepChunk = (pending: BytesPending, chunk: Uint8Array, options: CsvReadOptions): BytesStep => {
   if (pending.over) return [pending, []];
   const seen = pending.seen + chunk.length;
-  const size = ByteSize.bytes(BigInt(seen));
-  if (ByteSize.isGreaterThan(size, options.limits.maxInputBytes))
-    return [
-      { ...pending, seen, over: true },
-      [failWith(TooManyBytes.make({ maximum: options.limits.maxInputBytes, actual: size }))],
-    ];
+  if (ByteSize.isGreaterThan(ByteSize.bytes(BigInt(seen)), options.limits.maxInputBytes))
+    return passCap(pending, chunk, seen, options);
   const [decoding, texts] = stepDecoding(pending.decoding)(chunk, options);
   return [{ decoding, seen, over: false }, texts];
 };
@@ -346,8 +364,8 @@ export const bytesSteps = (
 ): ChannelSteps<ReadonlyArray<Uint8Array>, BytesPending, DecodedText> => ({
   initial: (): BytesPending => ({ decoding: { phase: "window", pieces: [], size: 0 }, seen: 0, over: false }),
   step: (pending, chunks) => {
-    const initial: readonly [BytesPending, ReadonlyArray<DecodedText>] = [pending, []];
-    return A.reduce(chunks, initial, ([state, texts], chunk): readonly [BytesPending, ReadonlyArray<DecodedText>] => {
+    const initial: BytesStep = [pending, []];
+    return A.reduce(chunks, initial, ([state, texts], chunk): BytesStep => {
       const [next, more] = stepChunk(state, chunk, options);
       return [next, A.appendAll(texts, more)];
     });
