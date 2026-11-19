@@ -13,10 +13,11 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { Item, ItemDetail, Location } from "./Item.ts";
-import { fingerprint, ItemKey } from "./ItemKey.ts";
+import { fingerprint } from "./ItemKey.ts";
+import { itemAnnotationFields, itemIdentityFields } from "./internal/itemFields.ts";
 import { optionalSlot } from "./internal/slots.ts";
 import { Count, DurationMs, Position, Text } from "./Scalars.ts";
-import { FailureKind, HistoryLabel, ItemOutcome, Severity } from "./Vocabulary.ts";
+import { ItemOutcome } from "./Vocabulary.ts";
 
 const $I = $GateReportId.create("Interchange");
 
@@ -36,21 +37,11 @@ const $I = $GateReportId.create("Interchange");
  */
 export class ItemExtension extends S.Opaque<ItemExtension, { readonly brand: unique symbol }>()(
   S.Struct({
-    key: ItemKey,
-    unit: Text,
-    path: S.Array(S.String),
-    name: S.String,
+    ...itemIdentityFields,
     column: optionalSlot(Position),
     diff: optionalSlot(S.String),
     stack: optionalSlot(S.String),
-    code: optionalSlot(Text),
-    rule: optionalSlot(Text),
-    severity: optionalSlot(Severity),
-    failureKind: optionalSlot(FailureKind),
-    signature: optionalSlot(Text),
-    attempts: optionalSlot(ItemOutcome.pipe(S.NonEmptyArray)),
-    durationMs: optionalSlot(DurationMs),
-    label: optionalSlot(HistoryLabel),
+    ...itemAnnotationFields,
     detailed: S.Boolean,
   }).pipe(
     $I.annoteSchema("ItemExtension", {

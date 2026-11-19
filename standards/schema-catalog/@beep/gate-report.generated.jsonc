@@ -65,6 +65,7 @@
     {"file":"packages/foundation/modeling/gate-report/src/Widening.ts","symbol":"UpstreamRunOutcome","kind":"literal-kit","owner":"@beep/gate-report","identity":"UpstreamRunOutcome","description":"Upstream RunOutcome: all pass, some fail or threshold violation."},
     {"file":"packages/foundation/modeling/gate-report/src/Widening.ts","symbol":"UpstreamRunReason","kind":"literal-kit","owner":"@beep/gate-report","identity":"UpstreamRunReason","description":"Upstream TestRunReason: why a test runner says a run ended."},
     {"file":"packages/foundation/modeling/gate-report/src/Widening.ts","symbol":"UpstreamRunShape","kind":"literal-kit","owner":"@beep/gate-report","identity":"UpstreamRunShape","description":"Upstream RunShape: single test, single file, single project or workspace."},
-    {"file":"packages/foundation/modeling/gate-report/src/Widening.ts","symbol":"UpstreamTestState","kind":"literal-kit","owner":"@beep/gate-report","identity":"UpstreamTestState","description":"Upstream TestState: the test states a test runner reports."}
+    {"file":"packages/foundation/modeling/gate-report/src/Widening.ts","symbol":"UpstreamTestState","kind":"literal-kit","owner":"@beep/gate-report","identity":"UpstreamTestState","description":"Upstream TestState: the test states a test runner reports."},
+    {"file":"packages/foundation/modeling/gate-report/src/internal/itemFields.ts","symbol":"itemIdentityFields","kind":"schema-const","owner":"@beep/gate-report"}
   ]
 }

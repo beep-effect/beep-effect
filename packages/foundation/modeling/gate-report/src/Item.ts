@@ -7,10 +7,10 @@
  */
 import { $GateReportId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
-import { ItemKey } from "./ItemKey.ts";
+import { itemAnnotationFields, itemIdentityFields } from "./internal/itemFields.ts";
 import { optionalSlot } from "./internal/slots.ts";
-import { DurationMs, Position, Text } from "./Scalars.ts";
-import { FailureKind, HistoryLabel, ItemOutcome, Severity } from "./Vocabulary.ts";
+import { Position, Text } from "./Scalars.ts";
+import { ItemOutcome } from "./Vocabulary.ts";
 
 const $I = $GateReportId.create("Item");
 
@@ -108,21 +108,11 @@ export class ItemDetail extends S.Opaque<ItemDetail, { readonly brand: unique sy
  */
 export class Item extends S.Opaque<Item, { readonly brand: unique symbol }>()(
   S.Struct({
-    key: ItemKey,
-    unit: Text,
-    path: S.Array(S.String),
-    name: S.String,
+    ...itemIdentityFields,
     outcome: ItemOutcome,
     location: optionalSlot(Location),
     detail: optionalSlot(ItemDetail),
-    code: optionalSlot(Text),
-    rule: optionalSlot(Text),
-    severity: optionalSlot(Severity),
-    failureKind: optionalSlot(FailureKind),
-    signature: optionalSlot(Text),
-    attempts: optionalSlot(ItemOutcome.pipe(S.NonEmptyArray)),
-    durationMs: optionalSlot(DurationMs),
-    label: optionalSlot(HistoryLabel),
+    ...itemAnnotationFields,
   }).pipe(
     $I.annoteSchema("Item", {
       description: "One test case, diagnostic or step with its outcome, location, detail and history slot.",
