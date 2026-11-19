@@ -13,7 +13,7 @@
   },
   "scripts": {
     "build": "bun run beep:build",
-    "check": "bun run beep:check",
+    "check": "beep-cli quality check-probe && bun run beep:check",
     "coverage": "bunx vitest run --coverage test/*.test.ts test/integration/ContradictionTriage.pglite.test.ts",
     "docgen": "bun run beep:docgen",
     "lint": "bun run beep:lint",

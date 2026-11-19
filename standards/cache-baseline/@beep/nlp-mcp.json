@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/nlp-mcp",
   "review": {
-    "reviewer": "Claude Opus 5.5 (declaration-only-builds PR 3, check once)",
-    "reason": "Record the configuration drift of check once: the root turbo.json check task depends on the package's own build as well as ^build, and bun run beep lint package-scripts --write rewrote 180 declaration-only scripts blocks so beep:check leads with tsrs -p tsconfig.json --emitDeclarationOnly instead of tsrs -p tsconfig.check.json (first-segment flags such as @beep/repo-cli's --checkerCostCache carried over), re-keying the command digest of every task of the written packages, cached or not. The 19 packages whose build is not declaration-only keep their previous check graph through an explicit tasks.check.dependsOn [\"^build\"] in their own turbo.json. Task commands, cache flags, inputs, outputs and environment are unchanged; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
+    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/check-once-cache-review-2026-11-13.md",
-      "sha256": "3c9c0c16b9aff33114a2733091c6ea5e9831fbd7b5fc27fee96432d6bdfa3cc3"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/nlp-mcp#build",
       "command": "bun run beep:build",
-      "commandDigest": "24fe5dc09aa9e86860bd14f184eed4d26edddbe90b17947b53ddfb30168a10fc",
+      "commandDigest": "7db1445186cc20771c7386e5101a2d9fd11b20ca1fa318418af0a5e9682cdbb9",
       "dependencies": [
         "@beep/file-processing#build",
         "@beep/identity#build",
@@ -73,8 +73,8 @@
     },
     {
       "computation": "@beep/nlp-mcp#check",
-      "command": "bun run beep:check",
-      "commandDigest": "24fe5dc09aa9e86860bd14f184eed4d26edddbe90b17947b53ddfb30168a10fc",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "7db1445186cc20771c7386e5101a2d9fd11b20ca1fa318418af0a5e9682cdbb9",
       "dependencies": [
         "@beep/file-processing#build",
         "@beep/identity#build",
@@ -124,7 +124,7 @@
     {
       "computation": "@beep/nlp-mcp#coverage",
       "command": "bunx vitest run --coverage --exclude=test/integration/**",
-      "commandDigest": "24fe5dc09aa9e86860bd14f184eed4d26edddbe90b17947b53ddfb30168a10fc",
+      "commandDigest": "7db1445186cc20771c7386e5101a2d9fd11b20ca1fa318418af0a5e9682cdbb9",
       "dependencies": [
         "@beep/file-processing#build",
         "@beep/identity#build",
@@ -182,7 +182,7 @@
     {
       "computation": "@beep/nlp-mcp#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "24fe5dc09aa9e86860bd14f184eed4d26edddbe90b17947b53ddfb30168a10fc",
+      "commandDigest": "7db1445186cc20771c7386e5101a2d9fd11b20ca1fa318418af0a5e9682cdbb9",
       "dependencies": [
         "@beep/nlp-mcp#transit",
         "@beep/repo-docgen#transit"
@@ -222,7 +222,7 @@
     {
       "computation": "@beep/nlp-mcp#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "24fe5dc09aa9e86860bd14f184eed4d26edddbe90b17947b53ddfb30168a10fc",
+      "commandDigest": "7db1445186cc20771c7386e5101a2d9fd11b20ca1fa318418af0a5e9682cdbb9",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -256,7 +256,7 @@
     {
       "computation": "@beep/nlp-mcp#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "24fe5dc09aa9e86860bd14f184eed4d26edddbe90b17947b53ddfb30168a10fc",
+      "commandDigest": "7db1445186cc20771c7386e5101a2d9fd11b20ca1fa318418af0a5e9682cdbb9",
       "dependencies": [
         "@beep/file-processing#transit",
         "@beep/identity#transit",
@@ -329,7 +329,7 @@
     {
       "computation": "@beep/nlp-mcp#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "24fe5dc09aa9e86860bd14f184eed4d26edddbe90b17947b53ddfb30168a10fc",
+      "commandDigest": "7db1445186cc20771c7386e5101a2d9fd11b20ca1fa318418af0a5e9682cdbb9",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -359,7 +359,7 @@
     {
       "computation": "@beep/nlp-mcp#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "24fe5dc09aa9e86860bd14f184eed4d26edddbe90b17947b53ddfb30168a10fc",
+      "commandDigest": "7db1445186cc20771c7386e5101a2d9fd11b20ca1fa318418af0a5e9682cdbb9",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -415,7 +415,7 @@
     {
       "computation": "@beep/nlp-mcp#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "24fe5dc09aa9e86860bd14f184eed4d26edddbe90b17947b53ddfb30168a10fc",
+      "commandDigest": "7db1445186cc20771c7386e5101a2d9fd11b20ca1fa318418af0a5e9682cdbb9",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -461,7 +461,7 @@
     {
       "computation": "@beep/nlp-mcp#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "24fe5dc09aa9e86860bd14f184eed4d26edddbe90b17947b53ddfb30168a10fc",
+      "commandDigest": "7db1445186cc20771c7386e5101a2d9fd11b20ca1fa318418af0a5e9682cdbb9",
       "dependencies": [
         "@beep/file-processing#transit",
         "@beep/identity#transit",
@@ -512,7 +512,7 @@
     {
       "computation": "@beep/nlp-mcp#test",
       "command": "bun run beep:test",
-      "commandDigest": "24fe5dc09aa9e86860bd14f184eed4d26edddbe90b17947b53ddfb30168a10fc",
+      "commandDigest": "7db1445186cc20771c7386e5101a2d9fd11b20ca1fa318418af0a5e9682cdbb9",
       "dependencies": [
         "@beep/file-processing#transit",
         "@beep/identity#transit",
@@ -571,7 +571,7 @@
     {
       "computation": "@beep/nlp-mcp#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "24fe5dc09aa9e86860bd14f184eed4d26edddbe90b17947b53ddfb30168a10fc",
+      "commandDigest": "7db1445186cc20771c7386e5101a2d9fd11b20ca1fa318418af0a5e9682cdbb9",
       "dependencies": [
         "@beep/file-processing#build",
         "@beep/identity#build",
@@ -619,7 +619,7 @@
     {
       "computation": "@beep/nlp-mcp#test:integration:parallel",
       "command": "bun run beep:test:integration",
-      "commandDigest": "24fe5dc09aa9e86860bd14f184eed4d26edddbe90b17947b53ddfb30168a10fc",
+      "commandDigest": "7db1445186cc20771c7386e5101a2d9fd11b20ca1fa318418af0a5e9682cdbb9",
       "dependencies": [
         "@beep/file-processing#build",
         "@beep/identity#build",
@@ -667,7 +667,7 @@
     {
       "computation": "@beep/nlp-mcp#test:property",
       "command": "bun run beep:test",
-      "commandDigest": "24fe5dc09aa9e86860bd14f184eed4d26edddbe90b17947b53ddfb30168a10fc",
+      "commandDigest": "7db1445186cc20771c7386e5101a2d9fd11b20ca1fa318418af0a5e9682cdbb9",
       "dependencies": [
         "@beep/file-processing#transit",
         "@beep/identity#transit",

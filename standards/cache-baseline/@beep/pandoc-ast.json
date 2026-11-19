@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/pandoc-ast",
   "review": {
-    "reviewer": "Claude Opus 5.5 (declaration-only-builds PR 3, check once)",
-    "reason": "Record the configuration drift of check once: the root turbo.json check task depends on the package's own build as well as ^build, and bun run beep lint package-scripts --write rewrote 180 declaration-only scripts blocks so beep:check leads with tsrs -p tsconfig.json --emitDeclarationOnly instead of tsrs -p tsconfig.check.json (first-segment flags such as @beep/repo-cli's --checkerCostCache carried over), re-keying the command digest of every task of the written packages, cached or not. The 19 packages whose build is not declaration-only keep their previous check graph through an explicit tasks.check.dependsOn [\"^build\"] in their own turbo.json. Task commands, cache flags, inputs, outputs and environment are unchanged; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
+    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/check-once-cache-review-2026-11-13.md",
-      "sha256": "3c9c0c16b9aff33114a2733091c6ea5e9831fbd7b5fc27fee96432d6bdfa3cc3"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/pandoc-ast#build",
       "command": "bun run beep:build",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [
         "@beep/identity#build",
         "@beep/md#build",
@@ -70,8 +70,8 @@
     },
     {
       "computation": "@beep/pandoc-ast#check",
-      "command": "bun run beep:check",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [
         "@beep/identity#build",
         "@beep/md#build",
@@ -118,7 +118,7 @@
     {
       "computation": "@beep/pandoc-ast#coverage",
       "command": "bunx vitest run --coverage --exclude=test/integration/**",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [
         "@beep/identity#build",
         "@beep/md#build",
@@ -173,7 +173,7 @@
     {
       "computation": "@beep/pandoc-ast#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [
         "@beep/pandoc-ast#transit",
         "@beep/repo-docgen#transit"
@@ -213,7 +213,7 @@
     {
       "computation": "@beep/pandoc-ast#doctest",
       "command": "bun run beep:doctest",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/md#transit",
@@ -267,7 +267,7 @@
     {
       "computation": "@beep/pandoc-ast#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -301,7 +301,7 @@
     {
       "computation": "@beep/pandoc-ast#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/md#transit",
@@ -371,7 +371,7 @@
     {
       "computation": "@beep/pandoc-ast#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -401,7 +401,7 @@
     {
       "computation": "@beep/pandoc-ast#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -457,7 +457,7 @@
     {
       "computation": "@beep/pandoc-ast#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -503,7 +503,7 @@
     {
       "computation": "@beep/pandoc-ast#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/md#transit",
@@ -551,7 +551,7 @@
     {
       "computation": "@beep/pandoc-ast#test",
       "command": "bun run beep:test",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/md#transit",
@@ -607,7 +607,7 @@
     {
       "computation": "@beep/pandoc-ast#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [
         "@beep/identity#build",
         "@beep/md#build",
@@ -652,7 +652,7 @@
     {
       "computation": "@beep/pandoc-ast#test:integration:parallel",
       "command": "bun run beep:test:integration",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [
         "@beep/identity#build",
         "@beep/md#build",
@@ -697,7 +697,7 @@
     {
       "computation": "@beep/pandoc-ast#test:property",
       "command": "bun run beep:test",
-      "commandDigest": "6d44093de486dfd6efe4051da84adaf83cd8d563b867df69a797648b974b57d6",
+      "commandDigest": "9e9c64c793e225d82b4f0d891370cb63c4ba45f507d5817397772f21f7fe5a4f",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/md#transit",

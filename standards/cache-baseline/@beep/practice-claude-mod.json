@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/practice-claude-mod",
   "review": {
-    "reviewer": "Claude Opus 5.5 (perf/lint-turbo-inputs, PR A of the lint efficiency plan)",
-    "reason": "Move the workspace-manifest walk from per-package lint:laws onto its lint-laws seal (identical invalidation) and negate gitignored residue/coverage/storybook/docs-modules paths that the root scanners never read; no qualification change. Re-recorded after the basis report gained the lint:effect-imports-markdown bullet (review thread on PR #3014); turbo.json unchanged.",
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
+    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/lint-turbo-inputs-cache-review-2026-11-09.md",
-      "sha256": "f35ed3aa2989cdf6b439fa0cae3e645d683be6318c6699b67c50d43b0a07901f"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/practice-claude-mod#build",
       "command": "bun run beep:build",
-      "commandDigest": "1f26e4e9820efc924380a9b4d8533f457b5b1a0027ae0e84f9dfd49a3d727053",
+      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
       "dependencies": [
         "@beep/identity#build",
         "@beep/law-practice-domain#build",
@@ -55,8 +55,8 @@
     },
     {
       "computation": "@beep/practice-claude-mod#check",
-      "command": "bun run beep:check",
-      "commandDigest": "1f26e4e9820efc924380a9b4d8533f457b5b1a0027ae0e84f9dfd49a3d727053",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
       "dependencies": [
         "@beep/identity#build",
         "@beep/law-practice-domain#build",
@@ -99,7 +99,7 @@
     {
       "computation": "@beep/practice-claude-mod#coverage",
       "command": "bunx vitest run --coverage",
-      "commandDigest": "1f26e4e9820efc924380a9b4d8533f457b5b1a0027ae0e84f9dfd49a3d727053",
+      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
       "dependencies": [
         "@beep/identity#build",
         "@beep/law-practice-domain#build",
@@ -152,7 +152,7 @@
     {
       "computation": "@beep/practice-claude-mod#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "1f26e4e9820efc924380a9b4d8533f457b5b1a0027ae0e84f9dfd49a3d727053",
+      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -186,7 +186,7 @@
     {
       "computation": "@beep/practice-claude-mod#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "1f26e4e9820efc924380a9b4d8533f457b5b1a0027ae0e84f9dfd49a3d727053",
+      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/law-practice-domain#transit",
@@ -254,7 +254,7 @@
     {
       "computation": "@beep/practice-claude-mod#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "1f26e4e9820efc924380a9b4d8533f457b5b1a0027ae0e84f9dfd49a3d727053",
+      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -284,7 +284,7 @@
     {
       "computation": "@beep/practice-claude-mod#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "1f26e4e9820efc924380a9b4d8533f457b5b1a0027ae0e84f9dfd49a3d727053",
+      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -340,7 +340,7 @@
     {
       "computation": "@beep/practice-claude-mod#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "1f26e4e9820efc924380a9b4d8533f457b5b1a0027ae0e84f9dfd49a3d727053",
+      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -386,7 +386,7 @@
     {
       "computation": "@beep/practice-claude-mod#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "1f26e4e9820efc924380a9b4d8533f457b5b1a0027ae0e84f9dfd49a3d727053",
+      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/law-practice-domain#transit",
@@ -432,7 +432,7 @@
     {
       "computation": "@beep/practice-claude-mod#test",
       "command": "bun run beep:test",
-      "commandDigest": "1f26e4e9820efc924380a9b4d8533f457b5b1a0027ae0e84f9dfd49a3d727053",
+      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/law-practice-domain#transit",

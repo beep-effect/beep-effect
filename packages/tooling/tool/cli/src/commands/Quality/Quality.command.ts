@@ -72,6 +72,7 @@ import { CatalogUsageSourceLive, runCatalogUsageCheck } from "./CatalogUsage.ts"
 import { runChangesetGraphCheck } from "./ChangesetGraph.ts";
 import { changesetStatusCommand } from "./ChangesetStatus.ts";
 import { checkCensusCommand } from "./CheckCensus.ts";
+import { checkPackageReferencesBuilt } from "./CheckProbe.ts";
 import { qualityFallowCommand } from "./FallowQuality.command.ts";
 import {
   githubCheckChangesetStatusLane,
@@ -3636,6 +3637,14 @@ const testTsgoPackageCommand = Command.make(
   ({ args }) => runQualityProgram(runTestTsgoPackageTask(args as ReadonlyArray<string>))
 ).pipe(Command.withDescription("Run one package-owned tsgo test task for the aggregate lane"));
 
+const checkProbeCommand = Command.make("check-probe", {}, () =>
+  Effect.flatMap(Path.Path, (path) => checkPackageReferencesBuilt(path.resolve(process.cwd())))
+).pipe(
+  Command.withDescription(
+    "Fail with one line, before any compiler, when a project this package references has no built declarations; run from the package directory"
+  )
+);
+
 const tsgoSmokeCommand = Command.make("tsgo-smoke", {}, () => runQualityProgram(runTsgoSmokeCheck())).pipe(
   Command.withDescription("Smoke test the repo tsgo Effect diagnostics")
 );
@@ -4398,6 +4407,7 @@ export const qualityCommand = Command.make("quality", {}, () =>
     testTsgoPackageCommand,
     tsgoSmokeCommand,
     checkCensusCommand,
+    checkProbeCommand,
     tsgoRulesCommand,
     jsdocModuleTagsCommand,
     jsdocInventoryCommand,

@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (goals/infra-alchemy-rebuild-p5-ci-runners)",
-    "reason": "Record the new @beep/infra-ci-runners package at its generated scripts and its manifest joining the //#lint:policy-fingerprint inputs in turbo.json, re-recorded on the per-subject baseline after merging main; no command, output or environment changes, no qualification granted.",
+    "reviewer": "Claude Fable 5.2 (gate-output-switch-on P3 lane, fix/gate-output-check-probe)",
+    "reason": "Re-record two subjects after merging main at a4ce5e8b0c9. @beep/infra-ci-runners reached main after the probe lane rewrote the other manifests; the scripts writer gave it the same generated check, beep-cli quality check-probe && bun run beep:check, re-keying the scripts digest of its tasks. The root subject changed on both sides: main added the new package's tasks, and this lane regenerated the input lists of the policy fingerprint tasks. Task outputs, environment entries and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "goals/infra-alchemy-rebuild/research/cache-baseline-review-infra-ci-runners.md",
-      "sha256": "eb242fe64f5361bde5d1e01290597b03db0f3e52a80c7ec36f3cb9afdd6aae4c"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "c51700b3f8f5beffd882e1f2d41f6bcb4e51ca78eaf5ba7d7275b4141289b9ea"
+      "sha256": "5618523274536dc1f38fda4ce47c0c3880b631f061ab8ae61cd3b62438905d9a"
     }
   ],
   "nodes": [

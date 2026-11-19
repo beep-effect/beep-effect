@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/semantica",
   "review": {
-    "reviewer": "Claude Opus 5.5 (declaration-only-builds PR 2, feat/declaration-only-build)",
-    "reason": "Record the configuration drift of the declaration-only build: turbo.json build.outputs drops the stale **/node_modules/.tmp/*.tsbuildinfo glob (every inheriting #build task), and bun run beep lint package-scripts --write rewrote 182 workspace scripts blocks (beep:build becomes tsrs -p tsconfig.json --emitDeclarationOnly and the retired babel script leaves), re-keying the command digest of every task of the written packages, cached or not; // changes only through the turbo.json source digest. Task commands, cache flags, inputs, environment and the dist/** output are unchanged; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
+    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/declaration-only-build-cache-review-2026-11-12.md",
-      "sha256": "5bb548542cedc98186c614c99dd152eb33d6fcf09a6e853b7e345c58300acef9"
+      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
+      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
     }
   },
   "nodes": [
     {
       "computation": "@beep/semantica#build",
       "command": "bun run beep:build",
-      "commandDigest": "cedaecd1e74064ec769c43435e1a5483d9ebdebd2cee3cfd9967756db7e3c015",
+      "commandDigest": "1fa8faabfae78812d75cad6a9c316379326e9e15e9d2adf02131f39ce9a45860",
       "dependencies": [
         "@beep/anthropic#build",
         "@beep/doc-text#build",
@@ -85,8 +85,8 @@
     },
     {
       "computation": "@beep/semantica#check",
-      "command": "bun run beep:check",
-      "commandDigest": "cedaecd1e74064ec769c43435e1a5483d9ebdebd2cee3cfd9967756db7e3c015",
+      "command": "beep-cli quality check-probe && bun run beep:check",
+      "commandDigest": "1fa8faabfae78812d75cad6a9c316379326e9e15e9d2adf02131f39ce9a45860",
       "dependencies": [
         "@beep/anthropic#build",
         "@beep/doc-text#build",
@@ -145,7 +145,7 @@
     {
       "computation": "@beep/semantica#coverage",
       "command": "bun run beep:coverage",
-      "commandDigest": "cedaecd1e74064ec769c43435e1a5483d9ebdebd2cee3cfd9967756db7e3c015",
+      "commandDigest": "1fa8faabfae78812d75cad6a9c316379326e9e15e9d2adf02131f39ce9a45860",
       "dependencies": [
         "@beep/anthropic#build",
         "@beep/doc-text#build",
@@ -214,7 +214,7 @@
     {
       "computation": "@beep/semantica#dev",
       "command": "portless semantica.labs.beep sh -c 'vite --host 127.0.0.1 --port \"${PORT:-1420}\" --strictPort'",
-      "commandDigest": "cedaecd1e74064ec769c43435e1a5483d9ebdebd2cee3cfd9967756db7e3c015",
+      "commandDigest": "1fa8faabfae78812d75cad6a9c316379326e9e15e9d2adf02131f39ce9a45860",
       "dependencies": [
         "@beep/anthropic#build",
         "@beep/doc-text#build",
@@ -263,7 +263,7 @@
     {
       "computation": "@beep/semantica#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "cedaecd1e74064ec769c43435e1a5483d9ebdebd2cee3cfd9967756db7e3c015",
+      "commandDigest": "1fa8faabfae78812d75cad6a9c316379326e9e15e9d2adf02131f39ce9a45860",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -297,7 +297,7 @@
     {
       "computation": "@beep/semantica#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "cedaecd1e74064ec769c43435e1a5483d9ebdebd2cee3cfd9967756db7e3c015",
+      "commandDigest": "1fa8faabfae78812d75cad6a9c316379326e9e15e9d2adf02131f39ce9a45860",
       "dependencies": [
         "@beep/anthropic#transit",
         "@beep/doc-text#transit",
@@ -381,7 +381,7 @@
     {
       "computation": "@beep/semantica#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "cedaecd1e74064ec769c43435e1a5483d9ebdebd2cee3cfd9967756db7e3c015",
+      "commandDigest": "1fa8faabfae78812d75cad6a9c316379326e9e15e9d2adf02131f39ce9a45860",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -411,7 +411,7 @@
     {
       "computation": "@beep/semantica#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "cedaecd1e74064ec769c43435e1a5483d9ebdebd2cee3cfd9967756db7e3c015",
+      "commandDigest": "1fa8faabfae78812d75cad6a9c316379326e9e15e9d2adf02131f39ce9a45860",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -457,7 +457,7 @@
     {
       "computation": "@beep/semantica#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "cedaecd1e74064ec769c43435e1a5483d9ebdebd2cee3cfd9967756db7e3c015",
+      "commandDigest": "1fa8faabfae78812d75cad6a9c316379326e9e15e9d2adf02131f39ce9a45860",
       "dependencies": [
         "@beep/anthropic#transit",
         "@beep/doc-text#transit",
@@ -519,7 +519,7 @@
     {
       "computation": "@beep/semantica#test",
       "command": "bun run beep:test",
-      "commandDigest": "cedaecd1e74064ec769c43435e1a5483d9ebdebd2cee3cfd9967756db7e3c015",
+      "commandDigest": "1fa8faabfae78812d75cad6a9c316379326e9e15e9d2adf02131f39ce9a45860",
       "dependencies": [
         "@beep/anthropic#transit",
         "@beep/doc-text#transit",
