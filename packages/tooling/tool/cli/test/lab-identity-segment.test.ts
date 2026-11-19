@@ -35,7 +35,7 @@ const registryWithRegions = (
 ): string =>
   A.join(
     [
-      'const generatedComposers = $I.compose("identity", "widget");',
+      'const generatedComposers = /*#__PURE__*/ $I.compose("identity", "widget");',
       "",
       LAB_COMPOSERS_START_MARKER,
       ...composerRegionLines,
@@ -46,8 +46,8 @@ const registryWithRegions = (
       "  ...generatedLabComposers,",
       "};",
       "",
-      "export const $IdentityId = composers.$IdentityId;",
-      "export const $WidgetId = composers.$WidgetId;",
+      'export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = /*#__PURE__*/ $I.create("identity");',
+      'export const $WidgetId: Identity.IdentityComposer<"@beep/widget"> = /*#__PURE__*/ $I.create("widget");',
       "",
       LAB_EXPORTS_START_MARKER,
       ...exportRegionLines,
@@ -112,7 +112,7 @@ describe("lab identity segment", () => {
 
   it("renders a short composer region sorted on one biome-canonical line", () => {
     expect(LabIdentitySegment.renderLabComposersRegion(["zeta-lab", "probe-lab"])).toBe(
-      'const generatedLabComposers = $I.compose("probe-lab", "zeta-lab");'
+      'const generatedLabComposers = /*#__PURE__*/ $I.compose("probe-lab", "zeta-lab");'
     );
   });
 
@@ -124,7 +124,7 @@ describe("lab identity segment", () => {
       "quite-long-lab-slug-delta",
     ];
     const rendered = LabIdentitySegment.renderLabComposersRegion(slugs);
-    expect(Str.startsWith("const generatedLabComposers = $I.compose(\n")(rendered)).toBe(true);
+    expect(Str.startsWith("const generatedLabComposers = /*#__PURE__*/ $I.compose(\n")(rendered)).toBe(true);
     expect(rendered).toContain('  "quite-long-lab-slug-alpha",');
     expect(Str.endsWith('  "quite-long-lab-slug-delta"\n);')(rendered)).toBe(true);
   });
@@ -143,11 +143,34 @@ describe("lab identity segment", () => {
     expect(markerIndex("$ProbeLabId")(rendered)).toBeLessThan(markerIndex("$ZetaLabId")(rendered));
   });
 
-  it("breaks over-wide export statements the way biome would", () => {
+  it("breaks an over-wide leaf inside the call when its head still fits, the way biome would", () => {
     const rendered = LabIdentitySegment.renderLabExportsRegion(["trustgraph-workbench"]);
     expect(rendered).toContain(
-      'export const $TrustgraphWorkbenchId: Identity.IdentityComposer<"@beep/trustgraph-workbench"> =\n  composers.$TrustgraphWorkbenchId;'
+      'export const $TrustgraphWorkbenchId: Identity.IdentityComposer<"@beep/trustgraph-workbench"> = /*#__PURE__*/ $I.create(\n  "trustgraph-workbench"\n);'
     );
+  });
+
+  it("breaks an over-wide leaf after `=` when even its head exceeds the width, the way biome would", () => {
+    const rendered = LabIdentitySegment.renderLabExportsRegion(["execution-authority-use-cases"]);
+    expect(rendered).toContain(
+      'export const $ExecutionAuthorityUseCasesId: Identity.IdentityComposer<"@beep/execution-authority-use-cases"> =\n  /*#__PURE__*/ $I.create("execution-authority-use-cases");'
+    );
+  });
+
+  it("renders leaves that read back with no registry-leaf mismatch", () => {
+    const rendered = LabIdentitySegment.renderLabExportsRegion([
+      "probe-lab",
+      "trustgraph-workbench",
+      "execution-authority-use-cases",
+    ]);
+    const registry = `const generatedLabComposers = /*#__PURE__*/ $I.compose("probe-lab", "trustgraph-workbench", "execution-authority-use-cases");\n${rendered}\n`;
+
+    expect(CreatePackageIdentityRegistration.registeredIdentityExportSlugs(registry)).toEqual([
+      "execution-authority-use-cases",
+      "probe-lab",
+      "trustgraph-workbench",
+    ]);
+    expect(CreatePackageIdentityRegistration.identityLeafMismatches(registry)).toEqual([]);
   });
 
   it("syncs a new lab into empty regions and is idempotent afterwards", () =>
@@ -185,8 +208,10 @@ describe("lab identity segment", () => {
         yield* writeLabsFixture({
           labPackages: ["probe-lab", "zeta-lab"],
           registryContent: registryWithRegions(
-            ['const generatedLabComposers = $I.compose("zeta-lab", "ghost-lab");'],
-            ["export const $GhostLabId = composers.$GhostLabId;"]
+            ['const generatedLabComposers = /*#__PURE__*/ $I.compose("zeta-lab", "ghost-lab");'],
+            [
+              'export const $GhostLabId: Identity.IdentityComposer<"@beep/ghost-lab"> = /*#__PURE__*/ $I.create("ghost-lab");',
+            ]
           ),
         });
 
@@ -248,14 +273,14 @@ describe("lab identity segment", () => {
       Effect.gen(function* () {
         const misplacedRegistry = A.join(
           [
-            'const generatedComposers = $I.compose("identity", "widget", "probe-lab");',
+            'const generatedComposers = /*#__PURE__*/ $I.compose("identity", "widget", "probe-lab");',
             "",
             LAB_COMPOSERS_START_MARKER,
             "const generatedLabComposers = {};",
             LAB_COMPOSERS_END_MARKER,
             "",
-            "export const $IdentityId = composers.$IdentityId;",
-            "export const $ProbeLabId = composers.$ProbeLabId;",
+            'export const $IdentityId: Identity.IdentityComposer<"@beep/identity"> = /*#__PURE__*/ $I.create("identity");',
+            'export const $ProbeLabId: Identity.IdentityComposer<"@beep/probe-lab"> = /*#__PURE__*/ $I.create("probe-lab");',
             "",
             LAB_EXPORTS_START_MARKER,
             LAB_EXPORTS_END_MARKER,
