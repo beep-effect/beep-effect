@@ -136,6 +136,54 @@ describe("GateRecordStore", () => {
   it.layer(liveStore, { timeout: "30 seconds" })("on the file system", storeRules);
 
   it.layer(platform, { timeout: "30 seconds" })("on a file system that refuses", (it) => {
+    it.effect("overlapping writes of one record each publish whole contents and leave no temporary file", () =>
+      Effect.gen(function* () {
+        const store = yield* GateRecordStore.make("/repo-overlap");
+        const target = packageTarget("glob");
+        const written = yield* Effect.all(
+          A.map(["r1", "r2", "r3"], (runId) => store.writeRecord(target, record(runId))),
+          { concurrency: "unbounded" }
+        );
+        const read = yield* store.readRecord(target);
+        const fs = yield* FileSystem.FileSystem;
+        const names = yield* fs.readDirectory("/repo-overlap/packages/glob/.beep/gates/test");
+        assert.strictEqual(written.length, 3);
+        assert.isTrue(A.contains(["r1", "r2", "r3"], read.report.runId));
+        assert.deepStrictEqual(names, ["report.json"]);
+      })
+    );
+
+    it.effect("a write that cannot be renamed into place removes its temporary file", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const store = yield* GateRecordStore.make("/repo-blocked");
+        const dir = "/repo-blocked/packages/glob/.beep/gates/test";
+        yield* fs.makeDirectory(`${dir}/report.json/held`, { recursive: true });
+        const failure = yield* Effect.flip(store.writeRecord(packageTarget("glob"), record("r1")));
+        const names = yield* fs.readDirectory(dir);
+        assert.instanceOf(failure, GateRecordWriteError);
+        assert.deepStrictEqual(names, ["report.json"]);
+      })
+    );
+
+    it.effect("a run whose log cannot be removed keeps its record, so the next prune retries it", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = "/repo-retry";
+        const store = yield* GateRecordStore.make(root);
+        yield* store.writeRecord(rootTarget("run-00"), record("run-00"));
+        yield* fs.makeDirectory(`${root}/.beep/gates/test/run-00.log/held`, { recursive: true });
+        yield* Effect.forEach(runIds(ROOT_RUNS_KEPT), (runId) => store.writeRecord(rootTarget(runId), record(runId)), {
+          concurrency: 1,
+        });
+        const blocked = yield* store.listRuns("test");
+        yield* fs.remove(`${root}/.beep/gates/test/run-00.log`, { recursive: true });
+        yield* store.writeRecord(rootTarget("run-30"), record("run-30"));
+        const retried = yield* store.listRuns("test");
+        assert.isTrue(A.contains(blocked, "run-00"));
+        assert.isFalse(A.contains(retried, "run-00"));
+      })
+    );
     it.effect("tells an unreadable record from a missing or invalid one", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

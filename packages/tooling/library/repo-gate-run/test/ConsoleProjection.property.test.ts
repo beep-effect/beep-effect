@@ -3,7 +3,14 @@
 // request. Both stay inside the agent budget and open and close on the
 // verdict line, omission lines included.
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
-import { agentBudget, ConsoleRequest, ProgressSnapshot } from "@beep/repo-gate-run/GateConsole";
+import { ConsoleBudget } from "@beep/gate-report/ConsoleDocument";
+import {
+  agentBudget,
+  ConsoleRequest,
+  ConsoleSettings,
+  makeGateConsole,
+  ProgressSnapshot,
+} from "@beep/repo-gate-run/GateConsole";
 import { assert, describe, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
@@ -25,6 +32,22 @@ describe("console projections", () => {
         const progress = O.getOrElse(terminalConsole.progress(snapshot), () => "");
         const terminal = `${progress}${terminalConsole.render(request).text}`;
         assert.strictEqual(stripTerminal(terminal), agentConsole.render(request).text);
+      }),
+    runs
+  );
+
+  it.effect.prop(
+    "the whole console, omission lines included, stays within any budget, the minimum included",
+    [requests, Arbitrary.schema(ConsoleBudget)],
+    ([request, budget]) =>
+      Effect.sync(() => {
+        const tight = makeGateConsole(ConsoleSettings.make({ audience: "agent", budget }));
+        const lines = linesOf(tight.render(request).text);
+        assert.isAtMost(
+          A.reduce(lines, 0, (total, line) => total + line.length + 1),
+          budget.maxChars
+        );
+        assert.strictEqual(A.headNonEmpty(lines), A.lastNonEmpty(lines));
       }),
     runs
   );

@@ -2,16 +2,24 @@
 // schema's arbitrary: verdict first and last, silent on success, bounded.
 import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import { verdictWord } from "@beep/gate-report/Classify";
-import { ConsoleBudget, ConsoleDocument, ConsoleEntry } from "@beep/gate-report/ConsoleDocument";
+import {
+  ConsoleBudget,
+  ConsoleDocument,
+  ConsoleEntry,
+  NoteEntry,
+  VerdictLine,
+} from "@beep/gate-report/ConsoleDocument";
 import { ConsoleInput, dispatch } from "@beep/gate-report/Dispatch";
 import { formatDuration } from "@beep/gate-report/Format";
 import { GateReport } from "@beep/gate-report/GateReport";
 import { fitDocument, projectLines } from "@beep/gate-report/PlainText";
 import { assert, describe, it } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { agentBudget } from "./support/builders.ts";
 import type { FailureEntry } from "@beep/gate-report/ConsoleDocument";
@@ -35,6 +43,10 @@ const projectEntry = (document: ConsoleDocument, entry: FailureEntry, budget: Co
 const inputs = Arbitrary.schema(ConsoleInput);
 const budgets = Arbitrary.schema(ConsoleBudget);
 const documents = Arbitrary.schema(ConsoleDocument);
+
+// Note-only documents with no tail: the frame renders as the verdict alone, so a kept note must
+// bring its closing verdict inside the budget.
+const noteOnly = S.Struct({ verdict: VerdictLine, notes: S.Array(NoteEntry) }).pipe(Arbitrary.schema);
 
 describe("console laws", () => {
   it.effect.prop(
@@ -82,6 +94,20 @@ describe("console laws", () => {
           budget: agentBudget,
         });
         assert.strictEqual(lines.length, 1);
+      }),
+    runs
+  );
+
+  it.effect.prop(
+    "AC-L3: a note-only document with no tail fits the budget and opens and closes on its verdict",
+    [noteOnly, budgets],
+    ([{ verdict, notes }, budget]) =>
+      Effect.sync(() => {
+        const document = ConsoleDocument.make({ verdict, entries: notes, folds: [] });
+        const lines = projectLines({ document, budget });
+        assert.isAtMost(size(lines), budget.maxChars);
+        assert.strictEqual(lines[0], lines[lines.length - 1]);
+        assertNone(fitDocument({ document, budget }).cap);
       }),
     runs
   );

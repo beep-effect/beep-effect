@@ -5,8 +5,10 @@
  */
 import * as Str from "effect/String";
 
-// CSI (`ESC [` or the one-byte C1 form), OSC (`ESC ]` up to BEL or ST) and the two-byte escapes.
-const ESCAPES = /(?:\u001b\[|\u009b)[0-?]*[ -/]*[@-~]|\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)|\u001b[@-Z\\-_]/gu;
+// CSI (`ESC [` or the one-byte C1 form), OSC (`ESC ]` up to BEL or ST), escapes with intermediate
+// bytes (`ESC ( B`, a character-set designation) and the two-byte escapes (`ESC 7`, `ESC c`, ...).
+const ESCAPES =
+  /(?:\u001b\[|\u009b)[0-?]*[ -/]*[@-~]|\u001b\][^\u0007\u001b]*(?:\u0007|\u001b\\)|\u001b[ -/]+[0-~]|\u001b[0-~]/gu;
 
 /**
  * Remove every terminal escape sequence from a text, leaving what it styled.

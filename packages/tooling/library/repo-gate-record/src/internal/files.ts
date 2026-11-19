@@ -12,6 +12,7 @@ import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as PlatformError from "effect/PlatformError";
+import * as Random from "effect/Random";
 import * as Ref from "effect/Ref";
 import * as Sink from "effect/Sink";
 import * as Str from "effect/String";
@@ -35,8 +36,9 @@ export interface RecordFiles {
  * **Details**
  *
  * Every write first makes the parent directory. A text write goes to a
- * sibling `.tmp` file and is renamed into place, so a reader never sees half
- * a record.
+ * sibling temporary file unique to that write and is renamed into place, so a
+ * reader never sees half a record and overlapping writes never share a
+ * temporary file; a failed write removes its temporary file.
  *
  * @since 0.0.0
  */
@@ -47,12 +49,16 @@ export const platformFiles = Effect.fnUntraced(function* (repoRoot: string) {
   const makeParent = (relative: string) => fs.makeDirectory(path.dirname(absolute(relative)), { recursive: true });
   const files: RecordFiles = {
     sink: (relative) => Sink.unwrap(Effect.as(makeParent(relative), fs.sink(absolute(relative)))),
-    writeText: (relative, text) =>
-      Effect.andThen(makeParent(relative), () =>
-        Effect.andThen(fs.writeFileString(absolute(`${relative}.tmp`), text), () =>
-          fs.rename(absolute(`${relative}.tmp`), absolute(relative))
-        )
-      ),
+    writeText: Effect.fnUntraced(function* (relative: string, text: string) {
+      yield* makeParent(relative);
+      // A sibling temporary file of its own per write, so overlapping writes never share contents.
+      const suffix = yield* Random.nextIntBetween(0, 0x7fffffff);
+      const temporary = absolute(`${relative}.${suffix.toString(36)}.tmp`);
+      yield* fs.writeFileString(temporary, text).pipe(
+        Effect.andThen(fs.rename(temporary, absolute(relative))),
+        Effect.onError(() => Effect.ignore(fs.remove(temporary, { force: true })))
+      );
+    }),
     readText: (relative) =>
       Effect.flatMap(fs.exists(absolute(relative)), (present) =>
         present ? Effect.asSome(fs.readFileString(absolute(relative))) : Effect.succeedNone

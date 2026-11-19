@@ -206,6 +206,10 @@ const keepPrefix = <V>(values: ReadonlyArray<V>, sizes: ReadonlyArray<number>, r
 const recordBlocks = (blocks: Kept): number =>
   A.filter(blocks.entries, ConsoleEntry.guards.FailureEntry).length + blocks.folds.length;
 
+// The room the frame takes: a frame with no tail renders as its verdict alone, but anything kept
+// beside it brings the closing verdict back, so both verdict lines are always reserved.
+const frameSize = (lines: ReadonlyArray<string>): number => size(lines.length === 1 ? [...lines, ...lines] : lines);
+
 const capOf = (dropped: number): O.Option<CapLine> => (dropped > 0 ? CapLine.makeOption({ dropped }) : O.none());
 
 /**
@@ -256,7 +260,7 @@ export const fitDocument = (input: {
   if (size(render(document, budget)) <= budget.maxChars) return document;
   const blocks = recordBlocks(document);
   const frame = ConsoleDocument.make({ ...document, entries: [], folds: [], cap: capOf(prior + blocks) });
-  const kept = keepWithin(document, budget, budget.maxChars - size(render(frame, budget)));
+  const kept = keepWithin(document, budget, budget.maxChars - frameSize(render(frame, budget)));
   return ConsoleDocument.make({ ...document, ...kept, cap: capOf(prior + blocks - recordBlocks(kept)) });
 };
 

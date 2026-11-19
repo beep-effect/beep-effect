@@ -140,6 +140,24 @@ describe("GateConsole", () => {
     );
   });
 
+  it("keeps the whole console, omission lines included, within a minimum budget", () => {
+    const minimum = ConsoleBudget.make({ maxChars: 328, maxLineChars: 40, maxDiffLines: 0 });
+    const tight = makeGateConsole(ConsoleSettings.make({ audience: "agent", budget: minimum }));
+    const omissions = A.map(["record", "log", "history"] as const, (part) =>
+      Omission.make({ part, reason: Str.repeat(80)("r") })
+    );
+    const text = tight.render(
+      ConsoleRequest.make({
+        report: reportOf(testRunEvents(["adds", "subtracts", "divides"])),
+        paths: O.some(paths),
+        omissions,
+      })
+    ).text;
+    const lines = linesOf(text);
+    assert.isAtMost(text.length + 1, minimum.maxChars);
+    assert.strictEqual(lines[0], A.lastNonEmpty(lines));
+  });
+
   it("paints every verdict word and every line kind", () => {
     const red = terminalConsole.render(
       ConsoleRequest.make({

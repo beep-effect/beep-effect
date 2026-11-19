@@ -15,6 +15,7 @@
  */
 
 export * from "./ConsoleDefaults.ts";
+export * from "./Excerpt.ts";
 export * from "./GateAudience.ts";
 export * from "./GateConsole.ts";
 export * from "./GateHistory.ts";

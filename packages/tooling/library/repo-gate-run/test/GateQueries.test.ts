@@ -50,6 +50,8 @@ const recordOf = (runId: string) =>
       outcome: "some-fail",
       units: [],
       items: [
+        // A skipped item ahead of the failures: positions count failing and warning items only.
+        Item.make({ ...failedTest("skips"), outcome: "skipped", detail: O.none(), location: O.none() }),
         Item.make({ ...failedTest("adds"), outcome: "passed", detail: O.none(), location: O.none() }),
         failedTest("subtracts"),
         fullItem,

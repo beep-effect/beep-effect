@@ -260,6 +260,16 @@ describe("runGate", () => {
         })
       );
 
+      it.effect("a passed run whose start is missing was not observed whole: errored, items kept", () =>
+        Effect.gen(function* () {
+          const result = yield* runGate(request(A.drop(testRunEvents([]), 1), 0), log);
+          assert.strictEqual(result.report.reason, "errored");
+          assert.strictEqual(result.report.totals.passed, 3);
+          assert.include(linesOf(result.output.text)[0], ": ERRORED,");
+          assert.strictEqual(result.exitCode, 0);
+        })
+      );
+
       it.effect("a run with no start is stated by its package name when the caller gives one", () =>
         Effect.gen(function* () {
           const named = yield* runGate(GateRunRequest.make({ ...request([], 1), subject: O.some("@beep/glob") }), log);

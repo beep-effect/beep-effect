@@ -350,8 +350,10 @@ export const itemLines = (item: Item): ReadonlyArray<string> => [
   ),
 ];
 
+// The items the console lists, failing and warning ones in record order; skipped and passed items
+// never shift a position.
 const listed = (record: GateRecord): ReadonlyArray<Item> =>
-  A.filter(record.report.items, (item) => !ItemOutcome.is.passed(item.outcome));
+  A.filter(record.report.items, (item) => ItemOutcome.is.failed(item.outcome) || ItemOutcome.is.warned(item.outcome));
 
 const select = (record: GateRecord, selector: ItemSelector): O.Option<Item> =>
   ItemSelector.match(selector, {

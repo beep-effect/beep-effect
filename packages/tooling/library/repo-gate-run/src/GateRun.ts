@@ -210,8 +210,13 @@ const isEnd = (event: GateEvent): boolean =>
   GateEvent.guards.RunFinished(event) || GateEvent.guards.RunCancelled(event);
 
 // The reducer resets on every `RunStarted`, so only the events from the last start describe the
-// run: a missing start is stated from the request, and a run with no end after its last start
-// (a rerun cut off when the tool exited) gets an errored finish carrying the tool's exit code.
+// run: a missing start is stated from the request and makes the run errored, its items kept, and a
+// run with no end after its last start (a rerun cut off when the tool exited) gets an errored
+// finish carrying the tool's exit code.
+// A run whose start was never seen was not observed whole: its finish, whatever it said, is errored.
+const unobserved = (event: GateEvent): GateEvent =>
+  GateEvent.guards.RunFinished(event) ? GateEvent.cases.RunFinished.make({ ...event, reason: "errored" }) : event;
+
 const completeEvents = (
   request: GateRunRequest,
   events: ReadonlyArray<GateEvent>,
@@ -219,9 +224,10 @@ const completeEvents = (
 ): ReadonlyArray<GateEvent> => {
   const lastStart = A.findLastIndex(events, GateEvent.guards.RunStarted);
   const lastRun = O.match(lastStart, { onNone: () => events, onSome: (index) => A.drop(events, index) });
+  const observed = O.isSome(lastStart) ? events : A.map(events, unobserved);
   return [
     ...(O.isSome(lastStart) ? [] : [GateEvent.cases.RunStarted.make(statedRun(request, startedAt))]),
-    ...events,
+    ...observed,
     ...(A.some(lastRun, isEnd)
       ? []
       : [GateEvent.cases.RunFinished.make({ durationMs: 0, reason: "errored", exitCode: O.some(request.exitCode) })]),
@@ -318,7 +324,9 @@ const readHistory = (history: GateHistoryShape, report: GateReport, deadlineMs: 
  * names the record and log as not written; the path line only ever names
  * files the recorder confirmed. Events missing their start or end are
  * completed from the request (its subject, else the package directory) and
- * the tool's exit code, and only the events after the last `RunStarted`
+ * the tool's exit code; a run whose start is missing was not observed whole,
+ * so it is errored whatever its finish said, with its items kept. Only the
+ * events after the last `RunStarted`
  * count, so a rerun cut off by the tool's exit renders as an errored run; if
  * completed events still do not reduce, {@link fallbackReport} is rendered.
  * A history failure or defect, or a late answer, renders without labels and

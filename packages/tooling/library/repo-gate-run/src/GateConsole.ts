@@ -25,6 +25,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -250,14 +251,29 @@ const fitNotice =
     return line.length <= budget.maxLineChars ? line : `${Str.takeLeft(line, budget.maxLineChars - 3)}...`;
   };
 
+const sizeOf = (lines: ReadonlyArray<string>): number => A.reduce(lines, 0, (total, line) => total + line.length + 1);
+
+// Room for the notices, as far as the budget's frame allows: a budget must keep eight full lines.
 const reserveFor = (budget: ConsoleBudget, notices: ReadonlyArray<string>): ConsoleBudget =>
-  pipe(
-    ConsoleBudget.makeOption({
-      ...budget,
-      maxChars: budget.maxChars - A.reduce(notices, 0, (total, notice) => total + notice.length + 1),
-    }),
-    O.getOrElse(() => budget)
+  ConsoleBudget.make({
+    ...budget,
+    maxChars: N.max(8 * (budget.maxLineChars + 1), budget.maxChars - sizeOf(notices)),
+  });
+
+// The notices that still fit beside the projected lines, the closing verdict a lone verdict line
+// gains included, so the whole console stays within the budget.
+const fittingNotices = (
+  budget: ConsoleBudget,
+  lines: ReadonlyArray<string>,
+  notices: ReadonlyArray<string>
+): ReadonlyArray<string> => {
+  const room = budget.maxChars - sizeOf(lines) - (lines.length === 1 ? sizeOf(lines) : 0);
+  const totals = A.drop(
+    A.scan(notices, 0, (total, notice) => total + notice.length + 1),
+    1
   );
+  return A.take(notices, A.filter(totals, (total) => total <= room).length);
+};
 
 type TonedLine = { readonly text: string; readonly tone: Tone };
 
@@ -283,7 +299,8 @@ const consoleLines = (settings: ConsoleSettings, request: ConsoleRequest): Reado
       tone,
     })
   );
-  const middle = [...body, ...A.map(notices, (text) => ({ text, tone: tone("warning") }))];
+  const kept = fittingNotices(settings.budget, lines, notices);
+  const middle = [...body, ...A.map(kept, (text) => ({ text, tone: tone("warning") }))];
   return A.isReadonlyArrayNonEmpty(middle) ? [verdict, ...middle, verdict] : [verdict];
 };
 
