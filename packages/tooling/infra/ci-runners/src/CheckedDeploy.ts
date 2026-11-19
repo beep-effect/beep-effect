@@ -27,6 +27,7 @@ import { hmacSha256Hex } from "@beep/alchemy-github-runners/WebCrypto";
 import { $InfraCiRunnersId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { formatYamlLines } from "alchemy/Cli/PropertyDiff";
+import { havePropsChanged } from "alchemy/Diff";
 import * as Output from "alchemy/Output";
 import { describePlan, describeResource } from "alchemy/Plan";
 import * as A from "effect/Array";
@@ -37,6 +38,7 @@ import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
+import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
@@ -94,6 +96,43 @@ export type ResumeKind = typeof ResumeKind.Type;
 /**
  * One resource of a checked plan.
  *
+ * **Details**
+ *
+ * `changedProperties` names, never values, what an `update` or `replace`
+ * changes: each top-level declared property whose new value differs from the
+ * row's prior props, sorted. The prior props are the state's `props`, except
+ * for an interrupted update (state `updating`), whose `props` already hold the
+ * in-flight new props: there they are the props it last applied, kept under
+ * `old.props` (its own `props` when that snapshot is absent). For a `created`
+ * or `updated` row that is the value last applied; for a `creating` row it is
+ * the checkpoint of the stopped create; for a `replacing` or `replaced` row it
+ * is the replacement generation's.
+ *
+ * A key listed as `<name> (unresolved)` does not claim a change: its new value
+ * holds an Output known only after apply, so the plan cannot compare it. It
+ * also appears for a property holding a whole resource that is itself updated
+ * in place, where Alchemy compared that resource's known values and found no
+ * change: this reading compares the declared props, not the materialised view
+ * the engine diffs, so it lists the key and withholds the inferred code label.
+ * Each
+ * key is compared with Alchemy's generic comparison (`alchemy/Diff`
+ * `havePropsChanged`), not a provider's own: the Lambda provider compares
+ * `layers` and `functionUrl` normalised, so a layer named once by resource and
+ * once by ARN lists `layers` on a row another key made an update.
+ *
+ * A parenthesised entry is a fixed note, never a key: an update from an
+ * unsettled state or a renamed or drift-repair node names why it runs
+ * (`(continues an interrupted update)`, `(finishes a pending replacement)`,
+ * `(renamed from a former FQN)`, `(repairs drift)`) before any changed key, and
+ * a replace of a stopped create whose checkpoint is incomplete reads
+ * `(incomplete checkpoint)` alone. Alchemy marks a checkpoint incomplete only
+ * while it has no recorded outputs, and the one such replace step 1a resumes
+ * (an event-source mapping, {@link ResumeKind}) prints as a resumed create
+ * with no changes; the note is what any other such replace prints. Only an update with none of those notes,
+ * no changed key and no binding change, of a Lambda function, reads
+ * {@link inferredCodeChange}. It defaults to empty, which every create, noop
+ * and resumed row keeps.
+ *
  * **Example** (A created VPC)
  *
  * ```ts
@@ -118,10 +157,11 @@ export class CheckedResource extends S.Opaque<CheckedResource, { readonly brand:
     baselineDigest: S.String,
     pendingReplacement: S.Boolean,
     resume: ResumeKind,
+    changedProperties: S.Array(S.String).pipe(S.withConstructorDefault(Effect.succeed([]))),
   }).pipe(
     $I.annoteSchema("CheckedResource", {
       description:
-        "A planned resource: action, `<fqn>/<sid> <action>` bindings, digests of its declared properties, binding payloads, secrets and starting state, whether it holds a pending replacement, and how it continues a stopped deploy.",
+        "A planned resource: action, `<fqn>/<sid> <action>` bindings, digests of its declared properties, binding payloads, secrets and starting state, whether it holds a pending replacement, how it continues a stopped deploy, and the names of the properties it changes.",
     })
   )
 ) {}
@@ -427,6 +467,118 @@ const baselineDigestOf = Effect.fn("CiRunners.baselineDigest")(function* (salt: 
   });
 });
 
+const lambdaFunction = "AWS.Lambda.Function";
+
+/**
+ * The entry a Lambda function update carries when it changes no declared
+ * property and no binding.
+ *
+ * **Details**
+ *
+ * The plan carries neither the deployed code hash nor the new bundle's, so
+ * the entry is deduced and says so. It is printed only for an update of a
+ * Lambda function from a settled state (`created` or `updated`) whose node
+ * names no former FQN and carries no drift, with no changed declared property
+ * and every binding `noop`. It assumes what nothing on the node can show:
+ *
+ * - the plan was made without `--force`, which upgrades any noop to an update
+ *   and leaves no mark on the resource node (the plan step never passes it);
+ * - the update came from the Lambda provider's diff, whose branches that no
+ *   declared-property difference explains are the code hash and, for an image
+ *   function only, the image identity, which this entry would then misname
+ *   as a bundle hash.
+ *
+ * An engine update after a cold adoption plans as `adopted`, not `update`,
+ * and an interrupted update, a pending replacement, a rename and a drift
+ * repair each print their note in place of this entry.
+ *
+ * **Example** (Read the label)
+ *
+ * ```ts
+ * import { inferredCodeChange } from "@beep/infra-ci-runners/CheckedDeploy"
+ *
+ * console.log(inferredCodeChange) // "code (bundle hash, inferred)"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const inferredCodeChange = "code (bundle hash, inferred)";
+
+const propsRecord = (props: O.Option<unknown>): Readonly<Record<string, unknown>> =>
+  O.getOrElse(O.filter(props, isPlainRecord), () => ({}));
+
+const propsOf = (state: unknown): O.Option<unknown> => (P.hasProperty(state, "props") ? O.some(state.props) : O.none());
+
+const statusOf = (node: CRUD): unknown => (P.hasProperty(node.state, "status") ? node.state.status : undefined);
+
+// The props a change is read against. An interrupted update has already committed its in-flight new props as
+// `props` and keeps the ones it last applied under `old` (alchemy Apply), so it is read against `old.props`, or
+// against its own `props` when that snapshot is missing. Every other state is read against its `props`.
+const priorProps = (node: CRUD): O.Option<unknown> =>
+  statusOf(node) === "updating" && P.hasProperty(node.state, "old")
+    ? O.orElse(propsOf(node.state.old), () => propsOf(node.state))
+    : propsOf(node.state);
+
+// Each key is compared on its own with Alchemy's generic comparison. That comparison also reports a new value that
+// still holds an unresolved Output, so such a key is labelled: the plan cannot yet say whether its value changes.
+const changedKeys = (node: CRUD): ReadonlyArray<string> => {
+  const olds = propsRecord(priorProps(node));
+  const news = propsRecord(declaredProps(node));
+  return pipe(
+    A.dedupe([...R.keys(olds), ...R.keys(news)]),
+    A.filter((key) => havePropsChanged({ [key]: olds[key] }, { [key]: news[key] })),
+    A.sort(Order.String),
+    A.map((key) => (Output.hasOutputs(news[key]) ? `${key} (unresolved)` : key))
+  );
+};
+
+const bindingsUnchanged = (node: CRUD): boolean => A.every(node.bindings, (binding) => binding.action === "noop");
+
+const isRenamed = (node: CRUD): boolean =>
+  P.hasProperty(node, "renamedFrom") && A.isArray(node.renamedFrom) && A.isReadonlyArrayNonEmpty(node.renamedFrom);
+
+const repairsDrift = (node: CRUD): boolean => P.hasProperty(node, "drift") && P.isNotUndefined(node.drift);
+
+// Why an update runs that its declared properties may not explain: the engine plans `update` for an interrupted
+// update and for a renamed row whatever the diff says, and a drift repair or an unfinished replacement is not a
+// settled starting point either. Each is named, and any one of them withholds the inferred code label.
+const updateNotes = (node: CRUD): ReadonlyArray<string> =>
+  A.getSomes([
+    Match.value(statusOf(node)).pipe(
+      Match.when("updating", () => O.some("(continues an interrupted update)")),
+      Match.when("replaced", () => O.some("(finishes a pending replacement)")),
+      Match.orElse(() => O.none<string>())
+    ),
+    isRenamed(node) ? O.some("(renamed from a former FQN)") : O.none(),
+    repairsDrift(node) ? O.some("(repairs drift)") : O.none(),
+  ]);
+
+const updateChanges = (node: CRUD, resourceType: string): ReadonlyArray<string> => {
+  const notes = updateNotes(node);
+  const changed = changedKeys(node);
+  return A.isReadonlyArrayEmpty(notes) &&
+    A.isReadonlyArrayEmpty(changed) &&
+    resourceType === lambdaFunction &&
+    bindingsUnchanged(node)
+    ? [inferredCodeChange]
+    : [...notes, ...changed];
+};
+
+// A stopped create checkpointed without the props it could not yet resolve: a key missing from that checkpoint is
+// no change, so the replace names the checkpoint instead of its keys.
+const replaceChanges = (node: CRUD): ReadonlyArray<string> =>
+  isCreating(node) && incompleteProps(node) ? ["(incomplete checkpoint)"] : changedKeys(node);
+
+// What an update or replace changes, by name. A resumed row reads as the create it continues, and its checkpointed
+// props are incomplete by design, so it lists nothing.
+const changedPropertiesOf = (node: CRUD, resourceType: string, resume: ResumeKind): ReadonlyArray<string> =>
+  Match.value({ action: node.action, resume }).pipe(
+    Match.when({ action: "update", resume: "none" }, () => updateChanges(node, resourceType)),
+    Match.when({ action: "replace", resume: "none" }, () => replaceChanges(node)),
+    Match.orElse(A.empty<string>)
+  );
+
 /**
  * A fresh random salt for {@link readEnginePlan}'s secrets fingerprint.
  *
@@ -495,6 +647,7 @@ export const readEnginePlan = Effect.fn("CiRunners.readEnginePlan")(function* (i
       const row = describeResource(node);
       const props = declaredProps(node);
       const payloads = node.bindings;
+      const resume = resumeOf(node, row.resourceType);
       const bindingDigests = yield* Effect.forEach(
         payloads,
         (binding) => digestOf(O.some([binding.sid, binding.data])),
@@ -512,7 +665,8 @@ export const readEnginePlan = Effect.fn("CiRunners.readEnginePlan")(function* (i
         secretsDigest: yield* secretsDigestOf(salt, planSecrets, entriesOf(node)),
         baselineDigest: yield* baselineDigestOf(salt, node),
         pendingReplacement: isPendingReplacement(node),
-        resume: resumeOf(node, row.resourceType),
+        resume,
+        changedProperties: changedPropertiesOf(node, row.resourceType, resume),
       });
     }),
     { concurrency: 1 }
@@ -557,7 +711,7 @@ export const toReading = (plan: CheckedPlan): PlanReading =>
         // expectation keeps `replace`, which the plan check refuses.
         action: plan.expectation === "bootstrap" && resource.resume === "empty-replace" ? "create" : resource.action,
         bindings: resource.bindings,
-        changedProperties: [],
+        changedProperties: resource.changedProperties,
       })
     ),
     violations: [
@@ -694,7 +848,10 @@ export const checkEnginePlan = (plan: CheckedPlan) =>
     })
   );
 
-// One signature per FQN: type, action, bindings and digest for a resource; the action for a stack action.
+const changesSegment = (name: string): string => `changes ${name}`;
+
+// One signature per FQN: type, action, bindings, digests and changed property names for a resource; the action for
+// a stack action.
 const keyed = (plan: CheckedPlan) =>
   HashMap.fromIterable([
     ...A.map(
@@ -713,6 +870,7 @@ const keyed = (plan: CheckedPlan) =>
               resource.baselineDigest,
               String(resource.pendingReplacement),
               resource.resume,
+              ...A.map(resource.changedProperties, changesSegment),
             ],
             "|"
           ),
@@ -813,8 +971,10 @@ const rowLabel = (resource: CheckedResource): string =>
 
 /**
  * The line the plan step prints for one resource: `[fqn] action`, then each
- * binding action. A row that continues a stopped deploy prints
- * `resumed create` in place of its action ({@link ResumeKind}).
+ * binding action, then each changed property name as `changes <name>` (never
+ * a value). A row that continues a stopped deploy prints `resumed create` in
+ * place of its action ({@link ResumeKind}); a row that changes no property
+ * prints no `changes` segment.
  *
  * **Example** (A created VPC)
  *
@@ -832,20 +992,57 @@ const rowLabel = (resource: CheckedResource): string =>
  */
 export const planRowLine = (resource: CheckedResource): string =>
   A.join(
-    [`[${resource.fqn}] ${rowLabel(resource)}`, ...A.map(resource.bindings, (binding) => `binding ${binding}`)],
+    [
+      `[${resource.fqn}] ${rowLabel(resource)}`,
+      ...A.map(resource.bindings, (binding) => `binding ${binding}`),
+      ...A.map(resource.changedProperties, changesSegment),
+    ],
     " | "
   );
 
 /**
- * The plan-rows digest: SHA-256 over the sorted plan rows, one per line, the
- * resources' ({@link planRowLine}) and then the stack actions'.
+ * Every line the plan-rows digest hashes, in the order it hashes them: the
+ * resources' rows ({@link planRowLine}) sorted, then one
+ * `[fqn] action <verb>` line per stack action, sorted.
  *
  * **Details**
  *
- * It reads only FQNs, actions and binding actions: no property, secret or
- * salt. Two plans of one commit over one state therefore print the same
- * digest, so the gate can read a plan-only run's rows and then hold the
- * deploy to them with `--expect-digest`.
+ * The plan step prints exactly these lines in this order, so the digest can
+ * be rebuilt from the log: SHA-256 over the lines joined with a line feed and
+ * no trailing one. Each group is sorted by UTF-16 code unit, which for these
+ * ASCII lines is bytewise order.
+ *
+ * **Example** (A plan with one stack action)
+ *
+ * ```ts
+ * import { CheckedAction, CheckedPlan, planDigestLines } from "@beep/infra-ci-runners/CheckedDeploy"
+ *
+ * const plan = CheckedPlan.make({ stage: "prod", expectation: "routine", secretSalt: "", sourceTree: "", resources: [], actions: [CheckedAction.make({ fqn: "Seed", action: "run" })] })
+ * console.log(planDigestLines(plan)) // ["[Seed] action run"]
+ * ```
+ *
+ * @param plan - A checked plan.
+ * @returns The hashed lines, in hashed order.
+ * @category validation
+ * @since 0.0.0
+ */
+export const planDigestLines = (plan: CheckedPlan): ReadonlyArray<string> => [
+  ...A.sort(A.map(plan.resources, planRowLine), Order.String),
+  ...A.sort(
+    A.map(plan.actions, (action) => `[${action.fqn}] action ${action.action}`),
+    Order.String
+  ),
+];
+
+/**
+ * The plan-rows digest: SHA-256 over {@link planDigestLines}, one per line.
+ *
+ * **Details**
+ *
+ * It reads only FQNs, actions, binding actions and changed property names:
+ * no property value, secret or salt. Two plans of one commit over one state
+ * therefore print the same digest, so the gate can read a plan-only run's
+ * rows and then hold the deploy to them with `--expect-digest`.
  *
  * **Example** (An empty plan)
  *
@@ -866,14 +1063,7 @@ export const planRowLine = (resource: CheckedResource): string =>
  */
 export const planRowsDigest = Effect.fn("CiRunners.planRowsDigest")(function* (plan: CheckedPlan) {
   const digest = yield* Digest.Digest;
-  const rows = [
-    ...A.sort(A.map(plan.resources, planRowLine), Order.String),
-    ...A.sort(
-      A.map(plan.actions, (action) => `[${action.fqn}] action ${action.action}`),
-      Order.String
-    ),
-  ];
-  return yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(A.join(rows, "\n")));
+  return yield* digest.digestHex(Digest.sha256, new TextEncoder().encode(A.join(planDigestLines(plan), "\n")));
 });
 
 /**
