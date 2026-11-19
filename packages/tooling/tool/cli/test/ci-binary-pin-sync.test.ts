@@ -645,6 +645,42 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
       })
     );
 
+    it.effect("refuses an ignored file at the destination of a file main renamed, and keeps it", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const root = yield* fs.makeTempDirectoryScoped();
+        yield* gitOutput(root, ["init", "-q", "-b", "main"]);
+        yield* gitOutput(root, ["config", "user.email", "pin-sync@example.test"]);
+        yield* gitOutput(root, ["config", "user.name", "Pin Sync Test"]);
+        yield* gitOutput(root, ["config", "commit.gpgsign", "false"]);
+        yield* gitOutput(root, ["config", "pull.rebase", "false"]);
+        yield* commitFile(root, { file: PIN_FILE, text: actionText(OLD), message: "pin OLD" });
+        yield* commitFile(root, { file: "src/old.md", text: "# moved later\n", message: "a file main moves" });
+        yield* gitOutput(root, ["checkout", "-q", "-b", "pin"]);
+        yield* commitFile(root, { file: PIN_FILE, text: actionText(NEW), message: "bump the pin" });
+        yield* gitOutput(root, ["checkout", "-q", "main"]);
+        yield* fs.makeDirectory(`${root}/docs`, { recursive: true });
+        yield* gitOutput(root, ["mv", "src/old.md", "docs/notes.md"]);
+        yield* gitOutput(root, ["commit", "-q", "--no-verify", "-m", "rename"]);
+        yield* gitOutput(root, ["checkout", "-q", "pin"]);
+        yield* fs.writeFileString(`${root}/.git/info/exclude`, "docs/\n");
+        yield* fs.makeDirectory(`${root}/docs`, { recursive: true });
+        yield* fs.writeFileString(`${root}/docs/notes.md`, "LOCAL\n");
+        const scratch = yield* fs.makeTempDirectoryScoped();
+        const rows = yield* decodeReleaseRows(releaseRows);
+        const releasesText = yield* encodeReleases(rows);
+        yield* fs.writeFileString(`${scratch}/releases.json`, releasesText);
+        const before = yield* head(root);
+        const repo = { root, releases: `${scratch}/releases.json`, output: `${scratch}/output`, before };
+        const failure = yield* Effect.flip(sync(repo));
+        const kept = yield* fs.readFileString(`${root}/docs/notes.md`);
+        const after = yield* head(root);
+        expect(`${failure}`).toContain("untracked or ignored files at paths the merge would add (docs/notes.md)");
+        expect(kept).toBe("LOCAL\n");
+        expect(after).toBe(before);
+      })
+    );
+
     it.effect("a merge failure whose restore also fails reports both", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;

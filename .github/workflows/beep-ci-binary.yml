@@ -522,6 +522,10 @@ jobs:
               echo "- main pins an older release, and a pin-bump pull request for \`$tag\` was closed unmerged: parked until a newer release; no push, no reopen."
               exit 0
             fi
+            if [[ "$report" == "true" && "$push" == "true" ]]; then
+              echo "- \`$PIN_BRANCH\`: ${reason}. Main was merged in, and the push step below pushes that merge without force; only the step above needs a hand, and it is reported once."
+              exit 0
+            fi
             if [[ "$report" == "true" ]]; then
               echo "- \`$PIN_BRANCH\` (pinning \`$branch_tag\`) cannot be brought up to date with \`$DEFAULT_BRANCH\`: ${reason}. Nothing was pushed; it is reported once on the pin-bump pull request. Bring it up to date by hand."
               exit 0
@@ -615,6 +619,7 @@ jobs:
           REASON: ${{ steps.pin.outputs.reason }}
           SUPERSEDE: ${{ steps.pin.outputs.supersede }}
           RELABEL: ${{ steps.pin.outputs.relabel }}
+          PUSHED: ${{ steps.pin.outputs.push }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
           set -euo pipefail
@@ -667,8 +672,13 @@ jobs:
             echo "- already reported on #${PULL} for \`${BRANCH_HEAD}\`." >> "$GITHUB_STEP_SUMMARY"
             exit 0
           fi
+          # Say what this run does: when the merge is pushed too, only the reported step needs a hand.
+          done_text="Nothing was pushed. Bring the branch up to date by hand"
+          if [[ "$PUSHED" == "true" ]]; then
+            done_text="This run merged main in and pushes that merge without force; only the step above needs a hand"
+          fi
           gh api -X POST "repos/${GH_REPO}/issues/${PULL}/comments" -f body="${marker}
-          The pin-bump workflow ([run](${RUN_URL})) cannot bring \`${PIN_BRANCH}\` up to date with main: ${REASON}. Nothing was pushed. Bring the branch up to date by hand; this is reported once per branch head." >/dev/null
+          The pin-bump workflow ([run](${RUN_URL})) reports for \`${PIN_BRANCH}\`: ${REASON}. ${done_text}; this is reported once per branch head." >/dev/null
           echo "- reported on #${PULL}." >> "$GITHUB_STEP_SUMMARY"
 
       # `merged`: the pin step merged main into the pin-bump branch (it was

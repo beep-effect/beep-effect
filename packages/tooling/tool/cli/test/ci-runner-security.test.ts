@@ -473,34 +473,32 @@ const assertTurboJobSetup = (jobs: WorkflowJobs, jobId: string, appSecrets: bool
   assert.strictEqual(inputs["app-secrets"], appSecrets ? "true" : undefined, jobId);
 };
 
-// Forced push forms the pin-bump workflow must never use, checked inside each `git push` command
-// (continuation lines included) so other tools' flags (`gh api -f`) are not mistaken for them.
-const FORCED_PUSH_FORMS = [
-  /--force(?!-with-lease)/u,
-  /(^|\s)-f(\s|$)/mu,
-  /--force-with-lease/u,
-  /--mirror/u,
-  /["\s]\+[A-Za-z]*HEAD/u,
-  /["\s]\+refs\//u,
+// The beep-ci-binary workflow's push allow-list: every `git push` in any of its run scripts must be exactly
+// one of these two commands (shell line continuations joined), so no forced form can hide in a variable,
+// a quoted `+` refspec, a bundled short flag or a second, unleased delete. The first is the plain merge
+// push; the second is the supersede step's conditional delete, a lease on the full ref at the checked
+// head (validated as a 40-character sha before it runs) with a delete refspec.
+const ALLOWED_PIN_PUSHES = [
+  'git -C "$WORKTREE" -c core.hooksPath=/dev/null push "https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${PIN_BRANCH}"',
+  'git -c core.hooksPath=/dev/null push --force-with-lease="refs/heads/${PIN_BRANCH}:${BRANCH_HEAD}" "https://x-access-token:${GH_TOKEN}@github.com/${GH_REPO}.git" ":refs/heads/${PIN_BRANCH}"',
 ];
 
-// The one forced form allowed: the supersede step's lease-protected delete of the bot branch, a lease on
-// the full ref at the checked head (validated as a 40-character sha) with a delete refspec.
-const LEASED_DELETE =
-  /--force-with-lease="refs\/heads\/\$\{PIN_BRANCH\}:\$\{BRANCH_HEAD\}" "https:\/\/x-access-token:\$\{GH_TOKEN\}@github\.com\/\$\{GH_REPO\}\.git" ":refs\/heads\/\$\{PIN_BRANCH\}"/u;
+const joinContinuations = Str.replace(/\s*\\\n\s*/gu, " ");
 
-// Shell line continuations are joined first, so each push command is checked whole.
-const forcedPushViolations = (text: string): ReadonlyArray<string> =>
-  A.flatMap(
-    A.fromIterable(Str.matchAll(/\bgit\b[^\n]*\bpush\b[^\n]*/gu)(Str.replace(/\s*\\\n\s*/gu, " ")(text))),
-    (match) => {
-      const command = Str.replace(LEASED_DELETE, "")(match[0]);
-      return A.map(
-        A.filter(FORCED_PUSH_FORMS, (form) => form.test(command)),
-        (form) => `${form.source} in: ${match[0]}`
-      );
-    }
+const gitPushCommands = (script: string): ReadonlyArray<string> =>
+  A.map(A.fromIterable(Str.matchAll(/\bgit\s[^\n;|&]*?\bpush\b[^\n;|&]*/gu)(joinContinuations(script))), (match) =>
+    Str.trim(match[0])
   );
+
+// Every push that is not on the allow-list, and every `gh api` call that writes a git ref (a ref rewrite
+// through the API can force just as a push can; the workflow only reads `git/ref/heads/...`).
+const pinPushViolations = (script: string): ReadonlyArray<string> => [
+  ...A.filter(gitPushCommands(script), (command) => !A.contains(ALLOWED_PIN_PUSHES, command)),
+  ...A.filter(
+    A.map(A.fromIterable(Str.matchAll(/\bgh\s+api\b[^\n]*/gu)(joinContinuations(script))), (match) => match[0]),
+    (call) => /git\/refs\b/u.test(call) || (/git\/ref\b/u.test(call) && /(-X|--method)\s*\w/u.test(call))
+  ),
+];
 
 it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (it) => {
   it.effect("requires a real apt-pruning command before refreshing package indexes", () =>
@@ -2633,16 +2631,11 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(push).toContain(
         '"https://x-access-token:${PUSH_TOKEN}@github.com/${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/${PIN_BRANCH}"'
       );
-      for (const forced of FORCED_PUSH_FORMS) {
-        expect(push).not.toMatch(forced);
-      }
       // The success line is written by the push step itself, after the push.
       expect(push).toMatch(/HEAD:refs\/heads\/\$\{PIN_BRANCH\}"[\s\S]*pushed main merged into/u);
       expect(rewrite).not.toContain("pushed without force");
-      // Supersede deletes the branch with the one forced form this workflow allows: a lease on the full ref
-      // at the 40-character head the sync checked, with a delete refspec. It labels the pull request
-      // `superseded` first and takes the label off again if the delete fails; a report is posted once
-      // per branch head.
+      // Supersede labels the pull request `superseded` first and takes the label off again if the delete
+      // fails; a report is posted once per branch head.
       const settle = stepRun(steps, "Supersede or report on the pin-bump pull request");
       for (const fragment of [
         'if [[ ! "$BRANCH_HEAD" =~ ^[0-9a-f]{40}$ ]]; then',
@@ -2655,28 +2648,40 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         expect(settle).toContain(fragment);
       }
       expect(settle).toMatch(/labels\[\]=superseded[\s\S]*--force-with-lease=/u);
-      expect(forcedPushViolations(settle)).toStrictEqual([]);
-      expect(Str.replace(/\s*\\\n\s*/gu, " ")(settle)).toMatch(LEASED_DELETE);
-      expect(forcedPushViolations(rewrite)).toStrictEqual([]);
-      // ...and the checker refuses every other forced form, an imitation of the lease included.
+      // The allow-list holds across EVERY run script of the workflow, and each permitted push appears once:
+      // the merge push in the push step, the leased delete in the supersede step.
+      const scripts = A.flatMap(R.values(jobs), (job) =>
+        A.getSomes(A.map(job.steps ?? [], (step) => O.fromUndefinedOr(step.run)))
+      );
+      expect(A.flatMap(scripts, pinPushViolations)).toStrictEqual([]);
+      expect(A.sort(A.flatMap(scripts, gitPushCommands), Str.Order)).toStrictEqual(
+        A.sort(ALLOWED_PIN_PUSHES, Str.Order)
+      );
+      expect(gitPushCommands(push)).toStrictEqual([ALLOWED_PIN_PUSHES[0]]);
+      expect(gitPushCommands(settle)).toStrictEqual([ALLOWED_PIN_PUSHES[1]]);
+      // ...and the allow-list refuses every other form, each way the forced push could be hidden.
       for (const [text, violates] of [
         [
-          `git push --force-with-lease="refs/heads/\${PIN_BRANCH}:\${BRANCH_HEAD}" \\\n  "https://x-access-token:\${GH_TOKEN}@github.com/\${GH_REPO}.git" ":refs/heads/\${PIN_BRANCH}"`,
+          `git -C "$WORKTREE" -c core.hooksPath=/dev/null push \\\n  "https://x-access-token:\${PUSH_TOKEN}@github.com/\${GITHUB_REPOSITORY}.git" "HEAD:refs/heads/\${PIN_BRANCH}"`,
           false,
         ],
-        ['git push --force-with-lease "$url" HEAD:refs/heads/x', true],
-        ['git push --force-with-lease=refs/heads/x "$url" :refs/heads/x', true],
         [
-          'git push --force-with-lease="refs/heads/${PIN_BRANCH}:${BRANCH_HEAD}" "$url" "HEAD:refs/heads/${PIN_BRANCH}"',
-          true,
+          `if ! git -c core.hooksPath=/dev/null push --force-with-lease="refs/heads/\${PIN_BRANCH}:\${BRANCH_HEAD}" \\\n  "https://x-access-token:\${GH_TOKEN}@github.com/\${GH_REPO}.git" ":refs/heads/\${PIN_BRANCH}"; then`,
+          false,
         ],
-        ["git push -f origin HEAD", true],
+        ['git push "$url" "$spec"', true],
+        ["git push origin '+HEAD:refs/heads/x'", true],
+        ["git push -qf origin HEAD", true],
         ["git push --force origin HEAD", true],
         ["git push --mirror origin", true],
-        ['git push origin "+HEAD:refs/heads/x"', true],
-        ["git push origin +refs/heads/a:refs/heads/b", true],
+        ['git push --force-with-lease "$url" HEAD:refs/heads/x', true],
+        ['git push "$url" ":refs/heads/${PIN_BRANCH}"', true],
+        [`${ALLOWED_PIN_PUSHES[1]}\ngit push "$url" ":refs/heads/\${PIN_BRANCH}"`, true],
+        ['gh api -X PATCH "repos/o/r/git/refs/heads/x" -F force=true -f sha="$sha"', true],
+        ['gh api --method DELETE "repos/o/r/git/ref/heads/x"', true],
+        ['gh api "repos/${GH_REPO}/git/ref/heads/${PIN_BRANCH}" --jq .object.sha', false],
       ] as const) {
-        expect(A.isReadonlyArrayNonEmpty(forcedPushViolations(text))).toBe(violates);
+        expect(A.isReadonlyArrayNonEmpty(pinPushViolations(text))).toBe(violates);
       }
       expect(secretReaders).toEqual(["publish/Create pin-bump App token"]);
     })
@@ -3222,6 +3227,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
               SEEN: "0",
               SUPERSEDE: "false",
               RELABEL: "false",
+              PUSHED: "false",
               GIT_FAIL: "0",
               GH_TOKEN: "app-token",
               ...env,
@@ -3240,6 +3246,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
             Str.split(calls, "\n"),
             (line) => Str.startsWith("api ")(line) || Str.startsWith("git ")(line)
           ),
+          text: calls,
         };
       });
       // Supersede: label, then the lease-protected delete at the checked 40-character head, then the comment.
@@ -3284,6 +3291,12 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const again = yield* runSettle({ SEEN: "1" });
       expect(again.status).toBe(0);
       expect(again.calls).toStrictEqual([]);
+      // The comment says what the run does: "Nothing was pushed" only when nothing is pushed.
+      expect(first.text).toContain("Nothing was pushed");
+      const pushedToo = yield* runSettle({ PUSHED: "true" });
+      expect(pushedToo.status).toBe(0);
+      expect(pushedToo.text).not.toContain("Nothing was pushed");
+      expect(pushedToo.text).toContain("This run merged main in and pushes that merge without force");
     })
   );
 

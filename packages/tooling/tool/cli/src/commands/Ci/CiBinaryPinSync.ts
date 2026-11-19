@@ -30,6 +30,7 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
@@ -550,9 +551,10 @@ export const syncCiBinaryPinBranch = Effect.fn("Ci.syncCiBinaryPinBranch")(funct
     return yield* finish(request, syncResult("blocked", target, O.some(beyondPinLinesReason(request))));
   }
   // git treats ignored files as expendable: a merge silently replaces one at a path the base newly
-  // tracks (untracked ones were refused above). Refuse any file already at such a path.
+  // tracks (untracked ones were refused above). Refuse any file already at such a path. Rename
+  // detection is off, so a file main moved shows its destination as an added path too.
   const incoming = yield* git
-    .changedFiles(request.cwd, { base: "HEAD", head: request.base, twoDot: true, diffFilter: "A" })
+    .changedFiles(request.cwd, { base: "HEAD", head: request.base, twoDot: true, diffFilter: "A", noRenames: true })
     .pipe(Effect.mapError(gitFailure(request)));
   const occupied = yield* Effect.filter(incoming, (file) =>
     fs.exists(path.join(request.cwd, file)).pipe(Effect.mapError(gitFailure(request)))
@@ -565,24 +567,28 @@ export const syncCiBinaryPinBranch = Effect.fn("Ci.syncCiBinaryPinBranch")(funct
   const before = yield* git.revParse(request.cwd, "HEAD").pipe(Effect.mapError(gitFailure(request)));
   // `reset --hard` to the pre-merge head also ends an unfinished merge (conflict markers, MERGE_HEAD).
   const restore = git.reset(request.cwd, { mode: "hard", ref: before }).pipe(Effect.mapError(gitFailure(request)));
-  // A failure after the merge starts, including writing a `merged` decision, restores the pre-merge head;
-  // a restore that fails too is reported with the original failure.
-  const rollback = (error: CiCommandError) =>
-    restore.pipe(
-      Effect.matchEffect({
-        onFailure: (resetError) =>
-          Effect.fail(
+  // Any failure after the merge starts, a typed error, a defect or an interruption alike (including
+  // writing a `merged` decision), restores the pre-merge head. A restore that fails too is remembered, so
+  // a typed failure is reported with it.
+  const restoreFailure = yield* Ref.make(O.none<CiCommandError>());
+  const restoreOnExit = restore.pipe(Effect.catch((resetError) => Ref.set(restoreFailure, O.some(resetError))));
+  const withRestoreReport = (error: CiCommandError) =>
+    Effect.flatMap(Ref.get(restoreFailure), (failed) =>
+      Effect.fail(
+        O.match(failed, {
+          onNone: () => error,
+          onSome: (resetError) =>
             CiCommandError.make({
               message: `${error.message} Restoring ${before} also failed (${resetError.message}); the checkout may be mid-merge.`,
-            })
-          ),
-        onSuccess: () => Effect.fail(error),
-      })
+            }),
+        })
+      )
     );
   const result = yield* mergeAndClassify(request, before, target.value).pipe(
     Effect.map((merged) => syncResult(merged.outcome, merged.pin, merged.reason, pinOnly)),
     Effect.tap((merged) => (merged.outcome === "merged" ? publish(request, merged) : Effect.void)),
-    Effect.catch(rollback)
+    Effect.onError(() => restoreOnExit),
+    Effect.catch(withRestoreReport)
   );
   if (result.outcome !== "merged") {
     yield* restore;
