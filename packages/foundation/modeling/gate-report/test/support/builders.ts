@@ -6,7 +6,7 @@ import { ConsoleInput, dispatch } from "@beep/gate-report/Dispatch";
 import { GateEvent } from "@beep/gate-report/GateEvent";
 import { GateReport, Totals } from "@beep/gate-report/GateReport";
 import { Item, ItemDetail, Location } from "@beep/gate-report/Item";
-import { ItemKey } from "@beep/gate-report/ItemKey";
+import { DiagnosticKeyInput, diagnosticKey, ItemKey } from "@beep/gate-report/ItemKey";
 import { projectLines } from "@beep/gate-report/PlainText";
 import { reduceEvents } from "@beep/gate-report/Reducer";
 import * as DateTime from "effect/DateTime";
@@ -126,3 +126,22 @@ export const decodes =
   <T, E>(schema: S.Codec<T, E>) =>
   (input: unknown): O.Option<T> =>
     S.decodeUnknownOption(schema)(input);
+
+/** A failed diagnostic item at a line of a file, keyed the way an adapter keys it (no occurrence). */
+export const diagnosticAt = (input: {
+  readonly file: string;
+  readonly code: string;
+  readonly message: string;
+  readonly line: number;
+}): Item =>
+  Item.make({
+    key: diagnosticKey(DiagnosticKeyInput.make({ file: input.file, code: input.code, message: input.message })),
+    unit: input.file,
+    path: [],
+    name: input.message,
+    outcome: "failed",
+    code: O.some(input.code),
+    severity: O.some("error"),
+    location: Location.makeOption({ file: input.file, line: input.line, column: 1 }),
+    detail: ItemDetail.makeOption({ message: input.message }),
+  });

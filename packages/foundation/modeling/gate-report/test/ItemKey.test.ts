@@ -1,5 +1,7 @@
 // The stable item key rules of the SPEC: file plus full name for a test; file,
 // code or rule, and normalized message shape for a diagnostic.
+
+import { fcRuns } from "@beep/fc-runs/FastCheckRuns";
 import {
   DiagnosticKeyInput,
   diagnosticKey,
@@ -9,7 +11,10 @@ import {
   SeriesKey,
 } from "@beep/gate-report/ItemKey";
 import { assert, describe, it } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -76,10 +81,50 @@ describe("item keys", () => {
     const fault = ItemKey.cases.FaultKey.make({ unit: "src/a.test.ts", kind: "load", name: "load" });
     const diagnostic = diagnosticKey(DiagnosticKeyInput.make({ file: "src/a.ts", code: "TS1", message: "m" }));
     assert.deepStrictEqual(
-      A.map([fault, diagnostic], (key) => A.headNonEmpty(Str.split(fingerprint(key), "\u001f"))),
+      A.map([fault, diagnostic], (key) => A.headNonEmpty(Str.split(fingerprint(key), "|"))),
       ["fault", "diagnostic"]
     );
   });
+
+  it("keeps distinct keys distinct when a field contains the old separator or the new delimiters", () => {
+    const pairs: ReadonlyArray<readonly [ItemKey, ItemKey]> = [
+      [
+        ItemKey.cases.TestKey.make({ file: "a\u001fb", fullName: "c" }),
+        ItemKey.cases.TestKey.make({ file: "a", fullName: "b\u001fc" }),
+      ],
+      [
+        ItemKey.cases.TestKey.make({ file: "a|1:b", fullName: "c" }),
+        ItemKey.cases.TestKey.make({ file: "a", fullName: "b|1:c" }),
+      ],
+      [
+        ItemKey.cases.DiagnosticKey.make({ file: "a", code: "TS1", shape: "s#2" }),
+        ItemKey.cases.DiagnosticKey.make({ file: "a", code: "TS1", shape: "s", occurrence: O.some(2) }),
+      ],
+    ];
+    for (const [left, right] of pairs) {
+      assert.isFalse(equivalent(left, right));
+      assert.notStrictEqual(fingerprint(left), fingerprint(right));
+    }
+  });
+
+  it("writes each field with its length, and an occurrence only from the second", () => {
+    const first = diagnosticKey(DiagnosticKeyInput.make({ file: "src/a.ts", code: "TS1", message: "m" }));
+    assert.strictEqual(fingerprint(first), "diagnostic|8:src/a.ts|3:TS1|1:m");
+    assert.strictEqual(
+      fingerprint(ItemKey.cases.DiagnosticKey.make({ ...first, occurrence: O.some(3) })),
+      "diagnostic|8:src/a.ts|3:TS1|1:m#3"
+    );
+  });
+
+  it.effect.prop(
+    "two keys have the same fingerprint exactly when they are equal",
+    [Arbitrary.schema(ItemKey), Arbitrary.schema(ItemKey)],
+    ([left, right]) =>
+      Effect.sync(() => {
+        assert.strictEqual(fingerprint(left) === fingerprint(right), equivalent(left, right));
+      }),
+    { arbitrary: fcRuns(200) }
+  );
 
   it("a series key carries the gate, subject, item key and branch", () => {
     const item = ItemKey.cases.TestKey.make({ file: "src/a.test.ts", fullName: "x" });

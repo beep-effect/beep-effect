@@ -24,7 +24,7 @@ describe("StrayOutput", () => {
       })
     );
     assert.deepStrictEqual(lines, [
-      'Stray output: tests wrote 2 lines directly to stdout, bypassing the runner\'s console capture. A child process with inherited stdio is the usual cause; pass `stdio: "pipe"`.',
+      'Stray output: the run wrote 2 lines directly to stdout, bypassing the runner\'s console capture. A child process with inherited stdio is the usual cause; pass `stdio: "pipe"`.',
       "  stdout: git worktree add",
       "  (+1 more)",
     ]);

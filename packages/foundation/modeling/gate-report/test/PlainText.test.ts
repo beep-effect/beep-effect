@@ -53,14 +53,44 @@ describe("projectLines", () => {
     assert.strictEqual(A.filter(lines, Str.startsWith("  + line")).length, 12);
   });
 
-  it("cuts a long line to the line limit with an ellipsis", () => {
+  it("shortens a 400-character scope and keeps the verdict word, counts and duration on the first and last line", () => {
     const long = VerdictLine.make({ ...verdict, scope: Str.repeat(400)("x") });
-    const [line] = projectLines({
-      document: ConsoleDocument.make({ verdict: long, entries: [], folds: [] }),
+    const lines = projectLines({
+      document: ConsoleDocument.make({ ...red([entry(1, 0)]), verdict: long }),
       budget: agentBudget,
     });
-    assert.strictEqual(line?.length, 240);
-    assert.isTrue(Str.endsWith("...")(line ?? ""));
+    for (const line of [lines[0] ?? "", lines[lines.length - 1] ?? ""]) {
+      assert.strictEqual(line.length, 240);
+      assert.isTrue(Str.endsWith("...: FAILED, 0/9 passed (5ms)")(line));
+      assert.isTrue(Str.startsWith("test xxx")(line));
+    }
+  });
+
+  it("keeps the delta suffix when it fits and drops it before the result when it does not", () => {
+    const delta = RunDelta.makeOption({ fixed: 1, stillFailing: 0, new: 0 });
+    const withDelta = VerdictLine.make({ ...verdict, scope: Str.repeat(400)("x"), delta });
+    const verdictOnly = (budget: ConsoleBudget) =>
+      projectLines({ document: ConsoleDocument.make({ verdict: withDelta, entries: [], folds: [] }), budget });
+    assert.isTrue(
+      Str.endsWith("(5ms); since last run: 1 fixed, 0 still failing, 0 new")(verdictOnly(agentBudget)[0] ?? "")
+    );
+    const narrow = ConsoleBudget.make({ maxChars: 1200, maxLineChars: 40, maxDiffLines: 3 });
+    assert.deepStrictEqual(verdictOnly(narrow), ["test xxxxxx...: FAILED, 0/9 passed (5ms)"]);
+  });
+
+  it("cuts a verdict whose result alone overflows the line, and any other long line, with an ellipsis", () => {
+    const narrow = ConsoleBudget.make({ maxChars: 1200, maxLineChars: 40, maxDiffLines: 3 });
+    const wide = VerdictLine.make({ ...verdict, counts: Str.repeat(60)("9") });
+    const [line] = projectLines({
+      document: ConsoleDocument.make({ verdict: wide, entries: [], folds: [] }),
+      budget: narrow,
+    });
+    assert.strictEqual(line, `test @beep/glob: FAILED, ${Str.repeat(12)("9")}...`);
+    const note = projectLines({
+      document: ConsoleDocument.make({ ...red([]), entries: [NoteEntry.make({ lines: [Str.repeat(300)("n")] })] }),
+      budget: agentBudget,
+    });
+    assert.strictEqual(note[1], `${Str.repeat(237)("n")}...`);
   });
 
   it("replaces control characters so a value never splits a line", () => {
@@ -130,9 +160,39 @@ describe("fitDocument and the cap", () => {
     );
   });
 
-  it("recomputes a cap the document already held", () => {
+  it("keeps a cap the document already held, and a zero cap is no cap", () => {
     const document = ConsoleDocument.make({ ...red([]), cap: CapLine.makeOption({ dropped: 9 }) });
-    assertNone(fitDocument({ document, budget: agentBudget }).cap);
+    assertSome(
+      O.map(fitDocument({ document, budget: agentBudget }).cap, (cap) => cap.dropped),
+      9
+    );
+    const zero = ConsoleDocument.make({ ...red([]), cap: CapLine.makeOption({ dropped: 0 }) });
+    assertNone(fitDocument({ document: zero, budget: agentBudget }).cap);
+  });
+
+  it("fitting is idempotent: projecting a fitted document keeps the cap equal to the entries dropped", () => {
+    const document = red(A.makeBy(40, (index) => entry(index, 5)));
+    const fitted = fitDocument({ document, budget: tight });
+    const dropped = 40 - fitted.entries.length;
+    assert.isAbove(dropped, 0);
+    assert.deepStrictEqual(fitDocument({ document: fitted, budget: tight }), fitted);
+    assert.include(projectLines({ document: fitted, budget: tight }), `... ${dropped} more in the record`);
+    assert.deepStrictEqual(
+      projectLines({ document: fitted, budget: tight }),
+      projectLines({ document, budget: tight })
+    );
+  });
+
+  it("adds new drops to a cap the document already held", () => {
+    const document = ConsoleDocument.make({
+      ...red(A.makeBy(40, (index) => entry(index, 5))),
+      cap: CapLine.makeOption({ dropped: 3 }),
+    });
+    const fitted = fitDocument({ document, budget: tight });
+    assertSome(
+      O.map(fitted.cap, (cap) => cap.dropped),
+      3 + 40 - fitted.entries.length
+    );
   });
 });
 

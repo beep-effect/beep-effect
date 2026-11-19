@@ -10,7 +10,15 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { makeReport, projectWith } from "./support/builders.ts";
+import {
+  diagnosticAt,
+  finished,
+  makeReport,
+  projectWith,
+  reduce,
+  runFinished,
+  runStarted,
+} from "./support/builders.ts";
 
 const diagnostic = (index: number, code: string, message: string): Item => {
   const file = `src/module${index}.ts`;
@@ -55,6 +63,28 @@ describe("cause folding", () => {
     assert.isAtMost(lines.length, 5);
     assert.include(lines, `TS6305 x701: upstream declarations are not built. Fix: ${FIX}`);
     assert.strictEqual(lines[0], lines[lines.length - 1]);
+  });
+
+  it("folds a reduced cascade of 701 diagnostics in 7 files to one line counting diagnostics, not files", () => {
+    const events = A.makeBy(701, (index) =>
+      finished(
+        diagnosticAt({
+          file: `src/module${index % 7}.ts`,
+          code: "TS6305",
+          message: `Output file '/repo/dist/m${index}.d.ts' has not been built from source file '/repo/src/m${index}.ts'.`,
+          line: index + 1,
+        })
+      )
+    );
+    const report = reduce([
+      runStarted({ gate: "check", itemKind: "diagnostic" }),
+      ...events,
+      runFinished({ reason: "failed", exitCode: O.some(2), collected: O.some(7) }),
+    ]);
+    assert.strictEqual(report.totals.failed, 701);
+    const lines = projectWith({ report, fixes: { TS6305: FIX } });
+    assert.isAtMost(lines.length, 5);
+    assert.include(lines, `TS6305 x701: upstream declarations are not built. Fix: ${FIX}`);
   });
 
   it("keeps items no rule names, in order, and folds without a fix when none is supplied", () => {

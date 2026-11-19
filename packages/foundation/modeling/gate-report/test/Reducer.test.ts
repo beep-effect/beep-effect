@@ -5,8 +5,8 @@
 // Vitest adapter slice and are listed in its port inventory.
 
 import { Unit } from "@beep/gate-report/GateReport";
-import { ItemDetail } from "@beep/gate-report/Item";
-import { ItemKey } from "@beep/gate-report/ItemKey";
+import { Item, ItemDetail } from "@beep/gate-report/Item";
+import { DiagnosticKeyInput, diagnosticKey, fingerprint, ItemKey } from "@beep/gate-report/ItemKey";
 import { PolicyBreach } from "@beep/gate-report/Policy";
 import { IncompleteRunError, reduceEvents } from "@beep/gate-report/Reducer";
 import { StrayOutput } from "@beep/gate-report/StrayOutput";
@@ -15,7 +15,17 @@ import { assert, describe, it } from "@effect/vitest";
 import { assertFailure, assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
-import { E, FILE, failedTest, finished, reduce, runFinished, runStarted, testItem } from "./support/builders.ts";
+import {
+  diagnosticAt,
+  E,
+  FILE,
+  failedTest,
+  finished,
+  reduce,
+  runFinished,
+  runStarted,
+  testItem,
+} from "./support/builders.ts";
 import type { GateEvent } from "@beep/gate-report/GateEvent";
 
 const fileUnit = Unit.make({ id: FILE, kind: "file", parent: O.some("@beep/glob") });
@@ -288,6 +298,89 @@ describe("reduceEvents — canonical runs", () => {
       reduceEvents([runStarted()]),
       IncompleteRunError.make({ message: "the events hold no RunFinished or RunCancelled" })
     );
+  });
+});
+
+describe("reduceEvents — diagnostic occurrences", () => {
+  const typeError = (line: number, message = "Type 'string' is not assignable to type 'number'.") =>
+    diagnosticAt({ file: "src/a.ts", code: "TS2322", message, line });
+  const occurrences = (report: ReturnType<typeof reduce>) =>
+    A.map(report.items, (item) => (ItemKey.guards.DiagnosticKey(item.key) ? O.getOrNull(item.key.occurrence) : -1));
+
+  it("keeps two same-shape diagnostics in one file as two failed items", () => {
+    const report = reduce([
+      runStarted({ itemKind: "diagnostic" }),
+      finished(typeError(3)),
+      finished(typeError(9)),
+      runFinished({ reason: "failed", collected: O.some(1) }),
+    ]);
+    assert.strictEqual(report.totals.failed, 2);
+    assert.deepStrictEqual(occurrences(report), [null, 2]);
+  });
+
+  it("numbers two TS2322 messages that normalize to one shape at different locations", () => {
+    const report = reduce([
+      runStarted({ itemKind: "diagnostic" }),
+      finished(typeError(3, "Type 'string' is not assignable to type 'number'.")),
+      finished(typeError(7, "Type 'boolean' is not assignable to type 'Foo'.")),
+      runFinished({ reason: "failed", collected: O.some(1) }),
+    ]);
+    assert.strictEqual(report.items.length, 2);
+    assert.deepStrictEqual(occurrences(report), [null, 2]);
+    assert.notStrictEqual(fingerprint(report.items[0]?.key ?? key("x")), fingerprint(report.items[1]?.key ?? key("x")));
+  });
+
+  it("replaces the same occurrence at the same location in place, and ignores an adapter-supplied ordinal", () => {
+    const repeated = typeError(3);
+    const supplied = Item.make({
+      ...typeError(3),
+      key: ItemKey.cases.DiagnosticKey.make({
+        ...diagnosticKey(
+          DiagnosticKeyInput.make({
+            file: "src/a.ts",
+            code: "TS2322",
+            message: "Type 'x' is not assignable to type 'y'.",
+          })
+        ),
+        occurrence: O.some(5),
+      }),
+    });
+    const report = reduce([
+      runStarted({ itemKind: "diagnostic" }),
+      finished(repeated),
+      finished(repeated),
+      finished(supplied),
+      finished(typeError(9)),
+      runFinished({ collected: O.some(1) }),
+    ]);
+    assert.strictEqual(report.totals.failed, 2);
+    assert.deepStrictEqual(occurrences(report), [null, 2]);
+  });
+
+  it("keeps diagnostics of different files, codes or shapes as first occurrences", () => {
+    const report = reduce([
+      runStarted({ itemKind: "diagnostic" }),
+      finished(typeError(3)),
+      finished(
+        diagnosticAt({ file: "src/b.ts", code: "TS2322", message: "Type 'a' is not assignable to type 'b'.", line: 3 })
+      ),
+      finished(
+        diagnosticAt({ file: "src/a.ts", code: "TS2345", message: "Type 'a' is not assignable to type 'b'.", line: 3 })
+      ),
+      runFinished({ collected: O.some(2) }),
+    ]);
+    assert.deepStrictEqual(occurrences(report), [null, null, null]);
+  });
+
+  it("a diagnostic reported twice without a location is one occurrence", () => {
+    const bare = Item.make({ ...typeError(1), location: O.none() });
+    const report = reduce([
+      runStarted({ itemKind: "diagnostic" }),
+      finished(bare),
+      finished(bare),
+      runFinished({ collected: O.some(1) }),
+    ]);
+    assert.strictEqual(report.totals.failed, 1);
   });
 });
 

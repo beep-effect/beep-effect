@@ -111,7 +111,8 @@ An item carries:
 - a stable key: the file and the test full name for a test, so same-named tests in two files
   stay distinct (upstream's flat `fullName` map collides, study section 4); the file, the TS code
   or lint rule, and the message shape (literals and line numbers normalized out) for a
-  diagnostic;
+  diagnostic, with an occurrence ordinal from 2 when the same key repeats at another location in
+  one run;
 - an optional location `{ file, line, column }`;
 - an optional detail: the first message line and a diff;
 - optional `code`, `rule` and `severity`;
@@ -573,15 +574,15 @@ Reverse: Edit the settled-reason and fallback rules in the reducer.
 
 ### CTRF and SARIF stay lossless through an extension bag, 2026-11-19
 
-Fields neither format has a native slot for travel in CTRF `extra` and SARIF `properties`. A warned item maps to CTRF `other` and SARIF `review`; a skipped item maps to SARIF `notApplicable`. The mapping functions exist for the round-trip test only; the emitters stay deferred.
+Fields neither format has a native slot for travel in CTRF `extra` and SARIF `properties`. A warned item maps to CTRF `other` and SARIF `review`; a skipped item maps to SARIF `notApplicable`. SARIF `level` is `none` unless the item failed, and CTRF `flaky` is set only for a final pass after an earlier failed attempt. The mapping functions exist for the round-trip test only; the emitters stay deferred.
 
 Lane feat/gate-report-core
 
 Reverse: Change the interchange mapping module.
 
-### The item key is a three-way union and fingerprints with a unit separator, 2026-11-19
+### The item key is a three-way union with an injective fingerprint and occurrence ordinals, 2026-11-19
 
-An item key is one of test (file and full name), diagnostic (file, code or rule, normalized message shape) or fault (a load, hook or unhandled failure of a unit). Its fingerprint joins the fields with the ASCII unit separator, which cannot appear in a path or a test name. The failure signature hashes with FNV-1a 64 instead of a SHA-256 prefix, which keeps the model synchronous and free of a crypto dependency; the function-boundary line is an optional input an adapter may supply.
+An item key is one of test (file and full name), diagnostic (file, code or rule, normalized message shape) or fault (a load, hook or unhandled failure of a unit). Its fingerprint is the tag followed by each field with its length in front, so for any two keys the schema accepts the fingerprints are equal exactly when the keys are equal, whatever characters the fields contain. A diagnostic that repeats a file, code and message shape at another location in the same run gets an occurrence ordinal from the reducer, starting at 2 and absent on the first, so each occurrence is its own item and the key stays free of line numbers. The failure signature hashes with FNV-1a 64 instead of a SHA-256 prefix, which keeps the model synchronous and free of a crypto dependency; the function-boundary line is an optional input an adapter may supply.
 
 Lane feat/gate-report-core
 

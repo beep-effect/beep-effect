@@ -94,7 +94,7 @@ const streamsOf = (stray: StrayOutput): string =>
 export const strayOutputNote = (stray: StrayOutput): ReadonlyArray<string> => {
   const shown = A.take(stray.samples, MAX_NOTE_SAMPLES);
   const more = stray.total - shown.length;
-  const head = `Stray output: tests wrote ${stray.total} ${stray.total === 1 ? "line" : "lines"} directly to ${streamsOf(stray)}, bypassing the runner's console capture. A child process with inherited stdio is the usual cause; pass \`stdio: "pipe"\`.`;
+  const head = `Stray output: the run wrote ${stray.total} ${stray.total === 1 ? "line" : "lines"} directly to ${streamsOf(stray)}, bypassing the runner's console capture. A child process with inherited stdio is the usual cause; pass \`stdio: "pipe"\`.`;
   return pipe(
     [head],
     A.appendAll(A.map(shown, (sample) => `  ${sample.stream}: ${sample.text}`)),

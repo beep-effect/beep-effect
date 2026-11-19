@@ -266,8 +266,18 @@ const itemOf = (extension: ItemExtension, parts: Pick<Item, "outcome" | "locatio
     ...parts,
   });
 
-const isFlaky = (attempts: O.Option<A.NonEmptyReadonlyArray<ItemOutcome>>): boolean =>
-  O.exists(attempts, (outcomes) => A.contains(outcomes, "failed") && A.contains(outcomes, "passed"));
+const levelOf = (item: Item): SarifLevel =>
+  ItemOutcome.is.failed(item.outcome)
+    ? pipe(
+        item.severity,
+        O.map((severity): SarifLevel => severity),
+        O.getOrElse((): SarifLevel => "error")
+      )
+    : "none";
+
+const isFlaky = (item: Item): boolean =>
+  ItemOutcome.is.passed(item.outcome) &&
+  O.exists(item.attempts, (outcomes) => A.contains(A.initNonEmpty(outcomes), "failed"));
 
 /**
  * Map an item to a CTRF test.
@@ -309,7 +319,7 @@ export const toCtrf = (item: Item): CtrfTest =>
       O.map((attempts) => attempts.length - 1),
       O.getOrElse(() => 0)
     ),
-    flaky: isFlaky(item.attempts),
+    flaky: isFlaky(item),
     extra: extensionOf(item),
   });
 
@@ -358,8 +368,9 @@ const ITEM_KEY_FINGERPRINT = "gateReport/itemKey/v1";
  *
  * **Details**
  *
- * The rule id is the item's TS code or lint rule, the level its severity
- * (`none` without one), the kind its outcome, the region its location, and
+ * The rule id is the item's TS code or lint rule. The level is `none` unless
+ * the item failed; a failed item's level is its severity, or `error` without
+ * one (the severity always travels in `properties`). The kind is the outcome, the region its location, and
  * `partialFingerprints` carries the item key's fingerprint.
  *
  * **Example** (Map a type error)
@@ -384,11 +395,7 @@ const ITEM_KEY_FINGERPRINT = "gateReport/itemKey/v1";
 export const toSarif = (item: Item): SarifResult =>
   SarifResult.make({
     ruleId: O.orElse(item.code, () => item.rule),
-    level: pipe(
-      item.severity,
-      O.map((severity): SarifLevel => severity),
-      O.getOrElse((): SarifLevel => "none")
-    ),
+    level: levelOf(item),
     kind: ItemOutcome.match(item.outcome, {
       passed: (): SarifKind => "pass",
       failed: (): SarifKind => "fail",
