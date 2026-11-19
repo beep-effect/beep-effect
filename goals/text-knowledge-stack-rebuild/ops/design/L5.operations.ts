@@ -4,7 +4,7 @@
  *
  * Target home: `@beep/nlp-processing` (foundation/capability), which absorbs
  * `nlp/Operations` and the census-surviving part of `nlp/Algebra` in P6. The
- * ActivityId and its start-time preimage live in L0 (ruling 1).
+ * ActivityId and its start-time preimage live in L0 (decision 2026-11-19-p0-activity-id-minted-at-start).
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -97,13 +97,15 @@ export const withActivity =
   <E, R>(operation: Operation<A, B, E, R>): Operation<A, Logged<B>, E, R> => ({
     name: operation.name,
     run: Effect.fnUntraced(function* (input: A) {
+      // Used ids are read before the run (decision 2026-11-19-p0-activity-id-minted-at-start), so they name what the run read.
+      const used = HashSet.fromIterable(ids.used(input));
       const started = yield* DateTime.now;
       const value = yield* operation.run(input);
       const clock = yield* DateTime.now;
       const ended = DateTime.max(started, clock);
       const activity = Activity.make({
         operation: operation.name,
-        used: HashSet.fromIterable(ids.used(input)),
+        used,
         generated: HashSet.fromIterable(ids.generated(value)),
         pin: ids.pin,
         promptDigest: ids.promptDigest,

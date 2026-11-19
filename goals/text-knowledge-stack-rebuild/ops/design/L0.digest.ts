@@ -152,7 +152,7 @@ export const ActivityPin = S.TaggedUnion({
 /** Decoded type of {@link ActivityPin}. */
 export type ActivityPin = typeof ActivityPin.Type;
 
-/** The fields of an activity known when it starts; the ActivityId hashes exactly these (ruling 1). */
+/** The fields of an activity known when it starts; the ActivityId hashes exactly these (decision 2026-11-19-p0-activity-id-minted-at-start). */
 export const ActivityStartFields = {
   operation: TermIri.annotateKey({ description: "Registry term naming the operation." }),
   pin: ActivityPin,

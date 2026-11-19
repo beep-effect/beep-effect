@@ -184,19 +184,25 @@ coverage, pinpoints) is not a generic kind; it is a law-practice profile.
 **Arrows.** `merge`, the pointwise join over compatible documents (same
 capture, no time conflict); `restrict` to a kind set, which refuses unless the
 set is closed under the references each kind declares, and `closure`, which
-computes the closed set; containment derived from strict range inclusion; an
-effectful `verify` that every decode path calls, checking that each anchors key
-equals the occurrence hash of its value; the OA and NIF codec for the declared
-profile (section 10).
+computes the closed set; containment derived from strict range inclusion; one
+checked decode entrypoint per boundary, which decodes through the schema
+(resolution, attribution, capture equality, body references) and then runs the
+effectful key verification (each anchors and annotation key equals the hash of
+its value) before it returns. The package exports that entrypoint for wire and
+storage input; the bare schema is exported for composition and generators
+only. The OA and NIF codec for the declared profile (section 10) is built on
+the entrypoint.
 
 **Laws.** `L2-1` (merge over one capture is idempotent, commutative and
 associative on content, and attribution unions), `L2-2` (the annotation hash is
 invariant under target permutation and duplication), `L2-3` (every annotation
 has non-empty attribution, and each annotation and activity pair is one
 generation), `L2-4` (referential integrity of targets and body references
-survives merge and restriction), `L2-5` (containment is a strict order with a kind tie-break on equal spans),
-`L2-6` (the codec round-trips a document exactly, maps third-party input to
-its normalized form, and preserves `resolve`).
+survives merge and restriction, and the checked entrypoint refuses a document
+whose annotation key was replaced), `L2-5` (containment is a strict order with
+a kind tie-break on equal spans), `L2-6` (the codec round-trips a document and
+its imported activities exactly, maps third-party input to its normalized
+form, and preserves `resolve`).
 
 ### L3 · Taxonomy and alignments
 
@@ -275,8 +281,11 @@ codec; a pure checker over a log for the partition clauses below. The Postgres
 exclusion constraint in the epistemic server remains the enforcement of
 valid-time overlap.
 
-**Laws.** `L4-1` (the log is prefix-monotone and the as-of view never changes
-after its time; per `(scope, logicalKey)` partition, supersession is acyclic by
+**Laws.** `L4-1` (the log is append-ordered in knowledge time: an append whose
+knowledge start is earlier than that of the log's last record is refused, and
+the checker reports it as a knowledge-start regression; that rule is what
+makes the log prefix-monotone and the as-of view at a time stable once the log
+has passed it; per `(scope, logicalKey)` partition, supersession is acyclic by
 hash construction, a record is superseded at most once and a second superseder
 is a reported fork, a superseder never starts earlier than the record it
 supersedes or than its own generation time, and the records not yet superseded
@@ -284,9 +293,11 @@ have pairwise disjoint valid intervals), `L4-2` (an admission requires
 non-empty grounding that verifies against the current text digest), `L4-3`
 (derivation is acyclic by construction: the `ClaimId` changes when
 `derivedFrom` changes, and every log built through the minting function has an
-acyclic derivation graph; challenges may cycle; the support half of the
-original row is deleted, because neither `supportAtCreation` nor an admission's
-grounding forms a graph over claims), `L4-4` (a claim whose `derivedFrom` is non-empty and wholly
+acyclic derivation graph; every `derivedFrom` parent is already in the log, so
+it starts no later than its child, and the checker reports a missing or later
+parent; challenges may cycle; the support half of the original row is deleted,
+because neither `supportAtCreation` nor an admission's grounding forms a graph
+over claims), `L4-4` (a claim whose `derivedFrom` is non-empty and wholly
 retracted is flagged, transitively), `L4-5` (equivalent propositions have equal
 keys, with an instance in every owning slice), `L4-6` (refusal is a no-op,
 independent coordinates commute, gates are monotone and never pass on
@@ -311,7 +322,8 @@ error and requirement channels per pipeline; an activity log of
 commutation witness), `traverse`, aggregation over `effect/Combiner` and
 `effect/Reducer` where the census shows coverage, and `withActivity`, which
 records used and generated ids and the engine or model pin for operations
-whose inputs and outputs carry ids. The activity id is minted at start, from
+whose inputs and outputs carry ids. It computes the used ids before the
+operation runs. The activity id is minted at start, from
 what is known then (section 2, L0).
 
 **Laws.** `L5-1` (Kleisli identity and associativity for fixed channels under a
@@ -545,7 +557,10 @@ The annotation codec supports one declared OA profile and nothing else.
 Decoding third-party input returns the annotation document, a table of
 imported activities, and a residual dataset that holds every triple outside
 the profile; residual triples are never stored in the document and never
-dropped silently. NIF is export-only for the `Sentence` and `Word` kinds. OA
+dropped silently. The encoder takes the document together with its table of
+imported activities, the pair the decoder returns without the residual, so an
+imported activity's original IRI and stated time survive the round trip. NIF
+is export-only for the `Sentence` and `Word` kinds. OA
 and NIF offsets are Unicode code points on the wire; the codec converts them
 from and to the stored `utf16-code-unit` through the `@beep/text` unit
 conversion and fails closed on a split surrogate, and `L2-6` includes an

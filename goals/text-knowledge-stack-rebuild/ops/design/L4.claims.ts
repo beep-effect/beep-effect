@@ -7,7 +7,7 @@
  * Target home: `@beep/epistemics` (foundation/modeling). Existing epistemics
  * schemas (`AbsenceReason`, `ValidTime`) and the factory id contract
  * (`IdCodec`) are imported. `makeClaimEnvelope` and its `ClaimVersion` retire
- * into `makeClaimCore` plus the separate records in P4 (round-one ruling 9);
+ * into `makeClaimCore` plus the separate records in P4 (decision 2026-11-19-p0-census-dispositions);
  * rows that store a ClaimVersion keep their bytes behind a read-time transform.
  *
  * @packageDocumentation
@@ -181,7 +181,7 @@ export const makeClaimCore = <
     )
   );
 
-  // Challenge cycles are allowed (L4-3); a person challenges as the slice principal (ruling 4).
+  // Challenge cycles are allowed (L4-3); a person challenges as the slice principal (decision 2026-11-19-p0-admission-actor-is-the-principal).
   const Challenge = S.TaggedUnion({
     ByPerson: { from: ClaimId, to: ClaimId, kind: ChallengeKind, actor: ids.principal, at: Instant },
     ByActivity: { from: ClaimId, to: ClaimId, kind: ChallengeKind, generatedBy: ActivityId },
@@ -265,6 +265,7 @@ export class ClaimLogEntry extends S.Opaque<ClaimLogEntry, { readonly brand: uni
     scope: S.Union([S.String, S.Finite]),
     logicalKey: S.NonEmptyString,
     supersedes: S.OptionFromOptionalKey(ClaimId),
+    derivedFrom: CanonicalHashSet(ClaimId).annotateKey({ description: "Parents the record was derived from." }),
     knowledgeStart: Instant,
     generatedAt: Instant.annotateKey({ description: "End time of the generating activity." }),
     valid: ValidTime,
@@ -278,10 +279,14 @@ export class ClaimLogEntry extends S.Opaque<ClaimLogEntry, { readonly brand: uni
  */
 export const ClaimLogViolation = S.TaggedUnion({
   SupersessionFork: { superseded: ClaimId, superseders: CanonicalHashSet(ClaimId) },
-  // Round-two ruling 1: a record may supersede only a record of its own partition.
+  // Decision 2026-11-19-p0-item3-amended-supersession-is-explicit: a record may supersede only a record of its own partition.
   SupersededAcrossPartitions: { claim: ClaimId, superseded: ClaimId },
   StartsBeforeSuperseded: { claim: ClaimId, superseded: ClaimId },
   StartsBeforeGeneration: { claim: ClaimId },
+  // Decisions 2026-11-19-p0-item3-amended-supersession-is-explicit and 2026-11-19-p0-item10-derived-from-in-the-hashed-core: the log is append-ordered in knowledge time, and parents precede children.
+  KnowledgeStartRegression: { claim: ClaimId, previous: ClaimId },
+  ParentMissing: { claim: ClaimId, parent: ClaimId },
+  ParentStartsLater: { claim: ClaimId, parent: ClaimId },
   ValidTimeOverlap: { left: ClaimId, right: ClaimId },
 }).pipe($I.annoteSchema("ClaimLogViolation", { description: "A partition-level interval law violation." }));
 
@@ -297,7 +302,7 @@ const samePartition = (left: ClaimLogEntry, right: ClaimLogEntry): boolean =>
 const startsBefore = (start: DateTime.Utc, end: O.Option<DateTime.Utc>): boolean =>
   O.match(end, { onNone: constTrue, onSome: (bound) => DateTime.isLessThan(start, bound) });
 
-// Round-two ruling 2: an Unknown valid time asserts no interval and stays out of the disjointness clause.
+// Decision 2026-11-19-p0-item3-amended-supersession-is-explicit: an Unknown valid time asserts no interval and stays out of the disjointness clause.
 const validOverlap = (left: ClaimLogEntry, right: ClaimLogEntry): boolean =>
   isIntervalValid(left.valid) &&
   isIntervalValid(right.valid) &&
@@ -323,7 +328,10 @@ const supersessionIndex = (log: ReadonlyArray<ClaimLogEntry>): HashMap.HashMap<C
  * starts no earlier than the record it supersedes nor than its own
  * generation; records not yet superseded have pairwise disjoint valid
  * intervals, mirroring the Postgres exclusion constraint. A record's knowledge
- * interval ends at its superseder's knowledgeStart and is open otherwise.
+ * interval ends at its superseder's knowledgeStart and is open otherwise. The
+ * log is append-ordered: a knowledgeStart earlier than the previous entry's is
+ * a regression, and every derivedFrom parent must appear earlier in the log
+ * and start no later than its child (decision 2026-11-19-p0-item10-derived-from-in-the-hashed-core).
  */
 export const checkClaimLog = (log: ReadonlyArray<ClaimLogEntry>): ReadonlyArray<ClaimLogViolation> => {
   const byClaim = HashMap.fromIterable(A.map(log, (entry): readonly [ClaimId, ClaimLogEntry] => [entry.claim, entry]));
@@ -366,27 +374,105 @@ export const checkClaimLog = (log: ReadonlyArray<ClaimLogEntry>): ReadonlyArray<
         : Result.fail(right.claim)
     )
   );
-  return [...forks, ...ordering, ...generation, ...overlaps];
+  const regressions = A.filterMap(A.zip(log, A.drop(log, 1)), ([previous, entry]) =>
+    DateTime.isLessThan(entry.knowledgeStart, previous.knowledgeStart)
+      ? Result.succeed(Violation.KnowledgeStartRegression.make({ claim: entry.claim, previous: previous.claim }))
+      : Result.fail(entry.claim)
+  );
+  const position = HashMap.fromIterable(A.map(log, (entry, index): readonly [ClaimId, number] => [entry.claim, index]));
+  const parents = A.flatMap(log, (entry, index) =>
+    A.filterMap(
+      A.fromIterable(entry.derivedFrom),
+      (parent): Result.Result<ClaimLogViolation, ClaimId> =>
+        O.match(
+          O.filter(HashMap.get(position, parent), (at) => at < index),
+          {
+            onNone: () => Result.succeed(Violation.ParentMissing.make({ claim: entry.claim, parent })),
+            onSome: () =>
+              O.exists(HashMap.get(byClaim, parent), (prior) =>
+                DateTime.isGreaterThan(prior.knowledgeStart, entry.knowledgeStart)
+              )
+                ? Result.succeed(Violation.ParentStartsLater.make({ claim: entry.claim, parent }))
+                : Result.fail(parent),
+          }
+        )
+    )
+  );
+  return [...forks, ...ordering, ...generation, ...overlaps, ...regressions, ...parents];
+};
+
+type Wave = {
+  readonly remaining: HashMap.HashMap<ClaimId, number>;
+  readonly next: HashSet.HashSet<ClaimId>;
 };
 
 /**
  * L4-4: the claims flagged by the retraction closure: a claim whose
  * derivedFrom is non-empty and consists only of retracted or flagged claims,
  * to a fixed point.
+ *
+ * **Details**
+ *
+ * A dependency worklist, linear in claims plus derivation edges: each claim
+ * keeps a count of its sources that are still live, and a claim is flagged
+ * when its count reaches zero; flagging it decrements its dependents. Claims
+ * with an empty source set are never flagged, and retracted claims are dead
+ * from the start but are not themselves flagged.
  */
 export const orphanedDerivations =
   (derivedFrom: HashMap.HashMap<ClaimId, HashSet.HashSet<ClaimId>>) =>
   (retracted: HashSet.HashSet<ClaimId>): HashSet.HashSet<ClaimId> => {
-    const step = (flagged: HashSet.HashSet<ClaimId>): HashSet.HashSet<ClaimId> => {
-      const dead = HashSet.union(retracted, flagged);
-      const next = HashMap.reduce(derivedFrom, flagged, (acc, sources, claim) =>
-        !HashSet.has(dead, claim) &&
-        !HashSet.isEmpty(sources) &&
-        HashSet.every(sources, (source) => HashSet.has(dead, source))
-          ? HashSet.add(acc, claim)
-          : acc
+    const dependents = HashMap.reduce(
+      derivedFrom,
+      HashMap.empty<ClaimId, HashSet.HashSet<ClaimId>>(),
+      (acc, sources, claim) =>
+        HashSet.reduce(sources, acc, (inner, source) =>
+          HashMap.set(
+            inner,
+            source,
+            HashSet.add(O.getOrElse(HashMap.get(inner, source), HashSet.empty<ClaimId>), claim)
+          )
+        )
+    );
+    const candidate = (claim: ClaimId): boolean => !HashSet.has(retracted, claim);
+    const initialRemaining = derivedFrom.pipe(
+      HashMap.map((sources) => HashSet.size(HashSet.filter(sources, candidate)))
+    );
+    let remaining = initialRemaining;
+    let frontier = derivedFrom.pipe(
+      HashMap.toEntries,
+      A.filterMap(([claim, sources]) =>
+        candidate(claim) && !HashSet.isEmpty(sources) && O.contains(HashMap.get(initialRemaining, claim), 0)
+          ? Result.succeed(claim)
+          : Result.fail(claim)
+      ),
+      HashSet.fromIterable
+    );
+    let flagged = HashSet.empty<ClaimId>();
+    while (!HashSet.isEmpty(frontier)) {
+      flagged = HashSet.union(flagged, frontier);
+      const done = flagged;
+      const wave = HashSet.reduce(
+        frontier,
+        { remaining, next: HashSet.empty<ClaimId>() },
+        (state: Wave, dead): Wave =>
+          HashSet.reduce(
+            O.getOrElse(HashMap.get(dependents, dead), HashSet.empty<ClaimId>),
+            state,
+            (inner: Wave, dependent): Wave => {
+              if (!candidate(dependent) || HashSet.has(done, dependent)) {
+                return inner;
+              }
+              const left = O.getOrElse(HashMap.get(inner.remaining, dependent), () => 0) - 1;
+              return {
+                remaining: HashMap.set(inner.remaining, dependent, left),
+                next: left === 0 ? HashSet.add(inner.next, dependent) : inner.next,
+              };
+            }
+          )
       );
-      return HashSet.size(next) === HashSet.size(flagged) ? flagged : step(next);
-    };
-    return step(HashSet.empty());
+      remaining = wave.remaining;
+      frontier = wave.next;
+    }
+    return flagged;
   };

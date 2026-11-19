@@ -78,6 +78,12 @@ Before marking the packet closed:
   (`Present.or(Absent)`, a bare `LiteralKit` type bound).
 - Every retirement PR carries its consumer migration; `research/consumer-census.md`
   is the work list and the evidence.
+- Design-module handoff: the phase that moves a layer out of `ops/design` into
+  its package also, in the same PR, re-points or removes every remaining import
+  of that design file, updates the design index and generators, and removes the
+  file's `opsScripts` entry; the PR that moves the last design file removes the
+  design tsconfig and its verification command and keeps the general goals ops
+  check.
 
 ## Verification Commands
 

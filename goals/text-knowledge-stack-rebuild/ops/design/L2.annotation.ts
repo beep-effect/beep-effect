@@ -90,7 +90,7 @@ export type KindBody = S.Top & { readonly DecodingServices: never; readonly Enco
 
 /**
  * One annotation kind: its registry term, its body schema, the kinds its body
- * may reference, the annotation ids a body references (ruling 2), an optional
+ * may reference, the annotation ids a body references (decision 2026-11-19-p0-items4-6-9-annotation-document-shape), an optional
  * structural level for the containment tie-break, and its content case.
  */
 export interface AnnotationKind<Name extends string, Body extends KindBody, Refs extends string> {
@@ -220,7 +220,7 @@ export const AnnotationDocumentChecks = S.makeFilterGroup(
   $I.annote("AnnotationDocumentChecks", { description: "Pure annotation document invariants." })
 );
 
-/** Ruling 2: every annotation id a body references resolves to an annotation of a kind its kind may reference. */
+/** Decision 2026-11-19-p0-items4-6-9-annotation-document-shape: every annotation id a body references resolves to an annotation of a kind its kind may reference. */
 export const referencesResolve =
   (kinds: KindRegistry) =>
   (doc: AnnotationDocumentView): boolean =>
@@ -380,7 +380,7 @@ export class Word extends S.Opaque<Word, { readonly brand: unique symbol }>()(
 
 /**
  * The generic structure (DoCO-bound) and segmentation (NIF-exported) kinds,
- * the only kinds with a containment level (round-two ruling 3): lower levels
+ * the only kinds with a containment level (decision 2026-11-19-p0-structure-kinds-carry-containment-levels): lower levels
  * contain higher ones on equal spans, so a one-sentence paragraph contains its
  * sentence.
  */
@@ -727,3 +727,33 @@ export const verifyDocument = (kinds: KindRegistry) =>
       { concurrency: 1, discard: true }
     );
   });
+
+/**
+ * The checked decode entrypoint for one document schema: decode JSON through
+ * the schema (resolution, attribution, capture equality, body references),
+ * then run {@link verifyDocument} before returning (decision 2026-11-19-p0-items4-6-9-annotation-document-shape).
+ *
+ * **Details**
+ *
+ * This is the only decode path for wire and storage input. The bare schema
+ * stays exported for composition and generators; it accepts a document whose
+ * annotation key was replaced, which this entrypoint refuses with a
+ * `DocumentKeyMismatch`. The OA decoder is built on it.
+ */
+export const makeCheckedDecode = <
+  Document extends S.Top & { readonly Type: AnnotationDocumentView; readonly DecodingServices: never },
+>(config: {
+  readonly schema: Document;
+  readonly kinds: KindRegistry;
+}) => {
+  const decode = S.decodeUnknownEffect(S.toCodecJson(config.schema));
+  const verify = verifyDocument(config.kinds);
+  return Effect.fn("AnnotationDocument.decodeChecked")(function* (input: unknown) {
+    const document = yield* decode(input);
+    yield* verify(document);
+    return document;
+  });
+};
+
+/** The checked decode entrypoint of {@link TextDocument}. */
+export const decodeTextDocument = makeCheckedDecode({ schema: TextDocument, kinds: DocumentKinds });

@@ -13,7 +13,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-// Ruling 6: makeSignal and Measurement move to @beep/schema in P4; until then they are read from epistemics.
+// Decision 2026-11-19-p0-census-dispositions: makeSignal and Measurement move to @beep/schema in P4; until then they are read from epistemics.
 import { Measurement, makeSignal } from "@beep/epistemics/Claim";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
@@ -89,7 +89,7 @@ export class MappingSet extends S.Opaque<MappingSet, { readonly brand: unique sy
   }).pipe($I.annoteSchema("MappingSet", { description: "An SSSOM mapping set." }))
 ) {}
 
-/** gUFO type-of-type a class term is declared as (ruling 3). */
+/** gUFO type-of-type a class term is declared as (decision 2026-11-19-p0-l0-split-by-dependency). */
 export const GufoClassType = LiteralKit([
   "Kind",
   "SubKind",
@@ -108,7 +108,7 @@ export const GufoClassType = LiteralKit([
 /** Decoded type of {@link GufoClassType}. */
 export type GufoClassType = typeof GufoClassType.Type;
 
-/** gUFO category of the instances of a class term (ruling 3). */
+/** gUFO category of the instances of a class term (decision 2026-11-19-p0-l0-split-by-dependency). */
 export const GufoInstanceCategory = LiteralKit(["Object", "Relator", "Mode", "Quality", "Event"]).pipe(
   $I.annoteSchema("GufoInstanceCategory", {
     description: "Whether the instances of a class are objects, relators, modes, qualities or events.",

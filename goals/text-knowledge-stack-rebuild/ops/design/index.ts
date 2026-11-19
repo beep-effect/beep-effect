@@ -29,7 +29,7 @@
  *
  * Layer edges used here: L1 -> L0; L2 -> L0, L1; L3 -> L0 and
  * `@beep/epistemics` (`makeSignal`, `Measurement`), an ontology -> epistemics
- * edge that ruling 6 removes in P4 by moving them to `@beep/schema`; L4 -> L0, L1; L5 -> L0; L6 -> L0, L2.
+ * edge that decision 2026-11-19-p0-census-dispositions removes in P4 by moving them to `@beep/schema`; L4 -> L0, L1; L5 -> L0; L6 -> L0, L2.
  * L0 is split by dependency: `L0.identity.ts` imports only effect and
  * `@beep/identity` (plus `@beep/rdf/Iri` until P1 moves IRI into identity);
  * `L0.digest.ts` may import `@beep/schema` and `@beep/jsonc`.

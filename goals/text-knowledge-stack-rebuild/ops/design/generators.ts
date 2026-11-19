@@ -11,13 +11,13 @@
  * by construction.
  *
  * Minting in the layers is effectful because the `Digest` service is the one
- * hash backend (round-one ruling 6). A generator cannot yield a service, so
+ * hash backend (decision 2026-11-19-p0-items4-6-9-annotation-document-shape). A generator cannot yield a service, so
  * these prototypes take a pure SHA-256 (`JsoncDigest`) from the test harness
  * and mint through `mintContentHashResult`, which hashes the same canonical
  * bytes as `mintContentHash`. Generated text is well-formed UTF-16 (astral
  * characters included), every range sits on code-point boundaries and the
  * capture's textDigest is the digest of the text, so a generated receipt also
- * passes re-verification (ruling 7); split surrogates stay a negative fixture
+ * passes re-verification (decision 2026-11-19-p0-law-generators-well-formed-text); split surrogates stay a negative fixture
  * for L1-2.
  *
  * @packageDocumentation
@@ -606,7 +606,9 @@ export const claimLogResultArbitrary = (digest: JsoncDigest) => {
     ): Result.Result<GeneratedClaimRecord, ClaimLogBuildError> =>
       Result.gen(function* () {
         const chain = `${spec.partitionIndex}/${spec.chain}`;
-        const knowledgeStart = DateTime.add(base, { milliseconds: 10_000 * (spec.step + 1) + index });
+        // knowledgeStart follows the append index, so the log is in knowledge-time order and every
+        // parent (drawn from earlier records) starts no later than its child; valid-time slots are per chain.
+        const knowledgeStart = DateTime.add(base, { milliseconds: 10_000 + index });
         const slot = DateTime.add(base, { milliseconds: 1_000 * spec.chain });
         const validPick = cyclic(validPicks, index);
         const valid =
@@ -663,6 +665,7 @@ export const claimLogResultArbitrary = (digest: JsoncDigest) => {
             scope,
             logicalKey,
             supersedes,
+            derivedFrom,
             knowledgeStart,
             generatedAt: knowledgeStart,
             valid,

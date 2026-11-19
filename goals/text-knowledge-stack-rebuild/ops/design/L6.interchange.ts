@@ -211,7 +211,7 @@ export class ImportedActivity extends S.Opaque<ImportedActivity, { readonly bran
   }).pipe($I.annoteSchema("ImportedActivity", { description: "A third-party prov:Activity kept with its IRI." }))
 ) {}
 
-/** Domain tag of the import activity id (round-one ruling 4). */
+/** Domain tag of the import activity id (decision 2026-11-19-p0-item7-oa-profile). */
 export const ImportActivityDomainTag = DomainTag.make("import-activity/v1");
 
 /**
@@ -247,13 +247,28 @@ export const mintImportedActivityId = Effect.fn("ImportedActivity.mint")(functio
  * schema: the document, the imported activities, the import activity, and
  * the residual dataset holding every triple outside the profile.
  */
+const oaDocumentFields = <Document extends S.Top>(document: Document) => ({
+  document,
+  importedActivities: S.HashMap(ActivityId, ImportedActivity),
+  importActivity: ImportActivity,
+});
+
 export const makeOaImport = <Document extends S.Top>(document: Document) =>
-  S.Struct({
-    document,
-    importedActivities: S.HashMap(ActivityId, ImportedActivity),
-    importActivity: ImportActivity,
-    residual: Dataset,
-  });
+  S.Struct({ ...oaDocumentFields(document), residual: Dataset });
+
+/**
+ * What the OA encoder takes: the document with its imported-activity table and
+ * import activity, the decoder's result minus the residual, so an imported
+ * activity's IRI and stated time survive the round trip (decision
+ * 2026-11-19-p0-item7-oa-profile).
+ */
+export class OaEncodeInput extends S.Opaque<OaEncodeInput, { readonly brand: unique symbol }>()(
+  AnnotationDocumentView.check(AnnotationDocumentChecks).pipe(
+    oaDocumentFields,
+    S.Struct,
+    $I.annoteSchema("OaEncodeInput", { description: "Document, imported activities and import activity to encode." })
+  )
+) {}
 
 /** The import result over the kind-independent document view. */
 export class OaImport extends S.Opaque<OaImport, { readonly brand: unique symbol }>()(
@@ -283,19 +298,21 @@ export class OaDecodeRefused extends S.TaggedError<OaDecodeRefused, { readonly b
 ) {}
 
 /**
- * Encode a document to the profile's dataset (L2-6: decode(encode(d)) = d).
+ * Encode a document and its imported activities to the profile's dataset
+ * (L2-6: decode(encode(d)) = d, imported activities included).
  * `oa:start` and `oa:end` are Unicode code points on the wire; the codec
  * converts from the stored utf16-code-unit through `convertPosition`
- * (round-one ruling 3).
+ * (decision 2026-11-19-p0-item7-oa-profile).
  */
-export declare const encodeOa: (kinds: KindRegistry) => (document: AnnotationDocumentView) => Dataset;
+export declare const encodeOa: (kinds: KindRegistry) => (input: OaEncodeInput) => Dataset;
 
 /**
  * Decode third-party input; unattributed annotations get the import activity
  * (L2-6: encode(decode(s)) = normalize(s)). Code-point offsets convert to
  * utf16-code-unit and a split surrogate refuses with `split-boundary`. The
  * returned document satisfies the document checks, `referencesResolve(kinds)`
- * holds on it, and `verifyDocument(kinds)` has run on it.
+ * holds on it, and `verifyDocument(kinds)` has run on it: the decoder is built
+ * on the L2 checked decode entrypoint (`makeCheckedDecode`).
  */
 export declare const decodeOa: (
   kinds: KindRegistry
