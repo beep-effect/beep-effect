@@ -541,6 +541,22 @@ describe("synthesizeEvents — reported objects that throw", () => {
     assert.strictEqual(report.totals.loadFailed, 1);
   });
 
+  // Older Vitest reporters hand objects without the optional accessors.
+  it("reads a test without attempts() and a suite without errors() as having none", () => {
+    const bare: VitestTestCase = {
+      type: "test",
+      name: "bare",
+      fullName: "bare",
+      result: () => ({ state: "passed" }),
+      diagnostic: () => ({ duration: 3 }),
+    };
+    const suite: VitestSuite = { type: "suite", name: "s", state: () => "passed" };
+    const report = reportOf([makeModule({ tests: [bare], suites: [suite] })]);
+    assertNone(onlyItem(report).attempts);
+    assert.strictEqual(report.outcome, "all-pass");
+    assert.strictEqual(report.totals.hookFailed, 0);
+  });
+
   it("tolerates a suite whose errors() and state() throw", () => {
     const suite: VitestSuite = { type: "suite", name: "s", state: boom, errors: boom };
     const report = reportOf([makeModule({ tests: [makeTestCase()], suites: [suite] })]);

@@ -1,3 +1,4 @@
+import { GlobSet } from "@beep/glob/GlobSet";
 import { $RepoCliId } from "@beep/identity/packages";
 import { Jsonc } from "@beep/jsonc/Jsonc";
 import { StepExec } from "@beep/repo-cli/test/PackageScripts";
@@ -26,6 +27,7 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -574,6 +576,100 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "90 seconds" })("check onc
         )
       );
       expect(A.map(wider, (row) => row.additions)).toEqual(A.map(wider, () => ["declares include"]));
+    })
+  );
+});
+
+const RootCheckInputs = S.Struct({
+  tasks: S.Struct({ check: S.Struct({ inputs: S.Array(S.String) }) }),
+}).pipe(
+  $I.annoteSchema("RootCheckInputs", {
+    description: "The root check task's inputs decoded from the repository Turbo configuration.",
+  })
+);
+
+const decodeRootCheckInputs = S.decodeEffect(S.fromJsonString(RootCheckInputs));
+
+const TURBO_ROOT = "$TURBO_ROOT$/";
+
+// The code that builds a package's check record and its log. A cached check restores both, so a
+// change here must change every package's check hash. Its package closure is not a dependency of
+// check (it reaches the repo CLI kit's drivers): these directories are hashed as files instead.
+const CHECK_RECORD_WRITERS = [
+  "packages/tooling/library/repo-gate-run/src",
+  "packages/tooling/tool/cli/src/commands/Gate",
+];
+
+it.layer(PlatformLayer, { concurrent: false, timeout: "90 seconds" })("check record writers", (it) => {
+  it.effect(
+    "hashes every source of the gate-run library and the Gate commands into check, naming only files that exist",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const turbo = yield* fs.readFileString(path.join(repoRoot, "turbo.json"));
+      const config = yield* decodeRootCheckInputs(turbo);
+      const rooted = A.map(
+        A.filter(config.tasks.check.inputs, Str.startsWith(TURBO_ROOT)),
+        Str.slice(TURBO_ROOT.length)
+      );
+      const hashed = yield* Effect.fromResult(GlobSet.compileResult(rooted));
+      const listed = yield* Effect.forEach(
+        CHECK_RECORD_WRITERS,
+        (dir) =>
+          Effect.map(
+            fs.readDirectory(path.join(repoRoot, dir), { recursive: true }),
+            A.map((entry) => `${dir}/${entry}`)
+          ),
+        { concurrency: 1 }
+      );
+      const sources = A.filter(A.flatten(listed), Str.endsWith(".ts"));
+      expect(sources.length).toBeGreaterThan(10);
+      expect(A.filter(sources, (file) => !hashed.matches(file))).toEqual([]);
+      // A named file renamed away would leave the hash without a sound: every named input exists.
+      const named = A.filter(rooted, (input) => !pipe(input, Str.includes("*")));
+      const present = yield* Effect.forEach(named, (file) => fs.exists(path.join(repoRoot, file)), {
+        concurrency: 1,
+      });
+      expect(
+        A.map(
+          A.filter(A.zip(named, present), ([, exists]) => !exists),
+          ([file]) => file
+        )
+      ).toEqual([]);
+    })
+  );
+});
+
+// A script that chains Vitest runs writes one gate record only when every run after the first
+// continues the chain's record.
+const vitestRuns = (script: string): ReadonlyArray<string> =>
+  A.filter(A.map(Str.split(script, "&&"), Str.trim), (command) => pipe(command, Str.includes("vitest run")));
+
+it.layer(PlatformLayer, { concurrent: false, timeout: "90 seconds" })("chained Vitest runs", (it) => {
+  it.effect(
+    "flags every Vitest run after the first as continuing, in every workspace script that chains them",
+    Effect.fnUntraced(function* () {
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const workspaces = yield* workspaceManifests(repoRoot);
+      const chained = A.flatMap(workspaces.pipe(HashMap.values, A.fromIterable), (member) =>
+        A.filterMap(member.manifest.scripts.pipe(HashMap.toEntries, A.fromIterable), ([name, script]) =>
+          A.length(vitestRuns(script)) > 1
+            ? Result.succeed({
+                script: `${path.relative(repoRoot, member.dir)} ${name}`,
+                named: A.every(A.drop(vitestRuns(script), 1), Str.startsWith("BEEP_GATE_CONTINUES=1 ")),
+              })
+            : Result.failVoid
+        )
+      );
+      expect(chained.length).toBeGreaterThan(0);
+      expect(
+        A.map(
+          A.filter(chained, (row) => !row.named),
+          (row) => row.script
+        )
+      ).toEqual([]);
     })
   );
 });

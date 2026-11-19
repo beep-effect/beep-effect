@@ -22,11 +22,18 @@ import {
   runQualityTask,
   withTurboSummaryForTesting,
 } from "@beep/repo-cli/commands/Quality/Tasks";
+import {
+  readTurboLaneLedger,
+  TURBO_LANE_LEDGER_ENV,
+  TurboRunSummary,
+  TurboSummaryTask,
+} from "@beep/repo-cli/test/Quality";
 import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
 import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -39,6 +46,7 @@ import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
+import type { TurboLaneDigest } from "@beep/repo-cli/test/Quality";
 
 const agent = { audience: [], human: [], agent: [true], ci: [] };
 const encodeRecord = S.encodeEffect(S.fromJsonString(GateRecord));
@@ -121,6 +129,28 @@ const logText = Effect.map(TestConsole.logLines, (lines) =>
 
 const invocation = (argv: ReadonlyArray<string>) => O.getOrThrow(parseQualityTaskInvocation(argv));
 
+const encodeSummary = S.encodeEffect(S.fromJsonString(TurboRunSummary));
+
+// Far in the future, so the summary reads as written by the run under test.
+const FRESH_MS = 4_102_444_800_000;
+
+// Name a lane ledger for the rest of the scope, as a wrapper lane's parent does.
+const nameLaneLedger = (ledger: string) =>
+  Effect.acquireRelease(
+    Effect.sync(() => {
+      const saved = O.fromUndefinedOr(Bun.env[TURBO_LANE_LEDGER_ENV]);
+      Bun.env[TURBO_LANE_LEDGER_ENV] = ledger;
+      return saved;
+    }),
+    (saved) =>
+      Effect.sync(() => {
+        O.match(saved, {
+          onNone: () => Reflect.deleteProperty(Bun.env, TURBO_LANE_LEDGER_ENV),
+          onSome: (value) => Reflect.set(Bun.env, TURBO_LANE_LEDGER_ENV, value),
+        });
+      })
+  );
+
 // Turbo rejects a repeated flag; the CI lane already passes the summary flag to a root check.
 describe("root gate summary flag", () => {
   it("adds the flag once and keeps a caller's own", () => {
@@ -188,6 +218,21 @@ describe("package gates", { concurrent: false }, () => {
         yield* runTestGate(packageRoot, "beep:test", [], agent);
         const text = yield* logText;
         assert.isTrue(Str.startsWith("test @beep/demo")(text) && Str.includes("PASSED, 3/3 passed (12ms)")(text), text);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    // A test script that exits 0 and leaves no record (the adapter never loaded) is recorded as run.
+    it.effect("records a script that exits 0 without a record, and keeps its exit code", () =>
+      Effect.gen(function* () {
+        const { repoRoot, packageRoot } = yield* tempRepo({ "beep:test": "exit 0" });
+        yield* runTestGate(packageRoot, "beep:test", [], agent);
+        const store = yield* GateRecordStore.make(repoRoot);
+        const record = yield* store.readRecord(
+          RecordTarget.cases.PackageTarget.make({ packageDir: PACKAGE_DIR, gate: "test" })
+        );
+        const text = yield* logText;
+        assert.isTrue(Str.startsWith(`test @beep/demo: ${Str.toUpperCase(record.report.reason)}`)(text), text);
+        assert.notStrictEqual(record.report.reason, "failed");
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
@@ -296,6 +341,48 @@ describe("package gates", { concurrent: false }, () => {
         assert.isTrue(Str.includes("check workspace: ERRORED")(text), `console: ${text}`);
         const whole = yield* Effect.flip(runQualityTask(invocation(["check", "--agent"])));
         assert.strictEqual(whole._tag, "QualityTaskGroupFailed");
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    // A wrapper lane (`beep ci lane check` or `test-unit`) names a ledger; the root gate step runs
+    // captured, and must still declare the digest of the Turbo run it made and close its group.
+    it.effect("declares the root check's and the root unit lane's Turbo digest to a named lane ledger", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const { repoRoot } = yield* tempRepo({});
+        yield* pinCwd(repoRoot);
+        const runs = path.join(repoRoot, ".turbo/runs");
+        yield* fs.makeDirectory(runs, { recursive: true });
+        const declaredBy = Effect.fnUntraced(function* (gate: "check" | "test", argv: ReadonlyArray<string>) {
+          const summaryPath = path.join(runs, `${gate}.json`);
+          const text = yield* encodeSummary(
+            TurboRunSummary.make({
+              id: gate,
+              execution: { startTime: FRESH_MS, endTime: FRESH_MS + 10, exitCode: 0 },
+              tasks: [
+                TurboSummaryTask.make({
+                  taskId: `@beep/demo#${gate}`,
+                  task: gate,
+                  hash: `${gate}-hash`,
+                  cache: { status: "MISS" },
+                  execution: { exitCode: 0 },
+                }),
+              ],
+            })
+          );
+          yield* fs.writeFileString(summaryPath, text);
+          yield* fs.utimes(summaryPath, FRESH_MS / 1_000, FRESH_MS / 1_000);
+          const ledger = path.join(repoRoot, `lane-${gate}`, "ledger.jsonl");
+          yield* Effect.scoped(Effect.andThen(nameLaneLedger(ledger), Effect.flip(runQualityTask(invocation(argv)))));
+          yield* fs.remove(summaryPath);
+          return yield* readTurboLaneLedger(ledger);
+        });
+        const check = yield* declaredBy("check", ["check", "--filter=@beep/demo", "--agent"]);
+        const unit = yield* declaredBy("test", ["test", "--unit", "--agent"]);
+        const rows = O.map((digest: TurboLaneDigest) => A.map(digest.tasks, (row) => [row.taskId, row.hash]));
+        assertSome(rows(check), [["@beep/demo#check", "check-hash"]]);
+        assertSome(rows(unit), [["@beep/demo#test", "test-hash"]]);
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 

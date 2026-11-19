@@ -5533,6 +5533,28 @@
       "reason": "The per-sink NodeHttpServer.layerTest scope shuts its ephemeral server down before returning, and cleanup probes verify all five listeners are unreachable afterwards (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises a helper scope whose close the caller observes before returning (#1855 wave 8 register)."
     },
     {
+      "id": "EV004:packages/tooling/tool/cli/test/gate-task-path.test.ts:377:scoped@17#1",
+      "lens": "resource",
+      "ruleId": "EV004",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/gate-task-path.test.ts",
+      "line": 377,
+      "endLine": 377,
+      "symbol": "scoped",
+      "occurrence": "v2:565b236cfde8cda347c08aa392f1b3adab9e96083d33957d9fb8b4f9dc55aeb7",
+      "class": "shorter-scope-lifetime-review",
+      "evidence": "Effect.scoped(Effect.andThen(nameLaneLedger(ledger), Effect.flip(runQualityTask(invocation(argv)))))",
+      "replacement": {
+        "primitive": "readme.resource-safety",
+        "sketch": "readme.resource-safety: Use for redundant-whole-body-scope findings (EV004, candidate class redundant-whole-body-scope); delete only a whole-body Effect.scoped wrapper and retain deliberate shorter scopes."
+      },
+      "severity": "major",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The named lane ledger is deliberately shorter than the test: each gate's run must see its own BEEP_TURBO_LANE_LEDGER and restore the variable before the next gate's run and its read-back, so the check and unit runs never share a ledger. Owner: @beep/repo-cli. Exit: retire when EV004 recognises a scope that restores process state between two runs of one test."
+    },
+    {
       "id": "EV004:packages/tooling/tool/cli/test/github-ledger.test.ts:757:scoped@10#1",
       "lens": "resource",
       "ruleId": "EV004",
@@ -14371,6 +14393,28 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The reporter class loads its implementation and writes real record files in a scoped temporary repository, as Vitest drives it, so the native filesystem is the subject. Owner: @beep/repo-gate-vitest. Exit: retire when the reporter takes an injected record store."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/build-turbo-outputs.test.ts:19:@effect/platform-node@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/build-turbo-outputs.test.ts",
+      "line": 19,
+      "endLine": 19,
+      "symbol": "@effect/platform-node",
+      "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import { NodeCrypto, NodeServices } from \"@effect/platform-node\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "exception",
+      "reason": "The checkout's committed configuration is the subject: the tests read the live turbo.json, workspace manifests and source directories, so the check task's inputs are proven against the files Turbo hashes; seeding a memory file system would fabricate that provenance. Owner: @beep/repo-cli. Exit: retire when the task-definition checks read the configuration through an injected source."
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/check-gate-flake.test.ts:19:@effect/platform-node/NodeServices@0#1",

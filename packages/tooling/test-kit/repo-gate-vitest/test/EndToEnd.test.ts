@@ -22,9 +22,11 @@ import * as Str from "effect/String";
 
 const encodeJson = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
+// A fixture runs `bun x --bun vitest run`, or its own `test` script when it has one.
 const runFixture = Effect.fn("RepoGateVitestTest.runFixture")(function* (
   name: string,
-  files: Readonly<Record<string, string>>
+  files: Readonly<Record<string, string>>,
+  script: O.Option<string> = O.none()
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -34,7 +36,12 @@ const runFixture = Effect.fn("RepoGateVitestTest.runFixture")(function* (
   const vitestEntry = yield* encodeJson(path.join(repoRoot, "node_modules/vitest/dist/index.js"));
   yield* fs.makeDirectory(path.join(repoRoot, ".beep"), { recursive: true });
   const root = yield* fs.makeTempDirectoryScoped({ directory: path.join(repoRoot, ".beep"), prefix: `${name}-` });
-  yield* fs.writeFileString(path.join(root, "package.json"), `{"name":"@fixture/${name}","type":"module"}`);
+  const manifest = yield* encodeJson({
+    name: `@fixture/${name}`,
+    type: "module",
+    scripts: O.match(script, { onNone: () => ({}), onSome: (test) => ({ test }) }),
+  });
+  yield* fs.writeFileString(path.join(root, "package.json"), manifest);
   const config = yield* encodeJson({
     test: { include: ["*.test.ts"], reporters: ["default", reporter], maxWorkers: 1, passWithNoTests: true },
   });
@@ -44,9 +51,11 @@ const runFixture = Effect.fn("RepoGateVitestTest.runFixture")(function* (
     ([file, source]) => fs.writeFileString(path.join(root, file), Str.replaceAll("VITEST", vitestEntry)(source)),
     { concurrency: 1 }
   );
-  const exitCode = yield* spawner.exitCode(
-    ChildProcess.make("bun", ["x", "--bun", "vitest", "run"], { cwd: root, extendEnv: true })
-  );
+  const command = O.match(script, {
+    onNone: () => ["x", "--bun", "vitest", "run"],
+    onSome: () => ["run", "test"],
+  });
+  const exitCode = yield* spawner.exitCode(ChildProcess.make("bun", command, { cwd: root, extendEnv: true }));
   const store = yield* GateRecordStore.make(repoRoot);
   const record = yield* store.readRecord(
     RecordTarget.cases.PackageTarget.make({ packageDir: path.relative(repoRoot, root), gate: "test" })
@@ -102,6 +111,32 @@ it.layer(NodeServices.layer, { timeout: "120 seconds" })("a real Vitest run", (i
           ),
           (location) => location.file === "diff.test.ts" && location.line === 2
         )
+      );
+    })
+  );
+
+  // The shape of @beep/repo-utils' `beep:test`: most files under Bun, then the one that needs Node.
+  it.effect("records the two Vitest runs one script chains as one run", () =>
+    Effect.gen(function* () {
+      const { exitCode, report } = yield* runFixture(
+        "chained",
+        {
+          "a.test.ts":
+            'import { expect, test } from VITEST;\ntest("bun one", () => { expect(1).toBe(1); });\ntest("bun two", () => { expect(2).toBe(2); });\n',
+          "node.test.ts": 'import { expect, test } from VITEST;\ntest("node", () => { expect(2).toBe(2); });\n',
+        },
+        O.some("bunx --bun vitest run --exclude=node.test.ts && BEEP_GATE_CONTINUES=1 bunx vitest run node.test.ts")
+      );
+      assert.strictEqual(exitCode, 0);
+      assert.strictEqual(report.reason, "passed");
+      assert.strictEqual(report.totals.passed, 3);
+      assert.strictEqual(report.totals.collected, 3);
+      assert.deepStrictEqual(
+        A.sort(
+          A.map(report.items, (item) => item.name),
+          Str.Order
+        ),
+        ["bun one", "bun two", "node"]
       );
     })
   );

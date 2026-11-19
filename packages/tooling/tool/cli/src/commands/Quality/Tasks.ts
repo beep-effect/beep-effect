@@ -2166,12 +2166,12 @@ const removeTurboLaneLedger = Effect.fn("QualityTasks.removeTurboLaneLedger")(fu
  * so the parent can refuse a ledger missing any declaration.
  *
  * @param ledger - Ledger path the parent named, if any.
- * @param outcome - The finished direct step.
+ * @param outcome - The finished direct step and when it started.
  * @returns `None` when no declaration was attempted, otherwise whether it landed.
  */
 const recordTurboLaneLedgerRow = Effect.fn("QualityTasks.recordTurboLaneLedgerRow")(function* (
   ledger: O.Option<string>,
-  outcome: StreamingStepOutcome
+  outcome: Pick<StreamingStepOutcome, "startedAt" | "step">
 ) {
   const tasks = directTurboTaskNames(outcome.step);
   if (O.isNone(ledger) || O.isNone(tasks)) {
@@ -2196,6 +2196,29 @@ const closeTurboLaneLedgerIfNamed = (ledger: O.Option<string>, attempted: number
     onSome: (ledgerPath) => closeTurboLaneLedger(ledgerPath, attempted).pipe(Effect.ignore),
   });
 
+// The child side of the ledger handoff for one group of steps: each finished direct Turbo step
+// declares its digest as it finishes, and the group closes once with the number of declarations
+// it attempted. The streaming runner and a captured root gate step share it, so a gate step that
+// prints its own console still declares what it ran.
+const openTurboLaneLedgerGroup = Effect.fn("QualityTasks.openTurboLaneLedgerGroup")(function* () {
+  const ledger = turboLaneLedgerPath();
+  const attempts = yield* Ref.make(0);
+  return {
+    declare: (outcome: Pick<StreamingStepOutcome, "startedAt" | "step">) =>
+      recordTurboLaneLedgerRow(ledger, outcome).pipe(
+        Effect.flatMap(
+          O.match({
+            onNone: () => Effect.void,
+            onSome: () => Ref.update(attempts, (attempted) => attempted + 1),
+          })
+        )
+      ),
+    close: Effect.flatMap(Ref.get(attempts), (attempted) => closeTurboLaneLedgerIfNamed(ledger, attempted)),
+  };
+});
+
+type TurboLaneLedgerGroup = Effect.Success<ReturnType<typeof openTurboLaneLedgerGroup>>;
+
 const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingStepOutcomes")(function* (
   label: string,
   steps: ReadonlyArray<QualityTaskStep>,
@@ -2207,8 +2230,7 @@ const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingSte
     return A.empty<StreamingStepOutcome>();
   }
 
-  const ledger = turboLaneLedgerPath();
-  const ledgerAttempts = yield* Ref.make(0);
+  const ledger = yield* openTurboLaneLedgerGroup();
   yield* Console.log(`[beep-cli] ${label}: running ${A.length(steps)} streaming step(s)`);
   const incidents = yield* Ref.make<ReadonlyArray<FlakeQuarantineIncident>>(A.empty());
   const artifactCwd = quarantineArtifactCwd(steps);
@@ -2227,16 +2249,12 @@ const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingSte
       yield* Console.log(`[beep-cli] ${step.label}: ${O.isNone(failure) ? "ok" : "failed"} in ${durationMs}ms`);
       const outcome = { durationMs, endedAt, failure, startedAt, step };
       yield* onOutcome(outcome, index);
-      const declaration = yield* recordTurboLaneLedgerRow(ledger, outcome);
-      if (O.isSome(declaration)) {
-        yield* Ref.update(ledgerAttempts, (attempts) => attempts + 1);
-      }
+      yield* ledger.declare(outcome);
       return outcome;
     }),
     { concurrency }
   );
-  const got = yield* Ref.get(ledgerAttempts);
-  yield* closeTurboLaneLedgerIfNamed(ledger, got);
+  yield* ledger.close;
   yield* O.match(artifactCwd, {
     onNone: () => Effect.void,
     onSome: (cwd) => Effect.flatMap(Ref.get(incidents), (recorded) => writeFlakeQuarantineArtifact(cwd, recorded)),
@@ -5384,7 +5402,8 @@ const runRootGateStep = Effect.fn("QualityTasks.runRootGateStep")(function* (
   repoRoot: string,
   gate: ContractGate,
   step: QualityTaskStep,
-  flags: AudienceFlagInput
+  flags: AudienceFlagInput,
+  ledger: TurboLaneLedgerGroup
 ) {
   const resolved = yield* withTurboSecretSession(step);
   const envOverrides = yield* turboEnvOverrides(resolved.command, resolved.args, Bun.env);
@@ -5397,6 +5416,7 @@ const runRootGateStep = Effect.fn("QualityTasks.runRootGateStep")(function* (
     env: { ...envOverrides, ...(resolved.env ?? {}) },
     extendEnv: turboEnvExtendsAmbient(resolved.command, resolved.args),
   });
+  yield* ledger.declare({ step, startedAt: DateTime.formatIso(startedAt) });
   const exitCode = yield* settleQuarantine(step, captured);
   const settled = CapturedRun.make({ exitCode, output: captured.output });
   const report = yield* recordRootRun({ repoRoot, gate, startedAt, captured: settled, flags });
@@ -5406,16 +5426,22 @@ const runRootGateStep = Effect.fn("QualityTasks.runRootGateStep")(function* (
   );
 });
 
-const runRootGateSteps = (
+// The root gate steps declare their digests to the lane ledger as the streaming runner's steps do,
+// so a wrapper lane that runs the root `check` or unit `test` still names what it ran.
+const runRootGateSteps = Effect.fn("QualityTasks.runRootGateSteps")(function* (
   repoRoot: string,
   gate: ContractGate,
   steps: ReadonlyArray<QualityTaskStep>,
   flags: AudienceFlagInput
-) =>
-  Effect.map(
-    Effect.forEach(steps, (step) => runRootGateStep(repoRoot, gate, step, flags), { concurrency: 1 }),
-    flow(A.getSomes, A.head)
-  );
+) {
+  if (A.isReadonlyArrayEmpty(steps)) return O.none<GateToolExit>();
+  const ledger = yield* openTurboLaneLedgerGroup();
+  const exits = yield* Effect.forEach(steps, (step) => runRootGateStep(repoRoot, gate, step, flags, ledger), {
+    concurrency: 1,
+  });
+  yield* ledger.close;
+  return A.head(A.getSomes(exits));
+});
 
 // The gate step printed its own console, so its failure adds no summary; a
 // failed step that streamed (an integration lane, the tsgo smoke) reports as before.

@@ -120,7 +120,7 @@ export const makeStrayOutputRecorder = (options: RecorderOptions = {}): StrayOut
       if (Str.isEmpty(text) || isEscapeOnly(text)) return;
       state.bytes += encoder.encode(text).length;
       const [first, ...rest] = Str.split(text, "\n");
-      append(state.pending[stream], first ?? "");
+      append(state.pending[stream], first);
       A.forEach(rest, startLine(stream));
     },
     snapshot: () => {

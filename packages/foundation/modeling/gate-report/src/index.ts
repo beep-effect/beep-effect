@@ -31,6 +31,7 @@ export * from "./ItemKey.ts";
 export * from "./PlainText.ts";
 export * from "./Policy.ts";
 export * from "./Reducer.ts";
+export * from "./ReportMerge.ts";
 export * from "./Scalars.ts";
 export * from "./StrayOutput.ts";
 export * from "./Vocabulary.ts";

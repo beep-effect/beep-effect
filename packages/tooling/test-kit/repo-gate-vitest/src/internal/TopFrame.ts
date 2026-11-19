@@ -50,13 +50,17 @@ const positionOf = (digits: string | undefined): number =>
 const parseLine = (line: string): O.Option<Frame> =>
   pipe(
     O.fromNullishOr(FRAME_LINE.exec(line)),
-    O.map(
-      (match): Frame => ({
-        method: O.fromNullishOr(match[1]),
-        file: match[2] ?? UNKNOWN_FILE,
-        line: positionOf(match[3]),
-        column: positionOf(match[4]),
-      })
+    // The file group is not optional: a line that matches always names one.
+    O.flatMap((match) =>
+      O.map(
+        O.fromNullishOr(match[2]),
+        (file): Frame => ({
+          method: O.fromNullishOr(match[1]),
+          file,
+          line: positionOf(match[3]),
+          column: positionOf(match[4]),
+        })
+      )
     )
   );
 

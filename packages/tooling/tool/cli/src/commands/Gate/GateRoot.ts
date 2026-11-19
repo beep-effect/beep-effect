@@ -21,7 +21,7 @@ import { GateEvent } from "@beep/gate-report/GateEvent";
 import { GateReport, Unit } from "@beep/gate-report/GateReport";
 import { Item, ItemDetail, Location } from "@beep/gate-report/Item";
 import { ItemKey } from "@beep/gate-report/ItemKey";
-import { RunReason } from "@beep/gate-report/Vocabulary";
+import { worstReason } from "@beep/gate-report/Vocabulary";
 import { $RepoCliId } from "@beep/identity/packages";
 import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
 import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
@@ -32,7 +32,7 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { constant, pipe } from "effect/Function";
+import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
@@ -274,13 +274,6 @@ const runEvents = (gate: string, run: PackageRun): ReadonlyArray<GateEvent> =>
     onSome: (report) => reportEvents(run.task.directory, report),
   });
 
-const reasonRank = Order.mapInput(Order.Number, (reason: RunReason) =>
-  O.getOrElse(
-    A.findFirstIndex(RunReason.literals, (literal) => literal === reason),
-    constant(0)
-  )
-);
-
 /**
  * The events of the workspace report folded from the package runs.
  *
@@ -328,11 +321,7 @@ export const workspaceEvents = (input: WorkspaceFold): ReadonlyArray<GateEvent> 
     ...A.flatMap(input.runs, (run) => runEvents(input.gate, run)),
     GateEvent.cases.RunFinished.make({
       durationMs: A.reduce(reports, 0, (total, report) => total + report.durationMs),
-      reason: A.reduce(
-        A.map(reports, (report) => report.reason),
-        "passed" as RunReason,
-        Order.max(reasonRank)
-      ),
+      reason: worstReason(A.map(reports, (report) => report.reason)),
       exitCode: O.some(input.exitCode),
       collected: O.some(
         A.reduce(reports, 0, (total, report) => total + report.totals.collected) + (input.runs.length - reports.length)

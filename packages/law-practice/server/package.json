@@ -32,7 +32,7 @@
     "beep:doctest": "BEEP_VITEST_DOCTEST=1 bunx vitest run",
     "beep:lint": "biome check .",
     "beep:lint:fix": "biome check . --write",
-    "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/** --exclude=test/PartyContactSource.boundary.test.ts && bunx vitest run test/PartyContactSource.boundary.test.ts",
+    "beep:test": "bunx --bun vitest run --passWithNoTests --exclude=test/integration/** --exclude=test/PartyContactSource.boundary.test.ts && BEEP_GATE_CONTINUES=1 bunx vitest run test/PartyContactSource.boundary.test.ts",
     "beep:test:integration": "bunx --bun vitest run test/integration --passWithNoTests",
     "beep:check:tests": "tsrs -p test/tsconfig.json --noEmit"
   },

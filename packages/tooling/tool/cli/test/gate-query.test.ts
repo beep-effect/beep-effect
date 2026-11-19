@@ -14,13 +14,15 @@ import {
   QueryWhere,
   renderStoredRecord,
   resolveRunQuery,
+  runViewLines,
   showItemLines,
   showRunLines,
 } from "@beep/repo-cli/commands/Gate";
 import { rootCommand } from "@beep/repo-cli/commands/Root";
-import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
+import { RecordLocation, RecordTarget } from "@beep/repo-gate-record/GatePaths";
 import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
 import { ConsoleSettings } from "@beep/repo-gate-run/GateConsole";
+import { RunView } from "@beep/repo-gate-run/GateQueries";
 import {
   ContractGate,
   commandText,
@@ -238,6 +240,35 @@ describe("gate queries", { concurrent: false }, () => {
     assert.strictEqual(itemSelectorOf("3")._tag, "ByPosition");
     assert.strictEqual(itemSelectorOf("0")._tag, "ByText");
     assert.strictEqual(itemSelectorOf("math > adds")._tag, "ByText");
+  });
+});
+
+// A warned item carries no failure kind: its listing shows the outcome alone.
+describe("run view lines", () => {
+  it("lists a warned item by its outcome, after the failing one", () => {
+    const warned = Item.make({
+      key: ItemKey.cases.TestKey.make({ file: "test/a.test.ts", fullName: "math > slow" }),
+      unit: "test/a.test.ts",
+      path: ["math"],
+      name: "slow",
+      outcome: "warned",
+    });
+    const lines = runViewLines(
+      RunView.make({
+        location: RecordLocation.make({
+          record: "packages/demo/.beep/gates/test/report.json",
+          log: "packages/demo/.beep/gates/test/report.log",
+        }),
+        record: GateRecord.make({
+          generatedAt: DateTime.makeUnsafe(0),
+          report: GateReport.make({ ...report("@beep/demo", "w1"), items: [failed, warned, skipped, passed] }),
+        }),
+      })
+    );
+    assert.deepStrictEqual(A.filter(lines, Str.startsWith("  ")).slice(-2), [
+      "  1. test/a.test.ts > math > adds [failed, assertion]",
+      "  2. test/a.test.ts > math > slow [warned]",
+    ]);
   });
 });
 

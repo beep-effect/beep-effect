@@ -5792,7 +5792,13 @@
         "$TURBO_ROOT$/tools/tsgo-shim/package.json",
         "$TURBO_ROOT$/vitest.shared.ts",
         "$TURBO_ROOT$/vite.shared.ts",
-        "$TURBO_ROOT$/vitest.aliases.generated.json"
+        "$TURBO_ROOT$/vitest.aliases.generated.json",
+        "$TURBO_ROOT$/packages/tooling/library/repo-gate-run/src/**",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Gate/**",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Quality/CheckProbe.ts",
+        "$TURBO_ROOT$/packages/tooling/library/repo-cli-kit/src/process/OutputBound.ts",
+        "$TURBO_ROOT$/packages/tooling/library/repo-tsconfig/src/TsconfigLoader.ts",
+        "$TURBO_ROOT$/packages/tooling/library/repo-tsconfig/src/internal/extendsTarget.ts"
       ],
       "outputs": [".beep/gates/check/**"]
     },

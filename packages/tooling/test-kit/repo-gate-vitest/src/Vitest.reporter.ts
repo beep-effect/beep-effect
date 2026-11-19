@@ -39,6 +39,18 @@ const switchedOff = (error: unknown): undefined => {
   return undefined;
 };
 
+// A started reporter: the session for its Vitest instance and the instance's logger.
+type Started = { readonly run: GateVitestRun; readonly logger: unknown };
+
+// Start the session once the implementation has loaded. The instance is read only then, so a
+// getter that throws switches the reporter off like a failed import.
+const startRun =
+  (vitest: VitestInstance, argv: ReadonlyArray<string>) =>
+  (module: typeof import("./internal/GateVitestRun.ts")): Started => ({
+    logger: vitest.logger,
+    run: module.makeGateVitestRun({ root: vitest.config.root, argv }),
+  });
+
 /**
  * The gate reporter: one per Vitest instance.
  *
@@ -56,8 +68,7 @@ const switchedOff = (error: unknown): undefined => {
  * @since 0.0.0
  */
 export default class GateVitestReporter implements Reporter {
-  #run: Promise<GateVitestRun | undefined> = Promise.resolve(undefined);
-  #logger: unknown = undefined;
+  #started: Promise<Started | undefined> = Promise.resolve(undefined);
 
   /**
    * Load the implementation for this Vitest instance.
@@ -76,13 +87,7 @@ export default class GateVitestReporter implements Reporter {
    * @since 0.0.0
    */
   onInit(vitest: VitestInstance): void {
-    const argv = process.argv;
-    this.#run = import("./internal/GateVitestRun.ts")
-      .then((module) => {
-        this.#logger = vitest.logger;
-        return module.makeGateVitestRun({ root: vitest.config.root, argv });
-      })
-      .catch(switchedOff);
+    this.#started = import("./internal/GateVitestRun.ts").then(startRun(vitest, process.argv)).catch(switchedOff);
   }
 
   /**
@@ -102,7 +107,7 @@ export default class GateVitestReporter implements Reporter {
    * @since 0.0.0
    */
   onTestRunStart(): Promise<void> {
-    return this.#run.then((run) => run?.start());
+    return this.#started.then((started) => started?.run.start());
   }
 
   /**
@@ -123,7 +128,7 @@ export default class GateVitestReporter implements Reporter {
    * @since 0.0.0
    */
   onUserConsoleLog(log: VitestConsoleLog): Promise<void> {
-    return this.#run.then((run) => run?.console(log));
+    return this.#started.then((started) => started?.run.console(log));
   }
 
   /**
@@ -150,8 +155,8 @@ export default class GateVitestReporter implements Reporter {
     unhandledErrors: ReadonlyArray<VitestError>,
     reason: string
   ): Promise<void> {
-    return this.#run
-      .then((run) => run?.finish({ modules, unhandledErrors, reason, logger: this.#logger }))
+    return this.#started
+      .then((started) => started?.run.finish({ modules, unhandledErrors, reason, logger: started.logger }))
       .catch(switchedOff);
   }
 }
