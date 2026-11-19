@@ -203,6 +203,12 @@ A digest that throws, or that returns anything other than 32 bytes, fails typed 
 
 Digests are always exactly 64 lowercase hexadecimal characters, with no `sha256:` or other algorithm prefix: the same format `@beep/sbom/InTotoStatement`'s `Sha256Digest` schema decodes, so a fingerprint flows straight into an attestation subject without this module taking a dependency edge on `@beep/sbom`. The `normalizeEol: true` option of `hashText` and `hashTextResult` (`JsoncTextHashOptions.make({ normalizeEol: true })`) normalizes `\r\n` and bare `\r` to `\n` before hashing. Reach for it when the same file content must fingerprint identically across checkouts with different line-ending settings; `JsoncFingerprint.normalizeEol` exposes the same normalization as a pure, total function.
 
+## Domain-tagged content hashes
+
+`Mint` is the one minting function of every content-addressed identifier the text and knowledge layers mint. `mintContentHash(domainTag, preimage)` hashes the RFC 8785 form of `[domainTag, ...preimage]` and returns a `ContentHash` (`sha256:` plus 64 lowercase hex, from `@beep/schema/ContentHash`); `mintContentHashResult(digest)` is its synchronous twin over a caller-supplied SHA-256. Canonical JSON sorts object keys but never arrays, so each identifier domain declares its preimage with `definePreimage({ domainTag, schema, golden })`. The schema encodes the record, set-valued fields through `@beep/schema/CanonicalHashSet`, which encodes them ascending. The required golden vector records one encoded preimage and the hash it mints, so a changed preimage fails its golden and needs a new domain tag in the same change. `PreimageRegistry.make` refuses a domain tag declared twice and checks every golden.
+
+`ActivityStart` declares the first preimage, `activity/v1`: the operation IRI, the model or engine pin, the prompt digest or `null`, the ascending used ids and the start time in epoch milliseconds. `mintActivityId` mints an `ActivityId` from those start-time facts only, so the outputs of a run can name it.
+
 ## Features
 
 - `Jsonc.parse` / `Jsonc.parseTree`: error-recovery parsing to a plain value or an offset-preserving `JsoncNode` AST, aggregating every recovered error into one `JsoncParseError` rather than failing on the first.
@@ -216,6 +222,8 @@ Digests are always exactly 64 lowercase hexadecimal characters, with no `sha256:
 - `JsoncVisitor`: walk a parsed document as a `Stream` of visitor events, with `Stream.take` early termination on large inputs.
 - `JsoncFingerprint`: RFC 8785 canonical JSON (`canonicalize` / `canonicalizeResult`) and SHA-256 content fingerprints over it (`hash`, `hashText`), failing typed with `JsoncCanonicalizeError` rather than silently dropping or altering non-JSON values; `hash`/`hashText` require core's `Crypto.Crypto` service.
 - `JsoncFingerprint.hashResult` / `JsoncFingerprint.hashTextResult`: the synchronous `Result` variants of `hash` and `hashText` for callers outside an Effect runtime, taking the caller's own `JsoncDigest` instead of a `Crypto` layer so a synchronous host hook can fingerprint at all.
+- `JsoncFingerprint.canonicalizeSchemaResult`: `canonicalizeResult` with its refusal carried as an `S.SchemaError`, for digest helpers whose error channel is already the schema error.
+- `mintContentHash` / `mintContentHashResult`, `definePreimage`, `PreimageRegistry` and the `activity/v1` `ActivityPreimage`: domain-tagged content hashes with a committed golden vector per preimage (see above).
 - `JsoncParseError` / `JsoncModificationError` / `JsoncEditOverlapError`: tagged errors carrying structured, positional payloads rather than opaque messages. Hostile input (deep nesting, unterminated literals) fails through the error channel, never as a stack overflow.
 
 ## Development
@@ -263,7 +271,9 @@ Facets widened from upstream (upstream exports a type only; this package exports
 - `JsoncPath`: upstream `ReadonlyArray<JsoncSegment>`; here `S.Array(JsoncSegment)`.
 - `JsoncSegment`: upstream `string | number`; here `S.Union([S.String, S.Natural])`, so the schema admits only natural-number indices.
 
-New members on existing exports (not index exports): the static `JsoncEdit.applyAllResult`, and the `SerializationFailed` member of `JsoncStringifyErrorCode`.
+- `Mint` (`mintContentHash`, `mintContentHashResult`, `definePreimage`, `Preimage`, `PreimageRegistry`, `PreimageGoldenMismatch`, `DuplicateDomainTag`) and `ActivityStart` (`ActivityPin`, `ActivityStart`, `ActivityStartFields`, `ActivityPreimage`, `mintActivityId`, `mintActivityIdResult`): the L0 minting function of the text-knowledge stack rebuild (P1).
+
+New members on existing exports (not index exports): the static `JsoncEdit.applyAllResult`, `JsoncFingerprint.canonicalizeSchemaResult`, and the `SerializationFailed` member of `JsoncStringifyErrorCode`.
 
 ### Deviations
 

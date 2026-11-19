@@ -10,7 +10,9 @@
  * standing exception for the bottom package the schema package itself depends
  * on; the registry test cross-checks both against the schema package's
  * version and literal schemas as a test dependency. Namespace pins live in L6 (`@beep/rdf`), gUFO typing in L3
- * (`@beep/ontology`), digests and minting in `L0.digest.ts`.
+ * (`@beep/ontology`). The digest brands and the set codec moved to `@beep/schema`
+ * (`ContentHash`, `CanonicalHashSet`, `WellFormedText`) and minting to `@beep/jsonc`
+ * (`Mint`, `ActivityStart`) in P1.
  *
  * @packageDocumentation
  * @since 0.0.0

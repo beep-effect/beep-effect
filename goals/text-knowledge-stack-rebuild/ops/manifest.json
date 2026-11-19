@@ -156,10 +156,6 @@
       "purpose": "L0 identity design (@beep/identity, effect-only): TermIri, CodeId, ReleaseVersion, Namespace, Term, TermBinding, Deprecation, TermSnapshot."
     },
     {
-      "path": "ops/design/L0.digest.ts",
-      "purpose": "L0 digest design (@beep/schema, @beep/jsonc): ContentHash and domain brands, CanonicalHashSet, mintContentHash, ActivityId and ActivityStart."
-    },
-    {
       "path": "ops/design/L1.text.ts",
       "purpose": "L1 design: OffsetUnit, OccurrenceId, QuoteKey, the recursive Selector, Resolution, Reanchoring, Anchored and the occurrence/v1 preimage."
     },

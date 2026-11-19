@@ -4,6 +4,9 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/jsonc",
   "entries": [
+    {"file":"packages/foundation/modeling/jsonc/src/ActivityStart.ts","symbol":"ActivityPin","kind":"tagged-union","owner":"@beep/jsonc","identity":"ActivityPin","description":"The model pin or engine edition an activity run was associated with."},
+    {"file":"packages/foundation/modeling/jsonc/src/ActivityStart.ts","symbol":"ActivityPreimage","kind":"schema-const","owner":"@beep/jsonc"},
+    {"file":"packages/foundation/modeling/jsonc/src/ActivityStart.ts","symbol":"ActivityStart","kind":"struct-const","owner":"@beep/jsonc","identity":"ActivityStart","description":"The start-time facts of one activity run."},
     {"file":"packages/foundation/modeling/jsonc/src/Jsonc.ts","symbol":"JsoncParseError","kind":"tagged-error","owner":"@beep/jsonc"},
     {"file":"packages/foundation/modeling/jsonc/src/Jsonc.ts","symbol":"JsoncParseErrorCode","kind":"literal-kit","owner":"@beep/jsonc","identity":"JsoncParseErrorCode","description":"The code of one recovered JSONC parse error."},
     {"file":"packages/foundation/modeling/jsonc/src/Jsonc.ts","symbol":"JsoncParseErrorDetail","kind":"struct-const","owner":"@beep/jsonc","identity":"JsoncParseErrorDetail","description":"A recovered parse error with its offset, length, line and character."},
@@ -29,6 +32,8 @@
     {"file":"packages/foundation/modeling/jsonc/src/JsoncNode.ts","symbol":"JsoncPath","kind":"schema-const","owner":"@beep/jsonc","identity":"JsoncPath","description":"An ordered list of segments locating a value inside a JSONC document."},
     {"file":"packages/foundation/modeling/jsonc/src/JsoncNode.ts","symbol":"JsoncSegment","kind":"union","owner":"@beep/jsonc","identity":"JsoncSegment","description":"One step of a JSONC path: an object key or a non-negative array index."},
     {"file":"packages/foundation/modeling/jsonc/src/JsoncVisitor.ts","symbol":"JsoncVisitorEvent","kind":"tagged-union","owner":"@beep/jsonc","identity":"JsoncVisitorEvent","description":"One event of a JSONC document walk: structure, values, separators, comments or recovered errors."},
+    {"file":"packages/foundation/modeling/jsonc/src/Mint.ts","symbol":"DuplicateDomainTag","kind":"tagged-error","owner":"@beep/jsonc"},
+    {"file":"packages/foundation/modeling/jsonc/src/Mint.ts","symbol":"PreimageGoldenMismatch","kind":"tagged-error","owner":"@beep/jsonc"},
     {"file":"packages/foundation/modeling/jsonc/src/internal/navigate.ts","symbol":"NavigateContainer","kind":"literal-kit","owner":"@beep/jsonc","identity":"NavigateContainer","description":"The JSONC container kind a path segment addresses."},
     {"file":"packages/foundation/modeling/jsonc/src/internal/navigate.ts","symbol":"NavigateResult","kind":"tagged-union","owner":"@beep/jsonc","identity":"NavigateResult","description":"Where a JSONC path resolves in the source text: a located value, an insertion point, a structural mismatch or no edit."},
     {"file":"packages/foundation/modeling/jsonc/src/internal/parser.ts","symbol":"ParseCode","kind":"literal-kit","owner":"@beep/jsonc","identity":"ParseCode","description":"Parse-error codes the recovering JSONC parser can report."},

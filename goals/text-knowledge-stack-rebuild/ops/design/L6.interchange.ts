@@ -15,14 +15,15 @@
 import { IRI } from "@beep/identity/Iri";
 import { SafePnPrefix } from "@beep/identity/PnLocal";
 import { $RepoCliId } from "@beep/identity/packages";
+import { mintContentHash } from "@beep/jsonc/Mint";
 import * as Rdf from "@beep/rdf/Rdf";
+import { ActivityId, ContentHash, DomainTag } from "@beep/schema/ContentHash";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
 import { SpdxExpression } from "@beep/spdx/SpdxExpression";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
-import { ActivityId, ContentHash, DomainTag, Instant, mintContentHash } from "./L0.digest.ts";
 import { AnnotationDocumentChecks, AnnotationDocumentView } from "./L2.annotation.ts";
 import type { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
 import type * as Digest from "effect/crypto/Digest";
@@ -207,7 +208,9 @@ export const ImportedActivityDomainTag = DomainTag.make("imported-activity/v1");
 export class ImportedActivity extends S.Opaque<ImportedActivity, { readonly brand: unique symbol }>()(
   S.Struct({
     iri: IRI.annotateKey({ description: "Activity IRI as it appeared in the input." }),
-    statedAt: S.OptionFromOptionalKey(Instant).annotateKey({ description: "Time the input stated, when given." }),
+    statedAt: S.OptionFromOptionalKey(S.DateTimeUtcFromMillis).annotateKey({
+      description: "Time the input stated, when given.",
+    }),
   }).pipe($I.annoteSchema("ImportedActivity", { description: "A third-party prov:Activity kept with its IRI." }))
 ) {}
 
@@ -222,7 +225,7 @@ export const ImportActivityDomainTag = DomainTag.make("import-activity/v1");
 export class ImportActivity extends S.Opaque<ImportActivity, { readonly brand: unique symbol }>()(
   S.Struct({
     sourceDigest: Sha256PrefixedDigest.annotateKey({ description: "Digest of the imported RDF document." }),
-    importedAt: Instant,
+    importedAt: S.DateTimeUtcFromMillis,
   }).pipe($I.annoteSchema("ImportActivity", { description: "Attribution for unattributed imported annotations." }))
 ) {}
 

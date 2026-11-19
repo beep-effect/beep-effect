@@ -10,13 +10,15 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { ActivityStartFields } from "@beep/jsonc/ActivityStart";
+import { CanonicalHashSet } from "@beep/schema/CanonicalHashSet";
+import { ContentHash } from "@beep/schema/ContentHash";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { dual, flow } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
-import { ActivityStartFields, CanonicalHashSet, ContentHash, Instant } from "./L0.digest.ts";
-import type { ActivityPin } from "./L0.digest.ts";
+import type { ActivityPin } from "@beep/jsonc/ActivityStart";
 import type { TermIri } from "./L0.identity.ts";
 
 const $I = $RepoCliId.create("goals/text-knowledge-stack-rebuild/ops/design/L5.operations");
@@ -35,7 +37,7 @@ export class Activity extends S.Opaque<Activity, { readonly brand: unique symbol
   S.Struct({
     ...ActivityStartFields,
     generated: CanonicalHashSet(ContentHash).annotateKey({ description: "Content entities the run produced." }),
-    ended: Instant,
+    ended: S.DateTimeUtcFromMillis,
   })
     .check(
       S.makeFilter(
