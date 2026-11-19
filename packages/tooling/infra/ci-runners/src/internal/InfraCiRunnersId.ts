@@ -15,7 +15,6 @@
  */
 
 import { $BeepId } from "@beep/identity/Root";
-import type { IdentityComposer } from "@beep/identity/Id";
 
 /**
  * Identity composer for the `@beep/infra-ci-runners` package, built without
@@ -32,6 +31,4 @@ import type { IdentityComposer } from "@beep/identity/Id";
  * @category configuration
  * @since 0.0.0
  */
-export const $InfraCiRunnersId: IdentityComposer<"@beep/infra-ci-runners"> = /*#__PURE__*/ $BeepId.create(
-  "infra-ci-runners"
-);
+export const $InfraCiRunnersId = /*#__PURE__*/ $BeepId.create("infra-ci-runners");

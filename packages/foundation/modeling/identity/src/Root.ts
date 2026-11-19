@@ -52,4 +52,7 @@ import * as Identity from "./Id.ts";
  * @category configuration
  * @since 0.0.0
  */
-export const $BeepId = Identity.make("beep", { authority: Identity.IdentityAuthority, prefix: "beep" }).$BeepId;
+export const $BeepId: Identity.IdentityComposer<"@beep"> = Identity.make("beep", {
+  authority: Identity.IdentityAuthority,
+  prefix: "beep",
+}).$BeepId;

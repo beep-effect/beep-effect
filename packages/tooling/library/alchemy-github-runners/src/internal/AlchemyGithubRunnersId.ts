@@ -15,7 +15,6 @@
  */
 
 import { $BeepId } from "@beep/identity/Root";
-import type { IdentityComposer } from "@beep/identity/Id";
 
 /**
  * Identity composer for the `@beep/alchemy-github-runners` package, built
@@ -32,6 +31,4 @@ import type { IdentityComposer } from "@beep/identity/Id";
  * @category configuration
  * @since 0.0.0
  */
-export const $AlchemyGithubRunnersId: IdentityComposer<"@beep/alchemy-github-runners"> = /*#__PURE__*/ $BeepId.create(
-  "alchemy-github-runners"
-);
+export const $AlchemyGithubRunnersId = /*#__PURE__*/ $BeepId.create("alchemy-github-runners");

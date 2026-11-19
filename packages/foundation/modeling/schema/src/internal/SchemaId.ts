@@ -10,12 +10,19 @@
  * code hash. The value equals the registry's `$SchemaId`; a test in this
  * package asserts it.
  *
+ * **Gotchas**
+ *
+ * The export is not annotated with `IdentityComposer<"@beep/schema">`. The
+ * inferred type is the same, but checking the call against the annotation
+ * makes the checker measure `IdentityComposer`'s variance, about 4,500 type
+ * instantiations in every program that loads this module, which the
+ * `@beep/schema` check census rejects.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
 
 import { $BeepId } from "@beep/identity/Root";
-import type { IdentityComposer } from "@beep/identity/Id";
 
 /**
  * Identity composer for the `@beep/schema` package, built without the
@@ -32,4 +39,4 @@ import type { IdentityComposer } from "@beep/identity/Id";
  * @category configuration
  * @since 0.0.0
  */
-export const $SchemaId: IdentityComposer<"@beep/schema"> = /*#__PURE__*/ $BeepId.create("schema");
+export const $SchemaId = /*#__PURE__*/ $BeepId.create("schema");
