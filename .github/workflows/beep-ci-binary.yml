@@ -379,6 +379,7 @@ jobs:
           supersede=false
           report=false
           relabel=false
+          missing_pr=false
           sync="none"
           reason=""
           branch_tag=""
@@ -469,6 +470,7 @@ jobs:
                     push=false
                   elif [[ "$kept_labelled" -lt 1 && "$kept_tag" == "$tag" ]]; then
                     report=true
+                    missing_pr=true
                     reason="the pin-bump pull request for ${tag} is missing and ${PIN_BRANCH} holds changes besides the pin, which opening it with create-pull-request would discard; open the pull request by hand"
                     echo "::warning::Beep CI pin bump: ${reason}."
                   fi
@@ -500,6 +502,7 @@ jobs:
             echo "supersede=$supersede"
             echo "report=$report"
             echo "relabel=$relabel"
+            echo "missing_pr=$missing_pr"
             echo "reason=$reason"
             echo "pull=$branch_pull"
             echo "branch_tag=$branch_tag"
@@ -524,6 +527,10 @@ jobs:
             fi
             if [[ "$report" == "true" && "$push" == "true" ]]; then
               echo "- \`$PIN_BRANCH\`: ${reason}. Main was merged in, and the push step below pushes that merge without force; only the step above needs a hand, and it is reported once."
+              exit 0
+            fi
+            if [[ "$report" == "true" && "$missing_pr" == "true" ]]; then
+              echo "- \`$PIN_BRANCH\` (pinning \`$kept_tag\`) is current with \`$DEFAULT_BRANCH\`; nothing was pushed: ${reason}. That is the only step that needs a hand, and it is reported once."
               exit 0
             fi
             if [[ "$report" == "true" ]]; then
@@ -619,6 +626,7 @@ jobs:
           REASON: ${{ steps.pin.outputs.reason }}
           SUPERSEDE: ${{ steps.pin.outputs.supersede }}
           RELABEL: ${{ steps.pin.outputs.relabel }}
+          MISSING_PR: ${{ steps.pin.outputs.missing_pr }}
           PUSHED: ${{ steps.pin.outputs.push }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
@@ -676,6 +684,9 @@ jobs:
           done_text="Nothing was pushed. Bring the branch up to date by hand"
           if [[ "$PUSHED" == "true" ]]; then
             done_text="This run merged main in and pushes that merge without force; only the step above needs a hand"
+          fi
+          if [[ "$MISSING_PR" == "true" && "$PUSHED" != "true" ]]; then
+            done_text="The branch is current with main and nothing was pushed; only the step above needs a hand"
           fi
           gh api -X POST "repos/${GH_REPO}/issues/${PULL}/comments" -f body="${marker}
           The pin-bump workflow ([run](${RUN_URL})) reports for \`${PIN_BRANCH}\`: ${REASON}. ${done_text}; this is reported once per branch head." >/dev/null

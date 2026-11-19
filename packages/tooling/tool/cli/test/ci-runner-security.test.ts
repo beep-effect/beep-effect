@@ -3075,6 +3075,14 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(notPinOnly.status).toBe(0);
       expect(notPinOnly.decision).toEqual({ ...idle, push: "true", report: "true" });
       expect(notPinOnly.summary).toContain("holds changes besides the pin");
+      // The same with the branch already current: it is up to date, so the summary says so and names only
+      // the hand step the reason gives (opening the pull request), never "Bring it up to date by hand".
+      const currentNoPull = yield* runCase(mainOld, branchNew, pulls(), { sync: "current", pinOnly: "false" });
+      expect(currentNoPull.decision).toEqual({ ...idle, report: "true" });
+      expect(currentNoPull.summary).toContain("is current with `main`; nothing was pushed");
+      expect(currentNoPull.summary).toContain("open the pull request by hand");
+      expect(currentNoPull.summary).not.toContain("cannot be brought up to date");
+      expect(currentNoPull.summary).not.toContain("Bring it up to date by hand");
       // A PR for the release a person closed unmerged (no `superseded` label): parked on purpose, no push
       // and no reopen.
       const closed = yield* runCase(mainOld, branchNew, pulls(pull("CLOSED", newTag, ["ready-for-heavy"])));
@@ -3228,6 +3236,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
               SUPERSEDE: "false",
               RELABEL: "false",
               PUSHED: "false",
+              MISSING_PR: "false",
               GIT_FAIL: "0",
               GH_TOKEN: "app-token",
               ...env,
@@ -3297,6 +3306,10 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(pushedToo.status).toBe(0);
       expect(pushedToo.text).not.toContain("Nothing was pushed");
       expect(pushedToo.text).toContain("This run merged main in and pushes that merge without force");
+      const currentToo = yield* runSettle({ MISSING_PR: "true" });
+      expect(currentToo.status).toBe(0);
+      expect(currentToo.text).toContain("The branch is current with main and nothing was pushed");
+      expect(currentToo.text).not.toContain("Bring the branch up to date by hand");
     })
   );
 
