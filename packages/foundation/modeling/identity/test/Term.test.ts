@@ -130,6 +130,12 @@ describe("TermSnapshot", () => {
     assertTrue(
       TermSnapshot.fromRows({ ...baseRows, bindings: [...baseRows.bindings, rebound] }).pipe(Result.isFailure)
     );
+    // A repeat separated by a distinct row of the same key stays refused.
+    assertTrue(
+      TermSnapshot.fromRows({ ...baseRows, bindings: [...baseRows.bindings, rebound, ...baseRows.bindings] }).pipe(
+        Result.isFailure
+      )
+    );
   });
 
   it("starts from an empty snapshot at release 0.0.0", () => {
@@ -217,6 +223,22 @@ describe("snapshotViolations", () => {
         (violation) => violation.term
       )
     ).toStrictEqual([activity, testHang]);
+  });
+
+  it("judges term membership apart from namespace membership", () => {
+    const previous = snapshot();
+    const entityNs = Namespace.make({ prefix: "entity", iri: IRI.make(entity) });
+    const extraNs = Namespace.make({ prefix: "extra", iri: IRI.make("https://example.test/extra/") });
+    // A removed term whose IRI becomes a namespace IRI is still a removed term.
+    expect(snapshotViolations(previous, snapshot({ namespaces: [...baseRows.namespaces, entityNs] }))).toStrictEqual([
+      SnapshotViolation.cases.TermRemoved.make({ term: entity }),
+    ]);
+    expect(
+      snapshotViolations(
+        previous,
+        snapshot({ namespaces: [...baseRows.namespaces, extraNs], terms: [...baseRows.terms, iri(extraNs.iri)] })
+      )
+    ).toStrictEqual([]);
   });
 
   it("reports a dropped namespace and a changed prefix", () => {

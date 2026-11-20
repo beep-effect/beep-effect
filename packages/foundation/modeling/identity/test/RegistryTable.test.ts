@@ -163,6 +163,23 @@ describe("RegistryTable.fromShards", () => {
     expect(conflictTags(RegistryTable.fromShards([vitestShard, other]))).toStrictEqual(["DuplicateBinding"]);
   });
 
+  it("refuses a binding or a replacement that names only a namespace IRI", () => {
+    const vocab = { prefix: "ex", iri: "https://example.test/vocab/" };
+    const entryNs = shard({ namespace: { prefix: "entry", iri: "https://example.test/vocab/Entry" } });
+    const bound = shard({ namespace: vocab, bindings: [{ code: hangCode, local: "Entry", since: "1.0.0" }] });
+    expect(conflictTags(RegistryTable.fromShards([bound, entryNs]))).toStrictEqual(["BindingToUnknownTerm"]);
+    const replaced = shard({
+      namespace: vocab,
+      deprecations: [{ term: "https://example.test/vocab/Old", since: "1.0.0", replacement: "Entry" }],
+    });
+    expect(conflictTags(RegistryTable.fromShards([replaced, entryNs]))).toStrictEqual(["ReplacementUnknown"]);
+    const deprecatedNs = shard({
+      namespace: vocab,
+      deprecations: [{ term: "https://example.test/vocab/Entry", since: "1.0.0" }],
+    });
+    expect(conflictTags(RegistryTable.fromShards([deprecatedNs, entryNs]))).toStrictEqual(["DeprecatedTermLive"]);
+  });
+
   it("reports a live deprecated term, a repeated deprecation and broken replacement chains", () => {
     const live = shard({
       namespace: vitestShard.namespace,
@@ -285,6 +302,25 @@ describe("RegistryTable.snapshot", () => {
       ])
     );
     expect(RegistryTable.snapshot(shrunk, first).release).toBe("2.0.0");
+  });
+
+  it("advances a release past the safe-integer range exactly", () => {
+    const first = RegistryTable.snapshot(table, TermSnapshot.empty);
+    const at = (value: string) => TermSnapshot.make({ ...first, release: ReleaseVersion.make(value) });
+    const grown = Result.getOrThrow(
+      RegistryTable.fromShards([vitestShard, shard({ namespace: fabioShard.namespace, terms: ["Article", "Report"] })])
+    );
+    expect(RegistryTable.snapshot(grown, at("1.9007199254740992.0")).release).toBe("1.9007199254740993.0");
+    const shrunk = Result.getOrThrow(
+      RegistryTable.fromShards([
+        vitestShard,
+        shard({
+          namespace: fabioShard.namespace,
+          deprecations: [{ term: "http://purl.org/spar/fabio/Report", since: "9007199254740994.0.0" }],
+        }),
+      ])
+    );
+    expect(RegistryTable.snapshot(shrunk, at("9007199254740993.0.0")).release).toBe("9007199254740994.0.0");
   });
 });
 

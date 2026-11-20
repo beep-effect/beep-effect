@@ -1,6 +1,6 @@
 {
   "version": "term-snapshot/v1",
-  "release": "1.1.0",
+  "release": "1.0.0",
   "namespaces": [
     {
       "prefix": "as",
@@ -442,7 +442,6 @@
     "http://www.w3.org/ns/shacl#targetNode",
     "http://www.w3.org/ns/shacl#xone",
     "https://schema.org/",
-    "https://schema.org/Athlete",
     "https://schema.org/CreativeWork",
     "https://schema.org/Event",
     "https://schema.org/Organization",

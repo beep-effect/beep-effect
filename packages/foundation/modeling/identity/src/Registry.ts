@@ -562,8 +562,9 @@ const refusePublished = (minted: string): string => {
 };
 
 // A namespace IRI ends with its own separator; a term IRI takes "/" before the next segment.
+// The segment grammar admits characters an IRI refuses, such as a space, so the result is an `IRI`.
 const joinUnder = (base: string, tail: string): string =>
-  refusePublished(Str.includes(":")(base) ? `${baseIri(base)}/${tail}` : `${baseIri(base)}${tail}`);
+  refusePublished(IRI.make(Str.includes(":")(base) ? `${baseIri(base)}/${tail}` : `${baseIri(base)}${tail}`));
 
 /**
  * Mint an instance IRI under a registry term or namespace with the identity segment grammar.
@@ -578,7 +579,9 @@ const joinUnder = (base: string, tail: string): string =>
  * **Gotchas**
  *
  * Throws the segment schema error for an empty segment or one with a leading
- * or trailing `/`. Throws {@link RegistryMintError} when the result is an IRI
+ * or trailing `/`, and the `IRI` schema error when a segment holds a
+ * character an IRI refuses, such as a space; {@link mintEncoded} takes free
+ * text. Throws {@link RegistryMintError} when the result is an IRI
  * the registry publishes, such as `mint("dcterms", "Agent")`, which is the
  * term `dcterms:Agent`.
  *

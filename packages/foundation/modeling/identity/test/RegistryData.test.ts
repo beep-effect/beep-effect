@@ -25,9 +25,9 @@ describe("generated registry data", () => {
     expect(R.keys(RegistryDeprecations)).toStrictEqual([]);
   });
 
-  it("publishes the term snapshot at release 1.1.0 with every term and namespace IRI", () => {
+  it("publishes the first term snapshot at release 1.0.0 with every term and namespace IRI", () => {
     const decoded = Result.getOrThrow(S.decodeUnknownResult(TermSnapshot)(snapshot));
-    expect(decoded.release).toBe("1.1.0");
+    expect(decoded.release).toBe("1.0.0");
     expect(A.map(decoded.namespaces, (namespace) => namespace.prefix)).toStrictEqual(sorted(R.keys(RegistryVocab)));
     const published = A.flatMap(
       R.values(RegistryVocab),

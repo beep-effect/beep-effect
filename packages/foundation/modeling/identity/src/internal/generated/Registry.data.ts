@@ -369,7 +369,6 @@ export const RegistryVocab = {
   schema: {
     iri: "https://schema.org/",
     terms: [
-      "Athlete",
       "CreativeWork",
       "Event",
       "Organization",

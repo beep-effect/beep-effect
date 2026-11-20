@@ -122,6 +122,30 @@ describe("renderRegistryData", () => {
     expect(data).toContain(`  "${IdentityAuthority}test-utils/Vitest/Gone": { since: "1.0.0" },`);
   });
 
+  it("imports IdentityAuthority when only a bound term or a replacement sits under it", () => {
+    // A namespace above the authority with a multi-segment local puts the term, not the namespace, under it.
+    const root = { prefix: "root", iri: "https://beep-effect.com/" };
+    assertTrue(
+      Str.startsWith(IdentityAuthority)(`${root.iri}ns/Example`) && !Str.startsWith(IdentityAuthority)(root.iri)
+    );
+    const bound = shard({
+      namespace: root,
+      terms: ["ns/Example"],
+      bindings: [{ code: "@beep/identity/Vitest/Example", local: "ns/Example", since: "1.0.0" }],
+    });
+    const bindingData = RegistryTable.fromShards([bound]).pipe(Result.getOrThrow, renderRegistryData);
+    expect(bindingData).toContain('import { IdentityAuthority } from "../../Authority.ts";');
+    expect(bindingData).toContain("iri: `${IdentityAuthority}Example` },");
+    const replaced = shard({
+      namespace: root,
+      terms: ["ns/Example"],
+      deprecations: [{ term: "https://beep-effect.com/Old", since: "1.0.0", replacement: "ns/Example" }],
+    });
+    const deprecationData = RegistryTable.fromShards([replaced]).pipe(Result.getOrThrow, renderRegistryData);
+    expect(deprecationData).toContain('import { IdentityAuthority } from "../../Authority.ts";');
+    expect(deprecationData).toContain("replacement: `${IdentityAuthority}Example` },");
+  });
+
   it("imports nothing and renders empty records for a purely external table", () => {
     const data = RegistryTable.fromShards([shard(fabio)]).pipe(Result.getOrThrow, renderRegistryData);
     expect(data).not.toContain("import");
