@@ -335,7 +335,8 @@ describe("CiRunners production stage", () => {
         A.flatMap(entry.bindings, (binding) =>
           A.flatMap(
             A.filter(statementsOfBinding(binding.data), (statement) => statement.Effect === "Allow"),
-            (statement) => A.map(resourceList(statement.Action), (action) => `${entry.fqn} ${action}`)
+            (statement: IAM.PolicyStatement) =>
+              A.map(resourceList(statement.Action), (action) => `${entry.fqn} ${action}`)
           )
         )
       );
