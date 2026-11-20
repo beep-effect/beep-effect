@@ -29,6 +29,7 @@ import * as Str from "effect/String";
 import * as SqlError from "effect/sql/SqlError";
 import * as TestClock from "effect/testing/TestClock";
 import { answerFor, historyContract, ingestAll, keyOf, laneA, reportOf, testItem } from "./support/historyContract.ts";
+import { historyWriterPath } from "./support/historyWriter.ts";
 
 const isBunRuntime = P.isNotUndefined(process.versions.bun);
 
@@ -159,7 +160,7 @@ describe.skipIf(!isBunRuntime)("GateHistorySqlite (Bun runtime)", () => {
         const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
         const dir = yield* tempDir;
         const file = path.join(dir, "store.sqlite");
-        const writer = path.join(import.meta.dirname, "support", "historyWriter.ts");
+        const writer = historyWriterPath;
         const exits = yield* Effect.forEach(
           A.range(1, 12),
           (index) =>

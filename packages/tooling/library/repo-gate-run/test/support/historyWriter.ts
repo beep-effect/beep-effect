@@ -42,9 +42,11 @@ const report = (run: number): GateReport =>
     totals: Totals.make({ collected: 3 }),
   });
 
-const store = layerSqlite(
-  GateHistorySqliteOptions.make({ filename, config: HistoryConfig.make({ retryAttempts: 8, retryBaseMs: 20 }) })
-);
+// Built on demand: importing this module for its path must not validate an absent file argument.
+const store = () =>
+  layerSqlite(
+    GateHistorySqliteOptions.make({ filename, config: HistoryConfig.make({ retryAttempts: 8, retryBaseMs: 20 }) })
+  );
 
 const program = Effect.gen(function* () {
   const history = yield* GateHistoryStore;
@@ -59,10 +61,16 @@ const program = Effect.gen(function* () {
   )
 );
 
-await Effect.runPromise(
-  store.pipe(
-    Layer.build,
-    Effect.flatMap((context) => Effect.provideContext(program, context)),
-    Effect.scoped
-  )
-);
+/** Where this script lives, for the test that spawns it as a separate process. */
+export const historyWriterPath = import.meta.filename;
+
+// The writer runs only when Bun executes this file directly, not when the test imports its path.
+if (import.meta.main) {
+  await Effect.runPromise(
+    store().pipe(
+      Layer.build,
+      Effect.flatMap((context) => Effect.provideContext(program, context)),
+      Effect.scoped
+    )
+  );
+}
