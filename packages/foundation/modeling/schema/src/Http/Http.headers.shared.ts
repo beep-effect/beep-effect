@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity";
 import { A } from "@beep/utils";
 import { cast } from "@beep/utils/Function";
 import * as Effect from "effect/Effect";
@@ -16,6 +15,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import { $SchemaId } from "../internal/SchemaId.ts";
 
 const $I = $SchemaId.create("Http/headers");
 

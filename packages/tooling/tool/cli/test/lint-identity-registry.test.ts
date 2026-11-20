@@ -45,6 +45,7 @@ const testLayer = Layer.provideMerge(
 );
 
 const IDENTITY_REGISTRY_PATH = "packages/identity/src/packages.ts";
+const WIDGET_LEAF_PATH = "packages/widget/src/internal/WidgetId.ts";
 const LINT_TIMEOUT = 20_000;
 
 const registryContentFor = (slugs: ReadonlyArray<string>, labSlugs: ReadonlyArray<string> = []): string =>
@@ -84,6 +85,7 @@ const writeWorkspaceFixture = Effect.fn("writeWorkspaceFixture")(function* (opti
   readonly extraPackages?: ReadonlyArray<string>;
   readonly widgetSourceLines?: ReadonlyArray<string>;
   readonly widgetRootFileLines?: ReadonlyArray<string>;
+  readonly widgetLeafLines?: ReadonlyArray<string>;
 }) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -138,6 +140,11 @@ const writeWorkspaceFixture = Effect.fn("writeWorkspaceFixture")(function* (opti
 
   if (options.widgetRootFileLines !== undefined) {
     yield* fs.writeFileString(path.join("packages", "widget", "Tool.ts"), A.join(options.widgetRootFileLines, "\n"));
+  }
+
+  if (options.widgetLeafLines !== undefined) {
+    yield* fs.makeDirectory(path.join("packages", "widget", "src", "internal"), { recursive: true });
+    yield* fs.writeFileString(WIDGET_LEAF_PATH, A.join(options.widgetLeafLines, "\n"));
   }
 });
 
@@ -428,6 +435,131 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
               A.some(
                 errorLines,
                 (line) => P.isString(line) && Str.startsWith("packages/widget/Tool.ts:2 [local-root-composer]")(line)
+              )
+            ).toBe(true);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "passes a leaf package whose modules take the composer from its registry-free leaf",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            yield* writeWorkspaceFixture({
+              registrySlugs: ["identity", "widget"],
+              widgetLeafLines: [
+                'import { $BeepId } from "@beep/identity/Root";',
+                'export const $WidgetId = /*#__PURE__*/ $BeepId.create("widget");',
+                "",
+              ],
+              widgetSourceLines: [
+                'import type { $WidgetId as RegistryWidgetId } from "@beep/identity/packages";',
+                'import { $WidgetId } from "./internal/WidgetId.ts";',
+                "export const probe: typeof RegistryWidgetId = $WidgetId;",
+                "",
+              ],
+            });
+
+            yield* runLintCommand(["identity-registry"]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toContain(
+              "[lint:identity-registry] OK: 2 workspace packages registered; 0 lab(s) in the generated labs segment; no orphan or local root composers."
+            );
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "confines the registry-free root to package leaves over their own slug",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeWorkspaceFixture({
+              registrySlugs: ["identity", "widget", "gadget"],
+              extraPackages: ["widget", "gadget"],
+              widgetLeafLines: [
+                'import { $BeepId as Root } from "@beep/identity/Root";',
+                'export const $WidgetId = /*#__PURE__*/ Root.create("widgets");',
+                "",
+              ],
+              widgetSourceLines: ['import { $WidgetId } from "@beep/identity/packages";', "void $WidgetId;", ""],
+              widgetRootFileLines: [
+                'import { $BeepId } from "@beep/identity/Root";',
+                'export const $ToolId = $BeepId.create("widget");',
+                "",
+              ],
+            });
+            yield* fs.writeFileString(
+              "packages/gadget/src/Gadget.ts",
+              A.join(
+                [
+                  'import * as Identity from "@beep/identity";',
+                  'import { $BeepId as Barrel } from "@beep/identity";',
+                  'export const $GadgetId = Identity.$BeepId.create("gadget");',
+                  'export const $OtherId = Barrel.create("other");',
+                  "",
+                ],
+                "\n"
+              )
+            );
+
+            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+
+            expectReportedExit(exit);
+            const errorLines = yield* TestConsole.errorLines;
+            const row = (prefix: string) =>
+              A.findFirst(errorLines, (line): line is string => P.isString(line) && Str.startsWith(prefix)(line));
+            expect(errorLines).toContain("[lint:identity-registry] found 5 violation(s).");
+            expect(O.getOrThrow(row(`${WIDGET_LEAF_PATH}:1 [root-leaf-slug-mismatch]`))).toContain(
+              'found `create("widgets")`'
+            );
+            expect(O.getOrThrow(row("packages/widget/src/Widget.ts:1 [leaf-package-registry-import]"))).toContain(
+              '"@beep/identity/packages" loads the identity registry'
+            );
+            expect(O.getOrThrow(row("packages/widget/Tool.ts:1 [root-composer-outside-leaf]"))).toContain(
+              `(${WIDGET_LEAF_PATH})`
+            );
+            expect(O.getOrThrow(row("packages/gadget/src/Gadget.ts:2 [root-composer-outside-leaf]"))).toContain(
+              "(packages/gadget/src/internal/GadgetId.ts)"
+            );
+            expect(O.getOrThrow(row("packages/gadget/src/Gadget.ts:3 [root-composer-outside-leaf]"))).toContain(
+              "(packages/gadget/src/internal/GadgetId.ts)"
+            );
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "reports a leaf with no root create call",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            yield* writeWorkspaceFixture({
+              registrySlugs: ["identity", "widget"],
+              widgetLeafLines: ["export const $WidgetId = 1;", ""],
+            });
+
+            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+
+            expectReportedExit(exit);
+            const errorLines = yield* TestConsole.errorLines;
+            expect(errorLines).toContain("[lint:identity-registry] found 1 violation(s).");
+            expect(
+              A.some(
+                errorLines,
+                (line) =>
+                  P.isString(line) &&
+                  Str.startsWith(`${WIDGET_LEAF_PATH}:1 [root-leaf-slug-mismatch]`)(line) &&
+                  Str.endsWith("found none.")(line)
               )
             ).toBe(true);
           })

@@ -9,7 +9,6 @@
  * @packageDocumentation
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import { A, Str } from "@beep/utils";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bech32, bech32m } from "@scure/base";
@@ -20,6 +19,7 @@ import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { bytesEqual, decodeCanonicalBase58, isCanonicalEvmAddress } from "../internal/crypto.ts";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("CryptoWalletAddress");

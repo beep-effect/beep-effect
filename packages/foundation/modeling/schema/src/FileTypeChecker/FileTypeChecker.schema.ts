@@ -4,7 +4,6 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -15,6 +14,7 @@ import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import { FileExtension } from "../FileExtension.ts";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { MimeType } from "../MimeType.ts";
 import type * as SchemaAST from "effect/SchemaAST";

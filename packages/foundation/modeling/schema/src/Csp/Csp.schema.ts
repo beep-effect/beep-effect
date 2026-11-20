@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $SchemaId } from "@beep/identity";
+
 import { A, Str, Struct } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
@@ -15,6 +15,7 @@ import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as internal from "../Http/Http.headers.shared.ts";
 import { wrapArray } from "../Http/Http.headers.shared.ts";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { CspError } from "../SecureHeaderError/index.ts";

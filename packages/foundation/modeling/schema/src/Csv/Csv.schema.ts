@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity";
 import { A, O } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
@@ -20,6 +19,7 @@ import { CsvCodecOptions, CsvCodecOptionsParseOptions } from "../CsvCodecOptions
 import { csvError } from "../CsvError/index.ts";
 import { formatCsvDocument } from "../CsvFormatter/index.ts";
 import { parseCsvRows } from "../CsvParser/index.ts";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import { ParserOptions } from "../ParserOptions/index.ts";
 import type { CsvCodecOptionsArgs } from "../CsvCodecOptions/index.ts";
 import type { CsvError } from "../CsvError/index.ts";

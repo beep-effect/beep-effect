@@ -4,13 +4,13 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as SchemaParser from "effect/SchemaParser";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import { InvariantDescriptor } from "./Conformance.invariant.schema.ts";
 import { ConformanceProfile } from "./Conformance.profile.schema.ts";
 import { SpecificationSource } from "./Conformance.source.schema.ts";

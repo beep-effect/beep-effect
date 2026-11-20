@@ -12,7 +12,6 @@
  * @since 0.0.0
  */
 
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as ec2 from "@distilled.cloud/aws/ec2";
 import * as s3 from "@distilled.cloud/aws/s3";
 import * as sqs from "@distilled.cloud/aws/sqs";
@@ -32,6 +31,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { FleetLaunchResult, TaggedInstance } from "./Ec2Fleet.models.ts";
 import { Ec2Fleet } from "./Ec2Fleet.service.ts";
+import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import { MessageQueue } from "./MessageQueue.service.ts";
 import { ReleaseAsset, RunnerBinaries } from "./RunnerBinaries.service.ts";
 import { AwsApiError, GitHubApiError } from "./RunnerFleet.errors.ts";

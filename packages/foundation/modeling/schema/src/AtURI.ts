@@ -20,10 +20,10 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { $SchemaId } from "./internal/SchemaId.ts";
 
 const $I = $SchemaId.create("AtURI");
 
