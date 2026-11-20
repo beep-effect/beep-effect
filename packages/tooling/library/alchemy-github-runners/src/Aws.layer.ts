@@ -12,6 +12,7 @@
  * @since 0.0.0
  */
 
+import * as Category from "@distilled.cloud/aws/Category";
 import * as ec2 from "@distilled.cloud/aws/ec2";
 import * as s3 from "@distilled.cloud/aws/s3";
 import * as sqs from "@distilled.cloud/aws/sqs";
@@ -40,6 +41,7 @@ import { ParameterEntry, SsmStore } from "./SsmStore.service.ts";
 import type { Credentials as AwsCredentials } from "@distilled.cloud/aws/Credentials";
 import type * as Context from "effect/Context";
 import type { FleetLaunchRequest } from "./Ec2Fleet.models.ts";
+import type { AwsFault } from "./RunnerFleet.errors.ts";
 import type { RunnerFilter } from "./RunnerInstance.models.ts";
 
 const $I = $AlchemyGithubRunnersId.create("Aws.layer");
@@ -61,16 +63,63 @@ const retryableTags = [
   "TooManyUpdates",
 ];
 
+// SSM answers these with HTTP 400 and a resend of the same request fails the same way, though distilled files
+// `ParameterMaxVersionLimitExceeded` under its throttling category.
+const clientTags = ["ParameterMaxVersionLimitExceeded"];
+
+const clientCategories: ReadonlyArray<(error: unknown) => boolean> = [
+  Category.isBadRequestError,
+  Category.isAuthError,
+  Category.isNotFoundError,
+  Category.isConflictError,
+  Category.isQuotaError,
+  Category.isAlreadyExistsError,
+  Category.isConfigurationError,
+  Category.isDependencyViolationError,
+];
+
+type SdkFailure = { readonly _tag: string; readonly message?: unknown };
+
+// The SDK's unknown-error class carries the HTTP status; its declared error classes carry a category instead.
+const statusOf = (error: SdkFailure): O.Option<number> =>
+  P.hasProperty(error, "status") && P.isNumber(error.status) && Number.isInteger(error.status)
+    ? O.some(error.status)
+    : O.none();
+
+const isTransientStatus = (status: number) => status === 429 || status >= 500;
+const isClientStatus = (status: number) => status >= 400 && status < 500 && status !== 429;
+
+const faultRules: ReadonlyArray<readonly [(error: SdkFailure, status: O.Option<number>) => boolean, AwsFault]> = [
+  [(error) => A.contains(clientTags, error._tag), "client"],
+  [(_error, status) => O.exists(status, isTransientStatus), "transient"],
+  [(_error, status) => O.exists(status, isClientStatus), "client"],
+  [(error) => A.contains(retryableTags, error._tag) || Category.isTransientError(error), "transient"],
+  [(error) => A.some(clientCategories, (isCategory) => isCategory(error)), "client"],
+];
+
+const faultOf = (error: SdkFailure, status: O.Option<number>): AwsFault =>
+  O.getOrElse(
+    O.map(
+      A.findFirst(faultRules, ([matches]) => matches(error, status)),
+      ([, fault]) => fault
+    ),
+    (): AwsFault => "unknown"
+  );
+
 const toAwsApiError =
   ({ service, operation }: { readonly service: string; readonly operation: string }) =>
-  (error: { readonly _tag: string; readonly message?: unknown }): AwsApiError =>
-    AwsApiError.make({
+  (error: SdkFailure): AwsApiError => {
+    const status = statusOf(error);
+    return AwsApiError.make({
       service,
       operation,
-      code: O.some(error._tag),
+      code: O.some(P.hasProperty(error, "code") && P.isString(error.code) ? error.code : error._tag),
       retryable: A.contains(retryableTags, error._tag),
+      status,
+      fault: faultOf(error, status),
       message: P.isString(error.message) ? error.message : error._tag,
     });
+  };
 
 const tagList = (tags: Readonly<Record<string, string>>) =>
   A.map(R.toEntries(tags), ([Key, Value]) => ({ Key, Value }));
@@ -273,7 +322,8 @@ export const ec2FleetLive: Layer.Layer<Ec2Fleet, never, AwsServices> = Layer.eff
  * **Details**
  *
  * SSM refuses `Tags` together with `Overwrite`, so a tagged put creates and an
- * untagged put overwrites, as upstream does.
+ * untagged put overwrites, as upstream does. Every put names its tier: the
+ * Standard tier's 4 KB value limit is too small for a JIT runner config.
  *
  * **Example** (The layer)
  *
@@ -315,6 +365,7 @@ export const ssmStoreLive: Layer.Layer<SsmStore, never, AwsServices> = Layer.eff
             Name: input.name,
             Value: input.value,
             Type: input.secure ? "SecureString" : "String",
+            Tier: input.tier,
             ...(A.isReadonlyArrayNonEmpty(tags) ? { Tags: tags } : { Overwrite: true }),
           })
         );

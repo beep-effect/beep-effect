@@ -1,7 +1,9 @@
 import {
   AwsApiError,
+  classifyFailure,
   Ec2Fleet,
   FleetLaunchResult,
+  GitHubApiError,
   handleScaleUp,
   RunnerPool,
   sanitizeAllocationStrategy,
@@ -12,9 +14,12 @@ import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { World, worldContext } from "./support/FakeWorld.ts";
 import { heavyPool, poolConfig, queued } from "./support/Fixtures.ts";
@@ -29,6 +34,10 @@ const run = Effect.fn("runScaleUp")(function* (
 });
 
 const decodeRetry = S.decodeUnknownEffect(S.fromJsonString(S.Struct({ id: S.Int, retryCounter: S.Int })));
+const encodeLines = S.encodeEffect(S.fromJsonString(S.Unknown));
+const decodeDeadLetter = S.decodeUnknownEffect(
+  S.fromJsonString(S.Struct({ id: S.Int, retryCounter: S.OptionFromOptionalKey(S.Int) }))
+);
 
 describe("handleScaleUp", () => {
   it.effect("launches one Spot runner per queued job with a capacity-optimized CreateFleet", () =>
@@ -344,13 +353,18 @@ describe("handleScaleUp", () => {
     })
   );
 
-  it.effect("terminates instances whose JIT config failed and retries their messages", () =>
+  it.effect("terminates an instance whose JIT config failed transiently and retries its job through job-retry", () =>
     Effect.gen(function* () {
       const world = new World();
       world.jitFailures = ["i-0001"];
       const retry = yield* run(world, [queued({ id: 1 }), queued({ id: 2 })]);
       expect(world.terminated).toStrictEqual(["i-0001"]);
-      expect(retry).toStrictEqual(["m-1"]);
+      // A 500 is transient: the job goes to job-retry, which re-checks it, rather than straight back to the build queue.
+      expect(retry).toStrictEqual([]);
+      expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([
+        "https://sqs.us-east-1.amazonaws.com/1/heavy-job-retry",
+        "https://sqs.us-east-1.amazonaws.com/1/heavy-job-retry",
+      ]);
       expect(R.keys(world.ssm)).toContain("/beep-ci/heavy/tokens/i-0002");
     })
   );
@@ -412,6 +426,238 @@ describe("handleScaleUp", () => {
       const world = new World();
       yield* run(world, [queued({ id: 1, installationId: 0 })]);
       expect(world.installationLookups).toBe(1);
+    })
+  );
+});
+
+// Runs scale-up with every log line captured as structured output.
+const runLogged = Effect.fn("runScaleUpLogged")(function* (
+  world: World,
+  batch: ReadonlyArray<ReturnType<typeof queued>>,
+  config: PoolRuntimeConfig = poolConfig()
+) {
+  const lines: Array<{ readonly level: string; readonly message: unknown; readonly annotations: unknown }> = [];
+  const capture = Logger.map(Logger.formatStructured, (line) => {
+    lines.push(line);
+  });
+  const loggers = yield* Layer.build(Logger.layer([capture]));
+  const retry = yield* run(world, batch, config).pipe(Effect.provideContext(loggers));
+  return { retry, lines };
+});
+
+const ssmRefusal = (message: string) =>
+  AwsApiError.make({
+    service: "ssm",
+    operation: "putParameter",
+    code: O.some("ValidationException"),
+    fault: "client",
+    message,
+  });
+
+const jobRetryUrl = "https://sqs.us-east-1.amazonaws.com/1/heavy-job-retry";
+const buildDlqUrl = "https://sqs.us-east-1.amazonaws.com/1/heavy-build-dlq";
+
+describe("handleScaleUp configure failures", () => {
+  it("classifies by HTTP status first, then by the AWS layer's client-fault reading", () => {
+    expect(
+      A.map(
+        [
+          GitHubApiError.make({ operation: "jit", status: O.some(422), message: "invalid" }),
+          GitHubApiError.make({ operation: "jit", status: O.some(429), message: "slow down" }),
+          GitHubApiError.make({ operation: "jit", status: O.some(502), message: "bad gateway" }),
+          GitHubApiError.make({ operation: "jit", message: "socket hang up" }),
+          ssmRefusal("too long"),
+          AwsApiError.make({
+            service: "ssm",
+            operation: "putParameter",
+            code: O.some("ThrottlingException"),
+            retryable: true,
+            fault: "transient",
+            message: "Rate exceeded",
+          }),
+          AwsApiError.make({ service: "ssm", operation: "putParameter", status: O.some(409), message: "conflict" }),
+          AwsApiError.make({ service: "ssm", operation: "putParameter", message: "unreadable" }),
+        ],
+        classifyFailure
+      )
+    ).toStrictEqual([
+      "deterministic",
+      "transient",
+      "transient",
+      "transient",
+      "deterministic",
+      "transient",
+      "deterministic",
+      "transient",
+    ]);
+  });
+
+  it.effect("writes the JIT config Advanced-tier, the runner-group cache Standard-tier", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      yield* run(world, [queued({ id: 1 })]);
+      expect(A.map(world.puts, (put) => [put.name, put.tier, put.secure])).toStrictEqual([
+        ["/beep-ci/heavy/config/runner-group/beep-ec2-heavy", "Standard", false],
+        ["/beep-ci/heavy/tokens/i-0001", "Advanced", true],
+      ]);
+    })
+  );
+
+  it.effect(
+    "a deterministic token-write failure deletes the JIT runner, terminates once, dead-letters and never retries",
+    () =>
+      Effect.gen(function* () {
+        const world = new World();
+        world.putFailures = [["/beep-ci/heavy/tokens/", ssmRefusal("Value too long")]];
+        const { retry, lines } = yield* runLogged(world, [queued({ id: 1 })]);
+        expect(world.terminated).toStrictEqual(["i-0001"]);
+        expect(world.deletedRunners).toStrictEqual([1001]);
+        expect(retry).toStrictEqual([]);
+        expect(A.filter(world.sent, (sent) => sent.queueUrl === jobRetryUrl)).toStrictEqual([]);
+        expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([buildDlqUrl]);
+        // The DLQ holds the original message, unchanged: no retry counter was added.
+        const dead = yield* decodeDeadLetter(world.sent[0]?.body);
+        expect(dead).toStrictEqual({ id: 1, retryCounter: O.none() });
+        const warnings = A.filter(lines, (line) => line.level === "WARN");
+        expect(A.map(warnings, (line) => line.annotations)).toStrictEqual([
+          {
+            instanceId: "i-0001",
+            operation: "putToken",
+            failureClass: "deterministic",
+            status: null,
+            code: "ValidationException",
+            providerMessage: "Value too long",
+          },
+        ]);
+        const errors = A.filter(lines, (line) => line.level === "ERROR");
+        expect(A.map(errors, (line) => line.annotations)).toStrictEqual([
+          {
+            instanceId: "i-0001",
+            operation: "putToken",
+            failureClass: "deterministic",
+            status: null,
+            code: "ValidationException",
+            providerMessage: "Value too long",
+            messageId: "m-1",
+            jobId: 1,
+            deadLetter: "sent",
+          },
+        ]);
+      })
+  );
+
+  it.effect("never logs the JIT config, even when the provider echoes it back", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const secret = "jit-beep-ci-i-0001";
+      // A long token-like run the provider might echo, not a known secret value: masked by its shape.
+      const longSecret = Str.repeat(6)("jitconfig");
+      world.putFailures = [
+        ["/beep-ci/heavy/tokens/", ssmRefusal(`Value '${secret}' at 'value' failed; also ${longSecret}`)],
+      ];
+      const { lines } = yield* runLogged(world, [queued({ id: 1 })]);
+      const rendered = yield* encodeLines(lines);
+      expect([Str.includes(secret)(rendered), Str.includes(longSecret)(rendered)]).toStrictEqual([false, false]);
+      expect(Str.includes("Value '<redacted>' at 'value' failed; also <redacted>")(rendered)).toBe(true);
+    })
+  );
+
+  it.effect("a transient token-write failure retries through job-retry with a delay that grows per attempt", () =>
+    Effect.gen(function* () {
+      const throttled = AwsApiError.make({
+        service: "ssm",
+        operation: "putParameter",
+        code: O.some("ThrottlingException"),
+        retryable: true,
+        fault: "transient",
+        message: "Rate exceeded",
+      });
+      const first = new World();
+      first.putFailures = [["/beep-ci/heavy/tokens/", throttled]];
+      const firstRetry = yield* run(first, [queued({ id: 1 })]);
+      const second = new World();
+      second.putFailures = [["/beep-ci/heavy/tokens/", throttled]];
+      const secondRetry = yield* run(second, [queued({ id: 1, retryCounter: 0 })]);
+      expect([firstRetry, secondRetry, first.terminated, first.deletedRunners]).toStrictEqual([
+        [],
+        [],
+        ["i-0001"],
+        [1001],
+      ]);
+      deepStrictEqual(
+        A.map(A.appendAll(first.sent, second.sent), (sent) => [sent.queueUrl, sent.delaySeconds] as const),
+        [[jobRetryUrl, O.some(120)] as const, [jobRetryUrl, O.some(240)] as const]
+      );
+      const counters = yield* Effect.forEach(A.appendAll(first.sent, second.sent), (sent) => decodeRetry(sent.body), {
+        concurrency: 1,
+      });
+      expect(A.map(counters, (message) => message.retryCounter)).toStrictEqual([0, 1]);
+    })
+  );
+
+  it.effect("returns a transient failure as a batch item failure once no job-retry can be published", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.jitFailures = ["i-0001"];
+      const retry = yield* run(world, [queued({ id: 1, retryCounter: 1 })]);
+      expect([retry, world.sent, world.terminated]).toStrictEqual([["m-1"], [], ["i-0001"]]);
+    })
+  );
+
+  it.effect("logs a failed instance tag once and keeps the runner", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.tagFailure = AwsApiError.makeOption({
+        service: "ec2",
+        operation: "createTags",
+        code: O.some("UnauthorizedOperation"),
+        fault: "client",
+        message: "denied",
+      });
+      const { retry, lines } = yield* runLogged(world, [queued({ id: 1 })]);
+      expect([retry, world.terminated, R.keys(world.ssm)]).toStrictEqual([
+        [],
+        [],
+        ["/beep-ci/heavy/config/runner-group/beep-ec2-heavy", "/beep-ci/heavy/tokens/i-0001"],
+      ]);
+      expect(
+        A.map(
+          A.filter(lines, (line) => line.level === "WARN"),
+          (line) => line.annotations
+        )
+      ).toStrictEqual([
+        {
+          instanceId: "i-0001",
+          operation: "tagInstance",
+          failureClass: "deterministic",
+          status: null,
+          code: "UnauthorizedOperation",
+          providerMessage: "denied",
+        },
+      ]);
+    })
+  );
+
+  it.effect("logs a failed runner deletion and a failed termination instead of swallowing them", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.putFailures = [["/beep-ci/heavy/tokens/", ssmRefusal("Value too long")]];
+      world.failOnDelete = [1001];
+      world.terminateFailure = AwsApiError.makeOption({
+        service: "ec2",
+        operation: "terminateInstances",
+        code: O.some("InternalError"),
+        retryable: true,
+        fault: "transient",
+        message: "try again",
+      });
+      const { lines } = yield* runLogged(world, [queued({ id: 1 })]);
+      expect(
+        A.map(
+          A.filter(lines, (line) => line.level === "WARN"),
+          (line) => R.get(line.annotations as Readonly<Record<string, unknown>>, "operation")
+        )
+      ).toStrictEqual([O.some("deleteRunner"), O.some("putToken"), O.some("terminate")]);
     })
   );
 });

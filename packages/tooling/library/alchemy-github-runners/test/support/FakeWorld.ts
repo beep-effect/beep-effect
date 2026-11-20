@@ -29,7 +29,13 @@ import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { FleetLaunchRequest, JitConfigRequest, ReleaseAsset, RunnerFilter } from "@beep/alchemy-github-runners";
+import type {
+  FleetLaunchRequest,
+  JitConfigRequest,
+  ParameterWrite,
+  ReleaseAsset,
+  RunnerFilter,
+} from "@beep/alchemy-github-runners";
 
 const isAwsApiError = S.is(AwsApiError);
 
@@ -56,6 +62,16 @@ export class World {
   tagged: Array<string> = [];
   untagged: Array<string> = [];
   ssm: Record<string, { value: string; modified: number; tags: Record<string, string> }> = {};
+  /** Every SSM write, as the program asked for it (tier included). */
+  puts: Array<ParameterWrite> = [];
+  /** Scripted SSM write failures by parameter-name prefix. */
+  putFailures: Array<readonly [string, AwsApiError]> = [];
+  /** Scripted instance-tag failure for every tag call. */
+  tagFailure: O.Option<AwsApiError> = O.none();
+  /** Scripted terminate failure for every terminate call. */
+  terminateFailure: O.Option<AwsApiError> = O.none();
+  /** Scripted JIT failure error; default a 500. */
+  jitError: GitHubApiError = GitHubApiError.make({ operation: "jit", status: O.some(500), message: "boom" });
   sent: Array<SentMessage> = [];
   githubRunners: Array<SelfHostedRunner> = [];
   deletedRunners: Array<number> = [];
@@ -146,12 +162,18 @@ export const worldContext = (world: World) =>
         terminate: Effect.fn("FakeEc2.terminate")(function* (instanceId) {
           world.onTerminate(instanceId);
           world.terminated.push(instanceId);
+          if (O.isSome(world.terminateFailure)) {
+            return yield* world.terminateFailure.value;
+          }
           for (const instance of O.toArray(world.instance(instanceId))) {
             instance.state = "terminated";
           }
         }),
         tag: Effect.fn("FakeEc2.tag")(function* (instanceId, tags) {
           world.tagged.push(instanceId);
+          if (O.isSome(world.tagFailure)) {
+            return yield* world.tagFailure.value;
+          }
           for (const instance of O.toArray(world.instance(instanceId))) {
             instance.tags = { ...instance.tags, ...tags };
           }
@@ -171,6 +193,11 @@ export const worldContext = (world: World) =>
           return O.map(O.fromUndefinedOr(world.ssm[name]), (entry) => Redacted.make(entry.value));
         }),
         put: Effect.fn("FakeSsm.put")(function* (input) {
+          world.puts.push(input);
+          const failure = A.findFirst(world.putFailures, ([prefix]) => Str.startsWith(prefix)(input.name));
+          if (O.isSome(failure)) {
+            return yield* failure.value[1];
+          }
           world.ssm[input.name] = { value: Redacted.value(input.value), modified: 0, tags: { ...input.tags } };
         }),
         delete: Effect.fn("FakeSsm.delete")(function* (name) {
@@ -218,7 +245,7 @@ export const worldContext = (world: World) =>
         generateJitConfig: Effect.fn("FakeGitHub.generateJitConfig")(function* (_token, request) {
           world.jitRequests.push(request);
           if (A.some(world.jitFailures, (name) => Str.endsWith(name)(request.name))) {
-            return yield* GitHubApiError.make({ operation: "jit", status: O.some(500), message: "boom" });
+            return yield* world.jitError;
           }
           const runnerId = 1000 + world.jitRequests.length;
           world.githubRunners.push(

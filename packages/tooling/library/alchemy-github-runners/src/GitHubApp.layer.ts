@@ -52,7 +52,13 @@ const toGitHubApiError =
   (error: { readonly _tag: string; readonly message?: unknown }): GitHubApiError =>
     GitHubApiError.make({
       operation,
-      status: O.fromUndefinedOr(statusByTag[error._tag]),
+      // An unmapped 4xx reaches the client as `UnknownGithubError`, which carries the status itself.
+      status: O.orElse(O.fromUndefinedOr(statusByTag[error._tag]), () =>
+        P.hasProperty(error, "status") && P.isNumber(error.status) && Number.isInteger(error.status)
+          ? O.some(error.status)
+          : O.none()
+      ),
+      code: O.some(error._tag),
       message: P.isString(error.message) ? error.message : error._tag,
     });
 
@@ -278,7 +284,12 @@ export const gitHubRunnersLive = (
             A.findFirst(response.runner_groups, (candidate) => candidate.name === groupName)
           ).pipe(
             Effect.mapError(() =>
-              GitHubApiError.make({ operation: "runnerGroupId", message: `Runner group ${groupName} does not exist` })
+              GitHubApiError.make({
+                operation: "runnerGroupId",
+                // The org answered, without the group: a resend fails the same way.
+                status: O.some(404),
+                message: `Runner group ${groupName} does not exist`,
+              })
             )
           );
           return group.id;

@@ -6,6 +6,7 @@ import {
   LaunchTemplateRef,
   MessageQueue,
   messageQueueLive,
+  ParameterWrite,
   ReleaseAsset,
   RunnerBinaries,
   RunnerFilter,
@@ -155,8 +156,24 @@ describe("live AWS layers over distilled", () => {
         const ssm = yield* SsmStore;
         const found = yield* ssm.get("/p");
         const missing = yield* ssm.get("/missing");
-        yield* ssm.put({ name: "/t/i-1", value: Redacted.make("jit"), secure: true, tags: { InstanceId: "i-1" } });
-        yield* ssm.put({ name: "/c/group", value: Redacted.make("7"), secure: false, tags: {} });
+        yield* ssm.put(
+          ParameterWrite.make({
+            name: "/t/i-1",
+            value: Redacted.make("jit"),
+            secure: true,
+            tier: "Advanced",
+            tags: { InstanceId: "i-1" },
+          })
+        );
+        yield* ssm.put(
+          ParameterWrite.make({
+            name: "/c/group",
+            value: Redacted.make("7"),
+            secure: false,
+            tier: "Standard",
+            tags: {},
+          })
+        );
         yield* ssm.delete("/t/i-1");
         const entries = yield* ssm.listByPath("/t");
         return { found, missing, entries };
@@ -171,7 +188,53 @@ describe("live AWS layers over distilled", () => {
         true,
         true,
       ]);
+      expect([
+        Str.includes('"Tier":"Advanced"')(puts[0] ?? ""),
+        Str.includes('"Tier":"Standard"')(puts[1] ?? ""),
+      ]).toStrictEqual([true, true]);
     })
+  );
+
+  it.effect(
+    "SSM: maps the SDK's tagged errors to a client or transient fault, with the status when the SDK has one",
+    () =>
+      Effect.gen(function* () {
+        const answers: Readonly<Record<string, FakeAnswer>> = {
+          "/validation": {
+            status: 400,
+            body: '{"__type":"ValidationException","message":"1 validation error detected: Value at value failed to satisfy constraint"}',
+            headers: { "content-type": "application/x-amz-json-1.1" },
+          },
+          "/undeclared": {
+            status: 409,
+            body: '{"__type":"SomethingNew","message":"conflict"}',
+            headers: { "content-type": "application/x-amz-json-1.1" },
+          },
+        };
+        const http = new FakeHttp((request) =>
+          A.findFirst(R.toEntries(answers), ([name]) => Str.includes(`"Name":"${name}"`)(request.body)).pipe(
+            O.map(([, answer]) => answer)
+          )
+        );
+        const errors = yield* Effect.gen(function* () {
+          const ssm = yield* SsmStore;
+          return yield* Effect.forEach(
+            R.keys(answers),
+            (name) =>
+              ssm
+                .put(ParameterWrite.make({ name, value: Redacted.make("v"), secure: true, tier: "Advanced", tags: {} }))
+                .pipe(Effect.flip),
+            { concurrency: 1 }
+          );
+        }).pipe(withLive(http));
+        deepStrictEqual(
+          A.map(errors, (error) => [error.code, error.status, error.fault] as const),
+          [
+            [O.some("ValidationException"), O.none(), "client"],
+            [O.some("SomethingNew"), O.some(409), "client"],
+          ]
+        );
+      })
   );
 
   it.effect("EC2: CreateFleet wire request and partial result, inventory filters, tag and terminate", () =>

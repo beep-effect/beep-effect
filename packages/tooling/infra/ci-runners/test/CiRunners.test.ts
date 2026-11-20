@@ -246,6 +246,13 @@ describe("CiRunners production stage", () => {
       const overflow = yield* poolConfig(recorder, "overflow");
       expect(overflow.pool.maximumCount).toBe(2);
       expect(overflow.pool.runnerGroup).toBe("beep-shard-overflow");
+      // Scale-up re-checks a job before launching, and knows the build DLQ for a message a resend cannot launch.
+      expect([
+        heavy.pool.jobQueuedCheck,
+        overflow.pool.jobQueuedCheck,
+        O.isSome(heavy.buildDlqUrl),
+        O.isSome(overflow.buildDlqUrl),
+      ]).toStrictEqual([true, true, true, true]);
       expect(A.filter(declaredNames(recorder), touchesLiveFleet)).toEqual([]);
       // All five production mappings name their function by ARN: scale-up and job-retry of both pools, and the
       // deregister retry. The deploy role conditions every mapping call on lambda:FunctionArn.

@@ -50,9 +50,11 @@ export const liveJobRetry = JobRetryPolicy.make({ maxAttempts: 2, delaySeconds: 
  *
  * **Details**
  *
- * Spot only, `capacity-optimized`, bidirectional label match, ephemeral JIT
- * runners and no job-queued check: the live module's settings
- * (`RunnerPool`'s defaults already equal them).
+ * Spot only, `capacity-optimized`, bidirectional label match and ephemeral
+ * JIT runners: the live module's settings (`RunnerPool`'s defaults already
+ * equal them). Unlike the live module, scale-up asks GitHub whether the job
+ * is still queued before it launches, so a redelivered message of a cancelled
+ * or finished job launches nothing.
  *
  * **Example** (The production overflow pool in the overlap)
  *
@@ -84,6 +86,7 @@ export const toRunnerPool: {
       labels: [pool.label],
       runnerGroup: pool.runnerGroup,
       runnerNamePrefix: pool.runnerNamePrefix,
+      jobQueuedCheck: true,
       jobRetry: pool.jobRetry ? O.some(liveJobRetry) : O.none(),
     })
 );
