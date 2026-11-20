@@ -36,6 +36,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 
@@ -173,6 +174,8 @@ describe("recorded contacts", () => {
         'First Name,Company\nAl"ex,Acme\n',
         'First Name,Company\n"Alex"x,Acme\n',
         'First Name,Company\n"Alex"x",Acme\n',
+        `First Name,Company\n${Str.repeat(1000)("\n")}"Alex"x",Acme\n`,
+        `First Name,Company\n${Str.repeat(1001)("x\n")}"Alex"x",Acme\n`,
       ]) {
         const failure = yield* parseOutlookCsv(input).pipe(Effect.flip);
         expect(failure).toMatchObject({ operation: "contact-parse", reason: "invalid-input" });

@@ -6,7 +6,7 @@
 
 import { Csv } from "@beep/csv/Csv.codec";
 import { CsvWarningFinding } from "@beep/csv/CsvDiagnostic.schema";
-import { CsvCodecOptions } from "@beep/csv/CsvOptions.schema";
+import { CsvCodecOptions, CsvReadOptions } from "@beep/csv/CsvOptions.schema";
 import { CsvRead } from "@beep/csv/CsvRead.schema";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
@@ -34,14 +34,17 @@ const invalid = () => IdentificationError.make({ operation: "contact-parse", rea
 const opt = (s: string) => (Str.isNonEmpty(Str.trim(s)) ? O.some(Str.trim(s)) : O.none());
 const nonempty = (xs: ReadonlyArray<string>) => A.filter(A.map(xs, Str.trim), Str.isNonEmpty);
 // Outlook writes RFC 4180 with commas. The lenient read keeps what the export tolerates (a byte-order mark, blanks
-// after a closing quote), a quote inside an unquoted cell or text after a closing quote is refused, and rows of only
-// empty cells are dropped.
-const isQuoteMisuse = (warning: CsvWarning): boolean =>
+// after a closing quote, blank lines, which it skips); a quote inside an unquoted cell or text after a closing quote is
+// refused, and rows of only empty cells are dropped. A read whose warnings passed the cap is refused too: past it the
+// reader only counts quote findings, so a misused quote could hide behind many ragged rows.
+const outlookRead = CsvReadOptions.make({ ...CsvCodecOptions.default.read, blankLines: "skip" });
+const isRefused = (warning: CsvWarning): boolean =>
   CsvWarningFinding.guards.StrayQuote(warning.finding) ||
-  CsvWarningFinding.guards.TextAfterClosingQuote(warning.finding);
+  CsvWarningFinding.guards.TextAfterClosingQuote(warning.finding) ||
+  CsvWarningFinding.guards.WarningsTruncated(warning.finding);
 const readOutlookRows = (text: string): Effect.Effect<ReadonlyArray<CsvRecord>, IdentificationError> =>
-  Csv.parse(text, CsvCodecOptions.default.read).pipe(
-    Effect.filterOrFail((read) => !A.some(CsvRead.warnings(read), isQuoteMisuse)),
+  Csv.parse(text, outlookRead).pipe(
+    Effect.filterOrFail((read) => !A.some(CsvRead.warnings(read), isRefused)),
     Effect.mapBoth({
       onFailure: invalid,
       onSuccess: (read) => A.filter(read.table.records, A.some(Str.isNonEmpty)),
