@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 Source: [`ops/manifest.json`](./ops/manifest.json)
 
@@ -34,13 +34,21 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+All phases complete. `bun run beep ai-metrics census` runs the census; the reproduction run is the first baseline file.
 
 ## Latest Evidence
 
-2026-11-18 baseline, from the exploration's transcript audit: verification is 19.9% of agent
-turns; agents pipe more than nine in ten verification runs through `tail`, `head` or `grep`; 9% of
-runs are followed by a log dig; tool output measures 2.28 characters per token.
+2026-11-19 reproduction ([history/2026-11-19-reproduction.md](./history/2026-11-19-reproduction.md)):
+the census reproduces the 2026-11-18 audit on its window. 157 of 181 compared rows are within tolerance.
+Each of the other 24 is attributed to a named rule difference in `decisions/`. The run file is
+[`standards/agent-output-census/runs/2026-11-18T11-57-45Z--census-rules-2026-11-18.json`](../../standards/agent-output-census/runs/2026-11-18T11-57-45Z--census-rules-2026-11-18.json).
+Headline rows on that run:
+
+- verification is 19.9% of Claude turns;
+- 92.3% of verification runs are piped through a filter;
+- 0.148 log digs follow each verification run;
+- a verdict costs 1.24 turns;
+- tool output measures 2.30 characters per token.
 
 ## Notes
 

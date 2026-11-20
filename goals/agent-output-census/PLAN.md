@@ -2,24 +2,24 @@
 
 ## Status
 
-Status: `pending`
+Status: `complete`
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Read the transcript modules of `@beep/repo-ai-metrics` and the audit's method; pin the 2026-11-18 window bounds and the repository match rule; settle the module name, the command name inside the `ai-metrics` group, the baseline location and the class rules the audit names by example only. | One decision file per choice; the spec's Target Surfaces still match the library. |
-| P1 Schema | pending | The `agent-output-census/v1` report: corpus row, totals, the closed class domains, every table of `transcript-audit.md`, the headline rows, and the baseline file schema. | AC1 holds; schemas decode synthetic reports. |
-| P2 Census service | pending | A `Context.Service` contract in `@beep/repo-ai-metrics` (enumerate sources for a window, project records, reduce to the report), then its implementation reusing `@beep/jsonl` `Line`, `parseSourceEventTime`, the source literal and the usage projection. | AC2 and AC7 hold over a synthetic Claude and Codex corpus with compaction boundaries, subagents, oversized lines and planted canaries. |
-| P3 Command | pending | The planned `census` subcommand of the repo CLI's `ai-metrics` group: window and root flags, the text tables, `--json`, and writing one baseline file per run. | AC3 and AC6 hold in a render test. |
-| P4 Reproduce | pending | Run the census on the pinned window, compare each row with `transcript-audit.md`, attribute every miss, and commit the baseline file. | AC4 and AC5 hold; the comparison is under `history/`. |
-| P5 Yeet: PR to mergeable | pending | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P6 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P0 Research | complete | Read the transcript modules of `@beep/repo-ai-metrics` and the audit's method; pin the 2026-11-18 window bounds and the repository match rule; settle the module name, the command name inside the `ai-metrics` group, the baseline location and the class rules the audit names by example only. | One decision file per choice; the spec's Target Surfaces still match the library. |
+| P1 Schema | complete | The `agent-output-census/v1` report: corpus row, totals, the closed class domains, every table of `transcript-audit.md`, the headline rows, and the baseline file schema. | AC1 holds; schemas decode synthetic reports. |
+| P2 Census service | complete | A `Context.Service` contract in `@beep/repo-ai-metrics` (enumerate sources for a window, project records, reduce to the report), then its implementation reusing `@beep/jsonl` `Line`, `parseSourceEventTime`, the source literal and the usage projection. | AC2 and AC7 hold over a synthetic Claude and Codex corpus with compaction boundaries, subagents, oversized lines and planted canaries. |
+| P3 Command | complete | The planned `census` subcommand of the repo CLI's `ai-metrics` group: window and root flags, the text tables, `--json`, and writing one baseline file per run. | AC3 and AC6 hold in a render test. |
+| P4 Reproduce | complete | Run the census on the pinned window, compare each row with `transcript-audit.md`, attribute every miss, and commit the baseline file. | AC4 and AC5 hold; the comparison is under `history/`. |
+| P5 Yeet: PR to mergeable | complete | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P6 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Work Breakdown
 
-Two pull requests. The first carries P1 and P2 (library only, synthetic fixtures). The second
-carries P3 and P4 (command, baseline file, comparison). P4 runs on a workstation that holds the
+One pull request carries P1 to P4 and the closeout (decision `one-pull-request`; the plan first
+named two). P4 runs on a workstation that holds the
 window's transcripts; the run reads them in place and writes only the baseline file.
 
 1. P0. Fix the window as two timestamps from the audit's "seven days ending that morning" and the
