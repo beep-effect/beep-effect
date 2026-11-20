@@ -8,9 +8,9 @@
 // A write refuses any sample whose compiler output reports a type error.
 {
   "schemaVersion": "check-census-baseline/v1",
-  "measuredAt": "2026-11-20T05:44:22.070Z",
-  "commit": "e1eec87dbfb6460a08be8d834059ca01d2fdd094",
-  "dirtyWorktree": true,
+  "measuredAt": "2026-11-20T08:43:52.807Z",
+  "commit": "3e9dd241832c9de8caae7cee90cd8503d7fe7067",
+  "dirtyWorktree": false,
   "compiler": "7.0.2+effect-tsgo.0.70.0",
   "command": "bun run tsc -p <tsconfig> --noEmit --extendedDiagnostics --singleThreaded --tsBuildInfoFile <fresh>",
   "checkTimeBandPercent": 5,
@@ -20,21 +20,21 @@
       "tsconfig": "packages/foundation/modeling/schema/tsconfig.json",
       "instantiations": 384017,
       "types": 115898,
-      "checkTimeMs": 606
+      "checkTimeMs": 742
     },
     {
       "name": "@beep/repo-cli",
       "tsconfig": "packages/tooling/tool/cli/tsconfig.json",
-      "instantiations": 8264656,
-      "types": 1840889,
-      "checkTimeMs": 17576
+      "instantiations": 8277840,
+      "types": 1844813,
+      "checkTimeMs": 22178
     },
     {
       "name": "@beep/law-practice-domain",
       "tsconfig": "packages/law-practice/domain/tsconfig.json",
       "instantiations": 1035116,
       "types": 271767,
-      "checkTimeMs": 1890
+      "checkTimeMs": 2561
     }
   ],
   "typeperfFixtures": [
@@ -43,35 +43,35 @@
       "tsconfig": "packages/foundation/modeling/schema/test/fixtures/typeperf/tsconfig.baseline.json",
       "instantiations": 19676,
       "types": 8727,
-      "checkTimeMs": 29
+      "checkTimeMs": 43
     },
     {
       "name": "@beep/schema#typeperf/literal-kit-tagged-union",
       "tsconfig": "packages/foundation/modeling/schema/test/fixtures/typeperf/tsconfig.literal-kit-tagged-union.json",
       "instantiations": 22921,
       "types": 9462,
-      "checkTimeMs": 27
+      "checkTimeMs": 35
     },
     {
       "name": "@beep/schema#typeperf/literal-kit-keyed-api",
       "tsconfig": "packages/foundation/modeling/schema/test/fixtures/typeperf/tsconfig.literal-kit-keyed-api.json",
       "instantiations": 20311,
       "types": 8899,
-      "checkTimeMs": 31
+      "checkTimeMs": 29
     },
     {
       "name": "@beep/schema#typeperf/literal-kit-large-untagged",
       "tsconfig": "packages/foundation/modeling/schema/test/fixtures/typeperf/tsconfig.literal-kit-large-untagged.json",
       "instantiations": 51943,
       "types": 99941,
-      "checkTimeMs": 219
+      "checkTimeMs": 263
     },
     {
       "name": "@beep/schema#typeperf/literal-kit-large-untagged-touched",
       "tsconfig": "packages/foundation/modeling/schema/test/fixtures/typeperf/tsconfig.literal-kit-large-untagged-touched.json",
       "instantiations": 55070,
       "types": 100178,
-      "checkTimeMs": 226
+      "checkTimeMs": 266
     }
   ]
 }
