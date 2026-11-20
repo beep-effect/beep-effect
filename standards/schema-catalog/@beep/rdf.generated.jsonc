@@ -73,7 +73,6 @@
     {"file":"packages/foundation/modeling/rdf/src/ProvRdf.ts","symbol":"ProvRdfCodecError","kind":"tagged-error","owner":"@beep/rdf","identity":"ProvRdfCodecError"},
     {"file":"packages/foundation/modeling/rdf/src/ProvRdf.ts","symbol":"ProvRdfCodecOptions","kind":"struct-const","owner":"@beep/rdf","identity":"ProvRdfCodecOptions","description":"Selects the RDF graph that owns the projected provenance quads."},
     {"file":"packages/foundation/modeling/rdf/src/Rdf.ts","symbol":"BlankNode","kind":"struct-const","owner":"@beep/rdf","identity":"BlankNode","description":"RDF blank node value aligned with RDF/JS."},
-    {"file":"packages/foundation/modeling/rdf/src/Rdf.ts","symbol":"Curie","kind":"brand","owner":"@beep/rdf","identity":"Curie","description":"CURIE-style compact IRI expression."},
     {"file":"packages/foundation/modeling/rdf/src/Rdf.ts","symbol":"Dataset","kind":"struct-const","owner":"@beep/rdf","identity":"Dataset","description":"Dataset wrapper for RDF quads."},
     {"file":"packages/foundation/modeling/rdf/src/Rdf.ts","symbol":"DefaultGraph","kind":"struct-const","owner":"@beep/rdf","identity":"DefaultGraph","description":"RDF default graph term aligned with RDF/JS."},
     {"file":"packages/foundation/modeling/rdf/src/Rdf.ts","symbol":"GraphTerm","kind":"tagged-union","owner":"@beep/rdf"},

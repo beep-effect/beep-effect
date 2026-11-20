@@ -32,7 +32,6 @@ import { ProvBundle } from "@beep/rdf/Prov";
 import {
   areDatasetsEquivalent,
   BlankNode,
-  Curie,
   DefaultGraph,
   GraphTerm,
   LanguageTag,
@@ -48,6 +47,7 @@ import {
   ObjectTerm,
   PrefixLabel,
   PrefixMap,
+  prefixMapFromRegistry,
   Quad,
   Subject,
   serializeQuad,
@@ -144,7 +144,6 @@ const EvidenceAnchorDecodeEffect = S.decodeEffect(EvidenceAnchor);
 const WebAnnotationFromEvidenceAnchorDecodeEffect = S.decodeEffect(WebAnnotationFromEvidenceAnchor);
 const SemanticSchemaMetadataDecodeEffect = S.decodeEffect(SemanticSchemaMetadata);
 const decodeBlankNode = S.decodeUnknownEffect(BlankNode);
-const decodeCurie = S.decodeUnknownEffect(Curie);
 const decodeJsonLdContext = S.decodeUnknownEffect(JsonLdContext);
 const decodeJsonLdDocument = S.decodeUnknownEffect(JsonLdDocument);
 const decodeJsonLdFrame = S.decodeUnknownEffect(JsonLdFrame);
@@ -250,16 +249,10 @@ describe("@beep/rdf RDF term and dataset models", () => {
     Effect.gen(function* () {
       expect(Result.getOrThrow(S.decodeResult(PrefixLabel)("schema"))).toBe("schema");
       expect(Result.getOrThrow(S.decodeResult(PrefixLabel)(""))).toBe("");
-      expect(Result.getOrThrow(S.decodeResult(Curie)("schema:Thing"))).toBe("schema:Thing");
       expect(Result.getOrThrow(S.decodeResult(LanguageTag)("en-US"))).toBe("en-US");
       expect(() => Result.getOrThrow(S.decodeResult(PrefixLabel)("bad prefix"))).toThrow(
         "Prefix labels must be empty for the default prefix or begin with an ASCII letter"
       );
-      const invalidCurie = yield* Effect.exit(decodeCurie("missing-colon"));
-      assertExitFailure(mapFailureTags(invalidCurie), Cause.fail("SchemaError"));
-      if (Exit.isFailure(invalidCurie)) {
-        expect(Cause.pretty(invalidCurie.cause)).toContain("CURIE values must be of the form");
-      }
       expect(() => Result.getOrThrow(S.decodeResult(LanguageTag)("en_US"))).toThrow(
         "Language tags must use alphanumeric subtags"
       );
@@ -368,6 +361,17 @@ describe("@beep/rdf RDF term and dataset models", () => {
       );
     })
   );
+
+  it("builds a prefix map from registry namespaces", () => {
+    expect(prefixMapFromRegistry(["rdf", "skos", "xsd"])).toEqual(
+      decodePrefixMap({
+        rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+        skos: "http://www.w3.org/2004/02/skos/core#",
+        xsd: "http://www.w3.org/2001/XMLSchema#",
+      })
+    );
+    expect(prefixMapFromRegistry([])).toEqual({});
+  });
 });
 
 describe("@beep/rdf JSON-LD models", () => {

@@ -12,7 +12,7 @@ import { OWL_NAMESPACE } from "./generated/Owl.terms.ts";
 /**
  * Generated namespace IRI and term inventory for this vocabulary.
  *
- * Single-sourced from the `@beep/identity` `CoreVocab` registry via
+ * Single-sourced from the `@beep/identity` registry (`RegistryVocab`) via
  * `bun run beep sync-data-to-ts --target vocab-terms`.
  *
  * @category constants

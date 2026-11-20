@@ -16,9 +16,6 @@
       "@beep/identity/internal/generated/Registry.data": [
         "./src/internal/generated/Registry.data.ts"
       ],
-      "@beep/identity/internal/generated/SparTerms": [
-        "./src/internal/generated/SparTerms.ts"
-      ],
       "@beep/identity/internal/schemaStatics": [
         "./src/internal/schemaStatics.ts"
       ]

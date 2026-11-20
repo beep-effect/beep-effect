@@ -1,5 +1,5 @@
-import { CoreVocab } from "@beep/identity";
 import { IRI } from "@beep/identity/Iri";
+import { RegistryVocab } from "@beep/identity/Registry";
 import { OWL_OBJECT_PROPERTY, OWL_TERMS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TERMS, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { SKOS_PREF_LABEL, SKOS_TERMS } from "@beep/rdf/Vocab/Skos";
@@ -21,9 +21,9 @@ describe("effect-ontology RDF vocabulary constants", () => {
     expect(S.is(IRI)(CORE.Mention.value)).toBe(true);
   });
 
-  it("uses generated term inventories backed by identity CoreVocab", () => {
-    expect(RDF_TERMS).toEqual(CoreVocab.rdf.terms);
-    expect(OWL_TERMS).toEqual(CoreVocab.owl.terms);
-    expect(SKOS_TERMS).toEqual(CoreVocab.skos.terms);
+  it("uses generated term inventories backed by the identity registry", () => {
+    expect(RDF_TERMS).toEqual(RegistryVocab.rdf.terms);
+    expect(OWL_TERMS).toEqual(RegistryVocab.owl.terms);
+    expect(SKOS_TERMS).toEqual(RegistryVocab.skos.terms);
   });
 });

@@ -5,8 +5,9 @@
  * @since 0.0.0
  */
 
-import { $ScratchpadId, CoreVocab } from "@beep/identity";
+import { $ScratchpadId } from "@beep/identity";
 import { IRI } from "@beep/identity/Iri";
+import { RegistryVocab } from "@beep/identity/Registry";
 import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import { LiteralKit } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
@@ -333,10 +334,10 @@ const ValidationSettings = S.Struct({
 });
 
 const rdfSettingsPrefixesDefault = {
-  schema: IRI.make(CoreVocab.schema.iri),
-  rdf: IRI.make(CoreVocab.rdf.iri),
-  rdfs: IRI.make(CoreVocab.rdfs.iri),
-  owl: IRI.make(CoreVocab.owl.iri),
+  schema: IRI.make(RegistryVocab.schema.iri),
+  rdf: IRI.make(RegistryVocab.rdf.iri),
+  rdfs: IRI.make(RegistryVocab.rdfs.iri),
+  owl: IRI.make(RegistryVocab.owl.iri),
   xsd: IRI.make(XSD_NAMESPACE),
 };
 const RdfSettings = S.Struct({

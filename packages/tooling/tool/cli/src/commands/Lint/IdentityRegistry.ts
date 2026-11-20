@@ -41,6 +41,7 @@ import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as Result from "effect/Result";
@@ -50,6 +51,7 @@ import { registerMissingWorkspaceIdentityPackages } from "../CreatePackage/inter
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
 import { LabIdentitySegment } from "../CreatePackage/internal/LabIdentitySegment.ts";
 import { checkRegistry, registryPresent, resolveRegistryLayout, writeRegistry } from "../Identity/Registry.ts";
+import type { ImportDeclaration, SourceFile } from "ts-morph";
 import type { LabIdentitySegmentState } from "../CreatePackage/internal/LabIdentitySegment.ts";
 
 const $I = $RepoCliId.create("commands/Lint/IdentityRegistry");
@@ -130,74 +132,80 @@ const isIdentityRootModuleSpecifier = (specifier: string): boolean =>
   specifier !== IDENTITY_PACKAGES_MODULE &&
   (specifier === IDENTITY_PACKAGE_NAME || Str.startsWith(IDENTITY_MODULE_PREFIX)(specifier));
 
+const localRootComposerViolation = (subject: string, call: string): IdentityRegistryViolation =>
+  IdentityRegistryViolation.make({
+    kind: "local-root-composer",
+    subject,
+    detail: `Import the canonical composer from "${IDENTITY_PACKAGES_MODULE}" instead of building a local root via \`${call}(...)\`.`,
+  });
+
+// Value imports of the identity root modules; type-only imports never build a composer.
+const identityRootImports = (sourceFile: SourceFile): ReadonlyArray<ImportDeclaration> =>
+  A.filter(
+    sourceFile.getImportDeclarations(),
+    (declaration) =>
+      !declaration.isTypeOnly() && isIdentityRootModuleSpecifier(declaration.getModuleSpecifier().getLiteralText())
+  );
+
+// `import { make } from "@beep/identity/..."`: each value import of `make` is one violation.
+const namedMakeImportViolations = (
+  filePath: string,
+  declaration: ImportDeclaration
+): ReadonlyArray<IdentityRegistryViolation> =>
+  A.map(
+    A.filter(
+      declaration.getNamedImports(),
+      (namedImport) => namedImport.getName() === "make" && !namedImport.isTypeOnly()
+    ),
+    (namedImport) => localRootComposerViolation(`${filePath}:${namedImport.getStartLineNumber()}`, "make")
+  );
+
+// `<alias>.make(...)` through a namespace import of an identity root module.
+const namespaceMakeCallViolations = (
+  sourceFile: SourceFile,
+  filePath: string,
+  namespaceAliases: A.NonEmptyReadonlyArray<string>
+): ReadonlyArray<IdentityRegistryViolation> => {
+  let violations = A.empty<IdentityRegistryViolation>();
+
+  sourceFile.forEachDescendant((node) => {
+    const expression = Node.isCallExpression(node) ? node.getExpression() : undefined;
+
+    if (!Node.isPropertyAccessExpression(expression) || expression.getName() !== "make") {
+      return;
+    }
+
+    const receiver = expression.getExpression();
+
+    if (Node.isIdentifier(receiver) && A.some(namespaceAliases, Str.equivalence(receiver.getText()))) {
+      violations = A.append(
+        violations,
+        localRootComposerViolation(`${filePath}:${node.getStartLineNumber()}`, `${receiver.getText()}.make`)
+      );
+    }
+  });
+
+  return violations;
+};
+
 const collectLocalRootComposerUses = (
   project: Project,
   filePath: string,
   content: string
 ): ReadonlyArray<IdentityRegistryViolation> => {
   const sourceFile = project.createSourceFile(filePath, content, { overwrite: true });
-  let violations = A.empty<IdentityRegistryViolation>();
-  let namespaceAliases = A.empty<string>();
+  const imports = identityRootImports(sourceFile);
+  const namedViolations = A.flatMap(imports, (declaration) => namedMakeImportViolations(filePath, declaration));
+  const namespaceAliases = A.flatMap(imports, (declaration) =>
+    O.match(O.fromUndefinedOr(declaration.getNamespaceImport()), {
+      onNone: A.empty<string>,
+      onSome: (namespaceImport) => [namespaceImport.getText()],
+    })
+  );
 
-  for (const declaration of sourceFile.getImportDeclarations()) {
-    if (declaration.isTypeOnly()) {
-      continue;
-    }
-
-    const specifier = declaration.getModuleSpecifier().getLiteralText();
-
-    if (!isIdentityRootModuleSpecifier(specifier)) {
-      continue;
-    }
-
-    for (const namedImport of declaration.getNamedImports()) {
-      if (namedImport.getName() === "make" && !namedImport.isTypeOnly()) {
-        violations = A.append(
-          violations,
-          IdentityRegistryViolation.make({
-            kind: "local-root-composer",
-            subject: `${filePath}:${namedImport.getStartLineNumber()}`,
-            detail: `Import the canonical composer from "${IDENTITY_PACKAGES_MODULE}" instead of building a local root via \`make(...)\`.`,
-          })
-        );
-      }
-    }
-
-    const namespaceImport = declaration.getNamespaceImport();
-
-    if (namespaceImport !== undefined) {
-      namespaceAliases = A.append(namespaceAliases, namespaceImport.getText());
-    }
-  }
-
-  if (A.isReadonlyArrayNonEmpty(namespaceAliases)) {
-    sourceFile.forEachDescendant((node) => {
-      if (!Node.isCallExpression(node)) {
-        return;
-      }
-
-      const expression = node.getExpression();
-
-      if (!Node.isPropertyAccessExpression(expression) || expression.getName() !== "make") {
-        return;
-      }
-
-      const receiver = expression.getExpression();
-
-      if (Node.isIdentifier(receiver) && A.some(namespaceAliases, Str.equivalence(receiver.getText()))) {
-        violations = A.append(
-          violations,
-          IdentityRegistryViolation.make({
-            kind: "local-root-composer",
-            subject: `${filePath}:${node.getStartLineNumber()}`,
-            detail: `Import the canonical composer from "${IDENTITY_PACKAGES_MODULE}" instead of building a local root via \`${receiver.getText()}.make(...)\`.`,
-          })
-        );
-      }
-    });
-  }
-
-  return violations;
+  return A.isReadonlyArrayNonEmpty(namespaceAliases)
+    ? A.appendAll(namedViolations, namespaceMakeCallViolations(sourceFile, filePath, namespaceAliases))
+    : namedViolations;
 };
 
 /**

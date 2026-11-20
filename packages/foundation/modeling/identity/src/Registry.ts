@@ -108,6 +108,33 @@ export type RegistryNamespace<P extends RegistryPrefix> = {
 };
 
 /**
+ * A predicate CURIE expanded to its term IRI, with `inverse` set for a `^`-marked (SPARQL inverse-path) predicate.
+ *
+ * **Example** (Check an expanded predicate)
+ *
+ * ```ts import.meta.vitest name="Check an expanded predicate"
+ * import * as O from "effect/Option"
+ * import * as S from "effect/Schema"
+ * import { ExpandedPredicate, expandPredicate } from "@beep/identity/Registry"
+ *
+ * O.exists(expandPredicate("^skos:broader"), S.is(ExpandedPredicate)) // => true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ExpandedPredicate extends S.Opaque<ExpandedPredicate, { readonly brand: unique symbol }>()(
+  S.Struct({
+    inverse: S.Boolean,
+    iri: TermIri,
+  }).pipe(
+    $I.annoteSchema("ExpandedPredicate", {
+      description: "A predicate CURIE expanded to its term IRI and its direction.",
+    })
+  )
+) {}
+
+/**
  * The exact lookups of one registry, generated or built from a table.
  *
  * @category models
@@ -118,8 +145,12 @@ export interface RegistryView {
   readonly bindingOf: (code: string) => O.Option<Term>;
   /** The CURIE of a live term IRI; `None` for any other IRI. */
   readonly contract: (iri: string) => O.Option<string>;
+  /** The namespace the prefix of a CURIE-shaped value names, whether or not its local is a term. */
+  readonly curieNamespace: (value: string) => O.Option<Namespace>;
   /** The live term IRI a CURIE names; `None` for an unregistered prefix or local. */
   readonly expand: (curie: string) => O.Option<TermIri>;
+  /** The term IRI and direction of a forward or `^`-inverse predicate CURIE. */
+  readonly expandPredicate: (predicate: string) => O.Option<ExpandedPredicate>;
   /** The namespace a prefix names. */
   readonly namespaceOf: (prefix: string) => O.Option<Namespace>;
   /** The live term a deprecated IRI is replaced by, following the deprecation chain. */
@@ -172,9 +203,22 @@ const makeView = (data: RegistryData): RegistryView => {
       )
     );
 
+  const expandCurie = (curie: string): O.Option<TermIri> => O.map(HashMap.get(termByCurie, curie), (term) => term.iri);
+
   return {
     namespaceOf: (prefix) => HashMap.get(namespaceByPrefix, prefix),
-    expand: (curie) => O.map(HashMap.get(termByCurie, curie), (term) => term.iri),
+    curieNamespace: (value) =>
+      pipe(
+        Str.indexOf(":")(value),
+        O.flatMap((separator) => HashMap.get(namespaceByPrefix, Str.slice(0, separator)(value)))
+      ),
+    expand: expandCurie,
+    expandPredicate: (predicate) => {
+      const inverse = Str.startsWith("^")(predicate);
+      return O.map(expandCurie(inverse ? Str.slice(1)(predicate) : predicate), (iri) =>
+        ExpandedPredicate.make({ inverse, iri })
+      );
+    },
     contract: (iri) => O.map(HashMap.get(termByIri, iri), curieOf),
     bindingOf: (code) =>
       pipe(
@@ -238,6 +282,31 @@ export const view = (table: RegistryTable): RegistryView => {
   });
 };
 
+/**
+ * Build the registry codec over a bare vocabulary, with no bindings and no deprecations.
+ *
+ * **When to use**
+ *
+ * Use with a composer bound to a vocabulary extension, whose terms are not
+ * all in the generated registry, such as a fixture vocabulary in an ontology
+ * fold test.
+ *
+ * **Example** (Expand over a fixture vocabulary)
+ *
+ * ```ts import.meta.vitest name="Expand over a fixture vocabulary"
+ * import * as O from "effect/Option"
+ * import { fromVocab } from "@beep/identity/Registry"
+ *
+ * const registry = fromVocab({ ex: { iri: "https://example.test/ns#", terms: ["Thing"] } })
+ * O.getOrThrow(registry.expand("ex:Thing")) // => "https://example.test/ns#Thing"
+ * O.isNone(registry.expand("skos:prefLabel")) // => true
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const fromVocab = (vocab: VocabShape): RegistryView => makeView({ vocab, bindings: {}, deprecations: {} });
+
 const generated: RegistryView = /*#__PURE__*/ makeView({
   vocab: RegistryVocab,
   bindings: RegistryBindings,
@@ -292,6 +361,48 @@ export const expand = (curie: string): O.Option<TermIri> => generated.expand(cur
  * @since 0.0.0
  */
 export const contract = (iri: string): O.Option<RegistryCurie> => O.filter(generated.contract(iri), isRegistryCurie);
+
+/**
+ * Expand a forward or `^`-inverse predicate CURIE of the generated registry to its term IRI and direction.
+ *
+ * **Example** (Expand an inverse predicate)
+ *
+ * ```ts import.meta.vitest name="Expand an inverse predicate"
+ * import * as O from "effect/Option"
+ * import { expandPredicate } from "@beep/identity/Registry"
+ *
+ * O.getOrThrow(expandPredicate("^rdfs:subClassOf")).inverse // => true
+ * O.getOrThrow(expandPredicate("rdfs:subClassOf")).iri // => "http://www.w3.org/2000/01/rdf-schema#subClassOf"
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const expandPredicate = (predicate: string): O.Option<ExpandedPredicate> => generated.expandPredicate(predicate);
+
+/**
+ * The namespace the prefix of a CURIE-shaped value names in the generated registry.
+ *
+ * **Details**
+ *
+ * Only the prefix is looked up, so `rdfs:notATerm` still names the `rdfs`
+ * namespace. Use it to tell a CURIE under a registered prefix from an
+ * absolute IRI such as `urn:x`.
+ *
+ * **Example** (Look up the namespace of a CURIE)
+ *
+ * ```ts import.meta.vitest name="Look up the namespace of a CURIE"
+ * import * as O from "effect/Option"
+ * import { curieNamespace } from "@beep/identity/Registry"
+ *
+ * O.map(curieNamespace("rdfs:notATerm"), (namespace) => namespace.prefix) // => O.some("rdfs")
+ * O.isNone(curieNamespace("urn:example:x")) // => true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const curieNamespace = (value: string): O.Option<Namespace> => generated.curieNamespace(value);
 
 /**
  * The namespace a prefix names in the generated registry.

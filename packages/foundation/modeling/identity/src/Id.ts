@@ -43,7 +43,8 @@ import type { TString } from "@beep/types";
 import type { PayloadEncoding } from "effect/http-api/HttpApiSchema";
 import type { Get, Paths } from "type-fest";
 import type { IdentityAuthority } from "./Authority.ts";
-import type { CoreVocab, Predicate, VocabShape } from "./Vocab.ts";
+import type { RegistryVocab } from "./internal/generated/Registry.data.ts";
+import type { Predicate, VocabShape } from "./Vocab.ts";
 
 const BeepNamespace = S.Literal("@beep");
 type BeepNamespace = typeof BeepNamespace.Type;
@@ -53,6 +54,9 @@ type BeepBase = typeof BeepBase.Type;
 
 type DefaultIdentityAuthority = typeof IdentityAuthority;
 type DefaultIdentityPrefix = "beep";
+// The composer's vocabulary defaults to the generated identity registry. A type-only import, so
+// the composer never loads the registry data at runtime.
+type DefaultVocab = typeof RegistryVocab;
 
 const isBeepNamespace = S.is(BeepNamespace);
 const isBeepBase = S.is(BeepBase);
@@ -681,7 +685,7 @@ export type SkosClassification = "concept" | "conceptScheme";
  * @since 0.0.0
  * @category models
  */
-export type OntologyKeyOptions<Vocab extends VocabShape = CoreVocab> = Omit<
+export type OntologyKeyOptions<Vocab extends VocabShape = DefaultVocab> = Omit<
   KeyAnnotationExtras<unknown>,
   "identifier" | "schemaId" | "iri" | "curie"
 > & {
@@ -922,7 +926,7 @@ export type TaggedModuleRecord<
   Segments extends ReadonlyArray<TString.NonEmpty>,
   Authority extends string | undefined = DefaultIdentityAuthority,
   Prefix extends string | undefined = DefaultIdentityPrefix,
-  Vocab extends VocabShape = CoreVocab,
+  Vocab extends VocabShape = DefaultVocab,
 > = {
   readonly [K in Segments[number] as TaggedAccessor<K>]: IdentityComposer<
     `${Value}/${ModuleSegmentValue<K>}`,
@@ -984,7 +988,7 @@ export interface IdentityComposer<
   Value extends string,
   Authority extends string | undefined = DefaultIdentityAuthority,
   Prefix extends string | undefined = DefaultIdentityPrefix,
-  Vocab extends VocabShape = CoreVocab,
+  Vocab extends VocabShape = DefaultVocab,
 > {
   /**
    * Produce an identity annotation record for an Effect schema.
@@ -1451,16 +1455,16 @@ export interface IdentityComposer<
   /**
    * The vocabulary registry supplied at binding time, or `undefined` when the
    * composer is unbound or bound without a vocabulary extension (consumers
-   * default to the core registry).
+   * default to the generated identity registry).
    *
    * **Example** (Read the bound vocabulary)
    *
    * ```ts import.meta.vitest name="Read the bound vocabulary"
-   * import { CoreVocab } from "@beep/identity/Vocab"
+   * import { RegistryVocab } from "@beep/identity/Registry"
    * import { make } from "@beep/identity/Id"
    *
-   * const { $BeepId } = make("beep", { authority: "https://beep-effect.com/ns/", prefix: "beep", vocab: CoreVocab })
-   * $BeepId.vocabRegistry === CoreVocab // => true
+   * const { $BeepId } = make("beep", { authority: "https://beep-effect.com/ns/", prefix: "beep", vocab: RegistryVocab })
+   * $BeepId.vocabRegistry === RegistryVocab // => true
    * ```
    *
    * @since 0.0.0
@@ -2033,7 +2037,7 @@ type MakeReturn<
   Base extends TString.NonEmpty,
   Authority extends string | undefined = DefaultIdentityAuthority,
   Prefix extends string | undefined = DefaultIdentityPrefix,
-  Vocab extends VocabShape = CoreVocab,
+  Vocab extends VocabShape = DefaultVocab,
 > = {
   readonly [K in `$${PascalCaseValue<ModuleSegmentValue<NormalizedBase<Base>>>}Id`]: IdentityComposer<
     BaseIdentity<Base>,
@@ -2080,7 +2084,7 @@ type MakeReturn<
  * @category constructors
  */
 export const make: {
-  <const Authority extends string, const Prefix extends string, const Vocab extends VocabShape = CoreVocab>(
+  <const Authority extends string, const Prefix extends string, const Vocab extends VocabShape = DefaultVocab>(
     options: IdentityBinding<Authority, Prefix, Vocab>
   ): <const Base extends TString.NonEmpty>(base: Base) => MakeReturn<Base, Authority, Prefix, Vocab>;
   <const Base extends TString.NonEmpty>(base: Base): MakeReturn<Base, undefined, undefined>;
@@ -2088,7 +2092,7 @@ export const make: {
     const Base extends TString.NonEmpty,
     const Authority extends string,
     const Prefix extends string,
-    const Vocab extends VocabShape = CoreVocab,
+    const Vocab extends VocabShape = DefaultVocab,
   >(
     base: Base,
     options: IdentityBinding<Authority, Prefix, Vocab>
@@ -2099,7 +2103,7 @@ export const make: {
     const Base extends TString.NonEmpty,
     const Authority extends string,
     const Prefix extends string,
-    const Vocab extends VocabShape = CoreVocab,
+    const Vocab extends VocabShape = DefaultVocab,
   >(
     base: Base,
     options?: IdentityBinding<Authority, Prefix, Vocab>

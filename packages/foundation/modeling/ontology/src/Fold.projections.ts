@@ -11,7 +11,8 @@
  * @since 0.0.0
  */
 
-import { CoreVocab, contractOption, prefixedNameOrIri } from "@beep/identity";
+import { prefixedNameOrIri } from "@beep/identity";
+import { contract, namespace } from "@beep/identity/Registry";
 import { O as OU } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -151,11 +152,11 @@ const SKOS_CONCEPT_SCHEME = "http://www.w3.org/2004/02/skos/core#ConceptScheme";
 type CorePrefix = { readonly prefix: string; readonly iri: string };
 
 const corePrefixes: ReadonlyArray<CorePrefix> = [
-  { prefix: "dcterms", iri: CoreVocab.dcterms.iri },
-  { prefix: "owl", iri: CoreVocab.owl.iri },
-  { prefix: "rdf", iri: CoreVocab.rdf.iri },
-  { prefix: "rdfs", iri: CoreVocab.rdfs.iri },
-  { prefix: "skos", iri: CoreVocab.skos.iri },
+  namespace("dcterms"),
+  namespace("owl"),
+  namespace("rdf"),
+  namespace("rdfs"),
+  namespace("skos"),
 ];
 
 const withNamespaceSeparator = (iri: string): string =>
@@ -164,7 +165,9 @@ const withNamespaceSeparator = (iri: string): string =>
 const localFromNamespace = (namespace: string, iri: string): O.Option<string> =>
   pipe(iri, Str.startsWith(namespace)) ? O.some(pipe(iri, Str.slice(Str.length(namespace)))) : O.none();
 
-const compactCore = (iri: string): O.Option<string> => contractOption(iri, CoreVocab);
+// Only a namespace the Turtle header declares compacts, so every printed prefixed name resolves.
+const compactCore = (iri: string): O.Option<string> =>
+  O.filter(contract(iri), (curie) => A.some(corePrefixes, (core) => Str.startsWith(`${core.prefix}:`)(curie)));
 
 const compactOwned = (ontology: AssembledOntology, iri: string): O.Option<string> =>
   pipe(

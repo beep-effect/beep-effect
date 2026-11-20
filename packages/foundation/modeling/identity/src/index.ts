@@ -30,21 +30,6 @@
  */
 export * from "./Authority.ts";
 /**
- * CURIE expansion, contraction, and schema codecs for identity vocabularies.
- *
- * **Example** (Expand CURIE to IRI)
- *
- * ```ts
- * import { expand } from "@beep/identity/Curie"
- *
- * console.log(expand("skos:prefLabel"))
- * ```
- *
- * @category codecs
- * @since 0.0.0
- */
-export * from "./Curie.ts";
-/**
  * Discrete fiber families with schema-validated section metadata.
  *
  * **Example** (Build a single-point family)
@@ -166,17 +151,19 @@ export * from "./packages.ts";
  */
 export * from "./Term.ts";
 /**
- * Static borrowed vocabulary registry and literal CURIE type helpers.
+ * Literal CURIE, predicate and IRI type helpers over a vocabulary shape.
  *
- * **Example** (Read core vocab IRI)
+ * **Example** (Type a CURIE over the registry)
  *
  * ```ts
- * import { CoreVocab } from "@beep/identity/Vocab"
+ * import type { RegistryVocab } from "@beep/identity/Registry"
+ * import type { Curie } from "@beep/identity/Vocab"
  *
- * console.log(CoreVocab.rdf.iri)
+ * const curie: Curie<typeof RegistryVocab> = "rdfs:label"
+ * console.log(curie)
  * ```
  *
- * @category constants
+ * @category type-level
  * @since 0.0.0
  */
 export * from "./Vocab.ts";

@@ -4,7 +4,6 @@
   "generatedBy": "bun run beep lint schema-catalog --write",
   "owner": "@beep/identity",
   "entries": [
-    {"file":"packages/foundation/modeling/identity/src/Curie.ts","symbol":"CurieFromIri","kind":"codec","owner":"@beep/identity","identity":"CurieFromIri","description":"Codec that decodes CoreVocab CURIEs to finite CoreVocab IRIs and encodes them back."},
     {"file":"packages/foundation/modeling/identity/src/Id.ts","symbol":"BaseIdentityInput","kind":"codec","owner":"@beep/identity"},
     {"file":"packages/foundation/modeling/identity/src/Id.ts","symbol":"IdentityInterpolationError","kind":"tagged-error","owner":"@beep/identity"},
     {"file":"packages/foundation/modeling/identity/src/Id.ts","symbol":"IdentitySegmentCountError","kind":"tagged-error","owner":"@beep/identity"},
@@ -20,6 +19,7 @@
     {"file":"packages/foundation/modeling/identity/src/PnLocal.ts","symbol":"SafePnLocal","kind":"codec","owner":"@beep/identity"},
     {"file":"packages/foundation/modeling/identity/src/PnLocal.ts","symbol":"SafePnPrefix","kind":"codec","owner":"@beep/identity"},
     {"file":"packages/foundation/modeling/identity/src/Registry.ts","symbol":"CurieFromIri","kind":"codec","owner":"@beep/identity","identity":"CurieFromIri","description":"Codec between a registry CURIE and the live term IRI it names."},
+    {"file":"packages/foundation/modeling/identity/src/Registry.ts","symbol":"ExpandedPredicate","kind":"struct-const","owner":"@beep/identity","identity":"ExpandedPredicate","description":"A predicate CURIE expanded to its term IRI and its direction."},
     {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"CodeId","kind":"brand","owner":"@beep/identity","identity":"CodeId","description":"A code-path identity for a kind."},
     {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"Deprecation","kind":"struct-const","owner":"@beep/identity","identity":"Deprecation","description":"A term deprecation with its optional successor."},
     {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"Namespace","kind":"struct-const","owner":"@beep/identity","identity":"Namespace","description":"A registry namespace: prefix and IRI."},
@@ -32,8 +32,6 @@
     {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"TermBinding","kind":"struct-const","owner":"@beep/identity","identity":"TermBinding","description":"Data-table binding from a code identity to a published term IRI."},
     {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"TermIri","kind":"brand","owner":"@beep/identity","identity":"TermIri","description":"A registry-declared term IRI."},
     {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"TermLocal","kind":"brand","owner":"@beep/identity","identity":"TermLocal","description":"The local name of a declared term."},
-    {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"TermSnapshot","kind":"struct-const","owner":"@beep/identity","identity":"TermSnapshot","description":"Snapshot of the published term set (L0-3)."},
-    {"file":"packages/foundation/modeling/identity/src/Vocab.ts","symbol":"VocabEntry","kind":"struct-const","owner":"@beep/identity","identity":"VocabEntry","description":"One namespace IRI and term list inside an identity vocabulary registry."},
-    {"file":"packages/foundation/modeling/identity/src/Vocab.ts","symbol":"VocabRegistry","kind":"schema-const","owner":"@beep/identity"}
+    {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"TermSnapshot","kind":"struct-const","owner":"@beep/identity","identity":"TermSnapshot","description":"Snapshot of the published term set (L0-3)."}
   ]
 }

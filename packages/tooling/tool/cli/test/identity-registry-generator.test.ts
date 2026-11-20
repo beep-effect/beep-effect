@@ -1,6 +1,6 @@
 import { IdentityAuthority } from "@beep/identity/Authority";
+import { RegistryVocab } from "@beep/identity/Registry";
 import { RegistryShard, RegistryTable, TermSnapshot } from "@beep/identity/Term";
-import { SparVocab } from "@beep/identity/Vocab";
 import { identityCommand } from "@beep/repo-cli/commands/Identity";
 import {
   driftIssues,
@@ -204,7 +204,7 @@ const decodeShardJson = S.decodeUnknownResult(S.fromJsonString(RegistryShard));
 
 it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
   describe("the committed identity registry", () => {
-    it.effect("regenerates to the committed bytes and keeps every mergeVocab(CoreVocab, SparTerms) namespace", () =>
+    it.effect("regenerates to the committed bytes and to the generated RegistryVocab", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -226,16 +226,8 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             ),
           { concurrency: 1 }
         );
-        // SparVocab is mergeVocab(CoreVocab, SparTerms); commit 9 of P1 adds the pinned namespaces and
-        // sh and void beside it, and commit 10 deletes SparVocab and this check.
         const vocab = RegistryTable.fromShards(shards).pipe(Result.getOrThrow, registryVocabOf);
-        const added = ["as", "gufo", "nif", "oa", "prov", "sh", "void", "xsd"];
-        expect(A.sort(R.keys(vocab), Order.String)).toStrictEqual(
-          A.sort([...R.keys(SparVocab), ...added], Order.String)
-        );
-        for (const [prefix, entry] of R.toEntries(SparVocab)) {
-          expect(vocab[prefix], prefix).toStrictEqual({ iri: entry.iri, terms: A.sort(entry.terms, Order.String) });
-        }
+        expect(vocab).toStrictEqual(RegistryVocab);
       })
     );
   });
