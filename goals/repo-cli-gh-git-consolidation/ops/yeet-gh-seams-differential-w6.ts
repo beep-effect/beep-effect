@@ -75,6 +75,7 @@ import {
   readYeetReviewWindow,
   renderYeetReviewWindow,
 } from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/ReviewWindow.ts";
+import { SquashCommitMessage } from "../../../packages/tooling/tool/cli/src/commands/Yeet/internal/SquashCommitlint.ts";
 import {
   GhPrView,
   layerGithubRest,
@@ -1041,7 +1042,14 @@ const program = Effect.gen(function* () {
       name,
       world: world as World,
       old: oldMergeAtHead(context, { number: PR }, { value: HEAD }, noWait),
-      new: mergeYeetPullRequestAtHead(PR, HEAD, noWait),
+      // Since the squash-title fix (#3441 follow-up) the shipped merge takes the linted message and reads the PR
+      // once before its PUT; that read is a later change than W6 and consumes this world's first pull read.
+      new: mergeYeetPullRequestAtHead(
+        PR,
+        HEAD,
+        SquashCommitMessage.make({ header: `feat(w6): ship (#${PR})`, body: "" }),
+        noWait
+      ),
       projectOld: (view: { readonly number: number; readonly state: string }) => [view.number, view.state],
       projectNew: (view: { readonly number: number; readonly state: string }) => [view.number, view.state],
       ...(classified === undefined ? {} : { classified }),

@@ -546,8 +546,31 @@ describe("offline owner checkpoint", () => {
             merge_method: "squash",
             sha: head,
             bypass_rules: false,
+            commit_title: "feat: fixed fixture (#42)",
           });
           expect(A.filter(github.calls, (call) => call.path === "{repo}/git/ref/heads/main")).toHaveLength(1);
+        })
+      )
+    );
+  });
+  it.effect("refuses before the dispatch fence when the live title cannot fit the squash header", () => {
+    const github = mergeGithub((call) =>
+      call.method === "PUT"
+        ? { body: { status: "merged", details: { message: "Pull request was merged.", sha: merge } } }
+        : { body: { ...livePull(), title: `feat: ${Str.repeat(95)("x")}` } }
+    );
+    return github.provide(
+      inMemory(
+        Effect.gen(function* () {
+          yield* TestClock.setTime(ms);
+          const store = yield* claimedStore;
+          const error = yield* Effect.flip(
+            dispatchOwnerCheckpointMerge(store, binding, 2, snapshot(-10, true), policy)
+          );
+          expect(error.reason).toBe("gate");
+          expect(A.filter(github.calls, (call) => call.method === "PUT")).toHaveLength(0);
+          const found = yield* store.read(binding);
+          expect(O.getOrThrow(found).state._tag).toBe("Claimed");
         })
       )
     );

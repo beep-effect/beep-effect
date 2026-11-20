@@ -105,7 +105,9 @@ import {
   readSquashCommitlint,
   renderSquashCommitlintVerdict,
   SquashCommitlintReport,
+  SquashCommitMessage,
   SquashPullRequestFacts,
+  squashTitleDrift,
 } from "./SquashCommitlint.ts";
 import { yeetStackRulesBranch } from "./Stack.ts";
 import {
@@ -565,6 +567,7 @@ export const MergeGateHoldReason = LiteralKit([
   "threads-unresolved",
   "merge-failed",
   "merge-unsettled",
+  "title-changed",
   "stack-unknown",
   "stack-too-deep",
   "stack-below-top",
@@ -1674,7 +1677,9 @@ const enforceMergeGateReviewer = (prNumber: number, headSha: string) =>
  *
  * The `sha` field makes GitHub refuse server-side when the head moved between
  * the read and the merge, before or after it accepts the request, so a push
- * landing in that window is never merged sight-unseen.
+ * landing in that window is never merged sight-unseen. The title has no such
+ * pin, so the pull request is read again just before the request and a title
+ * that no longer yields the linted header holds as `title-changed`.
  *
  * **Example** (Build the merge effect)
  *
@@ -1695,6 +1700,14 @@ export const executeMergeGate = Effect.fn("Yeet.executeMergeGate")(function* (
   ChildProcessSpawner.ChildProcessSpawner | SecureRandom.SecureRandom | GithubRest | FileSystem.FileSystem
 > {
   yield* enforceMergeGateReviewer(decision.prNumber, decision.headSha);
+  // The title read fresh at merge time must still yield the linted header (#3441).
+  const fresh = yield* readMergeGatePull(decision.prNumber);
+  const drift = squashTitleDrift(
+    SquashCommitMessage.make({ header: decision.commitTitle, body: decision.commitMessage }),
+    decision.prNumber,
+    fresh.title
+  );
+  if (O.isSome(drift)) return hold(decision.prNumber, "title-changed", drift.value);
   const bypassRequested = mergeGateRequestsBypass(decision);
   // Send the exact header/body whose commitlint verdict admitted this decision.
   const settled = yield* settleYeetMerge(
