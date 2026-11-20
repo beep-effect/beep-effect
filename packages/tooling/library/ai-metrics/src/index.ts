@@ -33,6 +33,31 @@ export * from "./agent-effectiveness.ts";
  */
 export * from "./archive.ts";
 /**
+ * The agent output census: a service that reads local Claude Code and Codex transcripts for one
+ * repository and window and folds them into an aggregate report. Examples live on the owning
+ * declarations in `./census.ts`.
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export * from "./census.ts";
+/**
+ * The `agent-output-census/v1` report and baseline file schemas. Examples live on the owning
+ * declarations in `./census-report.ts`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./census-report.ts";
+/**
+ * The census class domains and their matching rules, kept as data under one rule version. Examples
+ * live on the owning declarations in `./census-rules.ts`.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./census-rules.ts";
+/**
  * Machine-wide agent command circuit-breaker schemas and shared state paths.
  * Examples live on the owning declarations in `./circuit-breaker.ts`.
  *

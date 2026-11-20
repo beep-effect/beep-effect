@@ -7,6 +7,10 @@
   "instruments": [],
   "spans": [
     {"name":"AIMetrics.attachForwarderOtlpExport","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"AIMetrics.census.home","owner":"@beep/repo-cli","family":"tooling","conforms":false},
+    {"name":"AIMetrics.census.root","owner":"@beep/repo-cli","family":"tooling","conforms":false},
+    {"name":"AIMetrics.census.window","owner":"@beep/repo-cli","family":"tooling","conforms":false},
+    {"name":"AIMetrics.census.writeBaseline","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"AIMetrics.collectJsonlInputFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"AIMetrics.confirmRetentionMutation","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"AIMetrics.defaultServiceEndpoint","owner":"@beep/repo-cli","family":"tooling","conforms":true},
@@ -20,6 +24,7 @@
     {"name":"AIMetrics.makeBenchmarkCaseListProgram","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"AIMetrics.makeBenchmarkCompareProgram","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"AIMetrics.makeBenchmarkRunProgram","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"AIMetrics.makeCensusProgram","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"AIMetrics.makeCommandInstallInput","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"AIMetrics.makeCommandInstallSpec","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"AIMetrics.makeConfigSnapshotProgram","owner":"@beep/repo-cli","family":"tooling","conforms":true},
