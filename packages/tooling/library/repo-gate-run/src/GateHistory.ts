@@ -27,8 +27,9 @@ const $I = $RepoGateRunId.create("GateHistory");
 
 /**
  * What history says about a report: a label per item, keyed by the item
- * key's fingerprint, and the delta since the previous run of the same gate
- * and subject.
+ * key's fingerprint, the delta since the previous run of the same gate
+ * and subject, and why the main baseline is absent when it is, which the
+ * console says once.
  *
  * **Example** (Build an empty answer)
  *
@@ -45,9 +46,11 @@ export class HistoryAnswer extends S.Opaque<HistoryAnswer, { readonly brand: uni
   S.Struct({
     labels: S.Record(S.String, HistoryLabel).pipe(S.withConstructorDefault(Effect.succeed({}))),
     delta: S.OptionFromOptionalKey(RunDelta).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    baseline: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("HistoryAnswer", {
-      description: "History labels by item fingerprint and the delta since the previous run.",
+      description:
+        "History labels by item fingerprint, the delta since the previous run, and why the main baseline is absent.",
     })
   )
 ) {}

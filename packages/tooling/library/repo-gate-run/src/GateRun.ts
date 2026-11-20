@@ -309,7 +309,10 @@ const readHistory = (history: GateHistoryShape, report: GateReport, deadlineMs: 
     Effect.map(
       O.match({
         onNone: () => withoutHistory(`no answer within ${formatDuration(deadlineMs)}`),
-        onSome: (answer): HistoryRead => ({ answer, omission: O.none() }),
+        onSome: (answer): HistoryRead => ({
+          answer,
+          omission: O.flatMap(answer.baseline, (reason) => Omission.makeOption({ part: "baseline", reason })),
+        }),
       })
     ),
     // A history failure or a defect alike leaves the console without labels and delta.

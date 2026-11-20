@@ -481,7 +481,56 @@ export class DeltaRun extends S.Opaque<DeltaRun, { readonly brand: unique symbol
 ) {}
 
 /**
- * The delta's view of a report: its unit ids and its failed items.
+ * The checked unit an item is counted under: its own unit when the report
+ * declares it, else the report's one package unit when it declares exactly
+ * one (a check gate declares the package and hangs its diagnostics off their
+ * files), else the item's own unit.
+ *
+ * **Example** (A diagnostic under its package)
+ *
+ * ```ts
+ * import { GateReport, Totals, Unit } from "@beep/gate-report/GateReport";
+ * import { checkedUnitOf } from "@beep/gate-report/History";
+ * import { Item } from "@beep/gate-report/Item";
+ * import { ItemKey } from "@beep/gate-report/ItemKey";
+ * import * as DateTime from "effect/DateTime";
+ *
+ * const report = GateReport.make({
+ *   gate: "check", subject: "@beep/glob", itemKind: "diagnostic", runId: "r1",
+ *   startedAt: DateTime.makeUnsafe(0), durationMs: 0, inputFingerprint: "x",
+ *   reason: "failed", outcome: "some-fail", units: [Unit.make({ id: "@beep/glob", kind: "package" })],
+ *   items: [], totals: Totals.make({}),
+ * });
+ * const item = Item.make({
+ *   key: ItemKey.cases.DiagnosticKey.make({ file: "src/a.ts", code: "TS2322", shape: "x" }),
+ *   unit: "src/a.ts", path: [], name: "x", outcome: "failed",
+ * });
+ * console.log(checkedUnitOf(report, item)); // @beep/glob
+ * ```
+ *
+ * @param report - the run the item belongs to
+ * @param item - the item to place
+ * @returns the id of the checked unit the item counts under
+ * @category utilities
+ * @since 0.0.0
+ */
+export const checkedUnitOf: {
+  (report: GateReport, item: Item): string;
+  (item: Item): (report: GateReport) => string;
+} = dual(2, (report: GateReport, item: Item): string => {
+  if (A.some(report.units, (unit) => unit.id === item.unit)) return item.unit;
+  return pipe(
+    A.filter(report.units, (unit) => unit.kind === "package"),
+    O.liftPredicate((packages) => packages.length === 1),
+    O.flatMap(A.head),
+    O.match({ onNone: () => item.unit, onSome: (unit) => unit.id })
+  );
+});
+
+/**
+ * The delta's view of a report: the units it checked (those it declares and
+ * those its items hang off) and its failed items, each under
+ * {@link checkedUnitOf}.
  *
  * **Example** (Read a report)
  *
@@ -505,11 +554,14 @@ export class DeltaRun extends S.Opaque<DeltaRun, { readonly brand: unique symbol
  */
 export const deltaRunOf = (report: GateReport): DeltaRun =>
   DeltaRun.make({
-    units: A.map(report.units, (unit) => unit.id),
+    units: A.dedupe([
+      ...A.map(report.units, (unit) => unit.id),
+      ...A.map(report.items, (item) => checkedUnitOf(report, item)),
+    ]),
     failed: pipe(
       report.items,
       A.filter((item) => item.outcome === "failed"),
-      A.map((item) => DeltaFailure.make({ fingerprint: fingerprint(item.key), unit: item.unit }))
+      A.map((item) => DeltaFailure.make({ fingerprint: fingerprint(item.key), unit: checkedUnitOf(report, item) }))
     ),
   });
 

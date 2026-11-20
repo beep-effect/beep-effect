@@ -5,6 +5,7 @@
 import { RunDelta } from "@beep/gate-report/ConsoleDocument";
 import { Unit } from "@beep/gate-report/GateReport";
 import {
+  checkedUnitOf,
   classifyItem,
   DeltaFailure,
   DeltaRun,
@@ -318,6 +319,17 @@ describe("deltaOf (AC-H6)", () => {
     const item = testItem({ name: "adds", outcome: "failed" });
     const run = deltaRunOf(makeReport({ items: [item, testItem({ name: "subtracts", outcome: "passed" })] }));
     assert.deepStrictEqual(run.failed, [failure(fingerprint(item.key), FILE)]);
+  });
+});
+
+describe("checkedUnitOf", () => {
+  const item = testItem({ name: "adds", outcome: "failed" });
+  const pkg = (id: string) => Unit.make({ id, kind: "package" });
+
+  it("keeps a declared unit, else the one package unit, else the item's unit", () => {
+    assert.strictEqual(checkedUnitOf(makeReport({ units: [Unit.make({ id: FILE, kind: "file" })] }), item), FILE);
+    assert.strictEqual(checkedUnitOf(makeReport({ units: [pkg("@beep/glob")] }), item), "@beep/glob");
+    assert.strictEqual(checkedUnitOf(item)(makeReport({ units: [pkg("@beep/a"), pkg("@beep/b")] })), FILE);
   });
 });
 
