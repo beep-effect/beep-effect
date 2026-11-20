@@ -644,6 +644,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         handler: "handler",
         functionUrl: false,
         timeout: Duration.minutes(5),
+        // Lambda's 128 MB default left 8 MB free (peak 120 MB, 2026-11-20); its work grows with the token count.
+        memorySize: 256,
         logging,
         env: {
           [runtimeConfigEnvName]: yield* encodeHousekeeper(
@@ -734,6 +736,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         handler: "handler",
         functionUrl: false,
         timeout: Duration.seconds(60),
+        // Lambda's 128 MB default left 2 MB free (peak 126 MB over 1,186 runs, 2026-11-20).
+        memorySize: 256,
         logging,
         env: { [runtimeConfigEnvName]: watcherConfig },
       });
