@@ -3458,6 +3458,162 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
     })
   );
 
+  // The closure compare and re-record steps' own scripts, run against stub `gh` and `bun` with real bash
+  // and jq. The compare step takes the newest `beep-ci-*` release by createdAt, never GitHub's Latest
+  // flag (which sat on an older release, beep-ci-f9982f3b5e65). A byte-identical re-record keeps the
+  // superseded manifest as `beep-linux-x64.closure.<digest>.json` before it replaces
+  // `beep-linux-x64.closure.json`, names that digest in the notes, never clobbers an archive, and fails
+  // closed when the earlier manifest cannot be read (run 44631311634 overwrote it on beep-ci-7e2128d77b29).
+  it.effect("selects the newest release by createdAt and keeps the superseded closure on a re-record", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const workflowText = yield* fs.readFileString(`${root}/.github/workflows/beep-ci-binary.yml`);
+      const jobs = yield* workflowJobs(parseWorkflowYaml(workflowText));
+      const steps = jobSteps(jobs, "publish");
+      const compare = stepRun(steps, "Compare the closure digest with the latest release");
+      const rerecord = stepRun(steps, "Re-record the closure digest on the byte-identical release");
+      for (const script of [compare, stepRun(steps, "Rewrite the pin to the newest release")]) {
+        expect(script).not.toMatch(/isLatest|releases\/latest/u);
+      }
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const searchPath = yield* Config.String("PATH");
+      const oldDigest = A.join(A.replicate("a", 64), "");
+      const newDigest = A.join(A.replicate("b", 64), "");
+      const archive = `beep-linux-x64.closure.${oldDigest}.json`;
+      const runStep = Effect.fnUntraced(function* (script: string, env: Readonly<Record<string, string>>) {
+        const scratch = yield* fs.makeTempDirectoryScoped();
+        const work = yield* fs.realPath(scratch);
+        yield* fs.makeDirectory(`${work}/bin`);
+        yield* fs.makeDirectory(`${work}/dist`);
+        yield* fs.makeDirectory(`${work}/uploaded`);
+        yield* fs.makeDirectory(`${work}/tmp`);
+        yield* fs.writeFileString(`${work}/dist/beep-linux-x64.closure.json`, `{"digest":"${newDigest}"}\n`);
+        yield* fs.writeFileString(
+          `${work}/bin/gh`,
+          A.join(
+            [
+              "#!/usr/bin/env bash",
+              "set -euo pipefail",
+              'args=("$@"); jq_expr=""; dir=""; pattern=""',
+              "for ((i = 0; i < ${#args[@]}; i++)); do",
+              '  case "${args[$i]}" in',
+              '    --jq) jq_expr="${args[$((i + 1))]}" ;;',
+              '    --dir) dir="${args[$((i + 1))]}" ;;',
+              '    --pattern) pattern="${args[$((i + 1))]}" ;;',
+              "  esac",
+              "done",
+              'case "$1 $2" in',
+              '  "release list") printf "%s" "$RELEASES" | jq -r "$jq_expr" ;;',
+              '  "release view")',
+              '    if [[ "$*" == *"--json assets"* ]]; then printf "%s" "$ASSETS"; else echo "Earlier notes."; fi ;;',
+              '  "release download")',
+              '    echo "download $3" >> "$CALLS"',
+              '    if [[ "$DOWNLOAD_FAIL" == 1 ]]; then exit 1; fi',
+              '    mkdir -p "$dir" && printf "%s" "$EARLIER_CLOSURE" > "$dir/$pattern" ;;',
+              '  "release upload")',
+              '    echo "upload $(basename "$4")${5:+ $5}" >> "$CALLS"',
+              '    cp "$4" "$UPLOADED/$(basename "$4")" ;;',
+              '  "release edit") printf "%s" "$5" > "$NOTES" ;;',
+              '  *) echo "unexpected gh $*" >&2; exit 2 ;;',
+              "esac",
+              "",
+            ],
+            "\n"
+          )
+        );
+        yield* fs.chmod(`${work}/bin/gh`, 0o755);
+        // The compare step's closure command; the fixture's current closure is already in dist/.
+        yield* fs.writeFileString(`${work}/bin/bun`, "#!/usr/bin/env bash\nexit 0\n");
+        yield* fs.chmod(`${work}/bin/bun`, 0o755);
+        yield* fs.writeFileString(`${work}/calls`, "");
+        yield* fs.writeFileString(`${work}/notes`, "");
+        yield* fs.writeFileString(`${work}/output`, "");
+        const child = yield* spawner.spawn(
+          ChildProcess.make("/usr/bin/bash", ["--noprofile", "--norc", "-eo", "pipefail", "-c", script], {
+            cwd: work,
+            env: {
+              PATH: `${work}/bin:${searchPath}`,
+              CALLS: `${work}/calls`,
+              NOTES: `${work}/notes`,
+              UPLOADED: `${work}/uploaded`,
+              RUNNER_TEMP: `${work}/tmp`,
+              GITHUB_OUTPUT: `${work}/output`,
+              GITHUB_STEP_SUMMARY: `${work}/summary.md`,
+              GH_REPO: "fixture/repo",
+              GH_TOKEN: "token",
+              LATEST_TAG: "beep-ci-7e2128d77b29",
+              TARGET_SHA: "0123456789abcdef0123456789abcdef01234567",
+              CLOSURE_DIGEST: newDigest,
+              VERIFY_REPRODUCIBLE: "false",
+              RELEASES: "[]",
+              ASSETS: "beep-linux-x64\nbeep-linux-x64.sha256\nbeep-linux-x64.closure.json\n",
+              EARLIER_CLOSURE: `{"digest":"${oldDigest}"}\n`,
+              DOWNLOAD_FAIL: "0",
+              ...env,
+            },
+            extendEnv: true,
+            stdout: "pipe",
+            stderr: "pipe",
+          })
+        );
+        const exitCode = yield* child.exitCode;
+        const callsText = yield* fs.readFileString(`${work}/calls`);
+        const status = Number(exitCode);
+        const calls = A.filter(Str.split(callsText, "\n"), Str.isNonEmpty);
+        const notes = yield* fs.readFileString(`${work}/notes`);
+        const output = yield* fs.readFileString(`${work}/output`);
+        const kept = yield* fs.exists(`${work}/uploaded/${archive}`);
+        const keptText = kept ? yield* fs.readFileString(`${work}/uploaded/${archive}`) : "";
+        return { status, calls, notes, output, keptText };
+      });
+      // Compare: GitHub's Latest flag and list order both point at the older release; createdAt decides.
+      const releases = yield* encodeJobsFixture([
+        { tagName: "beep-ci-f9982f3b5e65", createdAt: "2026-11-18T10:00:00Z", isLatest: true },
+        { tagName: "beep-ci-7e2128d77b29", createdAt: "2026-11-19T20:00:00Z", isLatest: false },
+        { tagName: "v9.9.9", createdAt: "2026-11-19T23:00:00Z", isLatest: false },
+      ]);
+      const compared = yield* runStep(compare, { RELEASES: releases });
+      expect(compared.status).toBe(0);
+      expect(compared.calls).toStrictEqual(["download beep-ci-7e2128d77b29"]);
+      expect(compared.output).toContain("latest=beep-ci-7e2128d77b29\n");
+      expect(compared.output).toContain("changed=true\n");
+      // Re-record: archive the earlier manifest first, without --clobber, then replace the latest one.
+      const recorded = yield* runStep(rerecord, {});
+      expect(recorded.status).toBe(0);
+      expect(recorded.calls).toStrictEqual([
+        "download beep-ci-7e2128d77b29",
+        `upload ${archive}`,
+        "upload beep-linux-x64.closure.json --clobber",
+      ]);
+      expect(recorded.keptText).toBe(`{"digest":"${oldDigest}"}\n`);
+      expect(recorded.notes).toBe(
+        `Earlier notes.\nClosure digest re-recorded: ${newDigest} at 0123456789abcdef0123456789abcdef01234567 (byte-identical rebuild; superseded ${oldDigest}, kept as ${archive}).`
+      );
+      // A re-run finds the archive already kept and never uploads it again.
+      const rerun = yield* runStep(rerecord, {
+        ASSETS: `beep-linux-x64\nbeep-linux-x64.closure.json\n${archive}\n`,
+      });
+      expect(rerun.status).toBe(0);
+      expect(rerun.calls).toStrictEqual([
+        "download beep-ci-7e2128d77b29",
+        "upload beep-linux-x64.closure.json --clobber",
+      ]);
+      // A release from before closure assets has nothing to keep; the notes say so.
+      const legacy = yield* runStep(rerecord, { ASSETS: "beep-linux-x64\nbeep-linux-x64.sha256\n" });
+      expect(legacy.status).toBe(0);
+      expect(legacy.calls).toStrictEqual(["upload beep-linux-x64.closure.json --clobber"]);
+      expect(legacy.notes).toContain("(byte-identical rebuild; no earlier closure asset to keep).");
+      // A listed manifest that cannot be downloaded or records no digest changes nothing.
+      for (const env of [{ DOWNLOAD_FAIL: "1" }, { EARLIER_CLOSURE: '{"digest":null}' }]) {
+        const refused = yield* runStep(rerecord, env);
+        expect(refused.status).not.toBe(0);
+        expect(refused.calls).toStrictEqual(["download beep-ci-7e2128d77b29"]);
+        expect(refused.notes).toBe("");
+      }
+    })
+  );
+
   // goals/certainty-scorecard MEAS-01 slice 2: a scheduled scorer that reads Actions runs with the
   // workflow token, runs default-branch code only, publishes no branch names, and turns red when the
   // night's report is not certified, so a refused night can never be counted toward the seven.
