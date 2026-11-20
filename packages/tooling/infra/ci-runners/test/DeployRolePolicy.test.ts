@@ -3,6 +3,7 @@ import {
   boundaryWildcardReasons,
   chunkByLength,
   defaultGroupStatement,
+  deployPolicyVersion,
   deployRolePolicy,
   ec2CreateActions,
   ec2CreatesInVpc,
@@ -53,6 +54,27 @@ describe("CiRunners deploy role policy chunks", () => {
 });
 
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
+
+describe("CiRunners deploy role policy version", () => {
+  const vpcArn = O.some("arn:aws:ec2:us-east-1:832907639880:vpc/vpc-0123456789abcdef0");
+
+  it.effect("writes v2 with the fleet VPC ARN and v1 only on an explicit pre-VPC run", () =>
+    Effect.gen(function* () {
+      const v2 = yield* deployPolicyVersion({ vpcArn, beforeVpc: false });
+      const v1 = yield* deployPolicyVersion({ vpcArn: O.none(), beforeVpc: true });
+      expect([v2, v1]).toStrictEqual(["v2", "v1"]);
+    })
+  );
+
+  it.effect("refuses a run that states neither version, and one that states both", () =>
+    Effect.gen(function* () {
+      const neither = yield* Effect.flip(deployPolicyVersion({ vpcArn: O.none(), beforeVpc: false }));
+      const both = yield* Effect.flip(deployPolicyVersion({ vpcArn, beforeVpc: true }));
+      expect([neither._tag, both._tag]).toStrictEqual(["DeployPolicyVersionUnstated", "DeployPolicyVersionUnstated"]);
+      expect(neither.reason).toContain("--vpc-arn");
+    })
+  );
+});
 
 describe("CiRunners deploy role managed policies", () => {
   it.effect("splits v1 and v2 into whole statements in source order, each document within the IAM limit", () =>
