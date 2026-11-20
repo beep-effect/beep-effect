@@ -416,7 +416,7 @@ const passedLabel = (evidence: SeriesEvidence): O.Option<HistoryLabel> =>
  * @param outcome - the item's outcome in the current run
  * @param evidence - the current attempts, the lane series and the main baseline
  * @returns the label, or none when nothing can be decided
- * @category classifiers
+ * @category utilities
  * @since 0.0.0
  */
 export const classifyItem: {
