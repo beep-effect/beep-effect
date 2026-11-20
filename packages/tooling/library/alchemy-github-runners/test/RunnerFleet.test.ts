@@ -212,6 +212,11 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
       "rate(1 day)",
     ]);
 
+    // The runner tarball mirror is a multipart upload, and a failed one is aborted.
+    expect(
+      A.map(statementsOf(recorder, "Runners/RunnerBinariesSyncer"), (statement) => statement.Action)
+    ).toStrictEqual([["s3:AbortMultipartUpload", "s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"]]);
+
     const kms = A.filter(statementsOf(recorder, "Runners/TerminationWatcher"), (statement) =>
       A.contains(statement.Action as ReadonlyArray<string>, "kms:Decrypt")
     );

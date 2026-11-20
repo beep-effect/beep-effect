@@ -11,6 +11,7 @@ import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { GithubAsyncMergeRequest, GithubRest } from "../../../internal/github/index.ts";
 import { settleYeetMerge, YeetMergeSettlement } from "./AsyncMerge.ts";
 import {
@@ -21,6 +22,7 @@ import {
   OwnerCheckpointRequest,
 } from "./OwnerCheckpoint.schemas.ts";
 import { qualifyOwnerCheckpointSnapshot } from "./OwnerCheckpoint.ts";
+import { COMMITLINT_MAX_LINE_LENGTH, pinnedSquashCommitTitle } from "./SquashCommitlint.ts";
 import { readYeetStackUngatedRefusal } from "./StackGate.ts";
 import type {
   OwnerCheckpointBinding,
@@ -124,6 +126,9 @@ export const dispatchOwnerCheckpointMerge = Effect.fn("OwnerCheckpoint.dispatchM
   // one that cannot be read, refuses before the dispatch fence.
   const stackRefusal = yield* readYeetStackUngatedRefusal(live);
   if (O.isSome(stackRefusal)) return yield* OwnerCheckpointError.make({ reason: "gate" });
+  // GitHub's single-commit default is the commit subject, so the live title is pinned (#3441).
+  const commitTitle = pinnedSquashCommitTitle(live.title, live.number);
+  if (Str.length(commitTitle) > COMMITLINT_MAX_LINE_LENGTH) return yield* OwnerCheckpointError.make({ reason: "gate" });
   yield* qualifyDispatchBase(snapshot);
   const now = yield* DateTime.now;
   yield* qualifyOwnerCheckpointSnapshot(binding, snapshot, policy, now);
@@ -134,7 +139,7 @@ export const dispatchOwnerCheckpointMerge = Effect.fn("OwnerCheckpoint.dispatchM
   // confirmed `merged` stays uncertain and is reconciled through readback only.
   const result = yield* settleYeetMerge(
     binding.prNumber,
-    GithubAsyncMergeRequest.make({ action: "direct_merge", method: "squash", sha: binding.head })
+    GithubAsyncMergeRequest.make({ action: "direct_merge", method: "squash", sha: binding.head, commitTitle })
   ).pipe(Effect.result);
   if (Result.isFailure(result) || !YeetMergeSettlement.guards.Merged(result.success))
     return yield* unknown(store, record, policy);

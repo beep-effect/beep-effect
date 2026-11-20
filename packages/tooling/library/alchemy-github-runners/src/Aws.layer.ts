@@ -395,9 +395,66 @@ const LatestRelease = S.Struct({
   $I.annoteSchema("LatestRelease", { description: "The parts of GitHub's latest-release response the syncer reads." })
 );
 
+const mirrorPartSize = 16 * 1024 * 1024;
+
+const AssetContentLength = S.NumberFromString.check(S.isInt(), S.isGreaterThan(0)).pipe(
+  $I.annoteSchema("AssetContentLength", { description: "The positive byte length a release-asset download declares." })
+);
+
+interface PendingBytes {
+  readonly chunks: ReadonlyArray<Uint8Array>;
+  readonly size: number;
+}
+
+const noPendingBytes: PendingBytes = { chunks: [], size: 0 };
+
+const joinBytes = ({ chunks, size }: PendingBytes): Uint8Array => {
+  const out = new Uint8Array(size);
+  A.reduce(chunks, 0, (offset, chunk) => {
+    out.set(chunk, offset);
+    return offset + chunk.byteLength;
+  });
+  return out;
+};
+
+// Regroups download chunks into parts of exactly `partSize` bytes; the remainder waits for more.
+const splitParts =
+  (partSize: number) =>
+  (pending: PendingBytes, chunk: Uint8Array): readonly [PendingBytes, ReadonlyArray<Uint8Array>] => {
+    const next: PendingBytes = { chunks: A.append(pending.chunks, chunk), size: pending.size + chunk.byteLength };
+    if (next.size < partSize) {
+      return [next, []];
+    }
+    const bytes = joinBytes(next);
+    const count = Math.floor(next.size / partSize);
+    const rest = bytes.slice(count * partSize);
+    return [
+      rest.byteLength === 0 ? noPendingBytes : { chunks: [rest], size: rest.byteLength },
+      A.makeBy(count, (index) => bytes.subarray(index * partSize, (index + 1) * partSize)),
+    ];
+  };
+
+const flushParts = (pending: PendingBytes): ReadonlyArray<Uint8Array> =>
+  pending.size === 0 ? [] : [joinBytes(pending)];
+
+interface UploadedParts {
+  readonly bytes: number;
+  readonly parts: ReadonlyArray<{ readonly ETag: string; readonly PartNumber: number }>;
+}
+
 /**
  * Live {@link RunnerBinaries}: the public GitHub releases API for the asset,
- * distilled S3 for the mirror (the download streams straight into `PutObject`).
+ * distilled S3 for the mirror.
+ *
+ * **Details**
+ *
+ * The mirror streams the download into an S3 multipart upload, one bounded
+ * 16 MiB part buffer at a time, each part a fixed-length body. A streamed
+ * `PutObject` cannot work over `FetchHttpClient`: it drops `Content-Length`
+ * and sends the stream `Transfer-Encoding: chunked`, which S3 rejects with
+ * 501 NotImplemented. A download without a positive `Content-Length` fails
+ * with {@link GitHubApiError} before anything is written, and a download that
+ * ends short of it aborts the upload.
  *
  * **Example** (The layer)
  *
@@ -455,27 +512,80 @@ export const runnerBinariesLive: Layer.Layer<RunnerBinaries, never, AwsServices>
         );
       }),
       mirror: Effect.fn("RunnerBinaries.mirror")(function* (input) {
+        const downloadError = githubError("downloadAsset");
         const response = yield* http
           .execute(HttpClientRequest.get(input.asset.downloadUrl))
-          .pipe(Effect.flatMap(HttpClientResponse.filterStatusOk), Effect.mapError(githubError("downloadAsset")));
-        const contentLength = O.flatMap(O.fromUndefinedOr(response.headers["content-length"]), (value) =>
-          O.liftPredicate(Number.parseInt(value, 10), Number.isFinite)
+          .pipe(Effect.flatMap(HttpClientResponse.filterStatusOk), Effect.mapError(downloadError));
+        const contentLength = yield* S.decodeUnknownEffect(AssetContentLength)(response.headers["content-length"]).pipe(
+          Effect.mapError(() =>
+            GitHubApiError.make({
+              operation: "downloadAsset",
+              message: `${input.asset.name}: the download has no positive content-length; refusing an upload of unknown length`,
+            })
+          )
         );
-        yield* awsCall(
+        const object = { Bucket: input.bucket, Key: input.key };
+        const created = yield* awsCall(
           services,
           "s3",
-          "putObject"
-        )(
-          s3.putObject({
-            Bucket: input.bucket,
-            Key: input.key,
-            Body: response.stream,
-            Tagging: `name=${input.asset.name}`,
-            ...O.getOrElse(
-              O.map(contentLength, (ContentLength) => ({ ContentLength })),
-              () => ({})
+          "createMultipartUpload"
+        )(s3.createMultipartUpload({ ...object, Tagging: `name=${input.asset.name}` }));
+        const UploadId = yield* Effect.fromOption(O.fromUndefinedOr(created.UploadId)).pipe(
+          Effect.mapError(() =>
+            AwsApiError.make({ service: "s3", operation: "createMultipartUpload", message: "no UploadId returned" })
+          )
+        );
+        const uploadPart = (uploaded: UploadedParts, Body: Uint8Array) => {
+          const PartNumber = uploaded.parts.length + 1;
+          return awsCall(
+            services,
+            "s3",
+            "uploadPart"
+          )(s3.uploadPart({ ...object, UploadId, PartNumber, Body })).pipe(
+            Effect.flatMap((output) =>
+              Effect.fromOption(O.fromUndefinedOr(output.ETag)).pipe(
+                Effect.mapError(() =>
+                  AwsApiError.make({
+                    service: "s3",
+                    operation: "uploadPart",
+                    message: `part ${PartNumber} has no ETag`,
+                  })
+                )
+              )
             ),
-          })
+            Effect.map(
+              (ETag): UploadedParts => ({
+                parts: A.append(uploaded.parts, { ETag, PartNumber }),
+                bytes: uploaded.bytes + Body.byteLength,
+              })
+            )
+          );
+        };
+        yield* Effect.gen(function* () {
+          const uploaded = yield* response.stream.pipe(
+            Stream.mapError(downloadError),
+            Stream.mapAccum(() => noPendingBytes, splitParts(mirrorPartSize), { onHalt: flushParts }),
+            Stream.runFoldEffect((): UploadedParts => ({ parts: [], bytes: 0 }), uploadPart)
+          );
+          if (uploaded.bytes !== contentLength) {
+            return yield* GitHubApiError.make({
+              operation: "downloadAsset",
+              message: `${input.asset.name}: downloaded ${uploaded.bytes} of ${contentLength} bytes`,
+            });
+          }
+          yield* awsCall(
+            services,
+            "s3",
+            "completeMultipartUpload"
+          )(s3.completeMultipartUpload({ ...object, UploadId, MultipartUpload: { Parts: A.copy(uploaded.parts) } }));
+        }).pipe(
+          Effect.onError(() =>
+            awsCall(
+              services,
+              "s3",
+              "abortMultipartUpload"
+            )(s3.abortMultipartUpload({ ...object, UploadId })).pipe(Effect.ignore)
+          )
         );
       }),
     });
