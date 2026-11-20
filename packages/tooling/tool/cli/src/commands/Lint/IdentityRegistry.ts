@@ -27,10 +27,18 @@
  * counted on the summary line instead (goals/prunable-product-leaves, seam
  * 1b). Every other registration is checked exactly as before.
  *
+ * The declared-term registry is gated twice (law L0-3): the generated
+ * artifacts must match their source shards, and the snapshot regenerated from
+ * the shards must keep the published term set of a base ref (`--base`, by
+ * default the merge base with `origin/main`), read with `git show`. A term or
+ * namespace IRI the base published leaves only through a deprecation, which
+ * only `bun run beep identity deprecate` writes.
+ *
  * @packageDocumentation
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   isCheckoutSubjectPruned,
@@ -59,7 +67,14 @@ import { Node, Project } from "ts-morph";
 import { registerMissingWorkspaceIdentityPackages } from "../CreatePackage/internal/IdentityBulkRegistration.ts";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
 import { LabIdentitySegment } from "../CreatePackage/internal/LabIdentitySegment.ts";
-import { checkRegistry, registryPresent, resolveRegistryLayout, writeRegistry } from "../Identity/Registry.ts";
+import {
+  checkRegistry,
+  checkRegistryAgainstBase,
+  decodeBaseSnapshot,
+  registryPresent,
+  resolveRegistryLayout,
+  writeRegistry,
+} from "../Identity/Registry.ts";
 import type { CallExpression, ImportDeclaration, ImportSpecifier, SourceFile } from "ts-morph";
 import type { LabIdentitySegmentState } from "../CreatePackage/internal/LabIdentitySegment.ts";
 
@@ -98,10 +113,15 @@ const IdentityRegistryViolationKind = LiteralKit([
   "registry-conflict",
   "registry-snapshot-break",
   "registry-generated-drift",
+  "term-removed-without-deprecation",
+  "namespace-prefix-changed",
+  "deprecation-changed",
+  "term-revived",
+  "binding-changed",
 ]).pipe(
   $I.annoteSchema("IdentityRegistryViolationKind", {
     description:
-      "Closed identity-registry violation kind: registry completeness, orphaned registrations, non-leaf registry exports, local root composers, registry-free root uses outside a package leaf, leaf slug drift, registry imports in a leaf package, generated-labs-segment drift, and the declared-term registry (invalid shards, shard conflicts, snapshot breaks, generated-artifact drift).",
+      "Closed identity-registry violation kind: registry completeness, orphaned registrations, non-leaf registry exports, local root composers, registry-free root uses outside a package leaf, leaf slug drift, registry imports in a leaf package, generated-labs-segment drift, the declared-term registry (invalid shards, shard conflicts, snapshot breaks, generated-artifact drift), and breaks of the base ref's published term set (terms removed without a deprecation, namespace prefixes changed, deprecations changed, deprecated terms revived, bindings changed).",
   })
 );
 
@@ -575,12 +595,39 @@ const collectLocalRootViolations = Effect.fn("IdentityRegistry.collectLocalRootV
   return violations;
 });
 
-// Declared-term registry rows: invalid shards, shard conflicts and generated-artifact drift. A
-// checkout with neither shards nor the generated data module (a fixture repo) carries no registry.
-// `--fix` regenerates the artifacts first; it never edits a shard.
+const DEFAULT_BASE_REF = "origin/main";
+
+// The base ref's term snapshot: `--base <ref>`, or the merge base of HEAD with origin/main. A
+// checkout with no resolvable default base (no git, no origin/main, disjoint history) and a base
+// without a snapshot both compare against the empty snapshot, where every term is an addition.
+const readBaseSnapshot = Effect.fn("IdentityRegistry.readBaseSnapshot")(function* (
+  repoRoot: string,
+  snapshotPath: string,
+  base: O.Option<string>
+) {
+  const git = yield* Git;
+  const ref = yield* O.match(base, {
+    onNone: () => git.mergeBaseOption(repoRoot, "HEAD", DEFAULT_BASE_REF).pipe(Effect.orElseSucceed(O.none<string>)),
+    onSome: Effect.succeedSome,
+  });
+  if (O.isNone(ref)) {
+    yield* Console.log(
+      `[lint:identity-registry] no merge base with ${DEFAULT_BASE_REF}; the term-stability base is the empty snapshot.`
+    );
+    return decodeBaseSnapshot(snapshotPath, O.none());
+  }
+  const text = yield* git.show(repoRoot, ref.value, snapshotPath);
+  return decodeBaseSnapshot(snapshotPath, text);
+});
+
+// Declared-term registry rows: invalid shards, shard conflicts, generated-artifact drift and breaks
+// of the base ref's published term set. A checkout with neither shards nor the generated data module
+// (a fixture repo) carries no registry. `--fix` regenerates the artifacts first; it never edits a
+// shard and never writes a deprecation.
 const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermRegistryViolations")(function* (
   repoRoot: string,
-  fix: boolean
+  fix: boolean,
+  base: O.Option<string>
 ) {
   const layout = yield* resolveRegistryLayout(repoRoot);
 
@@ -598,7 +645,12 @@ const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermReg
     }
   }
 
-  const issues = yield* checkRegistry(repoRoot, layout);
+  const baseSnapshot = yield* readBaseSnapshot(repoRoot, layout.snapshot, base);
+  const baseIssues = Result.isSuccess(baseSnapshot)
+    ? yield* checkRegistryAgainstBase(repoRoot, layout, baseSnapshot.success)
+    : A.of(baseSnapshot.failure);
+  const committedIssues = yield* checkRegistry(repoRoot, layout);
+  const issues = A.appendAll(committedIssues, baseIssues);
   return A.map(issues, (issue) =>
     IdentityRegistryViolation.make({ kind: issue.kind, subject: issue.subject, detail: issue.detail })
   );
@@ -655,6 +707,7 @@ const withoutPrunedOwners = Effect.fn("IdentityRegistry.withoutPrunedOwners")(fu
 
 const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryLint")(function* (options: {
   readonly fix: boolean;
+  readonly base: O.Option<string>;
 }) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -683,7 +736,7 @@ const runIdentityRegistryLint = Effect.fn("IdentityRegistry.runIdentityRegistryL
     labsSegmentViolations(labsState, identityPackagesFilePath)
   );
   const collectLocalRootViolations1 = yield* collectLocalRootViolations(repoRoot, slugsToDirs);
-  const termRegistryViolations = yield* collectTermRegistryViolations(repoRoot, options.fix);
+  const termRegistryViolations = yield* collectTermRegistryViolations(repoRoot, options.fix, options.base);
   const found = A.appendAll(A.appendAll(argument, collectLocalRootViolations1), termRegistryViolations);
   const { skipped, violations } = yield* withoutPrunedOwners(repoRoot, found);
 
@@ -719,10 +772,16 @@ export const lintIdentityRegistryCommand = Command.make(
         "Register missing workspace packages in the identity composer registry and regenerate the declared-term registry artifacts"
       )
     ),
+    base: Flag.String("base").pipe(
+      Flag.withDescription(
+        "Git ref whose term snapshot the published term set is compared against (default: the merge base of HEAD with origin/main)"
+      ),
+      Flag.optional
+    ),
   },
   runIdentityRegistryLint
 ).pipe(
   Command.withDescription(
-    "Check that @beep/* workspace packages and identity composers agree exactly, no package builds local root composers, the registry-free root stays in package leaves, and the declared-term registry artifacts match their shards"
+    "Check that @beep/* workspace packages and identity composers agree exactly, no package builds local root composers, the registry-free root stays in package leaves, the declared-term registry artifacts match their shards, and the published term set keeps every term of the base ref or deprecates it"
   )
 );

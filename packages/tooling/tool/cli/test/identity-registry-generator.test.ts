@@ -392,7 +392,9 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           expect(errorLineWith(errors, "[registry-conflict]")).toBe(true);
           yield* runIdentityCommand([]);
           const logs = yield* TestConsole.logLines;
-          expect(logs).toContain("Identity registry commands: bun run beep identity registry [--write | --check]");
+          expect(logs).toContain(
+            "Identity registry commands: bun run beep identity registry [--write | --check], identity rebind <from> <to>, identity deprecate <curie> [--replacement <curie>]"
+          );
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

@@ -1,6 +1,7 @@
 import { fcRuns } from "@beep/fc-runs";
 import { RegistryDeprecations } from "@beep/identity/internal/generated/Registry.data";
 import { SafePnLocal } from "@beep/identity/PnLocal";
+import { $I as $BeepId } from "@beep/identity/packages";
 import * as Registry from "@beep/identity/Registry";
 import { CodeId, RegistryShard, RegistryTable, snapshotViolations, TermIri, TermSnapshot } from "@beep/identity/Term";
 import { it } from "@beep/test-runner";
@@ -8,6 +9,7 @@ import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
@@ -64,6 +66,18 @@ const deprecatingPrefLabel = editShard("skos", (shard) => ({
 
 // The research-library namespace IRI P1 retired, whose successor is the `research-library` namespace.
 const retiredLibraryNamespace = "https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/";
+
+// The IRI a composer derives from a code identity's module path, as `$BeepId.create(path).iri` prints it.
+const moduleIriOf = (code: string): string => {
+  const composer = $BeepId.create(Str.slice(Str.length("@beep/"))(code));
+  expect(composer.identifier).toBe(code);
+  return composer.iri;
+};
+
+const published = HashSet.fromIterable<string>(committed.terms);
+
+// A module path segment a code identity and the composer both accept.
+const ModuleSegment = S.String.check(S.isPattern(/^[A-Za-z][A-Za-z0-9_-]{0,11}$/));
 
 const LibraryModule = CodeId.make("@beep/repo-cli/commands/Research/Library/Library.schemas");
 const CatalogModule = CodeId.make("@beep/repo-cli/commands/Research/Catalog/Catalog.schemas");
@@ -160,5 +174,40 @@ describe("term stability", () => {
         expect(isLive(term), term).toBe(false);
       }
     })
+  );
+  it("L0-3 a module-derived IRI of a bound code is never published in place of its term", () => {
+    const table = tableOf(committedShards);
+    expect(A.isReadonlyArrayNonEmpty(table.bindings)).toBe(true);
+    for (const binding of table.bindings) {
+      const moduleIri = moduleIriOf(binding.code);
+      expect(moduleIri, binding.code).not.toBe(binding.term);
+      expect(HashSet.has(published, moduleIri), moduleIri).toBe(false);
+      // A module-derived IRI that left the process before P1 is retired in favour of the bound term.
+      if (R.has(deprecated, moduleIri)) {
+        assertSome(Registry.replacementOf(moduleIri), binding.term);
+      }
+    }
+  });
+
+  it.prop(
+    "L0-3 rebinding a module to any new path publishes no module-derived IRI",
+    [ModuleSegment, ModuleSegment],
+    ([area, module]) => {
+      const before = tableOf(committedShards);
+      const target = CodeId.make(`@beep/repo-cli/${area}/${module}`);
+      const after = Result.getOrThrow(RegistryTable.rebind(before, LibraryModule, target));
+      const previous = RegistryTable.snapshot(before, committed);
+      const next = RegistryTable.snapshot(after, previous);
+
+      expect(snapshotViolations(previous, next)).toStrictEqual([]);
+      expect(next.terms).toStrictEqual(previous.terms);
+      expect(next.deprecations).toStrictEqual(previous.deprecations);
+      const moved = A.filter(after.bindings, (binding) => Str.startsWith(`${target}/`)(binding.code));
+      expect(moved).toHaveLength(16);
+      for (const binding of moved) {
+        expect(HashSet.has(published, moduleIriOf(binding.code))).toBe(false);
+      }
+    },
+    { arbitrary: fcRuns(10) }
   );
 });

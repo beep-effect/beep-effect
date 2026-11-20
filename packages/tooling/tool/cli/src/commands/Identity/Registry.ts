@@ -50,7 +50,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
-import type { Term } from "@beep/identity/Term";
+import type { SnapshotViolation, Term } from "@beep/identity/Term";
 
 const $I = $RepoCliId.create("commands/Identity/Registry");
 
@@ -80,10 +80,15 @@ export const IdentityRegistryIssueKind = LiteralKit([
   "registry-conflict",
   "registry-snapshot-break",
   "registry-generated-drift",
+  "term-removed-without-deprecation",
+  "namespace-prefix-changed",
+  "deprecation-changed",
+  "term-revived",
+  "binding-changed",
 ]).pipe(
   $I.annoteSchema("IdentityRegistryIssueKind", {
     description:
-      "Identity registry finding kind: a shard that fails to decode, a conflict between shards, a regenerated snapshot that breaks the committed one, or a generated artifact that differs from regeneration.",
+      "Identity registry finding kind: a shard that fails to decode, a conflict between shards, a regenerated snapshot that breaks the committed one, a generated artifact that differs from regeneration, or a break of the base ref's published term set (a term or namespace removed without a deprecation, a namespace prefix changed, a deprecation removed or changed, a deprecated term revived, a binding reassigned).",
   })
 );
 
@@ -623,7 +628,28 @@ const decodeSnapshot = S.decodeUnknownResult(S.fromJsonString(TermSnapshot));
 const shardIssue = (path: string, detail: string): IdentityRegistryIssue =>
   IdentityRegistryIssue.make({ kind: "registry-shard-invalid", subject: path, detail });
 
-const decodeShardFile = (file: RegistrySourceFile): Result.Result<RegistryShard, IdentityRegistryIssue> =>
+/**
+ * Decode one shard file, refusing a file that is not named after its prefix.
+ *
+ * **Example** (Decode a shard file)
+ *
+ * ```ts
+ * import { decodeShardFile, RegistrySourceFile } from "@beep/repo-cli/commands/Identity/Registry"
+ * import * as Result from "effect/Result"
+ *
+ * const file = RegistrySourceFile.make({
+ *   path: "registry/namespaces/fabio.json",
+ *   content: '{"namespace":{"prefix":"fabio","iri":"http://purl.org/spar/fabio/"},"terms":[],"bindings":[],"deprecations":[]}'
+ * })
+ * console.log(Result.isSuccess(decodeShardFile(file))) // true
+ * ```
+ *
+ * @param file - The shard file to decode.
+ * @returns The decoded shard, or the `registry-shard-invalid` finding.
+ * @category validation
+ * @since 0.0.0
+ */
+export const decodeShardFile = (file: RegistrySourceFile): Result.Result<RegistryShard, IdentityRegistryIssue> =>
   pipe(
     decodeShard(file.content),
     Result.mapError((error) => shardIssue(file.path, error.message)),
@@ -831,6 +857,106 @@ export const driftIssues: {
     )
 );
 
+// The lint kind of each way a head snapshot breaks the base ref's published term set.
+const baseBreakKinds: { readonly [Tag in SnapshotViolation["_tag"]]: IdentityRegistryIssueKind } = {
+  TermRemoved: "term-removed-without-deprecation",
+  NamespaceDropped: "term-removed-without-deprecation",
+  NamespacePrefixChanged: "namespace-prefix-changed",
+  DeprecationRemoved: "deprecation-changed",
+  DeprecationChanged: "deprecation-changed",
+  TermRevived: "term-revived",
+  SinceRewritten: "binding-changed",
+  BindingReassigned: "binding-changed",
+  BindingAmbiguous: "binding-changed",
+};
+
+/**
+ * The findings of a head snapshot against the snapshot of a base ref (law L0-3).
+ *
+ * **Details**
+ *
+ * The committed snapshot is regenerated against itself, so a change that
+ * rewrites the shards and the snapshot together passes `--check`. This
+ * comparison reads the base ref's snapshot instead: every term and namespace
+ * IRI the base published stays published or gains a deprecation, deprecations
+ * stay as they were, a deprecated IRI is not revived, a namespace keeps its
+ * prefix and a binding keeps its term and `since`. Additions are free.
+ *
+ * **Example** (Report a term removed against the base)
+ *
+ * ```ts
+ * import { ReleaseVersion, TermIri, TermSnapshot } from "@beep/identity/Term"
+ * import { baseSnapshotIssues } from "@beep/repo-cli/commands/Identity/Registry"
+ * import * as Result from "effect/Result"
+ *
+ * const base = Result.getOrThrow(
+ *   TermSnapshot.fromRows({
+ *     release: ReleaseVersion.make("1.0.0"),
+ *     namespaces: [],
+ *     terms: [TermIri.make("http://www.w3.org/ns/prov#Activity")],
+ *     bindings: [],
+ *     deprecations: []
+ *   })
+ * )
+ * console.log(baseSnapshotIssues(base, TermSnapshot.empty, "term-snapshot.json")[0]?.kind)
+ * // "term-removed-without-deprecation"
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const baseSnapshotIssues: {
+  (head: TermSnapshot, subject: string): (base: TermSnapshot) => ReadonlyArray<IdentityRegistryIssue>;
+  (base: TermSnapshot, head: TermSnapshot, subject: string): ReadonlyArray<IdentityRegistryIssue>;
+} = dual(
+  3,
+  (base: TermSnapshot, head: TermSnapshot, subject: string): ReadonlyArray<IdentityRegistryIssue> =>
+    A.map(snapshotViolations(base, head), (violation) =>
+      IdentityRegistryIssue.make({
+        kind: baseBreakKinds[violation._tag],
+        subject,
+        detail: `Against the base ref: ${snapshotViolationMessage(violation)} Only \`bun run beep identity deprecate\` may remove a published term.`,
+      })
+    )
+);
+
+/**
+ * Decode the snapshot text of a base ref; an absent snapshot is the empty snapshot.
+ *
+ * **Example** (Read a base with no snapshot)
+ *
+ * ```ts
+ * import { decodeBaseSnapshot } from "@beep/repo-cli/commands/Identity/Registry"
+ * import * as O from "effect/Option"
+ * import * as Result from "effect/Result"
+ *
+ * console.log(Result.getOrThrow(decodeBaseSnapshot("term-snapshot.json", O.none())).release) // "0.0.0"
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const decodeBaseSnapshot: {
+  (text: O.Option<string>): (subject: string) => Result.Result<TermSnapshot, IdentityRegistryIssue>;
+  (subject: string, text: O.Option<string>): Result.Result<TermSnapshot, IdentityRegistryIssue>;
+} = dual(
+  2,
+  (subject: string, text: O.Option<string>): Result.Result<TermSnapshot, IdentityRegistryIssue> =>
+    O.match(text, {
+      onNone: () => Result.succeed(TermSnapshot.empty),
+      onSome: flow(
+        decodeSnapshot,
+        Result.mapError((error) =>
+          IdentityRegistryIssue.make({
+            kind: "registry-generated-drift",
+            subject,
+            detail: `The base ref's snapshot does not decode: ${error.message}`,
+          })
+        )
+      ),
+    })
+);
+
 // ---------------------------------------------------------------------------
 // Effects
 // ---------------------------------------------------------------------------
@@ -904,7 +1030,21 @@ export const registryPresent = Effect.fn("IdentityRegistry.present")(function* (
   return (yield* probe(layout.shards)) || (yield* probe(layout.data));
 });
 
-const readShardFiles = Effect.fn("IdentityRegistry.readShardFiles")(function* (
+/**
+ * Read the shard files of the checkout at `repoRoot`, in path order.
+ *
+ * **Example** (Read the shards)
+ *
+ * ```ts
+ * import { readShardFiles, RegistryLayout } from "@beep/repo-cli/commands/Identity/Registry"
+ *
+ * console.log(readShardFiles("/repo", RegistryLayout.of("packages/identity")))
+ * ```
+ *
+ * @category workflows
+ * @since 0.0.0
+ */
+export const readShardFiles = Effect.fn("IdentityRegistry.readShardFiles")(function* (
   repoRoot: string,
   layout: RegistryLayout
 ) {
@@ -978,6 +1118,43 @@ export const checkRegistry = Effect.fn("IdentityRegistry.check")(function* (repo
   );
   const byPath = R.fromEntries(current);
   return driftIssues(plan.success, (artifactPath) => O.flatten(R.get(byPath, artifactPath)));
+});
+
+/**
+ * The findings of the checkout's regenerated snapshot against a base ref's snapshot.
+ *
+ * **Details**
+ *
+ * A checkout whose plan fails has no head snapshot to compare, so it reports
+ * nothing here; {@link checkRegistry} reports why the plan failed.
+ *
+ * **Example** (Check against the empty base)
+ *
+ * ```ts
+ * import { TermSnapshot } from "@beep/identity/Term"
+ * import { checkRegistryAgainstBase, RegistryLayout } from "@beep/repo-cli/commands/Identity/Registry"
+ *
+ * console.log(checkRegistryAgainstBase("/repo", RegistryLayout.of("packages/identity"), TermSnapshot.empty))
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const checkRegistryAgainstBase = Effect.fn("IdentityRegistry.checkAgainstBase")(function* (
+  repoRoot: string,
+  layout: RegistryLayout,
+  base: TermSnapshot
+) {
+  const plan = yield* planRegistry(repoRoot, layout);
+  return pipe(
+    Result.getSuccess(plan),
+    O.flatMap(A.findFirst((artifact) => artifact.path === layout.snapshot)),
+    O.flatMap((artifact) => Result.getSuccess(decodeSnapshot(artifact.content))),
+    O.match({
+      onNone: A.empty<IdentityRegistryIssue>,
+      onSome: (head) => baseSnapshotIssues(base, head, layout.snapshot),
+    })
+  );
 });
 
 /**
