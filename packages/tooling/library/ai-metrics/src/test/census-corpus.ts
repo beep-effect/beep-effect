@@ -49,7 +49,7 @@ export const censusCorpusCanaries = [
 ] as const;
 
 const sessionId = "session-0f1e-SESSIONCANARY";
-const project = "-home-PATHCANARY-beep-effect";
+const project = "-home-alice-PATHCANARY-beep-effect";
 
 /**
  * The tool output texts of the corpus, exported so tests can derive sizes from them.
@@ -115,11 +115,11 @@ const sessionRecords = [
     type: "user",
     timestamp: at("10:00:00"),
     sessionId,
-    cwd: "/home/PATHCANARY/beep-effect",
+    cwd: "/home/alice/PATHCANARY/beep-effect",
     message: { content: "PROMPTCANARY check" },
   },
   assistant(at("10:01:00"), "m1", { input_tokens: 100, output_tokens: 10 }, [
-    bash("t1", "cd /home/PATHCANARY && bun run check > /tmp/CMDCANARY-check.log 2>&1"),
+    bash("t1", "cd /home/alice/PATHCANARY && bun run check > /tmp/CMDCANARY-check.log 2>&1"),
   ]),
   result(at("10:02:00"), "t1", texts.checkFailure),
   assistant(
@@ -130,7 +130,7 @@ const sessionRecords = [
   ),
   result(at("10:04:00"), "t2", [{ type: "text", text: texts.capturedLog }]),
   assistant(at("10:05:00"), "m3", { input_tokens: 10, cache_read_input_tokens: 2600, output_tokens: 5 }, [
-    bash("t3", "cd /home/PATHCANARY && bun run check | tail -5"),
+    bash("t3", "cd /home/alice/PATHCANARY && bun run check | tail -5"),
   ]),
   result(at("10:06:00"), "t3", texts.testsPassed),
   { type: "system", subtype: "compact_boundary", timestamp: at("11:00:00"), content: "compacted" },
@@ -140,7 +140,7 @@ const sessionRecords = [
       type: "tool_use",
       id: "t4",
       name: "Edit",
-      input: { file_path: "/home/PATHCANARY/x.ts", old_string: "CMDCANARY" },
+      input: { file_path: "/home/alice/PATHCANARY/x.ts", old_string: "CMDCANARY" },
     },
   ]),
   result(at("11:02:00"), "t4", texts.edited),
@@ -164,7 +164,7 @@ const subagentRecords = [
   result(sub("10:02:01"), "u3", texts.help),
   assistant(sub("10:03:00"), "s4", { input_tokens: 5 }, [{ type: "text", text: "PROMPTCANARY done" }]),
   assistant(sub("10:04:00"), "s5", { input_tokens: 3 }, [
-    { type: "tool_use", id: "u5", name: "Read", input: { file_path: "/home/PATHCANARY/tool-results/abc.txt" } },
+    { type: "tool_use", id: "u5", name: "Read", input: { file_path: "/home/alice/PATHCANARY/tool-results/abc.txt" } },
   ]),
   result(sub("10:04:01"), "u5", texts.persisted),
   assistant(sub("10:05:00"), "s6", { input_tokens: 2 }, [bash("u6", "gh run view 99 --log > /tmp/ci-CMDCANARY.log")]),
@@ -193,7 +193,7 @@ const codexRecords = [
   {
     type: "session_meta",
     timestamp: at("09:00:00"),
-    payload: { id: "SESSIONCANARY-codex", cwd: "/home/PATHCANARY/beep-effect" },
+    payload: { id: "SESSIONCANARY-codex", cwd: "/home/alice/PATHCANARY/beep-effect" },
   },
   call("09:01:00", "c1", "exec_command", '{"cmd":"bunx vitest run CMDCANARY | grep FAIL"}'),
   output("09:02:00", "c1", texts.codexTest),

@@ -78,12 +78,12 @@
     {
       "id": "P5",
       "name": "Yeet: PR to mergeable",
-      "status": "complete"
+      "status": "pending"
     },
     {
       "id": "P6",
       "name": "Close",
-      "status": "complete"
+      "status": "pending"
     }
   ],
   "verificationCommands": [

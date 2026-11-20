@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `complete`
+Status: `active`
 
 ## Phases
 
@@ -13,8 +13,8 @@ Status: `complete`
 | P2 Census service | complete | A `Context.Service` contract in `@beep/repo-ai-metrics` (enumerate sources for a window, project records, reduce to the report), then its implementation reusing `@beep/jsonl` `Line`, `parseSourceEventTime`, the source literal and the usage projection. | AC2 and AC7 hold over a synthetic Claude and Codex corpus with compaction boundaries, subagents, oversized lines and planted canaries. |
 | P3 Command | complete | The planned `census` subcommand of the repo CLI's `ai-metrics` group: window and root flags, the text tables, `--json`, and writing one baseline file per run. | AC3 and AC6 hold in a render test. |
 | P4 Reproduce | complete | Run the census on the pinned window, compare each row with `transcript-audit.md`, attribute every miss, and commit the baseline file. | AC4 and AC5 hold; the comparison is under `history/`. |
-| P5 Yeet: PR to mergeable | complete | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
-| P6 Close | complete | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
+| P5 Yeet: PR to mergeable | pending | Publish through yeet and drive each PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |
+| P6 Close | pending | Write the closeout reflection and flip packet state. | Packet status and evidence are updated; a closeout reflection exists. |
 
 ## Work Breakdown
 

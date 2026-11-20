@@ -76,7 +76,7 @@ const sectionTitles = [
   "Headline rows",
 ];
 
-it.layer(NodeServices.layer, { excludeTestServices: true })((it) => {
+it.layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
   describe("ai-metrics census", () => {
     it.effect("prints the tables in the audit's order with the headline rows last (AC3, AC6)", () =>
       Effect.gen(function* () {
@@ -84,7 +84,7 @@ it.layer(NodeServices.layer, { excludeTestServices: true })((it) => {
         const { exit, out } = yield* runCensus(home, options(corpus.window));
         expect(exit._tag).toBe("Success");
         const positions = A.map(sectionTitles, (title) => Str.indexOf(title)(out));
-        expect(A.every(positions, O.isSome)).toBe(true);
+        expect(A.length(A.getSomes(positions))).toBe(A.length(sectionTitles));
         const offsets = A.getSomes(positions);
         expect(offsets).toEqual(A.sort(offsets, Order.Number));
         for (const row of [

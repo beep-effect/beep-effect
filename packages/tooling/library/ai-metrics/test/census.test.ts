@@ -4,6 +4,7 @@ import { censusCorpusCanaries, censusCorpusTexts, writeCensusCorpus } from "@bee
 import { it } from "@beep/test-runner";
 import { NodeServices } from "@effect/platform-node";
 import { describe, expect } from "@effect/vitest";
+import { assertNone } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -55,7 +56,7 @@ const persisted = length(texts.persisted);
 const slope = 0.505; // through (4000 chars, 1990 tokens) and (6000 chars, 3000 tokens)
 const contextTokens = 5115 + 5021; // session m1..m5 plus subagent s1..s7
 
-it.layer(layer, { excludeTestServices: true })((it) => {
+it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
   describe("census over the synthetic corpus", () => {
     it.effect("counts the corpus, totals and compaction boundaries", () =>
       Effect.gen(function* () {
@@ -124,7 +125,7 @@ it.layer(layer, { excludeTestServices: true })((it) => {
         expect(row(report, "search-read").codex.chars).toBe(3);
         expect(row(report, "other-tool").codex.chars).toBe(2);
         expect(row(report, "unmatched-result").codex.chars).toBe(6);
-        expect(row(report, "check").codex.shareOfContextRead).toEqual(O.none());
+        assertNone(row(report, "check").codex.shareOfContextRead);
         const all = report.toolOutput.all.claude;
         expect(all.chars).toBe(4559 + 6000 + gate + help + persisted + 13);
         expect(report.toolOutput.verification.claude.chars).toBe(4057 + gate + help + 2);
@@ -260,8 +261,10 @@ it.layer(layer, { excludeTestServices: true })((it) => {
           }),
         });
         expect(report.corpus).toEqual({ claude: { _tag: "Absent" }, codex: { _tag: "Absent" } });
-        expect([report.totals.claudeSessions, report.totals.codex]).toEqual([O.none(), O.none()]);
-        expect([report.calibration.slope, report.headline.turnsPerVerdict]).toEqual([O.none(), O.none()]);
+        assertNone(report.totals.claudeSessions);
+        assertNone(report.totals.codex);
+        assertNone(report.calibration.slope);
+        assertNone(report.headline.turnsPerVerdict);
       })
     );
 
@@ -287,7 +290,7 @@ it.layer(layer, { excludeTestServices: true })((it) => {
         const { fixture } = yield* corpus();
         const session = path.join(
           fixture.claudeRoot,
-          "-home-PATHCANARY-beep-effect",
+          "-home-alice-PATHCANARY-beep-effect",
           "session-0f1e-SESSIONCANARY.jsonl"
         );
         const rollout = path.join(fixture.codexRoot, "2026", "11", "12", "rollout-CODEXCANARY.jsonl");

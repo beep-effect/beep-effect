@@ -686,8 +686,8 @@ export class CalibrationBinRow extends S.Opaque<CalibrationBinRow, { readonly br
  * **Details**
  *
  * A sample is a Claude API call that followed exactly one tool result over 3,000 characters; its tokens are
- * the call's context minus the previous call's context and output. The fit is `tokens = intercept + slope ×
- * chars`, and `charsPerToken` is `1 / slope`.
+ * the call's context minus the previous call's context and output. The fit is
+ * `tokens = intercept + slope * chars`, and `charsPerToken` is `1 / slope`.
  *
  * **Example** (Inspect the calibration fields)
  *
@@ -836,7 +836,7 @@ export class CensusBaselineFile extends S.Opaque<CensusBaselineFile, { readonly 
  *
  * @param until - the window end of the run
  * @param ruleVersion - the rule version of the run
- * @returns The baseline file name.
+ * @returns A portable `.json` name unique to the window end and rule version.
  * @category utilities
  * @since 0.0.0
  */

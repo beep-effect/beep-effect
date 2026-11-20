@@ -72,12 +72,16 @@ import {
   VerificationKind,
   YeetSubcommand,
 } from "./census-rules.ts";
-import { makeClaudeProjector, makeCodexProjector } from "./internal/census-projection.ts";
+import {
+  CensusWindowMillis,
+  CodexProjectorOptions,
+  makeClaudeProjector,
+  makeCodexProjector,
+} from "./internal/census-projection.ts";
 import { modifiedAtMillis } from "./internal/file-info.ts";
 import type { CensusHarness } from "./census-rules.ts";
 import type {
   AssistantFacts,
-  CensusWindowMillis,
   ClaudeLineFacts,
   ResultFacts,
   TurnToolFacts,
@@ -106,8 +110,8 @@ const $I = $RepoAiMetricsId.create("census");
  *     since: DateTime.makeUnsafe("2026-11-11T11:56:00Z"),
  *     until: DateTime.makeUnsafe("2026-11-18T11:57:45Z"),
  *   }),
- *   claudeRoot: "/home/agent/.claude/projects",
- *   codexRoot: "/home/agent/.codex/sessions",
+ *   claudeRoot: "/home/alice/.claude/projects",
+ *   codexRoot: "/home/alice/.codex/sessions",
  *   repository: "beep-effect",
  * })
  * console.log(request.repository) // "beep-effect"
@@ -295,7 +299,11 @@ const makeAccumulator = () => ({
 
 type Accumulator = ReturnType<typeof makeAccumulator>;
 
-const contextTokensOf = (usage: UsageFacts) => usage.input + usage.cacheCreation + usage.cacheRead;
+const contextTokensOf = (usage: {
+  readonly input: number;
+  readonly cacheCreation: number;
+  readonly cacheRead: number;
+}) => usage.input + usage.cacheCreation + usage.cacheRead;
 
 const addSamples = (acc: Accumulator, facts: VerificationFacts) => {
   const samples = acc.samples[facts.kind];
@@ -504,33 +512,47 @@ const makeClaudeContext = (acc: Accumulator, harness: CensusHarness) => {
     A.forEach(facts.user, (entry) => (entry._tag === "Text" ? pushBetween(0) : onResult(entry.result, facts.inWindow)));
   };
 
-  const finish = () => {
-    flush();
-    O.map(runDigs, (digs) => addFollowUp(acc, digs));
+  const addUsage = () => {
     const totals = acc.totals[harness];
-    let active = 0;
-    for (const { usage, inWindow } of MutableHashMap.values(usageById)) {
-      if (!inWindow) continue;
-      active += 1;
+    const counted = pipe(
+      usageById,
+      MutableHashMap.values,
+      A.fromIterable,
+      A.filter((entry) => entry.inWindow)
+    );
+    A.forEach(counted, ({ usage }) => {
       totals.apiCalls += 1;
       totals.input += usage.input;
       totals.cacheCreation += usage.cacheCreation;
       totals.cacheRead += usage.cacheRead;
       totals.output += usage.output;
-    }
-    if (active > 0) {
-      if (harness === "claude-subagent") acc.subagents += 1;
-      else acc.sessions += 1;
-    }
-    for (const turn of MutableHashMap.values(turns)) {
-      if (!turn.inWindow) continue;
-      const bucket = acc.turns.classes[turnClassOf(turn.bits, turn.toolCalls)];
-      acc.turns.turns += 1;
-      acc.turns.contextTokens += turn.contextTokens;
-      bucket.turns += 1;
-      bucket.contextTokens += turn.contextTokens;
-      bucket.chars += turn.chars;
-    }
+    });
+    return A.isReadonlyArrayNonEmpty(counted);
+  };
+
+  const addTurns = () =>
+    pipe(
+      turns,
+      MutableHashMap.values,
+      A.fromIterable,
+      A.filter((turn) => turn.inWindow),
+      A.forEach((turn) => {
+        const bucket = acc.turns.classes[turnClassOf(turn.bits, turn.toolCalls)];
+        acc.turns.turns += 1;
+        acc.turns.contextTokens += turn.contextTokens;
+        bucket.turns += 1;
+        bucket.contextTokens += turn.contextTokens;
+        bucket.chars += turn.chars;
+      })
+    );
+
+  const finish = () => {
+    flush();
+    O.map(runDigs, (digs) => addFollowUp(acc, digs));
+    const active = addUsage();
+    if (active && harness === "claude-subagent") acc.subagents += 1;
+    if (active && harness !== "claude-subagent") acc.sessions += 1;
+    addTurns();
   };
 
   return { consume, finish };
@@ -602,7 +624,7 @@ const censusCodexFile = Effect.fnUntraced(function* (
   window: CensusWindowMillis,
   repository: string
 ) {
-  const projector = makeCodexProjector({ window, repository });
+  const projector = makeCodexProjector(CodexProjectorOptions.make({ window, repository }));
   let matched = false;
   let tokens = O.none<{ readonly input: number; readonly cachedInput: number; readonly output: number }>();
   const read = yield* readLines(path, acc.codexFiles, (line) => {
@@ -644,27 +666,26 @@ const listEntries = Effect.fnUntraced(function* (directory: string) {
 });
 
 // Walk a directory: subdirectories while `descend` allows, transcript files modified since the window start.
-const walk = Effect.fnUntraced(function* (
+const walk: (
   directory: string,
   depth: number,
   since: number,
   descend: (name: string, depth: number) => boolean
-): Effect.fn.Return<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> {
-  const path = yield* Path.Path;
-  const found: Array<string> = [];
-  for (const entry of yield* listEntries(directory)) {
-    const child = path.join(directory, entry.name);
-    if (entry.type === "Directory") {
-      if (!descend(entry.name, depth)) continue;
-      const nested = yield* walk(child, depth + 1, since, descend);
-      found.push(...nested);
-    } else if (isTranscript(entry.name)) {
-      const selected = yield* modifiedSince(child, since);
-      if (selected) found.push(child);
-    }
+) => Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> = Effect.fnUntraced(
+  function* (directory, depth, since, descend) {
+    const path = yield* Path.Path;
+    const entries = yield* listEntries(directory);
+    const visit = (entry: FileSystem.DirectoryEntry) => {
+      const child = path.join(directory, entry.name);
+      if (entry.type === "Directory")
+        return descend(entry.name, depth) ? walk(child, depth + 1, since, descend) : Effect.succeed(A.empty<string>());
+      if (!isTranscript(entry.name)) return Effect.succeed(A.empty<string>());
+      return Effect.map(modifiedSince(child, since), (selected) => (selected ? [child] : A.empty<string>()));
+    };
+    const found = yield* Effect.forEach(entries, visit, { concurrency: 1 });
+    return A.flatten(found);
   }
-  return found;
-});
+);
 
 const isSubagent = (relative: ReadonlyArray<string>) =>
   A.some(A.dropRight(relative, 1), (segment) => segment === CensusSelectionRules.subagentDirectory) ||
@@ -998,10 +1019,11 @@ const foldReport = (acc: Accumulator, request: CensusRequest, presence: Presence
 // ---------------------------------------------------------------------------
 // Service
 
-const windowMillis = (window: CensusWindow): CensusWindowMillis => ({
-  since: DateTime.toEpochMillis(window.since),
-  until: DateTime.toEpochMillis(window.until),
-});
+const windowMillis = (window: CensusWindow): CensusWindowMillis =>
+  CensusWindowMillis.make({
+    since: DateTime.toEpochMillis(window.since),
+    until: DateTime.toEpochMillis(window.until),
+  });
 
 const runCensus = Effect.fn("AiMetrics.census")(function* (request: CensusRequest) {
   const window = windowMillis(request.window);
@@ -1087,8 +1109,8 @@ export const makeCensus: Effect.Effect<CensusShape, never, FileSystem.FileSystem
  *         since: DateTime.makeUnsafe("2026-11-11T11:56:00Z"),
  *         until: DateTime.makeUnsafe("2026-11-18T11:57:45Z"),
  *       }),
- *       claudeRoot: "/home/agent/.claude/projects",
- *       codexRoot: "/home/agent/.codex/sessions",
+ *       claudeRoot: "/home/alice/.claude/projects",
+ *       codexRoot: "/home/alice/.codex/sessions",
  *       repository: "beep-effect",
  *     })
  *   )

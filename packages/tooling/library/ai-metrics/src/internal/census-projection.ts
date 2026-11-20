@@ -11,6 +11,7 @@
  *
  * @since 0.0.0
  */
+import { $RepoAiMetricsId } from "@beep/identity/packages";
 import { thunkEmptyStr } from "@beep/utils";
 import * as A from "effect/Array";
 import { pipe } from "effect/Function";
@@ -27,6 +28,7 @@ import {
   CensusSelectionRules,
   EditToolName,
   FilteredCommandPattern,
+  FilterHabit,
   FilterHabitPipePatterns,
   LineClass,
   LineClassRules,
@@ -35,6 +37,7 @@ import {
   OffenderRules,
   RedirectTargetPattern,
   ShellClassRules,
+  ToolOutputClass,
   TurboTaskPrefixPattern,
   TurnCommandPatterns,
   VerificationKind,
@@ -42,14 +45,9 @@ import {
   YeetSubcommandPattern,
 } from "../census-rules.ts";
 import { parseSourceEventTime } from "./source-event-time.ts";
-import type {
-  FilterHabit,
-  LineClassRule,
-  OffenderRule,
-  ShellClass,
-  ToolOutputClass,
-  YeetSubcommand as YeetSubcommandType,
-} from "../census-rules.ts";
+import type { LineClassRule, OffenderRule, ShellClass } from "../census-rules.ts";
+
+const $I = $RepoAiMetricsId.create("internal/census-projection");
 
 // ---------------------------------------------------------------------------
 // Window
@@ -60,10 +58,11 @@ import type {
  * @category models
  * @since 0.0.0
  */
-export interface CensusWindowMillis {
-  readonly since: number;
-  readonly until: number;
-}
+export class CensusWindowMillis extends S.Opaque<CensusWindowMillis, { readonly brand: unique symbol }>()(
+  S.Struct({ since: S.Finite, until: S.Finite }).pipe(
+    $I.annoteSchema("CensusWindowMillis", { description: "Inclusive record-time bounds in epoch milliseconds." })
+  )
+) {}
 
 const timeOf = (value: unknown): O.Option<number> =>
   pipe(
@@ -111,14 +110,14 @@ const isVerificationKind = S.is(VerificationKind);
 const isYeetSubcommand = S.is(YeetSubcommand);
 const isEditToolName = S.is(EditToolName);
 
-const yeetSubcommandOf = (command: string): YeetSubcommandType =>
+const yeetSubcommandOf = (command: string): YeetSubcommand =>
   pipe(
     command,
     Str.match(YeetSubcommandPattern),
     O.flatMap(A.get(1)),
     O.map(Str.replace(/\s+/g, "-")),
     O.match({
-      onNone: (): YeetSubcommandType => "none",
+      onNone: (): YeetSubcommand => "none",
       onSome: (word) => (isYeetSubcommand(word) ? word : "other"),
     })
   );
@@ -148,13 +147,15 @@ const coreCommand = (command: string): string =>
  * @category models
  * @since 0.0.0
  */
-export interface CallFacts {
-  readonly asksForHelp: boolean;
-  readonly filtered: boolean;
-  readonly habits: ReadonlyArray<FilterHabit>;
-  readonly toolOutputClass: ToolOutputClass;
-  readonly yeetSubcommand: O.Option<YeetSubcommandType>;
-}
+export class CallFacts extends S.Opaque<CallFacts, { readonly brand: unique symbol }>()(
+  S.Struct({
+    asksForHelp: S.Boolean,
+    filtered: S.Boolean,
+    habits: S.Array(FilterHabit),
+    toolOutputClass: ToolOutputClass,
+    yeetSubcommand: S.Option(YeetSubcommand),
+  }).pipe($I.annoteSchema("CallFacts", { description: "Classified facts about one tool call; no command text." }))
+) {}
 
 const habitsOf = (command: string, filtered: boolean): ReadonlyArray<FilterHabit> =>
   A.getSomes([
@@ -167,22 +168,22 @@ const habitsOf = (command: string, filtered: boolean): ReadonlyArray<FilterHabit
 
 const callFacts = (toolOutputClass: ToolOutputClass, command: string, filterable: boolean): CallFacts => {
   const filtered = filterable && FilteredCommandPattern.test(command);
-  return {
+  return CallFacts.make({
     toolOutputClass,
     filtered,
     habits: isVerificationKind(toolOutputClass) ? habitsOf(command, filtered) : [],
     yeetSubcommand: toolOutputClass === "yeet" ? O.some(yeetSubcommandOf(command)) : O.none(),
     asksForHelp: TurnCommandPatterns.help.test(command),
-  };
+  });
 };
 
-const unmatchedCall: CallFacts = {
+const unmatchedCall = CallFacts.make({
   toolOutputClass: "unmatched-result",
   filtered: false,
   habits: [],
   yeetSubcommand: O.none(),
   asksForHelp: false,
-};
+});
 
 // ---------------------------------------------------------------------------
 // Result text
@@ -222,14 +223,20 @@ const isPersistedOutput = (text: string) =>
  * @category models
  * @since 0.0.0
  */
-export interface VerificationFacts {
-  readonly chars: number;
-  readonly habits: ReadonlyArray<FilterHabit>;
-  readonly kind: VerificationKind;
-  readonly lineClassChars: Readonly<Record<LineClass, number>>;
-  readonly offenderChars: Readonly<Record<CensusOffender, number>>;
-  readonly offenderLines: Readonly<Record<CensusOffender, number>>;
-}
+export class VerificationFacts extends S.Opaque<VerificationFacts, { readonly brand: unique symbol }>()(
+  S.Struct({
+    chars: S.Finite,
+    habits: S.Array(FilterHabit),
+    kind: VerificationKind,
+    lineClassChars: S.Record(LineClass, S.Finite),
+    offenderChars: S.Record(CensusOffender, S.Finite),
+    offenderLines: S.Record(CensusOffender, S.Finite),
+  }).pipe(
+    $I.annoteSchema("VerificationFacts", {
+      description: "Measured line classes, offenders and filter habits of one verification result.",
+    })
+  )
+) {}
 
 const zeroLineClasses = (): Record<LineClass, number> => R.fromEntries(A.map(LineClass.literals, (key) => [key, 0]));
 const zeroOffenders = (): Record<CensusOffender, number> =>
@@ -322,12 +329,14 @@ const verificationFacts = (
 ): O.Option<VerificationFacts> =>
   pipe(
     O.liftPredicate(call.toolOutputClass, isVerificationKind),
-    O.map((kind) => ({
-      kind,
-      chars: Str.length(text),
-      habits: call.habits,
-      ...measureLines(text, kind, call, gateRows),
-    }))
+    O.map((kind) =>
+      VerificationFacts.make({
+        kind,
+        chars: Str.length(text),
+        habits: call.habits,
+        ...measureLines(text, kind, call, gateRows),
+      })
+    )
   );
 
 /**
@@ -336,16 +345,20 @@ const verificationFacts = (
  * @category models
  * @since 0.0.0
  */
-export interface ResultFacts {
-  readonly chars: number;
-  readonly filtered: boolean;
-  readonly persisted: boolean;
-  readonly toolOutputClass: ToolOutputClass;
-  readonly turnChars: number;
-  readonly turnMessage: O.Option<string>;
-  readonly verification: O.Option<VerificationFacts>;
-  readonly yeetSubcommand: O.Option<YeetSubcommandType>;
-}
+export class ResultFacts extends S.Opaque<ResultFacts, { readonly brand: unique symbol }>()(
+  S.Struct({
+    chars: S.Finite,
+    filtered: S.Boolean,
+    persisted: S.Boolean,
+    toolOutputClass: ToolOutputClass,
+    turnChars: S.Finite,
+    turnMessage: S.Option(S.String),
+    verification: S.Option(VerificationFacts),
+    yeetSubcommand: S.Option(YeetSubcommand),
+  }).pipe(
+    $I.annoteSchema("ResultFacts", { description: "Measured facts about one tool result: sizes and classes, no text." })
+  )
+) {}
 
 const resultFacts = (
   text: string,
@@ -353,16 +366,17 @@ const resultFacts = (
   call: CallFacts,
   turnMessage: O.Option<string>,
   measured: O.Option<OffenderState["gateRows"]>
-): ResultFacts => ({
-  toolOutputClass: call.toolOutputClass,
-  chars: Str.length(text),
-  turnChars,
-  filtered: call.filtered,
-  persisted: isPersistedOutput(text),
-  yeetSubcommand: call.yeetSubcommand,
-  verification: O.flatMap(measured, (gateRows) => verificationFacts(text, call, gateRows)),
-  turnMessage,
-});
+): ResultFacts =>
+  ResultFacts.make({
+    toolOutputClass: call.toolOutputClass,
+    chars: Str.length(text),
+    turnChars,
+    filtered: call.filtered,
+    persisted: isPersistedOutput(text),
+    yeetSubcommand: call.yeetSubcommand,
+    verification: O.flatMap(measured, (gateRows) => verificationFacts(text, call, gateRows)),
+    turnMessage,
+  });
 
 // ---------------------------------------------------------------------------
 // Turn accounting (Claude)
@@ -373,19 +387,22 @@ const resultFacts = (
  * @category models
  * @since 0.0.0
  */
-export interface TurnToolFacts {
-  readonly kind: "edit" | "read" | "dig" | "other" | "run" | "ci-log";
-  readonly redirected: boolean;
-  readonly rerun: boolean;
-  readonly rerunSameCommand: boolean;
-}
+export class TurnToolFacts extends S.Opaque<TurnToolFacts, { readonly brand: unique symbol }>()(
+  S.Struct({
+    kind: S.Literals(["edit", "read", "dig", "other", "run", "ci-log"]),
+    redirected: S.Boolean,
+    rerun: S.Boolean,
+    rerunSameCommand: S.Boolean,
+  }).pipe($I.annoteSchema("TurnToolFacts", { description: "What one tool call did in its turn." }))
+) {}
 
-const turnTool = (kind: TurnToolFacts["kind"]): TurnToolFacts => ({
-  kind,
-  redirected: false,
-  rerun: false,
-  rerunSameCommand: false,
-});
+const turnTool = (kind: TurnToolFacts["kind"]): TurnToolFacts =>
+  TurnToolFacts.make({
+    kind,
+    redirected: false,
+    rerun: false,
+    rerunSameCommand: false,
+  });
 
 const makeTurnState = () => {
   const logNames = MutableHashSet.empty<string>();
@@ -400,12 +417,12 @@ const makeTurnState = () => {
     const prior = MutableHashMap.get(sinceEdit, core);
     MutableHashMap.set(sinceEdit, core, command);
     if (TurnCommandPatterns.mutation.test(command)) MutableHashMap.clear(sinceEdit);
-    return {
+    return TurnToolFacts.make({
       kind: "run",
       redirected,
       rerun: O.isSome(prior),
       rerunSameCommand: O.exists(prior, (previous) => previous === command),
-    };
+    });
   };
   const otherShell = (command: string): TurnToolFacts => {
     if (TurnCommandPatterns.ciLog.test(command)) {
@@ -462,17 +479,17 @@ const ClaudeRecord = S.Struct({
 const ToolInput = S.Struct({ command: S.optionalKey(S.Unknown), file_path: S.optionalKey(S.Unknown) });
 const ClaudeBlock = S.Union([
   S.Struct({
-    type: S.Literal("tool_use"),
+    type: S.tag("tool_use"),
     id: S.optionalKey(S.Unknown),
     name: S.String,
     input: S.optionalKey(S.Unknown),
   }),
   S.Struct({
-    type: S.Literal("tool_result"),
+    type: S.tag("tool_result"),
     tool_use_id: S.optionalKey(S.Unknown),
     content: S.optionalKey(S.Unknown),
   }),
-  S.Struct({ type: S.Literal("text") }),
+  S.Struct({ type: S.tag("text") }),
 ]);
 const decodeClaudeRecord = S.decodeUnknownOption(S.fromJsonString(ClaudeRecord));
 const decodeClaudeMessage = S.decodeUnknownOption(ClaudeMessage);
@@ -489,23 +506,27 @@ const countOf = (value: unknown): number => (P.isNumber(value) && Number.isFinit
  * @category models
  * @since 0.0.0
  */
-export interface UsageFacts {
-  readonly cacheCreation: number;
-  readonly cacheRead: number;
-  readonly input: number;
-  readonly output: number;
-}
+export class UsageFacts extends S.Opaque<UsageFacts, { readonly brand: unique symbol }>()(
+  S.Struct({
+    cacheCreation: S.Finite,
+    cacheRead: S.Finite,
+    input: S.Finite,
+    output: S.Finite,
+  }).pipe($I.annoteSchema("UsageFacts", { description: "Token usage of one Claude API call." }))
+) {}
 
 const usageOf = (value: unknown): O.Option<UsageFacts> =>
   pipe(
     O.liftPredicate(value, P.isTruthy),
     O.flatMap(decodeClaudeUsage),
-    O.map((usage) => ({
-      input: countOf(usage.input_tokens),
-      cacheCreation: countOf(usage.cache_creation_input_tokens),
-      cacheRead: countOf(usage.cache_read_input_tokens),
-      output: countOf(usage.output_tokens),
-    }))
+    O.map((usage) =>
+      UsageFacts.make({
+        input: countOf(usage.input_tokens),
+        cacheCreation: countOf(usage.cache_creation_input_tokens),
+        cacheRead: countOf(usage.cache_read_input_tokens),
+        output: countOf(usage.output_tokens),
+      })
+    )
   );
 
 /**
@@ -514,13 +535,17 @@ const usageOf = (value: unknown): O.Option<UsageFacts> =>
  * @category models
  * @since 0.0.0
  */
-export interface AssistantFacts {
-  readonly messageId: string;
-  readonly toolCalls: number;
-  readonly turnInWindow: boolean;
-  readonly turnTools: ReadonlyArray<TurnToolFacts>;
-  readonly usage: O.Option<UsageFacts>;
-}
+export class AssistantFacts extends S.Opaque<AssistantFacts, { readonly brand: unique symbol }>()(
+  S.Struct({
+    messageId: S.String,
+    toolCalls: S.Finite,
+    turnInWindow: S.Boolean,
+    turnTools: S.Array(TurnToolFacts),
+    usage: S.Option(UsageFacts),
+  }).pipe(
+    $I.annoteSchema("AssistantFacts", { description: "One Claude API call record: its message, usage and turn facts." })
+  )
+) {}
 
 /**
  * One entry of a Claude user record: a text block or a tool result.
@@ -528,7 +553,17 @@ export interface AssistantFacts {
  * @category models
  * @since 0.0.0
  */
-export type UserEntry = { readonly _tag: "Text" } | { readonly _tag: "Result"; readonly result: ResultFacts };
+export const UserEntry = S.Union([S.TaggedStruct("Text", {}), S.TaggedStruct("Result", { result: ResultFacts })]).pipe(
+  $I.annoteSchema("UserEntry", { description: "One entry of a Claude user record: a text block or a tool result." })
+);
+
+/**
+ * Type of {@link UserEntry}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type UserEntry = typeof UserEntry.Type;
 
 /**
  * The facts one Claude record contributes.
@@ -541,13 +576,15 @@ export type UserEntry = { readonly _tag: "Text" } | { readonly _tag: "Result"; r
  * @category models
  * @since 0.0.0
  */
-export interface ClaudeLineFacts {
-  readonly assistant: O.Option<AssistantFacts>;
-  readonly beforeEnd: boolean;
-  readonly inWindow: boolean;
-  readonly marker: "boundary" | "compact-summary" | "none";
-  readonly user: ReadonlyArray<UserEntry>;
-}
+export class ClaudeLineFacts extends S.Opaque<ClaudeLineFacts, { readonly brand: unique symbol }>()(
+  S.Struct({
+    assistant: S.Option(AssistantFacts),
+    beforeEnd: S.Boolean,
+    inWindow: S.Boolean,
+    marker: S.Literals(["boundary", "compact-summary", "none"]),
+    user: S.Array(UserEntry),
+  }).pipe($I.annoteSchema("ClaudeLineFacts", { description: "The facts one Claude record contributes." }))
+) {}
 
 interface ClaudeCall {
   readonly facts: CallFacts;
@@ -616,7 +653,13 @@ export const makeClaudeProjector = (window: CensusWindowMillis) => {
       : [];
     const uses = A.flatMap(blocks, (block) => (block.type === "tool_use" ? [block] : []));
     const turnTools = A.flatMap(uses, (block) => A.fromOption(toolUse(block, messageId, turnInWindow)));
-    return { messageId, usage: usageOf(message.usage), turnInWindow, toolCalls: A.length(uses), turnTools };
+    return AssistantFacts.make({
+      messageId,
+      usage: usageOf(message.usage),
+      turnInWindow,
+      toolCalls: A.length(uses),
+      turnTools,
+    });
   };
 
   const result = (block: { readonly tool_use_id?: unknown; readonly content?: unknown }, inWindow: boolean) => {
@@ -654,13 +697,13 @@ export const makeClaudeProjector = (window: CensusWindowMillis) => {
   const facts = (record: typeof ClaudeRecord.Type): ClaudeLineFacts => {
     const { inWindow, beforeEnd } = clock.observe(record.timestamp);
     const marker = markerOf(record);
-    const base: ClaudeLineFacts = { inWindow, beforeEnd, marker, assistant: O.none(), user: [] };
+    const base = { inWindow, beforeEnd, marker, assistant: O.none<AssistantFacts>(), user: A.empty<UserEntry>() };
     const message =
       marker === "boundary" || !P.isTruthy(record.message) ? O.none() : decodeClaudeMessage(record.message);
-    if (O.isNone(message)) return base;
+    if (O.isNone(message)) return ClaudeLineFacts.make(base);
     if (record.type === "assistant")
-      return { ...base, assistant: O.some(assistant(message.value, record.uuid, inWindow)) };
-    return record.type === "user" ? { ...base, user: user(message.value, inWindow) } : base;
+      return ClaudeLineFacts.make({ ...base, assistant: O.some(assistant(message.value, record.uuid, inWindow)) });
+    return ClaudeLineFacts.make(record.type === "user" ? { ...base, user: user(message.value, inWindow) } : base);
   };
 
   return {
@@ -713,11 +756,11 @@ const jsonText = (value: unknown): string => O.getOrElse(encodeJson(value), thun
  * @category models
  * @since 0.0.0
  */
-export interface CodexTokenFacts {
-  readonly cachedInput: number;
-  readonly input: number;
-  readonly output: number;
-}
+export class CodexTokenFacts extends S.Opaque<CodexTokenFacts, { readonly brand: unique symbol }>()(
+  S.Struct({ cachedInput: S.Finite, input: S.Finite, output: S.Finite }).pipe(
+    $I.annoteSchema("CodexTokenFacts", { description: "Cumulative token usage of one Codex session." })
+  )
+) {}
 
 /**
  * The facts one Codex record contributes, or the end of a file that does not belong to the repository.
@@ -797,11 +840,13 @@ const tokenFacts = (info: unknown): O.Option<CodexTokenFacts> =>
     decodeCodexTokenInfo(info),
     O.flatMap((value) => O.liftPredicate(value.total_token_usage, P.isTruthy)),
     O.flatMap(decodeCodexTokenUsage),
-    O.map((usage) => ({
-      input: countOf(usage.input_tokens),
-      cachedInput: countOf(usage.cached_input_tokens),
-      output: countOf(usage.output_tokens),
-    }))
+    O.map((usage) =>
+      CodexTokenFacts.make({
+        input: countOf(usage.input_tokens),
+        cachedInput: countOf(usage.cached_input_tokens),
+        output: countOf(usage.output_tokens),
+      })
+    )
   );
 
 /**
@@ -810,10 +855,11 @@ const tokenFacts = (info: unknown): O.Option<CodexTokenFacts> =>
  * @category models
  * @since 0.0.0
  */
-export interface CodexProjectorOptions {
-  readonly repository: string;
-  readonly window: CensusWindowMillis;
-}
+export class CodexProjectorOptions extends S.Opaque<CodexProjectorOptions, { readonly brand: unique symbol }>()(
+  S.Struct({ repository: S.String, window: CensusWindowMillis }).pipe(
+    $I.annoteSchema("CodexProjectorOptions", { description: "Inputs of a Codex projector." })
+  )
+) {}
 
 /**
  * Make the projector for one Codex session file.

@@ -32,3 +32,15 @@ Recorded while building the goal (2026-11-19).
    records to old transcripts. Prevention: the census selects on record timestamps and keeps
    modification time as a pre-filter only (decision
    `files-scanned-counts-files-touching-the-window`).
+5. **package-verify passes code that five final-check gates refuse.** Doing: the first final-check
+   after both packages passed package-verify. Evidence: final-check failed on schema-first (ten
+   exported interfaces in an internal module), private-home-paths (a placeholder home that is not on
+   the allowed list), schema-tag-idioms, fallow complexity (two functions at cognitive 10), the
+   root docs lint and the effect-vitest inventory. None is in package-verify. Prevention:
+   package-verify runs the repository law lints scoped to the package's changed files.
+6. **A window census is not repeatable on a live Codex corpus.** Doing: re-running the reproduction
+   after a refactor to confirm identical output. Evidence: six Codex session files left the
+   sessions directory between two runs ninety minutes apart, so the Codex totals moved while the
+   code had not. The check had to run the old and the new code against the same corpus state.
+   Prevention: a census run records the count of files it selected per harness day, so a
+   later run can say which days lost files.

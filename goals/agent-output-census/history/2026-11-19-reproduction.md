@@ -16,6 +16,11 @@ which decodes with `CensusBaselineFile`. The file and the JSON output hold count
 fitted constants, literal class names, the window timestamps and version tags only: no home path, no
 path at all, no command or transcript text.
 
+The corpus is live, so a later run on the same window can differ. About ninety minutes after the
+baseline run, the same command counted 29 Codex sessions instead of 32 (139 files instead of 145):
+six Codex session files had left the sessions directory. The Claude figures were unchanged. The
+baseline file is the record of the run that was made, and the comparison below uses it.
+
 ## Reference
 
 Two references, both aggregates:
