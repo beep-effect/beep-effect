@@ -19,7 +19,8 @@ name: Beep CI Binary
 # the digest recorded on the latest `beep-ci-*` release and the compiled bytes
 # differ from that release's binary; every release records its digest in its
 # notes and a `beep-linux-x64.closure.json` asset, which a byte-identical
-# rebuild re-records in place (goals/heavy-pool-diet PERIH-11).
+# rebuild re-records, keeping the superseded manifest as
+# `beep-linux-x64.closure.<digest>.json` (goals/heavy-pool-diet PERIH-11).
 
 on:
   push:
@@ -209,6 +210,12 @@ jobs:
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 
+      # `beep-linux-x64.closure.json` always means the latest recorded closure. The
+      # manifest it replaces was the one a reviewer cleared for the earlier pin, so it
+      # is first kept as its own `beep-linux-x64.closure.<digest>.json` asset and its
+      # digest named in the notes: a closure diff stays reproducible from the
+      # releases alone. An archived asset is never clobbered or deleted (overwritten
+      # once, on beep-ci-7e2128d77b29 in run 44631311634).
       - name: Re-record the closure digest on the byte-identical release
         if: steps.closure.outputs.changed == 'true' && steps.bytes.outputs.same == 'true'
         shell: bash
@@ -220,11 +227,32 @@ jobs:
           CLOSURE_DIGEST: ${{ steps.closure.outputs.digest }}
         run: |
           set -euo pipefail
+          superseded_dir="${RUNNER_TEMP}/superseded-closure"
+          superseded=""
+          kept="no earlier closure asset to keep"
+          assets="$(gh release view "$LATEST_TAG" --json assets --jq '.assets[].name')"
+          if grep -Fxq beep-linux-x64.closure.json <<< "$assets"; then
+            gh release download "$LATEST_TAG" --pattern beep-linux-x64.closure.json \
+              --dir "$superseded_dir" --clobber
+            superseded="$(jq -r .digest "$superseded_dir/beep-linux-x64.closure.json")"
+            if [[ ! "$superseded" =~ ^[0-9a-f]{64}$ ]]; then
+              echo "::error::${LATEST_TAG}'s closure asset records no sha256 digest ('${superseded}'); nothing was changed."
+              exit 1
+            fi
+            archive="beep-linux-x64.closure.${superseded}.json"
+            cp "$superseded_dir/beep-linux-x64.closure.json" "$superseded_dir/$archive"
+            if grep -Fxq "$archive" <<< "$assets"; then
+              echo "${LATEST_TAG} already keeps ${archive}."
+            else
+              gh release upload "$LATEST_TAG" "$superseded_dir/$archive"
+            fi
+            kept="superseded ${superseded}, kept as ${archive}"
+          fi
           gh release upload "$LATEST_TAG" dist/beep-linux-x64.closure.json --clobber
           notes="$(gh release view "$LATEST_TAG" --json body --jq .body)"
           gh release edit "$LATEST_TAG" --notes "${notes}
-          Closure digest re-recorded: ${CLOSURE_DIGEST} at ${TARGET_SHA} (byte-identical rebuild)."
-          echo "Re-recorded closure digest ${CLOSURE_DIGEST} on ${LATEST_TAG}; no new release."
+          Closure digest re-recorded: ${CLOSURE_DIGEST} at ${TARGET_SHA} (byte-identical rebuild; ${kept})."
+          echo "Re-recorded closure digest ${CLOSURE_DIGEST} on ${LATEST_TAG} (${kept}); no new release."
 
       - name: Publish the release asset
         if: steps.closure.outputs.changed == 'true' && steps.bytes.outputs.same != 'true'
