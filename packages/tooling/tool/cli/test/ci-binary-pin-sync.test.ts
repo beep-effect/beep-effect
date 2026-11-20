@@ -869,13 +869,16 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
     ) {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
-      yield* Effect.forEach(HOOKS, (hook) =>
-        Effect.gen(function* () {
-          const file = path.join(root, ".git", "hooks", hook);
-          yield* fs.makeDirectory(path.dirname(file), { recursive: true });
-          yield* fs.writeFileString(file, `#!/bin/sh\necho ran > "${marks}/${hook}"\nexit 1\n`);
-          yield* fs.chmod(file, 0o755);
-        })
+      yield* Effect.forEach(
+        HOOKS,
+        (hook) =>
+          Effect.gen(function* () {
+            const file = path.join(root, ".git", "hooks", hook);
+            yield* fs.makeDirectory(path.dirname(file), { recursive: true });
+            yield* fs.writeFileString(file, `#!/bin/sh\necho ran > "${marks}/${hook}"\nexit 1\n`);
+            yield* fs.chmod(file, 0o755);
+          }),
+        { concurrency: 1 }
       );
     });
 
@@ -910,9 +913,10 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
         );
         expect(plain.exitCode).not.toBe(0);
         expect(plain.output).toContain("Not committing merge");
-        expect(yield* ranHooks(marks)).not.toStrictEqual([]);
+        const ranOnPlainPull = yield* ranHooks(marks);
+        expect(ranOnPlainPull).not.toStrictEqual([]);
         yield* gitOutput(checkout, ["reset", "-q", "--hard", repo.before]);
-        yield* Effect.forEach(HOOKS, (hook) => fs.remove(`${marks}/${hook}`, { force: true }));
+        yield* Effect.forEach(HOOKS, (hook) => fs.remove(`${marks}/${hook}`, { force: true }), { concurrency: 1 });
 
         // The sync: a merge commit with git's own message, no hook run.
         yield* fs.remove(repo.output, { force: true });
@@ -930,13 +934,16 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
           "--output",
           repo.output,
         ]);
-        const lines = A.filter(Str.split(yield* fs.readFileString(repo.output), "\n"), Str.isNonEmpty);
+        const output = yield* fs.readFileString(repo.output);
+        const lines = A.filter(Str.split(output, "\n"), Str.isNonEmpty);
         const merged = yield* head(checkout);
         const message = yield* gitOutput(checkout, ["log", "-1", "--format=%s"]);
         expect(A.take(lines, 3)).toStrictEqual(decided("merged", O.some(NEW)));
-        expect(yield* parents(checkout)).toStrictEqual([repo.before, main]);
+        const mergeParents = yield* parents(checkout);
+        expect(mergeParents).toStrictEqual([repo.before, main]);
         expect(O.some(message)).toStrictEqual(A.head(Str.split(mergeMessage, "\n")));
-        expect(yield* ranHooks(marks)).toStrictEqual([]);
+        const ranOnSync = yield* ranHooks(marks);
+        expect(ranOnSync).toStrictEqual([]);
 
         // The workflow's push, verbatim but for the URL: no force, no hook.
         yield* gitOutput(checkout, [
@@ -947,8 +954,10 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
           remote,
           "HEAD:refs/heads/ci/beep-ci-pin-bump",
         ]);
-        expect(yield* gitOutput(remote, ["rev-parse", "refs/heads/ci/beep-ci-pin-bump"])).toBe(merged);
-        expect(yield* ranHooks(marks)).toStrictEqual([]);
+        const pushed = yield* gitOutput(remote, ["rev-parse", "refs/heads/ci/beep-ci-pin-bump"]);
+        const ranOnPush = yield* ranHooks(marks);
+        expect(pushed).toBe(merged);
+        expect(ranOnPush).toStrictEqual([]);
       })
     );
   });
