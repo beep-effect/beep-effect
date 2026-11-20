@@ -450,6 +450,7 @@
       "name": "@beep/practice-m365-contacts",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/csv": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/law-practice-server": "workspace:^",
         "@beep/law-practice-use-cases": "workspace:^",
@@ -3653,6 +3654,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@beep/box": "workspace:^",
+        "@beep/csv": "workspace:^",
         "@beep/duckdb": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
         "@beep/epistemic-server": "workspace:^",
@@ -4604,6 +4606,7 @@
         "@beep/colors": "workspace:^",
         "@beep/commands": "workspace:^",
         "@beep/config-file": "workspace:^",
+        "@beep/csv": "workspace:^",
         "@beep/duckdb": "workspace:^",
         "@beep/epistemics": "workspace:^",
         "@beep/exiftool": "workspace:^",

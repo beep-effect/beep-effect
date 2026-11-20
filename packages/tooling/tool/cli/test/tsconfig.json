@@ -119,6 +119,9 @@
       "path": "../../../../foundation/modeling/contract-kit/tsconfig.json"
     },
     {
+      "path": "../../../../foundation/modeling/csv/tsconfig.json"
+    },
+    {
       "path": "../../../../foundation/modeling/epistemics/tsconfig.json"
     },
     {

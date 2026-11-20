@@ -709,3 +709,12 @@ to the gap between the reference checkout (main) and the pinned release.
 - **Would have prevented it:** a test that stops a fake deploy part-way and plans again. The expectation now
   names resumed rows (`ResumeKind`), and the workflow has a plan-only run whose rows the gate reads before any
   write.
+
+## 2026-11-19: a cheap-gates Fallow lane ran with an empty `--base` and failed the push
+
+- **Doing:** pushing the URL-permission provider patch (#3423) through `yeet publish`.
+- **Evidence:** the first push of the head failed `fallow:audit` with `base-resolution-failed`; the lane had been
+  started with an empty `--base` value. The same push passed on retry with nothing changed, so the red said
+  nothing about the patch and cost a full cheap-gates rerun.
+- **Would have prevented it:** a Fallow lane that resolves its base itself and never runs with an empty
+  value. #3427 (merged 2026-11-20, `56f52bf398d`) does that and adds a test.

@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 registry lane, goals/text-knowledge-stack-rebuild-p1b-registry)",
-    "reason": "Re-record the root and @beep/rdf after merging P1 PR A's final head 7a7b87f0328, which re-recorded them: @beep/rdf keeps PR B's @beep/spdx dependency edge, //#lint:identity-registry keeps the registry shard input glob, and turbo.json carries the regenerated seal-input lists. No command, cache flag, output or environment changed; no qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (text-knowledge-stack-rebuild P1 registry lane, goals/text-knowledge-stack-rebuild-p1b-registry)",
+    "reason": "Re-record the root after merging P1 PR A's head 91d8c174242: //#lint:identity-registry keeps PR B's registry shard input glob. No command, cache flag, output or environment changed; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p1b-a-merge-cache-review-2026-11-19.md",
-      "sha256": "9c8fc30a3333e6d879b41dbfc8ab2acccdd1b439c8998c16a4925d7f72bd3380"
+      "path": "docs/reports/tksr-p1b-a-merge-2-cache-review-2026-11-20.md",
+      "sha256": "5149a91a773e187900ecf9f98fc0d34e5fc4a4f9049a7993f786cb35cdb67aec"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "df271d931bfc4e669eedc1aa9cb368ffe78b9c408c13a20762dfc8d890b182f9"
+      "sha256": "5d87a04b4fed379fbbe5ff720ba27d3c8bccfbb469e85d26fb76407d7073d288"
     }
   ],
   "nodes": [

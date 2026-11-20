@@ -1,0 +1,25 @@
+{
+  "previous": {
+    "@beep/law-practice-server": "0519d149cbe1792891381cb68877ddd6402104736eae0b59bb5af1464c4d35c0",
+    "@beep/practice-m365-contacts": "aa9a44563abce1a81c7bad9442210d635e825403669bc986f76d6724f2498262",
+    "@beep/repo-cli": "1ce814eea397c8c92535ca174cb97adda5686ade0030b25ce5a6bfa0ae5b79f9",
+    "//": "d8b876ca6f218a17d3caa9778318b5d9d92b69f4b1255cb3e92b733b02868072"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (schema CSV migration lane, refactor/schema-csv-to-beep-csv)",
+    "reason": "Record the three packages whose manifests and tsconfig references gained the @beep/csv dependency when their CSV reads moved off @beep/schema. No qualification is granted. The root records the turbo.json inputs the policy fingerprint resealed.",
+    "basis": {
+      "path": "docs/reports/schema-csv-to-beep-csv-cache-review-2026-11-20.md",
+      "sha256": "cec74e4af5ae058d0f983a064ca513f4ebe0902e9b63268314a18c0c524c5bf8"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/law-practice-server",
+    "@beep/practice-m365-contacts",
+    "@beep/repo-cli"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

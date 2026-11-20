@@ -30,6 +30,7 @@
     "dev": "portless practice-m365-contacts.beep sh -c 'bun --watch src/main.ts'"
   },
   "dependencies": {
+    "@beep/csv": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/law-practice-server": "workspace:^",
     "@beep/law-practice-use-cases": "workspace:^",

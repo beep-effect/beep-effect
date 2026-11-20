@@ -540,21 +540,6 @@
   "@beep/schema/Csp": [
     "./packages/foundation/modeling/schema/src/Csp/index.ts"
   ],
-  "@beep/schema/Csv": [
-    "./packages/foundation/modeling/schema/src/Csv/index.ts"
-  ],
-  "@beep/schema/CsvCodecOptions": [
-    "./packages/foundation/modeling/schema/src/CsvCodecOptions/index.ts"
-  ],
-  "@beep/schema/CsvError": [
-    "./packages/foundation/modeling/schema/src/CsvError/index.ts"
-  ],
-  "@beep/schema/CsvFormatter": [
-    "./packages/foundation/modeling/schema/src/CsvFormatter/index.ts"
-  ],
-  "@beep/schema/CsvParser": [
-    "./packages/foundation/modeling/schema/src/CsvParser/index.ts"
-  ],
   "@beep/schema/DomCssProperties": [
     "./packages/foundation/modeling/schema/src/DomCssProperties/index.ts"
   ],
@@ -590,9 +575,6 @@
   ],
   "@beep/schema/NoSniff": [
     "./packages/foundation/modeling/schema/src/NoSniff/index.ts"
-  ],
-  "@beep/schema/ParserOptions": [
-    "./packages/foundation/modeling/schema/src/ParserOptions/index.ts"
   ],
   "@beep/schema/PermissionsPolicy": [
     "./packages/foundation/modeling/schema/src/PermissionsPolicy/index.ts"
@@ -2409,6 +2391,9 @@
   "@beep/xlsx": ["./packages/foundation/modeling/xlsx/src/index.ts"],
   "@beep/xlsx/*": ["./packages/foundation/modeling/xlsx/src/*"],
   "@beep/csv/internal/*": ["./packages/foundation/modeling/csv/src/internal/*"],
+  "@beep/repo-cli/commands/Gate": [
+    "./packages/tooling/tool/cli/src/commands/Gate/index.ts"
+  ],
   "@beep/repo-gate-vitest": [
     "./packages/tooling/test-kit/repo-gate-vitest/src/index.ts"
   ],
@@ -2417,9 +2402,6 @@
   ],
   "@beep/repo-gate-vitest/internal/*": [
     "./packages/tooling/test-kit/repo-gate-vitest/src/internal/*"
-  ],
-  "@beep/repo-cli/commands/Gate": [
-    "./packages/tooling/tool/cli/src/commands/Gate/index.ts"
   ],
   "@beep/schema/CanonicalHashSet": [
     "./packages/foundation/modeling/schema/src/CanonicalHashSet.ts"
