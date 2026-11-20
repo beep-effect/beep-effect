@@ -3393,6 +3393,7 @@
         "from": "@beep/law-practice-server",
         "allow": [
           "@beep/box",
+          "@beep/csv",
           "@beep/duckdb",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
@@ -3429,6 +3430,7 @@
         ],
         "allowTypeOnly": [
           "@beep/box",
+          "@beep/csv",
           "@beep/duckdb",
           "@beep/epistemic-domain",
           "@beep/epistemic-server",
@@ -4659,6 +4661,7 @@
       {
         "from": "@beep/practice-m365-contacts",
         "allow": [
+          "@beep/csv",
           "@beep/identity",
           "@beep/law-practice-server",
           "@beep/law-practice-use-cases",
@@ -4669,6 +4672,7 @@
           "@beep/xdg"
         ],
         "allowTypeOnly": [
+          "@beep/csv",
           "@beep/identity",
           "@beep/law-practice-server",
           "@beep/law-practice-use-cases",
@@ -5035,6 +5039,7 @@
           "@beep/commands",
           "@beep/config-file",
           "@beep/contract-kit",
+          "@beep/csv",
           "@beep/duckdb",
           "@beep/epistemics",
           "@beep/exiftool",
@@ -5113,6 +5118,7 @@
           "@beep/commands",
           "@beep/config-file",
           "@beep/contract-kit",
+          "@beep/csv",
           "@beep/duckdb",
           "@beep/epistemics",
           "@beep/exiftool",

@@ -19,6 +19,7 @@ import * as Flag from "effect/cli/Flag";
 import { pipe } from "effect/Function";
 import { runAiMetricsProgram } from "./AIMetrics.errors.ts";
 import { defaultP7MirrorRemoteRoot, defaultP7MirrorSshHost } from "./AIMetrics.schemas.ts";
+import { CensusCommandOptions, makeCensusProgram } from "./internal/Census.ts";
 import { makeForwarderRunProgram, makeForwarderTimerProgram, makeOtlpExportProgram } from "./internal/Forwarder.ts";
 import {
   makeConfigSnapshotProgram,
@@ -1316,6 +1317,43 @@ const inventoryCommand = Command.make("inventory", {}, () =>
   Command.withSubcommands([inventoryReportCommand, inventoryProbeCommand, inventoryCoverageCommand])
 );
 
+const censusCommand = Command.make(
+  "census",
+  {
+    since: Flag.String("since").pipe(
+      Flag.withDescription("Window start, an ISO timestamp; seven days before the window end by default"),
+      Flag.optional
+    ),
+    until: Flag.String("until").pipe(
+      Flag.withDescription("Window end, an ISO timestamp; now by default"),
+      Flag.optional
+    ),
+    claudeRoot: Flag.String("claude-root").pipe(
+      Flag.withDescription("Claude Code projects directory; ~/.claude/projects by default"),
+      Flag.optional
+    ),
+    codexRoot: Flag.String("codex-root").pipe(
+      Flag.withDescription("Codex sessions directory; ~/.codex/sessions by default"),
+      Flag.optional
+    ),
+    repository: Flag.String("repository").pipe(
+      Flag.withDefault("beep-effect"),
+      Flag.withDescription("Repository name a Claude project directory or Codex working directory must contain")
+    ),
+    json: jsonFlag,
+    writeBaseline: Flag.Boolean("write-baseline").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Add this run's file under standards/agent-output-census/runs; never overwrites")
+    ),
+    repoRoot: repoRootFlag,
+    baselineDirectory: Flag.String("baseline-dir").pipe(
+      Flag.withDescription("Directory for --write-baseline; standards/agent-output-census/runs by default"),
+      Flag.optional
+    ),
+  },
+  (options) => runAiMetricsProgram(makeCensusProgram(CensusCommandOptions.make(options)))
+).pipe(Command.withDescription("Census agent tool output in local Claude Code and Codex transcripts; aggregates only"));
+
 /**
  * Root of the `ai-metrics` command tree: ingest, storage, export, and retention.
  *
@@ -1343,6 +1381,7 @@ const inventoryCommand = Command.make("inventory", {}, () =>
 export const aiMetricsCommand = Command.make("ai-metrics", {}, () =>
   printLines([
     "AI metrics commands:",
+    "- census",
     "- ingest",
     "- sources discover",
     "- inventory report",
@@ -1363,6 +1402,7 @@ export const aiMetricsCommand = Command.make("ai-metrics", {}, () =>
 ).pipe(
   Command.withDescription("Collect, normalize, and plan deployment for AI-agent metrics"),
   Command.withSubcommands([
+    censusCommand,
     ingestCommand,
     sourcesCommand,
     inventoryCommand,

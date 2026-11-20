@@ -5,13 +5,12 @@
  * @since 0.0.0
  */
 
+import { Csv } from "@beep/csv/Csv.codec";
+import { CsvCodecOptions } from "@beep/csv/CsvOptions.schema";
 import { $RepoCliId } from "@beep/identity/packages";
 import { formatJsonValue } from "@beep/repo-cli-kit/cli/Json";
-import { CSV } from "@beep/schema/Csv";
-import { parseCsvRows } from "@beep/schema/CsvParser";
-import { ParserOptions } from "@beep/schema/ParserOptions";
 import { XmlTextToUnknown } from "@beep/schema/Xml";
-import { A, Str } from "@beep/utils";
+import { A, O, Str } from "@beep/utils";
 import { cast } from "@beep/utils/Function";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -19,7 +18,6 @@ import * as Hex from "effect/encoding/Hex";
 import { dual, flow, pipe } from "effect/Function";
 import * as HttpClient from "effect/http/HttpClient";
 import * as HttpClientResponse from "effect/http/HttpClientResponse";
-import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { SyncDataToTsError } from "../SyncDataToTs.errors.ts";
@@ -34,7 +32,7 @@ const decodeJsonText = S.decodeUnknownEffect(UnknownJson);
 const decodeJsonTextResult = S.decodeUnknownResult(S.fromJsonString(S.Json));
 const decodeXmlText = S.decodeUnknownEffect(XmlTextToUnknown);
 const encodeUnknownJsonResult = S.encodeUnknownResult(UnknownJson);
-const defaultCsvParserOptions = ParserOptions.new();
+const decodeCsvHeaderRows = S.decodeEffect(Csv.recordsFromString());
 
 const ParsedCsvRecord = S.Record(S.String, S.String).pipe(
   $I.annoteSchema("ParsedCsvRecord", {
@@ -289,30 +287,19 @@ export const parseXmlSource: {
     decodeXmlText(source.text).pipe(SyncDataToTsError.mapError(`Failed to parse XML payload for ${targetId}`, targetId))
 );
 
+// The header view pads a short row with empty cells and drops the cells of a long row that no column names, so a long
+// row is refused before the rows are read through it.
 const decodeCsvText = Effect.fn("SyncDataToTs.decodeCsvText")(function* (content: string) {
-  const rawRows = yield* parseCsvRows(content, defaultCsvParserOptions);
-
-  return yield* A.match(rawRows, {
-    onEmpty: () => Effect.succeed(attachCsvColumns([], [])),
-    onNonEmpty: ([headerRow]) => {
-      const rowFields: Record<string, typeof S.String> = pipe(
-        headerRow,
-        A.map((header) => [header, S.String] as const),
-        R.fromEntries
-      );
-
-      class ParsedCsvRow extends S.Class<ParsedCsvRow, { readonly brand: unique symbol }>($I`ParsedCsvRow`)(
-        rowFields,
-        $I.annote("ParsedCsvRow", {
-          description: "CSV row decoded with the runtime header columns from the source document.",
-        })
-      ) {}
-
-      return S.decodeEffect(CSV({})(ParsedCsvRow))(content).pipe(
-        Effect.map((rows) => attachCsvColumns(rows as ReadonlyArray<ParsedCsvRecord>, headerRow))
-      );
-    },
-  });
+  const read = yield* Csv.parse(content, CsvCodecOptions.default.read);
+  const header = O.getOrElse(A.head(read.table.records), A.empty<string>);
+  const wider = A.findFirst(A.drop(read.table.records, 1), (row) => A.length(row) > A.length(header));
+  if (O.isSome(wider)) {
+    return yield* SyncDataToTsError.make({
+      message: `Column header mismatch expected: ${A.length(header)} columns got: ${A.length(wider.value)}`,
+    });
+  }
+  const rows = yield* decodeCsvHeaderRows(content);
+  return attachCsvColumns(rows, header);
 });
 
 /**

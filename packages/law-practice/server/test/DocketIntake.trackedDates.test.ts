@@ -25,9 +25,12 @@ const HEADER =
 const sheetRow = (fileNumber: string, name: string, dateType: string, date: string): string =>
   `0000.01234,${fileNumber},Fixture Client,"Fixture title, with a comma",${name},${dateType},${date},Open,US,"00/000,001","Said ""see below""\non two lines",Utility,,Active`;
 
-// A byte-order mark and CRLF line ends, as a spreadsheet's "CSV UTF-8" export writes them.
+// A byte-order mark and CRLF line ends, as a spreadsheet's "CSV UTF-8" export writes them, with a blank line and a
+// row of blank cells before the header that the read drops.
 const SHEET = `\uFEFF${A.join(
   [
+    "",
+    " , ,",
     HEADER,
     sheetRow("0000.00001US01", "Response", "Due Date", "2030-04-08"),
     sheetRow("0000.00001us01", "Final response", "Final Date", "4/1/2030"),

@@ -36,6 +36,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
+import * as Str from "effect/String";
 
 const encodeJson = S.encodeEffect(S.fromJsonString(S.Unknown));
 
@@ -159,6 +160,27 @@ describe("recorded contacts", () => {
       expect(error.reason).toBe("invalid-input");
       expect(String(error)).not.toContain("secret-unclosed");
       expect((yield* Effect.flip(parseVcards("BEGIN:VCARD\nVERSION:4.0"))).reason).toBe("invalid-input");
+    })
+  );
+  it.effect("reads the Outlook dialect: BOM, blank rows, blanks after a quote; refuses stray quotes", () =>
+    Effect.gen(function* () {
+      const cards = yield* parseOutlookCsv('﻿\nFirst Name,Company\r\n,\n"Alex" ,Acme\n\nSam,Beta\n');
+      expect(A.map(cards, (card) => card.displayName)).toEqual(["Alex", "Sam"]);
+      assertSome(
+        O.flatMap(A.head(cards), (c) => c.organization),
+        "Acme"
+      );
+      for (const input of [
+        'First Name,Company\nAl"ex,Acme\n',
+        'First Name,Company\n"Alex"x,Acme\n',
+        'First Name,Company\n"Alex"x",Acme\n',
+        `First Name,Company\n${Str.repeat(1000)("\n")}"Alex"x",Acme\n`,
+        `First Name,Company\n${Str.repeat(1001)("x\n")}"Alex"x",Acme\n`,
+      ]) {
+        const failure = yield* parseOutlookCsv(input).pipe(Effect.flip);
+        expect(failure).toMatchObject({ operation: "contact-parse", reason: "invalid-input" });
+        expect(String(failure)).not.toContain("Alex");
+      }
     })
   );
 });

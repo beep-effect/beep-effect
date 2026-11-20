@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/practice-m365-contacts",
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (schema CSV migration lane, refactor/schema-csv-to-beep-csv)",
+    "reason": "Record the three packages whose manifests and tsconfig references gained the @beep/csv dependency when their CSV reads moved off @beep/schema. No qualification is granted. The root records the turbo.json inputs the policy fingerprint resealed.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
-      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
+      "path": "docs/reports/schema-csv-to-beep-csv-cache-review-2026-11-20.md",
+      "sha256": "cec74e4af5ae058d0f983a064ca513f4ebe0902e9b63268314a18c0c524c5bf8"
     }
   },
   "nodes": [
@@ -15,6 +15,7 @@
       "command": "bun run beep:build",
       "commandDigest": "16d58201d91feb1d2ee9ad2cb66bf8fa00723f23d0e89eb11fbb581c018e0fac",
       "dependencies": [
+        "@beep/csv#build",
         "@beep/identity#build",
         "@beep/law-practice-server#build",
         "@beep/law-practice-use-cases#build",
@@ -61,6 +62,7 @@
       "command": "beep-cli gate run check",
       "commandDigest": "16d58201d91feb1d2ee9ad2cb66bf8fa00723f23d0e89eb11fbb581c018e0fac",
       "dependencies": [
+        "@beep/csv#build",
         "@beep/identity#build",
         "@beep/law-practice-server#build",
         "@beep/law-practice-use-cases#build",
@@ -115,6 +117,7 @@
       "command": "bunx vitest run --coverage",
       "commandDigest": "16d58201d91feb1d2ee9ad2cb66bf8fa00723f23d0e89eb11fbb581c018e0fac",
       "dependencies": [
+        "@beep/csv#build",
         "@beep/identity#build",
         "@beep/law-practice-server#build",
         "@beep/law-practice-use-cases#build",
@@ -171,6 +174,7 @@
       "command": "portless practice-m365-contacts.beep sh -c 'bun --watch src/main.ts'",
       "commandDigest": "16d58201d91feb1d2ee9ad2cb66bf8fa00723f23d0e89eb11fbb581c018e0fac",
       "dependencies": [
+        "@beep/csv#build",
         "@beep/identity#build",
         "@beep/law-practice-server#build",
         "@beep/law-practice-use-cases#build",
@@ -241,6 +245,7 @@
       "command": "beep-cli lint deprecated-apis --package .",
       "commandDigest": "16d58201d91feb1d2ee9ad2cb66bf8fa00723f23d0e89eb11fbb581c018e0fac",
       "dependencies": [
+        "@beep/csv#transit",
         "@beep/identity#transit",
         "@beep/law-practice-server#transit",
         "@beep/law-practice-use-cases#transit",
@@ -444,6 +449,7 @@
       "command": "beep-cli quality test-tsgo-package",
       "commandDigest": "16d58201d91feb1d2ee9ad2cb66bf8fa00723f23d0e89eb11fbb581c018e0fac",
       "dependencies": [
+        "@beep/csv#transit",
         "@beep/identity#transit",
         "@beep/law-practice-server#transit",
         "@beep/law-practice-use-cases#transit",
@@ -493,6 +499,7 @@
       "command": "bun run beep:test",
       "commandDigest": "16d58201d91feb1d2ee9ad2cb66bf8fa00723f23d0e89eb11fbb581c018e0fac",
       "dependencies": [
+        "@beep/csv#transit",
         "@beep/identity#transit",
         "@beep/law-practice-server#transit",
         "@beep/law-practice-use-cases#transit",

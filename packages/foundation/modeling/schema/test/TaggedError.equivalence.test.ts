@@ -1,8 +1,6 @@
 import { BlockedHostError } from "@beep/schema";
-import { CsvError } from "@beep/schema/CsvError";
 import { LiteralKitTaggedUnionLiteralError } from "@beep/schema/LiteralKit";
 import { MappedLiteralDuplicateError } from "@beep/schema/MappedLiteralKit";
-import { ParserOptionsError } from "@beep/schema/ParserOptions";
 import * as SchemaUtils from "@beep/schema/SchemaUtils";
 import {
   CoreError,
@@ -57,14 +55,7 @@ const makePrivateError = (schema: S.Top, fields: Readonly<Record<string, unknown
 };
 
 describe("@beep/schema tagged-error declared equivalence", { concurrent: false }, () => {
-  it("compares CSV, LiteralKit, and MappedLiteralKit errors by declared fields", () => {
-    expectDeclaredEquivalence(
-      CsvError,
-      CsvError.make({ message: "Invalid CSV", offset: 4 }),
-      CsvError.make({ message: "Invalid CSV", offset: 4 }),
-      CsvError.make({ message: "Invalid CSV", offset: 5 }),
-      "CsvError"
-    );
+  it("compares LiteralKit and MappedLiteralKit errors by declared fields", () => {
     expectDeclaredEquivalence(
       LiteralKitTaggedUnionLiteralError,
       LiteralKitTaggedUnionLiteralError.make({ literal: BigInt(1) }),
@@ -81,14 +72,7 @@ describe("@beep/schema tagged-error declared equivalence", { concurrent: false }
     );
   });
 
-  it("excludes opaque causes from parser and blocked-host diagnostic identity", () => {
-    expectDeclaredEquivalence(
-      ParserOptionsError,
-      ParserOptionsError.make({ cause: O.some({ side: "left" }), message: "Invalid delimiter" }),
-      ParserOptionsError.make({ cause: O.some({ side: "right" }), message: "Invalid delimiter" }),
-      ParserOptionsError.make({ cause: O.none(), message: "Invalid quote" }),
-      "ParserOptionsError"
-    );
+  it("excludes opaque causes from blocked-host diagnostic identity", () => {
     expectDeclaredEquivalence(
       BlockedHostError,
       BlockedHostError.make({

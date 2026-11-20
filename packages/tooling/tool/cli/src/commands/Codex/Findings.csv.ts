@@ -16,10 +16,10 @@
  * @since 0.0.0
  */
 
+import { Csv } from "@beep/csv/Csv.codec";
+import { CsvCodecOptions } from "@beep/csv/CsvOptions.schema";
 import { $RepoCliId } from "@beep/identity/packages";
 import { MappedLiteralKit } from "@beep/schema";
-import { parseCsvRows } from "@beep/schema/CsvParser";
-import { ParserOptions } from "@beep/schema/ParserOptions";
 import { A, O, Str } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as R from "effect/Record";
@@ -271,10 +271,9 @@ export const codexIdFromFindingUrl = (url: string): O.Option<string> => {
 };
 
 // The export's `description` column is a quoted cell that may carry commas and
-// newlines, so RFC 4180 handling is mandatory. `@beep/schema` already owns a
-// reviewed parser for exactly this; hand-rolling a second one would duplicate
-// its quote and line-ending edge cases without inheriting its coverage.
-const csvParserOptions = ParserOptions.new();
+// newlines, so RFC 4180 handling is mandatory: `@beep/csv` reads it with the
+// comma fixed, never a guessed delimiter.
+const csvReadOptions = CsvCodecOptions.default.read;
 
 const cellAt = (row: ReadonlyArray<string>, column: (typeof CODEX_CSV_COLUMNS)[number]): string =>
   row[CODEX_CSV_COLUMNS.indexOf(column)] ?? "";
@@ -439,7 +438,7 @@ const matchesCsvColumns = (actual: ReadonlyArray<string>, expected: ReadonlyArra
  * @since 0.0.0
  */
 export const decodeCodexFindingsCsv = Effect.fnUntraced(function* (text: string) {
-  const rows = yield* parseCsvRows(text, csvParserOptions).pipe(
+  const read = yield* Csv.parse(text, csvReadOptions).pipe(
     Effect.mapError(() =>
       CodexFindingsIngestError.make({
         reason: "payload-unreadable",
@@ -448,6 +447,7 @@ export const decodeCodexFindingsCsv = Effect.fnUntraced(function* (text: string)
       })
     )
   );
+  const rows = read.table.records;
   const header = O.getOrElse(A.head(rows), A.empty<string>);
   const legacy = matchesCsvColumns(header, CODEX_CSV_COLUMNS);
   const securityCloud = matchesCsvColumns(header, SECURITY_CLOUD_CSV_COLUMNS);

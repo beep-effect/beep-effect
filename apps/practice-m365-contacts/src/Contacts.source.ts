@@ -2,11 +2,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { Csv } from "@beep/csv/Csv.codec";
+import { CsvCodecOptions } from "@beep/csv/CsvOptions.schema";
 import { $PracticeM365ContactsId } from "@beep/identity/packages";
 import { parseOutlookCsv, parseVcards } from "@beep/law-practice-server/DocumentIdentification";
 import { normaliseContacts } from "@beep/law-practice-use-cases/DocumentIdentification";
-import { parseCsvRows } from "@beep/schema/CsvParser";
-import { ParserOptions } from "@beep/schema/ParserOptions";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -26,6 +26,14 @@ class SourceFile extends S.Opaque<SourceFile, { readonly brand: unique symbol }>
   )
 ) {}
 const failInput = () => ContactsError.make({ reason: "input" });
+// The header row parseOutlookCsv reads: the first row with a non-empty cell.
+const headerOf = (text: string) =>
+  Csv.parse(text, CsvCodecOptions.default.read).pipe(
+    Effect.mapBoth({
+      onFailure: failInput,
+      onSuccess: (read) => O.getOrElse(A.findFirst(read.table.records, A.some(Str.isNonEmpty)), A.empty<string>),
+    })
+  );
 
 /** Hash bytes using the runtime cryptography service.
  * **Example** (Compose a checksum)
@@ -94,14 +102,14 @@ export const loadContacts = Effect.fn("Contacts.load")(function* (inputs: Contac
   const csvInputs = yield* Effect.forEach(
     unique,
     Effect.fnUntraced(function* (file, index) {
-      const rows = yield* parseCsvRows(file.text, ParserOptions.new()).pipe(Effect.mapError(failInput));
+      const header = yield* headerOf(file.text);
       const cards = O.getOrElse(A.get(parsed, index), () => []);
       const individual = A.map(cards, (card) => A.head(normaliseContacts([card])));
       return CsvCensus.make({
         sha256: Str.slice(0, 12)(file.hash),
         inputsSharingHash: A.length(A.filter(files, (other) => other.hash === file.hash)),
-        columnCount: O.match(A.head(rows), { onNone: () => 0, onSome: A.length }),
-        headerNames: O.getOrElse(A.head(rows), () => []),
+        columnCount: A.length(header),
+        headerNames: header,
         recordCount: A.length(cards),
         withEmail: A.length(A.filter(individual, (card) => O.exists(card, (c) => A.isReadonlyArrayNonEmpty(c.emails)))),
         withNonRoleEmail: A.length(
