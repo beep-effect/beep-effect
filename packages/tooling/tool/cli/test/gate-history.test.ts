@@ -1,22 +1,25 @@
 /**
  * Gate run history on the repo CLI's task path: labels and the delta in the
  * console, ingest after the console (AC-H10 replay), the degrade causes
- * (AC-H8), the history queries (AC-H13) and the flake-quarantine
- * reconciliation (AC-H11). The suite runs under Bun only (the store's driver
- * imports `bun:sqlite`).
+ * (AC-H8), the history queries (AC-H13), the flake-quarantine reconciliation
+ * (AC-H11) and resolving where the store lives. The main suites run under
+ * Node and Bun on an in-memory store provided through `HistoryStoreBackend`;
+ * only a locked and an unreadable SQLite file need Bun (`bun:sqlite`).
  */
 import { GateEvent } from "@beep/gate-report/GateEvent";
-import { HistoryConfig, isFlaky } from "@beep/gate-report/History";
+import { GateHistoryError, HistoryConfig } from "@beep/gate-report/History";
 import { Item } from "@beep/gate-report/Item";
 import { fingerprint, ItemKey } from "@beep/gate-report/ItemKey";
 import {
   EventRun,
   GateHistoryTarget,
   GateServicesConfig,
+  gateCommand,
   HistorySetting,
+  HistoryStoreBackend,
   HistoryWhere,
   historyRunLines,
-  ingestAfterConsole,
+  historyStoreLayer,
   itemSeriesLines,
   listHistoryLines,
   recordEventRun,
@@ -27,14 +30,14 @@ import { FlakeQuarantineIncident, quarantineHistoryReport, recordQuarantineHisto
 import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
 import { ConsoleSettings } from "@beep/repo-gate-run/GateConsole";
 import { HistoryItemQuery, HistoryItemSeries, HistoryScope } from "@beep/repo-gate-run/GateHistoryRecord";
-import { GateHistorySqliteOptions, layerSqlite } from "@beep/repo-gate-run/GateHistorySqlite";
-import { GateHistoryStore } from "@beep/repo-gate-run/GateHistoryStore";
+import { GateHistoryStore, makeGateHistoryStore } from "@beep/repo-gate-run/GateHistoryStore";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { assert, describe, it } from "@effect/vitest";
-import { assertNone } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Console from "effect/Console";
+import * as Command from "effect/cli/Command";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -44,16 +47,20 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as R from "effect/Record";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as TestConsole from "effect/testing/TestConsole";
+import type { GateHistoryStoreShape } from "@beep/repo-gate-run/GateHistoryStore";
 
 const isBunRuntime = P.isNotUndefined(process.versions.bun);
 
 const E = GateEvent.cases;
 const FILE = "src/math.test.ts";
 const SUBJECT = "@beep/gate-report";
+const PACKAGE_DIR = "packages/foundation/modeling/gate-report";
+const STORE_FILE = "/home/alice/.local/state/beep/gate-history/history.sqlite";
 
 const testItem = (name: string, failed: boolean): Item =>
   Item.make({
@@ -66,10 +73,7 @@ const testItem = (name: string, failed: boolean): Item =>
 
 const run = (runId: string, at: number, failing: ReadonlyArray<string>): EventRun =>
   EventRun.make({
-    target: RecordTarget.cases.PackageTarget.make({
-      packageDir: "packages/foundation/modeling/gate-report",
-      gate: "test",
-    }),
+    target: RecordTarget.cases.PackageTarget.make({ packageDir: PACKAGE_DIR, gate: "test" }),
     events: [
       E.RunStarted.make({
         runId,
@@ -92,7 +96,7 @@ const run = (runId: string, at: number, failing: ReadonlyArray<string>): EventRu
 
 const scope = HistoryScope.make({ branch: "feature/a", head: O.some("abc123") });
 
-const historyAt = (filename: string, config: HistoryConfig = HistoryConfig.make({})) =>
+const historyAt = (filename: string = STORE_FILE, config: HistoryConfig = HistoryConfig.make({})) =>
   HistorySetting.cases.HistoryAt.make({ filename, config, scope: O.some(scope) });
 
 const servicesFor = (repoRoot: string, history: HistorySetting) =>
@@ -113,31 +117,351 @@ const workspace = Effect.fnUntraced(function* () {
   return { repoRoot, file: path.join(repoRoot, "history.sqlite") };
 });
 
-describe.skipIf(!isBunRuntime)("gate run history on the task path (Bun runtime)", () => {
-  it.layer(NodeServices.layer, { timeout: "60 seconds" })("over a store file", (it) => {
+// One in-memory store that every run of a test shares, so history persists between runs.
+const memoryStore = Effect.map(makeGateHistoryStore(HistoryConfig.make({})), GateHistoryStore.of);
+
+const backedBy =
+  (store: GateHistoryStoreShape) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+    Effect.provideService(effect, HistoryStoreBackend, () =>
+      Layer.succeed(GateHistoryStore, GateHistoryStore.of(store))
+    );
+
+const failingStore = GateHistoryStore.of({
+  ingest: Effect.fn("GateHistoryStore.ingest")(function* () {
+    return yield* GateHistoryError.make({ reason: "write-failed", message: "disk full" });
+  }),
+  answer: Effect.fn("GateHistoryStore.answer")(function* () {
+    return yield* GateHistoryError.make({ reason: "open-busy", message: "database is locked" });
+  }),
+  runs: Effect.fn("GateHistoryStore.runs")(function* () {
+    return yield* GateHistoryError.make({ reason: "open-failed", message: "unreadable" });
+  }),
+  series: Effect.fn("GateHistoryStore.series")(function* () {
+    return yield* GateHistoryError.make({ reason: "open-failed", message: "unreadable" });
+  }),
+});
+
+const dyingStore = GateHistoryStore.of({
+  ingest: Effect.fn("GateHistoryStore.ingest")(function* () {
+    return yield* Effect.die(new Error("store vanished\nsecond line"));
+  }),
+  answer: Effect.fn("GateHistoryStore.answer")(function* () {
+    return yield* Effect.die(new Error("store vanished"));
+  }),
+  runs: Effect.fn("GateHistoryStore.runs")(function* () {
+    return yield* Effect.die("unused");
+  }),
+  series: Effect.fn("GateHistoryStore.series")(function* () {
+    return yield* Effect.die("unused");
+  }),
+});
+
+const incidentAt = (detectedAt: string) =>
+  FlakeQuarantineIncident.make({
+    policy: "ts2589-no-location",
+    laneLabel: "quality:check",
+    taskId: "@beep/gate-report#check",
+    packageName: SUBJECT,
+    task: "check",
+    standaloneCommand: "bun run check -- --filter=@beep/gate-report",
+    detectedAt,
+    standaloneDurationMs: 4000,
+    laneRerunDurationMs: 3000,
+  });
+
+const git = Effect.fnUntraced(function* (dir: string, args: ReadonlyArray<string>) {
+  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+  const handle = yield* spawner.spawn(
+    ChildProcess.make(
+      "git",
+      ["-C", dir, "-c", "commit.gpgsign=false", "-c", "user.name=alice", "-c", "user.email=alice@example.com", ...args],
+      { extendEnv: true }
+    )
+  );
+  const output = yield* handle.stdout.pipe(Stream.decodeText, Stream.mkString);
+  yield* handle.exitCode;
+  return Str.trim(output);
+});
+
+const gitRepo = Effect.fnUntraced(function* (origin: O.Option<string>) {
+  const fs = yield* FileSystem.FileSystem;
+  const dir = yield* fs.makeTempDirectoryScoped({ prefix: "gate-history-git-" });
+  yield* git(dir, ["init", "-q", "-b", "feature/a"]);
+  yield* git(dir, ["commit", "--allow-empty", "-q", "-m", "init"]);
+  yield* Effect.forEach(O.toArray(origin), (url) => git(dir, ["remote", "add", "origin", url]), { concurrency: 1 });
+  return dir;
+});
+
+const withEnv =
+  (env: Record<string, string>) =>
+  <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+    Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord(env));
+
+const auto = HistorySetting.cases.HistoryAuto.make({});
+
+describe("gate run history on the task path", () => {
+  it.layer(NodeServices.layer, { timeout: "60 seconds" })("over a shared in-memory store", (it) => {
     it.effect("labels, the delta and one missing-baseline line; a replayed record answers the same (AC-H10)", () =>
       Effect.gen(function* () {
-        const { repoRoot, file } = yield* workspace();
-        const record = recordEventRun(servicesFor(repoRoot, historyAt(file)));
-        yield* record(run("r1", 1000, ["adds"]));
-        const second = yield* record(run("r2", 2000, ["adds", "subtracts"]));
+        const { repoRoot } = yield* workspace();
+        const store = yield* memoryStore;
+        const record = recordEventRun(servicesFor(repoRoot, historyAt()));
+        const second = yield* Effect.gen(function* () {
+          yield* record(run("r1", 1000, ["adds"]));
+          return yield* record(run("r2", 2000, ["adds", "subtracts"]));
+        }).pipe(backedBy(store));
         const lines = linesOf(second.output.text);
         assert.isTrue(A.some(lines, Str.includes("adds [persistent]")), second.output.text);
         assert.include(lines, "since last run: 0 fixed, 1 still failing, 1 new");
         assert.strictEqual(A.length(A.filter(lines, Str.startsWith("no main baseline: "))), 1);
         verdictFirstAndLast(second.output.text);
-        const replay = yield* record(run("r2", 2000, ["adds", "subtracts"]));
+        const replay = yield* record(run("r2", 2000, ["adds", "subtracts"])).pipe(backedBy(store));
         assert.strictEqual(replay.output.text, second.output.text);
         assert.strictEqual(replay.exitCode, second.exitCode);
         const listed = yield* listHistoryLines(
           "test",
-          HistoryWhere.make({ dir: O.some("packages/foundation/modeling/gate-report"), history: historyAt(file) })
-        );
+          HistoryWhere.make({ dir: O.some(PACKAGE_DIR), history: historyAt() })
+        ).pipe(backedBy(store));
         assert.strictEqual(A.length(listed), 2);
         assert.isTrue(Str.startsWith("r2 feature/a local ")(listed[0] ?? ""), A.join(listed, "\n"));
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("a run with history off renders as before and records nothing", () =>
+      Effect.gen(function* () {
+        const { repoRoot } = yield* workspace();
+        const result = yield* recordEventRun(servicesFor(repoRoot, HistorySetting.cases.HistoryOff.make({})))(
+          run("r1", 1000, ["adds"])
+        );
+        const lines = linesOf(result.output.text);
+        assert.isFalse(A.some(lines, Str.startsWith("no main baseline")), result.output.text);
+        assert.isFalse(A.some(lines, Str.includes("[")), result.output.text);
+        assert.strictEqual(result.exitCode, 1);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("AC-H8: a store that fails renders without labels, names the cause once, and keeps the exit code", () =>
+      Effect.gen(function* () {
+        const { repoRoot } = yield* workspace();
+        const result = yield* recordEventRun(servicesFor(repoRoot, historyAt()))(run("r1", 1000, ["adds"])).pipe(
+          backedBy(failingStore)
+        );
+        const lines = linesOf(result.output.text);
+        assert.deepStrictEqual(A.filter(lines, Str.startsWith("history not read: ")), [
+          "history not read: open-busy: database is locked",
+        ]);
+        assert.isFalse(A.some(lines, Str.includes("[")), result.output.text);
+        verdictFirstAndLast(result.output.text);
+        assert.strictEqual(result.exitCode, 1);
+        const errors = yield* TestConsole.errorLines;
+        assert.deepStrictEqual(
+          A.map(errors, (line) => `${line}`),
+          ["gate history: run not recorded: write-failed: disk full"]
+        );
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("AC-H8: a store that dies renders without labels and reports the write in one stderr line", () =>
+      Effect.gen(function* () {
+        const { repoRoot } = yield* workspace();
+        const result = yield* recordEventRun(servicesFor(repoRoot, historyAt()))(run("r1", 1000, ["adds"])).pipe(
+          backedBy(dyingStore)
+        );
+        const lines = linesOf(result.output.text);
+        assert.strictEqual(A.length(A.filter(lines, Str.startsWith("history not read: "))), 1, result.output.text);
+        verdictFirstAndLast(result.output.text);
+        assert.strictEqual(result.exitCode, 1);
+        const errors = yield* TestConsole.errorLines;
+        assert.deepStrictEqual(
+          A.map(errors, (line) => `${line}`),
+          ["gate history: run not recorded: Error: store vanished"]
+        );
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("AC-H13: lists a subject's history and shows one item's series by branch", () =>
+      Effect.gen(function* () {
+        const { repoRoot } = yield* workspace();
+        const store = yield* memoryStore;
+        const record = recordEventRun(servicesFor(repoRoot, historyAt()));
+        const where = HistoryWhere.make({
+          dir: O.some(PACKAGE_DIR),
+          branch: O.some("feature/a"),
+          history: historyAt(),
+        });
+        const { listed, series, none } = yield* Effect.gen(function* () {
+          yield* record(run("r1", 1000, ["adds"]));
+          yield* record(run("r2", 2000, []));
+          return {
+            listed: yield* listHistoryLines("test", where),
+            series: yield* showSeriesLines("test", "adds", where),
+            none: yield* showSeriesLines("test", "nothing-matches", where),
+          };
+        }).pipe(backedBy(store));
+        assert.deepStrictEqual(
+          A.map(listed, (line) => A.headNonEmpty(Str.split(line, " "))),
+          ["r2", "r1"]
+        );
+        assert.strictEqual(series[0], `${FILE} > math > adds on feature/a (local)`);
+        assert.isTrue(Str.endsWith("attempt 0: passed; input input-r2")(series[1] ?? ""), A.join(series, "\n"));
+        assert.isTrue(Str.endsWith("attempt 0: failed; input input-r1")(series[2] ?? ""), A.join(series, "\n"));
+        assert.deepStrictEqual(none, itemSeriesLines([]));
+        const off = yield* listHistoryLines(
+          "test",
+          HistoryWhere.make({ history: HistorySetting.cases.HistoryOff.make({}) })
+        );
+        assert.deepStrictEqual(off, ["no history store for this checkout"]);
+        assert.deepStrictEqual(historyRunLines([]), ["no recorded runs"]);
+        const flaky = itemSeriesLines([
+          HistoryItemSeries.make({
+            fingerprint: "k",
+            title: "adds",
+            branch: "feature/a",
+            origin: "local",
+            flaky: true,
+            observations: [],
+          }),
+        ]);
+        assert.isTrue(Str.endsWith(" [flaky]")(flaky[0] ?? ""));
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("prints through the `gate history` and `gate series` commands", () =>
+      Effect.gen(function* () {
+        const command = Command.runWith(gateCommand, { version: "0.0.0" });
+        yield* command(["history", "test", "--dir", PACKAGE_DIR, "--branch", "feature/a"]);
+        yield* command(["series", "test", "adds", "--dir", PACKAGE_DIR]);
+        const printed = yield* TestConsole.logLines;
+        // Inside Vitest the automatic setting resolves no store.
+        assert.deepStrictEqual(
+          A.map(printed, (line) => `${line}`),
+          ["no history store for this checkout", "no history store for this checkout"]
+        );
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("AC-H11: a quarantine incident is recorded flaky and the quarantine's verdict is untouched", () =>
+      Effect.gen(function* () {
+        const { repoRoot } = yield* workspace();
+        const store = yield* memoryStore;
+        const incident = incidentAt("2026-11-20T00:00:00.000Z");
+        const incidents = [incident];
+        const verdict = yield* recordQuarantineHistory(repoRoot, incidents, historyAt()).pipe(backedBy(store));
+        assert.isUndefined(verdict);
+        assert.deepStrictEqual(incidents, [incident]);
+        const report = quarantineHistoryReport(incident);
+        const key = fingerprint(A.headNonEmpty(report.items as A.NonEmptyReadonlyArray<Item>).key);
+        const series = yield* store.series(HistoryItemQuery.make({ gate: "check", subject: SUBJECT, selector: key }));
+        assert.deepStrictEqual(
+          A.map(series, (entry) => [entry.flaky, A.length(entry.observations)] as const),
+          [[true, 2]]
+        );
+        const answer = yield* store.answer(report, scope);
+        assertSome(R.get(answer.labels, key), "flaky");
+        yield* recordQuarantineHistory(repoRoot, [], historyAt()).pipe(backedBy(failingStore));
+        yield* recordQuarantineHistory(repoRoot, incidents, HistorySetting.cases.HistoryOff.make({}));
+        // An incident with an unreadable time is still recorded, at the epoch.
+        assert.strictEqual(DateTime.toEpochMillis(quarantineHistoryReport(incidentAt("not a date")).startedAt), 0);
+      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("backs history with the SQLite store by default, opened only on first use", () =>
+      Effect.gen(function* () {
+        const target = GateHistoryTarget.make({ filename: ":memory:", config: HistoryConfig.make({}), scope });
+        const context = yield* Layer.build(historyStoreLayer(target));
+        assert.isTrue(P.isNotUndefined(context));
+      })
+    );
+  });
+
+  it.layer(NodeServices.layer, { timeout: "60 seconds" })("resolving the store in a git checkout", (it) => {
+    it.effect("keys the store by the origin under the beep state directory, on the checkout's branch", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repo = yield* gitRepo(O.some("git@github.com:Acme/App.git"));
+        const state = yield* fs.makeTempDirectoryScoped({ prefix: "gate-history-state-" });
+        const target = yield* resolveHistoryTarget(repo, auto).pipe(
+          withEnv({ HOME: "/home/alice", XDG_STATE_HOME: state })
+        );
+        const found = O.getOrThrow(target);
+        assert.strictEqual(found.filename, path.join(state, "beep", "gate-history", "github.com__acme__app.sqlite"));
+        assert.strictEqual(found.scope.branch, "feature/a");
+        assert.match(O.getOrThrow(found.scope.head), /^[0-9a-f]{40}$/u);
+        const created = yield* fs.exists(path.join(state, "beep", "gate-history"));
+        assert.isTrue(created);
+      })
+    );
+
+    it.effect("keys a repository with no origin by its git directory, and a detached head by its commit", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const repo = yield* gitRepo(O.none());
+        const state = yield* fs.makeTempDirectoryScoped({ prefix: "gate-history-state-" });
+        const head = yield* git(repo, ["rev-parse", "HEAD"]);
+        yield* git(repo, ["checkout", "-q", "--detach"]);
+        const resolved = yield* resolveHistoryTarget(repo, auto).pipe(
+          withEnv({ HOME: "/home/alice", XDG_STATE_HOME: state })
+        );
+        const target = O.getOrThrow(resolved);
+        assert.match(target.filename, /\/local__[0-9a-f]{16}\.sqlite$/u);
+        assert.strictEqual(target.scope.branch, `detached@${head}`);
+      })
+    );
+
+    it.effect("takes a named file, turns off on request or inside Vitest, and asks git for a named file's scope", () =>
+      Effect.gen(function* () {
+        const repo = yield* gitRepo(O.none());
+        const named = yield* resolveHistoryTarget(repo, auto).pipe(
+          withEnv({ BEEP_GATE_HISTORY_FILE: "/home/alice/h.sqlite" })
+        );
+        assert.strictEqual(O.getOrThrow(named).filename, "/home/alice/h.sqlite");
+        const switchedOff = yield* resolveHistoryTarget(repo, auto).pipe(withEnv({ BEEP_GATE_HISTORY: "Off" }));
+        assertNone(switchedOff);
+        const inVitest = yield* resolveHistoryTarget(repo, auto).pipe(withEnv({ VITEST: "true" }));
+        assertNone(inVitest);
+        const at = yield* resolveHistoryTarget(
+          repo,
+          HistorySetting.cases.HistoryAt.make({ filename: "/home/alice/h.sqlite", config: HistoryConfig.make({}) })
+        );
+        assert.strictEqual(O.getOrThrow(at).scope.branch, "feature/a");
+      })
+    );
+
+    it.effect("resolves nothing outside a git checkout, and reads workspace runs outside a package", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const plain = yield* fs.makeTempDirectoryScoped({ prefix: "gate-history-plain-" });
+        const outside = yield* resolveHistoryTarget(plain, auto).pipe(
+          withEnv({ HOME: "/home/alice", XDG_STATE_HOME: plain })
+        );
+        assertNone(outside);
+        const unscoped = yield* resolveHistoryTarget(
+          plain,
+          HistorySetting.cases.HistoryAt.make({ filename: STORE_FILE, config: HistoryConfig.make({}) })
+        );
+        assertNone(unscoped);
+        const store = yield* memoryStore;
+        const lines = yield* listHistoryLines(
+          "test",
+          HistoryWhere.make({ dir: O.some("."), history: historyAt() })
+        ).pipe(backedBy(store));
+        assert.deepStrictEqual(lines, ["no recorded runs"]);
+        assert.strictEqual(HistoryWhere.make({}).history._tag, "HistoryAuto");
+        const defaults = GateServicesConfig.make({
+          repoRoot: plain,
+          settings: ConsoleSettings.make({ audience: "agent" }),
+        });
+        assert.strictEqual(defaults.history._tag, "HistoryAuto");
+        yield* recordQuarantineHistory(plain, [incidentAt("2026-11-20T00:00:00.000Z")]);
+      })
+    );
+  });
+});
+
+describe.skipIf(!isBunRuntime)("gate run history over a real SQLite file (Bun runtime)", () => {
+  it.layer(NodeServices.layer, { timeout: "60 seconds" })("over a store file", (it) => {
     it.effect("AC-H8: an unreadable store renders without labels, names the cause once, and keeps the exit code", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
@@ -178,269 +502,6 @@ describe.skipIf(!isBunRuntime)("gate run history on the task path (Bun runtime)"
         assert.strictEqual(A.length(errors), 1);
         verdictFirstAndLast(result.output.text);
         assert.strictEqual(result.exitCode, 1);
-      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-    );
-
-    it.effect("AC-H13: lists a subject's history and shows one item's series by branch", () =>
-      Effect.gen(function* () {
-        const { repoRoot, file } = yield* workspace();
-        const record = recordEventRun(servicesFor(repoRoot, historyAt(file)));
-        yield* record(run("r1", 1000, ["adds"]));
-        yield* record(run("r2", 2000, []));
-        const where = HistoryWhere.make({
-          dir: O.some("packages/foundation/modeling/gate-report"),
-          branch: O.some("feature/a"),
-          history: historyAt(file),
-        });
-        const listed = yield* listHistoryLines("test", where);
-        assert.deepStrictEqual(
-          A.map(listed, (line) => A.headNonEmpty(Str.split(line, " "))),
-          ["r2", "r1"]
-        );
-        const series = yield* showSeriesLines("test", "adds", where);
-        assert.strictEqual(series[0], `${FILE} > math > adds on feature/a (local)`);
-        assert.isTrue(Str.endsWith("attempt 0: passed; input input-r2")(series[1] ?? ""), A.join(series, "\n"));
-        assert.isTrue(Str.endsWith("attempt 0: failed; input input-r1")(series[2] ?? ""), A.join(series, "\n"));
-        const none = yield* showSeriesLines("test", "nothing-matches", where);
-        assert.deepStrictEqual(none, itemSeriesLines([]));
-        const off = yield* listHistoryLines(
-          "test",
-          HistoryWhere.make({ history: HistorySetting.cases.HistoryOff.make({}) })
-        );
-        assert.deepStrictEqual(off, ["no history store for this checkout"]);
-        assert.deepStrictEqual(historyRunLines([]), ["no recorded runs"]);
-        assert.isTrue(
-          Str.endsWith(" [flaky]")(
-            itemSeriesLines([
-              HistoryItemSeries.make({
-                fingerprint: "k",
-                title: "adds",
-                branch: "feature/a",
-                origin: "local",
-                flaky: true,
-                observations: [],
-              }),
-            ])[0] ?? ""
-          )
-        );
-      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-    );
-
-    it.effect("AC-H11: a quarantine incident is recorded flaky and the quarantine's verdict is untouched", () =>
-      Effect.gen(function* () {
-        const { repoRoot, file } = yield* workspace();
-        const incident = FlakeQuarantineIncident.make({
-          policy: "ts2589-no-location",
-          laneLabel: "quality:check",
-          taskId: "@beep/gate-report#check",
-          packageName: SUBJECT,
-          task: "check",
-          standaloneCommand: "bun run check -- --filter=@beep/gate-report",
-          detectedAt: "2026-11-20T00:00:00.000Z",
-          standaloneDurationMs: 4000,
-          laneRerunDurationMs: 3000,
-        });
-        const incidents = [incident];
-        const verdict = yield* recordQuarantineHistory(repoRoot, incidents, historyAt(file));
-        assert.isUndefined(verdict);
-        assert.deepStrictEqual(incidents, [incident]);
-        const key = fingerprint(
-          A.headNonEmpty(quarantineHistoryReport(incident).items as A.NonEmptyReadonlyArray<Item>).key
-        );
-        const store = layerSqlite(GateHistorySqliteOptions.make({ filename: file }));
-        const series = yield* store.pipe(
-          Layer.build,
-          Effect.flatMap((context) =>
-            Effect.provideContext(
-              Effect.flatMap(GateHistoryStore, (history) =>
-                history.series(HistoryItemQuery.make({ gate: "check", subject: SUBJECT, selector: key }))
-              ),
-              context
-            )
-          )
-        );
-        assert.deepStrictEqual(
-          A.map(series, (entry) => [entry.flaky, A.length(entry.observations)] as const),
-          [[true, 2]]
-        );
-        assert.isTrue(A.every(series, (entry) => isFlaky(entry.observations)));
-        const answer = yield* store.pipe(
-          Layer.build,
-          Effect.flatMap((context) =>
-            Effect.provideContext(
-              Effect.flatMap(GateHistoryStore, (history) => history.answer(quarantineHistoryReport(incident), scope)),
-              context
-            )
-          )
-        );
-        assert.deepStrictEqual(answer.labels[key], "flaky");
-        yield* recordQuarantineHistory(repoRoot, [], historyAt(file));
-        yield* recordQuarantineHistory(repoRoot, incidents, HistorySetting.cases.HistoryOff.make({}));
-      }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-    );
-
-    it.effect("resolves no history inside Vitest by default and outside a git checkout", () =>
-      Effect.gen(function* () {
-        const { repoRoot, file } = yield* workspace();
-        const none1 = yield* resolveHistoryTarget(repoRoot, HistorySetting.cases.HistoryAuto.make({}));
-        assertNone(none1);
-        const none2 = yield* resolveHistoryTarget(
-          repoRoot,
-          HistorySetting.cases.HistoryAt.make({ filename: file, config: HistoryConfig.make({}) })
-        );
-        assertNone(none2);
-      })
-    );
-  });
-});
-
-const git = Effect.fnUntraced(function* (dir: string, args: ReadonlyArray<string>) {
-  const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-  const handle = yield* spawner.spawn(
-    ChildProcess.make(
-      "git",
-      ["-C", dir, "-c", "commit.gpgsign=false", "-c", "user.name=alice", "-c", "user.email=alice@example.com", ...args],
-      { extendEnv: true }
-    )
-  );
-  const output = yield* handle.stdout.pipe(Stream.decodeText, Stream.mkString);
-  yield* handle.exitCode;
-  return Str.trim(output);
-});
-
-const gitRepo = Effect.fnUntraced(function* (origin: O.Option<string>) {
-  const fs = yield* FileSystem.FileSystem;
-  const dir = yield* fs.makeTempDirectoryScoped({ prefix: "gate-history-git-" });
-  yield* git(dir, ["init", "-q", "-b", "feature/a"]);
-  yield* git(dir, ["commit", "--allow-empty", "-q", "-m", "init"]);
-  yield* Effect.forEach(O.toArray(origin), (url) => git(dir, ["remote", "add", "origin", url]), { concurrency: 1 });
-  return dir;
-});
-
-const withEnv =
-  (env: Record<string, string>) =>
-  <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-    Effect.provideService(effect, ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord(env));
-
-const auto = HistorySetting.cases.HistoryAuto.make({});
-
-const quarantineReportIncident = FlakeQuarantineIncident.make({
-  policy: "ts2589-no-location",
-  laneLabel: "quality:check",
-  taskId: "@beep/gate-report#check",
-  packageName: SUBJECT,
-  task: "check",
-  standaloneCommand: "bun run check",
-  detectedAt: "not a date",
-  standaloneDurationMs: 1,
-  laneRerunDurationMs: 1,
-});
-
-const quarantineReportFixture = quarantineHistoryReport(quarantineReportIncident);
-
-describe.skipIf(!isBunRuntime)("resolving the history store (Bun runtime)", () => {
-  it.layer(NodeServices.layer, { timeout: "60 seconds" })("in a git checkout", (it) => {
-    it.effect("keys the store by the origin under the beep state directory, on the checkout's branch", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const repo = yield* gitRepo(O.some("git@github.com:Acme/App.git"));
-        const state = yield* fs.makeTempDirectoryScoped({ prefix: "gate-history-state-" });
-        const target = yield* resolveHistoryTarget(repo, auto).pipe(
-          withEnv({ HOME: "/home/alice", XDG_STATE_HOME: state })
-        );
-        const found = O.getOrThrow(target);
-        assert.strictEqual(found.filename, path.join(state, "beep", "gate-history", "github.com__acme__app.sqlite"));
-        assert.strictEqual(found.scope.branch, "feature/a");
-        assert.match(
-          O.getOrElse(found.scope.head, () => ""),
-          /^[0-9a-f]{40}$/u
-        );
-        const created = yield* fs.exists(path.join(state, "beep", "gate-history"));
-        assert.isTrue(created);
-      })
-    );
-
-    it.effect("keys a repository with no origin by its git directory, and a detached head by its commit", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const repo = yield* gitRepo(O.none());
-        const state = yield* fs.makeTempDirectoryScoped({ prefix: "gate-history-state-" });
-        const head = yield* git(repo, ["rev-parse", "HEAD"]);
-        yield* git(repo, ["checkout", "-q", "--detach"]);
-        const resolved = yield* resolveHistoryTarget(repo, auto).pipe(
-          withEnv({ HOME: "/home/alice", XDG_STATE_HOME: state })
-        );
-        const target = O.getOrThrow(resolved);
-        assert.match(target.filename, /\/local__[0-9a-f]{16}\.sqlite$/u);
-        assert.strictEqual(target.scope.branch, `detached@${head}`);
-      })
-    );
-
-    it.effect("takes a named file, turns off on request or inside Vitest, and asks git for a named file's scope", () =>
-      Effect.gen(function* () {
-        const repo = yield* gitRepo(O.none());
-        const named = yield* resolveHistoryTarget(repo, auto).pipe(
-          withEnv({ BEEP_GATE_HISTORY_FILE: "/home/alice/h.sqlite" })
-        );
-        assert.strictEqual(O.getOrThrow(named).filename, "/home/alice/h.sqlite");
-        const none3 = yield* resolveHistoryTarget(repo, auto).pipe(withEnv({ BEEP_GATE_HISTORY: "Off" }));
-        assertNone(none3);
-        const none4 = yield* resolveHistoryTarget(repo, auto).pipe(withEnv({ VITEST: "true" }));
-        assertNone(none4);
-        const at = yield* resolveHistoryTarget(
-          repo,
-          HistorySetting.cases.HistoryAt.make({ filename: "/home/alice/h.sqlite", config: HistoryConfig.make({}) })
-        );
-        assert.strictEqual(O.getOrThrow(at).scope.branch, "feature/a");
-      })
-    );
-
-    it.effect("resolves nothing outside a git checkout, and reads workspace runs outside a package", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const plain = yield* fs.makeTempDirectoryScoped({ prefix: "gate-history-plain-" });
-        const none5 = yield* resolveHistoryTarget(plain, auto).pipe(
-          withEnv({ HOME: "/home/alice", XDG_STATE_HOME: plain })
-        );
-        assertNone(none5);
-        const lines = yield* listHistoryLines(
-          "test",
-          HistoryWhere.make({ dir: O.some("."), history: historyAt(`${plain}/h.sqlite`) })
-        );
-        assert.deepStrictEqual(lines, ["no recorded runs"]);
-        assert.strictEqual(HistoryWhere.make({}).history._tag, "HistoryAuto");
-        yield* recordQuarantineHistory(plain, [quarantineReportIncident]);
-      })
-    );
-
-    it.effect("a write that dies, not a store error, is still one stderr line", () =>
-      Effect.gen(function* () {
-        const target = GateHistoryTarget.make({ filename: ":memory:", config: HistoryConfig.make({}), scope });
-        yield* ingestAfterConsole(target)(quarantineReportFixture).pipe(
-          Effect.provideService(
-            GateHistoryStore,
-            GateHistoryStore.of({
-              ingest: Effect.fn("GateHistoryStore.ingest")(function* () {
-                return yield* Effect.die(new Error("store vanished\nsecond line"));
-              }),
-              answer: Effect.fn("GateHistoryStore.answer")(function* () {
-                return yield* Effect.die("unused");
-              }),
-              runs: Effect.fn("GateHistoryStore.runs")(function* () {
-                return yield* Effect.die("unused");
-              }),
-              series: Effect.fn("GateHistoryStore.series")(function* () {
-                return yield* Effect.die("unused");
-              }),
-            })
-          )
-        );
-        const errors = yield* TestConsole.errorLines;
-        assert.deepStrictEqual(
-          A.map(errors, (line) => `${line}`),
-          ["gate history: run not recorded: Error: store vanished"]
-        );
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
   });

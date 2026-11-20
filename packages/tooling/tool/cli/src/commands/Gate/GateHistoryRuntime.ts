@@ -33,6 +33,7 @@ import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Config from "effect/Config";
 import * as Console from "effect/Console";
+import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -236,8 +237,41 @@ export const resolveHistoryTarget = Effect.fn("Gate.resolveHistoryTarget")(
   Effect.orElseSucceed(O.none<GateHistoryTarget>)
 );
 
+const sqliteStoreFor = (target: GateHistoryTarget): Layer.Layer<GateHistoryStore> =>
+  layerSqlite(GateHistorySqliteOptions.make({ filename: target.filename, config: target.config }));
+
 /**
- * The SQLite history store for a resolved target.
+ * Which history store backs a resolved target.
+ *
+ * **Details**
+ *
+ * The default is the SQLite store, which loads its driver by dynamic import on
+ * first use. A test provides another backend, such as one in-memory store
+ * shared by several runs, without changing how a gate run resolves or uses
+ * its history.
+ *
+ * **Example** (Back history with an in-memory store)
+ *
+ * ```ts
+ * import { HistoryStoreBackend } from "@beep/repo-cli/commands/Gate"
+ * import { GateHistoryStore } from "@beep/repo-gate-run/GateHistoryStore"
+ * import * as Effect from "effect/Effect"
+ *
+ * const program = Effect.provideService(Effect.void, HistoryStoreBackend, () => GateHistoryStore.layerMemory())
+ * console.log(Effect.isEffect(program)) // true
+ * ```
+ *
+ * @category services
+ * @since 0.0.0
+ */
+export const HistoryStoreBackend: Context.Reference<(target: GateHistoryTarget) => Layer.Layer<GateHistoryStore>> =
+  Context.Reference<(target: GateHistoryTarget) => Layer.Layer<GateHistoryStore>>($I`HistoryStoreBackend`, {
+    defaultValue: constant(sqliteStoreFor),
+  });
+
+/**
+ * The history store for a resolved target, from {@link HistoryStoreBackend}:
+ * the SQLite store at the target's file unless a backend is provided.
  *
  * **Example** (A store layer)
  *
@@ -252,12 +286,12 @@ export const resolveHistoryTarget = Effect.fn("Gate.resolveHistoryTarget")(
  * ```
  *
  * @param target - the store file, configuration and scope
- * @returns a layer providing the history store
+ * @returns a layer providing the store the backend gives for the target
  * @category layers
  * @since 0.0.0
  */
 export const historyStoreLayer = (target: GateHistoryTarget): Layer.Layer<GateHistoryStore> =>
-  layerSqlite(GateHistorySqliteOptions.make({ filename: target.filename, config: target.config }));
+  Layer.unwrap(Effect.map(HistoryStoreBackend, (storeFor) => storeFor(target)));
 
 const isHistoryError = S.is(GateHistoryError);
 
