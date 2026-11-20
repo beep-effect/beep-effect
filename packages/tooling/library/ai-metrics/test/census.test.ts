@@ -303,6 +303,10 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
         const error = yield* census(fixture).pipe(Effect.flip);
         yield* fs.chmod(fixture.codexRoot, 0o700);
         expect(error.reason).toBe("unreadable-root");
+        yield* fs.chmod(fixture.claudeRoot, 0o000);
+        const claudeError = yield* census(fixture).pipe(Effect.flip);
+        yield* fs.chmod(fixture.claudeRoot, 0o700);
+        expect(claudeError.reason).toBe("unreadable-root");
         expect(error.message).toBe("Census could not read a harness root that exists, or the root is not a directory.");
       })
     );
@@ -330,8 +334,14 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
           `{"type":"assistant",${at("10:00:06")},"message":{"id":"a3","usage":{"input_tokens":1},"content":[]}}`,
           // A user record whose content is neither text nor a block list contributes nothing.
           `{"type":"user",${at("10:00:07")},"message":{"content":{"other":1}}}`,
-          // A record of the same call after the window end must not drop it.
-          '{"type":"assistant","timestamp":"2026-11-19T00:00:00Z","message":{"id":"a1","usage":{"input_tokens":900},"content":[]}}',
+          // A call with no usage on any record is still one API call.
+          `{"type":"assistant",${at("10:00:08")},"message":{"id":"a4","content":[]}}`,
+          // Two boundary records in a row are two compactions; the summary after them is not a third.
+          `{"type":"system","subtype":"compact_boundary",${at("10:00:09")}}`,
+          `{"type":"system","subtype":"compact_boundary",${at("10:00:10")}}`,
+          `{"type":"user","isCompactSummary":true,${at("10:00:11")},"message":{"content":"summary"}}`,
+          // A record of the same call after the window end must not drop it, nor add its tool call to the turn.
+          '{"type":"assistant","timestamp":"2026-11-19T00:00:00Z","message":{"id":"a1","usage":{"input_tokens":900},"content":[{"type":"tool_use","id":"late","name":"Bash","input":{"command":"bun run check"}}]}}',
         ];
         // Opened by modification time, but its only timestamp is after the window: nothing in it counts.
         const excluded = [
@@ -342,6 +352,8 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
         yield* fs.writeFileString(path.join(project, "b.jsonl"), A.join(excluded, "\n"));
         // Not a transcript, a transcript that cannot be inspected, and a directory that cannot be listed.
         yield* fs.writeFileString(path.join(project, "notes.txt"), "not a transcript");
+        // An ordinary file whose name contains the repository name is not a project directory.
+        yield* fs.writeFileString(path.join(claudeRoot, "beep-effect-notes.txt"), "not a project");
         yield* fs.symlink(path.join(project, "missing-target"), path.join(project, "dangling.jsonl"));
         const locked = path.join(project, "locked");
         yield* fs.makeDirectory(locked);
@@ -356,8 +368,11 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
         );
         yield* fs.chmod(locked, 0o700);
         const sessions = O.getOrThrow(report.totals.claudeSessions);
-        expect([sessions.apiCalls, sessions.inputTokens]).toEqual([4, 16]);
-        expect(row(report, "search-read").claude).toMatchObject({ results: 1, chars: 4, carriedCharTurns: 12 });
+        expect([sessions.apiCalls, sessions.inputTokens]).toEqual([5, 16]);
+        expect(report.corpus.claude).toMatchObject({ compactionBoundaries: 2 });
+        expect([report.turns.verificationRuns, turn(report, "run-verification").turns]).toEqual([0, 0]);
+        expect(report.turns.contextTokens).toBe(16);
+        expect(row(report, "search-read").claude).toMatchObject({ results: 1, chars: 4, carriedCharTurns: 16 });
         expect(report.calibration.samples).toBe(0);
         expect(report.corpus.claude).toMatchObject({ unreadableFiles: 2 });
         expect(row(report, "unmatched-result").claude).toMatchObject({ results: 0, chars: 0 });

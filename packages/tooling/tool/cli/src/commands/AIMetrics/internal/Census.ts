@@ -351,7 +351,7 @@ const headlineSection = (report: CensusReport) => {
     Doc.table(
       [{ header: "Row" }, right("Value")],
       [
-        ["verification runs piped through a filter", percent(headline.filteredRunShare)],
+        ["verification runs filtered (piped, discarded or redirected)", percent(headline.filteredRunShare)],
         ["log digs per verification run", decimal(headline.logDigsPerRun, 3)],
         ["turns per verdict", decimal(headline.turnsPerVerdict, 3)],
       ]
@@ -412,10 +412,23 @@ export const renderCensusReport: {
 
 const commandError = (message: string) => AiMetricsCommandError.make({ message, cause: message });
 
-const parseInstant = (label: string, value: string) =>
-  Effect.fromOption(O.map(DateTime.make(value), DateTime.toUtc)).pipe(
-    Effect.mapError(() => commandError(`--${label} must be an ISO timestamp.`))
+// An ISO timestamp with a zone, whose calendar date exists: the platform parser would roll 02-30 into March.
+const IsoInstant = /^(\d{4}-\d{2}-\d{2})T\d{2}:\d{2}(?::\d{2}(?:\.\d+)?)?(?:Z|[+-]\d{2}:\d{2})$/;
+
+const calendarDate = (value: string): O.Option<string> =>
+  pipe(
+    Str.match(IsoInstant)(value),
+    O.flatMap(A.get(1)),
+    O.filter((date) => O.exists(DateTime.make(`${date}T00:00:00Z`), (day) => DateTime.formatIsoDateUtc(day) === date))
   );
+
+const parseInstant = (label: string, value: string) =>
+  Effect.fromOption(
+    O.map(
+      O.flatMap(calendarDate(value), () => DateTime.make(value)),
+      DateTime.toUtc
+    )
+  ).pipe(Effect.mapError(() => commandError(`--${label} must be an ISO timestamp.`)));
 
 const resolveWindow = Effect.fn("AIMetrics.census.window")(function* (options: CensusCommandOptions) {
   const until = O.isSome(options.until) ? yield* parseInstant("until", options.until.value) : yield* DateTime.now;

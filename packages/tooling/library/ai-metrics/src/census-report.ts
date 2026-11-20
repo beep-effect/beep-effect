@@ -254,7 +254,8 @@ export class ClaudeTotals extends S.Opaque<ClaudeTotals, { readonly brand: uniqu
  *
  * **Details**
  *
- * Token counts are each session's cumulative usage at its last token-count record within the window.
+ * Token counts are each session's cumulative usage at its last token-count record at or before the window end,
+ * which can be a record from before the window start.
  * Codex records do not count API calls.
  *
  * **Example** (Construct zero Codex totals)
@@ -689,7 +690,8 @@ export class CalibrationBinRow extends S.Opaque<CalibrationBinRow, { readonly br
  *
  * A sample is a Claude API call that followed exactly one tool result over 3,000 characters; its tokens are
  * the call's context minus the previous call's context and output. The fit is
- * `tokens = intercept + slope * chars`, and `charsPerToken` is `1 / slope`.
+ * `tokens = intercept + slope * chars`, and `charsPerToken` is `1 / slope`. The binned quantiles keep one number
+ * per sample for the length of the run, so that part of memory grows with the sample count.
  *
  * **Example** (Inspect the calibration fields)
  *
@@ -735,7 +737,8 @@ export class VerificationRunSize extends S.Opaque<VerificationRunSize, { readonl
  *
  * **Details**
  *
- * `filteredRunShare` is the share of verification runs piped through a filter; `logDigsPerRun` the mean log
+ * `filteredRunShare` is the share of verification runs not classified `unfiltered`: piped into a text filter,
+ * discarded, or redirected to a file; `logDigsPerRun` the mean log
  * digs after a verification run; `turnsPerVerdict` the run, dig, CI-fetch and no-edit re-run turns per
  * verification run turn.
  *

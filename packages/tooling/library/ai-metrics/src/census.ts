@@ -415,6 +415,7 @@ const makeClaudeContext = (acc: Accumulator, harness: CensusHarness) => {
   const usageById = MutableHashMap.empty<string, { readonly usage: UsageFacts; readonly inWindow: boolean }>();
   const turns = MutableHashMap.empty<string, Turn>();
   const counted = MutableHashSet.empty<string>();
+  const inWindowCalls = MutableHashSet.empty<string>();
   const pending = byToolOutputClass(() => ({ chars: 0, charsAt: 0 }));
   let calls = 0;
   let lastContext = O.none<number>();
@@ -491,14 +492,16 @@ const makeClaudeContext = (acc: Accumulator, harness: CensusHarness) => {
     A.forEach(assistant.turnTools, (tool) => turnTool(turn, tool));
   };
 
-  const onAssistant = (assistant: AssistantFacts, inWindow: boolean) => {
+  const onAssistant = (assistant: AssistantFacts, inWindow: boolean, beforeEnd: boolean) => {
     countCall(assistant, inWindow);
+    if (inWindow) MutableHashSet.add(inWindowCalls, assistant.messageId);
     O.map(assistant.usage, (usage) => {
       const kept = O.exists(MutableHashMap.get(usageById, assistant.messageId), (entry) => entry.inWindow) && !inWindow;
       if (!kept) MutableHashMap.set(usageById, assistant.messageId, { usage, inWindow });
       lastOutput = usage.output;
     });
-    trackTurn(assistant);
+    // A record after the window end adds nothing to a turn that began inside it.
+    if (beforeEnd) trackTurn(assistant);
   };
 
   const onResult = (result: ResultFacts, inWindow: boolean) => {
@@ -519,7 +522,8 @@ const makeClaudeContext = (acc: Accumulator, harness: CensusHarness) => {
     if (marker) {
       flush();
       resetCalibration();
-      if (!previousMarker && facts.inWindow) acc.boundaries += 1;
+      // Every boundary record counts; a compacted summary counts unless it follows another marker.
+      if (facts.inWindow && (facts.marker === "boundary" || !previousMarker)) acc.boundaries += 1;
     }
     previousMarker = marker;
   };
@@ -527,7 +531,7 @@ const makeClaudeContext = (acc: Accumulator, harness: CensusHarness) => {
   const consume = (facts: ClaudeLineFacts) => {
     onMarker(facts);
     if (facts.marker === "boundary") return;
-    O.map(facts.assistant, (assistant) => onAssistant(assistant, facts.inWindow));
+    O.map(facts.assistant, (assistant) => onAssistant(assistant, facts.inWindow, facts.beforeEnd));
     A.forEach(facts.user, (entry) => (entry._tag === "Text" ? pushBetween(0) : onResult(entry.result, facts.inWindow)));
   };
 
@@ -539,14 +543,15 @@ const makeClaudeContext = (acc: Accumulator, harness: CensusHarness) => {
       A.fromIterable,
       A.filter((entry) => entry.inWindow)
     );
+    // An API call is a message with a record inside the window; usage only supplies its tokens.
+    totals.apiCalls += MutableHashSet.size(inWindowCalls);
     A.forEach(counted, ({ usage }) => {
-      totals.apiCalls += 1;
       totals.input += usage.input;
       totals.cacheCreation += usage.cacheCreation;
       totals.cacheRead += usage.cacheRead;
       totals.output += usage.output;
     });
-    return A.isReadonlyArrayNonEmpty(counted);
+    return MutableHashSet.size(inWindowCalls) > 0;
   };
 
   const addTurns = () =>
@@ -754,8 +759,17 @@ const claudeSources = Effect.fnUntraced(function* (
   failures: FileCounts
 ) {
   const path = yield* Path.Path;
-  const listing = yield* requireListing(root);
-  const projects = A.sort(A.filter(listing, Str.includes(repository)), Order.String);
+  const fs = yield* FileSystem.FileSystem;
+  const listing = yield* fs
+    .readDirectoryEntries(root)
+    .pipe(Effect.mapError(() => CensusError.make({ reason: "unreadable-root" })));
+  // A project is a directory (or a link to one); an ordinary file with a matching name is not.
+  const projects = pipe(
+    listing,
+    A.filter((entry) => entry.type !== "File" && Str.includes(repository)(entry.name)),
+    A.map((entry) => entry.name),
+    A.sort(Order.String)
+  );
   const descend = (name: string, depth: number) =>
     depth < CensusSelectionRules.claudeWalkDepth && name !== CensusSelectionRules.skippedDirectory;
   const sources: Array<Source> = [];

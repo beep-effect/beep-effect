@@ -6,11 +6,13 @@ import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
+import * as Str from "effect/String";
 
 // Every path in a schema's decoded side that can hold free text, or whose node is not known to be text-free.
 // Literal domains, version tags and declarations without text parameters (DateTime) hold none.
 const keyOf = (name: PropertyKey) => (P.isString(name) ? name : "<symbol>");
 
+const textFreeDeclarations: ReadonlyArray<string> = ["DateTime.Utc", "Option"];
 const textFreeLeaves: ReadonlyArray<string> = ["Number", "Boolean", "Literal", "Null", "Undefined", "Enum"];
 
 const freeTextPaths = (ast: SchemaAST.AST, path: string): ReadonlyArray<string> =>
@@ -29,9 +31,13 @@ const freeTextPaths = (ast: SchemaAST.AST, path: string): ReadonlyArray<string> 
       A.flatMap([...arrays.elements, ...arrays.rest], (element) => freeTextPaths(element, `${path}[]`))
     ),
     Match.tag("Union", (union) => A.flatMap(union.types, (member) => freeTextPaths(member, path))),
-    Match.tag("Declaration", (declaration) =>
-      A.flatMap(declaration.typeParameters, (parameter) => freeTextPaths(parameter, `${path}<>`))
-    ),
+    // A declaration passes only by name: the census uses UTC instants and options. Any other one is unverified.
+    Match.tag("Declaration", (declaration) => {
+      const expected = String(declaration.annotations?.expected);
+      return A.some(textFreeDeclarations, (name) => Str.startsWith(name)(expected))
+        ? A.flatMap(declaration.typeParameters, (parameter) => freeTextPaths(parameter, `${path}<>`))
+        : [`${path}:Declaration(${expected})`];
+    }),
     Match.tag("Suspend", (suspend) => freeTextPaths(suspend.thunk(), path)),
     // Leaves that cannot hold text pass by name; any other node (unknown, any, object, symbol) fails closed.
     Match.orElse((leaf) => (A.contains(textFreeLeaves, leaf._tag) ? [] : [`${path}:${leaf._tag}`]))
@@ -56,9 +62,17 @@ describe("census report schema (AC1)", () => {
       maybe: S.OptionFromNullOr(S.TemplateLiteral(["x-", S.String])),
       later: S.suspend(() => S.String),
       loose: S.Unknown,
+      link: S.URL,
       count: S.Finite,
     });
-    expect(walk(leaky)).toEqual(["$.rows[].note", "$.tags[key]", "$.maybe<>", "$.later", "$.loose:Unknown"]);
+    expect(walk(leaky)).toEqual([
+      "$.rows[].note",
+      "$.tags[key]",
+      "$.maybe<>",
+      "$.later",
+      "$.loose:Unknown",
+      "$.link:Declaration(URL)",
+    ]);
   });
 
   it("names a baseline file by its window end and rule version", () => {

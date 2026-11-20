@@ -97,7 +97,7 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { excludeTestService
           const offsets = A.getSomes(positions);
           expect(offsets).toEqual(A.sort(offsets, Order.Number));
           for (const row of [
-            "verification runs piped through a filter",
+            "verification runs filtered (piped, discarded or redirected)",
             "log digs per verification run",
             "turns per verdict",
             "Chars per run",
@@ -184,8 +184,10 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { excludeTestService
           expect(Str.includes(`Census baseline written: ${shown}`)(inside.err)).toBe(true);
           const written = yield* fs.exists(path.join(checkout, shown));
           expect(written).toBe(true);
-          // No marker above this directory: the default cannot be found, an explicit directory still works.
-          const bare = yield* fs.makeTempDirectoryScoped({ directory: "/dev/shm", prefix: "census-bare-" });
+          // The filesystem root has no repository marker above it, wherever the temporary directory lives:
+          // the default cannot be found, and an explicit directory still works.
+          const bare = "/";
+          const runs = yield* fs.makeTempDirectoryScoped({ prefix: "census-runs-" });
           const lost = yield* runCensus(home, options(corpus.window, { writeBaseline: true, repoRoot: O.some(bare) }));
           expect(lost.exit._tag).toBe("Failure");
           const explicit = yield* runCensus(
@@ -193,7 +195,7 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { excludeTestService
             options(corpus.window, {
               writeBaseline: true,
               repoRoot: O.some(bare),
-              baselineDirectory: O.some(path.join(bare, "runs")),
+              baselineDirectory: O.some(runs),
             })
           );
           expect(explicit.exit._tag).toBe("Success");
@@ -245,6 +247,9 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { excludeTestService
           const recent = yield* runCensus(home, options(window, { since: O.none(), until: O.none() }));
           expect(recent.exit._tag).toBe("Failure");
           expect(Str.includes("Codex")(recent.out)).toBe(true);
+          // A day that does not exist is refused, not rolled into the next month.
+          const impossible = yield* runCensus(home, options(window, { until: O.some("2026-02-30T00:00:00Z") }));
+          expect(impossible.exit._tag).toBe("Failure");
           const malformed = yield* runCensus(home, options(window, { until: O.some("not-a-time") }));
           expect(malformed.exit._tag).toBe("Failure");
           const reversed = yield* runCensus(
