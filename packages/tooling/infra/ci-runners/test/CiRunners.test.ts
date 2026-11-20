@@ -321,6 +321,34 @@ describe("CiRunners production stage", () => {
     })
   );
 
+  // The boundary caps every function role: an action a role grants but the boundary does not allow is denied at
+  // run time, whatever the role says (the binaries syncer's multipart abort was such a gap until 2026-11-20).
+  const boundedGrants = Fakes.harness({ stage: "prod" });
+  boundedGrants.provider("allows every action a function role grants under the fleet boundary", (stack) =>
+    Effect.gen(function* () {
+      yield* stack.deploy(program.pipe(environmentOf(productionSecrets)));
+      const functions = A.filter(boundedGrants.recorder.reconciled, (entry) => entry.type === "Lambda.Function");
+      const allows = A.filter(fleetBoundary("prod").Statement, (statement) => statement.Effect === "Allow");
+      const statementsOfBinding = (data: Readonly<Record<string, unknown>>): ReadonlyArray<IAM.PolicyStatement> =>
+        A.isArray(data.policyStatements) ? (data.policyStatements as ReadonlyArray<IAM.PolicyStatement>) : [];
+      const granted = A.flatMap(functions, (entry) =>
+        A.flatMap(entry.bindings, (binding) =>
+          A.flatMap(
+            A.filter(statementsOfBinding(binding.data), (statement) => statement.Effect === "Allow"),
+            (statement: IAM.PolicyStatement) =>
+              A.map(resourceList(statement.Action), (action) => `${entry.fqn} ${action}`)
+          )
+        )
+      );
+      const covered = (grant: string) =>
+        A.some(allows, (allow) =>
+          A.some(resourceList(allow.Action), (pattern) => globMatches(pattern, Str.split(" ")(grant)[1] ?? ""))
+        );
+      expect(A.length(granted)).toBeGreaterThan(0);
+      expect(A.filter(granted, (grant) => !covered(grant))).toStrictEqual([]);
+    })
+  );
+
   const outsideCi = Fakes.harness({ stage: "prod" });
   outsideCi.provider("refuses prod outside CI before any resource", (stack) =>
     Effect.gen(function* () {
