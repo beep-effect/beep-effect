@@ -176,7 +176,8 @@ describe("opening a workbook part", () => {
         [
           "xl/worksheets/sheet1.xml",
           sheet(
-            '<row r="1"><c r="A1" s="1"><v>1</v></c><c r="B1" s="2"><v>2</v></c><c r="C1" s="0"><v>3</v></c></row>'
+            '<row r="1"><c r="A1" s="0"><v>1</v></c><c r="B1" s="1"><v>2</v></c><c r="C1" s="2"><v>3</v></c>' +
+              '<c r="D1" s="3"><v>4</v></c><c r="E1" s="4"><v>5</v></c><c r="F1" s="5"><v>6</v></c></row>'
           ),
         ],
         ["xl/styles.xml", stylesPart],
@@ -185,6 +186,20 @@ describe("opening a workbook part", () => {
         ["custom/thing.dat", "other"],
       ]);
       const result = yield* read(bytes);
+      // One format per cell, in style order: General; the custom id with the empty code it wrote; an unknown id as
+      // General under that id, the same for its repeat; and General for a style with no id or one that is no number.
+      const formats = A.map(result.workbook.sheets[0]?.rows[0]?.cells ?? [], (cell) => [
+        cell.format.id,
+        cell.format.code,
+      ]);
+      expect(formats).toEqual([
+        [0, "General"],
+        [170, ""],
+        [250, "General"],
+        [250, "General"],
+        [0, "General"],
+        [0, "General"],
+      ]);
       expect(A.map(result.workbook.dropped, (part) => [part.path, part.kind])).toEqual(
         expect.arrayContaining([
           ["xl/styles.xml", "styles"],
