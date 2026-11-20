@@ -32,6 +32,7 @@ import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as N from "effect/Number";
+import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
@@ -240,6 +241,13 @@ describe("ContentHash laws", () => {
         PreimageRegistry.make([ActivityPreimage, ProbePreimage, ActivityPreimage]),
         DuplicateDomainTag.make({ domainTag: ActivityPreimage.domainTag })
       );
+    });
+
+    it("L0-2 a registry finds each declared domain tag and misses an undeclared one", () => {
+      const registry = Result.getOrThrow(PreimageRegistry.make([ActivityPreimage, ProbePreimage]));
+      assert.deepStrictEqual(registry.get(ActivityPreimage.domainTag), O.some(ActivityPreimage));
+      assert.deepStrictEqual(registry.get(ProbeDomainTag), O.some(ProbePreimage));
+      assert.deepStrictEqual(registry.get(DomainTag.make("unknown/v1")), O.none());
     });
 
     it("L0-2 a golden that records another hash is refused", () => {

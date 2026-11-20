@@ -37,7 +37,6 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
@@ -47,6 +46,7 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { $SchemaId } from "./internal/SchemaId.ts";
 import { alwaysEquivalent } from "./SchemaUtils/toEquivalence.ts";
 
 const $I = $SchemaId.create("SafeRemoteHost");

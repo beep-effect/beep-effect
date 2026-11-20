@@ -184,6 +184,19 @@ describe("JsoncFingerprint", () => {
       assert.strictEqual(failure({ x: Number.NEGATIVE_INFINITY }).path, "/x");
     });
 
+    it("reports the same text on the schema channel and renders a refusal as a SchemaError", () => {
+      const input = { b: { d: 2, c: [1, { z: 0, a: 0 }] }, a: null };
+      assertSuccess(
+        JsoncFingerprint.canonicalizeSchemaResult(input),
+        Result.getOrThrow(JsoncFingerprint.canonicalizeResult(input))
+      );
+      assertSuccess(JsoncFingerprint.canonicalizeSchemaResult({ b: 1, a: 2 }), '{"a":2,"b":1}');
+      const refused = failureOfResult(JsoncFingerprint.canonicalizeSchemaResult({ n: 1n }));
+      assert.isTrue(S.isSchemaError(refused));
+      assert.strictEqual(refused.message, failure({ n: 1n }).message);
+      assert.include(refused.message, 'BigIntValue at "/n"');
+    });
+
     it("rejects non-plain objects and ignores toJSON", () => {
       assert.strictEqual(failure(DateTime.makeUnsafe(0).pipe(DateTime.toDateUtc)).code, "NonPlainObject");
       assert.strictEqual(failure({ when: new Map() }).path, "/when");

@@ -2225,6 +2225,26 @@ Lane goals/infra-alchemy-rebuild-p3-turbo-cache-stage-2
 
 Reverse: Revert the stage-2 PR: the callers and cache-warm go back to vars.TURBO_API/TURBO_TEAM, secrets.TURBO_TOKEN/TURBO_READ_TOKEN and the R2 inputs, all still live. Then, one name per command: gh variable delete TURBO_CACHE_API -R beep-effect/beep-effect; gh variable delete TURBO_CACHE_TEAM -R beep-effect/beep-effect; gh secret delete TURBO_CACHE_READ_TOKEN -R beep-effect/beep-effect; gh secret delete TURBO_CACHE_WRITE_TOKEN --env turbo-cache-write -R beep-effect/beep-effect.
 
+### CI runner handler bundles take their identity composer from a package-local leaf, 2026-11-19
+
+Until now every module took its identity composer from the registry module, @beep/identity/packages. That module holds one composer per workspace package, so its text changes whenever a package is registered. Alchemy hashes each Lambda zip with its source map, and the source map embeds the text of every module the handler loads. The CiRunners handlers (seven entries in @beep/alchemy-github-runners, the reaper in @beep/infra-ci-runners) all loaded the registry through $AlchemyGithubRunnersId, $InfraCiRunnersId and $SchemaId, so registering any package anywhere in the monorepo planned all 11 functions as code updates. Making each registry export a pure leaf (PR 3422) shrinks the minified code but leaves the whole file in the source map.
+
+The law is amended for packages whose modules a deployed handler bundle loads:
+
+- Such a package takes its composer from a package-local leaf, src/internal/<Composer>.ts, that derives it from $BeepId in @beep/identity/Root. Root imports only Id.ts, so the handler graph no longer reaches the registry. The rule covers every module of the package, not only the ones a handler loads today: @beep/schema (87 modules), @beep/alchemy-github-runners (25) and @beep/infra-ci-runners (6).
+- The registry stays the one list beep create-package and beep lint identity-registry read and write. The three registry entries are untouched, so the leaf form PR 3422 requires of them still holds. A leaf cannot drift from its registry entry unnoticed. In @beep/alchemy-github-runners and @beep/infra-ci-runners a test compares the leaf with the registry composer for the same slug (identifier, IRI, CURIE and derived identifiers). @beep/schema exports no internal path, so its test checks that identifiers its modules mint through the leaf sit under the registry's $SchemaId and equal what the registry composer derives. In @beep/identity a test asserts that $BeepId equals $I.
+- A guard test in @beep/infra-ci-runners builds the eight handler entries with Alchemy's bundler and the options of its Lambda bundle plan, and fails if any source map lists an @beep/identity source other than Id.ts, Root.ts and internal/schemaStatics.ts (an allowlist, so the registry, the barrel or any new identity module fails it). Adding the registry import to the webhook handler fails the webhook row and only that row.
+- beep lint identity-registry enforces the rule: only a package's src/internal/<Composer>.ts may use $BeepId (root-composer-outside-leaf), that leaf holds exactly one $BeepId.create over its own registry slug (root-leaf-slug-mismatch), and no scanned module of a package with such a leaf imports @beep/identity/packages or the @beep/identity barrel, which both load the registry (leaf-package-registry-import).
+- Every other package keeps importing its composer from @beep/identity/packages.
+
+The identifiers do not change. Rebuilt bundles differ from main before PR 3422 only in module wiring: the registry's compose calls and its three extra create calls are gone and the leaves add one create per composer; every other create, make and annotation argument is identical, and each bundle is about 6.8 KB smaller. After PR 3422 merged, which rewrote the registry file, the rebuilt bundles and source maps were byte-identical to the ones built before it: the registry no longer reaches them. The handlers reach @beep/schema only through LiteralKit, but the leaf rule covers the whole package so no @beep/schema module needs a per-module judgement about bundle reachability.
+
+The check-census re-baseline on this lane also rewrote two rows this change does not cause, because `bun run beep quality check-census --write-baseline` re-measures every row: @beep/repo-cli grew by about 83,000 instantiations inherited from main, and @beep/law-practice-domain shrank by 51. Only the @beep/schema rows and its typeperf fixtures move because of the leaf.
+
+Lane fix/ci-runner-handler-identity-leaves
+
+Reverse: point the modules of @beep/schema, @beep/alchemy-github-runners and @beep/infra-ci-runners back at @beep/identity/packages; delete their src/internal/*Id.ts leaves, @beep/identity/Root with its export * from ./Root.ts in identity/src/index.ts, and the IdentityLeaf, SchemaIdLeaf, Root and HandlerBundles tests; drop the leaf rules (root-composer-outside-leaf, root-leaf-slug-mismatch, leaf-package-registry-import) from beep lint identity-registry and their tests; revert the leaf paragraphs in the schema-first-development SKILL.md and references/local-primitives.md, then run beep skills update; then regenerate standards/policy-tools.fingerprint.json, the turbo.json inputs, the effect-vitest inventory and the check-census baseline with their writers
+
 ### CI runners step 1a resumes after a denied deploy, 2026-11-19
 
 Cutover step 1a (run 44435840783) passed its plan check and stopped in the deploy step on 14 denied calls, all implicit: four EC2 creates on the parent VPC, iam:ListPolicyTags and lambda:GetFunctionConcurrency. It left 20 state rows created and 52 creating; five functions and the runner IMDS-disable policy exist in AWS with their state rows still creating. The CI goals driver ruled, through the orchestrator:
@@ -2241,6 +2261,55 @@ Evidence: research/p5-ci-runners-deploy-role-coverage.md.
 Lane fix/ci-runners-deploy-role-read-and-vpc-grants · PR #3408
 
 Reverse: revert the PR; the deploy role's managed policies return to the previous default version with aws iam set-default-policy-version, and the workflow loses plan_only, expect_plan_digest and expect_plan_head
+
+### Drop r7a.2xlarge from the new CI runner fleet, 2026-11-19
+
+The CI goals driver ruled it, through the orchestrator, on 2026-11-19: `r7a.2xlarge` leaves the
+new fleet's heavy and shard-overflow type lists. The live Pulumi fleet is not changed.
+
+**Evidence.** One count, the packet gate's recount, from the live heavy fleet's CloudTrail for
+2026-11-19, 00:00Z to 23:20Z (`RunInstances`, `BidEvictedEvent` and `TerminateInstances`, plus the
+GitHub job windows of each runner; workstation-local folder
+`~/.cache/beep/ci-runners-step0/eviction-analysis-20261119/`, not in the repo). Hour rule: an
+instance counts from its `RunInstances` time to its `BidEvictedEvent` time if it was evicted, else to
+its `TerminateInstances` time, else to the end of its last job window; the two instances with none of
+these count to the end of the data. Result: 504 Spot launches, 23 evictions over 83.4 instance-hours,
+27.6 evictions per 100 hours for the fleet. `r7a.2xlarge`: 10 evictions over 6.5 hours, 152.8 per
+100 hours, 5.54 times the fleet. By zone: us-east-1b 19.79 times (6 evictions), us-east-1d 3.12 times
+(1 eviction), us-east-1c 2.60 times (3 evictions). The rule was: remove a type whose rate is at least
+twice the fleet's in at least two zones. It holds in all three zones where the type was evicted.
+
+**Heavy pool.** Six types remain: `r7i.2xlarge`, `r6i.2xlarge`, `m7a.4xlarge`, `m7i.4xlarge`,
+`m6a.4xlarge`, `m6i.4xlarge`. The largest type still has 16 vCPUs, so the Spot budget's heavy term is
+unchanged. `m6i.4xlarge` stays on watch through the green day; it is re-ruled if it has at least two
+evictions in a second zone.
+
+**Overflow pool.** `r7i.2xlarge` and `r6i.2xlarge` only, under the ICE watch below. The
+amended rule allowed `m7i.2xlarge` (its family had no evictions in 16.1 hours) only when the measured
+peak memory of the overflow jobs, plus 25%, fits in 32 GiB. No measured figure exists: the
+shard-overflow job (`shard-overflow.yml`, Test Unit partitions) does not run under
+`beep ci runner-resources`; only the heavy lanes in `heavy.yml` do. No guessed figure was used. A
+4xlarge type never goes into the overflow pool, because it would double the pool's per-VM vCPU term.
+
+**ICE watch.** During the green day, the overflow pool is re-ruled if any overflow job waits more
+than 10 minutes for a runner because `CreateFleet` returned `InsufficientInstanceCapacity` for every
+remaining override. A measured Test Unit partition memory peak, which the `m7i.2xlarge` branch needs,
+is owed only if the watch trips.
+
+**Order of the heavy types.** The heavy pool takes `RunnerInstanceType.literals` in order, so its
+first type moves from `r7a.2xlarge` to `r7i.2xlarge`. Only the empty-overrides fallback in
+`ScaleUp.program.ts` reads the first type. Override priorities come from list order only under a
+`prioritized` allocation strategy, and both pools run the default `capacity-optimized`
+(`lowest-price` for on-demand), which sets none. This is not a priority change.
+
+**Reach.** The change is to `packages/tooling/infra/ci-runners/src/Config.ts` alone. The next
+CiRunners deploy carries the pools' instance types in each pool function's runtime configuration
+(`env`): the scale-up, job-retry and scale-down functions of both pools, six function updates. No
+launch template or other resource changes. Those rows are attributed to this decision.
+
+Lane fix/ci-runners-drop-r7a-2xlarge
+
+Reverse: Re-add r7a.2xlarge to RunnerInstanceType and to the new heavy (and overflow) type lists in packages/tooling/infra/ci-runners/src/Config.ts
 
 <!-- beep:decisions:end -->
 

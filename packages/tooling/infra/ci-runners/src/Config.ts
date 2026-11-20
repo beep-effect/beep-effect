@@ -10,7 +10,6 @@
 
 import { AwsAccountId } from "@beep/alchemy-aws-extras/DeployTarget";
 import { RunnerType } from "@beep/alchemy-github-runners/RunnerPool.models";
-import { $InfraCiRunnersId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -20,6 +19,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { $InfraCiRunnersId } from "./internal/InfraCiRunnersId.ts";
 
 const $I = $InfraCiRunnersId.create("Config");
 
@@ -50,27 +50,30 @@ export const FleetRegion = LiteralKit(["us-east-1"]).pipe(
 export type FleetRegion = typeof FleetRegion.Type;
 
 /**
- * The 64 GiB x86_64 instance types the live pools launch.
+ * The 64 GiB x86_64 instance types the pools launch.
  *
  * **Details**
  *
- * The heavy pool uses all seven (35 Spot capacity pools across five
- * subnets); the shard-overflow pool uses the three 8-vCPU types. Carried
- * over from the Pulumi `CiRunnerPool` profiles.
+ * The heavy pool uses all six (30 Spot capacity pools across five
+ * subnets); the shard-overflow pool uses the two 8-vCPU types. Carried
+ * over from the Pulumi `CiRunnerPool` profiles, less `r7a.2xlarge`: on
+ * 2026-11-19 the live fleet's `r7a.2xlarge` runners were evicted at more
+ * than twice the fleet's per-hour rate in three zones (decision
+ * `2026-11-19-drop-r7a-2xlarge-from-the-new-fleet` in
+ * `goals/infra-alchemy-rebuild`).
  *
  * **Example** (List the instance types)
  *
  * ```ts
  * import { RunnerInstanceType } from "@beep/infra-ci-runners/Config"
  *
- * console.log(RunnerInstanceType.literals.length) // 7
+ * console.log(RunnerInstanceType.literals.length) // 6
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export const RunnerInstanceType = LiteralKit([
-  "r7a.2xlarge",
   "r7i.2xlarge",
   "r6i.2xlarge",
   "m7a.4xlarge",
@@ -95,17 +98,16 @@ export type RunnerInstanceType = typeof RunnerInstanceType.Type;
  * ```ts
  * import { instanceVcpus } from "@beep/infra-ci-runners/Config"
  *
- * console.log(instanceVcpus("r7a.2xlarge")) // 8
+ * console.log(instanceVcpus("r7i.2xlarge")) // 8
  * ```
  *
- * @param type - One of the seven 64 GiB x86_64 types.
+ * @param type - One of the six 64 GiB x86_64 types.
  * @returns Its vCPU count.
  * @category models
  * @since 0.0.0
  */
 export const instanceVcpus = (type: RunnerInstanceType): number =>
   RunnerInstanceType.match(type, {
-    "r7a.2xlarge": () => 8,
     "r7i.2xlarge": () => 8,
     "r6i.2xlarge": () => 8,
     "m7a.4xlarge": () => 16,
@@ -375,7 +377,7 @@ export class ImageSettings extends S.Opaque<ImageSettings, { readonly brand: uni
  *
  * const pool = S.decodeUnknownSync(PoolSettings)({
  *   name: "overflow",
- *   instanceTypes: ["r7a.2xlarge"],
+ *   instanceTypes: ["r7i.2xlarge"],
  *   maximumCount: 48,
  *   overlapMaximumCount: 2,
  *   label: "beep-fleet-overflow",
@@ -657,7 +659,7 @@ export const productionConfig: CiRunnersConfig.Encoded = {
   },
   overflow: {
     name: "overflow",
-    instanceTypes: ["r7a.2xlarge", "r7i.2xlarge", "r6i.2xlarge"],
+    instanceTypes: ["r7i.2xlarge", "r6i.2xlarge"],
     maximumCount: 48,
     overlapMaximumCount: 2,
     label: "beep-fleet-overflow",

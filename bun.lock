@@ -9,6 +9,7 @@
         "@beep/glob": "workspace:^",
         "@beep/jsonc": "workspace:^",
         "@beep/repo-configs": "workspace:^",
+        "@beep/repo-gate-vitest": "workspace:^",
         "@beep/tsgo-shim": "workspace:^",
         "@beep/utils": "workspace:^",
         "@biomejs/biome": "catalog:",
@@ -2770,6 +2771,21 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/foundation/modeling/csv": {
+      "name": "@beep/csv",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/foundation/modeling/epistemics": {
       "name": "@beep/epistemics",
       "version": "0.0.0",
@@ -3359,6 +3375,22 @@
         "@types/node": "catalog:",
         "bun-types": "catalog:",
         "type-fest": "catalog:",
+      },
+    },
+    "packages/foundation/modeling/xlsx": {
+      "name": "@beep/xlsx",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/utils": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+        "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz",
       },
     },
     "packages/foundation/modeling/yaml": {
@@ -4504,6 +4536,22 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/tooling/test-kit/repo-gate-vitest": {
+      "name": "@beep/repo-gate-vitest",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/gate-report": "workspace:^",
+        "@beep/repo-gate-record": "workspace:^",
+        "@effect/platform-node": "catalog:",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+        "vitest": "catalog:",
+      },
+    },
     "packages/tooling/test-kit/test-runner": {
       "name": "@beep/test-runner",
       "version": "0.0.0",
@@ -4562,6 +4610,7 @@
         "@beep/ffmpeg": "workspace:^",
         "@beep/file-processing": "workspace:^",
         "@beep/firecrawl": "workspace:^",
+        "@beep/gate-report": "workspace:^",
         "@beep/git": "workspace:^",
         "@beep/github": "workspace:^",
         "@beep/github-actions": "workspace:^",
@@ -4597,6 +4646,7 @@
         "@beep/repo-cli-kit": "workspace:^",
         "@beep/repo-configs": "workspace:^",
         "@beep/repo-docgen": "workspace:^",
+        "@beep/repo-gate-record": "workspace:^",
         "@beep/repo-gate-run": "workspace:^",
         "@beep/repo-tsconfig": "workspace:^",
         "@beep/repo-utils": "workspace:^",
@@ -5356,6 +5406,8 @@
 
     "@beep/cosmos": ["@beep/cosmos@workspace:packages/drivers/cosmos"],
 
+    "@beep/csv": ["@beep/csv@workspace:packages/foundation/modeling/csv"],
+
     "@beep/data": ["@beep/data@workspace:packages/foundation/primitive/data"],
 
     "@beep/db-admin": ["@beep/db-admin@workspace:packages/_internal/db-admin"],
@@ -5618,6 +5670,8 @@
 
     "@beep/repo-gate-run": ["@beep/repo-gate-run@workspace:packages/tooling/library/repo-gate-run"],
 
+    "@beep/repo-gate-vitest": ["@beep/repo-gate-vitest@workspace:packages/tooling/test-kit/repo-gate-vitest"],
+
     "@beep/repo-tsconfig": ["@beep/repo-tsconfig@workspace:packages/tooling/library/repo-tsconfig"],
 
     "@beep/repo-utils": ["@beep/repo-utils@workspace:packages/tooling/library/repo-utils"],
@@ -5707,6 +5761,8 @@
     "@beep/workspace-use-cases": ["@beep/workspace-use-cases@workspace:packages/workspace/use-cases"],
 
     "@beep/xdg": ["@beep/xdg@workspace:packages/foundation/capability/xdg"],
+
+    "@beep/xlsx": ["@beep/xlsx@workspace:packages/foundation/modeling/xlsx"],
 
     "@beep/xstate": ["@beep/xstate@workspace:packages/drivers/xstate"],
 
@@ -9723,6 +9779,8 @@
     "ws": ["ws@8.22.1", "", { "peerDependencies": { "bufferutil": "^4.0.1", "utf-8-validate": ">=5.0.2" }, "optionalPeers": ["bufferutil", "utf-8-validate"] }, "sha512-oyL6OPYme/CmiFvNuGzeoxCJ4nOrZE2O1FwM9MWM1AsGri6nLXB2pg+lNA8aLeXMSav0J6eIVS1j6vUPzUtK9g=="],
 
     "wsl-utils": ["wsl-utils@0.4.0", "", { "dependencies": { "is-wsl": "^3.1.0", "powershell-utils": "^0.1.0" } }, "sha512-9YmF+2sFEd+T7TkwlmE337F0IVzfDvDknhtpBQxxXzEOfgPphGlFYpyx0cTuCIFj8/p+sqwBYAeGxOMNSzPPDA=="],
+
+    "xlsx": ["xlsx@https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz", { "bin": { "xlsx": "./bin/xlsx.njs" } }, "sha512-oLDq3jw7AcLqKWH2AhCpVTZl8mf6X2YReP+Neh0SJUzV/BdZYjth94tG5toiMB1PPrYtxOCfaoUCkvtuH+3AJA=="],
 
     "xml-name-validator": ["xml-name-validator@5.0.0", "", {}, "sha512-EvGK8EJ3DhaHfbRlETOWAS5pO9MZITeauHKJyb8wyajUfQUenkIg2MvLDTZ4T/TgIcm3HU0TFBgWWboAZ30UHg=="],
 

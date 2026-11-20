@@ -16,4 +16,5 @@
 export * from "./GatePaths.ts";
 export * from "./GateRecordFile.ts";
 export * from "./GateRecordStore.ts";
+export * from "./PackageLocation.ts";
 export * from "./RunId.ts";

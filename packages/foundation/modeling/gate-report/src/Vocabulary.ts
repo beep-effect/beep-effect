@@ -8,6 +8,9 @@
  */
 import { $GateReportId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import * as A from "effect/Array";
+import * as O from "effect/Option";
+import * as Order from "effect/Order";
 
 const $I = $GateReportId.create("Vocabulary");
 
@@ -82,6 +85,39 @@ export const RunReason = LiteralKit(["passed", "failed", "errored", "cancelled"]
  * @since 0.0.0
  */
 export type RunReason = typeof RunReason.Type;
+
+const reasonOrder: Order.Order<RunReason> = Order.mapInput(Order.Number, (reason: RunReason) =>
+  O.getOrElse(
+    A.findFirstIndex(RunReason.literals, (literal) => literal === reason),
+    () => 0
+  )
+);
+
+/**
+ * The worst of some run reasons, from the best to the worst: passed,
+ * failed, errored, cancelled.
+ *
+ * **Details**
+ *
+ * The order of {@link RunReason}'s literals. Runs folded into one report
+ * keep the worst reason among them; no reason at all is `passed`.
+ *
+ * **Example** (Keep the worse reason)
+ *
+ * ```ts
+ * import { worstReason } from "@beep/gate-report/Vocabulary";
+ *
+ * console.log(worstReason(["failed", "errored", "passed"])); // errored
+ * console.log(worstReason([])); // passed
+ * ```
+ *
+ * @param reasons - The reasons of the runs folded together.
+ * @returns The worst of them, or `passed` when there is none.
+ * @category domain-logic
+ * @since 0.0.0
+ */
+export const worstReason = (reasons: ReadonlyArray<RunReason>): RunReason =>
+  A.reduce(reasons, "passed" as RunReason, Order.max(reasonOrder));
 
 /**
  * The run outcome that selects a dispatch cell column.

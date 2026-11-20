@@ -10,6 +10,7 @@
     "@beep/glob": "workspace:^",
     "@beep/jsonc": "workspace:^",
     "@beep/repo-configs": "workspace:^",
+    "@beep/repo-gate-vitest": "workspace:^",
     "@beep/tsgo-shim": "workspace:^",
     "@beep/utils": "workspace:^",
     "@biomejs/biome": "catalog:",

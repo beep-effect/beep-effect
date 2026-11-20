@@ -7,11 +7,11 @@
  * @since 0.0.0
  */
 
-import { $InfraCiRunnersId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual, flow } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { $InfraCiRunnersId } from "./internal/InfraCiRunnersId.ts";
 import type { PoolName } from "./Config.ts";
 
 const $I = $InfraCiRunnersId.create("Names");

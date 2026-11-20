@@ -5,11 +5,11 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import type * as AST from "effect/SchemaAST";
 

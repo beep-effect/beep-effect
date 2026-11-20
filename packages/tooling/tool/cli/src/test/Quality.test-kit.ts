@@ -80,6 +80,7 @@ export {
   fallowReportPathsForTesting,
   inheritedCodemodDuplicationCountForTesting,
   reportInvariantDiagnosticsForTesting,
+  resolveFallowBaseRefForTesting,
   workflowYamlValueForTesting,
 } from "../commands/Quality/FallowQuality.command.ts";
 export * from "../commands/Quality/internal/CheckCensusOutput.ts";

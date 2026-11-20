@@ -12,7 +12,6 @@
  * @since 0.0.0
  */
 
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as Provider from "alchemy/Provider";
 import { Resource } from "alchemy/Resource";
 import * as A from "effect/Array";
@@ -23,6 +22,7 @@ import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { Ec2Fleet } from "./Ec2Fleet.service.ts";
 import { RunnerOwner } from "./GitHubRunners.models.ts";
+import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import { GitHubApiError, RunnerSweepIncomplete } from "./RunnerFleet.errors.ts";
 import { RunnerFilter } from "./RunnerInstance.models.ts";
 import { RunnerType } from "./RunnerPool.models.ts";

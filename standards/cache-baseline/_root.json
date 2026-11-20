@@ -9,10 +9,10 @@
   ],
   "review": {
     "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 registry lane, goals/text-knowledge-stack-rebuild-p1b-registry)",
-    "reason": "@beep/rdf gains the workspace dependency @beep/spdx for the NamespacePin license codec, so its build, check, doctest, lint:deprecated-apis, test and test:property tasks depend on @beep/spdx#build; // records the seal-input lists commits 6 to 8 of this stack regenerated. No command, cache flag, output or environment changed; no qualification is granted.",
+    "reason": "Re-record the root and @beep/rdf after merging P1 PR A's final head 7a7b87f0328, which re-recorded them: @beep/rdf keeps PR B's @beep/spdx dependency edge, //#lint:identity-registry keeps the registry shard input glob, and turbo.json carries the regenerated seal-input lists. No command, cache flag, output or environment changed; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/rdf-spdx-dependency-cache-review-2026-11-20.md",
-      "sha256": "7cedc7eab46f98b8be276556a49873a3efe0281d32667ee458f3eeaf38c383f2"
+      "path": "docs/reports/tksr-p1b-a-merge-cache-review-2026-11-19.md",
+      "sha256": "9c8fc30a3333e6d879b41dbfc8ab2acccdd1b439c8998c16a4925d7f72bd3380"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "a6648adf3af2453ce0ee00aef806cfed67c1ca5fa20eca9679d44fd8fec448f3"
+      "sha256": "df271d931bfc4e669eedc1aa9cb368ffe78b9c408c13a20762dfc8d890b182f9"
     }
   ],
   "nodes": [
@@ -2185,9 +2185,11 @@
           "packages/foundation/capability/xdg/package.json",
           "packages/foundation/capability/xdg/src/**",
           "packages/foundation/modeling/contract-kit/package.json",
+          "packages/foundation/modeling/csv/package.json",
           "packages/foundation/modeling/epistemics/package.json",
           "packages/foundation/modeling/epistemics/src/**",
           "packages/foundation/modeling/gate-report/package.json",
+          "packages/foundation/modeling/gate-report/src/**",
           "packages/foundation/modeling/github-commands/package.json",
           "packages/foundation/modeling/github-commands/src/**",
           "packages/foundation/modeling/github-references/package.json",
@@ -2236,6 +2238,7 @@
           "packages/foundation/modeling/tsconfig/src/**",
           "packages/foundation/modeling/utils/package.json",
           "packages/foundation/modeling/utils/src/**",
+          "packages/foundation/modeling/xlsx/package.json",
           "packages/foundation/modeling/yaml/package.json",
           "packages/foundation/modeling/yaml/src/**",
           "packages/foundation/primitive/data/package.json",
@@ -2283,6 +2286,7 @@
           "packages/tooling/library/repo-cli-kit/package.json",
           "packages/tooling/library/repo-cli-kit/src/**",
           "packages/tooling/library/repo-gate-record/package.json",
+          "packages/tooling/library/repo-gate-record/src/**",
           "packages/tooling/library/repo-gate-run/package.json",
           "packages/tooling/library/repo-gate-run/src/**",
           "packages/tooling/library/repo-tsconfig/package.json",
@@ -2297,6 +2301,7 @@
           "packages/tooling/test-kit/fc-runs/package.json",
           "packages/tooling/test-kit/fc-runs/src/**",
           "packages/tooling/test-kit/memfs/package.json",
+          "packages/tooling/test-kit/repo-gate-vitest/package.json",
           "packages/tooling/test-kit/test-runner/package.json",
           "packages/tooling/test-kit/test-utils/package.json",
           "packages/tooling/test-kit/test-utils/src/**",

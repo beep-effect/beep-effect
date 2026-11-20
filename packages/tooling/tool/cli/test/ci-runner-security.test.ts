@@ -198,6 +198,15 @@ const assertPrunesAptSourcesBefore = (run: string, command: string): void => {
   );
 };
 
+// Hosted apt installs go through the one retrying composite action
+// (.github/actions/apt-install), which prunes the third-party sources itself.
+const APT_INSTALL_ACTION = "./.github/actions/apt-install";
+const assertUsesAptInstall = (step: WorkflowStep, packages: ReadonlyArray<string>): void => {
+  assert.strictEqual(step.uses, APT_INSTALL_ACTION, step.name);
+  assert.isUndefined(step.run, step.name);
+  assert.deepStrictEqual(Str.split(Str.trim(String(step.with?.packages ?? "")), /\s+/u), [...packages], step.name);
+};
+
 const PRODUCER_BUILD_TOOL_PIN_KEYS = [
   "ZIG_VERSION",
   "ZIG_URL",
@@ -1432,7 +1441,15 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.include(workflowText, "run: cargo check --locked");
       assert.include(workflowText, "run: cargo clippy --locked -- -D warnings");
       assert.include(workflowText, "working-directory: apps/professional-desktop/src-tauri");
-      assertPrunesAptSourcesBefore(stepRun(steps, "Install Tauri Linux system dependencies"), "sudo apt-get update");
+      assertUsesAptInstall(stepByName(steps, "Install Tauri Linux system dependencies"), [
+        "libwebkit2gtk-4.1-dev",
+        "libgtk-3-dev",
+        "librsvg2-dev",
+        "libayatana-appindicator3-dev",
+        "libssl-dev",
+        "build-essential",
+        "pkg-config",
+      ]);
       // The fetched binary is on PATH before the lane gate and the apt pruning.
       assert.strictEqual(stepByName(steps, "Fetch beep CI binary").uses, FETCH_BEEP_CI_ACTION);
       assert.isBelow(
@@ -1627,12 +1644,140 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const steps = jobSteps(workflowJobs13, "release-desktop");
       const install = "Install Tauri Linux system dependencies";
       assert.strictEqual(stepByName(steps, install).if, "runner.os == 'Linux'");
-      assertPrunesAptSourcesBefore(stepRun(steps, install), "sudo apt-get update");
+      assertUsesAptInstall(stepByName(steps, install), [
+        "libwebkit2gtk-4.1-dev",
+        "libgtk-3-dev",
+        "librsvg2-dev",
+        "patchelf",
+        "libayatana-appindicator3-dev",
+        "build-essential",
+        "curl",
+        "wget",
+        "file",
+        "libssl-dev",
+      ]);
+      assert.strictEqual(stepByName(steps, install).with?.["no-install-recommends"], "false");
       const checkoutIndex = O.getOrThrowWith(
         A.findFirstIndex(steps, (step) => Str.startsWith("actions/checkout@")(step.uses ?? "")),
         () => new Error("Job release-desktop declares no checkout step.")
       );
       assert.isBelow(checkoutIndex, stepIndexByName(steps, install));
+    })
+  );
+
+  // Hosted Ubuntu mirrors return 503 / "Connection failed" on InRelease and
+  // "File has unexpected size ... Mirror sync in progress?" for minutes at a
+  // time (Check run 44521813535). The shared action retries update and install
+  // as one unit a fixed number of times and fails loudly after the last one.
+  it.effect(
+    "retries apt update and install a bounded number of times through the shared action",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const repoRoot = yield* findRepoRoot();
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const actionText = yield* fs.readFileString(`${repoRoot}/.github/actions/apt-install/action.yml`);
+      const action = parseWorkflowYaml(actionText);
+      const actionSteps = yield* decodeWorkflowSteps(yamlAt(action, ["runs", "steps"]));
+      const script = stepRun(actionSteps, "Install apt packages with retries");
+      assertPrunesAptSourcesBefore(script, 'apt-get "${apt_options[@]}" -o APT::Update::Error-Mode=any update');
+      assert.include(script, "-o Acquire::Retries=3");
+
+      // setup-monorepo-ci installs poppler-utils through the same action.
+      const setupText = yield* fs.readFileString(`${repoRoot}/.github/actions/setup-monorepo-ci/action.yml`);
+      const setup = parseWorkflowYaml(setupText);
+      const setupSteps = yield* decodeWorkflowSteps(yamlAt(setup, ["runs", "steps"]));
+      assertUsesAptInstall(stepByName(setupSteps, "Install native PDF text extraction (apt)"), ["poppler-utils"]);
+
+      const runCase = Effect.fnUntraced(function* (failUpdates: number, failInstalls: number, recommends: string) {
+        const directory = yield* fs.makeTempDirectoryScoped();
+        const work = yield* fs.realPath(directory);
+        const stubs = `${work}/bin`;
+        yield* fs.makeDirectory(stubs, { recursive: true });
+        const stub = (name: string, body: string) =>
+          Effect.andThen(fs.writeFileString(`${stubs}/${name}`, `#!/usr/bin/bash\n${body}\n`), () =>
+            fs.chmod(`${stubs}/${name}`, 0o755)
+          );
+        yield* stub("beep", 'echo "beep $*" >> "$APT_LOG"');
+        yield* stub("sudo", '[[ "$1" == "-n" ]] && shift\nexec "$@"');
+        yield* stub("sleep", 'echo "sleep $*" >> "$APT_LOG"');
+        yield* stub(
+          "apt-get",
+          A.join(
+            [
+              'echo "apt-get $*" >> "$APT_LOG"',
+              'for arg in "$@"; do case "$arg" in update) phase=update ;; install) phase=install ;; esac; done',
+              'count_file="$APT_STATE/$phase"',
+              'count=$(( $(cat "$count_file" 2>/dev/null || echo 0) + 1 ))',
+              'echo "$count" > "$count_file"',
+              'limit=APT_FAIL_UPDATES; [[ "$phase" == install ]] && limit=APT_FAIL_INSTALLS',
+              '(( count > ${!limit} )) || { echo "E: Failed to fetch InRelease  503  Service Unavailable" >&2; exit 100; }',
+            ],
+            "\n"
+          )
+        );
+        const child = yield* spawner.spawn(
+          ChildProcess.make("/usr/bin/bash", ["--noprofile", "--norc", "-eo", "pipefail", "-c", script], {
+            cwd: work,
+            env: {
+              PATH: `${stubs}:/usr/bin:/bin`,
+              APT_LOG: `${work}/log`,
+              APT_STATE: work,
+              APT_FAIL_UPDATES: String(failUpdates),
+              APT_FAIL_INSTALLS: String(failInstalls),
+              APT_INSTALL_PACKAGES: "  poppler-utils\n  libssl-dev\n",
+              APT_INSTALL_NO_RECOMMENDS: recommends,
+              APT_INSTALL_ATTEMPTS: "3",
+              APT_INSTALL_BACKOFF_SECONDS: "15",
+            },
+            extendEnv: false,
+            stdout: "pipe",
+            stderr: "pipe",
+          })
+        );
+        const [status, stdout] = yield* Effect.all(
+          [child.exitCode, child.stdout.pipe(Stream.decodeText(), Stream.mkString)],
+          { concurrency: "unbounded" }
+        );
+        const logText = yield* fs.readFileString(`${work}/log`);
+        const log = A.filter(Str.split(logText, "\n"), Str.isNonEmpty);
+        return { status: Number(status), stdout, log };
+      });
+      const updates = (log: ReadonlyArray<string>) => A.filter(log, Str.endsWith(" update")).length;
+      const installs = (log: ReadonlyArray<string>) => A.filter(log, Str.includes(" install ")).length;
+      const sleeps = (log: ReadonlyArray<string>) => A.filter(log, Str.startsWith("sleep "));
+
+      // Two mirror failures on update, then success: three updates, one install, doubling pauses.
+      const recovered = yield* runCase(2, 0, "true");
+      assert.strictEqual(recovered.status, 0);
+      assert.strictEqual(recovered.log[0], "beep ci prune-apt");
+      assert.strictEqual(updates(recovered.log), 3);
+      assert.strictEqual(installs(recovered.log), 1);
+      assert.deepStrictEqual(sleeps(recovered.log), ["sleep 15", "sleep 30"]);
+      assert.include(
+        A.findFirst(recovered.log, Str.includes(" install ")).pipe(O.getOrElse(constant(""))),
+        "install -y --no-install-recommends poppler-utils libssl-dev"
+      );
+      assert.include(recovered.stdout, "::warning::apt-install: attempt 2 of 3 failed");
+
+      // A failed install starts the next attempt from update, and the recommends flag is optional.
+      const reinstalled = yield* runCase(0, 1, "false");
+      assert.strictEqual(reinstalled.status, 0);
+      assert.strictEqual(updates(reinstalled.log), 2);
+      assert.strictEqual(installs(reinstalled.log), 2);
+      assertTrue(
+        A.every(
+          A.filter(reinstalled.log, Str.includes(" install ")),
+          (line) => !Str.includes("--no-install-recommends")(line)
+        )
+      );
+
+      // A mirror that never recovers fails the step after exactly three attempts, with an error annotation.
+      const exhausted = yield* runCase(99, 0, "true");
+      assert.strictEqual(exhausted.status, 1);
+      assert.strictEqual(updates(exhausted.log), 3);
+      assert.strictEqual(installs(exhausted.log), 0);
+      assert.deepStrictEqual(sleeps(exhausted.log), ["sleep 15", "sleep 30"]);
+      assert.include(exhausted.stdout, "::error::apt-install: apt-get update and install failed after 3 attempts");
     })
   );
 
@@ -1806,15 +1951,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
 
       // Pull requests never publish a cache entry. The SHA-keyed post-lane
       // Turbo fallback was write-only (audit M13: 589 entries, 7.4 GB, zero
-      // restores), so the main Docgen cache and the push-only Playwright
-      // browsers are the only saves left, both push-gated.
+      // restores), so the main Docgen cache, the main Turbo build snapshot and
+      // the push-only Playwright browsers are the only saves left, all
+      // push-gated.
       const checkJobs = yield* workflowJobs(workflow);
       const heavyJobs = yield* workflowJobs(heavyWorkflow);
       const storybookJobs = yield* workflowJobs(policy.storybook);
       assert.deepStrictEqual(cacheSaveSteps(checkJobs), []);
       assert.deepStrictEqual(
         cacheSaveSteps(heavyJobs),
-        A.map(["verify", "check", "docgen", "doctest", "build"], (job) => `${job}/Save main Docgen Turbo cache`)
+        A.flatMap(["verify", "check", "docgen", "doctest", "build"], (job) => [
+          `${job}/Save main Docgen Turbo cache`,
+          `${job}/Save main Turbo build cache`,
+        ])
       );
       assert.deepStrictEqual(cacheSaveSteps(storybookJobs), ["storybook/Save Playwright Chromium cache"]);
       assert.include(
@@ -2267,6 +2416,133 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.strictEqual(
         save.with?.key,
         "turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-${{ github.sha }}"
+      );
+    })
+  );
+
+  // The main Turbo build snapshot: pull requests restore it, only a push to
+  // main saves it, and nothing about it reaches Turbo's task hashing.
+  const turboBuildCacheAction = "./.github/actions/turbo-build-cache";
+  const turboBuildCachePushToMain = "github.event_name == 'push' && github.ref == 'refs/heads/main'";
+  const readRepoText = Effect.fnUntraced(function* (relative: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const repoRoot = yield* findRepoRoot();
+    return yield* fs.readFileString(path.join(repoRoot, relative));
+  });
+
+  it.effect(
+    "keeps the Turbo build-cache action restore-only on pull requests and out of Turbo hashing",
+    Effect.fnUntraced(function* () {
+      const actionText = yield* readRepoText(".github/actions/turbo-build-cache/action.yml");
+      const actionSteps = yield* decodeWorkflowSteps(yamlAt(parseWorkflowYaml(actionText), ["runs", "steps"]));
+
+      // Check 1: the shared action never saves. Its restore acts only on pull
+      // requests and its prune only on a push to main.
+      const usesOf = (step: (typeof actionSteps)[number]) => step.uses ?? "";
+      assert.deepStrictEqual(
+        A.filter(actionSteps, (step) =>
+          A.some(["actions/cache@", "actions/cache/save@"], (prefix) => Str.startsWith(prefix)(usesOf(step)))
+        ),
+        []
+      );
+      const restore = stepByName(actionSteps, "Restore main Turbo build cache");
+      assert.strictEqual(restore.uses, "actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9");
+      assert.strictEqual(restore.if, "inputs.operation == 'restore' && github.event_name == 'pull_request'");
+      assert.deepStrictEqual(restore.with, {
+        path: ".turbo/cache",
+        key: "${{ steps.key.outputs.key }}",
+        "restore-keys": "${{ steps.key.outputs.prefix }}",
+      });
+      const pruneName = "Prune Turbo cache to environment-free build artifacts";
+      assert.strictEqual(
+        stepByName(actionSteps, pruneName).if,
+        `inputs.operation == 'prune' && ${turboBuildCachePushToMain}`
+      );
+      assert.include(
+        stepRun(actionSteps, "Resolve Turbo build cache key"),
+        'prefix="turbo-${RUNNER_OS}-build-outputs-main-"'
+      );
+      // The snapshot never carries a task that reads environment values.
+      const pruneRun = stepRun(actionSteps, pruneName);
+      assert.include(pruneRun, 'select(.task == "build" and .envMode == "strict")');
+      for (const field of ["specified.env", "specified.passThroughEnv", "configured", "inferred", "passthrough"]) {
+        assert.include(pruneRun, `.environmentVariables.${field} // []`);
+      }
+
+      // Check 2: no Turbo input, output, environment or hashing knob. The
+      // action exports nothing to the job environment and names no Turbo
+      // configuration; it only moves files under .turbo/cache.
+      assert.notInclude(actionText, "GITHUB_ENV");
+      assert.notInclude(actionText, "turbo.json");
+      assert.notMatch(actionText, /\bTURBO_[A-Z_]+/u);
+    })
+  );
+
+  it.effect(
+    "restores the Turbo build snapshot in Heavy Check and Build and saves it only from a main push of Check",
+    Effect.fnUntraced(function* () {
+      const heavyText = yield* readRepoText(".github/workflows/heavy.yml");
+      const heavyJobs = yield* workflowJobs(parseWorkflowYaml(heavyText));
+      const heavySteps = jobSteps(heavyJobs, "check");
+      const heavyRestore = stepByName(heavySteps, "Restore main Turbo build cache");
+      assert.strictEqual(heavyRestore.uses, turboBuildCacheAction);
+      assert.deepStrictEqual(heavyRestore.with, { operation: "restore" });
+      assert.strictEqual(
+        heavyRestore.if,
+        "(env.BEEP_CI_LANE_ID == 'check' || env.BEEP_CI_LANE_ID == 'build') && github.event_name == 'pull_request' && hashFiles('.github/actions/turbo-build-cache/action.yml') != ''"
+      );
+      const heavyPrune = stepByName(heavySteps, "Prune main Turbo build cache");
+      assert.strictEqual(heavyPrune.uses, turboBuildCacheAction);
+      assert.deepStrictEqual(heavyPrune.with, { operation: "prune" });
+      assert.strictEqual(heavyPrune.if, `env.BEEP_CI_LANE_ID == 'check' && ${turboBuildCachePushToMain}`);
+      const heavySave = stepByName(heavySteps, "Save main Turbo build cache");
+      assert.strictEqual(heavySave.uses, "actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9");
+      assert.strictEqual(
+        heavySave.if,
+        `env.BEEP_CI_LANE_ID == 'check' && ${turboBuildCachePushToMain} && steps.turbo-build-cache.outputs.ready == 'true'`
+      );
+      assert.deepStrictEqual(heavySave.with, {
+        path: ".turbo/cache",
+        key: "${{ steps.turbo-build-cache.outputs.key }}",
+      });
+      const order = A.map(
+        [
+          "Setup monorepo CI",
+          "Restore main Turbo build cache",
+          "Run verification lane",
+          "Prune main Turbo build cache",
+          "Save main Turbo build cache",
+        ],
+        (name) => stepIndexByName(heavySteps, name)
+      );
+      assert.deepStrictEqual(order, A.sort(order, Order.Number));
+    })
+  );
+
+  it.effect(
+    "restores the Turbo build snapshot in check.yml only on pull requests and never saves it there",
+    Effect.fnUntraced(function* () {
+      const checkText = yield* readRepoText(".github/workflows/check.yml");
+      const checkJobs = yield* workflowJobs(parseWorkflowYaml(checkText));
+      const stepsOf = (job: (typeof checkJobs)[string]) => job.steps ?? [];
+      const consumerSteps = A.flatMap(R.toEntries(checkJobs), ([jobId, job]) =>
+        A.map(
+          A.filter(stepsOf(job), (step) => step.uses === turboBuildCacheAction),
+          (step) => ({
+            jobId,
+            operation: step.with?.operation,
+            onPullRequest: Str.includes("github.event_name == 'pull_request'")(step.if ?? ""),
+          })
+        )
+      );
+      assert.deepStrictEqual(consumerSteps, [
+        { jobId: "labs", operation: "restore", onPullRequest: true },
+        { jobId: "test-integration-shard", operation: "restore", onPullRequest: true },
+      ]);
+      assert.include(
+        stepByName(jobSteps(checkJobs, "test-integration-shard"), "Restore main Turbo build cache").if,
+        "matrix.partition == 'int-rest'"
       );
     })
   );
@@ -3310,6 +3586,162 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(currentToo.status).toBe(0);
       expect(currentToo.text).toContain("The branch is current with main and nothing was pushed");
       expect(currentToo.text).not.toContain("Bring the branch up to date by hand");
+    })
+  );
+
+  // The closure compare and re-record steps' own scripts, run against stub `gh` and `bun` with real bash
+  // and jq. The compare step takes the newest `beep-ci-*` release by createdAt, never GitHub's Latest
+  // flag (which sat on an older release, beep-ci-f9982f3b5e65). A byte-identical re-record keeps the
+  // superseded manifest as `beep-linux-x64.closure.<digest>.json` before it replaces
+  // `beep-linux-x64.closure.json`, names that digest in the notes, never clobbers an archive, and fails
+  // closed when the earlier manifest cannot be read (run 44631311634 overwrote it on beep-ci-7e2128d77b29).
+  it.effect("selects the newest release by createdAt and keeps the superseded closure on a re-record", () =>
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const root = yield* findRepoRoot();
+      const workflowText = yield* fs.readFileString(`${root}/.github/workflows/beep-ci-binary.yml`);
+      const jobs = yield* workflowJobs(parseWorkflowYaml(workflowText));
+      const steps = jobSteps(jobs, "publish");
+      const compare = stepRun(steps, "Compare the closure digest with the latest release");
+      const rerecord = stepRun(steps, "Re-record the closure digest on the byte-identical release");
+      for (const script of [compare, stepRun(steps, "Rewrite the pin to the newest release")]) {
+        expect(script).not.toMatch(/isLatest|releases\/latest/u);
+      }
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const searchPath = yield* Config.String("PATH");
+      const oldDigest = A.join(A.replicate("a", 64), "");
+      const newDigest = A.join(A.replicate("b", 64), "");
+      const archive = `beep-linux-x64.closure.${oldDigest}.json`;
+      const runStep = Effect.fnUntraced(function* (script: string, env: Readonly<Record<string, string>>) {
+        const scratch = yield* fs.makeTempDirectoryScoped();
+        const work = yield* fs.realPath(scratch);
+        yield* fs.makeDirectory(`${work}/bin`);
+        yield* fs.makeDirectory(`${work}/dist`);
+        yield* fs.makeDirectory(`${work}/uploaded`);
+        yield* fs.makeDirectory(`${work}/tmp`);
+        yield* fs.writeFileString(`${work}/dist/beep-linux-x64.closure.json`, `{"digest":"${newDigest}"}\n`);
+        yield* fs.writeFileString(
+          `${work}/bin/gh`,
+          A.join(
+            [
+              "#!/usr/bin/env bash",
+              "set -euo pipefail",
+              'args=("$@"); jq_expr=""; dir=""; pattern=""',
+              "for ((i = 0; i < ${#args[@]}; i++)); do",
+              '  case "${args[$i]}" in',
+              '    --jq) jq_expr="${args[$((i + 1))]}" ;;',
+              '    --dir) dir="${args[$((i + 1))]}" ;;',
+              '    --pattern) pattern="${args[$((i + 1))]}" ;;',
+              "  esac",
+              "done",
+              'case "$1 $2" in',
+              '  "release list") printf "%s" "$RELEASES" | jq -r "$jq_expr" ;;',
+              '  "release view")',
+              '    if [[ "$*" == *"--json assets"* ]]; then printf "%s" "$ASSETS"; else echo "Earlier notes."; fi ;;',
+              '  "release download")',
+              '    echo "download $3" >> "$CALLS"',
+              '    if [[ "$DOWNLOAD_FAIL" == 1 ]]; then exit 1; fi',
+              '    mkdir -p "$dir" && printf "%s" "$EARLIER_CLOSURE" > "$dir/$pattern" ;;',
+              '  "release upload")',
+              '    echo "upload $(basename "$4")${5:+ $5}" >> "$CALLS"',
+              '    cp "$4" "$UPLOADED/$(basename "$4")" ;;',
+              '  "release edit") printf "%s" "$5" > "$NOTES" ;;',
+              '  *) echo "unexpected gh $*" >&2; exit 2 ;;',
+              "esac",
+              "",
+            ],
+            "\n"
+          )
+        );
+        yield* fs.chmod(`${work}/bin/gh`, 0o755);
+        // The compare step's closure command; the fixture's current closure is already in dist/.
+        yield* fs.writeFileString(`${work}/bin/bun`, "#!/usr/bin/env bash\nexit 0\n");
+        yield* fs.chmod(`${work}/bin/bun`, 0o755);
+        yield* fs.writeFileString(`${work}/calls`, "");
+        yield* fs.writeFileString(`${work}/notes`, "");
+        yield* fs.writeFileString(`${work}/output`, "");
+        const child = yield* spawner.spawn(
+          ChildProcess.make("/usr/bin/bash", ["--noprofile", "--norc", "-eo", "pipefail", "-c", script], {
+            cwd: work,
+            env: {
+              PATH: `${work}/bin:${searchPath}`,
+              CALLS: `${work}/calls`,
+              NOTES: `${work}/notes`,
+              UPLOADED: `${work}/uploaded`,
+              RUNNER_TEMP: `${work}/tmp`,
+              GITHUB_OUTPUT: `${work}/output`,
+              GITHUB_STEP_SUMMARY: `${work}/summary.md`,
+              GH_REPO: "fixture/repo",
+              GH_TOKEN: "token",
+              LATEST_TAG: "beep-ci-7e2128d77b29",
+              TARGET_SHA: "0123456789abcdef0123456789abcdef01234567",
+              CLOSURE_DIGEST: newDigest,
+              VERIFY_REPRODUCIBLE: "false",
+              RELEASES: "[]",
+              ASSETS: "beep-linux-x64\nbeep-linux-x64.sha256\nbeep-linux-x64.closure.json\n",
+              EARLIER_CLOSURE: `{"digest":"${oldDigest}"}\n`,
+              DOWNLOAD_FAIL: "0",
+              ...env,
+            },
+            extendEnv: true,
+            stdout: "pipe",
+            stderr: "pipe",
+          })
+        );
+        const exitCode = yield* child.exitCode;
+        const callsText = yield* fs.readFileString(`${work}/calls`);
+        const status = Number(exitCode);
+        const calls = A.filter(Str.split(callsText, "\n"), Str.isNonEmpty);
+        const notes = yield* fs.readFileString(`${work}/notes`);
+        const output = yield* fs.readFileString(`${work}/output`);
+        const kept = yield* fs.exists(`${work}/uploaded/${archive}`);
+        const keptText = kept ? yield* fs.readFileString(`${work}/uploaded/${archive}`) : "";
+        return { status, calls, notes, output, keptText };
+      });
+      // Compare: GitHub's Latest flag and list order both point at the older release; createdAt decides.
+      const releases = yield* encodeJobsFixture([
+        { tagName: "beep-ci-f9982f3b5e65", createdAt: "2026-11-18T10:00:00Z", isLatest: true },
+        { tagName: "beep-ci-7e2128d77b29", createdAt: "2026-11-19T20:00:00Z", isLatest: false },
+        { tagName: "v9.9.9", createdAt: "2026-11-19T23:00:00Z", isLatest: false },
+      ]);
+      const compared = yield* runStep(compare, { RELEASES: releases });
+      expect(compared.status).toBe(0);
+      expect(compared.calls).toStrictEqual(["download beep-ci-7e2128d77b29"]);
+      expect(compared.output).toContain("latest=beep-ci-7e2128d77b29\n");
+      expect(compared.output).toContain("changed=true\n");
+      // Re-record: archive the earlier manifest first, without --clobber, then replace the latest one.
+      const recorded = yield* runStep(rerecord, {});
+      expect(recorded.status).toBe(0);
+      expect(recorded.calls).toStrictEqual([
+        "download beep-ci-7e2128d77b29",
+        `upload ${archive}`,
+        "upload beep-linux-x64.closure.json --clobber",
+      ]);
+      expect(recorded.keptText).toBe(`{"digest":"${oldDigest}"}\n`);
+      expect(recorded.notes).toBe(
+        `Earlier notes.\nClosure digest re-recorded: ${newDigest} at 0123456789abcdef0123456789abcdef01234567 (byte-identical rebuild; superseded ${oldDigest}, kept as ${archive}).`
+      );
+      // A re-run finds the archive already kept and never uploads it again.
+      const rerun = yield* runStep(rerecord, {
+        ASSETS: `beep-linux-x64\nbeep-linux-x64.closure.json\n${archive}\n`,
+      });
+      expect(rerun.status).toBe(0);
+      expect(rerun.calls).toStrictEqual([
+        "download beep-ci-7e2128d77b29",
+        "upload beep-linux-x64.closure.json --clobber",
+      ]);
+      // A release from before closure assets has nothing to keep; the notes say so.
+      const legacy = yield* runStep(rerecord, { ASSETS: "beep-linux-x64\nbeep-linux-x64.sha256\n" });
+      expect(legacy.status).toBe(0);
+      expect(legacy.calls).toStrictEqual(["upload beep-linux-x64.closure.json --clobber"]);
+      expect(legacy.notes).toContain("(byte-identical rebuild; no earlier closure asset to keep).");
+      // A listed manifest that cannot be downloaded or records no digest changes nothing.
+      for (const env of [{ DOWNLOAD_FAIL: "1" }, { EARLIER_CLOSURE: '{"digest":null}' }]) {
+        const refused = yield* runStep(rerecord, env);
+        expect(refused.status).not.toBe(0);
+        expect(refused.calls).toStrictEqual(["download beep-ci-7e2128d77b29"]);
+        expect(refused.notes).toBe("");
+      }
     })
   );
 

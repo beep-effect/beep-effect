@@ -14,12 +14,12 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity";
 import { A } from "@beep/utils";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Model from "effect/schema/Model";
+import { $SchemaId } from "./internal/SchemaId.ts";
 
 const $I = $SchemaId.create("Float16Array");
 const float16ArrayConstructor = globalThis.Float16Array;

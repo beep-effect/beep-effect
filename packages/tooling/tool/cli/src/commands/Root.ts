@@ -24,6 +24,7 @@ import { drawingsCommand } from "./Drawings/index.ts";
 import { exploreCommand } from "./Explore/index.ts";
 import { fallowCommand } from "./Fallow/index.ts";
 import { filesCommand } from "./Files/index.ts";
+import { gateCommand } from "./Gate/index.ts";
 import { gitCommand } from "./Git/index.ts";
 import { githubCommand } from "./Github/index.ts";
 import { goalsCommand } from "./Goals/index.ts";
@@ -114,6 +115,7 @@ export const rootCommand = Command.make("beep-cli").pipe(
     knowledgeCommand,
     labsCommand,
     lintCommand,
+    gateCommand,
     lawsCommand,
     modelsCommand,
     observabilityCommand,

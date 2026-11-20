@@ -15,10 +15,10 @@
  * @since 0.0.0
  */
 
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import { RunnerTag } from "./RunnerInstance.models.ts";
 
 const $I = $AlchemyGithubRunnersId.create("RunnerUserData");

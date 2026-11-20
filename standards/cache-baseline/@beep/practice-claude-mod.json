@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/practice-claude-mod",
   "review": {
-    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
-    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
+    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
     "basis": {
-      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
-      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
+      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
     }
   },
   "nodes": [
     {
       "computation": "@beep/practice-claude-mod#build",
       "command": "bun run beep:build",
-      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
+      "commandDigest": "7558b776c4014d2f586759bd818bf773b2031a3553dc394c1e2713fcec5afbb2",
       "dependencies": [
         "@beep/identity#build",
         "@beep/law-practice-domain#build",
@@ -55,8 +55,8 @@
     },
     {
       "computation": "@beep/practice-claude-mod#check",
-      "command": "beep-cli quality check-probe && bun run beep:check",
-      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
+      "command": "beep-cli gate run check",
+      "commandDigest": "7558b776c4014d2f586759bd818bf773b2031a3553dc394c1e2713fcec5afbb2",
       "dependencies": [
         "@beep/identity#build",
         "@beep/law-practice-domain#build",
@@ -74,6 +74,12 @@
           "!README.md",
           "../../.bun-version",
           "../../.nvmrc",
+          "../../packages/tooling/library/repo-cli-kit/src/process/OutputBound.ts",
+          "../../packages/tooling/library/repo-gate-run/src/**",
+          "../../packages/tooling/library/repo-tsconfig/src/TsconfigLoader.ts",
+          "../../packages/tooling/library/repo-tsconfig/src/internal/extendsTarget.ts",
+          "../../packages/tooling/tool/cli/src/commands/Gate/**",
+          "../../packages/tooling/tool/cli/src/commands/Quality/CheckProbe.ts",
           "../../standards/root-package.projection.generated.json",
           "../../tools/tsgo-shim/package.json",
           "../../tools/tsgo-shim/tsgo.js",
@@ -86,7 +92,9 @@
         ],
         "env": [],
         "passThroughEnv": [],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/check/**"
+        ],
         "dependsOn": [
           "^build"
         ],
@@ -99,7 +107,7 @@
     {
       "computation": "@beep/practice-claude-mod#coverage",
       "command": "bunx vitest run --coverage",
-      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
+      "commandDigest": "7558b776c4014d2f586759bd818bf773b2031a3553dc394c1e2713fcec5afbb2",
       "dependencies": [
         "@beep/identity#build",
         "@beep/law-practice-domain#build",
@@ -152,7 +160,7 @@
     {
       "computation": "@beep/practice-claude-mod#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
+      "commandDigest": "7558b776c4014d2f586759bd818bf773b2031a3553dc394c1e2713fcec5afbb2",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -186,7 +194,7 @@
     {
       "computation": "@beep/practice-claude-mod#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
+      "commandDigest": "7558b776c4014d2f586759bd818bf773b2031a3553dc394c1e2713fcec5afbb2",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/law-practice-domain#transit",
@@ -254,7 +262,7 @@
     {
       "computation": "@beep/practice-claude-mod#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
+      "commandDigest": "7558b776c4014d2f586759bd818bf773b2031a3553dc394c1e2713fcec5afbb2",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -284,7 +292,7 @@
     {
       "computation": "@beep/practice-claude-mod#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
+      "commandDigest": "7558b776c4014d2f586759bd818bf773b2031a3553dc394c1e2713fcec5afbb2",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -340,7 +348,7 @@
     {
       "computation": "@beep/practice-claude-mod#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
+      "commandDigest": "7558b776c4014d2f586759bd818bf773b2031a3553dc394c1e2713fcec5afbb2",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -386,7 +394,7 @@
     {
       "computation": "@beep/practice-claude-mod#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
+      "commandDigest": "7558b776c4014d2f586759bd818bf773b2031a3553dc394c1e2713fcec5afbb2",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/law-practice-domain#transit",
@@ -432,10 +440,11 @@
     {
       "computation": "@beep/practice-claude-mod#test",
       "command": "bun run beep:test",
-      "commandDigest": "4ac6add018e338004c39f30fb7ee4778a995d6c58793e6e3a5b50d337388c6ab",
+      "commandDigest": "7558b776c4014d2f586759bd818bf773b2031a3553dc394c1e2713fcec5afbb2",
       "dependencies": [
         "@beep/identity#transit",
         "@beep/law-practice-domain#transit",
+        "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/utils#transit"
@@ -472,8 +481,11 @@
           "BEEP_CREATE_PACKAGE_BUN_ARGS_FILE",
           "GITHUB_STEP_SUMMARY"
         ],
-        "outputs": [],
+        "outputs": [
+          ".beep/gates/test/**"
+        ],
         "dependsOn": [
+          "@beep/repo-gate-vitest#transit",
           "@beep/utils#transit",
           "^transit"
         ],

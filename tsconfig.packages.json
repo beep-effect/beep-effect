@@ -361,6 +361,9 @@
       "path": "packages/foundation/modeling/contract-kit"
     },
     {
+      "path": "packages/foundation/modeling/csv"
+    },
+    {
       "path": "packages/foundation/modeling/epistemics"
     },
     {
@@ -455,6 +458,9 @@
     },
     {
       "path": "packages/foundation/modeling/utils"
+    },
+    {
+      "path": "packages/foundation/modeling/xlsx"
     },
     {
       "path": "packages/foundation/modeling/yaml"
@@ -602,6 +608,9 @@
     },
     {
       "path": "packages/tooling/test-kit/memfs"
+    },
+    {
+      "path": "packages/tooling/test-kit/repo-gate-vitest"
     },
     {
       "path": "packages/tooling/test-kit/test-runner"

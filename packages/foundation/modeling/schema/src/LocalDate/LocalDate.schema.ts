@@ -10,7 +10,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $SchemaId } from "@beep/identity";
+
 import { Str } from "@beep/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -25,6 +25,7 @@ import * as Order_ from "effect/Order";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import * as SchemaIssue from "effect/SchemaIssue";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import type * as Ordering from "effect/Ordering";
 import type * as AST from "effect/SchemaAST";

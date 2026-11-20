@@ -462,7 +462,7 @@ const parseRangeComparators = (s: ParserState): ReadonlyArray<ComparatorParts> =
 export const parseRange = (raw: string): ParseResult<ReadonlyArray<ReadonlyArray<ComparatorParts>>> => {
   const trimmed = Str.trim(raw);
 
-  if (trimmed.length === 0) {
+  if (Str.isEmpty(trimmed)) {
     // Empty string = match all
     return {
       ok: true,

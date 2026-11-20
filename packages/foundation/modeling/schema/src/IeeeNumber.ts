@@ -13,10 +13,10 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import { $SchemaId } from "./internal/SchemaId.ts";
 import { LiteralKit } from "./LiteralKit/index.ts";
 
 const $I = $SchemaId.create("IeeeNumber");
