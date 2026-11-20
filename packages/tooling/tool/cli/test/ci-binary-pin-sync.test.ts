@@ -941,7 +941,7 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
         expect(A.take(lines, 3)).toStrictEqual(decided("merged", O.some(NEW)));
         const mergeParents = yield* parents(checkout);
         expect(mergeParents).toStrictEqual([repo.before, main]);
-        expect(O.some(message)).toStrictEqual(A.head(Str.split(mergeMessage, "\n")));
+        expect(message).toBe(Str.split(mergeMessage, "\n")[0]);
         const ranOnSync = yield* ranHooks(marks);
         expect(ranOnSync).toStrictEqual([]);
 
