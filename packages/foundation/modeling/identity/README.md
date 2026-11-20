@@ -174,6 +174,8 @@ generated `src/internal/generated/Registry.data.ts` and the committed
 
 The snapshot's `release` is the vocabulary release a binding or deprecation
 names as `since`: an addition bumps the minor and a deprecation the major.
+A changed term set released below the release its change calls for fails the
+lint (`ReleaseUnderstated`): merge the base and regenerate.
 Removing a term, changing a namespace prefix, dropping a deprecation or
 reviving a retired IRI without a deprecation record fails the writer and the
 lint; law `L0-3` in [TermStability.test.ts](test/TermStability.test.ts) is the

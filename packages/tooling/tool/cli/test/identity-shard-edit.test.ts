@@ -216,10 +216,19 @@ describe("base snapshot findings", () => {
 
   it("names a removal and a prefix change against the base", () => {
     const base = RegistryTable.snapshot(tableOf([shardFile(fabio(["Report", "TechnicalReport"]))]), TermSnapshot.empty);
-    const removed = RegistryTable.snapshot(tableOf([shardFile(fabio(["Report"]))]), TermSnapshot.empty);
+    const removed = RegistryTable.snapshot(tableOf([shardFile(fabio(["Report"]))]), base);
     expect(A.map(baseSnapshotIssues(base, removed, layout.snapshot), (issue) => issue.kind)).toStrictEqual([
       "term-removed-without-deprecation",
     ]);
+    // A head regenerated from an older base keeps that base's release, which the change outgrew.
+    const stale = RegistryTable.snapshot(
+      tableOf([shardFile(fabio(["Report", "TechnicalReport", "Thesis"]))]),
+      TermSnapshot.empty
+    );
+    const [understated] = baseSnapshotIssues(base, stale, layout.snapshot);
+    expect(understated?.kind).toBe("release-regressed");
+    expect(understated?.detail).toContain("the change calls for 1.1.0");
+    expect(understated?.detail).toContain("bun run beep identity registry --write");
     const renamed = RegistryTable.snapshot(
       tableOf([
         shardFile({
@@ -227,7 +236,7 @@ describe("base snapshot findings", () => {
           namespace: { prefix: "fab", iri: "http://purl.org/spar/fabio/" },
         }),
       ]),
-      TermSnapshot.empty
+      base
     );
     expect(A.map(baseSnapshotIssues(base, renamed, layout.snapshot), (issue) => issue.kind)).toStrictEqual([
       "namespace-prefix-changed",

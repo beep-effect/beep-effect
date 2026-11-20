@@ -593,6 +593,9 @@ const canonicalRows = <Row>(rows: Iterable<Row>, key: (row: Row) => string): Rea
  * - `NamespaceDropped`: a namespace is gone and its IRI has no deprecation.
  * - `NamespacePrefixChanged`: a namespace IRI is published under a new prefix.
  * - `ReleaseRegressed`: the release is lower than the previous snapshot's release.
+ * - `ReleaseUnderstated`: the rows changed but the release is lower than the one the change
+ *   calls for (a minor bump for additions, a major bump for a new deprecation), so a
+ *   different term set would ship under a release the previous snapshot already published.
  * - `ReleaseBelowSince`: the release is lower than a `since` the snapshot itself records.
  *
  * **Example** (Match a violation)
@@ -620,6 +623,7 @@ export const SnapshotViolation = S.TaggedUnion({
   NamespaceDropped: { prefix: SafePnPrefix, iri: IRI },
   NamespacePrefixChanged: { iri: IRI, from: SafePnPrefix, to: SafePnPrefix },
   ReleaseRegressed: { from: ReleaseVersion, to: ReleaseVersion },
+  ReleaseUnderstated: { base: ReleaseVersion, expected: ReleaseVersion, release: ReleaseVersion },
   ReleaseBelowSince: { release: ReleaseVersion, since: ReleaseVersion },
 }).pipe($I.annoteSchema("SnapshotViolation", { description: "A break of the published term set (L0-3)." }));
 
@@ -657,6 +661,8 @@ export const snapshotViolationMessage: (violation: SnapshotViolation) => string 
   NamespaceDropped: ({ prefix, iri }) => `Namespace "${prefix}" (${iri}) is removed without a deprecation of its IRI.`,
   NamespacePrefixChanged: ({ iri, from, to }) => `Namespace ${iri} changes its prefix from "${from}" to "${to}".`,
   ReleaseRegressed: ({ from, to }) => `The snapshot release goes back from ${from} to ${to}.`,
+  ReleaseUnderstated: ({ base, expected, release }) =>
+    `The snapshot changes the rows of release ${base} but is released as ${release}; the change calls for ${expected}.`,
   ReleaseBelowSince: ({ release, since }) =>
     `The snapshot release ${release} is lower than the since ${since} its own rows record.`,
 });
@@ -786,10 +792,46 @@ const releaseOrder: Order.Order<ReleaseVersion> = Order.mapInput(
 );
 const releaseIsLower = Order.isLessThan(releaseOrder);
 
-const releaseViolations = (previous: TermSnapshot, next: TermSnapshot): ReadonlyArray<SnapshotViolation> =>
-  releaseIsLower(next.release, previous.release)
-    ? [Violation.ReleaseRegressed.make({ from: previous.release, to: next.release })]
+// Release arithmetic is exact `bigint` arithmetic over the components `releaseNumbers` reads.
+const nextMajor = (release: ReleaseVersion): ReleaseVersion =>
+  ReleaseVersion.make(`${BI.increment(releaseNumbers(release)[0])}.0.0`);
+
+const nextMinor = (release: ReleaseVersion): ReleaseVersion => {
+  const [major, minor] = releaseNumbers(release);
+  return ReleaseVersion.make(`${major}.${BI.increment(minor)}.0`);
+};
+
+const genesisRelease = ReleaseVersion.make("1.0.0");
+const snapshotEquivalence = S.toEquivalence(TermSnapshot);
+
+// The release that publishes `unchanged` (the next rows, still at the previous release) after
+// `previous`: the same release when nothing changed, the genesis release after the empty
+// snapshot, a major bump when a deprecation is new and a minor bump otherwise.
+const nextRelease = (previous: TermSnapshot, unchanged: TermSnapshot): ReleaseVersion => {
+  if (snapshotEquivalence(unchanged, previous)) {
+    return previous.release;
+  }
+  if (previous.release === TermSnapshot.empty.release) {
+    return genesisRelease;
+  }
+  const deprecated = HashSet.fromIterable(A.map(previous.deprecations, deprecationKey));
+  return A.some(unchanged.deprecations, (deprecation) => !HashSet.has(deprecated, deprecation.term))
+    ? nextMajor(previous.release)
+    : nextMinor(previous.release);
+};
+
+// A release below the previous one is wound back. A release at or above it must still reach the
+// release the change itself calls for, so a changed term set never ships under a release that
+// already published a different one.
+const releaseViolations = (previous: TermSnapshot, next: TermSnapshot): ReadonlyArray<SnapshotViolation> => {
+  if (releaseIsLower(next.release, previous.release)) {
+    return [Violation.ReleaseRegressed.make({ from: previous.release, to: next.release })];
+  }
+  const expected = nextRelease(previous, TermSnapshot.make({ ...next, release: previous.release }));
+  return releaseIsLower(next.release, expected)
+    ? [Violation.ReleaseUnderstated.make({ base: previous.release, expected, release: next.release })]
     : [];
+};
 
 /**
  * The release rows of one snapshot that its own `since` values contradict (law L0-3).
@@ -1359,15 +1401,6 @@ const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> 
 
 const termIriOf = (namespace: Namespace, local: TermLocal): TermIri => TermIri.make(`${namespace.iri}${local}`);
 
-// Release arithmetic is exact `bigint` arithmetic over the components `releaseNumbers` reads.
-const nextMajor = (release: ReleaseVersion): ReleaseVersion =>
-  ReleaseVersion.make(`${BI.increment(releaseNumbers(release)[0])}.0.0`);
-
-const nextMinor = (release: ReleaseVersion): ReleaseVersion => {
-  const [major, minor] = releaseNumbers(release);
-  return ReleaseVersion.make(`${major}.${BI.increment(minor)}.0`);
-};
-
 // The code a binding moves to: `to` for `from` itself, `to/<rest>` for `from/<rest>`.
 const rebindCode =
   (from: CodeId, to: CodeId) =>
@@ -1378,9 +1411,6 @@ const rebindCode =
     const under = `${from}/`;
     return Str.startsWith(under)(code) ? CodeId.make(`${to}/${Str.slice(under.length)(code)}`) : code;
   };
-
-const genesisRelease = ReleaseVersion.make("1.0.0");
-const snapshotEquivalence = S.toEquivalence(TermSnapshot);
 
 const snapshotAt = (table: RegistryRows, release: ReleaseVersion): TermSnapshot =>
   Result.getOrThrow(
@@ -1395,19 +1425,6 @@ const snapshotAt = (table: RegistryRows, release: ReleaseVersion): TermSnapshot 
       deprecations: table.deprecations,
     })
   );
-
-const nextRelease = (previous: TermSnapshot, unchanged: TermSnapshot): ReleaseVersion => {
-  if (snapshotEquivalence(unchanged, previous)) {
-    return previous.release;
-  }
-  if (previous.release === TermSnapshot.empty.release) {
-    return genesisRelease;
-  }
-  const deprecated = HashSet.fromIterable(A.map(previous.deprecations, deprecationKey));
-  return A.some(unchanged.deprecations, (deprecation) => !HashSet.has(deprecated, deprecation.term))
-    ? nextMajor(previous.release)
-    : nextMinor(previous.release);
-};
 
 /**
  * The one registry table: every namespace, live term, binding and deprecation.

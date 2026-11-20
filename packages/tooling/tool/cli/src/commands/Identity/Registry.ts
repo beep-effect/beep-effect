@@ -91,7 +91,7 @@ export const IdentityRegistryIssueKind = LiteralKit([
 ]).pipe(
   $I.annoteSchema("IdentityRegistryIssueKind", {
     description:
-      "Identity registry finding kind: a shard that fails to decode, a conflict between shards, a regenerated snapshot that breaks the committed one, a generated artifact that differs from regeneration, or a break of the base ref's published term set (a term or namespace removed without a deprecation, a namespace prefix changed, a deprecation removed or changed, a deprecated term revived, a binding reassigned), a snapshot release wound back below its base or its own rows, or a binding whose code names no module of the checkout.",
+      "Identity registry finding kind: a shard that fails to decode, a conflict between shards, a regenerated snapshot that breaks the committed one, a generated artifact that differs from regeneration, or a break of the base ref's published term set (a term or namespace removed without a deprecation, a namespace prefix changed, a deprecation removed or changed, a deprecated term revived, a binding reassigned), a snapshot release wound back below its base or its own rows or below the release its changes call for, or a binding whose code names no module of the checkout.",
   })
 );
 
@@ -875,6 +875,9 @@ const BINDING_REMEDY =
 const RELEASE_REMEDY =
   "Restore the release in term-snapshot.json to at least the base ref's release and every `since` its rows record.";
 
+const UNDERSTATED_REMEDY =
+  "Merge the base ref, then regenerate against its snapshot with `bun run beep identity registry --write` so the release is the one the change calls for.";
+
 // The lint kind of each way a head snapshot breaks the base ref's published term set, and its remedy.
 const baseBreaks: {
   readonly [Tag in SnapshotViolation["_tag"]]: readonly [kind: IdentityRegistryIssueKind, remedy: string];
@@ -889,6 +892,7 @@ const baseBreaks: {
   BindingReassigned: ["binding-changed", BINDING_REMEDY],
   BindingAmbiguous: ["binding-changed", BINDING_REMEDY],
   ReleaseRegressed: ["release-regressed", RELEASE_REMEDY],
+  ReleaseUnderstated: ["release-regressed", UNDERSTATED_REMEDY],
   ReleaseBelowSince: ["release-regressed", RELEASE_REMEDY],
 };
 

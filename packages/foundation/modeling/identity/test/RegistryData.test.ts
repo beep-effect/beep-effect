@@ -29,10 +29,11 @@ describe("generated registry data", () => {
     expect(R.keys(RegistryDeprecations)).toHaveLength(113);
   });
 
-  it("publishes the first term snapshot at release 1.0.0 with every term and namespace IRI", () => {
+  it("publishes the term snapshot at release 2.0.0 with every term and namespace IRI", () => {
     const decoded = Result.getOrThrow(S.decodeUnknownResult(TermSnapshot)(snapshot));
-    // No snapshot is published on main, so this is the first one: every row records since 1.0.0.
-    expect(decoded.release).toBe("1.0.0");
+    // PR B publishes the first snapshot at 1.0.0 with no bindings or deprecations. This change adds
+    // deprecations, so it is a major release and every binding and deprecation records since 2.0.0.
+    expect(decoded.release).toBe("2.0.0");
     expect(
       A.dedupe(
         A.appendAll(
@@ -40,7 +41,7 @@ describe("generated registry data", () => {
           A.map(decoded.deprecations, (row) => row.since)
         )
       )
-    ).toStrictEqual(["1.0.0"]);
+    ).toStrictEqual(["2.0.0"]);
     // schema:Athlete left the schema shard before the first snapshot, so it is neither live nor deprecated.
     expect(decoded.terms).not.toContain("https://schema.org/Athlete");
     expect(A.map(decoded.deprecations, (row): string => row.term)).not.toContain("https://schema.org/Athlete");

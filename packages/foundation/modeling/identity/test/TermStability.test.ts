@@ -140,7 +140,7 @@ describe("term stability", () => {
       );
       const tags = A.map(snapshotViolations(committed, wound), (violation) => violation._tag);
       expect(tags).toStrictEqual(lower ? ["ReleaseRegressed"] : []);
-      // The committed rows record since 1.0.0, the committed release, so a release below it contradicts the rows themselves.
+      // The committed rows record since values up to the committed release, so a release below it contradicts the rows themselves.
       expect(A.map(snapshotReleaseViolations(wound), (violation) => violation._tag)).toStrictEqual(
         lower ? ["ReleaseBelowSince"] : []
       );
@@ -154,6 +154,26 @@ describe("term stability", () => {
       snapshotViolations(committed, TermSnapshot.make({ ...committed, release: ReleaseVersion.make("0.1.0") }))
     ).toStrictEqual([
       SnapshotViolation.cases.ReleaseRegressed.make({ from: committed.release, to: ReleaseVersion.make("0.1.0") }),
+    ]);
+  });
+
+  it("L0-3 a changed term set never ships under a release its base already published", () => {
+    // A head regenerated from an older base keeps that base's release; against the committed
+    // snapshot, a change released at the committed release is understated.
+    const added: RegistryShard.Encoded = {
+      namespace: { prefix: "gen", iri: "https://example.test/gen/" },
+      terms: ["Added"],
+      bindings: [],
+      deprecations: [],
+    };
+    const next = RegistryTable.snapshot(tableOf(A.append(committedShards, added)), committed);
+    const understated = TermSnapshot.make({ ...next, release: committed.release });
+    expect(snapshotViolations(committed, understated)).toStrictEqual([
+      SnapshotViolation.cases.ReleaseUnderstated.make({
+        base: committed.release,
+        expected: next.release,
+        release: committed.release,
+      }),
     ]);
   });
 
