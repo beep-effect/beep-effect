@@ -2311,6 +2311,58 @@ Lane fix/ci-runners-drop-r7a-2xlarge
 
 Reverse: Re-add r7a.2xlarge to RunnerInstanceType and to the new heavy (and overflow) type lists in packages/tooling/infra/ci-runners/src/Config.ts
 
+### CiRunners function updates re-apply each function role's policies, 2026-11-20
+
+The CI goals driver accepted the 22 IAM writes of the PR 2 CiRunners deploy (run 44671153275, 2026-11-20) as an
+idempotent role reapply, and made them a standing expectation for every CiRunners deploy that updates functions.
+
+What the deploy did, from the deploy role's CloudTrail (two reads from saved events over 03:57-04:05Z, identical):
+
+- `iam:AttachRolePolicy` (AWSLambdaBasicExecutionRole) and `iam:PutRolePolicy` (the role's own inline policy) on
+  each of the 11 functions' execution roles, 22 writes in all, and no other role or policy.
+- Each PutRolePolicy document was byte-identical, as canonical JSON, to the same role's document in the previous
+  deploy (2026-11-19, run 44507595565).
+- 22 log-group writes (CreateLogGroup, which already existed, and PutRetentionPolicy) on the 11 functions' log groups.
+
+The plan shows the role rows as noop, but the Lambda provider re-PUTs each function's role policies when the function
+is updated.
+
+Standing rule: every CiRunners function-update deploy expects exactly these 22 IAM writes and 22 log-group writes. Its
+post-check compares the targets, and each PutRolePolicy document against the previous deploy's. A differing document,
+or any other role or policy touched, stops the cutover and goes to the driver. Counts come from saved CloudTrail events,
+never from pretty-printed lines.
+
+Lane docs/infra-alchemy-p5-m6i-and-iam-reapply
+
+Reverse: if the provider stops re-PUTting role policies, drop the 22 expected IAM writes from the post-check; if a deploy shows a changed document, stop and re-rule
+
+### m6i.4xlarge kept on the new heavy list after the re-rule, 2026-11-20
+
+The CI goals driver re-ruled `m6i.4xlarge` on 2026-11-20 and kept it on the new fleet's heavy list. The heavy pool keeps
+its six types; there is no Config.ts change and no extra dispatch.
+
+Source: the workstation-local analysis `~/.cache/beep/ci-runners-step0/eviction-analysis-20261119/analysis.3.txt`
+(the live heavy fleet's CloudTrail from 2026-11-19 00:00Z to 2026-11-20 05:46Z: 674 Spot launches, 31 evictions over
+83.87 instance-hours, 37.0 per 100 hours).
+
+- `m6i.4xlarge` overall: 4 evictions over 3.76 hours, 106.5 per 100 hours, 3.16 times the rest of the fleet
+  (P = 0.040 under the rest-of-fleet rate).
+- By zone, only us-east-1d is significant: 2 evictions over 0.67 hours, 8.84 times (P = 0.022). us-east-1f is
+  2.14 times on 2 evictions (P = 0.24, consistent with chance), and us-east-1b had none. The removal rule (at least
+  twice the fleet in at least two zones) is not met.
+- `m6i.4xlarge` is 4.5% of fleet hours. In a fleet that hits InsufficientInstanceCapacity often, keeping the capacity
+  diversity outweighs that excess.
+- In us-east-1f, the zone with the most ICE, non-m6i types run at 0.68 times the other zones' rate, so there is no zone
+  change. The ICE load there is covered by the overflow ICE watch.
+- For comparison: `m7i.4xlarge` had no evictions in 19.98 hours, and `r7i.2xlarge` ran at the fleet rate.
+
+New trigger through the green day, cumulative from 2026-11-19 00:00Z: re-rule if a second zone reaches at least three
+`m6i.4xlarge` evictions with P < 0.05, or if the overall per-hour P falls below 0.01.
+
+Lane docs/infra-alchemy-p5-m6i-and-iam-reapply
+
+Reverse: a Config.ts PR removing m6i.4xlarge from the new heavy list, plus an env-only dispatch
+
 ### PR 2 dispatch before the per-pool proofs, 2026-11-20
 
 The CI goals driver (the successor driver, 2026-11-20 02:10Z) ruled the order of the remaining P5 cutover steps:
