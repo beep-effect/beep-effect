@@ -17,7 +17,7 @@ import * as R from "effect/Record";
 import type { ItemOutcome } from "@beep/gate-report/Vocabulary";
 import type { HistoryAnswer } from "@beep/repo-gate-run/GateHistory";
 
-export const TEST_FILE = "src/math.test.ts";
+const TEST_FILE = "src/math.test.ts";
 
 export const testItem = (input: {
   readonly name: string;
@@ -68,7 +68,7 @@ export const reportOf = (run: RunInput): GateReport => {
 };
 
 export const laneA = HistoryScope.make({ branch: "feature/a" });
-export const laneB = HistoryScope.make({ branch: "feature/b" });
+const laneB = HistoryScope.make({ branch: "feature/b" });
 
 export const ingestAll = Effect.fnUntraced(function* (runs: ReadonlyArray<RunInput>, scope: HistoryScope = laneA) {
   const store = yield* GateHistoryStore;

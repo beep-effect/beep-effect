@@ -14,6 +14,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 const Manifest = S.Struct({ dependencies: S.Record(S.String, S.String) });
+const decodeManifest = S.decodeUnknownEffect(S.fromJsonString(Manifest));
 
 const STATIC_IMPORT = /^\s*(?:import|export)\s[^;]*?from\s+"([^"]+)";/gmu;
 
@@ -88,7 +89,7 @@ describe("history store boundaries (AC-H12)", () => {
         const root = yield* repoRoot;
         const manifest = yield* fs
           .readFileString(path.join(root, "packages/tooling/library/repo-gate-run/package.json"))
-          .pipe(Effect.flatMap(S.decodeUnknownEffect(S.fromJsonString(Manifest))));
+          .pipe(Effect.flatMap(decodeManifest));
         const drivers = yield* Effect.filter(
           A.filter(R.keys(manifest.dependencies), Str.startsWith("@beep/")),
           (name) => Effect.map(fs.realPath(path.join(root, "node_modules", name)), Str.includes("/packages/drivers/")),
