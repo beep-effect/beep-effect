@@ -345,6 +345,19 @@ describe("@beep/rdf RDF term and dataset models", () => {
     pipe(areDatasetsEquivalent(directDataset, makeDataset([makeQuad(bob, RDF_TYPE, person)])), assertFalse);
   });
 
+  it("escapes every STRING_LITERAL_QUOTE control character in serialized literals", () => {
+    const hostile = 'a\\b"c\nd\re\tf\bg\fh';
+    const escaped = 'a\\\\b\\"c\\nd\\re\\tf\\bg\\fh';
+
+    expect(serializeTerm(makeLiteral(hostile, XSD_STRING.value))).toBe(
+      `"${escaped}"^^<http://www.w3.org/2001/XMLSchema#string>`
+    );
+    expect(serializeTerm(makeLiteral(hostile, XSD_STRING.value, { language: "EN" }))).toBe(`"${escaped}"@en`);
+    expect(serializeQuad(makeQuad(alice, RDF_TYPE, makeLiteral(hostile, XSD_STRING.value)))).toBe(
+      `<https://example.com/people/alice> <http://www.w3.org/1999/02/22-rdf-syntax-ns#type> "${escaped}"^^<http://www.w3.org/2001/XMLSchema#string> default .`
+    );
+  });
+
   it.effect("decodes namespace bindings and prefix maps", () =>
     Effect.gen(function* () {
       const prefixMap = {
