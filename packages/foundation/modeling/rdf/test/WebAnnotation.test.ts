@@ -11,8 +11,10 @@ import {
 import { EvidenceSelector, EvidenceTarget } from "@beep/rdf/Evidence";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as S from "effect/Schema";
 
 const decodeEvidenceSelector = S.decodeEffect(EvidenceSelector);
@@ -129,5 +131,23 @@ describe("@beep/rdf Web Annotation selector and target codecs", () => {
       });
       expect(A.map(failures, (failure) => failure._tag)).toEqual(["SchemaError", "SchemaError"]);
     })
+  );
+
+  it.prop(
+    "returns every evidence selector unchanged after a trip through its Web Annotation DTO",
+    [Arbitrary.schema(EvidenceSelector)],
+    ([selector]) => {
+      const roundTripped = webAnnotationSelectorToEvidenceSelector(evidenceSelectorToWebAnnotationSelector(selector));
+      expect(Equal.equals(roundTripped, selector)).toBe(true);
+    }
+  );
+
+  it.prop(
+    "returns every evidence target unchanged after a trip through its Web Annotation DTO",
+    [Arbitrary.schema(EvidenceTarget)],
+    ([target]) => {
+      const roundTripped = webAnnotationTargetToEvidenceTarget(evidenceTargetToWebAnnotationTarget(target));
+      expect(Equal.equals(roundTripped, target)).toBe(true);
+    }
   );
 });
