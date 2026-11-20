@@ -2272,7 +2272,6 @@
           "@beep/documents-domain",
           "@beep/effect-drizzle",
           "@beep/identity",
-          "@beep/rdf",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
@@ -2283,7 +2282,6 @@
           "@beep/documents-domain",
           "@beep/effect-drizzle",
           "@beep/identity",
-          "@beep/rdf",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
@@ -2708,7 +2706,6 @@
       {
         "from": "@beep/execution-authority-domain",
         "allow": [
-          "@beep/epistemics",
           "@beep/execution-authority-domain",
           "@beep/identity",
           "@beep/jsonc",
@@ -2719,7 +2716,6 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
-          "@beep/epistemics",
           "@beep/execution-authority-domain",
           "@beep/identity",
           "@beep/jsonc",

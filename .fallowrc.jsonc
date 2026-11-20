@@ -591,7 +591,7 @@
         "reason": "This is one single-pass Turtle PN_LOCAL escape, percent, and code-point grammar scanner. Review by 2026-12-03: compare the scanner with the normative grammar and lower or remove the ceiling if a simpler single-pass form preserves it."
       },
       {
-        "files": ["packages/foundation/modeling/rdf/src/Iri.ts"],
+        "files": ["packages/foundation/modeling/identity/src/Iri.ts"],
         "functions": ["scanComponent"],
         "maxCognitive": 18,
         "maxCrap": 32,

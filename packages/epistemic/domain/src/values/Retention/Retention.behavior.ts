@@ -3,13 +3,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { canonicalDetectionJson, canonicalDetectionJsonResult } from "@beep/epistemics/ContradictionDetection";
 import { sha256 } from "@noble/hashes/sha2.js";
 import { bytesToHex, utf8ToBytes } from "@noble/hashes/utils.js";
 import * as Effect from "effect/Effect";
 import { dual } from "effect/Function";
 import * as Match from "effect/Match";
 import * as S from "effect/Schema";
-import { canonicalJson, canonicalJsonResult } from "../internal/CanonicalJson.ts";
 import { RetentionPolicy, RetentionTier } from "./Retention.model.ts";
 
 /**
@@ -26,7 +26,7 @@ import { RetentionPolicy, RetentionTier } from "./Retention.model.ts";
  */
 export const retentionPolicyDigest = Effect.fn("Retention.policyDigest")(function* (policy: RetentionPolicy) {
   const encoded = yield* S.encodeEffect(RetentionPolicy)(policy);
-  const canonical = yield* Effect.fromResult(canonicalJsonResult(encoded));
+  const canonical = yield* Effect.fromResult(canonicalDetectionJsonResult(encoded));
   return bytesToHex(sha256(utf8ToBytes(canonical)));
 });
 
@@ -42,7 +42,7 @@ export const retentionPolicyDigest = Effect.fn("Retention.policyDigest")(functio
  * @since 0.0.0
  */
 export const retentionPayloadBytes = (payload: Readonly<Record<string, unknown>>): number =>
-  utf8ToBytes(canonicalJson(payload)).length;
+  utf8ToBytes(canonicalDetectionJson(payload)).length;
 
 /**
  * Classify nonnegative assertion age with the inclusive retention-v1 cutoffs.

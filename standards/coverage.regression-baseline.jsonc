@@ -11233,18 +11233,6 @@
             "branches": 0,
             "functions": 0
           }
-        },
-        "packages/epistemic/domain/src/values/internal/CanonicalJson.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
         }
       }
     },
@@ -13008,18 +12996,6 @@
           }
         },
         "packages/execution-authority/domain/src/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/execution-authority/domain/src/internal/CanonicalJson.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -16629,6 +16605,18 @@
           }
         },
         "packages/foundation/modeling/identity/src/IdentityRegistry.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/identity/src/Iri.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -36528,18 +36516,6 @@
           }
         },
         "packages/foundation/modeling/rdf/src/Evidence.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/rdf/src/Iri.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

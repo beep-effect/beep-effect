@@ -1,9 +1,9 @@
 import { CoreVocab, make, mergeVocab } from "@beep/identity";
+import { IRI } from "@beep/identity/Iri";
 import { $OntologyId } from "@beep/identity/packages";
 import { fold, toContext, toJsonLd, toMarkdown, toTurtle } from "@beep/ontology";
 import { FactLiteral } from "@beep/ontology/Fold.models";
 import { OWLClass } from "@beep/ontology/Ontology.models";
-import { IRI } from "@beep/rdf/Iri";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertFalse, assertSome, assertTrue, strictEqual } from "@effect/vitest/utils";

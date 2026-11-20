@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
+import { IRIReference } from "@beep/identity/Iri";
 import { $I as $BeepId, $OntologyId } from "@beep/identity/packages";
-import { IRIReference } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -200,7 +200,7 @@ export class VendorManifestEntry extends S.Opaque<VendorManifestEntry, { readonl
  * ```ts
  * import { $SemanticFoundationId } from "@beep/identity/packages"
  * import { VendorAlignmentManifestEntry } from "@beep/ontology/TaxonomyLoader"
- * import { IRIReference } from "@beep/rdf/Iri"
+ * import { IRIReference } from "@beep/identity/Iri"
  *
  * const entry = VendorAlignmentManifestEntry.make({
  *   conceptIri: IRIReference.make("https://folio.openlegalstandard.org/example"),
@@ -265,7 +265,7 @@ export class VendorAlignmentManifestEntry extends S.Opaque<
  *
  * ```ts
  * import { VendorConceptSlice } from "@beep/ontology/TaxonomyLoader"
- * import { IRIReference } from "@beep/rdf/Iri"
+ * import { IRIReference } from "@beep/identity/Iri"
  *
  * const slice = VendorConceptSlice.make({
  *   "@id": IRIReference.make("https://folio.openlegalstandard.org/example"),
@@ -475,7 +475,7 @@ export class VendorSlicePathEscape extends S.TaggedError<VendorSlicePathEscape, 
  *
  * ```ts
  * import { VendorSliceConceptMismatch } from "@beep/ontology/TaxonomyLoader"
- * import { IRIReference } from "@beep/rdf/Iri"
+ * import { IRIReference } from "@beep/identity/Iri"
  *
  * const error = VendorSliceConceptMismatch.make({
  *   actualConceptIri: IRIReference.make("https://folio.openlegalstandard.org/actual"),
@@ -513,7 +513,7 @@ export class VendorSliceConceptMismatch extends S.TaggedError<
  * ```ts
  * import { $SemanticFoundationId } from "@beep/identity/packages"
  * import { VendorAlignmentTargetNotFound } from "@beep/ontology/TaxonomyLoader"
- * import { IRIReference } from "@beep/rdf/Iri"
+ * import { IRIReference } from "@beep/identity/Iri"
  *
  * const error = VendorAlignmentTargetNotFound.make({
  *   id: "folio-example",

@@ -1,4 +1,4 @@
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";

@@ -1,4 +1,4 @@
-import { IRI } from "@beep/rdf/Iri";
+import { IRI } from "@beep/identity/Iri";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect, it } from "@effect/vitest";
 import * as LanguageModel from "effect/ai/LanguageModel";

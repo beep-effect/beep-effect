@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/execution-authority-domain",
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 L0 identity lane, goals/text-knowledge-stack-rebuild-p1-l0-identity)",
+    "reason": "Re-record the root, @beep/documents-domain and @beep/execution-authority-domain after merging origin/main e5b61d30932, which re-recorded them: the branch removes two upstream dependency edges and adds generated policy-fingerprint input paths. No qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
-      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
+      "path": "docs/reports/tksr-p1a-main-merge-cache-review-2026-11-19.md",
+      "sha256": "c7d5d7277bc7a37de58aa0b56d972511e96b7eafda6f336fbe9204d0b8dc0a01"
     }
   },
   "nodes": [
@@ -15,7 +15,6 @@
       "command": "bun run beep:build",
       "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
-        "@beep/epistemics#build",
         "@beep/identity#build",
         "@beep/jsonc#build",
         "@beep/schema#build",
@@ -75,7 +74,6 @@
       "command": "beep-cli gate run check",
       "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
-        "@beep/epistemics#build",
         "@beep/execution-authority-domain#build",
         "@beep/identity#build",
         "@beep/jsonc#build",
@@ -134,7 +132,6 @@
       "command": "bunx vitest run --coverage --exclude=test/integration/**",
       "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
-        "@beep/epistemics#build",
         "@beep/identity#build",
         "@beep/jsonc#build",
         "@beep/schema#build",
@@ -265,7 +262,6 @@
       "command": "beep-cli lint deprecated-apis --package .",
       "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
-        "@beep/epistemics#transit",
         "@beep/identity#transit",
         "@beep/jsonc#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
@@ -469,7 +465,6 @@
       "command": "beep-cli quality test-tsgo-package",
       "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
-        "@beep/epistemics#transit",
         "@beep/identity#transit",
         "@beep/jsonc#transit",
         "@beep/schema#transit",
@@ -519,7 +514,6 @@
       "command": "bun run beep:test",
       "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
-        "@beep/epistemics#transit",
         "@beep/identity#transit",
         "@beep/jsonc#transit",
         "@beep/repo-gate-vitest#transit",
@@ -581,7 +575,6 @@
       "command": "bun run beep:test:integration",
       "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
       "dependencies": [
-        "@beep/epistemics#build",
         "@beep/identity#build",
         "@beep/jsonc#build",
         "@beep/schema#build",

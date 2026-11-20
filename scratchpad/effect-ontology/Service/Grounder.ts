@@ -15,7 +15,7 @@ import * as Digest from "effect/crypto/Digest";
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import { LiteralKit } from "@beep/schema";
 import { Str as BeepStr } from "@beep/utils";
 import * as A from "effect/Array";
@@ -128,7 +128,7 @@ const BatchEntityVerification = S.Struct({
  * **Example** (Create an entity verification request)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Entity } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { EntityVerificationInput } from "@effect-ontology/Service/Grounder"
@@ -165,7 +165,7 @@ export class EntityVerificationInput extends S.Opaque<EntityVerificationInput, {
  *
  * ```ts
  * import { Confidence } from "@beep/epistemics/EvidenceSpan"
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Entity, GroundingDecision } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { EntityGrounderResult } from "@effect-ontology/Service/Grounder"
@@ -203,7 +203,7 @@ export class EntityGrounderResult extends S.Class<EntityGrounderResult, { readon
    * **Example** (Check a supported entity)
    * ```ts
    * import { Confidence } from "@beep/epistemics/EvidenceSpan"
-   * import { IRI } from "@beep/rdf"
+   * import { IRI } from "@beep/identity/Iri"
    * import { Entity, GroundingDecision } from "@effect-ontology/Model/Entity"
    * import { EntityId } from "@effect-ontology/Model/shared"
    * import { EntityGrounderResult } from "@effect-ontology/Service/Grounder"
@@ -232,7 +232,7 @@ export class EntityGrounderResult extends S.Class<EntityGrounderResult, { readon
    * **Example** (Preserve unevaluated confidence absence)
    * ```ts
    * import * as O from "effect/Option"
-   * import { IRI } from "@beep/rdf"
+   * import { IRI } from "@beep/identity/Iri"
    * import { Entity, GroundingDecision } from "@effect-ontology/Model/Entity"
    * import { EntityId } from "@effect-ontology/Model/shared"
    * import { EntityGrounderResult } from "@effect-ontology/Service/Grounder"
@@ -262,7 +262,7 @@ const relationEntityContextTypesDefault = A.empty();
  *
  * **Example** (Create relation entity context)
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { RelationEntityContext } from "@effect-ontology/Service/Grounder"
  *
@@ -298,7 +298,7 @@ export class RelationEntityContext extends S.Opaque<RelationEntityContext, { rea
  * **Example** (Create a relation verification request)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Relation, RelationObject } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { RelationVerificationInput } from "@effect-ontology/Service/Grounder"
@@ -512,7 +512,7 @@ Instructions:
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { GroundingDecision, Relation, RelationObject } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { GrounderResult } from "@effect-ontology/Service/Grounder"
@@ -546,7 +546,7 @@ export class GrounderResult extends S.Class<GrounderResult, { readonly brand: un
    * **Example** (Check a supported relation)
    * ```ts
    * import { Confidence } from "@beep/epistemics/EvidenceSpan"
-   * import { IRI } from "@beep/rdf"
+   * import { IRI } from "@beep/identity/Iri"
    * import { GroundingDecision, Relation, RelationObject } from "@effect-ontology/Model/Entity"
    * import { EntityId } from "@effect-ontology/Model/shared"
    * import { GrounderResult } from "@effect-ontology/Service/Grounder"
@@ -574,7 +574,7 @@ export class GrounderResult extends S.Class<GrounderResult, { readonly brand: un
    * **Example** (Preserve unevaluated confidence absence)
    * ```ts
    * import * as O from "effect/Option"
-   * import { IRI } from "@beep/rdf"
+   * import { IRI } from "@beep/identity/Iri"
    * import { GroundingDecision, Relation, RelationObject } from "@effect-ontology/Model/Entity"
    * import { EntityId } from "@effect-ontology/Model/shared"
    * import { GrounderResult } from "@effect-ontology/Service/Grounder"

@@ -9,16 +9,18 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { IRI } from "@beep/identity/Iri";
 import { $RepoCliId } from "@beep/identity/packages";
+import { mintContentHash } from "@beep/jsonc/Mint";
 import { SourceTextDigest, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
-import { IRI } from "@beep/rdf/Iri";
+import { ContentHash, DomainTag } from "@beep/schema/ContentHash";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Sha256Hex } from "@beep/schema/Sha256";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { ContentHash, DomainTag, mintContentHash } from "./L0.digest.ts";
 import type { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
 import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import type * as Digest from "effect/crypto/Digest";

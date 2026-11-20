@@ -13,7 +13,7 @@
 
 import type { DrizzleError } from "@beep/drizzle";
 import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
@@ -116,7 +116,7 @@ export type EntityAliasId = typeof EntityAliasId.Type;
  * **Example** (Create a blocking candidate)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { BlockingCandidate, CanonicalEntityId } from "@effect-ontology/Repository/EntityRegistry"
  *
@@ -173,7 +173,7 @@ const canonicalEntityFilterOffsetDefault = S.Natural.make(0);
  *
  * ```ts
  * import * as S from "effect/Schema"
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { CanonicalEntityFilter } from "@effect-ontology/Repository/EntityRegistry"
  *
  * const PosInt = S.Int.check(S.isGreaterThan(0))

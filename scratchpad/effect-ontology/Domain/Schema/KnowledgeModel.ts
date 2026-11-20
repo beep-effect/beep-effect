@@ -16,8 +16,9 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { AbsoluteIRI } from "@beep/identity/Iri";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { AbsoluteIRI, NamedNode, ObjectTerm } from "@beep/rdf";
+import { NamedNode, ObjectTerm } from "@beep/rdf";
 import { LiteralKit, SchemaUtils } from "@beep/schema";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";

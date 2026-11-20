@@ -12,11 +12,11 @@
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/identity/Iri";
 import { N3ParseTurtleRequest, N3SerializeTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
 import type { BlankNode as BlankNodeType, Quad } from "@beep/rdf";
 import {
   GraphTerm,
-  IRI,
   MakeQuadOptionsInput,
   makeBlankNode,
   makeNamedNode as makeCanonicalNamedNode,

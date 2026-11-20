@@ -70,7 +70,6 @@
   "dependencies": {
     "@alchemy.run/domain": "catalog:",
     "@beep/identity": "workspace:^",
-    "@beep/rdf": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/shared-domain": "workspace:^",
     "@beep/utils": "workspace:^",

@@ -26,10 +26,13 @@
 
 import { ValidTime } from "@beep/epistemics/Claim";
 import { $RepoCliId } from "@beep/identity/packages";
+import { ActivityPin, ActivityStart, mintActivityIdResult } from "@beep/jsonc/ActivityStart";
+import { mintContentHashResult } from "@beep/jsonc/Mint";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath } from "@beep/schema/PosixPath";
+import { WellFormedText } from "@beep/schema/WellFormedText";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -42,15 +45,6 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import {
-  ActivityDomainTag,
-  ActivityId,
-  ActivityPin,
-  ActivityStart,
-  activityPreimage,
-  mintContentHashResult,
-  WellFormedText,
-} from "./L0.digest.ts";
 import { TermIri } from "./L0.identity.ts";
 import { Anchored, OccurrenceDomainTag, OccurrenceId, occurrencePreimage } from "./L1.text.ts";
 import {
@@ -77,6 +71,7 @@ import {
 } from "./L2.annotation.ts";
 import { ChallengeKind, ClaimDomainTag, ClaimId, ClaimLogEntry, makeClaimCore } from "./L4.claims.ts";
 import type { JsoncCanonicalizeError, JsoncDigest } from "@beep/jsonc/JsoncFingerprint";
+import type { ActivityId } from "@beep/schema/ContentHash";
 import type { AnyAnnotationKind } from "./L2.annotation.ts";
 
 const $I = $RepoCliId.create("goals/text-knowledge-stack-rebuild/ops/design/generators");
@@ -165,8 +160,7 @@ const minters = (digest: JsoncDigest) => {
       const [, ...fields] = occurrencePreimage(anchored);
       return Result.map(mint(OccurrenceDomainTag, fields), (hash) => OccurrenceId.make(hash));
     },
-    activity: (start: ActivityStart) =>
-      Result.map(mint(ActivityDomainTag, activityPreimage(start)), (hash) => ActivityId.make(hash)),
+    activity: mintActivityIdResult(digest),
     annotation: (kind: AnyAnnotationKind, targets: A.NonEmptyReadonlyArray<OccurrenceId>, body: unknown) =>
       Result.flatMap(encodeBody(kind)(body), (encoded) =>
         Result.map(

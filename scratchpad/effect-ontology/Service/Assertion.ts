@@ -15,8 +15,9 @@ import * as Str from "effect/String";
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/identity/Iri";
 import type { Quad } from "@beep/rdf";
-import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
+import { makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { PROV_NAMESPACE } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";

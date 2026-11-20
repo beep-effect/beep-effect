@@ -211,7 +211,7 @@ const mergeEntityCluster = (
  * **Example** (Merge overlapping Person mentions)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import * as Effect from "effect/Effect";
  * import { Entity, KnowledgeGraph } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"

@@ -7,8 +7,8 @@
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/identity/Iri";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { IRI } from "@beep/rdf";
 import { LiteralKit, SchemaUtils, Sha256HexFromBytes } from "@beep/schema";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";

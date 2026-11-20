@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "@beep/execution-authority-domain": "77c448c8311649067011fb4bb6bdc4295cf4cacb34111368abb20f998d2bf94a"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 L0 identity lane, goals/text-knowledge-stack-rebuild-p1-l0-identity)",
+    "reason": "Record @beep/execution-authority-domain after the canonical JSON copy retirement dropped its @beep/epistemics dependency, removing the @beep/epistemics#build and #transit edges from build, check, lint:deprecated-apis and test. No qualification is granted.",
+    "basis": {
+      "path": "docs/reports/canonical-json-cache-review-2026-11-19.md",
+      "sha256": "23e657a5bd7c59c53051f8e4202033a54899f098d886617a90c02abe2fcd1c57"
+    }
+  },
+  "subjects": ["@beep/execution-authority-domain"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

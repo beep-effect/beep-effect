@@ -20,12 +20,12 @@ import {
 } from "@beep/epistemic-domain/values/Contradiction";
 import {
   ContradictionDetectionSnapshot,
-  canonicalDetectionJson,
   DetectedContradiction,
   detectionProposalId,
   ExactNegationConfidence,
   ValueConflictConfidence,
 } from "@beep/epistemic-domain/values/ContradictionDetection";
+import { canonicalDetectionJson } from "@beep/epistemics/ContradictionDetection";
 import { SemanticVersion } from "@beep/schema/SemanticVersion";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";

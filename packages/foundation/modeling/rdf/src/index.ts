@@ -32,13 +32,6 @@ export * as WebAnnotation from "./Adapters/WebAnnotation.ts";
  */
 export * from "./Evidence.ts";
 /**
- * IRI schema and branded IRI helpers.
- *
- * @category validation
- * @since 0.0.0
- */
-export * from "./Iri.ts";
-/**
  * JSON-LD schema models.
  *
  * @category models

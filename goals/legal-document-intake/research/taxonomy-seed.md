@@ -45,7 +45,7 @@ Illustrative TypeScript only. The JSON-LD seed data should be the source of trut
 ```ts
 import { LiteralKit, SchemaUtils } from "@beep/schema"
 import { ValidWindowsPlainPathSegment } from "@beep/schema/FilePath"
-import { IRIReference } from "@beep/rdf"
+import { IRIReference } from "@beep/identity/Iri"
 import * as S from "effect/Schema"
 
 const LegalDocumentConceptId = LiteralKit([

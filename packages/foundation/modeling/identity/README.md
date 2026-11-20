@@ -129,6 +129,7 @@ console.log(describeTerm("skos:unregisteredTerm"));
 | `@beep/identity/Vocab` | Declared vocabularies and literal vocabulary types. |
 | `@beep/identity/Curie` | CURIE/IRI conversion and schema codecs. |
 | `@beep/identity/IdentityRegistry` | Exact identity, IRI, and CURIE lookup through a local registry service. |
+| `@beep/identity/Iri` | RFC 3987 IRI, IRI-reference, relative-reference, and absolute-IRI schemas. |
 | `@beep/identity/PnLocal` | Turtle local-name parsing and safe name emission. |
 | `@beep/identity/Fibered` | Schema-validated discrete families and their section metadata. |
 

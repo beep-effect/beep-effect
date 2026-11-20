@@ -22,12 +22,6 @@ remaining acceptance gate for this research precedent.
 
 ## Quick Start
 
-Rebuild the artifacts:
-
-```bash
-bun goals/trustgraph-doc-ontology/scripts/build-artifacts.ts
-```
-
 Run local verification:
 
 ```bash

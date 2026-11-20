@@ -12,8 +12,9 @@
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/identity/Iri";
 import type { GraphTerm, Literal, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
-import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
+import { makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { Str as BeepStr } from "@beep/utils";
@@ -172,7 +173,7 @@ class IriCollisionEntity extends S.Opaque<IriCollisionEntity, { readonly brand: 
  * **Example** (Construct a collision warning)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { IriCollisionWarning } from "@effect-ontology/Utils/ClaimFactory"
  *
  * const warning = IriCollisionWarning.make({

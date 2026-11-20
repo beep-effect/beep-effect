@@ -1,5 +1,5 @@
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
-import { IRI } from "@beep/rdf/Iri";
+import { IRI } from "@beep/identity/Iri";
 import { ObjectRef } from "@beep/rdf/Prov";
 import { describe, expect, it } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";

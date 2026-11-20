@@ -63,11 +63,16 @@ lands in the phase of its layer.
 **Owners.** `@beep/identity` imports `effect` only and owns what expansion and
 binding need: the RFC 3987 `IRI` schemas, which it receives from `@beep/rdf`,
 `Namespace`, `Term`, `TermBinding`, the `Deprecation` record and the
-term-stability snapshot (Pending P1). Its version field is a string with a
-local pattern check and its literal domains use `S.Literals`, the standing
-exception for the bottom package that `@beep/schema` itself depends on; the
-registry test cross-checks both against the `@beep/schema` schemas as a test
-dependency. Records that need `@beep/schema` primitives sit above it: an
+term-stability snapshot (Pending P1). The `since` of a binding or a
+deprecation is a vocabulary release of that snapshot, not a package version:
+the snapshot carries `release`, starting at `1.0.0`, its writer bumps the minor
+on additions and the major on deprecations, and existing rows keep their
+`since`. An addition needs no deprecation record: `L0-3` asks for one only
+when a published term is removed or changed. That field is a string with a local pattern check and the literal
+domains use `S.Literals`, the standing exception for the bottom package that
+`@beep/schema` itself depends on; `@beep/schema`'s tests cross-check both,
+because an identity test dependency on `@beep/schema` would close a workspace
+cycle. Records that need `@beep/schema` primitives sit above it: an
 external namespace's pin is `NamespacePin` in `@beep/rdf` (L6) and the gUFO
 class typing is a record in `@beep/ontology` (L3). `@beep/schema` owns the
 digest primitive (`Sha256PrefixedDigest`, `sha256:` plus 64 hex). `@beep/jsonc`

@@ -13,7 +13,7 @@ import { pipe } from "effect/Function";
 
 import type { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import type { IRI } from "@beep/rdf";
+import type { IRI } from "@beep/identity/Iri";
 import { ProvBundle } from "@beep/rdf/Prov";
 import * as A from "@beep/utils/Array";
 import * as DateTime from "effect/DateTime";
@@ -329,7 +329,7 @@ const selectBestTypes = (
  * **Example** (Merge two graphs that share an entity id)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Entity, KnowledgeGraph } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { mergeGraphs } from "@effect-ontology/Workflow/Merge"
@@ -375,7 +375,7 @@ export const mergeGraphs = dual2(mergeGraphData);
  * **Example** (Record a name conflict on a shared entity)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Entity, KnowledgeGraph } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { mergeGraphsWithConflicts } from "@effect-ontology/Workflow/Merge"

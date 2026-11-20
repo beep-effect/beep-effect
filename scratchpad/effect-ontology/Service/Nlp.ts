@@ -11,10 +11,10 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/identity/Iri";
 import type { BM25Config } from "@beep/nlp/Core/Vectorization";
 import { DefaultBM25Config } from "@beep/nlp/Core/Vectorization";
 import { Tokenization } from "@beep/nlp-processing/Core";
-import { IRI } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
 import { WinkTokenizationError } from "@beep/wink/Wink.errors";
 import { WinkLayerAllLive } from "@beep/wink/Wink.layer";
@@ -377,7 +377,7 @@ class PropertyOntologySearchResult extends OntologySearchResultBase.extend<Prope
  * **Example** (Represent a class search hit)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { ClassDefinition } from "@effect-ontology/Model/Ontology"
  * import { OntologySearchResult } from "@effect-ontology/Service/Nlp"
  * import * as O from "effect/Option"

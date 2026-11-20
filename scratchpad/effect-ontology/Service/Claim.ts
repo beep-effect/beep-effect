@@ -14,9 +14,10 @@ import * as Str from "effect/String";
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/identity/Iri";
 import type { PostgresDrizzle } from "@beep/postgres";
 import type { Quad } from "@beep/rdf";
-import { IRI, makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
+import { makeNamedNode as makeCanonicalNamedNode } from "@beep/rdf";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import type * as Config from "effect/Config";

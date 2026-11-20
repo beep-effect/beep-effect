@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/documents-domain",
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 L0 identity lane, goals/text-knowledge-stack-rebuild-p1-l0-identity)",
+    "reason": "Re-record the root, @beep/documents-domain and @beep/execution-authority-domain after merging origin/main e5b61d30932, which re-recorded them: the branch removes two upstream dependency edges and adds generated policy-fingerprint input paths. No qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
-      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
+      "path": "docs/reports/tksr-p1a-main-merge-cache-review-2026-11-19.md",
+      "sha256": "c7d5d7277bc7a37de58aa0b56d972511e96b7eafda6f336fbe9204d0b8dc0a01"
     }
   },
   "nodes": [
@@ -17,7 +17,6 @@
       "dependencies": [
         "@beep/effect-drizzle#build",
         "@beep/identity#build",
-        "@beep/rdf#build",
         "@beep/schema#build",
         "@beep/shared-domain#build",
         "@beep/test-runner#build",
@@ -78,7 +77,6 @@
         "@beep/documents-domain#build",
         "@beep/effect-drizzle#build",
         "@beep/identity#build",
-        "@beep/rdf#build",
         "@beep/repo-gate-record#transit",
         "@beep/schema#build",
         "@beep/shared-domain#build",
@@ -136,7 +134,6 @@
       "dependencies": [
         "@beep/effect-drizzle#build",
         "@beep/identity#build",
-        "@beep/rdf#build",
         "@beep/schema#build",
         "@beep/shared-domain#build",
         "@beep/test-runner#build",
@@ -267,7 +264,6 @@
       "dependencies": [
         "@beep/effect-drizzle#transit",
         "@beep/identity#transit",
-        "@beep/rdf#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
         "@beep/schema#transit",
         "@beep/shared-domain#transit",
@@ -471,7 +467,6 @@
       "dependencies": [
         "@beep/effect-drizzle#transit",
         "@beep/identity#transit",
-        "@beep/rdf#transit",
         "@beep/schema#transit",
         "@beep/shared-domain#transit",
         "@beep/test-runner#transit",
@@ -521,7 +516,6 @@
       "dependencies": [
         "@beep/effect-drizzle#transit",
         "@beep/identity#transit",
-        "@beep/rdf#transit",
         "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
         "@beep/shared-domain#transit",
@@ -583,7 +577,6 @@
       "dependencies": [
         "@beep/effect-drizzle#build",
         "@beep/identity#build",
-        "@beep/rdf#build",
         "@beep/schema#build",
         "@beep/shared-domain#build",
         "@beep/test-runner#build",

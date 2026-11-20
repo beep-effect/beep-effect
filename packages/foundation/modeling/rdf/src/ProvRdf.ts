@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { IRI } from "@beep/identity/Iri";
 import { $RdfId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -18,7 +19,6 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { IRI } from "./Iri.ts";
 import {
   Activity,
   Agent,

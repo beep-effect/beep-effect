@@ -27,7 +27,8 @@ import { ArticleMetadata } from "../Service/ClaimPersistence.ts";
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
-import { IRI, makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
+import { makeLiteral, makeNamedNode, makeQuad } from "@beep/rdf";
 import { datasetToProvBundle, provBundleToDataset } from "@beep/rdf/ProvRdf";
 import { PROV_ACTIVITY, PROV_NAMESPACE, PROV_USED, PROV_WAS_GENERATED_BY } from "@beep/rdf/Vocab/Prov";
 import { RDF_NAMESPACE, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";

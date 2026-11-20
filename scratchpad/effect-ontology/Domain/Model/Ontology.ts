@@ -6,7 +6,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf/Iri";
+import { IRI } from "@beep/identity/Iri";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as Bool from "effect/Boolean";
@@ -754,7 +754,7 @@ export class OntologyContext extends S.Class<OntologyContext, { readonly brand: 
    * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
    * import { OntologyContext } from "@effect-ontology/Model/Ontology"
-   * import { IRI } from "@beep/rdf"
+   * import { IRI } from "@beep/identity/Iri"
    *
    * const input = S.decodeUnknownOption(S.Struct({ iri: IRI, context: OntologyContext }))({
    *   iri: "https://schema.org/Person",
@@ -779,7 +779,7 @@ export class OntologyContext extends S.Class<OntologyContext, { readonly brand: 
    * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
    * import { OntologyContext } from "@effect-ontology/Model/Ontology"
-   * import { IRI } from "@beep/rdf"
+   * import { IRI } from "@beep/identity/Iri"
    *
    * const input = S.decodeUnknownOption(S.Struct({ iri: IRI, context: OntologyContext }))({
    *   iri: "https://schema.org/name",
@@ -804,7 +804,7 @@ export class OntologyContext extends S.Class<OntologyContext, { readonly brand: 
    * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
    * import { OntologyContext } from "@effect-ontology/Model/Ontology"
-   * import { IRI } from "@beep/rdf"
+   * import { IRI } from "@beep/identity/Iri"
    *
    * const input = S.decodeUnknownOption(S.Struct({ employee: IRI, context: OntologyContext }))({
    *   employee: "https://example.org/Employee",
@@ -829,7 +829,7 @@ export class OntologyContext extends S.Class<OntologyContext, { readonly brand: 
    * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
    * import { OntologyContext } from "@effect-ontology/Model/Ontology"
-   * import { IRI } from "@beep/rdf"
+   * import { IRI } from "@beep/identity/Iri"
    *
    * const input = S.decodeUnknownOption(S.Struct({ employee: IRI, context: OntologyContext }))({
    *   employee: "https://example.org/Employee",
@@ -859,7 +859,7 @@ export class OntologyContext extends S.Class<OntologyContext, { readonly brand: 
    * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
    * import { OntologyContext } from "@effect-ontology/Model/Ontology"
-   * import { IRI } from "@beep/rdf"
+   * import { IRI } from "@beep/identity/Iri"
    *
    * const input = S.decodeUnknownOption(S.Struct({ person: IRI, context: OntologyContext }))({
    *   person: "https://schema.org/Person",
@@ -884,7 +884,7 @@ export class OntologyContext extends S.Class<OntologyContext, { readonly brand: 
    * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
    * import { OntologyContext } from "@effect-ontology/Model/Ontology"
-   * import { IRI } from "@beep/rdf"
+   * import { IRI } from "@beep/identity/Iri"
    *
    * const input = S.decodeUnknownOption(S.Struct({ employee: IRI, person: IRI, context: OntologyContext }))({
    *   employee: "https://example.org/Employee",
@@ -911,7 +911,7 @@ export class OntologyContext extends S.Class<OntologyContext, { readonly brand: 
    * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
    * import { OntologyContext } from "@effect-ontology/Model/Ontology"
-   * import { IRI } from "@beep/rdf"
+   * import { IRI } from "@beep/identity/Iri"
    *
    * const input = S.decodeUnknownOption(S.Struct({ givenName: IRI, context: OntologyContext }))({
    *   givenName: "https://example.org/givenName",
@@ -936,7 +936,7 @@ export class OntologyContext extends S.Class<OntologyContext, { readonly brand: 
    * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
    * import { OntologyContext } from "@effect-ontology/Model/Ontology"
-   * import { IRI } from "@beep/rdf"
+   * import { IRI } from "@beep/identity/Iri"
    *
    * const input = S.decodeUnknownOption(S.Struct({ name: IRI, context: OntologyContext }))({
    *   name: "https://schema.org/name",
@@ -961,7 +961,7 @@ export class OntologyContext extends S.Class<OntologyContext, { readonly brand: 
    * import * as O from "effect/Option"
    * import * as S from "effect/Schema"
    * import { OntologyContext } from "@effect-ontology/Model/Ontology"
-   * import { IRI } from "@beep/rdf"
+   * import { IRI } from "@beep/identity/Iri"
    *
    * const input = S.decodeUnknownOption(S.Struct({ givenName: IRI, name: IRI, context: OntologyContext }))({
    *   givenName: "https://example.org/givenName",
