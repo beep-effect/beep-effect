@@ -364,7 +364,8 @@ const fleetCeilingStatements = (stage: string): ReadonlyArray<IAM.PolicyStatemen
     {
       Sid: "CeilingFleetBinaries",
       Effect: "Allow",
-      Action: ["s3:GetObject", "s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"],
+      // The syncer mirrors the runner tarball by multipart upload and aborts a failed one.
+      Action: ["s3:AbortMultipartUpload", "s3:GetObject", "s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"],
       Resource: [`arn:aws:s3:::beep-fleet-${slug}-binaries-*/*`, `arn:aws:s3:::cirunners-*-${slug}-*/*`],
     },
     {

@@ -701,8 +701,10 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
       yield* syncer.bind(
         "RunnerBinariesSyncer",
         lambdaRole([
+          // The mirror is a multipart upload: s3:PutObject covers create, part and complete; a failed upload is
+          // aborted, which needs s3:AbortMultipartUpload, or its parts would stay in the bucket.
           allow({
-            actions: ["s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"],
+            actions: ["s3:AbortMultipartUpload", "s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"],
             resources: [Output.interpolate`${binaries.bucketArn}/${runnerTarballKey}`],
           }),
         ])
