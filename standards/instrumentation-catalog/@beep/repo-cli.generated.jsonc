@@ -3693,6 +3693,7 @@
     {"name":"SyncDataToTs.Iso4217.acquire","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SyncDataToTs.Iso4217.normalizeIso4217Document","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SyncDataToTs.PinnedVocabularies.project","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"SyncDataToTs.PinnedVocabularies.readExistingShard","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SyncDataToTs.PinnedVocabularies.sha256Hex","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SyncDataToTs.PinnedVocabularies.validate","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"SyncDataToTs.ReportersDb.acquire","owner":"@beep/repo-cli","family":"tooling","conforms":true},
