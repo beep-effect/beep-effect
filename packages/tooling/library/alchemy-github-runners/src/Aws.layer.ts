@@ -35,7 +35,7 @@ import { Ec2Fleet } from "./Ec2Fleet.service.ts";
 import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import { MessageQueue } from "./MessageQueue.service.ts";
 import { ReleaseAsset, RunnerBinaries } from "./RunnerBinaries.service.ts";
-import { AwsApiError, GitHubApiError } from "./RunnerFleet.errors.ts";
+import { AwsApiError, AwsThrottlingCode, GitHubApiError } from "./RunnerFleet.errors.ts";
 import { RunnerInstance, RunnerTag, runnerApplicationTagValue } from "./RunnerInstance.models.ts";
 import { ParameterEntry, SsmStore } from "./SsmStore.service.ts";
 import type { Credentials as AwsCredentials } from "@distilled.cloud/aws/Credentials";
@@ -78,7 +78,12 @@ const clientCategories: ReadonlyArray<(error: unknown) => boolean> = [
   Category.isDependencyViolationError,
 ];
 
-type SdkFailure = { readonly _tag: string; readonly message?: unknown };
+type SdkFailure = {
+  readonly _tag: string;
+  readonly message?: unknown;
+  readonly status?: unknown;
+  readonly code?: unknown;
+};
 
 // The SDK's unknown-error class carries the HTTP status; its declared error classes carry a category instead.
 const statusOf = (error: SdkFailure): O.Option<number> =>
@@ -89,11 +94,22 @@ const statusOf = (error: SdkFailure): O.Option<number> =>
 const isTransientStatus = (status: number) => status === 429 || status >= 500;
 const isClientStatus = (status: number) => status >= 400 && status < 500 && status !== 429;
 
+const isThrottlingCode = S.is(AwsThrottlingCode);
+
+// The wire code of the SDK's unknown-error class, else the declared class's tag.
+const codeOf = (error: SdkFailure): string =>
+  P.hasProperty(error, "code") && P.isString(error.code) ? error.code : error._tag;
+
+// AWS throttles with HTTP 400, so a throttling code, tag or category is read before any status rule.
+const isThrottled = (error: SdkFailure): boolean =>
+  isThrottlingCode(error._tag) || isThrottlingCode(codeOf(error)) || Category.isThrottling(error);
+
 const faultRules: ReadonlyArray<readonly [(error: SdkFailure, status: O.Option<number>) => boolean, AwsFault]> = [
   [(error) => A.contains(clientTags, error._tag), "client"],
+  [isThrottled, "transient"],
   [(_error, status) => O.exists(status, isTransientStatus), "transient"],
-  [(_error, status) => O.exists(status, isClientStatus), "client"],
   [(error) => A.contains(retryableTags, error._tag) || Category.isTransientError(error), "transient"],
+  [(_error, status) => O.exists(status, isClientStatus), "client"],
   [(error) => A.some(clientCategories, (isCategory) => isCategory(error)), "client"],
 ];
 
@@ -106,15 +122,46 @@ const faultOf = (error: SdkFailure, status: O.Option<number>): AwsFault =>
     (): AwsFault => "unknown"
   );
 
-const toAwsApiError =
+/**
+ * Maps a distilled AWS SDK error to the fleet's {@link AwsApiError}.
+ *
+ * **Details**
+ *
+ * `code` is the wire code of the SDK's unknown-error class, else the
+ * declared class's tag; `status` is the HTTP status only that class carries.
+ * `fault` reads, in order: a resend-proof client code
+ * (`ParameterMaxVersionLimitExceeded`), a throttling code, tag or category
+ * (AWS throttles with HTTP 400, so this outranks the status), a 429 or 5xx, a
+ * transient category, a 4xx, then a client category; otherwise `unknown`.
+ *
+ * **Example** (A throttled write answered with 400)
+ *
+ * ```ts
+ * import { toAwsApiError } from "@beep/alchemy-github-runners/Aws.layer"
+ *
+ * const error = toAwsApiError({ service: "ssm", operation: "putParameter" })({
+ *   _tag: "UnknownAwsError",
+ *   status: 400,
+ *   code: "ThrottlingException",
+ *   message: "Rate exceeded",
+ * })
+ * console.log(error.fault) // "transient"
+ * ```
+ *
+ * @param call - The service and operation that failed.
+ * @returns A mapper from the SDK error to {@link AwsApiError}.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const toAwsApiError =
   ({ service, operation }: { readonly service: string; readonly operation: string }) =>
   (error: SdkFailure): AwsApiError => {
     const status = statusOf(error);
     return AwsApiError.make({
       service,
       operation,
-      code: O.some(P.hasProperty(error, "code") && P.isString(error.code) ? error.code : error._tag),
-      retryable: A.contains(retryableTags, error._tag),
+      code: O.some(codeOf(error)),
+      retryable: A.contains(retryableTags, error._tag) || isThrottlingCode(codeOf(error)),
       status,
       fault: faultOf(error, status),
       message: P.isString(error.message) ? error.message : error._tag,

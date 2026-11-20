@@ -477,6 +477,16 @@ describe("handleScaleUp configure failures", () => {
           }),
           AwsApiError.make({ service: "ssm", operation: "putParameter", status: O.some(409), message: "conflict" }),
           AwsApiError.make({ service: "ssm", operation: "putParameter", message: "unreadable" }),
+          // AWS throttles with HTTP 400: the code wins over the status.
+          AwsApiError.make({
+            service: "ssm",
+            operation: "putParameter",
+            code: O.some("ThrottlingException"),
+            status: O.some(400),
+            message: "Rate exceeded",
+          }),
+          GitHubApiError.make({ operation: "jit", status: O.some(403), rateLimited: true, message: "rate limit" }),
+          GitHubApiError.make({ operation: "jit", status: O.some(403), message: "Resource not accessible" }),
         ],
         classifyFailure
       )
@@ -489,6 +499,9 @@ describe("handleScaleUp configure failures", () => {
       "transient",
       "deterministic",
       "transient",
+      "transient",
+      "transient",
+      "deterministic",
     ]);
   });
 
@@ -540,6 +553,7 @@ describe("handleScaleUp configure failures", () => {
             providerMessage: "Value too long",
             messageId: "m-1",
             jobId: 1,
+            reason: "deterministic",
             deadLetter: "sent",
           },
         ]);
@@ -595,12 +609,82 @@ describe("handleScaleUp configure failures", () => {
     })
   );
 
-  it.effect("returns a transient failure as a batch item failure once no job-retry can be published", () =>
+  const exhaustedThrottle = AwsApiError.make({
+    service: "ssm",
+    operation: "putParameter",
+    code: O.some("ThrottlingException"),
+    retryable: true,
+    fault: "transient",
+    message: "Rate exceeded",
+  });
+
+  const errorAnnotations = (lines: ReadonlyArray<{ readonly level: string; readonly annotations: unknown }>) =>
+    A.map(
+      A.filter(lines, (line) => line.level === "ERROR"),
+      (line) => line.annotations as Readonly<Record<string, unknown>>
+    );
+
+  it.effect("dead-letters a transient failure once its job-retry attempts are used up, never redelivering it", () =>
     Effect.gen(function* () {
       const world = new World();
       world.jitFailures = ["i-0001"];
-      const retry = yield* run(world, [queued({ id: 1, retryCounter: 1 })]);
-      expect([retry, world.sent, world.terminated]).toStrictEqual([["m-1"], [], ["i-0001"]]);
+      const { retry, lines } = yield* runLogged(world, [queued({ id: 1, retryCounter: 1 })]);
+      expect([retry, A.map(world.sent, (sent) => sent.queueUrl), world.terminated]).toStrictEqual([
+        [],
+        [buildDlqUrl],
+        ["i-0001"],
+      ]);
+      expect(
+        A.map(errorAnnotations(lines), (annotations) => [annotations.reason, annotations.deadLetter])
+      ).toStrictEqual([["retries-exhausted", "sent"]]);
+    })
+  );
+
+  it.effect(
+    "dead-letters a transient token-write failure of a pool with no retry policy, deleting its JIT runner",
+    () =>
+      Effect.gen(function* () {
+        const world = new World();
+        world.putFailures = [["/beep-ci/heavy/tokens/", exhaustedThrottle]];
+        const pool = RunnerPool.make({ ...heavyPool, jobRetry: O.none() });
+        const { retry, lines } = yield* runLogged(world, [queued({ id: 1 })], poolConfig(pool));
+        expect([
+          retry,
+          A.map(world.sent, (sent) => sent.queueUrl),
+          world.terminated,
+          world.deletedRunners,
+        ]).toStrictEqual([[], [buildDlqUrl], ["i-0001"], [1001]]);
+        expect(A.map(errorAnnotations(lines), (annotations) => annotations.reason)).toStrictEqual(["no-retry-policy"]);
+      })
+  );
+
+  it.effect("keeps a dead-lettered message for redelivery only when the DLQ send itself fails", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.jitFailures = ["i-0001"];
+      world.sendFailures = [buildDlqUrl];
+      const { retry, lines } = yield* runLogged(world, [queued({ id: 1, retryCounter: 1 })]);
+      expect([retry, world.terminated]).toStrictEqual([["m-1"], ["i-0001"]]);
+      expect(
+        A.map(errorAnnotations(lines), (annotations) => [annotations.reason, annotations.deadLetter])
+      ).toStrictEqual([["retries-exhausted", "send-failed"]]);
+    })
+  );
+
+  it.effect("logs a failed job-retry publish for a launched runner and keeps the batch successful", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.sendFailures = [jobRetryUrl];
+      const { retry, lines } = yield* runLogged(world, [queued({ id: 1 })]);
+      expect([retry, world.terminated]).toStrictEqual([[], []]);
+      expect(
+        A.map(
+          A.filter(lines, (line) => line.level === "WARN"),
+          (line) => line.annotations
+        )
+      ).toStrictEqual([
+        { messageId: "m-1", jobId: 1, code: "ServiceUnavailable", status: 503, providerMessage: "unavailable" },
+      ]);
     })
   );
 
@@ -638,6 +722,63 @@ describe("handleScaleUp configure failures", () => {
     })
   );
 
+  it.effect("cleans up a failed token write in order: token parameter, JIT runner, instance, once each", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      // A write that fails client-side can still have landed: the parameter must not hold a cap slot afterwards.
+      world.putFailures = [["/beep-ci/heavy/tokens/", ssmRefusal("Value too long")]];
+      const retry = yield* run(world, [queued({ id: 1 })]);
+      expect([retry, world.cleanupCalls]).toStrictEqual([
+        [],
+        ["deleteToken:/beep-ci/heavy/tokens/i-0001", "deleteRunner:1001", "terminate:i-0001"],
+      ]);
+    })
+  );
+
+  it.effect("logs a failed token-parameter delete and still deletes the runner and terminates", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.putFailures = [["/beep-ci/heavy/tokens/", ssmRefusal("Value too long")]];
+      world.deleteFailure = AwsApiError.makeOption({
+        service: "ssm",
+        operation: "deleteParameter",
+        code: O.some("AccessDeniedException"),
+        fault: "client",
+        message: "not authorized",
+      });
+      const { lines } = yield* runLogged(world, [queued({ id: 1 })]);
+      expect(world.cleanupCalls).toStrictEqual([
+        "deleteToken:/beep-ci/heavy/tokens/i-0001",
+        "deleteRunner:1001",
+        "terminate:i-0001",
+      ]);
+      expect(
+        A.map(
+          A.filter(lines, (line) => line.level === "WARN"),
+          (line) => line.annotations
+        )
+      ).toStrictEqual([
+        {
+          instanceId: "i-0001",
+          operation: "putToken",
+          failureClass: "deterministic",
+          status: null,
+          code: "ValidationException",
+          providerMessage: "Value too long",
+        },
+        {
+          instanceId: "i-0001",
+          operation: "deleteToken",
+          failureClass: "deterministic",
+          status: null,
+          code: "AccessDeniedException",
+          providerMessage: "not authorized",
+          tokenParameter: "/beep-ci/heavy/tokens/i-0001",
+        },
+      ]);
+    })
+  );
+
   it.effect("logs a failed runner deletion and a failed termination instead of swallowing them", () =>
     Effect.gen(function* () {
       const world = new World();
@@ -657,7 +798,7 @@ describe("handleScaleUp configure failures", () => {
           A.filter(lines, (line) => line.level === "WARN"),
           (line) => R.get(line.annotations as Readonly<Record<string, unknown>>, "operation")
         )
-      ).toStrictEqual([O.some("deleteRunner"), O.some("putToken"), O.some("terminate")]);
+      ).toStrictEqual([O.some("putToken"), O.some("deleteRunner"), O.some("terminate")]);
     })
   );
 });

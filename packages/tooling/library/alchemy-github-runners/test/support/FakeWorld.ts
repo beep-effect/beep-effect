@@ -73,6 +73,12 @@ export class World {
   /** Scripted JIT failure error; default a 500. */
   jitError: GitHubApiError = GitHubApiError.make({ operation: "jit", status: O.some(500), message: "boom" });
   sent: Array<SentMessage> = [];
+  /** Cleanup calls in order: `deleteToken:<name>`, `deleteRunner:<id>`, `terminate:<instance>`. */
+  cleanupCalls: Array<string> = [];
+  /** Scripted SSM delete failure for every delete call. */
+  deleteFailure: O.Option<AwsApiError> = O.none();
+  /** Queue URLs whose sends fail with a 503. */
+  sendFailures: Array<string> = [];
   githubRunners: Array<SelfHostedRunner> = [];
   deletedRunners: Array<number> = [];
   busyOnDelete: Array<number> = [];
@@ -160,6 +166,7 @@ export const worldContext = (world: World) =>
           );
         }),
         terminate: Effect.fn("FakeEc2.terminate")(function* (instanceId) {
+          world.cleanupCalls.push(`terminate:${instanceId}`);
           world.onTerminate(instanceId);
           world.terminated.push(instanceId);
           if (O.isSome(world.terminateFailure)) {
@@ -201,6 +208,10 @@ export const worldContext = (world: World) =>
           world.ssm[input.name] = { value: Redacted.value(input.value), modified: 0, tags: { ...input.tags } };
         }),
         delete: Effect.fn("FakeSsm.delete")(function* (name) {
+          world.cleanupCalls.push(`deleteToken:${name}`);
+          if (O.isSome(world.deleteFailure)) {
+            return yield* world.deleteFailure.value;
+          }
           world.ssm = R.remove(world.ssm, name);
         }),
         listByPath: Effect.fn("FakeSsm.listByPath")(function* (path) {
@@ -215,6 +226,17 @@ export const worldContext = (world: World) =>
       MessageQueue,
       MessageQueue.of({
         send: Effect.fn("FakeSqs.send")(function* (input) {
+          if (A.contains(world.sendFailures, input.queueUrl)) {
+            return yield* AwsApiError.make({
+              service: "sqs",
+              operation: "sendMessage",
+              code: O.some("ServiceUnavailable"),
+              status: O.some(503),
+              retryable: true,
+              fault: "transient",
+              message: "unavailable",
+            });
+          }
           world.sent.push(input);
         }),
       })
@@ -263,6 +285,7 @@ export const worldContext = (world: World) =>
           return world.githubRunners;
         }),
         deleteRunner: Effect.fn("FakeGitHub.deleteRunner")(function* (_token, _owner, runnerId) {
+          world.cleanupCalls.push(`deleteRunner:${runnerId}`);
           if (A.contains(world.failOnDelete, runnerId)) {
             return yield* GitHubApiError.make({ operation: "delete", status: O.some(502), message: "bad gateway" });
           }

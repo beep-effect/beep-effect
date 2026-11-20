@@ -47,7 +47,35 @@ const statusByTag: Readonly<Record<string, number>> = {
   GatewayTimeout: 504,
 };
 
-const toGitHubApiError =
+/**
+ * Maps a distilled GitHub client error to the fleet's {@link GitHubApiError}.
+ *
+ * **Details**
+ *
+ * `status` comes from the client's status class, else the status its
+ * unknown-error class carries. `rateLimited` is true for `TooManyRequests`
+ * (the client's reading of a 429, or of a 403 with `retry-after`,
+ * `x-ratelimit-remaining: 0` or a rate-limit message) and for a `Forbidden`
+ * whose message names a rate limit.
+ *
+ * **Example** (A secondary rate limit)
+ *
+ * ```ts
+ * import { toGitHubApiError } from "@beep/alchemy-github-runners/GitHubApp.layer"
+ *
+ * const error = toGitHubApiError("generateJitConfig")({
+ *   _tag: "Forbidden",
+ *   message: "You have exceeded a secondary rate limit",
+ * })
+ * console.log(error.rateLimited) // true
+ * ```
+ *
+ * @param operation - The GitHub operation that failed.
+ * @returns A mapper from the client error to {@link GitHubApiError}.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const toGitHubApiError =
   (operation: string) =>
   (error: { readonly _tag: string; readonly message?: unknown }): GitHubApiError =>
     GitHubApiError.make({
@@ -59,6 +87,10 @@ const toGitHubApiError =
           : O.none()
       ),
       code: O.some(error._tag),
+      // The client turns a rate-limited 403 into `TooManyRequests`; a 403 whose message names a rate limit is one too.
+      rateLimited:
+        error._tag === "TooManyRequests" ||
+        (error._tag === "Forbidden" && P.isString(error.message) && /rate limit/iu.test(error.message)),
       message: P.isString(error.message) ? error.message : error._tag,
     });
 

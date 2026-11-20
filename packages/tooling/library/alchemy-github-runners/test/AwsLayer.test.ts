@@ -1,4 +1,5 @@
 import {
+  classifyFailure,
   Ec2Fleet,
   ec2FleetLive,
   FleetLaunchRequest,
@@ -13,8 +14,11 @@ import {
   runnerBinariesLive,
   SsmStore,
   ssmStoreLive,
+  toAwsApiError,
 } from "@beep/alchemy-github-runners";
 import * as AwsCredentials from "@distilled.cloud/aws/Credentials";
+import * as AwsErrors from "@distilled.cloud/aws/Errors";
+import * as AwsRetry from "@distilled.cloud/aws/Retry";
 import { describe, expect, it } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -205,6 +209,23 @@ describe("live AWS layers over distilled", () => {
             body: '{"__type":"ValidationException","message":"1 validation error detected: Value at value failed to satisfy constraint"}',
             headers: { "content-type": "application/x-amz-json-1.1" },
           },
+          // AWS throttles with HTTP 400: a declared throttling class and an undeclared throttling code.
+          "/throttled": {
+            status: 400,
+            body: '{"__type":"ThrottlingException","message":"Rate exceeded"}',
+            headers: { "content-type": "application/x-amz-json-1.1" },
+          },
+          "/throttling": {
+            status: 400,
+            body: '{"__type":"Throttling","message":"Rate exceeded"}',
+            headers: { "content-type": "application/x-amz-json-1.1" },
+          },
+          // A throttling code SSM does not declare reaches the layer as the SDK's unknown-error class, status 400.
+          "/request-throttled": {
+            status: 400,
+            body: '{"__type":"RequestThrottled","message":"Rate exceeded"}',
+            headers: { "content-type": "application/x-amz-json-1.1" },
+          },
           "/undeclared": {
             status: 409,
             body: '{"__type":"SomethingNew","message":"conflict"}',
@@ -226,16 +247,51 @@ describe("live AWS layers over distilled", () => {
                 .pipe(Effect.flip),
             { concurrency: 1 }
           );
-        }).pipe(withLive(http));
+          // The SDK would retry the throttled writes itself; the mapping is what this test reads.
+        }).pipe(AwsRetry.none, withLive(http));
         deepStrictEqual(
           A.map(errors, (error) => [error.code, error.status, error.fault] as const),
           [
             [O.some("ValidationException"), O.none(), "client"],
+            [O.some("ThrottlingException"), O.none(), "transient"],
+            // The SDK reads the bare `Throttling` code as its ThrottlingException class.
+            [O.some("ThrottlingException"), O.none(), "transient"],
+            [O.some("RequestThrottled"), O.some(400), "transient"],
             [O.some("SomethingNew"), O.some(409), "client"],
           ]
         );
       })
   );
+
+  it("maps an unknown-class 400 with a throttling code to transient, a declared validation error to client", () => {
+    const map = toAwsApiError({ service: "ssm", operation: "putParameter" });
+    expect(
+      A.map(
+        [
+          new AwsErrors.UnknownAwsError({
+            status: 400,
+            code: "ThrottlingException",
+            message: "Rate exceeded",
+            body: {},
+          }),
+          new AwsErrors.UnknownAwsError({ status: 400, code: "Throttling", message: "Rate exceeded", body: {} }),
+          new AwsErrors.ThrottlingException({ message: "Rate exceeded" }),
+          new AwsErrors.ValidationException({ message: "Value too long" }),
+          new AwsErrors.UnknownAwsError({ status: 400, code: "InvalidKeyId", message: "bad key", body: {} }),
+        ],
+        (error) => {
+          const mapped = map(error);
+          return [mapped.fault, classifyFailure(mapped)];
+        }
+      )
+    ).toStrictEqual([
+      ["transient", "transient"],
+      ["transient", "transient"],
+      ["transient", "transient"],
+      ["client", "deterministic"],
+      ["client", "deterministic"],
+    ]);
+  });
 
   it.effect("EC2: CreateFleet wire request and partial result, inventory filters, tag and terminate", () =>
     Effect.gen(function* () {

@@ -2,14 +2,18 @@ import {
   AppSigningKey,
   appKeyCanSign,
   appParameterNames,
+  classifyFailure,
   GitHubAppAuth,
   GitHubLiveOptions,
   GitHubRunners,
   gitHubAppAuthLive,
   gitHubRunnersLive,
+  InstallationToken,
   JitConfigRequest,
   RunnerOwner,
+  toGitHubApiError,
 } from "@beep/alchemy-github-runners";
+import * as GitHubRetry from "@distilled.cloud/github/Retry";
 import { describe, expect, it } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -59,6 +63,24 @@ const responses: Readonly<Record<string, FakeAnswer>> = {
   "GET /orgs/beep-effect/actions/runners": ok(`{"total_count":2,"runners":[${runner(11, true)},${runner(12, false)}]}`),
   "DELETE /orgs/beep-effect/actions/runners/11": ok('{"message":"Bad request - Runner is busy"}', 422),
   "DELETE /orgs/beep-effect/actions/runners/12": { status: 204, body: "" },
+  // A primary rate limit answered with 403, and a permission refusal answered with 403.
+  "GET /repos/beep-effect/beep-effect/actions/jobs/8": {
+    status: 403,
+    body: '{"message":"API rate limit exceeded for installation ID 42."}',
+    headers: { "content-type": "application/json", "x-ratelimit-remaining": "0", "x-ratelimit-reset": "0" },
+  },
+  "GET /repos/beep-effect/beep-effect/actions/jobs/9": ok('{"message":"Resource not accessible by integration"}', 403),
+  // A 403 asking to wait, a 429, and a secondary rate limit with no hint headers.
+  "GET /repos/beep-effect/beep-effect/actions/jobs/10": {
+    status: 403,
+    body: '{"message":"Forbidden"}',
+    headers: { "content-type": "application/json", "retry-after": "60" },
+  },
+  "GET /repos/beep-effect/beep-effect/actions/jobs/11": ok('{"message":"Too Many Requests"}', 429),
+  "GET /repos/beep-effect/beep-effect/actions/jobs/12": ok(
+    '{"message":"You have exceeded a secondary rate limit. Please wait a few minutes before you try again."}',
+    403
+  ),
 };
 
 const route = (request: RecordedRequest): O.Option<FakeAnswer> =>
@@ -150,6 +172,47 @@ describe("live GitHub layers over distilled", () => {
         O.some(3)
       );
     })
+  );
+
+  it.effect(
+    "reads a 403 or 429 rate limit (remaining 0, retry-after, 429, secondary) as transient, a 403 refusal as deterministic",
+    () =>
+      Effect.gen(function* () {
+        const token = InstallationToken.make({ installationId: 42, token: Redacted.make("ghs_installation") });
+        const errors = yield* run(
+          new FakeHttp(route),
+          new World(),
+          Effect.gen(function* () {
+            const github = yield* GitHubRunners;
+            return yield* Effect.forEach(
+              [8, 10, 11, 12, 9],
+              (jobId) =>
+                github.isJobQueued(token, { owner: "beep-effect", repo: "beep-effect", jobId }).pipe(Effect.flip),
+              { concurrency: 1 }
+            );
+            // The client would wait out the rate limit itself; the mapping is what this test reads.
+          }).pipe(GitHubRetry.none)
+        );
+        deepStrictEqual(
+          A.map(errors, (error) => [error.rateLimited, error.code, classifyFailure(error)] as const),
+          [
+            [true, O.some("TooManyRequests"), "transient"],
+            [true, O.some("TooManyRequests"), "transient"],
+            [true, O.some("TooManyRequests"), "transient"],
+            [true, O.some("TooManyRequests"), "transient"],
+            [false, O.some("Forbidden"), "deterministic"],
+          ]
+        );
+        expect(
+          A.map(
+            [
+              toGitHubApiError("jit")({ _tag: "Forbidden", message: "You have exceeded a secondary rate limit." }),
+              toGitHubApiError("jit")({ _tag: "Forbidden", message: "Resource not accessible by integration" }),
+            ],
+            classifyFailure
+          )
+        ).toStrictEqual(["transient", "deterministic"]);
+      })
   );
 
   it.effect("report a missing App parameter as GitHubAppAuthError", () =>

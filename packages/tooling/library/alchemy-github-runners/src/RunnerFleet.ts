@@ -526,6 +526,9 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                     actions: ["ssm:PutParameter", "ssm:AddTagsToResource", "ssm:GetParameter"],
                     resources: [Output.interpolate`${tokenArn}/*`, Output.interpolate`${configArn}/*`],
                   }),
+                  // Removes the token of a runner whose configuration failed: a token left behind counts as a launched
+                  // runner for the in-flight window and holds a slot under the cap.
+                  allow({ actions: ["ssm:DeleteParameter"], resources: [Output.interpolate`${tokenArn}/*`] }),
                   // Counts launched runners EC2 does not show yet: their JIT configs under the token path.
                   allow({ actions: ["ssm:GetParametersByPath"], resources: [tokenArn] }),
                   ...readAppSecrets,
