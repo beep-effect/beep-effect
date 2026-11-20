@@ -21,9 +21,16 @@ import * as Str from "effect/String";
 const IDENTITY_SOURCE_PREFIX = "foundation/modeling/identity/src/";
 const IDENTITY_CORE_SOURCE = "Id.ts";
 // The only @beep/identity sources a handler's map may embed: the identity core, the registry-free
-// root and the schema statics they load. The registry, the barrel or any other identity module in a
-// map would change every function's code hash whenever an unrelated package is registered.
-const ALLOWED_IDENTITY_SOURCES = ["Id.ts", "Root.ts", "internal/schemaStatics.ts"];
+// root, the import-free authority constant and the segment and schema statics they load. The
+// registry, the declared-term registry data, the barrel or any other identity module in a map would
+// change every function's code hash whenever an unrelated package or term is registered.
+const ALLOWED_IDENTITY_SOURCES = [
+  "Authority.ts",
+  "Id.ts",
+  "Root.ts",
+  "internal/Segment.ts",
+  "internal/schemaStatics.ts",
+];
 
 // Each source-map source under @beep/identity's src, as a path relative to that directory.
 const identitySources = (sources: ReadonlyArray<string>): ReadonlyArray<string> =>
