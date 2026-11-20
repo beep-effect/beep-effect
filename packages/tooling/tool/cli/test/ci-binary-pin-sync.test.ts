@@ -855,4 +855,101 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
       })
     );
   });
+
+  // Beep CI Binary run 44657799060: the sync ran in a separate checkout of the bot branch, where the
+  // repository's lefthook commit-msg hook (commitlint, which needs that checkout's own node_modules)
+  // failed, so git printed "Not committing merge" and the branch never took main. These hooks fail the
+  // same way, in the shared `.git/hooks` lefthook installs into, and record that they ran.
+  describe("the bot checkout under failing repository hooks", () => {
+    const HOOKS = ["commit-msg", "pre-merge-commit", "post-merge", "pre-push"] as const;
+
+    const installFailingHooks = Effect.fn("CiBinaryPinSyncTest.installFailingHooks")(function* (
+      root: string,
+      marks: string
+    ) {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* Effect.forEach(HOOKS, (hook) =>
+        Effect.gen(function* () {
+          const file = path.join(root, ".git", "hooks", hook);
+          yield* fs.makeDirectory(path.dirname(file), { recursive: true });
+          yield* fs.writeFileString(file, `#!/bin/sh\necho ran > "${marks}/${hook}"\nexit 1\n`);
+          yield* fs.chmod(file, 0o755);
+        })
+      );
+    });
+
+    const ranHooks = Effect.fn("CiBinaryPinSyncTest.ranHooks")(function* (marks: string) {
+      const fs = yield* FileSystem.FileSystem;
+      return yield* Effect.filter(HOOKS, (hook) => fs.exists(`${marks}/${hook}`));
+    });
+
+    it.effect("the sync merges main and the workflow's push lands without force; no hook runs", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repo = yield* fixture(NEW, O.some(unrelated));
+        const main = yield* gitOutput(repo.root, ["rev-parse", "main"]);
+        // The CI shape: a remote holding the bot branch, which refuses a non-fast-forward push, and a
+        // detached worktree of the branch head beside the main checkout.
+        const scratch = yield* fs.makeTempDirectoryScoped();
+        const remote = path.join(scratch, "remote.git");
+        const checkout = path.join(scratch, "pin-bump-branch");
+        const marks = path.join(scratch, "marks");
+        yield* fs.makeDirectory(marks);
+        yield* gitOutput(scratch, ["init", "-q", "--bare", remote]);
+        yield* gitOutput(remote, ["config", "receive.denyNonFastForwards", "true"]);
+        yield* gitOutput(repo.root, ["push", "-q", remote, "pin:refs/heads/ci/beep-ci-pin-bump"]);
+        yield* gitOutput(repo.root, ["worktree", "add", "-q", "--detach", checkout, repo.before]);
+        yield* installFailingHooks(repo.root, marks);
+
+        // Before the fix: the sync's own `git pull . <base>`, with the checkout's hooks, does not commit.
+        const plain = yield* runRepoCommandCapture("git", ["pull", "--no-edit", ".", "main"], checkout);
+        const mergeMessage = yield* gitOutput(checkout, ["rev-parse", "--git-path", "MERGE_MSG"]).pipe(
+          Effect.flatMap((file) => fs.readFileString(path.resolve(checkout, file)))
+        );
+        expect(plain.exitCode).not.toBe(0);
+        expect(plain.output).toContain("Not committing merge");
+        expect(yield* ranHooks(marks)).not.toStrictEqual([]);
+        yield* gitOutput(checkout, ["reset", "-q", "--hard", repo.before]);
+        yield* Effect.forEach(HOOKS, (hook) => fs.remove(`${marks}/${hook}`, { force: true }));
+
+        // The sync: a merge commit with git's own message, no hook run.
+        yield* fs.remove(repo.output, { force: true });
+        yield* runSync([
+          "--cwd",
+          checkout,
+          "--base",
+          "main",
+          "--tag",
+          NEW.tag,
+          "--sha256",
+          NEW.sha256,
+          "--releases",
+          repo.releases,
+          "--output",
+          repo.output,
+        ]);
+        const lines = A.filter(Str.split(yield* fs.readFileString(repo.output), "\n"), Str.isNonEmpty);
+        const merged = yield* head(checkout);
+        const message = yield* gitOutput(checkout, ["log", "-1", "--format=%s"]);
+        expect(A.take(lines, 3)).toStrictEqual(decided("merged", O.some(NEW)));
+        expect(yield* parents(checkout)).toStrictEqual([repo.before, main]);
+        expect(O.some(message)).toStrictEqual(A.head(Str.split(mergeMessage, "\n")));
+        expect(yield* ranHooks(marks)).toStrictEqual([]);
+
+        // The workflow's push, verbatim but for the URL: no force, no hook.
+        yield* gitOutput(checkout, [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "push",
+          "-q",
+          remote,
+          "HEAD:refs/heads/ci/beep-ci-pin-bump",
+        ]);
+        expect(yield* gitOutput(remote, ["rev-parse", "refs/heads/ci/beep-ci-pin-bump"])).toBe(merged);
+        expect(yield* ranHooks(marks)).toStrictEqual([]);
+      })
+    );
+  });
 });
