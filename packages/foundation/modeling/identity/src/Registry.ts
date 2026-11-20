@@ -16,7 +16,7 @@
  */
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { constant, dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -543,16 +543,14 @@ export class RegistryMintError extends S.TaggedError<RegistryMintError, { readon
 
 const deprecatedTerms: Readonly<Record<string, unknown>> = RegistryDeprecations;
 
-const isNamespaceIri = (value: string): boolean => A.some(R.values(RegistryVocab), (entry) => entry.iri === value);
+// Every published non-live IRI and the refusal it earns; a deprecation outranks a namespace.
+const publishedReasons: Readonly<Record<string, RegistryMintError["reason"]>> = {
+  ...R.fromEntries(A.map(R.values(RegistryVocab), (entry) => [entry.iri, "NamespaceIri"] as const)),
+  ...R.map(deprecatedTerms, constant<RegistryMintError["reason"]>("DeprecatedTerm")),
+};
 
 const publishedAs = (minted: string): O.Option<RegistryMintError["reason"]> =>
-  O.isSome(generated.contract(minted))
-    ? O.some("LiveTerm")
-    : R.has(deprecatedTerms, minted)
-      ? O.some("DeprecatedTerm")
-      : isNamespaceIri(minted)
-        ? O.some("NamespaceIri")
-        : O.none();
+  O.isSome(generated.contract(minted)) ? O.some("LiveTerm") : R.get(publishedReasons, minted);
 
 // A minted instance IRI never equals an IRI the registry publishes.
 const refusePublished = (minted: string): string => {
