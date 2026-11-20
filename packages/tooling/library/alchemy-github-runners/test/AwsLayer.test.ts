@@ -101,7 +101,13 @@ const s3Route = (request: RecordedRequest): O.Option<FakeAnswer> =>
       ? xml(
           "<Tagging><TagSet><Tag><Key>name</Key><Value>actions-runner-linux-x64-2.329.0.tar.gz</Value></Tag></TagSet></Tagging>"
         )
-      : { body: "" }
+      : request.method === "POST" && request.url.searchParams.has("uploads")
+        ? xml("<InitiateMultipartUploadResult><UploadId>upload-1</UploadId></InitiateMultipartUploadResult>")
+        : request.method === "PUT"
+          ? { body: "", headers: { etag: '"etag-1"' } }
+          : request.method === "POST"
+            ? xml('<CompleteMultipartUploadResult><ETag>"etag-all"</ETag></CompleteMultipartUploadResult>')
+            : { body: "" }
   );
 
 const hosts: ReadonlyArray<readonly [(host: string) => boolean, (request: RecordedRequest) => O.Option<FakeAnswer>]> = [
@@ -262,7 +268,7 @@ describe("live AWS layers over distilled", () => {
     })
   );
 
-  it.effect("runner binaries: latest asset, cached tag, streamed mirror", () =>
+  it.effect("runner binaries: latest asset, cached tag, multipart mirror", () =>
     Effect.gen(function* () {
       const http = new FakeHttp(route);
       const { asset, cached } = yield* Effect.gen(function* () {
@@ -283,8 +289,16 @@ describe("live AWS layers over distilled", () => {
         [O.map(asset, (value) => value.name), cached],
         [O.some("actions-runner-linux-x64-2.330.0.tar.gz"), O.some("actions-runner-linux-x64-2.329.0.tar.gz")]
       );
-      const put = http.matching((request) => request.method === "PUT")[0];
-      expect(put?.headers["x-amz-tagging"]).toBe("name=actions-runner-linux-x64-2.330.0.tar.gz");
+      const s3 = http.matching((request) => request.url.hostname !== "github.com" && request.method !== "GET");
+      expect(A.map(s3, (request) => [request.method, A.fromIterable(request.url.searchParams.keys())])).toStrictEqual([
+        ["POST", ["uploads"]],
+        ["PUT", ["partNumber", "uploadId", "x-id"]],
+        ["POST", ["uploadId"]],
+      ]);
+      expect([s3[0]?.headers["x-amz-tagging"], s3[1]?.body]).toStrictEqual([
+        "name=actions-runner-linux-x64-2.330.0.tar.gz",
+        "tarball-bytes",
+      ]);
     })
   );
 });
