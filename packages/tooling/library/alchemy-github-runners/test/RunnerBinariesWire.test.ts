@@ -2,6 +2,7 @@ import { ReleaseAsset, RunnerBinaries, runnerBinariesLive } from "@beep/alchemy-
 import * as AwsCredentials from "@distilled.cloud/aws/Credentials";
 import * as AwsEndpoint from "@distilled.cloud/aws/Endpoint";
 import { describe, expect, it } from "@effect/vitest";
+import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
@@ -64,83 +65,79 @@ const joined = (parts: ReadonlyArray<Uint8Array>) => {
 };
 
 describe("RunnerBinaries.mirror on the wire (FetchHttpClient, as in the Lambda)", () => {
-  it.live(
+  it.effect(
     "uploads a multi-part asset with a fixed Content-Length on every S3 request and no chunked framing",
     () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const stub = yield* makeWireS3({ assetSize: 17 * mib + 12_345, assetContentLength: true });
-          const outcome = yield* mirrorFrom(stub.origin).pipe(Effect.result);
-          const received = yield* stub.requests;
-          const s3 = A.filter(received, isS3);
-          for (const request of s3) {
-            const frame = framing(request);
-            expect(frame, request.head).toStrictEqual({
-              ...frame,
-              rejected: false,
-              contentLength: frame.bodyBytes,
-              transferEncoding: undefined,
-              chunkedSignature: false,
-              awsChunked: false,
-            });
-          }
-          expect(outcome._tag).toBe("Success");
-          const parts = A.filter(
-            s3,
-            (request) => request.method === "PUT" && Str.includes("partNumber=")(request.target)
-          );
-          expect(A.map(parts, (part) => part.body.byteLength)).toStrictEqual([16 * mib, mib + 12_345]);
-          const uploadedDigest = yield* digest(joined(A.map(parts, (part) => part.body)));
-          const assetDigest = yield* digest(stub.asset);
-          expect(uploadedDigest).toStrictEqual(assetDigest);
-          const create = A.findFirst(
-            s3,
-            (request) => request.method === "POST" && Str.endsWith("?uploads")(request.target)
-          );
-          expect(O.map(create, (request) => header(request, "x-amz-tagging"))).toStrictEqual(
-            O.some(`name=${assetName}`)
-          );
-          const complete = A.findFirst(
-            s3,
-            (request) => request.method === "POST" && Str.includes("uploadId=")(request.target)
-          );
-          expect(
-            O.map(complete, (request) =>
-              Str.includes("<PartNumber>2</PartNumber>")(new TextDecoder().decode(request.body))
-            )
-          ).toStrictEqual(O.some(true));
-          expect(A.some(s3, (request) => request.method === "DELETE")).toBe(false);
-        })
-      ),
+      Effect.gen(function* () {
+        const stub = yield* makeWireS3({ assetSize: 17 * mib + 12_345, assetContentLength: true });
+        const outcome = yield* mirrorFrom(stub.origin).pipe(Effect.result);
+        const received = yield* stub.requests;
+        const s3 = A.filter(received, isS3);
+        for (const request of s3) {
+          const frame = framing(request);
+          expect(frame, request.head).toStrictEqual({
+            ...frame,
+            rejected: false,
+            contentLength: frame.bodyBytes,
+            transferEncoding: undefined,
+            chunkedSignature: false,
+            awsChunked: false,
+          });
+        }
+        expect(outcome._tag).toBe("Success");
+        const parts = A.filter(
+          s3,
+          (request) => request.method === "PUT" && Str.includes("partNumber=")(request.target)
+        );
+        expect(A.map(parts, (part) => part.body.byteLength)).toStrictEqual([16 * mib, mib + 12_345]);
+        const uploadedDigest = yield* digest(joined(A.map(parts, (part) => part.body)));
+        const assetDigest = yield* digest(stub.asset);
+        expect(uploadedDigest).toStrictEqual(assetDigest);
+        const create = A.findFirst(
+          s3,
+          (request) => request.method === "POST" && Str.endsWith("?uploads")(request.target)
+        );
+        deepStrictEqual(
+          O.map(create, (request) => header(request, "x-amz-tagging")),
+          O.some(`name=${assetName}`)
+        );
+        const complete = A.findFirst(
+          s3,
+          (request) => request.method === "POST" && Str.includes("uploadId=")(request.target)
+        );
+        deepStrictEqual(
+          O.map(complete, (request) =>
+            Str.includes("<PartNumber>2</PartNumber>")(new TextDecoder().decode(request.body))
+          ),
+          O.some(true)
+        );
+        expect(A.some(s3, (request) => request.method === "DELETE")).toBe(false);
+      }),
     60_000
   );
 
-  it.live(
+  it.effect(
     "aborts the multipart upload and completes nothing when the download ends short",
     () =>
-      Effect.scoped(
-        Effect.gen(function* () {
-          const stub = yield* makeWireS3({ assetSize: 17 * mib, assetContentLength: true, truncateBy: mib });
-          const error = yield* mirrorFrom(stub.origin).pipe(Effect.flip);
-          const received = yield* stub.requests;
-          const s3 = A.filter(received, isS3);
-          expect([error._tag, error.operation]).toStrictEqual(["GitHubApiError", "downloadAsset"]);
-          expect(A.map(s3, (request) => request.method)).toStrictEqual(["POST", "PUT", "DELETE"]);
-          expect(A.some(s3, (request) => request.rejected)).toBe(false);
-        })
-      ),
+      Effect.gen(function* () {
+        const stub = yield* makeWireS3({ assetSize: 17 * mib, assetContentLength: true, truncateBy: mib });
+        const error = yield* mirrorFrom(stub.origin).pipe(Effect.flip);
+        const received = yield* stub.requests;
+        const s3 = A.filter(received, isS3);
+        expect([error._tag, error.operation]).toStrictEqual(["GitHubApiError", "downloadAsset"]);
+        expect(A.map(s3, (request) => request.method)).toStrictEqual(["POST", "PUT", "DELETE"]);
+        expect(A.some(s3, (request) => request.rejected)).toBe(false);
+      }),
     60_000
   );
 
-  it.live("fails closed with a typed error and writes nothing to S3 when the asset has no Content-Length", () =>
-    Effect.scoped(
-      Effect.gen(function* () {
-        const stub = yield* makeWireS3({ assetSize: 4096, assetContentLength: false });
-        const error = yield* mirrorFrom(stub.origin).pipe(Effect.flip);
-        expect([error._tag, error.operation]).toStrictEqual(["GitHubApiError", "downloadAsset"]);
-        const received = yield* stub.requests;
-        expect(A.filter(received, isS3)).toStrictEqual([]);
-      })
-    )
+  it.effect("fails closed with a typed error and writes nothing to S3 when the asset has no Content-Length", () =>
+    Effect.gen(function* () {
+      const stub = yield* makeWireS3({ assetSize: 4096, assetContentLength: false });
+      const error = yield* mirrorFrom(stub.origin).pipe(Effect.flip);
+      expect([error._tag, error.operation]).toStrictEqual(["GitHubApiError", "downloadAsset"]);
+      const received = yield* stub.requests;
+      expect(A.filter(received, isS3)).toStrictEqual([]);
+    })
   );
 });

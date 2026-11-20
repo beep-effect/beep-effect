@@ -417,7 +417,7 @@ const joinBytes = ({ chunks, size }: PendingBytes): Uint8Array => {
   return out;
 };
 
-/** Regroups download chunks into parts of exactly `partSize` bytes; the remainder waits for more. */
+// Regroups download chunks into parts of exactly `partSize` bytes; the remainder waits for more.
 const splitParts =
   (partSize: number) =>
   (pending: PendingBytes, chunk: Uint8Array): readonly [PendingBytes, ReadonlyArray<Uint8Array>] => {

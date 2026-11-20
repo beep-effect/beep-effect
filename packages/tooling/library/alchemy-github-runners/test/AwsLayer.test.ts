@@ -95,19 +95,28 @@ const releaseAnswer: FakeAnswer = {
   headers: { "content-type": "application/json" },
 };
 
+const s3Answers: ReadonlyArray<readonly [(request: RecordedRequest) => boolean, FakeAnswer]> = [
+  [
+    (request) => request.method === "GET",
+    xml(
+      "<Tagging><TagSet><Tag><Key>name</Key><Value>actions-runner-linux-x64-2.329.0.tar.gz</Value></Tag></TagSet></Tagging>"
+    ),
+  ],
+  [
+    (request) => request.method === "POST" && request.url.searchParams.has("uploads"),
+    xml("<InitiateMultipartUploadResult><UploadId>upload-1</UploadId></InitiateMultipartUploadResult>"),
+  ],
+  [(request) => request.method === "PUT", { body: "", headers: { etag: '"etag-1"' } }],
+  [
+    (request) => request.method === "POST",
+    xml('<CompleteMultipartUploadResult><ETag>"etag-all"</ETag></CompleteMultipartUploadResult>'),
+  ],
+];
+
 const s3Route = (request: RecordedRequest): O.Option<FakeAnswer> =>
-  O.some(
-    request.method === "GET"
-      ? xml(
-          "<Tagging><TagSet><Tag><Key>name</Key><Value>actions-runner-linux-x64-2.329.0.tar.gz</Value></Tag></TagSet></Tagging>"
-        )
-      : request.method === "POST" && request.url.searchParams.has("uploads")
-        ? xml("<InitiateMultipartUploadResult><UploadId>upload-1</UploadId></InitiateMultipartUploadResult>")
-        : request.method === "PUT"
-          ? { body: "", headers: { etag: '"etag-1"' } }
-          : request.method === "POST"
-            ? xml('<CompleteMultipartUploadResult><ETag>"etag-all"</ETag></CompleteMultipartUploadResult>')
-            : { body: "" }
+  A.findFirst(s3Answers, ([matches]) => matches(request)).pipe(
+    O.map(([, answer]) => answer),
+    O.orElse(() => O.some({ body: "" }))
   );
 
 const hosts: ReadonlyArray<readonly [(host: string) => boolean, (request: RecordedRequest) => O.Option<FakeAnswer>]> = [

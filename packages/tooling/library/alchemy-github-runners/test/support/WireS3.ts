@@ -14,6 +14,7 @@ import * as NodeNet from "node:net";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
 
@@ -43,26 +44,26 @@ export interface WireS3Options {
 const latin1 = new TextDecoder("latin1");
 const utf8 = new TextEncoder();
 const crlf2 = "\r\n\r\n";
+const xmlProlog = '<?xml version="1.0" encoding="UTF-8"?>\n';
 
-/** The offset of `needle` in `text`, `-1` when absent. */
-const findText = (text: string, needle: string): number => O.getOrElse(Str.indexOf(needle)(text), () => -1);
+const notImplementedXml = `${xmlProlog}<Error><Code>NotImplemented</Code><Message>A header you provided implies functionality that is not implemented</Message><Header>Transfer-Encoding</Header><RequestId>wire-stub</RequestId></Error>`;
+const initiateXml = `${xmlProlog}<InitiateMultipartUploadResult><Bucket>binaries</Bucket><Key>actions-runner-linux.tar.gz</Key><UploadId>upload-1</UploadId></InitiateMultipartUploadResult>`;
+const completeXml = `${xmlProlog}<CompleteMultipartUploadResult><Bucket>binaries</Bucket><Key>actions-runner-linux.tar.gz</Key><ETag>"etag-complete"</ETag></CompleteMultipartUploadResult>`;
+const noRouteXml = `${xmlProlog}<Error><Code>NoSuchKey</Code><Message>no route</Message></Error>`;
 
-/** The deterministic byte at `index` of the served asset. */
-export const assetByte = (index: number): number => index % 251;
-
+/** A served asset whose byte `i` is `i % 251`, so a reassembled upload can be compared to it. */
 const makeAsset = (size: number): Uint8Array => {
   const bytes = new Uint8Array(size);
-  for (let index = 0; index < size; index++) bytes[index] = assetByte(index);
+  for (let index = 0; index < size; index++) bytes[index] = index % 251;
   return bytes;
 };
 
-const notImplementedXml =
-  '<?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>NotImplemented</Code><Message>A header you provided implies functionality that is not implemented</Message><Header>Transfer-Encoding</Header><RequestId>wire-stub</RequestId></Error>';
-
-const concat = (left: Uint8Array, right: Uint8Array): Uint8Array => {
-  const out = new Uint8Array(left.byteLength + right.byteLength);
-  out.set(left, 0);
-  out.set(right, left.byteLength);
+const joinParts = (parts: ReadonlyArray<Uint8Array>): Uint8Array => {
+  const out = new Uint8Array(A.reduce(parts, 0, (total, part) => total + part.byteLength));
+  A.reduce(parts, 0, (offset, part) => {
+    out.set(part, offset);
+    return offset + part.byteLength;
+  });
   return out;
 };
 
@@ -70,69 +71,149 @@ const response = (
   status: string,
   headers: Readonly<Record<string, string>>,
   body: Uint8Array = new Uint8Array(0)
-): Uint8Array =>
-  concat(
-    utf8.encode(
-      `HTTP/1.1 ${status}\r\n${A.join(
-        A.map(
-          R.toEntries({ ...headers, "content-length": `${body.byteLength}` }),
-          ([name, value]) => `${name}: ${value}`
-        ),
-        "\r\n"
-      )}${crlf2}`
-    ),
-    body
+): Uint8Array => {
+  const lines = A.map(
+    R.toEntries({ ...headers, "content-length": `${body.byteLength}` }),
+    ([name, value]) => `${name}: ${value}`
   );
+  return joinParts([utf8.encode(`HTTP/1.1 ${status}\r\n${A.join(lines, "\r\n")}${crlf2}`), body]);
+};
 
 const xmlResponse = (status: string, xml: string, extra: Readonly<Record<string, string>> = {}) =>
   response(status, { "content-type": "application/xml", ...extra }, utf8.encode(xml));
 
+const headerEntry = (line: string): O.Option<readonly [string, string]> =>
+  O.map(
+    Str.indexOf(":")(line),
+    (at) => [Str.toLowerCase(Str.trim(Str.slice(0, at)(line))), Str.trim(Str.slice(at + 1)(line))] as const
+  );
+
 const parseHead = (head: string) => {
   const lines = Str.split("\r\n")(head);
-  const [method = "", target = ""] = Str.split(" ")(A.headNonEmpty(lines as A.NonEmptyArray<string>));
-  const headers = R.fromEntries(
-    A.getSomes(
-      A.map(A.drop(lines, 1), (line) => {
-        const colon = Str.indexOf(":")(line);
-        return O.map(
-          colon,
-          (at) => [Str.toLowerCase(Str.trim(Str.slice(0, at)(line))), Str.trim(Str.slice(at + 1)(line))] as const
-        );
-      })
-    )
-  );
+  const [method = "", target = ""] = Str.split(" ")(lines[0] ?? "");
+  const headers = R.fromEntries(A.getSomes(A.map(A.drop(lines, 1), headerEntry)));
   return { method, target, headers };
 };
 
-/**
- * Decodes a complete chunked body from `bytes`, or `None` while it is incomplete.
- * Returns the body and how many bytes the chunked encoding consumed.
- */
-const dechunk = (bytes: Uint8Array): O.Option<{ readonly body: Uint8Array; readonly consumed: number }> => {
-  const parts: Array<Uint8Array> = [];
-  let offset = 0;
-  for (;;) {
-    const window = latin1.decode(bytes.subarray(offset, offset + 64));
-    const lineEnd = findText(window, "\r\n");
-    if (lineEnd < 0) return O.none();
-    const size = Number.parseInt(Str.split(";")(Str.slice(0, lineEnd)(window))[0] ?? "", 16);
-    offset += lineEnd + 2;
+interface FramedBody {
+  readonly body: Uint8Array;
+  /** Bytes of the connection buffer the framed body occupied. */
+  readonly consumed: number;
+}
+
+/** The size of the chunk whose size line starts at `offset`, and where its data starts. */
+const chunkHeader = (bytes: Uint8Array, offset: number) => {
+  const window = latin1.decode(bytes.subarray(offset, offset + 64));
+  return O.map(Str.indexOf("\r\n")(window), (lineEnd) => ({
+    size: Number.parseInt(Str.split(";")(Str.slice(0, lineEnd)(window))[0] ?? "", 16),
+    data: offset + lineEnd + 2,
+  }));
+};
+
+/** Where the (possibly empty) trailer section that starts at `offset` ends. */
+const trailerEnd = (bytes: Uint8Array, offset: number): O.Option<number> => {
+  const rest = latin1.decode(bytes.subarray(offset));
+  return Str.startsWith("\r\n")(rest) ? O.some(offset + 2) : O.map(Str.indexOf(crlf2)(rest), (end) => offset + end + 4);
+};
+
+/** Decodes a complete chunked body from `offset`, or `None` while it is incomplete. */
+const dechunk = (bytes: Uint8Array, offset = 0, parts: ReadonlyArray<Uint8Array> = []): O.Option<FramedBody> =>
+  O.flatMap(chunkHeader(bytes, offset), ({ size, data }) => {
     if (size === 0) {
-      const rest = latin1.decode(bytes.subarray(offset));
-      const trailerEnd = Str.startsWith("\r\n")(rest) ? 0 : findText(rest, crlf2);
-      if (trailerEnd < 0) return O.none();
-      const consumed = offset + (trailerEnd === 0 ? 2 : trailerEnd + 4);
-      const body = new Uint8Array(A.reduce(parts, 0, (total, part) => total + part.byteLength));
-      A.reduce(parts, 0, (at, part) => {
-        body.set(part, at);
-        return at + part.byteLength;
-      });
-      return O.some({ body, consumed });
+      return O.map(trailerEnd(bytes, data), (consumed) => ({ body: joinParts(parts), consumed }));
     }
-    if (bytes.byteLength < offset + size + 2) return O.none();
-    parts.push(bytes.subarray(offset, offset + size));
-    offset += size + 2;
-  }
+    const end = data + size;
+    return bytes.byteLength < end + 2 ? O.none() : dechunk(bytes, end + 2, A.append(parts, bytes.subarray(data, end)));
+  });
+
+/** A `Content-Length` body, or `None` while it is incomplete. */
+const fixedBody = (bytes: Uint8Array, headers: Readonly<Record<string, string>>): O.Option<FramedBody> => {
+  const size = O.match(R.get(headers, "content-length"), {
+    onNone: () => 0,
+    onSome: (value) => Number.parseInt(value, 10),
+  });
+  return bytes.byteLength < size ? O.none() : O.some({ body: bytes.slice(0, size), consumed: size });
+};
+
+const isChunked = (headers: Readonly<Record<string, string>>) => R.has(headers, "transfer-encoding");
+
+/** What real S3 answers with 501: a chunked body, or a PUT body of undeclared length. */
+const isRejected = (method: string, headers: Readonly<Record<string, string>>) =>
+  isChunked(headers) || (method === "PUT" && !R.has(headers, "content-length"));
+
+/** The first complete request in `pending` and the bytes after it, or `None` while it is incomplete. */
+const nextRequest = (pending: Uint8Array) =>
+  O.flatMap(Str.indexOf(crlf2)(latin1.decode(pending.subarray(0, 65_536))), (headEnd) => {
+    const head = latin1.decode(pending.subarray(0, headEnd));
+    const { method, target, headers } = parseHead(head);
+    const rest = pending.subarray(headEnd + 4);
+    return O.map(isChunked(headers) ? dechunk(rest) : fixedBody(rest, headers), ({ body, consumed }) => ({
+      request: { head, method, target, headers, body, rejected: isRejected(method, headers) } satisfies WireRequest,
+      remaining: rest.slice(consumed),
+    }));
+  });
+
+const queryOf = (target: string) => (Str.includes("?")(target) ? (Str.split("?")(target)[1] ?? "") : "");
+
+const partEtag = (query: string) =>
+  O.getOrElse(
+    O.map(
+      A.findFirst(Str.split("&")(query), (pair) => Str.startsWith("partNumber=")(pair)),
+      Str.slice("partNumber=".length)
+    ),
+    () => "object"
+  );
+
+const octetStream = "content-type: application/octet-stream\r\n";
+
+const truncatedAsset = (asset: Uint8Array, short: number) =>
+  joinParts([
+    utf8.encode(`HTTP/1.1 200 OK\r\n${octetStream}content-length: ${asset.byteLength}${crlf2}`),
+    asset.subarray(0, asset.byteLength - short),
+  ]);
+
+const chunkedAsset = (asset: Uint8Array) =>
+  joinParts([
+    utf8.encode(`HTTP/1.1 200 OK\r\n${octetStream}transfer-encoding: chunked\r\nconnection: close${crlf2}`),
+    utf8.encode(`${asset.byteLength.toString(16)}\r\n`),
+    asset,
+    utf8.encode(`\r\n0${crlf2}`),
+  ]);
+
+const assetResponse = (asset: Uint8Array, options: WireS3Options) => {
+  const short = options.truncateBy ?? 0;
+  if (short > 0) return truncatedAsset(asset, short);
+  return options.assetContentLength
+    ? response("200 OK", { "content-type": "application/octet-stream" }, asset)
+    : chunkedAsset(asset);
+};
+
+type Route = readonly [matches: (request: WireRequest, query: string) => boolean, answer: () => Uint8Array];
+
+const routes = (origin: string, asset: Uint8Array, options: WireS3Options) => {
+  const isPost = (request: WireRequest) => request.method === "POST";
+  const table = (request: WireRequest): ReadonlyArray<Route> => [
+    [() => request.rejected, () => xmlResponse("501 Not Implemented", notImplementedXml, { connection: "close" })],
+    [
+      () => request.method === "GET" && Str.startsWith("/download/")(request.target),
+      () => response("302 Found", { location: `${origin}/assets/${Str.slice("/download/".length)(request.target)}` }),
+    ],
+    [() => request.method === "GET" && Str.startsWith("/assets/")(request.target), () => assetResponse(asset, options)],
+    [
+      (_, query) => isPost(request) && Str.includes("uploads")(query) && !Str.includes("uploadId=")(query),
+      () => xmlResponse("200 OK", initiateXml),
+    ],
+    [() => request.method === "PUT", () => response("200 OK", { etag: `"etag-${partEtag(queryOf(request.target))}"` })],
+    [(_, query) => isPost(request) && Str.includes("uploadId=")(query), () => xmlResponse("200 OK", completeXml)],
+    [() => request.method === "DELETE", () => response("204 No Content", {})],
+  ];
+  return (request: WireRequest): Uint8Array => {
+    const query = queryOf(request.target);
+    return O.match(
+      A.findFirst(table(request), ([matches]) => matches(request, query)),
+      { onNone: () => xmlResponse("404 Not Found", noRouteXml), onSome: ([, answer]) => answer() }
+    );
+  };
 };
 
 /**
@@ -142,100 +223,27 @@ export const makeWireS3 = Effect.fn("WireS3.make")(function* (options: WireS3Opt
   const asset = makeAsset(options.assetSize);
   const requests: Array<WireRequest> = [];
   const sockets: Array<NodeNet.Socket> = [];
-  let origin = "";
-
-  const answer = (request: WireRequest): Uint8Array => {
-    const query = Str.includes("?")(request.target) ? (Str.split("?")(request.target)[1] ?? "") : "";
-    if (request.rejected) return xmlResponse("501 Not Implemented", notImplementedXml, { connection: "close" });
-    if (request.method === "GET" && Str.startsWith("/download/")(request.target)) {
-      return response("302 Found", { location: `${origin}/assets/${Str.slice("/download/".length)(request.target)}` });
-    }
-    if (request.method === "GET" && Str.startsWith("/assets/")(request.target)) {
-      const short = options.truncateBy ?? 0;
-      if (short > 0) {
-        return concat(
-          utf8.encode(
-            `HTTP/1.1 200 OK\r\ncontent-type: application/octet-stream\r\ncontent-length: ${asset.byteLength}\r\n\r\n`
-          ),
-          asset.subarray(0, asset.byteLength - short)
-        );
-      }
-      return options.assetContentLength
-        ? response("200 OK", { "content-type": "application/octet-stream" }, asset)
-        : concat(
-            utf8.encode(
-              "HTTP/1.1 200 OK\r\ncontent-type: application/octet-stream\r\ntransfer-encoding: chunked\r\nconnection: close\r\n\r\n"
-            ),
-            concat(concat(utf8.encode(`${asset.byteLength.toString(16)}\r\n`), asset), utf8.encode("\r\n0\r\n\r\n"))
-          );
-    }
-    if (request.method === "POST" && Str.includes("uploads")(query) && !Str.includes("uploadId=")(query)) {
-      return xmlResponse(
-        "200 OK",
-        '<?xml version="1.0" encoding="UTF-8"?>\n<InitiateMultipartUploadResult><Bucket>binaries</Bucket><Key>actions-runner-linux.tar.gz</Key><UploadId>upload-1</UploadId></InitiateMultipartUploadResult>'
-      );
-    }
-    if (request.method === "PUT") {
-      const part = O.getOrElse(
-        O.flatMap(
-          A.findFirst(Str.split("&")(query), (pair) => Str.startsWith("partNumber=")(pair)),
-          (pair) => O.some(Str.slice("partNumber=".length)(pair))
-        ),
-        () => "object"
-      );
-      return response("200 OK", { etag: `"etag-${part}"` });
-    }
-    if (request.method === "POST" && Str.includes("uploadId=")(query)) {
-      return xmlResponse(
-        "200 OK",
-        '<?xml version="1.0" encoding="UTF-8"?>\n<CompleteMultipartUploadResult><Bucket>binaries</Bucket><Key>actions-runner-linux.tar.gz</Key><ETag>"etag-complete"</ETag></CompleteMultipartUploadResult>'
-      );
-    }
-    if (request.method === "DELETE") return response("204 No Content", {});
-    return xmlResponse(
-      "404 Not Found",
-      '<?xml version="1.0" encoding="UTF-8"?>\n<Error><Code>NoSuchKey</Code><Message>no route</Message></Error>'
-    );
-  };
+  let answer: (request: WireRequest) => Uint8Array = () => xmlResponse("503 Service Unavailable", noRouteXml);
+  const closesAfter = (request: WireRequest) =>
+    request.rejected || (Str.startsWith("/assets/")(request.target) && (options.truncateBy ?? 0) > 0);
 
   const serve = (socket: NodeNet.Socket) => {
     sockets.push(socket);
     let pending: Uint8Array = new Uint8Array(0);
     const drain = () => {
-      for (;;) {
-        const headEnd = findText(latin1.decode(pending.subarray(0, 65_536)), crlf2);
-        if (headEnd < 0) return;
-        const head = latin1.decode(pending.subarray(0, headEnd));
-        const { method, target, headers } = parseHead(head);
-        const rest = pending.subarray(headEnd + 4);
-        const chunked = R.has(headers, "transfer-encoding");
-        const length = O.getOrUndefined(R.get(headers, "content-length"));
-        const rejected = chunked || (method === "PUT" && length === undefined);
-        let body: Uint8Array;
-        let consumed: number;
-        if (chunked) {
-          const decoded = dechunk(rest);
-          if (O.isNone(decoded)) return;
-          body = decoded.value.body;
-          consumed = decoded.value.consumed;
-        } else {
-          const size = length === undefined ? 0 : Number.parseInt(length, 10);
-          if (rest.byteLength < size) return;
-          body = rest.slice(0, size);
-          consumed = size;
-        }
-        pending = rest.slice(consumed);
-        const request: WireRequest = { head, method, target, headers, body, rejected };
+      for (let next = nextRequest(pending); O.isSome(next); next = nextRequest(pending)) {
+        const { request, remaining } = next.value;
+        pending = remaining;
         requests.push(request);
         socket.write(answer(request));
-        if (rejected || (Str.startsWith("/assets/")(target) && (options.truncateBy ?? 0) > 0)) {
+        if (closesAfter(request)) {
           socket.end();
           return;
         }
       }
     };
     socket.on("data", (chunk: Uint8Array) => {
-      pending = concat(pending, chunk);
+      pending = joinParts([pending, chunk]);
       drain();
     });
     socket.on("error", () => socket.destroy());
@@ -253,7 +261,8 @@ export const makeWireS3 = Effect.fn("WireS3.make")(function* (options: WireS3Opt
     server.listen(0, "127.0.0.1", () => resume(Effect.void));
   });
   const address = server.address();
-  origin = `http://127.0.0.1:${address !== null && typeof address === "object" ? address.port : 0}`;
+  const origin = `http://127.0.0.1:${P.isObject(address) ? address.port : 0}`;
+  answer = routes(origin, asset, options);
   return {
     origin,
     asset,
