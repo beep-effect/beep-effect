@@ -25,6 +25,7 @@ import {
   RegistryShard,
   RegistryTable,
   registryConflictMessage,
+  snapshotReleaseViolations,
   snapshotViolationMessage,
   snapshotViolations,
   TermSnapshot,
@@ -85,10 +86,12 @@ export const IdentityRegistryIssueKind = LiteralKit([
   "deprecation-changed",
   "term-revived",
   "binding-changed",
+  "release-regressed",
+  "binding-dangling",
 ]).pipe(
   $I.annoteSchema("IdentityRegistryIssueKind", {
     description:
-      "Identity registry finding kind: a shard that fails to decode, a conflict between shards, a regenerated snapshot that breaks the committed one, a generated artifact that differs from regeneration, or a break of the base ref's published term set (a term or namespace removed without a deprecation, a namespace prefix changed, a deprecation removed or changed, a deprecated term revived, a binding reassigned).",
+      "Identity registry finding kind: a shard that fails to decode, a conflict between shards, a regenerated snapshot that breaks the committed one, a generated artifact that differs from regeneration, or a break of the base ref's published term set (a term or namespace removed without a deprecation, a namespace prefix changed, a deprecation removed or changed, a deprecated term revived, a binding reassigned), a snapshot release wound back below its base or its own rows, or a binding whose code names no module of the checkout.",
   })
 );
 
@@ -857,18 +860,45 @@ export const driftIssues: {
     )
 );
 
-// The lint kind of each way a head snapshot breaks the base ref's published term set.
-const baseBreakKinds: { readonly [Tag in SnapshotViolation["_tag"]]: IdentityRegistryIssueKind } = {
-  TermRemoved: "term-removed-without-deprecation",
-  NamespaceDropped: "term-removed-without-deprecation",
-  NamespacePrefixChanged: "namespace-prefix-changed",
-  DeprecationRemoved: "deprecation-changed",
-  DeprecationChanged: "deprecation-changed",
-  TermRevived: "term-revived",
-  SinceRewritten: "binding-changed",
-  BindingReassigned: "binding-changed",
-  BindingAmbiguous: "binding-changed",
+// How to repair each kind of break; only a removal is repaired with `identity deprecate`.
+const REMOVAL_REMEDY =
+  "Restore the IRI, or retire it with `bun run beep identity deprecate`, the only writer of a deprecation.";
+const PREFIX_REMEDY = "Restore the namespace's prefix from the base ref.";
+const DEPRECATION_REMEDY = "Restore the deprecation row from the base ref; deprecations are append-only.";
+const REVIVED_REMEDY = "Remove the term again; a deprecated IRI is never published again.";
+const BINDING_REMEDY =
+  "Restore the binding's term and `since` from the base ref; move a renamed module with `bun run beep identity rebind`.";
+const RELEASE_REMEDY =
+  "Restore the release in term-snapshot.json to at least the base ref's release and every `since` its rows record.";
+
+// The lint kind of each way a head snapshot breaks the base ref's published term set, and its remedy.
+const baseBreaks: {
+  readonly [Tag in SnapshotViolation["_tag"]]: readonly [kind: IdentityRegistryIssueKind, remedy: string];
+} = {
+  TermRemoved: ["term-removed-without-deprecation", REMOVAL_REMEDY],
+  NamespaceDropped: ["term-removed-without-deprecation", REMOVAL_REMEDY],
+  NamespacePrefixChanged: ["namespace-prefix-changed", PREFIX_REMEDY],
+  DeprecationRemoved: ["deprecation-changed", DEPRECATION_REMEDY],
+  DeprecationChanged: ["deprecation-changed", DEPRECATION_REMEDY],
+  TermRevived: ["term-revived", REVIVED_REMEDY],
+  SinceRewritten: ["binding-changed", BINDING_REMEDY],
+  BindingReassigned: ["binding-changed", BINDING_REMEDY],
+  BindingAmbiguous: ["binding-changed", BINDING_REMEDY],
+  ReleaseRegressed: ["release-regressed", RELEASE_REMEDY],
+  ReleaseBelowSince: ["release-regressed", RELEASE_REMEDY],
 };
+
+// One registry finding for a snapshot violation, prefixed with where it was found.
+const violationIssue =
+  (subject: string, where: string) =>
+  (violation: SnapshotViolation): IdentityRegistryIssue => {
+    const [kind, remedy] = baseBreaks[violation._tag];
+    return IdentityRegistryIssue.make({
+      kind,
+      subject,
+      detail: `${where}: ${snapshotViolationMessage(violation)} ${remedy}`,
+    });
+  };
 
 /**
  * The findings of a head snapshot against the snapshot of a base ref (law L0-3).
@@ -911,13 +941,7 @@ export const baseSnapshotIssues: {
 } = dual(
   3,
   (base: TermSnapshot, head: TermSnapshot, subject: string): ReadonlyArray<IdentityRegistryIssue> =>
-    A.map(snapshotViolations(base, head), (violation) =>
-      IdentityRegistryIssue.make({
-        kind: baseBreakKinds[violation._tag],
-        subject,
-        detail: `Against the base ref: ${snapshotViolationMessage(violation)} Only \`bun run beep identity deprecate\` may remove a published term.`,
-      })
-    )
+    A.map(snapshotViolations(base, head), violationIssue(subject, "Against the base ref"))
 );
 
 /**
@@ -971,6 +995,72 @@ const readOptional = Effect.fn("IdentityRegistry.readOptional")(function* (absol
   }
   const content = yield* fs.readFileString(absolutePath).pipe(Effect.mapError(ioError(`Cannot read ${absolutePath}.`)));
   return O.some(content);
+});
+
+// The workspace package a binding code names (`@beep/<package>`) and its module path: every segment
+// but the last, which is the member (a class or `Class.field`).
+const codeParts = (code: string): O.Option<readonly [packageName: string, modulePath: string]> => {
+  const [scope = "", name = "", ...segments] = Str.split("/")(code);
+  const modulePath = A.join(A.dropRight(segments, 1), "/");
+  return scope === "@beep" && name !== "" && modulePath !== ""
+    ? O.some([`${scope}/${name}`, modulePath] as const)
+    : O.none();
+};
+
+// The files a module path may name under its package.
+const moduleCandidates = (modulePath: string): ReadonlyArray<string> => [
+  `src/${modulePath}.ts`,
+  `src/${modulePath}.tsx`,
+  `src/${modulePath}/index.ts`,
+];
+
+/**
+ * The code identities among `codes` that name no module of the checkout at `repoRoot`.
+ *
+ * **Details**
+ *
+ * A binding code is `@beep/<package>/<module path>/<member>`, whose last
+ * segment is the member (a class, or `Class.field`). It resolves when
+ * `<package>` is a workspace of the checkout and the module path names a
+ * module file of that package: `src/<module path>.ts`, `.tsx` or
+ * `src/<module path>/index.ts`. A binding that
+ * resolves nowhere would leave its class unbound at runtime, so `rebind`
+ * refuses to create one and `identity registry --check` reports one.
+ *
+ * **Example** (List the dangling codes of a checkout)
+ *
+ * ```ts
+ * import { danglingBindingCodes } from "@beep/repo-cli/commands/Identity/Registry"
+ *
+ * console.log(danglingBindingCodes("/repo", ["@beep/test-runner/Vitest/TestHang"]))
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const danglingBindingCodes = Effect.fn("IdentityRegistry.danglingBindingCodes")(function* (
+  repoRoot: string,
+  codes: ReadonlyArray<string>
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const workspaces = yield* workspaceDirectories(repoRoot).pipe(
+    Effect.mapError(ioError("Cannot list the workspaces of the checkout."))
+  );
+  const resolves = (code: string) =>
+    O.match(
+      O.flatMap(codeParts(code), ([packageName, modulePath]) =>
+        O.map(HashMap.get(workspaces, packageName), (directory) => [directory, modulePath] as const)
+      ),
+      {
+        onNone: () => Effect.succeed(false),
+        onSome: ([directory, modulePath]) =>
+          Effect.findFirst(moduleCandidates(modulePath), (candidate) =>
+            fs.exists(path.join(directory, candidate)).pipe(Effect.mapError(ioError(`Cannot stat ${candidate}.`)))
+          ).pipe(Effect.map(O.isSome)),
+      }
+    );
+  return yield* Effect.filter(codes, (code) => Effect.map(resolves(code), (found) => !found), { concurrency: 1 });
 });
 
 /**
@@ -1093,6 +1183,12 @@ export const planRegistry = Effect.fn("IdentityRegistry.plan")(function* (repoRo
 /**
  * Every registry finding of the checkout at `repoRoot`: invalid shards, conflicts, or drift.
  *
+ * **Details**
+ *
+ * The regenerated snapshot is also checked on its own: its release is never
+ * lower than a `since` its rows record, and every binding code names a
+ * module of the checkout ({@link danglingBindingCodes}).
+ *
  * **Example** (Check the registry)
  *
  * ```ts
@@ -1117,7 +1213,27 @@ export const checkRegistry = Effect.fn("IdentityRegistry.check")(function* (repo
     { concurrency: 1 }
   );
   const byPath = R.fromEntries(current);
-  return driftIssues(plan.success, (artifactPath) => O.flatten(R.get(byPath, artifactPath)));
+  const drift = driftIssues(plan.success, (artifactPath) => O.flatten(R.get(byPath, artifactPath)));
+  const planned = pipe(
+    A.findFirst(plan.success, (artifact) => artifact.path === layout.snapshot),
+    O.flatMap((artifact) => Result.getSuccess(decodeSnapshot(artifact.content)))
+  );
+  if (O.isNone(planned)) {
+    return drift;
+  }
+  const release = A.map(snapshotReleaseViolations(planned.value), violationIssue(layout.snapshot, "In the snapshot"));
+  const dangling = yield* danglingBindingCodes(
+    repoRoot,
+    A.map(planned.value.bindings, (binding) => binding.code)
+  );
+  const danglingIssues = A.map(dangling, (code) =>
+    IdentityRegistryIssue.make({
+      kind: "binding-dangling",
+      subject: layout.shards,
+      detail: `The binding code ${code} names no module of the checkout. Restore the module, or move the binding with \`bun run beep identity rebind\`.`,
+    })
+  );
+  return A.appendAll(A.appendAll(drift, release), danglingIssues);
 });
 
 /**

@@ -889,6 +889,11 @@ const assembleWith = (registry: Registry.RegistryView) =>
 /**
  * Fold schemas and triples-as-tuples into a deterministic assembled ontology over a given registry.
  *
+ * **When to use**
+ *
+ * Use with a fixture registry, such as one built with `view` from
+ * `@beep/identity/Registry` in a test. Production code calls {@link fold}.
+ *
  * **Details**
  *
  * The registry namespace `prefix` is the owned namespace and the ontology
@@ -897,11 +902,6 @@ const assembleWith = (registry: Registry.RegistryView) =>
  * An owned field must be a declared term of the namespace, or the fold fails
  * with `undeclaredProperty`. Borrowed predicates ride the `ontologyTerm`
  * channel. An unknown namespace fails with `unknownTerm`.
- *
- * **When to use**
- *
- * Use with a fixture registry, such as one built with `view` from
- * `@beep/identity/Registry` in a test. Production code calls {@link fold}.
  *
  * **Example** (Fold over a fixture registry)
  * ```ts

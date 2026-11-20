@@ -17,9 +17,13 @@ import * as Str from "effect/String";
 import snapshot from "../registry/term-snapshot.json" with { type: "json" };
 
 // Kept values (design section 5.2): IRIs that are persisted or whose segments were chosen by
-// hand are declared with the bytes their read sites mint today. Each row pairs the composer
-// expression of a read site with the registry declaration it must equal, byte for byte, so a
-// shard edit that drifts from a live read site fails here before any stored row changes.
+// hand are declared with the bytes their read sites minted before P1. Each named read site now
+// reads its IRI from `@beep/identity/Registry` (`iri`, `namespace` or `mint`), so its bytes are
+// the registry's by construction and the term-stability gate covers them. Each row here pairs
+// the registry declaration with the composer expression the site used to mint, byte for byte,
+// so a shard edit that would change bytes already stored fails here. The instance namespaces
+// whose sites still take their base from a package composer (semantic-foundation, semantica)
+// are compared against that same exported composer.
 
 const runs = { arbitrary: fcRuns(100) };
 

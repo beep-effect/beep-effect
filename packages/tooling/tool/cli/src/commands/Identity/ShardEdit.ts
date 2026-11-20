@@ -37,6 +37,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
+  danglingBindingCodes,
   decodeBaseSnapshot,
   decodeShardFile,
   IdentityRegistryGeneratorError,
@@ -70,6 +71,7 @@ export const ShardEditRefusalReason = LiteralKit([
   "registry-conflict",
   "invalid-code",
   "nothing-bound",
+  "target-module-missing",
   "invalid-curie",
   "unknown-term",
   "term-bound",
@@ -78,7 +80,7 @@ export const ShardEditRefusalReason = LiteralKit([
 ]).pipe(
   $I.annoteSchema("ShardEditRefusalReason", {
     description:
-      "Why a registry shard edit is refused: an invalid shard, a resulting registry conflict, a malformed code identity or CURIE, a rebind that moves nothing, a term that is not live or is still bound, or a replacement outside the namespace or not live.",
+      "Why a registry shard edit is refused: an invalid shard, a resulting registry conflict, a malformed code identity or CURIE, a rebind that moves nothing or onto a module the checkout does not have, a term that is not live or is still bound, or a replacement outside the namespace or not live.",
   })
 );
 
@@ -265,7 +267,9 @@ const byTerm = Order.mapInput(Order.String, (deprecation: { readonly term: strin
  * The move is checked on the whole table first, so a move onto a code that
  * is already bound is refused with the `DuplicateBinding` conflict. A
  * request that moves no binding is refused, because a module rename that
- * finds nothing to move usually names the wrong code identity. Terms,
+ * finds nothing to move usually names the wrong code identity. The command
+ * then refuses a move onto a code that names no module of the checkout
+ * (`target-module-missing`), which would leave every moved class unbound. Terms,
  * namespaces and deprecations are untouched, so the regenerated snapshot
  * publishes exactly the IRIs it published before.
  *
@@ -550,10 +554,20 @@ const reportRefusals = Effect.fn("IdentityShardEdit.reportRefusals")(function* (
   return yield* failWithReportedExit(`identity ${label}: refused.`);
 });
 
-// Plan the edit, write the shards it changes and regenerate the registry artifacts.
+// Refusals an edit earns from the checkout itself, after its plan succeeded.
+type CheckoutRefusals = (
+  repoRoot: string,
+  planned: ReadonlyArray<RegistrySourceFile>
+) => Effect.Effect<ReadonlyArray<ShardEditRefusal>, IdentityRegistryGeneratorError, FileSystem.FileSystem | Path.Path>;
+
+const noCheckoutRefusals: CheckoutRefusals = () => Effect.succeed(A.empty());
+
+// Plan the edit, check it against the checkout, write the shards it changes and regenerate the
+// registry artifacts.
 const runShardEdit = Effect.fn("IdentityShardEdit.run")(function* (
   label: string,
-  plan: (input: ShardEditInput) => ShardEditResult
+  plan: (input: ShardEditInput) => ShardEditResult,
+  checkout: CheckoutRefusals = noCheckoutRefusals
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -566,6 +580,10 @@ const runShardEdit = Effect.fn("IdentityShardEdit.run")(function* (
   const planned = plan(input.success);
   if (Result.isFailure(planned)) {
     return yield* reportRefusals(label, planned.failure);
+  }
+  const refused = yield* checkout(repoRoot, planned.success);
+  if (A.isReadonlyArrayNonEmpty(refused)) {
+    return yield* reportRefusals(label, refused);
   }
   for (const shard of planned.success) {
     yield* fs
@@ -587,6 +605,31 @@ const runShardEdit = Effect.fn("IdentityShardEdit.run")(function* (
 
 const decodeCode = S.decodeUnknownResult(CodeId);
 
+// A rebind onto a module the checkout does not have would leave every moved class unbound, so each
+// moved code must name a module file of its package.
+const rebindTargetRefusals = (request: RebindRequest): CheckoutRefusals =>
+  Effect.fnUntraced(function* (repoRoot: string, planned: ReadonlyArray<RegistrySourceFile>) {
+    const moved = pipe(
+      planned,
+      A.flatMap((file) =>
+        O.match(Result.getSuccess(decodeShardFile(file)), {
+          onNone: A.empty<RegistryShard["bindings"][number]>,
+          onSome: (shard) => shard.bindings,
+        })
+      ),
+      A.map((binding) => binding.code),
+      A.filter((code) => code === request.to || Str.startsWith(`${request.to}/`)(code))
+    );
+    const dangling = yield* danglingBindingCodes(repoRoot, moved);
+    return A.map(dangling, (code) =>
+      refusal(
+        "target-module-missing",
+        code,
+        `${code} names no module of the checkout; create or rename the module under its package's src first, then rebind.`
+      )
+    );
+  });
+
 const runRebind = Effect.fn("IdentityShardEdit.runRebind")(function* (options: {
   readonly from: string;
   readonly to: string;
@@ -606,7 +649,7 @@ const runRebind = Effect.fn("IdentityShardEdit.runRebind")(function* (options: {
     );
   }
   const request = RebindRequest.make({ from: from.success, to: to.success });
-  return yield* runShardEdit("rebind", planRebind(request));
+  return yield* runShardEdit("rebind", planRebind(request), rebindTargetRefusals(request));
 });
 
 /**
@@ -636,7 +679,7 @@ export const identityRebindCommand = Command.make(
   runRebind
 ).pipe(
   Command.withDescription(
-    "Move the registry bindings of a code identity, and of every code under it, to a new code identity; no published IRI changes"
+    "Move the registry bindings of a code identity, and of every code under it, to a new code identity that names a module of the checkout; no published IRI changes"
   )
 );
 

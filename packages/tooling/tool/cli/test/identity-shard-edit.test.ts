@@ -44,8 +44,9 @@ const fabio = (
   deprecations: [],
 });
 
-const decodeShardText = (file: RegistrySourceFile): RegistryShard =>
-  Result.getOrThrow(S.decodeResult(S.fromJsonString(RegistryShard))(file.content));
+const decodeShardJson = S.decodeResult(S.fromJsonString(RegistryShard));
+
+const decodeShardText = (file: RegistrySourceFile): RegistryShard => Result.getOrThrow(decodeShardJson(file.content));
 
 const tableOf = (files: ReadonlyArray<RegistrySourceFile>): RegistryTable =>
   Result.getOrThrow(RegistryTable.fromShards(A.map(files, decodeShardText)));

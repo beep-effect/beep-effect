@@ -564,6 +564,8 @@ const canonicalRows = <Row>(rows: Iterable<Row>, key: (row: Row) => string): Rea
  * - `BindingAmbiguous`: one term is bound by more than one code identity.
  * - `NamespaceDropped`: a namespace is gone and its IRI has no deprecation.
  * - `NamespacePrefixChanged`: a namespace IRI is published under a new prefix.
+ * - `ReleaseRegressed`: the release is lower than the previous snapshot's release.
+ * - `ReleaseBelowSince`: the release is lower than a `since` the snapshot itself records.
  *
  * **Example** (Match a violation)
  *
@@ -589,6 +591,8 @@ export const SnapshotViolation = S.TaggedUnion({
   BindingAmbiguous: { term: TermIri, codes: S.Array(CodeId) },
   NamespaceDropped: { prefix: SafePnPrefix, iri: IRI },
   NamespacePrefixChanged: { iri: IRI, from: SafePnPrefix, to: SafePnPrefix },
+  ReleaseRegressed: { from: ReleaseVersion, to: ReleaseVersion },
+  ReleaseBelowSince: { release: ReleaseVersion, since: ReleaseVersion },
 }).pipe($I.annoteSchema("SnapshotViolation", { description: "A break of the published term set (L0-3)." }));
 
 /**
@@ -624,6 +628,9 @@ export const snapshotViolationMessage: (violation: SnapshotViolation) => string 
   BindingAmbiguous: ({ term, codes }) => `${term} is bound by more than one code identity (${A.join(codes, ", ")}).`,
   NamespaceDropped: ({ prefix, iri }) => `Namespace "${prefix}" (${iri}) is removed without a deprecation of its IRI.`,
   NamespacePrefixChanged: ({ iri, from, to }) => `Namespace ${iri} changes its prefix from "${from}" to "${to}".`,
+  ReleaseRegressed: ({ from, to }) => `The snapshot release goes back from ${from} to ${to}.`,
+  ReleaseBelowSince: ({ release, since }) =>
+    `The snapshot release ${release} is lower than the since ${since} its own rows record.`,
 });
 
 const Violation = SnapshotViolation.cases;
@@ -731,6 +738,77 @@ const namespaceViolations = (previous: TermSnapshot, next: TermSnapshot): Readon
   );
 };
 
+// A release as its numeric major, minor and patch, ordered component by component.
+const releaseNumbers = (release: ReleaseVersion): readonly [number, number, number] => {
+  const [major = "0", minor = "0", patch = "0"] = Str.split(".")(release);
+  return [Number(major), Number(minor), Number(patch)];
+};
+
+const releaseOrder: Order.Order<ReleaseVersion> = Order.mapInput(
+  Order.Tuple([Order.Number, Order.Number, Order.Number]),
+  releaseNumbers
+);
+const releaseIsLower = Order.isLessThan(releaseOrder);
+
+const releaseViolations = (previous: TermSnapshot, next: TermSnapshot): ReadonlyArray<SnapshotViolation> =>
+  releaseIsLower(next.release, previous.release)
+    ? [Violation.ReleaseRegressed.make({ from: previous.release, to: next.release })]
+    : [];
+
+/**
+ * The release rows of one snapshot that its own `since` values contradict (law L0-3).
+ *
+ * **Details**
+ *
+ * A binding or a deprecation records the release that published it, so the
+ * snapshot release is never lower than the largest of those `since` values.
+ * A release wound back by hand fails here even where the regenerated
+ * snapshot keeps it, because nothing else changed.
+ *
+ * **Example** (Refuse a release below its own rows)
+ *
+ * ```ts import.meta.vitest name="Refuse a release below its own rows"
+ * import * as A from "effect/Array"
+ * import * as O from "effect/Option"
+ * import * as Result from "effect/Result"
+ * import { Deprecation, ReleaseVersion, snapshotReleaseViolations, TermIri, TermSnapshot } from "@beep/identity/Term"
+ *
+ * const snapshot = Result.getOrThrow(
+ *   TermSnapshot.fromRows({
+ *     release: ReleaseVersion.make("0.1.0"),
+ *     namespaces: [],
+ *     terms: [],
+ *     bindings: [],
+ *     deprecations: [
+ *       Deprecation.make({
+ *         term: TermIri.make("http://www.w3.org/ns/prov#Old"),
+ *         since: ReleaseVersion.make("2.0.0"),
+ *         replacement: O.none()
+ *       })
+ *     ]
+ *   })
+ * )
+ * A.map(snapshotReleaseViolations(snapshot), (violation) => violation._tag) // => ["ReleaseBelowSince"]
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const snapshotReleaseViolations = (snapshot: TermSnapshot): ReadonlyArray<SnapshotViolation> =>
+  pipe(
+    A.appendAll(
+      A.map(snapshot.bindings, (binding) => binding.since),
+      A.map(snapshot.deprecations, (deprecation) => deprecation.since)
+    ),
+    A.filter((since) => releaseIsLower(snapshot.release, since)),
+    A.sort(releaseOrder),
+    A.last,
+    O.match({
+      onNone: A.empty<SnapshotViolation>,
+      onSome: (since) => [Violation.ReleaseBelowSince.make({ release: snapshot.release, since })],
+    })
+  );
+
 /**
  * Every way `next` breaks the published term set of `previous` (law L0-3).
  *
@@ -742,7 +820,8 @@ const namespaceViolations = (previous: TermSnapshot, next: TermSnapshot): Readon
  *
  * **Details**
  *
- * The result is ordered by kind (terms, deprecations, bindings, namespaces)
+ * The result is ordered by kind (terms, deprecations, bindings, namespaces,
+ * release)
  * and, within a kind, by the ascending row order of the snapshots, so equal
  * inputs give equal arrays.
  *
@@ -757,7 +836,7 @@ const namespaceViolations = (previous: TermSnapshot, next: TermSnapshot): Readon
  * const previous = Result.getOrThrow(
  *   TermSnapshot.fromRows({ release: ReleaseVersion.make("1.0.0"), namespaces: [], terms: [activity], bindings: [], deprecations: [] })
  * )
- * A.map(snapshotViolations(previous, TermSnapshot.empty), (violation) => violation._tag) // => ["TermRemoved"]
+ * A.map(snapshotViolations(previous, TermSnapshot.empty), (violation) => violation._tag) // => ["TermRemoved", "ReleaseRegressed"]
  * snapshotViolations(TermSnapshot.empty, previous).length // => 0
  * ```
  *
@@ -775,6 +854,7 @@ export const snapshotViolations: {
       deprecationViolations(previous, next),
       bindingViolations(previous, next),
       namespaceViolations(previous, next),
+      releaseViolations(previous, next),
     ])
 );
 

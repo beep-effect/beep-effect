@@ -905,6 +905,8 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
   describe("identity-registry lint against a base ref", { concurrent: false }, () => {
     const layout = RegistryLayout.of("packages/identity");
     const fabioPath = `${layout.shards}/fabio.json`;
+    const WIDGET_OLD_MODULE = "packages/widget/src/Old.ts";
+    const WIDGET_NEW_MODULE = "packages/widget/src/New.ts";
     const fabioShard = (terms: ReadonlyArray<string>, bindings: ReadonlyArray<unknown> = []) =>
       renderRegistryJson({
         namespace: { prefix: "fabio", iri: "http://purl.org/spar/fabio/" },
@@ -920,6 +922,7 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       const fs = yield* FileSystem.FileSystem;
       const git = yield* Git;
       yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget"] });
+      yield* fs.writeFileString(WIDGET_OLD_MODULE, "export const report = 1;\n");
       yield* fs.makeDirectory(layout.shards, { recursive: true });
       yield* fs.writeFileString(fabioPath, shard);
       yield* runIdentityCommand(["registry", "--write"]);
@@ -947,7 +950,7 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             expectReportedExit(removed);
             const removedLines = yield* TestConsole.errorLines;
             expect(removedLines).toContain(
-              `${layout.snapshot} [term-removed-without-deprecation] Against the base ref: http://purl.org/spar/fabio/TechnicalReport is removed without a deprecation. Only \`bun run beep identity deprecate\` may remove a published term.`
+              `${layout.snapshot} [term-removed-without-deprecation] Against the base ref: http://purl.org/spar/fabio/TechnicalReport is removed without a deprecation. Restore the IRI, or retire it with \`bun run beep identity deprecate\`, the only writer of a deprecation.`
             );
 
             yield* fs.writeFileString(fabioPath, fabioShard(["Report", "TechnicalReport"]));
@@ -978,6 +981,22 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
 
             const missing = yield* Effect.exit(runIdentityCommand(["rebind", "@beep/widget/Gone", "@beep/widget/New"]));
             expectReportedExit(missing);
+            // The module rename comes first: a rebind onto a module the checkout lacks is refused.
+            const dangling = yield* Effect.exit(runIdentityCommand(["rebind", "@beep/widget/Old", "@beep/widget/New"]));
+            expectReportedExit(dangling);
+            const refusedLines = yield* TestConsole.errorLines;
+            expect(refusedLines).toContainEqual(
+              expect.stringContaining("@beep/widget/New/Report [target-module-missing]")
+            );
+            const unmoved = yield* fs.readFileString(fabioPath);
+            expect(unmoved).toContain('"code": "@beep/widget/Old/Report"');
+            yield* fs.rename(WIDGET_OLD_MODULE, WIDGET_NEW_MODULE);
+            const stale = yield* Effect.exit(runLintCommand(["identity-registry", "--base", base]));
+            expectReportedExit(stale);
+            const staleLines = yield* TestConsole.errorLines;
+            expect(staleLines).toContainEqual(
+              expect.stringContaining("[binding-dangling] The binding code @beep/widget/Old/Report names no module")
+            );
             yield* runIdentityCommand(["rebind", "@beep/widget/Old", "@beep/widget/New"]);
             const rebound = yield* fs.readFileString(fabioPath);
             expect(rebound).toContain('"code": "@beep/widget/New/Report"');

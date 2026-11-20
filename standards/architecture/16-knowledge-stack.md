@@ -437,15 +437,18 @@ Identity has two regimes joined by minting.
 - **Kept or re-minted.** P1 sorted every IRI that existed before it into one
   of two cases. A kept value keeps its bytes: it is declared as a term with
   exactly today's IRI (the internal namespaces such as `qa:`, `skill-contract:`
-  and `practice-kg:`), and `identity/test/KeptValues.test.ts` pins each kept
-  read site to its declared term byte for byte. A re-minted value is a
-  path-derived IRI that was re-published from the registry, not frozen beside
-  it (the `research-library:` and `vitest:` namespaces): when the old IRI left
-  the process, written to a committed or exported artifact, its deprecation
-  row names the replacement; when it never left the process it gets no row.
-  The exception: the `$I` composers still derive an IRI from their path, and
-  the kept read sites still read it. Removing the composer IRI surface changes
-  `Id.ts`, which every CI runner handler bundle loads, so it waits for a
+  and `practice-kg:`). Each kept read site reads its IRI from
+  `@beep/identity/Registry` (`iri`, `namespace` or `mint`), so its bytes are
+  the declared term's by construction, and `identity/test/KeptValues.test.ts`
+  proves each declaration equals the bytes the site minted before P1. A
+  re-minted value is a path-derived IRI that was re-published from the
+  registry, not frozen beside it (the `research-library:` and `vitest:`
+  namespaces): when the old IRI left the process, written to a committed or
+  exported artifact, its deprecation row names the replacement; when it never
+  left the process it gets no row. The exception: the `$I` composers still
+  derive an IRI from their path for code identities, which are not published
+  terms. Removing the composer IRI surface changes `Id.ts`, which every CI
+  runner handler bundle loads, so it waits for a
   decision that accepts one handler redeploy (decision
   `2026-11-20-p1-composer-stays-registry-free` in the goal packet). Until then
   `L0-3` proves that no bound code's module-derived IRI is published in place

@@ -3,7 +3,17 @@ import { RegistryDeprecations } from "@beep/identity/internal/generated/Registry
 import { SafePnLocal } from "@beep/identity/PnLocal";
 import { $I as $BeepId } from "@beep/identity/packages";
 import * as Registry from "@beep/identity/Registry";
-import { CodeId, RegistryShard, RegistryTable, snapshotViolations, TermIri, TermSnapshot } from "@beep/identity/Term";
+import {
+  CodeId,
+  RegistryShard,
+  RegistryTable,
+  ReleaseVersion,
+  SnapshotViolation,
+  snapshotReleaseViolations,
+  snapshotViolations,
+  TermIri,
+  TermSnapshot,
+} from "@beep/identity/Term";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertNone, assertSome } from "@effect/vitest/utils";
@@ -76,6 +86,11 @@ const moduleIriOf = (code: string): string => {
 
 const published = HashSet.fromIterable<string>(committed.terms);
 
+const releaseNumbers = (release: string): readonly [number, number, number] => {
+  const [major = 0, minor = 0, patch = 0] = A.map(Str.split(".")(release), Number);
+  return [major, minor, patch];
+};
+
 // A module path segment a code identity and the composer both accept.
 const ModuleSegment = S.String.check(S.isPattern(/^[A-Za-z][A-Za-z0-9_-]{0,11}$/));
 
@@ -111,6 +126,34 @@ describe("term stability", () => {
       )
     );
     expect(A.map(revived, (violation) => violation._tag)).toStrictEqual(["TermRevived", "DeprecationRemoved"]);
+  });
+
+  it.prop(
+    "L0-3 a snapshot release never goes back below its base or its own since values",
+    [ReleaseVersion],
+    ([release]) => {
+      const wound = TermSnapshot.make({ ...committed, release });
+      const lower = Order.isLessThan(Order.Tuple([Order.Number, Order.Number, Order.Number]))(
+        releaseNumbers(release),
+        releaseNumbers(committed.release)
+      );
+      const tags = A.map(snapshotViolations(committed, wound), (violation) => violation._tag);
+      expect(tags).toStrictEqual(lower ? ["ReleaseRegressed"] : []);
+      // The committed rows record since 2.0.0, so a release below it contradicts the rows themselves.
+      expect(A.map(snapshotReleaseViolations(wound), (violation) => violation._tag)).toStrictEqual(
+        lower ? ["ReleaseBelowSince"] : []
+      );
+    },
+    { arbitrary: fcRuns(50) }
+  );
+
+  it("L0-3 the committed snapshot's release covers every since it records", () => {
+    expect(snapshotReleaseViolations(committed)).toStrictEqual([]);
+    expect(
+      snapshotViolations(committed, TermSnapshot.make({ ...committed, release: ReleaseVersion.make("0.1.0") }))
+    ).toStrictEqual([
+      SnapshotViolation.cases.ReleaseRegressed.make({ from: committed.release, to: ReleaseVersion.make("0.1.0") }),
+    ]);
   });
 
   it.prop(

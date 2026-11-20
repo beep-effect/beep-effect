@@ -118,10 +118,12 @@ const IdentityRegistryViolationKind = LiteralKit([
   "deprecation-changed",
   "term-revived",
   "binding-changed",
+  "release-regressed",
+  "binding-dangling",
 ]).pipe(
   $I.annoteSchema("IdentityRegistryViolationKind", {
     description:
-      "Closed identity-registry violation kind: registry completeness, orphaned registrations, non-leaf registry exports, local root composers, registry-free root uses outside a package leaf, leaf slug drift, registry imports in a leaf package, generated-labs-segment drift, the declared-term registry (invalid shards, shard conflicts, snapshot breaks, generated-artifact drift), and breaks of the base ref's published term set (terms removed without a deprecation, namespace prefixes changed, deprecations changed, deprecated terms revived, bindings changed).",
+      "Closed identity-registry violation kind: registry completeness, orphaned registrations, non-leaf registry exports, local root composers, registry-free root uses outside a package leaf, leaf slug drift, registry imports in a leaf package, generated-labs-segment drift, the declared-term registry (invalid shards, shard conflicts, snapshot breaks, generated-artifact drift, binding codes that name no module), and breaks of the base ref's published term set (terms removed without a deprecation, namespace prefixes changed, deprecations changed, deprecated terms revived, bindings changed, a snapshot release wound back).",
   })
 );
 
@@ -597,9 +599,10 @@ const collectLocalRootViolations = Effect.fn("IdentityRegistry.collectLocalRootV
 
 const DEFAULT_BASE_REF = "origin/main";
 
-// The base ref's term snapshot: `--base <ref>`, or the merge base of HEAD with origin/main. A
-// checkout with no resolvable default base (no git, no origin/main, disjoint history) and a base
-// without a snapshot both compare against the empty snapshot, where every term is an addition.
+// The base ref's term snapshot: `--base <ref>`, or the merge base of HEAD with origin/main. Only the
+// documented absences fall back to the empty snapshot, where every term is an addition, and each
+// says so on the log: no default base (not a git work tree, no origin/main ref, disjoint history)
+// and a base without a snapshot. Every other git failure fails the lint.
 const readBaseSnapshot = Effect.fn("IdentityRegistry.readBaseSnapshot")(function* (
   repoRoot: string,
   snapshotPath: string,
@@ -607,7 +610,13 @@ const readBaseSnapshot = Effect.fn("IdentityRegistry.readBaseSnapshot")(function
 ) {
   const git = yield* Git;
   const ref = yield* O.match(base, {
-    onNone: () => git.mergeBaseOption(repoRoot, "HEAD", DEFAULT_BASE_REF).pipe(Effect.orElseSucceed(O.none<string>)),
+    onNone: () =>
+      git.mergeBaseOption(repoRoot, "HEAD", DEFAULT_BASE_REF).pipe(
+        Effect.catchTags({
+          NotARepositoryError: () => Effect.succeedNone,
+          UnknownRefError: () => Effect.succeedNone,
+        })
+      ),
     onSome: Effect.succeedSome,
   });
   if (O.isNone(ref)) {
@@ -617,6 +626,11 @@ const readBaseSnapshot = Effect.fn("IdentityRegistry.readBaseSnapshot")(function
     return decodeBaseSnapshot(snapshotPath, O.none());
   }
   const text = yield* git.show(repoRoot, ref.value, snapshotPath);
+  if (O.isNone(text)) {
+    yield* Console.log(
+      `[lint:identity-registry] the base ${ref.value} has no ${snapshotPath}; the term-stability base is the empty snapshot.`
+    );
+  }
   return decodeBaseSnapshot(snapshotPath, text);
 });
 

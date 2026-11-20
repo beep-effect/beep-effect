@@ -316,7 +316,7 @@ const generated: RegistryView = /*#__PURE__*/ makeView({
  *
  * **When to use**
  *
- * Use where a caller takes a {@link RegistryView} and should read the
+ * Use when a caller takes a {@link RegistryView} and should read the
  * generated registry, such as `foldWith` in `@beep/ontology`.
  *
  * **Example** (Read a binding through the generated view)

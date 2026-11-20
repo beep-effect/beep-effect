@@ -2162,6 +2162,7 @@
     {"name":"IdentityRegistry.collectLocalRootViolations","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"IdentityRegistry.collectSourceFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"IdentityRegistry.collectTermRegistryViolations","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"IdentityRegistry.danglingBindingCodes","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"IdentityRegistry.plan","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"IdentityRegistry.present","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"IdentityRegistry.readBaseSnapshot","owner":"@beep/repo-cli","family":"tooling","conforms":true},
