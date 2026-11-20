@@ -51495,15 +51495,15 @@
     },
     "@beep/schema": {
       "path": "packages/foundation/modeling/schema",
-      "lines": 96.37,
-      "statements": 96.22,
-      "branches": 92.92,
-      "functions": 94.13,
+      "lines": 96.65,
+      "statements": 96.53,
+      "branches": 92.98,
+      "functions": 94.85,
       "uncovered": {
-        "lines": 98,
-        "statements": 107,
-        "branches": 67,
-        "functions": 53
+        "lines": 80,
+        "statements": 87,
+        "branches": 57,
+        "functions": 42
       },
       "files": {
         "packages/foundation/modeling/schema/src/Age/Age.schema.ts": {
@@ -52011,126 +52011,6 @@
           }
         },
         "packages/foundation/modeling/schema/src/Csp/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Csv/Csv.schema.ts": {
-          "lines": 97.7,
-          "statements": 96.62,
-          "branches": 94.44,
-          "functions": 96.29,
-          "uncovered": {
-            "lines": 2,
-            "statements": 3,
-            "branches": 2,
-            "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/Csv/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvCodecOptions/CsvCodecOptions.schema.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvCodecOptions/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvError/CsvError.errors.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvError/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvFormatter/CsvFormatter.formatter.ts": {
-          "lines": 85.71,
-          "statements": 86.66,
-          "branches": 100,
-          "functions": 77.77,
-          "uncovered": {
-            "lines": 6,
-            "statements": 6,
-            "branches": 0,
-            "functions": 6
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvFormatter/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvParser/CsvParser.parser.ts": {
-          "lines": 96.15,
-          "statements": 95.62,
-          "branches": 92.22,
-          "functions": 94.44,
-          "uncovered": {
-            "lines": 6,
-            "statements": 7,
-            "branches": 7,
-            "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvParser/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -53006,42 +52886,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts": {
-          "lines": 93.1,
-          "statements": 93.75,
-          "branches": 75,
-          "functions": 88.23,
-          "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 1,
-            "functions": 2
-          }
-        },
-        "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/ParserOptions/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/PatternOntology/PatternOntology.schema.ts": {
           "lines": 94.23,
           "statements": 94.82,
@@ -53198,6 +53042,18 @@
             "functions": 0
           }
         },
+        "packages/foundation/modeling/schema/src/SchemaUtils/defectDiagnostics.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/modeling/schema/src/SchemaUtils/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -53235,15 +53091,15 @@
           }
         },
         "packages/foundation/modeling/schema/src/SchemaUtils/optionalDefect.ts": {
-          "lines": 0,
-          "statements": 0,
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 0,
+          "functions": 100,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 1
+            "functions": 0
           }
         },
         "packages/foundation/modeling/schema/src/SchemaUtils/toEquivalence.ts": {
@@ -53547,6 +53403,18 @@
           }
         },
         "packages/foundation/modeling/schema/src/internal/ProtobufNumber.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/internal/SchemaId.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
