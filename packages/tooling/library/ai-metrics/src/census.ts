@@ -458,7 +458,6 @@ const makeClaudeContext = (acc: Accumulator, harness: CensusHarness) => {
     if (MutableHashSet.has(counted, assistant.messageId)) return;
     MutableHashSet.add(counted, assistant.messageId);
     if (inWindow) calls += 1;
-    O.map(assistant.usage, (usage) => calibrate(usage, inWindow));
   };
 
   const turnTool = (turn: Turn, tool: TurnToolFacts) => {
@@ -496,6 +495,8 @@ const makeClaudeContext = (acc: Accumulator, harness: CensusHarness) => {
     countCall(assistant, inWindow);
     if (inWindow) MutableHashSet.add(inWindowCalls, assistant.messageId);
     O.map(assistant.usage, (usage) => {
+      // Calibration runs on the first record of a call that carries usage, which need not be its first record.
+      if (!MutableHashMap.has(usageById, assistant.messageId)) calibrate(usage, inWindow);
       const kept = O.exists(MutableHashMap.get(usageById, assistant.messageId), (entry) => entry.inWindow) && !inWindow;
       if (!kept) MutableHashMap.set(usageById, assistant.messageId, { usage, inWindow });
       lastOutput = usage.output;

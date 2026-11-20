@@ -336,6 +336,11 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
           `{"type":"user",${at("10:00:07")},"message":{"content":{"other":1}}}`,
           // A call with no usage on any record is still one API call.
           `{"type":"assistant",${at("10:00:08")},"message":{"id":"a4","content":[]}}`,
+          // Usage that arrives on a call's second record still makes a calibration sample of the result before it.
+          `{"type":"assistant",${at("10:00:08")},"message":{"id":"b0","usage":{"input_tokens":10},"content":[{"type":"tool_use","id":"e3","name":"Bash","input":{"command":"true"}}]}}`,
+          `{"type":"user",${at("10:00:08")},"message":{"content":[{"type":"tool_result","tool_use_id":"e3","content":"${Str.repeat(3001)("y")}"}]}}`,
+          `{"type":"assistant",${at("10:00:08")},"message":{"id":"b1","content":[]}}`,
+          `{"type":"assistant",${at("10:00:08")},"message":{"id":"b1","usage":{"input_tokens":2000},"content":[]}}`,
           // Two boundary records in a row are two compactions; the summary after them is not a third.
           `{"type":"system","subtype":"compact_boundary",${at("10:00:09")}}`,
           `{"type":"system","subtype":"compact_boundary",${at("10:00:10")}}`,
@@ -368,12 +373,12 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
         );
         yield* fs.chmod(locked, 0o700);
         const sessions = O.getOrThrow(report.totals.claudeSessions);
-        expect([sessions.apiCalls, sessions.inputTokens]).toEqual([5, 16]);
+        expect([sessions.apiCalls, sessions.inputTokens]).toEqual([7, 2026]);
         expect(report.corpus.claude).toMatchObject({ compactionBoundaries: 2 });
         expect([report.turns.verificationRuns, turn(report, "run-verification").turns]).toEqual([0, 0]);
-        expect(report.turns.contextTokens).toBe(16);
-        expect(row(report, "search-read").claude).toMatchObject({ results: 1, chars: 4, carriedCharTurns: 16 });
-        expect(report.calibration.samples).toBe(0);
+        expect(report.turns.contextTokens).toBe(2026);
+        expect(row(report, "search-read").claude).toMatchObject({ results: 1, chars: 4, carriedCharTurns: 24 });
+        expect(report.calibration.samples).toBe(1);
         expect(report.corpus.claude).toMatchObject({ unreadableFiles: 2 });
         expect(row(report, "unmatched-result").claude).toMatchObject({ results: 0, chars: 0 });
         expect(report.corpus.claude).toMatchObject({ filesScanned: 1, contextsActive: 1 });
