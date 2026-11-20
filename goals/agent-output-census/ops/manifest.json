@@ -4,13 +4,13 @@
     "id": "agent-output-census",
     "packetId": "goal-packet/v1:8da5f1c0f77d0081681a9e5ed6069de09ac7454252c5ef87fcb3f0591df7db38",
     "title": "Agent Output Census",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-18",
-    "updated": "2026-11-18",
+    "updated": "2026-11-20",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/agent-output-census",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Make the transcript census a repeatable command so every other goal is judged with the instrument that set the baseline",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3432,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -78,12 +84,12 @@
     {
       "id": "P5",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -97,5 +103,10 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3432
+  },
+  "retentionReason": "The sibling goals gate-run-history, gate-report-rollout and ci-gate-reports cite this packet: its decisions define the census rules and the reproduction record explains how the baseline differs from the 2026-11-18 audit."
 }
