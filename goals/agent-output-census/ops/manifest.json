@@ -34,7 +34,7 @@
     "goals/agent-output-census/GOAL.md",
     "goals/agent-output-census/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -53,37 +53,37 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Schema",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Census service",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Command",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Reproduce",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P5",
       "name": "Yeet: PR to mergeable",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P6",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [

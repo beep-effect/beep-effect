@@ -189,6 +189,46 @@ Lane goals/agent-output-census-library
 
 Reverse: Move the run files and update the command's default directory.
 
+### Chars-per-token samples are API calls inside the window, 2026-11-19
+
+The reference run fitted 9,038 samples because it sampled every call in its modification-time file set, including 2,316 calls from before the window start. The census samples calls inside the window only: 6,704 on the reproduction run. It also treats a user message whose content is a plain string as a text entry that breaks a sample, as the reference did. The fitted density is 2.297 chars per token against the reference's 2.281, inside the 0.05 tolerance, and the binned medians agree (2.22 to 2.27). The sample count is therefore not compared against the reference.
+
+Lane goals/agent-output-census-library
+
+Reverse: Sample every call in each scanned file up to the window end and accept a sample count that depends on file history.
+
+### The census command takes --baseline-dir for the directory --write-baseline writes to, 2026-11-19
+
+The default stays standards/agent-output-census/runs under the repository root. The flag lets the render test write a run into a temporary directory, and lets an operator record a run outside the checkout, without changing the default. The write opens with the exclusive-create flag, so a second run for the same window end and rule version fails and leaves the first file untouched.
+
+Lane goals/agent-output-census-library
+
+Reverse: Remove the flag and always write under standards/agent-output-census/runs at the repository root.
+
+### Compaction boundaries count context resets inside the window, 2026-11-19
+
+The audit's figure of 104 boundaries came from a count that did not survive; neither the scripts nor the summary hold it. The census counts what its carried-cost flush honours: a compact_boundary system record, or a compacted summary that does not immediately follow one, inside the window. That is 113 on the reproduction run (72 compact_boundary records plus 41 summaries that open a resumed context). The flush rule itself is the reference's: carried char-turns over all Claude tool output match within 0.01% (16.730B against 16.729B).
+
+Lane goals/agent-output-census-library
+
+Reverse: Count compact_boundary system records only and accept that a context resumed from a summary is not counted.
+
+### A file is scanned when one of its own timestamps falls inside the window, 2026-11-19
+
+This amends the selection rule in reproduction-window. The reference run counted 342 Claude files: every file whose modification time was inside the window when it ran. That set cannot be rebuilt later. The harness appends untimestamped records to old transcripts, so a file can be modified without gaining a record in the window; on 2026-11-19, 870 files had a modification time at or after the window start and 780 also started before its end. The census counts a file as scanned when one of its own record timestamps falls inside the window: 226 files on the reproduction run. Active contexts, the count the audit's tables rest on, match exactly (223: 127 sessions, 96 subagents). The modification time is still the walk's pre-filter, and a file with no timestamp in the window contributes nothing.
+
+Lane goals/agent-output-census-library
+
+Reverse: Count every file whose modification time is at or after the window start, and accept a count that grows as old files are touched.
+
+### Filter habits are read from the whole command, not its first 600 characters, 2026-11-19
+
+The reference measured filter habits on its verification capture, which stored each command cut to its first 600 characters; 2,009 of the 4,404 Yeet commands and 2,013 of the 4,162 test commands reached the cut. Re-running the reference's pipe patterns over that capture reproduces the audit's shares exactly (Yeet: tail 42.3%, head 22.1%, grep 45.0%). The census reads the whole command, so the tail, head and grep shares rise: Yeet 56.2%, 32.8% and 54.9%. Run counts per kind and the unfiltered share, which the reference already computed on the whole command, match (Yeet 4,404 runs, 3.7% unfiltered against 4%). The census numbers are the corrected baseline; the audit's pipe shares undercount.
+
+Lane goals/agent-output-census-library
+
+Reverse: Truncate each verification command to 600 characters before matching the tail, head and grep pipes.
+
 ### The census lives in four flat modules of @beep/repo-ai-metrics and runs as beep ai-metrics census, 2026-11-19
 
 The library's sources are flat kebab-case modules, so the census follows: census-report.ts (the agent-output-census/v1 report and baseline file schemas), census-rules.ts (the closed class domains with each member's matching rule and the rule version), census-projection.ts (the in-memory projection of one record into calls, results and usage, internal), and census.ts (the Census Context.Service contract and its layer). The command is census under the existing ai-metrics group, with --since and --until for the window, --claude-root, --codex-root and --repository for selection, --json for the encoded report, and --write-baseline to add the run's file.
@@ -196,6 +236,14 @@ The library's sources are flat kebab-case modules, so the census follows: census
 Lane goals/agent-output-census-library
 
 Reverse: Move the census into its own tooling library and re-point the command.
+
+### The named repeat offenders are measured by written rules, and the JSON envelope rule names the audit's three envelopes, 2026-11-19
+
+The audit's offender figures came from ad-hoc queries that did not survive. The census writes each rule into census-rules. On the reproduction run: TS6305 lines (an error TS6305 line in check, lint or quality output) number 819 against the audit's 701, a 4.5% share of those kinds against 5.1%; test verdict lines (a Test Files or Tests line reporting passes) number 3,782 against 3,206; gate-table rows repeated in the same context are 3.3% of Yeet output against about 6%; global-flag help sections are 2.0% against at least 2%. Counting variants over the reference capture (any TS6305 mention, per-output dedupe, untrimmed lines, Claude only, Tests lines only, any later poll, repeats by pull request number) give 833, 842, 3,774, 3,567 and 2,564, or 8.4% to 9.1%, so none reproduce the prose figures. The JSON envelope rule is narrowed to the three envelopes the audit names: a bracketed tag before a JSON object, and the monitor submission envelope that opens with schemaVersion. That gives 7.3% of Yeet output against about 8%. The wider pattern also caught unrelated JSON lines and gave 13.7%.
+
+Lane goals/agent-output-census-library
+
+Reverse: Drop the offender rows from the report and cite the audit's prose figures.
 
 ### The census ships as one pull request, not a library PR followed by a command PR, 2026-11-19
 
