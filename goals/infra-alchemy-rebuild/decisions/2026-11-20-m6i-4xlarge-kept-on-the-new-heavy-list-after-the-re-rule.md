@@ -5,6 +5,9 @@ lane: "docs/infra-alchemy-p5-m6i-and-iam-reapply"
 reversal: "a Config.ts PR removing m6i.4xlarge from the new heavy list, plus an env-only dispatch"
 ---
 
+**Superseded** by `2026-11-20-drop-m6i-4xlarge-from-the-new-heavy-pool`: the re-rule trigger below was met, and
+`m6i.4xlarge` left the new heavy pool.
+
 The CI goals driver re-ruled `m6i.4xlarge` on 2026-11-20 and kept it on the new fleet's heavy list. The heavy pool keeps
 its six types; there is no Config.ts change and no extra dispatch.
 
