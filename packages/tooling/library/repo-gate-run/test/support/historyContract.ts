@@ -379,6 +379,8 @@ export const historyContract = (backend: {
           });
           assertSome(red.baseline, NO_MAIN_BASELINE);
           assertNone(green.baseline);
+          const empty = yield* answerFor({ runId: "r1", at: 1000, items: [] });
+          assert.deepStrictEqual([R.size(empty.labels), O.isNone(empty.baseline)], [0, true]);
         })
       )
     );
