@@ -61,8 +61,11 @@ runs:
     # variable (none specified, configured, inferred or passed through, strict
     # env mode). Any pull request, a fork's included, can restore a main entry,
     # so a task that reads environment values on a push (the oip-web and todox
-    # builds hash the application secrets) never enters the snapshot. Every
-    # other file is deleted, so the entry holds exactly this run's graph and
+    # builds hash the application secrets) never enters the snapshot. Turbo
+    # 2.11 stores three files per hash, and only those exact names are kept:
+    # `<hash>.tar.zst`, `<hash>-meta.json` and `<hash>-manifest.json`. Every
+    # other file is deleted, a partial write (`*.tmp`) of a kept hash or an
+    # unknown suffix included, so the entry holds exactly this run's graph and
     # cannot grow across generations; a snapshot above the cap is not saved.
     - name: Prune Turbo cache to environment-free build artifacts
       id: prune
@@ -107,7 +110,11 @@ runs:
         for file in "$cache_dir"/*; do
           name="${file##*/}"
           hash="${name%%[.-]*}"
-          if [[ -n "${keep[$hash]:-}" ]]; then
+          case "$name" in
+            "$hash.tar.zst" | "$hash-meta.json" | "$hash-manifest.json") allowed=true ;;
+            *) allowed=false ;;
+          esac
+          if [[ "$allowed" == true && -n "${keep[$hash]:-}" ]]; then
             kept=$((kept + 1))
           else
             rm -rf -- "$file"

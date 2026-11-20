@@ -2480,6 +2480,67 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
   );
 
   it.effect(
+    "prunes the Turbo build snapshot to the three exact file names of each kept hash",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      const actionText = yield* readRepoText(".github/actions/turbo-build-cache/action.yml");
+      const actionSteps = yield* decodeWorkflowSteps(yamlAt(parseWorkflowYaml(actionText), ["runs", "steps"]));
+      const run = stepRun(actionSteps, "Prune Turbo cache to environment-free build artifacts");
+      const noEnv = { specified: { env: [], passThroughEnv: [] }, configured: [], inferred: [], passthrough: [] };
+      const summary = {
+        tasks: [
+          { task: "build", envMode: "strict", hash: "aaaa1111", environmentVariables: noEnv },
+          {
+            task: "build",
+            envMode: "strict",
+            hash: "bbbb2222",
+            environmentVariables: { ...noEnv, specified: { env: ["APP_SECRET"], passThroughEnv: [] } },
+          },
+        ],
+      };
+      yield* fs.makeDirectory(path.join(tempRoot, ".turbo", "runs"), { recursive: true });
+      yield* fs.makeDirectory(path.join(tempRoot, ".turbo", "cache"), { recursive: true });
+      yield* fs.writeFileString(path.join(tempRoot, ".turbo", "runs", "summary.json"), JSON.stringify(summary));
+      const cacheFiles = [
+        "aaaa1111.tar.zst",
+        "aaaa1111-meta.json",
+        "aaaa1111-manifest.json",
+        "aaaa1111-manifest.json.tmp",
+        "aaaa1111.tar.zst.tmp",
+        "aaaa1111.unknown",
+        "bbbb2222.tar.zst",
+        "cccc3333-meta.json",
+      ];
+      yield* Effect.forEach(
+        cacheFiles,
+        (name) => fs.writeFileString(path.join(tempRoot, ".turbo", "cache", name), name),
+        {
+          discard: true,
+        }
+      );
+      const outputFile = path.join(tempRoot, "github-output");
+      const result = Bun.spawnSync(["bash", "-c", run], {
+        cwd: tempRoot,
+        env: { ...process.env, GITHUB_OUTPUT: outputFile, MAX_SNAPSHOT_MIB: "64" },
+        stderr: "pipe",
+        stdout: "pipe",
+      });
+      assert.strictEqual(result.exitCode, 0, result.stderr.toString());
+      const kept = yield* fs.readDirectory(path.join(tempRoot, ".turbo", "cache"));
+      assert.deepStrictEqual(A.sort(kept, Order.String), [
+        "aaaa1111-manifest.json",
+        "aaaa1111-meta.json",
+        "aaaa1111.tar.zst",
+      ]);
+      const output = yield* fs.readFileString(outputFile);
+      assert.include(output, "ready=true");
+      assert.include(result.stdout.toString(), "3 files kept, 5 removed");
+    })
+  );
+
+  it.effect(
     "restores the Turbo build snapshot in Heavy Check and Build and saves it only from a main push of Check",
     Effect.fnUntraced(function* () {
       const heavyText = yield* readRepoText(".github/workflows/heavy.yml");
