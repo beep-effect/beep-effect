@@ -62,6 +62,7 @@ import {
   sameEnvelopeStatus,
   sameFeatureFamily,
 } from "./internal/FallowEnvelope.schema.ts";
+import { LANE_PROOF_BASE_ENV } from "./internal/LaneProofReuse.ts";
 import { QualityScriptCommandError } from "./Quality.errors.ts";
 import type { GitInvocation } from "@beep/git/GitCommand";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -1579,6 +1580,57 @@ const resolveBaseRef = Effect.fn("FallowQuality.resolveBaseRef")(function* (
   );
 });
 
+// A blank `--base` is an absent one: the lane scripts pass `--base "$BEEP_PROOF_BASE"`, which expands to an
+// empty argument whenever the variable did not reach the process (a cold restart, a direct `bun run`).
+const blankToNone = (value: string | undefined): O.Option<string> =>
+  pipe(O.fromUndefinedOr(value), O.map(Str.trim), O.filter(Str.isNonEmpty));
+
+type FallowBaseEnv = Readonly<Record<string, string | undefined>>;
+
+/**
+ * Pick the base ref a Fallow lane diffs against, never an empty one.
+ *
+ * **Details**
+ *
+ * A non-blank `--base` wins. A blank one falls back, in order, to the yeet run's
+ * pinned proof base (`BEEP_YEET_PROOF_BASE`), the hosted pull request's base
+ * branch (`GITHUB_BASE_REF`, read as `origin/<branch>`), and `origin/main`.
+ * The pick is only a name: the caller still verifies it resolves and fails the
+ * lane before Fallow runs when it does not.
+ *
+ * **Example** (Recover from an empty base argument)
+ *
+ * ```ts
+ * import { resolveFallowBaseRefForTesting } from "@beep/repo-cli/commands/Quality/FallowQuality.command"
+ *
+ * console.log(resolveFallowBaseRefForTesting("", { GITHUB_BASE_REF: "main" }))
+ * // "origin/main"
+ * ```
+ *
+ * @param base - The `--base` flag value, possibly blank.
+ * @param env - Process environment the fallbacks are read from.
+ * @returns The base ref to verify and diff against.
+ * @category testing
+ * @since 0.0.0
+ */
+export const resolveFallowBaseRefForTesting: {
+  (env: FallowBaseEnv): (base: string) => string;
+  (base: string, env: FallowBaseEnv): string;
+} = dual(2, (base: string, env: FallowBaseEnv): string =>
+  pipe(
+    blankToNone(base),
+    O.orElse(() => blankToNone(env[LANE_PROOF_BASE_ENV])),
+    O.orElse(() => O.map(blankToNone(env.GITHUB_BASE_REF), (branch) => `origin/${branch}`)),
+    O.getOrElse(() => defaultBaseRef)
+  )
+);
+
+// Names where a fallback base came from, so a base that still fails to resolve says what was missing.
+const baseFallbackNote = (requested: string, resolved: string): string =>
+  Str.isNonEmpty(Str.trim(requested))
+    ? ""
+    : ` (--base was empty, so BEEP_PROOF_BASE did not reach the lane; fell back to ${resolved})`;
+
 // The audit diff was an unbounded capture; on the kit it gets its own instance with a 256 MiB fail-closed bound
 // (an overflow reads as a failed diff, so the fallback keeps the original result) and the patient deadline.
 const FALLOW_DIFF_GIT_OPTIONS = GitOptions.make({
@@ -1838,8 +1890,9 @@ const discardOwnBaseCache = Effect.fn("FallowQuality.discardOwnBaseCache")(funct
 
 const runFallowFeature = Effect.fn("FallowQuality.runFallowFeature")(function* (
   feature: FallowFeature,
-  options: FallowCommandOptions
+  requested: FallowCommandOptions
 ): Effect.fn.Return<void, QualityScriptCommandError, FallowQualityEnvironment> {
+  const options = { ...requested, base: resolveFallowBaseRefForTesting(requested.base, Bun.env) };
   const repoRoot = yield* findRepoRoot().pipe(QualityScriptCommandError.mapError("Failed to locate repository root."));
   const paths = yield* resolveReportPath(repoRoot, options.out, feature);
   const generatedAt = yield* DateTime.now.pipe(Effect.map(DateTime.formatIso));
@@ -1863,12 +1916,12 @@ const runFallowFeature = Effect.fn("FallowQuality.runFallowFeature")(function* (
       isDirty,
       "base-resolution-failed",
       baseResult.exitCode,
-      `unable to resolve base ref ${options.base}: ${stderrExcerpt(baseResult.stderr)}`
+      `unable to resolve base ref ${options.base}${baseFallbackNote(requested.base, options.base)}: ${stderrExcerpt(baseResult.stderr)}`
     );
     yield* writeEnvelope(paths, baseResult.output, envelope);
     if (shouldFailInvocation(envelope, options)) {
       return yield* QualityScriptCommandError.make({
-        message: `Unable to resolve Fallow base ref ${options.base}.`,
+        message: `Unable to resolve Fallow base ref ${options.base}${baseFallbackNote(requested.base, options.base)}.`,
         command: `git rev-parse --verify ${options.base}`,
         exitCode: baseResult.exitCode,
       });

@@ -2,6 +2,7 @@ import {
   fallowFeatureArgsForTesting,
   inheritedCodemodDuplicationCountForTesting,
   reportInvariantDiagnosticsForTesting,
+  resolveFallowBaseRefForTesting,
   workflowYamlValueForTesting,
 } from "@beep/repo-cli/test/Quality";
 import { expect, it } from "@effect/vitest";
@@ -181,3 +182,16 @@ it.effect("fails malformed workflow YAML with the file, the parser cause and exi
     expect(error.exitCode).toBe(1);
   })
 );
+
+// The lane scripts pass `--base "$BEEP_PROOF_BASE"`; with the variable unset that is `--base ""`, which
+// once failed fallow:audit:check as `unable to resolve base ref : unknown ref ''` (2026-11-19).
+it("never resolves an empty Fallow base ref", () => {
+  expect(resolveFallowBaseRefForTesting("", {})).toBe("origin/main");
+  expect(resolveFallowBaseRefForTesting("  ", { BEEP_YEET_PROOF_BASE: "" })).toBe("origin/main");
+  expect(resolveFallowBaseRefForTesting("", { BEEP_YEET_PROOF_BASE: "0123abc" })).toBe("0123abc");
+  expect(resolveFallowBaseRefForTesting("", { GITHUB_BASE_REF: "release" })).toBe("origin/release");
+  expect(resolveFallowBaseRefForTesting("", { BEEP_YEET_PROOF_BASE: "0123abc", GITHUB_BASE_REF: "release" })).toBe(
+    "0123abc"
+  );
+  expect(resolveFallowBaseRefForTesting("origin/next", { BEEP_YEET_PROOF_BASE: "0123abc" })).toBe("origin/next");
+});
