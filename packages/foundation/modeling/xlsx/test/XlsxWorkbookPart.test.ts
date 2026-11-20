@@ -5,6 +5,7 @@ import { Xlsx } from "@beep/xlsx/Xlsx.codec";
 import { XlsxLimits, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema";
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as ByteSize from "effect/ByteSize";
 import * as Effect from "effect/Effect";
 import * as Str from "effect/String";
 import { archive, sheet } from "./support/workbooks.ts";
@@ -163,9 +164,10 @@ describe("opening a workbook part", () => {
   it.effect("a format with no code, an id no table knows, and a styles part that styles more than formats", () =>
     Effect.gen(function* () {
       const stylesPart =
-        `<styleSheet xmlns="${main}"><numFmts count="1"><numFmt numFmtId="170"/></numFmts>` +
+        `<styleSheet xmlns="${main}"><numFmts count="2"><numFmt numFmtId="170"/><numFmt numFmtId="x" formatCode="0"/></numFmts>` +
         `<fonts count="2"><font/><font/></fonts>` +
-        `<cellXfs count="3"><xf numFmtId="0"/><xf numFmtId="170"/><xf numFmtId="250"/></cellXfs></styleSheet>`;
+        // Two styles of one id, one with no id and one whose id is no number: each is General or the one format made.
+        `<cellXfs count="6"><xf numFmtId="0"/><xf numFmtId="170"/><xf numFmtId="250"/><xf numFmtId="250"/><xf/><xf numFmtId="x"/></cellXfs></styleSheet>`;
       const bytes = yield* archive([
         ["[Content_Types].xml", "<Types/>"],
         rootRels("xl/workbook.xml"),
@@ -178,12 +180,48 @@ describe("opening a workbook part", () => {
           ),
         ],
         ["xl/styles.xml", stylesPart],
+        ["docProps/app.xml", "<Properties/>"],
+        ["xl/media/note.txt", "drawing"],
+        ["custom/thing.dat", "other"],
       ]);
       const result = yield* read(bytes);
-      expect(A.map(result.workbook.dropped, (part) => [part.path, part.kind])).toContainEqual([
-        "xl/styles.xml",
-        "styles",
+      expect(A.map(result.workbook.dropped, (part) => [part.path, part.kind])).toEqual(
+        expect.arrayContaining([
+          ["xl/styles.xml", "styles"],
+          ["docProps/app.xml", "properties"],
+          ["xl/media/note.txt", "drawing"],
+          ["custom/thing.dat", "other"],
+        ])
+      );
+    })
+  );
+
+  it.effect("a file with no root links is read from the usual workbook path", () =>
+    Effect.gen(function* () {
+      const bytes = yield* archive([
+        ["[Content_Types].xml", "<Types/>"],
+        ["xl/_rels/workbook.xml.rels", rels([sheetLink])],
+        ["xl/workbook.xml", book('<sheet name="Plain" sheetId="1" r:id="s1"/>')],
+        ["xl/worksheets/sheet1.xml", cells],
       ]);
+      const result = yield* read(bytes);
+      expect(A.map(result.workbook.sheets, (entry) => entry.info.name)).toEqual(["Plain"]);
+    })
+  );
+
+  it.effect("a file past the cap on its bytes, and shared text past the cap on its entries, stop the open", () =>
+    Effect.gen(function* () {
+      const plain = yield* usual({ links: [sheetLink], sheets: '<sheet name="One" sheetId="1" r:id="s1"/>' });
+      const texts = yield* usual({
+        links: [sheetLink, ["ss", "sharedStrings", "sharedStrings.xml"]],
+        sheets: '<sheet name="One" sheetId="1" r:id="s1"/>',
+        more: [["xl/sharedStrings.xml", `<sst xmlns="${main}"><si><t>a</t></si><si><t>b</t></si></sst>`]],
+      });
+      const findings = [
+        yield* findingOf(plain, { maxInputBytes: ByteSize.bytes(16) }),
+        yield* findingOf(texts, { maxSharedStrings: 1 }),
+      ];
+      expect(A.map(findings, (finding) => finding.kind)).toEqual(["LimitExceeded", "LimitExceeded"]);
     })
   );
 });
