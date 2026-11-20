@@ -2482,7 +2482,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
   it.effect(
     "restores the Turbo build snapshot in Heavy Check and Build and saves it only from a main push of Check",
     Effect.fnUntraced(function* () {
-      const heavyJobs = yield* workflowJobs(parseWorkflowYaml(yield* readRepoText(".github/workflows/heavy.yml")));
+      const heavyText = yield* readRepoText(".github/workflows/heavy.yml");
+      const heavyJobs = yield* workflowJobs(parseWorkflowYaml(heavyText));
       const heavySteps = jobSteps(heavyJobs, "check");
       const heavyRestore = stepByName(heavySteps, "Restore main Turbo build cache");
       assert.strictEqual(heavyRestore.uses, turboBuildCacheAction);
@@ -2522,7 +2523,8 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
   it.effect(
     "restores the Turbo build snapshot in check.yml only on pull requests and never saves it there",
     Effect.fnUntraced(function* () {
-      const checkJobs = yield* workflowJobs(parseWorkflowYaml(yield* readRepoText(".github/workflows/check.yml")));
+      const checkText = yield* readRepoText(".github/workflows/check.yml");
+      const checkJobs = yield* workflowJobs(parseWorkflowYaml(checkText));
       const stepsOf = (job: (typeof checkJobs)[string]) => job.steps ?? [];
       const consumerSteps = A.flatMap(R.toEntries(checkJobs), ([jobId, job]) =>
         A.map(
