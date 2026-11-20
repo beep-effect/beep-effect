@@ -25,13 +25,11 @@
  * @since 0.0.0
  */
 
-import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { $InfraCiRunnersId } from "./internal/InfraCiRunnersId.ts";
 import { stageSlug } from "./Names.ts";
 import type * as IAM from "@alchemy.run/aws/IAM";
 
@@ -908,109 +906,6 @@ export const deployRolePolicy = (vpcArn: O.Option<string>): IAM.PolicyDocument =
     denyLiveFleetMappings,
   ],
 });
-
-const $I = $InfraCiRunnersId.create("DeployRolePolicy");
-
-/**
- * Which deploy role policy a generator run writes: `v1`, the step-0 document
- * from before the fleet VPC existed, or `v2`, the document with the
- * VPC-scoped default-group grant that the live role holds once step 1b ran.
- *
- * **Example** (List the versions)
- *
- * ```ts
- * import { DeployPolicyVersion } from "@beep/infra-ci-runners/DeployRolePolicy"
- *
- * console.log(DeployPolicyVersion.literals) // ["v1", "v2"]
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export const DeployPolicyVersion = LiteralKit(["v1", "v2"]).pipe(
-  $I.annoteSchema("DeployPolicyVersion", { description: "The deploy role policy version a generator run writes." })
-);
-
-/**
- * Decoded {@link DeployPolicyVersion}.
- *
- * @category models
- * @since 0.0.0
- */
-export type DeployPolicyVersion = typeof DeployPolicyVersion.Type;
-
-/**
- * A generator run named neither or both of the fleet VPC ARN and the
- * pre-VPC opt-out, so it cannot say which version it writes; nothing was
- * written.
- *
- * **Example** (Construct the refusal)
- *
- * ```ts
- * import { DeployPolicyVersionUnstated } from "@beep/infra-ci-runners/DeployRolePolicy"
- *
- * console.log(DeployPolicyVersionUnstated.make({ reason: "no --vpc-arn" })._tag) // "DeployPolicyVersionUnstated"
- * ```
- *
- * @category errors
- * @since 0.0.0
- */
-export class DeployPolicyVersionUnstated extends S.TaggedError<
-  DeployPolicyVersionUnstated,
-  { readonly brand: unique symbol }
->($I`DeployPolicyVersionUnstated`)(
-  "DeployPolicyVersionUnstated",
-  { reason: S.String },
-  $I.annoteError<DeployPolicyVersionUnstated>("DeployPolicyVersionUnstated", {
-    title: "Deploy policy version unstated",
-    description:
-      "A deploy role policy generator run named neither or both of the fleet VPC ARN and the pre-VPC opt-out.",
-  })
-) {}
-
-/**
- * The version a generator run writes, stated explicitly. A run with the fleet
- * VPC ARN writes `v2`; only an explicit `beforeVpc` run, for a stage whose
- * VPC does not exist yet, writes `v1`. Leaving both out fails instead of
- * silently writing `v1`, whose managed-policy chunks differ from the live
- * role's once the VPC exists.
- *
- * **Example** (A run with the VPC ARN)
- *
- * ```ts
- * import { deployPolicyVersion } from "@beep/infra-ci-runners/DeployRolePolicy"
- * import * as Effect from "effect/Effect"
- * import * as O from "effect/Option"
- *
- * const version = Effect.runSync(
- *   deployPolicyVersion({ vpcArn: O.some("arn:aws:ec2:us-east-1:123456789012:vpc/vpc-1"), beforeVpc: false })
- * )
- * console.log(version) // "v2"
- * ```
- *
- * @param input - The fleet VPC ARN, if given, and whether the run explicitly targets the pre-VPC document.
- * @returns The version, or {@link DeployPolicyVersionUnstated} when the run states neither or both.
- * @category configuration
- * @since 0.0.0
- */
-export const deployPolicyVersion = (input: {
-  readonly vpcArn: O.Option<string>;
-  readonly beforeVpc: boolean;
-}): Effect.Effect<DeployPolicyVersion, DeployPolicyVersionUnstated> =>
-  O.match(input.vpcArn, {
-    onNone: () =>
-      input.beforeVpc
-        ? Effect.succeed(DeployPolicyVersion.Enum.v1)
-        : Effect.fail(
-            DeployPolicyVersionUnstated.make({
-              reason: "no --vpc-arn: pass the fleet VPC ARN for v2, or --before-vpc for the step-0 v1 document",
-            })
-          ),
-    onSome: () =>
-      input.beforeVpc
-        ? Effect.fail(DeployPolicyVersionUnstated.make({ reason: "--vpc-arn and --before-vpc together" }))
-        : Effect.succeed(DeployPolicyVersion.Enum.v2),
-  });
 
 /**
  * Split items into groups whose encoded document stays within `limit`

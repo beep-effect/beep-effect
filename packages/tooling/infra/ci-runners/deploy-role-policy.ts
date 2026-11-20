@@ -33,9 +33,9 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import { DeployPolicyVersionRequest, deployPolicyVersion } from "./src/DeployPolicyVersion.ts";
 import {
   chunkByLength,
-  deployPolicyVersion,
   deployRolePolicy,
   fleetBoundary,
   managedPolicyDocuments,
@@ -59,7 +59,7 @@ const write = Command.make(
   Effect.fn("CiRunners.deployRolePolicyCli")(function* ({ vpcArn, beforeVpc, outDir }) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const version = yield* deployPolicyVersion({ vpcArn, beforeVpc });
+    const version = yield* deployPolicyVersion(DeployPolicyVersionRequest.make({ vpcArn, beforeVpc }));
     const policy = deployRolePolicy(vpcArn);
     yield* fs.makeDirectory(outDir, { recursive: true });
     const text = yield* encode(policy);

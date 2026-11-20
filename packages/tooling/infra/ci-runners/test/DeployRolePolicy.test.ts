@@ -1,9 +1,13 @@
 import { fleetResourceNames, poolResourceNames } from "@beep/alchemy-github-runners/RunnerFleetNames";
 import {
+  DeployPolicyVersionRequest,
+  DeployPolicyVersionUnstated,
+  deployPolicyVersion,
+} from "@beep/infra-ci-runners/DeployPolicyVersion";
+import {
   boundaryWildcardReasons,
   chunkByLength,
   defaultGroupStatement,
-  deployPolicyVersion,
   deployRolePolicy,
   ec2CreateActions,
   ec2CreatesInVpc,
@@ -60,18 +64,22 @@ describe("CiRunners deploy role policy version", () => {
 
   it.effect("writes v2 with the fleet VPC ARN and v1 only on an explicit pre-VPC run", () =>
     Effect.gen(function* () {
-      const v2 = yield* deployPolicyVersion({ vpcArn, beforeVpc: false });
-      const v1 = yield* deployPolicyVersion({ vpcArn: O.none(), beforeVpc: true });
+      const v2 = yield* deployPolicyVersion(DeployPolicyVersionRequest.make({ vpcArn, beforeVpc: false }));
+      const v1 = yield* deployPolicyVersion(DeployPolicyVersionRequest.make({ vpcArn: O.none(), beforeVpc: true }));
       expect([v2, v1]).toStrictEqual(["v2", "v1"]);
     })
   );
 
   it.effect("refuses a run that states neither version, and one that states both", () =>
     Effect.gen(function* () {
-      const neither = yield* Effect.flip(deployPolicyVersion({ vpcArn: O.none(), beforeVpc: false }));
-      const both = yield* Effect.flip(deployPolicyVersion({ vpcArn, beforeVpc: true }));
+      const neither = yield* Effect.flip(
+        deployPolicyVersion(DeployPolicyVersionRequest.make({ vpcArn: O.none(), beforeVpc: false }))
+      );
+      const both = yield* Effect.flip(
+        deployPolicyVersion(DeployPolicyVersionRequest.make({ vpcArn, beforeVpc: true }))
+      );
       expect([neither._tag, both._tag]).toStrictEqual(["DeployPolicyVersionUnstated", "DeployPolicyVersionUnstated"]);
-      expect(neither.reason).toContain("--vpc-arn");
+      expect(S.is(DeployPolicyVersionUnstated)(neither) ? neither.reason : "").toContain("--vpc-arn");
     })
   );
 });
