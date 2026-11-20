@@ -21,6 +21,7 @@ import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
 import { selectAudience } from "@beep/repo-gate-run/GateAudience";
 import { ConsoleRequest, ConsoleSettings, GateConsole, makeGateConsole } from "@beep/repo-gate-run/GateConsole";
 import { GateHistory } from "@beep/repo-gate-run/GateHistory";
+import { GateHistoryStore } from "@beep/repo-gate-run/GateHistoryStore";
 import { GateRecorder, RunSource } from "@beep/repo-gate-run/GateRecorder";
 import { GateRunRequest, runGate } from "@beep/repo-gate-run/GateRun";
 import { repoPointerTableFor } from "@beep/repo-gate-run/RepoPointers";
@@ -41,8 +42,10 @@ import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { HistorySetting, historyStoreLayer, ingestAfterConsole, resolveHistoryTarget } from "./GateHistoryRuntime.ts";
 import type { GateRecord } from "@beep/gate-report/GateRecord";
 import type { ColorLevel } from "@beep/runtime-env/ColorLevel";
+import type { GateHistoryTarget } from "./GateHistoryRuntime.ts";
 
 const $I = $RepoCliId.create("commands/Gate/GateRuntime");
 
@@ -215,8 +218,9 @@ export const consoleSettings = Effect.fn("Gate.consoleSettings")(function* (flag
 });
 
 /**
- * Where a gate run records and how it prints: the repository root and the
- * console settings.
+ * Where a gate run records and how it prints: the repository root, the
+ * console settings, and whether it keeps history (resolved automatically by
+ * default).
  *
  * **Example** (Describe a gate run's services)
  *
@@ -235,9 +239,12 @@ export class GateServicesConfig extends S.Opaque<GateServicesConfig, { readonly 
   S.Struct({
     repoRoot: S.NonEmptyString,
     settings: ConsoleSettings,
+    history: HistorySetting.pipe(
+      S.withConstructorDefault(Effect.sync(() => HistorySetting.cases.HistoryAuto.make({})))
+    ),
   }).pipe(
     $I.annoteSchema("GateServicesConfig", {
-      description: "The repository root a gate run records under and its console settings.",
+      description: "The repository root a gate run records under, its console settings and its history setting.",
     })
   )
 ) {}
@@ -460,11 +467,42 @@ export class EventRun extends S.Opaque<EventRun, { readonly brand: unique symbol
   )
 ) {}
 
+const eventRequest = (run: EventRun, deadlineMs: O.Option<number>) =>
+  GateRunRequest.make({
+    target: run.target,
+    source: RunSource.cases.RunEvents.make({ events: run.events }),
+    exitCode: run.exitCode,
+    pointers: O.some(repoPointerTableFor(run.target)),
+    subject: run.subject,
+    ...O.match(deadlineMs, { onNone: () => ({}), onSome: (historyDeadlineMs) => ({ historyDeadlineMs }) }),
+  });
+
+// History is read under the target's deadline inside the run, and written only after the console was printed.
+const recordWithHistory = (config: GateServicesConfig, run: EventRun, target: GateHistoryTarget) =>
+  withLayer(
+    runGate(eventRequest(run, O.some(target.config.deadlineMs)), Stream.make(run.output)).pipe(
+      Effect.tap((result) => ingestAfterConsole(target)(result.report))
+    ),
+    Layer.mergeAll(
+      GateRecorder.layer.pipe(Layer.provide(GateRecordStore.layer(config.repoRoot))),
+      GateHistoryStore.historyLayer(target.scope),
+      GateConsole.layer(config.settings)
+    ).pipe(Layer.provideMerge(historyStoreLayer(target)))
+  );
+
 /**
  * Record a finished tool run and print its console with the gate services
  * for the configuration: the whole output goes to the raw log, the events to
  * the record. Its pointer line names the query pinned to that record:
  * `--dir <package>` for a package record, `--run <run id>` for a root run.
+ *
+ * **Details**
+ *
+ * With history resolved for the checkout, the console carries the history
+ * labels and the delta, read under the history deadline, and the report is
+ * recorded in history only after the console was printed; a failed write
+ * prints one line on standard error and changes neither the console nor the
+ * exit code.
  *
  * **Example** (Record a run)
  *
@@ -489,14 +527,11 @@ export class EventRun extends S.Opaque<EventRun, { readonly brand: unique symbol
  * @category use-cases
  * @since 0.0.0
  */
-export const recordEventRun = (config: GateServicesConfig) => (run: EventRun) =>
-  runGate(
-    GateRunRequest.make({
-      target: run.target,
-      source: RunSource.cases.RunEvents.make({ events: run.events }),
-      exitCode: run.exitCode,
-      pointers: O.some(repoPointerTableFor(run.target)),
-      subject: run.subject,
-    }),
-    Stream.make(run.output)
-  ).pipe(withGateServices(config));
+export const recordEventRun = (config: GateServicesConfig) =>
+  Effect.fn("Gate.recordEventRun")(function* (run: EventRun) {
+    const target = yield* resolveHistoryTarget(config.repoRoot, config.history);
+    return yield* O.match(target, {
+      onNone: () => runGate(eventRequest(run, O.none()), Stream.make(run.output)).pipe(withGateServices(config)),
+      onSome: (found) => recordWithHistory(config, run, found),
+    });
+  });

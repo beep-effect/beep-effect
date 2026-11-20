@@ -328,6 +328,14 @@ Lane goals/gate-run-history-lane
 
 Reverse: Render the full delta phrase as the green verdict suffix again and drop scopeDiffers from RunDelta.
 
+### Task-path history is automatic outside Vitest, with an off switch and a file override, 2026-11-20
+
+The SPEC says the store is never opened inside a Vitest process. The CLI's automatic history setting therefore resolves no store when VITEST is set; BEEP_GATE_HISTORY=off (or 0, false, no) turns history off anywhere, and BEEP_GATE_HISTORY_FILE names another store file. Tests pass an explicit HistoryAt setting with a file and scope instead of touching the environment. A detached checkout records under detached@<sha>, so it never joins a branch's series. Resolution never fails a gate run: outside a git checkout or without a state directory there is no history.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Drop the VITEST check and the two BEEP_GATE_HISTORY variables and always resolve the store from git and XDG.
+
 ### P1 to P3 ship first; the hosted-main baseline waits for the ci-gate-reports carrier, 2026-11-20
 
 On 2026-11-20 goals/ci-gate-reports has not started, so no hosted report reaches a lane. Lane history, the labels that need only lane evidence, the delta, the queries and the quarantine reconciliation ship in a first pull request. Until the carrier exists the main baseline is absent, red-on-main is never emitted, introduced-on-lane rests on lane evidence, and the console says once that there is no main baseline. P4 and AC-H7 follow in a second pull request once ci-gate-reports uploads reports, and the goal closes with that one.
@@ -343,6 +351,22 @@ The SPEC names two observed outcomes, passed and failed, and leaves warned and s
 Lane goals/gate-run-history-lane
 
 Reverse: Record warned items as passed observations and label only failed items flaky in classifyItem.
+
+### A quarantine incident is one check run whose item failed then passed; repo-gate-run coverage runs under Bun, 2026-11-20
+
+Each flake-quarantine incident becomes one check report for the package whose one item, DiagnosticKey(file = package, code = TS2589, shape = 'no location'), has attempts failed then passed on the incident's own input fingerprint (run id quarantine-<lane>-<task>-<detectedAt>). The one flaky rule labels it flaky; recording returns nothing, so the quarantine stays the authority on the lane's verdict. The SQLite store's tests need bun:sqlite, so @beep/repo-gate-run's coverage script runs vitest under Bun, as @beep/agent-memory-store's does; the suites skip under Node.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Record incidents as two separate runs, and return the coverage script to Node with the SQLite suites skipped.
+
+### Opening and reading the store wait at most the read deadline; only writes wait the busy timeout, 2026-11-20
+
+bun:sqlite waits on a lock synchronously, so an Effect deadline cannot interrupt a busy wait. The store therefore opens and reads with PRAGMA busy_timeout set to the read deadline (250 ms), raises it to the write timeout (5 s) only before a write transaction, which runs after the console was printed, and checks PRAGMA user_version before taking the migration's write lock, so an open of a current schema never waits on a writer. In WAL mode a reader is never blocked by an ordinary writer; an exclusive-mode holder makes the read fail open-busy within the deadline. A failed read is reported with reason open-failed, the closed domain having no read reason; read-deadline is left to the gate run's own deadline, which renders 'no answer within 250ms'.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Open every connection with the driver's 5 s busy timeout for reads and writes alike.
 
 ### The history store is the gate-run library's one driver dependency, loaded by dynamic import, 2026-11-20
 
