@@ -67,7 +67,8 @@ term-stability snapshot (Pending P1). The `since` of a binding or a
 deprecation is a vocabulary release of that snapshot, not a package version:
 the snapshot carries `release`, starting at `1.0.0`, its writer bumps the minor
 on additions and the major on deprecations, and existing rows keep their
-`since`. That field is a string with a local pattern check and the literal
+`since`. An addition needs no deprecation record: `L0-3` asks for one only
+when a published term is removed or changed. That field is a string with a local pattern check and the literal
 domains use `S.Literals`, the standing exception for the bottom package that
 `@beep/schema` itself depends on; `@beep/schema`'s tests cross-check both,
 because an identity test dependency on `@beep/schema` would close a workspace

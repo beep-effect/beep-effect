@@ -419,7 +419,8 @@ frozen evidence of a completed goal, not live inventories, and are not edited.
 ## 10. Ordered edit plan
 
 1. Record the identity-delta ruling as a decision file
-   (`bun run beep goals decisions add text-knowledge-stack-rebuild --title "P1: IRI schemas re-home under $IdentityId (18 code identities change, none pinned)" --reversal "Use $RdfId.create(\"iri\") from ./packages.ts in identity/src/Iri.ts"`).
+   (`bun run beep goals decisions add text-knowledge-stack-rebuild --title 'P1: IRI schemas re-home under $IdentityId (18 code identities change, none pinned)' --reversal 'Use $RdfId.create("iri") from ./packages.ts in identity/src/Iri.ts'`;
+   the single quotes keep the shell from expanding the two composer names).
 2. In `rdf/src/Vocab/SchemaOrg.ts`, add `canonicalizeSchemaOrgIri` with its private
    helpers (`Iri.ts:708-719`, a local `slice` or inline `Str.slice`, and the `A`/`Str`
    imports from `@beep/utils`). Update its JSDoc example import to
@@ -465,7 +466,8 @@ frozen evidence of a completed goal, not live inventories, and are not edited.
 # no moved symbol is imported from rdf anywhere (expect no output)
 rg -U -l -P "import\s+(type\s+)?\{[^}]*\b(IRI|IRIReference|RelativeIRIReference|AbsoluteIRI)\b[^}]*\}\s*from\s*[\"']@beep/rdf(/Iri)?[\"']" \
   packages apps scratchpad goals -g '*.ts' -g '*.tsx'
-git grep -n '@beep/rdf/Iri' -- '*.ts' '*.tsx' '*.md' ':!goals/boolean-creep' ':!explorations' ':!goals/*/research/2026-11-0*'
+# goal packets and explorations describe the removed subpath on purpose, so they are left out
+git grep -n '@beep/rdf/Iri' -- '*.ts' '*.tsx' '*.md' ':!goals' ':!explorations'
 # identity stays effect-only and never imports utils, schema, jsonc or rdf
 rg -n "from \"@beep/(utils|schema|jsonc|rdf|data)" packages/foundation/modeling/identity/src packages/foundation/modeling/identity/test
 rg -n 'Iri\.ts' packages/foundation/modeling/identity/src/Id.ts packages/foundation/modeling/identity/src/packages.ts   # expect none
