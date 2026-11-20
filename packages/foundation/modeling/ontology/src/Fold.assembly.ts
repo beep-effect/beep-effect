@@ -37,7 +37,8 @@ import {
   OntologyValidationWarning,
   TripleValue,
 } from "./Fold.models.ts";
-import type { IdentityComposer, SkosClassification as SkosClassificationMarker, VocabShape } from "@beep/identity";
+import type { SkosClassification as SkosClassificationMarker } from "@beep/identity";
+import type { Namespace } from "@beep/identity/Term";
 import type {
   FactObject,
   OntologyFoldInput,
@@ -48,36 +49,19 @@ import type {
   TypedLiteral,
 } from "./Fold.models.ts";
 
-/**
- * Bound identity composer accepted by the fold.
- *
- * **Details**
- *
- * One-argument `make(...)` composers are unbound and expose no IRI/CURIE
- * projections; the fold requires a bound composer.
- *
- * **Example** (Usage)
- * ```ts
- * import { $I } from "@beep/identity/packages"
- * import type { BoundComposer } from "@beep/ontology/Fold.assembly"
- *
- * const composer: BoundComposer = $I.create("patent")
- * console.log(composer.iri)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export type BoundComposer = IdentityComposer<string, string, string, VocabShape>;
-
-type ClassIdentity = {
+// The identity annotations of a schema: its code identity and display metadata, no IRI.
+type SchemaIdentity = {
   readonly schema: SchemaHandle;
   readonly identifier: string;
   readonly name: string;
-  readonly iri: IRI;
-  readonly curie: string;
   readonly description: O.Option<string>;
   readonly skos: O.Option<SkosClassificationMarker>;
+};
+
+// A schema identity bound in the registry: the term IRI and CURIE its code identity is bound to.
+type ClassIdentity = SchemaIdentity & {
+  readonly iri: IRI;
+  readonly curie: string;
 };
 
 type ErrorExtras = Partial<{
@@ -124,38 +108,43 @@ const annotationString = (annotations: unknown, property: string): O.Option<stri
 const isSkosMarker = (value: string): value is SkosClassificationMarker =>
   value === "concept" || value === "conceptScheme";
 
-const isIri = S.is(IRI);
-
-const classIdentity = (schema: SchemaHandle): O.Option<ClassIdentity> => {
+const classIdentity = (schema: SchemaHandle): O.Option<SchemaIdentity> => {
   const annotations = S.resolveAnnotations(schema);
 
-  return pipe(
-    O.all({
-      identifier: annotationString(annotations, "identifier"),
-      iri: pipe(annotationString(annotations, "iri"), O.filter(isIri)),
-      curie: annotationString(annotations, "curie"),
-    }),
-    O.map(({ curie, identifier, iri }) => ({
-      schema,
-      identifier,
-      iri,
-      curie,
-      name: pipe(
-        annotationString(annotations, "title"),
-        O.getOrElse(() => identifier)
-      ),
-      description: annotationString(annotations, "description"),
-      skos: pipe(annotationString(annotations, "skosClassification"), O.filter(isSkosMarker)),
-    }))
-  );
+  return O.map(annotationString(annotations, "identifier"), (identifier) => ({
+    schema,
+    identifier,
+    name: pipe(
+      annotationString(annotations, "title"),
+      O.getOrElse(() => identifier)
+    ),
+    description: annotationString(annotations, "description"),
+    skos: pipe(annotationString(annotations, "skosClassification"), O.filter(isSkosMarker)),
+  }));
 };
 
-const requireClassIdentity = (schema: SchemaHandle): Effect.Effect<ClassIdentity, OntologyAssemblyError> =>
+const requireClassIdentity = (schema: SchemaHandle): Effect.Effect<SchemaIdentity, OntologyAssemblyError> =>
   pipe(
     classIdentity(schema),
     O.match({
       onNone: () => fail("missingClassAnnotation", "Schema is missing owned identity annotations."),
       onSome: Effect.succeed,
+    })
+  );
+
+const requireBoundClass = (
+  registry: Registry.RegistryView,
+  identity: SchemaIdentity
+): Effect.Effect<ClassIdentity, OntologyAssemblyError> =>
+  pipe(
+    registry.bindingOf(identity.identifier),
+    O.match({
+      onNone: () =>
+        fail("unboundClass", `Schema identity is not bound to a registry term: ${identity.identifier}`, {
+          identifier: identity.identifier,
+        }),
+      onSome: (term) =>
+        Effect.succeed({ ...identity, iri: IRI.make(term.iri), curie: `${term.namespace}:${term.local}` }),
     })
   );
 
@@ -171,7 +160,7 @@ const objectAstFromSchema = (schema: SchemaHandle): O.Option<SchemaAST.Objects> 
   return O.none();
 };
 
-const classIdentityFromAst = (ast: SchemaAST.AST): O.Option<ClassIdentity> => {
+const classIdentityFromAst = (ast: SchemaAST.AST): O.Option<SchemaIdentity> => {
   const schema = S.make<SchemaHandle>(ast);
 
   return pipe(
@@ -181,7 +170,7 @@ const classIdentityFromAst = (ast: SchemaAST.AST): O.Option<ClassIdentity> => {
   );
 };
 
-const classIdentitiesInAst = (ast: SchemaAST.AST): ReadonlyArray<ClassIdentity> => {
+const classIdentitiesInAst = (ast: SchemaAST.AST): ReadonlyArray<SchemaIdentity> => {
   const direct = classIdentityFromAst(ast);
   if (O.isSome(direct)) {
     return [direct.value];
@@ -257,7 +246,7 @@ const includedClass = (classes: ReadonlyArray<ClassIdentity>, identifier: string
 
 const requireIncludedClass = (
   classes: ReadonlyArray<ClassIdentity>,
-  identity: ClassIdentity
+  identity: SchemaIdentity
 ): Effect.Effect<ClassIdentity, OntologyAssemblyError> =>
   pipe(
     includedClass(classes, identity.identifier),
@@ -269,9 +258,6 @@ const requireIncludedClass = (
       onSome: Effect.succeed,
     })
   );
-
-const appendLocal = (base: string, name: string): string =>
-  pipe(base, Str.endsWith("/")) || pipe(base, Str.endsWith("#")) ? `${base}${name}` : `${base}/${name}`;
 
 const isIriValue = S.is(IRI);
 
@@ -412,7 +398,7 @@ const requireStringFieldName = (property: SchemaAST.PropertySignature): Effect.E
     : fail("unsupportedFieldAst", "Only string field names are supported.");
 
 const fieldPredicate = Effect.fnUntraced(function* (
-  composer: BoundComposer,
+  namespace: Namespace,
   registry: Registry.RegistryView,
   classes: ReadonlyArray<ClassIdentity>,
   property: SchemaAST.PropertySignature
@@ -437,7 +423,16 @@ const fieldPredicate = Effect.fnUntraced(function* (
     });
   }
 
-  const ownedIri = yield* requireIri(appendLocal(composer.iri, field), field);
+  const ownedIri = yield* pipe(
+    registry.expand(`${namespace.prefix}:${field}`),
+    O.match({
+      onNone: () =>
+        fail("undeclaredProperty", `Owned field is not a declared term of namespace ${namespace.prefix}: ${field}`, {
+          field,
+        }),
+      onSome: (iri) => requireIri(iri, field),
+    })
+  );
 
   return AssembledPredicate.make({
     key: field,
@@ -451,7 +446,7 @@ const fieldPredicate = Effect.fnUntraced(function* (
 });
 
 const assembleClass = Effect.fnUntraced(function* (
-  composer: BoundComposer,
+  namespace: Namespace,
   registry: Registry.RegistryView,
   classes: ReadonlyArray<ClassIdentity>,
   identity: ClassIdentity
@@ -468,7 +463,7 @@ const assembleClass = Effect.fnUntraced(function* (
   );
   const predicates = yield* Effect.forEach(
     objectAst.propertySignatures,
-    (property) => fieldPredicate(composer, registry, classes, property),
+    (property) => fieldPredicate(namespace, registry, classes, property),
     { concurrency: 1 }
   );
 
@@ -849,94 +844,122 @@ const skosWarnings = (
   return [...missingScheme, ...missingPrefLabel, ...relatedDuplicates];
 };
 
-const composerPrefix = (composer: BoundComposer): string =>
-  pipe(
-    composer.curie,
-    Str.indexOf(":"),
-    O.map((separator) => pipe(composer.curie, Str.slice(0, separator))),
-    O.filter(Str.isNonEmpty),
-    O.getOrElse(() => "beep")
-  );
+const assembleWith = (registry: Registry.RegistryView) =>
+  Effect.fn("Ontology.foldWith")(function* (prefix: string, input: OntologyFoldInput) {
+    const namespace = yield* pipe(
+      registry.namespaceOf(prefix),
+      O.match({
+        onNone: () => fail("unknownTerm", `Unknown registry namespace: ${prefix}`, { term: prefix }),
+        onSome: Effect.succeed,
+      })
+    );
+    const label = yield* pipe(
+      decodeLabelEffect(input.label),
+      Effect.mapError(() => assemblyError("invalidLabel", "Ontology label must be non-empty."))
+    );
+    const identities = yield* Effect.forEach(input.schemas, requireClassIdentity, { concurrency: 1 });
+    const classes = yield* Effect.forEach(identities, (identity) => requireBoundClass(registry, identity), {
+      concurrency: 1,
+    });
+    const assembledClasses = yield* Effect.forEach(
+      classes,
+      (identity) => assembleClass(namespace, registry, classes, identity),
+      { concurrency: 1 }
+    );
+    const facts = yield* Effect.forEach(input.triples, (triple) => assembleFact(registry, classes, triple), {
+      concurrency: 1,
+    });
+    const semanticFacts = pipe(facts, A.map(semanticFact));
+
+    const hardIssue = skosHardIssue(semanticFacts);
+    if (O.isSome(hardIssue)) {
+      return yield* hardIssue.value;
+    }
+
+    return AssembledOntology.make({
+      label,
+      baseIri: namespace.iri,
+      prefix: namespace.prefix,
+      classes: assembledClasses,
+      facts,
+      warnings: skosWarnings(assembledClasses, semanticFacts),
+    });
+  });
 
 /**
- * Fold schemas and triples-as-tuples into a deterministic assembled ontology.
+ * Fold schemas and triples-as-tuples into a deterministic assembled ontology over a given registry.
  *
  * **Details**
  *
- * The composer supplies the owned namespace: class IRIs resolve through their
- * identity annotations, owned predicates default their local names from
- * struct keys, and borrowed predicates ride the `ontologyTerm` channel.
+ * The registry namespace `prefix` is the owned namespace and the ontology
+ * base. Each schema's code identity must be bound in the registry, and the
+ * bound term is the class IRI; an unbound schema fails with `unboundClass`.
+ * An owned field must be a declared term of the namespace, or the fold fails
+ * with `undeclaredProperty`. Borrowed predicates ride the `ontologyTerm`
+ * channel. An unknown namespace fails with `unknownTerm`.
  *
- * **Example** (Usage)
+ * **When to use**
+ *
+ * Use with a fixture registry, such as one built with `view` from
+ * `@beep/identity/Registry` in a test. Production code calls {@link fold}.
+ *
+ * **Example** (Fold over a fixture registry)
  * ```ts
  * import { $I as $BeepId } from "@beep/identity/packages"
- * import { fold } from "@beep/ontology/Fold.assembly"
- * import * as Effect from "effect/Effect";
+ * import { view } from "@beep/identity/Registry"
+ * import { RegistryShard, RegistryTable } from "@beep/identity/Term"
+ * import { foldWith } from "@beep/ontology/Fold.assembly"
+ * import * as Effect from "effect/Effect"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
  * const $I = $BeepId.create("patent")
  *
- * class Claim extends S.Class<Claim>($I`Claim`)(
- *   {
- *     prefLabel: S.String.pipe($I.key("skos:prefLabel")),
- *     text: S.String,
- *   },
- *   $I.class("Claim", { description: "A patent claim." })
- * ) {}
+ * class Claim extends S.Class<Claim>($I`Claim`)({ text: S.String }, $I.class("Claim")) {}
  *
- * const assembled = Effect.runSync(
- *   fold($I, {
- *     label: "Patent Core",
- *     schemas: [Claim],
- *     triples: [[Claim, "rdfs:subClassOf", "owl:Thing"]],
- *   })
- * )
- * console.log(assembled.classes[0]?.iri) // "https://beep-effect.com/ns/patent/Claim"
+ * const patent = S.decodeUnknownSync(RegistryShard)({
+ *   namespace: { prefix: "patent", iri: "https://example.test/patent/" },
+ *   terms: ["Claim", "text"],
+ *   bindings: [{ code: "@beep/patent/Claim", local: "Claim", since: "1.0.0" }],
+ *   deprecations: []
+ * })
+ * const registry = view(Result.getOrThrow(RegistryTable.fromShards([patent])))
+ * const assembled = Effect.runSync(foldWith(registry)("patent", { label: "Patent", schemas: [Claim], triples: [] }))
+ * console.log(assembled.classes[0]?.iri) // "https://example.test/patent/Claim"
+ * ```
+ *
+ * @param registry - The registry the namespace, class bindings and terms are read from.
+ * @returns The fold over `registry`.
+ * @category constructors
+ * @since 0.0.0
+ */
+export const foldWith: (
+  registry: Registry.RegistryView
+) => (prefix: string, input: OntologyFoldInput) => Effect.Effect<AssembledOntology, OntologyAssemblyError> =
+  assembleWith;
+
+/**
+ * Fold schemas and triples-as-tuples into a deterministic assembled ontology over the generated registry.
+ *
+ * **Details**
+ *
+ * The registry namespace `prefix` is the owned namespace and the ontology
+ * base. Each schema is bound to its class term in the registry, owned fields
+ * are declared terms of the namespace, and borrowed predicates ride the
+ * `ontologyTerm` channel. {@link foldWith} lists the refusals.
+ *
+ * **Example** (Fold an empty ontology under a registry namespace)
+ * ```ts
+ * import { fold } from "@beep/ontology/Fold.assembly"
+ * import * as Effect from "effect/Effect"
+ *
+ * const assembled = Effect.runSync(fold("research-library", { label: "Research Library", schemas: [], triples: [] }))
+ * console.log(assembled.baseIri) // "https://beep-effect.com/ns/research-library/"
  * ```
  *
  * @category constructors
  * @since 0.0.0
  */
-export const fold = Effect.fn("Ontology.fold")(function* (composer: BoundComposer, input: OntologyFoldInput) {
-  const registry = pipe(
-    O.fromUndefinedOr(composer.vocabRegistry),
-    O.getOrElse((): VocabShape => Registry.RegistryVocab),
-    Registry.fromVocab
-  );
-  const prefix = composerPrefix(composer);
-  if (O.isSome(registry.namespaceOf(prefix))) {
-    return yield* fail("reservedPrefix", `Owned prefix collides with a registered vocabulary prefix: ${prefix}`, {
-      term: prefix,
-    });
-  }
-
-  const label = yield* pipe(
-    decodeLabelEffect(input.label),
-    Effect.mapError(() => assemblyError("invalidLabel", "Ontology label must be non-empty."))
-  );
-  const baseIri = yield* requireIri(composer.iri, composer.identifier);
-  const classes = yield* Effect.forEach(input.schemas, requireClassIdentity, { concurrency: 1 });
-  const assembledClasses = yield* Effect.forEach(
-    classes,
-    (identity) => assembleClass(composer, registry, classes, identity),
-    { concurrency: 1 }
-  );
-  const facts = yield* Effect.forEach(input.triples, (triple) => assembleFact(registry, classes, triple), {
-    concurrency: 1,
-  });
-  const semanticFacts = pipe(facts, A.map(semanticFact));
-
-  const hardIssue = skosHardIssue(semanticFacts);
-  if (O.isSome(hardIssue)) {
-    return yield* hardIssue.value;
-  }
-
-  return AssembledOntology.make({
-    label,
-    baseIri,
-    prefix,
-    classes: assembledClasses,
-    facts,
-    warnings: skosWarnings(assembledClasses, semanticFacts),
-  });
+export const fold = Effect.fn("Ontology.fold")(function* (prefix: Registry.RegistryPrefix, input: OntologyFoldInput) {
+  return yield* foldWith(Registry.generatedView)(prefix, input);
 });

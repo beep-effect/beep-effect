@@ -177,12 +177,15 @@ describe("IdentityRegistry over binding rows", () => {
   );
 
   it.effect(
-    "binds no code identity in the generated registry before the internal namespaces land",
+    "resolves a test-runner binding of the generated registry and refuses an unbound identity",
     Effect.fnUntraced(function* () {
       const context = yield* Layer.build(IdentityRegistry.layer);
       const registry = Context.get(context, IdentityRegistry);
+      const resolved = yield* registry.resolve({ _tag: "identity", value: "@beep/test-runner/Vitest/TestHang" });
+      expect(resolved.curie).toBe(hang.curie);
+      expect(resolved.iri).toBe(hang.iri);
       const error = yield* registry
-        .resolve({ _tag: "identity", value: "@beep/test-runner/Vitest/TestHang" })
+        .resolve({ _tag: "identity", value: "@beep/identity/Term/TermIri" })
         .pipe(Effect.flip);
       expect(error._tag).toBe("IdentityNotFoundError");
     })

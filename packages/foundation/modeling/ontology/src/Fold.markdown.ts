@@ -275,9 +275,12 @@ const toMarkdownImpl = (ontology: AssembledOntology, options: MarkdownOptionsInp
  *
  * ```ts
  * import { $I as $BeepId } from "@beep/identity/packages"
- * import { fold } from "@beep/ontology/Fold.assembly"
+ * import { view } from "@beep/identity/Registry"
+ * import { RegistryShard, RegistryTable } from "@beep/identity/Term"
+ * import { foldWith } from "@beep/ontology/Fold.assembly"
  * import { toMarkdown } from "@beep/ontology/Fold.markdown"
- * import * as Effect from "effect/Effect";
+ * import * as Effect from "effect/Effect"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
  * const $I = $BeepId.create("patent")
@@ -286,9 +289,16 @@ const toMarkdownImpl = (ontology: AssembledOntology, options: MarkdownOptionsInp
  *   { text: S.String },
  *   $I.class("Claim", { description: "A patent claim." })
  * ) {}
+ * const patent = S.decodeUnknownSync(RegistryShard)({
+ *   namespace: { prefix: "patent", iri: "https://example.test/patent/" },
+ *   terms: ["Claim", "text"],
+ *   bindings: [{ code: "@beep/patent/Claim", local: "Claim", since: "1.0.0" }],
+ *   deprecations: []
+ * })
+ * const registry = view(Result.getOrThrow(RegistryTable.fromShards([patent])))
  *
  * const markdown = toMarkdown(
- *   Effect.runSync(fold($I, { label: "Patent Core", schemas: [Claim], triples: [] }))
+ *   Effect.runSync(foldWith(registry)("patent", { label: "Patent Core", schemas: [Claim], triples: [] }))
  * )
  * console.log(markdown.startsWith("# Patent Core")) // true
  * ```

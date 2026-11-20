@@ -153,7 +153,7 @@ export interface RegistryView {
   readonly expandPredicate: (predicate: string) => O.Option<ExpandedPredicate>;
   /** The namespace a prefix names. */
   readonly namespaceOf: (prefix: string) => O.Option<Namespace>;
-  /** The live term a deprecated IRI is replaced by, following the deprecation chain. */
+  /** The live term or namespace IRI a deprecated IRI is replaced by, following the deprecation chain. */
   readonly replacementOf: (iri: string) => O.Option<TermIri>;
 }
 
@@ -190,17 +190,15 @@ const makeView = (data: RegistryData): RegistryView => {
     ])
   );
 
+  const namespaceIris = HashSet.fromIterable(A.map(namespaces, ({ namespace }): string => namespace.iri));
+  const isLive = (iri: string): boolean => HashMap.has(termByIri, iri) || HashSet.has(namespaceIris, iri);
+
   const follow = (current: string, seen: HashSet.HashSet<string>): O.Option<TermIri> =>
     pipe(
       HashMap.get(replacementByTerm, current),
       O.flatten,
       O.filter((next) => !HashSet.has(seen, next)),
-      O.flatMap((next) =>
-        O.match(HashMap.get(termByIri, next), {
-          onNone: () => follow(next, HashSet.add(seen, next)),
-          onSome: (term) => O.some(term.iri),
-        })
-      )
+      O.flatMap((next) => (isLive(next) ? TermIri.makeOption(next) : follow(next, HashSet.add(seen, next))))
     );
 
   const expandCurie = (curie: string): O.Option<TermIri> => O.map(HashMap.get(termByCurie, curie), (term) => term.iri);
@@ -312,6 +310,28 @@ const generated: RegistryView = /*#__PURE__*/ makeView({
   bindings: RegistryBindings,
   deprecations: RegistryDeprecations,
 });
+
+/**
+ * The view over the generated registry, the one the module-level lookups read.
+ *
+ * **When to use**
+ *
+ * Use where a caller takes a {@link RegistryView} and should read the
+ * generated registry, such as `foldWith` in `@beep/ontology`.
+ *
+ * **Example** (Read a binding through the generated view)
+ *
+ * ```ts import.meta.vitest name="Read a binding through the generated view"
+ * import * as O from "effect/Option"
+ * import { generatedView } from "@beep/identity/Registry"
+ *
+ * O.getOrThrow(generatedView.expand("skos:prefLabel")) // => "http://www.w3.org/2004/02/skos/core#prefLabel"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const generatedView: RegistryView = generated;
 
 const isRegistryCurie = (curie: string): curie is RegistryCurie => O.isSome(generated.expand(curie));
 

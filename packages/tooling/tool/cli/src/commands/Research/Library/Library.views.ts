@@ -4,6 +4,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import * as Registry from "@beep/identity/Registry";
 import * as Rdf from "@beep/rdf/Rdf";
 import { XSD_INTEGER, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { findRepoRoot } from "@beep/repo-utils";
@@ -41,11 +42,11 @@ const $I = $RepoCliId.create("commands/Research/Library/Library.views");
 const ViewKind = LiteralKit(["Report", "Source", "Capture", "Qualification", "Claim", "Occurrence", "Artifact"]).pipe(
   $I.annoteSchema("ViewKind", { description: "Library projection read-model partitions." })
 );
-const iri = (key: string) => $I.create(key).iri;
-const model = $RepoCliId.create("commands/Research/Library/Library.schemas");
-const entity = (kind: string, id: string) => Rdf.makeNamedNode(`${model.create(kind).iri}/${encodeURIComponent(id)}`);
+const libraryNamespace = Registry.namespace("research-library").iri;
+const viewKey = (key: string) => `${Registry.iri("research-library:view")}/${key}`;
+const entity = (kind: string, id: string) => Rdf.makeNamedNode(`${libraryNamespace}${kind}/${encodeURIComponent(id)}`);
 const entityTerm = (kind: string, id: string) => Rdf.serializeTerm(entity(kind, id));
-const prefixes = `PREFIX v: <${iri("term")}/> PREFIX lib: <${model.iri}/>`;
+const prefixes = `PREFIX v: <${Registry.iri("research-library:view")}/> PREFIX lib: <${libraryNamespace}>`;
 const visible = (includePrivate: boolean) => (includePrivate ? "" : 'FILTER NOT EXISTS { ?record v:private "true" }');
 const selectRecords = (kind: string) =>
   `${prefixes} SELECT ?payload ?category ?readable WHERE { ?record a lib:${kind}; v:payload ?payload; lib:catalogIndex ?order . OPTIONAL { ?record v:displayCategory ?category } OPTIONAL { ?record lib:effectiveCategory ?category } OPTIONAL { ?record v:readable ?readable } $VISIBILITY } ORDER BY ?order`;
@@ -408,9 +409,7 @@ export const libraryViewDataset = Effect.fn("Library.viewDataset")(function* (
   );
   const addMetadata = (node: Rdf.NamedNode, metadata: Readonly<Record<string, string>>) =>
     A.forEach(R.toEntries(metadata), ([key, value]) =>
-      quads.push(
-        Rdf.makeQuad(node, Rdf.makeNamedNode(`${iri("term")}/${key}`), Rdf.makeLiteral(value, XSD_STRING.value))
-      )
+      quads.push(Rdf.makeQuad(node, Rdf.makeNamedNode(viewKey(key)), Rdf.makeLiteral(value, XSD_STRING.value)))
     );
   let sequence = 0;
   const add = <T, I>(
@@ -431,7 +430,7 @@ export const libraryViewDataset = Effect.fn("Library.viewDataset")(function* (
         quads.push(
           Rdf.makeQuad(
             node,
-            Rdf.makeNamedNode(model.create("catalogIndex").iri),
+            Rdf.makeNamedNode(Registry.iri("research-library:catalogIndex")),
             Rdf.makeLiteral(meta.order ?? `${order}`, XSD_INTEGER.value)
           )
         );
@@ -489,13 +488,13 @@ export const libraryViewDataset = Effect.fn("Library.viewDataset")(function* (
     quads.push(
       Rdf.makeQuad(
         entity("Finding", finding.id),
-        Rdf.makeNamedNode(`${iri("term")}/private`),
+        Rdf.makeNamedNode(viewKey("private")),
         Rdf.makeLiteral(`${HashSet.has(privateSources, finding.sourceId)}`, XSD_STRING.value)
       )
     );
   // Claims include legacy sources with no explicit versions array.
   A.forEach(claims, (claim) => {
-    const node = Rdf.makeNamedNode(iri(`row/${sequence++}`));
+    const node = Rdf.makeNamedNode(viewKey(`row/${sequence++}`));
     addMetadata(node, {
       kind: "Claim",
       category: claim.category,

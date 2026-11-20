@@ -854,8 +854,16 @@ export declare namespace ShardBinding {
   export type Encoded = typeof ShardBinding.Encoded;
 }
 
+// A replacement local of the shard namespace, or "" for the namespace IRI itself.
+const ShardReplacement = S.Union([TermLocal, S.Literal("")]);
+
 /**
  * A deprecation row of a source shard, whose replacement is a local of the shard's namespace.
+ *
+ * **Details**
+ *
+ * The empty replacement `""` names the shard namespace itself, for a retired
+ * namespace IRI whose successor is the namespace, not one of its terms.
  *
  * **Example** (Deprecate a re-minted term inside a shard)
  *
@@ -878,8 +886,8 @@ export class ShardDeprecation extends S.Opaque<ShardDeprecation, { readonly bran
   S.Struct({
     term: TermIri.annotateKey({ description: "The deprecated term IRI, under any namespace." }),
     since: ReleaseVersion.annotateKey({ description: "Vocabulary release that deprecated the term." }),
-    replacement: S.OptionFromOptionalKey(TermLocal).annotateKey({
-      description: "Local of the shard namespace that succeeds the term, when one exists.",
+    replacement: S.OptionFromOptionalKey(ShardReplacement).annotateKey({
+      description: 'Local of the shard namespace that succeeds the term, or "" for the namespace itself.',
     }),
   }).pipe($I.annoteSchema("ShardDeprecation", { description: "A source-shard term deprecation." }))
 ) {}
@@ -1356,7 +1364,7 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
           Deprecation.make({
             term: deprecation.term,
             since: deprecation.since,
-            replacement: O.map(deprecation.replacement, (local) => termIriOf(shard.namespace, local)),
+            replacement: O.map(deprecation.replacement, (local) => TermIri.make(`${shard.namespace.iri}${local}`)),
           })
         )
       ),

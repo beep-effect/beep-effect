@@ -967,6 +967,25 @@ Lane goals/text-knowledge-stack-rebuild-p1b-registry
 
 Reverse: Return the branded IRI from mint and mintEncoded, return { term, curie } from bindingOf, drop namespaceOf and IdentityRegistry.layerFromBindings, and add Registry to the barrel as a namespace export, by a decision file before PR B opens.
 
+### P1: the research library and the test-runner terms are re-published from the registry; the composer still derives its IRI, 2026-11-20
+
+Commit 13 (PR C, `feat(identity,ontology,repo-cli,test-runner): re-publish the research library and the test-runner terms`) follows the live tree at these points of design sections 5.3, 6.2, 6.3 and 14.
+
+1. Composer and handler graph. The composer keeps deriving its IRI, as commit 12 left it. No module in `ALLOWED_IDENTITY_SOURCES` (Authority.ts, Id.ts, Root.ts, internal/Segment.ts, internal/schemaStatics.ts) changes, so the CI runner handler bundles keep the same module graph. The registry is read only by `Registry.ts`, `IdentityRegistry.ts`, the ontology fold, repo-cli and tests.
+2. No read codemod. The research-library reads are rewritten by hand: the namespace through `Registry.namespace("research-library")`, the projection predicates through `Registry.iri`, and the instance IRIs through `Registry.mint` under the declared bases `Topic`, `SoftwareAgent` and `Distribution`. The view keys use the declared base `view`. The fixture `identity/test/fixtures/p1-retired-iris.json` was derived once from the live fold at the commit 12 head (`assembleLibraryOntology()`, class IRIs and owned property IRIs under the old base) and from the seven test-runner pins. That one-off derivation script is not committed because it can only run against the pre-P1 composer IRIs.
+3. Deprecation rows. There are 113 rows. The research library has 106: 16 classes, 87 owned properties, `effectiveCategory`, `catalogIndex`, and the old `lib:` namespace IRI `.../Library.schemas/`, whose successor is the `research-library` namespace. The test runner has 7. The old `Topic`, `SoftwareAgent`, `Distribution` and `Library.views/term` IRIs never leave the process, so under ruling 10 they get no row.
+4. A namespace successor. A shard replacement names a local of the shard namespace, so the namespace row could not be written. `ShardDeprecation.replacement` now accepts the empty local `""`, which names the shard namespace itself. `RegistryView.replacementOf` follows a chain to a namespace IRI as well as to a term IRI.
+5. Release. A deprecation bumps the snapshot major under ruling 2, so the snapshot moves from 1.2.0 to 2.0.0, and every new binding and deprecation row carries `since: "2.0.0"`.
+6. The fold. `fold(namespace, input)` runs over the generated registry, and `foldWith(view)(namespace, input)` runs over a fixture registry. A namespace the view does not declare fails with the existing `unknownTerm` reason. `reservedPrefix` is replaced by `unboundClass` and `undeclaredProperty`. `BoundComposer` is deleted because nothing reads it. `Fold.test.ts` moves to fixture registries now rather than in commit 14, because the fold signature changes here.
+7. The projection. `RegistryLayout` gains `projections`, which `resolveRegistryLayout` fills from the workspace map: one `RegistryProjectionTarget` for each `RegistryProjection` package present in the checkout. A shard that projects into a package the checkout lacks is a `registry-shard-invalid` finding.
+8. Test-runner test. `@beep/test-runner` does not export `./internal/*`, so `test/Vitest.errors.terms.test.ts` pins the seven expected identifiers, IRIs and CURIEs as literals. Equality with the registry is proved in `identity/test/VitestErrorsParity.test.ts`.
+9. Composers kept for annotations. `Library.projection.ts` and `Library.views.ts` keep their `$I` composers, because they annotate `TopicPacket`, `LibraryTopic` and `ViewKind`. Only their IRI reads are removed, so those schema identifiers are unchanged.
+10. L0-3. `identity/test/TermStability.test.ts` lands here with test 3 (every retired IRI has a deprecation naming a live replacement). Tests 1 and 2 follow in commit 14.
+
+Lane goals/text-knowledge-stack-rebuild-p1c-bindings
+
+Reverse: Restore the pre-P1 composer IRIs as live terms by inverting the 113 deprecation rows of the research-library and vitest shards, and restore fold(composer) with its reservedPrefix check, by a decision file before PR C opens.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

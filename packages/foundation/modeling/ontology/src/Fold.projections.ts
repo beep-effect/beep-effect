@@ -221,9 +221,12 @@ const prefixTerm = (iri: string): JsonLdTerm => ({ "@id": iri, "@prefix": true }
  *
  * ```ts
  * import { $I as $BeepId } from "@beep/identity/packages"
- * import { fold } from "@beep/ontology/Fold.assembly"
+ * import { view } from "@beep/identity/Registry"
+ * import { RegistryShard, RegistryTable } from "@beep/identity/Term"
+ * import { foldWith } from "@beep/ontology/Fold.assembly"
  * import { toContext } from "@beep/ontology/Fold.projections"
- * import * as Effect from "effect/Effect";
+ * import * as Effect from "effect/Effect"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
  * const $I = $BeepId.create("patent")
@@ -232,9 +235,22 @@ const prefixTerm = (iri: string): JsonLdTerm => ({ "@id": iri, "@prefix": true }
  *   { prefLabel: S.String.pipe($I.key("skos:prefLabel")) },
  *   $I.class("Claim", { description: "A patent claim." })
  * ) {}
+ * const patent = S.decodeUnknownSync(RegistryShard)({
+ *   namespace: { prefix: "patent", iri: "https://example.test/patent/" },
+ *   terms: ["Claim", "prefLabel"],
+ *   bindings: [{ code: "@beep/patent/Claim", local: "Claim", since: "1.0.0" }],
+ *   deprecations: []
+ * })
+ * const skos = S.decodeUnknownSync(RegistryShard)({
+ *   namespace: { prefix: "skos", iri: "http://www.w3.org/2004/02/skos/core#" },
+ *   terms: ["prefLabel"],
+ *   bindings: [],
+ *   deprecations: []
+ * })
+ * const registry = view(Result.getOrThrow(RegistryTable.fromShards([patent, skos])))
  *
  * const context = toContext(
- *   Effect.runSync(fold($I, { label: "Patent Core", schemas: [Claim], triples: [] }))
+ *   Effect.runSync(foldWith(registry)("patent", { label: "Patent Core", schemas: [Claim], triples: [] }))
  * )
  * console.log(context.prefLabel) // "http://www.w3.org/2004/02/skos/core#prefLabel"
  * ```
@@ -375,9 +391,12 @@ const predicateNode = (assembled: AssembledClass, predicate: AssembledPredicate)
  *
  * ```ts
  * import { $I as $BeepId } from "@beep/identity/packages"
- * import { fold } from "@beep/ontology/Fold.assembly"
+ * import { view } from "@beep/identity/Registry"
+ * import { RegistryShard, RegistryTable } from "@beep/identity/Term"
+ * import { foldWith } from "@beep/ontology/Fold.assembly"
  * import { toJsonLd } from "@beep/ontology/Fold.projections"
- * import * as Effect from "effect/Effect";
+ * import * as Effect from "effect/Effect"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
  * const $I = $BeepId.create("patent")
@@ -386,11 +405,18 @@ const predicateNode = (assembled: AssembledClass, predicate: AssembledPredicate)
  *   { text: S.String },
  *   $I.class("Claim", { description: "A patent claim." })
  * ) {}
+ * const patent = S.decodeUnknownSync(RegistryShard)({
+ *   namespace: { prefix: "patent", iri: "https://example.test/patent/" },
+ *   terms: ["Claim", "text"],
+ *   bindings: [{ code: "@beep/patent/Claim", local: "Claim", since: "1.0.0" }],
+ *   deprecations: []
+ * })
+ * const registry = view(Result.getOrThrow(RegistryTable.fromShards([patent])))
  *
  * const document = toJsonLd(
- *   Effect.runSync(fold($I, { label: "Patent Core", schemas: [Claim], triples: [] }))
+ *   Effect.runSync(foldWith(registry)("patent", { label: "Patent Core", schemas: [Claim], triples: [] }))
  * )
- * console.log(document["@graph"][0]?.["@id"]) // "https://beep-effect.com/ns/patent/Claim"
+ * console.log(document["@graph"][0]?.["@id"]) // "https://example.test/patent/Claim"
  * ```
  *
  * @category projections
@@ -619,9 +645,12 @@ const prefixDefinitions = (ontology: AssembledOntology): ReadonlyArray<readonly 
  *
  * ```ts
  * import { $I as $BeepId } from "@beep/identity/packages"
- * import { fold } from "@beep/ontology/Fold.assembly"
+ * import { view } from "@beep/identity/Registry"
+ * import { RegistryShard, RegistryTable } from "@beep/identity/Term"
+ * import { foldWith } from "@beep/ontology/Fold.assembly"
  * import { toTurtle } from "@beep/ontology/Fold.projections"
- * import * as Effect from "effect/Effect";
+ * import * as Effect from "effect/Effect"
+ * import * as Result from "effect/Result"
  * import * as S from "effect/Schema"
  *
  * const $I = $BeepId.create("patent")
@@ -630,11 +659,18 @@ const prefixDefinitions = (ontology: AssembledOntology): ReadonlyArray<readonly 
  *   { text: S.String },
  *   $I.class("Claim", { description: "A patent claim." })
  * ) {}
+ * const patent = S.decodeUnknownSync(RegistryShard)({
+ *   namespace: { prefix: "patent", iri: "https://example.test/patent/" },
+ *   terms: ["Claim", "text"],
+ *   bindings: [{ code: "@beep/patent/Claim", local: "Claim", since: "1.0.0" }],
+ *   deprecations: []
+ * })
+ * const registry = view(Result.getOrThrow(RegistryTable.fromShards([patent])))
  *
  * const turtle = toTurtle(
- *   Effect.runSync(fold($I, { label: "Patent Core", schemas: [Claim], triples: [] }))
+ *   Effect.runSync(foldWith(registry)("patent", { label: "Patent Core", schemas: [Claim], triples: [] }))
  * )
- * console.log(turtle.includes("beep:Claim")) // true
+ * console.log(turtle.includes("patent:Claim")) // true
  * ```
  *
  * @category projections
