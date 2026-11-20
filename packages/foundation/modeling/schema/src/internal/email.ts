@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import { $SchemaId } from "./SchemaId.ts";
 
 const $I = $SchemaId.create("Email");
 

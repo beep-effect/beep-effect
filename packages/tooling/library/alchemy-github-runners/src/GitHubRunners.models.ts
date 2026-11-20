@@ -6,8 +6,8 @@
  * @since 0.0.0
  */
 
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import { RunnerType } from "./RunnerPool.models.ts";
 
 const $I = $AlchemyGithubRunnersId.create("GitHubRunners.models");

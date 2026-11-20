@@ -8,7 +8,6 @@
  * @since 0.0.0
  */
 
-import { $InfraCiRunnersId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -19,6 +18,7 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { $InfraCiRunnersId } from "./internal/InfraCiRunnersId.ts";
 
 const $I = $InfraCiRunnersId.create("PlanCheck");
 

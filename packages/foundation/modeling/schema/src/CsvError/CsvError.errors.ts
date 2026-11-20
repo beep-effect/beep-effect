@@ -5,10 +5,10 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity";
 import { dual } from "effect/Function";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { $SchemaId } from "../internal/SchemaId.ts";
 
 const $I = $SchemaId.create("CsvError");
 

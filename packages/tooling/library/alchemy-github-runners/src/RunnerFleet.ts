@@ -24,7 +24,6 @@ import * as S3 from "@alchemy.run/aws/S3";
 import * as SQS from "@alchemy.run/aws/SQS";
 import * as SSM from "@alchemy.run/aws/SSM";
 import { RunnerLaunchTemplate } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate";
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as Namespace from "alchemy/Namespace";
 import * as Output from "alchemy/Output";
 import * as A from "effect/Array";
@@ -34,6 +33,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { instanceStateChangeDetailType, spotInterruptionWarningDetailType } from "./Ec2Events.models.ts";
+import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import { FleetNamePrefix, fleetResourceNames, poolResourceNames } from "./RunnerFleetNames.ts";
 import { RunnerPool, RunnerType } from "./RunnerPool.models.ts";
 import {

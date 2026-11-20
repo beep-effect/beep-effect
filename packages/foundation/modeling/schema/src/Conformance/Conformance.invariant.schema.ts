@@ -4,11 +4,11 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { SpecificationReference } from "./Conformance.source.schema.ts";

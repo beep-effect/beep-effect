@@ -11,8 +11,8 @@
  * @since 0.0.0
  */
 
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import { RepositoryOwnerType } from "./WorkflowJob.models.ts";
 
 const $I = $AlchemyGithubRunnersId.create("RunnerMessages.models");

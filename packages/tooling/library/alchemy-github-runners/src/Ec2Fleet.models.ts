@@ -13,8 +13,8 @@
  * @since 0.0.0
  */
 
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import { AllocationStrategy, CapacityType } from "./RunnerPool.models.ts";
 import { LaunchTemplateRef } from "./RunnerRuntime.models.ts";
 

@@ -6,7 +6,6 @@
  * @since 0.0.0
  */
 
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import { actions, apps } from "@distilled.cloud/github";
 import * as GitHubApp from "@distilled.cloud/github/App";
 import { Credentials as GitHubCredentials } from "@distilled.cloud/github/Credentials";
@@ -22,6 +21,7 @@ import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { GitHubAppAuth, GitHubRunners } from "./GitHubApp.service.ts";
 import { InstallationToken, JitRunnerConfig, SelfHostedRunner } from "./GitHubRunners.models.ts";
+import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import { GitHubApiError, GitHubAppAuthError } from "./RunnerFleet.errors.ts";
 import { AppParameterNames } from "./SsmParameters.models.ts";
 import { SsmStore } from "./SsmStore.service.ts";

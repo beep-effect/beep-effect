@@ -12,7 +12,6 @@ import * as Lambda from "@alchemy.run/aws/Lambda";
 import { Ec2Fleet } from "@beep/alchemy-github-runners/Ec2Fleet.service";
 import { RunnerFilter, RunnerTag } from "@beep/alchemy-github-runners/RunnerInstance.models";
 import { runtimeConfigEnvName } from "@beep/alchemy-github-runners/RunnerRuntime.models";
-import { $InfraCiRunnersId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Duration from "effect/Duration";
@@ -20,6 +19,7 @@ import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { $InfraCiRunnersId } from "./internal/InfraCiRunnersId.ts";
 import type { RunnerInstance } from "@beep/alchemy-github-runners/RunnerInstance.models";
 
 const $I = $InfraCiRunnersId.create("Reaper");
