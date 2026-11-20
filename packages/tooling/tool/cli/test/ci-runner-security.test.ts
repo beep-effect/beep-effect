@@ -3098,16 +3098,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         );
         yield* fs.chmod(`${stubs}/gh`, 0o755);
         // The sync path fetches and adds a worktree of the pin-bump branch; the fixture has no remote, so
-        // those are recorded no-ops and `beep ci binary-pin-sync` (stubbed above) decides the outcome.
+        // those are recorded no-ops and `beep ci binary-pin-sync` (stubbed above) decides the outcome. The
+        // workflow passes `-c core.hooksPath=<dir>` on the bot checkout's calls: the stub matches on the
+        // argv without `-c` pairs and hands real git the original argv.
         yield* fs.writeFileString(
           `${stubs}/git`,
           A.join(
             [
               "#!/usr/bin/env bash",
+              'original=("$@"); words=(); while [ $# -gt 0 ]; do if [ "$1" = -c ]; then shift 2; else words+=("$1"); shift; fi; done; set -- "${words[@]}"',
               'case "$1" in fetch | worktree) echo "$*" >> "$RUNNER_TEMP/git-calls"; exit 0 ;; esac',
               'case "$1 $2" in "rev-parse refs/remotes/"*) echo 0123456789abcdef0123456789abcdef0badbeef; exit 0 ;; esac',
               'if [ "$1" = -C ] && [ "$3" = config ]; then exit 0; fi',
-              'PATH="${PATH#*:}" exec git "$@"',
+              'PATH="${PATH#*:}" exec git "${original[@]}"',
               "",
             ],
             "\n"
