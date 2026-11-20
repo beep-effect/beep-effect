@@ -114,10 +114,10 @@ describe.skipIf(!isBunRuntime)("GateHistorySqlite (Bun runtime)", () => {
         const file = path.join(dir, "store.sqlite");
         const { Database } = yield* Effect.promise(() => import("bun:sqlite"));
         const holder = new Database(file);
-        holder.exec("PRAGMA journal_mode = WAL");
-        holder.exec("PRAGMA locking_mode = EXCLUSIVE");
-        holder.exec("BEGIN EXCLUSIVE");
-        holder.exec("CREATE TABLE lock_holder (x)");
+        holder.run("PRAGMA journal_mode = WAL");
+        holder.run("PRAGMA locking_mode = EXCLUSIVE");
+        holder.run("BEGIN EXCLUSIVE");
+        holder.run("CREATE TABLE lock_holder (x)");
         // The retry schedule sleeps on the real clock.
         const error = yield* withStoreAt(
           sqliteLayer(file, HistoryConfig.make({ retryAttempts: 2, retryBaseMs: 5, deadlineMs: 20 })),
@@ -139,8 +139,8 @@ describe.skipIf(!isBunRuntime)("GateHistorySqlite (Bun runtime)", () => {
           Effect.gen(function* () {
             yield* ingestAll([failing]);
             const holder = new Database(file);
-            holder.exec("BEGIN IMMEDIATE");
-            holder.exec("CREATE TABLE writer_holder (x)");
+            holder.run("BEGIN IMMEDIATE");
+            holder.run("CREATE TABLE writer_holder (x)");
             const answer = yield* answerFor({ ...failing, runId: "r2", at: 2000 });
             const store = yield* GateHistoryStore;
             const write = yield* Effect.flip(store.ingest(reportOf({ ...failing, runId: "r2", at: 2000 }), laneA));
@@ -159,7 +159,7 @@ describe.skipIf(!isBunRuntime)("GateHistorySqlite (Bun runtime)", () => {
         const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
         const dir = yield* tempDir;
         const file = path.join(dir, "store.sqlite");
-        const writer = path.join(import.meta.dirname, "fixtures", "history-writer.ts");
+        const writer = path.join(import.meta.dirname, "support", "historyWriter.ts");
         const exits = yield* Effect.forEach(
           A.range(1, 12),
           (index) =>

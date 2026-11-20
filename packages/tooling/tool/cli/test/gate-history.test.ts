@@ -164,9 +164,9 @@ describe.skipIf(!isBunRuntime)("gate run history on the task path (Bun runtime)"
         yield* record(run("r1", 1000, ["adds"]));
         const { Database } = yield* Effect.promise(() => import("bun:sqlite"));
         const holder = new Database(file);
-        holder.exec("PRAGMA locking_mode = EXCLUSIVE");
-        holder.exec("BEGIN EXCLUSIVE");
-        holder.exec("CREATE TABLE lock_holder (x)");
+        holder.run("PRAGMA locking_mode = EXCLUSIVE");
+        holder.run("BEGIN EXCLUSIVE");
+        holder.run("CREATE TABLE lock_holder (x)");
         const result = yield* record(run("r2", 2000, ["adds"])).pipe(
           TestClock.withLive,
           Effect.ensuring(Effect.sync(() => holder.close()))
