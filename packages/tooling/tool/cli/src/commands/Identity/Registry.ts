@@ -355,9 +355,11 @@ const isIdentifier = (value: string): boolean => /^[A-Za-z_$][A-Za-z0-9_$]*$/.te
 
 const objectKey = (value: string): string => (isIdentifier(value) ? value : quote(value));
 
+const authorityReference = "${IdentityAuthority}";
+
 const iriLiteral = (iri: string): string =>
   Str.startsWith(IdentityAuthority)(iri)
-    ? `\`\${IdentityAuthority}${Str.slice(Str.length(IdentityAuthority))(iri)}\``
+    ? `\`${authorityReference}${Str.slice(Str.length(IdentityAuthority))(iri)}\``
     : quote(iri);
 
 const sortedEntries = <Value>(entries: ReadonlyArray<readonly [string, Value]>) =>
@@ -455,7 +457,8 @@ const recordBody = (rows: ReadonlyArray<string>): string =>
  * **Details**
  *
  * The module holds three literal constants and imports only
- * `IdentityAuthority`, and only when a namespace IRI sits under it:
+ * `IdentityAuthority`, and only when a rendered IRI literal (a namespace,
+ * a bound term or a replacement) substitutes it:
  * `RegistryVocab` (the `VocabShape` view), `RegistryBindings` (code identity
  * to CURIE and IRI) and `RegistryDeprecations` (deprecated IRI to its release
  * and replacement).
@@ -483,10 +486,11 @@ const recordBody = (rows: ReadonlyArray<string>): string =>
  * @since 0.0.0
  */
 export const renderRegistryData = (table: RegistryTable): string => {
-  const vocab = sortedEntries(R.toEntries(registryVocabOf(table)));
+  const vocab = A.map(sortedEntries(R.toEntries(registryVocabOf(table))), renderVocabEntry);
   const bindings = renderBindings(table);
   const deprecations = renderDeprecations(table);
-  const authority = A.some(table.namespaces, (namespace) => Str.startsWith(IdentityAuthority)(namespace.iri))
+  // The import follows the rendered rows: any IRI literal under the authority references it.
+  const authority = A.some(A.flatten([vocab, bindings, deprecations]), Str.includes(authorityReference))
     ? `import { IdentityAuthority } from "../../Authority.ts";\n\n`
     : "";
   return `/**
@@ -502,7 +506,7 @@ ${authority}/**
  * @category constants
  * @since 0.0.0
  */
-export const RegistryVocab = ${recordBody(A.map(vocab, renderVocabEntry))} as const satisfies Readonly<
+export const RegistryVocab = ${recordBody(vocab)} as const satisfies Readonly<
   Record<string, { readonly iri: string; readonly terms: ReadonlyArray<string> }>
 >;
 

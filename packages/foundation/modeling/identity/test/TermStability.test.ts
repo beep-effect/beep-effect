@@ -86,8 +86,9 @@ const moduleIriOf = (code: string): string => {
 
 const published = HashSet.fromIterable<string>(committed.terms);
 
-const releaseNumbers = (release: string): readonly [number, number, number] => {
-  const [major = 0, minor = 0, patch = 0] = A.map(Str.split(".")(release), Number);
+// Release components are unbounded, so they compare as exact `bigint`s, as the snapshot does.
+const releaseNumbers = (release: string): readonly [bigint, bigint, bigint] => {
+  const [major = 0n, minor = 0n, patch = 0n] = A.map(Str.split(".")(release), BigInt);
   return [major, minor, patch];
 };
 
@@ -133,13 +134,13 @@ describe("term stability", () => {
     [ReleaseVersion],
     ([release]) => {
       const wound = TermSnapshot.make({ ...committed, release });
-      const lower = Order.isLessThan(Order.Tuple([Order.Number, Order.Number, Order.Number]))(
+      const lower = Order.isLessThan(Order.Tuple([Order.BigInt, Order.BigInt, Order.BigInt]))(
         releaseNumbers(release),
         releaseNumbers(committed.release)
       );
       const tags = A.map(snapshotViolations(committed, wound), (violation) => violation._tag);
       expect(tags).toStrictEqual(lower ? ["ReleaseRegressed"] : []);
-      // The committed rows record since 2.0.0, so a release below it contradicts the rows themselves.
+      // The committed rows record since 1.0.0, the committed release, so a release below it contradicts the rows themselves.
       expect(A.map(snapshotReleaseViolations(wound), (violation) => violation._tag)).toStrictEqual(
         lower ? ["ReleaseBelowSince"] : []
       );
@@ -173,7 +174,9 @@ describe("term stability", () => {
         committed
       );
       expect(snapshotViolations(committed, next)).toStrictEqual([]);
-      expect(next.release).toBe("2.1.0");
+      // An addition alone bumps the minor of the committed release.
+      const [major, minor] = releaseNumbers(committed.release);
+      expect(next.release).toBe(`${major}.${minor + 1n}.0`);
     },
     { arbitrary: fcRuns(25) }
   );

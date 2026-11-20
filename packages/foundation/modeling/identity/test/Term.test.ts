@@ -7,6 +7,7 @@ import {
   Namespace,
   ReleaseVersion,
   SnapshotViolation,
+  snapshotViolationMessage,
   snapshotViolations,
   Term,
   TermBinding,
@@ -22,6 +23,7 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const runs = { arbitrary: fcRuns(100) };
 
@@ -128,6 +130,12 @@ describe("TermSnapshot", () => {
     assertTrue(
       TermSnapshot.fromRows({ ...baseRows, bindings: [...baseRows.bindings, rebound] }).pipe(Result.isFailure)
     );
+    // A repeat separated by a distinct row of the same key stays refused.
+    assertTrue(
+      TermSnapshot.fromRows({ ...baseRows, bindings: [...baseRows.bindings, rebound, ...baseRows.bindings] }).pipe(
+        Result.isFailure
+      )
+    );
   });
 
   it("starts from an empty snapshot at release 0.0.0", () => {
@@ -217,6 +225,22 @@ describe("snapshotViolations", () => {
     ).toStrictEqual([activity, testHang]);
   });
 
+  it("judges term membership apart from namespace membership", () => {
+    const previous = snapshot();
+    const entityNs = Namespace.make({ prefix: "entity", iri: IRI.make(entity) });
+    const extraNs = Namespace.make({ prefix: "extra", iri: IRI.make("https://example.test/extra/") });
+    // A removed term whose IRI becomes a namespace IRI is still a removed term.
+    expect(snapshotViolations(previous, snapshot({ namespaces: [...baseRows.namespaces, entityNs] }))).toStrictEqual([
+      SnapshotViolation.cases.TermRemoved.make({ term: entity }),
+    ]);
+    expect(
+      snapshotViolations(
+        previous,
+        snapshot({ namespaces: [...baseRows.namespaces, extraNs], terms: [...baseRows.terms, iri(extraNs.iri)] })
+      )
+    ).toStrictEqual([]);
+  });
+
   it("reports a dropped namespace and a changed prefix", () => {
     const previous = snapshot();
     const renamed = Namespace.make({ prefix: "provo", iri: prov.iri });
@@ -259,3 +283,54 @@ describe("snapshotViolations", () => {
 });
 
 const pipeDual = (previous: TermSnapshot, next: TermSnapshot) => snapshotViolations(next)(previous);
+
+describe("snapshotViolationMessage", () => {
+  const Violation = SnapshotViolation.cases;
+  const v2 = release("2.0.0");
+  const otherCode = code("@beep/test-runner/Vitest/OtherHang");
+
+  it("states every violation kind in one line naming its fields", () => {
+    expect(
+      A.map(
+        [
+          Violation.TermRemoved.make({ term: activity }),
+          Violation.TermRevived.make({ term: oldTestHang }),
+          Violation.DeprecationRemoved.make({ term: oldTestHang }),
+          Violation.DeprecationChanged.make({ term: oldTestHang }),
+          Violation.SinceRewritten.make({ term: testHang, from: v1, to: v2 }),
+          Violation.BindingReassigned.make({ code: hangCode, from: testHang, to: entity }),
+          Violation.BindingAmbiguous.make({ term: testHang, codes: [hangCode, otherCode] }),
+          Violation.NamespaceDropped.make({ prefix: prov.prefix, iri: prov.iri }),
+          Violation.NamespacePrefixChanged.make({ iri: vitest.iri, from: vitest.prefix, to: prov.prefix }),
+        ],
+        snapshotViolationMessage
+      )
+    ).toStrictEqual([
+      "http://www.w3.org/ns/prov#Activity is removed without a deprecation.",
+      "https://beep-effect.com/ns/test-utils/Vitest/TestHang is deprecated and published again.",
+      "The deprecation of https://beep-effect.com/ns/test-utils/Vitest/TestHang is removed.",
+      "The deprecation of https://beep-effect.com/ns/test-utils/Vitest/TestHang is changed.",
+      "The binding of https://beep-effect.com/ns/vitest/TestHang changes its since from 1.0.0 to 2.0.0.",
+      "Code identity @beep/test-runner/Vitest/TestHang is rebound from https://beep-effect.com/ns/vitest/TestHang to http://www.w3.org/ns/prov#Entity.",
+      "https://beep-effect.com/ns/vitest/TestHang is bound by more than one code identity (@beep/test-runner/Vitest/TestHang, @beep/test-runner/Vitest/OtherHang).",
+      'Namespace "prov" (http://www.w3.org/ns/prov#) is removed without a deprecation of its IRI.',
+      'Namespace https://beep-effect.com/ns/vitest/ changes its prefix from "vitest" to "prov".',
+    ]);
+  });
+
+  it("describes the violations snapshotViolations reports", () => {
+    const next = snapshot({ release: release("1.1.0"), terms: [testHang, entity, iri(prov.iri), iri(vitest.iri)] });
+    expect(A.map(snapshotViolations(snapshot(), next), snapshotViolationMessage)).toStrictEqual([
+      "http://www.w3.org/ns/prov#Activity is removed without a deprecation.",
+    ]);
+  });
+
+  it.prop(
+    "every decoded violation has a non-empty message",
+    [SnapshotViolation],
+    ([violation]) => {
+      assertTrue(Str.isNonEmpty(snapshotViolationMessage(violation)));
+    },
+    runs
+  );
+});

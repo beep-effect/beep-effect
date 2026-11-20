@@ -13,6 +13,7 @@
  * @since 0.0.0
  */
 import * as A from "effect/Array";
+import * as BI from "effect/BigInt";
 import * as Equal from "effect/Equal";
 import { dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
@@ -182,6 +183,31 @@ export const TermLocal = S.String.check(
  * @since 0.0.0
  */
 export type TermLocal = typeof TermLocal.Type;
+
+/**
+ * Check whether an IRI has the shape of a namespace IRI: it ends with `/` or `#`.
+ *
+ * **Details**
+ *
+ * A {@link TermLocal} never ends with `/` or `#`, so no term IRI does. A
+ * deprecated IRI of that shape is therefore a retired namespace IRI, whose
+ * replacement chain ends at a namespace IRI; every other deprecated IRI is a
+ * retired term, whose chain ends at a declared term.
+ *
+ * **Example** (Tell a namespace IRI from a term IRI)
+ *
+ * ```ts import.meta.vitest name="Tell a namespace IRI from a term IRI"
+ * import { isNamespaceShapedIri } from "@beep/identity/Term"
+ *
+ * isNamespaceShapedIri("http://www.w3.org/ns/prov#") // => true
+ * isNamespaceShapedIri("https://beep-effect.com/ns/research-library/") // => true
+ * isNamespaceShapedIri("http://www.w3.org/ns/prov#Activity") // => false
+ * ```
+ *
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isNamespaceShapedIri = (iri: string): boolean => Str.endsWith("/")(iri) || Str.endsWith("#")(iri);
 
 /**
  * One registry namespace: the CURIE prefix and the IRI it expands to.
@@ -548,8 +574,10 @@ export declare namespace TermSnapshot {
 
 const decodeSnapshotType = S.decodeUnknownResult(S.toType(TermSnapshot));
 
+// The sort is stable and groups rows by key, so one linear pass drops exact repeats. Distinct rows
+// with one key stay for the schema to refuse, and so does a repeat they separate.
 const canonicalRows = <Row>(rows: Iterable<Row>, key: (row: Row) => string): ReadonlyArray<Row> =>
-  pipe(A.fromIterable(rows), A.sort(Order.mapInput(Order.String, key)), A.dedupeWith(Equal.equals));
+  pipe(A.fromIterable(rows), A.sort(Order.mapInput(Order.String, key)), A.dedupeAdjacent);
 
 /**
  * Every way a successor snapshot breaks the published term set of its predecessor.
@@ -638,15 +666,22 @@ const Violation = SnapshotViolation.cases;
 const indexBy = <Row, Key>(rows: ReadonlyArray<Row>, key: (row: Row) => Key): HashMap.HashMap<Key, Row> =>
   HashMap.fromIterable(A.map(rows, (row) => [key(row), row] as const));
 
+// `terms` holds namespace IRIs too; a vocabulary term is one that is not a namespace IRI of its
+// snapshot. Namespace membership is judged apart, by `namespaceViolations`.
+const vocabularyTerms = (snapshot: TermSnapshot): ReadonlyArray<TermIri> => {
+  const namespaceIris = HashSet.fromIterable(A.map(snapshot.namespaces, (namespace): string => namespace.iri));
+  return A.filter(snapshot.terms, (term) => !HashSet.has(namespaceIris, term));
+};
+
 const termViolations = (previous: TermSnapshot, next: TermSnapshot): ReadonlyArray<SnapshotViolation> => {
-  const published = HashSet.fromIterable(next.terms);
+  const published = HashSet.fromIterable(vocabularyTerms(next));
   const deprecated = HashSet.fromIterable(
     A.appendAll(A.map(previous.deprecations, deprecationKey), A.map(next.deprecations, deprecationKey))
   );
   const nextDeprecated = HashSet.fromIterable(A.map(next.deprecations, deprecationKey));
   return A.appendAll(
     pipe(
-      previous.terms,
+      vocabularyTerms(previous),
       A.filter((term) => !HashSet.has(published, term) && !HashSet.has(nextDeprecated, term)),
       A.map((term) => Violation.TermRemoved.make({ term }))
     ),
@@ -738,14 +773,15 @@ const namespaceViolations = (previous: TermSnapshot, next: TermSnapshot): Readon
   );
 };
 
-// A release as its numeric major, minor and patch, ordered component by component.
-const releaseNumbers = (release: ReleaseVersion): readonly [number, number, number] => {
+// A release as its major, minor and patch, ordered component by component. Components are
+// unbounded decimal integers, so they compare as exact `bigint`s, never as rounded numbers.
+const releaseNumbers = (release: ReleaseVersion): readonly [bigint, bigint, bigint] => {
   const [major = "0", minor = "0", patch = "0"] = Str.split(".")(release);
-  return [Number(major), Number(minor), Number(patch)];
+  return [BigInt(major), BigInt(minor), BigInt(patch)];
 };
 
 const releaseOrder: Order.Order<ReleaseVersion> = Order.mapInput(
-  Order.Tuple([Order.Number, Order.Number, Order.Number]),
+  Order.Tuple([Order.BigInt, Order.BigInt, Order.BigInt]),
   releaseNumbers
 );
 const releaseIsLower = Order.isLessThan(releaseOrder);
@@ -943,7 +979,10 @@ const ShardReplacement = S.Union([TermLocal, S.Literal("")]);
  * **Details**
  *
  * The empty replacement `""` names the shard namespace itself, for a retired
- * namespace IRI whose successor is the namespace, not one of its terms.
+ * namespace IRI whose successor is the namespace, not one of its terms. The
+ * table accepts it only for a deprecated IRI that ends with `/` or `#`
+ * ({@link isNamespaceShapedIri}): a retired term is never succeeded by a
+ * namespace IRI.
  *
  * **Example** (Deprecate a re-minted term inside a shard)
  *
@@ -1090,10 +1129,11 @@ export declare namespace RegistryShard {
  * - `NamespaceIriIsTerm`: no namespace IRI is also a term IRI, so the snapshot keeps the two apart.
  * - `TermOutsideNamespace`: a term IRI is its namespace IRI followed by its local.
  * - `DuplicateBinding`: a code identity is bound at most once.
- * - `BindingToUnknownTerm`: a binding names a live term.
+ * - `BindingToUnknownTerm`: a binding names a declared term, never a namespace IRI.
  * - `DuplicateDeprecation`: a term is deprecated at most once.
- * - `DeprecatedTermLive`: a deprecated IRI is not live.
- * - `ReplacementUnknown` and `ReplacementCycle`: a replacement chain ends at a live term.
+ * - `DeprecatedTermLive`: a deprecated IRI is neither a term IRI nor a namespace IRI.
+ * - `ReplacementUnknown` and `ReplacementCycle`: a retired term's replacement chain ends at a declared term,
+ *   never a namespace IRI; a retired namespace IRI ({@link isNamespaceShapedIri}) ends at a declared namespace IRI.
  *
  * **Example** (Make a conflict)
  *
@@ -1161,7 +1201,7 @@ export const registryConflictMessage: (conflict: RegistryConflict) => string = R
   DuplicateDeprecation: ({ term }) => `Term ${term} is deprecated more than once.`,
   DeprecatedTermLive: ({ term }) => `${term} is deprecated and still declared live.`,
   ReplacementUnknown: ({ term, replacement }) =>
-    `The replacement chain of ${term} reaches ${replacement}, which is neither live nor deprecated with a successor.`,
+    `The replacement chain of ${term} reaches ${replacement}, which is neither a declared ${isNamespaceShapedIri(term) ? "namespace IRI" : "term"} nor deprecated with a successor.`,
   ReplacementCycle: ({ term }) => `The replacement chain of ${term} returns to a term it already visited.`,
 });
 
@@ -1196,14 +1236,16 @@ const duplicateGroups = <Row>(
 const sortedStrings = <Value extends string>(values: ReadonlyArray<Value>): Array<Value> =>
   A.sort(A.dedupe(values), Order.String);
 
+// A retired term's chain ends at a declared term, never at a namespace IRI; a retired namespace IRI's
+// chain ends at a declared namespace IRI, never at a term. A namespace IRI is never a binding target.
 const followReplacement = (
-  live: HashSet.HashSet<string>,
+  successors: HashSet.HashSet<string>,
   byTerm: HashMap.HashMap<string, Deprecation>,
   origin: TermIri,
   current: TermIri,
   seen: HashSet.HashSet<string>
 ): O.Option<RegistryConflict> =>
-  HashSet.has(live, current)
+  HashSet.has(successors, current)
     ? O.none()
     : HashSet.has(seen, current)
       ? Conflict.ReplacementCycle.makeOption({ term: origin })
@@ -1212,17 +1254,14 @@ const followReplacement = (
           O.flatMap((successor) => successor.replacement),
           O.match({
             onNone: () => Conflict.ReplacementUnknown.makeOption({ term: origin, replacement: current }),
-            onSome: (next) => followReplacement(live, byTerm, origin, next, HashSet.add(seen, current)),
+            onSome: (next) => followReplacement(successors, byTerm, origin, next, HashSet.add(seen, current)),
           })
         );
 
 const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> => {
-  const live = HashSet.fromIterable(
-    A.appendAll(
-      A.map(rows.terms, (term) => term.iri),
-      A.map(rows.namespaces, (namespace): string => namespace.iri)
-    )
-  );
+  const terms = HashSet.fromIterable(A.map(rows.terms, (term): string => term.iri));
+  const namespaceIris = HashSet.fromIterable(A.map(rows.namespaces, (namespace): string => namespace.iri));
+  const live = HashSet.union(terms, namespaceIris);
   const namespaceByPrefix = indexBy(rows.namespaces, namespaceKey);
   const deprecationByTerm = indexBy(rows.deprecations, deprecationKey);
   return A.flatten([
@@ -1289,7 +1328,7 @@ const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> 
     ),
     pipe(
       rows.bindings,
-      A.filter((binding) => !HashSet.has(live, binding.term)),
+      A.filter((binding) => !HashSet.has(terms, binding.term)),
       A.map((binding) => Conflict.BindingToUnknownTerm.make({ code: binding.code, term: binding.term }))
     ),
     A.map(duplicateGroups(rows.deprecations, deprecationKey), (group) =>
@@ -1304,7 +1343,13 @@ const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> 
       pipe(
         deprecation.replacement,
         O.flatMap((replacement) =>
-          followReplacement(live, deprecationByTerm, deprecation.term, replacement, HashSet.make(deprecation.term))
+          followReplacement(
+            isNamespaceShapedIri(deprecation.term) ? namespaceIris : terms,
+            deprecationByTerm,
+            deprecation.term,
+            replacement,
+            HashSet.make(deprecation.term)
+          )
         ),
         Result.fromOption(() => deprecation)
       )
@@ -1314,17 +1359,13 @@ const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> 
 
 const termIriOf = (namespace: Namespace, local: TermLocal): TermIri => TermIri.make(`${namespace.iri}${local}`);
 
-const releaseParts = (release: ReleaseVersion): readonly [number, number] => {
-  const [major = "0", minor = "0"] = Str.split(".")(release);
-  return [Number(major), Number(minor)];
-};
-
+// Release arithmetic is exact `bigint` arithmetic over the components `releaseNumbers` reads.
 const nextMajor = (release: ReleaseVersion): ReleaseVersion =>
-  ReleaseVersion.make(`${releaseParts(release)[0] + 1}.0.0`);
+  ReleaseVersion.make(`${BI.increment(releaseNumbers(release)[0])}.0.0`);
 
 const nextMinor = (release: ReleaseVersion): ReleaseVersion => {
-  const [major, minor] = releaseParts(release);
-  return ReleaseVersion.make(`${major}.${minor + 1}.0`);
+  const [major, minor] = releaseNumbers(release);
+  return ReleaseVersion.make(`${major}.${BI.increment(minor)}.0`);
 };
 
 // The code a binding moves to: `to` for `from` itself, `to/<rest>` for `from/<rest>`.

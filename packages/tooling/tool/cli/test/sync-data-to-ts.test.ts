@@ -1,3 +1,4 @@
+import { renderRegistryJson } from "@beep/repo-cli/commands/Identity/Registry";
 import { syncDataToTsCommand } from "@beep/repo-cli/commands/SyncDataToTs";
 import { DEFAULT_JSON_PRETTY_MAX_LENGTH } from "@beep/repo-cli/test/Cli";
 import {
@@ -1175,6 +1176,8 @@ const fixtureClient = makeWebHandlerClient((request) => new Response(fixtureText
 const acquireFixture = (rows: ReadonlyArray<typeof VocabularyPin.Encoded>) =>
   makePinnedVocabulariesTarget(rows).acquire.pipe(Effect.provideService(HttpClient.HttpClient, fixtureClient));
 
+const exShardPath = "packages/foundation/modeling/identity/registry/namespaces/ex.json";
+
 it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned vocabulary acquisition", (it) => {
   it.effect("pins the eleven namespaces at immutable sources and rejects byte drift", () =>
     Effect.gen(function* () {
@@ -1268,6 +1271,69 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned vocabulary acquisi
       expect(malformed.message).toContain("Failed to decode the pinned vocabulary rows");
       const license = yield* acquireFixture([{ ...dt, license: "Not A License" }]).pipe(Effect.flip);
       expect(license.message).toContain("Failed to validate the namespace pins and registry shards");
+    })
+  );
+
+  it.effect("carries a shard's hand-authored bindings and deprecations through a sync", () =>
+    Effect.gen(function* () {
+      yield* temporaryRepository;
+      const { ex } = yield* fixturePins();
+      const handAuthored = {
+        namespace: { prefix: "ex", iri: "https://example.test/ns#" },
+        terms: ["Retired", "Thing"],
+        bindings: [{ code: "@beep/fixture/Thing", local: "Thing", since: "1.0.0" }],
+        deprecations: [{ term: "https://example.test/ns#Retired", since: "1.1.0", replacement: "Thing" }],
+      };
+      yield* writeOutputFile(exShardPath, formatJson(handAuthored));
+      const projection = yield* acquireFixture([ex]);
+      const shard = O.getOrThrow(A.findFirst(projection.files, (file) => file.path === exShardPath));
+      expect(shard.content).toBe(renderRegistryJson({ ...handAuthored, terms: ["Thing", "related"] }));
+      yield* writeOutputFile(exShardPath, shard.content);
+      const second = yield* acquireFixture([ex]);
+      const rerun = O.getOrThrow(A.findFirst(second.files, (file) => file.path === exShardPath));
+      expect(rerun.content).toBe(shard.content);
+    })
+  );
+
+  it.effect("writes a shard that does not exist yet with empty rows", () =>
+    Effect.gen(function* () {
+      yield* temporaryRepository;
+      const { ex } = yield* fixturePins();
+      const projection = yield* acquireFixture([ex]);
+      const shard = O.getOrThrow(A.findFirst(projection.files, (file) => file.path === exShardPath));
+      expect(shard.content).toBe(
+        renderRegistryJson({
+          namespace: { prefix: "ex", iri: "https://example.test/ns#" },
+          terms: ["Thing", "related"],
+          bindings: [],
+          deprecations: [],
+        })
+      );
+    })
+  );
+
+  it.effect("fails typed on a malformed existing shard instead of overwriting it", () =>
+    Effect.gen(function* () {
+      yield* temporaryRepository;
+      const { ex } = yield* fixturePins();
+      const malformed = formatJson({
+        namespace: { prefix: "ex", iri: "https://example.test/ns#" },
+        terms: ["Thing"],
+        bindings: [],
+        deprecations: [{ term: "https://example.test/ns#Retired", since: "not-a-version" }],
+      });
+      yield* writeOutputFile(exShardPath, malformed);
+      const error = yield* acquireFixture([ex]).pipe(Effect.flip);
+      expect(error._tag).toBe("SyncDataToTsError");
+      expect(error.file).toBe(exShardPath);
+      expect(error.message).toContain("ex: the existing registry shard is not a valid RegistryShard");
+      const unparsable = yield* writeOutputFile(exShardPath, "{ not json").pipe(
+        Effect.andThen(acquireFixture([ex])),
+        Effect.flip
+      );
+      expect(unparsable.message).toContain("ex: the existing registry shard is not a valid RegistryShard");
+      const kept = yield* readOutputFile(exShardPath);
+      expect(kept).toBe("{ not json");
     })
   );
 });

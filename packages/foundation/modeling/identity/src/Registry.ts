@@ -16,7 +16,7 @@
  */
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { constant, dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -29,7 +29,7 @@ import { IRI } from "./Iri.ts";
 import { RegistryBindings, RegistryDeprecations, RegistryVocab } from "./internal/generated/Registry.data.ts";
 import { SegmentSchema } from "./internal/Segment.ts";
 import { $IdentityId } from "./packages.ts";
-import { Namespace, Term, TermIri, TermLocal } from "./Term.ts";
+import { isNamespaceShapedIri, Namespace, Term, TermIri, TermLocal } from "./Term.ts";
 import type { RegistryTable } from "./Term.ts";
 import type { Curie, Expand, VocabShape } from "./Vocab.ts";
 
@@ -153,7 +153,7 @@ export interface RegistryView {
   readonly expandPredicate: (predicate: string) => O.Option<ExpandedPredicate>;
   /** The namespace a prefix names. */
   readonly namespaceOf: (prefix: string) => O.Option<Namespace>;
-  /** The live term or namespace IRI a deprecated IRI is replaced by, following the deprecation chain. */
+  /** The live term (or, for a retired namespace IRI, the namespace IRI) a deprecated IRI is replaced by, following the chain. */
   readonly replacementOf: (iri: string) => O.Option<TermIri>;
 }
 
@@ -191,14 +191,20 @@ const makeView = (data: RegistryData): RegistryView => {
   );
 
   const namespaceIris = HashSet.fromIterable(A.map(namespaces, ({ namespace }): string => namespace.iri));
-  const isLive = (iri: string): boolean => HashMap.has(termByIri, iri) || HashSet.has(namespaceIris, iri);
+  // A retired namespace IRI is succeeded by a namespace IRI, a retired term by a term, as the table requires.
+  const isSuccessor =
+    (origin: string) =>
+    (iri: string): boolean =>
+      isNamespaceShapedIri(origin) ? HashSet.has(namespaceIris, iri) : HashMap.has(termByIri, iri);
 
-  const follow = (current: string, seen: HashSet.HashSet<string>): O.Option<TermIri> =>
+  const follow = (origin: string, current: string, seen: HashSet.HashSet<string>): O.Option<TermIri> =>
     pipe(
       HashMap.get(replacementByTerm, current),
       O.flatten,
       O.filter((next) => !HashSet.has(seen, next)),
-      O.flatMap((next) => (isLive(next) ? TermIri.makeOption(next) : follow(next, HashSet.add(seen, next))))
+      O.flatMap((next) =>
+        isSuccessor(origin)(next) ? TermIri.makeOption(next) : follow(origin, next, HashSet.add(seen, next))
+      )
     );
 
   const expandCurie = (curie: string): O.Option<TermIri> => O.map(HashMap.get(termByCurie, curie), (term) => term.iri);
@@ -223,7 +229,7 @@ const makeView = (data: RegistryData): RegistryView => {
         HashMap.get(bindingByCode, code),
         O.flatMap((term) => HashMap.get(termByIri, term))
       ),
-    replacementOf: (iri) => follow(iri, HashSet.make(iri)),
+    replacementOf: (iri) => follow(iri, iri, HashSet.make(iri)),
   };
 };
 
@@ -563,16 +569,14 @@ export class RegistryMintError extends S.TaggedError<RegistryMintError, { readon
 
 const deprecatedTerms: Readonly<Record<string, unknown>> = RegistryDeprecations;
 
-const isNamespaceIri = (value: string): boolean => A.some(R.values(RegistryVocab), (entry) => entry.iri === value);
+// Every published non-live IRI and the refusal it earns; a deprecation outranks a namespace.
+const publishedReasons: Readonly<Record<string, RegistryMintError["reason"]>> = {
+  ...R.fromEntries(A.map(R.values(RegistryVocab), (entry) => [entry.iri, "NamespaceIri"] as const)),
+  ...R.map(deprecatedTerms, constant<RegistryMintError["reason"]>("DeprecatedTerm")),
+};
 
 const publishedAs = (minted: string): O.Option<RegistryMintError["reason"]> =>
-  O.isSome(generated.contract(minted))
-    ? O.some("LiveTerm")
-    : R.has(deprecatedTerms, minted)
-      ? O.some("DeprecatedTerm")
-      : isNamespaceIri(minted)
-        ? O.some("NamespaceIri")
-        : O.none();
+  O.isSome(generated.contract(minted)) ? O.some("LiveTerm") : R.get(publishedReasons, minted);
 
 // A minted instance IRI never equals an IRI the registry publishes.
 const refusePublished = (minted: string): string => {
@@ -584,8 +588,9 @@ const refusePublished = (minted: string): string => {
 };
 
 // A namespace IRI ends with its own separator; a term IRI takes "/" before the next segment.
+// The segment grammar admits characters an IRI refuses, such as a space, so the result is an `IRI`.
 const joinUnder = (base: string, tail: string): string =>
-  refusePublished(Str.includes(":")(base) ? `${baseIri(base)}/${tail}` : `${baseIri(base)}${tail}`);
+  refusePublished(IRI.make(Str.includes(":")(base) ? `${baseIri(base)}/${tail}` : `${baseIri(base)}${tail}`));
 
 /**
  * Mint an instance IRI under a registry term or namespace with the identity segment grammar.
@@ -600,7 +605,9 @@ const joinUnder = (base: string, tail: string): string =>
  * **Gotchas**
  *
  * Throws the segment schema error for an empty segment or one with a leading
- * or trailing `/`. Throws {@link RegistryMintError} when the result is an IRI
+ * or trailing `/`, and the `IRI` schema error when a segment holds a
+ * character an IRI refuses, such as a space; {@link mintEncoded} takes free
+ * text. Throws {@link RegistryMintError} when the result is an IRI
  * the registry publishes, such as `mint("dcterms", "Agent")`, which is the
  * term `dcterms:Agent`.
  *

@@ -16,73 +16,73 @@
     {
       "code": "@beep/test-runner/Vitest/PositiveTimeoutMillis",
       "local": "PositiveTimeoutMillis",
-      "since": "2.0.0"
+      "since": "1.0.0"
     },
     {
       "code": "@beep/test-runner/Vitest/TestContextUnavailable",
       "local": "TestContextUnavailable",
-      "since": "2.0.0"
+      "since": "1.0.0"
     },
     {
       "code": "@beep/test-runner/Vitest/TestContextUnavailable.method",
       "local": "TestContextUnavailable.method",
-      "since": "2.0.0"
+      "since": "1.0.0"
     },
     {
       "code": "@beep/test-runner/Vitest/TestHang",
       "local": "TestHang",
-      "since": "2.0.0"
+      "since": "1.0.0"
     },
     {
       "code": "@beep/test-runner/Vitest/TestHang.lastLogLine",
       "local": "TestHang.lastLogLine",
-      "since": "2.0.0"
+      "since": "1.0.0"
     },
     {
       "code": "@beep/test-runner/Vitest/TestHang.testName",
       "local": "TestHang.testName",
-      "since": "2.0.0"
+      "since": "1.0.0"
     },
     {
       "code": "@beep/test-runner/Vitest/TestHang.timeoutMillis",
       "local": "TestHang.timeoutMillis",
-      "since": "2.0.0"
+      "since": "1.0.0"
     }
   ],
   "deprecations": [
     {
       "term": "https://beep-effect.com/ns/test-utils/Vitest/PositiveTimeoutMillis",
-      "since": "2.0.0",
+      "since": "1.0.0",
       "replacement": "PositiveTimeoutMillis"
     },
     {
       "term": "https://beep-effect.com/ns/test-utils/Vitest/TestContextUnavailable",
-      "since": "2.0.0",
+      "since": "1.0.0",
       "replacement": "TestContextUnavailable"
     },
     {
       "term": "https://beep-effect.com/ns/test-utils/Vitest/TestContextUnavailable.method",
-      "since": "2.0.0",
+      "since": "1.0.0",
       "replacement": "TestContextUnavailable.method"
     },
     {
       "term": "https://beep-effect.com/ns/test-utils/Vitest/TestHang",
-      "since": "2.0.0",
+      "since": "1.0.0",
       "replacement": "TestHang"
     },
     {
       "term": "https://beep-effect.com/ns/test-utils/Vitest/TestHang.lastLogLine",
-      "since": "2.0.0",
+      "since": "1.0.0",
       "replacement": "TestHang.lastLogLine"
     },
     {
       "term": "https://beep-effect.com/ns/test-utils/Vitest/TestHang.testName",
-      "since": "2.0.0",
+      "since": "1.0.0",
       "replacement": "TestHang.testName"
     },
     {
       "term": "https://beep-effect.com/ns/test-utils/Vitest/TestHang.timeoutMillis",
-      "since": "2.0.0",
+      "since": "1.0.0",
       "replacement": "TestHang.timeoutMillis"
     }
   ],

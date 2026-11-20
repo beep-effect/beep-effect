@@ -2480,6 +2480,67 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
   );
 
   it.effect(
+    "prunes the Turbo build snapshot to the three exact file names of each kept hash",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      const actionText = yield* readRepoText(".github/actions/turbo-build-cache/action.yml");
+      const actionSteps = yield* decodeWorkflowSteps(yamlAt(parseWorkflowYaml(actionText), ["runs", "steps"]));
+      const run = stepRun(actionSteps, "Prune Turbo cache to environment-free build artifacts");
+      // A Turbo run summary with one environment-free build (kept) and one that hashes a variable (dropped).
+      const noEnv = '"configured":[],"inferred":[],"passthrough":[]';
+      const summaryJson = A.join(
+        [
+          '{"tasks":[',
+          `{"task":"build","envMode":"strict","hash":"aaaa1111","environmentVariables":{"specified":{"env":[],"passThroughEnv":[]},${noEnv}}},`,
+          `{"task":"build","envMode":"strict","hash":"bbbb2222","environmentVariables":{"specified":{"env":["APP_SECRET"],"passThroughEnv":[]},${noEnv}}}`,
+          "]}",
+        ],
+        ""
+      );
+      yield* fs.makeDirectory(path.join(tempRoot, ".turbo", "runs"), { recursive: true });
+      yield* fs.makeDirectory(path.join(tempRoot, ".turbo", "cache"), { recursive: true });
+      yield* fs.writeFileString(path.join(tempRoot, ".turbo", "runs", "summary.json"), summaryJson);
+      const cacheFiles = [
+        "aaaa1111.tar.zst",
+        "aaaa1111-meta.json",
+        "aaaa1111-manifest.json",
+        "aaaa1111-manifest.json.tmp",
+        "aaaa1111.tar.zst.tmp",
+        "aaaa1111.unknown",
+        "bbbb2222.tar.zst",
+        "cccc3333-meta.json",
+      ];
+      yield* Effect.forEach(
+        cacheFiles,
+        (name) => fs.writeFileString(path.join(tempRoot, ".turbo", "cache", name), name),
+        {
+          concurrency: 1,
+          discard: true,
+        }
+      );
+      const outputFile = path.join(tempRoot, "github-output");
+      const result = Bun.spawnSync(["bash", "-c", run], {
+        cwd: tempRoot,
+        env: { ...process.env, GITHUB_OUTPUT: outputFile, MAX_SNAPSHOT_MIB: "64" },
+        stderr: "pipe",
+        stdout: "pipe",
+      });
+      assert.strictEqual(result.exitCode, 0, result.stderr.toString());
+      const kept = yield* fs.readDirectory(path.join(tempRoot, ".turbo", "cache"));
+      assert.deepStrictEqual(A.sort(kept, Order.String), [
+        "aaaa1111-manifest.json",
+        "aaaa1111-meta.json",
+        "aaaa1111.tar.zst",
+      ]);
+      const output = yield* fs.readFileString(outputFile);
+      assert.include(output, "ready=true");
+      assert.include(result.stdout.toString(), "3 files kept, 5 removed");
+    })
+  );
+
+  it.effect(
     "restores the Turbo build snapshot in Heavy Check and Build and saves it only from a main push of Check",
     Effect.fnUntraced(function* () {
       const heavyText = yield* readRepoText(".github/workflows/heavy.yml");
@@ -3098,16 +3159,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         );
         yield* fs.chmod(`${stubs}/gh`, 0o755);
         // The sync path fetches and adds a worktree of the pin-bump branch; the fixture has no remote, so
-        // those are recorded no-ops and `beep ci binary-pin-sync` (stubbed above) decides the outcome.
+        // those are recorded no-ops and `beep ci binary-pin-sync` (stubbed above) decides the outcome. The
+        // workflow passes `-c core.hooksPath=<dir>` on the bot checkout's calls: the stub matches on the
+        // argv without `-c` pairs and hands real git the original argv.
         yield* fs.writeFileString(
           `${stubs}/git`,
           A.join(
             [
               "#!/usr/bin/env bash",
+              'original=("$@"); words=(); while [ $# -gt 0 ]; do if [ "$1" = -c ]; then shift 2; else words+=("$1"); shift; fi; done; set -- "${words[@]}"',
               'case "$1" in fetch | worktree) echo "$*" >> "$RUNNER_TEMP/git-calls"; exit 0 ;; esac',
               'case "$1 $2" in "rev-parse refs/remotes/"*) echo 0123456789abcdef0123456789abcdef0badbeef; exit 0 ;; esac',
               'if [ "$1" = -C ] && [ "$3" = config ]; then exit 0; fi',
-              'PATH="${PATH#*:}" exec git "$@"',
+              'PATH="${PATH#*:}" exec git "${original[@]}"',
               "",
             ],
             "\n"

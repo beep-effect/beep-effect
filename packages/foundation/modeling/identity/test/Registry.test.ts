@@ -115,6 +115,9 @@ describe("generated Registry", () => {
     expect(() => mint("skos:Concept", "")).toThrow();
     expect(() => mint("skos:Concept", "/leading")).toThrow();
     expect(() => mint("skos:Concept", "trailing/")).toThrow();
+    // The segment grammar admits a space; the minted value must still be an IRI.
+    expect(() => mint("dcterms", "a b")).toThrow("Schema validation failed");
+    expect(() => mint("skos:Concept", "legal", "a\u{E0001}")).toThrow("Schema validation failed");
   });
 
   it("mints instance IRIs from percent-encoded raw keys", () => {

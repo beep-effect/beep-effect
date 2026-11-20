@@ -1,4 +1,5 @@
 import { fcRuns } from "@beep/fc-runs";
+import { IRI } from "@beep/identity/Iri";
 import {
   $I as $BeepId,
   $EpistemicId,
@@ -26,6 +27,7 @@ import snapshot from "../registry/term-snapshot.json" with { type: "json" };
 // are compared against that same exported composer.
 
 const runs = { arbitrary: fcRuns(100) };
+const isIri = S.is(IRI);
 
 // One identity segment as the composer and `Registry.mint` both accept it.
 const Segment = S.String.check(
@@ -145,8 +147,11 @@ describe("kept internal values", () => {
     "mints the bytes the composer mints under a kept instance base",
     [Segment, Segment],
     ([kind, key]) => {
-      expect(mint("practice-kg:client", key)).toBe(graphIdentity.create("client").create(key).iri);
-      expect(mint("semantic-foundation", kind, key)).toBe($SemanticFoundationId.create(kind).create(key).iri);
+      // The composer prints any segment; `mint` returns an `IRI`, so it refuses the bytes an IRI refuses.
+      const sameBytes = (minted: () => string, composed: string) =>
+        isIri(composed) ? expect(minted()).toBe(composed) : expect(minted).toThrow();
+      sameBytes(() => mint("practice-kg:client", key), graphIdentity.create("client").create(key).iri);
+      sameBytes(() => mint("semantic-foundation", kind, key), $SemanticFoundationId.create(kind).create(key).iri);
     },
     runs
   );
