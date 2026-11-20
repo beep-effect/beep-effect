@@ -15,8 +15,8 @@
  * @packageDocumentation
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
+import { $SchemaId } from "./internal/SchemaId.ts";
 import { Sha256PrefixedDigest } from "./Sha256.ts";
 
 const $I = $SchemaId.create("ContentHash");

@@ -15,12 +15,12 @@
  * @packageDocumentation
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as HashSet from "effect/HashSet";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import * as SchemaTransformation from "effect/SchemaTransformation";
+import { $SchemaId } from "./internal/SchemaId.ts";
 
 const $I = $SchemaId.create("CanonicalHashSet");
 
