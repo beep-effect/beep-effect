@@ -2477,7 +2477,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.strictEqual(heavyRestore.with?.operation, "restore");
       assert.strictEqual(
         heavyRestore.if,
-        "(env.BEEP_CI_LANE_ID == 'check' || env.BEEP_CI_LANE_ID == 'build') && github.event_name == 'pull_request'"
+        "(env.BEEP_CI_LANE_ID == 'check' || env.BEEP_CI_LANE_ID == 'build') && github.event_name == 'pull_request' && hashFiles('.github/actions/turbo-build-cache/action.yml') != ''"
       );
       const heavyPrune = stepByName(heavySteps, "Prune main Turbo build cache");
       assert.strictEqual(heavyPrune.uses, actionPath);

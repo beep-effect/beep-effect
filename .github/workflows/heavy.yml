@@ -192,9 +192,14 @@ jobs:
 
       # Check and Build pull `^build` artifacts for most packages. Pull
       # requests take them from the newest main snapshot instead of one remote
-      # cache GET each; Turbo still decides every hit by task hash.
+      # cache GET each; Turbo still decides every hit by task hash. A pull
+      # request runs this workflow from main but the action from its own
+      # checkout, so a branch that predates the action skips the step.
       - name: Restore main Turbo build cache
-        if: (env.BEEP_CI_LANE_ID == 'check' || env.BEEP_CI_LANE_ID == 'build') && github.event_name == 'pull_request'
+        if: >-
+          (env.BEEP_CI_LANE_ID == 'check' || env.BEEP_CI_LANE_ID == 'build') &&
+          github.event_name == 'pull_request' &&
+          hashFiles('.github/actions/turbo-build-cache/action.yml') != ''
         continue-on-error: true
         uses: ./.github/actions/turbo-build-cache
         with:
