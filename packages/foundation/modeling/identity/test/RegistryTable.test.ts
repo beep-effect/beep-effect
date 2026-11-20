@@ -135,6 +135,19 @@ describe("RegistryTable.fromShards", () => {
     expect(conflictTags(RegistryTable.fromShards([parent, nested]))).toStrictEqual(["DuplicateTermIri"]);
   });
 
+  it("reports a namespace IRI that is also a term IRI", () => {
+    const parent = shard({ namespace: { prefix: "p", iri: "https://e.test/" }, terms: ["q"] });
+    const child = shard({ namespace: { prefix: "r", iri: "https://e.test/q" }, terms: ["x"] });
+    const result = RegistryTable.fromShards([parent, child]);
+    expect(conflictsOf(result)).toStrictEqual([
+      RegistryConflict.cases.NamespaceIriIsTerm.make({
+        iri: iri("https://e.test/q"),
+        namespaces: ["r"],
+        termNamespaces: ["p"],
+      }),
+    ]);
+  });
+
   it("reports a binding to an unknown term and a code bound twice", () => {
     const unknown = shard({
       namespace: vitestShard.namespace,
@@ -282,6 +295,7 @@ describe("registryConflictMessage", () => {
       RegistryConflict.cases.DuplicatePrefix.make({ prefix: "vitest", iris: [vitestNs.iri] }),
       RegistryConflict.cases.DuplicateNamespaceIri.make({ iri: vitestNs.iri, prefixes: ["a", "b"] }),
       RegistryConflict.cases.DuplicateTermIri.make({ term, namespaces: ["a", "b"] }),
+      RegistryConflict.cases.NamespaceIriIsTerm.make({ iri: term, namespaces: ["a"], termNamespaces: ["b"] }),
       RegistryConflict.cases.TermOutsideNamespace.make({ term, namespace: "vitest" }),
       RegistryConflict.cases.DuplicateBinding.make({ code: hangCode, terms: [term] }),
       RegistryConflict.cases.BindingToUnknownTerm.make({ code: hangCode, term }),
@@ -293,7 +307,7 @@ describe("registryConflictMessage", () => {
     const messages = A.map(conflicts, registryConflictMessage);
     expect(A.dedupe(messages)).toHaveLength(conflicts.length);
     expect(messages[0]).toContain('"vitest"');
-    expect(messages[4]).toContain(hangCode);
+    expect(messages[5]).toContain(hangCode);
     expect(
       A.every(A.drop(messages, 2), (message) => Str.includes(term)(message) || Str.includes(hangCode)(message))
     ).toBe(true);

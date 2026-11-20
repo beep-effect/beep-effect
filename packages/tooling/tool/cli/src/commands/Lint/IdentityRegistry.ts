@@ -82,11 +82,12 @@ const IdentityRegistryViolationKind = LiteralKit([
   "labs-segment-misplaced",
   "registry-shard-invalid",
   "registry-conflict",
+  "registry-snapshot-break",
   "registry-generated-drift",
 ]).pipe(
   $I.annoteSchema("IdentityRegistryViolationKind", {
     description:
-      "Closed identity-registry violation kind: registry completeness, orphaned registrations, non-leaf registry exports, local root composers, generated-labs-segment drift, and the declared-term registry (invalid shards, shard conflicts, generated-artifact drift).",
+      "Closed identity-registry violation kind: registry completeness, orphaned registrations, non-leaf registry exports, local root composers, generated-labs-segment drift, and the declared-term registry (invalid shards, shard conflicts, snapshot breaks, generated-artifact drift).",
   })
 );
 

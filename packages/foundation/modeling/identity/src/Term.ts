@@ -599,6 +599,33 @@ export const SnapshotViolation = S.TaggedUnion({
  */
 export type SnapshotViolation = typeof SnapshotViolation.Type;
 
+/**
+ * A one-line, human-readable statement of a snapshot violation.
+ *
+ * **Example** (Describe a violation)
+ *
+ * ```ts import.meta.vitest name="Describe a violation"
+ * import { SnapshotViolation, snapshotViolationMessage, TermIri } from "@beep/identity/Term"
+ *
+ * const violation = SnapshotViolation.cases.TermRemoved.make({ term: TermIri.make("http://www.w3.org/ns/prov#Activity") })
+ * snapshotViolationMessage(violation) // => "http://www.w3.org/ns/prov#Activity is removed without a deprecation."
+ * ```
+ *
+ * @category formatting
+ * @since 0.0.0
+ */
+export const snapshotViolationMessage: (violation: SnapshotViolation) => string = SnapshotViolation.match({
+  TermRemoved: ({ term }) => `${term} is removed without a deprecation.`,
+  TermRevived: ({ term }) => `${term} is deprecated and published again.`,
+  DeprecationRemoved: ({ term }) => `The deprecation of ${term} is removed.`,
+  DeprecationChanged: ({ term }) => `The deprecation of ${term} is changed.`,
+  SinceRewritten: ({ term, from, to }) => `The binding of ${term} changes its since from ${from} to ${to}.`,
+  BindingReassigned: ({ code, from, to }) => `Code identity ${code} is rebound from ${from} to ${to}.`,
+  BindingAmbiguous: ({ term, codes }) => `${term} is bound by more than one code identity (${A.join(codes, ", ")}).`,
+  NamespaceDropped: ({ prefix, iri }) => `Namespace "${prefix}" (${iri}) is removed without a deprecation of its IRI.`,
+  NamespacePrefixChanged: ({ iri, from, to }) => `Namespace ${iri} changes its prefix from "${from}" to "${to}".`,
+});
+
 const Violation = SnapshotViolation.cases;
 
 const indexBy = <Row, Key>(rows: ReadonlyArray<Row>, key: (row: Row) => Key): HashMap.HashMap<Key, Row> =>
@@ -972,6 +999,7 @@ export declare namespace RegistryShard {
  *
  * - `DuplicatePrefix` and `DuplicateNamespaceIri`: prefixes and namespace IRIs are unique.
  * - `DuplicateTermIri`: a term IRI is declared once, so contraction is an exact lookup.
+ * - `NamespaceIriIsTerm`: no namespace IRI is also a term IRI, so the snapshot keeps the two apart.
  * - `TermOutsideNamespace`: a term IRI is its namespace IRI followed by its local.
  * - `DuplicateBinding`: a code identity is bound at most once.
  * - `BindingToUnknownTerm`: a binding names a live term.
@@ -995,6 +1023,7 @@ export const RegistryConflict = S.TaggedUnion({
   DuplicatePrefix: { prefix: SafePnPrefix, iris: S.Array(IRI) },
   DuplicateNamespaceIri: { iri: IRI, prefixes: S.Array(SafePnPrefix) },
   DuplicateTermIri: { term: TermIri, namespaces: S.Array(SafePnPrefix) },
+  NamespaceIriIsTerm: { iri: TermIri, namespaces: S.Array(SafePnPrefix), termNamespaces: S.Array(SafePnPrefix) },
   TermOutsideNamespace: { term: TermIri, namespace: SafePnPrefix },
   DuplicateBinding: { code: CodeId, terms: S.Array(TermIri) },
   BindingToUnknownTerm: { code: CodeId, term: TermIri },
@@ -1035,6 +1064,8 @@ export const registryConflictMessage: (conflict: RegistryConflict) => string = R
     `Namespace IRI ${iri} is declared under more than one prefix (${A.join(prefixes, ", ")}).`,
   DuplicateTermIri: ({ term, namespaces }) =>
     `Term ${term} is declared more than once (in ${A.join(namespaces, ", ")}).`,
+  NamespaceIriIsTerm: ({ iri, namespaces, termNamespaces }) =>
+    `${iri} is the IRI of namespace ${A.join(namespaces, ", ")} and a term of ${A.join(termNamespaces, ", ")}.`,
   TermOutsideNamespace: ({ term, namespace }) =>
     `Term ${term} is not its namespace "${namespace}" IRI followed by its local.`,
   DuplicateBinding: ({ code, terms }) => `Code identity ${code} is bound more than once (${A.join(terms, ", ")}).`,
@@ -1128,6 +1159,29 @@ const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> 
           term: A.headNonEmpty(group).iri,
           namespaces: sortedStrings(A.map(group, (term) => term.namespace)),
         })
+    ),
+    A.filterMap(
+      duplicateGroups(
+        A.appendAll(
+          A.map(rows.terms, (term) => ({ iri: term.iri, prefix: term.namespace, namespace: false })),
+          A.map(rows.namespaces, (namespace) => ({ iri: namespace.iri, prefix: namespace.prefix, namespace: true }))
+        ),
+        (row) => row.iri
+      ),
+      (group) => {
+        const [namespaces, termNamespaces] = A.partition(group, (row) =>
+          row.namespace ? Result.succeed(row.prefix) : Result.fail(row.prefix)
+        );
+        return A.isReadonlyArrayNonEmpty(namespaces) && A.isReadonlyArrayNonEmpty(termNamespaces)
+          ? Result.succeed(
+              Conflict.NamespaceIriIsTerm.make({
+                iri: TermIri.make(A.headNonEmpty(group).iri),
+                namespaces: sortedStrings(namespaces),
+                termNamespaces: sortedStrings(termNamespaces),
+              })
+            )
+          : Result.failVoid;
+      }
     ),
     pipe(
       rows.terms,

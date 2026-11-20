@@ -5,6 +5,7 @@ import {
   mintEncoded,
   namespace,
   namespaceOf,
+  RegistryMintError,
   replacementOf,
   view,
 } from "@beep/identity/Registry";
@@ -109,7 +110,7 @@ describe("generated Registry", () => {
 
   it("mints instance IRIs with the composer segment grammar", () => {
     expect(mint("skos:Concept", "legal", "patent")).toBe("http://www.w3.org/2004/02/skos/core#Concept/legal/patent");
-    expect(mint("dcterms", "Agent")).toBe("http://purl.org/dc/terms/Agent");
+    expect(mint("dcterms", "agents", "alice")).toBe("http://purl.org/dc/terms/agents/alice");
     expect(mint("skos:Concept", "a/b")).toBe("http://www.w3.org/2004/02/skos/core#Concept/a/b");
     expect(() => mint("skos:Concept", "")).toThrow();
     expect(() => mint("skos:Concept", "/leading")).toThrow();
@@ -120,5 +121,19 @@ describe("generated Registry", () => {
     expect(mintEncoded("skos:Concept", "a b/c")).toBe("http://www.w3.org/2004/02/skos/core#Concept/a%20b%2Fc");
     expect(mintEncoded("dcterms", "x y")).toBe("http://purl.org/dc/terms/x%20y");
     expect(pipe("skos:Concept", mintEncoded("k"))).toBe("http://www.w3.org/2004/02/skos/core#Concept/k");
+  });
+
+  it("refuses to mint an IRI the registry publishes or from an empty key", () => {
+    const reasonOf = (thunk: () => string) =>
+      Result.match(Result.try(thunk), {
+        onSuccess: () => "minted",
+        onFailure: (error) => (S.is(RegistryMintError)(error) ? error.reason : "other"),
+      });
+    expect(reasonOf(() => mint("dcterms", "Agent"))).toBe("LiveTerm");
+    expect(reasonOf(() => mint("skos", "prefLabel"))).toBe("LiveTerm");
+    expect(reasonOf(() => mintEncoded("rdf", "type"))).toBe("LiveTerm");
+    expect(reasonOf(() => mintEncoded("dcterms", ""))).toBe("EmptyKey");
+    expect(reasonOf(() => mintEncoded("skos:Concept", ""))).toBe("EmptyKey");
+    expect(() => mintEncoded("skos:Concept", "\uD800")).toThrow(URIError);
   });
 });

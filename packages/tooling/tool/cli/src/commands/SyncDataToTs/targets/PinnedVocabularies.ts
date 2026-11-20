@@ -17,6 +17,7 @@ import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import { pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Regex from "effect/RegExp";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { renderRegistryJson } from "../../Identity/Registry.ts";
@@ -145,7 +146,11 @@ const sparPin = (options: {
   attribution: `${options.name} by David Shotton and Silvio Peroni. Contributors: ${options.contributors}. CC BY 4.0. Curated term names projected to TypeScript.`,
   version: options.version,
   sha256: options.sha256,
-  markers: [`owl:versionIRI ${options.prefix}:${options.release}`, `dcterms:license <${options.licenseIri}>`],
+  markers: [
+    `@prefix ${options.prefix}: <http://purl.org/spar/${options.prefix}/> .`,
+    `owl:versionIRI ${options.prefix}:${options.release}`,
+    `dcterms:license <${options.licenseIri}>`,
+  ],
   declaration: turtle(`${options.prefix}:`),
   terms: options.terms,
 });
@@ -468,7 +473,7 @@ const declaresTerm = (declaration: VocabularyDeclaration, text: string, term: st
       O.isSome(
         Str.match(
           new RegExp(
-            `^${subjectPrefix}${term}\\s+(?:a|rdf:type)\\s+(?:[\\w-]*:[\\w-]+\\s*,\\s*)*(?:${declarationTypes})\\b`,
+            `^${Regex.escape(subjectPrefix)}${Regex.escape(term)}\\s+(?:a|rdf:type)\\s+(?:[\\w-]*:[\\w-]+\\s*,\\s*)*(?:${declarationTypes})\\b`,
             "mu"
           )
         )(text)
@@ -477,7 +482,7 @@ const declaresTerm = (declaration: VocabularyDeclaration, text: string, term: st
       O.isSome(
         Str.match(
           new RegExp(
-            `<rdf:Description rdf:about="#${term}">(?:(?!</rdf:Description>)[\\s\\S])*<rdf:type rdf:resource="${rdfXmlDeclarationTypes}"/>`,
+            `<rdf:Description rdf:about="#${Regex.escape(term)}">(?:(?!</rdf:Description>)[\\s\\S])*<rdf:type rdf:resource="${rdfXmlDeclarationTypes}"/>`,
             "u"
           )
         )(text)

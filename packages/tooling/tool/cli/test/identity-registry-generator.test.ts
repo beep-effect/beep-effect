@@ -20,6 +20,7 @@ import {
 import { findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
@@ -177,6 +178,30 @@ describe("planRegistryArtifacts", () => {
         planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [fabioFile], previous: O.some("{}") }))
       )
     ).toStrictEqual(["registry-generated-drift"]);
+  });
+
+  it("refuses a regenerated snapshot that removes a term with no deprecation", () => {
+    const grown = shardFile("fabio.json", { ...fabio, terms: ["Article", "Report"], bindings: [], deprecations: [] });
+    const first = Result.getOrThrow(
+      planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [grown], previous: O.none() }))
+    );
+    const previous = O.fromUndefinedOr(first[1]?.content);
+    const removed = planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [fabioFile], previous }));
+    expect(issueKinds(removed)).toStrictEqual(["registry-snapshot-break"]);
+    const details = Result.isFailure(removed) ? A.map(removed.failure, (issue) => issue.detail) : [];
+    expect(details).toStrictEqual([
+      "http://purl.org/spar/fabio/Article is removed without a deprecation. Deprecate the term in its shard instead.",
+    ]);
+    const deprecated = shardFile("fabio.json", {
+      ...fabio,
+      bindings: [],
+      deprecations: [{ term: "http://purl.org/spar/fabio/Article", since: "2.0.0" }],
+    });
+    assertTrue(
+      planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [deprecated], previous })).pipe(
+        Result.isSuccess
+      )
+    );
   });
 });
 

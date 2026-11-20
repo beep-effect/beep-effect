@@ -507,9 +507,65 @@ const baseIri = (base: string): string =>
     unregistered(base)
   );
 
+/**
+ * Refusal of an instance IRI that the generated registry already publishes, or of an empty raw key.
+ *
+ * **Details**
+ *
+ * `reason` is `LiveTerm` when the minted IRI is a live term IRI,
+ * `DeprecatedTerm` when it is a deprecated term IRI, `NamespaceIri` when it
+ * is a namespace IRI and `EmptyKey` when {@link mintEncoded} gets an empty key.
+ *
+ * **Example** (Construct a mint refusal)
+ *
+ * ```ts import.meta.vitest name="Construct a mint refusal"
+ * import { RegistryMintError } from "@beep/identity/Registry"
+ *
+ * const error = RegistryMintError.make({ iri: "http://purl.org/dc/terms/Agent", reason: "LiveTerm" })
+ * error.reason // => "LiveTerm"
+ * ```
+ *
+ * @category errors
+ * @since 0.0.0
+ */
+export class RegistryMintError extends S.TaggedError<RegistryMintError, { readonly brand: unique symbol }>(
+  "@beep/identity/Registry/RegistryMintError"
+)(
+  "RegistryMintError",
+  {
+    iri: S.String,
+    reason: S.Literals(["LiveTerm", "DeprecatedTerm", "NamespaceIri", "EmptyKey"]),
+  },
+  $I.annoteError<RegistryMintError>("RegistryMintError", {
+    description: "A minted instance IRI would equal a published registry IRI, or its raw key is empty.",
+  })
+) {}
+
+const deprecatedTerms: Readonly<Record<string, unknown>> = RegistryDeprecations;
+
+const isNamespaceIri = (value: string): boolean => A.some(R.values(RegistryVocab), (entry) => entry.iri === value);
+
+const publishedAs = (minted: string): O.Option<RegistryMintError["reason"]> =>
+  O.isSome(generated.contract(minted))
+    ? O.some("LiveTerm")
+    : R.has(deprecatedTerms, minted)
+      ? O.some("DeprecatedTerm")
+      : isNamespaceIri(minted)
+        ? O.some("NamespaceIri")
+        : O.none();
+
+// A minted instance IRI never equals an IRI the registry publishes.
+const refusePublished = (minted: string): string => {
+  const published = publishedAs(minted);
+  if (O.isSome(published)) {
+    throw RegistryMintError.make({ iri: minted, reason: published.value });
+  }
+  return minted;
+};
+
 // A namespace IRI ends with its own separator; a term IRI takes "/" before the next segment.
 const joinUnder = (base: string, tail: string): string =>
-  Str.includes(":")(base) ? `${baseIri(base)}/${tail}` : `${baseIri(base)}${tail}`;
+  refusePublished(Str.includes(":")(base) ? `${baseIri(base)}/${tail}` : `${baseIri(base)}${tail}`);
 
 /**
  * Mint an instance IRI under a registry term or namespace with the identity segment grammar.
@@ -524,7 +580,9 @@ const joinUnder = (base: string, tail: string): string =>
  * **Gotchas**
  *
  * Throws the segment schema error for an empty segment or one with a leading
- * or trailing `/`.
+ * or trailing `/`. Throws {@link RegistryMintError} when the result is an IRI
+ * the registry publishes, such as `mint("dcterms", "Agent")`, which is the
+ * term `dcterms:Agent`.
  *
  * **Example** (Mint an instance under a term)
  *
@@ -532,7 +590,7 @@ const joinUnder = (base: string, tail: string): string =>
  * import { mint } from "@beep/identity/Registry"
  *
  * mint("skos:Concept", "legal", "patent") // => "http://www.w3.org/2004/02/skos/core#Concept/legal/patent"
- * mint("dcterms", "Agent") // => "http://purl.org/dc/terms/Agent"
+ * mint("dcterms", "agents", "alice") // => "http://purl.org/dc/terms/agents/alice"
  * ```
  *
  * @category constructors
@@ -555,6 +613,12 @@ export const mint = (base: RegistryCurie | RegistryPrefix, ...segments: A.NonEmp
  * Use when the key is free text, such as a fixture key or a canonical URL,
  * that the segment grammar would refuse.
  *
+ * **Gotchas**
+ *
+ * Throws {@link RegistryMintError} for an empty key and when the result is
+ * an IRI the registry publishes. A key holding a lone UTF-16 surrogate throws
+ * the `URIError` of `encodeURIComponent`.
+ *
  * **Example** (Mint an instance from a raw key)
  *
  * ```ts import.meta.vitest name="Mint an instance from a raw key"
@@ -569,7 +633,12 @@ export const mint = (base: RegistryCurie | RegistryPrefix, ...segments: A.NonEmp
 export const mintEncoded: {
   (raw: string): (base: RegistryCurie | RegistryPrefix) => string;
   (base: RegistryCurie | RegistryPrefix, raw: string): string;
-} = dual(2, (base: RegistryCurie | RegistryPrefix, raw: string): string => joinUnder(base, encodeURIComponent(raw)));
+} = dual(2, (base: RegistryCurie | RegistryPrefix, raw: string): string => {
+  if (Str.isEmpty(raw)) {
+    throw RegistryMintError.make({ iri: baseIri(base), reason: "EmptyKey" });
+  }
+  return joinUnder(base, encodeURIComponent(raw));
+});
 
 const unknownCurie = (curie: string) => new SchemaIssue.InvalidValue({ message: `Unknown CURIE: ${curie}` }, curie);
 const unknownIri = (term: string) => new SchemaIssue.InvalidValue({ message: `Unknown IRI: ${term}` }, term);

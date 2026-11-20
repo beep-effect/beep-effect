@@ -1213,6 +1213,10 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })("pinned vocabulary acquisi
       const { dt, ex, sk } = yield* fixturePins();
       const turtle = yield* acquireFixture([{ ...ex, terms: ["Thing", "Missing"] }]).pipe(Effect.flip);
       expect(turtle.message).toContain("ex: curated terms have no declaration in the artifact: Missing");
+      const metacharacter = yield* acquireFixture([{ ...ex, terms: ["Th.ng"] }]).pipe(Effect.flip);
+      expect(metacharacter.message).toContain("ex: curated terms have no declaration in the artifact: Th.ng");
+      const rdfXmlMetacharacter = yield* acquireFixture([{ ...sk, terms: ["Con.ept"] }]).pipe(Effect.flip);
+      expect(rdfXmlMetacharacter.message).toContain("sk: curated terms have no declaration in the artifact: Con.ept");
       const rdfXml = yield* acquireFixture([{ ...sk, terms: ["Concept", "narrower"] }]).pipe(Effect.flip);
       expect(rdfXml.message).toContain("sk: curated terms have no declaration in the artifact: narrower");
       const spec = yield* acquireFixture([{ ...dt, terms: ["integer"] }]).pipe(Effect.flip);

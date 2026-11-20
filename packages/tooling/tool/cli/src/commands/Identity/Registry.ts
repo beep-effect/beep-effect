@@ -18,7 +18,14 @@
 
 import { IdentityAuthority } from "@beep/identity/Authority";
 import { $RepoCliId } from "@beep/identity/packages";
-import { RegistryShard, RegistryTable, registryConflictMessage, TermSnapshot } from "@beep/identity/Term";
+import {
+  RegistryShard,
+  RegistryTable,
+  registryConflictMessage,
+  snapshotViolationMessage,
+  snapshotViolations,
+  TermSnapshot,
+} from "@beep/identity/Term";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { formatJsonValue } from "@beep/repo-cli-kit/cli/Json";
 import { findRepoRoot } from "@beep/repo-utils";
@@ -65,11 +72,12 @@ const WRITE_HINT = "Run `bun run beep identity registry --write` to regenerate."
 export const IdentityRegistryIssueKind = LiteralKit([
   "registry-shard-invalid",
   "registry-conflict",
+  "registry-snapshot-break",
   "registry-generated-drift",
 ]).pipe(
   $I.annoteSchema("IdentityRegistryIssueKind", {
     description:
-      "Identity registry finding kind: a shard that fails to decode, a conflict between shards, or a generated artifact that differs from regeneration.",
+      "Identity registry finding kind: a shard that fails to decode, a conflict between shards, a regenerated snapshot that breaks the committed one, or a generated artifact that differs from regeneration.",
   })
 );
 
@@ -529,7 +537,9 @@ export class RegistryPlanInput extends S.Opaque<RegistryPlanInput, { readonly br
  *
  * `previous` is the committed snapshot text, if any. A snapshot that does not
  * decode is a `registry-generated-drift` finding, because the release history
- * it carries cannot be recovered by regeneration.
+ * it carries cannot be recovered by regeneration. A regenerated snapshot that
+ * breaks the committed one, such as a term removed with no deprecation, is a
+ * `registry-snapshot-break` finding for each violation, so `--write` refuses it.
  *
  * **Example** (Plan from no shards)
  *
@@ -590,13 +600,22 @@ export const planRegistryArtifacts = ({
         })
       )
     ),
-    Result.map((table) => [
-      RegistrySourceFile.make({ path: layout.data, content: renderRegistryData(table) }),
-      RegistrySourceFile.make({
-        path: layout.snapshot,
-        content: renderTermSnapshot(RegistryTable.snapshot(table, previousSnapshot.success)),
-      }),
-    ])
+    Result.flatMap((table) => {
+      const next = RegistryTable.snapshot(table, previousSnapshot.success);
+      const breaks = A.map(snapshotViolations(previousSnapshot.success, next), (violation) =>
+        IdentityRegistryIssue.make({
+          kind: "registry-snapshot-break",
+          subject: layout.snapshot,
+          detail: `${snapshotViolationMessage(violation)} Deprecate the term in its shard instead.`,
+        })
+      );
+      return A.isReadonlyArrayNonEmpty(breaks)
+        ? Result.fail(breaks)
+        : Result.succeed([
+            RegistrySourceFile.make({ path: layout.data, content: renderRegistryData(table) }),
+            RegistrySourceFile.make({ path: layout.snapshot, content: renderTermSnapshot(next) }),
+          ]);
+    })
   );
 };
 
