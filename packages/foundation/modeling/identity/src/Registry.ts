@@ -50,6 +50,29 @@ class RegistryInvariantError extends S.TaggedError<RegistryInvariantError, { rea
 ) {}
 
 /**
+ * Every namespace of the generated registry: its IRI and its live term locals, keyed by prefix.
+ *
+ * **When to use**
+ *
+ * Use when a projection needs a namespace's whole term list as literal types,
+ * such as the generated `@beep/rdf` term modules; use {@link expand} and
+ * {@link contract} to resolve one term.
+ *
+ * **Example** (Read a namespace term list)
+ *
+ * ```ts import.meta.vitest name="Read a namespace term list"
+ * import { RegistryVocab } from "@beep/identity/Registry"
+ *
+ * RegistryVocab.as.iri // => "http://www.w3.org/ns/activitystreams#"
+ * RegistryVocab.as.terms // => ["generator"]
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export { RegistryVocab } from "./internal/generated/Registry.data.ts";
+
+/**
  * A prefix of the generated registry.
  *
  * @category type-level

@@ -9,10 +9,10 @@
   ],
   "review": {
     "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 registry lane, goals/text-knowledge-stack-rebuild-p1b-registry)",
-    "reason": "//#lint:identity-registry gains the input glob packages/foundation/modeling/identity/registry/**/*.json because the lint now checks the registry shards and the term snapshot. No command, cache flag, output or environment changed; no qualification is granted.",
+    "reason": "@beep/rdf gains the workspace dependency @beep/spdx for the NamespacePin license codec, so its build, check, doctest, lint:deprecated-apis, test and test:property tasks depend on @beep/spdx#build; // records the seal-input lists commits 6 to 8 of this stack regenerated. No command, cache flag, output or environment changed; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/identity-registry-shards-cache-review-2026-11-19.md",
-      "sha256": "ccb7e2b34f6d1a44de41d5340aef92473a1e5593395de764b3853b5f381f1d26"
+      "path": "docs/reports/rdf-spdx-dependency-cache-review-2026-11-20.md",
+      "sha256": "7cedc7eab46f98b8be276556a49873a3efe0281d32667ee458f3eeaf38c383f2"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "06b4dc77118ed7b178c188d326241c01fa092805e14545a4fe8ae593045a49e7"
+      "sha256": "a6648adf3af2453ce0ee00aef806cfed67c1ca5fa20eca9679d44fd8fec448f3"
     }
   ],
   "nodes": [

@@ -129,6 +129,22 @@ describe("Curie laws", () => {
     }
   });
 
+  it("L0-1 the six acceptance terms of the pinned namespaces expand and contract back", () => {
+    const accepted = [
+      ["prov:Activity", "http://www.w3.org/ns/prov#Activity"],
+      ["oa:TextQuoteSelector", "http://www.w3.org/ns/oa#TextQuoteSelector"],
+      ["nif:beginIndex", "http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#beginIndex"],
+      ["xsd:string", "http://www.w3.org/2001/XMLSchema#string"],
+      ["gufo:Relator", "http://purl.org/nemo/gufo#Relator"],
+      ["as:generator", "http://www.w3.org/ns/activitystreams#generator"],
+    ] as const;
+    for (const [curie, iri] of accepted) {
+      assertSome(widen(expand(curie)), iri);
+      assertSome(widen(contract(iri)), curie);
+      expect(decodeCurie(curie).pipe(Result.getOrThrow)).toBe(iri);
+    }
+  });
+
   it("L0-1 a multi-segment local and a nested namespace contract exactly", () => {
     const shards = Result.all([
       decodeShard({

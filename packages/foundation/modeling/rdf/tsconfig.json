@@ -18,6 +18,9 @@
       "path": "../schema/tsconfig.json"
     },
     {
+      "path": "../spdx/tsconfig.json"
+    },
+    {
       "path": "../utils/tsconfig.json"
     },
     {

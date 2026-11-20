@@ -1,0 +1,26 @@
+{
+  "namespace": {
+    "prefix": "oa",
+    "iri": "http://www.w3.org/ns/oa#"
+  },
+  "terms": [
+    "Annotation",
+    "FragmentSelector",
+    "RangeSelector",
+    "SpecificResource",
+    "TextPositionSelector",
+    "TextQuoteSelector",
+    "end",
+    "exact",
+    "hasBody",
+    "hasSelector",
+    "hasSource",
+    "hasTarget",
+    "prefix",
+    "refinedBy",
+    "start",
+    "suffix"
+  ],
+  "bindings": [],
+  "deprecations": []
+}

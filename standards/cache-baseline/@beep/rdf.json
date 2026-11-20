@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/rdf",
   "review": {
-    "reviewer": "Claude Opus 5.5 (gate-output-switch-on fix 6, package check probe)",
-    "reason": "Record the configuration drift of the package check probe: the generated check of the library, tool, ecosystem, app and lab kinds now reads beep-cli quality check-probe && bun run beep:check, and bun run beep lint package-scripts --write rewrote 207 manifests, re-keying the scripts digest of every task of the written packages, cached or not. @beep/infra keeps bun run beep:check. Task outputs, inputs, environment and cache flags are unchanged; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 registry lane, goals/text-knowledge-stack-rebuild-p1b-registry)",
+    "reason": "@beep/rdf gains the workspace dependency @beep/spdx for the NamespacePin license codec, so its build, check, doctest, lint:deprecated-apis, test and test:property tasks depend on @beep/spdx#build; // records the seal-input lists commits 6 to 8 of this stack regenerated. No command, cache flag, output or environment changed; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/check-probe-cache-review-2026-11-18.md",
-      "sha256": "6d2505dccf1146cc9fb2aed45f218a8c9a674291ed8b4b23f2a0370ae4ca5977"
+      "path": "docs/reports/rdf-spdx-dependency-cache-review-2026-11-20.md",
+      "sha256": "7cedc7eab46f98b8be276556a49873a3efe0281d32667ee458f3eeaf38c383f2"
     }
   },
   "nodes": [
@@ -18,6 +18,7 @@
         "@beep/identity#build",
         "@beep/md#build",
         "@beep/schema#build",
+        "@beep/spdx#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
         "@beep/utils#build"
@@ -77,6 +78,7 @@
         "@beep/md#build",
         "@beep/rdf#build",
         "@beep/schema#build",
+        "@beep/spdx#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
         "@beep/utils#build"
@@ -123,6 +125,7 @@
         "@beep/identity#build",
         "@beep/md#build",
         "@beep/schema#build",
+        "@beep/spdx#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
         "@beep/utils#build"
@@ -218,6 +221,7 @@
         "@beep/identity#transit",
         "@beep/md#transit",
         "@beep/schema#transit",
+        "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
         "@beep/utils#transit",
@@ -307,6 +311,7 @@
         "@beep/md#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
         "@beep/schema#transit",
+        "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
         "@beep/utils#transit"
@@ -508,6 +513,7 @@
         "@beep/identity#transit",
         "@beep/md#transit",
         "@beep/schema#transit",
+        "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
         "@beep/utils#transit"
@@ -556,6 +562,7 @@
         "@beep/identity#transit",
         "@beep/md#transit",
         "@beep/schema#transit",
+        "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
         "@beep/utils#transit",
@@ -612,6 +619,7 @@
         "@beep/identity#transit",
         "@beep/md#transit",
         "@beep/schema#transit",
+        "@beep/spdx#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
         "@beep/utils#transit",

@@ -1,5 +1,8 @@
 {
-  "namespace": { "prefix": "doco", "iri": "http://purl.org/spar/doco/" },
+  "namespace": {
+    "prefix": "doco",
+    "iri": "http://purl.org/spar/doco/"
+  },
   "terms": ["Figure", "List", "Paragraph", "Section", "SectionTitle", "Title"],
   "bindings": [],
   "deprecations": []

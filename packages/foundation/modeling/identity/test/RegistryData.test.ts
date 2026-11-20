@@ -12,15 +12,17 @@ import * as S from "effect/Schema";
 import snapshot from "../registry/term-snapshot.json" with { type: "json" };
 import type { Curie, Expand } from "@beep/identity/Vocab";
 
-// Commit 7 of the P1 plan: the generated registry carries exactly the external vocabulary of
-// `Vocab.ts` until commit 10 deletes `CoreVocab` and `SparTerms` and this parity with them.
+// P1 plan, commits 7 and 9: every namespace of `Vocab.ts` keeps its value in the generated registry,
+// which adds the pinned namespaces (prov, oa, nif, xsd, gufo, as) and sh and void, until commit 10
+// deletes `CoreVocab` and `SparTerms` and this parity with them.
 const legacyVocab = mergeVocab(CoreVocab, SparTerms);
+const addedPrefixes = ["as", "gufo", "nif", "oa", "prov", "sh", "void", "xsd"];
 
 const sorted = (values: ReadonlyArray<string>): ReadonlyArray<string> => A.sort(values, Order.String);
 
 describe("generated registry data", () => {
-  it("RegistryVocab equals mergeVocab(CoreVocab, SparTerms) prefix by prefix", () => {
-    expect(sorted(R.keys(RegistryVocab))).toStrictEqual(sorted(R.keys(legacyVocab)));
+  it("RegistryVocab equals mergeVocab(CoreVocab, SparTerms) on every legacy prefix", () => {
+    expect(sorted(R.keys(RegistryVocab))).toStrictEqual(sorted([...R.keys(legacyVocab), ...addedPrefixes]));
     for (const [prefix, entry] of R.toEntries(legacyVocab)) {
       const generated = RegistryVocab[prefix];
       expect(generated.iri, prefix).toBe(entry.iri);
@@ -40,9 +42,9 @@ describe("generated registry data", () => {
     expect(R.keys(RegistryDeprecations)).toStrictEqual([]);
   });
 
-  it("publishes the first term snapshot at release 1.0.0 with every term and namespace IRI", () => {
+  it("publishes the term snapshot at release 1.1.0 with every term and namespace IRI", () => {
     const decoded = Result.getOrThrow(S.decodeUnknownResult(TermSnapshot)(snapshot));
-    expect(decoded.release).toBe("1.0.0");
+    expect(decoded.release).toBe("1.1.0");
     expect(A.map(decoded.namespaces, (namespace) => namespace.prefix)).toStrictEqual(sorted(R.keys(RegistryVocab)));
     const published = A.flatMap(
       R.values(RegistryVocab),

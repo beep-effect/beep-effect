@@ -1,5 +1,8 @@
 {
-  "namespace": { "prefix": "deo", "iri": "http://purl.org/spar/deo/" },
+  "namespace": {
+    "prefix": "deo",
+    "iri": "http://purl.org/spar/deo/"
+  },
   "terms": ["Introduction", "Methods"],
   "bindings": [],
   "deprecations": []

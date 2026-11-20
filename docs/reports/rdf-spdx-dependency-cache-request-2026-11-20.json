@@ -1,0 +1,18 @@
+{
+  "previous": {
+    "//": "c5b1e6a6ef4b1cc2897dbd05d75e01f1b8cf86f958cec21aec65a43222a26d58",
+    "@beep/rdf": "809e17541fcadbdc746bbed358e9858ccdb82ad059e9c43a552375de0486e243"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 registry lane, goals/text-knowledge-stack-rebuild-p1b-registry)",
+    "reason": "@beep/rdf gains the workspace dependency @beep/spdx for the NamespacePin license codec, so its build, check, doctest, lint:deprecated-apis, test and test:property tasks depend on @beep/spdx#build; // records the seal-input lists commits 6 to 8 of this stack regenerated. No command, cache flag, output or environment changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/rdf-spdx-dependency-cache-review-2026-11-20.md",
+      "sha256": "7cedc7eab46f98b8be276556a49873a3efe0281d32667ee458f3eeaf38c383f2"
+    }
+  },
+  "subjects": ["//", "@beep/rdf"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

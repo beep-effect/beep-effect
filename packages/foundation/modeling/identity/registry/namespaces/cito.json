@@ -1,5 +1,8 @@
 {
-  "namespace": { "prefix": "cito", "iri": "http://purl.org/spar/cito/" },
+  "namespace": {
+    "prefix": "cito",
+    "iri": "http://purl.org/spar/cito/"
+  },
   "terms": ["cites", "citesAsEvidence"],
   "bindings": [],
   "deprecations": []

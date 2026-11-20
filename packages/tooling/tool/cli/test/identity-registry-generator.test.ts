@@ -204,7 +204,7 @@ const decodeShardJson = S.decodeUnknownResult(S.fromJsonString(RegistryShard));
 
 it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
   describe("the committed identity registry", () => {
-    it.effect("regenerates to the committed bytes and carries mergeVocab(CoreVocab, SparTerms)", () =>
+    it.effect("regenerates to the committed bytes and keeps every mergeVocab(CoreVocab, SparTerms) namespace", () =>
       Effect.gen(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
@@ -226,9 +226,13 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             ),
           { concurrency: 1 }
         );
-        // SparVocab is mergeVocab(CoreVocab, SparTerms); commit 10 of P1 deletes both and this check.
+        // SparVocab is mergeVocab(CoreVocab, SparTerms); commit 9 of P1 adds the pinned namespaces and
+        // sh and void beside it, and commit 10 deletes SparVocab and this check.
         const vocab = RegistryTable.fromShards(shards).pipe(Result.getOrThrow, registryVocabOf);
-        expect(A.sort(R.keys(vocab), Order.String)).toStrictEqual(A.sort(R.keys(SparVocab), Order.String));
+        const added = ["as", "gufo", "nif", "oa", "prov", "sh", "void", "xsd"];
+        expect(A.sort(R.keys(vocab), Order.String)).toStrictEqual(
+          A.sort([...R.keys(SparVocab), ...added], Order.String)
+        );
         for (const [prefix, entry] of R.toEntries(SparVocab)) {
           expect(vocab[prefix], prefix).toStrictEqual({ iri: entry.iri, terms: A.sort(entry.terms, Order.String) });
         }
