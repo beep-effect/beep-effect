@@ -320,6 +320,78 @@ Lane explore/agent-verification-output
 
 Reverse: Drop the main baseline and label from lane history alone
 
+### The delta's scope differs when the unit sets differ; a green run shows only its fixed count, 2026-11-20
+
+RunDelta gains scopeDiffers (default false), set when the two runs' checked unit sets are not equal; only units both checked are counted. The red delta line ends with (scope differs) then. Core rendered a green run's delta as '; since last run: F fixed, 0 still failing, 0 new'; the SPEC asks for '(F fixed since last run)' and only when F > 0, so the plain-text projection now renders that suffix, with ', scope differs' inside the parentheses when the scopes differ, and nothing when a green run fixed nothing.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Render the full delta phrase as the green verdict suffix again and drop scopeDiffers from RunDelta.
+
+### Task-path history is automatic outside Vitest, with an off switch and a file override, 2026-11-20
+
+The SPEC says the store is never opened inside a Vitest process. The CLI's automatic history setting therefore resolves no store when VITEST is set; BEEP_GATE_HISTORY=off (or 0, false, no) turns history off anywhere, and BEEP_GATE_HISTORY_FILE names another store file. Tests pass an explicit HistoryAt setting with a file and scope instead of touching the environment. A detached checkout records under detached@<sha>, so it never joins a branch's series. Resolution never fails a gate run: outside a git checkout or without a state directory there is no history.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Drop the VITEST check and the two BEEP_GATE_HISTORY variables and always resolve the store from git and XDG.
+
+### P1 to P3 ship first; the hosted-main baseline waits for the ci-gate-reports carrier, 2026-11-20
+
+On 2026-11-20 goals/ci-gate-reports has not started, so no hosted report reaches a lane. Lane history, the labels that need only lane evidence, the delta, the queries and the quarantine reconciliation ship in a first pull request. Until the carrier exists the main baseline is absent, red-on-main is never emitted, introduced-on-lane rests on lane evidence, and the console says once that there is no main baseline. P4 and AC-H7 follow in a second pull request once ci-gate-reports uploads reports, and the goal closes with that one.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Hold the whole goal until the carrier exists and ship it as one pull request.
+
+### Warned and skipped items are no observation, and a retried pass is labelled flaky, 2026-11-20
+
+The SPEC names two observed outcomes, passed and failed, and leaves warned and skipped items open. A warned diagnostic is not a failure and a skipped test did not run, so neither records an observation and neither gets a label. The flaky rule is applied before the outcome split, so a passed item whose attempts disagree on one input (a retried pass) is labelled flaky; a passed item otherwise gets recovered only when the newest lane observation failed. This is what AC-H2's retried-pass row needs and what the quarantine reconciliation expects.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Record warned items as passed observations and label only failed items flaky in classifyItem.
+
+### A quarantine incident is one check run whose item failed then passed; repo-gate-run coverage runs under Bun, 2026-11-20
+
+Each flake-quarantine incident becomes one check report for the package whose one item, DiagnosticKey(file = package, code = TS2589, shape = 'no location'), has attempts failed then passed on the incident's own input fingerprint (run id quarantine-<lane>-<task>-<detectedAt>). The one flaky rule labels it flaky; recording returns nothing, so the quarantine stays the authority on the lane's verdict. The SQLite store's tests need bun:sqlite, so @beep/repo-gate-run's coverage script runs vitest under Bun, as @beep/agent-memory-store's does; the suites skip under Node.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Record incidents as two separate runs, and return the coverage script to Node with the SQLite suites skipped.
+
+### Opening and reading the store wait at most the read deadline; only writes wait the busy timeout, 2026-11-20
+
+bun:sqlite waits on a lock synchronously, so an Effect deadline cannot interrupt a busy wait. The store therefore opens and reads with PRAGMA busy_timeout set to the read deadline (250 ms), raises it to the write timeout (5 s) only before a write transaction, which runs after the console was printed, and checks PRAGMA user_version before taking the migration's write lock, so an open of a current schema never waits on a writer. In WAL mode a reader is never blocked by an ordinary writer; an exclusive-mode holder makes the read fail open-busy within the deadline. A failed read is reported with reason open-failed, the closed domain having no read reason; read-deadline is left to the gate run's own deadline, which renders 'no answer within 250ms'.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Open every connection with the driver's 5 s busy timeout for reads and writes alike.
+
+### The history store is the gate-run library's one driver dependency, loaded by dynamic import, 2026-11-20
+
+@beep/repo-gate-run depends on @beep/sqlite for the history store only, as a narrowly scoped operational adapter, the same edge @beep/agent-memory-store holds. The store module is a separate entry that loads the driver with a dynamic import, as the memory store does, so the rest of the library still loads under Node and the Vitest adapter's import graph never reaches bun:sqlite. A boundary test asserts both.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Move the store into its own tooling library that owns the driver edge.
+
+### The store is one SQLite file per repository, keyed by the origin URL, 2026-11-20
+
+The file is gate-history/<repository-key>.sqlite under the beep state directory from @beep/xdg AppDirs. The key is the canonical origin URL written as host__owner__repo, lower-cased, with the .git suffix and any credentials dropped; a repository with no origin takes a digest of the real path of its git common directory. Upstream derives its key from the package manifest's repository field and falls back to the directory name; the origin URL is used here because every clone and worktree of this repository shares it and a worktree's directory name does not identify the repository.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Key the file by the checkout path and accept one history per clone.
+
+### The window is 10 runs, the read deadline 250 ms, and open contention retries 5 times from 50 ms, 2026-11-20
+
+The window W is 10 observations per series per branch, for the reader and for retention alike. Runs are kept newest 200 per gate, subject and branch. The label and delta read runs under core's existing deadline constant, 250 ms. A busy open or a contended migration retries on a jittered exponential schedule, 5 attempts from 50 ms. These are the spec's values; nothing in the upstream sources or the driver argues for others.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Change the defaults in the history configuration schema; they are configuration, not constants.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger

@@ -37,8 +37,11 @@ const fitLine =
   (text: string): string =>
     cut(oneLine(text), budget.maxLineChars);
 
+const SCOPE_DIFFERS = "scope differs";
+
 /**
- * The delta phrase: `since last run: F fixed, S still failing, N new`.
+ * The delta phrase: `since last run: F fixed, S still failing, N new`, ending
+ * with `(scope differs)` when the two runs checked different units.
  *
  * **Example** (Render a delta)
  *
@@ -54,17 +57,25 @@ const fitLine =
  * @since 0.0.0
  */
 export const deltaText = (delta: RunDelta): string =>
-  `since last run: ${delta.fixed} fixed, ${delta.stillFailing} still failing, ${delta.new} new`;
+  `since last run: ${delta.fixed} fixed, ${delta.stillFailing} still failing, ${delta.new} new${
+    delta.scopeDiffers ? ` (${SCOPE_DIFFERS})` : ""
+  }`;
 
 const verdictHead = (verdict: VerdictLine): string => `${verdict.gate} ${verdict.scope}`;
 
 const verdictResult = (verdict: VerdictLine): string =>
   `: ${verdictWord(verdict.reason)}, ${verdict.counts} (${formatDuration(verdict.durationMs)})`;
 
+// A green verdict carries the delta only as its fixed count, and only when it fixed something:
+// a green run has nothing still failing and nothing new.
+const greenDeltaText = (delta: RunDelta): string =>
+  ` (${delta.fixed} fixed since last run${delta.scopeDiffers ? `, ${SCOPE_DIFFERS}` : ""})`;
+
 const deltaSuffix = (verdict: VerdictLine): string =>
   pipe(
     verdict.delta,
-    O.map((delta) => `; ${deltaText(delta)}`),
+    O.filter((delta) => delta.fixed > 0),
+    O.map(greenDeltaText),
     O.getOrElse(() => "")
   );
 

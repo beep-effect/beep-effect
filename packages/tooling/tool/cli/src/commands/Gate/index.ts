@@ -20,6 +20,18 @@ export * from "./Gate.command.ts";
  */
 export * from "./GateCheck.ts";
 /**
+ * The gate history queries: a subject's runs and one item's series.
+ *
+ * @since 0.0.0
+ */
+export * from "./GateHistoryQuery.ts";
+/**
+ * Gate run history on the task path.
+ *
+ * @since 0.0.0
+ */
+export * from "./GateHistoryRuntime.ts";
+/**
  * The gate query commands: a run's record and one item in full.
  *
  * @category use-cases
