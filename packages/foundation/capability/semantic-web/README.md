@@ -5,8 +5,9 @@ and SHACL policy projection. This package is the ports layer between the RDF
 value models in `@beep/rdf` and the driver packages that implement the
 contracts.
 
-Canonical RDF value models, IRI/URI schemas, vocabularies, PROV-O models,
-evidence anchors, and Web Annotation DTOs live in `@beep/rdf`. RDF Dataset
+Canonical RDF value models, URI schemas, vocabularies, PROV-O models,
+evidence anchors, and Web Annotation DTOs live in `@beep/rdf`. The RFC 3987
+IRI schemas live in `@beep/identity` (`@beep/identity/Iri`). RDF Dataset
 Canonicalization lives in the driver package `@beep/rdf-canonize`; the
 `shacl-engine`-backed validator lives in `@beep/shacl`; the bounded validator
 behind the epistemic claim gate lives in `@beep/epistemic-server`.
