@@ -1,7 +1,7 @@
 import { Git } from "@beep/git/Git";
-import { BeepCiRelease, ciBinaryPinSyncCommand } from "@beep/repo-cli/commands/Ci/CiBinaryPinSync";
+import { BeepCiRelease, ciBinaryPinSyncCommand, withHooksPath } from "@beep/repo-cli/commands/Ci/CiBinaryPinSync";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
-import { afterAll, beforeAll, describe, expect, layer, vi } from "@effect/vitest";
+import { afterAll, beforeAll, describe, expect, it, layer, vi } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -10,6 +10,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -854,5 +855,134 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
         expect(after).toBe(before);
       })
     );
+  });
+
+  // Beep CI Binary run 44657799060: the sync ran in a separate checkout of the bot branch, where the
+  // repository's lefthook commit-msg hook (commitlint, which needs that checkout's own node_modules)
+  // failed, so git printed "Not committing merge" and the branch never took main. These hooks fail the
+  // same way, in the shared `.git/hooks` lefthook installs into, and record that they ran.
+  describe("the bot checkout under failing repository hooks", () => {
+    const HOOKS = ["commit-msg", "pre-merge-commit", "post-merge", "pre-push"] as const;
+
+    const installFailingHooks = Effect.fn("CiBinaryPinSyncTest.installFailingHooks")(function* (
+      root: string,
+      marks: string
+    ) {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      yield* Effect.forEach(
+        HOOKS,
+        (hook) =>
+          Effect.gen(function* () {
+            const file = path.join(root, ".git", "hooks", hook);
+            yield* fs.makeDirectory(path.dirname(file), { recursive: true });
+            yield* fs.writeFileString(file, `#!/bin/sh\necho ran > "${marks}/${hook}"\nexit 1\n`);
+            yield* fs.chmod(file, 0o755);
+          }),
+        { concurrency: 1 }
+      );
+    });
+
+    const ranHooks = Effect.fn("CiBinaryPinSyncTest.ranHooks")(function* (marks: string) {
+      const fs = yield* FileSystem.FileSystem;
+      return yield* Effect.filter(HOOKS, (hook) => fs.exists(`${marks}/${hook}`));
+    });
+
+    it.effect("the sync merges main and the workflow's push lands without force; no hook runs", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repo = yield* fixture(NEW, O.some(unrelated));
+        const main = yield* gitOutput(repo.root, ["rev-parse", "main"]);
+        // The CI shape: a remote holding the bot branch, which refuses a non-fast-forward push, and a
+        // detached worktree of the branch head beside the main checkout.
+        const scratch = yield* fs.makeTempDirectoryScoped();
+        const remote = path.join(scratch, "remote.git");
+        const checkout = path.join(scratch, "pin-bump-branch");
+        const marks = path.join(scratch, "marks");
+        yield* fs.makeDirectory(marks);
+        yield* gitOutput(scratch, ["init", "-q", "--bare", remote]);
+        yield* gitOutput(remote, ["config", "receive.denyNonFastForwards", "true"]);
+        yield* gitOutput(repo.root, ["push", "-q", remote, "pin:refs/heads/ci/beep-ci-pin-bump"]);
+        yield* gitOutput(repo.root, ["worktree", "add", "-q", "--detach", checkout, repo.before]);
+        yield* installFailingHooks(repo.root, marks);
+
+        // Before the fix: the sync's own `git pull . <base>`, with the checkout's hooks, does not commit.
+        const plain = yield* runRepoCommandCapture("git", ["pull", "--no-edit", ".", "main"], checkout);
+        const mergeMessage = yield* gitOutput(checkout, ["rev-parse", "--git-path", "MERGE_MSG"]).pipe(
+          Effect.flatMap((file) => fs.readFileString(path.resolve(checkout, file)))
+        );
+        expect(plain.exitCode).not.toBe(0);
+        expect(plain.output).toContain("Not committing merge");
+        const ranOnPlainPull = yield* ranHooks(marks);
+        expect(ranOnPlainPull).not.toStrictEqual([]);
+        yield* gitOutput(checkout, ["reset", "-q", "--hard", repo.before]);
+        yield* Effect.forEach(HOOKS, (hook) => fs.remove(`${marks}/${hook}`, { force: true }), { concurrency: 1 });
+
+        // The sync: a merge commit with git's own message, no hook run.
+        yield* fs.remove(repo.output, { force: true });
+        yield* runSync([
+          "--cwd",
+          checkout,
+          "--base",
+          "main",
+          "--tag",
+          NEW.tag,
+          "--sha256",
+          NEW.sha256,
+          "--releases",
+          repo.releases,
+          "--output",
+          repo.output,
+        ]);
+        const output = yield* fs.readFileString(repo.output);
+        const lines = A.filter(Str.split(output, "\n"), Str.isNonEmpty);
+        const merged = yield* head(checkout);
+        const message = yield* gitOutput(checkout, ["log", "-1", "--format=%s"]);
+        expect(A.take(lines, 3)).toStrictEqual(decided("merged", O.some(NEW)));
+        const mergeParents = yield* parents(checkout);
+        expect(mergeParents).toStrictEqual([repo.before, main]);
+        expect(message).toBe(Str.split(mergeMessage, "\n")[0]);
+        const ranOnSync = yield* ranHooks(marks);
+        expect(ranOnSync).toStrictEqual([]);
+
+        // The workflow's push, verbatim but for the URL: no force, no hook.
+        yield* gitOutput(checkout, [
+          "-c",
+          "core.hooksPath=/dev/null",
+          "push",
+          "-q",
+          remote,
+          "HEAD:refs/heads/ci/beep-ci-pin-bump",
+        ]);
+        const pushed = yield* gitOutput(remote, ["rev-parse", "refs/heads/ci/beep-ci-pin-bump"]);
+        const ranOnPush = yield* ranHooks(marks);
+        expect(pushed).toBe(merged);
+        expect(ranOnPush).toStrictEqual([]);
+      })
+    );
+  });
+});
+
+// The spawner decorator the sync runs its `Git` under: a `git` command gains the empty hooks path ahead of
+// its own argv; anything else the spawner is handed passes through untouched.
+describe("withHooksPath", () => {
+  const hooked = withHooksPath("/tmp/no-hooks");
+
+  it("prefixes a git command's argv with the empty hooks path and keeps its options", () => {
+    const command = hooked(ChildProcess.make("git", ["pull", ".", "main"], { cwd: "/repo" }));
+    expect(ChildProcess.isStandardCommand(command)).toBe(true);
+    expect(command).toMatchObject({
+      command: "git",
+      args: ["-c", "core.hooksPath=/tmp/no-hooks", "pull", ".", "main"],
+      options: { cwd: "/repo" },
+    });
+  });
+
+  it("leaves a command that is not git, and a pipeline, unchanged", () => {
+    const other = ChildProcess.make("bun", ["--version"]);
+    const piped = ChildProcess.pipeTo(ChildProcess.make("git", ["log"]), ChildProcess.make("head", ["-n", "1"]));
+    expect(hooked(other)).toBe(other);
+    expect(hooked(piped)).toBe(piped);
   });
 });

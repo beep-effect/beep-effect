@@ -461,10 +461,14 @@ jobs:
                 "+refs/heads/${DEFAULT_BRANCH}:refs/remotes/origin/${DEFAULT_BRANCH}" \
                 "+refs/heads/${PIN_BRANCH}:refs/remotes/origin/${PIN_BRANCH}"
               branch_head="$(git rev-parse "refs/remotes/origin/${PIN_BRANCH}")"
-              git worktree add --detach "$worktree" "$branch_head"
-              git -C "$worktree" config user.name "beep-ci-pin-bump"
-              git -C "$worktree" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-              git -C "$worktree" config pull.rebase false
+              # The bot checkout runs no repository hook (lefthook needs its own node_modules):
+              # every git call in it points core.hooksPath at an empty directory, as the sync
+              # itself does for its merge.
+              no_hooks="$(mktemp -d "${RUNNER_TEMP}/no-git-hooks.XXXXXX")"
+              git -c core.hooksPath="$no_hooks" worktree add --detach "$worktree" "$branch_head"
+              git -C "$worktree" -c core.hooksPath="$no_hooks" config user.name "beep-ci-pin-bump"
+              git -C "$worktree" -c core.hooksPath="$no_hooks" config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+              git -C "$worktree" -c core.hooksPath="$no_hooks" config pull.rebase false
               sync_output="${RUNNER_TEMP}/pin-sync.out"
               # The base is this run's own main commit (the checkout create-pull-request
               # builds from), not the fetched tip, so a supersede and its replacement

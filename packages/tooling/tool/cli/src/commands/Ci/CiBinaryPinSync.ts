@@ -18,7 +18,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { Git, MergeConflictError } from "@beep/git/Git";
+import { Git, GitOptions, MergeConflictError } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
@@ -30,6 +30,8 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -480,6 +482,62 @@ const mergeAndClassify = Effect.fnUntraced(function* (
 });
 
 /**
+ * Rewrite a `git <args>` command to `git -c core.hooksPath=<hooks> <args>`, leaving any other command as it is.
+ *
+ * **Details**
+ *
+ * The per-invocation config outranks the repository's own `core.hooksPath`
+ * and `.git/hooks`, so with an empty `hooks` directory git has no hook to
+ * run. It rewrites the argv of a command the `Git` kit already built, so it
+ * adds no git operation of its own. A command that is not a plain `git`
+ * invocation, such as a pipeline, passes through unchanged.
+ *
+ * **Example** (Disable hooks on one git command)
+ *
+ * ```ts
+ * import { withHooksPath } from "@beep/repo-cli/commands/Ci/CiBinaryPinSync"
+ * import * as ChildProcess from "effect/process/ChildProcess"
+ *
+ * const command = withHooksPath("/tmp/no-hooks")(ChildProcess.make`git status`)
+ * console.log(command._tag) // "StandardCommand"
+ * ```
+ *
+ * @param hooks - An empty directory for `core.hooksPath`.
+ * @returns The command transformer.
+ * @category combinators
+ * @since 0.0.0
+ */
+export const withHooksPath =
+  (hooks: string) =>
+  (command: ChildProcess.Command): ChildProcess.Command =>
+    ChildProcess.isStandardCommand(command) && command.command === "git"
+      ? // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-23), reason above
+        ChildProcess.make("git", ["-c", `core.hooksPath=${hooks}`, ...command.args], command.options)
+      : command;
+
+// The sync's merge commit is a bot commit with git's fixed message, made in a separate checkout of the
+// pin-bump branch. The repository's hooks are for people's commits: its lefthook commit-msg hook loads
+// commitlint's config from that checkout's own `node_modules`, which the bot checkout does not have, so
+// `git pull` stopped with "Not committing merge" (Beep CI Binary run 44657799060). Every git call here
+// runs through a `Git` whose spawner points `core.hooksPath` at an empty, scoped temporary directory,
+// which covers commit-msg, pre-merge-commit, post-merge and any other hook, whatever installed them.
+const withoutRepoHooks = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
+  Effect.scoped(
+    Effect.gen(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const hooks = yield* fs
+        .makeTempDirectoryScoped({ prefix: "beep-pin-sync-hooks-" })
+        .pipe(Effect.mapError(CiCommandError.new("Failed to create the empty hooks directory.")));
+      const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+      const hookless = ChildProcessSpawner.make((command) => spawner.spawn(withHooksPath(hooks)(command)));
+      const git = yield* Git.makeWith(GitOptions.make({})).pipe(
+        Effect.provideService(ChildProcessSpawner.ChildProcessSpawner, hookless)
+      );
+      return yield* Effect.provideService(effect, Git, git);
+    })
+  );
+
+/**
  * Merge `base` into a pin-bump branch checkout when it is behind or in conflict, never moving the pin backwards.
  *
  * **Details**
@@ -497,7 +555,10 @@ const mergeAndClassify = Effect.fnUntraced(function* (
  * pre-merge head, and so does every failure after the merge starts, so no
  * conflict markers or `MERGE_HEAD` are left behind. A branch tag the release
  * list does not hold, or one sharing its creation time with another
- * release, fails before anything changes: its order cannot be decided. The checkout needs `pull.rebase=false`, a committer
+ * release, fails before anything changes: its order cannot be decided. Every git call runs with
+ * `-c core.hooksPath=<an empty temporary directory>`: the merge is a bot commit with git's fixed
+ * message, so the checkout's commit-msg, pre-merge-commit and post-merge hooks never run (the
+ * repository's lefthook commit-msg hook needs that checkout's own `node_modules`). The checkout needs `pull.rebase=false`, a committer
  * identity, and enough history for a merge base.
  *
  * **Example** (Sync a branch checkout)
@@ -514,6 +575,10 @@ const mergeAndClassify = Effect.fnUntraced(function* (
  * @since 0.0.0
  */
 export const syncCiBinaryPinBranch = Effect.fn("Ci.syncCiBinaryPinBranch")(function* (input: CiBinaryPinSyncRequest) {
+  return yield* withoutRepoHooks(syncBranch(input));
+});
+
+const syncBranch = Effect.fnUntraced(function* (input: CiBinaryPinSyncRequest) {
   const git = yield* Git;
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
