@@ -7,15 +7,6 @@
   "instruments": [],
   "spans": [
     {"name":"Csp.decodeContentSecurityPolicyHeader","owner":"@beep/schema","family":"foundation","conforms":true},
-    {"name":"Csv.decodeCsvRowsEffect","owner":"@beep/schema","family":"foundation","conforms":true},
-    {"name":"Csv.decodeCsvRowsEffect.onNonEmpty","owner":"@beep/schema","family":"foundation","conforms":false},
-    {"name":"Csv.encodeCsvRowsEffect","owner":"@beep/schema","family":"foundation","conforms":true},
-    {"name":"Csv.normalizeParserOptions","owner":"@beep/schema","family":"foundation","conforms":true},
-    {"name":"CsvFormatter.formatCsvDataRowEffect","owner":"@beep/schema","family":"foundation","conforms":true},
-    {"name":"CsvFormatter.formatCsvDocumentEffect","owner":"@beep/schema","family":"foundation","conforms":true},
-    {"name":"CsvFormatter.formatCsvHeaderRowEffect","owner":"@beep/schema","family":"foundation","conforms":true},
-    {"name":"CsvParser.parseCsvRowsEffect","owner":"@beep/schema","family":"foundation","conforms":true},
-    {"name":"CsvParser.parseRowAt","owner":"@beep/schema","family":"foundation","conforms":true},
     {"name":"CuidState.make","owner":"@beep/schema","family":"foundation","conforms":true},
     {"name":"ExpectCT.decodeExpectCTValue","owner":"@beep/schema","family":"foundation","conforms":true},
     {"name":"ExpectCT.formatExpectCTValue","owner":"@beep/schema","family":"foundation","conforms":true},
@@ -33,7 +24,6 @@
     {"name":"SecureHeaderOptions.createSecureHeaders","owner":"@beep/schema","family":"foundation","conforms":true},
     {"name":"XSSProtection.formatXSSProtectionValue","owner":"@beep/schema","family":"foundation","conforms":true},
     {"name":"Xml.decodeXmlUnknown","owner":"@beep/schema","family":"foundation","conforms":true},
-    {"name":"computeSha256Hex","owner":"@beep/schema","family":"foundation","conforms":false},
-    {"name":"validateHeaderRow","owner":"@beep/schema","family":"foundation","conforms":false}
+    {"name":"computeSha256Hex","owner":"@beep/schema","family":"foundation","conforms":false}
   ]
 }

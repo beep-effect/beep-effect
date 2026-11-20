@@ -77,7 +77,7 @@ canonical public subpaths:
 
 ```ts
 import * as Color from "@beep/schema/Color"
-import * as Csv from "@beep/schema/Csv"
+import * as LocalDate from "@beep/schema/LocalDate"
 import * as HttpHeaders from "@beep/schema/HttpHeaders"
 ```
 
@@ -86,10 +86,6 @@ Do not create broad suite aggregators such as `@beep/schema/Blockchain`,
 `@beep/schema/Person`. Lowercase topical source and public paths such as
 `src/color/`, `src/http/`, `@beep/schema/color`, and
 `@beep/schema/http/headers` are retired.
-
-`Csv` is a same-concept schema module; parser, formatter, option, and error
-helpers live in their own leaf modules such as `@beep/schema/CsvParser` and are
-not re-exported from `@beep/schema/Csv`.
 
 Package-local tests may use source-only test seams such as
 `@beep/schema/test/Markdown`. Parser internals

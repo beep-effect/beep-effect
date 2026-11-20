@@ -70,6 +70,7 @@
   "sideEffects": [],
   "dependencies": {
     "@beep/box": "workspace:^",
+    "@beep/csv": "workspace:^",
     "@beep/duckdb": "workspace:^",
     "@beep/epistemic-domain": "workspace:^",
     "@beep/epistemic-server": "workspace:^",

@@ -34,6 +34,9 @@
       "path": "../../packages/foundation/capability/xdg/tsconfig.json"
     },
     {
+      "path": "../../packages/foundation/modeling/csv/tsconfig.json"
+    },
+    {
       "path": "../../packages/foundation/modeling/identity/tsconfig.json"
     },
     {

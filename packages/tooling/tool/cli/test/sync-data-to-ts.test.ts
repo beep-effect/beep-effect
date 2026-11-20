@@ -434,6 +434,39 @@ it.layer(CommandTestLayer, { timeout: "30 seconds" })((it) => {
     );
 
     it.effect(
+      "reads CSV rows through the header, padding short rows and refusing long rows and bad headings",
+      Effect.fnUntraced(function* () {
+        const csvSource = (text: string) =>
+          SyncDataFetchedSource.make({
+            bytes: new Uint8Array(),
+            id: "fixture-csv",
+            sha256: "fixture",
+            text,
+            url: "https://example.test/fixture.csv",
+          });
+        const rows = yield* parseCsvSource("fixture-csv", csvSource("﻿code,name\nUS\n\nGB,United Kingdom\n"));
+        const headerOnly = yield* parseCsvSource("fixture-csv", csvSource("code,name\n"));
+        const empty = yield* parseCsvSource("fixture-csv", csvSource(""));
+        const refused = yield* Effect.forEach(
+          ["code,name\nUS,USA,840\n", "code,\nUS,\n", "code,code\nUS,USA\n"],
+          (text) => Effect.flip(parseCsvSource("fixture-csv", csvSource(text))),
+          { concurrency: 1 }
+        );
+
+        expect(A.copy(rows)).toStrictEqual([
+          { code: "US", name: "" },
+          { code: "", name: "" },
+          { code: "GB", name: "United Kingdom" },
+        ]);
+        expect(rows.columns).toStrictEqual(["code", "name"]);
+        expect([A.length(headerOnly), headerOnly.columns]).toStrictEqual([0, ["code", "name"]]);
+        expect([A.length(empty), empty.columns]).toStrictEqual([0, []]);
+        expect(A.map(refused, (error) => error._tag)).toStrictEqual(A.replicate("SyncDataToTsError", 3));
+        expect(refused[0]?.message).toContain("Column header mismatch expected: 2 columns got: 3");
+      })
+    );
+
+    it.effect(
       "extracts an empty selection from a tar archive",
       Effect.fnUntraced(
         function* () {

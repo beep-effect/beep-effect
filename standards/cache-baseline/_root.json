@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Fable 5.2 (csv and xlsx lane, feat/xlsx-and-csv-foundation-modeling)",
-    "reason": "Record the two new modeling packages' tasks (generated scripts, including the gate-run check script main regenerated, root task definitions, no override) and the two manifest inputs the policy fingerprint added to the root. No qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (schema CSV migration lane, refactor/schema-csv-to-beep-csv)",
+    "reason": "Record the three packages whose manifests and tsconfig references gained the @beep/csv dependency when their CSV reads moved off @beep/schema. No qualification is granted. The root records the turbo.json inputs the policy fingerprint resealed.",
     "basis": {
-      "path": "docs/reports/csv-xlsx-cache-review-2026-11-19.md",
-      "sha256": "2276c12fc15782beb0bd1e56d956daf437f52eba99e04c548bc6a9b4da7b358e"
+      "path": "docs/reports/schema-csv-to-beep-csv-cache-review-2026-11-20.md",
+      "sha256": "cec74e4af5ae058d0f983a064ca513f4ebe0902e9b63268314a18c0c524c5bf8"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "3310b8e0930ba1d7bcbc2882a9ac7777056962919070a962bc369986a9038e08"
+      "sha256": "6ecbb8e4223f938f70a76aede62a82adee546d8a67cef50e7517e7e6a5aceca9"
     }
   ],
   "nodes": [
