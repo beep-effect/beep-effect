@@ -250,6 +250,7 @@ it.layer(Layer.provideMerge(Git.layer, NodeServices.layer), { excludeTestService
           // A day that does not exist is refused, not rolled into the next month.
           const impossible = yield* runCensus(home, options(window, { until: O.some("2026-02-30T00:00:00Z") }));
           expect(impossible.exit._tag).toBe("Failure");
+          expect(Str.includes("--until must be an ISO timestamp.")(Str.String(impossible.exit))).toBe(true);
           const malformed = yield* runCensus(home, options(window, { until: O.some("not-a-time") }));
           expect(malformed.exit._tag).toBe("Failure");
           const reversed = yield* runCensus(

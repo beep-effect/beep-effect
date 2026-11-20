@@ -6,7 +6,6 @@ import * as Match from "effect/Match";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
-import * as Str from "effect/String";
 
 // Every path in a schema's decoded side that can hold free text, or whose node is not known to be text-free.
 // Literal domains, version tags and declarations without text parameters (DateTime) hold none.
@@ -34,7 +33,7 @@ const freeTextPaths = (ast: SchemaAST.AST, path: string): ReadonlyArray<string> 
     // A declaration passes only by name: the census uses UTC instants and options. Any other one is unverified.
     Match.tag("Declaration", (declaration) => {
       const expected = String(declaration.annotations?.expected);
-      return A.some(textFreeDeclarations, (name) => Str.startsWith(name)(expected))
+      return A.contains(textFreeDeclarations, expected)
         ? A.flatMap(declaration.typeParameters, (parameter) => freeTextPaths(parameter, `${path}<>`))
         : [`${path}:Declaration(${expected})`];
     }),
@@ -63,6 +62,8 @@ describe("census report schema (AC1)", () => {
       later: S.suspend(() => S.String),
       loose: S.Unknown,
       link: S.URL,
+      // A declaration whose name only starts like an allowed one is still unverified.
+      secret: S.URL.annotate({ expected: "OptionSecret" }),
       count: S.Finite,
     });
     expect(walk(leaky)).toEqual([
@@ -72,6 +73,7 @@ describe("census report schema (AC1)", () => {
       "$.later",
       "$.loose:Unknown",
       "$.link:Declaration(URL)",
+      "$.secret:Declaration(OptionSecret)",
     ]);
   });
 
