@@ -9,6 +9,11 @@ The CI goals driver re-ruled `m6i.4xlarge` on 2026-11-20, ahead of the green day
 which keeps five types: `r7i.2xlarge`, `r6i.2xlarge`, `m7a.4xlarge`, `m7i.4xlarge` and `m6a.4xlarge`. The overflow
 pool never listed it, and the live Pulumi fleet is not changed.
 
+Supersedes the same-day decision `2026-11-20-m6i-4xlarge-kept-on-the-new-heavy-list-after-the-re-rule`. That decision
+set a re-rule trigger: a second zone with at least three `m6i.4xlarge` evictions at P < 0.05, or an overall per-hour
+P below 0.01. Both were met under both treatments in the result table below: us-east-1f with five evictions, and an
+overall P of 0.0011 (0.0038 conservative).
+
 **Method.** The test is evictions per instance-hour in the live (old) fleet's Spot population, cumulative from
 2026-11-19 00:00Z.
 
