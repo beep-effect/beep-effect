@@ -1,0 +1,32 @@
+{
+  "namespace": { "prefix": "owl", "iri": "http://www.w3.org/2002/07/owl#" },
+  "terms": [
+    "AnnotationProperty",
+    "AsymmetricProperty",
+    "Class",
+    "DatatypeProperty",
+    "FunctionalProperty",
+    "InverseFunctionalProperty",
+    "IrreflexiveProperty",
+    "NamedIndividual",
+    "Nothing",
+    "ObjectProperty",
+    "Ontology",
+    "ReflexiveProperty",
+    "SymmetricProperty",
+    "Thing",
+    "TransitiveProperty",
+    "backwardCompatibleWith",
+    "deprecated",
+    "equivalentClass",
+    "equivalentProperty",
+    "imports",
+    "incompatibleWith",
+    "inverseOf",
+    "priorVersion",
+    "sameAs",
+    "versionInfo"
+  ],
+  "bindings": [],
+  "deprecations": []
+}

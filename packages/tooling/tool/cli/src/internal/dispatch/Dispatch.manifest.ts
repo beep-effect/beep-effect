@@ -176,6 +176,10 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     []
   )(() => import("../../commands/Holds/index.ts").then((module) => module.holdsCommand)),
   groupRoute(
+    { name: "identity", description: "Declared terms: generate and check the identity registry" },
+    []
+  )(() => import("../../commands/Identity/index.ts").then((module) => module.identityCommand)),
+  groupRoute(
     { name: "kb", description: "Validate and project a generic evidence ledger" },
     []
   )(() => import("../../commands/Kb/index.ts").then((module) => module.kbCommand)),

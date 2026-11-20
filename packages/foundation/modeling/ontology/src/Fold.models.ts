@@ -12,16 +12,16 @@
  * @since 0.0.0
  */
 
-import { CoreVocab, expandOption, expandPredicate } from "@beep/identity";
 import { IRI } from "@beep/identity/Iri";
 import { $OntologyId } from "@beep/identity/packages";
+import { curieNamespace, expand, expandPredicate } from "@beep/identity/Registry";
 import { LanguageTag } from "@beep/rdf/Rdf";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import { registryPrefix } from "./internal/Fold.ts";
-import type { Curie, Predicate } from "@beep/identity";
+import type { Predicate } from "@beep/identity";
+import type { RegistryCurie, RegistryVocab } from "@beep/identity/Registry";
 
 const $I = $OntologyId.create("Fold");
 
@@ -82,7 +82,7 @@ export type SchemaHandle = S.Top;
  * @category models
  * @since 0.0.0
  */
-export type Subject = SchemaHandle | Curie<CoreVocab> | AbsoluteIri;
+export type Subject = SchemaHandle | RegistryCurie | AbsoluteIri;
 
 /**
  * Scalar payload accepted inside a typed literal object.
@@ -121,7 +121,7 @@ export type LiteralScalar = string | number | boolean;
  */
 export type TypedLiteral = {
   readonly value: LiteralScalar;
-  readonly datatype?: Curie<CoreVocab> | AbsoluteIri | undefined;
+  readonly datatype?: RegistryCurie | AbsoluteIri | undefined;
   readonly language?: string | undefined;
 };
 
@@ -161,7 +161,7 @@ export type TupleObject = Subject | TypedLiteral;
  * @category models
  * @since 0.0.0
  */
-export type Triple = readonly [Subject, Predicate<CoreVocab>, TupleObject];
+export type Triple = readonly [Subject, Predicate<typeof RegistryVocab>, TupleObject];
 
 /**
  * Input payload accepted by the ontology fold entrypoint.
@@ -185,13 +185,13 @@ export type OntologyFoldInput = {
 
 const isIriValue = S.is(IRI);
 
-const isAbsoluteIri = (value: string): boolean => O.isNone(registryPrefix(CoreVocab, value)) && isIriValue(value);
+const isAbsoluteIri = (value: string): boolean => O.isNone(curieNamespace(value)) && isIriValue(value);
 
-const isKnownCurie = (value: string): boolean => O.isSome(expandOption(value, CoreVocab));
+const isKnownCurie = (value: string): boolean => O.isSome(expand(value));
 
 const isTermString = (value: string): boolean => isKnownCurie(value) || isAbsoluteIri(value);
 
-const isKnownPredicate = (value: string): boolean => expandPredicate(value) !== undefined;
+const isKnownPredicate = (value: string): boolean => O.isSome(expandPredicate(value));
 
 /**
  * Guard for schema handles at tuple endpoints.

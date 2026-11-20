@@ -15,6 +15,8 @@ import { CITO_NAMESPACE, CITO_TERMS } from "../Vocab/Cito.ts";
 import { DEO_NAMESPACE, DEO_TERMS } from "../Vocab/Deo.ts";
 import { DOCO_NAMESPACE, DOCO_TERMS } from "../Vocab/Doco.ts";
 import { FABIO_NAMESPACE, FABIO_TERMS } from "../Vocab/Fabio.ts";
+import { PROV_NAMESPACE } from "../Vocab/Prov.ts";
+import { RDF_NAMESPACE } from "../Vocab/Rdf.ts";
 import { MdNodeId } from "./MdSections.ts";
 import { WebAnnotationFragmentSelector, WebAnnotationTarget } from "./WebAnnotation.ts";
 
@@ -37,8 +39,8 @@ const documentCitationIri = $BeepId.create("document/citation").iri;
 export const DOCUMENT_ANNOTATION_CONTEXT = [
   "http://www.w3.org/ns/anno.jsonld",
   {
-    rdf: "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    prov: "http://www.w3.org/ns/prov#",
+    rdf: RDF_NAMESPACE,
+    prov: PROV_NAMESPACE,
     discourseType: { "@id": "rdf:type", "@type": "@id" },
     pattern: documentPatternIri,
     citation: documentCitationIri,

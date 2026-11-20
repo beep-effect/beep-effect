@@ -1,5 +1,5 @@
 /**
- * DCAT vocabulary constants from the identity CoreVocab registry.
+ * DCAT vocabulary constants from the identity registry.
  *
  * @packageDocumentation
  * @since 0.0.0

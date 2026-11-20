@@ -54,6 +54,7 @@ import {
 import { OWL_CLASS, OWL_NAMESPACE } from "@beep/rdf/Vocab/Owl";
 import { RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";
+import { SH_NODE_SHAPE, SH_PATH, SH_PROPERTY } from "@beep/rdf/Vocab/Shacl";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import { SparqlAskResult, SparqlQueryService, SparqlSelectResult } from "@beep/semantic-web/services/sparql-query";
 import { it } from "@beep/test-runner";
@@ -76,10 +77,6 @@ const encodeOntologyGraphProjectionOptionsResult = S.encodeResult(OntologyGraphP
 
 const sessionId = SessionId.make("session-1");
 const fixturePath = OntologyFilePath.make("fixtures/demo.ttl");
-const SHACL_NAMESPACE = "http://www.w3.org/ns/shacl#" as const;
-const SH_NODE_SHAPE = makeNamedNode(`${SHACL_NAMESPACE}NodeShape`);
-const SH_PROPERTY = makeNamedNode(`${SHACL_NAMESPACE}property`);
-const SH_PATH = makeNamedNode(`${SHACL_NAMESPACE}path`);
 const aliceNameQuad = makeQuad(
   makeNamedNode("https://example.test/alice"),
   makeNamedNode("https://example.test/name"),

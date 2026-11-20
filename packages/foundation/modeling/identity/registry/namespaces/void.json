@@ -1,0 +1,9 @@
+{
+  "namespace": {
+    "prefix": "void",
+    "iri": "http://rdfs.org/ns/void#"
+  },
+  "terms": ["Dataset", "triples"],
+  "bindings": [],
+  "deprecations": []
+}

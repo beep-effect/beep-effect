@@ -16568,18 +16568,6 @@
         "functions": 14
       },
       "files": {
-        "packages/foundation/modeling/identity/src/Curie.ts": {
-          "lines": 81.15,
-          "statements": 79.72,
-          "branches": 88.88,
-          "functions": 68.88,
-          "uncovered": {
-            "lines": 13,
-            "statements": 15,
-            "branches": 1,
-            "functions": 14
-          }
-        },
         "packages/foundation/modeling/identity/src/Fibered.ts": {
           "lines": 100,
           "statements": 100,
@@ -31089,18 +31077,6 @@
             "statements": 3,
             "branches": 1,
             "functions": 3
-          }
-        },
-        "packages/foundation/modeling/ontology/src/internal/Fold.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
           }
         }
       }
@@ -45978,18 +45954,6 @@
             "statements": 15,
             "branches": 0,
             "functions": 4
-          }
-        },
-        "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/SparTerms.ts": {
-          "lines": 36.11,
-          "statements": 36.58,
-          "branches": 10,
-          "functions": 33.33,
-          "uncovered": {
-            "lines": 23,
-            "statements": 26,
-            "branches": 9,
-            "functions": 8
           }
         },
         "packages/tooling/tool/cli/src/commands/SyncDataToTs/targets/VocabTerms.ts": {

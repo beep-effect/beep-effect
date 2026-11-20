@@ -1,160 +1,90 @@
-import { fcRuns } from "@beep/fc-runs";
 import {
-  CoreVocab,
-  CurieFromIri,
   contract,
-  contractOption,
+  curieNamespace,
+  ExpandedPredicate,
   expand,
-  expandOption,
   expandPredicate,
-  makeCurieCodec,
-  makeCurieFromIri,
-} from "@beep/identity";
+  fromVocab,
+  iri,
+  RegistryVocab,
+} from "@beep/identity/Registry";
 import { it } from "@beep/test-runner";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
-import * as Arbitrary from "effect/Arbitrary";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
-import * as Effect from "effect/Effect";
-import * as Equal from "effect/Equal";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 
-const decodeUnknownCurieFromIriOption = S.decodeUnknownOption(CurieFromIri);
-const encodeCurieFromIriOption = S.encodeOption(CurieFromIri);
+const widen = (value: O.Option<string>): O.Option<string> => value;
+const directionAndIri = (predicate: ExpandedPredicate): readonly [boolean, string] => [
+  predicate.inverse,
+  predicate.iri,
+];
+const prefixOf = (value: string): O.Option<string> => O.map(curieNamespace(value), (namespace) => namespace.prefix);
 
-const decodeCurie = S.decodeUnknownEffect(CurieFromIri);
-const encodeIri = S.encodeUnknownEffect(CurieFromIri);
-
-const coreCurieCases = A.flatMap(R.toEntries(CoreVocab), ([prefix, vocab]) =>
-  A.map(vocab.terms, (term) => ({
-    curie: `${prefix}:${term}`,
-    iri: `${vocab.iri}${term}`,
-    prefix,
-    term,
-  }))
+const registryCuries = A.flatMap(R.toEntries(RegistryVocab), ([prefix, entry]) =>
+  A.map(entry.terms, (term): string => `${prefix}:${term}`)
 );
 
-describe("CURIE codec", () => {
-  it("preserves literal expansion types", () => {
-    expectTypeOf(expand("skos:prefLabel")).toEqualTypeOf<"http://www.w3.org/2004/02/skos/core#prefLabel">();
-    expect(expand("skos:prefLabel")).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
+const fixture = fromVocab({
+  ex: { iri: "https://example.test/ns#", terms: ["Thing", "knows"] },
+  "ex-deep": { iri: "https://example.test/ns#deep/", terms: ["Leaf"] },
+});
+
+describe("the registry CURIE codec", () => {
+  it("keeps the literal IRI type of a registered CURIE", () => {
+    expectTypeOf(iri("skos:prefLabel")).toEqualTypeOf<"http://www.w3.org/2004/02/skos/core#prefLabel">();
+    expect(iri("skos:prefLabel")).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
   });
 
-  it("round-trips every CoreVocab term", () => {
-    for (const current of coreCurieCases) {
-      const iri = expandOption(current.curie, CoreVocab);
+  it("expands forward and inverse predicates with their direction", () => {
+    assertSome(O.map(expandPredicate("^rdfs:subClassOf"), directionAndIri), [true, iri("rdfs:subClassOf")]);
+    assertSome(O.map(expandPredicate("rdfs:subClassOf"), directionAndIri), [false, iri("rdfs:subClassOf")]);
+    assertNone(expandPredicate("^rdfs:subClasOf"));
+    assertNone(expandPredicate("^^rdfs:subClassOf"));
+  });
 
-      expect(O.getOrUndefined(iri), current.curie).toBe(current.iri);
-      if (O.isSome(iri)) {
-        expect(O.getOrUndefined(contractOption(iri.value, CoreVocab)), current.iri).toBe(current.curie);
+  it("expands every registry CURIE as a forward and as an inverse predicate to the same term", () => {
+    for (const curie of registryCuries) {
+      for (const inverse of [false, true]) {
+        const expanded = expandPredicate(inverse ? `^${curie}` : curie);
+        assertSome(O.map(expanded, directionAndIri), [inverse, O.getOrThrow(expand(curie))]);
+        assertTrue(O.exists(expanded, S.is(ExpandedPredicate)));
       }
     }
   });
 
-  // Arbitrary.Constant ignores size/seed: the 100-run floor intentionally repeats
-  // the same fixed registry list rather than exploring a generated domain.
-  it.prop(
-    "repeats deterministic round-trips over the entire registry",
-    [Arbitrary.Constant(coreCurieCases)],
-    ([cases]) => {
-      for (const current of cases) {
-        const iri = expandOption(current.curie, CoreVocab);
-
-        expect(O.getOrUndefined(iri), current.curie).toBe(current.iri);
-        if (O.isSome(iri)) {
-          expect(O.getOrUndefined(contractOption(iri.value, CoreVocab)), current.iri).toBe(current.curie);
-        }
-      }
-
-      return true;
-    },
-    { arbitrary: fcRuns(100) }
-  );
-
-  it.effect(
-    "decodes and encodes known CURIEs",
-    Effect.fnUntraced(function* () {
-      const decodedCurie = yield* decodeCurie("skos:prefLabel");
-      expect(decodedCurie).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
-      const encodedIri = yield* encodeIri("http://www.w3.org/2004/02/skos/core#prefLabel");
-      expect(encodedIri).toBe("skos:prefLabel");
-    })
-  );
-
-  it.prop(
-    "round-trips generated CoreVocab IRIs through the schema codec",
-    [Arbitrary.schema(CurieFromIri)],
-    ([iri]) => {
-      const decoded = O.flatMap(encodeCurieFromIriOption(iri), decodeUnknownCurieFromIriOption);
-
-      expect(O.exists(decoded, (value) => Equal.equals(value, iri))).toBe(true);
-
-      return true;
-    },
-    { arbitrary: fcRuns(100) }
-  );
-
-  it.effect(
-    "fails schema decoding for unknown prefixes and known-prefix unknown terms",
-    Effect.fnUntraced(function* () {
-      expect((yield* Effect.flip(decodeCurie("nope:term")))._tag).toBe("SchemaError");
-      expect((yield* Effect.flip(decodeCurie("skos:nope")))._tag).toBe("SchemaError");
-    })
-  );
-
-  it.effect(
-    "fails schema encoding for unregistered IRIs",
-    Effect.fnUntraced(function* () {
-      expect((yield* Effect.flip(encodeIri("http://www.w3.org/2004/02/skos/core#nope")))._tag).toBe("SchemaError");
-    })
-  );
-
-  it("expands inverse predicates", () => {
-    expect(expandPredicate("^rdfs:subClassOf")).toEqual({
-      iri: "http://www.w3.org/2000/01/rdf-schema#subClassOf",
-      inverse: true,
-    });
-  });
-
-  it("contracts an IRI with the default core vocabulary", () => {
-    expect(contract("http://www.w3.org/2004/02/skos/core#prefLabel")).toBe("skos:prefLabel");
-  });
-
-  it("preserves the forward direction of ordinary predicates", () => {
-    expect(expandPredicate("rdfs:subClassOf")).toEqual({
-      iri: "http://www.w3.org/2000/01/rdf-schema#subClassOf",
-      inverse: false,
-    });
-  });
-
-  it("supports data-last CURIE operations", () => {
-    expect(expand(CoreVocab)("skos:prefLabel")).toBe("http://www.w3.org/2004/02/skos/core#prefLabel");
-    expect(contract(CoreVocab)("http://www.w3.org/2004/02/skos/core#prefLabel")).toBe("skos:prefLabel");
-    expect(expandPredicate(CoreVocab)("^rdfs:subClassOf")).toEqual({
-      iri: "http://www.w3.org/2000/01/rdf-schema#subClassOf",
-      inverse: true,
-    });
+  it("names the namespace of a CURIE under a registered prefix, whatever its local", () => {
+    assertSome(prefixOf("rdfs:label"), "rdfs");
+    assertSome(prefixOf("rdfs:notATerm"), "rdfs");
+    assertNone(prefixOf("urn:example:x"));
+    assertNone(prefixOf("https://example.test/x"));
+    assertNone(prefixOf("no-separator"));
   });
 });
 
-describe("custom vocabulary codecs", () => {
-  it.effect(
-    "round-trips registered terms and rejects unknown values",
-    Effect.fnUntraced(function* () {
-      const codec = makeCurieFromIri(CoreVocab);
-      const iri = "http://www.w3.org/2004/02/skos/core#prefLabel";
-      const value1 = yield* S.decodeEffect(codec)("skos:prefLabel");
-      expect(value1).toBe(iri);
-      const value2 = yield* S.encodeEffect(codec)(iri);
-      expect(value2).toBe("skos:prefLabel");
-      expect((yield* Effect.flip(S.decodeEffect(codec)("missing:term"))).message).toContain("Unknown CURIE");
-      expect((yield* Effect.flip(S.encodeEffect(codec)("https://unknown.example/term"))).message).toContain(
-        "Unknown IRI"
-      );
-      const helpers = makeCurieCodec(CoreVocab);
-      expect(helpers.decode("skos:prefLabel")).toBe(iri);
-      expect(helpers.encode(iri)).toBe("skos:prefLabel");
-    })
-  );
+describe("a registry view over a bare vocabulary", () => {
+  it("expands and contracts exactly, with no fallback to the generated registry", () => {
+    assertSome(widen(fixture.expand("ex:Thing")), "https://example.test/ns#Thing");
+    assertSome(fixture.contract("https://example.test/ns#Thing"), "ex:Thing");
+    assertSome(fixture.contract("https://example.test/ns#deep/Leaf"), "ex-deep:Leaf");
+    assertNone(fixture.contract("https://example.test/ns#deep/"));
+    assertNone(fixture.expand("skos:prefLabel"));
+    assertNone(contract("https://example.test/ns#Thing"));
+  });
+
+  it("expands predicates and looks up prefixes over the vocabulary", () => {
+    assertSome(O.map(fixture.expandPredicate("^ex:knows"), directionAndIri), [true, "https://example.test/ns#knows"]);
+    assertSome(
+      O.map(fixture.curieNamespace("ex:Unknown"), (namespace): string => namespace.iri),
+      "https://example.test/ns#"
+    );
+    assertNone(fixture.curieNamespace("skos:prefLabel"));
+  });
+
+  it("holds no bindings and no deprecations", () => {
+    assertNone(fixture.bindingOf("@beep/identity/Anything"));
+    assertNone(fixture.replacementOf("https://example.test/ns#Thing"));
+  });
 });

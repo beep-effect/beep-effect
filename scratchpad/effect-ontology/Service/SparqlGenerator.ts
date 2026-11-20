@@ -18,7 +18,8 @@ import * as A from "effect/Array";
  */
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
-import { $ScratchpadId, CoreVocab } from "@beep/identity";
+import { $ScratchpadId } from "@beep/identity";
+import { RegistryVocab } from "@beep/identity/Registry";
 import { XSD_NAMESPACE } from "@beep/rdf/Vocab/Xsd";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Context from "effect/Context";
@@ -255,8 +256,8 @@ export class SparqlGenerator extends Context.Service<SparqlGenerator>()($I`Sparq
           const prefixDeclarations = formatPrefixes(
             prefixes ?? {
               "": config.rdf.baseNamespace,
-              rdf: CoreVocab.rdf.iri,
-              rdfs: CoreVocab.rdfs.iri,
+              rdf: RegistryVocab.rdf.iri,
+              rdfs: RegistryVocab.rdfs.iri,
               xsd: XSD_NAMESPACE,
             }
           );

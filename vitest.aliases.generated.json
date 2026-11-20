@@ -2411,5 +2411,8 @@
   ],
   "@beep/schema/WellFormedText": [
     "./packages/foundation/modeling/schema/src/WellFormedText.ts"
+  ],
+  "@beep/repo-cli/commands/Identity": [
+    "./packages/tooling/tool/cli/src/commands/Identity/index.ts"
   ]
 }
