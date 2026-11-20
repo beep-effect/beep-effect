@@ -169,7 +169,11 @@ describe("recorded contacts", () => {
         O.flatMap(A.head(cards), (c) => c.organization),
         "Acme"
       );
-      for (const input of ['First Name,Company\nAl"ex,Acme\n', 'First Name,Company\n"Alex"x,Acme\n']) {
+      for (const input of [
+        'First Name,Company\nAl"ex,Acme\n',
+        'First Name,Company\n"Alex"x,Acme\n',
+        'First Name,Company\n"Alex"x",Acme\n',
+      ]) {
         const failure = yield* parseOutlookCsv(input).pipe(Effect.flip);
         expect(failure).toMatchObject({ operation: "contact-parse", reason: "invalid-input" });
         expect(String(failure)).not.toContain("Alex");

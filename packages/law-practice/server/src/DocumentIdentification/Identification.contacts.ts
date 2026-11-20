@@ -34,11 +34,14 @@ const invalid = () => IdentificationError.make({ operation: "contact-parse", rea
 const opt = (s: string) => (Str.isNonEmpty(Str.trim(s)) ? O.some(Str.trim(s)) : O.none());
 const nonempty = (xs: ReadonlyArray<string>) => A.filter(A.map(xs, Str.trim), Str.isNonEmpty);
 // Outlook writes RFC 4180 with commas. The lenient read keeps what the export tolerates (a byte-order mark, blanks
-// after a closing quote), a quote inside an unquoted cell is refused, and rows of only empty cells are dropped.
-const isStrayQuote = (warning: CsvWarning): boolean => CsvWarningFinding.guards.StrayQuote(warning.finding);
+// after a closing quote), a quote inside an unquoted cell or text after a closing quote is refused, and rows of only
+// empty cells are dropped.
+const isQuoteMisuse = (warning: CsvWarning): boolean =>
+  CsvWarningFinding.guards.StrayQuote(warning.finding) ||
+  CsvWarningFinding.guards.TextAfterClosingQuote(warning.finding);
 const readOutlookRows = (text: string): Effect.Effect<ReadonlyArray<CsvRecord>, IdentificationError> =>
   Csv.parse(text, CsvCodecOptions.default.read).pipe(
-    Effect.filterOrFail((read) => !A.some(CsvRead.warnings(read), isStrayQuote)),
+    Effect.filterOrFail((read) => !A.some(CsvRead.warnings(read), isQuoteMisuse)),
     Effect.mapBoth({
       onFailure: invalid,
       onSuccess: (read) => A.filter(read.table.records, A.some(Str.isNonEmpty)),
