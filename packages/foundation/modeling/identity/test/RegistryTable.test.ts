@@ -180,6 +180,38 @@ describe("RegistryTable.fromShards", () => {
     expect(conflictTags(RegistryTable.fromShards([deprecatedNs, entryNs]))).toStrictEqual(["DeprecatedTermLive"]);
   });
 
+  it("lets only a retired namespace IRI end its replacement chain at a namespace IRI", () => {
+    const vocab = { prefix: "ex", iri: "https://example.test/vocab/" };
+    const retiredNs = "https://example.test/old/";
+    const succeeded = (deprecations: RegistryShard.Encoded["deprecations"]) =>
+      RegistryTable.fromShards([shard({ namespace: vocab, terms: ["Entry"], deprecations })]);
+    // The empty local names the shard namespace: a retired namespace IRI ending in "/" or "#" may take it.
+    const direct = Result.getOrThrow(succeeded([{ term: retiredNs, since: "1.0.0", replacement: "" }]));
+    assertSome(A.head(direct.deprecations).pipe(O.flatMap((row) => row.replacement)), iri(vocab.iri));
+    const hashNs = "https://example.test/older#";
+    assertTrue(
+      succeeded([
+        { term: retiredNs, since: "1.0.0", replacement: "" },
+        { term: hashNs, since: "1.0.0", replacement: "" },
+      ]).pipe(Result.isSuccess)
+    );
+    // A retired term is never succeeded by a namespace IRI, and a retired namespace IRI never by a term.
+    const termToNamespace = succeeded([{ term: "https://example.test/old/Entry", since: "1.0.0", replacement: "" }]);
+    expect(conflictsOf(termToNamespace)).toStrictEqual([
+      RegistryConflict.cases.ReplacementUnknown.make({
+        term: iri("https://example.test/old/Entry"),
+        replacement: iri(vocab.iri),
+      }),
+    ]);
+    expect(A.map(conflictsOf(termToNamespace), registryConflictMessage)).toStrictEqual([
+      `The replacement chain of https://example.test/old/Entry reaches ${vocab.iri}, which is neither a declared term nor deprecated with a successor.`,
+    ]);
+    const namespaceToTerm = succeeded([{ term: retiredNs, since: "1.0.0", replacement: "Entry" }]);
+    expect(A.map(conflictsOf(namespaceToTerm), registryConflictMessage)).toStrictEqual([
+      `The replacement chain of ${retiredNs} reaches https://example.test/vocab/Entry, which is neither a declared namespace IRI nor deprecated with a successor.`,
+    ]);
+  });
+
   it("reports a live deprecated term, a repeated deprecation and broken replacement chains", () => {
     const live = shard({
       namespace: vitestShard.namespace,

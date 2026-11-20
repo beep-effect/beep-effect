@@ -122,17 +122,13 @@ describe("identity deprecate planning", () => {
     expect(snapshotViolations(previous, next)).toStrictEqual([]);
   });
 
-  it("names the namespace itself with an empty replacement local", () => {
-    const [edited] = Result.getOrThrow(
-      planDeprecate(
-        inputOf([plain], previous),
-        DeprecateRequest.make({ curie: "fabio:Note", replacement: O.some("fabio:") })
-      )
+  it("refuses the namespace itself as the successor of a retired term", () => {
+    const refused = planDeprecate(
+      inputOf([plain], previous),
+      DeprecateRequest.make({ curie: "fabio:Note", replacement: O.some("fabio:") })
     );
-    assertSome(
-      O.flatMap(A.head(decodeShardText(edited ?? plain).deprecations), (row): O.Option<string> => row.replacement),
-      ""
-    );
+    expect(reasonsOf(refused)).toStrictEqual(["replacement-unknown"]);
+    expect(Result.isFailure(refused) && refused.failure[0]?.detail).toContain("never by its namespace IRI");
   });
 
   it("refuses a malformed CURIE, an unknown or bound term, and a replacement it cannot record", () => {

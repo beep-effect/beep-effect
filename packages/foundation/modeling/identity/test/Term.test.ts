@@ -4,9 +4,11 @@ import { SafePnLocal } from "@beep/identity/PnLocal";
 import {
   CodeId,
   Deprecation,
+  isNamespaceShapedIri,
   Namespace,
   ReleaseVersion,
   SnapshotViolation,
+  snapshotReleaseViolations,
   snapshotViolationMessage,
   snapshotViolations,
   Term,
@@ -60,6 +62,15 @@ const decodeSnapshot = S.decodeUnknownResult(TermSnapshot);
 const encodeSnapshot = (value: TermSnapshot) => Result.getOrThrow(S.encodeResult(TermSnapshot)(value));
 
 describe("Term schemas", () => {
+  it("tells a namespace-shaped IRI from a term IRI by its final separator", () => {
+    expect(A.map([prov.iri, vitest.iri, activity, testHang], isNamespaceShapedIri)).toStrictEqual([
+      true,
+      true,
+      false,
+      false,
+    ]);
+  });
+
   it("accepts declared term IRIs, code identities and release versions", () => {
     expect(S.is(TermIri)("https://beep-effect.com/ns/qa/receipts/accepted/v2")).toBe(true);
     expect(S.is(TermIri)("no scheme")).toBe(false);
@@ -280,6 +291,22 @@ describe("snapshotViolations", () => {
     },
     runs
   );
+
+  it("orders releases exactly past the safe integer range", () => {
+    // 2^53 + 1 and 2^53 are one number as a float; as release components they differ.
+    const base = snapshot({ release: release("9007199254740993.0.0") });
+    const wound = snapshot({ release: release("9007199254740992.0.0") });
+    expect(snapshotViolations(base, wound)).toStrictEqual([
+      SnapshotViolation.cases.ReleaseRegressed.make({ from: base.release, to: wound.release }),
+    ]);
+    expect(snapshotViolations(wound, base)).toStrictEqual([]);
+    const belowRow = snapshot({
+      release: release("1.9007199254740992.0"),
+      deprecations: [Deprecation.make({ term: entity, since: release("1.9007199254740993.0"), replacement: O.none() })],
+      terms: [testHang, activity, iri(prov.iri), iri(vitest.iri)],
+    });
+    expect(tags(snapshotReleaseViolations(belowRow))).toStrictEqual(["ReleaseBelowSince"]);
+  });
 });
 
 const pipeDual = (previous: TermSnapshot, next: TermSnapshot) => snapshotViolations(next)(previous);

@@ -150,8 +150,9 @@ export class RebindRequest extends S.Opaque<RebindRequest, { readonly brand: uni
  *
  * **Details**
  *
- * `replacement` is a CURIE of the term's own namespace; `<prefix>:` names the
- * namespace itself, for a term whose successor is its namespace.
+ * `replacement` is a CURIE of a live term of the deprecated term's own
+ * namespace. The namespace itself (`<prefix>:`) is refused: a retired term is
+ * succeeded by a term, never by a namespace IRI.
  *
  * **Example** (Request a deprecation)
  *
@@ -362,7 +363,8 @@ const splitCurie = (curie: string): Result.Result<readonly [prefix: string, loca
     Result.fromOption(() => refusal("invalid-curie", curie, "Expected a CURIE of the form <prefix>:<local>."))
   );
 
-// The shard-relative replacement: a live local of the term's own shard, or "" for its namespace.
+// The shard-relative replacement: a live local of the term's own shard. A retired term is never succeeded by
+// its namespace IRI (the table refuses that chain), so `<prefix>:` is refused here with the same reason.
 const replacementLocal = (
   shard: RegistryShard,
   local: string,
@@ -381,9 +383,17 @@ const replacementLocal = (
             )
           );
         }
-        return successor === "" || (successor !== local && A.contains(shard.terms, successor))
+        return successor !== local && A.contains(shard.terms, successor)
           ? Result.succeed(O.some(successor))
-          : Result.fail(refusal("replacement-unknown", curie, `The replacement is not a live term of "${prefix}".`));
+          : Result.fail(
+              refusal(
+                "replacement-unknown",
+                curie,
+                successor === ""
+                  ? `A term is succeeded by a term, never by its namespace IRI; name a live term of "${prefix}".`
+                  : `The replacement is not a live term of "${prefix}".`
+              )
+            );
       }),
   });
 
@@ -702,7 +712,7 @@ export const identityDeprecateCommand = Command.make(
   {
     curie: Argument.String("curie").pipe(Argument.withDescription("CURIE of the live term to retire")),
     replacement: Flag.String("replacement").pipe(
-      Flag.withDescription("CURIE of its successor in the same namespace; <prefix>: names the namespace itself"),
+      Flag.withDescription("CURIE of its successor, a live term of the same namespace"),
       Flag.optional
     ),
   },
