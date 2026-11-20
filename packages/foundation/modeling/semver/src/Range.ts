@@ -45,9 +45,12 @@ const $I = $SemverId.create("Range");
  * @category errors
  * @since 0.0.0
  */
-export class InvalidRangeError extends S.TaggedError<InvalidRangeError, { readonly brand: unique symbol }>(
-  $I`InvalidRangeError`
-)(
+export class InvalidRangeError extends S.TaggedError<
+  InvalidRangeError,
+  {
+    readonly brand: unique symbol;
+  }
+>($I`InvalidRangeError`)(
   "InvalidRangeError",
   {
     /** The raw input string that failed to parse. */
@@ -141,7 +144,12 @@ const pickSatisfying =
  * @category models
  * @since 0.0.0
  */
-export class Range extends S.Class<Range, { readonly brand: unique symbol }>($I`Range`)(
+export class Range extends S.Class<
+  Range,
+  {
+    readonly brand: unique symbol;
+  }
+>($I`Range`)(
   {
     /** Comparator sets combined with OR semantics; a version matches when it satisfies any set. */
     sets: Comparator.pipe(
@@ -193,7 +201,7 @@ export class Range extends S.Class<Range, { readonly brand: unique symbol }>($I`
               );
         },
         encode: (parts) => {
-          if (parts.sets.length === 0) return Effect.succeed("<0.0.0-0");
+          if (A.isReadonlyArrayEmpty(parts.sets)) return Effect.succeed("<0.0.0-0");
           if (A.some(parts.sets, A.isReadonlyArrayEmpty)) {
             return Effect.fail(
               new SchemaIssue.InvalidValue(
@@ -240,7 +248,12 @@ export class Range extends S.Class<Range, { readonly brand: unique symbol }>($I`
   static parseResult(input: string): Result.Result<Range, InvalidRangeError> {
     const result = parseRange(input);
     if (!result.ok) {
-      return Result.fail(InvalidRangeError.make({ input: result.input, position: result.position }));
+      return Result.fail(
+        InvalidRangeError.make({
+          input: result.input,
+          position: result.position,
+        })
+      );
     }
     return S.decodeResult(Range)({ sets: normalizeSets(result.value) }).pipe(
       Result.mapError(() => InvalidRangeError.make({ input }))
@@ -469,7 +482,7 @@ export class Range extends S.Class<Range, { readonly brand: unique symbol }>($I`
       A.flatMap(that.sets, (setB) => A.filter(intersectSets(setA, setB), isSetSatisfiable))
     );
 
-    if (candidates.length === 0) {
+    if (A.isReadonlyArrayEmpty(candidates)) {
       return Result.fail(UnsatisfiableConstraintError.make({ constraints: [self, that] }));
     }
 
@@ -601,7 +614,7 @@ export class Range extends S.Class<Range, { readonly brand: unique symbol }>($I`
         )
     );
 
-    if (sets.length === 0) return range;
+    if (A.isReadonlyArrayEmpty(sets)) return range;
     return Range.make({ sets });
   }
 
@@ -777,9 +790,9 @@ const satisfiesSet: {
   (version: SemVer, set: ComparatorSet): boolean;
   (set: ComparatorSet): (version: SemVer) => boolean;
 } = Fn.dual(2, (version: SemVer, set: ComparatorSet): boolean => {
-  if (set.length === 0) return true;
+  if (A.isReadonlyArrayEmpty(set)) return true;
 
-  if (version.prerelease.length > 0) {
+  if (A.isReadonlyArrayNonEmpty(version.prerelease)) {
     const hasTupleMatch = A.some(
       set,
       (c) =>
@@ -900,8 +913,8 @@ const intersectSets: {
   (a: ComparatorSet, b: ComparatorSet): ReadonlyArray<ComparatorSet>;
   (b: ComparatorSet): (a: ComparatorSet) => ReadonlyArray<ComparatorSet>;
 } = Fn.dual(2, (a: ComparatorSet, b: ComparatorSet): ReadonlyArray<ComparatorSet> => {
-  if (a.length === 0) return [b];
-  if (b.length === 0) return [a];
+  if (A.isReadonlyArrayEmpty(a)) return [b];
+  if (A.isReadonlyArrayEmpty(b)) return [a];
   const merged = [...a, ...b];
   const tuples = prereleaseTuples(merged);
   if (
@@ -917,8 +930,14 @@ const intersectSets: {
     ...O.getOrElse(O.map(stable, A.of), () => []),
     ...A.map(permitted, (tuple) => [
       ...merged,
-      Comparator.make({ operator: ">=", version: SemVer.of(tuple.major, tuple.minor, tuple.patch, [0]) }),
-      Comparator.make({ operator: "<", version: SemVer.of(tuple.major, tuple.minor, tuple.patch) }),
+      Comparator.make({
+        operator: ">=",
+        version: SemVer.of(tuple.major, tuple.minor, tuple.patch, [0]),
+      }),
+      Comparator.make({
+        operator: "<",
+        version: SemVer.of(tuple.major, tuple.minor, tuple.patch),
+      }),
     ]),
   ];
 });
@@ -956,8 +975,8 @@ const isComparatorSetSubset: {
   (sub: ComparatorSet, sup: ComparatorSet): boolean;
   (sup: ComparatorSet): (sub: ComparatorSet) => boolean;
 } = Fn.dual(2, (sub: ComparatorSet, sup: ComparatorSet): boolean => {
-  if (sup.length === 0 || !isSetSatisfiable(sub)) return true;
+  if (A.isReadonlyArrayEmpty(sup) || !isSetSatisfiable(sub)) return true;
   // An empty set admits all prerelease tuples; finite nonempty sets cannot.
-  if (sub.length === 0) return false;
+  if (A.isReadonlyArrayEmpty(sub)) return false;
   return coversPrereleaseTuples(sub, sup) && A.every(sup, (supComp) => isComparatorImplied(sub, supComp));
 });
