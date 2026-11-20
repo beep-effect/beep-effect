@@ -1,7 +1,7 @@
 import { Git } from "@beep/git/Git";
-import { BeepCiRelease, ciBinaryPinSyncCommand } from "@beep/repo-cli/commands/Ci/CiBinaryPinSync";
+import { BeepCiRelease, ciBinaryPinSyncCommand, withHooksPath } from "@beep/repo-cli/commands/Ci/CiBinaryPinSync";
 import { runRepoCommandCapture } from "@beep/repo-cli/test/RepoRun";
-import { afterAll, beforeAll, describe, expect, layer, vi } from "@effect/vitest";
+import { afterAll, beforeAll, describe, expect, it, layer, vi } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
@@ -10,6 +10,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
@@ -960,5 +961,28 @@ layer(testLayer, { timeout: "60 seconds" })("ci binary-pin-sync", (it) => {
         expect(ranOnPush).toStrictEqual([]);
       })
     );
+  });
+});
+
+// The spawner decorator the sync runs its `Git` under: a `git` command gains the empty hooks path ahead of
+// its own argv; anything else the spawner is handed passes through untouched.
+describe("withHooksPath", () => {
+  const hooked = withHooksPath("/tmp/no-hooks");
+
+  it("prefixes a git command's argv with the empty hooks path and keeps its options", () => {
+    const command = hooked(ChildProcess.make("git", ["pull", ".", "main"], { cwd: "/repo" }));
+    expect(ChildProcess.isStandardCommand(command)).toBe(true);
+    expect(command).toMatchObject({
+      command: "git",
+      args: ["-c", "core.hooksPath=/tmp/no-hooks", "pull", ".", "main"],
+      options: { cwd: "/repo" },
+    });
+  });
+
+  it("leaves a command that is not git, and a pipeline, unchanged", () => {
+    const other = ChildProcess.make("bun", ["--version"]);
+    const piped = ChildProcess.pipeTo(ChildProcess.make("git", ["log"]), ChildProcess.make("head", ["-n", "1"]));
+    expect(hooked(other)).toBe(other);
+    expect(hooked(piped)).toBe(piped);
   });
 });

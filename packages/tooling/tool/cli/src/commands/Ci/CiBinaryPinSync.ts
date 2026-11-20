@@ -481,10 +481,33 @@ const mergeAndClassify = Effect.fnUntraced(function* (
   return yield* classifyMerge(request, before, target);
 });
 
-// `git -c core.hooksPath=<hooks> <args>`: the per-invocation config outranks the repository's own
-// `core.hooksPath` and `.git/hooks`, so an empty directory leaves git no hook to run.
-// It rewrites the argv of a command the `Git` kit already built, so it adds no git operation of its own.
-const withHooksPath =
+/**
+ * Rewrite a `git <args>` command to `git -c core.hooksPath=<hooks> <args>`, leaving any other command as it is.
+ *
+ * **Details**
+ *
+ * The per-invocation config outranks the repository's own `core.hooksPath`
+ * and `.git/hooks`, so with an empty `hooks` directory git has no hook to
+ * run. It rewrites the argv of a command the `Git` kit already built, so it
+ * adds no git operation of its own. A command that is not a plain `git`
+ * invocation, such as a pipeline, passes through unchanged.
+ *
+ * **Example** (Disable hooks on one git command)
+ *
+ * ```ts
+ * import { withHooksPath } from "@beep/repo-cli/commands/Ci/CiBinaryPinSync"
+ * import * as ChildProcess from "effect/process/ChildProcess"
+ *
+ * const command = withHooksPath("/tmp/no-hooks")(ChildProcess.make`git status`)
+ * console.log(command._tag) // "StandardCommand"
+ * ```
+ *
+ * @param hooks - An empty directory for `core.hooksPath`.
+ * @returns The command transformer.
+ * @category combinators
+ * @since 0.0.0
+ */
+export const withHooksPath =
   (hooks: string) =>
   (command: ChildProcess.Command): ChildProcess.Command =>
     ChildProcess.isStandardCommand(command) && command.command === "git"
