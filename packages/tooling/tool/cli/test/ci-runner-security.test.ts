@@ -2488,21 +2488,20 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       const actionText = yield* readRepoText(".github/actions/turbo-build-cache/action.yml");
       const actionSteps = yield* decodeWorkflowSteps(yamlAt(parseWorkflowYaml(actionText), ["runs", "steps"]));
       const run = stepRun(actionSteps, "Prune Turbo cache to environment-free build artifacts");
-      const noEnv = { specified: { env: [], passThroughEnv: [] }, configured: [], inferred: [], passthrough: [] };
-      const summary = {
-        tasks: [
-          { task: "build", envMode: "strict", hash: "aaaa1111", environmentVariables: noEnv },
-          {
-            task: "build",
-            envMode: "strict",
-            hash: "bbbb2222",
-            environmentVariables: { ...noEnv, specified: { env: ["APP_SECRET"], passThroughEnv: [] } },
-          },
+      // A Turbo run summary with one environment-free build (kept) and one that hashes a variable (dropped).
+      const noEnv = '"configured":[],"inferred":[],"passthrough":[]';
+      const summaryJson = A.join(
+        [
+          '{"tasks":[',
+          `{"task":"build","envMode":"strict","hash":"aaaa1111","environmentVariables":{"specified":{"env":[],"passThroughEnv":[]},${noEnv}}},`,
+          `{"task":"build","envMode":"strict","hash":"bbbb2222","environmentVariables":{"specified":{"env":["APP_SECRET"],"passThroughEnv":[]},${noEnv}}}`,
+          "]}",
         ],
-      };
+        ""
+      );
       yield* fs.makeDirectory(path.join(tempRoot, ".turbo", "runs"), { recursive: true });
       yield* fs.makeDirectory(path.join(tempRoot, ".turbo", "cache"), { recursive: true });
-      yield* fs.writeFileString(path.join(tempRoot, ".turbo", "runs", "summary.json"), JSON.stringify(summary));
+      yield* fs.writeFileString(path.join(tempRoot, ".turbo", "runs", "summary.json"), summaryJson);
       const cacheFiles = [
         "aaaa1111.tar.zst",
         "aaaa1111-meta.json",
@@ -2517,6 +2516,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         cacheFiles,
         (name) => fs.writeFileString(path.join(tempRoot, ".turbo", "cache", name), name),
         {
+          concurrency: 1,
           discard: true,
         }
       );
