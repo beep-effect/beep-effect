@@ -1,0 +1,493 @@
+/**
+ * The one CURIE codec over the identity registry: expansion, contraction,
+ * bindings, deprecation chains and instance minting.
+ *
+ * **Details**
+ *
+ * Every lookup is exact. A CURIE expands only when its prefix is a registry
+ * namespace and its local is a live term of that namespace, and an IRI
+ * contracts only when it is a live term IRI, so nested namespaces never fall
+ * back to a longest-prefix guess. The module-level functions read the
+ * generated registry; {@link view} builds the same codec over any
+ * {@link RegistryTable}, which tests and fixture registries use.
+ *
+ * @packageDocumentation
+ * @since 0.0.0
+ */
+import * as A from "effect/Array";
+import * as Effect from "effect/Effect";
+import { dual, pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
+import * as O from "effect/Option";
+import * as R from "effect/Record";
+import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
+import * as SchemaTransformation from "effect/SchemaTransformation";
+import * as Str from "effect/String";
+import { IRI } from "./Iri.ts";
+import { RegistryBindings, RegistryDeprecations, RegistryVocab } from "./internal/generated/Registry.data.ts";
+import { SegmentSchema } from "./internal/Segment.ts";
+import { $IdentityId } from "./packages.ts";
+import { Namespace, Term, TermIri, TermLocal } from "./Term.ts";
+import type { RegistryTable } from "./Term.ts";
+import type { Curie, Expand, VocabShape } from "./Vocab.ts";
+
+const $I = $IdentityId.create("Registry");
+
+// Internal invariant guard for the literal-typed lookups (`iri`, `mint`,
+// `mintEncoded`): their argument is registered by its literal type, so the
+// unresolved branch is type-level unreachable. Not exported: never a caught
+// public failure.
+class RegistryInvariantError extends S.TaggedError<RegistryInvariantError, { readonly brand: unique symbol }>(
+  "@beep/identity/Registry/RegistryInvariantError"
+)(
+  "RegistryInvariantError",
+  { value: S.String },
+  $I.annoteError<RegistryInvariantError>("RegistryInvariantError", {
+    description: "A CURIE or prefix asserted registered by its literal type is absent from the registry.",
+  })
+) {}
+
+/**
+ * A prefix of the generated registry.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RegistryPrefix = keyof typeof RegistryVocab & string;
+
+/**
+ * A CURIE of a live term of the generated registry, as a literal union.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RegistryCurie = Curie<typeof RegistryVocab>;
+
+/**
+ * The exact IRI literal a registry CURIE expands to.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RegistryIri<C extends RegistryCurie> = Expand<C, typeof RegistryVocab>;
+
+/**
+ * The literal namespace row of a registry prefix.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type RegistryNamespace<P extends RegistryPrefix> = {
+  readonly prefix: P;
+  readonly iri: (typeof RegistryVocab)[P]["iri"];
+};
+
+/**
+ * The exact lookups of one registry, generated or built from a table.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export interface RegistryView {
+  /** The live term a code identity is bound to. */
+  readonly bindingOf: (code: string) => O.Option<Term>;
+  /** The CURIE of a live term IRI; `None` for any other IRI. */
+  readonly contract: (iri: string) => O.Option<string>;
+  /** The live term IRI a CURIE names; `None` for an unregistered prefix or local. */
+  readonly expand: (curie: string) => O.Option<TermIri>;
+  /** The namespace a prefix names. */
+  readonly namespaceOf: (prefix: string) => O.Option<Namespace>;
+  /** The live term a deprecated IRI is replaced by, following the deprecation chain. */
+  readonly replacementOf: (iri: string) => O.Option<TermIri>;
+}
+
+// The generated data shape, which a table is projected to, so the generated registry and a
+// table view share one code path.
+type RegistryData = {
+  readonly vocab: VocabShape;
+  readonly bindings: Readonly<Record<string, { readonly iri: string }>>;
+  readonly deprecations: Readonly<Record<string, { readonly replacement?: string | undefined }>>;
+};
+
+const curieOf = (term: Term): string => `${term.namespace}:${term.local}`;
+
+const makeView = (data: RegistryData): RegistryView => {
+  const namespaces = A.map(R.toEntries(data.vocab), ([prefix, entry]) => ({
+    namespace: Namespace.make({ prefix, iri: IRI.make(entry.iri) }),
+    locals: entry.terms,
+  }));
+  const terms = A.flatMap(namespaces, ({ namespace, locals }) =>
+    A.map(locals, (local) => Term.of(namespace, TermLocal.make(local)))
+  );
+  const namespaceByPrefix = HashMap.fromIterable(
+    A.map(namespaces, ({ namespace }): readonly [string, Namespace] => [namespace.prefix, namespace])
+  );
+  const termByCurie = HashMap.fromIterable(A.map(terms, (term): readonly [string, Term] => [curieOf(term), term]));
+  const termByIri = HashMap.fromIterable(A.map(terms, (term): readonly [string, Term] => [term.iri, term]));
+  const bindingByCode = HashMap.fromIterable(
+    A.map(R.toEntries(data.bindings), ([code, binding]): readonly [string, string] => [code, binding.iri])
+  );
+  const replacementByTerm = HashMap.fromIterable(
+    A.map(R.toEntries(data.deprecations), ([term, deprecation]): readonly [string, O.Option<string>] => [
+      term,
+      O.fromUndefinedOr(deprecation.replacement),
+    ])
+  );
+
+  const follow = (current: string, seen: HashSet.HashSet<string>): O.Option<TermIri> =>
+    pipe(
+      HashMap.get(replacementByTerm, current),
+      O.flatten,
+      O.filter((next) => !HashSet.has(seen, next)),
+      O.flatMap((next) =>
+        O.match(HashMap.get(termByIri, next), {
+          onNone: () => follow(next, HashSet.add(seen, next)),
+          onSome: (term) => O.some(term.iri),
+        })
+      )
+    );
+
+  return {
+    namespaceOf: (prefix) => HashMap.get(namespaceByPrefix, prefix),
+    expand: (curie) => O.map(HashMap.get(termByCurie, curie), (term) => term.iri),
+    contract: (iri) => O.map(HashMap.get(termByIri, iri), curieOf),
+    bindingOf: (code) =>
+      pipe(
+        HashMap.get(bindingByCode, code),
+        O.flatMap((term) => HashMap.get(termByIri, term))
+      ),
+    replacementOf: (iri) => follow(iri, HashSet.make(iri)),
+  };
+};
+
+/**
+ * Build the registry codec over a table, for fixture registries and tests.
+ *
+ * **When to use**
+ *
+ * Use when a caller must expand and contract against a registry other than
+ * the generated one, such as a fixture table in a test.
+ *
+ * **Example** (Expand and contract over a fixture table)
+ *
+ * ```ts import.meta.vitest name="Expand and contract over a fixture table"
+ * import * as O from "effect/Option"
+ * import * as Result from "effect/Result"
+ * import * as S from "effect/Schema"
+ * import { view } from "@beep/identity/Registry"
+ * import { RegistryShard, RegistryTable } from "@beep/identity/Term"
+ *
+ * const qa = S.decodeUnknownSync(RegistryShard)({
+ *   namespace: { prefix: "qa", iri: "https://beep-effect.com/ns/qa/" },
+ *   terms: ["receipts/accepted/v2"],
+ *   bindings: [],
+ *   deprecations: []
+ * })
+ * const registry = view(Result.getOrThrow(RegistryTable.fromShards([qa])))
+ * O.getOrThrow(registry.expand("qa:receipts/accepted/v2")) // => "https://beep-effect.com/ns/qa/receipts/accepted/v2"
+ * O.getOrThrow(registry.contract("https://beep-effect.com/ns/qa/receipts/accepted/v2")) // => "qa:receipts/accepted/v2"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const view = (table: RegistryTable): RegistryView => {
+  const localsByPrefix = A.groupBy(table.terms, (term) => term.namespace);
+  return makeView({
+    vocab: R.fromEntries(
+      A.map(table.namespaces, (namespace) => [
+        namespace.prefix,
+        {
+          iri: namespace.iri,
+          terms: A.map(O.getOrElse(R.get(localsByPrefix, namespace.prefix), A.empty), (term) => term.local),
+        },
+      ])
+    ),
+    bindings: R.fromEntries(A.map(table.bindings, (binding) => [binding.code, { iri: binding.term }])),
+    deprecations: R.fromEntries(
+      A.map(table.deprecations, (deprecation) => [
+        deprecation.term,
+        { replacement: O.getOrUndefined(deprecation.replacement) },
+      ])
+    ),
+  });
+};
+
+const generated: RegistryView = /*#__PURE__*/ makeView({
+  vocab: RegistryVocab,
+  bindings: RegistryBindings,
+  deprecations: RegistryDeprecations,
+});
+
+const isRegistryCurie = (curie: string): curie is RegistryCurie => O.isSome(generated.expand(curie));
+
+/**
+ * Expand a CURIE of the generated registry to its term IRI.
+ *
+ * **Details**
+ *
+ * The registry is a closed world: an unregistered prefix, an undeclared
+ * local and a deprecated term all give `None`.
+ *
+ * **Example** (Expand a CURIE)
+ *
+ * ```ts import.meta.vitest name="Expand a CURIE"
+ * import * as O from "effect/Option"
+ * import { expand } from "@beep/identity/Registry"
+ *
+ * O.getOrThrow(expand("skos:prefLabel")) // => "http://www.w3.org/2004/02/skos/core#prefLabel"
+ * O.isNone(expand("skos:notATerm")) // => true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const expand = (curie: string): O.Option<TermIri> => generated.expand(curie);
+
+/**
+ * Contract a term IRI of the generated registry to its CURIE.
+ *
+ * **Details**
+ *
+ * Contraction is an exact lookup of live term IRIs, not a longest-prefix
+ * match, so a namespace IRI or an IRI under a namespace that is not a
+ * declared term gives `None`.
+ *
+ * **Example** (Contract an IRI)
+ *
+ * ```ts import.meta.vitest name="Contract an IRI"
+ * import * as O from "effect/Option"
+ * import { contract } from "@beep/identity/Registry"
+ *
+ * O.getOrThrow(contract("http://purl.org/dc/terms/creator")) // => "dcterms:creator"
+ * O.isNone(contract("http://purl.org/dc/terms/")) // => true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const contract = (iri: string): O.Option<RegistryCurie> => O.filter(generated.contract(iri), isRegistryCurie);
+
+/**
+ * The namespace a prefix names in the generated registry.
+ *
+ * **Example** (Look up a namespace)
+ *
+ * ```ts import.meta.vitest name="Look up a namespace"
+ * import * as O from "effect/Option"
+ * import { namespaceOf } from "@beep/identity/Registry"
+ *
+ * O.map(namespaceOf("rdfs"), (namespace) => namespace.iri) // => O.some("http://www.w3.org/2000/01/rdf-schema#")
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const namespaceOf = (prefix: string): O.Option<Namespace> => generated.namespaceOf(prefix);
+
+/**
+ * The live term a code identity is bound to in the generated registry.
+ *
+ * **Example** (Look up an unbound code identity)
+ *
+ * ```ts import.meta.vitest name="Look up an unbound code identity"
+ * import * as O from "effect/Option"
+ * import { bindingOf } from "@beep/identity/Registry"
+ *
+ * O.isNone(bindingOf("@beep/identity/Registry/Unbound")) // => true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const bindingOf = (code: string): O.Option<Term> => generated.bindingOf(code);
+
+/**
+ * The live term that replaces a deprecated IRI of the generated registry, following the deprecation chain.
+ *
+ * **When to use**
+ *
+ * Use when reading a stored IRI that may have been re-minted: the stored row
+ * keeps its bytes and the reader converts it on read.
+ *
+ * **Example** (Read a live IRI)
+ *
+ * ```ts import.meta.vitest name="Read a live IRI"
+ * import * as O from "effect/Option"
+ * import { replacementOf } from "@beep/identity/Registry"
+ *
+ * O.isNone(replacementOf("http://www.w3.org/2004/02/skos/core#prefLabel")) // => true
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const replacementOf = (iri: string): O.Option<TermIri> => generated.replacementOf(iri);
+
+const unregistered = (value: string) => () => RegistryInvariantError.make({ value });
+
+/**
+ * Expand a literal CURIE of the generated registry to its exact IRI literal.
+ *
+ * **Example** (Expand a literal CURIE)
+ *
+ * ```ts import.meta.vitest name="Expand a literal CURIE"
+ * import { iri } from "@beep/identity/Registry"
+ *
+ * const label = iri("rdfs:label")
+ * label // => "http://www.w3.org/2000/01/rdf-schema#label"
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export function iri<const C extends RegistryCurie>(curie: C): RegistryIri<C>;
+export function iri(curie: string): string {
+  return O.getOrThrowWith(generated.expand(curie), unregistered(curie));
+}
+
+/**
+ * The literal namespace row of a prefix of the generated registry.
+ *
+ * **Example** (Read a namespace literal)
+ *
+ * ```ts import.meta.vitest name="Read a namespace literal"
+ * import { namespace } from "@beep/identity/Registry"
+ *
+ * namespace("skos").iri // => "http://www.w3.org/2004/02/skos/core#"
+ * ```
+ *
+ * @category codecs
+ * @since 0.0.0
+ */
+export const namespace = <const P extends RegistryPrefix>(prefix: P): RegistryNamespace<P> => ({
+  prefix,
+  iri: RegistryVocab[prefix].iri,
+});
+
+const baseIri = (base: string): string =>
+  O.getOrThrowWith(
+    Str.includes(":")(base) ? generated.expand(base) : O.map(generated.namespaceOf(base), (row) => row.iri),
+    unregistered(base)
+  );
+
+// A namespace IRI ends with its own separator; a term IRI takes "/" before the next segment.
+const joinUnder = (base: string, tail: string): string =>
+  Str.includes(":")(base) ? `${baseIri(base)}/${tail}` : `${baseIri(base)}${tail}`;
+
+/**
+ * Mint an instance IRI under a registry term or namespace with the identity segment grammar.
+ *
+ * **Details**
+ *
+ * Each segment passes the same validation as the composer's `create`, so the
+ * bytes equal the composer IRI of the same segments under the same base. A
+ * CURIE base takes `/` before the first segment; a namespace base already
+ * ends with its separator.
+ *
+ * **Gotchas**
+ *
+ * Throws the segment schema error for an empty segment or one with a leading
+ * or trailing `/`.
+ *
+ * **Example** (Mint an instance under a term)
+ *
+ * ```ts import.meta.vitest name="Mint an instance under a term"
+ * import { mint } from "@beep/identity/Registry"
+ *
+ * mint("skos:Concept", "legal", "patent") // => "http://www.w3.org/2004/02/skos/core#Concept/legal/patent"
+ * mint("dcterms", "Agent") // => "http://purl.org/dc/terms/Agent"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const mint = (base: RegistryCurie | RegistryPrefix, ...segments: A.NonEmptyReadonlyArray<string>): string =>
+  joinUnder(
+    base,
+    A.join(
+      A.map(segments, (segment) => SegmentSchema.make(segment)),
+      "/"
+    )
+  );
+
+/**
+ * Mint an instance IRI under a registry term or namespace from one raw key, percent-encoded.
+ *
+ * **When to use**
+ *
+ * Use when the key is free text, such as a fixture key or a canonical URL,
+ * that the segment grammar would refuse.
+ *
+ * **Example** (Mint an instance from a raw key)
+ *
+ * ```ts import.meta.vitest name="Mint an instance from a raw key"
+ * import { mintEncoded } from "@beep/identity/Registry"
+ *
+ * mintEncoded("skos:Concept", "a b/c") // => "http://www.w3.org/2004/02/skos/core#Concept/a%20b%2Fc"
+ * ```
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export const mintEncoded: {
+  (raw: string): (base: RegistryCurie | RegistryPrefix) => string;
+  (base: RegistryCurie | RegistryPrefix, raw: string): string;
+} = dual(2, (base: RegistryCurie | RegistryPrefix, raw: string): string => joinUnder(base, encodeURIComponent(raw)));
+
+const unknownCurie = (curie: string) => new SchemaIssue.InvalidValue({ message: `Unknown CURIE: ${curie}` }, curie);
+const unknownIri = (term: string) => new SchemaIssue.InvalidValue({ message: `Unknown IRI: ${term}` }, term);
+
+/**
+ * The schema codec between a registry CURIE (encoded) and its term IRI (decoded).
+ *
+ * **Details**
+ *
+ * Decoding refuses an unregistered or deprecated CURIE and encoding refuses
+ * an IRI that is not a live term, so a round trip is the identity on every
+ * registered term.
+ *
+ * **Example** (Decode and encode a CURIE)
+ *
+ * ```ts import.meta.vitest name="Decode and encode a CURIE"
+ * import * as S from "effect/Schema"
+ * import { CurieFromIri } from "@beep/identity/Registry"
+ *
+ * const term = S.decodeUnknownSync(CurieFromIri)("owl:Class")
+ * term // => "http://www.w3.org/2002/07/owl#Class"
+ * S.encodeSync(CurieFromIri)(term) // => "owl:Class"
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CurieFromIri = S.String.pipe(
+  S.decodeTo(
+    TermIri,
+    SchemaTransformation.transformEffect({
+      decode: (curie: string) =>
+        pipe(
+          generated.expand(curie),
+          Effect.fromOption(() => unknownCurie(curie))
+        ),
+      encode: (term: string) =>
+        pipe(
+          generated.contract(term),
+          Effect.fromOption(() => unknownIri(term))
+        ),
+    })
+  ),
+  $I.annoteSchema("CurieFromIri", {
+    description: "Codec between a registry CURIE and the live term IRI it names.",
+  })
+);
+
+/**
+ * Decoded type of {@link CurieFromIri}: a live term IRI.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CurieFromIri = typeof CurieFromIri.Type;

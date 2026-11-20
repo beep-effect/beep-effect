@@ -144,3 +144,47 @@ describe("IdentityRegistry", () => {
     })
   );
 });
+
+describe("IdentityRegistry over binding rows", () => {
+  const hang = {
+    curie: "vitest:TestHang",
+    iri: "https://beep-effect.com/ns/vitest/TestHang",
+  } as const;
+
+  it("builds an entry from a binding row with no fibers", () => {
+    const made = IdentityEntry.fromBinding("@beep/test-runner/Vitest/TestHang", hang);
+    expect(made).toStrictEqual(
+      IdentityEntry.make({
+        identity: "@beep/test-runner/Vitest/TestHang",
+        iri: hang.iri,
+        curie: hang.curie,
+        fibers: {},
+      })
+    );
+  });
+
+  it.effect(
+    "resolves a bound code identity in all three encodings",
+    Effect.fnUntraced(function* () {
+      const layer = IdentityRegistry.layerFromBindings({ "@beep/test-runner/Vitest/TestHang": hang });
+      const context = yield* Layer.build(layer);
+      const registry = Context.get(context, IdentityRegistry);
+      const byCurie = yield* registry.resolve({ _tag: "curie", value: hang.curie });
+      expect(byCurie.identity).toBe("@beep/test-runner/Vitest/TestHang");
+      const byIri = yield* registry.resolve({ _tag: "iri", value: hang.iri });
+      expect(byIri).toBe(byCurie);
+    })
+  );
+
+  it.effect(
+    "binds no code identity in the generated registry before the internal namespaces land",
+    Effect.fnUntraced(function* () {
+      const context = yield* Layer.build(IdentityRegistry.layer);
+      const registry = Context.get(context, IdentityRegistry);
+      const error = yield* registry
+        .resolve({ _tag: "identity", value: "@beep/test-runner/Vitest/TestHang" })
+        .pipe(Effect.flip);
+      expect(error._tag).toBe("IdentityNotFoundError");
+    })
+  );
+});

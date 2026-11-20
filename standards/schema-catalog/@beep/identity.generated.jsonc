@@ -19,6 +19,7 @@
     {"file":"packages/foundation/modeling/identity/src/PnLocal.ts","symbol":"EscapedPnLocal","kind":"codec","owner":"@beep/identity"},
     {"file":"packages/foundation/modeling/identity/src/PnLocal.ts","symbol":"SafePnLocal","kind":"codec","owner":"@beep/identity"},
     {"file":"packages/foundation/modeling/identity/src/PnLocal.ts","symbol":"SafePnPrefix","kind":"codec","owner":"@beep/identity"},
+    {"file":"packages/foundation/modeling/identity/src/Registry.ts","symbol":"CurieFromIri","kind":"codec","owner":"@beep/identity","identity":"CurieFromIri","description":"Codec between a registry CURIE and the live term IRI it names."},
     {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"CodeId","kind":"brand","owner":"@beep/identity","identity":"CodeId","description":"A code-path identity for a kind."},
     {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"Deprecation","kind":"struct-const","owner":"@beep/identity","identity":"Deprecation","description":"A term deprecation with its optional successor."},
     {"file":"packages/foundation/modeling/identity/src/Term.ts","symbol":"Namespace","kind":"struct-const","owner":"@beep/identity","identity":"Namespace","description":"A registry namespace: prefix and IRI."},

@@ -4871,6 +4871,7 @@
         "$TURBO_ROOT$/packages/foundation/modeling/identity/src/Vocab.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/identity/src/index.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/identity/src/internal/Segment.ts",
+        "$TURBO_ROOT$/packages/foundation/modeling/identity/src/internal/generated/Registry.data.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/identity/src/internal/generated/SparTerms.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/identity/src/internal/schemaStatics.ts",
         "$TURBO_ROOT$/packages/foundation/modeling/identity/src/packages.ts",
