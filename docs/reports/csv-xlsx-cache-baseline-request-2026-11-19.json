@@ -1,0 +1,19 @@
+{
+  "previous": {
+    "//": "a21269cb9765ffb5c1aaf0b9f0369d47cff785176bd9a69ce072c0988edeaae0",
+    "@beep/csv": "2db6e041114334cfbd96f9eca27d17626d8e3786b04585b101771e31e83f2a42",
+    "@beep/xlsx": "9ab8690bd0c77efe4945fbfbe9ea22529528fee718e15a4b09ea67e7f1b933f4"
+  },
+  "review": {
+    "reviewer": "Claude Fable 5.2 (csv and xlsx lane, feat/xlsx-and-csv-foundation-modeling)",
+    "reason": "Record the two new modeling packages' tasks (generated scripts, including the gate-run check script main regenerated, root task definitions, no override) and the two manifest inputs the policy fingerprint added to the root. No qualification is granted.",
+    "basis": {
+      "path": "docs/reports/csv-xlsx-cache-review-2026-11-19.md",
+      "sha256": "2276c12fc15782beb0bd1e56d956daf437f52eba99e04c548bc6a9b4da7b358e"
+    }
+  },
+  "subjects": ["//", "@beep/csv", "@beep/xlsx"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

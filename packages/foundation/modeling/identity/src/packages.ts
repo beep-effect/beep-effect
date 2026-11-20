@@ -272,6 +272,8 @@ const generatedComposers = /*#__PURE__*/ $I.compose(
   "gate-report",
   "repo-gate-record",
   "repo-gate-run",
+  "csv",
+  "xlsx",
   "repo-gate-vitest"
 );
 
@@ -4195,6 +4197,40 @@ export const $RepoGateRecordId: Identity.IdentityComposer<"@beep/repo-gate-recor
 export const $RepoGateRunId: Identity.IdentityComposer<"@beep/repo-gate-run"> = /*#__PURE__*/ $I.create(
   "repo-gate-run"
 );
+
+/**
+ * Identity composer for `@beep/csv`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $CsvId } from "@beep/identity/packages"
+ *
+ * const id = $CsvId.make("Csv")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $CsvId: Identity.IdentityComposer<"@beep/csv"> = /*#__PURE__*/ $I.create("csv");
+
+/**
+ * Identity composer for `@beep/xlsx`.
+ *
+ * **Example** (Make package ID)
+ *
+ * ```ts import.meta.vitest name="Make package ID"
+ * import { $XlsxId } from "@beep/identity/packages"
+ *
+ * const id = $XlsxId.make("Xlsx")
+ * console.log(id)
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const $XlsxId: Identity.IdentityComposer<"@beep/xlsx"> = /*#__PURE__*/ $I.create("xlsx");
 
 /**
  * Identity composer for `@beep/repo-gate-vitest`.
