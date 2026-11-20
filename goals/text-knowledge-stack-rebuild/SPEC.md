@@ -343,10 +343,10 @@ decision file) and the law-test ledger:
    are retained, and the imported-input law as equivalence to the normalized
    input (`encode(decode s) = normalize(s)` for third-party OA input `s`), carried into ledger row `L2-6`
    and its tests.
-8. Where the runtime `IRI` schema lives: today only in
-   `packages/foundation/modeling/rdf/src/Iri.ts`, while `identity` must stay
-   rdf-free and `@beep/schema` depends on `identity`; P0 moves it (into
-   `identity` or a dependency-free home) before L0 and L1 compile.
+8. Where the runtime `IRI` schema lives: it used to live only in `@beep/rdf`,
+   while `identity` must stay rdf-free and `@beep/schema` depends on
+   `identity`. P0 ruled the home and P1 moved it to
+   `packages/foundation/modeling/identity/src/Iri.ts`, before L0 and L1 compile.
 9. `Anchored` is an L1 `S.Opaque` of range, quote and the powerless
    `TextAnchorVerificationReceipt` (never a `VerifiedTextAnchor`, so decoding a
    stored document grants no proof); the `anchors` table checks that each key
