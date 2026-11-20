@@ -115,6 +115,9 @@ const section = (title: string, blocks: ReadonlyArray<Block>) => Doc.section(tit
 const corpusSection = (corpus: CensusCorpus) => {
   const claude = corpus.claude;
   const codex = corpus.codex;
+  const present = [...(claude._tag === "Present" ? [claude] : []), ...(codex._tag === "Present" ? [codex] : [])];
+  const oversized = A.reduce(present, 0, (total, entry) => total + entry.oversizedLines);
+  const unreadable = A.reduce(present, 0, (total, entry) => total + entry.unreadableFiles);
   return section("Corpus", [
     Doc.table(
       [{ header: "Harness" }, right("Files scanned"), right("Active contexts"), right("Sessions"), right("Subagents")],
@@ -134,11 +137,11 @@ const corpusSection = (corpus: CensusCorpus) => {
       ]
     ),
     Doc.paragraph(
-      claude._tag === "Present"
-        ? `Compaction boundaries: ${count(claude.compactionBoundaries)}. Lines over the page bound: ${count(
-            claude.oversizedLines + (codex._tag === "Present" ? codex.oversizedLines : 0)
-          )}. Unreadable files: ${count(claude.unreadableFiles + (codex._tag === "Present" ? codex.unreadableFiles : 0))}.`
-        : "Claude Code root absent."
+      `${
+        claude._tag === "Present"
+          ? `Compaction boundaries: ${count(claude.compactionBoundaries)}.`
+          : "Claude Code root absent."
+      } Lines over the page bound: ${count(oversized)}. Unreadable files: ${count(unreadable)}.`
     ),
   ]);
 };

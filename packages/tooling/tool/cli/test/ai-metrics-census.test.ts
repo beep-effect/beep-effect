@@ -150,6 +150,9 @@ it.layer(NodeServices.layer, { excludeTestServices: true, timeout: "30 seconds" 
         const empty = yield* runCensus(home, options(window));
         expect(empty.exit._tag).toBe("Failure");
         expect(Str.includes("absent")(empty.out)).toBe(true);
+        expect(
+          Str.includes("Claude Code root absent. Lines over the page bound: 0. Unreadable files: 0.")(empty.out)
+        ).toBe(true);
         const malformed = yield* runCensus(home, options(window, { until: O.some("not-a-time") }));
         expect(malformed.exit._tag).toBe("Failure");
         const reversed = yield* runCensus(
