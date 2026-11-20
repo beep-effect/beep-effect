@@ -49,7 +49,8 @@ const $I = $RepoCliId.create("commands/AIMetrics/internal/Census");
  *
  * `until` defaults to now and `since` to seven days before `until`. Roots default to `~/.claude/projects` and
  * `~/.codex/sessions`. `baselineDirectory` defaults to `standards/agent-output-census/runs` under the
- * repository root and is only read when `writeBaseline` is set.
+ * repository root and is only read when `writeBaseline` is set. `repoRoot` is where the repository root is
+ * searched from; the working directory by default.
  *
  * **Example** (Configure a JSON census of the default window)
  *
@@ -57,7 +58,7 @@ const $I = $RepoCliId.create("commands/AIMetrics/internal/Census");
  * import { CensusCommandOptions } from "@beep/repo-cli/commands/AIMetrics/internal/Census"
  * import * as O from "effect/Option"
  * const options = CensusCommandOptions.make({
- *   since: O.none(), until: O.none(), claudeRoot: O.none(), codexRoot: O.none(), baselineDirectory: O.none(),
+ *   since: O.none(), until: O.none(), claudeRoot: O.none(), codexRoot: O.none(), baselineDirectory: O.none(), repoRoot: O.none(),
  *   repository: "beep-effect", json: true, writeBaseline: false,
  * })
  * console.log(options.json) // true
@@ -73,6 +74,7 @@ export class CensusCommandOptions extends S.Opaque<CensusCommandOptions, { reado
     claudeRoot: S.Option(S.String),
     codexRoot: S.Option(S.String),
     baselineDirectory: S.Option(S.String),
+    repoRoot: S.Option(S.String),
     repository: S.NonEmptyString,
     json: S.Boolean,
     writeBaseline: S.Boolean,
@@ -424,10 +426,11 @@ const resolveWindow = Effect.fn("AIMetrics.census.window")(function* (options: C
 });
 
 const resolveHome = Effect.fn("AIMetrics.census.home")(function* () {
+  // A provider that cannot answer is the same as no HOME: the roots must then be passed explicitly.
   const home = yield* ConfigProvider.ConfigProvider.use(pipe(Config.String("HOME"), Config.option).parse).pipe(
-    Effect.mapError(() => commandError("Failed to read HOME from the Effect config provider."))
+    Effect.option
   );
-  return O.filter(home, Str.isNonEmpty);
+  return O.filter(O.flatten(home), Str.isNonEmpty);
 });
 
 // A root under the home directory is shown with `~`; any other root is not shown at all.
@@ -460,34 +463,45 @@ const encodeBaseline = S.encodeEffect(S.fromJsonString(CensusBaselineFile, { spa
 
 const writeBaseline = Effect.fn("AIMetrics.census.writeBaseline")(function* (
   report: CensusReport,
-  directory: O.Option<string>
+  options: CensusCommandOptions
 ) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const root = yield* findRepoRoot().pipe(Effect.mapError(() => commandError("Unable to locate the repository root.")));
-  const target = O.getOrElse(O.map(directory, path.resolve), () =>
-    path.join(root, "standards", "agent-output-census", "runs")
+  const located = options.repoRoot.pipe(O.getOrUndefined, findRepoRoot);
+  // The repository root is needed only for the default directory, so an explicit one works outside a checkout.
+  const root = O.isSome(options.baselineDirectory)
+    ? yield* located.pipe(Effect.option)
+    : yield* located.pipe(
+        Effect.asSome,
+        Effect.mapError(() => commandError("Unable to locate the repository root. Pass --baseline-dir."))
+      );
+  const target = pipe(
+    options.baselineDirectory,
+    O.orElse(() => O.map(root, (value) => path.join(value, "standards", "agent-output-census", "runs"))),
+    O.map(path.resolve),
+    O.getOrThrow
   );
-  const file = path.join(target, censusBaselineFileName(report.window.until, report.ruleVersion));
+  const name = censusBaselineFileName(report.window.until, report.ruleVersion);
+  const file = path.join(target, name);
   const recordedAt = yield* DateTime.now;
+  // The report was built by its own schema, so encoding it cannot fail.
   const text = yield* encodeBaseline(
     CensusBaselineFile.make({ version: "agent-output-census-baseline/v1", recordedAt, report })
-  ).pipe(Effect.mapError(() => commandError("Unable to encode the census baseline file.")));
-  yield* fs
-    .makeDirectory(target, { recursive: true })
-    .pipe(Effect.mapError(() => commandError("Unable to create the census baseline directory.")));
+  ).pipe(Effect.orDie);
   // `wx` refuses an existing file, so no run overwrites another's.
-  yield* fs
-    .writeFileString(file, `${text}\n`, { flag: "wx" })
-    .pipe(
-      Effect.mapError(() =>
-        commandError(
-          "A census baseline file for this window end and rule version already exists, or cannot be written."
-        )
-      )
-    );
-  const shown = path.relative(root, file);
-  return Str.startsWith("..")(shown) ? path.basename(file) : shown;
+  yield* fs.makeDirectory(target, { recursive: true }).pipe(
+    Effect.andThen(fs.writeFileString(file, `${text}\n`, { flag: "wx" })),
+    Effect.mapError(() =>
+      commandError("A census baseline file for this window end and rule version already exists, or cannot be written.")
+    )
+  );
+  // Shown relative to the repository when it is inside one; otherwise by name, never as an absolute path.
+  return pipe(
+    root,
+    O.map((value) => path.relative(value, file)),
+    O.filter((shown) => !Str.startsWith("..")(shown)),
+    O.getOrElse(() => name)
+  );
 });
 
 /**
@@ -506,7 +520,7 @@ const writeBaseline = Effect.fn("AIMetrics.census.writeBaseline")(function* (
  * import * as O from "effect/Option"
  * const program = makeCensusProgram(
  *   CensusCommandOptions.make({
- *     since: O.none(), until: O.none(), claudeRoot: O.none(), codexRoot: O.none(), baselineDirectory: O.none(),
+ *     since: O.none(), until: O.none(), claudeRoot: O.none(), codexRoot: O.none(), baselineDirectory: O.none(), repoRoot: O.none(),
  *     repository: "beep-effect", json: false, writeBaseline: false,
  *   })
  * )
@@ -529,10 +543,8 @@ export const makeCensusProgram = Effect.fn("AIMetrics.makeCensusProgram")(
       .report(CensusRequest.make({ window, claudeRoot, codexRoot, repository: options.repository }))
       .pipe(Effect.mapError((error) => commandError(error.message)));
     if (options.json) {
-      yield* encodeReport(report).pipe(
-        Effect.mapError(() => commandError("Unable to encode the census report.")),
-        Effect.flatMap(Console.log)
-      );
+      // The report was built by its own schema, so encoding it cannot fail.
+      yield* encodeReport(report).pipe(Effect.orDie, Effect.flatMap(Console.log));
     } else {
       yield* Console.log(
         renderCensusReport(report, [
@@ -546,7 +558,7 @@ export const makeCensusProgram = Effect.fn("AIMetrics.makeCensusProgram")(
     }
     if (isEmpty(report)) return yield* commandError("The census found no activity in the window.");
     if (!options.writeBaseline) return;
-    const written = yield* writeBaseline(report, options.baselineDirectory);
+    const written = yield* writeBaseline(report, options);
     yield* Console.error(`Census baseline written: ${written}`);
   },
   Effect.provideServiceEffect(Census, makeCensus)

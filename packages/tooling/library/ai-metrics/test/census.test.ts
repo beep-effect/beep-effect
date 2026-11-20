@@ -303,7 +303,88 @@ it.layer(layer, { excludeTestServices: true, timeout: "30 seconds" })((it) => {
         const error = yield* census(fixture).pipe(Effect.flip);
         yield* fs.chmod(fixture.codexRoot, 0o700);
         expect(error.reason).toBe("unreadable-root");
-        expect(error.message).toBe("Census could not list a harness root that exists.");
+        expect(error.message).toBe("Census could not read a harness root that exists, or the root is not a directory.");
+      })
+    );
+
+    it.effect("counts a message once, keeps in-window usage, and stages each file", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const home = yield* fs.makeTempDirectoryScoped();
+        const claudeRoot = path.join(home, "projects");
+        const codexRoot = path.join(home, "codex");
+        const project = path.join(claudeRoot, "staged-beep-effect");
+        yield* fs.makeDirectory(project, { recursive: true });
+        yield* fs.makeDirectory(codexRoot, { recursive: true });
+        const at = (time: string) => `"timestamp":"2026-11-12T${time}Z"`;
+        const session = [
+          `{"type":"assistant",${at("10:00:00")},"message":{"id":"a0","usage":{"input_tokens":3},"content":[{"type":"tool_use","id":"e1","name":"Bash","input":{"command":"ls"}}]}}`,
+          `{"type":"user",${at("10:00:01")},"message":{"content":[{"type":"tool_result","tool_use_id":"e1","content":"four"}]}}`,
+          // One API call in two records: the first carries no usage.
+          `{"type":"assistant",${at("10:00:02")},"message":{"id":"a1","content":[]}}`,
+          `{"type":"assistant",${at("10:00:03")},"message":{"id":"a1","usage":{"input_tokens":5},"content":[]}}`,
+          // A single large result followed by a smaller context is not a calibration sample.
+          `{"type":"assistant",${at("10:00:04")},"message":{"id":"a2","usage":{"input_tokens":7},"content":[{"type":"tool_use","id":"e2","name":"Bash","input":{"command":"true"}}]}}`,
+          `{"type":"user",${at("10:00:05")},"message":{"content":[{"type":"tool_result","tool_use_id":"e2","content":"${Str.repeat(3001)("x")}"}]}}`,
+          `{"type":"assistant",${at("10:00:06")},"message":{"id":"a3","usage":{"input_tokens":1},"content":[]}}`,
+          // A user record whose content is neither text nor a block list contributes nothing.
+          `{"type":"user",${at("10:00:07")},"message":{"content":{"other":1}}}`,
+          // A record of the same call after the window end must not drop it.
+          '{"type":"assistant","timestamp":"2026-11-19T00:00:00Z","message":{"id":"a1","usage":{"input_tokens":900},"content":[]}}',
+        ];
+        // Opened by modification time, but its only timestamp is after the window: nothing in it counts.
+        const excluded = [
+          '{"type":"user","message":{"content":[{"type":"tool_result","tool_use_id":"none","content":"leak"}]}}',
+          '{"type":"assistant","timestamp":"2026-11-19T00:00:00Z","message":{"id":"x","usage":{"input_tokens":1},"content":[]}}',
+        ];
+        yield* fs.writeFileString(path.join(project, "a.jsonl"), A.join(session, "\n"));
+        yield* fs.writeFileString(path.join(project, "b.jsonl"), A.join(excluded, "\n"));
+        // Not a transcript, a transcript that cannot be inspected, and a directory that cannot be listed.
+        yield* fs.writeFileString(path.join(project, "notes.txt"), "not a transcript");
+        yield* fs.symlink(path.join(project, "missing-target"), path.join(project, "dangling.jsonl"));
+        const locked = path.join(project, "locked");
+        yield* fs.makeDirectory(locked);
+        yield* fs.chmod(locked, 0o000);
+        const window = CensusWindow.make({
+          since: DateTime.makeUnsafe("2026-11-11T00:00:00Z"),
+          until: DateTime.makeUnsafe("2026-11-18T00:00:00Z"),
+        });
+        const service = yield* Census;
+        const report = yield* service.report(
+          CensusRequest.make({ claudeRoot, codexRoot, repository: "beep-effect", window })
+        );
+        yield* fs.chmod(locked, 0o700);
+        const sessions = O.getOrThrow(report.totals.claudeSessions);
+        expect([sessions.apiCalls, sessions.inputTokens]).toEqual([4, 16]);
+        expect(row(report, "search-read").claude).toMatchObject({ results: 1, chars: 4, carriedCharTurns: 12 });
+        expect(report.calibration.samples).toBe(0);
+        expect(report.corpus.claude).toMatchObject({ unreadableFiles: 2 });
+        expect(row(report, "unmatched-result").claude).toMatchObject({ results: 0, chars: 0 });
+        expect(report.corpus.claude).toMatchObject({ filesScanned: 1, contextsActive: 1 });
+        // A root that is a file is an error, not an absent harness.
+        const error = yield* service
+          .report(
+            CensusRequest.make({
+              claudeRoot,
+              codexRoot: path.join(project, "a.jsonl"),
+              repository: "beep-effect",
+              window,
+            })
+          )
+          .pipe(Effect.flip);
+        expect(error.reason).toBe("unreadable-root");
+        // A root that exists but cannot be inspected is an error too.
+        const sealed = path.join(home, "sealed");
+        yield* fs.makeDirectory(path.join(sealed, "root"), { recursive: true });
+        yield* fs.chmod(sealed, 0o000);
+        const denied = yield* service
+          .report(
+            CensusRequest.make({ claudeRoot, codexRoot: path.join(sealed, "root"), repository: "beep-effect", window })
+          )
+          .pipe(Effect.flip);
+        yield* fs.chmod(sealed, 0o700);
+        expect(denied.reason).toBe("unreadable-root");
       })
     );
 

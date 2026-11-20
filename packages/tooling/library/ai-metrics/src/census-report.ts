@@ -106,8 +106,10 @@ export class CensusWindow extends S.Opaque<CensusWindow, { readonly brand: uniqu
  *
  * `filesScanned` counts the selected files; `contextsActive` the files with an API call in the window, split
  * into `sessions` and `subagents`. `compactionBoundaries` counts compactions inside the window.
- * `oversizedLines` and `oversizedBytes` count lines larger than the transcript page reader's bound, which
- * the census still parses. `unreadableFiles` counts selected files that could not be read.
+ * `oversizedLines` and `oversizedBytes` count lines larger than the transcript page reader's bound in every file
+ * opened (scanned or not), which
+ * the census still parses. `unreadableFiles` counts transcript files and directories under the root that could not
+ * be inspected, listed or read; a non-zero count means the census is incomplete.
  *
  * **Example** (Construct an absent Claude corpus)
  *

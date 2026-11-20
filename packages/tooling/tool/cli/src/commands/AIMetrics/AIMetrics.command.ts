@@ -1345,6 +1345,7 @@ const censusCommand = Command.make(
       Flag.withDefault(false),
       Flag.withDescription("Add this run's file under standards/agent-output-census/runs; never overwrites")
     ),
+    repoRoot: repoRootFlag,
     baselineDirectory: Flag.String("baseline-dir").pipe(
       Flag.withDescription("Directory for --write-baseline; standards/agent-output-census/runs by default"),
       Flag.optional

@@ -21,9 +21,11 @@ import * as FileSystem from "effect/FileSystem";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
@@ -145,7 +147,7 @@ export class CensusRequest extends S.Opaque<CensusRequest, { readonly brand: uni
 export class CensusError extends S.TaggedError<CensusError, { readonly brand: unique symbol }>($I`CensusError`)(
   "CensusError",
   { reason: S.Literals(["invalid-window", "unreadable-root"]) },
-  $I.annote("CensusError", { description: "A census refused its window or could not list a harness root." })
+  $I.annote("CensusError", { description: "A census refused its window or could not read a harness root." })
 ) {
   /**
    * A fixed message naming the reason only.
@@ -155,7 +157,7 @@ export class CensusError extends S.TaggedError<CensusError, { readonly brand: un
   override get message(): string {
     return this.reason === "invalid-window"
       ? "Census window start is after its end."
-      : "Census could not list a harness root that exists.";
+      : "Census could not read a harness root that exists, or the root is not a directory.";
   }
 }
 
@@ -299,6 +301,19 @@ const makeAccumulator = () => ({
 
 type Accumulator = ReturnType<typeof makeAccumulator>;
 
+// Add one file's staged counts into the run's: numbers sum (a `max` keeps the larger), lists append.
+const mergeCounts = (target: Record<string, unknown>, staged: Record<string, unknown>): void =>
+  A.forEach(R.toEntries(staged), ([key, value]) => {
+    const current = target[key];
+    if (P.isNumber(value) && P.isNumber(current))
+      target[key] = key === "max" ? Math.max(current, value) : current + value;
+    else if (A.isArray(value) && A.isArray(current)) current.push(...value);
+    else
+      O.map(O.all([O.liftPredicate(current, P.isObject), O.liftPredicate(value, P.isObject)]), ([nested, counts]) =>
+        mergeCounts(nested, counts)
+      );
+  });
+
 const contextTokensOf = (usage: {
   readonly input: number;
   readonly cacheCreation: number;
@@ -399,6 +414,7 @@ interface Turn {
 const makeClaudeContext = (acc: Accumulator, harness: CensusHarness) => {
   const usageById = MutableHashMap.empty<string, { readonly usage: UsageFacts; readonly inWindow: boolean }>();
   const turns = MutableHashMap.empty<string, Turn>();
+  const counted = MutableHashSet.empty<string>();
   const pending = byToolOutputClass(() => ({ chars: 0, charsAt: 0 }));
   let calls = 0;
   let lastContext = O.none<number>();
@@ -437,7 +453,9 @@ const makeClaudeContext = (acc: Accumulator, harness: CensusHarness) => {
   };
 
   const countCall = (assistant: AssistantFacts, inWindow: boolean) => {
-    if (MutableHashMap.has(usageById, assistant.messageId)) return;
+    // A message is one API call however many records carry it, with or without usage on the first.
+    if (MutableHashSet.has(counted, assistant.messageId)) return;
+    MutableHashSet.add(counted, assistant.messageId);
     if (inWindow) calls += 1;
     O.map(assistant.usage, (usage) => calibrate(usage, inWindow));
   };
@@ -476,7 +494,8 @@ const makeClaudeContext = (acc: Accumulator, harness: CensusHarness) => {
   const onAssistant = (assistant: AssistantFacts, inWindow: boolean) => {
     countCall(assistant, inWindow);
     O.map(assistant.usage, (usage) => {
-      MutableHashMap.set(usageById, assistant.messageId, { usage, inWindow });
+      const kept = O.exists(MutableHashMap.get(usageById, assistant.messageId), (entry) => entry.inWindow) && !inWindow;
+      if (!kept) MutableHashMap.set(usageById, assistant.messageId, { usage, inWindow });
       lastOutput = usage.output;
     });
     trackTurn(assistant);
@@ -582,6 +601,7 @@ const countLine = (counts: FileCounts, line: string) => {
 };
 
 // Read a file line by line until `consume` answers false. A file that cannot be read is counted, not fatal.
+// Oversized lines and read failures are diagnostics of every file opened, so they go to the run's counts directly.
 const readLines = Effect.fnUntraced(function* (path: string, counts: FileCounts, consume: (line: string) => boolean) {
   const fs = yield* FileSystem.FileSystem;
   return yield* fs.stream(path).pipe(
@@ -608,14 +628,17 @@ const startsInWindow = (first: O.Option<number>, window: CensusWindowMillis) =>
 
 const censusClaudeFile = Effect.fnUntraced(function* (acc: Accumulator, source: Source, window: CensusWindowMillis) {
   const projector = makeClaudeProjector(window);
-  const context = makeClaudeContext(acc, source.harness);
+  // Staged, so a file that fails to read or never touches the window contributes nothing.
+  const staged = makeAccumulator();
+  const context = makeClaudeContext(staged, source.harness);
   const read = yield* readLines(source.path, acc.claudeFiles, (line) => {
     O.map(projector.project(line), context.consume);
     return startsInWindow(projector.firstTime(), window);
   });
   if (!read || !projector.touchedWindow()) return;
   context.finish();
-  acc.claudeFiles.filesScanned += 1;
+  staged.claudeFiles.filesScanned += 1;
+  mergeCounts(acc, staged);
 });
 
 const censusCodexFile = Effect.fnUntraced(function* (
@@ -625,6 +648,7 @@ const censusCodexFile = Effect.fnUntraced(function* (
   repository: string
 ) {
   const projector = makeCodexProjector(CodexProjectorOptions.make({ window, repository }));
+  const staged = makeAccumulator();
   let matched = false;
   let tokens = O.none<{ readonly input: number; readonly cachedInput: number; readonly output: number }>();
   const read = yield* readLines(path, acc.codexFiles, (line) => {
@@ -632,33 +656,41 @@ const censusCodexFile = Effect.fnUntraced(function* (
     if (facts._tag === "Stop") return false;
     if (facts._tag === "Matched") matched = true;
     if (facts._tag === "Tokens") tokens = O.some(facts.tokens);
-    if (facts._tag === "Result") addResult(acc, "codex", facts.result);
+    if (facts._tag === "Result") addResult(staged, "codex", facts.result);
     return startsInWindow(projector.firstTime(), window);
   });
   if (!read || !projector.touchedWindow()) return;
-  acc.codexFiles.filesScanned += 1;
-  if (!matched) return;
-  acc.codexSessions += 1;
-  O.map(tokens, (usage) => {
-    acc.totals.codex.input += usage.input;
-    acc.totals.codex.cacheRead += usage.cachedInput;
-    acc.totals.codex.output += usage.output;
-  });
+  staged.codexFiles.filesScanned += 1;
+  if (matched) {
+    staged.codexSessions += 1;
+    O.map(tokens, (usage) => {
+      staged.totals.codex.input += usage.input;
+      staged.totals.codex.cacheRead += usage.cachedInput;
+      staged.totals.codex.output += usage.output;
+    });
+  }
+  mergeCounts(acc, staged);
 });
 
 const isTranscript = Str.endsWith(CensusSelectionRules.transcriptExtension);
 
-const modifiedSince = Effect.fnUntraced(function* (path: string, since: number) {
+const modifiedSince = Effect.fnUntraced(function* (path: string, since: number, failures: FileCounts) {
   const fs = yield* FileSystem.FileSystem;
   const info = yield* fs.stat(path).pipe(Effect.option);
+  if (O.isNone(info)) failures.unreadableFiles += 1;
   return O.exists(info, (value) => modifiedAtMillis(value) >= since);
 });
 
-const listEntries = Effect.fnUntraced(function* (directory: string) {
+const listEntries = Effect.fnUntraced(function* (directory: string, failures: FileCounts) {
   const fs = yield* FileSystem.FileSystem;
-  const entries = yield* fs
-    .readDirectoryEntries(directory)
-    .pipe(Effect.orElseSucceed(A.empty<FileSystem.DirectoryEntry>));
+  const entries = yield* fs.readDirectoryEntries(directory).pipe(
+    Effect.catchTag("PlatformError", () =>
+      Effect.sync(() => {
+        failures.unreadableFiles += 1;
+        return A.empty<FileSystem.DirectoryEntry>();
+      })
+    )
+  );
   return A.sort(
     entries,
     Order.mapInput(Order.String, (entry: FileSystem.DirectoryEntry) => entry.name)
@@ -670,17 +702,20 @@ const walk: (
   directory: string,
   depth: number,
   since: number,
+  failures: FileCounts,
   descend: (name: string, depth: number) => boolean
 ) => Effect.Effect<ReadonlyArray<string>, never, FileSystem.FileSystem | Path.Path> = Effect.fnUntraced(
-  function* (directory, depth, since, descend) {
+  function* (directory, depth, since, failures, descend) {
     const path = yield* Path.Path;
-    const entries = yield* listEntries(directory);
+    const entries = yield* listEntries(directory, failures);
     const visit = (entry: FileSystem.DirectoryEntry) => {
       const child = path.join(directory, entry.name);
       if (entry.type === "Directory")
-        return descend(entry.name, depth) ? walk(child, depth + 1, since, descend) : Effect.succeed(A.empty<string>());
+        return descend(entry.name, depth)
+          ? walk(child, depth + 1, since, failures, descend)
+          : Effect.succeed(A.empty<string>());
       if (!isTranscript(entry.name)) return Effect.succeed(A.empty<string>());
-      return Effect.map(modifiedSince(child, since), (selected) => (selected ? [child] : A.empty<string>()));
+      return Effect.map(modifiedSince(child, since, failures), (selected) => (selected ? [child] : A.empty<string>()));
     };
     const found = yield* Effect.forEach(entries, visit, { concurrency: 1 });
     return A.flatten(found);
@@ -691,10 +726,20 @@ const isSubagent = (relative: ReadonlyArray<string>) =>
   A.some(A.dropRight(relative, 1), (segment) => segment === CensusSelectionRules.subagentDirectory) ||
   O.exists(A.last(relative), Str.startsWith(CensusSelectionRules.subagentFilePrefix));
 
+// Only a missing root is absent. A root that cannot be inspected, or is not a directory, fails the census.
 const rootPresent = Effect.fnUntraced(function* (root: string) {
   const fs = yield* FileSystem.FileSystem;
-  const info = yield* fs.stat(root).pipe(Effect.option);
-  return O.exists(info, (value) => value.type === "Directory");
+  const info = yield* fs.stat(root).pipe(
+    Effect.asSome,
+    Effect.catchTag("PlatformError", (error) =>
+      error.reason._tag === "NotFound"
+        ? Effect.succeed(O.none<FileSystem.File.Info>())
+        : Effect.fail(CensusError.make({ reason: "unreadable-root" }))
+    )
+  );
+  if (O.isNone(info)) return false;
+  if (info.value.type !== "Directory") return yield* CensusError.make({ reason: "unreadable-root" });
+  return true;
 });
 
 const requireListing = Effect.fnUntraced(function* (root: string) {
@@ -702,7 +747,12 @@ const requireListing = Effect.fnUntraced(function* (root: string) {
   return yield* fs.readDirectory(root).pipe(Effect.mapError(() => CensusError.make({ reason: "unreadable-root" })));
 });
 
-const claudeSources = Effect.fnUntraced(function* (root: string, repository: string, since: number) {
+const claudeSources = Effect.fnUntraced(function* (
+  root: string,
+  repository: string,
+  since: number,
+  failures: FileCounts
+) {
   const path = yield* Path.Path;
   const listing = yield* requireListing(root);
   const projects = A.sort(A.filter(listing, Str.includes(repository)), Order.String);
@@ -711,7 +761,7 @@ const claudeSources = Effect.fnUntraced(function* (root: string, repository: str
   const sources: Array<Source> = [];
   for (const project of projects) {
     const directory = path.join(root, project);
-    const files = yield* walk(directory, 0, since, descend);
+    const files = yield* walk(directory, 0, since, failures, descend);
     for (const file of files) {
       const relative = Str.split(path.relative(directory, file), path.sep);
       sources.push({ path: file, harness: isSubagent(relative) ? "claude-subagent" : "claude-session" });
@@ -1034,7 +1084,7 @@ const runCensus = Effect.fn("AiMetrics.census")(function* (request: CensusReques
     codex: yield* rootPresent(request.codexRoot),
   };
   if (presence.claude) {
-    const sources = yield* claudeSources(request.claudeRoot, request.repository, window.since);
+    const sources = yield* claudeSources(request.claudeRoot, request.repository, window.since, acc.claudeFiles);
     yield* Effect.forEach(sources, (source) => censusClaudeFile(acc, source, window), {
       concurrency: 1,
       discard: true,
@@ -1042,7 +1092,7 @@ const runCensus = Effect.fn("AiMetrics.census")(function* (request: CensusReques
   }
   if (presence.codex) {
     yield* requireListing(request.codexRoot);
-    const files = yield* walk(request.codexRoot, 0, window.since, () => true);
+    const files = yield* walk(request.codexRoot, 0, window.since, acc.codexFiles, () => true);
     yield* Effect.forEach(files, (file) => censusCodexFile(acc, file, window, request.repository), {
       concurrency: 1,
       discard: true,

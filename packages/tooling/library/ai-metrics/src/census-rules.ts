@@ -1027,8 +1027,9 @@ export const CalibrationBinRules: ReadonlyArray<CalibrationBinRule> = [
  * under a `subagentDirectory` directory or named with `subagentFilePrefix` is a subagent context. Codex:
  * every transcript file under the sessions root whose first `session_meta` record names a working directory,
  * or a runtime workspace root, containing the repository name; a file is abandoned after
- * `codexPreludeRecordLimit` records with no `session_meta`. A function call is a shell call when its name
- * matches `codexShellToolPattern`. A tool result is persisted output when `persistedOutputPattern` matches
+ * `codexPreludeRecordLimit` records with no `session_meta`: the record after the limit ends the file. A function
+ * call is a shell call when its name matches `codexShellToolPattern`; a custom tool call and a local shell call
+ * are always shell calls, because Codex batches its shell commands inside one custom call. A tool result is persisted output when `persistedOutputPattern` matches
  * its first `persistedOutputProbeChars` characters. A calibration sample is a result larger than
  * `calibrationMinimumChars`. A line over `oversizedLineBytes` is counted, never rejected.
  *
