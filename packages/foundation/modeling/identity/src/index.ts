@@ -119,6 +119,21 @@ export * from "./PnLocal.ts";
  */
 export * from "./packages.ts";
 /**
+ * Registry-free root composer for package-local leaves in deployed bundles.
+ *
+ * **Example** (Derive a leaf composer)
+ *
+ * ```ts
+ * import { $BeepId } from "@beep/identity/Root"
+ *
+ * console.log($BeepId.create("schema").make("Email"))
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export * from "./Root.ts";
+/**
  * Static borrowed vocabulary registry and literal CURIE type helpers.
  *
  * **Example** (Read core vocab IRI)

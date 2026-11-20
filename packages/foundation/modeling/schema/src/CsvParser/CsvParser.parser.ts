@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity";
 import { A, Str, thunkFalse } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
@@ -13,6 +12,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { csvError } from "../CsvError/index.ts";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import type { CsvError } from "../CsvError/index.ts";
 import type { ParserOptions } from "../ParserOptions/index.ts";
 

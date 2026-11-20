@@ -4,9 +4,9 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import * as Tuple from "effect/Tuple";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { RequirementStrength } from "./Conformance.invariant.schema.ts";
 

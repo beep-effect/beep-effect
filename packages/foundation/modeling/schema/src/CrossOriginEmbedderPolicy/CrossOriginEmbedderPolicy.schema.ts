@@ -5,7 +5,6 @@
  * @packageDocumentation
  */
 
-import { $SchemaId } from "@beep/identity";
 import { O } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -15,6 +14,7 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { ResponseHeader } from "../Http/Http.headers.shared.ts";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { CrossOriginEmbedderPolicyError } from "../SecureHeaderError/index.ts";
