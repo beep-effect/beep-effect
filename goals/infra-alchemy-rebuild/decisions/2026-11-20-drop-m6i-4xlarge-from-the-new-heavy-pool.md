@@ -39,8 +39,8 @@ significant.
 **Reach.** The change is to `packages/tooling/infra/ci-runners/src/Config.ts`. `m6i.4xlarge` leaves the
 `RunnerInstanceType` literal and `instanceVcpus`, and nothing else references it. The heavy pool takes every literal, so
 only the heavy pool's runtime configuration changes: its scale-up, job-retry and scale-down functions get env-only
-updates. The largest heavy type still has 16 vCPUs, so the Spot budget is unchanged. The change rides the 4b dispatch
-with those rows attributed.
+updates. The largest heavy type still has 16 vCPUs, so the Spot budget is unchanged. The change rides the next checked
+dispatch, with those rows attributed.
 
 **New watch.** It replaces the `m6i.4xlarge` watch: re-rule the new heavy pool if a heavy job waits more than 10 minutes
 for a runner while `CreateFleet` returns `InsufficientInstanceCapacity` for all five overrides. The overflow ICE watch
