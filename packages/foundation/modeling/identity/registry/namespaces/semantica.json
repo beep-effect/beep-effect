@@ -1,0 +1,9 @@
+{
+  "namespace": {
+    "prefix": "semantica",
+    "iri": "https://beep-effect.com/ns/semantica/"
+  },
+  "terms": [],
+  "bindings": [],
+  "deprecations": []
+}

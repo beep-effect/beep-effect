@@ -20,14 +20,14 @@ describe("generated registry data", () => {
     expectTypeOf<Expand<"cito:cites", typeof RegistryVocab>>().toEqualTypeOf<"http://purl.org/spar/cito/cites">();
   });
 
-  it("binds no code identity and deprecates no term before the internal namespaces land", () => {
+  it("binds no code identity and deprecates no term while only kept values are declared", () => {
     expect(R.keys(RegistryBindings)).toStrictEqual([]);
     expect(R.keys(RegistryDeprecations)).toStrictEqual([]);
   });
 
-  it("publishes the term snapshot at release 1.1.0 with every term and namespace IRI", () => {
+  it("publishes the term snapshot at release 1.2.0 with every term and namespace IRI", () => {
     const decoded = Result.getOrThrow(S.decodeUnknownResult(TermSnapshot)(snapshot));
-    expect(decoded.release).toBe("1.1.0");
+    expect(decoded.release).toBe("1.2.0");
     expect(A.map(decoded.namespaces, (namespace) => namespace.prefix)).toStrictEqual(sorted(R.keys(RegistryVocab)));
     const published = A.flatMap(
       R.values(RegistryVocab),

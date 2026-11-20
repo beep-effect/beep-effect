@@ -1,14 +1,22 @@
 {
   "version": "term-snapshot/v1",
-  "release": "1.1.0",
+  "release": "1.2.0",
   "namespaces": [
     {
       "prefix": "as",
       "iri": "http://www.w3.org/ns/activitystreams#"
     },
     {
+      "prefix": "beepQA",
+      "iri": "https://beep-effect.com/ns/qa/1.0/"
+    },
+    {
       "prefix": "cito",
       "iri": "http://purl.org/spar/cito/"
+    },
+    {
+      "prefix": "contracts",
+      "iri": "https://beep-effect.com/ns/contracts/"
     },
     {
       "prefix": "dcat",
@@ -27,12 +35,32 @@
       "iri": "http://purl.org/spar/doco/"
     },
     {
+      "prefix": "document",
+      "iri": "https://beep-effect.com/ns/document/"
+    },
+    {
+      "prefix": "documents-taxonomy",
+      "iri": "https://beep-effect.com/ns/documents/taxonomy/"
+    },
+    {
+      "prefix": "epistemic",
+      "iri": "https://beep-effect.com/ns/epistemic/"
+    },
+    {
       "prefix": "fabio",
       "iri": "http://purl.org/spar/fabio/"
     },
     {
       "prefix": "gufo",
       "iri": "http://purl.org/nemo/gufo#"
+    },
+    {
+      "prefix": "identity-rdf",
+      "iri": "https://beep-effect.com/ns/semantic-web/identity/"
+    },
+    {
+      "prefix": "lejeune",
+      "iri": "https://beep-effect.com/ns/lejeune/ontology/"
     },
     {
       "prefix": "nif",
@@ -47,8 +75,16 @@
       "iri": "http://www.w3.org/2002/07/owl#"
     },
     {
+      "prefix": "practice-kg",
+      "iri": "https://beep-effect.com/ns/practice-kg/"
+    },
+    {
       "prefix": "prov",
       "iri": "http://www.w3.org/ns/prov#"
+    },
+    {
+      "prefix": "qa",
+      "iri": "https://beep-effect.com/ns/qa/"
     },
     {
       "prefix": "rdf",
@@ -63,8 +99,24 @@
       "iri": "https://schema.org/"
     },
     {
+      "prefix": "schemas",
+      "iri": "https://beep-effect.com/ns/schemas/"
+    },
+    {
+      "prefix": "semantic-foundation",
+      "iri": "https://beep-effect.com/ns/ontology/semantic-foundation/"
+    },
+    {
+      "prefix": "semantica",
+      "iri": "https://beep-effect.com/ns/semantica/"
+    },
+    {
       "prefix": "sh",
       "iri": "http://www.w3.org/ns/shacl#"
+    },
+    {
+      "prefix": "skill-contract",
+      "iri": "https://beep-effect.com/ns/skill-contract/"
     },
     {
       "prefix": "skos",
@@ -441,6 +493,59 @@
     "http://www.w3.org/ns/shacl#targetClass",
     "http://www.w3.org/ns/shacl#targetNode",
     "http://www.w3.org/ns/shacl#xone",
+    "https://beep-effect.com/ns/contracts/",
+    "https://beep-effect.com/ns/contracts/qa-inventory/v1",
+    "https://beep-effect.com/ns/document/",
+    "https://beep-effect.com/ns/document/citation",
+    "https://beep-effect.com/ns/document/pattern",
+    "https://beep-effect.com/ns/documents/taxonomy/",
+    "https://beep-effect.com/ns/documents/taxonomy/legal-document",
+    "https://beep-effect.com/ns/epistemic/",
+    "https://beep-effect.com/ns/epistemic/Claim",
+    "https://beep-effect.com/ns/epistemic/claim",
+    "https://beep-effect.com/ns/epistemic/hasEvidenceQuote",
+    "https://beep-effect.com/ns/lejeune/ontology/",
+    "https://beep-effect.com/ns/ontology/semantic-foundation/",
+    "https://beep-effect.com/ns/practice-kg/",
+    "https://beep-effect.com/ns/practice-kg/application",
+    "https://beep-effect.com/ns/practice-kg/client",
+    "https://beep-effect.com/ns/practice-kg/docket",
+    "https://beep-effect.com/ns/practice-kg/docket_family",
+    "https://beep-effect.com/ns/practice-kg/document",
+    "https://beep-effect.com/ns/practice-kg/email_archive",
+    "https://beep-effect.com/ns/practice-kg/patent",
+    "https://beep-effect.com/ns/qa/",
+    "https://beep-effect.com/ns/qa/1.0/",
+    "https://beep-effect.com/ns/qa/1.0/actionId",
+    "https://beep-effect.com/ns/qa/1.0/capturedAtEpochMs",
+    "https://beep-effect.com/ns/qa/1.0/clockOffsetMs",
+    "https://beep-effect.com/ns/qa/1.0/commitSha",
+    "https://beep-effect.com/ns/qa/1.0/scenarioName",
+    "https://beep-effect.com/ns/qa/1.0/sessionId",
+    "https://beep-effect.com/ns/qa/1.0/sourceVideo",
+    "https://beep-effect.com/ns/qa/1.0/toolVersions",
+    "https://beep-effect.com/ns/qa/evidence/cited-artifact-exists/v2",
+    "https://beep-effect.com/ns/qa/evidence/cited-event-id-exists/v2",
+    "https://beep-effect.com/ns/qa/evidence/declared-round-coherent/v2",
+    "https://beep-effect.com/ns/qa/evidence/evidence-cross-check/v2",
+    "https://beep-effect.com/ns/qa/evidence/judge-output-inventory/v2",
+    "https://beep-effect.com/ns/qa/receipts/accepted/v2",
+    "https://beep-effect.com/ns/qa/receipts/delivered/v2",
+    "https://beep-effect.com/ns/qa/receipts/persisted/v2",
+    "https://beep-effect.com/ns/qa/receipts/recovery-attempt/v2",
+    "https://beep-effect.com/ns/qa/receipts/semantically-applied/v2",
+    "https://beep-effect.com/ns/qa/verifiers/judge-settlement/v1",
+    "https://beep-effect.com/ns/schemas/",
+    "https://beep-effect.com/ns/schemas/qa-judge-input/v1",
+    "https://beep-effect.com/ns/schemas/qa-judge-settlement/v1",
+    "https://beep-effect.com/ns/semantic-web/identity/",
+    "https://beep-effect.com/ns/semantic-web/identity/curie",
+    "https://beep-effect.com/ns/semantic-web/identity/identifier",
+    "https://beep-effect.com/ns/semantica/",
+    "https://beep-effect.com/ns/skill-contract/",
+    "https://beep-effect.com/ns/skill-contract/evidence/failure/v2",
+    "https://beep-effect.com/ns/skill-contract/evidence/gate-certificate/v1",
+    "https://beep-effect.com/ns/skill-contract/evidence/gate-summary/v2",
     "https://schema.org/",
     "https://schema.org/Athlete",
     "https://schema.org/CreativeWork",

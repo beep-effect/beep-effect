@@ -5,6 +5,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+import { IdentityAuthority } from "../../Authority.ts";
+
 /**
  * Every registry namespace: its IRI and its live term locals, keyed by prefix.
  *
@@ -18,11 +20,30 @@ export const RegistryVocab = {
       "generator",
     ],
   },
+  beepQA: {
+    iri: `${IdentityAuthority}qa/1.0/`,
+    terms: [
+      "actionId",
+      "capturedAtEpochMs",
+      "clockOffsetMs",
+      "commitSha",
+      "scenarioName",
+      "sessionId",
+      "sourceVideo",
+      "toolVersions",
+    ],
+  },
   cito: {
     iri: "http://purl.org/spar/cito/",
     terms: [
       "cites",
       "citesAsEvidence",
+    ],
+  },
+  contracts: {
+    iri: `${IdentityAuthority}contracts/`,
+    terms: [
+      "qa-inventory/v1",
     ],
   },
   dcat: {
@@ -196,6 +217,27 @@ export const RegistryVocab = {
       "Title",
     ],
   },
+  document: {
+    iri: `${IdentityAuthority}document/`,
+    terms: [
+      "citation",
+      "pattern",
+    ],
+  },
+  "documents-taxonomy": {
+    iri: `${IdentityAuthority}documents/taxonomy/`,
+    terms: [
+      "legal-document",
+    ],
+  },
+  epistemic: {
+    iri: `${IdentityAuthority}epistemic/`,
+    terms: [
+      "Claim",
+      "claim",
+      "hasEvidenceQuote",
+    ],
+  },
   fabio: {
     iri: "http://purl.org/spar/fabio/",
     terms: [
@@ -219,6 +261,17 @@ export const RegistryVocab = {
       "SubKind",
       "mediates",
     ],
+  },
+  "identity-rdf": {
+    iri: `${IdentityAuthority}semantic-web/identity/`,
+    terms: [
+      "curie",
+      "identifier",
+    ],
+  },
+  lejeune: {
+    iri: `${IdentityAuthority}lejeune/ontology/`,
+    terms: [],
   },
   nif: {
     iri: "http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#",
@@ -284,6 +337,18 @@ export const RegistryVocab = {
       "versionInfo",
     ],
   },
+  "practice-kg": {
+    iri: `${IdentityAuthority}practice-kg/`,
+    terms: [
+      "application",
+      "client",
+      "docket",
+      "docket_family",
+      "document",
+      "email_archive",
+      "patent",
+    ],
+  },
   prov: {
     iri: "http://www.w3.org/ns/prov#",
     terms: [
@@ -322,6 +387,22 @@ export const RegistryVocab = {
       "wasGeneratedBy",
       "wasQuotedFrom",
       "wasRevisionOf",
+    ],
+  },
+  qa: {
+    iri: `${IdentityAuthority}qa/`,
+    terms: [
+      "evidence/cited-artifact-exists/v2",
+      "evidence/cited-event-id-exists/v2",
+      "evidence/declared-round-coherent/v2",
+      "evidence/evidence-cross-check/v2",
+      "evidence/judge-output-inventory/v2",
+      "receipts/accepted/v2",
+      "receipts/delivered/v2",
+      "receipts/persisted/v2",
+      "receipts/recovery-attempt/v2",
+      "receipts/semantically-applied/v2",
+      "verifiers/judge-settlement/v1",
     ],
   },
   rdf: {
@@ -384,6 +465,21 @@ export const RegistryVocab = {
       "url",
     ],
   },
+  schemas: {
+    iri: `${IdentityAuthority}schemas/`,
+    terms: [
+      "qa-judge-input/v1",
+      "qa-judge-settlement/v1",
+    ],
+  },
+  "semantic-foundation": {
+    iri: `${IdentityAuthority}ontology/semantic-foundation/`,
+    terms: [],
+  },
+  semantica: {
+    iri: `${IdentityAuthority}semantica/`,
+    terms: [],
+  },
   sh: {
     iri: "http://www.w3.org/ns/shacl#",
     terms: [
@@ -406,6 +502,14 @@ export const RegistryVocab = {
       "targetClass",
       "targetNode",
       "xone",
+    ],
+  },
+  "skill-contract": {
+    iri: `${IdentityAuthority}skill-contract/`,
+    terms: [
+      "evidence/failure/v2",
+      "evidence/gate-certificate/v1",
+      "evidence/gate-summary/v2",
     ],
   },
   skos: {

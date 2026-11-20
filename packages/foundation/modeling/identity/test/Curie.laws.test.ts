@@ -145,6 +145,24 @@ describe("Curie laws", () => {
     }
   });
 
+  it("L0-1 the kept multi-segment and nested internal terms expand and contract back", () => {
+    const accepted = [
+      ["qa:receipts/accepted/v2", "https://beep-effect.com/ns/qa/receipts/accepted/v2"],
+      [
+        "skill-contract:evidence/gate-certificate/v1",
+        "https://beep-effect.com/ns/skill-contract/evidence/gate-certificate/v1",
+      ],
+      ["beepQA:sessionId", "https://beep-effect.com/ns/qa/1.0/sessionId"],
+      ["practice-kg:docket_family", "https://beep-effect.com/ns/practice-kg/docket_family"],
+    ] as const;
+    for (const [curie, iri] of accepted) {
+      assertSome(widen(expand(curie)), iri);
+      assertSome(widen(contract(iri)), curie);
+      expect(decodeCurie(curie).pipe(Result.getOrThrow)).toBe(iri);
+    }
+    assertNone(contract("https://beep-effect.com/ns/qa/1.0/"));
+  });
+
   it("L0-1 a multi-segment local and a nested namespace contract exactly", () => {
     const shards = Result.all([
       decodeShard({
