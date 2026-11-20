@@ -1247,6 +1247,17 @@ const nextMinor = (release: ReleaseVersion): ReleaseVersion => {
   return ReleaseVersion.make(`${major}.${minor + 1}.0`);
 };
 
+// The code a binding moves to: `to` for `from` itself, `to/<rest>` for `from/<rest>`.
+const rebindCode =
+  (from: CodeId, to: CodeId) =>
+  (code: CodeId): CodeId => {
+    if (code === from) {
+      return to;
+    }
+    const under = `${from}/`;
+    return Str.startsWith(under)(code) ? CodeId.make(`${to}/${Str.slice(under.length)(code)}`) : code;
+  };
+
 const genesisRelease = ReleaseVersion.make("1.0.0");
 const snapshotEquivalence = S.toEquivalence(TermSnapshot);
 
@@ -1422,6 +1433,76 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
     const release = nextRelease(previous, unchanged);
     return release === previous.release ? unchanged : snapshotAt(table, release);
   });
+
+  /**
+   * Move the bindings of a code identity to a new code identity, keeping each term and `since`.
+   *
+   * **Details**
+   *
+   * A binding moves when its code is `from`, or, in prefix mode, when its code
+   * starts with `from/`; the rest of the code is kept under `to/`. Terms,
+   * namespaces and deprecations are untouched, so the published term set of
+   * the table's snapshot is unchanged. A move onto a code that is already
+   * bound returns the `DuplicateBinding` conflict.
+   *
+   * **When to use**
+   *
+   * Use after a module or package rename: the code identity follows the file
+   * and the published IRI stays.
+   *
+   * **Example** (Rebind a module's code identities)
+   *
+   * ```ts import.meta.vitest name="Rebind a module's code identities"
+   * import * as Result from "effect/Result"
+   * import * as S from "effect/Schema"
+   * import { CodeId, RegistryShard, RegistryTable } from "@beep/identity/Term"
+   *
+   * const vitest = S.decodeUnknownSync(RegistryShard)({
+   *   namespace: { prefix: "vitest", iri: "https://beep-effect.com/ns/vitest/" },
+   *   terms: ["TestHang"],
+   *   bindings: [{ code: "@beep/test-runner/Vitest/TestHang", local: "TestHang", since: "2.0.0" }],
+   *   deprecations: []
+   * })
+   * const table = Result.getOrThrow(RegistryTable.fromShards([vitest]))
+   * const moved = RegistryTable.rebind(table, CodeId.make("@beep/test-runner/Vitest"), CodeId.make("@beep/test-runner/Runner"))
+   * Result.getOrThrow(moved).bindings[0]?.code // => "@beep/test-runner/Runner/TestHang"
+   * ```
+   *
+   * @category combinators
+   * @since 0.0.0
+   */
+  static readonly rebind: {
+    (
+      from: CodeId,
+      to: CodeId
+    ): (table: RegistryTable) => Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>;
+    (
+      table: RegistryTable,
+      from: CodeId,
+      to: CodeId
+    ): Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>;
+  } = dual(
+    3,
+    (
+      table: RegistryTable,
+      from: CodeId,
+      to: CodeId
+    ): Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>> => {
+      const move = rebindCode(from, to);
+      const rows: RegistryRows = {
+        namespaces: table.namespaces,
+        terms: table.terms,
+        bindings: A.map(table.bindings, (binding) =>
+          TermBinding.make({ code: move(binding.code), term: binding.term, since: binding.since })
+        ),
+        deprecations: table.deprecations,
+      };
+      const conflicts = registryConflicts(rows);
+      return A.isReadonlyArrayNonEmpty(conflicts)
+        ? Result.fail(conflicts)
+        : Result.succeed(RegistryTable.make({ ...rows, bindings: canonicalRows(rows.bindings, bindingKey) }));
+    }
+  );
 }
 
 /**

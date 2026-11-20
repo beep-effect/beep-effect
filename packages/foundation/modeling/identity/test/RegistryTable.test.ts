@@ -288,6 +288,52 @@ describe("RegistryTable.snapshot", () => {
   });
 });
 
+describe("RegistryTable.rebind", () => {
+  const table = Result.getOrThrow(RegistryTable.fromShards([vitestShard, fabioShard]));
+  const codes = (result: Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>) =>
+    A.map(Result.getOrThrow(result).bindings, (binding) => binding.code);
+
+  it("moves one code identity and keeps its term and since", () => {
+    const moved = Result.getOrThrow(RegistryTable.rebind(table, hangCode, code("@beep/test-runner/Runner/Hang")));
+    expect(moved.bindings).toStrictEqual([
+      TermBinding.make({
+        code: code("@beep/test-runner/Runner/Hang"),
+        term: iri("https://beep-effect.com/ns/vitest/TestHang"),
+        since: v1,
+      }),
+    ]);
+    expect(moved.terms).toStrictEqual(table.terms);
+    expect(moved.deprecations).toStrictEqual(table.deprecations);
+  });
+
+  it("moves every code identity under a module in prefix mode and leaves other codes alone", () => {
+    expect(
+      codes(RegistryTable.rebind(table, code("@beep/test-runner/Vitest"), code("@beep/test-kit/Runner")))
+    ).toStrictEqual(["@beep/test-kit/Runner/TestHang"]);
+    expect(
+      codes(RegistryTable.rebind(table, code("@beep/test-runner/Vit"), code("@beep/test-kit/Runner")))
+    ).toStrictEqual([hangCode]);
+  });
+
+  it("refuses a move onto a code identity that is already bound", () => {
+    const twoBound = Result.getOrThrow(
+      RegistryTable.fromShards([
+        shard({
+          namespace: { prefix: "vitest", iri: "https://beep-effect.com/ns/vitest/" },
+          terms: ["TestFailure", "TestHang"],
+          bindings: [
+            { code: "@beep/test-runner/Vitest/TestFailure", local: "TestFailure", since: "1.0.0" },
+            { code: hangCode, local: "TestHang", since: "1.0.0" },
+          ],
+        }),
+      ])
+    );
+    expect(
+      conflictTags(RegistryTable.rebind(twoBound, hangCode, code("@beep/test-runner/Vitest/TestFailure")))
+    ).toStrictEqual(["DuplicateBinding"]);
+  });
+});
+
 describe("registryConflictMessage", () => {
   it("names the subject of every conflict", () => {
     const term = iri("https://beep-effect.com/ns/vitest/TestHang");
