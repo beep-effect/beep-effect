@@ -320,6 +320,38 @@ Lane explore/agent-verification-output
 
 Reverse: Drop the main baseline and label from lane history alone
 
+### P1 to P3 ship first; the hosted-main baseline waits for the ci-gate-reports carrier, 2026-11-20
+
+On 2026-11-20 goals/ci-gate-reports has not started, so no hosted report reaches a lane. Lane history, the labels that need only lane evidence, the delta, the queries and the quarantine reconciliation ship in a first pull request. Until the carrier exists the main baseline is absent, red-on-main is never emitted, introduced-on-lane rests on lane evidence, and the console says once that there is no main baseline. P4 and AC-H7 follow in a second pull request once ci-gate-reports uploads reports, and the goal closes with that one.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Hold the whole goal until the carrier exists and ship it as one pull request.
+
+### The history store is the gate-run library's one driver dependency, loaded by dynamic import, 2026-11-20
+
+@beep/repo-gate-run depends on @beep/sqlite for the history store only, as a narrowly scoped operational adapter, the same edge @beep/agent-memory-store holds. The store module is a separate entry that loads the driver with a dynamic import, as the memory store does, so the rest of the library still loads under Node and the Vitest adapter's import graph never reaches bun:sqlite. A boundary test asserts both.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Move the store into its own tooling library that owns the driver edge.
+
+### The store is one SQLite file per repository, keyed by the origin URL, 2026-11-20
+
+The file is gate-history/<repository-key>.sqlite under the beep state directory from @beep/xdg AppDirs. The key is the canonical origin URL written as host__owner__repo, lower-cased, with the .git suffix and any credentials dropped; a repository with no origin takes a digest of the real path of its git common directory. Upstream derives its key from the package manifest's repository field and falls back to the directory name; the origin URL is used here because every clone and worktree of this repository shares it and a worktree's directory name does not identify the repository.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Key the file by the checkout path and accept one history per clone.
+
+### The window is 10 runs, the read deadline 250 ms, and open contention retries 5 times from 50 ms, 2026-11-20
+
+The window W is 10 observations per series per branch, for the reader and for retention alike. Runs are kept newest 200 per gate, subject and branch. The label and delta read runs under core's existing deadline constant, 250 ms. A busy open or a contended migration retries on a jittered exponential schedule, 5 attempts from 50 ms. These are the spec's values; nothing in the upstream sources or the driver argues for others.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Change the defaults in the history configuration schema; they are configuration, not constants.
+
 <!-- beep:decisions:end -->
 
 ## Exception Ledger
