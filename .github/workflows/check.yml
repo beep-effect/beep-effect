@@ -597,6 +597,15 @@ jobs:
           security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
           liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
 
+      # Labs pulls `^build` artifacts for the packages its apps use; pull
+      # requests take them from the newest main snapshot (heavy.yml saves it).
+      - name: Restore main Turbo build cache
+        if: steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'pull_request'
+        continue-on-error: true
+        uses: ./.github/actions/turbo-build-cache
+        with:
+          operation: restore
+
       - name: Run Labs lane
         if: steps.lane-gate.outputs.should_run == 'true'
         run: |
@@ -1335,6 +1344,15 @@ jobs:
           better-auth-url: ${{ github.event_name == 'push' && secrets.BETTER_AUTH_URL || '' }}
           security-trusted-origins: ${{ github.event_name == 'push' && secrets.SECURITY_TRUSTED_ORIGINS || '' }}
           liveblocks-secret-key: ${{ github.event_name == 'push' && secrets.LIVEBLOCKS_SECRET_KEY || '' }}
+
+      # Only the catch-all partition runs a `^build` graph; the sharded
+      # partitions run `--only` and fetch no dependency artifacts.
+      - name: Restore main Turbo build cache
+        if: steps.lane-gate.outputs.should_run == 'true' && github.event_name == 'pull_request' && matrix.partition == 'int-rest'
+        continue-on-error: true
+        uses: ./.github/actions/turbo-build-cache
+        with:
+          operation: restore
 
       - name: Run Test Integration partition
         if: steps.lane-gate.outputs.should_run == 'true'

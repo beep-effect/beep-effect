@@ -5,13 +5,13 @@
  * @packageDocumentation
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Hex from "effect/encoding/Hex";
 import * as S from "effect/Schema";
 import * as SchemaGetter from "effect/SchemaGetter";
 import * as Str from "effect/String";
+import { $SchemaId } from "./internal/SchemaId.ts";
 
 const $I = $SchemaId.create("Sha256");
 

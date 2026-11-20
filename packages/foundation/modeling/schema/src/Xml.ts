@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as P from "effect/Predicate";
@@ -14,6 +13,7 @@ import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import { XMLParser } from "fast-xml-parser";
 import { SyntaxValidator } from "fast-xml-validator";
+import { $SchemaId } from "./internal/SchemaId.ts";
 
 const $I = $SchemaId.create("Xml");
 

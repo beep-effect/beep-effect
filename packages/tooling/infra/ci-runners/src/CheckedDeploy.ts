@@ -24,7 +24,6 @@
  */
 
 import { hmacSha256Hex } from "@beep/alchemy-github-runners/WebCrypto";
-import { $InfraCiRunnersId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { formatYamlLines } from "alchemy/Cli/PropertyDiff";
 import { havePropsChanged } from "alchemy/Diff";
@@ -48,6 +47,7 @@ import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import { $InfraCiRunnersId } from "./internal/InfraCiRunnersId.ts";
 import { checkPlan, PlanAction, PlannedResource, PlanReading, PlanViolation } from "./PlanCheck.ts";
 import type { CRUD, Plan } from "alchemy/Plan";
 

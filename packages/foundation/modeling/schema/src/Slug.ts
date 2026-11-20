@@ -16,10 +16,10 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import { Str } from "@beep/utils";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { $SchemaId } from "./internal/SchemaId.ts";
 
 const $I = $SchemaId.create("Slug");
 const slugAllowedCharactersPattern = /^[a-z0-9-]+$/;

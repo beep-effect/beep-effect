@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import { $SchemaId } from "../../internal/SchemaId.ts";
 
 const $I = $SchemaId.create("SchemaUtils/internal/staticDescriptors");
 

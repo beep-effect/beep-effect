@@ -9,7 +9,6 @@
 
 import { AppSigningKey, appKeyCanSign } from "@beep/alchemy-github-runners/GitHubApp.layer";
 import { placeholderWebhookSecret } from "@beep/alchemy-github-runners/Webhook.program";
-import { $InfraCiRunnersId } from "@beep/identity/packages";
 import * as Config from "effect/Config";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
@@ -21,6 +20,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { productionStage, rehearsalRepository } from "./Config.ts";
+import { $InfraCiRunnersId } from "./internal/InfraCiRunnersId.ts";
 
 const $I = $InfraCiRunnersId.create("Credentials");
 

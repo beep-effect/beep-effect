@@ -5,12 +5,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $SchemaId } from "@beep/identity";
+
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { $SchemaId } from "../internal/SchemaId.ts";
 
 const $I = $SchemaId.create("SchemaUtils/defectDiagnostics");
 

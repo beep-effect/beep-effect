@@ -11,8 +11,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $SchemaId } from "@beep/identity";
+
 import * as S from "effect/Schema";
+import { $SchemaId } from "./internal/SchemaId.ts";
 
 const $I = $SchemaId.create("UnitInterval");
 

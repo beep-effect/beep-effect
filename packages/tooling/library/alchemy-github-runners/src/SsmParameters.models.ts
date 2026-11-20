@@ -12,9 +12,9 @@
  * @since 0.0.0
  */
 
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
+import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 
 const $I = $AlchemyGithubRunnersId.create("SsmParameters.models");
 

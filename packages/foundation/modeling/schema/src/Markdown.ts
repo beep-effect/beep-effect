@@ -5,7 +5,6 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as Effect from "effect/Effect";
 import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
@@ -20,6 +19,7 @@ import {
   loadMarkdownModule,
   makeParseMarkdownForSchema,
 } from "./internal/markdown.ts";
+import { $SchemaId } from "./internal/SchemaId.ts";
 import type * as R from "effect/Record";
 import type * as SchemaAST from "effect/SchemaAST";
 import type { MarkdownParseResult } from "./internal/markdown.ts";

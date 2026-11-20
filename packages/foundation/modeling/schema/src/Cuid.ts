@@ -5,7 +5,6 @@
  * @packageDocumentation
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import { Str } from "@beep/utils";
 import { DateTimes } from "@beep/utils/DateTime";
 import * as A from "effect/Array";
@@ -17,6 +16,7 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { $SchemaId } from "./internal/SchemaId.ts";
 
 const $I = $SchemaId.create("Cuid");
 
