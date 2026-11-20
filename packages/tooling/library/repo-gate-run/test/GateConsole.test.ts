@@ -65,7 +65,7 @@ describe("GateConsole", () => {
     assert.strictEqual(output.projection, "agent");
     assert.strictEqual(
       output.text,
-      "test @beep/glob src/math.test.ts: PASSED, 3/3 passed (1.2s); since last run: 1 fixed, 0 still failing, 0 new"
+      "test @beep/glob src/math.test.ts: PASSED, 3/3 passed (1.2s) (1 fixed since last run)"
     );
   });
 

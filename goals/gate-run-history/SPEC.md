@@ -320,6 +320,14 @@ Lane explore/agent-verification-output
 
 Reverse: Drop the main baseline and label from lane history alone
 
+### The delta's scope differs when the unit sets differ; a green run shows only its fixed count, 2026-11-20
+
+RunDelta gains scopeDiffers (default false), set when the two runs' checked unit sets are not equal; only units both checked are counted. The red delta line ends with (scope differs) then. Core rendered a green run's delta as '; since last run: F fixed, 0 still failing, 0 new'; the SPEC asks for '(F fixed since last run)' and only when F > 0, so the plain-text projection now renders that suffix, with ', scope differs' inside the parentheses when the scopes differ, and nothing when a green run fixed nothing.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Render the full delta phrase as the green verdict suffix again and drop scopeDiffers from RunDelta.
+
 ### P1 to P3 ship first; the hosted-main baseline waits for the ci-gate-reports carrier, 2026-11-20
 
 On 2026-11-20 goals/ci-gate-reports has not started, so no hosted report reaches a lane. Lane history, the labels that need only lane evidence, the delta, the queries and the quarantine reconciliation ship in a first pull request. Until the carrier exists the main baseline is absent, red-on-main is never emitted, introduced-on-lane rests on lane evidence, and the console says once that there is no main baseline. P4 and AC-H7 follow in a second pull request once ci-gate-reports uploads reports, and the goal closes with that one.
@@ -327,6 +335,14 @@ On 2026-11-20 goals/ci-gate-reports has not started, so no hosted report reaches
 Lane goals/gate-run-history-lane
 
 Reverse: Hold the whole goal until the carrier exists and ship it as one pull request.
+
+### Warned and skipped items are no observation, and a retried pass is labelled flaky, 2026-11-20
+
+The SPEC names two observed outcomes, passed and failed, and leaves warned and skipped items open. A warned diagnostic is not a failure and a skipped test did not run, so neither records an observation and neither gets a label. The flaky rule is applied before the outcome split, so a passed item whose attempts disagree on one input (a retried pass) is labelled flaky; a passed item otherwise gets recovered only when the newest lane observation failed. This is what AC-H2's retried-pass row needs and what the quarantine reconciliation expects.
+
+Lane goals/gate-run-history-lane
+
+Reverse: Record warned items as passed observations and label only failed items flaky in classifyItem.
 
 ### The history store is the gate-run library's one driver dependency, loaded by dynamic import, 2026-11-20
 
