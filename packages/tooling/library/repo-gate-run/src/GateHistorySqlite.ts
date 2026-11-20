@@ -49,6 +49,7 @@ import * as Reactivity from "effect/reactivity/Reactivity";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
+import * as Str from "effect/String";
 import * as SqlError from "effect/sql/SqlError";
 import { HistoryItemSeries, HistoryRunView, KnownKey, withAbsentPassed } from "./GateHistoryRecord.ts";
 import { GateHistoryStore, makeGateHistoryStore } from "./GateHistoryStore.ts";
@@ -71,8 +72,9 @@ const $I = $RepoGateRunId.create("GateHistorySqlite");
  * **Details**
  *
  * `filename` names the database file; `":memory:"` opens a private database.
- * The file's directory must exist. `busyTimeoutMs` is how long one
- * statement waits on another connection's lock (the driver's 5 s by default).
+ * The file's directory must exist. `busyTimeoutMs` is how long a write
+ * waits on another connection's lock (the driver's 5 s by default); opening
+ * and reading wait at most the read deadline, `config.deadlineMs`.
  *
  * **Example** (A store file)
  *
@@ -104,13 +106,21 @@ type Sql = SqlClient.SqlClient;
 
 const BUSY_REASONS = ["LockTimeoutError", "DeadlockError"];
 
+// The driver's own error keeps its cause and message as options.
+const field = (error: unknown, key: "cause" | "message"): unknown => {
+  const value = P.hasProperty(error, key) ? error[key] : undefined;
+  return O.isOption(value) ? O.getOrUndefined(value) : value;
+};
+
 const isBusy = (error: unknown): boolean =>
   SqlError.isSqlError(error)
     ? A.contains(BUSY_REASONS, error.reason._tag)
-    : P.hasProperty(error, "cause") && SqlError.isSqlError(error.cause) && isBusy(error.cause);
+    : SqlError.isSqlError(field(error, "cause")) && isBusy(field(error, "cause"));
 
-const messageOf = (error: unknown): string =>
-  P.hasProperty(error, "message") && P.isString(error.message) ? error.message : Inspectable.toStringUnknown(error);
+const messageOf = (error: unknown): string => {
+  const message = field(error, "message");
+  return P.isString(message) && Str.isNonEmpty(message) ? message : Inspectable.toStringUnknown(error);
+};
 
 /**
  * Translate a driver failure into the store's error: a busy or deadlocked
@@ -201,14 +211,20 @@ export const SCHEMA_VERSION = MIGRATIONS.length;
 
 const VersionRows = S.Array(S.Struct({ user_version: S.Finite }));
 
+const schemaVersion = (sql: Sql) =>
+  sql`PRAGMA user_version`.pipe(
+    Effect.flatMap(S.decodeUnknownEffect(VersionRows)),
+    Effect.orDie,
+    Effect.map(A.reduce(0, (_, row) => row.user_version))
+  );
+
+// A current schema is read without the write lock, so an open never waits on a writer for nothing.
 const migrate = Effect.fnUntraced(function* (sql: Sql) {
+  const found = yield* schemaVersion(sql);
+  if (found >= SCHEMA_VERSION) return;
   yield* sql.withTransaction(
     Effect.gen(function* () {
-      const rows = yield* sql`PRAGMA user_version`.pipe(
-        Effect.flatMap(S.decodeUnknownEffect(VersionRows)),
-        Effect.orDie
-      );
-      const current = A.reduce(rows, 0, (_, row) => row.user_version);
+      const current = yield* schemaVersion(sql);
       yield* Effect.forEach(A.drop(MIGRATIONS, current), (step) => step(sql), { concurrency: 1, discard: true });
       yield* sql.unsafe(`PRAGMA user_version = ${SCHEMA_VERSION}`);
     })
@@ -460,20 +476,25 @@ const seriesOf = (sql: Sql) => (query: HistoryItemQuery) =>
 
 // --- opening ---------------------------------------------------------------------
 
-const backendOn = (sql: Sql, config: HistoryConfig): HistoryBackend => {
-  const insert = insertWithin(sql, config);
+// The driver waits on a lock synchronously, so a read waits at most the read deadline; only a
+// write, which runs after the console was printed, waits the longer write timeout.
+const waitAtMost = (sql: Sql, millis: number) => sql.unsafe(`PRAGMA busy_timeout = ${millis}`);
+
+const backendOn = (sql: Sql, options: GateHistorySqliteOptions): HistoryBackend => {
+  const insert = insertWithin(sql, options.config);
+  const read = <A>(effect: Effect.Effect<A, SqlError.SqlError>) =>
+    waitAtMost(sql, options.config.deadlineMs).pipe(Effect.andThen(effect), Effect.mapError(translate("open-failed")));
   return {
     insert: (record) =>
-      sql
-        .withTransaction(insert(record))
-        .pipe(
-          Effect.provideService(References.PreventSchedulerYield, true),
-          Effect.mapError(translate("write-failed"))
-        ),
-    lane: (query) => laneOf(sql)(query).pipe(Effect.mapError(translate("open-failed"))),
-    previous: (query) => previousOf(sql)(query).pipe(Effect.mapError(translate("open-failed"))),
-    runs: (query) => runsOf(sql)(query).pipe(Effect.mapError(translate("open-failed"))),
-    series: (query) => seriesOf(sql)(query).pipe(Effect.mapError(translate("open-failed"))),
+      waitAtMost(sql, options.busyTimeoutMs).pipe(
+        Effect.andThen(sql.withTransaction(insert(record))),
+        Effect.provideService(References.PreventSchedulerYield, true),
+        Effect.mapError(translate("write-failed"))
+      ),
+    lane: (query) => read(laneOf(sql)(query)),
+    previous: (query) => read(previousOf(sql)(query)),
+    runs: (query) => read(runsOf(sql)(query)),
+    series: (query) => read(seriesOf(sql)(query)),
   };
 };
 
@@ -492,10 +513,10 @@ const loadDriver = Effect.promise(() => import("@beep/sqlite"));
 const openBackend = Effect.fnUntraced(function* (options: GateHistorySqliteOptions) {
   const driver = yield* loadDriver;
   const sql = yield* driver
-    .make({ filename: options.filename, busyTimeout: Duration.millis(options.busyTimeoutMs) })
+    .make({ filename: options.filename, busyTimeout: Duration.millis(options.config.deadlineMs) })
     .pipe(Effect.mapError(translate("open-failed")), retryBusy(options.config));
   yield* migrate(sql).pipe(Effect.mapError(translate("migrate-failed")), retryBusy(options.config));
-  return backendOn(sql, options.config);
+  return backendOn(sql, options);
 });
 
 const lazyBackend = (opened: Effect.Effect<HistoryBackend, GateHistoryError>): HistoryBackend => ({

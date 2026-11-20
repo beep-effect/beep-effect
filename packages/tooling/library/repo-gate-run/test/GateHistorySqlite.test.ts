@@ -18,15 +18,17 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
+import * as R from "effect/Record";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as SqlError from "effect/sql/SqlError";
 import * as TestClock from "effect/testing/TestClock";
-import { answerFor, historyContract, ingestAll, testItem } from "./support/historyContract.ts";
+import { answerFor, historyContract, ingestAll, keyOf, laneA, reportOf, testItem } from "./support/historyContract.ts";
 
 const isBunRuntime = P.isNotUndefined(process.versions.bun);
 
@@ -105,21 +107,49 @@ describe.skipIf(!isBunRuntime)("GateHistorySqlite (Bun runtime)", () => {
       })
     );
 
-    it.effect("a store locked by another writer fails with open-busy after the bounded retries", () =>
+    it.effect("a store an exclusive holder keeps from readers fails with open-busy after the bounded retries", () =>
       Effect.gen(function* () {
         const path = yield* Path.Path;
         const dir = yield* tempDir;
         const file = path.join(dir, "store.sqlite");
-        yield* withStoreAt(sqliteLayer(file), ingestAll([{ runId: "r1", at: 1000, items: [] }]));
         const { Database } = yield* Effect.promise(() => import("bun:sqlite"));
         const holder = new Database(file);
-        holder.exec("PRAGMA busy_timeout = 0; BEGIN EXCLUSIVE");
+        holder.exec("PRAGMA journal_mode = WAL");
+        holder.exec("PRAGMA locking_mode = EXCLUSIVE");
+        holder.exec("BEGIN EXCLUSIVE");
+        holder.exec("CREATE TABLE lock_holder (x)");
         // The retry schedule sleeps on the real clock.
         const error = yield* withStoreAt(
-          sqliteLayer(file, fastRetry, 10),
+          sqliteLayer(file, HistoryConfig.make({ retryAttempts: 2, retryBaseMs: 5, deadlineMs: 20 })),
           Effect.flip(answerFor({ runId: "r2", at: 2000, items: [] }))
         ).pipe(TestClock.withLive, Effect.ensuring(Effect.sync(() => holder.close())));
         assert.strictEqual(error.reason, "open-busy");
+      })
+    );
+
+    it.effect("a migrated store still answers while another connection writes, and a write waits then fails busy", () =>
+      Effect.gen(function* () {
+        const path = yield* Path.Path;
+        const dir = yield* tempDir;
+        const file = path.join(dir, "store.sqlite");
+        const failing = { runId: "r1", at: 1000, items: [testItem({ name: "adds", outcome: "failed" })] };
+        const { Database } = yield* Effect.promise(() => import("bun:sqlite"));
+        const outcome = yield* withStoreAt(
+          sqliteLayer(file, HistoryConfig.make({}), 10),
+          Effect.gen(function* () {
+            yield* ingestAll([failing]);
+            const holder = new Database(file);
+            holder.exec("BEGIN IMMEDIATE");
+            holder.exec("CREATE TABLE writer_holder (x)");
+            const answer = yield* answerFor({ ...failing, runId: "r2", at: 2000 });
+            const store = yield* GateHistoryStore;
+            const write = yield* Effect.flip(store.ingest(reportOf({ ...failing, runId: "r2", at: 2000 }), laneA));
+            holder.close();
+            return { answer, write };
+          })
+        );
+        assert.strictEqual(R.get(outcome.answer.labels, keyOf("adds")).pipe(O.getOrNull), "persistent");
+        assert.strictEqual(outcome.write.reason, "open-busy");
       })
     );
 
