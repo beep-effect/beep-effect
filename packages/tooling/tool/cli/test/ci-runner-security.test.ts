@@ -1951,15 +1951,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
 
       // Pull requests never publish a cache entry. The SHA-keyed post-lane
       // Turbo fallback was write-only (audit M13: 589 entries, 7.4 GB, zero
-      // restores), so the main Docgen cache and the push-only Playwright
-      // browsers are the only saves left, both push-gated.
+      // restores), so the main Docgen cache, the main Turbo build snapshot and
+      // the push-only Playwright browsers are the only saves left, all
+      // push-gated.
       const checkJobs = yield* workflowJobs(workflow);
       const heavyJobs = yield* workflowJobs(heavyWorkflow);
       const storybookJobs = yield* workflowJobs(policy.storybook);
       assert.deepStrictEqual(cacheSaveSteps(checkJobs), []);
       assert.deepStrictEqual(
         cacheSaveSteps(heavyJobs),
-        A.map(["verify", "check", "docgen", "doctest", "build"], (job) => `${job}/Save main Docgen Turbo cache`)
+        A.flatMap(["verify", "check", "docgen", "doctest", "build"], (job) => [
+          `${job}/Save main Docgen Turbo cache`,
+          `${job}/Save main Turbo build cache`,
+        ])
       );
       assert.deepStrictEqual(cacheSaveSteps(storybookJobs), ["storybook/Save Playwright Chromium cache"]);
       assert.include(
@@ -2412,6 +2416,112 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.strictEqual(
         save.with?.key,
         "turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-${{ github.sha }}"
+      );
+    })
+  );
+
+  // The main Turbo build snapshot: pull requests restore it, only a push to
+  // main saves it, and nothing about it reaches Turbo's task hashing.
+  it.effect(
+    "keeps the main Turbo build snapshot restore-only on pull requests and saved only by main pushes",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const repoRoot = yield* findRepoRoot();
+      const readText = (relative: string) => fs.readFileString(path.join(repoRoot, relative));
+      const actionPath = "./.github/actions/turbo-build-cache";
+      const actionText = yield* readText(".github/actions/turbo-build-cache/action.yml");
+      const actionSteps = yield* decodeWorkflowSteps(yamlAt(parseWorkflowYaml(actionText), ["runs", "steps"]));
+      const pushToMain = "github.event_name == 'push' && github.ref == 'refs/heads/main'";
+
+      // Check 1: the shared action never saves. Its restore acts only on pull
+      // requests and its prune only on a push to main.
+      assert.deepStrictEqual(
+        A.filter(actionSteps, (step) =>
+          A.some(["actions/cache@", "actions/cache/save@"], (prefix) => Str.startsWith(prefix)(step.uses ?? ""))
+        ),
+        []
+      );
+      const restore = stepByName(actionSteps, "Restore main Turbo build cache");
+      assert.strictEqual(restore.uses, "actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9");
+      assert.strictEqual(restore.if, "inputs.operation == 'restore' && github.event_name == 'pull_request'");
+      assert.strictEqual(restore.with?.path, ".turbo/cache");
+      assert.strictEqual(restore.with?.["restore-keys"], "${{ steps.key.outputs.prefix }}");
+      const pruneName = "Prune Turbo cache to environment-free build artifacts";
+      assert.strictEqual(stepByName(actionSteps, pruneName).if, `inputs.operation == 'prune' && ${pushToMain}`);
+      assert.include(
+        stepRun(actionSteps, "Resolve Turbo build cache key"),
+        'prefix="turbo-${RUNNER_OS}-build-outputs-main-"'
+      );
+      // The snapshot never carries a task that reads environment values.
+      const pruneRun = stepRun(actionSteps, pruneName);
+      assert.include(pruneRun, 'select(.task == "build" and .envMode == "strict")');
+      for (const field of ["specified.env", "specified.passThroughEnv", "configured", "inferred", "passthrough"]) {
+        assert.include(pruneRun, `.environmentVariables.${field} // []`);
+      }
+
+      // Check 2: no Turbo input, output, environment or hashing knob. The
+      // action exports nothing to the job environment and names no Turbo
+      // configuration; it only moves files under .turbo/cache.
+      assert.notInclude(actionText, "GITHUB_ENV");
+      assert.notInclude(actionText, "turbo.json");
+      assert.notMatch(actionText, /\bTURBO_[A-Z_]+/u);
+
+      // Heavy: Check and Build restore on pull requests; only Check, on a push
+      // to main, prunes and saves, with the key the prune resolved.
+      const heavyText = yield* readText(".github/workflows/heavy.yml");
+      const heavyJobs = yield* workflowJobs(parseWorkflowYaml(heavyText));
+      const heavySteps = jobSteps(heavyJobs, "check");
+      const heavyRestore = stepByName(heavySteps, "Restore main Turbo build cache");
+      assert.strictEqual(heavyRestore.uses, actionPath);
+      assert.strictEqual(heavyRestore.with?.operation, "restore");
+      assert.strictEqual(
+        heavyRestore.if,
+        "(env.BEEP_CI_LANE_ID == 'check' || env.BEEP_CI_LANE_ID == 'build') && github.event_name == 'pull_request'"
+      );
+      const heavyPrune = stepByName(heavySteps, "Prune main Turbo build cache");
+      assert.strictEqual(heavyPrune.uses, actionPath);
+      assert.strictEqual(heavyPrune.with?.operation, "prune");
+      assert.strictEqual(heavyPrune.if, `env.BEEP_CI_LANE_ID == 'check' && ${pushToMain}`);
+      const heavySave = stepByName(heavySteps, "Save main Turbo build cache");
+      assert.strictEqual(heavySave.uses, "actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9");
+      assert.strictEqual(
+        heavySave.if,
+        `env.BEEP_CI_LANE_ID == 'check' && ${pushToMain} && steps.turbo-build-cache.outputs.ready == 'true'`
+      );
+      assert.strictEqual(heavySave.with?.path, ".turbo/cache");
+      assert.strictEqual(heavySave.with?.key, "${{ steps.turbo-build-cache.outputs.key }}");
+      const order = A.map(
+        [
+          "Setup monorepo CI",
+          "Restore main Turbo build cache",
+          "Run verification lane",
+          "Prune main Turbo build cache",
+          "Save main Turbo build cache",
+        ],
+        (name) => stepIndexByName(heavySteps, name)
+      );
+      assert.deepStrictEqual(order, A.sort(order, Order.Number));
+
+      // Check.yml consumers restore on pull requests only and never save.
+      const checkText = yield* readText(".github/workflows/check.yml");
+      const checkJobs = yield* workflowJobs(parseWorkflowYaml(checkText));
+      const consumers = A.filter(R.toEntries(checkJobs), ([, job]) =>
+        A.some(job.steps ?? [], (step) => step.uses === actionPath)
+      );
+      assert.deepStrictEqual(
+        A.map(consumers, ([jobId]) => jobId),
+        ["labs", "test-integration-shard"]
+      );
+      for (const [jobId, job] of consumers) {
+        for (const step of A.filter(job.steps ?? [], (step) => step.uses === actionPath)) {
+          assert.strictEqual(step.with?.operation, "restore", jobId);
+          assert.include(step.if, "github.event_name == 'pull_request'", jobId);
+        }
+      }
+      assert.include(
+        stepByName(jobSteps(checkJobs, "test-integration-shard"), "Restore main Turbo build cache").if,
+        "matrix.partition == 'int-rest'"
       );
     })
   );
