@@ -43,6 +43,11 @@ import { enforceReviewerGate, withReviewerOperatorClient } from "../../Reviewer/
 import { YeetCommandError } from "../Yeet.errors.ts";
 import { renderYeetMergeSettlement, settleYeetMerge, YeetMergeSettlement } from "./AsyncMerge.ts";
 import { provideYeetGhLogin, withYeetGithubCredentialHint } from "./GhOps.ts";
+import {
+  readSquashCommitlintForPullRequest,
+  renderSquashCommitlintVerdict,
+  squashTitleDrift,
+} from "./SquashCommitlint.ts";
 import { readYeetStackUngatedRefusal } from "./StackGate.ts";
 import { SweepReport } from "./Sweep.schemas.ts";
 import { executeSweep } from "./Sweep.ts";
@@ -54,6 +59,7 @@ import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GithubPullRequestRecord } from "../../../internal/github/index.ts";
 import type { RepoRunContext } from "../../../internal/repo-run/index.ts";
 import type { YeetGithubServices } from "./GhOps.ts";
+import type { SquashCommitMessage } from "./SquashCommitlint.ts";
 
 const $I = $RepoCliId.create("commands/Yeet/internal/Merge");
 
@@ -215,9 +221,13 @@ const readMergeStackRefusal = Effect.fn("Yeet.readMergeStackRefusal")(function* 
  *
  * The merge phase of {@link mergePr}, below its reviewer gate: one async squash
  * merge (`PUT pulls/{n}/merge-async` through {@link settleYeetMerge}, strict, no
- * rules bypass) pinned to the head, with no commit subject or body so GitHub
- * writes its defaults, settled to a terminal outcome; then a bounded poll of the
- * REST pull request read until it reports `MERGED`. A refused or failed merge (a
+ * rules bypass) pinned to the head and sending the linted squash header and body
+ * as `commit_title` / `commit_message`, settled to a terminal outcome; then a
+ * bounded poll of the REST pull request read until it reports `MERGED`. The PR
+ * is read again just before the request: a title that no longer yields the
+ * linted header refuses the merge ({@link squashTitleDrift}), because GitHub's
+ * own default for a single-commit pull request is the commit subject, never the
+ * edited title (#3441). A refused or failed merge (a
  * head that moved, an unresolved conversation, a draft) fails with GitHub's
  * sentence and is never confirmed; a request that never settles, or a merge the
  * poll cannot confirm, fails too.
@@ -225,14 +235,16 @@ const readMergeStackRefusal = Effect.fn("Yeet.readMergeStackRefusal")(function* 
  * **Example** (Build the merge step)
  *
  * ```ts
- * import { mergeYeetPullRequestAtHead } from "@beep/repo-cli/test/Yeet"
+ * import { mergeYeetPullRequestAtHead, SquashCommitMessage } from "@beep/repo-cli/test/Yeet"
  * import * as Effect from "effect/Effect"
  *
- * console.log(Effect.isEffect(mergeYeetPullRequestAtHead(7, "a".repeat(40)))) // true
+ * const linted = SquashCommitMessage.make({ header: "fix: x (#7)", body: "" })
+ * console.log(Effect.isEffect(mergeYeetPullRequestAtHead(7, "a".repeat(40), linted))) // true
  * ```
  *
  * @param pullRequestNumber - The pull request to merge.
  * @param pinnedHead - The head the merge is pinned to; GitHub refuses it if the head moved.
+ * @param linted - The squash message whose commitlint verdict admitted the merge; sent verbatim.
  * @param options - Confirmation poll budget; defaults to {@link defaultMergePrOptions}.
  * @returns The confirmed pull request view.
  * @category workflows
@@ -241,6 +253,7 @@ const readMergeStackRefusal = Effect.fn("Yeet.readMergeStackRefusal")(function* 
 export const mergeYeetPullRequestAtHead = Effect.fn("Yeet.mergePullRequestAtHead")(function* (
   pullRequestNumber: number,
   pinnedHead: string,
+  linted: SquashCommitMessage,
   options: MergePrOptions = defaultMergePrOptions
 ): Effect.fn.Return<GhPrView, YeetCommandError, YeetGithubServices> {
   const mergeCommand = `gh api -X PUT repos/{owner}/{repo}/pulls/${pullRequestNumber}/merge-async -f sha=${pinnedHead}`;
@@ -251,11 +264,23 @@ export const mergeYeetPullRequestAtHead = Effect.fn("Yeet.mergePullRequestAtHead
       exitCode: 1,
       ...(cause === undefined ? {} : { cause }),
     });
+  // The title read fresh at merge time must still yield the linted header.
+  const fresh = yield* GithubRest.use((rest) => rest.pullRequest(pullRequestNumber)).pipe(
+    Effect.mapError((error) => refused(error.message, error))
+  );
+  const drift = squashTitleDrift(linted, pullRequestNumber, fresh.title);
+  if (O.isSome(drift)) return yield* refused(drift.value);
   // One request, never resent here; a 409 attaches to the request already in flight,
   // and the poll below only reads.
   const settled = yield* settleYeetMerge(
     pullRequestNumber,
-    GithubAsyncMergeRequest.make({ action: "direct_merge", method: "squash", sha: pinnedHead })
+    GithubAsyncMergeRequest.make({
+      action: "direct_merge",
+      method: "squash",
+      sha: pinnedHead,
+      commitTitle: linted.header,
+      commitMessage: linted.body,
+    })
   ).pipe(Effect.mapError((error) => refused(error.message, error)));
   if (!YeetMergeSettlement.guards.Merged(settled)) {
     return yield* refused(renderYeetMergeSettlement(settled));
@@ -271,8 +296,10 @@ export const mergeYeetPullRequestAtHead = Effect.fn("Yeet.mergePullRequestAtHead
  *
  * **Details**
  *
- * Three phases, in order and never reordered: the async squash merge pinned to
- * the viewed head (`PUT pulls/{n}/merge-async`, settled by
+ * The squash message is linted first, exactly as the merge will send it
+ * (`<PR title> (#n)` plus the folded body); a failing verdict refuses before
+ * anything is sent. Then three phases, in order and never reordered: the async
+ * squash merge pinned to the viewed head (`PUT pulls/{n}/merge-async`, settled by
  * {@link settleYeetMerge}), which deletes no branch; a bounded poll
  * until the REST pull request read reports it merged; then
  * {@link executeSweep}, which owns every ref update and deletion under its own
@@ -360,7 +387,16 @@ export const mergePr = Effect.fn("Yeet.mergePr")(function* (
     withReviewerOperatorClient(process.cwd()),
     Effect.mapError((error) => YeetCommandError.make({ message: error.message, exitCode: 1 }))
   );
-  const confirmed = yield* mergeYeetPullRequestAtHead(view.number, pinnedHead.value, options).pipe(
+  // The squash message the merge sends, linted exactly as sent: `<PR title> (#n)`.
+  const squash = yield* readSquashCommitlintForPullRequest(context, view.number);
+  if (squash.verdict._tag !== "pass") {
+    return yield* YeetCommandError.make({
+      message: `yeet merge refuses #${view.number}: ${renderSquashCommitlintVerdict(squash.verdict)}`,
+      command: `gh api repos/{owner}/{repo}/pulls/${view.number}`,
+      exitCode: 1,
+    });
+  }
+  const confirmed = yield* mergeYeetPullRequestAtHead(view.number, pinnedHead.value, squash.message, options).pipe(
     provideYeetGhLogin(context.repoRoot)
   );
 
