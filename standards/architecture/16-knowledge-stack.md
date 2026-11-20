@@ -12,7 +12,8 @@ of the goal packet `goals/text-knowledge-stack-rebuild`, which tracks each
 phase, its exit criteria and its law tests. A rule marked **Pending Pn** is
 the target that phase n makes true; new code follows the target, and existing
 code is brought to it by the named phase. A rule with no marker holds at the
-packet's P0 base. The decisions behind the chapter are the 2026-11-19 entries
+packet's P0 base or was made true by a phase that has landed: P1 made the L0
+rules true, with the one exception section 4 names. The decisions behind the chapter are the 2026-11-19 entries
 in [`DECISIONS.md`](DECISIONS.md); the vocabulary is in
 [`GLOSSARY.md`](GLOSSARY.md).
 
@@ -49,7 +50,7 @@ lands in the phase of its layer.
 
 | Layer | Role | Owner | Lands |
 | --- | --- | --- | --- |
-| L0 | Identity | `@beep/identity`, `@beep/schema` (digest), `@beep/jsonc` (canonical JSON) | Pending P1 |
+| L0 | Identity | `@beep/identity`, `@beep/schema` (digest), `@beep/jsonc` (canonical JSON) | P1 |
 | L1 | Text identity and anchoring | `@beep/text`, replacing `@beep/provenance` | Pending P2 |
 | L2 | Annotation | `@beep/annotation` (new, `foundation/modeling`) | Pending P3 |
 | L3 | Taxonomy and alignments | `@beep/ontology` | Pending P5 |
@@ -61,25 +62,31 @@ lands in the phase of its layer.
 ### L0 · Identity
 
 **Owners.** `@beep/identity` imports `effect` only and owns what expansion and
-binding need: the RFC 3987 `IRI` schemas, which it receives from `@beep/rdf`,
+binding need: the RFC 3987 `IRI` schemas, which moved there from `@beep/rdf`,
 `Namespace`, `Term`, `TermBinding`, the `Deprecation` record and the
-term-stability snapshot (Pending P1). The `since` of a binding or a
-deprecation is a vocabulary release of that snapshot, not a package version:
-the snapshot carries `release`, starting at `1.0.0`, its writer bumps the minor
-on additions and the major on deprecations, and existing rows keep their
-`since`. An addition needs no deprecation record: `L0-3` asks for one only
-when a published term is removed or changed. That field is a string with a local pattern check and the literal
-domains use `S.Literals`, the standing exception for the bottom package that
-`@beep/schema` itself depends on; `@beep/schema`'s tests cross-check both,
-because an identity test dependency on `@beep/schema` would close a workspace
-cycle. Records that need `@beep/schema` primitives sit above it: an
-external namespace's pin is `NamespacePin` in `@beep/rdf` (L6) and the gUFO
-class typing is a record in `@beep/ontology` (L3). `@beep/schema` owns the
-digest primitive (`Sha256PrefixedDigest`, `sha256:` plus 64 hex). `@beep/jsonc`
-owns canonical JSON (RFC 8785, `JsoncFingerprint`) and the one minting function
-that hashes a versioned, domain-tagged preimage (Pending P1). L0 is a layer, not
-one package, because `@beep/identity` depends only on `effect` and every other
-L0 owner depends on it.
+term-stability snapshot. One generated registry holds them: the source shards
+under `packages/foundation/modeling/identity/registry/namespaces/` are written
+by `bun run beep identity registry --write` into `Registry.data.ts` and the
+committed `term-snapshot.json`. The `since` of a binding or a deprecation is a
+vocabulary release of that snapshot, not a package version: the snapshot
+carries `release`, starting at `1.0.0`, its writer bumps the minor on
+additions and the major on deprecations, and existing rows keep their `since`.
+The lint refuses a changed term set released below the release its change calls
+for, so two term sets never ship under one release.
+An addition needs no deprecation record: `L0-3` asks for one only when a
+published term is removed or changed. That field is a string with a local
+pattern check and the literal domains use `S.Literals`, the standing exception
+for the bottom package that `@beep/schema` itself depends on; `@beep/schema`'s
+tests cross-check both, because an identity test dependency on `@beep/schema`
+would close a workspace cycle. Records that need `@beep/schema` primitives sit
+above it: an external namespace's pin is `NamespacePin` in `@beep/rdf` (L6)
+and the gUFO class typing is a record in `@beep/ontology` (L3). `@beep/schema`
+owns the digest primitive (`Sha256PrefixedDigest`, `sha256:` plus 64 hex) and
+`ContentHash` over it. `@beep/jsonc` owns canonical JSON (RFC 8785,
+`JsoncFingerprint`) and the one minting function that hashes a versioned,
+domain-tagged preimage (`@beep/jsonc/Mint`). L0 is a layer, not one package,
+because `@beep/identity` depends only on `effect` and every other L0 owner
+depends on it.
 
 **Denotes.** Two identity regimes joined by minting (section 4), one
 closed-world vocabulary registry, one digest format, and the activity id other
@@ -89,12 +96,13 @@ layers reference.
 per minted identifier (`OccurrenceId`, `AnnotationId`, `RunEntityId`,
 `ActivityId`, `ClaimId`), all over the `@beep/schema` digest; `TermIri`;
 `Namespace` (prefix, IRI); `Term` (IRI, namespace, local name); `TermBinding`
-(code id, term, since); `Deprecation` (term, since, replacement). `ActivityId` is minted from what is known when a run starts: `activity/v1`,
-the operation term, the agent or engine pin, the prompt digest when there is
-one, the sorted ids the run used, and its start time. What the run generated
-and when it ended are fields of the activity record, outside the id, because
-an output id that contains the activity id cannot also be inside it. Pending
-P1.
+(code id, term, since); `Deprecation` (term, since, replacement). `ActivityId`
+is minted from what is known when a run starts: `activity/v1`, the operation
+term, the agent or engine pin, the prompt digest when there is one, the sorted
+ids the run used, and its start time (`@beep/jsonc/ActivityStart`). What the
+run generated and when it ended are fields of the activity record, outside the
+id, because an output id that contains the activity id cannot also be inside
+it. Each other domain brand lands with its layer, Pending P2 to P4.
 
 **Arrows.** CURIE expansion and contraction over every namespace the repo
 speaks (`prov:`, `oa:`, `nif:`, `xsd:`, `gufo:` and `as:` included); code id to term
@@ -107,7 +115,21 @@ in `@beep/rdf`, which owns the RDF data model; `@beep/identity` never imports
 `@beep/jsonc`. `L0-1` (expand after contract is the identity on registered terms),
 `L0-2` (equivalent records hash alike, with set-valued fields sorted on the
 preimage), `L0-3` (acceptance: the published term set changes only with a
-deprecation record, module-derived IRIs included).
+deprecation record, module-derived IRIs included). Their tests are
+`identity/test/Curie.laws.test.ts`, `jsonc/test/ContentHash.laws.test.ts` and
+`identity/test/TermStability.test.ts` under `packages/foundation/modeling/`.
+
+**Gates.** `bun run beep identity registry --write` refuses a snapshot break
+against the committed snapshot, and `--check` refuses generated drift. `bun run beep lint
+identity-registry` also regenerates the snapshot from the head's shards and
+compares it with the snapshot of a base ref (`--base`, by default the merge
+base with `origin/main`), so a change that edits the shards and the committed
+snapshot together is still caught. A removed term is retired only through
+`bun run beep identity deprecate <curie>`, which writes the deprecation row,
+and a renamed module moves its bindings through `bun run beep identity rebind
+<from> <to>`. The registry and its generated data never reach a CI runner
+handler bundle: the handlers load only the registry-free identity sources, and
+`packages/tooling/infra/ci-runners/test/HandlerBundles.test.ts` holds that list.
 
 ### L1 · Text identity and anchoring
 
@@ -353,7 +375,7 @@ isomorphism and a digest on the canonical form; `Literal` with the cases
 `SourceTextIdentity` through `packages/foundation/modeling/rdf/src/Prov.ts`;
 `NamespacePin` (source, license, version, digest), keyed by prefix, beside the
 vendored vocabularies it describes. The `@beep/rdf` to `@beep/md` edge is
-removed. Pending P5, except `NamespacePin`, Pending P1.
+removed. Pending P5, except `NamespacePin`, which P1 landed.
 
 **Laws.** `L6-1` (dataset equality up to blank-node isomorphism; digest on the
 canonical form), `L6-2` (a projection is deterministic and its kept fields
@@ -408,13 +430,39 @@ Identity has two regimes joined by minting.
   the registry under the [identity authority](GLOSSARY.md#identity-authority)
   `https://beep-effect.com/ns/` and pinned to code through `TermBinding`. It is
   never derived from a package or file path, so a module rename changes no
-  published IRI. Today's path-derived IRIs are re-published from the registry,
-  not frozen beside it. Pending P1.
+  published IRI. A code id is the composer identity
+  `@beep/<pkg>/<module>/<Name>` and stays a code path; its declared IRI is the
+  term its binding names, and an unbound code id has no published IRI. A new
+  internal term is `https://beep-effect.com/ns/<namespace>/<local>` with a
+  one-segment local, in a namespace named for its vocabulary, not for a
+  package or file, so a rename edits only `TermBinding.code`.
+- **Kept or re-minted.** P1 sorted every IRI that existed before it into one
+  of two cases. A kept value keeps its bytes: it is declared as a term with
+  exactly today's IRI (the internal namespaces such as `qa:`, `skill-contract:`
+  and `practice-kg:`). Each kept read site reads its IRI from
+  `@beep/identity/Registry` (`iri`, `namespace` or `mint`), so its bytes are
+  the declared term's by construction, and `identity/test/KeptValues.test.ts`
+  proves each declaration equals the bytes the site minted before P1. A
+  re-minted value is a path-derived IRI that was re-published from the
+  registry, not frozen beside it (the `research-library:` and `vitest:`
+  namespaces): when the old IRI left the process, written to a committed or
+  exported artifact, its deprecation row names the replacement; when it never
+  left the process it gets no row. The exception: the `$I` composers still
+  derive an IRI from their path for code identities, which are not published
+  terms. Removing the composer IRI surface changes `Id.ts`, which every CI
+  runner handler bundle loads, so it waits for a
+  decision that accepts one handler redeploy (decision
+  `2026-11-20-p1-composer-stays-registry-free` in the goal packet). Until then
+  `L0-3` proves that no bound code's module-derived IRI is published in place
+  of its term.
 - **Instances** have content-addressed identity. A layer-minted identifier is
   the digest of a preimage that names its domain and version (`occurrence/v1`,
   `annotation/v1`, `generation/v1`, `citation-mention/v2`). Canonical JSON sorts
   object keys only, so every set-valued field is sorted on the preimage before
-  hashing. Pending P1 to P4, per brand.
+  hashing. An instance that is not content-addressed is minted under a
+  declared term or namespace (`Registry.mint`), never under a code path. P1
+  landed the minting function and the first preimage, `activity/v1`; the other
+  brands are Pending P2 to P4, per brand.
 - **One digest format** binds identifiers minted by the eight layers:
   `sha256:` plus 64 lowercase hex, one brand per domain. The bare hex primitive
   used elsewhere in the repository is out of scope for this rule.
@@ -551,12 +599,17 @@ PROV-O, NIF, DoCO, SKOS, gUFO, LKIF, ELI). Each enters as a registry
 version and digest in `@beep/rdf`, and an adapter at the
 interchange boundary. Internal kinds stay repo-stable; nothing internal is
 renamed to an external vocabulary until a decision names the kind and its
-consumer. Pending P1 for the registry entries: P1 registers six namespaces
-(`prov:`, `oa:`, `nif:`, `xsd:`, `gufo:` and ActivityStreams `as:`) and adds
-pins to the existing `skos:` and `doco:` entries;
-LKIF and ELI are candidate entries with no commitment, like OntoLex
-`lexicog`, and enter when a decision names their first consumer. P5 for the
-license and digest test in `@beep/rdf`.
+consumer. P1 registered six namespaces (`prov:`, `oa:`, `nif:`, `xsd:`,
+`gufo:` and ActivityStreams `as:`) and pinned eleven: those six, `skos:`,
+`doco:` and the SPAR `deo:`, `fabio:` and `cito:`. `bun run beep
+sync-data-to-ts --target pinned-vocabularies` acquires each pinned artifact,
+refuses byte drift, and writes the registry shards and the pin data in
+`@beep/rdf`. SHACL `sh:` and VoID `void:` are registered unpinned, holding the
+terms the repo uses, and every SHACL and VoID constant imports
+`@beep/rdf/Vocab/Shacl` or `@beep/rdf/Vocab/Void`. LKIF and ELI are candidate
+entries with no commitment, like OntoLex `lexicog`, and enter when a decision
+names their first consumer. The license and digest test over every external
+namespace in `@beep/rdf` is Pending P5.
 
 The annotation codec supports one declared OA profile and nothing else.
 Decoding third-party input returns the annotation document, a table of

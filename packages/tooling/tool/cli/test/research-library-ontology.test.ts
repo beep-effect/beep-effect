@@ -1,3 +1,5 @@
+import * as Registry from "@beep/identity/Registry";
+import { TermIri } from "@beep/identity/Term";
 import { MemoryFileSystem } from "@beep/memfs";
 import { N3ParseTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
 import { toTurtle } from "@beep/ontology";
@@ -19,6 +21,7 @@ import { ShaclValidationRequest, ShaclValidationService } from "@beep/semantic-w
 import { ShaclValidationServiceLive } from "@beep/shacl";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
@@ -134,6 +137,31 @@ describe("research library ontology", () => {
   it.layer(Layer.mergeAll(N3TurtleCodecLive, ShaclValidationServiceLive, MemoryFileSystem.layer, Path.layer), {
     timeout: "30 seconds",
   })("generated contracts", (it) => {
+    it.effect(
+      "publishes every class and owned property under the research-library registry namespace",
+      Effect.fnUntraced(function* () {
+        const assembled = yield* assembleLibraryOntology();
+        const namespace = Registry.namespace("research-library");
+        expect(assembled.baseIri).toBe("https://beep-effect.com/ns/research-library/");
+        expect(assembled.prefix).toBe(namespace.prefix);
+        expect(A.map(assembled.classes, (cls) => cls.curie)).toStrictEqual(
+          A.map(assembled.classes, (cls) => `research-library:${cls.name}`)
+        );
+        const owned = A.flatMap(assembled.classes, (cls) =>
+          A.filter(cls.predicates, (predicate) => Str.startsWith(namespace.iri)(predicate.termIri))
+        );
+        expect(owned.length).toBeGreaterThan(0);
+        for (const predicate of owned) {
+          assertSome(Registry.contract(predicate.termIri), `research-library:${predicate.key}`);
+          assertSome(
+            Registry.replacementOf(
+              `https://beep-effect.com/ns/repo-cli/commands/Research/Library/Library.schemas/${predicate.key}`
+            ),
+            TermIri.make(predicate.termIri)
+          );
+        }
+      })
+    );
     it.effect(
       "parses audited classes and alignments and renders deterministic shapes including status membership",
       Effect.fnUntraced(function* () {

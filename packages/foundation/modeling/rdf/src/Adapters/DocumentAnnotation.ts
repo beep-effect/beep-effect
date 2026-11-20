@@ -6,7 +6,8 @@
  */
 
 import { IRIReference } from "@beep/identity/Iri";
-import { $I as $BeepId, $RdfId } from "@beep/identity/packages";
+import { $RdfId } from "@beep/identity/packages";
+import { iri } from "@beep/identity/Registry";
 import { LiteralKit } from "@beep/schema";
 import { PoPattern } from "@beep/schema/PatternOntology";
 import * as Effect from "effect/Effect";
@@ -20,8 +21,8 @@ import { RDF_NAMESPACE } from "../Vocab/Rdf.ts";
 import { MdNodeId } from "./MdSections.ts";
 import { WebAnnotationFragmentSelector, WebAnnotationTarget } from "./WebAnnotation.ts";
 
-const documentPatternIri = $BeepId.create("document/pattern").iri;
-const documentCitationIri = $BeepId.create("document/citation").iri;
+const documentPatternIri = iri("document:pattern");
+const documentCitationIri = iri("document:citation");
 
 /**
  * JSON-LD context for the OA/SPAR/PROV document profile.

@@ -10,10 +10,12 @@ import {
   planRegistryArtifacts,
   RegistryLayout,
   RegistryPlanInput,
+  RegistryProjectionTarget,
   RegistrySourceFile,
   registryVocabOf,
   renderRegistryData,
   renderRegistryJson,
+  renderRegistryProjection,
   renderTermSnapshot,
   resolveRegistryLayout,
 } from "@beep/repo-cli/commands/Identity/Registry";
@@ -204,6 +206,38 @@ describe("planRegistryArtifacts", () => {
     ).toStrictEqual(["registry-generated-drift"]);
   });
 
+  it("writes the bindings of a projecting shard into its package and refuses an absent package", () => {
+    const vitest = {
+      namespace: { prefix: "vitest", iri: `${IdentityAuthority}vitest/` },
+      terms: ["TestHang"],
+      bindings: [{ code: "@beep/test-runner/Vitest/TestHang", local: "TestHang", since: "1.0.0" }],
+      deprecations: [],
+      projection: "@beep/test-runner",
+    } satisfies RegistryShard.Encoded;
+    const target = RegistryProjectionTarget.of("@beep/test-runner", "packages/test-runner");
+    const projecting = RegistryLayout.of("packages/identity", [target]);
+    const vitestFile = shardFile("vitest.json", vitest);
+    const planned = Result.getOrThrow(
+      planRegistryArtifacts(
+        RegistryPlanInput.make({ layout: projecting, shardFiles: [fabioFile, vitestFile], previous: O.none() })
+      )
+    );
+    expect(A.map(planned, (artifact) => artifact.path)).toStrictEqual([layout.data, layout.snapshot, target.path]);
+    const table = Result.getOrThrow(RegistryTable.fromShards([shard(fabio), shard(vitest)]));
+    expect(planned[2]?.content).toBe(renderRegistryProjection(table, ["vitest"]));
+    expect(renderRegistryProjection(["vitest"])(table)).toContain(
+      `    iri: "${IdentityAuthority}vitest/TestHang",\n    curie: "vitest:TestHang",`
+    );
+    expect(renderRegistryProjection(table, ["fabio"])).toContain("export const RegistryTerms = {} as const");
+    expect(
+      issueKinds(
+        planRegistryArtifacts(
+          RegistryPlanInput.make({ layout, shardFiles: [fabioFile, vitestFile], previous: O.none() })
+        )
+      )
+    ).toStrictEqual(["registry-shard-invalid"]);
+  });
+
   it("refuses a regenerated snapshot that removes a term with no deprecation", () => {
     const grown = shardFile("fabio.json", { ...fabio, terms: ["Article", "Report"], bindings: [], deprecations: [] });
     const first = Result.getOrThrow(
@@ -259,7 +293,11 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
         const path = yield* Path.Path;
         const repoRoot = yield* findRepoRoot();
         const committed = yield* resolveRegistryLayout(repoRoot);
-        expect(committed).toStrictEqual(RegistryLayout.of("packages/foundation/modeling/identity"));
+        expect(committed).toStrictEqual(
+          RegistryLayout.of("packages/foundation/modeling/identity", [
+            RegistryProjectionTarget.of("@beep/test-runner", "packages/tooling/test-kit/test-runner"),
+          ])
+        );
         const plan = yield* planRegistry(repoRoot, committed);
         for (const artifact of Result.getOrThrow(plan)) {
           const onDisk = yield* fs.readFileString(path.join(repoRoot, artifact.path));
@@ -378,7 +416,9 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           expect(errorLineWith(errors, "[registry-conflict]")).toBe(true);
           yield* runIdentityCommand([]);
           const logs = yield* TestConsole.logLines;
-          expect(logs).toContain("Identity registry commands: bun run beep identity registry [--write | --check]");
+          expect(logs).toContain(
+            "Identity registry commands: bun run beep identity registry [--write | --check], identity rebind <from> <to>, identity deprecate <curie> [--replacement <curie>]"
+          );
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

@@ -1,0 +1,9 @@
+{
+  "namespace": {
+    "prefix": "identity-rdf",
+    "iri": "https://beep-effect.com/ns/semantic-web/identity/"
+  },
+  "terms": ["curie", "identifier"],
+  "bindings": [],
+  "deprecations": []
+}

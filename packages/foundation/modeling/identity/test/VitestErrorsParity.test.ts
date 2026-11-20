@@ -1,26 +1,26 @@
-import { $TestUtilsId } from "@beep/identity/packages";
+import * as Registry from "@beep/identity/Registry";
+import { TermIri } from "@beep/identity/Term";
 import { it, TestContextUnavailable, TestHang } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import * as Str from "effect/String";
 
-// @beep/test-runner pins its schema IRIs as literals because it must not
-// depend on @beep/identity. This parity test keeps those pins equal to the
-// identity derivation, so an authority move cannot leave them behind.
+// @beep/test-runner cannot depend on @beep/identity, so the registry generator projects the
+// `vitest` shard into it as literals. This parity test keeps every projected annotation equal to
+// the registry binding of its code identity, so a shard edit cannot leave the runner behind.
 
-const PinnedIdentity = S.Struct({
+const ProjectedIdentity = S.Struct({
   identifier: S.String,
   iri: S.String,
   curie: S.String,
 });
 
-const decodePinned = S.decodeUnknownEffect(PinnedIdentity);
+const decodeProjected = S.decodeUnknownEffect(ProjectedIdentity);
 
-const $Vitest = $TestUtilsId.create("Vitest");
-
-const pinnedAnnotations = [
+const projectedAnnotations = [
   S.resolveAnnotations(TestContextUnavailable),
   S.resolveAnnotationsKey(TestContextUnavailable.fields.method),
   S.resolveAnnotations(TestHang),
@@ -30,32 +30,43 @@ const pinnedAnnotations = [
   S.resolveAnnotations(TestHang.fields.timeoutMillis),
 ];
 
-const derivedComposers = [
-  $Vitest.create("TestContextUnavailable"),
-  $Vitest.create("TestContextUnavailable.method"),
-  $Vitest.create("TestHang"),
-  $Vitest.create("TestHang.lastLogLine"),
-  $Vitest.create("TestHang.testName"),
-  $Vitest.create("TestHang.timeoutMillis"),
-  $Vitest.create("PositiveTimeoutMillis"),
-];
+const registryRow = (identifier: string) =>
+  O.map(Registry.bindingOf(identifier), (term) => ({
+    identifier,
+    iri: term.iri,
+    curie: `${term.namespace}:${term.local}`,
+  }));
 
-describe("@beep/test-runner pinned IRI parity", () => {
+describe("@beep/test-runner registry projection parity", () => {
   it.effect(
-    "pins every Vitest error IRI and CURIE exactly as $TestUtilsId derives them",
+    "annotates every Vitest error schema with the registry binding of its code identity",
     Effect.fnUntraced(function* () {
-      const pinned = yield* Effect.forEach(pinnedAnnotations, (annotations) => decodePinned(annotations), {
+      const projected = yield* Effect.forEach(projectedAnnotations, (annotations) => decodeProjected(annotations), {
         concurrency: 1,
       });
-      const derived = A.map(derivedComposers, (composer) => ({
-        identifier: composer.string(),
-        iri: composer.iri,
-        curie: composer.curie,
-      }));
-      const isUnderVitestRoot = Str.startsWith(`${$Vitest.iri}/`);
+      const bound = A.map(projected, ({ identifier }) => registryRow(identifier));
 
-      expect(pinned).toEqual(derived);
-      expect(A.every(pinned, ({ iri }) => isUnderVitestRoot(iri))).toBe(true);
+      expect(bound).toEqual(A.map(projected, O.some));
+      expect(A.map(projected, ({ curie }) => curie)).toEqual([
+        "vitest:TestContextUnavailable",
+        "vitest:TestContextUnavailable.method",
+        "vitest:TestHang",
+        "vitest:TestHang.lastLogLine",
+        "vitest:TestHang.testName",
+        "vitest:TestHang.timeoutMillis",
+        "vitest:PositiveTimeoutMillis",
+      ]);
     })
   );
+
+  it("records each retired test-utils IRI as a deprecation replaced by its vitest term", () => {
+    const vitest = Registry.namespace("vitest").iri;
+    expect(Registry.RegistryVocab.vitest.terms).toHaveLength(7);
+    for (const local of Registry.RegistryVocab.vitest.terms) {
+      assertSome(
+        Registry.replacementOf(`https://beep-effect.com/ns/test-utils/Vitest/${local}`),
+        TermIri.make(`${vitest}${local}`)
+      );
+    }
+  });
 });

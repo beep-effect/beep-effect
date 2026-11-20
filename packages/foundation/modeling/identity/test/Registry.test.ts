@@ -78,6 +78,22 @@ describe("Registry view", () => {
     assertNone(fixture.replacementOf(`${vitestIri}TestHang`));
   });
 
+  it("follows a retired namespace IRI to its successor namespace IRI", () => {
+    const retiredNs = "https://beep-effect.com/ns/test-utils/Vitest/";
+    const registry = viewOf({
+      namespace: { prefix: "vitest", iri: vitestIri },
+      terms: ["TestHang"],
+      bindings: [],
+      deprecations: [
+        { term: retiredNs, since: "1.0.0", replacement: "" },
+        { term: oldHang, since: "1.0.0", replacement: "TestHang" },
+      ],
+    });
+    assertSome(widen(registry.replacementOf(retiredNs)), vitestIri);
+    assertSome(widen(registry.replacementOf(oldHang)), `${vitestIri}TestHang`);
+    assertNone(registry.contract(retiredNs));
+  });
+
   it("keeps a namespace that declares no live term", () => {
     const registry = viewOf({
       namespace: { prefix: "practice-kg", iri: "https://beep-effect.com/ns/practice-kg/" },

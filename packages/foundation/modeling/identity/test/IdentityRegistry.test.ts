@@ -1,20 +1,16 @@
-import {
-  Fibered,
-  IdentityEntry,
-  IdentityRegistry,
-  IdentityRegistryConflictError,
-  make as makeIdentity,
-} from "@beep/identity";
-import { $IdentityId } from "@beep/identity/packages";
+import { Fibered, IdentityEntry, IdentityRegistry, IdentityRegistryConflictError } from "@beep/identity";
+import { iri } from "@beep/identity/Registry";
 import { it } from "@beep/test-runner";
-import { describe, expect, expectTypeOf } from "@effect/vitest";
+import { describe, expect } from "@effect/vitest";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as S from "effect/Schema";
 
-const composer = $IdentityId.create("RegistryTest");
-const entry = IdentityEntry.fromComposer(composer, { label: "Registry test" });
+// An identity entry is built only from a registry binding, never from a composer path.
+const boundCode = "@beep/test-runner/Vitest/TestHang";
+const boundTerm = { curie: "vitest:TestHang", iri: iri("vitest:TestHang") } as const;
+const entry = IdentityEntry.fromBinding(boundCode, boundTerm, { label: "Registry test" });
 const layer = IdentityRegistry.layerLocal([entry]);
 
 const resolve = (ref: Parameters<(typeof IdentityRegistry)["Service"]["resolve"]>[0]) =>
@@ -103,23 +99,11 @@ describe("IdentityRegistry", () => {
     })
   );
 
-  it("copies literal projections from a bound composer", () => {
-    const made = IdentityEntry.fromComposer(composer, { label: "Registry test" });
-
-    expect(made.identity).toBe(composer.identifier);
-    expect(made.iri).toBe(composer.iri);
-    expect(made.curie).toBe(composer.curie);
-    expect(made.fibers).toEqual({ label: "Registry test" });
-  });
-
-  it("rejects unbound composers at compile time", () => {
-    const rejectUnboundComposer = () => {
-      const unbound = makeIdentity("identity").$IdentityId.create("Unbound");
-      // @ts-expect-error -- Registry entries require a composer with IRI and CURIE bindings. Owner: @beep/identity. Exit: remove if the API is meant to accept this.
-      IdentityEntry.fromComposer(unbound, {});
-    };
-
-    expectTypeOf(rejectUnboundComposer).toBeFunction();
+  it("copies the binding row and the fibers into the entry", () => {
+    expect(entry.identity).toBe(boundCode);
+    expect(entry.iri).toBe("https://beep-effect.com/ns/vitest/TestHang");
+    expect(entry.curie).toBe(boundTerm.curie);
+    expect(entry.fibers).toEqual({ label: "Registry test" });
   });
 
   it.effect(
@@ -135,7 +119,7 @@ describe("IdentityRegistry", () => {
           },
         },
       });
-      const bridged = IdentityEntry.fromComposer(composer, family.project("registry", ["label", "route"]));
+      const bridged = IdentityEntry.fromBinding(boundCode, boundTerm, family.project("registry", ["label", "route"]));
       const context = yield* Layer.build(IdentityRegistry.layerLocal([bridged]));
       const registry = Context.get(context, IdentityRegistry);
       const resolved = yield* registry.resolve({ _tag: "identity", value: bridged.identity });
@@ -177,12 +161,15 @@ describe("IdentityRegistry over binding rows", () => {
   );
 
   it.effect(
-    "binds no code identity in the generated registry before the internal namespaces land",
+    "resolves a test-runner binding of the generated registry and refuses an unbound identity",
     Effect.fnUntraced(function* () {
       const context = yield* Layer.build(IdentityRegistry.layer);
       const registry = Context.get(context, IdentityRegistry);
+      const resolved = yield* registry.resolve({ _tag: "identity", value: "@beep/test-runner/Vitest/TestHang" });
+      expect(resolved.curie).toBe(hang.curie);
+      expect(resolved.iri).toBe(hang.iri);
       const error = yield* registry
-        .resolve({ _tag: "identity", value: "@beep/test-runner/Vitest/TestHang" })
+        .resolve({ _tag: "identity", value: "@beep/identity/Term/TermIri" })
         .pipe(Effect.flip);
       expect(error._tag).toBe("IdentityNotFoundError");
     })

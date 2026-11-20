@@ -702,7 +702,8 @@ export const OntologyAssemblyErrorReason = LiteralKit([
   "unsupportedFieldAst",
   "invalidTriple",
   "invalidLabel",
-  "reservedPrefix",
+  "unboundClass",
+  "undeclaredProperty",
   "skosIntegrity",
 ]).pipe(
   $I.annoteSchema("OntologyAssemblyErrorReason", {

@@ -119,6 +119,68 @@ console.log(describeTerm("skos:unregisteredTerm"));
 // Unregistered vocabulary term
 ```
 
+## Publish an IRI: declared terms and bindings
+
+A composer identity such as `@beep/schema/Example/Title` is a code id. It
+names code (schema identifiers, `Symbol.for` keys, JSON Schema `$defs`) and is
+not, by itself, a published IRI. An IRI that leaves the process, in Turtle,
+SHACL, SPARQL or an exported entry, is a declared term of a registry shard,
+and the code that publishes it is bound to that term by a `TermBinding`.
+Look a code id's term up with `bindingOf`; a code id with no binding has no
+published IRI.
+
+```ts
+import { bindingOf } from "@beep/identity/Registry";
+import * as O from "effect/Option";
+
+const publishedIri = (code: string): string =>
+  O.match(bindingOf(code), {
+    onNone: () => "No published IRI",
+    onSome: ({ iri }) => iri,
+  });
+
+console.log(publishedIri("@beep/test-runner/Vitest/PositiveTimeoutMillis"));
+// https://beep-effect.com/ns/vitest/PositiveTimeoutMillis
+console.log(publishedIri("@beep/schema/Example/Title"));
+// No published IRI
+```
+
+A new internal term lives in a namespace named for its vocabulary, under the
+identity authority `https://beep-effect.com/ns/`, never under a package or file
+path, so renaming a module changes no published IRI. An instance that is not
+content-addressed is minted under a declared term or namespace with `mint`
+(or `mintEncoded` for a free-text key), which refuses to mint an IRI the
+registry already publishes as a term.
+
+The composers still carry a path-derived `.iri`. It equals the declared term
+only at the kept read sites, which `test/KeptValues.test.ts` pins byte for
+byte; new code reads a published IRI from the registry. The composer surface
+stays registry-free because the CI runner handlers bundle `Id.ts` and must
+not load the registry (`packages/tooling/infra/ci-runners/test/HandlerBundles.test.ts`).
+
+### Changing the term set
+
+The shards in [registry/namespaces](registry/namespaces) are the source; the
+generated `src/internal/generated/Registry.data.ts` and the committed
+[term snapshot](registry/term-snapshot.json) are written from them.
+
+| Change | Command |
+| --- | --- |
+| Add a term or binding | edit the shard, then `bun run beep identity registry --write` |
+| Retire a published term | `bun run beep identity deprecate <curie> [--replacement <curie>]` |
+| Move the bindings of a renamed module | `bun run beep identity rebind <from> <to>` |
+| Check generated drift | `bun run beep identity registry --check` |
+| Check the published set against a base ref | `bun run beep lint identity-registry [--base <ref>]` |
+
+The snapshot's `release` is the vocabulary release a binding or deprecation
+names as `since`: an addition bumps the minor and a deprecation the major.
+A changed term set released below the release its change calls for fails the
+lint (`ReleaseUnderstated`): merge the base and regenerate.
+Removing a term, changing a namespace prefix, dropping a deprecation or
+reviving a retired IRI without a deprecation record fails the writer and the
+lint; law `L0-3` in [TermStability.test.ts](test/TermStability.test.ts) is the
+acceptance test.
+
 ## Module map
 
 | Import | Responsibility |
@@ -126,7 +188,8 @@ console.log(describeTerm("skos:unregisteredTerm"));
 | `@beep/identity/packages` | Registered package composers; the normal starting point for consumers. |
 | `@beep/identity/Id` | Composer contracts, identity construction, and schema annotation helpers. |
 | `@beep/identity/Registry` | The generated term registry and the one CURIE codec: expansion, contraction, bindings, deprecations and instance minting. |
-| `@beep/identity/Term` | Declared terms, namespaces, bindings, deprecations, registry shards and the term snapshot. |
+| `@beep/identity/Term` | Declared terms, namespaces, bindings, deprecations, registry shards, the term snapshot and `snapshotViolations`. |
+| `@beep/identity/Authority` | `IdentityAuthority`, the root of the internal namespaces. |
 | `@beep/identity/Vocab` | Literal CURIE, predicate and IRI types over a vocabulary shape. |
 | `@beep/identity/IdentityRegistry` | Exact identity, IRI, and CURIE lookup through a local registry service. |
 | `@beep/identity/Iri` | RFC 3987 IRI, IRI-reference, relative-reference, and absolute-IRI schemas. |
@@ -156,8 +219,9 @@ bun run beep quality package-verify @beep/identity
 
 For a focused edit loop, run `bun run check`, `bun run test`, or `bun run lint`
 from this package directory. The test suite covers literal identities, annotation
-metadata and schema statics, template guards, vocabulary conversion, and registry
-behavior.
+metadata and schema statics, template guards, vocabulary conversion, registry
+behavior, and the `L0-1` and `L0-3` laws (`Curie.laws.test.ts`,
+`TermStability.test.ts`).
 
 ## License
 

@@ -4,6 +4,7 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import * as Registry from "@beep/identity/Registry";
 import * as Rdf from "@beep/rdf/Rdf";
 import * as Dcat from "@beep/rdf/Vocab/Dcat";
 import * as Prov from "@beep/rdf/Vocab/Prov";
@@ -26,7 +27,7 @@ import type { AssembledClass } from "@beep/ontology";
 import type { LibraryCatalog } from "./Library.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.schemas");
-const topicIri = (id: string) => $I.create(`Topic/${id}`).iri;
+const topicIri = (id: string) => Registry.mint("research-library:Topic", id);
 const get = (value: unknown, key: string): unknown => (P.hasProperty(value, key) ? value[key] : undefined);
 const text = (value: unknown, key: string): string => {
   const item = get(value, key);
@@ -222,7 +223,9 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
       cls.name === "SourceVersion" ? `${owner}@${text(record, "revision")}` : sourceId
     );
     if (A.contains(["Source", "SourceVersion"], cls.name) && O.isSome(category))
-      quads.push(Rdf.makeQuad(subject, nn($I.create("effectiveCategory").iri), literal(category.value)));
+      quads.push(
+        Rdf.makeQuad(subject, nn(Registry.iri("research-library:effectiveCategory")), literal(category.value))
+      );
   };
   const project = (cls: AssembledClass, record: unknown, fallback: string, owner: string): Rdf.NamedNode => {
     const sourceId = cls.name === "Source" ? text(record, "id") : owner;
@@ -252,7 +255,7 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
   };
   const catalogNode = project(classByName("Catalog"), catalog, "catalog/library.json", "");
   quads.push(Rdf.makeQuad(catalogNode, RDF_TYPE, Dcat.DCAT_DATASET));
-  const distribution = nn($I.create("Distribution/catalog/library.json").iri);
+  const distribution = nn(Registry.mint("research-library:Distribution", "catalog/library.json"));
   quads.push(
     Rdf.makeQuad(catalogNode, Dcat.DCAT_DISTRIBUTION_PREDICATE, distribution),
     Rdf.makeQuad(distribution, RDF_TYPE, Dcat.DCAT_DISTRIBUTION)
@@ -263,16 +266,18 @@ export const catalogDataset = Effect.fn("Library.catalogDataset")(function* (
     ["Qualification", catalog.qualifications],
   ] satisfies ReadonlyArray<readonly [string, ReadonlyArray<{ readonly id: string }>]>) {
     for (const [index, record] of A.map(records, (v, i) => [i, v] satisfies readonly [number, { readonly id: string }]))
-      quads.push(Rdf.makeQuad(iri(name, record.id), nn($I.create("catalogIndex").iri), literal(index)));
+      quads.push(Rdf.makeQuad(iri(name, record.id), nn(Registry.iri("research-library:catalogIndex")), literal(index)));
   }
   for (const run of catalog.modelRuns) {
-    const agent = nn($I.create(`SoftwareAgent/${encodeURIComponent(run.model)}/${encodeURIComponent(run.effort)}`).iri);
+    const agent = nn(
+      Registry.mint("research-library:SoftwareAgent", encodeURIComponent(run.model), encodeURIComponent(run.effort))
+    );
     quads.push(
       Rdf.makeQuad(agent, RDF_TYPE, Prov.PROV_SOFTWARE_AGENT),
       Rdf.makeQuad(iri("ModelRun", run.id), Prov.PROV_WAS_ASSOCIATED_WITH, agent)
     );
   }
-  const scheme = nn($I.create("Topic").iri);
+  const scheme = nn(Registry.iri("research-library:Topic"));
   quads.push(Rdf.makeQuad(scheme, RDF_TYPE, Skos.SKOS_CONCEPT_SCHEME));
   for (const topic of topics) {
     const concept = nn(topicIri(topic.id));

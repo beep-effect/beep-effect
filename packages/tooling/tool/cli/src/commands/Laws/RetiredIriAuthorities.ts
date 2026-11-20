@@ -341,7 +341,7 @@ export const isRetiredIriAuthorityExempt = (file: string): boolean =>
  * ```ts
  * import { isPublicOriginAllowlisted } from "@beep/repo-cli/commands/Laws/RetiredIriAuthorities"
  *
- * console.log(isPublicOriginAllowlisted("packages/tooling/test-kit/test-runner/src/Vitest.errors.ts")) // true
+ * console.log(isPublicOriginAllowlisted("packages/tooling/test-kit/test-runner/src/internal/generated/RegistryTerms.ts")) // true
  * ```
  *
  * @param file - Repository-relative path.

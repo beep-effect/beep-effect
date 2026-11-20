@@ -7,6 +7,7 @@
 import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import { identityRegistryCommand } from "./Registry.ts";
+import { identityDeprecateCommand, identityRebindCommand } from "./ShardEdit.ts";
 
 /**
  * `beep identity`: the identity registry command group.
@@ -23,8 +24,10 @@ import { identityRegistryCommand } from "./Registry.ts";
  * @since 0.0.0
  */
 export const identityCommand = Command.make("identity", {}, () =>
-  Console.log("Identity registry commands: bun run beep identity registry [--write | --check]")
+  Console.log(
+    "Identity registry commands: bun run beep identity registry [--write | --check], identity rebind <from> <to>, identity deprecate <curie> [--replacement <curie>]"
+  )
 ).pipe(
-  Command.withDescription("Declared terms: generate and check the identity registry"),
-  Command.withSubcommands([identityRegistryCommand])
+  Command.withDescription("Declared terms: generate and check the identity registry, rebind codes, deprecate terms"),
+  Command.withSubcommands([identityRegistryCommand, identityRebindCommand, identityDeprecateCommand])
 );

@@ -4,9 +4,11 @@ import { SafePnLocal } from "@beep/identity/PnLocal";
 import {
   CodeId,
   Deprecation,
+  isNamespaceShapedIri,
   Namespace,
   ReleaseVersion,
   SnapshotViolation,
+  snapshotReleaseViolations,
   snapshotViolationMessage,
   snapshotViolations,
   Term,
@@ -38,6 +40,8 @@ const entity = iri("http://www.w3.org/ns/prov#Entity");
 const testHang = iri("https://beep-effect.com/ns/vitest/TestHang");
 const oldTestHang = iri("https://beep-effect.com/ns/test-utils/Vitest/TestHang");
 const v1 = release("1.0.0");
+const v1_1 = release("1.1.0");
+const v2 = release("2.0.0");
 const hangCode = code("@beep/test-runner/Vitest/TestHang");
 
 type TermSnapshotRows = Parameters<typeof TermSnapshot.fromRows>[0];
@@ -60,6 +64,15 @@ const decodeSnapshot = S.decodeUnknownResult(TermSnapshot);
 const encodeSnapshot = (value: TermSnapshot) => Result.getOrThrow(S.encodeResult(TermSnapshot)(value));
 
 describe("Term schemas", () => {
+  it("tells a namespace-shaped IRI from a term IRI by its final separator", () => {
+    expect(A.map([prov.iri, vitest.iri, activity, testHang], isNamespaceShapedIri)).toStrictEqual([
+      true,
+      true,
+      false,
+      false,
+    ]);
+  });
+
   it("accepts declared term IRIs, code identities and release versions", () => {
     expect(S.is(TermIri)("https://beep-effect.com/ns/qa/receipts/accepted/v2")).toBe(true);
     expect(S.is(TermIri)("no scheme")).toBe(false);
@@ -147,17 +160,15 @@ describe("TermSnapshot", () => {
 describe("snapshotViolations", () => {
   it("the published term set changes only with a deprecation record", () => {
     const previous = snapshot();
-    const removed = snapshot({ terms: [testHang, activity, iri(prov.iri), iri(vitest.iri)] });
+    const removed = snapshot({ release: v1_1, terms: [testHang, activity, iri(prov.iri), iri(vitest.iri)] });
     expect(snapshotViolations(previous, removed)).toStrictEqual([
       SnapshotViolation.cases.TermRemoved.make({ term: entity }),
     ]);
 
     const deprecated = snapshot({
+      release: v2,
       terms: [testHang, activity, iri(prov.iri), iri(vitest.iri)],
-      deprecations: [
-        ...baseRows.deprecations,
-        Deprecation.make({ term: entity, since: release("2.0.0"), replacement: O.none() }),
-      ],
+      deprecations: [...baseRows.deprecations, Deprecation.make({ term: entity, since: v2, replacement: O.none() })],
     });
     expect(snapshotViolations(previous, deprecated)).toStrictEqual([]);
     expect(pipeDual(previous, deprecated)).toStrictEqual([]);
@@ -165,15 +176,20 @@ describe("snapshotViolations", () => {
 
   it("reports a revived, removed or changed deprecation", () => {
     const previous = snapshot();
-    expect(tags(snapshotViolations(previous, snapshot({ terms: [...baseRows.terms, oldTestHang] })))).toStrictEqual([
-      "TermRevived",
+    expect(
+      tags(snapshotViolations(previous, snapshot({ release: v1_1, terms: [...baseRows.terms, oldTestHang] })))
+    ).toStrictEqual(["TermRevived"]);
+    expect(tags(snapshotViolations(previous, snapshot({ release: v1_1, deprecations: [] })))).toStrictEqual([
+      "DeprecationRemoved",
     ]);
-    expect(tags(snapshotViolations(previous, snapshot({ deprecations: [] })))).toStrictEqual(["DeprecationRemoved"]);
     expect(
       tags(
         snapshotViolations(
           previous,
-          snapshot({ deprecations: [Deprecation.make({ term: oldTestHang, since: v1, replacement: O.none() })] })
+          snapshot({
+            release: v1_1,
+            deprecations: [Deprecation.make({ term: oldTestHang, since: v1, replacement: O.none() })],
+          })
         )
       )
     ).toStrictEqual(["DeprecationChanged"]);
@@ -184,27 +200,28 @@ describe("snapshotViolations", () => {
     expect(
       snapshotViolations(
         previous,
-        snapshot({ bindings: [TermBinding.make({ code: hangCode, term: activity, since: v1 })] })
+        snapshot({ release: v1_1, bindings: [TermBinding.make({ code: hangCode, term: activity, since: v1 })] })
       )
     ).toStrictEqual([SnapshotViolation.cases.BindingReassigned.make({ code: hangCode, from: testHang, to: activity })]);
     expect(
       snapshotViolations(
         previous,
-        snapshot({ bindings: [TermBinding.make({ code: hangCode, term: testHang, since: release("1.1.0") })] })
+        snapshot({ release: v1_1, bindings: [TermBinding.make({ code: hangCode, term: testHang, since: v1_1 })] })
       )
-    ).toStrictEqual([SnapshotViolation.cases.SinceRewritten.make({ term: testHang, from: v1, to: release("1.1.0") })]);
+    ).toStrictEqual([SnapshotViolation.cases.SinceRewritten.make({ term: testHang, from: v1, to: v1_1 })]);
 
     const movedCode = code("@beep/test-runner/Runner/TestHang");
     expect(
       snapshotViolations(
         previous,
-        snapshot({ bindings: [TermBinding.make({ code: movedCode, term: testHang, since: v1 })] })
+        snapshot({ release: v1_1, bindings: [TermBinding.make({ code: movedCode, term: testHang, since: v1 })] })
       )
     ).toStrictEqual([]);
     expect(
       snapshotViolations(
         previous,
         snapshot({
+          release: v1_1,
           bindings: [...baseRows.bindings, TermBinding.make({ code: movedCode, term: testHang, since: v1 })],
         })
       )
@@ -230,13 +247,17 @@ describe("snapshotViolations", () => {
     const entityNs = Namespace.make({ prefix: "entity", iri: IRI.make(entity) });
     const extraNs = Namespace.make({ prefix: "extra", iri: IRI.make("https://example.test/extra/") });
     // A removed term whose IRI becomes a namespace IRI is still a removed term.
-    expect(snapshotViolations(previous, snapshot({ namespaces: [...baseRows.namespaces, entityNs] }))).toStrictEqual([
-      SnapshotViolation.cases.TermRemoved.make({ term: entity }),
-    ]);
+    expect(
+      snapshotViolations(previous, snapshot({ release: v1_1, namespaces: [...baseRows.namespaces, entityNs] }))
+    ).toStrictEqual([SnapshotViolation.cases.TermRemoved.make({ term: entity })]);
     expect(
       snapshotViolations(
         previous,
-        snapshot({ namespaces: [...baseRows.namespaces, extraNs], terms: [...baseRows.terms, iri(extraNs.iri)] })
+        snapshot({
+          release: v1_1,
+          namespaces: [...baseRows.namespaces, extraNs],
+          terms: [...baseRows.terms, iri(extraNs.iri)],
+        })
       )
     ).toStrictEqual([]);
   });
@@ -244,20 +265,21 @@ describe("snapshotViolations", () => {
   it("reports a dropped namespace and a changed prefix", () => {
     const previous = snapshot();
     const renamed = Namespace.make({ prefix: "provo", iri: prov.iri });
-    expect(snapshotViolations(previous, snapshot({ namespaces: [renamed, vitest] }))).toStrictEqual([
+    expect(snapshotViolations(previous, snapshot({ release: v1_1, namespaces: [renamed, vitest] }))).toStrictEqual([
       SnapshotViolation.cases.NamespacePrefixChanged.make({ iri: prov.iri, from: "prov", to: "provo" }),
     ]);
-    expect(snapshotViolations(previous, snapshot({ namespaces: [vitest] }))).toStrictEqual([
+    expect(snapshotViolations(previous, snapshot({ release: v1_1, namespaces: [vitest] }))).toStrictEqual([
       SnapshotViolation.cases.NamespaceDropped.make({ prefix: "prov", iri: prov.iri }),
     ]);
     expect(
       snapshotViolations(
         previous,
         snapshot({
+          release: v2,
           namespaces: [vitest],
           deprecations: [
             ...baseRows.deprecations,
-            Deprecation.make({ term: iri(prov.iri), since: release("2.0.0"), replacement: O.none() }),
+            Deprecation.make({ term: iri(prov.iri), since: v2, replacement: O.none() }),
           ],
           terms: [testHang, entity, activity, iri(vitest.iri)],
         })
@@ -275,18 +297,61 @@ describe("snapshotViolations", () => {
         A.filter((local) => S.is(TermIri)(`${vitest.iri}${local}`)),
         A.map((local) => Term.of(vitest, TermLocal.make(local)).iri)
       );
-      const next = snapshot({ release: release("1.1.0"), terms: [...baseRows.terms, ...added] });
+      const next = snapshot({ release: v1_1, terms: [...baseRows.terms, ...added] });
       expect(snapshotViolations(snapshot(), next)).toStrictEqual([]);
     },
     runs
   );
+
+  it("orders releases exactly past the safe integer range", () => {
+    // 2^53 + 1 and 2^53 are one number as a float; as release components they differ.
+    const base = snapshot({ release: release("9007199254740993.0.0") });
+    const wound = snapshot({ release: release("9007199254740992.0.0") });
+    expect(snapshotViolations(base, wound)).toStrictEqual([
+      SnapshotViolation.cases.ReleaseRegressed.make({ from: base.release, to: wound.release }),
+    ]);
+    expect(snapshotViolations(wound, base)).toStrictEqual([]);
+    const belowRow = snapshot({
+      release: release("1.9007199254740992.0"),
+      deprecations: [Deprecation.make({ term: entity, since: release("1.9007199254740993.0"), replacement: O.none() })],
+      terms: [testHang, activity, iri(prov.iri), iri(vitest.iri)],
+    });
+    expect(tags(snapshotReleaseViolations(belowRow))).toStrictEqual(["ReleaseBelowSince"]);
+  });
+
+  it("refuses a changed term set released below the release its change calls for", () => {
+    const previous = snapshot();
+    const added = { terms: [...baseRows.terms, iri(`${vitest.iri}Added`)] };
+    // An addition at the base release would ship two term sets as 1.0.0; it calls for a minor bump.
+    expect(snapshotViolations(previous, snapshot(added))).toStrictEqual([
+      SnapshotViolation.cases.ReleaseUnderstated.make({ base: v1, expected: v1_1, release: v1 }),
+    ]);
+    expect(snapshotViolations(previous, snapshot({ ...added, release: v1_1 }))).toStrictEqual([]);
+    expect(snapshotViolations(previous, snapshot({ ...added, release: v2 }))).toStrictEqual([]);
+    // A new deprecation calls for a major bump, so a minor bump is still understated.
+    const retired = {
+      terms: [testHang, activity, iri(prov.iri), iri(vitest.iri)],
+      deprecations: [...baseRows.deprecations, Deprecation.make({ term: entity, since: v1_1, replacement: O.none() })],
+    };
+    expect(snapshotViolations(previous, snapshot({ ...retired, release: v1_1 }))).toStrictEqual([
+      SnapshotViolation.cases.ReleaseUnderstated.make({ base: v1, expected: v2, release: v1_1 }),
+    ]);
+    // An unchanged term set keeps its release, and the empty base calls for the genesis release.
+    expect(snapshotViolations(previous, previous)).toStrictEqual([]);
+    expect(snapshotViolations(TermSnapshot.empty, snapshot({ release: release("0.0.0") }))).toStrictEqual([
+      SnapshotViolation.cases.ReleaseUnderstated.make({
+        base: release("0.0.0"),
+        expected: v1,
+        release: release("0.0.0"),
+      }),
+    ]);
+  });
 });
 
 const pipeDual = (previous: TermSnapshot, next: TermSnapshot) => snapshotViolations(next)(previous);
 
 describe("snapshotViolationMessage", () => {
   const Violation = SnapshotViolation.cases;
-  const v2 = release("2.0.0");
   const otherCode = code("@beep/test-runner/Vitest/OtherHang");
 
   it("states every violation kind in one line naming its fields", () => {
@@ -302,6 +367,7 @@ describe("snapshotViolationMessage", () => {
           Violation.BindingAmbiguous.make({ term: testHang, codes: [hangCode, otherCode] }),
           Violation.NamespaceDropped.make({ prefix: prov.prefix, iri: prov.iri }),
           Violation.NamespacePrefixChanged.make({ iri: vitest.iri, from: vitest.prefix, to: prov.prefix }),
+          Violation.ReleaseUnderstated.make({ base: v1, expected: v2, release: v1 }),
         ],
         snapshotViolationMessage
       )
@@ -315,6 +381,7 @@ describe("snapshotViolationMessage", () => {
       "https://beep-effect.com/ns/vitest/TestHang is bound by more than one code identity (@beep/test-runner/Vitest/TestHang, @beep/test-runner/Vitest/OtherHang).",
       'Namespace "prov" (http://www.w3.org/ns/prov#) is removed without a deprecation of its IRI.',
       'Namespace https://beep-effect.com/ns/vitest/ changes its prefix from "vitest" to "prov".',
+      "The snapshot changes the rows of release 1.0.0 but is released as 1.0.0; the change calls for 2.0.0.",
     ]);
   });
 

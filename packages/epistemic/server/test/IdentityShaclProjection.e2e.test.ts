@@ -1,6 +1,7 @@
 import { BoundedShaclValidationServiceLive } from "@beep/epistemic-server/ShaclValidation";
 import { IdentityEntry } from "@beep/identity";
 import { $EpistemicServerId } from "@beep/identity/packages";
+import { iri } from "@beep/identity/Registry";
 import { makeDataset, makeLiteral, makeNamedNode, makeQuad, NamedNode } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import {
@@ -19,7 +20,6 @@ import { pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 
-const entryComposer = $EpistemicServerId.create("identity/shacl-projection-e2e-entry");
 const requiredFiberPath = makeNamedNode($EpistemicServerId.create("identity/fibers/display-name").iri);
 const binding = IdentityRdfBinding.make({
   identifierPath: DefaultIdentityRdfBinding.identifierPath,
@@ -27,7 +27,12 @@ const binding = IdentityRdfBinding.make({
   fiberPaths: { displayName: requiredFiberPath },
 });
 const policy = IdentityShapePolicy.make({ requiredFibers: ["displayName"] });
-const entry = IdentityEntry.fromComposer(entryComposer, { displayName: "Identity projection e2e" });
+// Identity entries come from registry bindings; any bound code identity serves the projection.
+const entry = IdentityEntry.fromBinding(
+  "@beep/test-runner/Vitest/TestHang",
+  { curie: "vitest:TestHang", iri: iri("vitest:TestHang") },
+  { displayName: "Identity projection e2e" }
+);
 const sameNamedNode = S.toEquivalence(NamedNode);
 
 describe("identity SHACL projection end to end", () => {

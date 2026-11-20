@@ -1,4 +1,5 @@
 import { Git } from "@beep/git/Git";
+import { TermSnapshot } from "@beep/identity/Term";
 import { lintCommand } from "@beep/repo-cli";
 import {
   LAB_COMPOSERS_END_MARKER,
@@ -7,6 +8,7 @@ import {
   LAB_EXPORTS_START_MARKER,
   LabIdentitySegment,
 } from "@beep/repo-cli/commands/CreatePackage/internal/LabIdentitySegment";
+import { identityCommand } from "@beep/repo-cli/commands/Identity";
 import { RegistryLayout, renderRegistryJson } from "@beep/repo-cli/commands/Identity/Registry";
 import { TSMorphServiceLive } from "@beep/repo-utils";
 import { FsUtilsLive } from "@beep/repo-utils/FsUtils";
@@ -27,12 +29,14 @@ import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as TestConsole from "effect/testing/TestConsole";
-import { expectReportedExit, temporaryWorkingDirectory } from "./support/CommandTest.ts";
+import { expectReportedExit, gitFixture, temporaryWorkingDirectory } from "./support/CommandTest.ts";
 
 // `Git` rides beside the platform services: repo-cli's typed git readers take it from the context (W1a).
 const gitLayer = Git.layer.pipe(Layer.provide(NodeServices.layer));
 
 const runLintCommand = Command.runWith(lintCommand, { version: "0.0.0" });
+const runIdentityCommand = Command.runWith(identityCommand, { version: "0.0.0" });
+const decodeSnapshotText = flow(S.decodeUnknownResult(S.fromJsonString(TermSnapshot)), Result.getOrThrow);
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const testLayer = Layer.provideMerge(
@@ -891,6 +895,118 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
                   Str.includes("bun run beep lint identity-registry --fix")(line)
               )
             ).toBe(true);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+  });
+
+  // Law L0-3 at the gate: the head's regenerated snapshot keeps the base ref's published term set.
+  describe("identity-registry lint against a base ref", { concurrent: false }, () => {
+    const layout = RegistryLayout.of("packages/identity");
+    const fabioPath = `${layout.shards}/fabio.json`;
+    const WIDGET_OLD_MODULE = "packages/widget/src/Old.ts";
+    const WIDGET_NEW_MODULE = "packages/widget/src/New.ts";
+    const fabioShard = (terms: ReadonlyArray<string>, bindings: ReadonlyArray<unknown> = []) =>
+      renderRegistryJson({
+        namespace: { prefix: "fabio", iri: "http://purl.org/spar/fabio/" },
+        terms,
+        bindings,
+        deprecations: [],
+      });
+
+    // A committed fixture checkout with the fabio shard and its generated artifacts; answers the base sha.
+    const commitRegistryFixture = Effect.fn("LintIdentityRegistryTest.commitRegistryFixture")(function* (
+      shard: string
+    ) {
+      const fs = yield* FileSystem.FileSystem;
+      const git = yield* Git;
+      yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget"] });
+      yield* fs.writeFileString(WIDGET_OLD_MODULE, "export const report = 1;\n");
+      yield* fs.makeDirectory(layout.shards, { recursive: true });
+      yield* fs.writeFileString(fabioPath, shard);
+      yield* runIdentityCommand(["registry", "--write"]);
+      const root = yield* Effect.sync(() => process.cwd());
+      yield* gitFixture(root);
+      yield* git.commit(root, "base", { noVerify: true, noGpgSign: true });
+      return yield* git.revParse(root, "HEAD");
+    });
+
+    it.effect(
+      "L0-3 reports a term removed against the base ref and accepts its deprecation",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const base = yield* commitRegistryFixture(fabioShard(["Report", "TechnicalReport"]));
+            const committedSnapshot = yield* fs.readFileString(layout.snapshot);
+
+            // Removing the term and regenerating the snapshot from nothing hides the removal from --check.
+            yield* fs.writeFileString(fabioPath, fabioShard(["Report"]));
+            yield* fs.remove(layout.snapshot);
+            yield* runIdentityCommand(["registry", "--write"]);
+            const removed = yield* Effect.exit(runLintCommand(["identity-registry", "--base", base]));
+            expectReportedExit(removed);
+            const removedLines = yield* TestConsole.errorLines;
+            expect(removedLines).toContain(
+              `${layout.snapshot} [term-removed-without-deprecation] Against the base ref: http://purl.org/spar/fabio/TechnicalReport is removed without a deprecation. Restore the IRI, or retire it with \`bun run beep identity deprecate\`, the only writer of a deprecation.`
+            );
+
+            yield* fs.writeFileString(fabioPath, fabioShard(["Report", "TechnicalReport"]));
+            yield* fs.writeFileString(layout.snapshot, committedSnapshot);
+            yield* runIdentityCommand(["deprecate", "fabio:TechnicalReport", "--replacement", "fabio:Report"]);
+            const deprecated = yield* fs.readFileString(fabioPath);
+            expect(deprecated).toContain('"term": "http://purl.org/spar/fabio/TechnicalReport"');
+            expect(deprecated).toContain('"since": "2.0.0"');
+            const regenerated = yield* fs.readFileString(layout.snapshot);
+            expect(regenerated).toContain('"release": "2.0.0"');
+            yield* runLintCommand(["identity-registry", "--base", base]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "L0-3 renaming a bound module and rebinding it keeps the base ref's published term set",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const base = yield* commitRegistryFixture(
+              fabioShard(["Report"], [{ code: "@beep/widget/Old/Report", local: "Report", since: "1.0.0" }])
+            );
+            const before = yield* Effect.map(fs.readFileString(layout.snapshot), decodeSnapshotText);
+
+            const missing = yield* Effect.exit(runIdentityCommand(["rebind", "@beep/widget/Gone", "@beep/widget/New"]));
+            expectReportedExit(missing);
+            // The module rename comes first: a rebind onto a module the checkout lacks is refused.
+            const dangling = yield* Effect.exit(runIdentityCommand(["rebind", "@beep/widget/Old", "@beep/widget/New"]));
+            expectReportedExit(dangling);
+            const refusedLines = yield* TestConsole.errorLines;
+            expect(refusedLines).toContainEqual(
+              expect.stringContaining("@beep/widget/New/Report [target-module-missing]")
+            );
+            const unmoved = yield* fs.readFileString(fabioPath);
+            expect(unmoved).toContain('"code": "@beep/widget/Old/Report"');
+            yield* fs.rename(WIDGET_OLD_MODULE, WIDGET_NEW_MODULE);
+            const stale = yield* Effect.exit(runLintCommand(["identity-registry", "--base", base]));
+            expectReportedExit(stale);
+            const staleLines = yield* TestConsole.errorLines;
+            expect(staleLines).toContainEqual(
+              expect.stringContaining("[binding-dangling] The binding code @beep/widget/Old/Report names no module")
+            );
+            yield* runIdentityCommand(["rebind", "@beep/widget/Old", "@beep/widget/New"]);
+            const rebound = yield* fs.readFileString(fabioPath);
+            expect(rebound).toContain('"code": "@beep/widget/New/Report"');
+            const after = yield* Effect.map(fs.readFileString(layout.snapshot), decodeSnapshotText);
+
+            expect(after.terms).toStrictEqual(before.terms);
+            expect(after.namespaces).toStrictEqual(before.namespaces);
+            expect(after.deprecations).toStrictEqual(before.deprecations);
+            expect(A.map(after.bindings, (binding) => binding.code)).toStrictEqual(["@beep/widget/New/Report"]);
+            yield* runLintCommand(["identity-registry", "--base", base]);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       LINT_TIMEOUT

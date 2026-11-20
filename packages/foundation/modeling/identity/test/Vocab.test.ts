@@ -1,3 +1,4 @@
+import { IdentityAuthority } from "@beep/identity/Authority";
 import { RegistryVocab } from "@beep/identity/Registry";
 import { it } from "@beep/test-runner";
 import { describe, expect, expectTypeOf } from "@effect/vitest";
@@ -50,8 +51,10 @@ describe("generated registry vocabulary invariants", () => {
   it("lists every namespace's terms strictly ascending, so no term repeats", () => {
     for (const [prefix, entry] of R.toEntries(RegistryVocab)) {
       const terms: ReadonlyArray<string> = entry.terms;
+      // An internal namespace may declare no term: instances are minted under it (semantica, lejeune).
+      const internal = Str.startsWith(IdentityAuthority)(entry.iri);
 
-      expect(terms.length, prefix).toBeGreaterThan(0);
+      expect(internal || terms.length > 0, prefix).toBe(true);
       expect(A.dedupe(A.sort(terms, Order.String)), prefix).toStrictEqual(terms);
     }
   });

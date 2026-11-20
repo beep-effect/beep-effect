@@ -7,6 +7,7 @@
 
 import { IdentityEntry } from "@beep/identity";
 import { $SemanticWebId } from "@beep/identity/packages";
+import { iri } from "@beep/identity/Registry";
 import { makeDataset, makeLiteral, makeNamedNode, makeQuad, NamedNode, ObjectTerm, Subject } from "@beep/rdf/Rdf";
 import { XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import * as A from "effect/Array";
@@ -24,8 +25,8 @@ import type * as SchemaAST from "effect/SchemaAST";
 
 const $I = $SemanticWebId.create("identity/IdentityRdfBinding");
 
-const identifierPathIri = $SemanticWebId.create("identity/identifier").iri;
-const curiePathIri = $SemanticWebId.create("identity/curie").iri;
+const identifierPathIri = iri("identity-rdf:identifier");
+const curiePathIri = iri("identity-rdf:curie");
 const sameNamedNode = S.toEquivalence(NamedNode);
 const sameSubject = S.toEquivalence(Subject);
 

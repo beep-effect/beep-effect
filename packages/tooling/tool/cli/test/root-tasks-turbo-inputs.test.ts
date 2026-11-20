@@ -207,6 +207,7 @@ const nonReusableTasks: ReadonlyArray<string> = [
   ...trackedDiscoveryTasks.literals,
   "knowledge:semantic-delta",
   "knowledge:refs-check",
+  "lint:identity-registry",
   "lint:oxlint",
   "lint:shadcn",
   "goals:doctor",

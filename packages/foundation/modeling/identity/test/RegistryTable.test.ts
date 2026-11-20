@@ -180,6 +180,38 @@ describe("RegistryTable.fromShards", () => {
     expect(conflictTags(RegistryTable.fromShards([deprecatedNs, entryNs]))).toStrictEqual(["DeprecatedTermLive"]);
   });
 
+  it("lets only a retired namespace IRI end its replacement chain at a namespace IRI", () => {
+    const vocab = { prefix: "ex", iri: "https://example.test/vocab/" };
+    const retiredNs = "https://example.test/old/";
+    const succeeded = (deprecations: RegistryShard.Encoded["deprecations"]) =>
+      RegistryTable.fromShards([shard({ namespace: vocab, terms: ["Entry"], deprecations })]);
+    // The empty local names the shard namespace: a retired namespace IRI ending in "/" or "#" may take it.
+    const direct = Result.getOrThrow(succeeded([{ term: retiredNs, since: "1.0.0", replacement: "" }]));
+    assertSome(A.head(direct.deprecations).pipe(O.flatMap((row) => row.replacement)), iri(vocab.iri));
+    const hashNs = "https://example.test/older#";
+    assertTrue(
+      succeeded([
+        { term: retiredNs, since: "1.0.0", replacement: "" },
+        { term: hashNs, since: "1.0.0", replacement: "" },
+      ]).pipe(Result.isSuccess)
+    );
+    // A retired term is never succeeded by a namespace IRI, and a retired namespace IRI never by a term.
+    const termToNamespace = succeeded([{ term: "https://example.test/old/Entry", since: "1.0.0", replacement: "" }]);
+    expect(conflictsOf(termToNamespace)).toStrictEqual([
+      RegistryConflict.cases.ReplacementUnknown.make({
+        term: iri("https://example.test/old/Entry"),
+        replacement: iri(vocab.iri),
+      }),
+    ]);
+    expect(A.map(conflictsOf(termToNamespace), registryConflictMessage)).toStrictEqual([
+      `The replacement chain of https://example.test/old/Entry reaches ${vocab.iri}, which is neither a declared term nor deprecated with a successor.`,
+    ]);
+    const namespaceToTerm = succeeded([{ term: retiredNs, since: "1.0.0", replacement: "Entry" }]);
+    expect(A.map(conflictsOf(namespaceToTerm), registryConflictMessage)).toStrictEqual([
+      `The replacement chain of ${retiredNs} reaches https://example.test/vocab/Entry, which is neither a declared namespace IRI nor deprecated with a successor.`,
+    ]);
+  });
+
   it("reports a live deprecated term, a repeated deprecation and broken replacement chains", () => {
     const live = shard({
       namespace: vitestShard.namespace,
@@ -321,6 +353,52 @@ describe("RegistryTable.snapshot", () => {
       ])
     );
     expect(RegistryTable.snapshot(shrunk, at("9007199254740993.0.0")).release).toBe("9007199254740994.0.0");
+  });
+});
+
+describe("RegistryTable.rebind", () => {
+  const table = Result.getOrThrow(RegistryTable.fromShards([vitestShard, fabioShard]));
+  const codes = (result: Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>) =>
+    A.map(Result.getOrThrow(result).bindings, (binding) => binding.code);
+
+  it("moves one code identity and keeps its term and since", () => {
+    const moved = Result.getOrThrow(RegistryTable.rebind(table, hangCode, code("@beep/test-runner/Runner/Hang")));
+    expect(moved.bindings).toStrictEqual([
+      TermBinding.make({
+        code: code("@beep/test-runner/Runner/Hang"),
+        term: iri("https://beep-effect.com/ns/vitest/TestHang"),
+        since: v1,
+      }),
+    ]);
+    expect(moved.terms).toStrictEqual(table.terms);
+    expect(moved.deprecations).toStrictEqual(table.deprecations);
+  });
+
+  it("moves every code identity under a module in prefix mode and leaves other codes alone", () => {
+    expect(
+      codes(RegistryTable.rebind(table, code("@beep/test-runner/Vitest"), code("@beep/test-kit/Runner")))
+    ).toStrictEqual(["@beep/test-kit/Runner/TestHang"]);
+    expect(
+      codes(RegistryTable.rebind(table, code("@beep/test-runner/Vit"), code("@beep/test-kit/Runner")))
+    ).toStrictEqual([hangCode]);
+  });
+
+  it("refuses a move onto a code identity that is already bound", () => {
+    const twoBound = Result.getOrThrow(
+      RegistryTable.fromShards([
+        shard({
+          namespace: { prefix: "vitest", iri: "https://beep-effect.com/ns/vitest/" },
+          terms: ["TestFailure", "TestHang"],
+          bindings: [
+            { code: "@beep/test-runner/Vitest/TestFailure", local: "TestFailure", since: "1.0.0" },
+            { code: hangCode, local: "TestHang", since: "1.0.0" },
+          ],
+        }),
+      ])
+    );
+    expect(
+      conflictTags(RegistryTable.rebind(twoBound, hangCode, code("@beep/test-runner/Vitest/TestFailure")))
+    ).toStrictEqual(["DuplicateBinding"]);
   });
 });
 
