@@ -16,7 +16,7 @@ import {
 } from "@beep/repo-cli/commands/Identity/ShardEdit";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertFailure, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -128,7 +128,13 @@ describe("identity deprecate planning", () => {
       DeprecateRequest.make({ curie: "fabio:Note", replacement: O.some("fabio:") })
     );
     expect(reasonsOf(refused)).toStrictEqual(["replacement-unknown"]);
-    expect(Result.isFailure(refused) && refused.failure[0]?.detail).toContain("never by its namespace IRI");
+    assertFailure(
+      Result.mapError(
+        refused,
+        A.map((refusal) => refusal.detail)
+      ),
+      ['A term is succeeded by a term, never by its namespace IRI; name a live term of "fabio".']
+    );
   });
 
   it("refuses a malformed CURIE, an unknown or bound term, and a replacement it cannot record", () => {
