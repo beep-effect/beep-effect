@@ -7,9 +7,11 @@ import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
 
-// Every path in a schema's decoded side that can hold free text. Literal domains, version tags and
-// declarations without text parameters (DateTime) hold none.
+// Every path in a schema's decoded side that can hold free text, or whose node is not known to be text-free.
+// Literal domains, version tags and declarations without text parameters (DateTime) hold none.
 const keyOf = (name: PropertyKey) => (P.isString(name) ? name : "<symbol>");
+
+const textFreeLeaves: ReadonlyArray<string> = ["Number", "Boolean", "Literal", "Null", "Undefined", "Enum"];
 
 const freeTextPaths = (ast: SchemaAST.AST, path: string): ReadonlyArray<string> =>
   Match.value(ast).pipe(
@@ -31,7 +33,8 @@ const freeTextPaths = (ast: SchemaAST.AST, path: string): ReadonlyArray<string> 
       A.flatMap(declaration.typeParameters, (parameter) => freeTextPaths(parameter, `${path}<>`))
     ),
     Match.tag("Suspend", (suspend) => freeTextPaths(suspend.thunk(), path)),
-    Match.orElse(() => [])
+    // Leaves that cannot hold text pass by name; any other node (unknown, any, object, symbol) fails closed.
+    Match.orElse((leaf) => (A.contains(textFreeLeaves, leaf._tag) ? [] : [`${path}:${leaf._tag}`]))
   );
 
 const walk = (schema: S.Top) => freeTextPaths(SchemaAST.toType(schema.ast), "$");
@@ -52,8 +55,10 @@ describe("census report schema (AC1)", () => {
       tags: S.Record(S.String, S.Finite),
       maybe: S.OptionFromNullOr(S.TemplateLiteral(["x-", S.String])),
       later: S.suspend(() => S.String),
+      loose: S.Unknown,
+      count: S.Finite,
     });
-    expect(walk(leaky)).toEqual(["$.rows[].note", "$.tags[key]", "$.maybe<>", "$.later"]);
+    expect(walk(leaky)).toEqual(["$.rows[].note", "$.tags[key]", "$.maybe<>", "$.later", "$.loose:Unknown"]);
   });
 
   it("names a baseline file by its window end and rule version", () => {
