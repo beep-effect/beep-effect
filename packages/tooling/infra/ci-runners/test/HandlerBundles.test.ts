@@ -20,10 +20,17 @@ import * as Str from "effect/String";
 
 const IDENTITY_SOURCE_PREFIX = "foundation/modeling/identity/src/";
 const IDENTITY_CORE_SOURCE = "Id.ts";
-// The only @beep/identity sources a handler's map may embed: the identity core, the registry-free
-// root, the import-free authority constant and the segment and schema statics they load. The
-// registry, the declared-term registry data, the barrel or any other identity module in a map would
-// change every function's code hash whenever an unrelated package or term is registered.
+// The only @beep/identity sources a handler's map may embed, as exact paths relative to the
+// package's src (compared by equality, never as a directory, glob or prefix). Each one is allowed
+// because it loads neither the package registry nor the declared-term registry:
+// - Authority.ts: no imports; one constant, the `IdentityAuthority` IRI root.
+// - Id.ts: the identity core the handlers' composer comes from.
+// - Root.ts: the registry-free root `$I` composer.
+// - internal/Segment.ts: the segment grammar schemas; imports only effect modules and an erased
+//   `import type` from @beep/types, so no @beep/types source reaches a map.
+// - internal/schemaStatics.ts: the schema statics the core attaches.
+// The registry, the declared-term registry data, the barrel or any other identity module in a map
+// would change every function's code hash whenever an unrelated package or term is registered.
 const ALLOWED_IDENTITY_SOURCES = [
   "Authority.ts",
   "Id.ts",
