@@ -442,6 +442,28 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (i
     })
   );
 
+  it.effect("declares a referenced definition once, under its own name", () =>
+    Effect.gen(function* () {
+      const kit = yield* CodegenKit;
+      const generateConfig = config("references.gen.ts");
+      const document: S.Json = {
+        $defs: {
+          Branch: {
+            type: "object",
+            properties: { leaf: { $ref: "#/$defs/Leaf" }, parent: { $ref: "#/$defs/Branch" } },
+            required: ["leaf"],
+          },
+          Leaf: { type: "object", properties: { id: { type: "string" } }, required: ["id"] },
+        },
+      };
+      const raw = yield* kit.generate(document, generateConfig);
+      const output = yield* kit.postProcess(raw, generateConfig);
+
+      expect(output.match(/^export const \w+/gmu)).toEqual(["export const Leaf", "export const Branch"]);
+      expect(output).toContain("S.suspend((): S.Codec<Branch> => Branch)");
+    })
+  );
+
   it.effect("applies the schema post-processing contract", () =>
     Effect.gen(function* () {
       const kit = yield* CodegenKit;

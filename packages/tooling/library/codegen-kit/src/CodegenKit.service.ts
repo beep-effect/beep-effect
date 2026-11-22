@@ -376,9 +376,11 @@ const makeService = Effect.fn("CodegenKit.make")(function* (extraRenderers: Extr
       const definitions = yield* definitionsFor(document, config);
       return yield* Effect.try({
         try: () => {
-          const generator = makeJsonSchemaGenerator();
-          for (const [name, schema] of selectedEntries(definitions, config.roots)) generator.addSchema(name, schema);
-          return generator.generate(schemaGeneratorSource(config), definitions, false, {
+          // Every selected schema is a definition: registering one again as a named root would collide with
+          // its own reference, and the generator would emit a second copy under a suffixed name.
+          const includeSchemas = A.map(selectedEntries(definitions, config.roots), ([name]) => name);
+          return makeJsonSchemaGenerator().generate(schemaGeneratorSource(config), definitions, false, {
+            includeSchemas,
             onEnter: composeTransforms(config.transforms, definitions),
           });
         },
