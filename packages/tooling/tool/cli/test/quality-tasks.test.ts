@@ -12197,70 +12197,82 @@ it.layer(PlatformLayer, { timeout: "60 seconds" })("lane-proof reuse across Yeet
   );
 });
 
-it.layer(PlatformLayer, { timeout: "30 seconds" })("origin/main refresh under GitHub Actions", (it) => {
-  const SHA = Str.repeat(40)("c");
-  const TOKEN = "ghs_origin_main_test_token";
-  const forbidden = { stdout: "", stderr: "fatal: unable to access: The requested URL returned error: 403", exit: 128 };
-  const gitScript = (options: { readonly shallow: boolean; readonly ref: boolean; readonly fetchFailures: number }) => {
-    let fetches = 0;
-    return ScriptedSpawner.make((_command, args) => {
-      if (A.contains(args, "--is-shallow-repository")) {
-        return { stdout: options.shallow ? "true\n" : "false\n" };
-      }
-      if (A.contains(args, "--verify")) {
-        return options.ref ? { stdout: `${SHA}\n` } : { exit: 1 };
-      }
-      if (!A.contains(args, "fetch")) {
-        return { stdout: `${SHA}\n` };
-      }
-      fetches += 1;
-      return fetches <= options.fetchFailures ? forbidden : {};
-    });
-  };
-  const fetchesOf = (spawner: ScriptedSpawner) => A.filter(spawner.spawns, (spawn) => A.contains(spawn.args, "fetch"));
-  const settle = Effect.fnUntraced(function* (spawner: ScriptedSpawner, count: number) {
-    for (let turn = 0; turn < 2000 && fetchesOf(spawner).length < count; turn++) {
-      yield* TestClock.withLive(Effect.sleep("1 millis"));
+const originMainSha = Str.repeat(40)("c");
+const originMainToken = "ghs_origin_main_test_token";
+const originMainForbidden = {
+  stdout: "",
+  stderr: "fatal: unable to access: The requested URL returned error: 403",
+  exit: 128,
+};
+const originMainGitScript = (options: {
+  readonly shallow: boolean;
+  readonly ref: boolean;
+  readonly fetchFailures: number;
+}) => {
+  let fetches = 0;
+  return ScriptedSpawner.make((_command, args) => {
+    if (A.contains(args, "--is-shallow-repository")) {
+      return { stdout: options.shallow ? "true\n" : "false\n" };
     }
-    expect(fetchesOf(spawner)).toHaveLength(count);
+    if (A.contains(args, "--verify")) {
+      return options.ref ? { stdout: `${originMainSha}\n` } : { exit: 1 };
+    }
+    if (!A.contains(args, "fetch")) {
+      return { stdout: `${originMainSha}\n` };
+    }
+    fetches += 1;
+    return fetches <= options.fetchFailures ? originMainForbidden : {};
   });
-  const logged = Effect.map(TestConsole.logLines, (lines) => A.join(A.filter(lines, Str.isString), "\n"));
-  const withEnvironment =
-    (env: Record<string, string>) =>
-    <Out, E, R>(use: Effect.Effect<Out, E, R>): Effect.Effect<Out, E, R> =>
-      withEnvVarEffect("BEEP_YEET_PROOF_BASE", undefined, use).pipe(
-        Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env))
-      );
-  const inActions = <Out, E, R>(tokens: Record<string, string>, use: Effect.Effect<Out, E, R>) =>
-    withEnvironment({ GITHUB_ACTIONS: "true", ...tokens })(use);
+};
+const originMainFetchesOf = (spawner: ScriptedSpawner) =>
+  A.filter(spawner.spawns, (spawn) => A.contains(spawn.args, "fetch"));
+const originMainSettle = Effect.fnUntraced(function* (spawner: ScriptedSpawner, count: number) {
+  for (let turn = 0; turn < 2000 && originMainFetchesOf(spawner).length < count; turn++) {
+    yield* TestClock.withLive(Effect.sleep("1 millis"));
+  }
+  expect(originMainFetchesOf(spawner)).toHaveLength(count);
+});
+const originMainLogged = Effect.map(TestConsole.logLines, (lines) => A.join(A.filter(lines, Str.isString), "\n"));
+const originMainEnvironment =
+  (env: Record<string, string>) =>
+  <Out, E, R>(use: Effect.Effect<Out, E, R>): Effect.Effect<Out, E, R> =>
+    withEnvVarEffect("BEEP_YEET_PROOF_BASE", undefined, use).pipe(
+      Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env))
+    );
+const originMainInActions = <Out, E, R>(tokens: Record<string, string>, use: Effect.Effect<Out, E, R>) =>
+  originMainEnvironment({ GITHUB_ACTIONS: "true", ...tokens })(use);
 
+it.layer(PlatformLayer, { timeout: "30 seconds" })("origin/main refresh under GitHub Actions", (it) => {
   it.effect("uses a full-history checkout's origin/main without fetching", () =>
     Effect.gen(function* () {
-      const spawner = gitScript({ shallow: false, ref: true, fetchFailures: 0 });
-      yield* inActions({ GH_TOKEN: TOKEN }, ensureOriginMainForTesting("/repo").pipe(provideSpawner(spawner)));
-      expect(fetchesOf(spawner)).toHaveLength(0);
-      const text = yield* logged;
+      const spawner = originMainGitScript({ shallow: false, ref: true, fetchFailures: 0 });
+      yield* originMainInActions(
+        { GH_TOKEN: originMainToken },
+        ensureOriginMainForTesting("/repo").pipe(provideSpawner(spawner))
+      );
+      expect(originMainFetchesOf(spawner)).toHaveLength(0);
+      const text = yield* originMainLogged;
       expect(text).toContain(
-        `[github-checks] origin/main from checkout (${Str.takeLeft(SHA, 12)}); not refreshing in CI`
+        `[github-checks] origin/main from checkout (${Str.takeLeft(originMainSha, 12)}); not refreshing in CI`
       );
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
   it.effect("still refreshes a full-history checkout when the parent run's pin is stale", () =>
     Effect.gen(function* () {
-      const spawner = gitScript({ shallow: false, ref: true, fetchFailures: 0 });
-      yield* inActions(
-        { GH_TOKEN: TOKEN },
+      const spawner = originMainGitScript({ shallow: false, ref: true, fetchFailures: 0 });
+      yield* originMainInActions(
+        { GH_TOKEN: originMainToken },
         withEnvVarEffect(
           "BEEP_YEET_PROOF_BASE",
           Str.repeat(40)("0"),
           ensureOriginMainForTesting("/repo").pipe(provideSpawner(spawner))
         )
       );
-      expect(A.map(fetchesOf(spawner), (spawn) => A.join(spawn.args, " "))).toEqual([
+      expect(A.map(originMainFetchesOf(spawner), (spawn) => A.join(spawn.args, " "))).toEqual([
         "fetch origin main:refs/remotes/origin/main --quiet",
       ]);
-      const text = yield* logged;
+      const text = yield* originMainLogged;
       expect(text).toContain("not the parent run's pinned base 000000000000; refreshing");
       expect(text).not.toContain("not refreshing in CI");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
@@ -12268,14 +12280,17 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("origin/main refresh under Gi
 
   it.effect("unshallows and fetches with the token in GIT_CONFIG_* env, never argv", () =>
     Effect.gen(function* () {
-      const spawner = gitScript({ shallow: true, ref: true, fetchFailures: 0 });
-      yield* inActions({ GH_TOKEN: TOKEN }, ensureOriginMainForTesting("/repo").pipe(provideSpawner(spawner)));
-      const fetches = fetchesOf(spawner);
+      const spawner = originMainGitScript({ shallow: true, ref: true, fetchFailures: 0 });
+      yield* originMainInActions(
+        { GH_TOKEN: originMainToken },
+        ensureOriginMainForTesting("/repo").pipe(provideSpawner(spawner))
+      );
+      const fetches = originMainFetchesOf(spawner);
       expect(A.map(fetches, (spawn) => A.join(spawn.args, " "))).toEqual([
         "fetch origin --quiet --unshallow",
         "fetch origin main:refs/remotes/origin/main --quiet",
       ]);
-      const header = `AUTHORIZATION: basic ${Base64.encode(`x-access-token:${TOKEN}`)}`;
+      const header = `AUTHORIZATION: basic ${Base64.encode(`x-access-token:${originMainToken}`)}`;
       for (const spawn of fetches) {
         expect(spawn.env).toMatchObject({
           GIT_CONFIG_COUNT: "1",
@@ -12287,62 +12302,73 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("origin/main refresh under Gi
         A.flatMap(spawner.spawns, (spawn) => spawn.args),
         " "
       );
-      expect(argv).not.toContain(TOKEN);
-      expect(argv).not.toContain(Base64.encode(`x-access-token:${TOKEN}`));
-    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-  );
-
-  it.effect("retries a 403 with GITHUB_TOKEN when the checkout lacks origin/main", () =>
-    Effect.gen(function* () {
-      const spawner = gitScript({ shallow: false, ref: false, fetchFailures: 1 });
-      const running = yield* Effect.forkChild(
-        inActions({ GITHUB_TOKEN: TOKEN }, ensureOriginMainForTesting("/repo").pipe(provideSpawner(spawner)))
-      );
-      yield* settle(spawner, 1);
-      yield* TestClock.adjust("4 seconds");
-      expect(fetchesOf(spawner)).toHaveLength(1);
-      yield* TestClock.adjust("1 second");
-      yield* Fiber.join(running);
-      const fetches = fetchesOf(spawner);
-      expect(fetches).toHaveLength(2);
-      expect(A.map(fetches, (spawn) => spawn.env?.GIT_CONFIG_VALUE_0)).toEqual(
-        A.replicate(`AUTHORIZATION: basic ${Base64.encode(`x-access-token:${TOKEN}`)}`, 2)
-      );
-    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
-  );
-
-  it.effect("gives up after three anonymous attempts, 5 s then 15 s apart", () =>
-    Effect.gen(function* () {
-      const spawner = gitScript({ shallow: false, ref: false, fetchFailures: 3 });
-      const running = yield* Effect.forkChild(
-        inActions({}, ensureOriginMainForTesting("/repo").pipe(provideSpawner(spawner), Effect.flip))
-      );
-      yield* settle(spawner, 1);
-      yield* TestClock.adjust("5 seconds");
-      yield* settle(spawner, 2);
-      yield* TestClock.adjust("14 seconds");
-      expect(fetchesOf(spawner)).toHaveLength(2);
-      yield* TestClock.adjust("1 second");
-      const failure = yield* Fiber.join(running);
-      expect(failure.exitCode).toBe(128);
-      const fetches = fetchesOf(spawner);
-      expect(fetches).toHaveLength(3);
-      expect(A.map(fetches, (spawn) => spawn.env?.GIT_CONFIG_COUNT)).toEqual(A.replicate(undefined, 3));
+      expect(argv).not.toContain(originMainToken);
+      expect(argv).not.toContain(Base64.encode(`x-access-token:${originMainToken}`));
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
   it.effect("keeps the local refresh unchanged outside GitHub Actions", () =>
     Effect.gen(function* () {
-      const spawner = gitScript({ shallow: true, ref: true, fetchFailures: 0 });
-      yield* withEnvironment({ GH_TOKEN: TOKEN })(ensureOriginMainForTesting("/repo").pipe(provideSpawner(spawner)));
+      const spawner = originMainGitScript({ shallow: true, ref: true, fetchFailures: 0 });
+      yield* originMainEnvironment({ GH_TOKEN: originMainToken })(
+        ensureOriginMainForTesting("/repo").pipe(provideSpawner(spawner))
+      );
       expect(A.map(spawner.spawns, (spawn) => A.join(spawn.args, " "))).toEqual([
         "rev-parse --is-shallow-repository",
         "fetch origin --quiet --unshallow",
         "fetch origin main:refs/remotes/origin/main --quiet",
       ]);
-      expect(A.map(fetchesOf(spawner), (spawn) => spawn.env?.GIT_CONFIG_COUNT)).toEqual(A.replicate(undefined, 2));
-      const text = yield* logged;
+      expect(A.map(originMainFetchesOf(spawner), (spawn) => spawn.env?.GIT_CONFIG_COUNT)).toEqual(
+        A.replicate(undefined, 2)
+      );
+      const text = yield* originMainLogged;
       expect(text).toContain("[github-checks] refreshing origin/main");
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+});
+
+it.layer(PlatformLayer, { timeout: "30 seconds" })("origin/main fetch retry after a 403", (it) => {
+  it.effect("retries a 403 with GITHUB_TOKEN when the checkout lacks origin/main", () =>
+    Effect.gen(function* () {
+      const spawner = originMainGitScript({ shallow: false, ref: false, fetchFailures: 1 });
+      const running = yield* Effect.forkChild(
+        originMainInActions(
+          { GITHUB_TOKEN: originMainToken },
+          ensureOriginMainForTesting("/repo").pipe(provideSpawner(spawner))
+        )
+      );
+      yield* originMainSettle(spawner, 1);
+      yield* TestClock.adjust("4 seconds");
+      expect(originMainFetchesOf(spawner)).toHaveLength(1);
+      yield* TestClock.adjust("1 second");
+      yield* Fiber.join(running);
+      const fetches = originMainFetchesOf(spawner);
+      expect(fetches).toHaveLength(2);
+      expect(A.map(fetches, (spawn) => spawn.env?.GIT_CONFIG_VALUE_0)).toEqual(
+        A.replicate(`AUTHORIZATION: basic ${Base64.encode(`x-access-token:${originMainToken}`)}`, 2)
+      );
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+});
+
+it.layer(PlatformLayer, { timeout: "30 seconds" })("origin/main fetch retry exhaustion", (it) => {
+  it.effect("gives up after three anonymous attempts, 5 s then 15 s apart", () =>
+    Effect.gen(function* () {
+      const spawner = originMainGitScript({ shallow: false, ref: false, fetchFailures: 3 });
+      const running = yield* Effect.forkChild(
+        originMainInActions({}, ensureOriginMainForTesting("/repo").pipe(provideSpawner(spawner), Effect.flip))
+      );
+      yield* originMainSettle(spawner, 1);
+      yield* TestClock.adjust("5 seconds");
+      yield* originMainSettle(spawner, 2);
+      yield* TestClock.adjust("14 seconds");
+      expect(originMainFetchesOf(spawner)).toHaveLength(2);
+      yield* TestClock.adjust("1 second");
+      const failure = yield* Fiber.join(running);
+      expect(failure.exitCode).toBe(128);
+      const fetches = originMainFetchesOf(spawner);
+      expect(fetches).toHaveLength(3);
+      expect(A.map(fetches, (spawn) => spawn.env?.GIT_CONFIG_COUNT)).toEqual(A.replicate(undefined, 3));
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 });
