@@ -31,10 +31,12 @@ import type {
 // reports and the commit-message history, the other `standards/` files, the guides directly under
 // `explorations/` and its packet template, and the changeset config and README. `goals/` and `research/`
 // are whole trees because the dependents scan reads their code; it never reads `explorations/` or
-// `docs/`, so there only prose and data are records, and source, manifests and tsconfigs stay live.
+// `docs/`, so there only prose and data are records. Source and every file a tool loads stay live: all
+// TOML and JSONC, and the JSON and YAML names the workspace's tools read.
 const recordFilesUnder = (tree: string): ReadonlyArray<string> => [
-  `${tree}/**/*.{md,toml,tsv,yaml,yml}`,
-  `${tree}/**/!(package|tsconfig*).{json,jsonc}`,
+  `${tree}/**/*.{md,tsv}`,
+  `${tree}/**/!(Pulumi*|compose|docker-compose|pnpm-workspace).{yaml,yml}`,
+  `${tree}/**/!(*.conf|*.config|biome|components|docgen|jsconfig*|package|tsconfig*|turbo|vercel).json`,
 ];
 
 const HISTORICAL_RECORD_GLOBS = A.map(
