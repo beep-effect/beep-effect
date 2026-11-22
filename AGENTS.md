@@ -147,6 +147,13 @@ the agent 1Password lane take precedence; a dialog never replaces those routes.
 - JSDoc on exported symbols uses titled `**Example** (Title)` and
   `**Details**`/`**Gotchas**` prose sections — never `@example` or `@remarks`
   tags. Law: `.patterns/jsdoc-documentation.md`.
+- No free prose comments and no JSDoc on non-exported declarations in TS/JS
+  source, tests or tooling. Put a reason in a name, type, schema annotation,
+  test title or assertion; a real decision in `<package>/decisions/`; a
+  hazard with no better home in one `// decision: <slug>` line. Directives
+  keep their exact tokens with a one-line reason. `bun run beep laws
+  comments` enforces it against the merge base; remove old ones with the
+  delete-comment skill.
 - In `packages/**/test/**/*.{ts,tsx}`, import package source through
   `@beep/*` aliases instead of relative paths into any workspace `src/`;
   relatives only for local helpers, fixtures, snapshots, and other
@@ -376,6 +383,8 @@ If you touch this, load or run this first. Do not hand-author around it.
 | Tailwind className / style props in UI code | bun run lint:shadcn (strict @shadcn/lint; policy .oxlintrc.shadcn.json, runbook docs/runbooks/design-system-lint.md) |
 | `@effect/tsgo` / `tsrs` / `@typescript/native` bumps | [TypeScript toolchain runbook](docs/runbooks/typescript-toolchain.md) |
 | PR publish / checks | yeet skill |
+| Deleting or moving existing source comments | delete-comment skill |
+| A file in a package that has `decisions/` | `bun run beep decisions for <path>` |
 | Any stopping point (done, blocked, merge-ready, retired) | closeout skill |
 
 ## Dev Servers
