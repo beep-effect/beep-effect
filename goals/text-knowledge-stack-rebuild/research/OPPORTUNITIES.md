@@ -106,3 +106,19 @@ home paths with `~`, drop session and machine ids.
   Claude account as "Rate limited" (unreadable), so the limit could not be seen coming.
 - **Prevention:** read Claude headroom before a long child is launched, and give a fallback child a brief
   file that it can continue from. This lane moved to Codex `gpt-6.1-sol` medium with such a brief.
+
+## 2026-11-22: the full effect-vitest ratchet names files, not the findings
+
+- **Doing:** PR C's third review round, new tests in two repo-cli test files.
+- **Evidence:** `bun run beep lint effect-vitest` printed "3 new finding(s) in 2 file(s)" after a 60 s
+  scan, with no line or rule. Only a second run with `--files <path>` for each file printed
+  `:768 EV006 hand-rolled-data-assertion`.
+- **Prevention:** print each new finding's line and rule in the full-scan summary too, as the scoped
+  run does.
+
+## 2026-11-22: `goals decisions write` takes `--slug`, `add` takes a positional slug
+
+- **Doing:** correcting a decision file just written with `goals decisions add <slug>`.
+- **Evidence:** `bun run beep goals decisions write text-knowledge-stack-rebuild` failed with
+  `Unexpected positional argument`; the same slug is positional for `add`.
+- **Prevention:** accept the slug the same way in every `goals decisions` subcommand.
