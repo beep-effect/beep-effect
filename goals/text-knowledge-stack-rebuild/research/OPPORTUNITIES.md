@@ -433,3 +433,10 @@ home paths with `~`, drop session and machine ids.
   changed when repeated entity surfaces lost their fabricated first-match spans.
   **Would have prevented it:** naming that expected pattern-report change beside
   the design's repeated-surface warning. Hosted frozen batches remain unchanged.
+- **Doing:** checking the retained P3 design-module handoff.
+  **Evidence:** the root oxlint configuration excludes goals, so a normal
+  invocation exits with “No files found to lint.” A temporary configuration
+  that removes only this exclusion found a claim-log codec compiled per call;
+  it is now hoisted beside its schema at module scope.
+  **Would have prevented it:** a supported explicit-files lint mode that reports
+  excluded inputs instead of silently leaving them outside the check.

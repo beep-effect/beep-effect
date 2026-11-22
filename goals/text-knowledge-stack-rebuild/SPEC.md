@@ -235,9 +235,17 @@ and the phase order is `PLAN.md`), this file is normative.
   chapter, then the file is retired with the package), `standards/instrumentation-catalog/` shards for every package
   that gains spans.
 
+P3 lane facts (2026-11-22): annotation documents and the checked handoff are
+implemented; readings and residuals retain every parsed candidate, including the
+over-extraction-cap tail. Semantica grounds historical unmapped-predicate
+residuals for E5 replay without declaring those predicates. The deterministic
+Tika scaffold declares text-scaffold/1. Handoff and Ontology facets and Graph
+float spans are deleted; Graph nodes remain for P6. The phase is content-complete
+in its lane, with no P3 PR opened.
+
 ## Constraints
 
-- Effect v4 against the installed `effect` (4.1.4 at P0; validate every API in
+- Effect v4 against the installed `effect` (4.1.5 at P3; validate every API in
   `.repos/effect`, never from priors). Schema first: plain data as branded
   `S.Opaque` with `$I` annotations, finite cases as discriminated unions
   (`S.TaggedUnion` for canonical `_tag` unions, `S.toTaggedUnion` for other
@@ -400,7 +408,7 @@ decision file) and the law-test ledger:
       encodings go in P3 and P4); `TextAnchor <-> oa:` round-trips in `@beep/rdf`; `L1-1` to
       `L1-6` are green, including the repeated-boilerplate, NFKC,
       de-hyphenation and split-surrogate fixtures.
-- [ ] L2: `@beep/annotation` exists with `makeAnnotationDocument` (anchors
+- [x] L2: `@beep/annotation` exists with `makeAnnotationDocument` (anchors
       table, content map, `Generation` attribution), `merge`, `restrict` and
       containment; the langextract handoff mints verified receipts and emits
       annotations with both digests, scope, extractor and normalization pins,

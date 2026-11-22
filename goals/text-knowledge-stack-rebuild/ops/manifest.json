@@ -53,6 +53,7 @@
     "research/2026-11-20-p2-map-provenance.md",
     "research/2026-11-20-p2-map-rdf-and-party.md",
     "research/2026-11-22-p3-commit-8-validation.md",
+    "research/2026-11-22-p3-commit-9-validation.md",
     "research/2026-11-22-p3-design.md",
     "research/2026-11-22-p3-map-consumers.md",
     "research/2026-11-22-p3-map-handoff.md",
@@ -103,7 +104,7 @@
     {
       "id": "P3",
       "name": "L2 annotation: @beep/annotation, lossless handoff",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P4",
@@ -154,15 +155,11 @@
     "The same blocker repeats after reasonable investigation.",
     "A retirement or rename is attempted without its row in research/consumer-census.md or without the consumer migration in the same PR: that step stops, the packet does not."
   ],
-  "statusNote": "P0 Design and grill is complete (PR #3420, merged as dcf6b16a77d). P1 (L0 identity) is in progress as a three-PR stack opened one after another: PR A foundation, PR B registry and pins, PR C bindings and the break. Base design research/2026-11-19-p1-design-registry-first.md; rulings in decisions/2026-11-19-p1-*. P2 (L1 text) is in progress as one PR stacked on PR C, not yet opened: @beep/text created and @beep/provenance retired, L1-1 to L1-6 green; the inventory regeneration and the final check remain; design research/2026-11-20-p2-design.md, rulings in decisions/2026-11-22-p2-*.",
+  "statusNote": "P0 Design and grill is complete (PR #3420, merged as dcf6b16a77d). P1 (L0 identity) is in progress as a three-PR stack opened one after another: PR A foundation, PR B registry and pins, PR C bindings and the break. Base design research/2026-11-19-p1-design-registry-first.md; rulings in decisions/2026-11-19-p1-*. P2 (L1 text) is in progress as one PR stacked on PR C, not yet opened: @beep/text created and @beep/provenance retired, L1-1 to L1-6 green; the inventory regeneration and the final check remain; design research/2026-11-20-p2-design.md, rulings in decisions/2026-11-22-p2-*. P3 L2 is content-complete in its lane, not open: annotation and the lossless handoff are implemented, L2 doctrine and inventories are local. P2 opens against main after PR C merges; P3 waits for P2 and the orchestrator.",
   "opsScripts": [
     {
       "path": "ops/design/index.ts",
-      "purpose": "P0 design module index: re-exports the L2 to L6 layers and the generator prototype as namespaces; L0 moved out in P1 and L1 in P2."
-    },
-    {
-      "path": "ops/design/L2.annotation.ts",
-      "purpose": "L2 design: kind registry, makeAnnotationDocument with its pure checks, Generation, candidate bodies, merge, restrict, closure and typed refusals."
+      "purpose": "Design index for L3 to L6; L0, L1, L2 and the OA adapter are production packages."
     },
     {
       "path": "ops/design/L3.taxonomy.ts",
@@ -178,11 +175,11 @@
     },
     {
       "path": "ops/design/L6.interchange.ts",
-      "purpose": "L6 design: three-case Literal, Dataset as a quad set with DatasetDigest, the OA profile and the OA import result."
+      "purpose": "L6 design: three-case Literal, Dataset quotient and DatasetDigest; OA moved to annotation."
     },
     {
       "path": "ops/design/generators.ts",
-      "purpose": "Composed Arbitrary prototype that generates annotation documents satisfying the document checks through the minting preimages."
+      "purpose": "Coherent claim-log arbitraries for the remaining L4 design."
     }
   ]
 }

@@ -3354,3 +3354,20 @@ Reversal:
 Mark this entry superseded by a new dated entry; restoring a design-module
 shape after P2 is a further preimage or receipt version step under the
 2026-11-19 scoped amendment, with a frozen fixture where rows are stored.
+
+## 2026-11-22: L2 Annotation Documents and Lossless Extraction Handoff
+
+Decision: @beep/annotation owns content-addressed standoff documents,
+canonical checked JSON, generation attribution and the five-kind OA adapter.
+The extractor verifies its capture before generation and keeps every parsed
+candidate in a reading or residual, including the over-extraction-cap tail.
+Semantica grounds historical unmapped-predicate residuals for replay without
+registering their predicates. The deterministic Tika scaffold declares text-scaffold/1.
+The nlp Handoff, Ontology kinds and float Graph span are deleted. Graph nodes
+remain for P6; optional positions resolve only unique surfaces. DoCO aligns in P5.
+
+Evidence: L2-1 through L2-6 in the annotation package tests and P3-H in
+langextract, with the frozen semantica replay and office-action flow.
+
+Reversal: supersede the P3 decisions and bump affected preimage domains; restore
+retired facets from history only with migrated consumers and replacement laws.

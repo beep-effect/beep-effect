@@ -53,7 +53,7 @@ lands in the phase of its layer.
 | --- | --- | --- | --- |
 | L0 | Identity | `@beep/identity`, `@beep/schema` (digest), `@beep/jsonc` (canonical JSON) | P1 |
 | L1 | Text identity and anchoring | `@beep/text` | P2 |
-| L2 | Annotation | `@beep/annotation` (new, `foundation/modeling`) | Pending P3 |
+| L2 | Annotation | `@beep/annotation` (`foundation/modeling`) | Implemented in P3 lane |
 | L3 | Taxonomy and alignments | `@beep/ontology` | Pending P5 |
 | L4 | Claims | `@beep/epistemics` | Pending P4 |
 | L5 | Operations | `@beep/nlp-processing` (capability) | Pending P6 |
@@ -106,7 +106,7 @@ ids the run used, and its start time (`@beep/jsonc/ActivityStart`). What the
 run generated and when it ended are fields of the activity record, outside the
 id, because an output id that contains the activity id cannot also be inside
 it. `OccurrenceId` landed with L1 in P2; each other domain brand lands with
-its layer, Pending P3 to P4.
+its layer. Capture, annotation and run-entity brands are implemented in P3; ClaimId remains Pending P4.
 
 **Arrows.** CURIE expansion and contraction over every namespace the repo
 speaks (`prov:`, `oa:`, `nif:`, `xsd:`, `gufo:` and `as:` included); code id to term
@@ -202,7 +202,7 @@ text; verification from a receipt and the source text to a
 offsets are Unicode code points on the wire, so that codec converts from and
 to the stored `utf16-code-unit` through this unit conversion and fails closed
 on a split surrogate and on selectors that disagree (the NIF codec does the
-same, Pending P3); a source map from `@beep/md` nodes to verified anchors
+same in the P3 annotation adapter); a source map from `@beep/md` nodes to verified anchors
 (`@beep/md/Md.anchors`). `@beep/pandoc-ast`, `@beep/lexical-schema` and
 `@beep/html` record no text positions today; each gains its source map over
 `@beep/text` when a phase needs one.
@@ -229,7 +229,7 @@ with `bun run beep create-package`. Its named consumers at creation are the
 langextract handoff (`@beep/langextract`), the semantica projection
 (`apps/labs/semantica`) and the law-practice office-action flow
 (`packages/law-practice/use-cases`). Its OA and NIF codec lives in an adapter
-subpath so the base entry stays rdf-free. Pending P3.
+subpath so the base entry stays rdf-free, enforced by its import-boundary test.
 
 **Denotes.** One standoff annotation model over one text capture for every
 annotation layer: document structure, segmentation, mentions, chunks and
@@ -241,7 +241,7 @@ capture, an `anchors` table from `OccurrenceId` to `Anchored`, an
 `annotations` map from `AnnotationId` to content, and an `attribution` map from
 `AnnotationId` to a set of `Generation` records. An annotation's content is its
 deduplicated sorted targets, its kind and its body. Kinds come in groups:
-structure (`Section`, `Paragraph`, `Title`, `Figure`, bound to DoCO terms),
+structure (`Section`, `Paragraph`, `Title`, `Figure`; DoCO alignments land through SSSOM in P5),
 segmentation (`Sentence`, `Word`, bound to NIF terms for export), and
 extraction (`Mention`, `Chunk`, `RelationCandidate`, `CorefCandidate`). Each
 kind declares the kinds its body may reference and a function from a body to
@@ -256,14 +256,16 @@ coverage, pinpoints) is not a generic kind; it is a law-practice profile.
 **Arrows.** `merge`, the pointwise join over compatible documents (same
 capture, no time conflict); `restrict` to a kind set, which refuses unless the
 set is closed under the references each kind declares, and `closure`, which
-computes the closed set; containment derived from strict range inclusion; one
+computes the closed set; containment uses range inclusion with non-decreasing levels,
+strict levels on equal spans; one
 checked decode entrypoint per boundary, which decodes through the schema
 (resolution, attribution, capture equality, body references) and then runs the
 effectful key verification (each anchors and annotation key equals the hash of
 its value) before it returns. The package exports that entrypoint for wire and
 storage input; the bare schema is exported for composition and generators
-only. The OA and NIF codec for the declared profile (section 10) is built on
-the entrypoint.
+only. The OA and NIF codec (section 10) mints every key through assembly and
+merges generation groups; it reads RDF rather than the document JSON entrypoint.
+The JSON codec refuses repeated table keys and encodes tables and generations canonically.
 
 **Laws.** `L2-1` (merge over one capture is idempotent, commutative and
 associative on content, and attribution unions), `L2-2` (the annotation hash is
@@ -272,7 +274,7 @@ has non-empty attribution, and each annotation and activity pair is one
 generation), `L2-4` (referential integrity of targets and body references
 survives merge and restriction, and the checked entrypoint refuses a document
 whose annotation key was replaced), `L2-5` (containment is a strict order with
-a kind tie-break on equal spans), `L2-6` (the codec round-trips a document and
+a level tie-break on equal spans), `L2-6` (the codec round-trips a document and
 its imported activities exactly, maps third-party input to its normalized
 form, and preserves `resolve`).
 
@@ -465,7 +467,7 @@ with a `@beep/schema` primitive; any base entry of
 `@beep/text`, `@beep/annotation` or `@beep/epistemics` to `@beep/rdf`;
 `@beep/rdf` to `@beep/md` (Pending P5); any `foundation/modeling` package to a
 capability; a slice's `domain` or model package to a capability. These hold
-for `@beep/text` since P2, and are Pending P3 to P6 for the packages that have
+for `@beep/text` since P2 and the annotation base since P3, and are Pending P4 to P6 for the packages that have
 not landed.
 
 ## 4. Identity regimes
@@ -510,7 +512,8 @@ Identity has two regimes joined by minting.
   landed the minting function and the first preimage, `activity/v1`. P2 landed
   `occurrence/v1` and `quote-key/v1` in `@beep/text` and `citation-mention/v2`
   in the law-practice server, each declared with `definePreimage` and a golden
-  vector; the other brands are Pending P3 to P4, per brand.
+  vector. P3 adds capture/v1, annotation/v1, generation/v1 and the two OA import
+  preimages with goldens; the claim brands remain Pending P4.
 - **One digest format** binds identifiers minted by the eight layers:
   `sha256:` plus 64 lowercase hex, one brand per domain. The bare hex primitive
   used elsewhere in the repository is out of scope for this rule.
@@ -547,12 +550,12 @@ end and quote. It is the only text-occurrence identity in the repository. The
 five non-canonical anchor encodings are deleted in the phase that owns each:
 the `@beep/rdf` selector schemas and the `TextSpan` case of the party-domain
 `EvidenceAnchor` were deleted in P2, and the `@beep/nlp` Handoff and Graph spans
-go in P3 and `EvidenceSpan` in P4. The party union keeps its three non-text
+were deleted in P3; `EvidenceSpan` remains Pending P4. The party union keeps its three non-text
 cases and points at text through a `TextOccurrence` case that holds an
 `Anchored`, and its record identifier is `ArtifactOccurrenceId`, so the name
 `OccurrenceId` belongs to `@beep/text` alone. The cli knowledge-base `Selector`
 has a text-quote case and is kept, because it is repo tooling with no consumer
-in the stack; P7 re-checks it. Pending P3 to P4.
+in the stack; P7 re-checks it.
 
 The stack is occurrence-first, not quote-first, because legal text repeats
 itself. Claim language, examiner boilerplate and headers share quote and
@@ -584,13 +587,14 @@ What a record says and who produced it are kept apart.
   `generation/v1`, the content id and the activity id) that is a
   `prov:specializationOf` the content entity. Attribution is unique per content
   and activity pair, its time is canonical per pair, and merging two records
-  for one pair with different times is a typed refusal. Pending P3.
+  for one pair with different times is a typed refusal, including absent versus stated
+  time. `Generation.at` is the stated time, optional for imported input.
 - Third-party input with no stated creator, generator or generating activity
   is attributed to the import activity, a `prov:Activity` whose id is
   deterministic: the hash of `import-activity/v1` and the source document
   digest. The import time is a field of its record outside the id, so the
   normalized form of an input is a function of the input and its source digest
-  (`L2-6`). Pending P3.
+  (`L2-6`), implemented in P3.
 - A claim core records only what is true at creation. Stance, challenges,
   admissions and retractions are separate records that point at the core
   (`L4-1`). What a record supersedes is known at creation, so `supersedes`
@@ -673,16 +677,19 @@ namespace in `@beep/rdf` is Pending P5.
 
 The annotation codec supports one declared OA profile and nothing else.
 Decoding third-party input returns the annotation document, a table of
-imported activities, and a residual dataset that holds every triple outside
+imported activities, typed per-annotation rejections, and a residual dataset that holds every triple outside
 the profile; residual triples are never stored in the document and never
 dropped silently. The encoder takes the document together with its table of
 imported activities, the pair the decoder returns without the residual, so an
 imported activity's original IRI and stated time survive the round trip. NIF
-is export-only for the `Sentence` and `Word` kinds. OA
+is export-only for the `Sentence` and `Word` kinds. Every generation is one run
+entity; creator and generator attribution retains its agent IRI. Rejected input
+keeps every reached quad in the residual, including shared quads. OA
 and NIF offsets are Unicode code points on the wire; the codec converts them
 from and to the stored `utf16-code-unit` through the `@beep/text` unit
 conversion and fails closed on a split surrogate, and `L2-6` includes an
-astral-plane fixture. Pending P3.
+astral-plane fixture. The five OA kinds are Mention, Title, Paragraph, Sentence
+and Word. The codec reads a default graph and normalizes accepted input independently.
 
 ## 11. Matter walls
 
@@ -766,7 +773,7 @@ file is deleted with its package in P7; what stays true of it is below.
 | Operations are arrows in the Kleisli category of `Effect`; identity is the unit and composition is associative. | Only for fixed error and requirement channels, and only under a declared observation. | `L5-1` |
 | `product` is the monoidal tensor of the pipeline category. | `product` is sequential; interchange needs a commutation witness, and only `Pure` operations are central. | `L5-2` |
 | Merging independent annotation passes is order-independent. | `merge` is a join over one text capture: idempotent, commutative and associative on content, with attribution unioned. Merging across captures is a refusal. | `L2-1` |
-| Text strata are distinct typed objects that operations cannot confuse. | Kinds come from a caller-supplied registry; containment between annotations is a strict order derived from range inclusion with a kind tie-break, not a closure over kinds. | `L2-5` |
+| Text strata are distinct typed objects that operations cannot confuse. | Kinds come from a caller-supplied registry; containment between annotations is a strict order derived from range inclusion with non-decreasing levels and a level tie-break, not a closure over kinds. | `L2-5` |
 | Provenance is stamped by construction, from `Clock`, never from the wall clock. | Every run emits a `prov:Activity`; `generated` is never earlier than `used`, and every output is attributed. | `L5-3` |
 | Graph theory comes from Effect's `Graph` module, not a local re-derivation. | The duplicate graph-operation module retires; acyclicity of derivation is checked with `effect/Graph`. | `L4-3` |
 
