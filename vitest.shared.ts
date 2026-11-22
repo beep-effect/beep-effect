@@ -154,15 +154,10 @@ export const packageTestTimeout = (focusedMs: number): number =>
 //    registrations and every unrecognised shape keep running, and suites left
 //    with no runnable test skip their hooks. The pure rules live in
 //    `@beep/fc-runs/PropertySelection`, which carries their unit tests.
-// The snapshot's native Arbitrary model replaced the fast-check bridge: property
-// files now import `effect/Arbitrary` and call `it.prop`,
-// `it.effect.prop`, `Arbitrary.checkEffect`, or `Arbitrary.sampleEffect`.
-// The shared assertion helper also runs native properties without a direct Arbitrary
-// import at the call site, so helper-only files must remain in the deep sweep.
-// The legacy FastCheck/fc shapes stay matched so an unmigrated straggler is still
-// swept rather than silently dropped from the deep lane.
-const propertyTestMarker =
-  /\bFastCheck\b|\bfast-check\b|\bit\.prop\b|\bit\.effect\.prop\b|\bassertSchemaArbitraryDecodesToSelf\b|\bArbitrary\.(?:checkEffect|sampleEffect|schema)\b|\bunstable\/arbitrary\/Arbitrary\b|\bfc\.(?:property|asyncProperty|assert|sample|check)\b/;
+// The marker is `propertyTestMarker` in the same module, loaded only under an active floor.
+const propertySelectionModule = fcDeepSweepActive
+  ? O.some(await Effect.runPromise(Effect.promise(() => import("@beep/fc-runs/PropertySelection"))))
+  : O.none<typeof import("@beep/fc-runs/PropertySelection")>();
 const testFilePattern = /\.test\.tsx?$/;
 const scanSkippedDirectories: ReadonlyArray<string> = ["node_modules", ".context", "fixtures"];
 const listTestFiles = (directory: string): ReadonlyArray<string> => {
@@ -193,13 +188,16 @@ const readSourceSync = (file: string): O.Option<string> => {
     return O.none();
   }
 };
-const propertyTestFiles = (packageRoot: string): ReadonlyArray<string> =>
+const propertyTestFiles = (packageRoot: string, marker: RegExp): ReadonlyArray<string> =>
   pipe(
     listTestFiles(NodePath.join(packageRoot, "test")),
-    A.filter((file) => O.exists(readSourceSync(file), (source) => propertyTestMarker.test(source))),
+    A.filter((file) => O.exists(readSourceSync(file), (source) => marker.test(source))),
     A.sort(Order.String)
   );
-const propertySweepFiles = fcDeepSweepActive ? propertyTestFiles(process.cwd()) : [];
+const propertySweepFiles = O.match(propertySelectionModule, {
+  onNone: A.empty<string>,
+  onSome: (selection) => propertyTestFiles(process.cwd(), selection.propertyTestMarker),
+});
 const propertySweepInclude = A.map(propertySweepFiles, (file) => toPosixRelative(process.cwd(), file));
 // Package-relative test file -> 1-based lines that are plain registrations. Inline files are
 // absent, which keeps every test. Loaded only under an active floor so other runs never read it.
@@ -230,14 +228,21 @@ const propertySweepPlainLines = (
     R.fromEntries
   );
 };
-const propertySweepSelection = fcDeepSweepActive
-  ? await Effect.runPromise(
-      Effect.promise(() => import("@beep/fc-runs/PropertySelection")).pipe(
-        Effect.map((Selection) => propertySweepPlainLines(propertySweepFiles, Selection))
-      )
-    )
-  : {};
+const propertySweepSelection = O.match(propertySelectionModule, {
+  onNone: (): Readonly<Record<string, ReadonlyArray<number>>> => ({}),
+  onSome: (selection) => propertySweepPlainLines(propertySweepFiles, selection),
+});
 const propertySweepRunner = new URL("./vitest.property-runner.ts", import.meta.url);
+const propertySweepReporter = new URL("./vitest.property-reporter.ts", import.meta.url);
+const modulePath = (url: URL): string => (url.protocol === "file:" ? NodeURL.fileURLToPath(url) : url.pathname);
+// A package config that names its own `include` is merged by concatenation, which would add every
+// test file back to the sweep. The list is therefore set once more on the merged config.
+const exactPropertySweepInclude = (): Plugin => ({
+  name: "beep:exact-property-sweep-include",
+  config(userConfig: ViteUserConfig) {
+    if (userConfig.test !== undefined) userConfig.test.include = [...propertySweepInclude];
+  },
+});
 // Fixed global coverage floors are retired (quality-gate-ratchets, 2026-07-06):
 // the committed per-package baseline compare (standards/coverage.regression-baseline.jsonc,
 // fail-on-drop) is the sole coverage judge. Package-local floors (e.g.
@@ -282,7 +287,11 @@ const GATE_REPORTER = "@beep/repo-gate-vitest/Vitest.reporter";
 const gateReporterActive = !vitestDoctestActive && !fcDeepSweepActive;
 
 const config: ViteUserConfig = {
-  plugins: [resolveUniformTypeScriptSourceSpecifiers(), ...(vitestDoctestActive ? [Doctest.plugin()] : [])],
+  plugins: [
+    resolveUniformTypeScriptSourceSpecifiers(),
+    ...(vitestDoctestActive ? [Doctest.plugin()] : []),
+    ...(fcDeepSweepActive && !vitestDoctestActive ? [exactPropertySweepInclude()] : []),
+  ],
   oxc: {
     // The repository's Node 24 and Bun runtimes both execute top-level await.
     // Keeping Vitest's transform at ESNext avoids Oxc lowering/parsing warnings
@@ -373,10 +382,8 @@ const config: ViteUserConfig = {
     // so unit, coverage and doctest configs are unchanged.
     ...(fcDeepSweepActive && !vitestDoctestActive
       ? {
-          runner:
-            propertySweepRunner.protocol === "file:"
-              ? NodeURL.fileURLToPath(propertySweepRunner)
-              : propertySweepRunner.pathname,
+          runner: modulePath(propertySweepRunner),
+          reporters: [...configDefaults.reporters, modulePath(propertySweepReporter)],
           includeTaskLocation: true,
           provide: { beepPropertySweepPlainLines: propertySweepSelection },
         }

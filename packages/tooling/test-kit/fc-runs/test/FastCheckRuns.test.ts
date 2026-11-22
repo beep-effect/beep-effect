@@ -1,10 +1,21 @@
-import { DEFAULT_FC_NUM_RUNS, envFcSeed, fcRuns, fcRunsCapped, parseFcNumRunsFloor } from "@beep/fc-runs";
+import {
+  DEFAULT_FC_NUM_RUNS,
+  envFcNumRunsFloor,
+  envFcSeed,
+  fcRuns,
+  fcRunsCapped,
+  parseFcNumRunsFloor,
+} from "@beep/fc-runs";
 import { describe, expect, it, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
 import * as Context from "effect/Context";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
+import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
 describe("fcRuns (one-round-loop P1 env-max helper)", () => {
@@ -122,5 +133,53 @@ describe("fcRunsCapped (fixed runs for I/O-heavy properties)", () => {
     const diagnostic = `fcRunsCapped boot probe: exit=${result.exitCode}, signal=${result.signalCode}, stderr=${Str.slice(0, 2000)(result.stderr.toString())}`;
     assertTrue(result.success, diagnostic);
     expect(result.stdout.toString(), diagnostic).toBe("10/42");
+  });
+});
+
+// The deep sweep's log carries the seed and the run count a property built with fcRuns drew.
+const drawn = Ref.makeUnsafe(0);
+describe("a property built with fcRuns", { concurrent: false }, () => {
+  it.effect.prop("draws", [S.Int], () => Ref.update(drawn, (count) => count + 1), { arbitrary: fcRuns(5) });
+
+  it.effect("draws at least the floor", () =>
+    Effect.gen(function* () {
+      const runs = yield* Ref.get(drawn);
+      const pinned = O.match(envFcSeed(), { onNone: () => "random", onSome: (seed) => `${seed}` });
+      yield* Effect.provideService(
+        Console.log(`[property-seed] worker seed ${pinned}, ${runs} runs with fcRuns`),
+        Console.Console,
+        globalThis.console
+      );
+      expect(runs).toBe(Math.max(5, envFcNumRunsFloor()));
+    })
+  );
+});
+
+describe("the deep sweep's reporters", () => {
+  // Each process reads the shared configuration under its own environment.
+  const reportersUnder = (env: Record<string, string>) => {
+    const { BEEP_FC_NUM_RUNS: _floor, ...inherited } = Bun.env;
+    const result = Bun.spawnSync({
+      cmd: [
+        "bun",
+        "-e",
+        'const { default: config } = await import("./vitest.shared.ts"); process.stdout.write(JSON.stringify(config.test.reporters));',
+      ],
+      cwd: `${import.meta.dir}/../../../../..`,
+      env: { ...inherited, ...env },
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    assertTrue(result.success, Str.slice(0, 2000)(result.stderr.toString()));
+    return result.stdout.toString();
+  };
+
+  it("leave no test gate record, so a narrowed run never reads as the package's test pass", () => {
+    const swept = reportersUnder({ BEEP_FC_NUM_RUNS: "5" });
+    expect(swept).not.toContain("repo-gate-vitest");
+    expect(swept).toContain("vitest.property-reporter.ts");
+    const ordinary = reportersUnder({});
+    expect(ordinary).toContain("repo-gate-vitest");
+    expect(ordinary).not.toContain("vitest.property-reporter.ts");
   });
 });

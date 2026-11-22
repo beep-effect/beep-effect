@@ -44,7 +44,9 @@ describe("the pinned property seed", { concurrent: false }, () => {
       const first = yield* sampled({});
       const second = yield* sampled({});
       const explicit = yield* sampled({ seed: O.getOrElse(seed, () => 1) + 1 });
-      yield* report(O.match(seed, { onNone: () => "random", onSome: (pinned) => `${pinned}` }));
+      yield* report(
+        `${O.match(seed, { onNone: () => "random", onSome: (pinned) => `${pinned}` })}, ${drawn.length} runs without fcRuns`
+      );
       deepStrictEqual([drawn.length, expected.length], [runs, runs]);
       deepStrictEqual(Equal.equals(drawn, expected), O.isSome(seed));
       deepStrictEqual(Equal.equals(first, second), O.isSome(seed));
