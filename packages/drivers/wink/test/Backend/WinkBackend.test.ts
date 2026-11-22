@@ -116,6 +116,19 @@ describe("WinkBackend", () => {
     );
   });
 
+  it.layer(TestLayer, { timeout: "30 seconds" })("takes entity spans from the original text", (it) => {
+    it.effect(
+      "takes entity spans from the original text",
+      Effect.fnUntraced(function* () {
+        const backend = yield* Backend.NLPBackend;
+        // wink caps a token's stored preceding spaces at 65,534, so offsets rebuilt from them drift.
+        const text = `${Str.repeat(65_535)(" ")}a@b.com`;
+        const entities = yield* backend.extractEntities(text);
+        expect(A.map(entities, (entity) => entity.span)).toEqual([{ end: 65_542, start: 65_535 }]);
+      })
+    );
+  });
+
   it.layer(UnresolvableSpanLayer, { timeout: "30 seconds" })("fails extractEntities when no span resolves", (it) => {
     it.effect(
       "fails extractEntities when no span resolves",

@@ -26,12 +26,14 @@
 
 import * as Schema from "@beep/nlp/Graph/Schema";
 import { BackendCapabilities, NLPBackend, notSupported, operationError } from "@beep/nlp-processing/Backend/NLPBackend";
-import { A, thunkEmptyStr } from "@beep/utils";
+import { A } from "@beep/utils";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
+import * as Str from "effect/String";
 import { WinkEngine } from "./Wink.service.ts";
 import type { Detail, ItsFunction } from "wink-nlp";
 
@@ -52,15 +54,19 @@ const capabilities: BackendCapabilities = BackendCapabilities.make({
 type CharSpan = { readonly end: number; readonly start: number };
 
 /**
- * Character offsets of every wink token, accumulated from each token's preceding
- * spaces and value (the same accumulation `WinkTokenization` uses).
+ * Character offsets of every wink token, located in the original text with a
+ * cursor that only moves forward; `None` when any token value is not found.
+ *
+ * Offsets are not rebuilt from wink's `precedingSpaces`: wink 2.4 caps a token's
+ * stored preceding spaces at 65,534, so a rebuilt offset drifts after a longer run.
  */
-const tokenCharSpans = (values: ReadonlyArray<string>, spaces: ReadonlyArray<string>): ReadonlyArray<CharSpan> =>
-  A.mapAccum(values, 0, (previousEnd, value, index) => {
-    const start = previousEnd + O.getOrElse(A.get(spaces, index), thunkEmptyStr).length;
-    const end = start + value.length;
-    return [end, { end, start }] as const;
-  })[1];
+const tokenCharSpans = (text: string, values: ReadonlyArray<string>): O.Option<ReadonlyArray<CharSpan>> =>
+  O.all(
+    A.mapAccum(values, O.some(0), (cursor, value) => {
+      const start = O.flatMap(cursor, (from) => O.map(Str.indexOf(value)(Str.slice(from)(text)), N.sum(from)));
+      return [O.map(start, N.sum(value.length)), O.map(start, (at) => ({ end: at + value.length, start: at }))];
+    })[1]
+  );
 
 /** Map a wink `its.span` token range (`[first, last]`, inclusive) onto character offsets. */
 const entityCharSpan = (tokens: ReadonlyArray<CharSpan>, tokenRange: ReadonlyArray<number>): O.Option<CharSpan> =>
@@ -131,23 +137,22 @@ const makeWinkBackend = Effect.gen(function* () {
       const timestamp = yield* Clock.currentTimeMillis;
       const detailAccessor: ItsFunction<Detail> = its.detail;
       const spanAccessor: ItsFunction<Array<number>> = its.span;
-      const spacesAccessor: ItsFunction<string> = its.precedingSpaces;
       const details = doc.entities().out(detailAccessor);
       const tokenRanges: ReadonlyArray<ReadonlyArray<number> | string> = doc.entities().out(spanAccessor);
-      const tokens = tokenCharSpans(doc.tokens().out(), doc.tokens().out(spacesAccessor));
+      const tokens = tokenCharSpans(text, doc.tokens().out());
       return yield* Effect.forEach(
         details,
         (element, index) => {
           const detail = P.isString(element) ? { type: "UNKNOWN", value: element } : element;
           const span = O.flatMap(A.get(tokenRanges, index), (tokenRange) =>
-            P.isString(tokenRange) ? O.none() : entityCharSpan(tokens, tokenRange)
-          );
+            P.isString(tokenRange) ? O.none() : O.flatMap(tokens, (located) => entityCharSpan(located, tokenRange))
+          ).pipe(O.filter(({ end, start }) => Str.Equivalence(Str.slice(start, end)(text), detail.value)));
           return O.match(span, {
             onNone: () =>
               Effect.fail(
                 toOpError("extractEntities")({
                   entity: detail.value,
-                  reason: "wink returned no resolvable token span for the entity.",
+                  reason: "wink returned no token span that locates the entity text.",
                 })
               ),
             onSome: (resolved) =>
