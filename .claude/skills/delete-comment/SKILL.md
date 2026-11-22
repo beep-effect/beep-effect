@@ -102,14 +102,16 @@ code ties it, and that code is deletable:
 | --- | --- |
 | T, S, G | always |
 | X | an agreeing vote carries an issue or pull request URL |
-| D | an agreeing vote names a git-tracked `<package>/decisions/<date>-<slug>.md` in the package that owns the file |
+| D | an agreeing vote names a `<package>/decisions/<date>-<slug>.md` committed in `HEAD` in the package that owns the file |
 | H, N, L | never (`retained-code`) |
 
 Apply also refuses protected rows (`protected`), rows whose `cid` no longer
-matches the tree (`stale-cid`: run `--ledger` again and reclassify), a
-deletion that would leave an identical comment with the same anchor behind
-(`ordinal-sibling`: the survivor would inherit the deleted row's `cid`), one
-vote (`too-few-votes`), and no agreement (`votes-disagree`).
+matches the tree or whose identical sibling is gone (`stale-cid`: run
+`--ledger` again and reclassify), a deletion that would leave an identical
+comment with the same anchor behind (`ordinal-sibling`: the survivor would
+inherit the deleted row's `cid`), one vote (`too-few-votes`), no agreement
+(`votes-disagree`), a path through a symlink (`symlinked-path`) and a file
+edited while apply ran (`file-changed`). Each vote file counts once.
 
 Each comment's exact range is removed, plus its whole line when nothing else is
 on it; an empty JSX `{/* ... */}` container goes with its comment. Then every
@@ -197,7 +199,8 @@ git commit -m "docs(<scope>): record <decision>"
 ```
 
 Commit the decision files alone, before the deletion. Apply checks that the
-path is tracked, so an uncommitted file refuses the row. Put the path in the
+path is committed in `HEAD`, so an uncommitted or only staged file refuses the
+row. Put the path in the
 `ref` column of both D votes.
 
 ### 4. Excuses
@@ -222,10 +225,11 @@ bunx biome format --write <touched files>
 git diff --stat
 ```
 
-Read the refusals list (protected rows are counted, not listed). Then format
+Read the refusals list (protected rows are counted, not listed; the touched files are listed). Then format
 the touched files with the repo's Biome config and commit the deletion alone:
 
 ```sh
+git add -- <touched files>
 git commit -m "refactor(<scope>): delete <n> comments the code already says"
 ```
 

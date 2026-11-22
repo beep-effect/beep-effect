@@ -1158,6 +1158,11 @@ const reportCommentApply = Effect.fn("reportCommentApply")(function* (summary: C
       Console.log(`  - ${refusal.file}:${refusal.line}  ${refusal.cid}  ${refusal.reason}  ${refusal.detail}`),
     { concurrency: 1, discard: true }
   );
+  if (A.isReadonlyArrayEmpty(summary.filesTouched)) return;
+  yield* Effect.forEach(summary.filesTouched, (file) => Console.log(`  touched: ${file}`), {
+    concurrency: 1,
+    discard: true,
+  });
   yield* Console.log("[comment-law] next: biome format --write on the touched files, then bun run beep laws comments.");
 });
 
@@ -1244,6 +1249,16 @@ const lawsCommentsCommand = Command.make(
   },
   Effect.fn(function* ({ base, staged, push, census, list, ledger, apply, votes, write, json }) {
     const cwd = process.cwd();
+    const modes = A.filter(
+      [census, Str.isNonEmpty(list), Str.isNonEmpty(ledger), Str.isNonEmpty(apply), write],
+      F.identity
+    );
+    if (A.length(modes) > 1)
+      return yield* failWithReportedExit(
+        "[comment-law] choose one of --census, --list, --ledger, --apply and --write."
+      );
+    if (A.isReadonlyArrayNonEmpty(votes) && Str.isEmpty(apply))
+      return yield* failWithReportedExit("[comment-law] --votes is read only with --apply.");
     if (census) return yield* printCommentCensus(cwd, json);
     if (Str.isNonEmpty(list)) return yield* printCommentList(cwd, list, json);
     if (Str.isNonEmpty(ledger)) return yield* writeCommentLedger(cwd, ledger, json);

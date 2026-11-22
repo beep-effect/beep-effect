@@ -59,14 +59,17 @@ export type CommentVoteCode = typeof CommentVoteCode.Type;
  *
  * **Details**
  *
- * `stale-cid` means the row no longer matches the tree, so the census must
- * run again. `too-few-votes` and `votes-disagree` mean no deletable code has
- * two agreeing votes. `retained-code` is an agreed `H`, `N` or `L`.
+ * `stale-cid` means the row no longer matches the tree, or an identical
+ * comment censused with it is gone, so the census must run again.
+ * `too-few-votes` and `votes-disagree` mean no deletable code has two
+ * agreeing votes. `retained-code` is an agreed `H`, `N` or `L`.
  * `missing-ref` is an `X` without an issue or pull request URL and
- * `missing-decision` a `D` whose decision file is absent or untracked.
+ * `missing-decision` a `D` whose decision file is not committed in `HEAD`.
  * `ordinal-sibling` refuses a deletion that would hand a surviving identical
  * comment the deleted row's `cid`. `proof-failed` and `parse-error` come
- * from the AST-identity proof; the file is left untouched.
+ * from the AST-identity proof. `symlinked-path` is a file that resolves
+ * through a symlink, and `file-changed` a file edited while apply ran. In
+ * every case the file is left untouched.
  *
  * **Example** (Recognize a protected refusal)
  *
@@ -90,6 +93,8 @@ export const CommentRefusalReason = LiteralKit([
   "ordinal-sibling",
   "proof-failed",
   "parse-error",
+  "symlinked-path",
+  "file-changed",
 ]).pipe($I.annoteSchema("CommentRefusalReason", { description: "Why the strip left one ledger row in place." }));
 
 /**

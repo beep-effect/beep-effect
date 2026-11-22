@@ -93,9 +93,10 @@ Write the file, commit it, then delete.
 is 128 MiB. The migration half ("the hand-rolled fold had no ceiling") is stale,
 the reason for raising it is not. H, home `keep`: a name such as
 `readTagsBatchOutputCeiling` says what the value is for but not why it is 128 MiB,
-so a rename is not a home for this reason. Only the stale migration half is
-removed; the reason stays under the ratchet until a test title or a typed
-constant states it. A home must carry the reason, not just the topic.
+so a rename is not a home for this reason. Apply removes whole comments, not
+sentences, so the whole comment stays in this run, stale half included; the
+absorption PR that gives the reason a test title or a typed constant deletes
+it. A home must carry the reason, not just the topic.
 
 ## H, home test
 

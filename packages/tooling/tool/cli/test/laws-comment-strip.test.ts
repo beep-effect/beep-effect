@@ -54,9 +54,9 @@ const makeCheckout = Effect.fn("CommentStripTest.makeCheckout")(function* (
   yield* Effect.forEach(files, ([file, text]) => write(file, text), { concurrency: 1, discard: true });
   yield* runGit(root, ["init", "--quiet", "--initial-branch=main"]);
   yield* runGit(root, ["add", "."]);
-  yield* runGit(root, ["commit", "--quiet", "--no-verify", "-m", "base"]);
-  const ledger = Effect.fnUntraced(function* () {
-    const summary = yield* runCommentLedger(root, "packages/a");
+  yield* runGit(root, ["commit", "--quiet", "--no-verify", "--no-gpg-sign", "-m", "base"]);
+  const ledger = Effect.fnUntraced(function* (scope = "packages/a") {
+    const summary = yield* runCommentLedger(root, scope);
     const text = yield* read(summary.path);
     const rows = yield* Effect.forEach(A.filter(Str.split(text, "\n"), Str.isNonEmpty), (line) => decodeRow(line), {
       concurrency: 1,
@@ -161,7 +161,10 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         expect(reasonsOf(untracked.refusals)).toEqual(["missing-decision"]);
 
         yield* runGit(checkout.root, ["add", decision]);
-        yield* runGit(checkout.root, ["commit", "--quiet", "--no-verify", "-m", "decision"]);
+        const staged = yield* checkout.apply(summary.path, [first, second]);
+        expect(reasonsOf(staged.refusals)).toEqual(["missing-decision"]);
+
+        yield* runGit(checkout.root, ["commit", "--quiet", "--no-verify", "--no-gpg-sign", "-m", "decision"]);
         const applied = yield* checkout.apply(summary.path, [first, second]);
         expect(applied.deleted).toBe(1);
         const text = yield* checkout.read("packages/a/src/A.ts");
@@ -178,7 +181,8 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         const { summary, rows } = yield* checkout.ledger();
         const cid = rows[0]?.cid ?? "";
         const bare = yield* checkout.vote("bare", [`${cid}\tX`]);
-        const refused = yield* checkout.apply(summary.path, [bare, bare]);
+        const alsoBare = yield* checkout.vote("also-bare", [`${cid}\tX`]);
+        const refused = yield* checkout.apply(summary.path, [bare, alsoBare]);
         expect(reasonsOf(refused.refusals)).toEqual(["missing-ref"]);
         const linked = yield* checkout.vote("linked", [`${cid}\tX\thttps://github.com/o/r/issues/12`]);
         const applied = yield* checkout.apply(summary.path, [bare, linked]);
@@ -230,6 +234,359 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         expect(reasonsOf(result.refusals)).toEqual(["stale-cid"]);
         const text = yield* checkout.read("packages/a/src/A.ts");
         expect(text).toBe("// new wording\nexport const a = 1;\n");
+      })
+    );
+
+    it.effect(
+      "reads ./ scopes and the whole repository like --list",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout([["packages/a/src/A.ts", "// note\nexport const a = 1;\n"]]);
+        const dotted = yield* checkout.ledger("./packages/a/");
+        expect(dotted.summary.path).toBe(".beep/comment-law/ledger/packages-a.jsonl");
+        expect(dotted.summary.rows).toBe(1);
+        const whole = yield* checkout.ledger(".");
+        expect(whole.summary.path).toBe(".beep/comment-law/ledger/_root.jsonl");
+        expect(whole.summary.rows).toBe(1);
+      })
+    );
+
+    it.effect(
+      "refuses a row whose identical sibling vanished after the census",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout([
+          ["packages/a/src/A.ts", "export const f = () => {\n  // twin\n  // twin\n  return 1;\n};\n"],
+        ]);
+        const { summary, rows } = yield* checkout.ledger();
+        expect(A.length(rows)).toBe(2);
+        const firstCid = rows[0]?.cid ?? "";
+        yield* checkout.write("packages/a/src/A.ts", "export const f = () => {\n  // twin\n  return 1;\n};\n");
+        const first = yield* checkout.vote("first", [`${firstCid}\tT`]);
+        const second = yield* checkout.vote("second", [`${firstCid}\tT`]);
+        const result = yield* checkout.apply(summary.path, [first, second]);
+        expect(result.deleted).toBe(0);
+        expect(
+          A.map(
+            A.filter(result.refusals, (refusal) => refusal.cid === firstCid),
+            (refusal) => [refusal.reason, refusal.detail]
+          )
+        ).toEqual([["stale-cid", "an identical comment censused with it is gone; run --ledger again"]]);
+        const text = yield* checkout.read("packages/a/src/A.ts");
+        expect(text).toBe("export const f = () => {\n  // twin\n  return 1;\n};\n");
+      })
+    );
+
+    it.effect("fails the proof when a removed container joins two JSX text children", () =>
+      Effect.sync(() => {
+        const before = "export const W = () => <Widget>a{/* note */}b</Widget>;\n";
+        const after = "export const W = () => <Widget>ab</Widget>;\n";
+        assertSome(commentStripProof("W.tsx", before, after), "proof-failed");
+      })
+    );
+
+    it.effect(
+      "refuses a file that resolves through a symlink",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const source = "// note\nexport const a = 1;\n";
+        const checkout = yield* makeCheckout([["packages/a/src/A.ts", source]]);
+        const { summary, rows } = yield* checkout.ledger();
+        const outside = yield* fs.makeTempDirectoryScoped({ prefix: "comment-strip-outside-" });
+        const target = path.join(outside, "A.ts");
+        yield* fs.writeFileString(target, source);
+        yield* fs.remove(path.join(checkout.root, "packages/a/src/A.ts"));
+        yield* fs.symlink(target, path.join(checkout.root, "packages/a/src/A.ts"));
+        const cid = rows[0]?.cid ?? "";
+        const first = yield* checkout.vote("first", [`${cid}\tT`]);
+        const second = yield* checkout.vote("second", [`${cid}\tT`]);
+        const result = yield* checkout.apply(summary.path, [first, second]);
+        expect(reasonsOf(result.refusals)).toEqual(["symlinked-path"]);
+        const text = yield* fs.readFileString(target);
+        expect(text).toBe(source);
+      })
+    );
+
+    it.effect(
+      "leaves a file alone when it changes while apply runs",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const source = "// note\nexport const a = 1;\n";
+        const edited = "// note\nexport const a = 2;\n";
+        const checkout = yield* makeCheckout([["packages/a/src/A.ts", source]]);
+        const { summary, rows } = yield* checkout.ledger();
+        const cid = rows[0]?.cid ?? "";
+        const first = yield* checkout.vote("first", [`${cid}\tT`]);
+        const second = yield* checkout.vote("second", [`${cid}\tT`]);
+        let reads = 0;
+        const editing: FileSystem.FileSystem = {
+          ...fs,
+          readFileString: (file, encoding) =>
+            Effect.tap(fs.readFileString(file, encoding), () => {
+              reads = Str.endsWith("/packages/a/src/A.ts")(file) ? reads + 1 : reads;
+              return reads === 1 && Str.endsWith("/packages/a/src/A.ts")(file)
+                ? fs.writeFileString(file, edited)
+                : Effect.void;
+            }),
+        };
+        const result = yield* checkout
+          .apply(summary.path, [first, second])
+          .pipe(Effect.provideService(FileSystem.FileSystem, editing));
+        expect(result.deleted).toBe(0);
+        expect(reasonsOf(result.refusals)).toEqual(["file-changed"]);
+        const text = yield* checkout.read("packages/a/src/A.ts");
+        expect(text).toBe(edited);
+      })
+    );
+
+    it.effect(
+      "counts one vote file once, even through another spelling",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout([["packages/a/src/A.ts", "// note\nexport const a = 1;\n"]]);
+        const { summary, rows } = yield* checkout.ledger();
+        const only = yield* checkout.vote("only", [`${rows[0]?.cid ?? ""}\tT`]);
+        const error = yield* Effect.flip(checkout.apply(summary.path, [only, `./votes/../${only}`]));
+        expect(error.message).toContain("each vote file counts once");
+        const text = yield* checkout.read("packages/a/src/A.ts");
+        expect(text).toBe("// note\nexport const a = 1;\n");
+      })
+    );
+
+    it.effect(
+      "names the files already written when a later file fails",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const checkout = yield* makeCheckout([["packages/a/src/A.ts", "// note\nexport const a = 1;\n"]]);
+        const { summary, rows } = yield* checkout.ledger();
+        yield* fs.makeDirectory(path.join(checkout.root, "packages/a/src/B.ts"), { recursive: true });
+        const broken = `{"cid":"0000000000000000","file":"packages/a/src/B.ts","line":1,"kind":"prose","text":"x","protect":null}`;
+        yield* checkout.write("broken.jsonl", `${broken}\n`);
+        const ledgerText = yield* checkout.read(summary.path);
+        yield* checkout.write("both.jsonl", `${ledgerText}${broken}\n`);
+        const cid = rows[0]?.cid ?? "";
+        const first = yield* checkout.vote("first", [`${cid}\tT`]);
+        const second = yield* checkout.vote("second", [`${cid}\tT`]);
+        const alone = yield* Effect.flip(checkout.apply("broken.jsonl", [first, second]));
+        expect(alone.message).toContain("already written: none");
+        const after = yield* Effect.flip(checkout.apply("both.jsonl", [first, second]));
+        expect(after.message).toContain("already written: packages/a/src/A.ts");
+        const text = yield* checkout.read("packages/a/src/A.ts");
+        expect(text).toBe("export const a = 1;\n");
+      })
+    );
+
+    it.effect(
+      "protects directive continuations and stacked JSDoc, nothing near them",
+      Effect.fnUntraced(function* () {
+        const source = A.join(
+          [
+            "// biome-ignore lint/a: r",
+            "// continues the reason",
+            "export const a = 1;",
+            "/* biome-ignore lint/b: r */",
+            "// after a block directive",
+            "export const b = 2;",
+            "// biome-ignore lint/c: r",
+            "/* a block after a directive */",
+            "export const c = 3;",
+            "// biome-ignore lint/d: r",
+            "export const d = 4; // trailing note",
+            "// biome-ignore lint/e: r",
+            "",
+            "// after a gap",
+            "export const e = 5;",
+            "/** first local doc */",
+            "/** stacked local doc */",
+            "const f = 6;",
+            "// lead",
+            "/** after a line */",
+            "const g = 7;",
+            "export const h = f + g;",
+            "",
+          ],
+          "\n"
+        );
+        const checkout = yield* makeCheckout([
+          ["packages/a/src/P.ts", source],
+          ["packages/a/src/Q.ts", "/** top local doc */\nconst q = 1;\nexport const r = q;\n"],
+        ]);
+        const { rows } = yield* checkout.ledger();
+        expect(A.map(rows, (row) => [row.text, O.getOrElse(row.protect, () => "")])).toEqual([
+          ["continues the reason", "continues the directive above"],
+          ["after a block directive", ""],
+          ["a block after a directive", ""],
+          ["trailing note", ""],
+          ["after a gap", ""],
+          ["first local doc", ""],
+          ["stacked local doc", "JSDoc stacked under another JSDoc block"],
+          ["lead", ""],
+          ["after a line", ""],
+          ["top local doc", ""],
+        ]);
+      })
+    );
+
+    it.effect(
+      "skips missing and comment-free files and writes an empty ledger",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const checkout = yield* makeCheckout([
+          ["packages/a/src/A.ts", "// note\nexport const a = 1;\n"],
+          ["packages/a/src/B.ts", "export const b = 1;\n"],
+          ["packages/a/src/C.ts", "// gone\nexport const c = 1;\n"],
+          ["packages/a/src/D.ts", "/* only a block */\nexport const d = 1;\n"],
+        ]);
+        yield* fs.remove(path.join(checkout.root, "packages/a/src/C.ts"));
+        const { rows } = yield* checkout.ledger();
+        expect(A.map(rows, (row) => row.file)).toEqual(["packages/a/src/A.ts", "packages/a/src/D.ts"]);
+        const empty = yield* checkout.ledger("packages/a/src/B.ts");
+        expect(empty.summary.rows).toBe(0);
+        const text = yield* checkout.read(empty.summary.path);
+        expect(text).toBe("");
+      })
+    );
+
+    it.effect(
+      "fails on a missing ledger, one vote file and a cid voted twice",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout([["packages/a/src/A.ts", "// note\nexport const a = 1;\n"]]);
+        const { summary, rows } = yield* checkout.ledger();
+        const cid = rows[0]?.cid ?? "";
+        const first = yield* checkout.vote("first", [`${cid}\tT`]);
+        const twice = yield* checkout.vote("twice", [`${cid}\tT`, `${cid}\tS`]);
+        const missing = yield* Effect.flip(checkout.apply("absent.jsonl", [first, twice]));
+        expect(missing.message).toBe("absent.jsonl does not exist.");
+        const single = yield* Effect.flip(checkout.apply(summary.path, [first]));
+        expect(single.message).toBe("--apply needs at least two --votes files.");
+        const repeated = yield* Effect.flip(checkout.apply(summary.path, [first, twice]));
+        expect(repeated.message).toBe(`votes/twice.tsv:2 votes ${cid} a second time`);
+      })
+    );
+
+    it.effect(
+      "refuses tied votes and an agreed retained code",
+      Effect.fnUntraced(function* () {
+        const source = "// first note\nexport const a = 1;\n// second note\nexport const b = 2;\n";
+        const checkout = yield* makeCheckout([["packages/a/src/A.ts", source]]);
+        const { summary, rows } = yield* checkout.ledger();
+        const [tied = "", kept = ""] = A.map(rows, (row) => row.cid);
+        const votes = yield* Effect.forEach(
+          [
+            ["one", [`${tied}\tT`, `${kept}\tH`]],
+            ["two", [`${tied}\tT`, `${kept}\tH`]],
+            ["three", [`${tied}\tH`]],
+            ["four", [`${tied}\tH`]],
+          ] as const,
+          ([name, lines]) => checkout.vote(name, lines),
+          { concurrency: 1 }
+        );
+        const result = yield* checkout.apply(summary.path, votes);
+        expect(A.map(result.refusals, (refusal) => [refusal.reason, refusal.detail])).toEqual([
+          ["votes-disagree", "T and H tie"],
+          ["retained-code", "agreed H"],
+        ]);
+        const text = yield* checkout.read("packages/a/src/A.ts");
+        expect(text).toBe(source);
+      })
+    );
+
+    it.effect(
+      "reads package-relative and repository-root decision refs",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout([
+          ["packages/a/src/A.ts", "// relative why\nexport const a = 1;\n// bad ref why\nexport const b = 2;\n"],
+          ["packages/a/decisions/2026-11-22-relative.md", "# Relative\n"],
+          ["tool.ts", "// root why\nexport const t = 1;\n"],
+          ["decisions/2026-11-22-root.md", "# Root\n"],
+        ]);
+        const { summary, rows } = yield* checkout.ledger(".");
+        expect(A.map(rows, (row) => row.file)).toEqual(["packages/a/src/A.ts", "packages/a/src/A.ts", "tool.ts"]);
+        const [relative = "", bad = "", root = ""] = A.map(rows, (row) => row.cid);
+        const lines = [
+          `${relative}\tD\tdecisions/2026-11-22-relative.md`,
+          `${bad}\tD\tnotes.md`,
+          `${root}\tD\tdecisions/2026-11-22-root.md`,
+        ];
+        const first = yield* checkout.vote("first", lines);
+        const second = yield* checkout.vote("second", lines);
+        const result = yield* checkout.apply(summary.path, [first, second]);
+        expect(result.deleted).toBe(2);
+        expect(reasonsOf(result.refusals)).toEqual(["missing-decision"]);
+        const text = yield* checkout.read("tool.ts");
+        expect(text).toBe("export const t = 1;\n");
+      })
+    );
+
+    it.effect(
+      "refuses a deletion that leaves an identical sibling behind",
+      Effect.fnUntraced(function* () {
+        const source = "export const f = () => {\n  // twin\n  // twin\n  return 1;\n};\n";
+        const checkout = yield* makeCheckout([["packages/a/src/A.ts", source]]);
+        const { summary, rows } = yield* checkout.ledger();
+        const cid = rows[0]?.cid ?? "";
+        const first = yield* checkout.vote("first", [`${cid}\tT`]);
+        const second = yield* checkout.vote("second", [`${cid}\tT`]);
+        const result = yield* checkout.apply(summary.path, [first, second]);
+        expect(reasonsOf(result.refusals)).toEqual(["too-few-votes", "ordinal-sibling"]);
+        const text = yield* checkout.read("packages/a/src/A.ts");
+        expect(text).toBe(source);
+      })
+    );
+
+    it.effect(
+      "keeps tokens apart, removes a trailing comment and merges one container's comments",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout([
+          [
+            "packages/a/src/A.ts",
+            "export const xs = [1,/* a */2];\nexport const f = (a: number,/* b */ c: number) => a + c;\n// tail",
+          ],
+          ["packages/a/src/V.tsx", "export const V = () => <div>{/* a */ /* b */}</div>;\n"],
+        ]);
+        const { summary, rows } = yield* checkout.ledger();
+        const lines = A.map(rows, (row) => `${row.cid}\tG`);
+        const first = yield* checkout.vote("first", lines);
+        const second = yield* checkout.vote("second", lines);
+        const result = yield* checkout.apply(summary.path, [first, second]);
+        expect(result.refusals).toEqual([]);
+        const text = yield* checkout.read("packages/a/src/A.ts");
+        expect(text).toBe("export const xs = [1, 2];\nexport const f = (a: number, c: number) => a + c;\n");
+        const view = yield* checkout.read("packages/a/src/V.tsx");
+        expect(view).toBe("export const V = () => <div></div>;\n");
+      })
+    );
+
+    it.effect(
+      "refuses a gone file, a file that no longer parses and a strip the proof rejects",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const checkout = yield* makeCheckout([
+          ["packages/a/src/E.ts", "// broken soon\nexport const e = 1;\n"],
+          ["packages/a/src/G.ts", "// gone soon\nexport const g = 1;\n"],
+          ["packages/a/src/J.tsx", "export const J = () => <Widget>a{/* note */}b</Widget>;\n"],
+        ]);
+        const { summary, rows } = yield* checkout.ledger();
+        yield* checkout.write("packages/a/src/E.ts", "// broken soon\nexport const = 1;\n");
+        yield* fs.remove(path.join(checkout.root, "packages/a/src/G.ts"));
+        const lines = A.map(rows, (row) => `${row.cid}\tG`);
+        const first = yield* checkout.vote("first", lines);
+        const second = yield* checkout.vote("second", lines);
+        const result = yield* checkout.apply(summary.path, [first, second]);
+        expect(A.map(result.refusals, (refusal) => [refusal.file, refusal.reason])).toEqual([
+          ["packages/a/src/E.ts", "parse-error"],
+          ["packages/a/src/G.ts", "stale-cid"],
+          ["packages/a/src/J.tsx", "proof-failed"],
+        ]);
+        const view = yield* checkout.read("packages/a/src/J.tsx");
+        expect(view).toBe("export const J = () => <Widget>a{/* note */}b</Widget>;\n");
+      })
+    );
+
+    it.effect("tells regular expression literals apart", () =>
+      Effect.sync(() => {
+        assertSome(commentStripProof("r.ts", "export const r = /a/;\n", "export const r = /b/;\n"), "proof-failed");
       })
     );
   });

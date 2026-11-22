@@ -14,6 +14,7 @@
  * @since 0.0.0
  */
 
+import { Git } from "@beep/git/Git";
 import { GrammarNode, isBannedCommentKind } from "@beep/lint-rules/comment-grammar";
 import { findRepoRoot } from "@beep/repo-utils";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
@@ -34,7 +35,13 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { parseSync } from "oxc-parser";
-import { commentLawFiles, commentPackageRootOf, parseCommentSource } from "./CommentLaw.ts";
+import {
+  commentLawFiles,
+  commentPackageRootOf,
+  commentScopeOf,
+  isInCommentScope,
+  parseCommentSource,
+} from "./CommentLaw.ts";
 import {
   CommentApplySummary,
   CommentLedgerRow,
@@ -43,7 +50,6 @@ import {
   CommentVote,
 } from "./CommentStrip.model.ts";
 import { CommentLawExecutionError } from "./Laws.errors.ts";
-import type { Git } from "@beep/git/Git";
 import type { ClassifiedComment } from "@beep/lint-rules/comment-grammar";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -111,8 +117,9 @@ interface Span {
 
 interface ApplyContext {
   readonly ballots: ReadonlyArray<HashMap.HashMap<string, CommentVote>>;
+  readonly committed: HashSet.HashSet<string>;
+  readonly realRoot: string;
   readonly roots: ReadonlyArray<string>;
-  readonly tracked: HashSet.HashSet<string>;
 }
 
 interface FileOutcome {
@@ -171,15 +178,13 @@ const anchorAfter = (source: ParsedSource, from: number): string => {
 const isJsDocBlock = (comment: ClassifiedComment): boolean =>
   comment.type === "Block" && Str.startsWith("*")(comment.value);
 
-const stackedUnderJsDoc = (source: ParsedSource, index: number): boolean =>
-  O.match(A.get(source.comments, index - 1), {
-    onNone: () => false,
-    onSome: (previous) => {
-      const current = source.comments[index];
-      if (current === undefined || !isBlankBetween(source.text, previous.end, current.start)) return false;
-      return isJsDocBlock(previous) || stackedUnderJsDoc(source, index - 1);
-    },
-  });
+const stackedUnderJsDoc = (source: ParsedSource, comment: ClassifiedComment, index: number): boolean =>
+  O.exists(
+    A.get(source.comments, index - 1),
+    (previous) =>
+      isBlankBetween(source.text, previous.end, comment.start) &&
+      (isJsDocBlock(previous) || stackedUnderJsDoc(source, previous, index - 1))
+  );
 
 const continuesDirective = (source: ParsedSource, index: number, comment: ClassifiedComment): boolean =>
   O.exists(
@@ -223,7 +228,7 @@ const PROTECTION_RULES: ReadonlyArray<ProtectionRule> = [
   ),
   protectWhen(
     "JSDoc stacked under another JSDoc block",
-    ({ comment, index, source }) => isJsDocBlock(comment) && stackedUnderJsDoc(source, index)
+    ({ comment, index, source }) => isJsDocBlock(comment) && stackedUnderJsDoc(source, comment, index)
   ),
 ];
 
@@ -231,6 +236,8 @@ const protectionOf = (probe: ProtectionProbe): O.Option<string> => A.findFirst(P
 
 const groupKeyOf = (source: ParsedSource, comment: ClassifiedComment): string =>
   A.join([source.file, comment.kind, comment.text, anchorAfter(source, comment.end)], "\u0000");
+
+const cidOf = (group: string, ordinal: number) => Effect.map(sha256Hex(`${group}\u0000${ordinal}`), Str.slice(0, 16));
 
 const locateRows = Effect.fn("CommentStrip.locateRows")(function* (
   source: ParsedSource
@@ -246,9 +253,8 @@ const locateRows = Effect.fn("CommentStrip.locateRows")(function* (
     const group = groupKeyOf(source, comment);
     const ordinal = O.getOrElse(HashMap.get(ordinals, group), () => 0);
     ordinals = HashMap.set(ordinals, group, ordinal + 1);
-    const digest = yield* sha256Hex(`${group}\u0000${ordinal}`);
     const row = CommentLedgerRow.make({
-      cid: Str.slice(0, 16)(digest),
+      cid: yield* cidOf(group, ordinal),
       file: source.file,
       line: lineOf(source.text, comment.start),
       kind: comment.kind,
@@ -280,15 +286,7 @@ const nonEmptyLines = (text: string): ReadonlyArray<readonly [line: number, valu
     ([, value]) => Str.isNonEmpty(value)
   );
 
-const scopePrefixOf = (path: string): string => Str.replace(/\/+$/, "")(path);
-
-const ledgerSlugOf = (path: string): string => {
-  const prefix = scopePrefixOf(path);
-  return prefix === "." || Str.isEmpty(prefix) ? "_root" : Str.replaceAll("/", "-")(prefix);
-};
-
-const inScope = (prefix: string, file: string): boolean =>
-  prefix === "." || file === prefix || Str.startsWith(`${prefix}/`)(file);
+const ledgerSlugOf = (scope: string): string => (scope === "." ? "_root" : Str.replaceAll("/", "-")(scope));
 
 const locateFile = Effect.fn("CommentStrip.locateFile")(function* (repoRoot: string, file: string) {
   const text = yield* readOptionalText(`${repoRoot}/${file}`, file);
@@ -319,7 +317,7 @@ const locateFile = Effect.fn("CommentStrip.locateFile")(function* (repoRoot: str
  * ```
  *
  * @param cwd - Any directory inside the repository.
- * @param path - Repository-relative directory or file to census.
+ * @param path - Repository-relative directory or file to census; `./` and `.` are read as `--list` reads them.
  * @returns Effect that yields where the ledger went and its row counts.
  * @category utilities
  * @since 0.0.0
@@ -332,17 +330,17 @@ export const runCommentLedger = Effect.fn("CommentStrip.runCommentLedger")(funct
   const repoRoot = yield* findRepoRoot(cwd).pipe(
     CommentLawExecutionError.mapError("Failed to locate the repository root")
   );
-  const prefix = scopePrefixOf(path);
+  const scope = commentScopeOf(path);
   const { files } = yield* commentLawFiles(repoRoot);
   const located = yield* Effect.forEach(
-    A.filter(files, (file) => inScope(prefix, file)),
+    A.filter(files, (file) => isInCommentScope(scope, file)),
     (file) => locateFile(repoRoot, file),
     { concurrency: 1 }
   ).pipe(Effect.map(A.flatten));
   const lines = yield* Effect.forEach(located, ({ row }) => encodeLedgerLine(row), { concurrency: 1 }).pipe(
     CommentLawExecutionError.mapError("Failed to encode the ledger")
   );
-  const relative = `${COMMENT_LEDGER_DIR}/${ledgerSlugOf(path)}.jsonl`;
+  const relative = `${COMMENT_LEDGER_DIR}/${ledgerSlugOf(scope)}.jsonl`;
   yield* fs
     .makeDirectory(`${repoRoot}/${COMMENT_LEDGER_DIR}`, { recursive: true })
     .pipe(CommentLawExecutionError.mapError(`Failed to create ${COMMENT_LEDGER_DIR}`));
@@ -367,14 +365,17 @@ const readLedger = Effect.fn("CommentStrip.readLedger")(function* (absolute: str
 });
 
 const voteOfLine = (label: string, line: number, value: string) => {
-  const [cid = "", code = "", ref = ""] = Str.split(value, "\t");
-  return decodeVote({ cid: Str.trim(cid), code: Str.trim(code), ref: Str.trim(ref) }).pipe(
+  const fields = Str.split(value, "\t");
+  const field = (index: number) => Str.trim(O.getOrElse(A.get(fields, index), () => ""));
+  return decodeVote({ cid: field(0), code: field(1), ref: field(2) }).pipe(
     CommentLawExecutionError.mapError(`${label}:${line} is not a cid<TAB>code<TAB>ref vote`)
   );
 };
 
 const readBallot = Effect.fn("CommentStrip.readBallot")(function* (absolute: string, label: string) {
+  const fs = yield* FileSystem.FileSystem;
   const text = yield* readRequiredText(absolute, label);
+  const identity = yield* fs.realPath(absolute).pipe(CommentLawExecutionError.mapError(`Failed to resolve ${label}`));
   let ballot = HashMap.empty<string, CommentVote>();
   for (const [line, value] of nonEmptyLines(text)) {
     const vote = yield* voteOfLine(label, line, value);
@@ -382,22 +383,27 @@ const readBallot = Effect.fn("CommentStrip.readBallot")(function* (absolute: str
       return yield* CommentLawExecutionError.new(`${label}:${line} votes ${vote.cid} a second time`);
     ballot = HashMap.set(ballot, vote.cid, vote);
   }
-  return ballot;
+  return { ballot, identity };
 });
 
 const refusalOf = (row: CommentLedgerRow, reason: CommentRefusalReason, detail: string): CommentRefusal =>
   CommentRefusal.make({ cid: row.cid, file: row.file, line: row.line, reason, detail });
 
-const agreedVotes = (votes: ReadonlyArray<CommentVote>): Result.Result<ReadonlyArray<CommentVote>, string> => {
-  const tally = F.pipe(
-    R.values(A.groupBy(votes, (vote): string => vote.code)),
-    A.sort(Order.mapInput(Order.flip(Order.Number), (group: ReadonlyArray<CommentVote>) => A.length(group)))
-  );
-  const [first, second] = tally;
-  if (first === undefined || A.length(first) < 2) return Result.fail("no code has two agreeing votes");
-  if (second !== undefined && A.length(second) === A.length(first))
-    return Result.fail(`${first[0].code} and ${second[0]?.code ?? "?"} tie`);
-  return Result.succeed(first);
+const agreedVotes = (
+  votes: ReadonlyArray<CommentVote>
+): Result.Result<A.NonEmptyReadonlyArray<CommentVote>, string> => {
+  const groups = R.values(A.groupBy(votes, (vote): string => vote.code));
+  const best = A.reduce(groups, 0, (top, group) => N.max(top, A.length(group)));
+  const leaders = A.filter(groups, (group) => A.length(group) === best);
+  if (best < 2) return Result.fail("no code has two agreeing votes");
+  return A.isReadonlyArrayNonEmpty(leaders) && A.length(leaders) === 1
+    ? Result.succeed(A.headNonEmpty(leaders))
+    : Result.fail(
+        `${A.join(
+          A.map(leaders, (group) => A.headNonEmpty(group).code),
+          " and "
+        )} tie`
+      );
 };
 
 const decisionPathOf = (root: string, ref: string): string => {
@@ -415,10 +421,10 @@ const gateCode = (
     return O.some(refusalOf(row, "missing-ref", "X needs an issue or pull request URL"));
   if (code !== "D") return O.none();
   const root = commentPackageRootOf(context.roots, row.file);
-  const named = A.some(refs, (ref) => HashSet.has(context.tracked, decisionPathOf(root, ref)));
+  const named = A.some(refs, (ref) => HashSet.has(context.committed, decisionPathOf(root, ref)));
   return named
     ? O.none()
-    : O.some(refusalOf(row, "missing-decision", `D needs a tracked ${root}/decisions/<date>-<slug>.md`));
+    : O.some(refusalOf(row, "missing-decision", `D needs ${root}/decisions/<date>-<slug>.md committed in HEAD`));
 };
 
 const verdictOf = (row: CommentLedgerRow, context: ApplyContext): O.Option<CommentRefusal> => {
@@ -427,7 +433,7 @@ const verdictOf = (row: CommentLedgerRow, context: ApplyContext): O.Option<Comme
   return Result.match(agreedVotes(votes), {
     onFailure: (detail) => O.some(refusalOf(row, "votes-disagree", detail)),
     onSuccess: (agreed) => {
-      const code = agreed[0]?.code ?? "H";
+      const code = A.headNonEmpty(agreed).code;
       if (!isDeletableCode(code)) return O.some(refusalOf(row, "retained-code", `agreed ${code}`));
       return gateCode(
         row,
@@ -479,6 +485,27 @@ const withoutOrdinalSiblings = (
   ];
 };
 
+const withoutShrunkGroups = Effect.fn("CommentStrip.withoutShrunkGroups")(function* (
+  planned: ReadonlyArray<Located>,
+  current: ReadonlyArray<Located>,
+  censused: HashSet.HashSet<string>
+) {
+  let shrunk = HashSet.empty<string>();
+  for (const group of A.dedupe(A.map(planned, (entry) => entry.group))) {
+    const next = yield* cidOf(group, A.length(A.filter(current, (entry) => entry.group === group)));
+    shrunk = HashSet.has(censused, next) ? HashSet.add(shrunk, group) : shrunk;
+  }
+  const [kept, refused] = A.partition(planned, (entry) =>
+    HashSet.has(shrunk, entry.group) ? Result.fail(entry) : Result.succeed(entry)
+  );
+  return [
+    kept,
+    A.map(refused, (entry) =>
+      refusalOf(entry.row, "stale-cid", "an identical comment censused with it is gone; run --ledger again")
+    ),
+  ] as const;
+});
+
 const lineSpanOf = (text: string, start: number, end: number): O.Option<Span> => {
   const lineStart = O.getOrElse(
     O.map(Str.lastIndexOf("\n")(Str.slice(0, start)(text)), (index) => index + 1),
@@ -492,8 +519,8 @@ const lineSpanOf = (text: string, start: number, end: number): O.Option<Span> =>
 };
 
 const exactSpanOf = (text: string, start: number, end: number, joins: boolean): Span => {
-  const tight = joins && !isBlankBetween(text, start - 1, start) && start > 0 && !isBlankBetween(text, end, end + 1);
-  return { start, end, replacement: tight && end < Str.length(text) ? " " : "" };
+  const tight = joins && !isBlankBetween(text, start - 1, start) && !isBlankBetween(text, end, end + 1);
+  return { start, end, replacement: tight ? " " : "" };
 };
 
 const spanOf = (
@@ -564,22 +591,14 @@ const cleanJsxText = (value: string): string => {
 };
 
 const jsxTextOf = (value: unknown): O.Option<string> =>
-  isNode(value) && value.type === "JSXText"
-    ? O.some(cleanJsxText(P.isString(fieldOf(value, "value")) ? (fieldOf(value, "value") as string) : ""))
-    : O.none();
+  isNode(value) && value.type === "JSXText" ? O.some(cleanJsxText(`${fieldOf(value, "value")}`)) : O.none();
 
 const jsxChildren = (children: unknown): ReadonlyArray<unknown> =>
-  A.reduce(A.isArray(children) ? children : [], A.empty<unknown>(), (merged, child) => {
-    if (isNode(child) && isEmptyJsxContainer(child)) return merged;
+  A.flatMap(childValues(children), (child): ReadonlyArray<unknown> => {
+    if (isNode(child) && isEmptyJsxContainer(child)) return [];
     return O.match(jsxTextOf(child), {
-      onNone: () => A.append(merged, child),
-      onSome: (text) =>
-        Str.isEmpty(text)
-          ? merged
-          : O.match(O.filter(A.last(merged), P.isString), {
-              onNone: () => A.append(merged, text),
-              onSome: (previous) => A.append(A.dropRight(merged, 1), `${previous}${text}`),
-            }),
+      onNone: () => [child],
+      onSome: (text) => (Str.isEmpty(text) ? [] : [text]),
     });
   });
 
@@ -595,10 +614,10 @@ const canonicalNode = (node: Readonly<Record<string, unknown>>): unknown => {
 const canonical = (value: unknown): unknown =>
   A.isArray(value)
     ? A.map(value, canonical)
-    : P.isObject(value)
-      ? canonicalNode(value as Readonly<Record<string, unknown>>)
-      : P.isRegExp(value)
-        ? `${value}`
+    : P.isRegExp(value)
+      ? `${value}`
+      : P.isObject(value)
+        ? canonicalNode(value as Readonly<Record<string, unknown>>)
         : value;
 
 /**
@@ -608,8 +627,10 @@ const canonical = (value: unknown): unknown =>
  *
  * Both texts are parsed with `oxc-parser`. The ESTree programs are compared
  * with `start`, `end`, `range` and `loc` dropped; JSX children are compared
- * as they render: empty `{}` containers dropped, each text child cleaned
- * under JSX whitespace rules, adjacent text merged. A parse error on either
+ * as a JSX transform passes them: empty `{}` containers dropped, each text
+ * child cleaned under JSX whitespace rules and dropped when empty, and every
+ * remaining text child kept as its own child, so a deletion that joins two
+ * text children changes the child count and fails. A parse error on either
  * side is `parse-error`; any other difference is `proof-failed`.
  *
  * **Example** (Prove a comment deletion)
@@ -646,6 +667,9 @@ const emptyOutcome = (refusals: ReadonlyArray<CommentRefusal>): FileOutcome => (
   touched: O.none(),
 });
 
+const refuseAll = (rows: ReadonlyArray<CommentLedgerRow>, reason: CommentRefusalReason, detail: string) =>
+  A.map(rows, (row) => refusalOf(row, reason, detail));
+
 const applyToFile = Effect.fn("CommentStrip.applyToFile")(function* (
   repoRoot: string,
   file: string,
@@ -653,16 +677,24 @@ const applyToFile = Effect.fn("CommentStrip.applyToFile")(function* (
   context: ApplyContext
 ) {
   const fs = yield* FileSystem.FileSystem;
-  const text = yield* readOptionalText(`${repoRoot}/${file}`, file);
-  if (O.isNone(text)) return emptyOutcome(A.map(rows, (row) => refusalOf(row, "stale-cid", "the file is gone")));
+  const absolute = `${repoRoot}/${file}`;
+  const text = yield* readOptionalText(absolute, file);
+  if (O.isNone(text)) return emptyOutcome(refuseAll(rows, "stale-cid", "the file is gone"));
+  const real = yield* fs.realPath(absolute).pipe(CommentLawExecutionError.mapError(`Failed to resolve ${file}`));
+  if (real !== `${context.realRoot}/${file}`)
+    return emptyOutcome(refuseAll(rows, "symlinked-path", "the path resolves through a symlink"));
   const source = parseSource(file, text.value);
-  if (source.errors > 0)
-    return emptyOutcome(A.map(rows, (row) => refusalOf(row, "parse-error", "the file does not parse")));
+  if (source.errors > 0) return emptyOutcome(refuseAll(rows, "parse-error", "the file does not parse"));
   const current = yield* locateRows(source);
   const byCid = HashMap.fromIterable(A.map(current, (entry) => [entry.row.cid, entry] as const));
   const [decided, refused] = A.partition(rows, (row) => decideRow(row, byCid, context));
-  const [planned, siblings] = withoutOrdinalSiblings(decided, current);
-  const refusals = A.appendAll(refused, siblings);
+  const [unshrunk, siblings] = withoutOrdinalSiblings(decided, current);
+  const [planned, shrunk] = yield* withoutShrunkGroups(
+    unshrunk,
+    current,
+    HashSet.fromIterable(A.map(rows, (row) => row.cid))
+  );
+  const refusals = A.appendAll(A.appendAll(refused, siblings), shrunk);
   if (A.isReadonlyArrayEmpty(planned)) return emptyOutcome(refusals);
   const after = stripText(source, planned);
   const proof = commentStripProof(file, text.value, after);
@@ -673,10 +705,70 @@ const applyToFile = Effect.fn("CommentStrip.applyToFile")(function* (
         A.map(planned, (entry) => refusalOf(entry.row, proof.value, "the stripped file is not the same program"))
       )
     );
-  yield* fs
-    .writeFileString(`${repoRoot}/${file}`, after)
-    .pipe(CommentLawExecutionError.mapError(`Failed to write ${file}`));
+  const latest = yield* readOptionalText(absolute, file);
+  if (!O.contains(latest, text.value))
+    return emptyOutcome(
+      A.appendAll(
+        refusals,
+        A.map(planned, (entry) =>
+          refusalOf(entry.row, "file-changed", "the file changed while apply ran; run --ledger again")
+        )
+      )
+    );
+  yield* fs.writeFileString(absolute, after).pipe(CommentLawExecutionError.mapError(`Failed to write ${file}`));
   return { deleted: A.length(planned), refusals, touched: O.some(file) } satisfies FileOutcome;
+});
+
+const committedDecisions = Effect.fn("CommentStrip.committedDecisions")(function* (
+  repoRoot: string,
+  rows: ReadonlyArray<CommentLedgerRow>,
+  ballots: ReadonlyArray<HashMap.HashMap<string, CommentVote>>,
+  roots: ReadonlyArray<string>
+) {
+  const git = yield* Git;
+  const candidates = A.dedupe(
+    A.flatMap(rows, (row) =>
+      A.getSomes(
+        A.map(ballots, (ballot) =>
+          F.pipe(
+            HashMap.get(ballot, row.cid),
+            O.filter((vote) => vote.code === "D"),
+            O.map((vote) => decisionPathOf(commentPackageRootOf(roots, row.file), vote.ref)),
+            O.filter(Str.isNonEmpty)
+          )
+        )
+      )
+    )
+  );
+  if (A.isReadonlyArrayEmpty(candidates)) return A.empty<string>();
+  return yield* git
+    .lsTree(repoRoot, "HEAD", { pathspec: candidates, fullTree: true })
+    .pipe(
+      Effect.map(A.map((entry) => entry.path)),
+      CommentLawExecutionError.mapError("Failed to list the committed decision files")
+    );
+});
+
+const applyToFiles = Effect.fn("CommentStrip.applyToFiles")(function* (
+  repoRoot: string,
+  rows: ReadonlyArray<CommentLedgerRow>,
+  context: ApplyContext
+) {
+  let outcomes = A.empty<FileOutcome>();
+  for (const [file, fileRows] of A.sort(
+    R.toEntries(A.groupBy(rows, (row) => row.file)),
+    Order.mapInput(Order.String, ([name]: readonly [string, ReadonlyArray<CommentLedgerRow>]) => name)
+  )) {
+    const outcome = yield* Effect.result(applyToFile(repoRoot, file, fileRows, context));
+    if (Result.isFailure(outcome)) {
+      const written = A.getSomes(A.map(outcomes, ({ touched }) => touched));
+      return yield* CommentLawExecutionError.new(
+        `${outcome.failure.message}; already written: ${A.isReadonlyArrayEmpty(written) ? "none" : A.join(written, ", ")}`
+      );
+    }
+    outcomes = A.append(outcomes, outcome.success);
+  }
+  return outcomes;
 });
 
 /**
@@ -687,12 +779,15 @@ const applyToFile = Effect.fn("CommentStrip.applyToFile")(function* (
  * A row is deleted only when at least two vote files agree on one deletable
  * code and no other code ties it: `T`, `S` or `G`; `X` only with an issue or
  * pull request URL; `D` only when the ref names a git-tracked
- * `<package>/decisions/<date>-<slug>.md` in the owning package. Protected
- * rows, rows whose `cid` no longer matches the tree and deletions that would
- * leave an identical sibling behind are refused. Each comment's range is
+ * `<package>/decisions/<date>-<slug>.md` committed in `HEAD` in the owning
+ * package. Each vote file counts once. Protected rows, rows whose `cid` no
+ * longer matches the tree, deletions that would leave an identical sibling
+ * behind or follow one that is gone, files that resolve through a symlink
+ * and files edited while apply ran are refused. Each comment's range is
  * removed, with its whole line when nothing else is on it; an empty JSX
  * `{}` container goes with its comment. Every touched file must pass
- * {@link commentStripProof}, or it is not written. Biome is not run.
+ * {@link commentStripProof}, or it is not written. Biome is not run. When a
+ * file fails to read or write, the error names the files already written.
  *
  * **Example** (Apply two vote files)
  *
@@ -716,6 +811,7 @@ const applyToFile = Effect.fn("CommentStrip.applyToFile")(function* (
 export const runCommentApply = Effect.fn("CommentStrip.runCommentApply")(function* (
   options: CommentApplyOptions
 ): Effect.fn.Return<CommentApplySummary, CommentLawExecutionError, CommentStripServices> {
+  const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot(options.cwd).pipe(
     CommentLawExecutionError.mapError("Failed to locate the repository root")
@@ -723,19 +819,20 @@ export const runCommentApply = Effect.fn("CommentStrip.runCommentApply")(functio
   if (A.length(options.votes) < 2)
     return yield* CommentLawExecutionError.new("--apply needs at least two --votes files.");
   const rows = yield* readLedger(path.resolve(options.cwd, options.ledger), options.ledger);
-  const ballots = yield* Effect.forEach(options.votes, (votes) => readBallot(path.resolve(options.cwd, votes), votes), {
+  const read = yield* Effect.forEach(options.votes, (votes) => readBallot(path.resolve(options.cwd, votes), votes), {
     concurrency: 1,
   });
-  const { roots, tracked } = yield* commentLawFiles(repoRoot);
-  const context: ApplyContext = { ballots, roots, tracked: HashSet.fromIterable(tracked) };
-  const outcomes = yield* Effect.forEach(
-    A.sort(
-      R.toEntries(A.groupBy(rows, (row) => row.file)),
-      Order.mapInput(Order.String, ([file]: readonly [string, ReadonlyArray<CommentLedgerRow>]) => file)
-    ),
-    ([file, fileRows]) => applyToFile(repoRoot, file, fileRows, context),
-    { concurrency: 1 }
-  );
+  const identities = A.map(read, ({ identity }) => identity);
+  if (A.length(A.dedupe(identities)) < A.length(identities))
+    return yield* CommentLawExecutionError.new("--votes names one file twice; each vote file counts once.");
+  const ballots = A.map(read, ({ ballot }) => ballot);
+  const { roots } = yield* commentLawFiles(repoRoot);
+  const committed = yield* committedDecisions(repoRoot, rows, ballots, roots);
+  const realRoot = yield* fs
+    .realPath(repoRoot)
+    .pipe(CommentLawExecutionError.mapError("Failed to resolve the repository root"));
+  const context: ApplyContext = { ballots, committed: HashSet.fromIterable(committed), realRoot, roots };
+  const outcomes = yield* applyToFiles(repoRoot, rows, context);
   return CommentApplySummary.make({
     deleted: A.reduce(outcomes, 0, (total, outcome) => total + outcome.deleted),
     filesTouched: A.getSomes(A.map(outcomes, (outcome) => outcome.touched)),

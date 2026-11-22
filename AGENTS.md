@@ -149,8 +149,9 @@ the agent 1Password lane take precedence; a dialog never replaces those routes.
   tags. Law: `.patterns/jsdoc-documentation.md`.
 - No free prose comments and no JSDoc on non-exported declarations in TS/JS
   source, tests or tooling. Put a reason in a name, type, schema annotation,
-  test title or assertion; a real decision in `<package>/decisions/`; a
-  hazard with no better home in one `// decision: <slug>` line. Directives
+  test title or assertion; a real decision in `<package>/decisions/`, cited
+  where the code needs it by one `// decision: <slug>` line naming that
+  file. Directives
   keep their exact tokens with a one-line reason. `bun run beep laws
   comments` enforces it against the merge base; remove old ones with the
   delete-comment skill.
