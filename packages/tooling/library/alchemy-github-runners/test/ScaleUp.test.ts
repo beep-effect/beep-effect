@@ -547,6 +547,18 @@ describe("handleScaleUp configure failures", () => {
     })
   );
 
+  it.effect("deletes the token parameter a lost-response put left behind, then the runner, then the instance", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const token = "/beep-ci/heavy/tokens/i-0001";
+      // The put stores the parameter and then fails, as when SSM applied it and the response was lost.
+      world.landedPutFailures = [[token, landedPut]];
+      yield* runLogged(world, [queued({ id: 1 })]);
+      expect(world.cleanupCalls).toStrictEqual([`deleteToken:${token}`, "deleteRunner:1001", "terminate:i-0001"]);
+      expect(R.has(world.ssm, token)).toBe(false);
+    })
+  );
+
   it.effect("retries a JIT registration that conflicts with its own lost response, with no runner id to delete", () =>
     Effect.gen(function* () {
       const world = new World();

@@ -2475,7 +2475,7 @@ Standard parameter holds at most 4 KB, and a JIT config carries an RSA key and c
 the same token at Advanced. This is the probable cause: the rejected calls recorded no error code, so the new log line
 has to confirm it on the heavy re-proof, and a different SSM error there is a new ruling, not a retry.
 
-**Cost.** Advanced parameters bill per parameter-month, prorated, on the line the live fleet already pays per runner. Two
+**Cost.** Advanced parameters bill per parameter-month, prorated, on the line the live fleet already pays per runner. Three
 deletion paths bound each token:
 
 - The runner's start script deletes its own token parameter right after reading it at boot.

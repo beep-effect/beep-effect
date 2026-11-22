@@ -308,12 +308,13 @@ export const gitHubRunnersLive = (
           return response.status === "queued";
         }),
         runnerGroupId: Effect.fn("GitHubRunners.runnerGroupId")(function* (token, org, groupName) {
-          const response = yield* call(
+          // Every page: a 404 is deterministic, so a group on a later page must not read as missing.
+          const groups = yield* call(
             token,
             "listSelfHostedRunnerGroupsForOrg"
-          )(actions.listSelfHostedRunnerGroupsForOrg({ org, per_page: 100 }));
+          )(actions.listSelfHostedRunnerGroupsForOrg.items({ org, per_page: 100 }).pipe(Stream.runCollect));
           const group = yield* Effect.fromOption(
-            A.findFirst(response.runner_groups, (candidate) => candidate.name === groupName)
+            A.findFirst(A.fromIterable(groups), (candidate) => candidate.name === groupName)
           ).pipe(
             Effect.mapError(() =>
               GitHubApiError.make({

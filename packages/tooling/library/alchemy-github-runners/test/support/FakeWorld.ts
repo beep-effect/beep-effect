@@ -66,6 +66,8 @@ export class World {
   puts: Array<ParameterWrite> = [];
   /** Scripted SSM write failures by parameter-name prefix. */
   putFailures: Array<readonly [string, AwsApiError]> = [];
+  /** Name prefixes whose put stores the value and then fails: the response was lost. */
+  landedPutFailures: Array<readonly [string, AwsApiError]> = [];
   /** Scripted instance-tag failure for every tag call. */
   tagFailure: O.Option<AwsApiError> = O.none();
   /** Scripted terminate failure for every terminate call. */
@@ -206,6 +208,10 @@ export const worldContext = (world: World) =>
             return yield* failure.value[1];
           }
           world.ssm[input.name] = { value: Redacted.value(input.value), modified: 0, tags: { ...input.tags } };
+          const lost = A.findFirst(world.landedPutFailures, ([prefix]) => Str.startsWith(prefix)(input.name));
+          if (O.isSome(lost)) {
+            return yield* lost.value[1];
+          }
         }),
         delete: Effect.fn("FakeSsm.delete")(function* (name) {
           world.cleanupCalls.push(`deleteToken:${name}`);
