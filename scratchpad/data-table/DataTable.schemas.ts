@@ -29,7 +29,7 @@ export const FilterOperator = MappedLiteralKit(
     ["iLike", "ilike"],
     ["notILike", "not.ilike"],
     ["eq", "eq"],
-    ["ne", "neq"],
+    ["ne", "not.eq"],
     ["inArray", "in"],
     ["notInArray", "not.in"],
     ["isEmpty", "is.empty"],
@@ -38,7 +38,8 @@ export const FilterOperator = MappedLiteralKit(
     ["lte", "lte"],
     ["gt", "gt"],
     ["gte", "gte"],
-    ["isBetween", "between"]
+    ["isBetween", "between"],
+
   ]
 ).pipe(
   $I.annoteSchema("FilterOperator", {
