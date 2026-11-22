@@ -303,11 +303,11 @@ const locateFile = Effect.fn("CommentStrip.locateFile")(function* (repoRoot: str
  *
  * The ledger is written to `.beep/comment-law/ledger/<path-slug>.jsonl`
  * (gitignored), one row per banned comment, in file and offset order.
- * Protected rows are blocks carrying a tag tools read (`@since`,
- * `@category`, `@internal`, `@public`, `@expected-unused`, `@ignore`,
- * `@deprecated`), comments holding a code fence, the only content of a
- * block (`catch {}` included), TypeScript pragmas, the continuation line of
- * a directive, and JSDoc stacked under another JSDoc block.
+ * Protected rows are blocks carrying a tag tools read (since, category,
+ * internal, public, expected-unused, ignore or the deprecation tag), comments
+ * holding a code fence, the only content of a block (`catch {}` included),
+ * TypeScript pragmas, the continuation line of a directive, and JSDoc
+ * stacked under another JSDoc block.
  *
  * **Example** (Write a ledger for one package)
  *
