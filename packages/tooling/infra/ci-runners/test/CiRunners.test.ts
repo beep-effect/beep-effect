@@ -242,7 +242,7 @@ describe("CiRunners production stage", () => {
       expect(heavy.runnerType).toBe("Org");
       expect(heavy.pool.maximumCount).toBe(1);
       expect(heavy.pool.runnerGroup).toBe("beep-ec2-heavy");
-      expect(heavy.pool.instanceTypes).toHaveLength(6);
+      expect(heavy.pool.instanceTypes).toHaveLength(5);
       const overflow = yield* poolConfig(recorder, "overflow");
       expect(overflow.pool.maximumCount).toBe(2);
       expect(overflow.pool.runnerGroup).toBe("beep-shard-overflow");
