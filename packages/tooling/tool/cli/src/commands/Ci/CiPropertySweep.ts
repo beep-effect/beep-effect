@@ -241,7 +241,7 @@ export const clearPropertySweepReceipts = Effect.fn("CiPropertySweep.clear")(
  * import { PropertySweepPackage, PropertySweepVerdict } from "@beep/repo-cli/commands/Ci"
  *
  * const entry = PropertySweepPackage.make({ name: "@beep/csv", dir: "packages/csv", files: ["test/a.test.ts"], integration: [] })
- * console.log(PropertySweepVerdict.make({ package: entry, missing: ["test/a.test.ts"] }).missing.length) // 1
+ * console.log(PropertySweepVerdict.make({ package: entry, executed: 0, missing: ["test/a.test.ts"] }).missing.length) // 1
  * ```
  *
  * @category models
@@ -250,10 +250,12 @@ export const clearPropertySweepReceipts = Effect.fn("CiPropertySweep.clear")(
 export class PropertySweepVerdict extends S.Opaque<PropertySweepVerdict, { readonly brand: unique symbol }>()(
   S.Struct({
     package: PropertySweepPackage,
+    executed: S.Int,
     missing: S.Array(S.NonEmptyString),
   }).pipe(
     $I.annoteSchema("PropertySweepVerdict", {
-      description: "A swept package and its expected property files that executed no test.",
+      description:
+        "A swept package, how many files it executed, and its expected property files that executed no test.",
     })
   )
 ) {}
@@ -287,10 +289,12 @@ export const judgePropertySweep = Effect.fn("CiPropertySweep.judge")(
           receipts,
           A.flatMap((receipt) => receipt.files),
           A.filter((file) => file.executed > 0),
-          A.map((file) => file.file)
+          A.map((file) => file.file),
+          A.dedupe
         );
         return PropertySweepVerdict.make({
           package: entry,
+          executed: A.length(executed),
           missing: A.filter(entry.files, (file) => !A.contains(executed, file)),
         });
       }),
@@ -306,7 +310,9 @@ const countOf = (
 ) => A.reduce(verdicts, 0, (total, verdict) => total + A.length(files(verdict)));
 
 /**
- * The lines of a sweep's verdict: the totals, each integration file left out,
+ * The lines of a sweep's verdict: the totals, each package's expected and
+ * executed file counts (a package may execute more than its property files),
+ * each integration file left out,
  * and each expected file that did not run with the command that replays its
  * package.
  *
@@ -333,6 +339,11 @@ export const propertySweepLines = (
   const integration = countOf(verdicts, (verdict) => verdict.package.integration);
   return [
     `[property-sweep] ${A.length(verdicts)} package(s): ${expected - missing} of ${expected} expected file(s) executed, ${integration} left to the integration lane`,
+    ...A.map(
+      verdicts,
+      (verdict) =>
+        `[property-sweep] ${verdict.package.name}: ${A.length(verdict.package.files)} expected, ${verdict.executed} executed`
+    ),
     ...A.flatMap(verdicts, (verdict) =>
       A.map(
         verdict.package.integration,

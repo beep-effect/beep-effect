@@ -130,12 +130,16 @@ describe("property sweep", () => {
       Effect.gen(function* () {
         const root = yield* fixture({
           [`packages/a/${PROPERTY_SWEEP_RECEIPTS}/1.json`]: receipt([["test/a.test.ts", 3]]),
-          [`packages/a/${PROPERTY_SWEEP_RECEIPTS}/2.json`]: receipt([["test/b.test.ts", 1]]),
+          [`packages/a/${PROPERTY_SWEEP_RECEIPTS}/2.json`]: receipt([
+            ["test/b.test.ts", 1],
+            ["test/more.test.ts", 5],
+          ]),
         });
         const verdicts = yield* judgePropertySweep(root, [swept]);
         assertTrue(propertySweepIsComplete(verdicts));
         deepStrictEqual(propertySweepLines(verdicts, replay), [
           "[property-sweep] 1 package(s): 2 of 2 expected file(s) executed, 1 left to the integration lane",
+          "[property-sweep] @t/a: 2 expected, 3 executed",
           "[property-sweep] left to the integration lane: packages/a/test/integration/c.test.ts",
         ]);
       })
@@ -157,7 +161,7 @@ describe("property sweep", () => {
         });
         const verdicts = yield* judgePropertySweep(root, [swept, silent]);
         assertFalse(propertySweepIsComplete(verdicts));
-        deepStrictEqual(A.drop(propertySweepLines(verdicts, replay), 2), [
+        deepStrictEqual(A.drop(propertySweepLines(verdicts, replay), 4), [
           "[property-sweep] expected and not executed: packages/a/test/b.test.ts",
           "[property-sweep] expected and not executed: packages/s/test/s.test.ts",
           `[property-sweep] replay: ${propertySweepReplay("@t/a", replay)}`,
