@@ -84,11 +84,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
         runtime.runtime,
         controls.configuration
       ).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding({ ...runtime.limits, patterns: 1 }).pipe(
-            Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
-          )
-        ),
+        Effect.zipWith(makeCitationTestScaffoldBinding({ ...runtime.limits, patterns: 1 }), (stage, bind) => ({
+          ...stage,
+          port: { ...stage.port, tokenize: bind(stage.port.tokenize) },
+        })),
         Effect.provideContext(runtime.provided),
         Effect.flip
       );
@@ -107,11 +106,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned token
         ...controls.configuration,
         extractors: [first, contradictory],
       }).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(runtime.limits).pipe(
-            Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
-          )
-        ),
+        Effect.zipWith(makeCitationTestScaffoldBinding(runtime.limits), (stage, bind) => ({
+          ...stage,
+          port: { ...stage.port, tokenize: bind(stage.port.tokenize) },
+        })),
         Effect.provideContext(runtime.provided),
         Effect.flip
       );

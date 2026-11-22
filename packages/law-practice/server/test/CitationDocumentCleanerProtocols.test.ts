@@ -40,11 +40,11 @@ const setup = Effect.fn("DocumentCleanerProtocolsTest.setup")(function* (
     Effect.provideService(CitationCleanerProtocols, adapter.cleaner)
   );
   const pipeline = yield* makeCitationCleanerPipeline(policy.limits).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(policy.limits, "clean").pipe(
-        Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits, "clean"), (stage, bind) => ({
+      ...stage,
+      run: bind(stage.run),
+      runOwned: bind(stage.runOwned),
+    })),
     Effect.provideService(CitationCleaner, registry.runtime)
   );
   return { h, policy, adapter, pipeline };

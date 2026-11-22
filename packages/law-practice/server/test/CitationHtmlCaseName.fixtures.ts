@@ -122,11 +122,10 @@ const install = Effect.fn("HtmlCaseNameTest.install")(function* (kind: CitationN
   const setup = yield* setupCitationMetadataRuntime(kind);
   const prepare = yield* installCitationHtmlGeometryFixture(kind, setup);
   const stage = yield* makeCitationHtmlCaseName(setup.limits, setup.runtime, original.configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestInvocationBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestInvocationBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      extract: bind(stage.extract),
+    })),
     Effect.provideContext(setup.provided)
   );
   return { original, setup, prepare, stage };
@@ -191,11 +190,10 @@ export const assertCitationHtmlCaseNameRefusal = Effect.fn("HtmlCaseNameTest.ref
     Effect.gen(function* () {
       const { budget } = yield* CitationInvocation;
       const tight = yield* makeCitationHtmlCaseName(setup.limits, setup.runtime, original.configuration).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestInvocationBinding(setup.limits).pipe(
-            Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-          )
-        ),
+        Effect.zipWith(makeCitationTestInvocationBinding(setup.limits), (stage, bind) => ({
+          ...stage,
+          extract: bind(stage.extract),
+        })),
         Effect.provideContext(setup.provided)
       );
       const refused = yield* tight.extract(requestOf(row, prepared.geometry)).pipe(Effect.flip);

@@ -91,9 +91,7 @@ const install = Effect.fn("CourtLookupTest.install")(function* (maximum?: number
   const limits = maximum === undefined ? policy.limits : { ...policy.limits, producedTextUtf16: maximum };
   const table = yield* readFixture("court-table", Table);
   const parser = yield* makeCitationCourtLookup(limits, table.payload).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
-    )
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({ ...stage, lookup: bind(stage.lookup) }))
   );
   return { ...parser, limits, table };
 });
@@ -104,9 +102,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
     Effect.gen(function* () {
       const { limits, table } = yield* install();
       const invalidDigest = yield* makeCitationCourtLookup(limits, table.payload).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
-        ),
+        Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+          ...stage,
+          lookup: bind(stage.lookup),
+        })),
         Effect.provideService(
           Digest.Digest,
           makeTestCitationDigest(() => Effect.succeed(new Uint8Array(1)))
@@ -142,9 +141,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
     Effect.gen(function* () {
       const { limits, table } = yield* install();
       const refused = yield* makeCitationCourtLookup(limits, Str.replace("alacirct", "xlacirct")(table.payload)).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) })))
-        ),
+        Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+          ...stage,
+          lookup: bind(stage.lookup),
+        })),
         Effect.flip
       );
       expect(refused).toMatchObject({ _tag: "CitationCourtLookupFailure", reason: "invalid-table" });
@@ -179,11 +179,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
       const timer = yield* makeCitationNativeManualClock(deadline);
       const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
       const parser = yield* makeCitationCourtLookup({ ...limits, extractDeadline: deadline }, table.payload).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding({ ...limits, extractDeadline: deadline }).pipe(
-            Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
-          )
-        ),
+        Effect.zipWith(makeCitationTestScaffoldBinding({ ...limits, extractDeadline: deadline }), (stage, bind) => ({
+          ...stage,
+          lookup: bind(stage.lookup),
+        })),
         Effect.provideService(Clock.Clock, timer.clock)
       );
       const pending = yield* parser
@@ -199,11 +198,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
       const { limits, table } = yield* install();
       for (const operation of ["clean", "extract", "resolve", "annotate"] as const) {
         const parser = yield* makeCitationCourtLookup({ ...limits, sourceUtf16: 3 }, table.payload).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({ ...limits, sourceUtf16: 3 }).pipe(
-              Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding({ ...limits, sourceUtf16: 3 }), (stage, bind) => ({
+            ...stage,
+            lookup: bind(stage.lookup),
+          })),
           Effect.provideService(CitationRegexOperation, operation)
         );
         const source = yield* parser
@@ -211,11 +209,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
           .pipe(Effect.provideService(CitationRegexOperation, "extract"), Effect.flip);
         expect(source).toMatchObject({ _tag: "CitationSafetyLimitExceeded", operation, limit: "sourceUtf16" });
         const tight = yield* makeCitationCourtLookup({ ...limits, producedTextUtf16: 2 }, table.payload).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 2 }).pipe(
-              Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 2 }), (stage, bind) => ({
+            ...stage,
+            lookup: bind(stage.lookup),
+          })),
           Effect.provideService(CitationRegexOperation, operation)
         );
         const allocation = yield* tight
@@ -240,10 +237,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
           { ...limits, [`${operation}Deadline`]: deadline },
           table.payload
         ).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({ ...limits, [`${operation}Deadline`]: deadline }).pipe(
-              Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
-            )
+          Effect.zipWith(
+            makeCitationTestScaffoldBinding({ ...limits, [`${operation}Deadline`]: deadline }),
+            (stage, bind) => ({ ...stage, lookup: bind(stage.lookup) })
           ),
           Effect.provideService(Clock.Clock, timer.clock),
           Effect.provideService(CitationRegexOperation, operation)
@@ -272,11 +268,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source cour
       // The limits cross into the engine here; mutating the caller's copy later changes nothing installed.
       const owned = yield* ownCitationTestConfiguration(CitationEngineLimits, captured);
       const parser = yield* makeCitationCourtLookup(owned, table.payload).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(captured).pipe(
-            Effect.map((bind) => ({ ...stage, lookup: bind(stage.lookup) }))
-          )
-        )
+        Effect.zipWith(makeCitationTestScaffoldBinding(captured), (stage, bind) => ({
+          ...stage,
+          lookup: bind(stage.lookup),
+        }))
       );
       captured.sourceUtf16 = 100;
       const sourceRefused = yield* parser.lookup(native("S.C.")).pipe(Effect.flip);

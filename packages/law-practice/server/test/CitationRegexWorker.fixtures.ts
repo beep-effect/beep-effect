@@ -210,9 +210,10 @@ export const setupCitationRegexWorker = Effect.fn("RegexWorkerTest.setup")(funct
   );
 
   const worker = yield* installCitationRegexEvaluator(limits, runtime, bindings, engineInput).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+      ...stage,
+      evaluate: bind(stage.evaluate),
+    })),
     Effect.provideContext(context)
   );
   return { worker, admission, observed };

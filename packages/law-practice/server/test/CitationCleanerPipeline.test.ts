@@ -173,10 +173,9 @@ const pipeline = Effect.fn("CleanerTest.pipeline")(function* (
 ) {
   const citationResult1 = yield* defaultCitationEnginePolicy;
   return yield* makeCitationCleanerPipeline({ ...citationResult1.limits, ...overrides }).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding({ ...citationResult1.limits, ...overrides }, "clean").pipe(
-        Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
-      )
+    Effect.zipWith(
+      makeCitationTestScaffoldBinding({ ...citationResult1.limits, ...overrides }, "clean"),
+      (stage, bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) })
     ),
     Effect.provideService(CitationCleaner, h.runtime)
   );
@@ -713,11 +712,11 @@ it.effect("rejects negative text accounting from unchanged and produced runtime 
     const h = yield* harness;
     const limits = (yield* defaultCitationEnginePolicy).limits;
     const p = yield* makeCitationCleanerPipeline(limits).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(limits, "clean").pipe(
-          Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
-        )
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding(limits, "clean"), (stage, bind) => ({
+        ...stage,
+        run: bind(stage.run),
+        runOwned: bind(stage.runOwned),
+      })),
       Effect.provideService(CitationCleaner, {
         ...h.runtime,
         textUnits: () => Effect.succeedSome(-1),

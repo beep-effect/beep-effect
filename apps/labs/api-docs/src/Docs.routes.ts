@@ -29,7 +29,7 @@ class DocsRoutesOperationError extends S.TaggedError<DocsRoutesOperationError, {
 
 const apiBasePath = (slug: CatalogSlug): `/${string}` => `/apis/${slug}`;
 const docsPath = (slug: CatalogSlug): `/${string}` => `${apiBasePath(slug)}/docs`;
-const SCALAR_SCRIPT_PATH = "/assets/scalar-api-reference-1.43.5.js";
+const SCALAR_SCRIPT_PATH = "/assets/scalar-api-reference-1.81.0.js";
 const ScalarScriptModuleUrl = new URL(
   "./internal/httpApiScalar.js",
   import.meta.resolve("effect/http-api/HttpApiScalar")

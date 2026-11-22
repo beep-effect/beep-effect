@@ -40,9 +40,10 @@ const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimit
     create: installed.adapter.create,
   });
   const entry = yield* makeCitationExtractionEntry(limits, installed.setup.runtime, installed.configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+      ...stage,
+      extract: bind(stage.extract),
+    })),
     Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );

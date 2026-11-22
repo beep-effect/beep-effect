@@ -159,11 +159,11 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         const builtin = yield* values.retainHost({ function: "builtin" });
         const makePipeline = (value: CitationCleanerObject, name: unknown, repeat = false) =>
           makeCitationCleanerPipeline(policy).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(policy, "clean").pipe(
-                Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
-              )
-            ),
+            Effect.zipWith(makeCitationTestScaffoldBinding(policy, "clean"), (stage, bind) => ({
+              ...stage,
+              run: bind(stage.run),
+              runOwned: bind(stage.runOwned),
+            })),
             Effect.provideService(
               CitationCleaner,
               CitationCleaner.of({

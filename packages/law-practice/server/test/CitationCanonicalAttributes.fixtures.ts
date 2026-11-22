@@ -168,16 +168,12 @@ export const makeCitationCanonicalAttributeAssertion = Effect.fn("CanonicalAttri
   // `extractDeadline` expiry coverage.
   const unicode = yield* makeCitationPythonUnicode(setup.limits).pipe(Effect.provideContext(provided));
   const correction = yield* makeCitationResourceCorrection(setup.limits).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({
-          ...stage,
-          reporter: bind(stage.reporter),
-          page: bind(stage.page),
-          citation: bind(stage.citation),
-        }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      reporter: bind(stage.reporter),
+      page: bind(stage.page),
+      citation: bind(stage.citation),
+    })),
     Effect.provideContext(provided)
   );
   const bound = defaultConfiguration.extraction.extraction.loop.full.case.post.highestValidYear;

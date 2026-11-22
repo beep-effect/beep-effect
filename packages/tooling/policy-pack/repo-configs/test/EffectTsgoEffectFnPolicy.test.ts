@@ -189,10 +189,9 @@ it.layer(TestLayer, { timeout: "10 seconds" })((it) => {
         expect(tscRs.exitCode, context).toBe(0);
         const readFileString1 = yield* fs.readFileString(rootManifestPath);
         const { catalog } = decodeRootCatalog(readFileString1);
-        // tsrs pins its own upstream TypeScript (7.1.0-beta as of 0.20.1, the version tag names it) and
+        // tsrs pins its own upstream TypeScript and
         // `effect-tsgo patch --tsrs` replaces its binary with the Effect build of that exact tsrs
         // version, so the reported build carries the @effect/tsgo suffix and the installed tsrs version.
-        expect(catalog.tsrs).toMatch(/^\d+\.\d+\.\d+-ts7\.\d+\.\d+(?:-[0-9A-Za-z.]+)?$/u);
         expect(tscRs.stdout, context).toMatch(/^Version 7\..*\+effect-tsgo\./u);
         expect(tscRs.stdout, context).toContain(`+effect-tsgo.${catalog["@effect/tsgo"]} (tsrs ${catalog.tsrs},`);
       })

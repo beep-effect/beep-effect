@@ -26,11 +26,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
       Effect.gen(function* () {
         const { owner, limits } = yield* loadCitationRendering();
         const renderer = yield* makeCitationRendering(limits).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(limits).pipe(
-              Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+            ...stage,
+            render: bind(stage.render),
+          })),
           Effect.provideService(CitationFrozenEditions, owner)
         );
         for (const input of [null, {}, { mode: "unrecognized" }]) {
@@ -56,11 +55,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
           const unicode = yield* makeCitationPythonUnicode(limits);
           const value = yield* unicode.fromText(text);
           const rendering = yield* makeCitationRendering(limits).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(limits).pipe(
-                Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-              )
-            ),
+            Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+              ...stage,
+              render: bind(stage.render),
+            })),
             Effect.provideService(CitationFrozenEditions, owner)
           );
           const actual = yield* rendering.render({
@@ -80,10 +78,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
         const request = { mode: "id", metadata: { pinCite: native("42") } };
         const make = (maximum: number) =>
           makeCitationRendering({ ...limits, producedTextUtf16: maximum }).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: maximum }).pipe(
-                Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-              )
+            Effect.zipWith(
+              makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: maximum }),
+              (stage, bind) => ({ ...stage, render: bind(stage.render) })
             ),
             Effect.provideService(CitationFrozenEditions, owner)
           );
@@ -102,11 +99,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
             const budget = (yield* CitationInvocation).budget;
             yield* budget.reserve(3);
             const enclosing = yield* makeCitationRendering({ ...limits, producedTextUtf16: 16 }).pipe(
-              Effect.flatMap((stage) =>
-                makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 16 }).pipe(
-                  Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-                )
-              ),
+              Effect.zipWith(makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 16 }), (stage, bind) => ({
+                ...stage,
+                render: bind(stage.render),
+              })),
               Effect.provideService(CitationFrozenEditions, owner),
               Effect.provideService(CitationTextBudget, budget)
             );
@@ -137,11 +133,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
             source: Effect.fn("RenderingTest.wait")(() => Effect.never),
           });
           const installed = yield* makeCitationRendering(limits).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(limits).pipe(
-                Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-              )
-            ),
+            Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+              ...stage,
+              render: bind(stage.render),
+            })),
             Effect.provideService(CitationFrozenEditions, owner)
           );
           const request = { ...base, mode: "journal", metadata: { pinCite: null, parenthetical: null, year: null } };
@@ -151,10 +146,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
           expect(rendered).toEqual(native("1 NY Slip Op (U)"));
           const timer = yield* makeCitationNativeManualClock(Duration.millis(997));
           const timed = yield* makeCitationRendering({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
-                Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-              )
+            Effect.zipWith(
+              makeCitationTestScaffoldBinding({ ...limits, extractDeadline: Duration.millis(997) }),
+              (stage, bind) => ({ ...stage, render: bind(stage.render) })
             ),
             Effect.provideService(CitationFrozenEditions, waiting),
             Effect.provideService(Clock.Clock, timer.clock)

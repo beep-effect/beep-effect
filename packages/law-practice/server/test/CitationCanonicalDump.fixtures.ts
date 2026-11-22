@@ -76,11 +76,10 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
   const { setup, defaultConfiguration, provided, values, engineArtifact } =
     yield* installCitationDefaultConfigurationFixture(kind);
   const stage = yield* makeCitationSemanticExtraction(setup.limits, setup.runtime, defaultConfiguration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      extract: bind(stage.extract),
+    })),
     Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );
@@ -116,11 +115,10 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
   const profile = yield* readCitationNativeRenderingAsset("builtin-dump-profile");
   const utilityBudget = yield* makeCitationTextBudget(setup.limits);
   const adapter = yield* makeCitationBuiltinDump(setup.limits, profile).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, project: bind(stage.project) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      project: bind(stage.project),
+    })),
     Effect.provideService(CitationTextBudget, utilityBudget)
   );
   const rows = yield* Effect.forEach(models, adapter.project, { concurrency: 1 });
@@ -178,11 +176,10 @@ export const replayCitationCanonicalDump = Effect.fn("CanonicalDumpTest.replay")
   );
   const printability = yield* readCitationNativeRenderingAsset("python-printability");
   const dump = yield* makeCitationDump(setup.limits, printability).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      render: bind(stage.render),
+    })),
     Effect.provideService(CitationTextBudget, utilityBudget)
   );
   const rendered = yield* dump.render({ text: ownedPlain.storage, citations: rows });
