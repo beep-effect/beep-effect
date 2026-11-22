@@ -77,15 +77,15 @@
       "reason": "Each rebuild must acquire and close its own real PGlite, DuckDB and Oxigraph stores within one comparison case; a shared layer would turn the case into the different reused-store failure case. Owner: @beep/lejeune-bolt-workbench. Exit: retire when EV002 recognises two independent fresh builds compared within one case (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/labs/semantica/test/C0Slice.test.ts:259:provideScopedLayer@16#1",
+      "id": "EV002:apps/labs/semantica/test/C0Slice.test.ts:262:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/semantica",
       "file": "apps/labs/semantica/test/C0Slice.test.ts",
-      "line": 259,
-      "endLine": 259,
+      "line": 262,
+      "endLine": 262,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:052afaca7651d5356a1e2560656b0d45edd066b6f90a377e337ff6f9bc0fa5ba",
+      "occurrence": "v2:4c3c1a61d83023c35d5b711c6b92d7dcc83a48e84aa65af7add60bb593823786",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(runtime)",
       "replacement": {

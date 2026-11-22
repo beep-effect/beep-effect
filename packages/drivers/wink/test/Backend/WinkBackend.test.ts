@@ -11,10 +11,25 @@ import { it } from "@beep/test-runner";
 import * as WinkEngine from "@beep/wink";
 import { WinkBackendLive } from "@beep/wink";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Str from "effect/String";
 
 const TestLayer = Layer.provide(WinkBackendLive, WinkEngine.WinkEngineLive);
+
+// The live engine with `its.span` returning an empty token range, so no entity span resolves.
+const UnresolvableSpanEngine = Layer.effect(
+  WinkEngine.WinkEngine,
+  Effect.gen(function* () {
+    const live = yield* WinkEngine.WinkEngine;
+    return WinkEngine.WinkEngine.of({
+      ...live,
+      its: Effect.map(live.its, (its) => ({ ...its, span: (): Array<number> => [] })),
+    });
+  })
+).pipe(Layer.provide(WinkEngine.WinkEngineLive));
+const UnresolvableSpanLayer = Layer.provide(WinkBackendLive, UnresolvableSpanEngine);
 
 describe("WinkBackend", () => {
   it.layer(TestLayer, { timeout: "30 seconds" })("tokenizes text into words", (it) => {
@@ -79,6 +94,48 @@ describe("WinkBackend", () => {
           expect(typeof entity.entityType).toBe("string");
           expect(entity.span.end).toBeGreaterThanOrEqual(entity.span.start);
         }
+      })
+    );
+  });
+
+  it.layer(TestLayer, { timeout: "30 seconds" })("gives each repeated entity mention its own span", (it) => {
+    it.effect(
+      "gives each repeated entity mention its own span",
+      Effect.fnUntraced(function* () {
+        const backend = yield* Backend.NLPBackend;
+        const text = "Email a@b.com then a@b.com again.";
+        const entities = yield* backend.extractEntities(text);
+        expect(A.map(entities, (entity) => entity.span)).toEqual([
+          { end: 13, start: 6 },
+          { end: 26, start: 19 },
+        ]);
+        for (const entity of entities) {
+          expect(Str.slice(entity.span.start, entity.span.end)(text)).toBe(entity.text);
+        }
+      })
+    );
+  });
+
+  it.layer(TestLayer, { timeout: "30 seconds" })("takes entity spans from the original text", (it) => {
+    it.effect(
+      "takes entity spans from the original text",
+      Effect.fnUntraced(function* () {
+        const backend = yield* Backend.NLPBackend;
+        // wink caps a token's stored preceding spaces at 65,534, so offsets rebuilt from them drift.
+        const text = `${Str.repeat(65_535)(" ")}a@b.com`;
+        const entities = yield* backend.extractEntities(text);
+        expect(A.map(entities, (entity) => entity.span)).toEqual([{ end: 65_542, start: 65_535 }]);
+      })
+    );
+  });
+
+  it.layer(UnresolvableSpanLayer, { timeout: "30 seconds" })("fails extractEntities when no span resolves", (it) => {
+    it.effect(
+      "fails extractEntities when no span resolves",
+      Effect.fnUntraced(function* () {
+        const backend = yield* Backend.NLPBackend;
+        const result = yield* Effect.flip(backend.extractEntities("Email a@b.com today."));
+        expect(result._tag).toBe("BackendOperationError");
       })
     );
   });
