@@ -1,0 +1,61 @@
+{
+  "previous": {
+    "//": "c4d6eda969f96df448245ad6b5e2eb4ed07f59d43525859a59b5145e1bd1d9e6",
+    "@beep/agent-memory-store": "ed8a0a46c7828614d4750817d23fac1936f0882acd0fc04e6ca8c51acf0ce44a",
+    "@beep/epistemic-domain": "4993ca81aaaf91d02ccc98edf658df9004c571808f1efef518690a027c563398",
+    "@beep/epistemic-server": "57f983651d3619404f4675fc9b0156e0d51a30221cf35f1e16ba46530ee62072",
+    "@beep/epistemic-tables": "b38fa867148f1b5419c94aa718a902d5fae911cd1ccf942e44a848ad262f5803",
+    "@beep/epistemic-ui": "2cdc4741088ef6242bd08045bec8958758badc1854058d7827ee9979cd705a48",
+    "@beep/epistemic-use-cases": "9eac5bf7938ed7b38175201776c975b80371a11697746e0f990e34bd52043445",
+    "@beep/epistemics": "82294cd6290dbf8ebf331e1a3132b5004082dc14b712fa5218e8e72e504a1469",
+    "@beep/file-processing": "206965665f521fe310e5b0ed0d7b795e6479e78539ccfea4a22ff8969ce11400",
+    "@beep/langextract": "46a985fc40c21a0077d735e61a8ce5fd59ea2f5dcbc5827e3ebcd08996a7a35e",
+    "@beep/law-practice-domain": "2344cd19c580c061bc4e412839eb5c6075a7999cfea277b617119886b508f35c",
+    "@beep/law-practice-server": "fbd872ccb2f9ade5eb6de9c48811d5a3483e2b997abe6657b7741ca64be9d078",
+    "@beep/law-practice-use-cases": "fce9abde490112eca8f0fc35a50ea70127cf371743f8e8f26904c3c349d279d6",
+    "@beep/lejeune-bolt-workbench": "0296372fe619d2c2e33453580c894deadad38192982c99e137ce8ca8110efbf4",
+    "@beep/md": "329b4f9791615f1de6cc2138c3a51d4bbb3f26a57f403a04555b4ca20730ff74",
+    "@beep/party-domain": "46538973e0c572d66c1726972d70e6351ab4a248dc63d07e2b96c1e73ccaf758",
+    "@beep/professional-desktop": "33ddc1b3c4d8562379f0ac3e0d5cbe2402e24681946de55809c9caffcdc629ce",
+    "@beep/provenance": "2059488c4171abd972b635e3dffafdd930d5af265e5e340fcc58850bb49af6b0",
+    "@beep/rdf": "3dbd1521df6ec0a37cad9e7cefcfdf93360caaa9df4707bd22d00e69135c097c",
+    "@beep/repo-cli": "aec1bebdaa19a395b74064d286eadd0ecd70161b3ad2b86c5f86eaf789a40f91",
+    "@beep/semantica": "e021782dc891b9a07f0b85a328ff41029992248209edc90914d923b17b9a77ec",
+    "@beep/workspace-server": "774684183ba7aa75644c215d501d4d4756d557ec5ffda9d41145c34e3781389a"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P2 L1 text lane)",
+    "reason": "Record the move of @beep/provenance to @beep/text: every consumer task now depends on @beep/text#build instead of @beep/provenance#build, @beep/text, @beep/law-practice-server, @beep/rdf, @beep/party-domain and @beep/md gain the edges P2 adds, and the root policy-fingerprint input names the new package path. The root also records the inherited uncached //#lint:identity-registry of abfefff816c. No command, output or environment changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/tksr-p2-l1-move-cache-review-2026-11-22.md",
+      "sha256": "ab09a25a0124a78275bfef1e6ec502af0a1d974b1d90eaca49becb5f2e62624a"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/agent-memory-store",
+    "@beep/epistemic-domain",
+    "@beep/epistemic-server",
+    "@beep/epistemic-tables",
+    "@beep/epistemic-ui",
+    "@beep/epistemic-use-cases",
+    "@beep/epistemics",
+    "@beep/file-processing",
+    "@beep/langextract",
+    "@beep/law-practice-domain",
+    "@beep/law-practice-server",
+    "@beep/law-practice-use-cases",
+    "@beep/lejeune-bolt-workbench",
+    "@beep/md",
+    "@beep/party-domain",
+    "@beep/professional-desktop",
+    "@beep/rdf",
+    "@beep/repo-cli",
+    "@beep/semantica",
+    "@beep/text",
+    "@beep/workspace-server"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

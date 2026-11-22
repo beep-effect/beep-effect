@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 registry lane, PR #3439)",
-    "reason": "Re-record the root after merging main at bf1732fa398: //#lint:identity-registry keeps PR B's registry shard input glob; main's root changes are kept. No command, cache flag, output or environment changed; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P2 L1 text lane)",
+    "reason": "Record the move of @beep/provenance to @beep/text: every consumer task now depends on @beep/text#build instead of @beep/provenance#build, @beep/text, @beep/law-practice-server, @beep/rdf, @beep/party-domain and @beep/md gain the edges P2 adds, and the root policy-fingerprint input names the new package path. The root also records the inherited uncached //#lint:identity-registry of abfefff816c. No command, output or environment changed; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p1b-main-merge-cache-review-2026-11-22.md",
-      "sha256": "5390af34b49b8ed8a72c037487347834cff7e5c9a5007b9fd336da0772cea4bb"
+      "path": "docs/reports/tksr-p2-l1-move-cache-review-2026-11-22.md",
+      "sha256": "ab09a25a0124a78275bfef1e6ec502af0a1d974b1d90eaca49becb5f2e62624a"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "d0d73a191cdeb7a4bc828658992b0c0445bafe6a4fe8158492d301b93b2dc088"
+      "sha256": "4dafc694d39afb84ac3f4d19e4fc96811619d4b39e4dabde02d860acffa9a1d1"
     }
   ],
   "nodes": [
@@ -1545,7 +1545,7 @@
         "@beep/repo-cli#lint:policy-fingerprint:lint-identity-registry"
       ],
       "configuration": {
-        "cache": true,
+        "cache": false,
         "inputs": [
           "!**/.beep/**/package.json",
           "!**/.next/**/package.json",
@@ -2221,7 +2221,6 @@
           "packages/foundation/modeling/package-json/package.json",
           "packages/foundation/modeling/package-json/src/**",
           "packages/foundation/modeling/pandoc-ast/package.json",
-          "packages/foundation/modeling/provenance/package.json",
           "packages/foundation/modeling/public-site/package.json",
           "packages/foundation/modeling/rdf/package.json",
           "packages/foundation/modeling/sbom/package.json",
@@ -2234,6 +2233,7 @@
           "packages/foundation/modeling/skill-contract/src/**",
           "packages/foundation/modeling/spdx/package.json",
           "packages/foundation/modeling/spdx/src/**",
+          "packages/foundation/modeling/text/package.json",
           "packages/foundation/modeling/toml/package.json",
           "packages/foundation/modeling/tsconfig/package.json",
           "packages/foundation/modeling/tsconfig/src/**",

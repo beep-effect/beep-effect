@@ -1191,6 +1191,22 @@ Lane goals/text-knowledge-stack-rebuild-p2-text
 
 Reverse: Restore the v1 file beside a v2 sibling by a decision file; the v1 bytes are in git at the P2 base.
 
+### P2: the cache-baseline request names @beep/provenance in previous only, not among its subjects, 2026-11-22
+
+Section 3.1 of research/2026-11-20-p2-design.md says the request's subjects name every changed subject, @beep/provenance included. bun run beep cache baseline refuses that request: the retired package is no longer in the task graph, and the command reports it as an unknown subject. The request docs/reports/tksr-p2-l1-move-cache-baseline-request-2026-11-22.json therefore lists the 22 subjects in the graph (the root, 20 consumers and @beep/text) and keeps the retired file's digest in previous. The command then drops standards/cache-baseline/@beep/provenance.json as a subject that left the graph (printed as Dropped), so no baseline file is deleted by hand, which is what the design asked for. bun run beep cache audit and bun run beep quality cache-policy read 0 blocking findings afterwards.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Add @beep/provenance to the request's subjects once beep cache baseline accepts a subject that left the task graph, and re-record.
+
+### P2: commit 13 gates the check census and leaves the re-measure to the final check, 2026-11-22
+
+Section 10 says the census is measured once at the end, on a built tree, after the last merge of the parent branch, and that merge has not happened. Commit 13 therefore runs the gate (bun run beep quality check-census --gate-only on a tree built with bunx turbo run build for the upstream of @beep/repo-cli, @beep/law-practice-domain and @beep/schema) and does not rewrite the baseline. The gate passes: @beep/law-practice-domain and @beep/schema are unchanged, @beep/repo-cli grew by 26602 instantiations (+0.32 percent, inside the 10 percent band) since the baseline of 2026-11-20, and no row failed. The re-measure with --write-baseline runs after the parent merge, before yeet final-check.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Run bun run beep quality check-census --write-baseline on this head and commit the rewritten standards/check-census.regression-baseline.jsonc.
+
 ### P2: mention ids are cm2 over a bare-hex digest, only the case-occurrence authority key bumps its tag, and the preimage belongs to law-practice, 2026-11-22
 
 CitationMentionId becomes cm2: plus 64 hex, where the hex is the ContentHash of (citation-mention/v2, engineArtifact, semanticKind, OccurrenceId) without its sha256: prefix. The prefix bump keeps v3 and v4 receipts distinguishable on sight and lets the frozen v3 schema own cm1:. The bare-hex display form is the slice's existing token shape; the digest behind it is the standard one. The preimage is declared with definePreimage in packages/law-practice/server/src/internal/Citation/MentionIdentity.ts, not in @beep/text: citation kinds are legal semantics, which SPEC keeps out of foundation, so the CitationMention* exports of the design module are not moved into the package. Authorities: only the case-occurrence key embeds a mention id, so only that key changes its tag to citation-authority/v2; the case, law, journal and external-resource keys keep citation-authority/v1 and their ids. The ca1:, cl1: and cg1: prefixes stay, because they version the token format and the default-path cl and cg ids are a slice of the authority digest: they change exactly when that digest changes, which is the bumped tag p0-rq4 asks for. cd1 and the session-node cl1 and cg1 ids have no mention id in their preimage and do not change. Side-by-side goldens over the existing test source: cm1:dc70e426b0b9aa61caf21a5e6e0c7274720c7e674ff2b06a8cdfd82ee0346ae9 and cm2:7ece8d5655b197d8063442248a8f630cd05fee535fe5ae550f2b15754425cd44; its case-occurrence authority ca1:7f43ae8777fd804f01172cce2e73b1762c712f9f7e4c8d08bffdb58a49341bf6 (v1) and ca1:4d2adc3d142ce1c3a4b028bde50b9f27253a829404d1f7d773442e6d6ab5ee13 (v2).
@@ -1206,6 +1222,14 @@ LocatorMap.compose cuts the middle capture only at edges that are not strictly i
 Lane goals/text-knowledge-stack-rebuild-p2-text
 
 Reverse: Give AlignedSegment a third case that keeps inserted text visible and have compose emit it, by a decision file before P3 records a composite re-anchoring.
+
+### P2: coverage rows written at 100 percent for new files count as registration under S31, 2026-11-22
+
+Commit 13 re-records the coverage rows of @beep/text, @beep/rdf and @beep/md with the scoped writer (bun run coverage -- --filter=... --write-baseline). The writer drops the row of the deleted rdf/src/Evidence.ts and adds one row per file the old rows did not name: the ten new @beep/text modules, md/src/Md.anchors.ts and eleven rdf files that had no row (NamespacePin.ts, the generated NamespacePins.data.ts, the Dcat, Shacl and Void vocabularies and the generated term modules of Dcat, Oa, Prov, Shacl, Void and Xsd; all but the two Dcat files are new since the P0 base). Every added row records 100 percent on lines, statements, branches and functions with zero uncovered units, so it records no debt: it is the same bar the hosted ratchet applies to a file without a row. Under S31 those rows are registration, as S31a treats a re-stamped cache-baseline review for a new package, and the per-file line count of research/consumer-census.md grows by them (provenance and text 4 to 14, rdf 38 to 47, md 17 to 18). Rows below 100 percent are existing rows that the write raised (rdf/src/Rdf.ts, several md modules); no row was lowered.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Re-run bun run coverage -- --filter=@beep/text --filter=@beep/rdf --filter=@beep/md --write-baseline from the P2 base rows and drop the added file rows, leaving the hosted ratchet to judge the files as new.
 
 ### P2: webAnnotationTargetToTextAnchor refuses ill-formed text on every path, so a decoded anchor always re-encodes, 2026-11-22
 
