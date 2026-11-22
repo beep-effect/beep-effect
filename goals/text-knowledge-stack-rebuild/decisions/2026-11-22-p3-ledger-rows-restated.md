@@ -1,0 +1,8 @@
+---
+title: "P3: ledger rows L2-1, L2-3, L2-5 and L2-6 are restated over the functions under test"
+date: 2026-11-22
+lane: "goals/text-knowledge-stack-rebuild-p3-annotation"
+reversal: "Restore the P0 row texts by a decision file edited with the ledger"
+---
+
+`L2-1`: merge over one capture is idempotent, commutative and associative on content, attribution unions, and a refusal is the same value in either argument order (decision `p3-merge-refusals-are-symmetric`). `L2-3`: the checked decode refuses an annotation with no generation and a second generation for one (content, activity) pair, and `merge` and `restrict` keep every annotation attributed with one generation per pair. As written, the row restated two schema filters and named no function. `L2-5`: containment is a strict order, range inclusion with a non-decreasing level and the lower level on equal spans (decision `p3-containment-levels-are-monotone`). `L2-6`: for a document over the OA kinds, `decode(encode(d)) = d` with its imported activities; for third-party input `s`, `encode(decode(s)) = normalize(s)` on ground datasets; `resolve` gives the same result on every target before and after; offsets are code points on the wire and refuse a split surrogate (astral fixture); every generation is written as one run entity, and unattributed input is attributed to the import activity (decisions `p3-oa-codec-signatures-and-profile`, `p3-oa-instance-iris-and-ground-datasets`, `p3-oa-rejections-go-to-the-residual`, `p3-generation-time-is-the-stated-time`). Each row's package column becomes `@beep/annotation`, and each test title keeps its row id.
