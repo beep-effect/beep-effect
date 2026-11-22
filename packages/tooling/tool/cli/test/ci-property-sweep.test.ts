@@ -8,16 +8,17 @@ import {
   judgePropertySweep,
   PROPERTY_SWEEP_NO_CACHE,
   PROPERTY_SWEEP_RECEIPTS,
+  PROPERTY_TEST_MARKER,
   PropertySweepPackage,
   propertySweepIsComplete,
   propertySweepLines,
-  propertySweepMarkerForTesting,
   propertySweepPackages,
   propertySweepReplay,
 } from "@beep/repo-cli/commands/Ci";
 import { workspaceManifests } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { findRepoRoot } from "@beep/repo-utils";
-import * as NodeServices from "@effect/platform-node/NodeServices";
+import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";
+import * as NodePath from "@effect/platform-node/NodePath";
 import { describe, it } from "@effect/vitest";
 import { assertFalse, assertTrue, deepStrictEqual, strictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -25,16 +26,16 @@ import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
+import * as Layer from "effect/Layer";
 import * as Path from "effect/Path";
-import * as ChildProcess from "effect/process/ChildProcess";
-import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
-import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
 const UNIT = "bunx --bun vitest run --exclude=test/integration/**";
 const PROPERTY = 'it.effect.prop("law", [S.Int], check);\n';
 const PLAIN = 'it("adds", check);\n';
+const FAST_CHECK_IMPORT = /^import [^;]*from "fast-check";$/mu;
+const SEED_LITERAL = /\bseed: (\d+)/gu;
 const replay = { seed: "7", runs: "1000" };
 
 const manifest = (name: string, scripts: Record<string, string>): string =>
@@ -59,6 +60,13 @@ const fixture = Effect.fnUntraced(function* (files: Record<string, string>) {
   return root;
 });
 
+// Git's list of test files, not the census's own walk of the tree.
+const testFilesInGit = (root: string): ReadonlyArray<string> => {
+  const listed = Bun.spawnSync({ cmd: ["git", "-C", root, "ls-files", "*.test.ts", "*.test.tsx"], stdout: "pipe" });
+  assertTrue(listed.success, "git lists the tree");
+  return A.filter(Str.split(listed.stdout.toString(), "\n"), Str.isNonEmpty);
+};
+
 const receipt = (files: ReadonlyArray<readonly [file: string, executed: number]>): string =>
   `{"schemaVersion":"property-sweep/v1","files":[${A.join(
     A.map(files, ([file, executed]) => `{"file":"${file}","executed":${executed}}`),
@@ -74,8 +82,8 @@ const swept = PropertySweepPackage.make({
 
 describe("property sweep", () => {
   it("selects files by the marker the shared Vitest configuration selects with", () => {
-    strictEqual(propertySweepMarkerForTesting.source, propertyTestMarker.source);
-    strictEqual(propertySweepMarkerForTesting.flags, propertyTestMarker.flags);
+    strictEqual(PROPERTY_TEST_MARKER.source, propertyTestMarker.source);
+    strictEqual(PROPERTY_TEST_MARKER.flags, propertyTestMarker.flags);
   });
 
   it("names the replay command, uncached, with the run's seed and floor", () => {
@@ -85,7 +93,7 @@ describe("property sweep", () => {
     );
   });
 
-  it.layer(NodeServices.layer, { timeout: "120 seconds" })("over a workspace", (it) => {
+  it.layer(Layer.merge(NodeFileSystem.layer, NodePath.layer), { timeout: "120 seconds" })("over a workspace", (it) => {
     it.effect("takes property files of packages with a test script and no test:property script", () =>
       Effect.gen(function* () {
         const root = yield* fixture({
@@ -122,6 +130,24 @@ describe("property sweep", () => {
             integration: [],
           }),
         ]);
+      })
+    );
+
+    it.effect("names the same directories for a checkout reached through a link", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* fixture({
+          "packages/a/package.json": manifest("@t/a", { test: "x" }),
+          "packages/a/test/a.test.ts": PROPERTY,
+        });
+        const links = yield* fs.makeTempDirectoryScoped({ prefix: "property-sweep-link-" });
+        const link = path.join(links, "checkout");
+        yield* fs.symlink(root, link);
+        const direct = yield* propertySweepPackages(root);
+        const linked = yield* propertySweepPackages(link);
+        deepStrictEqual(linked, direct);
+        strictEqual(linked[0]?.dir, "packages/a");
       })
     );
 
@@ -201,12 +227,9 @@ describe("property sweep", () => {
         const path = yield* Path.Path;
         const root = yield* findRepoRoot();
         const workspaces = yield* Effect.map(workspaceManifests(root), flow(HashMap.entries, A.fromIterable));
-        // Git's list of test files, not the census's own walk of the tree.
-        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
-        const git = yield* spawner.spawn(ChildProcess.make("git", ["-C", root, "ls-files", "*.test.ts", "*.test.tsx"]));
-        const listed = yield* git.stdout.pipe(Stream.decodeText, Stream.mkString);
+        const listed = testFilesInGit(root);
         const marked = yield* Effect.filter(
-          A.filter(Str.split(listed, "\n"), (file) => Str.isNonEmpty(file) && !Str.includes("/fixtures/")(file)),
+          A.filter(listed, (file) => !Str.includes("/fixtures/")(file)),
           (file) => Effect.map(fs.readFileString(path.join(root, file)), (source) => propertyTestMarker.test(source)),
           { concurrency: 16 }
         );
@@ -236,6 +259,37 @@ describe("property sweep", () => {
           ["@beep/scratchpad"]
         );
       })
+    );
+
+    it.effect(
+      "names every test file that draws from fast-check, which no shared seed reaches, with its own seeds",
+      () =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          const root = yield* findRepoRoot();
+          const tracked = A.filter(testFilesInGit(root), (file) => !Str.startsWith("scratchpad/")(file));
+          const drawing = yield* Effect.filter(
+            tracked,
+            (file) => Effect.map(fs.readFileString(path.join(root, file)), (source) => FAST_CHECK_IMPORT.test(source)),
+            { concurrency: 16 }
+          );
+          const seeds = yield* Effect.forEach(
+            drawing,
+            (file) =>
+              Effect.map(
+                fs.readFileString(path.join(root, file)),
+                (source) =>
+                  [file, A.map(A.fromIterable(Str.matchAll(SEED_LITERAL)(source)), (match) => match[1] ?? "")] as const
+              ),
+            { concurrency: 1 }
+          );
+          // A new entry passes a literal seed to every draw; the nightly explores neither it nor these.
+          deepStrictEqual(R.fromEntries(seeds), {
+            "apps/professional-desktop/test/intake-model.test.ts": ["11", "5"],
+            "packages/drivers/xstate/test/ModelTesting.test.ts": ["7", "7", "7", "1", "3"],
+          });
+        })
     );
 
     it.effect("names every property file of the live workspace it leaves to the integration lane", () =>

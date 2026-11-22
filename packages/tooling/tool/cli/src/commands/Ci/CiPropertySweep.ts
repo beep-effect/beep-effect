@@ -22,9 +22,27 @@ import { CiCommandError } from "./Ci.errors.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiPropertySweep");
 
-// The same expression as `propertyTestMarker` in @beep/fc-runs, which vitest.shared.ts selects the
-// sweep's files with; a test holds the two equal.
-const PROPERTY_TEST_MARKER =
+/**
+ * Matches the source of a test file that draws from an arbitrary.
+ *
+ * **Details**
+ *
+ * The same expression as `propertyTestMarker` in `@beep/fc-runs`, which the
+ * shared Vitest configuration selects the sweep's files with; a test holds the
+ * two equal.
+ *
+ * **Example** (Recognise a property file)
+ *
+ * ```ts
+ * import { PROPERTY_TEST_MARKER } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(PROPERTY_TEST_MARKER.test('it.effect.prop("law", [arb], f)')) // true
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const PROPERTY_TEST_MARKER: RegExp =
   /\bFastCheck\b|\bfast-check\b|\bit\.prop\b|\bit\.effect\.prop\b|\bassertSchemaArbitraryDecodesToSelf\b|\bArbitrary\.(?:checkEffect|sampleEffect|schema)\b|\bunstable\/arbitrary\/Arbitrary\b|\bfc\.(?:property|asyncProperty|assert|sample|check)\b/;
 
 const TEST_FILE = /\.test\.tsx?$/;
@@ -164,8 +182,11 @@ const isLeftToIntegration = (file: string, unitScript: O.Option<string>): boolea
  */
 export const propertySweepPackages = Effect.fn("CiPropertySweep.packages")(
   function* (repoRoot: string) {
+    const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const workspaces = yield* workspaceManifests(repoRoot);
+    // Workspace directories are resolved through links, so the root they are relative to is too.
+    const root = yield* fs.realPath(repoRoot);
+    const workspaces = yield* workspaceManifests(root);
     const candidates = pipe(
       workspaces,
       HashMap.entries,
@@ -182,7 +203,7 @@ export const propertySweepPackages = Effect.fn("CiPropertySweep.packages")(
         const unitScript = HashMap.get(workspace.manifest.scripts, "beep:test");
         const integration = A.filter(all, (file) => isLeftToIntegration(file, unitScript));
         const files = A.filter(all, (file) => !isLeftToIntegration(file, unitScript));
-        const dir = Str.replaceAll(path.sep, "/")(path.relative(repoRoot, workspace.dir));
+        const dir = Str.replaceAll(path.sep, "/")(path.relative(root, workspace.dir));
         return PropertySweepPackage.make({ name, dir, files, integration });
       }),
       { concurrency: 8 }
@@ -430,13 +451,3 @@ export const PROPERTY_SWEEP_NO_CACHE = "--cache=local:,remote:";
  */
 export const propertySweepIsComplete = (verdicts: ReadonlyArray<PropertySweepVerdict>): boolean =>
   A.every(verdicts, (verdict) => A.isReadonlyArrayEmpty(verdict.missing));
-
-/**
- * Exposed so a test can hold the marker equal to the one the shared Vitest
- * configuration selects files with.
- *
- * @internal
- * @category testing
- * @since 0.0.0
- */
-export const propertySweepMarkerForTesting: RegExp = PROPERTY_TEST_MARKER;
