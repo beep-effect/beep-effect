@@ -63,14 +63,17 @@ runtime-issued `SafeHtml`.
 ## Parsing Markdown text
 
 `@beep/markdown` owns parsing: positioned nodes, trivia, and offset-splice edits. `@beep/md` owns the persisted
-semantic model. The bridge between them is two subpath modules:
+semantic model. The bridge between them is three subpath modules:
 
 - `@beep/md/Md.syntax` folds a parsed `MarkdownDocument` into an `Md.Document` with `fromMarkdownDocument`, and
   carries the loss, source-map, and option schemas.
 - `@beep/md/Md.parse` runs the `@beep/markdown` parser with frontmatter capture on and then the fold:
   `parseResult` and `parseSafeResult` return a `Result`, `parse` and `parseSafe` are their `Effect` twins.
+- `@beep/md/Md.anchors` turns a source-map span into evidence: `anchorAt` slices the node's span from a
+  `@beep/text` `VerifiedSourceText` and proves it, returning `Option<VerifiedTextAnchor>`. A zero-width or synthetic
+  span is `None`; a span past the end of the text or inside a surrogate pair fails with `VerifiedTextAnchorError`.
 
-Import them by subpath. Neither is re-exported from `@beep/md` or from the `Md` namespace, so code that only builds
+Import them by subpath. None is re-exported from `@beep/md` or from the `Md` namespace, so code that only builds
 or renders documents never loads the parser or the frontmatter codecs. A test in `test/Md.import-boundary.test.ts`
 holds that rule.
 

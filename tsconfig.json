@@ -2617,7 +2617,10 @@
         "./packages/tooling/tool/cli/src/commands/Identity/index.ts"
       ],
       "@beep/text": ["./packages/foundation/modeling/text/src/index.ts"],
-      "@beep/text/*": ["./packages/foundation/modeling/text/src/*"]
+      "@beep/text/*": ["./packages/foundation/modeling/text/src/*"],
+      "@beep/md/Md.anchors": [
+        "./packages/foundation/modeling/md/src/Md.anchors.ts"
+      ]
     }
   }
 }

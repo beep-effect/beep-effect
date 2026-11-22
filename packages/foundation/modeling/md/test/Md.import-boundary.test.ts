@@ -54,7 +54,7 @@ const ROOT_MODULES = [
   "./Md.ts",
 ];
 
-// Every public entry except the two bridge subpaths.
+// Every public entry except the three bridge subpaths.
 const NON_BRIDGE_ENTRIES = [
   "index.ts",
   "Md.ts",
@@ -70,7 +70,10 @@ const NON_BRIDGE_ENTRIES = [
 const PARSER_PACKAGES = ["@beep/markdown", "@beep/yaml", "@beep/toml", "@beep/jsonc"];
 
 const isBridgeModule = (module: string): boolean =>
-  module === "Md.syntax.ts" || module === "Md.parse.ts" || Str.startsWith("internal/syntax/")(module);
+  module === "Md.syntax.ts" ||
+  module === "Md.parse.ts" ||
+  module === "Md.anchors.ts" ||
+  Str.startsWith("internal/syntax/")(module);
 
 // The one exception: `@beep/jsonc/JsoncFingerprint` is that package's
 // canonical-JSON facade, not its parser, and loads no parser module. JSON
@@ -100,6 +103,14 @@ describe("@beep/md import boundary", () => {
       const closure = yield* runtimeClosure("Md.parse.ts");
       expect(A.contains(closure.modules, "Md.syntax.ts")).toBe(true);
       expect(A.some(closure.packages, isParserSpecifier)).toBe(true);
+    })
+  );
+
+  it.effect("loads the source map and @beep/text in the anchors bridge's own closure", () =>
+    Effect.gen(function* () {
+      const closure = yield* runtimeClosure("Md.anchors.ts");
+      expect(A.contains(closure.modules, "Md.syntax.ts")).toBe(true);
+      expect(A.some(closure.packages, Str.startsWith("@beep/text/"))).toBe(true);
     })
   );
 
@@ -135,8 +146,10 @@ describe("@beep/md import boundary", () => {
   it("publishes the bridge as side-effect-free subpaths with @beep/markdown as a dependency", () => {
     expect(manifest.exports["./Md.syntax"]).toBe("./src/Md.syntax.ts");
     expect(manifest.exports["./Md.parse"]).toBe("./src/Md.parse.ts");
+    expect(manifest.exports["./Md.anchors"]).toBe("./src/Md.anchors.ts");
     expect(manifest.publishConfig.exports["./Md.syntax"]).toBe("./dist/Md.syntax.js");
     expect(manifest.publishConfig.exports["./Md.parse"]).toBe("./dist/Md.parse.js");
+    expect(manifest.publishConfig.exports["./Md.anchors"]).toBe("./dist/Md.anchors.js");
     expect(manifest.exports["./internal/*"]).toBe("./src/internal/*.ts");
     expect(manifest.publishConfig.exports["./internal/*"]).toBe("./dist/internal/*.js");
     expect(manifest.sideEffects).toStrictEqual([]);

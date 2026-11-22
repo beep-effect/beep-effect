@@ -6,6 +6,7 @@
   "attributes": [],
   "instruments": [],
   "spans": [
+    {"name":"Md.anchorAt","owner":"@beep/md","family":"foundation","conforms":true},
     {"name":"Md.parse","owner":"@beep/md","family":"foundation","conforms":true},
     {"name":"Md.parseSafe","owner":"@beep/md","family":"foundation","conforms":true},
     {"name":"Md.youtubeEffect","owner":"@beep/md","family":"foundation","conforms":true}

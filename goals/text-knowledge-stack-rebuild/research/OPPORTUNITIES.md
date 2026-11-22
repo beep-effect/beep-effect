@@ -226,3 +226,13 @@ home paths with `~`, drop session and machine ids.
   and `OccurrenceId` rows. The same command with the two changed `.ts` files as arguments rewrote the shard.
 - **Prevention:** the command expands a directory argument to the sources under it, or refuses a path that
   names no source file instead of reporting a write.
+
+## 2026-11-22: `config-sync` writes a root tsconfig that biome then reformats
+
+- **Doing:** commit 11, adding the `./Md.anchors` subpath to `@beep/md` and running `bun run config-sync`
+  for its alias.
+- **Evidence:** the sync appended the alias after `@beep/text/*` and rewrote that neighbouring one-line
+  array as three lines; `bunx biome check tsconfig.json` then failed with `Formatter would have printed
+  the following content`. `config-sync:check` reported no drift both before and after `biome --write`.
+- **Prevention:** the sync formats the file it writes (or runs biome on it), so a lane does not carry a
+  formatter-only hunk in a generated file.

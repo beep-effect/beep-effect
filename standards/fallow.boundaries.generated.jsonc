@@ -3794,6 +3794,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3805,6 +3806,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ]
       },
