@@ -58,9 +58,13 @@ pre-commit:
       skip:
         - run: bun run beep compute profile --is worker
       run: bun run beep lint schema-catalog --write --stage {files}
+    # lefthook's default glob matcher needs at least one directory for `**/`, so
+    # `src/**/*.ts` alone skips a module directly under `src/`; the first pattern covers those.
     instrumentation-catalog:
       files: git diff --name-only --cached --no-renames --diff-filter=ACMD
-      glob: "{apps,packages}/**/src/**/*.{ts,tsx}"
+      glob:
+        - "{apps,packages}/**/src/*.{ts,tsx}"
+        - "{apps,packages}/**/src/**/*.{ts,tsx}"
       exclude:
         - "**/test/**"
         - "**/*.d.ts"
