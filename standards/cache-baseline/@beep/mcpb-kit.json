@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/mcpb-kit",
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (mcpb-kit output lane, t3/mcpb-kit-output-outside-dist)",
+    "reason": "Record the @beep/mcpb-kit drift from the new @beep/xdg workspace dependency (manifest bytes and the @beep/xdg build and transit edges), and the inherited root turbo.json source digest from #3458. No command, cache flag, output or environment changed; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
-      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
+      "path": "docs/reports/mcpb-kit-xdg-cache-review-2026-11-22.md",
+      "sha256": "f68140fcaafa032ec468a609d5f79ab3702bba4b97e380fe4834e76cd81bc0f6"
     }
   },
   "nodes": [
@@ -18,7 +18,8 @@
         "@beep/identity#build",
         "@beep/memfs#build",
         "@beep/schema#build",
-        "@beep/utils#build"
+        "@beep/utils#build",
+        "@beep/xdg#build"
       ],
       "configuration": {
         "cache": true,
@@ -76,7 +77,8 @@
         "@beep/memfs#build",
         "@beep/repo-gate-record#transit",
         "@beep/schema#build",
-        "@beep/utils#build"
+        "@beep/utils#build",
+        "@beep/xdg#build"
       ],
       "configuration": {
         "cache": true,
@@ -129,7 +131,8 @@
         "@beep/identity#build",
         "@beep/memfs#build",
         "@beep/schema#build",
-        "@beep/utils#build"
+        "@beep/utils#build",
+        "@beep/xdg#build"
       ],
       "configuration": {
         "cache": false,
@@ -257,7 +260,8 @@
         "@beep/memfs#transit",
         "@beep/repo-cli#lint:policy-fingerprint:lint-deprecated-apis",
         "@beep/schema#transit",
-        "@beep/utils#transit"
+        "@beep/utils#transit",
+        "@beep/xdg#transit"
       ],
       "configuration": {
         "cache": true,
@@ -456,7 +460,8 @@
         "@beep/identity#transit",
         "@beep/memfs#transit",
         "@beep/schema#transit",
-        "@beep/utils#transit"
+        "@beep/utils#transit",
+        "@beep/xdg#transit"
       ],
       "configuration": {
         "cache": false,
@@ -504,7 +509,8 @@
         "@beep/repo-gate-vitest#transit",
         "@beep/schema#transit",
         "@beep/utils#transit",
-        "@beep/utils#transit"
+        "@beep/utils#transit",
+        "@beep/xdg#transit"
       ],
       "configuration": {
         "cache": true,
@@ -560,7 +566,8 @@
         "@beep/identity#build",
         "@beep/memfs#build",
         "@beep/schema#build",
-        "@beep/utils#build"
+        "@beep/utils#build",
+        "@beep/xdg#build"
       ],
       "configuration": {
         "cache": false,

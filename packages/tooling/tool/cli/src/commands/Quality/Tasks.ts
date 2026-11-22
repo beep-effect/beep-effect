@@ -227,7 +227,7 @@ const LINT_FIX_AGGREGATE_ARGS = ["--full", "--repo"] as const;
 // Hosted runners died ("runner lost communication") under turbo's default concurrency
 // (~10) stacking multi-GB tsgo processes on the smallest hosted machines; see
 // goals/quality-speedup/research/instantiation-census.md §5. The heavy lanes now
-// run on 32GB beep-ec2-heavy fleet workers, so the cap is back to the 8vCPU
+// run on 32GB beep-fleet-heavy fleet workers, so the cap is back to the 8vCPU
 // tuning; the 16GB-survival value was 2.
 const CI_TURBO_CONCURRENCY_ARG = "--concurrency=4";
 const ROOT_COVERAGE_TURBO_CONCURRENCY_ARG = "--concurrency=3";

@@ -19,11 +19,13 @@ engine:                            # the ENGINE that judges this run is inside t
   validator_sha256_12: ""          # sha256[:12] of scripts/validate_artifacts.ts
   contracts_sha256_12: ""          # framed sha256[:12] over the FULL contract closure:
                                    # _shared/schemas/*.yaml, _shared/*.yaml (rules,
-                                   # authority matrix), _shared/*.md (foundational
-                                   # analysis, backbone, naming), _shared/*.json (the
-                                   # canonical namespace map), and the skill's
-                                   # templates/*.yaml — a semantic edit to ANY of them
-                                   # stales every prior manifest
+                                   # authority matrix), EVERY _shared/*.md (including
+                                   # the references other ontology skills read, such
+                                   # as bfo-categories.md and axiom-patterns.md),
+                                   # _shared/*.json (the canonical namespace map), and
+                                   # the skill's templates/*.yaml — an edit to ANY of
+                                   # them, a typo fix included, stales every prior
+                                   # manifest
 # This file is a SINGLETON at work/run-manifest.yaml — the validator rejects
 # manifests at any other path and rejects duplicates.
 repository: {commit: "<sha>", dirty: false, pin_waived: false, waiver_reason: ""}

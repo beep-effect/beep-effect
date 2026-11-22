@@ -232,19 +232,19 @@ describe("CiRunners update and destroy", () => {
 
 describe("CiRunners production stage", () => {
   const production = Fakes.harness({ stage: "prod" });
-  production.provider("serves the production repository with org runners at the overlap caps", (stack) =>
+  production.provider("serves the production repository with org runners at the primary caps", (stack) =>
     Effect.gen(function* () {
       const { recorder } = production;
       const output = yield* stack.deploy(program.pipe(environmentOf(productionSecrets)));
       expect(output.fleet).toBe("beep-fleet-prod");
-      expect(output.phase).toBe("overlap");
+      expect(output.phase).toBe("primary");
       const heavy = yield* poolConfig(recorder, "heavy");
       expect(heavy.runnerType).toBe("Org");
-      expect(heavy.pool.maximumCount).toBe(1);
+      expect(heavy.pool.maximumCount).toBe(2);
       expect(heavy.pool.runnerGroup).toBe("beep-ec2-heavy");
       expect(heavy.pool.instanceTypes).toHaveLength(5);
       const overflow = yield* poolConfig(recorder, "overflow");
-      expect(overflow.pool.maximumCount).toBe(2);
+      expect(overflow.pool.maximumCount).toBe(48);
       expect(overflow.pool.runnerGroup).toBe("beep-shard-overflow");
       // The job-queued check stays off: a lagging "not queued" answer consumes the message and strands the job.
       // Scale-up knows the build DLQ for a message a resend cannot launch.

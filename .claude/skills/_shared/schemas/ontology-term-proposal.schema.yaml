@@ -7,11 +7,26 @@ hypothesis_ref: "dh:..."
 identity_card_ref: "ic:..."
 foundational_status: analyzed | explicitly_deferred   # deferred proposals reach the
                                                       # steward FLAGGED, never hidden
-term: {preferred_label: "", local_name: "", proposed_iri: "", owl_entity_kind: class | object_property | data_property | individual}
+term: {preferred_label: "", local_name: "", proposed_iri: "", owl_entity_kind: class | object_property | data_property | annotation_property | individual | skos_concept | skos_concept_scheme, in_scheme: ""}
+                                  # proposed_iri is a proposal: the production IRI is
+                                  # minted only at ratification (stage-authority-matrix).
+                                  # An enum member that needs no class semantics is a
+                                  # skos_concept (in_scheme = its skos_concept_scheme's
+                                  # local_name) or an sh:in value, never a class by
+                                  # default (foundational-analysis.md, Enum-is-taxonomy);
+                                  # in_scheme stays "" for every other kind. The
+                                  # validator checks owl_entity_kind against these seven
+                                  # values but does not read in_scheme: the adversary
+                                  # and the steward check it
 definition:
   text: ""                        # unique, human-readable, genus-differentia preferred
   source: []                      # CQ ids + observation ids
 foundational: {ufo_category: "", gufo_alignment: ""}
+                                  # gufo_alignment records the UFO analysis as a gUFO
+                                  # term. It is an analysis tag, not the alignment to the
+                                  # project's upper ontology (BFO, another, or none, as
+                                  # the scope document records), which the
+                                  # conceptualizer makes
 ontoclean: {rigidity: "", identity: supplies | carries | none | unresolved, dependence: ""}
                                   # REQUIRED, DERIVED from the joined IdentityCard
                                   # (validator-enforced equality; identity is a

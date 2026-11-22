@@ -66,7 +66,7 @@ describe("CiRunners configuration", () => {
   it.effect("decodes the production configuration with the live pool values", () =>
     Effect.gen(function* () {
       const config = yield* decodeCiRunnersConfig(productionConfig);
-      expect(config.phase).toBe("overlap");
+      expect(config.phase).toBe("primary");
       // r7a.2xlarge (2026-11-19) and m6i.4xlarge (2026-11-20) left for their eviction rates; the overflow pool keeps the 8-vCPU r7i and r6i.
       expect(config.heavy.instanceTypes).toEqual([
         "r7i.2xlarge",
@@ -86,7 +86,7 @@ describe("CiRunners configuration", () => {
 
   it.effect("commits all 512 Spot vCPU in the overlap and 512 at the live caps", () =>
     Effect.gen(function* () {
-      const overlap = yield* decodeCiRunnersConfig(productionConfig);
+      const overlap = yield* decodeCiRunnersConfig({ ...productionConfig, phase: "overlap" });
       expect(spotVcpuCommitted(overlap)).toBe(512);
       const primary = yield* decodeCiRunnersConfig({
         ...productionConfig,
@@ -101,6 +101,7 @@ describe("CiRunners configuration", () => {
     Effect.gen(function* () {
       const error = yield* decodeCiRunnersConfig({
         ...productionConfig,
+        phase: "overlap",
         overflow: { ...productionConfig.overflow, overlapMaximumCount: 48 },
       }).pipe(Effect.flip);
       expect(error.message).toContain("exceeds the Spot vCPU quota");

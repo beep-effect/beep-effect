@@ -1,7 +1,7 @@
 name: Rerun Runner Loss
 
 # Re-run jobs that failed because their runner died, not because their code
-# failed. A Spot eviction of a `beep-ec2-heavy` runner surfaces 9-10 minutes
+# failed. A Spot eviction of a `beep-fleet-heavy` runner surfaces 9-10 minutes
 # later as a `failure` carrying the check-run annotation "The self-hosted
 # runner lost communication with the server". `bun run beep ci
 # rerun-runner-loss` decides from the run, its jobs and their annotations;

@@ -85,6 +85,13 @@ export * from "./CiCompileBinary.ts";
  */
 export * from "./CiEventBase.ts";
 /**
+ * The CI projection of gate reports: step summary, grouped log and annotations.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiGateProjection.ts";
+/**
  * Hosted CI governance commands and policy checks.
  *
  * @category cli-commands

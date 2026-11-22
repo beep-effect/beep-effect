@@ -2,7 +2,7 @@
 # decision per proposal. The agent may scribe the steward's VERBATIM per-proposal
 # decision (quoted below); a blanket "looks good" over a summary table ratifies
 # NOTHING. File layout: ontologies/{name}/governance/ratifications/rat-<nnn>.yaml.
-id: "rat:<nnn>"
+id: "rat:<n>"                     # unpadded integer of the filename: rat-007.yaml -> "rat:7"
 proposal_ref: "otp:..."
 proposal_sha256: "<sha256 of the proposal FILE bytes the steward saw>"
                                   # REQUIRED (validator-enforced): the decision
