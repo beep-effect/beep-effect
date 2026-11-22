@@ -6,6 +6,7 @@
 import * as NodeFS from "node:fs";
 import * as NodePath from "node:path";
 import * as NodeURL from "node:url";
+import { parseFcSeed } from "@beep/fc-runs/FastCheckRuns";
 import { A, P, Str, Struct } from "@beep/utils";
 import * as Doctest from "@effect/doctest/Plugin";
 import * as Config from "effect/Config";
@@ -110,7 +111,7 @@ export const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNu
 // none and draws random seeds. It is decided once here and handed to the workers as `BEEP_FC_SEED`,
 // because their argv does not carry `--coverage`; vitest.setup.ts applies it.
 const COVERAGE_PROPERTY_SEED = 20260708;
-const parsedFcSeed = readEnv("BEEP_FC_SEED").pipe(O.filter(Str.isNonEmpty), O.map(Number), O.filter(Number.isInteger));
+const parsedFcSeed = readEnv("BEEP_FC_SEED").pipe(O.getOrUndefined, parseFcSeed);
 const propertySeedEnvironment = pipe(
   O.orElse(parsedFcSeed, () => (vitestCoverageRunActive ? O.some(COVERAGE_PROPERTY_SEED) : O.none<number>())),
   O.match({ onNone: () => ({}), onSome: (seed) => ({ BEEP_FC_SEED: `${seed}` }) })

@@ -127,7 +127,13 @@ const decodeReceipt = S.decodeUnknownEffect(S.fromJsonString(PropertySweepReceip
 const testFilesUnder = Effect.fnUntraced(function* (directory: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const entries = yield* fs.readDirectory(directory, { recursive: true }).pipe(Effect.orElseSucceed(A.empty<string>));
+  // A package with no test directory has no property files; any other failure to read it is an error.
+  const entries = yield* fs.readDirectory(directory, { recursive: true }).pipe(
+    Effect.catchIf(
+      (error) => error.reason._tag === "NotFound",
+      () => Effect.succeed(A.empty<string>())
+    )
+  );
   return pipe(
     entries,
     A.map(Str.replaceAll(path.sep, "/")),

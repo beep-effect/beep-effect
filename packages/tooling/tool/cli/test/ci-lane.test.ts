@@ -3555,6 +3555,10 @@ describe("the unfiltered property lane's second step", () => {
           const error = yield* Effect.flip(runCiLane("property", nightly));
           expect(error._tag).toBe("QualityTaskGroupFailed");
           const logged = yield* commands;
+          const lines = yield* TestConsole.logLines;
+          expect(A.map(lines, (line) => `${line}`)).toContain(
+            "[property-sweep] test:property red; replay with: bun run beep ci lane property --runs 1000 --seed 77"
+          );
           expect(Str.startsWith("77/1000 ")(lastOf(logged))).toBe(true);
           expect(Str.endsWith(SECOND)(lastOf(logged))).toBe(true);
         })

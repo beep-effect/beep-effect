@@ -2691,6 +2691,13 @@ const runFullPropertyLane = Effect.fn("CiLane.runFullPropertyLane")(function* (
 ) {
   const first = yield* Effect.exit(runCiLaneSteps("property", steps));
   const second = yield* Effect.exit(runPropertySweep(repoRoot, options));
+  if (Exit.isFailure(first)) {
+    const runs = resolvePropertyLaneRuns(options.runs);
+    const seed = resolvePropertyLaneSeed(options.seed);
+    yield* Console.log(
+      `[property-sweep] test:property red; replay with: bun run beep ci lane property --runs ${runs} --seed ${seed}`
+    );
+  }
   yield* first;
   yield* second;
 });

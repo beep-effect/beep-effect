@@ -31,6 +31,7 @@ import * as NodeHttp from "node:http";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeStream from "node:stream";
+import { parseFcSeed } from "@beep/fc-runs/FastCheckRuns";
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { A, O, P, R } from "@beep/utils";
 import { addEqualityTesters } from "@effect/vitest";
@@ -102,12 +103,13 @@ addEqualityTesters();
 // Never read config here through the default ConfigProvider: this file runs in every test worker,
 // the default provider is built once from the environment at its first use, and a test that stubs a
 // variable afterwards (vi.stubEnv) would read the old environment. Keep the provider of its own.
-const propertySeed = Config.Int("BEEP_FC_SEED").pipe(
+// The seed is parsed as vitest.shared.ts and @beep/fc-runs parse it, so a seed accepted there is used here.
+const propertySeed = Config.String("BEEP_FC_SEED").pipe(
   Config.option,
   Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv()),
-  Effect.option,
   Effect.runSync,
-  O.flatten
+  O.getOrUndefined,
+  parseFcSeed
 );
 if (O.isSome(propertySeed)) {
   const seed = propertySeed.value;

@@ -151,6 +151,17 @@ describe("property sweep", () => {
       })
     );
 
+    it.effect("fails, not narrows, when a package's test directory cannot be read", () =>
+      Effect.gen(function* () {
+        const root = yield* fixture({
+          "packages/a/package.json": manifest("@t/a", { test: "x" }),
+          "packages/a/test": "a file where the test directory should be",
+        });
+        const error = yield* Effect.flip(propertySweepPackages(root));
+        strictEqual(error.message, "Failed to read the property sweep's packages.");
+      })
+    );
+
     it.effect("fails on a workspace it cannot read", () =>
       Effect.gen(function* () {
         const error = yield* Effect.flip(propertySweepPackages("/home/alice/missing"));

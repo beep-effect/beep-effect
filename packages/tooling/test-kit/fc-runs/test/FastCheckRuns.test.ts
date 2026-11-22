@@ -5,6 +5,7 @@ import {
   fcRuns,
   fcRunsCapped,
   parseFcNumRunsFloor,
+  parseFcSeed,
 } from "@beep/fc-runs";
 import { describe, expect, it, vi } from "@effect/vitest";
 import { assertTrue } from "@effect/vitest/utils";
@@ -208,5 +209,23 @@ describe("seeds between runs", () => {
     const [pinned, again] = [reportOf({ BEEP_FC_SEED: "4242" }), reportOf({ BEEP_FC_SEED: "4242" })];
     expect(pinned).toContain("worker seed 4242");
     expect(again).toBe(pinned);
+  });
+});
+
+describe("parseFcSeed", () => {
+  it("takes 32-bit signed integers, both bounds included, and drops anything else", () => {
+    expect([parseFcSeed("2147483647"), parseFcSeed("-2147483648")]).toEqual([
+      O.some(2_147_483_647),
+      O.some(-2_147_483_648),
+    ]);
+    expect([parseFcSeed("2147483648"), parseFcSeed("-2147483649")]).toEqual([O.none(), O.none()]);
+    expect([parseFcSeed("42"), parseFcSeed(" -7 "), parseFcSeed("0")]).toEqual([O.some(42), O.some(-7), O.some(0)]);
+    expect([
+      parseFcSeed("9007199254740992"),
+      parseFcSeed("2.5"),
+      parseFcSeed("seed"),
+      parseFcSeed(""),
+      parseFcSeed(undefined),
+    ]).toEqual([O.none(), O.none(), O.none(), O.none(), O.none()]);
   });
 });
