@@ -76,6 +76,9 @@ Ported from the MIT project vitest-agent by C. Spencer Beggs: the pure core of `
 
 - Upstream packages: `@vitest-agent/sdk` 9.0.5, `@vitest-agent/ui` 6.0.7, `@vitest-agent/engine` 3.2.8
 - Upstream commit: `1cf1ab94` (reference checkout `.repos/vitest-agent`)
+- Ported by `goals/gate-run-history` into `src/History.ts`: `packages/sdk/src/utils/classify-test.ts`
+  (the label classifier, with the goal's rules) and `packages/engine/src/layers/HistoryTrackerLive.ts`
+  (the window, now configuration)
 - License: [LICENSE](./LICENSE) (upstream MIT notice alongside the beep-effect notice)
 
 ### Deviations

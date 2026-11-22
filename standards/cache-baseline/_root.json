@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (schema CSV migration lane, refactor/schema-csv-to-beep-csv)",
-    "reason": "Record the three packages whose manifests and tsconfig references gained the @beep/csv dependency when their CSV reads moved off @beep/schema. No qualification is granted. The root records the turbo.json inputs the policy fingerprint resealed.",
+    "reviewer": "Claude Fable 5.2 (gate-run-history lane, goals/gate-run-history-lane)",
+    "reason": "Record the new @beep/sqlite dependency edge and the Bun coverage script of @beep/repo-gate-run, and the resealed policy fingerprint inputs at the root. No task output, environment entry or cache flag changed.",
     "basis": {
-      "path": "docs/reports/schema-csv-to-beep-csv-cache-review-2026-11-20.md",
-      "sha256": "cec74e4af5ae058d0f983a064ca513f4ebe0902e9b63268314a18c0c524c5bf8"
+      "path": "docs/reports/gate-history-cache-review-2026-11-20.md",
+      "sha256": "cbf8a366e85ff4a48c9901cf51484cfc8f7f7ccd063ecb41945439864ae96c53"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "6ecbb8e4223f938f70a76aede62a82adee546d8a67cef50e7517e7e6a5aceca9"
+      "sha256": "0d77c7021889e0c917c5e6bca30f0eddee259d29ef378e88014d837c921eb820"
     }
   ],
   "nodes": [
@@ -2139,6 +2139,7 @@
           "packages/drivers/sanity/package.json",
           "packages/drivers/shacl/package.json",
           "packages/drivers/sqlite/package.json",
+          "packages/drivers/sqlite/src/**",
           "packages/drivers/tailscale/package.json",
           "packages/drivers/tesseract/package.json",
           "packages/drivers/tika/package.json",

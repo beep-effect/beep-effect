@@ -5379,13 +5379,13 @@
       "reason": "The inner scope closes the registry and mounts before acquireUseRelease restores the Worker global; forced defect and interruption controls prove termination before restoration. Owner: @beep/ontology-client. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:92:scoped@4#1",
+      "id": "EV004:packages/tooling/library/codegen-kit/test/CodegenKit.test.ts:93:scoped@4#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/codegen-kit",
       "file": "packages/tooling/library/codegen-kit/test/CodegenKit.test.ts",
-      "line": 92,
-      "endLine": 92,
+      "line": 93,
+      "endLine": 93,
       "symbol": "scoped",
       "occurrence": "v2:91929c91a8890a77bca1ec61503b2e817190feb0619c5ce239e1b78c0ca61aba",
       "class": "inner-helper-scope-lifetime-review",
@@ -10417,6 +10417,27 @@
       "reason": "Locating a package walks real ancestor directories for turbo.json and reads a real manifest in a scoped temporary repository, so the native filesystem is the subject. Owner: @beep/repo-gate-record. Exit: retire when locatePackage runs against MemoryFileSystem with an equivalent ancestor walk."
     },
     {
+      "id": "EV010:packages/tooling/library/repo-gate-run/test/GateHistorySqlite.test.ts:15:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-gate-run",
+      "file": "packages/tooling/library/repo-gate-run/test/GateHistorySqlite.test.ts",
+      "line": 15,
+      "endLine": 15,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
+    },
+    {
       "id": "EV010:packages/tooling/library/repo-utils/test/FsUtils.test.ts:6:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
@@ -11931,6 +11952,27 @@
       "mechanization": "judgment",
       "status": "exception",
       "reason": "The command reads a temporary exploration manifest and goal packets, the same boundary the snapshot reader crosses in production. Owner: @beep/repo-cli. Exit: retire when the suite moves to MemoryFileSystem.layer: its stated subject is ordinary temporary files, which the memory filesystem also provides (a #1875 migration candidate)."
+    },
+    {
+      "id": "EV010:packages/tooling/tool/cli/test/gate-history.test.ts:34:@effect/platform-node/NodeServices@0#1",
+      "lens": "resource",
+      "ruleId": "EV010",
+      "package": "@beep/repo-cli",
+      "file": "packages/tooling/tool/cli/test/gate-history.test.ts",
+      "line": 34,
+      "endLine": 34,
+      "symbol": "@effect/platform-node/NodeServices",
+      "occurrence": "v2:fb7d6bba929488197f859519d08aea3efcf9ac097f647f2bbff02362d70850d7",
+      "class": "platform-resource-provenance-review",
+      "evidence": "import * as NodeServices from \"@effect/platform-node/NodeServices\";",
+      "replacement": {
+        "primitive": "it.layer",
+        "sketch": "Review opaque platform resource provenance; filesystem use is unproven. Preserve the subject and identify actual services before selecting a filesystem layer. it.layer: Use for per-test-layer-provide candidates (EV002, candidate class per-test-layer-provide), resource-wrapper candidates (EV003, candidate class resource-wrapper), and platform-filesystem-candidate judgments (EV010, candidate class platform-filesystem-candidate)."
+      },
+      "severity": "info",
+      "confidence": 0.55,
+      "mechanization": "judgment",
+      "status": "open"
     },
     {
       "id": "EV010:packages/tooling/tool/cli/test/gate-order-handoff.test.ts:32:@effect/platform-node@0#1",

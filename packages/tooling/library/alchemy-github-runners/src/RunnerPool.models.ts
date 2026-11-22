@@ -329,7 +329,8 @@ export class RunnerPool extends S.Opaque<RunnerPool, { readonly brand: unique sy
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultKey(Effect.succeed(false))
     ).annotateKey({
-      description: "Ask GitHub whether the job is still queued before launching (the live fleet disables it).",
+      description:
+        "Ask GitHub whether the job is still queued before launching. The live fleet disables it: its jobs API answered not-queued for queued jobs, and scale-up then consumes the message with no retry.",
     }),
     jobRetry: S.OptionFromOptionalKey(JobRetryPolicy).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
