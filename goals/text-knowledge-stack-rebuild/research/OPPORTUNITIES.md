@@ -97,3 +97,12 @@ home paths with `~`, drop session and machine ids.
   to ready through the shared login and no session on the host had run it; only
   a search of every transcript could show that. **Would have prevented it:** an
   actor or session id on PR state changes that Yeet and T3 make.
+
+## 2026-11-22: a Claude child's weekly limit killed a fix mid-edit
+
+- **Doing:** PR C's release-against-base fix, a Workflow child pinned to Opus 5.5.
+- **Evidence:** the child failed with "You've hit your weekly limit · resets 11pm" after about 20 minutes.
+  It left 21 modified files and 2 new ones uncommitted and untested. `bun run beep accounts` showed every
+  Claude account as "Rate limited" (unreadable), so the limit could not be seen coming.
+- **Prevention:** read Claude headroom before a long child is launched, and give a fallback child a brief
+  file that it can continue from. This lane moved to Codex `gpt-6.1-sol` medium with such a brief.

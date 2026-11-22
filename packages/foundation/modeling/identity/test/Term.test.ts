@@ -8,7 +8,6 @@ import {
   NamespaceIri,
   ReleaseVersion,
   SnapshotViolation,
-  snapshotReleaseViolations,
   snapshotViolationMessage,
   snapshotViolations,
   Term,
@@ -16,6 +15,7 @@ import {
   TermIri,
   TermLocal,
   TermSnapshot,
+  termSetViolations,
 } from "@beep/identity/Term";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
@@ -214,7 +214,7 @@ describe("snapshotViolations", () => {
     expect(
       snapshotViolations(
         previous,
-        snapshot({ release: v1_1, bindings: [TermBinding.make({ code: hangCode, term: activity, since: v1 })] })
+        snapshot({ release: v1_1, bindings: [TermBinding.make({ code: hangCode, term: activity, since: v1_1 })] })
       )
     ).toStrictEqual([SnapshotViolation.cases.BindingReassigned.make({ code: hangCode, from: testHang, to: activity })]);
     expect(
@@ -317,7 +317,9 @@ describe("snapshotViolations", () => {
         A.filter((local) => S.is(TermIri)(`${vitest.iri}${local}`)),
         A.map((local) => Term.of(vitest, TermLocal.make(local)).iri)
       );
-      const next = snapshot({ release: v1_1, terms: [...baseRows.terms, ...added] });
+      const grown = snapshot({ terms: [...baseRows.terms, ...added] });
+      // No new local leaves the published set, and its release, unchanged.
+      const next = TermSnapshot.make({ ...grown, release: grown.terms.length > snapshot().terms.length ? v1_1 : v1 });
       expect(snapshotViolations(snapshot(), next)).toStrictEqual([]);
     },
     runs
@@ -330,16 +332,16 @@ describe("snapshotViolations", () => {
     expect(snapshotViolations(base, wound)).toStrictEqual([
       SnapshotViolation.cases.ReleaseRegressed.make({ from: base.release, to: wound.release }),
     ]);
-    expect(snapshotViolations(wound, base)).toStrictEqual([]);
-    const belowRow = snapshot({
-      release: release("1.9007199254740992.0"),
-      deprecations: [Deprecation.make({ term: entity, since: release("1.9007199254740993.0"), replacement: O.none() })],
-      terms: [testHang, activity, iri(prov.iri), iri(vitest.iri)],
-    });
-    expect(tags(snapshotReleaseViolations(belowRow))).toStrictEqual(["ReleaseBelowSince"]);
+    expect(snapshotViolations(wound, base)).toStrictEqual([
+      SnapshotViolation.cases.ReleaseOverstated.make({
+        base: wound.release,
+        expected: wound.release,
+        release: base.release,
+      }),
+    ]);
   });
 
-  it("refuses a changed term set released below the release its change calls for", () => {
+  it("refuses a changed term set released below or above the release its change calls for", () => {
     const previous = snapshot();
     const added = { terms: [...baseRows.terms, iri(`${vitest.iri}Added`)] };
     // An addition at the base release would ship two term sets as 1.0.0; it calls for a minor bump.
@@ -347,11 +349,17 @@ describe("snapshotViolations", () => {
       SnapshotViolation.cases.ReleaseUnderstated.make({ base: v1, expected: v1_1, release: v1 }),
     ]);
     expect(snapshotViolations(previous, snapshot({ ...added, release: v1_1 }))).toStrictEqual([]);
-    expect(snapshotViolations(previous, snapshot({ ...added, release: v2 }))).toStrictEqual([]);
+    // A major for an addition alone, or any bump for no change, skips a release.
+    expect(snapshotViolations(previous, snapshot({ ...added, release: v2 }))).toStrictEqual([
+      SnapshotViolation.cases.ReleaseOverstated.make({ base: v1, expected: v1_1, release: v2 }),
+    ]);
+    expect(snapshotViolations(previous, snapshot({ release: v1_1 }))).toStrictEqual([
+      SnapshotViolation.cases.ReleaseOverstated.make({ base: v1, expected: v1, release: v1_1 }),
+    ]);
     // A new deprecation calls for a major bump, so a minor bump is still understated.
     const retired = {
       terms: [testHang, activity, iri(prov.iri), iri(vitest.iri)],
-      deprecations: [...baseRows.deprecations, Deprecation.make({ term: entity, since: v1_1, replacement: O.none() })],
+      deprecations: [...baseRows.deprecations, Deprecation.make({ term: entity, since: v2, replacement: O.none() })],
     };
     expect(snapshotViolations(previous, snapshot({ ...retired, release: v1_1 }))).toStrictEqual([
       SnapshotViolation.cases.ReleaseUnderstated.make({ base: v1, expected: v2, release: v1_1 }),
@@ -365,6 +373,38 @@ describe("snapshotViolations", () => {
         release: release("0.0.0"),
       }),
     ]);
+  });
+
+  it("accepts any first release over the empty snapshot, with rows of any since", () => {
+    // A stacked layer carries releases its empty base never saw.
+    expect(TermSnapshot.isPublished(TermSnapshot.empty)).toBe(false);
+    expect(TermSnapshot.isPublished(snapshot())).toBe(true);
+    expect(snapshotViolations(TermSnapshot.empty, snapshot({ release: v2 }))).toStrictEqual([]);
+  });
+
+  it("refuses an added row that records another release than the change", () => {
+    const previous = snapshot();
+    const newCode = code("@beep/test-runner/Vitest/Entity");
+    const changedAt = (since: ReleaseVersion) =>
+      snapshot({
+        release: v2,
+        terms: [testHang, entity, iri(prov.iri), iri(vitest.iri)],
+        bindings: [...baseRows.bindings, TermBinding.make({ code: newCode, term: entity, since })],
+        deprecations: [...baseRows.deprecations, Deprecation.make({ term: activity, since, replacement: O.none() })],
+      });
+    expect(snapshotViolations(previous, changedAt(v2))).toStrictEqual([]);
+    const misstated = [
+      SnapshotViolation.cases.BindingSinceMisstated.make({ code: newCode, term: entity, since: v1_1, expected: v2 }),
+      SnapshotViolation.cases.DeprecationSinceMisstated.make({ term: activity, since: v1_1, expected: v2 }),
+    ];
+    expect(snapshotViolations(previous, changedAt(v1_1))).toStrictEqual(misstated);
+    // Neither is a break of the term set: regenerating and correcting the row repairs both.
+    expect(termSetViolations(previous, changedAt(v1_1))).toStrictEqual([]);
+    expect(termSetViolations(changedAt(v1_1))(previous)).toStrictEqual([]);
+    // The release the rows should record does not depend on the release the snapshot states.
+    expect(
+      snapshotViolations(previous, TermSnapshot.make({ ...changedAt(v1_1), release: release("0.9.0") }))
+    ).toStrictEqual([...misstated, SnapshotViolation.cases.ReleaseRegressed.make({ from: v1, to: release("0.9.0") })]);
   });
 });
 
@@ -387,7 +427,11 @@ describe("snapshotViolationMessage", () => {
           Violation.BindingAmbiguous.make({ term: testHang, codes: [hangCode, otherCode] }),
           Violation.NamespaceDropped.make({ prefix: prov.prefix, iri: prov.iri }),
           Violation.NamespacePrefixChanged.make({ iri: vitest.iri, from: vitest.prefix, to: prov.prefix }),
+          Violation.ReleaseRegressed.make({ from: v2, to: v1 }),
           Violation.ReleaseUnderstated.make({ base: v1, expected: v2, release: v1 }),
+          Violation.ReleaseOverstated.make({ base: v1, expected: v1_1, release: v2 }),
+          Violation.BindingSinceMisstated.make({ code: hangCode, term: testHang, since: v1, expected: v1_1 }),
+          Violation.DeprecationSinceMisstated.make({ term: oldTestHang, since: v1_1, expected: v2 }),
         ],
         snapshotViolationMessage
       )
@@ -401,7 +445,11 @@ describe("snapshotViolationMessage", () => {
       "https://beep-effect.com/ns/vitest/TestHang is bound by more than one code identity (@beep/test-runner/Vitest/TestHang, @beep/test-runner/Vitest/OtherHang).",
       'Namespace "prov" (http://www.w3.org/ns/prov#) is removed without a deprecation of its IRI.',
       'Namespace https://beep-effect.com/ns/vitest/ changes its prefix from "vitest" to "prov".',
+      "The snapshot release goes back from 2.0.0 to 1.0.0.",
       "The snapshot changes the rows of release 1.0.0 but is released as 1.0.0; the change calls for 2.0.0.",
+      "The snapshot is released as 2.0.0; its change to release 1.0.0 calls for 1.1.0.",
+      "The new binding of https://beep-effect.com/ns/vitest/TestHang to @beep/test-runner/Vitest/TestHang records since 1.0.0; the change is release 1.1.0.",
+      "The new deprecation of https://beep-effect.com/ns/test-utils/Vitest/TestHang records since 1.1.0; the change is release 2.0.0.",
     ]);
   });
 

@@ -10,7 +10,7 @@ import {
   RegistryTable,
   ReleaseVersion,
   SnapshotViolation,
-  snapshotReleaseViolations,
+  snapshotViolationMessage,
   snapshotViolations,
   TermIri,
   TermSnapshot,
@@ -131,26 +131,29 @@ describe("term stability", () => {
   });
 
   it.prop(
-    "L0-3 a snapshot release never goes back below its base or its own since values",
+    "L0-3 an unchanged published term set keeps its release, neither wound back nor bumped",
     [ReleaseVersion],
     ([release]) => {
-      const wound = TermSnapshot.make({ ...committed, release });
-      const lower = Order.isLessThan(Order.Tuple([Order.BigInt, Order.BigInt, Order.BigInt]))(
+      const restated = TermSnapshot.make({ ...committed, release });
+      const order = Order.Tuple([Order.BigInt, Order.BigInt, Order.BigInt])(
         releaseNumbers(release),
         releaseNumbers(committed.release)
       );
-      const tags = A.map(snapshotViolations(committed, wound), (violation) => violation._tag);
-      expect(tags).toStrictEqual(lower ? ["ReleaseRegressed"] : []);
-      // The committed rows record since values up to the committed release, so a release below it contradicts the rows themselves.
-      expect(A.map(snapshotReleaseViolations(wound), (violation) => violation._tag)).toStrictEqual(
-        lower ? ["ReleaseBelowSince"] : []
-      );
+      const tags = A.map(snapshotViolations(committed, restated), (violation) => violation._tag);
+      expect(tags).toStrictEqual(order === 0 ? [] : order < 0 ? ["ReleaseRegressed"] : ["ReleaseOverstated"]);
     },
     { arbitrary: fcRuns(50) }
   );
 
-  it("L0-3 the committed snapshot's release covers every since it records", () => {
-    expect(snapshotReleaseViolations(committed)).toStrictEqual([]);
+  it("L0-3 a regenerated release covers every since its rows record, whatever it succeeds", () => {
+    const table = tableOf(committedShards);
+    // The committed rows record since values up to the committed release.
+    for (const previous of [
+      TermSnapshot.empty,
+      TermSnapshot.make({ ...committed, release: ReleaseVersion.make("0.1.0") }),
+    ]) {
+      expect(RegistryTable.snapshot(table, previous)).toStrictEqual(committed);
+    }
     expect(
       snapshotViolations(committed, TermSnapshot.make({ ...committed, release: ReleaseVersion.make("0.1.0") }))
     ).toStrictEqual([
@@ -174,6 +177,34 @@ describe("term stability", () => {
         base: committed.release,
         expected: next.release,
         release: committed.release,
+      }),
+    ]);
+  });
+
+  it("L0-3 one change is one release, and its new rows record that release", () => {
+    const addedAt = (since: string): RegistryShard.Encoded => ({
+      namespace: { prefix: "gen", iri: "https://example.test/gen/" },
+      terms: ["Added"],
+      bindings: [{ code: "@beep/identity/Term/Added", local: "Added", since }],
+      deprecations: [],
+    });
+    // The addition alone is 2.1.0; with the deprecation the whole change is 3.0.0, so the binding moves with it.
+    expect(violationsOf(A.append(committedShards, addedAt("2.1.0")))).toStrictEqual([]);
+    const deprecating = deprecatingPrefLabel(withoutPrefLabel(committedShards));
+    expect(violationsOf(A.append(deprecating, addedAt("3.0.0")))).toStrictEqual([]);
+    const stale = violationsOf(A.append(deprecating, addedAt("2.1.0")));
+    expect(A.map(stale, snapshotViolationMessage)).toStrictEqual([
+      "The new binding of https://example.test/gen/Added to @beep/identity/Term/Added records since 2.1.0; the change is release 3.0.0.",
+    ]);
+    // Released in two steps, the same change skips a release.
+    const next = RegistryTable.snapshot(tableOf(A.append(committedShards, addedAt("2.1.0"))), committed);
+    expect(
+      snapshotViolations(committed, TermSnapshot.make({ ...next, release: ReleaseVersion.make("2.2.0") }))
+    ).toStrictEqual([
+      SnapshotViolation.cases.ReleaseOverstated.make({
+        base: committed.release,
+        expected: next.release,
+        release: ReleaseVersion.make("2.2.0"),
       }),
     ]);
   });

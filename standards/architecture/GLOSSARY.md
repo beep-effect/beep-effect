@@ -955,10 +955,12 @@ published IRI; a module or package rename moves the binding
 `packages/foundation/modeling/identity/registry/term-snapshot.json`, generated
 by `bun run beep identity registry --write`: every published namespace, term,
 binding and deprecation with its `since`, under a vocabulary `release`. The
-writer bumps the minor on additions and the major on deprecations.
+release is one per change against a base ref: the minor is bumped when the
+change adds and the major when it deprecates.
 `snapshotViolations(previous, next)` lists every change that breaks the
 published set (a term removed without a deprecation, a changed prefix, a
-dropped or changed deprecation, a revived IRI, a rewritten binding), and
+dropped or changed deprecation, a revived IRI, a rewritten binding) and every
+release or new `since` other than the one the change calls for, and
 `bun run beep lint identity-registry` runs it against the snapshot of a base
 ref. Law `L0-3` is its acceptance test.
 

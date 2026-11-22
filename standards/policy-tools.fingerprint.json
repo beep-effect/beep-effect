@@ -2918,6 +2918,7 @@
         "packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityRegistration.ts",
         "packages/tooling/tool/cli/src/commands/CreatePackage/internal/LabIdentitySegment.ts",
         "packages/tooling/tool/cli/src/commands/Identity/Registry.ts",
+        "packages/tooling/tool/cli/src/commands/Identity/RegistryBase.ts",
         "packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts"
       ]
     },

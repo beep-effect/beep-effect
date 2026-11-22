@@ -2636,6 +2636,7 @@
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/CreatePackage/internal/IdentityRegistration.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/CreatePackage/internal/LabIdentitySegment.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Identity/Registry.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Identity/RegistryBase.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Lint/IdentityRegistry.ts"
       ]
     },

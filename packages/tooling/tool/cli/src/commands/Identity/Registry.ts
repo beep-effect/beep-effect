@@ -1,6 +1,6 @@
 /**
- * `beep identity registry`: generate the identity registry artifacts from the
- * source shards, or check that the committed artifacts match them.
+ * The identity registry generator behind `beep identity registry`: generate the
+ * artifacts from the source shards, or check that the committed ones match them.
  *
  * **Details**
  *
@@ -8,9 +8,11 @@
  * package, one {@link RegistryShard} per file. The generator builds the one
  * {@link RegistryTable} from them and writes two artifacts: the literal data
  * module `src/internal/generated/Registry.data.ts` and the term-stability
- * snapshot `registry/term-snapshot.json`. The committed snapshot is the
- * previous snapshot, so regeneration keeps its `release` until the published
- * set changes. A shard that names a `projection` package also has its
+ * snapshot `registry/term-snapshot.json`. The snapshot's `release` is a property
+ * of the change against a base ref ({@link BaseSnapshot}): a writer computes it
+ * from the snapshot the base publishes, so a change made in many steps is released
+ * once. Where the base publishes none, and for `--check`, which reads no git
+ * state, the previous snapshot is the committed one. A shard that names a `projection` package also has its
  * bindings written into that package as plain literals, for a package that
  * cannot import `@beep/identity`. A projection module no shard targets any more
  * is drift, and `--write` removes it.
@@ -26,20 +28,15 @@ import {
   RegistryShard,
   RegistryTable,
   registryConflictMessage,
-  snapshotReleaseViolations,
   snapshotViolationMessage,
   snapshotViolations,
   TermSnapshot,
+  termSetViolations,
 } from "@beep/identity/Term";
-import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { formatJsonValue } from "@beep/repo-cli-kit/cli/Json";
 import { workspaceDirectories } from "@beep/repo-cli-kit/RepoWorkspaces";
-import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
-import * as Console from "effect/Console";
-import * as Command from "effect/cli/Command";
-import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import { constant, dual, flow, pipe } from "effect/Function";
@@ -61,11 +58,29 @@ const SNAPSHOT_FILE = "registry/term-snapshot.json";
 const DATA_FILE = "src/internal/generated/Registry.data.ts";
 const PROJECTION_FILE = "src/internal/generated/RegistryTerms.ts";
 const JSON_LINE_WIDTH = 80;
-const WRITE_COMMAND = "`bun run beep identity registry --write`";
+/**
+ * The ref whose merge base with `HEAD` is the base of a run that names none with `--base`.
+ *
+ * **Example** (Read the default base ref)
+ *
+ * ```ts
+ * import { DEFAULT_BASE_REF } from "@beep/repo-cli/commands/Identity/Registry"
+ *
+ * console.log(DEFAULT_BASE_REF) // "origin/main"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const DEFAULT_BASE_REF = "origin/main";
+
+// The command that regenerates the artifacts against the base `--base` named, or against the default base.
+const writeCommand = (ref: O.Option<string>): string =>
+  `\`bun run beep identity registry --write${O.match(ref, { onNone: () => "", onSome: (named) => ` --base ${named}` })}\``;
 // A package move rewrites binding codes only: the names a shard may project into are a closed set in source.
 const PROJECTION_REMEDY =
   "After renaming the package, put its new name in the RegistryProjection literal (`@beep/identity/Term`) and in the shard's `projection`, then move its bindings with `bun run beep identity rebind @beep/<old package> @beep/<new package>`; otherwise drop the shard's `projection`.";
-const WRITE_HINT = `Run ${WRITE_COMMAND} to regenerate.`;
+const WRITE_HINT = `Run ${writeCommand(O.none())} to regenerate.`;
 
 /**
  * Closed kind of an identity registry finding.
@@ -92,11 +107,13 @@ export const IdentityRegistryIssueKind = LiteralKit([
   "term-revived",
   "binding-changed",
   "release-regressed",
+  "release-overstated",
+  "since-misstated",
   "binding-dangling",
 ]).pipe(
   $I.annoteSchema("IdentityRegistryIssueKind", {
     description:
-      "Identity registry finding kind: a shard that fails to decode, a conflict between shards, a regenerated snapshot that breaks the committed one, a generated artifact that differs from regeneration, or a break of the base ref's published term set (a term or namespace removed without a deprecation, a namespace prefix changed, a deprecation removed or changed, a deprecated term revived, a binding reassigned), a snapshot release wound back below its base or its own rows or below the release its changes call for, or a binding whose code names no module of the checkout.",
+      "Identity registry finding kind: a shard that fails to decode, a conflict between shards, a regenerated snapshot that breaks the committed one, a generated artifact that differs from regeneration, or a break of the base ref's published term set (a term or namespace removed without a deprecation, a namespace prefix changed, a deprecation removed or changed, a deprecated term revived, a binding reassigned), a snapshot release below its base or below the release its changes call for, a snapshot release above the one its changes call for, an added binding or deprecation that records another release, or a binding whose code names no module of the checkout.",
   })
 );
 
@@ -679,7 +696,79 @@ export const decodeShardFile = (file: RegistrySourceFile): Result.Result<Registr
   );
 
 /**
- * The inputs of one registry plan: the layout, the shard files and the committed snapshot text.
+ * The term snapshot of a base ref and the ref a run named for it.
+ *
+ * **Details**
+ *
+ * A base that publishes no term set has the empty snapshot. `ref` is the
+ * `--base` of the run, so a remedy names the command that repairs against the
+ * same base.
+ *
+ * **Example** (Describe a base that published nothing)
+ *
+ * ```ts
+ * import { TermSnapshot } from "@beep/identity/Term"
+ * import { BaseSnapshot } from "@beep/repo-cli/commands/Identity/Registry"
+ *
+ * const base = BaseSnapshot.make({ snapshot: TermSnapshot.empty })
+ * console.log(base.snapshot.release) // "0.0.0"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class BaseSnapshot extends S.Opaque<BaseSnapshot, { readonly brand: unique symbol }>()(
+  S.Struct({
+    snapshot: TermSnapshot,
+    ref: S.Option(S.String)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({ description: "The ref `--base` named; none for the default base." }),
+  }).pipe(
+    $I.annoteSchema("BaseSnapshot", {
+      description: "The term snapshot of a base ref and the ref that was named.",
+    })
+  )
+) {}
+
+/**
+ * Decode the snapshot text of a base ref; an absent snapshot is the empty snapshot.
+ *
+ * **Example** (Read a base with no snapshot)
+ *
+ * ```ts
+ * import { decodeBaseSnapshot } from "@beep/repo-cli/commands/Identity/Registry"
+ * import * as O from "effect/Option"
+ * import * as Result from "effect/Result"
+ *
+ * console.log(Result.getOrThrow(decodeBaseSnapshot("term-snapshot.json", O.none())).release) // "0.0.0"
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export const decodeBaseSnapshot: {
+  (text: O.Option<string>): (subject: string) => Result.Result<TermSnapshot, IdentityRegistryIssue>;
+  (subject: string, text: O.Option<string>): Result.Result<TermSnapshot, IdentityRegistryIssue>;
+} = dual(
+  2,
+  (subject: string, text: O.Option<string>): Result.Result<TermSnapshot, IdentityRegistryIssue> =>
+    O.match(text, {
+      onNone: () => Result.succeed(TermSnapshot.empty),
+      onSome: flow(
+        decodeSnapshot,
+        Result.mapError((error) =>
+          IdentityRegistryIssue.make({
+            kind: "registry-generated-drift",
+            subject,
+            detail: `The base ref's snapshot does not decode: ${error.message}`,
+          })
+        )
+      ),
+    })
+);
+
+/**
+ * The inputs of one registry plan: the layout, the shard files, the committed snapshot text and the base.
  *
  * **Example** (Describe a plan with no committed snapshot)
  *
@@ -687,7 +776,7 @@ export const decodeShardFile = (file: RegistrySourceFile): Result.Result<Registr
  * import { RegistryLayout, RegistryPlanInput } from "@beep/repo-cli/commands/Identity/Registry"
  * import * as O from "effect/Option"
  *
- * const input = RegistryPlanInput.make({ layout: RegistryLayout.of("packages/identity"), shardFiles: [], previous: O.none() })
+ * const input = RegistryPlanInput.make({ layout: RegistryLayout.of("packages/identity"), shardFiles: [], committed: O.none() })
  * console.log(input.shardFiles.length) // 0
  * ```
  *
@@ -698,9 +787,65 @@ export class RegistryPlanInput extends S.Opaque<RegistryPlanInput, { readonly br
   S.Struct({
     layout: RegistryLayout,
     shardFiles: S.Array(RegistrySourceFile).annotateKey({ description: "The shard files, in path order." }),
-    previous: S.Option(S.String).annotateKey({ description: "The committed snapshot text, when one exists." }),
+    committed: S.Option(S.String).annotateKey({ description: "The committed snapshot text, when one exists." }),
+    base: S.Option(BaseSnapshot)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({ description: "The base a writer releases the change against; none for a check." }),
   }).pipe($I.annoteSchema("RegistryPlanInput", { description: "The inputs of one identity registry plan." }))
 ) {}
+
+// The base a plan succeeds: one that publishes a term set. Any other base leaves the committed snapshot.
+const publishedBase = (input: RegistryPlanInput): O.Option<BaseSnapshot> =>
+  O.filter(input.base, (base) => TermSnapshot.isPublished(base.snapshot));
+
+/**
+ * The snapshot a regeneration succeeds: the base's when the base publishes a term set, else the committed one.
+ *
+ * **Details**
+ *
+ * A committed snapshot that does not decode is a `registry-generated-drift`
+ * finding, because the release history it carries cannot be recovered by
+ * regeneration. It is not read at all when the base publishes a term set, whose
+ * release history is the one that counts.
+ *
+ * **Example** (Succeed the base)
+ *
+ * ```ts
+ * import { ReleaseVersion, TermSnapshot } from "@beep/identity/Term"
+ * import { BaseSnapshot, previousSnapshot, RegistryLayout, RegistryPlanInput } from "@beep/repo-cli/commands/Identity/Registry"
+ * import * as O from "effect/Option"
+ * import * as Result from "effect/Result"
+ *
+ * const layout = RegistryLayout.of("packages/identity")
+ * const snapshot = TermSnapshot.make({ ...TermSnapshot.empty, release: ReleaseVersion.make("1.0.0") })
+ * const base = BaseSnapshot.makeOption({ snapshot })
+ * const input = RegistryPlanInput.make({ layout, shardFiles: [], committed: O.none(), base })
+ * console.log(Result.getOrThrow(previousSnapshot(input)).release) // "1.0.0"
+ * ```
+ *
+ * @param input - The inputs of the plan.
+ * @returns The snapshot the plan succeeds, or the finding that the committed one does not decode.
+ * @category projections
+ * @since 0.0.0
+ */
+export const previousSnapshot = (input: RegistryPlanInput): Result.Result<TermSnapshot, IdentityRegistryIssue> =>
+  O.match(publishedBase(input), {
+    onSome: ({ snapshot }) => Result.succeed(snapshot),
+    onNone: () =>
+      O.match(input.committed, {
+        onNone: () => Result.succeed(TermSnapshot.empty),
+        onSome: flow(
+          decodeSnapshot,
+          Result.mapError((error) =>
+            IdentityRegistryIssue.make({
+              kind: "registry-generated-drift",
+              subject: input.layout.snapshot,
+              detail: `The committed snapshot does not decode, so its release history is unknown: ${error.message}`,
+            })
+          )
+        ),
+      }),
+  });
 
 /**
  * One registry plan: the regenerated snapshot, every artifact generated from the same table, and the
@@ -743,16 +888,91 @@ export class RegistryPlan extends S.Opaque<RegistryPlan, { readonly brand: uniqu
   )
 ) {}
 
+// Where a violation was found and what repairs it there.
+type RemedyContext = {
+  readonly where: string;
+  readonly layout: RegistryLayout;
+  readonly ref: O.Option<string>;
+};
+
+// How to repair each kind of break; only a removal is repaired with `identity deprecate`.
+const REMOVAL_REMEDY =
+  "Restore the IRI, or retire it with `bun run beep identity deprecate`, the only writer of a deprecation.";
+const PREFIX_REMEDY = "Restore the namespace's prefix from the base ref.";
+const DEPRECATION_REMEDY = "Restore the deprecation row from the base ref; deprecations are append-only.";
+const REVIVED_REMEDY = "Remove the term again; a deprecated IRI is never published again.";
+const BINDING_REMEDY =
+  "Restore the binding's term and `since` from the base ref; move a renamed module with `bun run beep identity rebind`.";
+
+// The writer computes the release from the base, so regenerating repairs it. A base that is not an ancestor
+// yet still publishes rows the checkout lacks, and a wrong `since` is a shard edit of its own.
+const mergeStep = ({ ref }: RemedyContext): string =>
+  `Merge ${O.getOrElse(ref, () => DEFAULT_BASE_REF)} if it is not merged yet`;
+const releaseRemedy = (context: RemedyContext): string =>
+  `${mergeStep(context)}, set every \`since\` reported as since-misstated, then run ${writeCommand(context.ref)}.`;
+const sinceRemedy = (context: RemedyContext): string =>
+  `${mergeStep(context)}, set that \`since\` in its shard under ${context.layout.shards} to the release of the change, then run ${writeCommand(context.ref)}.`;
+
+// The lint kind of each way a head snapshot breaks the base ref's published term set, and its remedy.
+const baseBreaks: {
+  readonly [Tag in SnapshotViolation["_tag"]]: readonly [
+    kind: IdentityRegistryIssueKind,
+    remedy: (context: RemedyContext) => string,
+  ];
+} = {
+  TermRemoved: ["term-removed-without-deprecation", constant(REMOVAL_REMEDY)],
+  NamespaceDropped: ["term-removed-without-deprecation", constant(REMOVAL_REMEDY)],
+  NamespacePrefixChanged: ["namespace-prefix-changed", constant(PREFIX_REMEDY)],
+  DeprecationRemoved: ["deprecation-changed", constant(DEPRECATION_REMEDY)],
+  DeprecationChanged: ["deprecation-changed", constant(DEPRECATION_REMEDY)],
+  TermRevived: ["term-revived", constant(REVIVED_REMEDY)],
+  SinceRewritten: ["binding-changed", constant(BINDING_REMEDY)],
+  BindingReassigned: ["binding-changed", constant(BINDING_REMEDY)],
+  BindingAmbiguous: ["binding-changed", constant(BINDING_REMEDY)],
+  ReleaseRegressed: ["release-regressed", releaseRemedy],
+  ReleaseUnderstated: ["release-regressed", releaseRemedy],
+  ReleaseOverstated: ["release-overstated", releaseRemedy],
+  BindingSinceMisstated: ["since-misstated", sinceRemedy],
+  DeprecationSinceMisstated: ["since-misstated", sinceRemedy],
+};
+
+// What a violation says and what repairs it, as the text of a finding.
+const violationDetail = (context: RemedyContext, violation: SnapshotViolation): string =>
+  `${context.where}: ${snapshotViolationMessage(violation)} ${baseBreaks[violation._tag][1](context)}`;
+
+const AGAINST_BASE = "Against the base ref";
+const AGAINST_COMMITTED = "Against the committed snapshot";
+
+// Why a regeneration is refused. A writer judges the rows against a base that publishes a term set. Against
+// the committed snapshot alone a row may never have been published, so the text says what tells them apart:
+// the writer, for a check, and the snapshot's removal where no base publishes one.
+const breakIssue =
+  (input: RegistryPlanInput) =>
+  (violation: SnapshotViolation): IdentityRegistryIssue => {
+    const { base, layout } = input;
+    const ref = O.flatMap(base, (found) => found.ref);
+    const detail = O.match(base, {
+      onNone: () =>
+        `${AGAINST_COMMITTED}: ${snapshotViolationMessage(violation)} Run ${writeCommand(ref)}, which judges the change against its base ref.`,
+      onSome: ({ snapshot }) =>
+        TermSnapshot.isPublished(snapshot)
+          ? violationDetail({ where: AGAINST_BASE, layout, ref }, violation)
+          : `${violationDetail({ where: AGAINST_COMMITTED, layout, ref }, violation)} If no branch published it either, remove ${layout.snapshot} and run ${writeCommand(ref)}.`,
+    });
+    return IdentityRegistryIssue.make({ kind: "registry-snapshot-break", subject: layout.snapshot, detail });
+  };
+
 /**
  * Build the table from shard files and render every generated artifact, or return every finding.
  *
  * **Details**
  *
- * `previous` is the committed snapshot text, if any. A snapshot that does not
- * decode is a `registry-generated-drift` finding, because the release history
- * it carries cannot be recovered by regeneration. A regenerated snapshot that
- * breaks the committed one, such as a term removed with no deprecation, is a
- * `registry-snapshot-break` finding for each violation, so `--write` refuses it.
+ * The regenerated snapshot succeeds {@link previousSnapshot}. One whose rows
+ * break that snapshot, such as a term removed with no deprecation, is a
+ * `registry-snapshot-break` finding for each break, so `--write` refuses it. A
+ * row the base never published is free to go again. Its release and the
+ * `since` of its new rows are judged by {@link baseSnapshotIssues}, not here:
+ * regenerating is what repairs a release.
  *
  * **Example** (Plan from no shards)
  *
@@ -762,18 +982,18 @@ export class RegistryPlan extends S.Opaque<RegistryPlan, { readonly brand: uniqu
  * import * as Result from "effect/Result"
  *
  * const layout = RegistryLayout.of("packages/identity")
- * console.log(Result.isFailure(planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [], previous: O.none() }))))
+ * console.log(Result.isFailure(planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [], committed: O.none() }))))
  * ```
  *
+ * @param input - The layout, source shards, committed snapshot and optional release base.
  * @returns The regenerated snapshot, the generated artifacts and the retired projection modules, or every finding that blocks them.
  * @category projections
  * @since 0.0.0
  */
-export const planRegistryArtifacts = ({
-  layout,
-  shardFiles,
-  previous,
-}: RegistryPlanInput): Result.Result<RegistryPlan, A.NonEmptyReadonlyArray<IdentityRegistryIssue>> => {
+export const planRegistryArtifacts = (
+  input: RegistryPlanInput
+): Result.Result<RegistryPlan, A.NonEmptyReadonlyArray<IdentityRegistryIssue>> => {
+  const { layout, shardFiles } = input;
   if (A.isReadonlyArrayEmpty(shardFiles)) {
     return Result.fail([shardIssue(layout.shards, "The registry has no source shard.")]);
   }
@@ -782,22 +1002,9 @@ export const planRegistryArtifacts = ({
   if (A.isReadonlyArrayNonEmpty(invalid)) {
     return Result.fail(invalid);
   }
-  const previousSnapshot = O.match(previous, {
-    onNone: () => Result.succeed(TermSnapshot.empty),
-    onSome: (text) =>
-      pipe(
-        decodeSnapshot(text),
-        Result.mapError((error) =>
-          IdentityRegistryIssue.make({
-            kind: "registry-generated-drift",
-            subject: layout.snapshot,
-            detail: `The committed snapshot does not decode, so its release history is unknown: ${error.message}`,
-          })
-        )
-      ),
-  });
-  if (Result.isFailure(previousSnapshot)) {
-    return Result.fail([previousSnapshot.failure]);
+  const previous = previousSnapshot(input);
+  if (Result.isFailure(previous)) {
+    return Result.fail([previous.failure]);
   }
   return pipe(
     RegistryTable.fromShards(A.getSuccesses(decoded)),
@@ -840,14 +1047,8 @@ export const planRegistryArtifacts = ({
             )
           : Result.fail(target.path);
       });
-      const next = RegistryTable.snapshot(table, previousSnapshot.success);
-      const breaks = A.map(snapshotViolations(previousSnapshot.success, next), (violation) =>
-        IdentityRegistryIssue.make({
-          kind: "registry-snapshot-break",
-          subject: layout.snapshot,
-          detail: `${snapshotViolationMessage(violation)} Deprecate the term in its shard instead.`,
-        })
-      );
+      const next = RegistryTable.snapshot(table, previous.success);
+      const breaks = A.map(termSetViolations(previous.success, next), breakIssue(input));
       return A.isReadonlyArrayNonEmpty(breaks)
         ? Result.fail(breaks)
         : Result.succeed(
@@ -920,91 +1121,6 @@ export const driftIssues: {
     )
 );
 
-// How to repair each kind of break; only a removal is repaired with `identity deprecate`.
-const REMOVAL_REMEDY =
-  "Restore the IRI, or retire it with `bun run beep identity deprecate`, the only writer of a deprecation.";
-const PREFIX_REMEDY = "Restore the namespace's prefix from the base ref.";
-const DEPRECATION_REMEDY = "Restore the deprecation row from the base ref; deprecations are append-only.";
-const REVIVED_REMEDY = "Remove the term again; a deprecated IRI is never published again.";
-const BINDING_REMEDY =
-  "Restore the binding's term and `since` from the base ref; move a renamed module with `bun run beep identity rebind`.";
-const RELEASE_REMEDY =
-  "Correct that `since`, or restore the release in term-snapshot.json to at least every `since` its rows record.";
-
-// The generator reads the checkout's own snapshot, so a snapshot that already holds the changed rows at the
-// wrong release regenerates to itself: the base's snapshot has to be put back first. A base that has it at
-// another path (the identity package moved since) has nothing to restore at this checkout's path.
-const restoreStep = (snapshot: string, basePath: string): string =>
-  snapshot === basePath
-    ? `\`git restore --source <base> -- ${snapshot}\` (remove the file when the base has none)`
-    : `\`git show <base>:${basePath} > ${snapshot}\``;
-const rebaseRemedy = (snapshot: string, basePath: string): string =>
-  `Merge the base ref if it is not merged yet, restore its snapshot with ${restoreStep(snapshot, basePath)}, set the \`since\` of every binding and deprecation the change adds to the release it calls for, then run ${WRITE_COMMAND}.`;
-
-// The lint kind of each way a head snapshot breaks the base ref's published term set, and its remedy.
-const baseBreaks: {
-  readonly [Tag in SnapshotViolation["_tag"]]: readonly [
-    kind: IdentityRegistryIssueKind,
-    remedy: (snapshot: string, basePath: string) => string,
-  ];
-} = {
-  TermRemoved: ["term-removed-without-deprecation", constant(REMOVAL_REMEDY)],
-  NamespaceDropped: ["term-removed-without-deprecation", constant(REMOVAL_REMEDY)],
-  NamespacePrefixChanged: ["namespace-prefix-changed", constant(PREFIX_REMEDY)],
-  DeprecationRemoved: ["deprecation-changed", constant(DEPRECATION_REMEDY)],
-  DeprecationChanged: ["deprecation-changed", constant(DEPRECATION_REMEDY)],
-  TermRevived: ["term-revived", constant(REVIVED_REMEDY)],
-  SinceRewritten: ["binding-changed", constant(BINDING_REMEDY)],
-  BindingReassigned: ["binding-changed", constant(BINDING_REMEDY)],
-  BindingAmbiguous: ["binding-changed", constant(BINDING_REMEDY)],
-  ReleaseRegressed: ["release-regressed", rebaseRemedy],
-  ReleaseUnderstated: ["release-regressed", rebaseRemedy],
-  ReleaseBelowSince: ["release-regressed", constant(RELEASE_REMEDY)],
-};
-
-// One registry finding for a snapshot violation, prefixed with where it was found. `basePath` is where the
-// snapshot it succeeds is kept, which is `subject` itself unless the identity package moved.
-const violationIssue =
-  (subject: string, where: string, basePath: string) =>
-  (violation: SnapshotViolation): IdentityRegistryIssue => {
-    const [kind, remedy] = baseBreaks[violation._tag];
-    return IdentityRegistryIssue.make({
-      kind,
-      subject,
-      detail: `${where}: ${snapshotViolationMessage(violation)} ${remedy(subject, basePath)}`,
-    });
-  };
-
-/**
- * The term snapshot of a base ref and the path the base has it at.
- *
- * **Details**
- *
- * The path is the base's own: a change that moves the identity package leaves
- * the snapshot of its base at the old path.
- *
- * **Example** (Describe a base that published nothing)
- *
- * ```ts
- * import { TermSnapshot } from "@beep/identity/Term"
- * import { BaseSnapshot } from "@beep/repo-cli/commands/Identity/Registry"
- *
- * const base = BaseSnapshot.make({ path: "packages/identity/registry/term-snapshot.json", snapshot: TermSnapshot.empty })
- * console.log(base.snapshot.release) // "0.0.0"
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class BaseSnapshot extends S.Opaque<BaseSnapshot, { readonly brand: unique symbol }>()(
-  S.Struct({
-    path: S.String.annotateKey({ description: "Path of the snapshot in the base tree." }),
-    snapshot: TermSnapshot,
-  }).pipe(
-    $I.annoteSchema("BaseSnapshot", { description: "The term snapshot of a base ref and where the base has it." })
-  )
-) {}
-
 /**
  * The findings of a head snapshot against the snapshot of a base ref (law L0-3).
  *
@@ -1015,13 +1131,15 @@ export class BaseSnapshot extends S.Opaque<BaseSnapshot, { readonly brand: uniqu
  * comparison reads the base ref's snapshot instead: every term and namespace
  * IRI the base published stays published or gains a deprecation, deprecations
  * stay as they were, a deprecated IRI is not revived, a namespace keeps its
- * prefix and a binding keeps its term and `since`. Additions are free.
+ * prefix and a binding keeps its term and `since`. Additions are free. The head
+ * is released as exactly the release the change calls for, and every binding
+ * or deprecation it adds records that release.
  *
  * **Example** (Report a term removed against the base)
  *
  * ```ts
  * import { ReleaseVersion, TermIri, TermSnapshot } from "@beep/identity/Term"
- * import { BaseSnapshot, baseSnapshotIssues } from "@beep/repo-cli/commands/Identity/Registry"
+ * import { BaseSnapshot, baseSnapshotIssues, RegistryLayout } from "@beep/repo-cli/commands/Identity/Registry"
  * import * as Result from "effect/Result"
  *
  * const snapshot = Result.getOrThrow(
@@ -1033,8 +1151,9 @@ export class BaseSnapshot extends S.Opaque<BaseSnapshot, { readonly brand: uniqu
  *     deprecations: []
  *   })
  * )
- * const base = BaseSnapshot.make({ path: "term-snapshot.json", snapshot })
- * console.log(baseSnapshotIssues(base, TermSnapshot.empty, "term-snapshot.json")[0]?.kind)
+ * const layout = RegistryLayout.of("packages/identity")
+ * const base = BaseSnapshot.make({ snapshot })
+ * console.log(baseSnapshotIssues(base, TermSnapshot.empty, layout)[0]?.kind)
  * // "term-removed-without-deprecation"
  * ```
  *
@@ -1042,49 +1161,18 @@ export class BaseSnapshot extends S.Opaque<BaseSnapshot, { readonly brand: uniqu
  * @since 0.0.0
  */
 export const baseSnapshotIssues: {
-  (head: TermSnapshot, subject: string): (base: BaseSnapshot) => ReadonlyArray<IdentityRegistryIssue>;
-  (base: BaseSnapshot, head: TermSnapshot, subject: string): ReadonlyArray<IdentityRegistryIssue>;
+  (head: TermSnapshot, layout: RegistryLayout): (base: BaseSnapshot) => ReadonlyArray<IdentityRegistryIssue>;
+  (base: BaseSnapshot, head: TermSnapshot, layout: RegistryLayout): ReadonlyArray<IdentityRegistryIssue>;
 } = dual(
   3,
-  (base: BaseSnapshot, head: TermSnapshot, subject: string): ReadonlyArray<IdentityRegistryIssue> =>
-    A.map(snapshotViolations(base.snapshot, head), violationIssue(subject, "Against the base ref", base.path))
-);
-
-/**
- * Decode the snapshot text of a base ref; an absent snapshot is the empty snapshot.
- *
- * **Example** (Read a base with no snapshot)
- *
- * ```ts
- * import { decodeBaseSnapshot } from "@beep/repo-cli/commands/Identity/Registry"
- * import * as O from "effect/Option"
- * import * as Result from "effect/Result"
- *
- * console.log(Result.getOrThrow(decodeBaseSnapshot("term-snapshot.json", O.none())).release) // "0.0.0"
- * ```
- *
- * @category validation
- * @since 0.0.0
- */
-export const decodeBaseSnapshot: {
-  (text: O.Option<string>): (subject: string) => Result.Result<TermSnapshot, IdentityRegistryIssue>;
-  (subject: string, text: O.Option<string>): Result.Result<TermSnapshot, IdentityRegistryIssue>;
-} = dual(
-  2,
-  (subject: string, text: O.Option<string>): Result.Result<TermSnapshot, IdentityRegistryIssue> =>
-    O.match(text, {
-      onNone: () => Result.succeed(TermSnapshot.empty),
-      onSome: flow(
-        decodeSnapshot,
-        Result.mapError((error) =>
-          IdentityRegistryIssue.make({
-            kind: "registry-generated-drift",
-            subject,
-            detail: `The base ref's snapshot does not decode: ${error.message}`,
-          })
-        )
-      ),
-    })
+  (base: BaseSnapshot, head: TermSnapshot, layout: RegistryLayout): ReadonlyArray<IdentityRegistryIssue> =>
+    A.map(snapshotViolations(base.snapshot, head), (violation) =>
+      IdentityRegistryIssue.make({
+        kind: baseBreaks[violation._tag][0],
+        subject: layout.snapshot,
+        detail: violationDetail({ where: AGAINST_BASE, layout, ref: base.ref }, violation),
+      })
+    )
 );
 
 // ---------------------------------------------------------------------------
@@ -1093,13 +1181,15 @@ export const decodeBaseSnapshot: {
 
 const ioError = (message: string) => (cause: unknown) => IdentityRegistryGeneratorError.make({ message, cause });
 
-const readOptional = Effect.fn("IdentityRegistry.readOptional")(function* (absolutePath: string) {
+const readOptional = Effect.fn("IdentityRegistry.readOptional")(function* (repoRoot: string, file: string) {
   const fs = yield* FileSystem.FileSystem;
-  const exists = yield* fs.exists(absolutePath).pipe(Effect.mapError(ioError(`Cannot stat ${absolutePath}.`)));
+  const path = yield* Path.Path;
+  const absolute = path.join(repoRoot, file);
+  const exists = yield* fs.exists(absolute).pipe(Effect.mapError(ioError(`Cannot stat ${file}.`)));
   if (!exists) {
     return O.none<string>();
   }
-  const content = yield* fs.readFileString(absolutePath).pipe(Effect.mapError(ioError(`Cannot read ${absolutePath}.`)));
+  const content = yield* fs.readFileString(absolute).pipe(Effect.mapError(ioError(`Cannot read ${file}.`)));
   return O.some(content);
 });
 
@@ -1277,19 +1367,46 @@ export const readShardFiles = Effect.fn("IdentityRegistry.readShardFiles")(funct
 });
 
 /**
- * Plan the registry artifacts of the checkout at `repoRoot` from its shards and committed snapshot.
+ * Read the plan inputs of the checkout at `repoRoot`: its shards, its committed snapshot and the given base.
+ *
+ * **Example** (Read the inputs of a check)
+ *
+ * ```ts
+ * import { readRegistryPlanInput, RegistryLayout } from "@beep/repo-cli/commands/Identity/Registry"
+ * import * as O from "effect/Option"
+ *
+ * console.log(readRegistryPlanInput("/repo", RegistryLayout.of("packages/identity"), O.none()))
+ * ```
+ *
+ * @category workflows
+ * @since 0.0.0
+ */
+export const readRegistryPlanInput = Effect.fn("IdentityRegistry.readPlanInput")(function* (
+  repoRoot: string,
+  layout: RegistryLayout,
+  base: O.Option<BaseSnapshot>
+) {
+  const shardFiles = yield* readShardFiles(repoRoot, layout);
+  const committed = yield* readOptional(repoRoot, layout.snapshot);
+  return RegistryPlanInput.make({ layout, shardFiles, committed, base });
+});
+
+/**
+ * Plan the registry artifacts of the checkout at `repoRoot` from its shards, its committed snapshot and the given base.
  *
  * **Details**
  *
  * An edited shard stands in for the committed shard at its path, so an edit is
- * planned in full before any of it is written.
+ * planned in full before any of it is written. A check names no base and reads
+ * no git state.
  *
  * **Example** (Plan the registry)
  *
  * ```ts
  * import { planRegistry, RegistryLayout } from "@beep/repo-cli/commands/Identity/Registry"
+ * import * as O from "effect/Option"
  *
- * console.log(planRegistry("/repo", RegistryLayout.of("packages/identity")))
+ * console.log(planRegistry("/repo", RegistryLayout.of("packages/identity"), O.none()))
  * ```
  *
  * @category workflows
@@ -1298,18 +1415,17 @@ export const readShardFiles = Effect.fn("IdentityRegistry.readShardFiles")(funct
 export const planRegistry = Effect.fn("IdentityRegistry.plan")(function* (
   repoRoot: string,
   layout: RegistryLayout,
+  base: O.Option<BaseSnapshot>,
   edits: ReadonlyArray<RegistrySourceFile> = A.empty()
 ) {
-  const path = yield* Path.Path;
-  const committed = yield* readShardFiles(repoRoot, layout);
-  const shardFiles = A.map(committed, (file) =>
+  const input = yield* readRegistryPlanInput(repoRoot, layout, base);
+  const shardFiles = A.map(input.shardFiles, (file) =>
     pipe(
       A.findFirst(edits, (edited) => edited.path === file.path),
       O.getOrElse(() => file)
     )
   );
-  const previous = yield* readOptional(path.join(repoRoot, layout.snapshot));
-  return planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles, previous }));
+  return planRegistryArtifacts(RegistryPlanInput.make({ ...input, shardFiles }));
 });
 
 /**
@@ -1317,9 +1433,10 @@ export const planRegistry = Effect.fn("IdentityRegistry.plan")(function* (
  *
  * **Details**
  *
- * The regenerated snapshot is also checked on its own: its release is never
- * lower than a `since` its rows record, and every binding code names a
- * module of the checkout ({@link danglingBindingCodes}).
+ * Every binding code of the regenerated snapshot names a module of the checkout
+ * ({@link danglingBindingCodes}). The check reads no base and no git state: a
+ * committed release below a `since` its rows record is drift, because a
+ * regeneration raises it.
  *
  * **Example** (Check the registry)
  *
@@ -1333,8 +1450,7 @@ export const planRegistry = Effect.fn("IdentityRegistry.plan")(function* (
  * @since 0.0.0
  */
 export const checkRegistry = Effect.fn("IdentityRegistry.check")(function* (repoRoot: string, layout: RegistryLayout) {
-  const path = yield* Path.Path;
-  const plan = yield* planRegistry(repoRoot, layout);
+  const plan = yield* planRegistry(repoRoot, layout, O.none());
   if (Result.isFailure(plan)) {
     return plan.failure;
   }
@@ -1344,15 +1460,11 @@ export const checkRegistry = Effect.fn("IdentityRegistry.check")(function* (repo
       A.map(artifacts, (artifact) => artifact.path),
       retired
     ),
-    (file) => Effect.map(readOptional(path.join(repoRoot, file)), (content) => [file, content] as const),
+    (file) => Effect.map(readOptional(repoRoot, file), (content) => [file, content] as const),
     { concurrency: 1 }
   );
   const byPath = R.fromEntries(current);
   const drift = driftIssues(plan.success, (file) => O.flatten(R.get(byPath, file)));
-  const release = A.map(
-    snapshotReleaseViolations(snapshot),
-    violationIssue(layout.snapshot, "In the snapshot", layout.snapshot)
-  );
   const dangling = yield* danglingBindingCodes(
     repoRoot,
     A.map(snapshot.bindings, (binding) => binding.code)
@@ -1364,7 +1476,7 @@ export const checkRegistry = Effect.fn("IdentityRegistry.check")(function* (repo
       detail: `The binding code ${code} names no module of the checkout. Restore the module, or move the binding with \`bun run beep identity rebind\`.`,
     })
   );
-  return A.appendAll(A.appendAll(drift, release), danglingIssues);
+  return A.appendAll(drift, danglingIssues);
 });
 
 /**
@@ -1382,7 +1494,7 @@ export const checkRegistry = Effect.fn("IdentityRegistry.check")(function* (repo
  * import { BaseSnapshot, checkRegistryAgainstBase, RegistryLayout } from "@beep/repo-cli/commands/Identity/Registry"
  *
  * const layout = RegistryLayout.of("packages/identity")
- * const base = BaseSnapshot.make({ path: layout.snapshot, snapshot: TermSnapshot.empty })
+ * const base = BaseSnapshot.make({ snapshot: TermSnapshot.empty })
  * console.log(checkRegistryAgainstBase("/repo", layout, base))
  * ```
  *
@@ -1394,10 +1506,10 @@ export const checkRegistryAgainstBase = Effect.fn("IdentityRegistry.checkAgainst
   layout: RegistryLayout,
   base: BaseSnapshot
 ) {
-  const plan = yield* planRegistry(repoRoot, layout);
+  const plan = yield* planRegistry(repoRoot, layout, O.none());
   return Result.match(plan, {
     onFailure: A.empty<IdentityRegistryIssue>,
-    onSuccess: ({ snapshot }) => baseSnapshotIssues(base, snapshot, layout.snapshot),
+    onSuccess: ({ snapshot }) => baseSnapshotIssues(base, snapshot, layout),
   });
 });
 
@@ -1427,7 +1539,7 @@ const replaceFile = Effect.fn("IdentityRegistry.replaceFile")(function* (repoRoo
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const absolute = path.join(repoRoot, file.path);
-  const current = yield* readOptional(absolute);
+  const current = yield* readOptional(repoRoot, file.path);
   if (O.contains(current, file.content)) {
     return false;
   }
@@ -1448,7 +1560,7 @@ const removeRetired = Effect.fn("IdentityRegistry.removeRetired")(function* (rep
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
   const absolute = path.join(repoRoot, retired);
-  const current = yield* readOptional(absolute);
+  const current = yield* readOptional(repoRoot, retired);
   if (!O.exists(current, isGeneratedProjection)) {
     return false;
   }
@@ -1467,6 +1579,10 @@ const withRecovery =
  *
  * **Details**
  *
+ * The release is computed from the base, so writing the same change in many steps
+ * gives the release of the whole change. A base that publishes no term set leaves
+ * the committed snapshot as the previous one.
+ *
  * The edited shards are written with the generated artifacts, and only after the
  * whole plan succeeds: a finding leaves every file as it was. No other shard is
  * rewritten, and the projection module of a package no shard targets any more is
@@ -1481,9 +1597,12 @@ const withRecovery =
  * **Example** (Write the registry)
  *
  * ```ts
- * import { RegistryLayout, writeRegistry } from "@beep/repo-cli/commands/Identity/Registry"
+ * import { TermSnapshot } from "@beep/identity/Term"
+ * import { BaseSnapshot, RegistryLayout, writeRegistry } from "@beep/repo-cli/commands/Identity/Registry"
  *
- * console.log(writeRegistry("/repo", RegistryLayout.of("packages/identity")))
+ * const layout = RegistryLayout.of("packages/identity")
+ * const base = BaseSnapshot.make({ snapshot: TermSnapshot.empty })
+ * console.log(writeRegistry("/repo", layout, base))
  * ```
  *
  * @category workflows
@@ -1492,9 +1611,10 @@ const withRecovery =
 export const writeRegistry = Effect.fn("IdentityRegistry.write")(function* (
   repoRoot: string,
   layout: RegistryLayout,
+  base: BaseSnapshot,
   edits: ReadonlyArray<RegistrySourceFile> = A.empty()
 ) {
-  const plan = yield* planRegistry(repoRoot, layout, edits);
+  const plan = yield* planRegistry(repoRoot, layout, O.some(base), edits);
   if (Result.isFailure(plan)) {
     return Result.fail(plan.failure);
   }
@@ -1515,7 +1635,7 @@ export const writeRegistry = Effect.fn("IdentityRegistry.write")(function* (
           `The shard edit was applied (${A.join(
             A.map(edits, (file) => file.path),
             ", "
-          )}), so do not run it again: fix the error, then run ${WRITE_COMMAND}.`
+          )}), so do not run it again: fix the error, then run ${writeCommand(base.ref)}.`
         )
       )
     : generated;
@@ -1545,82 +1665,3 @@ export const writeRegistry = Effect.fn("IdentityRegistry.write")(function* (
  * @since 0.0.0
  */
 export const issueLine = (issue: IdentityRegistryIssue): string => `${issue.subject} [${issue.kind}] ${issue.detail}`;
-
-const reportIssues = Effect.fn("IdentityRegistry.reportIssues")(function* (
-  issues: A.NonEmptyReadonlyArray<IdentityRegistryIssue>
-) {
-  yield* Console.error(`[identity:registry] found ${A.length(issues)} finding(s).`);
-  for (const issue of issues) {
-    yield* Console.error(issueLine(issue));
-  }
-  return yield* failWithReportedExit("identity registry: findings.");
-});
-
-// What one `--write` did, one line per kind of change.
-const writeLines = ({ removed, written }: RegistryWrite): A.NonEmptyReadonlyArray<string> => {
-  const lines = A.getSomes([
-    O.map(O.liftPredicate(A.isReadonlyArrayNonEmpty)(written), (files) => `wrote ${A.join(files, ", ")}.`),
-    O.map(O.liftPredicate(A.isReadonlyArrayNonEmpty)(removed), (files) => `removed ${A.join(files, ", ")}.`),
-  ]);
-  return A.isReadonlyArrayNonEmpty(lines) ? lines : ["up to date."];
-};
-
-const runRegistryWrite = Effect.fn("IdentityRegistry.runWrite")(function* (repoRoot: string, layout: RegistryLayout) {
-  const written = yield* writeRegistry(repoRoot, layout);
-  if (Result.isFailure(written)) {
-    return yield* reportIssues(written.failure);
-  }
-  for (const line of writeLines(written.success)) {
-    yield* Console.log(`[identity:registry] ${line}`);
-  }
-});
-
-const runIdentityRegistry = Effect.fn("IdentityRegistry.run")(function* (options: {
-  readonly write: boolean;
-  readonly check: boolean;
-}) {
-  if (options.write && options.check) {
-    return yield* failWithReportedExit("identity registry: pass --write or --check, not both.");
-  }
-  const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(ioError("Cannot find the repository root.")));
-  const layout = yield* resolveRegistryLayout(repoRoot);
-  if (options.write) {
-    return yield* runRegistryWrite(repoRoot, layout);
-  }
-  const issues = yield* checkRegistry(repoRoot, layout);
-  if (A.isReadonlyArrayNonEmpty(issues)) {
-    return yield* reportIssues(issues);
-  }
-  yield* Console.log("[identity:registry] OK: the generated registry artifacts match the shards.");
-});
-
-/**
- * `beep identity registry`: regenerate (`--write`) or check (`--check`, the default) the registry artifacts.
- *
- * **Example** (Read the command name)
- *
- * ```ts
- * import { identityRegistryCommand } from "@beep/repo-cli/commands/Identity/Registry"
- *
- * console.log(identityRegistryCommand.name) // "registry"
- * ```
- *
- * @category cli-commands
- * @since 0.0.0
- */
-export const identityRegistryCommand = Command.make(
-  "registry",
-  {
-    write: Flag.Boolean("write").pipe(
-      Flag.withDefault(false),
-      Flag.withDescription(
-        "Write Registry.data.ts, term-snapshot.json and the projection modules from the source shards, and remove a projection module no shard targets"
-      )
-    ),
-    check: Flag.Boolean("check").pipe(
-      Flag.withDefault(false),
-      Flag.withDescription("Write nothing; report shard, conflict and drift findings (the default)")
-    ),
-  },
-  runIdentityRegistry
-).pipe(Command.withDescription("Generate or check the identity registry artifacts from its source shards"));

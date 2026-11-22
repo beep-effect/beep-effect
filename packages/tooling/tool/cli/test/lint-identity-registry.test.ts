@@ -987,6 +987,338 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
       return yield* git.revParse(root, "HEAD");
     });
 
+    // What the lint says to run for a release or a `since` the change against `ref` contradicts.
+    const releaseRemedy = (ref: string) =>
+      `Merge ${ref} if it is not merged yet, set every \`since\` reported as since-misstated, then run \`bun run beep identity registry --write --base ${ref}\`.`;
+    const sinceRemedy = (ref: string) =>
+      `Merge ${ref} if it is not merged yet, set that \`since\` in its shard under ${layout.shards} to the release of the change, then run \`bun run beep identity registry --write --base ${ref}\`.`;
+    const REPORT_CODE = "@beep/widget/Old/Report";
+    const REPORT_IRI = "http://purl.org/spar/fabio/Report";
+
+    const commitAll = Effect.fn("LintIdentityRegistryTest.commitAll")(function* (message: string) {
+      const git = yield* Git;
+      const root = yield* Effect.sync(() => process.cwd());
+      yield* gitFixture(root);
+      yield* git.commit(root, message, { noVerify: true, noGpgSign: true });
+      return yield* git.revParse(root, "HEAD");
+    });
+    // Make `commit` the default base: the fixture's origin/main.
+    const setOriginMain = Effect.fn("LintIdentityRegistryTest.setOriginMain")(function* (commit: string) {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.makeDirectory(".git/refs/remotes/origin", { recursive: true });
+      yield* fs.writeFileString(".git/refs/remotes/origin/main", `${commit}\n`);
+    });
+    const expectRelease = Effect.fn("LintIdentityRegistryTest.expectRelease")(function* (release: string) {
+      const fs = yield* FileSystem.FileSystem;
+      const snapshot = yield* Effect.map(fs.readFileString(layout.snapshot), decodeSnapshotText);
+      expect(snapshot.release).toBe(release);
+    });
+    const setRelease = Effect.fn("LintIdentityRegistryTest.setRelease")(function* (from: string, to: string) {
+      const fs = yield* FileSystem.FileSystem;
+      const text = yield* fs.readFileString(layout.snapshot);
+      yield* fs.writeFileString(layout.snapshot, Str.replace(`"release": "${from}"`, `"release": "${to}"`)(text));
+    });
+    // The findings the lint reports against `args`, without the count header.
+    const lintFindings = Effect.fn("LintIdentityRegistryTest.lintFindings")(function* (args: ReadonlyArray<string>) {
+      const before = yield* TestConsole.errorLines;
+      const refused = yield* Effect.exit(runLintCommand(["identity-registry", ...args]));
+      expectReportedExit(refused);
+      const after = yield* TestConsole.errorLines;
+      return A.drop(after, before.length + 1);
+    });
+
+    it.effect(
+      "L0-3 releases a change once, however many commands it is made with",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const base = yield* commitRegistryFixture(fabioShard(["Note", "Report", "TechnicalReport"]));
+            yield* setOriginMain(base);
+
+            // Additions, one write each: one minor release.
+            yield* fs.writeFileString(fabioPath, fabioShard(["Article", "Note", "Report", "TechnicalReport"]));
+            yield* runIdentityCommand(["registry", "--write"]);
+            yield* expectRelease("1.1.0");
+            yield* commitAll("first addition");
+            yield* fs.writeFileString(
+              fabioPath,
+              fabioShard(["Article", "Note", "Report", "TechnicalReport", "Thesis"])
+            );
+            yield* runIdentityCommand(["registry", "--write"]);
+            yield* expectRelease("1.1.0");
+            yield* runLintCommand(["identity-registry"]);
+            yield* commitAll("second addition");
+
+            // A deprecation makes the whole change a major; a second one is in that major already.
+            yield* runIdentityCommand(["deprecate", "fabio:TechnicalReport", "--replacement", "fabio:Report"]);
+            yield* expectRelease("2.0.0");
+            yield* commitAll("first deprecation");
+            yield* runIdentityCommand(["deprecate", "fabio:Note"]);
+            yield* expectRelease("2.0.0");
+            const snapshot = yield* Effect.map(fs.readFileString(layout.snapshot), decodeSnapshotText);
+            expect(A.map(snapshot.deprecations, (row): string => row.since)).toStrictEqual(["2.0.0", "2.0.0"]);
+            yield* runLintCommand(["identity-registry"]);
+            yield* runIdentityCommand(["registry", "--check"]);
+
+            // Writing again, against the default base or the same base by name, changes nothing.
+            const written = yield* fs.readFileString(layout.snapshot);
+            yield* runIdentityCommand(["registry", "--write"]);
+            yield* runIdentityCommand(["registry", "--write", "--base", base]);
+            const logLines = yield* TestConsole.logLines;
+            expect(A.takeRight(logLines, 2)).toStrictEqual([
+              "[identity:registry] up to date.",
+              "[identity:registry] up to date.",
+            ]);
+            const rewritten = yield* fs.readFileString(layout.snapshot);
+            expect(rewritten).toBe(written);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "L0-3 an addition whose change becomes a major moves with it, as the lint says",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const base = yield* commitRegistryFixture(fabioShard(["Note", "Report"]));
+            yield* setOriginMain(base);
+            yield* fs.writeFileString(
+              fabioPath,
+              fabioShard(["Note", "Report"], [{ code: REPORT_CODE, local: "Report", since: "1.1.0" }])
+            );
+            yield* runIdentityCommand(["registry", "--write"]);
+            yield* runLintCommand(["identity-registry"]);
+            yield* runIdentityCommand(["deprecate", "fabio:Note"]);
+            yield* expectRelease("2.0.0");
+
+            const findings = yield* lintFindings([]);
+
+            expect(findings).toStrictEqual([
+              `${layout.snapshot} [since-misstated] Against the base ref: The new binding of ${REPORT_IRI} to ${REPORT_CODE} records since 1.1.0; the change is release 2.0.0. Merge origin/main if it is not merged yet, set that \`since\` in its shard under ${layout.shards} to the release of the change, then run \`bun run beep identity registry --write\`.`,
+            ]);
+            const shard = yield* fs.readFileString(fabioPath);
+            yield* fs.writeFileString(fabioPath, Str.replace('"since": "1.1.0"', '"since": "2.0.0"')(shard));
+            yield* runIdentityCommand(["registry", "--write"]);
+            yield* runLintCommand(["identity-registry"]);
+
+            // A rebind of the new binding keeps its since; the release stays that of the change.
+            yield* fs.rename(WIDGET_OLD_MODULE, WIDGET_NEW_MODULE);
+            yield* runIdentityCommand(["rebind", "@beep/widget/Old", "@beep/widget/New"]);
+            yield* expectRelease("2.0.0");
+            yield* runLintCommand(["identity-registry"]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "L0-3 refuses a release above the change, and regenerating or --fix repairs it",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const base = yield* commitRegistryFixture(fabioShard(["Report"]));
+            yield* fs.writeFileString(fabioPath, fabioShard(["Report", "Thesis"]));
+            yield* runIdentityCommand(["registry", "--write", "--base", base]);
+
+            yield* setRelease("1.1.0", "1.2.0");
+            yield* runIdentityCommand(["registry", "--check"]);
+            const overstated = yield* lintFindings(["--base", base]);
+            expect(overstated).toStrictEqual([
+              `${layout.snapshot} [release-overstated] Against the base ref: The snapshot is released as 1.2.0; its change to release 1.0.0 calls for 1.1.0. ${releaseRemedy(base)}`,
+            ]);
+            yield* runIdentityCommand(["registry", "--write", "--base", base]);
+            yield* expectRelease("1.1.0");
+            yield* runLintCommand(["identity-registry", "--base", base]);
+
+            // --fix regenerates against the lint's own base.
+            yield* setRelease("1.1.0", "1.2.0");
+            yield* runLintCommand(["identity-registry", "--fix", "--base", base]);
+            yield* expectRelease("1.1.0");
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "L0-3 refuses a release wound back below its base, and regenerating repairs it",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const base = yield* commitRegistryFixture(fabioShard(["Report"]));
+            yield* fs.writeFileString(fabioPath, fabioShard(["Report", "Thesis"]));
+            yield* runIdentityCommand(["registry", "--write", "--base", base]);
+            yield* setRelease("1.1.0", "0.9.0");
+            const regressed = yield* lintFindings(["--base", base]);
+            expect(regressed).toStrictEqual([
+              `${layout.snapshot} [release-regressed] Against the base ref: The snapshot release goes back from 1.0.0 to 0.9.0. ${releaseRemedy(base)}`,
+            ]);
+            yield* runIdentityCommand(["registry", "--write", "--base", base]);
+            yield* expectRelease("1.1.0");
+            yield* runLintCommand(["identity-registry", "--base", base]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "L0-3 refuses a since above its change, which raises the release, and says to set it",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const base = yield* commitRegistryFixture(fabioShard(["Report"]));
+            const boundAt = (since: string) => fabioShard(["Report"], [{ code: REPORT_CODE, local: "Report", since }]);
+            yield* fs.writeFileString(fabioPath, boundAt("3.0.0"));
+            yield* runIdentityCommand(["registry", "--write", "--base", base]);
+            yield* expectRelease("3.0.0");
+
+            const findings = yield* lintFindings(["--base", base]);
+
+            expect(findings).toStrictEqual([
+              `${layout.snapshot} [since-misstated] Against the base ref: The new binding of ${REPORT_IRI} to ${REPORT_CODE} records since 3.0.0; the change is release 1.1.0. ${sinceRemedy(base)}`,
+              `${layout.snapshot} [release-overstated] Against the base ref: The snapshot is released as 3.0.0; its change to release 1.0.0 calls for 1.1.0. ${releaseRemedy(base)}`,
+            ]);
+            yield* fs.writeFileString(fabioPath, boundAt("1.1.0"));
+            yield* runIdentityCommand(["registry", "--write", "--base", base]);
+            yield* expectRelease("1.1.0");
+            yield* runLintCommand(["identity-registry", "--base", base]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "L0-3 tells a layer exactly what to run once its parent's release is the base",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const main = yield* commitRegistryFixture(fabioShard(["Note", "Report", "TechnicalReport"]));
+            yield* setOriginMain(main);
+            yield* runIdentityCommand(["deprecate", "fabio:TechnicalReport"]);
+            const parent = yield* commitAll("the parent layer");
+
+            // Until the parent merges, the stack is one change against main: both layers are release 2.0.0.
+            yield* runIdentityCommand(["deprecate", "fabio:Note"]);
+            yield* runLintCommand(["identity-registry"]);
+            yield* expectRelease("2.0.0");
+            yield* commitAll("the layer");
+
+            yield* setOriginMain(parent);
+            const findings = yield* lintFindings([]);
+
+            const step = "Merge origin/main if it is not merged yet, set";
+            const write = "then run `bun run beep identity registry --write`.";
+            expect(findings).toStrictEqual([
+              `${layout.snapshot} [since-misstated] Against the base ref: The new deprecation of http://purl.org/spar/fabio/Note records since 2.0.0; the change is release 3.0.0. ${step} that \`since\` in its shard under ${layout.shards} to the release of the change, ${write}`,
+              `${layout.snapshot} [release-regressed] Against the base ref: The snapshot changes the rows of release 2.0.0 but is released as 2.0.0; the change calls for 3.0.0. ${step} every \`since\` reported as since-misstated, ${write}`,
+            ]);
+            const shard = yield* fs.readFileString(fabioPath);
+            yield* fs.writeFileString(
+              fabioPath,
+              Str.replace('fabio/Note",\n      "since": "2.0.0"', 'fabio/Note",\n      "since": "3.0.0"')(shard)
+            );
+            yield* runIdentityCommand(["registry", "--write"]);
+            yield* expectRelease("3.0.0");
+            yield* runLintCommand(["identity-registry"]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "L0-3 keeps the release of a layer whose base publishes no term set, and drops an unpublished row as the writer says",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget"] });
+            yield* fs.writeFileString(WIDGET_OLD_MODULE, "export const report = 1;\n");
+            const main = yield* commitAll("no registry");
+            yield* setOriginMain(main);
+            yield* fs.makeDirectory(layout.shards, { recursive: true });
+            const bound = (terms: ReadonlyArray<string>) =>
+              fabioShard(terms, [{ code: REPORT_CODE, local: "Report", since: "2.0.0" }]);
+            yield* fs.writeFileString(fabioPath, bound(["Report"]));
+            yield* runIdentityCommand(["registry", "--write"]);
+            yield* expectRelease("2.0.0");
+            yield* runIdentityCommand(["registry", "--write"]);
+            yield* expectRelease("2.0.0");
+            yield* runLintCommand(["identity-registry"]);
+
+            // The committed snapshot is all the writer has, so it counts an addition and refuses to drop it.
+            yield* fs.writeFileString(fabioPath, bound(["Draft", "Report"]));
+            yield* runIdentityCommand(["registry", "--write"]);
+            yield* expectRelease("2.1.0");
+            yield* fs.writeFileString(fabioPath, bound(["Report"]));
+            const refused = yield* Effect.exit(runIdentityCommand(["registry", "--write"]));
+            expectReportedExit(refused);
+            const errorLines = yield* TestConsole.errorLines;
+            expect(errorLines).toContainEqual(
+              expect.stringContaining(
+                `If no branch published it either, remove ${layout.snapshot} and run \`bun run beep identity registry --write\`.`
+              )
+            );
+            yield* fs.remove(layout.snapshot);
+            yield* runIdentityCommand(["registry", "--write"]);
+            yield* expectRelease("2.0.0");
+            yield* runLintCommand(["identity-registry"]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "L0-3 the writers refuse a base whose snapshot does not decode, and repair a committed one from its base",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const base = yield* commitRegistryFixture(fabioShard(["Note", "Report"]));
+            const snapshot = yield* fs.readFileString(layout.snapshot);
+            yield* fs.writeFileString(layout.snapshot, "{}");
+            const broken = yield* commitAll("a broken snapshot");
+
+            const edit = yield* Effect.exit(runIdentityCommand(["deprecate", "fabio:Note", "--base", broken]));
+            expectReportedExit(edit);
+            const write = yield* Effect.exit(runIdentityCommand(["registry", "--write", "--base", broken]));
+            expectReportedExit(write);
+            const errorLines = yield* TestConsole.errorLines;
+            const undecodable = expect.stringContaining(
+              `${layout.snapshot} [registry-generated-drift] The base ref's snapshot does not decode:`
+            );
+            expect(errorLines).toStrictEqual([undecodable, "[identity:registry] found 1 finding(s).", undecodable]);
+
+            // The writer's refusal of a removed term the base published names the base's remedy.
+            yield* fs.writeFileString(fabioPath, fabioShard(["Report"]));
+            const removed = yield* Effect.exit(runIdentityCommand(["registry", "--write", "--base", base]));
+            expectReportedExit(removed);
+            const removedLines = yield* TestConsole.errorLines;
+            expect(removedLines).toContain(
+              `${layout.snapshot} [registry-snapshot-break] Against the base ref: http://purl.org/spar/fabio/Note is removed without a deprecation. Restore the IRI, or retire it with \`bun run beep identity deprecate\`, the only writer of a deprecation.`
+            );
+            yield* fs.writeFileString(fabioPath, fabioShard(["Note", "Report"]));
+            yield* runIdentityCommand(["registry", "--write", "--base", base]);
+            const repaired = yield* fs.readFileString(layout.snapshot);
+            expect(repaired).toBe(snapshot);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
     it.effect(
       "L0-3 reports a term removed against the base ref and accepts its deprecation",
       () =>
@@ -1102,7 +1434,7 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
               expect.stringContaining(`${movedLayout.snapshot} ${REMOVED_TECHNICAL_REPORT}`)
             );
 
-            // A release wound back with the move is repaired from where the base has the snapshot.
+            // A release understated with the move is repaired against the base, wherever the base has its snapshot.
             yield* fs.writeFileString(
               `${movedLayout.shards}/fabio.json`,
               fabioShard(["Report", "TechnicalReport", "Thesis"])
@@ -1112,16 +1444,10 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             const understated = yield* Effect.exit(runLintCommand(["identity-registry", "--base", base]));
             expectReportedExit(understated);
             const understatedLines = yield* TestConsole.errorLines;
-            expect(understatedLines).toContainEqual(
-              expect.stringContaining(
-                `Merge the base ref if it is not merged yet, restore its snapshot with \`git show <base>:${layout.snapshot} > ${movedLayout.snapshot}\`, set the`
-              )
+            expect(understatedLines).toContain(
+              `${movedLayout.snapshot} [release-regressed] Against the base ref: The snapshot changes the rows of release 1.0.0 but is released as 1.0.0; the change calls for 1.1.0. ${releaseRemedy(base)}`
             );
-            const git = yield* Git;
-            const root = yield* Effect.sync(() => process.cwd());
-            const baseSnapshot = yield* git.show(root, base, layout.snapshot);
-            yield* fs.writeFileString(movedLayout.snapshot, O.getOrThrow(baseSnapshot));
-            yield* runIdentityCommand(["registry", "--write"]);
+            yield* runIdentityCommand(["registry", "--write", "--base", base]);
             yield* runLintCommand(["identity-registry", "--base", base]);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
@@ -1246,45 +1572,39 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
     );
 
     it.effect(
-      "L0-3 the release remedy repairs an understated release that merging and regenerating does not",
+      "L0-3 the release and since remedies repair a change regenerated from nothing",
       () =>
         Effect.andThen(
           temporaryWorkingDirectory,
           Effect.gen(function* () {
             const fs = yield* FileSystem.FileSystem;
-            const git = yield* Git;
             const base = yield* commitRegistryFixture(fabioShard(["Report"]));
-            const root = yield* Effect.sync(() => process.cwd());
             const boundAt = (since: string) =>
-              fabioShard(["Report", "Thesis"], [{ code: "@beep/widget/Old/Report", local: "Report", since }]);
+              fabioShard(["Report", "Thesis"], [{ code: REPORT_CODE, local: "Report", since }]);
 
             // The branch regenerated its change from nothing, so its snapshot holds the new rows at the base's release.
             yield* fs.writeFileString(fabioPath, boundAt("1.0.0"));
             yield* fs.remove(layout.snapshot);
             yield* runIdentityCommand(["registry", "--write"]);
-            yield* gitFixture(root);
-            yield* git.commit(root, "change on top of the base", { noVerify: true, noGpgSign: true });
-            const understated = yield* Effect.exit(runLintCommand(["identity-registry", "--base", base]));
-            expectReportedExit(understated);
-            const errorLines = yield* TestConsole.errorLines;
-            expect(errorLines).toContain(
-              `${layout.snapshot} [release-regressed] Against the base ref: The snapshot changes the rows of release 1.0.0 but is released as 1.0.0; the change calls for 1.1.0. Merge the base ref if it is not merged yet, restore its snapshot with \`git restore --source <base> -- ${layout.snapshot}\` (remove the file when the base has none), set the \`since\` of every binding and deprecation the change adds to the release it calls for, then run \`bun run beep identity registry --write\`.`
-            );
+            yield* commitAll("change on top of the base");
 
-            // The base is merged already (it is the parent commit), so regenerating alone repairs nothing.
-            yield* runIdentityCommand(["registry", "--write"]);
-            const logLines = yield* TestConsole.logLines;
-            expect(logLines).toContain("[identity:registry] up to date.");
-            const regenerated = yield* Effect.exit(runLintCommand(["identity-registry", "--base", base]));
-            expectReportedExit(regenerated);
+            const findings = yield* lintFindings(["--base", base]);
 
-            // The remedy's own steps.
-            const baseSnapshot = yield* git.show(root, base, layout.snapshot);
-            yield* fs.writeFileString(layout.snapshot, O.getOrThrow(baseSnapshot));
+            const since = `${layout.snapshot} [since-misstated] Against the base ref: The new binding of ${REPORT_IRI} to ${REPORT_CODE} records since 1.0.0; the change is release 1.1.0. ${sinceRemedy(base)}`;
+            expect(findings).toStrictEqual([
+              since,
+              `${layout.snapshot} [release-regressed] Against the base ref: The snapshot changes the rows of release 1.0.0 but is released as 1.0.0; the change calls for 1.1.0. ${releaseRemedy(base)}`,
+            ]);
+
+            // Regenerating against the base repairs the release by itself, and leaves the row to its shard.
+            yield* runIdentityCommand(["registry", "--write", "--base", base]);
+            yield* expectRelease("1.1.0");
+            const left = yield* lintFindings(["--base", base]);
+            expect(left).toStrictEqual([since]);
+
+            // The base is merged already (it is the parent commit); the remedy's other steps.
             yield* fs.writeFileString(fabioPath, boundAt("1.1.0"));
-            yield* runIdentityCommand(["registry", "--write"]);
-            const repaired = yield* Effect.map(fs.readFileString(layout.snapshot), decodeSnapshotText);
-            expect(repaired.release).toBe("1.1.0");
+            yield* runIdentityCommand(["registry", "--write", "--base", base]);
             yield* runLintCommand(["identity-registry", "--base", base]);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
