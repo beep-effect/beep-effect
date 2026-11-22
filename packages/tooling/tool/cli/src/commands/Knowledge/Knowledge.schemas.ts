@@ -126,8 +126,9 @@ type KnowledgePublicDetail = typeof KnowledgePublicDetail.Type;
  * **Details**
  *
  * The Stage-1 semantic delta emits only `broken-tracked-path`, `unknown-beep-command`, `index-drift`,
- * and `failed-assertion`. A `broken-tracked-path` excludes inline spans that exactly name a live
- * remote-tracking branch or tag. The Stage-2 knowledge doctor additionally emits
+ * and `failed-assertion`. A `broken-tracked-path` is read from the tracked tree, never from the refs
+ * a clone holds, so a branch or tag spelling with a governed root is a path. The Stage-2 knowledge
+ * doctor additionally emits
  * `unknown-beep-option` and the span-classification kinds (`historical-claim-unverified`,
  * `historical-commit-not-ancestor`, `historical-marker-on-live-surface`, and
  * `unclassified-reference-span`), and its domain evaluators emit `unknown-beep-symbol`,

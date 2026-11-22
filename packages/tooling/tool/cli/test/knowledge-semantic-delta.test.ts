@@ -15,12 +15,10 @@ import {
   KnowledgeServiceLive,
   KnowledgeTrackedEntry,
   knowledgeSemanticDeltaFailure,
-  readKnowledgeGitRefNames,
   resolveKnowledgeProbePolicy,
 } from "@beep/repo-cli/commands/Knowledge";
 import {
   baseSharingHeadCommandSurfaceForTesting,
-  gitRefSpanNamesForTesting,
   inSequenceOrderForTesting,
   KnowledgeCommandSurface,
   knowledgeTrackedPathExistsForTesting,
@@ -38,12 +36,10 @@ import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
-import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
 import { identity } from "effect/Function";
-import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -94,7 +90,6 @@ const COMMAND_TREE_WITHOUT_DOCTOR = Result.getOrThrowWith(
   }),
   identity
 );
-const NO_GIT_REFS = HashSet.empty<string>();
 const policyLayer = Layer.mergeAll(MemoryFileSystem.layer, NodePath.layer);
 
 const testLayer = KnowledgeServiceLive.pipe(
@@ -188,14 +183,12 @@ const fixture = (
   headFiles: Readonly<Record<string, string>>,
   options: {
     readonly base?: OracleOptions;
-    readonly gitRefNames?: ReadonlyArray<string>;
     readonly head?: OracleOptions;
     readonly probePolicy?: KnowledgeProbePolicy;
     readonly renames?: ReadonlyArray<KnowledgeRename>;
   } = {}
 ): KnowledgePairedOracleInput => ({
   base: makeOracle(baseFiles, options.base),
-  gitRefNames: HashSet.fromIterable(options.gitRefNames ?? []),
   head: makeOracle(headFiles, options.head),
   probePolicy: options.probePolicy ?? "enabled",
   renames: options.renames ?? [],
@@ -426,15 +419,6 @@ describe("knowledge semantic-delta proven package exports", () => {
 });
 
 describe("knowledge semantic-delta golden paired fixtures", () => {
-  it("parses remote-tracking and tag ref spellings without accepting other namespaces", () => {
-    expect(gitRefSpanNamesForTesting("refs/heads/goals/local-branch")).toEqual([]);
-    expect(gitRefSpanNamesForTesting("refs/remotes/origin/goals/remote-branch")).toEqual([
-      "origin/goals/remote-branch",
-    ]);
-    expect(gitRefSpanNamesForTesting("refs/tags/goals/release-tag")).toEqual(["goals/release-tag"]);
-    expect(gitRefSpanNamesForTesting("refs/notes/goals/not-a-branch")).toEqual([]);
-  });
-
   it.layer(testLayer, { timeout: "10 seconds" })((it) => {
     it.effect("treats retired deterministic projections as virtual targets and skips index drift", () =>
       Effect.gen(function* () {
@@ -447,7 +431,6 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
         });
         const report = yield* scan({
           base: makeOracle(files),
-          gitRefNames: NO_GIT_REFS,
           head: {
             ...head,
             trackedEntries: A.filter(head.trackedEntries, (entry) => entry.path !== "goals/INDEX.md"),
@@ -809,35 +792,31 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
   });
 
   it.layer(testLayer, { timeout: "10 seconds" })((it) => {
-    it.effect("a tag span is exempt while a local branch and a genuinely missing path remain", () =>
+    it.effect("a branch span with a governed root is a missing path", () =>
       Effect.gen(function* () {
-        const tagName = "goals/time-to-certainty-kickoff";
-        const branchName = "goals/local-lane-branch";
-        const missingPath = "goals/genuinely-missing.md";
         const report = yield* scan(
           fixture(
             { "docs/guide.md": "No references.\n" },
-            {
-              "docs/guide.md": `Read tag \`${tagName}\`; continue branch \`${branchName}\`; repair \`${missingPath}\`.\n`,
-            },
-            {
-              gitRefNames: A.flatMap(
-                [`refs/tags/${tagName}`, `refs/heads/${branchName}`, `refs/remotes/origin/${missingPath}`],
-                gitRefSpanNamesForTesting
-              ),
-            }
+            { "docs/guide.md": "Continue branch `goals/local-lane-branch`.\n" }
           )
         );
+        expect(introducedIds(report)).toEqual([
+          yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:goals/local-lane-branch"),
+        ]);
+      })
+    );
+  });
 
-        expect(A.sort(introducedIds(report), Order.String)).toEqual(
-          A.sort(
-            [
-              yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:goals/genuinely-missing.md"),
-              yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:goals/local-lane-branch"),
-            ],
-            Order.String
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("a remote-tracking branch span has no governed root and is never a path", () =>
+      Effect.gen(function* () {
+        const report = yield* scan(
+          fixture(
+            { "docs/guide.md": "No references.\n" },
+            { "docs/guide.md": "Continue branch `origin/goals/local-lane-branch`.\n" }
           )
         );
+        expect(introducedIds(report)).toEqual([]);
       })
     );
   });
@@ -1248,7 +1227,6 @@ describe("knowledge semantic-delta probe policy", () => {
         const service = yield* KnowledgeService;
         const input = (probePolicy: KnowledgeProbePolicy): KnowledgePairedOracleInput => ({
           base: explodingProbeOracle({ "docs/guide.md": "Nothing cited.\n" }),
-          gitRefNames: NO_GIT_REFS,
           head: explodingProbeOracle({ "docs/guide.md": "Run `bun run beep goals doctro`.\n" }),
           probePolicy,
           renames: [],
@@ -1895,7 +1873,6 @@ describe("knowledge semantic-delta base probe boot failure", () => {
     headOptions: OracleOptions = {}
   ): KnowledgePairedOracleInput => ({
     base: unbootableProbeOracle(baseFiles),
-    gitRefNames: NO_GIT_REFS,
     head: makeOracle(headFiles, headOptions),
     probePolicy: "enabled",
     renames: [],
@@ -1947,7 +1924,6 @@ describe("knowledge semantic-delta base probe boot failure", () => {
         // Only the index probe dies, after the command probe has already resolved an unknown command.
         const degraded = yield* scan({
           base: { ...makeOracle(baseFiles), indexBytes: Effect.fail(BOOT_FAILURE) },
-          gitRefNames: NO_GIT_REFS,
           head: makeOracle(CLEAN_BASE),
           probePolicy: "enabled",
           renames: [],
@@ -1972,7 +1948,6 @@ describe("knowledge semantic-delta base probe boot failure", () => {
         const error = yield* Effect.flip(
           service.scanPair({
             base: makeOracle(CLEAN_BASE),
-            gitRefNames: NO_GIT_REFS,
             head: unbootableProbeOracle(DIRTY_HEAD),
             probePolicy: "enabled",
             renames: [],
@@ -1994,7 +1969,6 @@ describe("knowledge semantic-delta base probe boot failure", () => {
         const error = yield* Effect.flip(
           service.scanPair({
             base: unbootableProbeOracle(CLEAN_BASE),
-            gitRefNames: NO_GIT_REFS,
             head: unbootableProbeOracle(CLEAN_BASE),
             probePolicy: "enabled",
             renames: [],
@@ -2026,7 +2000,6 @@ describe("knowledge semantic-delta base probe boot failure", () => {
         const error = yield* Effect.flip(
           scan({
             base: makeOracle(baseFiles),
-            gitRefNames: NO_GIT_REFS,
             head,
             probePolicy: "enabled",
             renames: [],
@@ -2045,7 +2018,6 @@ describe("knowledge semantic-delta base probe boot failure", () => {
         const baseFiles = { "docs/guide.md": "Run `bun run beep legacy command`.\n" };
         const report = yield* scan({
           base: unbootableProbeOracle(baseFiles),
-          gitRefNames: NO_GIT_REFS,
           head: makeOracle(CLEAN_BASE),
           probePolicy: "enabled",
           renames: [],
@@ -2065,7 +2037,7 @@ describe("knowledge semantic-delta base probe boot failure", () => {
           commandTree: KnowledgeCommandSurface.decodeCurrentCommandTree("not-json"),
         };
         const error = yield* Effect.flip(
-          scan({ base, gitRefNames: NO_GIT_REFS, head: makeOracle(CLEAN_BASE), probePolicy: "enabled", renames: [] })
+          scan({ base, head: makeOracle(CLEAN_BASE), probePolicy: "enabled", renames: [] })
         );
 
         assert.strictEqual(error._tag, "KnowledgeOperationalError");
@@ -2116,7 +2088,6 @@ describe("knowledge semantic-delta base probe boot failure", () => {
         };
         const report = yield* scan({
           base,
-          gitRefNames: NO_GIT_REFS,
           head: makeOracle(CLEAN_BASE),
           probePolicy: "enabled",
           renames: [],
@@ -2182,37 +2153,6 @@ describe("knowledge clone-local attributes guard", () => {
           assert.strictEqual(failure.attributesPath, attributesPath);
           assert.include(failure.message, attributesPath);
         }
-      })
-    );
-  });
-
-  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
-    it.effect("reads the same ref names from a clone with lane branches as from one without", () =>
-      Effect.gen(function* () {
-        const fs = yield* FileSystem.FileSystem;
-        const path = yield* Path.Path;
-        const repoDir = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-ref-names-" });
-        const env = {
-          PATH: Bun.env.PATH ?? "",
-          HOME: path.join(repoDir, "home"),
-          GIT_CONFIG_GLOBAL: "/dev/null",
-          GIT_CONFIG_NOSYSTEM: "1",
-          GIT_AUTHOR_NAME: "Fixture",
-          GIT_AUTHOR_EMAIL: "fixture@example.test",
-          GIT_COMMITTER_NAME: "Fixture",
-          GIT_COMMITTER_EMAIL: "fixture@example.test",
-        };
-        const git = (...args: ReadonlyArray<string>) => Effect.sync(() => runGit(repoDir, args, env));
-        yield* git("init", "-q", "-b", "main");
-        yield* git("commit", "-q", "--allow-empty", "--no-gpg-sign", "-m", "base");
-        yield* git("update-ref", "refs/remotes/origin/goals/shared-lane", "HEAD");
-        yield* git("update-ref", "refs/tags/goals/shared-tag", "HEAD");
-        const before = yield* readKnowledgeGitRefNames(repoDir);
-        assert.isTrue(Equal.equals(before, HashSet.make("origin/goals/shared-lane", "goals/shared-tag")));
-
-        yield* git("branch", "goals/local-lane");
-        const after = yield* readKnowledgeGitRefNames(repoDir);
-        assert.isTrue(Equal.equals(after, before));
       })
     );
   });

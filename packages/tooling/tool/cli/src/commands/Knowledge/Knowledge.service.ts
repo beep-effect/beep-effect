@@ -5,8 +5,6 @@
  * @since 0.0.0
  */
 
-import { Git } from "@beep/git/Git";
-import { GitCommand } from "@beep/git/GitCommand";
 import { $RepoCliId } from "@beep/identity/packages";
 import { sanitizeSensitiveText } from "@beep/observability";
 import { readContainedFileBytesNoFollow, writeContainedFileString } from "@beep/repo-cli-kit/cli/FsGuards";
@@ -34,7 +32,6 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { extract as extractTar } from "tar";
 import {
-  adaptGitKitError,
   gitArchiveEnv,
   guardCloneLocalGitAttributes,
   readGitRenames,
@@ -84,6 +81,7 @@ import {
   KnowledgeSemanticDeltaReport,
   KnowledgeTrackedEntry,
 } from "./Knowledge.schemas.ts";
+import type { Git } from "@beep/git/Git";
 import type { CapturedStreams } from "@beep/repo-cli-kit/process/StepExec";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -230,9 +228,8 @@ export interface KnowledgeArchiveOracle {
  * **Details**
  *
  * `renames` is what lets a moved document keep its base-side identity; without it every finding in a
- * renamed file would report as one resolved and one introduced pair. `gitRefNames` is one live,
- * immutable census for the whole comparison because branches and tags belong to the repository, not
- * either archived tree.
+ * renamed file would report as one resolved and one introduced pair. No field carries the clone's
+ * refs: which branches, remotes, or tags a checkout holds never changes the delta of a pair.
  *
  * **Gotchas**
  *
@@ -247,7 +244,6 @@ export interface KnowledgeArchiveOracle {
  */
 export interface KnowledgePairedOracleInput {
   readonly base: KnowledgeArchiveOracle;
-  readonly gitRefNames: HashSet.HashSet<string>;
   readonly head: KnowledgeArchiveOracle;
   readonly probePolicy: KnowledgeProbePolicy;
   readonly renames: ReadonlyArray<KnowledgeRename>;
@@ -580,24 +576,22 @@ const commandOccurrence = (
     : O.none();
 
 /**
- * A broken tracked-path candidate from one inline code span, unless Git proves the exact span is a
- * remote-tracking branch or tag name.
+ * A broken tracked-path candidate from one inline code span.
  *
  * **Details**
  *
- * Ref exclusion compares the raw code span against the single live `git for-each-ref` census before
- * path normalization. It deliberately does not guess from branch-like spelling or surrounding
- * prose: an unproven `goals/...` or `packages/...` span remains governed as a repository path.
+ * The verdict reads the document and the tracked tree alone. A span that spells a branch or a tag
+ * gets no exemption: with a governed root (`goals/...`, `packages/...`) it is read as a repository
+ * path, and without one (`origin/goals/...`) it is no path at all.
  *
  * @param inline - Parsed inline code span and its source column.
  * @param lineNumber - One-based source line containing the span.
  * @param documentPath - Repository-relative path of the scanned document.
  * @param documentId - Stable paired-document identity used by semantic delta.
  * @param entries - Tracked-path index of the archive side being scanned.
- * @param gitRefNames - Exact branch and tag names collected once for the comparison.
  * @param packageExports - Inline columns whose affirmative export claim has a tracked owner and target.
  * @returns A finding candidate only when the span is a governed missing path rather than a command
- * or proven Git ref.
+ * or a verified package export.
  */
 const inlinePathCandidate = (
   inline: KnowledgeInlineSpan,
@@ -605,12 +599,9 @@ const inlinePathCandidate = (
   documentPath: string,
   documentId: string,
   entries: KnowledgeTrackedPathIndex,
-  gitRefNames: HashSet.HashSet<string>,
   packageExports: HashSet.HashSet<number>
 ): O.Option<KnowledgeFindingCandidate> =>
-  isKnowledgeCommandSpan(inline.span) ||
-  HashSet.has(gitRefNames, inline.span) ||
-  HashSet.has(packageExports, inline.column)
+  isKnowledgeCommandSpan(inline.span) || HashSet.has(packageExports, inline.column)
     ? O.none()
     : O.map(brokenPathAt(inline.span, documentPath, entries), (repoPath) =>
         missingPathCandidate(documentId, documentPath, repoPath, lineNumber, inline.column)
@@ -622,7 +613,6 @@ const extractLineFindings = (
   documentPath: string,
   documentId: string,
   entries: KnowledgeTrackedPathIndex,
-  gitRefNames: HashSet.HashSet<string>,
   packageExports: HashSet.HashSet<number>
 ): readonly [ReadonlyArray<KnowledgeFindingCandidate>, ReadonlyArray<KnowledgeCommandOccurrence>] => {
   const inlines = knowledgeInlineSpans(lineText);
@@ -634,7 +624,7 @@ const extractLineFindings = (
     ),
     A.getSomes(
       A.map(inlines, (inline) =>
-        inlinePathCandidate(inline, lineNumber, documentPath, documentId, entries, gitRefNames, packageExports)
+        inlinePathCandidate(inline, lineNumber, documentPath, documentId, entries, packageExports)
       )
     )
   );
@@ -650,7 +640,6 @@ const extractDocument = Effect.fn("Knowledge.extractDocument")(function* (
   index: KnowledgeTrackedPathIndex,
   entry: KnowledgeTrackedEntry,
   documentId: string,
-  gitRefNames: HashSet.HashSet<string>,
   packages: ReadonlyArray<KnowledgeWorkspacePackage>
 ) {
   const text = yield* oracle.readBytes(entry.path).pipe(Effect.flatMap((bytes) => decodeUtf8(bytes, entry.path)));
@@ -669,7 +658,6 @@ const extractDocument = Effect.fn("Knowledge.extractDocument")(function* (
       entry.path,
       documentId,
       index,
-      gitRefNames,
       verifiedPackageExportColumns(line.text, packages, documentPackages, oracle.trackedEntries)
     );
     candidates = A.appendAll(candidates, extracted[0]);
@@ -763,8 +751,7 @@ const indexCandidate = Effect.fn("Knowledge.indexCandidate")(function* (
 
 const documentCandidatesForSide = Effect.fn("Knowledge.documentCandidatesForSide")(function* (
   oracle: KnowledgeArchiveOracle,
-  documentId: (entry: KnowledgeTrackedEntry) => string,
-  gitRefNames: HashSet.HashSet<string>
+  documentId: (entry: KnowledgeTrackedEntry) => string
 ) {
   const documents = pipe(
     oracle.trackedEntries,
@@ -779,7 +766,7 @@ const documentCandidatesForSide = Effect.fn("Knowledge.documentCandidatesForSide
   let candidates = A.empty<KnowledgeFindingCandidate>();
   let commands = A.empty<KnowledgeCommandOccurrence>();
   for (const entry of documents) {
-    const extracted = yield* extractDocument(oracle, index, entry, documentId(entry), gitRefNames, packages);
+    const extracted = yield* extractDocument(oracle, index, entry, documentId(entry), packages);
     candidates = A.appendAll(candidates, extracted.candidates);
     commands = A.appendAll(commands, extracted.commands);
   }
@@ -1027,7 +1014,6 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  * import { KnowledgeIndexBytes } from "@beep/repo-cli/commands/Knowledge/Knowledge.schemas"
  * import { scanKnowledgePair } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
  * import * as Effect from "effect/Effect";
- * import * as HashSet from "effect/HashSet";
  * import type { KnowledgeArchiveOracle } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
  *
  * const emptyArchive: KnowledgeArchiveOracle = {
@@ -1043,7 +1029,6 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  *
  * const report = scanKnowledgePair({
  *   base: emptyArchive,
- *   gitRefNames: HashSet.empty(),
  *   head: emptyArchive,
  *   probePolicy: "skipped-untrusted-context",
  *   renames: [],
@@ -1057,18 +1042,14 @@ const findingOrder = Order.mapInput(Order.String, (finding: KnowledgeFinding) =>
  * @since 0.0.0
  */
 export const scanKnowledgePair = Effect.fn("Knowledge.scanPair")(function* (input: KnowledgePairedOracleInput) {
-  const baseDocuments = yield* documentCandidatesForSide(
-    input.base,
-    (entry) => documentIdForBase(entry.path),
-    input.gitRefNames
-  );
+  const baseDocuments = yield* documentCandidatesForSide(input.base, (entry) => documentIdForBase(entry.path));
   const headDocumentId = makeHeadDocumentIdResolver(input.base.trackedEntries, input.renames);
   const headIndexEntry = A.findFirst(input.head.trackedEntries, (entry) => entry.path === INDEX_PATH);
   const headIndexDocumentId = O.match(headIndexEntry, {
     onNone: () => `head-new:${INDEX_PATH}`,
     onSome: headDocumentId,
   });
-  const headDocuments = yield* documentCandidatesForSide(input.head, headDocumentId, input.gitRefNames);
+  const headDocuments = yield* documentCandidatesForSide(input.head, headDocumentId);
   const probe = yield* resolveProbeCandidates(
     input,
     { commands: baseDocuments.commands, indexDocumentId: documentIdForBase(INDEX_PATH) },
@@ -1128,88 +1109,6 @@ const gitAdapter: GitCommandErrorAdapter<KnowledgeOperationalError> = {
     }),
   onTruncated: O.none(),
 };
-
-const GIT_TAG_REF_NAME_PATTERN = /^refs\/tags\/(.+)$/u;
-const GIT_REMOTE_REF_NAME_PATTERN = /^refs\/remotes\/([^/]+)\/(.+)$/u;
-
-/**
- * Parses one full Git ref into the exact inline spellings that can otherwise resemble tracked paths.
- *
- * @param fullRef - Fully qualified ref name emitted by `git for-each-ref`.
- * @returns Remote-tracking branch or tag spellings used in prose when the namespace is supported.
- */
-const gitRefSpanNames = (fullRef: string): ReadonlyArray<string> => {
-  const tagName = GIT_TAG_REF_NAME_PATTERN.exec(fullRef)?.[1];
-  if (P.isString(tagName)) {
-    return [tagName];
-  }
-
-  const remoteMatch = GIT_REMOTE_REF_NAME_PATTERN.exec(fullRef);
-  const remoteName = remoteMatch?.[1];
-  const branchName = remoteMatch?.[2];
-  return P.isString(remoteName) && P.isString(branchName) ? [`${remoteName}/${branchName}`] : A.empty<string>();
-};
-
-/**
- * Parses a fully qualified Git ref into the exact prose spellings used by semantic-delta.
- *
- * **Details**
- *
- * Tags yield their unqualified name. Remote-tracking branches yield only the conventional
- * remote-qualified spelling; accepting the suffix could hide a missing path with the same text.
- * Local branches yield nothing: they exist only in the clone that created them, so exempting one
- * would pass a document locally that a hosted checkout, which has no such branch, refuses.
- * Unsupported namespaces yield an empty collection.
- *
- * **Example** (Parse a remote-tracking branch)
- *
- * ```ts
- * import { gitRefSpanNamesForTesting } from "@beep/repo-cli/test/Knowledge"
- *
- * console.log(gitRefSpanNamesForTesting("refs/remotes/origin/goals/example"))
- * // ["origin/goals/example"]
- * ```
- *
- * @param fullRef - Fully qualified ref name emitted by `git for-each-ref`.
- * @returns Exact tag or remote-tracking spellings accepted by the ref exclusion.
- * @category testing
- * @since 0.0.0
- */
-export const gitRefSpanNamesForTesting = gitRefSpanNames;
-
-// The ref namespaces a span may cite: the shared ones, which every full clone of the repository reads.
-const KNOWLEDGE_REF_PATTERNS = ["refs/remotes", "refs/tags"];
-
-/**
- * Collects remote-tracking branch and tag names with one Git process per comparison.
- *
- * **Details**
- *
- * The short tag name and the `<remote>/<branch>` form, so an inline code span that exactly names
- * one of those refs is never read as a missing repository path. A local branch is not collected:
- * the verdict on a commit must not depend on which branches a clone happens to hold.
- *
- * **Example** (Read the ref census of a repository)
- *
- * ```ts
- * import { readKnowledgeGitRefNames } from "@beep/repo-cli/commands/Knowledge/Knowledge.service"
- * import * as Effect from "effect/Effect"
- *
- * console.log(Effect.isEffect(readKnowledgeGitRefNames("/repo"))) // true
- * ```
- *
- * @param repoRoot - Repository whose refs are listed.
- * @returns Every accepted ref spelling.
- * @category use-cases
- * @since 0.0.0
- */
-export const readKnowledgeGitRefNames = Effect.fn("Knowledge.readGitRefNames")(function* (repoRoot: string) {
-  const git = yield* Git;
-  const refs = yield* git
-    .forEachRef(repoRoot, { patterns: KNOWLEDGE_REF_PATTERNS })
-    .pipe(Effect.mapError(adaptGitKitError(GitCommand.forEachRef(KNOWLEDGE_REF_PATTERNS), gitAdapter)));
-  return HashSet.fromIterable(A.flatMap(refs, (entry) => gitRefSpanNames(entry.ref)));
-});
 
 /**
  * Refuses to materialize archives while a non-empty clone-local git attributes file exists.
@@ -1996,7 +1895,6 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
     KnowledgeOperationalError.mapError("Failed to locate the repository root for semantic-delta.")
   );
   yield* guardKnowledgeCloneAttributes(repoRoot);
-  const gitRefNames = yield* readKnowledgeGitRefNames(repoRoot);
   const historyAdapter = historyGitAdapter(baseRef);
   const headCommit = yield* resolveGitCommit(repoRoot, "HEAD", historyAdapter);
   const baseCommit = yield* resolveGitMergeBase(repoRoot, baseRef, headCommit, historyAdapter);
@@ -2068,7 +1966,6 @@ const semanticDeltaLive = Effect.fn("Knowledge.semanticDelta")(function* (baseRe
       const head = { ...headOracle, commandTree: headCommandTree } satisfies KnowledgeArchiveOracle;
       return yield* scanKnowledgePair({
         base: yield* baseSharingHeadCommandSurface(base, head),
-        gitRefNames,
         head,
         probePolicy,
         renames,
