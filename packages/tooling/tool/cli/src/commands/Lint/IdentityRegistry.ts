@@ -610,7 +610,7 @@ const collectLocalRootViolations = Effect.fn("IdentityRegistry.collectLocalRootV
 const DEFAULT_BASE_REF = "origin/main";
 
 class IdentityManifest extends S.Opaque<IdentityManifest, { readonly brand: unique symbol }>()(
-  S.Struct({ name: S.Literal(IDENTITY_PACKAGE_NAME) }).pipe(
+  S.Struct({ name: S.tag(IDENTITY_PACKAGE_NAME) }).pipe(
     $I.annoteSchema("IdentityManifest", { description: "A package.json that names the @beep/identity package." })
   )
 ) {}
