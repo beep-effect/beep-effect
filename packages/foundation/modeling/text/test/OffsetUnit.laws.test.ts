@@ -15,12 +15,24 @@ const runs = { arbitrary: fcRuns(100) };
 
 const unitArbitrary = Arbitrary.schema(OffsetUnit);
 
-// A generated text, a scalar range in it, and three units: the position of the range in each unit is read from
-// the generator's own boundary lists, never from the scan under test.
+// Any scalar above the BMP: two UTF-16 code units and four UTF-8 bytes, so both units can split it.
+const astralArbitrary = Arbitrary.map(
+  Arbitrary.schema(S.Int.check(S.isBetween({ minimum: 0x10000, maximum: 0x10ffff }))),
+  (codePoint) => String.fromCodePoint(codePoint)
+);
+
+// A generated text, a scalar range in it, three units and an astral scalar: the position of the range in each unit
+// is read from the generator's own boundary lists, never from the scan under test.
 const caseArbitrary = Arbitrary.flatMap(wellFormedText, (generated) =>
   Arbitrary.map(
-    Arbitrary.all([scalarRangeIn(generated.codePoints.length), unitArbitrary, unitArbitrary, unitArbitrary]),
-    ([range, u, v, w]) => ({ ...generated, range, u, v, w })
+    Arbitrary.all([
+      scalarRangeIn(generated.codePoints.length),
+      unitArbitrary,
+      unitArbitrary,
+      unitArbitrary,
+      astralArbitrary,
+    ]),
+    ([range, u, v, w, astral]) => ({ ...generated, range, u, v, w, astral })
   )
 );
 
@@ -37,7 +49,7 @@ describe("@beep/text OffsetUnit laws", () => {
   it.prop(
     "L1-2 unit conversion is a bijection on valid boundaries and refuses split surrogates",
     [caseArbitrary],
-    ([{ text, boundaries, range, u, v, w }]) => {
+    ([{ text, boundaries, range, u, v, w, astral }]) => {
       const p = positionOf(boundaries, range, u);
       const inV = Result.getOrThrow(convertPosition(p, v, text));
       // Conversion lands on the independently computed position in the target unit.
@@ -51,6 +63,23 @@ describe("@beep/text OffsetUnit laws", () => {
       for (const unit of OffsetUnit.literals) {
         assertSuccess(slicePosition(positionOf(boundaries, range, unit), text), quote);
       }
+      // With an astral scalar inserted at the start of the range, a boundary inside it is refused: between its two
+      // UTF-16 code units, and inside its four UTF-8 bytes, whatever the target unit.
+      const scalars = A.fromIterable(text);
+      const split = A.join(
+        A.appendAll(A.append(A.take(scalars, range.first), astral), A.drop(scalars, range.first)),
+        ""
+      );
+      const at16 = rangeIn(boundaries["utf16-code-unit"])(range).start;
+      const at8 = rangeIn(boundaries["utf8-byte"])(range).start;
+      assertFailure(
+        convertPosition(Position.make({ unit: "utf16-code-unit", start: at16 + 1, end: at16 + 2 }), v, split),
+        refusal("split-boundary", "utf16-code-unit", at16 + 1, at16 + 2)
+      );
+      assertFailure(
+        convertPosition(Position.make({ unit: "utf8-byte", start: at8 + 1, end: at8 + 4 }), w, split),
+        refusal("split-boundary", "utf8-byte", at8 + 1, at8 + 4)
+      );
     },
     runs
   );
