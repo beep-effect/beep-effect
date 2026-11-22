@@ -730,14 +730,14 @@ Anything else in either plan stops the step before any write: the two modes refu
 
 **Step 4, move the workflows (lane PRs, operator merge).** Order (amended 2026-11-18): first the workflow PR applies the reader inventory below (option A), while `prod` stays in `overlap`; from its merge no workflow targets the live labels, and jobs queue on the new pools' overlap caps (heavy 1, overflow 2) until the phase PR lands. Then a stack PR sets `phase: "primary"`; its plan must be updates only (pool caps in the runtime configs). Spot: `primary` lets the new pools use the whole quota, which is safe only with the live fleet idle, so the phase never moves while a workflow still targets the live labels. Before the phase PR merges (amended 2026-11-18, #3386 review), all three hold: (i) old-label jobs have drained: no run created before the workflow PR merged is unfinished. For each nonterminal status (`queued`, `in_progress`, `waiting`, `pending`, `requested`), `gh api --paginate "repos/beep-effect/beep-effect/actions/runs?status=<status>&created=<=<merge time>&per_page=100" --jq '.total_count'` returns 0; that is one paged read per status, and `total_count` covers the whole result, so no page limit hides a run. Also, `gh api orgs/beep-effect/actions/runners` lists no busy `beep-ci-` or `beep-ovf-` runner; (ii) no heavy burst is active: `systemctl --user list-timers | rg ci-burst` shows no burst timer; (iii) the live fleet is empty: step 6a's single `describe-instances` returns no `pending` or `running` live runner. Empty instances alone do not count, since a queued old-label job or a burst can launch one a minute later. Check: the next pushes run every heavy and overflow job on the new fleet and the live scale-up Lambdas log no launches.
 
-Rollback, in reverse order and drained at each step (amended 2026-11-18, #3386 review). Each scale-up function reads its pool caps from its environment when its handler is created (`RunnerRuntime`), so an invocation already running under the `primary` caps can launch a runner after the phase revert has deployed. Scale-up is therefore paused, and the pause drained, before anything is counted. The pause disables each scale-up function's SQS event-source mapping (`ScaleUpSource`), so build-queue messages stay in the queue untouched. Reserved concurrency 0 would not hold them: the mapping keeps polling, throttled batches come back after the 2-minute visibility timeout, and after 5 receives (`maxReceiveCount`, about 10 minutes) they go to the build DLQ, so new-label jobs would be lost during a pause that can last 90 minutes. The stack declares the mapping without an `enabled` value, so the pause still comes after the phase revert's deploy, and nothing deploys `prod` while it holds. The gate runs these steps from the operator workstation (`AWS_PROFILE=elpresidank-vault`, one call each). The function names are pinned: `beep-fleet-prod-heavy-scale-up` and `beep-fleet-prod-overflow-scale-up`.
+Rollback, in reverse order and drained at each step (amended 2026-11-18, #3386 review). Each scale-up function reads its pool caps from its environment when its handler is created (`RunnerRuntime`), so an invocation already running under the `primary` caps can launch a runner after the phase revert has deployed. Scale-up is therefore paused, and the pause drained, before anything is counted. The pause disables each scale-up function's SQS event-source mapping (`ScaleUpSource`), so build-queue messages stay in the queue untouched. Reserved concurrency 0 would not hold them: the mapping keeps polling and throttled batches come back after the visibility timeout (amended 2026-11-22: the build queue has a 1-minute timeout, no redrive and a one-day retention, so a message waits out a pause that can last 90 minutes, up to the day; before that change 5 receives, about 10 minutes, sent it to the build DLQ). The stack declares the mapping without an `enabled` value, so the pause still comes after the phase revert's deploy, and nothing deploys `prod` while it holds. The gate runs these steps from the operator workstation (`AWS_PROFILE=elpresidank-vault`, one call each). The function names are pinned: `beep-fleet-prod-heavy-scale-up` and `beep-fleet-prod-overflow-scale-up`.
 
 1. Revert the phase PR and wait for its deploy to complete, so the scale-up configuration carries the overlap caps again. Rollback of this step: revert the revert, which needs the drain conditions above again.
 2. Pause new-fleet scale-up. `aws lambda list-event-source-mappings --function-name beep-fleet-prod-heavy-scale-up --query 'EventSourceMappings[].UUID'` gives the mapping UUID; then `aws lambda update-event-source-mapping --uuid <uuid> --no-enabled`. Do the same for `beep-fleet-prod-overflow-scale-up`. Check: `aws lambda get-event-source-mapping --uuid <uuid>` reports `Disabled` for both; record the two UUIDs for step 6. No push to the workflow's paths merges while the pause holds; if a deploy runs anyway, read the mappings again and repeat this step and step 3. Rollback of this step: step 6's command.
 3. Drain: wait at least the scale-up timeout (60 s) after both mappings report `Disabled`, so that no invocation, warm or not, is still running. Then wait until one `describe-instances` on `ghr:environment` `beep-fleet-prod-heavy` / `beep-fleet-prod-overflow` returns no `pending` instance, so every launch has settled. Rollback of this step: none needed (it only reads).
 4. Check the caps: the same single read returns at most 1 heavy and 2 overflow `running` instances. If there are more, keep scale-up paused and wait for their jobs to finish (the reaper's 90-minute TTL bounds every runner), then read again. Rollback of this step: none needed (it only reads).
 5. Only then revert the workflow PR, which sends jobs back to the live fleet (burst cap still 6). Rollback of this step: revert the revert.
-6. Re-enable scale-up, now that the overlap configuration is live (step 1) and step 4 has passed: `aws lambda update-event-source-mapping --uuid <uuid> --enabled` for each of the two UUIDs from step 2. Check: `get-event-source-mapping` reports `Enabled` for both, and the build queues drain. Safety check: `aws sqs get-queue-attributes --queue-url <beep-fleet-prod-{heavy,overflow}-build-dlq URL> --attribute-names ApproximateNumberOfMessages` shows 0 on each build DLQ. If it is not 0, redrive the DLQ into its build queue (`aws sqs start-message-move-task --source-arn <dlq arn> --destination-arn <build queue arn>`) once scale-up is enabled. Rollback of this step: step 2's command.
+6. Re-enable scale-up, now that the overlap configuration is live (step 1) and step 4 has passed: `aws lambda update-event-source-mapping --uuid <uuid> --enabled` for each of the two UUIDs from step 2. Check: `get-event-source-mapping` reports `Enabled` for both, and the build queues drain. Safety check: `aws sqs get-queue-attributes --queue-url <beep-fleet-prod-{heavy,overflow}-build-dlq URL> --attribute-names ApproximateNumberOfMessages` shows 0 on each build DLQ. If it is not 0, stop (amended 2026-11-22): waiting no longer sends a message there, so it is a dead letter scale-up sent after a failed runner configuration, and its log line names the cause. Move it back only once that cause is fixed and scale-up is enabled. `start-message-move-task` cannot do it: the build DLQ is no queue's redrive target any more. Move a batch at a time by hand: `aws sqs receive-message` from the DLQ, `aws sqs send-message` of the same body, unchanged, to the build queue, then `aws sqs delete-message` from the DLQ for each message only after its send succeeded. The moved message's receive count starts again at 0. The build DLQ must then read 0. Rollback of this step: step 2's command.
 
 Both fleets keep running throughout.
 
@@ -2465,6 +2465,64 @@ Lane docs/infra-alchemy-p5-dispatch-order
 
 Reverse: restore the proofs-before-PR-2 order; re-proof each pool after the PR 2 dispatch
 
+### Build queue: a waiting job lives a day and never reaches the DLQ for waiting, 2026-11-22
+
+The new fleet's build queues moved a message to their DLQ after five receives at a two-minute visibility timeout, about
+ten minutes. Scale-up returns a message over the pool's cap as a batch item failure, so every wait for a free slot costs
+one receive. Nothing redrives the DLQ, so a job that waited ten minutes for capacity would stay queued until GitHub
+times it out. The CI goals driver found this before the cutover and ruled the bar: a message waiting on the cap or on
+capacity lives at least 24 hours and does not reach the DLQ for waiting alone.
+
+**Measured on the live fleet's queue**, which has no redrive, a 30-second visibility timeout and one-day retention:
+
+- Seven days: 2,113 messages sent and 1,502,086 received.
+- Waiting is the normal state: in six hours on 2026-11-20 between 170 and 210 messages were in flight on average.
+- The redelivery interval is the visibility timeout: receives per waiting message give 30.0 to 30.1 seconds in each of
+  those hours.
+- `ApproximateAgeOfOldestMessage` does not show this. It stayed at or under 140 seconds, because SQS leaves out messages
+  received more than three times.
+
+**Change**, on the build queue only:
+
+- **No redrive policy.** The DLQ stays for the dead letters scale-up sends itself, which the SSM fix (#3454, merged before
+  this) adds with the DLQ URL and the send grant. Nothing else reaches it, so a nonzero build-DLQ depth still means a
+  deliberate dead letter. A message whose DLQ send fails is acknowledged with an error line, not returned: with no
+  redrive it would relaunch an instance once a minute for the retention. An ERROR line in a scale-up log is a STOP in
+  every proof and post-check. SQS allows at most 1,000 receives, which would need a visibility timeout of at least 87
+  seconds to cover 24 hours; a redrive that the retention always beats protects nothing.
+- **One-day retention**, as on the live fleet. The source set none, so the queues had SQS's default four days. It also bounds how long a cancelled
+  job's message is retried.
+- **One-minute visibility timeout**, down from two. It equals the scale-up function's timeout, the lowest value Lambda
+  accepts for the mapping without redelivering a batch that is still being handled. A freed slot idles at most a minute
+  when one message waits, against 30 seconds on the live fleet, whose function timeout is 30 seconds. The new
+  function's longest run is 5.9 seconds so far, on few runs, so its timeout is not lowered here.
+
+**Other messages.**
+
+- A body that does not decode is acknowledged and dropped, now with one warning that names the message id and never the
+  body.
+- Scale-up returns a message whose event is not `workflow_job`, which now lives a day instead of five receives. The
+  webhook cannot enqueue one: it answers 202 to any other event before it builds a message, and writes the checked
+  event type into the message.
+- A message whose handler keeps failing as a whole (configuration, GitHub or AWS outage) is retried for a day and then
+  expires, as on the live fleet.
+- The job-retry and deregister-retry queues keep their redrive of three receives and their retention.
+
+**Plan expectation.** Alchemy replaces a queue only for a new name or FIFO flag, and declares the name, URL and ARN
+stable, so both `BuildQueue` rows update in place and no dependent row is expected to change.
+
+- Planned together with the SSM fix: 73 rows, 13 update and 60 noop, its accepted table plus the two `BuildQueue` rows.
+- Planned after the SSM fix is deployed: 73 rows, 4 update and 69 noop, the two `BuildQueue` rows and both scale-up
+  functions (code), unless the bundle diff shows another function that carries `scale-up.ts`.
+
+A replace, or a dependent row with a new label, goes to the CI goals driver before a digest is accepted. The post-check
+adds exactly two `SetQueueAttributes`, each confirmed by reading the attributes back: no redrive policy, retention 86400,
+visibility 60, both DLQs unchanged, and both event source mappings still enabled.
+
+**Order.** This must be deployed before the new fleet goes primary and before the webhook switch.
+
+Reverse: drain the build queues, then set the 2-minute visibility timeout, the 5-receive redrive and messageRetentionPeriod 4 days explicitly on BuildQueue and redeploy; removing the retention property does not restore the default, and a message already received five times would go to the DLQ
+
 ### OpenClaw stays declared and tested, not installed (operator ruling), 2026-11-22
 
 The operator ruled on 2026-11-22: OpenClaw is not installed on the workstation. `HostsOpenClaw`
@@ -2517,8 +2575,8 @@ turned it off again before the merge:
   seven pickup probes sat queued for over 25 minutes (`goals/ci-fleet-endgame/research/OPPORTUNITIES.md`).
 - The not-queued branch acknowledges the message with no launch, no retry and no dead letter. It is fail-open only on a
   GitHub error.
-- The relaunch is closed without it: a failed configuration goes back to the build queue only when the DLQ send itself
-  fails. A cancelled job whose message SQS redelivers for another reason (over the cap, a launch shortfall) costs one
+- The relaunch is closed without it: a failed configuration never goes back to the build queue (amended 2026-11-22: a
+  failed DLQ send used to). A cancelled job whose message SQS redelivers for another reason (over the cap, a launch shortfall) costs one
   VM, as on the live fleet.
 
 A test decodes both deployed runtime configurations and pins the check off for both pools.
@@ -2547,12 +2605,17 @@ such a failure to scale-up, unchecked. In every proof and post-check, each drop 
   like a deterministic one.
 
 **Dead-letter semantics.** When a message is dead-lettered, its instance is terminated once, its JIT runner and token are
-deleted, and the message is sent to the pool's own build DLQ and acknowledged. Only a failed DLQ send returns it as a batch item failure.
+deleted, and the message is sent to the pool's own build DLQ and acknowledged. A failed DLQ send is logged as an error and
+the message dropped (amended 2026-11-22, #3457): returning it would relaunch an instance once a minute for the build
+queue's one-day retention, since that queue has no redrive, and the job is lost either way.
 
 - **Nothing redrives a dead-lettered message.** No consumer and no automatic redrive exist, so that job stays queued
   until GitHub times it out.
 - **A nonzero build-DLQ depth is therefore a STOP** in every proof and every post-check of this stack, next to the
   other build and job-retry queue counts.
+- **An ERROR line in a scale-up log is a STOP** in every proof and post-check too: a dropped message after a failed DLQ
+  send leaves no queue depth, only that line. One send failure writes two error lines, the failed send and the
+  dead letter it was for, and the rule counts lines.
 
 Lane fix/ci-runners-scaleup-jit-token-tier
 

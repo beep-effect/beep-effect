@@ -876,16 +876,37 @@ describe("handleScaleUp configure failures", () => {
     })
   );
 
-  it.effect("keeps a dead-lettered message for redelivery only when the DLQ send itself fails", () =>
+  it.effect("drops a dead-lettered message whose DLQ send fails, with an error line, and never returns it", () =>
     Effect.gen(function* () {
       const world = new World();
       world.jitFailures = ["i-0001"];
       world.sendFailures = [buildDlqUrl];
       const { retry, lines } = yield* runLogged(world, [queued({ id: 1, retryCounter: 1 })]);
-      expect([retry, world.terminated]).toStrictEqual([["m-1"], ["i-0001"]]);
+      // Acknowledged: no redelivery, so no second launch for this job.
+      expect([retry, world.terminated, world.fleetRequests.length]).toStrictEqual([[], ["i-0001"], 1]);
+      const sendLine = A.filter(
+        lines,
+        (line) => line.message === "scale-up: build DLQ send failed; the message is dropped"
+      );
+      expect(A.map(sendLine, ({ level, annotations }) => ({ level, annotations }))).toStrictEqual([
+        {
+          level: "ERROR",
+          annotations: {
+            messageId: "m-1",
+            jobId: 1,
+            repository: "beep-effect/beep-effect",
+            reason: "retries-exhausted",
+            code: "ServiceUnavailable",
+            status: 503,
+          },
+        },
+      ]);
       expect(
-        A.map(errorAnnotations(lines), (annotations) => [annotations.reason, annotations.deadLetter])
-      ).toStrictEqual([["retries-exhausted", "send-failed"]]);
+        A.map(errorAnnotations(lines), (annotations) => [annotations.reason, annotations.deadLetter ?? "send line"])
+      ).toStrictEqual([
+        ["retries-exhausted", "send line"],
+        ["retries-exhausted", "send-failed"],
+      ]);
     })
   );
 
