@@ -96,9 +96,7 @@ export const readCitationPostCaseMetadataCorpus = Effect.fn("PostCaseMetadataTes
 });
 const install = makeCitationMetadataFixtureInstaller((...args: Parameters<typeof makeCitationPostCaseMetadata>) =>
   makeCitationPostCaseMetadata(...args).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-    )
+    Effect.zipWith(makeCitationTestScaffoldBinding(args[0]), (stage, bind) => ({ ...stage, apply: bind(stage.apply) }))
   )
 )(readCitationPostCaseMetadataCorpus());
 /** Smoke compares every field-write shape and one row per year-search family; the full replay retired 2026-11-09. */
@@ -160,9 +158,10 @@ export const assertCitationPostCaseBudget = Effect.fn("PostCaseMetadataTest.budg
   const row = A.getUnsafe(exact.corpus.cases, 15);
   const configuration = { ...exact.corpus.configuration };
   const captured = yield* makeCitationPostCaseMetadata(exact.limits, exact.runtime, configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(exact.limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(exact.limits), (stage, bind) => ({
+      ...stage,
+      apply: bind(stage.apply),
+    })),
     Effect.provideContext(exact.provided)
   );
   const accepted = yield* captured.apply(row.request);
@@ -213,11 +212,10 @@ export const assertCitationPostCaseMetadataConfiguration = Effect.fn("PostCaseMe
     yield* assertCitationMetadataInstallControls(
       (...args: Parameters<typeof makeCitationPostCaseMetadata>) =>
         makeCitationPostCaseMetadata(...args).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(args[0]).pipe(
-              Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
-            )
-          )
+          Effect.zipWith(makeCitationTestScaffoldBinding(args[0]), (stage, bind) => ({
+            ...stage,
+            apply: bind(stage.apply),
+          }))
         ),
       setup,
       corpus.configuration

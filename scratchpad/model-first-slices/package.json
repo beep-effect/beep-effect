@@ -39,16 +39,16 @@
     "@beep/effect-drizzle": "link:../../packages/ecosystem/effect-drizzle",
     "@beep/identity": "link:../../packages/foundation/modeling/identity",
     "@beep/schema": "link:../../packages/foundation/modeling/schema",
-    "@effect/tsgo": "0.70.0",
-    "@effect/vitest": "4.1.4",
+    "@effect/tsgo": "0.73.2",
+    "@effect/vitest": "4.1.5",
     "@types/node": "26.6.5",
     "drizzle-kit": "1.0.0-rc.5",
     "drizzle-orm": "link:../../node_modules/drizzle-orm",
-    "tsrs": "0.25.0-ts7.1.0-beta",
+    "tsrs": "7.1.0-beta.tsrs3",
     "vitest": "5.0.4"
   },
   "overrides": {
-    "effect": "4.1.4",
+    "effect": "4.1.5",
     "react": "link:../../node_modules/react",
     "react-dom": "link:../../node_modules/react-dom"
   },

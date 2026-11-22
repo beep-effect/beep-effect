@@ -60,11 +60,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("reference p
         const altered = A.map(names, (name, index) => (index === 0 ? "different" : name));
         strictEqual(altered.length, 93);
         const mismatch = yield* makeCitationReferenceNames(limits, altered).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(limits).pipe(
-              Effect.map((bind) => ({ ...stage, collect: bind(stage.collect) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+            ...stage,
+            collect: bind(stage.collect),
+          })),
           Effect.provideService(CitationTextBudget, budget),
           Effect.flip
         );

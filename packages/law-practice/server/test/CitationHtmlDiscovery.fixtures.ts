@@ -75,11 +75,10 @@ const install = makeCitationMetadataFixture({
   load: readCitationHtmlDiscoveryCorpus,
   make: (...args: Parameters<typeof makeCitationHtmlDiscovery>) =>
     makeCitationHtmlDiscovery(...args).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(args[0]).pipe(
-          Effect.map((bind) => ({ ...stage, discover: bind(stage.discover) }))
-        )
-      )
+      Effect.zipWith(makeCitationTestScaffoldBinding(args[0]), (stage, bind) => ({
+        ...stage,
+        discover: bind(stage.discover),
+      }))
     ),
 });
 /** Replay complete original observations and independently confirm both exits per call. */

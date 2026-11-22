@@ -61,11 +61,10 @@ export const installCitationTokenizedExtractionFixture = Effect.fn("TokenizedExt
   ).pipe(Effect.provideContext(provided), DateTime.withCurrentZoneOffset(0));
   const nativeConfiguration = CitationTokenizedExtractionConfiguration.make({ tokenizer, loop: helpers.loop });
   const stage = yield* makeCitationTokenizedExtraction(setup.limits, setup.runtime, nativeConfiguration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      extract: bind(stage.extract),
+    })),
     Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );
