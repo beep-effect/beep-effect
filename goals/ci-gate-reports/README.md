@@ -34,10 +34,14 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — complete (2026-11-22): carrier chosen in decision `report-carrier`. P1 (renderer, CI
-subcommand, `task-outcomes/v2` feed record) is next; `goals/gate-report-core` is completed-retained.
+P1 Projection and feed record — complete (2026-11-22): `task-outcomes/v2` record and reader, the CI
+projection renderer and `beep ci append-gate-reports`. P2 (workflow wiring) is next, after PR 1 merges.
 
 ## Latest Evidence
+
+2026-11-22: P1 renderer tests pass under Node and Bun: the summary of a red record equals `beep gate
+show`'s console line for line; a 200-item fixture gives 10 error annotations, both cap lines and a
+summary under 64 KiB; an injected `::error::` stays text (`test/ci-gate-projection.test.ts`).
 
 2026-11-22: P0 lookup measured live against `main`: a merge base with a cancelled Check run
 (`bc49cb6`) resolved to ancestor `4e3343774cc` and its job artifact in 4 REST requests, no GraphQL.

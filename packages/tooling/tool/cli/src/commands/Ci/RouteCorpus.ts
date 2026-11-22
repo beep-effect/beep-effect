@@ -30,6 +30,7 @@ import { GitHubClient } from "@beep/github/GitHubClient";
 import { GitHubError } from "@beep/github/GitHubError";
 import { Repo } from "@beep/github/Repo";
 import { $RepoCliId } from "@beep/identity/packages";
+import { GATES_DIR } from "@beep/repo-gate-record/GatePaths";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as DateTime from "effect/DateTime";
@@ -59,7 +60,7 @@ import {
 } from "../../internal/github/GithubIdentity.ts";
 import { GithubRest, layerGithubRest } from "../../internal/github/GithubRest.ts";
 import { sha256HexBytes } from "../Goals/PacketCore/PacketDigest.ts";
-import { TaskOutcomeRecord, taskOutcomeArtifactPrefix } from "./CiTaskOutcomes.ts";
+import { AnyTaskOutcomeRecord, taskOutcomeArtifactPrefix } from "./CiTaskOutcomes.ts";
 import { HostedJob, HostedRun, HostedStep, RouteCorpusReceipt, RouteError } from "./Route.schemas.ts";
 import { RouteCorpus, RouteCorpusLoaded } from "./Route.service.ts";
 import { makeRouteReadBudget, RouteReadBudget } from "./RouteBudget.ts";
@@ -323,7 +324,7 @@ const hostedRunOf = (view: GhRunView): HostedRun =>
     jobs: A.map(view.jobs, hostedJobOf),
   });
 
-const TaskOutcomeRead = S.Struct({ requests: S.Int, records: S.Array(TaskOutcomeRecord) }).pipe(
+const TaskOutcomeRead = S.Struct({ requests: S.Int, records: S.Array(AnyTaskOutcomeRecord) }).pipe(
   $I.annoteSchema("TaskOutcomeRead", {
     description: "The task-outcome records of one run attempt and the GitHub requests spent reading them.",
   })
@@ -341,11 +342,11 @@ const isFailedJob = (job: HostedJob): boolean => O.exists(job.conclusion, (value
 
 // A record names its job as GitHub lists it; a job reached through a reusable workflow is listed as
 // `<caller> / <job>` (the overflow shard), so a record also joins a job whose name starts with `<job> / `.
-const recordFor = (records: ReadonlyArray<TaskOutcomeRecord>, job: HostedJob): O.Option<TaskOutcomeRecord> =>
+const recordFor = (records: ReadonlyArray<AnyTaskOutcomeRecord>, job: HostedJob): O.Option<AnyTaskOutcomeRecord> =>
   A.findFirst(records, (record) => record.job === job.name || Str.startsWith(`${record.job} / `)(job.name));
 
 // Tasks are kept on the jobs that keep steps: the failed ones.
-const withTaskOutcomes = (run: HostedRun, records: ReadonlyArray<TaskOutcomeRecord>): HostedRun =>
+const withTaskOutcomes = (run: HostedRun, records: ReadonlyArray<AnyTaskOutcomeRecord>): HostedRun =>
   HostedRun.make({
     ...run,
     jobs: A.map(run.jobs, (job) =>
@@ -436,13 +437,18 @@ const ARTIFACT_PAGE = 100;
 const RECORD_BYTES_MAX = 1024 * 1024;
 
 // The JSON files of one record artifact, parsed but not yet decoded: the capture decodes them as
-// `task-outcomes/v1` records, so a malformed one fails there with the run it came from.
+// `task-outcomes/v1` or `v2` records, so a malformed one fails there with the run it came from. A v2 artifact also
+// carries the gate records and logs its record indexes, under `.beep/gates/`; those are not task-outcome records.
+const isGateFile = (file: string): boolean =>
+  Str.startsWith(`${GATES_DIR}/`)(file) || pipe(file, Str.includes(`/${GATES_DIR}/`));
+
 const archiveRecords = Effect.fnUntraced(function* (bytes: ArrayBuffer, name: string) {
   const entries = yield* Effect.try({
     // Only small JSON entries are inflated; every other entry is skipped before it expands.
     try: () =>
       unzipSync(new Uint8Array(bytes), {
-        filter: (file) => Str.endsWith(".json")(file.name) && file.originalSize <= RECORD_BYTES_MAX,
+        filter: (file) =>
+          Str.endsWith(".json")(file.name) && !isGateFile(file.name) && file.originalSize <= RECORD_BYTES_MAX,
       }),
     catch: RouteError.mapError("corpus-fetch", `Artifact ${name} is not a zip archive.`),
   });

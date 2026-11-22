@@ -4,15 +4,21 @@
 // `setup` red, and the captured rows decode under `route-corpus/v1`.
 
 import { fcRuns } from "@beep/fc-runs";
+import { GateRecord } from "@beep/gate-report/GateRecord";
+import { GateReport, Totals } from "@beep/gate-report/GateReport";
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { Repo } from "@beep/github/Repo";
 import { RetryPolicy } from "@beep/github/Resilience";
 import {
+  AnyTaskOutcomeRecord,
   ciTaskOutcomesCommand,
+  findJobGateRecords,
+  GateFeedEntry,
   HostedTaskOutcome,
   RouteCorpusCaptureOptions,
   RouteCorpusReceipt,
   TaskOutcomeRecord,
+  TaskOutcomeRecordV2,
   taskOutcomeArtifactPrefix,
   taskOutcomesOf,
   writeTaskOutcomes,
@@ -21,6 +27,8 @@ import { makeRouteReadBudget } from "@beep/repo-cli/commands/Ci/RouteBudget";
 import { hostedJobRedOrigin } from "@beep/repo-cli/commands/Ci/RouteCensus";
 import { makeRouteCorpus, makeRouteGithubRunner, RouteGhRateLimited } from "@beep/repo-cli/commands/Ci/RouteCorpus";
 import { layerGithubRest } from "@beep/repo-cli/test/SharedInternals";
+import { RecordTarget } from "@beep/repo-gate-record/GatePaths";
+import { GateRecordStore } from "@beep/repo-gate-record/GateRecordStore";
 import { provideScopedLayer } from "@beep/test-utils/Layer";
 import { NodeCrypto, NodeServices } from "@effect/platform-node";
 import { it } from "@effect/vitest";
@@ -39,6 +47,7 @@ import * as Path from "effect/Path";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Stdio from "effect/Stdio";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import * as Terminal from "effect/Terminal";
 import * as TestClock from "effect/testing/TestClock";
@@ -48,11 +57,17 @@ import type { RouteGhRunner } from "@beep/repo-cli/commands/Ci/RouteCorpus";
 
 const encode = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 const decodeRecord = S.decodeUnknownEffect(S.fromJsonString(TaskOutcomeRecord));
+const decodeRecordV2 = S.decodeUnknownEffect(S.fromJsonString(TaskOutcomeRecordV2));
+const decodeAnyRecord = S.decodeUnknownEffect(S.fromJsonString(AnyTaskOutcomeRecord));
+const encodeRecordV2 = S.encodeEffect(S.fromJsonString(TaskOutcomeRecordV2));
 const encodeReceipt = S.encodeEffect(S.fromJsonString(RouteCorpusReceipt));
 const encodeRecord = S.encodeEffect(S.fromJsonString(TaskOutcomeRecord));
 const encodeRecordValue = S.encodeEffect(TaskOutcomeRecord);
 const Payload = S.Struct({ requests: S.Int, records: S.Array(TaskOutcomeRecord) });
 const decodePayload = S.decodeUnknownEffect(S.fromJsonString(Payload));
+const decodeAnyPayload = S.decodeUnknownEffect(
+  S.fromJsonString(S.Struct({ requests: S.Int, records: S.Array(AnyTaskOutcomeRecord) }))
+);
 const isRateLimited = S.is(RouteGhRateLimited);
 
 const RUN = 9_000_001;
@@ -101,6 +116,41 @@ it.effect.prop(
     strictEqual(again, text);
   }),
   { arbitrary: fcRuns(50) }
+);
+
+const sameRecordV2 = S.toEquivalence(TaskOutcomeRecordV2);
+it.effect.prop(
+  "generated task-outcomes/v2 records round-trip through the record codec",
+  [Arbitrary.schema(TaskOutcomeRecordV2)],
+  Effect.fnUntraced(function* ([generated]) {
+    const text = yield* encodeRecordV2(generated);
+    const decoded = yield* decodeRecordV2(text);
+    assertTrue(sameRecordV2(decoded, generated));
+    const again = yield* encodeRecordV2(decoded);
+    strictEqual(again, text);
+  }),
+  { arbitrary: fcRuns(50) }
+);
+
+it.effect("the reader decodes a v1 and a v2 record, and refuses an unknown version", () =>
+  Effect.gen(function* () {
+    const v1 = yield* decodeAnyRecord('{"schemaVersion":"task-outcomes/v1","job":"Labs","tasks":[]}');
+    const v2 = yield* decodeAnyRecord(
+      '{"schemaVersion":"task-outcomes/v2","job":"Labs","tasks":[],"reports":[{"gate":"test","subject":"@beep/a","record":"packages/a/.beep/gates/test/report.json","log":"packages/a/.beep/gates/test/report.log"}]}'
+    );
+    deepStrictEqual([v1.schemaVersion, v2.schemaVersion], ["task-outcomes/v1", "task-outcomes/v2"]);
+    assertTrue(AnyTaskOutcomeRecord.guards["task-outcomes/v2"](v2));
+    deepStrictEqual(
+      AnyTaskOutcomeRecord.guards["task-outcomes/v2"](v2) ? A.map(v2.reports, (entry) => entry.record) : [],
+      ["packages/a/.beep/gates/test/report.json"]
+    );
+    const refused = yield* decodeAnyRecord('{"schemaVersion":"task-outcomes/v3","job":"Labs","tasks":[]}').pipe(
+      Effect.flip
+    );
+    strictEqual(refused._tag, "SchemaError");
+    // A feed entry's paths stay inside the repository.
+    assertTrue(!S.is(GateFeedEntry)({ gate: "test", subject: "@beep/a", record: "../a.json", log: "a.log" }));
+  })
 );
 
 it.effect("maps exit codes to outcomes and keeps the strongest evidence across summaries", () =>
@@ -162,6 +212,48 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
       yield* fs.writeFileString(path.join(root, ".turbo", "runs", "1.json"), first);
       yield* fs.writeFileString(path.join(root, ".turbo", "runs", "2.json"), second);
       const out = ".beep/ci-task-outcomes/record.json";
+      // The gate records the job wrote: a package record with its log, a root run without one, and files that
+      // are not gate records (a bad gate name, a bad run id, one under node_modules).
+      const gateReport = (gate: string, subject: string) =>
+        GateRecord.make({
+          generatedAt: DateTime.makeUnsafe(0),
+          report: GateReport.make({
+            gate,
+            subject,
+            itemKind: "test",
+            runId: "r1",
+            startedAt: DateTime.makeUnsafe(0),
+            durationMs: 0,
+            inputFingerprint: "x",
+            reason: "failed",
+            outcome: "some-fail",
+            units: [],
+            items: [],
+            totals: Totals.make({ collected: 1, failed: 1 }),
+          }),
+        });
+      const store = yield* GateRecordStore.make(root);
+      const packageTarget = RecordTarget.cases.PackageTarget.make({ packageDir: "packages/a", gate: "test" });
+      yield* store.writeLog(packageTarget, Stream.make(new TextEncoder().encode("raw\n")));
+      yield* store.writeRecord(packageTarget, gateReport("test", "@beep/a"));
+      yield* store.writeRecord(
+        RecordTarget.cases.RootTarget.make({ gate: "check", runId: "20261122T100000000Z-0001" }),
+        gateReport("check", "@beep/root")
+      );
+      yield* fs.makeDirectory(path.join(root, "packages", "b", ".beep", "gates", "Bad_Gate"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, "packages", "b", ".beep", "gates", "Bad_Gate", "report.json"), "{}");
+      yield* fs.makeDirectory(path.join(root, ".beep", "gates", "check"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, ".beep", "gates", "check", "-bad run.json"), "{}");
+      yield* fs.makeDirectory(path.join(root, "node_modules", "x", ".beep", "gates", "test"), { recursive: true });
+      yield* fs.writeFileString(path.join(root, "node_modules", "x", ".beep", "gates", "test", "report.json"), "{}");
+      const found = yield* findJobGateRecords(root);
+      deepStrictEqual(
+        A.map(found, (entry) => [entry.target._tag, entry.report.subject, entry.logBytes]),
+        [
+          ["RootTarget", "@beep/root", O.none()],
+          ["PackageTarget", "@beep/a", O.some(4)],
+        ]
+      );
       yield* writeTaskOutcomes(root, "Test Unit (unit-a)", out).pipe(
         Effect.provideService(
           ConfigProvider.ConfigProvider,
@@ -169,17 +261,35 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
         )
       );
       const text = yield* fs.readFileString(path.join(root, out));
-      const written = yield* decodeRecord(text);
+      const written = yield* decodeRecordV2(text);
       deepStrictEqual(
         [written.job, written.runId, written.runAttempt, outcomeRows(written.tasks)],
         ["Test Unit (unit-a)", O.some(RUN), O.some(1), ["@beep/a#test=pass", "@beep/b#test=fail"]]
       );
+      deepStrictEqual(written.reports, [
+        GateFeedEntry.make({
+          gate: "check",
+          subject: "@beep/root",
+          record: ".beep/gates/check/20261122T100000000Z-0001.json",
+          log: ".beep/gates/check/20261122T100000000Z-0001.log",
+        }),
+        GateFeedEntry.make({
+          gate: "test",
+          subject: "@beep/a",
+          record: "packages/a/.beep/gates/test/report.json",
+          log: "packages/a/.beep/gates/test/report.log",
+        }),
+      ]);
+      // A gate record that does not decode fails the command: the feed never drops a report silently.
+      yield* fs.writeFileString(path.join(root, "packages", "a", ".beep", "gates", "test", "report.json"), "{}");
+      const refused = yield* Effect.flip(findJobGateRecords(root));
+      strictEqual(refused.message, "packages/a/.beep/gates/test/report.json is not a readable gate-report/v1 record.");
       // A job that stopped before Turbo ran leaves no `.turbo/runs/`: its record has no tasks.
       const bare = yield* fs.makeTempDirectoryScoped({ prefix: "beep-ci-task-outcomes-bare-" });
       const none = yield* writeTaskOutcomes(bare, "Lint (lint-1)", "record.json").pipe(
         Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnvRecord({}))
       );
-      deepStrictEqual([none.tasks, none.runId], [[], O.none()]);
+      deepStrictEqual([none.tasks, none.runId, none.reports], [[], O.none(), []]);
     })
   );
 
@@ -251,6 +361,64 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer), { timeout: "30 se
           ]
         );
       })
+  );
+
+  it.effect("the REST runner reads a v2 record and skips the gate records its artifact carries", () =>
+    Effect.gen(function* () {
+      const v2 = TaskOutcomeRecordV2.make({
+        schemaVersion: "task-outcomes/v2",
+        job: "Test Unit (unit-a)",
+        runId: O.some(RUN),
+        runAttempt: O.some(1),
+        tasks: [HostedTaskOutcome.make({ task: "@beep/a#test", outcome: "fail" })],
+        reports: [
+          GateFeedEntry.make({
+            gate: "test",
+            subject: "@beep/a",
+            record: "packages/a/.beep/gates/test/report.json",
+            log: "packages/a/.beep/gates/test/report.log",
+          }),
+        ],
+      });
+      const v2Text = yield* encodeRecordV2(v2);
+      const bytes = (text: string) => new TextEncoder().encode(text);
+      // A v2 artifact holds the record and, at their repository paths, the gate records and logs it indexes.
+      const archive = zipSync({
+        ".beep/ci-task-outcomes/record.json": bytes(v2Text),
+        "packages/a/.beep/gates/test/report.json": bytes('{"version":"gate-report/v1"}'),
+        "packages/a/.beep/gates/test/report.log": bytes("raw"),
+        ".beep/gates/check/20261122T100000000Z-0001.json": bytes('{"version":"gate-report/v1"}'),
+      });
+      const listing = yield* encode({
+        total_count: 1,
+        artifacts: [
+          {
+            id: 1,
+            name: `task-outcomes-${RUN}-1-test-unit-shard-unit-a`,
+            expired: false,
+            size_in_bytes: archive.byteLength,
+          },
+        ],
+      });
+      const fetch: RecordedFetch = Object.assign(
+        (input: string | URL | Request): Promise<Response> => {
+          const url = new URL(input instanceof Request ? input.url : input);
+          const response = Str.endsWith("/zip")(url.pathname)
+            ? new Response(archive, { status: 200, headers: { "content-type": "application/zip" } })
+            : new Response(listing, { status: 200, headers: { "content-type": "application/json" } });
+          Object.defineProperty(response, "url", { value: url.href });
+          return Promise.resolve(response);
+        },
+        { preconnect: () => undefined }
+      );
+      const run = yield* restRunner(fetch);
+      const text = yield* run(["run", "task-outcomes", `${RUN}`, "1"], ".");
+      const payload = yield* decodeAnyPayload(text);
+      deepStrictEqual(
+        A.map(payload.records, (entry) => [entry.schemaVersion, entry.job, outcomeRows(entry.tasks)]),
+        [["task-outcomes/v2", "Test Unit (unit-a)", ["@beep/a#test=fail"]]]
+      );
+    })
   );
 
   it.effect("counts every listing page an attempt sends, including the pages of an attempt that failed", () =>
@@ -592,7 +760,7 @@ it.layer(CommandLayer, { timeout: "60 seconds" })("ci task-outcomes command", (i
       const out = path.join(temp, "out", "record.json");
       yield* runTaskOutcomesCommand(["--job-name", "Labs", "--out", out]);
       const text = yield* fs.readFileString(out);
-      const written = yield* decodeRecord(text);
+      const written = yield* decodeRecordV2(text);
       strictEqual(written.job, "Labs");
     })
   );
