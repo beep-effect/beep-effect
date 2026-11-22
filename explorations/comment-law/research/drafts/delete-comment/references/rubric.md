@@ -43,7 +43,11 @@ Length is not evidence: a long comment can be T and four words can be D.
   every sentence in it may be deleted. When it also holds an H or N sentence,
   that sentence stays (the rest of the group is edited out) until its home
   carries it, and the row keeps code H or N with `home` set. A D, S or T
-  verdict never carries a hazard out with it.
+  verdict never carries a hazard out with it. Each sentence edited out of a
+  mixed group meets its own code's gate first: a D sentence only after its
+  decision file is committed (or it is shown enforced or demoted), an X
+  sentence only with its fix or family issue. The edit records those
+  dispositions in the note.
 - Test titles count as code. A comment that repeats the `it` title is T.
 
 ## Notes and homes
