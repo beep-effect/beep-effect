@@ -530,7 +530,7 @@ describe("handleScaleUp configure failures", () => {
         expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([buildDlqUrl]);
         // The DLQ holds the original message, unchanged: no retry counter was added.
         const dead = yield* decodeDeadLetter(world.sent[0]?.body);
-        expect(dead).toStrictEqual({ id: 1, retryCounter: O.none() });
+        deepStrictEqual(dead, { id: 1, retryCounter: O.none() });
         const warnings = A.filter(lines, (line) => line.level === "WARN");
         expect(A.map(warnings, (line) => line.annotations)).toStrictEqual([
           {
@@ -793,12 +793,13 @@ describe("handleScaleUp configure failures", () => {
         message: "try again",
       });
       const { lines } = yield* runLogged(world, [queued({ id: 1 })]);
-      expect(
+      deepStrictEqual(
         A.map(
           A.filter(lines, (line) => line.level === "WARN"),
           (line) => R.get(line.annotations as Readonly<Record<string, unknown>>, "operation")
-        )
-      ).toStrictEqual([O.some("putToken"), O.some("deleteRunner"), O.some("terminate")]);
+        ),
+        [O.some("putToken"), O.some("deleteRunner"), O.some("terminate")]
+      );
     })
   );
 });

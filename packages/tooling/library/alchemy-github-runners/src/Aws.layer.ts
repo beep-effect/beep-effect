@@ -139,7 +139,7 @@ const faultOf = (error: SdkFailure, status: O.Option<number>): AwsFault =>
  * ```ts
  * import { toAwsApiError } from "@beep/alchemy-github-runners/Aws.layer"
  *
- * const error = toAwsApiError({ service: "ssm", operation: "putParameter" })({
+ * const error = toAwsApiError("ssm")("putParameter")({
  *   _tag: "UnknownAwsError",
  *   status: 400,
  *   code: "ThrottlingException",
@@ -148,13 +148,14 @@ const faultOf = (error: SdkFailure, status: O.Option<number>): AwsFault =>
  * console.log(error.fault) // "transient"
  * ```
  *
- * @param call - The service and operation that failed.
- * @returns A mapper from the SDK error to {@link AwsApiError}.
+ * @param service - The AWS service that failed.
+ * @returns A function from the failed operation to a mapper from the SDK error to {@link AwsApiError}.
  * @category utilities
  * @since 0.0.0
  */
 export const toAwsApiError =
-  ({ service, operation }: { readonly service: string; readonly operation: string }) =>
+  (service: string) =>
+  (operation: string) =>
   (error: SdkFailure): AwsApiError => {
     const status = statusOf(error);
     return AwsApiError.make({
@@ -285,7 +286,7 @@ const awsCall =
   <A, E extends { readonly _tag: string; readonly message?: unknown }>(
     call: Effect.Effect<A, E, AwsServices>
   ): Effect.Effect<A, AwsApiError> =>
-    call.pipe(Effect.provideContext(services), Effect.mapError(toAwsApiError({ service, operation })));
+    call.pipe(Effect.provideContext(services), Effect.mapError(toAwsApiError(service)(operation)));
 
 /**
  * Live {@link Ec2Fleet} over distilled EC2.

@@ -264,7 +264,7 @@ describe("live AWS layers over distilled", () => {
   );
 
   it("maps an unknown-class 400 with a throttling code to transient, a declared validation error to client", () => {
-    const map = toAwsApiError({ service: "ssm", operation: "putParameter" });
+    const map = toAwsApiError("ssm")("putParameter");
     expect(
       A.map(
         [
