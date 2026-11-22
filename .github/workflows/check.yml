@@ -129,12 +129,6 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
         with:
@@ -260,19 +254,32 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       - name: Determine lane execution
         id: lane-gate
         shell: bash
         env:
           DOCS_ONLY: ${{ needs.change-profile.outputs.docs_only }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          # Checkout removed its credentials, and an anonymous fetch can be
+          # throttled (403). GH_TOKEN is step-scoped: every command in this step
+          # sees it, and this step runs only git, jq and grep; never add repo code
+          # here. git receives the token through GIT_CONFIG_* entries on each
+          # fetch, never argv or .git/config. Three attempts, 5 s then 15 s.
+          authenticated_fetch() {
+            local attempt
+            for attempt in 1 2 3; do
+              if GIT_CONFIG_COUNT=1 \
+                GIT_CONFIG_KEY_0=http.https://github.com/.extraheader \
+                GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
+                git fetch "$@"; then
+                return 0
+              fi
+              case "$attempt" in 1) sleep 5 ;; 2) sleep 15 ;; esac
+            done
+            return 1
+          }
           should_run=true
           docs_path=false
           skills_lock=true
@@ -292,7 +299,7 @@ jobs:
               codegen|ecosystem)
                 base_ref="origin/${GITHUB_BASE_REF:-main}"
                 if ! git rev-parse --verify "$base_ref" >/dev/null 2>&1; then
-                  git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+                  authenticated_fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
                 fi
                 pattern="$(jq -r --arg lane "${{ env.BEEP_CI_LANE_ID }}" '.lanes[$lane] // empty' \
                   packages/tooling/tool/cli/src/commands/Ci/CiOperational.patterns.json)"
@@ -475,12 +482,6 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       # Tracked files and git history only: no disk cleanup, no application secrets.
       - name: Setup monorepo CI
         uses: ./.github/actions/setup-monorepo-ci
@@ -543,12 +544,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Determine lane execution
         id: lane-gate
@@ -710,12 +705,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Determine lane execution
         id: lane-gate
@@ -900,12 +889,6 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       - name: Fetch beep CI binary
         if: github.event_name == 'pull_request' || vars.BEEP_SHARD_OVERFLOW == 'on'
         uses: ./.github/actions/fetch-beep-ci
@@ -1034,12 +1017,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Determine lane execution
         id: lane-gate
@@ -1305,12 +1282,6 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       - name: Determine lane execution
         id: lane-gate
         shell: bash
@@ -1475,12 +1446,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Fetch beep CI binary
         uses: ./.github/actions/fetch-beep-ci
@@ -1676,11 +1641,29 @@ jobs:
           fetch-depth: 100
           persist-credentials: false
 
+      # A depth-100 checkout fetches only the merge ref, so the base is fetched
+      # here. Checkout removed its credentials, and an anonymous fetch can be
+      # throttled (403): the token reaches git through the environment of the
+      # fetch alone, never argv or .git/config. Three attempts, 5 s then 15 s.
       - name: Fetch pull request base
         if: github.event_name == 'pull_request'
         shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
-          git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
+          set -euo pipefail
+          base="${GITHUB_BASE_REF:-main}"
+          for attempt in 1 2 3; do
+            if GIT_CONFIG_COUNT=1 \
+              GIT_CONFIG_KEY_0=http.https://github.com/.extraheader \
+              GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
+              git fetch --quiet --no-tags --depth=100 origin "${base}:refs/remotes/origin/${base}"; then
+              exit 0
+            fi
+            case "$attempt" in 1) sleep 5 ;; 2) sleep 15 ;; esac
+          done
+          echo "::error::Fetching ${base} failed after 3 attempts"
+          exit 1
 
       - name: Fetch beep CI binary
         uses: ./.github/actions/fetch-beep-ci
@@ -1813,12 +1796,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Determine lane execution
         id: lane-gate
@@ -1961,16 +1938,35 @@ jobs:
         shell: bash
         env:
           BEFORE_SHA: ${{ github.event.before }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
+          # Checkout removed its credentials, and an anonymous fetch can be
+          # throttled (403). GH_TOKEN is step-scoped: every command in this step
+          # sees it, and this step runs only git; never add repo code
+          # here. git receives the token through GIT_CONFIG_* entries on each
+          # fetch, never argv or .git/config. Three attempts, 5 s then 15 s.
+          authenticated_fetch() {
+            local attempt
+            for attempt in 1 2 3; do
+              if GIT_CONFIG_COUNT=1 \
+                GIT_CONFIG_KEY_0=http.https://github.com/.extraheader \
+                GIT_CONFIG_VALUE_0="AUTHORIZATION: basic $(printf 'x-access-token:%s' "$GH_TOKEN" | base64 -w0)" \
+                git fetch "$@"; then
+                return 0
+              fi
+              case "$attempt" in 1) sleep 5 ;; 2) sleep 15 ;; esac
+            done
+            return 1
+          }
 
           fetch_status=0
           if [[ "$GITHUB_EVENT_NAME" == "pull_request" ]]; then
             base_ref="origin/${GITHUB_BASE_REF:-main}"
-            git fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}" || fetch_status=$?
+            authenticated_fetch --quiet --no-tags --depth=100 origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}" || fetch_status=$?
           elif [[ -n "${BEFORE_SHA:-}" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
             base_ref="$BEFORE_SHA"
-            git rev-parse --verify "${base_ref}^{commit}" >/dev/null 2>&1 || git fetch --quiet --no-tags --depth=100 origin "$base_ref" || fetch_status=$?
+            git rev-parse --verify "${base_ref}^{commit}" >/dev/null 2>&1 || authenticated_fetch --quiet --no-tags --depth=100 origin "$base_ref" || fetch_status=$?
           else
             base_ref="HEAD~1"
           fi
@@ -2101,12 +2097,6 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       - name: Fetch beep CI binary
         uses: ./.github/actions/fetch-beep-ci
 
@@ -2195,7 +2185,6 @@ jobs:
             # since — including the bodies GitHub generates for squash merges.
             to_ref="${PR_HEAD_SHA:?missing pull request head sha}"
             base_branch="${PR_BASE_REF:-main}"
-            git fetch --quiet --no-tags origin "+refs/heads/${base_branch}:refs/remotes/origin/${base_branch}"
             git rev-parse --verify "${to_ref}^{commit}" >/dev/null 2>&1 || git fetch --quiet --no-tags origin "$to_ref"
             from_ref="$(git merge-base "refs/remotes/origin/${base_branch}" "$to_ref")"
           elif [[ -n "${BEFORE_SHA:-}" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
@@ -2293,12 +2282,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       - name: Authenticate Docker Hub when configured
         shell: bash
@@ -2485,12 +2468,6 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       # `nix flake check` and `nix develop` evaluate the flake alone (flake.nix
       # reads no repository file), so a pull request proves them only when the
       # flake, this workflow or the lane body changes. Every main push runs.
@@ -2554,12 +2531,6 @@ jobs:
           fetch-depth: 0
           filter: blob:none
           persist-credentials: false
-
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
 
       # The repo CLI only dispatches Docker Semgrep, so it needs Bun and a
       # script-free install: no Node, lifecycle scripts, Turbo or secrets.

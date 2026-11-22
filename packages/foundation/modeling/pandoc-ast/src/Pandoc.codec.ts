@@ -737,8 +737,8 @@ const decodeTargetInline: {
   ): Effect.Effect<PandocInline.Type, S.SchemaError> =>
     Effect.flatMap(decodeLinkPayloadWire(input), ([attrWire, childrenWire, targetWire]) =>
       Effect.flatMap(attrFromWire(attrWire), (attr) =>
-        Effect.flatMap(decodeInlines(childrenWire), (children) =>
-          Effect.map(targetFromWire(targetWire), (target) => make(attr, children, target))
+        Effect.zipWith(decodeInlines(childrenWire), targetFromWire(targetWire), (children, target) =>
+          make(attr, children, target)
         )
       )
     )
@@ -759,9 +759,7 @@ const decodeAttributedInlineChildren: {
     make: (attr: PandocAttr, children: ReadonlyArray<PandocInline.Type>) => PandocInline.Type
   ): Effect.Effect<PandocInline.Type, S.SchemaError> =>
     Effect.flatMap(decodeDivPayloadWire(input), ([attrWire, childrenWire]) =>
-      Effect.flatMap(attrFromWire(attrWire), (attr) =>
-        Effect.map(decodeInlines(childrenWire), (children) => make(attr, children))
-      )
+      Effect.zipWith(attrFromWire(attrWire), decodeInlines(childrenWire), make)
     )
 );
 
@@ -903,23 +901,19 @@ const decodeAttributedBlockChildren = (
   make: (attr: PandocAttr, children: ReadonlyArray<PandocBlock.Type>) => PandocBlock.Type
 ): Effect.Effect<PandocBlock.Type, S.SchemaError> =>
   Effect.flatMap(decodeDivPayloadWire(input), ([attrWire, childrenWire]) =>
-    Effect.flatMap(attrFromWire(attrWire), (attr) =>
-      Effect.map(decodeBlockList(childrenWire), (children) => make(attr, children))
-    )
+    Effect.zipWith(attrFromWire(attrWire), decodeBlockList(childrenWire), make)
   );
 
 const decodeOrderedListBlock = (payload: unknown): Effect.Effect<PandocBlock.Type, S.SchemaError> =>
   Effect.flatMap(decodeOrderedListPayloadWire(payload), ([[start, style, delimiter], itemWire]) =>
     Effect.flatMap(listNumberStyleFromWire(style), (styleValue) =>
-      Effect.flatMap(listNumberDelimiterFromWire(delimiter), (delimiterValue) =>
-        Effect.map(decodeBlockItems(itemWire), (items) =>
-          OrderedList.make({
-            delimiter: delimiterValue,
-            items,
-            start,
-            style: styleValue,
-          })
-        )
+      Effect.zipWith(listNumberDelimiterFromWire(delimiter), decodeBlockItems(itemWire), (delimiterValue, items) =>
+        OrderedList.make({
+          delimiter: delimiterValue,
+          items,
+          start,
+          style: styleValue,
+        })
       )
     )
   );
@@ -976,14 +970,12 @@ const decodeBlock = (input: unknown): Effect.Effect<PandocBlock.Type, S.SchemaEr
       Match.when("LineBlock", () => decodeLineBlock(wire.c)),
       Match.when("Header", () =>
         Effect.flatMap(decodeHeaderPayloadWire(wire.c), ([level, attrWire, childrenWire]) =>
-          Effect.flatMap(attrFromWire(attrWire), (attr) =>
-            Effect.map(decodeInlines(childrenWire), (children) =>
-              Header.make({
-                attr,
-                children,
-                level,
-              })
-            )
+          Effect.zipWith(attrFromWire(attrWire), decodeInlines(childrenWire), (attr, children) =>
+            Header.make({
+              attr,
+              children,
+              level,
+            })
           )
         )
       ),
@@ -1265,14 +1257,12 @@ const encodeMeta = (meta: PandocMeta): Readonly<Record<string, S.Json>> =>
  * @since 0.0.0
  */
 const documentFromWire = (wire: PandocJsonWire): Effect.Effect<PandocDocument, S.SchemaError> =>
-  Effect.flatMap(decodeMeta(wire.meta), (meta) =>
-    Effect.map(decodeBlockList(wire.blocks), (blocks) =>
-      PandocDocument.make({
-        apiVersion: wire["pandoc-api-version"],
-        blocks,
-        meta,
-      })
-    )
+  Effect.zipWith(decodeMeta(wire.meta), decodeBlockList(wire.blocks), (meta, blocks) =>
+    PandocDocument.make({
+      apiVersion: wire["pandoc-api-version"],
+      blocks,
+      meta,
+    })
   );
 
 const decodePandocJsonInternal = flow(decodeWire, Effect.flatMap(documentFromWire));
@@ -1857,15 +1847,13 @@ const inspectMeta = (meta: Readonly<Record<string, S.Json>>): LosslessInspection
 const decodePandocJsonLosslessInternal = (input: unknown): Effect.Effect<PandocLosslessDocument, S.SchemaError> =>
   Effect.flatMap(decodeJsonObject(input), (rawWire) =>
     Effect.flatMap(decodeWire(rawWire), (wire) =>
-      Effect.flatMap(
+      Effect.zipWith(
         Effect.map(
           Effect.forEach(wire.blocks, (block, index) => inspectBlock(block, ["blocks", index]), { concurrency: 1 }),
           A.flatten
         ),
-        (blockIssues) =>
-          Effect.map(inspectMeta(wire.meta), (metaIssues) =>
-            issuePandocLosslessDocument(rawWire, [...blockIssues, ...metaIssues])
-          )
+        inspectMeta(wire.meta),
+        (blockIssues, metaIssues) => issuePandocLosslessDocument(rawWire, [...blockIssues, ...metaIssues])
       )
     )
   );

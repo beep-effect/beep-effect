@@ -26,11 +26,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("retained Do
             setup.runtime,
             configuration
           ).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(setup.limits).pipe(
-                Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-              )
-            ),
+            Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+              ...stage,
+              extract: bind(stage.extract),
+            })),
             Effect.provideContext(provided),
             DateTime.withCurrentZoneOffset(0)
           );

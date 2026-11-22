@@ -21,16 +21,16 @@
   },
   "dependencies": {
     "@alchemy.run/domain": "2.0.0-beta.87",
-    "@effect/platform-node": "4.1.4",
+    "@effect/platform-node": "4.1.5",
     "@proto/kernel": "workspace:*",
     "drizzle-kit": "1.0.0-rc.5",
-    "effect": "4.1.4"
+    "effect": "4.1.5"
   },
   "scripts": {
     "test": "vitest run"
   },
   "devDependencies": {
-    "@effect/vitest": "4.1.4",
+    "@effect/vitest": "4.1.5",
     "vitest": "5.0.4"
   }
 }

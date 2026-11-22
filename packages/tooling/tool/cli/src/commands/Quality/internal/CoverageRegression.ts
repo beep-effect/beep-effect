@@ -2433,10 +2433,8 @@ const readComparisonBaseline = Effect.fn("CoverageRegression.readComparisonBasel
         Effect.option
       );
       const selfJudge = yield* collectChangedFiles(repoRoot, base, "HEAD").pipe(
-        Effect.flatMap((changedFiles) =>
-          Effect.map(workspaceCoverageScopeOwners(repoRoot), (owners) =>
-            planCoverageSelfJudgeScope(owners, changedFiles)
-          )
+        Effect.zipWith(workspaceCoverageScopeOwners(repoRoot), (changedFiles, owners) =>
+          planCoverageSelfJudgeScope(owners, changedFiles)
         ),
         Effect.option
       );

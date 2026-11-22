@@ -45,9 +45,10 @@ export const installCitationHtmlGeometryFixture = Effect.fn("HtmlGeometryPrepara
     discovery: discovery.configuration,
     diffRuntime,
   }).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, prepare: bind(stage.prepare) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+      ...stage,
+      prepare: bind(stage.prepare),
+    })),
     Effect.provideContext(setup.provided)
   );
 });
