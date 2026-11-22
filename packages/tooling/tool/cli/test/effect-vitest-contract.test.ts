@@ -80,7 +80,7 @@ const fixtureInventoryFileSystem = Effect.fnUntraced(function* () {
   const content = yield* encodeInventoryJson(
     EffectVitestInventoryDocument.make({
       schemaVersion: "effect-vitest-inventory/v1",
-      effectVitestVersion: "4.1.4",
+      effectVitestVersion: "4.1.5",
       scope: [],
       findings: [],
     })
@@ -187,7 +187,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
         })
       );
       const inventory = yield* readEffectVitestInventory(output).pipe(Effect.map(O.getOrThrow));
-      assertTrue(inventory.effectVitestVersion === "4.1.4");
+      assertTrue(inventory.effectVitestVersion === "4.1.5");
       assertTrue(inventory.findings.length === timing.findingCount);
       assertTrue(A.some(inventory.findings, (row) => row.ruleId === "EV001"));
       const findingIds = A.map(inventory.findings, (row) => row.id);
@@ -274,7 +274,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
       );
       assertTrue(failure._tag === "EffectVitestLintError");
       assertTrue(
-        Str.includes("Baseline pin 4.0.0-rc.111 does not match graph pin 4.1.4")(failure.message),
+        Str.includes("Baseline pin 4.0.0-rc.111 does not match graph pin 4.1.5")(failure.message),
         failure.message
       );
     })
@@ -483,7 +483,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
   );
 
   it.effect(
-    "rejects an installed Effect Vitest version outside the 4.1.4 pin",
+    "rejects an installed Effect Vitest version outside the 4.1.5 pin",
     Effect.fnUntraced(function* () {
       const fs = yield* FileSystem.FileSystem;
       const path = yield* Path.Path;
@@ -495,7 +495,7 @@ it.layer(discoveryLayer, { timeout: "30 seconds" })("discovery filesystem", (it)
 
       const failure = yield* verifyEffectVitestPin(root, graph).pipe(Effect.flip);
       assertTrue(failure._tag === "EffectVitestLintError");
-      assertTrue(Str.includes("graph pin @effect/vitest@4.1.4 (")(failure.message));
+      assertTrue(Str.includes("graph pin @effect/vitest@4.1.5 (")(failure.message));
     })
   );
 });
@@ -605,7 +605,7 @@ it("preserves a justified exception on the matching live row", () => {
   });
   const document = EffectVitestInventoryDocument.make({
     schemaVersion: "effect-vitest-inventory/v1",
-    effectVitestVersion: "4.1.4",
+    effectVitestVersion: "4.1.5",
     scope: [],
     findings: [baselineFinding],
   });
@@ -644,7 +644,7 @@ const occurrences = Effect.fnUntraced(function* (body: string) {
 const withException = (rows: ReadonlyArray<EffectVitestFinding>) =>
   EffectVitestInventoryDocument.make({
     schemaVersion: "effect-vitest-inventory/v1",
-    effectVitestVersion: "4.1.4",
+    effectVitestVersion: "4.1.5",
     scope: [],
     findings: A.map(rows, (row, index) =>
       index === 0
