@@ -242,8 +242,8 @@ const fromRewrites = (text: string, rewrites: ReadonlyArray<Rewrite>): Normalize
  *
  * const normalized = normalizeText("exam-\nple", "dehyphenate")
  * normalized.text // => "example"
- * normalized.segments.map((segment) => [segment._tag, segment.from.start, segment.from.end])
- * // => [["Kept", 0, 3], ["Rewritten", 3, 7], ["Kept", 7, 9]]
+ * const segments = normalized.segments.map((segment) => [segment._tag, segment.from.start, segment.from.end])
+ * segments // => [["Kept", 0, 3], ["Rewritten", 3, 7], ["Kept", 7, 9]]
  * ```
  *
  * @category normalization
