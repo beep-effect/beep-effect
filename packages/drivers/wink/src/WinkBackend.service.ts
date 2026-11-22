@@ -26,15 +26,16 @@
 
 import * as Schema from "@beep/nlp/Graph/Schema";
 import { BackendCapabilities, NLPBackend, notSupported, operationError } from "@beep/nlp-processing/Backend/NLPBackend";
+import { Resolution, resolve } from "@beep/text/Resolution";
+import { QuoteSelector } from "@beep/text/Selector";
 import { A } from "@beep/utils";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
-import { constant } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Str from "effect/String";
 import { WinkEngine } from "./Wink.service.ts";
+import type { Position } from "@beep/text/OffsetUnit";
 import type { Detail, ItsFunction } from "wink-nlp";
 
 const BACKEND_NAME = "wink-nlp";
@@ -51,11 +52,14 @@ const capabilities: BackendCapabilities = BackendCapabilities.make({
   tokenization: true,
 });
 
-/** Locate `needle` in `haystack`, returning a character span (length-correct if absent). */
-const findSpan = (haystack: string, needle: string): { readonly end: number; readonly start: number } => {
-  const start = O.getOrElse(constant(-1))(Str.indexOf(needle)(haystack));
-  return start < 0 ? { end: needle.length, start: 0 } : { end: start + needle.length, start };
-};
+const findSpan = (text: string, value: string): O.Option<Position> =>
+  O.flatMap(QuoteSelector.makeOption({ exact: value, prefix: O.none(), suffix: O.none() }), (selector) =>
+    Resolution.match(resolve(text, selector), {
+      Unique: (unique) => O.some(unique.position),
+      Ambiguous: O.none<Position>,
+      NotFound: O.none<Position>,
+    })
+  );
 
 const makeWinkBackend = Effect.gen(function* () {
   const engine = yield* WinkEngine;

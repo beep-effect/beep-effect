@@ -798,8 +798,11 @@ const patternClaim = Effect.fn("PatternExtractor.patternClaim")(function* (
   chunks: A.NonEmptyReadonlyArray<Chunk>,
   entity: EntityNode
 ) {
-  const start = entity.span.start;
-  const end = entity.span.end;
+  if (O.isNone(entity.span) || entity.span.value.unit !== "utf16-code-unit") {
+    return Result.fail(fabricatedSpan(chunks));
+  }
+  const start = entity.span.value.start;
+  const end = entity.span.value.end;
   const validOffsets = isNatural(start) && isNatural(end) && start < end;
   const quote = validOffsets ? Str.slice(start, end)(canonical.text) : Str.empty;
   if (

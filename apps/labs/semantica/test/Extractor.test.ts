@@ -1,4 +1,5 @@
 import { ExtractionCandidate, parseModelOutput } from "@beep/langextract/Extraction";
+import { Position } from "@beep/text/OffsetUnit";
 import * as Arbitrary from "effect/Arbitrary";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Digest from "effect/crypto/Digest";
@@ -482,7 +483,11 @@ describe("C0 hosted extractor", () => {
 });
 
 describe("C0 pattern extractor", () => {
-  {
+  for (const span of [
+    Position.makeOption({ unit: "utf16-code-unit", end: 5, start: 0 }),
+    O.none<Position>(),
+    Position.makeOption({ unit: "unicode-code-point", end: 5, start: 0 }),
+  ]) {
     const nlp = Layer.succeed(
       NLPService,
       NLPService.of({
@@ -490,7 +495,7 @@ describe("C0 pattern extractor", () => {
           Effect.succeed([
             EntityNode.make({
               entityType: "PERSON",
-              span: { end: 5, start: 0 },
+              span,
               text: "Absent",
               timestamp: 0,
             }),

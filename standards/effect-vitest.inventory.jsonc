@@ -85,7 +85,7 @@
       "line": 259,
       "endLine": 259,
       "symbol": "provideScopedLayer",
-      "occurrence": "v2:052afaca7651d5356a1e2560656b0d45edd066b6f90a377e337ff6f9bc0fa5ba",
+      "occurrence": "v2:f2d328758c0a4e47b184fea60dde5afa584a24920a839d6e5d57eb88a41c6f38",
       "class": "unresolved-layer-provide",
       "evidence": "provideScopedLayer(runtime)",
       "replacement": {
@@ -99,13 +99,13 @@
       "reason": "The scoped runtime is built from this test's freshly acquired disk roots and local provider and gold stubs; it must cover the live/replay sequence and close before root cleanup. Owner: @beep/semantica. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:apps/labs/semantica/test/Extractor.test.ts:378:provideScopedLayer@4#1",
+      "id": "EV002:apps/labs/semantica/test/Extractor.test.ts:473:provideScopedLayer@4#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/semantica",
       "file": "apps/labs/semantica/test/Extractor.test.ts",
-      "line": 378,
-      "endLine": 378,
+      "line": 473,
+      "endLine": 473,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:d67d506e3de19e52f6d49ae3825adb993ad33a5a9701c875506b07667fea9596",
       "class": "unresolved-layer-provide",
@@ -1573,13 +1573,13 @@
       "reason": "Each malformed configuration is acquired inside Effect.exit so its typed failure and the absence of defects can be asserted; suite-hook acquisition would fail first. Owner: @beep/execution-authority-config. Exit: retire when EV002 recognises a provision inside Effect.exit whose acquisition failure the test asserts (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1227:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:1232:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 1227,
-      "endLine": 1227,
+      "line": 1232,
+      "endLine": 1232,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:9651c7b57d8e4cfbf0dde5d0ff0257dd9a3f56b488af9ec28f81f152d1b14c28",
       "class": "unresolved-layer-provide",
@@ -1595,13 +1595,13 @@
       "reason": "Owner: @beep/law-practice-server. The body runs two bundle builds into bundleOut, reads practice.duckdb through the same-file withDuckDb wrapper, and only then provides the MCP host over both stores in bundleOut; each earlier step closes its connection before the host reopens the files (PGlite and DuckDB lock them). it.layer would build the host before the bundle exists. Exit: retire when the builds move into a nested it.layer(Layer.unwrap(...)) without losing the base-run assertions, or when EV002 also counts same-file wrapper provisions as earlier lifecycles (#1855 wave 4 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2032:provideScopedLayer@16#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2037:provideScopedLayer@16#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 2032,
-      "endLine": 2032,
+      "line": 2037,
+      "endLine": 2037,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:e246edbc3d044db8f8107010a23467e0fa1f9f09a387be7d954e692a678909b6",
       "class": "unresolved-layer-provide",
@@ -1617,13 +1617,13 @@
       "reason": "Owner: @beep/law-practice-server. The body runs two bundle builds into bundleOut, reads practice.duckdb through the same-file withDuckDb wrapper, and only then provides the MCP host over both stores in bundleOut; each earlier step closes its connection before the host reopens the files (PGlite and DuckDB lock them). it.layer would build the host before the bundle exists. Exit: retire when the builds move into a nested it.layer(Layer.unwrap(...)) without losing the base-run assertions, or when EV002 also counts same-file wrapper provisions as earlier lifecycles (#1855 wave 4 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2607:provideScopedLayer@28#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2612:provideScopedLayer@28#1",
       "lens": "detector",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 2607,
-      "endLine": 2607,
+      "line": 2612,
+      "endLine": 2612,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:4f8fedf4796dc2cab3e9bcadd1d5905235544ba020d962468eb6e4efc2f1e689",
       "class": "per-test-layer-provide",
@@ -1639,13 +1639,13 @@
       "reason": "A separate empty-input bundle is built within the case; its body-derived PGlite directory and fixture model open for the zero-claims failure and close independently of the populated bundle. Owner: @beep/law-practice-server. Exit: retire when EV002 recognises a provision whose layer reads values the test body creates, which no it.layer can build before the body runs (#1855 wave 8 register)."
     },
     {
-      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2732:provideScopedLayer@12#1",
+      "id": "EV002:packages/law-practice/server/test/PracticeKg.projections.test.ts:2737:provideScopedLayer@12#1",
       "lens": "resource",
       "ruleId": "EV002",
       "package": "@beep/law-practice-server",
       "file": "packages/law-practice/server/test/PracticeKg.projections.test.ts",
-      "line": 2732,
-      "endLine": 2732,
+      "line": 2737,
+      "endLine": 2737,
       "symbol": "provideScopedLayer",
       "occurrence": "v2:841798a4fc3b5088d955a7afd686ca3de17bb80ce4cb20aeff486bad9233a6b2",
       "class": "unresolved-layer-provide",
@@ -5288,16 +5288,16 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only one typed-unavailable borrowed-provider family helper before finalizer assertions; outer tokenizer ownership remains alive. Removing or hoisting the scope invalidates the acquisition/finalizer subject. No source-code fix or semantic waiver required. Owner: claim-check-performance provider-lifetime implementation owner. Source binding: fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4. Expiry: Re-review on any change to test SHA256 fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4 or to the deliberate family-versus-outer provider lifetime invariant. Independent review: provider-lifetime-implementation-independent-review-001/delivery-ratchet-addendum.md. Exit: retire at the re-review named in Expiry once the family-versus-outer provider lifetime is no longer this test's subject, or when EV004 gains a reviewed deliberate-shorter-lifetime class that recognises it."
+      "reason": "Reviewed intentional shorter lifetime: this Effect.scoped closes only one successful borrowed-provider family helper before finalizer assertions; outer tokenizer ownership remains alive. Removing or hoisting the scope invalidates the acquisition/finalizer subject. No source-code fix or semantic waiver required. Owner: claim-check-performance provider-lifetime implementation owner. Source binding: fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4. Expiry: Re-review on any change to test SHA256 fb03f12659e739089e5587621ca1d88583031773c416d95e5fd1080b6a0527c4 or to the deliberate family-versus-outer provider lifetime invariant. Independent review: provider-lifetime-implementation-independent-review-001/delivery-ratchet-addendum.md. Exit: retire at the re-review named in Expiry once the family-versus-outer provider lifetime is no longer this test's subject, or when EV004 gains a reviewed deliberate-shorter-lifetime class that recognises it."
     },
     {
-      "id": "EV004:packages/ontology/client/test/Session.atoms.test.ts:207:scoped@10#1",
+      "id": "EV004:packages/ontology/client/test/Session.atoms.test.ts:202:scoped@10#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/ontology-client",
       "file": "packages/ontology/client/test/Session.atoms.test.ts",
-      "line": 207,
-      "endLine": 276,
+      "line": 202,
+      "endLine": 271,
       "symbol": "scoped",
       "occurrence": "v2:2121322db90367dc05f36cfa6faeb6ae8f234a28bc5858303bcdcd29dd4734c2",
       "class": "shorter-scope-lifetime-review",
@@ -5313,13 +5313,13 @@
       "reason": "The inner scope closes the registry and mounts before acquireUseRelease restores the Worker global; forced defect and interruption controls prove termination before restoration. Owner: @beep/ontology-client. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/ontology/client/test/Session.atoms.test.ts:297:scoped@10#1",
+      "id": "EV004:packages/ontology/client/test/Session.atoms.test.ts:292:scoped@10#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/ontology-client",
       "file": "packages/ontology/client/test/Session.atoms.test.ts",
-      "line": 297,
-      "endLine": 312,
+      "line": 292,
+      "endLine": 307,
       "symbol": "scoped",
       "occurrence": "v2:757f1e8a8d632c5517b1bb8a75710850674f03006eec03a28745a2791a3a21b6",
       "class": "shorter-scope-lifetime-review",
@@ -5335,13 +5335,13 @@
       "reason": "The inner scope closes the registry and mounts before acquireUseRelease restores the Worker global; forced defect and interruption controls prove termination before restoration. Owner: @beep/ontology-client. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
-      "id": "EV004:packages/ontology/client/test/Session.atoms.test.ts:331:scoped@10#1",
+      "id": "EV004:packages/ontology/client/test/Session.atoms.test.ts:326:scoped@10#1",
       "lens": "resource",
       "ruleId": "EV004",
       "package": "@beep/ontology-client",
       "file": "packages/ontology/client/test/Session.atoms.test.ts",
-      "line": 331,
-      "endLine": 346,
+      "line": 326,
+      "endLine": 341,
       "symbol": "scoped",
       "occurrence": "v2:2d2441372d7d1d840d913e960a4219a520b85cbb2308c507057ef5b8bf2cdec6",
       "class": "shorter-scope-lifetime-review",
@@ -5727,7 +5727,7 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open",
+      "status": "exception",
       "reason": "The inner scope releases child processes that hold cwd, open-file or flock references before the outer temporary-directory fixture removes its root (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
@@ -5749,7 +5749,7 @@
       "severity": "major",
       "confidence": 0.55,
       "mechanization": "judgment",
-      "status": "open",
+      "status": "exception",
       "reason": "The inner scope releases child processes that hold cwd, open-file or flock references before the outer temporary-directory fixture removes its root (goals/effect-vitest-canon/research/cli-next-five-scope-proof.md). Owner: @beep/repo-cli. Exit: retire when EV004 recognises assertions that run after a shorter scope closes (#1855 wave 8 register)."
     },
     {
@@ -6281,13 +6281,13 @@
       "reason": "The test owns a native React/jsdom scheduling subject (act, waitFor, deferred Mermaid promises); it.live keeps the real event-loop clock, and the keyboard case requires an emitted state with bold on and underline absent. Owner: @beep/editor. Exit: retire when the editor runtime schedules its renders through an injected Clock or Scheduler (#1855 wave 8 register)."
     },
     {
-      "id": "EV009:packages/ontology/client/test/Session.atoms.test.ts:154:it.live@2#1",
+      "id": "EV009:packages/ontology/client/test/Session.atoms.test.ts:149:it.live@2#1",
       "lens": "resource",
       "ruleId": "EV009",
       "package": "@beep/ontology-client",
       "file": "packages/ontology/client/test/Session.atoms.test.ts",
-      "line": 154,
-      "endLine": 281,
+      "line": 149,
+      "endLine": 276,
       "symbol": "it.live",
       "occurrence": "v2:b24f70823d8dbc27eef2e1244d2dedbc3008e49dfc4f779b41a316dad7280759",
       "class": "unjustified-live-test",
@@ -6303,13 +6303,13 @@
       "reason": "Real registry runtime scheduling and native worker, watchdog or action acknowledgements need live time; the bounded retry waits and assertions are unchanged, and only the two cases that share the Worker global are serialized. Owner: @beep/ontology-client. Exit: retire when the session atoms run their worker watchdog and retries on the test's TestClock (#1855 wave 8 register)."
     },
     {
-      "id": "EV009:packages/ontology/client/test/Session.atoms.test.ts:283:it.live@2#1",
+      "id": "EV009:packages/ontology/client/test/Session.atoms.test.ts:278:it.live@2#1",
       "lens": "resource",
       "ruleId": "EV009",
       "package": "@beep/ontology-client",
       "file": "packages/ontology/client/test/Session.atoms.test.ts",
-      "line": 283,
-      "endLine": 351,
+      "line": 278,
+      "endLine": 346,
       "symbol": "it.live",
       "occurrence": "v2:637cb21a6907a09816d2df0c7089fcfe84695009c465ddc3cc5bd5adb5fb6ff9",
       "class": "unjustified-live-test",
@@ -8107,13 +8107,13 @@
       "reason": "Native storage is the persistent PGlite close/reopen subject, in a directory owned by the outer TempDirServices layer; this makes no crash or fsync claim. Owner: @beep/epistemic-server. Exit: retire when the reopen case runs on an in-memory PGlite instance."
     },
     {
-      "id": "EV010:packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts:69:@effect/platform-node/NodeFileSystem@0#1",
+      "id": "EV010:packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts:70:@effect/platform-node/NodeFileSystem@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/epistemic-server",
       "file": "packages/epistemic/server/test/integration/ContradictionTriage.pglite.test.ts",
-      "line": 69,
-      "endLine": 69,
+      "line": 70,
+      "endLine": 70,
       "symbol": "@effect/platform-node/NodeFileSystem",
       "occurrence": "v2:1e14fe3983e1b10ec8ca10f275771b44fe07b6efae5f900877c3f472b89c0872",
       "class": "platform-filesystem-candidate",
@@ -13206,13 +13206,13 @@
       "reason": "The committed skills-provenance lock and the checkout root (import.meta.url) are inputs, and relock links .agents/skills. The #1875 wave 7 memory-filesystem trial failed with NotFound or a missing repository root. Owner: @beep/repo-cli. Exit: retire when the lock is seeded into memory and the root is injected."
     },
     {
-      "id": "EV010:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:36:@effect/platform-node@0#1",
+      "id": "EV010:packages/tooling/tool/cli/test/sync-data-to-ts.test.ts:39:@effect/platform-node@0#1",
       "lens": "resource",
       "ruleId": "EV010",
       "package": "@beep/repo-cli",
       "file": "packages/tooling/tool/cli/test/sync-data-to-ts.test.ts",
-      "line": 36,
-      "endLine": 36,
+      "line": 39,
+      "endLine": 39,
       "symbol": "@effect/platform-node",
       "occurrence": "v2:c122ba715aab10408dee94ef6f4286a69aceb8cd2a04f5d1a8aa6d00e3207487",
       "class": "platform-resource-provenance-review",
@@ -14522,7 +14522,7 @@
       "confidence": 0.55,
       "mechanization": "judgment",
       "status": "exception",
-      "reason": "The paged-listing case forks one runner call whose second listing page fails once, then advances its own TestClock past the runner's one-second retry backoff; nothing else in the case shares the clock or forks work, so the adjustment owns the only waiting fiber. Owner: @beep/repo-cli. Exit: retire when the route runner takes its retry schedule from an injectable service the test can make immediate."
+      "reason": "The REST-runner case forks one runner call whose first artifact listing fails, then advances its own TestClock past the runner's one-second retry backoff; nothing else in the case shares the clock or forks work, so the adjustment owns the only waiting fiber. Owner: @beep/repo-cli. Exit: retire when the route runner takes its retry schedule from an injectable service the test can make immediate."
     },
     {
       "id": "EV015:packages/tooling/tool/cli/test/ci-task-outcomes.test.ts:552:TestClock.adjust@13#1",

@@ -11,12 +11,25 @@ import { it } from "@beep/test-runner";
 import * as WinkEngine from "@beep/wink";
 import { WinkBackendLive } from "@beep/wink";
 import { describe, expect } from "@effect/vitest";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 
 const TestLayer = Layer.provide(WinkBackendLive, WinkEngine.WinkEngineLive);
 
 describe("WinkBackend", () => {
+  it.layer(TestLayer, { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "leaves repeated entity surfaces unresolved",
+      Effect.fnUntraced(function* () {
+        const backend = yield* Backend.NLPBackend;
+        const entities = yield* backend.extractEntities("Meet Monday and Monday.");
+        expect(entities.length).toBeGreaterThan(0);
+        for (const entity of entities) assertNone(entity.span);
+      })
+    );
+  });
   it.layer(TestLayer, { timeout: "30 seconds" })("tokenizes text into words", (it) => {
     it.effect(
       "tokenizes text into words",
@@ -77,7 +90,10 @@ describe("WinkBackend", () => {
         // wink detects temporal entities; each carries a type + span
         for (const entity of entities) {
           expect(typeof entity.entityType).toBe("string");
-          expect(entity.span.end).toBeGreaterThanOrEqual(entity.span.start);
+          assertSome(
+            O.map(entity.span, (span) => span.start < span.end),
+            true
+          );
         }
       })
     );

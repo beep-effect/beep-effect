@@ -419,3 +419,17 @@ home paths with `~`, drop session and machine ids.
 - Work: run JSDoc lint for the two touched lab workspaces.
 - Evidence: the package wrapper and an explicit invocation using `.oxlintrc.docs.json` report "No files found to lint" because that config excludes `apps/labs/**`; neither lab declares a docgen script.
 - Prevention: report that exclusion as an empty selection. For this change the touched lab sources are additionally checked with a temporary copy of the same documentation policy whose lab exclusion is removed; no repository policy is changed.
+
+## 2026-11-22 — P3 Graph position retirement
+
+- **Doing:** migrating Graph spans and running package verification.
+  **Evidence:** nlp-processing docgen caught three nested float-span examples
+  outside the design's file list. Wink's resolver match also needed an explicit
+  Option<Position> result to prevent a generic none from widening inference.
+  **Would have prevented it:** a span-constructor search that includes JSDoc,
+  plus an explicit result type at the resolver boundary.
+- **Doing:** proving the semantica pattern lane after unique-only resolution.
+  **Evidence:** C0Slice live and replay digests still agreed, but its fixed digest
+  changed when repeated entity surfaces lost their fabricated first-match spans.
+  **Would have prevented it:** naming that expected pattern-report change beside
+  the design's repeated-surface warning. Hosted frozen batches remain unchanged.

@@ -71,7 +71,8 @@
     "effect": "catalog:",
     "wink-eng-lite-web-model": "catalog:",
     "wink-nlp": "catalog:",
-    "wink-nlp-utils": "catalog:"
+    "wink-nlp-utils": "catalog:",
+    "@beep/text": "workspace:^"
   },
   "devDependencies": {
     "@beep/test-runner": "workspace:^",

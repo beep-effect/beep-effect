@@ -78,7 +78,6 @@
     "@beep/annotation": "workspace:^",
     "@beep/identity": "workspace:^",
     "@beep/jsonc": "workspace:^",
-    "@beep/nlp": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/text": "workspace:^",
     "@beep/utils": "workspace:^",
