@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Implement. PR 1 (advisory growth check, lock, oxlint rule) is built; the package decisions home runs in parallel.
+P4 Close. #3467 (scanner, lock, oxlint rule, advisory) and #3468 (package decisions home) landed; the final PR adds the strip and /delete-comment, template and law-text changes, the AGENTS line and turns the law blocking.
 
 ## Latest Evidence
 
