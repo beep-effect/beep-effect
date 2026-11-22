@@ -14,6 +14,7 @@ import * as Str from "effect/String";
 
 import * as O from "@beep/utils/Option";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 import { YamlAlias, YamlMap, YamlPair, YamlScalar, YamlSeq } from "../../YamlNode.ts";
 import { parseCSTAll } from "../cst-parser.ts";
@@ -48,6 +49,7 @@ import type { YamlNode } from "../../YamlNode.ts";
 import type { CstNode, CstNodeType } from "../cst.ts";
 import type { ParseOptionsInput } from "../options.ts";
 import type { RawDirective } from "../raw-document.ts";
+import type { EscapedComment } from "./comments.ts";
 import type { ComposerState, FlowComposers } from "./state.ts";
 
 /** The flow-composer dispatch wired into every state this module creates. */
@@ -345,6 +347,7 @@ const makeDocumentWalk = (
   documentComment: string | undefined;
   afterMarkerComment: string | undefined;
   documentCommentAfter: string | undefined;
+  firstCommentAfterOffset: number;
   lastLeadingCommentOffset: number;
   lastAfterMarkerCommentOffset: number;
 } => {
@@ -366,6 +369,7 @@ const makeDocumentWalk = (
     documentComment: undefined,
     afterMarkerComment: undefined,
     documentCommentAfter: undefined,
+    firstCommentAfterOffset: -1,
     lastLeadingCommentOffset: -1,
     lastAfterMarkerCommentOffset: -1,
   };
@@ -496,6 +500,7 @@ const composeCommentChild = (walk: DocumentWalk, child: CstNode): void => {
   const text = rawCommentText(child.source);
   const source = walk.state.text;
   if (walk.contents !== null || walk.sawDocEndMarker) {
+    if (walk.documentCommentAfter === undefined) walk.firstCommentAfterOffset = child.offset;
     walk.documentCommentAfter = appendCommentLine(walk.documentCommentAfter, text, source, child.offset);
   } else if (walk.sawDocStartMarker) {
     walk.afterMarkerComment = appendCommentLine(walk.afterMarkerComment, text, source, child.offset);
@@ -748,6 +753,30 @@ const escapeRootTerminalComment = (walk: DocumentWalk): void => {
   walk.contents = stripOwnComment(contents);
 };
 
+/** Source order for disowned comments. */
+const byEscapedOffset = Order.mapInput(Order.Number, (ec: EscapedComment) => ec.offset);
+
+/**
+ * Comments that escaped the root collection (a column shallower than an
+ * indented root's content, e.g. `# esc` in `  - a\n# esc\n`) belong to the
+ * root's enclosing scope, the document. They sit inside the root's span, so
+ * they come before any comment child walked after the content: they open the
+ * document's trailing `comment`, blank lines kept. Draining the queue also
+ * keeps them from leaking into a following document.
+ */
+const takeEscapedComments = (walk: DocumentWalk): void => {
+  const { state } = walk;
+  const escaped = A.sort(state.escapedComments, byEscapedOffset);
+  state.escapedComments.length = 0;
+  if (!A.isReadonlyArrayNonEmpty(escaped)) return;
+  const block = A.reduce(A.tailNonEmpty(escaped), A.headNonEmpty(escaped).text, (acc, ec) =>
+    appendCommentLine(acc, ec.text, state.text, ec.offset)
+  );
+  const after = walk.documentCommentAfter;
+  walk.documentCommentAfter =
+    after === undefined ? block : appendCommentLine(block, after, state.text, walk.firstCommentAfterOffset);
+};
+
 /**
  * Where the pre-marker header block lands. With a `---` marker (or no
  * content) it is the DOCUMENT's `commentBefore`; with no marker at all it is
@@ -793,10 +822,7 @@ const finishDocument = (walk: DocumentWalk): RawYamlDocument => {
   const docStartTab = hasDocStartTab(children, state.text);
   walk.documentComment = withBlankLineBelow(walk, walk.documentComment, walk.lastLeadingCommentOffset);
   walk.afterMarkerComment = withBlankLineBelow(walk, walk.afterMarkerComment, walk.lastAfterMarkerCommentOffset);
-  // Escaped comments that reached document scope have no carrier on the
-  // document model — drop them and clear the queue so nothing leaks into a
-  // following document.
-  state.escapedComments.length = 0;
+  takeEscapedComments(walk);
   escapeRootTerminalComment(walk);
   const { header, contents } = placeAfterMarkerComment(walk, placeLeadingHeader(walk));
   validateTagHandlesInDocument(walk.cst, state, "properties");
