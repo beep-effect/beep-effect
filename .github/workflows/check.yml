@@ -263,8 +263,10 @@ jobs:
         run: |
           set -euo pipefail
           # Checkout removed its credentials, and an anonymous fetch can be
-          # throttled (403). The token reaches git through the environment of
-          # this one command: never argv, never .git/config. Three attempts.
+          # throttled (403). GH_TOKEN is step-scoped: every command in this step
+          # sees it, and this step runs only git, jq and grep; never add repo code
+          # here. git receives the token through GIT_CONFIG_* entries on each
+          # fetch, never argv or .git/config. Three attempts, 5 s then 15 s.
           authenticated_fetch() {
             local attempt
             for attempt in 1 2 3; do
@@ -1940,8 +1942,10 @@ jobs:
         run: |
           set -euo pipefail
           # Checkout removed its credentials, and an anonymous fetch can be
-          # throttled (403). The token reaches git through the environment of
-          # this one command: never argv, never .git/config. Three attempts.
+          # throttled (403). GH_TOKEN is step-scoped: every command in this step
+          # sees it, and this step runs only git, jq and grep; never add repo code
+          # here. git receives the token through GIT_CONFIG_* entries on each
+          # fetch, never argv or .git/config. Three attempts, 5 s then 15 s.
           authenticated_fetch() {
             local attempt
             for attempt in 1 2 3; do
