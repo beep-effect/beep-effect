@@ -4,13 +4,13 @@
     "id": "comment-law-gate",
     "packetId": "goal-packet/v1:c1cd29a941205213179e1419ff00eccf8166456f2b92705b09b905636ce6eb04",
     "title": "Comment Law Gate",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-22",
     "updated": "2026-11-22",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/comment-law-gate",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Stop comment inflow: one scanner, a merge-base growth check, a clean-scope lock, an oxlint rule, the /delete-comment skill and a package decisions home.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3483,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -84,5 +90,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3483
+  }
 }
