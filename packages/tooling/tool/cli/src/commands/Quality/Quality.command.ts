@@ -29,6 +29,7 @@ import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Equal from "effect/Equal";
+import * as Base64 from "effect/encoding/Base64";
 import * as FileSystem from "effect/FileSystem";
 import { constant, dual, flow, pipe } from "effect/Function";
 import * as HM from "effect/HashMap";
@@ -40,6 +41,7 @@ import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
+import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { XMLParser } from "fast-xml-parser";
 import { checkScriptTestTypecheckCoverage } from "../../internal/quality/TestTypecheckCoverage.ts";
@@ -1023,6 +1025,24 @@ const currentBranch = Effect.fn("QualityScriptCommands.currentBranch")(function*
   );
 });
 
+// Three attempts: 5 s, then 15 s, before the third (the #3472 workflow steps' backoff).
+const ciFetchRetrySchedule = Schedule.max([Schedule.exponential("5 seconds", 3), Schedule.recurs(2)]);
+
+// git reads the token from GIT_CONFIG_* entries, never argv or .git/config, the
+// same channel the #3472 workflow fallback steps use. No token: an anonymous fetch.
+const githubFetchAuthEnv = Effect.gen(function* () {
+  const ghToken = yield* configStringOption("GH_TOKEN");
+  const githubToken = yield* configStringOption("GITHUB_TOKEN");
+  return O.map(
+    O.orElse(O.filter(ghToken, Str.isNonEmpty), () => O.filter(githubToken, Str.isNonEmpty)),
+    (token): Record<string, string> => ({
+      GIT_CONFIG_COUNT: "1",
+      GIT_CONFIG_KEY_0: "http.https://github.com/.extraheader",
+      GIT_CONFIG_VALUE_0: `AUTHORIZATION: basic ${Base64.encode(`x-access-token:${token}`)}`,
+    })
+  );
+});
+
 const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(function* (
   repoRoot: string
 ): Effect.fn.Return<
@@ -1055,7 +1075,11 @@ const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(fun
       `[github-checks] origin/main is ${Str.takeLeft(current, 12)}, not the parent run's pinned base ${Str.takeLeft(pinned.value, 12)}; refreshing`
     );
   }
-  yield* Console.log("[github-checks] refreshing origin/main");
+  const githubActions = yield* configStringOption("GITHUB_ACTIONS");
+  const inGithubActions = O.contains(githubActions, "true");
+  if (!inGithubActions) {
+    yield* Console.log("[github-checks] refreshing origin/main");
+  }
   const shallow = yield* collectSuccessfulOutput(
     // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
     // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
@@ -1067,25 +1091,74 @@ const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(fun
     })
   );
 
-  if (shallow === "true") {
+  if (!inGithubActions) {
+    if (shallow === "true") {
+      // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
+      yield* runFixedStep(repoRoot, "git:fetch:unshallow", "git", ["fetch", "origin", "--quiet", "--unshallow"]);
+    }
+
     // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
     // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
-    yield* runFixedStep(repoRoot, "git:fetch:unshallow", "git", ["fetch", "origin", "--quiet", "--unshallow"]);
+    yield* runFixedStep(repoRoot, "git:fetch:origin-main", "git", [
+      "fetch",
+      "origin",
+      "main:refs/remotes/origin/main",
+      "--quiet",
+    ]);
+    return;
   }
 
-  // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
-  // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
-  yield* runFixedStep(repoRoot, "git:fetch:origin-main", "git", [
-    "fetch",
-    "origin",
-    "main:refs/remotes/origin/main",
-    "--quiet",
-  ]);
+  // actions/checkout removes its credentials in a post step, so a fetch here
+  // is anonymous and GitHub can throttle it (403, exit 128). A full-history
+  // checkout already fetched every branch with the token: use its origin/main.
+  if (shallow !== "true") {
+    const checkedOut = yield* collectOutput(
+      // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
+      QualityTaskStep.make({
+        label: "git:origin-main",
+        command: "git",
+        args: ["rev-parse", "--verify", "--quiet", "refs/remotes/origin/main"],
+        cwd: repoRoot,
+      })
+    );
+    if (checkedOut.exitCode === 0 && Str.isNonEmpty(checkedOut.output)) {
+      yield* Console.log(
+        `[github-checks] origin/main from checkout (${Str.takeLeft(checkedOut.output, 12)}); not refreshing in CI`
+      );
+      return;
+    }
+  }
+
+  yield* Console.log("[github-checks] refreshing origin/main");
+  // `QualityTaskStep.env` is an optional key: omit it, never pass `undefined`.
+  const auth = yield* githubFetchAuthEnv;
+  const authEnv = O.match(auth, { onNone: () => ({}), onSome: (env) => ({ env }) });
+  const ciFetch = (label: string, args: ReadonlyArray<string>) =>
+    runStep(
+      // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
+      QualityTaskStep.make({ label, command: "git", args, cwd: repoRoot, ...authEnv })
+    ).pipe(Effect.retry({ schedule: ciFetchRetrySchedule }));
+  if (shallow === "true") {
+    yield* ciFetch("git:fetch:unshallow", ["fetch", "origin", "--quiet", "--unshallow"]);
+  }
+  yield* ciFetch("git:fetch:origin-main", ["fetch", "origin", "main:refs/remotes/origin/main", "--quiet"]);
 });
 
 /**
  * Refresh `origin/main` for a GitHub-check battery unless the parent Yeet run
  * pinned it and the pin still matches.
+ *
+ * **Details**
+ *
+ * Under GitHub Actions (`GITHUB_ACTIONS=true`) a full-history checkout's
+ * `origin/main` is used as is, because the step's own fetch would be anonymous
+ * after checkout drops its credentials. A shallow CI clone, or one without the
+ * ref, fetches with `GH_TOKEN` (or `GITHUB_TOKEN`) passed through `GIT_CONFIG_*`
+ * environment entries, never argv, and retries three attempts, 5 s then 15 s
+ * apart. Local runs keep the plain unshallow-and-fetch refresh.
  *
  * **Example** (Reference the refresh for a test)
  *
