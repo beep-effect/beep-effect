@@ -211,12 +211,6 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: env.ADMISSION_LABEL_EVENT == 'true'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       - name: Fetch beep CI binary
         if: env.ADMISSION_LABEL_EVENT == 'true'
         uses: ./.github/actions/fetch-beep-ci
