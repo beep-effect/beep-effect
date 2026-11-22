@@ -16,6 +16,7 @@ import { GitCommand } from "@beep/git/GitCommand";
 import { ActionOutputs } from "@beep/github-actions/ActionOutputs";
 import { $RepoCliId } from "@beep/identity/packages";
 import {
+  configStringOption,
   isCiSync,
   readTurboCacheEnvironment,
   resolveTurboCacheStep,
@@ -756,6 +757,7 @@ export const CI_LANE_DESCRIPTORS: ReadonlyArray<CiLaneDescriptor> = [
  */
 export class CiLaneRunOptions extends S.Opaque<CiLaneRunOptions, { readonly brand: unique symbol }>()(
   S.Struct({
+    push: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
     affected: S.Boolean,
     base: S.String,
     head: S.String,
@@ -2092,6 +2094,15 @@ export const ciLaneStepsForTesting: {
           // Required on every head: Heavy / Lint Policy also runs the law on
           // code PRs, but it is not a required context.
           homePaths,
+          bunRunStep(repoRoot, "lint:comment-law", [
+            "beep",
+            "laws",
+            "comments",
+            "--check",
+            "--base",
+            options.base,
+            ...(options.push ? ["--push"] : []),
+          ]),
           // A new reader of a scanned repository file (generated standards file or
           // root tooling input) in another package does not select the row's
           // owners, so the owner rows are checked here, on the pull request that
@@ -3308,7 +3319,10 @@ export const ciLaneCommand = Command.make(
     const base = yield* resolveCiLaneBase(baseFlag, eventBase).pipe(
       Effect.catchTag("CiCommandError", reportCiCommandError)
     );
+    const eventName = yield* configStringOption("GITHUB_EVENT_NAME");
+    const push = O.contains(eventName, "push");
     const options = CiLaneRunOptions.make({
+      push,
       affected,
       base,
       head,

@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/ai-provider-cli",
+  "root": "packages/drivers/ai-provider-cli",
+  "scopes": ["."]
+}

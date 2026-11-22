@@ -10,6 +10,21 @@
  * @category models
  * @since 0.0.0
  */
+
+/**
+ * Comment law schemas: policy, pending shards, findings and summaries.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./CommentLaw.model.ts";
+/**
+ * Comment law: merge-base growth check, pending-scope lock and census.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CommentLaw.ts";
 export * from "./EntityKitFreeze.model.ts";
 /**
  * Entity kit freeze law: pure scanner, baseline comparison, and repository runner.

@@ -206,9 +206,11 @@ describe("lint policy plan stages", () => {
     expect(state.args).toContain("--concurrency=1");
     expect(state.args).not.toContain("--affected");
     expect(state.env?.TURBO_SCM_BASE).toBeUndefined();
+    expect(state.env?.BEEP_PROOF_BASE).toBe("origin/main");
     expect(turboTaskNames(state)).toEqual([
       "knowledge:semantic-delta",
       "knowledge:refs-check",
+      "lint:comment-law",
       "goals:doctor",
       "lint:oxlint",
       "lint:typos",

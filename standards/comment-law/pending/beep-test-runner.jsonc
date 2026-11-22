@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/test-runner",
+  "root": "packages/tooling/test-kit/test-runner",
+  "scopes": ["."]
+}

@@ -31,6 +31,13 @@ pre-commit:
     no-tracked-python:
       glob: "*.{py,pyi,pyw,ipynb}"
       run: printf '%s  port it to TypeScript or run it outside the repository; tracked Python is banned\n' {staged_files} >&2; exit 1
+    # The comment law (`bun run beep laws comments --staged`) diffs the index against HEAD. It is
+    # advisory (standards/comment-law/policy.jsonc), so it reports introduced comments and never
+    # blocks the commit: `|| true` keeps a scanner failure advisory too.
+    comment-law:
+      glob: "*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"
+      exclude: ".beep/**|goals/**|explorations/**|research/**|docs/**|standards/**|outputs/**|scratchpad/**"
+      run: bun run beep laws comments --staged || true
     instructions-drift:
       glob: "{CLAUDE.md,AGENTS.md}"
       run: bun run instructions:drift
