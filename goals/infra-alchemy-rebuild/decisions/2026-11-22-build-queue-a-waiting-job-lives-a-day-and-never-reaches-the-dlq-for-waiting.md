@@ -23,7 +23,9 @@ capacity lives at least 24 hours and does not reach the DLQ for waiting alone.
 
 - **No redrive policy.** The DLQ stays for the dead letters scale-up sends itself, which the SSM fix (#3454, merged before
   this) adds with the DLQ URL and the send grant. Nothing else reaches it, so a nonzero build-DLQ depth still means a
-  deliberate dead letter. SQS allows at most 1,000 receives, which would need a visibility timeout of at least 87
+  deliberate dead letter. A message whose DLQ send fails is acknowledged with an error line, not returned: with no
+  redrive it would relaunch an instance once a minute for the retention. An ERROR line in a scale-up log is a STOP in
+  every proof and post-check. SQS allows at most 1,000 receives, which would need a visibility timeout of at least 87
   seconds to cover 24 hours; a redrive that the retention always beats protects nothing.
 - **One-day retention**, as on the live fleet. The source set none, so the queues had SQS's default four days. It also bounds how long a cancelled
   job's message is retried.

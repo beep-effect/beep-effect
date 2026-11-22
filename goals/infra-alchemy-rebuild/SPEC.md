@@ -736,7 +736,7 @@ Rollback, in reverse order and drained at each step (amended 2026-11-18, #3386 r
 3. Drain: wait at least the scale-up timeout (60 s) after both mappings report `Disabled`, so that no invocation, warm or not, is still running. Then wait until one `describe-instances` on `ghr:environment` `beep-fleet-prod-heavy` / `beep-fleet-prod-overflow` returns no `pending` instance, so every launch has settled. Rollback of this step: none needed (it only reads).
 4. Check the caps: the same single read returns at most 1 heavy and 2 overflow `running` instances. If there are more, keep scale-up paused and wait for their jobs to finish (the reaper's 90-minute TTL bounds every runner), then read again. Rollback of this step: none needed (it only reads).
 5. Only then revert the workflow PR, which sends jobs back to the live fleet (burst cap still 6). Rollback of this step: revert the revert.
-6. Re-enable scale-up, now that the overlap configuration is live (step 1) and step 4 has passed: `aws lambda update-event-source-mapping --uuid <uuid> --enabled` for each of the two UUIDs from step 2. Check: `get-event-source-mapping` reports `Enabled` for both, and the build queues drain. Safety check: `aws sqs get-queue-attributes --queue-url <beep-fleet-prod-{heavy,overflow}-build-dlq URL> --attribute-names ApproximateNumberOfMessages` shows 0 on each build DLQ. If it is not 0, stop (amended 2026-11-22): waiting no longer sends a message there, so it is a dead letter scale-up sent after a failed runner configuration, and its log line names the cause. Redrive it into its build queue (`aws sqs start-message-move-task --source-arn <dlq arn> --destination-arn <build queue arn>`) only once that cause is fixed and scale-up is enabled. Rollback of this step: step 2's command.
+6. Re-enable scale-up, now that the overlap configuration is live (step 1) and step 4 has passed: `aws lambda update-event-source-mapping --uuid <uuid> --enabled` for each of the two UUIDs from step 2. Check: `get-event-source-mapping` reports `Enabled` for both, and the build queues drain. Safety check: `aws sqs get-queue-attributes --queue-url <beep-fleet-prod-{heavy,overflow}-build-dlq URL> --attribute-names ApproximateNumberOfMessages` shows 0 on each build DLQ. If it is not 0, stop (amended 2026-11-22): waiting no longer sends a message there, so it is a dead letter scale-up sent after a failed runner configuration, and its log line names the cause. Move it back only once that cause is fixed and scale-up is enabled. `start-message-move-task` cannot do it: the build DLQ is no queue's redrive target any more. Move a batch at a time by hand: `aws sqs receive-message` from the DLQ, `aws sqs send-message` of the same body, unchanged, to the build queue, then `aws sqs delete-message` from the DLQ for each message only after its send succeeded. The moved message's receive count starts again at 0. The build DLQ must then read 0. Rollback of this step: step 2's command.
 
 Both fleets keep running throughout.
 
@@ -2485,7 +2485,9 @@ capacity lives at least 24 hours and does not reach the DLQ for waiting alone.
 
 - **No redrive policy.** The DLQ stays for the dead letters scale-up sends itself, which the SSM fix (#3454, merged before
   this) adds with the DLQ URL and the send grant. Nothing else reaches it, so a nonzero build-DLQ depth still means a
-  deliberate dead letter. SQS allows at most 1,000 receives, which would need a visibility timeout of at least 87
+  deliberate dead letter. A message whose DLQ send fails is acknowledged with an error line, not returned: with no
+  redrive it would relaunch an instance once a minute for the retention. An ERROR line in a scale-up log is a STOP in
+  every proof and post-check. SQS allows at most 1,000 receives, which would need a visibility timeout of at least 87
   seconds to cover 24 hours; a redrive that the retention always beats protects nothing.
 - **One-day retention**, as on the live fleet. The source set none, so the queues had SQS's default four days. It also bounds how long a cancelled
   job's message is retried.
@@ -2547,8 +2549,8 @@ turned it off again before the merge:
   seven pickup probes sat queued for over 25 minutes (`goals/ci-fleet-endgame/research/OPPORTUNITIES.md`).
 - The not-queued branch acknowledges the message with no launch, no retry and no dead letter. It is fail-open only on a
   GitHub error.
-- The relaunch is closed without it: a failed configuration goes back to the build queue only when the DLQ send itself
-  fails. A cancelled job whose message SQS redelivers for another reason (over the cap, a launch shortfall) costs one
+- The relaunch is closed without it: a failed configuration never goes back to the build queue (amended 2026-11-22: a
+  failed DLQ send used to). A cancelled job whose message SQS redelivers for another reason (over the cap, a launch shortfall) costs one
   VM, as on the live fleet.
 
 A test decodes both deployed runtime configurations and pins the check off for both pools.
@@ -2577,12 +2579,16 @@ such a failure to scale-up, unchecked. In every proof and post-check, each drop 
   like a deterministic one.
 
 **Dead-letter semantics.** When a message is dead-lettered, its instance is terminated once, its JIT runner and token are
-deleted, and the message is sent to the pool's own build DLQ and acknowledged. Only a failed DLQ send returns it as a batch item failure.
+deleted, and the message is sent to the pool's own build DLQ and acknowledged. A failed DLQ send is logged as an error and
+the message dropped (amended 2026-11-22, #3457): returning it would relaunch an instance once a minute for the build
+queue's one-day retention, since that queue has no redrive, and the job is lost either way.
 
 - **Nothing redrives a dead-lettered message.** No consumer and no automatic redrive exist, so that job stays queued
   until GitHub times it out.
 - **A nonzero build-DLQ depth is therefore a STOP** in every proof and every post-check of this stack, next to the
   other build and job-retry queue counts.
+- **An ERROR line in a scale-up log is a STOP** in every proof and post-check too: a dropped message after a failed DLQ
+  send leaves no queue depth, only that line.
 
 Lane fix/ci-runners-scaleup-jit-token-tier
 

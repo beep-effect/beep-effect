@@ -30,8 +30,8 @@ turned it off again before the merge:
   seven pickup probes sat queued for over 25 minutes (`goals/ci-fleet-endgame/research/OPPORTUNITIES.md`).
 - The not-queued branch acknowledges the message with no launch, no retry and no dead letter. It is fail-open only on a
   GitHub error.
-- The relaunch is closed without it: a failed configuration goes back to the build queue only when the DLQ send itself
-  fails. A cancelled job whose message SQS redelivers for another reason (over the cap, a launch shortfall) costs one
+- The relaunch is closed without it: a failed configuration never goes back to the build queue (amended 2026-11-22: a
+  failed DLQ send used to). A cancelled job whose message SQS redelivers for another reason (over the cap, a launch shortfall) costs one
   VM, as on the live fleet.
 
 A test decodes both deployed runtime configurations and pins the check off for both pools.
@@ -60,9 +60,13 @@ such a failure to scale-up, unchecked. In every proof and post-check, each drop 
   like a deterministic one.
 
 **Dead-letter semantics.** When a message is dead-lettered, its instance is terminated once, its JIT runner and token are
-deleted, and the message is sent to the pool's own build DLQ and acknowledged. Only a failed DLQ send returns it as a batch item failure.
+deleted, and the message is sent to the pool's own build DLQ and acknowledged. A failed DLQ send is logged as an error and
+the message dropped (amended 2026-11-22, #3457): returning it would relaunch an instance once a minute for the build
+queue's one-day retention, since that queue has no redrive, and the job is lost either way.
 
 - **Nothing redrives a dead-lettered message.** No consumer and no automatic redrive exist, so that job stays queued
   until GitHub times it out.
 - **A nonzero build-DLQ depth is therefore a STOP** in every proof and every post-check of this stack, next to the
   other build and job-retry queue counts.
+- **An ERROR line in a scale-up log is a STOP** in every proof and post-check too: a dropped message after a failed DLQ
+  send leaves no queue depth, only that line.
