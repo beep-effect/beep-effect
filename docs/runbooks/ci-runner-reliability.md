@@ -9,9 +9,21 @@ is 1, and the launch/retry queue mappings remain enabled. The earlier emergency
 pause blocked PR job pickup and has been superseded. Follow the current policy
 in AWS cost operations; the 14-worker deployment evidence below is historical.
 
-The current `beep-ec2-heavy` pool uses Spot capacity with `capacity-optimized`
-allocation across seven 64 GiB instance types and five availability zones, and
-automatic On-Demand fallback disabled. This is the October 1, 2026 pool spread
+**Cutover step 4 (2026-11):** the workflows request the Alchemy `CiRunners`
+fleet's labels, `beep-fleet-heavy` and `beep-fleet-overflow`, and no longer
+the Pulumi fleet's `beep-ec2-heavy` and `beep-shard-overflow`. The runner
+groups keep their names (`beep-ec2-heavy`, `beep-shard-overflow`), so a label
+and its group now differ. The Pulumi fleet stays deployed and idle as the
+rollback until the drain and destroy (cutover decision
+`goals/infra-alchemy-rebuild/decisions/2026-11-14-ci-runners-cutover-from-pulumi.md`,
+steps 4 to 6). Both fleets are described in
+[Shard overflow pool](#shard-overflow-pool); the Pulumi-era sections below
+still describe the Pulumi fleet.
+
+The Pulumi fleet's `beep-ec2-heavy` pool uses Spot capacity with
+`capacity-optimized` allocation across seven 64 GiB instance types and five
+availability zones, and automatic On-Demand fallback disabled. This is the
+October 1, 2026 pool spread
 (deployment evidence below, recorded with eight types), minus `r6a.2xlarge`,
 which was dropped on October 5, 2026 after 20 of its 69 launches that day
 ended `instance-terminated-no-capacity` while the other seven types lost 6 of
@@ -24,9 +36,10 @@ changing the alert does not change running workers.
 
 ## Admission and capacity
 
-Admission bounds what enters the `beep-ec2-heavy` queue; it does not add
-capacity. Two workflows share one decision, `bun run beep ci admission`: the
-`Heavy Admission` job in `check.yml` runs it on every push (a pull request
+Admission bounds what enters the heavy pool's queue (`beep-fleet-heavy`); it
+does not add capacity. Two workflows share one decision,
+`bun run beep ci admission`: the `Heavy Admission` job in `check.yml` runs it
+on every push (a pull request
 enters the heavy matrix only with the `ready-for-heavy` label, or as a main
 push / merge group; an unlabelled code PR holds outside the queue). A docs-only
 diff from this repository skips the job before it requests a runner, and the
@@ -165,7 +178,9 @@ A new output field (such as a new relevance lane) does, through a pin bump of
    times; GitHub's latest attempt alone hides earlier runner losses.
 2. Read the job's check annotations. A runner communication failure with an
    unfinished step identifies runner loss, not a source assertion.
-3. Remove `beep-ci-` from the runner name to obtain the EC2 instance ID. Read
+3. Remove the pool's runner-name prefix to obtain the EC2 instance ID:
+   `beep-fleet-heavy-` or `beep-fleet-ovf-` on the `CiRunners` fleet,
+   `beep-ci-` or `beep-ovf-` on the Pulumi fleet. Read
    `aws ec2 describe-spot-instance-requests --filters Name=instance-id,Values=<instance-id>`.
    `instance-terminated-no-capacity` proves Spot reclamation. Compare its
    update time with GitHub's later failure time before inferring a timeout.
@@ -335,11 +350,37 @@ runner workload identity.
 
 ## Shard overflow pool
 
-The shard overflow pool (`goals/ci-lane-economics`, #3256) is a second
-`CiFleetController` that takes Test Unit shards Test Plan routes away from a
-long hosted queue. The ordered enablement list, with its commands and the
+The shard overflow pool (`goals/ci-lane-economics`, #3256) takes Test Unit
+shards Test Plan routes away from a long hosted queue. It was built as a second
+Pulumi `CiFleetController`; the `CiRunners` overflow pool took its place at
+cutover step 4. The ordered enablement list, with its commands and the
 disable path, is in
 `goals/ci-lane-economics/research/shard-overflow-routing-2026-11-13.md`.
+
+Since cutover step 4 the workflows target the `CiRunners` fleet
+(`packages/tooling/infra/ci-runners`, stage `prod`). Its pools, from
+`src/Config.ts` and `src/Names.ts`:
+
+| | Heavy pool | Overflow pool |
+| --- | --- | --- |
+| Runner label (`runs-on`) | `beep-fleet-heavy` | `beep-fleet-overflow` |
+| Runner group (unchanged) | `beep-ec2-heavy` | `beep-shard-overflow` |
+| `ghr:environment` | `beep-fleet-prod-heavy` | `beep-fleet-prod-overflow` |
+| Runner names | `beep-fleet-heavy-<instance-id>` | `beep-fleet-ovf-<instance-id>` |
+| Scale-up function | `beep-fleet-prod-heavy-scale-up` | `beep-fleet-prod-overflow-scale-up` |
+| Webhook | one function, `beep-fleet-prod-webhook`, behind a Lambda function URL (stack output `webhookUrl`) | the same function |
+| App parameters | `/beep-fleet/prod/app/*` | the same parameters |
+| IAM path | `/beep-fleet/prod/` | the same path |
+
+Overflow routing reads its pool size from `BEEP_SHARD_OVERFLOW_POOL_SIZE`
+(default 48). The `CiRunners` overflow pool's cap is 2 while the stack is in
+`overlap` and 48 once it is `primary`.
+`beep ci shard-overflow-preflight --webhook-url <url>` takes the stack's
+`webhookUrl` and finds the group by its name, `beep-shard-overflow`, not by the
+label.
+
+The Pulumi fleet (`infra/ci-runners`, stack `beep-ci-runners/production`),
+idle after step 4 and destroyed at step 6:
 
 | | Heavy pool | Overflow pool |
 | --- | --- | --- |

@@ -330,7 +330,7 @@ const groupsGreenAt = (
  *     conclusion: "success",
  *     created_at: "2026-11-09T16:32:00Z",
  *     id,
- *     labels: ["beep-ec2-heavy"],
+ *     labels: ["beep-fleet-heavy"],
  *     name: "Heavy / Check",
  *     run_attempt,
  *     run_id: 1,
@@ -692,7 +692,7 @@ interface HeadAttempt {
 }
 
 // Each admitted heavy-admit.yml run joins the latest check.yml run of its head created at or before it
-// (the first one when it came earlier), so a label-admitted head carries its beep-ec2-heavy minutes too.
+// (the first one when it came earlier), so a label-admitted head carries its heavy-pool minutes too.
 const headAttempts = (head: HeadRuns): ReadonlyArray<HeadAttempt> => {
   const checks = A.sort(A.filter(head.runs, isCheckPullRequestRun), Order.mapInput(Order.Number, runCreatedMillis));
   const admits = A.filter(
@@ -993,7 +993,7 @@ const certaintyMarkdown = (report: CiCertaintyReport, headLines: ReadonlyArray<s
       "",
       "## Runner-minutes per head attempt",
       "",
-      `- head attempts: ${report.runnerMinutes.runs}; mean ${formatMinutes(report.runnerMinutes.meanTotal)} (GitHub-hosted ${formatMinutes(report.runnerMinutes.meanGithubHosted)}, beep-ec2-heavy ${formatMinutes(report.runnerMinutes.meanManaged)}); p50 ${formatMinutes(report.runnerMinutes.p50Total)}; p95 ${formatMinutes(report.runnerMinutes.p95Total)}`,
+      `- head attempts: ${report.runnerMinutes.runs}; mean ${formatMinutes(report.runnerMinutes.meanTotal)} (GitHub-hosted ${formatMinutes(report.runnerMinutes.meanGithubHosted)}, managed ${formatMinutes(report.runnerMinutes.meanManaged)}); p50 ${formatMinutes(report.runnerMinutes.p50Total)}; p95 ${formatMinutes(report.runnerMinutes.p95Total)}`,
       `- green code head attempts (check.yml plus admitted heavy-admit.yml): p50 ${formatMinutes(report.runnerMinutes.greenCodeRunP50)}; p95 ${formatMinutes(report.runnerMinutes.greenCodeRunP95)}`,
       `- superseded-head runner-minute share: ${formatShare(report.supersededRunnerMinuteShare)}`,
       "",

@@ -967,8 +967,25 @@ rendered user data past EC2's 16 KiB limit. `test/RunnerBootstrap.test.ts`
 keeps the rendered size under the limit, and cutover step 3 proves each pool
 boots and completes a real job.
 
+Workflow move (cutover step 4, option A; decision "CI runners workflows end
+on the beep-fleet labels"). Every workflow job that ran on the Pulumi fleet
+requests the fleet's labels: `heavy.yml`'s nine jobs, `cache-warm.yml`,
+`fleet-shadow-check.yml` and the `fleet-lane-probe.yml` default request
+`beep-fleet-heavy`, and `shard-overflow.yml` requests `beep-fleet-overflow`.
+The runner groups keep their names, so a label and its group differ: the
+CLI's `SHARD_OVERFLOW_RUNNER_LABEL` is `beep-fleet-overflow` and
+`SHARD_OVERFLOW_RUNNER_GROUP` is `beep-shard-overflow`, and
+`beep ci shard-overflow-preflight --webhook-url <url>` finds the group by its
+name and expects the stack output `webhookUrl` (the Lambda function URL
+`deploy-ci-runners.yml` prints as `webhookUrl=<url>`). The stack stays in
+`overlap` until the phase PR, so jobs queue on the overlap caps (heavy 1,
+overflow 2) in between; the phase moves to `primary` only after the drain
+checks of step 4. Rollback is the step 4 rollback list, ending with a revert
+of the workflow PR.
+
 Outside IaC, owned by the operator: the org runner groups `beep-ec2-heavy` and
-`beep-shard-overflow` (selected workflows only) and the GitHub App and webhook
+`beep-shard-overflow` (selected workflows only; the jobs in them request
+`beep-fleet-heavy` and `beep-fleet-overflow`) and the GitHub App and webhook
 that deliver `workflow_job` events to the fleet's function URL. Cutover order,
 checks and rollback: decision "CI runners cutover from the Pulumi fleet".
 
