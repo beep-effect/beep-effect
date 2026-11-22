@@ -25,6 +25,7 @@ import * as P from "effect/Predicate";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import type { NamedTransform, SpecSource } from "@beep/codegen-kit";
 import type * as JsonSchema from "effect/JsonSchema";
@@ -459,7 +460,13 @@ it.layer(CodegenKitTestLayer, { timeout: "10 seconds" })("@beep/codegen-kit", (i
       const raw = yield* kit.generate(document, generateConfig);
       const output = yield* kit.postProcess(raw, generateConfig);
 
-      expect(output.match(/^export const \w+/gmu)).toEqual(["export const Leaf", "export const Branch"]);
+      const declared = pipe(
+        Str.split(output, "\n"),
+        A.filter(Str.startsWith("export const ")),
+        A.map(Str.slice(Str.length("export const "))),
+        A.map((name) => Str.split(name, " ")[0])
+      );
+      expect(declared).toEqual(["Leaf", "Branch"]);
       expect(output).toContain("S.suspend((): S.Codec<Branch> => Branch)");
     })
   );
