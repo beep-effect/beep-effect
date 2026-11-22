@@ -15,8 +15,8 @@ import {
 } from "@beep/law-practice-use-cases/OfficeActionStructure";
 import { fixtureOcrPage } from "@beep/law-practice-use-cases/test";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { VerifySourceTextIdentityInput } from "@beep/provenance/VerifiedTextAnchor";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { VerifySourceTextIdentityInput } from "@beep/text/VerifiedTextAnchor";
 import { expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";

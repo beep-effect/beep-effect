@@ -4,11 +4,11 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ProvenanceId } from "@beep/identity/packages";
+import { $TextId } from "@beep/identity/packages";
 import { PosixPath, Sha256PrefixedDigest } from "@beep/schema";
 import * as S from "effect/Schema";
 
-const $I = $ProvenanceId.create("SourceTextIdentity");
+const $I = $TextId.create("SourceTextIdentity");
 
 /**
  * Canonical SHA-256 digest encoded as `sha256:<lowercase hex>`.
@@ -16,7 +16,7 @@ const $I = $ProvenanceId.create("SourceTextIdentity");
  * **Example** (Make empty SHA-256 digest)
  *
  * ```ts import.meta.vitest name="Make empty SHA-256 digest"
- * import { SourceTextDigest } from "@beep/provenance/SourceTextIdentity"
+ * import { SourceTextDigest } from "@beep/text/SourceTextIdentity"
  *
  * const digest = SourceTextDigest.make(
  *   "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -40,7 +40,7 @@ export const SourceTextDigest = Sha256PrefixedDigest.pipe(
  * **Example** (Type annotate SourceTextDigest value)
  *
  * ```ts import.meta.vitest name="Type annotate SourceTextDigest value"
- * import { SourceTextDigest } from "@beep/provenance/SourceTextIdentity"
+ * import { SourceTextDigest } from "@beep/text/SourceTextIdentity"
  *
  * const digest: SourceTextDigest = SourceTextDigest.make(
  *   "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
@@ -59,7 +59,7 @@ export type SourceTextDigest = typeof SourceTextDigest.Type;
  * **Example** (Create SourceTextExtractor instance)
  *
  * ```ts import.meta.vitest name="Create SourceTextExtractor instance"
- * import { SourceTextExtractor } from "@beep/provenance/SourceTextIdentity"
+ * import { SourceTextExtractor } from "@beep/text/SourceTextIdentity"
  *
  * const extractor = SourceTextExtractor.make({ name: "doc-text", version: "1" })
  * extractor.name // => "doc-text"
@@ -101,7 +101,7 @@ export class SourceTextExtractor extends S.Opaque<SourceTextExtractor, { readonl
  *   SourceTextDigest,
  *   SourceTextExtractor,
  *   SourceTextIdentity,
- * } from "@beep/provenance/SourceTextIdentity"
+ * } from "@beep/text/SourceTextIdentity"
  * import { PosixPath } from "@beep/schema/PosixPath"
  *
  * const emptyDigest = SourceTextDigest.make(

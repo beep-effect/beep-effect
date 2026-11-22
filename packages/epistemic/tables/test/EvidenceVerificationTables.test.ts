@@ -7,14 +7,14 @@ import {
 import { EvidenceVerificationManifestation } from "@beep/epistemic-domain/values/EvidenceVerification";
 import { DbSchema, Entities } from "@beep/epistemic-tables";
 import * as EvidenceVerification from "@beep/epistemic-tables/entities/EvidenceVerification";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath } from "@beep/schema/PosixPath";
 import * as Epistemic from "@beep/shared-domain/identity/Epistemic";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { it } from "@beep/test-runner";
 import { fcRuns, productEntityFixtureInput } from "@beep/test-utils";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import { describe, expect } from "@effect/vitest";
 import { assertFailure, assertTrue } from "@effect/vitest/utils";
 import { getColumns } from "drizzle-orm";

@@ -4,7 +4,7 @@
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationMention } from "@beep/law-practice-domain/values";
 import { CitationInputError } from "@beep/law-practice-use-cases/server";
-import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { CitationOperationAdmission } from "./Admission.ts";

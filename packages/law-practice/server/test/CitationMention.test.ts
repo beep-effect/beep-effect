@@ -13,13 +13,13 @@ import {
   restoreCitationMention,
 } from "@beep/law-practice-server/internal/Citation/Mention";
 import { makeCitationMentionId } from "@beep/law-practice-server/internal/Citation/MentionIdentity";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { VerifiedTextAnchor, VerifyTextAnchorInput, verifyTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import { VerifiedTextAnchor, VerifyTextAnchorInput, verifyTextAnchor } from "@beep/text/VerifiedTextAnchor";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import { assertSome, assertTrue } from "@effect/vitest/utils";

@@ -11,8 +11,8 @@ import {
   CitationSafetyLimitExceeded,
   CitationSourceRole,
 } from "@beep/law-practice-use-cases/server";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 import { O } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

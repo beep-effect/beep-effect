@@ -4,10 +4,10 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchorVerificationReceipt, VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import { Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchorVerificationReceipt, VerifiedTextAnchor } from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

@@ -7,7 +7,7 @@
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as O from "effect/Option";
-import type { TextAnchor } from "@beep/provenance/TextAnchor";
+import type { TextAnchor } from "@beep/text/TextAnchor";
 import type {
   ClaimFiniteSourceProof,
   ClaimFrameArgument,

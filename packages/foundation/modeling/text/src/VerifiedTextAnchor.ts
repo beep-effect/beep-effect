@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ProvenanceId } from "@beep/identity/packages";
+import { $TextId } from "@beep/identity/packages";
 import { LiteralKit, Sha256HexFromBytes } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -15,7 +15,7 @@ import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "./Sou
 import { isUtf16Boundary, TextAnchor } from "./TextAnchor.ts";
 import type * as Digest from "effect/crypto/Digest";
 
-const $I = $ProvenanceId.create("VerifiedTextAnchor");
+const $I = $TextId.create("VerifiedTextAnchor");
 const decodeSha256HexFromBytes = S.decodeUnknownEffect(Sha256HexFromBytes);
 const sourceTextDigestEquivalence = S.toEquivalence(SourceTextDigest);
 const sourceTextIdentityEquivalence = S.toEquivalence(SourceTextIdentity);
@@ -76,7 +76,7 @@ const copyTextAnchor = (anchor: TextAnchor): TextAnchor =>
  * **Example** (Check error reason membership)
  *
  * ```ts import.meta.vitest name="Check error reason membership"
- * import { VerifiedTextAnchorErrorReason } from "@beep/provenance/VerifiedTextAnchor"
+ * import { VerifiedTextAnchorErrorReason } from "@beep/text/VerifiedTextAnchor"
  *
  * VerifiedTextAnchorErrorReason.is["quote-mismatch"]("quote-mismatch") // => true
  * ```
@@ -101,7 +101,7 @@ export const VerifiedTextAnchorErrorReason = LiteralKit([
  * **Example** (Assign typed error reason)
  *
  * ```ts
- * import type { VerifiedTextAnchorErrorReason } from "@beep/provenance/VerifiedTextAnchor"
+ * import type { VerifiedTextAnchorErrorReason } from "@beep/text/VerifiedTextAnchor"
  *
  * const reason: VerifiedTextAnchorErrorReason = "stale-source"
  * console.log(reason)
@@ -118,7 +118,7 @@ export type VerifiedTextAnchorErrorReason = typeof VerifiedTextAnchorErrorReason
  * **Example** (Create error from reason)
  *
  * ```ts import.meta.vitest name="Create error from reason"
- * import { VerifiedTextAnchorError } from "@beep/provenance/VerifiedTextAnchor"
+ * import { VerifiedTextAnchorError } from "@beep/text/VerifiedTextAnchor"
  *
  * const error = VerifiedTextAnchorError.fromReason("quote-mismatch")
  * error.reason // => "quote-mismatch"
@@ -161,7 +161,7 @@ export class VerifiedTextAnchorError extends S.TaggedError<VerifiedTextAnchorErr
  * **Example** (Inspect source verification fields)
  *
  * ```ts import.meta.vitest name="Inspect source verification fields"
- * import { VerifySourceTextIdentityInput } from "@beep/provenance/VerifiedTextAnchor"
+ * import { VerifySourceTextIdentityInput } from "@beep/text/VerifiedTextAnchor"
  *
  * VerifySourceTextIdentityInput.fields.sourceText !== undefined // => true
  * ```
@@ -234,7 +234,7 @@ const issueVerifiedSourceText = (source: SourceTextIdentity, sourceText: string)
  * **Example** (Inspect the verified-source schema)
  *
  * ```ts import.meta.vitest name="Inspect the verified-source schema"
- * import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor"
+ * import { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor"
  * import * as S from "effect/Schema"
  *
  * S.is(VerifiedSourceText)({ source: {}, sourceText: "text" }) // => false
@@ -251,7 +251,7 @@ export type VerifiedSourceText = VerifiedSourceTextValue;
  * **Example** (Reject structural source data)
  *
  * ```ts import.meta.vitest name="Reject structural source data"
- * import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor"
+ * import { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor"
  * import * as S from "effect/Schema"
  *
  * S.is(VerifiedSourceText)({ source: {}, sourceText: "text" }) // => false
@@ -272,7 +272,7 @@ export const VerifiedSourceText = S.declare<VerifiedSourceText>(VerifiedSourceTe
  * **Example** (Inspect verified-source anchor fields)
  *
  * ```ts import.meta.vitest name="Inspect verified-source anchor fields"
- * import { VerifyTextAnchorAgainstVerifiedSourceInput } from "@beep/provenance/VerifiedTextAnchor"
+ * import { VerifyTextAnchorAgainstVerifiedSourceInput } from "@beep/text/VerifiedTextAnchor"
  *
  * VerifyTextAnchorAgainstVerifiedSourceInput.fields.anchor !== undefined // => true
  * ```
@@ -307,7 +307,7 @@ export class VerifyTextAnchorAgainstVerifiedSourceInput extends S.Opaque<
  * **Example** (Check sourceText field presence)
  *
  * ```ts import.meta.vitest name="Check sourceText field presence"
- * import { VerifyTextAnchorInput } from "@beep/provenance/VerifiedTextAnchor"
+ * import { VerifyTextAnchorInput } from "@beep/text/VerifiedTextAnchor"
  *
  * VerifyTextAnchorInput.fields.sourceText !== undefined // => true
  * ```
@@ -343,7 +343,7 @@ export class VerifyTextAnchorInput extends S.Opaque<VerifyTextAnchorInput, { rea
  * **Example** (Check receipt anchor field)
  *
  * ```ts import.meta.vitest name="Check receipt anchor field"
- * import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor"
+ * import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor"
  *
  * TextAnchorVerificationReceipt.fields.anchor !== undefined // => true
  * ```
@@ -417,7 +417,7 @@ const issueVerifiedTextAnchor = (anchor: TextAnchor, source: SourceTextIdentity)
  * import type {
  *   TextAnchorVerificationReceipt,
  *   VerifiedTextAnchor,
- * } from "@beep/provenance/VerifiedTextAnchor"
+ * } from "@beep/text/VerifiedTextAnchor"
  *
  * type ReceiptIsRuntimeProof =
  *   TextAnchorVerificationReceipt extends VerifiedTextAnchor ? true : false
@@ -444,7 +444,7 @@ export type VerifiedTextAnchor = VerifiedTextAnchorValue;
  *
  * ```ts import.meta.vitest name="Schema rejects structural data"
  * import * as S from "effect/Schema"
- * import { VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor"
+ * import { VerifiedTextAnchor } from "@beep/text/VerifiedTextAnchor"
  *
  * S.is(VerifiedTextAnchor)({ anchor: {}, source: {} }) // => false
  * ```
@@ -477,13 +477,13 @@ export const VerifiedTextAnchor = S.declare<VerifiedTextAnchor>(VerifiedTextAnch
  *   SourceTextDigest,
  *   SourceTextExtractor,
  *   SourceTextIdentity,
- * } from "@beep/provenance/SourceTextIdentity"
- * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ * } from "@beep/text/SourceTextIdentity"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  * import {
  *   toTextAnchorVerificationReceipt,
  *   VerifyTextAnchorInput,
  *   verifyTextAnchor,
- * } from "@beep/provenance/VerifiedTextAnchor"
+ * } from "@beep/text/VerifiedTextAnchor"
  * import { PosixPath } from "@beep/schema/PosixPath"
  *
  * const digest = SourceTextDigest.make(
@@ -551,11 +551,11 @@ export const toTextAnchorVerificationReceipt = (verified: VerifiedTextAnchor): T
  *   SourceTextDigest,
  *   SourceTextExtractor,
  *   SourceTextIdentity,
- * } from "@beep/provenance/SourceTextIdentity"
+ * } from "@beep/text/SourceTextIdentity"
  * import {
  *   VerifySourceTextIdentityInput,
  *   verifySourceTextIdentity,
- * } from "@beep/provenance/VerifiedTextAnchor"
+ * } from "@beep/text/VerifiedTextAnchor"
  * import { PosixPath } from "@beep/schema/PosixPath"
  *
  * const digest = SourceTextDigest.make(
@@ -626,7 +626,7 @@ export const verifySourceTextIdentity = Effect.fn("VerifiedTextAnchor.verifySour
  * **Example** (Inspect reusable anchor verification)
  *
  * ```ts import.meta.vitest name="Inspect reusable anchor verification"
- * import { verifyTextAnchorAgainstVerifiedSource } from "@beep/provenance/VerifiedTextAnchor"
+ * import { verifyTextAnchorAgainstVerifiedSource } from "@beep/text/VerifiedTextAnchor"
  *
  * typeof verifyTextAnchorAgainstVerifiedSource // => "function"
  * ```
@@ -680,12 +680,12 @@ export const verifyTextAnchorAgainstVerifiedSource = Effect.fn("VerifiedTextAnch
  *   SourceTextDigest,
  *   SourceTextExtractor,
  *   SourceTextIdentity,
- * } from "@beep/provenance/SourceTextIdentity"
- * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ * } from "@beep/text/SourceTextIdentity"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  * import {
  *   VerifyTextAnchorInput,
  *   verifyTextAnchor,
- * } from "@beep/provenance/VerifiedTextAnchor"
+ * } from "@beep/text/VerifiedTextAnchor"
  * import { PosixPath } from "@beep/schema/PosixPath"
  *
  * const digest = SourceTextDigest.make(

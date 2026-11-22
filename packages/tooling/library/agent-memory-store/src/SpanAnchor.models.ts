@@ -7,8 +7,8 @@
 
 import { $AgentMemoryStoreId } from "@beep/identity/packages";
 import { MarkdownRange } from "@beep/markdown";
-import { SourceTextIdentity, TextAnchor } from "@beep/provenance";
 import { LiteralKit } from "@beep/schema";
+import { SourceTextIdentity, TextAnchor } from "@beep/text";
 import * as S from "effect/Schema";
 
 const $I = $AgentMemoryStoreId.create("SpanAnchor.models");
@@ -19,7 +19,7 @@ const $I = $AgentMemoryStoreId.create("SpanAnchor.models");
  * **Details**
  *
  * Only `utf16` exists in P0: `@beep/markdown` `MarkdownRange` and
- * `@beep/provenance` `TextAnchor` both count UTF-16 code units.
+ * `@beep/text` `TextAnchor` both count UTF-16 code units.
  *
  * **Example** (Check the text unit)
  *
@@ -52,15 +52,15 @@ export type TextUnit = typeof TextUnit.Type;
  * **Details**
  *
  * This is the occurrence shape of `text-knowledge-stack-rebuild`, built from
- * the `@beep/provenance` classes, so the store never mints a second span
+ * the `@beep/text` classes, so the store never mints a second span
  * identity (decision `identity-depends-on-provenance`).
  *
  * **Example** (Anchor a node to a source span)
  *
  * ```ts
  * import { OccurrenceAnchor } from "@beep/agent-memory-store"
- * import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity"
- * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ * import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  * import { PosixPath } from "@beep/schema/PosixPath"
  *
  * const digest = SourceTextDigest.make("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
@@ -107,8 +107,8 @@ export class OccurrenceAnchor extends S.Opaque<OccurrenceAnchor, { readonly bran
  *
  * ```ts
  * import { OccurrenceAnchor, toMarkdownRange } from "@beep/agent-memory-store"
- * import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity"
- * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ * import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  * import { PosixPath } from "@beep/schema/PosixPath"
  *
  * const digest = SourceTextDigest.make("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")

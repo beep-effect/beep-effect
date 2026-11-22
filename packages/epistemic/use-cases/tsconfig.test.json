@@ -30,13 +30,13 @@
       "path": "../../foundation/modeling/identity/tsconfig.json"
     },
     {
-      "path": "../../foundation/modeling/provenance/tsconfig.json"
-    },
-    {
       "path": "../../foundation/modeling/rdf/tsconfig.json"
     },
     {
       "path": "../../foundation/modeling/schema/tsconfig.json"
+    },
+    {
+      "path": "../../foundation/modeling/text/tsconfig.json"
     },
     {
       "path": "../../shared/domain/tsconfig.json"

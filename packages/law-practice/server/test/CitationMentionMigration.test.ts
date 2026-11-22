@@ -48,19 +48,19 @@ import {
   makeCitationSessionDocumentProjector,
 } from "@beep/law-practice-server/internal/Citation/SessionDocument";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import {
   TextAnchorVerificationReceipt,
   VerifySourceTextIdentityInput,
   VerifyTextAnchorAgainstVerifiedSourceInput,
   verifySourceTextIdentity,
   verifyTextAnchorAgainstVerifiedSource,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import { UnitInterval } from "@beep/schema/UnitInterval";
-import { it } from "@beep/test-runner";
-import { fcRuns } from "@beep/test-utils";
+} from "@beep/text/VerifiedTextAnchor";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";
@@ -72,7 +72,7 @@ import * as R from "effect/Record";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import cases from "../../use-cases/test/fixtures/eyecite/authority-identity-cases.json" with { type: "json" };
-import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import type { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 
 // `fixtures/citation-document-receipt-v3.json` holds three receipts over one synthetic text, exactly as
 // `projectCitationDocumentReceipt` and the session projector wrote them under citation-document-receipt/v3 and

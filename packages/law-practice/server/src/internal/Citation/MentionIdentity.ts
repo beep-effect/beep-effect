@@ -7,8 +7,8 @@
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationMentionId } from "@beep/law-practice-domain/values";
-import { VerifiedTextAnchor } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { VerifiedTextAnchor } from "@beep/text/VerifiedTextAnchor";
 import * as Effect from "effect/Effect";
 import { flow } from "effect/Function";
 import * as S from "effect/Schema";

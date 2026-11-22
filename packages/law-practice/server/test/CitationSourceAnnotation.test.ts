@@ -12,10 +12,10 @@ import {
   CitationEngineLimits,
   CitationPythonUnicodeStorage,
 } from "@beep/law-practice-use-cases/server";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { Sha256Hex } from "@beep/schema";
 import { it } from "@beep/test-runner";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 import { expect } from "@effect/vitest";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";

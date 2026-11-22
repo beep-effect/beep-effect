@@ -162,9 +162,6 @@
       "path": "../../../foundation/modeling/package-json/tsconfig.json"
     },
     {
-      "path": "../../../foundation/modeling/provenance/tsconfig.json"
-    },
-    {
       "path": "../../../foundation/modeling/rdf/tsconfig.json"
     },
     {
@@ -178,6 +175,9 @@
     },
     {
       "path": "../../../foundation/modeling/spdx/tsconfig.json"
+    },
+    {
+      "path": "../../../foundation/modeling/text/tsconfig.json"
     },
     {
       "path": "../../../foundation/modeling/tsconfig/tsconfig.json"

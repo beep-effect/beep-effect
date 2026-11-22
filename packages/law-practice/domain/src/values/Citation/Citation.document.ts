@@ -4,8 +4,8 @@
  * @since 0.0.0
  */
 import { $LawPracticeDomainId } from "@beep/identity/packages";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { Sha256Hex } from "@beep/schema";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as HashMap from "effect/HashMap";

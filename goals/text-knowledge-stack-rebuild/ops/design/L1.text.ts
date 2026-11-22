@@ -2,7 +2,7 @@
  * L1 text: occurrence identity, the selector union, resolution and
  * re-anchoring outcomes, and `Anchored` as a powerless receipt.
  *
- * Target home: `@beep/text` (today `@beep/provenance`, renamed in P2).
+ * Target home: `@beep/text` (the package exists; these symbols land in P2).
  * `TextAnchor`, `VerifiedTextAnchor` and `TextAnchorVerificationReceipt` keep
  * their shapes and are imported, not redefined.
  *
@@ -13,16 +13,16 @@
 import { IRI } from "@beep/identity/Iri";
 import { $RepoCliId } from "@beep/identity/packages";
 import { mintContentHash } from "@beep/jsonc/Mint";
-import { SourceTextDigest, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import { ContentHash, DomainTag } from "@beep/schema/ContentHash";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Sha256Hex } from "@beep/schema/Sha256";
+import { SourceTextDigest, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import type { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
-import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import type { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 import type * as Digest from "effect/crypto/Digest";
 import type * as Result from "effect/Result";
 

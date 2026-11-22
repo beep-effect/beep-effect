@@ -1,9 +1,9 @@
-import { VerifiedTextAnchorError } from "@beep/provenance/VerifiedTextAnchor";
 import { it } from "@beep/test-runner";
+import { VerifiedTextAnchorError } from "@beep/text/VerifiedTextAnchor";
 import { describe, expect } from "@effect/vitest";
 import * as S from "effect/Schema";
 
-describe("@beep/provenance tagged-error declared equivalence", () => {
+describe("@beep/text tagged-error declared equivalence", () => {
   it("compares verified text-anchor errors by declared fields", () => {
     const same = S.toEquivalence(VerifiedTextAnchorError);
     const first = VerifiedTextAnchorError.fromReason("quote-mismatch");

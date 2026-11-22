@@ -1,6 +1,7 @@
 {
-  "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/provenance/src/",
   "$schema": "../../../../packages/tooling/tool/docgen/schema.json",
+  "exclude": ["src/internal/**/*.ts"],
+  "srcLink": "https://github.com/beep-effect/beep-effect/tree/main/packages/foundation/modeling/text/src/",
   "examplesCompilerOptions": {
     "noEmit": true,
     "strict": true,
@@ -27,6 +28,5 @@
     "noErrorTruncation": true,
     "types": [],
     "jsx": "react-jsx"
-  },
-  "exclude": ["src/internal/**/*.ts"]
+  }
 }

@@ -1,5 +1,5 @@
 import { NodeCreated, NodeCreatedEvent, OccurrenceAnchor } from "@beep/agent-memory-store";
-import { TextAnchor } from "@beep/provenance";
+import { TextAnchor } from "@beep/text";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";

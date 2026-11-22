@@ -25,16 +25,16 @@ import {
   citationAuthorityMentionIds,
   citationGroupMembers,
 } from "@beep/law-practice-domain/values";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
-import {
-  toTextAnchorVerificationReceipt,
-  VerifyTextAnchorAgainstVerifiedSourceInput,
-  verifyTextAnchorAgainstVerifiedSource,
-} from "@beep/provenance/VerifiedTextAnchor";
 import { Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import {
+  toTextAnchorVerificationReceipt,
+  VerifyTextAnchorAgainstVerifiedSourceInput,
+  verifyTextAnchorAgainstVerifiedSource,
+} from "@beep/text/VerifiedTextAnchor";
 import { assert, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";

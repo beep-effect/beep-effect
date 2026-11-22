@@ -6,13 +6,13 @@ import {
   makeCitationOccurrenceProjection as makeOwnedCitationOccurrenceProjection,
 } from "@beep/law-practice-server/internal/Citation/OccurrenceProjection";
 import { CitationSemanticExtractionResult } from "@beep/law-practice-server/internal/Citation/SemanticExtraction";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import {
   VerifiedSourceText,
   VerifySourceTextIdentityInput,
   verifySourceTextIdentity,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+} from "@beep/text/VerifiedTextAnchor";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

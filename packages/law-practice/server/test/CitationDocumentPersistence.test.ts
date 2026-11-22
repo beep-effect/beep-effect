@@ -32,17 +32,17 @@ import {
   CitationResourceIdentity,
   makeCitationResourceAuthorityId,
 } from "@beep/law-practice-server/internal/Citation/ResourceIdentity";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { it } from "@beep/test-runner";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import {
   TextAnchorVerificationReceipt,
   VerifySourceTextIdentityInput,
   VerifyTextAnchorInput,
   verifySourceTextIdentity,
   verifyTextAnchor,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
-import { it } from "@beep/test-runner";
+} from "@beep/text/VerifiedTextAnchor";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";

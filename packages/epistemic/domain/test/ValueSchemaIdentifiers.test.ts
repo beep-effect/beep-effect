@@ -14,10 +14,9 @@ import { pipe } from "effect/Function";
 import * as Order from "effect/Order";
 import * as S from "effect/Schema";
 
-// Every schema identifier the bound value modules emit. The fixture was
-// written before the modules became bindings of @beep/epistemics factories;
-// it must stay byte-identical so persisted or snapshotted identifiers never
-// move.
+// Every schema identifier the bound value modules emit. The fixture records
+// them so a change of an identifier is a reviewed diff: a package rename under
+// a decision regenerates it, anything else leaves it byte-identical.
 const modules: R.ReadonlyRecord<string, R.ReadonlyRecord<string, unknown>> = {
   ClaimEvidenceReview,
   ClaimProjection,

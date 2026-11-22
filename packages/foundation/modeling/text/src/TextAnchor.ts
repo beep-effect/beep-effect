@@ -13,7 +13,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $ProvenanceId } from "@beep/identity/packages";
+import { $TextId } from "@beep/identity/packages";
 import { dual, identity } from "effect/Function";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
@@ -22,7 +22,7 @@ import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as Str from "effect/String";
 import type * as SchemaAST from "effect/SchemaAST";
 
-const $I = $ProvenanceId.create("TextAnchor");
+const $I = $TextId.create("TextAnchor");
 const isNonNegativeInt = S.is(S.Natural);
 const isHighSurrogate = N.between({ minimum: 0xd800, maximum: 0xdbff });
 const isLowSurrogate = N.between({ minimum: 0xdc00, maximum: 0xdfff });
@@ -39,7 +39,7 @@ const isLowSurrogate = N.between({ minimum: 0xdc00, maximum: 0xdfff });
  * import {
  *   TextAnchorFields,
  *   TextAnchorWidthCheck,
- * } from "@beep/provenance/TextAnchor"
+ * } from "@beep/text/TextAnchor"
  *
  * const Span = S.Struct({ ...TextAnchorFields }).check(TextAnchorWidthCheck)
  * Object.keys(Span.fields) // => ["startChar", "endChar", "quote"]
@@ -80,7 +80,7 @@ const hasConsistentTextAnchorWidth = (anchor: {
  *
  * ```ts import.meta.vitest name="Checking flattened anchor schema"
  * import * as S from "effect/Schema"
- * import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance/TextAnchor"
+ * import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/text/TextAnchor"
  *
  * const FlatAnchor = S.Struct(TextAnchorFields).check(TextAnchorWidthCheck)
  * S.is(FlatAnchor)({ startChar: 0, endChar: 4, quote: "fact" }) // => true
@@ -109,7 +109,7 @@ export const TextAnchorWidthCheck = S.makeFilter(
  * **Example** (Surrogate pair boundary checks)
  *
  * ```ts import.meta.vitest name="Surrogate pair boundary checks"
- * import { isUtf16Boundary } from "@beep/provenance/TextAnchor"
+ * import { isUtf16Boundary } from "@beep/text/TextAnchor"
  *
  * const sourceText = "A😀B"
  * isUtf16Boundary(sourceText, 1) // => true
@@ -139,7 +139,7 @@ const TextAnchorSchema = TextAnchorStruct.mapFields(identity).check(TextAnchorWi
  *
  * ```ts
  * import * as Effect from "effect/Effect";
- * import { TextAnchor } from "@beep/provenance/TextAnchor"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  * import * as S from "effect/Schema"
  *
  * const program = S.decodeUnknownEffect(TextAnchor)({
@@ -178,7 +178,7 @@ export class TextAnchor extends S.Class<TextAnchor, { readonly brand: unique sym
    * **Example** (Checking well-ordered range)
    *
    * ```ts import.meta.vitest name="Checking well-ordered range"
-   * import { TextAnchor } from "@beep/provenance/TextAnchor"
+   * import { TextAnchor } from "@beep/text/TextAnchor"
    *
    * TextAnchor.isWellOrdered({ startChar: 0, endChar: 14 }) // => true
    * ```
@@ -196,7 +196,7 @@ export class TextAnchor extends S.Class<TextAnchor, { readonly brand: unique sym
    * **Example** (Checking internal consistency)
    *
    * ```ts import.meta.vitest name="Checking internal consistency"
-   * import { TextAnchor } from "@beep/provenance/TextAnchor"
+   * import { TextAnchor } from "@beep/text/TextAnchor"
    *
    * TextAnchor.isInternallyConsistent({ startChar: 0, endChar: 4, quote: "fact" }) // => true
    * ```
@@ -218,7 +218,7 @@ export class TextAnchor extends S.Class<TextAnchor, { readonly brand: unique sym
  * **Example** (Valid and inverted ranges)
  *
  * ```ts import.meta.vitest name="Valid and inverted ranges"
- * import { isWellOrdered } from "@beep/provenance/TextAnchor"
+ * import { isWellOrdered } from "@beep/text/TextAnchor"
  *
  * isWellOrdered({ startChar: 0, endChar: 14 }) // => true
  * isWellOrdered({ startChar: 9, endChar: 2 }) // => false
@@ -235,7 +235,7 @@ export const isWellOrdered = TextAnchor.isWellOrdered;
  * **Example** (Matching width and quote)
  *
  * ```ts import.meta.vitest name="Matching width and quote"
- * import { isInternallyConsistent } from "@beep/provenance/TextAnchor"
+ * import { isInternallyConsistent } from "@beep/text/TextAnchor"
  *
  * isInternallyConsistent({ startChar: 0, endChar: 4, quote: "fact" }) // => true
  * ```

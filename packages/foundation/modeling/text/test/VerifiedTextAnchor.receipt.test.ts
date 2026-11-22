@@ -1,14 +1,14 @@
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { PosixPath } from "@beep/schema/PosixPath";
+import { it } from "@beep/test-runner";
+import { fcRuns } from "@beep/test-utils";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import {
   TextAnchorVerificationReceipt,
   toTextAnchorVerificationReceipt,
   VerifyTextAnchorInput,
   verifyTextAnchor,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { PosixPath } from "@beep/schema/PosixPath";
-import { it } from "@beep/test-runner";
-import { fcRuns } from "@beep/test-utils";
+} from "@beep/text/VerifiedTextAnchor";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { expect } from "@effect/vitest";
 import * as Arbitrary from "effect/Arbitrary";

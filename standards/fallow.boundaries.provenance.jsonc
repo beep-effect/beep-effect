@@ -1182,12 +1182,12 @@
       "enforcementScope": "declared-dependency-consistency"
     },
     {
-      "ruleId": "@beep/provenance",
-      "generatedRuleFrom": "@beep/provenance",
+      "ruleId": "@beep/text",
+      "generatedRuleFrom": "@beep/text",
       "sourceClass": "manifest-derived",
       "sourceRefs": [
         "package.json",
-        "packages/foundation/modeling/provenance/package.json",
+        "packages/foundation/modeling/text/package.json",
         "standards/fallow.boundaries.generated.jsonc"
       ],
       "doctrineRefs": ["standards/ARCHITECTURE.md#package-dependency-graph"],

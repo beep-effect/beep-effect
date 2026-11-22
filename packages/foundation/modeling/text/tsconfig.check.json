@@ -21,6 +21,6 @@
     "declarationMap": false,
     "incremental": false,
     "noEmit": true,
-    "rootDir": "../../../.."
+    "rootDir": "../../../../."
   }
 }

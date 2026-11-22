@@ -400,8 +400,8 @@ environment stable. A root command may launch several Turbo invocations; inspect
 every new summary and match the exact `taskId`.
 
 ```sh
-bun run test -- --filter=@beep/provenance --summarize
-bun run test -- --filter=@beep/provenance --summarize
+bun run test -- --filter=@beep/text --summarize
+bun run test -- --filter=@beep/text --summarize
 ```
 
 Compare the task hash, input map, dependency hashes and cache status. A different

@@ -97,3 +97,20 @@ home paths with `~`, drop session and machine ids.
   to ready through the shared login and no session on the host had run it; only
   a search of every transcript could show that. **Would have prevented it:** an
   actor or session id on PR state changes that Yeet and T3 make.
+
+## 2026-11-21 — P2 package move
+
+- **Doing:** retiring `@beep/provenance` with `delete-package`. **Evidence:** its
+  baseline writers regenerate the whole fallow health baseline (3 minutes) and
+  wrote about 75 changed rows of churn-based targets and stale complexity rows,
+  none of which named the package; the dead-code and schema-first outputs
+  changed only their timestamps. All three were restored by hand, because a
+  retirement must not re-baseline other packages. **Would have prevented it:**
+  subtracting the target's rows in process, as the coverage baseline step
+  already does, and leaving a baseline alone when it has no such row.
+- **Doing:** the same command. **Evidence:** `standards/fallow.boundaries.provenance.jsonc`
+  is a hand-kept file with no writer, so the apply leaves the retired row as
+  residue after a dry run with no hard hits. `config-sync` likewise leaves the
+  `paths` block of `apps/professional-desktop/tsconfig.json` alone, and
+  `create-package` adds no shape row for the new composer. **Would have
+  prevented it:** a `rename-package` command that carries those rows over.

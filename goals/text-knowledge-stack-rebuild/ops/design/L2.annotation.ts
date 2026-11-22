@@ -12,11 +12,11 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { TermIri } from "@beep/identity/Term";
 import { mintContentHash } from "@beep/jsonc/Mint";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { CanonicalHashSet } from "@beep/schema/CanonicalHashSet";
 import { ActivityId, ContentHash, DomainTag } from "@beep/schema/ContentHash";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { WellFormedText } from "@beep/schema/WellFormedText";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";

@@ -1,6 +1,6 @@
-import { isInternallyConsistent, isUtf16Boundary, isWellOrdered, TextAnchor } from "@beep/provenance/TextAnchor";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
+import { isInternallyConsistent, isUtf16Boundary, isWellOrdered, TextAnchor } from "@beep/text/TextAnchor";
 import { describe, expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -17,7 +17,7 @@ const isTextAnchor = S.is(TextAnchor);
 const TextAnchorArbitrary = Arbitrary.schema(TextAnchor);
 const TextAnchorEquivalence = S.toEquivalence(TextAnchor);
 
-describe("@beep/provenance TextAnchor", () => {
+describe("@beep/text TextAnchor", () => {
   it("exposes TextAnchor from the public subpath", () => {
     expect(TextAnchor.isWellOrdered({ startChar: 0, endChar: 0 })).toBe(true);
   });

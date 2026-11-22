@@ -24,15 +24,15 @@ import {
   ContradictionTriageRepository,
 } from "@beep/epistemic-use-cases/server";
 import { ResolvedSourceText, SourceTextResolver } from "@beep/file-processing/SourceText";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Sha256HexFromBytes } from "@beep/schema/Sha256";
 import { UserPrincipal } from "@beep/shared-domain/entity/Principal";
 import * as SharedIdentity from "@beep/shared-domain/identity/Shared";
 import { it } from "@beep/test-runner";
 import { productEntityFixtureInput } from "@beep/test-utils";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";

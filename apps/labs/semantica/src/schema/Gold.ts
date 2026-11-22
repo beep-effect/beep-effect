@@ -1,7 +1,7 @@
 import { $SemanticaId } from "@beep/identity/packages";
-import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
 import { UnitInterval } from "@beep/schema/UnitInterval";
+import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/text";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";

@@ -19,8 +19,8 @@ import {
   FullCitation,
 } from "@beep/law-practice-domain/values";
 import { CitationEngineLimits } from "@beep/law-practice-use-cases/server";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Digest from "effect/crypto/Digest";

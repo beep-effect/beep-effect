@@ -618,15 +618,14 @@ decided under.
 ## Provenance Anchor
 
 A domain-agnostic value that pins derived knowledge to where it came from in a
-source. The canonical shape is `TextAnchor` (`@beep/provenance`): a half-open
+source. The canonical shape is `TextAnchor` (`@beep/text`): a half-open
 character range `[startChar, endChar)` into a source document plus the exact
 quoted substring, re-sliceable as `text.slice(startChar, endChar)`. It is pure
 provenance substrate — no confidence, claim, or domain semantics — and lives in
 `foundation/modeling` so any slice's `domain` can ground knowledge in a source
 span without depending on another slice. Consuming slices wrap it (e.g.
 epistemic `EvidenceSpan` = `TextAnchor` fields + a `Confidence`). Beside it,
-`@beep/text`, which replaces `@beep/provenance` in P2 of
-`goals/text-knowledge-stack-rebuild`, adds the
+P2 of `goals/text-knowledge-stack-rebuild` adds the
 [`Selector`](#selector) union and [`OccurrenceId`](#occurrence), the one
 text-occurrence identity.
 
@@ -1033,7 +1032,7 @@ canonical stems for evaluation outcomes, and the ownership law binding them:
 | Concern | Canonical stem | Owner |
 | --- | --- | --- |
 | Shape validity | `ShapeValidationResult` | the schema-owning domain |
-| Anchor fidelity | `AnchorVerificationResult` | `@beep/provenance` |
+| Anchor fidelity | `AnchorVerificationResult` | `@beep/text` |
 | Semantic stance | `SemanticStance` | epistemic domain |
 | Source authority | `SourceAuthorityAssessment` | the consuming legal/domain slice |
 | Human decision | `HumanDisposition` stem; domain-qualified concretes (e.g. `ClaimDisposition`) | the domain owning the reviewed subject |

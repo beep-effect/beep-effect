@@ -36145,69 +36145,6 @@
         }
       }
     },
-    "@beep/provenance": {
-      "path": "packages/foundation/modeling/provenance",
-      "lines": 100,
-      "statements": 100,
-      "branches": 100,
-      "functions": 100,
-      "uncovered": {
-        "lines": 0,
-        "statements": 0,
-        "branches": 0,
-        "functions": 0
-      },
-      "files": {
-        "packages/foundation/modeling/provenance/src/SourceTextIdentity.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/provenance/src/TextAnchor.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/provenance/src/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        }
-      }
-    },
     "@beep/public-site": {
       "path": "packages/foundation/modeling/public-site",
       "lines": 100,
@@ -57378,6 +57315,69 @@
           }
         },
         "packages/tooling/test-kit/test-utils/src/test/Vitest.test-kit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/text": {
+      "path": "packages/foundation/modeling/text",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "packages/foundation/modeling/text/src/SourceTextIdentity.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/TextAnchor.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/VerifiedTextAnchor.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

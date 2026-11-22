@@ -46,9 +46,6 @@ import {
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import * as Pglite from "@beep/pglite";
 import { makeDrizzle, makeDrizzleLayer, migrate } from "@beep/postgres";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
-import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { Principal } from "@beep/shared-domain/entity/Principal";
 import * as PublicEntityId from "@beep/shared-domain/entity/PublicEntityId";
@@ -64,6 +61,9 @@ import {
   TestDatabaseInfo,
   TestDatabaseInfoShape,
 } from "@beep/test-utils";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import { A } from "@beep/utils";
 import * as NodeCrypto from "@effect/platform-node/NodeCrypto";
 import * as NodeFileSystem from "@effect/platform-node/NodeFileSystem";

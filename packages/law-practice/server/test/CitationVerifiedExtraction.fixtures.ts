@@ -11,7 +11,7 @@ import {
   makeCitationVerifiedExtraction as makeOwnedCitationVerifiedExtraction,
 } from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
 import { CitationEngineReport } from "@beep/law-practice-use-cases/server";
-import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";

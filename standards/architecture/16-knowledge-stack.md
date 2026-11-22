@@ -51,7 +51,7 @@ lands in the phase of its layer.
 | Layer | Role | Owner | Lands |
 | --- | --- | --- | --- |
 | L0 | Identity | `@beep/identity`, `@beep/schema` (digest), `@beep/jsonc` (canonical JSON) | P1 |
-| L1 | Text identity and anchoring | `@beep/text`, replacing `@beep/provenance` | Pending P2 |
+| L1 | Text identity and anchoring | `@beep/text` | Pending P2 |
 | L2 | Annotation | `@beep/annotation` (new, `foundation/modeling`) | Pending P3 |
 | L3 | Taxonomy and alignments | `@beep/ontology` | Pending P5 |
 | L4 | Claims | `@beep/epistemics` | Pending P4 |
@@ -145,9 +145,9 @@ bundle: the handlers load only the registry-free identity sources, and
 
 ### L1 · Text identity and anchoring
 
-**Owner.** `@beep/text`, created with `bun run beep create-package` as a
-`foundation/modeling` package; `@beep/provenance` is retired in the same PR
-with every consumer migrated (Pending P2). The package is text identity and
+**Owner.** `@beep/text`, a `foundation/modeling` package that holds the source
+identity and anchor modules; the package that held them before is retired and
+has no alias (the rest of the layer is Pending P2). The package is text identity and
 anchoring, not PROV; PROV-O stays in `@beep/rdf`.
 
 **Denotes.** What a source text is and how to point into it with proof. It

@@ -983,10 +983,6 @@
       "@beep/law-practice-use-cases/server": [
         "./packages/law-practice/use-cases/src/server.ts"
       ],
-      "@beep/provenance": [
-        "./packages/foundation/modeling/provenance/src/index.ts"
-      ],
-      "@beep/provenance/*": ["./packages/foundation/modeling/provenance/src/*"],
       "@beep/schema/UnitInterval": [
         "./packages/foundation/modeling/schema/src/UnitInterval.ts"
       ],
@@ -2619,7 +2615,9 @@
       ],
       "@beep/repo-cli/commands/Identity": [
         "./packages/tooling/tool/cli/src/commands/Identity/index.ts"
-      ]
+      ],
+      "@beep/text": ["./packages/foundation/modeling/text/src/index.ts"],
+      "@beep/text/*": ["./packages/foundation/modeling/text/src/*"]
     }
   }
 }

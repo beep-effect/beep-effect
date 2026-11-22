@@ -1,6 +1,6 @@
 /**
- * Domain-agnostic provenance value models — the canonical "where did this come
- * from?" substrate that grounding, extraction, and evidence systems share.
+ * Domain-agnostic text identity and anchoring values — the canonical "where in
+ * which source text?" substrate that grounding, extraction, and evidence systems share.
  *
  * @packageDocumentation
  * @since 0.0.0
