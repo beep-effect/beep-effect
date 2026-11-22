@@ -56,7 +56,7 @@ export const liveJobRetry = JobRetryPolicy.make({ maxAttempts: 2, delaySeconds: 
  * GitHub's jobs API can answer "not queued" for a job that is queued, and
  * scale-up then consumes the message with no retry.
  *
- * **Example** (The production overflow pool in the overlap)
+ * **Example** (The production overflow pool in each phase)
  *
  * ```ts
  * import { toRunnerPool } from "@beep/infra-ci-runners/CiRunners"
@@ -64,7 +64,8 @@ export const liveJobRetry = JobRetryPolicy.make({ maxAttempts: 2, delaySeconds: 
  * import * as Effect from "effect/Effect"
  *
  * const config = Effect.runSync(decodeCiRunnersConfig(productionConfig))
- * console.log(toRunnerPool(config.overflow, config.phase).maximumCount) // 2
+ * console.log(toRunnerPool(config.overflow, "overlap").maximumCount) // 2
+ * console.log(toRunnerPool(config.overflow, config.phase).maximumCount) // 48
  * ```
  *
  * @param pool - The configured pool.
