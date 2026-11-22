@@ -57,14 +57,15 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
           ...citationResult5.limits,
           producedTextUtf16: input.budget,
         }).pipe(
-          Effect.flatMap((stage) =>
+          Effect.zipWith(
             makeCitationTestScaffoldBinding(
               {
                 ...citationResult5.limits,
                 producedTextUtf16: input.budget,
               },
               "clean"
-            ).pipe(Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) })))
+            ),
+            (stage, bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) })
           ),
           Effect.provideService(CitationCleaner, owned.runtime)
         );
@@ -167,14 +168,15 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
         ...citationResult16.limits,
         producedTextUtf16: 2,
       }).pipe(
-        Effect.flatMap((stage) =>
+        Effect.zipWith(
           makeCitationTestScaffoldBinding(
             {
               ...citationResult16.limits,
               producedTextUtf16: 2,
             },
             "clean"
-          ).pipe(Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) })))
+          ),
+          (stage, bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) })
         ),
         Effect.provideService(CitationCleaner, owned.runtime)
       );

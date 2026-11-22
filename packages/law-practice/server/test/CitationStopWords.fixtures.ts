@@ -79,11 +79,10 @@ const install = makeCitationMetadataFixture({
   load,
   make: (...args: Parameters<typeof makeCitationStopWords>) =>
     makeCitationStopWords(...args).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(args[0], "clean").pipe(
-          Effect.map((bind) => ({ ...stage, clean: bind(stage.clean) }))
-        )
-      )
+      Effect.zipWith(makeCitationTestScaffoldBinding(args[0], "clean"), (stage, bind) => ({
+        ...stage,
+        clean: bind(stage.clean),
+      }))
     ),
 });
 /** Smoke contains inline case, every semicolon shape, native surrogate controls, adjacency and one
@@ -147,11 +146,10 @@ export const assertCitationStopWordsLifetime = Effect.fn("StopWordsTest.lifetime
     },
   ]) {
     const rejected = yield* makeCitationStopWords(closed.limits, closed.runtime, configuration).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(closed.limits, "clean").pipe(
-          Effect.map((bind) => ({ ...stage, clean: bind(stage.clean) }))
-        )
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding(closed.limits, "clean"), (stage, bind) => ({
+        ...stage,
+        clean: bind(stage.clean),
+      })),
       Effect.provideContext(closed.provided),
       Effect.flip
     );
