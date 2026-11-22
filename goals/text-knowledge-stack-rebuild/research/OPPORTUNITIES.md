@@ -281,3 +281,14 @@ home paths with `~`, drop session and machine ids.
   not.
 - **Prevention:** every refusal whose message prescribes commands gets a test that runs those
   commands and ends with a passing lint, as `L0-3 a namespace is retired by hand` does.
+
+## 2026-11-22: the P2 PR cannot open as a third stack layer
+
+- **Doing:** opening the P2 PR stacked on PR #3449 at content-final, after `yeet final-check`
+  passed on 183872d5710.
+- **Evidence:** `yeet open --stack-on 3449` refused with `parent-off-trunk: #3449 targets` the
+  P1 B branch, `not main; a stack holds 2 layers at most`. The packet's P2 decision planned a
+  stack layer on C while B and C are held. It did not say that C is itself a layer on B.
+- **Prevention:** a decision that plans a stack layer should check the parent's base first, with
+  `gh pr view <n> --json baseRefName`. Or Yeet's stack plan could name the depth limit when a
+  packet's held PRs already form a two-layer stack.
