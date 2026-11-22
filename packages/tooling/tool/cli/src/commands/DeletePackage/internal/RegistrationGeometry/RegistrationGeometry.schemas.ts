@@ -491,8 +491,9 @@ export class DataResourceSurface extends S.Opaque<DataResourceSurface, { readonl
 ) {}
 
 /**
- * Surface for goal packets and research records that mention the package;
- * matches are classified as historical evidence and never pruned.
+ * Surface for dated records (goal and exploration packets, research, reports,
+ * decision logs) that mention the package; matches are classified as historical
+ * evidence and never pruned.
  *
  * **Example** (List historical record globs)
  *

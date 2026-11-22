@@ -25,6 +25,7 @@ export * from "./Format.ts";
 export * from "./GateEvent.ts";
 export * from "./GateRecord.ts";
 export * from "./GateReport.ts";
+export * from "./History.ts";
 export * from "./Interchange.ts";
 export * from "./Item.ts";
 export * from "./ItemKey.ts";

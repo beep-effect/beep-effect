@@ -7,6 +7,7 @@
  * @since 0.0.0
  */
 import { $GateReportId } from "@beep/identity/packages";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import { Location } from "./Item.ts";
 import { optionalSlot } from "./internal/slots.ts";
@@ -134,7 +135,9 @@ export type PointerTable = typeof PointerTable.Type;
  *
  * **Details**
  *
- * The model renders the slot; the history goal fills it.
+ * The model renders the slot; the history goal fills it. `scopeDiffers` is
+ * set when the two runs did not check the same units, so items in units only
+ * one of them checked were not counted; it defaults to `false`.
  *
  * **Example** (Build a delta)
  *
@@ -152,9 +155,11 @@ export class RunDelta extends S.Opaque<RunDelta, { readonly brand: unique symbol
     fixed: Count,
     stillFailing: Count,
     new: Count,
+    scopeDiffers: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe(
     $I.annoteSchema("RunDelta", {
-      description: "Items fixed, still failing and newly failing since the previous run.",
+      description:
+        "Items fixed, still failing and newly failing since the previous run, and whether the runs checked different units.",
     })
   )
 ) {}

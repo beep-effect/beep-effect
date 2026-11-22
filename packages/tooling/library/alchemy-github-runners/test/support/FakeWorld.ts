@@ -29,7 +29,13 @@ import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import type { FleetLaunchRequest, JitConfigRequest, ReleaseAsset, RunnerFilter } from "@beep/alchemy-github-runners";
+import type {
+  FleetLaunchRequest,
+  JitConfigRequest,
+  ParameterWrite,
+  ReleaseAsset,
+  RunnerFilter,
+} from "@beep/alchemy-github-runners";
 
 const isAwsApiError = S.is(AwsApiError);
 
@@ -56,7 +62,29 @@ export class World {
   tagged: Array<string> = [];
   untagged: Array<string> = [];
   ssm: Record<string, { value: string; modified: number; tags: Record<string, string> }> = {};
+  /** Every SSM write, as the program asked for it (tier included). */
+  puts: Array<ParameterWrite> = [];
+  /** Scripted SSM write failures by parameter-name prefix. */
+  putFailures: Array<readonly [string, AwsApiError]> = [];
+  /** Name prefixes whose put stores the value and then fails: the response was lost. */
+  landedPutFailures: Array<readonly [string, AwsApiError]> = [];
+  /** Scripted instance-tag failure for every tag call. */
+  tagFailure: O.Option<AwsApiError> = O.none();
+  /** Scripted terminate failure for every terminate call. */
+  terminateFailure: O.Option<AwsApiError> = O.none();
+  /** Scripted runner-group lookup failure for every lookup. */
+  runnerGroupError: O.Option<GitHubApiError> = O.none();
+  /** Scripted registration-token failure for every request. */
+  registrationError: O.Option<GitHubApiError> = O.none();
+  /** Scripted JIT failure error; default a 500. */
+  jitError: GitHubApiError = GitHubApiError.make({ operation: "jit", status: O.some(500), message: "boom" });
   sent: Array<SentMessage> = [];
+  /** Cleanup calls in order: `deleteToken:<name>`, `deleteRunner:<id>`, `terminate:<instance>`. */
+  cleanupCalls: Array<string> = [];
+  /** Scripted SSM delete failure for every delete call. */
+  deleteFailure: O.Option<AwsApiError> = O.none();
+  /** Queue URLs whose sends fail with a 503. */
+  sendFailures: Array<string> = [];
   githubRunners: Array<SelfHostedRunner> = [];
   deletedRunners: Array<number> = [];
   busyOnDelete: Array<number> = [];
@@ -144,14 +172,21 @@ export const worldContext = (world: World) =>
           );
         }),
         terminate: Effect.fn("FakeEc2.terminate")(function* (instanceId) {
+          world.cleanupCalls.push(`terminate:${instanceId}`);
           world.onTerminate(instanceId);
           world.terminated.push(instanceId);
+          if (O.isSome(world.terminateFailure)) {
+            return yield* world.terminateFailure.value;
+          }
           for (const instance of O.toArray(world.instance(instanceId))) {
             instance.state = "terminated";
           }
         }),
         tag: Effect.fn("FakeEc2.tag")(function* (instanceId, tags) {
           world.tagged.push(instanceId);
+          if (O.isSome(world.tagFailure)) {
+            return yield* world.tagFailure.value;
+          }
           for (const instance of O.toArray(world.instance(instanceId))) {
             instance.tags = { ...instance.tags, ...tags };
           }
@@ -171,9 +206,22 @@ export const worldContext = (world: World) =>
           return O.map(O.fromUndefinedOr(world.ssm[name]), (entry) => Redacted.make(entry.value));
         }),
         put: Effect.fn("FakeSsm.put")(function* (input) {
+          world.puts.push(input);
+          const failure = A.findFirst(world.putFailures, ([prefix]) => Str.startsWith(prefix)(input.name));
+          if (O.isSome(failure)) {
+            return yield* failure.value[1];
+          }
           world.ssm[input.name] = { value: Redacted.value(input.value), modified: 0, tags: { ...input.tags } };
+          const lost = A.findFirst(world.landedPutFailures, ([prefix]) => Str.startsWith(prefix)(input.name));
+          if (O.isSome(lost)) {
+            return yield* lost.value[1];
+          }
         }),
         delete: Effect.fn("FakeSsm.delete")(function* (name) {
+          world.cleanupCalls.push(`deleteToken:${name}`);
+          if (O.isSome(world.deleteFailure)) {
+            return yield* world.deleteFailure.value;
+          }
           world.ssm = R.remove(world.ssm, name);
         }),
         listByPath: Effect.fn("FakeSsm.listByPath")(function* (path) {
@@ -188,6 +236,17 @@ export const worldContext = (world: World) =>
       MessageQueue,
       MessageQueue.of({
         send: Effect.fn("FakeSqs.send")(function* (input) {
+          if (A.contains(world.sendFailures, input.queueUrl)) {
+            return yield* AwsApiError.make({
+              service: "sqs",
+              operation: "sendMessage",
+              code: O.some("ServiceUnavailable"),
+              status: O.some(503),
+              retryable: true,
+              fault: "transient",
+              message: "unavailable",
+            });
+          }
           world.sent.push(input);
         }),
       })
@@ -211,6 +270,9 @@ export const worldContext = (world: World) =>
           return world.jobQueued && !A.contains(world.startedJobs, job.jobId);
         }),
         runnerGroupId: Effect.fn("FakeGitHub.runnerGroupId")(function* (_token, _org, groupName) {
+          if (O.isSome(world.runnerGroupError)) {
+            return yield* world.runnerGroupError.value;
+          }
           return yield* Effect.fromOption(O.fromUndefinedOr(world.runnerGroups[groupName])).pipe(
             Effect.mapError(() => GitHubApiError.make({ operation: "runnerGroupId", message: "missing" }))
           );
@@ -218,7 +280,7 @@ export const worldContext = (world: World) =>
         generateJitConfig: Effect.fn("FakeGitHub.generateJitConfig")(function* (_token, request) {
           world.jitRequests.push(request);
           if (A.some(world.jitFailures, (name) => Str.endsWith(name)(request.name))) {
-            return yield* GitHubApiError.make({ operation: "jit", status: O.some(500), message: "boom" });
+            return yield* world.jitError;
           }
           const runnerId = 1000 + world.jitRequests.length;
           world.githubRunners.push(
@@ -227,6 +289,9 @@ export const worldContext = (world: World) =>
           return JitRunnerConfig.make({ runnerId, encodedJitConfig: Redacted.make(`jit-${request.name}`) });
         }),
         registrationToken: Effect.fn("FakeGitHub.registrationToken")(function* () {
+          if (O.isSome(world.registrationError)) {
+            return yield* world.registrationError.value;
+          }
           return Redacted.make("reg-token");
         }),
         getRunner: Effect.fn("FakeGitHub.getRunner")(function* (_token, _owner, runnerId) {
@@ -236,6 +301,7 @@ export const worldContext = (world: World) =>
           return world.githubRunners;
         }),
         deleteRunner: Effect.fn("FakeGitHub.deleteRunner")(function* (_token, _owner, runnerId) {
+          world.cleanupCalls.push(`deleteRunner:${runnerId}`);
           if (A.contains(world.failOnDelete, runnerId)) {
             return yield* GitHubApiError.make({ operation: "delete", status: O.some(502), message: "bad gateway" });
           }
