@@ -450,6 +450,7 @@
     "lint:schema-tag-idioms": "bun run beep laws schema-tag-idioms --check",
     "lint:tracked-shell-allowlist": "bun run beep laws tracked-shell-allowlist --check",
     "lint:no-tracked-python": "bun run beep laws no-tracked-python --check",
+    "lint:comment-law": "bun run beep laws comments --check --base \"$BEEP_PROOF_BASE\"",
     "lint:holds": "bun run beep holds lint",
     "lint:ecosystem-polarity": "bun run beep lint ecosystem-polarity",
     "goals:index-check": "bun run beep goals index --check",

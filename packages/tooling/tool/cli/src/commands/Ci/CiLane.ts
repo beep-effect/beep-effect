@@ -2092,6 +2092,7 @@ export const ciLaneStepsForTesting: {
           // Required on every head: Heavy / Lint Policy also runs the law on
           // code PRs, but it is not a required context.
           homePaths,
+          bunRunStep(repoRoot, "lint:comment-law", ["beep", "laws", "comments", "--check", "--base", options.base]),
           // A new reader of a scanned repository file (generated standards file or
           // root tooling input) in another package does not select the row's
           // owners, so the owner rows are checked here, on the pull request that
