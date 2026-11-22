@@ -31,11 +31,15 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P1 Implement — wave 1 (tooling and law text) in review; package sweeps follow.
 
 ## Latest Evidence
 
-Not started.
+Before any sweep the JSDoc inventory measures 8,726 restating leads
+(`restating-lead` in `standards/jsdoc-totals.regression-baseline.jsonc`): 3,283 on
+schema classes, 1,686 on schema constants, 2,529 on type companions, 400 on
+companion namespaces and 828 on barrels. The sampled estimate was about 25,000
+exported blocks of tautological prose of every kind.
 
 ## Notes
 

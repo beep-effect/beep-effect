@@ -536,7 +536,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocDocumentationInventory.ts",
-            "425978eb4ba243dab83125442e4c871065464455c310dcab5373d42493158227"
+            "1d7c8db71dd383e04eab476eceede3326738160cca0e7033e18bed08f5186d79"
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/QualityArtifactSupport.ts",
@@ -544,7 +544,7 @@ describe("Stage C root task inputs", { concurrent: false }, () => {
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Quality/internal/JSDocRatchet.ts",
-            "4afd585ac7a7494f692d4e5a941957c8130ba49ae7d0c4c73a481025fee35d96"
+            "1431ba10e3b3d306d95b078a7a47421b6549232a2bd26b1baab9d646aab43471"
           ),
           Tuple.make(
             "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",

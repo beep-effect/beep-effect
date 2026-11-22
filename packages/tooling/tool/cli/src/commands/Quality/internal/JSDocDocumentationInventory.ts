@@ -10,6 +10,7 @@ import {
   ParseJSDocSectionsOptions,
   parseJSDocSections,
 } from "@beep/repo-utils/JSDoc/JSDocSections";
+import { derivedLead, jsDocLead, leadRestates } from "@beep/repo-utils/JSDoc/LeadSource";
 import { LiteralKit } from "@beep/schema";
 import { A, O, Str, thunkFalse } from "@beep/utils";
 import * as SecureRandom from "effect/crypto/SecureRandom";
@@ -26,6 +27,7 @@ import * as Regex from "effect/RegExp";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, SyntaxKind, ts } from "ts-morph";
+import { hasGeneratedFileHeader, isGeneratedSourceFile } from "./JSDocRatchet.ts";
 import {
   declarationKind,
   defaultRepoRoot,
@@ -48,7 +50,7 @@ import {
 import type { Git } from "@beep/git/Git";
 import type { JSDocSectionName } from "@beep/repo-utils/JSDoc/JSDocSections";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
-import type { SourceFile } from "ts-morph";
+import type { ExportDeclaration, SourceFile } from "ts-morph";
 import type { GitCommandErrorAdapter } from "../../../internal/repo-run/index.ts";
 import type { WorkspacePackageInfo } from "./QualityArtifactSupport.ts";
 
@@ -82,6 +84,7 @@ const JSDocDocumentationRuleCode = LiteralKit([
   "category-must-be-lowercase",
   "missing-schema-annotation",
   "missing-schema-runtime-type-alias",
+  "restating-lead",
 ]).pipe(
   $I.annoteSchema("JSDocDocumentationRuleCode", {
     description: "Stable diagnostic codes emitted by the JSDoc documentation inventory.",
@@ -106,6 +109,7 @@ const newDocumentationRuleCodes = JSDocDocumentationRuleCode.pick([
   "loose-ts-fence",
   "forbidden-remarks",
   "no-root-package-import",
+  "restating-lead",
 ]).literals;
 
 /**
@@ -484,11 +488,13 @@ export const documentationShapeViolations = (commentText: string): ReadonlyArray
   const lead = Str.isEmpty(Str.trim(leadWithSeparator[leadWithSeparator.length - 1] ?? ""))
     ? A.dropRight(leadWithSeparator, 1)
     : leadWithSeparator;
-  if (Str.isEmpty(Str.trim(lead[0] ?? ""))) {
-    A.appendInPlace(findings, { rule: "leading-blank" });
-  }
-  if (Str.isEmpty(Str.trim(lead[lead.length - 1] ?? ""))) {
-    A.appendInPlace(findings, { rule: "trailing-blank" });
+  if (A.isReadonlyArrayNonEmpty(lead)) {
+    if (Str.isEmpty(Str.trim(lead[0]))) {
+      A.appendInPlace(findings, { rule: "leading-blank" });
+    }
+    if (Str.isEmpty(Str.trim(A.lastNonEmpty(lead)))) {
+      A.appendInPlace(findings, { rule: "trailing-blank" });
+    }
   }
   if (A.some(lead, (line) => /^\s*#{1,6}\s/.test(line))) {
     A.appendInPlace(findings, { rule: "invalid-heading" });
@@ -983,7 +989,7 @@ const declarationLocationOf = (
 });
 
 const analyzeExportDeclaration = (
-  declaration: Node,
+  declaration: ExportDeclaration,
   sourceFile: SourceFile,
   packagePath: string,
   repoRoot: string,
@@ -998,6 +1004,11 @@ const analyzeExportDeclaration = (
   const unsafeIssues = unsafeExampleViolations(commentText);
   const categoryIssues = categoryViolations(commentText);
   const forbidden = forbiddenTagsIn(presentTags);
+  const barrelLeadIssues = restatingLeadFindings(
+    leadingJsDocText(declaration),
+    barrelReferences(declaration),
+    isGeneratedSource(repoPath, sourceFile)
+  );
   // Re-export declarations are graph edges, not symbol-quality subjects
   // (.patterns/jsdoc-documentation.md:91-96; rulings R2, R5): exempt them from
   // requiredExportTags and missingSummary entirely instead of demanding fake
@@ -1029,10 +1040,51 @@ const analyzeExportDeclaration = (
     unsafeExampleViolations: unsafeIssues,
     schemaAnnotationGaps: [] as Array<DocumentationIssue>,
     categoryViolations: categoryIssues,
-    documentationShapeViolations: [] as Array<DocumentationIssue>,
+    documentationShapeViolations: barrelLeadIssues,
     remediationStatus: findingCount === 0 ? "resolved" : "open",
   };
 };
+
+const barrelReferences = (declaration: ExportDeclaration): ReadonlyArray<string> =>
+  A.filter(
+    [
+      declaration.getModuleSpecifierValue(),
+      declaration.getNamespaceExport()?.getName(),
+      ...A.flatMap(declaration.getNamedExports(), (specifier) => [
+        specifier.getName(),
+        specifier.getAliasNode()?.getText(),
+      ]),
+    ],
+    P.isString
+  );
+
+const isGeneratedSource = (repoPath: string, sourceFile: SourceFile): boolean =>
+  isGeneratedSourceFile(repoPath) || hasGeneratedFileHeader(sourceFile.getFullText());
+
+const moduleHeaderTags = ["@packageDocumentation", "@fileoverview", "@file"];
+
+const restatingLeadFindings = (
+  docText: string,
+  references: ReadonlyArray<string>,
+  generated: boolean
+): ReadonlyArray<DocumentationIssue> => {
+  const written = jsDocLead(docText);
+  const moduleHeader = A.some(tagsFromComment(docText), (tag) => A.contains(moduleHeaderTags, tag));
+  return !generated && !moduleHeader && Str.isNonEmpty(written) && leadRestates(written, references)
+    ? [{ rule: "restating-lead", detail: written }]
+    : [];
+};
+
+const derivedLeadFindings = (
+  docText: string,
+  name: string,
+  lead: O.Option<string>,
+  generated: boolean
+): ReadonlyArray<DocumentationIssue> =>
+  O.match(lead, {
+    onNone: () => [],
+    onSome: (description) => restatingLeadFindings(docText, [description, name], generated),
+  });
 
 const countFindings = (missingSummary: boolean, ...findingGroups: ReadonlyArray<ReadonlyArray<unknown>>): number =>
   A.reduce(findingGroups, missingSummary ? 1 : 0, (total, findings) => total + findings.length);
@@ -1055,9 +1107,11 @@ const analyzeDirectExport = (
   const unsafeIssues = unsafeExampleViolations(docText);
   const categoryIssues = categoryViolations(docText);
   const forbidden = forbiddenTagsIn(presentTags);
-  const missingSummary = O.isNone(summaryFromComment(docText));
+  const lead = derivedLead(declaration, name);
+  const missingSummary = O.isNone(lead) && Str.isEmpty(jsDocLead(docText));
   const schemaGaps = schemaAnnotationGaps(name, declaration, sourceFile);
   const shapeIssues = documentationShapeViolations(docText);
+  const leadIssues = derivedLeadFindings(docText, name, lead, isGeneratedSource(repoPath, sourceFile));
   const findingCount = countFindings(
     missingSummary,
     missingTags,
@@ -1086,7 +1140,7 @@ const analyzeDirectExport = (
     unsafeExampleViolations: unsafeIssues,
     schemaAnnotationGaps: schemaGaps,
     categoryViolations: categoryIssues,
-    documentationShapeViolations: shapeIssues,
+    documentationShapeViolations: A.appendAll(shapeIssues, leadIssues),
     remediationStatus: findingCount === 0 ? "resolved" : "open",
   };
 };
@@ -1119,7 +1173,8 @@ const analyzeFunctionOverloadGroup = (
   const missingTags = missingRequiredTags(effectiveTags, requiredExportTags);
   const { filePath, repoPath, line } = declarationLocationOf(anchor, sourceFile, packagePath, repoRoot, path);
   const forbidden = forbiddenTagsIn(presentTags);
-  const missingSummary = O.isNone(summaryFromComment(docText));
+  const lead = derivedLead(anchor, name);
+  const missingSummary = O.isNone(lead) && Str.isEmpty(jsDocLead(docText));
   const schemaGaps = schemaAnnotationGaps(name, anchor, sourceFile);
 
   // Malformed/forbidden-tag checks apply to any doc block found on any
@@ -1131,6 +1186,7 @@ const analyzeFunctionOverloadGroup = (
   const unsafeIssues = A.flatMap(groupDocTexts, unsafeExampleViolations);
   const categoryIssues = A.flatMap(groupDocTexts, categoryViolations);
   const shapeIssues = A.flatMap(groupDocTexts, documentationShapeViolations);
+  const leadIssues = derivedLeadFindings(docText, name, lead, isGeneratedSource(repoPath, sourceFile));
   const findingCount = countFindings(
     missingSummary,
     missingTags,
@@ -1159,7 +1215,7 @@ const analyzeFunctionOverloadGroup = (
     unsafeExampleViolations: unsafeIssues,
     schemaAnnotationGaps: schemaGaps,
     categoryViolations: categoryIssues,
-    documentationShapeViolations: shapeIssues,
+    documentationShapeViolations: A.appendAll(shapeIssues, leadIssues),
     remediationStatus: findingCount === 0 ? "resolved" : "open",
   };
 };
