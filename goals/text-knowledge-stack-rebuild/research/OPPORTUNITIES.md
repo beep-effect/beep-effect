@@ -292,3 +292,25 @@ home paths with `~`, drop session and machine ids.
 - **Prevention:** a decision that plans a stack layer should check the parent's base first, with
   `gh pr view <n> --json baseRefName`. Or Yeet's stack plan could name the depth limit when a
   packet's held PRs already form a two-layer stack.
+
+## 2026-11-22: the semantica provider cache survives only in the desktop Trash
+
+- **Doing:** freezing today's `bun run canary relation preview` report for P3 commit 1.
+- **Evidence:** no checkout has `.beep/semantica/provider-cache`, and no configured
+  `SEMANTICA_PROVIDER_CACHE_DIR` exists. The 152 MB cache (4,903 entries) was found only under
+  `~/.local/share/Trash/files/` in a retired `beep-effect11` clone, by a whole-disk `find` for one
+  cache key. Emptying the Trash would have made the relation-preview gate of commits 1 and 8
+  impossible. The three committed cases were copied to `~/.cache/beep/semantica-relation-preview-cache/`.
+- **Prevention:** give the provider cache a fixed workstation home outside every clone, set as the
+  default of `SEMANTICA_PROVIDER_CACHE_DIR`, and have the lane drain refuse to archive a clone that
+  holds the only copy of an untracked cache a gate reads.
+
+## 2026-11-22: `package-test-typecheck` exits 0 over test type errors
+
+- **Doing:** typechecking the semantica and law-practice server tests for P3 commit 1.
+- **Evidence:** `bun run package-test-typecheck` (`beep-cli quality test-tsgo-package`) printed only
+  its command line and exited 0, while `.turbo/package-test-typecheck-result.json` recorded
+  `"exitCode": 1` with `TS2345` and `TS377188` in `test/Extractor.test.ts`. Read by exit code
+  alone, the gate passed a test file that does not compile.
+- **Prevention:** have the script exit with the recorded `exitCode` and print the diagnostics it
+  stores, or name the artifact as the verdict in its own output.

@@ -27,7 +27,7 @@ import { ChunkerLive } from "@/layers/ChunkerLive";
 import { HostedExtractorLive, PatternExtractorLive } from "@/layers/ExtractorLive";
 import { ActiveModelIdentityLive } from "@/layers/LanguageModelLive";
 import { FixtureDeclaration, Origin, SourceDocument } from "@/schema/Document";
-import { ClaimBody, FrozenRelationPredicate, RelationExtractionCandidate } from "@/schema/Evidence";
+import { ClaimBody, EvidenceBatch, FrozenRelationPredicate, RelationExtractionCandidate } from "@/schema/Evidence";
 import { DocumentId, ProvenanceEventId } from "@/schema/Ids";
 import { ParseOutcome } from "@/schema/Text";
 import { Canonicalizer } from "@/services/Canonicalizer";
@@ -157,6 +157,96 @@ const hostedFailureLayer = (reason: "model-generation-failed" | "model-output-pa
     Layer.provide(canonicalizerLayer)
   );
 
+const hostedCase = (
+  name: string,
+  text: string,
+  extractionsOf: (text: string) => ReadonlyArray<GroundedExtraction>
+) => ({ extractions: extractionsOf(text), name, text });
+
+const firstStartOf = (surface: string, text: string) => O.getOrElse(constant(-1))(Str.indexOf(surface)(text));
+const lastStartOf = (surface: string, text: string) => O.getOrElse(constant(-1))(Str.lastIndexOf(surface)(text));
+const relationAttributes = O.some({ object: "Engine", predicate: "selected", subject: "Ada" });
+
+const clusterCase = hostedCase("coreference cluster", "Ada wrote notes.", () => [
+  grounded("person", "Ada", 0, O.some({ cluster: "person-ada" })),
+]);
+
+const synthesizedEndpointsCase = hostedCase(
+  "synthesized relation endpoints",
+  "Ada wrote notes. Ada selected Engine.",
+  (text) => [grounded("relation", "Ada selected Engine.", lastStartOf("Ada", text), relationAttributes)]
+);
+
+const reusedEndpointsCase = hostedCase("reused relation endpoints", "Ada wrote notes. Ada selected Engine.", (text) => [
+  grounded("person", "Ada", lastStartOf("Ada", text)),
+  grounded("method", "Engine", firstStartOf("Engine", text)),
+  grounded("relation", "Ada selected Engine.", lastStartOf("Ada", text), relationAttributes),
+]);
+
+const unresolvedRelationCase = hostedCase("unresolved relation", "Ada praised Engine.", (text) => [
+  grounded("person", "Ada", 0),
+  grounded("method", "Engine", firstStartOf("Engine", text)),
+  grounded("relation", text, 0, O.some({ object: "Engine", predicate: "praised", subject: "Missing" })),
+]);
+
+const malformedRelationCase = hostedCase("malformed relation contract", "Ada selected Engine.", (text) => [
+  grounded("relation", text, 0, O.some({ object: "Engine", subject: "Ada" })),
+]);
+
+const fuzzyRelationCase = hostedCase("fuzzy relation evidence", "Ada selected Engine.", (text) => [
+  GroundedExtraction.cases.match_fuzzy.make({
+    alignmentStatus: "match_fuzzy",
+    attributes: relationAttributes,
+    confidence: O.none(),
+    label: "relation",
+    matchedText: text,
+    span: Contract.Span.make({ end: S.Natural.make(text.length), start: S.Natural.make(0) }),
+    text,
+  }),
+]);
+
+const hostedCases = [
+  clusterCase,
+  synthesizedEndpointsCase,
+  reusedEndpointsCase,
+  unresolvedRelationCase,
+  malformedRelationCase,
+  fuzzyRelationCase,
+];
+
+class FrozenHostedBatch extends S.Opaque<FrozenHostedBatch, { readonly brand: unique symbol }>()(
+  S.Struct({ batch: EvidenceBatch, name: S.NonEmptyString })
+) {}
+
+const FrozenHostedBatchesJson = S.fromJsonString(S.Array(FrozenHostedBatch), { space: 2 });
+
+const hostedBatch = Effect.fn("ExtractorTest.hostedBatch")(function* (hosted: (typeof hostedCases)[number]) {
+  const outcome = yield* provideScopedLayer(Layer.merge(baseLayer, hostedLayer(hosted.extractions)))(
+    Effect.gen(function* () {
+      const { canonical, chunks } = yield* makeCanonical(hosted.text);
+      const extractor = yield* HostedExtractor;
+      return yield* extractor.extract(canonical, chunks);
+    })
+  );
+  if (outcome.outcome === "Degraded") {
+    return yield* Effect.die(new Error(outcome.detail));
+  }
+  return FrozenHostedBatch.make({ batch: outcome.batch, name: hosted.name });
+});
+
+describe("C0 hosted extractor frozen batch", () => {
+  it.effect(
+    "keeps the bytes of the hosted evidence batches over this file's model outputs",
+    (context) =>
+      Effect.gen(function* () {
+        const batches = yield* Effect.forEach(hostedCases, hostedBatch, { concurrency: 1 });
+        const json = yield* S.encodeEffect(FrozenHostedBatchesJson)(batches);
+        yield* Effect.promise(() => context.expect(`${json}\n`).toMatchFileSnapshot("./fixtures/hosted-batch-v1.json"));
+      }),
+    { timeout: 60_000 }
+  );
+});
+
 describe("C0 hosted extractor", () => {
   it("keeps the frozen target vocabulary separate from the legacy-preview relation contract", () => {
     expect(FrozenRelationPredicate.literals).toEqual([
@@ -180,8 +270,7 @@ describe("C0 hosted extractor", () => {
   });
 
   {
-    const text = "Ada wrote notes.";
-    const extractions = [grounded("person", "Ada", 0, O.some({ cluster: "person-ada" }))];
+    const { extractions, text } = clusterCase;
     it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
       it.effect("preserves hosted coreference cluster assignments on entity claims", () =>
         Effect.gen(function* () {
@@ -208,21 +297,9 @@ describe("C0 hosted extractor", () => {
   }
 
   {
-    const text = "Ada wrote notes. Ada selected Engine.";
-    const relationStart = O.getOrElse(constant(-1))(Str.lastIndexOf("Ada")(text));
-    const engineStart = O.getOrElse(constant(-1))(Str.indexOf("Engine")(text));
-    const extractions = [
-      grounded(
-        "relation",
-        "Ada selected Engine.",
-        relationStart,
-        O.some({
-          object: "Engine",
-          predicate: "selected",
-          subject: "Ada",
-        })
-      ),
-    ];
+    const { extractions, text } = synthesizedEndpointsCase;
+    const relationStart = lastStartOf("Ada", text);
+    const engineStart = firstStartOf("Engine", text);
     it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
       it.effect("anchors repeated endpoint surfaces inside relation evidence and synthesizes same-batch entities", () =>
         Effect.gen(function* () {
@@ -259,19 +336,8 @@ describe("C0 hosted extractor", () => {
   }
 
   {
-    const text = "Ada wrote notes. Ada selected Engine.";
-    const secondAda = O.getOrElse(constant(-1))(Str.lastIndexOf("Ada")(text));
-    const engine = O.getOrElse(constant(-1))(Str.indexOf("Engine")(text));
-    const extractions = [
-      grounded("person", "Ada", secondAda),
-      grounded("method", "Engine", engine),
-      grounded(
-        "relation",
-        "Ada selected Engine.",
-        secondAda,
-        O.some({ object: "Engine", predicate: "selected", subject: "Ada" })
-      ),
-    ];
+    const { extractions, text } = reusedEndpointsCase;
+    const secondAda = lastStartOf("Ada", text);
     it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
       it.effect("reuses base entity claims already anchored inside the relation evidence", () =>
         Effect.gen(function* () {
@@ -297,12 +363,7 @@ describe("C0 hosted extractor", () => {
   }
 
   {
-    const text = "Ada praised Engine.";
-    const extractions = [
-      grounded("person", "Ada", 0),
-      grounded("method", "Engine", O.getOrElse(constant(-1))(Str.indexOf("Engine")(text))),
-      grounded("relation", text, 0, O.some({ object: "Engine", predicate: "praised", subject: "Missing" })),
-    ];
+    const { extractions, text } = unresolvedRelationCase;
     it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
       it.effect("retains an unresolved relation as a degraded claim", () =>
         Effect.gen(function* () {
@@ -324,8 +385,7 @@ describe("C0 hosted extractor", () => {
   }
 
   {
-    const text = "Ada selected Engine.";
-    const extractions = [grounded("relation", text, 0, O.some({ object: "Engine", subject: "Ada" }))];
+    const { extractions, text } = malformedRelationCase;
     it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
       it.effect("fails a malformed relation contract as typed model-output degradation", () =>
         Effect.gen(function* () {
@@ -344,17 +404,8 @@ describe("C0 hosted extractor", () => {
   }
 
   {
-    const text = "Ada selected Engine.";
-    const extraction = GroundedExtraction.cases.match_fuzzy.make({
-      alignmentStatus: "match_fuzzy",
-      attributes: O.some({ object: "Engine", predicate: "selected", subject: "Ada" }),
-      confidence: O.none(),
-      label: "relation",
-      matchedText: text,
-      span: Contract.Span.make({ end: S.Natural.make(text.length), start: S.Natural.make(0) }),
-      text,
-    });
-    it.layer(Layer.merge(baseLayer, hostedLayer([extraction])), { timeout: "30 seconds" })((it) => {
+    const { extractions, text } = fuzzyRelationCase;
+    it.layer(Layer.merge(baseLayer, hostedLayer(extractions)), { timeout: "30 seconds" })((it) => {
       it.effect("disqualifies fuzzy alignment for relation evidence", () =>
         Effect.gen(function* () {
           const { canonical, chunks } = yield* makeCanonical(text);

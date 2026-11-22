@@ -4,7 +4,14 @@ import {
   LangExtractService,
   remoteExtractionPolicyFromConfig,
 } from "@beep/langextract/Service";
-import { Distinction, DistinctionDetail } from "@beep/law-practice-domain";
+import {
+  Claim,
+  Distinction,
+  DistinctionDetail,
+  OfficeAction,
+  PriorArtReference,
+  Rejection,
+} from "@beep/law-practice-domain";
 import { LawPracticeServerLive } from "@beep/law-practice-server/layer";
 import { IrToLaw, IrToLawExtractionError } from "@beep/law-practice-use-cases/IrToLaw";
 import { OfficeActionReview, officeActionExtractionTargets } from "@beep/law-practice-use-cases/OfficeActionReview";
@@ -31,6 +38,16 @@ import {
 } from "./fixture.ts";
 
 const isIrToLawExtractionError = S.is(IrToLawExtractionError);
+const LawEntitiesJson = S.fromJsonString(
+  S.Struct({
+    claim: Claim,
+    distinction: Distinction,
+    officeAction: OfficeAction,
+    priorArtReference: PriorArtReference,
+    rejection: Rejection,
+  }),
+  { space: 2 }
+);
 
 const OFFICE_ACTION_MODEL_OUTPUT = `{"extractions":[{"label":"office_action","text":"Office Action"},{"label":"claim","text":"A widget comprising a lid and a base."},{"label":"rejection_reference","text":"Smith"},{"label":"distinction","text":"a hinge coupling the lid to the base"}]}`;
 
@@ -120,6 +137,20 @@ describe("@beep/law-practice-server", () => {
           DistinctionDetail.match(distinctionDetail, {
             missing_limitation: (detail) => expect(detail.limitation).toBe(EXPECTED_DISTINCTION_LIMITATION),
           });
+        })
+      );
+
+      it.effect("IrToLaw keeps the bytes of the frozen v1 law entities for the server fixture", (context) =>
+        Effect.gen(function* () {
+          const langExtract = yield* LangExtractService;
+          const irToLaw = yield* IrToLaw;
+          const extractionResult = yield* langExtract.extract(makeExtractionRequest());
+          const law = yield* irToLaw.toLaw(extractionResult.extractions);
+          const json = yield* S.encodeEffect(LawEntitiesJson)(law);
+
+          yield* Effect.promise(() =>
+            context.expect(`${json}\n`).toMatchFileSnapshot("./fixtures/ir-to-law-entities-v1.json")
+          );
         })
       );
 
