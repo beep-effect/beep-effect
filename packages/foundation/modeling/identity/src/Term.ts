@@ -1832,6 +1832,47 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
   });
 
   /**
+   * Project the table to the snapshot of a registry no base has published yet, keeping the release `committed` has.
+   *
+   * **Details**
+   *
+   * Until a base publishes a term set, every row of the checkout belongs to one
+   * unreleased change, so a further edit calls for no further release. The
+   * snapshot keeps the release of `committed`, or takes the one
+   * {@link RegistryTable.releaseAfter} gives when `committed` publishes nothing,
+   * raised to the largest `since` a row records.
+   *
+   * **Example** (Keep the release across two edits)
+   *
+   * ```ts import.meta.vitest name="Keep the release across two edits"
+   * import * as Result from "effect/Result"
+   * import * as S from "effect/Schema"
+   * import { RegistryShard, RegistryTable, TermSnapshot } from "@beep/identity/Term"
+   *
+   * const tableOf = (terms: ReadonlyArray<string>) =>
+   *   Result.getOrThrow(RegistryTable.fromShards([S.decodeUnknownSync(RegistryShard)({
+   *     namespace: { prefix: "fabio", iri: "http://purl.org/spar/fabio/" },
+   *     terms,
+   *     bindings: [],
+   *     deprecations: []
+   *   })]))
+   * const first = RegistryTable.snapshotKeeping(tableOf(["Report"]), TermSnapshot.empty)
+   * first.release // => "1.0.0"
+   * RegistryTable.snapshotKeeping(tableOf(["Article", "Report"]), first).release // => "1.0.0"
+   * ```
+   *
+   * @category projections
+   * @since 0.0.0
+   */
+  static readonly snapshotKeeping: {
+    (committed: TermSnapshot): (table: RegistryTable) => TermSnapshot;
+    (table: RegistryTable, committed: TermSnapshot): TermSnapshot;
+  } = dual(2, (table: RegistryTable, committed: TermSnapshot): TermSnapshot => {
+    const kept = TermSnapshot.isPublished(committed) ? committed.release : RegistryTable.releaseAfter(table, committed);
+    return snapshotAt(table, A.reduce(sinceValues(table), kept, latestRelease));
+  });
+
+  /**
    * Move the bindings a {@link CodeMove} reaches to their new code identities, keeping each term and `since`.
    *
    * **Details**

@@ -180,8 +180,12 @@ with `origin/main` unless `--base <ref>` names another. `registry --write`,
 `deprecate` and `rebind` compute it from the snapshot that base publishes, so a
 branch of two additions is one minor and a branch of two deprecations is one
 major, however many commands made it. The regenerated release is never below a
-`since` a row records. Where the base publishes no term set, the writers succeed
-the checkout's own snapshot. `--check` always does, and reads no git state.
+`since` a row records. Where the base commit publishes no term set, the registry
+is still unreleased: the writers keep the release the checkout's snapshot has,
+however many commands run, and a deprecation records that release. `--check`
+reads no git state and succeeds the checkout's own snapshot, as the writers do
+in a checkout with no base commit at all (no `origin/main`, or not a git work
+tree).
 
 Against a base that publishes a term set, the lint wants exactly that release
 and the same release in every row the change adds. It reports:
@@ -196,9 +200,10 @@ Each message names the release and the command, with the `--base` the lint was
 given. Merge the base first when it is not merged yet. A rebind keeps the term
 bound, so it keeps its `since`; a binding added in the same branch as a later
 deprecation moves to the major with it. In a stack, keep the default base: until
-its parent merges, a layer is part of one change against `main`. Once the
-parent's release is on `main`, merge `main` into the layer; the lint then names
-the layer's next release and every row to move to it.
+its parent merges, a layer is part of one change against `main`. While `main`
+publishes no term set, that change is unreleased and the writers leave the
+release alone. Once the parent's release is on `main`, merge `main` into the
+layer; the lint then names the layer's next release and every row to move to it.
 
 Renaming a package that a shard projects into (`@beep/test-runner`) takes two
 source edits before the rebind, because a package move rewrites binding codes

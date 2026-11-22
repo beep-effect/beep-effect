@@ -1258,10 +1258,11 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             yield* expectRelease("2.0.0");
             yield* runLintCommand(["identity-registry"]);
 
-            // The committed snapshot is all the writer has, so it counts an addition and refuses to drop it.
+            // The registry is unreleased, so an addition keeps the release; the writer still refuses to drop a row
+            // of the committed snapshot, which is all it has.
             yield* fs.writeFileString(fabioPath, bound(["Draft", "Report"]));
             yield* runIdentityCommand(["registry", "--write"]);
-            yield* expectRelease("2.1.0");
+            yield* expectRelease("2.0.0");
             yield* fs.writeFileString(fabioPath, bound(["Report"]));
             const refused = yield* Effect.exit(runIdentityCommand(["registry", "--write"]));
             expectReportedExit(refused);
@@ -1274,6 +1275,41 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             yield* fs.remove(layout.snapshot);
             yield* runIdentityCommand(["registry", "--write"]);
             yield* expectRelease("2.0.0");
+            yield* runLintCommand(["identity-registry"]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "L0-3 counts two deprecations of a layer whose base publishes no term set as no further release",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            yield* writeWorkspaceFixture({ registrySlugs: ["identity", "widget"] });
+            yield* fs.writeFileString(WIDGET_OLD_MODULE, "export const report = 1;\n");
+            const main = yield* commitAll("no registry");
+            yield* setOriginMain(main);
+            yield* fs.makeDirectory(layout.shards, { recursive: true });
+            yield* fs.writeFileString(
+              fabioPath,
+              fabioShard(["Note", "Report", "Thesis"], [{ code: REPORT_CODE, local: "Report", since: "2.0.0" }])
+            );
+            yield* runIdentityCommand(["registry", "--write"]);
+            yield* expectRelease("2.0.0");
+
+            yield* runIdentityCommand(["deprecate", "fabio:Note", "--replacement", "fabio:Report"]);
+            yield* expectRelease("2.0.0");
+            yield* runIdentityCommand(["deprecate", "fabio:Thesis"]);
+            yield* expectRelease("2.0.0");
+            const retired = yield* Effect.map(fs.readFileString(layout.snapshot), decodeSnapshotText);
+            expect(A.map(retired.deprecations, (row) => [row.term, row.since])).toStrictEqual([
+              ["http://purl.org/spar/fabio/Note", "2.0.0"],
+              ["http://purl.org/spar/fabio/Thesis", "2.0.0"],
+            ]);
+            yield* runIdentityCommand(["registry", "--check"]);
             yield* runLintCommand(["identity-registry"]);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),

@@ -333,11 +333,16 @@ describe("planRegistryArtifacts", () => {
     expect(Result.getOrThrow(planOf(["Report"], textOf(again), base))).toStrictEqual(first);
     // A committed snapshot that does not decode, such as one with conflict markers, is regenerated from the base.
     expect(Result.getOrThrow(planOf(["Article", "Report"], O.some("<<<<<<<"), base))).toStrictEqual(grown);
-    // A base that publishes nothing leaves the committed snapshot as the previous one.
+    // A base that publishes nothing leaves the registry unreleased: a writer keeps the committed release.
     const unpublished = BaseSnapshot.makeOption({ snapshot: TermSnapshot.empty });
     expect(
       Result.getOrThrow(planOf(["Article", "Report", "Thesis"], textOf(grown), unpublished)).snapshot.release
-    ).toBe("1.2.0");
+    ).toBe("1.1.0");
+    expect(Result.getOrThrow(planOf(["Report"], O.none(), unpublished)).snapshot.release).toBe("1.0.0");
+    // A check reads no base and succeeds the committed snapshot.
+    expect(Result.getOrThrow(planOf(["Article", "Report", "Thesis"], textOf(grown), O.none())).snapshot.release).toBe(
+      "1.2.0"
+    );
   });
 });
 

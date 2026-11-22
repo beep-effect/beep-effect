@@ -54,7 +54,9 @@ import {
   previousSnapshot,
   RegistryLayout,
   RegistrySourceFile,
+  ReleasePolicy,
   readRegistryPlanInput,
+  releasePolicy,
   renderRegistryJson,
   resolveRegistryLayout,
   writeRegistry,
@@ -187,6 +189,9 @@ export class ShardEditInput extends S.Opaque<ShardEditInput, { readonly brand: u
     layout: RegistryLayout,
     shardFiles: S.Array(RegistrySourceFile).annotateKey({ description: "The shard files, in path order." }),
     previous: TermSnapshot,
+    policy: ReleasePolicy.pipe(S.withConstructorDefault(Effect.succeed(ReleasePolicy.Enum.succeed))).annotateKey({
+      description: "Whether the edit succeeds the previous snapshot or keeps its release.",
+    }),
   }).pipe($I.annoteSchema("ShardEditInput", { description: "The inputs of one registry shard edit." }))
 ) {}
 
@@ -412,6 +417,7 @@ const deprecatedRows = (
  * `since` is the release the whole change from the previous snapshot calls
  * for, so every deprecation of one change records one release. Against a
  * published term set this is the next major; the first release is `1.0.0`.
+ * Under the `keep` policy it is the release the regenerated snapshot keeps.
  * The edited shards must still form a table, which refuses a replacement chain
  * that the retirement breaks.
  *
@@ -486,7 +492,10 @@ export const planDeprecate: {
         editedFile(file, deprecatedRows(shard, local, replacement, input.previous.release)),
         A.of
       );
-      const since = RegistryTable.releaseAfter(yield* tableOf(input.layout, A.append(others, draft)), input.previous);
+      const drafted = yield* tableOf(input.layout, A.append(others, draft));
+      const since = ReleasePolicy.is.keep(input.policy)
+        ? RegistryTable.snapshotKeeping(drafted, input.previous).release
+        : RegistryTable.releaseAfter(drafted, input.previous);
       const [edited, retired] = yield* Result.mapError(
         editedFile(file, deprecatedRows(shard, local, replacement, since)),
         A.of
@@ -524,7 +533,7 @@ export const readShardEditInput = Effect.fn("IdentityShardEdit.readInput")(funct
 ) {
   const input = yield* readRegistryPlanInput(repoRoot, layout, O.some(base));
   return Result.map(previousSnapshot(input), (previous) =>
-    ShardEditInput.make({ layout, shardFiles: input.shardFiles, previous })
+    ShardEditInput.make({ layout, shardFiles: input.shardFiles, previous, policy: releasePolicy(input.base) })
   );
 });
 

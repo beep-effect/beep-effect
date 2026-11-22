@@ -11,8 +11,10 @@
  * snapshot `registry/term-snapshot.json`. The snapshot's `release` is a property
  * of the change against a base ref ({@link BaseSnapshot}): a writer computes it
  * from the snapshot the base publishes, so a change made in many steps is released
- * once. Where the base publishes none, and for `--check`, which reads no git
- * state, the previous snapshot is the committed one. A shard that names a `projection` package also has its
+ * once. Where the base commit publishes none, the registry is still unreleased
+ * and a writer keeps the release the committed snapshot has ({@link ReleasePolicy}).
+ * `--check`, which reads no git state, and a writer with no base commit succeed
+ * the committed snapshot. A shard that names a `projection` package also has its
  * bindings written into that package as plain literals, for a package that
  * cannot import `@beep/identity`. A projection module no shard targets any more
  * is drift, and `--write` removes it.
@@ -702,7 +704,9 @@ export const decodeShardFile = (file: RegistrySourceFile): Result.Result<Registr
  *
  * A base that publishes no term set has the empty snapshot. `ref` is the
  * `--base` of the run, so a remedy names the command that repairs against the
- * same base.
+ * same base. `resolved` is false when the checkout has no base commit at all
+ * (not a git work tree, no `origin/main`, disjoint history): the empty
+ * snapshot then says nothing about what is published.
  *
  * **Example** (Describe a base that published nothing)
  *
@@ -723,6 +727,9 @@ export class BaseSnapshot extends S.Opaque<BaseSnapshot, { readonly brand: uniqu
     ref: S.Option(S.String)
       .pipe(S.withConstructorDefault(Effect.succeedNone))
       .annotateKey({ description: "The ref `--base` named; none for the default base." }),
+    resolved: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(true))).annotateKey({
+      description: "Whether a base commit was found; false when the checkout has no default base.",
+    }),
   }).pipe(
     $I.annoteSchema("BaseSnapshot", {
       description: "The term snapshot of a base ref and the ref that was named.",
@@ -799,7 +806,100 @@ const publishedBase = (input: RegistryPlanInput): O.Option<BaseSnapshot> =>
   O.filter(input.base, (base) => TermSnapshot.isPublished(base.snapshot));
 
 /**
- * The snapshot a regeneration succeeds: the base's when the base publishes a term set, else the committed one.
+ * How a regeneration releases its change: `succeed` the previous snapshot, or `keep` its release.
+ *
+ * **Details**
+ *
+ * A writer over a base commit that publishes no term set keeps: until the
+ * base publishes, every edit of the checkout is part of one unreleased change,
+ * and succeeding the committed snapshot would bump the release once per
+ * command. Every other regeneration succeeds its previous snapshot, including
+ * a writer in a checkout with no base commit, where nothing says the registry
+ * is unreleased.
+ *
+ * **Example** (Check a policy)
+ *
+ * ```ts
+ * import { ReleasePolicy } from "@beep/repo-cli/commands/Identity/Registry"
+ *
+ * console.log(ReleasePolicy.is.keep("keep")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ReleasePolicy = LiteralKit(["succeed", "keep"]).pipe(
+  $I.annoteSchema("ReleasePolicy", {
+    description:
+      "How a regeneration releases its change: succeed the previous snapshot, or keep the release of a registry no base has published.",
+  })
+);
+
+/**
+ * Type of {@link ReleasePolicy}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type ReleasePolicy = typeof ReleasePolicy.Type;
+
+/**
+ * The release policy of a run over `base`: `keep` for a writer whose base commit publishes no term set.
+ *
+ * **Example** (Keep the release over an unpublished base)
+ *
+ * ```ts
+ * import { TermSnapshot } from "@beep/identity/Term"
+ * import { BaseSnapshot, releasePolicy } from "@beep/repo-cli/commands/Identity/Registry"
+ * import * as O from "effect/Option"
+ *
+ * console.log(releasePolicy(BaseSnapshot.makeOption({ snapshot: TermSnapshot.empty }))) // "keep"
+ * console.log(releasePolicy(O.none())) // "succeed"
+ * ```
+ *
+ * @param base - The base of the run; none for a check.
+ * @returns The policy the regeneration follows.
+ * @category projections
+ * @since 0.0.0
+ */
+export const releasePolicy = (base: O.Option<BaseSnapshot>): ReleasePolicy =>
+  O.exists(base, ({ resolved, snapshot }) => resolved && !TermSnapshot.isPublished(snapshot)) ? "keep" : "succeed";
+
+/**
+ * Regenerate the snapshot of `table` after `previous`, under a {@link ReleasePolicy}.
+ *
+ * **Example** (Keep the release of an unreleased registry)
+ *
+ * ```ts
+ * import { ReleaseVersion, RegistryTable, TermSnapshot } from "@beep/identity/Term"
+ * import { regeneratedSnapshot } from "@beep/repo-cli/commands/Identity/Registry"
+ * import * as Result from "effect/Result"
+ *
+ * const table = Result.getOrThrow(RegistryTable.fromShards([]))
+ * const committed = TermSnapshot.make({ ...TermSnapshot.empty, release: ReleaseVersion.make("2.0.0") })
+ * console.log(regeneratedSnapshot(table, "keep", committed).release) // "2.0.0"
+ * ```
+ *
+ * @param table - The registry table to project.
+ * @param policy - Whether the change succeeds `previous` or keeps its release.
+ * @param previous - The snapshot the plan reads as the previous one.
+ * @returns The snapshot the plan writes, at the release the policy gives.
+ * @category projections
+ * @since 0.0.0
+ */
+export const regeneratedSnapshot: {
+  (policy: ReleasePolicy, previous: TermSnapshot): (table: RegistryTable) => TermSnapshot;
+  (table: RegistryTable, policy: ReleasePolicy, previous: TermSnapshot): TermSnapshot;
+} = dual(
+  3,
+  (table: RegistryTable, policy: ReleasePolicy, previous: TermSnapshot): TermSnapshot =>
+    ReleasePolicy.is.keep(policy)
+      ? RegistryTable.snapshotKeeping(table, previous)
+      : RegistryTable.snapshot(table, previous)
+);
+
+/**
+ * The previous snapshot of a regeneration: the base's when the base publishes a term set, else the committed one.
  *
  * **Details**
  *
@@ -1047,7 +1147,7 @@ export const planRegistryArtifacts = (
             )
           : Result.fail(target.path);
       });
-      const next = RegistryTable.snapshot(table, previous.success);
+      const next = regeneratedSnapshot(table, releasePolicy(input.base), previous.success);
       const breaks = A.map(termSetViolations(previous.success, next), breakIssue(input));
       return A.isReadonlyArrayNonEmpty(breaks)
         ? Result.fail(breaks)
@@ -1580,8 +1680,8 @@ const withRecovery =
  * **Details**
  *
  * The release is computed from the base, so writing the same change in many steps
- * gives the release of the whole change. A base that publishes no term set leaves
- * the committed snapshot as the previous one.
+ * gives the release of the whole change. A base commit that publishes no term set
+ * leaves the committed snapshot as the previous one and keeps its release.
  *
  * The edited shards are written with the generated artifacts, and only after the
  * whole plan succeeds: a finding leaves every file as it was. No other shard is

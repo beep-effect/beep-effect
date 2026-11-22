@@ -145,7 +145,7 @@ export const readBaseSnapshot = Effect.fn("IdentityRegistryBase.read")(function*
     yield* Console.log(
       `[${label}] no merge base with ${DEFAULT_BASE_REF}; the term-stability base is the empty snapshot.`
     );
-    return none;
+    return Result.succeed(BaseSnapshot.make({ snapshot: TermSnapshot.empty, ref, resolved: false }));
   }
   const located = yield* locateBaseSnapshot(repoRoot, commit.value, layout.snapshot);
   if (O.isNone(located)) {

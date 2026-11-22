@@ -6,6 +6,7 @@ import {
   CodePackageMove,
   RegistryShard,
   RegistryTable,
+  ReleaseVersion,
   snapshotViolations,
   TermLocal,
   TermSnapshot,
@@ -20,6 +21,8 @@ import {
   RegistryPlanInput,
   RegistryProjectionTarget,
   RegistrySourceFile,
+  regeneratedSnapshot,
+  releasePolicy,
   renderRegistryJson,
   renderRegistryProjection,
   renderTermSnapshot,
@@ -244,6 +247,39 @@ describe("identity deprecate planning", () => {
     const next = RegistryTable.snapshot(tableOf(twice), previous);
     expect(next.release).toBe("2.0.0");
     expect(snapshotViolations(previous, next)).toStrictEqual([]);
+  });
+
+  it("keeps the committed release for every retirement over a base that publishes nothing", () => {
+    const committed = TermSnapshot.make({ ...previous, release: ReleaseVersion.make("2.0.0") });
+    const retire = (files: ReadonlyArray<RegistrySourceFile>, curie: string) =>
+      Result.getOrThrow(
+        planDeprecate(
+          ShardEditInput.make({ layout, shardFiles: files, previous: committed, policy: "keep" }),
+          DeprecateRequest.make({ curie, replacement: O.none() })
+        )
+      );
+    const once = retire([plain], "fabio:Note");
+    const afterOnce = regeneratedSnapshot(tableOf(once), "keep", committed);
+    expect(afterOnce.release).toBe("2.0.0");
+    const twice = Result.getOrThrow(
+      planDeprecate(
+        ShardEditInput.make({ layout, shardFiles: once, previous: afterOnce, policy: "keep" }),
+        DeprecateRequest.make({ curie: "fabio:Report", replacement: O.none() })
+      )
+    );
+    expect(A.map(decodeShardText(twice[0] ?? plain).deprecations, (row) => [row.term, row.since])).toStrictEqual([
+      ["http://purl.org/spar/fabio/Note", "2.0.0"],
+      ["http://purl.org/spar/fabio/Report", "2.0.0"],
+    ]);
+    expect(regeneratedSnapshot(tableOf(twice), "keep", afterOnce).release).toBe("2.0.0");
+    // Succeeding the committed snapshot instead counts the second retirement again.
+    expect(regeneratedSnapshot(tableOf(twice), "succeed", afterOnce).release).toBe("3.0.0");
+    expect(pipe(tableOf(twice), regeneratedSnapshot("keep", afterOnce)).release).toBe("2.0.0");
+    expect(releasePolicy(O.some(baseOf(TermSnapshot.empty)))).toBe("keep");
+    expect(releasePolicy(O.some(baseOf(previous)))).toBe("succeed");
+    expect(releasePolicy(O.none())).toBe("succeed");
+    // A checkout with no base commit says nothing about what is published, so its writers succeed.
+    expect(releasePolicy(BaseSnapshot.makeOption({ snapshot: TermSnapshot.empty, resolved: false }))).toBe("succeed");
   });
 
   it("keeps the deprecations ascending and rewrites only the shard of the term", () => {
