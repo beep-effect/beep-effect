@@ -2,7 +2,7 @@
 
 ## Status
 
-Lifecycle: `active`
+Lifecycle: `completed-retained`
 
 The drainable class shipped in #3307 and the first apply wave ran on 2026-11-22. goals/ops-seat-timers is replaced by the `timer-host` check: [`decisions/2026-11-13-resume-without-ops-seat-timers.md`](./decisions/2026-11-13-resume-without-ops-seat-timers.md).
 
