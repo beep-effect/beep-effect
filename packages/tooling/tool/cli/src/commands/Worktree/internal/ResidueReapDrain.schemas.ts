@@ -338,9 +338,10 @@ export class ResidueDrainDisk extends S.Opaque<ResidueDrainDisk, { readonly bran
  * @category models
  * @since 0.0.0
  */
-export const ResidueDrainJournalOutcome = LiteralKit(["removed", "refused"]).pipe(
+export const ResidueDrainJournalOutcome = LiteralKit(["removed", "refused", "partial"]).pipe(
   $I.annoteSchema("ResidueDrainJournalOutcome", {
-    description: "Whether an applied drain removed an eligible checkout or refused it at apply time.",
+    description:
+      "Whether an applied drain removed an eligible checkout, refused it untouched, or stopped part-way through removal.",
   })
 );
 

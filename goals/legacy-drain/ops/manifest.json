@@ -65,12 +65,12 @@
     {
       "id": "P3",
       "name": "Yeet: PR to mergeable",
-      "status": "in-progress"
+      "status": "complete"
     },
     {
       "id": "P4",
       "name": "Close",
-      "status": "pending"
+      "status": "complete"
     }
   ],
   "verificationCommands": [
@@ -93,5 +93,5 @@
   ],
   "provides": ["fleet/drain"],
   "requires": ["fleet/registry", "fleet/lane-bootstrap", "fleet/ops-seat"],
-  "statusNote": "Active since 2026-11-13 (operator resumed it). The drainable class is built and observing: the first live run started 221 lane grace windows. The first apply wave is time-gated to on or after 2026-11-20T22:06Z. ops-seat-timers is replaced by the timer-host check (decisions/2026-11-13-resume-without-ops-seat-timers.md)."
+  "statusNote": "First apply wave ran 2026-11-22 (39 removed, 10 stopped part-way and finished by hand); both remaining legacy clones are in use. The closeout PR fixes the two defects the wave exposed."
 }

@@ -503,6 +503,51 @@ describe("residue reap drainable class", () => {
       })
     );
 
+    it.effect("preserves agent material under .beep and refuses a locked lane", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        yield* run(fleet.clone, "git", ["worktree", "lock", "--reason", "held", fleet.lane]);
+        yield* fs.writeFileString(path.join(fleet.stray, ".git", "info", "exclude"), ".beep/\n");
+        yield* fs.makeDirectory(path.join(fleet.stray, ".beep", "qa", "node_modules"), { recursive: true });
+        yield* fs.writeFileString(path.join(fleet.stray, ".beep", "qa", "evidence.md"), "seen\n");
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const probe = fleetProbe(fleet, registry);
+        const first = yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+        expect(outcomeOf(drainRow(first, fleet.lane), "owned-worktrees")).toBe("fail");
+
+        const wave = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
+        yield* expectExists(fleet.lane, true);
+        yield* expectExists(fleet.stray, false);
+        const preserved = O.getOrThrow(O.fromNullishOr(drainRow(wave, fleet.stray).drain?.preserved));
+        const evidence = yield* fs.readFileString(path.join(preserved, ".beep", "qa", "evidence.md"));
+        expect(evidence).toBe("seen\n");
+      })
+    );
+
+    it.effect("journals a removal that stops part-way as partial, never as kept", () =>
+      Effect.gen(function* () {
+        const fleet = yield* makeFleet();
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const stuck = path.join(fleet.stray, "node_modules", "dep");
+        const registry = yield* Ref.make<ReadonlyArray<FleetRegistryRow>>([]);
+        const probe = fleetProbe(fleet, registry);
+        yield* reap(fleet, probe, { nowMillis: NOW, classes: ["drainable"] });
+        yield* Effect.acquireRelease(fs.chmod(stuck, 0o555), () => fs.chmod(stuck, 0o755).pipe(Effect.ignore));
+        const wave = yield* reap(fleet, probe, { nowMillis: NOW + 8 * DAY, apply: true, classes: ["drainable"] });
+        const row = drainRow(wave, fleet.stray);
+        expect(row.skipReason).toBe("removal-failed");
+        expect(A.some(wave.warnings, Str.includes("may have stopped part-way"))).toBe(true);
+        const entries = yield* journal(fleet);
+        const entry = A.findFirst(entries, (line) => line.checkout === fleet.stray);
+        expect(O.getOrThrow(entry).outcome).toBe("partial");
+        const rows = yield* Ref.get(registry);
+        expect(rowFor(rows, fleet.stray).drainStatus).not.toBe("retired");
+      })
+    );
+
     it.effect("keeps a clone whose locked lane lost its directory, and drops a prunable one", () =>
       Effect.gen(function* () {
         const fleet = yield* makeFleet();
