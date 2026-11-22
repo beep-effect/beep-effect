@@ -40,7 +40,8 @@ const runGit = Effect.fn("CommentLawTest.runGit")(function* (root: string, args:
     },
     extendEnv: true,
   });
-  expect(yield* handle.exitCode).toBe(0);
+  const exitCode = yield* handle.exitCode;
+  expect(exitCode).toBe(0);
 });
 
 const makeCheckout = Effect.fn("CommentLawTest.makeCheckout")(function* (enforcement: "advisory" | "blocking") {
@@ -279,7 +280,8 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         yield* checkout.write("packages/a/src/A.ts", "export const a = 1;\n");
         const pruned = yield* runCommentLawWrite(checkout.root);
         expect(pruned).toEqual([]);
-        expect(yield* fs.exists(`${checkout.root}/standards/comment-law/pending/beep-a.jsonc`)).toBe(false);
+        const shardLeft = yield* fs.exists(`${checkout.root}/standards/comment-law/pending/beep-a.jsonc`);
+        expect(shardLeft).toBe(false);
       })
     );
   });
