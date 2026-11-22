@@ -192,6 +192,29 @@ jobs:
           if-no-files-found: error
           retention-days: ${{ github.event_name == 'pull_request' && 7 || 30 }}
 
+      # The gate-report projection (grouped log, annotations, step summary) and the
+      # task-outcomes/v2 record that indexes the job's gate records (goals/ci-gate-reports,
+      # decision report-carrier), uploaded red or green. A measurement: it never decides
+      # the job, so it continues on error.
+      - name: Report gate records
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: ./.github/actions/gate-reports
+        with:
+          job-name: Storybook
+          artifact: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+
+      - name: Upload gate reports and task outcomes
+        if: steps.lane-gate.outputs.should_run == 'true' && always()
+        continue-on-error: true
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: task-outcomes-${{ github.run_id }}-${{ github.run_attempt }}-${{ github.job }}-single
+          path: ${{ runner.temp }}/gate-reports/
+          include-hidden-files: true
+          retention-days: 30
+          if-no-files-found: warn
+
       - name: Skip lane
         if: steps.lane-gate.outputs.should_run != 'true'
         run: echo "Skipping Storybook for this change set."
