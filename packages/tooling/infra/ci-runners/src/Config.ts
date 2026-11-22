@@ -365,7 +365,10 @@ export class ImageSettings extends S.Opaque<ImageSettings, { readonly brand: uni
  * `overlapMaximumCount` is the cap while the live fleet still runs. Labels
  * are new (`beep-fleet-heavy`, `beep-fleet-overflow`) so a job reaches this
  * fleet only once its workflow asks for it; the runner groups are the live
- * org groups.
+ * org groups. `jobQueuedCheck` makes scale-up ask GitHub before it launches
+ * and drop a message whose job is already `in_progress` or `completed`;
+ * production turns it on so a served job's redelivered message launches no
+ * idle runner.
  *
  * **Example** (Decode a pool)
  *
@@ -382,6 +385,7 @@ export class ImageSettings extends S.Opaque<ImageSettings, { readonly brand: uni
  *   runnerGroup: "beep-shard-overflow",
  *   runnerNamePrefix: "beep-fleet-ovf-",
  *   jobRetry: false,
+ *   jobQueuedCheck: true,
  * })
  * console.log(pool.maximumCount) // 48
  * ```
@@ -399,6 +403,7 @@ export class PoolSettings extends S.Opaque<PoolSettings, { readonly brand: uniqu
     runnerGroup: S.String.check(S.isPattern(/^[A-Za-z0-9_-]{1,64}$/u)),
     runnerNamePrefix: S.String.check(S.isPattern(/^[a-z0-9-]{1,32}$/u)),
     jobRetry: S.Boolean,
+    jobQueuedCheck: S.Boolean,
   }).pipe($I.annoteSchema("PoolSettings", { description: "Instance types, caps, label and group of one pool." }))
 ) {}
 
@@ -655,6 +660,7 @@ export const productionConfig: CiRunnersConfig.Encoded = {
     runnerGroup: "beep-ec2-heavy",
     runnerNamePrefix: "beep-fleet-heavy-",
     jobRetry: true,
+    jobQueuedCheck: true,
   },
   overflow: {
     name: "overflow",
@@ -665,6 +671,7 @@ export const productionConfig: CiRunnersConfig.Encoded = {
     runnerGroup: "beep-shard-overflow",
     runnerNamePrefix: "beep-fleet-ovf-",
     jobRetry: true,
+    jobQueuedCheck: true,
   },
   reaperTtlMinutes: 90,
   runnerType: "Org",
