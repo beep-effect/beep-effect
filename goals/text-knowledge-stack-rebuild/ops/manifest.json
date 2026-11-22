@@ -93,7 +93,7 @@
     {
       "id": "P2",
       "name": "L1 text: @beep/text, occurrence identity, selectors",
-      "status": "pending"
+      "status": "in-progress"
     },
     {
       "id": "P3",
@@ -149,15 +149,11 @@
     "The same blocker repeats after reasonable investigation.",
     "A retirement or rename is attempted without its row in research/consumer-census.md or without the consumer migration in the same PR: that step stops, the packet does not."
   ],
-  "statusNote": "P0 Design and grill is complete (PR #3420, merged as dcf6b16a77d). P1 (L0 identity) is in progress as a three-PR stack opened one after another: PR A foundation, PR B registry and pins, PR C bindings and the break. Base design research/2026-11-19-p1-design-registry-first.md; rulings in decisions/2026-11-19-p1-*.",
+  "statusNote": "P0 Design and grill is complete (PR #3420, merged as dcf6b16a77d). P1 (L0 identity) is in progress as a three-PR stack opened one after another: PR A foundation, PR B registry and pins, PR C bindings and the break. Base design research/2026-11-19-p1-design-registry-first.md; rulings in decisions/2026-11-19-p1-*. P2 (L1 text) is in progress as one PR stacked on PR C, not yet opened: @beep/text created and @beep/provenance retired, L1-1 to L1-6 green; the inventory regeneration and the final check remain; design research/2026-11-20-p2-design.md, rulings in decisions/2026-11-22-p2-*.",
   "opsScripts": [
     {
       "path": "ops/design/index.ts",
-      "purpose": "P0 design module index: re-exports the L0 to L6 layers and the generator prototype as namespaces."
-    },
-    {
-      "path": "ops/design/L1.text.ts",
-      "purpose": "L1 design: OffsetUnit, OccurrenceId, QuoteKey, the recursive Selector, Resolution, Reanchoring, Anchored and the occurrence/v1 preimage."
+      "purpose": "P0 design module index: re-exports the L2 to L6 layers and the generator prototype as namespaces; L0 moved out in P1 and L1 in P2."
     },
     {
       "path": "ops/design/L2.annotation.ts",

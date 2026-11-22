@@ -184,11 +184,13 @@ and the phase order is `PLAN.md`), this file is normative.
   stability snapshot, the IRI schemas), with the L0 digest brands over the primitive in
   `packages/foundation/modeling/schema` and canonical JSON plus the one
   minting function in `packages/foundation/modeling/jsonc`.
-- `packages/foundation/modeling/provenance`, becoming `@beep/text` in P2 (L1:
-  `Selector`, `OccurrenceId`, `QuoteKey`, `Resolution`, `Reanchoring`, unit
-  conversion; `TextAnchor` and `VerifiedTextAnchor` keep their shapes; created
-  through `bun run beep create-package`, the old name retired per chapter 11
-  with every consumer migrated in the same PR).
+- `packages/foundation/modeling/text` (`@beep/text`, L1: `Selector`,
+  `OccurrenceId`, `QuoteKey`, `Resolution`, `Reanchoring`, `LocatorMap`, the
+  two text normalizations and unit conversion; `TextAnchor` and
+  `VerifiedTextAnchor` keep their shapes). P2 created it through
+  `bun run beep create-package` and retired `packages/foundation/modeling/provenance`
+  (`@beep/provenance`) per chapter 11, with every consumer migrated in the same PR
+  and no alias.
 - `@beep/annotation`, created in P3 through `bun run beep create-package`
   (L2) once P0 has recorded the specific-home-first routing decision and the
   capability negative-gate clauses (`standards/ARCHITECTURE.md`): pure schemas
@@ -211,8 +213,11 @@ and the phase order is `PLAN.md`), this file is normative.
   `prov:Entity` projection through `src/Prov.ts`, registry-backed `prov:`,
   `oa:`, `nif:`, `xsd:`, `NamespacePin` (source, license, version, digest)
   for every external namespace; the `rdf -> md` edge removed).
-- `packages/foundation/modeling/md`, `pandoc-ast`, `lexical`, `html`: AST
-  source maps that import `@beep/text`.
+- `packages/foundation/modeling/md`: the one AST source map, `@beep/md/Md.anchors`
+  (`anchorAt`, landed in P2), which yields a `VerifiedTextAnchor` for a mapped,
+  non-empty node. `pandoc-ast`, `lexical-schema` and `html` record no text
+  positions; each gains a source map over `@beep/text` when a phase needs one
+  (decision `2026-11-22-p2-ast-source-maps-md-only`).
 - `packages/foundation/modeling/schema-org`: retired whole in P7 (census: no consumer).
 - `packages/foundation/capability/langextract/src/Handoff` (verified receipts
   first, lossless handoff), `apps/labs/semantica/src/layers` (projection and
@@ -347,9 +352,10 @@ decision file) and the law-test ledger:
    while `identity` must stay rdf-free and `@beep/schema` depends on
    `identity`. P0 ruled the home and P1 moved it to
    `packages/foundation/modeling/identity/src/Iri.ts`, before L0 and L1 compile.
-9. `Anchored` is an L1 `S.Opaque` of range, quote and the powerless
-   `TextAnchorVerificationReceipt` (never a `VerifiedTextAnchor`, so decoding a
-   stored document grants no proof); the `anchors` table checks that each key
+9. `Anchored` is an L1 `S.Opaque` that holds the powerless
+   `TextAnchorVerificationReceipt` and reads range and quote from its anchor
+   (never a `VerifiedTextAnchor`, so decoding a stored document grants no proof;
+   landed in P2 as `@beep/text/Occurrence`); the `anchors` table checks that each key
    equals the occurrence hash of its value; `Instant` is
    `S.DateTimeUtcFromMillis` or P0 records why not.
 10. `derivedFrom`: whether it lives in the hashed core or a separate record;

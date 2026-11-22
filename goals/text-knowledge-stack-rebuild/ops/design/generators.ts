@@ -3,7 +3,7 @@
  * claim log.
  *
  * Leaves come from `Arbitrary.schema` over the production schemas, with every
- * string leaf drawn well-formed (`WellFormedText`, `PosixPath`, registry IRI
+ * string leaf drawn well-formed (`WellFormedText`, `SourceTextLocator`, registry IRI
  * pools), so no root is discarded by canonicalization. Every dependent value
  * (capture text digest, occurrence, annotation, activity, run and claim ids)
  * is built with `map`/`flatMap`/`filterMap` through the layers' preimage
@@ -14,7 +14,10 @@
  * hash backend (decision 2026-11-19-p0-items4-6-9-annotation-document-shape). A generator cannot yield a service, so
  * these prototypes take a pure SHA-256 (`JsoncDigest`) from the test harness
  * and mint through `mintContentHashResult`, which hashes the same canonical
- * bytes as `mintContentHash`. Generated text is well-formed UTF-16 (astral
+ * bytes as `mintContentHash`; occurrences go through the `@beep/text`
+ * `OccurrencePreimage.mintResult`, the sync twin of `mintOccurrenceId`, whose
+ * error is `PreimageMintError`. The package's own law generators live in
+ * `packages/foundation/modeling/text/test/support/generators.ts`. Generated text is well-formed UTF-16 (astral
  * characters included), every range sits on code-point boundaries and the
  * capture's textDigest is the digest of the text, so a generated receipt also
  * passes re-verification (decision 2026-11-19-p0-law-generators-well-formed-text); split surrogates stay a negative fixture
@@ -29,9 +32,14 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { TermIri } from "@beep/identity/Term";
 import { ActivityPin, ActivityStart, mintActivityIdResult } from "@beep/jsonc/ActivityStart";
 import { mintContentHashResult } from "@beep/jsonc/Mint";
-import { PosixPath } from "@beep/schema/PosixPath";
 import { WellFormedText } from "@beep/schema/WellFormedText";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { Anchored, OccurrenceId, OccurrencePreimage } from "@beep/text/Occurrence";
+import {
+  SourceTextDigest,
+  SourceTextExtractor,
+  SourceTextIdentity,
+  SourceTextLocator,
+} from "@beep/text/SourceTextIdentity";
 import { TextAnchor } from "@beep/text/TextAnchor";
 import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import * as Arbitrary from "effect/Arbitrary";
@@ -46,7 +54,6 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { Anchored, OccurrenceDomainTag, OccurrenceId, occurrencePreimage } from "./L1.text.ts";
 import {
   AnnotationContent,
   AnnotationDomainTag,
@@ -156,10 +163,7 @@ const minters = (digest: JsoncDigest) => {
   const mint = mintContentHashResult(digest);
   return {
     textDigest: (text: string) => SourceTextDigest.make(`sha256:${Hex.encode(digest(utf8.encode(text)))}`),
-    occurrence: (anchored: Anchored) => {
-      const [, ...fields] = occurrencePreimage(anchored);
-      return Result.map(mint(OccurrenceDomainTag, fields), (hash) => OccurrenceId.make(hash));
-    },
+    occurrence: (anchored: Anchored) => Result.map(OccurrencePreimage.mintResult(digest)(anchored), OccurrenceId.make),
     activity: mintActivityIdResult(digest),
     annotation: (kind: AnyAnnotationKind, targets: A.NonEmptyReadonlyArray<OccurrenceId>, body: unknown) =>
       Result.flatMap(encodeBody(kind)(body), (encoded) =>
@@ -205,7 +209,7 @@ export const documentFamilyResultArbitrary = (digest: JsoncDigest) => {
     text: wellFormedText,
     scopeRef: Arbitrary.schema(WellFormedText),
     sourceRef: Arbitrary.schema(WellFormedText),
-    locator: Arbitrary.schema(PosixPath),
+    locator: Arbitrary.schema(SourceTextLocator),
     sourceDigest: Arbitrary.schema(SourceTextDigest),
     extractorName: Arbitrary.schema(WellFormedText),
     extractorVersion: Arbitrary.schema(WellFormedText),
@@ -752,7 +756,7 @@ export const containmentCaseResultArbitrary = (digest: JsoncDigest) => {
     text: wellFormedTextWith(2),
     scopeRef: Arbitrary.schema(WellFormedText),
     sourceRef: Arbitrary.schema(WellFormedText),
-    locator: Arbitrary.schema(PosixPath),
+    locator: Arbitrary.schema(SourceTextLocator),
     sourceDigest: Arbitrary.schema(SourceTextDigest),
     extractorName: Arbitrary.schema(WellFormedText),
     extractorVersion: Arbitrary.schema(WellFormedText),

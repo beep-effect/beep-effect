@@ -66,6 +66,14 @@ or collective agent as a product record in the party slice. A claim names its
 asserting `prov:Agent`; an admission names its actor as a principal; neither
 makes the other a party.
 
+## Anchored
+
+An anchors-table row of `@beep/text`: an `S.Opaque` that holds only the powerless
+`TextAnchorVerificationReceipt` and reads range, quote and capture from it.
+Decoding one grants no proof; a `VerifiedTextAnchor` comes only from
+re-verification against the text (`L1-6`). Its `OccurrenceId` is minted from
+the receipt and never stored beside it.
+
 ## Anemic Domain Model
 
 A domain model that only describes data shape and maybe validation. An anemic
@@ -513,6 +521,14 @@ config, server, client, tables and UI. Existing slices keep it until their own
 migration under the checkers' baselines; no new slice and no new migration to
 `@alchemy.run/domain` starts on it.
 
+## Locator Map
+
+A recorded alignment between two text captures, in `utf16-code-unit`
+positions: ordered, disjoint `Kept` segments (equal width, mapped pointwise) and
+`Rewritten` segments (mapped only as a whole); a gap is unmapped.
+`normalizeText` returns one for each text normalization, and maps compose.
+It is the input of [re-anchoring](#re-anchoring).
+
 ## Matter Wall
 
 Authorization that keeps one matter's material out of another's. One authority
@@ -575,7 +591,9 @@ One place in one text capture. `OccurrenceId` (`@beep/text`) is the digest of
 the versioned tuple of scope, source reference, locator, source and text
 digests, extractor and normalization pins, offset unit, range and quote. It is
 the only text-occurrence identity in the repository. Quotes locate and verify;
-ranges identify.
+ranges identify. The preimage spells the unit as the literal `utf16-code-unit`, so one range
+in two units is one id. Grouping repeated passages is a [quote key](#quote-key),
+never an identity.
 
 ## Ontology (OWL) Versus Taxonomy (SKOS)
 
@@ -625,9 +643,9 @@ provenance substrate — no confidence, claim, or domain semantics — and lives
 `foundation/modeling` so any slice's `domain` can ground knowledge in a source
 span without depending on another slice. Consuming slices wrap it (e.g.
 epistemic `EvidenceSpan` = `TextAnchor` fields + a `Confidence`). Beside it,
-P2 of `goals/text-knowledge-stack-rebuild` adds the
-[`Selector`](#selector) union and [`OccurrenceId`](#occurrence), the one
-text-occurrence identity.
+`@beep/text` holds the [`Selector`](#selector) union and
+[`OccurrenceId`](#occurrence), the one text-occurrence identity, which P2 of
+`goals/text-knowledge-stack-rebuild` added when it retired `@beep/provenance`.
 
 ## Published Stream
 
@@ -635,6 +653,15 @@ A `Domain.Stream` that carries [integration facts](#integration-fact), served
 by the producer's host as a feed. It is pinned to its writer, generation and
 sources, is never rebuilt in place, and serves closed generations followed by
 the open one as one log.
+
+## Quote Key
+
+A grouping key over a quote (`QuoteKey`, `@beep/text`): the digest of
+`quote-key/v1`, the `QuoteNormalization` version and the quote normalized under
+it (NFKC, then de-hyphenation). The key normalizes the quote itself, and its
+version is not the capture's `normalizationVersion`. It is explicitly not
+injective: three copies of one boilerplate passage share one key and have three
+[occurrence](#occurrence) ids.
 
 ## Schema Concept Module
 
@@ -766,6 +793,18 @@ rebuild an Invocation from a stored provenance and live grants. It never adds a
 grant and passes those still in force; a command that needs a lapsed one is
 refused and the refusal recorded.
 
+## Re-anchoring
+
+Carrying an [occurrence](#occurrence) from one text capture to another across a
+[locator map](#locator-map) (`reanchor`, `@beep/text`). The outcome is a value:
+`Exact` when both boundaries land on a segment edge or inside a `Kept` segment,
+`Widened` when a boundary fell inside a `Rewritten` segment and the image grew
+to its edge, `Unmapped` with its reason otherwise. `Exact` and `Widened` carry
+the target capture's [`Anchored`](#anchored), verified against the target text.
+It is lax-functorial: when two steps and their composite map are all mapped,
+the stepwise image lies inside the composite image, and `Exact` then `Exact`
+is `Exact` (`L1-3`).
+
 ## Referent
 
 The thing a mention names, as distinct from the text that names it. Referents
@@ -816,8 +855,9 @@ through `/public` or any other browser-safe surface.
 The one selector union of `@beep/text`, after Web Annotation's: `Position`
 (unit, start, end), `Quote` (exact, prefix, suffix), `Fragment`, `Refined` and
 `Range`. `resolve` maps a capture and a selector to `Unique`, `Ambiguous` or
-`NotFound`; an ambiguous quote never resolves to its first hit. `TextAnchor`
-keeps its wire shape beside it.
+`NotFound`; an ambiguous quote never resolves to its first hit, `Range` ends
+before its end selector as in the W3C model, and `Unique` always carries a
+`utf16-code-unit` position. `TextAnchor` keeps its wire shape beside it.
 
 ## Server Config
 
