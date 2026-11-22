@@ -94,7 +94,6 @@ it.layer(Layer.merge(BunServices.layer, BunCrypto.layer))("lossless literal comp
       },
       (effect) => withCitationTestInvocation(effect)
     ),
-    // Every run spawns native worker processes; the nightly floor must not multiply them.
     { arbitrary: fcRunsCapped(25) }
   );
   it.effect("matches every non-HTML source history through builtin dispatch and the real reservation ledger", () =>

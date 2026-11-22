@@ -71,7 +71,6 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
           expect(actual).toEqual(value.storage);
         })
       ),
-    // Every run spawns native worker processes; the nightly floor must not multiply them.
     { arbitrary: fcRunsCapped(20) }
   );
   it.effect("bounds native assembly and preserves invocation budgets and owned results", () =>

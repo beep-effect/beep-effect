@@ -84,7 +84,6 @@ it.layer(TestRuntime, { excludeTestServices: true })("captured builtin cleaner i
         const native = yield* owned.nativeCounts;
         expect(native).toEqual({ spawned: 0, confirmed: 0 });
       }),
-    // Every run spawns native worker processes; the nightly floor must not multiply them.
     { arbitrary: fcRunsCapped(20) }
   );
 
