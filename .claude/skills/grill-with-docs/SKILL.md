@@ -130,9 +130,10 @@ Update canonical docs as decisions crystallize, but only the surface that actual
 - Architecture-wide doctrine change -> `standards/architecture/DECISIONS.md`; follow `ADR-FORMAT.md`.
 - Rule text or examples changing -> the relevant numbered architecture doc and, if binding, `standards/ARCHITECTURE.md`.
 - High-bar `shared/*` export -> package README promotion record; use the schema in `02-shared-kernel.md`.
-- Package-local ownership, consumers, or routing policy -> the affected package README or agent guidance.
+- Package-local decision that passes the admission test in `ADR-FORMAT.md` -> one file under `<package>/decisions/`; follow `ADR-FORMAT.md` ("Package decisions").
+- Package-local ownership, consumers, usage, or routing policy -> the affected package README or agent guidance.
 
-Do not create generic context files or ADR directories for this repo. If a proposed doc update does not fit one of the surfaces above, ask whether it is package-local guidance, architecture doctrine, or implementation notes.
+Do not create generic context files, or ADR directories other than `<package>/decisions/`, for this repo. If a proposed doc update does not fit one of the surfaces above, ask whether it is package-local guidance, architecture doctrine, or implementation notes.
 
 ## Offer durable records sparingly
 
