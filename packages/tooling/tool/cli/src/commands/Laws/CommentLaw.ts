@@ -411,6 +411,7 @@ const findingsWhere = (verdicts: ReadonlyArray<LockVerdict>, fails: boolean): Re
  *   CommentLockInput.make({
  *     headShards: [],
  *     baseShards: O.some([]),
+ *     packageRoots: ["packages/x"],
  *     bannedCounts: HashMap.make(["packages/x/src/A.ts", 0]),
  *     changedFiles: HashSet.empty(),
  *     wholeTree: true,
