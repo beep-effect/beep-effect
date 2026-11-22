@@ -14,6 +14,7 @@ import * as Console from "effect/Console";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
+import * as R from "effect/Record";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
@@ -181,5 +182,31 @@ describe("the deep sweep's reporters", () => {
     const ordinary = reportersUnder({});
     expect(ordinary).toContain("repo-gate-vitest");
     expect(ordinary).not.toContain("vitest.property-reporter.ts");
+  });
+});
+
+describe("seeds between runs", () => {
+  const PINNING = ["BEEP_FC_SEED", "BEEP_FC_NUM_RUNS", "VITEST_COVERAGE_RATCHET", "VITEST_COVERAGE_REPORT_ONLY"];
+  // One Vitest run of the seed suite, and the line it reports.
+  const reportOf = (env: Record<string, string>) => {
+    const inherited = R.filter(Bun.env as Record<string, string>, (_, name) => !A.contains(PINNING, name));
+    const result = Bun.spawnSync({
+      cmd: ["bunx", "vitest", "run", "test/PropertySeed.test.ts", "--reporter=default"],
+      cwd: `${import.meta.dirname}/..`,
+      env: { ...inherited, ...env },
+      stdout: "pipe",
+      stderr: "pipe",
+    });
+    assertTrue(result.success, Str.slice(0, 2000)(result.stderr.toString()));
+    return O.getOrThrow(A.findFirst(Str.split(result.stdout.toString(), "\n"), Str.includes("[property-seed]")));
+  };
+
+  it("vary without a pinned seed or coverage, and are equal with one", { timeout: 120_000 }, () => {
+    const [first, second] = [reportOf({}), reportOf({})];
+    expect(first).toContain("worker seed random");
+    expect(second).not.toBe(first);
+    const [pinned, again] = [reportOf({ BEEP_FC_SEED: "4242" }), reportOf({ BEEP_FC_SEED: "4242" })];
+    expect(pinned).toContain("worker seed 4242");
+    expect(again).toBe(pinned);
   });
 });
