@@ -45,7 +45,7 @@ Length is not evidence: a long comment can be T and four words can be D.
   carries it, and the row keeps code H or N with `home` set. A D, S or T
   verdict never carries a hazard out with it. Each sentence edited out of a
   mixed group meets its own code's gate first: a D sentence only after its
-  decision file is committed (or it is shown enforced or demoted), an X
+  decision file is committed, as SKILL.md hard stop 5 requires, an X
   sentence only with its fix or family issue. The edit records those
   dispositions in the note.
 - Test titles count as code. A comment that repeats the `it` title is T.
