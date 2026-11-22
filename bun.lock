@@ -4476,6 +4476,7 @@
         "are-docs-informative": "catalog:",
         "comment-parser": "catalog:",
         "effect": "catalog:",
+        "oxc-parser": "catalog:",
         "oxlint": "catalog:",
       },
     },

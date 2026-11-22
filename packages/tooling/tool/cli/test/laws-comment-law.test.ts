@@ -7,20 +7,31 @@ import {
   commentDelta,
   evaluateCommentLock,
   isCommentLawPath,
+  lawsCommand,
+  runCommentCensus,
   runCommentLaw,
   runCommentLawWrite,
+  runCommentList,
   scanCommentSource,
 } from "@beep/repo-cli/commands/Laws";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
+import { assertTrue } from "@effect/vitest/utils";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Console from "effect/Console";
+import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
+import * as Str from "effect/String";
+import * as TestConsole from "effect/testing/TestConsole";
 import { NodeTestLayer } from "./support/CommandTest.ts";
 
 const kindsOf = (file: string, text: string) => A.map(scanCommentSource(file, text), (comment) => comment.kind);
@@ -28,6 +39,45 @@ const change = (file: string, before: O.Option<string>, after: O.Option<string>)
   CommentFileChange.make({ file, before, after });
 const shard = (root: string, scopes: readonly [string, ...Array<string>]) =>
   CommentLawPending.make({ schemaVersion: "comment-law-pending/v1", package: `@beep/${root}`, root, scopes });
+
+const runLaws = Command.runWith(lawsCommand, { version: "0.0.0" });
+const withEmptyConfig = Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}));
+const failureText = <A, E>(exit: Exit.Exit<A, E>): string => (Exit.isFailure(exit) ? String(exit.cause) : "");
+
+const runCommentsCommand = Effect.fn("CommentLawTest.runCommentsCommand")(
+  function* (args: ReadonlyArray<string>) {
+    const exit = yield* runLaws(["comments", ...args]).pipe(withEmptyConfig, Effect.exit);
+    const lines = yield* TestConsole.logLines;
+    return { exit, lines: A.map(lines, String) };
+  },
+  Effect.provideServiceEffect(Console.Console, TestConsole.make)
+);
+
+const enterDirectory = (directory: string) =>
+  Effect.acquireRelease(
+    Effect.sync(() => {
+      const previous = process.cwd();
+      process.chdir(directory);
+      return previous;
+    }),
+    (previous) => Effect.sync(() => process.chdir(previous))
+  );
+
+const scopedEnv = (name: string, value: string) =>
+  Effect.acquireRelease(
+    Effect.sync(() => {
+      const previous = Bun.env[name];
+      Bun.env[name] = value;
+      return previous;
+    }),
+    (previous) =>
+      Effect.sync(() => {
+        if (previous === undefined) delete Bun.env[name];
+        else Bun.env[name] = previous;
+      })
+  );
+
+const LONG_NOTE = "an untracked note long enough that the excerpt is cut before the reader reaches the end of it";
 
 const runGit = Effect.fn("CommentLawTest.runGit")(function* (root: string, args: ReadonlyArray<string>) {
   const handle = yield* ChildProcess.make("git", [...args], {
@@ -354,6 +404,228 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         expect(pruned).toEqual([]);
         const shardLeft = yield* fs.exists(`${checkout.root}/standards/comment-law/pending/beep-a.jsonc`);
         expect(shardLeft).toBe(false);
+      })
+    );
+    it.effect(
+      "counts, lists and seeds shards by package root across nested, nameless, loose, deleted and untracked files",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const checkout = yield* makeCheckout("advisory");
+        yield* checkout.write("vitest.config.ts", "// root note\nexport default 1;\n");
+        yield* checkout.write("scripts/tool.ts", "// script note\nexport const s = 1;\n");
+        yield* checkout.write("packages/a/nested/package.json", `{ "private": true }\n`);
+        yield* checkout.write("packages/a/nested/src/N.ts", "/** Local. */\nconst n = 1;\nexport const m = n;\n");
+        yield* checkout.write("packages/a/src/Gone.ts", "// gone soon\nexport const g = 1;\n");
+        yield* runGit(checkout.root, ["add", "."]);
+        yield* runGit(checkout.root, ["commit", "--quiet", "--no-verify", "-m", "fixture"]);
+        yield* fs.remove(`${checkout.root}/packages/a/src/Gone.ts`);
+        yield* checkout.write("packages/a/src/U.ts", `// ${LONG_NOTE}\nexport const u = 1;\n`);
+
+        const census = yield* runCommentCensus(checkout.root);
+        expect(A.map(census, (row) => [row.root, row.kind, row.count])).toEqual([
+          [".", "prose", 2],
+          ["packages/a", "prose", 2],
+          ["packages/a/nested", "jsdoc-local", 1],
+        ]);
+
+        const listed = yield* runCommentList(checkout.root, "packages/a/");
+        expect(A.map(listed, (finding) => [finding.file, finding.line, finding.kind])).toEqual([
+          ["packages/a/nested/src/N.ts", 1, "jsdoc-local"],
+          ["packages/a/src/A.ts", 1, "prose"],
+          ["packages/a/src/U.ts", 1, "prose"],
+        ]);
+        expect(listed[2]?.excerpt).toBe(`${Str.slice(0, 72)(LONG_NOTE)}...`);
+        const single = yield* runCommentList(checkout.root, "vitest.config.ts");
+        expect(A.map(single, (finding) => finding.excerpt)).toEqual(["root note"]);
+
+        yield* fs.remove(`${checkout.root}/standards/comment-law/pending/beep-a.jsonc`);
+        const seeded = yield* runCommentLawWrite(checkout.root);
+        expect(A.map(seeded, (entry) => [entry.package, entry.root, entry.scopes])).toEqual([
+          ["(root)", ".", ["scripts", "vitest.config.ts"]],
+          ["@beep/a", "packages/a", ["."]],
+          ["packages/a/nested", "packages/a/nested", ["."]],
+        ]);
+        const pending = yield* fs.readDirectory(`${checkout.root}/standards/comment-law/pending`);
+        expect(A.sort(pending, Order.String)).toEqual(["_root.jsonc", "beep-a.jsonc", "packages-a-nested.jsonc"]);
+
+        const steady = yield* runCommentLawWrite(checkout.root);
+        expect(steady).toEqual(seeded);
+
+        yield* checkout.write("vitest.config.ts", "export default 1;\n");
+        yield* checkout.write(
+          "standards/comment-law/pending/beep-a.jsonc",
+          `{ "schemaVersion": "comment-law-pending/v1", "package": "@beep/a", "root": "packages/a", "scopes": ["src", "test"] }\n`
+        );
+        const narrowed = yield* runCommentLawWrite(checkout.root);
+        expect(A.map(narrowed, (entry) => [entry.root, entry.scopes])).toEqual([
+          [".", ["scripts"]],
+          ["packages/a", ["src"]],
+          ["packages/a/nested", ["."]],
+        ]);
+        const rewritten = yield* fs.readFileString(`${checkout.root}/standards/comment-law/pending/beep-a.jsonc`);
+        expect(rewritten).not.toContain('"test"');
+      })
+    );
+
+    it.effect(
+      "compares the index with HEAD in staged mode and skips the lock",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout("blocking");
+        yield* checkout.write("packages/a/src/B.ts", "// explains b\nexport const b = 2;\n");
+        yield* checkout.write("README.md", "# readme\n");
+        yield* runGit(checkout.root, ["add", "packages/a/src/B.ts", "README.md"]);
+        yield* checkout.write("packages/a/src/A.ts", "// unstaged edit\nexport const a = 1;\n");
+
+        const staged = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, staged: true }));
+        expect([staged.changedFiles, staged.introduced, staged.failed]).toEqual([1, 1, true]);
+        expect(A.map(staged.findings, (finding) => [finding.rule, finding.file])).toEqual([
+          ["introduced-comment", "packages/a/src/B.ts"],
+        ]);
+        expect(staged.advisories).toEqual([]);
+
+        yield* runGit(checkout.root, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+        const defaulted = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root }));
+        expect(defaulted.introduced).toBe(2);
+      })
+    );
+
+    it.effect(
+      "reads a merge base without a policy or pending shards and counts a deleted comment as removed",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const checkout = yield* makeCheckout("blocking");
+        yield* runGit(checkout.root, ["rm", "-r", "--quiet", "standards"]);
+        yield* runGit(checkout.root, ["commit", "--quiet", "--no-verify", "-m", "drop the law"]);
+        yield* runGit(checkout.root, ["tag", "bare"]);
+        yield* checkout.write(
+          "standards/comment-law/policy.jsonc",
+          `{ "schemaVersion": "comment-law-policy/v1", "enforcement": "blocking" }\n`
+        );
+        yield* runGit(checkout.root, ["add", "."]);
+        yield* runGit(checkout.root, ["commit", "--quiet", "--no-verify", "-m", "restore the policy"]);
+        yield* fs.remove(`${checkout.root}/packages/a/src/A.ts`);
+
+        const summary = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, base: "bare" }));
+        expect([summary.changedFiles, summary.introduced, summary.removed, summary.failed]).toEqual([1, 0, 1, false]);
+        expect(summary.findings).toEqual([]);
+      })
+    );
+
+    it.effect(
+      "fails on a missing policy, an undecodable shard and a history with no merge base",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const unpoliced = yield* makeCheckout("advisory");
+        yield* fs.remove(`${unpoliced.root}/standards/comment-law/policy.jsonc`);
+        const missing = yield* runCommentLaw(CommentLawOptions.make({ cwd: unpoliced.root, base: "main" })).pipe(
+          Effect.flip
+        );
+        expect(missing.message).toBe("standards/comment-law/policy.jsonc is missing.");
+
+        const broken = yield* makeCheckout("advisory");
+        yield* broken.write("standards/comment-law/pending/zz.jsonc", "{ not jsonc\n");
+        const undecodable = yield* runCommentLaw(CommentLawOptions.make({ cwd: broken.root, base: "main" })).pipe(
+          Effect.flip
+        );
+        expect(undecodable.message).toContain("Failed to decode standards/comment-law/pending/zz.jsonc");
+
+        const lonely = yield* makeCheckout("advisory");
+        yield* runGit(lonely.root, ["switch", "--quiet", "--orphan", "lonely"]);
+        yield* lonely.write(
+          "standards/comment-law/policy.jsonc",
+          `{ "schemaVersion": "comment-law-policy/v1", "enforcement": "advisory" }\n`
+        );
+        yield* runGit(lonely.root, ["add", "."]);
+        yield* runGit(lonely.root, ["commit", "--quiet", "--no-verify", "-m", "unrelated"]);
+        const unrelated = yield* runCommentLaw(CommentLawOptions.make({ cwd: lonely.root, base: "main" })).pipe(
+          Effect.flip
+        );
+        expect(unrelated.message).toBe("No merge base between main and HEAD; the comment law never skips.");
+      })
+    );
+
+    it.effect(
+      "runs `laws comments` census, list, write and an advisory check with and without annotations",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout("advisory");
+        yield* checkout.write("packages/a/src/B.ts", "// explains b\nexport const b = 2;\n");
+        yield* enterDirectory(checkout.root);
+
+        const census = yield* runCommentsCommand(["--census"]);
+        assertTrue(Exit.isSuccess(census.exit), failureText(census.exit));
+        expect(census.lines).toEqual(["packages/a\tprose\t2"]);
+        const censusJson = yield* runCommentsCommand(["--census", "--json"]);
+        assertTrue(Exit.isSuccess(censusJson.exit), failureText(censusJson.exit));
+
+        const listed = yield* runCommentsCommand(["--list", "packages/a"]);
+        assertTrue(Exit.isSuccess(listed.exit), failureText(listed.exit));
+        expect(listed.lines).toEqual([
+          '  - packages/a/src/A.ts:1  prose  "keeps the reason"',
+          '  - packages/a/src/B.ts:1  prose  "explains b"',
+        ]);
+        const listedJson = yield* runCommentsCommand(["--list", "packages/a", "--json"]);
+        assertTrue(Exit.isSuccess(listedJson.exit), failureText(listedJson.exit));
+
+        yield* scopedEnv("GITHUB_ACTIONS", "false");
+        const plain = yield* runCommentsCommand(["--base", "main"]);
+        assertTrue(Exit.isSuccess(plain.exit), failureText(plain.exit));
+        expect(plain.lines).toContain('  - packages/a/src/B.ts:1  prose  "explains b"');
+        expect(plain.lines).toContain(
+          "[comment-law] advisory: these findings do not fail the check until the law turns blocking."
+        );
+        expect(A.some(plain.lines, Str.startsWith("::"))).toBe(false);
+
+        const checkJson = yield* runCommentsCommand(["--check", "--base", "main", "--json"]);
+        assertTrue(Exit.isSuccess(checkJson.exit), failureText(checkJson.exit));
+
+        yield* scopedEnv("GITHUB_ACTIONS", "true");
+        const annotated = yield* runCommentsCommand(["--base", "main"]);
+        assertTrue(Exit.isSuccess(annotated.exit), failureText(annotated.exit));
+        expect(annotated.lines).toContain(
+          "::warning file=packages/a/src/B.ts,line=1,title=comment-law introduced-comment::explains b"
+        );
+
+        yield* runGit(checkout.root, ["update-ref", "refs/remotes/origin/main", "HEAD"]);
+        yield* scopedEnv("BEEP_PROOF_BASE", "");
+        yield* scopedEnv("BEEP_YEET_PROOF_BASE", " ");
+        const defaulted = yield* runCommentsCommand([]);
+        assertTrue(Exit.isSuccess(defaulted.exit), failureText(defaulted.exit));
+        expect(defaulted.lines).toContain('  - packages/a/src/B.ts:1  prose  "explains b"');
+
+        const usage = yield* runLaws([]).pipe(withEmptyConfig, Effect.exit);
+        assertTrue(Exit.isSuccess(usage), failureText(usage));
+
+        const written = yield* runCommentsCommand(["--write"]);
+        assertTrue(Exit.isSuccess(written.exit), failureText(written.exit));
+        expect(written.lines).toEqual(["[comment-law] pending shards=1"]);
+      })
+    );
+
+    it.effect(
+      "fails a blocking `laws comments` check on a locked scope and prints the stale scope as advisory",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const checkout = yield* makeCheckout("blocking");
+        yield* fs.remove(`${checkout.root}/standards/comment-law/pending/beep-a.jsonc`);
+        yield* checkout.write(
+          "standards/comment-law/pending/beep-b.jsonc",
+          `{ "schemaVersion": "comment-law-pending/v1", "package": "@beep/b", "root": "packages/b", "scopes": ["."] }\n`
+        );
+        yield* runGit(checkout.root, ["add", "-A"]);
+        yield* runGit(checkout.root, ["commit", "--quiet", "--no-verify", "-m", "move the pending scope"]);
+        yield* enterDirectory(checkout.root);
+        yield* scopedEnv("GITHUB_ACTIONS", "true");
+
+        const blocked = yield* runCommentsCommand(["--base", "HEAD"]);
+        expect(failureText(blocked.exit)).toContain("[comment-law] check failed.");
+        expect(blocked.lines).toContain("[comment-law] pending-scope lock:");
+        expect(blocked.lines).toContain(
+          "  - locked-scope-comment  packages/a/src/A.ts  1 banned comment(s) in a swept scope"
+        );
+        expect(A.some(blocked.lines, Str.startsWith("[comment-law] advisory:   - stale-pending-scope"))).toBe(true);
+        expect(blocked.lines).toContain(
+          "::error file=packages/a/src/A.ts,title=comment-law locked-scope-comment::1 banned comment(s) in a swept scope"
+        );
       })
     );
   });

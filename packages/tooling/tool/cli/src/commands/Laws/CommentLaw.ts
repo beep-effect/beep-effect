@@ -54,7 +54,7 @@ import {
 import { messageGitErrorAdapter } from "./internal/TrackedTextFiles.ts";
 import { CommentLawExecutionError } from "./Laws.errors.ts";
 import type { GitInvocation } from "@beep/git/GitCommand";
-import type { ClassifiedComment, CommentKind } from "@beep/lint-rules/comment-grammar";
+import type { ClassifiedComment } from "@beep/lint-rules/comment-grammar";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as Path from "effect/Path";
@@ -517,10 +517,7 @@ const readBaseShards = Effect.fn("CommentLaw.readBaseShards")(function* (repoRoo
     A.sort(paths, Order.String),
     (path) =>
       Effect.flatMap(mapGit(GitCommand.show(base, path), git.show(repoRoot, base, path)), (text) =>
-        O.match(text, {
-          onNone: () => Effect.succeed(O.none<CommentLawPending>()),
-          onSome: (value) => Effect.asSome(decodeShard(path, value)),
-        })
+        Effect.transposeOption(O.map(text, (value) => decodeShard(path, value)))
       ),
     { concurrency: 8 }
   );
@@ -557,10 +554,9 @@ const packageRootsOf = (files: ReadonlyArray<string>): ReadonlyArray<string> =>
   );
 
 const packageRootOf = (roots: ReadonlyArray<string>, file: string): string =>
-  F.pipe(
-    roots,
-    A.filter((root) => Str.startsWith(`${root}/`)(file)),
-    A.reduce(".", (best, root) => (Str.length(root) > Str.length(best) || best === "." ? root : best))
+  O.getOrElse(
+    A.findLast(roots, (root) => Str.startsWith(`${root}/`)(file)),
+    () => "."
   );
 
 const bannedCountsOf = Effect.fn("CommentLaw.bannedCountsOf")(function* (
@@ -760,23 +756,21 @@ export const runCommentCensus = Effect.fn("CommentLaw.runCommentCensus")(functio
     CommentLawExecutionError.mapError("Failed to locate the repository root")
   );
   const { files, roots } = yield* lawFiles(repoRoot);
-  let counts = HashMap.empty<string, number>();
+  let rows = HashMap.empty<string, CommentCensusRow>();
   for (const file of files) {
     const text = yield* readWorktreeText(repoRoot, file);
     if (O.isNone(text)) continue;
     const root = packageRootOf(roots, file);
     for (const comment of scanCommentSource(file, text.value)) {
       const key = `${root}\u0000${comment.kind}`;
-      counts = HashMap.set(counts, key, O.getOrElse(HashMap.get(counts, key), () => 0) + 1);
+      const count = O.match(HashMap.get(rows, key), { onNone: () => 1, onSome: (row) => row.count + 1 });
+      rows = HashMap.set(rows, key, CommentCensusRow.make({ root, kind: comment.kind, count }));
     }
   }
   return F.pipe(
-    A.fromIterable(counts),
-    A.sort(Order.mapInput(Order.String, ([key]: readonly [string, number]) => key)),
-    A.map(([key, count]) => {
-      const [root = ".", kind = "prose"] = Str.split(key, "\u0000");
-      return CommentCensusRow.make({ root, kind: kind as CommentKind, count });
-    })
+    A.fromIterable(rows),
+    A.sort(Order.mapInput(Order.String, ([key]: readonly [string, CommentCensusRow]) => key)),
+    A.map(([, row]) => row)
   );
 });
 
@@ -932,16 +926,13 @@ const seedShards = (
   return A.getSomes(
     A.map(A.sort(owners, Order.String), (root) => {
       if (root !== ".")
-        return CommentLawPending.makeOption({
-          schemaVersion: "comment-law-pending/v1",
-          package: O.getOrElse(HashMap.get(names, root), () => root),
-          root,
-          scopes: ["."],
-        });
+        return O.flatMap(HashMap.get(names, root), (name) =>
+          CommentLawPending.makeOption({ schemaVersion: "comment-law-pending/v1", package: name, root, scopes: ["."] })
+        );
       const loose = A.dedupe(
         A.map(
           A.filter(bannedFiles, (file) => packageRootOf(roots, file) === "."),
-          (file) => O.getOrElse(A.head(Str.split(file, "/")), () => file)
+          (file) => A.headNonEmpty(Str.split(file, "/"))
         )
       );
       return O.map(O.liftPredicate(A.isReadonlyArrayNonEmpty<string>)(A.sort(loose, Order.String)), (scopes) =>

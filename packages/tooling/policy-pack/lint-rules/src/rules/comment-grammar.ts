@@ -663,7 +663,7 @@ const suppressionKind = (text: string): O.Option<CommentKind> => {
   const match = SUPPRESSION.exec(text);
   if (match === null) return O.none();
   const [, tool, verb, scope, rest] = match;
-  const [rulesPart = "", reason = ""] = Str.split(rest ?? "", " -- ");
+  const [rulesPart, reason = ""] = Str.split(rest ?? "", " -- ");
   const rules = A.filter(Str.split(rulesPart, /[\s,]+/), Str.isNonEmpty);
   if (A.isReadonlyArrayEmpty(rules) || A.contains(rules, LAW_RULE)) return O.some("law-disable");
   if (tool === "oxlint" && verb === "disable" && scope === "-next-line" && Str.isNonEmpty(Str.trim(reason)))
