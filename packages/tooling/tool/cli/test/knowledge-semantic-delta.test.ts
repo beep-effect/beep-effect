@@ -15,6 +15,7 @@ import {
   KnowledgeServiceLive,
   KnowledgeTrackedEntry,
   knowledgeSemanticDeltaFailure,
+  readKnowledgeGitRefNames,
   resolveKnowledgeProbePolicy,
 } from "@beep/repo-cli/commands/Knowledge";
 import {
@@ -37,6 +38,7 @@ import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as Deferred from "effect/Deferred";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as Exit from "effect/Exit";
 import * as Hex from "effect/encoding/Hex";
 import * as FileSystem from "effect/FileSystem";
@@ -424,8 +426,8 @@ describe("knowledge semantic-delta proven package exports", () => {
 });
 
 describe("knowledge semantic-delta golden paired fixtures", () => {
-  it("parses local, remote-tracking, and tag ref spellings without accepting other namespaces", () => {
-    expect(gitRefSpanNamesForTesting("refs/heads/goals/local-branch")).toEqual(["goals/local-branch"]);
+  it("parses remote-tracking and tag ref spellings without accepting other namespaces", () => {
+    expect(gitRefSpanNamesForTesting("refs/heads/goals/local-branch")).toEqual([]);
     expect(gitRefSpanNamesForTesting("refs/remotes/origin/goals/remote-branch")).toEqual([
       "origin/goals/remote-branch",
     ]);
@@ -807,28 +809,35 @@ describe("knowledge semantic-delta golden paired fixtures", () => {
   });
 
   it.layer(testLayer, { timeout: "10 seconds" })((it) => {
-    it.effect("a real Git ref span is exempt while a genuinely missing path remains", () =>
+    it.effect("a tag span is exempt while a local branch and a genuinely missing path remain", () =>
       Effect.gen(function* () {
-        const branchName = "goals/time-to-certainty-kickoff";
+        const tagName = "goals/time-to-certainty-kickoff";
+        const branchName = "goals/local-lane-branch";
         const missingPath = "goals/genuinely-missing.md";
         const report = yield* scan(
           fixture(
             { "docs/guide.md": "No references.\n" },
             {
-              "docs/guide.md": `Continue branch \`${branchName}\`; repair \`${missingPath}\`.\n`,
+              "docs/guide.md": `Read tag \`${tagName}\`; continue branch \`${branchName}\`; repair \`${missingPath}\`.\n`,
             },
             {
-              gitRefNames: A.appendAll(
-                gitRefSpanNamesForTesting(`refs/heads/${branchName}`),
-                gitRefSpanNamesForTesting(`refs/remotes/origin/${missingPath}`)
+              gitRefNames: A.flatMap(
+                [`refs/tags/${tagName}`, `refs/heads/${branchName}`, `refs/remotes/origin/${missingPath}`],
+                gitRefSpanNamesForTesting
               ),
             }
           )
         );
 
-        expect(introducedIds(report)).toEqual([
-          yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:goals/genuinely-missing.md"),
-        ]);
+        expect(A.sort(introducedIds(report), Order.String)).toEqual(
+          A.sort(
+            [
+              yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:goals/genuinely-missing.md"),
+              yield* expectedId("broken-tracked-path", "base:docs/guide.md", "repo-path:goals/local-lane-branch"),
+            ],
+            Order.String
+          )
+        );
       })
     );
   });
@@ -2173,6 +2182,37 @@ describe("knowledge clone-local attributes guard", () => {
           assert.strictEqual(failure.attributesPath, attributesPath);
           assert.include(failure.message, attributesPath);
         }
+      })
+    );
+  });
+
+  it.layer(testLayer, { timeout: "10 seconds" })((it) => {
+    it.effect("reads the same ref names from a clone with lane branches as from one without", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const repoDir = yield* fs.makeTempDirectoryScoped({ prefix: "knowledge-ref-names-" });
+        const env = {
+          PATH: Bun.env.PATH ?? "",
+          HOME: path.join(repoDir, "home"),
+          GIT_CONFIG_GLOBAL: "/dev/null",
+          GIT_CONFIG_NOSYSTEM: "1",
+          GIT_AUTHOR_NAME: "Fixture",
+          GIT_AUTHOR_EMAIL: "fixture@example.test",
+          GIT_COMMITTER_NAME: "Fixture",
+          GIT_COMMITTER_EMAIL: "fixture@example.test",
+        };
+        const git = (...args: ReadonlyArray<string>) => Effect.sync(() => runGit(repoDir, args, env));
+        yield* git("init", "-q", "-b", "main");
+        yield* git("commit", "-q", "--allow-empty", "--no-gpg-sign", "-m", "base");
+        yield* git("update-ref", "refs/remotes/origin/goals/shared-lane", "HEAD");
+        yield* git("update-ref", "refs/tags/goals/shared-tag", "HEAD");
+        const before = yield* readKnowledgeGitRefNames(repoDir);
+        assert.isTrue(Equal.equals(before, HashSet.make("origin/goals/shared-lane", "goals/shared-tag")));
+
+        yield* git("branch", "goals/local-lane");
+        const after = yield* readKnowledgeGitRefNames(repoDir);
+        assert.isTrue(Equal.equals(after, before));
       })
     );
   });

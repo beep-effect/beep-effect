@@ -581,7 +581,7 @@ const commandOccurrence = (
 
 /**
  * A broken tracked-path candidate from one inline code span, unless Git proves the exact span is a
- * local branch, remote-tracking branch, or tag name.
+ * remote-tracking branch or tag name.
  *
  * **Details**
  *
@@ -1129,20 +1129,19 @@ const gitAdapter: GitCommandErrorAdapter<KnowledgeOperationalError> = {
   onTruncated: O.none(),
 };
 
-const GIT_LOCAL_REF_NAME_PATTERN = /^refs\/(?:heads|tags)\/(.+)$/u;
+const GIT_TAG_REF_NAME_PATTERN = /^refs\/tags\/(.+)$/u;
 const GIT_REMOTE_REF_NAME_PATTERN = /^refs\/remotes\/([^/]+)\/(.+)$/u;
 
 /**
  * Parses one full Git ref into the exact inline spellings that can otherwise resemble tracked paths.
  *
  * @param fullRef - Fully qualified ref name emitted by `git for-each-ref`.
- * @returns Branch or tag spellings used in prose when the namespace is supported.
+ * @returns Remote-tracking branch or tag spellings used in prose when the namespace is supported.
  */
 const gitRefSpanNames = (fullRef: string): ReadonlyArray<string> => {
-  const localMatch = GIT_LOCAL_REF_NAME_PATTERN.exec(fullRef);
-  const localName = localMatch?.[1];
-  if (P.isString(localName)) {
-    return [localName];
+  const tagName = GIT_TAG_REF_NAME_PATTERN.exec(fullRef)?.[1];
+  if (P.isString(tagName)) {
+    return [tagName];
   }
 
   const remoteMatch = GIT_REMOTE_REF_NAME_PATTERN.exec(fullRef);
@@ -1156,9 +1155,11 @@ const gitRefSpanNames = (fullRef: string): ReadonlyArray<string> => {
  *
  * **Details**
  *
- * Local branches and tags yield their unqualified name. Remote-tracking branches yield only the
- * conventional remote-qualified spelling; accepting the suffix could hide a missing path with the
- * same text. Unsupported namespaces yield an empty collection.
+ * Tags yield their unqualified name. Remote-tracking branches yield only the conventional
+ * remote-qualified spelling; accepting the suffix could hide a missing path with the same text.
+ * Local branches yield nothing: they exist only in the clone that created them, so exempting one
+ * would pass a document locally that a hosted checkout, which has no such branch, refuses.
+ * Unsupported namespaces yield an empty collection.
  *
  * **Example** (Parse a remote-tracking branch)
  *
@@ -1170,23 +1171,23 @@ const gitRefSpanNames = (fullRef: string): ReadonlyArray<string> => {
  * ```
  *
  * @param fullRef - Fully qualified ref name emitted by `git for-each-ref`.
- * @returns Exact local, tag, or remote-tracking spellings accepted by the ref exclusion.
+ * @returns Exact tag or remote-tracking spellings accepted by the ref exclusion.
  * @category testing
  * @since 0.0.0
  */
 export const gitRefSpanNamesForTesting = gitRefSpanNames;
 
-// The ref namespaces a span may cite: local branches, remote-tracking branches and tags.
-const KNOWLEDGE_REF_PATTERNS = ["refs/heads", "refs/remotes", "refs/tags"];
+// The ref namespaces a span may cite: the shared ones, which every full clone of the repository reads.
+const KNOWLEDGE_REF_PATTERNS = ["refs/remotes", "refs/tags"];
 
 /**
- * Collects local branch, remote-tracking branch, and tag names with one Git process per comparison.
+ * Collects remote-tracking branch and tag names with one Git process per comparison.
  *
  * **Details**
  *
- * Every spelling a ref can be cited by — the full ref, the short branch or tag name, and the
- * `<remote>/<branch>` form — so an inline code span that exactly names a ref is never read as a
- * missing repository path.
+ * The short tag name and the `<remote>/<branch>` form, so an inline code span that exactly names
+ * one of those refs is never read as a missing repository path. A local branch is not collected:
+ * the verdict on a commit must not depend on which branches a clone happens to hold.
  *
  * **Example** (Read the ref census of a repository)
  *
