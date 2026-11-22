@@ -307,7 +307,7 @@ export class CoverageProducerManifest extends S.Opaque<CoverageProducerManifest,
     partitionId: S.NonEmptyString,
     rawFormat: S.tag("istanbul"),
     /** Version of the CLI's directly imported coverage-processing library, not the test provider's nested copy. */
-    coverageLibraryVersion: S.tag("2.1.0"),
+    coverageLibraryVersion: S.tag("2.1.1"),
     producerRuntime: S.tag("bun"),
     producerRuntimeVersion: S.NonEmptyString,
     packages: S.Array(CoveragePackageArtifact),

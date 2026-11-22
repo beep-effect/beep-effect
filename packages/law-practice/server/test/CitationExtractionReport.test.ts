@@ -43,11 +43,10 @@ it.layer(citationTokenizerTestLayer)("captured extraction report timing", (it) =
               engineArtifact,
               extraction: defaultConfiguration,
             }).pipe(
-              Effect.flatMap((stage) =>
-                makeCitationTestScaffoldBinding(setup.limits).pipe(
-                  Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-                )
-              ),
+              Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+                ...stage,
+                extract: bind(stage.extract),
+              })),
               Effect.provideContext(Context.add(provided, Clock.Clock, clock)),
               Effect.provideService(SourceTextResolver, resolver),
               DateTime.withCurrentZoneOffset(0)

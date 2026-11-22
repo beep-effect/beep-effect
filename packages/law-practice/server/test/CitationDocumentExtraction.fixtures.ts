@@ -87,11 +87,10 @@ export const installCitationDocumentExtractionFixture = Effect.fn("DocumentExtra
     CitationDocumentExtractionConfiguration.make({ document: { discovery, diffRuntime }, extraction: configuration })
   );
   const stage = yield* makeCitationDocumentExtraction(setup.limits, setup.runtime, documentConfiguration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      extract: bind(stage.extract),
+    })),
     Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );
@@ -121,11 +120,10 @@ const replayRetained = Effect.fnUntraced(function* (
 ) {
   const { setup, provided, configuration, translated } = installed;
   const retained = yield* makeCitationRetainedDocumentExtraction(setup.limits, setup.runtime, configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      extract: bind(stage.extract),
+    })),
     Effect.provideContext(provided),
     Effect.provideService(CitationDocumentInputProtocols, retainedProtocols),
     DateTime.withCurrentZoneOffset(0)

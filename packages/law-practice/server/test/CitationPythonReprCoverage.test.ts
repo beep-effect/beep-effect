@@ -21,9 +21,10 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const { limits } = yield* defaultCitationEnginePolicy;
         const table = yield* readCitationNativeRenderingAsset("python-printability");
         const repr = yield* makeCitationPythonRepr(limits, table).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, text: bind(stage.text) })))
-          )
+          Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+            ...stage,
+            text: bind(stage.text),
+          }))
         );
         const input = Str.repeat(5000)("x");
         const actual = yield* repr.text(word(input));

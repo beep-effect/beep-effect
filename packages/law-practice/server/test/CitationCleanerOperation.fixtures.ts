@@ -17,11 +17,11 @@ export const makeCitationReplayCleanerOperation = Effect.fn("CleanerReplayTest.m
 ) {
   const admission = yield* makeCitationOperationAdmission(limits);
   const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits, "clean").pipe(
-        Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits, "clean"), (stage, bind) => ({
+      ...stage,
+      run: bind(stage.run),
+      runOwned: bind(stage.runOwned),
+    })),
     Effect.provideService(CitationCleaner, runtime)
   );
   // Original private failure categories remain observable in the source replay.
