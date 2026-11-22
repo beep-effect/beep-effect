@@ -1,7 +1,7 @@
 /**
  * The history slot: the contract a history service fills with a label per
  * failing item and a delta since the previous run, read under a deadline so
- * the console never waits on it. `goals/gate-run-history` implements it;
+ * slow history never hides the verdict. `goals/gate-run-history` implements it;
  * this package ships the no-op layer and the test layers.
  *
  * @packageDocumentation
