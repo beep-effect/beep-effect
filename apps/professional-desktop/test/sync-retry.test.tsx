@@ -70,11 +70,11 @@ describe("a failed sync query is not a dead end", { concurrent: false }, () => {
         </RegistryProvider>
       );
       const screen = within(container);
-      const [statusRetry, conflictsRetry] = yield* Effect.promise(() =>
-        waitFor(
-          () => [screen.getByTestId("vault-sync-status-retry"), screen.getByTestId("vault-sync-conflicts-retry")],
-          { timeout: 4_000 }
-        )
+      const statusRetry = yield* Effect.promise(() =>
+        waitFor(() => screen.getByTestId("vault-sync-status-retry"), { timeout: 4_000 })
+      );
+      const conflictsRetry = yield* Effect.promise(() =>
+        waitFor(() => screen.getByTestId("vault-sync-conflicts-retry"), { timeout: 4_000 })
       );
       expect(statusRetry).toHaveTextContent("Retry");
       expect(conflictsRetry).toHaveTextContent("Retry");
