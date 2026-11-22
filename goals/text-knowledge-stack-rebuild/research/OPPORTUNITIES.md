@@ -314,3 +314,18 @@ home paths with `~`, drop session and machine ids.
   alone, the gate passed a test file that does not compile.
 - **Prevention:** have the script exit with the recorded `exitCode` and print the diagnostics it
   stores, or name the artifact as the verdict in its own output.
+
+## 2026-11-22: the instrumentation-catalog hook skips a module directly under `src/`
+
+- **Doing:** P3 commit 3 added `packages/foundation/modeling/text/src/Capture.ts` with the
+  `Capture.mint` span. The commit carried the schema-catalog shard but not the instrumentation
+  shard, so `beep observability catalog --check` reported `@beep/text.generated.jsonc: stale`.
+- **Evidence:** `lefthook run pre-commit --command instrumentation-catalog --file
+  packages/foundation/modeling/text/src/Capture.ts --verbose` printed `filtered [ ]` and
+  `no files for inspection`, while the same run on `src/internal/scalars.ts` matched. Lefthook's
+  default glob matcher needs at least one directory for `**/`, so
+  `{apps,packages}/**/src/**/*.{ts,tsx}` never matched `src/<Module>.ts`. Every new top-level module
+  in any package had the same gap.
+- **Prevention:** the hook's glob is now a list that adds `{apps,packages}/**/src/*.{ts,tsx}`. A
+  repo test that runs each `lefthook.yml` glob against one top-level and one nested sample path
+  would catch the next pattern of this shape.
