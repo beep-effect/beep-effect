@@ -5,7 +5,7 @@ import { makeCitationRendering } from "@beep/law-practice-server/internal/Citati
 import { makeCitationTextBudget } from "@beep/law-practice-server/internal/Citation/TextBudget";
 import { CitationTextBudget } from "@beep/law-practice-use-cases/server";
 import { it } from "@beep/test-runner";
-import { fcRuns } from "@beep/test-utils";
+import { fcRunsCapped } from "@beep/test-utils";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
@@ -69,7 +69,7 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("original bu
           expect(actual).toEqual(value.storage);
         })
       ),
-    { arbitrary: fcRuns(20) }
+    { arbitrary: fcRunsCapped(20) }
   );
   it.effect("bounds native assembly and preserves invocation budgets and owned results", () =>
     withCitationTestInvocation(

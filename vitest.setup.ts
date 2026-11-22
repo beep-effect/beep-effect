@@ -31,9 +31,14 @@ import * as NodeHttp from "node:http";
 import * as NodeOS from "node:os";
 import * as NodePath from "node:path";
 import * as NodeStream from "node:stream";
+import { parseFcSeed } from "@beep/fc-runs/FastCheckRuns";
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { A, O, P, R } from "@beep/utils";
 import { addEqualityTesters } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
+import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as Result from "effect/Result";
@@ -91,9 +96,25 @@ if (
 
 addEqualityTesters();
 
-// Property-test run floors and seeds now flow through @beep/fc-runs
-// (BEEP_FC_NUM_RUNS / BEEP_FC_SEED) into per-test `{ arbitrary: ... }`
-// options; the native effect Arbitrary model has no global configuration.
+// Property-test run floors flow through @beep/fc-runs (BEEP_FC_NUM_RUNS) into per-test
+// `{ arbitrary: ... }` options. A pinned seed (see `propertySeedEnvironment` in vitest.shared.ts) is
+// also the default of every check and sample, so a property that passes no options repeats too; an
+// explicit seed still wins. The few suites that draw from fast-check itself pass their own seed.
+// Never read config here through the default ConfigProvider: this file runs in every test worker,
+// the default provider is built once from the environment at its first use, and a test that stubs a
+// variable afterwards (vi.stubEnv) would read the old environment. Keep the provider of its own.
+// The seed is parsed as vitest.shared.ts and @beep/fc-runs parse it, so a seed accepted there is used here.
+const propertySeed = Config.String("BEEP_FC_SEED").pipe(
+  Config.option,
+  Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromEnv()),
+  Effect.runSync,
+  O.getOrUndefined,
+  parseFcSeed
+);
+if (O.isSome(propertySeed)) {
+  const seed = propertySeed.value;
+  Arbitrary.configureGlobal({ check: { seed }, sample: { seed } });
+}
 
 type BunFileShim = {
   readonly arrayBuffer: () => Promise<ArrayBuffer>;

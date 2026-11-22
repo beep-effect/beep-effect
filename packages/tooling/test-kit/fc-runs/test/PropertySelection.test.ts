@@ -2,6 +2,7 @@ import {
   isPlainRegistrationLine,
   moduleGraphRunsPropertiesInline,
   plainRegistrationLines,
+  propertyTestMarker,
   relativeImportCandidates,
   relativeImportSpecifiers,
   runsPropertiesInline,
@@ -187,5 +188,29 @@ describe("moduleGraphRunsPropertiesInline", () => {
       moduleGraphRunsPropertiesInline({ entry: "/t/a.test.ts", readSource: read, resolveCandidates: resolve })
     ).toBe(false);
     assertNone(read("/t/missing.json"));
+  });
+});
+
+describe("propertyTestMarker", () => {
+  // Each shape the sweep must see, with the part of the pattern that sees it and no other part does.
+  it.each([
+    ["it.prop", 'it.prop("law", [S.Int], check);', "\\bit\\.prop\\b|"],
+    ["it.effect.prop", 'it.effect.prop("law", [S.Int], check);', "\\bit\\.effect\\.prop\\b|"],
+    ["Arbitrary.checkEffect", "yield* Arbitrary.checkEffect(values, check);", "checkEffect|"],
+    ["Arbitrary.sampleEffect", "yield* Arbitrary.sampleEffect(values);", "sampleEffect|"],
+    [
+      "assertSchemaArbitraryDecodesToSelf",
+      "yield* assertSchemaArbitraryDecodesToSelf(Model);",
+      "\\bassertSchemaArbitraryDecodesToSelf\\b|",
+    ],
+  ])("sees %s by its own alternative", (_shape, source, alternative) => {
+    const without = Str.replace(alternative, "")(propertyTestMarker.source);
+    expect(without).not.toBe(propertyTestMarker.source);
+    expect(propertyTestMarker.test(source)).toBe(true);
+    expect(new RegExp(without).test(source)).toBe(false);
+  });
+
+  it("does not see a plain test", () => {
+    expect(propertyTestMarker.test('it.effect("adds", () => Effect.void);')).toBe(false);
   });
 });
