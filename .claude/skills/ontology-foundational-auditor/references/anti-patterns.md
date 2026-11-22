@@ -18,5 +18,6 @@
   Correlated agreement is one data point; the steward decides.
 - **Confidence laundering**: `confidence.value` influencing acceptance. It is
   triage metadata only (`use_for_acceptance: false` is load-bearing).
-- The full failure-mode table lives in `.claude/skills/_shared/foundational-analysis.md` —
+- The full failure-mode table lives in `../_shared/foundational-analysis.md`
+  (relative to this skill's directory) —
   run it as a checklist during the adversarial pass.

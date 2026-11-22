@@ -52,7 +52,8 @@ Phase 2.5: FOUNDATIONAL AUDIT
 
 Phase 3: CONCEPTUALIZATION
   └── ontology-conceptualizer
-        Build glossary, design taxonomy, align to BFO, select axiom patterns
+        Build glossary, design taxonomy, align to the chosen upper ontology,
+        select axiom patterns
 
 Phase 4: FORMALIZATION & IMPLEMENTATION
   └── ontology-architect
@@ -86,6 +87,7 @@ requirements → scout → foundational-auditor → conceptualizer → architect
 ```
 
 1. **requirements** produces: CQs, ORSD, pre-glossary, scope definition
+   (which records the project's upper ontology: BFO, another, or none)
 2. **scout** consumes pre-glossary, produces: reuse report, import term lists,
    ODP recommendations
 2.5 **foundational-auditor** consumes CQs + pre-glossary candidates + reuse
@@ -97,7 +99,9 @@ requirements → scout → foundational-auditor → conceptualizer → architect
 3. **conceptualizer** consumes RATIFIED proposals + ratification records +
    the dispositions index (never raw pre-glossary terms; the index carries
    the unresolved/deferred remainder), produces: glossary,
-   conceptual model, BFO alignment, axiom plan
+   conceptual model, upper-ontology alignment (`docs/upper-alignment.md`),
+   property design and axiom plan (each entry `status: proposed` until the
+   steward ratifies it; the architect formalizes only `ratified` entries)
 4. **architect** consumes approved conceptual model, produces: ontology files
    (.ttl), SHACL shapes
 5. **validator** consumes ontology + shapes + CQ tests, produces: validation

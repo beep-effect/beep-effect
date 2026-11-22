@@ -5,6 +5,8 @@
 id: "po:sha256:<full-64-hex>"    # RECOMPUTED by the validator —
 #   sha256(json.dumps([commit, path, start_line, end_line, quote],
 #     sort_keys=True, separators=(",", ":"), ensure_ascii=False))
+#   The same bytes from TypeScript/JavaScript: sha256 of the UTF-8 bytes of
+#     JSON.stringify([commit, path, start_line, end_line, quote])
 #   A random or stale id cannot match (content-consistency, not authorship). Quote must be a substantive excerpt
 #   (>=10 chars stripped); span lines 1 <= start <= end.
 schema_version: 1
