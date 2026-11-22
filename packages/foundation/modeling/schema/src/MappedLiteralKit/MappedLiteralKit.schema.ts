@@ -5,13 +5,13 @@
  * @packageDocumentation
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import { A, R } from "@beep/utils";
 import { pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import { LiteralKitEmptySubsetError, matchLiteral } from "../LiteralKit/index.ts";
 import { deriveKeys, literalKitBuilders, makeMatch, makeMatchOrElse } from "../LiteralKit/internal/builders.ts";
 import type * as SchemaAST from "effect/SchemaAST";

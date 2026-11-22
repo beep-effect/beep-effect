@@ -1,0 +1,133 @@
+name: Turbo build cache
+description: >-
+  Restore, or prune before a save, the trusted main snapshot of Turbo `build`
+  artifacts in `.turbo/cache`. The snapshot moves only the repeated `^build`
+  dependency downloads off the remote cache; Turbo still decides every hit by
+  task hash. This action never saves: the one push-gated save step lives in
+  heavy.yml, where the workflow lint and tests can see it.
+
+inputs:
+  operation:
+    description: >-
+      `restore` restores the newest main snapshot and acts only on
+      `pull_request` events. `prune` reduces `.turbo/cache` to this run's
+      environment-free `build` artifacts and acts only on a push to
+      `refs/heads/main`; the caller saves with the `key` output when `ready`
+      is `true`.
+    required: true
+
+outputs:
+  key:
+    description: Exact Actions cache key for this run's snapshot (one per two-hour UTC bucket).
+    value: ${{ steps.key.outputs.key }}
+  ready:
+    description: "`true` when the prune left a non-empty snapshot within the size cap."
+    value: ${{ steps.prune.outputs.ready }}
+
+runs:
+  using: composite
+  steps:
+    # One key per two-hour UTC bucket: the first successful main snapshot of a
+    # bucket is saved and later saves in the bucket are refused by the cache
+    # service, so main writes at most 12 entries a day. A superseded entry is
+    # never restored again and ages out after GitHub's 7 idle days, which
+    # bounds the live set to 84 entries.
+    - name: Resolve Turbo build cache key
+      id: key
+      shell: bash
+      run: |
+        set -euo pipefail
+        hour="$(date -u +%H)"
+        bucket="$(date -u +%Y%m%d)-$(printf '%02d' $(( (10#$hour / 2) * 2 )))"
+        prefix="turbo-${RUNNER_OS}-build-outputs-main-"
+        {
+          echo "prefix=${prefix}"
+          echo "key=${prefix}${bucket}"
+        } >> "$GITHUB_OUTPUT"
+
+    # Actions cache scoping: a pull request reads its own ref's entries and its
+    # base branch's. Nothing ever saves on a pull request ref, so the only
+    # entries it can find are the ones main pushes saved.
+    - name: Restore main Turbo build cache
+      if: inputs.operation == 'restore' && github.event_name == 'pull_request'
+      continue-on-error: true
+      uses: actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+      with:
+        path: .turbo/cache
+        key: ${{ steps.key.outputs.key }}
+        restore-keys: ${{ steps.key.outputs.prefix }}
+
+    # Keep only artifacts of `build` tasks whose hash covers no environment
+    # variable (none specified, configured, inferred or passed through, strict
+    # env mode). Any pull request, a fork's included, can restore a main entry,
+    # so a task that reads environment values on a push (the oip-web and todox
+    # builds hash the application secrets) never enters the snapshot. Turbo
+    # 2.11 stores three files per hash, and only those exact names are kept:
+    # `<hash>.tar.zst`, `<hash>-meta.json` and `<hash>-manifest.json`. Every
+    # other file is deleted, a partial write (`*.tmp`) of a kept hash or an
+    # unknown suffix included, so the entry holds exactly this run's graph and
+    # cannot grow across generations; a snapshot above the cap is not saved.
+    - name: Prune Turbo cache to environment-free build artifacts
+      id: prune
+      if: inputs.operation == 'prune' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+      continue-on-error: true
+      shell: bash
+      env:
+        MAX_SNAPSHOT_MIB: "64"
+      run: |
+        set -euo pipefail
+        cache_dir=.turbo/cache
+        shopt -s nullglob
+        summaries=(.turbo/runs/*.json)
+        if [[ ! -d "$cache_dir" || ${#summaries[@]} -eq 0 ]]; then
+          echo "No Turbo cache or run summary in this job; nothing to save."
+          echo "ready=false" >> "$GITHUB_OUTPUT"
+          exit 0
+        fi
+
+        declare -A keep=()
+        while IFS= read -r hash; do
+          if [[ -n "$hash" ]]; then
+            keep["$hash"]=1
+          fi
+        done < <(
+          jq -r '
+            .tasks[]
+            | select(.task == "build" and .envMode == "strict")
+            | select(
+                ((.environmentVariables.specified.env // [])
+                  + (.environmentVariables.specified.passThroughEnv // [])
+                  + (.environmentVariables.configured // [])
+                  + (.environmentVariables.inferred // [])
+                  + (.environmentVariables.passthrough // [])) | length == 0
+              )
+            | .hash
+          ' "${summaries[@]}"
+        )
+
+        kept=0
+        removed=0
+        for file in "$cache_dir"/*; do
+          name="${file##*/}"
+          hash="${name%%[.-]*}"
+          case "$name" in
+            "$hash.tar.zst" | "$hash-meta.json" | "$hash-manifest.json") allowed=true ;;
+            *) allowed=false ;;
+          esac
+          if [[ "$allowed" == true && -n "${keep[$hash]:-}" ]]; then
+            kept=$((kept + 1))
+          else
+            rm -rf -- "$file"
+            removed=$((removed + 1))
+          fi
+        done
+
+        size_mib="$(( ($(du -sk "$cache_dir" | cut -f1) + 1023) / 1024 ))"
+        echo "Turbo build snapshot: ${#keep[@]} build tasks, ${kept} files kept, ${removed} removed, ${size_mib} MiB."
+        ready=false
+        if (( kept > 0 && size_mib <= MAX_SNAPSHOT_MIB )); then
+          ready=true
+        elif (( kept > 0 )); then
+          echo "::warning::Turbo build snapshot is ${size_mib} MiB, above the ${MAX_SNAPSHOT_MIB} MiB cap; not saving it."
+        fi
+        echo "ready=${ready}" >> "$GITHUB_OUTPUT"

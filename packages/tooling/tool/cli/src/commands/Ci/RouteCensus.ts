@@ -183,6 +183,7 @@ export const ROUTE_SETUP_STEP_NAMES: ReadonlyArray<string> = [
   "Install pinned commitlint",
   "Install typos",
   "Restore main Docgen Turbo cache",
+  "Restore main Turbo build cache",
   "Set up job",
   "Set up runner",
   "Setup Bun for SAST dispatch",

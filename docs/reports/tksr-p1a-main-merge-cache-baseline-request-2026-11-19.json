@@ -1,0 +1,23 @@
+{
+  "previous": {
+    "//": "a21269cb9765ffb5c1aaf0b9f0369d47cff785176bd9a69ce072c0988edeaae0",
+    "@beep/documents-domain": "b26b933d810c0395663e03965523b46ac8e7a26f3cafa87f0700edcfcbe1ec02",
+    "@beep/execution-authority-domain": "4125b2d577a64efb5c3a99a1f3031c97d4f9965223475a4d2c3d0d77b6cfbaab"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 L0 identity lane, goals/text-knowledge-stack-rebuild-p1-l0-identity)",
+    "reason": "Re-record the root, @beep/documents-domain and @beep/execution-authority-domain after merging origin/main e5b61d30932, which re-recorded them: the branch removes two upstream dependency edges and adds generated policy-fingerprint input paths. No qualification is granted.",
+    "basis": {
+      "path": "docs/reports/tksr-p1a-main-merge-cache-review-2026-11-19.md",
+      "sha256": "c7d5d7277bc7a37de58aa0b56d972511e96b7eafda6f336fbe9204d0b8dc0a01"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/documents-domain",
+    "@beep/execution-authority-domain"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

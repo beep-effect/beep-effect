@@ -15,7 +15,11 @@
  */
 import { AbsenceReason, ValidTime } from "@beep/epistemics/Claim";
 import { $RepoCliId } from "@beep/identity/packages";
+import { ActivityPin } from "@beep/jsonc/ActivityStart";
+import { mintContentHash } from "@beep/jsonc/Mint";
 import { TextAnchorVerificationReceipt } from "@beep/provenance/VerifiedTextAnchor";
+import { CanonicalHashSet } from "@beep/schema/CanonicalHashSet";
+import { ActivityId, ContentHash, DomainTag } from "@beep/schema/ContentHash";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
 import * as A from "effect/Array";
@@ -29,15 +33,6 @@ import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Struct from "effect/Struct";
-import {
-  ActivityId,
-  ActivityPin,
-  CanonicalHashSet,
-  ContentHash,
-  DomainTag,
-  Instant,
-  mintContentHash,
-} from "./L0.digest.ts";
 import { OccurrenceId } from "./L1.text.ts";
 import type { FieldSchema, IdCodec } from "@beep/epistemics/Factory";
 import type { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
@@ -141,7 +136,7 @@ export const makeClaimCore = <
     generatedBy: ActivityId,
     assertedBy: AgentRef,
     valid: ValidTime,
-    knowledgeStart: Instant,
+    knowledgeStart: S.DateTimeUtcFromMillis,
     scope: ids.scope,
   }).check(
     S.makeFilter(
@@ -158,7 +153,7 @@ export const makeClaimCore = <
     action: ids.action,
     revision: ids.revision,
     scope: ids.scope,
-    issuedAt: Instant,
+    issuedAt: S.DateTimeUtcFromMillis,
     attestation: Sha256PrefixedDigest,
   });
 
@@ -170,7 +165,7 @@ export const makeClaimCore = <
     revision: ids.revision,
     grounding: S.NonEmptyArray(TextAnchorVerificationReceipt),
     token: HumanAdmissionToken,
-    at: Instant,
+    at: S.DateTimeUtcFromMillis,
   }).check(
     S.makeFilter(
       (admission: unknown) => isTokenBindingView(admission) && tokenIsBound(admission),
@@ -183,7 +178,7 @@ export const makeClaimCore = <
 
   // Challenge cycles are allowed (L4-3); a person challenges as the slice principal (decision 2026-11-19-p0-admission-actor-is-the-principal).
   const Challenge = S.TaggedUnion({
-    ByPerson: { from: ClaimId, to: ClaimId, kind: ChallengeKind, actor: ids.principal, at: Instant },
+    ByPerson: { from: ClaimId, to: ClaimId, kind: ChallengeKind, actor: ids.principal, at: S.DateTimeUtcFromMillis },
     ByActivity: { from: ClaimId, to: ClaimId, kind: ChallengeKind, generatedBy: ActivityId },
   });
 
@@ -191,7 +186,7 @@ export const makeClaimCore = <
     claim: ClaimId,
     actor: ids.principal,
     reason: S.NonEmptyString,
-    at: Instant,
+    at: S.DateTimeUtcFromMillis,
   });
 
   const ProposedClaimRecord = S.Struct({
@@ -266,8 +261,8 @@ export class ClaimLogEntry extends S.Opaque<ClaimLogEntry, { readonly brand: uni
     logicalKey: S.NonEmptyString,
     supersedes: S.OptionFromOptionalKey(ClaimId),
     derivedFrom: CanonicalHashSet(ClaimId).annotateKey({ description: "Parents the record was derived from." }),
-    knowledgeStart: Instant,
-    generatedAt: Instant.annotateKey({ description: "End time of the generating activity." }),
+    knowledgeStart: S.DateTimeUtcFromMillis,
+    generatedAt: S.DateTimeUtcFromMillis.annotateKey({ description: "End time of the generating activity." }),
     valid: ValidTime,
   }).pipe($I.annoteSchema("ClaimLogEntry", { description: "Projection of a log record for the interval laws." }))
 ) {}

@@ -912,7 +912,8 @@ instances, and for a relator the role terms it mediates) is a record keyed by
 term IRI in `@beep/ontology`. A published term IRI is declared in the
 `@beep/identity` registry and bound to code through
 `TermBinding`, never derived from a code path; the published set changes only
-with a deprecation record.
+with a deprecation record. `since` names a vocabulary release of the
+term-stability snapshot, not a package version.
 
 ## Tooling Package
 

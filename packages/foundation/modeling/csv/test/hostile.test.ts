@@ -3,7 +3,13 @@
 // cost more than linear time or memory, wide records and floods of warnings included.
 
 import { Csv } from "@beep/csv/Csv.codec";
-import { CsvFatal, LimitExceeded, UnterminatedQuote, WarningsTruncated } from "@beep/csv/CsvDiagnostic.schema";
+import {
+  CsvFatal,
+  LimitExceeded,
+  RaggedRecord,
+  UnterminatedQuote,
+  WarningsTruncated,
+} from "@beep/csv/CsvDiagnostic.schema";
 import {
   CsvDetectEncoding,
   CsvLimits,
@@ -416,6 +422,23 @@ describe("linear cost", { concurrent: false }, () => {
     assertSuccess(
       Result.map(read, (done) => A.map(CsvRead.warnings(done), (warning) => warning.finding.kind)),
       ["RaggedRecord", "WarningsTruncated"]
+    );
+  });
+
+  // The property tests only sometimes mix line endings after the cap is spent, so this example always does.
+  it("a change of line ending past the cap is counted and not kept", () => {
+    const read = Csv.parseResult("a,b\r\nc\r\nd,e\n", limited({ maxWarnings: 1 }));
+    assertSuccess(
+      Result.map(read, (done) => A.map(CsvRead.warnings(done), (warning) => warning.finding)),
+      [
+        RaggedRecord.make({
+          at: CsvTextSpan.make({ offset: 5, length: 3, line: 1, character: 0 }),
+          record: 1,
+          expected: 2,
+          actual: 1,
+        }),
+        WarningsTruncated.make({ kept: 1, dropped: 1 }),
+      ]
     );
   });
 });

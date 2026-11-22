@@ -1,0 +1,2217 @@
+{
+  "version": "agent-output-census-baseline/v1",
+  "recordedAt": "2026-11-19T23:58:39.384Z",
+  "report": {
+    "version": "agent-output-census/v1",
+    "ruleVersion": "census-rules/2026-11-18",
+    "repository": "reference",
+    "window": {
+      "since": "2026-11-11T11:56:00.000Z",
+      "until": "2026-11-18T11:57:45.000Z"
+    },
+    "corpus": {
+      "claude": {
+        "_tag": "Present",
+        "filesScanned": 226,
+        "contextsActive": 223,
+        "sessions": 127,
+        "subagents": 96,
+        "compactionBoundaries": 113,
+        "oversizedLines": 327,
+        "oversizedBytes": 208312856,
+        "unreadableFiles": 0
+      },
+      "codex": {
+        "_tag": "Present",
+        "filesScanned": 145,
+        "sessions": 32,
+        "oversizedLines": 17,
+        "oversizedBytes": 7381781,
+        "unreadableFiles": 0
+      }
+    },
+    "totals": {
+      "claudeSessions": {
+        "apiCalls": 34085,
+        "inputTokens": 76077,
+        "cacheCreationTokens": 104776204,
+        "cacheReadTokens": 14727202857,
+        "outputTokens": 23296302,
+        "contextTokens": 14832055138,
+        "toolOutputChars": 48797267,
+        "verificationChars": 11480772
+      },
+      "claudeSubagents": {
+        "apiCalls": 16794,
+        "inputTokens": 33927,
+        "cacheCreationTokens": 111621036,
+        "cacheReadTokens": 6302383002,
+        "outputTokens": 15740197,
+        "contextTokens": 6414037965,
+        "toolOutputChars": 42289705,
+        "verificationChars": 5259581
+      },
+      "codex": {
+        "inputTokens": 524160457,
+        "cachedInputTokens": 516298368,
+        "outputTokens": 1089608,
+        "toolOutputChars": 12191573,
+        "verificationChars": 3681785
+      }
+    },
+    "toolOutput": {
+      "rows": [
+        {
+          "toolOutputClass": "ci-logs",
+          "claude": {
+            "results": 790,
+            "chars": 1064354,
+            "carriedCharTurns": 224011788,
+            "filteredResults": 788,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.011685029995288459,
+            "shareOfContextRead": 0.004590488486856455
+          },
+          "codex": {
+            "results": 15,
+            "chars": 71596,
+            "carriedCharTurns": 0,
+            "filteredResults": 15,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.005872581003288091,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "yeet",
+          "claude": {
+            "results": 4299,
+            "chars": 4275245,
+            "carriedCharTurns": 729309438,
+            "filteredResults": 4172,
+            "persistedResults": 2,
+            "shareOfToolOutput": 0.04693585598607889,
+            "shareOfContextRead": 0.014945135737654805
+          },
+          "codex": {
+            "results": 105,
+            "chars": 323841,
+            "carriedCharTurns": 0,
+            "filteredResults": 71,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.026562692115283237,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "ci-status",
+          "claude": {
+            "results": 1136,
+            "chars": 763878,
+            "carriedCharTurns": 163411327,
+            "filteredResults": 854,
+            "persistedResults": 1,
+            "shareOfToolOutput": 0.008386248694269911,
+            "shareOfContextRead": 0.003348653309331362
+          },
+          "codex": {
+            "results": 89,
+            "chars": 226890,
+            "carriedCharTurns": 0,
+            "filteredResults": 43,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.018610395885748296,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "quality",
+          "claude": {
+            "results": 1037,
+            "chars": 830587,
+            "carriedCharTurns": 120606989,
+            "filteredResults": 1011,
+            "persistedResults": 1,
+            "shareOfToolOutput": 0.009118614679605334,
+            "shareOfContextRead": 0.002471499376804774
+          },
+          "codex": {
+            "results": 69,
+            "chars": 100755,
+            "carriedCharTurns": 0,
+            "filteredResults": 67,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.00826431503137454,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "test",
+          "claude": {
+            "results": 3863,
+            "chars": 3716767,
+            "carriedCharTurns": 654772734,
+            "filteredResults": 3704,
+            "persistedResults": 7,
+            "shareOfToolOutput": 0.0408045949754483,
+            "shareOfContextRead": 0.013417716646833442
+          },
+          "codex": {
+            "results": 300,
+            "chars": 1193551,
+            "carriedCharTurns": 0,
+            "filteredResults": 198,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.09789967217519839,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "check",
+          "claude": {
+            "results": 1624,
+            "chars": 2295816,
+            "carriedCharTurns": 487996524,
+            "filteredResults": 1548,
+            "persistedResults": 5,
+            "shareOfToolOutput": 0.025204658246845663,
+            "shareOfContextRead": 0.010000109570340868
+          },
+          "codex": {
+            "results": 281,
+            "chars": 1108605,
+            "carriedCharTurns": 0,
+            "filteredResults": 239,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.0909320725061483,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "lint",
+          "claude": {
+            "results": 1679,
+            "chars": 2248872,
+            "carriedCharTurns": 325164579,
+            "filteredResults": 1533,
+            "persistedResults": 21,
+            "shareOfToolOutput": 0.024689282678098026,
+            "shareOfContextRead": 0.006663329057634352
+          },
+          "codex": {
+            "results": 102,
+            "chars": 316035,
+            "carriedCharTurns": 0,
+            "filteredResults": 53,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.025922413785325324,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "docgen",
+          "claude": {
+            "results": 160,
+            "chars": 211307,
+            "carriedCharTurns": 23580809,
+            "filteredResults": 147,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.0023198377919511916,
+            "shareOfContextRead": 0.00048322203573171376
+          },
+          "codex": {
+            "results": 40,
+            "chars": 268527,
+            "carriedCharTurns": 0,
+            "filteredResults": 28,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.02202562376487431,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "build",
+          "claude": {
+            "results": 74,
+            "chars": 46028,
+            "carriedCharTurns": 7610853,
+            "filteredResults": 73,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.000505319245874152,
+            "shareOfContextRead": 0.0001559629222354
+          },
+          "codex": {
+            "results": 0,
+            "chars": 0,
+            "carriedCharTurns": 0,
+            "filteredResults": 0,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "turbo",
+          "claude": {
+            "results": 663,
+            "chars": 1051471,
+            "carriedCharTurns": 243406235,
+            "filteredResults": 514,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.011543593742472854,
+            "shareOfContextRead": 0.004987922865008231
+          },
+          "codex": {
+            "results": 10,
+            "chars": 62376,
+            "carriedCharTurns": 0,
+            "filteredResults": 6,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.0051163209210165084,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "install",
+          "claude": {
+            "results": 222,
+            "chars": 236028,
+            "carriedCharTurns": 57128348,
+            "filteredResults": 221,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.0025912377458326315,
+            "shareOfContextRead": 0.0011706840345702208
+          },
+          "codex": {
+            "results": 12,
+            "chars": 9609,
+            "carriedCharTurns": 0,
+            "filteredResults": 6,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.0007881673677383551,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "beep-other",
+          "claude": {
+            "results": 1922,
+            "chars": 2171888,
+            "carriedCharTurns": 415397222,
+            "filteredResults": 1883,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.023844112415988536,
+            "shareOfContextRead": 0.00851239205797132
+          },
+          "codex": {
+            "results": 132,
+            "chars": 689340,
+            "carriedCharTurns": 0,
+            "filteredResults": 46,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.05654233461096447,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "gh",
+          "claude": {
+            "results": 2151,
+            "chars": 3270369,
+            "carriedCharTurns": 553549467,
+            "filteredResults": 1542,
+            "persistedResults": 7,
+            "shareOfToolOutput": 0.0359038063094248,
+            "shareOfContextRead": 0.011343431869616732
+          },
+          "codex": {
+            "results": 47,
+            "chars": 180876,
+            "carriedCharTurns": 0,
+            "filteredResults": 32,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.014836149527218514,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "git",
+          "claude": {
+            "results": 4145,
+            "chars": 7920396,
+            "carriedCharTurns": 1200592259,
+            "filteredResults": 3509,
+            "persistedResults": 9,
+            "shareOfToolOutput": 0.08695421338630073,
+            "shareOfContextRead": 0.024602745201732345
+          },
+          "codex": {
+            "results": 300,
+            "chars": 2498232,
+            "carriedCharTurns": 0,
+            "filteredResults": 151,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.2049146570340021,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "search-read",
+          "claude": {
+            "results": 16807,
+            "chars": 41326556,
+            "carriedCharTurns": 8016990314,
+            "filteredResults": 12075,
+            "persistedResults": 56,
+            "shareOfToolOutput": 0.45370435631563205,
+            "shareOfContextRead": 0.164285558649515
+          },
+          "codex": {
+            "results": 719,
+            "chars": 4576813,
+            "carriedCharTurns": 0,
+            "filteredResults": 505,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.37540791495896386,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "other-shell",
+          "claude": {
+            "results": 1153,
+            "chars": 633813,
+            "carriedCharTurns": 79897924,
+            "filteredResults": 103,
+            "persistedResults": 2,
+            "shareOfToolOutput": 0.006958327695864124,
+            "shareOfContextRead": 0.0016372821426956874
+          },
+          "codex": {
+            "results": 231,
+            "chars": 540417,
+            "carriedCharTurns": 0,
+            "filteredResults": 8,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.04432709380487653,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "read-tool",
+          "claude": {
+            "results": 1361,
+            "chars": 13691633,
+            "carriedCharTurns": 2205671490,
+            "filteredResults": 0,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.15031384510180007,
+            "shareOfContextRead": 0.04519900345883817
+          },
+          "codex": {
+            "results": 0,
+            "chars": 0,
+            "carriedCharTurns": 0,
+            "filteredResults": 0,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "persisted-reread",
+          "claude": {
+            "results": 17,
+            "chars": 732865,
+            "carriedCharTurns": 140373882,
+            "filteredResults": 0,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.008045771902484584,
+            "shareOfContextRead": 0.002876565983109543
+          },
+          "codex": {
+            "results": 0,
+            "chars": 0,
+            "carriedCharTurns": 0,
+            "filteredResults": 0,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "other-tool",
+          "claude": {
+            "results": 8298,
+            "chars": 4599099,
+            "carriedCharTurns": 1080553912,
+            "filteredResults": 0,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.05049129309073969,
+            "shareOfContextRead": 0.022142898535606095
+          },
+          "codex": {
+            "results": 295,
+            "chars": 22583,
+            "carriedCharTurns": 0,
+            "filteredResults": 0,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.001852345058344809,
+            "shareOfContextRead": null
+          }
+        },
+        {
+          "toolOutputClass": "unmatched-result",
+          "claude": {
+            "results": 0,
+            "chars": 0,
+            "carriedCharTurns": 0,
+            "filteredResults": 0,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0,
+            "shareOfContextRead": 0
+          },
+          "codex": {
+            "results": 9,
+            "chars": 1527,
+            "carriedCharTurns": 0,
+            "filteredResults": 0,
+            "persistedResults": 0,
+            "shareOfToolOutput": 0.0001252504496343499,
+            "shareOfContextRead": null
+          }
+        }
+      ],
+      "verification": {
+        "claude": {
+          "results": 15547,
+          "chars": 16740353,
+          "carriedCharTurns": 3036999624,
+          "filteredResults": 14565,
+          "persistedResults": 37,
+          "shareOfToolOutput": 0.1837842737817654,
+          "shareOfContextRead": 0.06223472404300163
+        },
+        "codex": {
+          "results": 1023,
+          "chars": 3681785,
+          "carriedCharTurns": 0,
+          "filteredResults": 726,
+          "persistedResults": 0,
+          "shareOfToolOutput": 0.3019942545559954,
+          "shareOfContextRead": null
+        }
+      },
+      "all": {
+        "claude": {
+          "results": 51401,
+          "chars": 91086972,
+          "carriedCharTurns": 16730026094,
+          "filteredResults": 33677,
+          "persistedResults": 111,
+          "shareOfToolOutput": 1,
+          "shareOfContextRead": 0.3428346019420865
+        },
+        "codex": {
+          "results": 2756,
+          "chars": 12191573,
+          "carriedCharTurns": 0,
+          "filteredResults": 1468,
+          "persistedResults": 0,
+          "shareOfToolOutput": 1,
+          "shareOfContextRead": null
+        }
+      }
+    },
+    "verificationByKind": [
+      {
+        "kind": "yeet",
+        "claudeChars": 4275245,
+        "claudeShareOfVerification": 0.25538559431811264,
+        "claudeShareOfContextRead": 0.014945135737654805,
+        "codexChars": 323841
+      },
+      {
+        "kind": "test",
+        "claudeChars": 3716767,
+        "claudeShareOfVerification": 0.2220244101184724,
+        "claudeShareOfContextRead": 0.013417716646833442,
+        "codexChars": 1193551
+      },
+      {
+        "kind": "check",
+        "claudeChars": 2295816,
+        "claudeShareOfVerification": 0.13714262775701325,
+        "claudeShareOfContextRead": 0.010000109570340868,
+        "codexChars": 1108605
+      },
+      {
+        "kind": "lint",
+        "claudeChars": 2248872,
+        "claudeShareOfVerification": 0.13433838581540067,
+        "claudeShareOfContextRead": 0.006663329057634352,
+        "codexChars": 316035
+      },
+      {
+        "kind": "quality",
+        "claudeChars": 830587,
+        "claudeShareOfVerification": 0.04961585935493714,
+        "claudeShareOfContextRead": 0.002471499376804774,
+        "codexChars": 100755
+      },
+      {
+        "kind": "ci-logs",
+        "claudeChars": 1064354,
+        "claudeShareOfVerification": 0.0635801407533043,
+        "claudeShareOfContextRead": 0.004590488486856455,
+        "codexChars": 71596
+      },
+      {
+        "kind": "turbo",
+        "claudeChars": 1051471,
+        "claudeShareOfVerification": 0.06281056319421699,
+        "claudeShareOfContextRead": 0.004987922865008231,
+        "codexChars": 62376
+      },
+      {
+        "kind": "ci-status",
+        "claudeChars": 763878,
+        "claudeShareOfVerification": 0.04563093741213223,
+        "claudeShareOfContextRead": 0.003348653309331362,
+        "codexChars": 226890
+      },
+      {
+        "kind": "install",
+        "claudeChars": 236028,
+        "claudeShareOfVerification": 0.014099344261139535,
+        "claudeShareOfContextRead": 0.0011706840345702208,
+        "codexChars": 9609
+      },
+      {
+        "kind": "docgen",
+        "claudeChars": 211307,
+        "claudeShareOfVerification": 0.012622613155170622,
+        "claudeShareOfContextRead": 0.00048322203573171376,
+        "codexChars": 268527
+      },
+      {
+        "kind": "build",
+        "claudeChars": 46028,
+        "claudeShareOfVerification": 0.0027495238601002022,
+        "claudeShareOfContextRead": 0.0001559629222354,
+        "codexChars": 0
+      }
+    ],
+    "yeetSubcommands": [
+      {
+        "subcommand": "repair",
+        "results": 4,
+        "chars": 24985
+      },
+      {
+        "subcommand": "final-check",
+        "results": 960,
+        "chars": 940857
+      },
+      {
+        "subcommand": "publish",
+        "results": 451,
+        "chars": 668698
+      },
+      {
+        "subcommand": "open",
+        "results": 398,
+        "chars": 517019
+      },
+      {
+        "subcommand": "verify",
+        "results": 34,
+        "chars": 77144
+      },
+      {
+        "subcommand": "ready",
+        "results": 132,
+        "chars": 83887
+      },
+      {
+        "subcommand": "monitor",
+        "results": 44,
+        "chars": 32560
+      },
+      {
+        "subcommand": "job",
+        "results": 33,
+        "chars": 13775
+      },
+      {
+        "subcommand": "job-wait",
+        "results": 237,
+        "chars": 103316
+      },
+      {
+        "subcommand": "sweep",
+        "results": 274,
+        "chars": 235017
+      },
+      {
+        "subcommand": "reply",
+        "results": 230,
+        "chars": 189764
+      },
+      {
+        "subcommand": "merge-gate",
+        "results": 90,
+        "chars": 79226
+      },
+      {
+        "subcommand": "gate-table",
+        "results": 518,
+        "chars": 743149
+      },
+      {
+        "subcommand": "cheap-gates",
+        "results": 0,
+        "chars": 0
+      },
+      {
+        "subcommand": "inbox",
+        "results": 784,
+        "chars": 689810
+      },
+      {
+        "subcommand": "gh",
+        "results": 121,
+        "chars": 66790
+      },
+      {
+        "subcommand": "status",
+        "results": 37,
+        "chars": 51040
+      },
+      {
+        "subcommand": "economics",
+        "results": 15,
+        "chars": 17515
+      },
+      {
+        "subcommand": "other",
+        "results": 42,
+        "chars": 64534
+      },
+      {
+        "subcommand": "none",
+        "results": 0,
+        "chars": 0
+      }
+    ],
+    "filterHabits": {
+      "rows": [
+        {
+          "kind": "yeet",
+          "runs": 4404,
+          "habits": [
+            {
+              "habit": "tail",
+              "runs": 2474
+            },
+            {
+              "habit": "head",
+              "runs": 1444
+            },
+            {
+              "habit": "grep",
+              "runs": 2418
+            },
+            {
+              "habit": "unfiltered",
+              "runs": 161
+            },
+            {
+              "habit": "redirect",
+              "runs": 974
+            }
+          ]
+        },
+        {
+          "kind": "test",
+          "runs": 4163,
+          "habits": [
+            {
+              "habit": "tail",
+              "runs": 1427
+            },
+            {
+              "habit": "head",
+              "runs": 2425
+            },
+            {
+              "habit": "grep",
+              "runs": 2467
+            },
+            {
+              "habit": "unfiltered",
+              "runs": 261
+            },
+            {
+              "habit": "redirect",
+              "runs": 501
+            }
+          ]
+        },
+        {
+          "kind": "check",
+          "runs": 1905,
+          "habits": [
+            {
+              "habit": "tail",
+              "runs": 690
+            },
+            {
+              "habit": "head",
+              "runs": 1046
+            },
+            {
+              "habit": "grep",
+              "runs": 840
+            },
+            {
+              "habit": "unfiltered",
+              "runs": 118
+            },
+            {
+              "habit": "redirect",
+              "runs": 250
+            }
+          ]
+        },
+        {
+          "kind": "lint",
+          "runs": 1781,
+          "habits": [
+            {
+              "habit": "tail",
+              "runs": 781
+            },
+            {
+              "habit": "head",
+              "runs": 816
+            },
+            {
+              "habit": "grep",
+              "runs": 622
+            },
+            {
+              "habit": "unfiltered",
+              "runs": 195
+            },
+            {
+              "habit": "redirect",
+              "runs": 227
+            }
+          ]
+        },
+        {
+          "kind": "quality",
+          "runs": 1106,
+          "habits": [
+            {
+              "habit": "tail",
+              "runs": 648
+            },
+            {
+              "habit": "head",
+              "runs": 403
+            },
+            {
+              "habit": "grep",
+              "runs": 531
+            },
+            {
+              "habit": "unfiltered",
+              "runs": 28
+            },
+            {
+              "habit": "redirect",
+              "runs": 396
+            }
+          ]
+        },
+        {
+          "kind": "ci-logs",
+          "runs": 805,
+          "habits": [
+            {
+              "habit": "tail",
+              "runs": 142
+            },
+            {
+              "habit": "head",
+              "runs": 656
+            },
+            {
+              "habit": "grep",
+              "runs": 557
+            },
+            {
+              "habit": "unfiltered",
+              "runs": 2
+            },
+            {
+              "habit": "redirect",
+              "runs": 272
+            }
+          ]
+        },
+        {
+          "kind": "turbo",
+          "runs": 673,
+          "habits": [
+            {
+              "habit": "tail",
+              "runs": 140
+            },
+            {
+              "habit": "head",
+              "runs": 332
+            },
+            {
+              "habit": "grep",
+              "runs": 176
+            },
+            {
+              "habit": "unfiltered",
+              "runs": 153
+            },
+            {
+              "habit": "redirect",
+              "runs": 25
+            }
+          ]
+        },
+        {
+          "kind": "ci-status",
+          "runs": 1225,
+          "habits": [
+            {
+              "habit": "tail",
+              "runs": 195
+            },
+            {
+              "habit": "head",
+              "runs": 391
+            },
+            {
+              "habit": "grep",
+              "runs": 213
+            },
+            {
+              "habit": "unfiltered",
+              "runs": 328
+            },
+            {
+              "habit": "redirect",
+              "runs": 27
+            }
+          ]
+        },
+        {
+          "kind": "install",
+          "runs": 234,
+          "habits": [
+            {
+              "habit": "tail",
+              "runs": 180
+            },
+            {
+              "habit": "head",
+              "runs": 86
+            },
+            {
+              "habit": "grep",
+              "runs": 51
+            },
+            {
+              "habit": "unfiltered",
+              "runs": 7
+            },
+            {
+              "habit": "redirect",
+              "runs": 46
+            }
+          ]
+        },
+        {
+          "kind": "docgen",
+          "runs": 200,
+          "habits": [
+            {
+              "habit": "tail",
+              "runs": 46
+            },
+            {
+              "habit": "head",
+              "runs": 82
+            },
+            {
+              "habit": "grep",
+              "runs": 52
+            },
+            {
+              "habit": "unfiltered",
+              "runs": 25
+            },
+            {
+              "habit": "redirect",
+              "runs": 63
+            }
+          ]
+        },
+        {
+          "kind": "build",
+          "runs": 74,
+          "habits": [
+            {
+              "habit": "tail",
+              "runs": 40
+            },
+            {
+              "habit": "head",
+              "runs": 14
+            },
+            {
+              "habit": "grep",
+              "runs": 14
+            },
+            {
+              "habit": "unfiltered",
+              "runs": 1
+            },
+            {
+              "habit": "redirect",
+              "runs": 29
+            }
+          ]
+        }
+      ],
+      "allRuns": 16570,
+      "allHabits": [
+        {
+          "habit": "tail",
+          "runs": 6763
+        },
+        {
+          "habit": "head",
+          "runs": 7695
+        },
+        {
+          "habit": "grep",
+          "runs": 7941
+        },
+        {
+          "habit": "unfiltered",
+          "runs": 1279
+        },
+        {
+          "habit": "redirect",
+          "runs": 2810
+        }
+      ]
+    },
+    "turns": {
+      "turns": 50879,
+      "contextTokens": 21246093103,
+      "rows": [
+        {
+          "turnClass": "rerun-no-edit",
+          "turns": 132,
+          "shareOfTurns": 0.002594390613023055,
+          "contextTokens": 56933712,
+          "shareOfContextRead": 0.00267972618419717,
+          "resultChars": 158360
+        },
+        {
+          "turnClass": "run-verification",
+          "turns": 10109,
+          "shareOfTurns": 0.19868708111401562,
+          "contextTokens": 4581507697,
+          "shareOfContextRead": 0.2156400084848108,
+          "resultChars": 10810476
+        },
+        {
+          "turnClass": "dig-captured-log",
+          "turns": 1533,
+          "shareOfTurns": 0.030130309164881384,
+          "contextTokens": 721957840,
+          "shareOfContextRead": 0.03398073408131953,
+          "resultChars": 3555100
+        },
+        {
+          "turnClass": "fetch-ci-log",
+          "turns": 747,
+          "shareOfTurns": 0.01468189233278956,
+          "contextTokens": 342311251,
+          "shareOfContextRead": 0.016111726958010216,
+          "resultChars": 1019442
+        },
+        {
+          "turnClass": "edit",
+          "turns": 6899,
+          "shareOfTurns": 0.13559621847913678,
+          "contextTokens": 2862920061,
+          "shareOfContextRead": 0.13475042433075607,
+          "resultChars": 0
+        },
+        {
+          "turnClass": "other-tool",
+          "turns": 26756,
+          "shareOfTurns": 0.5258751154700367,
+          "contextTokens": 10324553675,
+          "shareOfContextRead": 0.4859506933791111,
+          "resultChars": 0
+        },
+        {
+          "turnClass": "no-tool",
+          "turns": 4703,
+          "shareOfTurns": 0.09243499282611686,
+          "contextTokens": 2355908867,
+          "shareOfContextRead": 0.11088668658179512,
+          "resultChars": 0
+        }
+      ],
+      "verificationRuns": 10296,
+      "redirectedRuns": 1809,
+      "rerunsNoEdit": 132,
+      "rerunsSameCommand": 1,
+      "logDigs": 1540,
+      "ciLogFetches": 749,
+      "digFollowUp": {
+        "runs": 10296,
+        "zero": 9383,
+        "one": 599,
+        "two": 163,
+        "threeOrMore": 151,
+        "max": 11,
+        "mean": 0.14763014763014762
+      }
+    },
+    "lineClasses": {
+      "totalChars": 20422138,
+      "classes": [
+        {
+          "lineClass": "signal",
+          "chars": 5891878,
+          "share": 0.28850446510546546
+        },
+        {
+          "lineClass": "other",
+          "chars": 12335103,
+          "share": 0.6040064463377929
+        },
+        {
+          "lineClass": "dup-line",
+          "chars": 507627,
+          "share": 0.024856702074973737
+        },
+        {
+          "lineClass": "pass-line",
+          "chars": 44066,
+          "share": 0.0021577564503775268
+        },
+        {
+          "lineClass": "runner-chrome",
+          "chars": 239582,
+          "share": 0.0117314847250567
+        },
+        {
+          "lineClass": "coverage-table",
+          "chars": 26598,
+          "share": 0.0013024101590146928
+        },
+        {
+          "lineClass": "turbo-chrome",
+          "chars": 272171,
+          "share": 0.013327253003578763
+        },
+        {
+          "lineClass": "turbo-prefix",
+          "chars": 89953,
+          "share": 0.0044046808419373135
+        },
+        {
+          "lineClass": "script-echo",
+          "chars": 516117,
+          "share": 0.025272427402067307
+        },
+        {
+          "lineClass": "stack-vendor",
+          "chars": 22510,
+          "share": 0.0011022352311986139
+        },
+        {
+          "lineClass": "stack-own",
+          "chars": 17883,
+          "share": 0.0008756673762561002
+        },
+        {
+          "lineClass": "zsh-noise",
+          "chars": 543693,
+          "share": 0.026622726768372636
+        },
+        {
+          "lineClass": "blank",
+          "chars": 11956,
+          "share": 0.0005854431108045593
+        },
+        {
+          "lineClass": "ansi",
+          "chars": 32644,
+          "share": 0.0015984614343512906
+        },
+        {
+          "lineClass": "persist-wrapper",
+          "chars": 9524,
+          "share": 0.0004663566566830564
+        }
+      ],
+      "byKind": [
+        {
+          "kind": "yeet",
+          "totalChars": 4599086,
+          "classes": [
+            {
+              "lineClass": "signal",
+              "chars": 662651,
+              "share": 0.14408319392157484
+            },
+            {
+              "lineClass": "other",
+              "chars": 3665743,
+              "share": 0.7970590243365747
+            },
+            {
+              "lineClass": "dup-line",
+              "chars": 59545,
+              "share": 0.012947137757371791
+            },
+            {
+              "lineClass": "pass-line",
+              "chars": 2622,
+              "share": 0.0005701132790297899
+            },
+            {
+              "lineClass": "runner-chrome",
+              "chars": 3804,
+              "share": 0.0008271208670592374
+            },
+            {
+              "lineClass": "coverage-table",
+              "chars": 4248,
+              "share": 0.0009236617884510097
+            },
+            {
+              "lineClass": "turbo-chrome",
+              "chars": 21210,
+              "share": 0.004611785907025874
+            },
+            {
+              "lineClass": "turbo-prefix",
+              "chars": 6340,
+              "share": 0.0013785347784320624
+            },
+            {
+              "lineClass": "script-echo",
+              "chars": 121795,
+              "share": 0.026482435857907417
+            },
+            {
+              "lineClass": "stack-vendor",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "stack-own",
+              "chars": 302,
+              "share": 0.00006566522130701623
+            },
+            {
+              "lineClass": "zsh-noise",
+              "chars": 59577,
+              "share": 0.012954095661616243
+            },
+            {
+              "lineClass": "blank",
+              "chars": 1485,
+              "share": 0.00032289024384410294
+            },
+            {
+              "lineClass": "ansi",
+              "chars": 10560,
+              "share": 0.0022961084006691765
+            },
+            {
+              "lineClass": "persist-wrapper",
+              "chars": 508,
+              "share": 0.00011045672988067628
+            }
+          ]
+        },
+        {
+          "kind": "test",
+          "totalChars": 4910318,
+          "classes": [
+            {
+              "lineClass": "signal",
+              "chars": 1347998,
+              "share": 0.2745235644616092
+            },
+            {
+              "lineClass": "other",
+              "chars": 2785777,
+              "share": 0.5673312807846661
+            },
+            {
+              "lineClass": "dup-line",
+              "chars": 167479,
+              "share": 0.03410756696409479
+            },
+            {
+              "lineClass": "pass-line",
+              "chars": 33982,
+              "share": 0.006920529383229355
+            },
+            {
+              "lineClass": "runner-chrome",
+              "chars": 219518,
+              "share": 0.044705454921656805
+            },
+            {
+              "lineClass": "coverage-table",
+              "chars": 16948,
+              "share": 0.0034515076212986613
+            },
+            {
+              "lineClass": "turbo-chrome",
+              "chars": 61357,
+              "share": 0.01249552472976292
+            },
+            {
+              "lineClass": "turbo-prefix",
+              "chars": 7701,
+              "share": 0.0015683301977590862
+            },
+            {
+              "lineClass": "script-echo",
+              "chars": 125046,
+              "share": 0.02546596778457118
+            },
+            {
+              "lineClass": "stack-vendor",
+              "chars": 14025,
+              "share": 0.002856230492607607
+            },
+            {
+              "lineClass": "stack-own",
+              "chars": 13569,
+              "share": 0.002763364816698226
+            },
+            {
+              "lineClass": "zsh-noise",
+              "chars": 123175,
+              "share": 0.025084933399425455
+            },
+            {
+              "lineClass": "blank",
+              "chars": 3843,
+              "share": 0.0007826377028941914
+            },
+            {
+              "lineClass": "ansi",
+              "chars": 6980,
+              "share": 0.0014214965303672798
+            },
+            {
+              "lineClass": "persist-wrapper",
+              "chars": 1764,
+              "share": 0.0003592435357547108
+            }
+          ]
+        },
+        {
+          "kind": "check",
+          "totalChars": 3404421,
+          "classes": [
+            {
+              "lineClass": "signal",
+              "chars": 1977776,
+              "share": 0.5809434262096257
+            },
+            {
+              "lineClass": "other",
+              "chars": 1002848,
+              "share": 0.294572263536149
+            },
+            {
+              "lineClass": "dup-line",
+              "chars": 82744,
+              "share": 0.02430486711249872
+            },
+            {
+              "lineClass": "pass-line",
+              "chars": 36,
+              "share": 0.000010574485353015976
+            },
+            {
+              "lineClass": "runner-chrome",
+              "chars": 1486,
+              "share": 0.00043649125651615945
+            },
+            {
+              "lineClass": "coverage-table",
+              "chars": 766,
+              "share": 0.0002250015494558399
+            },
+            {
+              "lineClass": "turbo-chrome",
+              "chars": 111044,
+              "share": 0.03261758754278628
+            },
+            {
+              "lineClass": "turbo-prefix",
+              "chars": 10456,
+              "share": 0.00307130052364264
+            },
+            {
+              "lineClass": "script-echo",
+              "chars": 36789,
+              "share": 0.010806242823669576
+            },
+            {
+              "lineClass": "stack-vendor",
+              "chars": 1293,
+              "share": 0.0003798002655958238
+            },
+            {
+              "lineClass": "stack-own",
+              "chars": 2306,
+              "share": 0.0006773545340015234
+            },
+            {
+              "lineClass": "zsh-noise",
+              "chars": 186661,
+              "share": 0.054829000291092084
+            },
+            {
+              "lineClass": "blank",
+              "chars": 1290,
+              "share": 0.00037891905848307247
+            },
+            {
+              "lineClass": "ansi",
+              "chars": 1152,
+              "share": 0.0003383835312965112
+            },
+            {
+              "lineClass": "persist-wrapper",
+              "chars": 1287,
+              "share": 0.0003780378513703211
+            }
+          ]
+        },
+        {
+          "kind": "lint",
+          "totalChars": 2564907,
+          "classes": [
+            {
+              "lineClass": "signal",
+              "chars": 770172,
+              "share": 0.30027287539080366
+            },
+            {
+              "lineClass": "other",
+              "chars": 1488333,
+              "share": 0.5802678225760233
+            },
+            {
+              "lineClass": "dup-line",
+              "chars": 53814,
+              "share": 0.020980877669248825
+            },
+            {
+              "lineClass": "pass-line",
+              "chars": 177,
+              "share": 0.00006900835001035126
+            },
+            {
+              "lineClass": "runner-chrome",
+              "chars": 361,
+              "share": 0.0001407458438064226
+            },
+            {
+              "lineClass": "coverage-table",
+              "chars": 1445,
+              "share": 0.0005633732529093647
+            },
+            {
+              "lineClass": "turbo-chrome",
+              "chars": 19703,
+              "share": 0.00768176000143475
+            },
+            {
+              "lineClass": "turbo-prefix",
+              "chars": 20262,
+              "share": 0.007899701626608684
+            },
+            {
+              "lineClass": "script-echo",
+              "chars": 140872,
+              "share": 0.05492284905456611
+            },
+            {
+              "lineClass": "stack-vendor",
+              "chars": 1817,
+              "share": 0.0007084077512362046
+            },
+            {
+              "lineClass": "stack-own",
+              "chars": 642,
+              "share": 0.00025030147291890117
+            },
+            {
+              "lineClass": "zsh-noise",
+              "chars": 82036,
+              "share": 0.03198400565790495
+            },
+            {
+              "lineClass": "blank",
+              "chars": 1874,
+              "share": 0.0007306307792056398
+            },
+            {
+              "lineClass": "ansi",
+              "chars": 2685,
+              "share": 0.0010468215806654978
+            },
+            {
+              "lineClass": "persist-wrapper",
+              "chars": 5442,
+              "share": 0.0021217143545555453
+            }
+          ]
+        },
+        {
+          "kind": "quality",
+          "totalChars": 931342,
+          "classes": [
+            {
+              "lineClass": "signal",
+              "chars": 218584,
+              "share": 0.23469788756439633
+            },
+            {
+              "lineClass": "other",
+              "chars": 588196,
+              "share": 0.6315574729798505
+            },
+            {
+              "lineClass": "dup-line",
+              "chars": 14742,
+              "share": 0.01582877181529449
+            },
+            {
+              "lineClass": "pass-line",
+              "chars": 282,
+              "share": 0.0003027888788436471
+            },
+            {
+              "lineClass": "runner-chrome",
+              "chars": 9476,
+              "share": 0.010174565304689362
+            },
+            {
+              "lineClass": "coverage-table",
+              "chars": 226,
+              "share": 0.00024266059084632712
+            },
+            {
+              "lineClass": "turbo-chrome",
+              "chars": 14191,
+              "share": 0.015237152410178001
+            },
+            {
+              "lineClass": "turbo-prefix",
+              "chars": 9481,
+              "share": 0.01017993390183198
+            },
+            {
+              "lineClass": "script-echo",
+              "chars": 60273,
+              "share": 0.06471629111540121
+            },
+            {
+              "lineClass": "stack-vendor",
+              "chars": 49,
+              "share": 0.000052612251997655
+            },
+            {
+              "lineClass": "stack-own",
+              "chars": 173,
+              "share": 0.00018575346113457785
+            },
+            {
+              "lineClass": "zsh-noise",
+              "chars": 25215,
+              "share": 0.027073835390221852
+            },
+            {
+              "lineClass": "blank",
+              "chars": 780,
+              "share": 0.0008375011542483857
+            },
+            {
+              "lineClass": "ansi",
+              "chars": 1806,
+              "share": 0.0019391372879135698
+            },
+            {
+              "lineClass": "persist-wrapper",
+              "chars": 261,
+              "share": 0.0002802407708446521
+            }
+          ]
+        },
+        {
+          "kind": "ci-logs",
+          "totalChars": 1135950,
+          "classes": [
+            {
+              "lineClass": "signal",
+              "chars": 328521,
+              "share": 0.28920375016506006
+            },
+            {
+              "lineClass": "other",
+              "chars": 753253,
+              "share": 0.6631040098595888
+            },
+            {
+              "lineClass": "dup-line",
+              "chars": 43200,
+              "share": 0.03802984286280206
+            },
+            {
+              "lineClass": "pass-line",
+              "chars": 572,
+              "share": 0.0005035432897574718
+            },
+            {
+              "lineClass": "runner-chrome",
+              "chars": 2601,
+              "share": 0.002289713455697874
+            },
+            {
+              "lineClass": "coverage-table",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "turbo-chrome",
+              "chars": 5241,
+              "share": 0.004613759408424667
+            },
+            {
+              "lineClass": "turbo-prefix",
+              "chars": 13894,
+              "share": 0.012231172146661385
+            },
+            {
+              "lineClass": "script-echo",
+              "chars": 3247,
+              "share": 0.002858400457766627
+            },
+            {
+              "lineClass": "stack-vendor",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "stack-own",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "zsh-noise",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "blank",
+              "chars": 120,
+              "share": 0.00010563845239667239
+            },
+            {
+              "lineClass": "ansi",
+              "chars": 342,
+              "share": 0.0003010695893305163
+            },
+            {
+              "lineClass": "persist-wrapper",
+              "chars": 0,
+              "share": 0
+            }
+          ]
+        },
+        {
+          "kind": "turbo",
+          "totalChars": 1113847,
+          "classes": [
+            {
+              "lineClass": "signal",
+              "chars": 150972,
+              "share": 0.1355410572547217
+            },
+            {
+              "lineClass": "other",
+              "chars": 847891,
+              "share": 0.7612275294542249
+            },
+            {
+              "lineClass": "dup-line",
+              "chars": 63199,
+              "share": 0.05673939059852924
+            },
+            {
+              "lineClass": "pass-line",
+              "chars": 6214,
+              "share": 0.005578863165228258
+            },
+            {
+              "lineClass": "runner-chrome",
+              "chars": 1425,
+              "share": 0.0012793498568474844
+            },
+            {
+              "lineClass": "coverage-table",
+              "chars": 2442,
+              "share": 0.0021924016494186366
+            },
+            {
+              "lineClass": "turbo-chrome",
+              "chars": 17353,
+              "share": 0.015579338993596068
+            },
+            {
+              "lineClass": "turbo-prefix",
+              "chars": 9232,
+              "share": 0.008288391493625246
+            },
+            {
+              "lineClass": "script-echo",
+              "chars": 8534,
+              "share": 0.007661734511113286
+            },
+            {
+              "lineClass": "stack-vendor",
+              "chars": 2756,
+              "share": 0.0024743075126116964
+            },
+            {
+              "lineClass": "stack-own",
+              "chars": 462,
+              "share": 0.0004147786904305528
+            },
+            {
+              "lineClass": "zsh-noise",
+              "chars": 11851,
+              "share": 0.01063970186210494
+            },
+            {
+              "lineClass": "blank",
+              "chars": 1421,
+              "share": 0.0012757586993545791
+            },
+            {
+              "lineClass": "ansi",
+              "chars": 5799,
+              "share": 0.005206280575339342
+            },
+            {
+              "lineClass": "persist-wrapper",
+              "chars": 0,
+              "share": 0
+            }
+          ]
+        },
+        {
+          "kind": "ci-status",
+          "totalChars": 990768,
+          "classes": [
+            {
+              "lineClass": "signal",
+              "chars": 225338,
+              "share": 0.22743770489155887
+            },
+            {
+              "lineClass": "other",
+              "chars": 742208,
+              "share": 0.7491239119551701
+            },
+            {
+              "lineClass": "dup-line",
+              "chars": 10370,
+              "share": 0.010466627908854545
+            },
+            {
+              "lineClass": "pass-line",
+              "chars": 57,
+              "share": 0.00005753112736786008
+            },
+            {
+              "lineClass": "runner-chrome",
+              "chars": 756,
+              "share": 0.0007630444261421443
+            },
+            {
+              "lineClass": "coverage-table",
+              "chars": 523,
+              "share": 0.0005278733265507163
+            },
+            {
+              "lineClass": "turbo-chrome",
+              "chars": 4382,
+              "share": 0.004422831581157243
+            },
+            {
+              "lineClass": "turbo-prefix",
+              "chars": 3261,
+              "share": 0.0032913860762559953
+            },
+            {
+              "lineClass": "script-echo",
+              "chars": 4818,
+              "share": 0.004862894239620173
+            },
+            {
+              "lineClass": "stack-vendor",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "stack-own",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "zsh-noise",
+              "chars": 2829,
+              "share": 0.002855360689889056
+            },
+            {
+              "lineClass": "blank",
+              "chars": 450,
+              "share": 0.00045419311079889543
+            },
+            {
+              "lineClass": "ansi",
+              "chars": 917,
+              "share": 0.0009255446280057491
+            },
+            {
+              "lineClass": "persist-wrapper",
+              "chars": 262,
+              "share": 0.0002644413222873569
+            }
+          ]
+        },
+        {
+          "kind": "install",
+          "totalChars": 245637,
+          "classes": [
+            {
+              "lineClass": "signal",
+              "chars": 7966,
+              "share": 0.032429967798010884
+            },
+            {
+              "lineClass": "other",
+              "chars": 220077,
+              "share": 0.895944014948888
+            },
+            {
+              "lineClass": "dup-line",
+              "chars": 2980,
+              "share": 0.01213172282677284
+            },
+            {
+              "lineClass": "pass-line",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "runner-chrome",
+              "chars": 20,
+              "share": 0.00008142095856894524
+            },
+            {
+              "lineClass": "coverage-table",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "turbo-chrome",
+              "chars": 642,
+              "share": 0.002613612770063142
+            },
+            {
+              "lineClass": "turbo-prefix",
+              "chars": 530,
+              "share": 0.002157655402077049
+            },
+            {
+              "lineClass": "script-echo",
+              "chars": 11558,
+              "share": 0.04705317195699345
+            },
+            {
+              "lineClass": "stack-vendor",
+              "chars": 110,
+              "share": 0.0004478152721291988
+            },
+            {
+              "lineClass": "stack-own",
+              "chars": 138,
+              "share": 0.0005618046141257221
+            },
+            {
+              "lineClass": "zsh-noise",
+              "chars": 2005,
+              "share": 0.008162451096536759
+            },
+            {
+              "lineClass": "blank",
+              "chars": 375,
+              "share": 0.0015266429731677232
+            },
+            {
+              "lineClass": "ansi",
+              "chars": 588,
+              "share": 0.0023937761819269898
+            },
+            {
+              "lineClass": "persist-wrapper",
+              "chars": 0,
+              "share": 0
+            }
+          ]
+        },
+        {
+          "kind": "docgen",
+          "totalChars": 479834,
+          "classes": [
+            {
+              "lineClass": "signal",
+              "chars": 198715,
+              "share": 0.41413280426147375
+            },
+            {
+              "lineClass": "other",
+              "chars": 208791,
+              "share": 0.43513173305768243
+            },
+            {
+              "lineClass": "dup-line",
+              "chars": 8515,
+              "share": 0.017745720394969928
+            },
+            {
+              "lineClass": "pass-line",
+              "chars": 124,
+              "share": 0.000258422704518646
+            },
+            {
+              "lineClass": "runner-chrome",
+              "chars": 135,
+              "share": 0.00028134729927433235
+            },
+            {
+              "lineClass": "coverage-table",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "turbo-chrome",
+              "chars": 11457,
+              "share": 0.023877007465081673
+            },
+            {
+              "lineClass": "turbo-prefix",
+              "chars": 8599,
+              "share": 0.017920780936740623
+            },
+            {
+              "lineClass": "script-echo",
+              "chars": 3002,
+              "share": 0.006256330314233672
+            },
+            {
+              "lineClass": "stack-vendor",
+              "chars": 2460,
+              "share": 0.005126773008998945
+            },
+            {
+              "lineClass": "stack-own",
+              "chars": 291,
+              "share": 0.0006064597339913387
+            },
+            {
+              "lineClass": "zsh-noise",
+              "chars": 46297,
+              "share": 0.09648545121854642
+            },
+            {
+              "lineClass": "blank",
+              "chars": 247,
+              "share": 0.0005147613549685933
+            },
+            {
+              "lineClass": "ansi",
+              "chars": 1815,
+              "share": 0.0037825581346882463
+            },
+            {
+              "lineClass": "persist-wrapper",
+              "chars": 0,
+              "share": 0
+            }
+          ]
+        },
+        {
+          "kind": "build",
+          "totalChars": 46028,
+          "classes": [
+            {
+              "lineClass": "signal",
+              "chars": 3185,
+              "share": 0.06919701051533848
+            },
+            {
+              "lineClass": "other",
+              "chars": 31986,
+              "share": 0.6949248283653429
+            },
+            {
+              "lineClass": "dup-line",
+              "chars": 1039,
+              "share": 0.02257321630311984
+            },
+            {
+              "lineClass": "pass-line",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "runner-chrome",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "coverage-table",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "turbo-chrome",
+              "chars": 5591,
+              "share": 0.12146954027982967
+            },
+            {
+              "lineClass": "turbo-prefix",
+              "chars": 197,
+              "share": 0.004280003476144955
+            },
+            {
+              "lineClass": "script-echo",
+              "chars": 183,
+              "share": 0.00397584079256105
+            },
+            {
+              "lineClass": "stack-vendor",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "stack-own",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "zsh-noise",
+              "chars": 4047,
+              "share": 0.08792474146171896
+            },
+            {
+              "lineClass": "blank",
+              "chars": 71,
+              "share": 0.0015425393238898061
+            },
+            {
+              "lineClass": "ansi",
+              "chars": 0,
+              "share": 0
+            },
+            {
+              "lineClass": "persist-wrapper",
+              "chars": 0,
+              "share": 0
+            }
+          ]
+        }
+      ],
+      "offenders": [
+        {
+          "offender": "ts6305-unbuilt-output",
+          "lines": 819,
+          "chars": 311107,
+          "scopeChars": 6900670,
+          "share": 0.04508359333224165
+        },
+        {
+          "offender": "gate-table-repeat",
+          "lines": 849,
+          "chars": 152433,
+          "scopeChars": 4599086,
+          "share": 0.033144194302954975
+        },
+        {
+          "offender": "json-envelope",
+          "lines": 131,
+          "chars": 335162,
+          "scopeChars": 4599086,
+          "share": 0.07287578444934494
+        },
+        {
+          "offender": "help-global-flags",
+          "lines": 1016,
+          "chars": 93500,
+          "scopeChars": 4599086,
+          "share": 0.020330126464258334
+        },
+        {
+          "offender": "tests-passed-line",
+          "lines": 3782,
+          "chars": 108428,
+          "scopeChars": 20422138,
+          "share": 0.005309336368209832
+        }
+      ]
+    },
+    "calibration": {
+      "samples": 6704,
+      "slope": 0.43537863186022085,
+      "intercept": 119.87850579588067,
+      "charsPerToken": 2.2968513537914097,
+      "bins": [
+        {
+          "bin": "3k-6k",
+          "samples": 4153,
+          "median": 2.2201166180758016,
+          "p25": 2.0649078726968173,
+          "p75": 2.367965367965368
+        },
+        {
+          "bin": "6k-12k",
+          "samples": 1803,
+          "median": 2.261870912709696,
+          "p25": 2.1277837837837836,
+          "p75": 2.4001518602885343
+        },
+        {
+          "bin": "12k-20k",
+          "samples": 487,
+          "median": 2.2676899462778204,
+          "p25": 2.1410622501427756,
+          "p75": 2.407277174743923
+        },
+        {
+          "bin": "20k-plus",
+          "samples": 261,
+          "median": 2.2475550919285436,
+          "p25": 2.1403691813804175,
+          "p75": 2.4343980343980345
+        }
+      ]
+    },
+    "headline": {
+      "filteredRunShare": 0.9228123114061557,
+      "logDigsPerRun": 0.14763014763014762,
+      "verificationCharsPerRun": [
+        {
+          "kind": "yeet",
+          "runs": 4404,
+          "chars": 4599086,
+          "charsPerRun": 1044.2974568574023
+        },
+        {
+          "kind": "test",
+          "runs": 4163,
+          "chars": 4910318,
+          "charsPerRun": 1179.5142925774683
+        },
+        {
+          "kind": "check",
+          "runs": 1905,
+          "chars": 3404421,
+          "charsPerRun": 1787.0976377952757
+        },
+        {
+          "kind": "lint",
+          "runs": 1781,
+          "chars": 2564907,
+          "charsPerRun": 1440.149915777653
+        },
+        {
+          "kind": "quality",
+          "runs": 1106,
+          "chars": 931342,
+          "charsPerRun": 842.0813743218806
+        },
+        {
+          "kind": "ci-logs",
+          "runs": 805,
+          "chars": 1135950,
+          "charsPerRun": 1411.1180124223602
+        },
+        {
+          "kind": "turbo",
+          "runs": 673,
+          "chars": 1113847,
+          "charsPerRun": 1655.0475482912334
+        },
+        {
+          "kind": "ci-status",
+          "runs": 1225,
+          "chars": 990768,
+          "charsPerRun": 808.7902040816326
+        },
+        {
+          "kind": "install",
+          "runs": 234,
+          "chars": 245637,
+          "charsPerRun": 1049.7307692307693
+        },
+        {
+          "kind": "docgen",
+          "runs": 200,
+          "chars": 479834,
+          "charsPerRun": 2399.17
+        },
+        {
+          "kind": "build",
+          "runs": 74,
+          "chars": 46028,
+          "charsPerRun": 622
+        }
+      ],
+      "turnsPerVerdict": 1.2385992679790285
+    }
+  }
+}

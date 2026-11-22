@@ -190,6 +190,21 @@ jobs:
           restore-keys: |
             turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-
 
+      # Check and Build pull `^build` artifacts for most packages. Pull
+      # requests take them from the newest main snapshot instead of one remote
+      # cache GET each; Turbo still decides every hit by task hash. A pull
+      # request runs this workflow from main but the action from its own
+      # checkout, so a branch that predates the action skips the step.
+      - name: Restore main Turbo build cache
+        if: >-
+          (env.BEEP_CI_LANE_ID == 'check' || env.BEEP_CI_LANE_ID == 'build') &&
+          github.event_name == 'pull_request' &&
+          hashFiles('.github/actions/turbo-build-cache/action.yml') != ''
+        continue-on-error: true
+        uses: ./.github/actions/turbo-build-cache
+        with:
+          operation: restore
+
       - name: Install typos
         if: env.BEEP_CI_LANE_INSTALL_TYPOS == 'true'
         uses: taiki-e/install-action@cfdb7ed4ccc7c7dce37759eae89dc5674b469b39 # v2.90.3
@@ -272,6 +287,25 @@ jobs:
         with:
           path: .turbo/cache
           key: turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-${{ github.sha }}
+
+      # Check's push graph builds every package any lane depends on, so it
+      # alone produces the build snapshot. Prune first: the entry keeps only
+      # this run's environment-free build artifacts, under a size cap.
+      - name: Prune main Turbo build cache
+        id: turbo-build-cache
+        if: env.BEEP_CI_LANE_ID == 'check' && github.event_name == 'push' && github.ref == 'refs/heads/main'
+        continue-on-error: true
+        uses: ./.github/actions/turbo-build-cache
+        with:
+          operation: prune
+
+      - name: Save main Turbo build cache
+        if: env.BEEP_CI_LANE_ID == 'check' && github.event_name == 'push' && github.ref == 'refs/heads/main' && steps.turbo-build-cache.outputs.ready == 'true'
+        continue-on-error: true
+        uses: actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: .turbo/cache
+          key: ${{ steps.turbo-build-cache.outputs.key }}
 
       - name: Append Turbo summary
         if: env.BEEP_CI_LANE_USES_TURBO == 'true' && always()

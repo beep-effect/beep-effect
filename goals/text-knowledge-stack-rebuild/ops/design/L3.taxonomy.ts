@@ -16,11 +16,11 @@
 // Decision 2026-11-19-p0-census-dispositions: makeSignal and Measurement move to @beep/schema in P4; until then they are read from epistemics.
 import { Measurement, makeSignal } from "@beep/epistemics/Claim";
 import { $RepoCliId } from "@beep/identity/packages";
+import { CanonicalHashSet } from "@beep/schema/CanonicalHashSet";
 import { LiteralKit } from "@beep/schema/LiteralKit";
 import { SpdxExpression } from "@beep/spdx/SpdxExpression";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
-import { CanonicalHashSet } from "./L0.digest.ts";
 import { Term, TermIri } from "./L0.identity.ts";
 
 const $I = $RepoCliId.create("goals/text-knowledge-stack-rebuild/ops/design/L3.taxonomy");

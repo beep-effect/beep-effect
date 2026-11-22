@@ -4,11 +4,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $SchemaId } from "@beep/identity/packages";
+
 import { A, Str, thunkFalse, thunkTrue } from "@beep/utils";
 import { flow } from "effect/Function";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
+import { $SchemaId } from "../internal/SchemaId.ts";
 
 /**
  * Internal identity composer.

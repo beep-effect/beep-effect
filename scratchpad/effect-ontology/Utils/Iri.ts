@@ -12,7 +12,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import type { IRI } from "@beep/rdf";
+import type { IRI } from "@beep/identity/Iri";
 import * as A from "effect/Array";
 import { dual, flow, pipe } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -36,7 +36,7 @@ const $I = $ScratchpadId.create("effect-ontology/Utils/Iri");
  * **Example** (Inspect build case insensitive iri map)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { buildCaseInsensitiveIriMap } from "@effect-ontology/Utils/Iri"
  * import * as MutableHashMap from "effect/MutableHashMap"
  * import * as O from "effect/Option"
@@ -70,7 +70,7 @@ export const buildCaseInsensitiveIriMap = (iris: ReadonlyArray<IRI>): MutableHas
  * **Example** (Inspect normalize iri)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { buildCaseInsensitiveIriMap, normalizeIri } from "@effect-ontology/Utils/Iri"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -196,7 +196,7 @@ export const extractLocalNameFromIri = (iri: string): string => {
  * **Example** (Create a local-name codec)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { makeLocalNameSchema } from "@effect-ontology/Utils/Iri"
  * import * as S from "effect/Schema"
  *
@@ -248,7 +248,7 @@ export const makeLocalNameSchema: {
  * **Example** (Build a collision-aware local-name map)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { buildLocalNameToIriMapSafe } from "@effect-ontology/Utils/Iri"
  *
  * const result = buildLocalNameToIriMapSafe([IRI.make("https://example.com/Person")])
@@ -293,7 +293,7 @@ export class LocalNameMapResult extends S.Opaque<LocalNameMapResult, { readonly 
  * **Example** (Detect a local-name collision)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { buildLocalNameToIriMapSafe } from "@effect-ontology/Utils/Iri"
  * import * as MutableHashMap from "effect/MutableHashMap"
  * import * as O from "effect/Option"
@@ -354,7 +354,7 @@ export const buildLocalNameToIriMapSafe = (iris: ReadonlyArray<IRI>): LocalNameM
  * **Example** (Inspect expand local name to iri)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { buildLocalNameToIriMapSafe, expandLocalNameToIri } from "@effect-ontology/Utils/Iri"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
@@ -389,7 +389,7 @@ export const expandLocalNameToIri: {
  * **Example** (Inspect expand types to iris)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { buildLocalNameToIriMapSafe, expandTypesToIris } from "@effect-ontology/Utils/Iri"
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"

@@ -6,6 +6,7 @@
   "attributes": [],
   "instruments": [],
   "spans": [
+    {"name":"ActivityStart.mintActivityId","owner":"@beep/jsonc","family":"foundation","conforms":true},
     {"name":"Jsonc.parse","owner":"@beep/jsonc","family":"foundation","conforms":true},
     {"name":"Jsonc.parseTree","owner":"@beep/jsonc","family":"foundation","conforms":true},
     {"name":"Jsonc.stringify","owner":"@beep/jsonc","family":"foundation","conforms":true},
@@ -13,6 +14,10 @@
     {"name":"JsoncFingerprint.hash","owner":"@beep/jsonc","family":"foundation","conforms":true},
     {"name":"JsoncFingerprint.hashText","owner":"@beep/jsonc","family":"foundation","conforms":true},
     {"name":"JsoncModifier.modify","owner":"@beep/jsonc","family":"foundation","conforms":true},
-    {"name":"JsoncModifier.modifyWithFormatting","owner":"@beep/jsonc","family":"foundation","conforms":true}
+    {"name":"JsoncModifier.modifyWithFormatting","owner":"@beep/jsonc","family":"foundation","conforms":true},
+    {"name":"Mint.mintContentHash","owner":"@beep/jsonc","family":"foundation","conforms":true},
+    {"name":"Preimage.mint","owner":"@beep/jsonc","family":"foundation","conforms":true},
+    {"name":"Preimage.verifyGolden","owner":"@beep/jsonc","family":"foundation","conforms":true},
+    {"name":"PreimageRegistry.verifyGoldens","owner":"@beep/jsonc","family":"foundation","conforms":true}
   ]
 }

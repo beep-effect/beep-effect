@@ -10,7 +10,6 @@
 
 import { AwsAccountId } from "@beep/alchemy-aws-extras/DeployTarget";
 import { RunnerType } from "@beep/alchemy-github-runners/RunnerPool.models";
-import { $InfraCiRunnersId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -20,6 +19,7 @@ import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { $InfraCiRunnersId } from "./internal/InfraCiRunnersId.ts";
 
 const $I = $InfraCiRunnersId.create("Config");
 
@@ -54,20 +54,20 @@ export type FleetRegion = typeof FleetRegion.Type;
  *
  * **Details**
  *
- * The heavy pool uses all six (30 Spot capacity pools across five
+ * The heavy pool uses all five (25 Spot capacity pools across five
  * subnets); the shard-overflow pool uses the two 8-vCPU types. Carried
- * over from the Pulumi `CiRunnerPool` profiles, less `r7a.2xlarge`: on
- * 2026-11-19 the live fleet's `r7a.2xlarge` runners were evicted at more
- * than twice the fleet's per-hour rate in three zones (decision
- * `2026-11-19-drop-r7a-2xlarge-from-the-new-fleet` in
- * `goals/infra-alchemy-rebuild`).
+ * over from the Pulumi `CiRunnerPool` profiles, less two types the live
+ * fleet's Spot evictions ruled out: `r7a.2xlarge` (2026-11-19, decision
+ * `2026-11-19-drop-r7a-2xlarge-from-the-new-fleet`) and `m6i.4xlarge`
+ * (2026-11-20, decision `2026-11-20-drop-m6i-4xlarge-from-the-new-heavy-pool`),
+ * both in `goals/infra-alchemy-rebuild`.
  *
  * **Example** (List the instance types)
  *
  * ```ts
  * import { RunnerInstanceType } from "@beep/infra-ci-runners/Config"
  *
- * console.log(RunnerInstanceType.literals.length) // 6
+ * console.log(RunnerInstanceType.literals.length) // 5
  * ```
  *
  * @category models
@@ -79,7 +79,6 @@ export const RunnerInstanceType = LiteralKit([
   "m7a.4xlarge",
   "m7i.4xlarge",
   "m6a.4xlarge",
-  "m6i.4xlarge",
 ]).pipe($I.annoteSchema("RunnerInstanceType", { description: "An EC2 instance type a runner pool may launch." }));
 
 /**
@@ -101,7 +100,7 @@ export type RunnerInstanceType = typeof RunnerInstanceType.Type;
  * console.log(instanceVcpus("r7i.2xlarge")) // 8
  * ```
  *
- * @param type - One of the six 64 GiB x86_64 types.
+ * @param type - One of the five 64 GiB x86_64 types.
  * @returns Its vCPU count.
  * @category models
  * @since 0.0.0
@@ -113,7 +112,6 @@ export const instanceVcpus = (type: RunnerInstanceType): number =>
     "m7a.4xlarge": () => 16,
     "m7i.4xlarge": () => 16,
     "m6a.4xlarge": () => 16,
-    "m6i.4xlarge": () => 16,
   });
 
 /**

@@ -5,8 +5,8 @@
  * @since 0.0.0
  */
 
+import { IRIReference } from "@beep/identity/Iri";
 import { $SemanticFoundationId } from "@beep/identity/packages";
-import { IRIReference } from "@beep/rdf";
 import { FilingRoot, TaxonomyConcept, TaxonomySeed } from "./SemanticFoundation.models.ts";
 
 const scheme = $SemanticFoundationId.create("taxonomy/legal-intake");

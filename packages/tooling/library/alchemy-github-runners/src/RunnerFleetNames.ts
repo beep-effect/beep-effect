@@ -14,11 +14,11 @@
  * @since 0.0.0
  */
 
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 
 const $I = $AlchemyGithubRunnersId.create("RunnerFleetNames");
 

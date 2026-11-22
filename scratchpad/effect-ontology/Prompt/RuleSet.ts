@@ -6,7 +6,7 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";

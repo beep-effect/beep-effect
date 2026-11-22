@@ -14,8 +14,9 @@ import { pipe } from "effect/Function";
  */
 
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/identity/Iri";
 import type { GraphTerm, NamedNode, ObjectTerm, Quad, Subject } from "@beep/rdf";
-import { IRI, makeBlankNode, makeNamedNode } from "@beep/rdf";
+import { makeBlankNode, makeNamedNode } from "@beep/rdf";
 import { OWL_CLASS, OWL_DATATYPE_PROPERTY, OWL_NAMESPACE, OWL_OBJECT_PROPERTY } from "@beep/rdf/Vocab/Owl";
 import { RDF_FIRST, RDF_NIL, RDF_REST, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { RDFS_COMMENT, RDFS_LABEL, RDFS_NAMESPACE } from "@beep/rdf/Vocab/Rdfs";

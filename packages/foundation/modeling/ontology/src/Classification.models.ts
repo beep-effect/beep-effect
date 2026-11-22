@@ -3,8 +3,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { IRIReference } from "@beep/identity/Iri";
 import { $OntologyId, $SemanticFoundationId } from "@beep/identity/packages";
-import { IRIReference } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
 import { dual } from "effect/Function";
 import * as S from "effect/Schema";

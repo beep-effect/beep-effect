@@ -230,6 +230,13 @@ export type LogicalEdgeIdentityShape = typeof LogicalEdgeIdentityShapeSchema.Typ
  * prefixed with the encoding version. `logicalEdgeKey` is its lowercase SHA-256
  * hex digest. Both functions are typed on the caller's identity class.
  *
+ * **Gotchas**
+ *
+ * This is a pinned encoder (see "Pinned encoders" in the `@beep/jsonc`
+ * README): the logical edge key is stored in SQL, so the `|`-joined preimage
+ * keeps its exact bytes and never moves to the canonical JSON owner. A new
+ * format needs a new encoding version, never an edit to this one.
+ *
  * **Example** (Digest a bound logical edge identity)
  *
  * ```ts

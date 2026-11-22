@@ -5,6 +5,7 @@
  * @since 0.0.0
  */
 
+import { IRI } from "@beep/identity/Iri";
 import { $RdfId } from "@beep/identity/packages";
 import { A, R, Str } from "@beep/utils";
 import * as O from "@beep/utils/Option";
@@ -15,7 +16,6 @@ import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { IRI } from "./Iri.ts";
 import { makeSemanticSchemaMetadata } from "./SemanticSchemaMetadata/index.ts";
 
 const $I = $RdfId.create("rdf");

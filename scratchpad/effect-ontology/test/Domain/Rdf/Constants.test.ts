@@ -1,5 +1,5 @@
 import { CoreVocab } from "@beep/identity";
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import { OWL_OBJECT_PROPERTY, OWL_TERMS } from "@beep/rdf/Vocab/Owl";
 import { RDF_TERMS, RDF_TYPE } from "@beep/rdf/Vocab/Rdf";
 import { SKOS_PREF_LABEL, SKOS_TERMS } from "@beep/rdf/Vocab/Skos";

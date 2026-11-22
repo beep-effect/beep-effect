@@ -69,6 +69,9 @@
       "path": "../../../foundation/capability/mcp-kit/tsconfig.json"
     },
     {
+      "path": "../../../foundation/modeling/csv/tsconfig.json"
+    },
+    {
       "path": "../../../foundation/modeling/identity/tsconfig.json"
     },
     {

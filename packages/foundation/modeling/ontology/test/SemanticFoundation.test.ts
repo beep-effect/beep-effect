@@ -1,3 +1,4 @@
+import { IRIReference } from "@beep/identity/Iri";
 import { $SemanticFoundationId } from "@beep/identity/packages";
 import {
   ConceptAlignment,
@@ -25,7 +26,6 @@ import {
   VendorSliceReadError,
   VendorSliceUnvetted,
 } from "@beep/ontology";
-import { IRIReference } from "@beep/rdf";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as BunFileSystem from "@effect/platform-bun/BunFileSystem";

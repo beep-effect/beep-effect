@@ -450,6 +450,7 @@
       "name": "@beep/practice-m365-contacts",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/csv": "workspace:^",
         "@beep/identity": "workspace:^",
         "@beep/law-practice-server": "workspace:^",
         "@beep/law-practice-use-cases": "workspace:^",
@@ -997,7 +998,6 @@
       "dependencies": {
         "@alchemy.run/domain": "catalog:",
         "@beep/identity": "workspace:^",
-        "@beep/rdf": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",
         "@beep/utils": "workspace:^",
@@ -2392,8 +2392,8 @@
       "name": "@beep/execution-authority-domain",
       "version": "0.0.0",
       "dependencies": {
-        "@beep/epistemics": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/jsonc": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/shared-domain": "workspace:^",
         "@beep/utils": "workspace:^",
@@ -2401,7 +2401,6 @@
         "effect": "catalog:",
       },
       "devDependencies": {
-        "@beep/jsonc": "workspace:^",
         "@beep/test-runner": "workspace:^",
         "@beep/test-utils": "workspace:^",
         "@effect/vitest": "catalog:",
@@ -3654,6 +3653,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@beep/box": "workspace:^",
+        "@beep/csv": "workspace:^",
         "@beep/duckdb": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
         "@beep/epistemic-server": "workspace:^",
@@ -4605,6 +4605,7 @@
         "@beep/colors": "workspace:^",
         "@beep/commands": "workspace:^",
         "@beep/config-file": "workspace:^",
+        "@beep/csv": "workspace:^",
         "@beep/duckdb": "workspace:^",
         "@beep/epistemics": "workspace:^",
         "@beep/exiftool": "workspace:^",

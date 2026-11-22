@@ -67,14 +67,13 @@ describe("CiRunners configuration", () => {
     Effect.gen(function* () {
       const config = yield* decodeCiRunnersConfig(productionConfig);
       expect(config.phase).toBe("overlap");
-      // r7a.2xlarge left both pools on 2026-11-19 (eviction rate); the overflow pool keeps the 8-vCPU r7i and r6i.
+      // r7a.2xlarge (2026-11-19) and m6i.4xlarge (2026-11-20) left for their eviction rates; the overflow pool keeps the 8-vCPU r7i and r6i.
       expect(config.heavy.instanceTypes).toEqual([
         "r7i.2xlarge",
         "r6i.2xlarge",
         "m7a.4xlarge",
         "m7i.4xlarge",
         "m6a.4xlarge",
-        "m6i.4xlarge",
       ]);
       expect(config.overflow.instanceTypes).toEqual(["r7i.2xlarge", "r6i.2xlarge"]);
       expect(config.heavy.maximumCount).toBe(2);

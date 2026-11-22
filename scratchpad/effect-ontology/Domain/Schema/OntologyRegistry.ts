@@ -5,7 +5,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { AbsoluteIRI, IRI } from "@beep/rdf";
+import { AbsoluteIRI, IRI } from "@beep/identity/Iri";
 import { SemanticVersion } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";

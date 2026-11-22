@@ -1,4 +1,4 @@
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import { assert, describe, it } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";

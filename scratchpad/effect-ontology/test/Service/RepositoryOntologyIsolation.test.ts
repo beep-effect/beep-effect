@@ -1,7 +1,7 @@
 import { DrizzleError } from "@beep/drizzle";
+import { IRI } from "@beep/identity/Iri";
 import { PgliteTestLayer } from "@beep/pglite";
 import { makeDrizzleLayer } from "@beep/postgres";
-import { IRI } from "@beep/rdf";
 import { assert, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";

@@ -32,6 +32,7 @@ import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as SchemaIssue from "effect/SchemaIssue";
 import * as Str from "effect/String";
 import { MAX_NESTING_DEPTH } from "./internal/limits.ts";
 
@@ -646,6 +647,44 @@ export abstract class JsoncFingerprint {
     (value: unknown, options?: JsoncCanonicalizeOptions) =>
       Effect.fromResult(JsoncFingerprint.canonicalizeResult(value, options))
   );
+
+  /**
+   * {@link JsoncFingerprint.canonicalizeResult} with its refusal carried as an
+   * `S.SchemaError`, for digest helpers whose error channel is already the
+   * schema error.
+   *
+   * **Details**
+   *
+   * The canonical text is the same string. A refusal becomes a `SchemaError`
+   * over one `InvalidValue` issue whose message is the
+   * {@link JsoncCanonicalizeError} message, so the code and the JSON pointer
+   * survive in the rendered error.
+   *
+   * **Example** (Report a refusal on the schema channel)
+   *
+   * ```ts
+   * import * as Result from "effect/Result"
+   * import { JsoncFingerprint } from "@beep/jsonc/JsoncFingerprint"
+   *
+   * console.log(Result.getOrThrow(JsoncFingerprint.canonicalizeSchemaResult({ b: 1, a: 2 }))) // '{"a":2,"b":1}'
+   *
+   * const refused = JsoncFingerprint.canonicalizeSchemaResult({ n: 1n })
+   * console.log(Result.isFailure(refused) && refused.failure.message.includes("BigIntValue")) // true
+   * ```
+   *
+   * @param value - The plain JSON value to serialize.
+   * @param options - Canonicalize options; omitted fields take their defaults.
+   * @returns The canonical JSON text, or an `S.SchemaError` naming the refusal.
+   */
+  static canonicalizeSchemaResult(
+    value: unknown,
+    options?: JsoncCanonicalizeOptions
+  ): Result.Result<string, S.SchemaError> {
+    return Result.mapError(
+      JsoncFingerprint.canonicalizeResult(value, options),
+      (error) => new S.SchemaError(new SchemaIssue.InvalidValue({ message: error.message }))
+    );
+  }
 
   /**
    * Normalize line endings for hashing: `\r\n` and bare `\r` become `\n`.

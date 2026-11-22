@@ -4,6 +4,10 @@
  * @since 0.0.0
  */
 
+import { Csv } from "@beep/csv/Csv.codec";
+import { CsvWarningFinding } from "@beep/csv/CsvDiagnostic.schema";
+import { CsvCodecOptions, CsvReadOptions } from "@beep/csv/CsvOptions.schema";
+import { CsvRead } from "@beep/csv/CsvRead.schema";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import {
   ContactCardSource,
@@ -22,46 +26,30 @@ import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
+import type { CsvWarning } from "@beep/csv/CsvDiagnostic.schema";
+import type { CsvRecord } from "@beep/csv/CsvTable.schema";
 
 const $I = $LawPracticeServerId.create("DocumentIdentification/Identification.contacts");
 const invalid = () => IdentificationError.make({ operation: "contact-parse", reason: "invalid-input" });
 const opt = (s: string) => (Str.isNonEmpty(Str.trim(s)) ? O.some(Str.trim(s)) : O.none());
 const nonempty = (xs: ReadonlyArray<string>) => A.filter(A.map(xs, Str.trim), Str.isNonEmpty);
-// One cell and its terminator: a quoted cell (doubled quotes escape, trailing blanks tolerated) or a bare cell.
-const csvCell = /("(?:[^"]|"")*"[ \t]*|[^",\r\n]*)(,|\r\n|\n|\r|$)/uy;
-const unquote = (cell: string) =>
-  Str.startsWith('"')(cell) ? Str.replace(/""/gu, '"')(Str.slice(1, -1)(Str.trimEnd(cell))) : cell;
-// The next cell must start exactly at `at`; a stray quote or an unterminated quoted cell matches nothing.
-const nextCell = (text: string, at: number): RegExpExecArray => {
-  csvCell.lastIndex = at;
-  const match = csvCell.exec(text);
-  if (match === null || match.index !== at) throw invalid();
-  return match;
-};
-// Rows made only of empty cells (blank lines) are dropped.
-const pushRow = (rows: Array<Array<string>>, row: Array<string>) =>
-  A.some(row, Str.isNonEmpty) ? rows.push(row) : rows.length;
-const parseCsv = (input: string): Array<Array<string>> => {
-  const text = Str.replace(/^\uFEFF/u, "")(input);
-  const rows: Array<Array<string>> = [];
-  let row: Array<string> = [];
-  let at = 0;
-  let last = "";
-  while (at < text.length) {
-    const match = nextCell(text, at);
-    row.push(unquote(match[1] ?? ""));
-    at += match[0].length;
-    last = match[2] ?? "";
-    if (last !== ",") {
-      pushRow(rows, row);
-      row = [];
-    }
-  }
-  // A file that ends with a comma and no final newline still owes its last, empty cell.
-  if (last === ",") row.push("");
-  if (row.length > 0) rows.push(row);
-  return rows;
-};
+// Outlook writes RFC 4180 with commas. The lenient read keeps what the export tolerates (a byte-order mark, blanks
+// after a closing quote, blank lines, which it skips); a quote inside an unquoted cell or text after a closing quote is
+// refused, and rows of only empty cells are dropped. A read whose warnings passed the cap is refused too: past it the
+// reader only counts quote findings, so a misused quote could hide behind many ragged rows.
+const outlookRead = CsvReadOptions.make({ ...CsvCodecOptions.default.read, blankLines: "skip" });
+const isRefused = (warning: CsvWarning): boolean =>
+  CsvWarningFinding.guards.StrayQuote(warning.finding) ||
+  CsvWarningFinding.guards.TextAfterClosingQuote(warning.finding) ||
+  CsvWarningFinding.guards.WarningsTruncated(warning.finding);
+const readOutlookRows = (text: string): Effect.Effect<ReadonlyArray<CsvRecord>, IdentificationError> =>
+  Csv.parse(text, outlookRead).pipe(
+    Effect.filterOrFail((read) => !A.some(CsvRead.warnings(read), isRefused)),
+    Effect.mapBoth({
+      onFailure: invalid,
+      onSuccess: (read) => A.filter(read.table.records, A.some(Str.isNonEmpty)),
+    })
+  );
 
 /**
  * Parses Outlook CSV including quoted delimiters, escaped quotes and embedded newlines.
@@ -78,47 +66,49 @@ const parseCsv = (input: string): Array<Array<string>> => {
  * @since 0.0.0
  */
 export const parseOutlookCsv = (text: string): Effect.Effect<ReadonlyArray<RawContactCard>, IdentificationError> =>
-  Effect.try({
-    try: () => {
-      const [header, ...rows] = parseCsv(text);
-      if (
-        header === undefined ||
-        !A.some(header, (h) => A.contains(["First Name", "Full Name", "Company"], Str.trim(h)))
-      )
-        throw invalid();
-      return A.map(rows, (row) => {
-        if (row.length !== header.length) throw invalid();
-        const values = M.fromIterable(A.map(header, (h, i) => [Str.trim(h), Str.trim(row[i] ?? "")] as const));
-        const get = (key: string) => O.getOrElse(M.get(values, key), () => "");
-        const displayName =
-          get("Full Name") || A.join(nonempty(A.map(["First Name", "Middle Name", "Last Name", "Suffix"], get)), " ");
-        return RawContactCard.make({
-          displayName,
-          organization: opt(get("Company")),
-          titles: nonempty([get("Job Title")]),
-          emails: nonempty(A.map(["E-mail Address", "E-mail 2 Address", "E-mail 3 Address"], get)),
-          phones: nonempty(
-            A.map(
-              A.filter(header, (h) => /(?:Phone(?: 2)?|Fax)$/u.test(h)),
-              get
-            )
-          ),
-          addresses: nonempty(
-            A.map(["Business", "Home", "Other"], (kind) =>
-              A.join(
-                nonempty(
-                  A.map(["Street", "City", "State", "Postal Code", "Country/Region"], (f) => get(`${kind} ${f}`))
-                ),
-                ", "
+  Effect.flatMap(readOutlookRows(text), (records) =>
+    Effect.try({
+      try: () => {
+        const [header, ...rows] = records;
+        if (
+          header === undefined ||
+          !A.some(header, (h) => A.contains(["First Name", "Full Name", "Company"], Str.trim(h)))
+        )
+          throw invalid();
+        return A.map(rows, (row) => {
+          if (row.length !== header.length) throw invalid();
+          const values = M.fromIterable(A.map(header, (h, i) => [Str.trim(h), Str.trim(row[i] ?? "")] as const));
+          const get = (key: string) => O.getOrElse(M.get(values, key), () => "");
+          const displayName =
+            get("Full Name") || A.join(nonempty(A.map(["First Name", "Middle Name", "Last Name", "Suffix"], get)), " ");
+          return RawContactCard.make({
+            displayName,
+            organization: opt(get("Company")),
+            titles: nonempty([get("Job Title")]),
+            emails: nonempty(A.map(["E-mail Address", "E-mail 2 Address", "E-mail 3 Address"], get)),
+            phones: nonempty(
+              A.map(
+                A.filter(header, (h) => /(?:Phone(?: 2)?|Fax)$/u.test(h)),
+                get
               )
-            )
-          ),
-          source: "outlook-csv",
+            ),
+            addresses: nonempty(
+              A.map(["Business", "Home", "Other"], (kind) =>
+                A.join(
+                  nonempty(
+                    A.map(["Street", "City", "State", "Postal Code", "Country/Region"], (f) => get(`${kind} ${f}`))
+                  ),
+                  ", "
+                )
+              )
+            ),
+            source: "outlook-csv",
+          });
         });
-      });
-    },
-    catch: invalid,
-  });
+      },
+      catch: invalid,
+    })
+  );
 const unescape = (s: string) =>
   Str.replace(/\\\\/gu, "\\")(Str.replace(/\\([,;:])/gu, "$1")(Str.replace(/\\[nN]/gu, "\n")(s)));
 const components = (s: string) => A.map(Str.split(s, /(?<!\\);/u), unescape);

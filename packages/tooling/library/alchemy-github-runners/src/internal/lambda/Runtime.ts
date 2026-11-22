@@ -5,7 +5,6 @@
  * @internal
  */
 
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as AwsCredentials from "@distilled.cloud/aws/Credentials";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
@@ -20,6 +19,7 @@ import { ec2FleetLive, messageQueueLive, runnerBinariesLive, ssmStoreLive } from
 import { GitHubLiveOptions, gitHubAppAuthLive, gitHubRunnersLive } from "../../GitHubApp.layer.ts";
 import { RuntimeConfigError } from "../../RunnerFleet.errors.ts";
 import { runtimeConfigEnvName } from "../../RunnerRuntime.models.ts";
+import { $AlchemyGithubRunnersId } from "../AlchemyGithubRunnersId.ts";
 import type { PoolRuntimeConfig, TerminationWatcherRuntimeConfig } from "../../RunnerRuntime.models.ts";
 
 const $I = $AlchemyGithubRunnersId.create("internal/lambda/Runtime");

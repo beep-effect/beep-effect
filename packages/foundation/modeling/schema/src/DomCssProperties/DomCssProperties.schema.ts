@@ -4,9 +4,10 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $SchemaId } from "@beep/identity";
+
 import { A, P } from "@beep/utils";
 import * as S from "effect/Schema";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import type * as React from "react";
 
 const $I = $SchemaId.create("DomCssProperties");

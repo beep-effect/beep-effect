@@ -6007,6 +6007,213 @@
         }
       }
     },
+    "@beep/csv": {
+      "path": "packages/foundation/modeling/csv",
+      "lines": 96.36,
+      "statements": 96.14,
+      "branches": 92.69,
+      "functions": 92.92,
+      "uncovered": {
+        "lines": 28,
+        "statements": 33,
+        "branches": 26,
+        "functions": 24
+      },
+      "files": {
+        "packages/foundation/modeling/csv/src/Csv.codec.ts": {
+          "lines": 96.26,
+          "statements": 96.64,
+          "branches": 97.5,
+          "functions": 93.54,
+          "uncovered": {
+            "lines": 5,
+            "statements": 5,
+            "branches": 1,
+            "functions": 6
+          }
+        },
+        "packages/foundation/modeling/csv/src/CsvDiagnostic.schema.ts": {
+          "lines": 60.86,
+          "statements": 60.86,
+          "branches": 100,
+          "functions": 35.71,
+          "uncovered": {
+            "lines": 9,
+            "statements": 9,
+            "branches": 0,
+            "functions": 9
+          }
+        },
+        "packages/foundation/modeling/csv/src/CsvError.errors.ts": {
+          "lines": 75,
+          "statements": 75,
+          "branches": 100,
+          "functions": 66.66,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/foundation/modeling/csv/src/CsvOptions.schema.ts": {
+          "lines": 82.85,
+          "statements": 82.85,
+          "branches": 100,
+          "functions": 60,
+          "uncovered": {
+            "lines": 6,
+            "statements": 6,
+            "branches": 0,
+            "functions": 6
+          }
+        },
+        "packages/foundation/modeling/csv/src/CsvPosition.schema.ts": {
+          "lines": 86.66,
+          "statements": 86.66,
+          "branches": 100,
+          "functions": 83.33,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/foundation/modeling/csv/src/CsvRead.schema.ts": {
+          "lines": 92.3,
+          "statements": 93.33,
+          "branches": 100,
+          "functions": 87.5,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/foundation/modeling/csv/src/CsvTable.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/csv/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/csv/src/internal/encoding.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 86,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 7,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/csv/src/internal/header.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/csv/src/internal/machine.ts": {
+          "lines": 98.52,
+          "statements": 97.37,
+          "branches": 92.68,
+          "functions": 100,
+          "uncovered": {
+            "lines": 4,
+            "statements": 8,
+            "branches": 12,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/csv/src/internal/rules.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/csv/src/internal/sniff.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/csv/src/internal/start.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/csv/src/internal/stream.ts": {
+          "lines": 100,
+          "statements": 99.23,
+          "branches": 86.95,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 6,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/csv/src/internal/writer.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
     "@beep/data": {
       "path": "packages/foundation/primitive/data",
       "lines": 92.07,
@@ -11026,18 +11233,6 @@
             "branches": 0,
             "functions": 0
           }
-        },
-        "packages/epistemic/domain/src/values/internal/CanonicalJson.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
         }
       }
     },
@@ -12801,18 +12996,6 @@
           }
         },
         "packages/execution-authority/domain/src/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/execution-authority/domain/src/internal/CanonicalJson.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -16422,6 +16605,18 @@
           }
         },
         "packages/foundation/modeling/identity/src/IdentityRegistry.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/identity/src/Iri.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -36332,18 +36527,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/rdf/src/Iri.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/rdf/src/JsonLd.ts": {
           "lines": 100,
           "statements": 100,
@@ -51495,15 +51678,15 @@
     },
     "@beep/schema": {
       "path": "packages/foundation/modeling/schema",
-      "lines": 96.37,
-      "statements": 96.22,
-      "branches": 92.92,
-      "functions": 94.13,
+      "lines": 96.65,
+      "statements": 96.53,
+      "branches": 92.98,
+      "functions": 94.85,
       "uncovered": {
-        "lines": 98,
-        "statements": 107,
-        "branches": 67,
-        "functions": 53
+        "lines": 80,
+        "statements": 87,
+        "branches": 57,
+        "functions": 42
       },
       "files": {
         "packages/foundation/modeling/schema/src/Age/Age.schema.ts": {
@@ -52011,126 +52194,6 @@
           }
         },
         "packages/foundation/modeling/schema/src/Csp/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/Csv/Csv.schema.ts": {
-          "lines": 97.7,
-          "statements": 96.62,
-          "branches": 94.44,
-          "functions": 96.29,
-          "uncovered": {
-            "lines": 2,
-            "statements": 3,
-            "branches": 2,
-            "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/Csv/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvCodecOptions/CsvCodecOptions.schema.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvCodecOptions/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvError/CsvError.errors.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvError/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvFormatter/CsvFormatter.formatter.ts": {
-          "lines": 85.71,
-          "statements": 86.66,
-          "branches": 100,
-          "functions": 77.77,
-          "uncovered": {
-            "lines": 6,
-            "statements": 6,
-            "branches": 0,
-            "functions": 6
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvFormatter/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvParser/CsvParser.parser.ts": {
-          "lines": 96.15,
-          "statements": 95.62,
-          "branches": 92.22,
-          "functions": 94.44,
-          "uncovered": {
-            "lines": 6,
-            "statements": 7,
-            "branches": 7,
-            "functions": 1
-          }
-        },
-        "packages/foundation/modeling/schema/src/CsvParser/index.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -53006,42 +53069,6 @@
             "functions": 0
           }
         },
-        "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.schema.ts": {
-          "lines": 93.1,
-          "statements": 93.75,
-          "branches": 75,
-          "functions": 88.23,
-          "uncovered": {
-            "lines": 2,
-            "statements": 2,
-            "branches": 1,
-            "functions": 2
-          }
-        },
-        "packages/foundation/modeling/schema/src/ParserOptions/ParserOptions.types.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/schema/src/ParserOptions/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
         "packages/foundation/modeling/schema/src/PatternOntology/PatternOntology.schema.ts": {
           "lines": 94.23,
           "statements": 94.82,
@@ -53198,6 +53225,18 @@
             "functions": 0
           }
         },
+        "packages/foundation/modeling/schema/src/SchemaUtils/defectDiagnostics.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/modeling/schema/src/SchemaUtils/index.ts": {
           "lines": 100,
           "statements": 100,
@@ -53235,15 +53274,15 @@
           }
         },
         "packages/foundation/modeling/schema/src/SchemaUtils/optionalDefect.ts": {
-          "lines": 0,
-          "statements": 0,
+          "lines": 100,
+          "statements": 100,
           "branches": 100,
-          "functions": 0,
+          "functions": 100,
           "uncovered": {
-            "lines": 2,
-            "statements": 2,
+            "lines": 0,
+            "statements": 0,
             "branches": 0,
-            "functions": 1
+            "functions": 0
           }
         },
         "packages/foundation/modeling/schema/src/SchemaUtils/toEquivalence.ts": {
@@ -53547,6 +53586,18 @@
           }
         },
         "packages/foundation/modeling/schema/src/internal/ProtobufNumber.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/schema/src/internal/SchemaId.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -61686,6 +61737,273 @@
             "statements": 0,
             "branches": 0,
             "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/xlsx": {
+      "path": "packages/foundation/modeling/xlsx",
+      "lines": 95.3,
+      "statements": 93.79,
+      "branches": 87.71,
+      "functions": 90.93,
+      "uncovered": {
+        "lines": 79,
+        "statements": 125,
+        "branches": 137,
+        "functions": 54
+      },
+      "files": {
+        "packages/foundation/modeling/xlsx/src/Xlsx.codec.ts": {
+          "lines": 97.51,
+          "statements": 95.72,
+          "branches": 88.88,
+          "functions": 93.33,
+          "uncovered": {
+            "lines": 4,
+            "statements": 8,
+            "branches": 5,
+            "functions": 7
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/XlsxAddress.schema.ts": {
+          "lines": 100,
+          "statements": 96.29,
+          "branches": 83.33,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 4,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/XlsxCell.schema.ts": {
+          "lines": 95.12,
+          "statements": 94.11,
+          "branches": 100,
+          "functions": 88.88,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/XlsxDiagnostic.schema.ts": {
+          "lines": 61.53,
+          "statements": 62.5,
+          "branches": 100,
+          "functions": 37.5,
+          "uncovered": {
+            "lines": 15,
+            "statements": 15,
+            "branches": 0,
+            "functions": 15
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/XlsxError.errors.ts": {
+          "lines": 66.66,
+          "statements": 66.66,
+          "branches": 100,
+          "functions": 50,
+          "uncovered": {
+            "lines": 1,
+            "statements": 1,
+            "branches": 0,
+            "functions": 1
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/XlsxFormatKind.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/XlsxOptions.schema.ts": {
+          "lines": 82.6,
+          "statements": 82.6,
+          "branches": 100,
+          "functions": 71.42,
+          "uncovered": {
+            "lines": 4,
+            "statements": 4,
+            "branches": 0,
+            "functions": 4
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/XlsxRead.schema.ts": {
+          "lines": 33.33,
+          "statements": 25,
+          "branches": 100,
+          "functions": 0,
+          "uncovered": {
+            "lines": 2,
+            "statements": 3,
+            "branches": 0,
+            "functions": 2
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/XlsxSerial.schema.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/XlsxWorkbook.schema.ts": {
+          "lines": 83.54,
+          "statements": 79.34,
+          "branches": 68.42,
+          "functions": 75,
+          "uncovered": {
+            "lines": 13,
+            "statements": 19,
+            "branches": 6,
+            "functions": 8
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/internal/budget.ts": {
+          "lines": 92.3,
+          "statements": 92.85,
+          "branches": 87.5,
+          "functions": 100,
+          "uncovered": {
+            "lines": 2,
+            "statements": 2,
+            "branches": 1,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/internal/container.ts": {
+          "lines": 87.9,
+          "statements": 86.24,
+          "branches": 78.84,
+          "functions": 85.71,
+          "uncovered": {
+            "lines": 26,
+            "statements": 37,
+            "branches": 33,
+            "functions": 9
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/internal/formula.ts": {
+          "lines": 100,
+          "statements": 97.36,
+          "branches": 71.15,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 1,
+            "branches": 15,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/internal/numberFormat.ts": {
+          "lines": 100,
+          "statements": 99.32,
+          "branches": 91.59,
+          "functions": 98.66,
+          "uncovered": {
+            "lines": 0,
+            "statements": 2,
+            "branches": 19,
+            "functions": 1
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/internal/ooxml.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 76.92,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 9,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/internal/serial.ts": {
+          "lines": 100,
+          "statements": 95.45,
+          "branches": 91.11,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 3,
+            "branches": 4,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/internal/sheet.ts": {
+          "lines": 98.82,
+          "statements": 97.56,
+          "branches": 92.41,
+          "functions": 100,
+          "uncovered": {
+            "lines": 4,
+            "statements": 10,
+            "branches": 21,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/internal/text.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/internal/workbookPart.ts": {
+          "lines": 97.38,
+          "statements": 94.37,
+          "branches": 85.59,
+          "functions": 95.52,
+          "uncovered": {
+            "lines": 5,
+            "statements": 13,
+            "branches": 17,
+            "functions": 3
+          }
+        },
+        "packages/foundation/modeling/xlsx/src/internal/writer.ts": {
+          "lines": 99.03,
+          "statements": 98.44,
+          "branches": 95.83,
+          "functions": 95.45,
+          "uncovered": {
+            "lines": 1,
+            "statements": 2,
+            "branches": 3,
+            "functions": 2
           }
         }
       }

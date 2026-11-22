@@ -12,7 +12,7 @@ import * as Digest from "effect/crypto/Digest";
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import * as A from "effect/Array";
 import * as LanguageModel from "effect/ai/LanguageModel";
 import * as Chunk from "effect/Chunk";

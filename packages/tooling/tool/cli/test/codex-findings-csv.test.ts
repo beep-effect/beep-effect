@@ -64,7 +64,7 @@ const reason = (text: string) =>
   );
 
 describe("codex findings csv parser integration", () => {
-  // RFC 4180 mechanics belong to `@beep/schema`'s parser and are covered there.
+  // RFC 4180 mechanics belong to `@beep/csv` and are covered there.
   // What matters here is that a quoted multiline `description` — the one column
   // that actually carries newlines — does not shear the row apart.
   it.effect("survives a description cell containing commas and newlines", () =>
@@ -206,6 +206,16 @@ describe("codex findings csv refusals", () => {
       const decoded = yield* decode(csv([]));
 
       expect(A.length(decoded.findings)).toBe(0);
+    })
+  );
+
+  it.effect("skips blank lines between rows and refuses an unterminated quote as unreadable", () =>
+    Effect.gen(function* () {
+      const decoded = yield* decode(`${csv([row({ seed: "a" }), "", row({ seed: "c" })])}\n`);
+      const unreadable = yield* reason(`${csv([])}${url("a")},"kriegcloud\n`);
+
+      expect(A.length(decoded.findings)).toBe(2);
+      expect(unreadable).toBe("payload-unreadable");
     })
   );
 });

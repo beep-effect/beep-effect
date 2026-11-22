@@ -5,7 +5,6 @@
  * @packageDocumentation
  */
 
-import { $SchemaId } from "@beep/identity";
 import { A } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -15,6 +14,7 @@ import * as S from "effect/Schema";
 import * as SchemaIssue from "effect/SchemaIssue";
 import * as SchemaTransformation from "effect/SchemaTransformation";
 import * as internal from "../Http/Http.headers.shared.ts";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 import { ExpectCtError } from "../SecureHeaderError/index.ts";
 import type { SecureHeaderError } from "../SecureHeaderError/index.ts";

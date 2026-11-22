@@ -4,6 +4,7 @@
 import { Csv } from "@beep/csv/Csv.codec";
 import {
   CsvWarning,
+  LimitExceeded,
   MixedTerminators,
   RaggedRecord,
   StrayQuote,
@@ -102,6 +103,63 @@ describe("misplaced quotes", () => {
     assertFailure(findingsOf('a,b"c\n', strict), [StrayQuote.make({ at: at(3, 1, 0, 3), record: 0, field: 1 })]);
     assertFailure(findingsOf('"a"  ,b\n', strict), [
       TextAfterClosingQuote.make({ at: at(5, 1, 0, 5), record: 0, field: 0 }),
+    ]);
+  });
+
+  // The machine's paths after a closing quote and its spaces, stated by example: the property tests reach them only
+  // when an arbitrary happens to put a quote, spaces and then text, a line break, a quote or the end side by side.
+  describe("after a closing quote and spaces", () => {
+    const strict = readWithRules(",", { quotes: "strict" });
+
+    it("text after the spaces keeps the quote and the spaces, and the field stays quoted", () => {
+      assertSuccess(
+        readOf('"a"  b",c\n'),
+        read([['a"  b', "c"]], [TextAfterClosingQuote.make({ at: at(5, 1, 0, 5), record: 0, field: 0 })])
+      );
+    });
+
+    it("a quote after the spaces opens a doubled-quote check, and the text after it is reported too", () => {
+      assertSuccess(
+        readOf('"a" "b",c\n'),
+        read(
+          [['a" "b', "c"]],
+          [
+            TextAfterClosingQuote.make({ at: at(4, 1, 0, 4), record: 0, field: 0 }),
+            TextAfterClosingQuote.make({ at: at(5, 1, 0, 5), record: 0, field: 0 }),
+          ]
+        )
+      );
+    });
+
+    it("the spaces are dropped before a line break and at the end of the input", () => {
+      assertSuccess(readOf('"a"  \nb\n'), read([["a"], ["b"]]));
+      assertSuccess(readOf('"a"  '), read([["a"]]));
+    });
+
+    it("a strict read refuses text after a closing quote, with or without spaces, and spaces at the end", () => {
+      assertFailure(findingsOf('"a"b\n', strict), [
+        TextAfterClosingQuote.make({ at: at(3, 1, 0, 3), record: 0, field: 0 }),
+      ]);
+      assertFailure(findingsOf('"a"  b\n', strict), [
+        TextAfterClosingQuote.make({ at: at(5, 1, 0, 5), record: 0, field: 0 }),
+      ]);
+      assertFailure(findingsOf('"a"  ', strict), [
+        TextAfterClosingQuote.make({ at: at(5, 1, 0, 5), record: 0, field: 0 }),
+      ]);
+    });
+
+    it("the kept quote and spaces count toward the field-length cap", () => {
+      const capped = readWithRules(",", { limits: CsvLimits.make({ maxFieldLength: 3 }) });
+      assertFailure(findingsOf('"ab"   x', capped), [
+        LimitExceeded.make({ limit: "fieldLength", maximum: 3, at: at(7, 0, 0, 7) }),
+      ]);
+    });
+  });
+
+  it("a CRLF whose line feed is past the text-length cap is not read", () => {
+    const capped = readWithRules(",", { limits: CsvLimits.make({ maxTextLength: 2 }) });
+    assertFailure(findingsOf("a\r\n", capped), [
+      LimitExceeded.make({ limit: "textLength", maximum: 2, at: at(2, 0, 1, 0) }),
     ]);
   });
 });

@@ -5,17 +5,17 @@
  * @since 0.0.0
  */
 
+import { Csv } from "@beep/csv/Csv.codec";
+import { CsvCodecOptions } from "@beep/csv/CsvOptions.schema";
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { DocketIntakeError, DocketTrackedDates, TrackedDate } from "@beep/law-practice-use-cases/DocketIntake";
-import { parseCsvRows } from "@beep/schema/CsvParser";
 import { LocalDateFromString } from "@beep/schema/LocalDate";
-import { ParserOptions } from "@beep/schema/ParserOptions";
 import { thunkEmptyStr } from "@beep/utils";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { identity, pipe } from "effect/Function";
+import { flow, identity, pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as Match from "effect/Match";
 import * as Num from "effect/Number";
@@ -134,10 +134,8 @@ type SheetEntry = {
 
 type ParsedSheet = { readonly entries: ReadonlyArray<SheetEntry>; readonly unparsedDates: number };
 
-const parserOptions = ParserOptions.new({ ignoreEmpty: true });
-
-// A spreadsheet's "CSV UTF-8" export starts with a byte-order mark; most decoders drop it, this makes sure.
-const BYTE_ORDER_MARK = /^\uFEFF/u;
+// A row of only blank cells (a spreadsheet's empty line) carries nothing to cross-check.
+const hasContent = (cells: ReadonlyArray<string>): boolean => A.some(cells, flow(Str.trim, Str.isNonEmpty));
 
 // Dockets compare without case or spaces.
 const normalizedDocket = (value: string): string => Str.toUpperCase(Str.replaceAll(" ", "")(Str.trim(value)));
@@ -162,9 +160,11 @@ const entryOf = (row: DocketSheetRow): O.Option<SheetEntry> =>
   }));
 
 const parseSheet = Effect.fnUntraced(function* (text: string): Effect.fn.Return<ParsedSheet, DocketIntakeError> {
-  const rows = yield* parseCsvRows(Str.replace(BYTE_ORDER_MARK, "")(text), parserOptions).pipe(
+  // The comma-fixed lenient read drops a spreadsheet's "CSV UTF-8" byte-order mark itself.
+  const read = yield* Csv.parse(text, CsvCodecOptions.default.read).pipe(
     Effect.mapError(sheetFailure("docket-sheet-invalid"))
   );
+  const rows = A.filter(read.table.records, hasContent);
   const [header, ...data] = A.match(rows, {
     onEmpty: (): A.NonEmptyReadonlyArray<ReadonlyArray<string>> => [[]],
     onNonEmpty: (nonEmpty) => nonEmpty,

@@ -4,13 +4,14 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $SchemaId } from "@beep/identity/packages";
+
 import { thunkEmptyStr } from "@beep/utils";
 import * as A from "effect/Array";
 import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { $SchemaId } from "./internal/SchemaId.ts";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 import {
   TerritoryCodeFromName as TerritoryCodeFromNameSchema,

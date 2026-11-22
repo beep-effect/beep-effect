@@ -5,7 +5,6 @@
  * @packageDocumentation
  */
 
-import { $SchemaId } from "@beep/identity";
 import { A } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
@@ -24,6 +23,7 @@ import { ContentSecurityPolicyHeader, ContentSecurityPolicyOption } from "../Csp
 import { ExpectCTHeader, ExpectCTOption } from "../ExpectCt/index.ts";
 import { ForceHttpsRedirectHeader, ForceHttpsRedirectOption } from "../ForceHttpsRedirect/index.ts";
 import { FrameGuardHeader, FrameGuardOption } from "../FrameGuard/index.ts";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import { NoOpenHeader, NoOpenOption } from "../NoOpen/index.ts";
 import { NoSniffHeader, NoSniffOption } from "../NoSniff/index.ts";
 import { PermissionsPolicyHeader, PermissionsPolicyOption } from "../PermissionsPolicy/index.ts";

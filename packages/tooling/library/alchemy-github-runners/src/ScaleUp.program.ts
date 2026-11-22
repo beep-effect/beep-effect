@@ -14,7 +14,6 @@
  * @since 0.0.0
  */
 
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
@@ -30,6 +29,7 @@ import { FleetLaunchRequest, FleetOverride } from "./Ec2Fleet.models.ts";
 import { Ec2Fleet } from "./Ec2Fleet.service.ts";
 import { GitHubRunners } from "./GitHubApp.service.ts";
 import { JitConfigRequest, RunnerOwner } from "./GitHubRunners.models.ts";
+import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import { installationTokenFor, ownerOf } from "./internal/Installation.ts";
 import { MessageQueue } from "./MessageQueue.service.ts";
 import { RunnerFilter, RunnerTag, runnerApplicationTagValue } from "./RunnerInstance.models.ts";

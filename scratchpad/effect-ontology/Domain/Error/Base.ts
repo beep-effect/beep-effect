@@ -11,7 +11,7 @@
  * @since 0.0.0
  */
 import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import { URLStr } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";

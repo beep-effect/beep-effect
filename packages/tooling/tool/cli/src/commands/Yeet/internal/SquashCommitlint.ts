@@ -40,7 +40,7 @@ import { $RepoCliId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
-import { flow } from "effect/Function";
+import { dual, flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as Result from "effect/Result";
@@ -394,6 +394,77 @@ export const SQUASH_COMMIT_SUBJECT_MAX_LENGTH = COMMITLINT_MAX_LINE_LENGTH - 2;
  */
 export const squashPullRequestTitleMaxLength = (prNumber: number): number =>
   COMMITLINT_MAX_LINE_LENGTH - Str.length(` (#${prNumber})`);
+
+/**
+ * The squash header every Yeet merge pins as `commit_title`: `<PR title> (#n)`.
+ *
+ * **Gotchas**
+ *
+ * Without a `commit_title` GitHub composes the header from the repository's
+ * `COMMIT_OR_PR_TITLE` default, which for a single-commit pull request is the
+ * commit's subject, not the PR title: a title edited after the commit never
+ * reaches the squash (#3441, 2026-11-20, a 108-character header on `main`).
+ *
+ * **Example** (Pin a header)
+ *
+ * ```ts
+ * import { pinnedSquashCommitTitle } from "@beep/repo-cli/test/Yeet"
+ *
+ * console.log(pinnedSquashCommitTitle("fix(x): y", 7)) // "fix(x): y (#7)"
+ * ```
+ *
+ * @param title - The PR title, as GitHub reports it.
+ * @param prNumber - The pull request number the header suffix carries.
+ * @returns The header the merge request sends.
+ * @category formatting
+ * @since 0.0.0
+ */
+export const pinnedSquashCommitTitle: {
+  (title: string, prNumber: number): string;
+  (prNumber: number): (title: string) => string;
+} = dual(2, (title: string, prNumber: number): string => `${title} (#${prNumber})`);
+
+/**
+ * Why a linted squash header no longer matches the PR title read again just
+ * before the merge request, if it does not.
+ *
+ * **Details**
+ *
+ * The merge sends the linted header; a title edited between the lint and the
+ * request would otherwise land unseen as the stale header. A drift refuses the
+ * merge so the next run lints the new title.
+ *
+ * **Example** (A title edited after the lint)
+ *
+ * ```ts
+ * import { SquashCommitMessage, squashTitleDrift } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
+ *
+ * const linted = SquashCommitMessage.make({ header: "fix: old (#7)", body: "" })
+ * console.log(O.isSome(squashTitleDrift(linted, 7, "fix: new"))) // true
+ * console.log(O.isNone(squashTitleDrift(linted, 7, "fix: old"))) // true
+ * ```
+ *
+ * @param linted - The message whose commitlint verdict admitted the merge.
+ * @param prNumber - The pull request about to merge.
+ * @param freshTitle - The PR title read immediately before the merge request.
+ * @returns The refusal detail, or None when the header still matches.
+ * @category workflows
+ * @since 0.0.0
+ */
+export const squashTitleDrift: {
+  (linted: SquashCommitMessage, prNumber: number, freshTitle: string): O.Option<string>;
+  (prNumber: number, freshTitle: string): (linted: SquashCommitMessage) => O.Option<string>;
+} = dual(
+  3,
+  (linted: SquashCommitMessage, prNumber: number, freshTitle: string): O.Option<string> =>
+    O.liftPredicate(pinnedSquashCommitTitle(freshTitle, prNumber), (header) => header !== linted.header).pipe(
+      O.map(
+        (header) =>
+          `the PR title changed after the squash message was linted: linted "${linted.header}", now "${header}"; re-run the merge to lint the new title`
+      )
+    )
+);
 
 /**
  * One line of the predicted message that is longer than the commitlint limit.
@@ -946,7 +1017,7 @@ export const readSquashCommitlint = Effect.fn("Yeet.readSquashCommitlint")(funct
       body: O.getOrElse(facts.body, () => Str.empty),
       commitMessages: A.map(commits, (entry) => entry.commit.message),
       defaults,
-      commitTitle: sent ? O.some(`${facts.title} (#${facts.number})`) : O.none(),
+      commitTitle: sent ? O.some(pinnedSquashCommitTitle(facts.title, facts.number)) : O.none(),
     })
   );
   // Prediction remains GitHub's unchanged default. The merge pins this explicit

@@ -13,7 +13,7 @@
  * @since 0.0.0
  */
 
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";

@@ -12,7 +12,7 @@ import { pipe } from "effect/Function";
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { IRI } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
 import * as A from "effect/Array";
 import * as Chunk from "effect/Chunk";
 import * as Context from "effect/Context";
@@ -35,7 +35,7 @@ const $I = $ScratchpadId.create("effect-ontology/Service/RelationLinker");
  * **Example** (Remap a subject to its canonical entity)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Relation, RelationObject } from "@effect-ontology/Model/Entity"
  * import { EntityId } from "@effect-ontology/Model/shared"
  * import { LinkedRelation } from "@effect-ontology/Service/RelationLinker"

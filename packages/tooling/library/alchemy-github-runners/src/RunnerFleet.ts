@@ -24,7 +24,6 @@ import * as S3 from "@alchemy.run/aws/S3";
 import * as SQS from "@alchemy.run/aws/SQS";
 import * as SSM from "@alchemy.run/aws/SSM";
 import { RunnerLaunchTemplate } from "@beep/alchemy-aws-extras/RunnerLaunchTemplate";
-import { $AlchemyGithubRunnersId } from "@beep/identity/packages";
 import * as Namespace from "alchemy/Namespace";
 import * as Output from "alchemy/Output";
 import * as A from "effect/Array";
@@ -34,6 +33,7 @@ import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
 import { instanceStateChangeDetailType, spotInterruptionWarningDetailType } from "./Ec2Events.models.ts";
+import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import { FleetNamePrefix, fleetResourceNames, poolResourceNames } from "./RunnerFleetNames.ts";
 import { RunnerPool, RunnerType } from "./RunnerPool.models.ts";
 import {
@@ -644,6 +644,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         handler: "handler",
         functionUrl: false,
         timeout: Duration.minutes(5),
+        // Lambda's 128 MB default left 8 MB free (peak 120 MB, 2026-11-20); its work grows with the token count.
+        memorySize: 256,
         logging,
         env: {
           [runtimeConfigEnvName]: yield* encodeHousekeeper(
@@ -701,8 +703,10 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
       yield* syncer.bind(
         "RunnerBinariesSyncer",
         lambdaRole([
+          // The mirror is a multipart upload: s3:PutObject covers create, part and complete; a failed upload is
+          // aborted, which needs s3:AbortMultipartUpload, or its parts would stay in the bucket.
           allow({
-            actions: ["s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"],
+            actions: ["s3:AbortMultipartUpload", "s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"],
             resources: [Output.interpolate`${binaries.bucketArn}/${runnerTarballKey}`],
           }),
         ])
@@ -732,6 +736,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         handler: "handler",
         functionUrl: false,
         timeout: Duration.seconds(60),
+        // Lambda's 128 MB default left 2 MB free (peak 126 MB over 1,186 runs, 2026-11-20).
+        memorySize: 256,
         logging,
         env: { [runtimeConfigEnvName]: watcherConfig },
       });

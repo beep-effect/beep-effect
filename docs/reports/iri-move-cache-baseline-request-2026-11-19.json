@@ -1,0 +1,17 @@
+{
+  "previous": {
+    "@beep/documents-domain": "37f9c7bace7f710907d727d9d0239c92e15aa6f288e786be42c560584363e162"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 L0 identity lane, goals/text-knowledge-stack-rebuild-p1-l0-identity)",
+    "reason": "Record @beep/documents-domain after the IRI schema move dropped its @beep/rdf dependency, removing the @beep/rdf#build and #transit edges from build, check, lint:deprecated-apis and test. No qualification is granted.",
+    "basis": {
+      "path": "docs/reports/iri-move-cache-review-2026-11-19.md",
+      "sha256": "1d6e816d42ff497cb262d80c809337858a11c2b8bdddb19056237c9b55dc8721"
+    }
+  },
+  "subjects": ["@beep/documents-domain"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}

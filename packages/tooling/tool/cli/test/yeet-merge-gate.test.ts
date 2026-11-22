@@ -4,6 +4,7 @@ import { reviewerCheckExternalId } from "@beep/repo-cli/commands/Reviewer";
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import {
   decideMergeGate,
+  executeMergeGate,
   GateTableCommandOptions,
   GateTableReportJson,
   HeadSuiteCheck,
@@ -18,6 +19,7 @@ import {
   MergeGateCommandOptions,
   MergeGateHold,
   MergeGateInput,
+  MergeGateMerge,
   MergeGateOptions,
   MergeGateRead,
   MergeGateRunOptions,
@@ -2082,6 +2084,60 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, gitLayer, TestCons
             expect(merge.value).toContain(`commit_title=${pullFixture.title} (#${pullFixture.number})`);
             expect(merge.value).toContain("commit_message=The one commit.");
           }
+        })
+      )
+    );
+
+    // #3441: one commit whose subject is the original title, and the PR retitled after it.
+    // GitHub's single-commit default is that subject; the gate must pin the retitled header.
+    const retitled = "fix(yeet): pin the retitled header";
+    it.effect("a retitled single-commit PR squash-merges with the fresh title, never the commit subject", () =>
+      withScriptedGh(
+        {
+          ...defaultScript,
+          pull: { ...pullFixture, title: retitled },
+          commits: [`${pullFixture.title}\n\nThe one commit.`],
+        },
+        (_calls, github) =>
+          Effect.gen(function* () {
+            const decision = yield* runMergeGate(
+              context,
+              MergeGateRunOptions.make({
+                prNumber: pullFixture.number,
+                wantSha: headSha,
+                tolerate: [],
+                forceWindow: false,
+                relaxed: false,
+                dryRun: false,
+              })
+            );
+            expect(decision._tag).toBe("merge");
+            const request = A.findFirst(github, (call) => call.method === "PUT");
+            request.pipe(O.isSome, assertTrue);
+            if (O.isSome(request))
+              expect(request.value.body).toMatchObject({ commit_title: `${retitled} (#${pullFixture.number})` });
+          })
+      )
+    );
+
+    it.effect("a title edited after the lint holds as title-changed and sends no merge", () =>
+      withScriptedGh({ ...defaultScript, pull: { ...pullFixture, title: retitled } }, (calls) =>
+        Effect.gen(function* () {
+          const executed = yield* executeMergeGate(
+            MergeGateMerge.make({
+              prNumber: pullFixture.number,
+              headSha,
+              commitTitle: `${pullFixture.title} (#${pullFixture.number})`,
+              commitMessage: "The one commit.",
+              windowAgeSeconds: 1260,
+              tolerated: [],
+              relaxed: false,
+              atMerge: [],
+            })
+          );
+          expect(executed).toMatchObject({ _tag: "hold", reason: "title-changed" });
+          const mergeSent = yield* mergeWasSent(calls);
+          expect(mergeSent).toBe(false);
         })
       )
     );

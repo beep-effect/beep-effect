@@ -86,6 +86,22 @@ export * from "./Id.ts";
  */
 export * from "./IdentityRegistry.ts";
 /**
+ * RFC 3987 IRI, IRI-reference, relative-reference, and absolute-IRI schemas.
+ *
+ * **Example** (Decode an RFC 3987 IRI)
+ *
+ * ```ts import.meta.vitest name="Decode an RFC 3987 IRI"
+ * import { IRI } from "@beep/identity/Iri"
+ * import * as S from "effect/Schema"
+ *
+ * S.decodeUnknownSync(IRI)("https://example.org/page#section") // => "https://example.org/page#section"
+ * ```
+ *
+ * @category validation
+ * @since 0.0.0
+ */
+export * from "./Iri.ts";
+/**
  * Turtle PN_LOCAL parser-side helpers and safe emission fallback.
  *
  * **Example** (Emit prefixed name or IRI)
@@ -118,6 +134,21 @@ export * from "./PnLocal.ts";
  * @since 0.0.0
  */
 export * from "./packages.ts";
+/**
+ * Registry-free root composer for package-local leaves in deployed bundles.
+ *
+ * **Example** (Derive a leaf composer)
+ *
+ * ```ts
+ * import { $BeepId } from "@beep/identity/Root"
+ *
+ * console.log($BeepId.create("schema").make("Email"))
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export * from "./Root.ts";
 /**
  * Static borrowed vocabulary registry and literal CURIE type helpers.
  *

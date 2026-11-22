@@ -18,13 +18,13 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { dual, pipe } from "effect/Function";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import * as SchemaAST from "effect/SchemaAST";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import { visitStructuralChildren } from "../SchemaUtils/collectAnnotationsAt.ts";
 

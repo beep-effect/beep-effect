@@ -6,6 +6,7 @@
  * @packageDocumentation
  */
 
+import { IRIReference } from "@beep/identity/Iri";
 import { $RdfId } from "@beep/identity/packages";
 import * as O from "@beep/utils/Option";
 import * as Effect from "effect/Effect";
@@ -21,7 +22,6 @@ import {
   TextPositionSelector,
   TextQuoteSelector,
 } from "../Evidence.ts";
-import { IRIReference } from "../Iri.ts";
 import { makeSemanticSchemaMetadata } from "../SemanticSchemaMetadata/index.ts";
 
 const $I = $RdfId.create("adapters/web-annotation");

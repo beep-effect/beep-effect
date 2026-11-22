@@ -3,8 +3,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { IRIReference } from "@beep/identity/Iri";
 import { $OntologyId } from "@beep/identity/packages";
-import { IRIReference } from "@beep/rdf";
 import { LiteralKit } from "@beep/schema";
 import * as S from "effect/Schema";
 import { ConceptAlignment } from "./SemanticFoundation.models.ts";

@@ -3,8 +3,9 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { IRIReference } from "@beep/identity/Iri";
 import { $OntologyId } from "@beep/identity/packages";
-import { IRIReference } from "@beep/rdf";
 import * as A from "effect/Array";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";

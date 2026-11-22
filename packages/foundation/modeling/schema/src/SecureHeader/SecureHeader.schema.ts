@@ -3,7 +3,7 @@
  * @since 0.0.0
  * @packageDocumentation
  */
-import { $SchemaId } from "@beep/identity";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import { LiteralKit } from "../LiteralKit/index.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 

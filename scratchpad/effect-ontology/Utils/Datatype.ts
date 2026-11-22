@@ -11,7 +11,8 @@
  */
 
 import { $ScratchpadId } from "@beep/identity";
-import { IRI, makeNamedNode } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
+import { makeNamedNode } from "@beep/rdf";
 import { XSD_BOOLEAN, XSD_DOUBLE, XSD_INTEGER, XSD_NAMESPACE, XSD_STRING } from "@beep/rdf/Vocab/Xsd";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
@@ -29,7 +30,7 @@ const $I = $ScratchpadId.create("effect-ontology/Utils/Datatype");
  * **Example** (Construct a normalized value)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { NormalizedValue } from "@effect-ontology/Utils/Datatype"
  *
  * const normalized = NormalizedValue.make({

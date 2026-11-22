@@ -65,7 +65,7 @@ import { simpleTokenize } from "../Utils/String.ts";
  * **Example** (Cluster two similar people without embeddings)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import * as Effect from "effect/Effect";
  * import * as HashMap from "effect/HashMap";
  * import * as Layer from "effect/Layer";
@@ -406,7 +406,7 @@ const mergeClusterToResolved = (cluster: EntityCluster): ResolvedEntity => {
  * **Example** (Build a resolution graph from two people)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import * as Effect from "effect/Effect";
  * import * as Layer from "effect/Layer";
  * import * as O from "effect/Option"

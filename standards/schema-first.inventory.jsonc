@@ -1,6 +1,6 @@
 {
   "version": 1,
-  "generatedOn": "2026-11-18",
+  "generatedOn": "2026-11-20",
   "scope": [
     "apps/**/*.{ts,tsx}",
     "packages/**/*.{ts,tsx}",
@@ -2392,14 +2392,6 @@
       "status": "exception",
       "owner": "@beep/repo-cli",
       "reason": "Mixed strategy contract: access, description, id, and sourceUrls are modeled by SyncDataTargetMetadata, while acquire remains an Effect."
-    },
-    {
-      "file": "packages/tooling/tool/cli/src/commands/SyncDataToTs/internal/Source.ts",
-      "symbol": "ParsedCsvRow",
-      "kind": "plain-data-schema-class",
-      "status": "exception",
-      "owner": "@beep/repo-cli",
-      "reason": "Plain data whose fields come from runtime CSV header columns inside a function (rowFields), which the schema-opaque-default codemod could not classify (keep reason fields-expression-unknown), so it stays a branded S.Class. Follow-up: convert by hand to a branded S.Opaque over that struct."
     },
     {
       "file": "packages/tooling/tool/cli/src/commands/Yeet/internal/Reply.schemas.ts",

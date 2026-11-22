@@ -4,11 +4,12 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { $SchemaId } from "@beep/identity";
+
 import { O } from "@beep/utils";
 import * as Brand from "effect/Brand";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
+import { $SchemaId } from "./internal/SchemaId.ts";
 import * as SchemaUtils from "./SchemaUtils/index.ts";
 
 const decodeURLFromStringOption = S.decodeOption(S.URLFromString);

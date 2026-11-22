@@ -299,7 +299,7 @@ export const buildRunConfig = dual3(
  * **Example** (Stamp a document id onto an extracted entity)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import * as DateTime from "effect/DateTime";
  * import * as O from "effect/Option"
  * import { BatchId, DocumentId, GcsUri, Namespace, OntologyName } from "@effect-ontology/Identity"

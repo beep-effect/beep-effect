@@ -5,9 +5,9 @@
  * @since 0.0.0
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import * as S from "effect/Schema";
 import { ProtobufNumber } from "./internal/ProtobufNumber.ts";
+import { $SchemaId } from "./internal/SchemaId.ts";
 
 const $I = $SchemaId.create("Double");
 

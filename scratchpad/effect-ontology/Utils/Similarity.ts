@@ -26,7 +26,7 @@ import { combinedSimilarity, jaccardSimilarity, overlapRatio } from "./String.ts
  * **Example** (Collect outgoing neighbors and skip self-links)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Relation, RelationObject } from "@effect-ontology/Domain/Model/Entity"
  * import { EntityId } from "@effect-ontology/Domain/Model/shared"
  * import { getNeighbors } from "@effect-ontology/Utils/Similarity"
@@ -100,7 +100,7 @@ export const getNeighbors = dual2(
  * **Example** (Score two person mentions)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Entity } from "@effect-ontology/Domain/Model/Entity"
  * import { EntityResolutionConfig } from "@effect-ontology/Domain/Model/EntityResolution"
  * import { EntityId } from "@effect-ontology/Domain/Model/shared"
@@ -230,7 +230,7 @@ export const computeEntitySimilarity = dual6(
  * **Example** (Reject disjoint types unless embedding is near-duplicate)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import { Entity } from "@effect-ontology/Domain/Model/Entity"
  * import { EntityResolutionConfig } from "@effect-ontology/Domain/Model/EntityResolution"
@@ -296,7 +296,7 @@ export const shouldConsiderMerge = dual6(
  * **Example** (Detect containment between mentions)
  *
  * ```ts
- * import { IRI } from "@beep/rdf"
+ * import { IRI } from "@beep/identity/Iri"
  * import { Entity } from "@effect-ontology/Domain/Model/Entity"
  * import { EntityId } from "@effect-ontology/Domain/Model/shared"
  * import { detectResolutionMethod } from "@effect-ontology/Utils/Similarity"

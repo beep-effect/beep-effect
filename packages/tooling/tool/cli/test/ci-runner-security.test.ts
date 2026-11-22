@@ -1951,15 +1951,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
 
       // Pull requests never publish a cache entry. The SHA-keyed post-lane
       // Turbo fallback was write-only (audit M13: 589 entries, 7.4 GB, zero
-      // restores), so the main Docgen cache and the push-only Playwright
-      // browsers are the only saves left, both push-gated.
+      // restores), so the main Docgen cache, the main Turbo build snapshot and
+      // the push-only Playwright browsers are the only saves left, all
+      // push-gated.
       const checkJobs = yield* workflowJobs(workflow);
       const heavyJobs = yield* workflowJobs(heavyWorkflow);
       const storybookJobs = yield* workflowJobs(policy.storybook);
       assert.deepStrictEqual(cacheSaveSteps(checkJobs), []);
       assert.deepStrictEqual(
         cacheSaveSteps(heavyJobs),
-        A.map(["verify", "check", "docgen", "doctest", "build"], (job) => `${job}/Save main Docgen Turbo cache`)
+        A.flatMap(["verify", "check", "docgen", "doctest", "build"], (job) => [
+          `${job}/Save main Docgen Turbo cache`,
+          `${job}/Save main Turbo build cache`,
+        ])
       );
       assert.deepStrictEqual(cacheSaveSteps(storybookJobs), ["storybook/Save Playwright Chromium cache"]);
       assert.include(
@@ -2412,6 +2416,194 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       assert.strictEqual(
         save.with?.key,
         "turbo-${{ runner.os }}-docgen-main-${{ hashFiles('bun.lock') }}-${{ github.sha }}"
+      );
+    })
+  );
+
+  // The main Turbo build snapshot: pull requests restore it, only a push to
+  // main saves it, and nothing about it reaches Turbo's task hashing.
+  const turboBuildCacheAction = "./.github/actions/turbo-build-cache";
+  const turboBuildCachePushToMain = "github.event_name == 'push' && github.ref == 'refs/heads/main'";
+  const readRepoText = Effect.fnUntraced(function* (relative: string) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const repoRoot = yield* findRepoRoot();
+    return yield* fs.readFileString(path.join(repoRoot, relative));
+  });
+
+  it.effect(
+    "keeps the Turbo build-cache action restore-only on pull requests and out of Turbo hashing",
+    Effect.fnUntraced(function* () {
+      const actionText = yield* readRepoText(".github/actions/turbo-build-cache/action.yml");
+      const actionSteps = yield* decodeWorkflowSteps(yamlAt(parseWorkflowYaml(actionText), ["runs", "steps"]));
+
+      // Check 1: the shared action never saves. Its restore acts only on pull
+      // requests and its prune only on a push to main.
+      const usesOf = (step: (typeof actionSteps)[number]) => step.uses ?? "";
+      assert.deepStrictEqual(
+        A.filter(actionSteps, (step) =>
+          A.some(["actions/cache@", "actions/cache/save@"], (prefix) => Str.startsWith(prefix)(usesOf(step)))
+        ),
+        []
+      );
+      const restore = stepByName(actionSteps, "Restore main Turbo build cache");
+      assert.strictEqual(restore.uses, "actions/cache/restore@55cc8345863c7cc4c66a329aec7e433d2d1c52a9");
+      assert.strictEqual(restore.if, "inputs.operation == 'restore' && github.event_name == 'pull_request'");
+      assert.deepStrictEqual(restore.with, {
+        path: ".turbo/cache",
+        key: "${{ steps.key.outputs.key }}",
+        "restore-keys": "${{ steps.key.outputs.prefix }}",
+      });
+      const pruneName = "Prune Turbo cache to environment-free build artifacts";
+      assert.strictEqual(
+        stepByName(actionSteps, pruneName).if,
+        `inputs.operation == 'prune' && ${turboBuildCachePushToMain}`
+      );
+      assert.include(
+        stepRun(actionSteps, "Resolve Turbo build cache key"),
+        'prefix="turbo-${RUNNER_OS}-build-outputs-main-"'
+      );
+      // The snapshot never carries a task that reads environment values.
+      const pruneRun = stepRun(actionSteps, pruneName);
+      assert.include(pruneRun, 'select(.task == "build" and .envMode == "strict")');
+      for (const field of ["specified.env", "specified.passThroughEnv", "configured", "inferred", "passthrough"]) {
+        assert.include(pruneRun, `.environmentVariables.${field} // []`);
+      }
+
+      // Check 2: no Turbo input, output, environment or hashing knob. The
+      // action exports nothing to the job environment and names no Turbo
+      // configuration; it only moves files under .turbo/cache.
+      assert.notInclude(actionText, "GITHUB_ENV");
+      assert.notInclude(actionText, "turbo.json");
+      assert.notMatch(actionText, /\bTURBO_[A-Z_]+/u);
+    })
+  );
+
+  it.effect(
+    "prunes the Turbo build snapshot to the three exact file names of each kept hash",
+    Effect.fnUntraced(function* () {
+      const fs = yield* FileSystem.FileSystem;
+      const path = yield* Path.Path;
+      const tempRoot = yield* fs.makeTempDirectoryScoped();
+      const actionText = yield* readRepoText(".github/actions/turbo-build-cache/action.yml");
+      const actionSteps = yield* decodeWorkflowSteps(yamlAt(parseWorkflowYaml(actionText), ["runs", "steps"]));
+      const run = stepRun(actionSteps, "Prune Turbo cache to environment-free build artifacts");
+      // A Turbo run summary with one environment-free build (kept) and one that hashes a variable (dropped).
+      const noEnv = '"configured":[],"inferred":[],"passthrough":[]';
+      const summaryJson = A.join(
+        [
+          '{"tasks":[',
+          `{"task":"build","envMode":"strict","hash":"aaaa1111","environmentVariables":{"specified":{"env":[],"passThroughEnv":[]},${noEnv}}},`,
+          `{"task":"build","envMode":"strict","hash":"bbbb2222","environmentVariables":{"specified":{"env":["APP_SECRET"],"passThroughEnv":[]},${noEnv}}}`,
+          "]}",
+        ],
+        ""
+      );
+      yield* fs.makeDirectory(path.join(tempRoot, ".turbo", "runs"), { recursive: true });
+      yield* fs.makeDirectory(path.join(tempRoot, ".turbo", "cache"), { recursive: true });
+      yield* fs.writeFileString(path.join(tempRoot, ".turbo", "runs", "summary.json"), summaryJson);
+      const cacheFiles = [
+        "aaaa1111.tar.zst",
+        "aaaa1111-meta.json",
+        "aaaa1111-manifest.json",
+        "aaaa1111-manifest.json.tmp",
+        "aaaa1111.tar.zst.tmp",
+        "aaaa1111.unknown",
+        "bbbb2222.tar.zst",
+        "cccc3333-meta.json",
+      ];
+      yield* Effect.forEach(
+        cacheFiles,
+        (name) => fs.writeFileString(path.join(tempRoot, ".turbo", "cache", name), name),
+        {
+          concurrency: 1,
+          discard: true,
+        }
+      );
+      const outputFile = path.join(tempRoot, "github-output");
+      const result = Bun.spawnSync(["bash", "-c", run], {
+        cwd: tempRoot,
+        env: { ...process.env, GITHUB_OUTPUT: outputFile, MAX_SNAPSHOT_MIB: "64" },
+        stderr: "pipe",
+        stdout: "pipe",
+      });
+      assert.strictEqual(result.exitCode, 0, result.stderr.toString());
+      const kept = yield* fs.readDirectory(path.join(tempRoot, ".turbo", "cache"));
+      assert.deepStrictEqual(A.sort(kept, Order.String), [
+        "aaaa1111-manifest.json",
+        "aaaa1111-meta.json",
+        "aaaa1111.tar.zst",
+      ]);
+      const output = yield* fs.readFileString(outputFile);
+      assert.include(output, "ready=true");
+      assert.include(result.stdout.toString(), "3 files kept, 5 removed");
+    })
+  );
+
+  it.effect(
+    "restores the Turbo build snapshot in Heavy Check and Build and saves it only from a main push of Check",
+    Effect.fnUntraced(function* () {
+      const heavyText = yield* readRepoText(".github/workflows/heavy.yml");
+      const heavyJobs = yield* workflowJobs(parseWorkflowYaml(heavyText));
+      const heavySteps = jobSteps(heavyJobs, "check");
+      const heavyRestore = stepByName(heavySteps, "Restore main Turbo build cache");
+      assert.strictEqual(heavyRestore.uses, turboBuildCacheAction);
+      assert.deepStrictEqual(heavyRestore.with, { operation: "restore" });
+      assert.strictEqual(
+        heavyRestore.if,
+        "(env.BEEP_CI_LANE_ID == 'check' || env.BEEP_CI_LANE_ID == 'build') && github.event_name == 'pull_request' && hashFiles('.github/actions/turbo-build-cache/action.yml') != ''"
+      );
+      const heavyPrune = stepByName(heavySteps, "Prune main Turbo build cache");
+      assert.strictEqual(heavyPrune.uses, turboBuildCacheAction);
+      assert.deepStrictEqual(heavyPrune.with, { operation: "prune" });
+      assert.strictEqual(heavyPrune.if, `env.BEEP_CI_LANE_ID == 'check' && ${turboBuildCachePushToMain}`);
+      const heavySave = stepByName(heavySteps, "Save main Turbo build cache");
+      assert.strictEqual(heavySave.uses, "actions/cache/save@55cc8345863c7cc4c66a329aec7e433d2d1c52a9");
+      assert.strictEqual(
+        heavySave.if,
+        `env.BEEP_CI_LANE_ID == 'check' && ${turboBuildCachePushToMain} && steps.turbo-build-cache.outputs.ready == 'true'`
+      );
+      assert.deepStrictEqual(heavySave.with, {
+        path: ".turbo/cache",
+        key: "${{ steps.turbo-build-cache.outputs.key }}",
+      });
+      const order = A.map(
+        [
+          "Setup monorepo CI",
+          "Restore main Turbo build cache",
+          "Run verification lane",
+          "Prune main Turbo build cache",
+          "Save main Turbo build cache",
+        ],
+        (name) => stepIndexByName(heavySteps, name)
+      );
+      assert.deepStrictEqual(order, A.sort(order, Order.Number));
+    })
+  );
+
+  it.effect(
+    "restores the Turbo build snapshot in check.yml only on pull requests and never saves it there",
+    Effect.fnUntraced(function* () {
+      const checkText = yield* readRepoText(".github/workflows/check.yml");
+      const checkJobs = yield* workflowJobs(parseWorkflowYaml(checkText));
+      const stepsOf = (job: (typeof checkJobs)[string]) => job.steps ?? [];
+      const consumerSteps = A.flatMap(R.toEntries(checkJobs), ([jobId, job]) =>
+        A.map(
+          A.filter(stepsOf(job), (step) => step.uses === turboBuildCacheAction),
+          (step) => ({
+            jobId,
+            operation: step.with?.operation,
+            onPullRequest: Str.includes("github.event_name == 'pull_request'")(step.if ?? ""),
+          })
+        )
+      );
+      assert.deepStrictEqual(consumerSteps, [
+        { jobId: "labs", operation: "restore", onPullRequest: true },
+        { jobId: "test-integration-shard", operation: "restore", onPullRequest: true },
+      ]);
+      assert.include(
+        stepByName(jobSteps(checkJobs, "test-integration-shard"), "Restore main Turbo build cache").if,
+        "matrix.partition == 'int-rest'"
       );
     })
   );
@@ -2967,16 +3159,19 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         );
         yield* fs.chmod(`${stubs}/gh`, 0o755);
         // The sync path fetches and adds a worktree of the pin-bump branch; the fixture has no remote, so
-        // those are recorded no-ops and `beep ci binary-pin-sync` (stubbed above) decides the outcome.
+        // those are recorded no-ops and `beep ci binary-pin-sync` (stubbed above) decides the outcome. The
+        // workflow passes `-c core.hooksPath=<dir>` on the bot checkout's calls: the stub matches on the
+        // argv without `-c` pairs and hands real git the original argv.
         yield* fs.writeFileString(
           `${stubs}/git`,
           A.join(
             [
               "#!/usr/bin/env bash",
+              'original=("$@"); words=(); while [ $# -gt 0 ]; do if [ "$1" = -c ]; then shift 2; else words+=("$1"); shift; fi; done; set -- "${words[@]}"',
               'case "$1" in fetch | worktree) echo "$*" >> "$RUNNER_TEMP/git-calls"; exit 0 ;; esac',
               'case "$1 $2" in "rev-parse refs/remotes/"*) echo 0123456789abcdef0123456789abcdef0badbeef; exit 0 ;; esac',
               'if [ "$1" = -C ] && [ "$3" = config ]; then exit 0; fi',
-              'PATH="${PATH#*:}" exec git "$@"',
+              'PATH="${PATH#*:}" exec git "${original[@]}"',
               "",
             ],
             "\n"

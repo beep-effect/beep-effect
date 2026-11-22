@@ -4,21 +4,23 @@
  *
  * Owner package: `@beep/identity`, which depends on effect only (decision
  * 2026-11-19-p0-l0-split-by-dependency). This file therefore imports only
- * `effect/*` and `@beep/identity/*`, plus `@beep/rdf/Iri` until P1 moves the
- * IRI schemas into identity. The version field is a branded string with a
+ * `effect/*` and `@beep/identity/*`, the RFC 3987 schemas included
+ * (`@beep/identity/Iri`). The version field is a branded string with a
  * local pattern check, and any literal domain here uses `S.Literals`, the
  * standing exception for the bottom package the schema package itself depends
  * on; the registry test cross-checks both against the schema package's
  * version and literal schemas as a test dependency. Namespace pins live in L6 (`@beep/rdf`), gUFO typing in L3
- * (`@beep/ontology`), digests and minting in `L0.digest.ts`.
+ * (`@beep/ontology`). The digest brands and the set codec moved to `@beep/schema`
+ * (`ContentHash`, `CanonicalHashSet`, `WellFormedText`) and minting to `@beep/jsonc`
+ * (`Mint`, `ActivityStart`) in P1.
  *
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { IRI } from "@beep/identity/Iri";
 import { SafePnLocal, SafePnPrefix } from "@beep/identity/PnLocal";
 import { $RepoCliId } from "@beep/identity/packages";
-// P1 moves the RFC 3987 schemas into @beep/identity; the design module reads them from their current home.
-import { IRI } from "@beep/rdf/Iri";
 import { dual } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as S from "effect/Schema";
@@ -50,9 +52,11 @@ export const CodeId = S.String.check(
 export type CodeId = typeof CodeId.Type;
 
 /**
- * A package version `major.minor.patch`, checked locally because identity
- * cannot import the schema package's `SemanticVersion`; the registry test checks
- * every value against that schema.
+ * A vocabulary release `major.minor.patch` of the term snapshot, not a package
+ * version: the snapshot writer bumps the minor on additions and the major on
+ * deprecations, and existing rows keep theirs. Checked locally because identity
+ * cannot import the schema package's `SemanticVersion`; the schema package's tests
+ * check the pattern against that schema.
  */
 export const ReleaseVersion = S.String.check(
   S.isPattern(
@@ -63,7 +67,10 @@ export const ReleaseVersion = S.String.check(
       message: "Expected a version of the form major.minor.patch.",
     })
   )
-).pipe(S.brand("ReleaseVersion"), $I.annoteSchema("ReleaseVersion", { description: "A package release version." }));
+).pipe(
+  S.brand("ReleaseVersion"),
+  $I.annoteSchema("ReleaseVersion", { description: "A vocabulary release of the term snapshot." })
+);
 
 /** Decoded type of {@link ReleaseVersion}. */
 export type ReleaseVersion = typeof ReleaseVersion.Type;
@@ -90,7 +97,7 @@ export class TermBinding extends S.Opaque<TermBinding, { readonly brand: unique 
   S.Struct({
     code: CodeId.annotateKey({ description: "Code identity of the kind today." }),
     term: TermIri.annotateKey({ description: "Published term the code identity is bound to." }),
-    since: ReleaseVersion.annotateKey({ description: "Package version that first published the binding." }),
+    since: ReleaseVersion.annotateKey({ description: "Vocabulary release that first published the binding." }),
   }).pipe(
     $I.annoteSchema("TermBinding", {
       description: "Data-table binding from a code identity to a published term IRI.",
@@ -102,7 +109,7 @@ export class TermBinding extends S.Opaque<TermBinding, { readonly brand: unique 
 export class Deprecation extends S.Opaque<Deprecation, { readonly brand: unique symbol }>()(
   S.Struct({
     term: TermIri.annotateKey({ description: "The deprecated term." }),
-    since: ReleaseVersion.annotateKey({ description: "Version that deprecated the term." }),
+    since: ReleaseVersion.annotateKey({ description: "Vocabulary release that deprecated the term." }),
     replacement: S.OptionFromOptionalKey(TermIri).annotateKey({ description: "Successor term, when one exists." }),
   }).pipe($I.annoteSchema("Deprecation", { description: "A term deprecation with its optional successor." }))
 ) {}

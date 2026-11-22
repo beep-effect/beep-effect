@@ -227,40 +227,33 @@ const fold = (document: Document): MdSectionFold => {
       previous = source.node.level;
     }
   }
-  const nest = (start: number, end: number): ReadonlyArray<MdSection | MdSourceBlock> => {
+  const nest = (blocks: ReadonlyArray<MdSourceBlock>): ReadonlyArray<MdSection | MdSourceBlock> => {
     let children = A.empty<MdSection | MdSourceBlock>();
-    let cursor = start;
-    while (cursor < end) {
-      const sourceAt = A.get(sources, cursor);
-      if (O.isNone(sourceAt)) break;
-      const source = sourceAt.value;
+    let rest = blocks;
+    while (A.isReadonlyArrayNonEmpty(rest)) {
+      const source = A.headNonEmpty(rest);
+      const tail = A.tailNonEmpty(rest);
       if (Heading.is(source.node)) {
         const level = source.node.level;
-        const boundary = A.findFirstIndex(
-          A.take(A.drop(sources, cursor + 1), end - cursor - 1),
-          (next) => Heading.is(next.node) && next.node.level <= level
-        ).pipe(
-          O.map((offset) => cursor + 1 + offset),
-          O.getOrElse(() => end)
-        );
+        const [body, after] = A.span(tail, (next) => !(Heading.is(next.node) && next.node.level <= level));
         children = A.append(
           children,
           MdSection.make({
             type: `${DOCO_NAMESPACE}Section`,
             heading: source,
             level,
-            children: nest(cursor + 1, boundary),
+            children: nest(body),
           })
         );
-        cursor = boundary;
+        rest = after;
       } else {
         children = A.append(children, source);
-        cursor += 1;
+        rest = tail;
       }
     }
     return children;
   };
-  return MdSectionFold.make({ children: nest(0, A.length(sources)), diagnostics });
+  return MdSectionFold.make({ children: nest(sources), diagnostics });
 };
 
 /**

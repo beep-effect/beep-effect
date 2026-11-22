@@ -40,6 +40,7 @@ import {
   runGhPullRequestView,
   runYeetReady,
   runYeetReadyGate,
+  SquashCommitMessage,
   SweepGitState,
   shouldMonitorChecks,
   TurboPlanSnapshot,
@@ -1398,39 +1399,67 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet merge at the p
   const mergedResult: GithubAnswer = {
     body: { status: "merged", details: { message: "Pull request was merged.", sha: MERGE_SHA } },
   };
+  // The #3441 shape: one commit whose subject is the original 100-character title, and the
+  // PR title patched to a shorter one after the commit.
+  const ORIGINAL_TITLE =
+    "docs(infra-alchemy-rebuild): record the m6i.4xlarge re-rule and the role reapply on function updates";
+  const PATCHED_TITLE = "docs(infra-alchemy-rebuild): record the m6i re-rule and function-update role reapply";
+  const LINTED = SquashCommitMessage.make({ header: `${PATCHED_TITLE} (#7)`, body: "Two rulings." });
+  const openPull = restPullRequest({ number: 7, title: PATCHED_TITLE });
+  // The read before the PUT answers `titleRead`; each read after it takes the next of `pulls`.
   const mergeGithub = (
     merge: GithubAnswer,
     pulls: ReadonlyArray<GithubAnswer> = [{ body: mergedPull }],
-    result: GithubAnswer = mergedResult
+    result: GithubAnswer = mergedResult,
+    titleRead: GithubAnswer = { body: openPull }
   ) => {
     let reads = 0;
+    let sent = false;
     return recordedGithub((call) => {
-      if (call.method === "PUT") return merge;
+      if (call.method === "PUT") {
+        sent = true;
+        return merge;
+      }
       if (Str.includes("/merge-async/")(call.path)) return result;
+      if (!sent) return titleRead;
       reads = reads + 1;
       return pulls[Math.min(reads, pulls.length) - 1];
     });
   };
 
-  it.effect("squash-merges once through merge-async at the pinned head with GitHub's own subject, then confirms", () =>
+  it.effect(
+    "squash-merges a retitled single-commit PR once at the pinned head with the fresh title, then confirms",
+    () =>
+      Effect.gen(function* () {
+        const github = mergeGithub(enqueued);
+        const confirmed = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, LINTED, noWait).pipe(github.provide);
+        expect([confirmed.number, confirmed.state]).toEqual([7, "MERGED"]);
+        expect(A.map(github.calls, githubCallLine)).toEqual([
+          "GET {repo}/pulls/7",
+          "PUT {repo}/pulls/7/merge-async",
+          `GET {repo}/pulls/7/merge-async/${UUID}`,
+          "GET {repo}/pulls/7",
+        ]);
+        // GitHub's own single-commit default would be `${ORIGINAL_TITLE} (#7)`, 105 characters.
+        expect(github.calls[1]?.body).toEqual({
+          merge_action: "direct_merge",
+          merge_method: "squash",
+          sha: HEAD_SHA,
+          bypass_rules: false,
+          commit_title: `${PATCHED_TITLE} (#7)`,
+          commit_message: "Two rulings.",
+        });
+      })
+  );
+
+  it.effect("refuses before the PUT when the title changed after the squash message was linted", () =>
     Effect.gen(function* () {
-      const github = mergeGithub(enqueued);
-      const confirmed = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, noWait).pipe(github.provide);
-      expect([confirmed.number, confirmed.state]).toEqual([7, "MERGED"]);
-      expect(A.map(github.calls, githubCallLine)).toEqual([
-        "PUT {repo}/pulls/7/merge-async",
-        `GET {repo}/pulls/7/merge-async/${UUID}`,
-        "GET {repo}/pulls/7",
-      ]);
-      const put = github.calls[0];
-      expect(put?.body).toEqual({
-        merge_action: "direct_merge",
-        merge_method: "squash",
-        sha: HEAD_SHA,
-        bypass_rules: false,
+      const github = mergeGithub(enqueued, [{ body: mergedPull }], mergedResult, {
+        body: restPullRequest({ number: 7, title: ORIGINAL_TITLE }),
       });
-      expect(P.hasProperty(put?.body, "commit_message")).toBe(false);
-      expect(P.hasProperty(put?.body, "commit_title")).toBe(false);
+      const error = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, LINTED, noWait).pipe(Effect.flip, github.provide);
+      expect(error.message).toContain(`linted "${PATCHED_TITLE} (#7)", now "${ORIGINAL_TITLE} (#7)"`);
+      expect(A.map(github.calls, githubCallLine)).toEqual(["GET {repo}/pulls/7"]);
     })
   );
 
@@ -1440,11 +1469,11 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet merge at the p
   ] as const)("fails %s with GitHub's sentence and never confirms", ([, status, reason]) =>
     Effect.gen(function* () {
       const github = mergeGithub({ status, body: { status: "failed", details: { message: reason } } });
-      const error = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, noWait).pipe(Effect.flip, github.provide);
+      const error = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, LINTED, noWait).pipe(Effect.flip, github.provide);
       expect(error.message).toBe(`${MERGE_COMMAND} failed:\nmerge-async failed: ${reason}`);
       expect(error.command).toBe(MERGE_COMMAND);
       expect(error.exitCode).toBe(1);
-      expect(A.map(github.calls, githubCallLine)).toEqual(["PUT {repo}/pulls/7/merge-async"]);
+      expect(A.map(github.calls, githubCallLine)).toEqual(["GET {repo}/pulls/7", "PUT {repo}/pulls/7/merge-async"]);
     })
   );
 
@@ -1454,9 +1483,10 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet merge at the p
       const github = mergeGithub(enqueued, [{ body: mergedPull }], {
         body: { status: "failed", details: { message: reason } },
       });
-      const error = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, noWait).pipe(Effect.flip, github.provide);
+      const error = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, LINTED, noWait).pipe(Effect.flip, github.provide);
       expect(error.message).toBe(`${MERGE_COMMAND} failed:\nmerge-async failed: ${reason}`);
       expect(A.map(github.calls, githubCallLine)).toEqual([
+        "GET {repo}/pulls/7",
         "PUT {repo}/pulls/7/merge-async",
         `GET {repo}/pulls/7/merge-async/${UUID}`,
       ]);
@@ -1468,12 +1498,12 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet merge at the p
       const reason =
         "refusing to allow a GitHub App to create or update workflow `.github/workflows/heavy.yml` without `workflows` permission";
       const github = mergeGithub({ status: 403, body: { message: reason } });
-      const error = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, noWait).pipe(Effect.flip, github.provide);
+      const error = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, LINTED, noWait).pipe(Effect.flip, github.provide);
       expect(error.message).toContain(reason);
       expect(error.message).toContain("without the `workflows` permission");
       expect(error.message).toContain("`workflow` scope (`gh auth refresh -s workflow`)");
       expect(error.exitCode).toBe(1);
-      expect(A.map(github.calls, githubCallLine)).toEqual(["PUT {repo}/pulls/7/merge-async"]);
+      expect(A.map(github.calls, githubCallLine)).toEqual(["GET {repo}/pulls/7", "PUT {repo}/pulls/7/merge-async"]);
     })
   );
 
@@ -1486,15 +1516,18 @@ it.layer(Layer.fresh(testLayer), { timeout: "30 seconds" })("yeet merge at the p
       const merged = enqueued;
       const open = { body: restPullRequest({ number: 7 }) };
       const lagging = mergeGithub(merged, [open, { body: mergedPull }]);
-      const confirmed = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, noWait).pipe(lagging.provide);
+      const confirmed = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, LINTED, noWait).pipe(lagging.provide);
       expect(confirmed.state).toBe("MERGED");
-      expect(A.length(lagging.calls)).toBe(4);
+      expect(A.length(lagging.calls)).toBe(5);
       const stuck = mergeGithub(merged, [open]);
-      const error = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, noWait).pipe(Effect.flip, stuck.provide);
+      const error = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, LINTED, noWait).pipe(Effect.flip, stuck.provide);
       expect(error.message).toBe("pull request #7 reports state OPEN, not MERGED.");
-      expect(A.length(stuck.calls)).toBe(4);
+      expect(A.length(stuck.calls)).toBe(5);
       const unreadable = mergeGithub(merged, [{ status: 502, body: { message: "Bad Gateway" } }]);
-      const readError = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, noWait).pipe(Effect.flip, unreadable.provide);
+      const readError = yield* mergeYeetPullRequestAtHead(7, HEAD_SHA, LINTED, noWait).pipe(
+        Effect.flip,
+        unreadable.provide
+      );
       expect(readError.message).toContain('Failed to read pull request "7" (');
       expect(readError.message).toContain("Bad Gateway");
     })

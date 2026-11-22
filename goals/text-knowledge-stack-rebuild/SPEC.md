@@ -132,7 +132,8 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
   semirings outside a bounded derivation query with a stored provenance term.
 - Compatibility shims: no old-wire codecs for internal shapes, no parallel
   persisted encodings, no projections kept alive for deleted carriers.
-  Breaking public API or wire changes still ship with a major changeset.
+  Breaking public API or wire changes still ship with a major changeset
+  (a decision file for a private workspace; see Delivery).
 - Local-only or on-device architecture language. Hosted providers are
   welcome; the operator withdrew the local-first framing, and this entry
   records that ruling.
@@ -299,7 +300,9 @@ and the phase order is `PLAN.md`), this file is normative.
   technical detail logged at the translation boundary.
 - Delivery: at most three concurrently open PRs for this packet; each phase
   lands through Yeet (`yeet final-check` before `yeet ready`); a breaking
-  public API or wire change ships with a major changeset;
+  public API or wire change ships with a major changeset when the package is
+  public, and is recorded in a decision file of its phase when the package is
+  private, since repo-sanity forbids a changeset for a private workspace;
   `bun run beep quality package-verify <pkg>` before every handoff;
   `bun run beep architecture` for any new slice, concept or role file; the
   office-action flow test stays green at every phase exit from P3 on.
@@ -340,10 +343,10 @@ decision file) and the law-test ledger:
    are retained, and the imported-input law as equivalence to the normalized
    input (`encode(decode s) = normalize(s)` for third-party OA input `s`), carried into ledger row `L2-6`
    and its tests.
-8. Where the runtime `IRI` schema lives: today only in
-   `packages/foundation/modeling/rdf/src/Iri.ts`, while `identity` must stay
-   rdf-free and `@beep/schema` depends on `identity`; P0 moves it (into
-   `identity` or a dependency-free home) before L0 and L1 compile.
+8. Where the runtime `IRI` schema lives: it used to live only in `@beep/rdf`,
+   while `identity` must stay rdf-free and `@beep/schema` depends on
+   `identity`. P0 ruled the home and P1 moved it to
+   `packages/foundation/modeling/identity/src/Iri.ts`, before L0 and L1 compile.
 9. `Anchored` is an L1 `S.Opaque` of range, quote and the powerless
    `TextAnchorVerificationReceipt` (never a `VerifiedTextAnchor`, so decoding a
    stored document grants no proof); the `anchors` table checks that each key
@@ -678,6 +681,8 @@ The reviewer of PR #3420 found that the design module typed identity-owned objec
 
 The gUFO class typing record has three fields: the type of type (Kind, SubKind, Role, Phase, Category, Mixin, RoleMixin, PhaseMixin), the category of its instances (Object, Relator, Mode, Quality, Event), and for a Relator the set of role terms it mediates. The audit rules of L3-3 read those fields; an untyped term is skipped.
 
+Amended 2026-11-19 (P1 ruling 14): the cross-check of the local version pattern and literal domains runs in @beep/schema's tests, not as a @beep/schema test dependency of identity, because that dependency would close the workspace cycle identity to schema to identity (decision 2026-11-19-p1-version-and-literal-cross-check-in-schema-tests).
+
 Lane goals/text-knowledge-stack-rebuild-p0-design · PR #3420
 
 Reverse: Move the digest, version and literal-kit primitives below @beep/identity into a new effect-only primitive package and reunite the registry record, by a decision file before P1 opens.
@@ -753,6 +758,158 @@ TextAnchor is retained in @beep/text with its stored shape, and the four persist
 Lane goals/text-knowledge-stack-rebuild-p0-design · PR #3420
 
 Reverse: Make TextAnchor the Position case of Selector by a decision file before P2 opens, with its stored columns read through a declared read-time transform; the census TextAnchor row is edited in the same change.
+
+### P1: the beep: CURIE prefix retires with the path-derived curie annotation; semantic-web identity predicates keep their bytes, 2026-11-19
+
+P1 ruling 6. The beep: CURIE prefix retires together with the curie annotation that composers derive from code paths: the beep entry of CoreVocab and the four terms SemanticFoundationVocab declares (Vocab.ts:548-558) are removed, and their only readers are identity tests (map R section 1.2). The IRIs live on as instances minted under the semantic-foundation namespace, with today bytes. The semantic-web identity predicates (IdentityRdfBinding.ts:27-28, minted as $SemanticWebId.create("identity/identifier") and create("identity/curie")) keep their bytes, because their segments are chosen by hand and spell no module path (the module is identity/IdentityRdfBinding); they are declared as terms of an identity-rdf namespace semantic-web/identity/ with their current values. The rule for the rest: an identity predicate whose IRI spells a module path is re-minted with a deprecation row; one that does not keeps its bytes.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Re-declare beep: as a registry prefix over the authority root by a decision file in any later phase; no stored row uses the prefix.
+
+### P1: every slice-local canonical-JSON copy retires to an existing owner export without a new dependency edge (amends design D10), 2026-11-19
+
+P1 ruling 7, amending D10 of the registry-first design. P1 retires every slice-local canonical-JSON copy: the two the census names, packages/epistemic/domain/src/values/internal/CanonicalJson.ts (consumer Retention.behavior.ts:12) and packages/execution-authority/domain/src/internal/CanonicalJson.ts (consumers ExecutionRecord.model.ts:33 and GrantSet.model.ts:34), 7 lines in 3 files, and the public re-export the map found in packages/epistemic/domain/src/values/ContradictionDetection/ContradictionDetection.behavior.ts:7-10,32 (consumers epistemic/domain/test/ContradictionDetection.test.ts:72, epistemic/use-cases/src/ContradictionDetection/ContradictionDetection.layer.ts:51,166 and epistemic/use-cases/test/ContradictionDetection.golden.test.ts:42). Each consumer is re-pointed to an existing owner export without adding a package dependency edge where one already reaches an owner: @beep/epistemic-domain has @beep/epistemics and @beep/schema but not @beep/jsonc, so its consumers import @beep/epistemics/ContradictionDetection; @beep/execution-authority-domain already depends on @beep/jsonc. No re-export is left behind. The bytes do not change; the seal goldens at ExecutionAuthority.test.ts:533 and the canonical-digest-owner differential and replay tests prove it. The public @beep/epistemics alias chain (canonicalDetectionJson and canonicalDetectionJsonResult, ContradictionDetection.behavior.ts:42,67, over the internal wrapper) retires in P4 with its direct consumers.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Re-add the slice canonical-JSON aliases at their pre-P1 paths by a decision file; the bytes they produce are unchanged either way.
+
+### P1: CanonicalHashSet lives in @beep/schema; @beep/identity uses strictly ascending sorted arrays (withdraws design D5), 2026-11-19
+
+P1 ruling 8, withdrawing D5 of the registry-first design, which put CanonicalHashSet, CanonicalHashSetBy and sortedMembers in a new @beep/identity/CanonicalSet. CanonicalHashSet stays in @beep/schema, as decision 2026-11-19-p0-l0-split-by-dependency and the L0.digest.ts owner line say: a HashSet when decoded, a deduplicated array sorted by the encoded string when encoded (the set-codec amendment of decision 2026-11-19-p0-items4-6-9-annotation-document-shape). @beep/identity imports effect only, so its snapshot and registry collections (TermSnapshot terms, namespaces, bindings and deprecations; RegistryShard and RegistryTable members) are strictly ascending sorted arrays whose schema check rejects an out-of-order or duplicate member. That keeps the committed snapshot byte-deterministic without a HashSet: S.HashSet and S.HashMap encode in iteration order, so a TermSnapshot with S.HashSet fields (L0.identity.ts:111-117) would not be deterministic.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Move CanonicalHashSet into @beep/identity by a decision file, keeping @beep/identity effect-only, and swap the sorted arrays for it.
+
+### P1 delivers ContentHash, the versioned domain-tagged minting function with definePreimage and golden vectors in @beep/jsonc, and the ActivityId brand, 2026-11-19
+
+P1 ruling 9. P1 delivers three L0 objects. (1) ContentHash and DomainTag in @beep/schema/ContentHash, a brand over the existing Sha256PrefixedDigest (Sha256.ts:132), as at L0.digest.ts:49-78, per decision 2026-11-19-p0-l0-homes-iri-in-identity-canonical-json-stays-in-jsonc. (2) The minting function in @beep/jsonc: mintContentHash (Effect.fn, over JsoncFingerprint.hash, needs Digest.Digest) and mintContentHashResult (pure, over hashResult), whose preimage is the RFC 8785 form of [domainTag, ...preimage]; definePreimage declares a versioned domain tag with its preimage fields, and committed golden vectors pin the bytes, so a changed preimage must bump its domain tag in the same PR (SPEC Constraints, PLAN P1 preimage versioning). Duplicate domain tags and a preimage with no golden are refused. (3) The ActivityId brand with its start-time preimage (activity/v1, operation term, agent or engine pin, prompt digest when present, the sorted used ids, start time), per decision 2026-11-19-p0-activity-id-minted-at-start. The L0-2 law test proves that equivalent records hash alike under key order and set order.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Defer the minting function and ActivityId to their first consumers (P2 OccurrenceId, P3 import activity) by a decision file; ContentHash stays in @beep/schema.
+
+### P1: IdentityAuthority moves to @beep/identity/Authority, a module with no imports (design D11), 2026-11-19
+
+D11 of the registry-first design, not replaced by a ruling. IdentityAuthority moves from Id.ts:77 to a new @beep/identity/Authority module with no imports, because the generated registry data (identity/src/internal/generated/Registry.data.ts) and Id.ts both need it and Id.ts keeping it would close the cycle Id.ts to Registry.data.ts to Id.ts. Id.ts and packages.ts never import Iri.ts, Term.ts or Registry.ts; an ImportGraph test in identity guards that. The importer outside identity, public-site/test/PublicSite.test.ts, is re-pointed in the same commit. IdentityRegistry stays as the runtime view of the same table, and @beep/semantic-web IdentityEntry is built by IdentityEntry.fromBinding with iri typed TermIri (breaking; no changeset is written).
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Move IdentityAuthority back into Id.ts by a decision file and inline the authority string in the generated registry data.
+
+### P1: instance IRIs are minted under a declared term or namespace with the composer segment grammar (design D3), 2026-11-19
+
+D3 of the registry-first design, not replaced by a ruling. An instance IRI is minted under a declared term or namespace by Registry.mint(base, ...segments), which reuses the segment validation of create(...) moved to identity/src/internal/Segment.ts, so Registry.mint("practice-kg:" + kind, naturalKey) and graphIdentity.create(kind).create(naturalKey).iri (PracticeKg.projections.ts:285) produce the same bytes and refuse the same inputs; Registry.mintEncoded covers the encodeURIComponent form used by ClaimGate and the research library. The Namespace record stays prefix and IRI. A namespace IRI is itself in the snapshot, because instances are minted under it (practice-kg/, semantic-foundation/, semantica/, lejeune/ontology/). Kept instance families keep their bytes: the 7 KgNodeKind graph IRIs, the ClaimGate claim base, the semantic-foundation seed concepts and the lab namespaces.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Add a kind field to Namespace that separates term namespaces from instance namespaces, by a decision file.
+
+### P1: the IRI schemas re-home under @beep/identity and are annotated with its own composer; the first term snapshot is taken after the move (amends design D4), 2026-11-19
+
+P1 ruling 15, amending D4 of the registry-first design (map M option 1). The RFC 3987 schemas IRI, IRIReference, RelativeIRIReference and AbsoluteIRI move by git mv from rdf/src/Iri.ts to identity/src/Iri.ts, with their 34 @beep/utils calls rewritten to effect modules, canonicalizeSchemaOrgIri moved to rdf/src/Vocab/SchemaOrg.ts, the @beep/rdf/Iri subpath removed, and every importer re-pointed in the same commit (no re-export is left). The moved schemas are annotated with the identity package composer ($IdentityId), not the rdf one. The 18 identities that change carry no IRI under the registry-first design, so the move publishes nothing, and the first term snapshot is taken after the move so it never records the rdf form. @beep/documents-domain drops its @beep/rdf dependency. Breaking: @beep/rdf loses the IRI schemas and the branded Curie (Rdf.ts:301); no changeset is written.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Annotate the moved schemas with $RdfId.create("iri") from ./packages.ts by a decision file, re-taking the term snapshot in the same change.
+
+### P1: the base design facts the judges flagged are corrected before implementation, 2026-11-19
+
+P1 ruling 16. Before implementation the registry-first design carries a Rulings applied section with these corrections, and the implementation follows them. (1) The research-library fold publishes 87 distinct owned property IRIs, not 90: the 90 counted field keys, including the borrowed dcterms:created and dcterms:title (Library.schemas.ts, 7 .key( uses); measured by running assembleLibraryOntology(). (2) Class locals are the ones the live fold prints, Source to Manifest, not LibrarySource as in the section 4.1 shard example. (3) The design-module handoff covers every importer of ./L0.*: L0.digest.ts:28, L1.text.ts:21, L2.annotation.ts:34-35, L3.taxonomy.ts:23-24, L4.claims.ts:40, L5.operations.ts:18-20, L6.interchange.ts:25, generators.ts:53-54 and index.ts:44,46 (grep -rn on ops/design); the base design omitted L1, L4 and L6. (4) The IdentityAuthority importer outside identity is public-site/test/PublicSite.test.ts. (5) The citations of the deleted decision slugs 2026-11-19-p0-design-module-rulings and 2026-11-19-p0-review-round-one-rulings in the three designs and three maps now cite the split files that hold each ruling.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Restore a corrected figure by a decision file that cites a new measurement of it.
+
+### P1: no changeset is written for a private workspace; each breaking change is recorded in a P1 decision file, 2026-11-19
+
+P1 ruling 11, withdrawing section 5.5 (changesets) of the registry-first design. Every package P1 touches is private (package.json private true: @beep/identity 0.1.1, @beep/schema 0.1.2, @beep/semantic-web 0.0.2, @beep/jsonc, @beep/rdf, @beep/test-runner and @beep/ontology 0.0.0, and the slice packages), and repo-sanity forbids a changeset that names a private workspace (packages/tooling/tool/cli/src/commands/Quality/ChangesetGraph.ts:652-671, "private workspaces must not accumulate release notes"). So P1 writes no changeset. Each breaking change is recorded in a P1 decision file instead: the composer surface and annotation record of @beep/identity (2026-11-19-p1-registry-first-fold-terms-declared), the fold signature of @beep/ontology (same file), the IRI schema move out of @beep/rdf (2026-11-19-p1-iri-schemas-re-home-under-identity), the test-runner identifiers (2026-11-19-p1-test-runner-iris-re-minted-from-the-registry) and the IdentityEntry shape of @beep/semantic-web (2026-11-19-p1-identity-authority-moves-to-its-own-module). The SPEC Constraints Delivery sentence about majors is amended to say so.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Make the touched packages public by a decision file and write their changesets in the PR that publishes them; the P1 decision files then become the changeset text.
+
+### P1 adds no Biome rule; the declared-term law is held by the identity-registry lint and the L0 tests, 2026-11-19
+
+P1 ruling 13. P1 adds no Biome rule. Once the composer .iri, .curie and rebase members are deleted, a derived IRI does not type-check, so the compiler holds the law; the extended bun run beep lint identity-registry gate (snapshot violations against the base ref, binding and deprecation checks) and the L0-1 to L0-3 tests hold the rest.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Add a Biome GritQL rule for composer IRI reads by a decision file in any later phase.
+
+### P1: pin prov, oa, nif, xsd, gufo, as, skos and doco plus the three SPAR pins; the every-namespace pin test stays in P5 (narrows design D8), 2026-11-19
+
+P1 ruling 3, narrowing D8 of the registry-first design. P1 registers prov, oa, nif, xsd, gufo and as (ActivityStreams, for the OA profile as:generator) with source pin, license and digest, adds source pin, license and digest to the existing skos and doco entries, and carries the three SPAR pins already present (deo, fabio and cito, from SparTerms.ts). That is the scope of chapter 16 section 10 and decision 2026-11-19-p0-rq3-external-vocabularies-as-adapters-confirmed. The base design pinned all 19 external namespaces in P1, sh (SHACL, 11 files through 7 local SHACL_NAMESPACE constants) and void (VoID, 3 files) included; dcat, rdf, rdfs, owl, dcterms, schema, sh and void stay unpinned until P5, whose exit test asserts a pin for every external namespace. This takes 11 network acquisitions off the P1 critical path. Kept from D8: PinnedSource.revision uses the typed revision kinds of @beep/schema/Conformance (Conformance.source.schema.ts:139-348) instead of a free NonEmptyString; as is the http form http://www.w3.org/ns/activitystreams# that anno.jsonld binds and DocumentAnnotation.ts:37 loads; xsd pins RDF 1.1 Concepts REC 2014-02-25 section 5.1; prov pins the dated PROV-O of the REC of 2013-04-30. Upstream byte digests and license notices are recorded at acquisition, never invented. NamespacePin and its data live in @beep/rdf, which gains the edge @beep/rdf to @beep/spdx.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Widen the P1 pin set to every external namespace the registry holds (19 in the base design), by a decision file that also moves the P5 every-namespace pin test into P1.
+
+### P1: registry first; only IRIs that leave a process are terms, and fold terms are declared registry terms bound by code id, 2026-11-19
+
+The registry-first design (research/2026-11-19-p1-design-registry-first.md) is the P1 base, taken with grafts from the minimal-surface and evolution-first designs. Only an IRI that leaves a process is a term. A code id, the composer identity @beep/<pkg>/<module>/<Name>, stays a code path (identifier, Symbol.for, JSON Schema $defs, OpenAPI names), and none of the 3,303 create(...) chains change. The composer readers .iri and .curie, rebase, vocabRegistry, toIri, toCurie, IriFromIdentity and CurieFromIdentity are deleted, so no code path can compute an IRI from an identity, and the 21,434 distinct path-derived annotation IRIs (map I section 5) cease to exist instead of being snapshotted. Fold terms (P1 ruling 1): the class and owned property IRIs the ontology fold emits are declared terms of a registry namespace, and a class reaches its term through a TermBinding keyed by its code id. Nothing is derived from a class name or a field key. fold(composer, input) becomes fold(namespace, input), with the typed refusals UnboundClass and UndeclaredProperty added to OntologyAssemblyError. P1 binds 23 code ids: the 16 research-library classes the fold reads and the 7 test-runner schemas. An annotation carries iri and curie only for a bound code id; the other annotations lose two fields that nothing reads. This reverses the addressing rulings of the identity-iri-core and identity-iri-fold packets. Breaking: @beep/identity (composer surface), @beep/ontology (fold signature); no changeset is written (decision 2026-11-19-p1-no-changesets-for-private-workspaces).
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Bind every annotation identity with today's path-derived value and restore the composer iri and curie readers, by a decision file before P2 opens.
+
+### P1: kept or re-minted; a research-library IRI written to a committed or exported artifact gets a deprecation row, an in-process one does not (amends design D2), 2026-11-19
+
+P1 ruling 10, amending D2 of the registry-first design. Persisted values and values whose segments were already chosen by hand are declared with their current bytes, so the stored-format law holds; values that spell a module path are re-minted to <namespace>/<local>. A research-library IRI that is written to a committed or exported artifact (the research-library T-Box and SHACL Turtle written by Library.paths.ts:39,53, the SPARQL lib: prefix) counts as published and gets a deprecation row naming its replacement when re-minted; an IRI that never leaves the process (the Library.views term base for metadata keys and the 6 v: locals) gets none. The judges corrected the base counts: the live fold publishes 16 class IRIs, whose locals are the ones the fold prints (Source to Manifest, not the schema class names such as LibrarySource), and 87 distinct owned property IRIs (measured by running assembleLibraryOntology(); 134 owned slots, plus the borrowed dcterms:created and dcterms:title, which are not re-minted). The base design counted 90 field keys and 119 deprecations; the codemod re-derives the rows from the live fold plus the projection predicates effectiveCategory and catalogIndex, computed from the composer expressions at the P1 base before the composer IRI surface is deleted, and freezes the old values in identity/test/fixtures/p1-retired-iris.json for L0-3.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Re-declare the old research-library values as live terms by a decision file, inverting their deprecation rows; in-process IRIs need no record either way.
+
+### P1: S31 counts an inventory row that moves from the rdf column to the identity column with its file as a rename, 2026-11-19
+
+P1 ruling 12. The S31 no-inventory-growth rule applies to P1 as follows: an exception-inventory, coverage, fallow or catalog row that moves from @beep/rdf to @beep/identity together with the file it names (the RFC 3987 IRI schemas, rdf/src/Iri.ts to identity/src/Iri.ts, and their tests) is a rename, not an addition. The sum of rows over the two packages may not grow, and no row is added for a file that did not move. The same holds for the RetiredIriAuthorities allowlist entry that moves to the generated test-runner projection: its count stays 1.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Count moved rows as new identity rows by a decision file, and burn them down before the move merges.
+
+### P1: since is a vocabulary release of the term snapshot, not a package version (replaces design D7), 2026-11-19
+
+P1 ruling 2, replacing D7 of the registry-first design. The since field of a term, a binding and a deprecation is a vocabulary release of the term snapshot. TermSnapshot carries a release field that starts at 1.0.0. The snapshot writer bumps the minor when a term is added and the major when a term is deprecated, and every existing row keeps its since: regeneration never rewrites one, and a rewritten since is a snapshot violation. No lint ties since to a changeset. The base design computed since as semver.inc(identity.version, highestPendingBump) from .changeset/*.md frontmatter and refused a registry change without an @beep/identity changeset; both are dropped, because @beep/identity is private (package.json private true, version 0.1.1) and a private workspace may not carry a changeset (decision 2026-11-19-p1-no-changesets-for-private-workspaces). Every row of the first P1 snapshot carries since 1.0.0. The doctrine text that called since a package version (ops/design/L0.identity.ts, chapter 16, GLOSSARY.md) is corrected in the same commit as this decision.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Tie since to the @beep/identity package version by a decision file and recompute the since values before the P1 snapshot merges; after P1 only a new release may change it.
+
+### P1: TermSnapshot gains namespaces and a release, and snapshotViolations replaces unexplainedRemovals (design D6), 2026-11-19
+
+D6 of the registry-first design, not replaced by a ruling, read with rulings 2 and 8. The committed snapshot packages/foundation/modeling/identity/registry/term-snapshot.json is regenerated from the source shards and holds every term IRI and every namespace IRI, the namespaces (so a prefix change is visible), the bindings and the append-only deprecations, as strictly ascending sorted arrays laid out one canonical row per line, plus the release field of decision 2026-11-19-p1-since-is-a-snapshot-vocabulary-release. snapshotViolations(previous, next) returns a typed SnapshotViolation union in place of the design-module unexplainedRemovals: a removal with no deprecation, a revived deprecated term, a changed or removed deprecation, a rewritten since, a reassigned or ambiguous binding and a dropped namespace. The gate compares against the base ref; an unreadable base is unknown, never clean. A git-free genesis floor fixture beside it guards the first snapshot.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Drop the namespaces field and keep only the removals check, by a decision file before the snapshot is first published.
+
+### P1: the seven test-runner IRIs are re-minted from the registry with deprecation rows, and their code ids become @beep/test-runner (amends design D9), 2026-11-19
+
+P1 ruling 5, amending D9 of the registry-first design. The 7 test-runner pinned IRIs (Vitest.errors.ts:23,55,65,121,131,141,151) spell the module path test-utils/Vitest/<Name>. They are re-minted from the registry under a stable term name, vitest/<Name> in a vitest namespace, and each old value gets a deprecation row naming its replacement. Their code ids are corrected from @beep/test-utils/Vitest/<Name> to @beep/test-runner/Vitest/<Name>: @beep/test-utils is a different live package, so the old identifier claimed an owner it does not have. Kept from D9: @beep/test-runner cannot import @beep/identity, because all 14 identity test files import @beep/test-runner, so the registry generator writes a projection test-runner/src/internal/generated/RegistryTerms.ts from the shards that declare projection @beep/test-runner, with identifier, iri and curie per row as plain literals. The RetiredIriAuthorities.model.ts allowlist entry moves to that file with its reason updated; it is a rename and the count stays 1 (decision 2026-11-19-p1-s31-rows-move-with-the-file). Breaking: @beep/test-runner published identifiers and IRIs; no changeset is written.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Restore the hand-written test-runner pins at their pre-P1 values and the @beep/test-utils code ids by a decision file; the P1 deprecation rows stay, since deprecations only grow.
+
+### P1: the cross-check of identity version pattern and literal domains against @beep/schema runs in @beep/schema tests (design D12), 2026-11-19
+
+P1 ruling 14, the same call as D12 of the registry-first design, and an amendment of decision 2026-11-19-p0-l0-split-by-dependency. @beep/identity keeps a local version pattern and S.Literals literal domains (the standing exception for the package @beep/schema depends on). The test that cross-checks them against @beep/schema SemanticVersion and LiteralKit lives in packages/foundation/modeling/schema/test/IdentityRegistryParity.test.ts, because a @beep/schema dev dependency in identity tests would close the workspace cycle identity to schema to identity, while schema to identity is the legal direction.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Add a schema-free copy of SemanticVersion to the identity tests by a decision file and move the cross-check there.
+
+### P1: versioned contract and predicate-type IRIs are declared terms with multi-segment locals and keep their bytes, 2026-11-19
+
+P1 ruling 4. The versioned contract and predicate-type IRIs under https://beep-effect.com/ns/ are declared terms in the snapshot: qa evidence/{cited-event-id-exists, declared-round-coherent, evidence-cross-check, judge-output-inventory, cited-artifact-exists}/v2, qa receipts/{accepted, delivered, persisted, recovery-attempt, semantically-applied}/v2, qa verifiers/judge-settlement/v1, skill-contract evidence/failure/v2, evidence/gate-summary/v2 and evidence/gate-certificate/v1, contracts qa-inventory/v1, and schemas qa-judge-input/v1 and qa-judge-settlement/v1. A TermLocal schema admits slash-separated segments for them. They keep their bytes because evidence receipts carry them and cli/skills/qa-inventory-judge/SKILL.md commits them (read sites JudgeContract.ts:64-72,770-773,841-855,942, CitedArtifactExistsGate.ts:30-32, Recovery.ts:340, EvidenceReceipt.ts:385, GateCertificate.ts:335-336). The canonical CURIE keeps the raw slash (qa:receipts/accepted/v2); Turtle writers escape it at the boundary with the existing prefixedNameOrIri (PnLocal.ts:480), because a bare slash is not a legal PN_LOCAL. Golden tests read the expected values from the frozen pre-P1 base fixture.
+
+Lane goals/text-knowledge-stack-rebuild-p1-l0-identity
+
+Reverse: Re-declare the versioned contract IRIs as instances minted under their namespace by a decision file; their snapshot rows then leave only through deprecation rows naming the instance form.
 
 <!-- beep:decisions:end -->
 

@@ -8,8 +8,8 @@ import * as Arbitrary from "effect/Arbitrary";
 
 import { Confidence } from "@beep/epistemics/EvidenceSpan";
 import { $ScratchpadId } from "@beep/identity";
+import { IRI } from "@beep/identity/Iri";
 import { TextAnchorFields, TextAnchorWidthCheck } from "@beep/provenance/TextAnchor";
-import { IRI } from "@beep/rdf";
 import type { ProvRecord } from "@beep/rdf/Prov";
 import { ObjectRef, Activity as ProvActivity, ProvBundle, Entity as ProvEntity } from "@beep/rdf/Prov";
 import { LiteralKit } from "@beep/schema";
@@ -441,7 +441,7 @@ export class Entity extends S.Class<Entity, { readonly brand: unique symbol }>($
    * **Example** (Read evaluated grounding confidence)
    * ```ts
    * import { Confidence } from "@beep/epistemics/EvidenceSpan"
-   * import { IRI } from "@beep/rdf"
+   * import { IRI } from "@beep/identity/Iri"
    * import * as O from "effect/Option"
    * import { Entity, GroundingDecision } from "@effect-ontology/Model/Entity"
    * import { EntityId } from "@effect-ontology/Model/shared"

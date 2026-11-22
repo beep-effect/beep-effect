@@ -260,6 +260,15 @@ describe("contact seeding", () => {
             vcfOnly: 0,
           });
           expect(O.getOrThrow(census.census).csvInputs[0]?.inputsSharingHash).toBe(2);
+          // The census header is the row parseOutlookCsv reads: a byte-order mark and blank rows before it are skipped.
+          const padded = path.join(root, "padded.csv");
+          yield* fs.writeFileString(padded, `﻿\n,,\n${csv}`);
+          const paddedCensus = yield* loadContacts(ContactInputs.make({ csv: [padded], vcf: [] }), true);
+          expect(O.getOrThrow(paddedCensus.census).csvInputs[0]).toMatchObject({
+            columnCount: 4,
+            headerNames: ["First Name", "Last Name", "Company", "E-mail Address"],
+            recordCount: 1,
+          });
           const flip1 = yield* Effect.flip(loadContacts(ContactInputs.make({ csv: [one], vcf: [vcf] }), false));
           expect(flip1).toMatchObject({
             reason: "input",

@@ -9,11 +9,11 @@
  * @packageDocumentation
  */
 
-import { $SchemaId } from "@beep/identity/packages";
 import { flow } from "effect/Function";
 import * as Redacted from "effect/Redacted";
 import * as S from "effect/Schema";
 import { isCanonicalEvmAddress } from "../internal/crypto.ts";
+import { $SchemaId } from "../internal/SchemaId.ts";
 import * as SchemaUtils from "../SchemaUtils/index.ts";
 
 const $I = $SchemaId.create("EvmAddress");

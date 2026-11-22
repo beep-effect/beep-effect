@@ -10,7 +10,8 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { IRI, makeNamedNode } from "@beep/rdf";
+import { IRI } from "@beep/identity/Iri";
+import { makeNamedNode } from "@beep/rdf";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 

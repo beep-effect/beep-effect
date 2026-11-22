@@ -192,6 +192,10 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
 
     expect(fn(recorder, "Runners/Webhook").news.functionUrl).toBe(true);
     expect(out.webhookUrl).toBe("https://runners-webhook.lambda-url.on.aws/");
+    // Both ran at 93-98% of Lambda's 128 MB default before they were sized (2026-11-20).
+    expect(
+      A.map(["Runners/SsmHousekeeper", "Runners/TerminationWatcher"], (fqn) => fn(recorder, fqn).news.memorySize)
+    ).toStrictEqual([256, 256]);
     const webhook = yield* decodeWebhook(
       (fn(recorder, "Runners/Webhook").news.env as Record<string, unknown>)[runtimeConfigEnvName]
     );
@@ -207,6 +211,11 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
       "rate(1 day)",
       "rate(1 day)",
     ]);
+
+    // The runner tarball mirror is a multipart upload, and a failed one is aborted.
+    expect(
+      A.map(statementsOf(recorder, "Runners/RunnerBinariesSyncer"), (statement) => statement.Action)
+    ).toStrictEqual([["s3:AbortMultipartUpload", "s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"]]);
 
     const kms = A.filter(statementsOf(recorder, "Runners/TerminationWatcher"), (statement) =>
       A.contains(statement.Action as ReadonlyArray<string>, "kms:Decrypt")

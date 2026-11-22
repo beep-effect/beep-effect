@@ -2225,6 +2225,26 @@ Lane goals/infra-alchemy-rebuild-p3-turbo-cache-stage-2
 
 Reverse: Revert the stage-2 PR: the callers and cache-warm go back to vars.TURBO_API/TURBO_TEAM, secrets.TURBO_TOKEN/TURBO_READ_TOKEN and the R2 inputs, all still live. Then, one name per command: gh variable delete TURBO_CACHE_API -R beep-effect/beep-effect; gh variable delete TURBO_CACHE_TEAM -R beep-effect/beep-effect; gh secret delete TURBO_CACHE_READ_TOKEN -R beep-effect/beep-effect; gh secret delete TURBO_CACHE_WRITE_TOKEN --env turbo-cache-write -R beep-effect/beep-effect.
 
+### CI runner handler bundles take their identity composer from a package-local leaf, 2026-11-19
+
+Until now every module took its identity composer from the registry module, @beep/identity/packages. That module holds one composer per workspace package, so its text changes whenever a package is registered. Alchemy hashes each Lambda zip with its source map, and the source map embeds the text of every module the handler loads. The CiRunners handlers (seven entries in @beep/alchemy-github-runners, the reaper in @beep/infra-ci-runners) all loaded the registry through $AlchemyGithubRunnersId, $InfraCiRunnersId and $SchemaId, so registering any package anywhere in the monorepo planned all 11 functions as code updates. Making each registry export a pure leaf (PR 3422) shrinks the minified code but leaves the whole file in the source map.
+
+The law is amended for packages whose modules a deployed handler bundle loads:
+
+- Such a package takes its composer from a package-local leaf, src/internal/<Composer>.ts, that derives it from $BeepId in @beep/identity/Root. Root imports only Id.ts, so the handler graph no longer reaches the registry. The rule covers every module of the package, not only the ones a handler loads today: @beep/schema (87 modules), @beep/alchemy-github-runners (25) and @beep/infra-ci-runners (6).
+- The registry stays the one list beep create-package and beep lint identity-registry read and write. The three registry entries are untouched, so the leaf form PR 3422 requires of them still holds. A leaf cannot drift from its registry entry unnoticed. In @beep/alchemy-github-runners and @beep/infra-ci-runners a test compares the leaf with the registry composer for the same slug (identifier, IRI, CURIE and derived identifiers). @beep/schema exports no internal path, so its test checks that identifiers its modules mint through the leaf sit under the registry's $SchemaId and equal what the registry composer derives. In @beep/identity a test asserts that $BeepId equals $I.
+- A guard test in @beep/infra-ci-runners builds the eight handler entries with Alchemy's bundler and the options of its Lambda bundle plan, and fails if any source map lists an @beep/identity source other than Id.ts, Root.ts and internal/schemaStatics.ts (an allowlist, so the registry, the barrel or any new identity module fails it). Adding the registry import to the webhook handler fails the webhook row and only that row.
+- beep lint identity-registry enforces the rule: only a package's src/internal/<Composer>.ts may use $BeepId (root-composer-outside-leaf), that leaf holds exactly one $BeepId.create over its own registry slug (root-leaf-slug-mismatch), and no scanned module of a package with such a leaf imports @beep/identity/packages or the @beep/identity barrel, which both load the registry (leaf-package-registry-import).
+- Every other package keeps importing its composer from @beep/identity/packages.
+
+The identifiers do not change. Rebuilt bundles differ from main before PR 3422 only in module wiring: the registry's compose calls and its three extra create calls are gone and the leaves add one create per composer; every other create, make and annotation argument is identical, and each bundle is about 6.8 KB smaller. After PR 3422 merged, which rewrote the registry file, the rebuilt bundles and source maps were byte-identical to the ones built before it: the registry no longer reaches them. The handlers reach @beep/schema only through LiteralKit, but the leaf rule covers the whole package so no @beep/schema module needs a per-module judgement about bundle reachability.
+
+The check-census re-baseline on this lane also rewrote two rows this change does not cause, because `bun run beep quality check-census --write-baseline` re-measures every row: @beep/repo-cli grew by about 83,000 instantiations inherited from main, and @beep/law-practice-domain shrank by 51. Only the @beep/schema rows and its typeperf fixtures move because of the leaf.
+
+Lane fix/ci-runner-handler-identity-leaves
+
+Reverse: point the modules of @beep/schema, @beep/alchemy-github-runners and @beep/infra-ci-runners back at @beep/identity/packages; delete their src/internal/*Id.ts leaves, @beep/identity/Root with its export * from ./Root.ts in identity/src/index.ts, and the IdentityLeaf, SchemaIdLeaf, Root and HandlerBundles tests; drop the leaf rules (root-composer-outside-leaf, root-leaf-slug-mismatch, leaf-package-registry-import) from beep lint identity-registry and their tests; revert the leaf paragraphs in the schema-first-development SKILL.md and references/local-primitives.md, then run beep skills update; then regenerate standards/policy-tools.fingerprint.json, the turbo.json inputs, the effect-vitest inventory and the check-census baseline with their writers
+
 ### CI runners step 1a resumes after a denied deploy, 2026-11-19
 
 Cutover step 1a (run 44435840783) passed its plan check and stopped in the deploy step on 14 denied calls, all implicit: four EC2 creates on the parent VPC, iam:ListPolicyTags and lambda:GetFunctionConcurrency. It left 20 state rows created and 52 creating; five functions and the runner IMDS-disable policy exist in AWS with their state rows still creating. The CI goals driver ruled, through the orchestrator:
@@ -2290,6 +2310,159 @@ launch template or other resource changes. Those rows are attributed to this dec
 Lane fix/ci-runners-drop-r7a-2xlarge
 
 Reverse: Re-add r7a.2xlarge to RunnerInstanceType and to the new heavy (and overflow) type lists in packages/tooling/infra/ci-runners/src/Config.ts
+
+### CiRunners function updates re-apply each function role's policies, 2026-11-20
+
+The CI goals driver accepted the 22 IAM writes of the PR 2 CiRunners deploy (run 44671153275, 2026-11-20) as an
+idempotent role reapply, and made them a standing expectation for every CiRunners deploy that updates functions.
+
+What the deploy did, from the deploy role's CloudTrail (two reads from saved events over 03:57-04:05Z, identical):
+
+- `iam:AttachRolePolicy` (AWSLambdaBasicExecutionRole) and `iam:PutRolePolicy` (the role's own inline policy) on
+  each of the 11 functions' execution roles, 22 writes in all, and no other role or policy.
+- Each PutRolePolicy document was byte-identical, as canonical JSON, to the same role's document in the previous
+  deploy (2026-11-19, run 44507595565).
+- 22 log-group writes (CreateLogGroup, which already existed, and PutRetentionPolicy) on the 11 functions' log groups.
+
+The plan shows the role rows as noop, but the Lambda provider re-PUTs each function's role policies when the function
+is updated.
+
+Standing rule: every CiRunners function-update deploy expects exactly these 22 IAM writes and 22 log-group writes. Its
+post-check compares the targets, and each PutRolePolicy document against the previous deploy's. A differing document,
+or any other role or policy touched, stops the cutover and goes to the driver. Counts come from saved CloudTrail events,
+never from pretty-printed lines.
+
+Lane docs/infra-alchemy-p5-m6i-and-iam-reapply
+
+Reverse: if the provider stops re-PUTting role policies, drop the 22 expected IAM writes from the post-check; if a deploy shows a changed document, stop and re-rule
+
+### Drop m6i.4xlarge from the new heavy pool, 2026-11-20
+
+The CI goals driver re-ruled `m6i.4xlarge` on 2026-11-20, ahead of the green day: it leaves the new fleet's heavy pool,
+which keeps five types: `r7i.2xlarge`, `r6i.2xlarge`, `m7a.4xlarge`, `m7i.4xlarge` and `m6a.4xlarge`. The overflow
+pool never listed it, and the live Pulumi fleet is not changed.
+
+Supersedes the same-day decision `2026-11-20-m6i-4xlarge-kept-on-the-new-heavy-list-after-the-re-rule`. That decision
+set a re-rule trigger: a second zone with at least three `m6i.4xlarge` evictions at P < 0.05, or an overall per-hour
+P below 0.01. Both were met under both treatments in the result table below: us-east-1f with five evictions, and an
+overall P of 0.0011 (0.0038 conservative).
+
+**Method.** The test is evictions per instance-hour in the live (old) fleet's Spot population, cumulative from
+2026-11-19 00:00Z.
+
+- **Data:** the gate's analysis.3 (to 2026-11-20 05:46:42Z) plus analysis.4 (05:46:42Z to 09:09Z), both workstation-local
+  analysis files built from the fleet's CloudTrail `RunInstances` and `BidEvictedEvent` records and the GitHub job
+  windows of each runner.
+- **Hour rule:** an instance counts from launch to its eviction, else to its last job end plus two minutes, else to the
+  window end.
+- **Statistic:** a Poisson tail P(X ≥ k) for each zone and overall, against the rest of the fleet's rate (every type
+  except `m6i.4xlarge`).
+- **Two treatments** of the 16 analysis.4 instances with no end source:
+  - as measured (to the window end);
+  - a conservative bound (`analysis.4.conservative.txt`): open non-m6i instances count zero hours, which raises the
+    rest-of-fleet rate, and open m6i instances count to the window end.
+
+**Result.**
+
+| Measure | As measured | Conservative bound |
+| --- | --- | --- |
+| Rest of fleet (per 100 instance-hours) | 27.1 (29 evictions in 106.97 h) | 33.9 (85.54 h) |
+| `m6i.4xlarge` overall: 7 evictions in 5.70 h, P(≥7) | 0.0011 | 0.0038 |
+| us-east-1f: 5 evictions in 4.72 h, P(≥5) | 0.0100 | 0.0236 |
+| us-east-1d: 2 evictions in 0.67 h, P(≥2) | 0.0146 | 0.0222 |
+
+The rule was met under both treatments: us-east-1f below 0.05 or the overall test below 0.01, with us-east-1d already
+significant.
+
+**Reach.** The change is to `packages/tooling/infra/ci-runners/src/Config.ts`. `m6i.4xlarge` leaves the
+`RunnerInstanceType` literal and `instanceVcpus`, and nothing else references it. The heavy pool takes every literal, so
+only the heavy pool's runtime configuration changes: its scale-up, job-retry and scale-down functions get env-only
+updates. The largest heavy type still has 16 vCPUs, so the Spot budget is unchanged. The change rides the next checked
+dispatch, with those rows attributed.
+
+**New watch.** It replaces the `m6i.4xlarge` watch: re-rule the new heavy pool if a heavy job waits more than 10 minutes
+for a runner while `CreateFleet` returns `InsufficientInstanceCapacity` for all five overrides. The overflow ICE watch
+and the us-east-1b watch continue.
+
+Lane fix/ci-runners-drop-m6i-4xlarge
+
+Reverse: re-add m6i.4xlarge to RunnerInstanceType and instanceVcpus in packages/tooling/infra/ci-runners/src/Config.ts, with an env-only dispatch
+
+### m6i.4xlarge kept on the new heavy list after the re-rule, 2026-11-20
+
+**Superseded** by `2026-11-20-drop-m6i-4xlarge-from-the-new-heavy-pool`: the re-rule trigger below was met, and
+`m6i.4xlarge` left the new heavy pool.
+
+The CI goals driver re-ruled `m6i.4xlarge` on 2026-11-20 and kept it on the new fleet's heavy list. The heavy pool keeps
+its six types; there is no Config.ts change and no extra dispatch.
+
+Source: the workstation-local analysis `~/.cache/beep/ci-runners-step0/eviction-analysis-20261119/analysis.3.txt`
+(the live heavy fleet's CloudTrail from 2026-11-19 00:00Z to 2026-11-20 05:46Z: 674 Spot launches, 31 evictions over
+83.87 instance-hours, 37.0 per 100 hours).
+
+- `m6i.4xlarge` overall: 4 evictions over 3.76 hours, 106.5 per 100 hours, 3.16 times the rest of the fleet
+  (P = 0.040 under the rest-of-fleet rate).
+- By zone, only us-east-1d is significant: 2 evictions over 0.67 hours, 8.84 times (P = 0.022). us-east-1f is
+  2.14 times on 2 evictions (P = 0.24, consistent with chance), and us-east-1b had none. The removal rule (at least
+  twice the fleet in at least two zones) is not met.
+- `m6i.4xlarge` is 4.5% of fleet hours. In a fleet that hits InsufficientInstanceCapacity often, keeping the capacity
+  diversity outweighs that excess.
+- In us-east-1f, the zone with the most ICE, non-m6i types run at 0.68 times the other zones' rate, so there is no zone
+  change. The ICE load there is covered by the overflow ICE watch.
+- For comparison: `m7i.4xlarge` had no evictions in 19.98 hours, and `r7i.2xlarge` ran at the fleet rate.
+
+New trigger through the green day, cumulative from 2026-11-19 00:00Z: re-rule if a second zone reaches at least three
+`m6i.4xlarge` evictions with P < 0.05, or if the overall per-hour P falls below 0.01.
+
+Lane docs/infra-alchemy-p5-m6i-and-iam-reapply
+
+Reverse: a Config.ts PR removing m6i.4xlarge from the new heavy list, plus an env-only dispatch
+
+### Orphaned runner-tarball upload parts accepted as residual risk, 2026-11-20
+
+The CI goals driver accepted a residual risk on 2026-11-20 for the runner-tarball mirror, which is now a multipart
+upload: orphaned parts in the new fleet's binaries bucket.
+
+- **When it happens:** an upload's `AbortMultipartUpload` never runs, because the binaries-syncer function is killed
+  by its 5-minute timeout or by running out of its 1024 MB, or the abort itself fails. The upload's parts then stay in
+  the bucket, stored and billed.
+- **Bound:** the syncer runs once a day and uploads only when a new runner release appears. So at most one orphaned
+  part set of at most 228 MB a day (the v2.338.2 asset is 228,071,396 bytes).
+- **Why no lifecycle rule:** an `AbortIncompleteMultipartUpload` rule would clean these up automatically. But the
+  CiRunners deploy role has no `s3:PutLifecycleConfiguration`, and adding it would be a new deploy-role write.
+- **Cleanup:** by hand. List with `aws s3api list-multipart-uploads --bucket <binaries bucket>`, then abort each with
+  `aws s3api abort-multipart-upload`.
+- **Watch:** the post-deploy check after every CiRunners deploy confirms `ListMultipartUploads` is empty after the
+  announced one-off syncer invoke.
+
+Lane fix/runner-binaries-s3-upload
+
+Reverse: give the CiRunners deploy role s3:PutLifecycleConfiguration on the binaries bucket and add an AbortIncompleteMultipartUpload rule of 1 day
+
+### PR 2 dispatch before the per-pool proofs, 2026-11-20
+
+The CI goals driver (the successor driver, 2026-11-20 02:10Z) ruled the order of the remaining P5 cutover steps:
+the PR 2 dispatch, which deploys the handler identity leaves (#3431) and the r7a.2xlarge removal (#3430) to the
+CiRunners stack, now goes before the per-pool proofs.
+
+New order: PR 2 dispatch, then the operator adds the new-fleet repository webhook, then the heavy proof, the
+overflow proof, BEEP_SHARD_OVERFLOW off, step 4a, step 4b, the post-4a pin bump, BEEP_SHARD_OVERFLOW on, the green
+day, step 6b and the drain.
+
+Conditions on the dispatch:
+
+- A plan_only on the then-current main must show exactly 11 function rows `changes code (bundle hash, inferred)`.
+  Exactly six of them (scale-up, job-retry and scale-down of both pools) also carry env, and that env diff is
+  only r7a.2xlarge leaving the instance-type list. Each #3423 reconcile row is named; every other row is noop.
+  Any other row stops it. If main moves before the dispatch word, a fresh plan_only on the new main is required.
+- It waits for the driver's explicit word after the plan clears, and not before the heavy burst ends
+  (03:54:14Z, 2026-11-20). CI_RUNNERS_ROUTINE_ARMED is set for that one dispatch only.
+- Its proof is CloudTrail: GetPolicy on the webhook function's URL permission and no RemovePermission or
+  AddPermission. Without that proof, step 4a does not go.
+
+Lane docs/infra-alchemy-p5-dispatch-order
+
+Reverse: restore the proofs-before-PR-2 order; re-proof each pool after the PR 2 dispatch
 
 <!-- beep:decisions:end -->
 

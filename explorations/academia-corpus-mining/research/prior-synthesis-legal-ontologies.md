@@ -417,7 +417,8 @@ Every legal fact is jurisdiction- and time-indexed (Marmor's closed `system S at
 ```ts
 import * as S from "effect/Schema"
 import { EntityId } from "@beep/identity"
-import { IRI, makeNamedNode, type NamedNode } from "@beep/rdf"
+import { IRI } from "@beep/identity/Iri";
+import { makeNamedNode, type NamedNode } from "@beep/rdf";
 
 // Internal: branded entity id (the LawPractice.* registry idiom)
 export const NormId = EntityId.factory("legal_norm", $I)

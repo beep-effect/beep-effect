@@ -949,8 +949,12 @@ state row by hand to change what the plan shows.
 Deploy role policy. The role holds the policy as customer managed policies
 `ci-runners-deploy-<n>` under `/beep-alchemy-deploy/`, because the document
 is longer than one inline policy. `bun deploy-role-policy.ts --out-dir <dir>
-[--vpc-arn <arn>]` writes them as `managed-<version>-<n>.json`, split in
-statement order at 6,144 characters (`managedPolicyDocuments`). Apply a
+--vpc-arn <arn>` writes them as `managed-<version>-<n>.json`, split in
+statement order at 6,144 characters (`managedPolicyDocuments`). The live role
+holds v2, so pass the fleet VPC ARN (the one VPC tagged `alchemy::stack=CiRunners`
+and `alchemy::stage=prod`). `--before-vpc` writes the step-0 v1 document
+instead; a run with neither flag, or with both, fails
+(`DeployPolicyVersionUnstated`) rather than silently writing v1. Apply a
 version with `aws iam create-policy-version --set-as-default` on each, delete
 the oldest non-default version first when a policy already has five, then run
 the principal simulations on the live role. Which call needs which statement,

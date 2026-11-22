@@ -4,12 +4,13 @@
  * @packageDocumentation
  * @since 0.0.0
  */
+
+import { IRIReference } from "@beep/identity/Iri";
 import { $I as $BeepId, $RdfId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import { PoPattern } from "@beep/schema/PatternOntology";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-import { IRIReference } from "../Iri.ts";
 import { CITO_NAMESPACE, CITO_TERMS } from "../Vocab/Cito.ts";
 import { DEO_NAMESPACE, DEO_TERMS } from "../Vocab/Deo.ts";
 import { DOCO_NAMESPACE, DOCO_TERMS } from "../Vocab/Doco.ts";

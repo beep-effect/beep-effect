@@ -10,8 +10,12 @@
  * @since 0.0.0
  */
 import { $RepoCliId } from "@beep/identity/packages";
+import { mintContentHash } from "@beep/jsonc/Mint";
 import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { CanonicalHashSet } from "@beep/schema/CanonicalHashSet";
+import { ActivityId, ContentHash, DomainTag } from "@beep/schema/ContentHash";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import { WellFormedText } from "@beep/schema/WellFormedText";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -19,19 +23,10 @@ import { constFalse, dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
+import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import {
-  ActivityId,
-  CanonicalHashSet,
-  ContentHash,
-  DomainTag,
-  Instant,
-  mintContentHash,
-  sortedMembers,
-  WellFormedText,
-} from "./L0.digest.ts";
 import { TermIri } from "./L0.identity.ts";
 import { Anchored, mintOccurrenceId, OccurrenceId } from "./L1.text.ts";
 import type { JsoncCanonicalizeError } from "@beep/jsonc/JsoncFingerprint";
@@ -65,7 +60,7 @@ export class Generation extends S.Opaque<Generation, { readonly brand: unique sy
     run: RunEntityId,
     content: AnnotationId,
     activity: ActivityId,
-    at: Instant.annotateKey({ description: "Generation time, canonical per (content, activity)." }),
+    at: S.DateTimeUtcFromMillis.annotateKey({ description: "Generation time, canonical per (content, activity)." }),
   }).pipe($I.annoteSchema("Generation", { description: "A prov:Generation of a run-specific annotation entity." }))
 ) {}
 
@@ -463,7 +458,7 @@ export class GenerationTimeConflict extends S.TaggedError<GenerationTimeConflict
   $I`GenerationTimeConflict`
 )(
   "GenerationTimeConflict",
-  { annotation: AnnotationId, activity: ActivityId, left: Instant, right: Instant },
+  { annotation: AnnotationId, activity: ActivityId, left: S.DateTimeUtcFromMillis, right: S.DateTimeUtcFromMillis },
   $I.annoteError<GenerationTimeConflict>("GenerationTimeConflict", {
     description: "Two generation records for one (content, activity) pair disagree on time.",
   })
@@ -494,6 +489,12 @@ export class AnnotationContent extends S.Opaque<AnnotationContent, { readonly br
     body: S.Unknown.annotateKey({ description: "Body already encoded by the kind's JSON codec." }),
   }).pipe($I.annoteSchema("AnnotationContent", { description: "Input of the annotation content hash." }))
 ) {}
+
+// Targets arrive as an array with repeats; the preimage hashes them deduplicated and ascending.
+// P3 replaces this with the annotation preimage declared through @beep/jsonc/Mint definePreimage,
+// whose schema encodes the targets with @beep/schema/CanonicalHashSet.
+const sortedMembers = <Item extends string>(members: Iterable<Item>): ReadonlyArray<Item> =>
+  A.sort(A.fromIterable(HashSet.fromIterable(members)), Order.String);
 
 /** The annotation preimage after the domain tag: sorted unique targets, kind IRI, encoded body (L2-2). */
 export const annotationPreimage = (content: AnnotationContent): ReadonlyArray<unknown> => [
