@@ -52,7 +52,7 @@ const EFFECT_ROOT_SOURCE = "effect";
  *
  * Each row is the live count of manual runners in that file, so the rule
  * admits no net-new occurrence there; unlisted test files must have zero.
- * `test/manual-runtime-baseline.test.ts` fails when a row names a missing file
+ * The baseline guard in `test/oxlint-rules.test.ts` fails when a row names a missing file
  * or a count that differs from the file's live violations, so rows shrink as
  * files migrate. To regenerate, empty this map and tally from the repo root:
  *

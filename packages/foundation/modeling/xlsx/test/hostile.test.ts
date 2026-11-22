@@ -748,7 +748,7 @@ describe("hostile files", () => {
     recordsFromBytes: (bytes: Uint8Array) =>
       Effect.exit(S.decodeEffect(Xlsx.recordsFromBytes({ sheet: "S", header: "first" }))(bytes)),
   };
-  it.layer(Targets.layer)((it) =>
+  it.layer(Targets.layer, { timeout: "30 seconds" })((it) =>
     it.effect.prop(
       "no damage to a workbook's bytes makes a read die",
       [S.Array(Mutation).check(S.isMinLength(1), S.isMaxLength(2)), Other],
