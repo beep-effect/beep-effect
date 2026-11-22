@@ -203,31 +203,27 @@ export class CiProjection extends S.Opaque<CiProjection, { readonly brand: uniqu
   )
 ) {}
 
-// UTF-8 spends at most three bytes per UTF-16 code unit, so a console of `n` characters is at most `3n` bytes. The
-// consoles share 60 KiB of the summary budget; the heading, fences and footer take far less than the 4 KiB left.
-const CONSOLE_BYTES = 60 * 1024;
-const BYTES_PER_CHAR = 3;
-// The smallest console budget: eight full agent lines, the frame every console budget holds.
-const FRAME_CHARS = 8 * (agentBudget.maxLineChars + 1);
-// The grouped log has no size limit of its own; the model's largest budget keeps every entry there.
-const logBudget = ConsoleBudget.make({ ...agentBudget, maxChars: 1_000_000 });
+const CONSOLE_SHARE_OF_SUMMARY_BYTES = 60 * 1024;
+const MAX_UTF8_BYTES_PER_UTF16_UNIT = 3;
+const EIGHT_AGENT_LINE_FRAME_CHARS = 8 * (agentBudget.maxLineChars + 1);
+const unboundedLogBudget = ConsoleBudget.make({ ...agentBudget, maxChars: 1_000_000 });
 
 const HEADING = "Gate reports";
-// Summary parts are separate Markdown blocks.
-const JOIN = "\n\n";
+const MARKDOWN_BLOCK_SEPARATOR = "\n\n";
 
 const utf8Length = (text: string): number => new TextEncoder().encode(text).length;
 
-// The console budget of each red report: the console share split between them, never below the frame.
-const consoleBudgetFor = (reds: number): ConsoleBudget =>
+const perRedReportConsoleBudget = (reds: number): ConsoleBudget =>
   ConsoleBudget.make({
     ...agentBudget,
-    maxChars: Math.max(FRAME_CHARS, Math.floor(CONSOLE_BYTES / BYTES_PER_CHAR / Math.max(1, reds))),
+    maxChars: Math.max(
+      EIGHT_AGENT_LINE_FRAME_CHARS,
+      Math.floor(CONSOLE_SHARE_OF_SUMMARY_BYTES / MAX_UTF8_BYTES_PER_UTF16_UNIT / Math.max(1, reds))
+    ),
   });
 
 const isRed = (found: JobGateRecord): boolean => !RunOutcome.is["all-pass"](found.report.outcome);
 
-// Red reports first, so a summary that must leave reports out leaves out green ones; otherwise the feed's order.
 const byRedFirst = Order.mapInput(Order.Boolean, (found: JobGateRecord) => !isRed(found));
 
 const consoleRequestOf = (found: JobGateRecord): ConsoleRequest => {
@@ -241,15 +237,13 @@ const consoleRequestOf = (found: JobGateRecord): ConsoleRequest => {
   });
 };
 
-// The agent console lines of one record under a budget: what `beep gate show` prints for it, at that budget.
 const agentConsoleLines = (found: JobGateRecord, budget: ConsoleBudget): A.NonEmptyReadonlyArray<string> =>
   Str.split(
     makeGateConsole(ConsoleSettings.make({ audience: "ci", budget })).render(consoleRequestOf(found)).text,
     "\n"
   );
 
-// The dispatched document of a record, as the agent console dispatches it, before any budget is applied.
-const documentOf = (found: JobGateRecord): ConsoleDocument =>
+const dispatchedDocumentBeforeBudget = (found: JobGateRecord): ConsoleDocument =>
   dispatch(
     ConsoleInput.make({
       report: found.report,
@@ -258,9 +252,7 @@ const documentOf = (found: JobGateRecord): ConsoleDocument =>
     })
   );
 
-// The body lines the model's plain-text projection gives some entries and folds: the lines between its two verdict
-// lines, so a group's lines are the console's own lines for those entries.
-const bodyLines = (
+const consoleLinesBetweenVerdicts = (
   document: ConsoleDocument,
   entries: ReadonlyArray<ConsoleEntry>,
   folds: ConsoleDocument["folds"]
@@ -269,7 +261,7 @@ const bodyLines = (
     A.dropRight(
       projectLines({
         document: ConsoleDocument.make({ verdict: document.verdict, entries, folds }),
-        budget: logBudget,
+        budget: unboundedLogBudget,
       }),
       1
     ),
@@ -278,7 +270,6 @@ const bodyLines = (
 
 const isFailureEntry = ConsoleEntry.guards.FailureEntry;
 
-// One group per unit, in the order the units first appear among the failure entries.
 const unitGroups = (found: JobGateRecord, document: ConsoleDocument): ReadonlyArray<Block> => {
   const failures = A.filter(document.entries, isFailureEntry);
   const units = A.dedupe(A.map(failures, (entry: FailureEntry) => entry.unit));
@@ -286,7 +277,7 @@ const unitGroups = (found: JobGateRecord, document: ConsoleDocument): ReadonlyAr
     Doc.collapsible(`${found.report.gate} ${found.report.subject}: ${unit}`, [
       Doc.verbatim(
         A.join(
-          bodyLines(
+          consoleLinesBetweenVerdicts(
             document,
             A.filter(failures, (entry) => entry.unit === unit),
             []
@@ -298,19 +289,16 @@ const unitGroups = (found: JobGateRecord, document: ConsoleDocument): ReadonlyAr
   );
 };
 
-// Notes and folds stand for no unit: they print after the groups, outside them.
-const restLines = (document: ConsoleDocument): ReadonlyArray<string> =>
+const unitlessNoteAndFoldLines = (document: ConsoleDocument): ReadonlyArray<string> =>
   A.isReadonlyArrayEmpty(document.folds) && A.every(document.entries, isFailureEntry)
     ? []
-    : bodyLines(document, A.filter(document.entries, ConsoleEntry.guards.NoteEntry), document.folds);
+    : consoleLinesBetweenVerdicts(document, A.filter(document.entries, ConsoleEntry.guards.NoteEntry), document.folds);
 
 type Candidate = { readonly level: AnnotationLevel; readonly options: AnnotationOptions; readonly message: string };
 
 const firstLine = (text: string): string => A.headNonEmpty(Str.split(text, "\n"));
 
-// A package gate records locations relative to its package; an annotation names a repository-relative file. An
-// absolute path names no file in the repository, so its annotation carries no position.
-const annotationFile = (target: RecordTarget, file: string): O.Option<string> =>
+const repoRelativeAnnotationFile = (target: RecordTarget, file: string): O.Option<string> =>
   O.map(
     O.liftPredicate(file, P.not(Str.startsWith("/"))),
     RecordTarget.match(target, {
@@ -319,11 +307,9 @@ const annotationFile = (target: RecordTarget, file: string): O.Option<string> =>
     })
   );
 
-// A failed item is an error annotation, a warned one a warning; a passed or skipped item is not annotated.
-const ANNOTATION_LEVEL: Readonly<Record<string, AnnotationLevel>> = { failed: "error", warned: "warning" };
+const ANNOTATION_LEVEL_BY_OUTCOME: Readonly<Record<string, AnnotationLevel>> = { failed: "error", warned: "warning" };
 
-// `code title: first message line`, each part present only when the item has it.
-const annotationText = (item: Item): string => {
+const codeTitleAndFirstMessageLine = (item: Item): string => {
   const head = A.join(
     A.getSomes([
       O.orElse(item.code, () => item.rule),
@@ -341,9 +327,9 @@ const annotationText = (item: Item): string => {
 const candidateOf =
   (found: JobGateRecord) =>
   (item: Item): O.Option<Candidate> =>
-    O.map(R.get(ANNOTATION_LEVEL, item.outcome), (level): Candidate => {
+    O.map(R.get(ANNOTATION_LEVEL_BY_OUTCOME, item.outcome), (level): Candidate => {
       const position = O.flatMap(item.location, (location) =>
-        O.map(annotationFile(found.target, location.file), (file) => ({
+        O.map(repoRelativeAnnotationFile(found.target, location.file), (file) => ({
           file,
           line: location.line,
           col: location.column,
@@ -352,7 +338,7 @@ const candidateOf =
       return {
         level,
         options: { level, title: `${found.report.gate} ${found.report.subject}`, ...O.getOrElse(position, () => ({})) },
-        message: CommandNeutralizer.text(annotationText(item)),
+        message: CommandNeutralizer.text(codeTitleAndFirstMessageLine(item)),
       };
     });
 
@@ -364,8 +350,7 @@ type Plan = {
   readonly tally: AnnotationTally;
 };
 
-// Annotations in the model's order, record by record, while the step's per-level cap and the job's cap allow.
-const planAnnotations = (perRecord: ReadonlyArray<ReadonlyArray<Candidate>>, used: number): Plan => {
+const planAnnotationsInModelOrder = (perRecord: ReadonlyArray<ReadonlyArray<Candidate>>, used: number): Plan => {
   const limits = ciProjectionLimits;
   const initial = { chosen: A.empty<ReadonlyArray<Candidate>>(), errors: 0, warnings: 0, unannotated: 0 };
   const final = A.reduce(perRecord, initial, (state, candidates) => {
@@ -399,17 +384,15 @@ const planAnnotations = (perRecord: ReadonlyArray<ReadonlyArray<Candidate>>, use
   };
 };
 
-// A `ci` context neutralizes workflow commands in every rendered string.
-const ciContext = Render.contextOf({ audience: "ci" });
+const neutralizingCiContext = Render.contextOf({ audience: "ci" });
 
-const markdownOf = (blocks: ReadonlyArray<Block>): string => Render.markdown(blocks, ciContext);
+const markdownOf = (blocks: ReadonlyArray<Block>): string => Render.markdown(blocks, neutralizingCiContext);
 
 type Fitted = { readonly sections: ReadonlyArray<string>; readonly bytes: number; readonly omitted: number };
 
-// Sections in order while they fit the room; once one does not, it and every later one are left to the record.
-const fitSections = (sections: ReadonlyArray<string>, room: number): Fitted =>
+const keepSectionsUntilOneOverflows = (sections: ReadonlyArray<string>, room: number): Fitted =>
   A.reduce(sections, { sections: A.empty<string>(), bytes: 0, omitted: 0 }, (fitted, section) => {
-    const bytes = utf8Length(section) + JOIN.length;
+    const bytes = utf8Length(section) + MARKDOWN_BLOCK_SEPARATOR.length;
     return fitted.omitted === 0 && fitted.bytes + bytes <= room
       ? { sections: A.append(fitted.sections, section), bytes: fitted.bytes + bytes, omitted: 0 }
       : { ...fitted, omitted: fitted.omitted + 1 };
@@ -446,6 +429,16 @@ const footerBlocks = (request: CiProjectionRequest, tally: AnnotationTally, omit
  * the artifact. The log gives each report its annotations, one group per
  * unit, its notes and folds, and its verdict line last.
  *
+ * UTF-8 spends at most three bytes per UTF-16 code unit, so the character
+ * budget is a third of the console share in bytes, never below the eight
+ * agent lines every console budget holds; the heading, fences and footer
+ * fit in the 4 KiB left. Red reports come first so that, when sections must
+ * be left out, the green ones go; once one section overflows, it and every
+ * later one stay in the record artifact only. A package gate records
+ * locations relative to its package, so an annotation prefixes the package
+ * directory; an absolute path names no repository file and carries no
+ * position.
+ *
  * **Example** (Render an empty projection)
  *
  * ```ts
@@ -462,20 +455,20 @@ const footerBlocks = (request: CiProjectionRequest, tally: AnnotationTally, omit
  */
 export const renderCiProjection = (request: CiProjectionRequest): CiProjection => {
   const records = A.sort(request.records, byRedFirst);
-  const budget = consoleBudgetFor(A.filter(records, isRed).length);
+  const budget = perRedReportConsoleBudget(A.filter(records, isRed).length);
   const consoles = A.map(records, (found) => agentConsoleLines(found, budget));
-  const plan = planAnnotations(A.map(records, candidatesOf), request.annotationsUsed);
+  const plan = planAnnotationsInModelOrder(A.map(records, candidatesOf), request.annotationsUsed);
   const heading = markdownOf([Doc.heading(3, HEADING)]);
   const sections = A.map(consoles, (lines) => markdownOf([Doc.codeBlock(A.join(lines, "\n"), "text")]));
   const room =
     ciProjectionLimits.summaryBudgetBytes -
     utf8Length(heading) -
     utf8Length(markdownOf(footerBlocks(request, plan.tally, records.length))) -
-    JOIN.length;
-  const fitted = fitSections(sections, room);
+    MARKDOWN_BLOCK_SEPARATOR.length;
+  const fitted = keepSectionsUntilOneOverflows(sections, room);
   const summary = A.join(
     [heading, ...fitted.sections, markdownOf(footerBlocks(request, plan.tally, fitted.omitted))],
-    JOIN
+    MARKDOWN_BLOCK_SEPARATOR
   );
   const projected = A.zipWith(
     records,
@@ -483,8 +476,8 @@ export const renderCiProjection = (request: CiProjectionRequest): CiProjection =
     (found, rendered) => ({ found, ...rendered })
   );
   const logBlocks = A.flatMap(projected, ({ found, lines, chosen }): ReadonlyArray<Block> => {
-    const document = documentOf(found);
-    const rest = restLines(document);
+    const document = dispatchedDocumentBeforeBudget(found);
+    const rest = unitlessNoteAndFoldLines(document);
     return [
       ...A.map(chosen, (candidate) => Doc.annotation(candidate.options, candidate.message)),
       ...unitGroups(found, document),
@@ -492,7 +485,7 @@ export const renderCiProjection = (request: CiProjectionRequest): CiProjection =
       Doc.verbatim(A.headNonEmpty(lines)),
     ];
   });
-  return CiProjection.make({ summary, log: Render.githubLog(logBlocks, ciContext), tally: plan.tally });
+  return CiProjection.make({ summary, log: Render.githubLog(logBlocks, neutralizingCiContext), tally: plan.tally });
 };
 
 /**

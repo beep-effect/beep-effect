@@ -334,21 +334,18 @@ const isRunId = S.is(RunId);
 const isGateName = S.is(GateName);
 const isRepoRelativeDir = S.is(RepoRelativeDir);
 const ROOT_PREFIX = `${GATES_DIR}/`;
-// The segments after a package directory: `.beep`, `gates`, the gate and `report.json`.
-const PACKAGE_TAIL = 4;
+const PACKAGE_RECORD_TAIL = [".beep", "gates", "<gate>", "report.json"].length;
 
-// `<package>/.beep/gates/<gate>/report.json`, as the package glob matched it.
-const packageTargetOf = (segments: ReadonlyArray<string>): O.Option<RecordTarget> =>
+const packageTargetOfPackageGlobMatch = (segments: ReadonlyArray<string>): O.Option<RecordTarget> =>
   pipe(
     O.all({
-      packageDir: O.liftPredicate(A.join(A.dropRight(segments, PACKAGE_TAIL), "/"), isRepoRelativeDir),
+      packageDir: O.liftPredicate(A.join(A.dropRight(segments, PACKAGE_RECORD_TAIL), "/"), isRepoRelativeDir),
       gate: O.filter(A.get(segments, segments.length - 2), isGateName),
     }),
     O.map(RecordTarget.cases.PackageTarget.make)
   );
 
-// `.beep/gates/<gate>/<run-id>.json`, as the root glob matched it.
-const rootTargetOf = (segments: ReadonlyArray<string>): O.Option<RecordTarget> =>
+const rootTargetOfRootGlobMatch = (segments: ReadonlyArray<string>): O.Option<RecordTarget> =>
   pipe(
     O.all({
       gate: O.filter(A.get(segments, 2), isGateName),
@@ -358,7 +355,9 @@ const rootTargetOf = (segments: ReadonlyArray<string>): O.Option<RecordTarget> =
   );
 
 const recordTargetOf = (file: string): O.Option<RecordTarget> =>
-  (Str.startsWith(ROOT_PREFIX)(file) ? rootTargetOf : packageTargetOf)(Str.split(file, "/"));
+  (Str.startsWith(ROOT_PREFIX)(file) ? rootTargetOfRootGlobMatch : packageTargetOfPackageGlobMatch)(
+    Str.split(file, "/")
+  );
 
 const byRecordPath = Order.mapInput(Order.String, (target: RecordTarget) => recordLocation(target).record);
 

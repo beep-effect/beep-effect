@@ -1,7 +1,3 @@
-// goals/ci-gate-reports P1: the CI projection of gate reports. The job summary carries the local agent console's
-// verdict and failure lines (AC 2); annotations, the summary and the grouped log keep GitHub's limits and never let
-// diagnostic text become a workflow command (AC 3).
-
 import { GateRecord } from "@beep/gate-report/GateRecord";
 import { GateReport, Totals } from "@beep/gate-report/GateReport";
 import { Item, ItemDetail, Location } from "@beep/gate-report/Item";
@@ -96,7 +92,6 @@ const found = (gateReport: GateReport, target: RecordTarget = packageTarget(), l
 const request = (records: ReadonlyArray<JobGateRecord>, annotationsUsed = 0) =>
   CiProjectionRequest.make({ records, artifact: "task-outcomes-1-1-test-unit-shard-unit-a", annotationsUsed });
 
-// The lines of every fenced block in the summary, block by block.
 const fencedBlocks = (summary: string): ReadonlyArray<ReadonlyArray<string>> =>
   A.reduce(
     Str.split(summary, "\n"),
@@ -113,7 +108,6 @@ const fencedBlocks = (summary: string): ReadonlyArray<ReadonlyArray<string>> =>
 
 const utf8Length = (text: string): number => new TextEncoder().encode(text).length;
 
-// Off a runner, whatever the host environment says: the summary goes to stdout.
 const offRunner = Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}));
 const onRunner = (summaryFile: string) =>
   Effect.provideService(
@@ -123,7 +117,6 @@ const onRunner = (summaryFile: string) =>
 const withOutputs = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
   effect.pipe(provideScopedLayer(Layer.merge(CiGateProjection.layer, CiRunnerOutputsLive)));
 
-// The terminal services a command run needs beside the platform; the console is the test console.
 const CommandSupport = Layer.mergeAll(
   Stdio.layerTest({ stdinIsTerminal: Effect.succeed(false), stdoutIsTerminal: Effect.succeed(false) }),
   Layer.succeed(
@@ -142,8 +135,7 @@ const runAppendCommand = Command.runWith(ciAppendGateReportsCommand, { version: 
 
 const logLines = (projection: CiProjection) => Str.split(projection.log, "\n");
 
-// A line the runner would read as a workflow command: `::` after leading whitespace.
-const isCommandLine = (line: string): boolean => /^\s*::/u.test(line);
+const runnerReadsAsWorkflowCommand = (line: string): boolean => /^\s*::/u.test(line);
 
 it.layer(Layer.merge(NodeServices.layer, CommandSupport), { timeout: "60 seconds" })(
   "ci gate projection on disk",
@@ -165,7 +157,6 @@ it.layer(Layer.merge(NodeServices.layer, CommandSupport), { timeout: "60 seconds
         const store = yield* GateRecordStore.make(repoRoot);
         yield* store.writeLog(target, Stream.make(new TextEncoder().encode("raw tool output\n")));
         yield* store.writeRecord(target, GateRecord.make({ generatedAt: DateTime.makeUnsafe(0), report: red }));
-        // The local agent console: what `beep gate show` prints for this record.
         const local = yield* renderStoredRecord(repoRoot, target, ConsoleSettings.make({ audience: "agent" })).pipe(
           Effect.andThen(TestConsole.logLines),
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
@@ -178,10 +169,8 @@ it.layer(Layer.merge(NodeServices.layer, CommandSupport), { timeout: "60 seconds
           Effect.provideServiceEffect(Console.Console, TestConsole.make)
         );
         const summary = O.match(printed.projection, { onNone: () => "", onSome: (projection) => projection.summary });
-        // Off a runner the log and then the summary are printed.
         deepStrictEqual(A.map(printed.lines, String).slice(-1), [summary]);
         const [block] = fencedBlocks(summary);
-        // Verdict first, the same failing items in the same order, verdict last.
         deepStrictEqual(block, agentLines);
         strictEqual(
           A.head(agentLines).pipe(O.getOrElse(() => "")),
@@ -242,8 +231,7 @@ it.layer(Layer.merge(NodeServices.layer, CommandSupport), { timeout: "60 seconds
       })
     );
 
-    // The command checks its flags before it searches the checkout it runs in, so a refused count never reads it.
-    it.effect("the command reports a refused annotation count as a CI error", () =>
+    it.effect("the command refuses a negative annotation count before it searches the checkout", () =>
       Effect.gen(function* () {
         const exit = yield* runAppendCommand(["--artifact", "task-outcomes-1-1-labs", "--annotations-used", "-1"]).pipe(
           Effect.exit
@@ -275,21 +263,18 @@ it.effect("AC 3: 200 failing items give 10 error annotations, a cap line and a s
     strictEqual(errors.length, ciProjectionLimits.annotationsPerLevelPerStep);
     deepStrictEqual(projection.tally, AnnotationTally.make({ errors: 10, warnings: 0, unannotated: 190 }));
     assertTrue(utf8Length(projection.summary) < ciProjectionLimits.summaryBudgetBytes);
-    // The console cap and the annotation cap both name the rest.
     assertTrue(A.some(Str.split(projection.summary, "\n"), (line) => /^\.\.\. \d+ more in the record$/u.test(line)));
     assertTrue(Str.includes("190 failing items were not annotated")(projection.summary));
-    // The first annotation is the first item, in model order, with a repository-relative position; inside the
-    // escaped message the injected text is data, since a command starts only at the start of a line.
     strictEqual(
       A.head(errors).pipe(O.getOrElse(() => "")),
       `::error title=test @beep/glob,file=${PACKAGE}/src/unit-0.test.ts,line=12,col=5::suite > case 0: ::error::injected ${Str.repeat(20)("expected value differs ")}`
     );
-    // Every command line is the projection's own; the injected `::error::` is text in a group.
     assertTrue(
-      A.every(A.filter(lines, isCommandLine), (line) => /^::(error |warning |group::|endgroup::)/u.test(line))
+      A.every(A.filter(lines, runnerReadsAsWorkflowCommand), (line) =>
+        /^::(error |warning |group::|endgroup::)/u.test(line)
+      )
     );
     assertTrue(A.some(lines, Str.startsWith(`${ZERO_WIDTH_SPACE}  ::error::injected expected value differs`)));
-    // One group per unit, in the order units first appear, and the verdict last outside any group.
     deepStrictEqual(
       A.map(A.filter(lines, Str.startsWith("::group::")), (line) =>
         Str.slice("::group::test @beep/glob: ".length)(line)
@@ -304,74 +289,78 @@ it.effect("AC 3: 200 failing items give 10 error annotations, a cap line and a s
   })
 );
 
-it.effect("the job cap, warnings, unlocated items and root records", () =>
-  Effect.sync(() => {
-    const warned = report({
-      gate: "lint",
-      reason: "passed",
-      outcome: "warnings-only",
-      totals: Totals.make({ collected: 2, passed: 1, warned: 1 }),
-      items: [
-        item({ file: "src/w.ts", name: "", outcome: "warned", code: "W1" }),
-        item({ file: "/abs/x.ts", name: "absolute", outcome: "warned", message: "outside" }),
-        item({ file: "src/y.ts", name: "", outcome: "warned", located: false, message: "only a message" }),
-        item({ file: "src/s.ts", name: "skipped", outcome: "skipped" }),
-      ],
-    });
-    const root = found(
-      report({ items: [item({ file: "src/r.test.ts", name: "root" })] }),
-      RecordTarget.cases.RootTarget.make({ gate: "test", runId: "20261122T100000000Z-0002" }),
-      O.none()
-    );
-    const projection = renderCiProjection(request([root, found(warned, packageTarget("lint"))], 48));
-    const lines = logLines(projection);
-    // 48 used, so two more fit the job: the root record comes first and takes one, a warning the other.
-    deepStrictEqual(projection.tally, AnnotationTally.make({ errors: 1, warnings: 1, unannotated: 2 }));
-    deepStrictEqual(
-      A.filter(lines, (line) => /^::(error|warning) /u.test(line)),
-      [
-        "::error title=test @beep/glob,file=src/r.test.ts,line=12,col=5::suite > root",
+it.effect(
+  "with 48 annotations used the job cap leaves two, for the first record's error and the next warning; unlocated and absolute items carry no position",
+  () =>
+    Effect.sync(() => {
+      const warned = report({
+        gate: "lint",
+        reason: "passed",
+        outcome: "warnings-only",
+        totals: Totals.make({ collected: 2, passed: 1, warned: 1 }),
+        items: [
+          item({ file: "src/w.ts", name: "", outcome: "warned", code: "W1" }),
+          item({ file: "/abs/x.ts", name: "absolute", outcome: "warned", message: "outside" }),
+          item({ file: "src/y.ts", name: "", outcome: "warned", located: false, message: "only a message" }),
+          item({ file: "src/s.ts", name: "skipped", outcome: "skipped" }),
+        ],
+      });
+      const root = found(
+        report({ items: [item({ file: "src/r.test.ts", name: "root" })] }),
+        RecordTarget.cases.RootTarget.make({ gate: "test", runId: "20261122T100000000Z-0002" }),
+        O.none()
+      );
+      const projection = renderCiProjection(request([root, found(warned, packageTarget("lint"))], 48));
+      const lines = logLines(projection);
+      deepStrictEqual(projection.tally, AnnotationTally.make({ errors: 1, warnings: 1, unannotated: 2 }));
+      deepStrictEqual(
+        A.filter(lines, (line) => /^::(error|warning) /u.test(line)),
+        [
+          "::error title=test @beep/glob,file=src/r.test.ts,line=12,col=5::suite > root",
+          `::warning title=lint @beep/glob,file=${PACKAGE}/src/w.ts,line=12,col=5::W1`,
+        ]
+      );
+      const unlimited = renderCiProjection(request([found(warned, packageTarget("lint"))]));
+      deepStrictEqual(A.filter(logLines(unlimited), Str.startsWith("::warning")), [
         `::warning title=lint @beep/glob,file=${PACKAGE}/src/w.ts,line=12,col=5::W1`,
-      ]
-    );
-    const unlimited = renderCiProjection(request([found(warned, packageTarget("lint"))]));
-    deepStrictEqual(A.filter(logLines(unlimited), Str.startsWith("::warning")), [
-      `::warning title=lint @beep/glob,file=${PACKAGE}/src/w.ts,line=12,col=5::W1`,
-      "::warning title=lint @beep/glob::suite > absolute: outside",
-      "::warning title=lint @beep/glob::only a message",
-    ]);
-    assertTrue(
-      Str.includes("Annotated 0 errors and 3 warnings; 0 failing items were not annotated")(unlimited.summary)
-    );
-  })
+        "::warning title=lint @beep/glob::suite > absolute: outside",
+        "::warning title=lint @beep/glob::only a message",
+      ]);
+      assertTrue(
+        Str.includes("Annotated 0 errors and 3 warnings; 0 failing items were not annotated")(unlimited.summary)
+      );
+    })
 );
 
-it.effect("green reports render their verdict alone, and notes print outside the groups", () =>
-  Effect.sync(() => {
-    const green = report({
-      reason: "passed",
-      outcome: "all-pass",
-      totals: Totals.make({ collected: 1, passed: 1 }),
-    });
-    const projection = renderCiProjection(request([found(green)]));
-    deepStrictEqual(fencedBlocks(projection.summary), [["test @beep/glob: PASSED, 1/1 passed (1.2s)"]]);
-    strictEqual(projection.log, "test @beep/glob: PASSED, 1/1 passed (1.2s)");
-    assertTrue(!Str.includes("Annotated")(projection.summary));
-    // Red reports come first, whatever the feed order.
-    const mixed = renderCiProjection(
-      request([found(green), found(report({ items: [item({ file: "src/a.ts", name: "x" })] }))])
-    );
-    deepStrictEqual(
-      A.map(fencedBlocks(mixed.summary), (block) => A.head(block).pipe(O.getOrElse(() => ""))),
-      ["test @beep/glob > suite > x: FAILED, 1/3 passed, 2 failed (1.2s)", "test @beep/glob: PASSED, 1/1 passed (1.2s)"]
-    );
-    // An empty red run carries a note and no failure entry: no group, the note, then the verdict.
-    const empty = renderCiProjection(request([found(report({ totals: Totals.make({ collected: 0 }), items: [] }))]));
-    const lines = logLines(empty);
-    deepStrictEqual(A.filter(lines, Str.startsWith("::group::")), []);
-    assertTrue(Str.startsWith("Nothing collected.")(lines[0] ?? ""));
-    strictEqual(A.last(lines).pipe(O.getOrElse(() => "")), "test @beep/glob: FAILED, 0 tests collected (1.2s)");
-  })
+it.effect(
+  "green reports render their verdict alone, red reports come first, and an empty run's note prints outside any group",
+  () =>
+    Effect.sync(() => {
+      const green = report({
+        reason: "passed",
+        outcome: "all-pass",
+        totals: Totals.make({ collected: 1, passed: 1 }),
+      });
+      const projection = renderCiProjection(request([found(green)]));
+      deepStrictEqual(fencedBlocks(projection.summary), [["test @beep/glob: PASSED, 1/1 passed (1.2s)"]]);
+      strictEqual(projection.log, "test @beep/glob: PASSED, 1/1 passed (1.2s)");
+      assertTrue(!Str.includes("Annotated")(projection.summary));
+      const mixed = renderCiProjection(
+        request([found(green), found(report({ items: [item({ file: "src/a.ts", name: "x" })] }))])
+      );
+      deepStrictEqual(
+        A.map(fencedBlocks(mixed.summary), (block) => A.head(block).pipe(O.getOrElse(() => ""))),
+        [
+          "test @beep/glob > suite > x: FAILED, 1/3 passed, 2 failed (1.2s)",
+          "test @beep/glob: PASSED, 1/1 passed (1.2s)",
+        ]
+      );
+      const empty = renderCiProjection(request([found(report({ totals: Totals.make({ collected: 0 }), items: [] }))]));
+      const lines = logLines(empty);
+      deepStrictEqual(A.filter(lines, Str.startsWith("::group::")), []);
+      assertTrue(Str.startsWith("Nothing collected.")(lines[0] ?? ""));
+      strictEqual(A.last(lines).pipe(O.getOrElse(() => "")), "test @beep/glob: FAILED, 0 tests collected (1.2s)");
+    })
 );
 
 it.effect("a summary too large for the budget leaves the last reports to the record artifact", () =>

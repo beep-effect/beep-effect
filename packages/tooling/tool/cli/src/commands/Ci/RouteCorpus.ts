@@ -432,14 +432,10 @@ const ArtifactPage = S.Struct({ total_count: S.Int, artifacts: S.Array(ArtifactW
 const ArchiveBytes = S.instanceOf(ArrayBuffer);
 const decodeRecordJson = S.decodeUnknownEffect(S.fromJsonString(S.Unknown));
 const ARTIFACT_PAGE = 100;
-// A record is one small JSON file (a few hundred bytes per task). Any artifact or archive entry above this bound is
-// not a record a lane wrote: it is skipped unread, so a crafted archive cannot make the capture inflate it.
-const RECORD_BYTES_MAX = 1024 * 1024;
+const ENTRY_INFLATE_BYTES_MAX = 1024 * 1024;
+const ARTIFACT_DOWNLOAD_BYTES_MAX = 64 * 1024 * 1024;
 
-// The JSON files of one record artifact, parsed but not yet decoded: the capture decodes them as
-// `task-outcomes/v1` or `v2` records, so a malformed one fails there with the run it came from. A v2 artifact also
-// carries the gate records and logs its record indexes, under `.beep/gates/`; those are not task-outcome records.
-const isGateFile = (file: string): boolean =>
+const isIndexedGateFile = (file: string): boolean =>
   Str.startsWith(`${GATES_DIR}/`)(file) || pipe(file, Str.includes(`/${GATES_DIR}/`));
 
 const archiveRecords = Effect.fnUntraced(function* (bytes: ArrayBuffer, name: string) {
@@ -448,7 +444,9 @@ const archiveRecords = Effect.fnUntraced(function* (bytes: ArrayBuffer, name: st
     try: () =>
       unzipSync(new Uint8Array(bytes), {
         filter: (file) =>
-          Str.endsWith(".json")(file.name) && !isGateFile(file.name) && file.originalSize <= RECORD_BYTES_MAX,
+          Str.endsWith(".json")(file.name) &&
+          !isIndexedGateFile(file.name) &&
+          file.originalSize <= ENTRY_INFLATE_BYTES_MAX,
       }),
     catch: RouteError.mapError("corpus-fetch", `Artifact ${name} is not a zip archive.`),
   });
@@ -484,6 +482,13 @@ const ghRun = (run: typeof RunWire.Type) => ({
  * Display names resolve against every workflow page; numeric ids and workflow
  * filenames go directly to the runs endpoint. The compatibility protocol keeps
  * the corpus decoder and its error wording stable without spawning `gh`.
+ *
+ * A task-outcome artifact is downloaded only up to 64 MiB, since a
+ * `task-outcomes/v2` artifact also carries the job's gate records and raw
+ * logs. Inside it, only JSON entries up to 1 MiB inflate, so a crafted
+ * archive cannot make the capture expand an entry; the gate records under
+ * `.beep/gates/` are skipped, and every other JSON entry is decoded as a
+ * `task-outcomes/v1` or `v2` record, so a malformed one fails with its run.
  *
  * **Example** (Inspect the REST runner)
  *
@@ -568,7 +573,9 @@ export const makeRouteGithubRunner = Effect.gen(function* () {
           const wanted = A.filter(
             artifacts,
             (artifact) =>
-              !artifact.expired && Str.startsWith(prefix)(artifact.name) && artifact.size_in_bytes <= RECORD_BYTES_MAX
+              !artifact.expired &&
+              Str.startsWith(prefix)(artifact.name) &&
+              artifact.size_in_bytes <= ARTIFACT_DOWNLOAD_BYTES_MAX
           );
           const records = yield* Effect.forEach(
             wanted,
