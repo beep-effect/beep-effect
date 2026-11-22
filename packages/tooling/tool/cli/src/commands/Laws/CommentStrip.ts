@@ -47,6 +47,7 @@ import {
   CommentLedgerRow,
   CommentLedgerSummary,
   CommentRefusal,
+  CommentRepoPath,
   CommentVote,
 } from "./CommentStrip.model.ts";
 import { CommentLawExecutionError } from "./Laws.errors.ts";
@@ -118,6 +119,7 @@ interface Span {
 interface ApplyContext {
   readonly ballots: ReadonlyArray<HashMap.HashMap<string, CommentVote>>;
   readonly committed: HashSet.HashSet<string>;
+  readonly covered: HashSet.HashSet<string>;
   readonly realRoot: string;
   readonly roots: ReadonlyArray<string>;
 }
@@ -255,7 +257,7 @@ const locateRows = Effect.fn("CommentStrip.locateRows")(function* (
     ordinals = HashMap.set(ordinals, group, ordinal + 1);
     const row = CommentLedgerRow.make({
       cid: yield* cidOf(group, ordinal),
-      file: source.file,
+      file: CommentRepoPath.make(source.file),
       line: lineOf(source.text, comment.start),
       kind: comment.kind,
       text: comment.text,
@@ -376,6 +378,8 @@ const readBallot = Effect.fn("CommentStrip.readBallot")(function* (absolute: str
   const fs = yield* FileSystem.FileSystem;
   const text = yield* readRequiredText(absolute, label);
   const identity = yield* fs.realPath(absolute).pipe(CommentLawExecutionError.mapError(`Failed to resolve ${label}`));
+  const info = yield* fs.stat(absolute).pipe(CommentLawExecutionError.mapError(`Failed to stat ${label}`));
+  const inode = O.map(info.ino, (ino) => `${info.dev}:${ino}`);
   let ballot = HashMap.empty<string, CommentVote>();
   for (const [line, value] of nonEmptyLines(text)) {
     const vote = yield* voteOfLine(label, line, value);
@@ -383,7 +387,7 @@ const readBallot = Effect.fn("CommentStrip.readBallot")(function* (absolute: str
       return yield* CommentLawExecutionError.new(`${label}:${line} votes ${vote.cid} a second time`);
     ballot = HashMap.set(ballot, vote.cid, vote);
   }
-  return { ballot, identity };
+  return { ballot, identity, inode };
 });
 
 const refusalOf = (row: CommentLedgerRow, reason: CommentRefusalReason, detail: string): CommentRefusal =>
@@ -677,13 +681,16 @@ const applyToFile = Effect.fn("CommentStrip.applyToFile")(function* (
   context: ApplyContext
 ) {
   const fs = yield* FileSystem.FileSystem;
+  if (!HashSet.has(context.covered, file))
+    return emptyOutcome(refuseAll(rows, "uncovered-path", "the comment law does not cover this file"));
   const absolute = `${repoRoot}/${file}`;
-  const text = yield* readOptionalText(absolute, file);
-  if (O.isNone(text)) return emptyOutcome(refuseAll(rows, "stale-cid", "the file is gone"));
+  const exists = yield* fs.exists(absolute).pipe(CommentLawExecutionError.mapError(`Failed to stat ${file}`));
+  if (!exists) return emptyOutcome(refuseAll(rows, "stale-cid", "the file is gone"));
   const real = yield* fs.realPath(absolute).pipe(CommentLawExecutionError.mapError(`Failed to resolve ${file}`));
   if (real !== `${context.realRoot}/${file}`)
     return emptyOutcome(refuseAll(rows, "symlinked-path", "the path resolves through a symlink"));
-  const source = parseSource(file, text.value);
+  const text = yield* fs.readFileString(absolute).pipe(CommentLawExecutionError.mapError(`Failed to read ${file}`));
+  const source = parseSource(file, text);
   if (source.errors > 0) return emptyOutcome(refuseAll(rows, "parse-error", "the file does not parse"));
   const current = yield* locateRows(source);
   const byCid = HashMap.fromIterable(A.map(current, (entry) => [entry.row.cid, entry] as const));
@@ -697,7 +704,7 @@ const applyToFile = Effect.fn("CommentStrip.applyToFile")(function* (
   const refusals = A.appendAll(A.appendAll(refused, siblings), shrunk);
   if (A.isReadonlyArrayEmpty(planned)) return emptyOutcome(refusals);
   const after = stripText(source, planned);
-  const proof = commentStripProof(file, text.value, after);
+  const proof = commentStripProof(file, text, after);
   if (O.isSome(proof))
     return emptyOutcome(
       A.appendAll(
@@ -706,7 +713,7 @@ const applyToFile = Effect.fn("CommentStrip.applyToFile")(function* (
       )
     );
   const latest = yield* readOptionalText(absolute, file);
-  if (!O.contains(latest, text.value))
+  if (!O.contains(latest, text))
     return emptyOutcome(
       A.appendAll(
         refusals,
@@ -823,15 +830,22 @@ export const runCommentApply = Effect.fn("CommentStrip.runCommentApply")(functio
     concurrency: 1,
   });
   const identities = A.map(read, ({ identity }) => identity);
-  if (A.length(A.dedupe(identities)) < A.length(identities))
+  const inodes = A.getSomes(A.map(read, ({ inode }) => inode));
+  if (A.length(A.dedupe(identities)) < A.length(identities) || A.length(A.dedupe(inodes)) < A.length(inodes))
     return yield* CommentLawExecutionError.new("--votes names one file twice; each vote file counts once.");
   const ballots = A.map(read, ({ ballot }) => ballot);
-  const { roots } = yield* commentLawFiles(repoRoot);
+  const { files, roots } = yield* commentLawFiles(repoRoot);
   const committed = yield* committedDecisions(repoRoot, rows, ballots, roots);
   const realRoot = yield* fs
     .realPath(repoRoot)
     .pipe(CommentLawExecutionError.mapError("Failed to resolve the repository root"));
-  const context: ApplyContext = { ballots, committed: HashSet.fromIterable(committed), realRoot, roots };
+  const context: ApplyContext = {
+    ballots,
+    committed: HashSet.fromIterable(committed),
+    covered: HashSet.fromIterable(files),
+    realRoot,
+    roots,
+  };
   const outcomes = yield* applyToFiles(repoRoot, rows, context);
   return CommentApplySummary.make({
     deleted: A.reduce(outcomes, 0, (total, outcome) => total + outcome.deleted),

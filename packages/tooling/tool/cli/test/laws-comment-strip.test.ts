@@ -339,13 +339,18 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
     );
 
     it.effect(
-      "counts one vote file once, even through another spelling",
+      "counts one vote file once, even through another spelling or a hard link",
       Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
         const checkout = yield* makeCheckout([["packages/a/src/A.ts", "// note\nexport const a = 1;\n"]]);
         const { summary, rows } = yield* checkout.ledger();
         const only = yield* checkout.vote("only", [`${rows[0]?.cid ?? ""}\tT`]);
         const error = yield* Effect.flip(checkout.apply(summary.path, [only, `./votes/../${only}`]));
         expect(error.message).toContain("each vote file counts once");
+        yield* fs.link(path.join(checkout.root, only), path.join(checkout.root, "votes/linked.tsv"));
+        const linked = yield* Effect.flip(checkout.apply(summary.path, [only, "votes/linked.tsv"]));
+        expect(linked.message).toContain("each vote file counts once");
         const text = yield* checkout.read("packages/a/src/A.ts");
         expect(text).toBe("// note\nexport const a = 1;\n");
       })
@@ -356,9 +361,13 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
-        const checkout = yield* makeCheckout([["packages/a/src/A.ts", "// note\nexport const a = 1;\n"]]);
+        const checkout = yield* makeCheckout([
+          ["packages/a/src/A.ts", "// note\nexport const a = 1;\n"],
+          ["packages/a/src/B.ts", "export const b = 1;\n"],
+        ]);
         const { summary, rows } = yield* checkout.ledger();
-        yield* fs.makeDirectory(path.join(checkout.root, "packages/a/src/B.ts"), { recursive: true });
+        yield* fs.remove(path.join(checkout.root, "packages/a/src/B.ts"));
+        yield* fs.makeDirectory(path.join(checkout.root, "packages/a/src/B.ts"));
         const broken = `{"cid":"0000000000000000","file":"packages/a/src/B.ts","line":1,"kind":"prose","text":"x","protect":null}`;
         yield* checkout.write("broken.jsonl", `${broken}\n`);
         const ledgerText = yield* checkout.read(summary.path);
@@ -587,6 +596,38 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
     it.effect("tells regular expression literals apart", () =>
       Effect.sync(() => {
         assertSome(commentStripProof("r.ts", "export const r = /a/;\n", "export const r = /b/;\n"), "proof-failed");
+      })
+    );
+
+    it.effect(
+      "rejects ledger paths that leave the checkout and refuses files the law does not cover",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout([
+          ["packages/a/src/A.ts", "// note\nexport const a = 1;\n"],
+          ["goals/x/probe.ts", "// note\nexport const p = 1;\n"],
+        ]);
+        const { rows } = yield* checkout.ledger();
+        const cid = rows[0]?.cid ?? "";
+        const first = yield* checkout.vote("first", [`${cid}\tT`]);
+        const second = yield* checkout.vote("second", [`${cid}\tT`]);
+        const rowFor = (file: string) =>
+          `{"cid":"${cid}","file":"${file}","line":1,"kind":"prose","text":"note","protect":null}\n`;
+        for (const file of [
+          "../other/src/A.ts",
+          "/etc/A.ts",
+          "packages\\\\a\\\\src\\\\A.ts",
+          "packages//a/A.ts",
+          "./A.ts",
+        ]) {
+          yield* checkout.write("escape.jsonl", rowFor(file));
+          const error = yield* Effect.flip(checkout.apply("escape.jsonl", [first, second]));
+          expect(error.message).toContain("escape.jsonl:1 is not a ledger row");
+        }
+        yield* checkout.write("uncovered.jsonl", rowFor("goals/x/probe.ts"));
+        const result = yield* checkout.apply("uncovered.jsonl", [first, second]);
+        expect(reasonsOf(result.refusals)).toEqual(["uncovered-path"]);
+        const text = yield* checkout.read("goals/x/probe.ts");
+        expect(text).toBe("// note\nexport const p = 1;\n");
       })
     );
   });

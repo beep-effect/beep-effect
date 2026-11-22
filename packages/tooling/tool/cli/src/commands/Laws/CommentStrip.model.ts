@@ -17,7 +17,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import { CommentKind } from "@beep/lint-rules/comment-grammar";
 import { LiteralKit } from "@beep/schema";
+import * as A from "effect/Array";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const $I = $RepoCliId.create("commands/Laws/CommentStrip.model");
 
@@ -68,7 +70,8 @@ export type CommentVoteCode = typeof CommentVoteCode.Type;
  * `ordinal-sibling` refuses a deletion that would hand a surviving identical
  * comment the deleted row's `cid`. `proof-failed` and `parse-error` come
  * from the AST-identity proof. `symlinked-path` is a file that resolves
- * through a symlink, and `file-changed` a file edited while apply ran. In
+ * through a symlink, `uncovered-path` a file the comment law does not cover,
+ * and `file-changed` a file edited while apply ran. In
  * every case the file is left untouched.
  *
  * **Example** (Recognize a protected refusal)
@@ -94,6 +97,7 @@ export const CommentRefusalReason = LiteralKit([
   "proof-failed",
   "parse-error",
   "symlinked-path",
+  "uncovered-path",
   "file-changed",
 ]).pipe($I.annoteSchema("CommentRefusalReason", { description: "Why the strip left one ledger row in place." }));
 
@@ -104,6 +108,57 @@ export const CommentRefusalReason = LiteralKit([
  * @since 0.0.0
  */
 export type CommentRefusalReason = typeof CommentRefusalReason.Type;
+
+const isRepoRelativeFile = (file: string): boolean =>
+  !Str.startsWith("/")(file) &&
+  !Str.includes("\\")(file) &&
+  !A.some(Str.split(file, "/"), (segment) => segment === ".." || segment === "." || segment === "");
+
+/**
+ * A file path relative to the repository root, written with `/`, that cannot
+ * leave the repository.
+ *
+ * **Details**
+ *
+ * An absolute path, a backslash, and an empty, `.` or `..` segment are
+ * rejected, so a ledger row can only name a file inside the checkout. Apply
+ * still resolves the real path, which catches a symlink escape.
+ *
+ * **Example** (Check ledger paths)
+ *
+ * ```ts
+ * import * as S from "effect/Schema"
+ * import { CommentRepoPath } from "@beep/repo-cli/commands/Laws/CommentStrip.model"
+ *
+ * console.log(S.is(CommentRepoPath)("packages/foo/src/Bar.ts")) // true
+ * console.log(S.is(CommentRepoPath)("../other/src/Bar.ts")) // false
+ * console.log(S.is(CommentRepoPath)("/etc/passwd")) // false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CommentRepoPath = S.String.check(
+  S.makeFilter(isRepoRelativeFile, {
+    identifier: "CommentRepoPathShape",
+    title: "Repository Relative File",
+    description: "A relative file path with no backslash and no empty, `.` or `..` segment.",
+    message: "expected a repository-relative file path with no backslash and no empty, `.` or `..` segment",
+  })
+).pipe(
+  S.brand("CommentRepoPath"),
+  $I.annoteSchema("CommentRepoPath", {
+    description: "A file path relative to the repository root that cannot leave the repository.",
+  })
+);
+
+/**
+ * Type of {@link CommentRepoPath}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CommentRepoPath = typeof CommentRepoPath.Type;
 
 /**
  * One banned comment in a strip ledger.
@@ -121,11 +176,11 @@ export type CommentRefusalReason = typeof CommentRefusalReason.Type;
  *
  * ```ts
  * import * as O from "effect/Option"
- * import { CommentLedgerRow } from "@beep/repo-cli/commands/Laws/CommentStrip.model"
+ * import { CommentLedgerRow, CommentRepoPath } from "@beep/repo-cli/commands/Laws/CommentStrip.model"
  *
  * const row = CommentLedgerRow.make({
  *   cid: "0123456789abcdef",
- *   file: "packages/foo/src/Bar.ts",
+ *   file: CommentRepoPath.make("packages/foo/src/Bar.ts"),
  *   line: 12,
  *   kind: "prose",
  *   text: "retry twice",
@@ -141,7 +196,7 @@ export type CommentRefusalReason = typeof CommentRefusalReason.Type;
 export class CommentLedgerRow extends S.Opaque<CommentLedgerRow, { readonly brand: unique symbol }>()(
   S.Struct({
     cid: S.String,
-    file: S.String,
+    file: CommentRepoPath,
     line: S.Int,
     kind: CommentKind,
     text: S.String,

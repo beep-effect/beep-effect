@@ -110,7 +110,8 @@ matches the tree or whose identical sibling is gone (`stale-cid`: run
 `--ledger` again and reclassify), a deletion that would leave an identical
 comment with the same anchor behind (`ordinal-sibling`: the survivor would
 inherit the deleted row's `cid`), one vote (`too-few-votes`), no agreement
-(`votes-disagree`), a path through a symlink (`symlinked-path`) and a file
+(`votes-disagree`), a path through a symlink (`symlinked-path`), a file the
+law does not cover (`uncovered-path`) and a file
 edited while apply ran (`file-changed`). Each vote file counts once.
 
 Each comment's exact range is removed, plus its whole line when nothing else is
