@@ -4,13 +4,13 @@
     "id": "comment-census-defects",
     "packetId": "goal-packet/v1:01ebf28c5e9af18b91496ed46da815c48b42451fae48bc07cffac1b8154e9064",
     "title": "Comment Census Defects",
-    "status": "active",
+    "status": "completed-retained",
     "created": "2026-11-22",
     "updated": "2026-11-22",
     "packetAnchorDocument": "SPEC.md"
   },
   "packetPath": "goals/comment-census-defects",
-  "lifecycle": "active",
+  "lifecycle": "completed-retained",
   "mission": "Fix the defects the comment census found under comments, each as a small PR.",
   "executionCapable": true,
   "reflectionRequired": true,
@@ -23,7 +23,13 @@
     "requiresPullRequest": true,
     "requiresMergeable": true,
     "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
-    "grandfathered": false
+    "grandfathered": false,
+    "pullRequests": [
+      {
+        "number": 3482,
+        "role": "final"
+      }
+    ]
   },
   "currentSourceOfTruth": [
     "AGENTS.md",
@@ -84,5 +90,9 @@
     "Required source files are missing or materially contradictory.",
     "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
     "The same blocker repeats after reasonable investigation."
-  ]
+  ],
+  "closeout": {
+    "status": "completed-retained",
+    "finalPullRequest": 3482
+  }
 }
