@@ -95,6 +95,165 @@ export const CodeId = S.String.check(
 export type CodeId = typeof CodeId.Type;
 
 /**
+ * The package half of a code identity, `@beep/<package>`: the prefix every code identity of the package shares.
+ *
+ * **Details**
+ *
+ * A package is never a {@link CodeId}: a binding names a kind, so a stored
+ * code always has a module path. Only a {@link CodeMove} names a package.
+ *
+ * **Example** (Check a code package)
+ *
+ * ```ts import.meta.vitest name="Check a code package"
+ * import * as S from "effect/Schema"
+ * import { CodePackage } from "@beep/identity/Term"
+ *
+ * S.is(CodePackage)("@beep/test-runner") // => true
+ * S.is(CodePackage)("@beep/test-runner/Vitest/TestHang") // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CodePackage = S.String.check(
+  S.isPattern(
+    /^@beep\/[a-z0-9][a-z0-9-]*$/,
+    $I.annote("CodePackagePattern", {
+      title: "Code Package",
+      description: "A @beep package name with no module path.",
+      message: "Expected a package of the form @beep/<package>.",
+    })
+  )
+).pipe(
+  S.brand("CodePackage"),
+  $I.annoteSchema("CodePackage", { description: "The package prefix of a package's code identities." })
+);
+
+/**
+ * Decoded type of {@link CodePackage}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CodePackage = typeof CodePackage.Type;
+
+/**
+ * The rename of one code identity, and of every code identity under it.
+ *
+ * **Example** (Rename a module)
+ *
+ * ```ts import.meta.vitest name="Rename a module"
+ * import { CodeId, CodeIdMove } from "@beep/identity/Term"
+ *
+ * const move = CodeIdMove.make({
+ *   from: CodeId.make("@beep/test-runner/Vitest"),
+ *   to: CodeId.make("@beep/test-runner/Runner")
+ * })
+ * move.to // => "@beep/test-runner/Runner"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CodeIdMove extends S.Opaque<CodeIdMove, { readonly brand: unique symbol }>()(
+  S.Struct({ from: CodeId, to: CodeId }).pipe(
+    $I.annoteSchema("CodeIdMove", { description: "The rename of a code identity and every code under it." })
+  )
+) {}
+
+/**
+ * The rename of a package: every code identity of it moves to the new package and keeps its path.
+ *
+ * **Example** (Rename a package)
+ *
+ * ```ts import.meta.vitest name="Rename a package"
+ * import { CodePackage, CodePackageMove } from "@beep/identity/Term"
+ *
+ * const move = CodePackageMove.make({
+ *   from: CodePackage.make("@beep/test-runner"),
+ *   to: CodePackage.make("@beep/test-kit")
+ * })
+ * move.to // => "@beep/test-kit"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CodePackageMove extends S.Opaque<CodePackageMove, { readonly brand: unique symbol }>()(
+  S.Struct({ from: CodePackage, to: CodePackage }).pipe(
+    $I.annoteSchema("CodePackageMove", { description: "The rename of a package and every code identity of it." })
+  )
+) {}
+
+/**
+ * A rename of code identities: one code identity (with every code under it) or one whole package.
+ *
+ * **Details**
+ *
+ * Both ends are of the same kind, so a moved code always keeps a package and
+ * at least one path segment: a package moves to a package, and a code
+ * identity to a code identity. {@link moveCode} applies the move to one code.
+ *
+ * **Example** (Check the ends of a move)
+ *
+ * ```ts import.meta.vitest name="Check the ends of a move"
+ * import * as S from "effect/Schema"
+ * import { CodeMove } from "@beep/identity/Term"
+ *
+ * S.is(CodeMove)({ from: "@beep/test-runner", to: "@beep/test-kit" }) // => true
+ * S.is(CodeMove)({ from: "@beep/test-runner/Vitest", to: "@beep/test-runner/Runner" }) // => true
+ * S.is(CodeMove)({ from: "@beep/test-runner/Vitest", to: "@beep/test-kit" }) // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CodeMove = S.Union([CodeIdMove, CodePackageMove]).pipe(
+  $I.annoteSchema("CodeMove", {
+    description: "A rename of a code identity and every code under it, or of every code identity of a package.",
+  })
+);
+
+/**
+ * Decoded type of {@link CodeMove}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CodeMove = typeof CodeMove.Type;
+
+/**
+ * The code identity a code has after a move: `to` for `from` itself, `to/<rest>` for `from/<rest>`, else itself.
+ *
+ * **Example** (Move a code with its package)
+ *
+ * ```ts import.meta.vitest name="Move a code with its package"
+ * import { CodeId, CodePackage, CodePackageMove, moveCode } from "@beep/identity/Term"
+ *
+ * const move = CodePackageMove.make({
+ *   from: CodePackage.make("@beep/test-runner"),
+ *   to: CodePackage.make("@beep/test-kit")
+ * })
+ * moveCode(CodeId.make("@beep/test-runner/Vitest/TestHang"), move) // => "@beep/test-kit/Vitest/TestHang"
+ * moveCode(CodeId.make("@beep/test-runner-ui/Vitest/TestHang"), move) // => "@beep/test-runner-ui/Vitest/TestHang"
+ * ```
+ *
+ * @param code - The code identity to move.
+ * @param move - The rename to apply.
+ * @returns The moved code identity, or `code` when the move does not reach it.
+ * @category combinators
+ * @since 0.0.0
+ */
+export const moveCode: {
+  (move: CodeMove): (code: CodeId) => CodeId;
+  (code: CodeId, move: CodeMove): CodeId;
+} = dual(
+  2,
+  (code: CodeId, { from, to }: CodeMove): CodeId =>
+    code === from || Str.startsWith(`${from}/`)(code) ? CodeId.make(`${to}${Str.slice(Str.length(from))(code)}`) : code
+);
+
+/**
  * A vocabulary release `major.minor.patch` of the term snapshot.
  *
  * **Details**
@@ -1417,17 +1576,6 @@ const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> 
 
 const termIriOf = (namespace: Namespace, local: TermLocal): TermIri => TermIri.make(`${namespace.iri}${local}`);
 
-// The code a binding moves to: `to` for `from` itself, `to/<rest>` for `from/<rest>`.
-const rebindCode =
-  (from: CodeId, to: CodeId) =>
-  (code: CodeId): CodeId => {
-    if (code === from) {
-      return to;
-    }
-    const under = `${from}/`;
-    return Str.startsWith(under)(code) ? CodeId.make(`${to}/${Str.slice(under.length)(code)}`) : code;
-  };
-
 const snapshotAt = (table: RegistryRows, release: ReleaseVersion): TermSnapshot =>
   Result.getOrThrow(
     TermSnapshot.fromRows({
@@ -1589,15 +1737,15 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
   });
 
   /**
-   * Move the bindings of a code identity to a new code identity, keeping each term and `since`.
+   * Move the bindings a {@link CodeMove} reaches to their new code identities, keeping each term and `since`.
    *
    * **Details**
    *
-   * A binding moves when its code is `from`, or, in prefix mode, when its code
-   * starts with `from/`; the rest of the code is kept under `to/`. Terms,
-   * namespaces and deprecations are untouched, so the published term set of
-   * the table's snapshot is unchanged. A move onto a code that is already
-   * bound returns the `DuplicateBinding` conflict.
+   * A binding moves when its code is the move's `from` or is under `from/`; the
+   * rest of the code is kept under `to/`. Terms, namespaces and deprecations
+   * are untouched, so the published term set of the table's snapshot is
+   * unchanged. A move onto a code that is already bound returns the
+   * `DuplicateBinding` conflict.
    *
    * **When to use**
    *
@@ -1609,7 +1757,7 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
    * ```ts import.meta.vitest name="Rebind a module's code identities"
    * import * as Result from "effect/Result"
    * import * as S from "effect/Schema"
-   * import { CodeId, RegistryShard, RegistryTable } from "@beep/identity/Term"
+   * import { CodeId, CodeIdMove, RegistryShard, RegistryTable } from "@beep/identity/Term"
    *
    * const vitest = S.decodeUnknownSync(RegistryShard)({
    *   namespace: { prefix: "vitest", iri: "https://beep-effect.com/ns/vitest/" },
@@ -1618,7 +1766,11 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
    *   deprecations: []
    * })
    * const table = Result.getOrThrow(RegistryTable.fromShards([vitest]))
-   * const moved = RegistryTable.rebind(table, CodeId.make("@beep/test-runner/Vitest"), CodeId.make("@beep/test-runner/Runner"))
+   * const move = CodeIdMove.make({
+   *   from: CodeId.make("@beep/test-runner/Vitest"),
+   *   to: CodeId.make("@beep/test-runner/Runner")
+   * })
+   * const moved = RegistryTable.rebind(table, move)
    * Result.getOrThrow(moved).bindings[0]?.code // => "@beep/test-runner/Runner/TestHang"
    * ```
    *
@@ -1626,28 +1778,16 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
    * @since 0.0.0
    */
   static readonly rebind: {
-    (
-      from: CodeId,
-      to: CodeId
-    ): (table: RegistryTable) => Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>;
-    (
-      table: RegistryTable,
-      from: CodeId,
-      to: CodeId
-    ): Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>;
+    (move: CodeMove): (table: RegistryTable) => Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>;
+    (table: RegistryTable, move: CodeMove): Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>;
   } = dual(
-    3,
-    (
-      table: RegistryTable,
-      from: CodeId,
-      to: CodeId
-    ): Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>> => {
-      const move = rebindCode(from, to);
+    2,
+    (table: RegistryTable, move: CodeMove): Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>> => {
       const rows: RegistryRows = {
         namespaces: table.namespaces,
         terms: table.terms,
         bindings: A.map(table.bindings, (binding) =>
-          TermBinding.make({ code: move(binding.code), term: binding.term, since: binding.since })
+          TermBinding.make({ code: moveCode(binding.code, move), term: binding.term, since: binding.since })
         ),
         deprecations: table.deprecations,
       };

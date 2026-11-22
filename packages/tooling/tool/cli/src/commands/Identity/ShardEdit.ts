@@ -5,8 +5,9 @@
  * **Details**
  *
  * `rebind` moves the bindings of a code identity (and every code under it) to
- * a new code identity after a module or package rename, keeping each term and
- * its `since`, so no published IRI changes. `deprecate` retires a live term:
+ * a new code identity after a module rename, or every binding of a package to
+ * its new name after a package rename. Each term keeps its IRI and its
+ * `since`, so no published IRI changes. `deprecate` retires a live term:
  * it removes the local from its shard and appends the append-only
  * deprecation row, with the vocabulary release the regenerated snapshot will
  * carry and an optional replacement in the same namespace. Both rewrite only
@@ -20,6 +21,9 @@
 import { $RepoCliId } from "@beep/identity/packages";
 import {
   CodeId,
+  CodeMove,
+  CodePackage,
+  moveCode,
   RegistryShard,
   RegistryTable,
   registryConflictMessage,
@@ -77,6 +81,7 @@ export const ShardEditRefusalReason = LiteralKit([
   "shard-invalid",
   "registry-conflict",
   "invalid-code",
+  "mixed-move",
   "nothing-bound",
   "target-module-missing",
   "invalid-curie",
@@ -87,7 +92,7 @@ export const ShardEditRefusalReason = LiteralKit([
 ]).pipe(
   $I.annoteSchema("ShardEditRefusalReason", {
     description:
-      "Why a registry shard edit is refused: an invalid shard, a resulting registry conflict, a malformed code identity or CURIE, a rebind that moves nothing or onto a module the checkout does not have, a term that is not live or is still bound, or a replacement outside the namespace or not live.",
+      "Why a registry shard edit is refused: an invalid shard, a resulting registry conflict, a malformed code identity or CURIE, a rebind between a package and a code identity, a rebind that moves nothing or onto a module the checkout does not have, a term that is not live or is still bound, or a replacement outside the namespace or not live.",
   })
 );
 
@@ -124,32 +129,6 @@ export class ShardEditRefusal extends S.Opaque<ShardEditRefusal, { readonly bran
       description: "A refused registry shard edit: reason, subject and remediation detail.",
     })
   )
-) {}
-
-/**
- * A rebind request: move the bindings of `from`, and of every code under `from/`, to `to`.
- *
- * **Example** (Request a module rename)
- *
- * ```ts
- * import { CodeId } from "@beep/identity/Term"
- * import { RebindRequest } from "@beep/repo-cli/commands/Identity/ShardEdit"
- *
- * const request = RebindRequest.make({
- *   from: CodeId.make("@beep/repo-cli/commands/Research/Library/Library.schemas"),
- *   to: CodeId.make("@beep/repo-cli/commands/Research/Catalog/Catalog.schemas")
- * })
- * console.log(request.to)
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export class RebindRequest extends S.Opaque<RebindRequest, { readonly brand: unique symbol }>()(
-  S.Struct({
-    from: CodeId.annotateKey({ description: "The code identity the bindings move from." }),
-    to: CodeId.annotateKey({ description: "The code identity the bindings move to." }),
-  }).pipe($I.annoteSchema("RebindRequest", { description: "Move the bindings of a code identity to a new one." }))
 ) {}
 
 /**
@@ -262,23 +241,13 @@ const editedFile = (
 const byCode = Order.mapInput(Order.String, (binding: { readonly code: string }) => binding.code);
 const byTerm = Order.mapInput(Order.String, (deprecation: { readonly term: string }) => deprecation.term);
 
-// The code a binding moves to: `to` for `from` itself, `to/<rest>` for `from/<rest>`.
-const movedCode =
-  ({ from, to }: RebindRequest) =>
-  (code: CodeId): CodeId =>
-    code === from
-      ? to
-      : Str.startsWith(`${from}/`)(code)
-        ? CodeId.make(`${to}${Str.slice(Str.length(from))(code)}`)
-        : code;
-
 // The shard with its bindings moved. The moved table has no conflict, so the moved codes are distinct
 // and the sorted bindings always form a shard.
-const movedShard = (shard: RegistryShard, move: (code: CodeId) => CodeId): RegistryShard =>
+const movedShard = (shard: RegistryShard, move: CodeMove): RegistryShard =>
   RegistryShard.make({
     ...shard,
     bindings: A.sort(
-      A.map(shard.bindings, (binding) => ShardBinding.make({ ...binding, code: move(binding.code) })),
+      A.map(shard.bindings, (binding) => ShardBinding.make({ ...binding, code: moveCode(binding.code, move) })),
       byCode
     ),
   });
@@ -288,10 +257,11 @@ const movedShard = (shard: RegistryShard, move: (code: CodeId) => CodeId): Regis
  *
  * **Details**
  *
- * The move is checked on the whole table first, so a move onto a code that
- * is already bound is refused with the `DuplicateBinding` conflict. A
- * request that moves no binding is refused, because a module rename that
- * finds nothing to move usually names the wrong code identity. The command
+ * The move renames a code identity and every code under it, or every code of
+ * a package. It is checked on the whole table first, so a move onto a code
+ * that is already bound is refused with the `DuplicateBinding` conflict. A
+ * move of no binding is refused, because a rename that finds nothing to move
+ * usually names the wrong code identity. The command
  * then refuses a move onto a code that names no module of the checkout
  * (`target-module-missing`), which would leave every moved class unbound. Terms,
  * namespaces and deprecations are untouched, so the regenerated snapshot
@@ -300,9 +270,9 @@ const movedShard = (shard: RegistryShard, move: (code: CodeId) => CodeId): Regis
  * **Example** (Rebind a test-runner module)
  *
  * ```ts
- * import { CodeId, TermSnapshot } from "@beep/identity/Term"
+ * import { CodeId, CodeIdMove, TermSnapshot } from "@beep/identity/Term"
  * import { RegistryLayout, RegistrySourceFile, renderRegistryJson } from "@beep/repo-cli/commands/Identity/Registry"
- * import { planRebind, RebindRequest, ShardEditInput } from "@beep/repo-cli/commands/Identity/ShardEdit"
+ * import { planRebind, ShardEditInput } from "@beep/repo-cli/commands/Identity/ShardEdit"
  * import * as Result from "effect/Result"
  *
  * const layout = RegistryLayout.of("packages/identity")
@@ -317,23 +287,23 @@ const movedShard = (shard: RegistryShard, move: (code: CodeId) => CodeId): Regis
  * })
  * const planned = planRebind(
  *   ShardEditInput.make({ layout, shardFiles: [vitest], previous: TermSnapshot.empty }),
- *   RebindRequest.make({ from: CodeId.make("@beep/test-runner/Vitest"), to: CodeId.make("@beep/test-runner/Runner") })
+ *   CodeIdMove.make({ from: CodeId.make("@beep/test-runner/Vitest"), to: CodeId.make("@beep/test-runner/Runner") })
  * )
  * console.log(Result.getOrThrow(planned)[0]?.content.includes("@beep/test-runner/Runner/TestHang")) // true
  * ```
  *
  * @param input - The layout, shard files and committed snapshot.
- * @param request - The code identity to move and its destination.
+ * @param move - The code identity or package to move and its destination.
  * @returns The rewritten shard files, or every refusal.
  * @category projections
  * @since 0.0.0
  */
 export const planRebind: {
-  (request: RebindRequest): (input: ShardEditInput) => ShardEditResult;
-  (input: ShardEditInput, request: RebindRequest): ShardEditResult;
+  (move: CodeMove): (input: ShardEditInput) => ShardEditResult;
+  (input: ShardEditInput, move: CodeMove): ShardEditResult;
 } = dual(
   2,
-  (input: ShardEditInput, request: RebindRequest): ShardEditResult =>
+  (input: ShardEditInput, move: CodeMove): ShardEditResult =>
     Result.gen(function* () {
       const files = yield* decodeShardFiles(input.shardFiles);
       const table = yield* tableOf(
@@ -341,20 +311,19 @@ export const planRebind: {
         A.map(files, ([, shard]) => shard)
       );
       yield* Result.mapError(
-        RegistryTable.rebind(table, request.from, request.to),
+        RegistryTable.rebind(table, move),
         A.map((conflict) => refusal("registry-conflict", input.layout.shards, registryConflictMessage(conflict)))
       );
-      const move = movedCode(request);
       const touched = A.filter(files, ([, shard]) =>
-        A.some(shard.bindings, (binding) => move(binding.code) !== binding.code)
+        A.some(shard.bindings, (binding) => moveCode(binding.code, move) !== binding.code)
       );
       if (!A.isReadonlyArrayNonEmpty(touched)) {
         return yield* Result.fail(
           A.of(
             refusal(
               "nothing-bound",
-              request.from,
-              `No binding has the code ${request.from} or a code under ${request.from}/; nothing moves.`
+              move.from,
+              `No binding has the code ${move.from} or a code under ${move.from}/; nothing moves.`
             )
           )
         );
@@ -435,7 +404,8 @@ const deprecatedRows = (
  * **Details**
  *
  * The term must be a live local of its shard and no code identity may still
- * be bound to it, since a binding names a live term. The deprecation's
+ * be bound to it, since a binding names a live term. The binding is removed
+ * from its shard first; a rebind would keep the term bound. The deprecation's
  * `since` is the release the regenerated snapshot carries, the next major of
  * the committed snapshot, so the row and the snapshot agree. The edited
  * shards must still form a table, which refuses a replacement chain that the
@@ -498,7 +468,7 @@ export const planDeprecate: {
             refusal(
               "term-bound",
               request.curie,
-              `${request.curie} is bound by ${A.join(codes, ", ")}; remove or rebind the binding before deprecating the term.`
+              `${request.curie} is bound by ${A.join(codes, ", ")}; remove the binding from ${file.path} before deprecating the term. A rebind does not help: it keeps the term bound.`
             )
           )
         );
@@ -609,17 +579,49 @@ const runShardEdit = Effect.fn("IdentityShardEdit.run")(function* (
     }
     return yield* failWithReportedExit(`identity ${label}: the edited shards do not regenerate.`);
   }
-  for (const file of written.success) {
+  for (const file of written.success.written) {
     const verb = A.some(planned.success, (shard) => shard.path === file) ? "rewrote" : "regenerated";
     yield* Console.log(`[identity:${label}] ${verb} ${file}`);
   }
+  for (const file of written.success.removed) {
+    yield* Console.log(`[identity:${label}] removed ${file}`);
+  }
 });
 
-const decodeCode = S.decodeUnknownResult(CodeId);
+const isMoveEnd = S.is(S.Union([CodeId, CodePackage]));
+const decodeMove = S.decodeUnknownResult(CodeMove);
+
+// The requested move, or a refusal for each end that is neither a code identity nor a package, or for
+// a move between the two kinds.
+const moveOf = (options: {
+  readonly from: string;
+  readonly to: string;
+}): Result.Result<CodeMove, A.NonEmptyReadonlyArray<ShardEditRefusal>> => {
+  const invalid = A.map(
+    A.filter([options.from, options.to], (end) => !isMoveEnd(end)),
+    (end) =>
+      refusal(
+        "invalid-code",
+        end,
+        "Expected a code identity of the form @beep/<package>/<path>, or a package of the form @beep/<package>."
+      )
+  );
+  return A.isReadonlyArrayNonEmpty(invalid)
+    ? Result.fail(invalid)
+    : Result.mapError(decodeMove(options), () =>
+        A.of(
+          refusal(
+            "mixed-move",
+            `${options.from} -> ${options.to}`,
+            "A package moves to a package and a code identity to a code identity; name both ends of the same kind."
+          )
+        )
+      );
+};
 
 // A rebind onto a module the checkout does not have would leave every moved class unbound, so each
 // moved code must name a module file of its package.
-const rebindTargetRefusals = (request: RebindRequest): CheckoutRefusals =>
+const rebindTargetRefusals = (move: CodeMove): CheckoutRefusals =>
   Effect.fnUntraced(function* (repoRoot: string, planned: ReadonlyArray<RegistrySourceFile>) {
     const moved = pipe(
       planned,
@@ -630,14 +632,14 @@ const rebindTargetRefusals = (request: RebindRequest): CheckoutRefusals =>
         })
       ),
       A.map((binding) => binding.code),
-      A.filter((code) => code === request.to || Str.startsWith(`${request.to}/`)(code))
+      A.filter((code) => code === move.to || Str.startsWith(`${move.to}/`)(code))
     );
     const dangling = yield* danglingBindingCodes(repoRoot, moved);
     return A.map(dangling, (code) =>
       refusal(
         "target-module-missing",
         code,
-        `${code} names no module of the checkout; create or rename the module under its package's src first, then rebind.`
+        `${code} names no module of the checkout; create or rename the module (or the package) first, then rebind.`
       )
     );
   });
@@ -646,26 +648,15 @@ const runRebind = Effect.fn("IdentityShardEdit.runRebind")(function* (options: {
   readonly from: string;
   readonly to: string;
 }) {
-  const from = decodeCode(options.from);
-  const to = decodeCode(options.to);
-  if (Result.isFailure(from) || Result.isFailure(to)) {
-    return yield* reportRefusals(
-      "rebind",
-      A.of(
-        refusal(
-          "invalid-code",
-          Result.isFailure(from) ? options.from : options.to,
-          "Expected a code identity of the form @beep/<package>/<path>."
-        )
-      )
-    );
+  const move = moveOf(options);
+  if (Result.isFailure(move)) {
+    return yield* reportRefusals("rebind", move.failure);
   }
-  const request = RebindRequest.make({ from: from.success, to: to.success });
-  return yield* runShardEdit("rebind", planRebind(request), rebindTargetRefusals(request));
+  return yield* runShardEdit("rebind", planRebind(move.success), rebindTargetRefusals(move.success));
 });
 
 /**
- * `beep identity rebind <from> <to>`: move the bindings of a renamed module to its new code identity.
+ * `beep identity rebind <from> <to>`: move the bindings of a renamed module, or of a renamed package, to its new code identities.
  *
  * **Example** (Read the command name)
  *
@@ -682,16 +673,20 @@ export const identityRebindCommand = Command.make(
   "rebind",
   {
     from: Argument.String("from").pipe(
-      Argument.withDescription("Code identity the bindings move from, such as @beep/<package>/<old module path>")
+      Argument.withDescription(
+        "Code identity the bindings move from, such as @beep/<package>/<old module path>, or the package @beep/<old package>"
+      )
     ),
     to: Argument.String("to").pipe(
-      Argument.withDescription("Code identity the bindings move to, such as @beep/<package>/<new module path>")
+      Argument.withDescription(
+        "Code identity the bindings move to, such as @beep/<package>/<new module path>, or the package @beep/<new package>"
+      )
     ),
   },
   runRebind
 ).pipe(
   Command.withDescription(
-    "Move the registry bindings of a code identity, and of every code under it, to a new code identity that names a module of the checkout; no published IRI changes"
+    "Move the registry bindings of a code identity and every code under it, or of every code of a package, to new code identities that name modules of the checkout; no published IRI changes"
   )
 );
 

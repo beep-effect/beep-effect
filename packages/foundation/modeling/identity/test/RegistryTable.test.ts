@@ -2,6 +2,10 @@ import { fcRuns } from "@beep/fc-runs";
 import { SafePnLocal } from "@beep/identity/PnLocal";
 import {
   CodeId,
+  CodeIdMove,
+  CodeMove,
+  CodePackage,
+  CodePackageMove,
   Deprecation,
   Namespace,
   NamespaceIri,
@@ -358,12 +362,13 @@ describe("RegistryTable.snapshot", () => {
 });
 
 describe("RegistryTable.rebind", () => {
+  const moveTo = (from: CodeId, to: string) => CodeIdMove.make({ from, to: code(to) });
   const table = Result.getOrThrow(RegistryTable.fromShards([vitestShard, fabioShard]));
   const codes = (result: Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>) =>
     A.map(Result.getOrThrow(result).bindings, (binding) => binding.code);
 
   it("moves one code identity and keeps its term and since", () => {
-    const moved = Result.getOrThrow(RegistryTable.rebind(table, hangCode, code("@beep/test-runner/Runner/Hang")));
+    const moved = Result.getOrThrow(RegistryTable.rebind(table, moveTo(hangCode, "@beep/test-runner/Runner/Hang")));
     expect(moved.bindings).toStrictEqual([
       TermBinding.make({
         code: code("@beep/test-runner/Runner/Hang"),
@@ -377,11 +382,44 @@ describe("RegistryTable.rebind", () => {
 
   it("moves every code identity under a module in prefix mode and leaves other codes alone", () => {
     expect(
-      codes(RegistryTable.rebind(table, code("@beep/test-runner/Vitest"), code("@beep/test-kit/Runner")))
+      codes(RegistryTable.rebind(table, moveTo(code("@beep/test-runner/Vitest"), "@beep/test-kit/Runner")))
     ).toStrictEqual(["@beep/test-kit/Runner/TestHang"]);
     expect(
-      codes(RegistryTable.rebind(table, code("@beep/test-runner/Vit"), code("@beep/test-kit/Runner")))
+      codes(RegistryTable.rebind(table, moveTo(code("@beep/test-runner/Vit"), "@beep/test-kit/Runner")))
     ).toStrictEqual([hangCode]);
+  });
+
+  it("moves every code identity of a renamed package and no code of a package that shares its prefix", () => {
+    const twoPackages = Result.getOrThrow(
+      RegistryTable.fromShards([
+        shard({
+          namespace: { prefix: "vitest", iri: "https://beep-effect.com/ns/vitest/" },
+          terms: ["TestFailure", "TestHang"],
+          bindings: [
+            { code: "@beep/test-runner-ui/Vitest/TestFailure", local: "TestFailure", since: "1.0.0" },
+            { code: hangCode, local: "TestHang", since: "1.0.0" },
+          ],
+        }),
+      ])
+    );
+    const rename = CodePackageMove.make({
+      from: CodePackage.make("@beep/test-runner"),
+      to: CodePackage.make("@beep/test-kit"),
+    });
+    expect(codes(RegistryTable.rebind(rename)(twoPackages))).toStrictEqual([
+      "@beep/test-kit/Vitest/TestHang",
+      "@beep/test-runner-ui/Vitest/TestFailure",
+    ]);
+  });
+
+  it("refuses a move between a package and a code identity", () => {
+    const isMove = S.is(CodeMove);
+    expect(isMove({ from: "@beep/test-runner", to: "@beep/test-kit" })).toBe(true);
+    expect(isMove({ from: hangCode, to: "@beep/test-kit/Vitest/TestHang" })).toBe(true);
+    // Moving the code itself onto a package would leave a code with no path.
+    expect(isMove({ from: hangCode, to: "@beep/test-kit" })).toBe(false);
+    expect(isMove({ from: "@beep/test-runner", to: hangCode })).toBe(false);
+    expect(isMove({ from: "@beep/Test_Runner", to: "@beep/test-kit" })).toBe(false);
   });
 
   it("refuses a move onto a code identity that is already bound", () => {
@@ -398,7 +436,7 @@ describe("RegistryTable.rebind", () => {
       ])
     );
     expect(
-      conflictTags(RegistryTable.rebind(twoBound, hangCode, code("@beep/test-runner/Vitest/TestFailure")))
+      conflictTags(RegistryTable.rebind(twoBound, moveTo(hangCode, "@beep/test-runner/Vitest/TestFailure")))
     ).toStrictEqual(["DuplicateBinding"]);
   });
 });

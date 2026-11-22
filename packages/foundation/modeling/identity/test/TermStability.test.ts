@@ -5,6 +5,7 @@ import { $I as $BeepId } from "@beep/identity/packages";
 import * as Registry from "@beep/identity/Registry";
 import {
   CodeId,
+  CodeIdMove,
   RegistryShard,
   RegistryTable,
   ReleaseVersion,
@@ -203,7 +204,9 @@ describe("term stability", () => {
 
   it("L0-3 renaming a module changes no published IRI", () => {
     const before = tableOf(committedShards);
-    const after = Result.getOrThrow(RegistryTable.rebind(before, LibraryModule, CatalogModule));
+    const after = Result.getOrThrow(
+      RegistryTable.rebind(before, CodeIdMove.make({ from: LibraryModule, to: CatalogModule }))
+    );
     const previous = RegistryTable.snapshot(before, committed);
     const next = RegistryTable.snapshot(after, previous);
 
@@ -261,7 +264,9 @@ describe("term stability", () => {
     ([area, module]) => {
       const before = tableOf(committedShards);
       const target = CodeId.make(`@beep/repo-cli/${area}/${module}`);
-      const after = Result.getOrThrow(RegistryTable.rebind(before, LibraryModule, target));
+      const after = Result.getOrThrow(
+        RegistryTable.rebind(before, CodeIdMove.make({ from: LibraryModule, to: target }))
+      );
       const previous = RegistryTable.snapshot(before, committed);
       const next = RegistryTable.snapshot(after, previous);
 

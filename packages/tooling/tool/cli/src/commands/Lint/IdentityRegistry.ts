@@ -32,7 +32,9 @@
  * the shards must keep the published term set of a base ref (`--base`, by
  * default the merge base with `origin/main`), read with `git show`. A term or
  * namespace IRI the base published leaves only through a deprecation, which
- * only `bun run beep identity deprecate` writes.
+ * only `bun run beep identity deprecate` writes. A checkout with no registry at all
+ * publishes nothing, so deleting the registry is reported as the removal of every
+ * term the base published.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -40,6 +42,7 @@
 
 import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
+import { TermSnapshot } from "@beep/identity/Term";
 import {
   isCheckoutSubjectPruned,
   loadCheckoutInventory,
@@ -68,6 +71,7 @@ import { registerMissingWorkspaceIdentityPackages } from "../CreatePackage/inter
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
 import { LabIdentitySegment } from "../CreatePackage/internal/LabIdentitySegment.ts";
 import {
+  baseSnapshotIssues,
   checkRegistry,
   checkRegistryAgainstBase,
   decodeBaseSnapshot,
@@ -77,6 +81,7 @@ import {
 } from "../Identity/Registry.ts";
 import type { CallExpression, ImportDeclaration, ImportSpecifier, SourceFile } from "ts-morph";
 import type { LabIdentitySegmentState } from "../CreatePackage/internal/LabIdentitySegment.ts";
+import type { IdentityRegistryIssue } from "../Identity/Registry.ts";
 
 const $I = $RepoCliId.create("commands/Lint/IdentityRegistry");
 
@@ -636,8 +641,9 @@ const readBaseSnapshot = Effect.fn("IdentityRegistry.readBaseSnapshot")(function
 
 // Declared-term registry rows: invalid shards, shard conflicts, generated-artifact drift and breaks
 // of the base ref's published term set. A checkout with neither shards nor the generated data module
-// (a fixture repo) carries no registry. `--fix` regenerates the artifacts first; it never edits a
-// shard and never writes a deprecation.
+// carries no registry: it publishes nothing, so every term the base published is removed, and a base
+// that published nothing (a fixture repo) leaves no row. `--fix` regenerates the artifacts first; it
+// never edits a shard and never writes a deprecation.
 const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermRegistryViolations")(function* (
   repoRoot: string,
   fix: boolean,
@@ -645,25 +651,28 @@ const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermReg
 ) {
   const layout = yield* resolveRegistryLayout(repoRoot);
 
-  if (!(yield* registryPresent(repoRoot, layout))) {
-    return A.empty<IdentityRegistryViolation>();
-  }
+  const present = yield* registryPresent(repoRoot, layout);
 
-  if (fix) {
+  if (fix && present) {
     const written = yield* writeRegistry(repoRoot, layout);
 
     if (Result.isSuccess(written)) {
-      for (const artifact of written.success) {
+      for (const artifact of written.success.written) {
         yield* Console.log(`[lint:identity-registry] regenerated ${artifact}`);
+      }
+      for (const projection of written.success.removed) {
+        yield* Console.log(`[lint:identity-registry] removed ${projection}`);
       }
     }
   }
 
   const baseSnapshot = yield* readBaseSnapshot(repoRoot, layout.snapshot, base);
-  const baseIssues = Result.isSuccess(baseSnapshot)
-    ? yield* checkRegistryAgainstBase(repoRoot, layout, baseSnapshot.success)
-    : A.of(baseSnapshot.failure);
-  const committedIssues = yield* checkRegistry(repoRoot, layout);
+  const committedIssues = present ? yield* checkRegistry(repoRoot, layout) : A.empty<IdentityRegistryIssue>();
+  const baseIssues = Result.isFailure(baseSnapshot)
+    ? A.of(baseSnapshot.failure)
+    : present
+      ? yield* checkRegistryAgainstBase(repoRoot, layout, baseSnapshot.success)
+      : baseSnapshotIssues(baseSnapshot.success, TermSnapshot.empty, layout.snapshot);
   const issues = A.appendAll(committedIssues, baseIssues);
   return A.map(issues, (issue) =>
     IdentityRegistryViolation.make({ kind: issue.kind, subject: issue.subject, detail: issue.detail })
