@@ -85,11 +85,10 @@ const install = Effect.fn("FullExtractionTest.install")(function* (kind: Citatio
     journal: journals.configuration,
   };
   const stage = yield* makeCitationFullExtraction(setup.limits, setup.runtime, configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      extract: bind(stage.extract),
+    })),
     Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );

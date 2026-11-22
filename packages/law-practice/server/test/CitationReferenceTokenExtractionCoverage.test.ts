@@ -37,9 +37,10 @@ const install = Effect.fnUntraced(function* () {
   };
   const make = (input: unknown, limits = setup.limits) =>
     makeCitationReferenceTokenExtraction(limits, setup.runtime, input).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) })))
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+        ...stage,
+        extract: bind(stage.extract),
+      })),
       Effect.provideContext(setup.provided),
       DateTime.withCurrentZoneOffset(0)
     );

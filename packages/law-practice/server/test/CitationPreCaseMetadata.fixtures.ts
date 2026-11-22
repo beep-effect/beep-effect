@@ -80,9 +80,7 @@ export const readCitationPreCaseMetadataCorpus = Effect.fn("PreCaseMetadataTest.
 });
 const install = makeCitationMetadataFixtureInstaller((...args: Parameters<typeof makeCitationPreCaseMetadata>) =>
   makeCitationPreCaseMetadata(...args).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-    )
+    Effect.zipWith(makeCitationTestScaffoldBinding(args[0]), (stage, bind) => ({ ...stage, apply: bind(stage.apply) }))
   )
 )(readCitationPreCaseMetadataCorpus());
 /** Compare every early skip locally plus actual backward matching through both runtimes. */
@@ -153,9 +151,10 @@ export const assertCitationPreCaseMetadataConfiguration = Effect.fn("PreCaseMeta
   yield* assertCitationMetadataInstallControls(
     (...args: Parameters<typeof makeCitationPreCaseMetadata>) =>
       makeCitationPreCaseMetadata(...args).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-        )
+        Effect.zipWith(makeCitationTestScaffoldBinding(args[0]), (stage, bind) => ({
+          ...stage,
+          apply: bind(stage.apply),
+        }))
       ),
     setup,
     corpus.configuration

@@ -47,11 +47,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           Effect.gen(function* () {
             const setup = yield* installCitationAnnotationEntryFixture(kind);
             const entry = yield* makeCitationAnnotationEntry(setup.limits, setup.runtime, setup.configuration).pipe(
-              Effect.flatMap((stage) =>
-                makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
-                  Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
-                )
-              ),
+              Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits, "annotate"), (stage, bind) => ({
+                ...stage,
+                annotate: bind(stage.annotate),
+              })),
               Effect.provideContext(setup.provided)
             );
             const source = word("<i>Foo</i>");
@@ -96,11 +95,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
       Effect.gen(function* () {
         const setup = yield* installCitationAnnotationEntryFixture();
         const entry = yield* makeCitationAnnotationEntry(setup.limits, setup.runtime, setup.configuration).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
-              Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits, "annotate"), (stage, bind) => ({
+            ...stage,
+            annotate: bind(stage.annotate),
+          })),
           Effect.provideContext(setup.provided)
         );
         const corpus = yield* readCitationOracleFixture(
@@ -139,11 +137,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           }),
         });
         const entry = yield* makeCitationAnnotationEntry(setup.limits, setup.runtime, setup.configuration).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
-              Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits, "annotate"), (stage, bind) => ({
+            ...stage,
+            annotate: bind(stage.annotate),
+          })),
           Effect.provideService(CitationAnnotationAnnotator, callback),
           Effect.provideContext(setup.provided)
         );
@@ -177,11 +174,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           update: Effect.fn("AnnotationEntryTest.update")(() => Effect.succeed(0)),
         });
         const entry = yield* makeCitationAnnotationEntry(setup.limits, setup.runtime, setup.configuration).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
-              Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits, "annotate"), (stage, bind) => ({
+            ...stage,
+            annotate: bind(stage.annotate),
+          })),
           Effect.provideService(CitationAnnotationOffsetUpdater, updater),
           Effect.provideContext(setup.provided)
         );
