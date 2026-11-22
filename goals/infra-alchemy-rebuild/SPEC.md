@@ -2588,7 +2588,8 @@ queue's one-day retention, since that queue has no redrive, and the job is lost 
 - **A nonzero build-DLQ depth is therefore a STOP** in every proof and every post-check of this stack, next to the
   other build and job-retry queue counts.
 - **An ERROR line in a scale-up log is a STOP** in every proof and post-check too: a dropped message after a failed DLQ
-  send leaves no queue depth, only that line.
+  send leaves no queue depth, only that line. One send failure writes two error lines, the failed send and the
+  dead letter it was for, and the rule counts lines.
 
 Lane fix/ci-runners-scaleup-jit-token-tier
 

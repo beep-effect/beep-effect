@@ -64,6 +64,13 @@ Ported from the MIT project vitest-agent by C. Spencer Beggs: the agent renderer
 
 - Upstream packages: `@vitest-agent/ui` 6.0.7, `@vitest-agent/plugin` 6.0.15
 - Upstream commit: `1cf1ab94` (reference checkout `.repos/vitest-agent`)
+- Ported by `goals/gate-run-history`: `packages/engine/src/layers/HistoryTrackerLive.ts` and
+  `packages/engine/src/services/HistoryTracker.ts` (the window and series key, in
+  `src/GateHistoryStore.ts` and `src/internal/MemoryHistoryBackend.ts`),
+  `packages/engine/src/utils/persist-transaction.ts` (the no-yield transaction invariant, in
+  `src/GateHistorySqlite.ts`), `packages/engine/src/migrations/0003_run_retention.ts` (the
+  retention invariant, in `src/GateHistorySqlite.ts`) and `packages/sdk/src/utils/canonicalize-git-url.ts`
+  (the repository key, in `src/GateHistoryLocation.ts`)
 - License: [LICENSE](./LICENSE) (upstream MIT notice alongside the beep-effect notice)
 
 ### Deviations

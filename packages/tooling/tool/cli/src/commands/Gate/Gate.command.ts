@@ -17,6 +17,7 @@ import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as Path from "effect/Path";
 import { runCheckGate } from "./GateCheck.ts";
+import { HistoryWhere, listHistoryLines, showSeriesLines } from "./GateHistoryQuery.ts";
 import { QueryWhere, showItemLines, showRunLines } from "./GateQuery.ts";
 import { splitAudienceArgs } from "./GateRuntime.ts";
 
@@ -69,6 +70,38 @@ const itemCommand = Command.make(
     Effect.flatMap(showItemLines(gate, selector, QueryWhere.make({ dir, run })), printLines)
 ).pipe(Command.withDescription("Show one item of a gate run in full: location, attempts, message, diff and stack"));
 
+const historyFlags = {
+  gate: Argument.String("gate").pipe(Argument.withDescription("The gate: test or check")),
+  dir: Flag.String("dir").pipe(
+    Flag.optional,
+    Flag.withDescription(
+      "The package directory, relative to the repository root (default: the working directory's package, else the workspace runs)"
+    )
+  ),
+};
+
+const historyCommand = Command.make(
+  "history",
+  {
+    ...historyFlags,
+    branch: Flag.String("branch").pipe(Flag.optional, Flag.withDescription("Only this branch (default: every branch)")),
+  },
+  ({ gate, dir, branch }) => Effect.flatMap(listHistoryLines(gate, HistoryWhere.make({ dir, branch })), printLines)
+).pipe(
+  Command.withDescription("List a subject's recorded gate runs, newest first: branch, origin, failures and input")
+);
+
+const seriesCommand = Command.make(
+  "series",
+  {
+    ...historyFlags,
+    selector: Argument.String("selector").pipe(
+      Argument.withDescription("The item's key fingerprint, or text in its title")
+    ),
+  },
+  ({ gate, selector, dir }) => Effect.flatMap(showSeriesLines(gate, selector, HistoryWhere.make({ dir })), printLines)
+).pipe(Command.withDescription("Show one item's recorded series by branch, flagged when the one flaky rule holds"));
+
 const runCommand = Command.make("run").pipe(
   Command.withDescription("Run one gate for the package in the working directory"),
   Command.withSubcommands([checkCommand])
@@ -89,6 +122,6 @@ const runCommand = Command.make("run").pipe(
  * @since 0.0.0
  */
 export const gateCommand = Command.make("gate").pipe(
-  Command.withDescription("Gate reports: run a gate and print its console from the record"),
-  Command.withSubcommands([runCommand, showCommand, itemCommand])
+  Command.withDescription("Gate reports: run a gate, print its console from the record, and read its history"),
+  Command.withSubcommands([runCommand, showCommand, itemCommand, historyCommand, seriesCommand])
 );

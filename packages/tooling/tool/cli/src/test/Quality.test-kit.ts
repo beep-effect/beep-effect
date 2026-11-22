@@ -116,6 +116,7 @@ export {
   readWorkspacePackageText,
   tagsFromComment,
 } from "../commands/Quality/internal/QualityArtifactSupport.ts";
+export * from "../commands/Quality/internal/QuarantineHistory.ts";
 export { testTsgoPrograms } from "../commands/Quality/internal/TestTsgoPrograms.ts";
 export * from "../commands/Quality/internal/TurboConfigProof.ts";
 export * from "../commands/Quality/internal/TurboLaneDigest.ts";

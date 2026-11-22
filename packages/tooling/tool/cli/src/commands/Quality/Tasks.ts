@@ -142,6 +142,7 @@ import {
   lintPolicyAffectedTargetsFromDryRun,
   resolveLintPolicyScope,
 } from "./internal/LintPolicyScope.ts";
+import { recordQuarantineHistory } from "./internal/QuarantineHistory.ts";
 import {
   appendTurboLaneLedger,
   closeTurboLaneLedger,
@@ -2257,7 +2258,10 @@ const collectStreamingStepOutcomes = Effect.fn("QualityTasks.collectStreamingSte
   yield* ledger.close;
   yield* O.match(artifactCwd, {
     onNone: () => Effect.void,
-    onSome: (cwd) => Effect.flatMap(Ref.get(incidents), (recorded) => writeFlakeQuarantineArtifact(cwd, recorded)),
+    onSome: (cwd) =>
+      Effect.flatMap(Ref.get(incidents), (recorded) =>
+        writeFlakeQuarantineArtifact(cwd, recorded).pipe(Effect.andThen(recordQuarantineHistory(cwd, recorded)))
+      ),
   });
 
   return outcomes;
