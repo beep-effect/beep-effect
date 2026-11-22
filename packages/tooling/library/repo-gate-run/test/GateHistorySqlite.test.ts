@@ -94,13 +94,22 @@ describe.skipIf(!isBunRuntime)("GateHistorySqlite (Bun runtime)", () => {
           yield* Effect.sync(() => {
             const db = new Database(file);
             db.run("DROP TABLE gate_history_ingested");
+            // A version 1 store may hold a run's observations after pruning its row.
+            db.run("DELETE FROM gate_history_runs WHERE run_id = 'r1'");
             db.run("ALTER TABLE gate_history_runs DROP COLUMN partial");
             db.run("PRAGMA user_version = 1");
             db.close();
           });
-          const replay = Effect.flatMap(GateHistoryStore, (store) => store.ingest(reportOf(second), laneA));
-          const inserted = yield* withStoreAt(sqliteLayer(file), replay);
-          assert.isFalse(inserted.inserted);
+          const replays = Effect.flatMap(GateHistoryStore, (store) =>
+            Effect.forEach([first, second], (run) => store.ingest(reportOf(run), laneA), { concurrency: 1 })
+          );
+          const ingested = yield* withStoreAt(sqliteLayer(file), replays);
+          assert.deepStrictEqual(
+            A.map(ingested, (ingest) => ingest.inserted),
+            [false, false]
+          );
+          const upgraded = yield* withStoreAt(sqliteLayer(file), answerFor(second));
+          assert.strictEqual(R.get(upgraded.labels, keyOf("adds")).pipe(O.getOrNull), "persistent");
           yield* Effect.sync(() => {
             const db = new Database(file);
             db.run("UPDATE gate_history_ingested SET answer_json = '{\"labels\":7}'");

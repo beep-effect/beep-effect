@@ -132,7 +132,8 @@ const subjectOf = Effect.fnUntraced(function* (where: HistoryWhere) {
   const root = yield* findRepoRoot(cwd);
   const base = O.getOrElse(root, constant(cwd));
   const dir = O.match(where.dir, { onNone: () => cwd, onSome: (relative) => path.resolve(base, relative) });
-  const located = yield* locatePackage(yield* packageDirOf(dir, base));
+  const packageDir = yield* packageDirOf(dir, base);
+  const located = yield* locatePackage(packageDir);
   return {
     repoRoot: O.getOrElse(
       O.map(located, (found) => found.repoRoot),
