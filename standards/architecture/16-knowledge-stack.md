@@ -74,7 +74,7 @@ additions and the major on deprecations, and existing rows keep their `since`.
 The lint refuses a changed term set released below the release its change calls
 for, so two term sets never ship under one release.
 An addition needs no deprecation record: `L0-3` asks for one only when a
-published term is removed or changed. That field is a string with a local
+published term is removed or its IRI changed. That field is a string with a local
 pattern check and the literal domains use `S.Literals`, the standing exception
 for the bottom package that `@beep/schema` itself depends on; `@beep/schema`'s
 tests cross-check both, because an identity test dependency on `@beep/schema`
@@ -95,9 +95,9 @@ layers reference.
 **Objects.** `ContentHash`, a brand over the prefixed digest; one domain brand
 per minted identifier (`OccurrenceId`, `AnnotationId`, `RunEntityId`,
 `ActivityId`, `ClaimId`), all over the `@beep/schema` digest; `TermIri`;
-`Namespace` (prefix, IRI); `Term` (IRI, namespace, local name); `TermBinding`
-(code id, term, since); `Deprecation` (term, since, replacement). `ActivityId`
-is minted from what is known when a run starts: `activity/v1`, the operation
+`Namespace` (prefix and a `NamespaceIri`, which ends with `/` or `#`); `Term`
+(IRI, namespace, local name); `TermBinding` (code id, term, since);
+`Deprecation` (term, since, replacement). `ActivityId` is minted from what is known when a run starts: `activity/v1`, the operation
 term, the agent or engine pin, the prompt digest when there is one, the sorted
 ids the run used, and its start time (`@beep/jsonc/ActivityStart`). What the
 run generated and when it ended are fields of the activity record, outside the
@@ -114,8 +114,8 @@ in `@beep/rdf`, which owns the RDF data model; `@beep/identity` never imports
 **Laws.** `L0-1` and `L0-3` are tested in `@beep/identity`, `L0-2` in
 `@beep/jsonc`. `L0-1` (expand after contract is the identity on registered terms),
 `L0-2` (equivalent records hash alike, with set-valued fields sorted on the
-preimage), `L0-3` (acceptance: the published term set changes only with a
-deprecation record, module-derived IRIs included). Their tests are
+preimage), `L0-3` (acceptance: a published IRI leaves the term set only with
+a deprecation record, module-derived IRIs included; an addition needs none). Their tests are
 `identity/test/Curie.laws.test.ts`, `jsonc/test/ContentHash.laws.test.ts` and
 `identity/test/TermStability.test.ts` under `packages/foundation/modeling/`.
 
