@@ -11,8 +11,10 @@ import { it } from "@beep/test-runner";
 import * as WinkEngine from "@beep/wink";
 import { WinkBackendLive } from "@beep/wink";
 import { describe, expect } from "@effect/vitest";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as Str from "effect/String";
 
 const TestLayer = Layer.provide(WinkBackendLive, WinkEngine.WinkEngineLive);
 
@@ -78,6 +80,24 @@ describe("WinkBackend", () => {
         for (const entity of entities) {
           expect(typeof entity.entityType).toBe("string");
           expect(entity.span.end).toBeGreaterThanOrEqual(entity.span.start);
+        }
+      })
+    );
+  });
+
+  it.layer(TestLayer, { timeout: "30 seconds" })("gives each repeated entity mention its own span", (it) => {
+    it.effect(
+      "gives each repeated entity mention its own span",
+      Effect.fnUntraced(function* () {
+        const backend = yield* Backend.NLPBackend;
+        const text = "Email a@b.com then a@b.com again.";
+        const entities = yield* backend.extractEntities(text);
+        expect(A.map(entities, (entity) => entity.span)).toEqual([
+          { end: 13, start: 6 },
+          { end: 26, start: 19 },
+        ]);
+        for (const entity of entities) {
+          expect(Str.slice(entity.span.start, entity.span.end)(text)).toBe(entity.text);
         }
       })
     );

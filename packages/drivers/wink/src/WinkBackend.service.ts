@@ -26,14 +26,12 @@
 
 import * as Schema from "@beep/nlp/Graph/Schema";
 import { BackendCapabilities, NLPBackend, notSupported, operationError } from "@beep/nlp-processing/Backend/NLPBackend";
-import { A } from "@beep/utils";
+import { A, thunkEmptyStr } from "@beep/utils";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
-import { constant } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
-import * as Str from "effect/String";
 import { WinkEngine } from "./Wink.service.ts";
 import type { Detail, ItsFunction } from "wink-nlp";
 
@@ -51,11 +49,26 @@ const capabilities: BackendCapabilities = BackendCapabilities.make({
   tokenization: true,
 });
 
-/** Locate `needle` in `haystack`, returning a character span (length-correct if absent). */
-const findSpan = (haystack: string, needle: string): { readonly end: number; readonly start: number } => {
-  const start = O.getOrElse(constant(-1))(Str.indexOf(needle)(haystack));
-  return start < 0 ? { end: needle.length, start: 0 } : { end: start + needle.length, start };
-};
+type CharSpan = { readonly end: number; readonly start: number };
+
+/**
+ * Character offsets of every wink token, accumulated from each token's preceding
+ * spaces and value (the same accumulation `WinkTokenization` uses).
+ */
+const tokenCharSpans = (values: ReadonlyArray<string>, spaces: ReadonlyArray<string>): ReadonlyArray<CharSpan> =>
+  A.mapAccum(values, 0, (previousEnd, value, index) => {
+    const start = previousEnd + O.getOrElse(A.get(spaces, index), thunkEmptyStr).length;
+    const end = start + value.length;
+    return [end, { end, start }] as const;
+  })[1];
+
+/** Map a wink `its.span` token range (`[first, last]`, inclusive) onto character offsets. */
+const entityCharSpan = (tokens: ReadonlyArray<CharSpan>, tokenRange: ReadonlyArray<number>): O.Option<CharSpan> =>
+  O.zipWith(
+    O.flatMap(A.get(tokenRange, 0), (first) => A.get(tokens, first)),
+    O.flatMap(A.get(tokenRange, 1), (last) => A.get(tokens, last)),
+    (first, last) => ({ end: last.end, start: first.start })
+  );
 
 const makeWinkBackend = Effect.gen(function* () {
   const engine = yield* WinkEngine;
@@ -117,17 +130,40 @@ const makeWinkBackend = Effect.gen(function* () {
       const its = yield* Effect.mapError(engine.its, toOpError("extractEntities"));
       const timestamp = yield* Clock.currentTimeMillis;
       const detailAccessor: ItsFunction<Detail> = its.detail;
+      const spanAccessor: ItsFunction<Array<number>> = its.span;
+      const spacesAccessor: ItsFunction<string> = its.precedingSpaces;
       const details = doc.entities().out(detailAccessor);
-      return A.map(details, (element) => {
-        const detail = P.isString(element) ? { type: "UNKNOWN", value: element } : element;
-        return Schema.EntityNode.make({
-          confidence: 1,
-          entityType: detail.type,
-          span: findSpan(text, detail.value),
-          text: detail.value,
-          timestamp,
-        });
-      });
+      const tokenRanges: ReadonlyArray<ReadonlyArray<number> | string> = doc.entities().out(spanAccessor);
+      const tokens = tokenCharSpans(doc.tokens().out(), doc.tokens().out(spacesAccessor));
+      return yield* Effect.forEach(
+        details,
+        (element, index) => {
+          const detail = P.isString(element) ? { type: "UNKNOWN", value: element } : element;
+          const span = O.flatMap(A.get(tokenRanges, index), (tokenRange) =>
+            P.isString(tokenRange) ? O.none() : entityCharSpan(tokens, tokenRange)
+          );
+          return O.match(span, {
+            onNone: () =>
+              Effect.fail(
+                toOpError("extractEntities")({
+                  entity: detail.value,
+                  reason: "wink returned no resolvable token span for the entity.",
+                })
+              ),
+            onSome: (resolved) =>
+              Effect.succeed(
+                Schema.EntityNode.make({
+                  confidence: 1,
+                  entityType: detail.type,
+                  span: resolved,
+                  text: detail.value,
+                  timestamp,
+                })
+              ),
+          });
+        },
+        { concurrency: 1 }
+      );
     }),
 
     parseDependencies: Effect.fn("WinkBackend.parseDependencies")(function* (_sentence: string) {
