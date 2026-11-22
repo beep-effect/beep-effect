@@ -743,3 +743,36 @@ to the gap between the reference checkout (main) and the pinned release.
   the proof started, which still include a launch whose instance has terminated. The evidence script decides
   the proof that way (exactly one call). The watcher's active count is an early warning only, and a later
   watcher reads the same CloudTrail count for its launch abort.
+
+## 2026-11-22: after the label move, the Pulumi fleet relaunched idle runners for stale queued-build messages
+
+- **Doing:** P5 step 4a, moving every workflow reader onto the `beep-fleet-*` labels while the old fleet
+  drained.
+- **Evidence:** the old fleet's queued-build queue held about 234 in-flight messages for jobs that had
+  already finished (`0/234/0`; no sends since 19:20Z). The old scale-up has no job-queued check and the queue
+  keeps messages for one day, so each redelivery launched an idle Spot runner: 15 `RunInstances` by the old
+  scale-up between 19:12Z and 19:58Z, 6 of them after the 4a merge. The queue was purged at 20:07:24Z on
+  the driver's word and read back `0/0/0`; the old fleet's own scale-down then retired its last two
+  instances (20:08Z, 20:10Z) and it has had none since.
+- **Would have prevented it:** purging the old build queue as part of the label move, in the same step that
+  stops new work from reaching the old fleet, with a read-back of the queue depth before the move is called
+  done.
+
+## 2026-11-22: `gh --jq` rounds webhook delivery ids, and the rounded ids 404
+
+- **Doing:** dry-running the 4a watch's delivery matching after the driver's gap ruling.
+- **Evidence:** delivery ids exceed 2^53. `gh api .../hooks/<id>/deliveries --jq '.[0].id'` printed
+  `...401472` where the API returned `...401474`, and fetching the rounded id answered `404 Not Found` with a
+  scope hint, which reads like a permissions problem. System `jq` 1.8 kept the exact id and the fetch worked.
+- **Would have prevented it:** reading delivery ids with system `jq` on the raw body (`gh api ... | jq -r`)
+  and passing them on as strings; never through `gh --jq`. The watch script does this, and a failed detail
+  read now gives UNKNOWN rather than a miss.
+
+## 2026-11-22: a JMESPath `length()` over nested instance lists counted reservations
+
+- **Doing:** checking that exactly one heavy runner launched after the 4b cap change.
+- **Evidence:** `length(Reservations[].Instances[?LaunchTime>='<t>'])` returned 14 while one instance had
+  launched: the filter yields one (often empty) list per reservation, so `length` counts reservations. The
+  4a watch's launch count used the same expression.
+- **Would have prevented it:** flattening before counting, `length(Reservations[].Instances[?...][])`, as the
+  running-instance count already did. The watch script is fixed.
