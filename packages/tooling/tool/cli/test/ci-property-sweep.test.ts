@@ -15,6 +15,7 @@ import {
   propertySweepPackages,
   propertySweepReplay,
 } from "@beep/repo-cli/commands/Ci";
+import { workspaceManifests } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { findRepoRoot } from "@beep/repo-utils";
 import * as NodeServices from "@effect/platform-node/NodeServices";
 import { describe, it } from "@effect/vitest";
@@ -22,8 +23,13 @@ import { assertFalse, assertTrue, deepStrictEqual, strictEqual } from "@effect/v
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
+import * as HashMap from "effect/HashMap";
 import * as Path from "effect/Path";
+import * as ChildProcess from "effect/process/ChildProcess";
+import * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import * as R from "effect/Record";
+import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 
 const UNIT = "bunx --bun vitest run --exclude=test/integration/**";
@@ -186,6 +192,48 @@ describe("property sweep", () => {
         const other = PropertySweepPackage.make({ name: "@t/b", dir: "packages/b", files: [], integration: [] });
         const error = yield* Effect.flip(judgePropertySweep(root, [other]));
         strictEqual(error.message, "Failed to read the property sweep's receipts.");
+      })
+    );
+
+    it.effect("covers, with the first step, every package of the live workspace that has a property file", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* findRepoRoot();
+        const workspaces = A.fromIterable(HashMap.entries(yield* workspaceManifests(root)));
+        // Git's list of test files, not the census's own walk of the tree.
+        const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
+        const git = yield* spawner.spawn(ChildProcess.make("git", ["-C", root, "ls-files", "*.test.ts", "*.test.tsx"]));
+        const listed = yield* git.stdout.pipe(Stream.decodeText, Stream.mkString);
+        const marked = yield* Effect.filter(
+          A.filter(Str.split(listed, "\n"), (file) => Str.isNonEmpty(file) && !Str.includes("/fixtures/")(file)),
+          (file) => Effect.map(fs.readFileString(path.join(root, file)), (source) => propertyTestMarker.test(source)),
+          { concurrency: 16 }
+        );
+        const holding = A.filter(workspaces, ([, workspace]) => {
+          const tests = `${path.relative(root, workspace.dir)}/test/`;
+          return A.some(marked, Str.startsWith(tests));
+        });
+        const second = A.map(yield* propertySweepPackages(root), (entry) => entry.name);
+        const first = pipe(
+          workspaces,
+          A.filter(([, workspace]) => HashMap.has(workspace.manifest.scripts, "test:property")),
+          A.map(([name]) => name)
+        );
+        assertTrue(A.isReadonlyArrayNonEmpty(second), "the census is empty");
+        deepStrictEqual(
+          A.filter(second, (name) => A.contains(first, name)),
+          []
+        );
+        // @beep/scratchpad has no test script, so no hosted lane runs its tests.
+        deepStrictEqual(
+          pipe(
+            holding,
+            A.map(([name]) => name),
+            A.filter((name) => !A.contains(first, name) && !A.contains(second, name))
+          ),
+          ["@beep/scratchpad"]
+        );
       })
     );
 

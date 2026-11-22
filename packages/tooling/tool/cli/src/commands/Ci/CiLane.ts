@@ -2661,9 +2661,13 @@ const runPropertySweep = Effect.fn("CiLane.runPropertySweep")(function* (repoRoo
   const packages = yield* propertySweepPackages(repoRoot);
   const swept = A.filter(packages, (entry) => A.isReadonlyArrayNonEmpty(entry.files));
   yield* clearPropertySweepReceipts(repoRoot, swept);
-  // With no filter Turbo would run every package's tests, so an empty sweep runs nothing.
-  const steps = A.isReadonlyArrayEmpty(swept) ? [] : [propertySweepStep(repoRoot, swept, options)];
-  const run = yield* Effect.exit(runQualityTaskStreamingStepGroup("ci:property", steps));
+  // An empty list means the census is wrong, and with no filter Turbo would run every package's tests.
+  if (A.isReadonlyArrayEmpty(swept)) {
+    return yield* CiCommandError.make({ message: "The property sweep found no package to run." });
+  }
+  const run = yield* Effect.exit(
+    runQualityTaskStreamingStepGroup("ci:property", [propertySweepStep(repoRoot, swept, options)])
+  );
   const verdicts = yield* judgePropertySweep(repoRoot, packages);
   const replay = { seed: resolvePropertyLaneSeed(options.seed), runs: resolvePropertyLaneRuns(options.runs) };
   yield* Effect.forEach(propertySweepLines(verdicts, replay), (line) => Console.log(line), {

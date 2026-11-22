@@ -3585,12 +3585,13 @@ describe("the unfiltered property lane's second step", () => {
       )
     );
 
-    it.effect("runs nothing when no package has a missed property file", () =>
+    it.effect("runs nothing and is red when it finds no package", () =>
       withSweepRepo({ firstExit: 0, secondExit: 1, receipt: false }, (commands) =>
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           yield* fs.writeFileString("packages/a/test/a.test.ts", "it(x);");
-          yield* runCiLane("property", nightly);
+          const error = yield* Effect.flip(runCiLane("property", nightly));
+          expect(error.message).toBe("The property sweep found no package to run.");
           const logged = yield* commands;
           expect(logged).toHaveLength(1);
         })
