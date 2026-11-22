@@ -16,7 +16,7 @@ import {
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
@@ -322,7 +322,7 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("ci shard-overflow-preflight",
           seen
         )
       );
-      expect(O.isNone(read.group)).toBe(true);
+      assertNone(read.group);
       expect(decideShardOverflowPreflight(read)).toStrictEqual(["missing-group"]);
     })
   );
