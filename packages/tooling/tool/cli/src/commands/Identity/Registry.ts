@@ -1202,6 +1202,11 @@ export const readShardFiles = Effect.fn("IdentityRegistry.readShardFiles")(funct
 /**
  * Plan the registry artifacts of the checkout at `repoRoot` from its shards and committed snapshot.
  *
+ * **Details**
+ *
+ * An edited shard stands in for the committed shard at its path, so an edit is
+ * planned in full before any of it is written.
+ *
  * **Example** (Plan the registry)
  *
  * ```ts
@@ -1213,9 +1218,19 @@ export const readShardFiles = Effect.fn("IdentityRegistry.readShardFiles")(funct
  * @category workflows
  * @since 0.0.0
  */
-export const planRegistry = Effect.fn("IdentityRegistry.plan")(function* (repoRoot: string, layout: RegistryLayout) {
+export const planRegistry = Effect.fn("IdentityRegistry.plan")(function* (
+  repoRoot: string,
+  layout: RegistryLayout,
+  edits: ReadonlyArray<RegistrySourceFile> = A.empty()
+) {
   const path = yield* Path.Path;
-  const shardFiles = yield* readShardFiles(repoRoot, layout);
+  const committed = yield* readShardFiles(repoRoot, layout);
+  const shardFiles = A.map(committed, (file) =>
+    pipe(
+      A.findFirst(edits, (edited) => edited.path === file.path),
+      O.getOrElse(() => file)
+    )
+  );
   const previous = yield* readOptional(path.join(repoRoot, layout.snapshot));
   return planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles, previous }));
 });
@@ -1307,8 +1322,9 @@ export const checkRegistryAgainstBase = Effect.fn("IdentityRegistry.checkAgainst
  *
  * **Details**
  *
- * Only the generated data module and the snapshot are written; a shard is
- * never rewritten. The result is the list of artifacts whose bytes changed.
+ * The edited shards are written with the generated artifacts, and only after the
+ * whole plan succeeds: a finding leaves every file as it was. No other shard is
+ * rewritten. The result is the list of files whose bytes changed.
  *
  * **Example** (Write the registry)
  *
@@ -1321,15 +1337,19 @@ export const checkRegistryAgainstBase = Effect.fn("IdentityRegistry.checkAgainst
  * @category workflows
  * @since 0.0.0
  */
-export const writeRegistry = Effect.fn("IdentityRegistry.write")(function* (repoRoot: string, layout: RegistryLayout) {
+export const writeRegistry = Effect.fn("IdentityRegistry.write")(function* (
+  repoRoot: string,
+  layout: RegistryLayout,
+  edits: ReadonlyArray<RegistrySourceFile> = A.empty()
+) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const plan = yield* planRegistry(repoRoot, layout);
+  const plan = yield* planRegistry(repoRoot, layout, edits);
   if (Result.isFailure(plan)) {
     return Result.fail(plan.failure);
   }
   let written = A.empty<string>();
-  for (const artifact of plan.success.artifacts) {
+  for (const artifact of A.appendAll(edits, plan.success.artifacts)) {
     const absolute = path.join(repoRoot, artifact.path);
     const current = yield* readOptional(absolute);
     if (O.isSome(current) && current.value === artifact.content) {

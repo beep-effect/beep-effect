@@ -452,13 +452,14 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
       )
     );
 
-    it.effect("reports why the edited shards do not regenerate", () =>
+    it.effect("leaves the checkout as it was when the edited shards do not regenerate", () =>
       Effect.andThen(
         temporaryWorkingDirectory,
         Effect.gen(function* () {
           const fs = yield* FileSystem.FileSystem;
           // The shard projects into a package this checkout does not have, which only regeneration checks.
-          yield* writeFixture({ ...fabio(["Note", "Report"]), projection: "@beep/test-runner" });
+          const shard = { ...fabio(["Note", "Report"]), projection: "@beep/test-runner" } as const;
+          yield* writeFixture(shard);
 
           const refused = yield* Effect.exit(runIdentityCommand(deprecateNote));
 
@@ -468,7 +469,9 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             `${fabioPath} [registry-shard-invalid] The shard projects into @beep/test-runner, which this checkout does not have.`,
           ]);
           const logs = yield* TestConsole.logLines;
-          expect(logs).toStrictEqual([`[identity:deprecate] rewrote ${fabioPath}`]);
+          expect(logs).toStrictEqual([]);
+          const untouched = yield* fs.readFileString(fabioPath);
+          expect(untouched).toBe(renderRegistryJson(shard));
           const dataWritten = yield* fs.exists(layout.data);
           expect(dataWritten).toBe(false);
         })

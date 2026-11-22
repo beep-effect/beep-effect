@@ -581,15 +581,13 @@ type CheckoutRefusals = (
 
 const noCheckoutRefusals: CheckoutRefusals = () => Effect.succeed(A.empty());
 
-// Plan the edit, check it against the checkout, write the shards it changes and regenerate the
-// registry artifacts.
+// Plan the edit, check it against the checkout, then write the shards it changes with the regenerated
+// registry artifacts. Nothing is written unless the edited shards regenerate.
 const runShardEdit = Effect.fn("IdentityShardEdit.run")(function* (
   label: string,
   plan: (input: ShardEditInput) => ShardEditResult,
   checkout: CheckoutRefusals = noCheckoutRefusals
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(ioError("Cannot find the repository root.")));
   const input = yield* readShardEditInput(repoRoot);
   if (Result.isFailure(input)) {
@@ -604,21 +602,16 @@ const runShardEdit = Effect.fn("IdentityShardEdit.run")(function* (
   if (A.isReadonlyArrayNonEmpty(refused)) {
     return yield* reportRefusals(label, refused);
   }
-  for (const shard of planned.success) {
-    yield* fs
-      .writeFileString(path.join(repoRoot, shard.path), shard.content)
-      .pipe(Effect.mapError(ioError(`Cannot write ${shard.path}.`)));
-    yield* Console.log(`[identity:${label}] rewrote ${shard.path}`);
-  }
-  const written = yield* writeRegistry(repoRoot, input.success.layout);
+  const written = yield* writeRegistry(repoRoot, input.success.layout, planned.success);
   if (Result.isFailure(written)) {
     for (const issue of written.failure) {
       yield* Console.error(issueLine(issue));
     }
     return yield* failWithReportedExit(`identity ${label}: the edited shards do not regenerate.`);
   }
-  for (const artifact of written.success) {
-    yield* Console.log(`[identity:${label}] regenerated ${artifact}`);
+  for (const file of written.success) {
+    const verb = A.some(planned.success, (shard) => shard.path === file) ? "rewrote" : "regenerated";
+    yield* Console.log(`[identity:${label}] ${verb} ${file}`);
   }
 });
 
