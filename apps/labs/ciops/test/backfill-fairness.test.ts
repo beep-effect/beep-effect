@@ -1,5 +1,5 @@
 import { it } from "@beep/test-runner";
-import { fcRuns } from "@beep/test-utils";
+import { fcRuns, fcRunsCapped } from "@beep/test-utils";
 import { expect } from "@effect/vitest";
 import { assertInstanceOf, assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -370,7 +370,8 @@ it.layer(BackfillModelLive, { timeout: "60 seconds" })("@beep/ciops SCHE-06 back
         expect(breachEvents(report)).toEqual([]);
         return true;
       }),
-    { arbitrary: fcRuns(64) }
+    // Each run simulates a train of up to 80 arrivals (about 40 ms a run); the nightly floor must not multiply it.
+    { arbitrary: fcRunsCapped(64) }
   );
 
   it.effect.prop(

@@ -3165,7 +3165,7 @@
       "line": 96,
       "endLine": 96,
       "symbol": "withCitationTestInvocation",
-      "occurrence": "v2:95dfd1b6068ad224705413b4b88c87ade9338acb3d5dcdcc82cc8aa263820d5c",
+      "occurrence": "v2:20d4e976a3c18775ec91f1b2b037ae08e72e54423fdda6b221779f109845b639",
       "class": "unresolved-resource-wrapper",
       "evidence": "withCitationTestInvocation(effect)",
       "replacement": {
@@ -3781,7 +3781,7 @@
       "line": 52,
       "endLine": 71,
       "symbol": "withCitationTestInvocation",
-      "occurrence": "v2:28b66a8ac6b7157e7b130b87cd1dafb73b6f0c36278b3270c349a669220b6328",
+      "occurrence": "v2:2dcee53c02617503d0f1006b9331b0de3964872eb740db6700381745c30667dc",
       "class": "unresolved-resource-wrapper",
       "evidence": "withCitationTestInvocation( Effect.gen(function* () { const { owner, limits } = yield* loadCitationRendering(); const unicode = yield* makeCitationPythonUnicode(limits); const value = yield* unicode.f",
       "replacement": {

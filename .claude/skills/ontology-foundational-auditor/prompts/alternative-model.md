@@ -21,7 +21,8 @@ No majority voting. Your output is an independent model, not a vote.
 
 OUTPUT CONTRACT: you never see proposals, so you cannot target them. Emit
 your OWN IdentityCard + FoundationalAnalysis records (per the _shared
-schemas) into `work/alternative/` — BOTH records, one PAIR per surviving
+schemas) into the output directory you are given (it lands in
+`work/alternative/`) — BOTH records, one PAIR per surviving
 hypothesis (the gate rejects half a pair as no coverage), with
 `hypothesis_ref` set — the validator joins your records to the primary
 seat's on `hypothesis_ref` and computes divergence deterministically. Mint

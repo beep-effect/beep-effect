@@ -48,9 +48,13 @@ import { describe, expect, it } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Config from "effect/Config";
+import * as Console from "effect/Console";
 import * as DateTime from "effect/DateTime";
+import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -485,4 +489,22 @@ describe("uniqueness", () => {
     assertNone(XlsxSheetOutline.makeOption({ count, merges: [], hiddenColumns: [3, 3, 1] }));
     assertNone(XlsxSheetOutline.makeOption({ count, merges: [range, range], hiddenColumns: [] }));
   });
+});
+
+// This package's properties pass no seed of their own, and its coverage once changed with the seed they
+// drew. The run's log carries the seed and the number of values one of them draws, the built-in count; the
+// deep sweep keeps properties only, so the property reports on its last draw.
+const BUILT_IN_RUNS = 100;
+const drawn = Ref.makeUnsafe(0);
+describe("the seed of a property here", () => {
+  it.effect.prop("is the run's", [XlsxNumberFormat], () =>
+    Effect.gen(function* () {
+      const runs = yield* Ref.updateAndGet(drawn, (count) => count + 1);
+      expect(runs).toBeLessThanOrEqual(BUILT_IN_RUNS);
+      if (runs < BUILT_IN_RUNS) return;
+      const seed = yield* Config.option(Config.String("BEEP_FC_SEED"));
+      const line = `[property-seed] xlsx worker seed ${O.getOrElse(seed, () => "random")}, ${runs} runs without fcRuns`;
+      yield* Effect.provideService(Console.log(line), Console.Console, globalThis.console);
+    })
+  );
 });

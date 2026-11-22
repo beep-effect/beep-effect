@@ -12,7 +12,18 @@ id: "so:sha256:<full-64-hex>"   # RECOMPUTED by the validator — the id is
 #   sha256(json.dumps([commit, path, start_line, end_line,
 #     sorted([[predicate, object], ...]), extractor.id, extractor.version],
 #     sort_keys=True, separators=(",", ":"), ensure_ascii=False))
-#   (canonical JSON, exactly this serialization). A random or stale hex cannot
+#   (canonical JSON, exactly this serialization). The same bytes from
+#   TypeScript/JavaScript, comparing strings by code point as Python does
+#   (a bare .sort() orders by UTF-16 units and by the comma-joined pair, and
+#   gives a different id):
+#     const cp = (a, b) => { const x = [...a], y = [...b];
+#       for (let i = 0; i < Math.min(x.length, y.length); i++) {
+#         const t = x[i].codePointAt(0) - y[i].codePointAt(0); if (t) return t; }
+#       return x.length - y.length; };
+#     JSON.stringify([commit, path, start_line, end_line,
+#       [...pairs].sort((a, b) => cp(a[0], b[0]) || cp(a[1], b[1])),
+#       extractor.id, extractor.version])   // then sha256 of its UTF-8 bytes
+#   A random or stale hex cannot
 #   match — but a matching id proves CONTENT-CONSISTENCY, not that the adapter
 #   authored the record (Known Limits). The extractor tuple must match a
 #   manifest-pinned adapter; an adapter upgrade (new extractor.version) MUST

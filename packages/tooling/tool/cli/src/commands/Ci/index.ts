@@ -85,6 +85,13 @@ export * from "./CiCompileBinary.ts";
  */
 export * from "./CiEventBase.ts";
 /**
+ * The CI projection of gate reports: step summary, grouped log and annotations.
+ *
+ * @category cli-commands
+ * @since 0.0.0
+ */
+export * from "./CiGateProjection.ts";
+/**
  * Hosted CI governance commands and policy checks.
  *
  * @category cli-commands
@@ -147,6 +154,13 @@ export * from "./CiPartitions.schemas.ts";
  * @since 0.0.0
  */
 export * from "./CiPartitions.service.ts";
+/**
+ * Public property sweep census and verdict (the nightly's second property step).
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./CiPropertySweep.ts";
 /**
  * Public runner-loss rerun subcommand export.
  *

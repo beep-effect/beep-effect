@@ -3771,14 +3771,16 @@
           "@beep/mcpb-kit",
           "@beep/memfs",
           "@beep/schema",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/xdg"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/mcpb-kit",
           "@beep/memfs",
           "@beep/schema",
-          "@beep/utils"
+          "@beep/utils",
+          "@beep/xdg"
         ]
       },
       {

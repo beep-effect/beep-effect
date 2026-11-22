@@ -23,8 +23,11 @@ import {
   ciOperationalPatterns,
   DOCS_POLICY_ROOT_TASKS,
   docgenLaneModeForChangedPaths,
+  isFullPropertySweep,
+  PROPERTY_SWEEP_RECEIPTS,
   planCiLanePartitions,
   plannedCiLanePartitions,
+  propertySweepReplay,
   proveCiLanePartition,
   runCiLane,
   withCiLaneDefaultPlacements,
@@ -3522,6 +3525,161 @@ describe("public CI coverage lane dispatch", () => {
           "test-unit unit-a: partition has no selected tasks (skipped)"
         );
       })
+    );
+  });
+});
+
+describe("the unfiltered property lane's second step", () => {
+  // A workspace with one swept package, and a `bunx` that logs its arguments and the sweep's
+  // environment, leaves the receipt when told to, and exits with the code given per task.
+  const withSweepRepo = Effect.fn("withSweepRepo")(function* <A, E, R>(
+    shim: { readonly firstExit: number; readonly secondExit: number; readonly receipt: boolean },
+    use: (commands: Effect.Effect<ReadonlyArray<string>, PlatformError.PlatformError>) => Effect.Effect<A, E, R>
+  ) {
+    const fs = yield* FileSystem.FileSystem;
+    const path = yield* Path.Path;
+    const tempDir = yield* fs.makeTempDirectoryScoped();
+    const packageDir = path.join(tempDir, "packages", "a");
+    const receipts = path.join(packageDir, PROPERTY_SWEEP_RECEIPTS);
+    const logPath = path.join(tempDir, "commands.log");
+    const binDir = path.join(tempDir, "bin");
+    yield* fs.makeDirectory(path.join(tempDir, ".git"), { recursive: true });
+    yield* fs.makeDirectory(path.join(packageDir, "test"), { recursive: true });
+    yield* fs.makeDirectory(binDir, { recursive: true });
+    yield* fs.writeFileString(
+      path.join(tempDir, "package.json"),
+      '{ "name": "root", "private": true, "workspaces": ["packages/*"] }'
+    );
+    yield* fs.writeFileString(
+      path.join(packageDir, "package.json"),
+      '{ "name": "@t/a", "version": "0.0.0", "private": true, "scripts": { "test": "x" } }'
+    );
+    yield* fs.writeFileString(path.join(packageDir, "test", "a.test.ts"), "it.effect.prop(x);");
+    yield* fs.writeFileString(
+      path.join(binDir, "bunx"),
+      A.join(
+        [
+          "#!/usr/bin/env sh",
+          `printf '%s\\n' "$BEEP_FC_SEED/$BEEP_FC_NUM_RUNS $*" >> "${logPath}"`,
+          'case "$*" in',
+          `  *"run test:property"*) exit ${shim.firstExit} ;;`,
+          "esac",
+          ...(shim.receipt
+            ? [
+                `mkdir -p "${receipts}"`,
+                `printf '%s' '{"schemaVersion":"property-sweep/v1","files":[{"file":"test/a.test.ts","executed":1}]}' > "${receipts}/1.json"`,
+              ]
+            : []),
+          `exit ${shim.secondExit}`,
+          "",
+        ],
+        "\n"
+      )
+    );
+    yield* fs.chmod(path.join(binDir, "bunx"), 0o755);
+    yield* fs.copyFile(path.join(binDir, "bunx"), path.join(binDir, "bun"));
+    const commands = Effect.map(fs.readFileString(logPath), (log) => A.filter(Str.split(log, "\n"), Str.isNonEmpty));
+    return yield* withEnvVarEffect(
+      "PATH",
+      `${binDir}:${Bun.env.PATH ?? ""}`,
+      withWorkingDirectory(tempDir, use(commands))
+    );
+  });
+
+  const nightly = CiLaneRunOptions.make({ ...baseOptions, runs: "1000", seed: "77", summarize: true });
+  const SECOND =
+    " run test --cache=local:,remote: --concurrency=4 --continue=dependencies-successful --summarize --filter=@t/a";
+
+  it("belongs to the nightly and a plain local run, and to no pull-request or push partition", () => {
+    const shard = CiLanePartitionShard.make({ index: 1, total: 2 });
+    expect(isFullPropertySweep(baseOptions)).toBe(true);
+    expect(isFullPropertySweep(nightly)).toBe(true);
+    expect(isFullPropertySweep(prShapeOptions)).toBe(false);
+    expect(isFullPropertySweep({ ...baseOptions, filter: "./packages/foundation/**" })).toBe(false);
+    expect(isFullPropertySweep({ ...prShapeOptions, filter: "@beep/repo-cli", shard })).toBe(false);
+    expect(isFullPropertySweep({ ...baseOptions, filter: "@beep/repo-cli", shard })).toBe(false);
+    expect(isFullPropertySweep({ ...baseOptions, shard })).toBe(false);
+  });
+
+  it.layer(PartitionLaneLayer, { timeout: "60 seconds" })("over a workspace", (it) => {
+    it.effect("runs after the first step with its seed and floor, uncached, and passes on its receipts", () =>
+      withSweepRepo({ firstExit: 0, secondExit: 0, receipt: true }, (commands) =>
+        Effect.gen(function* () {
+          yield* runCiLane("property", nightly);
+          const logged = yield* commands;
+          expect(logged).toHaveLength(2);
+          expect(firstOf(logged)).toContain(" run test:property ");
+          expect(Str.startsWith("77/1000 ")(firstOf(logged))).toBe(true);
+          expect(Str.startsWith("77/1000 ")(lastOf(logged))).toBe(true);
+          expect(Str.endsWith(SECOND)(lastOf(logged))).toBe(true);
+        })
+      )
+    );
+
+    it.effect("leaves a partition's run as its one filtered step", () =>
+      withSweepRepo({ firstExit: 0, secondExit: 0, receipt: false }, (commands) =>
+        Effect.gen(function* () {
+          yield* runCiLane("property", CiLaneRunOptions.make({ ...nightly, filter: "@t/a" }));
+          const logged = yield* commands;
+          expect(logged).toHaveLength(1);
+          expect(firstOf(logged)).toContain("--filter=@t/a");
+        })
+      )
+    );
+
+    it.effect("still runs when the first step is red, and the lane is red", () =>
+      withSweepRepo({ firstExit: 1, secondExit: 0, receipt: true }, (commands) =>
+        Effect.gen(function* () {
+          const error = yield* Effect.flip(runCiLane("property", nightly));
+          expect(error._tag).toBe("QualityTaskGroupFailed");
+          const logged = yield* commands;
+          const lines = yield* TestConsole.logLines;
+          expect(A.map(lines, (line) => `${line}`)).toContain(
+            "[property-sweep] test:property red; replay with: bun run beep ci lane property --runs 1000 --seed 77"
+          );
+          expect(Str.startsWith("77/1000 ")(lastOf(logged))).toBe(true);
+          expect(Str.endsWith(SECOND)(lastOf(logged))).toBe(true);
+        })
+      )
+    );
+
+    it.effect("is red, with a replay command, when its own run is red", () =>
+      withSweepRepo({ firstExit: 0, secondExit: 1, receipt: true }, () =>
+        Effect.gen(function* () {
+          const error = yield* Effect.flip(runCiLane("property", nightly));
+          expect(error._tag).toBe("QualityTaskGroupFailed");
+          const lines = yield* TestConsole.logLines;
+          const printed = A.map(lines, (line) => `${line}`);
+          expect(A.some(printed, Str.includes(propertySweepReplay("<package>", { seed: "77", runs: "1000" })))).toBe(
+            true
+          );
+        })
+      )
+    );
+
+    it.effect("is red when an expected file left no receipt, however green the run was", () =>
+      withSweepRepo({ firstExit: 0, secondExit: 0, receipt: false }, () =>
+        Effect.gen(function* () {
+          const error = yield* Effect.flip(runCiLane("property", nightly));
+          expect(error.message).toBe("The property sweep did not execute every expected file.");
+          const lines = yield* TestConsole.logLines;
+          const printed = A.map(lines, (line) => `${line}`);
+          expect(printed).toContain("[property-sweep] expected and not executed: packages/a/test/a.test.ts");
+        })
+      )
+    );
+
+    it.effect("runs nothing and is red when it finds no package", () =>
+      withSweepRepo({ firstExit: 0, secondExit: 1, receipt: false }, (commands) =>
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* fs.writeFileString("packages/a/test/a.test.ts", "it(x);");
+          const error = yield* Effect.flip(runCiLane("property", nightly));
+          expect(error.message).toBe("The property sweep found no package to run.");
+          const logged = yield* commands;
+          expect(logged).toHaveLength(1);
+        })
+      )
     );
   });
 });

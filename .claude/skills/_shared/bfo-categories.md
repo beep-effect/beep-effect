@@ -3,6 +3,12 @@
 Reference for aligning domain concepts to Basic Formal Ontology (BFO, ISO
 21838-2). Used during conceptualization and architecture phases.
 
+**Applies only when the project's upper ontology is BFO.** The upper
+ontology is a project input recorded in the scope document; BFO is one
+option. When the scope names another upper ontology (DOLCE, gist, UFO via
+gUFO, schema.org) or none, use that ontology's own categories instead of
+this file.
+
 ## The Top-Level Split
 
 Every entity falls into exactly one of two disjoint categories:
@@ -32,7 +38,8 @@ Is it a Continuant?
 │   │   │   │   │   Examples: person, cell, planet, violin
 │   │   │   │   ├── Collection of objects? → Object Aggregate (BFO:0000027)
 │   │   │   │   │   Examples: orchestra, cell population, fleet
-│   │   │   │   └── Part of an object, not self-connected? → Fiat Object Part (BFO:0000024)
+│   │   │   │   └── Part of an object marked off by fiat boundaries, not physical
+│   │   │   │       discontinuities (it may be self-connected)? → Fiat Object Part (BFO:0000024)
 │   │   │   │       Examples: upper lobe of lung, headstock of guitar
 │   │   │   └── NO → Immaterial Entity (BFO:0000141)
 │   │   │       ├── Bounded three-dimensional? → Site (BFO:0000029)
@@ -53,10 +60,11 @@ Is it a Continuant?
 │       ├── Is it a capacity/tendency that may or may not be realized?
 │       │   └── YES → Realizable Entity (BFO:0000017)
 │       │       ├── Exists because of the bearer's physical makeup?
-│       │       │   ├── Tendency toward a process? → Disposition (BFO:0000016)
-│       │       │   │   Examples: fragility, solubility, disease susceptibility
-│       │       │   └── Selected/designed purpose? → Function (BFO:0000034)
-│       │       │       Examples: heart's pumping function, gene's coding function
+│       │       │   └── Disposition (BFO:0000016)
+│       │       │       Examples: fragility, solubility, disease susceptibility
+│       │       │       └── Exists because the bearer was selected or designed for it?
+│       │       │           → Function (BFO:0000034), a subclass of Disposition
+│       │       │           Examples: heart's pumping function, gene's coding function
 │       │       └── Exists because of social/contextual factors?
 │       │           └── Role (BFO:0000023)
 │       │               Examples: student role, employer role, patient role
@@ -103,28 +111,30 @@ Is it an Occurrent?
 
 | Mistake | Why It's Wrong | Correct Classification |
 |---------|---------------|----------------------|
-| "Student" as a subclass of Person | Student is a **role** played by a person | Student is a **Role** (BFO:0000023); a Person **bears** a Student role |
+| "Student" as a rigid subclass of Person, or disjoint with Teacher | Being a student is a **role** a person can gain and lose | StudentRole is a **Role** (BFO:0000023); define `Student EquivalentTo Person and ('has role' some StudentRole)` (RO:0000087) |
 | "Surgery" as a Material Entity | Surgery unfolds in time | Surgery is a **Process** (BFO:0000015) |
-| "Red" as a subclass of Color | Red is an instance of the color quality | Red is a **particular Quality** value, or use a value partition pattern |
+| "RedCar" as a subclass of Car | Mixes the bearer with one value of its quality | Red is a **determinate Quality class** under Color (as in PATO); relate the car to it: `Car SubClassOf 'has quality' some Color` (RO:0000086) |
 | "Information" as Independent Continuant | Information depends on a physical carrier | Information content entity is a **GDC** (BFO:0000031) |
 | "Location" as a Quality | Locations are regions, not dependent qualities | Use **Site** (BFO:0000029) or **Spatial Region** (BFO:0000006) |
 | Using `part_of` for containment | `part_of` is mereological; containment/location is different | Use `located_in` for location and `part_of` only for genuine parthood |
 | "Disease" as a Process | Disease is a disposition toward pathological processes | Disease is a **Disposition** (BFO:0000016) |
 | "Gene" as information | A gene is a physical segment of DNA | Gene is a **Material Entity**; the sequence is a GDC |
-| "Organization" as Object | Organizations have members that change | Organization is an **Object Aggregate** (BFO:0000027). Note: BFO 2020 treats organizations as Objects; many biomedical ontologies model them as Object Aggregates. Choose based on your domain's conventions and document the rationale. |
+| "Organization" as a single Object | An organization is made of members that can change | Organization is an **Object Aggregate** (BFO:0000027); BFO's own usage examples for object aggregate include "an organization is an aggregate whose member parts have roles of specific types". See Known Ambiguities for the alternative. |
 
 ## Key BFO Relations (from RO)
 
 | Relation | Domain | Range | Use When |
 |----------|--------|-------|----------|
-| `RO:0000052` (inheres in) | SDC | IC | Quality/disposition/role inheres in its bearer |
-| `RO:0000053` (bearer of) | IC | SDC | Inverse of inheres in |
+| `RO:0000052` (characteristic of; formerly "inheres in") | SDC | IC | Quality/disposition/role inheres in its bearer |
+| `RO:0000053` (has characteristic; formerly "bearer of") | IC | SDC | Inverse of RO:0000052 |
 | `RO:0000056` (participates in) | Continuant | Process | A continuant takes part in a process |
 | `RO:0000057` (has participant) | Process | Continuant | Inverse of participates in |
 | `BFO:0000050` (part of) | — | — | Parthood (mereological) |
 | `BFO:0000051` (has part) | — | — | Inverse of part of |
 | `RO:0000087` (has role) | IC | Role | Entity bears a role |
-| `RO:0000080` (has quality) | IC | Quality | Entity has a quality |
+| `RO:0000086` (has quality) | IC | Quality | Entity has a quality (RO:0000080 is the inverse, "quality of") |
+| `RO:0000059` (concretizes) | SDC | GDC | A pattern on a carrier concretizes information content |
+| `RO:0000058` (is concretized as) | GDC | SDC | Inverse of concretizes |
 | `BFO:0000054` (realized in) | Realizable | Process | Disposition/function realized in a process |
 | `BFO:0000055` (realizes) | Process | Realizable | Process realizes a disposition/function |
 
@@ -149,13 +159,17 @@ Verbal quantification templates:
 
 For information entities and other GDCs, model concretization explicitly:
 
-- A **GDC** is concretized in a **specifically dependent continuant**.
-- That specifically dependent continuant inheres in a **material entity**.
-- Use an explicit concretization relation such as `isConcretizationOf`.
+- A **GDC** is concretized in a **specifically dependent continuant**
+  (RO:0000058 is concretized as; inverse RO:0000059 concretizes).
+- That specifically dependent continuant inheres in a **material entity**
+  (RO:0000052).
+- The material entity never concretizes the GDC directly: the SDC does.
 
 Example:
-"This PDF file" (material bearer) concretizes an information content entity
-(the document content) via a concretization chain.
+A file's content (GDC) is concretized as a pattern of magnetic or electric
+states (SDC) that inheres in a disk or other storage device (material
+entity). Printing the file makes a second pattern, in ink on paper, that
+concretizes the same content.
 
 ## Perspectives
 
@@ -188,7 +202,7 @@ you hit one of these, document your choice and rationale explicitly.
 | Entity | Debate | Recommended Default | Alternative | Choose Alternative When |
 |--------|--------|--------------------:|-------------|------------------------|
 | Disease | Disposition vs Process | **Disposition** (per OGMS) — a tendency toward pathological processes | Process | Your domain treats disease as something that "happens" rather than something an organism "has" |
-| Organization | Object vs Object Aggregate | **Object** (per BFO 2020) — identity persists through member changes | Object Aggregate | Your domain defines the organization by its members (e.g., a research consortium) |
+| Organization | Object Aggregate vs Object | **Object Aggregate** (BFO's own object-aggregate examples include organizations; CCO follows this) — member parts can change over time | Object | Your domain treats the organization as one unified thing whose identity does not rest on its members, and you record why |
 | Information entity | GDC with concretization chain | **GDC** (per IAO pattern) — model the 3-hop chain: GDC → concretized in → SDC → inheres in → Material Entity | Skip concretization, model as GDC directly | Concretization detail is not relevant to your CQs |
 | "Being toxic" | Disposition vs Role | **Disposition** — arises from physical makeup | Role | Toxicity is context-dependent (e.g., a substance toxic only to certain organisms) |
 | "Being a drug" | Function vs Disposition vs Role | **Role** — exists because of social/regulatory designation | Function | Your domain defines drugs by their biochemical mechanism, not regulatory status |

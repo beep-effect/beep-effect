@@ -31,7 +31,7 @@ in `goals/practice-gateway/research/onboarding-distribution.md`.
 
 ```bash
 bun run --cwd apps/practice-gateway package:mcpb:windows
-bun run --cwd apps/practice-setup package:windows --bundle ../practice-gateway/dist/mcpb/practice-gateway-windows-x64.mcpb
+bun run --cwd apps/practice-setup package:windows --bundle ../practice-gateway/.mcpb/practice-gateway-windows-x64.mcpb
 ```
 
 The second command reads the bundle's `manifest.json` version (needs `unzip`) and writes

@@ -31,7 +31,7 @@ jobs:
   warm:
     name: Warm Turbo cache
     if: github.ref == 'refs/heads/main'
-    runs-on: beep-ec2-heavy
+    runs-on: beep-fleet-heavy
     # The warm runs build/check/lint and then a bounded-concurrency test pass (#1858), so it needs
     # more wall time than the old single starved pass.
     timeout-minutes: 90
