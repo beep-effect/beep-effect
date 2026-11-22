@@ -57,11 +57,10 @@ it.layer(citationTokenizerTestLayer)("raw-source annotation timing", (it) => {
           setup.configuration,
           Sha256Hex.make(Str.repeat(64)("a"))
         ).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
-              Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits, "annotate"), (stage, bind) => ({
+            ...stage,
+            annotate: bind(stage.annotate),
+          })),
           Effect.provideService(SourceTextResolver, resolver),
           Effect.provideService(CitationAnnotationAnnotator, callback),
           Effect.provideContext(setup.provided)
@@ -120,11 +119,9 @@ it.layer(citationTokenizerTestLayer)("raw-source annotation timing", (it) => {
           setup.runtime,
           setup.configuration
         ).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(
-              { ...setup.limits, annotateDeadline: Duration.millis(50) },
-              "annotate"
-            ).pipe(Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) })))
+          Effect.zipWith(
+            makeCitationTestScaffoldBinding({ ...setup.limits, annotateDeadline: Duration.millis(50) }, "annotate"),
+            (stage, bind) => ({ ...stage, annotate: bind(stage.annotate) })
           ),
           Effect.provideService(SourceTextResolver, resolver),
           Effect.provideService(CitationAnnotationAnnotator, callback),

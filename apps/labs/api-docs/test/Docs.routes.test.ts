@@ -76,11 +76,11 @@ const verifyDocsRoutes = Effect.fn("ApiDocs.test.verifyDocsRoutes")(function* ()
     try: () => committedDocsResponse.text(),
     catch: (cause) => DocsRoutesTestOperationError.make({ cause }),
   });
-  expect(committedDocs).toContain('src="/assets/scalar-api-reference-1.43.5.js"');
+  expect(committedDocs).toContain('src="/assets/scalar-api-reference-1.81.0.js"');
   expect(committedDocs).not.toContain("cdn.jsdelivr.net");
 
   const scalarScriptResponse = yield* Effect.tryPromise({
-    try: () => webHandler.handler(new Request("http://api-docs.test/assets/scalar-api-reference-1.43.5.js")),
+    try: () => webHandler.handler(new Request("http://api-docs.test/assets/scalar-api-reference-1.81.0.js")),
     catch: (cause) => DocsRoutesTestOperationError.make({ cause }),
   });
   expect(scalarScriptResponse.status).toBe(200);
@@ -89,7 +89,7 @@ const verifyDocsRoutes = Effect.fn("ApiDocs.test.verifyDocsRoutes")(function* ()
     try: () => scalarScriptResponse.text(),
     catch: (cause) => DocsRoutesTestOperationError.make({ cause }),
   });
-  expect(scalarScript).toContain("@scalar/api-reference@1.43.5");
+  expect(scalarScript).toContain("@scalar/api-reference@1.81.0");
   expect(scalarScript.length).toBeGreaterThan(1_000_000);
 });
 
@@ -110,7 +110,7 @@ describe("API docs routes", { concurrent: false }, () => {
         ({ dispose }) => Effect.promise(dispose)
       );
       const response = yield* Effect.promise(() =>
-        webHandler.handler(new Request("http://api-docs.test/assets/scalar-api-reference-1.43.5.js"))
+        webHandler.handler(new Request("http://api-docs.test/assets/scalar-api-reference-1.81.0.js"))
       );
       expect(response.status).toBe(500);
     })

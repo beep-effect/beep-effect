@@ -78,11 +78,10 @@ const install = Effect.fn("CaseNameSelectionTest.install")(function* (kind: Cita
     plain: plain.configuration,
     html: html.configuration,
   }).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      extract: bind(stage.extract),
+    })),
     Effect.provideContext(setup.provided)
   );
   return { corpus, setup, prepare, stage };

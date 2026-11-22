@@ -141,11 +141,11 @@ export const makeCitationUnicodePipelineHarness = Effect.fn("UnicodePipelineTest
     ),
   });
   const pipeline = yield* makeCitationCleanerPipeline(limits).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits, "clean").pipe(
-        Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits, "clean"), (stage, bind) => ({
+      ...stage,
+      run: bind(stage.run),
+      runOwned: bind(stage.runOwned),
+    })),
     Effect.provideService(CitationCleaner, runtime)
   );
   return {

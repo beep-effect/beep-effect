@@ -1,8 +1,8 @@
 {
   "config": {
     "effectSource": {
-      "version": "4.1.4",
-      "commit": "289a53f7b1fc40049219c6e69022db2fb859c356"
+      "version": "4.1.5",
+      "commit": "e3aca1f1484e623cee09b7f3fa18d6ff5d66c0e8"
     }
   },
   "devDependencies": {
@@ -62,7 +62,7 @@
     "launch-editor": "2.14.2",
     "zod": "4.6.6"
   },
-  "packageManager": "bun@1.4.4",
+  "packageManager": "bun@1.4.5",
   "patchedDependencies": {
     "@alchemy.run/domain@2.0.0-beta.87": "patches/@alchemy.run%2Fdomain@2.0.0-beta.87.patch",
     "@alchemy.run/aws@2.0.0-beta.87": "patches/@alchemy.run%2Faws@2.0.0-beta.87.patch"

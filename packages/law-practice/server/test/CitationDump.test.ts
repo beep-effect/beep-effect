@@ -26,11 +26,10 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
           const policy = yield* defaultCitationEnginePolicy;
           const printability = yield* readCitationNativeRenderingAsset("python-printability");
           const dump = yield* makeCitationDump(policy.limits, printability).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(policy.limits).pipe(
-                Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-              )
-            )
+            Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits), (stage, bind) => ({
+              ...stage,
+              render: bind(stage.render),
+            }))
           );
           const text = yield* readCitationOracleFixture(
             "builtin-dump-cases",
@@ -56,11 +55,10 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
           const parent = (yield* CitationInvocation).budget;
           const replacement = yield* makeCitationTextBudget(policy.limits);
           const dump = yield* makeCitationDump(policy.limits, printability).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(policy.limits).pipe(
-                Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-              )
-            ),
+            Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits), (stage, bind) => ({
+              ...stage,
+              render: bind(stage.render),
+            })),
             Effect.provideService(CitationTextBudget, parent)
           );
           const refused = yield* dump
@@ -80,10 +78,9 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const policy = yield* defaultCitationEnginePolicy;
         const printability = yield* readCitationNativeRenderingAsset("python-printability");
         const dump = yield* makeCitationDump({ ...policy.limits, producedTextUtf16: 16 }, printability).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({ ...policy.limits, producedTextUtf16: 16 }).pipe(
-              Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-            )
+          Effect.zipWith(
+            makeCitationTestScaffoldBinding({ ...policy.limits, producedTextUtf16: 16 }),
+            (stage, bind) => ({ ...stage, render: bind(stage.render) })
           )
         );
         const invalid = yield* dump.render({}).pipe(Effect.flip);
@@ -104,27 +101,26 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const policy = yield* defaultCitationEnginePolicy;
         const printability = yield* readCitationNativeRenderingAsset("python-printability");
         const badPolicy = yield* makeCitationDump({}, printability).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({}).pipe(Effect.map((bind) => ({ ...stage, render: bind(stage.render) })))
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding({}), (stage, bind) => ({
+            ...stage,
+            render: bind(stage.render),
+          })),
           Effect.flip
         );
         expect(badPolicy).toMatchObject({ reason: "invalid-policy" });
         const notText = yield* makeCitationDump(policy.limits, 5).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(policy.limits).pipe(
-              Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits), (stage, bind) => ({
+            ...stage,
+            render: bind(stage.render),
+          })),
           Effect.flip
         );
         expect(notText).toMatchObject({ reason: "invalid-configuration" });
         const wrongTable = yield* makeCitationDump(policy.limits, "not the pinned table").pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(policy.limits).pipe(
-              Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits), (stage, bind) => ({
+            ...stage,
+            render: bind(stage.render),
+          })),
           Effect.flip
         );
         expect(wrongTable).toMatchObject({ reason: "invalid-configuration" });
@@ -135,11 +131,10 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const policy = yield* defaultCitationEnginePolicy;
         const printability = yield* readCitationNativeRenderingAsset("python-printability");
         const dump = yield* makeCitationDump({ ...policy.limits, mentions: 1 }, printability).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({ ...policy.limits, mentions: 1 }).pipe(
-              Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-            )
-          )
+          Effect.zipWith(makeCitationTestScaffoldBinding({ ...policy.limits, mentions: 1 }), (stage, bind) => ({
+            ...stage,
+            render: bind(stage.render),
+          }))
         );
         const row = { kind: "IdCitation", span: [0, 0], fields: [] };
         const refused = yield* dump
@@ -153,11 +148,10 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const policy = yield* defaultCitationEnginePolicy;
         const printability = yield* readCitationNativeRenderingAsset("python-printability");
         const dump = yield* makeCitationDump(policy.limits, printability).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(policy.limits).pipe(
-              Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-            )
-          )
+          Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits), (stage, bind) => ({
+            ...stage,
+            render: bind(stage.render),
+          }))
         );
         const output = yield* dump.render({
           text: { width: 1, bytes: new Uint8Array() },
@@ -194,11 +188,10 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const policy = yield* defaultCitationEnginePolicy;
         const printability = yield* readCitationNativeRenderingAsset("python-printability");
         const dump = yield* makeCitationDump(policy.limits, printability).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(policy.limits).pipe(
-              Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-            )
-          )
+          Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits), (stage, bind) => ({
+            ...stage,
+            render: bind(stage.render),
+          }))
         );
         const storage = (text: string) => ({ width: 1, bytes: new TextEncoder().encode(text) });
         const output = yield* dump.render({
@@ -238,11 +231,10 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const policy = yield* defaultCitationEnginePolicy;
         const printability = yield* readCitationNativeRenderingAsset("python-printability");
         const dump = yield* makeCitationDump(policy.limits, printability).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(policy.limits).pipe(
-              Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-            )
-          )
+          Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits), (stage, bind) => ({
+            ...stage,
+            render: bind(stage.render),
+          }))
         );
         const encoder = new TextEncoder();
         const row = (span: readonly [number, number]) => ({ kind: "IdCitation", span, fields: [] });
@@ -266,36 +258,34 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const policy = yield* defaultCitationEnginePolicy;
         const profile = yield* readCitationNativeRenderingAsset("builtin-dump-profile");
         const notText = yield* makeCitationBuiltinDump(policy.limits, 5).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(policy.limits).pipe(
-              Effect.map((bind) => ({ ...stage, project: bind(stage.project) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits), (stage, bind) => ({
+            ...stage,
+            project: bind(stage.project),
+          })),
           Effect.flip
         );
         expect(notText).toMatchObject({ reason: "invalid-configuration" });
         const wrongDigest = yield* makeCitationBuiltinDump(policy.limits, "not the pinned profile").pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(policy.limits).pipe(
-              Effect.map((bind) => ({ ...stage, project: bind(stage.project) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits), (stage, bind) => ({
+            ...stage,
+            project: bind(stage.project),
+          })),
           Effect.flip
         );
         expect(wrongDigest).toMatchObject({ reason: "invalid-configuration" });
         const badPolicy = yield* makeCitationBuiltinDump({}, profile).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({}).pipe(Effect.map((bind) => ({ ...stage, project: bind(stage.project) })))
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding({}), (stage, bind) => ({
+            ...stage,
+            project: bind(stage.project),
+          })),
           Effect.flip
         );
         expect(badPolicy).toMatchObject({ reason: "invalid-policy" });
         const adapter = yield* makeCitationBuiltinDump(policy.limits, profile).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(policy.limits).pipe(
-              Effect.map((bind) => ({ ...stage, project: bind(stage.project) }))
-            )
-          )
+          Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits), (stage, bind) => ({
+            ...stage,
+            project: bind(stage.project),
+          }))
         );
         const badModel = yield* adapter.project({}).pipe(Effect.flip);
         expect(badModel).toMatchObject({ reason: "invalid-input" });

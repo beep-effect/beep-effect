@@ -26,11 +26,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("input Docum
             setup.runtime,
             configuration.document
           ).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(setup.limits).pipe(
-                Effect.map((bind) => ({ ...stage, initialize: bind(stage.initialize) }))
-              )
-            ),
+            Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+              ...stage,
+              initialize: bind(stage.initialize),
+            })),
             Effect.provideContext(provided)
           );
           const plain = yield* values.sourceText("1 U.S. 1");
@@ -56,11 +55,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("input Docum
         // install refuses, while every check that runs when the stage is installed passes.
         const limits = { ...setup.limits, patterns: 1 };
         const initializer = yield* makeCitationInputDocument(limits, setup.runtime, configuration.document).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(limits).pipe(
-              Effect.map((bind) => ({ ...stage, initialize: bind(stage.initialize) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+            ...stage,
+            initialize: bind(stage.initialize),
+          })),
           Effect.provideContext(provided)
         );
         const plain = yield* values.sourceText("1 U.S. 1");

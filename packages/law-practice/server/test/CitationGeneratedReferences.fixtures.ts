@@ -121,28 +121,25 @@ export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesT
     patterns: template.patterns,
     disallowedNames: corpus.disallowedNames,
   }).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, pincited: bind(stage.pincited) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      pincited: bind(stage.pincited),
+    })),
     Effect.provideContext(setup.provided)
   );
   const configuration = { patterns: template.patterns, disallowedNames: corpus.disallowedNames };
   const markup = yield* makeCitationGeneratedMarkupReferences(setup.limits, setup.runtime, configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, markup: bind(stage.markup) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      markup: bind(stage.markup),
+    })),
     Effect.provideContext(setup.provided)
   );
   const combined = yield* makeCitationGeneratedCombinedReferences(setup.limits, setup.runtime, configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, combined: bind(stage.combined) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      combined: bind(stage.combined),
+    })),
     Effect.provideContext(setup.provided)
   );
   const geometryStage = yield* installCitationHtmlGeometryFixture(kind, setup);
@@ -203,11 +200,10 @@ export const replayCitationGeneratedReferences = Effect.fn("GeneratedReferencesT
     patterns: template.patterns,
     disallowedNames: corpus.disallowedNames,
   }).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding({ ...setup.limits, candidates: 1 }).pipe(
-        Effect.map((bind) => ({ ...stage, pincited: bind(stage.pincited) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding({ ...setup.limits, candidates: 1 }), (stage, bind) => ({
+      ...stage,
+      pincited: bind(stage.pincited),
+    })),
     Effect.provideContext(setup.provided)
   );
   const refused = yield* tight

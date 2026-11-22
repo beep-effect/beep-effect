@@ -118,9 +118,7 @@ const install = Effect.fn("LawMetadataTest.install")(function* (
   const context = setup.context.pipe(Context.add(CitationOperationAdmission, operation));
   const installed = enclosing === true ? context.pipe(Context.add(CitationTextBudget, owner)) : context;
   const metadata = yield* makeCitationLawMetadata(limits, setup.runtime, configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({ ...stage, apply: bind(stage.apply) })),
     Effect.provideContext(installed)
   );
   return { ...setup, operation, owner, metadata, installed };
@@ -230,9 +228,10 @@ export const assertCitationLawMetadataConfiguration = Effect.fn("LawMetadataTest
     [setup.limits, setup.runtime, { ...corpus.configuration, lawPattern: changedPattern }],
   ] as const) {
     const failed = yield* makeCitationLawMetadata(policy, runtime, configuration).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(policy).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding(policy), (stage, bind) => ({
+        ...stage,
+        apply: bind(stage.apply),
+      })),
       Effect.provideContext(setup.provided),
       Effect.flip
     );
@@ -249,9 +248,10 @@ export const assertCitationFullLawMetadataInput = Effect.fn("LawMetadataTest.ful
   const { bundle } = yield* loadCitationFrozenEditionFixtures();
   const editions = yield* makeCitationFrozenEditions(bundle);
   const metadata = yield* makeCitationFullLawMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      apply: bind(stage.apply),
+    })),
     Effect.provideContext(Context.add(setup.provided, CitationFrozenEditions, editions)),
     DateTime.withCurrentZoneOffset(0)
   );
@@ -273,9 +273,10 @@ export const assertCitationLawMetadataDigest = Effect.fn("LawMetadataTest.digest
   const corpus = yield* loadCitationLawMetadataFixtures();
   const setup = yield* setupCitationMetadataRuntime("bun");
   const failed = yield* makeCitationLawMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      apply: bind(stage.apply),
+    })),
     Effect.provideContext(setup.provided),
     Effect.provideService(
       Digest.Digest,
@@ -288,9 +289,10 @@ export const assertCitationLawMetadataDigest = Effect.fn("LawMetadataTest.digest
   const before = yield* setup.observed.snapshot;
   expect(before).toEqual({ spawned: 0, confirmed: 0 });
   const metadata = yield* makeCitationLawMetadata(setup.limits, setup.runtime, corpus.configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      apply: bind(stage.apply),
+    })),
     Effect.provideContext(setup.provided)
   );
   const row = A.getUnsafe(corpus.cases, 11);

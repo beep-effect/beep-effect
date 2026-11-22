@@ -49,9 +49,10 @@ export const replayCitationExtractionEntry = Effect.fn("ExtractionEntryTest.repl
   const entryContext = Context.add(provided, CitationDocumentStepContainers, { create: adapter.create });
   const install = (limits: typeof setup.limits) =>
     makeCitationExtractionEntry(limits, setup.runtime, configuration).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) })))
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+        ...stage,
+        extract: bind(stage.extract),
+      })),
       Effect.provideContext(entryContext),
       DateTime.withCurrentZoneOffset(0)
     );

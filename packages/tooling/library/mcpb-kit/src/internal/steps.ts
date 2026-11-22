@@ -26,15 +26,15 @@ import type { McpbRuntimePin } from "../McpbKit.models.ts";
 
 const $I = $McpbKitId.create("internal/steps");
 
-const DuckDbVersion = "2.0.0-r.1";
+const DuckDbVersion = "2.0.1-r.1";
 /*
  * sha512 integrity published by the npm registry for
- * @duckdb/node-bindings-win32-x64@2.0.0-r.1, checked against the downloaded tarball.
+ * @duckdb/node-bindings-win32-x64@2.0.1-r.1, checked against the downloaded tarball.
  * Packaging verifies this pin before extracting a user-installed artifact;
  * a DuckDB catalog bump must update both constants.
  */
 const WindowsBindingsSha512 =
-  "8moS6xWPmM4UahiUhkfNSPFQG+7kpN2zu8w39C+K9Xgn8Z4Ctu5jOSTdXlybYrLofLH8jwgoNFiUOLMXLD4giw==";
+  "tIyo4NP52GhxRz5ReL9wy6JqcMNfsRr2mVOO40lsx9GB8jE1SRyXZEVFoIskQST8jTiSZV+ezLOPIof62Va/SA==";
 const WindowsBindingsUrl = `https://registry.npmjs.org/@duckdb/node-bindings-win32-x64/-/node-bindings-win32-x64-${DuckDbVersion}.tgz`;
 
 class BindingsManifest extends S.Opaque<BindingsManifest, { readonly brand: unique symbol }>()(

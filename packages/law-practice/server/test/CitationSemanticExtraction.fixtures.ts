@@ -163,9 +163,10 @@ export const replayCitationSemanticExtraction = Effect.fn("SemanticExtractionTes
   const rows = A.filter(corpus.cases, (row) => full || A.contains([4, 14, 18, 20, 22, 26, 32], row.id));
   const install = (limits: typeof setup.limits, input = config) =>
     makeCitationSemanticExtraction(limits, setup.runtime, input).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) })))
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+        ...stage,
+        extract: bind(stage.extract),
+      })),
       Effect.provideContext(provided),
       DateTime.withCurrentZoneOffset(0)
     );
