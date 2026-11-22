@@ -4,7 +4,8 @@ description: >
   Searches for and evaluates reusable ontological resources. Queries
   OLS, BioPortal, OBO Foundry, and LOV. Extracts ontology modules via
   ROBOT. Finds applicable Ontology Design Patterns. Use when looking
-  for existing ontologies to reuse or align with.
+  for existing ontologies to reuse or align with. Not for importing
+  data files into an application.
 ---
 
 # Ontology Scout (Reuse Advisor)
@@ -21,18 +22,19 @@ downstream skills.
 ## When to Activate
 
 - User wants to find existing ontologies covering their domain
-- User mentions "reuse", "import", "alignment", or "existing ontology"
+- User mentions ontology reuse, `owl:imports`, ontology alignment, or an
+  existing ontology or vocabulary
 - Starting conceptualization (always check what exists first)
 - Pipeline A Step 2 or Pipeline B Step 1
 
 ## Shared Reference Materials
 
-Read these files from `_shared/` before beginning work:
+Read these files from `../_shared/` (relative to this skill's directory) before beginning work:
 
-- `_shared/methodology-backbone.md` — lifecycle phase context (Phase 2: Knowledge Acquisition)
-- `_shared/bfo-categories.md` — needed to evaluate BFO alignment of candidates
-- `_shared/naming-conventions.md` — to assess naming quality of candidates
-- `_shared/namespaces.json` — standard prefixes for search queries
+- `../_shared/methodology-backbone.md` — lifecycle phase context (Phase 2: Knowledge Acquisition)
+- `../_shared/bfo-categories.md` — needed only when the scope document records BFO as the upper ontology
+- `../_shared/naming-conventions.md` — to assess naming quality of candidates
+- `../_shared/namespaces.json` — standard prefixes for search queries
 
 ## Core Workflow
 
@@ -51,18 +53,27 @@ domain ontologies.
 
 ### Step 1: Search Registries
 
-For each candidate term from the pre-glossary, search multiple registries:
+For each candidate term from the pre-glossary, search the registries that
+cover the domain. OLS, BioPortal and the OBO Foundry hold mostly life-science
+and biomedical ontologies; for other domains (business, manufacturing,
+engineering, the web) start with LOV and the vocabularies published by the
+domain's standards bodies, and treat OLS hits as a cross-check.
 
 ```bash
 # Search via oaklib (OLS backend)
-uv run runoak -i ols: search "TERM"
+uvx --from oaklib runoak -i ols: search "TERM"
 
-# Search via oaklib (BioPortal backend, if API key configured)
-uv run runoak -i bioportal: search "TERM"
+# Search via oaklib (BioPortal backend; needs an API key, set once with
+# `uvx --from oaklib runoak set-apikey -e bioportal KEY`)
+uvx --from oaklib runoak -i bioportal: search "TERM"
 
-# Search OBO Foundry ontologies specifically
-uv run runoak -i sqlite:obo:{ontology_id} search "TERM"
+# Search one OBO Foundry ontology (downloads its SemSQL build on first use)
+uvx --from oaklib runoak -i sqlite:obo:{ontology_id} search "TERM"
 ```
+
+Search LOV (Linked Open Vocabularies) in its web interface,
+`https://lov.linkeddata.es/dataset/lov/terms?q=TERM`. oaklib's `lov:`
+adapter returned no results on 2026-11-22, because LOV's v2 API answered 404.
 
 Also check specialized repositories when relevant:
 - OMG specifications catalog
@@ -73,17 +84,18 @@ Also check specialized repositories when relevant:
 
 ### Step 2: Evaluate Candidates
 
-Score each candidate ontology on nine dimensions:
+Score each candidate ontology on ten dimensions:
 
 | Criterion | Weight | How to Assess |
 |-----------|--------|--------------|
 | Coverage | High | % of pre-glossary terms found in the ontology |
-| Quality | High | OBO Dashboard score, label/definition coverage, ROBOT report |
+| Quality | High | Label/definition coverage, ROBOT report; versioned releases (version IRIs); OBO Dashboard score for OBO ontologies |
 | License | Required | Must be open (CC-BY or CC0 preferred) |
 | Community | Medium | Active maintenance, GitHub activity, publications |
-| BFO Alignment | Medium | Already aligned to BFO? Uses RO relations? |
-| Syntactic correctness | Required | `robot validate --input candidate.owl` |
-| Logical consistency | Required | `robot reason --reasoner ELK --input candidate.owl` |
+| Upper-ontology alignment | Medium | Aligned to the upper ontology the scope document records, if any? (For OBO candidates: uses RO relations?) |
+| Syntactic correctness | Required | Loads in ROBOT: `robot convert --input candidate.owl --output results/candidate.ofn` |
+| OWL 2 profile | Medium | `robot validate-profile --profile DL --input candidate.owl --output results/candidate-dl.txt` (EL too, to choose the reasoner) |
+| Logical consistency | Required | `robot reason --reasoner hermit --input candidate.owl --output results/candidate-reasoned.owl`; ELK only if the candidate is in OWL 2 EL |
 | Modularization | Medium | Can modules be imported independently? |
 | Metadata completeness | Medium | `robot report --input candidate.owl` + header metadata checks |
 
@@ -108,9 +120,11 @@ Run representative competency-question probes against each short-listed
 candidate (or extracted module) to test practical fit:
 
 - Select 3-5 high-priority CQs from requirements.
-- Draft quick probe queries (or adapt existing CQ drafts).
-- Record whether the candidate can answer each probe fully, partially, or not
-  at all.
+- Draft quick probe queries (or adapt existing CQ drafts), each with the
+  answer it should give.
+- Run each probe with `robot query` (see Tool Commands) and compare its rows
+  with the expected answer. Record whether the candidate answers it fully,
+  partially, or not at all.
 
 ### Step 4: Module Extraction
 
@@ -118,10 +132,10 @@ candidate (or extracted module) to test practical fit:
 
 | Method | What It Extracts | Best For | Watch Out |
 |--------|-----------------|----------|-----------|
-| MIREOT | Term + ancestors only | Large ontologies (GO, ChEBI) — fast, minimal | Loses sibling context and some axioms |
-| STAR | All axioms involving the term | Small/medium ontologies — most complete | Can pull in unexpected classes via axiom references |
-| BOT | Term + all ancestors (bottom module) | Good middle ground | May include more than needed for deep hierarchies |
-| TOP | Term + all descendants (top module) | Extracting a subtree | Large result if term has many descendants |
+| MIREOT | Lower terms + ancestors up to the upper terms (or all descendants with `--branch-from-terms`); no logical guarantee | Large ontologies (GO, ChEBI) — fast, minimal | Loses sibling context and some axioms |
+| STAR | Seed terms + the axioms among them (smallest SLME module) | Keeping an import small while preserving the seed terms' entailments | Not necessarily their superclasses or subclasses |
+| BOT | Seed terms + all superclasses and their relations (bottom module) | The default; "when in doubt" in the ROBOT docs | Medium size; more than needed for deep hierarchies |
+| TOP | Seed terms + all subclasses and their relations (top module) | Extracting a subtree | Large result if a term has many descendants |
 
 **Import management pitfalls**:
 - **Transitive import chains**: Importing one OBO ontology can pull in dozens
@@ -137,21 +151,25 @@ candidate (or extracted module) to test practical fit:
 For recommended imports:
 
 ```bash
-# Create term list file
-echo "http://purl.obolibrary.org/obo/GO_0008150" > imports/go_terms.txt
-echo "http://purl.obolibrary.org/obo/GO_0003674" >> imports/go_terms.txt
+# Create the term list only if it does not exist; after that, edit it by hand
+[ -e imports/go_terms.txt ] || printf '%s\n' \
+  http://purl.obolibrary.org/obo/GO_0008150 \
+  http://purl.obolibrary.org/obo/GO_0003674 > imports/go_terms.txt
 
-# Extract module (STAR method — most complete)
+# Two alternatives, each to its own file. Compare them, then keep the chosen
+# one as imports/go_import.owl.
+
+# STAR module (smallest SLME module; seed terms from --term-file)
 robot extract --method STAR \
   --input-iri http://purl.obolibrary.org/obo/go.owl \
   --term-file imports/go_terms.txt \
-  --output imports/go_import.owl
+  --output imports/go_import.star.owl
 
-# Extract module (MIREOT — minimal, just term + parents)
+# MIREOT (term + ancestors; MIREOT takes --lower-terms, not --term-file)
 robot extract --method MIREOT \
   --input-iri http://purl.obolibrary.org/obo/go.owl \
-  --term-file imports/go_terms.txt \
-  --output imports/go_import.owl
+  --lower-terms imports/go_terms.txt \
+  --output imports/go_import.mireot.owl
 ```
 
 ### Step 5: ODP Search
@@ -172,29 +190,29 @@ Document which ODPs apply and how they should be instantiated.
 ### Registry search
 
 ```bash
-# OLS search with result limit
-uv run runoak -i ols: search "musical instrument" -l 20
+# OLS search, first 20 results (search has no limit flag)
+uvx --from oaklib runoak -i ols: search "musical instrument" | head -20
 
 # Get term details from a specific ontology
-uv run runoak -i sqlite:obo:go info GO:0008150
+uvx --from oaklib runoak -i sqlite:obo:go info GO:0008150
 
 # Get ancestors of a term
-uv run runoak -i sqlite:obo:go ancestors GO:0008150
+uvx --from oaklib runoak -i sqlite:obo:go ancestors GO:0008150
 
-# Check if ontology is in OBO Foundry
-uv run runoak -i obo: ontologies
+# Check if an ontology is in the OBO Foundry registry (prints its status)
+curl -sL https://obofoundry.org/registry/ontologies.jsonld | python3 -c 'import json,sys; ids={o["id"]: o.get("activity_status") for o in json.load(sys.stdin)["ontologies"]}; print(ids.get(sys.argv[1], "not in the OBO Foundry registry"))' go
 ```
 
 ### ROBOT extraction
 
 ```bash
-# BOT extraction (bottom module — term + all ancestors)
+# BOT extraction (bottom module — term + all superclasses)
 robot extract --method BOT \
   --input source.owl \
   --term "http://example.org/Term" \
   --output module.owl
 
-# TOP extraction (top module — term + all descendants)
+# TOP extraction (top module — term + all subclasses)
 robot extract --method TOP \
   --input source.owl \
   --term "http://example.org/Term" \
@@ -204,20 +222,39 @@ robot extract --method TOP \
 ### Quality assessment of candidate
 
 ```bash
-# Syntax validation
-robot validate --input candidate.owl
+# Syntax check: ROBOT has no `validate` command; loading the file is the check
+robot convert --input candidate.owl --output results/candidate.ofn
 
-# Logical consistency
-robot reason --reasoner ELK --input candidate.owl
+# OWL 2 profile (DL; run with --profile EL to see whether ELK is enough)
+robot validate-profile --profile DL --input candidate.owl \
+  --output results/candidate-dl.txt
+
+# Logical consistency. HermiT covers OWL 2 DL; ELK reasons over OWL 2 EL only
+# and ignores other axioms, so use it only for a candidate in the EL profile
+robot reason --reasoner hermit --input candidate.owl \
+  --output results/candidate-reasoned.owl
 
 # Run ROBOT report on candidate ontology
 robot report --input candidate.owl --output candidate-report.tsv
 
-# Check label coverage
-uv run runoak -i candidate.owl statistics
+# Check definition coverage (the pronto adapter reads RDF/XML and OBO; convert
+# other syntaxes first, e.g. `robot convert --input candidate.owl --output
+# results/candidate.rdf.owl`). Its count of text definitions reads only
+# obo:IAO_0000115 (the OBO def), so a candidate on skos:definition shows 0
+uvx --from oaklib runoak -i pronto:candidate.owl statistics
 
-# Run representative CQ probes (if available)
-robot verify --input candidate.owl --queries ontologies/{name}/tests/candidate-probes/
+# For a candidate on another definition property, count with the
+# definition-coverage query (../_shared/quality-checklist.md section 6, with
+# that property in it) saved as results/definition-coverage.rq
+robot query --input candidate.owl \
+  --query results/definition-coverage.rq results/definition-coverage.csv
+
+# Run each CQ probe and compare its rows with the expected answer. `robot
+# verify` is not for this: it fails when a query returns rows. robot query
+# writes no file when the probe returns nothing.
+robot query --input candidate.owl \
+  --query ontologies/{name}/tests/candidate-probes/probe-1.rq \
+  results/probe-1.csv
 ```
 
 ## Outputs
@@ -242,7 +279,7 @@ This skill produces:
 **Handoff checklist**:
 - [ ] Every pre-glossary term has been searched in at least one registry
 - [ ] Reuse report includes scored candidates with clear recommendations
-- [ ] Extracted modules load without errors (`robot validate`)
+- [ ] Extracted modules load without errors (`robot convert --input imports/{source}_import.owl --output results/{source}_import.ofn`)
 - [ ] ODP recommendations reference specific pattern templates
 
 ## Anti-Patterns to Avoid
