@@ -2,7 +2,6 @@
  * @internal @packageDocumentation @since 0.0.0
  */
 import { $LawPracticeServerId } from "@beep/identity/packages";
-import { convertTextOffsetRange, TextOffsetRange } from "@beep/langextract/VerifiedSpan";
 import {
   Citation,
   CitationComponentAnchor,
@@ -16,6 +15,7 @@ import {
   CitationTextBudget,
 } from "@beep/law-practice-use-cases/server";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { convertPosition, Position } from "@beep/text/OffsetUnit";
 import { TextAnchor } from "@beep/text/TextAnchor";
 import {
   VerifiedSourceText,
@@ -115,7 +115,7 @@ export class CitationOccurrenceProjectionConfiguration extends S.Opaque<
     })
   )
 ) {}
-const decodeRange = S.decodeResult(TextOffsetRange);
+const decodePosition = S.decodeResult(Position);
 /** @internal @category models @since 0.0.0 */
 export class CitationOccurrenceProjectionResult extends S.Opaque<
   CitationOccurrenceProjectionResult,
@@ -191,25 +191,20 @@ const anchor = Effect.fn("Citation.verifyOccurrenceSpan")(function* (
   source: VerifiedSourceText,
   span: typeof Span.Type
 ) {
-  const decoded = decodeRange({ start: span[0], end: span[1], unit: "unicode-code-point" });
+  const decoded = decodePosition({ _tag: "Position", start: span[0], end: span[1], unit: "unicode-code-point" });
   if (Result.isFailure(decoded)) return O.none();
-  const converted = yield* convertTextOffsetRange(decoded.success, source.sourceText).pipe(
-    Effect.asSome,
-    Effect.catchTag("VerifiedSpanError", (error) =>
-      error.reason === "invalid-offset" || error.reason === "absent-text"
-        ? Effect.succeedNone
-        : Effect.fail(fail("unverifiable-source"))
-    )
-  );
-  if (O.isNone(converted)) return O.none();
-  const range = converted.value;
+  // Every conversion refusal (a split boundary, a point past the text, a lone surrogate before the end) leaves the
+  // row unverified: none of them names a UTF-16 range the source could prove.
+  const converted = convertPosition(decoded.success, "utf16-code-unit", source.sourceText);
+  if (Result.isFailure(converted)) return O.none();
+  const range = converted.success;
   const budget = yield* CitationTextBudget;
-  yield* budget.reserve(range.endChar - range.startChar);
-  const quote = Str.slice(range.startChar, range.endChar)(source.sourceText);
+  yield* budget.reserve(range.end - range.start);
+  const quote = Str.slice(range.start, range.end)(source.sourceText);
   const proof = yield* verifyTextAnchorAgainstVerifiedSource(
     VerifyTextAnchorAgainstVerifiedSourceInput.make({
       verifiedSource: source,
-      anchor: TextAnchor.make({ ...range, quote }),
+      anchor: TextAnchor.make({ startChar: range.start, endChar: range.end, quote }),
     })
   ).pipe(Effect.mapError(() => fail("unverifiable-source")));
   return O.some(proof);

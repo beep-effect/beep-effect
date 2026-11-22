@@ -13,7 +13,7 @@ import { EntityNode } from "@beep/nlp/Graph/Schema";
 import { Contract } from "@beep/nlp/Handoff";
 import { NLPService } from "@beep/nlp-processing/NLPService";
 import { Sha256Hex } from "@beep/schema";
-import { SourceTextExtractor } from "@beep/text";
+import { SourceTextExtractor, TextAnchor } from "@beep/text";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
@@ -93,10 +93,10 @@ const grounded = (
     attributes,
     confidence: O.none(),
     label,
-    matchedText: text,
-    span: Contract.Span.make({
-      end: S.Natural.make(start + text.length),
-      start: S.Natural.make(start),
+    anchor: TextAnchor.make({
+      endChar: S.Natural.make(start + text.length),
+      quote: text,
+      startChar: S.Natural.make(start),
     }),
     text,
   });
@@ -199,8 +199,7 @@ const fuzzyRelationCase = hostedCase("fuzzy relation evidence", "Ada selected En
     attributes: relationAttributes,
     confidence: O.none(),
     label: "relation",
-    matchedText: text,
-    span: Contract.Span.make({ end: S.Natural.make(text.length), start: S.Natural.make(0) }),
+    anchor: TextAnchor.make({ endChar: S.Natural.make(text.length), quote: text, startChar: S.Natural.make(0) }),
     text,
   }),
 ]);

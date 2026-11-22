@@ -382,14 +382,7 @@ type AlignedGroundedExtraction = Exclude<GroundedExtraction, { readonly alignmen
 type LocatedExtraction = readonly [extraction: GroundedExtraction, anchor: TextAnchor];
 
 const alignedExtraction = (extraction: AlignedGroundedExtraction): Result.Result<LocatedExtraction, void> =>
-  Result.succeed([
-    extraction,
-    TextAnchor.make({
-      endChar: extraction.span.end,
-      quote: extraction.matchedText,
-      startChar: extraction.span.start,
-    }),
-  ]);
+  Result.succeed([extraction, extraction.anchor]);
 
 const locateExtraction = (extraction: GroundedExtraction): Result.Result<LocatedExtraction, void> =>
   GroundedExtraction.match(extraction, {

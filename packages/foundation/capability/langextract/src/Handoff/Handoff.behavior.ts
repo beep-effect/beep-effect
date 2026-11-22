@@ -45,8 +45,8 @@ const makeAnnotation =
         chunkId,
         id: mentionId,
         provenance,
-        span: extraction.span,
-        text: extraction.matchedText,
+        span: Contract.Span.make({ end: extraction.anchor.endChar, start: extraction.anchor.startChar }),
+        text: extraction.anchor.quote,
       }),
       Contract.Entity.make({
         canonicalName: extraction.text,

@@ -10,8 +10,8 @@
  * per-entity character spans: its `Entity.mentions` are bare `MentionId[]` and
  * the span-bearing `Mention` objects are not included in the envelope, so a
  * required `Distinction.anchor` (`TextAnchor`) cannot be recovered from it. A
- * `GroundedExtraction` instead carries its own aligned `span` plus the original
- * `matchedText`, which is exactly what grounding a distinction's anchor needs.
+ * `GroundedExtraction` instead carries its own aligned `anchor` (range and exact
+ * source quote), which is exactly what grounding a distinction's anchor needs.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -124,8 +124,8 @@ export class LawEntities extends LawEntitiesBase {}
 /**
  * Service shape for the IR-to-law mapping: take the span-bearing grounded
  * extractions for one office action and produce the law-practice
- * {@link LawEntities} they encode. The `span`/`matchedText` an extraction
- * carries is what grounds the distinction's `TextAnchor`.
+ * {@link LawEntities} they encode. The `anchor` an extraction carries is
+ * what grounds the distinction's `TextAnchor`.
  *
  * **Example** (Fail shape toLaw call)
  *

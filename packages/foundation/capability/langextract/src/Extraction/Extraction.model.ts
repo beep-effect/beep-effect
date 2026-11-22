@@ -7,8 +7,10 @@
 import { $LangExtractId } from "@beep/identity";
 import { ExtractionExample, ExtractionTarget } from "@beep/langextract/Target";
 import { DocumentId } from "@beep/nlp/Core";
-import { Contract, UnitInterval } from "@beep/nlp/Handoff";
+import { Contract } from "@beep/nlp/Handoff";
 import { LiteralKit } from "@beep/schema/LiteralKit";
+import { UnitInterval } from "@beep/schema/UnitInterval";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
@@ -108,7 +110,7 @@ export type AlignmentStatus = typeof AlignmentStatus.Type;
  * ```ts
  * import * as S from "effect/Schema"
  * import { LangExtractOptions } from "@beep/langextract/Extraction"
- * import { UnitInterval } from "@beep/nlp/Handoff"
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import * as O from "effect/Option"
  *
  * console.log(LangExtractOptions.make({
@@ -138,7 +140,7 @@ export class LangExtractOptions extends S.Opaque<LangExtractOptions, { readonly 
  *
  * ```ts
  * import { ExtractionCandidate } from "@beep/langextract/Extraction"
- * import { UnitInterval } from "@beep/nlp/Handoff"
+ * import { UnitInterval } from "@beep/schema/UnitInterval"
  * import * as O from "effect/Option"
  *
  * console.log(ExtractionCandidate.make({
@@ -186,8 +188,9 @@ const GroundedExtractionCommonFields = {
 
 const GroundedExtractionAlignedFields = {
   ...GroundedExtractionCommonFields,
-  matchedText: S.NonEmptyString,
-  span: Contract.Span,
+  anchor: TextAnchor.annotateKey({
+    description: "The aligned source slice: its UTF-16 range and the exact raw text it covers.",
+  }),
 };
 
 /**
@@ -198,13 +201,12 @@ const GroundedExtractionAlignedFields = {
  * ```ts
  * import * as S from "effect/Schema"
  * import { GroundedExtraction, GroundedExtractionMatchExact } from "@beep/langextract/Extraction"
- * import { Contract } from "@beep/nlp/Handoff"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  *
  * const party = GroundedExtractionMatchExact.make({
  *   label: "party",
  *   text: "Acme Robotics, Inc.",
- *   matchedText: "Acme Robotics, Inc.",
- *   span: Contract.Span.make({ start: S.Natural.make(17), end: S.Natural.make(36) })
+ *   anchor: TextAnchor.make({ startChar: S.Natural.make(17), endChar: S.Natural.make(36), quote: "Acme Robotics, Inc." })
  * })
  *
  * console.log(party.alignmentStatus) // => "match_exact"
@@ -236,16 +238,15 @@ export class GroundedExtractionMatchExact extends S.Opaque<
  * ```ts
  * import * as S from "effect/Schema"
  * import { GroundedExtractionMatchLesser } from "@beep/langextract/Extraction"
- * import { Contract } from "@beep/nlp/Handoff"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  *
  * const term = GroundedExtractionMatchLesser.make({
  *   label: "claim-term",
  *   text: "Robotic Arm",
- *   matchedText: "robotic arm",
- *   span: Contract.Span.make({ start: S.Natural.make(102), end: S.Natural.make(113) })
+ *   anchor: TextAnchor.make({ startChar: S.Natural.make(102), endChar: S.Natural.make(113), quote: "robotic arm" })
  * })
  *
- * console.log(term.text === term.matchedText) // => false
+ * console.log(term.text === term.anchor.quote) // => false
  * console.log(term.alignmentStatus) // => "match_lesser"
  * ```
  *
@@ -274,16 +275,15 @@ export class GroundedExtractionMatchLesser extends S.Opaque<
  * ```ts
  * import * as S from "effect/Schema"
  * import { GroundedExtractionMatchMinimalFold } from "@beep/langextract/Extraction"
- * import { Contract } from "@beep/nlp/Handoff"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  *
  * const term = GroundedExtractionMatchMinimalFold.make({
  *   label: "component",
  *   text: "end effector",
- *   matchedText: "end ef-\nfector",
- *   span: Contract.Span.make({ start: S.Natural.make(240), end: S.Natural.make(255) })
+ *   anchor: TextAnchor.make({ startChar: S.Natural.make(240), endChar: S.Natural.make(255), quote: "end ef-\nfector" })
  * })
  *
- * console.log(term.span.end - term.span.start) // => 15
+ * console.log(term.anchor.endChar - term.anchor.startChar) // => 15
  * ```
  *
  * @category models
@@ -313,14 +313,13 @@ export class GroundedExtractionMatchMinimalFold extends S.Opaque<
  * import * as O from "effect/Option"
  * import * as S from "effect/Schema"
  * import { GroundedExtractionMatchFuzzy } from "@beep/langextract/Extraction"
- * import { Contract } from "@beep/nlp/Handoff"
  * import { UnitInterval } from "@beep/schema/UnitInterval"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  *
  * const filingDate = GroundedExtractionMatchFuzzy.make({
  *   label: "filing-date",
  *   text: "March 3, 2024",
- *   matchedText: "Rarch 3, 2O24",
- *   span: Contract.Span.make({ start: S.Natural.make(58), end: S.Natural.make(71) }),
+ *   anchor: TextAnchor.make({ startChar: S.Natural.make(58), endChar: S.Natural.make(71), quote: "Rarch 3, 2O24" }),
  *   confidence: UnitInterval.makeOption(0.82)
  * })
  *
@@ -355,7 +354,7 @@ export class GroundedExtractionMatchFuzzy extends S.Opaque<
  * const hallucinated = GroundedExtractionUnaligned.make({ label: "inventor", text: "Grace Hopper" })
  *
  * console.log(GroundedExtraction.isAnyOf(["unaligned"])(hallucinated)) // => true
- * console.log("span" in hallucinated) // => false
+ * console.log("anchor" in hallucinated) // => false
  * ```
  *
  * @category models
@@ -383,13 +382,12 @@ export class GroundedExtractionUnaligned extends S.Opaque<
  * ```ts
  * import * as S from "effect/Schema"
  * import { GroundedExtraction } from "@beep/langextract/Extraction"
- * import { Contract } from "@beep/nlp/Handoff"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
  *
- * const span = Contract.Span.make({ start: S.Natural.make(0), end: S.Natural.make(12) })
+ * const anchor = TextAnchor.make({ startChar: S.Natural.make(0), endChar: S.Natural.make(12), quote: "Ada Lovelace" })
  * console.log(GroundedExtraction.cases.match_exact.make({
  *   label: "person",
- *   matchedText: "Ada Lovelace",
- *   span,
+ *   anchor,
  *   text: "Ada Lovelace"
  * }))
  * ```

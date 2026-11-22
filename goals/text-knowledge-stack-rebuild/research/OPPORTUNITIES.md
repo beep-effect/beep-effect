@@ -376,3 +376,15 @@ home paths with `~`, drop session and machine ids.
 - **Prevention:** a lint or schema-first rule that flags `annotateKey` on an `S.Opaque` class used as a struct field,
   or an `annotateKey` overload on opaque classes that keeps `Self`; until then, annotate the field's description on
   the opaque class itself and leave the field unannotated.
+
+## 2026-11-22: a scoped `lint schema-catalog --write` reports a shard written that it left stale
+
+- **Doing:** P3 commit 7, refreshing the `@beep/langextract` and `@beep/law-practice-use-cases` schema-catalog shards
+  after deleting the langextract range schemas and adding the attempt-log read codec.
+- **Evidence:** `bun run beep lint schema-catalog --write packages/foundation/capability/langextract
+  packages/law-practice/use-cases` printed `wrote @beep/langextract, @beep/law-practice-use-cases` and changed no
+  file; the same command over one source file of each package wrote only the use-cases shard. The check still said
+  `stale standards/schema-catalog/@beep/langextract.generated.jsonc` until a repository-wide `--write` rewrote it.
+  `observability catalog --write <file>` refreshed the langextract instrumentation shard from one file.
+- **Prevention:** make the scoped write resolve directory paths to their owning package and fail when a shard it
+  reports as written is still stale; until then, run the unscoped `--write` and read `git status` afterwards.

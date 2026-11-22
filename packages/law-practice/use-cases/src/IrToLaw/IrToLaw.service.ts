@@ -6,8 +6,8 @@
  * Maps the span-bearing `GroundedExtraction[]` for one office action into the
  * five law-practice domain entities, keyed by the extraction `label`
  * vocabulary (`"office_action"`, `"claim"`, `"rejection_reference"`,
- * `"distinction"`). The `"distinction"` extraction's aligned `span` +
- * `matchedText` ground the required `Distinction.anchor` (`TextAnchor`); the
+ * `"distinction"`). The `"distinction"` extraction's aligned `anchor`
+ * grounds the required `Distinction.anchor` (`TextAnchor`); the
  * §102 rejection cites the prior-art reference by its fixture key.
  *
  * Entities are decoded through their schemas with a spike audit envelope (see
@@ -22,7 +22,6 @@
 import { AlignedStatus } from "@beep/langextract/Alignment";
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { Claim, Distinction, OfficeAction, PriorArtReference, Rejection } from "@beep/law-practice-domain";
-import { TextAnchor } from "@beep/text";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Eq from "effect/Equal";
@@ -33,6 +32,7 @@ import { spikeEntityInput } from "../internal/spikeEntity.ts";
 import { OfficeActionExtractionLabel } from "../OfficeActionReview/OfficeActionExtractionLabel.ts";
 import { IrToLawExtractionError } from "./IrToLaw.errors.ts";
 import { IrToLawShape } from "./IrToLaw.ports.ts";
+import type { TextAnchor } from "@beep/text";
 import type { OfficeActionExtractionLabel as OfficeActionExtractionLabelValue } from "../OfficeActionReview/OfficeActionExtractionLabel.ts";
 import type { LawEntities } from "./IrToLaw.ports.ts";
 
@@ -91,11 +91,7 @@ const anchorOf = Effect.fn("law_practice.ir_to_law.anchor_of")(function* (
   label: OfficeActionExtractionLabelValue
 ): Effect.fn.Return<TextAnchor, IrToLawExtractionError> {
   const extraction = yield* requiredExtraction(extractions, label);
-  return TextAnchor.make({
-    endChar: extraction.span.end,
-    quote: extraction.matchedText,
-    startChar: extraction.span.start,
-  });
+  return extraction.anchor;
 });
 
 const officeActionFixtureKey = "office-action.spike";

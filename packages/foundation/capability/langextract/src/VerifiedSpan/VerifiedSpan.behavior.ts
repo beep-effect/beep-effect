@@ -33,8 +33,6 @@ import {
 } from "./VerifiedSpan.config.ts";
 import { VerifiedSpanError } from "./VerifiedSpan.errors.ts";
 import {
-  TextOffsetUnit,
-  Utf16TextRange,
   VerifiedSpanAttemptFailure,
   VerifiedSpanAttemptKind,
   VerifiedSpanAttemptOutcome,
@@ -50,7 +48,6 @@ import type {
   BeginVerifiedSpanHistoryInput,
   ContinueVerifiedSpanHistoryInput,
   RawTextChunk,
-  TextOffsetRange,
   VerifiedSpanAttemptId,
   VerifiedSpanAttemptOutcome as VerifiedSpanAttemptOutcomeType,
   VerifiedSpanHistory as VerifiedSpanHistoryType,
@@ -315,96 +312,6 @@ export const locateRawText: {
   })
 );
 
-const convertUtf16CodeUnitRange = Effect.fnUntraced(function* (
-  range: TextOffsetRange,
-  sourceText: string
-): Effect.fn.Return<Utf16TextRange, VerifiedSpanError> {
-  if (
-    Bool.or(
-      range.end > Str.length(sourceText),
-      Bool.or(Bool.not(isUtf16Boundary(sourceText, range.start)), Bool.not(isUtf16Boundary(sourceText, range.end)))
-    )
-  ) {
-    return yield* VerifiedSpanError.fromReason("invalid-offset");
-  }
-  return Utf16TextRange.make({
-    endChar: range.end,
-    startChar: range.start,
-  });
-});
-
-const codePointUtf16Width = (point: number) => (point > 65535 ? 2 : 1);
-
-const convertCodePointRange = Effect.fnUntraced(function* (
-  range: TextOffsetRange,
-  sourceText: string
-): Effect.fn.Return<Utf16TextRange, VerifiedSpanError> {
-  let pointIndex = 0;
-  let cursor = 0;
-  let startChar = 0;
-  while (pointIndex < range.end && cursor < Str.length(sourceText)) {
-    if (pointIndex % 4096 === 0) yield* Effect.yieldNow;
-    if (pointIndex === range.start) startChar = cursor;
-    const point = O.getOrThrow(Str.codePointAt(sourceText, cursor));
-    cursor += codePointUtf16Width(point);
-    pointIndex++;
-  }
-  if (pointIndex !== range.end) return yield* VerifiedSpanError.fromReason("invalid-offset");
-  return Utf16TextRange.make({ endChar: S.Natural.make(cursor), startChar: S.Natural.make(startChar) });
-});
-
-/**
- * Convert one declared half-open range into canonical UTF-16 offsets.
- *
- * **Details**
- *
- * Ranges that split a surrogate pair, exceed the source, or are empty/reversed
- * fail closed.
- *
- * **Example** (Convert range to UTF-16)
- *
- * ```ts
- * import * as S from "effect/Schema"
- * import * as Effect from "effect/Effect";
- * import {
- *   TextOffsetRange,
- *   convertTextOffsetRange,
- * } from "@beep/langextract/VerifiedSpan"
- *
- * const range = TextOffsetRange.make({
- *   start: S.Natural.make(1),
- *   end: S.Natural.make(2),
- *   unit: "unicode-code-point",
- * })
- * Effect.runPromise(convertTextOffsetRange(range, "A😀B")).then(console.log)
- * ```
- *
- * @category mapping
- * @since 0.0.0
- */
-export const convertTextOffsetRange: {
-  (sourceText: string): (range: TextOffsetRange) => Effect.Effect<Utf16TextRange, VerifiedSpanError>;
-  (range: TextOffsetRange, sourceText: string): Effect.Effect<Utf16TextRange, VerifiedSpanError>;
-} = dual(
-  2,
-  Effect.fn("VerifiedSpan.convertTextOffsetRange")(function* (
-    range: TextOffsetRange,
-    sourceText: string
-  ): Effect.fn.Return<Utf16TextRange, VerifiedSpanError> {
-    if (Str.isEmpty(sourceText)) {
-      return yield* VerifiedSpanError.fromReason("absent-text");
-    }
-    if (Str.length(sourceText) > MAX_SOURCE_TEXT_LENGTH) {
-      return yield* VerifiedSpanError.fromReason("limit-exceeded");
-    }
-
-    return yield* TextOffsetUnit.match(range.unit, {
-      "unicode-code-point": () => convertCodePointRange(range, sourceText),
-      "utf16-code-unit": () => convertUtf16CodeUnitRange(range, sourceText),
-    });
-  })
-);
-
 /**
  * Reconstruct one exact raw source from explicit contiguous chunks.
  *
@@ -461,7 +368,7 @@ export const reconstructSourceText = Effect.fn("VerifiedSpan.reconstructSourceTe
  *
  * **Details**
  *
- * Legacy alignment status, span, and `matchedText` are not authorization
+ * An aligned candidate's alignment status and anchor are not authorization
  * inputs: each candidate's original `text` is independently located under the
  * strict normalization contract.
  *

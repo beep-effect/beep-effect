@@ -1,8 +1,10 @@
 import { GroundedExtraction } from "@beep/langextract/Extraction";
 import { AnnotatedDocumentInput, toAnnotatedDocument } from "@beep/langextract/Handoff";
 import { DocumentId } from "@beep/nlp/Core";
-import { Contract, UnitInterval } from "@beep/nlp/Handoff";
+import { Contract } from "@beep/nlp/Handoff";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as O from "@beep/utils/Option";
 import { describe, expect } from "@effect/vitest";
 import { assertSome, deepStrictEqual } from "@effect/vitest/utils";
@@ -14,10 +16,9 @@ describe("toAnnotatedDocument", () => {
   it("projects only source-aligned extractions into handoff entities", () => {
     const documentId = DocumentId.make("doc-1");
     const aligned = GroundedExtraction.cases.match_exact.make({
+      anchor: TextAnchor.make({ endChar: S.Natural.make(12), quote: "Ada Lovelace", startChar: S.Natural.make(0) }),
       confidence: UnitInterval.makeOption(0.98),
       label: "person",
-      matchedText: "Ada Lovelace",
-      span: Contract.Span.make({ end: S.Natural.make(12), start: S.Natural.make(0) }),
       text: "Ada Lovelace",
     });
     const unaligned = GroundedExtraction.cases.unaligned.make({
@@ -43,14 +44,13 @@ describe("toAnnotatedDocument", () => {
     );
   });
 
-  it("emits one mention per aligned extraction carrying the aligned span into the document chunk", () => {
+  it("emits one mention per aligned extraction carrying the aligned anchor's span into the document chunk", () => {
     const documentId = DocumentId.make("doc-1");
     const sourceText = "Ada Lovelace wrote notes.";
     const span = Contract.Span.make({ end: S.Natural.make(12), start: S.Natural.make(0) });
     const aligned = GroundedExtraction.cases.match_exact.make({
+      anchor: TextAnchor.make({ endChar: S.Natural.make(12), quote: "Ada Lovelace", startChar: S.Natural.make(0) }),
       label: "person",
-      matchedText: "Ada Lovelace",
-      span,
       text: "Ada Lovelace",
     });
 

@@ -14,7 +14,6 @@
     {"name":"LangExtractService.extract","owner":"@beep/langextract","family":"foundation","conforms":true},
     {"name":"LangExtractService.make","owner":"@beep/langextract","family":"foundation","conforms":true},
     {"name":"VerifiedSpan.beginHistory","owner":"@beep/langextract","family":"foundation","conforms":true},
-    {"name":"VerifiedSpan.convertTextOffsetRange","owner":"@beep/langextract","family":"foundation","conforms":true},
     {"name":"VerifiedSpan.locateGroundedExtractions","owner":"@beep/langextract","family":"foundation","conforms":true},
     {"name":"VerifiedSpan.locateRawText","owner":"@beep/langextract","family":"foundation","conforms":true},
     {"name":"VerifiedSpan.reanchorHistory","owner":"@beep/langextract","family":"foundation","conforms":true},
