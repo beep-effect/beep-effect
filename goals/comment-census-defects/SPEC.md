@@ -36,7 +36,7 @@ Higher sources outrank lower sources when they conflict.
 | Dead nav anchors | `apps/oip-web/src/components/OipHomePage.tsx` with `OipContent.data.ts` | nav and hero link to `#matters` and `#press`; both sections are commented out | sections restored, or the links removed |
 | Test resolves a missing directory | `packages/tooling/library/repo-workspaces/test/integration/node-sync.int.test.ts:22` | `cwd` climbs five levels and resolves a doubled packages segment | six levels; the test asserts the directory exists |
 | Claimed tensor check | `packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.onnx.ts:119` | the comment says tensors are checked before graph construction; only a later `MISSING:` scan exists | a missing required tensor fails before construction, with a test |
-| EPERM counted as gone | `packages/tooling/tool/cli/src/internal/repo-run/ProcessIdentity.ts:154` | probe a live pid owned by another user: `kill(pid, 0)` throws EPERM | EPERM reads as alive, so a live collector's handle is never reclaimed |
+| EPERM counted as gone | `packages/tooling/library/qa-capture/src/Collector.service.ts` `isPidAlive` (about line 280) | probe a live pid owned by another user: `kill(pid, 0)` throws EPERM, which `isPidAlive` turns into false | EPERM reads as alive, as `isProcessPidAlive` in `packages/tooling/tool/cli/src/internal/repo-run/ProcessIdentity.ts` already does, so a live collector's handle is never reclaimed |
 
 ## Constraints
 
