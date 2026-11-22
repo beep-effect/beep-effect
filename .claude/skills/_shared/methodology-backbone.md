@@ -99,7 +99,7 @@ requirements → scout → foundational-auditor → conceptualizer → architect
 3. **conceptualizer** consumes RATIFIED proposals + ratification records +
    the dispositions index (never raw pre-glossary terms; the index carries
    the unresolved/deferred remainder), produces: glossary,
-   conceptual model, upper-ontology alignment (`docs/upper-alignment.md`),
+   conceptual model, upper-ontology alignment (`ontologies/{name}/docs/upper-alignment.md`),
    property design and axiom plan (each entry `status: proposed` until the
    steward ratifies it; the architect formalizes only `ratified` entries)
 4. **architect** consumes approved conceptual model, produces: ontology files
