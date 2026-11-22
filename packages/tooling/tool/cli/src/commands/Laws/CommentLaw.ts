@@ -29,6 +29,7 @@ import { formatJsonc } from "@beep/repo-cli-kit/artifacts/index";
 import { findRepoRoot } from "@beep/repo-utils";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { A } from "@beep/utils";
+import * as Console from "effect/Console";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as F from "effect/Function";
@@ -306,7 +307,9 @@ const lockedFindings = (
 ): ReadonlyArray<CommentLawFinding> => {
   const roots = input.packageRoots;
   const newlyLocked = (file: string): boolean =>
-    O.isSome(input.baseShards) && isCovered(roots, baseShards, file) && !isCovered(roots, input.headShards, file);
+    O.isSome(input.baseShards) &&
+    isCovered(input.basePackageRoots, baseShards, file) &&
+    !isCovered(roots, input.headShards, file);
   return F.pipe(
     files,
     A.filter((file) => countIn(input.bannedCounts, file) > 0),
@@ -412,6 +415,7 @@ const findingsWhere = (verdicts: ReadonlyArray<LockVerdict>, fails: boolean): Re
  *     headShards: [],
  *     baseShards: O.some([]),
  *     packageRoots: ["packages/x"],
+ *     basePackageRoots: ["packages/x"],
  *     bannedCounts: HashMap.make(["packages/x/src/A.ts", 0]),
  *     changedFiles: HashSet.empty(),
  *     wholeTree: true,
@@ -477,13 +481,18 @@ const readPolicy = Effect.fn("CommentLaw.readPolicy")(function* (repoRoot: strin
   return yield* decodePolicy(text.value);
 });
 
+interface WorktreeShard {
+  readonly name: string;
+  readonly shard: CommentLawPending;
+}
+
 const readWorktreeShards = Effect.fn("CommentLaw.readWorktreeShards")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const directory = `${repoRoot}/${COMMENT_LAW_PENDING_DIR}`;
   const exists = yield* fs
     .exists(directory)
     .pipe(CommentLawExecutionError.mapError(`Failed to stat ${COMMENT_LAW_PENDING_DIR}`));
-  if (!exists) return A.empty<CommentLawPending>();
+  if (!exists) return A.empty<WorktreeShard>();
   const names = yield* fs
     .readDirectory(directory)
     .pipe(CommentLawExecutionError.mapError(`Failed to list ${COMMENT_LAW_PENDING_DIR}`));
@@ -494,7 +503,11 @@ const readWorktreeShards = Effect.fn("CommentLaw.readWorktreeShards")(function* 
         fs
           .readFileString(`${directory}/${name}`)
           .pipe(CommentLawExecutionError.mapError(`Failed to read ${COMMENT_LAW_PENDING_DIR}/${name}`)),
-        (text) => decodeShard(`${COMMENT_LAW_PENDING_DIR}/${name}`, text)
+        (text) =>
+          Effect.map(
+            decodeShard(`${COMMENT_LAW_PENDING_DIR}/${name}`, text),
+            (shard): WorktreeShard => ({ name, shard })
+          )
       ),
     { concurrency: 1 }
   );
@@ -527,6 +540,17 @@ const readBaseShards = Effect.fn("CommentLaw.readBaseShards")(function* (repoRoo
     { concurrency: 8 }
   );
   return O.some(A.getSomes(shards));
+});
+
+const basePackageRoots = Effect.fn("CommentLaw.basePackageRoots")(function* (repoRoot: string, base: string) {
+  const git = yield* Git;
+  const entries = yield* mapGit(GitCommand.lsTree(base, [], true), git.lsTree(repoRoot, base, { fullTree: true }));
+  return packageRootsOf(
+    A.map(
+      A.filter(entries, (entry) => entry.type === "blob"),
+      (entry) => entry.path
+    )
+  );
 });
 
 const lawFiles = Effect.fn("CommentLaw.lawFiles")(function* (repoRoot: string) {
@@ -589,7 +613,21 @@ const prefetchBlobs = Effect.fn("CommentLaw.prefetchBlobs")(function* (
   );
   if (A.isReadonlyArrayEmpty(paths) || !O.exists(partial, (value) => value === "true")) return;
   const options = { base, noRenames: true, unified: 0, pathspec: paths };
-  yield* mapGit(GitCommand.diffPatch(options), Effect.asVoid(git.diffPatch(repoRoot, options)));
+  yield* mapGit(GitCommand.diffPatch(options), Effect.asVoid(git.diffPatch(repoRoot, options))).pipe(
+    Effect.catchTag("CommentLawExecutionError", (error) =>
+      Console.log(`[comment-law] advisory: blob prefetch failed, reading each file on demand (${error.message})`)
+    )
+  );
+});
+
+const readBaseText = Effect.fn("CommentLaw.readBaseText")(function* (repoRoot: string, base: string, file: string) {
+  const git = yield* Git;
+  const text = yield* git
+    .show(repoRoot, base, file)
+    .pipe(CommentLawExecutionError.mapError(`Failed to read ${file} at ${base}; the comment law never skips`));
+  if (O.isNone(text))
+    return yield* CommentLawExecutionError.new(`${file} is missing at ${base}; the comment law never skips`);
+  return text;
 });
 
 const changesAgainst = Effect.fn("CommentLaw.changesAgainst")(function* (
@@ -632,9 +670,7 @@ const changesAgainst = Effect.fn("CommentLaw.changesAgainst")(function* (
       Effect.all(
         {
           before:
-            entry.status === "added"
-              ? Effect.succeed(O.none<string>())
-              : mapGit(GitCommand.show(base, entry.path), git.show(repoRoot, base, entry.path)),
+            entry.status === "added" ? Effect.succeed(O.none<string>()) : readBaseText(repoRoot, base, entry.path),
           after: readWorktreeText(repoRoot, entry.path),
         },
         { concurrency: 2 }
@@ -659,31 +695,22 @@ const lockFor = Effect.fn("CommentLaw.lockFor")(function* (
   changes: ReadonlyArray<CommentFileChange>
 ) {
   const { files, roots } = yield* lawFiles(repoRoot);
-  const headShards = yield* readWorktreeShards(repoRoot);
+  const headFiles = yield* readWorktreeShards(repoRoot);
+  const headShards = A.map(headFiles, (entry) => entry.shard);
   const baseShards = yield* readBaseShards(repoRoot, base);
+  const baseRoots = O.isSome(baseShards) ? yield* basePackageRoots(repoRoot, base) : A.empty<string>();
   const bannedCounts = yield* bannedCountsOf(repoRoot, files);
   return evaluateCommentLock(
     CommentLockInput.make({
       headShards,
       baseShards,
       packageRoots: roots,
+      basePackageRoots: baseRoots,
       bannedCounts,
       changedFiles: HashSet.fromIterable(A.map(changes, (change) => change.file)),
       wholeTree,
     })
   );
-});
-
-const firstParentOr = Effect.fn("CommentLaw.firstParentOr")(function* (repoRoot: string, fallback: string) {
-  const git = yield* Git;
-  const parent = yield* mapGit(
-    GitCommand.revParse("HEAD^1"),
-    git.revParse(repoRoot, "HEAD^1", { peel: "commit", quiet: true }).pipe(
-      Effect.asSome,
-      Effect.catchTag("UnknownRefError", () => Effect.succeedNone)
-    )
-  );
-  return O.getOrElse(parent, () => fallback);
 });
 
 const DATED_DECISION = /^\d{4}-\d{2}-\d{2}-/;
@@ -702,6 +729,12 @@ const decisionNamesIn = Effect.fn("CommentLaw.decisionNamesIn")(function* (repoR
 
 const namesDecision = (slug: string) => (name: string) =>
   name === `${slug}.md` || (DATED_DECISION.test(name) && Str.slice(11)(name) === `${slug}.md`);
+
+const isRegularFile = Effect.fn("CommentLaw.isRegularFile")(function* (repoRoot: string, file: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const info = yield* fs.stat(`${repoRoot}/${file}`).pipe(CommentLawExecutionError.mapError(`Failed to stat ${file}`));
+  return info.type === "File";
+});
 
 interface PointerSite {
   readonly comment: ClassifiedComment;
@@ -731,8 +764,12 @@ const danglingPointers = Effect.fn("CommentLaw.danglingPointers")(function* (
     const root = packageRootOf(roots, file);
     const directory = root === "." ? "decisions" : `${root}/decisions`;
     const slug = Str.slice(Str.length(DECISION_PREFIX))(comment.text);
-    const names = yield* decisionNamesIn(repoRoot, directory);
-    if (A.some(names, namesDecision(slug))) continue;
+    const listed = yield* decisionNamesIn(repoRoot, directory);
+    const names = A.filter(listed, namesDecision(slug));
+    const recorded = yield* Effect.forEach(names, (name) => isRegularFile(repoRoot, `${directory}/${name}`), {
+      concurrency: 1,
+    });
+    if (A.some(recorded, F.identity)) continue;
     findings = A.append(
       findings,
       CommentLawFinding.make({
@@ -753,10 +790,11 @@ const danglingPointers = Effect.fn("CommentLaw.danglingPointers")(function* (
  * **Details**
  *
  * The base ref is resolved to its merge base with `HEAD`; an unresolvable
- * base fails, it never skips. When the merge base is `HEAD` itself (a push
- * run) the delta is `HEAD` against its first parent, the commit the push
- * landed, and the lock judges the whole tree; a root commit has an empty
- * delta. A `// decision: <slug>` line in a changed file must name a file
+ * base fails, it never skips. With `push` (the CI caller sets it on a push
+ * event only) the base is `HEAD`, skipping the landed growth delta. With no
+ * changes the lock judges the whole tree. Without it the delta is always the
+ * merge base, even when that is
+ * `HEAD` itself. A `// decision: <slug>` line in a changed file must name a file
  * under its owning package's `decisions/` directory. With
  * `staged`, the index is compared with `HEAD` and the lock is skipped.
  * Findings fail the run only when the policy is `blocking`.
@@ -787,8 +825,9 @@ export const runCommentLaw = Effect.fn("CommentLaw.runCommentLaw")(function* (
   );
   const policy = yield* readPolicy(repoRoot);
   const head = yield* mapGit(GitCommand.revParse("HEAD"), git.revParse(repoRoot, "HEAD"));
-  const requested = options.staged ? "HEAD" : O.getOrElse(O.fromUndefinedOr(options.base), () => "origin/main");
-  const mergeBase = options.staged
+  const atHead = options.staged || options.push;
+  const requested = atHead ? "HEAD" : O.getOrElse(O.fromUndefinedOr(options.base), () => "origin/main");
+  const mergeBase = atHead
     ? O.some(head)
     : yield* mapGit(GitCommand.mergeBase(requested, "HEAD"), git.mergeBaseOption(repoRoot, requested, "HEAD"));
   const base = O.getOrElse(mergeBase, () => "");
@@ -796,18 +835,17 @@ export const runCommentLaw = Effect.fn("CommentLaw.runCommentLaw")(function* (
     return yield* CommentLawExecutionError.new(
       `No merge base between ${requested} and HEAD; the comment law never skips.`
     );
-  const pushed = !options.staged && base === head;
-  const deltaBase = pushed ? yield* firstParentOr(repoRoot, base) : base;
-  const changes = yield* changesAgainst(repoRoot, deltaBase, options.staged);
+  const pushed = !options.staged && options.push;
+  const changes = yield* changesAgainst(repoRoot, base, options.staged);
   const delta = yield* commentDelta(changes);
   const pointers = yield* danglingPointers(repoRoot, changes);
   const lock = options.staged
     ? CommentLockResult.make({ findings: [], advisories: [] })
-    : yield* lockFor(repoRoot, deltaBase, pushed, changes);
+    : yield* lockFor(repoRoot, base, pushed && A.isReadonlyArrayEmpty(changes), changes);
   const findings = A.appendAll(A.appendAll(delta.introduced, pointers), lock.findings);
   return CommentLawSummary.make({
     enforcement: policy.enforcement,
-    base: deltaBase,
+    base,
     changedFiles: A.length(changes),
     introduced: A.length(delta.introduced),
     removed: delta.removed,
@@ -946,18 +984,18 @@ export const runCommentLawWrite = Effect.fn("CommentLaw.runCommentLawWrite")(fun
   );
   const { files, roots } = yield* lawFiles(repoRoot);
   const counts = yield* bannedCountsOf(repoRoot, files);
-  const current = yield* readWorktreeShards(repoRoot);
+  const currentFiles = yield* readWorktreeShards(repoRoot);
   const names = yield* packageNamesOf(repoRoot, roots);
   const bannedFiles = A.filter(files, (file) => O.getOrElse(HashMap.get(counts, file), () => 0) > 0);
-  const next = A.isReadonlyArrayEmpty(current)
-    ? seedShards(roots, names, bannedFiles)
+  const next: ReadonlyArray<WorktreeShard> = A.isReadonlyArrayEmpty(currentFiles)
+    ? A.map(seedShards(roots, names, bannedFiles), (shard): WorktreeShard => ({ name: shardFileName(shard), shard }))
     : A.getSomes(
-        A.map(current, (shard) =>
+        A.map(currentFiles, ({ name, shard }) =>
           O.map(
             O.liftPredicate(A.isReadonlyArrayNonEmpty<string>)(
               A.filter(shard.scopes, (scope) => A.some(bannedFiles, (file) => scopeCovers(roots, shard, scope, file)))
             ),
-            (scopes) => CommentLawPending.make({ ...shard, scopes })
+            (scopes): WorktreeShard => ({ name, shard: CommentLawPending.make({ ...shard, scopes }) })
           )
         )
       );
@@ -965,25 +1003,22 @@ export const runCommentLawWrite = Effect.fn("CommentLaw.runCommentLawWrite")(fun
   yield* fs
     .makeDirectory(directory, { recursive: true })
     .pipe(CommentLawExecutionError.mapError(`Failed to create ${COMMENT_LAW_PENDING_DIR}`));
-  const keep = HashSet.fromIterable(A.map(next, shardFileName));
-  for (const shard of current) {
-    const name = shardFileName(shard);
+  const keep = HashSet.fromIterable(A.map(next, (entry) => entry.name));
+  for (const { name } of currentFiles) {
     if (!HashSet.has(keep, name))
       yield* fs.remove(`${directory}/${name}`).pipe(CommentLawExecutionError.mapError(`Failed to remove ${name}`));
   }
   const unchanged = HashSet.fromIterable(
-    A.map(current, (shard) => `${shard.root}\u0000${A.join(shard.scopes, "\u0000")}`)
+    A.map(currentFiles, ({ name, shard }) => `${name}\u0000${shard.root}\u0000${A.join(shard.scopes, "\u0000")}`)
   );
-  for (const shard of next) {
-    if (HashSet.has(unchanged, `${shard.root}\u0000${A.join(shard.scopes, "\u0000")}`)) continue;
-    const text = yield* formatJsonc(shard).pipe(
-      CommentLawExecutionError.mapError(`Failed to encode ${shardFileName(shard)}`)
-    );
+  for (const { name, shard } of next) {
+    if (HashSet.has(unchanged, `${name}\u0000${shard.root}\u0000${A.join(shard.scopes, "\u0000")}`)) continue;
+    const text = yield* formatJsonc(shard).pipe(CommentLawExecutionError.mapError(`Failed to encode ${name}`));
     yield* fs
-      .writeFileString(`${directory}/${shardFileName(shard)}`, text)
-      .pipe(CommentLawExecutionError.mapError(`Failed to write ${shardFileName(shard)}`));
+      .writeFileString(`${directory}/${name}`, text)
+      .pipe(CommentLawExecutionError.mapError(`Failed to write ${name}`));
   }
-  return next;
+  return A.map(next, (entry) => entry.shard);
 });
 
 const packageNamesOf = Effect.fn("CommentLaw.packageNamesOf")(function* (

@@ -88,6 +88,7 @@ describe("comment grammar", () => {
     "// gitleaks:allow",
     '/// <reference types="node" />',
     "// oxlint-disable-next-line no-console -- the fixture prints",
+    "// oxlint-disable-next-line no-console-- temporary output",
   ])("classifies %s as a directive", (comment) => {
     expect(kindOfOnly(afterCode(comment))).toBe("directive");
   });
@@ -97,6 +98,8 @@ describe("comment grammar", () => {
     ["// oxlint-disable-next-line beep/no-comments -- hide", "law-disable"],
     ["// eslint-disable-line beep/no-comments, no-console", "law-disable"],
     ["// oxlint-disable-next-line -- the reason -- more words", "law-disable"],
+    ["// oxlint-disable-next-line beep/no-comments-- -- x", "law-disable"],
+    ["// oxlint-disable-next-line no-console,beep/no-comments--x", "law-disable"],
     ["// oxlint-disable-next-line no-console,no-alert -- the reason", "directive"],
     ["// oxlint-disable-next-line no-console", "bad-suppression"],
     ["// oxlint-disable-next-line no-console --  ", "bad-suppression"],

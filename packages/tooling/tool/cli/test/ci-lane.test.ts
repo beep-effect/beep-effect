@@ -1662,6 +1662,28 @@ describe("partitioned CI lane execution", () => {
 });
 
 describe("ciLaneStepsForTesting", () => {
+  it("sets comment-law --push only for the push shape and preserves the PR base sha", () => {
+    for (const push of [false, true]) {
+      const options = CiLaneRunOptions.make({ ...prShapeOptions, base: "abc123", push });
+      const step = O.getOrThrow(
+        A.findFirst(
+          ciLaneStepsForTesting(REPO_ROOT, "repo-sanity", options),
+          (step) => step.label === "lint:comment-law"
+        )
+      );
+      expect(step.args).toEqual([
+        "run",
+        "beep",
+        "laws",
+        "comments",
+        "--check",
+        "--base",
+        "abc123",
+        ...(push ? ["--push"] : []),
+      ]);
+    }
+  });
+
   it("uses the local PR-shape check concurrency outside GitHub Actions", () => {
     const step = withEnvVar("GITHUB_ACTIONS", undefined, () =>
       withEnvVar("BEEP_QUALITY_CHECK_CONCURRENCY", undefined, () =>
@@ -2402,6 +2424,47 @@ const storybookCiLayer = (
     )
   );
 };
+
+for (const { eventName, skipSkillsLock } of [
+  { eventName: "push", skipSkillsLock: false },
+  { eventName: "pull_request", skipSkillsLock: false },
+  { eventName: "pull_request", skipSkillsLock: true },
+]) {
+  const probe = ScriptedSpawner.make(() => ({}));
+  it.layer(Layer.mergeAll(storybookCiLayer(probe), NodeStdio.layer, NodeTerminal.layer), { timeout: "10 seconds" })(
+    `repo-sanity comment-law event routing (${eventName}, skipSkillsLock=${skipSkillsLock})`,
+    (it) => {
+      it.effect(
+        "derives --push only from a push event and retains the resolved base for both PR shapes",
+        Effect.fnUntraced(function* () {
+          yield* Command.runWith(ciLaneCommand, { version: "0.0.0" })([
+            "repo-sanity",
+            "--base",
+            "abc123",
+            "--serial",
+            ...(skipSkillsLock ? ["--skip-skills-lock"] : []),
+          ]).pipe(
+            Effect.provideService(
+              ConfigProvider.ConfigProvider,
+              ConfigProvider.fromUnknown({ GITHUB_EVENT_NAME: eventName })
+            )
+          );
+          const spawn = O.getOrThrow(A.findFirst(probe.spawns, (spawn) => A.contains(spawn.args, "comments")));
+          expect(spawn.args).toEqual([
+            "run",
+            "beep",
+            "laws",
+            "comments",
+            "--check",
+            "--base",
+            "abc123",
+            ...(eventName === "push" ? ["--push"] : []),
+          ]);
+        })
+      );
+    }
+  );
+}
 
 const storybookDryRun = (
   tasks: ReadonlyArray<{ readonly package: string; readonly task: string; readonly command?: string }>

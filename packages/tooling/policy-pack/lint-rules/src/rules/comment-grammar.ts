@@ -689,19 +689,13 @@ const HEADER_FIRST_TYPES = /^(?:ImportDeclaration|TSImportEqualsDeclaration|Expo
 const MODULE_TAG = /@packageDocumentation\b|@module\b|@fileoverview\b/;
 const LIVE_TAG = /@(?:internal|public|expected-unused|ignore|deprecated)\b|import\.meta\.vitest/;
 
-const isReasonMarker = (token: string): boolean => token === "--";
-
 const suppressionKind = (text: string): O.Option<CommentKind> => {
   const match = SUPPRESSION.exec(text);
   if (match === null) return O.none();
-  const [, tool, verb, scope, rest] = match;
-  const tokens = A.filter(Str.split(rest ?? "", /\s+/), Str.isNonEmpty);
-  const marker = O.getOrElse(A.findFirstIndex(tokens, isReasonMarker), () => A.length(tokens));
-  const rules = A.filter(
-    A.flatMap(A.take(tokens, marker), (token) => Str.split(token, ",")),
-    Str.isNonEmpty
-  );
-  const reason = A.join(A.drop(tokens, marker + 1), " ");
+  const [, tool, verb, scope, rest = ""] = match;
+  const marker = O.getOrElse(Str.indexOf("--")(rest), () => Str.length(rest));
+  const rules = A.filter(Str.split(Str.slice(0, marker)(rest), /[\s,]+/), Str.isNonEmpty);
+  const reason = Str.trim(Str.slice(marker + 2)(rest));
   if (A.isReadonlyArrayEmpty(rules) || A.contains(rules, LAW_RULE)) return O.some("law-disable");
   if (tool === "oxlint" && verb === "disable" && scope === "-next-line" && Str.isNonEmpty(reason))
     return O.some("directive");

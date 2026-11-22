@@ -255,7 +255,9 @@ export class CommentDelta extends S.Opaque<CommentDelta, { readonly brand: uniqu
  *
  * `bannedCounts` maps every in-scope file of the checked tree to its banned
  * comment count. `packageRoots` lists every package root: a shard scope
- * covers only the files its own root owns, never those of a nested package. `baseShards` is `None` when the merge base predates the
+ * covers only the files its own root owns, never those of a nested package.
+ * `basePackageRoots` lists the merge base's package roots, which decide what
+ * the base shards covered. `baseShards` is `None` when the merge base predates the
  * law, which skips the shrink-only guard for the bootstrap PR.
  * `wholeTree` reports every locked violation; otherwise only those in
  * changed files or in scopes the change locked.
@@ -272,6 +274,7 @@ export class CommentDelta extends S.Opaque<CommentDelta, { readonly brand: uniqu
  *   headShards: [],
  *   baseShards: O.none(),
  *   packageRoots: [],
+ *   basePackageRoots: [],
  *   bannedCounts: HashMap.empty(),
  *   changedFiles: HashSet.empty(),
  *   wholeTree: true,
@@ -288,6 +291,7 @@ export class CommentLockInput extends S.Opaque<CommentLockInput, { readonly bran
     headShards: S.Array(CommentLawPending),
     baseShards: CommentLawPending.pipe(S.Array, S.Option),
     packageRoots: S.Array(S.String),
+    basePackageRoots: S.Array(S.String),
     bannedCounts: S.HashMap(S.String, S.Int),
     changedFiles: S.HashSet(S.String),
     wholeTree: S.Boolean,
@@ -333,7 +337,9 @@ export class CommentLockResult extends S.Opaque<CommentLockResult, { readonly br
  * `base` names the ref to diff against; the check uses its merge base with
  * `HEAD`. Without one, `BEEP_PROOF_BASE`, `BEEP_YEET_PROOF_BASE` and then
  * `origin/main` are tried. `staged` compares the index with `HEAD` and skips
- * the lock check.
+ * the lock check. `push` uses `HEAD` as base, skipping the landed growth
+ * delta and judging the whole-tree lock when there are no changes. Only the
+ * CI push run sets it.
  *
  * **Example** (Configure a staged check)
  *
@@ -353,6 +359,10 @@ export class CommentLawOptions extends S.Opaque<CommentLawOptions, { readonly br
     cwd: S.String,
     base: S.optionalKey(S.NonEmptyString),
     staged: S.Boolean.pipe(
+      S.withConstructorDefault(Effect.succeed(false)),
+      S.withDecodingDefaultKey(Effect.succeed(false))
+    ),
+    push: S.Boolean.pipe(
       S.withConstructorDefault(Effect.succeed(false)),
       S.withDecodingDefaultKey(Effect.succeed(false))
     ),

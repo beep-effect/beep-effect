@@ -1,3 +1,4 @@
+import { Git, GitCommandError } from "@beep/git/Git";
 import {
   CommentFileChange,
   CommentLawExecutionError,
@@ -14,6 +15,7 @@ import {
   runCommentList,
   scanCommentSource,
 } from "@beep/repo-cli/commands/Laws";
+import { TSMorphServiceLive } from "@beep/repo-utils/TSMorph/index";
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
@@ -26,6 +28,7 @@ import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
@@ -125,7 +128,7 @@ const makeCheckout = Effect.fn("CommentLawTest.makeCheckout")(function* (enforce
   return { root, write };
 });
 
-it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
+it.layer(Layer.provideMerge(TSMorphServiceLive, NodeTestLayer), { timeout: "60 seconds" })((it) => {
   describe("comment law", { concurrent: false }, () => {
     it.effect("covers source under the enforced zones only", () =>
       Effect.sync(() => {
@@ -256,6 +259,7 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
           CommentLockInput.make({
             headShards: [shard("packages/a", ["."]), shard("packages/b", ["."])],
             baseShards: O.some([shard("packages/a", ["."]), shard("packages/b", ["."]), shard("packages/c", ["."])]),
+            basePackageRoots: ROOTS,
             packageRoots: ROOTS,
             bannedCounts: counts,
             changedFiles: HashSet.make("packages/b/src/B.ts"),
@@ -271,6 +275,7 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
           CommentLockInput.make({
             headShards: [shard("packages/a", ["."]), shard("packages/b", ["."])],
             baseShards: O.some([shard("packages/a", ["."]), shard("packages/b", ["."])]),
+            basePackageRoots: ROOTS,
             packageRoots: ROOTS,
             bannedCounts: counts,
             changedFiles: HashSet.empty(),
@@ -284,6 +289,7 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
           CommentLockInput.make({
             headShards: [shard("packages/a", ["."]), shard("packages/c", ["."])],
             baseShards: O.some([shard("packages/a", ["src"])]),
+            basePackageRoots: ROOTS,
             packageRoots: ROOTS,
             bannedCounts: counts,
             changedFiles: HashSet.empty(),
@@ -312,6 +318,7 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
                 scopes: ["."],
               }),
             ]),
+            basePackageRoots: ROOTS,
             packageRoots: ["packages/new"],
             bannedCounts: HashMap.make(["packages/new/src/A.ts", 2]),
             changedFiles: HashSet.make("packages/new/src/A.ts"),
@@ -332,6 +339,7 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
               }),
             ],
             baseShards: O.none(),
+            basePackageRoots: ROOTS,
             packageRoots: ["packages/a", "packages/a/nested", "packages/x"],
             bannedCounts: HashMap.make(
               ["packages/a/src/A.ts", 1],
@@ -352,6 +360,7 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
           CommentLockInput.make({
             headShards: [shard("packages/a", ["."]), shard("packages/b", ["."])],
             baseShards: O.some([shard("packages/a", ["."]), shard("packages/b", ["."])]),
+            basePackageRoots: ROOTS,
             packageRoots: ROOTS,
             bannedCounts: HashMap.make(["packages/a/src/A.ts", 1]),
             changedFiles: HashSet.make("packages/b/src/Gone.ts"),
@@ -369,20 +378,20 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
       Effect.fnUntraced(function* () {
         const fs = yield* FileSystem.FileSystem;
         const checkout = yield* makeCheckout("blocking");
-        const pushed = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, base: "HEAD" }));
+        const pushed = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, base: "HEAD", push: true }));
         expect([pushed.changedFiles, pushed.findings]).toEqual([0, []]);
 
         const landed = yield* makeCheckout("blocking");
         yield* landed.write("packages/a/src/B.ts", "// landed with the push\nexport const b = 2;\n");
         yield* runGit(landed.root, ["commit", "--quiet", "--no-verify", "-am", "push a comment"]);
-        const landedPush = yield* runCommentLaw(CommentLawOptions.make({ cwd: landed.root, base: "HEAD" }));
-        expect(A.map(landedPush.findings, (finding) => [finding.rule, finding.file])).toEqual([
-          ["introduced-comment", "packages/a/src/B.ts"],
-        ]);
+        const landedPush = yield* runCommentLaw(CommentLawOptions.make({ cwd: landed.root, base: "HEAD", push: true }));
+        expect(landedPush.findings).toEqual([]);
 
         yield* fs.remove(`${checkout.root}/standards/comment-law/pending/beep-a.jsonc`);
         yield* runGit(checkout.root, ["commit", "--quiet", "--no-verify", "-am", "sweep without the comment"]);
-        const laundered = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, base: "HEAD" }));
+        const laundered = yield* runCommentLaw(
+          CommentLawOptions.make({ cwd: checkout.root, base: "HEAD", push: true })
+        );
         expect(A.map(laundered.findings, (finding) => [finding.rule, finding.file])).toEqual([
           ["locked-scope-comment", "packages/a/src/A.ts"],
         ]);
@@ -408,6 +417,147 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
           "packages/a/src/B.ts",
           "packages/a/src/C.ts",
         ]);
+      })
+    );
+
+    it.effect(
+      "uses base package roots when a new nested package locks an unchanged comment",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout("blocking");
+        yield* checkout.write("packages/a/nested/src/N.ts", "// inherited reason\nexport const n = 1;\n");
+        yield* runGit(checkout.root, ["add", "."]);
+        yield* runGit(checkout.root, ["commit", "--quiet", "--no-verify", "-m", "nested source"]);
+        yield* runGit(checkout.root, ["tag", "before-package"]);
+        yield* checkout.write("packages/a/nested/package.json", '{ "name": "@beep/nested" }\n');
+        const report = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, base: "before-package" }));
+        expect(A.map(report.findings, (finding) => [finding.rule, finding.file])).toEqual([
+          ["locked-scope-comment", "packages/a/nested/src/N.ts"],
+        ]);
+      })
+    );
+
+    it.effect(
+      "does not infer push mode from a clean checkout synced to its base",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const checkout = yield* makeCheckout("blocking");
+        yield* fs.remove(`${checkout.root}/standards/comment-law/pending/beep-a.jsonc`);
+        yield* runGit(checkout.root, ["commit", "--quiet", "--no-verify", "-am", "sweep"]);
+        const local = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, base: "HEAD" }));
+        expect(local.findings).toEqual([]);
+        const pushed = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, push: true }));
+        expect(A.map(pushed.findings, (finding) => finding.rule)).toEqual(["locked-scope-comment"]);
+        yield* checkout.write("packages/a/src/B.ts", "export const b = 3;\n");
+        const changed = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, push: true }));
+        expect(changed.findings).toEqual([]);
+        yield* enterDirectory(checkout.root);
+        const incompatible = yield* runCommentsCommand(["--staged", "--push"]);
+        expect(failureText(incompatible.exit)).toContain("--staged and --push cannot be combined");
+      })
+    );
+
+    it.effect(
+      "falls back to per-file reads when blob prefetch fails",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout("blocking");
+        const git = yield* Git;
+        yield* checkout.write("packages/a/src/B.ts", "// added reason\nexport const b = 2;\n");
+        yield* runGit(checkout.root, ["config", "remote.origin.promisor", "true"]);
+        const report = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, base: "main" })).pipe(
+          Effect.provideService(
+            Git,
+            Git.makeTest({
+              ...git,
+              diffPatch: () =>
+                Effect.fail(
+                  GitCommandError.make({
+                    kind: "failed",
+                    args: ["diff"],
+                    cwd: checkout.root,
+                    exitCode: 128,
+                    stderr: "truncated prefetch",
+                  })
+                ),
+            })
+          )
+        );
+        expect(report.introduced).toBe(1);
+        expect(report.failed).toBe(true);
+      })
+    );
+
+    it.effect(
+      "fails closed naming an unreadable file after blob prefetch fails",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout("blocking");
+        const git = yield* Git;
+        yield* checkout.write("packages/a/src/B.ts", "// added reason\nexport const b = 2;\n");
+        yield* runGit(checkout.root, ["config", "remote.origin.promisor", "true"]);
+        for (const missing of [false, true]) {
+          const error = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, base: "main" })).pipe(
+            Effect.provideService(
+              Git,
+              Git.makeTest({
+                ...git,
+                diffPatch: () =>
+                  Effect.fail(
+                    GitCommandError.make({
+                      kind: "failed",
+                      args: ["diff"],
+                      cwd: checkout.root,
+                      exitCode: 128,
+                      stderr: "truncated prefetch",
+                    })
+                  ),
+                show: (root, ref, file) =>
+                  file === "packages/a/src/B.ts"
+                    ? missing
+                      ? Effect.succeedNone
+                      : Effect.fail(
+                          GitCommandError.make({
+                            kind: "failed",
+                            args: ["show"],
+                            cwd: root,
+                            exitCode: 128,
+                            stderr: "unreadable blob",
+                          })
+                        )
+                    : git.show(root, ref, file),
+              })
+            ),
+            Effect.flip
+          );
+          expect(error).toBeInstanceOf(CommentLawExecutionError);
+          expect(error.message).toContain("packages/a/src/B.ts");
+          expect(error.message).toContain("the comment law never skips");
+        }
+      })
+    );
+
+    it.effect(
+      "updates and prunes a hand-named shard using its source filename",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const checkout = yield* makeCheckout("blocking");
+        yield* fs.rename(
+          `${checkout.root}/standards/comment-law/pending/beep-a.jsonc`,
+          `${checkout.root}/standards/comment-law/pending/a.jsonc`
+        );
+        yield* checkout.write(
+          "standards/comment-law/pending/a.jsonc",
+          '{ "schemaVersion": "comment-law-pending/v1", "package": "@beep/a", "root": "packages/a", "scopes": ["src", "test"] }\n'
+        );
+        const updated = yield* runCommentLawWrite(checkout.root);
+        expect(updated[0]?.scopes).toEqual(["src"]);
+        const rewritten = yield* fs.readFileString(`${checkout.root}/standards/comment-law/pending/a.jsonc`);
+        expect(rewritten).not.toContain('"test"');
+        const derivedExists = yield* fs.exists(`${checkout.root}/standards/comment-law/pending/beep-a.jsonc`);
+        expect(derivedExists).toBe(false);
+        yield* checkout.write("packages/a/src/A.ts", "export const a = 1;\n");
+        const pruned = yield* runCommentLawWrite(checkout.root);
+        expect(pruned).toEqual([]);
+        const sourceExists = yield* fs.exists(`${checkout.root}/standards/comment-law/pending/a.jsonc`);
+        expect(sourceExists).toBe(false);
       })
     );
 
@@ -677,7 +827,18 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
           ["dangling-decision-pointer", "scripts/tool.ts", 1],
         ]);
         expect(dangling.findings[2]?.excerpt).toBe("no decisions/<date>-root-call.md records this decision");
+        yield* enterDirectory(checkout.root);
+        const printed = yield* runCommentsCommand(["--base", "main"]);
+        expect(printed.lines).toContain(
+          '  - scripts/tool.ts:1  decision-pointer  "no decisions/<date>-root-call.md records this decision"'
+        );
 
+        const fs = yield* FileSystem.FileSystem;
+        yield* fs.makeDirectory(`${checkout.root}/packages/a/decisions/2026-11-22-keep-it.md`, { recursive: true });
+        yield* fs.makeDirectory(`${checkout.root}/packages/a/decisions/plain.md`, { recursive: true });
+        const directories = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, base: "main" }));
+        expect(directories.findings).toEqual(dangling.findings);
+        yield* fs.remove(`${checkout.root}/packages/a/decisions`, { recursive: true });
         yield* checkout.write("packages/a/decisions/2026-11-22-keep-it.md", "# Keep it\n");
         yield* checkout.write("packages/a/decisions/plain.md", "# Plain\n");
         yield* checkout.write("packages/a/decisions/2026-11-22-other.md", "# Other\n");
@@ -720,7 +881,7 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         yield* enterDirectory(checkout.root);
         yield* scopedEnv("GITHUB_ACTIONS", "true");
 
-        const blocked = yield* runCommentsCommand(["--base", "HEAD"]);
+        const blocked = yield* runCommentsCommand(["--base", "HEAD", "--push"]);
         expect(failureText(blocked.exit)).toContain("[comment-law] check failed.");
         expect(blocked.lines).toContain("[comment-law] pending-scope lock:");
         expect(blocked.lines).toContain(
@@ -734,17 +895,82 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
     );
 
     it.effect(
+      "renders diagnostic law commands in process and preserves strict failure exits",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout("advisory");
+        yield* checkout.write(
+          "tsconfig.json",
+          '{ "compilerOptions": { "target": "ES2022", "module": "ESNext" }, "include": ["packages/**/*.ts"] }'
+        );
+        yield* checkout.write(
+          "packages/a/src/A.ts",
+          'import * as Effect from "effect/Effect";\nexport const load = () => Effect.gen(function* () { return 1; });\ndeclare const FrozenGrantSet: { make: (input: object) => unknown };\nexport const grants = FrozenGrantSet.make({});\n'
+        );
+        yield* enterDirectory(checkout.root);
+        for (const law of ["effect-fn", "frozen-grant-set"]) {
+          for (const check of [false, true]) {
+            const exit = yield* runLaws([
+              law,
+              "--include",
+              "packages/a/src/A.ts",
+              "--exclude",
+              "packages/a/src/B.ts",
+              ...(check ? ["--check"] : []),
+            ]).pipe(withEmptyConfig, Effect.exit);
+            if (check) exit.pipe(Exit.isFailure, assertTrue);
+            else exit.pipe(Exit.isSuccess, assertTrue);
+          }
+        }
+      })
+    );
+
+    it.effect(
+      "renders terse-effect dry-run, advisory, write and manual candidates in process",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout("advisory");
+        yield* checkout.write("tsconfig.json", '{ "compilerOptions": { "target": "ES2022", "module": "ESNext" } }');
+        yield* checkout.write(
+          "packages/a/src/A.ts",
+          'import * as A from "effect/Array";\nimport { pipe } from "effect/Function";\nimport * as O from "effect/Option";\ndeclare const parse: (input: string) => O.Option<string>;\nexport const value = { onNone: () => A.empty<string>(), parse: (input: string) => pipe(input, parse) };\n'
+        );
+        yield* enterDirectory(checkout.root);
+        for (const flags of [[], ["--check"], ["--check", "--advisory"], ["--write"]]) {
+          const exit = yield* runLaws(["terse-effect", "--include", "packages/a/src/A.ts", ...flags]).pipe(
+            withEmptyConfig,
+            Effect.exit
+          );
+          const shouldFail = A.contains(flags, "--check") && !A.contains(flags, "--advisory");
+          if (shouldFail) exit.pipe(Exit.isFailure, assertTrue);
+          else exit.pipe(Exit.isSuccess, assertTrue);
+        }
+      })
+    );
+
+    it.effect(
+      "runs the allowlist command in process and reports invalid documents",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout("advisory");
+        yield* enterDirectory(checkout.root);
+        const absent = yield* runLaws(["allowlist-check"]).pipe(withEmptyConfig, Effect.exit);
+        absent.pipe(Exit.isFailure, assertTrue);
+        yield* checkout.write("standards/effect-laws.allowlist.jsonc", '{ "version": 1, "entries": [] }');
+        const empty = yield* runLaws(["allowlist-check"]).pipe(withEmptyConfig, Effect.exit);
+        empty.pipe(Exit.isSuccess, assertTrue);
+      })
+    );
+
+    it.effect(
       "fails `laws comments --check` closed on an unresolvable base and on a blocking introduced comment",
       Effect.fnUntraced(function* () {
         const checkout = yield* makeCheckout("blocking");
         yield* enterDirectory(checkout.root);
         const unresolved = yield* runCommentsCommand(["--check", "--base", "no-such-ref"]);
-        assertTrue(Exit.isFailure(unresolved.exit));
+        unresolved.exit.pipe(Exit.isFailure, assertTrue);
         expect(failureText(unresolved.exit)).toContain("CommentLawExecutionError");
 
         yield* checkout.write("packages/a/src/B.ts", "// explains b\nexport const b = 2;\n");
         const introduced = yield* runCommentsCommand(["--check", "--base", "main"]);
-        assertTrue(Exit.isFailure(introduced.exit));
+        introduced.exit.pipe(Exit.isFailure, assertTrue);
         expect(failureText(introduced.exit)).toContain("[comment-law] check failed.");
         expect(introduced.lines).toContain('  - packages/a/src/B.ts:1  prose  "explains b"');
       })
