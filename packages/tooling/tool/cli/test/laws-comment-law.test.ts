@@ -134,6 +134,9 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         expect(kindsOf("a.ts", "/**\n * Mod.\n *\n * @packageDocumentation\n */\nexport const x = 1;\n")).toEqual([
           "jsdoc-module",
         ]);
+        expect(
+          kindsOf("a.ts", '/** File header. */\nimport * as A from "effect/Array";\nexport const x = A.empty();\n')
+        ).toEqual(["jsdoc-module"]);
         expect(kindsOf("a.ts", "/** Local. */\nconst h = 1;\nexport const x = h;\n")).toEqual(["jsdoc-local"]);
         expect(kindsOf("a.ts", "/** @internal */\nconst h = 1;\nexport const x = h;\n")).toEqual(["jsdoc-tagged"]);
         expect(kindsOf("a.ts", "export class C {\n  /** Member. */\n  m() {}\n}\n")).toEqual(["jsdoc-member"]);

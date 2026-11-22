@@ -875,7 +875,11 @@ export const runCommentLawWrite = Effect.fn("CommentLaw.runCommentLawWrite")(fun
     if (!HashSet.has(keep, name))
       yield* fs.remove(`${directory}/${name}`).pipe(CommentLawExecutionError.mapError(`Failed to remove ${name}`));
   }
+  const unchanged = HashSet.fromIterable(
+    A.map(current, (shard) => `${shard.root}\u0000${A.join(shard.scopes, "\u0000")}`)
+  );
   for (const shard of next) {
+    if (HashSet.has(unchanged, `${shard.root}\u0000${A.join(shard.scopes, "\u0000")}`)) continue;
     const text = yield* formatJsonc(shard).pipe(
       CommentLawExecutionError.mapError(`Failed to encode ${shardFileName(shard)}`)
     );
