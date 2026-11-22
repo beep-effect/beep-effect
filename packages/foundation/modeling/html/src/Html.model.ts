@@ -17,9 +17,6 @@ import { $HtmlId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
-
-// WHATWG's lowercase global event handler names are normative.
-
 import {
   AutocompleteAttribute,
   BooleanAttribute,
@@ -62,13 +59,6 @@ type TaggedMembers<A extends Tagged, E extends Tagged> = readonly [
   ...ReadonlyArray<TaggedSchema<A, E>>,
 ];
 
-/**
- * Build a large `_tag`-discriminated union without erasing member Type or
- * Encoded information.
- *
- * @category models
- * @since 0.0.0
- */
 const taggedUnion = <A extends Tagged, E extends Tagged>(
   id: string,
   description: string,
