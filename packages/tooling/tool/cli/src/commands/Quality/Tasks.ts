@@ -3857,6 +3857,9 @@ const policyLintTurboStep = (
   });
 };
 
+const withProofBase = (step: QualityTaskStep, base: string): QualityTaskStep =>
+  QualityTaskStep.make({ ...step, env: { ...step.env, BEEP_PROOF_BASE: base } });
+
 const deprecatedApisTurboStep = (
   repoRoot: string,
   base?: string,
@@ -3944,7 +3947,7 @@ const policyTrackedDiscoveryTasks = [
 // contract and cost about two minutes on a clean tree, so a local full-scope `bun run lint`
 // (no review base, no PR) leaves them to the hosted plan and to the changed-scope
 // `lint:policy` run, which carries an explicit base.
-const policyGitDeltaTasks = ["knowledge:semantic-delta", "knowledge:refs-check"];
+const policyGitDeltaTasks = ["knowledge:semantic-delta", "knowledge:refs-check", "lint:comment-law"];
 const policyStateTasks = [
   ...policyGitDeltaTasks,
   "goals:doctor",
@@ -4261,13 +4264,16 @@ const changedScopePolicyStages = (
       plan,
       Math.max(1, plan.policyLint - POLICY_UNSCOPED_STATE_WIDTH)
     ),
-    policyLintTurboStep(
-      repoRoot,
-      "lint:policy:state",
-      policyUnscopedStateTasks,
-      undefined,
-      plan,
-      POLICY_UNSCOPED_STATE_WIDTH
+    withProofBase(
+      policyLintTurboStep(
+        repoRoot,
+        "lint:policy:state",
+        policyUnscopedStateTasks,
+        undefined,
+        plan,
+        POLICY_UNSCOPED_STATE_WIDTH
+      ),
+      base
     ),
     ...knowledgeDoctorPolicySteps(repoRoot, base, hosted)
   ),

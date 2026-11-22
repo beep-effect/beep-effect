@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/n3",
+  "root": "packages/drivers/n3",
+  "scopes": ["."]
+}

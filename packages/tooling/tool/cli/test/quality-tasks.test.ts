@@ -1864,6 +1864,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "goals:doctor",
         "lint:schema-catalog",
         "lint:oxlint",
+        "lint:comment-law",
         "quality:jsdoc-ratchet:regenerated",
         "fallow:audit",
         "fallow:dead-code",
@@ -1924,6 +1925,12 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         expectedTurboArgs("lint:schema-catalog", ["--summarize"])
       );
       expect(qualityLaneArgs(lanes, "lint:oxlint")).toEqual(["run", "lint:oxlint"]);
+      expect(qualityLaneArgs(lanes, "lint:comment-law")).toEqual(
+        expectedTurboArgs("lint:comment-law", ["--summarize"])
+      );
+      expect(A.findFirst(lanes, (lane) => lane.id === "lint:comment-law").pipe(O.getOrThrow).step.env).toEqual({
+        BEEP_PROOF_BASE: "origin/main",
+      });
       // The regenerated ratchet rides the cached root chain
       // (`//#jsdoc:inventory:check` -> `//#jsdoc:ratchet:check`), not an in-process scan.
       expect(qualityLaneArgs(lanes, "quality:jsdoc-ratchet:regenerated")).toEqual(
@@ -5717,6 +5724,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       expect(taskNames(O.getOrThrow(A.get(local, 2)))).toEqual([
         "knowledge:semantic-delta",
         "knowledge:refs-check",
+        "lint:comment-law",
         "goals:doctor",
         "lint:oxlint",
         "lint:identity-registry",
@@ -5780,6 +5788,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         "check:model-first-slices",
         "knowledge:semantic-delta",
         "knowledge:refs-check",
+        "lint:comment-law",
         "goals:doctor",
         "lint:oxlint",
         "lint:identity-registry",
@@ -5813,7 +5822,10 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           A.get(full, 1),
           O.getOrThrow,
           taskNames,
-          A.filter((task) => task !== "knowledge:semantic-delta" && task !== "knowledge:refs-check")
+          A.filter(
+            (task) =>
+              task !== "knowledge:semantic-delta" && task !== "knowledge:refs-check" && task !== "lint:comment-law"
+          )
         )
       );
       expect(A.every(full, (step) => !A.contains(step.args, "--affected"))).toBe(true);
@@ -5927,6 +5939,7 @@ it.layer(PlatformLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
           "lint:private-home-paths",
           "lint:tracked-shell-allowlist",
           "lint:no-tracked-python",
+          "lint:comment-law",
           "lint:schema-tag-idioms",
           "lint:holds",
           "quality:test-tsgo",

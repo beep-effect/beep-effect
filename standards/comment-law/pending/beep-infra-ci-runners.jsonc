@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/infra-ci-runners",
+  "root": "packages/tooling/infra/ci-runners",
+  "scopes": ["."]
+}

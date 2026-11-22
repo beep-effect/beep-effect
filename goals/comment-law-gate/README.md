@@ -31,11 +31,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P1 Implement. PR 1 (advisory growth check, lock, oxlint rule) is built; the package decisions home runs in parallel.
 
 ## Latest Evidence
 
-Not started.
+[`history/2026-11-22-scanner-replay-and-parity.md`](./history/2026-11-22-scanner-replay-and-parity.md): the oxlint rule and the scanner agree on 57,854 of 57,854 findings; 67 of the last 72 in-scope main commits would fail, with no false positive on a directive, licence or exported JSDoc.
 
 ## Notes
 
