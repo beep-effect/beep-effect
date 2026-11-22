@@ -247,6 +247,29 @@ describe("CiRunners production stage", () => {
       expect(overflow.pool.maximumCount).toBe(2);
       expect(overflow.pool.runnerGroup).toBe("beep-shard-overflow");
       expect(A.filter(declaredNames(recorder), touchesLiveFleet)).toEqual([]);
+      // A job waiting for the cap stays on the build queue a day: it must never reach the DLQ for waiting alone.
+      const queues = A.filter(
+        recorder.reconciled,
+        (entry) =>
+          entry.type === "SQS.Queue" &&
+          (Str.endsWith("/BuildQueue")(entry.fqn) || Str.endsWith("/JobRetryQueue")(entry.fqn))
+      );
+      expect(
+        A.map(
+          A.sortWith(queues, ({ fqn }) => fqn, Order.String),
+          ({ fqn, news }) => [
+            fqn,
+            news.visibilityTimeout,
+            news.messageRetentionPeriod,
+            P.isNotUndefined(news.redrivePolicy),
+          ]
+        )
+      ).toStrictEqual([
+        ["Runners/Poolheavy/BuildQueue", "1 minute", "1 day", false],
+        ["Runners/Poolheavy/JobRetryQueue", "2 minutes", undefined, true],
+        ["Runners/Pooloverflow/BuildQueue", "1 minute", "1 day", false],
+        ["Runners/Pooloverflow/JobRetryQueue", "2 minutes", undefined, true],
+      ]);
       // All five production mappings name their function by ARN: scale-up and job-retry of both pools, and the
       // deregister retry. The deploy role conditions every mapping call on lambda:FunctionArn.
       const mappings = A.filter(recorder.reconciled, (entry) => entry.type === "Lambda.EventSourceMapping");
