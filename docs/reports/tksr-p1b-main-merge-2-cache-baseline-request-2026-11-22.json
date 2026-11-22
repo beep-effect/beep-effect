@@ -12,6 +12,6 @@
   },
   "subjects": ["//"],
   "scope": ["@beep/identity#lint", "@beep/types#lint"],
-  "profile": "local-linux-x64-bun1.4.4",
+  "profile": "local-linux-x64-bun1.4.5",
   "epoch": "qualification-v3"
 }
