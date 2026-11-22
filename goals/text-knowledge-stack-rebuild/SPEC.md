@@ -1469,6 +1469,20 @@ Lane goals/text-knowledge-stack-rebuild-p2-text
 
 Reverse: Check every authority, group and list reference against the converted receipt inside convertDocumentV3 and refuse with its own issue message.
 
+### P3: @beep/annotation exports its target-set schema and assembly-refusal kit, and the document view only as a type, 2026-11-22
+
+Three surface calls the design did not settle, taken while writing commit 4.
+
+- `AnnotationTargets` (the design's private `Targets`, a non-empty `CanonicalHashSet(OccurrenceId)`) is exported from `src/AnnotationId.ts`. It is the first element of the `annotation/v1` preimage there and the `targets` field of every content case in `src/Kind.ts`, so both modules read one schema, and the declared type of `AnnotationKind.case` names it.
+- `DocumentAssemblyRefusal` is the exported `LiteralKit` of the three `DocumentAssemblyRefused` reasons, hoisted as `HandoffRefusal` is in section 4.2.
+- `AnnotationDocumentView` is exported as a type over a module-private schema. A branded `S.Opaque` view would be nominal, so no caller-owned document would satisfy it. `standards/schema-first.inventory.jsonc` records that, the `AnyAnnotationKind` registry element type (schemas and a function, not data) and the internal `DocumentEnvelope` as exceptions with their reasons.
+
+`mintAnnotationId(kinds)` compiles one JSON body encoder per kind when it is applied to a registry and takes the kind-independent `{ _tag, targets, body }` shape, so a generic caller such as the document codec needs no cast. `assemble` mints every key first, then refuses in a fixed order (`anchor-off-capture`, `target-without-anchor`, `reference-unresolved`), and repeated parts collapse to one row each. `encode` returns the canonical JSON value; its bytes are the RFC 8785 form, which `test/fixtures/canonical-document-v1.json` holds.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Make the target set and the refusal kit module-private and export the view schema with a schema-first exception, by a decision file
+
 ### P3: annotation/v1 and generation/v1 are declared preimages with goldens; one preimage serves every kind through its JSON body, 2026-11-22
 
 `AnnotationPreimage` is `definePreimage` under `annotation/v1` over `Tuple[CanonicalHashSet(OccurrenceId) (non-empty), TermIri, S.Unknown]`, whose third element is the body encoded by `S.toCodecJson(kind.body)`. One preimage serves every kind, because the kind IRI already separates the body schemas. `GenerationPreimage` is `definePreimage` under `generation/v1` over `Tuple[AnnotationId, ActivityId]`. The design module's hand sort goes: the set codec sorts.
@@ -1633,6 +1647,14 @@ When a label has no annotation, a residual candidate with that label gives `requ
 Lane goals/text-knowledge-stack-rebuild-p3-annotation
 
 Reverse: Pick by candidate order instead of text position, by a decision file; the reading's candidate index carries the order
+
+### P3: L2-3 lands in two halves, its decode and assemble half in commit 4 and its merge and restrict half in commit 5, 2026-11-22
+
+Section 10 of the P3 design lists `L2-3` in commit 4, but the restated row (decision `p3-ledger-rows-restated`) also asks that `merge` and `restrict` keep every annotation attributed with one generation per pair, and those two functions arrive in commit 5. Commit 4 therefore ships `packages/foundation/modeling/annotation/test/Generation.laws.test.ts` with the cases its code can carry: the checked decode refuses an unattributed annotation and a second generation for one (content, activity) pair; `assemble` gives every annotation exactly one generation of its activity; every generated run is the `generation/v1` hash of its pair, with the golden; and a generation with no stated time encodes without the `at` key. Commit 5 adds the merge and restrict cases to the same file under the same ledger title, so the row turns green in commit 10 with both halves.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Move every L2-3 case into commit 5 and keep Generation.laws.test.ts out of commit 4, by a decision file
 
 ### P3: the langextract offset ranges move in P3; the law-practice TextQuote, SourceRef and SourceQuote move in P4, 2026-11-22
 

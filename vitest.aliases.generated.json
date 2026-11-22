@@ -2413,5 +2413,11 @@
   ],
   "@beep/text": ["./packages/foundation/modeling/text/src/index.ts"],
   "@beep/text/*": ["./packages/foundation/modeling/text/src/*"],
-  "@beep/md/Md.anchors": ["./packages/foundation/modeling/md/src/Md.anchors.ts"]
+  "@beep/md/Md.anchors": [
+    "./packages/foundation/modeling/md/src/Md.anchors.ts"
+  ],
+  "@beep/annotation": [
+    "./packages/foundation/modeling/annotation/src/index.ts"
+  ],
+  "@beep/annotation/*": ["./packages/foundation/modeling/annotation/src/*"]
 }

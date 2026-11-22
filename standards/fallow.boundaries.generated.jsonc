@@ -84,6 +84,12 @@
         ]
       },
       {
+        "name": "@beep/annotation",
+        "patterns": [
+          "packages/foundation/modeling/annotation/src/**"
+        ]
+      },
+      {
         "name": "@beep/anthropic",
         "patterns": [
           "packages/drivers/anthropic/src/**"
@@ -1600,6 +1606,27 @@
           "@beep/identity",
           "@beep/schema",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/annotation",
+        "allow": [
+          "@beep/annotation",
+          "@beep/identity",
+          "@beep/jsonc",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/text"
+        ],
+        "allowTypeOnly": [
+          "@beep/annotation",
+          "@beep/identity",
+          "@beep/jsonc",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/text"
         ]
       },
       {

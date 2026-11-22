@@ -329,3 +329,24 @@ home paths with `~`, drop session and machine ids.
 - **Prevention:** the hook's glob is now a list that adds `{apps,packages}/**/src/*.{ts,tsx}`. A
   repo test that runs each `lefthook.yml` glob against one top-level and one nested sample path
   would catch the next pattern of this shape.
+
+## 2026-11-22: `goals decisions add` and `goals decisions write` spell the slug two ways
+
+- **Doing:** recording the two decision files of P3 commit 4, then regenerating their projections.
+- **Evidence:** `bun run beep goals decisions add text-knowledge-stack-rebuild ...` takes the slug as a
+  positional argument; the follow-up `bun run beep goals decisions write text-knowledge-stack-rebuild`
+  failed with `Unexpected positional argument: "text-knowledge-stack-rebuild"` and needs `--slug`.
+  In a `set -e` script the second command aborted the run after the files were written.
+- **Prevention:** accept the slug positionally in `write` and `check` as `add` does, or accept
+  `--slug` in `add`, so one spelling works for the whole family.
+
+## 2026-11-22: schema-first flags a structural view whose schema is module-private
+
+- **Doing:** P3 commit 4 exported `AnnotationDocumentView`, the kind-independent view every
+  caller-owned annotation document satisfies.
+- **Evidence:** `bun run lint:schema-first` reported `object-struct-schema` for it after the schema was
+  made module-private and only `export type AnnotationDocumentView = typeof View.Type` remained. A
+  branded `S.Opaque` view is nominal, so no `TextDocument` would satisfy it; the only way through was
+  an inventory exception, as for the internal `DocumentEnvelope`.
+- **Prevention:** let the rule tell a structural view (a type consumed only as a constraint) from an
+  exported data model, or document the exception pattern for generic views beside the D1 rule.

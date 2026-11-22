@@ -2758,6 +2758,24 @@
         "bun-types": "catalog:",
       },
     },
+    "packages/foundation/modeling/annotation": {
+      "name": "@beep/annotation",
+      "version": "0.0.0",
+      "dependencies": {
+        "@beep/identity": "workspace:^",
+        "@beep/jsonc": "workspace:^",
+        "@beep/schema": "workspace:^",
+        "@beep/text": "workspace:^",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@beep/test-runner": "workspace:^",
+        "@beep/test-utils": "workspace:^",
+        "@effect/vitest": "catalog:",
+        "@types/node": "catalog:",
+        "bun-types": "catalog:",
+      },
+    },
     "packages/foundation/modeling/contract-kit": {
       "name": "@beep/contract-kit",
       "version": "0.0.0",
@@ -5366,6 +5384,8 @@
     "@beep/alchemy-postgres": ["@beep/alchemy-postgres@workspace:packages/drivers/alchemy-postgres"],
 
     "@beep/alchemy-vercel": ["@beep/alchemy-vercel@workspace:packages/tooling/library/alchemy-vercel"],
+
+    "@beep/annotation": ["@beep/annotation@workspace:packages/foundation/modeling/annotation"],
 
     "@beep/anthropic": ["@beep/anthropic@workspace:packages/drivers/anthropic"],
 
