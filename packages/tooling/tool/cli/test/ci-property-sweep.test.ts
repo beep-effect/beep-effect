@@ -27,6 +27,7 @@ import * as FileSystem from "effect/FileSystem";
 import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
+import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
@@ -34,6 +35,10 @@ import * as Str from "effect/String";
 const UNIT = "bunx --bun vitest run --exclude=test/integration/**";
 const PROPERTY = 'it.effect.prop("law", [S.Int], check);\n';
 const PLAIN = 'it("adds", check);\n';
+// Only real call sites: the helper's own tests name it inside strings and assertions, so they are left out.
+const CAPPED_RUNS = /\barbitrary: fcRunsCapped\((\d+)\)/gu;
+// An I/O-heavy cache producer property, capped before this list.
+const PRE_EXISTING_CAPPED = ["packages/tooling/tool/cli/test/cache-private-producer-object.test.ts 20"];
 const FAST_CHECK_IMPORT = /^import [^;]*from "fast-check";$/mu;
 const SEED_LITERAL = /\bseed: (\d+)/gu;
 const replay = { seed: "7", runs: "1000" };
@@ -301,6 +306,35 @@ describe("property sweep", () => {
             "packages/drivers/xstate/test/ModelTesting.test.ts": ["7", "7", "7", "1", "3"],
           });
         })
+    );
+
+    it.effect("names every property the nightly floor does not raise, with its count and why", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* findRepoRoot();
+        const tracked = A.filter(testFilesInGit(root), (file) => !Str.startsWith("scratchpad/")(file));
+        const capped = yield* Effect.forEach(
+          tracked,
+          (file) =>
+            Effect.map(fs.readFileString(path.join(root, file)), (source) =>
+              A.map(A.fromIterable(Str.matchAll(CAPPED_RUNS)(source)), (match) => `${file} ${match[1] ?? ""}`)
+            ),
+          { concurrency: 16 }
+        );
+        // A new capped site fails until it is listed here with its reason; ms per run measured at its count.
+        deepStrictEqual(A.sort(A.flatten(capped), Order.String), [
+          // About 40 ms a run: simulates a train of up to 80 arrivals.
+          "apps/labs/ciops/test/backfill-fairness.test.ts 64",
+          // About 140 ms a run: spawns native worker processes.
+          "packages/law-practice/server/test/CitationBuiltinCleaners.test.ts 20",
+          // About 90 ms a run: spawns native worker processes.
+          "packages/law-practice/server/test/CitationLiteralUnicodeComposition.test.ts 25",
+          // About 310 ms a run: spawns native worker processes.
+          "packages/law-practice/server/test/CitationRendering.test.ts 20",
+          ...PRE_EXISTING_CAPPED,
+        ]);
+      })
     );
 
     it.effect("names every property file of the live workspace it leaves to the integration lane", () =>
