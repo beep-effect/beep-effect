@@ -515,7 +515,7 @@ export const spotVcpuCommitted = (config: typeof SpotBudgetFields.Type): number 
  * import * as Effect from "effect/Effect"
  *
  * const config = Effect.runSync(decodeCiRunnersConfig(productionConfig))
- * console.log(config.phase) // "overlap"
+ * console.log(config.phase) // "primary"
  * ```
  *
  * @category configuration
@@ -602,7 +602,8 @@ export const productionRepository = "beep-effect/beep-effect";
 
 /**
  * Configuration input of the `prod` stage: the live fleet's values, in the
- * `overlap` phase.
+ * `primary` phase (cutover step 4b; the `overlap` caps stay declared for the
+ * step 4 rollback, which reverts the phase).
  *
  * **Details**
  *
@@ -630,7 +631,7 @@ export const productionRepository = "beep-effect/beep-effect";
 export const productionConfig: CiRunnersConfig.Encoded = {
   expectedAccountId: "832907639880",
   region: "us-east-1",
-  phase: "overlap",
+  phase: "primary",
   spotQuotaVcpu: 512,
   liveFleetReserveVcpu: 480,
   network: {

@@ -41,9 +41,14 @@ Class: Guitar
 **ROBOT Template**:
 ```tsv
 ID	LABEL	SC %	REL
-ID	A rdfs:label	SC %	'hasComponent' some %
+ID	A rdfs:label	SC %	SC 'hasComponent' some %
 EX:0002	guitar	EX:0010	EX:0030
 ```
+
+A class-expression column starts with `C`, `SC`, `EC` or `DC` (`C` takes
+its axiom type from a `CLASS_TYPE` column, default subclass). ROBOT parses
+properties in a class expression only by label, so `'hasComponent'` must be
+the `rdfs:label` of a property in the `--input` ontology.
 
 **Notes**: The most common restriction pattern. Use for necessary conditions
 that define what members of the class must have.
@@ -130,10 +135,14 @@ EX:0021	wind instrument	EX:0010	EX:0020
 ```
 
 **Notes**: Disjointness is critical for reasoning — without it, the
-reasoner cannot detect classification errors. Siblings under the same
-parent SHOULD be declared disjoint unless there is a specific reason
-not to. For >2 classes, use `DisjointClasses` (pairwise disjointness)
-or `DisjointUnion`.
+reasoner cannot detect classification errors. Sibling kinds (rigid classes)
+under the same parent SHOULD be declared disjoint unless there is a
+specific reason not to. Never apply this default to roles or phases: they
+are anti-rigid, and one individual can hold several at once (an
+organization that is both customer and supplier), so disjointness between
+them, or between a role and a kind, makes such individuals inconsistent.
+For >2 classes, use `DisjointClasses` (pairwise disjointness) or
+`DisjointUnion`.
 
 ---
 
@@ -176,8 +185,9 @@ EX:0050	string quartet	'hasMember' exactly 4 EX:0060
 ```
 
 **Notes**: Requires OWL 2 DL. Unqualified cardinality (`R exactly 3`) is
-simpler but less expressive. ELK does not support cardinality — use
-HermiT or Pellet.
+simpler but less expressive. ELK does not support cardinality and ignores
+the axiom — use HermiT (`robot reason --reasoner hermit`) or a DL reasoner
+outside ROBOT such as Openllet, which has its own CLI.
 
 ---
 
@@ -200,8 +210,11 @@ Class: Cello
   SubClassOf: hasPitchRange some LowPitch
 ```
 
-**Notes**: Preferred over data properties with string values. Enables
-reasoning over quality values. Each value is a class, not an individual.
+**Notes**: Preferred over data properties with string values when the
+values take part in reasoning. Each value is a class, not an individual.
+For a code list that needs no reasoning (statuses, units chosen from a
+list), a SKOS concept scheme or SHACL `sh:in` is enough
+(`foundational-analysis.md`, Enum-is-taxonomy).
 
 ---
 
@@ -241,14 +254,18 @@ Class: NarcissisticEntity
 ```
 
 **Notes**: Rarely needed. More common is to declare the property reflexive
-globally (`ReflexiveObjectProperty: partOf`).
+globally:
+```
+ObjectProperty: partOf
+  Characteristics: Reflexive
+```
 
 ---
 
 ## 11. HasKey Axiom
 
-**When**: Defining a unique identifier for individuals of a class — analogous
-to a database primary key.
+**When**: Stating that individuals of a class that share values for the key
+properties are the same individual.
 
 **Pattern**: `HasKey(C, P1, P2, ...)`
 
@@ -258,9 +275,14 @@ Class: Person
   HasKey: hasSSN
 ```
 
-**Notes**: OWL 2 feature. Individuals of class C are considered identical
-if they share values for all key properties. Useful for instance matching
-and data integration.
+**Notes**: OWL 2 feature. HasKey applies only to named individuals, and it
+does not enforce anything: a reasoner infers `owl:sameAs` between named
+individuals of C that share values for all key properties. It is therefore
+an identity claim with the consequences of #14, not a database primary key:
+it never rejects a duplicate and never requires a key to be present. For
+uniqueness or presence, use SHACL (`sh:minCount`, a SPARQL constraint over
+the key) or a database constraint. Add a key only after the identity
+criterion for C has been established and accepted.
 
 ---
 
@@ -278,9 +300,23 @@ ObjectProperty: hasGrandparent
 ```
 
 **Notes**: Powerful for transitive-like inference paths. OWL 2 allows
-chains of arbitrary length but regularity restrictions apply (R can
-appear at most once and only at the end of its own chain). ELK supports
-simple chains.
+chains of arbitrary length, but the property hierarchy must be regular. A
+chain that implies R may take only one of these forms:
+
+- `R o R` (R is then transitive)
+- `R o S1 o ... o Sn` (R first)
+- `S1 o ... o Sn o R` (R last)
+- `S1 o ... o Sn`
+
+In the last three forms no Si may be R, nor a property whose own chain or
+subproperty axioms lead back to R (the Si must sit below R in a strict
+order, OWL 2 Structural Specification §11.2).
+
+A property implied by a chain, a transitive property, and any property with
+such a subproperty is non-simple. A
+non-simple property cannot be used in cardinality restrictions, `Self`
+restrictions, or in functional, inverse-functional, irreflexive,
+asymmetric or disjoint-property axioms. ELK supports simple chains.
 
 ---
 
@@ -317,7 +353,11 @@ Individual: ex:PatientRecord123
 ```
 
 **Notes**: `owl:sameAs` is very strong and transitive. One incorrect link can
-merge large identity clusters and propagate unintended inferences.
+merge large identity clusters and propagate unintended inferences. Assert it
+only when an accepted identity criterion says the two are one individual;
+records that look alike are not evidence of identity. For "these records
+describe related things", use a weaker link (`skos:closeMatch`,
+`skos:exactMatch`, an SSSOM mapping) instead.
 
 ---
 
@@ -367,7 +407,7 @@ positive class definitions or insufficient partition design.
 | "X has exactly N of Y" | Qualified cardinality | 7 |
 | "X has high/medium/low Z" | Value partition | 8 |
 | "X did Y to Z at time T" | N-ary relation | 9 |
-| "X is identified by P" | HasKey | 11 |
+| "Individuals of X that share P are the same individual" | HasKey (entails sameAs; not a uniqueness check) | 11 |
 | "if R1 then R2" (chained) | Property chain | 12 |
-| "These two identifiers are the same individual" | Identity links | 14 |
+| "These two identifiers are the same individual" (per an accepted identity criterion) | Identity links | 14 |
 | "Class is exactly this finite set" | Enumeration | 15 |
