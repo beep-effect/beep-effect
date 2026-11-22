@@ -433,7 +433,7 @@ describe("runGate", () => {
         const result = yield* runGate(green, log);
         assert.strictEqual(
           result.output.text,
-          "test @beep/glob src/math.test.ts: PASSED, 3/3 passed (1.2s); since last run: 2 fixed, 1 still failing, 1 new"
+          "test @beep/glob src/math.test.ts: PASSED, 3/3 passed (1.2s) (2 fixed since last run)"
         );
       })
     );

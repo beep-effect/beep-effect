@@ -159,6 +159,24 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
     expect(O.getOrUndefined(config.jobRetryQueueUrl)).toBe(
       "https://sqs.us-east-1.amazonaws.com/123456789012/Runners-Poolheavy-JobRetryQueue"
     );
+    expect(O.getOrUndefined(config.buildDlqUrl)).toBe(
+      "https://sqs.us-east-1.amazonaws.com/123456789012/Runners-Poolheavy-BuildQueueDlq"
+    );
+    // Scale-up may send to its build DLQ (a deterministic configure failure) and to job-retry, and to no other queue.
+    const sends = A.filter(statementsOf(recorder, "Runners/Poolheavy/ScaleUp"), (statement) =>
+      A.contains(statement.Action as ReadonlyArray<string>, "sqs:SendMessage")
+    );
+    // Scale-up may delete only its own pool's token parameters (a failed configuration's leftover token).
+    const deletes = A.filter(statementsOf(recorder, "Runners/Poolheavy/ScaleUp"), (statement) =>
+      A.contains(statement.Action as ReadonlyArray<string>, "ssm:DeleteParameter")
+    );
+    expect(A.map(deletes, (statement) => [statement.Action, statement.Resource] as const)).toStrictEqual([
+      [["ssm:DeleteParameter"], ["arn:aws:ssm:us-east-1:123456789012:parameter/beep-ci/heavy/tokens/*"]],
+    ]);
+    expect(A.flatMap(sends, (statement) => statement.Resource as ReadonlyArray<string>)).toStrictEqual([
+      "arn:aws:sqs:us-east-1:123456789012:Runners-Poolheavy-BuildQueueDlq",
+      "arn:aws:sqs:us-east-1:123456789012:Runners-Poolheavy-JobRetryQueue",
+    ]);
 
     const source = O.getOrThrow(recorder.byFqn("Runners/Poolheavy/ScaleUpSource"));
     expect([source.news.functionName, source.news.functionResponseTypes]).toStrictEqual([

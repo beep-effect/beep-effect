@@ -35,6 +35,7 @@ export const poolConfig = (pool: RunnerPool = heavyPool) =>
     configPath: `/beep-ci/${pool.name}/config`,
     buildQueueUrl: `https://sqs.us-east-1.amazonaws.com/1/${pool.name}-build`,
     jobRetryQueueUrl: O.some(`https://sqs.us-east-1.amazonaws.com/1/${pool.name}-job-retry`),
+    buildDlqUrl: O.some(`https://sqs.us-east-1.amazonaws.com/1/${pool.name}-build-dlq`),
     app: appParameterNames("/beep-ci"),
   });
 

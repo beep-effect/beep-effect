@@ -2,20 +2,25 @@ import {
   AppSigningKey,
   appKeyCanSign,
   appParameterNames,
+  classifyFailure,
   GitHubAppAuth,
   GitHubLiveOptions,
   GitHubRunners,
   gitHubAppAuthLive,
   gitHubRunnersLive,
+  InstallationToken,
   JitConfigRequest,
   RunnerOwner,
+  toGitHubApiError,
 } from "@beep/alchemy-github-runners";
+import * as GitHubRetry from "@distilled.cloud/github/Retry";
 import { describe, expect, it } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
@@ -59,6 +64,35 @@ const responses: Readonly<Record<string, FakeAnswer>> = {
   "GET /orgs/beep-effect/actions/runners": ok(`{"total_count":2,"runners":[${runner(11, true)},${runner(12, false)}]}`),
   "DELETE /orgs/beep-effect/actions/runners/11": ok('{"message":"Bad request - Runner is busy"}', 422),
   "DELETE /orgs/beep-effect/actions/runners/12": { status: 204, body: "" },
+  "POST /repos/beep-effect/beep-effect/actions/runners/generate-jitconfig": ok(
+    `{"runner":${runner(21, false)},"encoded_jit_config":"cmVwbw=="}`,
+    201
+  ),
+  "POST /repos/beep-effect/beep-effect/actions/runners/registration-token": ok(
+    '{"token":"repo-reg","expires_at":"2026-11-13T20:00:00Z"}',
+    201
+  ),
+  "GET /repos/beep-effect/beep-effect/actions/runners/21": ok(runner(21, false)),
+  "GET /repos/beep-effect/beep-effect/actions/runners": ok(`{"total_count":1,"runners":[${runner(21, false)}]}`),
+  "DELETE /repos/beep-effect/beep-effect/actions/runners/21": { status: 204, body: "" },
+  // A primary rate limit answered with 403, and a permission refusal answered with 403.
+  "GET /repos/beep-effect/beep-effect/actions/jobs/8": {
+    status: 403,
+    body: '{"message":"API rate limit exceeded for installation ID 42."}',
+    headers: { "content-type": "application/json", "x-ratelimit-remaining": "0", "x-ratelimit-reset": "0" },
+  },
+  "GET /repos/beep-effect/beep-effect/actions/jobs/9": ok('{"message":"Resource not accessible by integration"}', 403),
+  // A 403 asking to wait, a 429, and a secondary rate limit with no hint headers.
+  "GET /repos/beep-effect/beep-effect/actions/jobs/10": {
+    status: 403,
+    body: '{"message":"Forbidden"}',
+    headers: { "content-type": "application/json", "retry-after": "60" },
+  },
+  "GET /repos/beep-effect/beep-effect/actions/jobs/11": ok('{"message":"Too Many Requests"}', 429),
+  "GET /repos/beep-effect/beep-effect/actions/jobs/12": ok(
+    '{"message":"You have exceeded a secondary rate limit. Please wait a few minutes before you try again."}',
+    403
+  ),
 };
 
 const route = (request: RecordedRequest): O.Option<FakeAnswer> =>
@@ -150,6 +184,242 @@ describe("live GitHub layers over distilled", () => {
         O.some(3)
       );
     })
+  );
+
+  it.effect("drives the runner API of a repository-owned pool", () =>
+    Effect.gen(function* () {
+      const token = InstallationToken.make({ installationId: 43, token: Redacted.make("ghs_installation") });
+      const repo = RunnerOwner.make({ type: "Repo", owner: "beep-effect/beep-effect" });
+      const http = new FakeHttp(route);
+      const out = yield* run(
+        http,
+        new World(),
+        Effect.gen(function* () {
+          const github = yield* GitHubRunners;
+          const jit = yield* github.generateJitConfig(
+            token,
+            JitConfigRequest.make({ owner: repo, name: "beep-ci-i-021", runnerGroupId: 1, labels: ["beep-ec2-heavy"] })
+          );
+          const registration = yield* github.registrationToken(token, repo);
+          const single = yield* github.getRunner(token, repo, 21);
+          const listed = yield* github.listRunners(token, repo);
+          yield* github.deleteRunner(token, repo, 21);
+          return {
+            jit: [jit.runnerId, Redacted.value(jit.encodedJitConfig)] as const,
+            registration: Redacted.value(registration),
+            single: O.map(single, (value) => value.id),
+            listed: A.map(listed, (value) => value.id),
+          };
+        })
+      );
+      deepStrictEqual(out, {
+        jit: [21, "cmVwbw=="] as const,
+        registration: "repo-reg",
+        single: O.some(21),
+        listed: [21],
+      });
+    })
+  );
+
+  it.effect("refuses an App key that is not base64, and one that is not a private key", () =>
+    Effect.gen(function* () {
+      const failureFor = Effect.fn("appKeyFailure")(function* (key: string) {
+        const world = new World();
+        world.ssm["/beep-ci/app/github_app_id"] = { value: "123456", modified: 0, tags: {} };
+        world.ssm["/beep-ci/app/github_app_key_base64"] = { value: key, modified: 0, tags: {} };
+        const error = yield* run(
+          new FakeHttp(route),
+          world,
+          Effect.gen(function* () {
+            const app = yield* GitHubAppAuth;
+            return yield* app.installationFor(org);
+          })
+        ).pipe(Effect.flip);
+        return error.message;
+      });
+      const notBase64 = yield* failureFor("%%%");
+      const notPem = yield* failureFor(Base64.encode("not a pem"));
+      expect([notBase64, Str.isNonEmpty(notPem)]).toStrictEqual(["App key parameter is not base64", true]);
+    })
+  );
+
+  it("decides an unmapped GitHub error by its own status, and keeps the status of a mapped one", () => {
+    const map = toGitHubApiError("generateJitConfig");
+    const rows = A.map(
+      [
+        map({ _tag: "UnknownGithubError", message: "gone", status: 410 } as { _tag: string; message: string }),
+        map({ _tag: "UnknownGithubError", message: "unavailable", status: 503 } as { _tag: string; message: string }),
+        map({ _tag: "UnknownGithubError", message: "no status" }),
+        map({ _tag: "UnknownGithubError", message: "text status", status: "410" } as { _tag: string; message: string }),
+        map({ _tag: "UnknownGithubError", message: "fraction", status: 410.5 } as { _tag: string; message: string }),
+        // A mapped tag keeps the mapped status, whatever status the error also carries.
+        map({ _tag: "Forbidden", message: "Resource not accessible", status: 503 } as {
+          _tag: string;
+          message: string;
+        }),
+        // A message that is not text is read by its tag and never as a rate limit.
+        map({ _tag: "Forbidden", message: { text: "rate limit" } }),
+        map({ _tag: "SocketError", message: { reason: "reset" } }),
+      ],
+      (error) => [error.status, error.rateLimited, error.message, classifyFailure("generateJitConfig")(error)] as const
+    );
+    deepStrictEqual(rows, [
+      [O.some(410), false, "gone", "deterministic"],
+      [O.some(503), false, "unavailable", "transient"],
+      [O.none(), false, "no status", "transient"],
+      [O.none(), false, "text status", "transient"],
+      [O.none(), false, "fraction", "transient"],
+      [O.some(403), false, "Resource not accessible", "deterministic"],
+      [O.some(403), false, "Forbidden", "deterministic"],
+      [O.none(), false, "SocketError", "transient"],
+    ]);
+  });
+
+  it.effect("reads every page of runner groups, and a missing group only after the last one", () =>
+    Effect.gen(function* () {
+      const token = InstallationToken.make({ installationId: 42, token: Redacted.make("ghs_installation") });
+      const group = (id: number, name: string) =>
+        `{"id":${id},"name":"${name}","visibility":"selected","default":false}`;
+      const pages = (second: FakeAnswer) =>
+        new FakeHttp((request) =>
+          request.url.pathname === "/orgs/beep-effect/actions/runner-groups"
+            ? O.some(
+                request.url.searchParams.get("page") === "2"
+                  ? second
+                  : {
+                      status: 200,
+                      body: `{"total_count":101,"runner_groups":[${A.join(
+                        A.makeBy(100, (index) => group(index + 1, `group-${index + 1}`)),
+                        ","
+                      )}]}`,
+                      headers: {
+                        "content-type": "application/json",
+                        link: '<https://api.github.com/orgs/beep-effect/actions/runner-groups?per_page=100&page=2>; rel="next"',
+                      },
+                    }
+              )
+            : O.none()
+        );
+      const lookup = (http: FakeHttp, groupName: string) =>
+        run(
+          http,
+          new World(),
+          Effect.gen(function* () {
+            const github = yield* GitHubRunners;
+            return yield* github.runnerGroupId(token, "beep-effect", groupName);
+            // The client would retry a 5xx itself; the mapping is what this test reads.
+          }).pipe(GitHubRetry.none)
+        );
+      const secondPage = ok(`{"total_count":101,"runner_groups":[${group(101, "beep-ec2-heavy")}]}`);
+      const found = yield* lookup(pages(secondPage), "beep-ec2-heavy");
+      expect(found).toBe(101);
+      const missing = yield* lookup(pages(secondPage), "nope").pipe(Effect.flip);
+      deepStrictEqual(
+        [missing.status, missing.message, classifyFailure("resolveRunnerGroup")(missing)],
+        [O.some(404), "Runner group nope does not exist", "deterministic"]
+      );
+      const broken = yield* lookup(pages(ok('{"message":"Service Unavailable"}', 503)), "nope").pipe(Effect.flip);
+      deepStrictEqual(
+        [broken.status, broken.code, classifyFailure("resolveRunnerGroup")(broken)],
+        [O.some(503), O.some("ServiceUnavailable"), "transient"]
+      );
+      expect(Str.includes("does not exist")(broken.message)).toBe(false);
+    })
+  );
+
+  it.effect("counts a job as taken only once it started or ended, and logs every status but queued", () =>
+    Effect.gen(function* () {
+      const token = InstallationToken.make({ installationId: 42, token: Redacted.make("ghs_installation") });
+      const statuses = ["queued", "in_progress", "completed", "waiting", "requested", "pending"];
+      const lines: Array<{ readonly level: string; readonly message: unknown; readonly annotations: unknown }> = [];
+      const capture = Logger.map(Logger.formatStructured, (line) => {
+        lines.push(line);
+      });
+      const loggers = yield* Layer.build(Logger.layer([capture]));
+      const answers = yield* run(
+        new FakeHttp((request) =>
+          O.map(A.get(statuses, Number(Str.slice(-1)(request.url.pathname))), (status) =>
+            ok(`{"id":1,"run_id":3,"status":"${status}","name":"check","labels":["beep-ec2-heavy"]}`)
+          )
+        ),
+        new World(),
+        Effect.gen(function* () {
+          const github = yield* GitHubRunners;
+          return yield* Effect.forEach(
+            statuses,
+            (_, jobId) => github.isJobQueued(token, { owner: "beep-effect", repo: "beep-effect", jobId }),
+            { concurrency: 1 }
+          );
+        })
+      ).pipe(Effect.provideContext(loggers));
+      deepStrictEqual(A.zip(statuses, answers), [
+        ["queued", true],
+        ["in_progress", false],
+        ["completed", false],
+        ["waiting", true],
+        ["requested", true],
+        ["pending", true],
+      ]);
+      const line = (jobId: number, status: string, queued: boolean) => ({
+        level: "INFO",
+        message: "github: the job's status is not queued",
+        annotations: { jobId, repository: "beep-effect/beep-effect", status, queued },
+      });
+      deepStrictEqual(
+        A.map(lines, ({ level, message, annotations }) => ({ level, message, annotations })),
+        [
+          line(1, "in_progress", false),
+          line(2, "completed", false),
+          line(3, "waiting", true),
+          line(4, "requested", true),
+          line(5, "pending", true),
+        ]
+      );
+    })
+  );
+
+  it.effect(
+    "reads a 403 or 429 rate limit (remaining 0, retry-after, 429, secondary) as transient, a 403 refusal as deterministic",
+    () =>
+      Effect.gen(function* () {
+        const token = InstallationToken.make({ installationId: 42, token: Redacted.make("ghs_installation") });
+        const errors = yield* run(
+          new FakeHttp(route),
+          new World(),
+          Effect.gen(function* () {
+            const github = yield* GitHubRunners;
+            return yield* Effect.forEach(
+              [8, 10, 11, 12, 9],
+              (jobId) =>
+                github.isJobQueued(token, { owner: "beep-effect", repo: "beep-effect", jobId }).pipe(Effect.flip),
+              { concurrency: 1 }
+            );
+            // The client would wait out the rate limit itself; the mapping is what this test reads.
+          }).pipe(GitHubRetry.none)
+        );
+        deepStrictEqual(
+          A.map(
+            errors,
+            (error) => [error.rateLimited, error.code, classifyFailure("generateJitConfig")(error)] as const
+          ),
+          [
+            [true, O.some("TooManyRequests"), "transient"],
+            [true, O.some("TooManyRequests"), "transient"],
+            [true, O.some("TooManyRequests"), "transient"],
+            [true, O.some("TooManyRequests"), "transient"],
+            [false, O.some("Forbidden"), "deterministic"],
+          ]
+        );
+        expect(
+          A.map(
+            [
+              toGitHubApiError("jit")({ _tag: "Forbidden", message: "You have exceeded a secondary rate limit." }),
+              toGitHubApiError("jit")({ _tag: "Forbidden", message: "Resource not accessible by integration" }),
+            ],
+            classifyFailure("generateJitConfig")
+          )
+        ).toStrictEqual(["transient", "deterministic"]);
+      })
   );
 
   it.effect("report a missing App parameter as GitHubAppAuthError", () =>

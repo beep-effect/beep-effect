@@ -169,7 +169,8 @@ export class WebhookRuntimeConfig extends S.Opaque<WebhookRuntimeConfig, { reado
  * `environment` is the pool's `ghr:environment` tag value; inventory queries
  * filter on it so pools never see each other's instances. `amiIdParameterName`
  * overrides the launch template's image when set. `ghesApiUrl` is absent for
- * github.com.
+ * github.com. `buildDlqUrl` is the build queue's dead-letter queue: scale-up
+ * sends it a message whose runner configuration failed deterministically.
  *
  * **Example** (Decode a pool config)
  *
@@ -206,6 +207,9 @@ export class PoolRuntimeConfig extends S.Opaque<PoolRuntimeConfig, { readonly br
     configPath: SsmParameterName,
     buildQueueUrl: S.String,
     jobRetryQueueUrl: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    buildDlqUrl: S.OptionFromOptionalKey(S.String)
+      .pipe(S.withConstructorDefault(Effect.succeedNone))
+      .annotateKey({ description: "The build queue's DLQ, where scale-up sends a message a resend cannot launch." }),
     app: AppParameterNames,
     ghesApiUrl: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
     scaleErrors: S.Array(S.String).pipe(

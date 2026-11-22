@@ -34,7 +34,7 @@
     "goals/gate-run-history/GOAL.md",
     "goals/gate-run-history/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",
@@ -55,22 +55,22 @@
     {
       "id": "P0",
       "name": "Research",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P1",
       "name": "Schema",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P2",
       "name": "Service contracts",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P3",
       "name": "Lane history",
-      "status": "pending"
+      "status": "complete"
     },
     {
       "id": "P4",

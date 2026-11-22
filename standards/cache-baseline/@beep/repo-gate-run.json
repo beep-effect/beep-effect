@@ -2,18 +2,18 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/repo-gate-run",
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
+    "reviewer": "Claude Fable 5.2 (gate-run-history lane, goals/gate-run-history-lane)",
+    "reason": "Record the new @beep/sqlite dependency edge and the Bun coverage script of @beep/repo-gate-run, and the resealed policy fingerprint inputs at the root. No task output, environment entry or cache flag changed.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
-      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
+      "path": "docs/reports/gate-history-cache-review-2026-11-20.md",
+      "sha256": "cbf8a366e85ff4a48c9901cf51484cfc8f7f7ccd063ecb41945439864ae96c53"
     }
   },
   "nodes": [
     {
       "computation": "@beep/repo-gate-run#build",
       "command": "bun run beep:build",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "13d9c4bb3112c14d4a5d8926bd5d8bb1219dd80d2f2475e7169a9bca893fae3c",
       "dependencies": [
         "@beep/cli-kit#build",
         "@beep/fc-runs#build",
@@ -22,7 +22,8 @@
         "@beep/repo-cli-kit#build",
         "@beep/repo-gate-record#build",
         "@beep/runtime-env#build",
-        "@beep/schema#build"
+        "@beep/schema#build",
+        "@beep/sqlite#build"
       ],
       "configuration": {
         "cache": true,
@@ -73,7 +74,7 @@
     {
       "computation": "@beep/repo-gate-run#check",
       "command": "beep-cli gate run check",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "13d9c4bb3112c14d4a5d8926bd5d8bb1219dd80d2f2475e7169a9bca893fae3c",
       "dependencies": [
         "@beep/cli-kit#build",
         "@beep/fc-runs#build",
@@ -84,7 +85,8 @@
         "@beep/repo-gate-record#transit",
         "@beep/repo-gate-run#build",
         "@beep/runtime-env#build",
-        "@beep/schema#build"
+        "@beep/schema#build",
+        "@beep/sqlite#build"
       ],
       "configuration": {
         "cache": true,
@@ -131,8 +133,8 @@
     },
     {
       "computation": "@beep/repo-gate-run#coverage",
-      "command": "bunx vitest run --coverage --exclude=test/integration/**",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "command": "bunx --bun vitest run --coverage --exclude=test/integration/**",
+      "commandDigest": "13d9c4bb3112c14d4a5d8926bd5d8bb1219dd80d2f2475e7169a9bca893fae3c",
       "dependencies": [
         "@beep/cli-kit#build",
         "@beep/fc-runs#build",
@@ -141,7 +143,8 @@
         "@beep/repo-cli-kit#build",
         "@beep/repo-gate-record#build",
         "@beep/runtime-env#build",
-        "@beep/schema#build"
+        "@beep/schema#build",
+        "@beep/sqlite#build"
       ],
       "configuration": {
         "cache": false,
@@ -189,7 +192,7 @@
     {
       "computation": "@beep/repo-gate-run#docgen",
       "command": "bun run beep:docgen",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "13d9c4bb3112c14d4a5d8926bd5d8bb1219dd80d2f2475e7169a9bca893fae3c",
       "dependencies": [
         "@beep/repo-docgen#transit",
         "@beep/repo-gate-run#transit"
@@ -229,7 +232,7 @@
     {
       "computation": "@beep/repo-gate-run#lint",
       "command": "bun run beep:lint",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "13d9c4bb3112c14d4a5d8926bd5d8bb1219dd80d2f2475e7169a9bca893fae3c",
       "dependencies": [],
       "configuration": {
         "cache": true,
@@ -263,7 +266,7 @@
     {
       "computation": "@beep/repo-gate-run#lint:deprecated-apis",
       "command": "beep-cli lint deprecated-apis --package .",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "13d9c4bb3112c14d4a5d8926bd5d8bb1219dd80d2f2475e7169a9bca893fae3c",
       "dependencies": [
         "@beep/cli-kit#transit",
         "@beep/fc-runs#transit",
@@ -273,7 +276,8 @@
         "@beep/repo-cli-kit#transit",
         "@beep/repo-gate-record#transit",
         "@beep/runtime-env#transit",
-        "@beep/schema#transit"
+        "@beep/schema#transit",
+        "@beep/sqlite#transit"
       ],
       "configuration": {
         "cache": true,
@@ -335,7 +339,7 @@
     {
       "computation": "@beep/repo-gate-run#lint:fix",
       "command": "bun run beep:lint:fix",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "13d9c4bb3112c14d4a5d8926bd5d8bb1219dd80d2f2475e7169a9bca893fae3c",
       "dependencies": [],
       "configuration": {
         "cache": false,
@@ -365,7 +369,7 @@
     {
       "computation": "@beep/repo-gate-run#lint:jsdoc",
       "command": "beep-cli lint jsdoc --package .",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "13d9c4bb3112c14d4a5d8926bd5d8bb1219dd80d2f2475e7169a9bca893fae3c",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-jsdoc"
       ],
@@ -421,7 +425,7 @@
     {
       "computation": "@beep/repo-gate-run#lint:laws",
       "command": "beep-cli lint laws --package .",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "13d9c4bb3112c14d4a5d8926bd5d8bb1219dd80d2f2475e7169a9bca893fae3c",
       "dependencies": [
         "@beep/repo-cli#lint:policy-fingerprint:lint-laws"
       ],
@@ -467,7 +471,7 @@
     {
       "computation": "@beep/repo-gate-run#package-test-typecheck",
       "command": "beep-cli quality test-tsgo-package",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "13d9c4bb3112c14d4a5d8926bd5d8bb1219dd80d2f2475e7169a9bca893fae3c",
       "dependencies": [
         "@beep/cli-kit#transit",
         "@beep/fc-runs#transit",
@@ -476,7 +480,8 @@
         "@beep/repo-cli-kit#transit",
         "@beep/repo-gate-record#transit",
         "@beep/runtime-env#transit",
-        "@beep/schema#transit"
+        "@beep/schema#transit",
+        "@beep/sqlite#transit"
       ],
       "configuration": {
         "cache": false,
@@ -517,7 +522,7 @@
     {
       "computation": "@beep/repo-gate-run#test",
       "command": "bun run beep:test",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "13d9c4bb3112c14d4a5d8926bd5d8bb1219dd80d2f2475e7169a9bca893fae3c",
       "dependencies": [
         "@beep/cli-kit#transit",
         "@beep/fc-runs#transit",
@@ -528,6 +533,7 @@
         "@beep/repo-gate-vitest#transit",
         "@beep/runtime-env#transit",
         "@beep/schema#transit",
+        "@beep/sqlite#transit",
         "@beep/utils#transit"
       ],
       "configuration": {
@@ -579,7 +585,7 @@
     {
       "computation": "@beep/repo-gate-run#test:integration",
       "command": "bun run beep:test:integration",
-      "commandDigest": "e2c41bee5f81bac4a6c25ac87265dae6fbb1c64f0fc6339de91a9c342c875f6c",
+      "commandDigest": "13d9c4bb3112c14d4a5d8926bd5d8bb1219dd80d2f2475e7169a9bca893fae3c",
       "dependencies": [
         "@beep/cli-kit#build",
         "@beep/fc-runs#build",
@@ -588,7 +594,8 @@
         "@beep/repo-cli-kit#build",
         "@beep/repo-gate-record#build",
         "@beep/runtime-env#build",
-        "@beep/schema#build"
+        "@beep/schema#build",
+        "@beep/sqlite#build"
       ],
       "configuration": {
         "cache": false,
