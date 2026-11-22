@@ -29,7 +29,7 @@ import { IRI } from "./Iri.ts";
 import { RegistryBindings, RegistryDeprecations, RegistryVocab } from "./internal/generated/Registry.data.ts";
 import { SegmentSchema } from "./internal/Segment.ts";
 import { $IdentityId } from "./packages.ts";
-import { isNamespaceShapedIri, Namespace, Term, TermIri, TermLocal } from "./Term.ts";
+import { isNamespaceShapedIri, Namespace, NamespaceIri, Term, TermIri, TermLocal } from "./Term.ts";
 import type { RegistryTable } from "./Term.ts";
 import type { Curie, Expand, VocabShape } from "./Vocab.ts";
 
@@ -169,7 +169,7 @@ const curieOf = (term: Term): string => `${term.namespace}:${term.local}`;
 
 const makeView = (data: RegistryData): RegistryView => {
   const namespaces = A.map(R.toEntries(data.vocab), ([prefix, entry]) => ({
-    namespace: Namespace.make({ prefix, iri: IRI.make(entry.iri) }),
+    namespace: Namespace.make({ prefix, iri: NamespaceIri.make(entry.iri) }),
     locals: entry.terms,
   }));
   const terms = A.flatMap(namespaces, ({ namespace, locals }) =>
@@ -306,6 +306,7 @@ export const view = (table: RegistryTable): RegistryView => {
  * O.isNone(registry.expand("skos:prefLabel")) // => true
  * ```
  *
+ * @throws A schema validation error when an entry's IRI does not end with `/` or `#`, or a term is not a local.
  * @category constructors
  * @since 0.0.0
  */
@@ -527,11 +528,10 @@ export const namespace = <const P extends RegistryPrefix>(prefix: P): RegistryNa
   iri: RegistryVocab[prefix].iri,
 });
 
-const baseIri = (base: string): string =>
-  O.getOrThrowWith(
-    Str.includes(":")(base) ? generated.expand(base) : O.map(generated.namespaceOf(base), (row) => row.iri),
-    unregistered(base)
-  );
+const baseOf = (base: string): O.Option<IRI> =>
+  Str.includes(":")(base) ? generated.expand(base) : O.map(generated.namespaceOf(base), (row) => row.iri);
+
+const baseIri = (base: string): string => O.getOrThrowWith(baseOf(base), unregistered(base));
 
 /**
  * Refusal of an instance IRI that the generated registry already publishes, or of an empty raw key.

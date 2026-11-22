@@ -1,10 +1,10 @@
 import { fcRuns } from "@beep/fc-runs";
-import { IRI } from "@beep/identity/Iri";
 import { SafePnLocal } from "@beep/identity/PnLocal";
 import {
   CodeId,
   Deprecation,
   Namespace,
+  NamespaceIri,
   RegistryConflict,
   RegistryShard,
   RegistryTable,
@@ -33,11 +33,12 @@ const local = (value: string): TermLocal => TermLocal.make(value);
 const iri = (value: string): TermIri => TermIri.make(value);
 const code = (value: string): CodeId => CodeId.make(value);
 
-const vitestNs = Namespace.make({ prefix: "vitest", iri: IRI.make("https://beep-effect.com/ns/vitest/") });
+const vitestNs = Namespace.make({ prefix: "vitest", iri: NamespaceIri.make("https://beep-effect.com/ns/vitest/") });
 const hangCode = code("@beep/test-runner/Vitest/TestHang");
 const oldHang = iri("https://beep-effect.com/ns/test-utils/Vitest/TestHang");
 
 const decodeShard = S.decodeResult(RegistryShard);
+const decodeTable = S.decodeUnknownResult(S.toType(RegistryTable));
 const shard = (fields: Partial<RegistryShard.Encoded> & Pick<RegistryShard.Encoded, "namespace">): RegistryShard =>
   Result.getOrThrow(decodeShard({ terms: [], bindings: [], deprecations: [], ...fields }));
 
@@ -135,17 +136,16 @@ describe("RegistryTable.fromShards", () => {
     expect(conflictTags(RegistryTable.fromShards([parent, nested]))).toStrictEqual(["DuplicateTermIri"]);
   });
 
-  it("reports a namespace IRI that is also a term IRI", () => {
-    const parent = shard({ namespace: { prefix: "p", iri: "https://e.test/" }, terms: ["q"] });
-    const child = shard({ namespace: { prefix: "r", iri: "https://e.test/q" }, terms: ["x"] });
-    const result = RegistryTable.fromShards([parent, child]);
-    expect(conflictsOf(result)).toStrictEqual([
-      RegistryConflict.cases.NamespaceIriIsTerm.make({
-        iri: iri("https://e.test/q"),
-        namespaces: ["r"],
-        termNamespaces: ["p"],
-      }),
-    ]);
+  it("admits no namespace IRI that is also a term IRI", () => {
+    const decode = S.decodeUnknownResult(RegistryShard);
+    const rows = { terms: [], bindings: [], deprecations: [] };
+    // A term IRI ends with its local, so only an IRI with no separator could be both; a namespace refuses it.
+    assertTrue(decode({ ...rows, namespace: { prefix: "r", iri: "https://e.test/q" } }).pipe(Result.isFailure));
+    assertTrue(decode({ ...rows, namespace: { prefix: "r", iri: "https://e.test/q/" } }).pipe(Result.isSuccess));
+    // A hand-written term row may still name a namespace IRI; its IRI is not its namespace IRI and its local.
+    const table = Result.getOrThrow(RegistryTable.fromShards([fabioShard]));
+    const term = Term.make({ iri: iri("http://purl.org/spar/fabio/"), namespace: "fabio", local: local("Report") });
+    assertTrue(decodeTable({ ...table, terms: [term] }).pipe(Result.isFailure));
   });
 
   it("reports a binding to an unknown term and a code bound twice", () => {
@@ -165,19 +165,20 @@ describe("RegistryTable.fromShards", () => {
 
   it("refuses a binding or a replacement that names only a namespace IRI", () => {
     const vocab = { prefix: "ex", iri: "https://example.test/vocab/" };
-    const entryNs = shard({ namespace: { prefix: "entry", iri: "https://example.test/vocab/Entry" } });
-    const bound = shard({ namespace: vocab, bindings: [{ code: hangCode, local: "Entry", since: "1.0.0" }] });
-    expect(conflictTags(RegistryTable.fromShards([bound, entryNs]))).toStrictEqual(["BindingToUnknownTerm"]);
+    // A shard binds locals, so only a hand-written row can bind a code to the namespace IRI itself.
+    const table = Result.getOrThrow(RegistryTable.fromShards([shard({ namespace: vocab, terms: ["Entry"] })]));
+    const bound = { code: hangCode, term: iri(vocab.iri), since: v1 };
+    assertTrue(
+      decodeTable({ ...table, bindings: [{ ...bound, term: iri(`${vocab.iri}Entry`) }] }).pipe(Result.isSuccess)
+    );
+    assertTrue(decodeTable({ ...table, bindings: [bound] }).pipe(Result.isFailure));
     const replaced = shard({
       namespace: vocab,
-      deprecations: [{ term: "https://example.test/vocab/Old", since: "1.0.0", replacement: "Entry" }],
+      deprecations: [{ term: "https://example.test/vocab/Old", since: "1.0.0", replacement: "" }],
     });
-    expect(conflictTags(RegistryTable.fromShards([replaced, entryNs]))).toStrictEqual(["ReplacementUnknown"]);
-    const deprecatedNs = shard({
-      namespace: vocab,
-      deprecations: [{ term: "https://example.test/vocab/Entry", since: "1.0.0" }],
-    });
-    expect(conflictTags(RegistryTable.fromShards([deprecatedNs, entryNs]))).toStrictEqual(["DeprecatedTermLive"]);
+    expect(conflictTags(RegistryTable.fromShards([replaced]))).toStrictEqual(["ReplacementUnknown"]);
+    const deprecatedNs = shard({ namespace: vocab, deprecations: [{ term: vocab.iri, since: "1.0.0" }] });
+    expect(conflictTags(RegistryTable.fromShards([deprecatedNs]))).toStrictEqual(["DeprecatedTermLive"]);
   });
 
   it("lets only a retired namespace IRI end its replacement chain at a namespace IRI", () => {
@@ -409,7 +410,6 @@ describe("registryConflictMessage", () => {
       RegistryConflict.cases.DuplicatePrefix.make({ prefix: "vitest", iris: [vitestNs.iri] }),
       RegistryConflict.cases.DuplicateNamespaceIri.make({ iri: vitestNs.iri, prefixes: ["a", "b"] }),
       RegistryConflict.cases.DuplicateTermIri.make({ term, namespaces: ["a", "b"] }),
-      RegistryConflict.cases.NamespaceIriIsTerm.make({ iri: term, namespaces: ["a"], termNamespaces: ["b"] }),
       RegistryConflict.cases.TermOutsideNamespace.make({ term, namespace: "vitest" }),
       RegistryConflict.cases.DuplicateBinding.make({ code: hangCode, terms: [term] }),
       RegistryConflict.cases.BindingToUnknownTerm.make({ code: hangCode, term }),
@@ -421,7 +421,7 @@ describe("registryConflictMessage", () => {
     const messages = A.map(conflicts, registryConflictMessage);
     expect(A.dedupe(messages)).toHaveLength(conflicts.length);
     expect(messages[0]).toContain('"vitest"');
-    expect(messages[5]).toContain(hangCode);
+    expect(messages[4]).toContain(hangCode);
     expect(
       A.every(A.drop(messages, 2), (message) => Str.includes(term)(message) || Str.includes(hangCode)(message))
     ).toBe(true);

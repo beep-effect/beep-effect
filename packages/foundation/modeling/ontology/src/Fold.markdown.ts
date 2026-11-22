@@ -112,22 +112,17 @@ const iriSlug: (iri: string) => string = flow(
 const markdownLink = (label: string, iri: string, linkMode: MarkdownLinkMode): string =>
   linkMode === "obsidian" ? `[[${iri}|${obsidianAlias(label)}]]` : `[${markdownText(label)}](#${iriSlug(iri)})`;
 
-const withNamespaceSeparator = (iri: string): string =>
-  pipe(iri, Str.endsWith("/")) || pipe(iri, Str.endsWith("#")) ? iri : `${iri}/`;
-
-const compactOwnedLabel = (ontology: AssembledOntology, iri: string): O.Option<string> => {
-  const namespace = withNamespaceSeparator(ontology.baseIri);
-
-  return pipe(
-    O.liftPredicate(iri, Str.startsWith(namespace)),
-    O.map(Str.slice(Str.length(namespace))),
+const compactOwnedLabel = (ontology: AssembledOntology, iri: string): O.Option<string> =>
+  pipe(
+    O.liftPredicate(iri, Str.startsWith(ontology.baseIri)),
+    O.map(Str.slice(Str.length(ontology.baseIri))),
     O.map((local) => `${ontology.prefix}:${local}`)
   );
-};
 
+// The owned prefix labels only IRIs under the base: the generated registry may bind it to another namespace.
 const compactLabel = (ontology: AssembledOntology, iri: string): string =>
   pipe(
-    contract(iri),
+    O.filter(contract(iri), P.not(Str.startsWith(`${ontology.prefix}:`))),
     O.orElse(() => compactOwnedLabel(ontology, iri)),
     O.getOrElse(() => iri)
   );

@@ -189,10 +189,11 @@ export type TermLocal = typeof TermLocal.Type;
  *
  * **Details**
  *
- * A {@link TermLocal} never ends with `/` or `#`, so no term IRI does. A
- * deprecated IRI of that shape is therefore a retired namespace IRI, whose
- * replacement chain ends at a namespace IRI; every other deprecated IRI is a
- * retired term, whose chain ends at a declared term.
+ * A {@link TermLocal} never ends with `/` or `#`, so no term IRI does, and a
+ * {@link NamespaceIri} always does. A deprecated IRI of that shape is therefore
+ * a retired namespace IRI, whose replacement chain ends at a namespace IRI;
+ * every other deprecated IRI is a retired term, whose chain ends at a declared
+ * term.
  *
  * **Example** (Tell a namespace IRI from a term IRI)
  *
@@ -210,15 +211,59 @@ export type TermLocal = typeof TermLocal.Type;
 export const isNamespaceShapedIri = (iri: string): boolean => Str.endsWith("/")(iri) || Str.endsWith("#")(iri);
 
 /**
+ * A namespace IRI: an IRI that ends with the separator its terms follow, `/` or `#`.
+ *
+ * **Details**
+ *
+ * A term IRI is the namespace IRI followed by a local, with nothing between
+ * them, so the namespace IRI carries the separator itself. The check is
+ * {@link isNamespaceShapedIri}, which also tells a retired namespace IRI from a
+ * retired term.
+ *
+ * **Example** (Refuse an IRI without a separator)
+ *
+ * ```ts import.meta.vitest name="Refuse an IRI without a separator"
+ * import * as S from "effect/Schema"
+ * import { NamespaceIri } from "@beep/identity/Term"
+ *
+ * S.is(NamespaceIri)("http://www.w3.org/ns/prov#") // => true
+ * S.is(NamespaceIri)("https://example.test/old") // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NamespaceIri = IRI.check(
+  S.makeFilter(
+    isNamespaceShapedIri,
+    $I.annote("NamespaceIriSeparator", {
+      title: "Namespace IRI Separator",
+      description: "A namespace IRI ends with the separator its terms follow, a slash or a hash.",
+      message: "Expected a namespace IRI that ends with / or #.",
+    })
+  )
+).pipe(
+  S.brand("NamespaceIri"),
+  $I.annoteSchema("NamespaceIri", { description: "An IRI that ends with the separator its terms follow." })
+);
+
+/**
+ * Decoded type of {@link NamespaceIri}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type NamespaceIri = typeof NamespaceIri.Type;
+
+/**
  * One registry namespace: the CURIE prefix and the IRI it expands to.
  *
  * **Example** (Make a namespace)
  *
  * ```ts import.meta.vitest name="Make a namespace"
- * import { IRI } from "@beep/identity/Iri"
- * import { Namespace } from "@beep/identity/Term"
+ * import { Namespace, NamespaceIri } from "@beep/identity/Term"
  *
- * const prov = Namespace.make({ prefix: "prov", iri: IRI.make("http://www.w3.org/ns/prov#") })
+ * const prov = Namespace.make({ prefix: "prov", iri: NamespaceIri.make("http://www.w3.org/ns/prov#") })
  * prov.prefix // => "prov"
  * ```
  *
@@ -228,7 +273,7 @@ export const isNamespaceShapedIri = (iri: string): boolean => Str.endsWith("/")(
 export class Namespace extends S.Opaque<Namespace, { readonly brand: unique symbol }>()(
   S.Struct({
     prefix: SafePnPrefix.annotateKey({ description: "CURIE prefix, for example prov or oa." }),
-    iri: IRI.annotateKey({ description: "Namespace IRI the prefix expands to." }),
+    iri: NamespaceIri.annotateKey({ description: "Namespace IRI the prefix expands to, ending with / or #." }),
   }).pipe($I.annoteSchema("Namespace", { description: "A registry namespace: prefix and IRI." }))
 ) {}
 
@@ -254,10 +299,9 @@ export declare namespace Namespace {
  * **Example** (Declare a term under a namespace)
  *
  * ```ts import.meta.vitest name="Declare a term under a namespace"
- * import { IRI } from "@beep/identity/Iri"
- * import { Namespace, Term, TermLocal } from "@beep/identity/Term"
+ * import { Namespace, NamespaceIri, Term, TermLocal } from "@beep/identity/Term"
  *
- * const prov = Namespace.make({ prefix: "prov", iri: IRI.make("http://www.w3.org/ns/prov#") })
+ * const prov = Namespace.make({ prefix: "prov", iri: NamespaceIri.make("http://www.w3.org/ns/prov#") })
  * const activity = Term.of(prov, TermLocal.make("Activity"))
  * activity.iri // => "http://www.w3.org/ns/prov#Activity"
  * ```
@@ -283,10 +327,9 @@ export class Term extends S.Opaque<Term, { readonly brand: unique symbol }>()(
    * **Example** (Declare a multi-segment term)
    *
    * ```ts import.meta.vitest name="Declare a multi-segment term"
-   * import { IRI } from "@beep/identity/Iri"
-   * import { Namespace, Term, TermLocal } from "@beep/identity/Term"
+   * import { Namespace, NamespaceIri, Term, TermLocal } from "@beep/identity/Term"
    *
-   * const qa = Namespace.make({ prefix: "qa", iri: IRI.make("https://beep-effect.com/ns/qa/") })
+   * const qa = Namespace.make({ prefix: "qa", iri: NamespaceIri.make("https://beep-effect.com/ns/qa/") })
    * Term.of(qa, TermLocal.make("receipts/accepted/v2")).iri // => "https://beep-effect.com/ns/qa/receipts/accepted/v2"
    * ```
    *
@@ -448,13 +491,12 @@ const strictlyAscending = <Row>(key: (row: Row) => string, name: string) =>
  * **Example** (Build a snapshot from unsorted rows)
  *
  * ```ts import.meta.vitest name="Build a snapshot from unsorted rows"
- * import { IRI } from "@beep/identity/Iri"
  * import * as Result from "effect/Result"
- * import { Namespace, ReleaseVersion, TermIri, TermSnapshot } from "@beep/identity/Term"
+ * import { Namespace, NamespaceIri, ReleaseVersion, TermIri, TermSnapshot } from "@beep/identity/Term"
  *
  * const snapshot = TermSnapshot.fromRows({
  *   release: ReleaseVersion.make("1.0.0"),
- *   namespaces: [Namespace.make({ prefix: "prov", iri: IRI.make("http://www.w3.org/ns/prov#") })],
+ *   namespaces: [Namespace.make({ prefix: "prov", iri: NamespaceIri.make("http://www.w3.org/ns/prov#") })],
  *   terms: [TermIri.make("http://www.w3.org/ns/prov#Entity"), TermIri.make("http://www.w3.org/ns/prov#Activity")],
  *   bindings: [],
  *   deprecations: []
@@ -1168,8 +1210,8 @@ export declare namespace RegistryShard {
  *
  * - `DuplicatePrefix` and `DuplicateNamespaceIri`: prefixes and namespace IRIs are unique.
  * - `DuplicateTermIri`: a term IRI is declared once, so contraction is an exact lookup.
- * - `NamespaceIriIsTerm`: no namespace IRI is also a term IRI, so the snapshot keeps the two apart.
- * - `TermOutsideNamespace`: a term IRI is its namespace IRI followed by its local.
+ * - `TermOutsideNamespace`: a term IRI is its namespace IRI followed by its local, so it never ends with the
+ *   separator a {@link NamespaceIri} ends with, and no namespace IRI is also a term IRI.
  * - `DuplicateBinding`: a code identity is bound at most once.
  * - `BindingToUnknownTerm`: a binding names a declared term, never a namespace IRI.
  * - `DuplicateDeprecation`: a term is deprecated at most once.
@@ -1193,7 +1235,6 @@ export const RegistryConflict = S.TaggedUnion({
   DuplicatePrefix: { prefix: SafePnPrefix, iris: S.Array(IRI) },
   DuplicateNamespaceIri: { iri: IRI, prefixes: S.Array(SafePnPrefix) },
   DuplicateTermIri: { term: TermIri, namespaces: S.Array(SafePnPrefix) },
-  NamespaceIriIsTerm: { iri: TermIri, namespaces: S.Array(SafePnPrefix), termNamespaces: S.Array(SafePnPrefix) },
   TermOutsideNamespace: { term: TermIri, namespace: SafePnPrefix },
   DuplicateBinding: { code: CodeId, terms: S.Array(TermIri) },
   BindingToUnknownTerm: { code: CodeId, term: TermIri },
@@ -1234,8 +1275,6 @@ export const registryConflictMessage: (conflict: RegistryConflict) => string = R
     `Namespace IRI ${iri} is declared under more than one prefix (${A.join(prefixes, ", ")}).`,
   DuplicateTermIri: ({ term, namespaces }) =>
     `Term ${term} is declared more than once (in ${A.join(namespaces, ", ")}).`,
-  NamespaceIriIsTerm: ({ iri, namespaces, termNamespaces }) =>
-    `${iri} is the IRI of namespace ${A.join(namespaces, ", ")} and a term of ${A.join(termNamespaces, ", ")}.`,
   TermOutsideNamespace: ({ term, namespace }) =>
     `Term ${term} is not its namespace "${namespace}" IRI followed by its local.`,
   DuplicateBinding: ({ code, terms }) => `Code identity ${code} is bound more than once (${A.join(terms, ", ")}).`,
@@ -1328,29 +1367,6 @@ const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> 
           term: A.headNonEmpty(group).iri,
           namespaces: sortedStrings(A.map(group, (term) => term.namespace)),
         })
-    ),
-    A.filterMap(
-      duplicateGroups(
-        A.appendAll(
-          A.map(rows.terms, (term) => ({ iri: term.iri, prefix: term.namespace, namespace: false })),
-          A.map(rows.namespaces, (namespace) => ({ iri: namespace.iri, prefix: namespace.prefix, namespace: true }))
-        ),
-        (row) => row.iri
-      ),
-      (group) => {
-        const [namespaces, termNamespaces] = A.partition(group, (row) =>
-          row.namespace ? Result.succeed(row.prefix) : Result.fail(row.prefix)
-        );
-        return A.isReadonlyArrayNonEmpty(namespaces) && A.isReadonlyArrayNonEmpty(termNamespaces)
-          ? Result.succeed(
-              Conflict.NamespaceIriIsTerm.make({
-                iri: TermIri.make(A.headNonEmpty(group).iri),
-                namespaces: sortedStrings(namespaces),
-                termNamespaces: sortedStrings(termNamespaces),
-              })
-            )
-          : Result.failVoid;
-      }
     ),
     pipe(
       rows.terms,

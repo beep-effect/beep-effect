@@ -44,8 +44,8 @@ ruling of 2026-11-09, recorded in `decisions/`). The final state is observable:
    an attached document's text is unavailable) is gone and guarded by named
    tests.
 5. Term IRIs declared in the registry, never derived from code paths: a
-   `TermBinding` table and a stability snapshot that only a deprecation record
-   may change; the registry expands every namespace the repo speaks (`prov:`,
+   `TermBinding` table and a stability snapshot that a published IRI leaves only
+   with a deprecation record; the registry expands every namespace the repo speaks (`prov:`,
    `oa:`, `nif:`, `xsd:`, `gufo:` and `as:` included); today's path-derived IRIs are
    re-published, not pinned. `@beep/identity` stays effect-only: it holds
    `Namespace` (prefix, IRI), `Term`, `TermBinding` and `Deprecation`; each
@@ -1029,7 +1029,7 @@ Commit 13 (PR C, `feat(identity,ontology,repo-cli,test-runner): re-publish the r
 3. Deprecation rows. There are 113 rows. The research library has 106: 16 classes, 87 owned properties, `effectiveCategory`, `catalogIndex`, and the old `lib:` namespace IRI `.../Library.schemas/`, whose successor is the `research-library` namespace. The test runner has 7. The old `Topic`, `SoftwareAgent`, `Distribution` and `Library.views/term` IRIs never leave the process, so under ruling 10 they get no row.
 4. A namespace successor. A shard replacement names a local of the shard namespace, so the namespace row could not be written. `ShardDeprecation.replacement` now accepts the empty local `""`, which names the shard namespace itself. `RegistryView.replacementOf` follows a chain to a namespace IRI as well as to a term IRI.
 5. Release. A deprecation bumps the snapshot major under ruling 2, so the snapshot moves from 1.2.0 to 2.0.0, and every new binding and deprecation row carries `since: "2.0.0"`.
-6. The fold. `fold(namespace, input)` runs over the generated registry, and `foldWith(view)(namespace, input)` runs over a fixture registry. A namespace the view does not declare fails with the existing `unknownTerm` reason. `reservedPrefix` is replaced by `unboundClass` and `undeclaredProperty`. `BoundComposer` is deleted because nothing reads it. `Fold.test.ts` moves to fixture registries now rather than in commit 14, because the fold signature changes here.
+6. The fold. `fold(namespace, input)` runs over the generated registry, and `foldWith(view)(namespace, input)` runs over a fixture registry. A namespace the view does not declare fails with the existing `unknownTerm` reason. `reservedPrefix` is replaced by `unboundClass` and `undeclaredProperty` (decision `2026-11-22-p1-a-namespace-iri-ends-with-its-separator-and-a-fold-refuses-a-rebound-core-prefix` brings it back for a registry that rebinds a core prefix). `BoundComposer` is deleted because nothing reads it. `Fold.test.ts` moves to fixture registries now rather than in commit 14, because the fold signature changes here.
 7. The projection. `RegistryLayout` gains `projections`, which `resolveRegistryLayout` fills from the workspace map: one `RegistryProjectionTarget` for each `RegistryProjection` package present in the checkout. A shard that projects into a package the checkout lacks is a `registry-shard-invalid` finding.
 8. Test-runner test. `@beep/test-runner` does not export `./internal/*`, so `test/Vitest.errors.terms.test.ts` pins the seven expected identifiers, IRIs and CURIEs as literals. Equality with the registry is proved in `identity/test/VitestErrorsParity.test.ts`.
 9. Composers kept for annotations. `Library.projection.ts` and `Library.views.ts` keep their `$I` composers, because they annotate `TopicPacket`, `LibraryTopic` and `ViewKind`. Only their IRI reads are removed, so those schema identifiers are unchanged.
@@ -1080,6 +1080,20 @@ Commit 15 (PR C) realises design section 7 and section 14, item 15 against the l
 Lane goals/text-knowledge-stack-rebuild-p1c-bindings
 
 Reverse: Remove --base and the five base kinds from lint identity-registry and IdentityRegistryIssueKind, and delete commands/Identity/ShardEdit.ts with its tests; deprecations are then hand-authored in shards again.
+
+### P1: a namespace IRI ends with its separator, and a fold refuses a rebound core prefix, 2026-11-22
+
+A review of PR #3449 reproduced three places where a registry accepted a namespace its readers could not print. This records how each was closed.
+
+1. **A namespace IRI ends with its separator.** `Namespace.iri` is a `NamespaceIri` (`@beep/identity/Term`): an `IRI` that ends with `/` or `#`, checked by `isNamespaceShapedIri` and branded. A term IRI is the namespace IRI followed by a local with nothing between them, so the separator belongs to the namespace. Before this, `https://example.test/old` was a valid namespace whose later retirement read as a retired term, and `urn:example:` was a valid namespace whose ontology projections printed `urn:example:/`. Every committed namespace already ends that way, so no shard, snapshot or pin changes. `NamespacePin.namespace` in `@beep/rdf` and `AssembledOntology.baseIri` in `@beep/ontology` use the same schema.
+2. **What became unreachable is deleted.** `withNamespaceSeparator` in the ontology projections and the Markdown projection is gone. The `NamespaceIriIsTerm` conflict is gone: a term IRI is its namespace IRI and a local, a local never ends with `/` or `#`, so a term IRI that equals a namespace IRI always reports `TermOutsideNamespace`. `ReplacementUnknown` already names the kind it expected (a declared term or a declared namespace IRI); with point 1 that kind is always the right one.
+3. **A fold refuses a rebound core prefix.** The projections bind `dcterms`, `owl`, `rdf`, `rdfs` and `skos` themselves and the fold compares against the SKOS IRIs, so `foldWith` fails with `reservedPrefix` when its registry binds one of the five to another namespace, whether that namespace owns the fold or only lends terms to it. A registry that omits a core prefix or binds it to the core namespace folds as before. `AssembledOntology` carries the owned half of the rule as a schema check, so a decoded ontology cannot bypass the fold. This brings `reservedPrefix` back for this one case, after point 6 of `2026-11-20-p1-republish-live-tree-calls` removed the check that reserved the five prefixes outright. Reading the prefixes from the registry was the alternative; the fold's SKOS gate and the `skos:Concept` markers would still mean the core namespace, so the output would contradict itself.
+4. **Found while fixing.** The Turtle projection declared `skos:` twice when a core namespace owned the fold, printed a typed number as `42^^<...>`, which is not Turtle, and the Markdown projection labelled an IRI with the owned prefix when the generated registry binds that prefix to another namespace. All three are fixed and tested in `Fold.test.ts`.
+5. **L0-3 wording.** The law ledger, the glossary, the knowledge-stack chapter and the goal text said the published set changes only with a deprecation record. An addition needs none, so they now say that a published IRI leaves the set only with one. The law id and the test title are unchanged.
+
+Lane goals/text-knowledge-stack-rebuild-p1c-bindings · PR #3449
+
+Reverse: Set Namespace.iri, NamespacePin.namespace and AssembledOntology.baseIri back to IRI, restore NamespaceIriIsTerm and withNamespaceSeparator, and drop requireCorePrefixes and the AssembledOntology check, by a decision file.
 
 <!-- beep:decisions:end -->
 
