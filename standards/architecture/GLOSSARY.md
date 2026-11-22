@@ -935,8 +935,8 @@ replacement). Optional gUFO class typing (type of type, category of
 instances, and for a relator the role terms it mediates) is a record keyed by
 term IRI in `@beep/ontology`. A published term IRI is declared in the
 `@beep/identity` registry and bound to code through
-`TermBinding`, never derived from a code path; the published set changes only
-with a deprecation record. `since` names a vocabulary release of the
+`TermBinding`, never derived from a code path; a published IRI leaves the set
+only with a deprecation record, and an addition needs none. `since` names a vocabulary release of the
 term-stability snapshot, not a package version. A term can also be an
 instance base: identifiers of its instances are minted beneath it
 (`Registry.mint`) instead of being declared one by one.
@@ -947,7 +947,7 @@ instance base: identifiers of its instances are minted beneath it
 publishes, and the release (`since`) that bound it. Bindings live in the
 registry shards beside their terms. A code id has at most one binding and a
 term at most one code id. The binding is the only arrow from code to a
-published IRI; a module rename moves the binding
+published IRI; a module or package rename moves the binding
 (`bun run beep identity rebind <from> <to>`) and leaves the term unchanged.
 
 ## Term-Stability Snapshot

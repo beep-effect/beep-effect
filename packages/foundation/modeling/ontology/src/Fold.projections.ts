@@ -12,7 +12,7 @@
  */
 
 import { prefixedNameOrIri } from "@beep/identity";
-import { contract, namespace } from "@beep/identity/Registry";
+import { contract } from "@beep/identity/Registry";
 import { O as OU } from "@beep/utils";
 import * as A from "effect/Array";
 import * as Eq from "effect/Equal";
@@ -22,6 +22,7 @@ import * as Order from "effect/Order";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as Str from "effect/String";
+import { coreNamespaces } from "./internal/CoreNamespaces.ts";
 import type {
   AssembledClass,
   AssembledFact,
@@ -149,29 +150,16 @@ const OWL_OBJECT_PROPERTY = "http://www.w3.org/2002/07/owl#ObjectProperty";
 const SKOS_CONCEPT = "http://www.w3.org/2004/02/skos/core#Concept";
 const SKOS_CONCEPT_SCHEME = "http://www.w3.org/2004/02/skos/core#ConceptScheme";
 
-type CorePrefix = { readonly prefix: string; readonly iri: string };
-
-const corePrefixes: ReadonlyArray<CorePrefix> = [
-  namespace("dcterms"),
-  namespace("owl"),
-  namespace("rdf"),
-  namespace("rdfs"),
-  namespace("skos"),
-];
-
-const withNamespaceSeparator = (iri: string): string =>
-  pipe(iri, Str.endsWith("/")) || pipe(iri, Str.endsWith("#")) ? iri : `${iri}/`;
-
 const localFromNamespace = (namespace: string, iri: string): O.Option<string> =>
   pipe(iri, Str.startsWith(namespace)) ? O.some(pipe(iri, Str.slice(Str.length(namespace)))) : O.none();
 
 // Only a namespace the Turtle header declares compacts, so every printed prefixed name resolves.
 const compactCore = (iri: string): O.Option<string> =>
-  O.filter(contract(iri), (curie) => A.some(corePrefixes, (core) => Str.startsWith(`${core.prefix}:`)(curie)));
+  O.filter(contract(iri), (curie) => A.some(coreNamespaces, (core) => Str.startsWith(`${core.prefix}:`)(curie)));
 
 const compactOwned = (ontology: AssembledOntology, iri: string): O.Option<string> =>
   pipe(
-    localFromNamespace(withNamespaceSeparator(ontology.baseIri), iri),
+    localFromNamespace(ontology.baseIri, iri),
     O.map((local) => `${ontology.prefix}:${local}`)
   );
 
@@ -183,7 +171,7 @@ const compactIri = (ontology: AssembledOntology, iri: string): string =>
   );
 
 const isOwnedPredicate = (ontology: AssembledOntology, predicate: AssembledPredicate): boolean =>
-  O.isSome(localFromNamespace(withNamespaceSeparator(ontology.baseIri), predicate.termIri));
+  O.isSome(localFromNamespace(ontology.baseIri, predicate.termIri));
 
 const predicateContextTerm = (predicate: AssembledPredicate): JsonLdTerm => {
   if (predicate.reverse) {
@@ -261,9 +249,9 @@ const prefixTerm = (iri: string): JsonLdTerm => ({ "@id": iri, "@prefix": true }
 export const toContext = (ontology: AssembledOntology): JsonLdContext =>
   R.fromEntries([
     ["@vocab", ontology.baseIri],
-    [ontology.prefix, prefixTerm(withNamespaceSeparator(ontology.baseIri))],
+    [ontology.prefix, prefixTerm(ontology.baseIri)],
     ...pipe(
-      corePrefixes,
+      coreNamespaces,
       A.map(({ iri, prefix }) => [prefix, prefixTerm(iri)] as const)
     ),
     ...classContextEntries(ontology.classes),
@@ -449,9 +437,8 @@ export const toJsonLd = (ontology: AssembledOntology): JsonLdDocument => ({
 const iriRef = (iri: string): string => `<${iri}>`;
 
 const turtleTerm = (ontology: AssembledOntology, iri: string): string => {
-  const ownedNamespace = withNamespaceSeparator(ontology.baseIri);
   const owned = pipe(
-    localFromNamespace(ownedNamespace, iri),
+    localFromNamespace(ontology.baseIri, iri),
     O.map(prefixedNameOrIri({ prefix: ontology.prefix, fullIri: iri }))
   );
 
@@ -460,7 +447,7 @@ const turtleTerm = (ontology: AssembledOntology, iri: string): string => {
   }
 
   return pipe(
-    corePrefixes,
+    coreNamespaces,
     A.findFirst(({ iri: namespace }) => pipe(iri, Str.startsWith(namespace))),
     O.map(({ iri: namespace, prefix }) =>
       prefixedNameOrIri(pipe(iri, Str.slice(Str.length(namespace))), { prefix, fullIri: iri })
@@ -477,24 +464,23 @@ const escapeTurtleLiteral: (value: string) => string = flow(
   Str.replaceAll("\r", "\\r")
 );
 
+// A quoted Turtle string: the only lexical form a language tag or a datatype may follow.
+const quotedLiteral = (value: string | number | boolean): string => `"${escapeTurtleLiteral(`${value}`)}"`;
+
 const literalValue = (value: string | number | boolean): string =>
-  P.isString(value)
-    ? `"${escapeTurtleLiteral(value)}"`
-    : P.isBoolean(value)
-      ? `${value ? "true" : "false"}`
-      : `${value}`;
+  P.isString(value) ? quotedLiteral(value) : `${value}`;
 
 const turtleObject = (ontology: AssembledOntology, object: FactObject): string => {
   if (P.isString(object)) {
     return turtleTerm(ontology, object);
   }
 
-  const literal = literalValue(object.value);
+  const quoted = quotedLiteral(object.value);
 
   return pipe(
-    O.map(object.language, (language) => `${literal}@${language}`),
-    O.orElse(() => O.map(object.datatypeIri, (datatypeIri) => `${literal}^^${turtleTerm(ontology, datatypeIri)}`)),
-    O.getOrElse(() => literal)
+    O.map(object.language, (language) => `${quoted}@${language}`),
+    O.orElse(() => O.map(object.datatypeIri, (datatypeIri) => `${quoted}^^${turtleTerm(ontology, datatypeIri)}`)),
+    O.getOrElse(() => literalValue(object.value))
   );
 };
 
@@ -622,10 +608,11 @@ const prefixDefinitions = (ontology: AssembledOntology): ReadonlyArray<readonly 
   ];
 
   const entries: ReadonlyArray<readonly [string, string]> = [
-    [ontology.prefix, withNamespaceSeparator(ontology.baseIri)] as const,
+    [ontology.prefix, ontology.baseIri] as const,
     ...pipe(
-      corePrefixes,
-      A.filter(({ iri }) => pipe(usedIris, A.some(Str.startsWith(iri)))),
+      coreNamespaces,
+      // An ontology owned by a core prefix has that core namespace as its base, so the owned entry declares it.
+      A.filter(({ iri, prefix }) => prefix !== ontology.prefix && pipe(usedIris, A.some(Str.startsWith(iri)))),
       A.map(({ iri, prefix }) => [prefix, iri] as const)
     ),
   ];

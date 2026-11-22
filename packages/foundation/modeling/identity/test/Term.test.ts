@@ -1,11 +1,11 @@
 import { fcRuns } from "@beep/fc-runs";
-import { IRI } from "@beep/identity/Iri";
 import { SafePnLocal } from "@beep/identity/PnLocal";
 import {
   CodeId,
   Deprecation,
   isNamespaceShapedIri,
   Namespace,
+  NamespaceIri,
   ReleaseVersion,
   SnapshotViolation,
   snapshotReleaseViolations,
@@ -33,8 +33,8 @@ const iri = (value: string): TermIri => TermIri.make(value);
 const code = (value: string): CodeId => CodeId.make(value);
 const release = (value: string): ReleaseVersion => ReleaseVersion.make(value);
 
-const prov = Namespace.make({ prefix: "prov", iri: IRI.make("http://www.w3.org/ns/prov#") });
-const vitest = Namespace.make({ prefix: "vitest", iri: IRI.make("https://beep-effect.com/ns/vitest/") });
+const prov = Namespace.make({ prefix: "prov", iri: NamespaceIri.make("http://www.w3.org/ns/prov#") });
+const vitest = Namespace.make({ prefix: "vitest", iri: NamespaceIri.make("https://beep-effect.com/ns/vitest/") });
 const activity = iri("http://www.w3.org/ns/prov#Activity");
 const entity = iri("http://www.w3.org/ns/prov#Entity");
 const testHang = iri("https://beep-effect.com/ns/vitest/TestHang");
@@ -68,6 +68,20 @@ describe("Term schemas", () => {
     expect(A.map([prov.iri, vitest.iri, activity, testHang], isNamespaceShapedIri)).toStrictEqual([
       true,
       true,
+      false,
+      false,
+    ]);
+  });
+
+  it("refuses a namespace whose IRI does not end with its separator", () => {
+    const declares = (namespaceIri: string) => S.is(Namespace)({ prefix: "ex", iri: namespaceIri });
+    expect(A.map(["https://example.test/new/", "https://example.test/new#", "urn:example:/"], declares)).toStrictEqual([
+      true,
+      true,
+      true,
+    ]);
+    expect(A.map(["https://example.test/old", "urn:example:", "not an iri/"], declares)).toStrictEqual([
+      false,
       false,
       false,
     ]);
@@ -244,12 +258,18 @@ describe("snapshotViolations", () => {
 
   it("judges term membership apart from namespace membership", () => {
     const previous = snapshot();
-    const entityNs = Namespace.make({ prefix: "entity", iri: IRI.make(entity) });
-    const extraNs = Namespace.make({ prefix: "extra", iri: IRI.make("https://example.test/extra/") });
-    // A removed term whose IRI becomes a namespace IRI is still a removed term.
+    const extraNs = Namespace.make({ prefix: "extra", iri: NamespaceIri.make("https://example.test/extra/") });
+    // A published IRI no namespace declared, which becomes a namespace IRI, is still a removed term.
     expect(
-      snapshotViolations(previous, snapshot({ release: v1_1, namespaces: [...baseRows.namespaces, entityNs] }))
-    ).toStrictEqual([SnapshotViolation.cases.TermRemoved.make({ term: entity })]);
+      snapshotViolations(
+        snapshot({ terms: [...baseRows.terms, iri(extraNs.iri)] }),
+        snapshot({
+          release: v1_1,
+          namespaces: [...baseRows.namespaces, extraNs],
+          terms: [...baseRows.terms, iri(extraNs.iri)],
+        })
+      )
+    ).toStrictEqual([SnapshotViolation.cases.TermRemoved.make({ term: iri(extraNs.iri) })]);
     expect(
       snapshotViolations(
         previous,

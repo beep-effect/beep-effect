@@ -95,6 +95,165 @@ export const CodeId = S.String.check(
 export type CodeId = typeof CodeId.Type;
 
 /**
+ * The package half of a code identity, `@beep/<package>`: the prefix every code identity of the package shares.
+ *
+ * **Details**
+ *
+ * A package is never a {@link CodeId}: a binding names a kind, so a stored
+ * code always has a module path. Only a {@link CodeMove} names a package.
+ *
+ * **Example** (Check a code package)
+ *
+ * ```ts import.meta.vitest name="Check a code package"
+ * import * as S from "effect/Schema"
+ * import { CodePackage } from "@beep/identity/Term"
+ *
+ * S.is(CodePackage)("@beep/test-runner") // => true
+ * S.is(CodePackage)("@beep/test-runner/Vitest/TestHang") // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CodePackage = S.String.check(
+  S.isPattern(
+    /^@beep\/[a-z0-9][a-z0-9-]*$/,
+    $I.annote("CodePackagePattern", {
+      title: "Code Package",
+      description: "A @beep package name with no module path.",
+      message: "Expected a package of the form @beep/<package>.",
+    })
+  )
+).pipe(
+  S.brand("CodePackage"),
+  $I.annoteSchema("CodePackage", { description: "The package prefix of a package's code identities." })
+);
+
+/**
+ * Decoded type of {@link CodePackage}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CodePackage = typeof CodePackage.Type;
+
+/**
+ * The rename of one code identity, and of every code identity under it.
+ *
+ * **Example** (Rename a module)
+ *
+ * ```ts import.meta.vitest name="Rename a module"
+ * import { CodeId, CodeIdMove } from "@beep/identity/Term"
+ *
+ * const move = CodeIdMove.make({
+ *   from: CodeId.make("@beep/test-runner/Vitest"),
+ *   to: CodeId.make("@beep/test-runner/Runner")
+ * })
+ * move.to // => "@beep/test-runner/Runner"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CodeIdMove extends S.Opaque<CodeIdMove, { readonly brand: unique symbol }>()(
+  S.Struct({ from: CodeId, to: CodeId }).pipe(
+    $I.annoteSchema("CodeIdMove", { description: "The rename of a code identity and every code under it." })
+  )
+) {}
+
+/**
+ * The rename of a package: every code identity of it moves to the new package and keeps its path.
+ *
+ * **Example** (Rename a package)
+ *
+ * ```ts import.meta.vitest name="Rename a package"
+ * import { CodePackage, CodePackageMove } from "@beep/identity/Term"
+ *
+ * const move = CodePackageMove.make({
+ *   from: CodePackage.make("@beep/test-runner"),
+ *   to: CodePackage.make("@beep/test-kit")
+ * })
+ * move.to // => "@beep/test-kit"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CodePackageMove extends S.Opaque<CodePackageMove, { readonly brand: unique symbol }>()(
+  S.Struct({ from: CodePackage, to: CodePackage }).pipe(
+    $I.annoteSchema("CodePackageMove", { description: "The rename of a package and every code identity of it." })
+  )
+) {}
+
+/**
+ * A rename of code identities: one code identity (with every code under it) or one whole package.
+ *
+ * **Details**
+ *
+ * Both ends are of the same kind, so a moved code always keeps a package and
+ * at least one path segment: a package moves to a package, and a code
+ * identity to a code identity. {@link moveCode} applies the move to one code.
+ *
+ * **Example** (Check the ends of a move)
+ *
+ * ```ts import.meta.vitest name="Check the ends of a move"
+ * import * as S from "effect/Schema"
+ * import { CodeMove } from "@beep/identity/Term"
+ *
+ * S.is(CodeMove)({ from: "@beep/test-runner", to: "@beep/test-kit" }) // => true
+ * S.is(CodeMove)({ from: "@beep/test-runner/Vitest", to: "@beep/test-runner/Runner" }) // => true
+ * S.is(CodeMove)({ from: "@beep/test-runner/Vitest", to: "@beep/test-kit" }) // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const CodeMove = S.Union([CodeIdMove, CodePackageMove]).pipe(
+  $I.annoteSchema("CodeMove", {
+    description: "A rename of a code identity and every code under it, or of every code identity of a package.",
+  })
+);
+
+/**
+ * Decoded type of {@link CodeMove}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CodeMove = typeof CodeMove.Type;
+
+/**
+ * The code identity a code has after a move: `to` for `from` itself, `to/<rest>` for `from/<rest>`, else itself.
+ *
+ * **Example** (Move a code with its package)
+ *
+ * ```ts import.meta.vitest name="Move a code with its package"
+ * import { CodeId, CodePackage, CodePackageMove, moveCode } from "@beep/identity/Term"
+ *
+ * const move = CodePackageMove.make({
+ *   from: CodePackage.make("@beep/test-runner"),
+ *   to: CodePackage.make("@beep/test-kit")
+ * })
+ * moveCode(CodeId.make("@beep/test-runner/Vitest/TestHang"), move) // => "@beep/test-kit/Vitest/TestHang"
+ * moveCode(CodeId.make("@beep/test-runner-ui/Vitest/TestHang"), move) // => "@beep/test-runner-ui/Vitest/TestHang"
+ * ```
+ *
+ * @param code - The code identity to move.
+ * @param move - The rename to apply.
+ * @returns The moved code identity, or `code` when the move does not reach it.
+ * @category combinators
+ * @since 0.0.0
+ */
+export const moveCode: {
+  (move: CodeMove): (code: CodeId) => CodeId;
+  (code: CodeId, move: CodeMove): CodeId;
+} = dual(
+  2,
+  (code: CodeId, { from, to }: CodeMove): CodeId =>
+    code === from || Str.startsWith(`${from}/`)(code) ? CodeId.make(`${to}${Str.slice(Str.length(from))(code)}`) : code
+);
+
+/**
  * A vocabulary release `major.minor.patch` of the term snapshot.
  *
  * **Details**
@@ -189,10 +348,11 @@ export type TermLocal = typeof TermLocal.Type;
  *
  * **Details**
  *
- * A {@link TermLocal} never ends with `/` or `#`, so no term IRI does. A
- * deprecated IRI of that shape is therefore a retired namespace IRI, whose
- * replacement chain ends at a namespace IRI; every other deprecated IRI is a
- * retired term, whose chain ends at a declared term.
+ * A {@link TermLocal} never ends with `/` or `#`, so no term IRI does, and a
+ * {@link NamespaceIri} always does. A deprecated IRI of that shape is therefore
+ * a retired namespace IRI, whose replacement chain ends at a namespace IRI;
+ * every other deprecated IRI is a retired term, whose chain ends at a declared
+ * term.
  *
  * **Example** (Tell a namespace IRI from a term IRI)
  *
@@ -210,15 +370,59 @@ export type TermLocal = typeof TermLocal.Type;
 export const isNamespaceShapedIri = (iri: string): boolean => Str.endsWith("/")(iri) || Str.endsWith("#")(iri);
 
 /**
+ * A namespace IRI: an IRI that ends with the separator its terms follow, `/` or `#`.
+ *
+ * **Details**
+ *
+ * A term IRI is the namespace IRI followed by a local, with nothing between
+ * them, so the namespace IRI carries the separator itself. The check is
+ * {@link isNamespaceShapedIri}, which also tells a retired namespace IRI from a
+ * retired term.
+ *
+ * **Example** (Refuse an IRI without a separator)
+ *
+ * ```ts import.meta.vitest name="Refuse an IRI without a separator"
+ * import * as S from "effect/Schema"
+ * import { NamespaceIri } from "@beep/identity/Term"
+ *
+ * S.is(NamespaceIri)("http://www.w3.org/ns/prov#") // => true
+ * S.is(NamespaceIri)("https://example.test/old") // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const NamespaceIri = IRI.check(
+  S.makeFilter(
+    isNamespaceShapedIri,
+    $I.annote("NamespaceIriSeparator", {
+      title: "Namespace IRI Separator",
+      description: "A namespace IRI ends with the separator its terms follow, a slash or a hash.",
+      message: "Expected a namespace IRI that ends with / or #.",
+    })
+  )
+).pipe(
+  S.brand("NamespaceIri"),
+  $I.annoteSchema("NamespaceIri", { description: "An IRI that ends with the separator its terms follow." })
+);
+
+/**
+ * Decoded type of {@link NamespaceIri}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type NamespaceIri = typeof NamespaceIri.Type;
+
+/**
  * One registry namespace: the CURIE prefix and the IRI it expands to.
  *
  * **Example** (Make a namespace)
  *
  * ```ts import.meta.vitest name="Make a namespace"
- * import { IRI } from "@beep/identity/Iri"
- * import { Namespace } from "@beep/identity/Term"
+ * import { Namespace, NamespaceIri } from "@beep/identity/Term"
  *
- * const prov = Namespace.make({ prefix: "prov", iri: IRI.make("http://www.w3.org/ns/prov#") })
+ * const prov = Namespace.make({ prefix: "prov", iri: NamespaceIri.make("http://www.w3.org/ns/prov#") })
  * prov.prefix // => "prov"
  * ```
  *
@@ -228,7 +432,7 @@ export const isNamespaceShapedIri = (iri: string): boolean => Str.endsWith("/")(
 export class Namespace extends S.Opaque<Namespace, { readonly brand: unique symbol }>()(
   S.Struct({
     prefix: SafePnPrefix.annotateKey({ description: "CURIE prefix, for example prov or oa." }),
-    iri: IRI.annotateKey({ description: "Namespace IRI the prefix expands to." }),
+    iri: NamespaceIri.annotateKey({ description: "Namespace IRI the prefix expands to, ending with / or #." }),
   }).pipe($I.annoteSchema("Namespace", { description: "A registry namespace: prefix and IRI." }))
 ) {}
 
@@ -254,10 +458,9 @@ export declare namespace Namespace {
  * **Example** (Declare a term under a namespace)
  *
  * ```ts import.meta.vitest name="Declare a term under a namespace"
- * import { IRI } from "@beep/identity/Iri"
- * import { Namespace, Term, TermLocal } from "@beep/identity/Term"
+ * import { Namespace, NamespaceIri, Term, TermLocal } from "@beep/identity/Term"
  *
- * const prov = Namespace.make({ prefix: "prov", iri: IRI.make("http://www.w3.org/ns/prov#") })
+ * const prov = Namespace.make({ prefix: "prov", iri: NamespaceIri.make("http://www.w3.org/ns/prov#") })
  * const activity = Term.of(prov, TermLocal.make("Activity"))
  * activity.iri // => "http://www.w3.org/ns/prov#Activity"
  * ```
@@ -283,10 +486,9 @@ export class Term extends S.Opaque<Term, { readonly brand: unique symbol }>()(
    * **Example** (Declare a multi-segment term)
    *
    * ```ts import.meta.vitest name="Declare a multi-segment term"
-   * import { IRI } from "@beep/identity/Iri"
-   * import { Namespace, Term, TermLocal } from "@beep/identity/Term"
+   * import { Namespace, NamespaceIri, Term, TermLocal } from "@beep/identity/Term"
    *
-   * const qa = Namespace.make({ prefix: "qa", iri: IRI.make("https://beep-effect.com/ns/qa/") })
+   * const qa = Namespace.make({ prefix: "qa", iri: NamespaceIri.make("https://beep-effect.com/ns/qa/") })
    * Term.of(qa, TermLocal.make("receipts/accepted/v2")).iri // => "https://beep-effect.com/ns/qa/receipts/accepted/v2"
    * ```
    *
@@ -448,13 +650,12 @@ const strictlyAscending = <Row>(key: (row: Row) => string, name: string) =>
  * **Example** (Build a snapshot from unsorted rows)
  *
  * ```ts import.meta.vitest name="Build a snapshot from unsorted rows"
- * import { IRI } from "@beep/identity/Iri"
  * import * as Result from "effect/Result"
- * import { Namespace, ReleaseVersion, TermIri, TermSnapshot } from "@beep/identity/Term"
+ * import { Namespace, NamespaceIri, ReleaseVersion, TermIri, TermSnapshot } from "@beep/identity/Term"
  *
  * const snapshot = TermSnapshot.fromRows({
  *   release: ReleaseVersion.make("1.0.0"),
- *   namespaces: [Namespace.make({ prefix: "prov", iri: IRI.make("http://www.w3.org/ns/prov#") })],
+ *   namespaces: [Namespace.make({ prefix: "prov", iri: NamespaceIri.make("http://www.w3.org/ns/prov#") })],
  *   terms: [TermIri.make("http://www.w3.org/ns/prov#Entity"), TermIri.make("http://www.w3.org/ns/prov#Activity")],
  *   bindings: [],
  *   deprecations: []
@@ -942,7 +1143,10 @@ export const snapshotViolations: {
  * **Details**
  *
  * A package that `@beep/identity` depends on cannot import the registry, so the
- * generator writes such a shard's rows into that package as plain literals.
+ * generator writes such a shard's rows into that package as plain literals. The
+ * set is closed in source: renaming such a package changes its name here and in
+ * the shard's `projection` first, and `beep identity rebind` then moves its
+ * bindings.
  *
  * **Example** (Check a projection target)
  *
@@ -1168,8 +1372,8 @@ export declare namespace RegistryShard {
  *
  * - `DuplicatePrefix` and `DuplicateNamespaceIri`: prefixes and namespace IRIs are unique.
  * - `DuplicateTermIri`: a term IRI is declared once, so contraction is an exact lookup.
- * - `NamespaceIriIsTerm`: no namespace IRI is also a term IRI, so the snapshot keeps the two apart.
- * - `TermOutsideNamespace`: a term IRI is its namespace IRI followed by its local.
+ * - `TermOutsideNamespace`: a term IRI is its namespace IRI followed by its local, so it never ends with the
+ *   separator a {@link NamespaceIri} ends with, and no namespace IRI is also a term IRI.
  * - `DuplicateBinding`: a code identity is bound at most once.
  * - `BindingToUnknownTerm`: a binding names a declared term, never a namespace IRI.
  * - `DuplicateDeprecation`: a term is deprecated at most once.
@@ -1193,7 +1397,6 @@ export const RegistryConflict = S.TaggedUnion({
   DuplicatePrefix: { prefix: SafePnPrefix, iris: S.Array(IRI) },
   DuplicateNamespaceIri: { iri: IRI, prefixes: S.Array(SafePnPrefix) },
   DuplicateTermIri: { term: TermIri, namespaces: S.Array(SafePnPrefix) },
-  NamespaceIriIsTerm: { iri: TermIri, namespaces: S.Array(SafePnPrefix), termNamespaces: S.Array(SafePnPrefix) },
   TermOutsideNamespace: { term: TermIri, namespace: SafePnPrefix },
   DuplicateBinding: { code: CodeId, terms: S.Array(TermIri) },
   BindingToUnknownTerm: { code: CodeId, term: TermIri },
@@ -1234,8 +1437,6 @@ export const registryConflictMessage: (conflict: RegistryConflict) => string = R
     `Namespace IRI ${iri} is declared under more than one prefix (${A.join(prefixes, ", ")}).`,
   DuplicateTermIri: ({ term, namespaces }) =>
     `Term ${term} is declared more than once (in ${A.join(namespaces, ", ")}).`,
-  NamespaceIriIsTerm: ({ iri, namespaces, termNamespaces }) =>
-    `${iri} is the IRI of namespace ${A.join(namespaces, ", ")} and a term of ${A.join(termNamespaces, ", ")}.`,
   TermOutsideNamespace: ({ term, namespace }) =>
     `Term ${term} is not its namespace "${namespace}" IRI followed by its local.`,
   DuplicateBinding: ({ code, terms }) => `Code identity ${code} is bound more than once (${A.join(terms, ", ")}).`,
@@ -1329,29 +1530,6 @@ const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> 
           namespaces: sortedStrings(A.map(group, (term) => term.namespace)),
         })
     ),
-    A.filterMap(
-      duplicateGroups(
-        A.appendAll(
-          A.map(rows.terms, (term) => ({ iri: term.iri, prefix: term.namespace, namespace: false })),
-          A.map(rows.namespaces, (namespace) => ({ iri: namespace.iri, prefix: namespace.prefix, namespace: true }))
-        ),
-        (row) => row.iri
-      ),
-      (group) => {
-        const [namespaces, termNamespaces] = A.partition(group, (row) =>
-          row.namespace ? Result.succeed(row.prefix) : Result.fail(row.prefix)
-        );
-        return A.isReadonlyArrayNonEmpty(namespaces) && A.isReadonlyArrayNonEmpty(termNamespaces)
-          ? Result.succeed(
-              Conflict.NamespaceIriIsTerm.make({
-                iri: TermIri.make(A.headNonEmpty(group).iri),
-                namespaces: sortedStrings(namespaces),
-                termNamespaces: sortedStrings(termNamespaces),
-              })
-            )
-          : Result.failVoid;
-      }
-    ),
     pipe(
       rows.terms,
       A.filter((term) =>
@@ -1400,17 +1578,6 @@ const registryConflicts = (rows: RegistryRows): ReadonlyArray<RegistryConflict> 
 };
 
 const termIriOf = (namespace: Namespace, local: TermLocal): TermIri => TermIri.make(`${namespace.iri}${local}`);
-
-// The code a binding moves to: `to` for `from` itself, `to/<rest>` for `from/<rest>`.
-const rebindCode =
-  (from: CodeId, to: CodeId) =>
-  (code: CodeId): CodeId => {
-    if (code === from) {
-      return to;
-    }
-    const under = `${from}/`;
-    return Str.startsWith(under)(code) ? CodeId.make(`${to}/${Str.slice(under.length)(code)}`) : code;
-  };
 
 const snapshotAt = (table: RegistryRows, release: ReleaseVersion): TermSnapshot =>
   Result.getOrThrow(
@@ -1573,15 +1740,15 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
   });
 
   /**
-   * Move the bindings of a code identity to a new code identity, keeping each term and `since`.
+   * Move the bindings a {@link CodeMove} reaches to their new code identities, keeping each term and `since`.
    *
    * **Details**
    *
-   * A binding moves when its code is `from`, or, in prefix mode, when its code
-   * starts with `from/`; the rest of the code is kept under `to/`. Terms,
-   * namespaces and deprecations are untouched, so the published term set of
-   * the table's snapshot is unchanged. A move onto a code that is already
-   * bound returns the `DuplicateBinding` conflict.
+   * A binding moves when its code is the move's `from` or is under `from/`; the
+   * rest of the code is kept under `to/`. Terms, namespaces and deprecations
+   * are untouched, so the published term set of the table's snapshot is
+   * unchanged. A move onto a code that is already bound returns the
+   * `DuplicateBinding` conflict.
    *
    * **When to use**
    *
@@ -1593,7 +1760,7 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
    * ```ts import.meta.vitest name="Rebind a module's code identities"
    * import * as Result from "effect/Result"
    * import * as S from "effect/Schema"
-   * import { CodeId, RegistryShard, RegistryTable } from "@beep/identity/Term"
+   * import { CodeId, CodeIdMove, RegistryShard, RegistryTable } from "@beep/identity/Term"
    *
    * const vitest = S.decodeUnknownSync(RegistryShard)({
    *   namespace: { prefix: "vitest", iri: "https://beep-effect.com/ns/vitest/" },
@@ -1602,7 +1769,11 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
    *   deprecations: []
    * })
    * const table = Result.getOrThrow(RegistryTable.fromShards([vitest]))
-   * const moved = RegistryTable.rebind(table, CodeId.make("@beep/test-runner/Vitest"), CodeId.make("@beep/test-runner/Runner"))
+   * const move = CodeIdMove.make({
+   *   from: CodeId.make("@beep/test-runner/Vitest"),
+   *   to: CodeId.make("@beep/test-runner/Runner")
+   * })
+   * const moved = RegistryTable.rebind(table, move)
    * Result.getOrThrow(moved).bindings[0]?.code // => "@beep/test-runner/Runner/TestHang"
    * ```
    *
@@ -1610,28 +1781,16 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
    * @since 0.0.0
    */
   static readonly rebind: {
-    (
-      from: CodeId,
-      to: CodeId
-    ): (table: RegistryTable) => Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>;
-    (
-      table: RegistryTable,
-      from: CodeId,
-      to: CodeId
-    ): Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>;
+    (move: CodeMove): (table: RegistryTable) => Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>;
+    (table: RegistryTable, move: CodeMove): Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>>;
   } = dual(
-    3,
-    (
-      table: RegistryTable,
-      from: CodeId,
-      to: CodeId
-    ): Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>> => {
-      const move = rebindCode(from, to);
+    2,
+    (table: RegistryTable, move: CodeMove): Result.Result<RegistryTable, A.NonEmptyReadonlyArray<RegistryConflict>> => {
       const rows: RegistryRows = {
         namespaces: table.namespaces,
         terms: table.terms,
         bindings: A.map(table.bindings, (binding) =>
-          TermBinding.make({ code: move(binding.code), term: binding.term, since: binding.since })
+          TermBinding.make({ code: moveCode(binding.code, move), term: binding.term, since: binding.since })
         ),
         deprecations: table.deprecations,
       };

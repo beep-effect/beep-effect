@@ -662,6 +662,35 @@ it.layer(services, { timeout: "30 seconds" })("research library mine runs", (it)
     })
   );
 
+  it.effect("records no topic whose packet id forms no topic IRI", () =>
+    Effect.gen(function* () {
+      const { root, repo, fs, path } = yield* fixture;
+      // A template packet carries a placeholder id, which is a live topic's initiative id and no IRI.
+      yield* fs.makeDirectory(path.join(repo, "goals/_template/ops"), { recursive: true });
+      const manifest = yield* encodeJson({ initiative: { id: "<slug>", title: "Template" } });
+      yield* fs.writeFileString(path.join(repo, "goals/_template/ops/manifest.json"), manifest);
+      const file = path.join(repo, "t3-template.json");
+      const synthesisText = yield* encodeJson({
+        id: "t3-template",
+        author: { model: "claude-fable-5-1", effort: "medium", route: "claude-code", argv: ["claude"] },
+        findings: [
+          {
+            sourceId: "one",
+            captureId: "capture-one",
+            citoRelation: "citesAsEvidence",
+            span: "They support audit queries.",
+            summary: "audit",
+            topicIds: ["<slug>", "goals/demo-memory"],
+          },
+        ],
+      });
+      yield* fs.writeFileString(file, synthesisText);
+      yield* mineLibrarySynthesize(root, file, O.some(repo), false);
+      const catalog = yield* loadCatalog(root);
+      expect(A.map(catalog.findings, (finding) => finding.topicIds)).toStrictEqual([["goals/demo-memory"]]);
+    })
+  );
+
   it.effect("plans parseable intake documents, skips byte-identical captures and keeps document access", () =>
     Effect.gen(function* () {
       const { root } = yield* documentFixture;

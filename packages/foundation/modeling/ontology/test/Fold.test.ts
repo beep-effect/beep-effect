@@ -4,7 +4,7 @@ import { IRI } from "@beep/identity/Iri";
 import { RegistryVocab, view } from "@beep/identity/Registry";
 import { RegistryShard, RegistryTable } from "@beep/identity/Term";
 import { foldWith, toContext, toJsonLd, toMarkdown, toTurtle } from "@beep/ontology";
-import { FactLiteral } from "@beep/ontology/Fold.models";
+import { AssembledOntology, FactLiteral } from "@beep/ontology/Fold.models";
 import { OWLClass } from "@beep/ontology/Ontology.models";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
@@ -395,6 +395,45 @@ describe("Ontology.fold SKOS gate", () => {
       .annotate($Skos.class("Scheme", { description: "A scheme.", skos: "conceptScheme" }))
   ) {}
 
+  it.effect("prints literal facts and SKOS warnings in every projection that carries them", () =>
+    Effect.gen(function* () {
+      const integer = "http://www.w3.org/2001/XMLSchema#integer";
+      const assembled = yield* foldVocab({
+        label: "Literals",
+        schemas: [Concept],
+        triples: [
+          [Concept, "rdfs:comment", { value: "Idea", language: "en" }],
+          [Concept, "rdfs:comment", { value: 42, datatype: integer }],
+          [Concept, "rdfs:comment", { value: true }],
+        ],
+      });
+      const markdown = toMarkdown(assembled);
+      const turtle = toTurtle(assembled);
+      const concept = pipe(
+        toJsonLd(assembled)["@graph"],
+        A.findFirst((node) => node["@id"] === "https://beep-effect.com/ns/vocab/Concept"),
+        O.getOrThrow
+      );
+
+      expect(markdown).toContain("`Idea`@en");
+      expect(markdown).toContain("`42` (`xsd:integer`)");
+      expect(markdown).toContain("`true`");
+      expect(markdown).toContain("SKOS: `skos:Concept`");
+      expect(markdown).toContain(
+        "SKOS concept has no concept\\-scheme membership\\. (<https://beep-effect.com/ns/vocab/Concept>)"
+      );
+      expect(turtle).toContain('rdfs:comment "Idea"@en');
+      expect(turtle).toContain(`rdfs:comment "42"^^<${integer}>`);
+      expect(turtle).toContain("rdfs:comment true");
+      expect(concept["rdfs:comment"]).toStrictEqual([
+        "A concept.",
+        { "@value": "Idea", "@language": "en" },
+        { "@value": 42, "@type": integer },
+        { "@value": true },
+      ]);
+    })
+  );
+
   it.effect("emits SKOS classification beside rdfs:Class in JSON-LD and Turtle", () =>
     Effect.gen(function* () {
       const assembled = yield* foldVocab({
@@ -730,6 +769,96 @@ describe("Ontology.fold negative fixtures", () => {
 
       expect(error.reason).toBe("undeclaredProperty");
       expect(O.getOrThrow(error.field)).toBe("label");
+    })
+  );
+
+  it.effect("refuses a registry that binds a core prefix to another namespace", () =>
+    Effect.gen(function* () {
+      const custom = "https://example.test/custom/";
+      const rebound = (prefix: string, owned: string) =>
+        foldWith(
+          view(
+            Result.getOrThrow(
+              RegistryTable.fromShards([
+                decodeShard({ namespace: { prefix, iri: custom }, terms: [], bindings: [], deprecations: [] }),
+                decodeShard({
+                  namespace: { prefix: "patent", iri: "https://example.test/patent/" },
+                  terms: [],
+                  bindings: [],
+                  deprecations: [],
+                }),
+              ])
+            )
+          )
+        )(owned, { label: "Rebound", schemas: [], triples: [] });
+
+      // The rebound prefix is refused whether it owns the fold or only lends terms to it.
+      for (const owned of ["skos", "patent"]) {
+        const error = yield* Effect.flip(rebound("skos", owned));
+        expect(error.reason).toBe("reservedPrefix");
+        assertSome(error.term, "skos");
+        expect(error.message).toContain(custom);
+      }
+      for (const prefix of ["dcterms", "owl", "rdf", "rdfs"]) {
+        expect((yield* Effect.flip(rebound(prefix, "patent"))).reason).toBe("reservedPrefix");
+      }
+      // A registry may leave the core prefixes out, or bind them to the core namespaces.
+      expect((yield* rebound("ex", "patent")).prefix).toBe("patent");
+      expect((yield* assemble).prefix).toBe("beep");
+    })
+  );
+
+  it.effect("folds an ontology owned by a core namespace, declaring its prefix once", () =>
+    Effect.gen(function* () {
+      const assembled = yield* foldWith(registryFor("ex", "https://example.test/ns#", []))("skos", {
+        label: "SKOS",
+        schemas: [],
+        triples: [["skos:Concept", "rdfs:seeAlso", "skos:ConceptScheme"]],
+      });
+
+      expect(toContext(assembled).skos).toStrictEqual({
+        "@id": "http://www.w3.org/2004/02/skos/core#",
+        "@prefix": true,
+      });
+      expect(A.filter(Str.split("\n")(toTurtle(assembled)), Str.startsWith("@prefix skos:"))).toStrictEqual([
+        "@prefix skos: <http://www.w3.org/2004/02/skos/core#> .",
+      ]);
+    })
+  );
+
+  it("refuses an assembled ontology whose core prefix or base IRI its projections could not print", () => {
+    const decode = S.decodeUnknownResult(AssembledOntology);
+    const assembled = (prefix: string, baseIri: string) =>
+      Result.isSuccess(decode({ label: "Decoded", baseIri, prefix, classes: [], facts: [], warnings: [] }));
+
+    assertTrue(assembled("patent", "https://example.test/patent/"));
+    assertTrue(assembled("skos", "http://www.w3.org/2004/02/skos/core#"));
+    assertFalse(assembled("skos", "https://example.test/custom/"));
+    assertFalse(assembled("patent", "https://example.test/patent"));
+  });
+
+  it.effect("labels Markdown IRIs with the owned prefix only under the owned namespace", () =>
+    Effect.gen(function* () {
+      const provShard = decodeShard({
+        namespace: { prefix: "prov", iri: "https://example.test/prov/" },
+        terms: ["Entry"],
+        bindings: [],
+        deprecations: [],
+      });
+      const registry = RegistryTable.fromShards([
+        provShard,
+        ...A.filter(externalShards, (row) => row.namespace.prefix === "rdfs"),
+      ]).pipe(Result.getOrThrow, view);
+      const assembled = yield* foldWith(registry)("prov", {
+        label: "Rebound",
+        schemas: [],
+        triples: [["https://example.test/prov/Entry", "rdfs:seeAlso", "http://www.w3.org/ns/prov#Activity"]],
+      });
+      const markdown = toMarkdown(assembled);
+
+      expect(markdown).toContain("[prov:Entry](");
+      expect(markdown).not.toContain("prov:Activity");
+      expect(markdown).toContain("`rdfs:seeAlso`");
     })
   );
 

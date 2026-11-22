@@ -75,3 +75,25 @@ home paths with `~`, drop session and machine ids.
   not run on ops files; a second tsconfig beside the module was needed to hold
   it to the package bar. **Would have prevented it:** an opt-in
   `opsScripts[].strict` flag that the ops typecheck honours.
+
+## 2026-11-21 — P1 PR C hosted reds
+
+- **Doing:** opening PR C (#3449) on a green local final-check. **Evidence:**
+  hosted Lint Policy reported `knowledge semantic-delta` `introduced (2)` on a
+  head where the local run reported 0. The gate exempts a code span that
+  exactly names a Git ref and counted local branches, which a hosted checkout
+  does not have, so a checkpoint that wrote its lane branch in backticks passed
+  locally only. **Would have prevented it:** #3453, which drops local branches
+  from that census. A gate whose verdict reads clone-local state is worth
+  checking for in the other lints that list refs.
+- **Doing:** skipping coverage in the local final-check of PR C. **Evidence:**
+  hosted Coverage Regression failed on three `@beep/repo-cli` files the stack
+  adds or changes; only the `@beep/identity` files had been measured, because the
+  merge review asked for those by name. A targeted run over the three files
+  takes about a minute and reproduced the hosted numbers exactly. **Would have
+  prevented it:** `final-check --skip coverage` printing the new and changed
+  source files it leaves unmeasured, with the targeted command for each package.
+- **Doing:** acting as the only writer on PR C. **Evidence:** #3449 was flipped
+  to ready through the shared login and no session on the host had run it; only
+  a search of every transcript could show that. **Would have prevented it:** an
+  actor or session id on PR state changes that Yeet and T3 make.

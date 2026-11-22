@@ -3,12 +3,14 @@ import { RegistryVocab } from "@beep/identity/Registry";
 import { RegistryShard, RegistryTable, TermSnapshot } from "@beep/identity/Term";
 import { identityCommand } from "@beep/repo-cli/commands/Identity";
 import {
+  danglingBindingCodes,
   driftIssues,
   IdentityRegistryIssue,
   issueLine,
   planRegistry,
   planRegistryArtifacts,
   RegistryLayout,
+  RegistryPlan,
   RegistryPlanInput,
   RegistryProjectionTarget,
   RegistrySourceFile,
@@ -18,6 +20,7 @@ import {
   renderRegistryProjection,
   renderTermSnapshot,
   resolveRegistryLayout,
+  writeRegistry,
 } from "@beep/repo-cli/commands/Identity/Registry";
 import { findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
@@ -34,6 +37,7 @@ import { flow } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
+import * as PlatformError from "effect/PlatformError";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -54,7 +58,7 @@ const shardFile = (name: string, value: unknown): RegistrySourceFile =>
 const fabioFile = shardFile("fabio.json", { ...fabio, bindings: [], deprecations: [] });
 
 const issueKinds = (
-  result: Result.Result<ReadonlyArray<RegistrySourceFile>, A.NonEmptyReadonlyArray<IdentityRegistryIssue>>
+  result: Result.Result<RegistryPlan, A.NonEmptyReadonlyArray<IdentityRegistryIssue>>
 ): ReadonlyArray<string> => (Result.isFailure(result) ? A.map(result.failure, (issue) => issue.kind) : []);
 
 describe("renderRegistryJson", () => {
@@ -161,12 +165,17 @@ describe("planRegistryArtifacts", () => {
     const planned = Result.getOrThrow(
       planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [fabioFile], previous: O.none() }))
     );
-    expect(A.map(planned, (artifact) => artifact.path)).toStrictEqual([layout.data, layout.snapshot]);
+    expect(A.map(planned.artifacts, (artifact) => artifact.path)).toStrictEqual([layout.data, layout.snapshot]);
     const table = Result.getOrThrow(RegistryTable.fromShards([shard(fabio)]));
-    expect(planned[1]?.content).toBe(renderTermSnapshot(RegistryTable.snapshot(table, TermSnapshot.empty)));
+    expect(planned.snapshot).toStrictEqual(RegistryTable.snapshot(table, TermSnapshot.empty));
+    expect(planned.artifacts[1]?.content).toBe(renderTermSnapshot(planned.snapshot));
     const again = Result.getOrThrow(
       planRegistryArtifacts(
-        RegistryPlanInput.make({ layout, shardFiles: [fabioFile], previous: O.fromUndefinedOr(planned[1]?.content) })
+        RegistryPlanInput.make({
+          layout,
+          shardFiles: [fabioFile],
+          previous: O.fromUndefinedOr(planned.artifacts[1]?.content),
+        })
       )
     );
     expect(again).toStrictEqual(planned);
@@ -222,9 +231,14 @@ describe("planRegistryArtifacts", () => {
         RegistryPlanInput.make({ layout: projecting, shardFiles: [fabioFile, vitestFile], previous: O.none() })
       )
     );
-    expect(A.map(planned, (artifact) => artifact.path)).toStrictEqual([layout.data, layout.snapshot, target.path]);
+    expect(A.map(planned.artifacts, (artifact) => artifact.path)).toStrictEqual([
+      layout.data,
+      layout.snapshot,
+      target.path,
+    ]);
     const table = Result.getOrThrow(RegistryTable.fromShards([shard(fabio), shard(vitest)]));
-    expect(planned[2]?.content).toBe(renderRegistryProjection(table, ["vitest"]));
+    expect(planned.retired).toStrictEqual([]);
+    expect(planned.artifacts[2]?.content).toBe(renderRegistryProjection(table, ["vitest"]));
     expect(renderRegistryProjection(["vitest"])(table)).toContain(
       `    iri: "${IdentityAuthority}vitest/TestHang",\n    curie: "vitest:TestHang",`
     );
@@ -238,12 +252,23 @@ describe("planRegistryArtifacts", () => {
     ).toStrictEqual(["registry-shard-invalid"]);
   });
 
+  it("retires the projection module of a package that no shard projects into", () => {
+    const projecting = RegistryLayout.of("packages/identity", [
+      RegistryProjectionTarget.of("@beep/test-runner", "packages/test-runner"),
+    ]);
+    const planned = Result.getOrThrow(
+      planRegistryArtifacts(RegistryPlanInput.make({ layout: projecting, shardFiles: [fabioFile], previous: O.none() }))
+    );
+    expect(A.map(planned.artifacts, (artifact) => artifact.path)).toStrictEqual([layout.data, layout.snapshot]);
+    expect(planned.retired).toStrictEqual(["packages/test-runner/src/internal/generated/RegistryTerms.ts"]);
+  });
+
   it("refuses a regenerated snapshot that removes a term with no deprecation", () => {
     const grown = shardFile("fabio.json", { ...fabio, terms: ["Article", "Report"], bindings: [], deprecations: [] });
     const first = Result.getOrThrow(
       planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [grown], previous: O.none() }))
     );
-    const previous = O.fromUndefinedOr(first[1]?.content);
+    const previous = O.fromUndefinedOr(first.artifacts[1]?.content);
     const removed = planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [fabioFile], previous }));
     expect(issueKinds(removed)).toStrictEqual(["registry-snapshot-break"]);
     const details = Result.isFailure(removed) ? A.map(removed.failure, (issue) => issue.detail) : [];
@@ -265,11 +290,15 @@ describe("planRegistryArtifacts", () => {
 
 describe("driftIssues", () => {
   it("reports missing and changed artifacts and accepts equal ones", () => {
-    const planned = [
-      RegistrySourceFile.make({ path: "a", content: "1" }),
-      RegistrySourceFile.make({ path: "b", content: "2" }),
-      RegistrySourceFile.make({ path: "c", content: "3" }),
-    ];
+    const planned = RegistryPlan.make({
+      snapshot: TermSnapshot.empty,
+      artifacts: [
+        RegistrySourceFile.make({ path: "a", content: "1" }),
+        RegistrySourceFile.make({ path: "b", content: "2" }),
+        RegistrySourceFile.make({ path: "c", content: "3" }),
+      ],
+      retired: [],
+    });
     const current = R.fromEntries([
       ["b", "two"],
       ["c", "3"],
@@ -280,6 +309,21 @@ describe("driftIssues", () => {
     expect(
       issueLine(issues[0] ?? IdentityRegistryIssue.make({ kind: "registry-conflict", subject: "", detail: "" }))
     ).toMatch(/^a \[registry-generated-drift\] The generated artifact is missing\./);
+  });
+
+  it("reports a retired projection module only while a generated projection is at its path", () => {
+    const plan = RegistryPlan.make({ snapshot: TermSnapshot.empty, artifacts: [], retired: ["p"] });
+    const empty = Result.getOrThrow(RegistryTable.fromShards([shard(fabio)]));
+    expect(driftIssues(plan, () => O.none())).toStrictEqual([]);
+    expect(driftIssues(plan, () => O.some("export const RegistryTerms = {};\n"))).toStrictEqual([]);
+    expect(
+      A.map(
+        driftIssues(plan, () => O.some(renderRegistryProjection(empty, []))),
+        issueLine
+      )
+    ).toStrictEqual([
+      "p [registry-generated-drift] No shard projects into this package any more. Run `bun run beep identity registry --write` to regenerate.",
+    ]);
   });
 });
 
@@ -299,7 +343,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           ])
         );
         const plan = yield* planRegistry(repoRoot, committed);
-        for (const artifact of Result.getOrThrow(plan)) {
+        for (const artifact of Result.getOrThrow(plan).artifacts) {
           const onDisk = yield* fs.readFileString(path.join(repoRoot, artifact.path));
           expect(onDisk, artifact.path).toBe(artifact.content);
         }
@@ -387,6 +431,205 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           expect(failure).toContain("Cannot resolve the @beep/identity workspace.");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("finds the codes whose package, module or module path the checkout does not have", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* writeFixture([]);
+          yield* fs.makeDirectory("packages/widget/src/Nested", { recursive: true });
+          yield* fs.writeFileString(
+            "packages/widget/package.json",
+            `${encodeJson({ name: "@beep/widget", version: "0.0.0", type: "module" })}\n`
+          );
+          yield* fs.writeFileString("packages/widget/src/Report.ts", "export const report = 1;\n");
+          yield* fs.writeFileString("packages/widget/src/View.tsx", "export const view = 1;\n");
+          yield* fs.writeFileString("packages/widget/src/Nested/index.ts", "export const nested = 1;\n");
+          // Directories named like a module file, and a regular file where a directory would hold index.ts.
+          yield* fs.makeDirectory("packages/widget/src/Runner.ts", { recursive: true });
+          yield* fs.makeDirectory("packages/widget/src/Panel/index.ts", { recursive: true });
+          const root = yield* Effect.sync(() => process.cwd());
+
+          const dangling = yield* danglingBindingCodes(root, [
+            "@beep/widget/Report/Report",
+            "@beep/widget/View/View.title",
+            "@beep/widget/Nested/Section",
+            // A module the package does not have, a package the checkout does not have, and codes whose
+            // only segment is the member, or that have none, so they name no module at all.
+            "@beep/widget/Gone/Report",
+            "@beep/nowhere/Report/Report",
+            "@beep/widget/Report",
+            "@beep",
+            "@beep/widget/Runner/TestHang",
+            "@beep/widget/Panel/Title",
+            "@beep/widget/Report.ts/Report",
+          ]);
+
+          expect(dangling).toStrictEqual([
+            "@beep/widget/Gone/Report",
+            "@beep/nowhere/Report/Report",
+            "@beep/widget/Report",
+            "@beep",
+            "@beep/widget/Runner/TestHang",
+            "@beep/widget/Panel/Title",
+            "@beep/widget/Report.ts/Report",
+          ]);
+        })
+      )
+    );
+
+    it.effect("fails, and does not call the code dangling, when a module file cannot be statted", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* writeFixture([]);
+          const root = yield* Effect.sync(() => process.cwd());
+          const denied = PlatformError.systemError({
+            _tag: "PermissionDenied",
+            module: "FileSystem",
+            method: "stat",
+          });
+          const unstattable = FileSystem.FileSystem.of({
+            ...fs,
+            stat: Effect.fn("IdentityRegistryTest.deniedStat")((file) =>
+              Str.endsWith("src/Report.ts")(file) ? Effect.fail(denied) : fs.stat(file)
+            ),
+          });
+
+          const error = yield* danglingBindingCodes(root, ["@beep/identity/Report/Report"]).pipe(
+            Effect.provideService(FileSystem.FileSystem, unstattable),
+            Effect.flip
+          );
+
+          expect(error._tag).toBe("IdentityRegistryGeneratorError");
+          expect(error.message).toMatch(/^Cannot stat .*src\/Report\.ts\.$/);
+        })
+      )
+    );
+
+    it.effect("reports a snapshot released below a since its rows record", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* writeFixture([
+            [
+              "fabio.json",
+              {
+                ...fabio,
+                bindings: [{ code: "@beep/identity/Report/Report", local: "Report", since: "9.0.0" }],
+                deprecations: [],
+              },
+            ],
+          ]);
+          yield* fs.makeDirectory("packages/identity/src", { recursive: true });
+          yield* fs.writeFileString("packages/identity/src/Report.ts", "export const report = 1;\n");
+          yield* runIdentityCommand(["registry", "--write"]);
+
+          const understated = yield* Effect.exit(runIdentityCommand(["registry", "--check"]));
+
+          expectReportedExit(understated);
+          const errors = yield* TestConsole.errorLines;
+          expect(errors).toContain(
+            `${layout.snapshot} [release-regressed] In the snapshot: The snapshot release 1.0.0 is lower than the since 9.0.0 its own rows record. Correct that \`since\`, or restore the release in term-snapshot.json to at least every \`since\` its rows record.`
+          );
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("removes the projection module of a package its last shard stops projecting into, and only that", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const projection = "packages/test-runner/src/internal/generated/RegistryTerms.ts";
+          const vitest = {
+            namespace: { prefix: "vitest", iri: "https://example.test/vitest/" },
+            terms: ["TestHang"],
+            bindings: [{ code: "@beep/test-runner/Vitest/TestHang", local: "TestHang", since: "1.0.0" }],
+            deprecations: [],
+          };
+          const projecting = { ...vitest, projection: "@beep/test-runner" };
+          const alsoProjecting = { ...fabio, bindings: [], deprecations: [], projection: "@beep/test-runner" };
+          yield* writeFixture([
+            ["fabio.json", alsoProjecting],
+            ["vitest.json", projecting],
+          ]);
+          yield* fs.makeDirectory("packages/test-runner/src", { recursive: true });
+          yield* fs.writeFileString(
+            "packages/test-runner/package.json",
+            `${encodeJson({ name: "@beep/test-runner", version: "0.0.0", type: "module" })}\n`
+          );
+          yield* fs.writeFileString("packages/test-runner/src/Vitest.ts", "export const hang = 1;\n");
+          yield* runIdentityCommand(["registry", "--write"]);
+          yield* runIdentityCommand(["registry", "--check"]);
+
+          // One shard still projects into the package, so its module is still generated.
+          yield* fs.writeFileString(
+            `${layout.shards}/fabio.json`,
+            renderRegistryJson({ ...fabio, bindings: [], deprecations: [] })
+          );
+          yield* runIdentityCommand(["registry", "--write"]);
+          const kept = yield* fs.readFileString(projection);
+          expect(kept).toContain('"@beep/test-runner/Vitest/TestHang"');
+
+          // The last one drops out: the file is drift, and --write removes it.
+          yield* fs.writeFileString(`${layout.shards}/vitest.json`, renderRegistryJson(vitest));
+          const stale = yield* Effect.exit(runIdentityCommand(["registry", "--check"]));
+          expectReportedExit(stale);
+          const errors = yield* TestConsole.errorLines;
+          expect(errors).toContain(
+            `${projection} [registry-generated-drift] No shard projects into this package any more. Run \`bun run beep identity registry --write\` to regenerate.`
+          );
+          yield* runIdentityCommand(["registry", "--write"]);
+          const removed = yield* fs.exists(projection);
+          expect(removed).toBe(false);
+          const logs = yield* TestConsole.logLines;
+          expect(logs).toContain(`[identity:registry] removed ${projection}.`);
+          yield* runIdentityCommand(["registry", "--check"]);
+
+          // A file the generator did not write at the same path is neither drift nor removed.
+          yield* fs.writeFileString(projection, "export const RegistryTerms = {};\n");
+          yield* runIdentityCommand(["registry", "--check"]);
+          yield* runIdentityCommand(["registry", "--write"]);
+          const authored = yield* fs.readFileString(projection);
+          expect(authored).toBe("export const RegistryTerms = {};\n");
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("says which projection module it cannot remove", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const target = RegistryProjectionTarget.of("@beep/test-runner", "packages/test-runner");
+          yield* writeFixture([["fabio.json", { ...fabio, bindings: [], deprecations: [] }]]);
+          yield* fs.makeDirectory("packages/test-runner/src/internal/generated", { recursive: true });
+          const table = Result.getOrThrow(RegistryTable.fromShards([shard(fabio)]));
+          yield* fs.writeFileString(target.path, renderRegistryProjection(table, []));
+          const root = yield* Effect.sync(() => process.cwd());
+          const unremovable = FileSystem.FileSystem.of({
+            ...fs,
+            remove: Effect.fn("IdentityRegistryTest.deniedRemove")(() =>
+              Effect.fail(
+                PlatformError.systemError({ _tag: "PermissionDenied", module: "FileSystem", method: "remove" })
+              )
+            ),
+          });
+
+          const error = yield* writeRegistry(root, RegistryLayout.of("packages/identity", [target])).pipe(
+            Effect.provideService(FileSystem.FileSystem, unremovable),
+            Effect.flip
+          );
+
+          // No shard was edited, so the failure names no recovery: the same command is the recovery.
+          expect(error.message).toBe(`Cannot remove ${target.path}.`);
+        })
+      )
     );
 
     it.effect("refuses to write over a conflict", () =>

@@ -37,6 +37,7 @@ import {
   OntologyValidationWarning,
   TripleValue,
 } from "./Fold.models.ts";
+import { coreNamespaces, rebindsCorePrefix } from "./internal/CoreNamespaces.ts";
 import type { SkosClassification as SkosClassificationMarker } from "@beep/identity";
 import type { Namespace } from "@beep/identity/Term";
 import type {
@@ -844,8 +845,23 @@ const skosWarnings = (
   return [...missingScheme, ...missingPrefLabel, ...relatedDuplicates];
 };
 
+// The projections bind the core prefixes themselves, so a registry must bind each to the same namespace or not at all.
+const requireCorePrefixes = (registry: Registry.RegistryView): Effect.Effect<void, OntologyAssemblyError> =>
+  pipe(
+    coreNamespaces,
+    A.map((core) => registry.namespaceOf(core.prefix)),
+    A.getSomes,
+    A.findFirst(rebindsCorePrefix),
+    O.match({
+      onNone: () => Effect.void,
+      onSome: ({ iri, prefix }) =>
+        fail("reservedPrefix", `Registry rebinds the core prefix ${prefix} to ${iri}.`, { term: prefix }),
+    })
+  );
+
 const assembleWith = (registry: Registry.RegistryView) =>
   Effect.fn("Ontology.foldWith")(function* (prefix: string, input: OntologyFoldInput) {
+    yield* requireCorePrefixes(registry);
     const namespace = yield* pipe(
       registry.namespaceOf(prefix),
       O.match({
@@ -901,7 +917,9 @@ const assembleWith = (registry: Registry.RegistryView) =>
  * bound term is the class IRI; an unbound schema fails with `unboundClass`.
  * An owned field must be a declared term of the namespace, or the fold fails
  * with `undeclaredProperty`. Borrowed predicates ride the `ontologyTerm`
- * channel. An unknown namespace fails with `unknownTerm`.
+ * channel. An unknown namespace fails with `unknownTerm`, and a registry that
+ * binds a core prefix (`dcterms`, `owl`, `rdf`, `rdfs`, `skos`) to another
+ * namespace than the core one fails with `reservedPrefix`.
  *
  * **Example** (Fold over a fixture registry)
  * ```ts
