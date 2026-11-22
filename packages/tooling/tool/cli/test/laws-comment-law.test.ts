@@ -239,6 +239,69 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
           ["pending-scope-grew", "packages/a"],
           ["pending-scope-grew", "packages/c"],
         ]);
+        const moved = evaluateCommentLock(
+          CommentLockInput.make({
+            headShards: [
+              CommentLawPending.make({
+                schemaVersion: "comment-law-pending/v1",
+                package: "@beep/moved",
+                root: "packages/new",
+                scopes: ["."],
+              }),
+            ],
+            baseShards: O.some([
+              CommentLawPending.make({
+                schemaVersion: "comment-law-pending/v1",
+                package: "@beep/moved",
+                root: "packages/old",
+                scopes: ["."],
+              }),
+            ]),
+            bannedCounts: HashMap.make(["packages/new/src/A.ts", 2]),
+            changedFiles: HashSet.make("packages/new/src/A.ts"),
+            wholeTree: false,
+          })
+        );
+        expect(moved.findings).toEqual([]);
+      })
+    );
+
+    it.effect(
+      "judges the whole tree on a main push, the branch delta on a new branch, and reads a blobless clone",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const checkout = yield* makeCheckout("blocking");
+        const pushed = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, base: "HEAD" }));
+        expect([pushed.changedFiles, pushed.findings]).toEqual([0, []]);
+
+        yield* fs.remove(`${checkout.root}/standards/comment-law/pending/beep-a.jsonc`);
+        yield* runGit(checkout.root, ["commit", "--quiet", "--no-verify", "-am", "sweep without the comment"]);
+        const laundered = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, base: "HEAD" }));
+        expect(A.map(laundered.findings, (finding) => [finding.rule, finding.file])).toEqual([
+          ["locked-scope-comment", "packages/a/src/A.ts"],
+        ]);
+        expect(laundered.failed).toBe(true);
+
+        const branch = yield* makeCheckout("advisory");
+        yield* runGit(branch.root, ["switch", "--quiet", "-c", "feature"]);
+        yield* branch.write("packages/a/src/C.ts", "// a new reason\nexport const c = 3;\n");
+        yield* runGit(branch.root, ["add", "."]);
+        yield* runGit(branch.root, ["commit", "--quiet", "--no-verify", "-m", "first push"]);
+        const firstPush = yield* runCommentLaw(CommentLawOptions.make({ cwd: branch.root, base: "main" }));
+        expect(A.map(firstPush.findings, (finding) => [finding.rule, finding.file])).toEqual([
+          ["introduced-comment", "packages/a/src/C.ts"],
+        ]);
+
+        yield* runGit(branch.root, ["config", "uploadpack.allowFilter", "true"]);
+        const clone = yield* fs.makeTempDirectoryScoped({ prefix: "comment-law-blobless-" });
+        yield* runGit(clone, ["clone", "--quiet", "--filter=blob:none", "--no-local", `file://${branch.root}`, "repo"]);
+        const repo = `${clone}/repo`;
+        yield* fs.writeFileString(`${repo}/packages/a/src/B.ts`, "// explains b\nexport const b = 2;\n");
+        const blobless = yield* runCommentLaw(CommentLawOptions.make({ cwd: repo, base: "origin/main" }));
+        expect(A.map(blobless.findings, (finding) => finding.file)).toEqual([
+          "packages/a/src/B.ts",
+          "packages/a/src/C.ts",
+        ]);
       })
     );
 

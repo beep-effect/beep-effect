@@ -857,6 +857,7 @@
     {"name":"CommentLaw.lawFiles","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CommentLaw.lockFor","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CommentLaw.packageNamesOf","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CommentLaw.prefetchBlobs","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CommentLaw.readBaseShards","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CommentLaw.readPolicy","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CommentLaw.readWorktreeShards","owner":"@beep/repo-cli","family":"tooling","conforms":true},

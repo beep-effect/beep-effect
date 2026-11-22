@@ -355,16 +355,24 @@ const grewVerdicts = (context: ShardScopeContext, scope: string): ReadonlyArray<
   ];
 };
 
+const movedFrom = (input: CommentLockInput, candidate: CommentLawPending, shard: CommentLawPending): boolean =>
+  candidate.package === shard.package &&
+  !A.some(input.headShards, (head) => head.root === candidate.root) &&
+  !A.some(A.fromIterable(HashMap.keys(input.bannedCounts)), (file) => Str.startsWith(`${candidate.root}/`)(file));
+
 const shardVerdicts = (
   input: CommentLockInput,
   files: ReadonlyArray<string>,
   baseShards: ReadonlyArray<CommentLawPending>,
   shard: CommentLawPending
 ): ReadonlyArray<LockVerdict> => {
-  const baseShard = A.findFirst(baseShards, (candidate) => candidate.root === shard.root);
+  const baseShard = O.orElse(
+    A.findFirst(baseShards, (candidate) => candidate.root === shard.root),
+    () => A.findFirst(baseShards, (candidate) => movedFrom(input, candidate, shard))
+  );
   const shardChanged = O.match(baseShard, {
     onNone: () => true,
-    onSome: (previous) => A.join(previous.scopes, "\n") !== A.join(shard.scopes, "\n"),
+    onSome: (previous) => previous.root !== shard.root || A.join(previous.scopes, "\n") !== A.join(shard.scopes, "\n"),
   });
   const context: ShardScopeContext = { baseShard, files, input, shard, shardChanged };
   return A.flatMap(shard.scopes, (scope) => A.appendAll(staleVerdicts(context, scope), grewVerdicts(context, scope)));
@@ -495,7 +503,7 @@ const readBaseShards = Effect.fn("CommentLaw.readBaseShards")(function* (repoRoo
   );
   if (O.isNone(policy)) return O.none<ReadonlyArray<CommentLawPending>>();
   const entries = yield* mapGit(
-    GitCommand.lsFiles(),
+    GitCommand.lsTree(base, [`${COMMENT_LAW_PENDING_DIR}/`]),
     git.lsTree(repoRoot, base, { pathspec: [`${COMMENT_LAW_PENDING_DIR}/`] })
   );
   const paths = A.filter(
@@ -522,7 +530,7 @@ const readBaseShards = Effect.fn("CommentLaw.readBaseShards")(function* (repoRoo
 const lawFiles = Effect.fn("CommentLaw.lawFiles")(function* (repoRoot: string) {
   const git = yield* Git;
   const tracked = yield* mapGit(GitCommand.lsFiles(), git.lsFiles(repoRoot));
-  const untracked = yield* mapGit(GitCommand.lsFiles(), git.untrackedFiles(repoRoot));
+  const untracked = yield* mapGit(GitCommand.untrackedFiles(), git.untrackedFiles(repoRoot));
   const all = A.dedupe(
     A.appendAll(
       A.map(tracked, (entry) => entry.path),
@@ -568,6 +576,21 @@ const bannedCountsOf = Effect.fn("CommentLaw.bannedCountsOf")(function* (
   return counts;
 });
 
+const prefetchBlobs = Effect.fn("CommentLaw.prefetchBlobs")(function* (
+  repoRoot: string,
+  base: string,
+  paths: ReadonlyArray<string>
+) {
+  const git = yield* Git;
+  const partial = yield* mapGit(
+    GitCommand.configGet("remote.origin.promisor"),
+    git.configGet(repoRoot, "remote.origin.promisor")
+  );
+  if (A.isReadonlyArrayEmpty(paths) || !O.exists(partial, (value) => value === "true")) return;
+  const options = { base, noRenames: true, unified: 0, pathspec: paths };
+  yield* mapGit(GitCommand.diffPatch(options), Effect.asVoid(git.diffPatch(repoRoot, options)));
+});
+
 const changesAgainst = Effect.fn("CommentLaw.changesAgainst")(function* (
   repoRoot: string,
   base: string,
@@ -575,7 +598,7 @@ const changesAgainst = Effect.fn("CommentLaw.changesAgainst")(function* (
 ) {
   const git = yield* Git;
   if (staged) {
-    const staged = yield* mapGit(GitCommand.lsFiles(), git.stagedChanges(repoRoot, { noRenames: true }));
+    const staged = yield* mapGit(GitCommand.stagedChanges(), git.stagedChanges(repoRoot, { noRenames: true }));
     return yield* Effect.forEach(
       A.filter(staged, isCommentLawPath),
       (file) =>
@@ -589,16 +612,19 @@ const changesAgainst = Effect.fn("CommentLaw.changesAgainst")(function* (
       { concurrency: 8 }
     );
   }
-  const entries = yield* mapGit(GitCommand.lsFiles(), git.nameStatus(repoRoot, { base, noRenames: true }));
-  const untrackedAll = yield* mapGit(GitCommand.lsFiles(), git.untrackedFiles(repoRoot));
+  const entries = yield* mapGit(
+    GitCommand.nameStatus(base, undefined),
+    git.nameStatus(repoRoot, { base, noRenames: true })
+  );
+  const untrackedAll = yield* mapGit(GitCommand.untrackedFiles(), git.untrackedFiles(repoRoot));
   const untracked = A.filter(untrackedAll, isCommentLawPath);
   const changed = A.filter(entries, (entry) => isCommentLawPath(entry.path));
   const existing = A.filter(changed, (entry) => entry.status !== "added");
-  if (A.isReadonlyArrayNonEmpty(existing))
-    yield* mapGit(
-      GitCommand.lsFiles(),
-      git.diffPatch(repoRoot, { base, noRenames: true, unified: 0, pathspec: A.map(existing, (entry) => entry.path) })
-    );
+  yield* prefetchBlobs(
+    repoRoot,
+    base,
+    A.map(existing, (entry) => entry.path)
+  );
   const tracked = yield* Effect.forEach(
     changed,
     (entry) =>
@@ -682,11 +708,11 @@ export const runCommentLaw = Effect.fn("CommentLaw.runCommentLaw")(function* (
     CommentLawExecutionError.mapError("Failed to locate the repository root")
   );
   const policy = yield* readPolicy(repoRoot);
-  const head = yield* mapGit(GitCommand.lsFiles(), git.revParse(repoRoot, "HEAD"));
+  const head = yield* mapGit(GitCommand.revParse("HEAD"), git.revParse(repoRoot, "HEAD"));
   const requested = options.staged ? "HEAD" : O.getOrElse(O.fromUndefinedOr(options.base), () => "origin/main");
   const mergeBase = options.staged
     ? O.some(head)
-    : yield* mapGit(GitCommand.lsFiles(), git.mergeBaseOption(repoRoot, requested, "HEAD"));
+    : yield* mapGit(GitCommand.mergeBase(requested, "HEAD"), git.mergeBaseOption(repoRoot, requested, "HEAD"));
   const base = O.getOrElse(mergeBase, () => "");
   if (Str.isEmpty(base))
     return yield* CommentLawExecutionError.new(
