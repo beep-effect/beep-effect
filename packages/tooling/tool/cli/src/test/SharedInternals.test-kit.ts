@@ -22,6 +22,7 @@ export * from "@beep/repo-cli-kit/tsmorph/index";
 export * from "@beep/repo-cli-kit/WholeToken";
 export * from "../commands/Models/internal/PublicationLedger.ts";
 export * from "../commands/Skills/internal/SkillFrontmatterCheck.ts";
+export * from "../internal/decisions/DecisionFile.ts";
 export * from "../internal/github/index.ts";
 export * from "../internal/quality/SchemaFirstPolicyFinding.ts";
 export * from "../internal/quality/TestTypecheckCoverage.ts";
