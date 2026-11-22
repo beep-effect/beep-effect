@@ -31,7 +31,7 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. Blocked on `goals/gate-report-core`; the hosted-main baseline
+P0 to P3 complete: lane history, labels from lane evidence, the fix-loop delta and the history queries. P4 (hosted-main baseline, `AC-H7`) waits for the carrier `goals/ci-gate-reports` ships; P5 to P7 follow it.
 (P4) also waits on `goals/ci-gate-reports`.
 
 ## Latest Evidence

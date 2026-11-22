@@ -199,7 +199,7 @@ export const commandGroupRoutes: ReadonlyArray<CommandGroupRoute> = [
     () => import("../../commands/Lint/index.ts").then((module) => module.lintCommand)
   ),
   groupRoute(
-    { name: "gate", description: "Gate reports: run a gate and print its console from the record" },
+    { name: "gate", description: "Gate reports: run a gate, print its console from the record, and read its history" },
     []
   )(() => import("../../commands/Gate/index.ts").then((module) => module.gateCommand)),
   // `lawsCommand` and `researchCommand` are exported with their requirements cast away, so
