@@ -483,11 +483,14 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         Effect.gen(function* () {
           const records: ReadonlyArray<readonly [string, string]> = [
             [".changeset/older-note.md", "---\n{}\n---\n\nMoves out of `deploy/src/Stack.ts`.\n"],
+            ["docs/history/commit-message-map.json", '{ "0": "feat: add `@beep/deploy`" }\n'],
             ["docs/reports/2026-01-01-cache-review.md", "Reviewed `@beep/deploy`.\n"],
             ["docs/reports/retirement/request.json", '{ "package": "@beep/deploy" }\n'],
             ["explorations/INBOX.md", "- 2026-01-01: split `@beep/deploy`.\n"],
             ["explorations/demo/.runs/census.yaml", 'package: "@beep/deploy"\n'],
             ["explorations/demo/DECISIONS.md", "Keep `@beep/deploy`.\n"],
+            ["explorations/demo/ops/manifest.json", '{ "package": "@beep/deploy" }\n'],
+            ["explorations/demo/research/package-census.json", '["@beep/deploy"]\n'],
             ["goals/demo/decisions/2026-01-01-move.md", "Retire `@beep/deploy`.\n"],
             ["goals/demo/history/notes.md", "Moved out of `deploy/src/Stack.ts`.\n"],
             ["goals/demo/research/graph.tsv", "@beep/deploy\tbuild\n"],
@@ -512,14 +515,30 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
         temporaryGitWorkingDirectory,
         Effect.gen(function* () {
           const line = "Reads `@beep/deploy`.\n";
+          const importLine = 'import "@beep/deploy";\n';
+          const manifest = '{ "dependencies": { "@beep/deploy": "workspace:*" } }\n';
+          const paths = '{ "compilerOptions": { "paths": { "@beep/deploy": ["./x.ts"] } } }\n';
           const live: ReadonlyArray<readonly [string, string]> = [
+            [".changeset/README.md", "Releases `deploy/package.json`.\n"],
+            [".changeset/config.json", '{ "ignore": ["@beep/deploy"] }\n'],
+            ["docs/history/README.md", line],
             ["docs/reports.md", line],
+            ["docs/reports/package.json", manifest],
+            ["docs/reports/probe.ts", importLine],
             ["docs/runbooks/deploy.md", line],
             ["explorations-index.md", line],
             ["explorations/AGENTS.md", line],
             ["explorations/README.md", line],
+            ["explorations/_template/BRIEF.md", line],
+            ["explorations/_template/ops/manifest.json", '{ "package": "@beep/deploy" }\n'],
+            ["explorations/demo/ops/package.json", manifest],
+            ["explorations/demo/ops/run.mts", importLine],
+            ["explorations/demo/ops/run.ts", importLine],
+            ["explorations/demo/ops/tsconfig.run.json", paths],
             ["packages/consumer/docs/reports/notes.md", line],
-            ["packages/consumer/src/index.ts", 'import "@beep/deploy";\n'],
+            ["packages/consumer/explorations/demo/notes.md", line],
+            ["packages/consumer/research/notes.md", line],
+            ["packages/consumer/src/index.ts", importLine],
             ["scratchpad/goals/notes.md", line],
             ["standards/architecture/16-demo.md", line],
             ["standards/architecture/GLOSSARY.md", line],
@@ -537,6 +556,38 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             "docs/reports/2026-01-01-cache-review.md",
           ]);
           expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, observations)).toBe(false);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("reads every import form in packet code as a hard import, not a packet claim", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const imports: ReadonlyArray<readonly [string, string]> = [
+            ["goals/demo/ops/call.ts", 'export const load = () => import("@beep/deploy/Stack");\n'],
+            ["goals/demo/ops/common.cts", 'import deploy = require("@beep/deploy");\nexport = deploy;\n'],
+            ["goals/demo/ops/module.mts", 'export * from "@beep/deploy";\n'],
+            ["goals/demo/ops/type.ts", 'export type Stack = import("@beep/deploy").Stack;\n'],
+            ["goals/demo/ops/typeof.ts", 'export type Deploy = typeof import("@beep/deploy/Stack");\n'],
+          ];
+          const repoRoot = yield* writeDeletedDeployLayout([
+            ...imports,
+            // Each names the package, so each is parsed, but none imports it.
+            ["goals/demo/ops/label.ts", 'export type Label = "@beep/deploy";\n'],
+            [
+              "goals/demo/ops/local.ts",
+              "// @beep/deploy\nimport L = O.I;\nimport M = require(L);\ntype T = import(L).T;\n",
+            ],
+            ["goals/demo/ops/sibling.ts", '// @beep/deploy\nexport type Sibling = import("@beep/deploy-x").Stack;\n'],
+          ]);
+
+          const report = yield* dependentsOfAtRoot(repoRoot, rootDeployTarget);
+          const importFiles = A.map(
+            A.filter(report.hits, (hit) => hit.kind === "import-prod"),
+            (hit) => hit.file
+          );
+          expect(importFiles).toStrictEqual(A.map(imports, ([file]) => file));
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

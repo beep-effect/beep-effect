@@ -28,15 +28,24 @@ import type {
 // evidence, never residue, and rewriting it would falsify the record. The doctor probes read these globs
 // for both the authored-references skip and the historical-records surface, so a path has one reading.
 // Everything else in the same trees stays live: the architecture chapters and glossary, `docs/` outside
-// `docs/reports/`, the other `standards/` files, and the guides directly under `explorations/`.
+// reports and the commit-message history, the other `standards/` files, the guides directly under
+// `explorations/` and its packet template, and the changeset config and README. `goals/` and `research/`
+// are whole trees because the dependents scan reads their code; it never reads `explorations/` or
+// `docs/`, so there only prose and data are records, and source, manifests and tsconfigs stay live.
+const recordFilesUnder = (tree: string): ReadonlyArray<string> => [
+  `${tree}/**/*.{md,toml,tsv,yaml,yml}`,
+  `${tree}/**/!(package|tsconfig*).{json,jsonc}`,
+];
+
 const HISTORICAL_RECORD_GLOBS = A.map(
   [
     "goals/**",
     "research/**",
-    ".changeset/**",
+    ".changeset/!(README).md",
     "explorations/INBOX.md",
-    "explorations/*/**",
-    "docs/reports/**",
+    ...recordFilesUnder("explorations/!(_template)"),
+    ...recordFilesUnder("docs/reports"),
+    "docs/history/*.json",
     "standards/architecture/DECISIONS.md",
     "standards/changesets.retired-packages.json",
   ],

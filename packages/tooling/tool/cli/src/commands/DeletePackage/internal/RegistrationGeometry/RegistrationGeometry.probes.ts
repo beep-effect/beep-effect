@@ -57,21 +57,8 @@ const SCAN_ROOTS = [
 // listing drops a path with any of these segments too, so a checkout that does
 // not ignore them reads the same set the walk did.
 const EXCLUDED_DIRECTORIES = HashSet.fromIterable([".git", "node_modules", "dist", "coverage", ".turbo", ".beep"]);
-const SOURCE_SUFFIXES = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
-const TEXT_SUFFIXES = [
-  ".ts",
-  ".tsx",
-  ".js",
-  ".jsx",
-  ".mjs",
-  ".cjs",
-  ".json",
-  ".jsonc",
-  ".md",
-  ".yml",
-  ".yaml",
-  ".toml",
-];
+const SOURCE_SUFFIXES = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
+const TEXT_SUFFIXES = [...SOURCE_SUFFIXES, ".json", ".jsonc", ".md", ".yml", ".yaml", ".toml"];
 // A historical record is read in every suffix the authored-reference probe skips it in, plus tables.
 const RECORD_SUFFIXES = A.append(TEXT_SUFFIXES, ".tsv");
 
@@ -548,6 +535,24 @@ const dynamicImportSpecifier = (node: Node): O.Option<string> => {
   );
 };
 
+// `import("x").T` in type position.
+const importTypeSpecifier = (node: Node): O.Option<string> => {
+  if (!Node.isImportTypeNode(node)) return O.none();
+  const argument = node.getArgument();
+  const literal = Node.isLiteralTypeNode(argument) ? argument.getLiteral() : argument;
+  return Node.isStringLiteral(literal) ? O.some(literal.getLiteralText()) : O.none();
+};
+
+// `import x = require("x")`; its `require` is a module reference, not a call.
+const importEqualsSpecifier = (node: Node): O.Option<string> => {
+  if (!Node.isExternalModuleReference(node)) return O.none();
+  const expression = node.getExpression();
+  return Node.isStringLiteral(expression) ? O.some(expression.getLiteralText()) : O.none();
+};
+
+const nestedSpecifier = (node: Node): O.Option<string> =>
+  O.firstSomeOf([dynamicImportSpecifier(node), importTypeSpecifier(node), importEqualsSpecifier(node)]);
+
 const importHitsInFile = (
   project: Project,
   absoluteFile: string,
@@ -585,7 +590,7 @@ const importHitsInFile = (
       append(declaration.getStartLineNumber());
   }
   source.forEachDescendant((node) => {
-    const specifier = dynamicImportSpecifier(node);
+    const specifier = nestedSpecifier(node);
     if (O.isSome(specifier) && isTargetSpecifier(specifier.value, target.packageName))
       append(node.getStartLineNumber());
   });
