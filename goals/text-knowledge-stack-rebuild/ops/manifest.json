@@ -54,7 +54,9 @@
     "research/2026-11-20-p2-map-rdf-and-party.md",
     "research/2026-11-22-p3-commit-8-validation.md",
     "research/2026-11-22-p3-commit-9-validation.md",
+    "research/2026-11-22-p3-commits-9-11-validation.md",
     "research/2026-11-22-p3-design.md",
+    "research/2026-11-22-p3-inventory-validation.md",
     "research/2026-11-22-p3-map-consumers.md",
     "research/2026-11-22-p3-map-handoff.md",
     "research/2026-11-22-p3-map-model.md",
@@ -155,7 +157,7 @@
     "The same blocker repeats after reasonable investigation.",
     "A retirement or rename is attempted without its row in research/consumer-census.md or without the consumer migration in the same PR: that step stops, the packet does not."
   ],
-  "statusNote": "P0 Design and grill is complete (PR #3420, merged as dcf6b16a77d). P1 (L0 identity) is in progress as a three-PR stack opened one after another: PR A foundation, PR B registry and pins, PR C bindings and the break. Base design research/2026-11-19-p1-design-registry-first.md; rulings in decisions/2026-11-19-p1-*. P2 (L1 text) is in progress as one PR stacked on PR C, not yet opened: @beep/text created and @beep/provenance retired, L1-1 to L1-6 green; the inventory regeneration and the final check remain; design research/2026-11-20-p2-design.md, rulings in decisions/2026-11-22-p2-*. P3 L2 is content-complete in its lane, not open: annotation and the lossless handoff are implemented, L2 doctrine and inventories are local. P2 opens against main after PR C merges; P3 waits for P2 and the orchestrator.",
+  "statusNote": "P0 Design and grill merged as dcf6b16a77d (PR #3420). P1 L0 identity is a three-PR stack. P2 L1 text is content-final and pushed in its lane; its PR waits for PR C to merge, then opens against main. P3 L2 annotation is content-complete in its lane with local proof and inventory registration, and no P3 PR is open. P3 publication waits for P2 and the orchestrator, under the 2026-11-22 content-final checkpoints.",
   "opsScripts": [
     {
       "path": "ops/design/index.ts",

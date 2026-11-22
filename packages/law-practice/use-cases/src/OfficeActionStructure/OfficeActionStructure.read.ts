@@ -90,3 +90,20 @@ export const OfficeActionStructureAttemptRead = S.Union([FromV1, OfficeActionStr
     description: "Attempt-log row reader: v2 as stored, v1 converted on read; v1 is never written.",
   })
 );
+
+/**
+ * Decoded v2 attempt produced by the attempt-log reader.
+ *
+ * **Example** (Read the decoded version)
+ *
+ * ```ts
+ * import type { OfficeActionStructureAttemptRead } from "@beep/law-practice-use-cases/OfficeActionStructure"
+ *
+ * const versionOf = (attempt: OfficeActionStructureAttemptRead) => attempt.schemaVersion
+ * console.log(versionOf)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type OfficeActionStructureAttemptRead = typeof OfficeActionStructureAttemptRead.Type;

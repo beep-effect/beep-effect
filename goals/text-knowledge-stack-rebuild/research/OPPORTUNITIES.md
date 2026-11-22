@@ -440,3 +440,24 @@ home paths with `~`, drop session and machine ids.
   it is now hoisted beside its schema at module scope.
   **Would have prevented it:** a supported explicit-files lint mode that reports
   excluded inputs instead of silently leaving them outside the check.
+- **Doing:** registering targeted law-practice read-codec coverage through the
+  existing additions-only coverage writer.
+  **Evidence:** the writer refuses an unselected measured package even when its
+  rows were just registered by the preceding small-package run. The exact
+  selected set must include every retained summary; all five measured package
+  names are now supplied. The law-practice run itself remains file-targeted.
+  **Would have prevented it:** the additions-only CLI accepting a summary path
+  or filtering its snapshot to the exact selected packages before validation.
+- **Doing:** regenerating the P3 JSDoc totals.
+  **Evidence:** the full inventory found that the commit-7 exported read codec
+  lacked its same-name runtime type alias; package docgen alone had passed.
+  The alias and its titled example are now present; the new finding is removed
+  rather than admitted into the JSDoc baseline.
+  **Would have prevented it:** the package JSDoc gate sharing the inventory's
+  schema/value/type parity check.
+- **Doing:** proving the L2 cache baseline after inventory regeneration.
+  **Evidence:** cache audit reported configuration-drift on the root
+  lint:policy-fingerprint computation because the fingerprint was regenerated
+  after the review. The final cache review now follows that generator.
+  **Would have prevented it:** an explicit generator-order dependency from
+  the cache-baseline writer to the policy-fingerprint writer.

@@ -3377,7 +3377,6 @@
           "@beep/identity",
           "@beep/jsonc",
           "@beep/langextract",
-          "@beep/nlp",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -3389,7 +3388,6 @@
           "@beep/identity",
           "@beep/jsonc",
           "@beep/langextract",
-          "@beep/nlp",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -3889,6 +3887,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3897,6 +3896,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -3937,6 +3937,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3947,6 +3948,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -6203,6 +6205,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils",
           "@beep/wink"
         ],
@@ -6214,6 +6217,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils",
           "@beep/wink"
         ]

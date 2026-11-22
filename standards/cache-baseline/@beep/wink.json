@@ -2,11 +2,11 @@
   "schemaVersion": "cache-baseline-package/v1",
   "subject": "@beep/wink",
   "review": {
-    "reviewer": "Claude Fable 5.2 (gate-report-core wiring lane, feat/gate-report-wiring)",
-    "reason": "Record the check task's new root inputs, which name the sources that build the check record so a change to them invalidates cached records, and the scripts digest of the four packages whose chained test script marks its later Vitest run with BEEP_GATE_CONTINUES=1. No task output, environment entry or cache flag changes, and no qualification is granted.",
+    "reviewer": "GPT-6.1 Sol (P3 L2 implementation lane)",
+    "reason": "Register the L2 workspace and its modeling and consumer build edges; remove retired nlp handoff dependencies. Configuration review only; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/gate-wiring-cache-review-check-inputs-2026-11-19.md",
-      "sha256": "4fa5685659a39855ad20fd76d0c5149643b409d299c4debaec9b08c3e1d08975"
+      "path": "docs/reports/tksr-p3-l2-cache-review-2026-11-22.md",
+      "sha256": "32a9764967af3bfbc9c092e6b67296e87ef4148368f7c88b58e8c45be56de7e6"
     }
   },
   "nodes": [
@@ -22,6 +22,7 @@
         "@beep/schema#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
+        "@beep/text#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -83,6 +84,7 @@
         "@beep/schema#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
+        "@beep/text#build",
         "@beep/utils#build",
         "@beep/wink#build"
       ],
@@ -141,6 +143,7 @@
         "@beep/schema#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
+        "@beep/text#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -273,6 +276,7 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
+        "@beep/text#transit",
         "@beep/utils#transit"
       ],
       "configuration": {
@@ -476,6 +480,7 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
+        "@beep/text#transit",
         "@beep/utils#transit"
       ],
       "configuration": {
@@ -527,6 +532,7 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
+        "@beep/text#transit",
         "@beep/utils#transit",
         "@beep/utils#transit"
       ],
@@ -588,6 +594,7 @@
         "@beep/schema#build",
         "@beep/test-runner#build",
         "@beep/test-utils#build",
+        "@beep/text#build",
         "@beep/utils#build"
       ],
       "configuration": {
@@ -635,6 +642,7 @@
         "@beep/schema#transit",
         "@beep/test-runner#transit",
         "@beep/test-utils#transit",
+        "@beep/text#transit",
         "@beep/utils#transit",
         "@beep/utils#transit"
       ],
