@@ -7,6 +7,7 @@ import { describe, expect } from "@effect/vitest";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 
 const quote = (exact: string, prefix?: string) =>
   QuoteSelector.make({ exact, prefix: O.fromUndefinedOr(prefix), suffix: O.none() });
@@ -80,6 +81,19 @@ describe("@beep/text Resolution", () => {
     // Otherwise an ambiguous part makes the range ambiguous with the product of the counts.
     expect(resolve(text, RangeSelector.make({ from: quote("Claim"), to: quote("two") }))).toEqual(ambiguous(2));
     expect(resolve(text, RangeSelector.make({ from: quote("Claim"), to: quote(".") }))).toEqual(ambiguous(8));
+  });
+
+  it("saturates the count of nested ranges instead of throwing", () => {
+    // (10^4 * 10^4)^2 = 10^16 selections, past Number.MAX_SAFE_INTEGER: the count saturates there.
+    const text = Str.repeat(10_000)("a");
+    const inner = RangeSelector.make({ from: quote("a"), to: quote("a") });
+    const nested = RangeSelector.make({ from: inner, to: inner });
+    expect(resolve(text, inner)).toEqual(ambiguous(100_000_000));
+    expect(resolve(text, nested)).toEqual(ambiguous(Number.MAX_SAFE_INTEGER));
+    expect(resolve(text, RangeSelector.make({ from: nested, to: nested }))).toEqual(ambiguous(Number.MAX_SAFE_INTEGER));
+    expect(resolve(text, RefinedSelector.make({ base: nested, by: quote("a") }))).toEqual(
+      ambiguous(Number.MAX_SAFE_INTEGER)
+    );
   });
 
   it("resolves through the pipeable form", () => {

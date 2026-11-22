@@ -25,23 +25,59 @@ const between = (minimum: number, maximum: number) => Arbitrary.schema(S.Int.che
 const at = (values: A.NonEmptyReadonlyArray<number>, index: number): number =>
   O.getOrElse(A.get(values, index), () => A.headNonEmpty(values));
 
+const textOf = (codePoints: ReadonlyArray<number>) => ({
+  text: A.join(
+    A.map(codePoints, (codePoint) => String.fromCodePoint(codePoint)),
+    ""
+  ),
+  codePoints,
+  boundaries: {
+    "utf16-code-unit": A.scan(codePoints, 0, (offset, codePoint) => offset + utf16Width(codePoint)),
+    "unicode-code-point": A.scan(codePoints, 0, (offset) => offset + 1),
+    "utf8-byte": A.scan(codePoints, 0, (offset, codePoint) => offset + utf8Width(codePoint)),
+  } satisfies { readonly [Unit in OffsetUnit]: A.NonEmptyReadonlyArray<number> },
+});
+
 /** Generated well-formed text with its scalar boundaries in each unit (offset 0, then the end of each scalar). */
 export const wellFormedTextWith = (options: { readonly minLength: number; readonly maxLength: number }) =>
-  Arbitrary.map(Arbitrary.array(Arbitrary.schema(CodePointPick), options), (picks) => {
-    const codePoints = A.map(picks, toCodePoint);
-    return {
-      text: A.join(
-        A.map(codePoints, (codePoint) => String.fromCodePoint(codePoint)),
-        ""
-      ),
-      codePoints,
-      boundaries: {
-        "utf16-code-unit": A.scan(codePoints, 0, (offset, codePoint) => offset + utf16Width(codePoint)),
-        "unicode-code-point": A.scan(codePoints, 0, (offset) => offset + 1),
-        "utf8-byte": A.scan(codePoints, 0, (offset, codePoint) => offset + utf8Width(codePoint)),
-      } satisfies { readonly [Unit in OffsetUnit]: A.NonEmptyReadonlyArray<number> },
-    };
-  });
+  Arbitrary.map(Arbitrary.array(Arbitrary.schema(CodePointPick), options), (picks) =>
+    textOf(A.map(picks, toCodePoint))
+  );
+
+// One BMP letter and one astral scalar. Over two scalars a passage overlaps itself often, which the wide alphabet
+// almost never produces, so the KMP fallback step and surrogate pairs inside a repeated passage both get exercised.
+const narrowAlphabet: A.NonEmptyReadonlyArray<number> = [0x61, 0x1f600];
+
+const narrowCodePoints = (options: { readonly minLength: number; readonly maxLength: number }) =>
+  Arbitrary.map(
+    Arbitrary.array(between(0, 1), options),
+    A.map((pick) => at(narrowAlphabet, pick))
+  );
+
+/** Generated well-formed text over the narrow alphabet `a`, `😀`, with its scalar boundaries in each unit. */
+export const narrowTextWith = (options: { readonly minLength: number; readonly maxLength: number }) =>
+  Arbitrary.map(narrowCodePoints(options), textOf);
+
+/**
+ * A passage `border + middle + border` over the narrow alphabet and the text `passage + passage[border.length..]`,
+ * where the second copy starts inside the first: at least two overlapping occurrences by construction.
+ */
+export const overlappingRepeat = Arbitrary.map(
+  Arbitrary.all({
+    border: narrowCodePoints({ minLength: 1, maxLength: 8 }),
+    middle: narrowCodePoints({ minLength: 0, maxLength: 8 }),
+  }),
+  ({ border, middle }) => {
+    const passage = A.appendAll(A.appendAll(border, middle), border);
+    return { passage: textOf(passage), text: textOf(A.appendAll(passage, A.drop(passage, border.length))) };
+  }
+);
+
+/** One of several arbitraries, each picked with the same weight. */
+export const oneOf = <Value>(arbitraries: A.NonEmptyReadonlyArray<Arbitrary.Arbitrary<Value>>) =>
+  Arbitrary.flatMap(between(0, arbitraries.length - 1), (index) =>
+    O.getOrElse(A.get(arbitraries, index), () => A.headNonEmpty(arbitraries))
+  );
 
 /** Generated well-formed, non-empty text of at most 80 scalars. */
 export const wellFormedText = wellFormedTextWith({ minLength: 1, maxLength: 80 });

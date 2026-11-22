@@ -14,6 +14,7 @@
 import { $TextId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import { constant, dual } from "effect/Function";
+import * as N from "effect/Number";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -81,6 +82,12 @@ const unique = (sourceText: string, start: number, end: number): Resolution =>
 
 // The count of a part of a composite that is not NotFound: a Unique part counts once.
 const countOf = (outcome: Resolution): number => (Resolution.guards.Ambiguous(outcome) ? outcome.count : 1);
+
+// Nested ranges multiply counts past `Number.MAX_SAFE_INTEGER`, which `S.Int` refuses; the count saturates there, so a
+// saturated count is a lower bound (decision p2-ambiguous-count-saturates). Both factors are safe integers, so a
+// product at or below the cap is exact.
+const saturatingProduct = (left: number, right: number): number =>
+  N.min(N.multiply(left, right), Number.MAX_SAFE_INTEGER);
 
 const shiftBy =
   (offset: number) =>
@@ -168,7 +175,7 @@ const resolveRange = (sourceText: string, range: RangeSelector): Resolution => {
       ? unique(sourceText, from.position.start, to.position.start)
       : notFound;
   }
-  return ambiguous(countOf(from) * countOf(to));
+  return ambiguous(saturatingProduct(countOf(from), countOf(to)));
 };
 
 const resolveSelector = (sourceText: string, selector: Selector): Resolution =>
@@ -197,7 +204,9 @@ const resolveSelector = (sourceText: string, selector: Selector): Resolution =>
  * - `Range` runs from the start of `from` to the start of `to`, exclusive; an
  *   empty or inverted span is `NotFound`.
  * - A `Range` whose part is `NotFound` is `NotFound`; otherwise an `Ambiguous`
- *   part makes it `Ambiguous` with the product of the counts.
+ *   part makes it `Ambiguous` with the product of the counts. The product
+ *   saturates at `Number.MAX_SAFE_INTEGER`, so a count there is a lower bound and
+ *   resolution never throws.
  *
  * **Example** (A repeated passage is ambiguous)
  *

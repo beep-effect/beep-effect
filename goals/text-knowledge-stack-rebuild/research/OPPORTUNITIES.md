@@ -144,3 +144,15 @@ home paths with `~`, drop session and machine ids.
   `package-verify` then failed on `missedPipeableOpportunity` (TS377050), a
   diagnostic the plain test typecheck does not run. **Would have prevented it:**
   one test typecheck command that runs the gate's diagnostic set.
+- **Doing:** answering a verifier on the L1-5 law. **Evidence:** replacing the KMP
+  fallback `matched = table[matched - 1]` with `matched = 0` left every L1-5
+  property green at 10,000 runs, and again over a random two-letter alphabet,
+  because separated copies of a random passage never need the fallback; only a
+  generator that builds a passage as `border + middle + border` and overlaps two
+  copies by the border turned it red (about one sample in five). **Would have
+  prevented it:** a mutation pass over each new scan (one hand mutant per
+  fallback or boundary branch) before a law is called green.
+- **Doing:** regenerating the decision projections. **Evidence:** `goals decisions add`
+  takes the slug as a positional argument and `goals decisions write` refuses it
+  ("Unexpected positional argument") and wants `--slug`. **Would have prevented
+  it:** one argument shape for the two sibling commands.
