@@ -55,8 +55,8 @@ const CitationMemberListIdV1 = S.TemplateLiteral(["cl1:", Sha256Hex]);
 const CitationResourceGroupIdV1 = S.TemplateLiteral(["cg1:", Sha256Hex]);
 
 const MemberV3 = S.Union([
-  S.StructWithRest(S.Struct({ _tag: S.tag("Mention"), mentionId: CitationMentionIdV1 }), Rest),
-  S.StructWithRest(S.Struct({ _tag: S.tag("Detached") }), Rest),
+  S.StructWithRest(S.TaggedStruct("Mention", { mentionId: CitationMentionIdV1 }), Rest),
+  S.StructWithRest(S.TaggedStruct("Detached", {}), Rest),
 ]).pipe(
   S.toTaggedUnion("_tag"),
   $I.annoteSchema("MemberV3", { description: "Frozen group member of a v3 receipt; detached members pass through." })
