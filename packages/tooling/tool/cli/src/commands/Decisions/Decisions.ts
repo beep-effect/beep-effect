@@ -29,6 +29,7 @@ import * as Struct from "effect/Struct";
 import { ts } from "ts-morph";
 import { readDecisionFrontmatter } from "../../internal/decisions/DecisionFile.ts";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
+import { messageGitErrorAdapter } from "../Laws/internal/TrackedTextFiles.ts";
 import { CodeDecisionsExecutionError } from "./Decisions.errors.ts";
 import {
   CODE_DECISIONS_DIR,
@@ -45,7 +46,6 @@ import {
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { DecisionFrontmatterReader } from "../../internal/decisions/DecisionFile.ts";
-import type { GitCommandErrorAdapter } from "../../internal/repo-run/GitExec.ts";
 
 const REGULAR_FILE_MODES = HashSet.make("100644", "100755");
 
@@ -72,12 +72,9 @@ const decodeBody = S.decodeUnknownResult(CodeDecisionBody);
 
 const isLintEnforcer = S.is(CodeDecisionLintEnforcer);
 
-const gitErrors: GitCommandErrorAdapter<CodeDecisionsExecutionError> = {
-  onSpawnFailure: (commandLine) => () => CodeDecisionsExecutionError.new(`Failed to spawn ${commandLine}.`),
-  onNonZeroExit: ({ commandLine, exitCode }) =>
-    CodeDecisionsExecutionError.new(`${commandLine} failed with exit code ${exitCode}.`),
-  onTruncated: O.none(),
-};
+const gitErrors = messageGitErrorAdapter(CodeDecisionsExecutionError.new);
+
+const fileNameOf = (file: string): string => A.lastNonEmpty(Str.split("/")(file));
 
 const problem = (kind: CodeDecisionProblemKind, file: string, message: string): CodeDecisionProblem =>
   CodeDecisionProblem.make({ kind, file, message });
@@ -328,12 +325,7 @@ export const parseCodeDecision = Effect.fn("Decisions.parseCodeDecision")(functi
   packageRoot: string,
   raw: string
 ) {
-  const name = pipe(
-    Str.split("/")(file),
-    A.last,
-    O.getOrElse(() => file)
-  );
-  const parts = yield* readDecisionFrontmatter(codeDecisionReader, name, raw);
+  const parts = yield* readDecisionFrontmatter(codeDecisionReader, fileNameOf(file), raw);
   return Result.flatMap(
     Result.mapError(parts, (message) => problem(CodeDecisionProblemKind.Enum["invalid-file"], file, message)),
     ({ frontmatter, body }) =>
@@ -447,12 +439,7 @@ const readDecisions = Effect.fn("Decisions.readDecisions")(function* (
   return { decisionFiles, decisions, problems };
 });
 
-const slugOf = (file: string): O.Option<string> =>
-  pipe(
-    Str.split("/")(file),
-    A.last,
-    O.flatMap((name) => O.fromNullishOr(DECISION_FILE_SLUG.exec(name)?.[1]))
-  );
+const slugOf = (file: string): O.Option<string> => O.fromNullishOr(DECISION_FILE_SLUG.exec(fileNameOf(file))?.[1]);
 
 const slugsByPackage = (decisionFiles: ReadonlyArray<string>, packageOf: (file: string) => string) =>
   pipe(
@@ -676,7 +663,7 @@ export const runCodeDecisionFor = Effect.fn("Decisions.runCodeDecisionFor")(func
   const context = yield* loadTracked(cwd);
   const { decisions } = yield* readDecisions(context);
   const wanted = A.map(queries, (query) => {
-    const [file, name] = Str.includes("#")(query) ? splitAnchor(query) : [query, ""];
+    const [file, name] = splitAnchor(query);
     const target = path.relative(context.repoRoot, path.resolve(cwd, file));
     return { target, name };
   });

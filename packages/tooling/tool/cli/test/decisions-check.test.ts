@@ -1,4 +1,5 @@
 import {
+  CodeDecisionBody,
   CodeDecisionProblemKind,
   decisionPointers,
   formatCodeDecisionProblem,
@@ -19,7 +20,8 @@ import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
-import { NodeTestLayer } from "./support/CommandTest.ts";
+import * as S from "effect/Schema";
+import { NodeTestLayer, withAncestorsHidden } from "./support/CommandTest.ts";
 
 const SOURCE = A.join(
   [
@@ -98,6 +100,9 @@ const makeCheckout = Effect.fn("DecisionsTest.makeCheckout")(function* (files: R
   return root;
 });
 
+const sorted = (values: Iterable<string>): ReadonlyArray<string> =>
+  A.sort(A.fromIterable(values), (left: string, right: string) => (left < right ? -1 : left > right ? 1 : 0));
+
 const kinds = (problems: ReadonlyArray<{ readonly kind: string }>): ReadonlyArray<string> =>
   A.map(problems, (entry) => entry.kind);
 
@@ -141,6 +146,86 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
           [1, "kept-one"],
           [6, "inside-object"],
         ]);
+      })
+    );
+
+    it.effect("picks the script kind from the extension and skips untitled or unrooted test calls", () =>
+      Effect.sync(() => {
+        expect(
+          sorted(
+            topLevelDeclarationNames(
+              "a.tsx",
+              "export default function () {}\nconst { a } = b;\nfoo();\nconst c = <div />;\n"
+            )
+          )
+        ).toEqual(["c"]);
+        expect(sorted(topLevelDeclarationNames("a.jsx", "const d = <i />;\n"))).toEqual(["d"]);
+        expect(sorted(topLevelDeclarationNames("a.mjs", "export const e = 1;\n"))).toEqual(["e"]);
+        const titles = testCallTitles(
+          "a.test.ts",
+          A.join(
+            [
+              'const title = "t";',
+              "it(title);",
+              "it();",
+              'suites["it"]("indexed");',
+              '(0, it)("parenthesized");',
+              'it.each([1])("each title");',
+              "test(`template`);",
+              "",
+            ],
+            "\n"
+          )
+        );
+        expect(sorted(titles)).toEqual(["each title", "template"]);
+        assertTrue(S.is(CodeDecisionBody)(""));
+      })
+    );
+
+    it.effect(
+      "rejects non-source anchors, anchors and decisions missing from the working tree and ownerless pointers",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const root = yield* makeCheckout({
+          ...BASE_FILES,
+          "packages/loose.ts": "// decision: raw-ddl\nexport const l = 1;\n",
+          "packages/demo/README.md": "Demo.\n",
+          "packages/demo/src/gone.ts": "export const y = 1;\n",
+          "packages/demo/decisions/2026-11-22-readme.md": decisionFile([
+            "title: Readme",
+            "date: 2026-11-22",
+            "reversal: Delete the file.",
+            "governs: [README.md#x, src/gone.ts#y]",
+            "enforcedBy: []",
+          ]),
+          "packages/demo/decisions/2026-11-22-deleted.md": decisionFile(VALID_FRONTMATTER),
+        });
+        yield* fs.remove(path.join(root, "packages/demo/src/gone.ts"));
+        yield* fs.remove(path.join(root, "packages/demo/decisions/2026-11-22-deleted.md"));
+        const report = yield* runCodeDecisionCheck(root);
+        expect(sorted(A.map(report.problems, formatCodeDecisionProblem))).toEqual([
+          "packages/demo/decisions/2026-11-22-readme.md  unresolved-anchor: governs README.md#x: packages/demo/README.md is not a TypeScript or JavaScript file.",
+          "packages/demo/decisions/2026-11-22-readme.md  unresolved-anchor: governs src/gone.ts#y: packages/demo/src/gone.ts is missing from the working tree.",
+          "packages/loose.ts:1  unresolved-pointer: decision: raw-ddl has no owning package.json above it.",
+        ]);
+        expect(report.decisions).toBe(2);
+      })
+    );
+
+    it.effect(
+      "fails with an execution error outside a repository and when git cannot list the index",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const bare = yield* fs.makeTempDirectoryScoped({ prefix: "decisions-bare-" });
+        const outside = yield* runCodeDecisionCheck(bare).pipe(withAncestorsHidden(bare), Effect.flip);
+        expect(outside.message).toContain("Failed to locate the repository root");
+        const broken = yield* fs.makeTempDirectoryScoped({ prefix: "decisions-broken-" });
+        yield* fs.writeFileString(path.join(broken, ".git"), "gitdir: ./missing\n");
+        yield* fs.writeFileString(path.join(broken, "bun.lock"), "");
+        const unlisted = yield* Effect.flip(runCodeDecisionFor(broken, ["a.ts"]));
+        expect(unlisted.message).toContain("failed with exit code");
       })
     );
 
