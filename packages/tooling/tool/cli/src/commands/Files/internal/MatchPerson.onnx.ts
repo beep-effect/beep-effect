@@ -79,6 +79,7 @@ class Graph {
   readonly nodes: Array<Uint8Array> = [];
   readonly initializers: Array<Uint8Array> = [];
   private used = HashMap.empty<string, string>();
+  readonly requested: Array<string> = [];
   private serial = 0;
   readonly tensors: HashMap.HashMap<string, TensorSource>;
   constructor(tensors: HashMap.HashMap<string, TensorSource>) {
@@ -115,12 +116,14 @@ class Graph {
   weight(name: string): string {
     const previous = HashMap.get(this.used, name);
     if (O.isSome(previous)) return previous.value;
-    // compileAdaFaceOnnx rejects a checkpoint missing any name TensorNameCollector records.
-    const value = O.getOrThrowWith(HashMap.get(this.tensors, name), () =>
-      MatchPersonError.modelIntegrity(`Unchecked missing tensor: ${name}`)
-    );
     this.used = HashMap.set(this.used, name, name);
-    return this.tensor(name, value.shape, value.data, value.dtype === "F32" ? 1 : 7);
+    this.requested.push(name);
+    // An absent tensor stays a bare input name; compileAdaFaceOnnx builds once with no tensors
+    // to collect `requested` and rejects missing names before the real build.
+    return O.match(HashMap.get(this.tensors, name), {
+      onNone: () => name,
+      onSome: ({ shape, data, dtype }) => this.tensor(name, shape, data, dtype === "F32" ? 1 : 7),
+    });
   }
   reshape(x: string, shape: ReadonlyArray<number>) {
     return this.node("Reshape", [x, this.constant(shape, [shape.length], true)]);
@@ -234,18 +237,6 @@ class Graph {
       bytes(12, valueInfo("output", shape)),
     ]);
     return concat([integer(1, 8), text(2, "beep-photo-face"), bytes(7, graph), bytes(8, integer(2, 17))]);
-  }
-}
-
-// Runs a builder without weights to record every tensor name it reads, in first-use order.
-class TensorNameCollector extends Graph {
-  readonly names: Array<string> = [];
-  constructor() {
-    super(HashMap.empty());
-  }
-  override weight(name: string): string {
-    this.names.push(name);
-    return name;
   }
 }
 
@@ -528,9 +519,9 @@ export const compileAdaFaceOnnx = Effect.fn("Files.compileAdaFaceOnnx")(function
 ) {
   const tensors = yield* decodeFaceSafetensors(payload);
   const build = (graph: Graph) => (component === "aligner" ? buildAligner(graph) : buildRecognizer(graph, dimensions));
-  const collector = new TensorNameCollector();
+  const collector = new Graph(HashMap.empty());
   build(collector);
-  const missing = A.filter(A.dedupe(collector.names), (name) => !HashMap.has(tensors, name));
+  const missing = A.filter(collector.requested, (name) => !HashMap.has(tensors, name));
   if (A.isReadonlyArrayNonEmpty(missing))
     return yield* MatchPersonError.modelIntegrity(`Missing required ${component} tensors: ${A.join(missing, ", ")}.`);
   return build(new Graph(tensors));
