@@ -907,19 +907,19 @@ it.layer(Layer.provideMerge(TSMorphServiceLive, NodeTestLayer), { timeout: "60 s
           'import * as Effect from "effect/Effect";\nexport const load = () => Effect.gen(function* () { return 1; });\ndeclare const FrozenGrantSet: { make: (input: object) => unknown };\nexport const grants = FrozenGrantSet.make({});\n'
         );
         yield* enterDirectory(checkout.root);
-        for (const law of ["effect-fn", "frozen-grant-set"]) {
-          for (const check of [false, true]) {
-            const exit = yield* runLaws([
-              law,
-              "--include",
-              "packages/a/src/A.ts",
-              "--exclude",
-              "packages/a/src/B.ts",
-              ...(check ? ["--check"] : []),
-            ]).pipe(withEmptyConfig, Effect.exit);
-            if (check) exit.pipe(Exit.isFailure, assertTrue);
-            else exit.pipe(Exit.isSuccess, assertTrue);
-          }
+        const cases = A.flatMap(["effect-fn", "frozen-grant-set"], (law) => [
+          { args: [law], fails: false },
+          { args: [law, "--check"], fails: true },
+        ]);
+        for (const { args, fails } of cases) {
+          const exit = yield* runLaws([
+            ...args,
+            "--include",
+            "packages/a/src/A.ts",
+            "--exclude",
+            "packages/a/src/B.ts",
+          ]).pipe(withEmptyConfig, Effect.exit);
+          expect(Exit.isFailure(exit)).toBe(fails);
         }
       })
     );
