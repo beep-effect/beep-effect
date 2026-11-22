@@ -1269,6 +1269,14 @@ Lane goals/text-knowledge-stack-rebuild-p2-text
 
 Reverse: Delete the read codec and refuse v3 again by a decision file that records that no v3 receipt is held anywhere.
 
+### P2: a Refined selector over a base that is not Unique resolves to the base's outcome, 2026-11-22
+
+Decision p2-selector-resolution-semantics says Refined resolves by inside the segment base selects, and that a composite is NotFound when a part is NotFound and otherwise Ambiguous with the product of the counts. It does not say what by is resolved in when base is Ambiguous: there is no single segment, and Resolution carries a count, not the candidates. resolve therefore does not evaluate by over an ambiguous or absent base; the Refined outcome is the base outcome (Ambiguous with the base count, or NotFound). The product rule stays for Range, whose parts are both resolved over the whole text. The outcome still fails closed exactly when it should: a Refined selector is Unique only when its base is Unique and by is Unique inside it. Counting every by match inside every base candidate would need candidate enumeration, which the design rules out (callers that need candidates search for them explicitly), and a nested Refined would multiply that work.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Resolve by inside every candidate of an ambiguous base and report the summed count, by a decision file before P3 builds on resolve.
+
 ### P2: schema identifiers follow the package to @beep/text and the epistemic identifier fixture is regenerated, 2026-11-22
 
 packages/epistemic/domain/test/fixtures/value-schema-identifiers.txt pins 20 @beep/provenance/... annotation identifiers, and its test comment says they never move. They move in P2: an identifier is a schema annotation composed from a code path, not a published term (no registry shard or term-snapshot row names provenance, so L0-3 is not involved) and not a stored value (no reader of these strings exists outside the fixture). Keeping the old segment would be an alias for the retired name, which chapter 11 rule 3 forbids. The fixture is regenerated in the rename commit with exactly those 20 lines changed, and the later well-formedness commit adds the WellFormedText lines. The comment in ValueSchemaIdentifiers.test.ts is corrected: the fixture records identifier changes so they are reviewed, and a package rename under a decision is a reviewed change.

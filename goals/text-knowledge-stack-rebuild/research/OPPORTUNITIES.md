@@ -126,3 +126,21 @@ home paths with `~`, drop session and machine ids.
   scan it prints "1 new finding(s)" with the file and no line, rule or primitive,
   so the finding has to be guessed from the diff. **Would have prevented it:**
   printing the line and the matched rule of each new finding.
+
+## 2026-11-22 — P2 offset units, selectors and resolution
+
+- **Doing:** documenting `convertPosition` and `resolve` in `@beep/text`. **Evidence:**
+  the package's own `bun run docgen` passed with `@category conversions`, and the
+  docgen step of `beep quality package-verify @beep/text` then failed with
+  "Unknown @category value conversions". **Would have prevented it:** the plain
+  docgen script checking categories against the same allow list.
+- **Doing:** exporting the internal scan of `internal/scalars.ts` as a dual.
+  **Evidence:** `missingPipeableSignature` reported both overloads as unmatched
+  while they returned the same inline labelled tuple type; naming the result type
+  once and using it in both overloads cleared it. **Would have prevented it:** the
+  rule comparing return types structurally, or its message naming the mismatch.
+- **Doing:** a new property test in `@beep/langextract`. **Evidence:** the package's
+  `tsrs -p tsconfig.test.json` was clean, and the `check` gate inside
+  `package-verify` then failed on `missedPipeableOpportunity` (TS377050), a
+  diagnostic the plain test typecheck does not run. **Would have prevented it:**
+  one test typecheck command that runs the gate's diagnostic set.

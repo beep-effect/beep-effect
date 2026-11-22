@@ -7,6 +7,27 @@
  */
 
 /**
+ * Offset units, unit-tagged positions and conversion between units.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./OffsetUnit.ts";
+/**
+ * Resolving a selector in one text capture.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Resolution.ts";
+/**
+ * The Web Annotation selector union over one text capture.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Selector.ts";
+/**
  * Exact extracted-source identity and digest/version schemas.
  *
  * @category models
