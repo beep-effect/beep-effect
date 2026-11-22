@@ -59,6 +59,7 @@ const isolatedSuites = [
   "test/coverage-artifacts.test.ts",
   "test/create-package-lab.test.ts",
   "test/create-package.test.ts",
+  "test/decisions-command.test.ts",
   "test/delete-package-labs.test.ts",
   "test/delete-package.test.ts",
   "test/docgen.test.ts",

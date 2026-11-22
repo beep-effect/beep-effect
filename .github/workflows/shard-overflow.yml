@@ -58,12 +58,6 @@ jobs:
           filter: blob:none
           persist-credentials: false
 
-      - name: Fetch pull request base
-        if: github.event_name == 'pull_request'
-        shell: bash
-        run: |
-          git fetch --quiet --no-tags origin "+refs/heads/${GITHUB_BASE_REF:-main}:refs/remotes/origin/${GITHUB_BASE_REF:-main}"
-
       - name: Determine lane execution
         id: lane-gate
         shell: bash
