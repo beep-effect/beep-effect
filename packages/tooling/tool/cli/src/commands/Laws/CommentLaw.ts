@@ -19,7 +19,12 @@
 import { Git } from "@beep/git/Git";
 import { GitCommand } from "@beep/git/GitCommand";
 import { Jsonc } from "@beep/jsonc/Jsonc";
-import { classifyComments, isBannedCommentKind, SourceComment } from "@beep/lint-rules/comment-grammar";
+import {
+  CommentGrammarInput,
+  classifyComments,
+  isBannedCommentKind,
+  SourceComment,
+} from "@beep/lint-rules/comment-grammar";
 import { formatJsonc } from "@beep/repo-cli-kit/artifacts/index";
 import { findRepoRoot } from "@beep/repo-utils";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
@@ -37,10 +42,14 @@ import { parseSync } from "oxc-parser";
 import { adaptGitKitError } from "../../internal/repo-run/GitExec.ts";
 import {
   CommentCensusRow,
+  CommentDelta,
+  CommentFileChange,
   CommentLawFinding,
   CommentLawPending,
   CommentLawPolicy,
   CommentLawSummary,
+  CommentLockInput,
+  CommentLockResult,
 } from "./CommentLaw.model.ts";
 import { messageGitErrorAdapter } from "./internal/TrackedTextFiles.ts";
 import { CommentLawExecutionError } from "./Laws.errors.ts";
@@ -56,6 +65,14 @@ import type { CommentLawOptions } from "./CommentLaw.model.ts";
 /**
  * Repository-relative path of the comment-law policy file.
  *
+ * **Example** (Locate the policy)
+ *
+ * ```ts
+ * import { COMMENT_LAW_POLICY_PATH } from "@beep/repo-cli/commands/Laws/CommentLaw"
+ *
+ * console.log(COMMENT_LAW_POLICY_PATH) // "standards/comment-law/policy.jsonc"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -63,6 +80,14 @@ export const COMMENT_LAW_POLICY_PATH = "standards/comment-law/policy.jsonc";
 
 /**
  * Repository-relative directory that holds one pending shard per package.
+ *
+ * **Example** (Locate a pending shard)
+ *
+ * ```ts
+ * import { COMMENT_LAW_PENDING_DIR } from "@beep/repo-cli/commands/Laws/CommentLaw"
+ *
+ * console.log(`${COMMENT_LAW_PENDING_DIR}/beep-csv.jsonc`) // "standards/comment-law/pending/beep-csv.jsonc"
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -137,7 +162,7 @@ export const scanCommentSource: {
   const comments = A.map(parsed.comments, (comment) =>
     SourceComment.make({ type: comment.type, value: comment.value, start: comment.start, end: comment.end })
   );
-  return classifyComments({ source: text, program: parsed.program, comments });
+  return classifyComments(CommentGrammarInput.make({ source: text, program: parsed.program, comments }));
 });
 
 const bannedOf = (file: string, text: string): ReadonlyArray<ClassifiedComment> =>
@@ -152,49 +177,56 @@ const excerptOf = (comment: ClassifiedComment): string =>
 const fingerprintOf = (comment: ClassifiedComment) =>
   Effect.map(sha256Hex(comment.text), (digest) => Str.slice(0, 16)(digest));
 
-/**
- * One changed file's text on each side of the growth check.
- *
- * **Example** (Describe an added file)
- *
- * ```ts
- * import * as O from "effect/Option"
- * import type { CommentFileChange } from "@beep/repo-cli/commands/Laws/CommentLaw"
- *
- * const change: CommentFileChange = { file: "a.ts", before: O.none(), after: O.some("// new\n") }
- *
- * console.log(O.isNone(change.before)) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface CommentFileChange {
-  readonly after: O.Option<string>;
-  readonly before: O.Option<string>;
+const countIn = <K>(counts: HashMap.HashMap<K, number>, key: K): number =>
+  O.getOrElse(HashMap.get(counts, key), () => 0);
+
+interface Fingerprinted {
+  readonly comment: ClassifiedComment;
+  readonly digest: string;
   readonly file: string;
+  readonly text: string;
 }
 
-/**
- * Outcome of the fingerprint multiset comparison.
- *
- * **Example** (Read an empty delta)
- *
- * ```ts
- * import type { CommentDelta } from "@beep/repo-cli/commands/Laws/CommentLaw"
- *
- * const delta: CommentDelta = { introduced: [], removed: 0 }
- *
- * console.log(delta.removed) // 0
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface CommentDelta {
+interface DeltaState {
   readonly introduced: ReadonlyArray<CommentLawFinding>;
-  readonly removed: number;
+  readonly kept: number;
+  readonly pool: HashMap.HashMap<string, number>;
 }
+
+const fingerprintsOf = (file: string, side: O.Option<string>) =>
+  O.match(side, {
+    onNone: () => Effect.succeed(A.empty<Fingerprinted>()),
+    onSome: (text) =>
+      Effect.forEach(
+        bannedOf(file, text),
+        (comment) => Effect.map(fingerprintOf(comment), (digest): Fingerprinted => ({ comment, digest, file, text })),
+        { concurrency: 1 }
+      ),
+  });
+
+const fingerprintsAcross = (
+  changes: ReadonlyArray<CommentFileChange>,
+  side: (change: CommentFileChange) => O.Option<string>
+) =>
+  Effect.forEach(changes, (change) => fingerprintsOf(change.file, side(change)), { concurrency: 1 }).pipe(
+    Effect.map(A.flatten)
+  );
+
+const introducedFinding = ({ comment, file, text }: Fingerprinted): CommentLawFinding =>
+  CommentLawFinding.make({
+    rule: "introduced-comment",
+    file,
+    line: lineAt(text, comment.start),
+    kind: comment.kind,
+    excerpt: excerptOf(comment),
+  });
+
+const consumeFingerprint = (state: DeltaState, entry: Fingerprinted): DeltaState => {
+  const available = countIn(state.pool, entry.digest);
+  return available > 0
+    ? { ...state, pool: HashMap.set(state.pool, entry.digest, available - 1), kept: state.kept + 1 }
+    : { ...state, introduced: A.append(state.introduced, introducedFinding(entry)) };
+};
 
 /**
  * Compare banned-comment fingerprints across changed files.
@@ -211,8 +243,11 @@ export interface CommentDelta {
  * import * as Effect from "effect/Effect"
  * import * as O from "effect/Option"
  * import { commentDelta } from "@beep/repo-cli/commands/Laws/CommentLaw"
+ * import { CommentFileChange } from "@beep/repo-cli/commands/Laws/CommentLaw.model"
  *
- * const program = commentDelta([{ file: "a.ts", before: O.some("export const x = 1\n"), after: O.some("// why\nexport const x = 1\n") }])
+ * const program = commentDelta([
+ *   CommentFileChange.make({ file: "a.ts", before: O.some("export const x = 1\n"), after: O.some("// why\nexport const x = 1\n") }),
+ * ])
  *
  * console.log(Effect.isEffect(program)) // true
  * ```
@@ -225,42 +260,13 @@ export interface CommentDelta {
 export const commentDelta = Effect.fn("CommentLaw.commentDelta")(function* (
   changes: ReadonlyArray<CommentFileChange>
 ): Effect.fn.Return<CommentDelta, never, Digest.Digest> {
-  let pool = HashMap.empty<string, number>();
-  let beforeTotal = 0;
-  for (const change of changes) {
-    if (O.isNone(change.before)) continue;
-    for (const comment of bannedOf(change.file, change.before.value)) {
-      const digest = yield* fingerprintOf(comment);
-      pool = HashMap.set(pool, digest, O.getOrElse(HashMap.get(pool, digest), () => 0) + 1);
-      beforeTotal++;
-    }
-  }
-  let introduced = A.empty<CommentLawFinding>();
-  let kept = 0;
-  for (const change of changes) {
-    if (O.isNone(change.after)) continue;
-    const text = change.after.value;
-    for (const comment of bannedOf(change.file, text)) {
-      const digest = yield* fingerprintOf(comment);
-      const available = O.getOrElse(HashMap.get(pool, digest), () => 0);
-      if (available > 0) {
-        pool = HashMap.set(pool, digest, available - 1);
-        kept++;
-        continue;
-      }
-      introduced = A.append(
-        introduced,
-        CommentLawFinding.make({
-          rule: "introduced-comment",
-          file: change.file,
-          line: lineAt(text, comment.start),
-          kind: comment.kind,
-          excerpt: excerptOf(comment),
-        })
-      );
-    }
-  }
-  return { introduced, removed: beforeTotal - kept };
+  const before = yield* fingerprintsAcross(changes, (change) => change.before);
+  const after = yield* fingerprintsAcross(changes, (change) => change.after);
+  const pool = A.reduce(before, HashMap.empty<string, number>(), (counts, entry) =>
+    HashMap.set(counts, entry.digest, countIn(counts, entry.digest) + 1)
+  );
+  const { introduced, kept } = A.reduce(after, { introduced: A.empty(), kept: 0, pool }, consumeFingerprint);
+  return CommentDelta.make({ introduced, removed: A.length(before) - kept });
 });
 
 const scopeCovers = (shard: CommentLawPending, scope: string, file: string): boolean => {
@@ -277,67 +283,98 @@ const isCovered = (shards: ReadonlyArray<CommentLawPending>, file: string): bool
 const scopeContains = (outer: string, inner: string): boolean =>
   outer === "." || outer === inner || Str.startsWith(`${outer}/`)(inner);
 
-/**
- * Inputs to the pending-scope lock evaluation.
- *
- * **Details**
- *
- * `bannedCounts` maps every in-scope file of the checked tree to its banned
- * comment count. `baseShards` is `None` when the merge base predates the
- * law, which skips the shrink-only guard for the bootstrap PR.
- * `wholeTree` reports every locked violation; otherwise only those in
- * changed files or in scopes the change locked.
- *
- * **Example** (Describe an empty lock input)
- *
- * ```ts
- * import * as HashMap from "effect/HashMap"
- * import * as HashSet from "effect/HashSet"
- * import * as O from "effect/Option"
- * import type { CommentLockInput } from "@beep/repo-cli/commands/Laws/CommentLaw"
- *
- * const input: CommentLockInput = {
- *   headShards: [],
- *   baseShards: O.none(),
- *   bannedCounts: HashMap.empty(),
- *   changedFiles: HashSet.empty(),
- *   wholeTree: true,
- * }
- *
- * console.log(input.wholeTree) // true
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface CommentLockInput {
-  readonly bannedCounts: HashMap.HashMap<string, number>;
-  readonly baseShards: O.Option<ReadonlyArray<CommentLawPending>>;
-  readonly changedFiles: HashSet.HashSet<string>;
-  readonly headShards: ReadonlyArray<CommentLawPending>;
-  readonly wholeTree: boolean;
+interface LockVerdict {
+  readonly fails: boolean;
+  readonly finding: CommentLawFinding;
 }
 
-/**
- * Lock findings split by whether they fail the check.
- *
- * **Example** (Read an empty lock result)
- *
- * ```ts
- * import type { CommentLockResult } from "@beep/repo-cli/commands/Laws/CommentLaw"
- *
- * const result: CommentLockResult = { findings: [], advisories: [] }
- *
- * console.log(result.findings.length) // 0
- * ```
- *
- * @category models
- * @since 0.0.0
- */
-export interface CommentLockResult {
-  readonly advisories: ReadonlyArray<CommentLawFinding>;
-  readonly findings: ReadonlyArray<CommentLawFinding>;
+interface ShardScopeContext {
+  readonly baseShard: O.Option<CommentLawPending>;
+  readonly files: ReadonlyArray<string>;
+  readonly input: CommentLockInput;
+  readonly shard: CommentLawPending;
+  readonly shardChanged: boolean;
 }
+
+const lockedFindings = (
+  input: CommentLockInput,
+  files: ReadonlyArray<string>,
+  baseShards: ReadonlyArray<CommentLawPending>
+): ReadonlyArray<CommentLawFinding> => {
+  const newlyLocked = (file: string): boolean =>
+    O.isSome(input.baseShards) && isCovered(baseShards, file) && !isCovered(input.headShards, file);
+  return F.pipe(
+    files,
+    A.filter((file) => countIn(input.bannedCounts, file) > 0),
+    A.filter((file) => !isCovered(input.headShards, file)),
+    A.filter((file) => input.wholeTree || HashSet.has(input.changedFiles, file) || newlyLocked(file)),
+    A.map((file) =>
+      CommentLawFinding.make({
+        rule: "locked-scope-comment",
+        file,
+        line: 0,
+        excerpt: `${countIn(input.bannedCounts, file)} banned comment(s) in a swept scope`,
+      })
+    )
+  );
+};
+
+const staleVerdicts = (context: ShardScopeContext, scope: string): ReadonlyArray<LockVerdict> => {
+  const { input, shard } = context;
+  const covered = A.filter(context.files, (file) => scopeCovers(shard, scope, file));
+  if (A.some(covered, (file) => countIn(input.bannedCounts, file) > 0)) return [];
+  const touched = context.shardChanged || A.some(covered, (file) => HashSet.has(input.changedFiles, file));
+  return [
+    {
+      fails: !input.wholeTree && touched,
+      finding: CommentLawFinding.make({
+        rule: "stale-pending-scope",
+        file: scopePath(shard.root, scope),
+        line: 0,
+        excerpt: `${shard.package} scope "${scope}" has no banned comments left; run \`bun run beep laws comments --write\``,
+      }),
+    },
+  ];
+};
+
+const grewVerdicts = (context: ShardScopeContext, scope: string): ReadonlyArray<LockVerdict> => {
+  const insideBase = O.exists(context.baseShard, (previous) =>
+    A.some(previous.scopes, (outer) => scopeContains(outer, scope))
+  );
+  if (O.isNone(context.input.baseShards) || insideBase) return [];
+  return [
+    {
+      fails: true,
+      finding: CommentLawFinding.make({
+        rule: "pending-scope-grew",
+        file: scopePath(context.shard.root, scope),
+        line: 0,
+        excerpt: `${context.shard.package} scope "${scope}" is not inside a pending scope on the merge base; the list may only shrink`,
+      }),
+    },
+  ];
+};
+
+const shardVerdicts = (
+  input: CommentLockInput,
+  files: ReadonlyArray<string>,
+  baseShards: ReadonlyArray<CommentLawPending>,
+  shard: CommentLawPending
+): ReadonlyArray<LockVerdict> => {
+  const baseShard = A.findFirst(baseShards, (candidate) => candidate.root === shard.root);
+  const shardChanged = O.match(baseShard, {
+    onNone: () => true,
+    onSome: (previous) => A.join(previous.scopes, "\n") !== A.join(shard.scopes, "\n"),
+  });
+  const context: ShardScopeContext = { baseShard, files, input, shard, shardChanged };
+  return A.flatMap(shard.scopes, (scope) => A.appendAll(staleVerdicts(context, scope), grewVerdicts(context, scope)));
+};
+
+const findingsWhere = (verdicts: ReadonlyArray<LockVerdict>, fails: boolean): ReadonlyArray<CommentLawFinding> =>
+  A.map(
+    A.filter(verdicts, (verdict) => verdict.fails === fails),
+    (verdict) => verdict.finding
+  );
 
 /**
  * Evaluate the pending-scope lock.
@@ -356,14 +393,17 @@ export interface CommentLockResult {
  * import * as HashSet from "effect/HashSet"
  * import * as O from "effect/Option"
  * import { evaluateCommentLock } from "@beep/repo-cli/commands/Laws/CommentLaw"
+ * import { CommentLockInput } from "@beep/repo-cli/commands/Laws/CommentLaw.model"
  *
- * const result = evaluateCommentLock({
- *   headShards: [],
- *   baseShards: O.some([]),
- *   bannedCounts: HashMap.make(["packages/x/src/A.ts", 0]),
- *   changedFiles: HashSet.empty(),
- *   wholeTree: true,
- * })
+ * const result = evaluateCommentLock(
+ *   CommentLockInput.make({
+ *     headShards: [],
+ *     baseShards: O.some([]),
+ *     bannedCounts: HashMap.make(["packages/x/src/A.ts", 0]),
+ *     changedFiles: HashSet.empty(),
+ *     wholeTree: true,
+ *   })
+ * )
  *
  * console.log(result.findings.length) // 0
  * ```
@@ -375,66 +415,12 @@ export interface CommentLockResult {
  */
 export const evaluateCommentLock = (input: CommentLockInput): CommentLockResult => {
   const baseShards = O.getOrElse(input.baseShards, A.empty<CommentLawPending>);
-  const newlyLocked = (file: string): boolean =>
-    O.isSome(input.baseShards) && isCovered(baseShards, file) && !isCovered(input.headShards, file);
   const files = A.sort(HashMap.keys(input.bannedCounts), Order.String);
-  const locked = F.pipe(
-    files,
-    A.filter((file) => O.getOrElse(HashMap.get(input.bannedCounts, file), () => 0) > 0),
-    A.filter((file) => !isCovered(input.headShards, file)),
-    A.filter((file) => input.wholeTree || HashSet.has(input.changedFiles, file) || newlyLocked(file)),
-    A.map((file) =>
-      CommentLawFinding.make({
-        rule: "locked-scope-comment",
-        file,
-        line: 0,
-        excerpt: `${O.getOrElse(HashMap.get(input.bannedCounts, file), () => 0)} banned comment(s) in a swept scope`,
-      })
-    )
-  );
-  let findings = locked;
-  let advisories = A.empty<CommentLawFinding>();
-  for (const shard of input.headShards) {
-    const baseShard = A.findFirst(baseShards, (candidate) => candidate.root === shard.root);
-    const shardChanged = O.match(baseShard, {
-      onNone: () => true,
-      onSome: (previous) => A.join(previous.scopes, "\n") !== A.join(shard.scopes, "\n"),
-    });
-    for (const scope of shard.scopes) {
-      const path = scopePath(shard.root, scope);
-      const covered = A.filter(files, (file) => scopeCovers(shard, scope, file));
-      const count = A.reduce(
-        covered,
-        0,
-        (total, file) => total + O.getOrElse(HashMap.get(input.bannedCounts, file), () => 0)
-      );
-      if (count === 0) {
-        const finding = CommentLawFinding.make({
-          rule: "stale-pending-scope",
-          file: path,
-          line: 0,
-          excerpt: `${shard.package} scope "${scope}" has no banned comments left; run \`bun run beep laws comments --write\``,
-        });
-        const touched = shardChanged || A.some(covered, (file) => HashSet.has(input.changedFiles, file));
-        if (!input.wholeTree && touched) findings = A.append(findings, finding);
-        else advisories = A.append(advisories, finding);
-      }
-      if (
-        O.isSome(input.baseShards) &&
-        !O.exists(baseShard, (previous) => A.some(previous.scopes, (outer) => scopeContains(outer, scope)))
-      )
-        findings = A.append(
-          findings,
-          CommentLawFinding.make({
-            rule: "pending-scope-grew",
-            file: path,
-            line: 0,
-            excerpt: `${shard.package} scope "${scope}" is not inside a pending scope on the merge base; the list may only shrink`,
-          })
-        );
-    }
-  }
-  return { findings, advisories };
+  const verdicts = A.flatMap(input.headShards, (shard) => shardVerdicts(input, files, baseShards, shard));
+  return CommentLockResult.make({
+    findings: A.appendAll(lockedFindings(input, files, baseShards), findingsWhere(verdicts, true)),
+    advisories: findingsWhere(verdicts, false),
+  });
 };
 
 type CommentLawServices =
@@ -599,7 +585,7 @@ const changesAgainst = Effect.fn("CommentLaw.changesAgainst")(function* (
             after: mapGit(GitCommand.show("", file), git.show(repoRoot, "", file)),
           },
           { concurrency: 2 }
-        ).pipe(Effect.map(({ before, after }): CommentFileChange => ({ file, before, after }))),
+        ).pipe(Effect.map(({ before, after }) => CommentFileChange.make({ file, before, after }))),
       { concurrency: 8 }
     );
   }
@@ -625,13 +611,15 @@ const changesAgainst = Effect.fn("CommentLaw.changesAgainst")(function* (
           after: readWorktreeText(repoRoot, entry.path),
         },
         { concurrency: 2 }
-      ).pipe(Effect.map(({ before, after }): CommentFileChange => ({ file: entry.path, before, after }))),
+      ).pipe(Effect.map(({ before, after }) => CommentFileChange.make({ file: entry.path, before, after }))),
     { concurrency: 8 }
   );
   const added = yield* Effect.forEach(
     untracked,
     (file) =>
-      Effect.map(readWorktreeText(repoRoot, file), (after): CommentFileChange => ({ file, before: O.none(), after })),
+      Effect.map(readWorktreeText(repoRoot, file), (after) =>
+        CommentFileChange.make({ file, before: O.none(), after })
+      ),
     { concurrency: 8 }
   );
   return A.appendAll(tracked, added);
@@ -647,13 +635,15 @@ const lockFor = Effect.fn("CommentLaw.lockFor")(function* (
   const headShards = yield* readWorktreeShards(repoRoot);
   const baseShards = yield* readBaseShards(repoRoot, base);
   const bannedCounts = yield* bannedCountsOf(repoRoot, files);
-  return evaluateCommentLock({
-    headShards,
-    baseShards,
-    bannedCounts,
-    changedFiles: HashSet.fromIterable(A.map(changes, (change) => change.file)),
-    wholeTree: base === head && A.isReadonlyArrayEmpty(changes),
-  });
+  return evaluateCommentLock(
+    CommentLockInput.make({
+      headShards,
+      baseShards,
+      bannedCounts,
+      changedFiles: HashSet.fromIterable(A.map(changes, (change) => change.file)),
+      wholeTree: base === head && A.isReadonlyArrayEmpty(changes),
+    })
+  );
 });
 
 /**
@@ -705,7 +695,7 @@ export const runCommentLaw = Effect.fn("CommentLaw.runCommentLaw")(function* (
   const changes = yield* changesAgainst(repoRoot, base, options.staged);
   const delta = yield* commentDelta(changes);
   const lock = options.staged
-    ? { findings: A.empty<CommentLawFinding>(), advisories: A.empty<CommentLawFinding>() }
+    ? CommentLockResult.make({ findings: [], advisories: [] })
     : yield* lockFor(repoRoot, base, head, changes);
   const findings = A.appendAll(delta.introduced, lock.findings);
   return CommentLawSummary.make({

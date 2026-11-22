@@ -4414,6 +4414,7 @@
     {"name":"YeetWaveNotifier.probeOwner","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"YeetWaveNotifier.resolveOwner","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"YeetWaveNotifier.waveKey","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"checkCommentLaw","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"checkWritableOperation","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"computePolicyFingerprint","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"ensureDirectoryFor","owner":"@beep/repo-cli","family":"tooling","conforms":false},
@@ -4434,6 +4435,8 @@
     {"name":"parityIntroducedLines","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"parityRatchetInput","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"pathExists","owner":"@beep/repo-cli","family":"tooling","conforms":false},
+    {"name":"printCommentCensus","owner":"@beep/repo-cli","family":"tooling","conforms":false},
+    {"name":"printCommentList","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"readIfExists","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"readLockfileResolvedVersion","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"readPolicyWorkspaces","owner":"@beep/repo-cli","family":"tooling","conforms":false},
@@ -4457,6 +4460,7 @@
     {"name":"updateBiomeSchema","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"updateJsoncSchemaUrl","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"validateSymlinkTarget","owner":"@beep/repo-cli","family":"tooling","conforms":false},
+    {"name":"writeCommentShards","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"writeGeneratedFile","owner":"@beep/repo-cli","family":"tooling","conforms":false},
     {"name":"writeInventoryDocument","owner":"@beep/repo-cli","family":"tooling","conforms":false}
   ]

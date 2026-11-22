@@ -102,7 +102,7 @@ export type CommentLawRule = typeof CommentLawRule.Type;
  */
 export class CommentLawPolicy extends S.Opaque<CommentLawPolicy, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.Literal("comment-law-policy/v1"),
+    schemaVersion: S.tag("comment-law-policy/v1"),
     enforcement: CommentLawEnforcement,
   }).pipe($I.annoteSchema("CommentLawPolicy", { description: "Enforcement state of the comment law." }))
 ) {}
@@ -137,7 +137,7 @@ export class CommentLawPolicy extends S.Opaque<CommentLawPolicy, { readonly bran
  */
 export class CommentLawPending extends S.Opaque<CommentLawPending, { readonly brand: unique symbol }>()(
   S.Struct({
-    schemaVersion: S.Literal("comment-law-pending/v1"),
+    schemaVersion: S.tag("comment-law-pending/v1"),
     package: S.NonEmptyString,
     root: S.NonEmptyString,
     scopes: S.NonEmptyArray(S.NonEmptyString),
@@ -183,6 +183,140 @@ export class CommentLawFinding extends S.Opaque<CommentLawFinding, { readonly br
     kind: S.optionalKey(CommentKind),
     excerpt: S.String,
   }).pipe($I.annoteSchema("CommentLawFinding", { description: "One comment-law violation and where it is." }))
+) {}
+
+/**
+ * One changed file's text on each side of the growth check.
+ *
+ * **Details**
+ *
+ * `before` is `None` for an added file and `after` is `None` for a deleted one.
+ *
+ * **Example** (Describe an added file)
+ *
+ * ```ts
+ * import * as O from "effect/Option"
+ * import { CommentFileChange } from "@beep/repo-cli/commands/Laws/CommentLaw.model"
+ *
+ * const change = CommentFileChange.make({ file: "a.ts", before: O.none(), after: O.some("// new\n") })
+ *
+ * console.log(O.isNone(change.before)) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CommentFileChange extends S.Opaque<CommentFileChange, { readonly brand: unique symbol }>()(
+  S.Struct({
+    file: S.String,
+    before: S.Option(S.String),
+    after: S.Option(S.String),
+  }).pipe(
+    $I.annoteSchema("CommentFileChange", {
+      description: "One changed file's text at the merge base and in the checked tree.",
+    })
+  )
+) {}
+
+/**
+ * Outcome of the fingerprint multiset comparison.
+ *
+ * **Example** (Read an empty delta)
+ *
+ * ```ts
+ * import { CommentDelta } from "@beep/repo-cli/commands/Laws/CommentLaw.model"
+ *
+ * const delta = CommentDelta.make({ introduced: [], removed: 0 })
+ *
+ * console.log(delta.removed) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CommentDelta extends S.Opaque<CommentDelta, { readonly brand: unique symbol }>()(
+  S.Struct({
+    introduced: S.Array(CommentLawFinding),
+    removed: S.Int,
+  }).pipe(
+    $I.annoteSchema("CommentDelta", {
+      description: "Banned comments introduced since the merge base and the count removed.",
+    })
+  )
+) {}
+
+/**
+ * Inputs to the pending-scope lock evaluation.
+ *
+ * **Details**
+ *
+ * `bannedCounts` maps every in-scope file of the checked tree to its banned
+ * comment count. `baseShards` is `None` when the merge base predates the
+ * law, which skips the shrink-only guard for the bootstrap PR.
+ * `wholeTree` reports every locked violation; otherwise only those in
+ * changed files or in scopes the change locked.
+ *
+ * **Example** (Describe an empty lock input)
+ *
+ * ```ts
+ * import * as HashMap from "effect/HashMap"
+ * import * as HashSet from "effect/HashSet"
+ * import * as O from "effect/Option"
+ * import { CommentLockInput } from "@beep/repo-cli/commands/Laws/CommentLaw.model"
+ *
+ * const input = CommentLockInput.make({
+ *   headShards: [],
+ *   baseShards: O.none(),
+ *   bannedCounts: HashMap.empty(),
+ *   changedFiles: HashSet.empty(),
+ *   wholeTree: true,
+ * })
+ *
+ * console.log(input.wholeTree) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CommentLockInput extends S.Opaque<CommentLockInput, { readonly brand: unique symbol }>()(
+  S.Struct({
+    headShards: S.Array(CommentLawPending),
+    baseShards: CommentLawPending.pipe(S.Array, S.Option),
+    bannedCounts: S.HashMap(S.String, S.Int),
+    changedFiles: S.HashSet(S.String),
+    wholeTree: S.Boolean,
+  }).pipe(
+    $I.annoteSchema("CommentLockInput", {
+      description: "Pending shards on both sides, banned counts per file and the change scope of one lock check.",
+    })
+  )
+) {}
+
+/**
+ * Lock findings split by whether they fail the check.
+ *
+ * **Example** (Read an empty lock result)
+ *
+ * ```ts
+ * import { CommentLockResult } from "@beep/repo-cli/commands/Laws/CommentLaw.model"
+ *
+ * const result = CommentLockResult.make({ findings: [], advisories: [] })
+ *
+ * console.log(result.findings.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CommentLockResult extends S.Opaque<CommentLockResult, { readonly brand: unique symbol }>()(
+  S.Struct({
+    findings: S.Array(CommentLawFinding),
+    advisories: S.Array(CommentLawFinding),
+  }).pipe(
+    $I.annoteSchema("CommentLockResult", {
+      description: "Pending-scope lock findings that fail the check and advisories that do not.",
+    })
+  )
 ) {}
 
 /**

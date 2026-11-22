@@ -209,32 +209,53 @@ export class ClassifiedComment extends S.Opaque<ClassifiedComment, { readonly br
   )
 ) {}
 
+const GrammarNodeShape = S.Struct({
+  type: S.String,
+  start: S.Int,
+  end: S.Int,
+});
+
 /**
  * Structural ESTree node accepted by the grammar.
  *
  * **Details**
  *
  * The oxc parser and the oxlint plugin runtime both give every node `type`,
- * `start` and `end`; nothing else is assumed.
+ * `start` and `end`; nothing else is assumed. The schema is a guard
+ * declaration, so decoding passes the parser node through with every other
+ * field intact.
  *
- * **Example** (Describe a program)
+ * **Example** (Recognize a program node)
  *
  * ```ts
- * import type { GrammarNode } from "@beep/lint-rules/comment-grammar"
+ * import * as S from "effect/Schema"
+ * import { GrammarNode } from "@beep/lint-rules/comment-grammar"
  *
- * const program: GrammarNode = { type: "Program", start: 0, end: 0 }
- *
- * console.log(program.type)
+ * console.log(S.is(GrammarNode)({ type: "Program", start: 0, end: 0, body: [] })) // true
  * ```
  *
  * @category models
  * @since 0.1.0
  */
-export interface GrammarNode {
-  readonly end: number;
-  readonly start: number;
-  readonly type: string;
-}
+export const GrammarNode = GrammarNodeShape.pipe(
+  S.is,
+  S.declare,
+  $I.annoteSchema("GrammarNode", {
+    description: "Structural ESTree node: the type and source offsets every oxc and oxlint node carries.",
+  })
+);
+
+/**
+ * Type-level member of {@link GrammarNode}.
+ *
+ * **Details**
+ *
+ * The type stays structural, so a parser node with more fields is accepted.
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export type GrammarNode = typeof GrammarNode.Type;
 
 /**
  * AST node types that put a JSDoc block in export context.
@@ -258,6 +279,14 @@ export const ExportNodeType = LiteralKit([
   "TSNamespaceExportDeclaration",
   "ExportSpecifier",
 ]).pipe($I.annoteSchema("ExportNodeType", { description: "AST node types that put a JSDoc block in export context." }));
+
+/**
+ * Type-level member of {@link ExportNodeType}.
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export type ExportNodeType = typeof ExportNodeType.Type;
 
 /**
  * Top-level declaration types an export specifier can name.
@@ -284,6 +313,14 @@ export const DeclarationNodeType = LiteralKit([
 ]).pipe(
   $I.annoteSchema("DeclarationNodeType", { description: "Top-level declaration types an export specifier can name." })
 );
+
+/**
+ * Type-level member of {@link DeclarationNodeType}.
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export type DeclarationNodeType = typeof DeclarationNodeType.Type;
 
 /**
  * Member node types whose JSDoc follows the export status of their owner.
@@ -318,6 +355,14 @@ export const MemberNodeType = LiteralKit([
     description: "Member node types whose JSDoc follows the export status of their owner.",
   })
 );
+
+/**
+ * Type-level member of {@link MemberNodeType}.
+ *
+ * @category models
+ * @since 0.1.0
+ */
+export type MemberNodeType = typeof MemberNodeType.Type;
 
 const isExportNodeType = S.is(ExportNodeType);
 const isDeclarationNodeType = S.is(DeclarationNodeType);
@@ -384,9 +429,9 @@ const decoratorStarts = (node: GrammarNode): ReadonlyArray<number> =>
  * ```ts
  * import * as HashMap from "effect/HashMap"
  * import * as HashSet from "effect/HashSet"
- * import type { CommentAttachment } from "@beep/lint-rules/comment-grammar"
+ * import { CommentAttachment } from "@beep/lint-rules/comment-grammar"
  *
- * const attachment: CommentAttachment = { publicStarts: HashSet.empty(), memberStarts: HashMap.empty() }
+ * const attachment = CommentAttachment.make({ publicStarts: HashSet.empty(), memberStarts: HashMap.empty() })
  *
  * console.log(HashSet.size(attachment.publicStarts)) // 0
  * ```
@@ -394,10 +439,16 @@ const decoratorStarts = (node: GrammarNode): ReadonlyArray<number> =>
  * @category models
  * @since 0.1.0
  */
-export interface CommentAttachment {
-  readonly memberStarts: HashMap.HashMap<number, boolean>;
-  readonly publicStarts: HashSet.HashSet<number>;
-}
+export class CommentAttachment extends S.Opaque<CommentAttachment, { readonly brand: unique symbol }>()(
+  S.Struct({
+    publicStarts: S.HashSet(S.Int),
+    memberStarts: S.HashMap(S.Int, S.Boolean),
+  }).pipe(
+    $I.annoteSchema("CommentAttachment", {
+      description: "Export anchor offsets and member offsets with their owner's export status for one file.",
+    })
+  )
+) {}
 
 /**
  * Incremental attachment index fed by a depth-first walk.
@@ -485,7 +536,7 @@ export const makeAttachmentIndex = (program: GrammarNode): AttachmentIndex => {
     exit: (node) => {
       if (isContext(node)) depth--;
     },
-    result: () => ({ publicStarts, memberStarts }),
+    result: () => CommentAttachment.make({ publicStarts, memberStarts }),
   };
 };
 
@@ -514,19 +565,17 @@ export const makeAttachmentIndex = (program: GrammarNode): AttachmentIndex => {
  */
 export const attachmentOf = (program: GrammarNode): CommentAttachment => {
   const index = makeAttachmentIndex(program);
+  const visitChild = (child: unknown): void => {
+    if (P.isObjectOrArray(child)) visit(child);
+  };
+  const visitNode = (node: GrammarNode): void => {
+    index.enter(node);
+    for (const key in node) if (!HashSet.has(SKIPPED_KEYS, key)) visitChild(field(node, key));
+    index.exit(node);
+  };
   const visit = (value: unknown): void => {
-    if (P.isIterable(value) && !P.isString(value)) {
-      for (const item of value) visit(item);
-      return;
-    }
-    if (!isNode(value)) return;
-    index.enter(value);
-    for (const key in value) {
-      if (HashSet.has(SKIPPED_KEYS, key)) continue;
-      const child = field(value, key);
-      if (P.isObjectOrArray(child)) visit(child);
-    }
-    index.exit(value);
+    if (P.isIterable(value) && !P.isString(value)) for (const item of value) visit(item);
+    else if (isNode(value)) visitNode(value);
   };
   visit(program);
   return index.result();
@@ -669,9 +718,9 @@ const leadingRuns = (
  * **Example** (Describe an empty file)
  *
  * ```ts
- * import type { CommentGrammarInput } from "@beep/lint-rules/comment-grammar"
+ * import { CommentGrammarInput } from "@beep/lint-rules/comment-grammar"
  *
- * const input: CommentGrammarInput = { source: "", program: { type: "Program", start: 0, end: 0 }, comments: [] }
+ * const input = CommentGrammarInput.make({ source: "", program: { type: "Program", start: 0, end: 0 }, comments: [] })
  *
  * console.log(input.comments.length) // 0
  * ```
@@ -679,18 +728,80 @@ const leadingRuns = (
  * @category models
  * @since 0.1.0
  */
-export interface CommentGrammarInput {
-  readonly attachment?: CommentAttachment | undefined;
-  readonly comments: ReadonlyArray<SourceComment>;
-  readonly program: GrammarNode;
-  readonly source: string;
-}
+export class CommentGrammarInput extends S.Opaque<CommentGrammarInput, { readonly brand: unique symbol }>()(
+  S.Struct({
+    source: S.String,
+    program: GrammarNode,
+    comments: S.Array(SourceComment),
+    attachment: S.optionalKey(CommentAttachment),
+  }).pipe(
+    $I.annoteSchema("CommentGrammarInput", {
+      description: "One parsed file: source text, ESTree program, parser comments and an optional attachment index.",
+    })
+  )
+) {}
 
 const isTrailing = (source: string, comment: SourceComment): boolean => {
   const before = Str.slice(0, comment.start)(source);
   const lineStart = O.getOrElse(Str.lastIndexOf("\n")(before), () => -1) + 1;
   return Str.isNonEmpty(Str.trim(Str.slice(lineStart)(before)));
 };
+
+interface FileFacts {
+  readonly attachment: O.Option<CommentAttachment>;
+  readonly commentEnds: HashMap.HashMap<number, number>;
+  readonly headerFirst: boolean;
+  readonly licensed: HashSet.HashSet<number>;
+  readonly source: string;
+}
+
+interface KindProbe {
+  readonly comment: SourceComment;
+  readonly file: FileFacts;
+  readonly leading: boolean;
+  readonly text: string;
+}
+
+type KindRule = (probe: KindProbe) => O.Option<CommentKind>;
+
+const when =
+  (predicate: (probe: KindProbe) => boolean, kind: CommentKind): KindRule =>
+  (probe) =>
+    O.as(O.liftPredicate(probe, predicate), kind);
+
+const isShebang = ({ comment, file }: KindProbe): boolean =>
+  comment.type === "Shebang" || (comment.start === 0 && Str.startsWith("#!")(file.source));
+
+const directiveRule: KindRule = ({ comment, text, file }) =>
+  directiveKind(comment, text, () => isTrailing(file.source, comment));
+
+const attachedRule: KindRule = ({ comment, file }) => {
+  const target = nextCodeOffset(file.source, comment.end, file.commentEnds);
+  const attached = O.getOrThrow(file.attachment);
+  return HashSet.has(attached.publicStarts, target)
+    ? O.some("jsdoc-export")
+    : O.as(O.filter(HashMap.get(attached.memberStarts, target), P.isTruthy), "jsdoc-member");
+};
+
+const KIND_RULES: ReadonlyArray<KindRule> = [
+  when(isShebang, "shebang"),
+  directiveRule,
+  when(({ comment, leading, file }) => leading && HashSet.has(file.licensed, comment.start), "license"),
+  when(({ text }) => PROVENANCE.test(text), "provenance"),
+  when(({ text, leading }) => leading && GENERATED.test(text), "generated-header"),
+  when(({ text }) => PORT_MARKER.test(text), "port-marker"),
+  when(({ comment, text }) => comment.type === "Line" && DECISION_POINTER.test(text), "decision-pointer"),
+  when(({ comment }) => !isJSDoc(comment), "prose"),
+  when(({ comment, leading, file }) => leading && (file.headerFirst || MODULE_TAG.test(comment.value)), "jsdoc-module"),
+  attachedRule,
+  when(({ comment }) => LIVE_TAG.test(comment.value), "jsdoc-tagged"),
+];
+
+const kindOf = (probe: KindProbe): CommentKind =>
+  O.getOrElse(
+    A.findFirst(KIND_RULES, (rule) => rule(probe)),
+    (): CommentKind => "jsdoc-local"
+  );
 
 /**
  * Classify every comment of one parsed source file.
@@ -709,13 +820,13 @@ const isTrailing = (source: string, comment: SourceComment): boolean => {
  * **Example** (Classify a small file)
  *
  * ```ts
- * import { classifyComments, SourceComment } from "@beep/lint-rules/comment-grammar"
+ * import { classifyComments, CommentGrammarInput, SourceComment } from "@beep/lint-rules/comment-grammar"
  *
  * const source = "// note\nconst x = 1\n"
  * const program = { type: "Program", start: 0, end: source.length, body: [] }
  * const comments = [SourceComment.make({ type: "Line", value: " note", start: 0, end: 7 })]
  *
- * console.log(classifyComments({ source, program, comments })[0]?.kind) // "prose"
+ * console.log(classifyComments(CommentGrammarInput.make({ source, program, comments }))[0]?.kind) // "prose"
  * ```
  *
  * @param input - Source text, its parsed ESTree `Program` and the parser comments in source order.
@@ -743,29 +854,14 @@ export const classifyComments = (input: CommentGrammarInput): ReadonlyArray<Clas
   const attachment = A.some(comments, isJSDoc)
     ? O.some(O.getOrElse(O.fromUndefinedOr(input.attachment), () => attachmentOf(program)))
     : O.none<CommentAttachment>();
-  const kindOf = (comment: SourceComment, text: string): CommentKind => {
-    if (comment.type === "Shebang" || (comment.start === 0 && Str.startsWith("#!")(source))) return "shebang";
-    const leading = comment.end <= firstCode;
-    const directive = directiveKind(comment, text, () => isTrailing(source, comment));
-    if (O.isSome(directive)) return directive.value;
-    if (leading && HashSet.has(licensed, comment.start)) return "license";
-    if (PROVENANCE.test(text)) return "provenance";
-    if (leading && GENERATED.test(text)) return "generated-header";
-    if (PORT_MARKER.test(text)) return "port-marker";
-    if (comment.type === "Line" && DECISION_POINTER.test(text)) return "decision-pointer";
-    if (!isJSDoc(comment)) return "prose";
-    if (leading && (headerFirst || MODULE_TAG.test(comment.value))) return "jsdoc-module";
-    const target = nextCodeOffset(source, comment.end, commentEnds);
-    const attached = O.getOrThrow(attachment);
-    if (HashSet.has(attached.publicStarts, target)) return "jsdoc-export";
-    const member = HashMap.get(attached.memberStarts, target);
-    if (O.isSome(member) && member.value) return "jsdoc-member";
-    if (LIVE_TAG.test(comment.value)) return "jsdoc-tagged";
-    return "jsdoc-local";
-  };
+  const file: FileFacts = { source, headerFirst, licensed, commentEnds, attachment };
   return A.map(comments, (comment) => {
     const text = normalizeCommentText(comment.value);
-    return ClassifiedComment.make({ ...comment, kind: kindOf(comment, text), text });
+    return ClassifiedComment.make({
+      ...comment,
+      kind: kindOf({ comment, text, leading: comment.end <= firstCode, file }),
+      text,
+    });
   });
 };
 

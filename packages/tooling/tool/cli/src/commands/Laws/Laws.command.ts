@@ -1102,6 +1102,47 @@ const reportCommentLaw = Effect.fn("reportCommentLaw")(function* (summary: Comme
     yield* Console.log(`${prefix} advisory: these findings do not fail the check until the law turns blocking.`);
 });
 
+const printCommentCensus = Effect.fn("printCommentCensus")(function* (cwd: string, json: boolean) {
+  const rows = yield* runCommentCensus(cwd);
+  if (json) return yield* printCommandJson(rows);
+  return yield* Effect.forEach(rows, (row) => Console.log(`${row.root}\t${row.kind}\t${row.count}`), {
+    concurrency: 1,
+    discard: true,
+  });
+});
+
+const printCommentList = Effect.fn("printCommentList")(function* (cwd: string, list: string, json: boolean) {
+  const findings = yield* runCommentList(cwd, list);
+  if (json) return yield* printCommandJson(findings);
+  return yield* Effect.forEach(findings, (finding) => Console.log(commentFindingLine(finding)), {
+    concurrency: 1,
+    discard: true,
+  });
+});
+
+const writeCommentShards = Effect.fn("writeCommentShards")(function* (cwd: string) {
+  const shards = yield* runCommentLawWrite(cwd);
+  return yield* Console.log(`[comment-law] pending shards=${A.length(shards)}`);
+});
+
+const checkCommentLaw = Effect.fn("checkCommentLaw")(function* (
+  cwd: string,
+  base: string,
+  staged: boolean,
+  json: boolean
+) {
+  const summary = yield* runCommentLaw(
+    CommentLawOptions.make({
+      cwd,
+      staged,
+      ...O.match(commentLawBaseOf(base), { onNone: () => ({}), onSome: (value) => ({ base: value }) }),
+    })
+  );
+  if (json) yield* printCommandJson(summary);
+  else yield* reportCommentLaw(summary);
+  if (summary.failed) return yield* failWithReportedExit("[comment-law] check failed.");
+});
+
 const lawsCommentsCommand = Command.make(
   "comments",
   {
@@ -1133,36 +1174,10 @@ const lawsCommentsCommand = Command.make(
   },
   Effect.fn(function* ({ base, staged, census, list, write, json }) {
     const cwd = process.cwd();
-    if (census) {
-      const rows = yield* runCommentCensus(cwd);
-      if (json) return yield* printCommandJson(rows);
-      return yield* Effect.forEach(rows, (row) => Console.log(`${row.root}\t${row.kind}\t${row.count}`), {
-        concurrency: 1,
-        discard: true,
-      });
-    }
-    if (Str.isNonEmpty(list)) {
-      const findings = yield* runCommentList(cwd, list);
-      if (json) return yield* printCommandJson(findings);
-      return yield* Effect.forEach(findings, (finding) => Console.log(commentFindingLine(finding)), {
-        concurrency: 1,
-        discard: true,
-      });
-    }
-    if (write) {
-      const shards = yield* runCommentLawWrite(cwd);
-      return yield* Console.log(`[comment-law] pending shards=${A.length(shards)}`);
-    }
-    const summary = yield* runCommentLaw(
-      CommentLawOptions.make({
-        cwd,
-        staged,
-        ...O.match(commentLawBaseOf(base), { onNone: () => ({}), onSome: (value) => ({ base: value }) }),
-      })
-    );
-    if (json) yield* printCommandJson(summary);
-    else yield* reportCommentLaw(summary);
-    if (summary.failed) return yield* failWithReportedExit("[comment-law] check failed.");
+    if (census) return yield* printCommentCensus(cwd, json);
+    if (Str.isNonEmpty(list)) return yield* printCommentList(cwd, list, json);
+    if (write) return yield* writeCommentShards(cwd);
+    return yield* checkCommentLaw(cwd, base, staged, json);
   })
 ).pipe(
   Command.withDescription("Ban new prose comments and local JSDoc: merge-base growth check and pending-scope lock")

@@ -1,7 +1,9 @@
 import {
+  CommentFileChange,
   CommentLawExecutionError,
   CommentLawOptions,
   CommentLawPending,
+  CommentLockInput,
   commentDelta,
   evaluateCommentLock,
   isCommentLawPath,
@@ -22,7 +24,8 @@ import * as ChildProcess from "effect/process/ChildProcess";
 import { NodeTestLayer } from "./support/CommandTest.ts";
 
 const kindsOf = (file: string, text: string) => A.map(scanCommentSource(file, text), (comment) => comment.kind);
-const change = (file: string, before: O.Option<string>, after: O.Option<string>) => ({ file, before, after });
+const change = (file: string, before: O.Option<string>, after: O.Option<string>) =>
+  CommentFileChange.make({ file, before, after });
 const shard = (root: string, scopes: readonly [string, ...Array<string>]) =>
   CommentLawPending.make({ schemaVersion: "comment-law-pending/v1", package: `@beep/${root}`, root, scopes });
 
@@ -197,35 +200,41 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
     it.effect("locks unlisted scopes and keeps the pending list shrink-only", () =>
       Effect.sync(() => {
         const counts = HashMap.make(["packages/a/src/A.ts", 2], ["packages/b/src/B.ts", 0], ["packages/c/src/C.ts", 1]);
-        const pr = evaluateCommentLock({
-          headShards: [shard("packages/a", ["."]), shard("packages/b", ["."])],
-          baseShards: O.some([shard("packages/a", ["."]), shard("packages/b", ["."]), shard("packages/c", ["."])]),
-          bannedCounts: counts,
-          changedFiles: HashSet.make("packages/b/src/B.ts"),
-          wholeTree: false,
-        });
+        const pr = evaluateCommentLock(
+          CommentLockInput.make({
+            headShards: [shard("packages/a", ["."]), shard("packages/b", ["."])],
+            baseShards: O.some([shard("packages/a", ["."]), shard("packages/b", ["."]), shard("packages/c", ["."])]),
+            bannedCounts: counts,
+            changedFiles: HashSet.make("packages/b/src/B.ts"),
+            wholeTree: false,
+          })
+        );
         expect(A.map(pr.findings, (finding) => [finding.rule, finding.file])).toEqual([
           ["locked-scope-comment", "packages/c/src/C.ts"],
           ["stale-pending-scope", "packages/b"],
         ]);
 
-        const push = evaluateCommentLock({
-          headShards: [shard("packages/a", ["."]), shard("packages/b", ["."])],
-          baseShards: O.some([shard("packages/a", ["."]), shard("packages/b", ["."])]),
-          bannedCounts: counts,
-          changedFiles: HashSet.empty(),
-          wholeTree: true,
-        });
+        const push = evaluateCommentLock(
+          CommentLockInput.make({
+            headShards: [shard("packages/a", ["."]), shard("packages/b", ["."])],
+            baseShards: O.some([shard("packages/a", ["."]), shard("packages/b", ["."])]),
+            bannedCounts: counts,
+            changedFiles: HashSet.empty(),
+            wholeTree: true,
+          })
+        );
         expect(A.map(push.findings, (finding) => finding.rule)).toEqual(["locked-scope-comment"]);
         expect(A.map(push.advisories, (finding) => finding.rule)).toEqual(["stale-pending-scope"]);
 
-        const grew = evaluateCommentLock({
-          headShards: [shard("packages/a", ["."]), shard("packages/c", ["."])],
-          baseShards: O.some([shard("packages/a", ["src"])]),
-          bannedCounts: counts,
-          changedFiles: HashSet.empty(),
-          wholeTree: false,
-        });
+        const grew = evaluateCommentLock(
+          CommentLockInput.make({
+            headShards: [shard("packages/a", ["."]), shard("packages/c", ["."])],
+            baseShards: O.some([shard("packages/a", ["src"])]),
+            bannedCounts: counts,
+            changedFiles: HashSet.empty(),
+            wholeTree: false,
+          })
+        );
         expect(A.map(grew.findings, (finding) => [finding.rule, finding.file])).toEqual([
           ["pending-scope-grew", "packages/a"],
           ["pending-scope-grew", "packages/c"],

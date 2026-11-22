@@ -17,6 +17,7 @@ import { defineRule } from "@oxlint/plugins";
 import * as A from "effect/Array";
 import * as R from "effect/Record";
 import {
+  CommentGrammarInput,
   classifyComments,
   commentLawMessage,
   DeclarationNodeType,
@@ -75,7 +76,8 @@ export default defineRule({
           SourceComment.make({ type: comment.type, value: comment.value, start: comment.start, end: comment.end })
         );
         const attachment = index.result();
-        for (const comment of classifyComments({ source: context.sourceCode.text, program, comments, attachment })) {
+        const input = CommentGrammarInput.make({ source: context.sourceCode.text, program, comments, attachment });
+        for (const comment of classifyComments(input)) {
           if (!isBannedCommentKind(comment.kind)) continue;
           context.report({
             loc: {
