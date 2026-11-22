@@ -1143,7 +1143,10 @@ export const snapshotViolations: {
  * **Details**
  *
  * A package that `@beep/identity` depends on cannot import the registry, so the
- * generator writes such a shard's rows into that package as plain literals.
+ * generator writes such a shard's rows into that package as plain literals. The
+ * set is closed in source: renaming such a package changes its name here and in
+ * the shard's `projection` first, and `beep identity rebind` then moves its
+ * bindings.
  *
  * **Example** (Check a projection target)
  *

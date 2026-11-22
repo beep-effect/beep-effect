@@ -12,6 +12,7 @@ import {
 } from "@beep/identity/Term";
 import { identityCommand } from "@beep/repo-cli/commands/Identity";
 import {
+  BaseSnapshot,
   baseSnapshotIssues,
   decodeBaseSnapshot,
   RegistryLayout,
@@ -50,6 +51,8 @@ const runIdentityCommand = Command.runWith(identityCommand, { version: "0.0.0" }
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
 
 const layout = RegistryLayout.of("packages/identity");
+const PROJECTION_REMEDY =
+  "After renaming the package, put its new name in the RegistryProjection literal (`@beep/identity/Term`) and in the shard's `projection`, then move its bindings with `bun run beep identity rebind @beep/<old package> @beep/<new package>`; otherwise drop the shard's `projection`.";
 
 // A term local that forms an IRI under any namespace, so every generated shard decodes.
 const AsciiLocal = TermLocal.check(S.isPattern(/^[A-Za-z][A-Za-z0-9]{0,8}$/));
@@ -72,6 +75,8 @@ const fabio = (
 
 const decodeShardJson = S.decodeResult(S.fromJsonString(RegistryShard));
 
+const decodeSnapshotText = flow(S.decodeUnknownResult(S.fromJsonString(TermSnapshot)), Result.getOrThrow);
+
 const decodeShardText = (file: RegistrySourceFile): RegistryShard => Result.getOrThrow(decodeShardJson(file.content));
 
 const tableOf = (files: ReadonlyArray<RegistrySourceFile>): RegistryTable =>
@@ -82,6 +87,8 @@ const inputOf = (files: ReadonlyArray<RegistrySourceFile>, previous: TermSnapsho
 
 const reasonsOf = (result: Result.Result<unknown, ReadonlyArray<{ readonly reason: string }>>) =>
   Result.match(result, { onFailure: A.map((refusal) => refusal.reason), onSuccess: () => [] });
+
+const baseOf = (snapshot: TermSnapshot) => BaseSnapshot.make({ path: layout.snapshot, snapshot });
 
 // Every refusal of a plan as `[reason, subject, detail]`.
 const refusalRowsOf = <Planned>(result: Result.Result<Planned, A.NonEmptyReadonlyArray<ShardEditRefusal>>) =>
@@ -375,7 +382,7 @@ describe("identity deprecate planning", () => {
       );
       const after = RegistryTable.snapshot(tableOf([edited ?? file]), before);
       expect(snapshotViolations(before, after)).toStrictEqual([]);
-      expect(baseSnapshotIssues(before, after, layout.snapshot)).toStrictEqual([]);
+      expect(baseSnapshotIssues(baseOf(before), after, layout.snapshot)).toStrictEqual([]);
       expect(after.release).toBe("2.0.0");
     },
     { arbitrary: fcRuns(25) }
@@ -397,7 +404,7 @@ describe("base snapshot findings", () => {
   it("names a removal and a prefix change against the base", () => {
     const base = RegistryTable.snapshot(tableOf([shardFile(fabio(["Report", "TechnicalReport"]))]), TermSnapshot.empty);
     const removed = RegistryTable.snapshot(tableOf([shardFile(fabio(["Report"]))]), base);
-    expect(A.map(baseSnapshotIssues(base, removed, layout.snapshot), (issue) => issue.kind)).toStrictEqual([
+    expect(A.map(baseSnapshotIssues(baseOf(base), removed, layout.snapshot), (issue) => issue.kind)).toStrictEqual([
       "term-removed-without-deprecation",
     ]);
     // A head regenerated from an older base keeps that base's release, which the change outgrew.
@@ -405,7 +412,7 @@ describe("base snapshot findings", () => {
       tableOf([shardFile(fabio(["Report", "TechnicalReport", "Thesis"]))]),
       TermSnapshot.empty
     );
-    const [understated] = baseSnapshotIssues(base, stale, layout.snapshot);
+    const [understated] = baseSnapshotIssues(baseOf(base), stale, layout.snapshot);
     expect(understated?.kind).toBe("release-regressed");
     expect(understated?.detail).toContain("the change calls for 1.1.0");
     expect(understated?.detail).toContain(`git restore --source <base> -- ${layout.snapshot}`);
@@ -419,7 +426,7 @@ describe("base snapshot findings", () => {
       ]),
       base
     );
-    expect(A.map(baseSnapshotIssues(base, renamed, layout.snapshot), (issue) => issue.kind)).toStrictEqual([
+    expect(A.map(baseSnapshotIssues(baseOf(base), renamed, layout.snapshot), (issue) => issue.kind)).toStrictEqual([
       "namespace-prefix-changed",
     ]);
   });
@@ -530,7 +537,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           expectReportedExit(refused);
           const errors = yield* TestConsole.errorLines;
           expect(errors).toStrictEqual([
-            `${fabioPath} [registry-shard-invalid] The shard projects into @beep/test-runner, which this checkout does not have.`,
+            `${fabioPath} [registry-shard-invalid] The shard projects into @beep/test-runner, which this checkout does not have. ${PROJECTION_REMEDY}`,
           ]);
           const logs = yield* TestConsole.logLines;
           expect(logs).toStrictEqual([]);
@@ -565,7 +572,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           expectReportedExit(refused);
           const errors = yield* TestConsole.errorLines;
           expect(errors).toStrictEqual([
-            `${vitestPath} [registry-shard-invalid] The shard projects into @beep/test-runner, which this checkout does not have.`,
+            `${vitestPath} [registry-shard-invalid] The shard projects into @beep/test-runner, which this checkout does not have. ${PROJECTION_REMEDY}`,
           ]);
           const untouched = yield* fs.readFileString(fabioPath);
           expect(untouched).toBe(renderRegistryJson(shard));
@@ -573,6 +580,81 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           expect(otherUntouched).toBe(vitest);
           const dataWritten = yield* fs.exists(layout.data);
           expect(dataWritten).toBe(false);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    // A workspace package with one module for the bindings to name.
+    const writePackage = Effect.fn("IdentityShardEditTest.writePackage")(function* (directory: string, name: string) {
+      const fs = yield* FileSystem.FileSystem;
+      yield* fs.makeDirectory(`packages/${directory}/src`, { recursive: true });
+      yield* fs.writeFileString(
+        `packages/${directory}/package.json`,
+        `${encodeJson({ name, version: "0.0.0", type: "module" })}\n`
+      );
+      yield* fs.writeFileString(`packages/${directory}/src/Vitest.ts`, "export const hang = 1;\n");
+    });
+    const vitestShard = (packageName: string) => ({
+      namespace: { prefix: "vitest", iri: "https://example.test/vitest/" },
+      terms: ["TestHang"],
+      bindings: [{ code: `${packageName}/Vitest/TestHang`, local: "TestHang", since: "1.0.0" }],
+      deprecations: [],
+      projection: "@beep/test-runner",
+    });
+
+    it.effect("refuses the rename of a projected package until the projection names it, and says so", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* writeFixture(fabio(["Note", "Report"]));
+          const vitestPath = `${layout.shards}/vitest.json`;
+          const vitest = renderRegistryJson(vitestShard("@beep/test-runner"));
+          yield* fs.writeFileString(vitestPath, vitest);
+          yield* writePackage("test-runner", "@beep/test-runner");
+          yield* runIdentityCommand(["registry", "--write"]);
+          yield* fs.remove("packages/test-runner", { recursive: true });
+          yield* writePackage("test-kit", "@beep/test-kit");
+
+          const refused = yield* Effect.exit(runIdentityCommand(["rebind", "@beep/test-runner", "@beep/test-kit"]));
+
+          expectReportedExit(refused);
+          const errors = yield* TestConsole.errorLines;
+          expect(errors).toStrictEqual([
+            `${vitestPath} [registry-shard-invalid] The shard projects into @beep/test-runner, which this checkout does not have. ${PROJECTION_REMEDY}`,
+          ]);
+          const untouched = yield* fs.readFileString(vitestPath);
+          expect(untouched).toBe(vitest);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("renames a projected package once its projection names the new package, and keeps every IRI", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* writeFixture(fabio(["Report"]));
+          const vitestPath = `${layout.shards}/vitest.json`;
+          // @beep/old-runner becomes the package of the RegistryProjection literal. The shard names its projection by
+          // the new name already, which is the state the remedy's two source edits leave.
+          yield* writePackage("test-runner", "@beep/test-runner");
+          yield* fs.writeFileString(vitestPath, renderRegistryJson(vitestShard("@beep/old-runner")));
+          yield* runIdentityCommand(["registry", "--write"]);
+          const before = yield* Effect.map(fs.readFileString(layout.snapshot), decodeSnapshotText);
+          const stale = yield* Effect.exit(runIdentityCommand(["registry", "--check"]));
+          expectReportedExit(stale);
+
+          yield* runIdentityCommand(["rebind", "@beep/old-runner", "@beep/test-runner"]);
+
+          yield* runIdentityCommand(["registry", "--check"]);
+          const projected = yield* fs.readFileString("packages/test-runner/src/internal/generated/RegistryTerms.ts");
+          expect(projected).toContain('"@beep/test-runner/Vitest/TestHang"');
+          expect(projected).toContain("https://example.test/vitest/TestHang");
+          const after = yield* Effect.map(fs.readFileString(layout.snapshot), decodeSnapshotText);
+          expect(after.terms).toStrictEqual(before.terms);
+          expect(after.namespaces).toStrictEqual(before.namespaces);
+          expect(snapshotViolations(before, after)).toStrictEqual([]);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

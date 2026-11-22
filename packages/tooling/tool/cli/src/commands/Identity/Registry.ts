@@ -62,6 +62,9 @@ const DATA_FILE = "src/internal/generated/Registry.data.ts";
 const PROJECTION_FILE = "src/internal/generated/RegistryTerms.ts";
 const JSON_LINE_WIDTH = 80;
 const WRITE_COMMAND = "`bun run beep identity registry --write`";
+// A package move rewrites binding codes only: the names a shard may project into are a closed set in source.
+const PROJECTION_REMEDY =
+  "After renaming the package, put its new name in the RegistryProjection literal (`@beep/identity/Term`) and in the shard's `projection`, then move its bindings with `bun run beep identity rebind @beep/<old package> @beep/<new package>`; otherwise drop the shard's `projection`.";
 const WRITE_HINT = `Run ${WRITE_COMMAND} to regenerate.`;
 
 /**
@@ -818,7 +821,7 @@ export const planRegistryArtifacts = ({
               : Result.succeed(
                   shardIssue(
                     `${layout.shards}/${shard.namespace.prefix}.json`,
-                    `The shard projects into ${projection}, which this checkout does not have.`
+                    `The shard projects into ${projection}, which this checkout does not have. ${PROJECTION_REMEDY}`
                   )
                 ),
         })
@@ -929,15 +932,20 @@ const RELEASE_REMEDY =
   "Correct that `since`, or restore the release in term-snapshot.json to at least every `since` its rows record.";
 
 // The generator reads the checkout's own snapshot, so a snapshot that already holds the changed rows at the
-// wrong release regenerates to itself: the base's snapshot has to be put back first.
-const rebaseRemedy = (snapshot: string): string =>
-  `Merge the base ref if it is not merged yet, restore its snapshot with \`git restore --source <base> -- ${snapshot}\` (remove the file when the base has none), set the \`since\` of every binding and deprecation the change adds to the release it calls for, then run ${WRITE_COMMAND}.`;
+// wrong release regenerates to itself: the base's snapshot has to be put back first. A base that has it at
+// another path (the identity package moved since) has nothing to restore at this checkout's path.
+const restoreStep = (snapshot: string, basePath: string): string =>
+  snapshot === basePath
+    ? `\`git restore --source <base> -- ${snapshot}\` (remove the file when the base has none)`
+    : `\`git show <base>:${basePath} > ${snapshot}\``;
+const rebaseRemedy = (snapshot: string, basePath: string): string =>
+  `Merge the base ref if it is not merged yet, restore its snapshot with ${restoreStep(snapshot, basePath)}, set the \`since\` of every binding and deprecation the change adds to the release it calls for, then run ${WRITE_COMMAND}.`;
 
 // The lint kind of each way a head snapshot breaks the base ref's published term set, and its remedy.
 const baseBreaks: {
   readonly [Tag in SnapshotViolation["_tag"]]: readonly [
     kind: IdentityRegistryIssueKind,
-    remedy: (snapshot: string) => string,
+    remedy: (snapshot: string, basePath: string) => string,
   ];
 } = {
   TermRemoved: ["term-removed-without-deprecation", constant(REMOVAL_REMEDY)],
@@ -954,17 +962,48 @@ const baseBreaks: {
   ReleaseBelowSince: ["release-regressed", constant(RELEASE_REMEDY)],
 };
 
-// One registry finding for a snapshot violation, prefixed with where it was found.
+// One registry finding for a snapshot violation, prefixed with where it was found. `basePath` is where the
+// snapshot it succeeds is kept, which is `subject` itself unless the identity package moved.
 const violationIssue =
-  (subject: string, where: string) =>
+  (subject: string, where: string, basePath: string) =>
   (violation: SnapshotViolation): IdentityRegistryIssue => {
     const [kind, remedy] = baseBreaks[violation._tag];
     return IdentityRegistryIssue.make({
       kind,
       subject,
-      detail: `${where}: ${snapshotViolationMessage(violation)} ${remedy(subject)}`,
+      detail: `${where}: ${snapshotViolationMessage(violation)} ${remedy(subject, basePath)}`,
     });
   };
+
+/**
+ * The term snapshot of a base ref and the path the base has it at.
+ *
+ * **Details**
+ *
+ * The path is the base's own: a change that moves the identity package leaves
+ * the snapshot of its base at the old path.
+ *
+ * **Example** (Describe a base that published nothing)
+ *
+ * ```ts
+ * import { TermSnapshot } from "@beep/identity/Term"
+ * import { BaseSnapshot } from "@beep/repo-cli/commands/Identity/Registry"
+ *
+ * const base = BaseSnapshot.make({ path: "packages/identity/registry/term-snapshot.json", snapshot: TermSnapshot.empty })
+ * console.log(base.snapshot.release) // "0.0.0"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class BaseSnapshot extends S.Opaque<BaseSnapshot, { readonly brand: unique symbol }>()(
+  S.Struct({
+    path: S.String.annotateKey({ description: "Path of the snapshot in the base tree." }),
+    snapshot: TermSnapshot,
+  }).pipe(
+    $I.annoteSchema("BaseSnapshot", { description: "The term snapshot of a base ref and where the base has it." })
+  )
+) {}
 
 /**
  * The findings of a head snapshot against the snapshot of a base ref (law L0-3).
@@ -982,10 +1021,10 @@ const violationIssue =
  *
  * ```ts
  * import { ReleaseVersion, TermIri, TermSnapshot } from "@beep/identity/Term"
- * import { baseSnapshotIssues } from "@beep/repo-cli/commands/Identity/Registry"
+ * import { BaseSnapshot, baseSnapshotIssues } from "@beep/repo-cli/commands/Identity/Registry"
  * import * as Result from "effect/Result"
  *
- * const base = Result.getOrThrow(
+ * const snapshot = Result.getOrThrow(
  *   TermSnapshot.fromRows({
  *     release: ReleaseVersion.make("1.0.0"),
  *     namespaces: [],
@@ -994,6 +1033,7 @@ const violationIssue =
  *     deprecations: []
  *   })
  * )
+ * const base = BaseSnapshot.make({ path: "term-snapshot.json", snapshot })
  * console.log(baseSnapshotIssues(base, TermSnapshot.empty, "term-snapshot.json")[0]?.kind)
  * // "term-removed-without-deprecation"
  * ```
@@ -1002,12 +1042,12 @@ const violationIssue =
  * @since 0.0.0
  */
 export const baseSnapshotIssues: {
-  (head: TermSnapshot, subject: string): (base: TermSnapshot) => ReadonlyArray<IdentityRegistryIssue>;
-  (base: TermSnapshot, head: TermSnapshot, subject: string): ReadonlyArray<IdentityRegistryIssue>;
+  (head: TermSnapshot, subject: string): (base: BaseSnapshot) => ReadonlyArray<IdentityRegistryIssue>;
+  (base: BaseSnapshot, head: TermSnapshot, subject: string): ReadonlyArray<IdentityRegistryIssue>;
 } = dual(
   3,
-  (base: TermSnapshot, head: TermSnapshot, subject: string): ReadonlyArray<IdentityRegistryIssue> =>
-    A.map(snapshotViolations(base, head), violationIssue(subject, "Against the base ref"))
+  (base: BaseSnapshot, head: TermSnapshot, subject: string): ReadonlyArray<IdentityRegistryIssue> =>
+    A.map(snapshotViolations(base.snapshot, head), violationIssue(subject, "Against the base ref", base.path))
 );
 
 /**
@@ -1066,7 +1106,7 @@ const readOptional = Effect.fn("IdentityRegistry.readOptional")(function* (absol
 // The workspace package a binding code names (`@beep/<package>`) and its module path: every segment
 // but the last, which is the member (a class or `Class.field`).
 const codeParts = (code: string): O.Option<readonly [packageName: string, modulePath: string]> => {
-  const [scope = "", name = "", ...segments] = Str.split("/")(code);
+  const [scope, name = "", ...segments] = Str.split("/")(code);
   const modulePath = A.join(A.dropRight(segments, 1), "/");
   return scope === "@beep" && name !== "" && modulePath !== ""
     ? O.some([`${scope}/${name}`, modulePath] as const)
@@ -1309,7 +1349,10 @@ export const checkRegistry = Effect.fn("IdentityRegistry.check")(function* (repo
   );
   const byPath = R.fromEntries(current);
   const drift = driftIssues(plan.success, (file) => O.flatten(R.get(byPath, file)));
-  const release = A.map(snapshotReleaseViolations(snapshot), violationIssue(layout.snapshot, "In the snapshot"));
+  const release = A.map(
+    snapshotReleaseViolations(snapshot),
+    violationIssue(layout.snapshot, "In the snapshot", layout.snapshot)
+  );
   const dangling = yield* danglingBindingCodes(
     repoRoot,
     A.map(snapshot.bindings, (binding) => binding.code)
@@ -1336,9 +1379,11 @@ export const checkRegistry = Effect.fn("IdentityRegistry.check")(function* (repo
  *
  * ```ts
  * import { TermSnapshot } from "@beep/identity/Term"
- * import { checkRegistryAgainstBase, RegistryLayout } from "@beep/repo-cli/commands/Identity/Registry"
+ * import { BaseSnapshot, checkRegistryAgainstBase, RegistryLayout } from "@beep/repo-cli/commands/Identity/Registry"
  *
- * console.log(checkRegistryAgainstBase("/repo", RegistryLayout.of("packages/identity"), TermSnapshot.empty))
+ * const layout = RegistryLayout.of("packages/identity")
+ * const base = BaseSnapshot.make({ path: layout.snapshot, snapshot: TermSnapshot.empty })
+ * console.log(checkRegistryAgainstBase("/repo", layout, base))
  * ```
  *
  * @category validation
@@ -1347,7 +1392,7 @@ export const checkRegistry = Effect.fn("IdentityRegistry.check")(function* (repo
 export const checkRegistryAgainstBase = Effect.fn("IdentityRegistry.checkAgainstBase")(function* (
   repoRoot: string,
   layout: RegistryLayout,
-  base: TermSnapshot
+  base: BaseSnapshot
 ) {
   const plan = yield* planRegistry(repoRoot, layout);
   return Result.match(plan, {

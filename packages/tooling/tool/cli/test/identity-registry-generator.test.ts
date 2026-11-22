@@ -456,11 +456,12 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             "@beep/widget/Report/Report",
             "@beep/widget/View/View.title",
             "@beep/widget/Nested/Section",
-            // A module the package does not have, a package the checkout does not have, and a code whose
-            // only segment is its member, so it names no module at all.
+            // A module the package does not have, a package the checkout does not have, and codes whose
+            // only segment is the member, or that have none, so they name no module at all.
             "@beep/widget/Gone/Report",
             "@beep/nowhere/Report/Report",
             "@beep/widget/Report",
+            "@beep",
             "@beep/widget/Runner/TestHang",
             "@beep/widget/Panel/Title",
             "@beep/widget/Report.ts/Report",
@@ -470,6 +471,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             "@beep/widget/Gone/Report",
             "@beep/nowhere/Report/Report",
             "@beep/widget/Report",
+            "@beep",
             "@beep/widget/Runner/TestHang",
             "@beep/widget/Panel/Title",
             "@beep/widget/Report.ts/Report",
@@ -506,6 +508,36 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           expect(error.message).toMatch(/^Cannot stat .*src\/Report\.ts\.$/);
         })
       )
+    );
+
+    it.effect("reports a snapshot released below a since its rows record", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* writeFixture([
+            [
+              "fabio.json",
+              {
+                ...fabio,
+                bindings: [{ code: "@beep/identity/Report/Report", local: "Report", since: "9.0.0" }],
+                deprecations: [],
+              },
+            ],
+          ]);
+          yield* fs.makeDirectory("packages/identity/src", { recursive: true });
+          yield* fs.writeFileString("packages/identity/src/Report.ts", "export const report = 1;\n");
+          yield* runIdentityCommand(["registry", "--write"]);
+
+          const understated = yield* Effect.exit(runIdentityCommand(["registry", "--check"]));
+
+          expectReportedExit(understated);
+          const errors = yield* TestConsole.errorLines;
+          expect(errors).toContain(
+            `${layout.snapshot} [release-regressed] In the snapshot: The snapshot release 1.0.0 is lower than the since 9.0.0 its own rows record. Correct that \`since\`, or restore the release in term-snapshot.json to at least every \`since\` its rows record.`
+          );
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
     it.effect("removes the projection module of a package its last shard stops projecting into, and only that", () =>

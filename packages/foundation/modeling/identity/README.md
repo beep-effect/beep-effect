@@ -179,9 +179,17 @@ A changed term set released below the release its change calls for fails the
 lint (`ReleaseUnderstated`). Regenerating alone does not repair it, because
 `--write` reads the checkout's own snapshot: merge the base ref if it is not
 merged yet, restore its snapshot (in this package,
-`git restore --source <base> -- registry/term-snapshot.json`), set the `since`
+`git restore --source <base> -- registry/term-snapshot.json`, or `git show` from
+the path the base has it at when this package moved), set the `since`
 of every row the change adds to the release it calls for, then run
 `bun run beep identity registry --write`.
+
+Renaming a package that a shard projects into (`@beep/test-runner`) takes two
+source edits before the rebind, because a package move rewrites binding codes
+only: put the new name in the `RegistryProjection` literal of
+[src/Term.ts](src/Term.ts), put it in the shard's `projection`, then run the
+package rebind above. Until then every registry command refuses the shard,
+because the checkout has no package of the old name.
 
 A bound term is deprecated only after its binding is removed from the shard; a
 rebind keeps the term bound. When the last shard drops its `projection`, the
@@ -191,8 +199,10 @@ a failure after them is finished with `bun run beep identity registry --write`.
 
 Removing a term, changing a namespace prefix, dropping a deprecation or
 reviving a retired IRI without a deprecation record fails the writer and the
-lint, and so does deleting the whole registry against a base that published it;
-law `L0-3` in [TermStability.test.ts](test/TermStability.test.ts) is the
+lint, and so does deleting the whole registry against a base that published it.
+The lint reads the snapshot where the base tree has its `@beep/identity` package,
+so moving the package hides no removal. Law
+`L0-3` in [TermStability.test.ts](test/TermStability.test.ts) is the
 acceptance test.
 
 ## Module map
