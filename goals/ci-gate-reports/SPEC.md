@@ -274,6 +274,30 @@ Lane explore/agent-verification-output
 
 Reverse: Stop the upload and the lookup; history labels then compare against lane runs only
 
+### CI-job adapter: cancelled steps count as unhandled; a stepless job is a fault, 2026-11-22
+
+`ciRunGateReport` (`Ci/CiJobAdapter.ts`) reads a run as gate `run`, each job a unit and each step an item. `success` passes, `failure` fails, `skipped` and `neutral` skip, a step with no conclusion has not finished and skips, and any other conclusion is a plain failure. `timed_out` fails with `failureKind` `timeout` and `cancelled` fails with `unhandled`, so both keep their own totals buckets: the gate-report model has no cancel kind, and `unhandled` (the run stopped the step, not an assertion) is the nearest. A job with no steps is never green: it gets one `FaultKey` item, counted as `errored`, even when GitHub calls it a success. A red job whose steps all passed gets the same fault item, so the report never reads green while the job is red.
+
+Lane goals/ci-gate-reports-p3
+
+Reverse: Edit STEP_READINGS and jobItems in Ci/CiJobAdapter.ts
+
+### The failing-region command is `beep ci failures`, 2026-11-22
+
+The failing-region command is `bun run beep ci failures --run <id> | --pr <number>` (`Ci/CiFailures.ts`). It sits in the `ci` family beside `task-outcomes` and `append-gate-reports`, because it reads the same carrier and the same GitHub runs; `failures` names what it prints, the failed jobs of a run, and reads plainly after `ci`. A pull request resolves to the newest run of each workflow at its head that failed or is still running. Each red job is joined to its uploaded task-outcome artifact by `record.job` (a job reached through a reusable workflow is listed as `<caller> / <job>`, so a record also joins a job whose name starts with `<job> / `). GitHub's job name does not give the artifact key, so the command ranks this attempt's artifacts by token overlap with the red job names and downloads at most 8 (`FAILED_JOB_ARTIFACT_DOWNLOADS_MAX`), stopping once every red job is joined.
+
+Lane goals/ci-gate-reports-p3
+
+Reverse: Rename the subcommand in Ci/CiFailures.ts and Ci.command.ts and update the help line
+
+### Main-feed lookup keys on job artifact and gate filter, 2026-11-22
+
+`MainFeed.lookup` (`Ci/CiMainFeed.ts`) takes a merge base, the caller's first-parent ancestors, the job artifact keys to read and a gate filter (empty means every gate). A gate name alone cannot address an artifact: artifacts are named per job, `task-outcomes-<run>-<attempt>-<job>`, so the caller names the jobs. The caller supplies `git rev-list --first-parent` past the merge base, since the checkout already has it and the walk then costs no API call; the lookup lists `check.yml` push runs on `main` once, bounded by the merge base run's creation time, and takes the first listed ancestor within 100 (`MAIN_FEED_ANCESTOR_LIMIT`) whose run concluded `success` or `failure`. A cancelled or skipped run ran no gate; red runs are kept, because main's red reports are the baseline a lane compares against. A hit at the merge base costs 1 listing plus 2 requests per job (artifact by exact name, zip), 3 for one job; everything goes through `GitHubClient`, REST only.
+
+Lane goals/ci-gate-reports-p3
+
+Reverse: Change MainFeedRequest in Ci/CiMainFeed.ts and its callers
+
 ### The report carrier is the per-job task-outcome artifact, widened to hold the gate records, 2026-11-22
 
 The feed's carrier is the existing per-job task-outcome artifact, widened. Each hosted gate job uploads one artifact, `task-outcomes-<run>-<attempt>-<job>-<partition>` (name unchanged, so `Ci/RouteCorpus.ts` keeps finding it), uploaded `if: always()` with `retention-days: 30`. It holds:

@@ -1,0 +1,148 @@
+{
+  "total_count": 6,
+  "jobs": [
+    {
+      "id": 101,
+      "run_id": 45042229032,
+      "name": "Repo Sanity",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": "2026-11-22T10:00:05Z",
+      "completed_at": "2026-11-22T10:03:10Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run lane",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 2
+        }
+      ]
+    },
+    {
+      "id": 102,
+      "run_id": 45042229032,
+      "name": "Test Unit (repo-cli-8)",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-22T10:00:05Z",
+      "completed_at": "2026-11-22T10:11:42Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run lane",
+          "status": "completed",
+          "conclusion": "failure",
+          "number": 2
+        },
+        {
+          "name": "Upload task outcomes",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 3
+        },
+        {
+          "name": "Append summary",
+          "status": "completed",
+          "conclusion": "skipped",
+          "number": 4
+        }
+      ]
+    },
+    {
+      "id": 103,
+      "run_id": 45042229032,
+      "name": "Lint (lint-2)",
+      "status": "completed",
+      "conclusion": "cancelled",
+      "started_at": "2026-11-22T10:00:05Z",
+      "completed_at": "2026-11-22T10:06:00Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run lane",
+          "status": "completed",
+          "conclusion": "cancelled",
+          "number": 2
+        }
+      ]
+    },
+    {
+      "id": 104,
+      "run_id": 45042229032,
+      "name": "Test Integration (integration-1)",
+      "status": "completed",
+      "conclusion": "timed_out",
+      "started_at": "2026-11-22T10:00:05Z",
+      "completed_at": "2026-11-22T10:45:05Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Run lane",
+          "status": "completed",
+          "conclusion": "timed_out",
+          "number": 2
+        },
+        {
+          "name": "Post cleanup",
+          "status": "in_progress",
+          "conclusion": null,
+          "number": 3
+        }
+      ]
+    },
+    {
+      "id": 105,
+      "run_id": 45042229032,
+      "name": "Nix Shell",
+      "status": "completed",
+      "conclusion": "success",
+      "started_at": null,
+      "completed_at": null,
+      "steps": []
+    },
+    {
+      "id": 106,
+      "run_id": 45042229032,
+      "name": "Docs Policy",
+      "status": "completed",
+      "conclusion": "failure",
+      "started_at": "2026-11-22T10:00:05Z",
+      "completed_at": "2026-11-22T10:00:09Z",
+      "steps": [
+        {
+          "name": "Set up job",
+          "status": "completed",
+          "conclusion": "success",
+          "number": 1
+        },
+        {
+          "name": "Check docs",
+          "status": "completed",
+          "conclusion": "action_required",
+          "number": 2
+        }
+      ]
+    }
+  ]
+}
