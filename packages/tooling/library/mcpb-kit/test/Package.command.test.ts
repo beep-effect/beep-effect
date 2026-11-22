@@ -1,8 +1,16 @@
-import { McpbManifestFields, McpbPackageSpec, makeMcpbPackageCommand, mcpbWindowsRuntime } from "@beep/mcpb-kit";
+import {
+  McpbManifestFields,
+  McpbPackageFailure,
+  McpbPackageSpec,
+  makeMcpbPackageCommand,
+  mcpbCacheDirectory,
+  mcpbWindowsRuntime,
+} from "@beep/mcpb-kit";
 import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import * as BunPath from "@effect/platform-bun/BunPath";
 import { afterEach, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
@@ -41,7 +49,8 @@ const inventory =
 const windowsArchive = `${output}/example-mcp-windows-x64.mcpb`;
 const windowsInventory =
   "manifest.json\nbun.exe\nexample-mcp.js\nengine.wasm\nnode_modules/\nnode_modules/@duckdb/\nnode_modules/@duckdb/node-bindings-win32-x64/duckdb.dll\nnode_modules/@duckdb/node-bindings-win32-x64/duckdb.node\n";
-const cache = `${output}/.cache`;
+const cacheHome = "/xdg-cache";
+const cache = `${cacheHome}/beep/mcpb`;
 const bindingsCache = `${cache}/node-bindings-win32-x64-2.0.1-r.1`;
 const runtimeCache = `${cache}/bun-windows-x64-${mcpbWindowsRuntime.version}`;
 const runtimeArchive = `${cache}/bun-windows-x64-${mcpbWindowsRuntime.version}.zip`;
@@ -92,7 +101,8 @@ const commandEnvironment = Layer.mergeAll(
     ChildProcessSpawner.ChildProcessSpawner,
     ChildProcessSpawner.make(() => Effect.die("Unexpected process execution"))
   ),
-  Digest.layerWebCrypto
+  Digest.layerWebCrypto,
+  ConfigProvider.layer(ConfigProvider.fromUnknown({ XDG_CACHE_HOME: cacheHome }))
 );
 
 it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB packaging boundaries", (it) => {
@@ -108,6 +118,7 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
   ) {
     const fs = yield* FileSystem.FileSystem;
     yield* fs.remove("/repo", { recursive: true, force: true });
+    yield* fs.remove(cacheHome, { recursive: true, force: true });
     yield* fs.makeDirectory(nativeDir, { recursive: true });
     yield* fs.writeFileString("/repo/.bun-version", `${options.bunVersion ?? mcpbWindowsRuntime.version}\n`);
     const argument = `${nativeDir}/package.json`;
@@ -283,6 +294,33 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
     })
   );
 
+  it.effect("writes to apps/<appName>/.mcpb, outside dist/, when no output is named", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      const defaultOutput = "/repo/apps/example-mcp/.mcpb";
+      yield* runCommand(["--target", "linux-x64"]).pipe(Effect.provideService(FileSystem.FileSystem, fixture.fs));
+      expect(fixture.calls[0]).toContain(`--outfile=${defaultOutput}/linux-x64/example-mcp`);
+      expect(fixture.calls[1]?.[3]).toBe(`${defaultOutput}/example-mcp-linux-x64.mcpb`);
+      const manifestExists = yield* fixture.fs.exists(`${defaultOutput}/linux-x64/manifest.json`);
+      expect(manifestExists).toBe(true);
+      const distExists = yield* fixture.fs.exists("/repo/apps/example-mcp/dist");
+      expect(distExists).toBe(false);
+    })
+  );
+
+  it.effect("keeps the Windows downloads in the cache home, never in the output tree", () =>
+    Effect.gen(function* () {
+      const fixture = yield* prepare();
+      yield* cacheWindowsDownloads();
+      yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(
+        Effect.provideService(FileSystem.FileSystem, fixture.fs)
+      );
+      expect(A.map(fixture.calls, (args) => args[0])).not.toContain("curl");
+      const outputCacheExists = yield* fixture.fs.exists(`${output}/.cache`);
+      expect(outputCacheExists).toBe(false);
+    })
+  );
+
   it.effect("reports a cached runtime that cannot be copied into the bundle", () =>
     Effect.gen(function* () {
       const fixture = yield* prepare({ listing: windowsInventory });
@@ -453,7 +491,7 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
   it.effect("never reuses a cached unpack from another DuckDB pin", () =>
     Effect.gen(function* () {
       const fixture = yield* prepare();
-      const stale = `${output}/.cache/node-bindings-win32-x64-1.5.6-r.2`;
+      const stale = `${cache}/node-bindings-win32-x64-1.5.6-r.2`;
       yield* fixture.fs.makeDirectory(stale, { recursive: true });
       yield* fixture.fs.writeFileString(`${stale}/duckdb.node`, "stale Windows sidecar");
       yield* runCommand(["--target", "windows-x64", "--output", output]).pipe(Effect.result);
@@ -517,6 +555,35 @@ it.layer(commandEnvironment, { concurrent: false, timeout: "5 seconds" })("MCPB 
         failure: { message: expect.stringContaining("differ from pinned") },
       });
       expect(fixture.calls).toEqual([]);
+    })
+  );
+});
+
+it.layer(BunPath.layer)("mcpbCacheDirectory", (it) => {
+  const resolveWith = (env: Record<string, string>) =>
+    mcpbCacheDirectory.pipe(Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown(env)));
+
+  it.effect("uses an absolute XDG_CACHE_HOME", () =>
+    Effect.gen(function* () {
+      const directory = yield* resolveWith({ XDG_CACHE_HOME: "/var/cache", HOME: "/home/ada" });
+      expect(directory).toBe("/var/cache/beep/mcpb");
+    })
+  );
+
+  it.effect("falls back to $HOME/.cache when XDG_CACHE_HOME is unset or relative", () =>
+    Effect.gen(function* () {
+      const unset = yield* resolveWith({ HOME: "/home/ada" });
+      const relative = yield* resolveWith({ XDG_CACHE_HOME: "relative/cache", HOME: "/home/ada" });
+      expect(unset).toBe("/home/ada/.cache/beep/mcpb");
+      expect(relative).toBe("/home/ada/.cache/beep/mcpb");
+    })
+  );
+
+  it.effect("fails with a packaging failure when neither variable is absolute", () =>
+    Effect.gen(function* () {
+      const error = yield* resolveWith({ HOME: "relative-home" }).pipe(Effect.flip);
+      expect(error).toBeInstanceOf(McpbPackageFailure);
+      expect(error.message).toContain("XDG_CACHE_HOME");
     })
   );
 });

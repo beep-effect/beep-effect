@@ -8,8 +8,8 @@ The gateway ships as a Claude Desktop extension (`.mcpb`):
 
 ```bash
 # from the repository root
-bun run --cwd apps/practice-gateway package:mcpb:linux    # dist/mcpb/practice-gateway-linux-x64.mcpb
-bun run --cwd apps/practice-gateway package:mcpb:windows  # dist/mcpb/practice-gateway-windows-x64.mcpb
+bun run --cwd apps/practice-gateway package:mcpb:linux    # .mcpb/practice-gateway-linux-x64.mcpb
+bun run --cwd apps/practice-gateway package:mcpb:windows  # .mcpb/practice-gateway-windows-x64.mcpb
 ```
 
 The Linux bundle holds one compiled `practice-gateway` executable. The Windows

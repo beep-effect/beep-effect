@@ -556,7 +556,7 @@ const program = Effect.scoped(
     const path = yield* Path.Path;
     const root = yield* fs.makeTempDirectoryScoped({ prefix: "practice-kg-compiled-smoke-" });
     const bundleOut = yield* makePracticeKgSmokeBundle(root);
-    const executable = path.resolve(import.meta.dir, "..", "dist", "mcpb", "linux-x64", "practice-kg-mcp");
+    const executable = path.resolve(import.meta.dir, "..", ".mcpb", "linux-x64", "practice-kg-mcp");
     if (!(yield* fs.exists(executable))) {
       return yield* SmokeFailure.make({
         message: `Compiled Linux host is missing at "${executable}"; run the package:mcpb:linux script first.`,

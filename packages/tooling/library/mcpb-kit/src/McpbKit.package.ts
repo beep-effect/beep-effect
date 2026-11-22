@@ -14,6 +14,7 @@
  */
 
 import { Sha256Hex } from "@beep/schema";
+import { XdgBase } from "@beep/xdg/XdgBase";
 import * as A from "effect/Array";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
@@ -260,6 +261,43 @@ export const mcpbManifest: {
   });
 });
 
+/**
+ * The directory the pinned Windows downloads are cached in:
+ * `<XDG cache home>/beep/mcpb`.
+ *
+ * **Details**
+ *
+ * The cache home is `$XDG_CACHE_HOME` when it is absolute, otherwise
+ * `$HOME/.cache` (`@beep/xdg` `XdgBase.require("cache")`). The cache lives
+ * outside the output directory so a build that archives `dist/**` or the
+ * output tree never carries the toolchain downloads, and every app shares one
+ * copy. Entries stay keyed by pinned version.
+ *
+ * **Example** (Build the resolution effect)
+ *
+ * ```ts
+ * import { mcpbCacheDirectory } from "@beep/mcpb-kit"
+ * import * as Effect from "effect/Effect"
+ *
+ * console.log(Effect.isEffect(mcpbCacheDirectory)) // true
+ * ```
+ *
+ * @category configuration
+ * @since 0.0.0
+ */
+export const mcpbCacheDirectory = Effect.gen(function* () {
+  const path = yield* Path.Path;
+  const cacheHome = yield* XdgBase.require("cache").pipe(
+    Effect.mapError((cause) =>
+      McpbPackageFailure.make({
+        cause,
+        message: "Cannot resolve the cache directory: set an absolute XDG_CACHE_HOME or HOME.",
+      })
+    )
+  );
+  return path.join(cacheHome, "beep", "mcpb");
+});
+
 const encodeManifest = S.encodeEffect(S.fromJsonString(McpbManifest, { space: 2 }));
 
 const packageTarget = Effect.fn("McpbPackage.packageTarget")(function* (
@@ -275,12 +313,11 @@ const packageTarget = Effect.fn("McpbPackage.packageTarget")(function* (
   const resolvedOutputRoot = path.resolve(repoRoot, outputRoot);
   const bundleDir = path.resolve(resolvedOutputRoot, target);
   const archivePath = path.resolve(resolvedOutputRoot, `${appName}-${target}.mcpb`);
-  const cacheDir = path.resolve(resolvedOutputRoot, ".cache");
   const entrypoint = `apps/${appName}/src/bin.ts`;
   const externals = A.flatMap(NativeAddonExternals, (external) => ["--external", external]);
   const nativeSource =
     target === "windows-x64"
-      ? yield* ensureWindowsBindings(cacheDir, repoRoot)
+      ? yield* Effect.flatMap(mcpbCacheDirectory, (cacheDir) => ensureWindowsBindings(cacheDir, repoRoot))
       : path.resolve(repoRoot, "node_modules", "@duckdb", nativePackage);
   // Staging resolves the pinned runtime before the last bundle is removed, so
   // a pin or download failure leaves it in place.
@@ -303,32 +340,35 @@ const packageTarget = Effect.fn("McpbPackage.packageTarget")(function* (
         ),
       }),
     "runtime-script": ({ runtime, script }) =>
-      Effect.map(ensureRuntime(runtime, cacheDir, repoRoot), (runtimeSource) => ({
-        files: [runtime.executable, script, ...spec.assets],
-        build: run(
-          [
-            "bun",
-            "build",
-            "--target=bun",
-            entrypoint,
-            `--outdir=${bundleDir}`,
-            `--entry-naming=${script}`,
-            "--asset-naming=[name].[ext]",
-            ...externals,
-          ],
-          { cwd: repoRoot }
-        ).pipe(
-          Effect.andThen(
-            fs
-              .copyFile(runtimeSource, path.join(bundleDir, runtime.executable))
-              .pipe(
-                Effect.mapError((cause) =>
-                  McpbPackageFailure.make({ cause, message: `Failed copying ${runtime.executable} into the bundle.` })
+      Effect.map(
+        Effect.flatMap(mcpbCacheDirectory, (cacheDir) => ensureRuntime(runtime, cacheDir, repoRoot)),
+        (runtimeSource) => ({
+          files: [runtime.executable, script, ...spec.assets],
+          build: run(
+            [
+              "bun",
+              "build",
+              "--target=bun",
+              entrypoint,
+              `--outdir=${bundleDir}`,
+              `--entry-naming=${script}`,
+              "--asset-naming=[name].[ext]",
+              ...externals,
+            ],
+            { cwd: repoRoot }
+          ).pipe(
+            Effect.andThen(
+              fs
+                .copyFile(runtimeSource, path.join(bundleDir, runtime.executable))
+                .pipe(
+                  Effect.mapError((cause) =>
+                    McpbPackageFailure.make({ cause, message: `Failed copying ${runtime.executable} into the bundle.` })
+                  )
                 )
-              )
-          )
-        ),
-      })),
+            )
+          ),
+        })
+      ),
   });
   yield* fs.remove(bundleDir, { recursive: true, force: true });
   yield* fs.makeDirectory(bundleDir, { recursive: true });
@@ -362,10 +402,11 @@ const packageTarget = Effect.fn("McpbPackage.packageTarget")(function* (
  * **Details**
  *
  * `--target` defaults to `all` (Linux then Windows); `--output` defaults to
- * `apps/<appName>/dist/mcpb`, resolved against the repository root. Each target
- * writes `<output>/<target>/` and `<output>/<appName>-<target>.mcpb`. The
- * Windows target downloads the pinned DuckDB win32 bindings and the pinned
- * Bun runtime into `<output>/.cache` once per pinned version, verifies their
+ * `apps/<appName>/.mcpb`, resolved against the repository root and kept out of
+ * `dist/` so build caches never archive bundles. Each target writes
+ * `<output>/<target>/` and `<output>/<appName>-<target>.mcpb`. The Windows
+ * target downloads the pinned DuckDB win32 bindings and the pinned Bun runtime
+ * into {@link mcpbCacheDirectory} once per pinned version, verifies their
  * digests before unpacking, and refuses to package an unsigned Windows
  * binary other than DuckDB's `duckdb.node`. The command needs a
  * `Digest` service; running it needs `bun`, `zip` and `unzip` (and `curl`,
@@ -405,7 +446,7 @@ export const makeMcpbPackageCommand = (spec: McpbPackageSpec) =>
   Command.make(
     spec.commandName,
     {
-      output: Flag.Directory("output").pipe(Flag.withDefault(`apps/${spec.appName}/dist/mcpb`)),
+      output: Flag.Directory("output").pipe(Flag.withDefault(`apps/${spec.appName}/.mcpb`)),
       target: Flag.Literals("target", McpbTargetSelection.literals).pipe(
         Flag.withDefault(McpbTargetSelection.Enum.all)
       ),
