@@ -1,10 +1,10 @@
-# Cache baseline review: P1 PR B after merging main at 8bae990b9ce
+# Cache baseline review: P1 PR B after merging main at bf1732fa398
 
 Date: 2026-11-22. Lane: P1 PR B of `goals/text-knowledge-stack-rebuild` (#3439).
 
 ## What changed
 
-PR B merged `origin/main` (`8bae990b9ce`) to clear a base conflict. The root baseline conflicted
+PR B merged `origin/main` (`bf1732fa398`) to clear a base conflict. The root baseline conflicted
 with `main`'s re-record for the gate-run-history lane (#3446), and the merge took `main`'s side, so
 the root lost the one edit PR B owns.
 

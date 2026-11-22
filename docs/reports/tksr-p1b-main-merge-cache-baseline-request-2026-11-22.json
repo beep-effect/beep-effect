@@ -1,13 +1,13 @@
 {
   "previous": {
-    "//": "14755a5e8fddfc9cdf090c94b7b3143dd7b80713bb722c3b7183efdb4f99ffb4"
+    "//": "e88a02fa487cb9273358489ba25b4cfa3a00415273ed0086839db9c16c2361c0"
   },
   "review": {
     "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 registry lane, PR #3439)",
-    "reason": "Re-record the root after merging main at 8bae990b9ce: //#lint:identity-registry keeps PR B's registry shard input glob; main's root changes are kept. No command, cache flag, output or environment changed; no qualification is granted.",
+    "reason": "Re-record the root after merging main at bf1732fa398: //#lint:identity-registry keeps PR B's registry shard input glob; main's root changes are kept. No command, cache flag, output or environment changed; no qualification is granted.",
     "basis": {
       "path": "docs/reports/tksr-p1b-main-merge-cache-review-2026-11-22.md",
-      "sha256": "5a511939882eca0436675c2bff72877447fda1b416f0c66f418dc890a433137e"
+      "sha256": "5390af34b49b8ed8a72c037487347834cff7e5c9a5007b9fd336da0772cea4bb"
     }
   },
   "subjects": ["//"],
