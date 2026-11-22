@@ -147,12 +147,12 @@ export const isValidAttributeName = S.is(AttributeName);
 export const isValidAttributeValue = S.is(AttributeValue);
 
 const isNameStart = (char: string | undefined): boolean =>
-  char !== undefined && ((char >= "A" && char <= "Z") || (char >= "a" && char <= "z")); // A-Z a-z
+  char !== undefined && ((char >= "A" && char <= "Z") || (char >= "a" && char <= "z"));
 
 const isNameChar = (char: string | undefined): boolean =>
-  isNameStart(char) || (char !== undefined && char >= "0" && char <= "9") || char === "_" || char === "-"; // 0-9 _ -
+  isNameStart(char) || (char !== undefined && char >= "0" && char <= "9") || char === "_" || char === "-";
 
-const isSeparator = (char: string | undefined): boolean => char === " " || char === "\t"; // space, tab
+const isSeparator = (char: string | undefined): boolean => char === " " || char === "\t";
 
 /** The index a walk step returns when the run is refused. */
 const REFUSED = -1;

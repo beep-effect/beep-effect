@@ -120,7 +120,6 @@ describe("ReleaseAgeGate#isExcluded", () => {
 });
 
 describe("ReleaseAgeGate#filterVersions", () => {
-  // Fixed clock: 2026-07-21T00:00:00Z.
   const now = Date.parse("2026-07-21T00:00:00Z");
   const day = 24 * 60; // minutes in a day
 
