@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "comment-law-sweep",
+    "packetId": "goal-packet/v1:c888e5b7e7346220d5a0d25312541ca0c3681162ac7d33aaeefd77deda721e46",
+    "title": "Comment Law Sweep",
+    "status": "active",
+    "created": "2026-11-22",
+    "updated": "2026-11-22",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/comment-law-sweep",
+  "lifecycle": "active",
+  "mission": "Burn the comment backlog down in batches: tautology and stale deleted, decisions moved, excuse families fixed or filed, hazards absorbed.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/comment-law",
+    "graduated": "2026-11-22"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/comment-law-sweep/README.md",
+    "goals/comment-law-sweep/SPEC.md",
+    "goals/comment-law-sweep/PLAN.md",
+    "goals/comment-law-sweep/GOAL.md",
+    "goals/comment-law-sweep/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/comment-law-sweep/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": ["comment-law/growth-check-blocking"],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/comment-law-sweep/GOAL.md)\" -le 4000",
+    "jq . goals/comment-law-sweep/ops/manifest.json",
+    "rg -n \"comment-law-sweep|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/comment-law-sweep",
+    "git diff --check -- goals/comment-law-sweep",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
