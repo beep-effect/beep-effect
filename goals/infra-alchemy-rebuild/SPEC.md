@@ -131,8 +131,8 @@ group, `infra:prepare-gha-runners` in root `postinstall`, `infra` in root `works
       `bun run beep quality package-verify <pkg>`, and has stack tests on the `@alchemy.run/test`
       harness.
 - [ ] `alchemy plan` for every deployed stack shows no create or replace against its live stage after
-      cutover (OpenClaw has no live stage, operator ruling 2026-11-22), `alchemy drift` is clean, and the shared S3 state store lists every stack
-      including `BeepEffectWeb` (`plan` has no changes-pending exit code; GitHub secrets
+      cutover (OpenClaw has no live stage, operator ruling 2026-11-22), `alchemy drift` is clean, and the shared S3 state store lists every deployed
+      stack including `BeepEffectWeb` (`plan` has no changes-pending exit code; GitHub secrets
       re-upload by design).
 - [ ] CI runs on the Alchemy-built runner fleet; `heavy.yml` and `check.yml` enrolled against the
       Worker turbo cache with hit evidence from a `main` run and a PR run.
