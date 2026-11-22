@@ -33,10 +33,13 @@
  * default the merge base with `origin/main`), read with `git show` from wherever
  * the base tree has its `@beep/identity` package, at exactly the release the
  * change against that base calls for. A term or
- * namespace IRI the base published leaves only through a deprecation, which
- * only `bun run beep identity deprecate` writes. A checkout with no registry at all
+ * namespace IRI the base published leaves only through a deprecation. A term is
+ * retired with `bun run beep identity deprecate`, which takes a live term only;
+ * no command retires a namespace, whose IRI is retired by hand with a
+ * deprecation row in a remaining shard. A checkout with no registry at all
  * publishes nothing, so deleting the registry is reported as the removal of every
- * term the base published, and moving the package hides no removal.
+ * term the base published, and a term snapshot left without its registry is
+ * drift. Moving the package hides no removal.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -75,7 +78,7 @@ import {
   BaseSnapshot,
   baseSnapshotIssues,
   checkRegistry,
-  checkRegistryAgainstBase,
+  IdentityRegistryIssue,
   RegistryWrite,
   registryPresent,
   resolveRegistryLayout,
@@ -624,22 +627,33 @@ const regenerateRegistry = Effect.fn("IdentityRegistry.regenerateRegistry")(func
   }
 });
 
-// The rows of a checkout that carries a registry, against itself and against the base ref's snapshot.
-const presentRegistryIssues = Effect.fn("IdentityRegistry.presentRegistryIssues")(function* (
+// The rows of a checkout with no registry: every term the base published is removed, and a term snapshot
+// left behind is drift, because nothing regenerates it and it would become the next base.
+const absentRegistryIssues = Effect.fn("IdentityRegistry.absentRegistryIssues")(function* (
   repoRoot: string,
   layout: RegistryLayout,
   base: BaseSnapshot
 ) {
-  const committedIssues = yield* checkRegistry(repoRoot, layout);
-  const baseIssues = yield* checkRegistryAgainstBase(repoRoot, layout, base);
-  return A.appendAll(committedIssues, baseIssues);
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  const orphaned = yield* fs.exists(path.join(repoRoot, layout.snapshot));
+  const snapshotIssues = orphaned
+    ? A.of(
+        IdentityRegistryIssue.make({
+          kind: "registry-generated-drift",
+          subject: layout.snapshot,
+          detail: `The term snapshot has no registry: there is no shard under ${layout.shards} and no ${layout.data}. Restore the registry, or remove the snapshot with it.`,
+        })
+      )
+    : A.empty<IdentityRegistryIssue>();
+  return A.appendAll(baseSnapshotIssues(base, TermSnapshot.empty, layout), snapshotIssues);
 });
 
 // Declared-term registry rows: invalid shards, shard conflicts, generated-artifact drift and breaks
 // of the base ref's published term set. A checkout with neither shards nor the generated data module
 // carries no registry: it publishes nothing, so every term the base published is removed, and a base
-// that published nothing (a fixture repo) leaves no row. `--fix` regenerates the artifacts first; it
-// never edits a shard and never writes a deprecation.
+// that published nothing (a fixture repo) leaves no row. `--fix` regenerates the artifacts first, and
+// only over a base snapshot that decodes; it never edits a shard and never writes a deprecation.
 const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermRegistryViolations")(function* (
   repoRoot: string,
   fix: boolean,
@@ -656,13 +670,15 @@ const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermReg
   );
   const undecodable = A.fromOption(Result.getFailure(baseSnapshot));
 
-  if (fix && present) {
-    yield* regenerateRegistry(repoRoot, layout, published);
+  // Regenerating against the empty stand-in would write a release no base backs, so --fix needs the base.
+  if (fix && present && Result.isSuccess(baseSnapshot)) {
+    yield* regenerateRegistry(repoRoot, layout, baseSnapshot.success);
   }
 
+  // One plan of the shards gives both the drift and the comparison with the base.
   const found = present
-    ? yield* presentRegistryIssues(repoRoot, layout, published)
-    : baseSnapshotIssues(published, TermSnapshot.empty, layout);
+    ? yield* checkRegistry(repoRoot, layout, O.some(published))
+    : yield* absentRegistryIssues(repoRoot, layout, published);
   const issues = A.appendAll(found, undecodable);
   return A.map(issues, (issue) =>
     IdentityRegistryViolation.make({ kind: issue.kind, subject: issue.subject, detail: issue.detail })

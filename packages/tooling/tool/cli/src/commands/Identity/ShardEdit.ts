@@ -87,6 +87,7 @@ export const ShardEditRefusalReason = LiteralKit([
   "registry-conflict",
   "invalid-code",
   "mixed-move",
+  "nested-move",
   "nothing-bound",
   "target-module-missing",
   "invalid-curie",
@@ -97,7 +98,7 @@ export const ShardEditRefusalReason = LiteralKit([
 ]).pipe(
   $I.annoteSchema("ShardEditRefusalReason", {
     description:
-      "Why a registry shard edit is refused: an invalid shard, a resulting registry conflict, a malformed code identity or CURIE, a rebind between a package and a code identity, a rebind that moves nothing or onto a module the checkout does not have, a term that is not live or is still bound, or a replacement outside the namespace or not live.",
+      "Why a registry shard edit is refused: an invalid shard, a resulting registry conflict, a malformed code identity or CURIE, a rebind between a package and a code identity or between two code identities one of which is under the other, a rebind that moves nothing or onto a module the checkout does not have, a term that is not live or is still bound, or a replacement outside the namespace or not live.",
   })
 );
 
@@ -548,10 +549,10 @@ const reportRefusals = Effect.fn("IdentityShardEdit.reportRefusals")(function* (
   return yield* failWithReportedExit(`identity ${label}: refused.`);
 });
 
-// Refusals an edit earns from the checkout itself, after its plan succeeded.
+// Refusals an edit earns from the checkout itself, after its plan over `input` succeeded.
 type CheckoutRefusals = (
   repoRoot: string,
-  planned: ReadonlyArray<RegistrySourceFile>
+  input: ShardEditInput
 ) => Effect.Effect<ReadonlyArray<ShardEditRefusal>, IdentityRegistryGeneratorError, FileSystem | Path>;
 
 const noCheckoutRefusals: CheckoutRefusals = () => Effect.succeed(A.empty());
@@ -608,7 +609,7 @@ const runShardEdit = Effect.fn("IdentityShardEdit.run")(function* (
   if (Result.isFailure(planned)) {
     return yield* reportRefusals(label, planned.failure);
   }
-  const refused = yield* checkout(repoRoot, planned.success);
+  const refused = yield* checkout(repoRoot, input.success);
   if (A.isReadonlyArrayNonEmpty(refused)) {
     return yield* reportRefusals(label, refused);
   }
@@ -620,10 +621,11 @@ const runShardEdit = Effect.fn("IdentityShardEdit.run")(function* (
 });
 
 const isMoveEnd = S.is(S.Union([CodeId, CodePackage]));
+const isCodeId = S.is(CodeId);
 const decodeMove = S.decodeUnknownResult(CodeMove);
 
-// The requested move, or a refusal for each end that is neither a code identity nor a package, or for
-// a move between the two kinds.
+// The requested move, or a refusal for each end that is neither a code identity nor a package, for a move
+// between the two kinds, or for a move between two code identities one of which is under the other.
 const moveOf = (options: {
   readonly from: string;
   readonly to: string;
@@ -641,29 +643,38 @@ const moveOf = (options: {
     ? Result.fail(invalid)
     : Result.mapError(decodeMove(options), () =>
         A.of(
-          refusal(
-            "mixed-move",
-            `${options.from} -> ${options.to}`,
-            "A package moves to a package and a code identity to a code identity; name both ends of the same kind."
-          )
+          isCodeId(options.from) && isCodeId(options.to)
+            ? refusal(
+                "nested-move",
+                `${options.from} -> ${options.to}`,
+                "One end is under the other, so the move would match the codes it moved and could not be run again after a partial write; move through a code identity outside both, in two rebinds."
+              )
+            : refusal(
+                "mixed-move",
+                `${options.from} -> ${options.to}`,
+                "A package moves to a package and a code identity to a code identity; name both ends of the same kind."
+              )
         )
       );
 };
 
 // A rebind onto a module the checkout does not have would leave every moved class unbound, so each
-// moved code must name a module file of its package.
+// code the move changes must name a module file of its package. A binding the move leaves alone is not
+// judged here, even when it already dangles: the registry check reports that one.
 const rebindTargetRefusals = (move: CodeMove): CheckoutRefusals =>
-  Effect.fnUntraced(function* (repoRoot: string, planned: ReadonlyArray<RegistrySourceFile>) {
+  Effect.fnUntraced(function* (repoRoot: string, input: ShardEditInput) {
     const moved = pipe(
-      planned,
+      input.shardFiles,
       A.flatMap((file) =>
         O.match(Result.getSuccess(decodeShardFile(file)), {
           onNone: A.empty<RegistryShard["bindings"][number]>,
           onSome: (shard) => shard.bindings,
         })
       ),
-      A.map((binding) => binding.code),
-      A.filter((code) => code === move.to || Str.startsWith(`${move.to}/`)(code))
+      A.filterMap((binding) => {
+        const code = moveCode(binding.code, move);
+        return code === binding.code ? Result.failVoid : Result.succeed(code);
+      })
     );
     const dangling = yield* danglingBindingCodes(repoRoot, moved);
     return A.map(dangling, (code) =>

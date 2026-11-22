@@ -26,10 +26,12 @@
 import { IdentityAuthority } from "@beep/identity/Authority";
 import { $RepoCliId } from "@beep/identity/packages";
 import {
+  CodeId,
   RegistryProjection,
   RegistryShard,
   RegistryTable,
   registryConflictMessage,
+  SnapshotViolation,
   snapshotViolationMessage,
   snapshotViolations,
   TermSnapshot,
@@ -51,7 +53,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CreatePackageIdentityRegistration } from "../CreatePackage/internal/IdentityRegistration.ts";
-import type { SnapshotViolation, Term } from "@beep/identity/Term";
+import type { Term } from "@beep/identity/Term";
 
 const $I = $RepoCliId.create("commands/Identity/Registry");
 
@@ -995,9 +997,12 @@ type RemedyContext = {
   readonly ref: O.Option<string>;
 };
 
-// How to repair each kind of break; only a removal is repaired with `identity deprecate`.
+// How to repair each kind of break; only a term's removal is repaired with `identity deprecate`, which retires
+// a live term and never a namespace.
 const REMOVAL_REMEDY =
-  "Restore the IRI, or retire it with `bun run beep identity deprecate`, the only writer of a deprecation.";
+  "Restore the IRI, or retire it with `bun run beep identity deprecate`, the only writer of a term's deprecation.";
+const NAMESPACE_REMOVAL_REMEDY =
+  "Restore the namespace's shard, or retire it by hand: `identity deprecate` retires terms only. In a remaining shard, add a deprecation of the namespace IRI and of each live term of the removed shard, at the release of the change (`replacement: \"\"` names that shard's namespace as the namespace IRI's successor), then regenerate.";
 const PREFIX_REMEDY = "Restore the namespace's prefix from the base ref.";
 const DEPRECATION_REMEDY = "Restore the deprecation row from the base ref; deprecations are append-only.";
 const REVIVED_REMEDY = "Remove the term again; a deprecated IRI is never published again.";
@@ -1021,7 +1026,7 @@ const baseBreaks: {
   ];
 } = {
   TermRemoved: ["term-removed-without-deprecation", constant(REMOVAL_REMEDY)],
-  NamespaceDropped: ["term-removed-without-deprecation", constant(REMOVAL_REMEDY)],
+  NamespaceDropped: ["term-removed-without-deprecation", constant(NAMESPACE_REMOVAL_REMEDY)],
   NamespacePrefixChanged: ["namespace-prefix-changed", constant(PREFIX_REMEDY)],
   DeprecationRemoved: ["deprecation-changed", constant(DEPRECATION_REMEDY)],
   DeprecationChanged: ["deprecation-changed", constant(DEPRECATION_REMEDY)],
@@ -1062,6 +1067,23 @@ const breakIssue =
     return IdentityRegistryIssue.make({ kind: "registry-snapshot-break", subject: layout.snapshot, detail });
   };
 
+const isSinceViolation = SnapshotViolation.isAnyOf(["BindingSinceMisstated", "DeprecationSinceMisstated"]);
+
+// A row the change adds whose `since` is not the release of the change. Only a shard edit repairs it, so the
+// writer refuses the change instead of writing what the lint then reports.
+const sinceIssues = (input: RegistryPlanInput, previous: TermSnapshot, next: TermSnapshot) =>
+  O.match(publishedBase(input), {
+    onNone: A.empty<IdentityRegistryIssue>,
+    onSome: () =>
+      A.map(A.filter(snapshotViolations(previous, next), isSinceViolation), (violation) =>
+        IdentityRegistryIssue.make({
+          kind: "since-misstated",
+          subject: input.layout.snapshot,
+          detail: `${AGAINST_BASE}: ${snapshotViolationMessage(violation)} Set that \`since\` in its shard under ${input.layout.shards} to the release of the change, then run the same command again.`,
+        })
+      ),
+  });
+
 /**
  * Build the table from shard files and render every generated artifact, or return every finding.
  *
@@ -1070,9 +1092,11 @@ const breakIssue =
  * The regenerated snapshot succeeds {@link previousSnapshot}. One whose rows
  * break that snapshot, such as a term removed with no deprecation, is a
  * `registry-snapshot-break` finding for each break, so `--write` refuses it. A
- * row the base never published is free to go again. Its release and the
- * `since` of its new rows are judged by {@link baseSnapshotIssues}, not here:
- * regenerating is what repairs a release.
+ * row the base never published is free to go again. Against a base that
+ * publishes a term set, a binding or deprecation the change adds must record
+ * the release of the change: another `since` is a `since-misstated` finding,
+ * because only a shard edit repairs it. The release itself is computed, so
+ * regenerating repairs it, and {@link baseSnapshotIssues} judges the committed one.
  *
  * **Example** (Plan from no shards)
  *
@@ -1148,7 +1172,10 @@ export const planRegistryArtifacts = (
           : Result.fail(target.path);
       });
       const next = regeneratedSnapshot(table, releasePolicy(input.base), previous.success);
-      const breaks = A.map(termSetViolations(previous.success, next), breakIssue(input));
+      const breaks = A.appendAll(
+        A.map(termSetViolations(previous.success, next), breakIssue(input)),
+        sinceIssues(input, previous.success, next)
+      );
       return A.isReadonlyArrayNonEmpty(breaks)
         ? Result.fail(breaks)
         : Result.succeed(
@@ -1293,14 +1320,15 @@ const readOptional = Effect.fn("IdentityRegistry.readOptional")(function* (repoR
   return O.some(content);
 });
 
+const isCodeId = S.is(CodeId);
+
 // The workspace package a binding code names (`@beep/<package>`) and its module path: every segment
-// but the last, which is the member (a class or `Class.field`).
+// but the last, which is the member (a class or `Class.field`). Only a code identity has them: it has no
+// segment of dots alone, so its module path never leaves the package's `src`.
 const codeParts = (code: string): O.Option<readonly [packageName: string, modulePath: string]> => {
   const [scope, name = "", ...segments] = Str.split("/")(code);
   const modulePath = A.join(A.dropRight(segments, 1), "/");
-  return scope === "@beep" && name !== "" && modulePath !== ""
-    ? O.some([`${scope}/${name}`, modulePath] as const)
-    : O.none();
+  return isCodeId(code) && modulePath !== "" ? O.some([`${scope}/${name}`, modulePath] as const) : O.none();
 };
 
 // The files a module path may name under its package.
@@ -1331,7 +1359,9 @@ const isRegularFile = Effect.fn("IdentityRegistry.isRegularFile")(function* (abs
  * segment is the member (a class, or `Class.field`). It resolves when
  * `<package>` is a workspace of the checkout and the module path names a
  * regular file of that package: `src/<module path>.ts`, `.tsx` or
- * `src/<module path>/index.ts`. A directory with such a name is no module. A
+ * `src/<module path>/index.ts`. A directory with such a name is no module, and
+ * a code that is not a {@link CodeId}, such as one with a `..` segment, names
+ * none. A
  * binding that resolves nowhere would leave its class unbound at runtime, so `rebind`
  * refuses to create one and `identity registry --check` reports one.
  *
@@ -1497,8 +1527,10 @@ export const readRegistryPlanInput = Effect.fn("IdentityRegistry.readPlanInput")
  * **Details**
  *
  * An edited shard stands in for the committed shard at its path, so an edit is
- * planned in full before any of it is written. A check names no base and reads
- * no git state.
+ * planned in full before any of it is written. An edit at a path that has no
+ * shard, or two edits at one path, is a `registry-shard-invalid` finding: the
+ * plan would not describe what a write of the edits writes. A check names no
+ * base and reads no git state.
  *
  * **Example** (Plan the registry)
  *
@@ -1519,6 +1551,18 @@ export const planRegistry = Effect.fn("IdentityRegistry.plan")(function* (
   edits: ReadonlyArray<RegistrySourceFile> = A.empty()
 ) {
   const input = yield* readRegistryPlanInput(repoRoot, layout, base);
+  const editIssues = A.filterMap(A.dedupe(A.map(edits, (edited) => edited.path)), (path) => {
+    const count = A.length(A.filter(edits, (edited) => edited.path === path));
+    if (count > 1) {
+      return Result.succeed(shardIssue(path, `${count} edits name this shard; an edit names each shard once.`));
+    }
+    return A.some(input.shardFiles, (file) => file.path === path)
+      ? Result.failVoid
+      : Result.succeed(shardIssue(path, "The edit names no shard of the registry; an edit replaces a shard."));
+  });
+  if (A.isReadonlyArrayNonEmpty(editIssues)) {
+    return Result.fail(editIssues);
+  }
   const shardFiles = A.map(input.shardFiles, (file) =>
     pipe(
       A.findFirst(edits, (edited) => edited.path === file.path),
@@ -1529,27 +1573,39 @@ export const planRegistry = Effect.fn("IdentityRegistry.plan")(function* (
 });
 
 /**
- * Every registry finding of the checkout at `repoRoot`: invalid shards, conflicts, or drift.
+ * Every registry finding of the checkout at `repoRoot`: invalid shards, conflicts, drift, and the breaks of
+ * `against`'s published term set.
  *
  * **Details**
  *
  * Every binding code of the regenerated snapshot names a module of the checkout
- * ({@link danglingBindingCodes}). The check reads no base and no git state: a
+ * ({@link danglingBindingCodes}). The plan reads no base and no git state: a
  * committed release below a `since` its rows record is drift, because a
- * regeneration raises it.
+ * regeneration raises it. Given a base snapshot, the same regenerated snapshot is
+ * also compared with it ({@link baseSnapshotIssues}), so both comparisons read
+ * one set of shards. A checkout whose plan fails has no head snapshot, so it
+ * reports why the plan failed and nothing against the base.
  *
  * **Example** (Check the registry)
  *
  * ```ts
- * import { checkRegistry, RegistryLayout } from "@beep/repo-cli/commands/Identity/Registry"
+ * import { TermSnapshot } from "@beep/identity/Term"
+ * import { BaseSnapshot, checkRegistry, RegistryLayout } from "@beep/repo-cli/commands/Identity/Registry"
+ * import * as O from "effect/Option"
  *
- * console.log(checkRegistry("/repo", RegistryLayout.of("packages/identity")))
+ * const layout = RegistryLayout.of("packages/identity")
+ * console.log(checkRegistry("/repo", layout))
+ * console.log(checkRegistry("/repo", layout, O.some(BaseSnapshot.make({ snapshot: TermSnapshot.empty }))))
  * ```
  *
  * @category validation
  * @since 0.0.0
  */
-export const checkRegistry = Effect.fn("IdentityRegistry.check")(function* (repoRoot: string, layout: RegistryLayout) {
+export const checkRegistry = Effect.fn("IdentityRegistry.check")(function* (
+  repoRoot: string,
+  layout: RegistryLayout,
+  against: O.Option<BaseSnapshot> = O.none()
+) {
   const plan = yield* planRegistry(repoRoot, layout, O.none());
   if (Result.isFailure(plan)) {
     return plan.failure;
@@ -1576,41 +1632,11 @@ export const checkRegistry = Effect.fn("IdentityRegistry.check")(function* (repo
       detail: `The binding code ${code} names no module of the checkout. Restore the module, or move the binding with \`bun run beep identity rebind\`.`,
     })
   );
-  return A.appendAll(drift, danglingIssues);
-});
-
-/**
- * The findings of the checkout's regenerated snapshot against a base ref's snapshot.
- *
- * **Details**
- *
- * A checkout whose plan fails has no head snapshot to compare, so it reports
- * nothing here; {@link checkRegistry} reports why the plan failed.
- *
- * **Example** (Check against the empty base)
- *
- * ```ts
- * import { TermSnapshot } from "@beep/identity/Term"
- * import { BaseSnapshot, checkRegistryAgainstBase, RegistryLayout } from "@beep/repo-cli/commands/Identity/Registry"
- *
- * const layout = RegistryLayout.of("packages/identity")
- * const base = BaseSnapshot.make({ snapshot: TermSnapshot.empty })
- * console.log(checkRegistryAgainstBase("/repo", layout, base))
- * ```
- *
- * @category validation
- * @since 0.0.0
- */
-export const checkRegistryAgainstBase = Effect.fn("IdentityRegistry.checkAgainstBase")(function* (
-  repoRoot: string,
-  layout: RegistryLayout,
-  base: BaseSnapshot
-) {
-  const plan = yield* planRegistry(repoRoot, layout, O.none());
-  return Result.match(plan, {
-    onFailure: A.empty<IdentityRegistryIssue>,
-    onSuccess: ({ snapshot }) => baseSnapshotIssues(base, snapshot, layout),
+  const baseIssues = O.match(against, {
+    onNone: A.empty<IdentityRegistryIssue>,
+    onSome: (base) => baseSnapshotIssues(base, snapshot, layout),
   });
+  return A.appendAll(A.appendAll(drift, danglingIssues), baseIssues);
 });
 
 /**
@@ -1634,7 +1660,9 @@ export class RegistryWrite extends S.Opaque<RegistryWrite, { readonly brand: uni
   }).pipe($I.annoteSchema("RegistryWrite", { description: "The files one registry write changed and removed." }))
 ) {}
 
-// Replace a file whole: a failed write leaves the old bytes, so a rerun never reads a truncated file.
+// Replace a file whole: a failed write leaves the old bytes, so a rerun never reads a truncated file. Each
+// write stages in a directory of its own beside the file, which `mkdtemp` creates new, so no other write
+// shares the staged file and no entry already at a staging path (a link left there) is followed.
 const replaceFile = Effect.fn("IdentityRegistry.replaceFile")(function* (repoRoot: string, file: RegistrySourceFile) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
@@ -1643,15 +1671,21 @@ const replaceFile = Effect.fn("IdentityRegistry.replaceFile")(function* (repoRoo
   if (O.contains(current, file.content)) {
     return false;
   }
-  const staged = `${absolute}.tmp`;
+  const directory = path.dirname(absolute);
   yield* fs
-    .makeDirectory(path.dirname(absolute), { recursive: true })
+    .makeDirectory(directory, { recursive: true })
     .pipe(Effect.mapError(ioError(`Cannot create the directory of ${file.path}.`)));
-  yield* fs.writeFileString(staged, file.content).pipe(
-    Effect.andThen(fs.rename(staged, absolute)),
-    Effect.onError(() => Effect.ignore(fs.remove(staged))),
-    Effect.mapError(ioError(`Cannot write ${file.path}.`))
-  );
+  const staging = yield* fs
+    .makeTempDirectory({ directory, prefix: `.${path.basename(absolute)}.staging-` })
+    .pipe(Effect.mapError(ioError(`Cannot stage ${file.path}.`)));
+  const staged = path.join(staging, path.basename(absolute));
+  yield* fs
+    .writeFileString(staged, file.content, { flag: "wx" })
+    .pipe(
+      Effect.andThen(fs.rename(staged, absolute)),
+      Effect.ensuring(Effect.ignore(fs.remove(staging, { recursive: true, force: true }))),
+      Effect.mapError(ioError(`Cannot write ${file.path}.`))
+    );
   return true;
 });
 

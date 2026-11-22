@@ -38,16 +38,17 @@ class IdentityManifest extends S.Opaque<IdentityManifest, { readonly brand: uniq
 ) {}
 const decodeIdentityManifest = S.decodeUnknownOption(S.fromJsonString(IdentityManifest));
 
-// Where the tree at `ref` has the term snapshot of its @beep/identity package. The head's own path says nothing
+// Where the tree at `commit` has the term snapshot of its @beep/identity package; `shown` names it in a failure. The head's own path says nothing
 // about the base: a change may move the package. A tree with more than one such package is read at the head's path.
 const locateBaseSnapshot = Effect.fn("IdentityRegistryBase.locate")(function* (
   repoRoot: string,
-  ref: string,
-  headPath: string
+  commit: string,
+  headPath: string,
+  shown: string
 ) {
   const git = yield* Git;
   const path = yield* Path.Path;
-  const entries = yield* git.lsTree(repoRoot, ref, { fullTree: true });
+  const entries = yield* git.lsTree(repoRoot, commit, { fullTree: true });
   const files = HashSet.fromIterable(A.map(entries, (entry) => entry.path));
   const directories = A.filterMap(entries, (entry) => {
     const directory = path.dirname(entry.path);
@@ -59,7 +60,7 @@ const locateBaseSnapshot = Effect.fn("IdentityRegistryBase.locate")(function* (
     directories,
     (directory) =>
       Effect.map(
-        git.show(repoRoot, ref, `${directory}/package.json`),
+        git.show(repoRoot, commit, `${directory}/package.json`),
         flow(O.flatMap(decodeIdentityManifest), O.isSome)
       ),
     { concurrency: 1 }
@@ -70,7 +71,7 @@ const locateBaseSnapshot = Effect.fn("IdentityRegistryBase.locate")(function* (
   }
   return A.length(paths) > 1
     ? yield* IdentityRegistryGeneratorError.make({
-        message: `The base ${ref} has more than one ${IDENTITY_PACKAGE_NAME} term snapshot (${A.join(paths, ", ")}) and none at ${headPath}, so the published term set is unknown.`,
+        message: `The base ${shown} has more than one ${IDENTITY_PACKAGE_NAME} term snapshot (${A.join(paths, ", ")}) and none at ${headPath}, so the published term set is unknown.`,
       })
     : A.head(paths);
 });
@@ -110,6 +111,12 @@ export const baseFlag = Flag.String("base").pipe(
  * no identity term snapshot. Every other git failure fails, and a base snapshot
  * that does not decode is a finding.
  *
+ * An explicit ref is resolved to its commit once, before the first read, and
+ * every read of the tree and its files names that commit: a ref that moves
+ * while the command runs cannot make the snapshot come from another commit
+ * than the tree that located it. The finding and the remedies still name the
+ * ref as it was given.
+ *
  * **Example** (Read the default base)
  *
  * ```ts
@@ -139,7 +146,7 @@ export const readBaseSnapshot = Effect.fn("IdentityRegistryBase.read")(function*
           UnknownRefError: () => Effect.succeedNone,
         })
       ),
-    onSome: Effect.succeedSome,
+    onSome: (named) => Effect.asSome(git.revParse(repoRoot, named, { peel: "commit" })),
   });
   if (O.isNone(commit)) {
     yield* Console.log(
@@ -147,16 +154,18 @@ export const readBaseSnapshot = Effect.fn("IdentityRegistryBase.read")(function*
     );
     return Result.succeed(BaseSnapshot.make({ snapshot: TermSnapshot.empty, ref, resolved: false }));
   }
-  const located = yield* locateBaseSnapshot(repoRoot, commit.value, layout.snapshot);
+  // Logs name the ref as it was given; every read names the commit it resolved to.
+  const shown = O.getOrElse(ref, () => commit.value);
+  const located = yield* locateBaseSnapshot(repoRoot, commit.value, layout.snapshot, shown);
   if (O.isNone(located)) {
     yield* Console.log(
-      `[${label}] the base ${commit.value} has no ${IDENTITY_PACKAGE_NAME} term snapshot; the term-stability base is the empty snapshot.`
+      `[${label}] the base ${shown} has no ${IDENTITY_PACKAGE_NAME} term snapshot; the term-stability base is the empty snapshot.`
     );
     return none;
   }
   if (located.value !== layout.snapshot) {
     yield* Console.log(
-      `[${label}] the base ${commit.value} has its term snapshot at ${located.value}; this checkout has it at ${layout.snapshot}.`
+      `[${label}] the base ${shown} has its term snapshot at ${located.value}; this checkout has it at ${layout.snapshot}.`
     );
   }
   const text = yield* git.show(repoRoot, commit.value, located.value);
