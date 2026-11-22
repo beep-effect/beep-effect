@@ -327,6 +327,31 @@ describe("RegistryTable.snapshot", () => {
     expect(RegistryTable.snapshot(grown, first).release).toBe("1.1.0");
   });
 
+  it("keeps the release of a registry no base has published, however the table changes", () => {
+    const first = RegistryTable.snapshotKeeping(table, TermSnapshot.empty);
+    expect(first).toStrictEqual(RegistryTable.snapshot(table, TermSnapshot.empty));
+    const grown = Result.getOrThrow(
+      RegistryTable.fromShards([vitestShard, shard({ namespace: fabioShard.namespace, terms: ["Article", "Report"] })])
+    );
+    const kept = RegistryTable.snapshotKeeping(grown, first);
+    expect(kept.release).toBe("1.0.0");
+    expect(kept.terms).toContain("http://purl.org/spar/fabio/Article");
+    expect(RegistryTable.snapshotKeeping(first)(grown)).toStrictEqual(kept);
+    // Succeeding the same snapshot counts the addition.
+    expect(RegistryTable.snapshot(grown, first).release).toBe("1.1.0");
+    // A row that records a later release still raises it.
+    const bound = Result.getOrThrow(
+      RegistryTable.fromShards([
+        shard({
+          namespace: fabioShard.namespace,
+          terms: ["Report"],
+          bindings: [{ code: "@beep/widget/Report/Report", local: "Report", since: "2.0.0" }],
+        }),
+      ])
+    );
+    expect(RegistryTable.snapshotKeeping(bound, first).release).toBe("2.0.0");
+  });
+
   it("bumps the major when the table adds a deprecation", () => {
     const first = RegistryTable.snapshot(table, TermSnapshot.empty);
     const shrunk = Result.getOrThrow(
