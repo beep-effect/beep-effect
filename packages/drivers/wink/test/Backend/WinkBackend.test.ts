@@ -18,6 +18,19 @@ import * as Str from "effect/String";
 
 const TestLayer = Layer.provide(WinkBackendLive, WinkEngine.WinkEngineLive);
 
+// The live engine with `its.span` returning an empty token range, so no entity span resolves.
+const UnresolvableSpanEngine = Layer.effect(
+  WinkEngine.WinkEngine,
+  Effect.gen(function* () {
+    const live = yield* WinkEngine.WinkEngine;
+    return WinkEngine.WinkEngine.of({
+      ...live,
+      its: Effect.map(live.its, (its) => ({ ...its, span: (): Array<number> => [] })),
+    });
+  })
+).pipe(Layer.provide(WinkEngine.WinkEngineLive));
+const UnresolvableSpanLayer = Layer.provide(WinkBackendLive, UnresolvableSpanEngine);
+
 describe("WinkBackend", () => {
   it.layer(TestLayer, { timeout: "30 seconds" })("tokenizes text into words", (it) => {
     it.effect(
@@ -99,6 +112,17 @@ describe("WinkBackend", () => {
         for (const entity of entities) {
           expect(Str.slice(entity.span.start, entity.span.end)(text)).toBe(entity.text);
         }
+      })
+    );
+  });
+
+  it.layer(UnresolvableSpanLayer, { timeout: "30 seconds" })("fails extractEntities when no span resolves", (it) => {
+    it.effect(
+      "fails extractEntities when no span resolves",
+      Effect.fnUntraced(function* () {
+        const backend = yield* Backend.NLPBackend;
+        const result = yield* Effect.flip(backend.extractEntities("Email a@b.com today."));
+        expect(result._tag).toBe("BackendOperationError");
       })
     );
   });
