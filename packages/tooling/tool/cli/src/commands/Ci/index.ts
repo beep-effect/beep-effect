@@ -148,6 +148,13 @@ export * from "./CiPartitions.schemas.ts";
  */
 export * from "./CiPartitions.service.ts";
 /**
+ * Public property sweep census and verdict (the nightly's second property step).
+ *
+ * @category use-cases
+ * @since 0.0.0
+ */
+export * from "./CiPropertySweep.ts";
+/**
  * Public runner-loss rerun subcommand export.
  *
  * @category cli-commands
