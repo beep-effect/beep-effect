@@ -320,7 +320,7 @@ Reverse: Switch loadHostConfigFile to Config.schema over ConfigProvider.fromEnv 
 
 ### No Pulumi state exists for AI metrics or OpenClaw; the host stacks adopt what is on the host, 2026-11-13
 
-Checked 2026-11-13 by the launching session: the Pulumi backend `s3://oip-law-pulumi-state` holds no stack for the AI metrics project and none for OpenClaw, so P4's cutover rule (export, then `pulumi destroy`) has nothing to act on for either; the programs describe deployments that exist on the hosts outside Pulumi state. Adoption therefore happens on the host, not in a state store. AI metrics: the data volume is looked up by name, the Compose container and unit are retired by the RetireCompose step, and the Tailscale Serve port state file is reused in place. OpenClaw: generations are content-addressed under the config root, so the first Alchemy apply writes a new generation directory beside any earlier ones and flips the `current` pointer through the same apply script; the snapshot and rollback paths are unchanged. The generation id changes once at this move, because the proof skill's recorded source path changed from `infra/src/OpenClawArtifacts.ts` to the new package. The Pulumi programs leave with `infra/` in P6; no `pulumi stack rm` is owed.
+Checked 2026-11-13 by the launching session: the Pulumi backend `s3://oip-law-pulumi-state` holds no stack for the AI metrics project and none for OpenClaw, so P4's cutover rule (export, then `pulumi destroy`) has nothing to act on for either; the programs describe deployments that exist on the hosts outside Pulumi state (corrected 2026-11-22: true for AI metrics only; no OpenClaw deployment of the program's shape exists, see decision `2026-11-22-openclaw-stays-declared-and-tested-not-installed`). Adoption therefore happens on the host, not in a state store. AI metrics: the data volume is looked up by name, the Compose container and unit are retired by the RetireCompose step, and the Tailscale Serve port state file is reused in place. OpenClaw: generations are content-addressed under the config root, so the first Alchemy apply writes a new generation directory beside any earlier ones and flips the `current` pointer through the same apply script; the snapshot and rollback paths are unchanged. The generation id changes once at this move, because the proof skill's recorded source path changed from `infra/src/OpenClawArtifacts.ts` to the new package. The Pulumi programs leave with `infra/` in P6; no `pulumi stack rm` is owed.
 
 Lane goals/infra-alchemy-rebuild-p4-hosts
 
@@ -2528,8 +2528,12 @@ Reverse: drain the build queues, then set the 2-minute visibility timeout, the 5
 The operator ruled on 2026-11-22: OpenClaw is not installed on the workstation. `HostsOpenClaw`
 (`packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts`) stays declared and tested, and is not deployed.
 
-- **Why:** OpenClaw was never installed, and Pulumi never had a stack for it (decision `2026-11-13-hosts-no-pulumi-state`),
-  so nothing live would be lost or left unmanaged. Installing it would add a root toolchain and a new 1Password
+- **Why:** the install `HostsOpenClaw` manages does not exist on DankStation, checked read-only on 2026-11-22: no state
+  directory `/var/lib/beep/openclaw` and no `openclaw.service` unit. Pulumi never had a stack for it (decision
+  `2026-11-13-hosts-no-pulumi-state`). So nothing the stack would manage is live or left unmanaged. The workstation does
+  hold a personal `~/.openclaw` from an earlier hand trial (last written 2026-10-05) and an inactive mise shim; the stack
+  never managed either, and this ruling leaves both alone. This corrects the 2026-11-13 record, which assumed an OpenClaw
+  deployment on the host. Installing it would add a root toolchain and a new 1Password
   service-account credential file for a service nobody runs.
 - **Criteria amended:** the SPEC acceptance criterion and the P4 row named AI metrics and OpenClaw. They now ask that AI
   metrics deploys through `@beep/infra-hosts`, and that the OpenClaw stack is declared and tested there.
