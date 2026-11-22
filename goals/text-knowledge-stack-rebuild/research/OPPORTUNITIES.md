@@ -164,3 +164,11 @@ home paths with `~`, drop session and machine ids.
   as a tuple, so no type error points at it. **Would have prevented it:** an effect
   diagnostic that flags an `A.modify` or `A.replace` result used where an array or an
   `unknown` input is expected.
+- **Doing:** checking that the L1-3 chain property is not vacuous (how many generated map
+  pairs reach the comparison). **Evidence:** module counters read by a later `it` in the
+  same file reported 17 of 50 `it.effect.prop` trials and 5 of 4,000 in the law file,
+  while `Arbitrary.checkEffect` run directly evaluated all 50; appending one line per
+  trial to a file showed every run (3,000 chain cases: 1,743 compared, 1,307 Exact/Exact,
+  no counterexample). **Would have prevented it:** a `@beep/test-runner` hook or
+  documented recipe for per-property sample statistics, so a law's coverage of its
+  interesting cases is measured the same way every time.

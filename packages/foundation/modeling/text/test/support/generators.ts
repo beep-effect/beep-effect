@@ -4,7 +4,9 @@
 // block (one-, two- and three-byte in UTF-8) plus 64 astral emoji, so nothing is discarded. Every boundary is
 // computed from the code points themselves, independently of the scan under test, and every range sits on scalar
 // boundaries (decision p0-law-generators-well-formed-text). Split surrogates stay negative fixtures.
+import { AlignedSegment } from "@beep/text/LocatorMap";
 import { Anchored } from "@beep/text/Occurrence";
+import { Position } from "@beep/text/OffsetUnit";
 import {
   SourceTextDigest,
   SourceTextExtractor,
@@ -225,3 +227,64 @@ export const anchoredCase = Arbitrary.flatMap(wellFormedText, (generated) =>
     })
   )
 );
+
+// One run of scalars in a generated locator step: where the run ends, what the step does with it, and the text it
+// becomes or the target inserts before it.
+const StepPick = Arbitrary.all({
+  ends: between(0, 2),
+  kind: between(0, 9),
+  insert: between(0, 4),
+  replacement: Arbitrary.map(wellFormedTextWith({ minLength: 1, maxLength: 3 }), ({ text }) => text),
+  inserted: Arbitrary.map(wellFormedTextWith({ minLength: 1, maxLength: 3 }), ({ text }) => text),
+});
+
+const utf16At = (start: number, end: number) => Position.make({ unit: "utf16-code-unit", start, end });
+
+/**
+ * A generated step from `text` to a later text. The scalars are cut into runs; each run is kept (half the runs),
+ * rewritten to generated text (three in ten) or dropped, which leaves a gap in `text`; one run in five has generated
+ * text inserted before it in the target, a gap in the target. Every pick is used, so nothing is discarded.
+ */
+export const locatorStep = (text: string) => {
+  const scalars = A.fromIterable(text);
+  return Arbitrary.map(Arbitrary.array(StepPick, { minLength: scalars.length, maxLength: scalars.length }), (picks) => {
+    const segments: Array<AlignedSegment> = [];
+    let target = "";
+    let from = 0;
+    let runStart = 0;
+    let run = "";
+    A.forEach(scalars, (scalar, index) => {
+      run += scalar;
+      const pick = A.getUnsafe(picks, index);
+      const opener = A.getUnsafe(picks, runStart);
+      if (pick.ends !== 0 && index < scalars.length - 1) {
+        return;
+      }
+      if (opener.insert === 0) {
+        target += opener.inserted;
+      }
+      const to = Str.length(target);
+      if (opener.kind < 5) {
+        segments.push(
+          AlignedSegment.cases.Kept.make({
+            from: utf16At(from, from + run.length),
+            to: utf16At(to, to + run.length),
+          })
+        );
+        target += run;
+      } else if (opener.kind < 8) {
+        segments.push(
+          AlignedSegment.cases.Rewritten.make({
+            from: utf16At(from, from + run.length),
+            to: utf16At(to, to + opener.replacement.length),
+          })
+        );
+        target += opener.replacement;
+      }
+      from += run.length;
+      runStart = index + 1;
+      run = "";
+    });
+    return { segments, target };
+  });
+};

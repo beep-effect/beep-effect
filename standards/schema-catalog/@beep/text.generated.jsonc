@@ -5,6 +5,8 @@
   "owner": "@beep/text",
   "entries": [
     {"file":"packages/foundation/modeling/text/src/LocatorMap.ts","symbol":"AlignedSegment","kind":"tagged-union","owner":"@beep/text","identity":"AlignedSegment","description":"A range of one text and the range of another it became: kept unchanged or rewritten as a whole."},
+    {"file":"packages/foundation/modeling/text/src/LocatorMap.ts","symbol":"CaptureMismatch","kind":"tagged-error","owner":"@beep/text","identity":"CaptureMismatch"},
+    {"file":"packages/foundation/modeling/text/src/LocatorMap.ts","symbol":"LocatorMap","kind":"struct-const","owner":"@beep/text","identity":"LocatorMap","description":"A recorded map of aligned segments from one text capture to another."},
     {"file":"packages/foundation/modeling/text/src/Occurrence.ts","symbol":"Anchored","kind":"struct-const","owner":"@beep/text","identity":"Anchored","description":"An anchor receipt as the anchors table stores it; decoding one grants no proof."},
     {"file":"packages/foundation/modeling/text/src/Occurrence.ts","symbol":"OccurrenceId","kind":"brand","owner":"@beep/text","identity":"OccurrenceId","description":"Content hash of the whole text capture identity, the UTF-16 range and the exact quote."},
     {"file":"packages/foundation/modeling/text/src/OffsetUnit.ts","symbol":"OffsetUnit","kind":"literal-kit","owner":"@beep/text","identity":"OffsetUnit","description":"Unit of a text position; utf16-code-unit is the canonical stored unit."},
@@ -14,6 +16,8 @@
     {"file":"packages/foundation/modeling/text/src/QuoteKey.ts","symbol":"QuoteKey","kind":"brand","owner":"@beep/text","identity":"QuoteKey","description":"Content hash of a normalized quote, used to group repeated passages, never to identify one."},
     {"file":"packages/foundation/modeling/text/src/QuoteKey.ts","symbol":"QuoteKeyPreimage","kind":"schema-const","owner":"@beep/text"},
     {"file":"packages/foundation/modeling/text/src/QuoteKey.ts","symbol":"QuoteNormalization","kind":"literal-kit","owner":"@beep/text","identity":"QuoteNormalization","description":"Versioned normalization a quote key is minted under; not SourceTextIdentity.normalizationVersion."},
+    {"file":"packages/foundation/modeling/text/src/Reanchoring.ts","symbol":"Reanchoring","kind":"tagged-union","owner":"@beep/text","identity":"Reanchoring","description":"An occurrence carried to a later capture exactly, widened to segment edges, or not mapped."},
+    {"file":"packages/foundation/modeling/text/src/Reanchoring.ts","symbol":"UnmappedReason","kind":"literal-kit","owner":"@beep/text","identity":"UnmappedReason","description":"Why an occurrence did not map to the later capture."},
     {"file":"packages/foundation/modeling/text/src/Resolution.ts","symbol":"Resolution","kind":"tagged-union","owner":"@beep/text","identity":"Resolution","description":"Unique, Ambiguous or NotFound."},
     {"file":"packages/foundation/modeling/text/src/Selector.ts","symbol":"FragmentSelector","kind":"tagged-struct","owner":"@beep/text","identity":"FragmentSelector","description":"An oa:FragmentSelector."},
     {"file":"packages/foundation/modeling/text/src/Selector.ts","symbol":"QuoteSelector","kind":"tagged-struct","owner":"@beep/text","identity":"QuoteSelector","description":"An oa:TextQuoteSelector."},

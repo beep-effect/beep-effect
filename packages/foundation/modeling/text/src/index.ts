@@ -7,7 +7,7 @@
  */
 
 /**
- * Aligned segments between two text captures.
+ * Locator maps between two text captures and their aligned segments.
  *
  * @category models
  * @since 0.0.0
@@ -34,6 +34,13 @@ export * from "./OffsetUnit.ts";
  * @since 0.0.0
  */
 export * from "./QuoteKey.ts";
+/**
+ * Re-anchoring occurrences across text captures.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Reanchoring.ts";
 /**
  * Resolving a selector in one text capture.
  *

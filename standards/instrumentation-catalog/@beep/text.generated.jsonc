@@ -6,6 +6,9 @@
   "attributes": [],
   "instruments": [],
   "spans": [
+    {"name":"Occurrence.mint","owner":"@beep/text","family":"foundation","conforms":true},
+    {"name":"QuoteKey.mint","owner":"@beep/text","family":"foundation","conforms":true},
+    {"name":"Reanchoring.reanchor","owner":"@beep/text","family":"foundation","conforms":true},
     {"name":"VerifiedTextAnchor.verify","owner":"@beep/text","family":"foundation","conforms":true},
     {"name":"VerifiedTextAnchor.verifyAgainstVerifiedSource","owner":"@beep/text","family":"foundation","conforms":true},
     {"name":"VerifiedTextAnchor.verifySourceTextIdentity","owner":"@beep/text","family":"foundation","conforms":true}
