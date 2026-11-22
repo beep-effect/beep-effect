@@ -31,11 +31,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P1 Implement: wave 1 (semver, npm-spec, csv, spdx, managed-section) in PR.
 
 ## Latest Evidence
 
-Not started.
+Wave 1: 116 of 1,199 classified rows deleted (T 28, G 71, D 17 into one npm-spec decision file); kappa 0.78 between an Opus 5.5 and a Codex Sol classifier. The CI runner closure (identity, schema, utils, data, cli-kit, markdown, runtime-env, repo-utils, repo-cli-kit, walker, github-*, alchemy-*, infra-ci-runners, repo-cli) waits on the P5 cutover.
 
 ## Notes
 
