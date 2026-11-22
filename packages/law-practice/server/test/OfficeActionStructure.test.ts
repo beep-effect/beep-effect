@@ -31,7 +31,7 @@ import * as PlatformError from "effect/PlatformError";
 import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
-import { fixtureText } from "./officeActionFixtures.ts";
+import { fixtureText, frozenAttemptLog } from "./officeActionFixtures.ts";
 
 const document = DocStructureDocument.make({
   documentId: "fixture",
@@ -70,8 +70,8 @@ const ConsumerLive = Layer.effect(
     });
   })
 ).pipe(Layer.provideMerge(StateLive));
-const composition = () =>
-  OfficeActionDocketIntakeLive.pipe(Layer.provideMerge(officeActionStructureFileStore(filename)));
+const composition = (file = filename) =>
+  OfficeActionDocketIntakeLive.pipe(Layer.provideMerge(officeActionStructureFileStore(file)));
 it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-action durable evidence intake", (it) => {
   it.layer(composition(), { timeout: "10 seconds", concurrent: false })("initial writer", (it) => {
     it.effect("persists an atomic evidence pair with no admission state", () =>
@@ -288,6 +288,68 @@ it.layer(ConsumerLive, { timeout: "10 seconds", concurrent: false })("office-act
     );
   });
 });
+
+const writtenLog = "/written/attempts.jsonl";
+it.layer(composition(writtenLog).pipe(Layer.provideMerge(ConsumerLive)), { timeout: "10 seconds" })(
+  "frozen attempt log",
+  (it) => {
+    // `fixtures/office-action-attempts-v1.jsonl` is the log this intake and store wrote before the source identity
+    // changed package: one recognized row and one failed row. Logs on disk hold these bytes, so the file is never
+    // regenerated.
+    it.effect("writes the frozen rows byte for byte", () =>
+      Effect.gen(function* () {
+        const state = yield* TestState;
+        const intake = yield* OfficeActionDocketIntake;
+        const fs = yield* FileSystem.FileSystem;
+        const changed = yield* fixtureSource(`prefix ${state.text}`);
+        const recognized = yield* intake.record(
+          OfficeActionAttemptRequest.make({ attemptId: "a-1", document, verification: state.verification })
+        );
+        expect(recognized.status).toBe("recognized");
+        const refused = yield* intake
+          .record(
+            OfficeActionAttemptRequest.make({
+              attemptId: "a-2",
+              previousAttemptId: O.some("a-1"),
+              document,
+              verification: VerifySourceTextIdentityInput.make({
+                expectedSource: state.verification.expectedSource,
+                source: changed.source,
+                sourceText: `prefix ${state.text}`,
+              }),
+            })
+          )
+          .pipe(Effect.flip);
+        expect(refused._tag).toBe("VerifiedTextAnchorError");
+        const written = yield* fs.readFileString(writtenLog);
+        expect(written).toBe(frozenAttemptLog);
+      })
+    );
+
+    it.effect("reads the frozen rows and re-encodes every one to the same line", () =>
+      Effect.gen(function* () {
+        const state = yield* TestState;
+        const intake = yield* OfficeActionDocketIntake;
+        const fs = yield* FileSystem.FileSystem;
+        const frozenFile = "/frozen/attempts.jsonl";
+        const context = yield* Layer.build(officeActionStructureFileStore(frozenFile));
+        yield* fs.writeFileString(frozenFile, frozenAttemptLog);
+        const rows = yield* Context.get(context, OfficeActionStructureStore).read;
+        expect(A.map(rows, (row) => row.outcome.status)).toEqual(["recognized", "failed"]);
+        const lines = yield* Effect.forEach(rows, (row) => S.encodeEffect(AttemptJson)(row), { concurrency: 1 });
+        expect(
+          A.join(
+            A.map(lines, (line) => `${line}\n`),
+            ""
+          )
+        ).toBe(frozenAttemptLog);
+        const first = yield* Effect.fromOption(A.head(rows), () => "missing recognized row");
+        const replayed = yield* intake.replay(first, state.verification);
+        expect(replayed.status).toBe("recognized");
+      })
+    );
+  }
+);
 
 it.layer(StateLive, { timeout: "10 seconds" })("storage failures remain typed", (it) => {
   it.effect("rejects initialization, writer-lock and append failures", () =>
