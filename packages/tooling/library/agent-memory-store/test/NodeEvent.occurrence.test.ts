@@ -1,8 +1,11 @@
-import { NodeCreated, NodeCreatedEvent, OccurrenceAnchor } from "@beep/agent-memory-store";
+import { NodeCreated, NodeCreatedEvent, OccurrenceAnchor, occurrenceIdOf } from "@beep/agent-memory-store";
 import { TextAnchor } from "@beep/text";
+import { Anchored, mintOccurrenceId, OccurrenceId } from "@beep/text/Occurrence";
+import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import { describe, expect, it } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -13,6 +16,8 @@ import { anchor, author, contentHash, filePath, nodeId, otherNodeId, revisionA }
 // `NodeCreatedEvent.payloadSchemaBinary` wrote them before the anchor schemas changed package. Journals on
 // disk hold these bytes: the fixture is never regenerated.
 const codec = NodeCreatedEvent.payloadSchemaBinary;
+// The section 6 golden of the P2 design, asserted from the equivalent receipt in `L1-4` as well.
+const memoryNoteId = OccurrenceId.make("sha256:654d949fc9259fd7b3b3d90ef96c270b444cfece9feb03f15dfe29013001a06d");
 const Hex = S.Uint8ArrayFromHex;
 
 const anchored = NodeCreated.make({
@@ -48,11 +53,39 @@ const expectFrozen = Effect.fnUntraced(function* (hex: string, payload: NodeCrea
   expect(rewritten).toBe(hex);
 });
 
-describe("stored node events", () => {
-  it.effect("a frozen node event with an anchor decodes and re-encodes unchanged", () =>
-    expectFrozen(frozen.anchored, anchored)
+it.layer(Digest.layerWebCrypto)("stored node event occurrence ids", (it) => {
+  it.effect(
+    "a frozen node event reads to its OccurrenceId",
+    Effect.fnUntraced(function* () {
+      yield* expectFrozen(frozen.anchored, anchored);
+
+      const read = yield* S.decodeEffect(Hex)(frozen.anchored).pipe(Effect.flatMap(S.decodeUnknownEffect(codec)));
+      const stored = yield* Effect.fromOption(read.anchor);
+      const id = yield* occurrenceIdOf(stored);
+      expect(id).toBe(memoryNoteId);
+      // The same id comes from the equivalent anchors-table receipt, the route of `L1-4`.
+      const fromReceipt = yield* mintOccurrenceId(
+        Anchored.make({ receipt: TextAnchorVerificationReceipt.make({ source: stored.source, anchor: stored.anchor }) })
+      );
+      expect(fromReceipt).toBe(id);
+    })
   );
 
+  it.effect(
+    "an anchor whose quote holds a lone surrogate mints no OccurrenceId",
+    Effect.fnUntraced(function* () {
+      const error = yield* occurrenceIdOf(
+        OccurrenceAnchor.make({
+          ...anchor,
+          anchor: TextAnchor.make({ startChar: 6, endChar: 10, quote: "f\ud800ct" }),
+        })
+      ).pipe(Effect.flip);
+      expect(S.isSchemaError(error)).toBe(true);
+    })
+  );
+});
+
+describe("stored node events", () => {
   it.effect("a frozen node event without an anchor decodes and re-encodes unchanged", () =>
     expectFrozen(frozen.unanchored, unanchored)
   );

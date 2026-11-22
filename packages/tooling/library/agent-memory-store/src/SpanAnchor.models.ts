@@ -9,7 +9,12 @@ import { $AgentMemoryStoreId } from "@beep/identity/packages";
 import { MarkdownRange } from "@beep/markdown";
 import { LiteralKit } from "@beep/schema";
 import { SourceTextIdentity, TextAnchor } from "@beep/text";
+import { Anchored, mintOccurrenceId } from "@beep/text/Occurrence";
+import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
+import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
+import type { OccurrenceId, PreimageMintError } from "@beep/text/Occurrence";
+import type * as Digest from "effect/crypto/Digest";
 
 const $I = $AgentMemoryStoreId.create("SpanAnchor.models");
 
@@ -140,3 +145,60 @@ export const toMarkdownRange = (anchor: OccurrenceAnchor): MarkdownRange =>
     offset: anchor.anchor.startChar,
     length: anchor.anchor.endChar - anchor.anchor.startChar,
   });
+
+/**
+ * Derives the `@beep/text` occurrence id of a stored anchor.
+ *
+ * **Details**
+ *
+ * Builds the verification receipt from `source` and `anchor`, maps the
+ * stored unit to the canonical `utf16-code-unit` (a new {@link TextUnit}
+ * literal fails to compile here) and mints the `occurrence/v1` id. The id is
+ * derived at read time: the stored event keeps its bytes and the payload
+ * schema needs no service. A quote with a lone surrogate, which `TextAnchor`
+ * admits, fails with the schema error of `PreimageMintError`.
+ *
+ * **Example** (Derive the occurrence id of an anchor)
+ *
+ * ```ts
+ * import { OccurrenceAnchor, occurrenceIdOf } from "@beep/agent-memory-store"
+ * import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity"
+ * import { TextAnchor } from "@beep/text/TextAnchor"
+ * import { PosixPath } from "@beep/schema/PosixPath"
+ * import * as Digest from "effect/crypto/Digest"
+ * import * as Effect from "effect/Effect"
+ *
+ * const digest = SourceTextDigest.make("sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855")
+ * const anchor = OccurrenceAnchor.make({
+ *   source: SourceTextIdentity.make({
+ *     scopeRef: "memory",
+ *     sourceRef: "notes",
+ *     locator: PosixPath.make("notes/decisions.md"),
+ *     sourceDigest: digest,
+ *     textDigest: digest,
+ *     extractor: SourceTextExtractor.make({ name: "markdown", version: "1" }),
+ *     normalizationVersion: "1",
+ *   }),
+ *   unit: "utf16",
+ *   anchor: TextAnchor.make({ startChar: 6, endChar: 10, quote: "fact" }),
+ * })
+ * const id = occurrenceIdOf(anchor).pipe(Effect.provide(Digest.layerWebCrypto))
+ * console.log(Effect.isEffect(id)) // true
+ * ```
+ *
+ * @param anchor - The stored occurrence anchor.
+ * @returns The occurrence id of the anchored span.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const occurrenceIdOf = Effect.fn("OccurrenceAnchor.occurrenceId")(function* (
+  anchor: OccurrenceAnchor
+): Effect.fn.Return<OccurrenceId, PreimageMintError, Digest.Digest> {
+  const anchored = TextUnit.match(anchor.unit, {
+    utf16: () =>
+      Anchored.make({
+        receipt: TextAnchorVerificationReceipt.make({ source: anchor.source, anchor: anchor.anchor }),
+      }),
+  });
+  return yield* mintOccurrenceId(anchored);
+});
