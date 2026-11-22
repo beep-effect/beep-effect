@@ -62,6 +62,12 @@ export type TermIri = typeof TermIri.Type;
 /**
  * The compile-checked code identity of a kind, `@beep/<package>/<path>`, as a composer prints it.
  *
+ * **Details**
+ *
+ * No path segment is made of dots alone, so a code identity never names a
+ * path outside its package: `.` and `..` are refused, and `Library.schemas`
+ * is a segment like any other.
+ *
  * **Example** (Check a code identity)
  *
  * ```ts import.meta.vitest name="Check a code identity"
@@ -70,6 +76,7 @@ export type TermIri = typeof TermIri.Type;
  *
  * S.is(CodeId)("@beep/test-runner/Vitest/TestHang") // => true
  * S.is(CodeId)("@beep/test-runner") // => false
+ * S.is(CodeId)("@beep/test-runner/../Vitest/TestHang") // => false
  * ```
  *
  * @category schemas
@@ -77,10 +84,11 @@ export type TermIri = typeof TermIri.Type;
  */
 export const CodeId = S.String.check(
   S.isPattern(
-    /^@beep\/[a-z0-9][a-z0-9-]*(?:\/[A-Za-z0-9._-]+)+$/,
+    /^@beep\/[a-z0-9][a-z0-9-]*(?:\/(?!\.+(?:\/|$))[A-Za-z0-9._-]+)+$/,
     $I.annote("CodeIdPattern", {
       title: "Code Identity",
-      description: "A @beep package name followed by at least one module path segment.",
+      description:
+        "A @beep package name followed by at least one module path segment, none of which is made of dots alone.",
       message: "Expected a code identity of the form @beep/<package>/<path>.",
     })
   )
@@ -140,6 +148,13 @@ export type CodePackage = typeof CodePackage.Type;
 /**
  * The rename of one code identity, and of every code identity under it.
  *
+ * **Details**
+ *
+ * Neither end is under the other. A move from `@beep/p/A` to `@beep/p/A/B`
+ * would match the codes it moved again, so it could not be run twice, and a
+ * retry after a partial write would move those codes a second time. Make such
+ * a move through a code identity outside both, in two moves.
+ *
  * **Example** (Rename a module)
  *
  * ```ts import.meta.vitest name="Rename a module"
@@ -156,9 +171,18 @@ export type CodePackage = typeof CodePackage.Type;
  * @since 0.0.0
  */
 export class CodeIdMove extends S.Opaque<CodeIdMove, { readonly brand: unique symbol }>()(
-  S.Struct({ from: CodeId, to: CodeId }).pipe(
-    $I.annoteSchema("CodeIdMove", { description: "The rename of a code identity and every code under it." })
-  )
+  S.Struct({ from: CodeId, to: CodeId })
+    .check(
+      S.makeFilter(
+        ({ from, to }) => !Str.startsWith(`${from}/`)(to) && !Str.startsWith(`${to}/`)(from),
+        $I.annote("CodeIdMoveDisjoint", {
+          title: "Code Identity Move Disjoint",
+          description: "Neither end of the move is under the other, so the move never applies to a code it moved.",
+          message: "Expected a move whose ends are not under one another; move through a third code identity.",
+        })
+      )
+    )
+    .pipe($I.annoteSchema("CodeIdMove", { description: "The rename of a code identity and every code under it." }))
 ) {}
 
 /**
@@ -1151,7 +1175,9 @@ export const termSetViolations: {
  * The release is a property of the whole change from `previous` to `next`: it
  * must be exactly the release that change calls for, and every binding or
  * deprecation the change adds records it as `since`. Against the empty
- * snapshot, which publishes nothing, any release from `1.0.0` on is accepted.
+ * snapshot, which publishes nothing, a changed snapshot may state any release
+ * from `1.0.0` on. An unchanged empty snapshot stays unpublished, so it
+ * accepts `0.0.0`.
  *
  * **Example** (Report a removal without a deprecation)
  *
@@ -1752,8 +1778,9 @@ export class RegistryTable extends S.Opaque<RegistryTable, { readonly brand: uni
    *
    * **Details**
    *
-   * It is `previous.release` when nothing changed, `1.0.0` when `previous` is
-   * the empty snapshot, the next major when the table adds a deprecation and
+   * It is `previous.release` when nothing changed, so an unchanged empty
+   * snapshot stays at `0.0.0`, unpublished. It is `1.0.0` for the first change
+   * after the empty snapshot, the next major when the table adds a deprecation and
    * the next minor for any other change. It depends on the rows alone, so a
    * change made in many steps calls for the same release as the same change
    * made at once.

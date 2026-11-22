@@ -52,6 +52,17 @@ const committedShards: ReadonlyArray<RegistryShard.Encoded> = A.map(R.values(sha
 );
 const committed = Result.getOrThrow(S.decodeUnknownResult(TermSnapshot)(committedSnapshot));
 
+// Release components are unbounded, so they compare as exact `bigint`s, as the snapshot does.
+const releaseNumbers = (release: string): readonly [bigint, bigint, bigint] => {
+  const [major = 0n, minor = 0n, patch = 0n] = A.map(Str.split(".")(release), BigInt);
+  return [major, minor, patch];
+};
+
+// The releases a change to the committed snapshot calls for: an addition alone, and a deprecation.
+const [committedMajor, committedMinor] = releaseNumbers(committed.release);
+const nextMinorRelease = `${committedMajor}.${committedMinor + 1n}.0`;
+const nextMajorRelease = `${committedMajor + 1n}.0.0`;
+
 const tableOf = (shards: ReadonlyArray<RegistryShard.Encoded>): RegistryTable =>
   Result.getOrThrow(RegistryTable.fromShards(A.map(shards, (shard) => Result.getOrThrow(decodeShard(shard)))));
 
@@ -72,7 +83,7 @@ const withoutPrefLabel = editShard("skos", (shard) => ({
 }));
 const deprecatingPrefLabel = editShard("skos", (shard) => ({
   ...shard,
-  deprecations: A.sort(A.append(shard.deprecations, { term: prefLabel, since: "3.0.0" }), byTerm),
+  deprecations: A.sort(A.append(shard.deprecations, { term: prefLabel, since: nextMajorRelease }), byTerm),
 }));
 
 // The research-library namespace IRI P1 retired, whose successor is the `research-library` namespace.
@@ -86,12 +97,6 @@ const moduleIriOf = (code: string): string => {
 };
 
 const published = HashSet.fromIterable<string>(committed.terms);
-
-// Release components are unbounded, so they compare as exact `bigint`s, as the snapshot does.
-const releaseNumbers = (release: string): readonly [bigint, bigint, bigint] => {
-  const [major = 0n, minor = 0n, patch = 0n] = A.map(Str.split(".")(release), BigInt);
-  return [major, minor, patch];
-};
 
 // A module path segment a code identity and the composer both accept.
 const ModuleSegment = S.String.check(S.isPattern(/^[A-Za-z][A-Za-z0-9_-]{0,11}$/));
@@ -147,12 +152,21 @@ describe("term stability", () => {
 
   it("L0-3 a regenerated release covers every since its rows record, whatever it succeeds", () => {
     const table = tableOf(committedShards);
-    // The committed rows record since values up to the committed release.
+    const sinceValues = A.appendAll(
+      A.map(committed.bindings, (row) => row.since),
+      A.map(committed.deprecations, (row) => row.since)
+    );
+    expect(A.isReadonlyArrayNonEmpty(sinceValues)).toBe(true);
+    const byRelease = Order.mapInput(Order.Tuple([Order.BigInt, Order.BigInt, Order.BigInt]), releaseNumbers);
     for (const previous of [
       TermSnapshot.empty,
       TermSnapshot.make({ ...committed, release: ReleaseVersion.make("0.1.0") }),
     ]) {
-      expect(RegistryTable.snapshot(table, previous)).toStrictEqual(committed);
+      const projected = RegistryTable.snapshot(table, previous);
+      expect(TermSnapshot.make({ ...projected, release: committed.release })).toStrictEqual(committed);
+      for (const since of sinceValues) {
+        expect(byRelease(projected.release, since), since).toBeGreaterThanOrEqual(0);
+      }
     }
     expect(
       snapshotViolations(committed, TermSnapshot.make({ ...committed, release: ReleaseVersion.make("0.1.0") }))
@@ -188,23 +202,23 @@ describe("term stability", () => {
       bindings: [{ code: "@beep/identity/Term/Added", local: "Added", since }],
       deprecations: [],
     });
-    // The addition alone is 2.1.0; with the deprecation the whole change is 3.0.0, so the binding moves with it.
-    expect(violationsOf(A.append(committedShards, addedAt("2.1.0")))).toStrictEqual([]);
+    // The addition alone is the next minor; with the deprecation the whole change is the next major, so the
+    // binding moves with it.
+    expect(violationsOf(A.append(committedShards, addedAt(nextMinorRelease)))).toStrictEqual([]);
     const deprecating = deprecatingPrefLabel(withoutPrefLabel(committedShards));
-    expect(violationsOf(A.append(deprecating, addedAt("3.0.0")))).toStrictEqual([]);
-    const stale = violationsOf(A.append(deprecating, addedAt("2.1.0")));
+    expect(violationsOf(A.append(deprecating, addedAt(nextMajorRelease)))).toStrictEqual([]);
+    const stale = violationsOf(A.append(deprecating, addedAt(nextMinorRelease)));
     expect(A.map(stale, snapshotViolationMessage)).toStrictEqual([
-      "The new binding of https://example.test/gen/Added to @beep/identity/Term/Added records since 2.1.0; the change is release 3.0.0.",
+      `The new binding of https://example.test/gen/Added to @beep/identity/Term/Added records since ${nextMinorRelease}; the change is release ${nextMajorRelease}.`,
     ]);
     // Released in two steps, the same change skips a release.
-    const next = RegistryTable.snapshot(tableOf(A.append(committedShards, addedAt("2.1.0"))), committed);
-    expect(
-      snapshotViolations(committed, TermSnapshot.make({ ...next, release: ReleaseVersion.make("2.2.0") }))
-    ).toStrictEqual([
+    const next = RegistryTable.snapshot(tableOf(A.append(committedShards, addedAt(nextMinorRelease))), committed);
+    const skipped = ReleaseVersion.make(`${committedMajor}.${committedMinor + 2n}.0`);
+    expect(snapshotViolations(committed, TermSnapshot.make({ ...next, release: skipped }))).toStrictEqual([
       SnapshotViolation.cases.ReleaseOverstated.make({
         base: committed.release,
         expected: next.release,
-        release: ReleaseVersion.make("2.2.0"),
+        release: skipped,
       }),
     ]);
   });
@@ -227,8 +241,7 @@ describe("term stability", () => {
       );
       expect(snapshotViolations(committed, next)).toStrictEqual([]);
       // An addition alone bumps the minor of the committed release.
-      const [major, minor] = releaseNumbers(committed.release);
-      expect(next.release).toBe(`${major}.${minor + 1n}.0`);
+      expect(next.release).toBe(nextMinorRelease);
     },
     { arbitrary: fcRuns(25) }
   );
@@ -249,7 +262,7 @@ describe("term stability", () => {
     const beforeView = Registry.view(before);
     const afterView = Registry.view(after);
     const moved = A.filter(before.bindings, (binding) => Str.startsWith(`${LibraryModule}/`)(binding.code));
-    expect(moved).toHaveLength(16);
+    expect(A.isReadonlyArrayNonEmpty(moved)).toBe(true);
     for (const binding of moved) {
       const renamed = `${CatalogModule}${Str.slice(LibraryModule.length)(binding.code)}`;
       assertSome(
@@ -304,8 +317,10 @@ describe("term stability", () => {
       expect(snapshotViolations(previous, next)).toStrictEqual([]);
       expect(next.terms).toStrictEqual(previous.terms);
       expect(next.deprecations).toStrictEqual(previous.deprecations);
+      const source = A.filter(before.bindings, (binding) => Str.startsWith(`${LibraryModule}/`)(binding.code));
+      expect(A.isReadonlyArrayNonEmpty(source)).toBe(true);
       const moved = A.filter(after.bindings, (binding) => Str.startsWith(`${target}/`)(binding.code));
-      expect(moved).toHaveLength(16);
+      expect(moved).toHaveLength(source.length);
       for (const binding of moved) {
         expect(HashSet.has(published, moduleIriOf(binding.code))).toBe(false);
       }

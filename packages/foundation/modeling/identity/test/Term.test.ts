@@ -93,6 +93,11 @@ describe("Term schemas", () => {
     expect(S.is(CodeId)("@beep/repo-cli/commands/Research/Library/Library.schemas/Source")).toBe(true);
     expect(S.is(CodeId)("@other/pkg/Name")).toBe(false);
     expect(S.is(CodeId)("@beep/Pkg/Name")).toBe(false);
+    // A segment of dots alone would name a path outside the package; dots inside a segment are kept.
+    expect(
+      A.map(["@beep/p/../x/Name", "@beep/p/./Name", "@beep/p/A/..", "@beep/p/.../Name"], S.is(CodeId))
+    ).toStrictEqual([false, false, false, false]);
+    expect(A.map(["@beep/p/a..b/Name", "@beep/p/.hidden/Name"], S.is(CodeId))).toStrictEqual([true, true]);
     expect(S.is(ReleaseVersion)("10.20.30")).toBe(true);
     expect(S.is(ReleaseVersion)("01.0.0")).toBe(false);
     expect(S.is(ReleaseVersion)("1.0")).toBe(false);
