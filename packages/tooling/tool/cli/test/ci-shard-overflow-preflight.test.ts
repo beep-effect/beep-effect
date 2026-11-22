@@ -5,6 +5,7 @@ import {
   ciShardOverflowPreflightCommand,
   decideShardOverflowPreflight,
   readShardOverflowPreflightFacts,
+  SHARD_OVERFLOW_RUNNER_GROUP,
   SHARD_OVERFLOW_RUNNER_LABEL,
   ShardOverflowPreflightFacts,
   ShardOverflowPreflightProblem,
@@ -15,7 +16,7 @@ import {
 import { GithubTransportFetch } from "@beep/repo-cli/test/SharedInternals";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as ConfigProvider from "effect/ConfigProvider";
 import * as Command from "effect/cli/Command";
@@ -34,8 +35,10 @@ import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { GithubFetchCall } from "./support/GithubFetch.ts";
 
 const REPOSITORY = "beep-effect/beep-effect";
-const ENDPOINT = "https://overflow.execute-api.us-east-1.amazonaws.com/webhook";
-const HEAVY_ENDPOINT = "https://heavy.execute-api.us-east-1.amazonaws.com/webhook";
+// The new fleet serves both pools from one Lambda function URL; the Pulumi fleet
+// keeps its own API Gateway controller webhook until it is destroyed.
+const ENDPOINT = "https://fixturefleetwebhook.lambda-url.us-east-1.on.aws/";
+const LIVE_ENDPOINT = "https://heavy.execute-api.us-east-1.amazonaws.com/webhook";
 const ALLOWED = shardOverflowAllowedWorkflow(REPOSITORY);
 // A webhook secret as GitHub would redact it, plus a fixture value no output may echo.
 const HOOK_SECRET = "fixture-hook-secret-never-printed";
@@ -43,7 +46,7 @@ const HOOK_SECRET = "fixture-hook-secret-never-printed";
 const group = (values: Partial<ShardOverflowRunnerGroup> = {}) =>
   ShardOverflowRunnerGroup.make({
     id: 7,
-    name: SHARD_OVERFLOW_RUNNER_LABEL,
+    name: SHARD_OVERFLOW_RUNNER_GROUP,
     visibility: "selected",
     allows_public_repositories: true,
     restricted_to_workflows: true,
@@ -57,7 +60,7 @@ const facts = (values: Partial<ShardOverflowPreflightFacts> = {}) =>
     repository: REPOSITORY,
     group: O.some(group()),
     repositories: [REPOSITORY],
-    hooks: [hook({ url: HEAVY_ENDPOINT }), hook()],
+    hooks: [hook({ url: LIVE_ENDPOINT }), hook()],
     webhookUrl: ENDPOINT,
     ...values,
   });
@@ -115,15 +118,33 @@ describe("decideShardOverflowPreflight", () => {
   });
 
   it("refuses when no active workflow_job webhook delivers to the overflow endpoint", () => {
-    // The heavy pool's webhook already delivers workflow_job to its own controller.
+    // The live Pulumi fleet's webhook already delivers workflow_job to its own controller.
     for (const hooks of [
       [],
-      [hook({ url: HEAVY_ENDPOINT })],
+      [hook({ url: LIVE_ENDPOINT })],
       [hook({ active: false })],
       [hook({ events: ["push", "pull_request"] })],
     ]) {
       expect(decideShardOverflowPreflight(facts({ hooks }))).toStrictEqual(["missing-webhook"]);
     }
+  });
+
+  it("refuses the Pulumi pool's API Gateway URL even when a live hook delivers to it", () => {
+    // During the overlap that hook exists and is active, so an operator passing the old URL must not pass.
+    expect(
+      decideShardOverflowPreflight(facts({ webhookUrl: LIVE_ENDPOINT, hooks: [hook({ url: LIVE_ENDPOINT })] }))
+    ).toStrictEqual(["missing-webhook"]);
+  });
+
+  it("matches the fleet's function URL with or without its trailing slash", () => {
+    const bare = Str.replace(/\/$/u, "")(ENDPOINT);
+    expect(bare).not.toBe(ENDPOINT);
+    expect(decideShardOverflowPreflight(facts({ hooks: [hook({ url: bare })] }))).toStrictEqual([]);
+    expect(decideShardOverflowPreflight(facts({ webhookUrl: bare }))).toStrictEqual([]);
+    // Only the one trailing slash is dropped; another path is another endpoint.
+    expect(decideShardOverflowPreflight(facts({ hooks: [hook({ url: `${ENDPOINT}webhook` })] }))).toStrictEqual([
+      "missing-webhook",
+    ]);
   });
 
   it("reports every problem of a group created with GitHub's defaults", () => {
@@ -158,7 +179,7 @@ describe("decideShardOverflowPreflight", () => {
 // The REST shapes as GitHub returns them, extra fields included.
 const groupRest = (values: Record<string, unknown> = {}) => ({
   id: 7,
-  name: SHARD_OVERFLOW_RUNNER_LABEL,
+  name: SHARD_OVERFLOW_RUNNER_GROUP,
   visibility: "selected",
   default: false,
   inherited: false,
@@ -201,7 +222,7 @@ const respond = (routes: Routes) => (call: GithubFetchCall) =>
 const correctRoutes: Routes = {
   [GROUPS_PATH]: groupsRest([defaultGroupRest, groupRest()]),
   [REPOSITORIES_PATH]: repositoriesRest([REPOSITORY]),
-  [HOOKS_PATH]: [hookRest(HEAVY_ENDPOINT), hookRest(ENDPOINT)],
+  [HOOKS_PATH]: [hookRest(LIVE_ENDPOINT), hookRest(ENDPOINT)],
 };
 
 const withApi =
@@ -275,7 +296,7 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("ci shard-overflow-preflight",
       );
       expect(read.repositories).toStrictEqual([REPOSITORY]);
       // Only the active flag, events and payload URL survive the decode; the secret never does.
-      expect(read.hooks).toStrictEqual([hook({ url: HEAVY_ENDPOINT }), hook()]);
+      expect(read.hooks).toStrictEqual([hook({ url: LIVE_ENDPOINT }), hook()]);
       expect(decideShardOverflowPreflight(read)).toStrictEqual([]);
     })
   );
@@ -291,12 +312,27 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("ci shard-overflow-preflight",
     })
   );
 
+  it.effect("finds the group by its own name, never by the pool's runner label", () =>
+    Effect.gen(function* () {
+      expect(SHARD_OVERFLOW_RUNNER_LABEL).not.toBe(SHARD_OVERFLOW_RUNNER_GROUP);
+      const seen: Array<string> = [];
+      const read = yield* readShardOverflowPreflightFacts(ENDPOINT).pipe(
+        withApi(
+          { ...correctRoutes, [GROUPS_PATH]: groupsRest([groupRest({ name: SHARD_OVERFLOW_RUNNER_LABEL })]) },
+          seen
+        )
+      );
+      assertNone(read.group);
+      expect(decideShardOverflowPreflight(read)).toStrictEqual(["missing-group"]);
+    })
+  );
+
   it.effect("passes through the command and says what it checked", () =>
     Effect.gen(function* () {
       const seen: Array<string> = [];
       yield* runCommand(["--webhook-url", ENDPOINT]).pipe(withApi(correctRoutes, seen), withEnv);
       const output = yield* printed;
-      expect(output).toContain(`shard-overflow-preflight: ok; ${SHARD_OVERFLOW_RUNNER_LABEL} admits only ${ALLOWED}`);
+      expect(output).toContain(`shard-overflow-preflight: ok; ${SHARD_OVERFLOW_RUNNER_GROUP} admits only ${ALLOWED}`);
       expect(output).not.toContain(HOOK_SECRET);
     })
   );
@@ -309,7 +345,7 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("ci shard-overflow-preflight",
           {
             ...correctRoutes,
             [GROUPS_PATH]: groupsRest([groupRest({ restricted_to_workflows: false, selected_workflows: [] })]),
-            [HOOKS_PATH]: [hookRest(HEAVY_ENDPOINT)],
+            [HOOKS_PATH]: [hookRest(LIVE_ENDPOINT)],
           },
           seen
         ),
@@ -341,13 +377,13 @@ it.layer(CommandLayer, { timeout: "30 seconds" })("ci shard-overflow-preflight",
       );
       expect(forbidden._tag).toBe("Failure");
       const malformed = yield* runCommand(["--webhook-url", ENDPOINT]).pipe(
-        withApi({ ...correctRoutes, [GROUPS_PATH]: { runner_groups: [{ name: SHARD_OVERFLOW_RUNNER_LABEL }] } }, seen),
+        withApi({ ...correctRoutes, [GROUPS_PATH]: { runner_groups: [{ name: SHARD_OVERFLOW_RUNNER_GROUP }] } }, seen),
         withEnv,
         Effect.exit
       );
       expect(malformed._tag).toBe("Failure");
       const output = yield* printed;
-      expect(output).toContain(`missing-group: no organization runner group is named ${SHARD_OVERFLOW_RUNNER_LABEL}`);
+      expect(output).toContain(`missing-group: no organization runner group is named ${SHARD_OVERFLOW_RUNNER_GROUP}`);
       expect(output).toContain("the runner group listing did not decode");
     })
   );

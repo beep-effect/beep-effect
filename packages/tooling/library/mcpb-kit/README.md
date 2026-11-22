@@ -31,8 +31,11 @@ runMcpbEntrypoint({ isMain: import.meta.main, program })
 
 `bun run src/package.ts --target <target>` builds `apps/<appName>/src/bin.ts`,
 ships the DuckDB native bindings beside it, writes
-`apps/<appName>/dist/mcpb/<appName>-<target>.mcpb`, and audits the bundle and
-the archive.
+`apps/<appName>/.mcpb/<appName>-<target>.mcpb` (outside `dist/`, so build
+caches never archive bundles), and audits the bundle and the archive. The
+Windows target caches its pinned Bun runtime and DuckDB bindings under
+`$XDG_CACHE_HOME/beep/mcpb` (default `~/.cache/beep/mcpb`), shared by every
+app and keyed by pinned version.
 
 | Target | Launch | Bundle root |
 | --- | --- | --- |

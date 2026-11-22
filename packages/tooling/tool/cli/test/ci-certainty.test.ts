@@ -215,7 +215,7 @@ describe("ci certainty fixture replay", () => {
         const report = yield* loadCorpus(PLANNED).pipe(Effect.flatMap(buildCiCertaintyReport));
 
         assertTrue(report.certified);
-        // Heavy Admission to the first beep-ec2-heavy job of the same run, across both producers.
+        // Heavy Admission to the first managed heavy-pool job of the same run, across both producers.
         strictEqual(report.admissionToHeavy.n, 15);
         assertSome(report.admissionToHeavy.p50Minutes, 1.22);
         strictEqual(report.runnerMinutes.runs, 29);
@@ -343,7 +343,7 @@ const labelAdmittedCorpus = CiCertaintyCorpus.make({
       { completed_at: "2026-11-09T12:06:00Z", name: "Heavy Admission", started_at: "2026-11-09T12:05:00Z" },
       {
         completed_at: "2026-11-09T12:17:00Z",
-        labels: ["beep-ec2-heavy"],
+        labels: ["beep-fleet-heavy"],
         name: "Heavy / Check",
         started_at: "2026-11-09T12:07:00Z",
       },
@@ -367,7 +367,7 @@ const earlyAdmitCorpus = CiCertaintyCorpus.make({
       { completed_at: "2026-11-09T11:59:00Z", name: "Heavy Admission", started_at: "2026-11-09T11:58:00Z" },
       {
         completed_at: "2026-11-09T12:10:00Z",
-        labels: ["beep-ec2-heavy"],
+        labels: ["beep-fleet-heavy"],
         name: "Heavy / Check",
         started_at: "2026-11-09T12:00:00Z",
       },
@@ -832,7 +832,7 @@ const LIVE_JOBS: ReadonlyArray<readonly [number, ReadonlyArray<unknown>]> = [
       liveJob(11, 112, "Lint", "2026-11-09T10:01:00Z", "2026-11-09T10:05:00Z"),
     ],
   ],
-  [12, [liveJob(12, 121, "Heavy / Check", "2026-11-09T10:02:00Z", "2026-11-09T10:12:00Z", ["beep-ec2-heavy"])]],
+  [12, [liveJob(12, 121, "Heavy / Check", "2026-11-09T10:02:00Z", "2026-11-09T10:12:00Z", ["beep-fleet-heavy"])]],
   [13, [liveJob(13, 131, "Lint", "2026-11-10T01:01:00Z", "2026-11-10T01:04:00Z")]],
 ];
 
@@ -1305,8 +1305,8 @@ describe("ci per-attempt job reads", () => {
   });
 
   it("counts a rerun copy's runner-minutes once", () => {
-    const copy = CiWorkflowJob.make({ ...attemptJob(2, 2, "Job 1"), labels: ["beep-ec2-heavy"] });
-    const original = CiWorkflowJob.make({ ...attemptJob(1, 1), labels: ["beep-ec2-heavy"] });
+    const copy = CiWorkflowJob.make({ ...attemptJob(2, 2, "Job 1"), labels: ["beep-fleet-heavy"] });
+    const original = CiWorkflowJob.make({ ...attemptJob(1, 1), labels: ["beep-fleet-heavy"] });
     const minutes = ciCertaintyRunnerMinutes([original, copy]);
     strictEqual(minutes.managed, 1);
     strictEqual(minutes.githubHosted, 0);

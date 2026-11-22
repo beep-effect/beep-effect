@@ -22,6 +22,7 @@ import * as Config from "effect/Config";
 import * as Effect from "effect/Effect";
 import { constant, identity, pipe } from "effect/Function";
 import * as O from "effect/Option";
+import * as Str from "effect/String";
 import type * as Arbitrary from "effect/Arbitrary";
 
 /**
@@ -81,10 +82,44 @@ const fcNumRunsConfig = Config.option(Config.String("BEEP_FC_NUM_RUNS"));
 
 const fcSeedConfig = Config.option(Config.String("BEEP_FC_SEED"));
 
-const parseInteger = (raw: string): O.Option<number> => {
-  const parsed = Number(raw);
-  return Number.isInteger(parsed) ? O.some(parsed) : O.none();
-};
+/**
+ * Parse a raw `BEEP_FC_SEED` value into a seed.
+ *
+ * **Details**
+ *
+ * A seed is a 32-bit signed integer, -2147483648 to 2147483647; anything
+ * else, an empty value and an absent one collapse to `O.none()`. The range is
+ * what both generators replay exactly: fast-check wraps a larger seed modulo
+ * 2^32, so two different logged seeds would draw the same values, while
+ * `effect/Arbitrary` hashes the seed's text. The shared Vitest configuration,
+ * its setup and {@link envFcSeed} all parse the seed with this, so a seed one
+ * accepts is never dropped by another.
+ *
+ * **Example** (Parse seeds)
+ *
+ * ```ts
+ * import { parseFcSeed } from "@beep/fc-runs"
+ * import * as O from "effect/Option"
+ *
+ * console.log(O.getOrNull(parseFcSeed("42"))) // 42
+ * console.log(O.getOrNull(parseFcSeed("2147483648"))) // null
+ * console.log(O.getOrNull(parseFcSeed(" "))) // null
+ * ```
+ *
+ * @param raw - Raw environment value, if any.
+ * @returns The seed, or none when absent or not a 32-bit signed integer.
+ * @category testing
+ * @since 0.0.0
+ */
+export const parseFcSeed = (raw: string | undefined): O.Option<number> =>
+  pipe(O.fromNullishOr(raw), O.map(Str.trim), O.filter(Str.isNonEmpty), O.map(Number), O.filter(isInt32));
+
+const INT32_MIN = -2_147_483_648;
+const INT32_MAX = 2_147_483_647;
+
+function isInt32(seed: number): boolean {
+  return Number.isInteger(seed) && seed >= INT32_MIN && seed <= INT32_MAX;
+}
 
 /**
  * Read the `BEEP_FC_SEED` environment seed pin.
@@ -110,7 +145,7 @@ const parseInteger = (raw: string): O.Option<number> => {
  * @category testing
  * @since 0.0.0
  */
-export const envFcSeed = (): O.Option<number> => pipe(Effect.runSync(fcSeedConfig), O.flatMap(parseInteger));
+export const envFcSeed = (): O.Option<number> => pipe(Effect.runSync(fcSeedConfig), O.getOrUndefined, parseFcSeed);
 
 /**
  * Read the `BEEP_FC_NUM_RUNS` environment floor.

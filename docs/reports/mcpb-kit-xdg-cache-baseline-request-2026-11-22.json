@@ -1,0 +1,18 @@
+{
+  "previous": {
+    "//": "80f47cad7fd4d2fe58e884dd32b174caaa9abec2d8f6ac9afa2c6c220900f45f",
+    "@beep/mcpb-kit": "3d923cbaa7f75361ba662ffdeacc2014d21e04c67b4460e31daaddab64696b64"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (mcpb-kit output lane, t3/mcpb-kit-output-outside-dist)",
+    "reason": "Record the @beep/mcpb-kit drift from the new @beep/xdg workspace dependency (manifest bytes and the @beep/xdg build and transit edges), and the inherited root turbo.json source digest from #3458. No command, cache flag, output or environment changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/mcpb-kit-xdg-cache-review-2026-11-22.md",
+      "sha256": "f68140fcaafa032ec468a609d5f79ab3702bba4b97e380fe4834e76cd81bc0f6"
+    }
+  },
+  "subjects": ["//", "@beep/mcpb-kit"],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.5",
+  "epoch": "qualification-v3"
+}

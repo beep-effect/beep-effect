@@ -41,8 +41,8 @@ Tests inject a deterministic fake `LanguageModel` and never use this live layer.
 Ships as an MCP Bundle (`.mcpb`) built by `@beep/mcpb-kit`:
 
 ```bash
-bun run --cwd apps/practice-kg-mcp package:mcpb --target windows-x64  # dist/mcpb/practice-kg-mcp-windows-x64.mcpb
-bun run --cwd apps/practice-kg-mcp package:mcpb:linux                 # dist/mcpb/practice-kg-mcp-linux-x64.mcpb
+bun run --cwd apps/practice-kg-mcp package:mcpb --target windows-x64  # .mcpb/practice-kg-mcp-windows-x64.mcpb
+bun run --cwd apps/practice-kg-mcp package:mcpb:linux                 # .mcpb/practice-kg-mcp-linux-x64.mcpb
 bun run --cwd apps/practice-kg-mcp smoke:compiled                     # packages Linux, then drives the host over stdio
 ```
 
