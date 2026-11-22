@@ -487,11 +487,12 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             ["docs/reports/2026-01-01-cache-review.md", "Reviewed `@beep/deploy`.\n"],
             ["docs/reports/retirement/request.json", '{ "package": "@beep/deploy" }\n'],
             ["explorations/INBOX.md", "- 2026-01-01: split `@beep/deploy`.\n"],
-            ["explorations/demo/.runs/census.yaml", 'package: "@beep/deploy"\n'],
-            ["explorations/demo/.runs/composed.yaml", 'package: "@beep/deploy"\n'],
             ["explorations/demo/DECISIONS.md", "Keep `@beep/deploy`.\n"],
+            ["explorations/demo/composed.yaml", 'package: "@beep/deploy"\n'],
             ["explorations/demo/ops/manifest.json", '{ "package": "@beep/deploy" }\n'],
             ["explorations/demo/research/package-census.json", '["@beep/deploy"]\n'],
+            ["goals/demo/.briefs/lane.md", "Move `@beep/deploy`.\n"],
+            ["goals/demo/.notes.md", "Move `@beep/deploy`.\n"],
             ["goals/demo/decisions/2026-01-01-move.md", "Retire `@beep/deploy`.\n"],
             ["goals/demo/history/notes.md", "Moved out of `deploy/src/Stack.ts`.\n"],
             ["goals/demo/research/graph.tsv", "@beep/deploy\tbuild\n"],
@@ -532,18 +533,11 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             ["explorations/README.md", line],
             ["explorations/_template/BRIEF.md", line],
             ["explorations/_template/ops/manifest.json", '{ "package": "@beep/deploy" }\n'],
-            ["explorations/demo/.mcp.json", '{ "args": ["deploy/src/Stack.ts"] }\n'],
-            ["explorations/demo/bunfig.toml", 'preload = ["../../deploy/src/Stack.ts"]\n'],
-            ["explorations/demo/compose.override.yaml", "services: { app: { build: deploy/src/Stack.ts } }\n"],
-            ["explorations/demo/docker-compose.yml", "services: { app: { build: deploy/src/Stack.ts } }\n"],
-            ["explorations/demo/ops/biome.jsonc", '{ "extends": ["@beep/deploy"] }\n'],
-            ["explorations/demo/ops/components.json", '{ "aliases": { "ui": "@beep/deploy" } }\n'],
+            ["explorations/demo/.github/workflows/ci.yml", "run: bun deploy/src/Stack.ts\n"],
             ["explorations/demo/ops/package.json", manifest],
             ["explorations/demo/ops/run.mts", importLine],
             ["explorations/demo/ops/run.ts", importLine],
-            ["explorations/demo/ops/tauri.conf.json", '{ "plugins": ["@beep/deploy"] }\n'],
             ["explorations/demo/ops/tsconfig.run.json", paths],
-            ["explorations/demo/turbo.json", '{ "tasks": { "@beep/deploy#build": {} } }\n'],
             ["packages/consumer/docs/reports/notes.md", line],
             ["packages/consumer/explorations/demo/notes.md", line],
             ["packages/consumer/research/notes.md", line],
@@ -565,6 +559,68 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
             "docs/reports/2026-01-01-cache-review.md",
           ]);
           expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, observations)).toBe(false);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("keeps every file a tool loads live inside a record tree", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const names = [
+            ".claude/settings.json",
+            ".lefthook.yaml",
+            ".mcp.json",
+            ".mise.toml",
+            "AGENTS.md",
+            "CLAUDE.md",
+            "Chart.yaml",
+            "GEMINI.md",
+            "Pulumi.dev.yaml",
+            "Pulumi.yaml",
+            "SKILL.md",
+            "app.config.json",
+            "biome.json",
+            "biome.jsonc",
+            "bunfig.toml",
+            "components.json",
+            "compose.override.yaml",
+            "compose.yaml",
+            "deno.json",
+            "docgen.json",
+            "docker-compose.prod.yml",
+            "docker-compose.yml",
+            "jsconfig.json",
+            "knip.json",
+            "kustomization.yaml",
+            "lefthook.yml",
+            "lerna.json",
+            "nx.json",
+            "package.json",
+            "pnpm-workspace.yaml",
+            "renovate.json",
+            "syncpack.json",
+            "tauri.conf.json",
+            "tsconfig.run.json",
+            "turbo.json",
+            "vercel.json",
+            "wrangler.json",
+          ];
+          const live = A.flatMap(["docs/reports/demo", "explorations/demo/ops"], (directory) =>
+            A.map(names, (name) => `${directory}/${name}`)
+          );
+          const repoRoot = yield* writeDeletedDeployLayout([
+            ...A.map(live, (file) => [file, '"deploy/src/Stack.ts"\n'] as const),
+            ["explorations/demo/ops/composed.yaml", '"deploy/src/Stack.ts"\n'],
+            ["explorations/demo/ops/packages.json", '"deploy/src/Stack.ts"\n'],
+          ]);
+
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(evidenceOf(observations, "authored-references")).toStrictEqual(live);
+          expect(evidenceOf(observations, "historical-records")).toStrictEqual([
+            "explorations/demo/ops/composed.yaml",
+            "explorations/demo/ops/packages.json",
+          ]);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );

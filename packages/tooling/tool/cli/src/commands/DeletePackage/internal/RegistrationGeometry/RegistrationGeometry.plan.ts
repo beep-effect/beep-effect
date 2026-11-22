@@ -31,22 +31,27 @@ import type {
 // reports and the commit-message history, the other `standards/` files, the guides directly under
 // `explorations/` and its packet template, and the changeset config and README. `goals/` and `research/`
 // are whole trees because the dependents scan reads their code; it never reads `explorations/` or
-// `docs/`, so there only prose and data are records. Source and every file a tool loads stay live: all
-// TOML and JSONC, and the JSON and YAML files that are dotfiles or have a name tools look for.
+// `docs/`, so there only prose and data are records. Source and every file a tool loads stay live: other
+// file types (TOML, JSONC), dot entries (a wildcard here never matches one), agent
+// instructions, and the JSON and YAML names that tools look for.
+const agentDocs = "!(AGENTS|CLAUDE|GEMINI|SKILL)";
 const toolYaml =
-  "!(.*|Chart|Pulumi|Pulumi.*|compose|compose.*|docker-compose|docker-compose.*|kustomization|lefthook|pnpm-workspace)";
+  "!(Chart|Pulumi|Pulumi.*|compose|compose.*|docker-compose|docker-compose.*|kustomization|lefthook|pnpm-workspace)";
 const toolJson =
-  "!(.*|*.conf|*.config|biome|components|deno|docgen|jsconfig*|knip|lerna|nx|package|renovate|syncpack|tsconfig*|turbo|vercel|wrangler)";
+  "!(*.conf|*.config|biome|components|deno|docgen|jsconfig*|knip|lerna|nx|package|renovate|syncpack|tsconfig*|turbo|vercel|wrangler)";
 const recordFilesUnder = (tree: string): ReadonlyArray<string> => [
-  `${tree}/**/*.{md,tsv}`,
+  `${tree}/**/*.tsv`,
+  `${tree}/**/${agentDocs}.md`,
   `${tree}/**/${toolYaml}.{yaml,yml}`,
   `${tree}/**/${toolJson}.json`,
 ];
 
+const wholeTree = (tree: string): ReadonlyArray<string> => [`${tree}/**`, `${tree}/**/.*`, `${tree}/**/.*/**`];
+
 const HISTORICAL_RECORD_GLOBS = A.map(
   [
-    "goals/**",
-    "research/**",
+    ...wholeTree("goals"),
+    ...wholeTree("research"),
     ".changeset/!(README).md",
     "explorations/INBOX.md",
     ...recordFilesUnder("explorations/!(_template)"),

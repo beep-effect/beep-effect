@@ -249,10 +249,10 @@ const isPendingChangesetResidue = Effect.fn("RegistrationGeometry.isPendingChang
   return !isCanonicalDeletionNote;
 });
 
-const recordGlob = GlobPatternOptions.make({ dot: true, nonegate: true, nocomment: true });
+const recordGlob = GlobPatternOptions.make({ nonegate: true, nocomment: true });
 
-// The doctor's one reading of a dated record: the files the historical-record surfaces declare, dot
-// entries included. The authored-reference probe skips exactly these and nothing else.
+// The doctor's one reading of a dated record: the files the historical-record surfaces declare, where
+// a wildcard matches no dot entry. The authored-reference probe skips exactly these and nothing else.
 const historicalRecordMatcherFor = (surfaces: ReadonlyArray<RegistrationSurface>): ((file: string) => boolean) => {
   const patterns = pipe(
     surfaces,
