@@ -11,7 +11,7 @@ import { workspaceManifests } from "@beep/repo-cli-kit/RepoWorkspaces";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -132,7 +132,9 @@ const propertyFilesOf = Effect.fnUntraced(function* (directory: string) {
     Effect.fnUntraced(function* (file) {
       // A screenshot directory carries its test file's name.
       const info = yield* fs.stat(path.join(directory, file));
-      return info.type === "File" && PROPERTY_TEST_MARKER.test(yield* fs.readFileString(path.join(directory, file)));
+      if (info.type !== "File") return false;
+      const source = yield* fs.readFileString(path.join(directory, file));
+      return PROPERTY_TEST_MARKER.test(source);
     }),
     { concurrency: 16 }
   );
@@ -164,10 +166,14 @@ export const propertySweepPackages = Effect.fn("CiPropertySweep.packages")(
   function* (repoRoot: string) {
     const path = yield* Path.Path;
     const workspaces = yield* workspaceManifests(repoRoot);
-    const candidates = A.filter(
-      A.fromIterable(HashMap.entries(workspaces)),
-      ([, workspace]) =>
-        HashMap.has(workspace.manifest.scripts, "test") && !HashMap.has(workspace.manifest.scripts, "test:property")
+    const candidates = pipe(
+      workspaces,
+      HashMap.entries,
+      A.fromIterable,
+      A.filter(
+        ([, workspace]) =>
+          HashMap.has(workspace.manifest.scripts, "test") && !HashMap.has(workspace.manifest.scripts, "test:property")
+      )
     );
     const found = yield* Effect.forEach(
       candidates,
@@ -304,6 +310,8 @@ export const judgePropertySweep = Effect.fn("CiPropertySweep.judge")(
   Effect.mapError(CiCommandError.new("Failed to read the property sweep's receipts."))
 );
 
+type SweepReplay = { readonly seed: string; readonly runs: string };
+
 const countOf = (
   verdicts: ReadonlyArray<PropertySweepVerdict>,
   files: (entry: PropertySweepVerdict) => ReadonlyArray<string>
@@ -330,10 +338,10 @@ const countOf = (
  * @category projections
  * @since 0.0.0
  */
-export const propertySweepLines = (
-  verdicts: ReadonlyArray<PropertySweepVerdict>,
-  replay: { readonly seed: string; readonly runs: string }
-): ReadonlyArray<string> => {
+export const propertySweepLines: {
+  (verdicts: ReadonlyArray<PropertySweepVerdict>, replay: SweepReplay): ReadonlyArray<string>;
+  (replay: SweepReplay): (verdicts: ReadonlyArray<PropertySweepVerdict>) => ReadonlyArray<string>;
+} = dual(2, (verdicts: ReadonlyArray<PropertySweepVerdict>, replay: SweepReplay): ReadonlyArray<string> => {
   const expected = countOf(verdicts, (verdict) => verdict.package.files);
   const missing = countOf(verdicts, (verdict) => verdict.missing);
   const integration = countOf(verdicts, (verdict) => verdict.package.integration);
@@ -358,7 +366,7 @@ export const propertySweepLines = (
       (verdict) => `[property-sweep] replay: ${propertySweepReplay(verdict.package.name, replay)}`
     ),
   ];
-};
+});
 
 /**
  * The command that replays one package of a sweep.
@@ -378,8 +386,14 @@ export const propertySweepLines = (
  * @category projections
  * @since 0.0.0
  */
-export const propertySweepReplay = (name: string, replay: { readonly seed: string; readonly runs: string }): string =>
-  `BEEP_FC_SEED=${replay.seed} BEEP_FC_NUM_RUNS=${replay.runs} bunx turbo run test --filter=${name} ${PROPERTY_SWEEP_NO_CACHE}`;
+export const propertySweepReplay: {
+  (name: string, replay: SweepReplay): string;
+  (replay: SweepReplay): (name: string) => string;
+} = dual(
+  2,
+  (name: string, replay: SweepReplay): string =>
+    `BEEP_FC_SEED=${replay.seed} BEEP_FC_NUM_RUNS=${replay.runs} bunx turbo run test --filter=${name} ${PROPERTY_SWEEP_NO_CACHE}`
+);
 
 /**
  * The Turbo flag that neither reads nor writes any cache.

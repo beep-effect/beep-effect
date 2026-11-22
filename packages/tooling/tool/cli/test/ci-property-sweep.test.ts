@@ -200,7 +200,9 @@ describe("property sweep", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* findRepoRoot();
-        const workspaces = A.fromIterable(HashMap.entries(yield* workspaceManifests(root)));
+        const workspaces = yield* Effect.map(workspaceManifests(root), (members) =>
+          A.fromIterable(HashMap.entries(members))
+        );
         // Git's list of test files, not the census's own walk of the tree.
         const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
         const git = yield* spawner.spawn(ChildProcess.make("git", ["-C", root, "ls-files", "*.test.ts", "*.test.tsx"]));
@@ -214,7 +216,8 @@ describe("property sweep", () => {
           const tests = `${path.relative(root, workspace.dir)}/test/`;
           return A.some(marked, Str.startsWith(tests));
         });
-        const second = A.map(yield* propertySweepPackages(root), (entry) => entry.name);
+        const packages = yield* propertySweepPackages(root);
+        const second = A.map(packages, (entry) => entry.name);
         const first = pipe(
           workspaces,
           A.filter(([, workspace]) => HashMap.has(workspace.manifest.scripts, "test:property")),

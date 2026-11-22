@@ -3531,9 +3531,9 @@ describe("the unfiltered property lane's second step", () => {
           const logged = yield* commands;
           expect(logged).toHaveLength(2);
           expect(firstOf(logged)).toContain(" run test:property ");
-          expect(firstOf(logged).startsWith("77/1000 ")).toBe(true);
-          expect(lastOf(logged).startsWith("77/1000 ")).toBe(true);
-          expect(lastOf(logged).endsWith(SECOND)).toBe(true);
+          expect(Str.startsWith("77/1000 ")(firstOf(logged))).toBe(true);
+          expect(Str.startsWith("77/1000 ")(lastOf(logged))).toBe(true);
+          expect(Str.endsWith(SECOND)(lastOf(logged))).toBe(true);
         })
       )
     );
@@ -3555,8 +3555,8 @@ describe("the unfiltered property lane's second step", () => {
           const error = yield* Effect.flip(runCiLane("property", nightly));
           expect(error._tag).toBe("QualityTaskGroupFailed");
           const logged = yield* commands;
-          expect(lastOf(logged).startsWith("77/1000 ")).toBe(true);
-          expect(lastOf(logged).endsWith(SECOND)).toBe(true);
+          expect(Str.startsWith("77/1000 ")(lastOf(logged))).toBe(true);
+          expect(Str.endsWith(SECOND)(lastOf(logged))).toBe(true);
         })
       )
     );
@@ -3566,7 +3566,8 @@ describe("the unfiltered property lane's second step", () => {
         Effect.gen(function* () {
           const error = yield* Effect.flip(runCiLane("property", nightly));
           expect(error._tag).toBe("QualityTaskGroupFailed");
-          const printed = A.map(yield* TestConsole.logLines, (line) => `${line}`);
+          const lines = yield* TestConsole.logLines;
+          const printed = A.map(lines, (line) => `${line}`);
           expect(A.some(printed, Str.includes(propertySweepReplay("<package>", { seed: "77", runs: "1000" })))).toBe(
             true
           );
@@ -3579,7 +3580,8 @@ describe("the unfiltered property lane's second step", () => {
         Effect.gen(function* () {
           const error = yield* Effect.flip(runCiLane("property", nightly));
           expect(error.message).toBe("The property sweep did not execute every expected file.");
-          const printed = A.map(yield* TestConsole.logLines, (line) => `${line}`);
+          const lines = yield* TestConsole.logLines;
+          const printed = A.map(lines, (line) => `${line}`);
           expect(printed).toContain("[property-sweep] expected and not executed: packages/a/test/a.test.ts");
         })
       )
