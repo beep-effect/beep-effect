@@ -74,7 +74,6 @@ import {
   materializeKnowledgeTree,
   materializeKnowledgeTreePaths,
   materializeKnowledgeTreeWhere,
-  readKnowledgeGitRefNames,
 } from "./Knowledge.service.ts";
 import {
   checkKnowledgeDoctorReport,
@@ -220,7 +219,6 @@ export interface KnowledgeDoctorTree extends KnowledgeTreeOracle {
   readonly commandTree: Effect.Effect<O.Option<KnowledgeStaticCommandTree>, KnowledgeOperationalError>;
   readonly domain: KnowledgeDoctorDomain;
   readonly entryIndex: KnowledgeTreeEntryIndex;
-  readonly gitRefNames: HashSet.HashSet<string>;
   readonly globalOptions: ReadonlyArray<KnowledgeStaticCommandFlag>;
   readonly isAncestor: (commit: KnowledgeCommitSha) => Effect.Effect<boolean, KnowledgeOperationalError>;
   readonly pathRemovals: (
@@ -449,7 +447,6 @@ const namesBranch = (text: string, column: number): boolean => BRANCH_NAME_PREFI
 const proseSpans = (
   line: KnowledgeDocumentFenceLine,
   documentPath: string,
-  gitRefNames: HashSet.HashSet<string>,
   exportColumns: HashSet.HashSet<number>
 ): ReadonlyArray<readonly [KnowledgeSpanForm, string, number]> => {
   const assertions = O.toArray(
@@ -461,7 +458,6 @@ const proseSpans = (
         return O.some(["command", inlineSpan.span, inlineSpan.column] as const);
       }
       return HashSet.has(exportColumns, inlineSpan.column) ||
-        HashSet.has(gitRefNames, inlineSpan.span) ||
         namesBranch(line.text, inlineSpan.column) ||
         O.isNone(normalizeKnowledgeRepoPath(documentPath, inlineSpan.span))
         ? O.none()
@@ -477,10 +473,10 @@ const proseSpans = (
  * **Details**
  *
  * Spans come from the Stage-1 readers: inline code spans on prose lines (a `bun run beep` span is a
- * command, a governed repository spelling a path unless it exactly names a Git ref or the prose
- * introduces it as a branch, as in "branch `goals/x`") and
- * `beep:assert path-exists` markers that fill a whole prose line (a marker quoted in inline code or
- * written mid-line asserts nothing). Fenced content is never read as spans: an unmarked fence is a
+ * command, a governed repository spelling a path unless the prose introduces it as a branch, as in
+ * "branch `goals/x`"; the refs the clone holds are never read) and `beep:assert path-exists`
+ * markers that fill a whole prose line (a marker quoted in inline code or written mid-line asserts
+ * nothing). Fenced content is never read as spans: an unmarked fence is a
  * decoy, and a fence whose info string carries `beep:generated=<producer-id>` is one
  * `generated-fence` span on its opening delimiter. A block marker scopes the next Markdown block
  * (a fence through its closing delimiter, or the run of non-blank prose lines that follows), a
@@ -495,16 +491,14 @@ const proseSpans = (
  *
  * ```ts
  * import { extractKnowledgeDocumentSpans } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.service"
- * import * as HashSet from "effect/HashSet"
  *
- * const extraction = extractKnowledgeDocumentSpans("docs/README.md", "See `goals/INDEX.md`.", HashSet.empty())
+ * const extraction = extractKnowledgeDocumentSpans("docs/README.md", "See `goals/INDEX.md`.")
  *
  * console.log(extraction.spans.length) // 1
  * ```
  *
  * @param documentPath - Repository-relative path of the scanned document.
  * @param text - Decoded document text.
- * @param gitRefNames - Exact ref spellings that are never read as paths.
  * @param packages - Workspace export facts from the scanned tree, when available.
  * @param entries - Tracked entries used to prove the export targets.
  * @returns Source-ordered spans plus every historical marker in the document.
@@ -514,7 +508,6 @@ const proseSpans = (
 const extractDocumentSpans = (
   documentPath: string,
   text: string,
-  gitRefNames: HashSet.HashSet<string>,
   packages: ReadonlyArray<KnowledgeWorkspacePackage> = [],
   entries: ReadonlyArray<KnowledgeTrackedEntry> = []
 ): KnowledgeDocumentExtraction => {
@@ -557,12 +550,7 @@ const extractDocumentSpans = (
       ? A.map(
           A.appendAll(
             phase,
-            proseSpans(
-              line,
-              documentPath,
-              gitRefNames,
-              verifiedPackageExportColumns(line.text, packages, documentPackages, entries)
-            )
+            proseSpans(line, documentPath, verifiedPackageExportColumns(line.text, packages, documentPackages, entries))
           ),
           ([form, raw, column]) =>
             KnowledgeSpan.make({
@@ -587,18 +575,16 @@ const extractDocumentSpans = (
  * **Example** (Extract a relative path)
  * ```ts
  * import { extractKnowledgeDocumentSpans } from "@beep/repo-cli/commands/Knowledge/KnowledgeDoctor.service"
- * import * as HashSet from "effect/HashSet"
- * console.log(extractKnowledgeDocumentSpans("docs/a.md", "`./missing`", HashSet.empty()).spans.length) // 1
+ *
+ * console.log(extractKnowledgeDocumentSpans("docs/a.md", "`./missing`").spans.length) // 1
  * ```
  * @category parsing
  * @since 0.0.0
  */
 export const extractKnowledgeDocumentSpans: {
-  (text: string, gitRefNames: HashSet.HashSet<string>): (documentPath: string) => KnowledgeDocumentExtraction;
-  (documentPath: string, text: string, gitRefNames: HashSet.HashSet<string>): KnowledgeDocumentExtraction;
-} = dual(3, (documentPath: string, text: string, gitRefNames: HashSet.HashSet<string>) =>
-  extractDocumentSpans(documentPath, text, gitRefNames)
-);
+  (text: string): (documentPath: string) => KnowledgeDocumentExtraction;
+  (documentPath: string, text: string): KnowledgeDocumentExtraction;
+} = dual(2, (documentPath: string, text: string) => extractDocumentSpans(documentPath, text));
 
 /* -------------------------------------------------------------------------------------------------
  * Classification rule table
@@ -1534,7 +1520,7 @@ export const scanKnowledgeDoctorTree = Effect.fn("KnowledgeDoctor.scanTree")(fun
         ),
         Effect.map((text) => ({
           documentPath: entry.path,
-          extraction: extractDocumentSpans(entry.path, text, tree.gitRefNames, packages, tree.trackedEntries),
+          extraction: extractDocumentSpans(entry.path, text, packages, tree.trackedEntries),
         }))
       ),
     { concurrency: 1 }
@@ -1640,7 +1626,6 @@ export interface KnowledgeDoctorMemoryTreeInput {
   readonly commandTree?: O.Option<KnowledgeStaticCommandTree> | undefined;
   readonly commit?: string | undefined;
   readonly files: Readonly<Record<string, string>>;
-  readonly gitRefNames?: HashSet.HashSet<string> | undefined;
   readonly globalOptions?: ReadonlyArray<KnowledgeStaticCommandFlag> | undefined;
   /** Doctor trees of historical commits, keyed by commit. */
   readonly history?: Readonly<Record<string, KnowledgeDoctorTree>> | undefined;
@@ -1708,7 +1693,6 @@ export const makeKnowledgeDoctorMemoryTree = (input: KnowledgeDoctorMemoryTreeIn
     ...oracle,
     entryIndex: makeKnowledgeTreeEntryIndex(entries),
     domain: deriveKnowledgeDoctorDomain(oracle),
-    gitRefNames: input.gitRefNames ?? HashSet.empty(),
     producers: input.producers ?? KNOWLEDGE_PRODUCER_OUTPUTS,
     commandTree: Effect.succeed(input.commandTree ?? O.none()),
     globalOptions: input.globalOptions ?? KNOWLEDGE_CLI_GLOBAL_FLAGS,
@@ -1967,7 +1951,6 @@ const liveCommandTree = (materialized: KnowledgeMaterializedTree) =>
 
 const liveDoctorTree = Effect.fn("KnowledgeDoctor.liveTree")(function* (
   materialized: KnowledgeMaterializedTree,
-  gitRefNames: HashSet.HashSet<string>,
   history: MutableHashMap.MutableHashMap<string, KnowledgeDoctorTree>
 ) {
   const runtime = yield* Effect.context<LiveTreeRequirements>();
@@ -1978,7 +1961,6 @@ const liveDoctorTree = Effect.fn("KnowledgeDoctor.liveTree")(function* (
     ...materialized.oracle,
     domain,
     entryIndex: makeKnowledgeTreeEntryIndex(materialized.oracle.trackedEntries),
-    gitRefNames,
     producers: KNOWLEDGE_PRODUCER_OUTPUTS,
     commandTree,
     globalOptions: KNOWLEDGE_CLI_GLOBAL_FLAGS,
@@ -1991,7 +1973,7 @@ const liveDoctorTree = Effect.fn("KnowledgeDoctor.liveTree")(function* (
         onSome: Effect.succeed,
         onNone: () =>
           materializeKnowledgeTree(cited).pipe(
-            Effect.flatMap((historical) => liveDoctorTree(historical, gitRefNames, history)),
+            Effect.flatMap((historical) => liveDoctorTree(historical, history)),
             Effect.tap((historical) => Effect.sync(() => MutableHashMap.set(history, cited, historical))),
             Effect.catchTag("KnowledgeCloneAttributesError", (error) =>
               Effect.fail(KnowledgeOperationalError.make({ message: error.message }))
@@ -2033,8 +2015,7 @@ const liveDoctorTree = Effect.fn("KnowledgeDoctor.liveTree")(function* (
  */
 export const makeKnowledgeDoctorTree = Effect.fn("KnowledgeDoctor.makeTree")(function* (treeish: string) {
   const materialized = yield* materializeKnowledgeTree(treeish);
-  const gitRefNames = yield* readKnowledgeGitRefNames(materialized.repoRoot);
-  return yield* liveDoctorTree(materialized, gitRefNames, MutableHashMap.empty());
+  return yield* liveDoctorTree(materialized, MutableHashMap.empty());
 });
 
 /**
@@ -2042,7 +2023,7 @@ export const makeKnowledgeDoctorTree = Effect.fn("KnowledgeDoctor.makeTree")(fun
  *
  * **Details**
  *
- * The same archive, `git ls-tree` entry list, ref names, command surface, domain and history reads as
+ * The same archive, `git ls-tree` entry list, command surface, domain and history reads as
  * {@link makeKnowledgeDoctorTree}, with extraction narrowed to `paths` plus the static command
  * reader's inputs, so the command surface is still derived from the archive's own CLI sources. What
  * it saves is writing every other tracked file to disk, which is most of the full tree's cost and
@@ -2078,8 +2059,7 @@ export const makeKnowledgeDoctorTreePaths = Effect.fn("KnowledgeDoctor.makeTreeP
     treeish,
     (repoPath) => HashSet.has(selected, repoPath) || KnowledgeCommandSurface.isStaticCommandTreeInput(repoPath)
   );
-  const gitRefNames = yield* readKnowledgeGitRefNames(materialized.repoRoot);
-  return yield* liveDoctorTree(materialized, gitRefNames, MutableHashMap.empty());
+  return yield* liveDoctorTree(materialized, MutableHashMap.empty());
 });
 
 /* -------------------------------------------------------------------------------------------------

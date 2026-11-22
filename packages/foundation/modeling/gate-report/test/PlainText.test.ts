@@ -71,9 +71,7 @@ describe("projectLines", () => {
     const withDelta = VerdictLine.make({ ...verdict, scope: Str.repeat(400)("x"), delta });
     const verdictOnly = (budget: ConsoleBudget) =>
       projectLines({ document: ConsoleDocument.make({ verdict: withDelta, entries: [], folds: [] }), budget });
-    assert.isTrue(
-      Str.endsWith("(5ms); since last run: 1 fixed, 0 still failing, 0 new")(verdictOnly(agentBudget)[0] ?? "")
-    );
+    assert.isTrue(Str.endsWith("(5ms) (1 fixed since last run)")(verdictOnly(agentBudget)[0] ?? ""));
     const narrow = ConsoleBudget.make({ maxChars: 1200, maxLineChars: 40, maxDiffLines: 3 });
     assert.deepStrictEqual(verdictOnly(narrow), ["test xxxxxx...: FAILED, 0/9 passed (5ms)"]);
   });
@@ -257,16 +255,17 @@ describe("verdict and delta text", () => {
       ...verdict,
       delta: RunDelta.makeOption({ fixed: 1, stillFailing: 0, new: 0 }),
     });
-    assert.strictEqual(
-      verdictText(withDelta),
-      "test @beep/glob: FAILED, 0/9 passed (5ms); since last run: 1 fixed, 0 still failing, 0 new"
-    );
+    assert.strictEqual(verdictText(withDelta), "test @beep/glob: FAILED, 0/9 passed (5ms) (1 fixed since last run)");
   });
 
   it("renders the delta phrase", () => {
     assert.strictEqual(
       deltaText(RunDelta.make({ fixed: 0, stillFailing: 2, new: 1 })),
       "since last run: 0 fixed, 2 still failing, 1 new"
+    );
+    assert.strictEqual(
+      deltaText(RunDelta.make({ fixed: 1, stillFailing: 0, new: 0, scopeDiffers: true })),
+      "since last run: 1 fixed, 0 still failing, 0 new (scope differs)"
     );
   });
 });

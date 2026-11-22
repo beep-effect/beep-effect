@@ -39,7 +39,6 @@ import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
-import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -58,6 +57,7 @@ import type {
   KnowledgeEvaluator,
   KnowledgeFindingKind,
 } from "@beep/repo-cli/commands/Knowledge";
+import type * as HashSet from "effect/HashSet";
 
 const testLayer = Layer.provideMerge(Git.layer, Layer.mergeAll(NodeServices.layer, NodeCrypto.layer));
 
@@ -123,8 +123,7 @@ const subjects = (report: KnowledgeDoctorReport, kind: KnowledgeFindingKind): Re
     Str.Order
   );
 
-const spansOf = (documentPath: string, text: string) =>
-  extractKnowledgeDocumentSpans(documentPath, text, HashSet.empty()).spans;
+const spansOf = (documentPath: string, text: string) => extractKnowledgeDocumentSpans(documentPath, text).spans;
 
 const doc = (...lines: ReadonlyArray<string>): string => A.join(lines, "\n");
 
@@ -245,8 +244,7 @@ describe("knowledge doctor span extraction", () => {
           "not a span",
           FENCE,
           "`goals/d.md` after the fence"
-        ),
-        HashSet.empty()
+        )
       );
       assert.deepStrictEqual(
         A.map(extraction.spans, (span) => [span.raw, O.getOrNull(O.map(span.citation, (citation) => citation.form))]),
@@ -274,7 +272,7 @@ describe("knowledge doctor span extraction", () => {
       const documentMarkers = (text: string) =>
         A.map(
           A.filter(
-            extractKnowledgeDocumentSpans("docs/guide.md", text, HashSet.empty()).markers,
+            extractKnowledgeDocumentSpans("docs/guide.md", text).markers,
             (marker) => marker.form === "document"
           ),
           (marker) => [marker.commit, marker.line]
@@ -367,21 +365,6 @@ describe("knowledge doctor span extraction", () => {
           ["command", 'bun run beep create-package demo --description "Doc → KG"'],
           ["command", "bun run beep create-package demo --description 'Doc -> KG'"],
         ]
-      );
-    })
-  );
-
-  it.effect(
-    "never reads a span that exactly names a Git ref as a path",
-    Effect.fnUntraced(function* () {
-      const extraction = extractKnowledgeDocumentSpans(
-        "docs/guide.md",
-        "branch `goals/feature-x` and path `goals/feature-y`",
-        HashSet.make("goals/feature-x")
-      );
-      assert.deepStrictEqual(
-        A.map(extraction.spans, (span) => span.raw),
-        ["goals/feature-y"]
       );
     })
   );

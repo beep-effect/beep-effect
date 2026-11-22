@@ -14,13 +14,13 @@ import * as MutableHashMap from "effect/MutableHashMap";
 import * as S from "effect/Schema";
 
 const $I = $LangExtractId.create("VerifiedSpan/normalization");
-const CombiningMark = S.String.check(
+const MarkLeadingText = S.String.check(
   S.isPattern(
-    /^\p{M}$/u,
-    $I.annote("CombiningMarkCheck", {
-      title: "Combining Mark",
-      description: "Checks for one Unicode combining-mark code point.",
-      message: "Expected one Unicode combining-mark code point.",
+    /^\p{M}/u,
+    $I.annote("MarkLeadingTextCheck", {
+      title: "Mark-Leading Text",
+      description: "Checks for text whose first code point is a Unicode combining mark.",
+      message: "Expected text that starts with a Unicode combining-mark code point.",
     })
   )
 );
@@ -65,7 +65,7 @@ export class NormalizedTextWithRawOffsets extends S.Opaque<
   )
 ) {}
 
-const isCombiningMark = S.is(CombiningMark);
+const isMarkLeading = S.is(MarkLeadingText);
 const isWhitespace = S.is(WhitespaceCodePoint);
 const normalizeUnicode = Str.normalize("NFKC");
 const straightenQuotes = flow(Str.replace(/[‘’‚‛]/gu, "'"), Str.replace(/[“”„‟]/gu, '"'));
@@ -135,7 +135,7 @@ type NormalizationScan = {
   readonly starts: Array<number>;
   readonly ends: Array<number>;
   readonly points: Array<string>;
-  readonly combiningMarks: Memo<boolean>;
+  readonly leadingMarks: Memo<boolean>;
   readonly clusterForms: Memo<ClusterForm>;
   readonly joins: Memo<boolean>;
   clusterStart: number;
@@ -145,6 +145,13 @@ type NormalizationScan = {
 
 const formOf = (scan: NormalizationScan, rawCluster: string): ClusterForm =>
   scan.clusterForms(rawCluster, () => clusterForm(rawCluster));
+
+// Four letters (U+0E33, U+0EB3, U+FF9E, U+FF9F) normalize to text that starts
+// with a combining mark. Their own category is not a mark, so the rule reads the
+// normalized point: left as its own cluster, such a letter would keep a later
+// mark (Z, U+FF9E, U+0323) from composing with the cluster before it.
+const startsWithMark = (scan: NormalizationScan, point: string): boolean =>
+  scan.leadingMarks(point, () => isMarkLeading(formOf(scan, point)[0]));
 
 // A code point joins the open cluster when normalizing them together differs
 // from normalizing each on its own.
@@ -184,13 +191,11 @@ const emitCluster = (source: string, scan: NormalizationScan): void => {
 const scanPoint = (source: string, scan: NormalizationScan, point: string): void => {
   const pointEnd = scan.clusterEnd + point.length;
   const rawCluster = Str.slice(scan.clusterStart, scan.clusterEnd)(source);
-  // Combining marks always join, so the join verdict (which normalizes the whole
-  // open cluster) runs only for other code points. Its memo key is the cluster
-  // followed by exactly one code point, which fixes both inputs of the verdict.
-  if (
-    scan.combiningMarks(point, () => isCombiningMark(point)) ||
-    scan.joins(rawCluster + point, () => joinsCluster(scan, rawCluster, point))
-  ) {
+  // A code point whose normalized form starts with a combining mark always joins,
+  // so the join verdict (which normalizes the whole open cluster) runs only for
+  // other code points. Its memo key is the cluster followed by exactly one code
+  // point, which fixes both inputs of the verdict.
+  if (startsWithMark(scan, point) || scan.joins(rawCluster + point, () => joinsCluster(scan, rawCluster, point))) {
     scan.clusterEnd = pointEnd;
     return;
   }
@@ -223,9 +228,9 @@ export const normalizeWithRawOffsets = (source: string): NormalizedTextWithRawOf
     clusterForms: memo(),
     clusterStart: 0,
     ends: A.empty(),
-    combiningMarks: memo(),
     joins: memo(),
     lastPointIsSpace: false,
+    leadingMarks: memo(),
     points: A.empty(),
     starts: A.empty(),
   };

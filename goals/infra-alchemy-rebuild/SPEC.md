@@ -2311,6 +2311,134 @@ Lane fix/ci-runners-drop-r7a-2xlarge
 
 Reverse: Re-add r7a.2xlarge to RunnerInstanceType and to the new heavy (and overflow) type lists in packages/tooling/infra/ci-runners/src/Config.ts
 
+### CiRunners function updates re-apply each function role's policies, 2026-11-20
+
+The CI goals driver accepted the 22 IAM writes of the PR 2 CiRunners deploy (run 44671153275, 2026-11-20) as an
+idempotent role reapply, and made them a standing expectation for every CiRunners deploy that updates functions.
+
+What the deploy did, from the deploy role's CloudTrail (two reads from saved events over 03:57-04:05Z, identical):
+
+- `iam:AttachRolePolicy` (AWSLambdaBasicExecutionRole) and `iam:PutRolePolicy` (the role's own inline policy) on
+  each of the 11 functions' execution roles, 22 writes in all, and no other role or policy.
+- Each PutRolePolicy document was byte-identical, as canonical JSON, to the same role's document in the previous
+  deploy (2026-11-19, run 44507595565).
+- 22 log-group writes (CreateLogGroup, which already existed, and PutRetentionPolicy) on the 11 functions' log groups.
+
+The plan shows the role rows as noop, but the Lambda provider re-PUTs each function's role policies when the function
+is updated.
+
+Standing rule: every CiRunners function-update deploy expects exactly these 22 IAM writes and 22 log-group writes. Its
+post-check compares the targets, and each PutRolePolicy document against the previous deploy's. A differing document,
+or any other role or policy touched, stops the cutover and goes to the driver. Counts come from saved CloudTrail events,
+never from pretty-printed lines.
+
+Lane docs/infra-alchemy-p5-m6i-and-iam-reapply
+
+Reverse: if the provider stops re-PUTting role policies, drop the 22 expected IAM writes from the post-check; if a deploy shows a changed document, stop and re-rule
+
+### Drop m6i.4xlarge from the new heavy pool, 2026-11-20
+
+The CI goals driver re-ruled `m6i.4xlarge` on 2026-11-20, ahead of the green day: it leaves the new fleet's heavy pool,
+which keeps five types: `r7i.2xlarge`, `r6i.2xlarge`, `m7a.4xlarge`, `m7i.4xlarge` and `m6a.4xlarge`. The overflow
+pool never listed it, and the live Pulumi fleet is not changed.
+
+Supersedes the same-day decision `2026-11-20-m6i-4xlarge-kept-on-the-new-heavy-list-after-the-re-rule`. That decision
+set a re-rule trigger: a second zone with at least three `m6i.4xlarge` evictions at P < 0.05, or an overall per-hour
+P below 0.01. Both were met under both treatments in the result table below: us-east-1f with five evictions, and an
+overall P of 0.0011 (0.0038 conservative).
+
+**Method.** The test is evictions per instance-hour in the live (old) fleet's Spot population, cumulative from
+2026-11-19 00:00Z.
+
+- **Data:** the gate's analysis.3 (to 2026-11-20 05:46:42Z) plus analysis.4 (05:46:42Z to 09:09Z), both workstation-local
+  analysis files built from the fleet's CloudTrail `RunInstances` and `BidEvictedEvent` records and the GitHub job
+  windows of each runner.
+- **Hour rule:** an instance counts from launch to its eviction, else to its last job end plus two minutes, else to the
+  window end.
+- **Statistic:** a Poisson tail P(X ≥ k) for each zone and overall, against the rest of the fleet's rate (every type
+  except `m6i.4xlarge`).
+- **Two treatments** of the 16 analysis.4 instances with no end source:
+  - as measured (to the window end);
+  - a conservative bound (`analysis.4.conservative.txt`): open non-m6i instances count zero hours, which raises the
+    rest-of-fleet rate, and open m6i instances count to the window end.
+
+**Result.**
+
+| Measure | As measured | Conservative bound |
+| --- | --- | --- |
+| Rest of fleet (per 100 instance-hours) | 27.1 (29 evictions in 106.97 h) | 33.9 (85.54 h) |
+| `m6i.4xlarge` overall: 7 evictions in 5.70 h, P(≥7) | 0.0011 | 0.0038 |
+| us-east-1f: 5 evictions in 4.72 h, P(≥5) | 0.0100 | 0.0236 |
+| us-east-1d: 2 evictions in 0.67 h, P(≥2) | 0.0146 | 0.0222 |
+
+The rule was met under both treatments: us-east-1f below 0.05 or the overall test below 0.01, with us-east-1d already
+significant.
+
+**Reach.** The change is to `packages/tooling/infra/ci-runners/src/Config.ts`. `m6i.4xlarge` leaves the
+`RunnerInstanceType` literal and `instanceVcpus`, and nothing else references it. The heavy pool takes every literal, so
+only the heavy pool's runtime configuration changes: its scale-up, job-retry and scale-down functions get env-only
+updates. The largest heavy type still has 16 vCPUs, so the Spot budget is unchanged. The change rides the next checked
+dispatch, with those rows attributed.
+
+**New watch.** It replaces the `m6i.4xlarge` watch: re-rule the new heavy pool if a heavy job waits more than 10 minutes
+for a runner while `CreateFleet` returns `InsufficientInstanceCapacity` for all five overrides. The overflow ICE watch
+and the us-east-1b watch continue.
+
+Lane fix/ci-runners-drop-m6i-4xlarge
+
+Reverse: re-add m6i.4xlarge to RunnerInstanceType and instanceVcpus in packages/tooling/infra/ci-runners/src/Config.ts, with an env-only dispatch
+
+### m6i.4xlarge kept on the new heavy list after the re-rule, 2026-11-20
+
+**Superseded** by `2026-11-20-drop-m6i-4xlarge-from-the-new-heavy-pool`: the re-rule trigger below was met, and
+`m6i.4xlarge` left the new heavy pool.
+
+The CI goals driver re-ruled `m6i.4xlarge` on 2026-11-20 and kept it on the new fleet's heavy list. The heavy pool keeps
+its six types; there is no Config.ts change and no extra dispatch.
+
+Source: the workstation-local analysis `~/.cache/beep/ci-runners-step0/eviction-analysis-20261119/analysis.3.txt`
+(the live heavy fleet's CloudTrail from 2026-11-19 00:00Z to 2026-11-20 05:46Z: 674 Spot launches, 31 evictions over
+83.87 instance-hours, 37.0 per 100 hours).
+
+- `m6i.4xlarge` overall: 4 evictions over 3.76 hours, 106.5 per 100 hours, 3.16 times the rest of the fleet
+  (P = 0.040 under the rest-of-fleet rate).
+- By zone, only us-east-1d is significant: 2 evictions over 0.67 hours, 8.84 times (P = 0.022). us-east-1f is
+  2.14 times on 2 evictions (P = 0.24, consistent with chance), and us-east-1b had none. The removal rule (at least
+  twice the fleet in at least two zones) is not met.
+- `m6i.4xlarge` is 4.5% of fleet hours. In a fleet that hits InsufficientInstanceCapacity often, keeping the capacity
+  diversity outweighs that excess.
+- In us-east-1f, the zone with the most ICE, non-m6i types run at 0.68 times the other zones' rate, so there is no zone
+  change. The ICE load there is covered by the overflow ICE watch.
+- For comparison: `m7i.4xlarge` had no evictions in 19.98 hours, and `r7i.2xlarge` ran at the fleet rate.
+
+New trigger through the green day, cumulative from 2026-11-19 00:00Z: re-rule if a second zone reaches at least three
+`m6i.4xlarge` evictions with P < 0.05, or if the overall per-hour P falls below 0.01.
+
+Lane docs/infra-alchemy-p5-m6i-and-iam-reapply
+
+Reverse: a Config.ts PR removing m6i.4xlarge from the new heavy list, plus an env-only dispatch
+
+### Orphaned runner-tarball upload parts accepted as residual risk, 2026-11-20
+
+The CI goals driver accepted a residual risk on 2026-11-20 for the runner-tarball mirror, which is now a multipart
+upload: orphaned parts in the new fleet's binaries bucket.
+
+- **When it happens:** an upload's `AbortMultipartUpload` never runs, because the binaries-syncer function is killed
+  by its 5-minute timeout or by running out of its 1024 MB, or the abort itself fails. The upload's parts then stay in
+  the bucket, stored and billed.
+- **Bound:** the syncer runs once a day and uploads only when a new runner release appears. So at most one orphaned
+  part set of at most 228 MB a day (the v2.338.2 asset is 228,071,396 bytes).
+- **Why no lifecycle rule:** an `AbortIncompleteMultipartUpload` rule would clean these up automatically. But the
+  CiRunners deploy role has no `s3:PutLifecycleConfiguration`, and adding it would be a new deploy-role write.
+- **Cleanup:** by hand. List with `aws s3api list-multipart-uploads --bucket <binaries bucket>`, then abort each with
+  `aws s3api abort-multipart-upload`.
+- **Watch:** the post-deploy check after every CiRunners deploy confirms `ListMultipartUploads` is empty after the
+  announced one-off syncer invoke.
+
+Lane fix/runner-binaries-s3-upload
+
+Reverse: give the CiRunners deploy role s3:PutLifecycleConfiguration on the binaries bucket and add an AbortIncompleteMultipartUpload rule of 1 day
+
 ### PR 2 dispatch before the per-pool proofs, 2026-11-20
 
 The CI goals driver (the successor driver, 2026-11-20 02:10Z) ruled the order of the remaining P5 cutover steps:
@@ -2335,6 +2463,74 @@ Conditions on the dispatch:
 Lane docs/infra-alchemy-p5-dispatch-order
 
 Reverse: restore the proofs-before-PR-2 order; re-proof each pool after the PR 2 dispatch
+
+### SSM fix: Advanced JIT tokens, no relaunch loop, dead-letter without a redrive, 2026-11-22
+
+The new fleet's heavy proof failed on 2026-11-20: scale-up launched an instance, registered a JIT runner for it, failed
+to store the runner's token in SSM, terminated the instance, and relaunched every two minutes (three times in all). The
+CI goals driver ruled the fix and this record.
+
+**Advanced tier.** Both token writes (the JIT config and the `config.sh` arguments) use the Advanced parameter tier. A
+Standard parameter holds at most 4 KB, and a JIT config carries an RSA key and can exceed that. The live fleet writes
+the same token at Advanced. This is the probable cause: the rejected calls recorded no error code, so the new log line
+has to confirm it on the heavy re-proof, and a different SSM error there is a new ruling, not a retry.
+
+**Cost.** Advanced parameters bill per parameter-month, prorated, on the line the live fleet already pays per runner. Three
+deletion paths bound each token:
+
+- The runner's start script deletes its own token parameter right after reading it at boot.
+- The SSM housekeeper runs once a day and deletes token parameters last modified more than one day ago. A token whose
+  instance dies before boot therefore lives at most about two days.
+- A configuration that fails after the put also deletes the token, then the JIT runner, then terminates the instance.
+
+**The job-queued check stays off in production.** The failed message was redelivered to scale-up after the build queue's
+two-minute visibility timeout, so a launch followed the cancelled run. This fix first turned scale-up's check on, and
+turned it off again before the merge:
+
+- The live fleet keeps it off because GitHub's jobs API answered "not queued" for queued jobs. With the check on, two of
+  seven pickup probes sat queued for over 25 minutes (`goals/ci-fleet-endgame/research/OPPORTUNITIES.md`).
+- The not-queued branch acknowledges the message with no launch, no retry and no dead letter. It is fail-open only on a
+  GitHub error.
+- The relaunch is closed without it: a failed configuration goes back to the build queue only when the DLQ send itself
+  fails. A cancelled job whose message SQS redelivers for another reason (over the cap, a launch shortfall) costs one
+  VM, as on the live fleet.
+
+A test decodes both deployed runtime configurations and pins the check off for both pools.
+
+**What "not queued" means.** Job-retry always asks GitHub for the job's status, as the live fleet's does, and drops the
+message when the job needs no runner. The live fleet reads every status except `queued` that way, and so did this port.
+Now only `in_progress` and `completed` do: a lagging read normally shows an earlier state (requested, waiting, pending), not a later one. That is an
+inference. The status the two stranded probes got was never recorded. Every status other than `queued` is logged with
+the job and the answer, and job-retry logs the message it drops with its retry counter.
+
+**What remains.** A transient configuration failure has lost its runner and relies on job-retry alone. A wrong
+`in_progress` or `completed` at 120 seconds still drops that job, now with a log line. The live fleet instead redelivers
+such a failure to scale-up, unchecked. In every proof and post-check, each drop line must be `in_progress` or
+`completed`, with the job's start or completion time before the line; one that is not is a STOP.
+
+**Failure classification.**
+
+- A throttling code is transient whatever the status. Otherwise the AWS layer's fault reading decides, then the HTTP
+  status. A GitHub 403 or 429 rate limit is transient.
+- A conflict in the two steps that create under an instance-unique name reads as the first attempt having landed after
+  a lost response: SSM `ParameterAlreadyExists` or a 409 on the token put, and a GitHub 409 on `generateJitConfig`. Both
+  are transient, bounded by the two job-retry attempts. Every other conflict stays deterministic. A GitHub 409 carries
+  no runner id, so its cleanup cannot delete that registration: an offline JIT registration remains, not a running
+  machine.
+- A transient failure goes through job-retry (120 s, then 240 s). When no retry can be published, it is dead-lettered
+  like a deterministic one.
+
+**Dead-letter semantics.** When a message is dead-lettered, its instance is terminated once, its JIT runner and token are
+deleted, and the message is sent to the pool's own build DLQ and acknowledged. Only a failed DLQ send returns it as a batch item failure.
+
+- **Nothing redrives a dead-lettered message.** No consumer and no automatic redrive exist, so that job stays queued
+  until GitHub times it out.
+- **A nonzero build-DLQ depth is therefore a STOP** in every proof and every post-check of this stack, next to the
+  other build and job-retry queue counts.
+
+Lane fix/ci-runners-scaleup-jit-token-tier
+
+Reverse: revert the SSM-fix commits and redeploy the previous CiRunners head; nothing is migrated, and tokens already in the Advanced tier are removed by their own deletion paths
 
 <!-- beep:decisions:end -->
 

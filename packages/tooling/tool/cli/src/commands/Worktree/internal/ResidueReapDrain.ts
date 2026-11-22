@@ -11,6 +11,7 @@ import { isPathWithinRoot } from "@beep/file-processing/PathSafety";
 import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { GitObjectId } from "@beep/schema/Conformance";
+import { LiteralKit } from "@beep/schema/LiteralKit";
 import * as A from "effect/Array";
 import * as Config from "effect/Config";
 import * as Context from "effect/Context";
@@ -386,10 +387,15 @@ const livenessCheck = Effect.fnUntraced(function* (context: ResidueDrainContext,
 });
 
 const ownedWorktreesCheck = Effect.fnUntraced(function* (layout: DrainLayout) {
-  if (layout.kind !== "clone") return checkResult("owned-worktrees", "pass", "linked worktree owns no worktrees");
   const git = yield* Git;
   const listing = yield* git.worktreeList(layout.real).pipe(Effect.option);
   if (O.isNone(listing)) return checkResult("owned-worktrees", "probe-failed", "git worktree list failed");
+  if (layout.kind !== "clone") {
+    // `git worktree lock` is an explicit hold, and the inode-bound removal does not ask git.
+    return A.some(listing.value, (entry) => Str.Equivalence(entry.path, layout.real) && entry.locked !== undefined)
+      ? checkResult("owned-worktrees", "fail", "the worktree is locked")
+      : checkResult("owned-worktrees", "pass", "linked worktree, not locked");
+  }
   // Every entry but the clone itself, unless git calls it prunable. A locked worktree is never
   // prunable to git, even with its directory gone (unmounted storage): its HEAD lives in this clone.
   const registered = A.filter(
@@ -858,15 +864,27 @@ const REPOSITORY_LOCATION_VARIABLES = [
   "GIT_ALTERNATE_OBJECT_DIRECTORIES",
 ];
 
-// Ignored directories kept whole: secret stores and machine-local config directories. Every other
-// ignored directory (`node_modules/`, `dist/`, `.turbo/`, `.beep/`, tool caches) is regenerable.
-const PRESERVED_DIRECTORY_NAME = /^(?:\.?secrets|[^/]*\.local(?:\.[^/]*)?)$/u;
+// Ignored directories a build, install or tool rewrites. Every other ignored directory is preserved:
+// `.beep/` holds QA evidence, audits and hand-written notes that exist nowhere else.
+const RegenerableDirectoryName = LiteralKit([
+  "node_modules",
+  "dist",
+  ".turbo",
+  ".next",
+  ".prebuilt",
+  "coverage",
+  "docgen",
+  "docs",
+  ".fallow",
+  ".repos",
+  ".direnv",
+  ".venv",
+  "__pycache__",
+  ".pytest_cache",
+  ".ruff_cache",
+]);
+const isRegenerableDirectoryName = S.is(RegenerableDirectoryName);
 const PRESERVED_BYTES_CAP = 512 * 1024 ** 2;
-
-const entryName = (entry: string): string => {
-  const trimmed = Str.replace(/\/$/u, "")(entry);
-  return O.getOrElse(A.last(Str.split("/")(trimmed)), () => trimmed);
-};
 
 // Bytes of one ignored path to preserve, or `None` for a symlink (it points elsewhere and loses
 // nothing) or a regenerable directory.
@@ -877,7 +895,7 @@ const preservedBytes = Effect.fnUntraced(function* (root: string, entry: string)
   const link = yield* fs.readLink(absolute).pipe(Effect.option);
   if (O.isSome(link)) return O.none<number>();
   if (Str.endsWith("/")(entry)) {
-    if (!PRESERVED_DIRECTORY_NAME.test(entryName(entry))) return O.none<number>();
+    if (A.some(Str.split("/")(entry), isRegenerableDirectoryName)) return O.none<number>();
     const capture = yield* runRepoCommandCaptureRaw("du", ["-B1", "--apparent-size", "-s", "--", absolute], root).pipe(
       Effect.option
     );
@@ -897,7 +915,7 @@ const preservedBytes = Effect.fnUntraced(function* (root: string, entry: string)
   );
 });
 
-// Copy every gitignored file a checkout holds, and its ignored secret or local-config directories,
+// Copy every gitignored file a checkout holds, and every ignored directory no tool regenerates,
 // beside its bundle: `git status` never reports them and no bundle carries them. Ignored
 // directories are listed collapsed (`--directory`), so `node_modules/` stays one regenerable entry.
 const preserveLocalFiles = Effect.fnUntraced(function* (layout: DrainLayout, stateDirectory: string, runId: string) {
@@ -912,7 +930,12 @@ const preserveLocalFiles = Effect.fnUntraced(function* (layout: DrainLayout, sta
     "-z",
   ]);
   if (O.isNone(listing)) return Result.fail("git ls-files could not list the ignored files");
-  const entries = A.filter(Str.split("\u0000")(listing.value), Str.isNonEmpty);
+  const listed = A.filter(Str.split("\u0000")(listing.value), Str.isNonEmpty);
+  // git lists an ignored directory and the ignored directories inside it; the outer copy carries both.
+  const entries = A.filter(
+    listed,
+    (entry) => !A.some(listed, (outer) => Str.endsWith("/")(outer) && outer !== entry && Str.startsWith(outer)(entry))
+  );
   const sized = yield* Effect.forEach(
     entries,
     (entry) =>
@@ -992,9 +1015,8 @@ const settledAfterPreservation = Effect.fnUntraced(function* (
  * otherwise the result fails with `drain-blocked` and the fresh assessment.
  * Local-only work is then written to a bundle under the fleet state
  * directory's `drain-bundles/`, which must pass `git bundle verify` and cover
- * every local-only commit, and every gitignored file plus any ignored
- * `secrets/`, `.secrets/` or `*.local` directory is copied to `<bundle>.local/`
- * (other ignored directories are regenerable; more than 512 MiB refuses); either failure
+ * every local-only commit, and every gitignored file plus every ignored directory except the
+ * ones a build or install rewrites is copied to `<bundle>.local/` (more than 512 MiB refuses); either failure
  * fails the result with `drain-bundle-failed`. Last, the checkout is read again:
  * a moved HEAD, a changed tree, a live process or a local-only commit no bundle
  * holds fails it with `drain-blocked`.

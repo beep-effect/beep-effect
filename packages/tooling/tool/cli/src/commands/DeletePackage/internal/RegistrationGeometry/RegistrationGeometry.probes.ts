@@ -1,3 +1,4 @@
+import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { isLabsWorkspacePath } from "@beep/repo-cli-kit/cli/Labs/index";
 import { workspaceDirectories, workspacePackages } from "@beep/repo-cli-kit/RepoWorkspaces";
 import { mentionsAnyToken, mentionsRepoPath, mentionsToken, shadowPrefixesFor } from "@beep/repo-cli-kit/WholeToken";
@@ -15,6 +16,7 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as R from "effect/Record";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { Node, Project, SyntaxKind } from "ts-morph";
 import { listGitVisiblePaths } from "../../../Quality/internal/QualityArtifactSupport.ts";
@@ -55,21 +57,10 @@ const SCAN_ROOTS = [
 // listing drops a path with any of these segments too, so a checkout that does
 // not ignore them reads the same set the walk did.
 const EXCLUDED_DIRECTORIES = HashSet.fromIterable([".git", "node_modules", "dist", "coverage", ".turbo", ".beep"]);
-const SOURCE_SUFFIXES = [".ts", ".tsx", ".js", ".jsx", ".mjs", ".cjs"];
-const TEXT_SUFFIXES = [
-  ".ts",
-  ".tsx",
-  ".js",
-  ".jsx",
-  ".mjs",
-  ".cjs",
-  ".json",
-  ".jsonc",
-  ".md",
-  ".yml",
-  ".yaml",
-  ".toml",
-];
+const SOURCE_SUFFIXES = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs"];
+const TEXT_SUFFIXES = [...SOURCE_SUFFIXES, ".json", ".jsonc", ".md", ".yml", ".yaml", ".toml"];
+// A historical record is read in every suffix the authored-reference probe skips it in, plus tables.
+const RECORD_SUFFIXES = A.append(TEXT_SUFFIXES, ".tsv");
 
 const isSuffixIn =
   (suffixes: ReadonlyArray<string>) =>
@@ -258,6 +249,20 @@ const isPendingChangesetResidue = Effect.fn("RegistrationGeometry.isPendingChang
   return !isCanonicalDeletionNote;
 });
 
+const recordGlob = GlobPatternOptions.make({ nonegate: true, nocomment: true });
+
+// The doctor's one reading of a dated record: the files the historical-record surfaces declare, where
+// a wildcard matches no dot entry. The authored-reference probe skips exactly these and nothing else.
+const historicalRecordMatcherFor = (surfaces: ReadonlyArray<RegistrationSurface>): ((file: string) => boolean) => {
+  const patterns = pipe(
+    surfaces,
+    A.filter(RegistrationSurface.guards["historical-record"]),
+    A.flatMap((surface) => surface.files),
+    A.map((source) => Result.getOrThrow(GlobPattern.compileResult(source, recordGlob)))
+  );
+  return (file) => A.some(patterns, (pattern) => pattern.matches(file));
+};
+
 const observation = (
   surfaceId: string,
   status: RegistrationObservationStatus,
@@ -270,6 +275,7 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
   surface: RegistrationSurface,
   matchNeedles: NeedleMatcher,
   visibleFiles: ReadonlyArray<string>,
+  isHistoricalRecord: (file: string) => boolean,
   acknowledgedOccurrences: AcknowledgedOccurrences
 ) {
   const fs = yield* FileSystem.FileSystem;
@@ -325,12 +331,7 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
       const mentionsNeedle = matchNeedles(authored.needles);
       let evidence = A.empty<string>();
       for (const relative of A.filter(visibleFiles, isSuffixIn(TEXT_SUFFIXES))) {
-        if (
-          Str.startsWith("research/")(relative) ||
-          Str.startsWith("goals/")(relative) ||
-          Str.startsWith(".changeset/")(relative)
-        )
-          continue;
+        if (isHistoricalRecord(relative)) continue;
         const content = yield* readVisibleFile(repoRoot, relative);
         if (
           O.isSome(content) &&
@@ -396,8 +397,8 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
     "historical-record": Effect.fn(function* (historical) {
       const mentionsNeedle = matchNeedles(historical.needles);
       let evidence = A.empty<string>();
-      for (const relative of A.filter(visibleFiles, isSuffixIn([".md", ".json", ".jsonc", ".tsv"]))) {
-        if (!(Str.startsWith("research/")(relative) || Str.startsWith("goals/")(relative))) continue;
+      for (const relative of A.filter(visibleFiles, isSuffixIn(RECORD_SUFFIXES))) {
+        if (!isHistoricalRecord(relative)) continue;
         const content = yield* readVisibleFile(repoRoot, relative);
         if (O.exists(content, mentionsNeedle)) evidence = A.append(evidence, relative);
       }
@@ -422,7 +423,9 @@ const inspectSurface = Effect.fn("RegistrationGeometry.inspectSurface")(function
  * untracked, not ignored), so gitignored build output is never evidence; only
  * the runtime-artifact probe walks the gitignored `.beep/ci` tree. An
  * `authored-reference` file whose only matching lines are acknowledged, no more
- * often than acknowledged, reads `clean`.
+ * often than acknowledged, reads `clean`. A file the `historical-records` surface
+ * declares is a dated record: the `authored-references` probe skips it and the
+ * `historical-records` observation lists it, which keeps the doctor clean.
  *
  * **Gotchas**
  *
@@ -465,9 +468,20 @@ export const inspectTargetAtRoot = Effect.fn("RegistrationGeometry.inspectTarget
   const workspacePaths = yield* workspacePathsAt(repoRoot);
   const matchNeedles = needleMatcherFor(target, workspacePaths);
   const visibleFiles = yield* gitVisibleFilesAt(repoRoot, acknowledgementFile);
+  const surfaces = surfacesForTarget(target);
+  const isHistoricalRecord = historicalRecordMatcherFor(surfaces);
   return yield* Effect.forEach(
-    surfacesForTarget(target),
-    (surface) => inspectSurface(repoRoot, target, surface, matchNeedles, visibleFiles, acknowledgedOccurrences),
+    surfaces,
+    (surface) =>
+      inspectSurface(
+        repoRoot,
+        target,
+        surface,
+        matchNeedles,
+        visibleFiles,
+        isHistoricalRecord,
+        acknowledgedOccurrences
+      ),
     { concurrency: 8 }
   );
 });
@@ -521,6 +535,24 @@ const dynamicImportSpecifier = (node: Node): O.Option<string> => {
   );
 };
 
+// `import("x").T` in type position.
+const importTypeSpecifier = (node: Node): O.Option<string> => {
+  if (!Node.isImportTypeNode(node)) return O.none();
+  const argument = node.getArgument();
+  const literal = Node.isLiteralTypeNode(argument) ? argument.getLiteral() : argument;
+  return Node.isStringLiteral(literal) ? O.some(literal.getLiteralText()) : O.none();
+};
+
+// `import x = require("x")`; its `require` is a module reference, not a call.
+const importEqualsSpecifier = (node: Node): O.Option<string> => {
+  if (!Node.isExternalModuleReference(node)) return O.none();
+  const expression = node.getExpression();
+  return Node.isStringLiteral(expression) ? O.some(expression.getLiteralText()) : O.none();
+};
+
+const nestedSpecifier = (node: Node): O.Option<string> =>
+  O.firstSomeOf([dynamicImportSpecifier(node), importTypeSpecifier(node), importEqualsSpecifier(node)]);
+
 const importHitsInFile = (
   project: Project,
   absoluteFile: string,
@@ -558,7 +590,7 @@ const importHitsInFile = (
       append(declaration.getStartLineNumber());
   }
   source.forEachDescendant((node) => {
-    const specifier = dynamicImportSpecifier(node);
+    const specifier = nestedSpecifier(node);
     if (O.isSome(specifier) && isTargetSpecifier(specifier.value, target.packageName))
       append(node.getStartLineNumber());
   });

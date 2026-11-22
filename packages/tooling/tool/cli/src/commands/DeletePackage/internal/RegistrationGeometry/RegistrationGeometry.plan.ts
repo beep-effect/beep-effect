@@ -24,6 +24,45 @@ import type {
   RegistrationTarget,
 } from "./RegistrationGeometry.schemas.ts";
 
+// Dated records: they say what was true when they were written, so a deleted package named there is
+// evidence, never residue, and rewriting it would falsify the record. The doctor probes read these globs
+// for both the authored-references skip and the historical-records surface, so a path has one reading.
+// Everything else in the same trees stays live: the architecture chapters and glossary, `docs/` outside
+// reports and the commit-message history, the other `standards/` files, the guides directly under
+// `explorations/` and its packet template, and the changeset config and README. `goals/` and `research/`
+// are whole trees because the dependents scan reads their code; it never reads `explorations/` or
+// `docs/`, so there only prose and data are records. Source and every file a tool loads stay live: other
+// file types (TOML, JSONC), dot entries (a wildcard here never matches one), agent
+// instructions, and the JSON and YAML names that tools look for.
+const agentDocs = "!(AGENTS|CLAUDE|GEMINI|SKILL)";
+const toolYaml =
+  "!(Chart|Pulumi|Pulumi.*|compose|compose.*|docker-compose|docker-compose.*|kustomization|lefthook|pnpm-workspace)";
+const toolJson =
+  "!(*.conf|*.config|biome|components|deno|docgen|jsconfig*|knip|lerna|nx|package|renovate|syncpack|tsconfig*|turbo|vercel|wrangler)";
+const recordFilesUnder = (tree: string): ReadonlyArray<string> => [
+  `${tree}/**/*.tsv`,
+  `${tree}/**/${agentDocs}.md`,
+  `${tree}/**/${toolYaml}.{yaml,yml}`,
+  `${tree}/**/${toolJson}.json`,
+];
+
+const wholeTree = (tree: string): ReadonlyArray<string> => [`${tree}/**`, `${tree}/**/.*`, `${tree}/**/.*/**`];
+
+const HISTORICAL_RECORD_GLOBS = A.map(
+  [
+    ...wholeTree("goals"),
+    ...wholeTree("research"),
+    ".changeset/!(README).md",
+    "explorations/INBOX.md",
+    ...recordFilesUnder("explorations/!(_template)"),
+    ...recordFilesUnder("docs/reports"),
+    "docs/history/*.json",
+    "standards/architecture/DECISIONS.md",
+    "standards/changesets.retired-packages.json",
+  ],
+  (value) => GlobString.make(value)
+);
+
 const slugOf = (packageName: string): string => Str.replace("@beep/", Str.empty)(packageName);
 
 /**
@@ -194,9 +233,7 @@ export const surfacesForTarget = (target: RegistrationTarget): ReadonlyArray<Reg
     }),
     HistoricalRecordSurface.make({
       id: "historical-records",
-      files: A.map(["research/**", "goals/**/research/**", "goals/**/history/**", ".changeset/**/*.md"], (value) =>
-        GlobString.make(value)
-      ),
+      files: HISTORICAL_RECORD_GLOBS,
       needles: packageNeedles,
     }),
     ...dataResourceSurfaces,

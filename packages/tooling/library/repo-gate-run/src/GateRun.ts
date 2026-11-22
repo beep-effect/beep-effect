@@ -59,7 +59,7 @@ export const DEFAULT_RECORD_DEADLINE_MS = 10_000;
 /**
  * One finished tool run to report: whose record, what the run produced, the
  * exit code the tool returned, how long to wait for the record and log
- * writes (10 s by default), how long to wait for history (250 ms by
+ * writes (10 s by default), the deadline history is read under (250 ms by
  * default), and the pointer table to print with instead of the console's
  * own, when the caller pins the next step to this run's record. `subject` is
  * the package name, which the caller knows; it states the run when the
@@ -309,7 +309,10 @@ const readHistory = (history: GateHistoryShape, report: GateReport, deadlineMs: 
     Effect.map(
       O.match({
         onNone: () => withoutHistory(`no answer within ${formatDuration(deadlineMs)}`),
-        onSome: (answer): HistoryRead => ({ answer, omission: O.none() }),
+        onSome: (answer): HistoryRead => ({
+          answer,
+          omission: O.flatMap(answer.baseline, (reason) => Omission.makeOption({ part: "baseline", reason })),
+        }),
       })
     ),
     // A history failure or a defect alike leaves the console without labels and delta.

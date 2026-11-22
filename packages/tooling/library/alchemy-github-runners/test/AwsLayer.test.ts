@@ -1,4 +1,5 @@
 import {
+  classifyFailure,
   Ec2Fleet,
   ec2FleetLive,
   FleetLaunchRequest,
@@ -6,14 +7,18 @@ import {
   LaunchTemplateRef,
   MessageQueue,
   messageQueueLive,
+  ParameterWrite,
   ReleaseAsset,
   RunnerBinaries,
   RunnerFilter,
   runnerBinariesLive,
   SsmStore,
   ssmStoreLive,
+  toAwsApiError,
 } from "@beep/alchemy-github-runners";
 import * as AwsCredentials from "@distilled.cloud/aws/Credentials";
+import * as AwsErrors from "@distilled.cloud/aws/Errors";
+import * as AwsRetry from "@distilled.cloud/aws/Retry";
 import { describe, expect, it } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -95,13 +100,28 @@ const releaseAnswer: FakeAnswer = {
   headers: { "content-type": "application/json" },
 };
 
+const s3Answers: ReadonlyArray<readonly [(request: RecordedRequest) => boolean, FakeAnswer]> = [
+  [
+    (request) => request.method === "GET",
+    xml(
+      "<Tagging><TagSet><Tag><Key>name</Key><Value>actions-runner-linux-x64-2.329.0.tar.gz</Value></Tag></TagSet></Tagging>"
+    ),
+  ],
+  [
+    (request) => request.method === "POST" && request.url.searchParams.has("uploads"),
+    xml("<InitiateMultipartUploadResult><UploadId>upload-1</UploadId></InitiateMultipartUploadResult>"),
+  ],
+  [(request) => request.method === "PUT", { body: "", headers: { etag: '"etag-1"' } }],
+  [
+    (request) => request.method === "POST",
+    xml('<CompleteMultipartUploadResult><ETag>"etag-all"</ETag></CompleteMultipartUploadResult>'),
+  ],
+];
+
 const s3Route = (request: RecordedRequest): O.Option<FakeAnswer> =>
-  O.some(
-    request.method === "GET"
-      ? xml(
-          "<Tagging><TagSet><Tag><Key>name</Key><Value>actions-runner-linux-x64-2.329.0.tar.gz</Value></Tag></TagSet></Tagging>"
-        )
-      : { body: "" }
+  A.findFirst(s3Answers, ([matches]) => matches(request)).pipe(
+    O.map(([, answer]) => answer),
+    O.orElse(() => O.some({ body: "" }))
   );
 
 const hosts: ReadonlyArray<readonly [(host: string) => boolean, (request: RecordedRequest) => O.Option<FakeAnswer>]> = [
@@ -140,8 +160,24 @@ describe("live AWS layers over distilled", () => {
         const ssm = yield* SsmStore;
         const found = yield* ssm.get("/p");
         const missing = yield* ssm.get("/missing");
-        yield* ssm.put({ name: "/t/i-1", value: Redacted.make("jit"), secure: true, tags: { InstanceId: "i-1" } });
-        yield* ssm.put({ name: "/c/group", value: Redacted.make("7"), secure: false, tags: {} });
+        yield* ssm.put(
+          ParameterWrite.make({
+            name: "/t/i-1",
+            value: Redacted.make("jit"),
+            secure: true,
+            tier: "Advanced",
+            tags: { InstanceId: "i-1" },
+          })
+        );
+        yield* ssm.put(
+          ParameterWrite.make({
+            name: "/c/group",
+            value: Redacted.make("7"),
+            secure: false,
+            tier: "Standard",
+            tags: {},
+          })
+        );
         yield* ssm.delete("/t/i-1");
         const entries = yield* ssm.listByPath("/t");
         return { found, missing, entries };
@@ -156,8 +192,122 @@ describe("live AWS layers over distilled", () => {
         true,
         true,
       ]);
+      expect([
+        Str.includes('"Tier":"Advanced"')(puts[0] ?? ""),
+        Str.includes('"Tier":"Standard"')(puts[1] ?? ""),
+      ]).toStrictEqual([true, true]);
     })
   );
+
+  it.effect(
+    "SSM: maps the SDK's tagged errors to a client or transient fault, with the status when the SDK has one",
+    () =>
+      Effect.gen(function* () {
+        const answers: Readonly<Record<string, FakeAnswer>> = {
+          "/validation": {
+            status: 400,
+            body: '{"__type":"ValidationException","message":"1 validation error detected: Value at value failed to satisfy constraint"}',
+            headers: { "content-type": "application/x-amz-json-1.1" },
+          },
+          // AWS throttles with HTTP 400: a declared throttling class and an undeclared throttling code.
+          "/throttled": {
+            status: 400,
+            body: '{"__type":"ThrottlingException","message":"Rate exceeded"}',
+            headers: { "content-type": "application/x-amz-json-1.1" },
+          },
+          "/throttling": {
+            status: 400,
+            body: '{"__type":"Throttling","message":"Rate exceeded"}',
+            headers: { "content-type": "application/x-amz-json-1.1" },
+          },
+          // A throttling code SSM does not declare reaches the layer as the SDK's unknown-error class, status 400.
+          "/request-throttled": {
+            status: 400,
+            body: '{"__type":"RequestThrottled","message":"Rate exceeded"}',
+            headers: { "content-type": "application/x-amz-json-1.1" },
+          },
+          // A tagged put creates, so a resend after a lost response finds its own first attempt.
+          "/exists": {
+            status: 400,
+            body: '{"__type":"ParameterAlreadyExists","message":"The parameter already exists."}',
+            headers: { "content-type": "application/x-amz-json-1.1" },
+          },
+          "/undeclared": {
+            status: 409,
+            body: '{"__type":"SomethingNew","message":"conflict"}',
+            headers: { "content-type": "application/x-amz-json-1.1" },
+          },
+        };
+        const http = new FakeHttp((request) =>
+          A.findFirst(R.toEntries(answers), ([name]) => Str.includes(`"Name":"${name}"`)(request.body)).pipe(
+            O.map(([, answer]) => answer)
+          )
+        );
+        const errors = yield* Effect.gen(function* () {
+          const ssm = yield* SsmStore;
+          return yield* Effect.forEach(
+            R.keys(answers),
+            (name) =>
+              ssm
+                .put(ParameterWrite.make({ name, value: Redacted.make("v"), secure: true, tier: "Advanced", tags: {} }))
+                .pipe(Effect.flip),
+            { concurrency: 1 }
+          );
+          // The SDK would retry the throttled writes itself; the mapping is what this test reads.
+        }).pipe(AwsRetry.none, withLive(http));
+        deepStrictEqual(
+          A.map(errors, (error) => [error.code, error.status, error.fault] as const),
+          [
+            [O.some("ValidationException"), O.none(), "client"],
+            [O.some("ThrottlingException"), O.none(), "transient"],
+            // The SDK reads the bare `Throttling` code as its ThrottlingException class.
+            [O.some("ThrottlingException"), O.none(), "transient"],
+            [O.some("RequestThrottled"), O.some(400), "transient"],
+            [O.some("ParameterAlreadyExists"), O.none(), "client"],
+            [O.some("SomethingNew"), O.some(409), "client"],
+          ]
+        );
+        // The conflict means "it landed" only for the token put, the step that creates under the instance's own name.
+        const exists = A.filter(errors, (error) => O.contains(error.code, "ParameterAlreadyExists"));
+        expect([
+          A.map(exists, classifyFailure("putToken")),
+          A.map(exists, classifyFailure("resolveRunnerGroup")),
+        ]).toStrictEqual([["transient"], ["deterministic"]]);
+      })
+  );
+
+  it("maps an unknown-class 400 with a throttling code to transient, a declared validation error to client", () => {
+    const map = toAwsApiError("ssm")("putParameter");
+    expect(
+      A.map(
+        [
+          new AwsErrors.UnknownAwsError({
+            status: 400,
+            code: "ThrottlingException",
+            message: "Rate exceeded",
+            body: {},
+          }),
+          new AwsErrors.UnknownAwsError({ status: 400, code: "Throttling", message: "Rate exceeded", body: {} }),
+          new AwsErrors.ThrottlingException({ message: "Rate exceeded" }),
+          new AwsErrors.ValidationException({ message: "Value too long" }),
+          new AwsErrors.UnknownAwsError({ status: 400, code: "InvalidKeyId", message: "bad key", body: {} }),
+          // No status and no category: nothing says whether a resend can succeed, so it keeps the bounded retry path.
+          { _tag: "SomethingElse", message: "unreadable" },
+        ],
+        (error) => {
+          const mapped = map(error);
+          return [mapped.fault, classifyFailure("putToken")(mapped)];
+        }
+      )
+    ).toStrictEqual([
+      ["transient", "transient"],
+      ["transient", "transient"],
+      ["transient", "transient"],
+      ["client", "deterministic"],
+      ["client", "deterministic"],
+      ["unknown", "transient"],
+    ]);
+  });
 
   it.effect("EC2: CreateFleet wire request and partial result, inventory filters, tag and terminate", () =>
     Effect.gen(function* () {
@@ -262,7 +412,7 @@ describe("live AWS layers over distilled", () => {
     })
   );
 
-  it.effect("runner binaries: latest asset, cached tag, streamed mirror", () =>
+  it.effect("runner binaries: latest asset, cached tag, multipart mirror", () =>
     Effect.gen(function* () {
       const http = new FakeHttp(route);
       const { asset, cached } = yield* Effect.gen(function* () {
@@ -283,8 +433,16 @@ describe("live AWS layers over distilled", () => {
         [O.map(asset, (value) => value.name), cached],
         [O.some("actions-runner-linux-x64-2.330.0.tar.gz"), O.some("actions-runner-linux-x64-2.329.0.tar.gz")]
       );
-      const put = http.matching((request) => request.method === "PUT")[0];
-      expect(put?.headers["x-amz-tagging"]).toBe("name=actions-runner-linux-x64-2.330.0.tar.gz");
+      const s3 = http.matching((request) => request.url.hostname !== "github.com" && request.method !== "GET");
+      expect(A.map(s3, (request) => [request.method, A.fromIterable(request.url.searchParams.keys())])).toStrictEqual([
+        ["POST", ["uploads"]],
+        ["PUT", ["partNumber", "uploadId", "x-id"]],
+        ["POST", ["uploadId"]],
+      ]);
+      expect([s3[0]?.headers["x-amz-tagging"], s3[1]?.body]).toStrictEqual([
+        "name=actions-runner-linux-x64-2.330.0.tar.gz",
+        "tarball-bytes",
+      ]);
     })
   );
 });

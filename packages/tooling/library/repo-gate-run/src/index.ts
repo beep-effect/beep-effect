@@ -19,6 +19,8 @@ export * from "./Excerpt.ts";
 export * from "./GateAudience.ts";
 export * from "./GateConsole.ts";
 export * from "./GateHistory.ts";
+export * from "./GateHistoryRecord.ts";
+export * from "./GateHistoryStore.ts";
 export * from "./GateQueries.ts";
 export * from "./GateRecorder.ts";
 export * from "./GateRun.ts";
