@@ -37,14 +37,24 @@ import * as Ref from "effect/Ref";
 import * as S from "effect/Schema";
 import { CiCommandError } from "./Ci.errors.ts";
 import { downloadFeedArtifact, FeedArtifactPage, FeedReport } from "./CiFeedArtifact.ts";
+import { CiWorkflowRunsPage } from "./CiJobAdapter.ts";
 import { taskOutcomeArtifactPrefix } from "./CiTaskOutcomes.ts";
 import { CommitSha } from "./DependencyReviewSchemas.ts";
 import type { GitHubError } from "@beep/github/GitHubError";
+import type { CiWorkflowRun } from "./CiJobAdapter.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiMainFeed");
 
 /**
  * The workflow whose push runs carry `main`'s gate reports.
+ *
+ * **Example** (Name the workflow)
+ *
+ * ```ts
+ * import { MAIN_FEED_WORKFLOW } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(MAIN_FEED_WORKFLOW) // "check.yml"
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -54,6 +64,14 @@ export const MAIN_FEED_WORKFLOW = "check.yml";
 /**
  * The page of `main` runs the ancestor walk reads, and the most first-parent
  * ancestors it considers.
+ *
+ * **Example** (Bound the walk)
+ *
+ * ```ts
+ * import { MAIN_FEED_ANCESTOR_LIMIT } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(MAIN_FEED_ANCESTOR_LIMIT) // 100
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -134,6 +152,15 @@ export class MainFeedRequest extends S.Opaque<MainFeedRequest, { readonly brand:
  * One job's reports in the hit run: the job key, its artifact's name, and the
  * reports kept for the requested gates.
  *
+ * **Example** (A job with no kept report)
+ *
+ * ```ts
+ * import { MainFeedJob } from "@beep/repo-cli/commands/Ci"
+ *
+ * const job = MainFeedJob.make({ job: "labs-single", artifact: "task-outcomes-9-1-labs-single", reports: [] })
+ * console.log(job.reports.length) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -153,12 +180,28 @@ export class MainFeedJob extends S.Opaque<MainFeedJob, { readonly brand: unique 
  * Why a lookup found no baseline: no completed run of the workflow at the
  * merge base or at any ancestor in the page it reads.
  *
+ * **Example** (The one miss reason)
+ *
+ * ```ts
+ * import { MainFeedMissReason } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(MainFeedMissReason.is["no-main-run"]("no-main-run")) // true
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
 export const MainFeedMissReason = LiteralKit(["no-main-run"]).pipe(
   $I.annoteSchema("MainFeedMissReason", { description: "Why a main feed lookup found no baseline." })
 );
+
+/**
+ * Type of {@link MainFeedMissReason}.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type MainFeedMissReason = typeof MainFeedMissReason.Type;
 
 /**
  * A lookup's answer: the hit run with its jobs' reports, or a miss; each
@@ -207,25 +250,13 @@ export const MainFeedResult = S.TaggedUnion({
  */
 export type MainFeedResult = typeof MainFeedResult.Type;
 
-const RunWire = S.Struct({
-  id: S.Int,
-  head_sha: S.String,
-  conclusion: S.NullOr(S.String),
-  created_at: S.String,
-  run_attempt: S.optionalKey(S.Int),
-});
-
-type RunWire = typeof RunWire.Type;
-
-const RunsPage = S.Struct({ workflow_runs: S.Array(RunWire) });
-
 const RAN_GATES = ["success", "failure"];
 
-const ranGates = (run: RunWire): boolean => A.contains(RAN_GATES, run.conclusion ?? "");
+const ranGates = (run: CiWorkflowRun): boolean => A.contains(RAN_GATES, run.conclusion ?? "");
 
-const newestFirst = Order.flip(Order.mapInput(Order.String, (run: RunWire) => run.created_at));
+const newestFirst = Order.flip(Order.mapInput(Order.String, (run: CiWorkflowRun) => run.created_at));
 
-const newestThatRan = (runs: ReadonlyArray<RunWire>): O.Option<RunWire> =>
+const newestThatRan = (runs: ReadonlyArray<CiWorkflowRun>): O.Option<CiWorkflowRun> =>
   A.findFirst(A.sort(runs, newestFirst), ranGates);
 
 const keep =
@@ -235,9 +266,9 @@ const keep =
 
 const ancestorHit = (
   ancestors: ReadonlyArray<string>,
-  runs: ReadonlyArray<RunWire>
-): O.Option<{ readonly run: RunWire; readonly distance: number }> => {
-  const bySha = A.reduce(A.sort(runs, newestFirst), HashMap.empty<string, RunWire>(), (map, run) =>
+  runs: ReadonlyArray<CiWorkflowRun>
+): O.Option<{ readonly run: CiWorkflowRun; readonly distance: number }> => {
+  const bySha = A.reduce(A.sort(runs, newestFirst), HashMap.empty<string, CiWorkflowRun>(), (map, run) =>
     ranGates(run) && !HashMap.has(map, run.head_sha) ? HashMap.set(map, run.head_sha, run) : map
   );
   return pipe(
@@ -292,7 +323,7 @@ export const lookupMainFeed = Effect.fn("CiMainFeed.lookup")(function* (request:
           per_page: MAIN_FEED_ANCESTOR_LIMIT,
           ...query,
         },
-        RunsPage
+        CiWorkflowRunsPage
       )
     ).pipe(Effect.map((page) => page.workflow_runs));
 

@@ -39,6 +39,14 @@ const $I = $RepoCliId.create("commands/Ci/CiJobAdapter");
 /**
  * The gate name a workflow run is recorded under.
  *
+ * **Example** (Name a run's gate)
+ *
+ * ```ts
+ * import { CI_RUN_GATE } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(CI_RUN_GATE) // "run"
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -134,6 +142,23 @@ export class CiRunView extends S.Opaque<CiRunView, { readonly brand: unique symb
  * What the adapter reads: a run, its jobs, and the failure detail of the
  * jobs that have one, keyed by job id.
  *
+ * **Example** (A run with no jobs)
+ *
+ * ```ts
+ * import { CiRunGateInput, CiRunView } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
+ *
+ * const run = CiRunView.make({
+ *   id: 9,
+ *   attempt: 1,
+ *   workflow: "Check",
+ *   headSha: "4e3343774cc",
+ *   branch: O.none(),
+ *   createdAt: "2026-11-22T10:00:00Z",
+ * })
+ * console.log(CiRunGateInput.make({ run, jobs: [] }).jobs.length) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
@@ -146,6 +171,65 @@ export class CiRunGateInput extends S.Opaque<CiRunGateInput, { readonly brand: u
     $I.annoteSchema("CiRunGateInput", {
       description: "A workflow run, its jobs, and the failure detail of each job that has one.",
     })
+  )
+) {}
+
+/**
+ * One workflow run, as `GET /actions/runs/{run_id}` and the run listings
+ * return it.
+ *
+ * **Example** (A listed run)
+ *
+ * ```ts
+ * import { CiWorkflowRun } from "@beep/repo-cli/commands/Ci"
+ *
+ * const run = CiWorkflowRun.make({
+ *   id: 9,
+ *   name: "Check",
+ *   workflow_id: 1,
+ *   head_sha: "4e3343774cc",
+ *   head_branch: "main",
+ *   status: "completed",
+ *   conclusion: "failure",
+ *   created_at: "2026-11-22T10:00:00Z",
+ * })
+ * console.log(run.conclusion) // "failure"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiWorkflowRun extends S.Opaque<CiWorkflowRun, { readonly brand: unique symbol }>()(
+  S.Struct({
+    id: S.Int,
+    name: S.NullOr(S.String),
+    workflow_id: S.Int,
+    head_sha: S.String,
+    head_branch: S.NullOr(S.String),
+    status: S.NullOr(S.String),
+    conclusion: S.NullOr(S.String),
+    created_at: S.String,
+    run_attempt: S.optionalKey(S.Int),
+  }).pipe($I.annoteSchema("CiWorkflowRun", { description: "One workflow run as the REST run endpoints return it." }))
+) {}
+
+/**
+ * One page of a workflow run listing.
+ *
+ * **Example** (An empty page)
+ *
+ * ```ts
+ * import { CiWorkflowRunsPage } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(CiWorkflowRunsPage.make({ workflow_runs: [] }).workflow_runs.length) // 0
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class CiWorkflowRunsPage extends S.Opaque<CiWorkflowRunsPage, { readonly brand: unique symbol }>()(
+  S.Struct({ workflow_runs: S.Array(CiWorkflowRun) }).pipe(
+    $I.annoteSchema("CiWorkflowRunsPage", { description: "One page of a workflow run listing." })
   )
 ) {}
 

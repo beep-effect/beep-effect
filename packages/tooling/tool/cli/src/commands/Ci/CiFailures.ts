@@ -33,7 +33,7 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { dual, pipe } from "effect/Function";
+import { dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
@@ -47,7 +47,16 @@ import { YEET_GH_LOGIN_IDENTITY } from "../Yeet/internal/GhOps.ts";
 import { readYeetFailedJobLog, YeetJobLogRead } from "../Yeet/internal/MonitorLoop.ts";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { downloadFeedArtifact, FeedArtifact, FeedArtifactRef } from "./CiFeedArtifact.ts";
-import { CI_RUN_GATE, CiRunGateInput, CiRunJob, CiRunView, ciJobIsRed, ciRunGateReport } from "./CiJobAdapter.ts";
+import {
+  CI_RUN_GATE,
+  CiRunGateInput,
+  CiRunJob,
+  CiRunView,
+  CiWorkflowRun,
+  CiWorkflowRunsPage,
+  ciJobIsRed,
+  ciRunGateReport,
+} from "./CiJobAdapter.ts";
 import { taskOutcomeArtifactPrefix } from "./CiTaskOutcomes.ts";
 import type { CliReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
@@ -60,6 +69,14 @@ const $I = $RepoCliId.create("commands/Ci/CiFailures");
 /**
  * The most task-outcome artifacts one run's failed jobs download to find
  * their gate reports.
+ *
+ * **Example** (Cap the downloads)
+ *
+ * ```ts
+ * import { FAILED_JOB_ARTIFACT_DOWNLOADS_MAX } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FAILED_JOB_ARTIFACT_DOWNLOADS_MAX) // 8
+ * ```
  *
  * @category constants
  * @since 0.0.0
@@ -98,28 +115,15 @@ export const CiFailuresTarget = S.TaggedUnion({
  */
 export type CiFailuresTarget = typeof CiFailuresTarget.Type;
 
-const RunWire = S.Struct({
-  id: S.Int,
-  name: S.NullOr(S.String),
-  workflow_id: S.Int,
-  head_sha: S.String,
-  head_branch: S.NullOr(S.String),
-  status: S.NullOr(S.String),
-  conclusion: S.NullOr(S.String),
-  created_at: S.String,
-  run_attempt: S.optionalKey(S.Int),
-});
-
-type RunWire = typeof RunWire.Type;
-
-const RunsPage = S.Struct({ workflow_runs: S.Array(RunWire) });
 const PullHead = S.Struct({ head: S.Struct({ sha: S.String }) });
+const decodeRunJobs = S.decodeUnknownEffect(S.Array(CiRunJob));
+const decodeRunArtifacts = S.decodeUnknownEffect(S.Array(FeedArtifactRef));
 
 type Github = GitHubClient | Repo;
 
-const newestFirst = Order.flip(Order.mapInput(Order.String, (run: RunWire) => run.created_at));
+const newestFirst = Order.flip(Order.mapInput(Order.String, (run: CiWorkflowRun) => run.created_at));
 
-const headRunsWorthReading = (runs: ReadonlyArray<RunWire>): ReadonlyArray<RunWire> =>
+const headRunsWorthReading = (runs: ReadonlyArray<CiWorkflowRun>): ReadonlyArray<CiWorkflowRun> =>
   pipe(
     A.sort(runs, newestFirst),
     A.dedupeWith((left, right) => left.workflow_id === right.workflow_id),
@@ -132,8 +136,12 @@ const targetRuns = Effect.fn("CiFailures.targetRuns")(function* (target: CiFailu
   return yield* CiFailuresTarget.match(target, {
     RunTarget: ({ runId }) =>
       client
-        .requestDecoded("GET /repos/{owner}/{repo}/actions/runs/{run_id}", { owner, repo, run_id: runId }, RunWire)
-        .pipe(Effect.map(A.of)),
+        .requestDecoded(
+          "GET /repos/{owner}/{repo}/actions/runs/{run_id}",
+          { owner, repo, run_id: runId },
+          CiWorkflowRun
+        )
+        .pipe(Effect.map(flow(CiWorkflowRun.make, A.of))),
     PullTarget: ({ number }) =>
       client
         .requestDecoded("GET /repos/{owner}/{repo}/pulls/{pull_number}", { owner, repo, pull_number: number }, PullHead)
@@ -142,15 +150,15 @@ const targetRuns = Effect.fn("CiFailures.targetRuns")(function* (target: CiFailu
             client.requestDecoded(
               "GET /repos/{owner}/{repo}/actions/runs",
               { owner, repo, head_sha: pull.head.sha, per_page: 100 },
-              RunsPage
+              CiWorkflowRunsPage
             )
           ),
-          Effect.map((page) => headRunsWorthReading(page.workflow_runs))
+          Effect.map((page) => headRunsWorthReading(A.map(page.workflow_runs, (run) => CiWorkflowRun.make(run))))
         ),
   }).pipe(CiCommandError.mapError("Failed to read the target's workflow runs."));
 });
 
-const runView = (run: RunWire): CiRunView =>
+const runView = (run: CiWorkflowRun): CiRunView =>
   CiRunView.make({
     id: run.id,
     attempt: run.run_attempt ?? 1,
@@ -165,10 +173,7 @@ const runJobs = Effect.fn("CiFailures.runJobs")(function* (runId: number) {
   const { owner, repo } = yield* Repo;
   return yield* client
     .paginate("GET /repos/{owner}/{repo}/actions/runs/{run_id}/jobs", { owner, repo, run_id: runId })
-    .pipe(
-      Effect.flatMap(S.decodeUnknownEffect(S.Array(CiRunJob))),
-      CiCommandError.mapError(`Failed to read run ${runId}'s jobs.`)
-    );
+    .pipe(Effect.flatMap(decodeRunJobs), CiCommandError.mapError(`Failed to read run ${runId}'s jobs.`));
 });
 
 const runArtifacts = Effect.fn("CiFailures.runArtifacts")(function* (runId: number) {
@@ -176,10 +181,7 @@ const runArtifacts = Effect.fn("CiFailures.runArtifacts")(function* (runId: numb
   const { owner, repo } = yield* Repo;
   return yield* client
     .paginate("GET /repos/{owner}/{repo}/actions/runs/{run_id}/artifacts", { owner, repo, run_id: runId })
-    .pipe(
-      Effect.flatMap(S.decodeUnknownEffect(S.Array(FeedArtifactRef))),
-      CiCommandError.mapError(`Failed to list run ${runId}'s artifacts.`)
-    );
+    .pipe(Effect.flatMap(decodeRunArtifacts), CiCommandError.mapError(`Failed to list run ${runId}'s artifacts.`));
 });
 
 const tokens = (text: string): HashSet.HashSet<string> =>
@@ -190,6 +192,30 @@ const overlap = (left: HashSet.HashSet<string>, right: HashSet.HashSet<string>):
 
 const recordJoins = (feed: FeedArtifact, job: CiRunJob): boolean =>
   feed.record.job === job.name || Str.startsWith(`${feed.record.job} / `)(job.name);
+
+/**
+ * What {@link rankFeedArtifacts} reads: the run attempt's artifact prefix,
+ * its artifacts and its failed jobs.
+ *
+ * **Example** (Nothing to rank)
+ *
+ * ```ts
+ * import { FeedArtifactRanking } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FeedArtifactRanking.make({ prefix: "task-outcomes-9-1-", artifacts: [], jobs: [] }).prefix)
+ * // "task-outcomes-9-1-"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class FeedArtifactRanking extends S.Opaque<FeedArtifactRanking, { readonly brand: unique symbol }>()(
+  S.Struct({ prefix: S.String, artifacts: S.Array(FeedArtifactRef), jobs: S.Array(CiRunJob) }).pipe(
+    $I.annoteSchema("FeedArtifactRanking", {
+      description: "A run attempt's artifact prefix, its artifacts and its failed jobs, to rank for download.",
+    })
+  )
+) {}
 
 /**
  * Rank a run's task-outcome artifacts for its failed jobs: those sharing a
@@ -205,11 +231,11 @@ const recordJoins = (feed: FeedArtifact, job: CiRunJob): boolean =>
  * **Example** (Rank one artifact)
  *
  * ```ts
- * import { CiRunJob, FeedArtifactRef, rankFeedArtifacts } from "@beep/repo-cli/commands/Ci"
+ * import { CiRunJob, FeedArtifactRanking, FeedArtifactRef, rankFeedArtifacts } from "@beep/repo-cli/commands/Ci"
  *
  * const job = CiRunJob.make({ id: 7, name: "Test Unit (unit-a)", status: "completed", conclusion: "failure" })
  * const artifact = FeedArtifactRef.make({ id: 1, name: "task-outcomes-9-1-test-unit-shard-unit-a", expired: false, size_in_bytes: 9 })
- * console.log(rankFeedArtifacts({ prefix: "task-outcomes-9-1-", artifacts: [artifact], jobs: [job] }).length) // 1
+ * console.log(rankFeedArtifacts(FeedArtifactRanking.make({ prefix: "task-outcomes-9-1-", artifacts: [artifact], jobs: [job] })).length) // 1
  * ```
  *
  * @param input - The run attempt's artifact prefix, its artifacts and its failed jobs.
@@ -217,15 +243,7 @@ const recordJoins = (feed: FeedArtifact, job: CiRunJob): boolean =>
  * @category utilities
  * @since 0.0.0
  */
-export const rankFeedArtifacts = ({
-  prefix,
-  artifacts,
-  jobs,
-}: {
-  readonly prefix: string;
-  readonly artifacts: ReadonlyArray<FeedArtifactRef>;
-  readonly jobs: ReadonlyArray<CiRunJob>;
-}): ReadonlyArray<FeedArtifactRef> => {
+export const rankFeedArtifacts = ({ prefix, artifacts, jobs }: FeedArtifactRanking): ReadonlyArray<FeedArtifactRef> => {
   const jobTokens = A.map(jobs, (job) => tokens(job.name));
   const scored = A.map(
     A.filter(artifacts, (artifact) => Str.startsWith(prefix)(artifact.name) && !artifact.expired),
@@ -244,7 +262,9 @@ export const rankFeedArtifacts = ({
 
 const feedsForJobs = Effect.fn("CiFailures.feedsForJobs")(function* (run: CiRunView, jobs: ReadonlyArray<CiRunJob>) {
   const artifacts = yield* runArtifacts(run.id);
-  const ranked = rankFeedArtifacts({ prefix: taskOutcomeArtifactPrefix(run.id, run.attempt), artifacts, jobs });
+  const ranked = rankFeedArtifacts(
+    FeedArtifactRanking.make({ prefix: taskOutcomeArtifactPrefix(run.id, run.attempt), artifacts, jobs })
+  );
   return yield* Effect.reduce(ranked, A.empty<FeedArtifact>, (feeds, artifact) =>
     A.every(jobs, (job) => A.some(feeds, (feed) => recordJoins(feed, job)))
       ? Effect.succeed(feeds)
@@ -464,7 +484,7 @@ const recordRun = Effect.fn("CiFailures.recordRun")(function* (
   return saved;
 });
 
-const failuresOfRun = Effect.fn("CiFailures.failuresOfRun")(function* (repoRoot: string, wire: RunWire) {
+const failuresOfRun = Effect.fn("CiFailures.failuresOfRun")(function* (repoRoot: string, wire: CiWorkflowRun) {
   const run = runView(wire);
   const jobs = yield* runJobs(run.id);
   const red = A.filter(jobs, ciJobIsRed);

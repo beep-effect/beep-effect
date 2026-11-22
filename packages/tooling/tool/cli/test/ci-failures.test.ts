@@ -5,6 +5,7 @@ import {
   CiRunJob,
   ciFailuresCommand,
   FAILED_JOB_ARTIFACT_DOWNLOADS_MAX,
+  FeedArtifactRanking,
   FeedArtifactRef,
   printCiFailures,
   rankFeedArtifacts,
@@ -31,7 +32,7 @@ import * as TestConsole from "effect/testing/TestConsole";
 import { zipSync } from "fflate";
 import recordedJobs from "./fixtures/ci-gate-reports/run-jobs.json" with { type: "json" };
 import { bytes, feedZip, gateRecordJson, gateReport, packageEntry, v1Json, v2Json } from "./support/FeedFixtures.ts";
-import { provideBuilt, restRoutes } from "./support/RestRoutes.ts";
+import { provideBuilt, restRoutes, routeTable } from "./support/RestRoutes.ts";
 import { provideSpawner } from "./support/ScriptedProcess.ts";
 import type { RestReply } from "./support/RestRoutes.ts";
 
@@ -95,25 +96,24 @@ const ghLogFailed = A.join(
 
 const isPath = (suffix: string) => (url: URL) => Str.endsWith(suffix)(url.pathname);
 
-const runRoutes =
-  (options: {
-    readonly jobs: unknown;
-    readonly artifacts: ReadonlyArray<unknown>;
-    readonly zips: Record<string, Uint8Array>;
-  }) =>
-  (url: URL): RestReply => {
-    if (isPath(`/actions/runs/${RUN}`)(url)) return { json: runWire(RUN) };
-    if (isPath("/jobs")(url)) return { json: options.jobs };
-    if (isPath("/artifacts")(url))
-      return { json: { total_count: options.artifacts.length, artifacts: options.artifacts } };
-    if (isPath("/zip")(url)) {
-      const id = Str.split(url.pathname, "/").at(-2) ?? "";
-      return id in options.zips ? { zip: options.zips[id]! } : { text: "not a zip" };
-    }
-    if (isPath("/actions/jobs/104/logs")(url)) return { text: boundedEndpointLog };
-    if (isPath("/actions/jobs/106/logs")(url)) return { text: unboundedEndpointLog };
-    return { json: { message: "Not Found" }, status: 404 };
-  };
+const zipIdOf = (url: URL): string => Str.split(url.pathname, "/").at(-2) ?? "";
+
+const zipReply = (zips: Record<string, Uint8Array>, id: string): RestReply =>
+  id in zips ? { zip: zips[id]! } : { text: "not a zip" };
+
+const runRoutes = (options: {
+  readonly jobs: unknown;
+  readonly artifacts: ReadonlyArray<unknown>;
+  readonly zips: Record<string, Uint8Array>;
+}) =>
+  routeTable([
+    [isPath(`/actions/runs/${RUN}`), () => ({ json: runWire(RUN) })],
+    [isPath("/jobs"), () => ({ json: options.jobs })],
+    [isPath("/artifacts"), () => ({ json: { total_count: options.artifacts.length, artifacts: options.artifacts } })],
+    [isPath("/zip"), (url) => zipReply(options.zips, zipIdOf(url))],
+    [isPath("/actions/jobs/104/logs"), () => ({ text: boundedEndpointLog })],
+    [isPath("/actions/jobs/106/logs"), () => ({ text: unboundedEndpointLog })],
+  ]);
 
 const ghSpawner = (answers: Record<string, { readonly stdout: string; readonly exit: number }>) =>
   ScriptedSpawner.make((_command, args) => {
@@ -397,15 +397,17 @@ describe("failing-region bounds", () => {
     const many = A.makeBy(FAILED_JOB_ARTIFACT_DOWNLOADS_MAX + 2, (index) =>
       ref(index + 10, `task-outcomes-9-1-unit-${index}`)
     );
-    const ranked = rankFeedArtifacts({
-      prefix: "task-outcomes-9-1-",
-      artifacts: [
-        ref(1, "task-outcomes-9-1-nix-shell-single"),
-        ref(2, "task-outcomes-9-1-test-unit-shard-unit-a"),
-        ...many,
-      ],
-      jobs: [job],
-    });
+    const ranked = rankFeedArtifacts(
+      FeedArtifactRanking.make({
+        prefix: "task-outcomes-9-1-",
+        artifacts: [
+          ref(1, "task-outcomes-9-1-nix-shell-single"),
+          ref(2, "task-outcomes-9-1-test-unit-shard-unit-a"),
+          ...many,
+        ],
+        jobs: [job],
+      })
+    );
     strictEqual(ranked[0]!.id, 2);
     strictEqual(ranked.length, FAILED_JOB_ARTIFACT_DOWNLOADS_MAX);
     assertTrue(A.every(ranked, (found) => found.id !== 1));

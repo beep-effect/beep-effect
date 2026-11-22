@@ -20,8 +20,7 @@ import artifactByName from "./fixtures/ci-gate-reports/artifact-by-name.json" wi
 import runsAtMergeBase from "./fixtures/ci-gate-reports/main-runs-at-merge-base.json" with { type: "json" };
 import runsOnBranch from "./fixtures/ci-gate-reports/main-runs-branch.json" with { type: "json" };
 import { bytes, feedZip, gateRecordJson, gateReport, packageEntry, v1Json, v2Json } from "./support/FeedFixtures.ts";
-import { provideBuilt, restRoutes } from "./support/RestRoutes.ts";
-import type { RestReply } from "./support/RestRoutes.ts";
+import { provideBuilt, restRoutes, routeTable } from "./support/RestRoutes.ts";
 
 const MERGE_BASE = "bc49cb60e1f5d3a7c2b8946d0f1e2a3b4c5d6e7f";
 const ANCESTOR = "4e3343774cc5a1b2c3d4e5f6a7b8c9d0e1f2a3b4";
@@ -64,27 +63,21 @@ const artifactNamed = (name: string, id: number, expired = false) => ({
   artifacts: [{ ...artifactByName.artifacts[0]!, id, name, expired }],
 });
 
-const mainRoutes =
-  (options: {
-    readonly atMergeBase: unknown;
-    readonly onBranch?: unknown;
-    readonly listing?: (name: string) => unknown;
-    readonly zip?: (id: string) => Uint8Array;
-  }) =>
-  (url: URL): RestReply => {
-    if (isRuns(url)) {
-      return {
-        json: url.searchParams.has("head_sha") ? options.atMergeBase : (options.onBranch ?? { workflow_runs: [] }),
-      };
-    }
-    if (isListing(url)) {
-      return { json: (options.listing ?? (() => artifactByName))(url.searchParams.get("name") ?? "") };
-    }
-    if (isZip(url)) {
-      return { zip: (options.zip ?? (() => unitE))(Str.split(url.pathname, "/").at(-2) ?? "") };
-    }
-    return { json: { message: "Not Found" }, status: 404 };
-  };
+const mainRoutes = (options: {
+  readonly atMergeBase: unknown;
+  readonly onBranch?: unknown;
+  readonly listing?: (name: string) => unknown;
+  readonly zip?: (id: string) => Uint8Array;
+}) => {
+  const onBranch = options.onBranch ?? { workflow_runs: [] };
+  const listing = options.listing ?? (() => artifactByName);
+  const zip = options.zip ?? (() => unitE);
+  return routeTable([
+    [isRuns, (url) => ({ json: url.searchParams.has("head_sha") ? options.atMergeBase : onBranch })],
+    [isListing, (url) => ({ json: listing(url.searchParams.get("name") ?? "") })],
+    [isZip, (url) => ({ zip: zip(Str.split(url.pathname, "/").at(-2) ?? "") })],
+  ]);
+};
 
 const atMergeBaseHit = {
   workflow_runs: [

@@ -7,8 +7,10 @@
 import { GitHubClient } from "@beep/github/GitHubClient";
 import { Repo } from "@beep/github/Repo";
 import { RetryPolicy } from "@beep/github/Resilience";
+import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
+import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -41,6 +43,32 @@ const responseOf = (url: URL, reply: RestReply): Response => {
     },
   });
 };
+
+/**
+ * One recorded route: when `matches` accepts a request's URL, `reply` answers it.
+ */
+export type RestRoute = readonly [matches: (url: URL) => boolean, reply: (url: URL) => RestReply];
+
+const notFound: RestReply = { json: { message: "Not Found" }, status: 404 };
+
+/**
+ * Answer a request with the first route that matches its URL, else 404.
+ *
+ * **Example** (One route)
+ *
+ * ```ts
+ * import { routeTable } from "./RestRoutes.ts"
+ * const respond = routeTable([[(url) => url.pathname === "/a", () => ({ text: "a" })]])
+ * console.log(respond(new URL("https://api.github.com/a"))) // { text: "a" }
+ * ```
+ */
+export const routeTable =
+  (routes: ReadonlyArray<RestRoute>) =>
+  (url: URL): RestReply =>
+    O.match(
+      A.findFirst(routes, ([matches]) => matches(url)),
+      { onNone: () => notFound, onSome: ([, reply]) => reply(url) }
+    );
 
 /**
  * Answer every request through `respond` and record its URL.

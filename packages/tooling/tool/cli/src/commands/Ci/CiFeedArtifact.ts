@@ -38,6 +38,14 @@ const $I = $RepoCliId.create("commands/Ci/CiFeedArtifact");
  * The largest feed artifact a reader downloads: 64 MiB, since a v2 artifact
  * also carries the job's raw gate logs.
  *
+ * **Example** (Check an artifact's size)
+ *
+ * ```ts
+ * import { FEED_ARTIFACT_BYTES_MAX } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(12 <= FEED_ARTIFACT_BYTES_MAX) // true
+ * ```
+ *
  * @category constants
  * @since 0.0.0
  */
@@ -77,12 +85,22 @@ export class FeedArtifactRef extends S.Opaque<FeedArtifactRef, { readonly brand:
 /**
  * One page of a run's artifact listing.
  *
+ * **Example** (An empty page)
+ *
+ * ```ts
+ * import { FeedArtifactPage } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(FeedArtifactPage.make({ total_count: 0, artifacts: [] }).artifacts.length) // 0
+ * ```
+ *
  * @category models
  * @since 0.0.0
  */
-export const FeedArtifactPage = S.Struct({ total_count: Count, artifacts: S.Array(FeedArtifactRef) }).pipe(
-  $I.annoteSchema("FeedArtifactPage", { description: "One page of a workflow run's artifact listing." })
-);
+export class FeedArtifactPage extends S.Opaque<FeedArtifactPage, { readonly brand: unique symbol }>()(
+  S.Struct({ total_count: Count, artifacts: S.Array(FeedArtifactRef) }).pipe(
+    $I.annoteSchema("FeedArtifactPage", { description: "One page of a workflow run's artifact listing." })
+  )
+) {}
 
 /**
  * One gate record read out of a feed artifact: its feed entry, the decoded
