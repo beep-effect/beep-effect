@@ -21,6 +21,7 @@ import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
+import * as Ref from "effect/Ref";
 import * as Stream from "effect/Stream";
 import * as Str from "effect/String";
 import { packageTarget } from "./support/fixtures.ts";
@@ -156,6 +157,29 @@ describe("history records", () => {
       "feature/b"
     );
   });
+
+  it.effect("records a run with no kept answer when its history cannot be read", () =>
+    Effect.gen(function* () {
+      const kept = yield* Ref.make(A.empty<HistoryRunRecord>());
+      const unread = Effect.fail(GateHistoryError.make({ reason: "open-busy", message: "database is locked" }));
+      const store = yield* makeGateHistoryStore(HistoryConfig.make({}), {
+        insert: (run) => Effect.as(Ref.update(kept, A.append(run)), true),
+        recorded: () => unread,
+        lane: () => unread,
+        previous: () => unread,
+        runs: () => unread,
+        series: () => unread,
+      });
+      const report = reportOf({ runId: "r1", at: 1000, items: [testItem({ name: "adds", outcome: "failed" })] });
+      const ingest = yield* store.ingest(report, laneA);
+      assert.isTrue(ingest.inserted);
+      const runs = yield* Ref.get(kept);
+      assert.deepStrictEqual(
+        A.map(runs, (run) => O.isNone(run.answer)),
+        [true]
+      );
+    })
+  );
 
   it.effect("builds a store over the in-memory backend by default", () =>
     Effect.gen(function* () {

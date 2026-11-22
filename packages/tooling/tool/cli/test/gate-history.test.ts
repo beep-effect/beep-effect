@@ -224,6 +224,17 @@ describe("gate run history on the task path", () => {
           HistoryWhere.make({ dir: O.some(PACKAGE_DIR), history: historyAt() })
         ).pipe(backedBy(store));
         assert.strictEqual(A.length(listed), 2);
+        // A directory inside the package reads the package's runs, and one in no package reads its own.
+        const nested = yield* listHistoryLines(
+          "test",
+          HistoryWhere.make({ dir: O.some(`${PACKAGE_DIR}/src/internal`), history: historyAt() })
+        ).pipe(backedBy(store));
+        assert.deepStrictEqual(nested, listed);
+        const unpackaged = yield* listHistoryLines(
+          "test",
+          HistoryWhere.make({ dir: O.some("standards"), history: historyAt() })
+        ).pipe(backedBy(store));
+        assert.deepStrictEqual(unpackaged, historyRunLines([]));
         assert.isTrue(Str.startsWith("r2 feature/a local ")(listed[0] ?? ""), A.join(listed, "\n"));
       }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -421,6 +432,10 @@ describe("gate run history on the task path", () => {
         assertNone(switchedOff);
         const inVitest = yield* resolveHistoryTarget(repo, auto).pipe(withEnv({ VITEST: "true" }));
         assertNone(inVitest);
+        const namedInVitest = yield* resolveHistoryTarget(repo, auto).pipe(
+          withEnv({ VITEST: "true", BEEP_GATE_HISTORY_FILE: "/home/alice/h.sqlite" })
+        );
+        assertNone(namedInVitest);
         const at = yield* resolveHistoryTarget(
           repo,
           HistorySetting.cases.HistoryAt.make({ filename: "/home/alice/h.sqlite", config: HistoryConfig.make({}) })

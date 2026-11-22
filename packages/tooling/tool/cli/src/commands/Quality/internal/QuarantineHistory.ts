@@ -11,6 +11,7 @@
 import { GateReport, Totals, Unit } from "@beep/gate-report/GateReport";
 import { Item } from "@beep/gate-report/Item";
 import { ItemKey } from "@beep/gate-report/ItemKey";
+import { HistoryScope } from "@beep/repo-gate-run/GateHistoryRecord";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
@@ -18,6 +19,7 @@ import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import {
+  GateHistoryTarget,
   HistorySetting,
   historyStoreLayer,
   ingestAfterConsole,
@@ -169,7 +171,9 @@ export const recordQuarantineHistory = Effect.fn("QualityTasks.recordQuarantineH
   if (A.isReadonlyArrayEmpty(incidents)) return;
   const target = yield* resolveHistoryTarget(repoRoot, setting);
   if (O.isNone(target)) return;
-  const ingest = ingestAfterConsole(target.value);
+  // An incident reports one item of its package's check, never the whole of it.
+  const scope = HistoryScope.make({ ...target.value.scope, partial: true });
+  const ingest = ingestAfterConsole(GateHistoryTarget.make({ ...target.value, scope }));
   const context = yield* Layer.build(historyStoreLayer(target.value));
   yield* Effect.forEach(
     incidents,

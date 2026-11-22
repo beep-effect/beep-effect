@@ -10,7 +10,8 @@
  * canonical `origin` URL (decision `store-path-and-repository-key`). It is
  * opened only by the CLI under Bun, never inside a Vitest process: the
  * automatic setting is off when `VITEST` is set, and `BEEP_GATE_HISTORY=off`
- * turns it off anywhere. `BEEP_GATE_HISTORY_FILE` names another file.
+ * turns it off anywhere. `BEEP_GATE_HISTORY_FILE` names another file, which
+ * does not turn history on inside Vitest.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -156,10 +157,10 @@ const stateDirectory = Effect.fnUntraced(function* () {
 const autoFile = Effect.fnUntraced(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
   const path = yield* Path.Path;
-  const named = yield* envValue("BEEP_GATE_HISTORY_FILE");
-  if (O.isSome(named)) return named;
   const vitest = yield* envValue("VITEST");
   if (O.isSome(vitest)) return O.none<string>();
+  const named = yield* envValue("BEEP_GATE_HISTORY_FILE");
+  if (O.isSome(named)) return named;
   const key = yield* repositoryKey(repoRoot);
   const state = yield* stateDirectory();
   const directory = path.join(state, STORE_DIRECTORY);

@@ -32,11 +32,20 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import { GateHistory, HistoryAnswer, HistoryReadError } from "./GateHistory.ts";
-import { HistoryIngest, LaneQuery, PreviousRunQuery, runRecordOf, scopedReport } from "./GateHistoryRecord.ts";
+import {
+  HistoryIngest,
+  HistoryRunRecord,
+  LaneQuery,
+  PreviousRunQuery,
+  RecordedRunQuery,
+  runRecordOf,
+  scopedReport,
+} from "./GateHistoryRecord.ts";
 import { makeMemoryBackend } from "./internal/MemoryHistoryBackend.ts";
 import type { GateReport } from "@beep/gate-report/GateReport";
-import type { GateHistoryError } from "@beep/gate-report/History";
+import type { DeltaRun, GateHistoryError } from "@beep/gate-report/History";
 import type { Item } from "@beep/gate-report/Item";
 import type { HistoryLabel } from "@beep/gate-report/Vocabulary";
 import type {
@@ -95,8 +104,11 @@ const answerOn = Effect.fnUntraced(function* (
   backend: HistoryBackend,
   config: HistoryConfig,
   report: GateReport,
-  branch: string
+  branch: string,
+  partial: boolean
 ) {
+  const kept = yield* backend.recorded(RecordedRunQuery.make({ runId: report.runId, branch }));
+  if (O.isSome(kept)) return kept.value;
   const series = {
     gate: report.gate,
     subject: report.subject,
@@ -111,7 +123,7 @@ const answerOn = Effect.fnUntraced(function* (
       window: config.window,
     })
   );
-  const previous = yield* backend.previous(PreviousRunQuery.make(series));
+  const previous = partial ? O.none<DeltaRun>() : yield* backend.previous(PreviousRunQuery.make(series));
   return HistoryAnswer.make({
     labels: R.fromEntries(A.getSomes(A.map(report.items, labelEntry(report, branch, lane)))),
     delta: O.map(previous, deltaOf(deltaRunOf(report))),
@@ -127,7 +139,9 @@ const answerOn = Effect.fnUntraced(function* (
  * `ingest` records a report under a scope, once per run id. `answer` labels
  * a report's items and computes its delta from the lane's earlier local runs
  * on the report's branch, excluding observations that carry the report's
- * own run id, so a replayed record answers as the run it replays. `runs`
+ * own run id. `ingest` keeps that answer with the run, and a replayed record
+ * on the same branch is answered with it, so it renders as the run it replays
+ * whatever was recorded or pruned since. `runs`
  * lists a subject's history; `series` shows one item's series by branch.
  *
  * **Example** (Read through the shape)
@@ -173,20 +187,28 @@ export const makeGateHistoryStore = Effect.fnUntraced(function* (
   backend?: HistoryBackend
 ): Effect.fn.Return<GateHistoryStoreShape> {
   const store = backend ?? (yield* makeMemoryBackend(config));
+  // What this process rendered, by run, so ingest keeps the answer the console showed.
+  const rendered = yield* Ref.make(HashMap.empty<string, HistoryAnswer>());
+  const answer = Effect.fnUntraced(function* (report: GateReport, scope: HistoryScope) {
+    const branch = O.getOrElse(report.branch, () => scope.branch);
+    const found = yield* answerOn(store, config, scopedReport(report, scope), branch, scope.partial);
+    yield* Ref.update(rendered, HashMap.set(report.runId, found));
+    return found;
+  });
+  // A run whose console had no answer keeps the one it can read now, or none.
+  const answerToKeep = Effect.fnUntraced(function* (report: GateReport, scope: HistoryScope) {
+    const byRun = yield* Ref.get(rendered);
+    const shown = HashMap.get(byRun, report.runId);
+    return O.isSome(shown) ? shown : yield* Effect.option(answer(report, scope));
+  });
   return {
-    ingest: (report, scope) => {
+    ingest: Effect.fnUntraced(function* (report, scope) {
       const record = runRecordOf(report, scope);
-      return Effect.map(store.insert(record), (inserted) => HistoryIngest.make({ runId: record.runId, inserted }));
-    },
-    answer: (report, scope) => {
-      const placed = scopedReport(report, scope);
-      return answerOn(
-        store,
-        config,
-        placed,
-        O.getOrElse(report.branch, () => scope.branch)
-      );
-    },
+      const kept = yield* answerToKeep(report, scope);
+      const inserted = yield* store.insert(HistoryRunRecord.make({ ...record, answer: kept }));
+      return HistoryIngest.make({ runId: record.runId, inserted });
+    }),
+    answer,
     runs: store.runs,
     series: store.series,
   };
@@ -235,7 +257,8 @@ export class GateHistoryStore extends Context.Service<GateHistoryStore, GateHist
    * **Example** (Read history from the store)
    *
    * ```ts
-   * import { GateHistoryStore, HistoryScope } from "@beep/repo-gate-run/GateHistoryStore";
+   * import { HistoryScope } from "@beep/repo-gate-run/GateHistoryRecord";
+   * import { GateHistoryStore } from "@beep/repo-gate-run/GateHistoryStore";
    * import * as Layer from "effect/Layer";
    *
    * const history = GateHistoryStore.historyLayer(HistoryScope.make({ branch: "feature/a" }));

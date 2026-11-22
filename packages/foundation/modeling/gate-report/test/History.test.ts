@@ -315,6 +315,23 @@ describe("deltaOf (AC-H6)", () => {
     assert.isTrue(Str.endsWith(" (2 fixed since last run)")(lines[0] ?? ""));
   });
 
+  it("does not count a failure that is skipped or warned now as fixed, and counts one that is gone", () => {
+    const red = makeReport({
+      units: [Unit.make({ id: FILE, kind: "file" })],
+      items: A.map(["skips", "warns", "leaves"], (name) => testItem({ name, outcome: "failed" })),
+      reason: "failed",
+      outcome: "some-fail",
+    });
+    const after = deltaRunOf(
+      makeReport({
+        units: [Unit.make({ id: FILE, kind: "file" })],
+        items: [testItem({ name: "skips", outcome: "skipped" }), testItem({ name: "warns", outcome: "warned" })],
+      })
+    );
+    assert.strictEqual(after.unobserved.length, 2);
+    assert.deepStrictEqual(deltaOf(deltaRunOf(red), after), RunDelta.make({ fixed: 1, stillFailing: 0, new: 0 }));
+  });
+
   it("reads a report's failed items by key fingerprint and unit", () => {
     const item = testItem({ name: "adds", outcome: "failed" });
     const run = deltaRunOf(makeReport({ items: [item, testItem({ name: "subtracts", outcome: "passed" })] }));

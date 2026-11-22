@@ -80,6 +80,61 @@ describe.skipIf(!isBunRuntime)("GateHistorySqlite (Bun runtime)", () => {
       })
     );
 
+    it.effect(
+      "migrates a version 1 store: its run ids stay ingested, and an unreadable kept answer is read afresh",
+      () =>
+        Effect.gen(function* () {
+          const path = yield* Path.Path;
+          const dir = yield* tempDir;
+          const file = path.join(dir, "store.sqlite");
+          const first = { runId: "r1", at: 1000, items: [testItem({ name: "adds", outcome: "failed" as const })] };
+          const second = { ...first, runId: "r2", at: 2000 };
+          yield* withStoreAt(sqliteLayer(file), ingestAll([first, second]));
+          const { Database } = yield* Effect.promise(() => import("bun:sqlite"));
+          yield* Effect.sync(() => {
+            const db = new Database(file);
+            db.run("DROP TABLE gate_history_ingested");
+            db.run("ALTER TABLE gate_history_runs DROP COLUMN partial");
+            db.run("PRAGMA user_version = 1");
+            db.close();
+          });
+          const replay = Effect.flatMap(GateHistoryStore, (store) => store.ingest(reportOf(second), laneA));
+          const inserted = yield* withStoreAt(sqliteLayer(file), replay);
+          assert.isFalse(inserted.inserted);
+          yield* Effect.sync(() => {
+            const db = new Database(file);
+            db.run("UPDATE gate_history_ingested SET answer_json = '{\"labels\":7}'");
+            db.close();
+          });
+          const answer = yield* withStoreAt(sqliteLayer(file), answerFor(second));
+          assert.strictEqual(R.get(answer.labels, keyOf("adds")).pipe(O.getOrNull), "persistent");
+        })
+    );
+
+    it.effect("a failed open does not keep a later use from opening, and a good open is shared", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const dir = yield* tempDir;
+        const inner = path.join(dir, "late");
+        const report = reportOf({ runId: "r1", at: 1000, items: [testItem({ name: "adds", outcome: "failed" })] });
+        const outcome = yield* withStoreAt(
+          sqliteLayer(path.join(inner, "store.sqlite")),
+          Effect.gen(function* () {
+            const store = yield* GateHistoryStore;
+            const error = yield* Effect.flip(store.answer(report, laneA));
+            yield* fs.makeDirectory(inner);
+            const ingest = yield* store.ingest(report, laneA);
+            const runs = yield* store.runs(HistoryRunsQuery.make({ gate: "test", subject: "@beep/glob" }));
+            return { error, ingest, runs };
+          })
+        );
+        assert.strictEqual(outcome.error.reason, "open-failed");
+        assert.isTrue(outcome.ingest.inserted);
+        assert.strictEqual(A.length(outcome.runs), 1);
+      })
+    );
+
     it.effect("a missing directory fails the use with open-failed, not the layer", () =>
       Effect.gen(function* () {
         const path = yield* Path.Path;

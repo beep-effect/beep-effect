@@ -21,6 +21,8 @@ describe("repository key", () => {
     ["https://github.com/acme/app/", "github.com__acme__app"],
     ["  http://gitlab.example.com/group/sub/repo.git  ", "gitlab.example.com__group__sub__repo"],
     ["ssh://git@host.example/a/b", "host.example__a__b"],
+    ["https://gitlab.example.com/group__sub/repo.git", "gitlab.example.com__group_u_usub__repo"],
+    ["https://gitlab.example.com/group/sub__repo.git", "gitlab.example.com__group__sub_u_urepo"],
   ])("keys %s as %s", (url, key) => {
     assert.strictEqual(O.getOrNull(repositoryKeyFromOrigin(url)), key);
   });

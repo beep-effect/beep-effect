@@ -13,11 +13,13 @@ import { GateHistoryStore } from "@beep/repo-gate-run/GateHistoryStore";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { constant } from "effect/Function";
+import * as FileSystem from "effect/FileSystem";
+import { constant, constFalse } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { HistorySetting, historyStoreLayer, resolveHistoryTarget } from "./GateHistoryRuntime.ts";
 import type { HistoryItemSeries, HistoryRunView } from "@beep/repo-gate-run/GateHistoryRecord";
 import type { GateHistoryTarget } from "./GateHistoryRuntime.ts";
@@ -111,13 +113,26 @@ export const itemSeriesLines = (series: ReadonlyArray<HistoryItemSeries>): Reado
 
 const NO_STORE = ["no history store for this checkout"];
 
+// The package a directory is in: the nearest directory up to the repository root with a manifest, else itself.
+const packageDirOf = Effect.fnUntraced(function* (dir: string, root: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  let at = dir;
+  while (Str.startsWith(`${root}${path.sep}`)(at)) {
+    const held = yield* fs.exists(path.join(at, "package.json")).pipe(Effect.orElseSucceed(constFalse));
+    if (held) return at;
+    at = path.dirname(at);
+  }
+  return dir;
+});
+
 const subjectOf = Effect.fnUntraced(function* (where: HistoryWhere) {
   const path = yield* Path.Path;
   const cwd = path.resolve(process.cwd());
   const root = yield* findRepoRoot(cwd);
   const base = O.getOrElse(root, constant(cwd));
   const dir = O.match(where.dir, { onNone: () => cwd, onSome: (relative) => path.resolve(base, relative) });
-  const located = yield* locatePackage(dir);
+  const located = yield* locatePackage(yield* packageDirOf(dir, base));
   return {
     repoRoot: O.getOrElse(
       O.map(located, (found) => found.repoRoot),

@@ -83,13 +83,13 @@ export const answerFor = Effect.fnUntraced(function* (run: RunInput, scope: Hist
 const labelOf = (answer: HistoryAnswer, name: string) => R.get(answer.labels, keyOf(name));
 
 const PKG = "@beep/glob";
-const diagnostic = (message: string): Item =>
+const diagnostic = (message: string, outcome: ItemOutcome = "failed"): Item =>
   Item.make({
     key: diagnosticKey(DiagnosticKeyInput.make({ file: "src/a.ts", code: "TS2322", message })),
     unit: "src/a.ts",
     path: [],
     name: message,
-    outcome: "failed",
+    outcome,
   });
 const checkRun = (runId: string, at: number, items: ReadonlyArray<Item>): RunInput => ({
   runId,
@@ -307,6 +307,121 @@ export const historyContract = (backend: {
             A.map(runs, (run) => run.runId),
             ["r3", "r2", "r1"]
           );
+        })
+      )
+    );
+
+    it.effect(
+      "AC-H10: a replay keeps its answer, and adds nothing, after retention dropped what it was answered from",
+      () =>
+        withStore(HistoryConfig.make({ window: 2, retainRuns: 2 }))(
+          Effect.gen(function* () {
+            const store = yield* GateHistoryStore;
+            const failing = (runId: string, at: number): RunInput => ({
+              runId,
+              at,
+              items: [testItem({ name: "adds", outcome: "failed" })],
+            });
+            yield* ingestAll([failing("r1", 1000)]);
+            const rendered = yield* answerFor(failing("r2", 2000));
+            assertSome(labelOf(rendered, "adds"), "persistent");
+            assert.strictEqual(O.getOrThrow(rendered.delta).stillFailing, 1);
+            yield* ingestAll([failing("r2", 2000), failing("r3", 3000)]);
+            const replayed = yield* answerFor(failing("r2", 2000));
+            assert.deepStrictEqual(replayed, rendered);
+            // r1's run row is gone; r2 and r3 hold the series window. Replaying any of them changes nothing.
+            const seriesQuery = HistoryItemQuery.make({ gate: "test", subject: "@beep/glob", selector: "adds" });
+            const before = yield* store.series(seriesQuery);
+            const replays = yield* Effect.forEach(
+              [failing("r1", 1000), failing("r2", 2000), failing("r3", 3000)],
+              (run) => store.ingest(reportOf(run), laneA),
+              { concurrency: 1 }
+            );
+            assert.deepStrictEqual(
+              A.map(replays, (replay) => replay.inserted),
+              [false, false, false]
+            );
+            const after = yield* store.series(seriesQuery);
+            assert.deepStrictEqual(after, before);
+          })
+        )
+    );
+
+    it.effect("AC-H10: a replay of a pruned run whose observation is still in a window adds nothing", () =>
+      withStore(HistoryConfig.make({ window: 5, retainRuns: 1 }))(
+        Effect.gen(function* () {
+          const store = yield* GateHistoryStore;
+          const first: RunInput = { runId: "r1", at: 1000, items: [testItem({ name: "adds", outcome: "failed" })] };
+          yield* ingestAll([first, { runId: "r2", at: 2000, items: [testItem({ name: "adds", outcome: "passed" })] }]);
+          const replay = yield* store.ingest(reportOf(first), laneA);
+          assert.isFalse(replay.inserted);
+          const series = yield* store.series(
+            HistoryItemQuery.make({ gate: "test", subject: "@beep/glob", selector: "adds" })
+          );
+          assert.deepStrictEqual(
+            A.map(series, (entry) => A.map(entry.observations, (observation) => observation.runId)),
+            [["r2", "r1"]]
+          );
+        })
+      )
+    );
+
+    it.effect("a run restored on another branch is answered from that branch, not with the kept answer", () =>
+      withStore()(
+        Effect.gen(function* () {
+          const failing = (runId: string, at: number): RunInput => ({
+            runId,
+            at,
+            items: [testItem({ name: "adds", outcome: "failed" })],
+          });
+          yield* ingestAll([failing("r1", 1000), failing("r2", 2000)]);
+          const onA = yield* answerFor(failing("r2", 2000));
+          const onB = yield* answerFor(failing("r2", 2000), laneB);
+          assertSome(labelOf(onA, "adds"), "persistent");
+          assertNone(labelOf(onB, "adds"));
+        })
+      )
+    );
+
+    it.effect("a partial run is no delta's previous run and says nothing about the items it does not report", () =>
+      withStore()(
+        Effect.gen(function* () {
+          const broken = diagnostic("Type 'a' is wrong.");
+          yield* ingestAll([checkRun("c1", 1000, [broken])]);
+          const partial = HistoryScope.make({ ...laneA, partial: true });
+          const incident = checkRun("q1", 2000, [diagnostic("No location.", "passed")]);
+          const own = yield* answerFor(incident, partial);
+          assertNone(own.delta);
+          yield* ingestAll([incident], partial);
+          const answer = yield* answerFor(checkRun("c2", 3000, [broken]));
+          assertSome(R.get(answer.labels, fingerprint(broken.key)), "persistent");
+          const delta = O.getOrThrow(answer.delta);
+          assert.deepStrictEqual([delta.fixed, delta.stillFailing, delta.new], [0, 1, 0]);
+        })
+      )
+    );
+
+    it.effect("a diagnostic warned now is no passed observation, while one that is gone is", () =>
+      withStore()(
+        Effect.gen(function* () {
+          const warned = diagnostic("Type 'a' is wrong.");
+          const gone = diagnostic("Name 'b' is missing.");
+          yield* ingestAll([
+            checkRun("c1", 1000, [warned, gone]),
+            checkRun("c2", 2000, [diagnostic("Type 'a' is wrong.", "warned")]),
+          ]);
+          const store = yield* GateHistoryStore;
+          const outcomesOf = (item: Item) =>
+            Effect.map(
+              store.series(
+                HistoryItemQuery.make({ gate: "check", subject: "@beep/glob", selector: fingerprint(item.key) })
+              ),
+              A.flatMap((entry) => A.map(entry.observations, (observation) => observation.outcome))
+            );
+          const ofWarned = yield* outcomesOf(warned);
+          const ofGone = yield* outcomesOf(gone);
+          assert.deepStrictEqual(ofWarned, ["failed"]);
+          assert.deepStrictEqual(ofGone, ["passed", "failed"]);
         })
       )
     );

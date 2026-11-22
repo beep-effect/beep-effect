@@ -34,7 +34,7 @@
     "goals/gate-run-history/GOAL.md",
     "goals/gate-run-history/research/SOURCES.md"
   ],
-  "researchReports": ["research/SOURCES.md"],
+  "researchReports": ["research/OPPORTUNITIES.md", "research/SOURCES.md"],
   "agentLaunchers": [
     {
       "kind": "codex-goal",

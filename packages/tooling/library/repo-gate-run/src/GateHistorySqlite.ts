@@ -37,6 +37,7 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Inspectable from "effect/Inspectable";
@@ -44,14 +45,17 @@ import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Ref from "effect/Ref";
 import * as References from "effect/References";
 import * as Reactivity from "effect/reactivity/Reactivity";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import * as Scope from "effect/Scope";
+import * as Semaphore from "effect/Semaphore";
 import * as Str from "effect/String";
 import * as SqlError from "effect/sql/SqlError";
-import { HistoryItemSeries, HistoryRunView, KnownKey, withAbsentPassed } from "./GateHistoryRecord.ts";
+import { HistoryAnswer } from "./GateHistory.ts";
+import { HistoryItemSeries, HistoryRunView, KnownKey, observesAbsence, withAbsentPassed } from "./GateHistoryRecord.ts";
 import { GateHistoryStore, makeGateHistoryStore } from "./GateHistoryStore.ts";
 import type { GateHistoryErrorReason } from "@beep/gate-report/History";
 import type * as SqlClient from "effect/sql/SqlClient";
@@ -62,6 +66,7 @@ import type {
   HistoryRunsQuery,
   LaneQuery,
   PreviousRunQuery,
+  RecordedRunQuery,
 } from "./GateHistoryRecord.ts";
 
 const $I = $RepoGateRunId.create("GateHistorySqlite");
@@ -147,6 +152,12 @@ export const translateStoreError =
 
 const translate = translateStoreError;
 
+// Rows the store wrote itself always decode; a row that does not is a defect. A failed query stays typed.
+const decodeRows =
+  <Row, I>(schema: S.Codec<ReadonlyArray<Row>, I>) =>
+  <E>(rows: Effect.Effect<ReadonlyArray<unknown>, E>) =>
+    Effect.flatMap(rows, (raw) => Effect.orDie(S.decodeUnknownEffect(schema)(raw)));
+
 // --- migrations ----------------------------------------------------------------
 
 const MIGRATIONS: ReadonlyArray<(sql: Sql) => Effect.Effect<unknown, SqlError.SqlError>> = [
@@ -191,6 +202,22 @@ const MIGRATIONS: ReadonlyArray<(sql: Sql) => Effect.Effect<unknown, SqlError.Sq
       ],
       { concurrency: 1, discard: true }
     ),
+  (sql) =>
+    Effect.all(
+      [
+        // Every run id ever ingested, kept past the pruning of the run's own row, with the answer it rendered.
+        sql`CREATE TABLE IF NOT EXISTS gate_history_ingested (
+          run_id TEXT PRIMARY KEY,
+          branch TEXT NOT NULL,
+          answer_json TEXT
+        )`,
+        sql`INSERT OR IGNORE INTO gate_history_ingested (run_id, branch) SELECT run_id, branch FROM gate_history_runs`,
+        sql`INSERT OR IGNORE INTO gate_history_ingested (run_id, branch)
+          SELECT DISTINCT run_id, branch FROM gate_history_observations`,
+        sql`ALTER TABLE gate_history_runs ADD COLUMN partial INTEGER NOT NULL DEFAULT 0`,
+      ],
+      { concurrency: 1, discard: true }
+    ),
 ];
 
 /**
@@ -201,7 +228,7 @@ const MIGRATIONS: ReadonlyArray<(sql: Sql) => Effect.Effect<unknown, SqlError.Sq
  * ```ts
  * import { SCHEMA_VERSION } from "@beep/repo-gate-run/GateHistorySqlite";
  *
- * console.log(SCHEMA_VERSION); // 1
+ * console.log(SCHEMA_VERSION); // 2
  * ```
  *
  * @category constants
@@ -212,11 +239,7 @@ export const SCHEMA_VERSION = MIGRATIONS.length;
 const VersionRows = S.Array(S.Struct({ user_version: S.Finite }));
 
 const schemaVersion = (sql: Sql) =>
-  sql`PRAGMA user_version`.pipe(
-    Effect.flatMap(S.decodeUnknownEffect(VersionRows)),
-    Effect.orDie,
-    Effect.map(A.reduce(0, (_, row) => row.user_version))
-  );
+  sql`PRAGMA user_version`.pipe(decodeRows(VersionRows), Effect.map(A.reduce(0, (_, row) => row.user_version)));
 
 // A current schema is read without the write lock, so an open never waits on a writer for nothing.
 const migrate = Effect.fnUntraced(function* (sql: Sql) {
@@ -266,13 +289,8 @@ const RunRow = S.Struct({
 });
 const RunRows = S.Array(RunRow);
 const KnownRows = S.Array(S.Struct({ fingerprint: S.String, unit: S.String, title: S.String }));
-const ExistsRows = S.Array(S.Struct({ found: S.Finite }));
-
-// Rows the store wrote itself always decode; a row that does not is a defect.
-const decodeRows =
-  <Row, I>(schema: S.Codec<ReadonlyArray<Row>, I>) =>
-  <E>(rows: Effect.Effect<ReadonlyArray<unknown>, E>) =>
-    Effect.flatMap(rows, (raw) => Effect.orDie(S.decodeUnknownEffect(schema)(raw)));
+const AnswerRows = S.Array(S.Struct({ branch: S.String, answer_json: S.NullOr(S.String) }));
+const Answer = S.fromJsonString(HistoryAnswer);
 
 const millis = (at: DateTime.Utc): number => DateTime.toEpochMillis(at);
 
@@ -290,11 +308,24 @@ const observationOf = (row: ObservationRow): Observation =>
 
 // --- writes ----------------------------------------------------------------------
 
-const runExists = (sql: Sql, runId: string) =>
-  sql`SELECT 1 AS found FROM gate_history_runs WHERE run_id = ${runId}`.pipe(
-    decodeRows(ExistsRows),
-    Effect.map(A.isReadonlyArrayNonEmpty)
+const ingestedRow = (sql: Sql, runId: string) =>
+  sql`SELECT branch, answer_json FROM gate_history_ingested WHERE run_id = ${runId}`.pipe(
+    decodeRows(AnswerRows),
+    Effect.map(A.head)
   );
+
+const insertIngested = Effect.fnUntraced(function* (sql: Sql, record: HistoryRunRecord) {
+  const answer = yield* pipe(
+    O.toArray(record.answer),
+    Effect.forEach((kept) => S.encodeEffect(Answer)(kept), { concurrency: 1 }),
+    Effect.orDie
+  );
+  return yield* sql`INSERT INTO gate_history_ingested ${sql.insert({
+    run_id: record.runId,
+    branch: record.branch,
+    answer_json: O.getOrNull(A.head(answer)),
+  })}`;
+});
 
 const knownKeys = (sql: Sql, record: HistoryRunRecord) =>
   sql`SELECT DISTINCT fingerprint, unit, title FROM gate_history_observations
@@ -320,6 +351,7 @@ const insertRun = Effect.fnUntraced(function* (sql: Sql, record: HistoryRunRecor
     units_json: units,
     failed_json: failed,
     observations: A.length(record.entries),
+    partial: record.partial ? 1 : 0,
   })}`;
 });
 
@@ -374,9 +406,11 @@ const prune = (sql: Sql, record: HistoryRunRecord, config: HistoryConfig) =>
 
 const insertWithin = (sql: Sql, config: HistoryConfig) =>
   Effect.fnUntraced(function* (record: HistoryRunRecord) {
-    if (yield* runExists(sql, record.runId)) return false;
-    const known = yield* knownKeys(sql, record);
+    const ingested = yield* ingestedRow(sql, record.runId);
+    if (O.isSome(ingested)) return false;
+    const known = observesAbsence(record) ? yield* knownKeys(sql, record) : [];
     const full = withAbsentPassed(record, known);
+    yield* insertIngested(sql, full);
     yield* insertRun(sql, full);
     yield* insertObservations(sql, full);
     yield* prune(sql, full, config);
@@ -409,10 +443,22 @@ const laneOf = (sql: Sql) => (query: LaneQuery) =>
         )
       );
 
+// An answer written by another version of the store that no longer decodes is answered afresh.
+const recordedOf = (sql: Sql) => (query: RecordedRunQuery) =>
+  Effect.map(
+    ingestedRow(sql, query.runId),
+    flow(
+      O.filter((row) => row.branch === query.branch),
+      O.flatMapNullishOr((row) => row.answer_json),
+      O.flatMap(S.decodeUnknownOption(Answer))
+    )
+  );
+
 const previousOf = (sql: Sql) => (query: PreviousRunQuery) =>
   sql`SELECT * FROM gate_history_runs
       WHERE gate = ${query.gate} AND subject = ${query.subject} AND branch = ${query.branch}
-        AND origin = 'local' AND run_id <> ${query.excludeRunId} AND at_ms < ${millis(query.before)}
+        AND origin = 'local' AND partial = 0
+        AND run_id <> ${query.excludeRunId} AND at_ms < ${millis(query.before)}
       ORDER BY at_ms DESC, run_id DESC LIMIT 1`.pipe(
     decodeRows(RunRows),
     Effect.map(
@@ -491,6 +537,7 @@ const backendOn = (sql: Sql, options: GateHistorySqliteOptions): HistoryBackend 
         Effect.provideService(References.PreventSchedulerYield, true),
         Effect.mapError(translate("write-failed"))
       ),
+    recorded: (query) => read(recordedOf(sql)(query)),
     lane: (query) => read(laneOf(sql)(query)),
     previous: (query) => read(previousOf(sql)(query)),
     runs: (query) => read(runsOf(sql)(query)),
@@ -521,17 +568,36 @@ const openBackend = Effect.fnUntraced(function* (options: GateHistorySqliteOptio
 
 const lazyBackend = (opened: Effect.Effect<HistoryBackend, GateHistoryError>): HistoryBackend => ({
   insert: (record) => Effect.flatMap(opened, (backend) => backend.insert(record)),
+  recorded: (query) => Effect.flatMap(opened, (backend) => backend.recorded(query)),
   lane: (query) => Effect.flatMap(opened, (backend) => backend.lane(query)),
   previous: (query) => Effect.flatMap(opened, (backend) => backend.previous(query)),
   runs: (query) => Effect.flatMap(opened, (backend) => backend.runs(query)),
   series: (query) => Effect.flatMap(opened, (backend) => backend.series(query)),
 });
 
-const makeStore = Effect.fnUntraced(function* (options: GateHistorySqliteOptions) {
+// A successful open is shared by every later use; a failed one closes what it opened, and the next use opens again.
+const makeLazyBackend = Effect.fnUntraced(function* (options: GateHistorySqliteOptions) {
   const scope = yield* Effect.scope;
   const context = yield* Effect.context<Reactivity.Reactivity>();
-  const opened = yield* Effect.cached(openBackend(options).pipe(Scope.provide(scope), Effect.provideContext(context)));
-  const store = yield* makeGateHistoryStore(options.config, lazyBackend(opened));
+  const held = yield* Ref.make(O.none<HistoryBackend>());
+  const open = Effect.gen(function* () {
+    const child = yield* Scope.fork(scope);
+    const backend = yield* openBackend(options).pipe(
+      Scope.provide(child),
+      Effect.provideContext(context),
+      Effect.onError((cause) => Scope.close(child, Exit.failCause(cause)))
+    );
+    yield* Ref.set(held, O.some(backend));
+    return backend;
+  });
+  const shared = Effect.flatMap(Ref.get(held), O.match({ onNone: () => open, onSome: Effect.succeed }));
+  const gate = yield* Semaphore.make(1);
+  return lazyBackend(gate.withPermit(shared));
+});
+
+const makeStore = Effect.fnUntraced(function* (options: GateHistorySqliteOptions) {
+  const backend = yield* makeLazyBackend(options);
+  const store = yield* makeGateHistoryStore(options.config, backend);
   return GateHistoryStore.of(store);
 });
 

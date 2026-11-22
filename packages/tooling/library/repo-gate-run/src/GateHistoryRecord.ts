@@ -23,11 +23,13 @@ import { $RepoGateRunId } from "@beep/identity/packages";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
-import * as HashMap from "effect/HashMap";
+import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import { HistoryAnswer } from "./GateHistory.ts";
 import type { DeltaRun, GateHistoryError } from "@beep/gate-report/History";
 import type { Item } from "@beep/gate-report/Item";
+import type * as HashMap from "effect/HashMap";
 
 const $I = $RepoGateRunId.create("GateHistoryRecord");
 
@@ -37,7 +39,10 @@ const $I = $RepoGateRunId.create("GateHistoryRecord");
  *
  * **Details**
  *
- * A report's own `branch` and `head` win over the scope's.
+ * A report's own `branch` and `head` win over the scope's. `partial` marks a
+ * report of part of what its gate checks, such as one quarantine incident: it
+ * is never the run a delta compares with, and it says nothing about the items
+ * it does not report.
  *
  * **Example** (A local scope)
  *
@@ -55,9 +60,11 @@ export class HistoryScope extends S.Opaque<HistoryScope, { readonly brand: uniqu
     branch: Text,
     head: S.OptionFromOptionalKey(Text).pipe(S.withConstructorDefault(Effect.succeedNone)),
     origin: ObservationOrigin.pipe(S.withConstructorDefault(Effect.succeed("local" as const))),
+    partial: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
   }).pipe(
     $I.annoteSchema("HistoryScope", {
-      description: "The branch, head commit and origin a report is recorded under when it does not name them.",
+      description:
+        "The branch, head commit and origin a report is recorded under, and whether it reports only part of its gate.",
     })
   )
 ) {}
@@ -99,7 +106,10 @@ export class HistoryEntry extends S.Opaque<HistoryEntry, { readonly brand: uniqu
  * **Details**
  *
  * `units` are the units the run checked; `failed` are its finally failed
- * items, which the next run's delta reads; `entries` are its observations.
+ * items, which the next run's delta reads; `entries` are its observations;
+ * `unobserved` are the items it reported that neither passed nor failed.
+ * `answer` is what history answered when the run was rendered, kept so a
+ * replay renders the same; `partial` is {@link HistoryScope}'s.
  *
  * **Example** (An empty run)
  *
@@ -131,9 +141,13 @@ export class HistoryRunRecord extends S.Opaque<HistoryRunRecord, { readonly bran
     units: Text.pipe(S.Array),
     failed: DeltaFailure.pipe(S.Array),
     entries: HistoryEntry.pipe(S.Array),
+    unobserved: Text.pipe(S.Array, S.withConstructorDefault(Effect.succeed([]))),
+    partial: S.Boolean.pipe(S.withConstructorDefault(Effect.succeed(false))),
+    answer: S.OptionFromOptionalKey(HistoryAnswer).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("HistoryRunRecord", {
-      description: "One recorded run: its series coordinates, input, checked units, failed items and observations.",
+      description:
+        "One recorded run: its series coordinates, input, checked units, failed items, observations and answer.",
     })
   )
 ) {}
@@ -201,7 +215,7 @@ export class LaneQuery extends S.Opaque<LaneQuery, { readonly brand: unique symb
 
 /**
  * The run a delta compares with: the newest earlier local run of the gate
- * and subject on the branch, other than the report's own.
+ * and subject on the branch, other than the report's own and not partial.
  *
  * **Example** (The run before a report)
  *
@@ -228,6 +242,31 @@ export class PreviousRunQuery extends S.Opaque<PreviousRunQuery, { readonly bran
   }).pipe(
     $I.annoteSchema("PreviousRunQuery", {
       description: "The gate, subject, branch and cut-off of the run a delta compares with.",
+    })
+  )
+) {}
+
+/**
+ * The answer a replay reuses: the run's id and the branch it is answered on.
+ *
+ * **Example** (A restored run)
+ *
+ * ```ts
+ * import { RecordedRunQuery } from "@beep/repo-gate-run/GateHistoryRecord";
+ *
+ * console.log(RecordedRunQuery.make({ runId: "r1", branch: "feature/a" }).runId); // r1
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export class RecordedRunQuery extends S.Opaque<RecordedRunQuery, { readonly brand: unique symbol }>()(
+  S.Struct({
+    runId: Text,
+    branch: Text,
+  }).pipe(
+    $I.annoteSchema("RecordedRunQuery", {
+      description: "The run id and branch whose recorded answer a replay reuses.",
     })
   )
 ) {}
@@ -362,14 +401,16 @@ export class HistoryItemSeries extends S.Opaque<HistoryItemSeries, { readonly br
  *
  * **Details**
  *
- * `insert` is idempotent on run id and returns whether the run was new. In
- * one step it records the run, its checked units and its observations, adds
+ * `insert` is idempotent on run id and returns whether the run was new, also
+ * for a run whose row was since pruned: the store keeps every run id it
+ * ingested. In one step it records the run, its checked units and its observations, adds
  * a passed observation for each known diagnostic key absent from a unit the
  * run checked ({@link withAbsentPassed}), and prunes to the configuration:
  * the newest `retainRuns` runs per gate, subject and branch, and the newest
  * `window` observations per series. Pruning a run never removes the
- * observations still in a window. `lane` answers each fingerprint's series
- * newest first; `previous` the newest earlier run; `runs` and `series` the
+ * observations still in a window. `recorded` gives the answer kept with a run
+ * ingested on the same branch; `lane` answers each fingerprint's series
+ * newest first; `previous` the newest earlier run that is not partial; `runs` and `series` the
  * queries.
  *
  * **Example** (Use the in-memory backend's shape)
@@ -390,6 +431,7 @@ export interface HistoryBackend {
     query: LaneQuery
   ) => Effect.Effect<HashMap.HashMap<string, ReadonlyArray<Observation>>, GateHistoryError>;
   readonly previous: (query: PreviousRunQuery) => Effect.Effect<O.Option<DeltaRun>, GateHistoryError>;
+  readonly recorded: (query: RecordedRunQuery) => Effect.Effect<O.Option<HistoryAnswer>, GateHistoryError>;
   readonly runs: (query: HistoryRunsQuery) => Effect.Effect<ReadonlyArray<HistoryRunView>, GateHistoryError>;
   readonly series: (query: HistoryItemQuery) => Effect.Effect<ReadonlyArray<HistoryItemSeries>, GateHistoryError>;
 }
@@ -421,14 +463,40 @@ export class KnownKey extends S.Opaque<KnownKey, { readonly brand: unique symbol
 ) {}
 
 /**
+ * Whether a run says which known items passed by not reporting them: a whole
+ * diagnostic run does, a test run and a partial run do not.
+ *
+ * **Example** (A test run)
+ *
+ * ```ts
+ * import { HistoryRunRecord, observesAbsence } from "@beep/repo-gate-run/GateHistoryRecord";
+ * import * as DateTime from "effect/DateTime";
+ *
+ * const run = HistoryRunRecord.make({
+ *   gate: "test", subject: "@beep/glob", branch: "a", origin: "local", runId: "r1", inputFingerprint: "x",
+ *   at: DateTime.makeUnsafe(0), itemKind: "test", units: [], failed: [], entries: [],
+ * });
+ * console.log(observesAbsence(run)); // false
+ * ```
+ *
+ * @param record - the run being recorded
+ * @returns whether an absent known key counts as passed
+ * @category predicates
+ * @since 0.0.0
+ */
+export const observesAbsence = (record: HistoryRunRecord): boolean =>
+  record.itemKind === "diagnostic" && !record.partial;
+
+/**
  * Add a passed observation for every known key absent from a unit a
  * diagnostic run checked.
  *
  * **Details**
  *
  * A diagnostic gate records only failing items, so a key it knew in a unit
- * it checked and no longer reports passed. Test runs record every item and
- * are returned unchanged.
+ * it checked and no longer reports passed. A key the run reports without
+ * deciding it (a warning) is present, not passed. Test runs record every item,
+ * and partial runs only some, so both are returned unchanged.
  *
  * **Example** (A diagnostic that went away)
  *
@@ -454,11 +522,11 @@ export const withAbsentPassed: {
   (record: HistoryRunRecord, known: ReadonlyArray<KnownKey>): HistoryRunRecord;
   (known: ReadonlyArray<KnownKey>): (record: HistoryRunRecord) => HistoryRunRecord;
 } = dual(2, (record: HistoryRunRecord, known: ReadonlyArray<KnownKey>): HistoryRunRecord => {
-  if (record.itemKind !== "diagnostic") return record;
-  const present = HashMap.fromIterable(A.map(record.entries, (entry) => [entry.fingerprint, entry.unit] as const));
+  if (!observesAbsence(record)) return record;
+  const present = HashSet.fromIterable([...A.map(record.entries, (entry) => entry.fingerprint), ...record.unobserved]);
   const absent = pipe(
     known,
-    A.filter((key) => A.contains(record.units, key.unit) && !HashMap.has(present, key.fingerprint)),
+    A.filter((key) => A.contains(record.units, key.unit) && !HashSet.has(present, key.fingerprint)),
     A.dedupeWith((left, right) => left.fingerprint === right.fingerprint),
     A.map((key) => HistoryEntry.make({ ...key, outcome: "passed", attempt: 0 }))
   );
@@ -562,5 +630,7 @@ export const runRecordOf: {
     units: delta.units,
     failed: delta.failed,
     entries: A.flatMap(placed.items, entriesOf(placed)),
+    unobserved: delta.unobserved,
+    partial: scope.partial,
   });
 });

@@ -77,6 +77,10 @@ export const canonicalGitUrl: (url: string) => O.Option<string> = flow(
  * The repository key of a git remote URL: its canonical `host/path` with
  * every `/` written as `__`.
  *
+ * **Details**
+ *
+ * A `_` of the URL is written as `_u`, so no two canonical URLs share a key.
+ *
  * **Example** (An HTTPS remote with credentials)
  *
  * ```ts
@@ -93,7 +97,7 @@ export const canonicalGitUrl: (url: string) => O.Option<string> = flow(
  */
 export const repositoryKeyFromOrigin: (url: string) => O.Option<string> = flow(
   canonicalGitUrl,
-  O.map(Str.replaceAll("/", "__"))
+  O.map(flow(Str.replaceAll("_", "_u"), Str.replaceAll("/", "__")))
 );
 
 /**

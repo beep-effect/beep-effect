@@ -455,8 +455,14 @@ export class DeltaFailure extends S.Opaque<DeltaFailure, { readonly brand: uniqu
 ) {}
 
 /**
- * What the delta reads from one run: the units it checked and its failed
- * items.
+ * What the delta reads from one run: the units it checked, its failed items,
+ * and the items it reported without deciding them.
+ *
+ * **Details**
+ *
+ * `unobserved` holds the fingerprints of the items that neither passed nor
+ * failed (skipped or warned), so a failure that is skipped or warned now is
+ * not counted as fixed.
  *
  * **Example** (A run with no failures)
  *
@@ -473,9 +479,10 @@ export class DeltaRun extends S.Opaque<DeltaRun, { readonly brand: unique symbol
   S.Struct({
     units: S.Array(Text),
     failed: S.Array(DeltaFailure),
+    unobserved: S.Array(Text).pipe(S.withConstructorDefault(Effect.succeed([]))),
   }).pipe(
     $I.annoteSchema("DeltaRun", {
-      description: "The units one run checked and its failed items, as the fix-loop delta reads them.",
+      description: "The units one run checked, its failed items and the items it reported without deciding them.",
     })
   )
 ) {}
@@ -529,8 +536,8 @@ export const checkedUnitOf: {
 
 /**
  * The delta's view of a report: the units it checked (those it declares and
- * those its items hang off) and its failed items, each under
- * {@link checkedUnitOf}.
+ * those its items hang off), its failed items, each under
+ * {@link checkedUnitOf}, and the items that neither passed nor failed.
  *
  * **Example** (Read a report)
  *
@@ -548,7 +555,7 @@ export const checkedUnitOf: {
  * ```
  *
  * @param report - the run to read
- * @returns the units the run checked and its failed items
+ * @returns the units the run checked, its failed items and its undecided ones
  * @category constructors
  * @since 0.0.0
  */
@@ -562,6 +569,11 @@ export const deltaRunOf = (report: GateReport): DeltaRun =>
       report.items,
       A.filter((item) => item.outcome === "failed"),
       A.map((item) => DeltaFailure.make({ fingerprint: fingerprint(item.key), unit: checkedUnitOf(report, item) }))
+    ),
+    unobserved: pipe(
+      report.items,
+      A.filter((item) => !isObserved(item.outcome)),
+      A.map((item) => fingerprint(item.key))
     ),
   });
 
@@ -579,8 +591,9 @@ const failedIn = (run: DeltaRun, checked: HashSet.HashSet<string>): HashSet.Hash
  *
  * **Details**
  *
- * `fixed` failed before and passed or is absent now; `stillFailing` failed in
- * both; `new` failed now and passed or was absent before. Items in units only
+ * `fixed` failed before and passed or is absent now, so an item skipped or
+ * warned now is not fixed; `stillFailing` failed in both; `new` failed now and
+ * did not fail before. Items in units only
  * one run checked are not counted, and `scopeDiffers` then says so.
  *
  * **Example** (One fixed, one new)
@@ -609,8 +622,9 @@ export const deltaOf: {
   const checked = HashSet.intersection(before, after);
   const failedBefore = failedIn(previous, checked);
   const failedAfter = failedIn(current, checked);
+  const undecided = HashSet.fromIterable(current.unobserved);
   return RunDelta.make({
-    fixed: HashSet.size(HashSet.difference(failedBefore, failedAfter)),
+    fixed: HashSet.size(HashSet.difference(failedBefore, HashSet.union(failedAfter, undecided))),
     stillFailing: HashSet.size(HashSet.intersection(failedBefore, failedAfter)),
     new: HashSet.size(HashSet.difference(failedAfter, failedBefore)),
     scopeDiffers: HashSet.size(checked) !== HashSet.size(before) || HashSet.size(checked) !== HashSet.size(after),

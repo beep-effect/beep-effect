@@ -27,12 +27,14 @@ import {
   withAbsentPassed,
 } from "../GateHistoryRecord.ts";
 import type { HistoryConfig } from "@beep/gate-report/History";
+import type { HistoryAnswer } from "../GateHistory.ts";
 import type {
   HistoryBackend,
   HistoryItemQuery,
   HistoryRunsQuery,
   LaneQuery,
   PreviousRunQuery,
+  RecordedRunQuery,
 } from "../GateHistoryRecord.ts";
 
 const $I = $RepoGateRunId.create("internal/MemoryHistoryBackend");
@@ -57,7 +59,11 @@ export class StoredObservation extends S.Opaque<StoredObservation, { readonly br
   )
 ) {}
 
-type State = { readonly runs: ReadonlyArray<HistoryRunRecord>; readonly rows: ReadonlyArray<StoredObservation> };
+type State = {
+  readonly runs: ReadonlyArray<HistoryRunRecord>;
+  readonly rows: ReadonlyArray<StoredObservation>;
+  readonly ingested: HashMap.HashMap<string, HistoryRunRecord>;
+};
 
 const newestRunFirst: Order.Order<HistoryRunRecord> = Order.flip(
   Order.mapInput(DateTime.Order, (run: HistoryRunRecord) => run.at)
@@ -126,6 +132,7 @@ const inserted = (state: State, record: HistoryRunRecord, config: HistoryConfig)
   return {
     runs: pruneRuns([...state.runs, full], full, config.retainRuns),
     rows: pruneRows([...state.rows, ...rowsOf(full)], config.window),
+    ingested: HashMap.set(state.ingested, record.runId, record),
   };
 };
 
@@ -152,6 +159,13 @@ const laneOf = (state: State, query: LaneQuery): HashMap.HashMap<string, Readonl
     (byKey) => HashMap.fromIterable(R.toEntries(byKey))
   );
 
+const recordedOf = (state: State, query: RecordedRunQuery): O.Option<HistoryAnswer> =>
+  pipe(
+    HashMap.get(state.ingested, query.runId),
+    O.filter((run) => run.branch === query.branch),
+    O.flatMap((run) => run.answer)
+  );
+
 const previousOf = (state: State, query: PreviousRunQuery): O.Option<DeltaRun> =>
   pipe(
     state.runs,
@@ -160,6 +174,7 @@ const previousOf = (state: State, query: PreviousRunQuery): O.Option<DeltaRun> =
         run.gate === query.gate &&
         run.subject === query.subject &&
         run.origin === "local" &&
+        !run.partial &&
         run.branch === query.branch &&
         run.runId !== query.excludeRunId &&
         DateTime.isLessThan(run.at, query.before)
@@ -229,15 +244,16 @@ const itemSeriesOf = (state: State, query: HistoryItemQuery): ReadonlyArray<Hist
  * @since 0.0.0
  */
 export const makeMemoryBackend = Effect.fnUntraced(function* (config: HistoryConfig) {
-  const state = yield* Ref.make<State>({ runs: [], rows: [] });
+  const state = yield* Ref.make<State>({ runs: [], rows: [], ingested: HashMap.empty() });
   const read = <A>(f: (current: State) => A) => Effect.map(Ref.get(state), f);
   const backend: HistoryBackend = {
     insert: (record) =>
       Ref.modify(state, (current): readonly [boolean, State] =>
-        A.some(current.runs, (run) => run.runId === record.runId)
+        HashMap.has(current.ingested, record.runId)
           ? [false, current]
           : [true, inserted(current, HistoryRunRecord.make(record), config)]
       ),
+    recorded: (query) => read((current) => recordedOf(current, query)),
     lane: (query) => read((current) => laneOf(current, query)),
     previous: (query) => read((current) => previousOf(current, query)),
     runs: (query) => read((current) => runsOf(current, query)),

@@ -322,7 +322,7 @@ Reverse: Drop the main baseline and label from lane history alone
 
 ### The delta's scope differs when the unit sets differ; a green run shows only its fixed count, 2026-11-20
 
-RunDelta gains scopeDiffers (default false), set when the two runs' checked unit sets are not equal; only units both checked are counted. The red delta line ends with (scope differs) then. Core rendered a green run's delta as '; since last run: F fixed, 0 still failing, 0 new'; the SPEC asks for '(F fixed since last run)' and only when F > 0, so the plain-text projection now renders that suffix, with ', scope differs' inside the parentheses when the scopes differ, and nothing when a green run fixed nothing.
+RunDelta gains scopeDiffers (default false), set when the two runs' checked unit sets are not equal; only units both checked are counted. An item skipped or warned now is not fixed, since it neither passed nor is absent; an item skipped or warned before that fails now counts as new, because the earlier run did not see it fail. The red delta line ends with (scope differs) then. Core rendered a green run's delta as '; since last run: F fixed, 0 still failing, 0 new'; the SPEC asks for '(F fixed since last run)' and only when F > 0, so the plain-text projection now renders that suffix, with ', scope differs' inside the parentheses when the scopes differ, and nothing when a green run fixed nothing.
 
 Lane goals/gate-run-history-lane
 
@@ -330,7 +330,7 @@ Reverse: Render the full delta phrase as the green verdict suffix again and drop
 
 ### Task-path history is automatic outside Vitest, with an off switch and a file override, 2026-11-20
 
-The SPEC says the store is never opened inside a Vitest process. The CLI's automatic history setting therefore resolves no store when VITEST is set; BEEP_GATE_HISTORY=off (or 0, false, no) turns history off anywhere, and BEEP_GATE_HISTORY_FILE names another store file. Tests pass an explicit HistoryAt setting with a file and scope instead of touching the environment. A detached checkout records under detached@<sha>, so it never joins a branch's series. Resolution never fails a gate run: outside a git checkout or without a state directory there is no history.
+The SPEC says the store is never opened inside a Vitest process. The CLI's automatic history setting therefore resolves no store when VITEST is set; BEEP_GATE_HISTORY=off (or 0, false, no) turns history off anywhere, and BEEP_GATE_HISTORY_FILE names another store file. The Vitest rule comes first, so a named file does not turn the automatic setting on inside Vitest; only an explicit HistoryAt setting does. Tests pass an explicit HistoryAt setting with a file and scope instead of touching the environment. A detached checkout records under detached@<sha>, so it never joins a branch's series. Resolution never fails a gate run: outside a git checkout or without a state directory there is no history.
 
 Lane goals/gate-run-history-lane
 
@@ -346,7 +346,7 @@ Reverse: Hold the whole goal until the carrier exists and ship it as one pull re
 
 ### Warned and skipped items are no observation, and a retried pass is labelled flaky, 2026-11-20
 
-The SPEC names two observed outcomes, passed and failed, and leaves warned and skipped items open. A warned diagnostic is not a failure and a skipped test did not run, so neither records an observation and neither gets a label. The flaky rule is applied before the outcome split, so a passed item whose attempts disagree on one input (a retried pass) is labelled flaky; a passed item otherwise gets recovered only when the newest lane observation failed. This is what AC-H2's retried-pass row needs and what the quarantine reconciliation expects.
+The SPEC names two observed outcomes, passed and failed, and leaves warned and skipped items open. A warned diagnostic is not a failure and a skipped test did not run, so neither records an observation and neither gets a label. A warned diagnostic is still reported, so its key is not absent and no passed observation is added for it. The flaky rule is applied before the outcome split, so a passed item whose attempts disagree on one input (a retried pass) is labelled flaky; a passed item otherwise gets recovered only when the newest lane observation failed. This is what AC-H2's retried-pass row needs and what the quarantine reconciliation expects.
 
 Lane goals/gate-run-history-lane
 
@@ -354,15 +354,15 @@ Reverse: Record warned items as passed observations and label only failed items 
 
 ### A quarantine incident is one check run whose item failed then passed; repo-gate-run coverage runs under Bun, 2026-11-20
 
-Each flake-quarantine incident becomes one check report for the package whose one item, DiagnosticKey(file = package, code = TS2589, shape = 'no location'), has attempts failed then passed on the incident's own input fingerprint (run id quarantine-<lane>-<task>-<detectedAt>). The one flaky rule labels it flaky; recording returns nothing, so the quarantine stays the authority on the lane's verdict. The SQLite store's tests need bun:sqlite, so @beep/repo-gate-run's coverage script runs vitest under Bun, as @beep/agent-memory-store's does; the suites skip under Node.
+Each flake-quarantine incident becomes one check report for the package whose one item, DiagnosticKey(file = package, code = TS2589, shape = 'no location'), has attempts failed then passed on the incident's own input fingerprint (run id quarantine-<lane>-<task>-<detectedAt>). The one flaky rule labels it flaky; recording returns nothing, so the quarantine stays the authority on the lane's verdict. The report covers one item of the package's check, so it is recorded with a partial scope: it is never the run a real check's delta compares with, and it adds no passed observation for the package's other known diagnostics. The SQLite store's tests need bun:sqlite, so @beep/repo-gate-run's coverage script runs vitest under Bun, as @beep/agent-memory-store's does; the suites skip under Node.
 
 Lane goals/gate-run-history-lane
 
 Reverse: Record incidents as two separate runs, and return the coverage script to Node with the SQLite suites skipped.
 
-### Opening and reading the store wait at most the read deadline; only writes wait the busy timeout, 2026-11-20
+### A lock wait while opening or reading is capped at the read deadline; only writes wait the busy timeout, 2026-11-20
 
-bun:sqlite waits on a lock synchronously, so an Effect deadline cannot interrupt a busy wait. The store therefore opens and reads with PRAGMA busy_timeout set to the read deadline (250 ms), raises it to the write timeout (5 s) only before a write transaction, which runs after the console was printed, and checks PRAGMA user_version before taking the migration's write lock, so an open of a current schema never waits on a writer. In WAL mode a reader is never blocked by an ordinary writer; an exclusive-mode holder makes the read fail open-busy within the deadline. A failed read is reported with reason open-failed, the closed domain having no read reason; read-deadline is left to the gate run's own deadline, which renders 'no answer within 250ms'.
+bun:sqlite waits on a lock synchronously, so an Effect deadline cannot interrupt a busy wait. The store therefore opens and reads with PRAGMA busy_timeout set to the read deadline (250 ms), raises it to the write timeout (5 s) only before a write transaction, which runs after the console was printed, and checks PRAGMA user_version before taking the migration's write lock, so an open of a current schema never waits on a writer. In WAL mode a reader is never blocked by an ordinary writer; an exclusive-mode holder makes a read fail open-busy. The 250 ms caps each SQLite lock wait, not a whole open and read: opening and migration retry open-busy with backoff. A gate run reads under its own deadline over the whole answer, so its console never waits longer; gate history and gate series have no such deadline and can take several lock waits under contention. A failed open is not remembered: the next use, such as the write after the console, opens again. A failed read is reported with reason open-failed, the closed domain having no read reason; read-deadline is left to the gate run's own deadline, which renders 'no answer within 250ms'.
 
 Lane goals/gate-run-history-lane
 
@@ -378,7 +378,7 @@ Reverse: Move the store into its own tooling library that owns the driver edge.
 
 ### The store is one SQLite file per repository, keyed by the origin URL, 2026-11-20
 
-The file is gate-history/<repository-key>.sqlite under the beep state directory from @beep/xdg AppDirs. The key is the canonical origin URL written as host__owner__repo, lower-cased, with the .git suffix and any credentials dropped; a repository with no origin takes a digest of the real path of its git common directory. Upstream derives its key from the package manifest's repository field and falls back to the directory name; the origin URL is used here because every clone and worktree of this repository shares it and a worktree's directory name does not identify the repository.
+The file is gate-history/<repository-key>.sqlite under the beep state directory from @beep/xdg AppDirs. The key is the canonical origin URL written as host__owner__repo, lower-cased, with the .git suffix and any credentials dropped, and an underscore of the URL written as _u so no two origins share a key; a repository with no origin takes a digest of the real path of its git common directory. Upstream derives its key from the package manifest's repository field and falls back to the directory name; the origin URL is used here because every clone and worktree of this repository shares it and a worktree's directory name does not identify the repository.
 
 Lane goals/gate-run-history-lane
 
@@ -391,6 +391,14 @@ The window W is 10 observations per series per branch, for the reader and for re
 Lane goals/gate-run-history-lane
 
 Reverse: Change the defaults in the history configuration schema; they are configuration, not constants.
+
+### A run keeps the answer it rendered, and its id is kept for good, 2026-11-22
+
+A replay must render what the original run rendered, but the window and the run retention drop the evidence that answer came from. Schema version 2 adds gate_history_ingested, one row per run id ever ingested, with the branch and the labels, delta and baseline line the console showed. A replay on the same branch is answered with that row; on another branch it is answered from that branch, so AC-H1 still holds. A run whose console had no answer (a read past its deadline) keeps the answer read at ingest, or none, and is then answered afresh.
+
+The same table decides a replay, so a run id ingested before adds nothing even after its run row was pruned. The table is not pruned: a row is the run id, the branch and the labels of the items that had one, typically under a kilobyte, so ten thousand runs take under ten megabytes. Version 1 stores are migrated from the run ids their rows still hold, with no kept answer.
+
+Reverse: Drop gate_history_ingested, recompute the answer of a replay from the retained window, and judge a replay by the run row alone.
 
 <!-- beep:decisions:end -->
 
