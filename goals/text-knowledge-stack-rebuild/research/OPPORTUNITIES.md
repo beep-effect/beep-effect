@@ -114,3 +114,15 @@ home paths with `~`, drop session and machine ids.
   `paths` block of `apps/professional-desktop/tsconfig.json` alone, and
   `create-package` adds no shape row for the new composer. **Would have
   prevented it:** a `rename-package` command that carries those rows over.
+
+## 2026-11-21 — P2 source identity
+
+- **Doing:** adding one import to `ContradictionTriage.pglite.test.ts`. **Evidence:**
+  `lint:schema-first` failed with "Stale schema-first inventory entry" because
+  the row is keyed by line (94 became 95); the fix is a write that changes a
+  line number and a date. **Would have prevented it:** keying the rows by file
+  and symbol, which every row already carries.
+- **Doing:** reading a red `lint effect-vitest`. **Evidence:** after a 60 second
+  scan it prints "1 new finding(s)" with the file and no line, rule or primitive,
+  so the finding has to be guessed from the diff. **Would have prevented it:**
+  printing the line and the matched rule of each new finding.

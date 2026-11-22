@@ -1,4 +1,5 @@
 import * as NodeURL from "node:url";
+import * as NodeUtil from "node:util";
 import {
   CandidateClaim,
   ContradictionCandidate,
@@ -1501,6 +1502,46 @@ if (!shouldRunPgliteIntegration) {
             O.map(unchanged, (edge) => edge.fact.amount),
             "100"
           );
+        }),
+        120_000
+      );
+
+      it.effect(
+        "stores no anchor whose source identity holds an unpaired surrogate escape",
+        Effect.fnUntraced(function* () {
+          // The jsonb column is why `SourceTextIdentity` could become well-formed on decode: Postgres refuses the
+          // escape that `JSON.stringify` writes for a lone surrogate, so no stored row can hold one.
+          const seeded = yield* seedScenario(120);
+          const db = yield* makeDrizzle();
+          const table = DbSchema.evidenceVerification;
+          const stored = yield* insertVerification(120, 1, seeded.evidenceA, 1_300, "workspace:😀");
+          const rows = yield* db.select().from(table).where(eq(table.manifestationKey, stored.manifestationKey));
+          const { id: _id, ...row } = yield* requireHead(rows, "the stored verification");
+          expect(row.verifiedAnchor.source.scopeRef).toBe("workspace:😀");
+
+          const otherKey = yield* sha256Hex("unpaired-surrogate-escape");
+          const insertWithScope = (scopeRef: string) =>
+            db.insert(table).values({
+              ...row,
+              manifestationKey: otherKey,
+              publicId: productEntityFixtureInput("EpistemicEvidenceVerification", 120 * 100 + 2).publicId,
+              verifiedAnchor: {
+                ...row.verifiedAnchor,
+                source: { ...row.verifiedAnchor.source, scopeRef },
+              },
+            });
+          const refusals = yield* Effect.forEach(
+            ["workspace:\ud83d", "workspace:\ude00"],
+            (scopeRef) => insertWithScope(scopeRef).pipe(Effect.flip),
+            { concurrency: 1 }
+          );
+          expect(refusals).toHaveLength(2);
+          A.forEach(refusals, (refusal) => {
+            expect(NodeUtil.inspect(refusal, { depth: 12 })).toContain("invalid input syntax for type json");
+          });
+
+          // The same insert with the pair in order is accepted, so the escape alone was refused.
+          yield* insertWithScope("workspace:😀");
         }),
         120_000
       );

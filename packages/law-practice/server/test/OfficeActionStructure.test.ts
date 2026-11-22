@@ -18,12 +18,14 @@ import { MemoryFileSystem } from "@beep/memfs/MemoryFileSystem";
 import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import { VerifySourceTextIdentityInput } from "@beep/text/VerifiedTextAnchor";
 import { expect, it } from "@effect/vitest";
-import { assertSome } from "@effect/vitest/utils";
+import { assertNone, assertSome, assertTrue } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Cause from "effect/Cause";
 import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -346,6 +348,63 @@ it.layer(composition(writtenLog).pipe(Layer.provideMerge(ConsumerLive)), { timeo
         const first = yield* Effect.fromOption(A.head(rows), () => "missing recognized row");
         const replayed = yield* intake.replay(first, state.verification);
         expect(replayed.status).toBe("recognized");
+      })
+    );
+
+    // A lone surrogate in a source identity is refused, never repaired: replacing it would change `scopeRef`, which is
+    // the matter wall and half of the predecessor-chain key. The frozen log is the same file without the escape.
+    it.effect("refuses a row whose source identity spells a lone surrogate, in either direction", () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const file = "/ill-formed/attempts.jsonl";
+        const context = yield* Layer.build(officeActionStructureFileStore(file));
+        const store = Context.get(context, OfficeActionStructureStore);
+        const refusals = yield* Effect.forEach(
+          [
+            '"scopeRef":"',
+            '"sourceRef":"',
+            '"locator":"',
+            '"name":"',
+            '"utf8","version":"',
+            '"normalizationVersion":"',
+          ],
+          Effect.fnUntraced(function* (field) {
+            yield* fs.writeFileString(file, Str.replaceAll(field, `${field}\\ud800`)(frozenAttemptLog));
+            return yield* store.read.pipe(Effect.flip);
+          }),
+          { concurrency: 1 }
+        );
+        expect(A.dedupe(A.map(refusals, (refusal) => refusal.message))).toEqual([
+          "Cannot decode complete attempt history.",
+        ]);
+        expect(A.map(refusals, (refusal) => refusal._tag)).toEqual(A.replicate("OfficeActionStructureStorageError", 6));
+
+        yield* fs.writeFileString(file, Str.replaceAll("matter:", "matter:\\ud83d\\ude00")(frozenAttemptLog));
+        const paired = yield* store.read;
+        expect(A.map(paired, (row) => row.source.scopeRef)).toEqual(A.replicate("matter:😀fixture", 2));
+
+        yield* fs.writeFileString(file, frozenAttemptLog);
+        const rows = yield* store.read;
+        const last = yield* Effect.fromOption(A.last(rows), () => "missing failed row");
+        assertNone(SourceTextIdentity.makeOption({ ...last.source, scopeRef: "matter:\ud800" }));
+        const next = OfficeActionStructureAttempt.make({
+          ...last,
+          attemptId: "a-3",
+          previousAttemptId: O.some("a-2"),
+          source: SourceTextIdentity.make({ ...last.source }),
+        });
+        // A value that got past its constructor still cannot be written.
+        expect(Reflect.set(next.source, "sourceRef", "source:\ud800")).toBe(true);
+        const cause = yield* store.append(next).pipe(Effect.sandbox, Effect.flip);
+        pipe(cause, Cause.hasDies, assertTrue);
+        expect(Cause.pretty(cause)).toContain("Expected text without lone UTF-16 surrogates.");
+        const kept = yield* fs.readFileString(file);
+        expect(kept).toBe(frozenAttemptLog);
+
+        expect(Reflect.set(next.source, "sourceRef", last.source.sourceRef)).toBe(true);
+        yield* store.append(next);
+        const grown = yield* store.read;
+        expect(A.map(grown, (row) => row.attemptId)).toEqual(["a-1", "a-2", "a-3"]);
       })
     );
   }

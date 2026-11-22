@@ -1,6 +1,6 @@
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
-import { isInternallyConsistent, isUtf16Boundary, isWellOrdered, TextAnchor } from "@beep/text/TextAnchor";
+import { isInternallyConsistent, isUtf16Boundary, TextAnchor } from "@beep/text/TextAnchor";
 import { describe, expect } from "@effect/vitest";
 import { assertFailure } from "@effect/vitest/utils";
 import * as Arbitrary from "effect/Arbitrary";
@@ -18,10 +18,6 @@ const TextAnchorArbitrary = Arbitrary.schema(TextAnchor);
 const TextAnchorEquivalence = S.toEquivalence(TextAnchor);
 
 describe("@beep/text TextAnchor", () => {
-  it("exposes TextAnchor from the public subpath", () => {
-    expect(TextAnchor.isWellOrdered({ startChar: 0, endChar: 0 })).toBe(true);
-  });
-
   it.effect(
     "decodes a well-formed anchor and re-slices the source text to the quote",
     Effect.fnUntraced(function* () {
@@ -36,11 +32,6 @@ describe("@beep/text TextAnchor", () => {
       expect(Str.slice(anchor.startChar, anchor.endChar)(source)).toBe(anchor.quote);
     })
   );
-
-  it("flags an out-of-order anchor via isWellOrdered", () => {
-    expect(isWellOrdered({ startChar: 0, endChar: 14 })).toBe(true);
-    expect(isWellOrdered({ startChar: 9, endChar: 2 })).toBe(false);
-  });
 
   it("recognizes zero, end, BMP, and whole-pair UTF-16 boundaries", () => {
     const sourceText = "A😀B";
@@ -94,23 +85,6 @@ describe("@beep/text TextAnchor", () => {
       });
       expect(TextAnchor.isInternallyConsistent(anchor)).toBe(true);
       expect(TextAnchorEquivalence(decoded, anchor)).toBe(true);
-
-      return true;
-    },
-    { arbitrary: fcRuns(50) }
-  );
-
-  it.prop(
-    "colocated well-ordered predicate agrees with ordered offset pairs",
-    [
-      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0))),
-      Arbitrary.schema(S.Int.check(S.isGreaterThanOrEqualTo(0))),
-    ],
-    ([startChar, length]) => {
-      const endChar = startChar + length;
-
-      expect(TextAnchor.isWellOrdered({ startChar, endChar })).toBe(true);
-      expect(isWellOrdered({ startChar: endChar + 1, endChar: startChar })).toBe(false);
 
       return true;
     },

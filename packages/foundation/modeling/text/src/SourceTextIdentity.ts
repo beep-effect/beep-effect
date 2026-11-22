@@ -6,6 +6,7 @@
  */
 import { $TextId } from "@beep/identity/packages";
 import { PosixPath, Sha256PrefixedDigest } from "@beep/schema";
+import { WellFormedText } from "@beep/schema/WellFormedText";
 import * as S from "effect/Schema";
 
 const $I = $TextId.create("SourceTextIdentity");
@@ -54,6 +55,61 @@ export const SourceTextDigest = Sha256PrefixedDigest.pipe(
 export type SourceTextDigest = typeof SourceTextDigest.Type;
 
 /**
+ * POSIX locator of one source inside its scope, with no lone UTF-16 surrogate.
+ *
+ * **Details**
+ *
+ * The decoded value is a `PosixPath`; the encoded shape is the same string. A
+ * locator with a lone surrogate cannot be written as canonical JSON, so it is
+ * refused on construction and on decode.
+ *
+ * **Example** (Refuse an ill-formed locator)
+ *
+ * ```ts import.meta.vitest name="Refuse an ill-formed locator"
+ * import { SourceTextLocator } from "@beep/text/SourceTextIdentity"
+ * import * as S from "effect/Schema"
+ *
+ * const isSourceTextLocator = S.is(SourceTextLocator)
+ * isSourceTextLocator("documents/source.pdf") // => true
+ * isSourceTextLocator("documents/\uD800.pdf") // => false
+ * ```
+ *
+ * @category schemas
+ * @since 0.0.0
+ */
+export const SourceTextLocator = PosixPath.check(
+  S.makeFilter(
+    (locator) => locator.isWellFormed(),
+    $I.annote("WellFormedLocatorCheck", {
+      title: "Well-Formed Locator",
+      description: "Checks that a source locator contains only complete UTF-16 scalar sequences.",
+      message: "Expected a locator without lone UTF-16 surrogates.",
+    })
+  )
+).pipe(
+  $I.annoteSchema("SourceTextLocator", {
+    description: "A POSIX locator of one source inside its scope, with no lone UTF-16 surrogate.",
+  })
+);
+
+/**
+ * Type for {@link SourceTextLocator}.
+ *
+ * **Example** (Type annotate SourceTextLocator value)
+ *
+ * ```ts import.meta.vitest name="Type annotate SourceTextLocator value"
+ * import { SourceTextLocator } from "@beep/text/SourceTextIdentity"
+ *
+ * const locator: SourceTextLocator = SourceTextLocator.make("documents/source.pdf")
+ * locator // => "documents/source.pdf"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SourceTextLocator = typeof SourceTextLocator.Type;
+
+/**
  * Pinned extractor implementation that produced the source text.
  *
  * **Example** (Create SourceTextExtractor instance)
@@ -70,10 +126,10 @@ export type SourceTextDigest = typeof SourceTextDigest.Type;
  */
 export class SourceTextExtractor extends S.Opaque<SourceTextExtractor, { readonly brand: unique symbol }>()(
   S.Struct({
-    name: S.NonEmptyString.annotateKey({
+    name: WellFormedText.annotateKey({
       description: "Stable extractor implementation name.",
     }),
-    version: S.NonEmptyString.annotateKey({
+    version: WellFormedText.annotateKey({
       description: "Pinned extractor implementation version.",
     }),
   }).pipe(
@@ -93,6 +149,10 @@ export class SourceTextExtractor extends S.Opaque<SourceTextExtractor, { readonl
  * `locator` is interpreted relative to the scope's configured source root.
  * Containment checks, filesystem access, extraction, and digest computation
  * remain responsibilities of the resolving capability.
+ *
+ * Every text field is well-formed UTF-16 on construction and on decode: RFC 8785
+ * canonical JSON has no form for a lone surrogate, so an identity that held one
+ * could not be minted.
  *
  * **Example** (Build complete SourceTextIdentity)
  *
@@ -124,13 +184,13 @@ export class SourceTextExtractor extends S.Opaque<SourceTextExtractor, { readonl
  */
 export class SourceTextIdentity extends S.Opaque<SourceTextIdentity, { readonly brand: unique symbol }>()(
   S.Struct({
-    scopeRef: S.NonEmptyString.annotateKey({
+    scopeRef: WellFormedText.annotateKey({
       description: "Opaque matter or tenant scope reference used by the local resolver.",
     }),
-    sourceRef: S.NonEmptyString.annotateKey({
+    sourceRef: WellFormedText.annotateKey({
       description: "Opaque stable reference for the logical source.",
     }),
-    locator: PosixPath.annotateKey({
+    locator: SourceTextLocator.annotateKey({
       description: "POSIX locator interpreted relative to the configured root for scopeRef.",
     }),
     sourceDigest: SourceTextDigest.annotateKey({
@@ -140,7 +200,7 @@ export class SourceTextIdentity extends S.Opaque<SourceTextIdentity, { readonly 
       description: "Digest of the exact extracted raw source text.",
     }),
     extractor: SourceTextExtractor,
-    normalizationVersion: S.NonEmptyString.annotateKey({
+    normalizationVersion: WellFormedText.annotateKey({
       description: "Version of the locator-only normalization contract.",
     }),
   }).pipe(

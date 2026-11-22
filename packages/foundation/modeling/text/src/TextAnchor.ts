@@ -173,23 +173,6 @@ export class TextAnchor extends S.Class<TextAnchor, { readonly brand: unique sym
   })
 ) {
   /**
-   * Whether an anchor is well-ordered: `startChar <= endChar`.
-   *
-   * **Example** (Checking well-ordered range)
-   *
-   * ```ts import.meta.vitest name="Checking well-ordered range"
-   * import { TextAnchor } from "@beep/text/TextAnchor"
-   *
-   * TextAnchor.isWellOrdered({ startChar: 0, endChar: 14 }) // => true
-   * ```
-   *
-   * @category validation
-   * @since 0.0.0
-   */
-  static readonly isWellOrdered = (anchor: Pick<typeof TextAnchor.Encoded, "startChar" | "endChar">): boolean =>
-    anchor.startChar <= anchor.endChar;
-
-  /**
    * Whether an anchor is internally consistent without needing the source text:
    * a non-empty half-open range whose width equals the quote length.
    *
@@ -210,24 +193,6 @@ export class TextAnchor extends S.Class<TextAnchor, { readonly brand: unique sym
 
   static readonly decodeEffect = S.decodeEffect(TextAnchor);
 }
-
-/**
- * Whether an anchor is well-ordered: `startChar <= endChar`. A malformed anchor
- * (start after end) is a defect at the producing boundary.
- *
- * **Example** (Valid and inverted ranges)
- *
- * ```ts import.meta.vitest name="Valid and inverted ranges"
- * import { isWellOrdered } from "@beep/text/TextAnchor"
- *
- * isWellOrdered({ startChar: 0, endChar: 14 }) // => true
- * isWellOrdered({ startChar: 9, endChar: 2 }) // => false
- * ```
- *
- * @category validation
- * @since 0.0.0
- */
-export const isWellOrdered = TextAnchor.isWellOrdered;
 
 /**
  * Whether an anchor is internally consistent without needing the source text.
