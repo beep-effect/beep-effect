@@ -57,7 +57,7 @@ const subjects = (report: KnowledgeDoctorReport, kind: KnowledgeFindingKind): Re
   );
 
 const spansOf = (documentPath: string, text: string): ReadonlyArray<KnowledgeSpan> =>
-  extractKnowledgeDocumentSpans(documentPath, text, HashSet.empty()).spans;
+  extractKnowledgeDocumentSpans(documentPath, text).spans;
 
 const notFailed = (verdicts: ReadonlyArray<KnowledgeCounterfactualVerdict>): ReadonlyArray<string> =>
   A.map(

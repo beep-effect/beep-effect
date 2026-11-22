@@ -17,6 +17,9 @@
  * bodies over a scripted `gh`, new ones over the real client and a paginating `fetch`. A difference is classified
  * (an intended shift named in D-19, with its witness scenario) or unclassified; the gate is zero unclassified.
  *
+ * Deviation from the recorded run: the two B25 scenarios (the knowledge ref census) are gone, because #3453 deleted
+ * the shipped census they replayed; `research/groups-differential-w7.json` keeps their 2026-11-03 rows.
+ *
  * Usage (from the repo root):
  *
  *   bun goals/repo-cli-gh-git-consolidation/ops/groups-differential-w7.ts [--out <report.json>]
@@ -43,7 +46,6 @@ import { ChangeClassifier, ClassifyInput } from "../../../packages/tooling/tool/
 import { makeRouteGit } from "../../../packages/tooling/tool/cli/src/commands/Ci/RouteCensus.ts";
 import { ChangeClassifierLive } from "../../../packages/tooling/tool/cli/src/commands/Ci/RouteClassify.ts";
 import { discoverChangedDoctestFilesForTesting } from "../../../packages/tooling/tool/cli/src/commands/Docgen/internal/Doctest.ts";
-import { readKnowledgeGitRefNames } from "../../../packages/tooling/tool/cli/src/commands/Knowledge/Knowledge.service.ts";
 import {
   KNOWLEDGE_PATH_REMOVAL_LOG,
   knowledgePathRemovalsFromLog,
@@ -64,7 +66,6 @@ import * as Old from "./frozen-w7b/Groups.old.ts";
 import { githubDifferentialRows } from "./groups-differential-w7.github.ts";
 import type * as Digest from "effect/crypto/Digest";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
-import type * as HashSet from "effect/HashSet";
 import type * as ChildProcessSpawner from "effect/process/ChildProcessSpawner";
 import type { GitCommandErrorAdapter } from "../../../packages/tooling/tool/cli/src/internal/repo-run/GitExec.ts";
 import type { GroupsDifferentialRow } from "./groups-differential-w7.github.ts";
@@ -324,22 +325,6 @@ const gitProgram = Effect.gen(function* () {
     oldDoctest(clean),
     discoverChangedDoctestFilesForTesting(clean)
   );
-
-  // B25: the knowledge ref census.
-  const refNames = (names: HashSet.HashSet<string>) => A.sort(A.fromIterable(names), Order.String);
-  for (const [scenario, cwd] of [
-    ["a clone with remote branches", work],
-    ["outside a repository", plain],
-  ] as const) {
-    yield* compare(
-      "Knowledge.readKnowledgeGitRefNames",
-      scenario,
-      Old.oldKnowledgeGitRefNames(cwd),
-      readKnowledgeGitRefNames(cwd),
-      refNames,
-      refNames
-    );
-  }
 
   // B18, B19: the knowledge path-removal log from a tree commit.
   const removals = optionView(

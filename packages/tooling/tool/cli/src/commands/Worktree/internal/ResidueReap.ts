@@ -2794,7 +2794,7 @@ const journalDrain = (
   settings: ResidueReapSettings,
   context: ResidueDrainContext,
   assessment: ResidueDrainAssessment,
-  outcome: "removed" | "refused",
+  outcome: "removed" | "refused" | "partial",
   reason: O.Option<string>,
   bytes: O.Option<number>
 ) =>
@@ -2833,6 +2833,24 @@ const refusedDrain = Effect.fnUntraced(function* (
     reclaimedBytes: 0,
     warnings: A.prepend(warnings, `Kept ${assessed.path}: ${refusal.detail}.`),
   } satisfies AppliedCandidate;
+});
+
+// A lane's tree goes through the same inode-bound handle as a clone's, then git drops its registration.
+// `git worktree remove` on a multi-GiB lane outlives the Git kit's 30 s timeout and is killed half done.
+const removeDrainedCheckout = Effect.fnUntraced(function* (
+  candidate: ResidueReapCandidate,
+  identity: DirectoryIdentity
+): Effect.fn.Return<ApplyRemovalOutcome, never, DiscoveryRequirements | Scope.Scope> {
+  const outcome = yield* removeResolvedCandidate(
+    ResidueReapCandidate.make({ ...candidate, action: "remove-dir" }),
+    identity
+  );
+  const owner = O.fromUndefinedOr(candidate.checkoutRoot);
+  if (outcome === "removed" && O.isSome(owner)) {
+    const git = yield* Git;
+    yield* git.worktreePrune(owner.value).pipe(Effect.ignore);
+  }
+  return outcome;
 });
 
 const REMOVAL_REFUSALS: Record<Exclude<ApplyRemovalOutcome, "removed">, ResidueReapSkipReason> = {
@@ -2878,13 +2896,20 @@ const applyDrainCandidate = Effect.fnUntraced(function* (
       assessment,
     });
   }
-  const outcome = yield* removeResolvedCandidate(resolved.value.candidate, resolved.value.identity).pipe(Effect.scoped);
+  const outcome = yield* removeDrainedCheckout(resolved.value.candidate, resolved.value.identity).pipe(Effect.scoped);
   if (outcome !== "removed") {
-    return yield* refusedDrain(settings, context, current, {
-      reason: REMOVAL_REFUSALS[outcome],
-      detail: `removal ended ${outcome}`,
-      assessment,
-    });
+    // Any outcome but `removed` may leave the tree half gone: never report it as kept.
+    const reason = REMOVAL_REFUSALS[outcome];
+    const warnings = yield* journalDrain(settings, context, assessment, "partial", O.some(reason), O.none());
+    return {
+      candidate: ResidueReapCandidate.make({ ...current, action: "skip", skipReason: reason }),
+      reaped: false,
+      reclaimedBytes: 0,
+      warnings: A.prepend(
+        warnings,
+        `Removal of ${assessed.path} may have stopped part-way (${outcome}): inspect it; its work is preserved as journaled.`
+      ),
+    } satisfies AppliedCandidate;
   }
   const bytes = O.fromUndefinedOr(current.bytes);
   const warnings = yield* journalDrain(settings, context, assessment, "removed", O.none(), bytes);

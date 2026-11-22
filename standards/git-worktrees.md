@@ -433,10 +433,10 @@ A checkout is drainable only when all of these hold:
 | `open-pr` | its checked-out branch has an open pull request |
 | `session-ledger` | an open session-ledger row names it |
 | `liveness` | it is live, or liveness is `unknown`: a probe could not confirm inactivity |
-| `owned-worktrees` | (clone) a worktree is still registered to it; lanes retire first |
+| `owned-worktrees` | (clone) a worktree is still registered to it; lanes retire first. (lane) it is locked |
 | `object-borrowers` | (clone) another clone reads its objects through `objects/info/alternates` |
 | `local-only-work` | never refuses; local-only branches, tags, stashes or a detached HEAD need a verified bundle first |
-| `clean-tree` | `git status` shows any change, untracked files included (ignored files are copied out at removal instead, see below; ignored directories other than `secrets/`, `.secrets/` and `*.local` are regenerable and removed) |
+| `clean-tree` | `git status` shows any change, untracked files included (ignored files and directories are copied out at removal instead, see below, except the ones a build or install rewrites) |
 | `grace-window` | it has not stayed drainable at one HEAD for `--drain-grace-days` (default 7) |
 
 Liveness reuses the fleet mirror's classifier with the reaper's process probe,
@@ -457,15 +457,15 @@ eligible are kept with reason `drain-opt-in`. An applied wave re-checks every
 eligible checkout immediately before removal, bundles its local-only work to
 `~/.local/state/beep/fleet/<repo-key>/drain-bundles/` (refused unless
 `git bundle verify` passes and every local-only commit is reachable from a
-bundled head), copies every gitignored file (keys, `.env*`, credentials,
-machine-local config) and every ignored `secrets/`, `.secrets/` or `*.local`
-directory to `<bundle>.local/` beside it (refused above 512 MiB; other ignored
-directories such as `node_modules/`, `dist/` and `.turbo/` are regenerable), reads the checkout once more
+bundled head), copies every gitignored file and directory except the ones a build or install
+rewrites (`node_modules/`, `dist/`, `.turbo/`, `coverage/`, `docgen/` and the
+like) to `<bundle>.local/` beside it (refused above 512 MiB), reads the checkout once more
 (same HEAD, still clean and dormant, no local-only commit outside the bundle),
-files its Yeet attempt journals, removes it (`git worktree
-remove` from the owning clone for a lane, an inode-bound tree removal for a
-clone), and appends the decision with every check to `drain-journal.jsonl`
-beside the registry. The wave report lists the disk held by registered legacy
+files its Yeet attempt journals, removes the tree through an
+inode-bound handle (a lane's registration is then pruned from its clone), and
+appends the decision with every check to `drain-journal.jsonl`
+beside the registry. A removal that stops part-way is journaled `partial`, never
+as kept. The wave report lists the disk held by registered legacy
 clones before and after.
 
 Restore a drained checkout's local work from its bundle:
