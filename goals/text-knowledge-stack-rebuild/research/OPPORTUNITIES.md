@@ -216,3 +216,13 @@ home paths with `~`, drop session and machine ids.
   typecheck or test runs it.
 - **Prevention:** a gate that runs each reference goal's `rerun.verify` (or at least decodes its frozen
   artifacts) whenever a schema it imports changes.
+
+## 2026-11-22: `lint schema-catalog --write` given a directory reports a write and writes nothing
+
+- **Doing:** commit 10, regenerating the `@beep/party-domain` schema-catalog shard after renaming the party
+  `OccurrenceId` and replacing `TextSpan`.
+- **Evidence:** `bun run beep lint schema-catalog --write packages/party/domain/src` printed
+  `[schema-catalog] wrote @beep/party-domain` and `entries=147 shards=1`, but the shard kept the `TextSpan`
+  and `OccurrenceId` rows. The same command with the two changed `.ts` files as arguments rewrote the shard.
+- **Prevention:** the command expands a directory argument to the sources under it, or refuses a path that
+  names no source file instead of reporting a write.

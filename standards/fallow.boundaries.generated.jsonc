@@ -4395,6 +4395,7 @@
           "@beep/party-domain",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -4404,6 +4405,7 @@
           "@beep/party-domain",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/text",
           "@beep/utils"
         ]
       },
