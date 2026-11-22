@@ -8,6 +8,7 @@ import {
 import { it } from "@beep/test-runner";
 import { A } from "@beep/utils";
 import { describe, expect } from "@effect/vitest";
+import { assertSome } from "@effect/vitest/utils";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
@@ -210,13 +211,9 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
       Effect.sync(() => {
         const before = "export const P = () => (\n  <p>\n    a\n    {/* c */}\n    b\n  </p>\n);\n";
         const after = "export const P = () => (\n  <p>\n    a\n    b\n  </p>\n);\n";
-        expect(commentStripProof("P.tsx", before, after)).toEqual(O.some("proof-failed"));
-        expect(commentStripProof("a.ts", "export const x = 1;\n", "export const x = 2;\n")).toEqual(
-          O.some("proof-failed")
-        );
-        expect(commentStripProof("a.ts", "export const x = 1;\n", "export const = 1;\n")).toEqual(
-          O.some("parse-error")
-        );
+        assertSome(commentStripProof("P.tsx", before, after), "proof-failed");
+        assertSome(commentStripProof("a.ts", "export const x = 1;\n", "export const x = 2;\n"), "proof-failed");
+        assertSome(commentStripProof("a.ts", "export const x = 1;\n", "export const = 1;\n"), "parse-error");
       })
     );
 
