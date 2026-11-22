@@ -75,7 +75,9 @@ bun run beep comments census <@beep/package>
 ```
 
 Read the tally. `unclassified` is your work; every other bucket is protected.
-Rerunning is safe: earlier verdicts carry over by `cid`.
+Rerunning is safe: earlier verdicts carry over by `cid`, except for a row whose `cid`
+matches a row deleted since the last census (an ordinal sibling). `census` clears that
+row's code, so it comes back unclassified.
 
 ### 2. Classify
 
@@ -225,8 +227,9 @@ Stop and report; do not work around:
 ## Resume
 
 The ledger is the state. `census` then `verify` tells any session what is left.
-If `main` moved under the run, merge it, rerun `census`, and reclassify only the
-rows that came back without a code.
+If `main` moved under the run, merge it, rerun `census`, and reclassify the rows that
+came back without a code. That set includes every ordinal sibling whose `cid` a
+deletion on `main` handed over, because `census` clears those codes first.
 
 ## Related
 
