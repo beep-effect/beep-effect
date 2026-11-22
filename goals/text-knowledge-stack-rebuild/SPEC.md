@@ -1483,6 +1483,21 @@ Lane goals/text-knowledge-stack-rebuild-p3-annotation
 
 Reverse: Make the target set and the refusal kit module-private and export the view schema with a schema-first exception, by a decision file
 
+### P3: merge and restrict return the caller's document type, conflicts take the least and greatest time, contains is dual, 2026-11-22
+
+Four surface calls the design did not settle, taken while writing commit 5.
+
+- `merge` and `restrict` take any document type over `AnnotationDocumentView` and return that type, rebuilt from the input with its tables replaced; neither re-runs the schema. Both preserve every pure check by construction (the union of content-keyed tables of one capture, refused when a pair would carry two times; the kept annotations of a set closed under references, with the anchors and attribution they use), and `L2-4` proves the outputs pass the schema and the checked codec.
+- A `GenerationTimeConflict` takes the least and the greatest time of its (content, activity) group under `Option.makeOrder(DateTime.Order)`, `None` first. Two documents that each pass their checks give at most two times per pair, so the group is the two sides.
+- `contains(kinds)` is dual: `(document, outer, inner)` and `(outer, inner)(document)`, as the design module had it.
+- `restrictToOa` throws when its restriction or its `OaDocument` decode fails, which the design calls a defect; it stays a pure function with the signature of section 1.6, through `Result.getOrThrow`.
+
+`closure` and `restrict` take any `KindRegistry`, and the kept set is `HashSet<KindName<Kinds>>`, so an unregistered name is a type error. The test generator of commit 4 now prefixes each activity seed with its index, so two equal drawn labels still name two activities and a generated document never holds two generations of one pair.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Re-validate the outputs through the schema, refuse more than two times, and drop the data-last contains form, by a decision file
+
 ### P3: annotation/v1 and generation/v1 are declared preimages with goldens; one preimage serves every kind through its JSON body, 2026-11-22
 
 `AnnotationPreimage` is `definePreimage` under `annotation/v1` over `Tuple[CanonicalHashSet(OccurrenceId) (non-empty), TermIri, S.Unknown]`, whose third element is the body encoded by `S.toCodecJson(kind.body)`. One preimage serves every kind, because the kind IRI already separates the body schemas. `GenerationPreimage` is `definePreimage` under `generation/v1` over `Tuple[AnnotationId, ActivityId]`. The design module's hand sort goes: the set codec sorts.

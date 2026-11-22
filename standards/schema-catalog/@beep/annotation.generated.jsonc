@@ -26,6 +26,8 @@
     {"file":"packages/foundation/modeling/annotation/src/Kinds.ts","symbol":"Sentence","kind":"struct-const","owner":"@beep/annotation","identity":"Sentence","description":"Body of a Sentence annotation."},
     {"file":"packages/foundation/modeling/annotation/src/Kinds.ts","symbol":"TextDocument","kind":"struct-const","owner":"@beep/annotation","identity":"TextDocument","description":"An annotation document over every declared kind."},
     {"file":"packages/foundation/modeling/annotation/src/Kinds.ts","symbol":"Title","kind":"struct-const","owner":"@beep/annotation","identity":"Title","description":"Body of a Title annotation."},
-    {"file":"packages/foundation/modeling/annotation/src/Kinds.ts","symbol":"Word","kind":"struct-const","owner":"@beep/annotation","identity":"Word","description":"Body of a Word annotation."}
+    {"file":"packages/foundation/modeling/annotation/src/Kinds.ts","symbol":"Word","kind":"struct-const","owner":"@beep/annotation","identity":"Word","description":"Body of a Word annotation."},
+    {"file":"packages/foundation/modeling/annotation/src/Merge.ts","symbol":"GenerationTimeConflict","kind":"tagged-error","owner":"@beep/annotation","identity":"GenerationTimeConflict"},
+    {"file":"packages/foundation/modeling/annotation/src/Restrict.ts","symbol":"RestrictionNotClosed","kind":"tagged-error","owner":"@beep/annotation","identity":"RestrictionNotClosed"}
   ]
 }

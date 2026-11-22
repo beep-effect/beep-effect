@@ -1,5 +1,8 @@
 import { AnnotationId, GenerationPreimage, RunEntityId } from "@beep/annotation/AnnotationId";
 import { Generation, mintRunEntityId } from "@beep/annotation/Generation";
+import { DocumentKinds } from "@beep/annotation/Kinds";
+import { merge } from "@beep/annotation/Merge";
+import { closure, restrict } from "@beep/annotation/Restrict";
 import { fcRuns } from "@beep/fc-runs";
 import { ActivityId } from "@beep/schema/ContentHash";
 import { it } from "@beep/test-runner";
@@ -16,7 +19,7 @@ import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import { codec } from "./support/fixtures.ts";
-import { activityIdOf, documentCase, generationOf } from "./support/generators.ts";
+import { activityIdOf, documentCase, generationOf, kindSetCase, mergeTripleCase } from "./support/generators.ts";
 import type { TextDocument } from "@beep/annotation/Kinds";
 
 const runs = { arbitrary: fcRuns(60) };
@@ -25,6 +28,20 @@ const encodeGeneration = flow(S.encodeResult(Generation), Result.getOrThrow);
 
 const generationsOf = (document: TextDocument): ReadonlyArray<Generation> =>
   A.flatMap(document.attribution.pipe(HashMap.values, A.fromIterable), A.fromIterable);
+
+// Every annotation is attributed, and no activity generates one content twice.
+const expectAttributed = (document: TextDocument): void => {
+  for (const id of HashMap.keys(document.annotations)) {
+    const generations = document.attribution.pipe(HashMap.get(id), O.getOrThrow, A.fromIterable);
+    expect(generations.length).toBeGreaterThan(0);
+    expect(A.dedupe(A.map(generations, (generation) => generation.activity))).toHaveLength(generations.length);
+  }
+  expect(HashMap.size(document.attribution)).toBe(HashMap.size(document.annotations));
+};
+
+const close = closure(DocumentKinds);
+
+const restrictTo = restrict(DocumentKinds);
 
 // The least annotation key of a document, so a modification is a function of the document alone.
 const leastKey = (document: TextDocument): AnnotationId =>
@@ -101,6 +118,44 @@ it.layer(Digest.layerWebCrypto, { timeout: "20 seconds" })("@beep/annotation gen
           ),
         { concurrency: 1, discard: true }
       ),
+    runs
+  );
+
+  it.prop(
+    "L2-3 merge and restrict keep every annotation attributed with one generation per content and activity pair",
+    [mergeTripleCase, kindSetCase],
+    ([{ triple }, keep]) => {
+      const [a, b, c] = triple;
+      const merged = A.flatMap([merge(a, b), Result.flatMap(merge(a, b), merge(c))], (result) =>
+        Result.match(result, { onFailure: A.empty, onSuccess: A.of })
+      );
+      for (const document of A.appendAll(triple, merged)) {
+        expectAttributed(document);
+        expectAttributed(restrictTo(close(keep))(document).pipe(Result.getOrThrow));
+      }
+      // A refused merge names a pair the union would have given two times.
+      for (const [left, right] of [
+        [a, b],
+        [b, c],
+        [a, c],
+      ] as const) {
+        Result.match(merge(left, right), {
+          onSuccess: () => undefined,
+          onFailure: (refusal) => {
+            if (refusal._tag === "GenerationTimeConflict") {
+              const times = A.map(
+                A.filter(
+                  A.appendAll(generationsOf(left), generationsOf(right)),
+                  (generation) => generation.content === refusal.annotation && generation.activity === refusal.activity
+                ),
+                (generation) => generation.at
+              );
+              expect(A.dedupe(times)).toHaveLength(2);
+            }
+          },
+        });
+      }
+    },
     runs
   );
 

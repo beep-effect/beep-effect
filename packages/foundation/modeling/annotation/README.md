@@ -18,7 +18,7 @@ per activity. Every arrow is pure or needs only core's `Digest.Digest`; the pack
 Each claim below is a row of the law-test plan,
 [`law-test-plan.md`](../../../../goals/text-knowledge-stack-rebuild/research/law-test-plan.md), and a test titled
 with the row id under `test/`. Rows `L2-2` and `L2-3` cover the ids, kinds and checked codec; `L2-1`, `L2-4`
-and `L2-5` land with merge, restriction and containment, and `L2-6` with the OA codec subpath.
+and `L2-5` cover merge, restriction and containment; `L2-6` lands with the OA codec subpath.
 
 | Claim | Ledger row | Test |
 | --- | --- | --- |
@@ -33,13 +33,20 @@ and `L2-5` land with merge, restriction and containment, and `L2-6` with the OA 
 
 ```ts
 import { makeDocumentCodec } from "@beep/annotation/AnnotationDocument"
+import { contains } from "@beep/annotation/Containment"
 import { mintAnnotationId } from "@beep/annotation/Kind"
 import { DocumentKinds, TextDocument } from "@beep/annotation/Kinds"
+import { merge } from "@beep/annotation/Merge"
+import { restrict, restrictToOa } from "@beep/annotation/Restrict"
 ```
 
 `makeDocumentCodec({ schema, kinds })` is the only decode path for document JSON from the wire or storage: it refuses
 a repeated key, checks the document, and verifies every key against the hash of its value. Its `encode` writes one
 canonical JSON form per document, and its `assemble` mints every key from unkeyed parts.
+
+`merge` unions two documents over one capture and refuses with the same value in either argument order;
+`restrict` keeps a kind set closed under body references and refuses an open one; `contains` is the strict
+containment order of the structure and segmentation kinds.
 
 ## Development
 

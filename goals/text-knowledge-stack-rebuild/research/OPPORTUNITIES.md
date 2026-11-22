@@ -350,3 +350,16 @@ home paths with `~`, drop session and machine ids.
   an inventory exception, as for the internal `DocumentEnvelope`.
 - **Prevention:** let the rule tell a structural view (a type consumed only as a constraint) from an
   exported data model, or document the exception pattern for generic views beside the D1 rule.
+
+## 2026-11-22: vitest `toEqual` compares a `HashMap`'s trie, not its entries
+
+- **Doing:** P3 commit 5, the `L2-1` and `L2-4` laws over merged and restricted annotation documents.
+- **Evidence:** `expect(merged).toEqual(expected)` failed on documents and generation sets that
+  `Equal.equals` holds equal (`expected { Object (~effect/HashSet, keyMap) } to deeply equal ...`),
+  about one property run in three. `@effect/vitest`'s `addEqualityTesters` registers an empty
+  tester list, so `toEqual` walks the internal trie, whose shape depends on how the map was built
+  (a union against a decoded copy). The same test passed on its first run, so a green run proved
+  nothing.
+- **Prevention:** compare Effect collections with `assertEquals` from `@effect/vitest/utils`, and
+  have the effect-vitest lint flag `toEqual` whose operands carry a `HashMap` or `HashSet`; or
+  register an `Equal.equals` tester in `@beep/test-runner` so `toEqual` means `Equal` for them.

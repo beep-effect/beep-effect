@@ -21,6 +21,10 @@ export * from "./AnnotationId.ts";
 /**
  * @since 0.0.0
  */
+export * from "./Containment.ts";
+/**
+ * @since 0.0.0
+ */
 export * from "./Generation.ts";
 /**
  * @since 0.0.0
@@ -30,3 +34,11 @@ export * from "./Kind.ts";
  * @since 0.0.0
  */
 export * from "./Kinds.ts";
+/**
+ * @since 0.0.0
+ */
+export * from "./Merge.ts";
+/**
+ * @since 0.0.0
+ */
+export * from "./Restrict.ts";

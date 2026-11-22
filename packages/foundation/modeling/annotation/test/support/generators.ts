@@ -37,7 +37,7 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import type { Annotation } from "@beep/annotation/Kind";
+import type { Annotation, KindName, KindRegistry } from "@beep/annotation/Kind";
 import type { JsoncDigest } from "@beep/jsonc/JsoncFingerprint";
 import type { Anchored } from "@beep/text/Occurrence";
 
@@ -239,8 +239,13 @@ export const documentCase: Arbitrary.Arbitrary<GeneratedDocument> = Arbitrary.fl
         const attribution = HashMap.fromIterable(
           A.map(annotations.pipe(HashMap.keys, A.fromIterable), (content, index) => {
             const activities = at(activitySets, at(drawn.membership, index));
+            // The seed is prefixed with the activity's index, so two equal drawn labels still name two activities.
             const generations = A.map(activities, (activity) =>
-              generationOf({ content, activity: activityIdOf(drawn.activities[activity]), at: drawn.times[activity] })
+              generationOf({
+                content,
+                activity: activityIdOf(`${activity}:${drawn.activities[activity]}`),
+                at: drawn.times[activity],
+              })
             );
             return [content, HashSet.fromIterable(generations)] as const;
           })
@@ -293,3 +298,195 @@ export const targetArrayCase = Arbitrary.flatMap(between(1, 6), (count) =>
     }
   )
 );
+
+const registry: KindRegistry = DocumentKinds;
+
+// The annotation ids a body references, read through its kind.
+const referencesOf = (annotation: AnyAnnotation): ReadonlyArray<AnnotationId> =>
+  R.get(registry, annotation._tag).pipe(
+    O.map((kind) => A.fromIterable(kind.referencedIds(annotation.body))),
+    O.getOrElse(A.empty<AnnotationId>)
+  );
+
+const byActivity = Order.mapInput(Order.String, (generation: Generation) => generation.activity);
+
+const byKey = Order.mapInput(Order.String, ([key]: readonly [AnnotationId, AnyAnnotation]) => key);
+
+/** What one document of a merge triple keeps of the shared pool, and the time it may restate. */
+const partDraw = Arbitrary.all({
+  membership: nonEmptyArray(Arbitrary.schema(S.Boolean), 8),
+  generations: nonEmptyArray(between(0, activitySets.length - 1), 8),
+  retime: between(0, 7),
+  at: statedTime,
+});
+
+type PartDraw = typeof partDraw extends Arbitrary.Arbitrary<infer Draw> ? Draw : never;
+
+// One document of a merge triple: the drawn annotations of the pool closed over their body references, the anchors
+// their targets use, and for each a drawn non-empty part of its pool generations. One draw in eight restates the time
+// of the pool's least activity, which conflicts with any other document that keeps one of those generations at its
+// pool time.
+const partOf = (pool: TextDocument, draw: PartDraw): TextDocument => {
+  const entries = A.sort(HashMap.toEntries(pool.annotations), byKey);
+  const chosen = A.filter(entries, (_, index) => at(draw.membership, index));
+  const kept = HashSet.fromIterable(A.flatMap(chosen, ([id, annotation]) => A.prepend(referencesOf(annotation), id)));
+  const annotations = HashMap.filter(pool.annotations, (_, id) => HashSet.has(kept, id));
+  const used = HashSet.fromIterable(
+    A.flatMap(annotations.pipe(HashMap.values, A.fromIterable), (annotation) => A.fromIterable(annotation.targets))
+  );
+  const activities = A.map(
+    A.flatMap(pool.attribution.pipe(HashMap.values, A.fromIterable), A.fromIterable),
+    ({ activity }) => activity
+  );
+  const restated = O.filter(A.head(A.sort(activities, Order.String)), () => draw.retime === 0);
+  const attribution = HashMap.map(
+    HashMap.filter(pool.attribution, (_, id) => HashSet.has(kept, id)),
+    (generations, content) => {
+      const sorted = A.sort(A.fromIterable(generations), byActivity);
+      const index = A.findFirstIndex(entries, ([key]) => key === content).pipe(O.getOrElse(() => 0));
+      const part = A.map(at(activitySets, at(draw.generations, index)), (pick) =>
+        A.getUnsafe(sorted, pick % sorted.length)
+      );
+      return HashSet.fromIterable(
+        A.map(part, (generation) =>
+          O.contains(restated, generation.activity)
+            ? generationOf({ content, activity: generation.activity, at: draw.at })
+            : generation
+        )
+      );
+    }
+  );
+  return TextDocument.make({
+    text: pool.text,
+    anchors: HashMap.filter(pool.anchors, (_, id) => HashSet.has(used, id)),
+    annotations,
+    attribution,
+  });
+};
+
+/** Three documents for the merge laws, and the text their anchors slice. */
+export type MergeTriple = {
+  readonly text: string;
+  readonly triple: readonly [TextDocument, TextDocument, TextDocument];
+};
+
+// Four values in the middle of 0..99: the integer arbitrary favours its bounds, so a window at either end would be
+// drawn far more often than four times in a hundred.
+const isForeign = (draw: number): boolean => draw >= 48 && draw < 52;
+
+/**
+ * Generated merge triples: three parts of one generated pool document, so they share one capture, contents and
+ * activities, with drawn time restatements that conflict. In about four draws of a hundred the first document is
+ * replaced by an independently generated document, which is on another capture.
+ */
+export const mergeTripleCase: Arbitrary.Arbitrary<MergeTriple> = Arbitrary.flatMap(documentCase, ({ text, document }) =>
+  Arbitrary.map(
+    Arbitrary.all({
+      parts: Arbitrary.all([partDraw, partDraw, partDraw]),
+      foreign: between(0, 99),
+      other: documentCase,
+    }),
+    ({ parts: [first, second, third], foreign, other }) => ({
+      text,
+      triple: [
+        isForeign(foreign) ? other.document : partOf(document, first),
+        partOf(document, second),
+        partOf(document, third),
+      ],
+    })
+  )
+);
+
+/** The annotations of one containment case, by the role each plays in the L2-5 fixtures. */
+export type ContainmentRoles = {
+  readonly section: AnnotationId;
+  readonly title: AnnotationId;
+  readonly figure: AnnotationId;
+  readonly wordOverWhole: AnnotationId;
+  readonly paragraph: AnnotationId;
+  readonly sentence: AnnotationId;
+  readonly word: AnnotationId;
+  readonly mention: AnnotationId;
+  readonly twoTargets: AnnotationId;
+};
+
+/** One containment case: a document over a whole range and a strict inner range, and its roles. */
+export type ContainmentCase = {
+  readonly document: TextDocument;
+  readonly roles: ContainmentRoles;
+};
+
+/**
+ * Generated containment cases over text of two or more scalars. A Section, a Title, a Figure and a Word span the
+ * whole text; a Paragraph, a Sentence, a Word and a Mention span one strict inner range, so the Paragraph is a
+ * one-sentence paragraph; a Sentence targets both ranges. A drawn inner range equal to the whole text is narrowed by
+ * its last scalar, so it stays non-empty and becomes strict; nothing is filtered.
+ */
+export const containmentCase: Arbitrary.Arbitrary<ContainmentCase> = Arbitrary.flatMap(
+  wellFormedTextWith({ minLength: 2, maxLength: 24 }),
+  (generated) =>
+    Arbitrary.map(
+      Arbitrary.all({
+        source: sourceFor(sha256)(generated.text),
+        inner: scalarRangeIn(generated.codePoints.length),
+        activity: label,
+        at: instant,
+        klass: pick,
+      }),
+      (drawn) => {
+        const scalars = generated.codePoints.length;
+        const strict =
+          drawn.inner.first === 0 && drawn.inner.last === scalars ? { first: 0, last: scalars - 1 } : drawn.inner;
+        const range = rangeIn(generated.boundaries["utf16-code-unit"]);
+        const wholeRow = anchoredOn(drawn.source, generated.text, range({ first: 0, last: scalars }));
+        const innerRow = anchoredOn(drawn.source, generated.text, range(strict));
+        const whole = HashSet.make(occurrenceOf(wholeRow));
+        const inner = HashSet.make(occurrenceOf(innerRow));
+        const annotations = {
+          section: K.Section.case.make({ targets: whole, body: Section.make({ depth: 1 }) }),
+          title: K.Title.case.make({ targets: whole, body: Title.make({}) }),
+          figure: K.Figure.case.make({ targets: whole, body: Figure.make({ label: O.none() }) }),
+          wordOverWhole: K.Word.case.make({ targets: whole, body: Word.make({}) }),
+          paragraph: K.Paragraph.case.make({ targets: inner, body: Paragraph.make({}) }),
+          sentence: K.Sentence.case.make({ targets: inner, body: Sentence.make({}) }),
+          word: K.Word.case.make({ targets: inner, body: Word.make({}) }),
+          mention: K.Mention.case.make({
+            targets: inner,
+            body: Mention.make({ class: at(mentionClasses, drawn.klass) }),
+          }),
+          twoTargets: K.Sentence.case.make({ targets: HashSet.union(whole, inner), body: Sentence.make({}) }),
+        };
+        const roles: ContainmentRoles = R.map(annotations, annotationIdOf);
+        const activity = activityIdOf(drawn.activity);
+        return {
+          roles,
+          document: TextDocument.make({
+            text: drawn.source,
+            anchors: HashMap.make([occurrenceOf(wholeRow), wholeRow], [occurrenceOf(innerRow), innerRow]),
+            annotations: HashMap.fromIterable(
+              A.map(R.values(annotations), (annotation) => [annotationIdOf(annotation), annotation] as const)
+            ),
+            attribution: HashMap.fromIterable(
+              A.map(
+                R.values(roles),
+                (content) => [content, HashSet.make(generationOf({ content, activity, at: O.some(drawn.at) }))] as const
+              )
+            ),
+          }),
+        };
+      }
+    )
+);
+
+/** A kind name of the text document. */
+export type DocumentKindName = KindName<typeof DocumentKinds>;
+
+/** Generated kind sets over every declared kind, open or closed under body references. */
+export const kindSetCase: Arbitrary.Arbitrary<HashSet.HashSet<DocumentKindName>> = Arbitrary.map(
+  Arbitrary.all(R.map(DocumentKinds, () => Arbitrary.schema(S.Boolean))),
+  (drawn) => HashSet.fromIterable(A.filter(R.keys(drawn), (name) => drawn[name]))
+);
+
+/** A kind set of the text document from its names. */
+export const kindSet = (...names: ReadonlyArray<DocumentKindName>): HashSet.HashSet<DocumentKindName> =>
+  HashSet.fromIterable(names);
