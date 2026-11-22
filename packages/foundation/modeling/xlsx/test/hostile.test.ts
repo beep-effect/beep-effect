@@ -13,8 +13,10 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
 import * as ByteSize from "effect/ByteSize";
 import * as Cause from "effect/Cause";
+import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Exit from "effect/Exit";
+import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
@@ -720,13 +722,14 @@ describe("hostile files", () => {
   };
   const whole = streamedArchive([["a.xml", "<a/>"], ...partsOf(one(sheet('<row r="1"><c r="A1"><v>1</v></c></row>')))]);
   // Each case damages the workbook and the same workbook cut inside its directory, after its last entry: that one
-  // still reads, and has no end record left to be found before one a mutation writes. Both are built once.
-  const targets = Effect.runSync(
-    whole.pipe(
-      Effect.map((bytes) => [bytes, bytes.subarray(0, bytes.length - 30)]),
-      Effect.cached
-    )
-  );
+  // still reads, and has no end record left to be found before one a mutation writes. Both are built once, by the
+  // layer the property runs under.
+  class Targets extends Context.Service<Targets, ReadonlyArray<Uint8Array>>()("@beep/xlsx/test/hostile.test/Targets") {
+    static readonly layer = Layer.effect(
+      Targets,
+      Effect.map(whole, (bytes) => [bytes, bytes.subarray(0, bytes.length - 30)])
+    );
+  }
   /** A read's exit is a success or a typed failure (`XlsxParseError`, or the codec's `SchemaError`), never a defect. */
   const typed = <A, E>(exit: Exit.Exit<A, E>): boolean =>
     Exit.isSuccess(exit) ||
@@ -745,19 +748,21 @@ describe("hostile files", () => {
     recordsFromBytes: (bytes: Uint8Array) =>
       Effect.exit(S.decodeEffect(Xlsx.recordsFromBytes({ sheet: "S", header: "first" }))(bytes)),
   };
-  it.effect.prop(
-    "no damage to a workbook's bytes makes a read die",
-    [S.Array(Mutation).check(S.isMinLength(1), S.isMaxLength(2)), Other],
-    ([mutations, other]) =>
-      Effect.gen(function* () {
-        for (const target of yield* targets) {
-          const bytes = A.reduce(mutations, target, mutate);
-          const parsed = yield* Effect.exit(Xlsx.parse(bytes));
-          const read = yield* others[other](bytes);
-          expect(typed(parsed)).toBe(true);
-          expect(typed(read)).toBe(true);
-        }
-      }),
-    { arbitrary: { runs: 1200 } }
+  it.layer(Targets.layer)((it) =>
+    it.effect.prop(
+      "no damage to a workbook's bytes makes a read die",
+      [S.Array(Mutation).check(S.isMinLength(1), S.isMaxLength(2)), Other],
+      ([mutations, other]) =>
+        Effect.gen(function* () {
+          for (const target of yield* Targets) {
+            const bytes = A.reduce(mutations, target, mutate);
+            const parsed = yield* Effect.exit(Xlsx.parse(bytes));
+            const read = yield* others[other](bytes);
+            expect(typed(parsed)).toBe(true);
+            expect(typed(read)).toBe(true);
+          }
+        }),
+      { arbitrary: { runs: 1200 } }
+    )
   );
 });

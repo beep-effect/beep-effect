@@ -76,7 +76,6 @@ const EFFECT_ROOT_SOURCE = "effect";
  */
 export const MANUAL_EFFECT_RUNTIME_LEGACY_BASELINE = HashMap.fromIterable<string, number>([
   ["apps/oip-web/test/oip-web.test.tsx", 4],
-  ["packages/foundation/modeling/xlsx/test/hostile.test.ts", 1],
 ]);
 
 const baselineFor = (repoPath: string): number => {
