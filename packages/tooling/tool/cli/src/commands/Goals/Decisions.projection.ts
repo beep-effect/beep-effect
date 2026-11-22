@@ -13,32 +13,28 @@
  * @since 0.0.0
  */
 
-import { FrontmatterSource } from "@beep/markdown/FrontmatterSource";
-import { Frontmatter } from "@beep/markdown/MarkdownNode";
-import { YamlFrontmatter } from "@beep/markdown/YamlFrontmatter";
 import { optionalProp } from "@beep/repo-cli-kit/cli/OptionRecord";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { dual, pipe } from "effect/Function";
-import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as Struct from "effect/Struct";
+import { readDecisionFrontmatter } from "../../internal/decisions/DecisionFile.ts";
 import {
   GOAL_DECISIONS_DIR,
   GoalDecision,
   GoalDecisionFileInvalid,
-  GoalDecisionFileName,
   GoalDecisionFrontmatter,
   GoalDecisionKind,
   GoalDecisionLogReport,
   GoalDecisionProjection,
   GoalDecisionTarget,
 } from "./Decisions.schemas.ts";
-import type * as SchemaIssue from "effect/SchemaIssue";
+import type { DecisionFrontmatterReader } from "../../internal/decisions/DecisionFile.ts";
 import type { GoalPacketRecord } from "./Inventory.ts";
 
 /**
@@ -122,39 +118,12 @@ export interface GoalDecisionReader<E, R> {
   readonly readDocument: (packetPath: string, document: GoalDecisionDocument) => Effect.Effect<O.Option<string>, E, R>;
 }
 
-const isDecisionFileName = S.is(GoalDecisionFileName);
-const decodeFrontmatter = S.decodeUnknownEffect(GoalDecisionFrontmatter, { onExcessProperty: "error", errors: "all" });
-
-const allowedFrontmatterKeys = A.join(Struct.keys(GoalDecisionFrontmatter.fields), ", ");
-
-// OneOf is a leaf in effect/SchemaIssue (it carries successes, not child issues), so the
-// walk only descends through Pointer, Composite, AnyOf, Filter and Encoding.
-const unexpectedKeysMatcher = Match.type<SchemaIssue.Issue>().pipe(
-  Match.tag(
-    "Pointer",
-    (pointer) => (path: ReadonlyArray<PropertyKey>) => unexpectedKeys(pointer.issue, A.appendAll(path, pointer.path))
-  ),
-  Match.tag(
-    "Composite",
-    "AnyOf",
-    (group) => (path: ReadonlyArray<PropertyKey>) => A.flatMap(group.issues, (child) => unexpectedKeys(child, path))
-  ),
-  Match.tag(
-    "Filter",
-    "Encoding",
-    (wrapper) => (path: ReadonlyArray<PropertyKey>) => unexpectedKeys(wrapper.issue, path)
-  ),
-  Match.tag("UnexpectedKey", () => (path: ReadonlyArray<PropertyKey>) => A.of(pipe(path, A.map(String), A.join(".")))),
-  Match.orElse(() => (_path: ReadonlyArray<PropertyKey>) => A.empty<string>())
-);
-
-const unexpectedKeys = (issue: SchemaIssue.Issue, path: ReadonlyArray<PropertyKey>): ReadonlyArray<string> =>
-  unexpectedKeysMatcher(issue)(path);
-
-const invalid = (file: string, message: string): Result.Result<GoalDecision, GoalDecisionFileInvalid> =>
-  Result.fail(GoalDecisionFileInvalid.make({ file, message }));
-
-const fileDate = (file: string): string => Str.slice(0, 10)(file);
+const goalDecisionReader: DecisionFrontmatterReader<GoalDecisionFrontmatter> = {
+  schemaName: "GoalDecisionFrontmatter",
+  requiredKeys: "title, date, reversal",
+  allowedKeys: Struct.keys(GoalDecisionFrontmatter.fields),
+  decode: S.decodeUnknownEffect(GoalDecisionFrontmatter, { onExcessProperty: "error", errors: "all" }),
+};
 
 /**
  * Parses one decision file: name grammar, YAML frontmatter and the
@@ -184,34 +153,11 @@ const fileDate = (file: string): string => Str.slice(0, 10)(file);
  * @since 0.0.0
  */
 export const parseGoalDecision = Effect.fn("Goals.parseGoalDecision")(function* (file: string, raw: string) {
-  if (!isDecisionFileName(file)) {
-    return invalid(file, "file name is not <YYYY-MM-DD>-<topic>.md (lowercase hyphenated topic).");
-  }
-  const split = FrontmatterSource.split(raw);
-  if (split.frontmatter === undefined) {
-    return invalid(file, "missing YAML frontmatter (title, date, reversal).");
-  }
-  const block = split.frontmatter;
-  const decoded = yield* YamlFrontmatter.decode(Frontmatter.make({ format: block.format, value: block.value })).pipe(
-    Effect.flatMap(decodeFrontmatter),
-    Effect.result
-  );
-  if (Result.isFailure(decoded)) {
-    const unknownKeys = S.isSchemaError(decoded.failure) ? unexpectedKeys(decoded.failure.issue, A.empty()) : A.empty();
-    const issue = pipe(String(decoded.failure.message), Str.replace(/\s+/g, " "), Str.slice(0, 200));
-    if (A.isReadonlyArrayNonEmpty(unknownKeys)) {
-      return invalid(
-        file,
-        `frontmatter has key(s) outside GoalDecisionFrontmatter: ${A.join(unknownKeys, ", ")} (allowed: ${allowedFrontmatterKeys}). All decode issues: ${issue}`
-      );
-    }
-    return invalid(file, `frontmatter does not decode as GoalDecisionFrontmatter: ${issue}`);
-  }
-  const frontmatter = decoded.success;
-  if (frontmatter.date !== fileDate(file)) {
-    return invalid(file, `frontmatter date ${frontmatter.date} differs from the file name date ${fileDate(file)}.`);
-  }
-  return Result.succeed(GoalDecision.make({ file, frontmatter, body: Str.trim(split.body) }));
+  const parts = yield* readDecisionFrontmatter(goalDecisionReader, file, raw);
+  return Result.mapBoth(parts, {
+    onFailure: (message) => GoalDecisionFileInvalid.make({ file, message }),
+    onSuccess: ({ frontmatter, body }) => GoalDecision.make({ file, frontmatter, body }),
+  });
 });
 
 const byDateThenFile: Order.Order<GoalDecision> = Order.combine(

@@ -2412,6 +2412,9 @@
   "@beep/schema/WellFormedText": [
     "./packages/foundation/modeling/schema/src/WellFormedText.ts"
   ],
+  "@beep/repo-cli/commands/Decisions": [
+    "./packages/tooling/tool/cli/src/commands/Decisions/index.ts"
+  ],
   "@beep/lint-rules/comment-grammar": [
     "./packages/tooling/policy-pack/lint-rules/src/rules/comment-grammar.ts"
   ]
