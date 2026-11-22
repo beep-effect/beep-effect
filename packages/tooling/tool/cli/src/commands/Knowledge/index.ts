@@ -56,7 +56,6 @@ export {
   makeKnowledgeFindingId,
   makeKnowledgeTreeOracle,
   materializeKnowledgeTree,
-  readKnowledgeGitRefNames,
   resolveKnowledgeProbePolicy,
   rewriteKnowledgeReferences,
   scanKnowledgePair,
