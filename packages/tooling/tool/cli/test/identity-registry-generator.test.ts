@@ -539,6 +539,9 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             "@beep/widget/Runner/TestHang",
             "@beep/widget/Panel/Title",
             "@beep/widget/Report.ts/Report",
+            // Dot-only segments are no code identity, even where the joined path reaches a real module.
+            "@beep/widget/../src/Report/Report",
+            "@beep/widget/./Report/Report",
           ]);
 
           expect(dangling).toStrictEqual([
@@ -549,6 +552,8 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             "@beep/widget/Runner/TestHang",
             "@beep/widget/Panel/Title",
             "@beep/widget/Report.ts/Report",
+            "@beep/widget/../src/Report/Report",
+            "@beep/widget/./Report/Report",
           ]);
         })
       )

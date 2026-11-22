@@ -647,7 +647,7 @@ const moveOf = (options: {
             ? refusal(
                 "nested-move",
                 `${options.from} -> ${options.to}`,
-                "One end is under the other, so the move would match the codes it moved and could not be run again after a partial write; move through a code identity outside both, in two rebinds."
+                `One end is under the other, so the move would match the codes it moved and could not be run again after a partial write. Move through a third code identity outside both ends that no binding uses: create a temporary module file for it, rebind ${options.from} to it, rebind it to ${options.to}, then delete the temporary file.`
               )
             : refusal(
                 "mixed-move",

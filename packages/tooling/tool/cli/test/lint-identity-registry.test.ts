@@ -1845,6 +1845,47 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
     );
 
     it.effect(
+      "L0-3 a nested move is made as the refusal says, through a temporary module in two rebinds",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const base = yield* commitRegistryFixture(
+              fabioShard(["Report"], [{ code: REPORT_CODE, local: "Report", since: "1.0.0" }])
+            );
+            const temporaryModule = "packages/widget/src/Tmp.ts";
+            yield* fs.makeDirectory("packages/widget/src/Old", { recursive: true });
+            yield* fs.writeFileString("packages/widget/src/Old/Sub.ts", "export const report = 1;\n");
+
+            const nested = yield* Effect.exit(
+              runIdentityCommand(["rebind", "@beep/widget/Old", "@beep/widget/Old/Sub"])
+            );
+            expectReportedExit(nested);
+            const nestedLines = yield* TestConsole.errorLines;
+            expect(nestedLines).toContainEqual(
+              expect.stringContaining(
+                "create a temporary module file for it, rebind @beep/widget/Old to it, rebind it to @beep/widget/Old/Sub, then delete the temporary file."
+              )
+            );
+
+            // The intermediate needs a module file, as every rebind target does.
+            const unbacked = yield* Effect.exit(runIdentityCommand(["rebind", "@beep/widget/Old", "@beep/widget/Tmp"]));
+            expectReportedExit(unbacked);
+            yield* fs.writeFileString(temporaryModule, "export const report = 1;\n");
+            yield* runIdentityCommand(["rebind", "@beep/widget/Old", "@beep/widget/Tmp", "--base", base]);
+            yield* runIdentityCommand(["rebind", "@beep/widget/Tmp", "@beep/widget/Old/Sub", "--base", base]);
+            yield* fs.remove(temporaryModule);
+
+            const after = yield* Effect.map(fs.readFileString(layout.snapshot), decodeSnapshotText);
+            expect(A.map(after.bindings, (binding) => binding.code)).toStrictEqual(["@beep/widget/Old/Sub/Report"]);
+            yield* runLintCommand(["identity-registry", "--base", base]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
       "L0-3 a namespace is retired by hand, as the writer's remedy says",
       () =>
         Effect.andThen(

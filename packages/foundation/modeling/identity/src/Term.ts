@@ -153,7 +153,8 @@ export type CodePackage = typeof CodePackage.Type;
  * Neither end is under the other. A move from `@beep/p/A` to `@beep/p/A/B`
  * would match the codes it moved again, so it could not be run twice, and a
  * retry after a partial write would move those codes a second time. Make such
- * a move through a code identity outside both, in two moves.
+ * a move in two moves through a third code identity that is outside both ends
+ * and has no code under it, so the second move carries only the moved codes.
  *
  * **Example** (Rename a module)
  *

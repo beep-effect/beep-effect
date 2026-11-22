@@ -122,3 +122,13 @@ home paths with `~`, drop session and machine ids.
 - **Evidence:** `bun run beep goals decisions write text-knowledge-stack-rebuild` failed with
   `Unexpected positional argument`; the same slug is positional for `add`.
 - **Prevention:** accept the slug the same way in every `goals decisions` subcommand.
+
+## 2026-11-22: a refusal's remedy text shipped without a test that follows it
+
+- **Doing:** answering a verifier on PR #3449's `nested-move` refusal of `identity rebind`.
+- **Evidence:** the remedy "move through a code identity outside both, in two rebinds" was refused
+  at its first step with `[target-module-missing]`, because a rebind target must name a module
+  file. A test that followed the steps would have shown it; the namespace remedy had one, this did
+  not.
+- **Prevention:** every refusal whose message prescribes commands gets a test that runs those
+  commands and ends with a passing lint, as `L0-3 a namespace is retired by hand` does.

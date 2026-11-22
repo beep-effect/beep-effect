@@ -224,7 +224,12 @@ then run `registry --write`. The
 A rebind moves a code identity and every code under it, so its two ends are
 never one under the other: `@beep/p/A` to `@beep/p/A/B` is refused
 (`nested-move`), because it would match the codes it moved and a retry could
-not finish it. Make that move through a third code identity, in two rebinds.
+not finish it. Make that move through a third code identity outside both ends
+that no binding uses. A rebind's target must name a module, so create a
+temporary module file for it (`src/Tmp.ts` for `@beep/p/Tmp`), rebind
+`@beep/p/A` to `@beep/p/Tmp`, rebind `@beep/p/Tmp` to `@beep/p/A/B`, then
+delete the temporary file. An identity that already has bindings will not do:
+the second rebind would move them too.
 Only the codes a rebind moves must name a module; a binding it leaves alone is
 reported by `--check`, not by the rebind.
 
