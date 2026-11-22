@@ -71,7 +71,8 @@ export type CommentVoteCode = typeof CommentVoteCode.Type;
  * comment the deleted row's `cid`. `proof-failed` and `parse-error` come
  * from the AST-identity proof. `symlinked-path` is a file that resolves
  * through a symlink, `uncovered-path` a file the comment law does not cover,
- * and `file-changed` a file edited while apply ran. In
+ * `target-dirty` a file whose working copy differs from `HEAD`, and
+ * `file-changed` a file edited while apply ran. In
  * every case the file is left untouched.
  *
  * **Example** (Recognize a protected refusal)
@@ -98,6 +99,7 @@ export const CommentRefusalReason = LiteralKit([
   "parse-error",
   "symlinked-path",
   "uncovered-path",
+  "target-dirty",
   "file-changed",
 ]).pipe($I.annoteSchema("CommentRefusalReason", { description: "Why the strip left one ledger row in place." }));
 

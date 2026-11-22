@@ -69,7 +69,15 @@ const makeCheckout = Effect.fn("CommentStripTest.makeCheckout")(function* (
   });
   const apply = (ledgerPath: string, votes: ReadonlyArray<string>) =>
     runCommentApply(CommentApplyOptions.make({ cwd: root, ledger: ledgerPath, votes }));
-  return { root, write, read, ledger, vote, apply };
+  const commit = Effect.fnUntraced(function* (files: ReadonlyArray<string>) {
+    yield* runGit(root, ["add", "-A", "--", ...files]);
+    yield* runGit(root, ["commit", "--quiet", "--no-verify", "--no-gpg-sign", "-m", "edit"]);
+  });
+  const leftovers = Effect.fnUntraced(function* (directory: string) {
+    const names = yield* fs.readDirectory(path.join(root, directory));
+    return A.filter(names, Str.endsWith(".tmp"));
+  });
+  return { root, write, read, ledger, vote, apply, commit, leftovers };
 });
 
 const reasonsOf = (refusals: ReadonlyArray<{ readonly reason: string }>) =>
@@ -98,6 +106,8 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         expect(result.refusals).toEqual([]);
         const text = yield* checkout.read("packages/a/src/A.ts");
         expect(text).toBe("export const a = 1;\nexport const one = () => a;\n");
+        const left = yield* checkout.leftovers("packages/a/src");
+        expect(left).toEqual([]);
       })
     );
 
@@ -228,6 +238,7 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         const { summary, rows } = yield* checkout.ledger();
         const cid = rows[0]?.cid ?? "";
         yield* checkout.write("packages/a/src/A.ts", "// new wording\nexport const a = 1;\n");
+        yield* checkout.commit(["packages/a/src/A.ts"]);
         const first = yield* checkout.vote("first", [`${cid}\tT`]);
         const second = yield* checkout.vote("second", [`${cid}\tT`]);
         const result = yield* checkout.apply(summary.path, [first, second]);
@@ -260,6 +271,7 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         expect(A.length(rows)).toBe(2);
         const firstCid = rows[0]?.cid ?? "";
         yield* checkout.write("packages/a/src/A.ts", "export const f = () => {\n  // twin\n  return 1;\n};\n");
+        yield* checkout.commit(["packages/a/src/A.ts"]);
         const first = yield* checkout.vote("first", [`${firstCid}\tT`]);
         const second = yield* checkout.vote("second", [`${firstCid}\tT`]);
         const result = yield* checkout.apply(summary.path, [first, second]);
@@ -335,6 +347,8 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         expect(reasonsOf(result.refusals)).toEqual(["file-changed"]);
         const text = yield* checkout.read("packages/a/src/A.ts");
         expect(text).toBe(edited);
+        const left = yield* checkout.leftovers("packages/a/src");
+        expect(left).toEqual([]);
       })
     );
 
@@ -579,6 +593,7 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         const { summary, rows } = yield* checkout.ledger();
         yield* checkout.write("packages/a/src/E.ts", "// broken soon\nexport const = 1;\n");
         yield* fs.remove(path.join(checkout.root, "packages/a/src/G.ts"));
+        yield* checkout.commit(["packages/a/src/E.ts"]);
         const lines = A.map(rows, (row) => `${row.cid}\tG`);
         const first = yield* checkout.vote("first", lines);
         const second = yield* checkout.vote("second", lines);
@@ -628,6 +643,32 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         expect(reasonsOf(result.refusals)).toEqual(["uncovered-path"]);
         const text = yield* checkout.read("goals/x/probe.ts");
         expect(text).toBe("// note\nexport const p = 1;\n");
+      })
+    );
+
+    it.effect(
+      "refuses a target whose working copy differs from HEAD and keeps its mode on a write",
+      Effect.fnUntraced(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const source = "// note\nexport const a = 1;\n";
+        const checkout = yield* makeCheckout([["packages/a/src/A.ts", source]]);
+        const { summary, rows } = yield* checkout.ledger();
+        const cid = rows[0]?.cid ?? "";
+        const first = yield* checkout.vote("first", [`${cid}\tT`]);
+        const second = yield* checkout.vote("second", [`${cid}\tT`]);
+        const dirty = `${source}export const b = 2;\n`;
+        yield* checkout.write("packages/a/src/A.ts", dirty);
+        const refused = yield* checkout.apply(summary.path, [first, second]);
+        expect(reasonsOf(refused.refusals)).toEqual(["target-dirty"]);
+        const kept = yield* checkout.read("packages/a/src/A.ts");
+        expect(kept).toBe(dirty);
+        yield* checkout.write("packages/a/src/A.ts", source);
+        yield* fs.chmod(path.join(checkout.root, "packages/a/src/A.ts"), 0o755);
+        const applied = yield* checkout.apply(summary.path, [first, second]);
+        expect(applied.deleted).toBe(1);
+        const info = yield* fs.stat(path.join(checkout.root, "packages/a/src/A.ts"));
+        expect(info.mode % 0o1000).toBe(0o755);
       })
     );
   });

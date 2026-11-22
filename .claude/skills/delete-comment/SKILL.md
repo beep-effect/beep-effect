@@ -111,8 +111,10 @@ matches the tree or whose identical sibling is gone (`stale-cid`: run
 comment with the same anchor behind (`ordinal-sibling`: the survivor would
 inherit the deleted row's `cid`), one vote (`too-few-votes`), no agreement
 (`votes-disagree`), a path through a symlink (`symlinked-path`), a file the
-law does not cover (`uncovered-path`) and a file
-edited while apply ran (`file-changed`). Each vote file counts once.
+law does not cover (`uncovered-path`), a file whose working copy differs from
+`HEAD` (`target-dirty`) and a file edited while apply ran (`file-changed`).
+Each vote file counts once. A file is written to a temporary sibling, checked
+once more against the proved text, then renamed over the original.
 
 Each comment's exact range is removed, plus its whole line when nothing else is
 on it; an empty JSX `{/* ... */}` container goes with its comment. Then every
@@ -132,7 +134,7 @@ git status --short
 bun run beep laws comments --list <package-dir>
 ```
 
-The tree must be clean. Stop if another open PR deletes comments in the same
+The tree must be clean; apply enforces it per file (`target-dirty`). Stop if another open PR deletes comments in the same
 package, or if the package has uncommitted work that is not yours. Work in a
 lane worktree, never on `main`.
 

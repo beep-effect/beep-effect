@@ -674,6 +674,27 @@ const emptyOutcome = (refusals: ReadonlyArray<CommentRefusal>): FileOutcome => (
 const refuseAll = (rows: ReadonlyArray<CommentLedgerRow>, reason: CommentRefusalReason, detail: string) =>
   A.map(rows, (row) => refusalOf(row, reason, detail));
 
+const replaceIfUnchanged = Effect.fn("CommentStrip.replaceIfUnchanged")(function* (
+  absolute: string,
+  file: string,
+  before: string,
+  after: string
+) {
+  const fs = yield* FileSystem.FileSystem;
+  const digest = yield* sha256Hex(after);
+  const temp = `${absolute}.${Str.slice(0, 12)(digest)}.comment-strip.tmp`;
+  const info = yield* fs.stat(absolute).pipe(CommentLawExecutionError.mapError(`Failed to stat ${file}`));
+  yield* fs.writeFileString(temp, after).pipe(CommentLawExecutionError.mapError(`Failed to write ${temp}`));
+  yield* fs.chmod(temp, info.mode % 0o10000).pipe(CommentLawExecutionError.mapError(`Failed to chmod ${temp}`));
+  const latest = yield* readOptionalText(absolute, file);
+  if (!O.contains(latest, before)) {
+    yield* fs.remove(temp).pipe(CommentLawExecutionError.mapError(`Failed to remove ${temp}`));
+    return false;
+  }
+  yield* fs.rename(temp, absolute).pipe(CommentLawExecutionError.mapError(`Failed to replace ${file}`));
+  return true;
+});
+
 const applyToFile = Effect.fn("CommentStrip.applyToFile")(function* (
   repoRoot: string,
   file: string,
@@ -681,6 +702,7 @@ const applyToFile = Effect.fn("CommentStrip.applyToFile")(function* (
   context: ApplyContext
 ) {
   const fs = yield* FileSystem.FileSystem;
+  const git = yield* Git;
   if (!HashSet.has(context.covered, file))
     return emptyOutcome(refuseAll(rows, "uncovered-path", "the comment law does not cover this file"));
   const absolute = `${repoRoot}/${file}`;
@@ -690,6 +712,11 @@ const applyToFile = Effect.fn("CommentStrip.applyToFile")(function* (
   if (real !== `${context.realRoot}/${file}`)
     return emptyOutcome(refuseAll(rows, "symlinked-path", "the path resolves through a symlink"));
   const text = yield* fs.readFileString(absolute).pipe(CommentLawExecutionError.mapError(`Failed to read ${file}`));
+  const committed = yield* git
+    .show(repoRoot, "HEAD", file)
+    .pipe(CommentLawExecutionError.mapError(`Failed to read HEAD:${file}`));
+  if (!O.contains(committed, text))
+    return emptyOutcome(refuseAll(rows, "target-dirty", "the working copy differs from HEAD; commit it first"));
   const source = parseSource(file, text);
   if (source.errors > 0) return emptyOutcome(refuseAll(rows, "parse-error", "the file does not parse"));
   const current = yield* locateRows(source);
@@ -712,8 +739,8 @@ const applyToFile = Effect.fn("CommentStrip.applyToFile")(function* (
         A.map(planned, (entry) => refusalOf(entry.row, proof.value, "the stripped file is not the same program"))
       )
     );
-  const latest = yield* readOptionalText(absolute, file);
-  if (!O.contains(latest, text))
+  const written = yield* replaceIfUnchanged(absolute, file, text, after);
+  if (!written)
     return emptyOutcome(
       A.appendAll(
         refusals,
@@ -722,7 +749,6 @@ const applyToFile = Effect.fn("CommentStrip.applyToFile")(function* (
         )
       )
     );
-  yield* fs.writeFileString(absolute, after).pipe(CommentLawExecutionError.mapError(`Failed to write ${file}`));
   return { deleted: A.length(planned), refusals, touched: O.some(file) } satisfies FileOutcome;
 });
 
@@ -789,9 +815,12 @@ const applyToFiles = Effect.fn("CommentStrip.applyToFiles")(function* (
  * `<package>/decisions/<date>-<slug>.md` committed in `HEAD` in the owning
  * package. Each vote file counts once. Protected rows, rows whose `cid` no
  * longer matches the tree, deletions that would leave an identical sibling
- * behind or follow one that is gone, files that resolve through a symlink
- * and files edited while apply ran are refused. Each comment's range is
- * removed, with its whole line when nothing else is on it; an empty JSX
+ * behind or follow one that is gone, files that resolve through a symlink,
+ * files whose working copy differs from `HEAD` and files edited while apply
+ * ran are refused. A file is replaced by renaming a temporary sibling over
+ * it, after its content is checked once more against what was proved. Each
+ * comment's range is removed, with its whole line when nothing else is on
+ * it; an empty JSX
  * `{}` container goes with its comment. Every touched file must pass
  * {@link commentStripProof}, or it is not written. Biome is not run. When a
  * file fails to read or write, the error names the files already written.

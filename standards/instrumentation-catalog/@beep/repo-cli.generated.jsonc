@@ -885,6 +885,7 @@
     {"name":"CommentStrip.readLedger","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CommentStrip.readOptionalText","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CommentStrip.readRequiredText","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"CommentStrip.replaceIfUnchanged","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CommentStrip.runCommentApply","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CommentStrip.runCommentLedger","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"CommentStrip.withoutShrunkGroups","owner":"@beep/repo-cli","family":"tooling","conforms":true},
