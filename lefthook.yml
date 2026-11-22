@@ -6,8 +6,12 @@ pre-commit:
       exclude: ".beep/**|goals/**|outputs/**|scratchpad/**"
       run: bunx biome check --write --files-ignore-unknown=true --no-errors-on-unmatched {staged_files}
       stage_fixed: true
+    # lefthook's default glob matcher needs at least one directory for `**/`; each `**/` glob
+    # below is paired with a pattern for the files directly under its root.
     jsdoc:
-      glob: "packages/tooling/*/*/src/**/*.ts"
+      glob:
+        - "packages/tooling/*/*/src/*.ts"
+        - "packages/tooling/*/*/src/**/*.ts"
       exclude:
         - "packages/tooling/*/*/src/internal/**"
         - "**/*.test.ts"
@@ -57,7 +61,9 @@ pre-commit:
     # regenerates the shards.
     schema-catalog:
       files: git diff --name-only --cached --no-renames --diff-filter=ACMD
-      glob: "{apps,packages,infra}/**/*.{ts,tsx}"
+      glob:
+        - "{apps,packages,infra}/*.{ts,tsx}"
+        - "{apps,packages,infra}/**/*.{ts,tsx}"
       exclude:
         - "**/docs/**"
         - "**/*.d.ts"
@@ -65,8 +71,6 @@ pre-commit:
       skip:
         - run: bun run beep compute profile --is worker
       run: bun run beep lint schema-catalog --write --stage {files}
-    # lefthook's default glob matcher needs at least one directory for `**/`, so
-    # `src/**/*.ts` alone skips a module directly under `src/`; the first pattern covers those.
     instrumentation-catalog:
       files: git diff --name-only --cached --no-renames --diff-filter=ACMD
       glob:
