@@ -31,15 +31,13 @@ const rawOipSiteContent = {
   nav: [
     { href: "#about", label: "About" },
     { href: "#practice", label: "Practice" },
-    { href: "#matters", label: "Matters" },
-    { href: "#press", label: "Press" },
     { href: "#contact", label: "Contact" },
   ],
   hero: {
     headline: "Thirty years as patent counsel for people who build machines",
     lede: "Patent counsel for the people who build the machines.",
     primaryCta: { href: "#contact", label: "Contact" },
-    secondaryCta: { href: "#matters", label: "Recent matters" },
+    secondaryCta: { href: "#practice", label: "Practice areas" },
     portrait: {
       src: "/oip/hero/portrait.png",
       alt: "Thomas J. Oppold",

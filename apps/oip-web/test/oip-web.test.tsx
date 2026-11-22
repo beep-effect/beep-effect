@@ -17,6 +17,7 @@ import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import * as React from "react";
 import { vi } from "vitest";
@@ -430,6 +431,45 @@ describe("@beep/oip-web", { concurrent: false }, () => {
         expect(screen.getByRole("heading", { name: /thirty years as patent counsel/i })).toBeDefined();
         expect(screen.getByRole("link", { name: oipSiteContent.contact.email })).toBeDefined();
         expect(screen.getByRole("button", { name: "Switch to dark mode" })).toBeDefined();
+      })
+      .then((value) => {
+        expect(fetchSpy).not.toHaveBeenCalled();
+        return value;
+      });
+  });
+
+  it("resolves every in-page anchor and manifest shortcut fragment to a rendered section id", ({ onTestFinished }) => {
+    const fetchSpy = vi
+      .spyOn(globalThis, "fetch")
+      .mockRejectedValue(new Error("Unconfigured provider must not receive a request"));
+    onTestFinished(() => {
+      try {
+        cleanup();
+      } finally {
+        fetchSpy.mockRestore();
+      }
+    });
+    return Home({})
+      .then((page) => {
+        render(page);
+
+        const pageFragments = A.map(
+          A.fromIterable(document.querySelectorAll<HTMLAnchorElement>('a[href^="#"]')),
+          (anchor) => anchor.getAttribute("href") ?? ""
+        );
+        const shortcutFragments = A.flatMap(oipManifest().shortcuts ?? [], (shortcut) =>
+          pipe(
+            Str.indexOf("#")(shortcut.url),
+            O.match({ onNone: A.empty<string>, onSome: (index) => [Str.slice(index)(shortcut.url)] })
+          )
+        );
+        const unresolved = A.filter(
+          A.dedupe(A.appendAll(pageFragments, shortcutFragments)),
+          (fragment) => document.getElementById(Str.slice(1)(fragment)) === null
+        );
+
+        expect(A.isReadonlyArrayNonEmpty(pageFragments)).toBe(true);
+        expect(unresolved).toEqual([]);
       })
       .then((value) => {
         expect(fetchSpy).not.toHaveBeenCalled();

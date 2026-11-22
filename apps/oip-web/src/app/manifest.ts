@@ -46,12 +46,6 @@ export default function manifest(): MetadataRoute.Manifest {
         url: "/?source=pwa#practice",
         icons: [{ src: "/oip/icon-192.png", sizes: "192x192", type: "image/png" }],
       },
-      {
-        name: "Recent matters",
-        short_name: "Matters",
-        url: "/?source=pwa#matters",
-        icons: [{ src: "/oip/icon-192.png", sizes: "192x192", type: "image/png" }],
-      },
     ],
     icons: [
       {
