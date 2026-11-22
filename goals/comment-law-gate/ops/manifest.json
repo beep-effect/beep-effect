@@ -44,7 +44,7 @@
       "command": "/goal follow the instructions in goals/comment-law-gate/GOAL.md"
     }
   ],
-  "provides": [],
+  "provides": ["comment-law/scanner", "comment-law/growth-check-blocking"],
   "requires": [],
   "phases": [
     {

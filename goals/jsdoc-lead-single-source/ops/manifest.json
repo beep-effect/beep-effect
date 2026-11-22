@@ -45,7 +45,7 @@
     }
   ],
   "provides": [],
-  "requires": [],
+  "requires": ["comment-law/scanner"],
   "phases": [
     {
       "id": "P0",
