@@ -919,7 +919,7 @@ it.layer(Layer.provideMerge(TSMorphServiceLive, NodeTestLayer), { timeout: "60 s
             "--exclude",
             "packages/a/src/B.ts",
           ]).pipe(withEmptyConfig, Effect.exit);
-          expect(Exit.isFailure(exit)).toBe(fails);
+          exit.pipe(fails ? Exit.isFailure : Exit.isSuccess, assertTrue);
         }
       })
     );
