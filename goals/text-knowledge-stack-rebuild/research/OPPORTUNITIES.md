@@ -236,3 +236,23 @@ home paths with `~`, drop session and machine ids.
   the following content`. `config-sync:check` reported no drift both before and after `biome --write`.
 - **Prevention:** the sync formats the file it writes (or runs biome on it), so a lane does not carry a
   formatter-only hunk in a generated file.
+
+## 2026-11-22: a cache-baseline review reason becomes delete-package residue
+
+- **Doing:** the P2 final gate, `bun run beep delete-package @beep/provenance --allow-stale-packets --check`.
+- **Evidence:** exit 1 with `[check] authored-references: residue` on chapter 16, the glossary and 22
+  files under `standards/cache-baseline/`. `bun run beep cache baseline` copies the request's
+  `review.reason` into every subject file it stamps, and the commit-13 reason spelled the retired
+  package name, so the record of a retirement became residue of it.
+- **Prevention:** `cache baseline` refuses (or warns on) a request whose review reason names a package
+  that is not in the task graph, and the retirement runbook says to describe a retired package without
+  its name in any live file.
+
+## 2026-11-22: "fallow inventories are current" was proved on two of the four fallow gates
+
+- **Doing:** verifying commit 13, which said the fallow inventories were current.
+- **Evidence:** only `fallow:boundaries:check` and dead-code had run; `fallow:health:check` and
+  `fallow:audit:check` each failed with 2 introduced findings (`resolveQuote` cognitive 19, CRAP 37.1;
+  `nfkcRewrites` cognitive 10), which the hosted Fallow gate would have reported.
+- **Prevention:** the package-verify of a new package runs `fallow health --base` scoped to its files,
+  so complexity over the threshold shows up in the commit that adds the function.

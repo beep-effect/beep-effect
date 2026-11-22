@@ -1191,6 +1191,14 @@ Lane goals/text-knowledge-stack-rebuild-p2-text
 
 Reverse: Restore the v1 file beside a v2 sibling by a decision file; the v1 bytes are in git at the P2 base.
 
+### P2: the biome-256-format-wave hold keeps its dated assertion naming the retired package, 2026-11-22
+
+hold-ledger/claims.jsonl line 8 asserts, as recorded on 2026-10-17, that newer Biome releases reformat the sources of @beep/html and of the package P2 retired. The ledger is append-only and docs/runbooks/hold-ledger.md allows a new version only with fresh evidence (a probe run, or a qa.judge verdict for a Judgement hold), so an edit in place is not allowed and a renewal that only renames a package would be one without evidence. The hold targets nothing by package name: its anchors are the @biomejs/biome catalog entry and syncpack held entry, and its falsifier is a root biome check . count, which reads the moved sources under @beep/text wherever they are. The assertion is therefore left as the dated observation it is; the next renewal or the format wave that ends the hold names @beep/text. The delete-package doctor does not report the ledger as residue.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Append a renewal version of biome-256-format-wave that names @beep/text, with a fresh Biome probe or qa.judge verdict as its evidence.
+
 ### P2: the cache-baseline request names @beep/provenance in previous only, not among its subjects, 2026-11-22
 
 Section 3.1 of research/2026-11-20-p2-design.md says the request's subjects name every changed subject, @beep/provenance included. bun run beep cache baseline refuses that request: the retired package is no longer in the task graph, and the command reports it as an unknown subject. The request docs/reports/tksr-p2-l1-move-cache-baseline-request-2026-11-22.json therefore lists the 22 subjects in the graph (the root, 20 consumers and @beep/text) and keeps the retired file's digest in previous. The command then drops standards/cache-baseline/@beep/provenance.json as a subject that left the graph (printed as Dropped), so no baseline file is deleted by hand, which is what the design asked for. bun run beep cache audit and bun run beep quality cache-policy read 0 blocking findings afterwards.
@@ -1390,6 +1398,14 @@ Decision p2-selector-resolution-semantics says Refined resolves by inside the se
 Lane goals/text-knowledge-stack-rebuild-p2-text
 
 Reverse: Resolve by inside every candidate of an ambiguous base and report the summed count, by a decision file before P3 builds on resolve.
+
+### P2: live standards and the cache baselines stop spelling the retired package name; the doctor is not widened, 2026-11-22
+
+The final gate of research/2026-11-20-p2-design.md section 10 needs delete-package --allow-stale-packets --check to print clean. After the doctor fix of preparatory PR a it still found residue in 24 live files, all written by this lane: chapter 16 and the glossary named the retired package, and the review reason of the commit-13 cache request, which bun run beep cache baseline copies into every subject it stamps, spelled it in 22 baseline files. Chapter 16 and the glossary now say the former provenance package; decision p2-delete-package-doctor-reads-dated-records-as-history already holds that these chapters stay live. The baselines are re-stamped through the repo route with docs/reports/tksr-p2-l1-reason-cache-review-2026-11-22.md and its request; the diff touches only the review block of each file, and cache audit and cache-policy read 0 blocking findings. Widening the doctor's history predicate to cache-baseline reason fields was not taken: a baseline file is live configuration, and a predicate that skips part of a live file would hide a real reference there. The --check now prints clean.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Restore the package name in chapter 16, the glossary and the baseline review reason, and extend the delete-package history predicate to cache-baseline review fields instead.
 
 ### P2: schema identifiers follow the package to @beep/text and the epistemic identifier fixture is regenerated, 2026-11-22
 

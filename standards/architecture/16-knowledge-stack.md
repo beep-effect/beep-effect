@@ -154,7 +154,7 @@ bundle: the handlers load only the registry-free identity sources, and
 **Owner.** `@beep/text` (`packages/foundation/modeling/text`), a
 `foundation/modeling` package that holds the source identity and anchor
 modules and the occurrence, selector and re-anchoring modules beside them. The
-package that held the first three before, `@beep/provenance`, is retired and
+former provenance package, which held the first three before, is retired and
 has no alias. The package is text identity and anchoring, not PROV; PROV-O
 stays in `@beep/rdf`. It has no `Context` service: every function is pure or
 needs only core's `Digest.Digest`, and reading the text of a capture stays the

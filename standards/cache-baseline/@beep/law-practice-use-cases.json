@@ -3,10 +3,10 @@
   "subject": "@beep/law-practice-use-cases",
   "review": {
     "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P2 L1 text lane)",
-    "reason": "Record the move of @beep/provenance to @beep/text: every consumer task now depends on @beep/text#build instead of @beep/provenance#build, @beep/text, @beep/law-practice-server, @beep/rdf, @beep/party-domain and @beep/md gain the edges P2 adds, and the root policy-fingerprint input names the new package path. The root also records the inherited uncached //#lint:identity-registry of abfefff816c. No command, output or environment changed; no qualification is granted.",
+    "reason": "Re-stamp the L1 move recorded in 8aaaff47f51 with a reason that does not spell the retired package name: every consumer task depends on @beep/text#build, and @beep/text, @beep/law-practice-server, @beep/rdf, @beep/party-domain and @beep/md keep the edges P2 adds. No node, edge, command, output or environment changed; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p2-l1-move-cache-review-2026-11-22.md",
-      "sha256": "ab09a25a0124a78275bfef1e6ec502af0a1d974b1d90eaca49becb5f2e62624a"
+      "path": "docs/reports/tksr-p2-l1-reason-cache-review-2026-11-22.md",
+      "sha256": "b2cb02cedd42461aefcd0d3515a12f72b51dce461bfd869ead45290edd6e2e6a"
     }
   },
   "nodes": [

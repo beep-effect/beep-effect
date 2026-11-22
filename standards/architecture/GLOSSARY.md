@@ -645,7 +645,8 @@ span without depending on another slice. Consuming slices wrap it (e.g.
 epistemic `EvidenceSpan` = `TextAnchor` fields + a `Confidence`). Beside it,
 `@beep/text` holds the [`Selector`](#selector) union and
 [`OccurrenceId`](#occurrence), the one text-occurrence identity, which P2 of
-`goals/text-knowledge-stack-rebuild` added when it retired `@beep/provenance`.
+`goals/text-knowledge-stack-rebuild` added when it retired the former
+provenance package.
 
 ## Published Stream
 

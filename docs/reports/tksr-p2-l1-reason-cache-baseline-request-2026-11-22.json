@@ -1,0 +1,61 @@
+{
+  "previous": {
+    "//": "37a240a9fb79e46c2578fa02ce0d1a5970cea384adb492661c2f9ad589acdb7c",
+    "@beep/agent-memory-store": "1537da28ea17649028529d2a036688985ea627a7632d8ffbca6f2117fb83a41c",
+    "@beep/epistemic-domain": "41b74b6c24d8636705780bedbeb624c6f7ffc1ea0c2c144aa38875d90fddef63",
+    "@beep/epistemic-server": "520248b3070d082539a404d5a22f50d8ee22b9f4dd46a869f0e0f190bb34fca8",
+    "@beep/epistemic-tables": "ffd0d2432af13176cbc4447849be381b6ffaed8c462204332e11356f3611d184",
+    "@beep/epistemic-ui": "ca2bb828b5b10b119e64e3065ed15709842ea8197987008f5e02bd2b5efc8104",
+    "@beep/epistemic-use-cases": "6cc85a5e2f94901a86fd97e0f30a1f1366e3896ff3f7e49bff46a3b0d2ef525f",
+    "@beep/epistemics": "e148a3268221052f667915d5dfff2d0fc0f95c38b6c0ed249feac53a841e7713",
+    "@beep/file-processing": "cccbff3c419f91563ec6010baef4d27c523a09e9c4ab9a3d3b7577a1c954e20c",
+    "@beep/langextract": "d7dd915bb09dbf44d67945d19a0aabb08dfb1fe0f4a3025052e5000bbbdd8551",
+    "@beep/law-practice-domain": "1987fd7d7294b050a1fc2aeb223dcb5988e95db59d2761078c6f88801cb651f0",
+    "@beep/law-practice-server": "bd74fdf303f44855680e6f2a6f4b8054575f47d158724d502a14d44f22342923",
+    "@beep/law-practice-use-cases": "0362f18553c97ae7aaf50d2ed297466db62adb149a1770a054dfbaa52f77ced9",
+    "@beep/lejeune-bolt-workbench": "8b56d2a0cb16901fde20ed4dcda9a07161181e7a1ef6d430767db5af961dc543",
+    "@beep/md": "8734073f4270fc1d39c3c746fb5fa6ccd3ef27fc2bf6a9db3b9bb1d36e3ae106",
+    "@beep/party-domain": "9b7cae483ddae8b01b65a058f24f7e246945291ac0c9417801c4ea8d69cf14d9",
+    "@beep/professional-desktop": "2c6f883edcb8dd7df6fe222d9f954347aa8982972cc14ecffd0ecaf70c15b750",
+    "@beep/rdf": "f753a54bc71c5153205cc404f977d2c566ddd6606dbe39aaa29b0be7fcdc9e27",
+    "@beep/repo-cli": "16b22166213140ccc6591d4c9e47636461737d9efb117df0bdf9c25573480917",
+    "@beep/semantica": "3f2df8348b33dc3cdc0abd404bb3218d5f08863c37054aade6637a3f6f448e17",
+    "@beep/text": "eb87f4d4dca5af1479b128bcce8f6d90f5a30485505f345314420c13b46af272",
+    "@beep/workspace-server": "901a528e567c8f295f42bbc4472c3d3cdf59ba51f5d9cd6dcd8b120a2005fc45"
+  },
+  "review": {
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P2 L1 text lane)",
+    "reason": "Re-stamp the L1 move recorded in 8aaaff47f51 with a reason that does not spell the retired package name: every consumer task depends on @beep/text#build, and @beep/text, @beep/law-practice-server, @beep/rdf, @beep/party-domain and @beep/md keep the edges P2 adds. No node, edge, command, output or environment changed; no qualification is granted.",
+    "basis": {
+      "path": "docs/reports/tksr-p2-l1-reason-cache-review-2026-11-22.md",
+      "sha256": "b2cb02cedd42461aefcd0d3515a12f72b51dce461bfd869ead45290edd6e2e6a"
+    }
+  },
+  "subjects": [
+    "//",
+    "@beep/agent-memory-store",
+    "@beep/epistemic-domain",
+    "@beep/epistemic-server",
+    "@beep/epistemic-tables",
+    "@beep/epistemic-ui",
+    "@beep/epistemic-use-cases",
+    "@beep/epistemics",
+    "@beep/file-processing",
+    "@beep/langextract",
+    "@beep/law-practice-domain",
+    "@beep/law-practice-server",
+    "@beep/law-practice-use-cases",
+    "@beep/lejeune-bolt-workbench",
+    "@beep/md",
+    "@beep/party-domain",
+    "@beep/professional-desktop",
+    "@beep/rdf",
+    "@beep/repo-cli",
+    "@beep/semantica",
+    "@beep/text",
+    "@beep/workspace-server"
+  ],
+  "scope": ["@beep/identity#lint", "@beep/types#lint"],
+  "profile": "local-linux-x64-bun1.4.4",
+  "epoch": "qualification-v3"
+}
