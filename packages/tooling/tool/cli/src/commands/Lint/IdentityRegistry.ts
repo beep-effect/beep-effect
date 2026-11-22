@@ -75,13 +75,14 @@ import {
   checkRegistry,
   checkRegistryAgainstBase,
   decodeBaseSnapshot,
+  RegistryWrite,
   registryPresent,
   resolveRegistryLayout,
   writeRegistry,
 } from "../Identity/Registry.ts";
 import type { CallExpression, ImportDeclaration, ImportSpecifier, SourceFile } from "ts-morph";
 import type { LabIdentitySegmentState } from "../CreatePackage/internal/LabIdentitySegment.ts";
-import type { IdentityRegistryIssue } from "../Identity/Registry.ts";
+import type { RegistryLayout } from "../Identity/Registry.ts";
 
 const $I = $RepoCliId.create("commands/Lint/IdentityRegistry");
 
@@ -639,6 +640,33 @@ const readBaseSnapshot = Effect.fn("IdentityRegistry.readBaseSnapshot")(function
   return decodeBaseSnapshot(snapshotPath, text);
 });
 
+// `--fix`: regenerate the artifacts and say what changed. A registry that does not regenerate is
+// reported by the checks that follow.
+const regenerateRegistry = Effect.fn("IdentityRegistry.regenerateRegistry")(function* (
+  repoRoot: string,
+  layout: RegistryLayout
+) {
+  const regenerated = yield* writeRegistry(repoRoot, layout);
+  const { removed, written } = Result.getOrElse(regenerated, () => RegistryWrite.make({ written: [], removed: [] }));
+  for (const artifact of written) {
+    yield* Console.log(`[lint:identity-registry] regenerated ${artifact}`);
+  }
+  for (const projection of removed) {
+    yield* Console.log(`[lint:identity-registry] removed ${projection}`);
+  }
+});
+
+// The rows of a checkout that carries a registry, against itself and against the base ref's snapshot.
+const presentRegistryIssues = Effect.fn("IdentityRegistry.presentRegistryIssues")(function* (
+  repoRoot: string,
+  layout: RegistryLayout,
+  base: TermSnapshot
+) {
+  const committedIssues = yield* checkRegistry(repoRoot, layout);
+  const baseIssues = yield* checkRegistryAgainstBase(repoRoot, layout, base);
+  return A.appendAll(committedIssues, baseIssues);
+});
+
 // Declared-term registry rows: invalid shards, shard conflicts, generated-artifact drift and breaks
 // of the base ref's published term set. A checkout with neither shards nor the generated data module
 // carries no registry: it publishes nothing, so every term the base published is removed, and a base
@@ -654,26 +682,17 @@ const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermReg
   const present = yield* registryPresent(repoRoot, layout);
 
   if (fix && present) {
-    const written = yield* writeRegistry(repoRoot, layout);
-
-    if (Result.isSuccess(written)) {
-      for (const artifact of written.success.written) {
-        yield* Console.log(`[lint:identity-registry] regenerated ${artifact}`);
-      }
-      for (const projection of written.success.removed) {
-        yield* Console.log(`[lint:identity-registry] removed ${projection}`);
-      }
-    }
+    yield* regenerateRegistry(repoRoot, layout);
   }
 
   const baseSnapshot = yield* readBaseSnapshot(repoRoot, layout.snapshot, base);
-  const committedIssues = present ? yield* checkRegistry(repoRoot, layout) : A.empty<IdentityRegistryIssue>();
-  const baseIssues = Result.isFailure(baseSnapshot)
-    ? A.of(baseSnapshot.failure)
-    : present
-      ? yield* checkRegistryAgainstBase(repoRoot, layout, baseSnapshot.success)
-      : baseSnapshotIssues(baseSnapshot.success, TermSnapshot.empty, layout.snapshot);
-  const issues = A.appendAll(committedIssues, baseIssues);
+  // A base that does not decode is compared as empty, so the checkout's own rows are still reported.
+  const published = Result.getOrElse(baseSnapshot, () => TermSnapshot.empty);
+  const undecodable = A.fromOption(Result.getFailure(baseSnapshot));
+  const found = present
+    ? yield* presentRegistryIssues(repoRoot, layout, published)
+    : baseSnapshotIssues(published, TermSnapshot.empty, layout.snapshot);
+  const issues = A.appendAll(found, undecodable);
   return A.map(issues, (issue) =>
     IdentityRegistryViolation.make({ kind: issue.kind, subject: issue.subject, detail: issue.detail })
   );

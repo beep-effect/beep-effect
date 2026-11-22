@@ -1511,6 +1511,25 @@ const reportIssues = Effect.fn("IdentityRegistry.reportIssues")(function* (
   return yield* failWithReportedExit("identity registry: findings.");
 });
 
+// What one `--write` did, one line per kind of change.
+const writeLines = ({ removed, written }: RegistryWrite): A.NonEmptyReadonlyArray<string> => {
+  const lines = A.getSomes([
+    O.map(O.liftPredicate(A.isReadonlyArrayNonEmpty)(written), (files) => `wrote ${A.join(files, ", ")}.`),
+    O.map(O.liftPredicate(A.isReadonlyArrayNonEmpty)(removed), (files) => `removed ${A.join(files, ", ")}.`),
+  ]);
+  return A.isReadonlyArrayNonEmpty(lines) ? lines : ["up to date."];
+};
+
+const runRegistryWrite = Effect.fn("IdentityRegistry.runWrite")(function* (repoRoot: string, layout: RegistryLayout) {
+  const written = yield* writeRegistry(repoRoot, layout);
+  if (Result.isFailure(written)) {
+    return yield* reportIssues(written.failure);
+  }
+  for (const line of writeLines(written.success)) {
+    yield* Console.log(`[identity:registry] ${line}`);
+  }
+});
+
 const runIdentityRegistry = Effect.fn("IdentityRegistry.run")(function* (options: {
   readonly write: boolean;
   readonly check: boolean;
@@ -1521,21 +1540,7 @@ const runIdentityRegistry = Effect.fn("IdentityRegistry.run")(function* (options
   const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(ioError("Cannot find the repository root.")));
   const layout = yield* resolveRegistryLayout(repoRoot);
   if (options.write) {
-    const written = yield* writeRegistry(repoRoot, layout);
-    if (Result.isFailure(written)) {
-      return yield* reportIssues(written.failure);
-    }
-    const { removed, written: changed } = written.success;
-    if (A.isReadonlyArrayEmpty(changed) && A.isReadonlyArrayEmpty(removed)) {
-      yield* Console.log("[identity:registry] up to date.");
-    }
-    if (A.isReadonlyArrayNonEmpty(changed)) {
-      yield* Console.log(`[identity:registry] wrote ${A.join(changed, ", ")}.`);
-    }
-    if (A.isReadonlyArrayNonEmpty(removed)) {
-      yield* Console.log(`[identity:registry] removed ${A.join(removed, ", ")}.`);
-    }
-    return;
+    return yield* runRegistryWrite(repoRoot, layout);
   }
   const issues = yield* checkRegistry(repoRoot, layout);
   if (A.isReadonlyArrayNonEmpty(issues)) {

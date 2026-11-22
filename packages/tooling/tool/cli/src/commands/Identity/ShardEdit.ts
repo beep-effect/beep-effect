@@ -60,6 +60,7 @@ import {
   resolveRegistryLayout,
   writeRegistry,
 } from "./Registry.ts";
+import type { RegistryWrite } from "./Registry.ts";
 
 const $I = $RepoCliId.create("commands/Identity/ShardEdit");
 
@@ -551,6 +552,21 @@ type CheckoutRefusals = (
 
 const noCheckoutRefusals: CheckoutRefusals = () => Effect.succeed(A.empty());
 
+// One line per file an applied edit rewrote, regenerated or removed.
+const reportWrite = Effect.fn("IdentityShardEdit.reportWrite")(function* (
+  label: string,
+  planned: ReadonlyArray<RegistrySourceFile>,
+  { removed, written }: RegistryWrite
+) {
+  for (const file of written) {
+    const verb = A.some(planned, (shard) => shard.path === file) ? "rewrote" : "regenerated";
+    yield* Console.log(`[identity:${label}] ${verb} ${file}`);
+  }
+  for (const file of removed) {
+    yield* Console.log(`[identity:${label}] removed ${file}`);
+  }
+});
+
 // Plan the edit, check it against the checkout, then write the shards it changes with the regenerated
 // registry artifacts. Nothing is written unless the edited shards regenerate.
 const runShardEdit = Effect.fn("IdentityShardEdit.run")(function* (
@@ -579,13 +595,7 @@ const runShardEdit = Effect.fn("IdentityShardEdit.run")(function* (
     }
     return yield* failWithReportedExit(`identity ${label}: the edited shards do not regenerate.`);
   }
-  for (const file of written.success.written) {
-    const verb = A.some(planned.success, (shard) => shard.path === file) ? "rewrote" : "regenerated";
-    yield* Console.log(`[identity:${label}] ${verb} ${file}`);
-  }
-  for (const file of written.success.removed) {
-    yield* Console.log(`[identity:${label}] removed ${file}`);
-  }
+  yield* reportWrite(label, planned.success, written.success);
 });
 
 const isMoveEnd = S.is(S.Union([CodeId, CodePackage]));
