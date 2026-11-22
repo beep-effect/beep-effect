@@ -172,3 +172,13 @@ home paths with `~`, drop session and machine ids.
   no counterexample). **Would have prevented it:** a `@beep/test-runner` hook or
   documented recipe for per-property sample statistics, so a law's coverage of its
   interesting cases is measured the same way every time.
+- **Doing:** killing two verifier mutants of `@beep/text` without editing the lane's
+  sources, through a scratch vitest config whose plugin rewrote one module in memory, with
+  the mutant chosen by an environment variable. **Evidence:** the second mutant's runs
+  reported the first mutant's failures and its own test passed: `fsModuleCache` keys an
+  entry by module id, file content, plugin names and the config file's contents, not by
+  plugin output, so two runs of one config file with different environments share
+  transformed modules (`test: { fsModuleCache: false }` in the scratch config fixed it;
+  the lane's own config never reads those entries). **Would have prevented it:** a
+  documented mutation recipe in the test-runner docs, or a `beep` command that applies a
+  named in-memory mutant with the module cache off.

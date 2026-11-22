@@ -117,6 +117,20 @@ describe("@beep/text LocatorMap", () => {
       kept(at(3, 4), at(4, 5)),
     ]);
     expect(composed([], second)).toEqual([]);
+    // A rewrite of the first map hides the cuts of the second inside it, so the one piece spans the second map's gap
+    // between two segments and is dropped.
+    expect(composed([rewritten(at(0, 1), at(0, 3))], [kept(at(0, 1), at(0, 1)), kept(at(2, 3), at(1, 2))])).toEqual([]);
+    // The same piece over two second-map segments that meet is kept, as one rewrite.
+    expect(composed([rewritten(at(0, 1), at(0, 3))], [kept(at(0, 1), at(0, 1)), kept(at(1, 3), at(2, 4))])).toEqual([
+      rewritten(at(0, 1), at(0, 4)),
+    ]);
+  });
+
+  it("absorbs into a rewrite the text the second map inserts inside a rewrite of the first", () => {
+    // ab to xy as a whole, then _ inserted between x and y: the middle offset 1 has no preimage, so one rewrite.
+    expect(composed([rewritten(at(0, 2), at(0, 2))], [kept(at(0, 1), at(0, 1)), kept(at(1, 2), at(2, 3))])).toEqual([
+      rewritten(at(0, 2), at(0, 3)),
+    ]);
   });
 
   it.effect.prop(

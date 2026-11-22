@@ -217,11 +217,16 @@ it.layer(Digest.layerWebCrypto, { timeout: "10 seconds" })("@beep/text Occurrenc
     "L1-4 examiner boilerplate repeated three times is three occurrences and one quote key",
     Effect.fnUntraced(function* () {
       const boilerplate = "The examiner maintains the rejection.";
-      const text = `${boilerplate} Claim 1. ${boilerplate} Claim 2. ${boilerplate}`;
+      // The third copy is broken across a line, so one quote key needs the normalization, not equal bytes.
+      const broken = "The exam-\niner maintains the rejection.";
+      const copies = [boilerplate, boilerplate, broken];
+      const text = A.join(copies, " Claim. ");
       const source = withFields(firstCitation, { textDigest: textDigestOf(text) }).receipt.source;
-      const starts = A.map([0, 1, 2], (n) => n * (Str.length(boilerplate) + 10));
-      const rows = A.map(starts, (start) => anchoredOn(source, text, { start, end: start + Str.length(boilerplate) }));
-      expect(A.map(rows, Anchored.quote)).toEqual([boilerplate, boilerplate, boilerplate]);
+      const starts = A.scan(A.dropRight(copies, 1), 0, (start, copy) => start + Str.length(copy) + 8);
+      const rows = A.map(A.zip(starts, copies), ([start, copy]) =>
+        anchoredOn(source, text, { start, end: start + Str.length(copy) })
+      );
+      expect(A.map(rows, Anchored.quote)).toEqual(copies);
       const ids = yield* idsOf(rows);
       expect(HashSet.size(HashSet.fromIterable(ids))).toBe(3);
       const keys = yield* keysOf(rows);

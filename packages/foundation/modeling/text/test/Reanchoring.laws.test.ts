@@ -260,6 +260,13 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("@beep/text Reanchori
       const gapped = [kept(at(0, 1), at(0, 1))];
       yield* expectUnmapped(throughSegments("ab", "a", gapped, 0, 2), "outside-map");
       yield* expectUnmapped(throughSegments("ab", "a", gapped, 1, 2), "outside-map");
+      // A gap between two segments: the deleted b is outside the map, so a range over it does not map, while the
+      // ranges on either side of it still map exactly.
+      const deleted = [kept(at(0, 1), at(0, 1)), kept(at(2, 3), at(1, 2))];
+      yield* expectUnmapped(throughSegments("abc", "ac", deleted, 0, 3), "outside-map");
+      yield* expectUnmapped(throughSegments("abc", "ac", deleted, 1, 3), "outside-map");
+      yield* expectMapped(throughSegments("abc", "ac", deleted, 0, 1), "Exact", "a");
+      yield* expectMapped(throughSegments("abc", "ac", deleted, 2, 3), "Exact", "c");
       const tampered = [kept(at(0, 3), at(0, 3))];
       yield* expectUnmapped(throughSegments("abc", "abd", tampered, 0, 3), "quote-mismatch");
       yield* expectMapped(throughSegments("abc", "abd", tampered, 0, 2), "Exact", "ab");
@@ -277,6 +284,30 @@ it.layer(Digest.layerWebCrypto, { timeout: "30 seconds" })("@beep/text Reanchori
       expect(unmapped.from).toBe(strayId);
       yield* expectUnmapped(reanchor(anchored, map, otherTarget), "capture-mismatch");
       yield* expectMapped(reanchor(anchored, map, target), "Exact", "ab");
+    })
+  );
+
+  it.effect(
+    "L1-3 a composite rewrite absorbs text the second step inserted inside the first step's rewrite",
+    Effect.fnUntraced(function* () {
+      // ab is rewritten to xy as a whole, then _ is inserted between x and y. The middle offset 1 has no preimage
+      // in ab, so the composite is one rewrite of ab to x_y: Exact through it, Widened stepwise, one range.
+      const a = capture("a", "ab");
+      const b = capture("b", "xy");
+      const c = capture("c", "x_y");
+      const f = LocatorMap.make({ from: a, to: b, segments: [rewritten(at(0, 2), at(0, 2))] });
+      const g = LocatorMap.make({ from: b, to: c, segments: [kept(at(0, 1), at(0, 1)), kept(at(1, 2), at(2, 3))] });
+      const composite = Result.getOrThrow(LocatorMap.compose(f, g));
+      expect(composite.segments).toEqual([rewritten(at(0, 2), at(0, 3))]);
+      const anchored = anchoredOn(a, "ab", { start: 0, end: 2 });
+      const middle = yield* verifiedOf(b, "xy");
+      const target = yield* verifiedOf(c, "x_y");
+      const first = yield* expectMapped(reanchor(anchored, f, middle), "Exact", "xy");
+      const direct = yield* expectMapped(reanchor(anchored, composite, target), "Exact", "x_y");
+      if (isMapped(first) && isMapped(direct)) {
+        const second = yield* expectMapped(reanchor(first.to, g, target), "Widened", "x_y");
+        expect(isMapped(second) && rangeOf(second)).toEqual(rangeOf(direct));
+      }
     })
   );
 

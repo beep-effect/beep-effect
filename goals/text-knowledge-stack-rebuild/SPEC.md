@@ -1165,6 +1165,14 @@ Lane goals/text-knowledge-stack-rebuild-p2-text
 
 Reverse: Return to cm1 with a further receipt version step and its own read-time transform; the v1 encoder is kept as a pinned historical encoder.
 
+### P2: a composite rewrite absorbs text the second map inserts inside the first map's rewrite, so Exact through a composite is relative to the composite, 2026-11-22
+
+LocatorMap.compose cuts the middle capture only at edges that are not strictly inside a Rewritten segment of either map (decision p2-reanchoring-shape-and-lax-direction). When the second map inserts text at an offset strictly inside a Rewritten segment of the first, that offset has no preimage in the first capture, so no cut can show the insertion: the piece over the rewrite becomes one Rewritten segment whose target includes the inserted text. Reproducer: ab rewritten to xy as one segment, then _ inserted between x and y (Kept 0..1 to 0..1, Kept 1..2 to 2..3); compose gives Rewritten 0..2 to 0..3; the occurrence 0..2 maps Exact to xy and then Widened to x_y stepwise, and Exact to x_y through the composite, with the same range. The AlignedSegment schema has two cases and a Rewritten segment already means text the step changed as a whole, with a target of any width; the composite is a coarser map, and a whole-rewrite image that lands on its edges is Exact relative to that map. A third segment case or a mark on Rewritten would change the encoded LocatorMap shape for a fact no consumer reads in P2. The laws stay as stated: when both steps and the composite are mapped, the stepwise range is inside the composite range, and Exact then Exact composes to the same Exact. The converse does not hold and is not claimed: Exact through a composite does not imply that every step was Exact. An image that spans text inserted between two segments of one map stays Widened, as before. LocatorMap.test.ts and Reanchoring.laws.test.ts pin the reproducer. Found by the verifier of commits 5 and 6.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Give AlignedSegment a third case that keeps inserted text visible and have compose emit it, by a decision file before P3 records a composite re-anchoring.
+
 ### P2: the delete-package doctor reads dated records as history, fixed by its own small PR; the move commit is gated on a listed residue, 2026-11-22
 
 delete-package ends with a doctor whose authored-references surface skips only goals/, research/ and .changeset/. Dated records in explorations/ (55 files) and docs/reports/ (15 files), the entries of standards/architecture/DECISIONS.md and the retired-package registry itself therefore count as residue of @beep/provenance, and the post-apply doctor exits 1 for any package a dated record names (checked: delete-package @beep/venice-ai --check, a package deleted weeks ago, exits 1). --acknowledge cannot accept them: standards hits are baseline hits, and docs and explorations are outside the dependents scan. Rewriting dated records would falsify them. The fix is one predicate in RegistrationGeometry.probes.ts that names the historical paths (goals/, research/, .changeset/, explorations/, docs/reports/, standards/architecture/DECISIONS.md, standards/changesets.retired-packages.json), used by the authored-references skip and the historical-records surface, with the surface declaration in RegistrationGeometry.plan.ts and cases in delete-package.test.ts; standards/architecture chapters and the glossary stay live and must be rewritten. The doctor is outside P2's files, so it is a small PR off main, opened before the move commit. The move does not wait for it: the apply runs every writer before the doctor, so a failure that reads post-apply doctor found residue means the writers finished, and the commit 2 gate is that the residue is a subset of the list in section 3.2. The final check requires a clean --check with --allow-stale-packets, which the check needs because it runs the same preflight.
@@ -1212,6 +1220,14 @@ Every L1 arrow is a pure function of its arguments or needs only core's effect/c
 Lane goals/text-knowledge-stack-rebuild-p2-text
 
 Reverse: Add a service contract in the capability that first needs a replaceable resolver, by a decision file.
+
+### P2: normalizeText takes the text first and the normalization second, the data-first order of every dual in @beep/text, 2026-11-22
+
+Design section 1.7 writes normalizeText(normalization, text): NormalizedText. The implementation is dual(2, (text, normalization) => ...), so the data-first call is normalizeText(text, normalization) and the data-last call is normalizeText(normalization)(text). The repo's dual convention puts the data first, and every other dual of the package does: normalizeQuote(quote, normalization), mintQuoteKey(quote, normalization) (design 1.4), convertPosition(position, unit, sourceText) and slicePosition(position, sourceText) (design 1.5), resolve(sourceText, selector) (design 1.6) and reanchor(anchored, map, target) (design 1.8). The text is the data a normalization acts on, so section 1.7 is read as naming the parameters, not fixing a positional order, and its curried reading normalizeText(normalization)(text) is the data-last form the dual provides. Swapping the order would make normalizeText the one dual in @beep/text whose first argument is not the data, and its data-last form would curry over the text. Found by the verifier of commits 5 and 6.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Swap normalizeText to (normalization, text) data-first and normalization-last curried, by a decision file, updating every caller in one commit.
 
 ### P2: OccurrenceId is minted from a receipt through definePreimage with a literal canonical unit; the citation path keeps its proof gate, 2026-11-22
 
