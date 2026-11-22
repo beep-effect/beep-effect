@@ -365,15 +365,27 @@ const statusClass = (status: number): O.Option<FailureClass> =>
       : O.none();
 
 /**
- * Classifies a failed AWS or GitHub call by whether a resend can succeed.
+ * Classifies a failed runner-configuration step by whether a resend can
+ * succeed.
  *
  * **Details**
  *
- * AWS: a throttling code is transient whatever the status (AWS throttles
+ * The token put (`putToken`) and `generateJitConfig` create something named
+ * after one instance. The clients resend a call whose response was lost, so a
+ * conflict there (SSM `ParameterAlreadyExists` or a 409, GitHub a 409) reads as
+ * the first attempt having landed: it is transient, because the retried job
+ * launches a new instance with new names. A conflict in any other step stays
+ * deterministic. Otherwise, AWS: a throttling code is transient whatever the status (AWS throttles
  * with HTTP 400); otherwise the live layer's fault reading decides, and only
  * an unread fault falls back to the status. GitHub: a rate limit is transient
  * even on a 403; otherwise the status decides. A failure with neither is
  * transient, so an unreadable failure keeps the bounded retry path.
+ *
+ * **Gotchas**
+ *
+ * A 409 from `generateJitConfig` carries no runner id, so the cleanup cannot
+ * delete that registration. What is left is an offline JIT registration on
+ * GitHub, not a running machine.
  *
  * **Example** (An SSM value over the tier limit)
  *
@@ -385,16 +397,32 @@ const statusClass = (status: number): O.Option<FailureClass> =>
  * const error = AwsApiError.make({
  *   service: "ssm", operation: "putParameter", code: O.some("ValidationException"), fault: "client", message: "too long",
  * })
- * console.log(classifyFailure(error)) // "deterministic"
+ * console.log(classifyFailure("putToken")(error)) // "deterministic"
  * ```
  *
- * @param error - The failed call's typed error.
- * @returns `deterministic` or `transient`.
+ * @param operation - The step that failed.
+ * @returns A classifier of that step's typed error: `deterministic` or `transient`.
  * @category use-cases
  * @since 0.0.0
  */
-export const classifyFailure = (error: AwsApiError | GitHubApiError): FailureClass =>
-  error._tag === "AwsApiError" ? classifyAws(error) : classifyGitHub(error);
+export const classifyFailure =
+  (operation: ConfigureOperation) =>
+  (error: AwsApiError | GitHubApiError): FailureClass =>
+    isLandedCreate(operation, error)
+      ? FailureClass.Enum.transient
+      : error._tag === "AwsApiError"
+        ? classifyAws(error)
+        : classifyGitHub(error);
+
+const isConflictStatus = (status: O.Option<number>): boolean => O.exists(status, (value) => value === 409);
+
+// A create resent after a lost response conflicts with its own first attempt. Only these two steps create under a name
+// that is unique to the instance, so only their conflicts mean "it landed".
+const isLandedCreate = (operation: ConfigureOperation, error: AwsApiError | GitHubApiError): boolean =>
+  error._tag === "AwsApiError"
+    ? ConfigureOperation.is.putToken(operation) &&
+      (O.exists(error.code, (code) => code === "ParameterAlreadyExists") || isConflictStatus(error.status))
+    : ConfigureOperation.is.generateJitConfig(operation) && isConflictStatus(error.status);
 
 const byStatus = (status: O.Option<number>): FailureClass =>
   O.getOrElse(O.flatMap(status, statusClass), () => FailureClass.Enum.transient);
@@ -493,7 +521,7 @@ const failureOf = (
   ConfigureFailure.make({
     instanceId,
     operation,
-    failureClass: classifyFailure(error),
+    failureClass: classifyFailure(operation)(error),
     status: error.status,
     code: error.code,
     message: scrubMessage(error.message, created.secrets ?? []),
@@ -1113,9 +1141,12 @@ const countRunners = Effect.fnUntraced(function* (config: PoolRuntimeConfig, fil
  * its message goes to the build DLQ and is acknowledged: no job-retry, no
  * redelivery, so a resend cannot relaunch an instance to fail again. When it
  * is transient its message is published to job-retry, which re-checks the job
- * and backs off with the retry counter, and comes back as a batch item failure
- * only when no retry can be published. Everything else handled is published
- * to the job-retry queue. Non-`workflow_job` events with ephemeral runners are
+ * and backs off with the retry counter; when no retry can be published (no
+ * retry policy, attempts used up, or a failed publish) it is dead-lettered
+ * too. A dead-lettered message comes back as a batch item failure only when
+ * the DLQ send itself fails. Nothing redrives the build DLQ, so a
+ * dead-lettered job waits until GitHub times it out. Everything else handled
+ * is published to the job-retry queue. Non-`workflow_job` events with ephemeral runners are
  * returned (upstream behaviour); a repository owned by a user while the pool
  * registers org runners is dropped. A group whose GitHub auth fails returns
  * all its messages.

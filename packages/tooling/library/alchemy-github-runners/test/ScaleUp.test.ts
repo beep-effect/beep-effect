@@ -1,5 +1,6 @@
 import {
   AwsApiError,
+  ConfigureOperation,
   classifyFailure,
   Ec2Fleet,
   FleetLaunchResult,
@@ -7,8 +8,11 @@ import {
   handleScaleUp,
   RunnerPool,
   sanitizeAllocationStrategy,
+  toAwsApiError,
   toCreateFleetRequest,
+  toGitHubApiError,
 } from "@beep/alchemy-github-runners";
+import * as ssm from "@distilled.cloud/aws/ssm";
 import { describe, expect, it } from "@effect/vitest";
 import { deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";
@@ -454,11 +458,14 @@ const ssmRefusal = (message: string) =>
     message,
   });
 
+// The SDK's own conflict class through the live mapper: its category is what the fault reading weighs.
+const landedPut = toAwsApiError("ssm")("putParameter")(new ssm.ParameterAlreadyExists({}));
+
 const jobRetryUrl = "https://sqs.us-east-1.amazonaws.com/1/heavy-job-retry";
 const buildDlqUrl = "https://sqs.us-east-1.amazonaws.com/1/heavy-build-dlq";
 
 describe("handleScaleUp configure failures", () => {
-  it("classifies by HTTP status first, then by the AWS layer's client-fault reading", () => {
+  it("classifies a throttling code first, then the AWS layer's fault reading, then the status", () => {
     expect(
       A.map(
         [
@@ -488,7 +495,7 @@ describe("handleScaleUp configure failures", () => {
           GitHubApiError.make({ operation: "jit", status: O.some(403), rateLimited: true, message: "rate limit" }),
           GitHubApiError.make({ operation: "jit", status: O.some(403), message: "Resource not accessible" }),
         ],
-        classifyFailure
+        classifyFailure("tagInstance")
       )
     ).toStrictEqual([
       "deterministic",
@@ -504,6 +511,62 @@ describe("handleScaleUp configure failures", () => {
       "deterministic",
     ]);
   });
+
+  it("reads a conflict as a landed create only for the token put and generateJitConfig", () => {
+    const bareAwsConflict = AwsApiError.make({
+      service: "ssm",
+      operation: "putParameter",
+      status: O.some(409),
+      message: "conflict",
+    });
+    const githubConflict = toGitHubApiError("generateJitConfig")({ _tag: "Conflict", message: "Already exists" });
+    const rows = A.map(
+      ConfigureOperation.literals,
+      (operation) =>
+        [operation, A.map([landedPut, bareAwsConflict, githubConflict], classifyFailure(operation))] as const
+    );
+    expect(rows).toStrictEqual([
+      ["resolveRunnerGroup", ["deterministic", "deterministic", "deterministic"]],
+      ["generateJitConfig", ["deterministic", "deterministic", "transient"]],
+      ["tagInstance", ["deterministic", "deterministic", "deterministic"]],
+      ["registrationToken", ["deterministic", "deterministic", "deterministic"]],
+      ["putToken", ["transient", "transient", "deterministic"]],
+      ["deleteToken", ["deterministic", "deterministic", "deterministic"]],
+      ["deleteRunner", ["deterministic", "deterministic", "deterministic"]],
+      ["terminate", ["deterministic", "deterministic", "deterministic"]],
+    ]);
+  });
+
+  it.effect("retries a token put that conflicts with its own lost response, after cleaning up what landed", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.putFailures = [["/beep-ci/heavy/tokens/", landedPut]];
+      const { retry } = yield* runLogged(world, [queued({ id: 1 })]);
+      expect([retry, world.terminated, world.deletedRunners]).toStrictEqual([[], ["i-0001"], [1001]]);
+      expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([jobRetryUrl]);
+    })
+  );
+
+  it.effect("retries a JIT registration that conflicts with its own lost response, with no runner id to delete", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.jitFailures = ["i-0001"];
+      world.jitError = toGitHubApiError("generateJitConfig")({ _tag: "Conflict", message: "Already exists" });
+      const { retry } = yield* runLogged(world, [queued({ id: 1 })]);
+      expect([retry, world.terminated, world.deletedRunners]).toStrictEqual([[], ["i-0001"], []]);
+      expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([jobRetryUrl]);
+    })
+  );
+
+  it.effect("keeps dead-lettering a JIT refusal that is not a conflict", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.jitFailures = ["i-0001"];
+      world.jitError = toGitHubApiError("generateJitConfig")({ _tag: "UnprocessableEntity", message: "invalid" });
+      const { retry } = yield* runLogged(world, [queued({ id: 1 })]);
+      expect([retry, A.map(world.sent, (sent) => sent.queueUrl)]).toStrictEqual([[], [buildDlqUrl]]);
+    })
+  );
 
   it.effect("writes the JIT config Advanced-tier, the runner-group cache Standard-tier", () =>
     Effect.gen(function* () {

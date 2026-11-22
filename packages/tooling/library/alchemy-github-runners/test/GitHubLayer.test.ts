@@ -194,7 +194,10 @@ describe("live GitHub layers over distilled", () => {
           }).pipe(GitHubRetry.none)
         );
         deepStrictEqual(
-          A.map(errors, (error) => [error.rateLimited, error.code, classifyFailure(error)] as const),
+          A.map(
+            errors,
+            (error) => [error.rateLimited, error.code, classifyFailure("generateJitConfig")(error)] as const
+          ),
           [
             [true, O.some("TooManyRequests"), "transient"],
             [true, O.some("TooManyRequests"), "transient"],
@@ -209,7 +212,7 @@ describe("live GitHub layers over distilled", () => {
               toGitHubApiError("jit")({ _tag: "Forbidden", message: "You have exceeded a secondary rate limit." }),
               toGitHubApiError("jit")({ _tag: "Forbidden", message: "Resource not accessible by integration" }),
             ],
-            classifyFailure
+            classifyFailure("generateJitConfig")
           )
         ).toStrictEqual(["transient", "deterministic"]);
       })

@@ -226,6 +226,12 @@ describe("live AWS layers over distilled", () => {
             body: '{"__type":"RequestThrottled","message":"Rate exceeded"}',
             headers: { "content-type": "application/x-amz-json-1.1" },
           },
+          // A tagged put creates, so a resend after a lost response finds its own first attempt.
+          "/exists": {
+            status: 400,
+            body: '{"__type":"ParameterAlreadyExists","message":"The parameter already exists."}',
+            headers: { "content-type": "application/x-amz-json-1.1" },
+          },
           "/undeclared": {
             status: 409,
             body: '{"__type":"SomethingNew","message":"conflict"}',
@@ -257,9 +263,16 @@ describe("live AWS layers over distilled", () => {
             // The SDK reads the bare `Throttling` code as its ThrottlingException class.
             [O.some("ThrottlingException"), O.none(), "transient"],
             [O.some("RequestThrottled"), O.some(400), "transient"],
+            [O.some("ParameterAlreadyExists"), O.none(), "client"],
             [O.some("SomethingNew"), O.some(409), "client"],
           ]
         );
+        // The conflict means "it landed" only for the token put, the step that creates under the instance's own name.
+        const exists = A.filter(errors, (error) => O.contains(error.code, "ParameterAlreadyExists"));
+        expect([
+          A.map(exists, classifyFailure("putToken")),
+          A.map(exists, classifyFailure("resolveRunnerGroup")),
+        ]).toStrictEqual([["transient"], ["deterministic"]]);
       })
   );
 
@@ -281,7 +294,7 @@ describe("live AWS layers over distilled", () => {
         ],
         (error) => {
           const mapped = map(error);
-          return [mapped.fault, classifyFailure(mapped)];
+          return [mapped.fault, classifyFailure("putToken")(mapped)];
         }
       )
     ).toStrictEqual([
