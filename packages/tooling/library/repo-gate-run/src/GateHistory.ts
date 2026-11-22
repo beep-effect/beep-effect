@@ -1,7 +1,7 @@
 /**
  * The history slot: the contract a history service fills with a label per
  * failing item and a delta since the previous run, read under a deadline so
- * the console never waits on it. `goals/gate-run-history` implements it;
+ * slow history never hides the verdict. `goals/gate-run-history` implements it;
  * this package ships the no-op layer and the test layers.
  *
  * @packageDocumentation
@@ -27,8 +27,9 @@ const $I = $RepoGateRunId.create("GateHistory");
 
 /**
  * What history says about a report: a label per item, keyed by the item
- * key's fingerprint, and the delta since the previous run of the same gate
- * and subject.
+ * key's fingerprint, the delta since the previous run of the same gate
+ * and subject, and why the main baseline is absent when it is, which the
+ * console says once.
  *
  * **Example** (Build an empty answer)
  *
@@ -45,9 +46,11 @@ export class HistoryAnswer extends S.Opaque<HistoryAnswer, { readonly brand: uni
   S.Struct({
     labels: S.Record(S.String, HistoryLabel).pipe(S.withConstructorDefault(Effect.succeed({}))),
     delta: S.OptionFromOptionalKey(RunDelta).pipe(S.withConstructorDefault(Effect.succeedNone)),
+    baseline: S.OptionFromOptionalKey(S.String).pipe(S.withConstructorDefault(Effect.succeedNone)),
   }).pipe(
     $I.annoteSchema("HistoryAnswer", {
-      description: "History labels by item fingerprint and the delta since the previous run.",
+      description:
+        "History labels by item fingerprint, the delta since the previous run, and why the main baseline is absent.",
     })
   )
 ) {}
@@ -77,8 +80,8 @@ export class HistoryReadError extends S.TaggedError<HistoryReadError, { readonly
 ) {}
 
 /**
- * How long a caller waits for history, in milliseconds, before rendering
- * without it.
+ * The deadline a caller reads history under, in milliseconds, before it
+ * renders without it. A store wait that cannot be interrupted can outlast it.
  *
  * **Example** (Read the default deadline)
  *

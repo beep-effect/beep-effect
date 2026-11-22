@@ -6,8 +6,9 @@
  * the runner retirement, for the direct captures). Error classes are reduced to `{ _tag, exitCode }` records carrying
  * the site's own error tag, since the differential compares only what callers branch on. Pure parsers the sites
  * deleted (`changedPathEntriesFromNameStatus`, `gitTreeEntriesFromNulOutput`, `parseKnowledgePathRemovals`) are
- * inlined verbatim; the unchanged pure classifier (`classifyChangedPaths`) and the ref-name expansion
- * (`gitRefSpanNamesForTesting`) are imported from the shipped tree.
+ * inlined verbatim; the unchanged pure classifier (`classifyChangedPaths`) is imported from the shipped tree.
+ *
+ * The B25 body (the knowledge ref census) is gone: #3453 deleted the shipped census it was compared with.
  *
  * Import repoint only: StepExec/JsonCodec moved to `@beep/repo-cli-kit` (#2669, beep-cli-composition W3).
  */
@@ -17,7 +18,6 @@ import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import { flow, pipe } from "effect/Function";
-import * as HashSet from "effect/HashSet";
 import * as Match from "effect/Match";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
@@ -34,7 +34,6 @@ import {
   runRepoCommandCapture,
   runRepoCommandCaptureRaw,
 } from "../../../../packages/tooling/tool/cli/src/internal/repo-run/RepoRun.executor.ts";
-import { gitRefSpanNamesForTesting } from "../../../../packages/tooling/tool/cli/src/test/Knowledge.test-kit.ts";
 import { runGitLines, runGitOutput, runGitPathList, runGitRawOutput } from "./GitRunners.old.ts";
 import type * as SecureRandom from "effect/crypto/SecureRandom";
 import type * as FileSystem from "effect/FileSystem";
@@ -214,16 +213,7 @@ export const oldDoctestChangedPaths = Effect.fnUntraced(function* (repoRoot: str
   return [...committed, ...dirty, ...untracked];
 });
 
-// --- Knowledge: readKnowledgeGitRefNames (B25) and the path-removal log (B18, B19) --------------------------------
-
-export const oldKnowledgeGitRefNames = Effect.fnUntraced(function* (repoRoot: string) {
-  const fullRefs = yield* runGitLines(
-    repoRoot,
-    ["for-each-ref", "--format=%(refname)", "refs/heads", "refs/remotes", "refs/tags"],
-    adapterFor("KnowledgeOperationalError")
-  );
-  return HashSet.fromIterable(A.flatMap(fullRefs, gitRefSpanNamesForTesting));
-});
+// --- Knowledge: the path-removal log (B18, B19) -------------------------------------------------------------------
 
 const KNOWLEDGE_PATH_REMOVAL_LOG_ARGS: ReadonlyArray<string> = [
   "-c",

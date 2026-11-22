@@ -2,7 +2,7 @@
 
 ## Status
 
-Status: `pending`
+Status: `active`
 
 ## Phases
 
@@ -13,10 +13,10 @@ model and the gate-run library from `goals/gate-report-core`.
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Confirm the store path and repository key, the window and deadline defaults, the driver under the narrow-adapter rule, and the state of the hosted-report carrier. | Decision files record each default and the guardian's reading of the driver edge; the carrier's status in `goals/ci-gate-reports` is noted. |
-| P1 Schema | pending | Define the series key, observation, input fingerprint use, history configuration, label answer, delta, `GateHistoryError` and its reason domain, and the table schema with its first migration. | Schemas round-trip; the label and delta fixtures decode; the migration applies twice without change. |
-| P2 Service contracts | pending | Define the history service that implements core's label and delta slot, and the baseline-import service, each with an in-memory test layer. | Contracts compile with schema-typed shapes; core's console renders labels and a delta through the test layer. |
-| P3 Lane history | pending | Port the classifier and window with the fixed rules, implement the SQLite store, task-path ingestion after render, retention, quarantine reconciliation and the history queries. | `AC-H1` to `AC-H6` and `AC-H8` to `AC-H13` pass, the twelve-writer test included. |
+| P0 Research | complete | Confirm the store path and repository key, the window and deadline defaults, the driver under the narrow-adapter rule, and the state of the hosted-report carrier. | Decision files record each default and the guardian's reading of the driver edge; the carrier's status in `goals/ci-gate-reports` is noted. |
+| P1 Schema | complete | Define the series key, observation, input fingerprint use, history configuration, label answer, delta, `GateHistoryError` and its reason domain, and the table schema with its first migration. | Schemas round-trip; the label and delta fixtures decode; the migration applies twice without change. |
+| P2 Service contracts | complete | Define the history service that implements core's label and delta slot, and the baseline-import service, each with an in-memory test layer. | Contracts compile with schema-typed shapes; core's console renders labels and a delta through the test layer. |
+| P3 Lane history | complete | Port the classifier and window with the fixed rules, implement the SQLite store, task-path ingestion after render, retention, quarantine reconciliation and the history queries. | `AC-H1` to `AC-H6` and `AC-H8` to `AC-H13` pass, the twelve-writer test included. |
 | P4 Hosted-main baseline | pending | Import main's hosted reports for the lane's merge base through the carrier `goals/ci-gate-reports` ships, and label `red-on-main`. | `AC-H7` passes against reports uploaded by a hosted run. |
 | P5 Port review | pending | Review each ported module against upstream and repo law, last. | Attribution, style laws and the persist invariant confirmed; findings fixed in place. |
 | P6 Yeet: PR to mergeable | pending | Publish through yeet and drive the PR to mergeable: required checks green, review comments answered and resolved. | `mergeStateStatus` is `CLEAN`; zero unresolved review threads. |

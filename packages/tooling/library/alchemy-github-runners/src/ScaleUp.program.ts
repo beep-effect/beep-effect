@@ -14,15 +14,17 @@
  * @since 0.0.0
  */
 
+import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
 import * as Clock from "effect/Clock";
 import * as Effect from "effect/Effect";
-import { dual } from "effect/Function";
+import { dual, pipe } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FleetLaunchRequest, FleetOverride } from "./Ec2Fleet.models.ts";
@@ -32,14 +34,16 @@ import { JitConfigRequest, RunnerOwner } from "./GitHubRunners.models.ts";
 import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import { installationTokenFor, ownerOf } from "./internal/Installation.ts";
 import { MessageQueue } from "./MessageQueue.service.ts";
+import { AwsFault, AwsThrottlingCode } from "./RunnerFleet.errors.ts";
 import { RunnerFilter, RunnerTag, runnerApplicationTagValue } from "./RunnerInstance.models.ts";
 import { ActionRequestMessage } from "./RunnerMessages.models.ts";
 import { CapacityType } from "./RunnerPool.models.ts";
 import { PoolRuntimeConfig } from "./RunnerRuntime.models.ts";
 import { runnerGroupCacheName } from "./SsmParameters.models.ts";
-import { SsmStore } from "./SsmStore.service.ts";
+import { ParameterWrite, SsmStore } from "./SsmStore.service.ts";
 import type { FleetLaunchResult } from "./Ec2Fleet.models.ts";
 import type { InstallationToken } from "./GitHubRunners.models.ts";
+import type { AwsApiError, GitHubApiError } from "./RunnerFleet.errors.ts";
 import type { QueuedActionRequest } from "./RunnerMessages.models.ts";
 import type { AllocationStrategy } from "./RunnerPool.models.ts";
 
@@ -275,28 +279,295 @@ const resolveRunnerGroupId = Effect.fn("ScaleUp.resolveRunnerGroupId")(function*
   }
   const github = yield* GitHubRunners;
   const groupId = yield* github.runnerGroupId(token, owner.owner, config.pool.runnerGroup);
-  yield* ssm.put({ name: cacheName, value: Redacted.make(String(groupId)), secure: false, tags: {} });
+  yield* ssm.put(
+    ParameterWrite.make({
+      name: cacheName,
+      value: Redacted.make(String(groupId)),
+      secure: false,
+      tier: "Standard",
+      tags: {},
+    })
+  );
   return groupId;
 });
 
-// Configures each instance in order and returns the ids whose configuration
-// failed; one failure never stops the others.
-const failedInstanceIds = <E, R>(
+/**
+ * A step of configuring one launched runner, or of cleaning one up.
+ *
+ * **Example** (The JIT token write)
+ *
+ * ```ts
+ * import { ConfigureOperation } from "@beep/alchemy-github-runners/ScaleUp.program"
+ *
+ * console.log(ConfigureOperation.is.putToken("putToken")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const ConfigureOperation = LiteralKit([
+  "resolveRunnerGroup",
+  "generateJitConfig",
+  "tagInstance",
+  "registrationToken",
+  "putToken",
+  "deleteToken",
+  "deleteRunner",
+  "terminate",
+]).pipe($I.annoteSchema("ConfigureOperation", { description: "A step of configuring or cleaning up one runner." }));
+
+/**
+ * Runtime type for {@link ConfigureOperation}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type ConfigureOperation = typeof ConfigureOperation.Type;
+
+/**
+ * Whether sending a failed request again can succeed.
+ *
+ * **Details**
+ *
+ * `deterministic`: an HTTP 4xx other than 429, or an AWS error the live layer
+ * reads as the client's fault (validation, authorization, quota). A resend
+ * fails the same way. `transient`: a 5xx, a 429, throttling, a timeout, or a
+ * failure with no status and no client-fault reading.
+ *
+ * **Example** (A refused SSM write)
+ *
+ * ```ts
+ * import { FailureClass } from "@beep/alchemy-github-runners/ScaleUp.program"
+ *
+ * console.log(FailureClass.is.deterministic("deterministic")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const FailureClass = LiteralKit(["deterministic", "transient"]).pipe(
+  $I.annoteSchema("FailureClass", { description: "Whether sending a failed request again can succeed." })
+);
+
+/**
+ * Runtime type for {@link FailureClass}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type FailureClass = typeof FailureClass.Type;
+
+const statusClass = (status: number): O.Option<FailureClass> =>
+  status === 429 || status >= 500
+    ? O.some("transient")
+    : status >= 400 && status < 500
+      ? O.some("deterministic")
+      : O.none();
+
+/**
+ * Classifies a failed runner-configuration step by whether a resend can
+ * succeed.
+ *
+ * **Details**
+ *
+ * The token put (`putToken`) and `generateJitConfig` create something named
+ * after one instance. The clients resend a call whose response was lost, so a
+ * conflict there (SSM `ParameterAlreadyExists` or a 409, GitHub a 409) reads as
+ * the first attempt having landed: it is transient, because the retried job
+ * launches a new instance with new names. A conflict in any other step stays
+ * deterministic. Otherwise, AWS: a throttling code is transient whatever the status (AWS throttles
+ * with HTTP 400); otherwise the live layer's fault reading decides, and only
+ * an unread fault falls back to the status. GitHub: a rate limit is transient
+ * even on a 403; otherwise the status decides. A failure with neither is
+ * transient, so an unreadable failure keeps the bounded retry path.
+ *
+ * **Gotchas**
+ *
+ * A 409 from `generateJitConfig` carries no runner id, so the cleanup cannot
+ * delete that registration. What is left is an offline JIT registration on
+ * GitHub, not a running machine.
+ *
+ * **Example** (An SSM value over the tier limit)
+ *
+ * ```ts
+ * import { classifyFailure } from "@beep/alchemy-github-runners/ScaleUp.program"
+ * import { AwsApiError } from "@beep/alchemy-github-runners/RunnerFleet.errors"
+ * import * as O from "effect/Option"
+ *
+ * const error = AwsApiError.make({
+ *   service: "ssm", operation: "putParameter", code: O.some("ValidationException"), fault: "client", message: "too long",
+ * })
+ * console.log(classifyFailure("putToken")(error)) // "deterministic"
+ * ```
+ *
+ * @param operation - The step that failed.
+ * @returns A classifier of that step's typed error: `deterministic` or `transient`.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const classifyFailure =
+  (operation: ConfigureOperation) =>
+  (error: AwsApiError | GitHubApiError): FailureClass =>
+    isLandedCreate(operation, error)
+      ? FailureClass.Enum.transient
+      : error._tag === "AwsApiError"
+        ? classifyAws(error)
+        : classifyGitHub(error);
+
+const isConflictStatus = (status: O.Option<number>): boolean => O.exists(status, (value) => value === 409);
+
+// A create resent after a lost response conflicts with its own first attempt. Only these two steps create under a name
+// that is unique to the instance, so only their conflicts mean "it landed".
+const isLandedCreate = (operation: ConfigureOperation, error: AwsApiError | GitHubApiError): boolean =>
+  error._tag === "AwsApiError"
+    ? ConfigureOperation.is.putToken(operation) &&
+      (O.exists(error.code, (code) => code === "ParameterAlreadyExists") || isConflictStatus(error.status))
+    : ConfigureOperation.is.generateJitConfig(operation) && isConflictStatus(error.status);
+
+const byStatus = (status: O.Option<number>): FailureClass =>
+  O.getOrElse(O.flatMap(status, statusClass), () => FailureClass.Enum.transient);
+
+const isThrottlingCode = S.is(AwsThrottlingCode);
+
+// A throttling code wins over everything (AWS throttles with HTTP 400); then the layer's fault reading, which already
+// weighed the status; only an unread fault falls back to the bare status.
+const classifyAws = (error: AwsApiError): FailureClass =>
+  O.exists(error.code, isThrottlingCode)
+    ? FailureClass.Enum.transient
+    : AwsFault.match(error.fault, {
+        client: () => FailureClass.Enum.deterministic,
+        transient: () => FailureClass.Enum.transient,
+        unknown: () => byStatus(error.status),
+      });
+
+// A primary or secondary rate limit is throttling even when GitHub answers 403.
+const classifyGitHub = (error: GitHubApiError): FailureClass =>
+  error.rateLimited ? FailureClass.Enum.transient : byStatus(error.status);
+
+/**
+ * One launched runner whose configuration failed: the step, its
+ * classification and the provider's status, code and (scrubbed) message.
+ *
+ * **Details**
+ *
+ * `runnerId` is the GitHub runner JIT created before the failure, and
+ * `tokenParameter` the token parameter that may exist (a token write that
+ * failed client-side can still have landed); cleanup removes both.
+ *
+ * **Example** (A refused JIT token write)
+ *
+ * ```ts
+ * import { ConfigureFailure } from "@beep/alchemy-github-runners/ScaleUp.program"
+ * import * as O from "effect/Option"
+ *
+ * const failure = ConfigureFailure.make({
+ *   instanceId: "i-1",
+ *   operation: "putToken",
+ *   failureClass: "deterministic",
+ *   status: O.none(),
+ *   code: O.some("ValidationException"),
+ *   message: "value too long",
+ *   runnerId: O.some(1001),
+ *   tokenParameter: O.some("/beep-ci/heavy/tokens/i-1"),
+ * })
+ * console.log(failure.failureClass)
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class ConfigureFailure extends S.Opaque<ConfigureFailure, { readonly brand: unique symbol }>()(
+  S.Struct({
+    instanceId: S.String,
+    operation: ConfigureOperation,
+    failureClass: FailureClass,
+    status: S.Option(S.Int),
+    code: S.Option(S.String),
+    message: S.String.annotateKey({
+      description: "The provider's message, with known secrets and long tokens masked.",
+    }),
+    runnerId: S.Option(S.Int).annotateKey({ description: "The GitHub runner JIT created before the failure." }),
+    tokenParameter: S.Option(S.String).annotateKey({
+      description: "The token parameter that may have been written before the failure.",
+    }),
+  }).pipe($I.annoteSchema("ConfigureFailure", { description: "One launched runner whose configuration failed." }))
+) {}
+
+const maxLoggedMessage = 512;
+// JIT configs and registration tokens are long base64 or base62 runs; mask any such run a provider echoes back.
+const tokenLike = /[A-Za-z0-9+/=_-]{40,}/gu;
+
+// Masks every known secret value and any token-like run, then bounds the length; never logs a value verbatim.
+const scrubMessage = (message: string, secrets: ReadonlyArray<Redacted.Redacted<string>>): string =>
+  pipe(
+    A.reduce(secrets, message, (text, secret) => {
+      const value = Redacted.value(secret);
+      return Str.isNonEmpty(value) ? Str.replaceAll(value, "<redacted>")(text) : text;
+    }),
+    Str.replaceAll(tokenLike, "<redacted>"),
+    Str.slice(0, maxLoggedMessage)
+  );
+
+const failureOf = (
+  instanceId: string,
+  operation: ConfigureOperation,
+  error: AwsApiError | GitHubApiError,
+  created: {
+    readonly secrets?: ReadonlyArray<Redacted.Redacted<string>>;
+    readonly runnerId?: number;
+    readonly tokenParameter?: string;
+  } = {}
+): ConfigureFailure =>
+  ConfigureFailure.make({
+    instanceId,
+    operation,
+    failureClass: classifyFailure(operation)(error),
+    status: error.status,
+    code: error.code,
+    message: scrubMessage(error.message, created.secrets ?? []),
+    runnerId: O.fromUndefinedOr(created.runnerId),
+    tokenParameter: O.fromUndefinedOr(created.tokenParameter),
+  });
+
+const failureAnnotations = (failure: ConfigureFailure) => ({
+  instanceId: failure.instanceId,
+  operation: failure.operation,
+  failureClass: failure.failureClass,
+  status: O.getOrNull(failure.status),
+  code: O.getOrNull(failure.code),
+  providerMessage: failure.message,
+});
+
+const logConfigureFailure = (failure: ConfigureFailure) =>
+  Effect.logWarning("scale-up: runner configuration step failed").pipe(
+    Effect.annotateLogs(failureAnnotations(failure))
+  );
+
+// Configures each instance in order and returns its failures, each logged once; one failure never stops the others.
+const collectFailures = <R>(
   instanceIds: ReadonlyArray<string>,
-  configure: (instanceId: string) => Effect.Effect<unknown, E, R>
-): Effect.Effect<ReadonlyArray<string>, never, R> =>
+  configure: (instanceId: string) => Effect.Effect<unknown, ConfigureFailure, R>
+): Effect.Effect<ReadonlyArray<ConfigureFailure>, never, R> =>
   Effect.map(
     Effect.forEach(
       instanceIds,
       (instanceId) =>
         configure(instanceId).pipe(
-          Effect.as(O.none<string>()),
-          Effect.orElseSucceed(() => O.some(instanceId))
+          Effect.as(O.none<ConfigureFailure>()),
+          Effect.catch((failure) => logConfigureFailure(failure).pipe(Effect.as(O.some(failure))))
         ),
       { concurrency: 1 }
     ),
     A.getSomes
   );
+
+// A step that failed for the whole group fails every instance of it, each logged once.
+const failEvery = (
+  instanceIds: ReadonlyArray<string>,
+  operation: ConfigureOperation,
+  error: AwsApiError | GitHubApiError
+): Effect.Effect<ReadonlyArray<ConfigureFailure>> =>
+  collectFailures(instanceIds, (instanceId) => Effect.fail(failureOf(instanceId, operation, error)));
 
 /**
  * Writes the start configuration of each launched instance into SSM and
@@ -305,11 +576,17 @@ const failedInstanceIds = <E, R>(
  * **Details**
  *
  * Ephemeral JIT pools get one JIT config per instance (runner name
- * `<prefix><instance-id>`), stored as a SecureString at
- * `<tokenPath>/<instance-id>` tagged `InstanceId`, and the instance is tagged
- * `ghr:github_runner_id`. Other pools share one registration token rendered
- * as `config.sh` arguments. A failure for one instance does not stop the
- * others.
+ * `<prefix><instance-id>`), stored as an Advanced-tier SecureString at
+ * `<tokenPath>/<instance-id>` tagged `InstanceId` (a JIT config exceeds the
+ * Standard tier's 4 KB), and the instance is tagged `ghr:github_runner_id`.
+ * Other pools share one registration token rendered as `config.sh`
+ * arguments, written the same way. A failure for one instance does not stop
+ * the others. Every failure is logged once as a warning naming the step, the
+ * HTTP status, the provider code and the provider message with secrets
+ * masked; a failed instance tag is logged and otherwise ignored. Each
+ * failure records the JIT runner and the token parameter it may leave
+ * behind; removing them and terminating the instance is
+ * {@link cleanUpFailedRunner}'s job.
  *
  * **Example** (Wire the configurer)
  *
@@ -320,7 +597,7 @@ const failedInstanceIds = <E, R>(
  * ```
  *
  * @param input - Pool config, installation token, owner and launched instance ids.
- * @returns The instance ids that failed configuration.
+ * @returns One classified failure per instance that could not be configured.
  * @category use-cases
  * @since 0.0.0
  */
@@ -334,48 +611,160 @@ export const configureRunners = Effect.fn("ScaleUp.configureRunners")(function* 
   const ssm = yield* SsmStore;
   const ec2 = yield* Ec2Fleet;
   const github = yield* GitHubRunners;
+  const tokenParameterOf = (instanceId: string) => `${config.tokenPath}/${instanceId}`;
   const putToken = (instanceId: string, value: Redacted.Redacted<string>) =>
-    ssm.put({ name: `${config.tokenPath}/${instanceId}`, value, secure: true, tags: { InstanceId: instanceId } });
+    ssm.put(
+      ParameterWrite.make({
+        name: tokenParameterOf(instanceId),
+        value,
+        secure: true,
+        tier: "Advanced",
+        tags: { InstanceId: instanceId },
+      })
+    );
 
   if (config.pool.ephemeral && config.pool.jitConfig) {
     const groupId = yield* resolveRunnerGroupId(config, token, owner).pipe(Effect.result);
     if (groupId._tag === "Failure") {
-      return input.instanceIds;
+      return yield* failEvery(input.instanceIds, "resolveRunnerGroup", groupId.failure);
     }
-    return yield* failedInstanceIds(
+    return yield* collectFailures(
       input.instanceIds,
       Effect.fnUntraced(function* (instanceId: string) {
-        const jit = yield* github.generateJitConfig(
-          token,
-          JitConfigRequest.make({
-            owner,
-            name: `${config.pool.runnerNamePrefix}${instanceId}`,
-            runnerGroupId: groupId.success,
-            labels: config.pool.labels,
-          })
+        const jit = yield* github
+          .generateJitConfig(
+            token,
+            JitConfigRequest.make({
+              owner,
+              name: `${config.pool.runnerNamePrefix}${instanceId}`,
+              runnerGroupId: groupId.success,
+              labels: config.pool.labels,
+            })
+          )
+          .pipe(Effect.mapError((error) => failureOf(instanceId, "generateJitConfig", error)));
+        // Scale-down reads the tag to deregister the runner; without it the runner is still usable, so only log it.
+        yield* ec2
+          .tag(instanceId, { [RunnerTag.githubRunnerId]: String(jit.runnerId) })
+          .pipe(Effect.catch((error) => logConfigureFailure(failureOf(instanceId, "tagInstance", error))));
+        yield* putToken(instanceId, jit.encodedJitConfig).pipe(
+          Effect.mapError((error) =>
+            failureOf(instanceId, "putToken", error, {
+              secrets: [jit.encodedJitConfig],
+              runnerId: jit.runnerId,
+              tokenParameter: tokenParameterOf(instanceId),
+            })
+          )
         );
-        yield* ec2.tag(instanceId, { [RunnerTag.githubRunnerId]: String(jit.runnerId) }).pipe(Effect.ignore);
-        yield* putToken(instanceId, jit.encodedJitConfig);
       })
     );
   }
 
   const registration = yield* github.registrationToken(token, owner).pipe(Effect.result);
   if (registration._tag === "Failure") {
-    return input.instanceIds;
+    return yield* failEvery(input.instanceIds, "registrationToken", registration.failure);
   }
-  const args = A.join(
-    A.getSomes([
-      O.some(`--url https://github.com/${owner.owner}`),
-      O.some(`--token ${Redacted.value(registration.success)}`),
-      O.some(`--labels ${A.join(config.pool.labels, ",")}`),
-      owner.type === "Org" ? O.some(`--runnergroup ${config.pool.runnerGroup}`) : O.none(),
-      config.pool.ephemeral ? O.some("--ephemeral") : O.none(),
-    ]),
-    " "
+  const args = Redacted.make(
+    A.join(
+      A.getSomes([
+        O.some(`--url https://github.com/${owner.owner}`),
+        O.some(`--token ${Redacted.value(registration.success)}`),
+        O.some(`--labels ${A.join(config.pool.labels, ",")}`),
+        owner.type === "Org" ? O.some(`--runnergroup ${config.pool.runnerGroup}`) : O.none(),
+        config.pool.ephemeral ? O.some("--ephemeral") : O.none(),
+      ]),
+      " "
+    )
   );
-  return yield* failedInstanceIds(input.instanceIds, (instanceId) => putToken(instanceId, Redacted.make(args)));
+  return yield* collectFailures(input.instanceIds, (instanceId) =>
+    putToken(instanceId, args).pipe(
+      Effect.mapError((error) =>
+        failureOf(instanceId, "putToken", error, {
+          secrets: [args, registration.success],
+          tokenParameter: tokenParameterOf(instanceId),
+        })
+      )
+    )
+  );
 });
+
+/**
+ * Removes what a failed runner configuration left behind, in order: the
+ * token parameter, the GitHub JIT runner, then the instance.
+ *
+ * **Details**
+ *
+ * A token parameter left behind counts as a launched runner for the
+ * in-flight window and holds a slot under the pool's cap; a JIT runner left
+ * behind is an offline registration. Each step that fails is logged as a
+ * warning naming the step, and the next step still runs.
+ *
+ * **Example** (Wire the cleanup)
+ *
+ * ```ts
+ * import { cleanUpFailedRunner } from "@beep/alchemy-github-runners/ScaleUp.program"
+ *
+ * console.log(typeof cleanUpFailedRunner)
+ * ```
+ *
+ * @param input - Installation token, owner and the configure failure.
+ * @returns Nothing; every failed step is logged.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const cleanUpFailedRunner = Effect.fn("ScaleUp.cleanUpFailedRunner")(function* (input: {
+  readonly token: InstallationToken;
+  readonly owner: RunnerOwner;
+  readonly failure: ConfigureFailure;
+}) {
+  const { failure } = input;
+  const ssm = yield* SsmStore;
+  const github = yield* GitHubRunners;
+  const ec2 = yield* Ec2Fleet;
+  const logCleanupFailure =
+    (operation: ConfigureOperation, extra: Readonly<Record<string, unknown>>) =>
+    (error: AwsApiError | GitHubApiError) =>
+      Effect.logWarning("scale-up: cleaning up a runner whose configuration failed failed").pipe(
+        Effect.annotateLogs({ ...failureAnnotations(failureOf(failure.instanceId, operation, error)), ...extra })
+      );
+  yield* O.match(failure.tokenParameter, {
+    onNone: () => Effect.void,
+    onSome: (name) => ssm.delete(name).pipe(Effect.catch(logCleanupFailure("deleteToken", { tokenParameter: name }))),
+  });
+  yield* O.match(failure.runnerId, {
+    onNone: () => Effect.void,
+    onSome: (runnerId) =>
+      github
+        .deleteRunner(input.token, input.owner, runnerId)
+        .pipe(Effect.catch(logCleanupFailure("deleteRunner", { runnerId }))),
+  });
+  yield* ec2.terminate(failure.instanceId).pipe(Effect.catch(logCleanupFailure("terminate", {})));
+});
+
+/**
+ * What one job-retry publish did.
+ *
+ * **Example** (The second attempt of a two-attempt policy)
+ *
+ * ```ts
+ * import { JobRetryOutcome } from "@beep/alchemy-github-runners/ScaleUp.program"
+ *
+ * console.log(JobRetryOutcome.is["retries-exhausted"]("retries-exhausted")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const JobRetryOutcome = LiteralKit(["published", "no-retry-policy", "retries-exhausted"]).pipe(
+  $I.annoteSchema("JobRetryOutcome", { description: "What one job-retry publish did." })
+);
+
+/**
+ * Runtime type for {@link JobRetryOutcome}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type JobRetryOutcome = typeof JobRetryOutcome.Type;
 
 /**
  * Publishes a handled message to the job-retry queue when the pool has a
@@ -383,8 +772,10 @@ export const configureRunners = Effect.fn("ScaleUp.configureRunners")(function* 
  *
  * **Details**
  *
- * The counter starts at 0 on the first publish; the delay is
- * `delaySeconds * delayBackoff ^ counter`, capped at 900 seconds.
+ * The counter starts at 0 on the first publish and grows by one per publish
+ * (job-retry carries it back to the build queue); the delay is
+ * `delaySeconds * delayBackoff ^ counter`, capped at SQS's 900 seconds. The
+ * live policy (120 s, backoff 2) waits 120 s, then 240 s.
  *
  * **Example** (Wire the publisher)
  *
@@ -395,7 +786,7 @@ export const configureRunners = Effect.fn("ScaleUp.configureRunners")(function* 
  * ```
  *
  * @param input - Pool config and the message to re-check later.
- * @returns Nothing; a disabled policy or exhausted attempts publish nothing.
+ * @returns `published`, or why nothing was: no retry policy or queue, or the attempts are used up.
  * @category use-cases
  * @since 0.0.0
  */
@@ -406,14 +797,14 @@ export const publishJobRetry = Effect.fn("ScaleUp.publishJobRetry")(function* (i
   const policy = input.config.pool.jobRetry;
   const queueUrl = input.config.jobRetryQueueUrl;
   if (O.isNone(policy) || O.isNone(queueUrl)) {
-    return;
+    return JobRetryOutcome.Enum["no-retry-policy"];
   }
   const counter = O.match(O.fromUndefinedOr(input.message.retryCounter), {
     onNone: () => 0,
     onSome: (current) => current + 1,
   });
   if (counter >= policy.value.maxAttempts) {
-    return;
+    return JobRetryOutcome.Enum["retries-exhausted"];
   }
   const delay = Math.min(policy.value.delaySeconds * policy.value.delayBackoff ** counter, 900);
   const queue = yield* MessageQueue;
@@ -421,6 +812,120 @@ export const publishJobRetry = Effect.fn("ScaleUp.publishJobRetry")(function* (i
     Effect.orDie
   );
   yield* queue.send({ queueUrl: queueUrl.value, body, delaySeconds: O.some(Math.floor(delay)) });
+  return JobRetryOutcome.Enum.published;
+});
+
+/**
+ * What happened to a message scale-up dead-lettered after a failed runner
+ * configuration.
+ *
+ * **Details**
+ *
+ * `send-failed` is the one outcome whose message comes back as a batch item
+ * failure, so it is not lost; `no-dlq` (a runtime config without the build
+ * DLQ) acknowledges it with only the error log.
+ *
+ * **Example** (Sent to the build DLQ)
+ *
+ * ```ts
+ * import { DeadLetterOutcome } from "@beep/alchemy-github-runners/ScaleUp.program"
+ *
+ * console.log(DeadLetterOutcome.is.sent("sent")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const DeadLetterOutcome = LiteralKit(["sent", "no-dlq", "send-failed"]).pipe(
+  $I.annoteSchema("DeadLetterOutcome", {
+    description: "What happened to a message scale-up dead-lettered after a failed runner configuration.",
+  })
+);
+
+/**
+ * Runtime type for {@link DeadLetterOutcome}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DeadLetterOutcome = typeof DeadLetterOutcome.Type;
+
+/**
+ * Why scale-up dead-lettered a message instead of retrying it.
+ *
+ * **Details**
+ *
+ * `deterministic`: a resend fails the same way. The others are a transient
+ * failure with no job-retry left: the pool has no retry policy, its attempts
+ * are used up, or publishing the retry failed. Redelivering such a message
+ * would relaunch an instance on SQS's fixed visibility timeout, with no
+ * backoff and no re-check of the job.
+ *
+ * **Example** (Attempts used up)
+ *
+ * ```ts
+ * import { DeadLetterReason } from "@beep/alchemy-github-runners/ScaleUp.program"
+ *
+ * console.log(DeadLetterReason.is["retries-exhausted"]("retries-exhausted")) // true
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export const DeadLetterReason = LiteralKit([
+  "deterministic",
+  "no-retry-policy",
+  "retries-exhausted",
+  "retry-publish-failed",
+]).pipe($I.annoteSchema("DeadLetterReason", { description: "Why scale-up dead-lettered a message." }));
+
+/**
+ * Runtime type for {@link DeadLetterReason}.
+ *
+ * @category type-level
+ * @since 0.0.0
+ */
+export type DeadLetterReason = typeof DeadLetterReason.Type;
+
+// Acknowledges a message whose runner configuration failed with no retry worth making: the message goes to the
+// build DLQ instead of back to a queue, logged as an error. Only a failed DLQ send keeps it for redelivery.
+const deadLetter = Effect.fn("ScaleUp.deadLetter")(function* (
+  config: PoolRuntimeConfig,
+  request: QueuedActionRequest,
+  failure: ConfigureFailure,
+  reason: DeadLetterReason
+) {
+  const queue = yield* MessageQueue;
+  const body = yield* encodeActionRequest(request.message).pipe(Effect.orDie);
+  const outcome = yield* O.match(config.buildDlqUrl, {
+    onNone: () => Effect.succeed(DeadLetterOutcome.Enum["no-dlq"]),
+    onSome: (queueUrl) =>
+      queue.send({ queueUrl, body, delaySeconds: O.none() }).pipe(
+        Effect.as(DeadLetterOutcome.Enum.sent),
+        Effect.catch((error) =>
+          Effect.logWarning("scale-up: sending a dropped message to the build DLQ failed").pipe(
+            Effect.annotateLogs({
+              messageId: request.messageId,
+              code: O.getOrNull(error.code),
+              status: O.getOrNull(error.status),
+            }),
+            Effect.as(DeadLetterOutcome.Enum["send-failed"])
+          )
+        )
+      ),
+  });
+  yield* Effect.logError(
+    "scale-up: dead-lettering the message; a redelivery would relaunch an instance with no backoff"
+  ).pipe(
+    Effect.annotateLogs({
+      ...failureAnnotations(failure),
+      messageId: request.messageId,
+      jobId: request.message.id,
+      reason,
+      deadLetter: outcome,
+    })
+  );
+  return outcome;
 });
 
 const byRetryCounter = Order.mapInput(
@@ -428,12 +933,32 @@ const byRetryCounter = Order.mapInput(
   (request: QueuedActionRequest) => request.message.retryCounter ?? 0
 );
 
+const messageIdsOf = (requests: ReadonlyArray<QueuedActionRequest>) =>
+  HashSet.fromIterable(A.map(requests, ({ messageId }) => messageId));
+
+// Publishes a job-retry re-check; a failed publish is logged and never fails the batch.
+const publishRetryLogged = (config: PoolRuntimeConfig, request: QueuedActionRequest) =>
+  publishJobRetry({ config, message: request.message }).pipe(
+    Effect.asSome,
+    Effect.catch((error) =>
+      Effect.logWarning("scale-up: publishing a job-retry re-check failed").pipe(
+        Effect.annotateLogs({
+          messageId: request.messageId,
+          jobId: request.message.id,
+          code: O.getOrNull(error.code),
+          status: O.getOrNull(error.status),
+          providerMessage: scrubMessage(error.message, []),
+        }),
+        Effect.as(O.none<JobRetryOutcome>())
+      )
+    )
+  );
+
 const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
   config: PoolRuntimeConfig,
   owner: RunnerOwner,
   messages: A.NonEmptyReadonlyArray<QueuedActionRequest>
 ) {
-  const ec2 = yield* Ec2Fleet;
   const github = yield* GitHubRunners;
   const ssm = yield* SsmStore;
   const token = yield* installationTokenFor(owner, messages[0].message.installationId);
@@ -459,17 +984,17 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
   const allowed =
     config.pool.maximumCount === -1 ? wanted : Math.max(0, Math.min(wanted, config.pool.maximumCount - current));
   const skipped = wanted - allowed;
-  const overCap = config.pool.ephemeral ? A.map(A.take(stillQueued, skipped), ({ messageId }) => messageId) : [];
-  const publishRetries = (retrying: ReadonlyArray<string>) =>
-    Effect.forEach(
-      A.filter(stillQueued, ({ messageId }) => !A.contains(retrying, messageId)),
-      ({ message }) => publishJobRetry({ config, message }).pipe(Effect.ignore),
-      { concurrency: 1, discard: true }
-    );
+  const overCap = config.pool.ephemeral ? A.take(stillQueued, skipped) : [];
+  const publishRetries = (requests: ReadonlyArray<QueuedActionRequest>) =>
+    Effect.forEach(requests, (request) => publishRetryLogged(config, request), { concurrency: 1, discard: true });
+  const handledExcept = (excluded: ReadonlyArray<QueuedActionRequest>) => {
+    const ids = messageIdsOf(excluded);
+    return A.filter(stillQueued, ({ messageId }) => !HashSet.has(ids, messageId));
+  };
 
   if (allowed <= 0) {
-    yield* publishRetries(overCap);
-    return overCap;
+    yield* publishRetries(handledExcept(overCap));
+    return A.map(overCap, ({ messageId }) => messageId);
   }
 
   const imageId = yield* O.match(config.amiIdParameterName, {
@@ -489,21 +1014,74 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
           })
         );
 
-  const failedConfig = A.isReadonlyArrayNonEmpty(launched.instanceIds)
+  const failures = A.isReadonlyArrayNonEmpty(launched.instanceIds)
     ? yield* configureRunners({ config, token, owner, instanceIds: launched.instanceIds })
     : [];
-  yield* Effect.forEach(failedConfig, (instanceId) => ec2.terminate(instanceId).pipe(Effect.ignore), {
+  yield* Effect.forEach(failures, (failure) => cleanUpFailedRunner({ token, owner, failure }), {
     concurrency: 1,
     discard: true,
   });
 
-  const retryCount = launched.retryable + failedConfig.length;
-  const retrying = A.appendAll(
-    overCap,
-    A.map(A.take(A.drop(stillQueued, skipped), retryCount), ({ messageId }) => messageId)
+  // The launch's messages, in order: a retryable shortfall first, then one per deterministic failure, then one per
+  // transient failure; the rest (launched runners and a non-retryable shortfall) keep the job-retry re-check.
+  const launchable = A.drop(stillQueued, skipped);
+  const launchRetry = A.take(launchable, launched.retryable);
+  const afterRetry = A.drop(launchable, launched.retryable);
+  const deterministicFailures = A.filter(failures, (failure) => FailureClass.is.deterministic(failure.failureClass));
+  const transientFailures = A.filter(failures, (failure) => FailureClass.is.transient(failure.failureClass));
+  const deterministic = A.zip(A.take(afterRetry, deterministicFailures.length), deterministicFailures);
+  const transient = A.zip(
+    A.take(A.drop(afterRetry, deterministicFailures.length), transientFailures.length),
+    transientFailures
   );
-  yield* publishRetries(retrying);
-  return retrying;
+
+  // A transient failure retries through job-retry, which re-checks the job and backs off with the retry counter.
+  // With no retry left it is dead-lettered like a deterministic one: a redelivery would relaunch on SQS's fixed
+  // visibility timeout.
+  const unretried = yield* Effect.forEach(
+    transient,
+    ([request, failure]) =>
+      publishRetryLogged(config, request).pipe(
+        Effect.map((outcome) =>
+          O.match(outcome, {
+            onNone: () => O.some([request, failure, DeadLetterReason.Enum["retry-publish-failed"]] as const),
+            onSome: (published) =>
+              JobRetryOutcome.match(published, {
+                published: () => O.none(),
+                "no-retry-policy": () => O.some([request, failure, DeadLetterReason.Enum["no-retry-policy"]] as const),
+                "retries-exhausted": () =>
+                  O.some([request, failure, DeadLetterReason.Enum["retries-exhausted"]] as const),
+              }),
+          })
+        )
+      ),
+    { concurrency: 1 }
+  );
+  const deadLettered = yield* Effect.forEach(
+    A.appendAll(
+      A.map(deterministic, ([request, failure]) => [request, failure, DeadLetterReason.Enum.deterministic] as const),
+      A.getSomes(unretried)
+    ),
+    ([request, failure, reason]) =>
+      deadLetter(config, request, failure, reason).pipe(Effect.map((outcome) => [request, outcome] as const)),
+    { concurrency: 1 }
+  );
+  const sendFailed = A.filterMap(deadLettered, ([request, outcome]) =>
+    DeadLetterOutcome.is["send-failed"](outcome) ? Result.succeed(request) : Result.failVoid
+  );
+
+  yield* publishRetries(
+    handledExcept(
+      A.appendAll(
+        A.appendAll(overCap, launchRetry),
+        A.appendAll(
+          A.map(deterministic, ([request]) => request),
+          A.map(transient, ([request]) => request)
+        )
+      )
+    )
+  );
+  return A.map(A.appendAll(A.appendAll(overCap, launchRetry), sendFailed), ({ messageId }) => messageId);
 });
 
 // A runner's JIT config parameter lives from its configuration until the runner reads and deletes it at boot, and
@@ -558,8 +1136,17 @@ const countRunners = Effect.fnUntraced(function* (config: PoolRuntimeConfig, fil
  * cutover decision. When either read fails, the group launches nothing
  * and every one of its messages is returned for retry. With
  * ephemeral runners, messages over the cap and retryable launch failures are
- * returned for redelivery; everything else handled is published to the
- * job-retry queue. Non-`workflow_job` events with ephemeral runners are
+ * returned for redelivery. An instance whose configuration failed is
+ * terminated once. When the failure is deterministic ({@link classifyFailure})
+ * its message goes to the build DLQ and is acknowledged: no job-retry, no
+ * redelivery, so a resend cannot relaunch an instance to fail again. When it
+ * is transient its message is published to job-retry, which re-checks the job
+ * and backs off with the retry counter; when no retry can be published (no
+ * retry policy, attempts used up, or a failed publish) it is dead-lettered
+ * too. A dead-lettered message comes back as a batch item failure only when
+ * the DLQ send itself fails. Nothing redrives the build DLQ, so a
+ * dead-lettered job waits until GitHub times it out. Everything else handled
+ * is published to the job-retry queue. Non-`workflow_job` events with ephemeral runners are
  * returned (upstream behaviour); a repository owned by a user while the pool
  * registers org runners is dropped. A group whose GitHub auth fails returns
  * all its messages.

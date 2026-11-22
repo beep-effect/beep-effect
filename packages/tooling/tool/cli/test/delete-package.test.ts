@@ -477,6 +477,186 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("reads dated records as history and keeps the doctor clean", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const records: ReadonlyArray<readonly [string, string]> = [
+            [".changeset/older-note.md", "---\n{}\n---\n\nMoves out of `deploy/src/Stack.ts`.\n"],
+            ["docs/history/commit-message-map.json", '{ "0": "feat: add `@beep/deploy`" }\n'],
+            ["docs/reports/2026-01-01-cache-review.md", "Reviewed `@beep/deploy`.\n"],
+            ["docs/reports/retirement/request.json", '{ "package": "@beep/deploy" }\n'],
+            ["explorations/INBOX.md", "- 2026-01-01: split `@beep/deploy`.\n"],
+            ["explorations/demo/DECISIONS.md", "Keep `@beep/deploy`.\n"],
+            ["explorations/demo/composed.yaml", 'package: "@beep/deploy"\n'],
+            ["explorations/demo/ops/manifest.json", '{ "package": "@beep/deploy" }\n'],
+            ["explorations/demo/research/package-census.json", '["@beep/deploy"]\n'],
+            ["goals/demo/.briefs/lane.md", "Move `@beep/deploy`.\n"],
+            ["goals/demo/.notes.md", "Move `@beep/deploy`.\n"],
+            ["goals/demo/decisions/2026-01-01-move.md", "Retire `@beep/deploy`.\n"],
+            ["goals/demo/history/notes.md", "Moved out of `deploy/src/Stack.ts`.\n"],
+            ["goals/demo/research/graph.tsv", "@beep/deploy\tbuild\n"],
+            ["research/2026-01-01/claims.md", "Uses `@beep/deploy`.\n"],
+            ["standards/architecture/DECISIONS.md", "2026-01-01: add `@beep/deploy`.\n"],
+            ["standards/changesets.retired-packages.json", '{ "packages": [{ "name": "@beep/deploy" }] }\n'],
+          ];
+          const repoRoot = yield* writeDeletedDeployLayout(records);
+
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(evidenceOf(observations, "authored-references")).toStrictEqual([]);
+          expect(statusOf(observations, "authored-references")).toBe("clean");
+          expect(statusOf(observations, "historical-records")).toBe("historical");
+          expect(evidenceOf(observations, "historical-records")).toStrictEqual(A.map(records, ([file]) => file));
+          expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, observations)).toBe(true);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("still reports live files beside the dated records as residue", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const line = "Reads `@beep/deploy`.\n";
+          const importLine = 'import "@beep/deploy";\n';
+          const manifest = '{ "dependencies": { "@beep/deploy": "workspace:*" } }\n';
+          const paths = '{ "compilerOptions": { "paths": { "@beep/deploy": ["./x.ts"] } } }\n';
+          const live: ReadonlyArray<readonly [string, string]> = [
+            [".changeset/README.md", "Releases `deploy/package.json`.\n"],
+            [".changeset/config.json", '{ "ignore": ["@beep/deploy"] }\n'],
+            ["docs/history/README.md", line],
+            ["docs/reports.md", line],
+            ["docs/reports/package.json", manifest],
+            ["docs/reports/probe.ts", importLine],
+            ["docs/runbooks/deploy.md", line],
+            ["explorations-index.md", line],
+            ["explorations/AGENTS.md", line],
+            ["explorations/README.md", line],
+            ["explorations/_template/BRIEF.md", line],
+            ["explorations/_template/ops/manifest.json", '{ "package": "@beep/deploy" }\n'],
+            ["explorations/demo/.github/workflows/ci.yml", "run: bun deploy/src/Stack.ts\n"],
+            ["explorations/demo/ops/package.json", manifest],
+            ["explorations/demo/ops/run.mts", importLine],
+            ["explorations/demo/ops/run.ts", importLine],
+            ["explorations/demo/ops/tsconfig.run.json", paths],
+            ["packages/consumer/docs/reports/notes.md", line],
+            ["packages/consumer/explorations/demo/notes.md", line],
+            ["packages/consumer/research/notes.md", line],
+            ["packages/consumer/src/index.ts", importLine],
+            ["scratchpad/goals/notes.md", line],
+            ["standards/architecture/16-demo.md", line],
+            ["standards/architecture/GLOSSARY.md", line],
+            ["standards/changesets.policy.json", '{ "package": "@beep/deploy" }\n'],
+          ];
+          const repoRoot = yield* writeDeletedDeployLayout([
+            ...live,
+            ["docs/reports/2026-01-01-cache-review.md", line],
+          ]);
+
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(statusOf(observations, "authored-references")).toBe("residue");
+          expect(evidenceOf(observations, "authored-references")).toStrictEqual(A.map(live, ([file]) => file));
+          expect(evidenceOf(observations, "historical-records")).toStrictEqual([
+            "docs/reports/2026-01-01-cache-review.md",
+          ]);
+          expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, observations)).toBe(false);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("keeps every file a tool loads live inside a record tree", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const names = [
+            ".claude/settings.json",
+            ".lefthook.yaml",
+            ".mcp.json",
+            ".mise.toml",
+            "AGENTS.md",
+            "CLAUDE.md",
+            "Chart.yaml",
+            "GEMINI.md",
+            "Pulumi.dev.yaml",
+            "Pulumi.yaml",
+            "SKILL.md",
+            "app.config.json",
+            "biome.json",
+            "biome.jsonc",
+            "bunfig.toml",
+            "components.json",
+            "compose.override.yaml",
+            "compose.yaml",
+            "deno.json",
+            "docgen.json",
+            "docker-compose.prod.yml",
+            "docker-compose.yml",
+            "jsconfig.json",
+            "knip.json",
+            "kustomization.yaml",
+            "lefthook.yml",
+            "lerna.json",
+            "nx.json",
+            "package.json",
+            "pnpm-workspace.yaml",
+            "renovate.json",
+            "syncpack.json",
+            "tauri.conf.json",
+            "tsconfig.run.json",
+            "turbo.json",
+            "vercel.json",
+            "wrangler.json",
+          ];
+          const live = A.flatMap(["docs/reports/demo", "explorations/demo/ops"], (directory) =>
+            A.map(names, (name) => `${directory}/${name}`)
+          );
+          const repoRoot = yield* writeDeletedDeployLayout([
+            ...A.map(live, (file) => [file, '"deploy/src/Stack.ts"\n'] as const),
+            ["explorations/demo/ops/composed.yaml", '"deploy/src/Stack.ts"\n'],
+            ["explorations/demo/ops/packages.json", '"deploy/src/Stack.ts"\n'],
+          ]);
+
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(evidenceOf(observations, "authored-references")).toStrictEqual(live);
+          expect(evidenceOf(observations, "historical-records")).toStrictEqual([
+            "explorations/demo/ops/composed.yaml",
+            "explorations/demo/ops/packages.json",
+          ]);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("reads every import form in packet code as a hard import, not a packet claim", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const imports: ReadonlyArray<readonly [string, string]> = [
+            ["goals/demo/ops/call.ts", 'export const load = () => import("@beep/deploy/Stack");\n'],
+            ["goals/demo/ops/common.cts", 'import deploy = require("@beep/deploy");\nexport = deploy;\n'],
+            ["goals/demo/ops/module.mts", 'export * from "@beep/deploy";\n'],
+            ["goals/demo/ops/type.ts", 'export type Stack = import("@beep/deploy").Stack;\n'],
+            ["goals/demo/ops/typeof.ts", 'export type Deploy = typeof import("@beep/deploy/Stack");\n'],
+          ];
+          const repoRoot = yield* writeDeletedDeployLayout([
+            ...imports,
+            // Each names the package, so each is parsed, but none imports it.
+            ["goals/demo/ops/label.ts", 'export type Label = "@beep/deploy";\n'],
+            [
+              "goals/demo/ops/local.ts",
+              "// @beep/deploy\nimport L = O.I;\nimport M = require(L);\ntype T = import(L).T;\n",
+            ],
+            ["goals/demo/ops/sibling.ts", '// @beep/deploy\nexport type Sibling = import("@beep/deploy-x").Stack;\n'],
+          ]);
+
+          const report = yield* dependentsOfAtRoot(repoRoot, rootDeployTarget);
+          const importFiles = A.map(
+            A.filter(report.hits, (hit) => hit.kind === "import-prod"),
+            (hit) => hit.file
+          );
+          expect(importFiles).toStrictEqual(A.map(imports, ([file]) => file));
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("classifies packet history and ledger references as historical, not live packet claims", () =>
       Effect.flatMap(temporaryGitDirectory, (repoRoot) =>
         Effect.gen(function* () {

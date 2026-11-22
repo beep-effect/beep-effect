@@ -5326,7 +5326,8 @@
           "@beep/repo-gate-record",
           "@beep/repo-gate-run",
           "@beep/runtime-env",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/sqlite"
         ],
         "allowTypeOnly": [
           "@beep/cli-kit",
@@ -5337,7 +5338,8 @@
           "@beep/repo-gate-record",
           "@beep/repo-gate-run",
           "@beep/runtime-env",
-          "@beep/schema"
+          "@beep/schema",
+          "@beep/sqlite"
         ]
       },
       {

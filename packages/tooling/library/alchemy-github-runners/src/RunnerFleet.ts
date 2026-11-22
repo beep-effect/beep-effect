@@ -237,12 +237,13 @@ const queueWithDlq = Effect.fn("RunnerFleet.queueWithDlq")(function* (input: {
     messageRetentionPeriod: "14 days",
     sqsManagedSseEnabled: true,
   });
-  return yield* SQS.Queue(input.id, {
+  const queue = yield* SQS.Queue(input.id, {
     ...O.match(input.names, { onNone: () => ({}), onSome: (names) => ({ queueName: names.queue }) }),
     visibilityTimeout: input.visibilityTimeout,
     sqsManagedSseEnabled: true,
     redrivePolicy: { deadLetterTargetArn: dlq.queueArn, maxReceiveCount: input.maxReceiveCount },
   });
+  return { queue, dlq };
 });
 
 /**
@@ -426,7 +427,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                 ),
               });
 
-              const buildQueue = yield* queueWithDlq({
+              const { queue: buildQueue, dlq: buildDlq } = yield* queueWithDlq({
                 id: "BuildQueue",
                 visibilityTimeout: "2 minutes",
                 maxReceiveCount: 5,
@@ -444,7 +445,7 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                       (names) => names.jobRetryQueue,
                       (names) => names.jobRetryDlq
                     ),
-                  }).pipe(Effect.asSome)
+                  }).pipe(Effect.map(({ queue }) => O.some(queue)))
                 : O.none<SQS.Queue>();
 
               const runtimeConfig = Output.all(
@@ -452,27 +453,30 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                 template.launchTemplateId,
                 template.defaultVersionNumber.pipe(Output.map(String)),
                 buildQueue.queueUrl,
+                buildDlq.queueUrl,
                 jobRetryQueue.pipe(
                   O.map((queue) => queue.queueUrl),
                   O.toArray,
                   collect
                 )
               ).pipe(
-                Output.mapEffect(([subnetIds, launchTemplateId, version, buildQueueUrl, jobRetryQueueUrl]) =>
-                  encodePool(
-                    PoolRuntimeConfig.make({
-                      pool,
-                      environment,
-                      runnerType: props.runnerType,
-                      subnetIds: A.isReadonlyArrayNonEmpty(subnetIds) ? subnetIds : [""],
-                      launchTemplate: LaunchTemplateRef.make({ launchTemplateId, version }),
-                      tokenPath,
-                      configPath,
-                      buildQueueUrl,
-                      jobRetryQueueUrl: A.head(jobRetryQueueUrl),
-                      app: appNames,
-                    })
-                  )
+                Output.mapEffect(
+                  ([subnetIds, launchTemplateId, version, buildQueueUrl, buildDlqUrl, jobRetryQueueUrl]) =>
+                    encodePool(
+                      PoolRuntimeConfig.make({
+                        pool,
+                        environment,
+                        runnerType: props.runnerType,
+                        subnetIds: A.isReadonlyArrayNonEmpty(subnetIds) ? subnetIds : [""],
+                        launchTemplate: LaunchTemplateRef.make({ launchTemplateId, version }),
+                        tokenPath,
+                        configPath,
+                        buildQueueUrl,
+                        jobRetryQueueUrl: A.head(jobRetryQueueUrl),
+                        buildDlqUrl: O.some(buildDlqUrl),
+                        app: appNames,
+                      })
+                    )
                 )
               );
               const poolFunction = (logicalId: string, file: string, extra: Partial<Lambda.FunctionProps> = {}) =>
@@ -522,9 +526,14 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
                     actions: ["ssm:PutParameter", "ssm:AddTagsToResource", "ssm:GetParameter"],
                     resources: [Output.interpolate`${tokenArn}/*`, Output.interpolate`${configArn}/*`],
                   }),
+                  // Removes the token of a runner whose configuration failed: a token left behind counts as a launched
+                  // runner for the in-flight window and holds a slot under the cap.
+                  allow({ actions: ["ssm:DeleteParameter"], resources: [Output.interpolate`${tokenArn}/*`] }),
                   // Counts launched runners EC2 does not show yet: their JIT configs under the token path.
                   allow({ actions: ["ssm:GetParametersByPath"], resources: [tokenArn] }),
                   ...readAppSecrets,
+                  // A message whose runner configuration failed deterministically goes straight to the DLQ.
+                  allow({ actions: ["sqs:SendMessage"], resources: [buildDlq.queueArn] }),
                   ...O.match(jobRetryQueue, {
                     onNone: () => [],
                     onSome: (queue) => [allow({ actions: ["sqs:SendMessage"], resources: [queue.queueArn] })],
@@ -644,6 +653,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         handler: "handler",
         functionUrl: false,
         timeout: Duration.minutes(5),
+        // Lambda's 128 MB default left 8 MB free (peak 120 MB, 2026-11-20); its work grows with the token count.
+        memorySize: 256,
         logging,
         env: {
           [runtimeConfigEnvName]: yield* encodeHousekeeper(
@@ -701,14 +712,16 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
       yield* syncer.bind(
         "RunnerBinariesSyncer",
         lambdaRole([
+          // The mirror is a multipart upload: s3:PutObject covers create, part and complete; a failed upload is
+          // aborted, which needs s3:AbortMultipartUpload, or its parts would stay in the bucket.
           allow({
-            actions: ["s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"],
+            actions: ["s3:AbortMultipartUpload", "s3:GetObjectTagging", "s3:PutObject", "s3:PutObjectTagging"],
             resources: [Output.interpolate`${binaries.bucketArn}/${runnerTarballKey}`],
           }),
         ])
       );
 
-      const deregisterRetry = yield* queueWithDlq({
+      const { queue: deregisterRetry } = yield* queueWithDlq({
         id: "DeregisterRetryQueue",
         visibilityTimeout: "2 minutes",
         maxReceiveCount: 3,
@@ -732,6 +745,8 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
         handler: "handler",
         functionUrl: false,
         timeout: Duration.seconds(60),
+        // Lambda's 128 MB default left 2 MB free (peak 126 MB over 1,186 runs, 2026-11-20).
+        memorySize: 256,
         logging,
         env: { [runtimeConfigEnvName]: watcherConfig },
       });
