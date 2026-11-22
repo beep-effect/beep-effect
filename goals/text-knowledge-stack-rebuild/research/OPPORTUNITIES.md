@@ -292,3 +292,13 @@ home paths with `~`, drop session and machine ids.
 - **Prevention:** a decision that plans a stack layer should check the parent's base first, with
   `gh pr view <n> --json baseRefName`. Or Yeet's stack plan could name the depth limit when a
   packet's held PRs already form a two-layer stack.
+
+## 2026-11-22: a cache re-record took a stale toolchain profile from a copied request
+
+- **Doing:** re-recording the root cache baseline of PR #3439 after its second main merge.
+- **Evidence:** the new request was copied from the earlier one and kept
+  `"profile": "local-linux-x64-bun1.4.4"`. `.bun-version` and main's root both say 1.4.5.
+  `beep cache baseline --request` accepted the stale profile and wrote it, and `cache audit` passed.
+  beep-reviewer caught it on the PR ("Merge re-record reverts main's root baseline profile").
+- **Prevention:** `cache baseline` could refuse a request whose profile is not the one the
+  checkout's `.bun-version` yields, or derive the profile itself when the request omits it.
