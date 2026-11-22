@@ -10,9 +10,13 @@
  * most 6,144 characters, statements whole and in source order
  * (`managedPolicyDocuments`).
  *
- * `--vpc-arn <arn>` writes v2 (`policy-v2.json`, `v2-<n>.json`); without it,
- * v1. Either run also writes `fleet-boundary.json`, the document of the prod
- * bootstrap boundary policy. The gate runs it from the operator workstation;
+ * `--vpc-arn <arn>` writes v2 (`policy-v2.json`, `v2-<n>.json`), the document
+ * the live role holds once the fleet VPC exists. `--before-vpc` writes v1, the
+ * step-0 document from before the VPC existed. One of the two is required: a
+ * run with neither fails (`DeployPolicyVersionUnstated`) rather than silently
+ * writing v1, whose managed-policy chunks differ from the live role's. Either
+ * run also writes `fleet-boundary.json`, the document of the prod bootstrap
+ * boundary policy. The gate runs it from the operator workstation;
  * nothing here calls AWS.
  *
  * @internal
@@ -29,6 +33,7 @@ import * as FileSystem from "effect/FileSystem";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
+import { DeployPolicyVersionRequest, deployPolicyVersion } from "./src/DeployPolicyVersion.ts";
 import {
   chunkByLength,
   deployRolePolicy,
@@ -45,12 +50,16 @@ const write = Command.make(
   "deploy-role-policy",
   {
     vpcArn: Flag.String("vpc-arn").pipe(Flag.withDescription("The prod fleet VPC ARN, for v2"), Flag.optional),
+    beforeVpc: Flag.Boolean("before-vpc").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Write v1, the step-0 document from before the fleet VPC existed")
+    ),
     outDir: Flag.String("out-dir").pipe(Flag.withDescription("Directory for the policy and its chunks")),
   },
-  Effect.fn("CiRunners.deployRolePolicyCli")(function* ({ vpcArn, outDir }) {
+  Effect.fn("CiRunners.deployRolePolicyCli")(function* ({ vpcArn, beforeVpc, outDir }) {
     const fs = yield* FileSystem.FileSystem;
     const path = yield* Path.Path;
-    const version = O.isSome(vpcArn) ? "v2" : "v1";
+    const version = yield* deployPolicyVersion(DeployPolicyVersionRequest.make({ vpcArn, beforeVpc }));
     const policy = deployRolePolicy(vpcArn);
     yield* fs.makeDirectory(outDir, { recursive: true });
     const text = yield* encode(policy);

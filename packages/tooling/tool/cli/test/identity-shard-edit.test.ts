@@ -6,6 +6,7 @@ import {
   CodePackageMove,
   RegistryShard,
   RegistryTable,
+  ReleaseVersion,
   snapshotViolations,
   TermLocal,
   TermSnapshot,
@@ -15,11 +16,16 @@ import {
   BaseSnapshot,
   baseSnapshotIssues,
   decodeBaseSnapshot,
+  planRegistryArtifacts,
   RegistryLayout,
+  RegistryPlanInput,
   RegistryProjectionTarget,
   RegistrySourceFile,
+  regeneratedSnapshot,
+  releasePolicy,
   renderRegistryJson,
   renderRegistryProjection,
+  renderTermSnapshot,
 } from "@beep/repo-cli/commands/Identity/Registry";
 import {
   DeprecateRequest,
@@ -36,7 +42,7 @@ import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as PlatformError from "effect/PlatformError";
@@ -44,7 +50,12 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { expectReportedExit, NodeTestLayer, temporaryWorkingDirectory } from "./support/CommandTest.ts";
+import {
+  expectReportedExit,
+  NodeTestLayer,
+  temporaryWorkingDirectory,
+  withAncestorsHidden,
+} from "./support/CommandTest.ts";
 import type { ShardEditRefusal } from "@beep/repo-cli/commands/Identity/ShardEdit";
 
 const runIdentityCommand = Command.runWith(identityCommand, { version: "0.0.0" });
@@ -88,7 +99,7 @@ const inputOf = (files: ReadonlyArray<RegistrySourceFile>, previous: TermSnapsho
 const reasonsOf = (result: Result.Result<unknown, ReadonlyArray<{ readonly reason: string }>>) =>
   Result.match(result, { onFailure: A.map((refusal) => refusal.reason), onSuccess: () => [] });
 
-const baseOf = (snapshot: TermSnapshot) => BaseSnapshot.make({ path: layout.snapshot, snapshot });
+const baseOf = (snapshot: TermSnapshot) => BaseSnapshot.make({ snapshot });
 
 // Every refusal of a plan as `[reason, subject, detail]`.
 const refusalRowsOf = <Planned>(result: Result.Result<Planned, A.NonEmptyReadonlyArray<ShardEditRefusal>>) =>
@@ -219,6 +230,56 @@ describe("identity deprecate planning", () => {
     const next = RegistryTable.snapshot(tableOf([edited ?? plain]), previous);
     expect(next.release).toBe("2.0.0");
     expect(snapshotViolations(previous, next)).toStrictEqual([]);
+  });
+
+  it("records one release for every retirement of a change, and leaves the release", () => {
+    const retire = (files: ReadonlyArray<RegistrySourceFile>, curie: string) =>
+      Result.getOrThrow(
+        planDeprecate(inputOf(files, previous), DeprecateRequest.make({ curie, replacement: O.none() }))
+      );
+    const once = retire([plain], "fabio:Note");
+    const twice = retire(once, "fabio:Report");
+    const shard = decodeShardText(twice[0] ?? plain);
+    expect(A.map(shard.deprecations, (row) => [row.term, row.since])).toStrictEqual([
+      ["http://purl.org/spar/fabio/Note", "2.0.0"],
+      ["http://purl.org/spar/fabio/Report", "2.0.0"],
+    ]);
+    const next = RegistryTable.snapshot(tableOf(twice), previous);
+    expect(next.release).toBe("2.0.0");
+    expect(snapshotViolations(previous, next)).toStrictEqual([]);
+  });
+
+  it("keeps the committed release for every retirement over a base that publishes nothing", () => {
+    const committed = TermSnapshot.make({ ...previous, release: ReleaseVersion.make("2.0.0") });
+    const retire = (files: ReadonlyArray<RegistrySourceFile>, curie: string) =>
+      Result.getOrThrow(
+        planDeprecate(
+          ShardEditInput.make({ layout, shardFiles: files, previous: committed, policy: "keep" }),
+          DeprecateRequest.make({ curie, replacement: O.none() })
+        )
+      );
+    const once = retire([plain], "fabio:Note");
+    const afterOnce = regeneratedSnapshot(tableOf(once), "keep", committed);
+    expect(afterOnce.release).toBe("2.0.0");
+    const twice = Result.getOrThrow(
+      planDeprecate(
+        ShardEditInput.make({ layout, shardFiles: once, previous: afterOnce, policy: "keep" }),
+        DeprecateRequest.make({ curie: "fabio:Report", replacement: O.none() })
+      )
+    );
+    expect(A.map(decodeShardText(twice[0] ?? plain).deprecations, (row) => [row.term, row.since])).toStrictEqual([
+      ["http://purl.org/spar/fabio/Note", "2.0.0"],
+      ["http://purl.org/spar/fabio/Report", "2.0.0"],
+    ]);
+    expect(regeneratedSnapshot(tableOf(twice), "keep", afterOnce).release).toBe("2.0.0");
+    // Succeeding the committed snapshot instead counts the second retirement again.
+    expect(regeneratedSnapshot(tableOf(twice), "succeed", afterOnce).release).toBe("3.0.0");
+    expect(pipe(tableOf(twice), regeneratedSnapshot("keep", afterOnce)).release).toBe("2.0.0");
+    expect(releasePolicy(O.some(baseOf(TermSnapshot.empty)))).toBe("keep");
+    expect(releasePolicy(O.some(baseOf(previous)))).toBe("succeed");
+    expect(releasePolicy(O.none())).toBe("succeed");
+    // A checkout with no base commit says nothing about what is published, so its writers succeed.
+    expect(releasePolicy(BaseSnapshot.makeOption({ snapshot: TermSnapshot.empty, resolved: false }))).toBe("succeed");
   });
 
   it("keeps the deprecations ascending and rewrites only the shard of the term", () => {
@@ -382,10 +443,97 @@ describe("identity deprecate planning", () => {
       );
       const after = RegistryTable.snapshot(tableOf([edited ?? file]), before);
       expect(snapshotViolations(before, after)).toStrictEqual([]);
-      expect(baseSnapshotIssues(baseOf(before), after, layout.snapshot)).toStrictEqual([]);
+      expect(baseSnapshotIssues(baseOf(before), after, layout)).toStrictEqual([]);
       expect(after.release).toBe("2.0.0");
     },
     { arbitrary: fcRuns(25) }
+  );
+});
+
+// One step of a change: declare a term, take back one the change declared, or retire one.
+const ChangeStep = S.TaggedUnion({
+  Declare: { local: AsciiLocal },
+  TakeBack: { index: S.Int.check(S.isBetween({ minimum: 0, maximum: 5 })) },
+  Retire: { index: S.Int.check(S.isBetween({ minimum: 0, maximum: 5 })) },
+});
+
+describe("a change in many steps", () => {
+  const published = A.map(["Article", "Note", "Report", "Thesis"], (local) => `P${local}`);
+  const baseFile = shardFile(fabio(published));
+  const base = RegistryTable.snapshot(tableOf([baseFile]), TermSnapshot.empty);
+
+  // The shard after one step, as the commands edit it: `deprecate` retires, and a shard edit does the rest.
+  // A step that has nothing to act on leaves the shard as it is.
+  const applyStep = (file: RegistrySourceFile, step: typeof ChangeStep.Type): RegistrySourceFile => {
+    const shard = decodeShardText(file);
+    const withTerms = (terms: ReadonlyArray<string>) =>
+      shardFile({ ...Result.getOrThrow(S.encodeResult(RegistryShard)(shard)), terms: A.sort(terms, Order.String) });
+    const retired = A.map(shard.deprecations, (row): string => row.term);
+    return ChangeStep.match(step, {
+      // A declared local never collides with a published one, which starts with "P", or with a retired IRI.
+      Declare: ({ local }) => {
+        const name = `d${local}`;
+        return A.contains(shard.terms, name) || A.contains(retired, `${shard.namespace.iri}${name}`)
+          ? file
+          : withTerms([...shard.terms, name]);
+      },
+      TakeBack: ({ index }) => {
+        const own = A.filter(shard.terms, Str.startsWith("d"));
+        return O.match(A.get(own, index), {
+          onNone: () => file,
+          onSome: (local) => withTerms(A.filter(shard.terms, (term) => term !== local)),
+        });
+      },
+      Retire: ({ index }) =>
+        O.match(A.get(shard.terms, index), {
+          onNone: () => file,
+          onSome: (local) =>
+            pipe(
+              planDeprecate(
+                inputOf([file], base),
+                DeprecateRequest.make({ curie: `fabio:${local}`, replacement: O.none() })
+              ),
+              Result.getOrThrow,
+              A.head,
+              O.getOrElse(() => file)
+            ),
+        }),
+    });
+  };
+
+  it.prop(
+    "L0-3 every step's write gives the release the whole change so far calls for",
+    [S.Array(ChangeStep).check(S.isMaxLength(8))],
+    ([steps]) => {
+      const write = (file: RegistrySourceFile, committed: string) =>
+        Result.getOrThrow(
+          planRegistryArtifacts(
+            RegistryPlanInput.make({
+              layout,
+              shardFiles: [file],
+              committed: O.some(committed),
+              base: O.some(baseOf(base)),
+            })
+          )
+        );
+      const start = { file: baseFile, committed: renderTermSnapshot(base) };
+      const end = A.reduce(steps, start, ({ committed, file }, step) => {
+        const edited = applyStep(file, step);
+        return { file: edited, committed: renderTermSnapshot(write(edited, committed).snapshot) };
+      });
+      const final = decodeSnapshotText(end.committed);
+      expect(final.release).toBe(RegistryTable.releaseAfter(tableOf([end.file]), base));
+      const changed = final.terms.length !== base.terms.length || final.deprecations.length > 0;
+      expect(final.release).toBe(final.deprecations.length > 0 ? "2.0.0" : changed ? "1.1.0" : "1.0.0");
+      expect(baseSnapshotIssues(baseOf(base), final, layout)).toStrictEqual([]);
+      // The writer is idempotent, and a hermetic regeneration keeps what it wrote.
+      expect(renderTermSnapshot(write(end.file, end.committed).snapshot)).toBe(end.committed);
+      const checked = planRegistryArtifacts(
+        RegistryPlanInput.make({ layout, shardFiles: [end.file], committed: O.some(end.committed) })
+      );
+      expect(renderTermSnapshot(Result.getOrThrow(checked).snapshot)).toBe(end.committed);
+    },
+    { arbitrary: fcRuns(50) }
   );
 });
 
@@ -404,7 +552,7 @@ describe("base snapshot findings", () => {
   it("names a removal and a prefix change against the base", () => {
     const base = RegistryTable.snapshot(tableOf([shardFile(fabio(["Report", "TechnicalReport"]))]), TermSnapshot.empty);
     const removed = RegistryTable.snapshot(tableOf([shardFile(fabio(["Report"]))]), base);
-    expect(A.map(baseSnapshotIssues(baseOf(base), removed, layout.snapshot), (issue) => issue.kind)).toStrictEqual([
+    expect(A.map(baseSnapshotIssues(baseOf(base), removed, layout), (issue) => issue.kind)).toStrictEqual([
       "term-removed-without-deprecation",
     ]);
     // A head regenerated from an older base keeps that base's release, which the change outgrew.
@@ -412,11 +560,13 @@ describe("base snapshot findings", () => {
       tableOf([shardFile(fabio(["Report", "TechnicalReport", "Thesis"]))]),
       TermSnapshot.empty
     );
-    const [understated] = baseSnapshotIssues(baseOf(base), stale, layout.snapshot);
+    const [understated] = baseSnapshotIssues(baseOf(base), stale, layout);
     expect(understated?.kind).toBe("release-regressed");
-    expect(understated?.detail).toContain("the change calls for 1.1.0");
-    expect(understated?.detail).toContain(`git restore --source <base> -- ${layout.snapshot}`);
-    expect(understated?.detail).toContain("bun run beep identity registry --write");
+    expect(understated?.detail).toBe(
+      "Against the base ref: The snapshot changes the rows of release 1.0.0 but is released as 1.0.0; the change calls for 1.1.0. Merge origin/main if it is not merged yet, set every `since` reported as since-misstated, then run `bun run beep identity registry --write`."
+    );
+    // The same findings with the base applied last.
+    expect(baseSnapshotIssues(stale, layout)(baseOf(base))).toStrictEqual([understated]);
     const renamed = RegistryTable.snapshot(
       tableOf([
         shardFile({
@@ -426,7 +576,7 @@ describe("base snapshot findings", () => {
       ]),
       base
     );
-    expect(A.map(baseSnapshotIssues(baseOf(base), renamed, layout.snapshot), (issue) => issue.kind)).toStrictEqual([
+    expect(A.map(baseSnapshotIssues(baseOf(base), renamed, layout), (issue) => issue.kind)).toStrictEqual([
       "namespace-prefix-changed",
     ]);
   });
@@ -449,6 +599,8 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
       );
       yield* fs.writeFileString(fabioPath, renderRegistryJson(shard));
     });
+    const NO_BASE =
+      "[identity:deprecate] no merge base with origin/main; the term-stability base is the empty snapshot.";
     const deprecateNote = ["deprecate", "fabio:Note", "--replacement", "fabio:Report"];
 
     it.effect("deprecates in a checkout with no committed snapshot and publishes the first release", () =>
@@ -462,6 +614,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
 
           const logs = yield* TestConsole.logLines;
           expect(logs).toStrictEqual([
+            NO_BASE,
             `[identity:deprecate] rewrote ${fabioPath}`,
             `[identity:deprecate] regenerated ${layout.data}`,
             `[identity:deprecate] regenerated ${layout.snapshot}`,
@@ -479,6 +632,19 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("fails outside a repository", () =>
+      Effect.gen(function* () {
+        const directory = yield* temporaryWorkingDirectory;
+
+        const error = yield* runIdentityCommand(deprecateNote).pipe(withAncestorsHidden(directory), Effect.flip);
+
+        expect(error).toMatchObject({
+          _tag: "IdentityRegistryGeneratorError",
+          message: "Cannot find the repository root.",
+        });
+      })
+    );
+
     it.effect("refuses to edit over a committed snapshot that does not decode", () =>
       Effect.andThen(
         temporaryWorkingDirectory,
@@ -494,7 +660,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           const errors = yield* TestConsole.errorLines;
           expect(errors).toContainEqual(
             expect.stringContaining(
-              `${layout.snapshot} [registry-generated-drift] The base ref's snapshot does not decode:`
+              `${layout.snapshot} [registry-generated-drift] The committed snapshot does not decode, so its release history is unknown:`
             )
           );
           const untouched = yield* fs.readFileString(fabioPath);
@@ -514,7 +680,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           yield* fs.makeDirectory(layout.snapshot);
           const root = yield* Effect.sync(() => process.cwd());
 
-          const error = yield* Effect.flip(readShardEditInput(root));
+          const error = yield* Effect.flip(readShardEditInput(root, layout, baseOf(TermSnapshot.empty)));
 
           expect(error._tag).toBe("IdentityRegistryGeneratorError");
           expect(error.message).toBe(`Cannot read ${layout.snapshot}.`);
@@ -540,7 +706,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             `${fabioPath} [registry-shard-invalid] The shard projects into @beep/test-runner, which this checkout does not have. ${PROJECTION_REMEDY}`,
           ]);
           const logs = yield* TestConsole.logLines;
-          expect(logs).toStrictEqual([]);
+          expect(logs).toStrictEqual([NO_BASE]);
           const untouched = yield* fs.readFileString(fabioPath);
           expect(untouched).toBe(renderRegistryJson(shard));
           const dataWritten = yield* fs.exists(layout.data);

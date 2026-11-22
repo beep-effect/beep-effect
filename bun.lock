@@ -4369,6 +4369,7 @@
         "@beep/repo-gate-record": "workspace:^",
         "@beep/runtime-env": "workspace:^",
         "@beep/schema": "workspace:^",
+        "@beep/sqlite": "workspace:^",
         "effect": "catalog:",
       },
       "devDependencies": {

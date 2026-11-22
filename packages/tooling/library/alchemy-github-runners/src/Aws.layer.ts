@@ -12,6 +12,7 @@
  * @since 0.0.0
  */
 
+import * as Category from "@distilled.cloud/aws/Category";
 import * as ec2 from "@distilled.cloud/aws/ec2";
 import * as s3 from "@distilled.cloud/aws/s3";
 import * as sqs from "@distilled.cloud/aws/sqs";
@@ -34,12 +35,13 @@ import { Ec2Fleet } from "./Ec2Fleet.service.ts";
 import { $AlchemyGithubRunnersId } from "./internal/AlchemyGithubRunnersId.ts";
 import { MessageQueue } from "./MessageQueue.service.ts";
 import { ReleaseAsset, RunnerBinaries } from "./RunnerBinaries.service.ts";
-import { AwsApiError, GitHubApiError } from "./RunnerFleet.errors.ts";
+import { AwsApiError, AwsThrottlingCode, GitHubApiError } from "./RunnerFleet.errors.ts";
 import { RunnerInstance, RunnerTag, runnerApplicationTagValue } from "./RunnerInstance.models.ts";
 import { ParameterEntry, SsmStore } from "./SsmStore.service.ts";
 import type { Credentials as AwsCredentials } from "@distilled.cloud/aws/Credentials";
 import type * as Context from "effect/Context";
 import type { FleetLaunchRequest } from "./Ec2Fleet.models.ts";
+import type { AwsFault } from "./RunnerFleet.errors.ts";
 import type { RunnerFilter } from "./RunnerInstance.models.ts";
 
 const $I = $AlchemyGithubRunnersId.create("Aws.layer");
@@ -61,16 +63,111 @@ const retryableTags = [
   "TooManyUpdates",
 ];
 
-const toAwsApiError =
-  ({ service, operation }: { readonly service: string; readonly operation: string }) =>
-  (error: { readonly _tag: string; readonly message?: unknown }): AwsApiError =>
-    AwsApiError.make({
+// SSM answers these with HTTP 400 and a resend of the same request fails the same way, though distilled files
+// `ParameterMaxVersionLimitExceeded` under its throttling category.
+const clientTags = ["ParameterMaxVersionLimitExceeded"];
+
+const clientCategories: ReadonlyArray<(error: unknown) => boolean> = [
+  Category.isBadRequestError,
+  Category.isAuthError,
+  Category.isNotFoundError,
+  Category.isConflictError,
+  Category.isQuotaError,
+  Category.isAlreadyExistsError,
+  Category.isConfigurationError,
+  Category.isDependencyViolationError,
+];
+
+type SdkFailure = {
+  readonly _tag: string;
+  readonly message?: unknown;
+  readonly status?: unknown;
+  readonly code?: unknown;
+};
+
+// The SDK's unknown-error class carries the HTTP status; its declared error classes carry a category instead.
+const statusOf = (error: SdkFailure): O.Option<number> =>
+  P.hasProperty(error, "status") && P.isNumber(error.status) && Number.isInteger(error.status)
+    ? O.some(error.status)
+    : O.none();
+
+const isTransientStatus = (status: number) => status === 429 || status >= 500;
+const isClientStatus = (status: number) => status >= 400 && status < 500 && status !== 429;
+
+const isThrottlingCode = S.is(AwsThrottlingCode);
+
+// The wire code of the SDK's unknown-error class, else the declared class's tag.
+const codeOf = (error: SdkFailure): string =>
+  P.hasProperty(error, "code") && P.isString(error.code) ? error.code : error._tag;
+
+// AWS throttles with HTTP 400, so a throttling code, tag or category is read before any status rule.
+const isThrottled = (error: SdkFailure): boolean =>
+  isThrottlingCode(error._tag) || isThrottlingCode(codeOf(error)) || Category.isThrottling(error);
+
+const faultRules: ReadonlyArray<readonly [(error: SdkFailure, status: O.Option<number>) => boolean, AwsFault]> = [
+  [(error) => A.contains(clientTags, error._tag), "client"],
+  [isThrottled, "transient"],
+  [(_error, status) => O.exists(status, isTransientStatus), "transient"],
+  [(error) => A.contains(retryableTags, error._tag) || Category.isTransientError(error), "transient"],
+  [(_error, status) => O.exists(status, isClientStatus), "client"],
+  [(error) => A.some(clientCategories, (isCategory) => isCategory(error)), "client"],
+];
+
+const faultOf = (error: SdkFailure, status: O.Option<number>): AwsFault =>
+  O.getOrElse(
+    O.map(
+      A.findFirst(faultRules, ([matches]) => matches(error, status)),
+      ([, fault]) => fault
+    ),
+    (): AwsFault => "unknown"
+  );
+
+/**
+ * Maps a distilled AWS SDK error to the fleet's {@link AwsApiError}.
+ *
+ * **Details**
+ *
+ * `code` is the wire code of the SDK's unknown-error class, else the
+ * declared class's tag; `status` is the HTTP status only that class carries.
+ * `fault` reads, in order: a resend-proof client code
+ * (`ParameterMaxVersionLimitExceeded`), a throttling code, tag or category
+ * (AWS throttles with HTTP 400, so this outranks the status), a 429 or 5xx, a
+ * transient category, a 4xx, then a client category; otherwise `unknown`.
+ *
+ * **Example** (A throttled write answered with 400)
+ *
+ * ```ts
+ * import { toAwsApiError } from "@beep/alchemy-github-runners/Aws.layer"
+ *
+ * const error = toAwsApiError("ssm")("putParameter")({
+ *   _tag: "UnknownAwsError",
+ *   status: 400,
+ *   code: "ThrottlingException",
+ *   message: "Rate exceeded",
+ * })
+ * console.log(error.fault) // "transient"
+ * ```
+ *
+ * @param service - The AWS service that failed.
+ * @returns A function from the failed operation to a mapper from the SDK error to {@link AwsApiError}.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const toAwsApiError =
+  (service: string) =>
+  (operation: string) =>
+  (error: SdkFailure): AwsApiError => {
+    const status = statusOf(error);
+    return AwsApiError.make({
       service,
       operation,
-      code: O.some(error._tag),
-      retryable: A.contains(retryableTags, error._tag),
+      code: O.some(codeOf(error)),
+      retryable: A.contains(retryableTags, error._tag) || isThrottlingCode(codeOf(error)),
+      status,
+      fault: faultOf(error, status),
       message: P.isString(error.message) ? error.message : error._tag,
     });
+  };
 
 const tagList = (tags: Readonly<Record<string, string>>) =>
   A.map(R.toEntries(tags), ([Key, Value]) => ({ Key, Value }));
@@ -189,7 +286,7 @@ const awsCall =
   <A, E extends { readonly _tag: string; readonly message?: unknown }>(
     call: Effect.Effect<A, E, AwsServices>
   ): Effect.Effect<A, AwsApiError> =>
-    call.pipe(Effect.provideContext(services), Effect.mapError(toAwsApiError({ service, operation })));
+    call.pipe(Effect.provideContext(services), Effect.mapError(toAwsApiError(service)(operation)));
 
 /**
  * Live {@link Ec2Fleet} over distilled EC2.
@@ -273,7 +370,8 @@ export const ec2FleetLive: Layer.Layer<Ec2Fleet, never, AwsServices> = Layer.eff
  * **Details**
  *
  * SSM refuses `Tags` together with `Overwrite`, so a tagged put creates and an
- * untagged put overwrites, as upstream does.
+ * untagged put overwrites, as upstream does. Every put names its tier: the
+ * Standard tier's 4 KB value limit is too small for a JIT runner config.
  *
  * **Example** (The layer)
  *
@@ -315,6 +413,7 @@ export const ssmStoreLive: Layer.Layer<SsmStore, never, AwsServices> = Layer.eff
             Name: input.name,
             Value: input.value,
             Type: input.secure ? "SecureString" : "String",
+            Tier: input.tier,
             ...(A.isReadonlyArrayNonEmpty(tags) ? { Tags: tags } : { Overwrite: true }),
           })
         );
@@ -395,9 +494,66 @@ const LatestRelease = S.Struct({
   $I.annoteSchema("LatestRelease", { description: "The parts of GitHub's latest-release response the syncer reads." })
 );
 
+const mirrorPartSize = 16 * 1024 * 1024;
+
+const AssetContentLength = S.NumberFromString.check(S.isInt(), S.isGreaterThan(0)).pipe(
+  $I.annoteSchema("AssetContentLength", { description: "The positive byte length a release-asset download declares." })
+);
+
+interface PendingBytes {
+  readonly chunks: ReadonlyArray<Uint8Array>;
+  readonly size: number;
+}
+
+const noPendingBytes: PendingBytes = { chunks: [], size: 0 };
+
+const joinBytes = ({ chunks, size }: PendingBytes): Uint8Array => {
+  const out = new Uint8Array(size);
+  A.reduce(chunks, 0, (offset, chunk) => {
+    out.set(chunk, offset);
+    return offset + chunk.byteLength;
+  });
+  return out;
+};
+
+// Regroups download chunks into parts of exactly `partSize` bytes; the remainder waits for more.
+const splitParts =
+  (partSize: number) =>
+  (pending: PendingBytes, chunk: Uint8Array): readonly [PendingBytes, ReadonlyArray<Uint8Array>] => {
+    const next: PendingBytes = { chunks: A.append(pending.chunks, chunk), size: pending.size + chunk.byteLength };
+    if (next.size < partSize) {
+      return [next, []];
+    }
+    const bytes = joinBytes(next);
+    const count = Math.floor(next.size / partSize);
+    const rest = bytes.slice(count * partSize);
+    return [
+      rest.byteLength === 0 ? noPendingBytes : { chunks: [rest], size: rest.byteLength },
+      A.makeBy(count, (index) => bytes.subarray(index * partSize, (index + 1) * partSize)),
+    ];
+  };
+
+const flushParts = (pending: PendingBytes): ReadonlyArray<Uint8Array> =>
+  pending.size === 0 ? [] : [joinBytes(pending)];
+
+interface UploadedParts {
+  readonly bytes: number;
+  readonly parts: ReadonlyArray<{ readonly ETag: string; readonly PartNumber: number }>;
+}
+
 /**
  * Live {@link RunnerBinaries}: the public GitHub releases API for the asset,
- * distilled S3 for the mirror (the download streams straight into `PutObject`).
+ * distilled S3 for the mirror.
+ *
+ * **Details**
+ *
+ * The mirror streams the download into an S3 multipart upload, one bounded
+ * 16 MiB part buffer at a time, each part a fixed-length body. A streamed
+ * `PutObject` cannot work over `FetchHttpClient`: it drops `Content-Length`
+ * and sends the stream `Transfer-Encoding: chunked`, which S3 rejects with
+ * 501 NotImplemented. A download without a positive `Content-Length` fails
+ * with {@link GitHubApiError} before anything is written, and a download that
+ * ends short of it aborts the upload.
  *
  * **Example** (The layer)
  *
@@ -455,27 +611,80 @@ export const runnerBinariesLive: Layer.Layer<RunnerBinaries, never, AwsServices>
         );
       }),
       mirror: Effect.fn("RunnerBinaries.mirror")(function* (input) {
+        const downloadError = githubError("downloadAsset");
         const response = yield* http
           .execute(HttpClientRequest.get(input.asset.downloadUrl))
-          .pipe(Effect.flatMap(HttpClientResponse.filterStatusOk), Effect.mapError(githubError("downloadAsset")));
-        const contentLength = O.flatMap(O.fromUndefinedOr(response.headers["content-length"]), (value) =>
-          O.liftPredicate(Number.parseInt(value, 10), Number.isFinite)
+          .pipe(Effect.flatMap(HttpClientResponse.filterStatusOk), Effect.mapError(downloadError));
+        const contentLength = yield* S.decodeUnknownEffect(AssetContentLength)(response.headers["content-length"]).pipe(
+          Effect.mapError(() =>
+            GitHubApiError.make({
+              operation: "downloadAsset",
+              message: `${input.asset.name}: the download has no positive content-length; refusing an upload of unknown length`,
+            })
+          )
         );
-        yield* awsCall(
+        const object = { Bucket: input.bucket, Key: input.key };
+        const created = yield* awsCall(
           services,
           "s3",
-          "putObject"
-        )(
-          s3.putObject({
-            Bucket: input.bucket,
-            Key: input.key,
-            Body: response.stream,
-            Tagging: `name=${input.asset.name}`,
-            ...O.getOrElse(
-              O.map(contentLength, (ContentLength) => ({ ContentLength })),
-              () => ({})
+          "createMultipartUpload"
+        )(s3.createMultipartUpload({ ...object, Tagging: `name=${input.asset.name}` }));
+        const UploadId = yield* Effect.fromOption(O.fromUndefinedOr(created.UploadId)).pipe(
+          Effect.mapError(() =>
+            AwsApiError.make({ service: "s3", operation: "createMultipartUpload", message: "no UploadId returned" })
+          )
+        );
+        const uploadPart = (uploaded: UploadedParts, Body: Uint8Array) => {
+          const PartNumber = uploaded.parts.length + 1;
+          return awsCall(
+            services,
+            "s3",
+            "uploadPart"
+          )(s3.uploadPart({ ...object, UploadId, PartNumber, Body })).pipe(
+            Effect.flatMap((output) =>
+              Effect.fromOption(O.fromUndefinedOr(output.ETag)).pipe(
+                Effect.mapError(() =>
+                  AwsApiError.make({
+                    service: "s3",
+                    operation: "uploadPart",
+                    message: `part ${PartNumber} has no ETag`,
+                  })
+                )
+              )
             ),
-          })
+            Effect.map(
+              (ETag): UploadedParts => ({
+                parts: A.append(uploaded.parts, { ETag, PartNumber }),
+                bytes: uploaded.bytes + Body.byteLength,
+              })
+            )
+          );
+        };
+        yield* Effect.gen(function* () {
+          const uploaded = yield* response.stream.pipe(
+            Stream.mapError(downloadError),
+            Stream.mapAccum(() => noPendingBytes, splitParts(mirrorPartSize), { onHalt: flushParts }),
+            Stream.runFoldEffect((): UploadedParts => ({ parts: [], bytes: 0 }), uploadPart)
+          );
+          if (uploaded.bytes !== contentLength) {
+            return yield* GitHubApiError.make({
+              operation: "downloadAsset",
+              message: `${input.asset.name}: downloaded ${uploaded.bytes} of ${contentLength} bytes`,
+            });
+          }
+          yield* awsCall(
+            services,
+            "s3",
+            "completeMultipartUpload"
+          )(s3.completeMultipartUpload({ ...object, UploadId, MultipartUpload: { Parts: A.copy(uploaded.parts) } }));
+        }).pipe(
+          Effect.onError(() =>
+            awsCall(
+              services,
+              "s3",
+              "abortMultipartUpload"
+            )(s3.abortMultipartUpload({ ...object, UploadId })).pipe(Effect.ignore)
+          )
         );
       }),
     });

@@ -341,6 +341,24 @@ describe("RegistryTable.snapshot", () => {
     expect(RegistryTable.snapshot(shrunk, first).release).toBe("2.0.0");
   });
 
+  it("raises the release to the largest since a row records", () => {
+    const bound = (since: string) =>
+      Result.getOrThrow(
+        RegistryTable.fromShards([
+          shard({
+            namespace: fabioShard.namespace,
+            terms: ["Report"],
+            bindings: [{ code: "@beep/widget/Report/Report", local: "Report", since }],
+          }),
+        ])
+      );
+    expect(RegistryTable.snapshot(bound("1.0.0"), TermSnapshot.empty).release).toBe("1.0.0");
+    expect(RegistryTable.snapshot(bound("2.0.0"), TermSnapshot.empty).release).toBe("2.0.0");
+    // The release the change calls for depends on which rows it adds, not on the since they record.
+    expect(RegistryTable.releaseAfter(bound("2.0.0"), TermSnapshot.empty)).toBe("1.0.0");
+    expect(RegistryTable.releaseAfter(TermSnapshot.empty)(bound("2.0.0"))).toBe("1.0.0");
+  });
+
   it("advances a release past the safe-integer range exactly", () => {
     const first = RegistryTable.snapshot(table, TermSnapshot.empty);
     const at = (value: string) => TermSnapshot.make({ ...first, release: ReleaseVersion.make(value) });

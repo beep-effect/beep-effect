@@ -220,3 +220,22 @@ export const withoutLastListed = (bytes: Uint8Array): Uint8Array => {
   record.setUint32(moved + 12, view.getUint32(end + 12, true) - last, true);
   return out;
 };
+
+/** An archive whose first directory entry gives its comment the longest length, so the entry ends past the directory. */
+export const longFirstListed = (bytes: Uint8Array): Uint8Array => {
+  const out = bytes.slice();
+  const view = new DataView(out.buffer);
+  view.setUint16(view.getUint32(endOf(out) + 16, true) + 32, 0xffff, true);
+  return out;
+};
+
+/** An archive whose end record counts one entry fewer than its directory holds, so the entries read stop short of it. */
+export const countedShort = (bytes: Uint8Array): Uint8Array => {
+  const out = bytes.slice();
+  const view = new DataView(out.buffer);
+  const end = endOf(out);
+  const count = view.getUint16(end + 10, true) - 1;
+  view.setUint16(end + 8, count, true);
+  view.setUint16(end + 10, count, true);
+  return out;
+};

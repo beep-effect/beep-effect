@@ -174,15 +174,36 @@ generated `src/internal/generated/Registry.data.ts` and the committed
 | Check the published set against a base ref | `bun run beep lint identity-registry [--base <ref>]` |
 
 The snapshot's `release` is the vocabulary release a binding or deprecation
-names as `since`: an addition bumps the minor and a deprecation the major.
-A changed term set released below the release its change calls for fails the
-lint (`ReleaseUnderstated`). Regenerating alone does not repair it, because
-`--write` reads the checkout's own snapshot: merge the base ref if it is not
-merged yet, restore its snapshot (in this package,
-`git restore --source <base> -- registry/term-snapshot.json`, or `git show` from
-the path the base has it at when this package moved), set the `since`
-of every row the change adds to the release it calls for, then run
-`bun run beep identity registry --write`.
+names as `since`: an addition bumps the minor and a deprecation the major. It
+is a property of the whole change against a base ref, the merge base of `HEAD`
+with `origin/main` unless `--base <ref>` names another. `registry --write`,
+`deprecate` and `rebind` compute it from the snapshot that base publishes, so a
+branch of two additions is one minor and a branch of two deprecations is one
+major, however many commands made it. The regenerated release is never below a
+`since` a row records. Where the base commit publishes no term set, the registry
+is still unreleased: the writers keep the release the checkout's snapshot has,
+however many commands run, and a deprecation records that release. `--check`
+reads no git state and succeeds the checkout's own snapshot, as the writers do
+in a checkout with no base commit at all (no `origin/main`, or not a git work
+tree).
+
+Against a base that publishes a term set, the lint wants exactly that release
+and the same release in every row the change adds. It reports:
+
+| Kind | State | Repair |
+| --- | --- | --- |
+| `release-regressed` | the release is below the base's, or below the one the change calls for | `bun run beep identity registry --write` |
+| `release-overstated` | the release is above the one the change calls for | the same |
+| `since-misstated` | an added binding or deprecation records another release | set that `since` in its shard, then the same |
+
+Each message names the release and the command, with the `--base` the lint was
+given. Merge the base first when it is not merged yet. A rebind keeps the term
+bound, so it keeps its `since`; a binding added in the same branch as a later
+deprecation moves to the major with it. In a stack, keep the default base: until
+its parent merges, a layer is part of one change against `main`. While `main`
+publishes no term set, that change is unreleased and the writers leave the
+release alone. Once the parent's release is on `main`, merge `main` into the
+layer; the lint then names the layer's next release and every row to move to it.
 
 Renaming a package that a shard projects into (`@beep/test-runner`) takes two
 source edits before the rebind, because a package move rewrites binding codes

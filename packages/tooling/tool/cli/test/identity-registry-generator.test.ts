@@ -3,6 +3,7 @@ import { RegistryVocab } from "@beep/identity/Registry";
 import { RegistryShard, RegistryTable, TermSnapshot } from "@beep/identity/Term";
 import { identityCommand } from "@beep/repo-cli/commands/Identity";
 import {
+  BaseSnapshot,
   danglingBindingCodes,
   driftIssues,
   IdentityRegistryIssue,
@@ -43,7 +44,12 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
-import { expectReportedExit, NodeTestLayer, temporaryWorkingDirectory } from "./support/CommandTest.ts";
+import {
+  expectReportedExit,
+  NodeTestLayer,
+  temporaryWorkingDirectory,
+  withAncestorsHidden,
+} from "./support/CommandTest.ts";
 
 const runIdentityCommand = Command.runWith(identityCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
@@ -163,7 +169,7 @@ describe("renderRegistryData", () => {
 describe("planRegistryArtifacts", () => {
   it("renders the data module and the first snapshot from shard files", () => {
     const planned = Result.getOrThrow(
-      planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [fabioFile], previous: O.none() }))
+      planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [fabioFile], committed: O.none() }))
     );
     expect(A.map(planned.artifacts, (artifact) => artifact.path)).toStrictEqual([layout.data, layout.snapshot]);
     const table = Result.getOrThrow(RegistryTable.fromShards([shard(fabio)]));
@@ -174,7 +180,7 @@ describe("planRegistryArtifacts", () => {
         RegistryPlanInput.make({
           layout,
           shardFiles: [fabioFile],
-          previous: O.fromUndefinedOr(planned.artifacts[1]?.content),
+          committed: O.fromUndefinedOr(planned.artifacts[1]?.content),
         })
       )
     );
@@ -183,7 +189,7 @@ describe("planRegistryArtifacts", () => {
 
   it("reports missing, undecodable, misnamed and conflicting shards and an undecodable snapshot", () => {
     expect(
-      issueKinds(planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [], previous: O.none() })))
+      issueKinds(planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [], committed: O.none() })))
     ).toStrictEqual(["registry-shard-invalid"]);
     const broken = RegistrySourceFile.make({ path: `${layout.shards}/broken.json`, content: "{" });
     expect(
@@ -192,7 +198,7 @@ describe("planRegistryArtifacts", () => {
           RegistryPlanInput.make({
             layout,
             shardFiles: [broken, shardFile("deo.json", { ...fabio, bindings: [], deprecations: [] })],
-            previous: O.none(),
+            committed: O.none(),
           })
         )
       )
@@ -205,12 +211,12 @@ describe("planRegistryArtifacts", () => {
     });
     expect(
       issueKinds(
-        planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [fabioFile, clash], previous: O.none() }))
+        planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [fabioFile, clash], committed: O.none() }))
       )
     ).toStrictEqual(["registry-conflict"]);
     expect(
       issueKinds(
-        planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [fabioFile], previous: O.some("{}") }))
+        planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [fabioFile], committed: O.some("{}") }))
       )
     ).toStrictEqual(["registry-generated-drift"]);
   });
@@ -228,7 +234,7 @@ describe("planRegistryArtifacts", () => {
     const vitestFile = shardFile("vitest.json", vitest);
     const planned = Result.getOrThrow(
       planRegistryArtifacts(
-        RegistryPlanInput.make({ layout: projecting, shardFiles: [fabioFile, vitestFile], previous: O.none() })
+        RegistryPlanInput.make({ layout: projecting, shardFiles: [fabioFile, vitestFile], committed: O.none() })
       )
     );
     expect(A.map(planned.artifacts, (artifact) => artifact.path)).toStrictEqual([
@@ -246,7 +252,7 @@ describe("planRegistryArtifacts", () => {
     expect(
       issueKinds(
         planRegistryArtifacts(
-          RegistryPlanInput.make({ layout, shardFiles: [fabioFile, vitestFile], previous: O.none() })
+          RegistryPlanInput.make({ layout, shardFiles: [fabioFile, vitestFile], committed: O.none() })
         )
       )
     ).toStrictEqual(["registry-shard-invalid"]);
@@ -257,7 +263,9 @@ describe("planRegistryArtifacts", () => {
       RegistryProjectionTarget.of("@beep/test-runner", "packages/test-runner"),
     ]);
     const planned = Result.getOrThrow(
-      planRegistryArtifacts(RegistryPlanInput.make({ layout: projecting, shardFiles: [fabioFile], previous: O.none() }))
+      planRegistryArtifacts(
+        RegistryPlanInput.make({ layout: projecting, shardFiles: [fabioFile], committed: O.none() })
+      )
     );
     expect(A.map(planned.artifacts, (artifact) => artifact.path)).toStrictEqual([layout.data, layout.snapshot]);
     expect(planned.retired).toStrictEqual(["packages/test-runner/src/internal/generated/RegistryTerms.ts"]);
@@ -266,14 +274,29 @@ describe("planRegistryArtifacts", () => {
   it("refuses a regenerated snapshot that removes a term with no deprecation", () => {
     const grown = shardFile("fabio.json", { ...fabio, terms: ["Article", "Report"], bindings: [], deprecations: [] });
     const first = Result.getOrThrow(
-      planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [grown], previous: O.none() }))
+      planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [grown], committed: O.none() }))
     );
-    const previous = O.fromUndefinedOr(first.artifacts[1]?.content);
-    const removed = planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [fabioFile], previous }));
-    expect(issueKinds(removed)).toStrictEqual(["registry-snapshot-break"]);
-    const details = Result.isFailure(removed) ? A.map(removed.failure, (issue) => issue.detail) : [];
-    expect(details).toStrictEqual([
-      "http://purl.org/spar/fabio/Article is removed without a deprecation. Deprecate the term in its shard instead.",
+    const committed = O.fromUndefinedOr(first.artifacts[1]?.content);
+    const detailsOf = (base: O.Option<BaseSnapshot>) => {
+      const removed = planRegistryArtifacts(
+        RegistryPlanInput.make({ layout, shardFiles: [fabioFile], committed, base })
+      );
+      expect(issueKinds(removed)).toStrictEqual(["registry-snapshot-break"]);
+      return Result.isFailure(removed) ? A.map(removed.failure, (issue) => issue.detail) : [];
+    };
+    const removal = "http://purl.org/spar/fabio/Article is removed without a deprecation.";
+    const remedy =
+      "Restore the IRI, or retire it with `bun run beep identity deprecate`, the only writer of a deprecation.";
+    const write = "`bun run beep identity registry --write";
+    // A check knows only the committed snapshot, so it leaves the verdict to the writer, which reads the base.
+    expect(detailsOf(O.none())).toStrictEqual([
+      `Against the committed snapshot: ${removal} Run ${write}\`, which judges the change against its base ref.`,
+    ]);
+    expect(detailsOf(BaseSnapshot.makeOption({ snapshot: first.snapshot }))).toStrictEqual([
+      `Against the base ref: ${removal} ${remedy}`,
+    ]);
+    expect(detailsOf(BaseSnapshot.makeOption({ snapshot: TermSnapshot.empty, ref: O.some("main") }))).toStrictEqual([
+      `Against the committed snapshot: ${removal} ${remedy} If no branch published it either, remove ${layout.snapshot} and run ${write} --base main\`.`,
     ]);
     const deprecated = shardFile("fabio.json", {
       ...fabio,
@@ -281,9 +304,44 @@ describe("planRegistryArtifacts", () => {
       deprecations: [{ term: "http://purl.org/spar/fabio/Article", since: "2.0.0" }],
     });
     assertTrue(
-      planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [deprecated], previous })).pipe(
+      planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [deprecated], committed })).pipe(
         Result.isSuccess
       )
+    );
+  });
+
+  it("succeeds a base that publishes a term set, whatever the committed snapshot holds", () => {
+    const planOf = (terms: ReadonlyArray<string>, committed: O.Option<string>, base: O.Option<BaseSnapshot>) =>
+      planRegistryArtifacts(
+        RegistryPlanInput.make({
+          layout,
+          shardFiles: [shardFile("fabio.json", { ...fabio, terms, bindings: [], deprecations: [] })],
+          committed,
+          base,
+        })
+      );
+    const first = Result.getOrThrow(planOf(["Report"], O.none(), O.none()));
+    const base = BaseSnapshot.makeOption({ snapshot: first.snapshot });
+    const textOf = (plan: RegistryPlan) => O.some(renderTermSnapshot(plan.snapshot));
+
+    // Two additions in two writes are one minor release.
+    const grown = Result.getOrThrow(planOf(["Article", "Report"], textOf(first), base));
+    expect(grown.snapshot.release).toBe("1.1.0");
+    const again = Result.getOrThrow(planOf(["Article", "Report", "Thesis"], textOf(grown), base));
+    expect(again.snapshot.release).toBe("1.1.0");
+    // A row the base never published goes again, and with it the bump.
+    expect(Result.getOrThrow(planOf(["Report"], textOf(again), base))).toStrictEqual(first);
+    // A committed snapshot that does not decode, such as one with conflict markers, is regenerated from the base.
+    expect(Result.getOrThrow(planOf(["Article", "Report"], O.some("<<<<<<<"), base))).toStrictEqual(grown);
+    // A base that publishes nothing leaves the registry unreleased: a writer keeps the committed release.
+    const unpublished = BaseSnapshot.makeOption({ snapshot: TermSnapshot.empty });
+    expect(
+      Result.getOrThrow(planOf(["Article", "Report", "Thesis"], textOf(grown), unpublished)).snapshot.release
+    ).toBe("1.1.0");
+    expect(Result.getOrThrow(planOf(["Report"], O.none(), unpublished)).snapshot.release).toBe("1.0.0");
+    // A check reads no base and succeeds the committed snapshot.
+    expect(Result.getOrThrow(planOf(["Article", "Report", "Thesis"], textOf(grown), O.none())).snapshot.release).toBe(
+      "1.2.0"
     );
   });
 });
@@ -342,7 +400,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             RegistryProjectionTarget.of("@beep/test-runner", "packages/tooling/test-kit/test-runner"),
           ])
         );
-        const plan = yield* planRegistry(repoRoot, committed);
+        const plan = yield* planRegistry(repoRoot, committed, O.none());
         for (const artifact of Result.getOrThrow(plan).artifacts) {
           const onDisk = yield* fs.readFileString(path.join(repoRoot, artifact.path));
           expect(onDisk, artifact.path).toBe(artifact.content);
@@ -410,8 +468,24 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
 
           const both = yield* Effect.exit(runIdentityCommand(["registry", "--write", "--check"]));
           expectReportedExit(both);
+          // A check compares with no base, so naming one is refused instead of ignored.
+          const based = yield* Effect.exit(runIdentityCommand(["registry", "--check", "--base", "HEAD"]));
+          expectReportedExit(based);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("fails outside a repository", () =>
+      Effect.gen(function* () {
+        const directory = yield* temporaryWorkingDirectory;
+
+        const error = yield* runIdentityCommand(["registry"]).pipe(withAncestorsHidden(directory), Effect.flip);
+
+        expect(error).toMatchObject({
+          _tag: "IdentityRegistryGeneratorError",
+          message: "Cannot find the repository root.",
+        });
+      })
     );
 
     it.effect("reports a registry with no shard directory", () =>
@@ -510,7 +584,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
       )
     );
 
-    it.effect("reports a snapshot released below a since its rows record", () =>
+    it.effect("raises a snapshot released below a since its rows record, and reports one wound back as drift", () =>
       Effect.andThen(
         temporaryWorkingDirectory,
         Effect.gen(function* () {
@@ -529,13 +603,21 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           yield* fs.writeFileString("packages/identity/src/Report.ts", "export const report = 1;\n");
           yield* runIdentityCommand(["registry", "--write"]);
 
-          const understated = yield* Effect.exit(runIdentityCommand(["registry", "--check"]));
+          const raised = yield* fs.readFileString(layout.snapshot);
+          expect(raised).toContain('"release": "9.0.0"');
+          yield* runIdentityCommand(["registry", "--check"]);
+          yield* fs.writeFileString(layout.snapshot, Str.replace('"release": "9.0.0"', '"release": "1.0.0"')(raised));
 
-          expectReportedExit(understated);
+          const woundBack = yield* Effect.exit(runIdentityCommand(["registry", "--check"]));
+
+          expectReportedExit(woundBack);
           const errors = yield* TestConsole.errorLines;
           expect(errors).toContain(
-            `${layout.snapshot} [release-regressed] In the snapshot: The snapshot release 1.0.0 is lower than the since 9.0.0 its own rows record. Correct that \`since\`, or restore the release in term-snapshot.json to at least every \`since\` its rows record.`
+            `${layout.snapshot} [registry-generated-drift] The generated artifact differs from regeneration. Run \`bun run beep identity registry --write\` to regenerate.`
           );
+          yield* runIdentityCommand(["registry", "--write"]);
+          const repaired = yield* fs.readFileString(layout.snapshot);
+          expect(repaired).toBe(raised);
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
@@ -621,10 +703,11 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             ),
           });
 
-          const error = yield* writeRegistry(root, RegistryLayout.of("packages/identity", [target])).pipe(
-            Effect.provideService(FileSystem.FileSystem, unremovable),
-            Effect.flip
-          );
+          const error = yield* writeRegistry(
+            root,
+            RegistryLayout.of("packages/identity", [target]),
+            BaseSnapshot.make({ snapshot: TermSnapshot.empty })
+          ).pipe(Effect.provideService(FileSystem.FileSystem, unremovable), Effect.flip);
 
           // No shard was edited, so the failure names no recovery: the same command is the recovery.
           expect(error.message).toBe(`Cannot remove ${target.path}.`);
@@ -660,7 +743,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           yield* runIdentityCommand([]);
           const logs = yield* TestConsole.logLines;
           expect(logs).toContain(
-            "Identity registry commands: bun run beep identity registry [--write | --check], identity rebind <from> <to>, identity deprecate <curie> [--replacement <curie>]"
+            "Identity registry commands: bun run beep identity registry [--write [--base <ref>] | --check], identity rebind <from> <to> [--base <ref>], identity deprecate <curie> [--replacement <curie>] [--base <ref>]"
           );
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))

@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Fable 5.2 (text-knowledge-stack-rebuild P1 registry lane, goals/text-knowledge-stack-rebuild-p1b-registry)",
-    "reason": "Re-record the root after merging P1 PR A's head 91d8c174242: //#lint:identity-registry keeps PR B's registry shard input glob. No command, cache flag, output or environment changed; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (text-knowledge-stack-rebuild P1 registry lane, PR #3439)",
+    "reason": "Re-record the root after merging main at bf1732fa398: //#lint:identity-registry keeps PR B's registry shard input glob; main's root changes are kept. No command, cache flag, output or environment changed; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/tksr-p1b-a-merge-2-cache-review-2026-11-20.md",
-      "sha256": "5149a91a773e187900ecf9f98fc0d34e5fc4a4f9049a7993f786cb35cdb67aec"
+      "path": "docs/reports/tksr-p1b-main-merge-cache-review-2026-11-22.md",
+      "sha256": "5390af34b49b8ed8a72c037487347834cff7e5c9a5007b9fd336da0772cea4bb"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "5d87a04b4fed379fbbe5ff720ba27d3c8bccfbb469e85d26fb76407d7073d288"
+      "sha256": "d0d73a191cdeb7a4bc828658992b0c0445bafe6a4fe8158492d301b93b2dc088"
     }
   ],
   "nodes": [
@@ -2140,6 +2140,7 @@
           "packages/drivers/sanity/package.json",
           "packages/drivers/shacl/package.json",
           "packages/drivers/sqlite/package.json",
+          "packages/drivers/sqlite/src/**",
           "packages/drivers/tailscale/package.json",
           "packages/drivers/tesseract/package.json",
           "packages/drivers/tika/package.json",

@@ -1,7 +1,8 @@
 /**
  * What a gate run could not persist or read, and the one console line that
- * says so. Rendering never waits on persistence or history: a failure there
- * becomes an omission, never a missing console.
+ * says so. Persistence and history are each bounded by a deadline: a failure
+ * or a missed deadline there becomes an omission, never a missing console. A
+ * history deadline takes effect between the store's lock waits.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -16,8 +17,8 @@ import * as S from "effect/Schema";
 const $I = $RepoGateRunId.create("Omission");
 
 /**
- * The part of a run that was left out: the raw log, the record, or the
- * history read.
+ * The part of a run that was left out: the raw log, the record, the
+ * history read, or the main baseline the history labels compare against.
  *
  * **Example** (Match an omitted part)
  *
@@ -30,9 +31,10 @@ const $I = $RepoGateRunId.create("Omission");
  * @category schemas
  * @since 0.0.0
  */
-export const OmittedPart = LiteralKit(["log", "record", "history"]).pipe(
+export const OmittedPart = LiteralKit(["log", "record", "history", "baseline"]).pipe(
   $I.annoteSchema("OmittedPart", {
-    description: "The part of a gate run that was left out: the raw log, the record, or the history read.",
+    description:
+      "The part of a gate run that was left out: the raw log, the record, the history read, or the main baseline.",
   })
 );
 
@@ -87,7 +89,8 @@ const writtenLine = (omissions: ReadonlyArray<Omission>): O.Option<string> => {
 
 /**
  * The console lines naming what was left out: at most one for the record
- * and raw log together, and one for the history read.
+ * and raw log together, one for the history read, and one for a missing
+ * main baseline.
  *
  * **Example** (Name a failed write)
  *
@@ -102,11 +105,12 @@ const writtenLine = (omissions: ReadonlyArray<Omission>): O.Option<string> => {
  * ```
  *
  * @param omissions - what the run could not write or read, and why
- * @returns at most two lines: one for the record and log, one for history
+ * @returns at most three lines: the record and log, the history read, the main baseline
  * @category projections
  * @since 0.0.0
  */
 export const omissionLines = (omissions: ReadonlyArray<Omission>): ReadonlyArray<string> => [
   ...A.fromOption(writtenLine(omissions)),
   ...A.fromOption(O.map(reasonOf(omissions, "history"), (reason) => `history not read: ${reason}`)),
+  ...A.fromOption(O.map(reasonOf(omissions, "baseline"), (reason) => `no main baseline: ${reason}`)),
 ];

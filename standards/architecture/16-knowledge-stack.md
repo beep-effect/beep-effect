@@ -71,8 +71,10 @@ committed `term-snapshot.json`. The `since` of a binding or a deprecation is a
 vocabulary release of that snapshot, not a package version: the snapshot
 carries `release`, starting at `1.0.0`, its writer bumps the minor on
 additions and the major on deprecations, and existing rows keep their `since`.
-The lint refuses a changed term set released below the release its change calls
-for, so two term sets never ship under one release.
+The release is a property of the whole change against a base ref: the writers
+compute it from the base's snapshot and the lint refuses any other, so two term
+sets never ship under one release and one change never skips one. Every binding
+or deprecation the change adds records that release.
 An addition needs no deprecation record: `L0-3` asks for one only when a
 published term is removed or its IRI changed. That field is a string with a local
 pattern check and the literal domains use `S.Literals`, the standing exception
@@ -119,22 +121,24 @@ a deprecation record, module-derived IRIs included; an addition needs none). The
 `identity/test/Curie.laws.test.ts`, `jsonc/test/ContentHash.laws.test.ts` and
 `identity/test/TermStability.test.ts` under `packages/foundation/modeling/`.
 
-**Gates.** `bun run beep identity registry --write` refuses a snapshot break
-against the committed snapshot, and `--check` refuses generated drift. `bun run beep lint
+**Gates.** `bun run beep identity registry --write` refuses a break of the term
+set its base ref publishes (`--base`, by default the merge base with
+`origin/main`; the committed snapshot where the base publishes none), and
+`--check` refuses generated drift without reading git. `bun run beep lint
 identity-registry` also regenerates the snapshot from the head's shards and
-compares it with the snapshot of a base ref (`--base`, by default the merge
-base with `origin/main`), so a change that edits the shards and the committed
-snapshot together is still caught. A removed term is retired only through
+compares it with the snapshot of the same base ref, so a change that edits the
+shards and the committed snapshot together is still caught. A removed term is retired only through
 `bun run beep identity deprecate <curie>`, which writes the deprecation row,
 after its binding, if it has one, is removed from the shard; a renamed module or
 package moves its bindings through `bun run beep identity rebind <from> <to>`.
 A package move rewrites binding codes only, so renaming a package that a shard
 projects into first changes its name in the `RegistryProjection` literal and in
 the shard's `projection`.
-A changed term set at a release below the one it calls for is repaired by
-restoring the base's snapshot, setting the new rows' `since` and running
-`identity registry --write`: the writer reads the checkout's own snapshot, so
-regenerating alone keeps the wrong release. A checkout that deletes the whole
+A release other than the one the change calls for is repaired by running
+`identity registry --write` against the base, after correcting any new row's
+`since` the lint names: the writer reads the base's snapshot, so regenerating
+gives the release of the whole change. A stacked layer is released against the
+same default base as its parent, and again once the parent has merged. A checkout that deletes the whole
 registry publishes nothing, so the lint reports every term its base published,
 and the base's snapshot is read from wherever the base tree has its
 `@beep/identity` package, so moving the package hides no removal.

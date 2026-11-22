@@ -9,10 +9,11 @@
  * its new name after a package rename. Each term keeps its IRI and its
  * `since`, so no published IRI changes. `deprecate` retires a live term:
  * it removes the local from its shard and appends the append-only
- * deprecation row, with the vocabulary release the regenerated snapshot will
- * carry and an optional replacement in the same namespace. Both rewrite only
- * the shards they change and then regenerate the registry artifacts; neither
- * edits the generated files by hand.
+ * deprecation row, with the vocabulary release the whole change against the
+ * base ref calls for and an optional replacement in the same namespace. Both
+ * rewrite only the shards they change and then regenerate the registry
+ * artifacts against that base (`--base`); neither edits the generated files by
+ * hand.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -39,28 +40,31 @@ import * as Argument from "effect/cli/Argument";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
-import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
-import * as Path from "effect/Path";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import {
   danglingBindingCodes,
-  decodeBaseSnapshot,
   decodeShardFile,
   IdentityRegistryGeneratorError,
   issueLine,
+  previousSnapshot,
   RegistryLayout,
   RegistrySourceFile,
-  readShardFiles,
+  ReleasePolicy,
+  readRegistryPlanInput,
+  releasePolicy,
   renderRegistryJson,
   resolveRegistryLayout,
   writeRegistry,
 } from "./Registry.ts";
-import type { RegistryWrite } from "./Registry.ts";
+import { baseFlag, readBaseSnapshot } from "./RegistryBase.ts";
+import type { FileSystem } from "effect/FileSystem";
+import type { Path } from "effect/Path";
+import type { BaseSnapshot, IdentityRegistryIssue, RegistryWrite } from "./Registry.ts";
 
 const $I = $RepoCliId.create("commands/Identity/ShardEdit");
 
@@ -164,7 +168,7 @@ export class DeprecateRequest extends S.Opaque<DeprecateRequest, { readonly bran
 ) {}
 
 /**
- * The inputs of a shard edit: the layout, the shard files and the committed snapshot.
+ * The inputs of a shard edit: the layout, the shard files and the snapshot the edited registry succeeds.
  *
  * **Example** (Describe an edit over no shards)
  *
@@ -185,6 +189,9 @@ export class ShardEditInput extends S.Opaque<ShardEditInput, { readonly brand: u
     layout: RegistryLayout,
     shardFiles: S.Array(RegistrySourceFile).annotateKey({ description: "The shard files, in path order." }),
     previous: TermSnapshot,
+    policy: ReleasePolicy.pipe(S.withConstructorDefault(Effect.succeed(ReleasePolicy.Enum.succeed))).annotateKey({
+      description: "Whether the edit succeeds the previous snapshot or keeps its release.",
+    }),
   }).pipe($I.annoteSchema("ShardEditInput", { description: "The inputs of one registry shard edit." }))
 ) {}
 
@@ -293,7 +300,7 @@ const movedShard = (shard: RegistryShard, move: CodeMove): RegistryShard =>
  * console.log(Result.getOrThrow(planned)[0]?.content.includes("@beep/test-runner/Runner/TestHang")) // true
  * ```
  *
- * @param input - The layout, shard files and committed snapshot.
+ * @param input - The layout, shard files and previous snapshot.
  * @param move - The code identity or package to move and its destination.
  * @returns The rewritten shard files, or every refusal.
  * @category projections
@@ -407,10 +414,12 @@ const deprecatedRows = (
  * The term must be a live local of its shard and no code identity may still
  * be bound to it, since a binding names a live term. The binding is removed
  * from its shard first; a rebind would keep the term bound. The deprecation's
- * `since` is the release the regenerated snapshot carries, the next major of
- * the committed snapshot, so the row and the snapshot agree. The edited
- * shards must still form a table, which refuses a replacement chain that the
- * retirement breaks.
+ * `since` is the release the whole change from the previous snapshot calls
+ * for, so every deprecation of one change records one release. Against a
+ * published term set this is the next major; the first release is `1.0.0`.
+ * Under the `keep` policy it is the release the regenerated snapshot keeps.
+ * The edited shards must still form a table, which refuses a replacement chain
+ * that the retirement breaks.
  *
  * **Example** (Deprecate a term in favour of another)
  *
@@ -438,7 +447,7 @@ const deprecatedRows = (
  * console.log(Result.getOrThrow(planned)[0]?.content.includes('"replacement": "Report"')) // true
  * ```
  *
- * @param input - The layout, shard files and committed snapshot.
+ * @param input - The layout, shard files and previous snapshot.
  * @param request - The term to retire and its optional replacement.
  * @returns The rewritten shard file, or every refusal.
  * @category projections
@@ -478,15 +487,15 @@ export const planDeprecate: {
       const others = A.filterMap(files, ([other, otherShard]) =>
         other.path === file.path ? Result.failVoid : Result.succeed(otherShard)
       );
-      // A first pass at the committed release finds the release the regenerated snapshot will carry.
+      // The release depends on which rows the change adds, never on their `since`, so a draft row finds it.
       const [, draft] = yield* Result.mapError(
         editedFile(file, deprecatedRows(shard, local, replacement, input.previous.release)),
         A.of
       );
-      const since = RegistryTable.snapshot(
-        yield* tableOf(input.layout, A.append(others, draft)),
-        input.previous
-      ).release;
+      const drafted = yield* tableOf(input.layout, A.append(others, draft));
+      const since = ReleasePolicy.is.keep(input.policy)
+        ? RegistryTable.snapshotKeeping(drafted, input.previous).release
+        : RegistryTable.releaseAfter(drafted, input.previous);
       const [edited, retired] = yield* Result.mapError(
         editedFile(file, deprecatedRows(shard, local, replacement, since)),
         A.of
@@ -500,36 +509,31 @@ export const planDeprecate: {
 // Effects
 // ---------------------------------------------------------------------------
 
-const ioError = (message: string) => (cause: unknown) => IdentityRegistryGeneratorError.make({ message, cause });
-
 /**
- * Read the inputs of a shard edit from the checkout at `repoRoot`.
+ * Read the inputs of a shard edit from the checkout at `repoRoot`, over the given base.
  *
  * **Example** (Read the edit inputs)
  *
  * ```ts
+ * import { TermSnapshot } from "@beep/identity/Term"
+ * import { BaseSnapshot, RegistryLayout } from "@beep/repo-cli/commands/Identity/Registry"
  * import { readShardEditInput } from "@beep/repo-cli/commands/Identity/ShardEdit"
  *
- * console.log(readShardEditInput("/repo"))
+ * const base = BaseSnapshot.make({ snapshot: TermSnapshot.empty })
+ * console.log(readShardEditInput("/repo", RegistryLayout.of("packages/identity"), base))
  * ```
  *
  * @category workflows
  * @since 0.0.0
  */
-export const readShardEditInput = Effect.fn("IdentityShardEdit.readInput")(function* (repoRoot: string) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
-  const layout = yield* resolveRegistryLayout(repoRoot);
-  const shardFiles = yield* readShardFiles(repoRoot, layout);
-  const snapshotPath = path.join(repoRoot, layout.snapshot);
-  const exists = yield* fs.exists(snapshotPath).pipe(Effect.mapError(ioError(`Cannot stat ${layout.snapshot}.`)));
-  const text = exists
-    ? yield* fs
-        .readFileString(snapshotPath)
-        .pipe(Effect.mapBoth({ onFailure: ioError(`Cannot read ${layout.snapshot}.`), onSuccess: O.some }))
-    : O.none<string>();
-  return Result.map(decodeBaseSnapshot(layout.snapshot, text), (previous) =>
-    ShardEditInput.make({ layout, shardFiles, previous })
+export const readShardEditInput = Effect.fn("IdentityShardEdit.readInput")(function* (
+  repoRoot: string,
+  layout: RegistryLayout,
+  base: BaseSnapshot
+) {
+  const input = yield* readRegistryPlanInput(repoRoot, layout, O.some(base));
+  return Result.map(previousSnapshot(input), (previous) =>
+    ShardEditInput.make({ layout, shardFiles: input.shardFiles, previous, policy: releasePolicy(input.base) })
   );
 });
 
@@ -548,7 +552,7 @@ const reportRefusals = Effect.fn("IdentityShardEdit.reportRefusals")(function* (
 type CheckoutRefusals = (
   repoRoot: string,
   planned: ReadonlyArray<RegistrySourceFile>
-) => Effect.Effect<ReadonlyArray<ShardEditRefusal>, IdentityRegistryGeneratorError, FileSystem.FileSystem | Path.Path>;
+) => Effect.Effect<ReadonlyArray<ShardEditRefusal>, IdentityRegistryGeneratorError, FileSystem | Path>;
 
 const noCheckoutRefusals: CheckoutRefusals = () => Effect.succeed(A.empty());
 
@@ -567,18 +571,38 @@ const reportWrite = Effect.fn("IdentityShardEdit.reportWrite")(function* (
   }
 });
 
-// Plan the edit, check it against the checkout, then write the shards it changes with the regenerated
-// registry artifacts. Nothing is written unless the edited shards regenerate.
+const reportIssues = Effect.fn("IdentityShardEdit.reportIssues")(function* (
+  label: string,
+  reason: string,
+  issues: ReadonlyArray<IdentityRegistryIssue>
+) {
+  for (const issue of issues) {
+    yield* Console.error(issueLine(issue));
+  }
+  return yield* failWithReportedExit(`identity ${label}: ${reason}`);
+});
+
+// Plan the edit over the base, check it against the checkout, then write the shards it changes with the
+// regenerated registry artifacts. Nothing is written unless the edited shards regenerate.
 const runShardEdit = Effect.fn("IdentityShardEdit.run")(function* (
   label: string,
+  ref: O.Option<string>,
   plan: (input: ShardEditInput) => ShardEditResult,
   checkout: CheckoutRefusals = noCheckoutRefusals
 ) {
-  const repoRoot = yield* findRepoRoot().pipe(Effect.mapError(ioError("Cannot find the repository root.")));
-  const input = yield* readShardEditInput(repoRoot);
+  const repoRoot = yield* findRepoRoot().pipe(
+    Effect.mapError((cause) =>
+      IdentityRegistryGeneratorError.make({ message: "Cannot find the repository root.", cause })
+    )
+  );
+  const layout = yield* resolveRegistryLayout(repoRoot);
+  const base = yield* readBaseSnapshot(`identity:${label}`, repoRoot, layout, ref);
+  if (Result.isFailure(base)) {
+    return yield* reportIssues(label, "the base ref's snapshot does not decode.", A.of(base.failure));
+  }
+  const input = yield* readShardEditInput(repoRoot, layout, base.success);
   if (Result.isFailure(input)) {
-    yield* Console.error(issueLine(input.failure));
-    return yield* failWithReportedExit(`identity ${label}: the committed snapshot does not decode.`);
+    return yield* reportIssues(label, "the committed snapshot does not decode.", A.of(input.failure));
   }
   const planned = plan(input.success);
   if (Result.isFailure(planned)) {
@@ -588,12 +612,9 @@ const runShardEdit = Effect.fn("IdentityShardEdit.run")(function* (
   if (A.isReadonlyArrayNonEmpty(refused)) {
     return yield* reportRefusals(label, refused);
   }
-  const written = yield* writeRegistry(repoRoot, input.success.layout, planned.success);
+  const written = yield* writeRegistry(repoRoot, layout, base.success, planned.success);
   if (Result.isFailure(written)) {
-    for (const issue of written.failure) {
-      yield* Console.error(issueLine(issue));
-    }
-    return yield* failWithReportedExit(`identity ${label}: the edited shards do not regenerate.`);
+    return yield* reportIssues(label, "the edited shards do not regenerate.", written.failure);
   }
   yield* reportWrite(label, planned.success, written.success);
 });
@@ -657,12 +678,13 @@ const rebindTargetRefusals = (move: CodeMove): CheckoutRefusals =>
 const runRebind = Effect.fn("IdentityShardEdit.runRebind")(function* (options: {
   readonly from: string;
   readonly to: string;
+  readonly base: O.Option<string>;
 }) {
   const move = moveOf(options);
   if (Result.isFailure(move)) {
     return yield* reportRefusals("rebind", move.failure);
   }
-  return yield* runShardEdit("rebind", planRebind(move.success), rebindTargetRefusals(move.success));
+  return yield* runShardEdit("rebind", options.base, planRebind(move.success), rebindTargetRefusals(move.success));
 });
 
 /**
@@ -692,6 +714,7 @@ export const identityRebindCommand = Command.make(
         "Code identity the bindings move to, such as @beep/<package>/<new module path>, or the package @beep/<new package>"
       )
     ),
+    base: baseFlag,
   },
   runRebind
 ).pipe(
@@ -722,10 +745,12 @@ export const identityDeprecateCommand = Command.make(
       Flag.withDescription("CURIE of its successor, a live term of the same namespace"),
       Flag.optional
     ),
+    base: baseFlag,
   },
-  ({ curie, replacement }) => runShardEdit("deprecate", planDeprecate(DeprecateRequest.make({ curie, replacement })))
+  ({ base, curie, replacement }) =>
+    runShardEdit("deprecate", base, planDeprecate(DeprecateRequest.make({ curie, replacement })))
 ).pipe(
   Command.withDescription(
-    "Retire a live registry term: remove it from its shard and append its deprecation with the next vocabulary release"
+    "Retire a live registry term: remove it from its shard and append its deprecation with the vocabulary release of the change against the base ref"
   )
 );

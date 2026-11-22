@@ -391,7 +391,17 @@ describe("labels and delta (AC-L5, AC-L6)", () => {
   it("on a green run the delta is a suffix of the single verdict line", () => {
     const lines = projectWith({ report: makeReport(), delta: RunDelta.make({ fixed: 2, stillFailing: 0, new: 0 }) });
     assert.strictEqual(lines.length, 1);
-    assert.isTrue(Str.endsWith("; since last run: 2 fixed, 0 still failing, 0 new")(lines[0] ?? ""));
+    assert.isTrue(Str.endsWith(" (2 fixed since last run)")(lines[0] ?? ""));
+  });
+
+  it("a green run that fixed nothing carries no delta suffix, and a narrower scope says so", () => {
+    const none = projectWith({ report: makeReport(), delta: RunDelta.make({ fixed: 0, stillFailing: 0, new: 0 }) });
+    assert.isFalse(Str.includes("since last run")(none[0] ?? ""));
+    const narrower = projectWith({
+      report: makeReport(),
+      delta: RunDelta.make({ fixed: 1, stillFailing: 0, new: 0, scopeDiffers: true }),
+    });
+    assert.isTrue(Str.endsWith(" (1 fixed since last run, scope differs)")(narrower[0] ?? ""));
   });
 });
 

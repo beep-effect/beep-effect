@@ -31,7 +31,8 @@
  * artifacts must match their source shards, and the snapshot regenerated from
  * the shards must keep the published term set of a base ref (`--base`, by
  * default the merge base with `origin/main`), read with `git show` from wherever
- * the base tree has its `@beep/identity` package. A term or
+ * the base tree has its `@beep/identity` package, at exactly the release the
+ * change against that base calls for. A term or
  * namespace IRI the base published leaves only through a deprecation, which
  * only `bun run beep identity deprecate` writes. A checkout with no registry at all
  * publishes nothing, so deleting the registry is reported as the removal of every
@@ -41,7 +42,6 @@
  * @since 0.0.0
  */
 
-import { Git } from "@beep/git/Git";
 import { $RepoCliId } from "@beep/identity/packages";
 import { TermSnapshot } from "@beep/identity/Term";
 import {
@@ -61,7 +61,6 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { flow } from "effect/Function";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
@@ -77,16 +76,15 @@ import {
   baseSnapshotIssues,
   checkRegistry,
   checkRegistryAgainstBase,
-  decodeBaseSnapshot,
-  IdentityRegistryGeneratorError,
-  RegistryLayout,
   RegistryWrite,
   registryPresent,
   resolveRegistryLayout,
   writeRegistry,
 } from "../Identity/Registry.ts";
+import { baseFlag, readBaseSnapshot } from "../Identity/RegistryBase.ts";
 import type { CallExpression, ImportDeclaration, ImportSpecifier, SourceFile } from "ts-morph";
 import type { LabIdentitySegmentState } from "../CreatePackage/internal/LabIdentitySegment.ts";
+import type { RegistryLayout } from "../Identity/Registry.ts";
 
 const $I = $RepoCliId.create("commands/Lint/IdentityRegistry");
 
@@ -129,6 +127,8 @@ const IdentityRegistryViolationKind = LiteralKit([
   "term-revived",
   "binding-changed",
   "release-regressed",
+  "release-overstated",
+  "since-misstated",
   "binding-dangling",
 ]).pipe(
   $I.annoteSchema("IdentityRegistryViolationKind", {
@@ -607,104 +607,14 @@ const collectLocalRootViolations = Effect.fn("IdentityRegistry.collectLocalRootV
   return violations;
 });
 
-const DEFAULT_BASE_REF = "origin/main";
-
-class IdentityManifest extends S.Opaque<IdentityManifest, { readonly brand: unique symbol }>()(
-  S.Struct({ name: S.tag(IDENTITY_PACKAGE_NAME) }).pipe(
-    $I.annoteSchema("IdentityManifest", { description: "A package.json that names the @beep/identity package." })
-  )
-) {}
-const decodeIdentityManifest = S.decodeUnknownOption(S.fromJsonString(IdentityManifest));
-
-// Where the tree at `ref` has the term snapshot of its @beep/identity package. The head's own path says nothing
-// about the base: a change may move the package. A tree with more than one such package is read at the head's path.
-const locateBaseSnapshot = Effect.fn("IdentityRegistry.locateBaseSnapshot")(function* (
-  repoRoot: string,
-  ref: string,
-  headPath: string
-) {
-  const git = yield* Git;
-  const path = yield* Path.Path;
-  const entries = yield* git.lsTree(repoRoot, ref, { fullTree: true });
-  const files = HashSet.fromIterable(A.map(entries, (entry) => entry.path));
-  const directories = A.filterMap(entries, (entry) => {
-    const directory = path.dirname(entry.path);
-    return path.basename(entry.path) === "package.json" && HashSet.has(files, RegistryLayout.of(directory).snapshot)
-      ? Result.succeed(directory)
-      : Result.failVoid;
-  });
-  const owners = yield* Effect.filter(
-    directories,
-    (directory) =>
-      Effect.map(
-        git.show(repoRoot, ref, `${directory}/package.json`),
-        flow(O.flatMap(decodeIdentityManifest), O.isSome)
-      ),
-    { concurrency: 1 }
-  );
-  const paths = A.map(owners, (directory) => RegistryLayout.of(directory).snapshot);
-  if (A.contains(paths, headPath)) {
-    return O.some(headPath);
-  }
-  return A.length(paths) > 1
-    ? yield* IdentityRegistryGeneratorError.make({
-        message: `The base ${ref} has more than one ${IDENTITY_PACKAGE_NAME} term snapshot (${A.join(paths, ", ")}) and none at ${headPath}, so the published term set is unknown.`,
-      })
-    : A.head(paths);
-});
-
-// The base ref's term snapshot: `--base <ref>`, or the merge base of HEAD with origin/main. Only the
-// documented absences fall back to the empty snapshot, where every term is an addition, and each
-// says so on the log: no default base (not a git work tree, no origin/main ref, disjoint history)
-// and a base whose tree has no identity term snapshot. Every other git failure fails the lint.
-const readBaseSnapshot = Effect.fn("IdentityRegistry.readBaseSnapshot")(function* (
-  repoRoot: string,
-  snapshotPath: string,
-  base: O.Option<string>
-) {
-  const git = yield* Git;
-  const none = Result.succeed(BaseSnapshot.make({ path: snapshotPath, snapshot: TermSnapshot.empty }));
-  const ref = yield* O.match(base, {
-    onNone: () =>
-      git.mergeBaseOption(repoRoot, "HEAD", DEFAULT_BASE_REF).pipe(
-        Effect.catchTags({
-          NotARepositoryError: () => Effect.succeedNone,
-          UnknownRefError: () => Effect.succeedNone,
-        })
-      ),
-    onSome: Effect.succeedSome,
-  });
-  if (O.isNone(ref)) {
-    yield* Console.log(
-      `[lint:identity-registry] no merge base with ${DEFAULT_BASE_REF}; the term-stability base is the empty snapshot.`
-    );
-    return none;
-  }
-  const located = yield* locateBaseSnapshot(repoRoot, ref.value, snapshotPath);
-  if (O.isNone(located)) {
-    yield* Console.log(
-      `[lint:identity-registry] the base ${ref.value} has no ${IDENTITY_PACKAGE_NAME} term snapshot; the term-stability base is the empty snapshot.`
-    );
-    return none;
-  }
-  if (located.value !== snapshotPath) {
-    yield* Console.log(
-      `[lint:identity-registry] the base ${ref.value} has its term snapshot at ${located.value}; this checkout has it at ${snapshotPath}.`
-    );
-  }
-  const text = yield* git.show(repoRoot, ref.value, located.value);
-  return Result.map(decodeBaseSnapshot(located.value, text), (snapshot) =>
-    BaseSnapshot.make({ path: located.value, snapshot })
-  );
-});
-
-// `--fix`: regenerate the artifacts and say what changed. A registry that does not regenerate is
+// `--fix`: regenerate the artifacts against the lint's own base and say what changed. A registry that does not regenerate is
 // reported by the checks that follow.
 const regenerateRegistry = Effect.fn("IdentityRegistry.regenerateRegistry")(function* (
   repoRoot: string,
-  layout: RegistryLayout
+  layout: RegistryLayout,
+  base: BaseSnapshot
 ) {
-  const regenerated = yield* writeRegistry(repoRoot, layout);
+  const regenerated = yield* writeRegistry(repoRoot, layout, base);
   const { removed, written } = Result.getOrElse(regenerated, () => RegistryWrite.make({ written: [], removed: [] }));
   for (const artifact of written) {
     yield* Console.log(`[lint:identity-registry] regenerated ${artifact}`);
@@ -739,19 +649,20 @@ const collectTermRegistryViolations = Effect.fn("IdentityRegistry.collectTermReg
 
   const present = yield* registryPresent(repoRoot, layout);
 
-  if (fix && present) {
-    yield* regenerateRegistry(repoRoot, layout);
-  }
-
-  const baseSnapshot = yield* readBaseSnapshot(repoRoot, layout.snapshot, base);
+  const baseSnapshot = yield* readBaseSnapshot("lint:identity-registry", repoRoot, layout, base);
   // A base that does not decode is compared as empty, so the checkout's own rows are still reported.
   const published = Result.getOrElse(baseSnapshot, () =>
-    BaseSnapshot.make({ path: layout.snapshot, snapshot: TermSnapshot.empty })
+    BaseSnapshot.make({ snapshot: TermSnapshot.empty, ref: base })
   );
   const undecodable = A.fromOption(Result.getFailure(baseSnapshot));
+
+  if (fix && present) {
+    yield* regenerateRegistry(repoRoot, layout, published);
+  }
+
   const found = present
     ? yield* presentRegistryIssues(repoRoot, layout, published)
-    : baseSnapshotIssues(published, TermSnapshot.empty, layout.snapshot);
+    : baseSnapshotIssues(published, TermSnapshot.empty, layout);
   const issues = A.appendAll(found, undecodable);
   return A.map(issues, (issue) =>
     IdentityRegistryViolation.make({ kind: issue.kind, subject: issue.subject, detail: issue.detail })
@@ -874,12 +785,7 @@ export const lintIdentityRegistryCommand = Command.make(
         "Register missing workspace packages in the identity composer registry and regenerate the declared-term registry artifacts"
       )
     ),
-    base: Flag.String("base").pipe(
-      Flag.withDescription(
-        "Git ref whose term snapshot the published term set is compared against (default: the merge base of HEAD with origin/main)"
-      ),
-      Flag.optional
-    ),
+    base: baseFlag,
   },
   runIdentityRegistryLint
 ).pipe(
