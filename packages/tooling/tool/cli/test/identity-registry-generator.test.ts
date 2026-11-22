@@ -3,6 +3,7 @@ import { RegistryVocab } from "@beep/identity/Registry";
 import { RegistryShard, RegistryTable, TermSnapshot } from "@beep/identity/Term";
 import { identityCommand } from "@beep/repo-cli/commands/Identity";
 import {
+  danglingBindingCodes,
   driftIssues,
   IdentityRegistryIssue,
   issueLine,
@@ -40,6 +41,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import * as TestConsole from "effect/testing/TestConsole";
 import { expectReportedExit, NodeTestLayer, temporaryWorkingDirectory } from "./support/CommandTest.ts";
+import type { RegistryPlan } from "@beep/repo-cli/commands/Identity/Registry";
 
 const runIdentityCommand = Command.runWith(identityCommand, { version: "0.0.0" });
 const encodeJson = flow(S.encodeUnknownResult(S.fromJsonString(S.Unknown)), Result.getOrThrow);
@@ -54,7 +56,7 @@ const shardFile = (name: string, value: unknown): RegistrySourceFile =>
 const fabioFile = shardFile("fabio.json", { ...fabio, bindings: [], deprecations: [] });
 
 const issueKinds = (
-  result: Result.Result<ReadonlyArray<RegistrySourceFile>, A.NonEmptyReadonlyArray<IdentityRegistryIssue>>
+  result: Result.Result<RegistryPlan, A.NonEmptyReadonlyArray<IdentityRegistryIssue>>
 ): ReadonlyArray<string> => (Result.isFailure(result) ? A.map(result.failure, (issue) => issue.kind) : []);
 
 describe("renderRegistryJson", () => {
@@ -161,12 +163,17 @@ describe("planRegistryArtifacts", () => {
     const planned = Result.getOrThrow(
       planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [fabioFile], previous: O.none() }))
     );
-    expect(A.map(planned, (artifact) => artifact.path)).toStrictEqual([layout.data, layout.snapshot]);
+    expect(A.map(planned.artifacts, (artifact) => artifact.path)).toStrictEqual([layout.data, layout.snapshot]);
     const table = Result.getOrThrow(RegistryTable.fromShards([shard(fabio)]));
-    expect(planned[1]?.content).toBe(renderTermSnapshot(RegistryTable.snapshot(table, TermSnapshot.empty)));
+    expect(planned.snapshot).toStrictEqual(RegistryTable.snapshot(table, TermSnapshot.empty));
+    expect(planned.artifacts[1]?.content).toBe(renderTermSnapshot(planned.snapshot));
     const again = Result.getOrThrow(
       planRegistryArtifacts(
-        RegistryPlanInput.make({ layout, shardFiles: [fabioFile], previous: O.fromUndefinedOr(planned[1]?.content) })
+        RegistryPlanInput.make({
+          layout,
+          shardFiles: [fabioFile],
+          previous: O.fromUndefinedOr(planned.artifacts[1]?.content),
+        })
       )
     );
     expect(again).toStrictEqual(planned);
@@ -222,9 +229,13 @@ describe("planRegistryArtifacts", () => {
         RegistryPlanInput.make({ layout: projecting, shardFiles: [fabioFile, vitestFile], previous: O.none() })
       )
     );
-    expect(A.map(planned, (artifact) => artifact.path)).toStrictEqual([layout.data, layout.snapshot, target.path]);
+    expect(A.map(planned.artifacts, (artifact) => artifact.path)).toStrictEqual([
+      layout.data,
+      layout.snapshot,
+      target.path,
+    ]);
     const table = Result.getOrThrow(RegistryTable.fromShards([shard(fabio), shard(vitest)]));
-    expect(planned[2]?.content).toBe(renderRegistryProjection(table, ["vitest"]));
+    expect(planned.artifacts[2]?.content).toBe(renderRegistryProjection(table, ["vitest"]));
     expect(renderRegistryProjection(["vitest"])(table)).toContain(
       `    iri: "${IdentityAuthority}vitest/TestHang",\n    curie: "vitest:TestHang",`
     );
@@ -238,12 +249,22 @@ describe("planRegistryArtifacts", () => {
     ).toStrictEqual(["registry-shard-invalid"]);
   });
 
+  it("writes no projection module for a package that no shard projects into", () => {
+    const projecting = RegistryLayout.of("packages/identity", [
+      RegistryProjectionTarget.of("@beep/test-runner", "packages/test-runner"),
+    ]);
+    const planned = Result.getOrThrow(
+      planRegistryArtifacts(RegistryPlanInput.make({ layout: projecting, shardFiles: [fabioFile], previous: O.none() }))
+    );
+    expect(A.map(planned.artifacts, (artifact) => artifact.path)).toStrictEqual([layout.data, layout.snapshot]);
+  });
+
   it("refuses a regenerated snapshot that removes a term with no deprecation", () => {
     const grown = shardFile("fabio.json", { ...fabio, terms: ["Article", "Report"], bindings: [], deprecations: [] });
     const first = Result.getOrThrow(
       planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [grown], previous: O.none() }))
     );
-    const previous = O.fromUndefinedOr(first[1]?.content);
+    const previous = O.fromUndefinedOr(first.artifacts[1]?.content);
     const removed = planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [fabioFile], previous }));
     expect(issueKinds(removed)).toStrictEqual(["registry-snapshot-break"]);
     const details = Result.isFailure(removed) ? A.map(removed.failure, (issue) => issue.detail) : [];
@@ -299,7 +320,7 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           ])
         );
         const plan = yield* planRegistry(repoRoot, committed);
-        for (const artifact of Result.getOrThrow(plan)) {
+        for (const artifact of Result.getOrThrow(plan).artifacts) {
           const onDisk = yield* fs.readFileString(path.join(repoRoot, artifact.path));
           expect(onDisk, artifact.path).toBe(artifact.content);
         }
@@ -387,6 +408,42 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
           expect(failure).toContain("Cannot resolve the @beep/identity workspace.");
         })
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("finds the codes whose package, module or module path the checkout does not have", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* writeFixture([]);
+          yield* fs.makeDirectory("packages/widget/src/Nested", { recursive: true });
+          yield* fs.writeFileString(
+            "packages/widget/package.json",
+            `${encodeJson({ name: "@beep/widget", version: "0.0.0", type: "module" })}\n`
+          );
+          yield* fs.writeFileString("packages/widget/src/Report.ts", "export const report = 1;\n");
+          yield* fs.writeFileString("packages/widget/src/View.tsx", "export const view = 1;\n");
+          yield* fs.writeFileString("packages/widget/src/Nested/index.ts", "export const nested = 1;\n");
+          const root = yield* Effect.sync(() => process.cwd());
+
+          const dangling = yield* danglingBindingCodes(root, [
+            "@beep/widget/Report/Report",
+            "@beep/widget/View/View.title",
+            "@beep/widget/Nested/Section",
+            // A module the package does not have, a package the checkout does not have, and a code whose
+            // only segment is its member, so it names no module at all.
+            "@beep/widget/Gone/Report",
+            "@beep/nowhere/Report/Report",
+            "@beep/widget/Report",
+          ]);
+
+          expect(dangling).toStrictEqual([
+            "@beep/widget/Gone/Report",
+            "@beep/nowhere/Report/Report",
+            "@beep/widget/Report",
+          ]);
+        })
+      )
     );
 
     it.effect("refuses to write over a conflict", () =>

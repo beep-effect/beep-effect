@@ -18,7 +18,14 @@
  */
 
 import { $RepoCliId } from "@beep/identity/packages";
-import { CodeId, RegistryShard, RegistryTable, registryConflictMessage, TermSnapshot } from "@beep/identity/Term";
+import {
+  CodeId,
+  RegistryShard,
+  RegistryTable,
+  registryConflictMessage,
+  ShardBinding,
+  TermSnapshot,
+} from "@beep/identity/Term";
 import { failWithReportedExit } from "@beep/repo-cli-kit/cli/ExitCodeError";
 import { findRepoRoot } from "@beep/repo-utils";
 import { LiteralKit } from "@beep/schema";
@@ -238,6 +245,9 @@ const tableOf = (
     A.map((conflict) => refusal("registry-conflict", layout.shards, registryConflictMessage(conflict)))
   );
 
+const shardFileOf = (file: RegistrySourceFile, encoded: RegistryShard.Encoded): RegistrySourceFile =>
+  RegistrySourceFile.make({ path: file.path, content: renderRegistryJson(encoded) });
+
 // The edited shard as its file, validated by decoding the edited rows.
 const editedFile = (
   file: RegistrySourceFile,
@@ -246,19 +256,32 @@ const editedFile = (
   pipe(
     decodeEncodedShard(encoded),
     Result.mapError((error) => refusal("shard-invalid", file.path, error.message)),
-    Result.map(
-      (shard) => [RegistrySourceFile.make({ path: file.path, content: renderRegistryJson(encoded) }), shard] as const
-    )
+    Result.map((shard) => [shardFileOf(file, encoded), shard] as const)
   );
+
+const byCode = Order.mapInput(Order.String, (binding: { readonly code: string }) => binding.code);
+const byTerm = Order.mapInput(Order.String, (deprecation: { readonly term: string }) => deprecation.term);
 
 // The code a binding moves to: `to` for `from` itself, `to/<rest>` for `from/<rest>`.
 const movedCode =
   ({ from, to }: RebindRequest) =>
-  (code: string): string =>
-    code === from ? to : Str.startsWith(`${from}/`)(code) ? `${to}${Str.slice(Str.length(from))(code)}` : code;
+  (code: CodeId): CodeId =>
+    code === from
+      ? to
+      : Str.startsWith(`${from}/`)(code)
+        ? CodeId.make(`${to}${Str.slice(Str.length(from))(code)}`)
+        : code;
 
-const byCode = Order.mapInput(Order.String, (binding: { readonly code: string }) => binding.code);
-const byTerm = Order.mapInput(Order.String, (deprecation: { readonly term: string }) => deprecation.term);
+// The shard with its bindings moved. The moved table has no conflict, so the moved codes are distinct
+// and the sorted bindings always form a shard.
+const movedShard = (shard: RegistryShard, move: (code: CodeId) => CodeId): RegistryShard =>
+  RegistryShard.make({
+    ...shard,
+    bindings: A.sort(
+      A.map(shard.bindings, (binding) => ShardBinding.make({ ...binding, code: move(binding.code) })),
+      byCode
+    ),
+  });
 
 /**
  * Plan a rebind: the shard files whose bindings move, or every refusal.
@@ -336,21 +359,7 @@ export const planRebind: {
           )
         );
       }
-      const edited = A.map(touched, ([file, shard]) => {
-        const encoded = encodeShard(shard);
-        return editedFile(file, {
-          ...encoded,
-          bindings: A.sort(
-            A.map(encoded.bindings, (binding) => ({ ...binding, code: move(binding.code) })),
-            byCode
-          ),
-        });
-      });
-      const refused = A.getFailures(edited);
-      if (A.isReadonlyArrayNonEmpty(refused)) {
-        return yield* Result.fail(refused);
-      }
-      return A.map(A.getSuccesses(edited), ([file]) => file);
+      return A.map(touched, ([file, shard]) => shardFileOf(file, encodeShard(movedShard(shard, move))));
     })
 );
 

@@ -692,6 +692,36 @@ export class RegistryPlanInput extends S.Opaque<RegistryPlanInput, { readonly br
 ) {}
 
 /**
+ * One registry plan: the regenerated snapshot and every artifact generated from the same table.
+ *
+ * **Details**
+ *
+ * `snapshot` is the value the snapshot artifact renders, so a reader of the
+ * plan compares it without looking the file up and decoding it again.
+ *
+ * **Example** (Describe a plan over no term)
+ *
+ * ```ts
+ * import { TermSnapshot } from "@beep/identity/Term"
+ * import { RegistryPlan } from "@beep/repo-cli/commands/Identity/Registry"
+ *
+ * const plan = RegistryPlan.make({ snapshot: TermSnapshot.empty, artifacts: [] })
+ * console.log(plan.snapshot.release) // "0.0.0"
+ * ```
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export class RegistryPlan extends S.Opaque<RegistryPlan, { readonly brand: unique symbol }>()(
+  S.Struct({
+    snapshot: TermSnapshot,
+    artifacts: S.Array(RegistrySourceFile).annotateKey({
+      description: "The generated files: the data module, the snapshot and every projection module.",
+    }),
+  }).pipe($I.annoteSchema("RegistryPlan", { description: "The regenerated snapshot and the artifacts of one plan." }))
+) {}
+
+/**
  * Build the table from shard files and render every generated artifact, or return every finding.
  *
  * **Details**
@@ -713,7 +743,7 @@ export class RegistryPlanInput extends S.Opaque<RegistryPlanInput, { readonly br
  * console.log(Result.isFailure(planRegistryArtifacts(RegistryPlanInput.make({ layout, shardFiles: [], previous: O.none() }))))
  * ```
  *
- * @returns The generated artifacts, or every finding that blocks them.
+ * @returns The regenerated snapshot and the generated artifacts, or every finding that blocks them.
  * @category projections
  * @since 0.0.0
  */
@@ -721,10 +751,7 @@ export const planRegistryArtifacts = ({
   layout,
   shardFiles,
   previous,
-}: RegistryPlanInput): Result.Result<
-  ReadonlyArray<RegistrySourceFile>,
-  A.NonEmptyReadonlyArray<IdentityRegistryIssue>
-> => {
+}: RegistryPlanInput): Result.Result<RegistryPlan, A.NonEmptyReadonlyArray<IdentityRegistryIssue>> => {
   if (A.isReadonlyArrayEmpty(shardFiles)) {
     return Result.fail([shardIssue(layout.shards, "The registry has no source shard.")]);
   }
@@ -800,11 +827,16 @@ export const planRegistryArtifacts = ({
       );
       return A.isReadonlyArrayNonEmpty(breaks)
         ? Result.fail(breaks)
-        : Result.succeed([
-            RegistrySourceFile.make({ path: layout.data, content: renderRegistryData(table) }),
-            RegistrySourceFile.make({ path: layout.snapshot, content: renderTermSnapshot(next) }),
-            ...projections,
-          ]);
+        : Result.succeed(
+            RegistryPlan.make({
+              snapshot: next,
+              artifacts: [
+                RegistrySourceFile.make({ path: layout.data, content: renderRegistryData(table) }),
+                RegistrySourceFile.make({ path: layout.snapshot, content: renderTermSnapshot(next) }),
+                ...projections,
+              ],
+            })
+          );
     })
   );
 };
@@ -1214,25 +1246,19 @@ export const checkRegistry = Effect.fn("IdentityRegistry.check")(function* (repo
   if (Result.isFailure(plan)) {
     return plan.failure;
   }
+  const { artifacts, snapshot } = plan.success;
   const current = yield* Effect.forEach(
-    plan.success,
+    artifacts,
     (artifact) =>
       Effect.map(readOptional(path.join(repoRoot, artifact.path)), (content) => [artifact.path, content] as const),
     { concurrency: 1 }
   );
   const byPath = R.fromEntries(current);
-  const drift = driftIssues(plan.success, (artifactPath) => O.flatten(R.get(byPath, artifactPath)));
-  const planned = pipe(
-    A.findFirst(plan.success, (artifact) => artifact.path === layout.snapshot),
-    O.flatMap((artifact) => Result.getSuccess(decodeSnapshot(artifact.content)))
-  );
-  if (O.isNone(planned)) {
-    return drift;
-  }
-  const release = A.map(snapshotReleaseViolations(planned.value), violationIssue(layout.snapshot, "In the snapshot"));
+  const drift = driftIssues(artifacts, (artifactPath) => O.flatten(R.get(byPath, artifactPath)));
+  const release = A.map(snapshotReleaseViolations(snapshot), violationIssue(layout.snapshot, "In the snapshot"));
   const dangling = yield* danglingBindingCodes(
     repoRoot,
-    A.map(planned.value.bindings, (binding) => binding.code)
+    A.map(snapshot.bindings, (binding) => binding.code)
   );
   const danglingIssues = A.map(dangling, (code) =>
     IdentityRegistryIssue.make({
@@ -1270,15 +1296,10 @@ export const checkRegistryAgainstBase = Effect.fn("IdentityRegistry.checkAgainst
   base: TermSnapshot
 ) {
   const plan = yield* planRegistry(repoRoot, layout);
-  return pipe(
-    Result.getSuccess(plan),
-    O.flatMap(A.findFirst((artifact) => artifact.path === layout.snapshot)),
-    O.flatMap((artifact) => Result.getSuccess(decodeSnapshot(artifact.content))),
-    O.match({
-      onNone: A.empty<IdentityRegistryIssue>,
-      onSome: (head) => baseSnapshotIssues(base, head, layout.snapshot),
-    })
-  );
+  return Result.match(plan, {
+    onFailure: A.empty<IdentityRegistryIssue>,
+    onSuccess: ({ snapshot }) => baseSnapshotIssues(base, snapshot, layout.snapshot),
+  });
 });
 
 /**
@@ -1308,7 +1329,7 @@ export const writeRegistry = Effect.fn("IdentityRegistry.write")(function* (repo
     return Result.fail(plan.failure);
   }
   let written = A.empty<string>();
-  for (const artifact of plan.success) {
+  for (const artifact of plan.success.artifacts) {
     const absolute = path.join(repoRoot, artifact.path);
     const current = yield* readOptional(absolute);
     if (O.isSome(current) && current.value === artifact.content) {

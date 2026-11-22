@@ -600,6 +600,61 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
     );
 
     it.effect(
+      "reads a leaf's create through a namespace import of the root and ignores its other calls",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            yield* writeWorkspaceFixture({
+              registrySlugs: ["identity", "widget"],
+              widgetLeafLines: [
+                'import * as Root from "@beep/identity/Root";',
+                'export const $WidgetId = /*#__PURE__*/ Root.$BeepId.create("widget");',
+                "export const isBuilt = Boolean($WidgetId);",
+                "",
+              ],
+            });
+
+            yield* runLintCommand(["identity-registry"]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toContain(
+              "[lint:identity-registry] OK: 2 workspace packages registered; 0 lab(s) in the generated labs segment; no orphan or local root composers."
+            );
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "reports a leaf whose root create call has no slug",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            yield* writeWorkspaceFixture({
+              registrySlugs: ["identity", "widget"],
+              widgetLeafLines: [
+                'import { $BeepId } from "@beep/identity/Root";',
+                "export const $WidgetId = /*#__PURE__*/ $BeepId.create();",
+                "",
+              ],
+            });
+
+            const exit = yield* Effect.exit(runLintCommand(["identity-registry"]));
+
+            expectReportedExit(exit);
+            const errorLines = yield* TestConsole.errorLines;
+            expect(errorLines).toStrictEqual([
+              "[lint:identity-registry] found 1 violation(s).",
+              `${WIDGET_LEAF_PATH}:1 [root-leaf-slug-mismatch] A registry-free leaf holds exactly one \`$BeepId.create("widget")\` over its package's registry slug; found \`create()\`.`,
+            ]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
       "reports a leaf with no root create call",
       () =>
         Effect.andThen(
@@ -962,6 +1017,68 @@ it.layer(testLayer, { concurrent: false, timeout: "20 seconds" })((it) => {
             const regenerated = yield* fs.readFileString(layout.snapshot);
             expect(regenerated).toContain('"release": "2.0.0"');
             yield* runLintCommand(["identity-registry", "--base", base]);
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "L0-3 falls back to the empty base and says so when the checkout has no origin/main",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            yield* commitRegistryFixture(fabioShard(["Report"]));
+
+            yield* runLintCommand(["identity-registry"]);
+
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toContain(
+              "[lint:identity-registry] no merge base with origin/main; the term-stability base is the empty snapshot."
+            );
+          })
+        ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
+      LINT_TIMEOUT
+    );
+
+    it.effect(
+      "L0-3 reads a base with no snapshot as empty and says so, and refuses a base whose snapshot does not decode",
+      () =>
+        Effect.andThen(
+          temporaryWorkingDirectory,
+          Effect.gen(function* () {
+            const fs = yield* FileSystem.FileSystem;
+            const git = yield* Git;
+            yield* commitRegistryFixture(fabioShard(["Report"]));
+            const snapshot = yield* fs.readFileString(layout.snapshot);
+            const root = yield* Effect.sync(() => process.cwd());
+            const commitAll = Effect.fnUntraced(function* (message: string) {
+              yield* gitFixture(root);
+              yield* git.commit(root, message, { noVerify: true, noGpgSign: true });
+              return yield* git.revParse(root, "HEAD");
+            });
+
+            yield* fs.remove(layout.snapshot);
+            const unpublished = yield* commitAll("base with no snapshot");
+            yield* fs.writeFileString(layout.snapshot, "{}");
+            const broken = yield* commitAll("base with a broken snapshot");
+            yield* fs.writeFileString(layout.snapshot, snapshot);
+
+            yield* runLintCommand(["identity-registry", "--base", unpublished]);
+            const logLines = yield* TestConsole.logLines;
+            expect(logLines).toContain(
+              `[lint:identity-registry] the base ${unpublished} has no ${layout.snapshot}; the term-stability base is the empty snapshot.`
+            );
+
+            const refused = yield* Effect.exit(runLintCommand(["identity-registry", "--base", broken]));
+            expectReportedExit(refused);
+            const errorLines = yield* TestConsole.errorLines;
+            expect(errorLines).toStrictEqual([
+              "[lint:identity-registry] found 1 violation(s).",
+              expect.stringContaining(
+                `${layout.snapshot} [registry-generated-drift] The base ref's snapshot does not decode:`
+              ),
+            ]);
           })
         ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make)),
       LINT_TIMEOUT
