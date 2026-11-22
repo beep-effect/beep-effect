@@ -160,6 +160,23 @@ onePool.test.provider("one pool declares the whole fleet from shipped primitives
       "https://sqs.us-east-1.amazonaws.com/123456789012/Runners-Poolheavy-JobRetryQueue"
     );
 
+    // A message over the cap waits a day on the build queue and never reaches the DLQ for waiting alone.
+    const queueSettings = (fqn: string) => {
+      const { visibilityTimeout, messageRetentionPeriod, redrivePolicy } = O.getOrThrow(recorder.byFqn(fqn)).news;
+      return { visibilityTimeout, messageRetentionPeriod, redrivePolicy };
+    };
+    expect(queueSettings("Runners/Poolheavy/BuildQueue")).toStrictEqual({
+      visibilityTimeout: "1 minute",
+      messageRetentionPeriod: "1 day",
+      redrivePolicy: undefined,
+    });
+    const jobRetryQueue = queueSettings("Runners/Poolheavy/JobRetryQueue");
+    expect([jobRetryQueue.visibilityTimeout, jobRetryQueue.messageRetentionPeriod]).toStrictEqual([
+      "2 minutes",
+      undefined,
+    ]);
+    expect(jobRetryQueue.redrivePolicy).toMatchObject({ maxReceiveCount: 3 });
+
     const source = O.getOrThrow(recorder.byFqn("Runners/Poolheavy/ScaleUpSource"));
     expect([source.news.functionName, source.news.functionResponseTypes]).toStrictEqual([
       // By ARN, so lambda:FunctionArn in the deploy role policy reads the same value on every mapping call.
