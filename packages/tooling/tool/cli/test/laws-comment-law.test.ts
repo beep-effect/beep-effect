@@ -732,5 +732,22 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         );
       })
     );
+
+    it.effect(
+      "fails `laws comments --check` closed on an unresolvable base and on a blocking introduced comment",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout("blocking");
+        yield* enterDirectory(checkout.root);
+        const unresolved = yield* runCommentsCommand(["--check", "--base", "no-such-ref"]);
+        assertTrue(Exit.isFailure(unresolved.exit));
+        expect(failureText(unresolved.exit)).toContain("CommentLawExecutionError");
+
+        yield* checkout.write("packages/a/src/B.ts", "// explains b\nexport const b = 2;\n");
+        const introduced = yield* runCommentsCommand(["--check", "--base", "main"]);
+        assertTrue(Exit.isFailure(introduced.exit));
+        expect(failureText(introduced.exit)).toContain("[comment-law] check failed.");
+        expect(introduced.lines).toContain('  - packages/a/src/B.ts:1  prose  "explains b"');
+      })
+    );
   });
 });
