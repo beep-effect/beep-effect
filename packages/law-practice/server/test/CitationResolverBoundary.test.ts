@@ -81,11 +81,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered resolver
       });
       const stage = yield* ownCitationTestConfiguration(CitationEngineLimits, input.limits).pipe(
         Effect.flatMap((limits) => makeCitationSourceResolution(limits, input.engineArtifact)),
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(input.limits, "resolve").pipe(
-            Effect.map((bind) => ({ ...stage, resolve: bind(stage.resolve) }))
-          )
-        ),
+        Effect.zipWith(makeCitationTestScaffoldBinding(input.limits, "resolve"), (stage, bind) => ({
+          ...stage,
+          resolve: bind(stage.resolve),
+        })),
         Effect.provideService(CitationOperationAdmission, admission),
         Effect.provideService(CitationFrozenEditions, frozen),
         Effect.provideService(SourceTextResolver, sourceResolver)
@@ -138,11 +137,10 @@ it.layer(Layer.merge(BunCrypto.layer, BunFileSystem.layer))("registered resolver
       const install = (limits = input.limits) =>
         ownCitationTestConfiguration(CitationEngineLimits, limits).pipe(
           Effect.flatMap((owned) => makeCitationSourceResolution(owned, input.engineArtifact)),
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(limits, "resolve").pipe(
-              Effect.map((bind) => ({ ...stage, resolve: bind(stage.resolve) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(limits, "resolve"), (stage, bind) => ({
+            ...stage,
+            resolve: bind(stage.resolve),
+          })),
           Effect.provideService(CitationOperationAdmission, admission),
           Effect.provideService(CitationFrozenEditions, frozen),
           Effect.provideService(SourceTextResolver, sourceResolver)

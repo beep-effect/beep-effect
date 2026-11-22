@@ -95,9 +95,7 @@ export const readCitationPinExtractionCorpus = Effect.fn("PinExtractionTest.load
 });
 const install = makeCitationMetadataFixtureInstaller((...args: Parameters<typeof makeCitationPinExtraction>) =>
   makeCitationPinExtraction(...args).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-    )
+    Effect.zipWith(makeCitationTestScaffoldBinding(args[0]), (stage, bind) => ({ ...stage, apply: bind(stage.apply) }))
   )
 )(readCitationPinExtractionCorpus());
 /** Smoke retains source errors and every result shape; the full source replay retired 2026-11-09. */
@@ -174,9 +172,10 @@ export const assertCitationPinExtractionConfiguration = Effect.fn("PinExtraction
   yield* assertCitationMetadataInstallControls(
     (...args: Parameters<typeof makeCitationPinExtraction>) =>
       makeCitationPinExtraction(...args).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-        )
+        Effect.zipWith(makeCitationTestScaffoldBinding(args[0]), (stage, bind) => ({
+          ...stage,
+          apply: bind(stage.apply),
+        }))
       ),
     setup,
     corpus.configuration

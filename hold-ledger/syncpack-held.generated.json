@@ -1,11 +1,16 @@
 [
   "@biomejs/biome",
   "@lexical/**",
+  "@vitest/browser",
+  "@vitest/browser-playwright",
+  "@vitest/coverage-istanbul",
+  "@vitest/coverage-v8",
   "detailed-xml-validator",
   "drizzle-kit",
   "drizzle-orm",
   "fallow",
   "fast-xml-validator",
   "lexical",
-  "tstyche"
+  "tstyche",
+  "vitest"
 ]

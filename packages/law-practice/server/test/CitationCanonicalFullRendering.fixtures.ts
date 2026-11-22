@@ -107,9 +107,10 @@ export const replayCitationCanonicalFullRendering = Effect.fn("CanonicalFullRend
     service: renderer,
   } = yield* installCitationParsedResourceReplay(kind, (...args: Parameters<typeof makeCitationRendering>) =>
     makeCitationRendering(...args).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, render: bind(stage.render) })))
-      )
+      Effect.zipWith(makeCitationTestScaffoldBinding(args[0]), (stage, bind) => ({
+        ...stage,
+        render: bind(stage.render),
+      }))
     )
   );
   for (const row of rows) {

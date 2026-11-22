@@ -1,5 +1,5 @@
 /**
- * Vendored from Effect, tag effect@4.1.4, packages/platform/node/test/cluster/SqlMessageStorage.integration.test.ts.
+ * Vendored from Effect, tag effect@4.1.5, packages/platform/node/test/cluster/SqlMessageStorage.integration.test.ts.
  * MIT License, Copyright (c) Effectful Technologies Inc. Adaptations carry // beep: markers.
  */
 // beep: Only the shared and SQLite-branch cases apply to DuckDB (D65). PostgreSQL deadlock and index,
@@ -294,19 +294,35 @@ describe("SqlMessageStorage", () => {
       })
     );
 
-    it.effect("clearReplies requeues when the expected reply is current", () =>
+    it.effect("clearReplies requeues the request without replaying consumed interrupts", () =>
       Effect.gen(function* () {
         yield* truncate;
         const storage = yield* MessageStorage.MessageStorage;
+        const snowflake = yield* Snowflake.Generator;
         const request = yield* makeRequest();
         const reply = yield* makeReply(request);
+        const interrupt = () =>
+          Message.OutgoingEnvelope.interrupt({
+            id: snowflake.nextUnsafe(),
+            requestId: request.envelope.requestId,
+            address: request.envelope.address,
+          });
         yield* storage.saveRequest(request);
+        yield* storage.saveEnvelope(interrupt());
         yield* storage.saveReply(reply);
+        // An interrupt received after completion belongs to the next execution.
+        const pending = interrupt();
+        yield* storage.saveEnvelope(pending);
         yield* storage.clearReplies(request.envelope.requestId, { expectedReplyId: reply.reply.id });
-        const repliesFor13 = yield* storage.repliesFor([request]);
-        expect(repliesFor13).toHaveLength(0);
-        const unprocessedMessages14 = yield* storage.unprocessedMessages([request.envelope.address.shardId]);
-        expect(unprocessedMessages14).toHaveLength(1);
+        // A duplicate reset must not remove that pending interrupt either.
+        yield* storage.clearReplies(request.envelope.requestId, { expectedReplyId: reply.reply.id });
+        const replies = yield* storage.repliesFor([request]);
+        assert.deepStrictEqual(replies, []);
+        const messages = yield* storage.unprocessedMessages([request.envelope.address.shardId]);
+        assert.deepStrictEqual(
+          A.map(messages, ({ envelope }) => (envelope._tag === "Request" ? envelope.requestId : envelope.id)),
+          [request.envelope.requestId, pending.envelope.id]
+        );
       })
     );
 

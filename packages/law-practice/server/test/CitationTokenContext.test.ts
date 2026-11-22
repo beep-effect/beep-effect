@@ -71,9 +71,10 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
           const corpus = yield* S.decodeEffect(Corpus)(new TextDecoder().decode(bytes));
           const limits = (yield* defaultCitationEnginePolicy).limits;
           const context = yield* makeCitationTokenContext(limits).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) })))
-            )
+            Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+              ...stage,
+              plan: bind(stage.plan),
+            }))
           );
           const outcomes = yield* Effect.forEach(
             corpus.cases,
@@ -112,9 +113,10 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
       Effect.gen(function* () {
         const limits = (yield* defaultCitationEnginePolicy).limits;
         const context = yield* makeCitationTokenContext(limits).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) })))
-          )
+          Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+            ...stage,
+            plan: bind(stage.plan),
+          }))
         );
         const data = native("word");
         const request = {
@@ -135,11 +137,10 @@ it.layer(Layer.merge(BunFileSystem.layer, BunCrypto.layerDigest), { excludeTestS
         const invalid = yield* context.plan({ ...request, words: [{ kind: "Text", data: null }] }).pipe(Effect.flip);
         expect(invalid).toMatchObject({ reason: "invalid-input" });
         const bounded = yield* makeCitationTokenContext({ ...limits, producedTextUtf16: 8 }).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 8 }).pipe(
-              Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) }))
-            )
-          )
+          Effect.zipWith(makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 8 }), (stage, bind) => ({
+            ...stage,
+            plan: bind(stage.plan),
+          }))
         );
         const refused = yield* bounded
           .plan({ ...request, words: [{ kind: "Text", data: native("word") }] })
@@ -157,10 +158,9 @@ it.effect("retains its captured deadline under a disabled caller Clock", () =>
     const disabled = yield* makeCitationNativeSleepClock(() => Effect.never);
     const limits = (yield* defaultCitationEnginePolicy).limits;
     const context = yield* makeCitationTokenContext({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding({ ...limits, extractDeadline: Duration.millis(997) }).pipe(
-          Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) }))
-        )
+      Effect.zipWith(
+        makeCitationTestScaffoldBinding({ ...limits, extractDeadline: Duration.millis(997) }),
+        (stage, bind) => ({ ...stage, plan: bind(stage.plan) })
       ),
       Effect.provideService(Clock.Clock, timer.clock)
     );
