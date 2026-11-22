@@ -23,7 +23,7 @@ import { assertFalse, assertTrue, deepStrictEqual, strictEqual } from "@effect/v
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import { pipe } from "effect/Function";
+import { flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as Path from "effect/Path";
 import * as ChildProcess from "effect/process/ChildProcess";
@@ -200,9 +200,7 @@ describe("property sweep", () => {
         const fs = yield* FileSystem.FileSystem;
         const path = yield* Path.Path;
         const root = yield* findRepoRoot();
-        const workspaces = yield* Effect.map(workspaceManifests(root), (members) =>
-          A.fromIterable(HashMap.entries(members))
-        );
+        const workspaces = yield* Effect.map(workspaceManifests(root), flow(HashMap.entries, A.fromIterable));
         // Git's list of test files, not the census's own walk of the tree.
         const spawner = yield* ChildProcessSpawner.ChildProcessSpawner;
         const git = yield* spawner.spawn(ChildProcess.make("git", ["-C", root, "ls-files", "*.test.ts", "*.test.tsx"]));
