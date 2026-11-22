@@ -201,3 +201,18 @@ home paths with `~`, drop session and machine ids.
   server project reads the referenced project's emitted `.d.ts`, not its source.
 - **Prevention:** a `beep` check of one package that rebuilds the stale declarations of its changed
   workspace references first (or warns that they are older than their sources).
+
+## 2026-11-22: the trustgraph verify script was already broken before its evidence import moved
+
+- **Doing:** commit 9, giving goals/trustgraph-doc-ontology/scripts/verify-artifacts.ts a local schema for
+  the frozen evidence artifact before `rdf/src/Evidence.ts` is deleted, then running the script as the
+  design's gate asks.
+- **Evidence:** `bun goals/trustgraph-doc-ontology/scripts/verify-artifacts.ts` exits 1 with
+  `Expected @beep/rdf/prov/ProvRecord at ["records"][6]`: the live `ProvBundle` no longer decodes the frozen
+  `beep-effect-documentation-seed.provenance.json`, whose record 6 is `{ activity, entity }`. A probe that
+  decodes the same file with the untouched `Prov.ts` fails the same way, so the break predates P2. The
+  local evidence schema decodes all three anchors and the dataset decodes; the evidence decode is never
+  reached in the script because the provenance decode runs first. `rerun.verify` names the script, and no
+  typecheck or test runs it.
+- **Prevention:** a gate that runs each reference goal's `rerun.verify` (or at least decodes its frozen
+  artifacts) whenever a schema it imports changes.

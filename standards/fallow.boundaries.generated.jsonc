@@ -4938,6 +4938,7 @@
           "@beep/spdx",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -4948,6 +4949,7 @@
           "@beep/spdx",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ]
       },
