@@ -87,6 +87,14 @@ Lane goals/comment-law-gate
 
 Reverse: Drop the decision-pointer kind from the grammar; such comments count as prose again.
 
+### Apply a deletion only on two agreeing votes; a tie refuses, 2026-11-22
+
+With three or more vote files the most common code wins when at least two votes give it and no other code ties it, following the draft skill's third-read rule. X needs an issue or PR URL and D a git-tracked decision file in the owning package; protected rows, stale ids, ordinal siblings and any file whose program changes are refused.
+
+Lane goals/comment-law-gate-final
+
+Reverse: Require unanimity across all vote files in CommentStrip.ts.
+
 ### Ban free prose and local JSDoc through a merge-base growth check, 2026-11-22
 
 Operator ruling, align round 2: agents may no longer add free prose or JSDoc on non-exported declarations in src, tests or tooling. Existing comments stay under a shrink-only pending list. Rejected: review-only enforcement, a repo-cli pilot first. Source: explorations/comment-law/DECISIONS.md.
@@ -102,6 +110,14 @@ The SPEC counts module headers as public. A file-header block before the first i
 Lane goals/comment-law-gate
 
 Reverse: Require @packageDocumentation for jsdoc-module again in comment-grammar.ts.
+
+### Drop the vitest override placeholder from 142 configs with the template change, 2026-11-22
+
+SPEC target surfaces name the placeholder; removing only the template would leave the copies under the lock forever. 16 pending shards emptied by the change were pruned by beep laws comments --write in the same PR.
+
+Lane goals/comment-law-gate-final
+
+Reverse: Restore the placeholder comment in vitest.config.ts.hbs and the configs.
 
 ### Exempt member JSDoc and live-tag blocks; ban local blocks that carry only since or category, 2026-11-22
 
@@ -119,6 +135,14 @@ Lane explore/comment-law
 
 Reverse: Treat retained hazards as banned and sweep them.
 
+### Keep the oxlint rule registered but enabled for no path, 2026-11-22
+
+The scanner is the gate: it sees through oxlint and eslint disable directives, and its lock already covers every scope off the pending list. An override list of clean paths would be a second inventory that every sweep PR edits. The rule stays available for editors and per-edit hooks through a one-rule config.
+
+Lane goals/comment-law-gate-final
+
+Reverse: Add an overrides block for the locked package globs in .oxlintrc.json.
+
 ### Package decisions live one file each under <package>/decisions/, 2026-11-22
 
 Operator ruling, align round 1: decision records that pass the admission test become <package>/decisions/<date>-<slug>.md with governs anchors checked by beep decisions check. Rejected: README tables, standards/decisions/, enforce-only. Source: explorations/comment-law/DECISIONS.md.
@@ -134,6 +158,14 @@ oxc-parser 0.148.0 was already in the lockfile through @shadcn/lint; it is now a
 Lane goals/comment-law-gate
 
 Reverse: Drop oxc-parser from the catalog and rebuild the scanner on ts-morph, keeping the grammar module.
+
+### Prove /delete-comment end to end in a throwaway copy, delete nothing in this goal, 2026-11-22
+
+The SPEC acceptance asks for one end-to-end run; the orchestrator brief forbids deleting existing comments here (comment-law-sweep owns that). The run used packages/drivers/ai-provider-cli in a checkout under ~/.cache/beep/comment-law-demo: ledger 12 rows (3 protected by tags), two vote files, one decision file written and staged before apply, deleted 5, refused 7, and a second AST proof after Biome format matched for all 3 files. Both vote files came from one session in two passes; a sweep run uses two sessions on different pinned routes, as the skill says.
+
+Lane goals/comment-law-gate-final
+
+Reverse: Run the same skill on a tracked package in a sweep PR.
 
 ### Seed 218 pending shards and lock every other scope, 2026-11-22
 

@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/party-server",
-  "root": "packages/party/server",
-  "scopes": ["."]
-}

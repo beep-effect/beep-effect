@@ -102,6 +102,7 @@ const EXCLUDED_ROOT = /^(?:scratchpad|goals|explorations|research|docs|standards
 const EXCLUDED_DIR =
   /(?:^|\/)(?:generated|_generated|vendor|vendored|sdks|fixtures|__fixtures__|__snapshots__|testdata|dist|node_modules)\//;
 const EXCLUDED_FILE = /\.d\.[cm]?ts$|\.(?:gen|generated)\.[^/]+$/;
+const NON_REGULAR_MODES = HashSet.make("120000", "160000");
 
 /**
  * Whether the comment law covers a repository-relative path.
@@ -159,12 +160,43 @@ export const scanCommentSource: {
   (file: string, text: string): ReadonlyArray<ClassifiedComment>;
 } = F.dual(2, (file: string, text: string): ReadonlyArray<ClassifiedComment> => {
   if (!Str.includes("//")(text) && !Str.includes("/*")(text)) return [];
+  return parseCommentSource({ file, text }).comments;
+});
+
+/**
+ * Parse one source file once and classify its comments, keeping the program.
+ *
+ * **Details**
+ *
+ * `errors` counts the parser diagnostics; the comment strip refuses a file
+ * that does not parse cleanly on either side of a deletion.
+ *
+ * **Example** (Parse a small file)
+ *
+ * ```ts
+ * import { parseCommentSource } from "@beep/repo-cli/commands/Laws/CommentLaw"
+ *
+ * const parsed = parseCommentSource({ file: "a.ts", text: "// note\nexport const x = 1\n" })
+ *
+ * console.log(parsed.errors, parsed.comments.length) // 0 1
+ * ```
+ *
+ * @param source - The path the parser uses to pick the dialect, and the full source text.
+ * @returns The parsed program, the parser error count and the classified comments.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const parseCommentSource = ({ file, text }: { readonly file: string; readonly text: string }) => {
   const parsed = parseSync(file, text, { sourceType: "module" });
   const comments = A.map(parsed.comments, (comment) =>
     SourceComment.make({ type: comment.type, value: comment.value, start: comment.start, end: comment.end })
   );
-  return classifyComments(CommentGrammarInput.make({ source: text, program: parsed.program, comments }));
-});
+  return {
+    program: parsed.program,
+    errors: A.length(parsed.errors),
+    comments: classifyComments(CommentGrammarInput.make({ source: text, program: parsed.program, comments })),
+  };
+};
 
 const bannedOf = (file: string, text: string): ReadonlyArray<ClassifiedComment> =>
   A.filter(scanCommentSource(file, text), (comment) => isBannedCommentKind(comment.kind));
@@ -553,10 +585,38 @@ const basePackageRoots = Effect.fn("CommentLaw.basePackageRoots")(function* (rep
   );
 });
 
-const lawFiles = Effect.fn("CommentLaw.lawFiles")(function* (repoRoot: string) {
+/**
+ * List the files the comment law covers, the package roots and the tracked paths.
+ *
+ * **Details**
+ *
+ * `files` holds the tracked regular files and untracked paths the law
+ * covers, and `roots` every package directory with a `package.json` in the
+ * enforced zones. A tracked symlink (`120000`) or gitlink (`160000`) is not
+ * a covered file.
+ *
+ * **Example** (List the covered files)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { commentLawFiles } from "@beep/repo-cli/commands/Laws/CommentLaw"
+ *
+ * console.log(Effect.isEffect(commentLawFiles(process.cwd()))) // true
+ * ```
+ *
+ * @param repoRoot - Repository root directory.
+ * @returns Effect that yields the covered files and package roots, each sorted.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const commentLawFiles = Effect.fn("CommentLaw.commentLawFiles")(function* (repoRoot: string) {
   const git = yield* Git;
   const tracked = yield* mapGit(GitCommand.lsFiles(), git.lsFiles(repoRoot));
   const untracked = yield* mapGit(GitCommand.untrackedFiles(), git.untrackedFiles(repoRoot));
+  const regular = A.map(
+    A.filter(tracked, (entry) => !HashSet.has(NON_REGULAR_MODES, entry.mode)),
+    (entry) => entry.path
+  );
   const all = A.dedupe(
     A.appendAll(
       A.map(tracked, (entry) => entry.path),
@@ -564,7 +624,7 @@ const lawFiles = Effect.fn("CommentLaw.lawFiles")(function* (repoRoot: string) {
     )
   );
   return {
-    files: A.sort(A.filter(all, isCommentLawPath), Order.String),
+    files: A.sort(A.filter(A.dedupe(A.appendAll(regular, untracked)), isCommentLawPath), Order.String),
     roots: packageRootsOf(all),
   };
 });
@@ -587,6 +647,29 @@ const packageRootOf = (roots: ReadonlyArray<string>, file: string): string =>
     A.findLast(roots, (root) => Str.startsWith(`${root}/`)(file)),
     () => "."
   );
+
+/**
+ * Package root that owns a file: the longest root that contains it, or `.`.
+ *
+ * **Example** (Find the owning package)
+ *
+ * ```ts
+ * import { commentPackageRootOf } from "@beep/repo-cli/commands/Laws/CommentLaw"
+ *
+ * console.log(commentPackageRootOf(["packages/a"], "packages/a/src/A.ts")) // "packages/a"
+ * console.log(commentPackageRootOf(["packages/a"], "tools/x.ts")) // "."
+ * ```
+ *
+ * @param roots - Package directories, repository-relative and sorted.
+ * @param file - Repository-relative file path.
+ * @returns The owning root, or `.` for a file in no package.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const commentPackageRootOf: {
+  (file: string): (roots: ReadonlyArray<string>) => string;
+  (roots: ReadonlyArray<string>, file: string): string;
+} = F.dual(2, packageRootOf);
 
 const bannedCountsOf = Effect.fn("CommentLaw.bannedCountsOf")(function* (
   repoRoot: string,
@@ -694,7 +777,7 @@ const lockFor = Effect.fn("CommentLaw.lockFor")(function* (
   wholeTree: boolean,
   changes: ReadonlyArray<CommentFileChange>
 ) {
-  const { files, roots } = yield* lawFiles(repoRoot);
+  const { files, roots } = yield* commentLawFiles(repoRoot);
   const headFiles = yield* readWorktreeShards(repoRoot);
   const headShards = A.map(headFiles, (entry) => entry.shard);
   const baseShards = yield* readBaseShards(repoRoot, base);
@@ -758,7 +841,7 @@ const danglingPointers = Effect.fn("CommentLaw.danglingPointers")(function* (
 ) {
   const pointers = A.flatMap(changes, pointersIn);
   if (A.isReadonlyArrayEmpty(pointers)) return A.empty<CommentLawFinding>();
-  const { roots } = yield* lawFiles(repoRoot);
+  const { roots } = yield* commentLawFiles(repoRoot);
   let findings = A.empty<CommentLawFinding>();
   for (const { comment, file, text } of pointers) {
     const root = packageRootOf(roots, file);
@@ -878,7 +961,7 @@ export const runCommentCensus = Effect.fn("CommentLaw.runCommentCensus")(functio
   const repoRoot = yield* findRepoRoot(cwd).pipe(
     CommentLawExecutionError.mapError("Failed to locate the repository root")
   );
-  const { files, roots } = yield* lawFiles(repoRoot);
+  const { files, roots } = yield* commentLawFiles(repoRoot);
   let rows = HashMap.empty<string, CommentCensusRow>();
   for (const file of files) {
     const text = yield* readWorktreeText(repoRoot, file);
@@ -896,6 +979,60 @@ export const runCommentCensus = Effect.fn("CommentLaw.runCommentCensus")(functio
     A.map(([, row]) => row)
   );
 });
+
+/**
+ * Normalize a repository-relative scope the way `--list` and `--ledger` read it.
+ *
+ * **Details**
+ *
+ * A leading `./` and trailing slashes are dropped; an empty scope is `.`,
+ * the whole repository.
+ *
+ * **Example** (Normalize scopes)
+ *
+ * ```ts
+ * import { commentScopeOf } from "@beep/repo-cli/commands/Laws/CommentLaw"
+ *
+ * console.log(commentScopeOf("./packages/a/")) // "packages/a"
+ * console.log(commentScopeOf("")) // "."
+ * ```
+ *
+ * @param prefix - Repository-relative directory or file as the operator typed it.
+ * @returns The scope with `./` and trailing slashes removed, or `.`.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const commentScopeOf = (prefix: string): string => {
+  const scope = Str.replace(/\/+$/, "")(Str.replace(/^(?:\.\/)+/, "")(prefix));
+  return Str.isEmpty(scope) ? "." : scope;
+};
+
+/**
+ * Whether a repository-relative file sits inside a normalized comment scope.
+ *
+ * **Example** (Test scope membership)
+ *
+ * ```ts
+ * import { isInCommentScope } from "@beep/repo-cli/commands/Laws/CommentLaw"
+ *
+ * console.log(isInCommentScope("packages/a", "packages/a/src/A.ts")) // true
+ * console.log(isInCommentScope("packages/a", "packages/ab/src/A.ts")) // false
+ * console.log(isInCommentScope(".", "packages/ab/src/A.ts")) // true
+ * ```
+ *
+ * @param scope - A scope from {@link commentScopeOf}.
+ * @param file - Repository-relative file path.
+ * @returns `true` when the scope is `.`, the file itself or a directory above it.
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isInCommentScope: {
+  (file: string): (scope: string) => boolean;
+  (scope: string, file: string): boolean;
+} = F.dual(
+  2,
+  (scope: string, file: string): boolean => scope === "." || file === scope || Str.startsWith(`${scope}/`)(file)
+);
 
 /**
  * Worklist of banned comments under one path prefix, for a sweep.
@@ -922,12 +1059,9 @@ export const runCommentList = Effect.fn("CommentLaw.runCommentList")(function* (
   const repoRoot = yield* findRepoRoot(cwd).pipe(
     CommentLawExecutionError.mapError("Failed to locate the repository root")
   );
-  const { files } = yield* lawFiles(repoRoot);
-  const scope = Str.replace(/\/+$/, "")(Str.replace(/^\.\//, "")(prefix));
-  const scoped =
-    scope === "." || Str.isEmpty(scope)
-      ? files
-      : A.filter(files, (file) => file === scope || Str.startsWith(`${scope}/`)(file));
+  const { files } = yield* commentLawFiles(repoRoot);
+  const scope = commentScopeOf(prefix);
+  const scoped = A.filter(files, (file) => isInCommentScope(scope, file));
   let findings = A.empty<CommentLawFinding>();
   for (const file of scoped) {
     const text = yield* readWorktreeText(repoRoot, file);
@@ -982,7 +1116,7 @@ export const runCommentLawWrite = Effect.fn("CommentLaw.runCommentLawWrite")(fun
   const repoRoot = yield* findRepoRoot(cwd).pipe(
     CommentLawExecutionError.mapError("Failed to locate the repository root")
   );
-  const { files, roots } = yield* lawFiles(repoRoot);
+  const { files, roots } = yield* commentLawFiles(repoRoot);
   const counts = yield* bannedCountsOf(repoRoot, files);
   const currentFiles = yield* readWorktreeShards(repoRoot);
   const names = yield* packageNamesOf(repoRoot, roots);

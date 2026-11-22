@@ -75,12 +75,13 @@ Code first. Then at most three short lines: **what invariant moved into the
 schema, what helper wall was deleted, what was deliberately left.** No essays.
 If the explanation is longer than the deletion, delete the explanation.
 
-Mark deliberately un-absorbed logic with a `crispen:` comment naming *why* and
-the *upgrade path*:
+Deliberately un-absorbed logic gets no comment: free prose comments are banned
+(Effect law 15). Name *why* and the *upgrade path* in the "deliberately left"
+line of the output. When the reason must live with the code, record it under
+`<package>/decisions/` and point at it with the one allowed line comment:
 
 ```ts
-// crispen: kept as a helper — the refinement needs a cross-field check S.makeFilterGroup
-// can't express yet; fold into the schema when it can.
+// decision: cross-field-refinement-helper
 ```
 
 ## Intensity
