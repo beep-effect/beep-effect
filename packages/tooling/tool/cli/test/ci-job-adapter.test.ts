@@ -18,6 +18,7 @@ import * as S from "effect/Schema";
 import recordedJobs from "./fixtures/ci-gate-reports/run-jobs.json" with { type: "json" };
 
 const decodeJobs = S.decodeUnknownEffect(S.Array(CiRunJob));
+const encodeJobs = S.encodeEffect(S.Array(CiRunJob));
 
 const run = CiRunView.make({
   id: 45042229032,
@@ -29,10 +30,21 @@ const run = CiRunView.make({
 });
 
 const step = (name: string, conclusion: string | null, number = 1) =>
-  CiRunStep.make({ name, status: conclusion === null ? "in_progress" : "completed", conclusion, number });
+  CiRunStep.make({
+    name,
+    status: conclusion === null ? "in_progress" : "completed",
+    conclusion: O.fromNullishOr(conclusion),
+    number,
+  });
 
 const job = (id: number, conclusion: string | null, steps: ReadonlyArray<CiRunStep> | null) =>
-  CiRunJob.make({ id, name: `job-${id}`, status: "completed", conclusion, steps });
+  CiRunJob.make({
+    id,
+    name: `job-${id}`,
+    status: "completed",
+    conclusion: O.fromNullishOr(conclusion),
+    steps: O.fromNullishOr(steps),
+  });
 
 const itemsOf = (report: ReturnType<typeof ciRunGateReport>, unit: string) =>
   A.filter(report.items, (item) => item.unit === unit);
@@ -110,7 +122,10 @@ describe("CI-job adapter", () => {
     const stepless = ciRunGateReport(
       CiRunGateInput.make({
         run,
-        jobs: [job(2, null, null), CiRunJob.make({ id: 3, name: "job-3", status: "completed", conclusion: null })],
+        jobs: [
+          job(2, null, null),
+          CiRunJob.make({ id: 3, name: "job-3", status: "completed", conclusion: O.none(), steps: O.none() }),
+        ],
       })
     );
     deepStrictEqual(
@@ -127,7 +142,7 @@ describe("CI-job adapter", () => {
         jobs: [
           job(1, "success", [step("Run lane", "success")]),
           job(2, "skipped", []),
-          CiRunJob.make({ id: 3, name: "job-3", status: "queued", conclusion: null, steps: [] }),
+          CiRunJob.make({ id: 3, name: "job-3", status: "queued", conclusion: O.none(), steps: O.some([]) }),
         ],
       })
     );
@@ -191,4 +206,35 @@ describe("CI-job adapter", () => {
       [true, true, true, false, false, false]
     );
   });
+
+  it.effect(
+    "decodes absent, null and listed steps and a null conclusion to Option, and encodes them back to their wire forms",
+    () =>
+      Effect.gen(function* () {
+        const wire = [
+          { id: 1, name: "absent", status: "queued", conclusion: null },
+          { id: 2, name: "null", status: "completed", conclusion: "cancelled", steps: null },
+          {
+            id: 3,
+            name: "listed",
+            status: "completed",
+            conclusion: "failure",
+            steps: [{ name: "Run", status: "in_progress", conclusion: null, number: 1 }],
+          },
+        ];
+        const jobs = yield* decodeJobs(wire);
+        deepStrictEqual(
+          A.map(jobs, (found) => [O.isSome(found.steps), O.getOrNull(found.conclusion)]),
+          [
+            [false, null],
+            [false, "cancelled"],
+            [true, "failure"],
+          ]
+        );
+        assertNone(O.getOrThrow(jobs[2]!.steps)[0]!.conclusion);
+        const encoded = yield* encodeJobs(jobs);
+        deepStrictEqual(encoded[2], wire[2]);
+        strictEqual(encoded[0]!.conclusion, null);
+      })
+  );
 });

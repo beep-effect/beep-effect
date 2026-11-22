@@ -7,8 +7,10 @@
  *
  * The main-feed lookup and `beep ci failures` both download a job's artifact
  * through `GitHubClient` and read it here. Only JSON entries up to 1 MiB
- * inflate; a raw log never does: only its size is read, from the zip's
- * directory, so a job's agent console can name it.
+ * inflate, 8 MiB in all by their declared sizes: an archive declaring more is
+ * refused before an entry past the limit inflates. A raw log never inflates:
+ * only its size is read, from the zip's directory, so a job's agent console
+ * can name it.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -23,6 +25,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
+import * as MutableRef from "effect/MutableRef";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
@@ -52,6 +55,10 @@ const $I = $RepoCliId.create("commands/Ci/CiFeedArtifact");
 export const FEED_ARTIFACT_BYTES_MAX = 64 * 1024 * 1024;
 
 const ENTRY_INFLATE_BYTES_MAX = 1024 * 1024;
+const ARCHIVE_INFLATE_BYTES_MAX = 8 * ENTRY_INFLATE_BYTES_MAX;
+
+const inflatableJson = (file: { readonly name: string; readonly originalSize: number }): boolean =>
+  Str.endsWith(".json")(file.name) && file.originalSize <= ENTRY_INFLATE_BYTES_MAX;
 
 /**
  * One artifact of a workflow run, as `GET /actions/runs/{run_id}/artifacts`
@@ -232,16 +239,25 @@ export const readFeedArchive = Effect.fn("CiFeedArtifact.readFeedArchive")(funct
   wanted: (gate: string) => boolean
 ) {
   const sizes = MutableHashMap.empty<string, number>();
+  const inflated = MutableRef.make(0);
   const entries = yield* Effect.try({
     try: () =>
       unzipSync(bytes instanceof Uint8Array ? bytes : new Uint8Array(bytes), {
         filter: (file) => {
           MutableHashMap.set(sizes, file.name, file.originalSize);
-          return Str.endsWith(".json")(file.name) && file.originalSize <= ENTRY_INFLATE_BYTES_MAX;
+          const accepted =
+            inflatableJson(file) && MutableRef.get(inflated) + file.originalSize <= ARCHIVE_INFLATE_BYTES_MAX;
+          MutableRef.update(inflated, (total) => total + (inflatableJson(file) ? file.originalSize : 0));
+          return accepted;
         },
       }),
     catch: CiCommandError.new(`Artifact ${name} is not a zip archive.`),
   });
+  if (MutableRef.get(inflated) > ARCHIVE_INFLATE_BYTES_MAX) {
+    return yield* CiCommandError.make({
+      message: `Artifact ${name} declares more than ${ARCHIVE_INFLATE_BYTES_MAX} bytes of JSON entries; none past the limit was inflated.`,
+    });
+  }
   const record = yield* Effect.fromOption(
     pipe(
       A.sort(R.toEntries(entries), byName),

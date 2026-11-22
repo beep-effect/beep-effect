@@ -177,18 +177,25 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, CommandSupport), {
         assertInclude(lint[1]!, "run Check #45042229032");
         assertInclude(lint[2]!, "noUnusedVariables");
         strictEqual(lint[1], lint[5]);
-        assertInclude(lint[4]!, `full log: .beep/gates/run/${RUN}-2.log (`);
+        assertInclude(
+          lint[4]!,
+          `saved log (failing steps only (gh run view --log-failed)): .beep/gates/run/${RUN}-2.log (`
+        );
         const integration = A.drop(lines, lineOf(lines, "== job Test Integration"));
         assertInclude(integration[2]!, "Run bun run beep ci lane test-integration");
         assertInclude(text, "ECONNREFUSED");
         assertTrue(!Str.includes("installed")(text));
-        assertInclude(text, "Docs Policy: the failing step could not be bounded; full log: .beep/gates/run/");
+        assertInclude(
+          text,
+          "Docs Policy: the failing step could not be bounded; saved log (whole job log): .beep/gates/run/"
+        );
         const store = yield* GateRecordStore.make(root);
         const record = yield* store.readRecord(RecordTarget.cases.RootTarget.make({ gate: "run", runId: `${RUN}-2` }));
         strictEqual(record.report.gate, "run");
         strictEqual(record.report.units.length, 6);
         const saved = yield* fs.readFileString(path.join(root, `.beep/gates/run/${RUN}-2.log`));
-        assertInclude(saved, "==> job Lint (lint-2) (103)");
+        assertInclude(saved, "==> job Lint (lint-2) (103): failing steps only (gh run view --log-failed)\n");
+        assertInclude(saved, "==> job Test Integration (integration-1) (104): whole job log\n");
         assertInclude(saved, "installed");
         assertInclude(saved, "no marker here");
         assertTrue(!Str.includes("==> job Test Unit")(saved));
@@ -298,7 +305,7 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, CommandSupport), {
       }).pipe(provideSpawner(ghSpawner({})), provideBuilt(transport.layer));
     });
 
-    it.effect("fails with a CiCommandError when the run, its jobs or its artifacts cannot be read", () =>
+    it.effect("fails with a CiCommandError when the run or its jobs cannot be read", () =>
       Effect.gen(function* () {
         const run = CiFailuresTarget.cases.RunTarget.make({ runId: RUN });
         const refused = yield* printCiFailures(".", run).pipe(
@@ -314,20 +321,96 @@ it.layer(Layer.mergeAll(NodeServices.layer, NodeCrypto.layer, CommandSupport), {
           )
         );
         assertInclude(noJobs.message, "jobs");
-        const noArtifacts = yield* printCiFailures(".", run).pipe(
-          Effect.flip,
-          provideBuilt(
-            restRoutes((url) =>
-              isPath(`/runs/${RUN}`)(url)
-                ? { json: runWire(RUN) }
-                : isPath("/jobs")(url)
-                  ? { json: recordedJobs }
-                  : { json: {}, status: 500 }
-            ).layer
-          )
-        );
-        assertInclude(noArtifacts.message, "artifacts");
       }).pipe(provideSpawner(ghSpawner({})))
+    );
+
+    it.effect("reads the logs when the artifact listing fails, instead of failing the run", () => {
+      const longLintLog = A.join(
+        [
+          ...A.makeBy(
+            4000,
+            (index) => `Lint (lint-2)\tRun lane\t2026-11-22T10:04:00.0000000Z line ${index} ${Str.repeat(80)("x")}`
+          ),
+          ghLogFailed,
+        ],
+        "\n"
+      );
+      const lintOnly = { total_count: 2, jobs: [recordedJobs.jobs[1], recordedJobs.jobs[2]] };
+      const transport = restRoutes((url) =>
+        isPath("/artifacts")(url)
+          ? { json: { message: "Server Error" }, status: 500 }
+          : runRoutes({ jobs: lintOnly, artifacts: [], zips: {} })(url)
+      );
+      return Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const temp = yield* fs.makeTempDirectoryScoped({ prefix: "beep-ci-failures-noart-" });
+        const root = yield* fs.realPath(temp);
+        const lines = yield* printCiFailures(root, CiFailuresTarget.cases.RunTarget.make({ runId: RUN }));
+        const text = A.join(lines, "\n");
+        assertInclude(text, "2 failed jobs");
+        assertInclude(text, "Test Unit (repo-cli-8): no log yet");
+        assertInclude(text, "noUnusedVariables");
+        const section = A.drop(lines, lineOf(lines, "== job Lint"));
+        assertTrue(A.reduce(section, 0, (sum, line) => sum + line.length + 1) <= agentBudget.maxChars);
+        assertInclude(text, "earlier lines in the saved log");
+        assertInclude(text, "saved log (failing steps only (gh run view --log-failed), truncated)");
+      }).pipe(provideSpawner(ghSpawner({ "103": { stdout: longLintLog, exit: 0 } })), provideBuilt(transport.layer));
+    });
+
+    it.effect("reads a pull request's timed-out run and leaves its cancelled run out", () => {
+      const transport = restRoutes((url) =>
+        isPath("/pulls/77")(url)
+          ? { json: { head: { sha: HEAD } } }
+          : isPath("/actions/runs")(url)
+            ? {
+                json: {
+                  workflow_runs: [
+                    runWire(RUN, { conclusion: "timed_out", workflow_id: 1 }),
+                    runWire(7, { conclusion: "cancelled", workflow_id: 2 }),
+                  ],
+                },
+              }
+            : runRoutes({ jobs: { total_count: 0, jobs: [] }, artifacts: [], zips: {} })(url)
+      );
+      return Effect.gen(function* () {
+        const lines = yield* printCiFailures(".", CiFailuresTarget.cases.PullTarget.make({ number: 77 }));
+        deepStrictEqual(lines, [`run ${RUN} attempt 2 (Check) at ${HEAD}: no failed job`]);
+      }).pipe(provideSpawner(ghSpawner({})), provideBuilt(transport.layer));
+    });
+
+    it.effect(
+      "reads the log of a job whose artifact indexes an unreadable report, and names what it could not read",
+      () => {
+        const lostEntry = packageEntry({ packageDir: "packages/lost", gate: "check", subject: "@beep/lost" });
+        const partialZip = feedZip({
+          recordJson: v2Json({ job: "Lint (lint-2)", reports: [testEntry, lostEntry] }),
+          files: {
+            [testEntry.record]: gateRecordJson(gateReport({ gate: "test", subject: "@beep/repo-cli", messages: [] })),
+          },
+        });
+        const lintOnly = { total_count: 1, jobs: [recordedJobs.jobs[2]] };
+        const transport = restRoutes(
+          runRoutes({
+            jobs: lintOnly,
+            artifacts: [artifact(2, `task-outcomes-${RUN}-2-lint-shard-lint-2`)],
+            zips: { "2": partialZip },
+          })
+        );
+        return Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const temp = yield* fs.makeTempDirectoryScoped({ prefix: "beep-ci-failures-partial-" });
+          const root = yield* fs.realPath(temp);
+          const lines = yield* printCiFailures(root, CiFailuresTarget.cases.RunTarget.make({ runId: RUN }));
+          const text = A.join(lines, "\n");
+          assertInclude(
+            text,
+            `reports: artifact task-outcomes-${RUN}-2-lint-shard-lint-2 has 1 unreadable: ${lostEntry.record}; log read`
+          );
+          assertInclude(text, "test @beep/repo-cli");
+          assertInclude(text, "noUnusedVariables");
+          assertTrue(!Str.includes("(no log fetched)")(text));
+        }).pipe(provideSpawner(ghSpawner({ "103": { stdout: ghLogFailed, exit: 0 } })), provideBuilt(transport.layer));
+      }
     );
 
     it.effect("reports a record it cannot write as a CiCommandError", () => {
@@ -382,8 +465,17 @@ describe("failing-region bounds", () => {
       "\n"
     );
     const kept = boundFailingRegion(region, 400);
-    assertTrue(A.join(kept, "\n").length <= agentBudget.maxChars - 400);
-    assertInclude(kept[0]!, "earlier lines in the full log");
+    assertTrue(A.join(kept, "\n").length + 1 <= agentBudget.maxChars - 400);
+    assertInclude(kept[0]!, "earlier lines in the saved log");
+    const xs = boundFailingRegion(
+      A.join(
+        A.makeBy(100, () => "x"),
+        "\n"
+      ),
+      agentBudget.maxChars - 100
+    );
+    assertTrue(A.reduce(xs, 0, (sum, line) => sum + line.length + 1) <= 100);
+    assertInclude(xs[0]!, "earlier lines in the saved log");
     assertInclude(kept.at(-1)!, "line 399");
     const long = boundFailingRegion(100)(Str.repeat(1000)("y"));
     strictEqual(long[0]!.length, agentBudget.maxLineChars);
@@ -392,7 +484,13 @@ describe("failing-region bounds", () => {
   });
 
   it("ranks only this attempt's live artifacts that share a word with a failed job, at most the cap", () => {
-    const job = CiRunJob.make({ id: 1, name: "Test Unit (unit-a)", status: "completed", conclusion: "failure" });
+    const job = CiRunJob.make({
+      id: 1,
+      name: "Test Unit (unit-a)",
+      status: "completed",
+      conclusion: O.some("failure"),
+      steps: O.none(),
+    });
     const ref = (id: number, name: string) => FeedArtifactRef.make({ id, name, expired: false, size_in_bytes: 1 });
     const many = A.makeBy(FAILED_JOB_ARTIFACT_DOWNLOADS_MAX + 2, (index) =>
       ref(index + 10, `task-outcomes-9-1-unit-${index}`)

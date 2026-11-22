@@ -14,6 +14,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as Layer from "effect/Layer";
+import * as R from "effect/Record";
 import * as Str from "effect/String";
 import { zipSync } from "fflate";
 import artifactByName from "./fixtures/ci-gate-reports/artifact-by-name.json" with { type: "json" };
@@ -254,6 +255,18 @@ describe("feed artifact reader", () => {
         )
       );
       assertInclude(noRecord.message, "holds no task-outcome record");
+      const padding = bytes(Str.repeat(1024 * 1024)(" "));
+      const bomb = yield* Effect.flip(
+        readFeedArchive(
+          zipSync({
+            "record.json": bytes(v1Json("Labs")),
+            ...R.fromEntries(A.makeBy(8, (index) => [`pad-${index}.json`, padding] as const)),
+          }),
+          "bomb",
+          () => true
+        )
+      );
+      assertInclude(bomb.message, "declares more than 8388608 bytes of JSON entries");
     })
   );
 

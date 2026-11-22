@@ -60,9 +60,10 @@ export const CI_RUN_GATE = "run";
  *
  * ```ts
  * import { CiRunStep } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
  *
- * const step = CiRunStep.make({ name: "Run lane", status: "completed", conclusion: "failure", number: 4 })
- * console.log(step.conclusion) // "failure"
+ * const step = CiRunStep.make({ name: "Run lane", status: "completed", conclusion: O.some("failure"), number: 4 })
+ * console.log(O.getOrNull(step.conclusion)) // "failure"
  * ```
  *
  * @category models
@@ -72,7 +73,7 @@ export class CiRunStep extends S.Opaque<CiRunStep, { readonly brand: unique symb
   S.Struct({
     name: Text,
     status: S.String,
-    conclusion: S.NullOr(S.String),
+    conclusion: S.OptionFromNullOr(S.String),
     number: S.Int,
   }).pipe($I.annoteSchema("CiRunStep", { description: "One step of a workflow job, as the REST job list returns it." }))
 ) {}
@@ -82,16 +83,17 @@ export class CiRunStep extends S.Opaque<CiRunStep, { readonly brand: unique symb
  *
  * **Details**
  *
- * `steps` is absent or `null` for a job the runner never started; both read
- * as no steps.
+ * `steps` is absent or `null` for a job the runner never started; both decode
+ * to `None`, and a step or job with a `null` conclusion decodes to `None`.
  *
  * **Example** (A job with no steps)
  *
  * ```ts
  * import { CiRunJob } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
  *
- * const job = CiRunJob.make({ id: 7, name: "Lint", status: "completed", conclusion: "cancelled", steps: null })
- * console.log(job.steps) // null
+ * const job = CiRunJob.make({ id: 7, name: "Lint", status: "completed", conclusion: O.some("cancelled"), steps: O.none() })
+ * console.log(O.isNone(job.steps)) // true
  * ```
  *
  * @category models
@@ -102,8 +104,8 @@ export class CiRunJob extends S.Opaque<CiRunJob, { readonly brand: unique symbol
     id: S.Int,
     name: Text,
     status: S.String,
-    conclusion: S.NullOr(S.String),
-    steps: S.Array(CiRunStep).pipe(S.NullOr, S.optionalKey),
+    conclusion: S.OptionFromNullOr(S.String),
+    steps: CiRunStep.pipe(S.Array, S.OptionFromOptionalNullOr),
   }).pipe($I.annoteSchema("CiRunJob", { description: "One job of a workflow run, as the REST job list returns it." }))
 ) {}
 
@@ -183,6 +185,7 @@ export class CiRunGateInput extends S.Opaque<CiRunGateInput, { readonly brand: u
  *
  * ```ts
  * import { CiWorkflowRun } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
  *
  * const run = CiWorkflowRun.make({
  *   id: 9,
@@ -191,10 +194,10 @@ export class CiRunGateInput extends S.Opaque<CiRunGateInput, { readonly brand: u
  *   head_sha: "4e3343774cc",
  *   head_branch: "main",
  *   status: "completed",
- *   conclusion: "failure",
+ *   conclusion: O.some("failure"),
  *   created_at: "2026-11-22T10:00:00Z",
  * })
- * console.log(run.conclusion) // "failure"
+ * console.log(O.getOrNull(run.conclusion)) // "failure"
  * ```
  *
  * @category models
@@ -208,7 +211,7 @@ export class CiWorkflowRun extends S.Opaque<CiWorkflowRun, { readonly brand: uni
     head_sha: S.String,
     head_branch: S.NullOr(S.String),
     status: S.NullOr(S.String),
-    conclusion: S.NullOr(S.String),
+    conclusion: S.OptionFromNullOr(S.String),
     created_at: S.String,
     run_attempt: S.optionalKey(S.Int),
   }).pipe($I.annoteSchema("CiWorkflowRun", { description: "One workflow run as the REST run endpoints return it." }))
@@ -258,8 +261,10 @@ const RED_JOB_CONCLUSIONS = ["failure", "timed_out", "cancelled"];
  *
  * ```ts
  * import { CiRunJob, ciJobIsRed } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
  *
- * console.log(ciJobIsRed(CiRunJob.make({ id: 7, name: "Lint", status: "completed", conclusion: "cancelled" }))) // true
+ * const job = CiRunJob.make({ id: 7, name: "Lint", status: "completed", conclusion: O.some("cancelled"), steps: O.none() })
+ * console.log(ciJobIsRed(job)) // true
  * ```
  *
  * @param job - A job from the run's jobs listing, steps optional.
@@ -270,7 +275,7 @@ const RED_JOB_CONCLUSIONS = ["failure", "timed_out", "cancelled"];
 export const ciJobIsRed = (job: CiRunJob): boolean => O.isSome(redConclusion(job));
 
 const redConclusion = (job: CiRunJob): O.Option<string> =>
-  O.filter(O.fromNullishOr(job.conclusion), (conclusion) => A.contains(RED_JOB_CONCLUSIONS, conclusion));
+  O.filter(job.conclusion, (conclusion) => A.contains(RED_JOB_CONCLUSIONS, conclusion));
 
 const readingOf = (conclusion: string): StepReading => O.getOrElse(R.get(STEP_READINGS, conclusion), () => failed);
 
@@ -280,8 +285,7 @@ const detailOf = (detail: O.Option<string>, fallback: string): O.Option<ItemDeta
 const stepItem =
   (job: CiRunJob, detail: O.Option<string>) =>
   (step: CiRunStep): Item => {
-    const conclusion = O.fromNullishOr(step.conclusion);
-    const reading = O.match(conclusion, { onNone: () => skipped, onSome: readingOf });
+    const reading = O.match(step.conclusion, { onNone: () => skipped, onSome: readingOf });
     return Item.make({
       key: ItemKey.cases.TestKey.make({ file: job.name, fullName: step.name }),
       unit: job.name,
@@ -290,7 +294,7 @@ const stepItem =
       outcome: reading.outcome,
       failureKind: reading.failureKind,
       detail: O.flatMap(
-        O.filter(conclusion, () => reading.outcome === "failed"),
+        O.filter(step.conclusion, () => reading.outcome === "failed"),
         (failedAs) => detailOf(detail, `step ${failedAs}`)
       ),
     });
@@ -316,14 +320,14 @@ const jobSkip = (job: CiRunJob): Item =>
   });
 
 const stepless = (job: CiRunJob, detail: O.Option<string>): ReadonlyArray<Item> => {
-  const state = job.conclusion ?? job.status;
-  return state === "skipped" || (job.conclusion === null && job.status !== "completed")
+  const state = O.getOrElse(job.conclusion, () => job.status);
+  return state === "skipped" || (O.isNone(job.conclusion) && job.status !== "completed")
     ? [jobSkip(job)]
     : [jobFault(job, detail, `job ${state} with no steps`)];
 };
 
 const jobItems = (job: CiRunJob, detail: O.Option<string>): ReadonlyArray<Item> => {
-  const steps = A.map(job.steps ?? [], stepItem(job, detail));
+  const steps = A.map(O.getOrElse(job.steps, A.empty<CiRunStep>), stepItem(job, detail));
   if (A.isReadonlyArrayEmpty(steps)) {
     return stepless(job, detail);
   }
@@ -351,8 +355,8 @@ const jobItems = (job: CiRunJob, detail: O.Option<string>): ReadonlyArray<Item> 
  *     run: CiRunView.make({ id: 9, attempt: 1, workflow: "Check", headSha: "abc", branch: O.none(), createdAt: "2026-11-22T00:00:00Z" }),
  *     jobs: [
  *       CiRunJob.make({
- *         id: 7, name: "Lint", status: "completed", conclusion: "failure",
- *         steps: [CiRunStep.make({ name: "Run lane", status: "completed", conclusion: "failure", number: 1 })],
+ *         id: 7, name: "Lint", status: "completed", conclusion: O.some("failure"),
+ *         steps: O.some([CiRunStep.make({ name: "Run lane", status: "completed", conclusion: O.some("failure"), number: 1 })]),
  *       }),
  *     ],
  *   })

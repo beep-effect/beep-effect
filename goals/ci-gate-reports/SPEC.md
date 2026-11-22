@@ -274,6 +274,22 @@ Lane explore/agent-verification-output
 
 Reverse: Stop the upload and the lookup; history labels then compare against lane runs only
 
+### ci failures review round 1: run selection, partial reports, saved-log labels, inflate cap, 2026-11-22
+
+CodeRabbit's first review of PR #3493 raised six findings and a nitpick; each was verified and fixed.
+
+- **Run selection.** A pull request's head runs are read when the newest run of a workflow concluded `failure` or `timed_out`, or has not completed. A `cancelled` run is left out: the head's code did not fail it, a newer push or a manual cancel did.
+- **Artifact listing failure.** A failed artifact listing reads as no feeds, so every red job falls back to its log instead of failing the command.
+- **Partial reports.** A job is reported from its artifact only when every report in it decoded. When some reports are unreadable, the command names them, prints the readable ones and still reads the job's log.
+- **Budget.** The bounded failing region reserves room for the job header, the partial-report lines, the verdict lines, the saved-log line and the omission line, so a job section stays within `agentBudget.maxChars`.
+- **Saved-log label.** The saved-log line and each section of the saved file say what the log holds: failing steps only (`gh run view --log-failed`, marked when the capture was truncated) or the whole job log. The monitor's own wording is unchanged.
+- **Inflate cap.** A feed artifact may declare at most 8 MiB of JSON entries in total (eight times the 1 MiB per-entry cap); entries past the limit are not inflated and the read fails with a `CiCommandError`.
+- **Option decoding.** Job and step `conclusion` and a job's `steps` decode to `Option` (`OptionFromNullOr`, `OptionFromOptionalNullOr`) and encode back to their wire forms.
+
+Lane goals/ci-gate-reports-p3 · PR #3493
+
+Reverse: Revert the round-1 fix commit on PR #3493; the prior failure-only filter, all-or-nothing feed reading and unlabelled log line return.
+
 ### CI-job adapter: cancelled steps count as unhandled; a stepless job is a fault unless skipped or not started, 2026-11-22
 
 `ciRunGateReport` (`Ci/CiJobAdapter.ts`) reads a run as gate `run`, each job a unit and each step an item. `success` passes, `failure` fails, `skipped` and `neutral` skip, a step with no conclusion has not finished and skips, and any other conclusion is a plain failure. `timed_out` fails with `failureKind` `timeout` and `cancelled` fails with `unhandled`, so both keep their own totals buckets: the gate-report model has no cancel kind, and `unhandled` (the run stopped the step, not an assertion) is the nearest. A job with no steps is never green. GitHub lists a job skipped by `if:`, or one not yet started, with `steps: []`: that job reads as one skipped item. Any other job with no steps gets one `FaultKey` item, counted as `errored`, even when GitHub calls it a success. A red job whose steps all passed gets the same fault item, so the report never reads green while the job is red.

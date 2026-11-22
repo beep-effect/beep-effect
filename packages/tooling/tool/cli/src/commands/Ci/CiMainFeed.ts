@@ -252,7 +252,8 @@ export type MainFeedResult = typeof MainFeedResult.Type;
 
 const RAN_GATES = ["success", "failure"];
 
-const ranGates = (run: CiWorkflowRun): boolean => A.contains(RAN_GATES, run.conclusion ?? "");
+const ranGates = (run: CiWorkflowRun): boolean =>
+  O.exists(run.conclusion, (conclusion) => A.contains(RAN_GATES, conclusion));
 
 const newestFirst = Order.flip(Order.mapInput(Order.String, (run: CiWorkflowRun) => run.created_at));
 

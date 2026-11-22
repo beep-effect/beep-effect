@@ -5,14 +5,16 @@
  * **Details**
  *
  * The run's jobs are read as a gate report by the CI-job adapter. A failed job
- * whose task-outcome artifact carries gate reports prints those reports'
- * agent consoles, and no log is fetched. Any other failed job's log is read
- * through the merge loop's log route (`readYeetFailedJobLog`): its failing
- * region prints within core's agent budget, verdict first and last, and the
- * whole log is saved under `.beep/gates/run/` with the run's record and named
- * by path and size. A log whose failing step cannot be bounded prints one line
- * with the saved path. Every GitHub request is REST through `GitHubClient`, so
- * the budget ledger records it; none is GraphQL.
+ * whose task-outcome artifact carries readable gate reports prints those
+ * reports' agent consoles, and no log is fetched. Any other failed job's log
+ * is read through the merge loop's log route (`readYeetFailedJobLog`): its
+ * failing region prints within core's agent budget, verdict first and last,
+ * and the log is saved under `.beep/gates/run/` with the run's record, named
+ * by path and size and labelled with what it holds: the failing steps
+ * `--log-failed` returned, or the whole job log. A log whose failing step
+ * cannot be bounded prints one line with the saved path. Every GitHub request
+ * is REST through `GitHubClient`, so the budget ledger records it; none is
+ * GraphQL.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -33,7 +35,7 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
-import { dual, flow, pipe } from "effect/Function";
+import { constant, dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as Layer from "effect/Layer";
@@ -121,13 +123,19 @@ const decodeRunArtifacts = S.decodeUnknownEffect(S.Array(FeedArtifactRef));
 
 type Github = GitHubClient | Repo;
 
+const FAILED_RUN_CONCLUSIONS = ["failure", "timed_out"];
+
 const newestFirst = Order.flip(Order.mapInput(Order.String, (run: CiWorkflowRun) => run.created_at));
 
 const headRunsWorthReading = (runs: ReadonlyArray<CiWorkflowRun>): ReadonlyArray<CiWorkflowRun> =>
   pipe(
     A.sort(runs, newestFirst),
     A.dedupeWith((left, right) => left.workflow_id === right.workflow_id),
-    A.filter((run) => run.conclusion === "failure" || run.status !== "completed")
+    A.filter(
+      (run) =>
+        O.exists(run.conclusion, (conclusion) => A.contains(FAILED_RUN_CONCLUSIONS, conclusion)) ||
+        run.status !== "completed"
+    )
   );
 
 const targetRuns = Effect.fn("CiFailures.targetRuns")(function* (target: CiFailuresTarget) {
@@ -232,8 +240,9 @@ export class FeedArtifactRanking extends S.Opaque<FeedArtifactRanking, { readonl
  *
  * ```ts
  * import { CiRunJob, FeedArtifactRanking, FeedArtifactRef, rankFeedArtifacts } from "@beep/repo-cli/commands/Ci"
+ * import * as O from "effect/Option"
  *
- * const job = CiRunJob.make({ id: 7, name: "Test Unit (unit-a)", status: "completed", conclusion: "failure" })
+ * const job = CiRunJob.make({ id: 7, name: "Test Unit (unit-a)", status: "completed", conclusion: O.some("failure"), steps: O.none() })
  * const artifact = FeedArtifactRef.make({ id: 1, name: "task-outcomes-9-1-test-unit-shard-unit-a", expired: false, size_in_bytes: 9 })
  * console.log(rankFeedArtifacts(FeedArtifactRanking.make({ prefix: "task-outcomes-9-1-", artifacts: [artifact], jobs: [job] })).length) // 1
  * ```
@@ -261,7 +270,7 @@ export const rankFeedArtifacts = ({ prefix, artifacts, jobs }: FeedArtifactRanki
 };
 
 const feedsForJobs = Effect.fn("CiFailures.feedsForJobs")(function* (run: CiRunView, jobs: ReadonlyArray<CiRunJob>) {
-  const artifacts = yield* runArtifacts(run.id);
+  const artifacts = yield* runArtifacts(run.id).pipe(Effect.orElseSucceed(A.empty<FeedArtifactRef>));
   const ranked = rankFeedArtifacts(
     FeedArtifactRanking.make({ prefix: taskOutcomeArtifactPrefix(run.id, run.attempt), artifacts, jobs })
   );
@@ -279,14 +288,21 @@ const feedsForJobs = Effect.fn("CiFailures.feedsForJobs")(function* (run: CiRunV
  * How one failed job was read: through its uploaded gate reports, or through
  * its log.
  *
+ * **Details**
+ *
+ * A job whose artifact indexes a report that could not be read is read
+ * through its log, with that artifact kept as `partial` so its readable
+ * reports and the unreadable paths are still shown.
+ *
  * **Example** (A job read through its log)
  *
  * ```ts
  * import { CiJobReading, CiRunJob } from "@beep/repo-cli/commands/Ci"
  * import { YeetJobLogRead } from "@beep/repo-cli/test/Yeet"
+ * import * as O from "effect/Option"
  *
- * const job = CiRunJob.make({ id: 7, name: "Lint", status: "completed", conclusion: "failure" })
- * const reading = CiJobReading.cases.Logged.make({ job, log: YeetJobLogRead.cases.Unreadable.make({}) })
+ * const job = CiRunJob.make({ id: 7, name: "Lint", status: "completed", conclusion: O.some("failure"), steps: O.none() })
+ * const reading = CiJobReading.cases.Logged.make({ job, log: YeetJobLogRead.cases.Unreadable.make({}), partial: O.none() })
  * console.log(reading._tag) // "Logged"
  * ```
  *
@@ -295,7 +311,7 @@ const feedsForJobs = Effect.fn("CiFailures.feedsForJobs")(function* (run: CiRunV
  */
 export const CiJobReading = S.TaggedUnion({
   Reported: { job: CiRunJob, feed: FeedArtifact },
-  Logged: { job: CiRunJob, log: YeetJobLogRead },
+  Logged: { job: CiRunJob, log: YeetJobLogRead, partial: S.OptionFromOptionalKey(FeedArtifact) },
 }).pipe(
   $I.annoteSchema("CiJobReading", {
     description: "A failed job read through its uploaded gate reports, or through its log.",
@@ -312,8 +328,13 @@ export type CiJobReading = typeof CiJobReading.Type;
 
 type JobReading = CiJobReading;
 
-const reportedFeed = (feeds: ReadonlyArray<FeedArtifact>, job: CiRunJob): O.Option<FeedArtifact> =>
-  A.findFirst(feeds, (feed) => recordJoins(feed, job) && A.isReadonlyArrayNonEmpty(feed.reports));
+const joinedFeed = (feeds: ReadonlyArray<FeedArtifact>, job: CiRunJob): O.Option<FeedArtifact> =>
+  A.findFirst(feeds, (feed) => recordJoins(feed, job));
+
+const completelyReported = (feed: FeedArtifact): boolean =>
+  A.isReadonlyArrayNonEmpty(feed.reports) && A.isReadonlyArrayEmpty(feed.unreadable);
+
+const partlyReported = (feed: FeedArtifact): boolean => A.isReadonlyArrayNonEmpty(feed.unreadable);
 
 const agentConsole = makeGateConsole(ConsoleSettings.make({ audience: "agent" }));
 
@@ -378,20 +399,41 @@ export const boundFailingRegion: {
 } = dual(2, (region: string, frameChars: number): ReadonlyArray<string> => {
   const lines = A.map(Str.split(region, "\n"), cutLine);
   const room = agentBudget.maxChars - frameChars;
-  const kept = A.reduceRight(lines, { lines: A.empty<string>(), chars: 0, full: false }, (state, line) =>
+  const all = tailWithin(lines, room);
+  if (all.length === lines.length) {
+    return all;
+  }
+  const kept = tailWithin(lines, room - omissionLine(lines.length).length - 1);
+  return A.prepend(kept, omissionLine(lines.length - kept.length));
+});
+
+const omissionLine = (dropped: number): string => `... ${dropped} earlier lines in the saved log`;
+
+const tailWithin = (lines: ReadonlyArray<string>, room: number): ReadonlyArray<string> =>
+  A.reduceRight(lines, { lines: A.empty<string>(), chars: 0, full: false }, (state, line) =>
     state.full || state.chars + line.length + 1 > room
       ? { ...state, full: true }
       : { lines: A.prepend(state.lines, line), chars: state.chars + line.length + 1, full: false }
-  );
-  const dropped = lines.length - kept.lines.length;
-  return dropped === 0 ? kept.lines : A.prepend(kept.lines, `... ${dropped} earlier lines in the full log`);
+  ).lines;
+
+const savedLogLabel: (log: YeetJobLogRead) => string = YeetJobLogRead.match({
+  LogFailed: ({ truncated }) =>
+    truncated
+      ? "failing steps only (gh run view --log-failed), truncated"
+      : "failing steps only (gh run view --log-failed)",
+  EndpointRegion: () => "whole job log",
+  EndpointUnbounded: () => "whole job log",
+  Unreadable: () => "no log",
 });
 
 const savedLogText = (readings: ReadonlyArray<JobReading>): O.Option<string> => {
   const sections = A.getSomes(
     A.map(readings, (reading) =>
       reading._tag === "Logged"
-        ? O.map(rawLogOf(reading.log), (raw) => `==> job ${reading.job.name} (${reading.job.id})\n${raw}\n`)
+        ? O.map(
+            rawLogOf(reading.log),
+            (raw) => `==> job ${reading.job.name} (${reading.job.id}): ${savedLogLabel(reading.log)}\n${raw}\n`
+          )
         : O.none<string>()
     )
   );
@@ -412,42 +454,56 @@ const jobVerdict = (run: CiRunView, job: CiRunJob, region: string, saved: Saved)
     )
   );
 
+const reportLines = (feed: FeedArtifact): ReadonlyArray<string> =>
+  A.flatMap(feed.reports, (found) => consoleLines(ConsoleRequest.make({ report: found.record.report })));
+
+const partialLines = (partial: O.Option<FeedArtifact>): ReadonlyArray<string> =>
+  O.match(partial, {
+    onNone: A.empty<string>,
+    onSome: (feed) => [
+      `reports: artifact ${feed.name} has ${feed.unreadable.length} unreadable: ${A.join(feed.unreadable, ", ")}; log read`,
+      ...reportLines(feed),
+    ],
+  });
+
 const jobSection =
   (run: CiRunView, saved: Saved) =>
   (reading: JobReading): ReadonlyArray<string> => {
-    const header = `== job ${reading.job.name} (${reading.job.id}): ${reading.job.conclusion}`;
+    const header = `== job ${reading.job.name} (${reading.job.id}): ${O.getOrElse(reading.job.conclusion, constant(reading.job.status))}`;
     if (reading._tag === "Reported") {
-      return [
-        header,
-        `reports: artifact ${reading.feed.name} (no log fetched)`,
-        ...A.flatMap(reading.feed.reports, (found) =>
-          consoleLines(ConsoleRequest.make({ report: found.record.report }))
-        ),
-      ];
+      return [header, `reports: artifact ${reading.feed.name} (no log fetched)`, ...reportLines(reading.feed)];
     }
+    const head = [header, ...partialLines(reading.partial)];
     const logLine = O.match(saved.log, {
       onNone: () => "no log saved",
-      onSome: (log) => `full log: ${log.path} (${log.bytes} bytes)`,
+      onSome: (log) => `saved log (${savedLogLabel(reading.log)}): ${log.path} (${log.bytes} bytes)`,
     });
     return YeetJobLogRead.match(reading.log, {
-      Unreadable: () => [header, `${reading.job.name}: no log yet (gh refused and the job log endpoint failed)`],
-      EndpointUnbounded: () => [header, `${reading.job.name}: the failing step could not be bounded; ${logLine}`],
-      LogFailed: ({ output }) => framedRegion(header, jobVerdict(run, reading.job, output, saved), output, logLine),
-      EndpointRegion: ({ region }) =>
-        framedRegion(header, jobVerdict(run, reading.job, region, saved), region, logLine),
+      Unreadable: () => [...head, `${reading.job.name}: no log yet (gh refused and the job log endpoint failed)`],
+      EndpointUnbounded: () => [...head, `${reading.job.name}: the failing step could not be bounded; ${logLine}`],
+      LogFailed: ({ output }) => framedRegion(head, jobVerdict(run, reading.job, output, saved), output, logLine),
+      EndpointRegion: ({ region }) => framedRegion(head, jobVerdict(run, reading.job, region, saved), region, logLine),
     });
   };
 
-const framedRegion = (header: string, verdict: string, region: string, logLine: string): ReadonlyArray<string> => [
-  header,
+const linesChars = (lines: ReadonlyArray<string>): number => A.reduce(lines, 0, (sum, line) => sum + line.length + 1);
+
+const framedRegion = (
+  head: ReadonlyArray<string>,
+  verdict: string,
+  region: string,
+  logLine: string
+): ReadonlyArray<string> => [
+  ...head,
   verdict,
-  ...boundFailingRegion(region, 2 * (verdict.length + 1) + logLine.length + 1),
+  ...boundFailingRegion(region, linesChars([...head, verdict, logLine, verdict])),
   logLine,
   verdict,
 ];
 
-const readJob = (repoRoot: string, feeds: ReadonlyArray<FeedArtifact>) => (job: CiRunJob) =>
-  O.match(reportedFeed(feeds, job), {
+const readJob = (repoRoot: string, feeds: ReadonlyArray<FeedArtifact>) => (job: CiRunJob) => {
+  const joined = joinedFeed(feeds, job);
+  return O.match(O.filter(joined, completelyReported), {
     onSome: (
       feed
     ): Effect.Effect<JobReading, never, Github | SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner> =>
@@ -455,9 +511,10 @@ const readJob = (repoRoot: string, feeds: ReadonlyArray<FeedArtifact>) => (job: 
     onNone: () =>
       Effect.map(
         readYeetFailedJobLog(repoRoot, job.id),
-        (log): JobReading => CiJobReading.cases.Logged.make({ job, log })
+        (log): JobReading => CiJobReading.cases.Logged.make({ job, log, partial: O.filter(joined, partlyReported) })
       ),
   });
+};
 
 const recordRun = Effect.fn("CiFailures.recordRun")(function* (
   repoRoot: string,
