@@ -49,7 +49,7 @@ const artifact = Sha256Hex.make(Str.repeat(64)("a"));
 const a = CitationAuthorityId.make(`ca1:${Str.repeat(64)("a")}`);
 const b = CitationAuthorityId.make(`ca1:${Str.repeat(64)("b")}`);
 const missingAuthority = CitationAuthorityId.make(`ca1:${Str.repeat(64)("c")}`);
-const missingMention = CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`);
+const missingMention = CitationMentionId.make(`cm2:${Str.repeat(64)("f")}`);
 const listA = CitationMemberListId.make(`cl1:${Str.repeat(64)("a")}`);
 const listB = CitationMemberListId.make(`cl1:${Str.repeat(64)("b")}`);
 const member = (mentionId: CitationMentionId) => CitationGroupMember.cases.Mention.make({ mentionId });
@@ -119,7 +119,7 @@ const fixture = Effect.gen(function* () {
           })
         );
         return CitationMention.make({
-          id: CitationMentionId.make(`cm1:${Str.repeat(64)(row.seed)}`),
+          id: CitationMentionId.make(`cm2:${Str.repeat(64)(row.seed)}`),
           citation,
           engineArtifact: artifact,
           anchor,
@@ -161,11 +161,11 @@ const fixture = Effect.gen(function* () {
   });
   const receipt = CitationDocumentReceipt.make({
     ...document,
-    schemaVersion: "citation-document-receipt/v3",
+    schemaVersion: "citation-document-receipt/v4",
     mentions: A.map(mentions, (mention) =>
       CitationMentionReceipt.make({
         ...mention,
-        schemaVersion: "citation-mention-receipt/v1",
+        schemaVersion: "citation-mention-receipt/v2",
         anchor: toTextAnchorVerificationReceipt(mention.anchor),
         components: [],
         footnote: O.none(),
@@ -236,7 +236,7 @@ it.layer(TestCrypto)("citation document relationships", (it) => {
         );
         const decoded = yield* S.decodeEffect(ReceiptJson)(encoded);
         expect(decoded.groups).toEqual(multiple.groups);
-        expect(isReceipt({ ...decoded, schemaVersion: "citation-document-receipt/v2" })).toBe(false);
+        expect(isReceipt({ ...decoded, schemaVersion: "citation-document-receipt/v3" })).toBe(false);
       })
   );
   it.effect("round-trips structural relationships without converting receipts into runtime proof", () =>

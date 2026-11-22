@@ -171,7 +171,7 @@ export const projectCitationMentionReceipt = Effect.fn("Citation.projectMentionR
   }).pipe(Effect.mapError(identityFailure));
   if (id !== expected) return yield* CitationMentionFailure.make({ reason: "stale-identity" });
   return yield* S.decodeUnknownEffect(CitationMentionReceiptType)({
-    schemaVersion: "citation-mention-receipt/v1",
+    schemaVersion: "citation-mention-receipt/v2",
     ...metadata,
     id,
     anchor,
@@ -191,7 +191,7 @@ export const projectCitationMentionReceipt = Effect.fn("Citation.projectMentionR
 export const captureCitationMentionReceiptData = (mention: CitationMention): CitationMentionReceipt =>
   CitationMentionReceipt.make({
     ...mention,
-    schemaVersion: "citation-mention-receipt/v1",
+    schemaVersion: "citation-mention-receipt/v2",
     anchor: toTextAnchorVerificationReceipt(mention.anchor),
     components: A.map(mention.components, (component) =>
       CitationComponentReceipt.make({ name: component.name, anchor: toTextAnchorVerificationReceipt(component.anchor) })

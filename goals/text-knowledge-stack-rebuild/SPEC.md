@@ -1329,6 +1329,14 @@ Lane goals/text-knowledge-stack-rebuild-p2-text
 
 Reverse: Return bare OccurrenceIds and untagged segments again, as the design module did, by a decision file before P3 records a re-anchoring.
 
+### P2: the receipt read functions fail with one sanitized CitationReceiptReadFailure; the codecs keep the reason as an issue message, 2026-11-22
+
+readCitationDocumentReceipt and readCitationMentionReceipt, the only decode path for a receipt from outside the process, map every refusal to CitationReceiptReadFailure, a tagged error with no fields. A schema issue over a receipt can quote source text, and every other citation boundary in the server is sanitized the same way (CitationMentionFailure, CitationDocumentFailure). The reason is not lost for in-process callers: CitationDocumentReceiptRead and CitationMentionReceiptRead fail with InvalidValue issues whose messages name the refusal (a stored cm1 that is not its own recomputation, a mention reference the receipt does not hold, a mention that cannot be minted under citation-mention/v2, a standalone v1 receipt with warnings), and CitationMentionMigration.test.ts asserts each message through the codec and the sanitized failure through the read function. No caller distinguishes the reasons today; the first consumer that must, adds them.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Give CitationReceiptReadFailure a LiteralKit reason per refusal (stale-cm1, dangling-reference, unmintable, not-a-receipt) and map the issue to it.
+
 ### P2: v3 citation receipts convert to v4 through a server read codec that checks the stored cm1 and grants no proof, 2026-11-22
 
 The live schemas become citation-document-receipt/v4 and citation-mention-receipt/v2 (the nested receipt's id changes meaning, so its version moves with the document). The read side is CitationDocumentReceiptRead in law-practice server, a union of the live schema and a frozen v3 schema decoded into it with SchemaGetter.transformEffect; encoding v3 is SchemaGetter.forbidden, so writes are always v4. It lives in the server because it needs Digest; the domain schema stays service-free. The frozen v3 schema types only what the step reads or rewrites (version tags, id positions with frozen cm1, ca1, cl1 and cg1 templates, engine artifact, citation.type and the anchor receipt) and passes every other encoded field through; the live v4 schema then decodes the result, so the coherence filter runs on it. Before minting, the pinned v1 encoder recomputes each cm1 and a mismatch is refused: a transform must not turn a stale or tampered id into a fresh one. Case-occurrence authorities are found by recomputing their v1 key, never by looking at the page component. Every reference is rewritten through the old-to-new maps and a dangling reference is refused. The converted receipt is still powerless: restoreCitationDocument re-verifies the source text and the anchors and re-mints every id. Neither restore function has a caller outside the tests and the package exports map ./internal/* to null, so the read codec and restore are both internal; the first consumer that holds a receipt exports their composition (read, then restore) from a public subpath, and until then CitationMentionMigration.test.ts is the only place that composes them. Out-of-band CitationResourceBinding values are adapter expectations that no one stores; adapters re-derive them and receive cm2 ids, so they are not converted. A standalone v1 mention receipt converts through the same mention step (CitationMentionReceiptRead); CitationEngineResolutionInput is a served input with no stored rows and refuses v1 under the amendment.
@@ -1384,6 +1392,14 @@ UnitConversionRefusal gains ill-formed-text beside split-boundary and out-of-ran
 Lane goals/text-knowledge-stack-rebuild-p2-text
 
 Reverse: Drop ill-formed-text from UnitConversionRefusal and let a lone surrogate count as one code point, by a decision file with the L1-2 row.
+
+### P2: the v3 conversion refuses a dangling mention reference itself and leaves dangling authority, group and list references to the live coherence check, 2026-11-22
+
+Step 5 of the read transform rewrites every reference through the old-to-new maps and refuses a dangling one. A mention reference has to be refused in the conversion: an id the mention map does not hold has no cm2 image, so there is nothing to write. Authority, group and list ids are kept unless the case-occurrence step re-keyed them, so a reference that names no node passes through unchanged, and the live CitationDocumentReceipt decode that ends the conversion refuses it with its relationship coherence check (unique ids, closed references, one resolution per mention). Checking those again in the conversion would duplicate the domain filter. The case-occurrence v2 key over a new mention id comes from makeCaseOccurrenceAuthorityId, exported from AuthorityIdentity.ts and shared with makeCitationAuthorityId, so the conversion cannot drift from the live key. Tests: a dangling warning and a dangling member list entry are refused by the conversion, an unknown authority by the coherence check.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Check every authority, group and list reference against the converted receipt inside convertDocumentV3 and refuse with its own issue message.
 
 <!-- beep:decisions:end -->
 

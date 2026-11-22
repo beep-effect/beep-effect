@@ -88,7 +88,7 @@ const bindingFor = (
 const text = "😀 1 U.S. 1; 1 U.S. 1; Id.";
 const artifact = Sha256Hex.make(Str.repeat(64)("a"));
 const staleAuthority = CitationAuthorityId.make(`ca1:${Str.repeat(64)("f")}`);
-const staleMention = CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`);
+const staleMention = CitationMentionId.make(`cm2:${Str.repeat(64)("f")}`);
 const Json = S.fromJsonString(CitationDocumentReceipt);
 const externalIdentity = () =>
   CitationResourceIdentity.cases.External.make({
@@ -629,7 +629,7 @@ it.layer(BunCrypto.layer)("whole citation document persistence", (it) => {
           )
         )
       );
-      expect(hashes).toBe(6); // One source, three mentions, two resolved full keys.
+      expect(hashes).toBe(9); // One source, three mentions at two digests each, two resolved full keys.
       const citationResult21 = yield* projectCitationDocumentReceipt({ document: restored, editions: data.editions });
       const citationResult22 = yield* S.encodeEffect(Json)(citationResult21);
       expect(citationResult22).toBe(captured);

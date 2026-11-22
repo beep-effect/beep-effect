@@ -190,3 +190,14 @@ home paths with `~`, drop session and machine ids.
   Claude account as "Rate limited" (unreadable), so the limit could not be seen coming.
 - **Prevention:** read Claude headroom before a long child is launched, and give a fallback child a brief
   file that it can continue from. This lane moved to Codex `gpt-6.1-sol` medium with such a brief.
+
+## 2026-11-22: a dependent's type check read stale declarations of a changed package
+
+- **Doing:** commit 7, moving `CitationMentionId` from `cm1:` to `cm2:` in law-practice-domain and
+  type-checking law-practice-server against it.
+- **Evidence:** `bunx tsrs -p packages/law-practice/server/tsconfig.check.json --noEmit` reported
+  `` Argument of type '`cm2:${string}`' is not assignable to parameter of type '`cm1:${string}`' `` until
+  `bunx tsrs -b packages/law-practice/domain/tsconfig.json` rewrote the domain's declaration output; the
+  server project reads the referenced project's emitted `.d.ts`, not its source.
+- **Prevention:** a `beep` check of one package that rebuilds the stale declarations of its changed
+  workspace references first (or warns that they are older than their sources).

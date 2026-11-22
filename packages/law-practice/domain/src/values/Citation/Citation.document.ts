@@ -57,7 +57,7 @@ const Relationships = {
 };
 const RuntimeShape = S.Struct({ ...Relationships, mentions: S.Array(CitationMention) });
 const ReceiptShape = S.Struct({
-  schemaVersion: S.tag("citation-document-receipt/v3"),
+  schemaVersion: S.tag("citation-document-receipt/v4"),
   ...Relationships,
   mentions: S.Array(CitationMentionReceipt),
 });

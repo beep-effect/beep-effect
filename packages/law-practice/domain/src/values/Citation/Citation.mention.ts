@@ -166,7 +166,7 @@ const EvidenceFields: EvidenceFields = { anchor: AnchorProof, components: Compon
 const MentionShape = S.Struct({ ...MetadataFields, ...EvidenceFields });
 
 const ReceiptShape = S.Struct({
-  schemaVersion: S.tag("citation-mention-receipt/v1"),
+  schemaVersion: S.tag("citation-mention-receipt/v2"),
   ...MetadataFields,
   anchor: TextAnchorVerificationReceipt,
   components: S.Array(CitationComponentReceipt),

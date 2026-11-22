@@ -347,10 +347,10 @@ export const projectCitationDocumentReceipt = Effect.fn("Citation.projectDocumen
     resourceBindings: decoded.resourceBindings,
     receipt: {
       ...decoded.document,
-      schemaVersion: "citation-document-receipt/v3",
+      schemaVersion: "citation-document-receipt/v4",
       mentions: A.map(decoded.document.mentions, (mention) => ({
         ...mention,
-        schemaVersion: "citation-mention-receipt/v1",
+        schemaVersion: "citation-mention-receipt/v2",
         anchor: toTextAnchorVerificationReceipt(mention.anchor),
         components: A.map(mention.components, (component) => ({
           name: component.name,
