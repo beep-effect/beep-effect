@@ -560,7 +560,8 @@ export class CiCertaintyRunnerMinutes extends S.Opaque<CiCertaintyRunnerMinutes,
     unknown: NonNegativeMinutes,
   }).pipe(
     $I.annoteSchema("CiCertaintyRunnerMinutes", {
-      description: "Raw runner-minutes split into GitHub-hosted, managed (beep-ec2-heavy) and unclassified runners.",
+      description:
+        "Raw runner-minutes split into GitHub-hosted, managed (self-hosted beep-* pools) and unclassified runners.",
     })
   )
 ) {}
@@ -702,7 +703,7 @@ export class CiCertaintyLatencyStat extends S.Opaque<CiCertaintyLatencyStat, { r
  *
  * A heavy-admit.yml run joins the latest check.yml run of its head created at
  * or before it, so a head admitted by the `ready-for-heavy` label carries its
- * beep-ec2-heavy minutes just as one admitted inside check.yml does. A
+ * heavy-pool minutes just as one admitted inside check.yml does. A
  * heavy-admit.yml run whose Heavy Admission was skipped is not counted. `runs`
  * counts head attempts; the green code-run percentiles cover the attempts of
  * code heads whose check.yml run succeeded.
@@ -834,7 +835,7 @@ export class CiCertaintyTestUnitConversion extends S.Opaque<
  * **Details**
  *
  * Each check.yml or heavy-admit.yml run pairs its own Heavy Admission start
- * with its first executed job on the heavy pool (beep-ec2-heavy runner
+ * with its first executed job on the heavy pool (managed `beep-` runner
  * labels). Hosted jobs named `Heavy / ...`, such as the Test Integration
  * aggregate, are not heavy-pool pickup and never count.
  *

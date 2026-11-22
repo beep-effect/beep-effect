@@ -3852,6 +3852,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
         A.join("\n")
       );
       expect(code).not.toContain("secrets.");
+      expect(code).not.toContain("beep-fleet-heavy");
       expect(code).not.toContain("beep-ec2-heavy");
       // An uncertified report must fail the run, and the captured corpus names branches.
       expect(code).not.toContain("--preview");
@@ -4116,7 +4117,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           " "
         )
       );
-      expect(yamlAt(heavy, ["jobs", "producer-inspect", "runs-on"])).toBe("beep-ec2-heavy");
+      expect(yamlAt(heavy, ["jobs", "producer-inspect", "runs-on"])).toBe("beep-fleet-heavy");
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "environment"])).toBe("turbo-cache-write");
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "timeout-minutes"])).toBe(10);
       expect(yamlAt(heavy, ["jobs", "producer-inspect", "env"])).toEqual({
@@ -4259,7 +4260,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
           " "
         )
       );
-      expect(yamlAt(heavy, ["jobs", "producer-prepare", "runs-on"])).toBe("beep-ec2-heavy");
+      expect(yamlAt(heavy, ["jobs", "producer-prepare", "runs-on"])).toBe("beep-fleet-heavy");
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "timeout-minutes"])).toBe(20);
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "environment"])).toBeUndefined();
       expect(yamlAt(heavy, ["jobs", "producer-prepare", "secrets"])).toBeUndefined();
@@ -4984,7 +4985,7 @@ it.layer(NodeServices.layer, { timeout: "30 seconds" })("CI runner security", (i
       expect(yamlAt(heavy, ["on", "workflow_call", "inputs", "local_pilot_observation", "default"])).toBe(false);
       expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "environment"])).toBeUndefined();
       expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "timeout-minutes"])).toBe(20);
-      expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "runs-on"])).toBe("beep-ec2-heavy");
+      expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "runs-on"])).toBe("beep-fleet-heavy");
       expect(yamlAt(heavy, ["jobs", "local-pilot-observe", "if"])).toContain(
         "github.workflow_ref == 'beep-effect/beep-effect/.github/workflows/cache-local-observe.yml@refs/heads/main'"
       );

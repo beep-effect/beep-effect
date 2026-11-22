@@ -1203,13 +1203,14 @@ jobs:
             infra/r2-cache/adapter.sh stop-ci
           fi
 
-  # The overflow half of the plan: the same shard on a `beep-shard-overflow`
-  # VM, through shard-overflow.yml at main (as heavy.yml@main: the runner
-  # group admits that definition only, so a pull request cannot replace it),
-  # reported as `Test Unit (<partition>) / Overflow`. Empty unless Test Plan
-  # routed partitions, which it never does for a fork's pull request; the
-  # condition repeats that guard and shard-overflow.yml repeats it again at
-  # main. Every artifact a hosted shard uploads is uploaded under the same name.
+  # The overflow half of the plan: the same shard on a `beep-fleet-overflow`
+  # VM (runner group `beep-shard-overflow`), through shard-overflow.yml at main
+  # (as heavy.yml@main: the runner group admits that definition only, so a pull
+  # request cannot replace it), reported as `Test Unit (<partition>) / Overflow`.
+  # Empty unless Test Plan routed partitions, which it never does for a fork's
+  # pull request; the condition repeats that guard and shard-overflow.yml
+  # repeats it again at main. Every artifact a hosted shard uploads is uploaded
+  # under the same name.
   test-unit-overflow:
     name: Test Unit (${{ matrix.partition }})
     needs: [change-profile, test-plan]

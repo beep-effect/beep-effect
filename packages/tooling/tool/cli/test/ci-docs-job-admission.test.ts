@@ -1512,7 +1512,7 @@ it.effect(
         assert.strictEqual(yamlAt(workflow, ["jobs", contract.job, "timeout-minutes"]), contract.timeout);
         assert.strictEqual(
           yamlAt(workflow, ["jobs", contract.job, "runs-on"]),
-          file === "heavy.yml" ? "beep-ec2-heavy" : "ubuntu-24.04"
+          file === "heavy.yml" ? "beep-fleet-heavy" : "ubuntu-24.04"
         );
         assert.deepEqual(yamlAt(workflow, ["jobs", contract.job, "permissions"]), { contents: "read" });
         assert.deepEqual(yamlAt(workflow, ["jobs", contract.job, "steps"]), steps);

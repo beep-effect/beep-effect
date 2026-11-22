@@ -59,18 +59,46 @@ const $I = $RepoCliId.create("commands/Ci/CiShardOverflow");
 /**
  * The runner label a routed shard requests: the overflow pool's only label.
  *
+ * **Details**
+ *
+ * The label is not the runner group's name: the pool registers its runners
+ * in the organization runner group {@link SHARD_OVERFLOW_RUNNER_GROUP}, which
+ * kept its name when the workflows moved to the `beep-fleet-*` labels.
+ *
  * **Example** (Print the overflow label)
  *
  * ```ts
  * import { SHARD_OVERFLOW_RUNNER_LABEL } from "@beep/repo-cli/commands/Ci"
  *
- * console.log(SHARD_OVERFLOW_RUNNER_LABEL) // "beep-shard-overflow"
+ * console.log(SHARD_OVERFLOW_RUNNER_LABEL) // "beep-fleet-overflow"
  * ```
  *
  * @category constants
  * @since 0.0.0
  */
-export const SHARD_OVERFLOW_RUNNER_LABEL = "beep-shard-overflow";
+export const SHARD_OVERFLOW_RUNNER_LABEL = "beep-fleet-overflow";
+
+/**
+ * The organization runner group the overflow pool's runners register in.
+ *
+ * **Details**
+ *
+ * The group admits only `shard-overflow.yml` at `refs/heads/main`, which is
+ * what `beep ci shard-overflow-preflight` reads back. Jobs never name it: they
+ * request {@link SHARD_OVERFLOW_RUNNER_LABEL}.
+ *
+ * **Example** (Print the overflow runner group)
+ *
+ * ```ts
+ * import { SHARD_OVERFLOW_RUNNER_GROUP } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(SHARD_OVERFLOW_RUNNER_GROUP) // "beep-shard-overflow"
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const SHARD_OVERFLOW_RUNNER_GROUP = "beep-shard-overflow";
 
 /**
  * The overflow pool's VM cap: 48 eight-vCPU `.2xlarge` workers, 384 vCPU.
@@ -472,7 +500,7 @@ export const isShardOverflowTrustedEvent = (
  * const queue = shardOverflowQueueOf(
  *   [
  *     ShardOverflowJob.make({ status: "queued", labels: ["ubuntu-24.04"] }),
- *     ShardOverflowJob.make({ status: "in_progress", labels: ["beep-shard-overflow"] }),
+ *     ShardOverflowJob.make({ status: "in_progress", labels: ["beep-fleet-overflow"] }),
  *   ],
  *   1
  * )
@@ -619,7 +647,7 @@ const minutesAndSeconds = (seconds: number): string => {
  *   freeVms: O.some(1),
  * })
  * console.log(renderShardOverflowSummary(decision))
- * // shard-overflow: routed; 1 of 2 Test Unit partitions to beep-shard-overflow (predicted hosted wait 11m00s; 1 overflow VMs free)
+ * // shard-overflow: routed; 1 of 2 Test Unit partitions to beep-fleet-overflow (predicted hosted wait 11m00s; 1 overflow VMs free)
  * ```
  *
  * @param decision - The decision to describe.
