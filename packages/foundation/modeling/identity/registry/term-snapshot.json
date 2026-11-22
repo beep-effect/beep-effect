@@ -3,6 +3,10 @@
   "release": "2.0.0",
   "namespaces": [
     {
+      "prefix": "annotation",
+      "iri": "https://beep-effect.com/ns/annotation/"
+    },
+    {
       "prefix": "as",
       "iri": "http://www.w3.org/ns/activitystreams#"
     },
@@ -59,6 +63,10 @@
       "iri": "https://beep-effect.com/ns/semantic-web/identity/"
     },
     {
+      "prefix": "instance",
+      "iri": "https://beep-effect.com/ns/instance/"
+    },
+    {
       "prefix": "lejeune",
       "iri": "https://beep-effect.com/ns/lejeune/ontology/"
     },
@@ -69,6 +77,14 @@
     {
       "prefix": "oa",
       "iri": "http://www.w3.org/ns/oa#"
+    },
+    {
+      "prefix": "office-action",
+      "iri": "https://beep-effect.com/ns/office-action/"
+    },
+    {
+      "prefix": "operation",
+      "iri": "https://beep-effect.com/ns/operation/"
     },
     {
       "prefix": "owl",
@@ -501,6 +517,17 @@
     "http://www.w3.org/ns/shacl#targetClass",
     "http://www.w3.org/ns/shacl#targetNode",
     "http://www.w3.org/ns/shacl#xone",
+    "https://beep-effect.com/ns/annotation/",
+    "https://beep-effect.com/ns/annotation/Chunk",
+    "https://beep-effect.com/ns/annotation/CorefCandidate",
+    "https://beep-effect.com/ns/annotation/Figure",
+    "https://beep-effect.com/ns/annotation/Mention",
+    "https://beep-effect.com/ns/annotation/Paragraph",
+    "https://beep-effect.com/ns/annotation/RelationCandidate",
+    "https://beep-effect.com/ns/annotation/Section",
+    "https://beep-effect.com/ns/annotation/Sentence",
+    "https://beep-effect.com/ns/annotation/Title",
+    "https://beep-effect.com/ns/annotation/Word",
     "https://beep-effect.com/ns/contracts/",
     "https://beep-effect.com/ns/contracts/qa-inventory/v1",
     "https://beep-effect.com/ns/document/",
@@ -512,8 +539,19 @@
     "https://beep-effect.com/ns/epistemic/Claim",
     "https://beep-effect.com/ns/epistemic/claim",
     "https://beep-effect.com/ns/epistemic/hasEvidenceQuote",
+    "https://beep-effect.com/ns/instance/",
     "https://beep-effect.com/ns/lejeune/ontology/",
+    "https://beep-effect.com/ns/lejeune/ontology/delivery_date",
+    "https://beep-effect.com/ns/lejeune/ontology/finish",
+    "https://beep-effect.com/ns/lejeune/ontology/project",
+    "https://beep-effect.com/ns/office-action/",
+    "https://beep-effect.com/ns/office-action/claim",
+    "https://beep-effect.com/ns/office-action/distinction",
+    "https://beep-effect.com/ns/office-action/office_action",
+    "https://beep-effect.com/ns/office-action/rejection_reference",
     "https://beep-effect.com/ns/ontology/semantic-foundation/",
+    "https://beep-effect.com/ns/operation/",
+    "https://beep-effect.com/ns/operation/Extract",
     "https://beep-effect.com/ns/practice-kg/",
     "https://beep-effect.com/ns/practice-kg/application",
     "https://beep-effect.com/ns/practice-kg/client",
@@ -660,6 +698,20 @@
     "https://beep-effect.com/ns/semantic-web/identity/curie",
     "https://beep-effect.com/ns/semantic-web/identity/identifier",
     "https://beep-effect.com/ns/semantica/",
+    "https://beep-effect.com/ns/semantica/abstract",
+    "https://beep-effect.com/ns/semantica/affiliatedWith",
+    "https://beep-effect.com/ns/semantica/authoredBy",
+    "https://beep-effect.com/ns/semantica/locatedIn",
+    "https://beep-effect.com/ns/semantica/method",
+    "https://beep-effect.com/ns/semantica/organization",
+    "https://beep-effect.com/ns/semantica/person",
+    "https://beep-effect.com/ns/semantica/reEvaluatesClaimDueTo",
+    "https://beep-effect.com/ns/semantica/reference",
+    "https://beep-effect.com/ns/semantica/relation-endpoint",
+    "https://beep-effect.com/ns/semantica/section",
+    "https://beep-effect.com/ns/semantica/selected",
+    "https://beep-effect.com/ns/semantica/shows",
+    "https://beep-effect.com/ns/semantica/title",
     "https://beep-effect.com/ns/skill-contract/",
     "https://beep-effect.com/ns/skill-contract/evidence/failure/v2",
     "https://beep-effect.com/ns/skill-contract/evidence/gate-certificate/v1",

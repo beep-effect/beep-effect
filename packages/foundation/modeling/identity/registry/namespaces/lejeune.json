@@ -3,7 +3,7 @@
     "prefix": "lejeune",
     "iri": "https://beep-effect.com/ns/lejeune/ontology/"
   },
-  "terms": [],
+  "terms": ["delivery_date", "finish", "project"],
   "bindings": [],
   "deprecations": []
 }

@@ -1,0 +1,20 @@
+{
+  "namespace": {
+    "prefix": "annotation",
+    "iri": "https://beep-effect.com/ns/annotation/"
+  },
+  "terms": [
+    "Chunk",
+    "CorefCandidate",
+    "Figure",
+    "Mention",
+    "Paragraph",
+    "RelationCandidate",
+    "Section",
+    "Sentence",
+    "Title",
+    "Word"
+  ],
+  "bindings": [],
+  "deprecations": []
+}

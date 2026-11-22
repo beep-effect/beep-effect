@@ -1772,6 +1772,16 @@ Lane goals/text-knowledge-stack-rebuild-p3-annotation
 
 Reverse: Move the label mapping to a separate request vocabulary, or mint candidates in each consumer, by a decision file
 
+### P3: the term snapshot keeps release 2.0.0, because the stack's base publishes no term set, 2026-11-22
+
+Decision `p3-registry-terms` expected the registry writer to release the P3 term additions as 2.0.0 to 2.1.0, "if nothing else lands first". Commit 2 ran `bun run beep identity registry --write` with its default base, the merge base of the lane with `origin/main` (`9a4f7b0258d`). That commit has no `@beep/identity` term snapshot, because the P1 registry has not merged, so the writer took its `keep` release policy (`packages/tooling/tool/cli/src/commands/Identity/Registry.ts`, `releasePolicy`): until a base publishes a term set, every edit of the P1, P2 and P3 stack is part of one unreleased change, and the committed release stays 2.0.0. `beep lint identity-registry` and `beep identity registry --check` both pass on that snapshot.
+
+The release is not set by hand and no `--base` naming the P2 lane is passed: that would release one step of an unpublished stack and bump once per layer. When a parent that publishes 2.0.0 reaches `origin/main` and the lane merges it, the writer then succeeds that snapshot. The lane regenerates at that merge, which gives 2.1.0 for these additions, and `release-regressed` in the identity-registry lint fails the lane until it does.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Regenerate with bun run beep identity registry --write --base <ref> against a ref that publishes 2.0.0, which writes 2.1.0
+
 ### P3: the @beep/text law generators move to src as @beep/text/Arbitrary and take the digest as an argument, 2026-11-22
 
 The L2 laws need well-formed text, scalar-boundary ranges and `Anchored` rows, which `packages/foundation/modeling/text/test/support/generators.ts` already builds. Another package may not import a test file across packages, and a copy would trip the duplication gate. `@beep/file-processing` already ships its test engine from `src` (`src/test.ts`, served as `@beep/file-processing/test`). So `wellFormedTextWith`, `rangeIn`, `sourceFor` and `anchoredOn` move to `packages/foundation/modeling/text/src/Arbitrary.ts`, served as `@beep/text/Arbitrary`. They take a `JsoncDigest` argument instead of calling `node:crypto`, so the module stays runtime-neutral. The text tests import them from there, and the text laws cover the module fully. The annotation package's own generators (documents, document triples, containment cases) live in its `test/support`.
