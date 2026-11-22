@@ -2,14 +2,14 @@
 
 ## Status
 
-Status: `pending`. Blocked on `goals/gate-report-core`: P1 starts once core's model, recorder and
-neutral document are on `main`. P0 may start at once.
+Status: `active`. P0 is complete (decision `report-carrier`). `goals/gate-report-core` is
+completed-retained, so P1 may start.
 
 ## Phases
 
 | Phase | Status | Goal | Exit criteria |
 | --- | --- | --- | --- |
-| P0 Research | pending | Confirm the workflow census, choose the report carrier against the six criteria in `SPEC.md`, and fix the feed's record schema. | One decision file names the carrier with each criterion answered by evidence; the census table in `SPEC.md` matches the workflows at that head. |
+| P0 Research | complete | Confirm the workflow census, choose the report carrier against the six criteria in `SPEC.md`, and fix the feed's record schema. | One decision file names the carrier with each criterion answered by evidence; the census table in `SPEC.md` matches the workflows at that head. |
 | P1 Projection and feed record | pending | The CI renderer (summary, grouped log, annotations) from gate reports, the planned CI subcommand that appends it, and the feed record schema. | The renderer, limit and neutralization tests pass. |
 | P2 Workflow wiring | pending | Every gate job in `check.yml`, `shard-overflow.yml`, `storybook.yml`, `property-laws-nightly.yml`, `fleet-lane-probe.yml` and `heavy.yml` renders the projection and uploads its reports. | The workflow upload test and `bun run beep ci workflow-lint` pass; the first `main` run after each workflow PR shows the projection in every gate job, cited by run id. |
 | P3 Lookup, adapter and failing-region command | pending | The main-feed lookup, the CI-job adapter, the extracted log route and the failing-region command. | The lookup, adapter and command fixture tests pass; the monitor's tests pass unchanged; the ledger shows REST only. |
@@ -89,6 +89,12 @@ git diff --check -- goals/ci-gate-reports
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug ci-gate-reports`; add a `kind: checkpoint` file there, never edit this block._
 
-_No checkpoint files yet._
+### P0 complete: census re-listed, carrier chosen, 2026-11-22
+
+P0 is complete. The SPEC census was re-listed at origin/main on 2026-11-22: 33 workflows; Test Plan added; Commitlint, Secret Scanning and Security marked as gates without `ci lane`; the task-outcome writers corrected. The carrier is chosen in decision `report-carrier`: the per-job `task-outcomes-*` artifact widened to a `task-outcomes/v2` record plus the job's gate records, with each criterion answered by a live REST lookup (3 requests at the merge base, 4 for an ancestor). P1 (renderer, CI subcommand, the v2 feed record) is next and rides PR 1 with these decisions.
+
+Lane goals/ci-gate-reports-p0
+
+Reverse: Reopen P0 by reverting this checkpoint and the report-carrier decision
 
 <!-- beep:decisions:end -->

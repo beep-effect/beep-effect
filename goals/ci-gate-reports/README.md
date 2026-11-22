@@ -34,9 +34,13 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started. P1 waits for `goals/gate-report-core` (manifest `blockedBy`).
+P0 Research — complete (2026-11-22): carrier chosen in decision `report-carrier`. P1 (renderer, CI
+subcommand, `task-outcomes/v2` feed record) is next; `goals/gate-report-core` is completed-retained.
 
 ## Latest Evidence
+
+2026-11-22: P0 lookup measured live against `main`: a merge base with a cancelled Check run
+(`bc49cb6`) resolved to ancestor `4e3343774cc` and its job artifact in 4 REST requests, no GraphQL.
 
 2026-11-18: packet authored from `explorations/agent-verification-output` (MAP candidate 6).
 
