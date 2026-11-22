@@ -78,8 +78,9 @@ const $I = $RepoGateRunId.create("GateHistorySqlite");
  *
  * `filename` names the database file; `":memory:"` opens a private database.
  * The file's directory must exist. `busyTimeoutMs` is how long a write
- * waits on another connection's lock (the driver's 5 s by default); opening
- * and reading wait at most the read deadline, `config.deadlineMs`.
+ * waits on another connection's lock (the driver's 5 s by default). Each lock
+ * wait while opening or reading is capped at `config.deadlineMs`; an open
+ * retries a busy store, so it can take several such waits.
  *
  * **Example** (A store file)
  *
@@ -522,8 +523,8 @@ const seriesOf = (sql: Sql) => (query: HistoryItemQuery) =>
 
 // --- opening ---------------------------------------------------------------------
 
-// The driver waits on a lock synchronously, so a read waits at most the read deadline; only a
-// write, which runs after the console was printed, waits the longer write timeout.
+// The driver waits on a lock synchronously, so each lock wait of an open or a read is capped at the
+// read deadline; only a write, which runs after the console was printed, gets the longer write timeout.
 const waitAtMost = (sql: Sql, millis: number) => sql.unsafe(`PRAGMA busy_timeout = ${millis}`);
 
 const backendOn = (sql: Sql, options: GateHistorySqliteOptions): HistoryBackend => {

@@ -176,10 +176,11 @@ the one verdict line, `(F fixed since last run)`.
 - Migrations are versioned and idempotent and run inside a transaction, so two first openers
   converge on one schema.
 
-### Rendering never waits on the store
+### The store never hides the verdict
 
-- The label and delta read for a report runs under a deadline, default 250 ms, configuration. On
-  the deadline or any `GateHistoryError`, the console renders without labels and delta and adds
+- The label and delta read for a report runs under a deadline, default 250 ms, configuration. The
+  deadline takes effect between the store's lock waits, each capped at the same 250 ms. On the
+  deadline or any `GateHistoryError`, the console renders without labels and delta and adds
   one line naming the cause. The verdict is never hidden (core law 10).
 - Writes start only after the console is flushed. A failed write leaves the console as printed
   and is reported on stderr in one line.

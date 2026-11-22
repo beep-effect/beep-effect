@@ -80,8 +80,8 @@ export class HistoryReadError extends S.TaggedError<HistoryReadError, { readonly
 ) {}
 
 /**
- * How long a caller waits for history, in milliseconds, before rendering
- * without it.
+ * The deadline a caller reads history under, in milliseconds, before it
+ * renders without it. A store wait that cannot be interrupted can outlast it.
  *
  * **Example** (Read the default deadline)
  *

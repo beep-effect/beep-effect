@@ -1,7 +1,8 @@
 /**
  * What a gate run could not persist or read, and the one console line that
- * says so. Rendering never waits on persistence or history: a failure there
- * becomes an omission, never a missing console.
+ * says so. Persistence and history are each bounded by a deadline: a failure
+ * or a missed deadline there becomes an omission, never a missing console. A
+ * history deadline takes effect between the store's lock waits.
  *
  * @packageDocumentation
  * @since 0.0.0

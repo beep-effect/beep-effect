@@ -186,8 +186,9 @@ const PositiveInt = S.Int.check(S.isGreaterThanOrEqualTo(1));
  *
  * `window` is `W`, the observations per series per branch the reader uses
  * and the retention keeps (default 10). `retainRuns` keeps the newest runs
- * per gate, subject and branch (default 200). `deadlineMs` bounds the label
- * and delta read (default 250). A busy open or a contended migration retries
+ * per gate, subject and branch (default 200). `deadlineMs` is the deadline
+ * of the label and delta read and the cap of each store lock wait in an open
+ * or a read (default 250). A busy open or a contended migration retries
  * `retryAttempts` times in all (default 5) on a jittered exponential
  * schedule from `retryBaseMs` (default 50).
  *
