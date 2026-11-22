@@ -734,8 +734,12 @@ to the gap between the reference checkout (main) and the pinned release.
 ## 2026-11-22: a proof watcher counted a terminated instance and raised a false abort
 
 - **Doing:** watching the overflow proof for its "more than one launch" abort.
-- **Evidence:** the watcher counted every instance with the pool's `ghr:environment` tag. A runner from the
-  heavy re-proof that had already terminated still matched, so the watcher reported two launches for one.
-- **Would have prevented it:** filtering every instance count on `instance-state-name` `pending` or
-  `running`, which the watcher now does. A terminated instance stays visible to `describe-instances` for
-  about an hour.
+- **Evidence:** the watcher counted every instance tagged with either pool's `ghr:environment`, in any
+  state. The heavy re-proof's runner had already terminated but still matched, so the watcher reported two
+  launches for one. A terminated instance stays visible to `describe-instances` for about an hour.
+- **Would have prevented it:** keeping the two questions apart. The live reading of what is running now
+  counts only the proof pool's instances in `pending` or `running`. The "more than one launch" abort counts
+  launches, not live instances: the CloudTrail `CreateFleet` calls by the proof pool's scale-up role since
+  the proof started, which still include a launch whose instance has terminated. The evidence script decides
+  the proof that way (exactly one call). The watcher's active count is an early warning only, and a later
+  watcher reads the same CloudTrail count for its launch abort.
