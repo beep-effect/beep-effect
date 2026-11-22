@@ -28,10 +28,11 @@ const encodeActionRequest = S.encodeEffect(S.fromJsonString(ActionRequestMessage
  *
  * **Details**
  *
- * When the job is still queued the message, retry counter included, goes
- * back to the pool's build queue so scale-up tries again; otherwise nothing
- * happens. The retry counter is what bounds the loop: scale-up stops
- * publishing once it reaches the policy's `maxAttempts`.
+ * When the job still needs a runner the message, retry counter included,
+ * goes back to the pool's build queue so scale-up tries again; otherwise the
+ * message is dropped with a log line, the only trace of it. The retry counter
+ * is what bounds the loop: scale-up stops publishing once it reaches the
+ * policy's `maxAttempts`.
  *
  * **Example** (Wire the program)
  *
@@ -63,6 +64,13 @@ export const handleJobRetry = Effect.fn("JobRetry.handle")(function* (input: {
     jobId: message.id,
   });
   if (!queued) {
+    yield* Effect.logInfo("job-retry: the job needs no runner; the message is dropped").pipe(
+      Effect.annotateLogs({
+        jobId: message.id,
+        repository: `${message.repositoryOwner}/${message.repositoryName}`,
+        retryCounter: message.retryCounter ?? 0,
+      })
+    );
     return false;
   }
   const body = yield* encodeActionRequest(message).pipe(Effect.orDie);

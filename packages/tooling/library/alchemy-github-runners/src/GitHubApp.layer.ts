@@ -31,6 +31,9 @@ import type { RunnerOwner } from "./GitHubRunners.models.ts";
 
 const $I = $AlchemyGithubRunnersId.create("GitHubApp.layer");
 
+// A lagging read shows an earlier state, so only these two mean the job no longer needs a runner.
+const isTakenJobStatus = S.is(S.Literals(["in_progress", "completed"]));
+
 const statusByTag: Readonly<Record<string, number>> = {
   BadRequest: 400,
   Unauthorized: 401,
@@ -47,12 +50,50 @@ const statusByTag: Readonly<Record<string, number>> = {
   GatewayTimeout: 504,
 };
 
-const toGitHubApiError =
+/**
+ * Maps a distilled GitHub client error to the fleet's {@link GitHubApiError}.
+ *
+ * **Details**
+ *
+ * `status` comes from the client's status class, else the status its
+ * unknown-error class carries. `rateLimited` is true for `TooManyRequests`
+ * (the client's reading of a 429, or of a 403 with `retry-after`,
+ * `x-ratelimit-remaining: 0` or a rate-limit message) and for a `Forbidden`
+ * whose message names a rate limit.
+ *
+ * **Example** (A secondary rate limit)
+ *
+ * ```ts
+ * import { toGitHubApiError } from "@beep/alchemy-github-runners/GitHubApp.layer"
+ *
+ * const error = toGitHubApiError("generateJitConfig")({
+ *   _tag: "Forbidden",
+ *   message: "You have exceeded a secondary rate limit",
+ * })
+ * console.log(error.rateLimited) // true
+ * ```
+ *
+ * @param operation - The GitHub operation that failed.
+ * @returns A mapper from the client error to {@link GitHubApiError}.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const toGitHubApiError =
   (operation: string) =>
   (error: { readonly _tag: string; readonly message?: unknown }): GitHubApiError =>
     GitHubApiError.make({
       operation,
-      status: O.fromUndefinedOr(statusByTag[error._tag]),
+      // An unmapped 4xx reaches the client as `UnknownGithubError`, which carries the status itself.
+      status: O.orElse(O.fromUndefinedOr(statusByTag[error._tag]), () =>
+        P.hasProperty(error, "status") && P.isNumber(error.status) && Number.isInteger(error.status)
+          ? O.some(error.status)
+          : O.none()
+      ),
+      code: O.some(error._tag),
+      // The client turns a rate-limited 403 into `TooManyRequests`; a 403 whose message names a rate limit is one too.
+      rateLimited:
+        error._tag === "TooManyRequests" ||
+        (error._tag === "Forbidden" && P.isString(error.message) && /rate limit/iu.test(error.message)),
       message: P.isString(error.message) ? error.message : error._tag,
     });
 
@@ -267,18 +308,35 @@ export const gitHubRunnersLive = (
             token,
             "getJobForWorkflowRun"
           )(actions.getJobForWorkflowRun({ owner: job.owner, repo: job.repo, job_id: job.jobId }));
-          return response.status === "queued";
+          const queued = !isTakenJobStatus(response.status);
+          if (response.status !== "queued") {
+            yield* Effect.logInfo("github: the job's status is not queued").pipe(
+              Effect.annotateLogs({
+                jobId: job.jobId,
+                repository: `${job.owner}/${job.repo}`,
+                status: response.status,
+                queued,
+              })
+            );
+          }
+          return queued;
         }),
         runnerGroupId: Effect.fn("GitHubRunners.runnerGroupId")(function* (token, org, groupName) {
-          const response = yield* call(
+          // Every page: a 404 is deterministic, so a group on a later page must not read as missing.
+          const groups = yield* call(
             token,
             "listSelfHostedRunnerGroupsForOrg"
-          )(actions.listSelfHostedRunnerGroupsForOrg({ org, per_page: 100 }));
+          )(actions.listSelfHostedRunnerGroupsForOrg.items({ org, per_page: 100 }).pipe(Stream.runCollect));
           const group = yield* Effect.fromOption(
-            A.findFirst(response.runner_groups, (candidate) => candidate.name === groupName)
+            A.findFirst(A.fromIterable(groups), (candidate) => candidate.name === groupName)
           ).pipe(
             Effect.mapError(() =>
-              GitHubApiError.make({ operation: "runnerGroupId", message: `Runner group ${groupName} does not exist` })
+              GitHubApiError.make({
+                operation: "runnerGroupId",
+                // The org answered, without the group: a resend fails the same way.
+                status: O.some(404),
+                message: `Runner group ${groupName} does not exist`,
+              })
             )
           );
           return group.id;
