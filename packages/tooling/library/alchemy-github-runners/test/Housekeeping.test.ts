@@ -9,6 +9,8 @@ import {
 import { describe, expect, it } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
+import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as R from "effect/Record";
 import * as TestClock from "effect/testing/TestClock";
@@ -35,6 +37,31 @@ describe("handleJobRetry", () => {
       );
       expect(dropped).toBe(false);
       expect(world.sent).toHaveLength(1);
+    })
+  );
+
+  it.effect("logs one line naming the job it drops, and none for a job it puts back", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const lines: Array<{ readonly level: string; readonly annotations: unknown }> = [];
+      const capture = Logger.map(Logger.formatStructured, (line) => {
+        lines.push(line);
+      });
+      const loggers = yield* Layer.build(Logger.layer([capture]));
+      const check = (retry: ReturnType<typeof message>) =>
+        handleJobRetry({ config: poolConfig(), message: retry }).pipe(
+          Effect.provideContext(worldContext(world)),
+          Effect.provideContext(loggers)
+        );
+      yield* check(message({ id: 9, retryCounter: 1 }));
+      expect(lines).toStrictEqual([]);
+      world.jobQueued = false;
+      yield* check(message({ id: 9, retryCounter: 1 }));
+      yield* check(message({ id: 10 }));
+      expect(A.map(lines, ({ level, annotations }) => ({ level, annotations }))).toStrictEqual([
+        { level: "INFO", annotations: { jobId: 9, repository: "beep-effect/beep-effect", retryCounter: 1 } },
+        { level: "INFO", annotations: { jobId: 10, repository: "beep-effect/beep-effect", retryCounter: 0 } },
+      ]);
     })
   );
 });

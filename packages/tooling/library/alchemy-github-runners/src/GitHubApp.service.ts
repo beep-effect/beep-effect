@@ -90,6 +90,11 @@ export class GitHubAppAuth extends Context.Service<
 export class GitHubRunners extends Context.Service<
   GitHubRunners,
   {
+    /**
+     * Whether the job still needs a runner: every status except `in_progress`
+     * and `completed`, because GitHub's answer can lag behind the webhook. Any
+     * status other than `queued` is logged.
+     */
     readonly isJobQueued: (
       token: InstallationToken,
       job: { readonly owner: string; readonly repo: string; readonly jobId: number }

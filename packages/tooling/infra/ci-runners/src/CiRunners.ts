@@ -52,7 +52,9 @@ export const liveJobRetry = JobRetryPolicy.make({ maxAttempts: 2, delaySeconds: 
  *
  * Spot only, `capacity-optimized`, bidirectional label match, ephemeral JIT
  * runners and no job-queued check: the live module's settings
- * (`RunnerPool`'s defaults already equal them).
+ * (`RunnerPool`'s defaults already equal them). The check stays off because
+ * GitHub's jobs API can answer "not queued" for a job that is queued, and
+ * scale-up then consumes the message with no retry.
  *
  * **Example** (The production overflow pool in the overlap)
  *

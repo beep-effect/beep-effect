@@ -333,7 +333,7 @@
     },
     {
       "path": "ops/groups-differential-w7.ts",
-      "purpose": "Retained W7b command-group Git and GitHub differential driver documenting 100 scenarios with zero unclassified differences."
+      "purpose": "Retained W7b command-group Git and GitHub differential driver: 100 scenarios recorded on 2026-11-03 with zero unclassified differences, 98 still runnable after #3453."
     },
     {
       "path": "ops/worktree-differential-w7.ts",
