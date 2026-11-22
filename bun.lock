@@ -220,6 +220,7 @@
       "name": "@beep/semantica",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/annotation": "workspace:^",
         "@beep/anthropic": "workspace:^",
         "@beep/doc-text": "workspace:^",
         "@beep/duckdb": "workspace:^",
@@ -2589,7 +2590,9 @@
       "name": "@beep/langextract",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/annotation": "workspace:^",
         "@beep/identity": "workspace:^",
+        "@beep/jsonc": "workspace:^",
         "@beep/nlp": "workspace:^",
         "@beep/schema": "workspace:^",
         "@beep/text": "workspace:^",
@@ -3745,6 +3748,7 @@
       "name": "@beep/law-practice-use-cases",
       "version": "0.0.0",
       "dependencies": {
+        "@beep/annotation": "workspace:^",
         "@beep/epistemic-domain": "workspace:^",
         "@beep/epistemic-use-cases": "workspace:^",
         "@beep/epistemics": "workspace:^",

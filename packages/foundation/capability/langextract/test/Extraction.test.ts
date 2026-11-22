@@ -6,7 +6,6 @@ import {
   MAX_CANDIDATE_TEXT_LENGTH,
   parseModelOutput,
 } from "@beep/langextract/Extraction";
-import { DocumentId } from "@beep/nlp/Core";
 import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
@@ -19,6 +18,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { sourceForText } from "./support/handoff.ts";
 
 const decodeExtractionCandidate = S.decodeEffect(ExtractionCandidate);
 const decodeGroundedExtraction = S.decodeEffect(GroundedExtraction);
@@ -192,7 +192,7 @@ describe("parseModelOutput", () => {
     "requires at least one extraction target",
     Effect.fnUntraced(function* () {
       const error = yield* decodeUnknownLangExtractRequest({
-        documentId: DocumentId.make("doc-1"),
+        source: sourceForText(""),
         targets: [],
         text: "Alice founded Acme.",
       }).pipe(Effect.flip);
@@ -200,8 +200,10 @@ describe("parseModelOutput", () => {
       expect(error).toBeDefined();
 
       const request = yield* decodeLangExtractRequest({
-        documentId: DocumentId.make("doc-1"),
-        targets: [{ kind: "entity", name: "person" }],
+        source: sourceForText(""),
+        targets: [
+          { annotates: { _tag: "Mention", class: "https://example.org/person" }, kind: "entity", name: "person" },
+        ],
         text: "Alice founded Acme.",
       });
 
@@ -214,10 +216,17 @@ describe("parseModelOutput", () => {
 
       const encodedLangExtractRequest = yield* encodeLangExtractRequest(request);
       expect(encodedLangExtractRequest).toEqual({
-        documentId: "doc-1",
+        source: sourceForText(""),
         examples: [],
         options: {},
-        targets: [{ attributes: [], kind: "entity", name: "person" }],
+        targets: [
+          {
+            annotates: { _tag: "Mention", class: "https://example.org/person" },
+            attributes: [],
+            kind: "entity",
+            name: "person",
+          },
+        ],
         text: "Alice founded Acme.",
       });
     })

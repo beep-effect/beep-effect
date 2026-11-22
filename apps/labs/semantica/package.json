@@ -35,6 +35,7 @@
     "fixtures:f1:text": "bun run scripts/generate-f1-text.ts"
   },
   "dependencies": {
+    "@beep/annotation": "workspace:^",
     "@beep/anthropic": "workspace:^",
     "@beep/doc-text": "workspace:^",
     "@beep/duckdb": "workspace:^",

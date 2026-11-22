@@ -1516,6 +1516,14 @@ Lane goals/text-knowledge-stack-rebuild-p3-annotation
 
 Reverse: Add a service contract when a second implementation or state appears, by a decision file
 
+### P3: candidates past maxExtractions enter the residual unaligned-by-cap; the cap still bounds alignment, 2026-11-22
+
+Design section 4 requires every parsed candidate in the handoff, but alignCandidates bounds its work by maxExtractions and returns only that prefix. By orchestrator ruling, handoff accepts optional overCap: ReadonlyArray<ExtractionCandidate>, defaulting to empty for its non-schema input. The service passes the unattempted raw tail without manufacturing GroundedExtraction values. The handoff appends those candidates with reason over-extraction-cap, alignment unaligned meaning no aligned proof, and no anchor. The reason distinguishes alignment not attempted from attempted and failed. Text, attributes and confidence survive. candidateCount is attempted input length plus overCap length, equal to the parsed count; diagnostics remain as before and maxExtractions still bounds alignment work. No residual-specific alignment domain is added and IrToLawExtractionError keeps its wire. The existing two-parsed, cap-one service test pins the distinction. This is an explicit amendment of design sections 4.2 and 4.3.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Align every parsed candidate and drop the cap from alignment, by a superseding decision
+
 ### P3: @beep/text gains CaptureId, the capture/v1 hash of the whole SourceTextIdentity, as the id an extraction run used, 2026-11-22
 
 An activity's `used` set holds the ids of what it read. The handoff reads one capture, and a capture has no id. Its `textDigest` is scope-free: two matters holding the same bytes share it, so a `used` set built from it would join activities across a matter wall in a provenance traversal.
@@ -1555,6 +1563,14 @@ A generic sorted-entry carrier was tried and dropped: `S.Tuple` over generic ele
 Lane goals/text-knowledge-stack-rebuild-p3-annotation
 
 Reverse: Encode tables as JSON objects keyed by id, which RFC 8785 sorts, by a decision file; fixtures are regenerated
+
+### P3: extraction result and checked wire codecs live in acyclic module leaves, 2026-11-22
+
+LangExtractResult lives in Extraction.result.ts so its dependency on Handoff.model does not cycle through Extraction.model. The Extraction public barrel still exports the result. Handoff.codec.ts owns the checked wire decode and canonical encode path, keeping Handoff.model available to the result and producer without a codec cycle.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Move the result and codec back into the existing model leaves using lazy schema composition
 
 ### P3: OfficeActionReview.flow.test.ts runs the real langextract service over a stubbed model on its own synthetic fixture, 2026-11-22
 
@@ -1821,6 +1837,14 @@ Lane goals/text-knowledge-stack-rebuild-p3-annotation
 
 Reverse: Add a SourceTextIdentity field to OfficeActionReviewInput built by its callers, by a decision file
 
+### P3: office-action review captures Digest as an explicit factory dependency, 2026-11-22
+
+The pure office-action review factory receives the existing Digest service as an explicit dependency. The server layer captures the service and passes it to the factory so returned review methods keep no requirements. This supplies capture hashing without widening the existing public method environments.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Make the factory effectful and capture Digest during construction, updating its callers
+
 ### P3: one PR stacked on the P2 branch, opened under the three-PR limit and on the orchestrator's word, 2026-11-22
 
 P3 ships as one PR from its lane, a stack layer on the P2 branch, in the commit order of section 10 of `research/2026-11-22-p3-design.md`. The handoff commit is indivisible: changing `LangExtractRequest`, `LangExtractResult` and the target breaks every caller, so chapter 11 rule 3 puts the consumer migration in the same commit. The registry terms, `@beep/text` additions, the annotation package, the OA adapter and the nlp deletions are separate commits around it. The PR opens only when the packet has fewer than three open PRs, after P2 is open, and on the orchestrator's word while P2 is unmerged. Before the final check the lane merges its parent once.
@@ -1828,6 +1852,14 @@ P3 ships as one PR from its lane, a stack layer on the P2 branch, in the commit 
 Lane goals/text-knowledge-stack-rebuild-p3-annotation
 
 Reverse: Split the commits after the annotation package into two PRs by a decision file; the commit order makes the cut clean
+
+### P3: producer and checked wire path share the document codec, 2026-11-22
+
+The producer and checked handoff wire path use the same exported module-scoped extractionDocumentCodec from Handoff.model. This preserves identical document verification and avoids constructing a schema or compiling a codec inside a call. The codec is configured for the extraction annotation document once at module scope.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Make each leaf own a private module-scoped document codec
 
 ### P3: the annotation, operation, instance and office-action namespaces and the semantica lab terms are declared at a minor release, 2026-11-22
 
@@ -1842,6 +1874,14 @@ The existing empty `lejeune` shard (`https://beep-effect.com/ns/lejeune/ontology
 Lane goals/text-knowledge-stack-rebuild-p3-annotation
 
 Reverse: Drop a shard and its read sites by a decision file before P3 merges; after the merge a published term leaves only with a deprecation record
+
+### P3: semantica grounds unmapped-predicate residuals for the E5 replay; the handoff keeps declared predicates only, 2026-11-22
+
+The offline E5 replay contains pre-freeze non-empty predicates outside the six FrozenRelationPredicate surfaces. The strict handoff keeps them as unmapped-predicate residuals with the aligner's anchor. By the orchestrator ruling, semantica alone grounds these residuals with its existing evidence-scoped unique endpoint alignment, preserving the arbitrary historical predicate string. Hosted declared predicates still read RelationCandidate annotations. This departs from the letter of design section 5.4; the frozen batch, claim order, first-wins deduplication and byte-for-byte preview report remain gates. No historical predicate is declared as a registry term.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Declare a historical replay vocabulary in the semantica shard and map it in the target, by a superseding decision
 
 ### P3: semantica's hosted extractor reads the handoff; the projection, the ledger and the fixtures keep their shapes, 2026-11-22
 
@@ -1898,6 +1938,14 @@ Decision `p3-text-arbitraries-in-src` names four generators for `@beep/text/Arbi
 Lane goals/text-knowledge-stack-rebuild-p3-annotation
 
 Reverse: Keep only the four named generators in src and copy the range, digest and boundary helpers into each test support under a duplication waiver, by a decision file
+
+### P3: the deterministic Tika scaffold declares text-scaffold/1, since the capture gate refuses an unversioned engine, 2026-11-22
+
+The server standing tests use the deterministic apache-tika scaffold. Its descriptor and both ExtractionResult paths omitted engineVersion, so the versioned capture gate correctly refused review. By orchestrator ruling, the exported TIKA_TEXT_SCAFFOLD_VERSION constant is text-scaffold/1; descriptor.version and every scaffold result engineVersion use it. The engine name stays apache-tika. This is a pin of the in-process implementation, not a Java Tika version. The text and image-metadata paths have regression assertions in Tika.service.test.ts. Tika.tikaapp.ts and Tika.server.ts are untouched. The package is private, so no changeset is added. Commit 8 additionally runs package-verify for @beep/tika.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Replace the pin with the real Tika server version when the app/server path becomes the text engine
 
 <!-- beep:decisions:end -->
 

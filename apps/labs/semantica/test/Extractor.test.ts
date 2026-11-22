@@ -1,3 +1,4 @@
+import * as Digest from "effect/crypto/Digest";
 import { ModelIdentity } from "@/schema/Model";
 // @vitest-environment node
 
@@ -7,15 +8,17 @@ import {
   LangExtractError,
   LangExtractResult,
 } from "@beep/langextract/Extraction";
-import { LangExtractService } from "@beep/langextract/Service";
-import { DocumentId as NlpDocumentId } from "@beep/nlp/Core";
+import { handoff, startExtraction } from "@beep/langextract/Handoff";
+import { buildPrompt, LangExtractService } from "@beep/langextract/Service";
 import { EntityNode } from "@beep/nlp/Graph/Schema";
-import { Contract } from "@beep/nlp/Handoff";
 import { NLPService } from "@beep/nlp-processing/NLPService";
 import { Sha256Hex } from "@beep/schema";
 import { SourceTextExtractor, TextAnchor } from "@beep/text";
+import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/text/VerifiedTextAnchor";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
 import * as A from "effect/Array";
+import * as Model from "effect/ai/Model";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
@@ -102,37 +105,48 @@ const grounded = (
   });
 
 const langExtractLayer = (extractions: ReadonlyArray<GroundedExtraction>) =>
-  Layer.succeed(
+  Layer.effect(
     LangExtractService,
-    LangExtractService.of({
-      extract: Effect.fn("LangExtractService.stub")(function* (request) {
-        const provenance = Contract.Provenance.make({
-          generatedBy: "extractor-test",
-          source: request.documentId,
-          timestamp: 0,
-        });
-        return LangExtractResult.make({
-          annotatedDocument: Contract.AnnotatedDocument.make({
-            chunks: [],
-            entities: [],
-            mentions: [],
-            provenance,
-            relations: [],
-            version: "nlp-ir/1.1",
-          }),
-          diagnostics: LangExtractDiagnostics.make({
-            alignedCount: S.Natural.make(A.length(extractions)),
-            candidateCount: S.Natural.make(A.length(extractions)),
-            promptChars: S.Natural.make(request.text.length),
-            unalignedCount: S.Natural.make(0),
-          }),
-          documentId: NlpDocumentId.make(request.documentId),
-          extractions,
-          text: request.text,
-        });
-      }),
+    Effect.gen(function* () {
+      const digest = yield* Digest.Digest;
+      return LangExtractService.of({
+        extract: Effect.fn("LangExtractService.stub")(
+          function* (request) {
+            const verified = yield* verifySourceTextIdentity(
+              VerifySourceTextIdentityInput.make({
+                source: request.source,
+                expectedSource: request.source,
+                sourceText: request.text,
+              })
+            ).pipe(Effect.orDie);
+            const prompt = yield* buildPrompt(request);
+            const activity = yield* startExtraction({ source: request.source, prompt, started: 0 }).pipe(
+              Effect.provideService(Model.ProviderName, "test"),
+              Effect.provideService(Model.ModelName, "stub-model"),
+              Effect.orDie
+            );
+            const extractionHandoff = yield* handoff({
+              targets: request.targets,
+              candidates: extractions,
+              verified,
+              activity,
+              at: DateTime.makeUnsafe(0),
+            });
+            return LangExtractResult.make({
+              handoff: extractionHandoff,
+              diagnostics: LangExtractDiagnostics.make({
+                alignedCount: S.Natural.make(A.length(extractions)),
+                candidateCount: S.Natural.make(A.length(extractions)),
+                promptChars: S.Natural.make(request.text.length),
+                unalignedCount: S.Natural.make(0),
+              }),
+            });
+          },
+          Effect.provideService(Digest.Digest, digest)
+        ),
+      });
     })
-  );
+  ).pipe(Layer.provide(BunCrypto.layer));
 
 const hostedLayer = (extractions: ReadonlyArray<GroundedExtraction>) =>
   HostedExtractorLive.pipe(

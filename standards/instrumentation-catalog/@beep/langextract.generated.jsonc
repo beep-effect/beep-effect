@@ -6,7 +6,11 @@
   "attributes": [],
   "instruments": [],
   "spans": [
+    {"name":"LangExtract.decodeExtractionHandoff","owner":"@beep/langextract","family":"foundation","conforms":true},
+    {"name":"LangExtract.encodeExtractionHandoff","owner":"@beep/langextract","family":"foundation","conforms":true},
+    {"name":"LangExtract.handoff","owner":"@beep/langextract","family":"foundation","conforms":true},
     {"name":"LangExtract.parseModelOutput","owner":"@beep/langextract","family":"foundation","conforms":true},
+    {"name":"LangExtract.startExtraction","owner":"@beep/langextract","family":"foundation","conforms":true},
     {"name":"LangExtractRemotePolicy.allowRemoteExtraction.allow","owner":"@beep/langextract","family":"foundation","conforms":false},
     {"name":"LangExtractRemotePolicy.allowRemoteExtraction.config","owner":"@beep/langextract","family":"foundation","conforms":false},
     {"name":"LangExtractService.buildPrompt","owner":"@beep/langextract","family":"foundation","conforms":true},

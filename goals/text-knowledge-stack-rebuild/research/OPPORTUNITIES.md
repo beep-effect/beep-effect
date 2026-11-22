@@ -388,3 +388,34 @@ home paths with `~`, drop session and machine ids.
   `observability catalog --write <file>` refreshed the langextract instrumentation shard from one file.
 - **Prevention:** make the scoped write resolve directory paths to their owning package and fail when a shard it
   reports as written is still stale; until then, run the unscoped `--write` and read `git status` afterwards.
+
+## 2026-11-22: commit 8 preview vocabulary conflicts with the design
+
+- Work: replay the frozen relation-preview report through the verified annotation handoff.
+- Evidence: the offline preview exits 1 with "The E5 preview grounded no relation"; historical aligned relation candidates become `unmapped-predicate` residuals. The frozen report requires 10 grounded relations.
+- Cause: design section 5.4 declares six predicates; semantica `src/schema/Evidence.ts` explicitly admits arbitrary non-empty historical predicates for this preview. The full semantica suite, including frozen hosted batches, passes 152 tests but does not catch this conflict.
+- Prevention: include the historical replay vocabulary in the design simulation, and assert the actual frozen report before calling the contract settled. Sent the contradiction to the orchestrator for a bounded resolution; no corpus text recorded.
+
+## 2026-11-22: versioned review captures expose an unversioned deterministic Tika scaffold
+
+- Work: run the server standing tests after capture construction.
+- Evidence: the review fails with "Office-action review requires a versioned extractor" from the deterministic `apache-tika` scaffold. Its descriptor and both result paths omitted a version.
+- Prevention: every text-producing engine should declare its implementation pin before a consumer constructs provenance from it. The orchestrator approved `text-scaffold/1` for this in-process scaffold, with both result paths and a regression test; app/server runtime paths stay separate.
+
+## 2026-11-22: source verification changes timeout-test scheduling under Node
+
+- Work: run langextract coverage under Node/V8 after adding capture verification.
+- Evidence: the full coverage run waited in the two TestClock timeout cases; focused handoff coverage completed in under two seconds at 100 percent. The model timeout was scheduled only after the asynchronous source digest completed, while the test advanced the clock immediately after forking.
+- Prevention: synchronize on a Deferred from the stub model before advancing TestClock. The tests now wait until generation starts; they keep the real digest service and production timeout.
+
+## 2026-11-22: the alignment cap and the lossless handoff need separate candidate inputs
+
+- Work: inspect commit 8 against the handoff count contract.
+- Evidence: the existing service case parses two candidates with an alignment cap of one. Passing only the aligner result gives a handoff count of one while diagnostics say two.
+- Prevention: keep the attempted prefix and raw skipped tail explicit. By orchestrator ruling, optional `overCap` preserves the latter as `over-extraction-cap` residuals, with no anchor and `alignment: unaligned` meaning no proof. The reason records that alignment was not attempted. The cap test now pins raw fields and matching parsed counts.
+
+## 2026-11-22: lab documentation wrappers intentionally select no source files
+
+- Work: run JSDoc lint for the two touched lab workspaces.
+- Evidence: the package wrapper and an explicit invocation using `.oxlintrc.docs.json` report "No files found to lint" because that config excludes `apps/labs/**`; neither lab declares a docgen script.
+- Prevention: report that exclusion as an empty selection. For this change the touched lab sources are additionally checked with a temporary copy of the same documentation policy whose lab exclusion is removed; no repository policy is changed.

@@ -65,17 +65,11 @@ const renderExamples = (examples: LangExtractRequest["examples"]): Effect.Effect
  * **Example** (Build extraction prompt)
  *
  * ```ts
- * import { LangExtractRequest } from "@beep/langextract/Extraction"
  * import { buildPrompt } from "@beep/langextract/Service"
- * import { ExtractionTarget } from "@beep/langextract/Target"
- * import { DocumentId } from "@beep/nlp/Core"
- * import * as Effect from "effect/Effect";
- * const request = LangExtractRequest.make({
- *   documentId: DocumentId.make("doc-1"),
- *   targets: [ExtractionTarget.make({ kind: "entity", name: "person" })],
- *   text: "Ada Lovelace wrote notes."
- * })
- * Effect.runPromise(buildPrompt(request)).then(console.log)
+ * import type { LangExtractRequest } from "@beep/langextract/Extraction"
+ *
+ * const renderVerifiedRequest = (request: LangExtractRequest) => buildPrompt(request)
+ * console.log(typeof renderVerifiedRequest)
  * ```
  *
  * @category formatting

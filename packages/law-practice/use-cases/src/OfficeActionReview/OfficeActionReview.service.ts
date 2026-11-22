@@ -5,7 +5,7 @@
  *
  * The end-to-end loop for reviewing one office action: extract text through
  * `@beep/file-processing`, invoke `@beep/langextract` for provider-neutral
- * structured extraction, map the resulting grounded extractions into law entities
+ * structured extraction, map the verified annotation handoff into law entities
  * through {@link IrToLaw}, then run the distinction's claim through the
  * epistemic admission lifecycle (gate to transition) and fold the result into a
  * {@link ClaimProjectionView}.
@@ -18,9 +18,17 @@ import { CandidateClaim, Evidence } from "@beep/epistemic-domain";
 import { projectClaims } from "@beep/epistemic-use-cases/ClaimProjection";
 import { ProcessFileResult } from "@beep/file-processing/Extraction";
 import { FileProcessingOperationError, ProcessFileOperation } from "@beep/file-processing/Operation";
+import { iri } from "@beep/identity/Registry";
+import { TermIri } from "@beep/identity/Term";
 import { LangExtractRequest } from "@beep/langextract/Extraction";
-import { ExtractionTarget } from "@beep/langextract/Target";
-import { DocumentId } from "@beep/nlp/Core";
+import { ExtractionTarget, TargetAnnotation } from "@beep/langextract/Target";
+import {
+  SourceTextDigest,
+  SourceTextExtractor,
+  SourceTextIdentity,
+  SourceTextLocator,
+} from "@beep/text/SourceTextIdentity";
+import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
@@ -57,21 +65,25 @@ export const officeActionExtractionTargets: LangExtractRequest["targets"] = [
     description: O.some("The office-action document identifier or heading."),
     kind: "entity",
     name: OfficeActionExtractionLabel.Enum.office_action,
+    annotates: TargetAnnotation.cases.Mention.make({ class: TermIri.make(iri("office-action:office_action")) }),
   }),
   ExtractionTarget.make({
     description: O.some("The rejected claim text."),
     kind: "entity",
     name: OfficeActionExtractionLabel.Enum.claim,
+    annotates: TargetAnnotation.cases.Mention.make({ class: TermIri.make(iri("office-action:claim")) }),
   }),
   ExtractionTarget.make({
     description: O.some("The prior-art reference cited by the rejection."),
     kind: "entity",
     name: OfficeActionExtractionLabel.Enum.rejection_reference,
+    annotates: TargetAnnotation.cases.Mention.make({ class: TermIri.make(iri("office-action:rejection_reference")) }),
   }),
   ExtractionTarget.make({
     description: O.some("Applicant distinction text copied from the office-action response material."),
     kind: "custom",
     name: OfficeActionExtractionLabel.Enum.distinction,
+    annotates: TargetAnnotation.cases.Mention.make({ class: TermIri.make(iri("office-action:distinction")) }),
   }),
 ];
 
@@ -134,12 +146,32 @@ const sourceTextFrom = Effect.fn("law_practice.office_action.source_text_from")(
   });
 });
 
-const extractionRequestFrom = (input: OfficeActionReviewInput, sourceText: string): LangExtractRequest =>
-  LangExtractRequest.make({
-    documentId: DocumentId.make(input.operationId),
-    targets: officeActionExtractionTargets,
-    text: sourceText,
+const utf8 = new TextEncoder();
+const extractionRequestFrom = Effect.fn("OfficeActionReview.extractionRequestFrom")(function* (
+  input: OfficeActionReviewInput,
+  sourceText: string,
+  processed: ProcessFileResult
+) {
+  const version = yield* O.match(
+    O.fromUndefinedOr(processed.resultKind === "extracted" ? processed.extraction.engineVersion : undefined),
+    {
+      onNone: () => failFileExtraction(processed, "Office-action review requires a versioned extractor."),
+      onSome: Effect.succeed,
+    }
+  );
+  const digest = yield* Digest.Digest;
+  const textDigest = yield* digest.digestHex(Digest.sha256, utf8.encode(sourceText));
+  const source = SourceTextIdentity.make({
+    scopeRef: input.matterFixtureKey,
+    sourceRef: input.sourceArtifact.id,
+    locator: SourceTextLocator.make(input.sourceArtifact.relativePath),
+    sourceDigest: SourceTextDigest.make(input.sourceArtifact.digest),
+    textDigest: SourceTextDigest.make(`sha256:${textDigest}`),
+    extractor: SourceTextExtractor.make({ name: processed.engine, version }),
+    normalizationVersion: "raw/1",
   });
+  return LangExtractRequest.make({ source, targets: officeActionExtractionTargets, text: sourceText });
+});
 
 /**
  * Dependencies the office-action review loop composes: file-processing source
@@ -150,9 +182,10 @@ const extractionRequestFrom = (input: OfficeActionReviewInput, sourceText: strin
  *
  * ```ts
  * import type { OfficeActionReviewDeps } from "@beep/law-practice-use-cases/OfficeActionReview"
+ * import * as Digest from "effect/crypto/Digest"
  *
  * type DependencyName = keyof OfficeActionReviewDeps
- * const requiredDeps: ReadonlyArray<DependencyName> = ["fileProcessing", "gate", "irToLaw", "langExtract", "transition"]
+ * const requiredDeps: ReadonlyArray<DependencyName> = ["digest", "fileProcessing", "gate", "irToLaw", "langExtract", "transition"]
  *
  * console.log(requiredDeps.includes("irToLaw")) // true
  * ```
@@ -161,6 +194,7 @@ const extractionRequestFrom = (input: OfficeActionReviewInput, sourceText: strin
  * @since 0.0.0
  */
 export interface OfficeActionReviewDeps {
+  readonly digest: Digest.Digest["Service"];
   readonly fileProcessing: FileProcessingServiceShape;
   readonly gate: ClaimGateShape;
   readonly irToLaw: IrToLawShape;
@@ -176,65 +210,12 @@ export interface OfficeActionReviewDeps {
  * **Example** (Review fails without extract)
  *
  * ```ts
- * import { ArtifactId, ArtifactLocator, ContentDigest, OperationId, SourceArtifact } from "@beep/file-processing/Artifact"
- * import { FileProcessingOperationError } from "@beep/file-processing/Operation"
- * import type { FileProcessingServiceShape } from "@beep/file-processing/Service"
- * import { IrToLawShape } from "@beep/law-practice-use-cases/IrToLaw"
  * import { makeOfficeActionReview } from "@beep/law-practice-use-cases/OfficeActionReview"
- * import { OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview"
- * import type { OfficeActionReviewDeps } from "@beep/law-practice-use-cases/OfficeActionReview"
- * import { PosixPath } from "@beep/schema/PosixPath"
- * import * as Effect from "effect/Effect";
- * import * as Exit from "effect/Exit";
- * import * as S from "effect/Schema"
+ * import type { OfficeActionReviewDeps, OfficeActionReviewInput } from "@beep/law-practice-use-cases/OfficeActionReview"
  *
- * const fileProcessing: FileProcessingServiceShape = {
- *   detect: () => Effect.never,
- *   exportArchive: () => Effect.never,
- *   extract: () => Effect.never,
- *   process: () =>
- *     Effect.fail(
- *       FileProcessingOperationError.fromReason("file-extraction-failed", {
- *         message: "Fixture text unavailable."
- *       })
- *     )
- * }
- *
- * const deps: OfficeActionReviewDeps = {
- *   fileProcessing,
- *   gate: { evaluate: () => Effect.never },
- *   irToLaw: IrToLawShape.make({ toLaw: () => Effect.never }),
- *   langExtract: { extract: () => Effect.never },
- *   transition: { advance: () => Effect.never }
- * }
- *
- * const digestHex = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
- * const program = Effect.gen(function* () {
- *   const relativePath = yield* S.decodeUnknownEffect(PosixPath)("fixtures/office-action.txt")
- *   const artifactId = yield* S.decodeUnknownEffect(ArtifactId)(`artifact:${digestHex}`)
- *   const digest = yield* S.decodeUnknownEffect(ContentDigest)(`sha256:${digestHex}`)
- *   const operationId = yield* S.decodeUnknownEffect(OperationId)(`operation:${digestHex}`)
- *   const input = OfficeActionReviewInput.make({
- *     matterFixtureKey: "matter.spike",
- *     officeActionFixtureKey: "office-action.spike",
- *     operationId,
- *     sourceArtifact: SourceArtifact.make({
- *       digest,
- *       extension: "txt",
- *       id: artifactId,
- *       locator: ArtifactLocator.make({ kind: "synthetic", value: relativePath }),
- *       name: "office-action.txt",
- *       relativePath,
- *       sizeBytes: S.Natural.make(21),
- *       text: "Claim 1 rejected."
- *     })
- *   })
- *
- *   const exit = yield* Effect.exit(makeOfficeActionReview(deps).review(input))
- *   return Exit.isFailure(exit)
- * })
- *
- * Effect.runPromise(program).then(console.log) // true
+ * const reviewWith = (deps: OfficeActionReviewDeps, input: OfficeActionReviewInput) =>
+ *   makeOfficeActionReview(deps).review(input)
+ * console.log(typeof reviewWith)
  * ```
  *
  * @effects The returned `review` workflow invokes the injected file-processing
@@ -257,8 +238,11 @@ export const makeOfficeActionReview = (deps: OfficeActionReviewDeps): OfficeActi
       })
     );
     const sourceText = yield* sourceTextFrom(processed);
-    const extractionResult = yield* deps.langExtract.extract(extractionRequestFrom(input, sourceText));
-    const law = yield* deps.irToLaw.toLaw(extractionResult.extractions);
+    const request = yield* extractionRequestFrom(input, sourceText, processed).pipe(
+      Effect.provideService(Digest.Digest, deps.digest)
+    );
+    const extractionResult = yield* deps.langExtract.extract(request);
+    const law = yield* deps.irToLaw.toLaw(extractionResult.handoff);
 
     return OfficeActionCandidateExtraction.make({
       candidate: yield* candidateClaimOf(law, input.entitySeed),

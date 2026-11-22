@@ -5,13 +5,8 @@
  *
  * **Details**
  *
- * The input is `ReadonlyArray<GroundedExtraction>` (from `@beep/langextract`),
- * NOT the `@beep/nlp` `AnnotatedDocument` envelope. The envelope does not carry
- * per-entity character spans: its `Entity.mentions` are bare `MentionId[]` and
- * the span-bearing `Mention` objects are not included in the envelope, so a
- * required `Distinction.anchor` (`TextAnchor`) cannot be recovered from it. A
- * `GroundedExtraction` instead carries its own aligned `anchor` (range and exact
- * source quote), which is exactly what grounding a distinction's anchor needs.
+ * The input is a checked annotation handoff. Mentions carry verified capture receipts,
+ * and readings retain the model text used to build the law entities.
  *
  * @packageDocumentation
  * @since 0.0.0
@@ -22,7 +17,7 @@ import { Claim, Distinction, OfficeAction, PriorArtReference, Rejection } from "
 import * as Context from "effect/Context";
 import * as P from "effect/Predicate";
 import * as S from "effect/Schema";
-import type { GroundedExtraction } from "@beep/langextract/Extraction";
+import type { ExtractionHandoff } from "@beep/langextract/Handoff";
 import type * as Effect from "effect/Effect";
 import type { IrToLawExtractionError } from "./IrToLaw.errors.ts";
 
@@ -51,7 +46,7 @@ export interface LawEntities {
   readonly rejection: Rejection;
 }
 
-type IrToLawHandler = (input: ReadonlyArray<GroundedExtraction>) => Effect.Effect<LawEntities, IrToLawExtractionError>;
+type IrToLawHandler = (input: ExtractionHandoff) => Effect.Effect<LawEntities, IrToLawExtractionError>;
 
 const isIrToLawHandler = (input: unknown): input is IrToLawHandler => P.isFunction(input);
 
@@ -122,30 +117,18 @@ const LawEntitiesBase: S.Class<LawEntities, S.Struct<LawEntitiesFields>, {}> = S
 export class LawEntities extends LawEntitiesBase {}
 
 /**
- * Service shape for the IR-to-law mapping: take the span-bearing grounded
- * extractions for one office action and produce the law-practice
- * {@link LawEntities} they encode. The `anchor` an extraction carries is
- * what grounds the distinction's `TextAnchor`.
+ * Map one checked extraction handoff into the law-practice {@link LawEntities}.
+ * Mentions supply the class and verified receipt; the first reading supplies
+ * the model text. The distinction takes its `TextAnchor` from that receipt.
  *
- * **Example** (Fail shape toLaw call)
+ * **Example** (Map a checked handoff)
  *
  * ```ts
- * import { IrToLawExtractionError, IrToLawShape } from "@beep/law-practice-use-cases/IrToLaw"
- * import * as Effect from "effect/Effect";
- * import * as Exit from "effect/Exit";
- * const shape = IrToLawShape.make({
- *   toLaw: () =>
- *     Effect.fail(
- *       IrToLawExtractionError.fromReason("required-extraction-missing", {
- *         label: "claim",
- *         message: "Missing claim extraction."
- *       })
- *     )
- * })
+ * import { makeIrToLaw } from "@beep/law-practice-use-cases/IrToLaw"
+ * import type { ExtractionHandoff } from "@beep/langextract/Handoff"
  *
- * const program = Effect.exit(shape.toLaw([]))
- *
- * Effect.runPromise(program).then((exit) => console.log(Exit.isFailure(exit))) // true
+ * const mapChecked = (handoff: ExtractionHandoff) => makeIrToLaw().toLaw(handoff)
+ * console.log(typeof mapChecked)
  * ```
  *
  * @category services
@@ -167,26 +150,11 @@ export class IrToLawShape extends S.Opaque<IrToLawShape, { readonly brand: uniqu
  * **Example** (Provide fake IrToLaw service)
  *
  * ```ts
- * import { IrToLaw, IrToLawExtractionError, IrToLawShape } from "@beep/law-practice-use-cases/IrToLaw"
- * import * as Effect from "effect/Effect";
- * import * as Exit from "effect/Exit";
- * const fakeMapper = IrToLawShape.make({
- *   toLaw: () =>
- *     Effect.fail(
- *       IrToLawExtractionError.fromReason("required-extraction-missing", {
- *         label: "office_action",
- *         message: "Missing office-action extraction."
- *       })
- *     )
- * })
+ * import { makeIrToLaw } from "@beep/law-practice-use-cases/IrToLaw"
+ * import type { ExtractionHandoff } from "@beep/langextract/Handoff"
  *
- * const program = Effect.gen(function* () {
- *   const mapper = yield* IrToLaw
- *   const exit = yield* Effect.exit(mapper.toLaw([]))
- *   return Exit.isFailure(exit)
- * }).pipe(Effect.provideService(IrToLaw, fakeMapper))
- *
- * Effect.runPromise(program).then(console.log) // true
+ * const mapChecked = (handoff: ExtractionHandoff) => makeIrToLaw().toLaw(handoff)
+ * console.log(typeof mapChecked)
  * ```
  *
  * @category services

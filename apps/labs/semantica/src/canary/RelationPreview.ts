@@ -1,11 +1,17 @@
 import { $SemanticaId } from "@beep/identity/packages";
 import { AlignmentSource, alignCandidates } from "@beep/langextract/Alignment";
 import { parseModelOutput } from "@beep/langextract/Extraction";
+import { handoff, startExtraction } from "@beep/langextract/Handoff";
+import { buildPrompt } from "@beep/langextract/Service";
 import { Sha256Hex } from "@beep/schema";
+import { VerifySourceTextIdentityInput, verifySourceTextIdentity } from "@beep/text/VerifiedTextAnchor";
 import * as A from "effect/Array";
+import * as Model from "effect/ai/Model";
 import * as Console from "effect/Console";
+import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as N from "effect/Number";
 import * as O from "effect/Option";
@@ -14,7 +20,7 @@ import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { CorpusPaperId } from "@/corpus/Manifest";
 import { loadDocumentSelection } from "@/layers/DocumentSourceLive";
-import { groundHostedExtractions, makeHostedExtractionRequest } from "@/layers/ExtractorLive";
+import { groundHostedHandoff, makeHostedExtractionRequest } from "@/layers/ExtractorLive";
 import { LabConfig } from "@/runtime/Config";
 import { Origin } from "@/schema/Document";
 import { RelationPreviewFailed } from "@/schema/Errors";
@@ -194,22 +200,51 @@ const previewCase = Effect.fn("RelationPreview.previewCase")(function* (
     Effect.mapError(() => failed("response-invalid", "An E5 cached response did not decode as LangExtract output."))
   );
   const extractions = alignCandidates(candidates, AlignmentSource.fromRequest(makeHostedExtractionRequest(canonical)));
-  const outcome = yield* groundHostedExtractions(
+  const request = makeHostedExtractionRequest(canonical);
+  const verified = yield* verifySourceTextIdentity(
+    VerifySourceTextIdentityInput.make({
+      expectedSource: request.source,
+      source: request.source,
+      sourceText: request.text,
+    })
+  ).pipe(Effect.orDie);
+  const activity = yield* startExtraction({
+    prompt: yield* buildPrompt(request),
+    source: request.source,
+    started: 0,
+  }).pipe(
+    Effect.provideService(Model.ProviderName, entry.key.model.provider),
+    Effect.provideService(Model.ModelName, entry.key.model.name),
+    Effect.orDie
+  );
+  const extractionHandoff = yield* handoff({
+    targets: request.targets,
+    verified,
+    candidates: extractions,
+    activity,
+    at: DateTime.makeUnsafe(0),
+  });
+  const outcome = yield* groundHostedHandoff(
     canonicalizer,
     canonical,
     chunks,
-    extractions,
+    extractionHandoff,
     entry.key.model,
     O.some(entry.cacheKey)
   );
   if (outcome.outcome === "Degraded") {
     return yield* failed("response-invalid", "The E5 cached response did not produce an extracted evidence batch.");
   }
-  const relationCandidates = A.length(A.filter(extractions, (item) => Str.Equivalence(item.label, "relation")));
+  const relationCandidates = A.length(
+    A.filter(
+      A.appendAll(extractionHandoff.readings.pipe(HashMap.toValues, A.flatten), extractionHandoff.residual),
+      (item) => Str.Equivalence(item.label, "relation")
+    )
+  );
   const groundedRelations = A.length(A.filter(outcome.batch.claims, (claim) => claim.body.kind === "Relation"));
   return RelationPreviewCaseResult.make({
     cacheKey: preview.cacheDigest,
-    candidateCount: S.Natural.make(A.length(extractions)),
+    candidateCount: extractionHandoff.candidateCount,
     degradedRelations: S.Natural.make(N.subtract(relationCandidates, groundedRelations)),
     groundedRelations: S.Natural.make(groundedRelations),
     paperId: preview.paperId,

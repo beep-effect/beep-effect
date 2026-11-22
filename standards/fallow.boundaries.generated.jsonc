@@ -3373,7 +3373,9 @@
       {
         "from": "@beep/langextract",
         "allow": [
+          "@beep/annotation",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/langextract",
           "@beep/nlp",
           "@beep/schema",
@@ -3383,7 +3385,9 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/annotation",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/langextract",
           "@beep/nlp",
           "@beep/schema",
@@ -3519,6 +3523,7 @@
       {
         "from": "@beep/law-practice-use-cases",
         "allow": [
+          "@beep/annotation",
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/epistemics",
@@ -3538,6 +3543,7 @@
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/annotation",
           "@beep/epistemic-domain",
           "@beep/epistemic-use-cases",
           "@beep/epistemics",
@@ -5665,6 +5671,7 @@
       {
         "from": "@beep/semantica",
         "allow": [
+          "@beep/annotation",
           "@beep/anthropic",
           "@beep/doc-text",
           "@beep/duckdb",
@@ -5688,6 +5695,7 @@
           "@beep/wink"
         ],
         "allowTypeOnly": [
+          "@beep/annotation",
           "@beep/anthropic",
           "@beep/doc-text",
           "@beep/duckdb",
