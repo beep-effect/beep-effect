@@ -16,6 +16,7 @@
 import { $LintRulesId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
 import * as A from "effect/Array";
+import * as F from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -37,8 +38,8 @@ const $I = $LintRulesId.create("rules/comment-grammar");
  * `@expected-unused`, `@ignore`, `@deprecated`) or an in-source test fence.
  * `decision-pointer` is the one allow-listed form for a hazard with no
  * better home: a line comment `decision: <slug>` whose slug names a file under
- * the owning package `decisions/` directory, which `beep decisions check`
- * resolves.
+ * the owning package `decisions/` directory; `beep laws comments` rejects a
+ * pointer in a changed file that names no such file.
  *
  * **Example** (Recognize a kind)
  *
@@ -378,13 +379,32 @@ const nodesField = (node: GrammarNode, key: string): ReadonlyArray<GrammarNode> 
   const value = field(node, key);
   return P.isIterable(value) ? A.filter(A.fromIterable(value), isNode) : [];
 };
-const identifierName = (node: GrammarNode): O.Option<string> =>
-  node.type === "Identifier" ? O.liftPredicate(field(node, "name"), P.isString) : O.none();
+const identifierName = (node: GrammarNode): O.Option<string> => {
+  if (node.type === "ParenthesizedExpression") return O.flatMap(nodeField(node, "expression"), identifierName);
+  return node.type === "Identifier" ? O.liftPredicate(field(node, "name"), P.isString) : O.none();
+};
+
+const BINDING_CHILDREN = HashMap.make(
+  ["ObjectPattern", "properties"],
+  ["ArrayPattern", "elements"],
+  ["Property", "value"],
+  ["AssignmentPattern", "left"],
+  ["RestElement", "argument"]
+);
+
+const childNodes = (node: GrammarNode, key: string): ReadonlyArray<GrammarNode> =>
+  A.appendAll(nodesField(node, key), O.toArray(nodeField(node, key)));
+
+const bindingNames = (node: GrammarNode): ReadonlyArray<string> =>
+  O.match(HashMap.get(BINDING_CHILDREN, node.type), {
+    onNone: () => O.toArray(identifierName(node)),
+    onSome: (key) => A.flatMap(childNodes(node, key), bindingNames),
+  });
 
 const declaredNames = (statement: GrammarNode): ReadonlyArray<string> => {
   if (statement.type === "VariableDeclaration")
     return A.flatMap(nodesField(statement, "declarations"), (declarator) =>
-      O.toArray(O.flatMap(nodeField(declarator, "id"), identifierName))
+      A.flatMap(O.toArray(nodeField(declarator, "id")), bindingNames)
     );
   return O.toArray(O.flatMap(nodeField(statement, "id"), identifierName));
 };
@@ -581,8 +601,9 @@ export const attachmentOf = (program: GrammarNode): CommentAttachment => {
   return index.result();
 };
 
-const isBlankCode = (code: number): boolean => code === 32 || (code >= 9 && code <= 13);
-const isBlankAt = (source: string, offset: number): boolean => O.exists(Str.charCodeAt(source, offset), isBlankCode);
+const BLANK = /^\s$/;
+const isBlankAt = (source: string, offset: number): boolean =>
+  O.exists(Str.charAt(source, offset), (character) => BLANK.test(character));
 
 const nextCodeOffset = (source: string, from: number, commentEnds: HashMap.HashMap<number, number>): number => {
   let offset = from;
@@ -599,35 +620,44 @@ const nextCodeOffset = (source: string, from: number, commentEnds: HashMap.HashM
  *
  * **Details**
  *
- * Leading `*` decoration on each block line is dropped and whitespace runs
- * collapse to one space, so re-indenting or re-wrapping a comment keeps its
- * text. Delimiters are never part of the value.
+ * Leading `*` decoration on each line of a block comment is dropped and
+ * whitespace runs collapse to one space, so re-indenting or re-wrapping a
+ * comment keeps its text. A line comment keeps its stars, so `// * note` and
+ * `// note` stay distinct. Delimiters are never part of the value.
  *
  * **Example** (Normalize a JSDoc block)
  *
  * ```ts
  * import { normalizeCommentText } from "@beep/lint-rules/comment-grammar"
  *
- * console.log(normalizeCommentText("*\n * Builds the\n *   request.\n ")) // "Builds the request."
+ * console.log(normalizeCommentText("*\n * Builds the\n *   request.\n ", "Block")) // "Builds the request."
+ * console.log(normalizeCommentText(" * note", "Line")) // "* note"
  * ```
  *
  * @param value - Comment value without its `//`, `/*` or `*\/` delimiters.
+ * @param syntax - Comment syntax; only `Block` comments lose their star decoration.
  * @returns The normalized text.
  * @category utilities
  * @since 0.1.0
  */
-export const normalizeCommentText = (value: string): string =>
+export const normalizeCommentText: {
+  (syntax: CommentSyntax): (value: string) => string;
+  (value: string, syntax: CommentSyntax): string;
+} = F.dual(2, (value: string, syntax: CommentSyntax): string =>
   Str.trim(
     Str.replace(
       /\s+/g,
       " "
     )(
-      A.join(
-        A.map(Str.split(value, "\n"), (line) => Str.replace(/^\s*\*+/, "")(line)),
-        " "
-      )
+      syntax === "Block"
+        ? A.join(
+            A.map(Str.split(value, "\n"), (line) => Str.replace(/^\s*\*+/, "")(line)),
+            " "
+          )
+        : value
     )
-  );
+  )
+);
 
 const DIRECTIVE_PATTERNS: ReadonlyArray<RegExp> = [
   /^@ts-expect-error\b/,
@@ -649,24 +679,31 @@ const DIRECTIVE_PATTERNS: ReadonlyArray<RegExp> = [
 ];
 const SUPPRESSION = /^(oxlint|eslint)-(disable|enable)(-next-line|-line)?(?:\s+(.*))?$/;
 const LICENSE =
-  /SPDX-License-Identifier|\bCopyright\b|\bLicensed under\b|\bMIT License\b|\bApache License\b|@license\b|@preserve\b/;
+  /SPDX-License-Identifier:\s*\S|\bCopyright(?:\s*(?:\([cC]\)|©|:)|\s+(?:\d{4}|[A-Z]))|\bLicensed under (?:the )?[A-Z]|\b(?:MIT|Apache) License\b|@license\b|@preserve\b/;
 const PROVENANCE = /^(?:Ported from|Port of|Adapted from) \S/;
 const GENERATED =
   /^(?:@generated\b|GENERATED FILE\b|DO NOT EDIT\b|Code generated by \S|Generated by \S|This file (?:is|was) (?:auto-?)?generated\b)/;
 const PORT_MARKER = /^beep:\s*\S/;
 const DECISION_POINTER = /^decision: [a-z0-9][a-z0-9-]*$/;
-const HEADER_FIRST_TYPES = /^(?:ImportDeclaration|ExpressionStatement|TSImportEqualsDeclaration|ExportAllDeclaration)$/;
+const HEADER_FIRST_TYPES = /^(?:ImportDeclaration|TSImportEqualsDeclaration|ExportAllDeclaration)$/;
 const MODULE_TAG = /@packageDocumentation\b|@module\b|@fileoverview\b/;
 const LIVE_TAG = /@(?:internal|public|expected-unused|ignore|deprecated)\b|import\.meta\.vitest/;
+
+const isReasonMarker = (token: string): boolean => token === "--";
 
 const suppressionKind = (text: string): O.Option<CommentKind> => {
   const match = SUPPRESSION.exec(text);
   if (match === null) return O.none();
   const [, tool, verb, scope, rest] = match;
-  const [rulesPart, reason = ""] = Str.split(rest ?? "", " -- ");
-  const rules = A.filter(Str.split(rulesPart, /[\s,]+/), Str.isNonEmpty);
+  const tokens = A.filter(Str.split(rest ?? "", /\s+/), Str.isNonEmpty);
+  const marker = O.getOrElse(A.findFirstIndex(tokens, isReasonMarker), () => A.length(tokens));
+  const rules = A.filter(
+    A.flatMap(A.take(tokens, marker), (token) => Str.split(token, ",")),
+    Str.isNonEmpty
+  );
+  const reason = A.join(A.drop(tokens, marker + 1), " ");
   if (A.isReadonlyArrayEmpty(rules) || A.contains(rules, LAW_RULE)) return O.some("law-disable");
-  if (tool === "oxlint" && verb === "disable" && scope === "-next-line" && Str.isNonEmpty(Str.trim(reason)))
+  if (tool === "oxlint" && verb === "disable" && scope === "-next-line" && Str.isNonEmpty(reason))
     return O.some("directive");
   return O.some("bad-suppression");
 };
@@ -740,6 +777,10 @@ export class CommentGrammarInput extends S.Opaque<CommentGrammarInput, { readonl
     })
   )
 ) {}
+
+const isHeaderFirst = (statement: GrammarNode): boolean =>
+  HEADER_FIRST_TYPES.test(statement.type) ||
+  (statement.type === "ExpressionStatement" && P.isString(field(statement, "directive")));
 
 const isTrailing = (source: string, comment: SourceComment): boolean => {
   const before = Str.slice(0, comment.start)(source);
@@ -842,7 +883,7 @@ export const classifyComments = (input: CommentGrammarInput): ReadonlyArray<Clas
     O.map(A.head(body), (statement) => statement.start),
     () => source.length
   );
-  const headerFirst = O.exists(A.head(body), (statement) => HEADER_FIRST_TYPES.test(statement.type));
+  const headerFirst = O.exists(A.head(body), isHeaderFirst);
   const runs = leadingRuns(source, comments, firstCode);
   const licensed = HashSet.fromIterable(
     A.flatMap(
@@ -856,7 +897,7 @@ export const classifyComments = (input: CommentGrammarInput): ReadonlyArray<Clas
     : O.none<CommentAttachment>();
   const file: FileFacts = { source, headerFirst, licensed, commentEnds, attachment };
   return A.map(comments, (comment) => {
-    const text = normalizeCommentText(comment.value);
+    const text = normalizeCommentText(comment.value, comment.type);
     return ClassifiedComment.make({
       ...comment,
       kind: kindOf({ comment, text, leading: comment.end <= firstCode, file }),

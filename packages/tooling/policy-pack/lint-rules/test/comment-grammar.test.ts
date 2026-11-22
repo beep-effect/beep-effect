@@ -14,6 +14,7 @@ import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
 import { assertSome } from "@effect/vitest/utils";
 import * as A from "effect/Array";
+import * as F from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -95,6 +96,8 @@ describe("comment grammar", () => {
     ["/* oxlint-disable */", "law-disable"],
     ["// oxlint-disable-next-line beep/no-comments -- hide", "law-disable"],
     ["// eslint-disable-line beep/no-comments, no-console", "law-disable"],
+    ["// oxlint-disable-next-line -- the reason -- more words", "law-disable"],
+    ["// oxlint-disable-next-line no-console,no-alert -- the reason", "directive"],
     ["// oxlint-disable-next-line no-console", "bad-suppression"],
     ["// oxlint-disable-next-line no-console --  ", "bad-suppression"],
     ["// oxlint-disable no-console -- for the file", "bad-suppression"],
@@ -126,12 +129,29 @@ describe("comment grammar", () => {
     expect(kindsOf(source)).toEqual(["license", "license", "prose", "prose"]);
   });
 
+  it.each([
+    "// Copyright (c) 2014 Fixture Authors",
+    "// Copyright: Fixture Authors",
+    "/* Copyright Fixture Authors, BSD-3-Clause */",
+    "// Licensed under the Apache License, Version 2.0",
+    "/* MIT License */",
+    "/** @license MIT */",
+  ])("classifies the leading notice %s as a licence", (comment) => {
+    expect(kindOfOnly(`${comment}\nexport const a = 1;\n`)).toBe("license");
+  });
+
+  it("classifies a leading comment that only mentions copyright as prose", () => {
+    expect(kindOfOnly("// Copyright is checked by the validator\nexport const a = 1;\n")).toBe("prose");
+    expect(kindOfOnly("// SPDX-License-Identifier is read by the scanner\nexport const a = 1;\n")).toBe("prose");
+  });
+
   it("classifies provenance, port markers and decision pointers anywhere", () => {
     expect(kindOfOnly(afterCode("// Ported from upstream/fixture.ts"))).toBe("provenance");
     expect(kindOfOnly(afterCode("// beep: keep-export"))).toBe("port-marker");
     expect(kindOfOnly(afterCode("// decision: comment-law-scope"))).toBe("decision-pointer");
     expect(kindOfOnly(afterCode("/* decision: comment-law-scope */"))).toBe("prose");
     expect(kindOfOnly(afterCode("// decision: Not A Slug"))).toBe("prose");
+    expect(kindOfOnly(afterCode("// * decision: comment-law-scope"))).toBe("prose");
   });
 
   it("classifies a generated header only before the first statement", () => {
@@ -155,6 +175,7 @@ describe("comment grammar", () => {
     expect(kindOfOnly('/** Fixture module. */\nimport * as A from "effect/Array";\nA;\n')).toBe("jsdoc-module");
     expect(kindOfOnly('/** Fixture module. */\nexport * from "./other.ts";\n')).toBe("jsdoc-module");
     expect(kindOfOnly('/** Fixture module. */\n"use client";\n')).toBe("jsdoc-module");
+    expect(kindOfOnly("/** Initialize once. */\nboot();\n")).toBe("jsdoc-local");
   });
 
   it("classifies JSDoc on exports by keyword, specifier, default, assignment and decorator", () => {
@@ -169,6 +190,10 @@ describe("comment grammar", () => {
     expect(kindOfOnly("export const first = 0;\n/** The default. */\nexport default function () {}\n")).toBe(
       "jsdoc-export"
     );
+    expect(kindOfOnly("export const first = 0;\n/** Wrapped. */\nfunction main() {}\nexport default ((main));\n")).toBe(
+      "jsdoc-export"
+    );
+    expect(kindOfOnly("export const first = 0;\n/** Public API. */\u00a0export const x = 1;\n")).toBe("jsdoc-export");
     expect(kindOfOnly("const first = 0;\n/** Assigned. */\nclass Assigned {}\nexport = Assigned;\n")).toBe(
       "jsdoc-export"
     );
@@ -180,6 +205,24 @@ describe("comment grammar", () => {
     expect(
       kindsOf("export const first = 0;\n/** Documents an export. */\n// a note between\nexport const a = 1;\n")
     ).toEqual(["jsdoc-export", "prose"]);
+  });
+
+  it("resolves exported names bound by destructuring patterns", () => {
+    const declarations = [
+      "const { raw: value } = source;",
+      "const { value = 1 } = source;",
+      "const { ...value } = source;",
+      "const [, [value]] = source;",
+      "const [value = 1] = source;",
+      "const [...value] = source;",
+    ];
+    for (const declaration of declarations)
+      expect(kindOfOnly(`const source: any = 0;\n/** Bound. */\n${declaration}\nexport { value };\n`)).toBe(
+        "jsdoc-export"
+      );
+    expect(
+      kindOfOnly("const source: any = 0;\n/** Key only. */\nconst { raw: value } = source;\nexport { raw };\n")
+    ).toBe("jsdoc-local");
   });
 
   it("does not export a declaration named only by a re-export from another module", () => {
@@ -283,8 +326,10 @@ describe("comment grammar", () => {
   });
 
   it("normalizes block decoration and whitespace", () => {
-    expect(normalizeCommentText("*\n * Builds the\n *   request.\n ")).toBe("Builds the request.");
-    expect(normalizeCommentText("  spaced\tline  ")).toBe("spaced line");
+    expect(normalizeCommentText("*\n * Builds the\n *   request.\n ", "Block")).toBe("Builds the request.");
+    expect(F.pipe("  spaced\tline  ", normalizeCommentText("Line"))).toBe("spaced line");
+    expect(normalizeCommentText(" * note", "Line")).toBe("* note");
+    expect(normalizeCommentText(" * note", "Block")).toBe("note");
   });
 
   it("parses JavaScript and TSX dialects", () => {

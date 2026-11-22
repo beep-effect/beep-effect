@@ -40,6 +40,8 @@ const change = (file: string, before: O.Option<string>, after: O.Option<string>)
 const shard = (root: string, scopes: readonly [string, ...Array<string>]) =>
   CommentLawPending.make({ schemaVersion: "comment-law-pending/v1", package: `@beep/${root}`, root, scopes });
 
+const ROOTS = ["packages/a", "packages/b", "packages/c"];
+
 const runLaws = Command.runWith(lawsCommand, { version: "0.0.0" });
 const withEmptyConfig = Effect.provideService(ConfigProvider.ConfigProvider, ConfigProvider.fromUnknown({}));
 const failureText = <A, E>(exit: Exit.Exit<A, E>): string => (Exit.isFailure(exit) ? String(exit.cause) : "");
@@ -254,6 +256,7 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
           CommentLockInput.make({
             headShards: [shard("packages/a", ["."]), shard("packages/b", ["."])],
             baseShards: O.some([shard("packages/a", ["."]), shard("packages/b", ["."]), shard("packages/c", ["."])]),
+            packageRoots: ROOTS,
             bannedCounts: counts,
             changedFiles: HashSet.make("packages/b/src/B.ts"),
             wholeTree: false,
@@ -268,6 +271,7 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
           CommentLockInput.make({
             headShards: [shard("packages/a", ["."]), shard("packages/b", ["."])],
             baseShards: O.some([shard("packages/a", ["."]), shard("packages/b", ["."])]),
+            packageRoots: ROOTS,
             bannedCounts: counts,
             changedFiles: HashSet.empty(),
             wholeTree: true,
@@ -280,6 +284,7 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
           CommentLockInput.make({
             headShards: [shard("packages/a", ["."]), shard("packages/c", ["."])],
             baseShards: O.some([shard("packages/a", ["src"])]),
+            packageRoots: ROOTS,
             bannedCounts: counts,
             changedFiles: HashSet.empty(),
             wholeTree: false,
@@ -307,12 +312,55 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
                 scopes: ["."],
               }),
             ]),
+            packageRoots: ["packages/new"],
             bannedCounts: HashMap.make(["packages/new/src/A.ts", 2]),
             changedFiles: HashSet.make("packages/new/src/A.ts"),
             wholeTree: false,
           })
         );
         expect(moved.findings).toEqual([]);
+
+        const nested = evaluateCommentLock(
+          CommentLockInput.make({
+            headShards: [
+              shard("packages/a", ["."]),
+              CommentLawPending.make({
+                schemaVersion: "comment-law-pending/v1",
+                package: "(root)",
+                root: ".",
+                scopes: ["packages"],
+              }),
+            ],
+            baseShards: O.none(),
+            packageRoots: ["packages/a", "packages/a/nested", "packages/x"],
+            bannedCounts: HashMap.make(
+              ["packages/a/src/A.ts", 1],
+              ["packages/a/nested/src/N.ts", 1],
+              ["packages/x/src/X.ts", 1],
+              ["packages/loose.ts", 1]
+            ),
+            changedFiles: HashSet.empty(),
+            wholeTree: true,
+          })
+        );
+        expect(A.map(nested.findings, (finding) => [finding.rule, finding.file])).toEqual([
+          ["locked-scope-comment", "packages/a/nested/src/N.ts"],
+          ["locked-scope-comment", "packages/x/src/X.ts"],
+        ]);
+
+        const deleted = evaluateCommentLock(
+          CommentLockInput.make({
+            headShards: [shard("packages/a", ["."]), shard("packages/b", ["."])],
+            baseShards: O.some([shard("packages/a", ["."]), shard("packages/b", ["."])]),
+            packageRoots: ROOTS,
+            bannedCounts: HashMap.make(["packages/a/src/A.ts", 1]),
+            changedFiles: HashSet.make("packages/b/src/Gone.ts"),
+            wholeTree: false,
+          })
+        );
+        expect(A.map(deleted.findings, (finding) => [finding.rule, finding.file])).toEqual([
+          ["stale-pending-scope", "packages/b"],
+        ]);
       })
     );
 
@@ -323,6 +371,14 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         const checkout = yield* makeCheckout("blocking");
         const pushed = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, base: "HEAD" }));
         expect([pushed.changedFiles, pushed.findings]).toEqual([0, []]);
+
+        const landed = yield* makeCheckout("blocking");
+        yield* landed.write("packages/a/src/B.ts", "// landed with the push\nexport const b = 2;\n");
+        yield* runGit(landed.root, ["commit", "--quiet", "--no-verify", "-am", "push a comment"]);
+        const landedPush = yield* runCommentLaw(CommentLawOptions.make({ cwd: landed.root, base: "HEAD" }));
+        expect(A.map(landedPush.findings, (finding) => [finding.rule, finding.file])).toEqual([
+          ["introduced-comment", "packages/a/src/B.ts"],
+        ]);
 
         yield* fs.remove(`${checkout.root}/standards/comment-law/pending/beep-a.jsonc`);
         yield* runGit(checkout.root, ["commit", "--quiet", "--no-verify", "-am", "sweep without the comment"]);
@@ -435,6 +491,10 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
           ["packages/a/src/U.ts", 1, "prose"],
         ]);
         expect(listed[2]?.excerpt).toBe(`${Str.slice(0, 72)(LONG_NOTE)}...`);
+        const whole = yield* runCommentList(checkout.root, ".");
+        expect(A.length(whole)).toBe(5);
+        const dotted = yield* runCommentList(checkout.root, "./packages/a/src/");
+        expect(A.map(dotted, (finding) => finding.file)).toEqual(["packages/a/src/A.ts", "packages/a/src/U.ts"]);
         const single = yield* runCommentList(checkout.root, "vitest.config.ts");
         expect(A.map(single, (finding) => finding.excerpt)).toEqual(["root note"]);
 
@@ -598,6 +658,50 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         const written = yield* runCommentsCommand(["--write"]);
         assertTrue(Exit.isSuccess(written.exit), failureText(written.exit));
         expect(written.lines).toEqual(["[comment-law] pending shards=1"]);
+        const writtenJson = yield* runCommentsCommand(["--write", "--json"]);
+        assertTrue(Exit.isSuccess(writtenJson.exit), failureText(writtenJson.exit));
+        expect(writtenJson.lines).toEqual([]);
+      })
+    );
+
+    it.effect(
+      "rejects a decision pointer whose owning package records no decision file",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout("blocking");
+        yield* checkout.write("packages/a/src/P.ts", "// decision: keep-it\n// decision: plain\nexport const p = 1;\n");
+        yield* checkout.write("scripts/tool.ts", "// decision: root-call\nexport const s = 1;\n");
+        const dangling = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, base: "main" }));
+        expect(A.map(dangling.findings, (finding) => [finding.rule, finding.file, finding.line])).toEqual([
+          ["dangling-decision-pointer", "packages/a/src/P.ts", 1],
+          ["dangling-decision-pointer", "packages/a/src/P.ts", 2],
+          ["dangling-decision-pointer", "scripts/tool.ts", 1],
+        ]);
+        expect(dangling.findings[2]?.excerpt).toBe("no decisions/<date>-root-call.md records this decision");
+
+        yield* checkout.write("packages/a/decisions/2026-11-22-keep-it.md", "# Keep it\n");
+        yield* checkout.write("packages/a/decisions/plain.md", "# Plain\n");
+        yield* checkout.write("packages/a/decisions/2026-11-22-other.md", "# Other\n");
+        yield* checkout.write("decisions/root-call-later.md", "# Later\n");
+        const resolved = yield* runCommentLaw(CommentLawOptions.make({ cwd: checkout.root, base: "main" }));
+        expect(A.map(resolved.findings, (finding) => [finding.rule, finding.file])).toEqual([
+          ["dangling-decision-pointer", "scripts/tool.ts"],
+        ]);
+        expect(resolved.introduced).toBe(0);
+      })
+    );
+
+    it.effect(
+      "escapes workflow-command properties and data in annotations",
+      Effect.fnUntraced(function* () {
+        const checkout = yield* makeCheckout("advisory");
+        yield* checkout.write("packages/a/src/a,b:c.ts", "// 100% sure\nexport const x = 1;\n");
+        yield* enterDirectory(checkout.root);
+        yield* scopedEnv("GITHUB_ACTIONS", "true");
+        const annotated = yield* runCommentsCommand(["--base", "main"]);
+        assertTrue(Exit.isSuccess(annotated.exit), failureText(annotated.exit));
+        expect(annotated.lines).toContain(
+          "::warning file=packages/a/src/a%2Cb%3Ac.ts,line=1,title=comment-law introduced-comment::100%25 sure"
+        );
       })
     );
 

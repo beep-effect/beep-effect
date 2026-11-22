@@ -1054,8 +1054,14 @@ const commentFindingLine = (finding: CommentLawFinding): string =>
     ? `  - ${finding.file}:${finding.line}  ${finding.kind ?? finding.rule}  "${finding.excerpt}"`
     : `  - ${finding.rule}  ${finding.file}  ${finding.excerpt}`;
 
+const escapeAnnotationData = (value: string): string =>
+  Str.replaceAll("\n", "%0A")(Str.replaceAll("\r", "%0D")(Str.replaceAll("%", "%25")(value)));
+
+const escapeAnnotationProperty = (value: string): string =>
+  Str.replaceAll(",", "%2C")(Str.replaceAll(":", "%3A")(escapeAnnotationData(value)));
+
 const commentAnnotation = (level: "error" | "warning", finding: CommentLawFinding): string =>
-  `::${level} file=${finding.file}${finding.line > 0 ? `,line=${finding.line}` : ""},title=comment-law ${finding.rule}::${finding.excerpt}`;
+  `::${level} file=${escapeAnnotationProperty(finding.file)}${finding.line > 0 ? `,line=${finding.line}` : ""},title=${escapeAnnotationProperty(`comment-law ${finding.rule}`)}::${escapeAnnotationData(finding.excerpt)}`;
 
 const reportCommentLaw = Effect.fn("reportCommentLaw")(function* (summary: CommentLawSummary) {
   const prefix = "[comment-law]";
@@ -1120,8 +1126,9 @@ const printCommentList = Effect.fn("printCommentList")(function* (cwd: string, l
   });
 });
 
-const writeCommentShards = Effect.fn("writeCommentShards")(function* (cwd: string) {
+const writeCommentShards = Effect.fn("writeCommentShards")(function* (cwd: string, json: boolean) {
   const shards = yield* runCommentLawWrite(cwd);
+  if (json) return yield* printCommandJson(shards);
   return yield* Console.log(`[comment-law] pending shards=${A.length(shards)}`);
 });
 
@@ -1176,7 +1183,7 @@ const lawsCommentsCommand = Command.make(
     const cwd = process.cwd();
     if (census) return yield* printCommentCensus(cwd, json);
     if (Str.isNonEmpty(list)) return yield* printCommentList(cwd, list, json);
-    if (write) return yield* writeCommentShards(cwd);
+    if (write) return yield* writeCommentShards(cwd, json);
     return yield* checkCommentLaw(cwd, base, staged, json);
   })
 ).pipe(

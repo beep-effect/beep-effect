@@ -269,16 +269,19 @@ export const commentDelta = Effect.fn("CommentLaw.commentDelta")(function* (
   return CommentDelta.make({ introduced, removed: A.length(before) - kept });
 });
 
-const scopeCovers = (shard: CommentLawPending, scope: string, file: string): boolean => {
+const scopeCovers = (roots: ReadonlyArray<string>, shard: CommentLawPending, scope: string, file: string): boolean => {
   const prefix = scopePath(shard.root, scope);
-  return prefix === "." || file === prefix || Str.startsWith(`${prefix}/`)(file);
+  return (
+    packageRootOf(roots, file) === shard.root &&
+    (prefix === "." || file === prefix || Str.startsWith(`${prefix}/`)(file))
+  );
 };
 
 const scopePath = (root: string, scope: string): string =>
   root === "." ? scope : scope === "." ? root : `${root}/${scope}`;
 
-const isCovered = (shards: ReadonlyArray<CommentLawPending>, file: string): boolean =>
-  A.some(shards, (shard) => A.some(shard.scopes, (scope) => scopeCovers(shard, scope, file)));
+const isCovered = (roots: ReadonlyArray<string>, shards: ReadonlyArray<CommentLawPending>, file: string): boolean =>
+  A.some(shards, (shard) => A.some(shard.scopes, (scope) => scopeCovers(roots, shard, scope, file)));
 
 const scopeContains = (outer: string, inner: string): boolean =>
   outer === "." || outer === inner || Str.startsWith(`${outer}/`)(inner);
@@ -301,12 +304,13 @@ const lockedFindings = (
   files: ReadonlyArray<string>,
   baseShards: ReadonlyArray<CommentLawPending>
 ): ReadonlyArray<CommentLawFinding> => {
+  const roots = input.packageRoots;
   const newlyLocked = (file: string): boolean =>
-    O.isSome(input.baseShards) && isCovered(baseShards, file) && !isCovered(input.headShards, file);
+    O.isSome(input.baseShards) && isCovered(roots, baseShards, file) && !isCovered(roots, input.headShards, file);
   return F.pipe(
     files,
     A.filter((file) => countIn(input.bannedCounts, file) > 0),
-    A.filter((file) => !isCovered(input.headShards, file)),
+    A.filter((file) => !isCovered(roots, input.headShards, file)),
     A.filter((file) => input.wholeTree || HashSet.has(input.changedFiles, file) || newlyLocked(file)),
     A.map((file) =>
       CommentLawFinding.make({
@@ -321,9 +325,9 @@ const lockedFindings = (
 
 const staleVerdicts = (context: ShardScopeContext, scope: string): ReadonlyArray<LockVerdict> => {
   const { input, shard } = context;
-  const covered = A.filter(context.files, (file) => scopeCovers(shard, scope, file));
-  if (A.some(covered, (file) => countIn(input.bannedCounts, file) > 0)) return [];
-  const touched = context.shardChanged || A.some(covered, (file) => HashSet.has(input.changedFiles, file));
+  const covers = (file: string): boolean => scopeCovers(input.packageRoots, shard, scope, file);
+  if (A.some(A.filter(context.files, covers), (file) => countIn(input.bannedCounts, file) > 0)) return [];
+  const touched = context.shardChanged || A.some(A.fromIterable(input.changedFiles), covers);
   return [
     {
       fails: !input.wholeTree && touched,
@@ -650,10 +654,10 @@ const changesAgainst = Effect.fn("CommentLaw.changesAgainst")(function* (
 const lockFor = Effect.fn("CommentLaw.lockFor")(function* (
   repoRoot: string,
   base: string,
-  head: string,
+  wholeTree: boolean,
   changes: ReadonlyArray<CommentFileChange>
 ) {
-  const { files } = yield* lawFiles(repoRoot);
+  const { files, roots } = yield* lawFiles(repoRoot);
   const headShards = yield* readWorktreeShards(repoRoot);
   const baseShards = yield* readBaseShards(repoRoot, base);
   const bannedCounts = yield* bannedCountsOf(repoRoot, files);
@@ -661,11 +665,85 @@ const lockFor = Effect.fn("CommentLaw.lockFor")(function* (
     CommentLockInput.make({
       headShards,
       baseShards,
+      packageRoots: roots,
       bannedCounts,
       changedFiles: HashSet.fromIterable(A.map(changes, (change) => change.file)),
-      wholeTree: base === head && A.isReadonlyArrayEmpty(changes),
+      wholeTree,
     })
   );
+});
+
+const firstParentOr = Effect.fn("CommentLaw.firstParentOr")(function* (repoRoot: string, fallback: string) {
+  const git = yield* Git;
+  const parent = yield* mapGit(
+    GitCommand.revParse("HEAD^1"),
+    git.revParse(repoRoot, "HEAD^1", { peel: "commit", quiet: true }).pipe(
+      Effect.asSome,
+      Effect.catchTag("UnknownRefError", () => Effect.succeedNone)
+    )
+  );
+  return O.getOrElse(parent, () => fallback);
+});
+
+const DATED_DECISION = /^\d{4}-\d{2}-\d{2}-/;
+const DECISION_PREFIX = "decision: ";
+
+const decisionNamesIn = Effect.fn("CommentLaw.decisionNamesIn")(function* (repoRoot: string, directory: string) {
+  const fs = yield* FileSystem.FileSystem;
+  const exists = yield* fs
+    .exists(`${repoRoot}/${directory}`)
+    .pipe(CommentLawExecutionError.mapError(`Failed to stat ${directory}`));
+  if (!exists) return A.empty<string>();
+  return yield* fs
+    .readDirectory(`${repoRoot}/${directory}`)
+    .pipe(CommentLawExecutionError.mapError(`Failed to list ${directory}`));
+});
+
+const namesDecision = (slug: string) => (name: string) =>
+  name === `${slug}.md` || (DATED_DECISION.test(name) && Str.slice(11)(name) === `${slug}.md`);
+
+interface PointerSite {
+  readonly comment: ClassifiedComment;
+  readonly file: string;
+  readonly text: string;
+}
+
+const pointersIn = (change: CommentFileChange): ReadonlyArray<PointerSite> =>
+  O.match(change.after, {
+    onNone: A.empty<PointerSite>,
+    onSome: (text) =>
+      A.map(
+        A.filter(scanCommentSource(change.file, text), (comment) => comment.kind === "decision-pointer"),
+        (comment): PointerSite => ({ comment, file: change.file, text })
+      ),
+  });
+
+const danglingPointers = Effect.fn("CommentLaw.danglingPointers")(function* (
+  repoRoot: string,
+  changes: ReadonlyArray<CommentFileChange>
+) {
+  const pointers = A.flatMap(changes, pointersIn);
+  if (A.isReadonlyArrayEmpty(pointers)) return A.empty<CommentLawFinding>();
+  const { roots } = yield* lawFiles(repoRoot);
+  let findings = A.empty<CommentLawFinding>();
+  for (const { comment, file, text } of pointers) {
+    const root = packageRootOf(roots, file);
+    const directory = root === "." ? "decisions" : `${root}/decisions`;
+    const slug = Str.slice(Str.length(DECISION_PREFIX))(comment.text);
+    const names = yield* decisionNamesIn(repoRoot, directory);
+    if (A.some(names, namesDecision(slug))) continue;
+    findings = A.append(
+      findings,
+      CommentLawFinding.make({
+        rule: "dangling-decision-pointer",
+        file,
+        line: lineAt(text, comment.start),
+        kind: comment.kind,
+        excerpt: `no ${directory}/<date>-${slug}.md records this decision`,
+      })
+    );
+  }
+  return findings;
 });
 
 /**
@@ -675,7 +753,10 @@ const lockFor = Effect.fn("CommentLaw.lockFor")(function* (
  *
  * The base ref is resolved to its merge base with `HEAD`; an unresolvable
  * base fails, it never skips. When the merge base is `HEAD` itself (a push
- * run) the delta is empty and the lock judges the whole tree. With
+ * run) the delta is `HEAD` against its first parent, the commit the push
+ * landed, and the lock judges the whole tree; a root commit has an empty
+ * delta. A `// decision: <slug>` line in a changed file must name a file
+ * under its owning package's `decisions/` directory. With
  * `staged`, the index is compared with `HEAD` and the lock is skipped.
  * Findings fail the run only when the policy is `blocking`.
  *
@@ -714,15 +795,18 @@ export const runCommentLaw = Effect.fn("CommentLaw.runCommentLaw")(function* (
     return yield* CommentLawExecutionError.new(
       `No merge base between ${requested} and HEAD; the comment law never skips.`
     );
-  const changes = yield* changesAgainst(repoRoot, base, options.staged);
+  const pushed = !options.staged && base === head;
+  const deltaBase = pushed ? yield* firstParentOr(repoRoot, base) : base;
+  const changes = yield* changesAgainst(repoRoot, deltaBase, options.staged);
   const delta = yield* commentDelta(changes);
+  const pointers = yield* danglingPointers(repoRoot, changes);
   const lock = options.staged
     ? CommentLockResult.make({ findings: [], advisories: [] })
-    : yield* lockFor(repoRoot, base, head, changes);
-  const findings = A.appendAll(delta.introduced, lock.findings);
+    : yield* lockFor(repoRoot, deltaBase, pushed, changes);
+  const findings = A.appendAll(A.appendAll(delta.introduced, pointers), lock.findings);
   return CommentLawSummary.make({
     enforcement: policy.enforcement,
-    base,
+    base: deltaBase,
     changedFiles: A.length(changes),
     introduced: A.length(delta.introduced),
     removed: delta.removed,
@@ -787,7 +871,7 @@ export const runCommentCensus = Effect.fn("CommentLaw.runCommentCensus")(functio
  * ```
  *
  * @param cwd - Any directory inside the repository.
- * @param prefix - Repository-relative directory or file.
+ * @param prefix - Repository-relative directory or file; `.` lists the whole repository.
  * @returns Effect that yields one finding per banned comment, in file order.
  * @category utilities
  * @since 0.0.0
@@ -800,10 +884,11 @@ export const runCommentList = Effect.fn("CommentLaw.runCommentList")(function* (
     CommentLawExecutionError.mapError("Failed to locate the repository root")
   );
   const { files } = yield* lawFiles(repoRoot);
-  const scoped = A.filter(
-    files,
-    (file) => file === prefix || Str.startsWith(`${Str.replace(/\/$/, "")(prefix)}/`)(file)
-  );
+  const scope = Str.replace(/\/+$/, "")(Str.replace(/^\.\//, "")(prefix));
+  const scoped =
+    scope === "." || Str.isEmpty(scope)
+      ? files
+      : A.filter(files, (file) => file === scope || Str.startsWith(`${scope}/`)(file));
   let findings = A.empty<CommentLawFinding>();
   for (const file of scoped) {
     const text = yield* readWorktreeText(repoRoot, file);
@@ -869,7 +954,7 @@ export const runCommentLawWrite = Effect.fn("CommentLaw.runCommentLawWrite")(fun
         A.map(current, (shard) =>
           O.map(
             O.liftPredicate(A.isReadonlyArrayNonEmpty<string>)(
-              A.filter(shard.scopes, (scope) => A.some(bannedFiles, (file) => scopeCovers(shard, scope, file)))
+              A.filter(shard.scopes, (scope) => A.some(bannedFiles, (file) => scopeCovers(roots, shard, scope, file)))
             ),
             (scopes) => CommentLawPending.make({ ...shard, scopes })
           )

@@ -56,7 +56,9 @@ export type CommentLawEnforcement = typeof CommentLawEnforcement.Type;
  * `introduced-comment` is the growth check. `locked-scope-comment` is a
  * banned comment in a scope no shard lists. `stale-pending-scope` is a listed
  * scope that holds none, and `pending-scope-grew` a head scope that no merge
- * base scope contains.
+ * base scope contains. `dangling-decision-pointer` is a `// decision: <slug>`
+ * line in a changed file whose owning package has no `decisions/<slug>.md`
+ * or `decisions/<date>-<slug>.md`.
  *
  * **Example** (Recognize the growth rule)
  *
@@ -74,6 +76,7 @@ export const CommentLawRule = LiteralKit([
   "locked-scope-comment",
   "stale-pending-scope",
   "pending-scope-grew",
+  "dangling-decision-pointer",
 ]).pipe($I.annoteSchema("CommentLawRule", { description: "Rule that produced a comment-law finding." }));
 
 /**
@@ -251,7 +254,8 @@ export class CommentDelta extends S.Opaque<CommentDelta, { readonly brand: uniqu
  * **Details**
  *
  * `bannedCounts` maps every in-scope file of the checked tree to its banned
- * comment count. `baseShards` is `None` when the merge base predates the
+ * comment count. `packageRoots` lists every package root: a shard scope
+ * covers only the files its own root owns, never those of a nested package. `baseShards` is `None` when the merge base predates the
  * law, which skips the shrink-only guard for the bootstrap PR.
  * `wholeTree` reports every locked violation; otherwise only those in
  * changed files or in scopes the change locked.
@@ -267,6 +271,7 @@ export class CommentDelta extends S.Opaque<CommentDelta, { readonly brand: uniqu
  * const input = CommentLockInput.make({
  *   headShards: [],
  *   baseShards: O.none(),
+ *   packageRoots: [],
  *   bannedCounts: HashMap.empty(),
  *   changedFiles: HashSet.empty(),
  *   wholeTree: true,
@@ -282,6 +287,7 @@ export class CommentLockInput extends S.Opaque<CommentLockInput, { readonly bran
   S.Struct({
     headShards: S.Array(CommentLawPending),
     baseShards: CommentLawPending.pipe(S.Array, S.Option),
+    packageRoots: S.Array(S.String),
     bannedCounts: S.HashMap(S.String, S.Int),
     changedFiles: S.HashSet(S.String),
     wholeTree: S.Boolean,
