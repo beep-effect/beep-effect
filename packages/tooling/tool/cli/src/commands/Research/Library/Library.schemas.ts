@@ -700,6 +700,8 @@ const isMintable = (mint: () => string): boolean => Result.isSuccess(Result.try(
  * // https://beep-effect.com/ns/research-library/Topic/goals/example
  * ```
  *
+ * @param id - A packet key such as `goals/example`, used as it stands.
+ * @returns An IRI under the `research-library:Topic` term.
  * @category constructors
  * @since 0.0.0
  */
@@ -923,6 +925,7 @@ export class LibraryModelRun extends S.Opaque<LibraryModelRun, { readonly brand:
  * // https://beep-effect.com/ns/research-library/SoftwareAgent/gpt-6-luna/medium
  * ```
  *
+ * @returns An IRI whose last two segments are the percent-encoded model and effort.
  * @category constructors
  * @since 0.0.0
  */

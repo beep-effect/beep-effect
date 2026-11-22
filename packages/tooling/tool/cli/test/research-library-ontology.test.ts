@@ -9,8 +9,12 @@ import {
   LibraryAgentLabel,
   LibraryCaptureStatus,
   LibraryCatalog,
+  LibraryMineProfile,
+  LibrarySynthesisAuthor,
   LibraryTopicId,
+  LibraryVidbeeBinding,
   libraryAgentIri,
+  libraryMineProfile,
   libraryTopicIri,
 } from "@beep/repo-cli/commands/Research";
 import {
@@ -213,6 +217,42 @@ describe("research library instance keys", () => {
       expect.stringContaining('["findings"][0]["topicIds"][0]'),
       expect.stringContaining('["findings"][0]["topicIds"][0]'),
     ]);
+  });
+
+  it.each<readonly [name: string, accepts: (value: unknown) => Result.Result<unknown, S.SchemaError>, value: object]>([
+    [
+      "LibrarySynthesisAuthor",
+      S.decodeUnknownResult(LibrarySynthesisAuthor),
+      { model: "claude-fable-5-1", effort: "medium", route: "claude-code", argv: [] },
+    ],
+    [
+      "LibraryVidbeeBinding",
+      S.decodeUnknownResult(LibraryVidbeeBinding),
+      {
+        sourceUrl: "https://example.test/video",
+        mediaPath: "media/video.mp4",
+        mediaSha256: Str.repeat(64)("a"),
+        mediaBytes: 3,
+        transcriptSha256: Str.repeat(64)("b"),
+        faqSha256: Str.repeat(64)("c"),
+        model: "gpt-6.1-sol",
+        effort: "unrecorded",
+        generatedAt: "2026-11-21T00:00:00Z",
+      },
+    ],
+    ["LibraryMineProfile", S.decodeUnknownResult(LibraryMineProfile), libraryMineProfile("codex-luna")],
+  ])("%s decodes only labels that name an agent, and names the field it refuses", (_name, decode, value) => {
+    const refusal = (fields: object) =>
+      Result.match(decode({ ...value, ...fields }), {
+        onFailure: (error) => error.message,
+        onSuccess: () => "",
+      });
+
+    expect(refusal({})).toBe("");
+    expect(refusal({ model: "" })).toContain('["model"]');
+    expect(refusal({ model: "\ud800" })).toContain('["model"]');
+    expect(refusal({ effort: "" })).toContain('["effort"]');
+    expect(refusal({ effort: "\ud800" })).toContain('["effort"]');
   });
 
   it.effect.prop(
