@@ -79,6 +79,7 @@ class Graph {
   readonly nodes: Array<Uint8Array> = [];
   readonly initializers: Array<Uint8Array> = [];
   private used = HashMap.empty<string, string>();
+  readonly requested: Array<string> = [];
   private serial = 0;
   readonly tensors: HashMap.HashMap<string, TensorSource>;
   constructor(tensors: HashMap.HashMap<string, TensorSource>) {
@@ -115,11 +116,14 @@ class Graph {
   weight(name: string): string {
     const previous = HashMap.get(this.used, name);
     if (O.isSome(previous)) return previous.value;
-    const value = HashMap.get(this.tensors, name);
-    // Required tensor names are checked before graph construction by the Effect boundary.
-    if (O.isNone(value)) return `MISSING:${name}`;
     this.used = HashMap.set(this.used, name, name);
-    return this.tensor(name, value.value.shape, value.value.data, value.value.dtype === "F32" ? 1 : 7);
+    this.requested.push(name);
+    // An absent tensor stays a bare input name; compileAdaFaceOnnx builds once with no tensors
+    // to collect `requested` and rejects missing names before the real build.
+    return O.match(HashMap.get(this.tensors, name), {
+      onNone: () => name,
+      onSome: ({ shape, data, dtype }) => this.tensor(name, shape, data, dtype === "F32" ? 1 : 7),
+    });
   }
   reshape(x: string, shape: ReadonlyArray<number>) {
     return this.node("Reshape", [x, this.constant(shape, [shape.length], true)]);
@@ -514,10 +518,11 @@ export const compileAdaFaceOnnx = Effect.fn("Files.compileAdaFaceOnnx")(function
   dimensions: RecognizerGraphDimensions = pinnedRecognizerDimensions
 ) {
   const tensors = yield* decodeFaceSafetensors(payload);
-  const graph = new Graph(tensors);
-  const model = component === "aligner" ? buildAligner(graph) : buildRecognizer(graph, dimensions);
-  // Missing inputs remain visible in the encoded graph; reject before caching or execution.
-  if (A.some(graph.nodes, (node) => Str.includes("MISSING:")(new TextDecoder().decode(node))))
-    return yield* MatchPersonError.modelIntegrity(`Missing required ${component} tensors.`);
-  return model;
+  const build = (graph: Graph) => (component === "aligner" ? buildAligner(graph) : buildRecognizer(graph, dimensions));
+  const collector = new Graph(HashMap.empty());
+  build(collector);
+  const missing = A.filter(collector.requested, (name) => !HashMap.has(tensors, name));
+  if (A.isReadonlyArrayNonEmpty(missing))
+    return yield* MatchPersonError.modelIntegrity(`Missing required ${component} tensors: ${A.join(missing, ", ")}.`);
+  return build(new Graph(tensors));
 });
