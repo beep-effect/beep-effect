@@ -398,6 +398,7 @@ export const CodeDecisionProblemKind = LiteralKit([
   "unresolved-anchor",
   "unresolved-enforcer",
   "unresolved-pointer",
+  "duplicate-slug",
 ]).pipe(
   $I.annoteSchema("CodeDecisionProblemKind", {
     description: "The rule a code-decision problem breaks.",

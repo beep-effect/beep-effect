@@ -181,6 +181,22 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
     );
 
     it.effect(
+      "rejects a second decision file with the same slug in one package",
+      Effect.fnUntraced(function* () {
+        const root = yield* makeCheckout({
+          ...BASE_FILES,
+          "packages/demo/decisions/2026-11-22-raw-ddl.md": decisionFile(
+            A.map(VALID_FRONTMATTER, (line) => (line === "date: 2026-11-21" ? "date: 2026-11-22" : line))
+          ),
+        });
+        const report = yield* runCodeDecisionCheck(root);
+        expect(A.map(report.problems, (entry) => [entry.kind, entry.file])).toEqual([
+          [CodeDecisionProblemKind.Enum["duplicate-slug"], "packages/demo/decisions/2026-11-22-raw-ddl.md"],
+        ]);
+      })
+    );
+
+    it.effect(
       "rejects an excess frontmatter key, an over-long body and a fenced body",
       Effect.fnUntraced(function* () {
         const file = "packages/demo/decisions/2026-11-21-raw-ddl.md";

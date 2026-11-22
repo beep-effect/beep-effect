@@ -400,10 +400,7 @@ const loadTracked = Effect.fn("Decisions.loadTracked")(function* (cwd: string) {
   const read = (file: string) =>
     fs.readFileString(path.join(repoRoot, file)).pipe(
       Effect.asSome,
-      Effect.catchIf(
-        (error) => error.reason._tag === "NotFound",
-        () => Effect.succeed(O.none<string>())
-      ),
+      Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(O.none<string>())),
       CodeDecisionsExecutionError.mapError(`Failed to read ${file}`)
     );
   const ownerOf = (file: string): O.Option<string> => {
@@ -450,18 +447,17 @@ const readDecisions = Effect.fn("Decisions.readDecisions")(function* (
   return { decisionFiles, decisions, problems };
 });
 
+const slugOf = (file: string): O.Option<string> =>
+  pipe(
+    Str.split("/")(file),
+    A.last,
+    O.flatMap((name) => O.fromNullishOr(DECISION_FILE_SLUG.exec(name)?.[1]))
+  );
+
 const slugsByPackage = (decisionFiles: ReadonlyArray<string>, packageOf: (file: string) => string) =>
   pipe(
     decisionFiles,
-    A.flatMap((file) => {
-      const name = pipe(
-        Str.split("/")(file),
-        A.last,
-        O.getOrElse(() => file)
-      );
-      const match = DECISION_FILE_SLUG.exec(name);
-      return match?.[1] === undefined ? A.empty<readonly [string, string]>() : [[packageOf(file), match[1]] as const];
-    }),
+    A.flatMap((file) => O.toArray(O.map(slugOf(file), (slug) => [packageOf(file), slug] as const))),
     A.groupBy(([packageRoot]) => packageRoot),
     (groups) =>
       HashMap.fromIterable(
@@ -470,6 +466,36 @@ const slugsByPackage = (decisionFiles: ReadonlyArray<string>, packageOf: (file: 
           HashSet.fromIterable(A.map(rows, ([, slug]) => slug)),
         ])
       )
+  );
+
+const duplicateSlugProblems = (
+  decisionFiles: ReadonlyArray<string>,
+  packageOf: (file: string) => string
+): ReadonlyArray<CodeDecisionProblem> =>
+  pipe(
+    decisionFiles,
+    A.flatMap((file) => O.toArray(O.map(slugOf(file), (slug) => [`${packageOf(file)}\u0000${slug}`, file] as const))),
+    A.groupBy(([key]) => key),
+    R.values,
+    A.flatMap((rows) =>
+      A.length(rows) < 2
+        ? A.empty<CodeDecisionProblem>()
+        : A.map(
+            A.drop(
+              A.sort(
+                A.map(rows, ([, file]) => file),
+                Order.String
+              ),
+              1
+            ),
+            (file) =>
+              problem(
+                CodeDecisionProblemKind.Enum["duplicate-slug"],
+                file,
+                "another decision file in this package has the same slug; a decision pointer would be ambiguous. Supersede the older file and delete it."
+              )
+          )
+    )
   );
 
 const readParsed = Effect.fn("Decisions.readParsed")(function* (
@@ -574,6 +600,7 @@ export const runCodeDecisionCheck = Effect.fn("Decisions.runCodeDecisionCheck")(
     ),
   ]);
   const slugs = slugsByPackage(decisionFiles, (file) => path.dirname(path.dirname(file)));
+  const slugProblems = duplicateSlugProblems(decisionFiles, (file) => path.dirname(path.dirname(file)));
   const sources = yield* Effect.forEach(
     A.filter(context.files, isCodeDecisionSourcePath),
     (file) =>
@@ -609,7 +636,7 @@ export const runCodeDecisionCheck = Effect.fn("Decisions.runCodeDecisionCheck")(
     decisions: A.length(decisions),
     unenforced: A.length(A.filter(decisions, (decision) => A.isReadonlyArrayEmpty(decision.frontmatter.enforcedBy))),
     pointers: A.length(pointers),
-    problems: A.sort([...fileProblems, ...anchorProblems, ...pointerProblems], byFile),
+    problems: A.sort([...fileProblems, ...slugProblems, ...anchorProblems, ...pointerProblems], byFile),
   });
 });
 
