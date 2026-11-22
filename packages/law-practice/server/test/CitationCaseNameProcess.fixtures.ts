@@ -165,9 +165,10 @@ const install = makeCitationMetadataFixture({
   load: readCitationCaseNameProcessCorpus,
   make: (...args: Parameters<typeof makeCitationCaseNameProcess>) =>
     makeCitationCaseNameProcess(...args).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(args[0]).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-      )
+      Effect.zipWith(makeCitationTestScaffoldBinding(args[0]), (stage, bind) => ({
+        ...stage,
+        apply: bind(stage.apply),
+      }))
     ),
 });
 type Row = (typeof Corpus.Type.cases)[number];
@@ -227,11 +228,10 @@ export const assertCitationCaseNameProcessBudget = Effect.fn("CaseNameProcessTes
     setup.runtime,
     setup.configuration
   ).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding({ ...setup.limits, tokens: 1 }).pipe(
-        Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding({ ...setup.limits, tokens: 1 }), (stage, bind) => ({
+      ...stage,
+      apply: bind(stage.apply),
+    })),
     Effect.provideContext(setup.provided)
   );
   const tokens = yield* bounded.apply(request(row)).pipe(Effect.flip);
@@ -262,11 +262,10 @@ export const assertCitationCaseNameProcessLifetime = Effect.fn("CaseNameProcessT
     },
   ]) {
     const rejected = yield* makeCitationCaseNameProcess(closed.limits, closed.runtime, configuration).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(closed.limits).pipe(
-          Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) }))
-        )
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding(closed.limits), (stage, bind) => ({
+        ...stage,
+        apply: bind(stage.apply),
+      })),
       Effect.provideContext(closed.provided),
       Effect.flip
     );
@@ -304,9 +303,7 @@ export const assertCitationMetadataStageDeadline = Effect.fn("CaseNameProcessTes
   });
   const configuration = yield* ownCitationTestConfiguration(BlockedStage, {});
   const stage = yield* make(setup.limits, setup.runtime, configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ apply: bind(stage.apply) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({ apply: bind(stage.apply) })),
     Effect.provideContext(setup.provided)
   );
   yield* assertCitationWorkerCapturedDeadline(

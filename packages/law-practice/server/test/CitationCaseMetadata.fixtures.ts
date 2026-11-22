@@ -170,11 +170,10 @@ const install = Effect.fn("CaseMetadataTest.install")(function* (
   };
   const prepare = yield* installCitationHtmlGeometryFixture(kind, { ...setup, provided });
   const stage = yield* makeCitationCaseMetadata(setup.limits, setup.runtime, configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      extract: bind(stage.extract),
+    })),
     Effect.provideContext(provided),
     DateTime.withCurrentZoneOffset(0)
   );

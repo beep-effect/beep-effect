@@ -340,8 +340,10 @@ describe("GovernedEgress", () => {
       const urls = A.map(A.range(0, 19), (index) =>
         index % 2 === 0 ? allowedUrl : `https://not-allowed-${index}.example/x`
       );
-      yield* Effect.promise(() =>
-        Promise.all(A.map(urls, (url) => harness.fetch(url, { method: "POST" }).catch(() => undefined)))
+      yield* Effect.forEach(
+        urls,
+        (url) => Effect.promise(() => harness.fetch(url, { method: "POST" }).catch(() => undefined)),
+        { concurrency: "unbounded", discard: true }
       );
 
       const decisions = yield* Ref.get(harness.decisions);

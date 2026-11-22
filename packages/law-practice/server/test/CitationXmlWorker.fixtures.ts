@@ -37,11 +37,11 @@ export const installCitationXmlWorker = Effect.fn("XmlWorkerTest.install")(funct
   const setup = yield* setupCitationMetadataRuntime(kind, undefined, true);
   const runtime = yield* makeCitationXmlTestRuntime(kind);
   const worker = yield* makeCitationXmlWorker(setup.limits, runtime).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
-        Effect.map((bind) => ({ ...stage, raw: stage, balance: bind(stage.balance) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits, "annotate"), (stage, bind) => ({
+      ...stage,
+      raw: stage,
+      balance: bind(stage.balance),
+    })),
     Effect.provideContext(setup.provided)
   );
   return { ...setup, regexRuntime: setup.runtime, runtime, worker };

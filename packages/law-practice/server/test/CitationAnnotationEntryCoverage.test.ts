@@ -20,11 +20,10 @@ const refusal = (failure: { readonly _tag: string }) => ({
 const install = Effect.fnUntraced(function* (narrow: Partial<CitationEngineLimits> = {}) {
   const setup = yield* installCitationAnnotationEntryFixture();
   return yield* makeCitationAnnotationEntry({ ...setup.limits, ...narrow }, setup.runtime, setup.configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding({ ...setup.limits, ...narrow }, "annotate").pipe(
-        Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding({ ...setup.limits, ...narrow }, "annotate"), (stage, bind) => ({
+      ...stage,
+      annotate: bind(stage.annotate),
+    })),
     Effect.provideContext(setup.provided)
   );
 });

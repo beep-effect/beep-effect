@@ -16,7 +16,7 @@ import {
 import { it } from "@beep/test-runner";
 import { A, O, Str } from "@beep/utils";
 import { NodeServices } from "@effect/platform-node";
-import { assert, expect } from "@effect/vitest";
+import { assert, expect, vi } from "@effect/vitest";
 import * as Effect from "effect/Effect";
 import * as Fiber from "effect/Fiber";
 import * as FileSystem from "effect/FileSystem";
@@ -332,6 +332,61 @@ it.layer(TestLayer, { timeout: "15 seconds" })("@beep/qa-capture collector", (it
     15000
   );
 
+  it.effect(
+    "serve treats an EPERM liveness probe as a live foreign owner",
+    () =>
+      Effect.gen(function* () {
+        const fs = yield* FileSystem.FileSystem;
+        const path = yield* Path.Path;
+        const tmpDir = yield* fs.makeTempDirectoryScoped();
+        const handlePath = path.join(tmpDir, "current.json");
+
+        // A pid owned by another user answers signal zero with EPERM: it
+        // exists, this process just may not signal it.
+        const otherUserPid = 2147483000;
+        const realKill = process.kill.bind(process);
+        const spy = vi.spyOn(process, "kill").mockImplementation((pid, signal) => {
+          if (pid === otherUserPid) {
+            throw Object.assign(new Error("kill EPERM"), { code: "EPERM" });
+          }
+          return realKill(pid, signal);
+        });
+        yield* Effect.addFinalizer(() => Effect.sync(() => spy.mockRestore()));
+
+        const foreign = CollectorHandle.make({
+          eventsPath: path.join(tmpDir, "round-1", "events.ndjson"),
+          pid: otherUserPid,
+          port: 43117,
+          round: 1,
+          sessionDir: path.join(tmpDir, "round-1"),
+          sessionId: "qa-other-user",
+          startedAtEpochMs: 1753838000000,
+        });
+        yield* Effect.flatMap(encodeCollectorHandleJson(foreign), (json) => fs.writeFileString(handlePath, json));
+
+        const error = yield* Effect.scoped(
+          Effect.gen(function* () {
+            const collector = yield* Collector;
+            return yield* collector.serve(
+              CollectorServeOptions.make({
+                eventsPath: path.join(tmpDir, "round-2", "events.ndjson"),
+                handlePath: O.some(handlePath),
+                port: 0,
+                round: 2,
+                sessionDir: path.join(tmpDir, "round-2"),
+                sessionId: "qa-usurper",
+              })
+            );
+          })
+        ).pipe(Effect.flip);
+
+        assert(QaCaptureError.is(error));
+        expect(pipe(error.message, Str.includes("still live"))).toBe(true);
+        const remaining = yield* Effect.flatMap(fs.readFileString(handlePath), decodeCollectorHandleJson);
+        expect(remaining.sessionId).toBe("qa-other-user");
+      }),
+    15000
+  );
   it.effect(
     "serve reclaims a stale dead-pid handle and teardown leaves a successor's handle in place",
     () =>

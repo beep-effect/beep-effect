@@ -38,7 +38,7 @@ it.effect("bounds owned-value preflight with the captured cleaner deadline", () 
       cleanDeadline: Duration.millis(50),
       operationDeadline: Duration.millis(100),
     }).pipe(
-      Effect.flatMap((stage) =>
+      Effect.zipWith(
         makeCitationTestScaffoldBinding(
           {
             ...policy.limits,
@@ -46,7 +46,8 @@ it.effect("bounds owned-value preflight with the captured cleaner deadline", () 
             operationDeadline: Duration.millis(100),
           },
           "clean"
-        ).pipe(Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) })))
+        ),
+        (stage, bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) })
       ),
       Effect.provideService(CitationCleaner, runtime)
     );
@@ -117,11 +118,11 @@ it.effect("rejects forged handles and native source overflow before invoking a p
     expect(rejected).toMatchObject({ _tag: "CitationCleanerFailure", reason: "unissued-value" });
     const policy = yield* defaultCitationEnginePolicy;
     const tight = yield* makeCitationCleanerPipeline({ ...policy.limits, sourceUtf16: 1 }).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding({ ...policy.limits, sourceUtf16: 1 }, "clean").pipe(
-          Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
-        )
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding({ ...policy.limits, sourceUtf16: 1 }, "clean"), (stage, bind) => ({
+        ...stage,
+        run: bind(stage.run),
+        runOwned: bind(stage.runOwned),
+      })),
       Effect.provideService(CitationCleaner, h.registry.runtime)
     );
     const refused = yield* tight.runOwned({ value, plan: "too-large" }).pipe(Effect.flip);

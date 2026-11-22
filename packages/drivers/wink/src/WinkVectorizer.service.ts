@@ -331,16 +331,12 @@ const makeWinkVectorizer = Effect.gen(function* () {
               Effect.mapError(VectorizerError.fromCause("freshLearnDocument"))
             ),
           vectorizeDocument: (document) =>
-            Effect.flatMap(readNormalizedTokens(document), (tokens) =>
-              getTerms(freshVectorizer).pipe(
-                Effect.map((terms) =>
-                  DocumentVector.make({
-                    documentId: document.id,
-                    terms,
-                    vector: freshVectorizer.vectorOf(A.fromIterable(tokens)),
-                  })
-                )
-              )
+            Effect.zipWith(readNormalizedTokens(document), getTerms(freshVectorizer), (tokens, terms) =>
+              DocumentVector.make({
+                documentId: document.id,
+                terms,
+                vector: freshVectorizer.vectorOf(A.fromIterable(tokens)),
+              })
             ),
         };
 

@@ -14,7 +14,7 @@ The package owns the technical boundary to DuckDB: connections, statement
 compilation, value conversion and error classification. Domain packages own
 their schemas, retention rules and projections.
 
-Versions: effect 4.1.4, `@duckdb/node-api` 2.0.0-r.1 (engine 2.0.0).
+Versions: effect 4.1.5, `@duckdb/node-api` 2.0.1-r.1 (engine 2.0.1).
 
 ## DuckDbClient quick start
 
@@ -455,7 +455,7 @@ The reason's `message` names the operation; the native error is in
 | `Parser`, `Catalog`, `Binder Error` | `SqlSyntaxError` |
 | anything else | `UnknownError` |
 
-## Support matrix (effect 4.1.4)
+## Support matrix (effect 4.1.5)
 
 The client reports the `"sqlite"` dialect, so effect modules pick their SQLite
 DDL for it.
