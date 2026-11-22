@@ -97,6 +97,24 @@ const parsedFcNumRuns = Config.String("BEEP_FC_NUM_RUNS").pipe(
 );
 export const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNumRuns > 0;
 
+// The seed of every property test in this run, when one is pinned: `BEEP_FC_SEED` whenever it is
+// set (the property lane, the nightly sweep and the hosted coverage producers export it), else a
+// fixed seed for a coverage run, which compares instrumentation between runs. Any other run has
+// none and draws random seeds. It is decided once here and handed to the workers as `BEEP_FC_SEED`,
+// because their argv does not carry `--coverage`; vitest.setup.ts applies it.
+const COVERAGE_PROPERTY_SEED = 20260708;
+const parsedFcSeed = Config.String("BEEP_FC_SEED").pipe(
+  Config.option,
+  Effect.runSync,
+  O.filter(Str.isNonEmpty),
+  O.map(Number),
+  O.filter(Number.isInteger)
+);
+const propertySeedEnvironment = pipe(
+  O.orElse(parsedFcSeed, () => (vitestCoverageRunActive ? O.some(COVERAGE_PROPERTY_SEED) : O.none<number>())),
+  O.match({ onNone: () => ({}), onSome: (seed) => ({ BEEP_FC_SEED: `${seed}` }) })
+);
+
 // Per-test ceiling every doctest owner inherits in doctest mode. The first example of a file
 // pays the module transform, which exceeded 30 s under the fleet's 4-way task concurrency on a
 // 4-vCPU runner (C3.4 hosted round 1). The doctest guard asserts this value per owner.
@@ -345,6 +363,7 @@ const config: ViteUserConfig = {
       process.versions.bun === undefined && Number(Str.split(process.versions.node, ".")[0]) < 24
         ? ["--js-float16array"]
         : [],
+    env: propertySeedEnvironment,
     sequence: {
       concurrent: !vitestDoctestActive,
     },

@@ -34,6 +34,9 @@ import * as NodeStream from "node:stream";
 import { GlobPattern, GlobPatternOptions } from "@beep/glob/GlobPattern";
 import { A, O, P, R } from "@beep/utils";
 import { addEqualityTesters } from "@effect/vitest";
+import * as Arbitrary from "effect/Arbitrary";
+import * as Config from "effect/Config";
+import * as Effect from "effect/Effect";
 import { identity } from "effect/Function";
 import * as MutableHashSet from "effect/MutableHashSet";
 import * as Result from "effect/Result";
@@ -91,9 +94,17 @@ if (
 
 addEqualityTesters();
 
-// Property-test run floors and seeds now flow through @beep/fc-runs
-// (BEEP_FC_NUM_RUNS / BEEP_FC_SEED) into per-test `{ arbitrary: ... }`
-// options; the native effect Arbitrary model has no global configuration.
+// Property-test run floors flow through @beep/fc-runs (BEEP_FC_NUM_RUNS) into per-test
+// `{ arbitrary: ... }` options. A pinned seed (see `propertySeed` in vitest.shared.ts) is also the
+// default of every property, so one that passes no options repeats too; an explicit seed still wins.
+// fast-check is loaded only for a pinned seed: few suites use it, and every file runs this setup.
+const propertySeed = Config.Int("BEEP_FC_SEED").pipe(Config.option, Effect.option, Effect.runSync, O.flatten);
+if (O.isSome(propertySeed)) {
+  const seed = propertySeed.value;
+  Arbitrary.configureGlobal({ check: { seed }, sample: { seed } });
+  const fastCheck = await import("fast-check");
+  fastCheck.configureGlobal({ ...fastCheck.readConfigureGlobal(), seed });
+}
 
 type BunFileShim = {
   readonly arrayBuffer: () => Promise<ArrayBuffer>;
