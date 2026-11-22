@@ -34,10 +34,16 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P1 Projection and feed record — complete (2026-11-22): `task-outcomes/v2` record and reader, the CI
-projection renderer and `beep ci append-gate-reports`. P2 (workflow wiring) is next, after PR 1 merges.
+P2 Workflow wiring — in progress (2026-11-22): part 1 (PR 3) wires every gate job in `check.yml`,
+`shard-overflow.yml`, `storybook.yml`, `property-laws-nightly.yml` and `fleet-lane-probe.yml` through
+the `gate-reports` composite action. PR 4 wires `heavy.yml`; P2 completes on the first `main` runs
+that show the projection in every gate job.
 
 ## Latest Evidence
+
+2026-11-22: P2 part 1 built: 18 gate jobs render the projection and upload the v2 task-outcomes
+artifact with `retention-days: 30`; `bun run beep ci workflow-lint` is clean and the 19 repo-cli
+workflow test files pass (964 tests). Hosted proof is pending the first `main` run after merge.
 
 2026-11-22: P1 renderer tests pass under Node and Bun: the summary of a red record equals `beep gate
 show`'s console line for line; a 200-item fixture gives 10 error annotations, both cap lines and a
