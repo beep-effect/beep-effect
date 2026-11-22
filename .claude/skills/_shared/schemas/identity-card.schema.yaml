@@ -12,10 +12,20 @@ ontoclean:
   rigidity: rigid | anti_rigid | semi_rigid | unresolved
   carries_identity: true | false | unresolved
   supplies_identity: true | false | unresolved
-  unity: ""
+  unity: ""                       # unity | anti_unity | non_unity | unresolved (+U | ~U | -U),
+                                  # read by the unity rule in ontoclean-rules.yaml. The
+                                  # validator requires the key and a STRING only; "" is
+                                  # the template's draft value and leaves the unity rule
+                                  # without an answer
   dependence: none | relational | intrinsic | unresolved
 ufo_analysis:
-  candidate_category: kind | subkind | role | phase | relator | quality | mode | event | process | situation | information_object | none | unresolved
+  candidate_category: kind | subkind | role | phase | category | mixin | role_mixin | phase_mixin | collective | quantity | relator | quality | mode | event | process | situation | information_object | none | unresolved
+                                  # non-sortals (category, mixin, role_mixin, phase_mixin)
+                                  # supply no identity: a role whose bearers span two
+                                  # kinds (a customer that is a person or an
+                                  # organization) is a role_mixin, not a role.
+                                  # information_object is an IAO/BFO notion kept for
+                                  # records and documents, not a UFO category
   alternatives: []
   existential_dependencies: []
 temporality:

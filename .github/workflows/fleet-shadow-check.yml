@@ -42,7 +42,7 @@ permissions: {}
 jobs:
   shadow-probe:
     name: Shadow Probe
-    runs-on: beep-ec2-heavy
+    runs-on: beep-fleet-heavy
     timeout-minutes: 10
     steps:
       - name: Prove the ephemeral worker
@@ -73,7 +73,7 @@ jobs:
           echo "hostname: $(hostname)"
 
           # CSF-003 denies IMDS to the runner user by design; RUNNER_NAME carries the instance ID.
-          if [[ "${RUNNER_NAME:-}" =~ ^beep-ci-(i-[0-9a-f]+)$ ]]; then
+          if [[ "${RUNNER_NAME:-}" =~ ^beep-fleet-heavy-(i-[0-9a-f]+)$ ]]; then
             instance_id="${BASH_REMATCH[1]}"
           else
             echo "Could not recover an instance ID from RUNNER_NAME"
@@ -450,7 +450,7 @@ jobs:
           for parameter in github_app_key_base64 github_app_webhook_secret; do
             error_file="${RUNNER_TEMP}/ssm-${parameter}.error"
             if aws ssm get-parameter \
-              --name "/github-action-runners/app/${parameter}" \
+              --name "/beep-fleet/prod/app/${parameter}" \
               --with-decryption --region us-east-1 \
               >/dev/null 2>"${error_file}"; then
               echo "FORBIDDEN SUCCESS: read ${parameter}"
@@ -493,22 +493,26 @@ jobs:
             sed -n '1,8p' "${RUNNER_TEMP}/s3-list.error"
             failed=1
           fi
-          if aws s3api put-object \
-            --bucket beep-ci-dist-8xycw0prvbhmjow8r6vp4uqv \
-            --key redteam-probe.txt \
-            --body /etc/hostname \
-            >/dev/null 2>"${RUNNER_TEMP}/s3-put.error"; then
-            echo "FORBIDDEN SUCCESS: wrote redteam-probe.txt"
-            failed=1
-          elif grep -Eqi 'AccessDenied|not authorized' "${RUNNER_TEMP}/s3-put.error"; then
-            echo "DENIED AS EXPECTED: put-object"
-          elif grep -Eqi 'Unable to locate credentials|No credentials|failed to refresh cached credentials|no EC2 IMDS role found' "${RUNNER_TEMP}/s3-put.error"; then
-            echo "DENIED AS EXPECTED: put-object (guest credentials unavailable)"
-          else
-            echo "UNEXPECTED ERROR: put-object"
-            sed -n '1,8p' "${RUNNER_TEMP}/s3-put.error"
-            failed=1
-          fi
+          # The fleet this job runs on keeps its runner tarball in beep-fleet-prod-binaries-<account>; the Pulumi fleet's
+          # dist bucket stays in the list until that fleet is destroyed. A runner may write to neither.
+          for bucket in beep-fleet-prod-binaries-832907639880 beep-ci-dist-8xycw0prvbhmjow8r6vp4uqv; do
+            if aws s3api put-object \
+              --bucket "${bucket}" \
+              --key redteam-probe.txt \
+              --body /etc/hostname \
+              >/dev/null 2>"${RUNNER_TEMP}/s3-put.error"; then
+              echo "FORBIDDEN SUCCESS: wrote redteam-probe.txt to ${bucket}"
+              failed=1
+            elif grep -Eqi 'AccessDenied|not authorized' "${RUNNER_TEMP}/s3-put.error"; then
+              echo "DENIED AS EXPECTED: put-object ${bucket}"
+            elif grep -Eqi 'Unable to locate credentials|No credentials|failed to refresh cached credentials|no EC2 IMDS role found' "${RUNNER_TEMP}/s3-put.error"; then
+              echo "DENIED AS EXPECTED: put-object ${bucket} (guest credentials unavailable)"
+            else
+              echo "UNEXPECTED ERROR: put-object ${bucket}"
+              sed -n '1,8p' "${RUNNER_TEMP}/s3-put.error"
+              failed=1
+            fi
+          done
           exit "${failed}"
 
       - name: Gate C - deny tailnet and LAN reachability

@@ -894,7 +894,7 @@ const jsdocRatchetStep = (repoRoot: string, inventoryPath: string): QualityTaskS
   bunRunStep(repoRoot, "ci:jsdoc-ratchet:ratchet", ["beep", "quality", "jsdoc-ratchet", "--inventory", inventoryPath]);
 
 // Lint and Test Unit still run on hosted 16GB ubuntu-24.04 runners (check.yml),
-// not the 32GB beep-ec2-heavy fleet, so they keep the 16GB-survival turbo cap
+// not the 32GB beep-fleet-heavy fleet, so they keep the 16GB-survival turbo cap
 // instead of inheriting the fleet default that boundedRootTurboArgs applies in CI.
 const HOSTED_16GB_TURBO_CONCURRENCY_ARG = "--concurrency=2";
 // Docs Policy's tasks are file walkers and git reads on a 4-vCPU hosted runner, with no

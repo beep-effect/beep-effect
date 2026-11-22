@@ -46,8 +46,19 @@ otp: ids ONLY, and the filename must correspond to the target. Set
 `chain_sha256` = FRAMED sha256 over the FULL closure — OTP+IC+FA+DH files
 PLUS every SO/PO record the hypothesis cites, sorted by filename (each
 member: filename + newline + byte length + newline + bytes), with a final
-virtual member "cq:<sha256_12 of the CQ file>\n" — a PASS must not survive
-its evidence or its warrant changing. Every attack row carries a non-blank
+virtual member "cq:<sha256_12 of the CQ file>\n" (appended unframed) — a
+PASS must not survive its evidence or its warrant changing. Compute both
+digests with commands, never by hand: `sha256sum <proposal file>`, and
+
+```bash
+python3 -c 'import hashlib,os,sys
+h=hashlib.sha256()
+for f in sorted(sys.argv[2:],key=os.path.basename):
+  b=open(f,"rb").read(); h.update(f"{os.path.basename(f)}\n{len(b)}\n".encode()); h.update(b)
+h.update(f"cq:{sys.argv[1]}\n".encode()); print(h.hexdigest())' <cq sha256_12> <closure files>
+```
+
+Every attack row carries a non-blank
 `rule` and a concrete `counterexample`; `evidence` cites the observation/CQ
 ids your verdict stands on. A FAIL must LAND at least one named attack
 (FAIL with nothing landed is self-contradictory); a PASS on bytes a FAIL
