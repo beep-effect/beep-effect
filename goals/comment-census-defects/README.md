@@ -31,11 +31,11 @@ Use this command for execution-capable sessions:
 
 ## Current Phase
 
-P0 Research — not started.
+P4 Close — all ten defects fixed; this PR carries the reflection and closeout.
 
 ## Latest Evidence
 
-Not started.
+All ten SPEC defects reproduced on `origin/main` 809947c and were fixed with failing-then-passing tests, one PR each: #3463 (node-sync cwd), #3464 (qa-capture EPERM), #3465 (git working-diff ref), #3469 (nlp-mcp SSRF), #3470 (wink spans), #3471 (onnx tensors), #3475 (YAML escaped comment), #3476 (runtime lint baseline), #3479 (coverage floors), and the final PR (oip-web dead anchors). Reflection: [`history/reflections/2026-11-22-claude.md`](./history/reflections/2026-11-22-claude.md).
 
 ## Notes
 
