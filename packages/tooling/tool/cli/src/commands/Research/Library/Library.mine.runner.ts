@@ -25,6 +25,7 @@ import * as Str from "effect/String";
 import { sanitizeLibraryDiagnostic } from "./Library.adapter.ts";
 import { LibraryMineRunnerError } from "./Library.mine.errors.ts";
 import { LibraryMineProfileId, LibraryMineTier } from "./Library.mine.schemas.ts";
+import { LibraryAgentLabel } from "./Library.schemas.ts";
 
 const $I = $RepoCliId.create("commands/Research/Library/Library.mine.runner");
 
@@ -68,8 +69,8 @@ export class LibraryMineProfile extends S.Opaque<LibraryMineProfile, { readonly 
     id: LibraryMineProfileId,
     tiers: S.Array(LibraryMineTier),
     command: S.String,
-    model: S.String,
-    effort: S.String,
+    model: LibraryAgentLabel,
+    effort: LibraryAgentLabel,
     route: S.String,
     externalLane: S.Boolean,
     transport: LibraryMinePromptTransport,

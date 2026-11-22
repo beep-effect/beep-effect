@@ -1,10 +1,18 @@
+import { fcRuns } from "@beep/fc-runs";
 import * as Registry from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
 import { MemoryFileSystem } from "@beep/memfs";
 import { N3ParseTurtleRequest, N3TurtleCodec, N3TurtleCodecLive } from "@beep/n3";
 import { toTurtle } from "@beep/ontology";
 import * as Rdf from "@beep/rdf/Rdf";
-import { LibraryCaptureStatus, LibraryCatalog } from "@beep/repo-cli/commands/Research";
+import {
+  LibraryAgentLabel,
+  LibraryCaptureStatus,
+  LibraryCatalog,
+  LibraryTopicId,
+  libraryAgentIri,
+  libraryTopicIri,
+} from "@beep/repo-cli/commands/Research";
 import {
   assembleLibraryOntology,
   libraryShapes,
@@ -29,6 +37,7 @@ import * as HashMap from "effect/HashMap";
 import * as Layer from "effect/Layer";
 import * as O from "effect/Option";
 import * as Path from "effect/Path";
+import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 
@@ -133,6 +142,104 @@ const fixture = {
     },
   ],
 };
+const decodeCatalog = S.decodeUnknownResult(LibraryCatalog);
+const isTopicId = S.is(LibraryTopicId);
+const isAgentLabel = S.is(LibraryAgentLabel);
+
+describe("research library instance keys", () => {
+  it("accepts exactly the topic keys that form an IRI, and mints them byte for byte", () => {
+    const minted = A.map(["goals/example", "example", "goals/_template", "a//b", "é", "a:b", ".."], (id) => [
+      isTopicId(id),
+      libraryTopicIri(id),
+    ]);
+    const base = "https://beep-effect.com/ns/research-library/Topic/";
+    expect(minted).toStrictEqual([
+      [true, `${base}goals/example`],
+      [true, `${base}example`],
+      [true, `${base}goals/_template`],
+      [true, `${base}a//b`],
+      [true, `${base}é`],
+      [true, `${base}a:b`],
+      [true, `${base}..`],
+    ]);
+    const refused = [
+      "",
+      " ",
+      "goals/an example",
+      "/goals/example",
+      "goals/example/",
+      "<slug>",
+      "a%zz",
+      "\ud800",
+      "a\u200eb",
+    ];
+    expect(A.filter(refused, isTopicId)).toStrictEqual([]);
+  });
+
+  it("accepts every agent label but the empty one and text with no UTF-8 form", () => {
+    const base = "https://beep-effect.com/ns/research-library/SoftwareAgent/";
+    const agents: ReadonlyArray<readonly [model: string, effort: string, iri: string]> = [
+      ["gpt-6.1-sol", "unrecorded", `${base}gpt-6.1-sol/unrecorded`],
+      ["/vendor/model/", "very high", `${base}%2Fvendor%2Fmodel%2F/very%20high`],
+      ["<model>", " ", `${base}%3Cmodel%3E/%20`],
+    ];
+    for (const [model, effort, iri] of agents) {
+      expect([isAgentLabel(model), isAgentLabel(effort), libraryAgentIri({ model, effort })]).toStrictEqual([
+        true,
+        true,
+        iri,
+      ]);
+    }
+    expect(A.filter(["", "\ud800", "a\udfff"], isAgentLabel)).toStrictEqual([]);
+  });
+
+  it("refuses a catalog whose model run or finding topic forms no IRI, naming the field", () => {
+    const [run] = fixture.modelRuns;
+    const [finding] = fixture.findings;
+    const refusals = A.map(
+      [
+        { ...fixture, modelRuns: [{ ...run, model: "" }] },
+        { ...fixture, modelRuns: [{ ...run, effort: "" }] },
+        { ...fixture, modelRuns: [{ ...run, model: "\ud800" }] },
+        { ...fixture, findings: [{ ...finding, topicIds: [""] }] },
+        { ...fixture, findings: [{ ...finding, topicIds: ["goals/an example"] }] },
+      ],
+      (catalog) => Result.match(decodeCatalog(catalog), { onFailure: (error) => error.message, onSuccess: () => "" })
+    );
+    expect(refusals).toStrictEqual([
+      expect.stringContaining('["modelRuns"][0]["model"]'),
+      expect.stringContaining('["modelRuns"][0]["effort"]'),
+      expect.stringContaining('["modelRuns"][0]["model"]'),
+      expect.stringContaining('["findings"][0]["topicIds"][0]'),
+      expect.stringContaining('["findings"][0]["topicIds"][0]'),
+    ]);
+  });
+
+  it.effect.prop(
+    "projects every catalog that decodes, whatever its run labels and topic keys",
+    [S.String, S.String, S.String],
+    ([model, effort, topicId]) =>
+      Result.match(
+        decodeCatalog({
+          ...fixture,
+          modelRuns: A.map(fixture.modelRuns, (run) => ({ ...run, model, effort })),
+          findings: A.map(fixture.findings, (finding) => ({ ...finding, topicIds: [topicId] })),
+        }),
+        {
+          onFailure: () =>
+            Effect.sync(() => expect(isAgentLabel(model) && isAgentLabel(effort) && isTopicId(topicId)).toBe(false)),
+          onSuccess: (catalog) =>
+            Effect.map(catalogDataset(catalog), (dataset) =>
+              expect(A.some(dataset.quads, (quad) => quad.object.value === libraryAgentIri({ model, effort }))).toBe(
+                true
+              )
+            ),
+        }
+      ),
+    { arbitrary: fcRuns(25) }
+  );
+});
+
 describe("research library ontology", () => {
   it.layer(Layer.mergeAll(N3TurtleCodecLive, ShaclValidationServiceLive, MemoryFileSystem.layer, Path.layer), {
     timeout: "30 seconds",
@@ -364,6 +471,11 @@ describe("research library ontology", () => {
         // A manifest that exists but does not decode is skipped and counted, not fatal.
         yield* fs.makeDirectory(path.join(root, "goals/garbled/ops"), { recursive: true });
         yield* fs.writeFileString(path.join(root, "goals/garbled/ops/manifest.json"), "not json");
+        // A packet directory whose name forms no topic IRI is skipped and counted the same way.
+        const spaced = path.join(root, "goals/an example/ops");
+        yield* fs.makeDirectory(spaced, { recursive: true });
+        const spacedManifest = yield* S.encodeEffect(SUnknownJson)({ initiative: { id: "spaced", title: "Spaced" } });
+        yield* fs.writeFileString(path.join(spaced, "manifest.json"), spacedManifest);
         const quiet = yield* libraryTopics(root, false);
         const topics = yield* libraryTopics(root);
         expect(quiet).toEqual(topics);
