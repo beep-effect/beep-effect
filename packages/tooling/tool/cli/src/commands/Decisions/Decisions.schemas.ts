@@ -130,8 +130,8 @@ export const CodeDecisionLintEnforcer = S.String.check(
 );
 
 /**
- * A test that enforces a decision: `<package-relative test path>#<describe or
- * test title>`.
+ * A test that enforces a decision, written as
+ * `<package-relative test path>#<describe or test title>`.
  *
  * **Example** (Validate a test enforcer)
  *
