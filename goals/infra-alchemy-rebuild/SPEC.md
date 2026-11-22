@@ -140,7 +140,8 @@ group, `infra:prepare-gha-runners` in root `postinstall`, `infra` in root `works
       domains; DNS and the assets bucket are Alchemy-owned.
 - [ ] GitHub rulesets, secrets, variables, environments and labels are reconciled by
       `@beep/infra-github` with `alchemy drift` clean.
-- [ ] AI metrics and OpenClaw deploy through `@beep/infra-hosts`.
+- [ ] AI metrics deploys through `@beep/infra-hosts`; the OpenClaw stack is declared and tested there, not installed
+      (operator ruling, 2026-11-22).
 - [ ] `infra/` and `scratchpad/turbo-cache-r2` are deleted; no `@pulumi/*` in any manifest or
       lockfile; no `typescript ^6` pin; root `postinstall` no longer builds the ghaRunners SDK.
 - [ ] Every Pulumi stack destroyed has a decision file naming its state export archive.
@@ -2463,6 +2464,31 @@ Conditions on the dispatch:
 Lane docs/infra-alchemy-p5-dispatch-order
 
 Reverse: restore the proofs-before-PR-2 order; re-proof each pool after the PR 2 dispatch
+
+### OpenClaw stays declared and tested, not installed (operator ruling), 2026-11-22
+
+The operator ruled on 2026-11-22: OpenClaw is not installed on the workstation. `HostsOpenClaw`
+(`packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts`) stays declared and tested, and is not deployed.
+
+- **Why:** OpenClaw was never installed, and Pulumi never had a stack for it (decision `2026-11-13-hosts-no-pulumi-state`),
+  so nothing live would be lost or left unmanaged. Installing it would add a root toolchain and a new 1Password
+  service-account credential file for a service nobody runs.
+- **Criteria amended:** the SPEC acceptance criterion and the P4 row named AI metrics and OpenClaw. They now ask that AI
+  metrics deploys through `@beep/infra-hosts`, and that the OpenClaw stack is declared and tested there.
+- **P6 unchanged:** the OpenClaw Pulumi program and its `infra/` files are still deleted with the other host program.
+
+The same day the operator set the AI metrics session, which needs them present, for after P5, once the new runner fleet has
+passed its proofs.
+
+**Source.** The operator answered a structured prompt in the packet gate's T3 thread on 2026-11-22. The answers are quoted
+as given, and each is the label of the option chosen:
+
+- "Should it be installed?" (OpenClaw): "Don't install (Recommended)".
+- "When should we do it?" (AI metrics): "After P5 (Recommended)".
+
+Lane goals/infra-alchemy-rebuild-p4-rulings
+
+Reverse: run the attended OpenClaw bootstrap, deploy HostsOpenClaw, and restore the two criteria
 
 <!-- beep:decisions:end -->
 
