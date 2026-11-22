@@ -718,3 +718,28 @@ to the gap between the reference checkout (main) and the pinned release.
   nothing about the patch and cost a full cheap-gates rerun.
 - **Would have prevented it:** a Fallow lane that resolves its base itself and never runs with an empty
   value. #3427 (merged 2026-11-20, `56f52bf398d`) does that and adds a test.
+
+## 2026-11-22: a no-op mock passed a runner-group PATCH that cleared the group's repositories live
+
+- **Doing:** adding the overflow proof workflow to the `beep-shard-overflow` runner group's allow-list
+  (overflow proof, step 1).
+- **Evidence:** the step script sent `visibility` with the workflow fields in one
+  `PATCH orgs/<org>/actions/runner-groups/<id>`. On GitHub that body resets a `selected` group's repository
+  list, so the group lost its repository and was restored by hand. The script's test used a mock that
+  accepted any body and returned it, so it could not show the side effect.
+- **Would have prevented it:** a two-key body (`selected_workflows`, `restricted_to_workflows`), a read-back
+  of both the group and its `/repositories` endpoint after every write, and a repair step when the
+  repository list comes back shorter than the snapshot. The proof scripts now do all three.
+
+## 2026-11-22: a proof watcher counted a terminated instance and raised a false abort
+
+- **Doing:** watching the overflow proof for its "more than one launch" abort.
+- **Evidence:** the watcher counted every instance tagged with either pool's `ghr:environment`, in any
+  state. The heavy re-proof's runner had already terminated but still matched, so the watcher reported two
+  launches for one. A terminated instance stays visible to `describe-instances` for about an hour.
+- **Would have prevented it:** keeping the two questions apart. The live reading of what is running now
+  counts only the proof pool's instances in `pending` or `running`. The "more than one launch" abort counts
+  launches, not live instances: the CloudTrail `CreateFleet` calls by the proof pool's scale-up role since
+  the proof started, which still include a launch whose instance has terminated. The evidence script decides
+  the proof that way (exactly one call). The watcher's active count is an early warning only, and a later
+  watcher reads the same CloudTrail count for its launch abort.
