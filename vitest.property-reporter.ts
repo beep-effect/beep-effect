@@ -12,7 +12,7 @@ import type { Reporter, TestModule } from "vitest/node";
 
 const Receipt = S.fromJsonString(
   S.Struct({
-    schemaVersion: S.Literal("property-sweep/v1"),
+    schemaVersion: S.tag("property-sweep/v1"),
     files: S.Array(S.Struct({ file: S.String, executed: S.Int })),
   })
 );

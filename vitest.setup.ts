@@ -95,15 +95,13 @@ if (
 addEqualityTesters();
 
 // Property-test run floors flow through @beep/fc-runs (BEEP_FC_NUM_RUNS) into per-test
-// `{ arbitrary: ... }` options. A pinned seed (see `propertySeed` in vitest.shared.ts) is also the
-// default of every property, so one that passes no options repeats too; an explicit seed still wins.
-// fast-check is loaded only for a pinned seed: few suites use it, and every file runs this setup.
+// `{ arbitrary: ... }` options. A pinned seed (see `propertySeedEnvironment` in vitest.shared.ts) is
+// also the default of every check and sample, so a property that passes no options repeats too; an
+// explicit seed still wins. The few suites that draw from fast-check itself pass their own seed.
 const propertySeed = Config.Int("BEEP_FC_SEED").pipe(Config.option, Effect.option, Effect.runSync, O.flatten);
 if (O.isSome(propertySeed)) {
   const seed = propertySeed.value;
   Arbitrary.configureGlobal({ check: { seed }, sample: { seed } });
-  const fastCheck = await import("fast-check");
-  fastCheck.configureGlobal({ ...fastCheck.readConfigureGlobal(), seed });
 }
 
 type BunFileShim = {
