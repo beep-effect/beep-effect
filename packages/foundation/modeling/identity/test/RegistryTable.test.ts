@@ -7,6 +7,7 @@ import {
   CodePackage,
   CodePackageMove,
   Deprecation,
+  moveCode,
   Namespace,
   NamespaceIri,
   RegistryConflict,
@@ -327,6 +328,31 @@ describe("RegistryTable.snapshot", () => {
     expect(RegistryTable.snapshot(grown, first).release).toBe("1.1.0");
   });
 
+  it("keeps the release of a registry no base has published, however the table changes", () => {
+    const first = RegistryTable.snapshotKeeping(table, TermSnapshot.empty);
+    expect(first).toStrictEqual(RegistryTable.snapshot(table, TermSnapshot.empty));
+    const grown = Result.getOrThrow(
+      RegistryTable.fromShards([vitestShard, shard({ namespace: fabioShard.namespace, terms: ["Article", "Report"] })])
+    );
+    const kept = RegistryTable.snapshotKeeping(grown, first);
+    expect(kept.release).toBe("1.0.0");
+    expect(kept.terms).toContain("http://purl.org/spar/fabio/Article");
+    expect(RegistryTable.snapshotKeeping(first)(grown)).toStrictEqual(kept);
+    // Succeeding the same snapshot counts the addition.
+    expect(RegistryTable.snapshot(grown, first).release).toBe("1.1.0");
+    // A row that records a later release still raises it.
+    const bound = Result.getOrThrow(
+      RegistryTable.fromShards([
+        shard({
+          namespace: fabioShard.namespace,
+          terms: ["Report"],
+          bindings: [{ code: "@beep/widget/Report/Report", local: "Report", since: "2.0.0" }],
+        }),
+      ])
+    );
+    expect(RegistryTable.snapshotKeeping(bound, first).release).toBe("2.0.0");
+  });
+
   it("bumps the major when the table adds a deprecation", () => {
     const first = RegistryTable.snapshot(table, TermSnapshot.empty);
     const shrunk = Result.getOrThrow(
@@ -439,6 +465,34 @@ describe("RegistryTable.rebind", () => {
     expect(isMove({ from: "@beep/test-runner", to: hangCode })).toBe(false);
     expect(isMove({ from: "@beep/Test_Runner", to: "@beep/test-kit" })).toBe(false);
   });
+
+  it("refuses a move whose ends are under one another", () => {
+    const isMove = S.is(CodeIdMove);
+    expect(isMove({ from: "@beep/p/A", to: "@beep/p/A/B" })).toBe(false);
+    expect(isMove({ from: "@beep/p/A/B", to: "@beep/p/A" })).toBe(false);
+    // A shared string prefix is not a shared path.
+    expect(isMove({ from: "@beep/p/A", to: "@beep/p/AB" })).toBe(true);
+  });
+
+  // Two segments make every nesting of the ends likely, so a move that could re-apply is generated often.
+  const MoveSegment = S.Literals(["A", "B"]);
+  const codeOf = (segments: ReadonlyArray<string>) => `@beep/p/${A.join(segments, "/")}`;
+  const Segments = S.Array(MoveSegment).check(S.isMinLength(1), S.isMaxLength(4));
+
+  it.prop(
+    "a code identity move is idempotent, so a retry never moves a moved code again",
+    [Segments, Segments, Segments],
+    ([from, to, rest]) => {
+      const candidate = { from: codeOf(from), to: codeOf(to) };
+      if (!S.is(CodeIdMove)(candidate)) return;
+      const move = CodeIdMove.make({ from: code(candidate.from), to: code(candidate.to) });
+      for (const start of [code(codeOf(rest)), code(`${candidate.from}/${A.join(rest, "/")}`)]) {
+        const once = moveCode(start, move);
+        expect(moveCode(once, move)).toBe(once);
+      }
+    },
+    { arbitrary: fcRuns(200) }
+  );
 
   it("refuses a move onto a code identity that is already bound", () => {
     const twoBound = Result.getOrThrow(

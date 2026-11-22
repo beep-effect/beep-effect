@@ -85,9 +85,10 @@ export const makeCitationDiffWorkerFixture = Effect.fn("DiffWorkerTest.fixture")
   const admission = yield* makeCitationNativeProcessAdmission(policy);
   const observed = yield* makeCitationObservedSpawner();
   const worker = yield* makeCitationDiffWorker(policy, runtime, useDmp).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(policy).pipe(Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(policy), (stage, bind) => ({
+      ...stage,
+      evaluate: bind(stage.evaluate),
+    })),
     Effect.provideService(CitationNativeProcessAdmission, admission),
     Effect.provideService(ChildProcessSpawner, observed.spawner)
   );

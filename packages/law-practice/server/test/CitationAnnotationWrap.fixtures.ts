@@ -117,11 +117,10 @@ export const replayCitationWrapComposition = Effect.fn("AnnotationWrapTest.compo
     Effect.provideService(CitationXmlBalance, observedXml.xml)
   );
   const assembly = yield* makeCitationAnnotationReplay(setup.limits, setup.budget, processor).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
-        Effect.map((bind) => ({ ...stage, assemble: bind(stage.assemble) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits, "annotate"), (stage, bind) => ({
+      ...stage,
+      assemble: bind(stage.assemble),
+    })),
     Effect.provideContext(setup.provided)
   );
   const rows = full ? corpus.cases : A.filter(corpus.cases, (row) => row.id % 9 === 2 || row.id % 9 === 8);

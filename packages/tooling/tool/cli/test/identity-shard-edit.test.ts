@@ -516,16 +516,20 @@ describe("a change in many steps", () => {
             })
           )
         );
+      // Each write is checked before the next one replaces its snapshot, so one wrong step cannot hide.
+      const expectRelease = (file: RegistrySourceFile, written: TermSnapshot) => {
+        expect(written.release).toBe(RegistryTable.releaseAfter(tableOf([file]), base));
+        const changed = written.terms.length !== base.terms.length || written.deprecations.length > 0;
+        expect(written.release).toBe(written.deprecations.length > 0 ? "2.0.0" : changed ? "1.1.0" : "1.0.0");
+        expect(baseSnapshotIssues(baseOf(base), written, layout)).toStrictEqual([]);
+      };
       const start = { file: baseFile, committed: renderTermSnapshot(base) };
       const end = A.reduce(steps, start, ({ committed, file }, step) => {
         const edited = applyStep(file, step);
-        return { file: edited, committed: renderTermSnapshot(write(edited, committed).snapshot) };
+        const written = write(edited, committed).snapshot;
+        expectRelease(edited, written);
+        return { file: edited, committed: renderTermSnapshot(written) };
       });
-      const final = decodeSnapshotText(end.committed);
-      expect(final.release).toBe(RegistryTable.releaseAfter(tableOf([end.file]), base));
-      const changed = final.terms.length !== base.terms.length || final.deprecations.length > 0;
-      expect(final.release).toBe(final.deprecations.length > 0 ? "2.0.0" : changed ? "1.1.0" : "1.0.0");
-      expect(baseSnapshotIssues(baseOf(base), final, layout)).toStrictEqual([]);
       // The writer is idempotent, and a hermetic regeneration keeps what it wrote.
       expect(renderTermSnapshot(write(end.file, end.committed).snapshot)).toBe(end.committed);
       const checked = planRegistryArtifacts(

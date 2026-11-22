@@ -105,9 +105,10 @@ const install = Effect.fn("CaseNameScanTest.install")(function* (
   const setup = yield* setupCitationMetadataRuntime(kind, maximum, enclosing, controlled, 8192);
   const configuration = { ...corpus.configuration, patterns: { ...corpus.configuration.patterns } };
   const scanner = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      scan: bind(stage.scan),
+    })),
     Effect.provideContext(setup.provided)
   );
   return { ...setup, corpus, configuration, stage: { apply: scanner.scan } };
@@ -187,11 +188,10 @@ export const assertCitationCaseNameScanBudget = Effect.fn("CaseNameScanTest.budg
     exact.runtime,
     exact.configuration
   ).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding({ ...exact.limits, tokens: 1 }).pipe(
-        Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding({ ...exact.limits, tokens: 1 }), (stage, bind) => ({
+      ...stage,
+      scan: bind(stage.scan),
+    })),
     Effect.provideContext(exact.provided)
   );
   const tokens = yield* bounded.scan(row.request).pipe(Effect.flip);
@@ -228,18 +228,20 @@ export const assertCitationCaseNameScanDefaultPolicy = Effect.fn("CaseNameScanTe
     },
   ]) {
     const rejected = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, configuration).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) })))
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+        ...stage,
+        scan: bind(stage.scan),
+      })),
       Effect.provideContext(setup.provided),
       Effect.flip
     );
     expect(rejected).toMatchObject({ reason: "invalid-configuration" });
   }
   const scanner = yield* makeCitationCaseNameScan(setup.limits, setup.runtime, corpus.configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(Effect.map((bind) => ({ ...stage, scan: bind(stage.scan) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      scan: bind(stage.scan),
+    })),
     Effect.provideContext(setup.provided)
   );
   const failure = yield* scanner.scan(A.getUnsafe(corpus.cases, 4).request).pipe(Effect.flip);

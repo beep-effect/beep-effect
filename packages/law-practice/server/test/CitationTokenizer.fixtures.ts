@@ -140,11 +140,10 @@ export const setupCitationTokenizer = Effect.fn("TokenizerTest.setup")(function*
   const timer = yield* makeCitationNativeManualClock(limits.regexDeadline);
   const admission = yield* makeCitationOperationAdmission(limits).pipe(Effect.provideService(Clock.Clock, timer.clock));
   const tokenizer = yield* makeCitationTokenizer(limits, runtime, configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits).pipe(
-        Effect.map((bind) => ({ ...stage, port: { ...stage.port, tokenize: bind(stage.port.tokenize) } }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+      ...stage,
+      port: { ...stage.port, tokenize: bind(stage.port.tokenize) },
+    })),
     Effect.provideService(CitationOperationAdmission, admission),
     Effect.provideService(Clock.Clock, timer.clock),
     Effect.provideService(ChildProcessSpawner, observed.spawner)

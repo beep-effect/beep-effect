@@ -169,9 +169,10 @@ export const makeCitationOccurrenceTestAdapter = Effect.fn("OccurrenceProjection
 ) {
   const install = (limits = setup.limits, engineArtifact = artifact) =>
     makeCitationOccurrenceProjection(limits, setup.runtime, { engineArtifact }).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, project: bind(stage.project) })))
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+        ...stage,
+        project: bind(stage.project),
+      })),
       Effect.provideContext(provided)
     );
   const stage = yield* install();

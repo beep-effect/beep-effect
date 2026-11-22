@@ -24,7 +24,6 @@ import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Redacted from "effect/Redacted";
-import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { FleetLaunchRequest, FleetOverride } from "./Ec2Fleet.models.ts";
@@ -821,9 +820,11 @@ export const publishJobRetry = Effect.fn("ScaleUp.publishJobRetry")(function* (i
  *
  * **Details**
  *
- * `send-failed` is the one outcome whose message comes back as a batch item
- * failure, so it is not lost; `no-dlq` (a runtime config without the build
- * DLQ) acknowledges it with only the error log.
+ * Every outcome acknowledges the message. `send-failed` logs one more error
+ * line naming the failed send: a returned message would relaunch an instance
+ * once per visibility timeout, and the build queue has no redrive to stop it.
+ * `no-dlq` (a runtime config without the build DLQ) acknowledges it with only
+ * the error log.
  *
  * **Example** (Sent to the build DLQ)
  *
@@ -888,7 +889,7 @@ export const DeadLetterReason = LiteralKit([
 export type DeadLetterReason = typeof DeadLetterReason.Type;
 
 // Acknowledges a message whose runner configuration failed with no retry worth making: the message goes to the
-// build DLQ instead of back to a queue, logged as an error. Only a failed DLQ send keeps it for redelivery.
+// build DLQ instead of back to a queue, logged as an error. A failed DLQ send is logged and the message dropped.
 const deadLetter = Effect.fn("ScaleUp.deadLetter")(function* (
   config: PoolRuntimeConfig,
   request: QueuedActionRequest,
@@ -903,9 +904,12 @@ const deadLetter = Effect.fn("ScaleUp.deadLetter")(function* (
       queue.send({ queueUrl, body, delaySeconds: O.none() }).pipe(
         Effect.as(DeadLetterOutcome.Enum.sent),
         Effect.catch((error) =>
-          Effect.logWarning("scale-up: sending a dropped message to the build DLQ failed").pipe(
+          Effect.logError("scale-up: build DLQ send failed; the message is dropped").pipe(
             Effect.annotateLogs({
               messageId: request.messageId,
+              jobId: request.message.id,
+              repository: `${request.message.repositoryOwner}/${request.message.repositoryName}`,
+              reason,
               code: O.getOrNull(error.code),
               status: O.getOrNull(error.status),
             }),
@@ -1057,19 +1061,14 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
       ),
     { concurrency: 1 }
   );
-  const deadLettered = yield* Effect.forEach(
+  yield* Effect.forEach(
     A.appendAll(
       A.map(deterministic, ([request, failure]) => [request, failure, DeadLetterReason.Enum.deterministic] as const),
       A.getSomes(unretried)
     ),
-    ([request, failure, reason]) =>
-      deadLetter(config, request, failure, reason).pipe(Effect.map((outcome) => [request, outcome] as const)),
-    { concurrency: 1 }
+    ([request, failure, reason]) => deadLetter(config, request, failure, reason),
+    { concurrency: 1, discard: true }
   );
-  const sendFailed = A.filterMap(deadLettered, ([request, outcome]) =>
-    DeadLetterOutcome.is["send-failed"](outcome) ? Result.succeed(request) : Result.failVoid
-  );
-
   yield* publishRetries(
     handledExcept(
       A.appendAll(
@@ -1081,7 +1080,7 @@ const scaleUpGroup = Effect.fn("ScaleUp.group")(function* (
       )
     )
   );
-  return A.map(A.appendAll(A.appendAll(overCap, launchRetry), sendFailed), ({ messageId }) => messageId);
+  return A.map(A.appendAll(overCap, launchRetry), ({ messageId }) => messageId);
 });
 
 // A runner's JIT config parameter lives from its configuration until the runner reads and deletes it at boot, and
@@ -1143,8 +1142,8 @@ const countRunners = Effect.fnUntraced(function* (config: PoolRuntimeConfig, fil
  * is transient its message is published to job-retry, which re-checks the job
  * and backs off with the retry counter; when no retry can be published (no
  * retry policy, attempts used up, or a failed publish) it is dead-lettered
- * too. A dead-lettered message comes back as a batch item failure only when
- * the DLQ send itself fails. Nothing redrives the build DLQ, so a
+ * too. A dead-lettered message is always acknowledged; a failed DLQ send is
+ * logged as an error and the message dropped. Nothing redrives the build DLQ, so a
  * dead-lettered job waits until GitHub times it out. Everything else handled
  * is published to the job-retry queue. Non-`workflow_job` events with ephemeral runners are
  * returned (upstream behaviour); a repository owned by a user while the pool

@@ -168,6 +168,7 @@ generated `src/internal/generated/Registry.data.ts` and the committed
 | --- | --- |
 | Add a term or binding | edit the shard, then `bun run beep identity registry --write` |
 | Retire a published term | `bun run beep identity deprecate <curie> [--replacement <curie>]` |
+| Retire a published namespace IRI | by hand: deprecate it and its live terms in a remaining shard, then `bun run beep identity registry --write` |
 | Move the bindings of a renamed module | `bun run beep identity rebind @beep/<package>/<old path> @beep/<package>/<new path>` |
 | Move the bindings of a renamed package | `bun run beep identity rebind @beep/<old package> @beep/<new package>` |
 | Check generated drift | `bun run beep identity registry --check` |
@@ -212,11 +213,34 @@ only: put the new name in the `RegistryProjection` literal of
 package rebind above. Until then every registry command refuses the shard,
 because the checkout has no package of the old name.
 
+`deprecate` retires a live term of a shard and nothing else, so no command
+retires a namespace. To drop a namespace whose IRI the base published, remove
+its shard and add to a remaining shard a deprecation of the namespace IRI and
+of each live term the shard had, with the release of the change as `since` and
+`"replacement": ""` on the namespace IRI when that shard's namespace succeeds it;
+then run `registry --write`. The
+`research-library` shard retires the IRI P1 replaced this way.
+
+A rebind moves a code identity and every code under it, so its two ends are
+never one under the other: `@beep/p/A` to `@beep/p/A/B` is refused
+(`nested-move`), because it would match the codes it moved and a retry could
+not finish it. Make that move through a third code identity outside both ends
+that no binding uses. A rebind's target must name a module, so create a
+temporary module file for it (`src/Tmp.ts` for `@beep/p/Tmp`), rebind
+`@beep/p/A` to `@beep/p/Tmp`, rebind `@beep/p/Tmp` to `@beep/p/A/B`, then
+delete the temporary file. An identity that already has bindings will not do:
+the second rebind would move them too.
+Only the codes a rebind moves must name a module; a binding it leaves alone is
+reported by `--check`, not by the rebind.
+
 A bound term is deprecated only after its binding is removed from the shard; a
 rebind keeps the term bound. When the last shard drops its `projection`, the
 generated projection module is drift and `--write` removes it. An edit command
 that stops while it writes says how to finish: the shards are written first, so
 a failure after them is finished with `bun run beep identity registry --write`.
+Against a base that publishes a term set, every writer refuses a binding or
+deprecation the change adds whose `since` is not the release of the change, and
+writes nothing: set that `since` in its shard, then run the same command again.
 
 Removing a term, changing a namespace prefix, dropping a deprecation or
 reviving a retired IRI without a deprecation record fails the writer and the

@@ -226,10 +226,12 @@ const queueConsumer = (queue: SQS.Queue): Statement =>
     resources: [queue.queueArn],
   });
 
+// Without a `maxReceiveCount` SQS never moves a message to the DLQ: only an explicit send reaches it.
 const queueWithDlq = Effect.fn("RunnerFleet.queueWithDlq")(function* (input: {
   readonly id: string;
   readonly visibilityTimeout: Duration.Input;
-  readonly maxReceiveCount: number;
+  readonly maxReceiveCount?: number;
+  readonly messageRetentionPeriod?: Duration.Input;
   readonly names: O.Option<{ readonly queue: string; readonly dlq: string }>;
 }) {
   const dlq = yield* SQS.Queue(`${input.id}Dlq`, {
@@ -240,8 +242,11 @@ const queueWithDlq = Effect.fn("RunnerFleet.queueWithDlq")(function* (input: {
   const queue = yield* SQS.Queue(input.id, {
     ...O.match(input.names, { onNone: () => ({}), onSome: (names) => ({ queueName: names.queue }) }),
     visibilityTimeout: input.visibilityTimeout,
+    ...(input.messageRetentionPeriod === undefined ? {} : { messageRetentionPeriod: input.messageRetentionPeriod }),
     sqsManagedSseEnabled: true,
-    redrivePolicy: { deadLetterTargetArn: dlq.queueArn, maxReceiveCount: input.maxReceiveCount },
+    ...(input.maxReceiveCount === undefined
+      ? {}
+      : { redrivePolicy: { deadLetterTargetArn: dlq.queueArn, maxReceiveCount: input.maxReceiveCount } }),
   });
   return { queue, dlq };
 });
@@ -429,8 +434,11 @@ export const RunnerFleet = (props: RunnerFleetProps) =>
 
               const { queue: buildQueue, dlq: buildDlq } = yield* queueWithDlq({
                 id: "BuildQueue",
-                visibilityTimeout: "2 minutes",
-                maxReceiveCount: 5,
+                // A message over the cap comes back once per visibility timeout, and each return is a receive. A redrive
+                // would dead-letter a job for waiting, so waiters live for the retention, as on the live fleet. The
+                // timeout is the function's: shorter would redeliver a batch still being handled, longer idles a slot.
+                visibilityTimeout: "1 minute",
+                messageRetentionPeriod: "1 day",
                 names: queueNames(
                   (names) => names.buildQueue,
                   (names) => names.buildDlq

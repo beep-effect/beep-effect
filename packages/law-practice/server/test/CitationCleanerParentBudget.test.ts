@@ -25,11 +25,11 @@ const install = Effect.fn("CleanerParentBudgetTest.install")(function* (_maximum
       ? yield* makeCitationCleanerRegistryHarness(undefined, undefined, observed.spawner)
       : yield* makeCitationCleanerRegistryHarness();
   const pipeline = yield* makeCitationCleanerPipeline({ ...policy, producedTextUtf16: 8 }).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding({ ...policy, producedTextUtf16: 8 }, "clean").pipe(
-        Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding({ ...policy, producedTextUtf16: 8 }, "clean"), (stage, bind) => ({
+      ...stage,
+      run: bind(stage.run),
+      runOwned: bind(stage.runOwned),
+    })),
     Effect.provideService(CitationCleaner, h.registry.runtime),
     Effect.provideService(CitationTextBudget, budget)
   );

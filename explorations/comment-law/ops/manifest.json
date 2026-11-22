@@ -1,0 +1,24 @@
+{
+  "schemaVersion": "exploration-manifest/v1",
+  "exploration": {
+    "slug": "comment-law",
+    "title": "Comment Law",
+    "status": "graduated",
+    "stage": "graduate",
+    "openQuestions": [],
+    "sources": ["research/SOURCES.md"],
+    "links": {
+      "goals": [
+        "goals/comment-law-gate",
+        "goals/comment-census-defects",
+        "goals/comment-law-sweep",
+        "goals/jsdoc-lead-single-source"
+      ],
+      "docs": [],
+      "supersededBy": null
+    },
+    "created": "2026-11-21",
+    "updated": "2026-11-22",
+    "retentionReason": "Evidence and rubric for the four live comment-law goals; archive once comment-law-sweep closes."
+  }
+}

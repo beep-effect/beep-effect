@@ -71,11 +71,10 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
                 extraction: defaultConfiguration,
                 engineArtifact,
               }).pipe(
-                Effect.flatMap((stage) =>
-                  makeCitationTestScaffoldBinding(setup.limits).pipe(
-                    Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-                  )
-                ),
+                Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+                  ...stage,
+                  extract: bind(stage.extract),
+                })),
                 Effect.provideContext(provided),
                 Effect.provideService(SourceTextResolver, resolver),
                 DateTime.withCurrentZoneOffset(0)
@@ -181,11 +180,10 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
               extraction: defaultConfiguration,
               engineArtifact,
             }).pipe(
-              Effect.flatMap((stage) =>
-                makeCitationTestScaffoldBinding(setup.limits).pipe(
-                  Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-                )
-              ),
+              Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+                ...stage,
+                extract: bind(stage.extract),
+              })),
               Effect.provideContext(provided),
               Effect.provideService(SourceTextResolver, resolver),
               DateTime.withCurrentZoneOffset(0)

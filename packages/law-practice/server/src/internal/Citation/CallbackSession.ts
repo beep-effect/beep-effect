@@ -1039,12 +1039,8 @@ export const makeCitationCallbackDictionary = Effect.fn("Citation.makeCallbackDi
             const snapshot = yield* Effect.forEach(
               entries,
               (entry) =>
-                listOf(entry.slot).pipe(
-                  Effect.flatMap((members) =>
-                    currentResource(entry.resource).pipe(
-                      Effect.map((resource) => CitationCallbackGroup.make({ resource, listSlot: entry.slot, members }))
-                    )
-                  )
+                Effect.zipWith(listOf(entry.slot), currentResource(entry.resource), (members, resource) =>
+                  CitationCallbackGroup.make({ resource, listSlot: entry.slot, members })
                 ),
               { concurrency: 1 }
             );

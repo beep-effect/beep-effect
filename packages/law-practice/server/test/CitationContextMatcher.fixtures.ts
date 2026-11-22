@@ -91,11 +91,10 @@ const install = Effect.fn("ContextMatcherTest.install")(function* (
     row.flags,
     row.bindings
   ).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, search: bind(stage.search) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      search: bind(stage.search),
+    })),
     Effect.provideContext(setup.context)
   );
   return { ...setup, matcher };

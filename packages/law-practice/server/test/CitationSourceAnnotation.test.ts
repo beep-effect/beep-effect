@@ -54,11 +54,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           ),
         });
         const entry = yield* makeCitationSourceAnnotation(setup.limits, setup.runtime, setup.configuration).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
-              Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits, "annotate"), (stage, bind) => ({
+            ...stage,
+            annotate: bind(stage.annotate),
+          })),
           Effect.provideService(SourceTextResolver, resolver),
           Effect.provideService(CitationAnnotationAnnotator, callback),
           Effect.provideContext(setup.provided)
@@ -113,11 +112,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
               setup.configuration,
               artifact
             ).pipe(
-              Effect.flatMap((stage) =>
-                makeCitationTestScaffoldBinding(policy, "annotate").pipe(
-                  Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
-                )
-              ),
+              Effect.zipWith(makeCitationTestScaffoldBinding(policy, "annotate"), (stage, bind) => ({
+                ...stage,
+                annotate: bind(stage.annotate),
+              })),
               Effect.provideService(SourceTextResolver, resolver),
               Effect.provideContext(setup.provided)
             );
@@ -166,11 +164,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           update: Effect.fn("SourceAnnotationTest.update")(() => Effect.succeed(0)),
         });
         const entry = yield* makeCitationSourceAnnotation(setup.limits, setup.runtime, setup.configuration).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
-              Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits, "annotate"), (stage, bind) => ({
+            ...stage,
+            annotate: bind(stage.annotate),
+          })),
           Effect.provideService(SourceTextResolver, resolver),
           Effect.provideService(CitationAnnotationOffsetUpdater, updater),
           Effect.provideContext(setup.provided)
@@ -205,11 +202,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           }),
         });
         const entry = yield* makeCitationSourceAnnotation(setup.limits, setup.runtime, setup.configuration).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
-              Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits, "annotate"), (stage, bind) => ({
+            ...stage,
+            annotate: bind(stage.annotate),
+          })),
           Effect.provideService(SourceTextResolver, resolver),
           Effect.provideContext(setup.provided)
         );
@@ -244,10 +240,9 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true, concurrent: fa
           setup.runtime,
           setup.configuration
         ).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({ ...setup.limits, sourceUtf16: 3 }, "annotate").pipe(
-              Effect.map((bind) => ({ ...stage, annotate: bind(stage.annotate) }))
-            )
+          Effect.zipWith(
+            makeCitationTestScaffoldBinding({ ...setup.limits, sourceUtf16: 3 }, "annotate"),
+            (stage, bind) => ({ ...stage, annotate: bind(stage.annotate) })
           ),
           Effect.provideService(SourceTextResolver, resolver),
           Effect.provideContext(setup.provided)

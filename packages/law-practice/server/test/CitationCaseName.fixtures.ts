@@ -68,11 +68,10 @@ const install = makeCitationMetadataFixture({
   load: readCitationCaseNameCorpus,
   make: (...args: Parameters<typeof makeCitationCaseName>) =>
     makeCitationCaseName(...args).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(args[0]).pipe(
-          Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-        )
-      )
+      Effect.zipWith(makeCitationTestScaffoldBinding(args[0]), (stage, bind) => ({
+        ...stage,
+        extract: bind(stage.extract),
+      }))
     ),
 });
 type Row = (typeof Corpus.Type.cases)[number];

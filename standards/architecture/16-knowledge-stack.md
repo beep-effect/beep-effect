@@ -131,8 +131,11 @@ identity-registry` also regenerates the snapshot from the head's shards and
 compares it with the snapshot of the same base ref, so a change that edits the
 shards and the committed snapshot together is still caught. A removed term is retired only through
 `bun run beep identity deprecate <curie>`, which writes the deprecation row,
-after its binding, if it has one, is removed from the shard; a renamed module or
-package moves its bindings through `bun run beep identity rebind <from> <to>`.
+after its binding, if it has one, is removed from the shard. That command takes
+a live term only: a namespace IRI is retired by hand, with a deprecation row in a
+remaining shard and a regeneration. A renamed module or
+package moves its bindings through `bun run beep identity rebind <from> <to>`,
+whose ends are never one under the other.
 A package move rewrites binding codes only, so renaming a package that a shard
 projects into first changes its name in the `RegistryProjection` literal and in
 the shard's `projection`.

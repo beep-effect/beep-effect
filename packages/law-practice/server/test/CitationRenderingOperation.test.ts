@@ -21,17 +21,17 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const limits = { ...policy.limits, producedTextUtf16: 16 };
         for (const operation of ["clean", "extract", "resolve", "annotate"] as const) {
           const repr = yield* makeCitationPythonRepr(limits, printability).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, text: bind(stage.text) })))
-            ),
+            Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+              ...stage,
+              text: bind(stage.text),
+            })),
             Effect.provideService(CitationRegexOperation, operation)
           );
           const dump = yield* makeCitationDump(limits, printability).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(limits).pipe(
-                Effect.map((bind) => ({ ...stage, render: bind(stage.render) }))
-              )
-            ),
+            Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+              ...stage,
+              render: bind(stage.render),
+            })),
             Effect.provideService(CitationRegexOperation, operation)
           );
           const reprFailure = yield* repr

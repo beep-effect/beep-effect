@@ -26,7 +26,7 @@ import {
 import { findRepoRoot } from "@beep/repo-utils";
 import { it } from "@beep/test-runner";
 import { describe, expect } from "@effect/vitest";
-import { assertTrue } from "@effect/vitest/utils";
+import { assertFailure, assertTrue } from "@effect/vitest/utils";
 import * as A from "effect/Array";
 import * as Cause from "effect/Cause";
 import * as Console from "effect/Console";
@@ -286,7 +286,7 @@ describe("planRegistryArtifacts", () => {
     };
     const removal = "http://purl.org/spar/fabio/Article is removed without a deprecation.";
     const remedy =
-      "Restore the IRI, or retire it with `bun run beep identity deprecate`, the only writer of a deprecation.";
+      "Restore the IRI, or retire it with `bun run beep identity deprecate`, the only writer of a term's deprecation.";
     const write = "`bun run beep identity registry --write";
     // A check knows only the committed snapshot, so it leaves the verdict to the writer, which reads the base.
     expect(detailsOf(O.none())).toStrictEqual([
@@ -539,6 +539,9 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             "@beep/widget/Runner/TestHang",
             "@beep/widget/Panel/Title",
             "@beep/widget/Report.ts/Report",
+            // Dot-only segments are no code identity, even where the joined path reaches a real module.
+            "@beep/widget/../src/Report/Report",
+            "@beep/widget/./Report/Report",
           ]);
 
           expect(dangling).toStrictEqual([
@@ -549,6 +552,8 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
             "@beep/widget/Runner/TestHang",
             "@beep/widget/Panel/Title",
             "@beep/widget/Report.ts/Report",
+            "@beep/widget/../src/Report/Report",
+            "@beep/widget/./Report/Report",
           ]);
         })
       )
@@ -711,6 +716,70 @@ it.layer(NodeTestLayer, { concurrent: false, timeout: "60 seconds" })((it) => {
 
           // No shard was edited, so the failure names no recovery: the same command is the recovery.
           expect(error.message).toBe(`Cannot remove ${target.path}.`);
+        })
+      )
+    );
+
+    it.effect("stages each write in a new directory, so no entry at a fixed staging path is followed", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          const path = yield* Path.Path;
+          yield* writeFixture([["fabio.json", { ...fabio, bindings: [], deprecations: [] }]]);
+          const root = yield* Effect.sync(() => process.cwd());
+          yield* fs.makeDirectory("outside", { recursive: true });
+          yield* fs.writeFileString("outside/victim.txt", "untouched\n");
+          yield* fs.makeDirectory(path.dirname(layout.data), { recursive: true });
+          // A link and a stale file where a fixed staging path would be.
+          yield* fs.symlink(path.join(root, "outside/victim.txt"), `${layout.snapshot}.tmp`);
+          yield* fs.writeFileString(`${layout.data}.tmp`, "stale\n");
+
+          yield* runIdentityCommand(["registry", "--write"]);
+
+          const victim = yield* fs.readFileString("outside/victim.txt");
+          const stale = yield* fs.readFileString(`${layout.data}.tmp`);
+          const written = yield* fs.readFileString(layout.snapshot);
+          expect(victim).toBe("untouched\n");
+          expect(stale).toBe("stale\n");
+          expect(written).toContain('"release": "1.0.0"');
+          // Every staging directory is gone after the write.
+          for (const directory of [path.dirname(layout.snapshot), path.dirname(layout.data)]) {
+            const entries = yield* fs.readDirectory(directory);
+            expect(A.filter(entries, Str.includes(".staging-")), directory).toStrictEqual([]);
+          }
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("refuses an edit that names no shard, or names one shard twice, and writes nothing", () =>
+      Effect.andThen(
+        temporaryWorkingDirectory,
+        Effect.gen(function* () {
+          const fs = yield* FileSystem.FileSystem;
+          yield* writeFixture([["fabio.json", { ...fabio, bindings: [], deprecations: [] }]]);
+          const root = yield* Effect.sync(() => process.cwd());
+          const base = BaseSnapshot.make({ snapshot: TermSnapshot.empty });
+          const stray = shardFile("skos.json", {
+            namespace: { prefix: "skos", iri: "http://www.w3.org/2004/02/skos/core#" },
+            terms: ["prefLabel"],
+            bindings: [],
+            deprecations: [],
+          });
+
+          const unknown = yield* writeRegistry(root, layout, base, [stray]);
+          const twice = yield* writeRegistry(root, layout, base, [fabioFile, fabioFile]);
+
+          assertFailure(Result.mapError(unknown, A.map(issueLine)), [
+            `${stray.path} [registry-shard-invalid] The edit names no shard of the registry; an edit replaces a shard.`,
+          ]);
+          assertFailure(Result.mapError(twice, A.map(issueLine)), [
+            `${fabioFile.path} [registry-shard-invalid] 2 edits name this shard; an edit names each shard once.`,
+          ]);
+          const present = yield* Effect.forEach([stray.path, layout.data, layout.snapshot], (file) => fs.exists(file), {
+            concurrency: 1,
+          });
+          expect(present).toStrictEqual([false, false, false]);
         })
       )
     );

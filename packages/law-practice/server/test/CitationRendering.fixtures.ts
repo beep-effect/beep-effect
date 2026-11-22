@@ -130,9 +130,10 @@ const replayMode = Effect.fn("RenderingTest.mode")(function* (
 export const replayCitationRendering = Effect.fn("RenderingTest.replay")(function* () {
   const { corpus, owner, limits } = yield* loadCitationRendering();
   const rendering = yield* makeCitationRendering(limits).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, render: bind(stage.render) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+      ...stage,
+      render: bind(stage.render),
+    })),
     Effect.provideService(CitationFrozenEditions, owner)
   );
   expect(A.map(corpus.modes, (m) => m.mode)).toEqual(Mode.literals);

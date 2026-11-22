@@ -256,3 +256,28 @@ home paths with `~`, drop session and machine ids.
   `nfkcRewrites` cognitive 10), which the hosted Fallow gate would have reported.
 - **Prevention:** the package-verify of a new package runs `fallow health --base` scoped to its files,
   so complexity over the threshold shows up in the commit that adds the function.
+## 2026-11-22: the full effect-vitest ratchet names files, not the findings
+
+- **Doing:** PR C's third review round, new tests in two repo-cli test files.
+- **Evidence:** `bun run beep lint effect-vitest` printed "3 new finding(s) in 2 file(s)" after a 60 s
+  scan, with no line or rule. Only a second run with `--files <path>` for each file printed
+  `:768 EV006 hand-rolled-data-assertion`.
+- **Prevention:** print each new finding's line and rule in the full-scan summary too, as the scoped
+  run does.
+
+## 2026-11-22: `goals decisions write` takes `--slug`, `add` takes a positional slug
+
+- **Doing:** correcting a decision file just written with `goals decisions add <slug>`.
+- **Evidence:** `bun run beep goals decisions write text-knowledge-stack-rebuild` failed with
+  `Unexpected positional argument`; the same slug is positional for `add`.
+- **Prevention:** accept the slug the same way in every `goals decisions` subcommand.
+
+## 2026-11-22: a refusal's remedy text shipped without a test that follows it
+
+- **Doing:** answering a verifier on PR #3449's `nested-move` refusal of `identity rebind`.
+- **Evidence:** the remedy "move through a code identity outside both, in two rebinds" was refused
+  at its first step with `[target-module-missing]`, because a rebind target must name a module
+  file. A test that followed the steps would have shown it; the namespace remedy had one, this did
+  not.
+- **Prevention:** every refusal whose message prescribes commands gets a test that runs those
+  commands and ends with a passing lint, as `L0-3 a namespace is retired by hand` does.

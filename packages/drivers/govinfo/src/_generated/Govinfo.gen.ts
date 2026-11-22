@@ -19,7 +19,7 @@ import * as HttpApiSecurity from "effect/http-api/HttpApiSecurity";
 import * as OpenApi from "effect/http-api/OpenApi";
 
 const $I = $GovinfoId.create("_generated/Govinfo.gen");
-// non-recursive definitions
+
 /**
  * Generated Sort declaration for \@beep/govinfo.
  *
@@ -30,6 +30,7 @@ export type Sort = {
   readonly field?: string;
   readonly sortOrder?: "ASC" | "DESC";
 } & { readonly [x: string]: S.Json };
+
 /**
  * Generated Sort declaration for \@beep/govinfo.
  *
@@ -51,6 +52,48 @@ export const Sort = S.StructWithRest(
   }),
   [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
 ).annotate({ identifier: "Sort" });
+
+/**
+ * Generated SearchRequest declaration for \@beep/govinfo.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SearchRequest = {
+  readonly query?: string;
+  readonly pageSize?: number;
+  readonly offsetMark?: string;
+  readonly sorts?: globalThis.ReadonlyArray<Sort>;
+  readonly historical?: boolean;
+  readonly resultLevel?: string;
+} & { readonly [x: string]: S.Json };
+
+/**
+ * Generated SearchRequest declaration for \@beep/govinfo.
+ *
+ * **Example** (Inspect SearchRequest)
+ *
+ * ```ts
+ * import { SearchRequest } from "@beep/govinfo"
+ *
+ * console.log(SearchRequest)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchRequest = S.StructWithRest(
+  S.Struct({
+    query: S.optionalKey(S.String),
+    pageSize: S.optionalKey(S.Int.annotate({ format: "int32" })),
+    offsetMark: S.optionalKey(S.String),
+    sorts: S.Array(Sort).pipe(S.optionalKey),
+    historical: S.optionalKey(S.Boolean),
+    resultLevel: S.optionalKey(S.String),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({ identifier: "SearchRequest" });
+
 /**
  * Generated SearchResult declaration for \@beep/govinfo.
  *
@@ -62,7 +105,7 @@ export type SearchResult = {
   readonly packageId?: string;
   readonly granuleId?: string;
   readonly lastModified?: string;
-  readonly governmentAuthor?: ReadonlyArray<string>;
+  readonly governmentAuthor?: globalThis.ReadonlyArray<string>;
   readonly dateIssued?: string;
   readonly collectionCode?: string;
   readonly resultLink?: string;
@@ -70,6 +113,7 @@ export type SearchResult = {
   readonly download?: { readonly [x: string]: string };
   readonly relatedLink?: string;
 } & { readonly [x: string]: S.Json };
+
 /**
  * Generated SearchResult declaration for \@beep/govinfo.
  *
@@ -100,6 +144,42 @@ export const SearchResult = S.StructWithRest(
   }),
   [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
 ).annotate({ identifier: "SearchResult" });
+
+/**
+ * Generated SearchResponse declaration for \@beep/govinfo.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SearchResponse = {
+  readonly results?: globalThis.ReadonlyArray<SearchResult>;
+  readonly offsetMark?: string;
+  readonly count?: number;
+} & { readonly [x: string]: S.Json };
+
+/**
+ * Generated SearchResponse declaration for \@beep/govinfo.
+ *
+ * **Example** (Inspect SearchResponse)
+ *
+ * ```ts
+ * import { SearchResponse } from "@beep/govinfo"
+ *
+ * console.log(SearchResponse)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SearchResponse = S.StructWithRest(
+  S.Struct({
+    results: S.Array(SearchResult).pipe(S.optionalKey),
+    offsetMark: S.optionalKey(S.String),
+    count: S.optionalKey(S.Int.annotate({ format: "int32" })),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({ identifier: "SearchResponse" });
+
 /**
  * Generated PackageInfo declaration for \@beep/govinfo.
  *
@@ -115,6 +195,7 @@ export type PackageInfo = {
   readonly congress?: string;
   readonly dateIssued?: string;
 } & { readonly [x: string]: S.Json };
+
 /**
  * Generated PackageInfo declaration for \@beep/govinfo.
  *
@@ -141,6 +222,46 @@ export const PackageInfo = S.StructWithRest(
   }),
   [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
 ).annotate({ identifier: "PackageInfo" });
+
+/**
+ * Generated CollectionContainer declaration for \@beep/govinfo.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type CollectionContainer = {
+  readonly count?: number;
+  readonly message?: string;
+  readonly nextPage?: string;
+  readonly previousPage?: string;
+  readonly packages?: globalThis.ReadonlyArray<PackageInfo>;
+} & { readonly [x: string]: S.Json };
+
+/**
+ * Generated CollectionContainer declaration for \@beep/govinfo.
+ *
+ * **Example** (Inspect CollectionContainer)
+ *
+ * ```ts
+ * import { CollectionContainer } from "@beep/govinfo"
+ *
+ * console.log(CollectionContainer)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const CollectionContainer = S.StructWithRest(
+  S.Struct({
+    count: S.optionalKey(S.Int.annotate({ format: "int64" })),
+    message: S.optionalKey(S.String),
+    nextPage: S.optionalKey(S.String),
+    previousPage: S.optionalKey(S.String),
+    packages: S.Array(PackageInfo).pipe(S.optionalKey),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({ identifier: "CollectionContainer" });
+
 /**
  * Generated GranuleMetadata declaration for \@beep/govinfo.
  *
@@ -155,6 +276,7 @@ export type GranuleMetadata = {
   readonly granuleClass?: string;
   readonly md5?: string;
 } & { readonly [x: string]: S.Json };
+
 /**
  * Generated GranuleMetadata declaration for \@beep/govinfo.
  *
@@ -180,150 +302,7 @@ export const GranuleMetadata = S.StructWithRest(
   }),
   [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
 ).annotate({ identifier: "GranuleMetadata" });
-/**
- * Generated SummaryItem declaration for \@beep/govinfo.
- *
- * @category models
- * @since 0.0.0
- */
-export type SummaryItem = {
-  readonly collectionCode?: string;
-  readonly collectionName?: string;
-  readonly packageCount?: number;
-  readonly granuleCount?: number;
-} & { readonly [x: string]: S.Json };
-/**
- * Generated SummaryItem declaration for \@beep/govinfo.
- *
- * **Example** (Inspect SummaryItem)
- *
- * ```ts
- * import { SummaryItem } from "@beep/govinfo"
- *
- * console.log(SummaryItem)
- * ```
- *
- * @category tools
- * @since 0.0.0
- */
-export const SummaryItem = S.StructWithRest(
-  S.Struct({
-    collectionCode: S.optionalKey(S.String),
-    collectionName: S.optionalKey(S.String),
-    packageCount: S.optionalKey(S.Int.annotate({ format: "int64" })),
-    granuleCount: S.optionalKey(S.Int.annotate({ format: "int64" })),
-  }),
-  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
-).annotate({ identifier: "SummaryItem" });
-/**
- * Generated SearchRequest declaration for \@beep/govinfo.
- *
- * @category models
- * @since 0.0.0
- */
-export type SearchRequest = {
-  readonly query?: string;
-  readonly pageSize?: number;
-  readonly offsetMark?: string;
-  readonly sorts?: ReadonlyArray<Sort>;
-  readonly historical?: boolean;
-  readonly resultLevel?: string;
-} & { readonly [x: string]: S.Json };
-/**
- * Generated SearchRequest declaration for \@beep/govinfo.
- *
- * **Example** (Inspect SearchRequest)
- *
- * ```ts
- * import { SearchRequest } from "@beep/govinfo"
- *
- * console.log(SearchRequest)
- * ```
- *
- * @category tools
- * @since 0.0.0
- */
-export const SearchRequest = S.StructWithRest(
-  S.Struct({
-    query: S.optionalKey(S.String),
-    pageSize: S.optionalKey(S.Int.annotate({ format: "int32" })),
-    offsetMark: S.optionalKey(S.String),
-    sorts: S.Array(Sort).pipe(S.optionalKey),
-    historical: S.optionalKey(S.Boolean),
-    resultLevel: S.optionalKey(S.String),
-  }),
-  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
-).annotate({ identifier: "SearchRequest" });
-/**
- * Generated SearchResponse declaration for \@beep/govinfo.
- *
- * @category models
- * @since 0.0.0
- */
-export type SearchResponse = {
-  readonly results?: ReadonlyArray<SearchResult>;
-  readonly offsetMark?: string;
-  readonly count?: number;
-} & { readonly [x: string]: S.Json };
-/**
- * Generated SearchResponse declaration for \@beep/govinfo.
- *
- * **Example** (Inspect SearchResponse)
- *
- * ```ts
- * import { SearchResponse } from "@beep/govinfo"
- *
- * console.log(SearchResponse)
- * ```
- *
- * @category tools
- * @since 0.0.0
- */
-export const SearchResponse = S.StructWithRest(
-  S.Struct({
-    results: S.Array(SearchResult).pipe(S.optionalKey),
-    offsetMark: S.optionalKey(S.String),
-    count: S.optionalKey(S.Int.annotate({ format: "int32" })),
-  }),
-  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
-).annotate({ identifier: "SearchResponse" });
-/**
- * Generated CollectionContainer declaration for \@beep/govinfo.
- *
- * @category models
- * @since 0.0.0
- */
-export type CollectionContainer = {
-  readonly count?: number;
-  readonly message?: string;
-  readonly nextPage?: string;
-  readonly previousPage?: string;
-  readonly packages?: ReadonlyArray<PackageInfo>;
-} & { readonly [x: string]: S.Json };
-/**
- * Generated CollectionContainer declaration for \@beep/govinfo.
- *
- * **Example** (Inspect CollectionContainer)
- *
- * ```ts
- * import { CollectionContainer } from "@beep/govinfo"
- *
- * console.log(CollectionContainer)
- * ```
- *
- * @category tools
- * @since 0.0.0
- */
-export const CollectionContainer = S.StructWithRest(
-  S.Struct({
-    count: S.optionalKey(S.Int.annotate({ format: "int64" })),
-    message: S.optionalKey(S.String),
-    nextPage: S.optionalKey(S.String),
-    previousPage: S.optionalKey(S.String),
-    packages: S.Array(PackageInfo).pipe(S.optionalKey),
-  }),
-  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
-).annotate({ identifier: "CollectionContainer" });
+
 /**
  * Generated GranuleContainer declaration for \@beep/govinfo.
  *
@@ -336,9 +315,10 @@ export type GranuleContainer = {
   readonly pageSize?: number;
   readonly nextPage?: string;
   readonly previousPage?: string;
-  readonly granules?: ReadonlyArray<GranuleMetadata>;
+  readonly granules?: globalThis.ReadonlyArray<GranuleMetadata>;
   readonly message?: string;
 } & { readonly [x: string]: S.Json };
+
 /**
  * Generated GranuleContainer declaration for \@beep/govinfo.
  *
@@ -365,6 +345,44 @@ export const GranuleContainer = S.StructWithRest(
   }),
   [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
 ).annotate({ identifier: "GranuleContainer" });
+
+/**
+ * Generated SummaryItem declaration for \@beep/govinfo.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export type SummaryItem = {
+  readonly collectionCode?: string;
+  readonly collectionName?: string;
+  readonly packageCount?: number;
+  readonly granuleCount?: number;
+} & { readonly [x: string]: S.Json };
+
+/**
+ * Generated SummaryItem declaration for \@beep/govinfo.
+ *
+ * **Example** (Inspect SummaryItem)
+ *
+ * ```ts
+ * import { SummaryItem } from "@beep/govinfo"
+ *
+ * console.log(SummaryItem)
+ * ```
+ *
+ * @category tools
+ * @since 0.0.0
+ */
+export const SummaryItem = S.StructWithRest(
+  S.Struct({
+    collectionCode: S.optionalKey(S.String),
+    collectionName: S.optionalKey(S.String),
+    packageCount: S.optionalKey(S.Int.annotate({ format: "int64" })),
+    granuleCount: S.optionalKey(S.Int.annotate({ format: "int64" })),
+  }),
+  [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
+).annotate({ identifier: "SummaryItem" });
+
 /**
  * Generated CollectionSummary declaration for \@beep/govinfo.
  *
@@ -372,8 +390,9 @@ export const GranuleContainer = S.StructWithRest(
  * @since 0.0.0
  */
 export type CollectionSummary = {
-  readonly collections?: ReadonlyArray<SummaryItem>;
+  readonly collections?: globalThis.ReadonlyArray<SummaryItem>;
 } & { readonly [x: string]: S.Json };
+
 /**
  * Generated CollectionSummary declaration for \@beep/govinfo.
  *
@@ -392,7 +411,7 @@ export const CollectionSummary = S.StructWithRest(
   S.Struct({ collections: S.Array(SummaryItem).pipe(S.optionalKey) }),
   [S.Record(S.String, S.Json.annotate({ expected: "JSON value" }))],
 ).annotate({ identifier: "CollectionSummary" });
-// schemas
+
 /**
  * Generated SearchRequestJson declaration for \@beep/govinfo.
  *
@@ -400,6 +419,7 @@ export const CollectionSummary = S.StructWithRest(
  * @since 0.0.0
  */
 export type SearchRequestJson = SearchRequest;
+
 /**
  * Generated SearchRequestJson declaration for \@beep/govinfo.
  *
@@ -415,6 +435,7 @@ export type SearchRequestJson = SearchRequest;
  * @since 0.0.0
  */
 export const SearchRequestJson = SearchRequest;
+
 /**
  * Generated Search200 declaration for \@beep/govinfo.
  *
@@ -422,6 +443,7 @@ export const SearchRequestJson = SearchRequest;
  * @since 0.0.0
  */
 export type Search200 = SearchResponse;
+
 /**
  * Generated Search200 declaration for \@beep/govinfo.
  *
@@ -437,6 +459,7 @@ export type Search200 = SearchResponse;
  * @since 0.0.0
  */
 export const Search200 = SearchResponse;
+
 /**
  * Generated RelatedPackageDetailsPathParams declaration for \@beep/govinfo.
  *
@@ -444,6 +467,7 @@ export const Search200 = SearchResponse;
  * @since 0.0.0
  */
 export type RelatedPackageDetailsPathParams = { readonly accessId: string };
+
 /**
  * Generated RelatedPackageDetailsPathParams declaration for \@beep/govinfo.
  *
@@ -466,6 +490,7 @@ export const RelatedPackageDetailsPathParams = S.Struct({
       "Generated GOVINFO schema for RelatedPackageDetailsPathParams.",
   }),
 );
+
 /**
  * Generated RelatedVersionsDetailsParams declaration for \@beep/govinfo.
  *
@@ -476,6 +501,7 @@ export type RelatedVersionsDetailsParams = {
   readonly granuleClass?: string;
   readonly subGranuleClass?: string;
 };
+
 /**
  * Generated RelatedVersionsDetailsParams declaration for \@beep/govinfo.
  *
@@ -498,6 +524,7 @@ export const RelatedVersionsDetailsParams = S.Struct({
     description: "Generated GOVINFO schema for RelatedVersionsDetailsParams.",
   }),
 );
+
 /**
  * Generated RelatedVersionsDetailsPathParams declaration for \@beep/govinfo.
  *
@@ -519,6 +546,7 @@ export type RelatedVersionsDetailsPathParams = {
     | "USCODE"
     | "CMR";
 };
+
 /**
  * Generated RelatedVersionsDetailsPathParams declaration for \@beep/govinfo.
  *
@@ -554,6 +582,7 @@ export const RelatedVersionsDetailsPathParams = S.Struct({
       "Generated GOVINFO schema for RelatedVersionsDetailsPathParams.",
   }),
 );
+
 /**
  * Generated RelatedVersionsDetailsQuery declaration for \@beep/govinfo.
  *
@@ -564,6 +593,7 @@ export type RelatedVersionsDetailsQuery = {
   readonly granuleClass?: string;
   readonly subGranuleClass?: string;
 };
+
 /**
  * Generated RelatedVersionsDetailsQuery declaration for \@beep/govinfo.
  *
@@ -586,6 +616,7 @@ export const RelatedVersionsDetailsQuery = S.Struct({
     description: "Generated GOVINFO schema for RelatedVersionsDetailsQuery.",
   }),
 );
+
 /**
  * Generated GetPackagesByDateIssuedParams declaration for \@beep/govinfo.
  *
@@ -667,6 +698,7 @@ export type GetPackagesByDateIssuedParams = {
   readonly natureSuitCode?: string;
   readonly natureSuit?: string;
 };
+
 /**
  * Generated GetPackagesByDateIssuedParams declaration for \@beep/govinfo.
  *
@@ -800,6 +832,7 @@ export const GetPackagesByDateIssuedParams = S.Struct({
     description: "Generated GOVINFO schema for GetPackagesByDateIssuedParams.",
   }),
 );
+
 /**
  * Generated GetPackagesByDateIssuedPathParams declaration for \@beep/govinfo.
  *
@@ -809,6 +842,7 @@ export const GetPackagesByDateIssuedParams = S.Struct({
 export type GetPackagesByDateIssuedPathParams = {
   readonly dateIssuedStartDate: string;
 };
+
 /**
  * Generated GetPackagesByDateIssuedPathParams declaration for \@beep/govinfo.
  *
@@ -837,6 +871,7 @@ export const GetPackagesByDateIssuedPathParams = S.Struct({
       "Generated GOVINFO schema for GetPackagesByDateIssuedPathParams.",
   }),
 );
+
 /**
  * Generated GetPackagesByDateIssuedQuery declaration for \@beep/govinfo.
  *
@@ -918,6 +953,7 @@ export type GetPackagesByDateIssuedQuery = {
   readonly natureSuitCode?: string;
   readonly natureSuit?: string;
 };
+
 /**
  * Generated GetPackagesByDateIssuedQuery declaration for \@beep/govinfo.
  *
@@ -1051,6 +1087,7 @@ export const GetPackagesByDateIssuedQuery = S.Struct({
     description: "Generated GOVINFO schema for GetPackagesByDateIssuedQuery.",
   }),
 );
+
 /**
  * Generated GetPackagesByDateIssued200 declaration for \@beep/govinfo.
  *
@@ -1058,6 +1095,7 @@ export const GetPackagesByDateIssuedQuery = S.Struct({
  * @since 0.0.0
  */
 export type GetPackagesByDateIssued200 = CollectionContainer;
+
 /**
  * Generated GetPackagesByDateIssued200 declaration for \@beep/govinfo.
  *
@@ -1073,6 +1111,7 @@ export type GetPackagesByDateIssued200 = CollectionContainer;
  * @since 0.0.0
  */
 export const GetPackagesByDateIssued200 = CollectionContainer;
+
 /**
  * Generated GetPackagesByDateIssued1Params declaration for \@beep/govinfo.
  *
@@ -1154,6 +1193,7 @@ export type GetPackagesByDateIssued1Params = {
   readonly natureSuit?: string;
   readonly isGLP?: boolean;
 };
+
 /**
  * Generated GetPackagesByDateIssued1Params declaration for \@beep/govinfo.
  *
@@ -1287,6 +1327,7 @@ export const GetPackagesByDateIssued1Params = S.Struct({
     description: "Generated GOVINFO schema for GetPackagesByDateIssued1Params.",
   }),
 );
+
 /**
  * Generated GetPackagesByDateIssued1PathParams declaration for \@beep/govinfo.
  *
@@ -1297,6 +1338,7 @@ export type GetPackagesByDateIssued1PathParams = {
   readonly dateIssuedStartDate: string;
   readonly dateIssuedEndDate: string;
 };
+
 /**
  * Generated GetPackagesByDateIssued1PathParams declaration for \@beep/govinfo.
  *
@@ -1332,6 +1374,7 @@ export const GetPackagesByDateIssued1PathParams = S.Struct({
       "Generated GOVINFO schema for GetPackagesByDateIssued1PathParams.",
   }),
 );
+
 /**
  * Generated GetPackagesByDateIssued1Query declaration for \@beep/govinfo.
  *
@@ -1413,6 +1456,7 @@ export type GetPackagesByDateIssued1Query = {
   readonly natureSuit?: string;
   readonly isGLP?: boolean;
 };
+
 /**
  * Generated GetPackagesByDateIssued1Query declaration for \@beep/govinfo.
  *
@@ -1546,6 +1590,7 @@ export const GetPackagesByDateIssued1Query = S.Struct({
     description: "Generated GOVINFO schema for GetPackagesByDateIssued1Query.",
   }),
 );
+
 /**
  * Generated GetPackagesByDateIssued1200 declaration for \@beep/govinfo.
  *
@@ -1553,6 +1598,7 @@ export const GetPackagesByDateIssued1Query = S.Struct({
  * @since 0.0.0
  */
 export type GetPackagesByDateIssued1200 = CollectionContainer;
+
 /**
  * Generated GetPackagesByDateIssued1200 declaration for \@beep/govinfo.
  *
@@ -1568,6 +1614,7 @@ export type GetPackagesByDateIssued1200 = CollectionContainer;
  * @since 0.0.0
  */
 export const GetPackagesByDateIssued1200 = CollectionContainer;
+
 /**
  * Generated PackageDetailsPathParams declaration for \@beep/govinfo.
  *
@@ -1575,6 +1622,7 @@ export const GetPackagesByDateIssued1200 = CollectionContainer;
  * @since 0.0.0
  */
 export type PackageDetailsPathParams = { readonly packageId: string };
+
 /**
  * Generated PackageDetailsPathParams declaration for \@beep/govinfo.
  *
@@ -1594,6 +1642,7 @@ export const PackageDetailsPathParams = S.Struct({ packageId: S.String }).pipe(
     description: "Generated GOVINFO schema for PackageDetailsPathParams.",
   }),
 );
+
 /**
  * Generated GetGranulesForPackageParams declaration for \@beep/govinfo.
  *
@@ -1607,6 +1656,7 @@ export type GetGranulesForPackageParams = {
   readonly md5?: string;
   readonly granuleClass?: string;
 };
+
 /**
  * Generated GetGranulesForPackageParams declaration for \@beep/govinfo.
  *
@@ -1636,6 +1686,7 @@ export const GetGranulesForPackageParams = S.Struct({
     description: "Generated GOVINFO schema for GetGranulesForPackageParams.",
   }),
 );
+
 /**
  * Generated GetGranulesForPackagePathParams declaration for \@beep/govinfo.
  *
@@ -1643,6 +1694,7 @@ export const GetGranulesForPackageParams = S.Struct({
  * @since 0.0.0
  */
 export type GetGranulesForPackagePathParams = { readonly packageId: string };
+
 /**
  * Generated GetGranulesForPackagePathParams declaration for \@beep/govinfo.
  *
@@ -1665,6 +1717,7 @@ export const GetGranulesForPackagePathParams = S.Struct({
       "Generated GOVINFO schema for GetGranulesForPackagePathParams.",
   }),
 );
+
 /**
  * Generated GetGranulesForPackageQuery declaration for \@beep/govinfo.
  *
@@ -1678,6 +1731,7 @@ export type GetGranulesForPackageQuery = {
   readonly md5?: string;
   readonly granuleClass?: string;
 };
+
 /**
  * Generated GetGranulesForPackageQuery declaration for \@beep/govinfo.
  *
@@ -1707,6 +1761,7 @@ export const GetGranulesForPackageQuery = S.Struct({
     description: "Generated GOVINFO schema for GetGranulesForPackageQuery.",
   }),
 );
+
 /**
  * Generated GetGranulesForPackage200 declaration for \@beep/govinfo.
  *
@@ -1714,6 +1769,7 @@ export const GetGranulesForPackageQuery = S.Struct({
  * @since 0.0.0
  */
 export type GetGranulesForPackage200 = GranuleContainer;
+
 /**
  * Generated GetGranulesForPackage200 declaration for \@beep/govinfo.
  *
@@ -1729,6 +1785,7 @@ export type GetGranulesForPackage200 = GranuleContainer;
  * @since 0.0.0
  */
 export const GetGranulesForPackage200 = GranuleContainer;
+
 /**
  * Generated GetGranuleContentDetailPathParams declaration for \@beep/govinfo.
  *
@@ -1739,6 +1796,7 @@ export type GetGranuleContentDetailPathParams = {
   readonly packageId: string;
   readonly granuleId: string;
 };
+
 /**
  * Generated GetGranuleContentDetailPathParams declaration for \@beep/govinfo.
  *
@@ -1762,6 +1820,7 @@ export const GetGranuleContentDetailPathParams = S.Struct({
       "Generated GOVINFO schema for GetGranuleContentDetailPathParams.",
   }),
 );
+
 /**
  * Generated GetGranuleContentDetail200 declaration for \@beep/govinfo.
  *
@@ -1769,6 +1828,7 @@ export const GetGranuleContentDetailPathParams = S.Struct({
  * @since 0.0.0
  */
 export type GetGranuleContentDetail200 = string;
+
 /**
  * Generated GetGranuleContentDetail200 declaration for \@beep/govinfo.
  *
@@ -1788,6 +1848,7 @@ export const GetGranuleContentDetail200 = S.String.pipe(
     description: "Generated GOVINFO schema for GetGranuleContentDetail200.",
   }),
 );
+
 /**
  * Generated GetCollectionSummary200 declaration for \@beep/govinfo.
  *
@@ -1795,6 +1856,7 @@ export const GetGranuleContentDetail200 = S.String.pipe(
  * @since 0.0.0
  */
 export type GetCollectionSummary200 = CollectionSummary;
+
 /**
  * Generated GetCollectionSummary200 declaration for \@beep/govinfo.
  *
@@ -1810,6 +1872,7 @@ export type GetCollectionSummary200 = CollectionSummary;
  * @since 0.0.0
  */
 export const GetCollectionSummary200 = CollectionSummary;
+
 /**
  * Generated GetModifiedCollectionsParams declaration for \@beep/govinfo.
  *
@@ -1889,6 +1952,7 @@ export type GetModifiedCollectionsParams = {
   readonly natureSuitCode?: string;
   readonly natureSuit?: string;
 };
+
 /**
  * Generated GetModifiedCollectionsParams declaration for \@beep/govinfo.
  *
@@ -2020,6 +2084,7 @@ export const GetModifiedCollectionsParams = S.Struct({
     description: "Generated GOVINFO schema for GetModifiedCollectionsParams.",
   }),
 );
+
 /**
  * Generated GetModifiedCollectionsPathParams declaration for \@beep/govinfo.
  *
@@ -2070,6 +2135,7 @@ export type GetModifiedCollectionsPathParams = {
     | "USREPORTS";
   readonly lastModifiedStartDate: string;
 };
+
 /**
  * Generated GetModifiedCollectionsPathParams declaration for \@beep/govinfo.
  *
@@ -2144,6 +2210,7 @@ export const GetModifiedCollectionsPathParams = S.Struct({
       "Generated GOVINFO schema for GetModifiedCollectionsPathParams.",
   }),
 );
+
 /**
  * Generated GetModifiedCollectionsQuery declaration for \@beep/govinfo.
  *
@@ -2223,6 +2290,7 @@ export type GetModifiedCollectionsQuery = {
   readonly natureSuitCode?: string;
   readonly natureSuit?: string;
 };
+
 /**
  * Generated GetModifiedCollectionsQuery declaration for \@beep/govinfo.
  *
@@ -2354,6 +2422,7 @@ export const GetModifiedCollectionsQuery = S.Struct({
     description: "Generated GOVINFO schema for GetModifiedCollectionsQuery.",
   }),
 );
+
 /**
  * Generated GetModifiedCollections200 declaration for \@beep/govinfo.
  *
@@ -2361,6 +2430,7 @@ export const GetModifiedCollectionsQuery = S.Struct({
  * @since 0.0.0
  */
 export type GetModifiedCollections200 = CollectionContainer;
+
 /**
  * Generated GetModifiedCollections200 declaration for \@beep/govinfo.
  *
@@ -2376,6 +2446,7 @@ export type GetModifiedCollections200 = CollectionContainer;
  * @since 0.0.0
  */
 export const GetModifiedCollections200 = CollectionContainer;
+
 /**
  * Generated GetModifiedCollections1Params declaration for \@beep/govinfo.
  *
@@ -2455,6 +2526,7 @@ export type GetModifiedCollections1Params = {
   readonly natureSuitCode?: string;
   readonly natureSuit?: string;
 };
+
 /**
  * Generated GetModifiedCollections1Params declaration for \@beep/govinfo.
  *
@@ -2586,6 +2658,7 @@ export const GetModifiedCollections1Params = S.Struct({
     description: "Generated GOVINFO schema for GetModifiedCollections1Params.",
   }),
 );
+
 /**
  * Generated GetModifiedCollections1PathParams declaration for \@beep/govinfo.
  *
@@ -2637,6 +2710,7 @@ export type GetModifiedCollections1PathParams = {
   readonly lastModifiedStartDate: string;
   readonly lastModifiedEndDate: string;
 };
+
 /**
  * Generated GetModifiedCollections1PathParams declaration for \@beep/govinfo.
  *
@@ -2722,6 +2796,7 @@ export const GetModifiedCollections1PathParams = S.Struct({
       "Generated GOVINFO schema for GetModifiedCollections1PathParams.",
   }),
 );
+
 /**
  * Generated GetModifiedCollections1Query declaration for \@beep/govinfo.
  *
@@ -2801,6 +2876,7 @@ export type GetModifiedCollections1Query = {
   readonly natureSuitCode?: string;
   readonly natureSuit?: string;
 };
+
 /**
  * Generated GetModifiedCollections1Query declaration for \@beep/govinfo.
  *
@@ -2932,6 +3008,7 @@ export const GetModifiedCollections1Query = S.Struct({
     description: "Generated GOVINFO schema for GetModifiedCollections1Query.",
   }),
 );
+
 /**
  * Generated GetModifiedCollections1200 declaration for \@beep/govinfo.
  *
@@ -2939,6 +3016,7 @@ export const GetModifiedCollections1Query = S.Struct({
  * @since 0.0.0
  */
 export type GetModifiedCollections1200 = CollectionContainer;
+
 /**
  * Generated GetModifiedCollections1200 declaration for \@beep/govinfo.
  *
