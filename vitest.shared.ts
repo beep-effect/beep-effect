@@ -9,6 +9,7 @@ import * as NodeURL from "node:url";
 import { A, P, Str, Struct } from "@beep/utils";
 import * as Doctest from "@effect/doctest/Plugin";
 import * as Config from "effect/Config";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Effect from "effect/Effect";
 import { pipe } from "effect/Function";
 import * as MutableHashMap from "effect/MutableHashMap";
@@ -55,12 +56,20 @@ const resolveUniformTypeScriptSourceSpecifiers = (): Plugin => ({
   },
 });
 
-const configStringEqualsSync = (name: string, expected: string): boolean =>
+// Every environment read in this module goes through this provider, once, at module load (the boot
+// snapshot). Never through the default ConfigProvider: test files import this module too, so it runs
+// inside workers, where the default provider would be built from the environment at that moment and
+// a test that stubs a variable afterwards (vi.stubEnv) would read the old environment.
+const environment = ConfigProvider.fromEnv();
+const readEnv = (name: string): O.Option<string> =>
   Config.String(name).pipe(
     Config.option,
-    Effect.runSync,
-    O.exists((value) => value === expected)
+    Effect.provideService(ConfigProvider.ConfigProvider, environment),
+    Effect.runSync
   );
+
+const configStringEqualsSync = (name: string, expected: string): boolean =>
+  O.exists(readEnv(name), (value) => value === expected);
 /**
  * Selects package-local in-source tests without ordinary test includes.
  *
@@ -86,12 +95,10 @@ export const vitestCoverageRunActive =
   process.argv.includes("--coverage");
 
 // one-round-loop P1: an active BEEP_FC_NUM_RUNS floor marks a deep
-// property sweep (PR lane at 400, nightly at 1000+). Read via Config
+// property sweep (PR lane at 400, nightly at 1000+). Read through `readEnv`
 // like the coverage flags above (boot-snapshot semantics are exactly
 // what the lane wants — CI exports the floor before vitest starts).
-const parsedFcNumRuns = Config.String("BEEP_FC_NUM_RUNS").pipe(
-  Config.option,
-  Effect.runSync,
+const parsedFcNumRuns = readEnv("BEEP_FC_NUM_RUNS").pipe(
   O.map(Number),
   O.getOrElse(() => 0)
 );
@@ -103,13 +110,7 @@ export const fcDeepSweepActive = Number.isInteger(parsedFcNumRuns) && parsedFcNu
 // none and draws random seeds. It is decided once here and handed to the workers as `BEEP_FC_SEED`,
 // because their argv does not carry `--coverage`; vitest.setup.ts applies it.
 const COVERAGE_PROPERTY_SEED = 20260708;
-const parsedFcSeed = Config.String("BEEP_FC_SEED").pipe(
-  Config.option,
-  Effect.runSync,
-  O.filter(Str.isNonEmpty),
-  O.map(Number),
-  O.filter(Number.isInteger)
-);
+const parsedFcSeed = readEnv("BEEP_FC_SEED").pipe(O.filter(Str.isNonEmpty), O.map(Number), O.filter(Number.isInteger));
 const propertySeedEnvironment = pipe(
   O.orElse(parsedFcSeed, () => (vitestCoverageRunActive ? O.some(COVERAGE_PROPERTY_SEED) : O.none<number>())),
   O.match({ onNone: () => ({}), onSome: (seed) => ({ BEEP_FC_SEED: `${seed}` }) })
