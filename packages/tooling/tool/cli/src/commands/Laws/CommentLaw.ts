@@ -159,12 +159,43 @@ export const scanCommentSource: {
   (file: string, text: string): ReadonlyArray<ClassifiedComment>;
 } = F.dual(2, (file: string, text: string): ReadonlyArray<ClassifiedComment> => {
   if (!Str.includes("//")(text) && !Str.includes("/*")(text)) return [];
+  return parseCommentSource({ file, text }).comments;
+});
+
+/**
+ * Parse one source file once and classify its comments, keeping the program.
+ *
+ * **Details**
+ *
+ * `errors` counts the parser diagnostics; the comment strip refuses a file
+ * that does not parse cleanly on either side of a deletion.
+ *
+ * **Example** (Parse a small file)
+ *
+ * ```ts
+ * import { parseCommentSource } from "@beep/repo-cli/commands/Laws/CommentLaw"
+ *
+ * const parsed = parseCommentSource({ file: "a.ts", text: "// note\nexport const x = 1\n" })
+ *
+ * console.log(parsed.errors, parsed.comments.length) // 0 1
+ * ```
+ *
+ * @param source - The path the parser uses to pick the dialect, and the full source text.
+ * @returns The parsed program, the parser error count and the classified comments.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const parseCommentSource = ({ file, text }: { readonly file: string; readonly text: string }) => {
   const parsed = parseSync(file, text, { sourceType: "module" });
   const comments = A.map(parsed.comments, (comment) =>
     SourceComment.make({ type: comment.type, value: comment.value, start: comment.start, end: comment.end })
   );
-  return classifyComments(CommentGrammarInput.make({ source: text, program: parsed.program, comments }));
-});
+  return {
+    program: parsed.program,
+    errors: A.length(parsed.errors),
+    comments: classifyComments(CommentGrammarInput.make({ source: text, program: parsed.program, comments })),
+  };
+};
 
 const bannedOf = (file: string, text: string): ReadonlyArray<ClassifiedComment> =>
   A.filter(scanCommentSource(file, text), (comment) => isBannedCommentKind(comment.kind));

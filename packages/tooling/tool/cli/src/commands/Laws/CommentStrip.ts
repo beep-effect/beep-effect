@@ -14,13 +14,7 @@
  * @since 0.0.0
  */
 
-import {
-  CommentGrammarInput,
-  classifyComments,
-  GrammarNode,
-  isBannedCommentKind,
-  SourceComment,
-} from "@beep/lint-rules/comment-grammar";
+import { GrammarNode, isBannedCommentKind } from "@beep/lint-rules/comment-grammar";
 import { findRepoRoot } from "@beep/repo-utils";
 import { sha256Hex } from "@beep/repo-utils/Sha256Hex";
 import { A } from "@beep/utils";
@@ -40,7 +34,7 @@ import * as Result from "effect/Result";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
 import { parseSync } from "oxc-parser";
-import { commentLawFiles, commentPackageRootOf } from "./CommentLaw.ts";
+import { commentLawFiles, commentPackageRootOf, parseCommentSource } from "./CommentLaw.ts";
 import {
   CommentApplySummary,
   CommentLedgerRow,
@@ -151,19 +145,11 @@ const isEmptyJsxContainer = (node: GrammarNode): boolean =>
 const contains = (outer: GrammarNode, comment: ClassifiedComment): boolean =>
   outer.start < comment.start && comment.end <= outer.end;
 
-const parseSource = (file: string, text: string): ParsedSource => {
-  const parsed = parseSync(file, text, { sourceType: "module" });
-  const comments = A.map(parsed.comments, (comment) =>
-    SourceComment.make({ type: comment.type, value: comment.value, start: comment.start, end: comment.end })
-  );
-  return {
-    comments: classifyComments(CommentGrammarInput.make({ source: text, program: parsed.program, comments })),
-    errors: A.length(parsed.errors),
-    file,
-    program: parsed.program,
-    text,
-  };
-};
+const parseSource = (file: string, text: string): ParsedSource => ({
+  ...parseCommentSource({ file, text }),
+  file,
+  text,
+});
 
 const lineOf = (text: string, offset: number): number => A.length(Str.split(Str.slice(0, offset)(text), "\n"));
 

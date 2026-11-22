@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/architecture-lab-client",
-  "root": "packages/architecture-lab/client",
-  "scopes": ["."]
-}
