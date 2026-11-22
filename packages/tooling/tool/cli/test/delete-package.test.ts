@@ -477,6 +477,70 @@ it.layer(commandLayer, { concurrent: false, timeout: "30 seconds" })((it) => {
       ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
     );
 
+    it.effect("reads dated records as history and keeps the doctor clean", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const records: ReadonlyArray<readonly [string, string]> = [
+            [".changeset/older-note.md", "---\n{}\n---\n\nMoves out of `deploy/src/Stack.ts`.\n"],
+            ["docs/reports/2026-01-01-cache-review.md", "Reviewed `@beep/deploy`.\n"],
+            ["docs/reports/retirement/request.json", '{ "package": "@beep/deploy" }\n'],
+            ["explorations/INBOX.md", "- 2026-01-01: split `@beep/deploy`.\n"],
+            ["explorations/demo/.runs/census.yaml", 'package: "@beep/deploy"\n'],
+            ["explorations/demo/DECISIONS.md", "Keep `@beep/deploy`.\n"],
+            ["goals/demo/decisions/2026-01-01-move.md", "Retire `@beep/deploy`.\n"],
+            ["goals/demo/history/notes.md", "Moved out of `deploy/src/Stack.ts`.\n"],
+            ["goals/demo/research/graph.tsv", "@beep/deploy\tbuild\n"],
+            ["research/2026-01-01/claims.md", "Uses `@beep/deploy`.\n"],
+            ["standards/architecture/DECISIONS.md", "2026-01-01: add `@beep/deploy`.\n"],
+            ["standards/changesets.retired-packages.json", '{ "packages": [{ "name": "@beep/deploy" }] }\n'],
+          ];
+          const repoRoot = yield* writeDeletedDeployLayout(records);
+
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(evidenceOf(observations, "authored-references")).toStrictEqual([]);
+          expect(statusOf(observations, "authored-references")).toBe("clean");
+          expect(statusOf(observations, "historical-records")).toBe("historical");
+          expect(evidenceOf(observations, "historical-records")).toStrictEqual(A.map(records, ([file]) => file));
+          expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, observations)).toBe(true);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
+    it.effect("still reports live files beside the dated records as residue", () =>
+      Effect.andThen(
+        temporaryGitWorkingDirectory,
+        Effect.gen(function* () {
+          const line = "Reads `@beep/deploy`.\n";
+          const live: ReadonlyArray<readonly [string, string]> = [
+            ["docs/reports.md", line],
+            ["docs/runbooks/deploy.md", line],
+            ["explorations-index.md", line],
+            ["explorations/AGENTS.md", line],
+            ["explorations/README.md", line],
+            ["packages/consumer/docs/reports/notes.md", line],
+            ["packages/consumer/src/index.ts", 'import "@beep/deploy";\n'],
+            ["scratchpad/goals/notes.md", line],
+            ["standards/architecture/16-demo.md", line],
+            ["standards/architecture/GLOSSARY.md", line],
+            ["standards/changesets.policy.json", '{ "package": "@beep/deploy" }\n'],
+          ];
+          const repoRoot = yield* writeDeletedDeployLayout([
+            ...live,
+            ["docs/reports/2026-01-01-cache-review.md", line],
+          ]);
+
+          const observations = yield* inspectTargetAtRoot(repoRoot, rootDeployTarget);
+          expect(statusOf(observations, "authored-references")).toBe("residue");
+          expect(evidenceOf(observations, "authored-references")).toStrictEqual(A.map(live, ([file]) => file));
+          expect(evidenceOf(observations, "historical-records")).toStrictEqual([
+            "docs/reports/2026-01-01-cache-review.md",
+          ]);
+          expect(DeletePackagePolicyEvaluation.doctorIsClean(rootDeployTarget, observations)).toBe(false);
+        })
+      ).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+    );
+
     it.effect("classifies packet history and ledger references as historical, not live packet claims", () =>
       Effect.flatMap(temporaryGitDirectory, (repoRoot) =>
         Effect.gen(function* () {

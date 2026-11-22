@@ -24,6 +24,25 @@ import type {
   RegistrationTarget,
 } from "./RegistrationGeometry.schemas.ts";
 
+// Dated records: they say what was true when they were written, so a deleted package named there is
+// evidence, never residue, and rewriting it would falsify the record. The doctor probes read these globs
+// for both the authored-references skip and the historical-records surface, so a path has one reading.
+// Everything else in the same trees stays live: the architecture chapters and glossary, `docs/` outside
+// `docs/reports/`, the other `standards/` files, and the guides directly under `explorations/`.
+const HISTORICAL_RECORD_GLOBS = A.map(
+  [
+    "goals/**",
+    "research/**",
+    ".changeset/**",
+    "explorations/INBOX.md",
+    "explorations/*/**",
+    "docs/reports/**",
+    "standards/architecture/DECISIONS.md",
+    "standards/changesets.retired-packages.json",
+  ],
+  (value) => GlobString.make(value)
+);
+
 const slugOf = (packageName: string): string => Str.replace("@beep/", Str.empty)(packageName);
 
 /**
@@ -194,9 +213,7 @@ export const surfacesForTarget = (target: RegistrationTarget): ReadonlyArray<Reg
     }),
     HistoricalRecordSurface.make({
       id: "historical-records",
-      files: A.map(["research/**", "goals/**/research/**", "goals/**/history/**", ".changeset/**/*.md"], (value) =>
-        GlobString.make(value)
-      ),
+      files: HISTORICAL_RECORD_GLOBS,
       needles: packageNeedles,
     }),
     ...dataResourceSurfaces,
