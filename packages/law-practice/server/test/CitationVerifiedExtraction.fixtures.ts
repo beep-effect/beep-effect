@@ -122,11 +122,10 @@ const assertResolvedRequest = Effect.fnUntraced(function* (
     engineArtifact,
     extraction: defaultConfiguration,
   }).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      extract: bind(stage.extract),
+    })),
     Effect.provideContext(provided),
     Effect.provideService(SourceTextResolver, resolver),
     DateTime.withCurrentZoneOffset(0)
@@ -182,11 +181,10 @@ export const replayCitationVerifiedExtraction = Effect.fn("VerifiedExtractionTes
     );
     const config = { engineArtifact, extraction: defaultConfiguration };
     const stage = yield* makeCitationVerifiedExtraction(setup.limits, setup.runtime, config).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(setup.limits).pipe(
-          Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-        )
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+        ...stage,
+        extract: bind(stage.extract),
+      })),
       Effect.provideContext(provided),
       DateTime.withCurrentZoneOffset(0)
     );

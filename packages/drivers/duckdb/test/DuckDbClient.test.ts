@@ -738,14 +738,11 @@ describe("DuckDbClient", { concurrent: false }, () => {
       "cancels a stream during its first native pull and releases the op lock",
       Effect.fnUntraced(function* () {
         const sql = yield* SqlClient.SqlClient;
-        // No row matches, so the first pull scans the whole range until it is cancelled.
-        const [elapsed, exit] = yield* sql`SELECT range AS i FROM range(20000000000) WHERE range % 7 = 99`.stream.pipe(
-          Stream.runCount,
-          Effect.timeout("300 millis"),
-          Effect.exit,
-          Effect.timed,
-          TestClock.withLive
-        );
+        // Squares are never 3 modulo 7, so no row matches and the first pull scans the whole range until it is
+        // cancelled. Column statistics cannot prove it: DuckDB 2.0.1 answers `range % 7 = 99` without scanning.
+        const [elapsed, exit] = yield* sql`
+          SELECT range AS i FROM range(20000000000) WHERE ((range % 7) * (range % 7)) % 7 = 3
+        `.stream.pipe(Stream.runCount, Effect.timeout("300 millis"), Effect.exit, Effect.timed, TestClock.withLive);
         pipe(exit, Exit.isFailure, assertTrue);
         assert.isBelow(Duration.toMillis(elapsed), 2000);
         const value79 = yield* sql`SELECT ${1} AS n`;

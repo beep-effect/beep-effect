@@ -122,9 +122,10 @@ const controlled = Effect.fn("RegexWorkerTest.controlled")(function* (
   const observed = yield* makeCitationNativeAcknowledgementSpawner(afterKill);
   const spawner = observed.spawner;
   const worker = yield* installCitationRegexEvaluator(limits, fixture, [descriptor]).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+      ...stage,
+      evaluate: bind(stage.evaluate),
+    })),
     Effect.provideService(Clock.Clock, timer.clock),
     Effect.provideService(CitationNativeProcessAdmission, admission),
     Effect.provideService(ChildProcessSpawner, spawner)

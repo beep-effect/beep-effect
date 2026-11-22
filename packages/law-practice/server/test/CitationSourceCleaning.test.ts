@@ -44,11 +44,10 @@ const setup = Effect.fn("SourceCleaningTest.setup")(function* () {
   const install = (policy = limits, resolver = sourceResolver, reader = h.values) =>
     ownCitationTestConfiguration(CitationEngineLimits, policy).pipe(
       Effect.flatMap((owned) => makeCitationSourceCleaning(owned, artifact)),
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(policy, "clean").pipe(
-          Effect.map((bind) => ({ ...stage, clean: bind(stage.clean) }))
-        )
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding(policy, "clean"), (stage, bind) => ({
+        ...stage,
+        clean: bind(stage.clean),
+      })),
       Effect.provideService(CitationOperationAdmission, admission),
       Effect.provideService(CitationCleaner, h.registry.runtime),
       Effect.provideService(CitationCleanerValues, reader),

@@ -20,6 +20,17 @@ const failures = (ids: ReadonlyArray<string>) => ({
   batchItemFailures: A.map(ids, (itemIdentifier) => ({ itemIdentifier })),
 });
 
+// A body that does not decode is acknowledged: no resend can fix it. The line names the message, never its body.
+const decodeRecord = (record: SqsEvent["Records"][number]) =>
+  O.match(decodeMessage(record.body), {
+    onNone: () =>
+      Effect.logWarning("scale-up: a message that does not decode is dropped").pipe(
+        Effect.annotateLogs({ messageId: record.messageId }),
+        Effect.as(O.none<QueuedActionRequest>())
+      ),
+    onSome: (message) => Effect.succeedSome(QueuedActionRequest.make({ messageId: record.messageId, message })),
+  });
+
 /**
  * Lambda handler: launch runners for a build-queue batch; messages that must
  * come back are reported as batch item failures.
@@ -31,19 +42,15 @@ export const definition = defineLambda({
   layer: fleetLive,
   run: Effect.fn("ScaleUpLambda.run")(function* (config, raw) {
     const event = yield* decodeEvent(raw);
-    const batch = A.getSomes(
-      A.map(
-        A.filter(
-          event.Records,
-          (record) => O.getOrElse(O.fromUndefinedOr(record.eventSource), () => "aws:sqs") === "aws:sqs"
-        ),
-        (record) =>
-          O.map(decodeMessage(record.body), (message) =>
-            QueuedActionRequest.make({ messageId: record.messageId, message })
-          )
-      )
+    const decoded = yield* Effect.forEach(
+      A.filter(
+        event.Records,
+        (record) => O.getOrElse(O.fromUndefinedOr(record.eventSource), () => "aws:sqs") === "aws:sqs"
+      ),
+      decodeRecord,
+      { concurrency: 1 }
     );
-    const retry = yield* handleScaleUp({ config, batch });
+    const retry = yield* handleScaleUp({ config, batch: A.getSomes(decoded) });
     return failures(retry);
   }),
   fallback: (raw) =>

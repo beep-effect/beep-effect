@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "comment-census-defects",
+    "packetId": "goal-packet/v1:01ebf28c5e9af18b91496ed46da815c48b42451fae48bc07cffac1b8154e9064",
+    "title": "Comment Census Defects",
+    "status": "active",
+    "created": "2026-11-22",
+    "updated": "2026-11-22",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/comment-census-defects",
+  "lifecycle": "active",
+  "mission": "Fix the defects the comment census found under comments, each as a small PR.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/comment-law",
+    "graduated": "2026-11-22"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/comment-census-defects/README.md",
+    "goals/comment-census-defects/SPEC.md",
+    "goals/comment-census-defects/PLAN.md",
+    "goals/comment-census-defects/GOAL.md",
+    "goals/comment-census-defects/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/comment-census-defects/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/comment-census-defects/GOAL.md)\" -le 4000",
+    "jq . goals/comment-census-defects/ops/manifest.json",
+    "rg -n \"comment-census-defects|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/comment-census-defects",
+    "git diff --check -- goals/comment-census-defects",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

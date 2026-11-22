@@ -29,6 +29,7 @@ import * as Context from "effect/Context";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
 import { World, worldContext } from "./support/FakeWorld.ts";
@@ -149,6 +150,30 @@ describe("Lambda entry points", () => {
         .pipe(Effect.provideContext(worldContext(world)));
       expect([out, world.instances.length]).toStrictEqual([{ batchItemFailures: [] }, 1]);
       expect(ScaleUpLambda.definition.layer(poolConfig())).toBeDefined();
+    })
+  );
+
+  it.effect("scale-up logs the id of a message it cannot decode, never its body", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      const lines: Array<{ readonly level: string; readonly message: unknown; readonly annotations: unknown }> = [];
+      const capture = Logger.map(Logger.formatStructured, (line) => {
+        lines.push(line);
+      });
+      const loggers = yield* Layer.build(Logger.layer([capture]));
+      const event = yield* sqsEvent([message({ id: 1 }), "a body that must stay out of the log"]);
+      yield* ScaleUpLambda.definition
+        .run(poolConfig(), event)
+        .pipe(Effect.provideContext(worldContext(world)), Effect.provideContext(loggers));
+      expect(A.map(lines, ({ level, message, annotations }) => ({ level, message, annotations }))).toStrictEqual([
+        {
+          level: "WARN",
+          message: "scale-up: a message that does not decode is dropped",
+          annotations: { messageId: "m-1" },
+        },
+      ]);
+      const logged = yield* encodeMessage(lines);
+      expect(logged).not.toContain("must stay out of the log");
     })
   );
 

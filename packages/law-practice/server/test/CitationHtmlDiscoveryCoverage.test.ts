@@ -23,11 +23,10 @@ const setup = Effect.fnUntraced(function* () {
   const runtime = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
   const make = (policy: CitationEngineLimits, configuration: unknown) =>
     makeCitationHtmlDiscovery(policy, runtime.runtime, configuration).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(policy).pipe(
-          Effect.map((bind) => ({ ...stage, discover: bind(stage.discover) }))
-        )
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding(policy), (stage, bind) => ({
+        ...stage,
+        discover: bind(stage.discover),
+      })),
       Effect.provideContext(runtime.provided)
     );
   return { ...loaded, runtime, make };

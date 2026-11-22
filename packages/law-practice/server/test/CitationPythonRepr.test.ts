@@ -39,11 +39,10 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
           const policy = yield* defaultCitationEnginePolicy;
           const raw = yield* table;
           const repr = yield* makeCitationPythonRepr(policy.limits, raw).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(policy.limits).pipe(
-                Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
-              )
-            )
+            Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits), (stage, bind) => ({
+              ...stage,
+              text: bind(stage.text),
+            }))
           );
           const corpusText = yield* readCitationOracleFixture(
             "python-repr-cases",
@@ -68,22 +67,20 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
           const raw = yield* table;
           for (const corrupt of [null, "{}", `${raw} `]) {
             const error = yield* makeCitationPythonRepr(policy.limits, corrupt).pipe(
-              Effect.flatMap((stage) =>
-                makeCitationTestScaffoldBinding(policy.limits).pipe(
-                  Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
-                )
-              ),
+              Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits), (stage, bind) => ({
+                ...stage,
+                text: bind(stage.text),
+              })),
               Effect.flip
             );
             expect(error).toMatchObject({ reason: "invalid-table" });
             expect("cause" in error).toBe(false);
           }
           const repr = yield* makeCitationPythonRepr(policy.limits, raw).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(policy.limits).pipe(
-                Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
-              )
-            )
+            Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits), (stage, bind) => ({
+              ...stage,
+              text: bind(stage.text),
+            }))
           );
           for (const input of [
             { width: 3, bytes: new Uint8Array() },
@@ -94,10 +91,9 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
             expect(error).toMatchObject({ reason: "invalid-input" });
           }
           const small = yield* makeCitationPythonRepr({ ...policy.limits, producedTextUtf16: 8 }, raw).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding({ ...policy.limits, producedTextUtf16: 8 }).pipe(
-                Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
-              )
+            Effect.zipWith(
+              makeCitationTestScaffoldBinding({ ...policy.limits, producedTextUtf16: 8 }),
+              (stage, bind) => ({ ...stage, text: bind(stage.text) })
             )
           );
           const refused = yield* small.text({ width: 1, bytes: new Uint8Array([0, 0, 0]) }).pipe(Effect.flip);
@@ -111,11 +107,10 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
         const policy = yield* defaultCitationEnginePolicy;
         const raw = yield* table;
         const repr = yield* makeCitationPythonRepr(policy.limits, raw).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(policy.limits).pipe(
-              Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
-            )
-          )
+          Effect.zipWith(makeCitationTestScaffoldBinding(policy.limits), (stage, bind) => ({
+            ...stage,
+            text: bind(stage.text),
+          }))
         );
         // Longer than one assembly chunk (1024) and one cooperative yield interval (4096).
         const bytes = new Uint8Array(5000).fill(97);
@@ -158,10 +153,9 @@ it.layer(Layer.merge(citationTokenizerTestLayer, BunCrypto.layer), { excludeTest
           { ...policy.limits, extractDeadline: Duration.seconds(1) },
           raw
         ).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({ ...policy.limits, extractDeadline: Duration.seconds(1) }).pipe(
-              Effect.map((bind) => ({ ...stage, text: bind(stage.text) }))
-            )
+          Effect.zipWith(
+            makeCitationTestScaffoldBinding({ ...policy.limits, extractDeadline: Duration.seconds(1) }),
+            (stage, bind) => ({ ...stage, text: bind(stage.text) })
           ),
           Effect.provideService(Clock.Clock, controlled)
         );
