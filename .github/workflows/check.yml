@@ -1943,7 +1943,7 @@ jobs:
           set -euo pipefail
           # Checkout removed its credentials, and an anonymous fetch can be
           # throttled (403). GH_TOKEN is step-scoped: every command in this step
-          # sees it, and this step runs only git, jq and grep; never add repo code
+          # sees it, and this step runs only git; never add repo code
           # here. git receives the token through GIT_CONFIG_* entries on each
           # fetch, never argv or .git/config. Three attempts, 5 s then 15 s.
           authenticated_fetch() {
@@ -2185,7 +2185,6 @@ jobs:
             # since — including the bodies GitHub generates for squash merges.
             to_ref="${PR_HEAD_SHA:?missing pull request head sha}"
             base_branch="${PR_BASE_REF:-main}"
-            git fetch --quiet --no-tags origin "+refs/heads/${base_branch}:refs/remotes/origin/${base_branch}"
             git rev-parse --verify "${to_ref}^{commit}" >/dev/null 2>&1 || git fetch --quiet --no-tags origin "$to_ref"
             from_ref="$(git merge-base "refs/remotes/origin/${base_branch}" "$to_ref")"
           elif [[ -n "${BEFORE_SHA:-}" && ! "$BEFORE_SHA" =~ ^0+$ ]]; then
