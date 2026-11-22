@@ -2,8 +2,10 @@ import {
   Citation,
   CitationAmbiguous,
   CitationComponentAnchor,
+  CitationComponentReceipt,
   CitationDocument,
   CitationDocumentReceipt,
+  CitationFootnoteReceipt,
   CitationFootnoteZone,
   CitationGroupMember,
   CitationMentionId,
@@ -49,6 +51,7 @@ import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
 import { TextAnchor } from "@beep/provenance/TextAnchor";
 import {
+  TextAnchorVerificationReceipt,
   VerifySourceTextIdentityInput,
   VerifyTextAnchorAgainstVerifiedSourceInput,
   verifySourceTextIdentity,
@@ -416,6 +419,45 @@ const fatesOf = Effect.fn("CitationMigrationTest.fates")(function* (receipt: Cit
   };
 });
 
+// Mention receipts that are coherent by construction: every nested anchor takes the primary anchor's source, and a
+// footnote zone is the primary range extended on both sides. `Arbitrary.schema(CitationMentionReceipt)` draws each
+// source on its own, so the coherence filter discards every receipt that has a component or a footnote.
+const coherentReceipt = Arbitrary.schema(
+  S.Struct({
+    ...CitationMentionReceipt.fields,
+    footnote: S.OptionFromNullOr(
+      S.Struct({ label: CitationFootnoteReceipt.fields.label, before: S.String, after: S.String })
+    ),
+  })
+).pipe(
+  Arbitrary.map((receipt) => {
+    const { anchor, source } = receipt.anchor;
+    return CitationMentionReceipt.make({
+      ...receipt,
+      components: A.map(receipt.components, (component) =>
+        CitationComponentReceipt.make({
+          name: component.name,
+          anchor: TextAnchorVerificationReceipt.make({ anchor: component.anchor.anchor, source }),
+        })
+      ),
+      footnote: O.map(receipt.footnote, ({ label, before, after }) => {
+        const lead = Str.takeRight(before, anchor.startChar);
+        return CitationFootnoteReceipt.make({
+          label,
+          anchor: TextAnchorVerificationReceipt.make({
+            anchor: TextAnchor.make({
+              startChar: anchor.startChar - Str.length(lead),
+              endChar: anchor.endChar + Str.length(after),
+              quote: `${lead}${anchor.quote}${after}`,
+            }),
+            source,
+          }),
+        });
+      }),
+    });
+  })
+);
+
 const representativesOf = (receipt: CitationDocumentReceipt) =>
   A.getSomes(A.map(receipt.authorities, (authority) => authority.representative));
 
@@ -460,7 +502,7 @@ it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
 
   it.effect.prop(
     "any mention receipt decodes and encodes back to the same bytes",
-    [Arbitrary.schema(CitationMentionReceipt)],
+    [coherentReceipt],
     ([receipt]) =>
       Effect.gen(function* () {
         const written = yield* S.encodeEffect(MentionJson)(receipt);
