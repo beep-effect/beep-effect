@@ -32,19 +32,19 @@
   "dependencies": {
     "@alchemy.run/domain": "2.0.0-beta.87",
     "@alchemy.run/effect-cluster": "2.0.0-beta.87",
-    "@effect/sql-pg": "4.1.4",
+    "@effect/sql-pg": "4.1.5",
     "@proto/authority-contract": "workspace:*",
     "@proto/kernel": "workspace:*",
     "@proto/party-contract": "workspace:*",
     "@proto/party-model": "workspace:*",
     "@proto/runs-contract": "workspace:*",
     "alchemy": "2.0.0-beta.87",
-    "effect": "4.1.4"
+    "effect": "4.1.5"
   },
   "devDependencies": {
     "@beep/pglite": "link:../../../../packages/drivers/pglite",
-    "@effect/platform-node": "4.1.4",
-    "@effect/vitest": "4.1.4",
+    "@effect/platform-node": "4.1.5",
+    "@effect/vitest": "4.1.5",
     "@proto/authority-contract": "workspace:*",
     "@proto/authority-host": "workspace:*",
     "@proto/authority-model": "workspace:*",

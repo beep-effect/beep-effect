@@ -76,11 +76,10 @@ export const replayCitationSkipAnnotations = Effect.fn("AnnotationSkipTest.repla
     }),
   });
   const assembly = yield* makeCitationAnnotationReplay(setup.limits, setup.budget, observed).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
-        Effect.map((bind) => ({ ...stage, assemble: bind(stage.assemble) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits, "annotate"), (stage, bind) => ({
+      ...stage,
+      assemble: bind(stage.assemble),
+    })),
     Effect.provideContext(setup.provided)
   );
   const rows = full ? corpus.cases : A.filter(corpus.cases, (row) => row.id % 7 === 2 || row.id % 7 === 5);

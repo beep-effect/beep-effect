@@ -120,7 +120,7 @@ const backfill = (store: ReviewItemStoreShape, apply: boolean) =>
   Effect.flatMap(fakeMailbox(), ({ asked, describeMessage }) =>
     backfillQuestions({ apply, describe: describeMessage, journal, state }).pipe(
       Effect.provideService(ReviewItemStore, store),
-      Effect.flatMap((report) => Effect.map(Ref.get(asked), (messageIds) => ({ messageIds, report })))
+      Effect.zipWith(Ref.get(asked), (report, messageIds) => ({ messageIds, report }))
     )
   );
 

@@ -81,10 +81,9 @@ const controlled = Effect.fn("DiffWorkerTest.controlled")(function* (
   const admission = yield* makeCitationNativeProcessAdmission(limits);
   const observed = yield* makeCitationNativeAcknowledgementSpawner(afterKill);
   const worker = yield* makeCitationDiffWorker(limits, fixture).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding({ ...limits, extractDeadline: Duration.millis(1601) }).pipe(
-        Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
-      )
+    Effect.zipWith(
+      makeCitationTestScaffoldBinding({ ...limits, extractDeadline: Duration.millis(1601) }),
+      (stage, bind) => ({ ...stage, evaluate: bind(stage.evaluate) })
     ),
     Effect.provideService(Clock.Clock, timer.clock),
     Effect.provideService(CitationNativeProcessAdmission, admission),
@@ -100,11 +99,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned defau
       const fixture = yield* makeCitationNativeWorkerFixture("busy", "diff", "bun");
       const observed = yield* makeCitationNativeAcknowledgementSpawner(Effect.void);
       const worker = yield* makeCitationDiffWorker(limits, fixture).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(limits).pipe(
-            Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
-          )
-        ),
+        Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+          ...stage,
+          evaluate: bind(stage.evaluate),
+        })),
         Effect.provideService(ChildProcessSpawner, observed.spawner)
       );
       const invalidUnicode = yield* worker.evaluate({ width: 3, bytes: new Uint8Array([97]) }, after).pipe(Effect.flip);
@@ -123,11 +121,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("owned defau
         const budget = (yield* CitationInvocation).budget;
         const observed = yield* makeCitationNativeAcknowledgementSpawner(Effect.void);
         const worker = yield* makeCitationDiffWorker(limits, fixture).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(limits).pipe(
-              Effect.map((bind) => ({ ...stage, evaluate: bind(stage.evaluate) }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+            ...stage,
+            evaluate: bind(stage.evaluate),
+          })),
           Effect.provideService(CitationTextBudget, budget),
           Effect.provideService(ChildProcessSpawner, observed.spawner)
         );

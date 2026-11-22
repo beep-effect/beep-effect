@@ -82,15 +82,11 @@ const install = Effect.fn("MetadataStringsTest.install")(function* (
   const limits =
     controlledDeadline === true ? { ...setup.limits, extractDeadline: Duration.millis(997) } : setup.limits;
   const helpers = yield* makeCitationMetadataStrings(limits, setup.runtime, corpus.yearPattern, corpus.bindings).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits).pipe(
-        Effect.map((bind) => ({
-          ...stage,
-          cleanPinCite: bind(stage.cleanPinCite),
-          parenthetical: bind(stage.parenthetical),
-        }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+      ...stage,
+      cleanPinCite: bind(stage.cleanPinCite),
+      parenthetical: bind(stage.parenthetical),
+    })),
     Effect.provideContext(setup.context)
   );
   return { ...setup, helpers };

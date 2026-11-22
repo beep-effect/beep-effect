@@ -141,10 +141,10 @@ export type McpbPlatform = typeof McpbPlatform.Type;
  * import { Sha256Hex } from "@beep/schema/Sha256"
  *
  * const pin = McpbRuntimePin.make({
- *   version: "1.4.4",
+ *   version: "1.4.5",
  *   asset: "bun-windows-x64",
  *   executable: "bun.exe",
- *   sha256: Sha256Hex.make("cd2c0fccc78f3ede1f50ca827a15f063eda13d4d150a3d0674f4f6e323d864a5"),
+ *   sha256: Sha256Hex.make("815ab45ec7f549abf87e6869584b506eab088e24225683957b7e150b47d6de30"),
  * })
  * console.log(pin.executable) // "bun.exe"
  * ```

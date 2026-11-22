@@ -130,9 +130,9 @@ group, `infra:prepare-gha-runners` in root `postinstall`, `infra` in root `works
 - [ ] Each target package exists via `create-package`, passes
       `bun run beep quality package-verify <pkg>`, and has stack tests on the `@alchemy.run/test`
       harness.
-- [ ] `alchemy plan` for every stack shows no create or replace against its live stage after
-      cutover, `alchemy drift` is clean, and the shared S3 state store lists every stack
-      including `BeepEffectWeb` (`plan` has no changes-pending exit code; GitHub secrets
+- [ ] `alchemy plan` for every deployed stack shows no create or replace against its live stage after
+      cutover (OpenClaw has no live stage, operator ruling 2026-11-22), `alchemy drift` is clean, and the shared S3 state store lists every deployed
+      stack including `BeepEffectWeb` (`plan` has no changes-pending exit code; GitHub secrets
       re-upload by design).
 - [ ] CI runs on the Alchemy-built runner fleet; `heavy.yml` and `check.yml` enrolled against the
       Worker turbo cache with hit evidence from a `main` run and a PR run.
@@ -140,7 +140,8 @@ group, `infra:prepare-gha-runners` in root `postinstall`, `infra` in root `works
       domains; DNS and the assets bucket are Alchemy-owned.
 - [ ] GitHub rulesets, secrets, variables, environments and labels are reconciled by
       `@beep/infra-github` with `alchemy drift` clean.
-- [ ] AI metrics and OpenClaw deploy through `@beep/infra-hosts`.
+- [ ] AI metrics deploys through `@beep/infra-hosts`; the OpenClaw stack is declared and tested there, not installed
+      (operator ruling, 2026-11-22).
 - [ ] `infra/` and `scratchpad/turbo-cache-r2` are deleted; no `@pulumi/*` in any manifest or
       lockfile; no `typescript ^6` pin; root `postinstall` no longer builds the ghaRunners SDK.
 - [ ] Every Pulumi stack destroyed has a decision file naming its state export archive.
@@ -319,7 +320,7 @@ Reverse: Switch loadHostConfigFile to Config.schema over ConfigProvider.fromEnv 
 
 ### No Pulumi state exists for AI metrics or OpenClaw; the host stacks adopt what is on the host, 2026-11-13
 
-Checked 2026-11-13 by the launching session: the Pulumi backend `s3://oip-law-pulumi-state` holds no stack for the AI metrics project and none for OpenClaw, so P4's cutover rule (export, then `pulumi destroy`) has nothing to act on for either; the programs describe deployments that exist on the hosts outside Pulumi state. Adoption therefore happens on the host, not in a state store. AI metrics: the data volume is looked up by name, the Compose container and unit are retired by the RetireCompose step, and the Tailscale Serve port state file is reused in place. OpenClaw: generations are content-addressed under the config root, so the first Alchemy apply writes a new generation directory beside any earlier ones and flips the `current` pointer through the same apply script; the snapshot and rollback paths are unchanged. The generation id changes once at this move, because the proof skill's recorded source path changed from `infra/src/OpenClawArtifacts.ts` to the new package. The Pulumi programs leave with `infra/` in P6; no `pulumi stack rm` is owed.
+Checked 2026-11-13 by the launching session: the Pulumi backend `s3://oip-law-pulumi-state` holds no stack for the AI metrics project and none for OpenClaw, so P4's cutover rule (export, then `pulumi destroy`) has nothing to act on for either; the programs describe deployments that exist on the hosts outside Pulumi state (corrected 2026-11-22: true for AI metrics only; no OpenClaw deployment of the program's shape exists, see decision `2026-11-22-openclaw-stays-declared-and-tested-not-installed`). Adoption therefore happens on the host, not in a state store. AI metrics: the data volume is looked up by name, the Compose container and unit are retired by the RetireCompose step, and the Tailscale Serve port state file is reused in place. OpenClaw: generations are content-addressed under the config root, so the first Alchemy apply writes a new generation directory beside any earlier ones and flips the `current` pointer through the same apply script; the snapshot and rollback paths are unchanged. The generation id changes once at this move, because the proof skill's recorded source path changed from `infra/src/OpenClawArtifacts.ts` to the new package. The Pulumi programs leave with `infra/` in P6; no `pulumi stack rm` is owed.
 
 Lane goals/infra-alchemy-rebuild-p4-hosts
 
@@ -2521,6 +2522,35 @@ visibility 60, both DLQs unchanged, and both event source mappings still enabled
 **Order.** This must be deployed before the new fleet goes primary and before the webhook switch.
 
 Reverse: drain the build queues, then set the 2-minute visibility timeout, the 5-receive redrive and messageRetentionPeriod 4 days explicitly on BuildQueue and redeploy; removing the retention property does not restore the default, and a message already received five times would go to the DLQ
+
+### OpenClaw stays declared and tested, not installed (operator ruling), 2026-11-22
+
+The operator ruled on 2026-11-22: OpenClaw is not installed on the workstation. `HostsOpenClaw`
+(`packages/tooling/infra/infra-hosts/openclaw.alchemy.run.ts`) stays declared and tested, and is not deployed.
+
+- **Why:** the install `HostsOpenClaw` manages does not exist on DankStation, checked read-only on 2026-11-22: no state
+  directory `/var/lib/beep/openclaw` and no `openclaw.service` unit. Pulumi never had a stack for it (decision
+  `2026-11-13-hosts-no-pulumi-state`). So nothing the stack would manage is live or left unmanaged. The workstation does
+  hold a personal `~/.openclaw` from an earlier hand trial (last written 2026-10-05) and an inactive mise shim; the stack
+  never managed either, and this ruling leaves both alone. This corrects the 2026-11-13 record, which assumed an OpenClaw
+  deployment on the host. Installing it would add a root toolchain and a new 1Password
+  service-account credential file for a service nobody runs.
+- **Criteria amended:** the SPEC acceptance criterion and the P4 row named AI metrics and OpenClaw. They now ask that AI
+  metrics deploys through `@beep/infra-hosts`, and that the OpenClaw stack is declared and tested there.
+- **P6 unchanged:** the OpenClaw Pulumi program and its `infra/` files are still deleted with the other host program.
+
+The same day the operator set the AI metrics session, which needs them present, for after P5, once the new runner fleet has
+passed its proofs.
+
+**Source.** The operator answered a structured prompt in the packet gate's T3 thread on 2026-11-22. The answers are quoted
+as given, and each is the label of the option chosen:
+
+- "Should it be installed?" (OpenClaw): "Don't install (Recommended)".
+- "When should we do it?" (AI metrics): "After P5 (Recommended)".
+
+Lane goals/infra-alchemy-rebuild-p4-rulings
+
+Reverse: run the attended OpenClaw bootstrap, deploy HostsOpenClaw, and restore the two criteria
 
 ### SSM fix: Advanced JIT tokens, no relaunch loop, dead-letter without a redrive, 2026-11-22
 

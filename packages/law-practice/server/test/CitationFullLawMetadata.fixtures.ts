@@ -93,9 +93,7 @@ const install = Effect.fn("FullLawMetadataTest.install")(function* (
   const { operation, context: base } = yield* makeCitationMetadataTestContext(setup.context, limits);
   const context = Context.add(base, CitationFrozenEditions, observedOwner);
   const metadata = yield* makeCitationFullLawMetadata(limits, setup.runtime, law.configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({ ...stage, apply: bind(stage.apply) })),
     Effect.provideContext(context),
     DateTime.withCurrentZoneOffset(0)
   );

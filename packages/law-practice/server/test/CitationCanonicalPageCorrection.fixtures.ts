@@ -92,16 +92,12 @@ export const replayCitationCanonicalPageCorrection = Effect.fn("CanonicalPageCor
     service: correction,
   } = yield* installCitationParsedResourceReplay(kind, (...args: Parameters<typeof makeCitationResourceCorrection>) =>
     makeCitationResourceCorrection(...args).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(args[0]).pipe(
-          Effect.map((bind) => ({
-            ...stage,
-            reporter: bind(stage.reporter),
-            page: bind(stage.page),
-            citation: bind(stage.citation),
-          }))
-        )
-      )
+      Effect.zipWith(makeCitationTestScaffoldBinding(args[0]), (stage, bind) => ({
+        ...stage,
+        reporter: bind(stage.reporter),
+        page: bind(stage.page),
+        citation: bind(stage.citation),
+      }))
     )
   );
   for (const row of rows) {
