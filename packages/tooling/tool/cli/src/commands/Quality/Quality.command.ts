@@ -40,10 +40,12 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
+import * as Redacted from "effect/Redacted";
 import * as Result from "effect/Result";
 import * as Schedule from "effect/Schedule";
 import * as S from "effect/Schema";
 import { XMLParser } from "fast-xml-parser";
+import { ghEnvToken } from "../../internal/github/GithubIdentityLabel.ts";
 import { checkScriptTestTypecheckCoverage } from "../../internal/quality/TestTypecheckCoverage.ts";
 import {
   ADMISSION_JOURNAL_ARCHIVE_RETENTION_MILLIS,
@@ -1025,22 +1027,138 @@ const currentBranch = Effect.fn("QualityScriptCommands.currentBranch")(function*
   );
 });
 
-// Three attempts: 5 s, then 15 s, before the third (the #3472 workflow steps' backoff).
-const ciFetchRetrySchedule = Schedule.max([Schedule.exponential("5 seconds", 3), Schedule.recurs(2)]);
+const threeAttemptsFiveThenFifteenSecondsApart = Schedule.max([
+  Schedule.exponential("5 seconds", 3),
+  Schedule.recurs(2),
+]);
+const singleAttempt = Schedule.recurs(0);
 
-// git reads the token from GIT_CONFIG_* entries, never argv or .git/config, the
-// same channel the #3472 workflow fallback steps use. No token: an anonymous fetch.
-const githubFetchAuthEnv = Effect.gen(function* () {
-  const ghToken = yield* configStringOption("GH_TOKEN");
-  const githubToken = yield* configStringOption("GITHUB_TOKEN");
-  return O.map(
-    O.orElse(O.filter(ghToken, Str.isNonEmpty), () => O.filter(githubToken, Str.isNonEmpty)),
-    (token): Record<string, string> => ({
-      GIT_CONFIG_COUNT: "1",
-      GIT_CONFIG_KEY_0: "http.https://github.com/.extraheader",
-      GIT_CONFIG_VALUE_0: `AUTHORIZATION: basic ${Base64.encode(`x-access-token:${token}`)}`,
+const tokenHeaderThroughGitConfigEnv = Effect.map(
+  ghEnvToken,
+  O.match({
+    onNone: () => ({}),
+    onSome: (token) => ({
+      env: {
+        GIT_CONFIG_COUNT: "1",
+        GIT_CONFIG_KEY_0: "http.https://github.com/.extraheader",
+        GIT_CONFIG_VALUE_0: `AUTHORIZATION: basic ${Base64.encode(`x-access-token:${Redacted.value(token)}`)}`,
+      },
+    }),
+  })
+);
+
+const parentPinStillMatchesOriginMain = Effect.fn("QualityScriptCommands.parentPinStillMatchesOriginMain")(function* (
+  repoRoot: string,
+  pinned: O.Option<string>
+): Effect.fn.Return<
+  boolean,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
+  if (O.isNone(pinned)) {
+    return false;
+  }
+  const current = yield* collectSuccessfulOutput(
+    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
+    QualityTaskStep.make({
+      label: "git:origin-main",
+      command: "git",
+      args: ["rev-parse", "origin/main"],
+      cwd: repoRoot,
     })
   );
+  if (current === pinned.value) {
+    yield* Console.log(
+      `[github-checks] origin/main pinned at ${Str.takeLeft(current, 12)} by the parent run; not refreshing`
+    );
+    return true;
+  }
+  yield* Console.log(
+    `[github-checks] origin/main is ${Str.takeLeft(current, 12)}, not the parent run's pinned base ${Str.takeLeft(pinned.value, 12)}; refreshing`
+  );
+  return false;
+});
+
+const isShallowClone = (repoRoot: string) =>
+  collectSuccessfulOutput(
+    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
+    QualityTaskStep.make({
+      label: "git:shallow",
+      command: "git",
+      args: ["rev-parse", "--is-shallow-repository"],
+      cwd: repoRoot,
+    })
+  ).pipe(Effect.map((output) => output === "true"));
+
+const resolvedOriginMainSha = (repoRoot: string) =>
+  collectOutput(
+    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
+    QualityTaskStep.make({
+      label: "git:origin-main",
+      command: "git",
+      args: ["rev-parse", "--verify", "--quiet", "refs/remotes/origin/main"],
+      cwd: repoRoot,
+    })
+  ).pipe(Effect.map(({ exitCode, output }) => (exitCode === 0 ? O.liftPredicate(output, Str.isNonEmpty) : O.none())));
+
+const fetchOriginMain = Effect.fn("QualityScriptCommands.fetchOriginMain")(function* (
+  repoRoot: string,
+  shallow: boolean,
+  auth: { readonly env?: Record<string, string> },
+  attempts: Schedule.Schedule<unknown>
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const gitFetch = (label: string, args: ReadonlyArray<string>) =>
+    runStep(
+      // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
+      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
+      QualityTaskStep.make({ label, command: "git", args, cwd: repoRoot, ...auth })
+    ).pipe(Effect.retry({ schedule: attempts }));
+  if (shallow) {
+    yield* gitFetch("git:fetch:unshallow", ["fetch", "origin", "--quiet", "--unshallow"]);
+  }
+  yield* gitFetch("git:fetch:origin-main", ["fetch", "origin", "main:refs/remotes/origin/main", "--quiet"]);
+});
+
+const refreshOriginMainLocally = Effect.fn("QualityScriptCommands.refreshOriginMainLocally")(function* (
+  repoRoot: string
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
+  yield* Console.log("[github-checks] refreshing origin/main");
+  const shallow = yield* isShallowClone(repoRoot);
+  yield* fetchOriginMain(repoRoot, shallow, {}, singleAttempt);
+});
+
+const reuseCheckoutOrFetchOriginMainInGithubActions = Effect.fn(
+  "QualityScriptCommands.reuseCheckoutOrFetchOriginMainInGithubActions"
+)(function* (
+  repoRoot: string,
+  stalePin: boolean
+): Effect.fn.Return<
+  void,
+  QualityScriptCommandError,
+  SecureRandom.SecureRandom | ChildProcessSpawner.ChildProcessSpawner
+> {
+  const shallow = yield* isShallowClone(repoRoot);
+  const fullHistorySha = shallow || stalePin ? O.none<string>() : yield* resolvedOriginMainSha(repoRoot);
+  if (O.isSome(fullHistorySha)) {
+    yield* Console.log(
+      `[github-checks] origin/main from checkout (${Str.takeLeft(fullHistorySha.value, 12)}); not refreshing in CI`
+    );
+    return;
+  }
+  yield* Console.log("[github-checks] refreshing origin/main");
+  const auth = yield* tokenHeaderThroughGitConfigEnv;
+  yield* fetchOriginMain(repoRoot, shallow, auth, threeAttemptsFiveThenFifteenSecondsApart);
 });
 
 const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(function* (
@@ -1054,97 +1172,14 @@ const ensureOriginMain = Effect.fn("QualityScriptCommands.ensureOriginMain")(fun
   // again here would move `origin/main` between tiers (and break lane-proof
   // reuse), so a battery whose pin still matches leaves the ref alone.
   const pinned = pinnedLaneProofBaseSha();
-  if (O.isSome(pinned)) {
-    const current = yield* collectSuccessfulOutput(
-      // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
-      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
-      QualityTaskStep.make({
-        label: "git:origin-main",
-        command: "git",
-        args: ["rev-parse", "origin/main"],
-        cwd: repoRoot,
-      })
-    );
-    if (current === pinned.value) {
-      yield* Console.log(
-        `[github-checks] origin/main pinned at ${Str.takeLeft(current, 12)} by the parent run; not refreshing`
-      );
-      return;
-    }
-    yield* Console.log(
-      `[github-checks] origin/main is ${Str.takeLeft(current, 12)}, not the parent run's pinned base ${Str.takeLeft(pinned.value, 12)}; refreshing`
-    );
-  }
-  const githubActions = yield* configStringOption("GITHUB_ACTIONS");
-  const inGithubActions = O.contains(githubActions, "true");
-  if (!inGithubActions) {
-    yield* Console.log("[github-checks] refreshing origin/main");
-  }
-  const shallow = yield* collectSuccessfulOutput(
-    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
-    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
-    QualityTaskStep.make({
-      label: "git:shallow",
-      command: "git",
-      args: ["rev-parse", "--is-shallow-repository"],
-      cwd: repoRoot,
-    })
-  );
-
-  if (!inGithubActions) {
-    if (shallow === "true") {
-      // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
-      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
-      yield* runFixedStep(repoRoot, "git:fetch:unshallow", "git", ["fetch", "origin", "--quiet", "--unshallow"]);
-    }
-
-    // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
-    // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
-    yield* runFixedStep(repoRoot, "git:fetch:origin-main", "git", [
-      "fetch",
-      "origin",
-      "main:refs/remotes/origin/main",
-      "--quiet",
-    ]);
+  if (yield* parentPinStillMatchesOriginMain(repoRoot, pinned)) {
     return;
   }
-
-  // actions/checkout removes its credentials in a post step, so a fetch here
-  // is anonymous and GitHub can throttle it (403, exit 128). A full-history
-  // checkout already fetched every branch with the token: use its origin/main.
-  if (shallow !== "true") {
-    const checkedOut = yield* collectOutput(
-      // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
-      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
-      QualityTaskStep.make({
-        label: "git:origin-main",
-        command: "git",
-        args: ["rev-parse", "--verify", "--quiet", "refs/remotes/origin/main"],
-        cwd: repoRoot,
-      })
-    );
-    if (checkedOut.exitCode === 0 && Str.isNonEmpty(checkedOut.output)) {
-      yield* Console.log(
-        `[github-checks] origin/main from checkout (${Str.takeLeft(checkedOut.output, 12)}); not refreshing in CI`
-      );
-      return;
-    }
+  const githubActions = yield* configStringOption("GITHUB_ACTIONS");
+  if (!O.contains(githubActions, "true")) {
+    return yield* refreshOriginMainLocally(repoRoot);
   }
-
-  yield* Console.log("[github-checks] refreshing origin/main");
-  // `QualityTaskStep.env` is an optional key: omit it, never pass `undefined`.
-  const auth = yield* githubFetchAuthEnv;
-  const authEnv = O.match(auth, { onNone: () => ({}), onSome: (env) => ({ env }) });
-  const ciFetch = (label: string, args: ReadonlyArray<string>) =>
-    runStep(
-      // KEEP (D-19): a labelled QualityTaskStep, whose log prefix is its contract (O-16b).
-      // biome-ignore lint/plugin/no-hand-rolled-git-gh-spawn: KEEP (D-19), reason above
-      QualityTaskStep.make({ label, command: "git", args, cwd: repoRoot, ...authEnv })
-    ).pipe(Effect.retry({ schedule: ciFetchRetrySchedule }));
-  if (shallow === "true") {
-    yield* ciFetch("git:fetch:unshallow", ["fetch", "origin", "--quiet", "--unshallow"]);
-  }
-  yield* ciFetch("git:fetch:origin-main", ["fetch", "origin", "main:refs/remotes/origin/main", "--quiet"]);
+  yield* reuseCheckoutOrFetchOriginMainInGithubActions(repoRoot, O.isSome(pinned));
 });
 
 /**

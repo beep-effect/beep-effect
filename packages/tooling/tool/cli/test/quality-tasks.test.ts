@@ -12185,8 +12185,6 @@ it.layer(PlatformLayer, { timeout: "60 seconds" })("lane-proof reuse across Yeet
   it.effect("refetches when the pin no longer matches origin/main", () =>
     Effect.gen(function* () {
       const { repoRoot } = yield* fixture("lane-proof-stale-pin-");
-      // A hosted runner sets GITHUB_ACTIONS, and the default provider snapshots env
-      // on first read, so this case pins an empty provider for the local refresh.
       const failure = yield* withEnvVarEffect(
         "BEEP_YEET_PROOF_BASE",
         Str.repeat(40)("0"),
@@ -12203,7 +12201,6 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("origin/main refresh under Gi
   const SHA = Str.repeat(40)("c");
   const TOKEN = "ghs_origin_main_test_token";
   const forbidden = { stdout: "", stderr: "fatal: unable to access: The requested URL returned error: 403", exit: 128 };
-  // Answers the probes and fails the first `fetchFailures` fetches with a 403.
   const gitScript = (options: { readonly shallow: boolean; readonly ref: boolean; readonly fetchFailures: number }) => {
     let fetches = 0;
     return ScriptedSpawner.make((_command, args) => {
@@ -12213,12 +12210,14 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("origin/main refresh under Gi
       if (A.contains(args, "--verify")) {
         return options.ref ? { stdout: `${SHA}\n` } : { exit: 1 };
       }
+      if (!A.contains(args, "fetch")) {
+        return { stdout: `${SHA}\n` };
+      }
       fetches += 1;
       return fetches <= options.fetchFailures ? forbidden : {};
     });
   };
   const fetchesOf = (spawner: ScriptedSpawner) => A.filter(spawner.spawns, (spawn) => A.contains(spawn.args, "fetch"));
-  // Lets the forked refresh reach its next fetch before the test clock moves.
   const settle = Effect.fnUntraced(function* (spawner: ScriptedSpawner, count: number) {
     for (let turn = 0; turn < 2000 && fetchesOf(spawner).length < count; turn++) {
       yield* TestClock.withLive(Effect.sleep("1 millis"));
@@ -12226,8 +12225,6 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("origin/main refresh under Gi
     expect(fetchesOf(spawner)).toHaveLength(count);
   });
   const logged = Effect.map(TestConsole.logLines, (lines) => A.join(A.filter(lines, Str.isString), "\n"));
-  // The default provider snapshots env on first read, so each case supplies its own.
-  // BEEP_YEET_PROOF_BASE is read live and cleared so no ambient pin short-circuits.
   const withEnvironment =
     (env: Record<string, string>) =>
     <Out, E, R>(use: Effect.Effect<Out, E, R>): Effect.Effect<Out, E, R> =>
@@ -12246,6 +12243,26 @@ it.layer(PlatformLayer, { timeout: "30 seconds" })("origin/main refresh under Gi
       expect(text).toContain(
         `[github-checks] origin/main from checkout (${Str.takeLeft(SHA, 12)}); not refreshing in CI`
       );
+    }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
+  );
+
+  it.effect("still refreshes a full-history checkout when the parent run's pin is stale", () =>
+    Effect.gen(function* () {
+      const spawner = gitScript({ shallow: false, ref: true, fetchFailures: 0 });
+      yield* inActions(
+        { GH_TOKEN: TOKEN },
+        withEnvVarEffect(
+          "BEEP_YEET_PROOF_BASE",
+          Str.repeat(40)("0"),
+          ensureOriginMainForTesting("/repo").pipe(provideSpawner(spawner))
+        )
+      );
+      expect(A.map(fetchesOf(spawner), (spawn) => A.join(spawn.args, " "))).toEqual([
+        "fetch origin main:refs/remotes/origin/main --quiet",
+      ]);
+      const text = yield* logged;
+      expect(text).toContain("not the parent run's pinned base 000000000000; refreshing");
+      expect(text).not.toContain("not refreshing in CI");
     }).pipe(Effect.provideServiceEffect(Console.Console, TestConsole.make))
   );
 
