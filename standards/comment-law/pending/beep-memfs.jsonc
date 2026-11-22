@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/memfs",
+  "root": "packages/tooling/test-kit/memfs",
+  "scopes": ["."]
+}

@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/openclaw",
+  "root": "packages/drivers/openclaw",
+  "scopes": ["."]
+}

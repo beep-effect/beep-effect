@@ -16,10 +16,15 @@ import * as Console from "effect/Console";
 import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Effect from "effect/Effect";
+import * as F from "effect/Function";
+import * as O from "effect/Option";
 import * as P from "effect/Predicate";
 import * as R from "effect/Record";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { AllowlistCheckOptions, reportAllowlistCheckSummary, runAllowlistCheck } from "./AllowlistCheck.ts";
+import { CommentLawOptions } from "./CommentLaw.model.ts";
+import { runCommentCensus, runCommentLaw, runCommentLawWrite, runCommentList } from "./CommentLaw.ts";
 import { EffectFnRulesOptions, runEffectFnRules } from "./EffectFn.ts";
 import { EffectImportCorpusMode, EffectImportRulesOptions, runEffectImportRules } from "./EffectImports.ts";
 import { EntityKitFreezeOptions } from "./EntityKitFreeze.model.ts";
@@ -45,6 +50,7 @@ import { formatSchemaTagIdiomFinding, runSchemaTagIdioms } from "./SchemaTagIdio
 import { runTerseEffectRules, TerseEffectRulesOptions } from "./TerseEffect.ts";
 import { TrackedShellAllowlistOptions } from "./TrackedShellAllowlist.model.ts";
 import { formatTrackedShellFinding, runTrackedShellAllowlist } from "./TrackedShellAllowlist.ts";
+import type { CommentLawFinding, CommentLawSummary } from "./CommentLaw.model.ts";
 import type { EffectFnRulesSummary } from "./EffectFn.ts";
 import type { FrozenGrantSetRulesSummary } from "./FrozenGrantSet.ts";
 
@@ -1035,6 +1041,162 @@ const lawsAllowlistCheckCommand = Command.make(
   })
 ).pipe(Command.withDescription("Validate the Effect governance allowlist document"));
 
+const commentLawBaseOf = (flag: string): O.Option<string> =>
+  F.pipe(
+    [flag, Bun.env.BEEP_PROOF_BASE, Bun.env.BEEP_YEET_PROOF_BASE],
+    A.map((value) => O.filter(O.map(O.fromUndefinedOr(value), Str.trim), Str.isNonEmpty)),
+    A.getSomes,
+    A.head
+  );
+
+const commentFindingLine = (finding: CommentLawFinding): string =>
+  finding.line > 0
+    ? `  - ${finding.file}:${finding.line}  ${finding.kind ?? finding.rule}  "${finding.excerpt}"`
+    : `  - ${finding.rule}  ${finding.file}  ${finding.excerpt}`;
+
+const escapeAnnotationData = (value: string): string =>
+  Str.replaceAll("\n", "%0A")(Str.replaceAll("\r", "%0D")(Str.replaceAll("%", "%25")(value)));
+
+const escapeAnnotationProperty = (value: string): string =>
+  Str.replaceAll(",", "%2C")(Str.replaceAll(":", "%3A")(escapeAnnotationData(value)));
+
+const commentAnnotation = (level: "error" | "warning", finding: CommentLawFinding): string =>
+  `::${level} file=${escapeAnnotationProperty(finding.file)}${finding.line > 0 ? `,line=${finding.line}` : ""},title=${escapeAnnotationProperty(`comment-law ${finding.rule}`)}::${escapeAnnotationData(finding.excerpt)}`;
+
+const reportCommentLaw = Effect.fn("reportCommentLaw")(function* (summary: CommentLawSummary) {
+  const prefix = "[comment-law]";
+  const level = summary.enforcement === "blocking" ? "error" : "warning";
+  yield* Console.log(
+    `${prefix} enforcement=${summary.enforcement} base=${Str.slice(0, 12)(summary.base)} changed_files=${summary.changedFiles} introduced=${summary.introduced} removed=${summary.removed} findings=${A.length(summary.findings)}`
+  );
+  const introduced = A.filter(summary.findings, (finding) => finding.rule === "introduced-comment");
+  const scoped = A.filter(summary.findings, (finding) => finding.rule !== "introduced-comment");
+  if (A.isReadonlyArrayNonEmpty(introduced)) {
+    yield* Console.log(`${prefix} ${A.length(introduced)} comment(s) introduced since the merge base:`);
+    yield* Effect.forEach(introduced, (finding) => Console.log(commentFindingLine(finding)), {
+      concurrency: 1,
+      discard: true,
+    });
+    yield* printLines([
+      `${prefix} editing a comment counts as writing a new one; moving it unchanged does not.`,
+      `${prefix} instead: delete it if the code already says it; put the reason in a name, type, schema`,
+      `${prefix}   annotation, test title or assertion; record a real decision under <package>/decisions/`,
+      `${prefix}   (run /delete-comment). There is no baseline to regenerate and no allowlist.`,
+    ]);
+  }
+  if (A.isReadonlyArrayNonEmpty(scoped)) {
+    yield* Console.log(`${prefix} pending-scope lock:`);
+    yield* Effect.forEach(scoped, (finding) => Console.log(commentFindingLine(finding)), {
+      concurrency: 1,
+      discard: true,
+    });
+  }
+  yield* Effect.forEach(
+    summary.advisories,
+    (finding) => Console.log(`${prefix} advisory: ${commentFindingLine(finding)}`),
+    {
+      concurrency: 1,
+      discard: true,
+    }
+  );
+  if (Bun.env.GITHUB_ACTIONS === "true")
+    yield* Effect.forEach(summary.findings, (finding) => Console.log(commentAnnotation(level, finding)), {
+      concurrency: 1,
+      discard: true,
+    });
+  if (summary.enforcement === "advisory" && A.isReadonlyArrayNonEmpty(summary.findings))
+    yield* Console.log(`${prefix} advisory: these findings do not fail the check until the law turns blocking.`);
+});
+
+const printCommentCensus = Effect.fn("printCommentCensus")(function* (cwd: string, json: boolean) {
+  const rows = yield* runCommentCensus(cwd);
+  if (json) return yield* printCommandJson(rows);
+  return yield* Effect.forEach(rows, (row) => Console.log(`${row.root}\t${row.kind}\t${row.count}`), {
+    concurrency: 1,
+    discard: true,
+  });
+});
+
+const printCommentList = Effect.fn("printCommentList")(function* (cwd: string, list: string, json: boolean) {
+  const findings = yield* runCommentList(cwd, list);
+  if (json) return yield* printCommandJson(findings);
+  return yield* Effect.forEach(findings, (finding) => Console.log(commentFindingLine(finding)), {
+    concurrency: 1,
+    discard: true,
+  });
+});
+
+const writeCommentShards = Effect.fn("writeCommentShards")(function* (cwd: string, json: boolean) {
+  const shards = yield* runCommentLawWrite(cwd);
+  if (json) return yield* printCommandJson(shards);
+  return yield* Console.log(`[comment-law] pending shards=${A.length(shards)}`);
+});
+
+const checkCommentLaw = Effect.fn("checkCommentLaw")(function* (
+  cwd: string,
+  base: string,
+  staged: boolean,
+  push: boolean,
+  json: boolean
+) {
+  if (staged && push) return yield* failWithReportedExit("[comment-law] --staged and --push cannot be combined.");
+  const summary = yield* runCommentLaw(
+    CommentLawOptions.make({
+      cwd,
+      staged,
+      push,
+      ...O.match(commentLawBaseOf(base), { onNone: () => ({}), onSome: (value) => ({ base: value }) }),
+    })
+  );
+  if (json) yield* printCommandJson(summary);
+  else yield* reportCommentLaw(summary);
+  if (summary.failed) return yield* failWithReportedExit("[comment-law] check failed.");
+});
+
+const lawsCommentsCommand = Command.make(
+  "comments",
+  {
+    check: Flag.Boolean("check").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Run the growth check against the merge base and the pending-scope lock (the default mode)")
+    ),
+    base: Flag.String("base").pipe(
+      Flag.withDefault(""),
+      Flag.withDescription("Ref to diff against; falls back to BEEP_PROOF_BASE, BEEP_YEET_PROOF_BASE, then origin/main")
+    ),
+    staged: Flag.Boolean("staged").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Compare the index with HEAD and skip the lock (pre-commit)")
+    ),
+    push: Flag.Boolean("push").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Use HEAD as base and judge the whole-tree lock when unchanged (CI push runs only)")
+    ),
+    census: Flag.Boolean("census").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Count every comment by package root and kind")
+    ),
+    list: Flag.String("list").pipe(
+      Flag.withDefault(""),
+      Flag.withDescription("List the banned comments under a repository-relative path")
+    ),
+    write: Flag.Boolean("write").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("Seed the pending shards when none exist, otherwise prune swept scopes")
+    ),
+    json: Flag.Boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Emit schema-shaped JSON")),
+  },
+  Effect.fn(function* ({ base, staged, push, census, list, write, json }) {
+    const cwd = process.cwd();
+    if (census) return yield* printCommentCensus(cwd, json);
+    if (Str.isNonEmpty(list)) return yield* printCommentList(cwd, list, json);
+    if (write) return yield* writeCommentShards(cwd, json);
+    return yield* checkCommentLaw(cwd, base, staged, push, json);
+  })
+).pipe(
+  Command.withDescription("Ban new prose comments and local JSDoc: merge-base growth check and pending-scope lock")
+);
+
 /**
  * Laws command group.
  *
@@ -1067,6 +1229,8 @@ export const lawsCommand = Command.make("laws", {}, () =>
     "- bun run beep laws terse-effect --check",
     "- bun run beep laws terse-effect --write",
     "- bun run beep laws allowlist-check",
+    "- bun run beep laws comments --check [--base <ref>]",
+    "- bun run beep laws comments --census",
   ])
 ).pipe(
   Command.withDescription("Effect governance validation and migration commands"),
@@ -1085,5 +1249,6 @@ export const lawsCommand = Command.make("laws", {}, () =>
     lawsTrackedShellAllowlistCommand,
     lawsTerseEffectCommand,
     lawsAllowlistCheckCommand,
+    lawsCommentsCommand,
   ])
 ) as Command.Command<"laws", {}, {}, never, never>;

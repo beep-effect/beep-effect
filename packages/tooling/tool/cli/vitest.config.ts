@@ -99,6 +99,7 @@ const isolatedSuites = [
   "test/knowledge-doctor.test.ts",
   "test/lab-identity-segment.test.ts",
   "test/labs-list.test.ts",
+  "test/laws-comment-law.test.ts",
   "test/laws-markdown-fences-command.test.ts",
   "test/laws-no-tracked-python.test.ts",
   "test/laws-schema-tag-idioms-command.test.ts",

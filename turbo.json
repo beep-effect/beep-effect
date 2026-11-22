@@ -479,6 +479,7 @@
         "packages/tooling/library/repo-workspaces/package.json",
         "packages/tooling/library/repo-workspaces/src/**",
         "packages/tooling/policy-pack/lint-rules/package.json",
+        "packages/tooling/policy-pack/lint-rules/src/**",
         "packages/tooling/policy-pack/repo-configs/package.json",
         "packages/tooling/policy-pack/repo-configs/src/**",
         "packages/tooling/test-kit/fc-runs/package.json",
@@ -1744,6 +1745,10 @@
       "outputs": [],
       "dependsOn": ["@beep/repo-cli#lint:policy-fingerprint:shared"],
       "inputs": [
+        "$TURBO_ROOT$/.oxlintrc.circular.json",
+        "$TURBO_ROOT$/.oxlintrc.deprecated-apis.jsonc",
+        "$TURBO_ROOT$/.oxlintrc.docs.json",
+        "$TURBO_ROOT$/.oxlintrc.json",
         "$TURBO_ROOT$/packages/foundation/capability/chalk/package.json",
         "$TURBO_ROOT$/packages/foundation/capability/chalk/src/Chalk.ts",
         "$TURBO_ROOT$/packages/foundation/capability/chalk/src/index.ts",
@@ -1980,6 +1985,8 @@
         "$TURBO_ROOT$/packages/tooling/library/repo-workspaces/src/internal/limits.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-workspaces/src/internal/manifestFields.ts",
         "$TURBO_ROOT$/packages/tooling/library/repo-workspaces/src/internal/traverse.ts",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/package.json",
+        "$TURBO_ROOT$/packages/tooling/policy-pack/lint-rules/src/rules/comment-grammar.ts",
         "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/package.json",
         "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/laws/EffectLawsAllowlistSchemas.ts",
         "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/internal/laws/EffectLawsAllowlistSnapshotCodegen.ts",
@@ -1988,6 +1995,8 @@
         "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/laws/NoNativeRuntimeHotspots.ts",
         "$TURBO_ROOT$/packages/tooling/policy-pack/repo-configs/src/laws/Shared.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/CommentLaw.model.ts",
+        "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/CommentLaw.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/EffectFn.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
         "$TURBO_ROOT$/packages/tooling/tool/cli/src/commands/Laws/EntityKitFreeze.model.ts",
@@ -2033,7 +2042,8 @@
         "$TURBO_ROOT$/packages/tooling/tool/docgen/src/Printer.ts",
         "$TURBO_ROOT$/packages/tooling/tool/docgen/src/ProofManifest.ts",
         "$TURBO_ROOT$/packages/tooling/tool/docgen/src/Version.ts",
-        "$TURBO_ROOT$/packages/tooling/tool/docgen/src/internal/JsonFile.ts"
+        "$TURBO_ROOT$/packages/tooling/tool/docgen/src/internal/JsonFile.ts",
+        "$TURBO_ROOT$/tsdoc.json"
       ]
     },
     "@beep/repo-cli#lint:policy-fingerprint:lint": {
@@ -7074,6 +7084,24 @@
         "!**/storybook-static/**",
         "!.claude/worktrees/**",
         "!**/src-tauri/target/**"
+      ]
+    },
+    "//#lint:comment-law": {
+      "cache": false,
+      "outputs": [],
+      "dependsOn": ["@beep/repo-cli#lint:policy-fingerprint:laws"],
+      "passThroughEnv": ["BEEP_PROOF_BASE"],
+      "inputs": [
+        "{apps,packages,infra,tools}/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+        "**/scripts/**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}",
+        ".claude/**/*.ts",
+        "*.{ts,mts,cts,js,mjs,cjs}",
+        "standards/comment-law/**",
+        "!**/node_modules/**",
+        "!**/.beep/**",
+        "!**/.turbo/**",
+        "!**/dist/**",
+        "!.claude/worktrees/**"
       ]
     },
     "//#lint:markdown-fences": {

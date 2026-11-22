@@ -79,6 +79,14 @@ generated from that directory and never edited by hand.
 <!-- beep:decisions:begin -->
 _Generated from [`decisions/`](./decisions/) by `bun run beep goals decisions write --slug comment-law-gate`; add a `kind: decision` file there, never edit this block._
 
+### Allow one decision-pointer comment for a hazard with no better home, 2026-11-22
+
+The single allow-listed form is a line comment that is exactly 'decision: <slug>'. The slug names a file under the owning package decisions/ directory, and beep decisions check rejects a pointer with no file. It replaces free-text KEEP notes; anything else on the line makes it prose.
+
+Lane goals/comment-law-gate
+
+Reverse: Drop the decision-pointer kind from the grammar; such comments count as prose again.
+
 ### Ban free prose and local JSDoc through a merge-base growth check, 2026-11-22
 
 Operator ruling, align round 2: agents may no longer add free prose or JSDoc on non-exported declarations in src, tests or tooling. Existing comments stay under a shrink-only pending list. Rejected: review-only enforcement, a repo-cli pilot first. Source: explorations/comment-law/DECISIONS.md.
@@ -86,6 +94,22 @@ Operator ruling, align round 2: agents may no longer add free prose or JSDoc on 
 Lane explore/comment-law
 
 Reverse: Set the check advisory again and drop the AGENTS line.
+
+### Count a leading JSDoc block above an import as the module header, 2026-11-22
+
+The SPEC counts module headers as public. A file-header block before the first import, re-export or directive is a module header whether or not it carries @packageDocumentation; a leading block directly above a declaration still documents that declaration. Found by spot-checking local-JSDoc findings in the 100-commit replay: every miss was a header above an import.
+
+Lane goals/comment-law-gate
+
+Reverse: Require @packageDocumentation for jsdoc-module again in comment-grammar.ts.
+
+### Exempt member JSDoc and live-tag blocks; ban local blocks that carry only since or category, 2026-11-22
+
+Member JSDoc stays exempt until the exported-JSDoc law is ruled in jsdoc-lead-single-source. A local block carrying @internal, @public, @expected-unused, @ignore or @deprecated, or an import.meta.vitest fence, is a live suppression and exempt. A truly local block carrying only @since or @category feeds no tool once exports resolve through specifiers, so a new one is banned; the strip still never deletes a block carrying any tag tools read.
+
+Lane goals/comment-law-gate
+
+Reverse: Classify tag-only local blocks as jsdoc-tagged in comment-grammar.ts.
 
 ### Hazards and narration stay under the ratchet until absorbed, 2026-11-22
 
@@ -102,6 +126,22 @@ Operator ruling, align round 1: decision records that pass the admission test be
 Lane explore/comment-law
 
 Reverse: Move the files to the package README and restore the ADR-FORMAT text.
+
+### Parse with oxc-parser so the scanner and the oxlint rule share one AST, 2026-11-22
+
+oxc-parser 0.148.0 was already in the lockfile through @shadcn/lint; it is now a catalog entry and a @beep/repo-cli dependency. It gives the scanner the same ESTree shape the oxlint plugin sees, so one grammar and one attachment index serve both hosts. Measured on the whole tree: the oxlint rule and the scanner agree on all 57,854 findings in 4,511 files, zero differences. Rejected: ts-morph (2.5 to 3 times the CPU and a second attachment visitor), running oxlint on base blobs (honours disable comments, no AST-checked strip).
+
+Lane goals/comment-law-gate
+
+Reverse: Drop oxc-parser from the catalog and rebuild the scanner on ts-morph, keeping the grammar module.
+
+### Seed 218 pending shards and lock every other scope, 2026-11-22
+
+beep laws comments --write seeded one shard per package root holding a banned comment (218, one of them _root.jsonc for loose root files), each listing the whole root. Every other scope is locked at zero. The list may only shrink: a head scope outside every merge-base scope of the same root fails, and a scope emptied by a change must leave the list in that change. The seed carries no counts and no per-comment inventory (S31). The bootstrap PR is the one run whose merge base has no policy file, so it is the only one that skips the shrink-only guard.
+
+Lane goals/comment-law-gate
+
+Reverse: Delete standards/comment-law/pending and the lock half of beep laws comments; the growth check stands alone.
 
 <!-- beep:decisions:end -->
 

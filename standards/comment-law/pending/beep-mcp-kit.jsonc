@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/mcp-kit",
+  "root": "packages/foundation/capability/mcp-kit",
+  "scopes": ["."]
+}

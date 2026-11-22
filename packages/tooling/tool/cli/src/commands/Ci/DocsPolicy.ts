@@ -134,6 +134,11 @@ export const DOCS_POLICY_EXCLUSIONS: ReadonlyArray<DocsPolicyExclusion> = [
     reason: "oxlint lints JavaScript and TypeScript sources and honors `.gitignore` files, all code-route shapes.",
   }),
   DocsPolicyExclusion.make({
+    task: "lint:comment-law",
+    reason:
+      "Reads TypeScript and JavaScript sources and the comment-law standards, all code-route shapes; Repo Sanity's code path runs it against the event base.",
+  }),
+  DocsPolicyExclusion.make({
     task: "lint:opaque-roundtrips",
     reason: "Reads TypeScript sources and tsconfig files, all code-route shapes.",
   }),

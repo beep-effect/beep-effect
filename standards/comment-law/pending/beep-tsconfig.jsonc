@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/tsconfig",
+  "root": "packages/foundation/modeling/tsconfig",
+  "scopes": ["."]
+}

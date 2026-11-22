@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/party-use-cases",
+  "root": "packages/party/use-cases",
+  "scopes": ["."]
+}

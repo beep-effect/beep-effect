@@ -724,6 +724,7 @@
     "packages/tooling/library/repo-workspaces/package.json",
     "packages/tooling/library/repo-workspaces/src/**",
     "packages/tooling/policy-pack/lint-rules/package.json",
+    "packages/tooling/policy-pack/lint-rules/src/**",
     "packages/tooling/policy-pack/repo-configs/package.json",
     "packages/tooling/policy-pack/repo-configs/src/**",
     "packages/tooling/test-kit/fc-runs/package.json",
@@ -2001,6 +2002,7 @@
       "parent": "shared",
       "tasks": [
         "//#lint:allowlist",
+        "//#lint:comment-law",
         "//#lint:effect-imports",
         "//#lint:effect-imports-markdown",
         "//#lint:entity-kit-freeze",
@@ -2014,6 +2016,10 @@
         "//#lint:tracked-shell-allowlist"
       ],
       "inputs": [
+        ".oxlintrc.circular.json",
+        ".oxlintrc.deprecated-apis.jsonc",
+        ".oxlintrc.docs.json",
+        ".oxlintrc.json",
         "packages/foundation/capability/chalk/package.json",
         "packages/foundation/capability/chalk/src/Chalk.ts",
         "packages/foundation/capability/chalk/src/index.ts",
@@ -2250,6 +2256,8 @@
         "packages/tooling/library/repo-workspaces/src/internal/limits.ts",
         "packages/tooling/library/repo-workspaces/src/internal/manifestFields.ts",
         "packages/tooling/library/repo-workspaces/src/internal/traverse.ts",
+        "packages/tooling/policy-pack/lint-rules/package.json",
+        "packages/tooling/policy-pack/lint-rules/src/rules/comment-grammar.ts",
         "packages/tooling/policy-pack/repo-configs/package.json",
         "packages/tooling/policy-pack/repo-configs/src/internal/laws/EffectLawsAllowlistSchemas.ts",
         "packages/tooling/policy-pack/repo-configs/src/internal/laws/EffectLawsAllowlistSnapshotCodegen.ts",
@@ -2258,6 +2266,8 @@
         "packages/tooling/policy-pack/repo-configs/src/laws/NoNativeRuntimeHotspots.ts",
         "packages/tooling/policy-pack/repo-configs/src/laws/Shared.ts",
         "packages/tooling/tool/cli/src/commands/Laws/AllowlistCheck.ts",
+        "packages/tooling/tool/cli/src/commands/Laws/CommentLaw.model.ts",
+        "packages/tooling/tool/cli/src/commands/Laws/CommentLaw.ts",
         "packages/tooling/tool/cli/src/commands/Laws/EffectFn.ts",
         "packages/tooling/tool/cli/src/commands/Laws/EffectImports.ts",
         "packages/tooling/tool/cli/src/commands/Laws/EntityKitFreeze.model.ts",
@@ -2303,7 +2313,8 @@
         "packages/tooling/tool/docgen/src/Printer.ts",
         "packages/tooling/tool/docgen/src/ProofManifest.ts",
         "packages/tooling/tool/docgen/src/Version.ts",
-        "packages/tooling/tool/docgen/src/internal/JsonFile.ts"
+        "packages/tooling/tool/docgen/src/internal/JsonFile.ts",
+        "tsdoc.json"
       ]
     },
     {
