@@ -5920,6 +5920,7 @@
         "from": "@beep/text",
         "allow": [
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
@@ -5927,6 +5928,7 @@
         ],
         "allowTypeOnly": [
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",

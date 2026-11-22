@@ -7,12 +7,33 @@
  */
 
 /**
+ * Aligned segments between two text captures.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./LocatorMap.ts";
+/**
+ * Occurrence identity: anchors-table rows and the ids minted from them.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./Occurrence.ts";
+/**
  * Offset units, unit-tagged positions and conversion between units.
  *
  * @category models
  * @since 0.0.0
  */
 export * from "./OffsetUnit.ts";
+/**
+ * Quote keys: grouping keys over normalized quotes.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./QuoteKey.ts";
 /**
  * Resolving a selector in one text capture.
  *
@@ -41,6 +62,13 @@ export * from "./SourceTextIdentity.ts";
  * @since 0.0.0
  */
 export * from "./TextAnchor.ts";
+/**
+ * Text normalizations that record their aligned segments.
+ *
+ * @category models
+ * @since 0.0.0
+ */
+export * from "./TextNormalization.ts";
 /**
  * Fail-closed verified-anchor construction.
  *

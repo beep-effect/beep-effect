@@ -1125,6 +1125,14 @@ Lane goals/text-knowledge-stack-rebuild-p1c-bindings · PR #3449
 
 Reverse: Type LibraryModelRun and LibraryFinding keys as S.String again and mint them inside catalogDataset.
 
+### P2: AlignedSegment lands in commit 5 with TextNormalization; the rest of LocatorMap stays in commit 6, 2026-11-22
+
+Section 1.4 types NormalizedText.segments as S.Array(AlignedSegment) and section 1.2 places AlignedSegment in src/LocatorMap.ts, while section 10 lists TextNormalization in commit 5 and LocatorMap in commit 6. Commit 5 therefore adds src/LocatorMap.ts holding only the AlignedSegment schema and type, exported from the barrel, so the module list of section 1.2 holds at every commit and no schema moves file later. Commit 6 adds the LocatorMap class with its check, the identity and compose statics and CaptureMismatch to the same file. Every byte and identifier is the one the design names; only the commit that first carries the schema changes.
+
+Lane goals/text-knowledge-stack-rebuild-p2-text
+
+Reverse: Move AlignedSegment into TextNormalization.ts and re-export it from LocatorMap.ts in commit 6, or land all of LocatorMap.ts in commit 5.
+
 ### P2: an Ambiguous count saturates at Number.MAX_SAFE_INTEGER, so a count there is a lower bound, 2026-11-22
 
 Decision p2-selector-resolution-semantics makes a composite with an ambiguous part Ambiguous with the product of the counts, and Resolution.Ambiguous carries that count as S.Int, whose check is Number.isSafeInteger. A Quote count is at most the text length, but a Range multiplies the counts of its two parts and a Range may nest Ranges, so the product grows without bound: a Range of two Ranges of the quote a over ten thousand a counts 10^16 selections, past 2^53, and the Ambiguous constructor threw. Resolution outcomes are values, never errors (SPEC error boundaries), and Selector is a wire-decodable recursive union, so any decoded selector could reach the throw. resolve therefore saturates the product at Number.MAX_SAFE_INTEGER. Both factors are safe integers, so a product at or below the cap is exact and a product above it is finite; a saturated count is a lower bound on the true count. Ambiguity still fails closed, and no caller reads the count as anything but how many selections matched, which a lower bound past 2^53 still answers. A bigint count or a saturation flag would change the encoded shape of Resolution for a case no real selector reaches.

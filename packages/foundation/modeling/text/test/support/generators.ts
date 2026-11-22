@@ -4,10 +4,23 @@
 // block (one-, two- and three-byte in UTF-8) plus 64 astral emoji, so nothing is discarded. Every boundary is
 // computed from the code points themselves, independently of the scan under test, and every range sits on scalar
 // boundaries (decision p0-law-generators-well-formed-text). Split surrogates stay negative fixtures.
+import { Anchored } from "@beep/text/Occurrence";
+import {
+  SourceTextDigest,
+  SourceTextExtractor,
+  SourceTextIdentity,
+  SourceTextLocator,
+} from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
+import { TextAnchorVerificationReceipt } from "@beep/text/VerifiedTextAnchor";
 import * as Arbitrary from "effect/Arbitrary";
 import * as A from "effect/Array";
+import * as Hex from "effect/encoding/Hex";
+import { dual } from "effect/Function";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
+import type { JsoncDigest } from "@beep/jsonc/JsoncFingerprint";
 import type { OffsetUnit } from "@beep/text/OffsetUnit";
 
 // Picks above 0x2fff map onto 64 astral emoji from U+1F600.
@@ -79,6 +92,49 @@ export const oneOf = <Value>(arbitraries: A.NonEmptyReadonlyArray<Arbitrary.Arbi
     O.getOrElse(A.get(arbitraries, index), () => A.headNonEmpty(arbitraries))
   );
 
+// The pieces the normalizations of section 1.7 rewrite: hyphen breaks of every kind, letters on both sides of them,
+// compatibility forms, combining marks, Hangul compatibility jamo, and the four letters whose NFKC form starts
+// with a mark.
+const normalizationPieces: A.NonEmptyReadonlyArray<string> = [
+  "-\n",
+  "-\r\n",
+  "-\r",
+  "‐\n",
+  "a",
+  "e",
+  "Z",
+  "𝒳",
+  "𝒶",
+  "ﬁ",
+  "①",
+  "́",
+  "̣",
+  "ㄱ",
+  "ㅏ",
+  "ำ",
+  "ຳ",
+  "ﾞ",
+  "ﾟ",
+  " ",
+];
+
+const normalizationPiece = Arbitrary.map(between(0, normalizationPieces.length - 1), (index) =>
+  O.getOrElse(A.get(normalizationPieces, index), () => A.headNonEmpty(normalizationPieces))
+);
+
+/** Well-formed text salted with hyphen breaks and the scalars NFKC rewrites, generated piece by piece. */
+export const normalizationText = Arbitrary.map(
+  Arbitrary.array(
+    oneOf([
+      normalizationPiece,
+      normalizationPiece,
+      Arbitrary.map(wellFormedTextWith({ minLength: 1, maxLength: 3 }), ({ text }) => text),
+    ]),
+    { minLength: 0, maxLength: 24 }
+  ),
+  (pieces) => A.join(pieces, "")
+);
+
 /** Generated well-formed, non-empty text of at most 80 scalars. */
 export const wellFormedText = wellFormedTextWith({ minLength: 1, maxLength: 80 });
 
@@ -95,3 +151,77 @@ export const rangeIn =
     start: at(boundaries, range.first),
     end: at(boundaries, range.last),
   });
+
+// A synchronous SHA-256 from the platform: the digest callback the preimage Result twins take, and an oracle for
+// the text digests that is independent of the `Digest` service the minting functions use.
+const { createHash } = process.getBuiltinModule("node:crypto");
+
+/** The raw SHA-256 of bytes in memory. */
+export const sha256: JsoncDigest = (bytes) => new Uint8Array(createHash("sha256").update(bytes).digest());
+
+const utf8 = new TextEncoder();
+
+/** The `sha256:<hex>` digest of a text's UTF-8 bytes, as a capture's `textDigest` records it. */
+export const textDigestOf = (text: string): SourceTextDigest =>
+  SourceTextDigest.make(`sha256:${Hex.encode(sha256(utf8.encode(text)))}`);
+
+// A short well-formed field value, non-empty by construction.
+const fieldText = Arbitrary.map(wellFormedTextWith({ minLength: 1, maxLength: 12 }), ({ text }) => text);
+
+/** A capture of `text`: generated well-formed fields, a backslash-free locator and the text's own digest. */
+export const sourceFor = (text: string) =>
+  Arbitrary.map(
+    Arbitrary.all({
+      scopeRef: fieldText,
+      sourceRef: fieldText,
+      locator: fieldText,
+      sourceBytes: fieldText,
+      name: fieldText,
+      version: fieldText,
+      normalizationVersion: fieldText,
+    }),
+    (fields) =>
+      SourceTextIdentity.make({
+        scopeRef: fields.scopeRef,
+        sourceRef: fields.sourceRef,
+        locator: SourceTextLocator.make(Str.replaceAll("\\", "/")(fields.locator)),
+        sourceDigest: textDigestOf(fields.sourceBytes),
+        textDigest: textDigestOf(text),
+        extractor: SourceTextExtractor.make({ name: fields.name, version: fields.version }),
+        normalizationVersion: fields.normalizationVersion,
+      })
+  );
+
+type Utf16Range = { readonly start: number; readonly end: number };
+
+/** The anchors row of a UTF-16 range of `text` in `source`; the quote is the slice. */
+export const anchoredOn: {
+  (text: string, range: Utf16Range): (source: SourceTextIdentity) => Anchored;
+  (source: SourceTextIdentity, text: string, range: Utf16Range): Anchored;
+} = dual(
+  3,
+  (source: SourceTextIdentity, text: string, range: Utf16Range): Anchored =>
+    Anchored.make({
+      receipt: TextAnchorVerificationReceipt.make({
+        anchor: TextAnchor.make({
+          startChar: range.start,
+          endChar: range.end,
+          quote: Str.slice(range.start, range.end)(text),
+        }),
+        source,
+      }),
+    })
+);
+
+/** Generated text, a scalar range in it, a capture of the text, and the anchors row of the range. */
+export const anchoredCase = Arbitrary.flatMap(wellFormedText, (generated) =>
+  Arbitrary.map(
+    Arbitrary.all([scalarRangeIn(generated.codePoints.length), sourceFor(generated.text)]),
+    ([range, source]) => ({
+      ...generated,
+      range,
+      source,
+      anchored: anchoredOn(source, generated.text, rangeIn(generated.boundaries["utf16-code-unit"])(range)),
+    })
+  )
+);

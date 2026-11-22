@@ -156,3 +156,11 @@ home paths with `~`, drop session and machine ids.
   takes the slug as a positional argument and `goals decisions write` refuses it
   ("Unexpected positional argument") and wants `--slug`. **Would have prevented
   it:** one argument shape for the two sibling commands.
+- **Doing:** finishing commit 5 of P2 over an interrupted attempt's tree. **Evidence:**
+  the inherited L1-4 property shifted a preimage slot with `A.modify(encoded, slot, f)`,
+  which in Effect 4 returns an `Option`, so the mint saw an `Option` object and failed
+  `NonPlainObject at "/1"`; a refusal test written the same way passed for the wrong
+  reason, because `S.decodeUnknownResult` takes `unknown` and an `Option` never decodes
+  as a tuple, so no type error points at it. **Would have prevented it:** an effect
+  diagnostic that flags an `A.modify` or `A.replace` result used where an array or an
+  `unknown` input is expected.
