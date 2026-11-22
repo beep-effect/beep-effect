@@ -72,11 +72,11 @@ export class World {
   tagFailure: O.Option<AwsApiError> = O.none();
   /** Scripted terminate failure for every terminate call. */
   terminateFailure: O.Option<AwsApiError> = O.none();
-  /** Scripted JIT failure error; default a 500. */
   /** Scripted runner-group lookup failure for every lookup. */
   runnerGroupError: O.Option<GitHubApiError> = O.none();
   /** Scripted registration-token failure for every request. */
   registrationError: O.Option<GitHubApiError> = O.none();
+  /** Scripted JIT failure error; default a 500. */
   jitError: GitHubApiError = GitHubApiError.make({ operation: "jit", status: O.some(500), message: "boom" });
   sent: Array<SentMessage> = [];
   /** Cleanup calls in order: `deleteToken:<name>`, `deleteRunner:<id>`, `terminate:<instance>`. */

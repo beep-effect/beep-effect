@@ -20,6 +20,7 @@ import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as Base64 from "effect/encoding/Base64";
 import * as Layer from "effect/Layer";
+import * as Logger from "effect/Logger";
 import * as O from "effect/Option";
 import * as Redacted from "effect/Redacted";
 import * as Str from "effect/String";
@@ -323,6 +324,57 @@ describe("live GitHub layers over distilled", () => {
         [O.some(503), O.some("ServiceUnavailable"), "transient"]
       );
       expect(Str.includes("does not exist")(broken.message)).toBe(false);
+    })
+  );
+
+  it.effect("counts a job as taken only once it started or ended, and logs every status but queued", () =>
+    Effect.gen(function* () {
+      const token = InstallationToken.make({ installationId: 42, token: Redacted.make("ghs_installation") });
+      const statuses = ["queued", "in_progress", "completed", "waiting", "requested", "pending"];
+      const lines: Array<{ readonly level: string; readonly message: unknown; readonly annotations: unknown }> = [];
+      const capture = Logger.map(Logger.formatStructured, (line) => {
+        lines.push(line);
+      });
+      const loggers = yield* Layer.build(Logger.layer([capture]));
+      const answers = yield* run(
+        new FakeHttp((request) =>
+          O.map(A.get(statuses, Number(Str.slice(-1)(request.url.pathname))), (status) =>
+            ok(`{"id":1,"run_id":3,"status":"${status}","name":"check","labels":["beep-ec2-heavy"]}`)
+          )
+        ),
+        new World(),
+        Effect.gen(function* () {
+          const github = yield* GitHubRunners;
+          return yield* Effect.forEach(
+            statuses,
+            (_, jobId) => github.isJobQueued(token, { owner: "beep-effect", repo: "beep-effect", jobId }),
+            { concurrency: 1 }
+          );
+        })
+      ).pipe(Effect.provideContext(loggers));
+      deepStrictEqual(A.zip(statuses, answers), [
+        ["queued", true],
+        ["in_progress", false],
+        ["completed", false],
+        ["waiting", true],
+        ["requested", true],
+        ["pending", true],
+      ]);
+      const line = (jobId: number, status: string, queued: boolean) => ({
+        level: "INFO",
+        message: "github: the job's status is not queued",
+        annotations: { jobId, repository: "beep-effect/beep-effect", status, queued },
+      });
+      deepStrictEqual(
+        A.map(lines, ({ level, message, annotations }) => ({ level, message, annotations })),
+        [
+          line(1, "in_progress", false),
+          line(2, "completed", false),
+          line(3, "waiting", true),
+          line(4, "requested", true),
+          line(5, "pending", true),
+        ]
+      );
     })
   );
 

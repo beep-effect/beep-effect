@@ -2483,10 +2483,30 @@ deletion paths bound each token:
   instance dies before boot therefore lives at most about two days.
 - A configuration that fails after the put also deletes the token, then the JIT runner, then terminates the instance.
 
-**Job-queued check on in production.** Scale-up now checks that the GitHub job is still queued before it launches. The
-check existed but was off in the production configuration. The failed message was redelivered to scale-up after the
-build queue's two-minute visibility timeout, so a launch followed the cancelled run. The check is fail-open on a GitHub
-error, as upstream. A test decodes both deployed runtime configurations and pins it on.
+**The job-queued check stays off in production.** The failed message was redelivered to scale-up after the build queue's
+two-minute visibility timeout, so a launch followed the cancelled run. This fix first turned scale-up's check on, and
+turned it off again before the merge:
+
+- The live fleet keeps it off because GitHub's jobs API answered "not queued" for queued jobs. With the check on, two of
+  seven pickup probes sat queued for over 25 minutes (`goals/ci-fleet-endgame/research/OPPORTUNITIES.md`).
+- The not-queued branch acknowledges the message with no launch, no retry and no dead letter. It is fail-open only on a
+  GitHub error.
+- The relaunch is closed without it: a failed configuration goes back to the build queue only when the DLQ send itself
+  fails. A cancelled job whose message SQS redelivers for another reason (over the cap, a launch shortfall) costs one
+  VM, as on the live fleet.
+
+A test decodes both deployed runtime configurations and pins the check off for both pools.
+
+**What "not queued" means.** Job-retry always asks GitHub for the job's status, as the live fleet's does, and drops the
+message when the job needs no runner. The live fleet reads every status except `queued` that way, and so did this port.
+Now only `in_progress` and `completed` do: a lagging read normally shows an earlier state (requested, waiting, pending), not a later one. That is an
+inference. The status the two stranded probes got was never recorded. Every status other than `queued` is logged with
+the job and the answer, and job-retry logs the message it drops with its retry counter.
+
+**What remains.** A transient configuration failure has lost its runner and relies on job-retry alone. A wrong
+`in_progress` or `completed` at 120 seconds still drops that job, now with a log line. The live fleet instead redelivers
+such a failure to scale-up, unchecked. In every proof and post-check, each drop line must be `in_progress` or
+`completed`, with the job's start or completion time before the line; one that is not is a STOP.
 
 **Failure classification.**
 

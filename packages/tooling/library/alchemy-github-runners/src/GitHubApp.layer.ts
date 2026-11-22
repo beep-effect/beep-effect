@@ -31,6 +31,9 @@ import type { RunnerOwner } from "./GitHubRunners.models.ts";
 
 const $I = $AlchemyGithubRunnersId.create("GitHubApp.layer");
 
+// A lagging read shows an earlier state, so only these two mean the job no longer needs a runner.
+const isTakenJobStatus = S.is(S.Literals(["in_progress", "completed"]));
+
 const statusByTag: Readonly<Record<string, number>> = {
   BadRequest: 400,
   Unauthorized: 401,
@@ -305,7 +308,18 @@ export const gitHubRunnersLive = (
             token,
             "getJobForWorkflowRun"
           )(actions.getJobForWorkflowRun({ owner: job.owner, repo: job.repo, job_id: job.jobId }));
-          return response.status === "queued";
+          const queued = !isTakenJobStatus(response.status);
+          if (response.status !== "queued") {
+            yield* Effect.logInfo("github: the job's status is not queued").pipe(
+              Effect.annotateLogs({
+                jobId: job.jobId,
+                repository: `${job.owner}/${job.repo}`,
+                status: response.status,
+                queued,
+              })
+            );
+          }
+          return queued;
         }),
         runnerGroupId: Effect.fn("GitHubRunners.runnerGroupId")(function* (token, org, groupName) {
           // Every page: a 404 is deterministic, so a group on a later page must not read as missing.
