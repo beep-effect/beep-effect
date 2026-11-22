@@ -131,6 +131,17 @@ describe("verified-span hostile-text contract", () => {
     })
   );
 
+  it.effect(
+    "keeps a letter whose NFKC form holds a mark after its first scalar out of the preceding cluster",
+    Effect.fnUntraced(function* () {
+      const source = "x\u0958y";
+      const anchor = yield* locateRawText(source, "\u0915\u093c");
+
+      expect(anchor).toEqual({ endChar: 2, quote: "\u0958", startChar: 1 });
+      expectExactRawSlice(source, anchor.startChar, anchor.endChar, anchor.quote);
+    })
+  );
+
   it.prop(
     "normalizes cluster by cluster to the NFKC form of the whole text",
     { text: nfkcClusterText },
