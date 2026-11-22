@@ -19,7 +19,9 @@ Commit no inventory of comments. Use two checks that share one scanner and one f
    may only lose scopes. A sweep PR that empties a scope deletes its line. New packages are never pending.
 
 At zero pending scopes, the lock check is a plain ban. Then the delta check, shards and ratchet code
-are deleted and the rule stays as an ordinary lint rule.
+are deleted. The scanner stays as the absolute gate beside the lint rule: an oxlint rule can be
+silenced by a source `oxlint-disable` or `eslint-disable` directive, so the scanner keeps rejecting every
+directive that would silence it (correction from the lint lane, `lint.md` refutation pass).
 
 Reason in one sentence: the delta check is the only design that stores nothing, survives renames and
 moves, and cannot collide across lanes; the lock check covers its one real hole, which is that a

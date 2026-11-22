@@ -28,6 +28,7 @@ Higher sources outrank lower sources when they conflict.
 
 ## Constraints
 
+- At zero pending scopes the scanner stays as the gate that rejects any directive silencing the rule; only the delta check and shards retire.
 - Starts only after `comment-law-gate` blocks.
 - Every deletion has two agreeing votes or an AST-checked mechanical rule; labels held at kappa 0.65 and T versus N is the soft boundary.
 - A stale comment that is true except for one clause is edited, not deleted; a comment that is right where the code is wrong goes to `comment-census-defects`.

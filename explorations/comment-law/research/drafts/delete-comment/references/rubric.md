@@ -39,7 +39,11 @@ Length is not evidence: a long comment can be T and four words can be D.
 - A comment attached to the wrong declaration is S even if its sentence is true
   of some other symbol. Name that symbol in the note.
 - Mixed groups take the code of their most valuable sentence, in the order
-  D, X, H, N, S, T, G. Note the mix. Do not split a group by hand.
+  D, X, H, N, S, T, G, and note the mix. A group is deleted whole only when
+  every sentence in it may be deleted. When it also holds an H or N sentence,
+  that sentence stays (the rest of the group is edited out) until its home
+  carries it, and the row keeps code H or N with `home` set. A D, S or T
+  verdict never carries a hazard out with it.
 - Test titles count as code. A comment that repeats the `it` title is T.
 
 ## Notes and homes

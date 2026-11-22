@@ -91,8 +91,11 @@ Write the file, commit it, then delete.
 
 `packages/drivers/exiftool/src/Exiftool.service.ts:351` explains why the ceiling
 is 128 MiB. The migration half ("the hand-rolled fold had no ceiling") is stale,
-the reason for raising it is not. H, home `name`: the constant can say
-`readTagsBatchOutputCeiling`. Retained in this PR.
+the reason for raising it is not. H, home `keep`: a name such as
+`readTagsBatchOutputCeiling` says what the value is for but not why it is 128 MiB,
+so a rename is not a home for this reason. Only the stale migration half is
+removed; the reason stays under the ratchet until a test title or a typed
+constant states it. A home must carry the reason, not just the topic.
 
 ## H, home test
 

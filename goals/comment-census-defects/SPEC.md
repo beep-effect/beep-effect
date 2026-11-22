@@ -23,11 +23,20 @@ Higher sources outrank lower sources when they conflict.
 
 ## Target Surfaces
 
-- `packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts` (drifted host guard; import `@beep/schema` SafeRemoteHost).
-- `packages/foundation/modeling/yaml` (formatter drops an escaped comment though the document carries one).
-- `packages/drivers/git/src/Git.ts` (an error arm called unreachable is reachable).
-- `packages/tooling/policy-pack/lint-rules/src/rules/no-manual-effect-runtime-in-tests.ts` (budget allows about 529 new violations) and the low local coverage floors.
-- `packages/drivers/wink` (entity spans for repeated mentions), `apps/oip-web` (dead nav anchors), `packages/tooling/library/repo-workspaces/test/integration/node-sync.int.test.ts` (resolves a missing directory), the onnx tensor check in `Files/internal/MatchPerson.onnx.ts`, the EPERM case in the process probe.
+- One defect per row below. Each was read in source on `a1b08269809`; re-verify on `origin/main` first.
+
+| Defect | Where | Reproduce | Expected |
+| --- | --- | --- | --- |
+| Drifted SSRF guard | `packages/drivers/nlp-mcp/src/Streaming/DatasetLoader.ts` `isBlockedRemoteHost` | load `http://localhost./x`: the guard keeps the trailing dot and allows it | refused, as `@beep/schema` SafeRemoteHost (which strips dots) refuses it; import that guard |
+| YAML formatter drops a comment | `packages/foundation/modeling/yaml/src/internal/composer/document.ts` (about line 796) | format a sequence followed by an escaped `# esc` comment line: the output loses the comment | the comment survives on the document's trailing comment field |
+| Reachable "unreachable" arm | `packages/drivers/git/src/Git.ts` working-tree diff helper (comment about line 635) | working-tree diff with a missing caller-supplied `head` | fails `UnknownRefError`, a test pins it, and the comment is corrected |
+| Stale runtime budget | `packages/tooling/policy-pack/lint-rules/src/rules/no-manual-effect-runtime-in-tests.ts` | 64 of 67 baseline rows match no `Effect.run*` or `ManagedRuntime` today | baseline cut to live rows, so the budget admits no new violation |
+| Uncalibrated coverage floors | `vitest.config.ts` of `packages/shared/tables`, `packages/shared/domain`, `packages/tooling/test-kit/test-utils` | floors (lines 25 in tables) sit far below `standards/coverage.regression-baseline.jsonc` (100); tables names a missing `src/table/Table.ts` | floors raised to measured or removed in favour of the repo ratchet; glob fixed |
+| Wrong entity spans | `packages/drivers/wink/src/WinkBackend.service.ts` (about line 56) | text with the same entity twice | each mention keeps its own span, taken from `its.span` as `WinkTools.service.ts` does |
+| Dead nav anchors | `apps/oip-web/src/components/OipHomePage.tsx` with `OipContent.data.ts` | nav and hero link to `#matters` and `#press`; both sections are commented out | sections restored, or the links removed |
+| Test resolves a missing directory | `packages/tooling/library/repo-workspaces/test/integration/node-sync.int.test.ts:22` | `cwd` climbs five levels and resolves a doubled packages segment | six levels; the test asserts the directory exists |
+| Claimed tensor check | `packages/tooling/tool/cli/src/commands/Files/internal/MatchPerson.onnx.ts:119` | the comment says tensors are checked before graph construction; only a later `MISSING:` scan exists | a missing required tensor fails before construction, with a test |
+| EPERM counted as gone | `packages/tooling/tool/cli/src/internal/repo-run/ProcessIdentity.ts:154` | probe a live pid owned by another user: `kill(pid, 0)` throws EPERM | EPERM reads as alive, so a live collector's handle is never reclaimed |
 
 ## Constraints
 

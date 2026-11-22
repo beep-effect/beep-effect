@@ -41,7 +41,7 @@ group. Adjacent `//` lines with the same indent form one group.
 
 | Field | Written by | Meaning |
 | --- | --- | --- |
-| `cid` | census | Hash of path, kind, normalized text, the next 60 code characters and an ordinal. Line shifts and other deletions do not change it. Editing the comment or the code under it does, which forces a fresh verdict. |
+| `cid` | census | Hash of path, kind, normalized text, the next 60 code characters and an ordinal. Line shifts and most other deletions do not change it. Exception: when two rows share path, kind, text and anchor, deleting the earlier one gives the survivor its `cid`. A survivor whose `cid` matches a deleted row always gets a fresh verdict, including after a merge of `main`. Editing the comment or the code under it changes the `cid` and forces a fresh verdict too. |
 | `protect` | census | Why the row can never be deleted here, or null |
 | `codeOffset` | census | Count of non-whitespace code characters before the comment |
 | `code`, `conf`, `note` | classify | Rubric code, confidence 1-3, evidence |
@@ -50,9 +50,10 @@ group. Adjacent `//` lines with the same indent form one group.
 | `home` | classify | H and N only: `name`, `type`, `test`, `assert`, `keep` |
 
 A later census joins on `cid`, so a rerun asks only about new or changed
-comments. While the campaign goal is open, commit the surviving verdicts as
-`cid<TAB>code<TAB>home` in `goals/comment-law/ledger/<package>.tsv`, so another
-workstation can resume. No comment inventory goes under `standards/`.
+comments. To resume on another workstation, keep the verdicts outside the repository in
+`~/.local/state/beep/comment-law/<package>.tsv` (`cid<TAB>code<TAB>home`). A
+per-comment ledger is never committed: it goes stale on every merge, and S31
+forbids a growing inventory.
 
 ## Procedure
 
