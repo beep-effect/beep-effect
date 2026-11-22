@@ -2411,5 +2411,8 @@
   ],
   "@beep/schema/WellFormedText": [
     "./packages/foundation/modeling/schema/src/WellFormedText.ts"
+  ],
+  "@beep/lint-rules/comment-grammar": [
+    "./packages/tooling/policy-pack/lint-rules/src/rules/comment-grammar.ts"
   ]
 }

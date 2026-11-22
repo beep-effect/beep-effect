@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/occt",
+  "root": "packages/drivers/occt",
+  "scopes": ["."]
+}

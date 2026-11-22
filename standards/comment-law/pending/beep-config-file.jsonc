@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/config-file",
+  "root": "packages/foundation/capability/config-file",
+  "scopes": ["."]
+}

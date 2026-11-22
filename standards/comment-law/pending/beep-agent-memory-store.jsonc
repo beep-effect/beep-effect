@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/agent-memory-store",
+  "root": "packages/tooling/library/agent-memory-store",
+  "scopes": ["."]
+}

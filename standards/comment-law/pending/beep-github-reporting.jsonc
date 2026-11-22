@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/github-reporting",
+  "root": "packages/foundation/modeling/github-reporting",
+  "scopes": ["."]
+}

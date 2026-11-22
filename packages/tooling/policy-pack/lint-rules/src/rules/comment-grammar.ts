@@ -519,7 +519,7 @@ export const attachmentOf = (program: GrammarNode): CommentAttachment => {
     for (const key in value) {
       if (HashSet.has(SKIPPED_KEYS, key)) continue;
       const child = field(value, key);
-      if (P.isObject(child)) visit(child);
+      if (P.isObjectOrArray(child)) visit(child);
     }
     index.exit(value);
   };
