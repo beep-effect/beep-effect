@@ -1,11 +1,11 @@
 // The golden captures of the P2 design (sections 1.4 and 6). Every hash below was recomputed by hand: a plain
 // SHA-256 over the hand-written RFC 8785 JSON of `[domainTag, ...preimage]`, independently of the minting code.
 import { PosixPath } from "@beep/schema/PosixPath";
+import { anchoredOn } from "@beep/text/Arbitrary";
 import { OccurrenceId } from "@beep/text/Occurrence";
 import { QuoteKey } from "@beep/text/QuoteKey";
 import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import * as Str from "effect/String";
-import { anchoredOn } from "./generators.ts";
 
 /** The source text of the existing `cm1` test: two occurrences of one citation after an astral character. */
 export const citationText = "😀 1 U.S. 1; 1 U.S. 1";

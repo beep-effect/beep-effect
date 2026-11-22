@@ -1,6 +1,7 @@
 import { fcRuns } from "@beep/fc-runs";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
+import { anchoredOn, rangeIn, scalarRangeIn, sourceFor, textDigestOf } from "@beep/text/Arbitrary";
 import { AlignedSegment, LocatorMap } from "@beep/text/LocatorMap";
 import { Anchored, mintOccurrenceId } from "@beep/text/Occurrence";
 import { Position } from "@beep/text/OffsetUnit";
@@ -16,17 +17,7 @@ import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as Str from "effect/String";
-import {
-  anchoredCase,
-  anchoredOn,
-  locatorStep,
-  normalizationText,
-  rangeIn,
-  scalarRangeIn,
-  sourceFor,
-  textDigestOf,
-  wellFormedText,
-} from "./support/generators.ts";
+import { anchoredCase, locatorStep, normalizationText, sha256, wellFormedText } from "./support/generators.ts";
 import type { PreimageMintError } from "@beep/text/Occurrence";
 import type { TextNormalization as Normalization } from "@beep/text/TextNormalization";
 import type { VerifiedTextAnchorError } from "@beep/text/VerifiedTextAnchor";
@@ -41,8 +32,8 @@ const capture = (name: string, text: string): SourceTextIdentity =>
     scopeRef: "matter:example",
     sourceRef: `source:${name}`,
     locator: PosixPath.make(`documents/${name}.txt`),
-    sourceDigest: textDigestOf(text),
-    textDigest: textDigestOf(text),
+    sourceDigest: textDigestOf(sha256)(text),
+    textDigest: textDigestOf(sha256)(text),
     extractor: SourceTextExtractor.make({ name: "utf8", version: "1" }),
     normalizationVersion: "1",
   });
@@ -65,9 +56,9 @@ const chainCase = Arbitrary.flatMap(wellFormedText, (first) =>
       Arbitrary.map(
         Arbitrary.all({
           range: scalarRangeIn(first.codePoints.length),
-          a: sourceFor(first.text),
-          b: sourceFor(f.target),
-          c: sourceFor(g.target),
+          a: sourceFor(sha256)(first.text),
+          b: sourceFor(sha256)(f.target),
+          c: sourceFor(sha256)(g.target),
         }),
         ({ range, a, b, c }) => ({
           anchored: anchoredOn(a, first.text, rangeIn(first.boundaries["utf16-code-unit"])(range)),

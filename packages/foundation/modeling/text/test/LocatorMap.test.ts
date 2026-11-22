@@ -1,6 +1,7 @@
 import { fcRuns } from "@beep/fc-runs";
 import { PosixPath } from "@beep/schema/PosixPath";
 import { it } from "@beep/test-runner";
+import { textDigestOf } from "@beep/text/Arbitrary";
 import { AlignedSegment, CaptureMismatch, LocatorMap } from "@beep/text/LocatorMap";
 import { Position } from "@beep/text/OffsetUnit";
 import { SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
@@ -11,15 +12,15 @@ import * as Arbitrary from "effect/Arbitrary";
 import * as Effect from "effect/Effect";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
-import { locatorStep, textDigestOf, wellFormedText } from "./support/generators.ts";
+import { locatorStep, sha256, wellFormedText } from "./support/generators.ts";
 
 const capture = (name: string): SourceTextIdentity =>
   SourceTextIdentity.make({
     scopeRef: "matter:example",
     sourceRef: `source:${name}`,
     locator: PosixPath.make(`documents/${name}.txt`),
-    sourceDigest: textDigestOf(name),
-    textDigest: textDigestOf(name),
+    sourceDigest: textDigestOf(sha256)(name),
+    textDigest: textDigestOf(sha256)(name),
     extractor: SourceTextExtractor.make({ name: "utf8", version: "1" }),
     normalizationVersion: "1",
   });
