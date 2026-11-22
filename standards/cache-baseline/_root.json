@@ -8,11 +8,11 @@
     "@beep/types#lint"
   ],
   "review": {
-    "reviewer": "Claude Opus 5.5 (comment-law gate wiring lane, goals/comment-law-gate)",
-    "reason": "Record the root drift of the new uncached lint:comment-law root script, the oxc-parser root dependency and the laws policy seal reseal, and the @beep/repo-cli edges the new @beep/lint-rules dependency adds. No existing command, cache flag, output or environment changed; no qualification is granted.",
+    "reviewer": "Claude Opus 5.5 (mcpb-kit output lane, t3/mcpb-kit-output-outside-dist)",
+    "reason": "Record the @beep/mcpb-kit drift from the new @beep/xdg workspace dependency (manifest bytes and the @beep/xdg build and transit edges), and the inherited root turbo.json source digest from #3458. No command, cache flag, output or environment changed; no qualification is granted.",
     "basis": {
-      "path": "docs/reports/comment-law-gate-cache-review-2026-11-22.md",
-      "sha256": "e78b15d76b6ed1c7e07a541a2055eb13028827a13e1c94dfadd12b1eca27be4a"
+      "path": "docs/reports/mcpb-kit-xdg-cache-review-2026-11-22.md",
+      "sha256": "f68140fcaafa032ec468a609d5f79ab3702bba4b97e380fe4834e76cd81bc0f6"
     }
   },
   "globalConfiguration": {
@@ -204,7 +204,7 @@
     },
     {
       "path": "turbo.json",
-      "sha256": "87a78b2ac488aeed1221f4ccb7476b94f8827253cf017febfb6f8a5838872e41"
+      "sha256": "1565194a19c724e05b0805b87766c34978f2a1ce6262d02bc1005de487eabb1b"
     }
   ],
   "nodes": [
