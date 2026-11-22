@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/pandoc-ast",
+  "root": "packages/foundation/modeling/pandoc-ast",
+  "scopes": ["."]
+}

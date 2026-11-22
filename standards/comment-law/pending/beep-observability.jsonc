@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/observability",
+  "root": "packages/foundation/capability/observability",
+  "scopes": ["."]
+}

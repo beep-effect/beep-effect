@@ -7,6 +7,7 @@
 
 import { definePlugin } from "@oxlint/plugins";
 import namespaceNodeImports from "./namespace-node-imports.ts";
+import noComments from "./no-comments.ts";
 import { noDirectProcessIo } from "./no-direct-process-io.ts";
 import noGlobalProcessRuntime from "./no-global-process-runtime.ts";
 import noInlineSchemaCompile from "./no-inline-schema-compile.ts";
@@ -14,6 +15,24 @@ import noJsExtensionImports from "./no-js-extension-imports.ts";
 import noManualEffectRuntimeInTests from "./no-manual-effect-runtime-in-tests.ts";
 import noOpaqueInstanceFields from "./no-opaque-instance-fields.ts";
 
+/**
+ * Re-exported legacy manual-runner baseline of `no-manual-effect-runtime-in-tests`.
+ *
+ * **Example** (Look up one file's allowance)
+ *
+ * ```ts
+ * import { strictEqual } from "node:assert/strict"
+ * import { MANUAL_EFFECT_RUNTIME_LEGACY_BASELINE } from "@beep/lint-rules/oxlint"
+ * import * as HashMap from "effect/HashMap"
+ * import * as O from "effect/Option"
+ *
+ * strictEqual(O.isNone(HashMap.get(MANUAL_EFFECT_RUNTIME_LEGACY_BASELINE, "unlisted.test.ts")), true)
+ * ```
+ *
+ * @category configuration
+ * @since 0.1.0
+ */
+export { MANUAL_EFFECT_RUNTIME_LEGACY_BASELINE } from "./no-manual-effect-runtime-in-tests.ts";
 /**
  * Re-exported import-binding model used by individual lint-rule helpers.
  *
@@ -57,6 +76,7 @@ export default definePlugin({
   },
   rules: {
     "namespace-node-imports": namespaceNodeImports,
+    "no-comments": noComments,
     "no-direct-process-io": noDirectProcessIo,
     "no-global-process-runtime": noGlobalProcessRuntime,
     "no-inline-schema-compile": noInlineSchemaCompile,

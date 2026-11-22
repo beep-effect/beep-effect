@@ -1,0 +1,6 @@
+{
+  "schemaVersion": "comment-law-pending/v1",
+  "package": "@beep/lejeune-bolt-workbench",
+  "root": "apps/labs/lejeune-bolt-workbench",
+  "scopes": ["."]
+}
