@@ -105,6 +105,14 @@ const Frozen = S.Struct({
 const FrozenJson = S.fromJsonString(Frozen);
 const Json = S.fromJsonString(S.Unknown);
 const MentionJson = S.fromJsonString(CitationMentionReceipt);
+const Mentions = S.Struct({ mentions: S.Array(S.Unknown) });
+const MentionReceipts = S.Array(CitationMentionReceipt);
+const MentionFields = S.Struct({
+  id: S.String,
+  engineArtifact: Sha256Hex,
+  citation: S.Struct({ type: S.String }),
+  anchor: TextAnchorVerificationReceipt,
+});
 const encoder = new TextEncoder();
 const artifact = Sha256Hex.make(Str.repeat(64)("a"));
 const suffix = Str.slice(4);
@@ -666,7 +674,6 @@ it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
   it.effect("converts a standalone v1 mention receipt and refuses one with warnings", () =>
     Effect.gen(function* () {
       const read = yield* readFrozen;
-      const Mentions = S.Struct({ mentions: S.Array(S.Unknown) });
       const { mentions } = yield* S.decodeUnknownEffect(Mentions)(read.frozen.document);
       const first = yield* readCitationMentionReceipt(A.getUnsafe(mentions, 0));
       expect(first).toEqual(A.getUnsafe(read.document.mentions, 0));
@@ -688,20 +695,12 @@ it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
   it.effect("refuses a v1 mention whose quote holds a lone surrogate: it has no OccurrenceId", () =>
     Effect.gen(function* () {
       const read = yield* readFrozen;
-      const { mentions } = yield* S.decodeUnknownEffect(S.Struct({ mentions: S.Array(S.Unknown) }))(
-        read.frozen.document
-      );
+      const { mentions } = yield* S.decodeUnknownEffect(Mentions)(read.frozen.document);
       const text = yield* S.encodeEffect(Json)(A.getUnsafe(mentions, 6));
       const ill = yield* S.decodeEffect(Json)(
         Str.replaceAll('"quote":"Doe, supra"', '"quote":"Doe, supr\\ud800"')(text)
       );
-      const Fields = S.Struct({
-        id: S.String,
-        engineArtifact: Sha256Hex,
-        citation: S.Struct({ type: S.String }),
-        anchor: TextAnchorVerificationReceipt,
-      });
-      const fields = yield* S.decodeUnknownEffect(Fields)(ill);
+      const fields = yield* S.decodeUnknownEffect(MentionFields)(ill);
       const recomputed = yield* citationMentionIdV1(fields.anchor, fields.engineArtifact, fields.citation.type);
       const illText = yield* S.encodeEffect(Json)(ill);
       const restamped = yield* S.decodeEffect(Json)(Str.replaceAll(fields.id, recomputed)(illText));
@@ -713,10 +712,8 @@ it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
   it.effect("serves only v2 mention receipts to the resolution input", () =>
     Effect.gen(function* () {
       const read = yield* readFrozen;
-      const { mentions } = yield* S.decodeUnknownEffect(S.Struct({ mentions: S.Array(S.Unknown) }))(
-        read.frozen.document
-      );
-      const live = yield* S.encodeEffect(S.Array(CitationMentionReceipt))(read.document.mentions);
+      const { mentions } = yield* S.decodeUnknownEffect(Mentions)(read.frozen.document);
+      const live = yield* S.encodeEffect(MentionReceipts)(read.document.mentions);
       const input = { source: read.frozen.expectedSource, sourceText: read.frozen.sourceText };
       const served = yield* S.decodeEffect(CitationEngineResolutionInput)({ ...input, mentions: live });
       expect(served.mentions).toEqual(read.document.mentions);
