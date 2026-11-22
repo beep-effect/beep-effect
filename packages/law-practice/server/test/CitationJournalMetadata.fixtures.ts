@@ -127,9 +127,7 @@ const install = Effect.fn("JournalMetadataTest.install")(function* (
   const installed = enclosing === true ? Context.add(context, CitationTextBudget, text) : context;
   const configuration = { ...corpus.configuration };
   const metadata = yield* makeCitationJournalMetadata(limits, setup.runtime, configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({ ...stage, apply: bind(stage.apply) })),
     Effect.provideContext(installed),
     DateTime.withCurrentZoneOffset(0)
   );
@@ -233,9 +231,10 @@ export const assertCitationJournalMetadataConfiguration = Effect.fn("JournalMeta
     [setup.limits, setup.runtime, { ...corpus.configuration, journalPattern: changedPattern }],
   ] as const) {
     const failed = yield* makeCitationJournalMetadata(policy, runtime, configuration).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(policy).pipe(Effect.map((bind) => ({ ...stage, apply: bind(stage.apply) })))
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding(policy), (stage, bind) => ({
+        ...stage,
+        apply: bind(stage.apply),
+      })),
       Effect.provideContext(installed),
       DateTime.withCurrentZoneOffset(0),
       Effect.flip

@@ -177,9 +177,10 @@ export const installCitationExtractionLoopFixture = Effect.fn("ExtractionLoopTes
     generated: { patterns: template.patterns, disallowedNames: names.disallowedNames },
   });
   const stage = yield* makeCitationExtractionLoop(limits, setup.runtime, configuration).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+      ...stage,
+      extract: bind(stage.extract),
+    })),
     Effect.provideContext(setup.provided),
     DateTime.withCurrentZoneOffset(0)
   );
@@ -205,11 +206,10 @@ export const replayCitationExtractionLoop = Effect.fn("ExtractionLoopTest.replay
     if (row.id === 2) {
       const tightLimits = { ...limits, producedTextUtf16: result.reservedUnits - 1 };
       const tight = yield* makeCitationExtractionLoop(limits, setup.runtime, configuration).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(tightLimits).pipe(
-            Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-          )
-        ),
+        Effect.zipWith(makeCitationTestScaffoldBinding(tightLimits), (stage, bind) => ({
+          ...stage,
+          extract: bind(stage.extract),
+        })),
         Effect.provideContext(setup.provided),
         DateTime.withCurrentZoneOffset(0)
       );

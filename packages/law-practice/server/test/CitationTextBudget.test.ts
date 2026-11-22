@@ -128,9 +128,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
         const limits = { ...(yield* defaultCitationEnginePolicy).limits, producedTextUtf16: 10 };
         const budget = (yield* CitationInvocation).budget;
         const context = yield* makeCitationTokenContext(limits).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) })))
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+            ...stage,
+            plan: bind(stage.plan),
+          })),
           Effect.provideService(CitationTextBudget, budget)
         );
         const failure = yield* context
@@ -152,11 +153,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
           Effect.gen(function* () {
             const fresh = (yield* CitationInvocation).budget;
             const freshContext = yield* makeCitationTokenContext({ ...limits, producedTextUtf16: 12 }).pipe(
-              Effect.flatMap((stage) =>
-                makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 12 }).pipe(
-                  Effect.map((bind) => ({ ...stage, plan: bind(stage.plan) }))
-                )
-              ),
+              Effect.zipWith(makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 12 }), (stage, bind) => ({
+                ...stage,
+                plan: bind(stage.plan),
+              })),
               Effect.provideService(CitationTextBudget, fresh)
             );
             const result = yield* freshContext.plan({
@@ -209,15 +209,11 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("composed pa
               corpus.yearPattern,
               corpus.bindings
             ).pipe(
-              Effect.flatMap((stage) =>
-                makeCitationTestScaffoldBinding(setup.limits).pipe(
-                  Effect.map((bind) => ({
-                    ...stage,
-                    cleanPinCite: bind(stage.cleanPinCite),
-                    parenthetical: bind(stage.parenthetical),
-                  }))
-                )
-              ),
+              Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+                ...stage,
+                cleanPinCite: bind(stage.cleanPinCite),
+                parenthetical: bind(stage.parenthetical),
+              })),
               Effect.provideContext(setup.context.pipe(Context.add(CitationTextBudget, budget)))
             );
             const pin = yield* helpers.cleanPinCite(native(" a "));

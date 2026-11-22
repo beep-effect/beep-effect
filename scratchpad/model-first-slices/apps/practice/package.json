@@ -8,7 +8,7 @@
     "@alchemy.run/docker": "2.0.0-beta.87",
     "@alchemy.run/domain": "2.0.0-beta.87",
     "@alchemy.run/effect-cluster": "2.0.0-beta.87",
-    "@effect/platform-node": "4.1.4",
+    "@effect/platform-node": "4.1.5",
     "@proto/authority-host": "workspace:*",
     "@proto/authority-model": "workspace:*",
     "@proto/conformance": "workspace:*",
@@ -20,7 +20,7 @@
     "@proto/runs-model": "workspace:*",
     "@proto/tooling": "workspace:*",
     "alchemy": "2.0.0-beta.87",
-    "effect": "4.1.4"
+    "effect": "4.1.5"
   },
   "scripts": {
     "test": "vitest run",
@@ -29,7 +29,7 @@
     "destroy": "bun --bun ../../node_modules/.bin/alchemy destroy --stage mfs-conformance --no-input --yes"
   },
   "devDependencies": {
-    "@effect/vitest": "4.1.4",
+    "@effect/vitest": "4.1.5",
     "vitest": "5.0.4"
   }
 }

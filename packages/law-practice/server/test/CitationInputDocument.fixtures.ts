@@ -243,11 +243,10 @@ const makeCase = Effect.fn("InputDocumentTest.case")(function* (
     discovery,
     diffRuntime,
   }).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(setup.limits).pipe(
-        Effect.map((bind) => ({ ...stage, initialize: bind(stage.initialize) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+      ...stage,
+      initialize: bind(stage.initialize),
+    })),
     Effect.provideContext(setup.provided),
     Effect.provideService(CitationCleanerValues, h.values),
     Effect.provideService(CitationCleaner, registry.runtime),

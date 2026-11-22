@@ -41,11 +41,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("full-citati
         const setup = yield* installCitationFrozenMetadataRuntime("bun");
         const make = (configuration: unknown) =>
           makeCitationFullExtraction(setup.limits, setup.runtime, configuration).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(setup.limits).pipe(
-                Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-              )
-            ),
+            Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+              ...stage,
+              extract: bind(stage.extract),
+            })),
             Effect.provideContext(setup.provided),
             DateTime.withCurrentZoneOffset(0)
           );

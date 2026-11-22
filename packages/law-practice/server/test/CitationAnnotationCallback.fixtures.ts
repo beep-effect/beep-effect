@@ -162,11 +162,10 @@ export const replayCitationAnnotationCallbacks = Effect.fn("AnnotationCallbackTe
       Effect.provideService(CitationXmlBalance, setup.worker.raw)
     );
     const replay = yield* makeCitationAnnotationReplay(setup.limits, setup.budget, O.getOrUndefined(processor)).pipe(
-      Effect.flatMap((stage) =>
-        makeCitationTestScaffoldBinding(setup.limits, "annotate").pipe(
-          Effect.map((bind) => ({ ...stage, assemble: bind(stage.assemble) }))
-        )
-      ),
+      Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits, "annotate"), (stage, bind) => ({
+        ...stage,
+        assemble: bind(stage.assemble),
+      })),
       Effect.provideService(CitationAnnotationAnnotator, port),
       Effect.provideContext(setup.provided)
     );
