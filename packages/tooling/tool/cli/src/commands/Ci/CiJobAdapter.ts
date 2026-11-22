@@ -10,8 +10,9 @@
  * timed out, `cancelled` a failure counted as unhandled (the runner stopped
  * the step; the model has no cancel kind), and any other conclusion a plain
  * failure. A step with no conclusion has not finished and reads as skipped. A
- * job with no steps, or a red job with no failed step, gets one fault item, so
- * it never reads as green. A failed step's detail is the text the caller
+ * job with no steps reads as one skipped item when GitHub skipped it (an
+ * `if:`) or has not started it; any other job with no steps, or a red job
+ * with no failed step, gets one fault item, so it never reads as green. A failed step's detail is the text the caller
  * supplies for its job: the job's uploaded gate-report verdict, else its
  * isolated failing region.
  *
@@ -305,10 +306,26 @@ const jobFault = (job: CiRunJob, detail: O.Option<string>, message: string): Ite
     detail: detailOf(detail, message),
   });
 
+const jobSkip = (job: CiRunJob): Item =>
+  Item.make({
+    key: ItemKey.cases.TestKey.make({ file: job.name, fullName: "job" }),
+    unit: job.name,
+    path: [],
+    name: "job",
+    outcome: "skipped",
+  });
+
+const stepless = (job: CiRunJob, detail: O.Option<string>): ReadonlyArray<Item> => {
+  const state = job.conclusion ?? job.status;
+  return state === "skipped" || (job.conclusion === null && job.status !== "completed")
+    ? [jobSkip(job)]
+    : [jobFault(job, detail, `job ${state} with no steps`)];
+};
+
 const jobItems = (job: CiRunJob, detail: O.Option<string>): ReadonlyArray<Item> => {
   const steps = A.map(job.steps ?? [], stepItem(job, detail));
   if (A.isReadonlyArrayEmpty(steps)) {
-    return [jobFault(job, detail, `job ${job.conclusion ?? job.status} with no steps`)];
+    return stepless(job, detail);
   }
   const anyFailed = A.some(steps, (item) => item.outcome === "failed");
   return O.match(

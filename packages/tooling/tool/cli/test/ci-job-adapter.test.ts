@@ -120,6 +120,30 @@ describe("CI-job adapter", () => {
     strictEqual(stepless.outcome, "some-fail");
   });
 
+  it("reads a stepless job GitHub skipped or has not started as skipped, not as a fault", () => {
+    const report = ciRunGateReport(
+      CiRunGateInput.make({
+        run,
+        jobs: [
+          job(1, "success", [step("Run lane", "success")]),
+          job(2, "skipped", []),
+          CiRunJob.make({ id: 3, name: "job-3", status: "queued", conclusion: null, steps: [] }),
+        ],
+      })
+    );
+    deepStrictEqual(
+      A.map(report.items, (item) => [item.unit, item.key._tag, item.outcome]),
+      [
+        ["job-1", "TestKey", "passed"],
+        ["job-2", "TestKey", "skipped"],
+        ["job-3", "TestKey", "skipped"],
+      ]
+    );
+    strictEqual(report.totals.errored, 0);
+    strictEqual(report.totals.skipped, 2);
+    strictEqual(report.reason, "passed");
+  });
+
   it("gives a red job with no failed step a fault item, with the job's detail when it has one", () => {
     const report = ciRunGateReport(
       CiRunGateInput.make({
