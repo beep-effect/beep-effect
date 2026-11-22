@@ -30,7 +30,7 @@ descriptors, a web package on generated bindings, a proof inventory (`PROOFS.md`
 conformance suite run against the stack on a local Docker swarm (`notes/phase-5.md`, `notes/phase-6.md`). Three
 bounded contexts (Party,
 authority, runs), each split by dependency closure into `contract`, `model` and `host` packages, on
-`@alchemy.run/domain` 2.0.0-beta.87 and effect 4.1.4. Stories run each model alone; the Api tests
+`@alchemy.run/domain` 2.0.0-beta.87 and effect 4.1.5. Stories run each model alone; the Api tests
 run all three on one `Domain.InMemory`. The app is type-checked only.
 
 Phase notes: `FINDINGS.md` (phase 1), `notes/phase-2.md`, `notes/phase-3.md`, `notes/phase-4.md`,

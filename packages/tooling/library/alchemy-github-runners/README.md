@@ -83,7 +83,7 @@ in-memory fakes with no AWS or GitHub credentials.
 GitHub workflow_job (queued)
   -> webhook Lambda (function URL): HMAC-SHA256 check, repository allow list,
      label match per pool (exact or bidirectional), SendMessage to the pool's build queue
-  -> build queue (SQS, DLQ) -> scale-up Lambda (reserved concurrency 1, partial batch failures):
+  -> build queue (SQS; a waiting message lives one day) -> scale-up Lambda (reserved concurrency 1, partial batch failures):
      group by owner, optional "still queued" check, count live runners against the VM cap,
      CreateFleet instant (Spot, capacity-optimized, instance types x subnets; on-demand failover
      on the configured error codes), JIT config per instance into SSM (tagged InstanceId),
@@ -118,7 +118,7 @@ Fleet
     + kms:Decrypt with kms:EncryptionContext:PARAMETER_ARN (no KMS grant)
   IAM.Role runner + IAM.InstanceProfile    per pool
   Pool <name> (one per pool)
-    SQS.Queue build + DLQ, SQS.Queue job-retry
+    SQS.Queue build + DLQ (no redrive), SQS.Queue job-retry + DLQ
     Lambda.Function scale-up (reserved concurrency 1) + EventSourceMapping
     Lambda.Function job-retry + EventSourceMapping
     Lambda.Function scale-down + EventBridge.Rule + Lambda.Permission

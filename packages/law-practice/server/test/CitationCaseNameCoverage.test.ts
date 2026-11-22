@@ -33,11 +33,10 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("plain case-
       const setup = yield* setupCitationMetadataRuntime("bun", undefined, false, true, 8192);
       const loaded = yield* readCitationCaseNameCorpus();
       const stage = yield* makeCitationCaseName(setup.limits, setup.runtime, loaded.configuration).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding(setup.limits).pipe(
-            Effect.map((bind) => ({ ...stage, extract: bind(stage.extract) }))
-          )
-        ),
+        Effect.zipWith(makeCitationTestScaffoldBinding(setup.limits), (stage, bind) => ({
+          ...stage,
+          extract: bind(stage.extract),
+        })),
         Effect.provideContext(setup.provided)
       );
       const invalid = yield* stage.extract({ words: "none" }).pipe(Effect.flip);

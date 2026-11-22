@@ -379,13 +379,10 @@ const makeCanaryC2 = Effect.fn("CanaryC2.make")(function* () {
       const timings = yield* Effect.forEach(
         A.replicate(C2_INTERACTIVE_QUERY, 20),
         () =>
-          Clock.currentTimeMillis.pipe(
-            Effect.flatMap((queryStarted) =>
-              rdf.query(projection, C2_INTERACTIVE_QUERY).pipe(
-                Effect.andThen(Clock.currentTimeMillis),
-                Effect.map((ended) => ended - queryStarted)
-              )
-            )
+          Effect.zipWith(
+            Clock.currentTimeMillis,
+            rdf.query(projection, C2_INTERACTIVE_QUERY).pipe(Effect.andThen(Clock.currentTimeMillis)),
+            (queryStarted, queryEnded) => queryEnded - queryStarted
           ),
         { concurrency: 1 }
       );

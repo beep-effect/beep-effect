@@ -190,6 +190,27 @@ it.layer(BunServices.layer, { excludeTestServices: true })("actual pinned recogn
         expect(capacity).toMatchObject({ active: 0, regexActive: 0, queued: 0, quarantined: 0 });
       })
   );
+  it.effect("reports a spawner defect as a source-free channel failure and releases capacity", () =>
+    Effect.gen(function* () {
+      const { runtime } = yield* fixture("bun");
+      const { limits } = yield* defaultCitationEnginePolicy;
+      const observed = yield* makeCitationObservedSpawner();
+      const admission = yield* makeCitationNativeProcessAdmission(limits);
+      const spawner = ChildProcessSpawner.of({
+        ...observed.spawner,
+        spawn: Effect.fn("RecognizerTest.dyingSpawn")(() => Effect.die("PRIVATE-DEFECT")),
+      });
+      const worker = yield* makeCitationRecognizerWorker(limits, runtime).pipe(
+        Effect.provideService(ChildProcessSpawner, spawner),
+        Effect.provideService(CitationNativeProcessAdmission, admission)
+      );
+      const failure = yield* worker.recognize("35 U.S.C. 101").pipe(Effect.flip);
+      expect(failure).toMatchObject({ _tag: "CitationRecognizerFailure", reason: "channel-failed" });
+      expect(failure).not.toHaveProperty("cause");
+      const capacity = yield* admission.snapshot;
+      expect(capacity).toMatchObject({ active: 0, regexActive: 0, queued: 0 });
+    })
+  );
   it.effect("refuses source before spawn and complete candidate overflow after acknowledged retirement", () =>
     Effect.gen(function* () {
       const { runtime } = yield* fixture("bun");

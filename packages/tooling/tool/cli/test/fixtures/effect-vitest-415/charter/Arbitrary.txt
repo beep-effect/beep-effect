@@ -1,0 +1,43 @@
+// Exact declaration excerpts from packages/effect/src/Arbitrary.ts at
+// @effect/vitest@4.1.5 (MIT; see ../LICENSE).
+// Pinned full-file SHA-256: d6f54e204757de07c44a3239a6228ddc1dd2c09ed0bb29e7f12f0a1efb067144
+
+// @effect-vitest-anchor Arbitrary.CheckOptions 240 248
+export interface CheckOptions {
+  readonly runs?: number | undefined
+  readonly concurrency?: number | undefined
+  readonly size?: number | undefined
+  readonly maxDiscards?: number | undefined
+  readonly maxShrinks?: number | undefined
+  readonly seed?: string | number | undefined
+  readonly replay?: Replay | undefined
+}
+
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.runs 241 241
+  readonly runs?: number | undefined
+
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.concurrency 242 242
+  readonly concurrency?: number | undefined
+
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.size 243 243
+  readonly size?: number | undefined
+
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.maxDiscards 244 244
+  readonly maxDiscards?: number | undefined
+
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.maxShrinks 245 245
+  readonly maxShrinks?: number | undefined
+
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.seed 246 246
+  readonly seed?: string | number | undefined
+
+// @effect-vitest-anchor Arbitrary.CheckOptions.option.replay 247 247
+  readonly replay?: Replay | undefined
+
+// @effect-vitest-anchor Arbitrary.schema 478 483
+export function schema<S extends Schema_.Constraint>(
+  schema: S,
+  options?: SchemaOptions<S["Type"]>
+): Arbitrary<S["Type"]> {
+  return Internal.schema(schema, options)
+}

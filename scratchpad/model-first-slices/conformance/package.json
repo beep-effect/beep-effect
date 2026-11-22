@@ -17,11 +17,11 @@
     "@alchemy.run/domain": "2.0.0-beta.87",
     "@proto/conformance-upstream": "workspace:*",
     "@proto/kernel": "workspace:*",
-    "effect": "4.1.4"
+    "effect": "4.1.5"
   },
   "devDependencies": {
-    "@effect/platform-node": "4.1.4",
-    "@effect/vitest": "4.1.4",
+    "@effect/platform-node": "4.1.5",
+    "@effect/vitest": "4.1.5",
     "@proto/authority-host": "workspace:*",
     "@proto/party-contract": "workspace:*",
     "@proto/party-host": "workspace:*",

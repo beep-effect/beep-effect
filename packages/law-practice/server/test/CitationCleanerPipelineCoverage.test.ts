@@ -46,10 +46,9 @@ it.effect("charges an unchanged owned value against the local ceiling and closes
       const value = yield* h.values.sourceText("ABCD");
       h.select([]);
       const tight = yield* makeCitationCleanerPipeline({ ...limits, producedTextUtf16: 3 }).pipe(
-        Effect.flatMap((stage) =>
-          makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 3 }, "clean").pipe(
-            Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
-          )
+        Effect.zipWith(
+          makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 3 }, "clean"),
+          (stage, bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) })
         ),
         Effect.provideService(CitationCleaner, h.registry.runtime)
       );
@@ -97,11 +96,11 @@ const parentedPipeline = Effect.fn("CleanerCoverageTest.parented")(function* (
   const limits = (yield* defaultCitationEnginePolicy).limits;
   const parent = (yield* CitationInvocation).budget;
   const pipeline = yield* makeCitationCleanerPipeline({ ...limits, producedTextUtf16: 8 }).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 8 }, "clean").pipe(
-        Effect.map((bind) => ({ ...stage, run: bind(stage.run), runOwned: bind(stage.runOwned) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 8 }, "clean"), (stage, bind) => ({
+      ...stage,
+      run: bind(stage.run),
+      runOwned: bind(stage.runOwned),
+    })),
     Effect.provideService(CitationCleaner, h.registry.runtime),
     Effect.provideService(CitationTextBudget, parent)
   );

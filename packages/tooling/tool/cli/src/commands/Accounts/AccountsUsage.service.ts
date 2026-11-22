@@ -1218,13 +1218,11 @@ export const makeAccountsUsageLive = Effect.fn("AccountsUsage.makeLive")(functio
     Effect.map(A.filter(Str.endsWith(".json"))),
     Effect.flatMap(Effect.forEach((name) => accountAt(path.join(directory, name)), { concurrency: POLL_CONCURRENCY })),
     Effect.map(A.getSomes),
-    Effect.flatMap((proxyAccounts) =>
-      Effect.map(junieAccount, (account) =>
-        O.match(account, {
-          onNone: () => proxyAccounts,
-          onSome: (value) => A.append(proxyAccounts, value),
-        })
-      )
+    Effect.zipWith(junieAccount, (proxyAccounts, account) =>
+      O.match(account, {
+        onNone: () => proxyAccounts,
+        onSome: (value) => A.append(proxyAccounts, value),
+      })
     ),
     Effect.map(A.sort(byProviderThenLabel)),
     Effect.withSpan("AccountsUsage.accounts")
