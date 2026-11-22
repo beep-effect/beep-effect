@@ -32,11 +32,15 @@ import type {
 // `explorations/` and its packet template, and the changeset config and README. `goals/` and `research/`
 // are whole trees because the dependents scan reads their code; it never reads `explorations/` or
 // `docs/`, so there only prose and data are records. Source and every file a tool loads stay live: all
-// TOML and JSONC, and the JSON and YAML names the workspace's tools read.
+// TOML and JSONC, and the JSON and YAML files that are dotfiles or have a name tools look for.
+const toolYaml =
+  "!(.*|Chart|Pulumi|Pulumi.*|compose|compose.*|docker-compose|docker-compose.*|kustomization|lefthook|pnpm-workspace)";
+const toolJson =
+  "!(.*|*.conf|*.config|biome|components|deno|docgen|jsconfig*|knip|lerna|nx|package|renovate|syncpack|tsconfig*|turbo|vercel|wrangler)";
 const recordFilesUnder = (tree: string): ReadonlyArray<string> => [
   `${tree}/**/*.{md,tsv}`,
-  `${tree}/**/!(Pulumi*|compose|docker-compose|pnpm-workspace).{yaml,yml}`,
-  `${tree}/**/!(*.conf|*.config|biome|components|docgen|jsconfig*|package|tsconfig*|turbo|vercel).json`,
+  `${tree}/**/${toolYaml}.{yaml,yml}`,
+  `${tree}/**/${toolJson}.json`,
 ];
 
 const HISTORICAL_RECORD_GLOBS = A.map(
