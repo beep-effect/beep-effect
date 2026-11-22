@@ -171,7 +171,11 @@ and describes code that does not exist until that issue closes.
    `Persistence`, `KeyValueStore` and both event-log storages did not.
    `MessageStorageTest.ts`, `SqlMessageStorageIntegrationTest.ts`,
    `PersistedQueueTest.ts` and `PersistedQueueSqlTest.ts` are vendored from
-   4.1.4; the other suites keep their 4.0.5/4.0.6 tags. Upstream also changed
+   4.1.4; the other suites keep their 4.0.5/4.0.6 tags. At 4.1.5 only
+   `SqlMessageStorage.clearReplies` (guarded reset, Effect #10629) was ported and
+   its integration suite re-vendored; the `SqlRunnerStorage` (MySQL advisory
+   locks) and `PersistedQueue` (Redis, PostgreSQL sequence) changes do not apply.
+   Upstream also changed
    `SqlRunnerStorage` (pg/MySQL advisory-lock sessions, which D65 drops),
    `SqlEventJournal`, `SqlEventLogServerEncrypted` and `Persistence` between
    4.0.6 and 4.1.2; those ports and suites were not re-vendored at the 4.1.0

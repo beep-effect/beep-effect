@@ -173,6 +173,17 @@ describe("safetensors boundary", () => {
       }
     })
   );
+  it.effect("names each missing recognizer tensor before building the graph", () =>
+    Effect.gen(function* () {
+      const shapes = recognizerShapes();
+      for (const omitted of R.keys(shapes)) {
+        const payload = yield* weights(R.remove(shapes, omitted));
+        const error = yield* compileAdaFaceOnnx(payload, "recognizer", dimensions).pipe(Effect.flip);
+        expect(error._tag).toBe("MatchPersonModelIntegrityError");
+        expect(error.message).toBe(`Missing required recognizer tensors: ${Str.slice(10)(omitted)}.`);
+      }
+    })
+  );
 });
 
 describe("generated ONNX graphs on the native CPU runtime", () => {

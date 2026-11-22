@@ -152,16 +152,12 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
       Effect.gen(function* () {
         const { owner, limits } = yield* load();
         const correction = yield* makeCitationResourceCorrection(limits).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding(limits).pipe(
-              Effect.map((bind) => ({
-                ...stage,
-                reporter: bind(stage.reporter),
-                page: bind(stage.page),
-                citation: bind(stage.citation),
-              }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+            ...stage,
+            reporter: bind(stage.reporter),
+            page: bind(stage.page),
+            citation: bind(stage.citation),
+          })),
           Effect.provideService(CitationFrozenEditions, owner)
         );
         for (const method of [correction.reporter, correction.page, correction.citation]) {
@@ -250,16 +246,12 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
           const corpus = yield* loadCitationCorpus();
           const { owner, limits } = yield* load();
           const correction = yield* makeCitationResourceCorrection(limits).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(limits).pipe(
-                Effect.map((bind) => ({
-                  ...stage,
-                  reporter: bind(stage.reporter),
-                  page: bind(stage.page),
-                  citation: bind(stage.citation),
-                }))
-              )
-            ),
+            Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+              ...stage,
+              reporter: bind(stage.reporter),
+              page: bind(stage.page),
+              citation: bind(stage.citation),
+            })),
             Effect.provideService(CitationFrozenEditions, owner)
           );
           for (const [group, edition, text, result, error] of corpus.controls) {
@@ -305,15 +297,14 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
         };
         const make = (maximum: number) =>
           makeCitationResourceCorrection({ ...limits, producedTextUtf16: maximum }).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: maximum }).pipe(
-                Effect.map((bind) => ({
-                  ...stage,
-                  reporter: bind(stage.reporter),
-                  page: bind(stage.page),
-                  citation: bind(stage.citation),
-                }))
-              )
+            Effect.zipWith(
+              makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: maximum }),
+              (stage, bind) => ({
+                ...stage,
+                reporter: bind(stage.reporter),
+                page: bind(stage.page),
+                citation: bind(stage.citation),
+              })
             ),
             Effect.provideService(CitationFrozenEditions, owner)
           );
@@ -333,16 +324,12 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
             const budget = (yield* CitationInvocation).budget;
             yield* budget.reserve(2);
             const enclosing = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 34 }).pipe(
-              Effect.flatMap((stage) =>
-                makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 34 }).pipe(
-                  Effect.map((bind) => ({
-                    ...stage,
-                    reporter: bind(stage.reporter),
-                    page: bind(stage.page),
-                    citation: bind(stage.citation),
-                  }))
-                )
-              ),
+              Effect.zipWith(makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 34 }), (stage, bind) => ({
+                ...stage,
+                reporter: bind(stage.reporter),
+                page: bind(stage.page),
+                citation: bind(stage.citation),
+              })),
               Effect.provideService(CitationFrozenEditions, owner),
               Effect.provideService(CitationTextBudget, budget)
             );
@@ -368,16 +355,12 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
         Effect.gen(function* () {
           const { corpus, owner, limits } = yield* load();
           const correction = yield* makeCitationResourceCorrection(limits).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(limits).pipe(
-                Effect.map((bind) => ({
-                  ...stage,
-                  reporter: bind(stage.reporter),
-                  page: bind(stage.page),
-                  citation: bind(stage.citation),
-                }))
-              )
-            ),
+            Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+              ...stage,
+              reporter: bind(stage.reporter),
+              page: bind(stage.page),
+              citation: bind(stage.citation),
+            })),
             Effect.provideService(CitationFrozenEditions, owner)
           );
           for (const row of corpus.cases) {
@@ -408,31 +391,23 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
         const { owner, limits } = yield* load();
         const request = { reporter: native("NY Slip Op"), page: native("[U]"), editionGuess: null };
         const bounded = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 15 }).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 15 }).pipe(
-              Effect.map((bind) => ({
-                ...stage,
-                reporter: bind(stage.reporter),
-                page: bind(stage.page),
-                citation: bind(stage.citation),
-              }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 15 }), (stage, bind) => ({
+            ...stage,
+            reporter: bind(stage.reporter),
+            page: bind(stage.page),
+            citation: bind(stage.citation),
+          })),
           Effect.provideService(CitationFrozenEditions, owner)
         );
         const failure = yield* bounded.page(request).pipe(Effect.flip);
         expect(failure).toMatchObject({ limit: "producedTextUtf16" });
         const exact = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 16 }).pipe(
-          Effect.flatMap((stage) =>
-            makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 16 }).pipe(
-              Effect.map((bind) => ({
-                ...stage,
-                reporter: bind(stage.reporter),
-                page: bind(stage.page),
-                citation: bind(stage.citation),
-              }))
-            )
-          ),
+          Effect.zipWith(makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 16 }), (stage, bind) => ({
+            ...stage,
+            reporter: bind(stage.reporter),
+            page: bind(stage.page),
+            citation: bind(stage.citation),
+          })),
           Effect.provideService(CitationFrozenEditions, owner)
         );
         const result = yield* exact.page(request);
@@ -446,16 +421,12 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
             const budget = (yield* CitationInvocation).budget;
             yield* budget.reserve(2);
             const enclosing = yield* makeCitationResourceCorrection({ ...limits, producedTextUtf16: 17 }).pipe(
-              Effect.flatMap((stage) =>
-                makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 17 }).pipe(
-                  Effect.map((bind) => ({
-                    ...stage,
-                    reporter: bind(stage.reporter),
-                    page: bind(stage.page),
-                    citation: bind(stage.citation),
-                  }))
-                )
-              ),
+              Effect.zipWith(makeCitationTestScaffoldBinding({ ...limits, producedTextUtf16: 17 }), (stage, bind) => ({
+                ...stage,
+                reporter: bind(stage.reporter),
+                page: bind(stage.page),
+                citation: bind(stage.citation),
+              })),
               Effect.provideService(CitationFrozenEditions, owner),
               Effect.provideService(CitationTextBudget, budget)
             );
@@ -486,16 +457,12 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
             source: Effect.fn("ResourceCorrectionTest.wait")(() => Effect.never),
           });
           const installed = yield* makeCitationResourceCorrection(limits).pipe(
-            Effect.flatMap((stage) =>
-              makeCitationTestScaffoldBinding(limits).pipe(
-                Effect.map((bind) => ({
-                  ...stage,
-                  reporter: bind(stage.reporter),
-                  page: bind(stage.page),
-                  citation: bind(stage.citation),
-                }))
-              )
-            ),
+            Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+              ...stage,
+              reporter: bind(stage.reporter),
+              page: bind(stage.page),
+              citation: bind(stage.citation),
+            })),
             Effect.provideService(CitationFrozenEditions, owner)
           );
           const reporter = yield* installed
@@ -512,18 +479,17 @@ it.layer(citationTokenizerTestLayer, { excludeTestServices: true })("source repo
               ...limits,
               extractDeadline: Duration.millis(997),
             }).pipe(
-              Effect.flatMap((stage) =>
+              Effect.zipWith(
                 makeCitationTestScaffoldBinding({
                   ...limits,
                   extractDeadline: Duration.millis(997),
-                }).pipe(
-                  Effect.map((bind) => ({
-                    ...stage,
-                    reporter: bind(stage.reporter),
-                    page: bind(stage.page),
-                    citation: bind(stage.citation),
-                  }))
-                )
+                }),
+                (stage, bind) => ({
+                  ...stage,
+                  reporter: bind(stage.reporter),
+                  page: bind(stage.page),
+                  citation: bind(stage.citation),
+                })
               ),
               Effect.provideService(CitationFrozenEditions, waiting),
               Effect.provideService(Clock.Clock, timer.clock)

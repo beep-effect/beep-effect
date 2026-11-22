@@ -185,7 +185,7 @@ const withFakeGithub = Effect.fnUntraced(function* <A, E, R>(
     Effect.provideContext(client),
     Effect.provideService(GithubTransportFetch, O.some(api.fetch)),
     provideSpawner(spawner),
-    Effect.flatMap((value) => TestConsole.logLines.pipe(Effect.map((lines) => ({ value, lines })))),
+    Effect.zipWith(TestConsole.logLines, (value, lines) => ({ value, lines })),
     Effect.provideServiceEffect(Console.Console, TestConsole.make),
     Effect.exit
   );

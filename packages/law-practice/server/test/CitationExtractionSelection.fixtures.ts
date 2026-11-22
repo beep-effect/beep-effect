@@ -76,9 +76,10 @@ export const replayCitationExtractionSelection = Effect.fn("ExtractionSelectionT
   const limits = (yield* defaultCitationEnginePolicy).limits;
   const owner = yield* makeCitationOperationAdmission(limits);
   const service = yield* makeCitationExtractionSelection(limits).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding(limits).pipe(Effect.map((bind) => ({ ...stage, select: bind(stage.select) })))
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding(limits), (stage, bind) => ({
+      ...stage,
+      select: bind(stage.select),
+    })),
     Effect.provideService(CitationOperationAdmission, owner)
   );
   for (const row of corpus.cases) {
@@ -93,11 +94,10 @@ export const replayCitationExtractionSelection = Effect.fn("ExtractionSelectionT
   const duplicate = yield* service.select([A.getUnsafe(source, 0), A.getUnsafe(source, 0)]).pipe(Effect.flip);
   expect(duplicate).toMatchObject({ _tag: "CitationExtractionSelectionFailure", reason: "duplicate-id" });
   const bounded = yield* makeCitationExtractionSelection({ ...limits, candidates: 1 }).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding({ ...limits, candidates: 1 }).pipe(
-        Effect.map((bind) => ({ ...stage, select: bind(stage.select) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding({ ...limits, candidates: 1 }), (stage, bind) => ({
+      ...stage,
+      select: bind(stage.select),
+    })),
     Effect.provideService(CitationOperationAdmission, owner)
   );
   const candidateRefusal = yield* bounded.select(source).pipe(Effect.flip);
@@ -106,11 +106,10 @@ export const replayCitationExtractionSelection = Effect.fn("ExtractionSelectionT
     limit: "candidates",
   });
   const tight = yield* makeCitationExtractionSelection({ ...limits, resolutionIterations: 1 }).pipe(
-    Effect.flatMap((stage) =>
-      makeCitationTestScaffoldBinding({ ...limits, resolutionIterations: 1 }).pipe(
-        Effect.map((bind) => ({ ...stage, select: bind(stage.select) }))
-      )
-    ),
+    Effect.zipWith(makeCitationTestScaffoldBinding({ ...limits, resolutionIterations: 1 }), (stage, bind) => ({
+      ...stage,
+      select: bind(stage.select),
+    })),
     Effect.provideService(CitationOperationAdmission, owner)
   );
   const workRefusal = yield* tight.select(source).pipe(Effect.flip);
