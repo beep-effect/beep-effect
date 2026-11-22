@@ -165,7 +165,7 @@ describe("the deep sweep's reporters", () => {
         "-e",
         'const { default: config } = await import("./vitest.shared.ts"); process.stdout.write(JSON.stringify(config.test.reporters));',
       ],
-      cwd: `${import.meta.dir}/../../../../..`,
+      cwd: `${import.meta.dirname}/../../../../..`,
       env: { ...inherited, ...env },
       stdout: "pipe",
       stderr: "pipe",
