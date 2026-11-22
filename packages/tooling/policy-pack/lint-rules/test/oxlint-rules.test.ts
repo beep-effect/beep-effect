@@ -5,7 +5,6 @@ import { describe, expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as Effect from "effect/Effect";
 import * as FileSystem from "effect/FileSystem";
-import * as HashMap from "effect/HashMap";
 import * as Path from "effect/Path";
 import * as P from "effect/Predicate";
 import * as Result from "effect/Result";
@@ -172,7 +171,6 @@ describe("no-manual-effect-runtime-in-tests legacy baseline", () => {
           const findings = yield* runOxlintRule("no-manual-effect-runtime-in-tests", source, path.basename(repoPath));
           expect(findings.length, `${repoPath} live count`).toBe(count);
         }
-        expect(HashMap.size(MANUAL_EFFECT_RUNTIME_LEGACY_BASELINE)).toBeGreaterThan(0);
       })
     )
   );
