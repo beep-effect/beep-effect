@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "comment-law-gate",
+    "packetId": "goal-packet/v1:c1cd29a941205213179e1419ff00eccf8166456f2b92705b09b905636ce6eb04",
+    "title": "Comment Law Gate",
+    "status": "active",
+    "created": "2026-11-22",
+    "updated": "2026-11-22",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/comment-law-gate",
+  "lifecycle": "active",
+  "mission": "Stop comment inflow: one scanner, a merge-base growth check, a clean-scope lock, an oxlint rule, the /delete-comment skill and a package decisions home.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/comment-law",
+    "graduated": "2026-11-22"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/comment-law-gate/README.md",
+    "goals/comment-law-gate/SPEC.md",
+    "goals/comment-law-gate/PLAN.md",
+    "goals/comment-law-gate/GOAL.md",
+    "goals/comment-law-gate/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/comment-law-gate/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/comment-law-gate/GOAL.md)\" -le 4000",
+    "jq . goals/comment-law-gate/ops/manifest.json",
+    "rg -n \"comment-law-gate|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/comment-law-gate",
+    "git diff --check -- goals/comment-law-gate",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}

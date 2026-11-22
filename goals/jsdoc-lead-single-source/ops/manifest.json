@@ -1,0 +1,88 @@
+{
+  "schemaVersion": "initiative-manifest/v2",
+  "initiative": {
+    "id": "jsdoc-lead-single-source",
+    "packetId": "goal-packet/v1:1d045d51847d24b1d337deab7f0a355e7fd41ced96e8349a3bbc1c545eeef141",
+    "title": "JSDoc Lead Single Source",
+    "status": "active",
+    "created": "2026-11-22",
+    "updated": "2026-11-22",
+    "packetAnchorDocument": "SPEC.md"
+  },
+  "packetPath": "goals/jsdoc-lead-single-source",
+  "lifecycle": "active",
+  "mission": "Single-source JSDoc leads from $I.annote descriptions and stop requiring restating leads on type companions and barrels.",
+  "executionCapable": true,
+  "reflectionRequired": true,
+  "provenance": {
+    "exploration": "explorations/comment-law",
+    "graduated": "2026-11-22"
+  },
+  "completionGate": {
+    "operator": "yeet",
+    "requiresPullRequest": true,
+    "requiresMergeable": true,
+    "statement": "Not achieved until this goal's final PR, driven to mergeable via /yeet (bun run beep yeet: repair -> publish -> final-check -> ready -> monitor), merges and goals completion refresh verifies it from hosted facts.",
+    "grandfathered": false
+  },
+  "currentSourceOfTruth": [
+    "AGENTS.md",
+    "CLAUDE.md",
+    "goals/jsdoc-lead-single-source/README.md",
+    "goals/jsdoc-lead-single-source/SPEC.md",
+    "goals/jsdoc-lead-single-source/PLAN.md",
+    "goals/jsdoc-lead-single-source/GOAL.md",
+    "goals/jsdoc-lead-single-source/research/SOURCES.md"
+  ],
+  "researchReports": ["research/SOURCES.md"],
+  "agentLaunchers": [
+    {
+      "kind": "codex-goal",
+      "path": "GOAL.md",
+      "targetChars": 3500,
+      "maxChars": 4000,
+      "command": "/goal follow the instructions in goals/jsdoc-lead-single-source/GOAL.md"
+    }
+  ],
+  "provides": [],
+  "requires": [],
+  "phases": [
+    {
+      "id": "P0",
+      "name": "Research",
+      "status": "pending"
+    },
+    {
+      "id": "P1",
+      "name": "Implement",
+      "status": "pending"
+    },
+    {
+      "id": "P2",
+      "name": "Verify",
+      "status": "pending"
+    },
+    {
+      "id": "P3",
+      "name": "Yeet: PR to mergeable",
+      "status": "pending"
+    },
+    {
+      "id": "P4",
+      "name": "Close",
+      "status": "pending"
+    }
+  ],
+  "verificationCommands": [
+    "test \"$(wc -m < goals/jsdoc-lead-single-source/GOAL.md)\" -le 4000",
+    "jq . goals/jsdoc-lead-single-source/ops/manifest.json",
+    "rg -n \"jsdoc-lead-single-source|GOAL.md|agentLaunchers|packetAnchorDocument\" goals/jsdoc-lead-single-source",
+    "git diff --check -- goals/jsdoc-lead-single-source",
+    "bun run beep lint reflection-artifacts"
+  ],
+  "stopConditions": [
+    "Required source files are missing or materially contradictory.",
+    "Any spend: purchases, paid services, quota top-ups or plan changes need the operator.",
+    "The same blocker repeats after reasonable investigation."
+  ]
+}
