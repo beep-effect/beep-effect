@@ -120,6 +120,10 @@ it.layer(NodeTestLayer, { timeout: "60 seconds" })((it) => {
         expect(kindsOf("a.ts", "// SPDX-License-Identifier: MIT\n\nexport const x = 1;\n")).toEqual(["license"]);
         expect(kindsOf("a.ts", "// Ported from effect-smol\nexport const x = 1;\n")).toEqual(["provenance"]);
         expect(kindsOf("a.ts", "// beep: upstream reads the env here\nexport const x = 1;\n")).toEqual(["port-marker"]);
+        expect(kindsOf("a.ts", "// decision: git-option-like-arguments\nexport const x = 1;\n")).toEqual([
+          "decision-pointer",
+        ]);
+        expect(kindsOf("a.ts", "// decision: see the README\nexport const x = 1;\n")).toEqual(["prose"]);
         expect(
           kindsOf("a.ts", 'export const s = "// no"; export const t = `/* no */`; export const r = /\\/\\/no/;\n')
         ).toEqual([]);
