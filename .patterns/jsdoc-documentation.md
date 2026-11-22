@@ -14,6 +14,11 @@ dependency on `@effect/jsdocs`.
 
 - Every public export has a useful lead description, canonical `@category`, and
   `@since 0.0.0`.
+- JSDoc belongs on exported declarations, module headers and members. A
+  non-exported declaration carries none unless it is tagged `@internal`,
+  `@public`, `@expected-unused`, `@ignore` or `@deprecated`; put its reason in a
+  name, type or schema annotation instead (Effect law 15,
+  `bun run beep laws comments`).
 - Value-level exports require at least one Example. Pure type-level exports require
   useful prose; their Example is optional.
 - Examples compile through the docgen TypeScript gate. Never remove an Example to
