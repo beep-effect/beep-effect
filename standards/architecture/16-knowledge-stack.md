@@ -126,9 +126,16 @@ compares it with the snapshot of a base ref (`--base`, by default the merge
 base with `origin/main`), so a change that edits the shards and the committed
 snapshot together is still caught. A removed term is retired only through
 `bun run beep identity deprecate <curie>`, which writes the deprecation row,
-and a renamed module moves its bindings through `bun run beep identity rebind
-<from> <to>`. The registry and its generated data never reach a CI runner
-handler bundle: the handlers load only the registry-free identity sources, and
+after its binding, if it has one, is removed from the shard; a renamed module or
+package moves its bindings through `bun run beep identity rebind <from> <to>`.
+A changed term set at a release below the one it calls for is repaired by
+restoring the base's snapshot, setting the new rows' `since` and running
+`identity registry --write`: the writer reads the checkout's own snapshot, so
+regenerating alone keeps the wrong release. A checkout that deletes the whole
+registry publishes nothing, so the lint reports every term its base published.
+A projection module no shard targets any more is drift, which `--write`
+removes. The registry and its generated data never reach a CI runner handler
+bundle: the handlers load only the registry-free identity sources, and
 `packages/tooling/infra/ci-runners/test/HandlerBundles.test.ts` holds that list.
 
 ### L1 · Text identity and anchoring

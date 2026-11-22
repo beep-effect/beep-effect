@@ -1,0 +1,16 @@
+---
+title: "P1: registry edits move codes by one schema, retire stale projections and say how to finish"
+date: 2026-11-22
+lane: "goals/text-knowledge-stack-rebuild-p1c-bindings"
+pullRequest: 3449
+reversal: "Restore RebindRequest and rebind(table, from, to), drop RegistryPlan.retired and the staged writes, and return early from the term lint when a checkout has no registry."
+---
+
+A second review of PR #3449 found five ways the registry commands or the lint let a checkout drift from its registry, or named a repair that does not work. Each was reproduced with a failing test first.
+
+1. **A move is a schema.** `CodeMove` (`@beep/identity/Term`) is a union of `CodeIdMove`, from code identity to code identity, and `CodePackageMove`, from `CodePackage` to `CodePackage`. `RegistryTable.rebind(table, move)` and `beep identity rebind` take it, and `moveCode` is the one place that applies it. The design and the command's own documentation promised a package rename, but both ends were decoded as `CodeId`, which needs a path, so `rebind @beep/old @beep/new` was refused. `CodeId` is unchanged: a stored binding still names a kind. A move between a package and a code identity is refused (`mixed-move`), because moving a code onto a package would leave a code with no path. The shape replaces `RebindRequest` and the `(from, to)` arguments, with no shim.
+2. **A projection module no shard targets is drift.** `RegistryPlan.retired` lists the projection module of every package in the checkout that no shard projects into. `--check` reports one that is on disk and `--write` removes it, but only when the file starts with the generated projection header. A file the generator did not write is never reported or removed. While any shard targets the package, its module is generated as before. `writeRegistry` answers a `RegistryWrite` with what it wrote and what it removed.
+3. **A binding needs a regular file.** A directory named like a module file (`src/Runner.ts/`) passed as a module. The check now reads the file type, and a path below a file is no module instead of an I/O failure.
+4. **A failed write says how to finish.** The whole plan runs before the first write, the edited shards are written before anything generated from them, and each file is staged and renamed, so a failure leaves whole files. A failure while the shards are written says to run the same command again, which edits the shards that are left. A failure after that says the edit was applied and to run `bun run beep identity registry --write`, because the edit no longer applies: the term is not live, or the old code is not bound.
+5. **Deleting the registry does not pass the lint.** `lint identity-registry` returned early when a checkout had neither shards nor the generated data module, so deleting both passed over a base that published terms. It now reads the base snapshot first and compares an absent registry as the empty snapshot. A base that published nothing still passes, so a fixture repository needs no registry.
+6. **Remedies that repair.** The release remedy restores the base's snapshot before regenerating (decision `2026-11-20-p1-pr-c-snapshot-is-release-2-0-0-after-pr-b`, point 2), and a bound term's refusal names the shard to remove the binding from instead of a rebind (decision `2026-11-20-p1-term-stability-gate-live-tree-calls`, point 4).

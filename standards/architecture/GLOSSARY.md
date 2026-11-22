@@ -947,7 +947,7 @@ instance base: identifiers of its instances are minted beneath it
 publishes, and the release (`since`) that bound it. Bindings live in the
 registry shards beside their terms. A code id has at most one binding and a
 term at most one code id. The binding is the only arrow from code to a
-published IRI; a module rename moves the binding
+published IRI; a module or package rename moves the binding
 (`bun run beep identity rebind <from> <to>`) and leaves the term unchanged.
 
 ## Term-Stability Snapshot

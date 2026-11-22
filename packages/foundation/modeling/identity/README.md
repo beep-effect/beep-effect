@@ -168,17 +168,31 @@ generated `src/internal/generated/Registry.data.ts` and the committed
 | --- | --- |
 | Add a term or binding | edit the shard, then `bun run beep identity registry --write` |
 | Retire a published term | `bun run beep identity deprecate <curie> [--replacement <curie>]` |
-| Move the bindings of a renamed module | `bun run beep identity rebind <from> <to>` |
+| Move the bindings of a renamed module | `bun run beep identity rebind @beep/<package>/<old path> @beep/<package>/<new path>` |
+| Move the bindings of a renamed package | `bun run beep identity rebind @beep/<old package> @beep/<new package>` |
 | Check generated drift | `bun run beep identity registry --check` |
 | Check the published set against a base ref | `bun run beep lint identity-registry [--base <ref>]` |
 
 The snapshot's `release` is the vocabulary release a binding or deprecation
 names as `since`: an addition bumps the minor and a deprecation the major.
 A changed term set released below the release its change calls for fails the
-lint (`ReleaseUnderstated`): merge the base and regenerate.
+lint (`ReleaseUnderstated`). Regenerating alone does not repair it, because
+`--write` reads the checkout's own snapshot: merge the base ref if it is not
+merged yet, restore its snapshot (in this package,
+`git restore --source <base> -- registry/term-snapshot.json`), set the `since`
+of every row the change adds to the release it calls for, then run
+`bun run beep identity registry --write`.
+
+A bound term is deprecated only after its binding is removed from the shard; a
+rebind keeps the term bound. When the last shard drops its `projection`, the
+generated projection module is drift and `--write` removes it. An edit command
+that stops while it writes says how to finish: the shards are written first, so
+a failure after them is finished with `bun run beep identity registry --write`.
+
 Removing a term, changing a namespace prefix, dropping a deprecation or
 reviving a retired IRI without a deprecation record fails the writer and the
-lint; law `L0-3` in [TermStability.test.ts](test/TermStability.test.ts) is the
+lint, and so does deleting the whole registry against a base that published it;
+law `L0-3` in [TermStability.test.ts](test/TermStability.test.ts) is the
 acceptance test.
 
 ## Module map
