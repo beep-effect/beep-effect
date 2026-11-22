@@ -1773,6 +1773,26 @@ Lane goals/text-knowledge-stack-rebuild-p3-annotation
 
 Reverse: Refuse the whole input on the first rejected annotation, by a decision file with the L2-6 row
 
+### P3: the OA residual keeps every quad a rejected annotation reaches, even when an accepted one carries it, 2026-11-22
+
+A call the P3 design does not settle, taken in the fix commit after commit 6. Decision `p3-oa-rejections-go-to-the-residual` sends a rejected annotation's triples to the residual. Two third-party annotations can share a target node, and through it its selectors, or an activity node. Commit 6 removed from the residual every quad an accepted annotation consumed, so a rejected annotation that shared a target with an accepted one kept its `oa:hasTarget` link in the residual while the target and selector quads it points at left it, and a shared `prov:Activity` typing quad went the same way.
+
+The residual now keeps every quad a rejected annotation reaches through the profile: the quads about the annotation, its targets, their selectors and the runs that specialize it, and the `rdf:type prov:Activity` quad of each activity it or one of its runs names. Where an accepted annotation shares those nodes, the same input quads are both carried by the document and kept in the residual; the residual is therefore not disjoint from what the document carries. `L2-6` states it two ways over generated input that now draws shared target nodes: each rejected annotation's reached quads, read by an independent walk in the test, are in the residual, and decoding the residual alone gives the same rejections. A fixture shares a target and an activity between an accepted `Word` and an `unknown-kind` `Section`.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Subtract only the quads no accepted annotation consumes, by a decision file edited with the L2-6 row
+
+### P3: the OA codec writes and reads the xsd:dateTime lexical form of every instant a DateTime holds, 2026-11-22
+
+A call the P3 design does not settle, taken in the fix commit after commit 6. `Generation.at` is any `DateTimeUtcFromMillis`, so a stated time can lie outside years 0000 to 9999. Commit 6 wrote `DateTime.formatIso`, which for such years prints `+010000-...` or `-000001-...`; neither is in the xsd:dateTime lexical space, and the decoder refused the first, so `decode(encode(d)) = d` failed for a valid document and a third-party time of `9999-12-31T23:59:59-14:00` was lost on the second decode.
+
+The codec keeps the full range instead of bounding it, since bounding would refuse native documents the schema accepts. The encoder writes the year with no `+` and with four or more digits, negative years signed (`10000-01-01T00:00:00.000Z`, `-0001-01-01T00:00:00.000Z`, `275760-09-13T00:00:00.000Z`). The decoder reads the xsd:dateTime lexical form: a year of four or more digits with no leading zero past four, the date, the clock, an optional fraction and an optional zone. It converts the year to the ECMAScript form, truncates the fraction to milliseconds, reads a missing zone as UTC (as `DateTime.make` already did), and gives no time for a calendar date that does not exist (`2024-02-30`, which ECMAScript rolls to March 1) or an instant outside the range a DateTime holds. Such a literal stays in the residual, as decision `p3-oa-codec-reading-calls` says of any other time literal. Year numbering follows XSD 1.1 and ISO 8601: `0000` is 1 BCE. The `L2-6` generators now draw document times over the whole range, half of them at its edges, and third-party times on both sides of the four-digit year and around year 0.
+
+Lane goals/text-knowledge-stack-rebuild-p3-annotation
+
+Reverse: Bound Generation.at and the decoder's times to years 0001 to 9999 by a schema check, by a decision file with L2-6
+
 ### P3: the office-action review builds its capture from the artifact and the processing result; OfficeActionStructure stays on extractions, 2026-11-22
 
 `OfficeActionReviewInput` does not change. After file processing the use case builds the capture: `scopeRef` the matter fixture key, `sourceRef` the artifact id, `locator` the artifact's `relativePath`, `sourceDigest` the artifact digest, `textDigest` the SHA-256 of the extracted text, `extractor` the processing engine and its `engineVersion`, and `normalizationVersion` `"raw/1"`, since the text is used as extracted. A result with no `engineVersion` fails as the existing `FileProcessingOperationError`, because an unversioned extractor would be an invented pin. The server layer already requires `Digest`.

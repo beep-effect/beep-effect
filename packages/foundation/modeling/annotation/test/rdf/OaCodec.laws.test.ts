@@ -37,6 +37,8 @@ import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
+import { constant } from "effect/Function";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
@@ -87,6 +89,32 @@ const isNifQuad = (quad: Rdf.Quad): boolean =>
 
 const hasBlankNode = (quad: Rdf.Quad): boolean =>
   quad.subject.termType === "BlankNode" || quad.object.termType === "BlankNode";
+
+// The input quads a rejected annotation reaches through the profile's links, read independently of the codec: its
+// own quads, its targets', their selectors', its runs', and the prov:Activity typing of the activities it or a run
+// names.
+const reachedFrom = (quads: ReadonlyArray<Rdf.Quad>, subject: Rdf.Term): ReadonlyArray<Rdf.Quad> => {
+  const defaults = A.filter(quads, (q) => q.graph.termType === "DefaultGraph");
+  const key = Rdf.serializeTerm;
+  const objects = (from: ReadonlyArray<Rdf.Term>, predicate: string): ReadonlyArray<Rdf.Term> =>
+    A.flatMap(defaults, (q) =>
+      q.predicate.value === predicate && A.some(from, (node) => key(node) === key(q.subject)) ? [q.object] : []
+    );
+  const targets = objects([subject], term.hasTarget);
+  const runs = A.flatMap(defaults, (q) =>
+    q.predicate.value === term.specializationOf && key(q.object) === key(subject) ? [q.subject] : []
+  );
+  const nodes = HashSet.fromIterable(A.map([subject, ...targets, ...objects(targets, term.hasSelector), ...runs], key));
+  const activities = HashSet.fromIterable(A.map(objects([subject, ...runs], term.wasGeneratedBy), key));
+  return A.filter(
+    defaults,
+    (q) =>
+      HashSet.has(nodes, key(q.subject)) ||
+      (q.predicate.value === iri("rdf:type") &&
+        q.object.value === iri("prov:Activity") &&
+        HashSet.has(activities, key(q.subject)))
+  );
+};
 
 // `resolve` of each anchors row's quote, by occurrence id.
 const resolutions = (text: string, document: OaDocument) =>
@@ -233,6 +261,23 @@ const blankActivity = annotationNode("blank-activity");
 const badTime = annotationNode("bad-time");
 const idle = annotationNode("idle");
 const idleRun = Q.blank("idle-run");
+const sharedAccepted = annotationNode("shared-accepted");
+const sharedRejected = annotationNode("shared-rejected");
+const sharedTarget = Q.named("https://example.org/target/shared");
+const sharedActivity = Q.named("https://example.org/activity/shared");
+
+// Stated times at the edges of the four-digit year, by annotation label: the lexical form, its kind and word, and
+// the instant it names (none for a literal outside the xsd:dateTime lexical or value space).
+const edgeTimes: ReadonlyArray<readonly [string, string, string, string, O.Option<number>]> = [
+  ["offset-past-9999", "9999-12-31T23:59:59-14:00", term.Word, "Gamma", O.some(253_402_351_199_000)],
+  ["year-10000", "10000-01-01T13:59:59.5Z", term.Word, "delta", O.some(253_402_351_199_500)],
+  ["year-minus-1", "-0001-12-31T23:59:59.99999Z", term.Word, "Alpha", O.some(-62_167_219_200_001)],
+  ["year-0", "0000-01-01T00:00:00Z", term.Word, "beta", O.some(-62_167_219_200_000)],
+  ["signed-year", "+010000-01-01T00:00:00.000Z", term.Title, "Alpha", O.none()],
+  ["padded-year", "02024-01-01T00:00:00Z", term.Title, "Gamma", O.none()],
+  ["no-such-day", "2024-02-30T00:00:00Z", term.Title, "beta", O.none()],
+  ["past-the-range", "1000000-01-01T00:00:00Z", term.Title, "delta", O.none()],
+];
 
 const all = (input: ReadonlyArray<Rdf.Quad>) => input;
 
@@ -475,6 +520,37 @@ const fixtures: ReadonlyArray<Fixture> = [
           q.subject.value === idleRun.value
       ),
   },
+  {
+    name: "a rejected annotation that shares its target and its activity with an accepted one",
+    quads: [
+      ...annotationOf(sharedAccepted, O.some(term.Word)),
+      ...targetOf(sharedAccepted, sharedTarget, quoteOf(sharedTarget, "shared-q", Q.string("beta"))),
+      Q.quad(sharedAccepted, term.wasGeneratedBy, sharedActivity),
+      Q.type(sharedActivity, iri("prov:Activity")),
+      ...annotationOf(sharedRejected, O.some(term.Section)),
+      Q.quad(sharedRejected, term.hasTarget, sharedTarget),
+      Q.quad(sharedRejected, term.wasGeneratedBy, sharedActivity),
+    ],
+    rejected: [[sharedRejected, "unknown-kind"]],
+    annotations: 1,
+    // Everything but the accepted annotation's own quads: the shared target, selector and activity typing included.
+    residual: (input) => A.filter(input, (q) => q.subject.value !== sharedAccepted.value),
+  },
+  {
+    name: "times at the edges of the four-digit year, and literals outside the xsd:dateTime lexical or value space",
+    quads: A.flatMap(edgeTimes, ([label, lexical, kind, word]) => [
+      ...annotationOf(annotationNode(label), O.some(kind)),
+      ...wordTarget(annotationNode(label), label, word),
+      Q.quad(annotationNode(label), term.creator, alice),
+      Q.quad(annotationNode(label), term.generatedAtTime, Q.lexicalTime(lexical)),
+    ]),
+    rejected: [],
+    annotations: edgeTimes.length,
+    residual: (input) =>
+      A.filter(input, (q) =>
+        A.some(edgeTimes, ([, lexical, , , instant]) => O.isNone(instant) && q.object.value === lexical)
+      ),
+  },
 ];
 
 const fixtureOptions = (text: VerifiedSourceText) => ({
@@ -520,6 +596,17 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
         assertEquals(quadSet(encoded), quadSet(normalized));
         const inputQuads = quadSet(input.dataset);
         expect(A.every(decoded.residual.quads, (q) => HashSet.has(inputQuads, Rdf.serializeQuad(q)))).toBe(true);
+        // Every quad a rejected annotation reaches stays in the residual, so the residual rejects it again.
+        const residual = quadSet(decoded.residual);
+        for (const rejection of decoded.rejected) {
+          const missing = A.filter(
+            reachedFrom(input.dataset.quads, rejection.subject),
+            (q) => !HashSet.has(residual, Rdf.serializeQuad(q))
+          );
+          expect(A.map(missing, Rdf.serializeQuad)).toStrictEqual([]);
+        }
+        const reread = yield* decode(decoded.residual, options);
+        expect(reread.rejected).toStrictEqual(decoded.rejected);
         const again = yield* decode(encoded, options);
         assertEquals(again.document, decoded.document);
         assertEquals(resolutions(input.text, again.document), resolutions(input.text, decoded.document));
@@ -547,6 +634,8 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
           fixture.annotations,
         ]);
         assertEquals(quadSet(decoded.residual), quadSet(Rdf.makeDataset(fixture.residual(fixture.quads))));
+        const again = yield* decode(encoded, options);
+        expect([fixture.name, Equal.equals(again.document, decoded.document)]).toStrictEqual([fixture.name, true]);
       }
     })
   );
@@ -600,6 +689,20 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
         A.sort([`${importedActivityIdOf(creator)} ${T0}`, `${importedActivityIdOf(bobCreator)} ${T1}`], Order.String)
       );
 
+      // An xsd:dateTime past year 9999 or before year 1 is a time; a literal outside the lexical or value space is none.
+      const edges = yield* generationsOf(12);
+      const shown = (instant: O.Option<number>) => O.match(instant, { onNone: () => "none", onSome: (m) => `${m}` });
+      expect(
+        A.sort(
+          A.map(edges.generations, (g) => shown(stated(g))),
+          Order.String
+        )
+      ).toStrictEqual(
+        A.sort(
+          A.map(edgeTimes, ([, , , , instant]) => shown(instant)),
+          Order.String
+        )
+      );
       const mixed = yield* generationsOf(10);
       const activities = HashSet.fromIterable(A.map(mixed.generations, (g) => g.activity));
       expect(HashSet.has(activities, activityIdOf("native"))).toBe(true);
@@ -678,6 +781,58 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
         encode({ document, importedActivities: HashMap.empty() }, { source: oaSource, text: other }),
         Result.fail(OaEncodeRefused.make({ reason: "capture-mismatch" }))
       );
+    })
+  );
+
+  it.effect(
+    `${L26}: a stated time outside years 0000 to 9999 is written as an xsd:dateTime and survives the codec`,
+    Effect.fnUntraced(function* () {
+      const text = yield* verify(fixtureSource, fixtureText);
+      const options = fixtureOptions(text);
+      const row = anchoredOn(fixtureSource, fixtureText, { start: 12, end: 17 });
+      const word = OaKinds.Word.case.make({ targets: yield* targetsOf(row), body: Word.make({}) });
+      // Each instant with the lexical form the encoder writes for it: no `+`, four or more year digits.
+      const written: ReadonlyArray<readonly [number, string]> = [
+        [-8_640_000_000_000_000, "-271821-04-20T00:00:00.000Z"],
+        [-62_198_755_200_000, "-0001-01-01T00:00:00.000Z"],
+        [-62_167_219_200_000, "0000-01-01T00:00:00.000Z"],
+        [253_402_300_799_999, "9999-12-31T23:59:59.999Z"],
+        [253_402_300_800_000, "10000-01-01T00:00:00.000Z"],
+        [8_640_000_000_000_000, "275760-09-13T00:00:00.000Z"],
+      ];
+      const parts = yield* Effect.forEach(
+        written,
+        ([millis], index) =>
+          codec.assemble({
+            text: fixtureSource,
+            generation: { activity: activityIdOf(`edge-${index}`), at: O.some(DateTime.makeUnsafe(millis)) },
+            anchors: [row],
+            annotations: [word],
+          }),
+        { concurrency: 1 }
+      );
+      const empty = OaDocument.make({
+        text: fixtureSource,
+        anchors: HashMap.empty(),
+        annotations: HashMap.empty(),
+        attribution: HashMap.empty(),
+      });
+      const document = yield* Effect.reduce(parts, constant(empty), (merged, part) =>
+        Effect.fromResult(mergeDocuments(merged, part))
+      );
+      const dataset = Result.getOrThrow(encode({ document, importedActivities: HashMap.empty() }, options));
+      const literals = A.flatMap(dataset.quads, (q) =>
+        q.predicate.value === term.generatedAtTime ? [q.object.value] : []
+      );
+      expect(A.sort(literals, Order.String)).toStrictEqual(
+        A.sort(
+          A.map(written, ([, lexical]) => lexical),
+          Order.String
+        )
+      );
+      const decoded = yield* decode(dataset, options);
+      assertEquals(decoded.document, document);
+      expect(A.every(decoded.residual.quads, isNifQuad)).toBe(true);
     })
   );
 

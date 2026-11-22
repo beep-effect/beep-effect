@@ -13,7 +13,9 @@ import * as Cause from "effect/Cause";
 import * as Digest from "effect/crypto/Digest";
 import * as Effect from "effect/Effect";
 import * as HashSet from "effect/HashSet";
+import * as Order from "effect/Order";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import { annotationIdOf, occurrenceIdOf, sha256, targetArrayCase } from "./support/generators.ts";
 
 const runs = { arbitrary: fcRuns(100) };
@@ -24,6 +26,18 @@ const distinction = TermIri.make(iri("office-action:distinction"));
 const claim = TermIri.make(iri("office-action:claim"));
 
 const decodeMention = S.decodeUnknownEffect(DocumentKinds.Mention.case);
+
+const encodeMention = S.encodeEffect(DocumentKinds.Mention.case);
+
+// Six occurrence ids whose HashSet iteration order is not their ascending order, and the annotation/v1 id of a claim
+// Mention over them: the SHA-256 of the RFC 8785 JSON of
+// ["annotation/v1",["sha256:1…1",…,"sha256:6…6"],"https://beep-effect.com/ns/annotation/Mention",
+// {"class":"https://beep-effect.com/ns/office-action/claim"}], computed outside the repo by sha256sum.
+const ascendingOccurrences = A.map(["1", "2", "3", "4", "5", "6"], (digit) =>
+  OccurrenceId.make(`sha256:${Str.repeat(64)(digit)}`)
+);
+
+const sixTargetMention = AnnotationId.make("sha256:40fb3e7ec0a27bb173f8b18fc6721db2d285549d559ce405702e2fd93587db7b");
 
 const goldenOccurrence = OccurrenceId.make("sha256:68270708e021dadff3752f9e0d36a435565fdb6015bf7c1cc16e4e9024c54a48");
 
@@ -46,6 +60,9 @@ it.layer(Digest.layerWebCrypto, { timeout: "10 seconds" })("@beep/annotation ann
         const fromArray = yield* mint(decoded);
         expect(fromArray).toBe(fromSet);
         expect(HashSet.size(decoded.targets)).toBe(HashSet.size(set));
+        // The set codec the preimage hashes writes the targets ascending, never in iteration order.
+        const encoded = yield* encodeMention(decoded);
+        expect(encoded.targets).toStrictEqual(A.sort(A.fromIterable(set), Order.String));
       }),
     runs
   );
@@ -88,6 +105,18 @@ it.layer(Digest.layerWebCrypto, { timeout: "10 seconds" })("@beep/annotation ann
       const id = yield* mint(goldenMention);
       expect(id).toBe(AnnotationId.make(AnnotationPreimage.golden.hash));
       expect(annotationIdOf(goldenMention)).toBe(id);
+    })
+  );
+
+  it.effect(
+    "L2-2 a six-target vector hashes its targets ascending, not in iteration order",
+    Effect.fnUntraced(function* () {
+      const targets = HashSet.fromIterable(A.reverse(ascendingOccurrences));
+      expect(A.fromIterable(targets)).not.toStrictEqual(ascendingOccurrences);
+      const mention = DocumentKinds.Mention.case.make({ targets, body: Mention.make({ class: claim }) });
+      const id = yield* mint(mention);
+      expect(id).toBe(sixTargetMention);
+      expect(annotationIdOf(mention)).toBe(sixTargetMention);
     })
   );
 

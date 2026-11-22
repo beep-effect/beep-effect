@@ -129,8 +129,21 @@ const predicates: A.NonEmptyReadonlyArray<TermIri> = [
   TermIri.make(iri("semantica:authoredBy")),
 ];
 
-// Instants from 1970 to 2100, so a stated time always encodes as finite epoch milliseconds.
-const instant = Arbitrary.map(between(0, 4_102_444_800_000), (millis) => DateTime.makeUnsafe(millis));
+// The edges the xsd:dateTime lexical form turns on: both ends of the range a DateTime holds, the first and last
+// instants of years -1 and 0, the last of year 9999, the first of year 10000, and the epoch.
+const edgeInstants: A.NonEmptyReadonlyArray<number> = [
+  -8_640_000_000_000_000, -62_198_755_200_000, -62_167_219_200_001, -62_167_219_200_000, 0, 253_402_300_799_999,
+  253_402_300_800_000, 8_640_000_000_000_000,
+];
+
+// Instants over the whole range a DateTime holds, one draw in two at one of its edges.
+const instant = Arbitrary.map(
+  Arbitrary.all({
+    edge: between(0, 2 * edgeInstants.length - 1),
+    millis: between(-8_640_000_000_000_000, 8_640_000_000_000_000),
+  }),
+  ({ edge, millis }) => DateTime.makeUnsafe(edge < edgeInstants.length ? A.getUnsafe(edgeInstants, edge) : millis)
+);
 
 const statedTime = Arbitrary.map(
   Arbitrary.all({ stated: Arbitrary.schema(S.Boolean), instant }),
@@ -627,6 +640,7 @@ export const oaQuads = {
   integer: (value: number): Rdf.Literal => Rdf.makeLiteral(`${value}`, xsd.integer),
   string: (value: string): Rdf.Literal => Rdf.makeLiteral(value, xsd.string),
   time: (millis: number): Rdf.Literal => Rdf.makeLiteral(DateTime.formatIso(DateTime.makeUnsafe(millis)), xsd.dateTime),
+  lexicalTime: (lexical: string): Rdf.Literal => Rdf.makeLiteral(lexical, xsd.dateTime),
 };
 
 const Q = oaQuads;
@@ -634,6 +648,7 @@ const Q = oaQuads;
 /** A target as third-party input writes it: its code-point range, its UTF-16 range and how its selectors look. */
 type InputTarget = {
   readonly node: Rdf.Subject;
+  readonly label: string;
   readonly points: { readonly start: number; readonly end: number };
   readonly units: { readonly start: number; readonly end: number };
   readonly prefixFrom: number;
@@ -642,9 +657,9 @@ type InputTarget = {
 };
 
 // The selectors of one target: both, position only, quote only, or a quote with its prefix.
-const targetQuads = (text: string, target: InputTarget, label: string): ReadonlyArray<Rdf.Quad> => {
-  const position = Q.blank(`${label}p`);
-  const quote = Q.blank(`${label}q`);
+const targetQuads = (text: string, target: InputTarget): ReadonlyArray<Rdf.Quad> => {
+  const position = Q.blank(`${target.label}p`);
+  const quote = Q.blank(`${target.label}q`);
   const exact = Str.slice(target.units.start, target.units.end)(text);
   const positionQuads = [
     Q.quad(target.node, iri("oa:hasSelector"), position),
@@ -681,7 +696,14 @@ const kindIris: A.NonEmptyReadonlyArray<O.Option<string>> = [
   O.none(),
 ];
 
-const instants: A.NonEmptyReadonlyArray<number> = [1_763_510_400_000, 1_763_510_401_000];
+// Pairs of xsd:dateTime lexical forms an annotation states its times with: two ordinary instants; one instant
+// written on both sides of the four-digit year, with an offset and in UTC with a fraction; and two instants around
+// year 0, one with a fraction past milliseconds.
+const timePairs: A.NonEmptyReadonlyArray<readonly [string, string]> = [
+  ["2025-11-19T00:00:00Z", "2025-11-19T00:00:01.000Z"],
+  ["9999-12-31T23:59:59-14:00", "10000-01-01T13:59:59.000Z"],
+  ["-0001-12-31T23:59:59.99999Z", "0000-01-01T00:00:00+00:00"],
+];
 
 /** One generated third-party OA dataset over one generated text and its capture. */
 export type GeneratedOaInput = {
@@ -703,7 +725,9 @@ const inputAnnotation = Arbitrary.all({
   agent: between(0, 2),
   ownTime: between(0, 3),
   runTime: between(0, 2),
+  era: between(0, timePairs.length - 1),
   copy: between(0, 3),
+  share: between(0, 3),
   extra: between(0, 3),
 });
 
@@ -714,8 +738,9 @@ type InputAnnotation = typeof inputAnnotation extends Arbitrary.Arbitrary<infer 
  * targets, every kind and an unknown or missing one, spurious and missing bodies, position-only, quote-only and
  * prefixed selectors, targets on another source, every attribution form (none, annotation-level and run-level
  * activities, creators and generators, two creators on two runs at two times, an instance-form native activity),
- * stated and conflicting times, annotations that repeat an earlier one's content, NIF triples, a triple outside the
- * profile and a quad in a named graph. Every draw is a dataset the law covers; nothing is filtered.
+ * stated and conflicting times written on both sides of the four-digit year and around year 0, annotations that
+ * repeat an earlier one's content, annotations that share an earlier one's target node, NIF triples, a triple
+ * outside the profile and a quad in a named graph. Every draw is a dataset the law covers; nothing is filtered.
  */
 export const oaInputCase: Arbitrary.Arbitrary<GeneratedOaInput> = Arbitrary.flatMap(
   wellFormedTextWith({ minLength: 1, maxLength: 24 }),
@@ -729,26 +754,36 @@ export const oaInputCase: Arbitrary.Arbitrary<GeneratedOaInput> = Arbitrary.flat
       (drawn) => {
         const points = generated.boundaries["unicode-code-point"];
         const units = generated.boundaries["utf16-code-unit"];
-        const quadsOf = (
-          annotation: InputAnnotation,
-          index: number,
-          shape: InputAnnotation
-        ): ReadonlyArray<Rdf.Quad> => {
-          const subject = annotation.blank ? Q.blank(`a${index}`) : Q.named(`https://example.org/annotation/${index}`);
-          const kind = at(kindIris, shape.kind);
-          const targets = A.map(shape.targets, (target, position): InputTarget => {
+        // A drawn copy repeats the previous annotation's kind, body and targets under its own subject and attribution.
+        const shapeOf = (annotation: InputAnnotation, index: number): InputAnnotation =>
+          annotation.copy === 0 && index > 0 ? A.getUnsafe(drawn.annotations, index - 1) : annotation;
+        const ownTargets = A.map(drawn.annotations, (annotation, index) =>
+          A.map(shapeOf(annotation, index).targets, (target, position): InputTarget => {
             const range = at(drawn.ranges, target.range);
             return {
               node: target.blank
                 ? Q.blank(`t${index}x${position}`)
                 : Q.named(`https://example.org/target/${index}/${position}`),
+              label: `s${index}x${position}`,
               points: rangeIn(points)(range),
               units: rangeIn(units)(range),
               prefixFrom: A.getUnsafe(units, Math.max(0, range.first - 2)),
               style: target.style,
               source: target.other === 0 ? otherSource : oaSource,
             };
-          });
+          })
+        );
+        const quadsOf = (annotation: InputAnnotation, index: number): ReadonlyArray<Rdf.Quad> => {
+          const shape = shapeOf(annotation, index);
+          const subject = annotation.blank ? Q.blank(`a${index}`) : Q.named(`https://example.org/annotation/${index}`);
+          const kind = at(kindIris, shape.kind);
+          const own = A.getUnsafe(ownTargets, index);
+          // A drawn share makes the first target the previous annotation's first target node, selectors and all.
+          const targets: A.NonEmptyReadonlyArray<InputTarget> =
+            annotation.share === 0 && index > 0
+              ? A.prepend(A.drop(own, 1), A.headNonEmpty(A.getUnsafe(ownTargets, index - 1)))
+              : own;
+          const [firstTime, lastTime] = at(timePairs, annotation.era);
           const isMention = O.contains(kind, iri("annotation:Mention"));
           const body = isMention
             ? shape.body === 0
@@ -760,8 +795,8 @@ export const oaInputCase: Arbitrary.Arbitrary<GeneratedOaInput> = Arbitrary.flat
           const activity = Q.named(`https://example.org/activity/${annotation.agent}`);
           const run = Q.blank(`r${index}`);
           const second = Q.blank(`r${index}b`);
-          const runTime = A.map(A.take(instants, annotation.runTime), (millis) =>
-            Q.quad(run, iri("prov:generatedAtTime"), Q.time(millis))
+          const runTime = A.map(A.take([firstTime, lastTime], annotation.runTime), (lexical) =>
+            Q.quad(run, iri("prov:generatedAtTime"), Q.lexicalTime(lexical))
           );
           const attributions: A.NonEmptyReadonlyArray<ReadonlyArray<Rdf.Quad>> = [
             [],
@@ -776,18 +811,20 @@ export const oaInputCase: Arbitrary.Arbitrary<GeneratedOaInput> = Arbitrary.flat
             [
               Q.quad(run, iri("prov:specializationOf"), subject),
               Q.quad(run, iri("dcterms:creator"), Q.named("https://example.org/agent/0")),
-              Q.quad(run, iri("prov:generatedAtTime"), Q.time(A.headNonEmpty(instants))),
+              Q.quad(run, iri("prov:generatedAtTime"), Q.lexicalTime(firstTime)),
               Q.quad(second, iri("prov:specializationOf"), subject),
               Q.quad(second, iri("dcterms:creator"), Q.named("https://example.org/agent/1")),
-              Q.quad(second, iri("prov:generatedAtTime"), Q.time(A.lastNonEmpty(instants))),
+              Q.quad(second, iri("prov:generatedAtTime"), Q.lexicalTime(lastTime)),
             ],
             [Q.quad(subject, iri("prov:wasGeneratedBy"), Q.named(instanceIri(activityIdOf(`${annotation.agent}`))))],
           ];
           const ownTimes: A.NonEmptyReadonlyArray<ReadonlyArray<Rdf.Quad>> = [
             [],
-            [Q.quad(subject, iri("prov:generatedAtTime"), Q.time(A.headNonEmpty(instants)))],
-            [Q.quad(subject, iri("dcterms:created"), Q.time(A.lastNonEmpty(instants)))],
-            A.map(instants, (millis) => Q.quad(subject, iri("prov:generatedAtTime"), Q.time(millis))),
+            [Q.quad(subject, iri("prov:generatedAtTime"), Q.lexicalTime(firstTime))],
+            [Q.quad(subject, iri("dcterms:created"), Q.lexicalTime(lastTime))],
+            A.map([firstTime, lastTime], (lexical) =>
+              Q.quad(subject, iri("prov:generatedAtTime"), Q.lexicalTime(lexical))
+            ),
           ];
           const first = A.headNonEmpty(targets);
           const extras: A.NonEmptyReadonlyArray<ReadonlyArray<Rdf.Quad>> = [
@@ -812,20 +849,16 @@ export const oaInputCase: Arbitrary.Arbitrary<GeneratedOaInput> = Arbitrary.flat
             Q.type(subject, iri("oa:Annotation")),
             ...A.map(A.fromOption(kind), (klass) => Q.type(subject, klass)),
             ...body,
-            ...A.flatMap(targets, (target, position) => [
+            ...A.flatMap(targets, (target) => [
               Q.quad(subject, iri("oa:hasTarget"), target.node),
-              ...targetQuads(generated.text, target, `s${index}x${position}`),
+              ...targetQuads(generated.text, target),
             ]),
             ...at(attributions, annotation.attribution),
             ...at(ownTimes, annotation.ownTime),
             ...at(extras, annotation.extra),
           ];
         };
-        // A drawn copy repeats the previous annotation's kind, body and targets under its own subject and attribution.
-        const quads = A.flatMap(drawn.annotations, (annotation, index) => {
-          const shape = annotation.copy === 0 && index > 0 ? A.getUnsafe(drawn.annotations, index - 1) : annotation;
-          return quadsOf(annotation, index, shape);
-        });
+        const quads = A.flatMap(drawn.annotations, quadsOf);
         return { text: generated.text, source: drawn.source, dataset: Rdf.makeDataset(quads) };
       }
     )

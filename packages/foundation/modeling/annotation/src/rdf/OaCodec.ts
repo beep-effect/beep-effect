@@ -572,8 +572,10 @@ export class OaEncodeRefused extends S.TaggedError<OaEncodeRefused, { readonly b
  *
  * The residual holds every input quad the document does not carry: the
  * triples outside the profile (every `nif:` triple and every quad in a named
- * graph included) and the triples of each rejected annotation. Nothing is
- * dropped silently.
+ * graph included) and every quad a rejected annotation reaches (its own, its
+ * targets' and selectors', its runs' and the typing of its activities), even
+ * when an accepted annotation that shares a target or an activity carries it
+ * too. Nothing is dropped silently.
  *
  * **Example** (Read an import's parts)
  *
@@ -714,7 +716,12 @@ const integerLiteral = (value: number): Rdf.Literal => Rdf.makeLiteral(`${value}
 
 const stringLiteral = (value: string): Rdf.Literal => Rdf.makeLiteral(value, xsdString);
 
-const timeLiteral = (at: DateTime.Utc): Rdf.Literal => Rdf.makeLiteral(DateTime.formatIso(at), xsdDateTime);
+// `toISOString` writes a year outside 0000..9999 with a sign and six digits (`+010000`, `-000001`), which the
+// xsd:dateTime lexical space does not admit: drop the `+` and every leading zero past four digits.
+const ExpandedIsoYear = /^\+?(-?)0*(\d{4,}-)/;
+
+const timeLiteral = (at: DateTime.Utc): Rdf.Literal =>
+  Rdf.makeLiteral(at.pipe(DateTime.formatIso, Str.replace(ExpandedIsoYear, "$1$2")), xsdDateTime);
 
 const quad = (subject: Rdf.Subject, predicate: Rdf.NamedNode, object: Rdf.ObjectTerm): Rdf.Quad =>
   Rdf.makeQuad(subject, predicate, object);
@@ -988,13 +995,35 @@ const naturalOf = (q: Rdf.Quad): O.Option<number> =>
 
 const decodeNonEmpty = S.decodeUnknownOption(S.NonEmptyString);
 
-const DateTimeLexical = /^-?\d{4,}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})?$/;
+// The xsd:dateTime lexical form: a year of four or more digits with no leading zero past four, the date, the clock,
+// an optional fraction and an optional zone.
+const DateTimeLexical = /^(-?)([1-9]\d{3,}|0\d{3})(-\d{2}-\d{2})(T\d{2}:\d{2}:\d{2})(?:\.(\d+))?(Z|[+-]\d{2}:\d{2})?$/;
+
+// The ECMAScript year of an xsd:dateTime year: four digits inside 0000..9999, else a sign and six digits.
+const ecmaYear = (year: number): string =>
+  year >= 0 && year <= 9999
+    ? Str.padStart(4, "0")(`${year}`)
+    : `${year < 0 ? "-" : "+"}${Str.padStart(6, "0")(`${Math.abs(year)}`)}`;
+
+// The instant an xsd:dateTime lexical form names, read through its ECMAScript form with the fraction truncated to
+// milliseconds and a missing zone read as UTC. A calendar date that does not exist (`2024-02-30`), or an instant
+// outside the range a DateTime holds, is no instant.
+const instantOf = (lexical: string): O.Option<DateTime.Utc> =>
+  O.flatMap(
+    Str.match(DateTimeLexical)(lexical),
+    ([, sign = "", digits = "", date = "", clock = "", fraction = "", zone = "Z"]) => {
+      const day = `${ecmaYear(Number(`${sign}${digits}`))}${date}`;
+      return O.filter(DateTime.make(`${day}${clock}.${Str.padEnd(3, "0")(Str.slice(0, 3)(fraction))}${zone}`), () =>
+        O.exists(DateTime.make(`${day}T00:00:00Z`), (midnight) => DateTime.formatIsoDateUtc(midnight) === day)
+      );
+    }
+  );
 
 const timeOf = (q: Rdf.Quad): O.Option<DateTime.Utc> =>
   O.some(q.object).pipe(
     O.filter(Rdf.Literal.is),
-    O.filter((literal) => literal.datatype.value === xsdDateTime && DateTimeLexical.test(literal.value)),
-    O.flatMap((literal) => DateTime.make(literal.value))
+    O.filter((literal) => literal.datatype.value === xsdDateTime),
+    O.flatMap((literal) => instantOf(literal.value))
   );
 
 type StatedTime = {
@@ -1217,6 +1246,25 @@ const conflictingPairs = (candidates: ReadonlyArray<Candidate>): HashSet.HashSet
 type Profile = {
   readonly accepted: ReadonlyArray<Candidate>;
   readonly rejected: ReadonlyArray<OaRejection>;
+  readonly retained: ReadonlyArray<Rdf.Quad>;
+};
+
+// Every quad a rejected annotation reaches through the profile: the quads about the annotation, its targets, their
+// selectors and the runs that specialize it, and the typing of each activity it or one of its runs names. An
+// accepted annotation that shares a target or an activity carries some of them too; they stay in the residual.
+const reachedQuads = (index: Index, subject: Rdf.Term): ReadonlyArray<Rdf.Quad> => {
+  const about = (node: string) => O.getOrElse(R.get(index.bySubject, node), A.empty<Rdf.Quad>);
+  const objects = (nodes: ReadonlyArray<string>, predicate: Rdf.NamedNode) =>
+    A.flatMap(nodes, (node) => A.map(statementsAbout(index, node, predicate), (q) => keyOf(q.object)));
+  const annotation = keyOf(subject);
+  const targets = objects([annotation], V.hasTarget);
+  const runs = A.map(O.getOrElse(R.get(index.runsOf, annotation), A.empty<Rdf.Quad>), (q) => keyOf(q.subject));
+  return [
+    ...A.flatMap([annotation, ...targets, ...objects(targets, V.hasSelector), ...runs], about),
+    ...A.flatMap(objects([annotation, ...runs], V.wasGeneratedBy), (activity) =>
+      A.filter(statementsAbout(index, activity, V.type), (q) => isNode(V.Activity)(q.object))
+    ),
+  ];
 };
 
 // The shared rule of section 8.4 of the P3 design: what decodeOa and normalize both admit.
@@ -1353,17 +1401,19 @@ const readProfile = (kinds: typeof OaKinds) => {
       A.some(candidate.generations, (generation) =>
         HashSet.has(conflicting, pairKey(candidate.content, generation.activity))
       );
+    const rejected = A.sort(
+      [
+        ...A.getFailures(read),
+        ...A.map(A.filter(candidates, isConflicting), (candidate) =>
+          OaRejection.make({ subject: candidate.subject, reason: "time-conflict" })
+        ),
+      ],
+      Order.mapInput(bySubjectKey, (rejection: OaRejection) => rejection.subject)
+    );
     return {
       accepted: A.filter(candidates, (candidate) => !isConflicting(candidate)),
-      rejected: A.sort(
-        [
-          ...A.getFailures(read),
-          ...A.map(A.filter(candidates, isConflicting), (candidate) =>
-            OaRejection.make({ subject: candidate.subject, reason: "time-conflict" })
-          ),
-        ],
-        Order.mapInput(bySubjectKey, (rejection: OaRejection) => rejection.subject)
-      ),
+      rejected,
+      retained: A.flatMap(rejected, (rejection) => reachedQuads(index, rejection.subject)),
     };
   });
 };
@@ -1415,9 +1465,11 @@ export const decodeOa = (kinds: typeof OaKinds) => {
     input: Rdf.Dataset,
     options: DecodeOptions
   ): Effect.fn.Return<OaImport, PreimageMintError, Digest.Digest> {
-    const { accepted, rejected } = yield* read(input, options);
-    const consumed = HashSet.fromIterable(
-      A.flatMap(accepted, (candidate) => A.map(candidate.consumed, Rdf.serializeQuad))
+    const { accepted, rejected, retained } = yield* read(input, options);
+    // What the document carries leaves the residual, except what a rejected annotation reaches.
+    const consumed = HashSet.difference(
+      HashSet.fromIterable(A.flatMap(accepted, (candidate) => A.map(candidate.consumed, Rdf.serializeQuad))),
+      HashSet.fromIterable(A.map(retained, Rdf.serializeQuad))
     );
     const groups = A.groupBy(
       A.flatMap(accepted, (candidate) =>

@@ -9,13 +9,15 @@ import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as DateTime from "effect/DateTime";
 import * as Effect from "effect/Effect";
+import * as Equal from "effect/Equal";
 import * as HashMap from "effect/HashMap";
 import * as HashSet from "effect/HashSet";
 import * as O from "effect/Option";
 import * as Order from "effect/Order";
 import * as Result from "effect/Result";
+import * as S from "effect/Schema";
 import { codec, fixtureGeneration, fixtureParts, fixtureSource } from "./support/fixtures.ts";
-import { mergeTripleCase } from "./support/generators.ts";
+import { activityIdOf, mergeTripleCase } from "./support/generators.ts";
 import type { AnnotationId } from "@beep/annotation/AnnotationId";
 
 const runs = { arbitrary: fcRuns(200) };
@@ -30,6 +32,45 @@ const pairsOf = <Value>([a, b, c]: readonly [Value, Value, Value]) =>
 // The generation set of one annotation in a document, empty when it is absent.
 const generationsOf = (document: TextDocument, id: AnnotationId) =>
   O.getOrElse(HashMap.get(document.attribution, id), HashSet.empty);
+
+const sameCapture = S.toEquivalence(SourceTextIdentity);
+
+// Stated times, `None` first.
+const timeOrder: Order.Order<O.Option<DateTime.Utc>> = O.makeOrder(DateTime.Order);
+
+const conflictOrder = Order.mapInput(Order.Array(Order.String), (conflict: GenerationTimeConflict) => [
+  conflict.annotation,
+  conflict.activity,
+]);
+
+// Every (annotation, activity, time) a document states.
+const timed = (document: TextDocument) =>
+  A.flatMap(A.fromIterable(document.attribution), ([annotation, generations]) =>
+    A.map(A.fromIterable(generations), ({ activity, at }) => ({ annotation, activity, at }))
+  );
+
+// The refusal L2-1 expects of two documents over one capture, read from the design alone: the least (annotation,
+// activity) pair the two documents time differently, with the earlier time on the left.
+const expectedConflict = (left: TextDocument, right: TextDocument): O.Option<GenerationTimeConflict> =>
+  A.head(
+    A.sort(
+      A.flatMap(timed(left), (l) =>
+        A.flatMap(timed(right), (r) =>
+          l.annotation === r.annotation && l.activity === r.activity && !Equal.equals(l.at, r.at)
+            ? [
+                GenerationTimeConflict.make({
+                  annotation: l.annotation,
+                  activity: l.activity,
+                  left: Order.min(timeOrder)(l.at, r.at),
+                  right: Order.max(timeOrder)(l.at, r.at),
+                }),
+              ]
+            : []
+        )
+      ),
+      conflictOrder
+    )
+  );
 
 const emptyOn = (text: SourceTextIdentity) =>
   TextDocument.make({ text, anchors: HashMap.empty(), annotations: HashMap.empty(), attribution: HashMap.empty() });
@@ -48,6 +89,10 @@ it.layer(Digest.layerWebCrypto, { timeout: "20 seconds" })("@beep/annotation mer
         // A refusal is the same value in either argument order.
         assertEquals(merge(right, left), forward);
         assertEquals(merge(right)(left), forward);
+        // Over one capture, the refusal is the least pair timed twice, the earlier time on the left.
+        if (sameCapture(left.text, right.text)) {
+          assertEquals(Result.getFailure(forward), expectedConflict(left, right));
+        }
         Result.match(forward, {
           onFailure: () => undefined,
           onSuccess: (merged) => {
@@ -101,6 +146,26 @@ it.layer(Digest.layerWebCrypto, { timeout: "20 seconds" })("@beep/annotation mer
       ] as const) {
         assertEquals(merge(left, right), expected);
         assertEquals(merge(right, left), expected);
+      }
+      // One activity per case, so the two generations of the pair iterate in either order across the cases; the
+      // earlier time is on the left whichever iterates first.
+      for (const seed of ["a", "b", "c", "d", "e", "f", "g", "h"]) {
+        const generation = { activity: activityIdOf(`conflict-${seed}`), at: O.some(later) };
+        const late = yield* codec.assemble({ ...fixtureParts, generation });
+        const early = yield* codec.assemble({
+          ...fixtureParts,
+          generation: { ...generation, at: fixtureGeneration.at },
+        });
+        const expected = Result.fail(
+          GenerationTimeConflict.make({
+            annotation: least,
+            activity: generation.activity,
+            left: fixtureGeneration.at,
+            right: O.some(later),
+          })
+        );
+        assertEquals(merge(early, late), expected);
+        assertEquals(merge(late, early), expected);
       }
     })
   );

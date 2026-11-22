@@ -64,12 +64,16 @@ it.layer(Digest.layerWebCrypto, { timeout: "20 seconds" })("@beep/annotation gen
         const generation = document.attribution.pipe(HashMap.get(key), O.getOrThrow, A.fromIterable, A.getUnsafe(0));
         // The annotation with no generation: its attribution row removed.
         const unattributed = { ...encoded, attribution: A.filter(encoded.attribution, ([id]) => id !== key) };
-        // A second generation for one (content, activity) pair, at another time.
-        const later = generation.at.pipe(O.match({ onNone: () => 0, onSome: (at) => DateTime.toEpochMillis(at) + 1 }));
+        // A second generation for one (content, activity) pair, at another time: one millisecond toward the epoch, so
+        // it stays inside the range a DateTime holds.
+        const other = generation.at.pipe(
+          O.map(DateTime.toEpochMillis),
+          O.match({ onNone: () => 0, onSome: (millis) => (millis > 0 ? millis - 1 : millis + 1) })
+        );
         const second = generationOf({
           content: key,
           activity: generation.activity,
-          at: O.some(DateTime.makeUnsafe(later)),
+          at: O.some(DateTime.makeUnsafe(other)),
         });
         const twice = {
           ...encoded,
