@@ -1021,6 +1021,21 @@ it.layer(TestLayer, { timeout: "30 seconds" })(
         })
       );
 
+      it.effect("a working-tree diff against a missing head fails UnknownRefError naming that head", () =>
+        Effect.gen(function* () {
+          const git = yield* Git;
+          for (const diff of [git.unstagedChanges, git.stagedChanges]) {
+            const exit = yield* Effect.exit(diff(dirD, { head: "no-such-ref" }));
+            assertExitFailure(exit, exit.pipe(Exit.getCause, O.getOrThrow));
+            const found = Cause.findFail(exit.cause);
+            assertSuccess(found, found.pipe(Result.getSuccess, O.getOrThrow));
+            const error = found.success.error;
+            assert.isTrue(S.is(UnknownRefError)(error));
+            assert.strictEqual(S.is(UnknownRefError)(error) ? error.ref : undefined, "no-such-ref");
+          }
+        })
+      );
+
       it.effect("log --name-status types c2's rename, delete, modify and add, with the subject and derived paths", () =>
         Effect.gen(function* () {
           const git = yield* Git;

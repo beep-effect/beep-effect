@@ -34,3 +34,7 @@ inputs and upstream edges. Recording the new configuration grants no qualificati
 Remove the root script, the `//#lint:comment-law` task, the two repo-cli dependencies and the
 comment law sources, rerun `bun install`, `bun run beep tsconfig-sync` and
 `bun run beep lint policy-fingerprint --write`, and re-record the two subjects.
+
+## Profile
+
+Re-recorded on 2026-11-22 under the `local-linux-x64-bun1.4.5` toolchain profile after main moved to Bun 1.4.5 (#3460); the first record used `local-linux-x64-bun1.4.4`.

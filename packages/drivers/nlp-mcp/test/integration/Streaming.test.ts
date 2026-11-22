@@ -420,7 +420,7 @@ describe("StreamingToolkit integration", () => {
 
 it.layer(RecordingTestLayer)("SSRF refusal before HTTP execution", (it) => {
   it.effect(
-    "stream_load_text rejects IPv4-mapped internal URLs",
+    "stream_load_text rejects IPv4-mapped and trailing-dot internal URLs",
     Effect.fnUntraced(function* () {
       const requests = yield* HttpRequestCount;
       const tk = yield* StreamingToolkit;
@@ -460,6 +460,7 @@ it.layer(RecordingTestLayer)("SSRF refusal before HTTP execution", (it) => {
 
       yield* assertBlocked("http://[::ffff:127.0.0.1]/data.txt", "[::ffff:7f00:1]");
       yield* assertBlocked("http://[::ffff:169.254.169.254]/latest/meta-data", "[::ffff:a9fe:a9fe]");
+      yield* assertBlocked("http://localhost./x", "localhost.");
     })
   );
 });

@@ -646,12 +646,24 @@ export const OXLINT_SOURCES: {
       { count: 1, source: lines(`// @ts-ignore`, `export const x: number = "a";`) },
       { count: 1, source: lines(`// Region-confined replacement`, `export const x = 1;`) },
       { count: 1, source: lines(`export const x = 1; // trailing note`) },
+      { count: 1, source: lines(`// Copyright is checked by the validator`, `export const x = 1;`) },
+      { count: 1, source: lines(`// oxlint-disable-next-line beep/no-comments-- -- x`, `export const x = 1;`) },
     ],
     valid: [
       { count: 0, source: lines(`/** Public. */`, `export const x = 1;`) },
       { count: 0, source: lines(`/** Named later. */`, `const y = 1;`, `export { y };`) },
       { count: 0, source: lines(`const z = 1;`, `export { /** On the specifier. */ z };`) },
       { count: 0, source: lines(`/** Default. */`, `function f() {}`, `export default f;`) },
+      { count: 0, source: lines(`/** Wrapped default. */`, `function f() {}`, `export default (f);`) },
+      {
+        count: 0,
+        source: lines(
+          `const source = { raw: 1 };`,
+          `/** Destructured. */`,
+          `const { raw: value } = source;`,
+          `export { value };`
+        ),
+      },
       { count: 0, source: lines(`/**`, ` * Module.`, ` *`, ` * @packageDocumentation`, ` */`, `export const x = 1;`) },
       { count: 0, source: lines(`/// <reference lib="dom" />`, `export const x = 1;`) },
       { count: 0, source: lines(`// SPDX-License-Identifier: MIT`, `export const x = 1;`) },
@@ -661,6 +673,7 @@ export const OXLINT_SOURCES: {
       },
       { count: 0, source: lines(`// @ts-expect-error string is not a number`, `export const x: number = "a";`) },
       { count: 0, source: lines(`// oxlint-disable-next-line no-console -- fixture output`, `export const x = 1;`) },
+      { count: 0, source: lines(`// oxlint-disable-next-line no-console-- temporary output`, `export const x = 1;`) },
       { count: 0, source: lines(`export const x = /* @__PURE__ */ Object.freeze({});`) },
       { count: 0, source: lines(`export const o = {`, `  /** Member. */`, `  a: 1,`, `};`) },
       { count: 0, source: lines(`/** @internal */`, `const hidden = 1;`, `export const x = hidden;`) },
