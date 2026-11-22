@@ -1,3 +1,6 @@
+import { AnnotationId } from "@beep/annotation/AnnotationId";
+import { Generation, mintRunEntityId } from "@beep/annotation/Generation";
+import { ExtractionDocument } from "@beep/annotation/Kinds";
 import { iri } from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
 import { mintActivityId } from "@beep/jsonc/ActivityStart";
@@ -7,6 +10,7 @@ import {
   decodeExtractionHandoff,
   ExtractionHandoff,
   encodeExtractionHandoff,
+  extractionDocumentCodec,
   handoff,
   startExtraction,
 } from "@beep/langextract/Handoff";
@@ -99,6 +103,7 @@ const build = Effect.fn("HandoffTest.build")(function* (
   const activity = yield* startExtraction({ prompt: "synthetic prompt", source: capture, started: 0 });
   return yield* handoff({ targets, verified, candidates: grounded, overCap, activity, at: DateTime.makeUnsafe(1) });
 });
+const decodeGeneration = S.decodeUnknownEffect(Generation);
 const decodeHandoffType = S.decodeUnknownEffect(S.toType(ExtractionHandoff));
 const canonicalize = S.encodeUnknownEffect(S.fromJsonString(S.Unknown));
 
@@ -202,9 +207,32 @@ describe("verified handoff", () => {
           "match_minimal_fold",
           "match_fuzzy",
         ]);
-        expect(readings[0]?.attributes).toEqual(fields.attributes);
-        expect(readings[0]?.confidence).toEqual(fields.confidence);
-        expect(readings[0]?.text).toBe("Bob");
+        expect(readings).toEqual(
+          A.map(["match_exact", "match_lesser", "match_minimal_fold", "match_fuzzy"], (alignment, candidate) => ({
+            candidate,
+            label: fields.label,
+            text: fields.text,
+            attributes: fields.attributes,
+            confidence: fields.confidence,
+            alignment,
+          }))
+        );
+        const aligned = alignCandidates(candidates, AlignmentSource.make({ sourceText: text }));
+        const tail = [candidate("tail-person", "Bob", { source: "cap" }), candidate("tail-relation", "Ada")];
+        const complete = yield* build(aligned, text, tail);
+        const originals = A.appendAll(candidates, tail);
+        const all = A.appendAll(complete.readings.pipe(HashMap.toValues, A.flatten), complete.residual);
+        expect(all).toHaveLength(originals.length);
+        for (const reading of all) {
+          const original = A.getUnsafe(originals, reading.candidate);
+          expect(reading.label).toBe(original.label);
+          expect(reading.text).toBe(original.text);
+          expect(reading.attributes).toEqual(original.attributes);
+          expect(reading.confidence).toEqual(original.confidence);
+          expect(reading.alignment).toBe(
+            reading.candidate < aligned.length ? A.getUnsafe(aligned, reading.candidate).alignmentStatus : "unaligned"
+          );
+        }
       })
     );
     it.effect(
@@ -305,6 +333,129 @@ describe("verified handoff", () => {
           }),
         ]);
         expect(refused.residual[0]?.reason).toBe("verification-refused");
+      })
+    );
+    it.effect(
+      "P3-H the checked wire refuses forged and repeated document keys",
+      Effect.fnUntraced(function* () {
+        const h = yield* build();
+        const wire = yield* encodeExtractionHandoff(h);
+        const forged = {
+          ...wire,
+          document: {
+            ...wire.document,
+            attribution: A.map(wire.document.attribution, ([key, generations]) => [
+              key,
+              A.map(generations, (generation) => ({
+                ...generation,
+                run: `sha256:${Str.repeat(64)("f")}`,
+              })),
+            ]),
+          },
+        };
+        const refused = yield* decodeExtractionHandoff(forged).pipe(Effect.isFailure);
+        expect(refused).toBe(true);
+        const error = yield* decodeExtractionHandoff(forged).pipe(Effect.flip);
+        expect(error._tag).toBe("DocumentKeyMismatch");
+        const repeated = {
+          ...wire,
+          document: {
+            ...wire.document,
+            anchors: A.append(wire.document.anchors, A.getUnsafe(wire.document.anchors, 0)),
+          },
+        };
+        const repeatedError = yield* decodeExtractionHandoff(repeated).pipe(Effect.flip);
+        expect(repeatedError._tag).toBe("DocumentKeyRepeated");
+      })
+    );
+    it.effect(
+      "P3-H the checked wire refuses a consistently forged annotation key",
+      Effect.fnUntraced(function* () {
+        const h = yield* build(
+          alignCandidates([candidate("person", "Bob")], AlignmentSource.make({ sourceText: text }))
+        );
+        const [originalId, annotation] = O.getOrThrow(h.document.annotations.pipe(HashMap.toEntries, A.head));
+        const forgedId = AnnotationId.make(`sha256:${Str.repeat(64)("f")}`);
+        const original = O.getOrThrow(
+          HashMap.getUnsafe(h.document.attribution, originalId).pipe(A.fromIterable, A.head)
+        );
+        const run = yield* mintRunEntityId(forgedId, h.activity.id);
+        const document = ExtractionDocument.make({
+          ...h.document,
+          annotations: HashMap.make([forgedId, annotation]),
+          attribution: HashMap.make([forgedId, HashSet.make(Generation.make({ ...original, content: forgedId, run }))]),
+        });
+        const forged = ExtractionHandoff.make({
+          ...h,
+          document,
+          readings: HashMap.make([forgedId, HashMap.getUnsafe(h.readings, originalId)]),
+        });
+        const wire = yield* encodeExtractionHandoff(forged);
+        const refused = yield* decodeExtractionHandoff(wire).pipe(Effect.isFailure);
+        expect(refused).toBe(true);
+        const error = yield* decodeExtractionHandoff(wire).pipe(Effect.flip);
+        expect(error._tag).toBe("DocumentKeyMismatch");
+      })
+    );
+    it.effect(
+      "P3-H the checked wire refuses readings that name no annotation",
+      Effect.fnUntraced(function* () {
+        const h = yield* build();
+        const wire = yield* encodeExtractionHandoff(h);
+        const unknown = `sha256:${Str.repeat(64)("f")}`;
+        const malformed = {
+          ...wire,
+          readings: A.map(wire.readings, ([key, readings], index) => [index === 0 ? unknown : key, readings]),
+        };
+        const rejected = yield* decodeExtractionHandoff(malformed).pipe(Effect.isFailure);
+        expect(rejected).toBe(true);
+      })
+    );
+    it.effect(
+      "P3-H the checked wire refuses a correctly minted generation of another activity",
+      Effect.fnUntraced(function* () {
+        const h = yield* build();
+        const wire = yield* encodeExtractionHandoff(h);
+        const other = yield* startExtraction({ prompt: "other generation", source, started: 0 });
+        const attribution = yield* Effect.forEach(
+          wire.document.attribution,
+          ([key, generations]) =>
+            Effect.forEach(
+              generations,
+              Effect.fnUntraced(function* (generation) {
+                const original = yield* decodeGeneration(generation);
+                const run = yield* mintRunEntityId(original.content, other.id);
+                return { ...generation, activity: other.id, run };
+              }),
+              { concurrency: 1 }
+            ).pipe(Effect.map((rows) => [key, rows] as const)),
+          { concurrency: 1 }
+        );
+        const malformed = { ...wire, document: { ...wire.document, attribution } };
+        // The document is valid on its own: only the handoff's activity check may refuse it.
+        yield* extractionDocumentCodec.decode(malformed.document);
+        const rejected = yield* decodeExtractionHandoff(malformed).pipe(Effect.isFailure);
+        expect(rejected).toBe(true);
+      })
+    );
+    it.effect(
+      "P3-H the checked wire refuses both residual anchor inconsistencies",
+      Effect.fnUntraced(function* () {
+        const h = yield* build();
+        const wire = yield* encodeExtractionHandoff(h);
+        for (const alignment of ["match_exact", "unaligned"]) {
+          const malformed = {
+            ...wire,
+            residual: A.map(wire.residual, (residual, index) => {
+              const { anchor, ...fields } = residual;
+              return index === 0
+                ? { ...fields, alignment, ...(alignment === "unaligned" ? { anchor } : {}) }
+                : residual;
+            }),
+          };
+          const rejected = yield* decodeExtractionHandoff(malformed).pipe(Effect.isFailure);
+          expect(rejected).toBe(true);
+        }
       })
     );
     it.effect(

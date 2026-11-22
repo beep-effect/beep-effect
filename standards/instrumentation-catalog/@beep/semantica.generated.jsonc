@@ -123,6 +123,7 @@
     {"name":"RelationPreview.previewCase","owner":"@beep/semantica","family":"lab","conforms":true},
     {"name":"RelationPreview.readCacheEntry","owner":"@beep/semantica","family":"lab","conforms":true},
     {"name":"RelationPreview.readManifest","owner":"@beep/semantica","family":"lab","conforms":true},
+    {"name":"RelationPreview.replayHandoff","owner":"@beep/semantica","family":"lab","conforms":true},
     {"name":"RelationPreview.run","owner":"@beep/semantica","family":"lab","conforms":true},
     {"name":"SemanticaCanary.buildManifest","owner":"@beep/semantica","family":"lab","conforms":true},
     {"name":"SemanticaCanary.checkManifest","owner":"@beep/semantica","family":"lab","conforms":true},

@@ -1,5 +1,29 @@
+import { ExtractionCandidate, parseModelOutput } from "@beep/langextract/Extraction";
+import * as Arbitrary from "effect/Arbitrary";
+import * as ConfigProvider from "effect/ConfigProvider";
 import * as Digest from "effect/crypto/Digest";
+import * as FileSystem from "effect/FileSystem";
+import * as HashMap from "effect/HashMap";
+import * as Path from "effect/Path";
+import {
+  RelationPreviewManifest,
+  RelationPreviewOptions,
+  replayRelationHandoff,
+  runRelationPreview,
+} from "@/canary/RelationPreview";
+import { CorpusManifest, CorpusPaperId, ManifestDecodeFailed } from "@/corpus/Manifest";
+import { CorpusManifestBuilder } from "@/corpus/ManifestBuilder";
+import { F1Catalog, F1Index } from "@/fixtures/F1";
+import * as ExtractorLive from "@/layers/ExtractorLive";
+import { LabConfigLive } from "@/runtime/Config";
+import { contentDigestSync, sha256TextSync } from "@/schema/Digest";
+import { DocumentUnavailable } from "@/schema/Errors";
 import { ModelIdentity } from "@/schema/Model";
+import { ProviderCacheEntry, ProviderCacheKey } from "@/schema/ProviderCache";
+import { DocumentSource } from "@/services/DocumentSource";
+import { Parser } from "@/services/Parser";
+import indexFixture from "../fixtures/f1/index.json";
+import manifestFixture from "../fixtures/w1.manifest.json";
 // @vitest-environment node
 
 import {
@@ -30,7 +54,13 @@ import { ChunkerLive } from "@/layers/ChunkerLive";
 import { HostedExtractorLive, PatternExtractorLive } from "@/layers/ExtractorLive";
 import { ActiveModelIdentityLive } from "@/layers/LanguageModelLive";
 import { FixtureDeclaration, Origin, SourceDocument } from "@/schema/Document";
-import { ClaimBody, EvidenceBatch, FrozenRelationPredicate, RelationExtractionCandidate } from "@/schema/Evidence";
+import {
+  ClaimBody,
+  EvidenceBatch,
+  ExtractOutcome,
+  FrozenRelationPredicate,
+  RelationExtractionCandidate,
+} from "@/schema/Evidence";
 import { DocumentId, ProvenanceEventId } from "@/schema/Ids";
 import { ParseOutcome } from "@/schema/Text";
 import { Canonicalizer } from "@/services/Canonicalizer";
@@ -39,9 +69,9 @@ import { Chunker } from "@/services/Chunker";
 const decodeRelationExtractionCandidateResult = S.decodeResult(RelationExtractionCandidate);
 
 import { it } from "@beep/test-runner";
-import { provideScopedLayer } from "@beep/test-utils";
-import { describe, expect } from "@effect/vitest";
-import { assertFalse, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
+import { fcRuns, provideScopedLayer } from "@beep/test-utils";
+import { describe, expect, vi } from "@effect/vitest";
+import { assertFalse, assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import { constant, pipe } from "effect/Function";
 import * as Str from "effect/String";
 import { HostedExtractor, PatternExtractor } from "@/services/Extractor";
@@ -490,4 +520,216 @@ describe("C0 pattern extractor", () => {
       );
     });
   }
+});
+
+const PreviewResponseJson = S.fromJsonString(S.Struct({ extractions: S.Array(ExtractionCandidate) }));
+const encodePreviewResponse = S.encodeEffect(PreviewResponseJson);
+const PreviewTailArbitrary = Arbitrary.schema(ExtractionCandidate);
+
+describe("relation preview replay cap", () => {
+  it.layer(Layer.merge(baseLayer, Digest.layerWebCrypto), { timeout: "30 seconds" })((it) => {
+    it.effect.prop(
+      "preserves schema-derived parsed candidate fields in the over-cap residual",
+      { tail: PreviewTailArbitrary },
+      ({ tail }) =>
+        Effect.gen(function* () {
+          const { canonical } = yield* makeCanonical("Ada knows Bob.");
+          const prefix = A.makeBy(256, () => ExtractionCandidate.make({ label: "person", text: "Bob" }));
+          const response = yield* encodePreviewResponse({ extractions: A.append(prefix, tail) });
+          const parsed = yield* parseModelOutput(response);
+          const original = A.getUnsafe(parsed, 256);
+          const h = yield* replayRelationHandoff(canonical, response, model);
+          expect(h.candidateCount).toBe(257);
+          const residual = A.filter(h.residual, (candidate) => candidate.candidate === 256);
+          expect(residual).toHaveLength(1);
+          const { anchor, ...fields } = A.getUnsafe(residual, 0);
+          assertNone(anchor);
+          expect(fields).toEqual({
+            ...original,
+            candidate: 256,
+            alignment: "unaligned",
+            reason: "over-extraction-cap",
+          });
+        }),
+      { arbitrary: fcRuns(25) }
+    );
+    it.effect(
+      "preserves all 257 parsed candidates and the unattempted tail",
+      Effect.fnUntraced(function* () {
+        const { canonical } = yield* makeCanonical("Ada knows Bob.");
+        const raw = A.makeBy(257, (index) =>
+          ExtractionCandidate.make({
+            label: index === 256 ? "tail-label" : "person",
+            text: "Bob",
+            attributes: O.some({ index: `${index}` }),
+          })
+        );
+        const response = yield* encodePreviewResponse({ extractions: raw });
+        const h = yield* replayRelationHandoff(canonical, response, model);
+        expect(h.candidateCount).toBe(257);
+        expect(A.length(A.appendAll(h.readings.pipe(HashMap.toValues, A.flatten), h.residual))).toBe(257);
+        const { anchor, ...tail } = A.getUnsafe(h.residual, h.residual.length - 1);
+        assertNone(anchor);
+        expect(tail).toEqual({
+          ...A.getUnsafe(raw, 256),
+          candidate: 256,
+          reason: "over-extraction-cap",
+          alignment: "unaligned",
+        });
+      })
+    );
+  });
+});
+
+const decodePreviewCorpus = S.decodeUnknownEffect(CorpusManifest);
+const decodePreviewFixtures = S.decodeUnknownEffect(F1Index);
+const encodePreviewCases = S.encodeEffect(S.fromJsonString(RelationPreviewManifest));
+const encodePreviewCache = S.encodeEffect(S.fromJsonString(ProviderCacheEntry));
+const previewOptions = RelationPreviewOptions.make({ cases: "cases", manifest: "manifest" });
+const replayPreview = Effect.fn("ExtractorTest.replayPreview")(function* (scenario: string) {
+  const manifest = yield* decodePreviewCorpus(manifestFixture);
+  const fixtures = yield* decodePreviewFixtures(indexFixture);
+  const paperId = CorpusPaperId.make("06c93f91ef3d");
+  const response =
+    scenario === "response-invalid"
+      ? "bad response"
+      : scenario === "floor"
+        ? '{"extractions":[]}'
+        : '{"extractions":[{"label":"relation","text":"Ada knows Bob.","attributes":{"subject":"Ada","object":"Bob","predicate":"shows"}}]}';
+  const key = ProviderCacheKey.make({
+    inputDigest: sha256TextSync("preview-test"),
+    model: scenario === "grounding" ? ModelIdentity.make({ ...model, name: "degraded-preview" }) : model,
+    requestKind: "generate-text",
+    schemaVersion: "provider-cache/v1",
+  });
+  const cacheKey = Result.getOrThrow(contentDigestSync(ProviderCacheKey)(key));
+  const entry = ProviderCacheEntry.make({ key, cacheKey, response, responseDigest: sha256TextSync(response) });
+  const cache = yield* encodePreviewCache(entry);
+  const cases = yield* encodePreviewCases(
+    RelationPreviewManifest.make({
+      cases: [{ paperId, cacheDigest: scenario === "cache-key" ? Sha256Hex.make(Str.repeat(64)("0")) : cacheKey }],
+    })
+  );
+  const noop = FileSystem.makeNoop({});
+  const fs = FileSystem.makeNoop({
+    readFileString: (path) => {
+      if (scenario === "cases-unavailable" || (path !== "cases" && scenario === "cache-unavailable"))
+        return noop.readFileString(path);
+      return Effect.succeed(
+        path === "cases"
+          ? scenario === "cases-invalid"
+            ? "bad json"
+            : cases
+          : scenario === "cache-invalid"
+            ? "bad json"
+            : cache
+      );
+    },
+  });
+  const selected = SourceDocument.make({
+    ...document,
+    origin: Origin.cases.W1Paper.make({ corpusId: "synthetic", paperId, relativePath: "synthetic.pdf" }),
+  });
+  const sourceFailure = DocumentUnavailable.make({ message: "synthetic unavailable" });
+  const source = DocumentSource.of({
+    list: Effect.fn("DocumentSource.list")(function* () {
+      if (scenario === "list") return yield* sourceFailure;
+      return scenario === "absent" ? [document] : [document, selected];
+    }),
+    read: Effect.fn("DocumentSource.read")(function* () {
+      if (scenario === "read") return yield* sourceFailure;
+      return new Uint8Array();
+    }),
+  });
+  const parser = Parser.of({
+    parse: Effect.fn("Parser.parse")(() =>
+      Effect.succeed(
+        scenario === "parse"
+          ? ParseOutcome.cases.Degraded.make({ document: document.id, kind: "truncated", detail: "synthetic degraded" })
+          : ParseOutcome.cases.Parsed.make({
+              document: document.id,
+              text: "Ada knows Bob.",
+              extractor: SourceTextExtractor.make({ name: "synthetic", version: "1" }),
+            })
+      )
+    ),
+  });
+  const builder = CorpusManifestBuilder.of({
+    build: Effect.succeed(manifest),
+    load: Effect.fn("CorpusManifestBuilder.load")(() => Effect.succeed(manifest)),
+    check: Effect.fn("CorpusManifestBuilder.check")(function* () {
+      if (scenario === "manifest")
+        return yield* ManifestDecodeFailed.make({ message: "synthetic manifest failure", manifestPath: "manifest" });
+      return manifest;
+    }),
+  });
+  return yield* runRelationPreview(previewOptions).pipe(
+    Effect.provideService(FileSystem.FileSystem, fs),
+    Effect.provideService(DocumentSource, source),
+    Effect.provideService(Parser, parser),
+    Effect.provideService(CorpusManifestBuilder, builder),
+    Effect.provideService(F1Catalog, F1Catalog.of({ load: Effect.succeed(fixtures) }))
+  );
+});
+
+describe("relation preview boundaries", () => {
+  const config = LabConfigLive.pipe(Layer.provide(ConfigProvider.layer(ConfigProvider.fromEnv({ env: {} }))));
+  it.layer(Layer.mergeAll(baseLayer, Digest.layerWebCrypto, Path.layer, config), { timeout: "30 seconds" })((it) => {
+    it.effect(
+      "reports grounded replay counts",
+      Effect.fnUntraced(function* () {
+        const report = yield* replayPreview("success");
+        expect(report.groundedRelations).toBe(1);
+        expect(report.cases[0]?.candidateCount).toBe(1);
+      })
+    );
+    it.effect(
+      "refuses a typed degradation returned by grounding",
+      Effect.fnUntraced(function* () {
+        const original = ExtractorLive.groundHostedHandoff;
+        const grounding = vi.spyOn(ExtractorLive, "groundHostedHandoff").mockImplementation((...args) =>
+          args[4].name === "degraded-preview"
+            ? Effect.succeed(
+                ExtractOutcome.cases.Degraded.make({
+                  document: document.id,
+                  lane: "hosted",
+                  kind: "model-output-invalid",
+                  detail: "synthetic degradation",
+                })
+              )
+            : original(...args)
+        );
+        try {
+          const error = yield* replayPreview("grounding").pipe(Effect.flip);
+          expect(error._tag).toBe("RelationPreviewFailed");
+          if (error._tag === "RelationPreviewFailed") expect(error.reason).toBe("response-invalid");
+        } finally {
+          grounding.mockRestore();
+        }
+      })
+    );
+    it.effect(
+      "refuses unavailable, invalid, ungrounded and degraded replay inputs",
+      Effect.fnUntraced(function* () {
+        for (const [scenario, reason] of [
+          ["cases-unavailable", "manifest-invalid"],
+          ["cases-invalid", "manifest-invalid"],
+          ["cache-unavailable", "cache-unavailable"],
+          ["cache-invalid", "cache-invalid"],
+          ["cache-key", "cache-invalid"],
+          ["manifest", "manifest-invalid"],
+          ["list", "source-unavailable"],
+          ["absent", "source-unavailable"],
+          ["read", "source-unavailable"],
+          ["parse", "parse-degraded"],
+          ["response-invalid", "response-invalid"],
+          ["floor", "preview-floor-not-met"],
+        ] as const) {
+          const error = yield* replayPreview(scenario).pipe(Effect.flip);
+          expect(error._tag).toBe("RelationPreviewFailed");
+          if (error._tag === "RelationPreviewFailed") expect(error.reason).toBe(reason);
+        }
+      })
+    );
+  });
 });
