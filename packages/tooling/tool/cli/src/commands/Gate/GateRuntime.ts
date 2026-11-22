@@ -360,6 +360,35 @@ export const captureRun = Effect.fn("Gate.captureRun")(function* (input: {
 });
 
 /**
+ * The size of a stored record's raw log, or none when the log is absent.
+ *
+ * **Example** (Read a package record's log size)
+ *
+ * ```ts
+ * import { storedLogBytes } from "@beep/repo-cli/commands/Gate"
+ * import { RecordTarget } from "@beep/repo-gate-record/GatePaths"
+ * import * as Effect from "effect/Effect"
+ *
+ * const target = RecordTarget.cases.PackageTarget.make({ packageDir: "packages/a", gate: "test" })
+ * console.log(Effect.isEffect(storedLogBytes("/repo", target))) // true
+ * ```
+ *
+ * @param repoRoot - The repository root.
+ * @param target - Whose record.
+ * @returns The log's size in bytes, or none.
+ * @category use-cases
+ * @since 0.0.0
+ */
+export const storedLogBytes = Effect.fn("Gate.storedLogBytes")(function* (repoRoot: string, target: RecordTarget) {
+  const fs = yield* FileSystem.FileSystem;
+  const path = yield* Path.Path;
+  return yield* fs.stat(path.join(repoRoot, recordLocation(target).log)).pipe(
+    Effect.map((info) => Number(info.size)),
+    Effect.option
+  );
+});
+
+/**
  * Print the console of a stored record: read it back, name its record and
  * raw log with the log's size, and render it for the settings.
  *
@@ -387,15 +416,10 @@ export const renderStoredRecord = Effect.fn("Gate.renderStoredRecord")(function*
   target: RecordTarget,
   settings: ConsoleSettings
 ) {
-  const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const store = yield* GateRecordStore.make(repoRoot);
   const record: GateRecord = yield* store.readRecord(target);
   const location = recordLocation(target);
-  const logBytes = yield* fs.stat(path.join(repoRoot, location.log)).pipe(
-    Effect.map((info) => Number(info.size)),
-    Effect.option
-  );
+  const logBytes = yield* storedLogBytes(repoRoot, target);
   const output = makeGateConsole(settings).render(
     ConsoleRequest.make({
       report: record.report,

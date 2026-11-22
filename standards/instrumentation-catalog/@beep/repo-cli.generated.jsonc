@@ -1868,6 +1868,7 @@
     {"name":"Gate.showItemLines","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Gate.showRunLines","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Gate.showSeriesLines","owner":"@beep/repo-cli","family":"tooling","conforms":true},
+    {"name":"Gate.storedLogBytes","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"GhCommand.ghOutput","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"GhOps.reassertProvenanceFooterAsGhLogin","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"GhOps.recordMonitoredPrSessionAsGhLogin","owner":"@beep/repo-cli","family":"tooling","conforms":true},

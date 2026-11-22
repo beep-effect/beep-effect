@@ -45,6 +45,7 @@ import * as Order from "effect/Order";
 import * as Path from "effect/Path";
 import * as S from "effect/Schema";
 import * as Str from "effect/String";
+import { storedLogBytes } from "../Gate/GateRuntime.ts";
 import { CiCommandError, reportCiCommandError } from "./Ci.errors.ts";
 import { HostedTaskOutcome, RouteTaskOutcome } from "./Route.schemas.ts";
 
@@ -388,7 +389,6 @@ const byRecordPath = Order.mapInput(Order.String, (target: RecordTarget) => reco
  */
 export const findJobGateRecords = Effect.fn("CiTaskOutcomes.findJobGateRecords")(function* (repoRoot: string) {
   const fs = yield* FileSystem.FileSystem;
-  const path = yield* Path.Path;
   const found = yield* Effect.all(
     [
       fs.glob(`**/${GATES_DIR}/*/report.json`, { root: repoRoot, exclude: ["**/node_modules/**"] }),
@@ -405,10 +405,7 @@ export const findJobGateRecords = Effect.fn("CiTaskOutcomes.findJobGateRecords")
       const record = yield* store
         .readRecord(target)
         .pipe(CiCommandError.mapError(`${location.record} is not a readable gate-report/v1 record.`));
-      const logBytes = yield* fs.stat(path.join(repoRoot, location.log)).pipe(
-        Effect.map((info) => Number(info.size)),
-        Effect.option
-      );
+      const logBytes = yield* storedLogBytes(repoRoot, target);
       return JobGateRecord.make({ target, report: record.report, logBytes });
     }),
     { concurrency: 1 }
