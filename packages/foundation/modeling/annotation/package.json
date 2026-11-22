@@ -66,6 +66,7 @@
   "dependencies": {
     "@beep/identity": "workspace:^",
     "@beep/jsonc": "workspace:^",
+    "@beep/rdf": "workspace:^",
     "@beep/schema": "workspace:^",
     "@beep/text": "workspace:^",
     "effect": "catalog:"

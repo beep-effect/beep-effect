@@ -13,6 +13,7 @@ import {
   DocumentKinds,
   Figure,
   Mention,
+  OaDocument,
   Paragraph,
   RelationCandidate,
   Section,
@@ -21,9 +22,19 @@ import {
   Title,
   Word,
 } from "@beep/annotation/Kinds";
+import { restrictToOa } from "@beep/annotation/Restrict";
+import {
+  ImportActivityPreimage,
+  ImportedActivity,
+  ImportedActivityPreimage,
+  instanceIri,
+} from "@beep/annotation/rdf/OaCodec";
+import { IRI } from "@beep/identity/Iri";
 import { iri } from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
+import * as Rdf from "@beep/rdf/Rdf";
 import { ActivityId } from "@beep/schema/ContentHash";
+import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
 import { anchoredOn, rangeIn, scalarRangeIn, sourceFor, wellFormedTextWith } from "@beep/text/Arbitrary";
 import { OccurrenceId, OccurrencePreimage } from "@beep/text/Occurrence";
 import * as Arbitrary from "effect/Arbitrary";
@@ -37,9 +48,11 @@ import * as Order from "effect/Order";
 import * as R from "effect/Record";
 import * as Result from "effect/Result";
 import * as S from "effect/Schema";
+import * as Str from "effect/String";
 import type { Annotation, KindName, KindRegistry } from "@beep/annotation/Kind";
 import type { JsoncDigest } from "@beep/jsonc/JsoncFingerprint";
 import type { Anchored } from "@beep/text/Occurrence";
+import type { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 
 // A synchronous SHA-256 from the platform, the digest the preimages' Result twins take.
 const { createHash } = process.getBuiltinModule("node:crypto");
@@ -490,3 +503,330 @@ export const kindSetCase: Arbitrary.Arbitrary<HashSet.HashSet<DocumentKindName>>
 /** A kind set of the text document from its names. */
 export const kindSet = (...names: ReadonlyArray<DocumentKindName>): HashSet.HashSet<DocumentKindName> =>
   HashSet.fromIterable(names);
+
+/** One generated OA document with its imported activities, the text its anchors slice and its import digest. */
+export type GeneratedOaDocument = {
+  readonly text: string;
+  readonly document: OaDocument;
+  readonly importedActivities: HashMap.HashMap<ActivityId, ImportedActivity>;
+  readonly sourceDigest: Sha256PrefixedDigest;
+};
+
+const activityHex = (activity: ActivityId): string => Str.slice(7, 23)(activity);
+
+// How one activity of a generated document is written: natively, or as one of the three imported forms.
+const importedForms: A.NonEmptyReadonlyArray<(activity: ActivityId) => O.Option<ImportedActivity>> = [
+  () => O.none(),
+  (activity) =>
+    ImportedActivity.cases.Activity.makeOption({
+      iri: IRI.make(`https://example.org/activity/${activityHex(activity)}`),
+    }),
+  (activity) =>
+    ImportedActivity.cases.Creator.makeOption({
+      agent: IRI.make(`https://example.org/agent/${activityHex(activity)}`),
+    }),
+  (activity) =>
+    ImportedActivity.cases.Generator.makeOption({
+      agent: IRI.make(`https://example.org/software/${activityHex(activity)}`),
+    }),
+];
+
+/** The id of an imported activity, through the `imported-activity/v1` twin. */
+export const importedActivityIdOf = (activity: ImportedActivity): ActivityId =>
+  ActivityId.make(Result.getOrThrow(ImportedActivityPreimage.mintResult(sha256)([activity])));
+
+/** The id of the import activity of a source digest, through the `import-activity/v1` twin. */
+export const importActivityIdOf = (sourceDigest: Sha256PrefixedDigest): ActivityId =>
+  ActivityId.make(Result.getOrThrow(ImportActivityPreimage.mintResult(sha256)([sourceDigest])));
+
+/**
+ * Generated OA documents: a generated text document narrowed by `restrictToOa`, so every anchors row is a target,
+ * its activities rewritten to drawn native or imported forms, and drawn annotations given an import generation beside
+ * their others. Each imported activity is keyed by its `imported-activity/v1` id and named from the activity it
+ * replaces, so two activities stay two; time stays one per (content, activity).
+ */
+export const oaDocumentCase: Arbitrary.Arbitrary<GeneratedOaDocument> = Arbitrary.flatMap(
+  documentCase,
+  ({ text, document }) =>
+    Arbitrary.map(
+      Arbitrary.all({
+        forms: nonEmptyArray(between(0, importedForms.length - 1), 3),
+        withImport: nonEmptyArray(Arbitrary.schema(S.Boolean), 8),
+        importAt: statedTime,
+        digestSeed: label,
+      }),
+      (drawn) => {
+        const restricted = restrictToOa(document);
+        const sourceDigest = Sha256PrefixedDigest.make(hashOf(`import:${drawn.digestSeed}`));
+        const importActivity = importActivityIdOf(sourceDigest);
+        const activities = A.sort(
+          A.dedupe(
+            A.flatMap(restricted.attribution.pipe(HashMap.values, A.fromIterable), (generations) =>
+              A.map(A.fromIterable(generations), ({ activity }) => activity)
+            )
+          ),
+          Order.String
+        );
+        const replaced = A.map(activities, (activity, index) => {
+          const imported = at(importedForms, at(drawn.forms, index))(activity);
+          return {
+            from: activity,
+            to: O.match(imported, { onNone: () => activity, onSome: importedActivityIdOf }),
+            imported,
+          };
+        });
+        const renamed = (activity: ActivityId): ActivityId =>
+          A.findFirst(replaced, ({ from }) => from === activity).pipe(
+            O.map(({ to }) => to),
+            O.getOrElse(() => activity)
+          );
+        const contents = A.sort(restricted.attribution.pipe(HashMap.keys, A.fromIterable), Order.String);
+        const attribution = HashMap.map(restricted.attribution, (generations, content) => {
+          const index = A.findFirstIndex(contents, (key) => key === content).pipe(O.getOrElse(() => 0));
+          const rewritten = A.map(A.fromIterable(generations), (generation) =>
+            generationOf({ content, activity: renamed(generation.activity), at: generation.at })
+          );
+          return HashSet.fromIterable(
+            at(drawn.withImport, index)
+              ? A.append(rewritten, generationOf({ content, activity: importActivity, at: drawn.importAt }))
+              : rewritten
+          );
+        });
+        return {
+          text,
+          sourceDigest,
+          importedActivities: HashMap.fromIterable(
+            A.flatMap(replaced, ({ to, imported }) =>
+              A.map(A.fromOption(imported), (activity) => [to, activity] as const)
+            )
+          ),
+          document: OaDocument.make({ ...restricted, attribution }),
+        };
+      }
+    )
+);
+
+/** The source IRI the generated and fixture OA input is over. */
+export const oaSource = IRI.make("https://example.org/source");
+
+const otherSource = "https://example.org/other";
+
+const rdfType = iri("rdf:type");
+
+const rdfNode = (value: string): Rdf.NamedNode => Rdf.makeNamedNode(value);
+
+const xsd = { integer: iri("xsd:integer"), string: iri("xsd:string"), dateTime: iri("xsd:dateTime") };
+
+/** The quad builders of the generated and fixture OA input. */
+export const oaQuads = {
+  named: rdfNode,
+  blank: (label: string): Rdf.BlankNode => Rdf.makeBlankNode(label),
+  quad: (subject: Rdf.Subject, predicate: string, object: Rdf.ObjectTerm): Rdf.Quad =>
+    Rdf.makeQuad(subject, rdfNode(predicate), object),
+  type: (subject: Rdf.Subject, klass: string): Rdf.Quad => Rdf.makeQuad(subject, rdfNode(rdfType), rdfNode(klass)),
+  integer: (value: number): Rdf.Literal => Rdf.makeLiteral(`${value}`, xsd.integer),
+  string: (value: string): Rdf.Literal => Rdf.makeLiteral(value, xsd.string),
+  time: (millis: number): Rdf.Literal => Rdf.makeLiteral(DateTime.formatIso(DateTime.makeUnsafe(millis)), xsd.dateTime),
+};
+
+const Q = oaQuads;
+
+/** A target as third-party input writes it: its code-point range, its UTF-16 range and how its selectors look. */
+type InputTarget = {
+  readonly node: Rdf.Subject;
+  readonly points: { readonly start: number; readonly end: number };
+  readonly units: { readonly start: number; readonly end: number };
+  readonly prefixFrom: number;
+  readonly style: number;
+  readonly source: string;
+};
+
+// The selectors of one target: both, position only, quote only, or a quote with its prefix.
+const targetQuads = (text: string, target: InputTarget, label: string): ReadonlyArray<Rdf.Quad> => {
+  const position = Q.blank(`${label}p`);
+  const quote = Q.blank(`${label}q`);
+  const exact = Str.slice(target.units.start, target.units.end)(text);
+  const positionQuads = [
+    Q.quad(target.node, iri("oa:hasSelector"), position),
+    Q.type(position, iri("oa:TextPositionSelector")),
+    Q.quad(position, iri("oa:start"), Q.integer(target.points.start)),
+    Q.quad(position, iri("oa:end"), Q.integer(target.points.end)),
+  ];
+  const quoteQuads = [
+    Q.quad(target.node, iri("oa:hasSelector"), quote),
+    Q.type(quote, iri("oa:TextQuoteSelector")),
+    Q.quad(quote, iri("oa:exact"), Q.string(exact)),
+  ];
+  const prefix = Str.slice(target.prefixFrom, target.units.start)(text);
+  const styles: A.NonEmptyReadonlyArray<ReadonlyArray<Rdf.Quad>> = [
+    [...positionQuads, ...quoteQuads],
+    positionQuads,
+    quoteQuads,
+    Str.isEmpty(prefix) ? quoteQuads : [...quoteQuads, Q.quad(quote, iri("oa:prefix"), Q.string(prefix))],
+  ];
+  return [
+    Q.type(target.node, iri("oa:SpecificResource")),
+    Q.quad(target.node, iri("oa:hasSource"), Q.named(target.source)),
+    ...at(styles, target.style),
+  ];
+};
+
+const kindIris: A.NonEmptyReadonlyArray<O.Option<string>> = [
+  O.some(iri("annotation:Mention")),
+  O.some(iri("annotation:Title")),
+  O.some(iri("annotation:Paragraph")),
+  O.some(iri("annotation:Sentence")),
+  O.some(iri("annotation:Word")),
+  O.some(iri("annotation:Section")),
+  O.none(),
+];
+
+const instants: A.NonEmptyReadonlyArray<number> = [1_763_510_400_000, 1_763_510_401_000];
+
+/** One generated third-party OA dataset over one generated text and its capture. */
+export type GeneratedOaInput = {
+  readonly text: string;
+  readonly source: SourceTextIdentity;
+  readonly dataset: Rdf.Dataset;
+};
+
+const inputAnnotation = Arbitrary.all({
+  blank: Arbitrary.schema(S.Boolean),
+  kind: between(0, kindIris.length - 1),
+  klass: pick,
+  body: between(0, 9),
+  targets: nonEmptyArray(
+    Arbitrary.all({ blank: Arbitrary.schema(S.Boolean), style: between(0, 3), other: between(0, 19), range: pick }),
+    2
+  ),
+  attribution: between(0, 6),
+  agent: between(0, 2),
+  ownTime: between(0, 3),
+  runTime: between(0, 2),
+  copy: between(0, 3),
+  extra: between(0, 3),
+});
+
+type InputAnnotation = typeof inputAnnotation extends Arbitrary.Arbitrary<infer Draw> ? Draw : never;
+
+/**
+ * Generated third-party OA input over a generated text: zero to four annotations with blank or IRI subjects and
+ * targets, every kind and an unknown or missing one, spurious and missing bodies, position-only, quote-only and
+ * prefixed selectors, targets on another source, every attribution form (none, annotation-level and run-level
+ * activities, creators and generators, two creators on two runs at two times, an instance-form native activity),
+ * stated and conflicting times, annotations that repeat an earlier one's content, NIF triples, a triple outside the
+ * profile and a quad in a named graph. Every draw is a dataset the law covers; nothing is filtered.
+ */
+export const oaInputCase: Arbitrary.Arbitrary<GeneratedOaInput> = Arbitrary.flatMap(
+  wellFormedTextWith({ minLength: 1, maxLength: 24 }),
+  (generated) =>
+    Arbitrary.map(
+      Arbitrary.all({
+        source: sourceFor(sha256)(generated.text),
+        ranges: nonEmptyArray(scalarRangeIn(generated.codePoints.length), 4),
+        annotations: Arbitrary.array(inputAnnotation, { maxLength: 4 }),
+      }),
+      (drawn) => {
+        const points = generated.boundaries["unicode-code-point"];
+        const units = generated.boundaries["utf16-code-unit"];
+        const quadsOf = (
+          annotation: InputAnnotation,
+          index: number,
+          shape: InputAnnotation
+        ): ReadonlyArray<Rdf.Quad> => {
+          const subject = annotation.blank ? Q.blank(`a${index}`) : Q.named(`https://example.org/annotation/${index}`);
+          const kind = at(kindIris, shape.kind);
+          const targets = A.map(shape.targets, (target, position): InputTarget => {
+            const range = at(drawn.ranges, target.range);
+            return {
+              node: target.blank
+                ? Q.blank(`t${index}x${position}`)
+                : Q.named(`https://example.org/target/${index}/${position}`),
+              points: rangeIn(points)(range),
+              units: rangeIn(units)(range),
+              prefixFrom: A.getUnsafe(units, Math.max(0, range.first - 2)),
+              style: target.style,
+              source: target.other === 0 ? otherSource : oaSource,
+            };
+          });
+          const isMention = O.contains(kind, iri("annotation:Mention"));
+          const body = isMention
+            ? shape.body === 0
+              ? [Q.quad(subject, iri("oa:hasBody"), Q.string("not a class"))]
+              : [Q.quad(subject, iri("oa:hasBody"), Q.named(at(mentionClasses, shape.klass)))]
+            : shape.body === 0
+              ? [Q.quad(subject, iri("oa:hasBody"), Q.named(at(mentionClasses, shape.klass)))]
+              : [];
+          const activity = Q.named(`https://example.org/activity/${annotation.agent}`);
+          const run = Q.blank(`r${index}`);
+          const second = Q.blank(`r${index}b`);
+          const runTime = A.map(A.take(instants, annotation.runTime), (millis) =>
+            Q.quad(run, iri("prov:generatedAtTime"), Q.time(millis))
+          );
+          const attributions: A.NonEmptyReadonlyArray<ReadonlyArray<Rdf.Quad>> = [
+            [],
+            [Q.quad(subject, iri("prov:wasGeneratedBy"), activity), Q.type(activity, iri("prov:Activity"))],
+            [Q.quad(subject, iri("dcterms:creator"), Q.named(`https://example.org/agent/${annotation.agent}`))],
+            [Q.quad(subject, iri("as:generator"), Q.named(`https://example.org/software/${annotation.agent}`))],
+            [
+              Q.quad(run, iri("prov:specializationOf"), subject),
+              Q.quad(run, iri("prov:wasGeneratedBy"), activity),
+              ...runTime,
+            ],
+            [
+              Q.quad(run, iri("prov:specializationOf"), subject),
+              Q.quad(run, iri("dcterms:creator"), Q.named("https://example.org/agent/0")),
+              Q.quad(run, iri("prov:generatedAtTime"), Q.time(A.headNonEmpty(instants))),
+              Q.quad(second, iri("prov:specializationOf"), subject),
+              Q.quad(second, iri("dcterms:creator"), Q.named("https://example.org/agent/1")),
+              Q.quad(second, iri("prov:generatedAtTime"), Q.time(A.lastNonEmpty(instants))),
+            ],
+            [Q.quad(subject, iri("prov:wasGeneratedBy"), Q.named(instanceIri(activityIdOf(`${annotation.agent}`))))],
+          ];
+          const ownTimes: A.NonEmptyReadonlyArray<ReadonlyArray<Rdf.Quad>> = [
+            [],
+            [Q.quad(subject, iri("prov:generatedAtTime"), Q.time(A.headNonEmpty(instants)))],
+            [Q.quad(subject, iri("dcterms:created"), Q.time(A.lastNonEmpty(instants)))],
+            A.map(instants, (millis) => Q.quad(subject, iri("prov:generatedAtTime"), Q.time(millis))),
+          ];
+          const first = A.headNonEmpty(targets);
+          const extras: A.NonEmptyReadonlyArray<ReadonlyArray<Rdf.Quad>> = [
+            [],
+            [
+              Q.type(first.node, iri("nif:Sentence")),
+              Q.quad(first.node, iri("nif:beginIndex"), Q.integer(first.points.start)),
+            ],
+            [Q.quad(subject, "https://example.org/vocab/note", Q.string("outside the profile"))],
+            [
+              Rdf.makeQuad(
+                subject,
+                rdfNode(rdfType),
+                Rdf.MakeQuadOptionsInput.make({
+                  object: rdfNode(iri("oa:Annotation")),
+                  graph: Q.named("https://example.org/graph"),
+                })
+              ),
+            ],
+          ];
+          return [
+            Q.type(subject, iri("oa:Annotation")),
+            ...A.map(A.fromOption(kind), (klass) => Q.type(subject, klass)),
+            ...body,
+            ...A.flatMap(targets, (target, position) => [
+              Q.quad(subject, iri("oa:hasTarget"), target.node),
+              ...targetQuads(generated.text, target, `s${index}x${position}`),
+            ]),
+            ...at(attributions, annotation.attribution),
+            ...at(ownTimes, annotation.ownTime),
+            ...at(extras, annotation.extra),
+          ];
+        };
+        // A drawn copy repeats the previous annotation's kind, body and targets under its own subject and attribution.
+        const quads = A.flatMap(drawn.annotations, (annotation, index) => {
+          const shape = annotation.copy === 0 && index > 0 ? A.getUnsafe(drawn.annotations, index - 1) : annotation;
+          return quadsOf(annotation, index, shape);
+        });
+        return { text: generated.text, source: drawn.source, dataset: Rdf.makeDataset(quads) };
+      }
+    )
+);

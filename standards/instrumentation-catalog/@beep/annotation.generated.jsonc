@@ -10,6 +10,9 @@
     {"name":"AnnotationDocument.assemble","owner":"@beep/annotation","family":"foundation","conforms":true},
     {"name":"AnnotationDocument.decodeChecked","owner":"@beep/annotation","family":"foundation","conforms":true},
     {"name":"AnnotationDocument.encode","owner":"@beep/annotation","family":"foundation","conforms":true},
-    {"name":"Generation.mintRun","owner":"@beep/annotation","family":"foundation","conforms":true}
+    {"name":"Generation.mintRun","owner":"@beep/annotation","family":"foundation","conforms":true},
+    {"name":"ImportActivity.mint","owner":"@beep/annotation","family":"foundation","conforms":true},
+    {"name":"ImportedActivity.mint","owner":"@beep/annotation","family":"foundation","conforms":true},
+    {"name":"OaCodec.decode","owner":"@beep/annotation","family":"foundation","conforms":true}
   ]
 }

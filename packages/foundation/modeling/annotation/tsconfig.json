@@ -15,6 +15,9 @@
       "path": "../jsonc/tsconfig.json"
     },
     {
+      "path": "../rdf/tsconfig.json"
+    },
+    {
       "path": "../schema/tsconfig.json"
     },
     {

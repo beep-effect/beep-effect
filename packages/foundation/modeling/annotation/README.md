@@ -18,7 +18,7 @@ per activity. Every arrow is pure or needs only core's `Digest.Digest`; the pack
 Each claim below is a row of the law-test plan,
 [`law-test-plan.md`](../../../../goals/text-knowledge-stack-rebuild/research/law-test-plan.md), and a test titled
 with the row id under `test/`. Rows `L2-2` and `L2-3` cover the ids, kinds and checked codec; `L2-1`, `L2-4`
-and `L2-5` cover merge, restriction and containment; `L2-6` lands with the OA codec subpath.
+and `L2-5` cover merge, restriction and containment; `L2-6` covers the OA codec subpath.
 
 | Claim | Ledger row | Test |
 | --- | --- | --- |
@@ -27,7 +27,7 @@ and `L2-5` cover merge, restriction and containment; `L2-6` lands with the OA co
 | Merge over one capture is idempotent, commutative and associative, and unions attribution. | `L2-1` | `test/AnnotationDocument.merge.laws.test.ts` |
 | Targets and body references resolve after merge and restriction; the checked decode refuses a forged key. | `L2-4` | `test/AnnotationDocument.integrity.laws.test.ts` |
 | Containment is a strict order with a level tie-break on equal spans. | `L2-5` | `test/Containment.laws.test.ts` |
-| The OA and NIF codec round-trips the declared profile and normalizes third-party input. | `L2-6` | `test/rdf/OaCodec.laws.test.ts` |
+| The OA and NIF codec round-trips the declared profile, normalizes third-party input, writes code-point offsets and preserves `resolve`. | `L2-6` | `test/rdf/OaCodec.laws.test.ts` |
 
 ## Canonical imports
 
@@ -40,6 +40,12 @@ import { merge } from "@beep/annotation/Merge"
 import { restrict, restrictToOa } from "@beep/annotation/Restrict"
 ```
 
+The OA and NIF adapter is its own subpath, so the base package never loads `@beep/rdf`:
+
+```ts
+import { decodeOa, encodeOa, normalize } from "@beep/annotation/rdf/OaCodec"
+```
+
 `makeDocumentCodec({ schema, kinds })` is the only decode path for document JSON from the wire or storage: it refuses
 a repeated key, checks the document, and verifies every key against the hash of its value. Its `encode` writes one
 canonical JSON form per document, and its `assemble` mints every key from unkeyed parts.
@@ -47,6 +53,13 @@ canonical JSON form per document, and its `assemble` mints every key from unkeye
 `merge` unions two documents over one capture and refuses with the same value in either argument order;
 `restrict` keeps a kind set closed under body references and refuses an open one; `contains` is the strict
 containment order of the structure and segmentation kinds.
+
+`encodeOa` writes an `OaDocument` and its imported activities as a ground Web Annotation dataset, with code-point
+offsets and NIF for sentences and words. `decodeOa` reads third-party OA input over a verified text: it mints every key
+from content, rejects what the profile cannot take into a residual with a reason, and attributes unattributed
+annotations to the import activity. `normalize` is the profile projection of an input in the encoder's form, so
+`encodeOa(decodeOa(s))` and `normalize(s)` are one quad set (`L2-6`). `test/Annotation.import-boundary.test.ts` keeps
+`@beep/rdf` out of every module outside `src/rdf/`.
 
 ## Development
 

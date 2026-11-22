@@ -363,3 +363,16 @@ home paths with `~`, drop session and machine ids.
 - **Prevention:** compare Effect collections with `assertEquals` from `@effect/vitest/utils`, and
   have the effect-vitest lint flag `toEqual` whose operands carry a `HashMap` or `HashSet`; or
   register an `Equal.equals` tester in `@beep/test-runner` so `toEqual` means `Equal` for them.
+
+## 2026-11-22: `annotateKey` on an `S.Opaque` field drops the opaque type
+
+- **Doing:** P3 commit 6, the `OaImport` result schema of `@beep/annotation/rdf/OaCodec`, whose `document` field is the
+  caller-owned `OaDocument` and whose `residual` is `@beep/rdf`'s `Dataset`.
+- **Evidence:** with `document: OaDocument.annotateKey({ ... })` the field's decoded type became the bare struct, and
+  every caller that passed `result.document` on as an `OaDocument` failed with `Property 'brand' is missing in type
+  '{ readonly text: SourceTextIdentity; ... }' but required in type 'OaDocument'` (TS2741); the same held for
+  `Rdf.Dataset.annotateKey`. `annotateKey` rebuilds the schema from its AST, and an opaque class's rebuild is its
+  struct, so the `Self` type is lost. The source module type-checked; only the test that used the result failed.
+- **Prevention:** a lint or schema-first rule that flags `annotateKey` on an `S.Opaque` class used as a struct field,
+  or an `annotateKey` overload on opaque classes that keeps `Self`; until then, annotate the field's description on
+  the opaque class itself and leave the field unannotated.
