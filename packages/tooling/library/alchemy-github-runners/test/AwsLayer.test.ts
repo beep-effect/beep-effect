@@ -291,6 +291,8 @@ describe("live AWS layers over distilled", () => {
           new AwsErrors.ThrottlingException({ message: "Rate exceeded" }),
           new AwsErrors.ValidationException({ message: "Value too long" }),
           new AwsErrors.UnknownAwsError({ status: 400, code: "InvalidKeyId", message: "bad key", body: {} }),
+          // No status and no category: nothing says whether a resend can succeed, so it keeps the bounded retry path.
+          { _tag: "SomethingElse", message: "unreadable" },
         ],
         (error) => {
           const mapped = map(error);
@@ -303,6 +305,7 @@ describe("live AWS layers over distilled", () => {
       ["transient", "transient"],
       ["client", "deterministic"],
       ["client", "deterministic"],
+      ["unknown", "transient"],
     ]);
   });
 

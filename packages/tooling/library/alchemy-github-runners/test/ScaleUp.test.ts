@@ -6,6 +6,7 @@ import {
   FleetLaunchResult,
   GitHubApiError,
   handleScaleUp,
+  PoolRuntimeConfig,
   RunnerPool,
   sanitizeAllocationStrategy,
   toAwsApiError,
@@ -27,7 +28,6 @@ import * as Str from "effect/String";
 import * as TestClock from "effect/testing/TestClock";
 import { World, worldContext } from "./support/FakeWorld.ts";
 import { heavyPool, poolConfig, queued } from "./support/Fixtures.ts";
-import type { PoolRuntimeConfig } from "@beep/alchemy-github-runners";
 
 const run = Effect.fn("runScaleUp")(function* (
   world: World,
@@ -693,6 +693,15 @@ describe("handleScaleUp configure failures", () => {
     message: "Rate exceeded",
   });
 
+  const warnAnnotations = (lines: ReadonlyArray<{ readonly level: string; readonly annotations: unknown }>) =>
+    A.map(
+      A.filter(lines, (line) => line.level === "WARN"),
+      (line) => line.annotations as Readonly<Record<string, unknown>>
+    );
+
+  // A pool that registers with a token instead of a JIT config.
+  const registrationPool = RunnerPool.make({ ...heavyPool, jitConfig: false });
+
   const errorAnnotations = (lines: ReadonlyArray<{ readonly level: string; readonly annotations: unknown }>) =>
     A.map(
       A.filter(lines, (line) => line.level === "ERROR"),
@@ -731,6 +740,140 @@ describe("handleScaleUp configure failures", () => {
         ]).toStrictEqual([[], [buildDlqUrl], ["i-0001"], [1001]]);
         expect(A.map(errorAnnotations(lines), (annotations) => annotations.reason)).toStrictEqual(["no-retry-policy"]);
       })
+  );
+
+  it.effect("dead-letters a group whose runner-group lookup is refused, terminating each instance once", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.runnerGroupError = GitHubApiError.makeOption({
+        operation: "runnerGroupId",
+        status: O.some(404),
+        message: "Runner group beep-ec2-heavy does not exist",
+      });
+      const { retry, lines } = yield* runLogged(world, [queued({ id: 1 }), queued({ id: 2 })]);
+      expect([retry, world.cleanupCalls, world.deletedRunners]).toStrictEqual([
+        [],
+        ["terminate:i-0001", "terminate:i-0002"],
+        [],
+      ]);
+      expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([buildDlqUrl, buildDlqUrl]);
+      const dead = yield* Effect.forEach(world.sent, (sent) => decodeDeadLetter(sent.body), { concurrency: 1 });
+      expect(A.map(dead, (message) => message.id)).toStrictEqual([1, 2]);
+      expect(warnAnnotations(lines)).toStrictEqual([
+        {
+          instanceId: "i-0001",
+          operation: "resolveRunnerGroup",
+          failureClass: "deterministic",
+          status: 404,
+          code: null,
+          providerMessage: "Runner group beep-ec2-heavy does not exist",
+        },
+        {
+          instanceId: "i-0002",
+          operation: "resolveRunnerGroup",
+          failureClass: "deterministic",
+          status: 404,
+          code: null,
+          providerMessage: "Runner group beep-ec2-heavy does not exist",
+        },
+      ]);
+    })
+  );
+
+  it.effect("retries a group whose runner-group lookup answered 503, sending nothing to the DLQ", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.runnerGroupError = GitHubApiError.makeOption({
+        operation: "runnerGroupId",
+        status: O.some(503),
+        message: "unavailable",
+      });
+      const { retry, lines } = yield* runLogged(world, [queued({ id: 1 }), queued({ id: 2 })]);
+      expect([retry, world.cleanupCalls]).toStrictEqual([[], ["terminate:i-0001", "terminate:i-0002"]]);
+      expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([jobRetryUrl, jobRetryUrl]);
+      expect(
+        A.map(warnAnnotations(lines), (annotations) => [
+          annotations.instanceId,
+          annotations.operation,
+          annotations.failureClass,
+        ])
+      ).toStrictEqual([
+        ["i-0001", "resolveRunnerGroup", "transient"],
+        ["i-0002", "resolveRunnerGroup", "transient"],
+      ]);
+      expect(errorAnnotations(lines)).toStrictEqual([]);
+    })
+  );
+
+  it.effect("dead-letters a transient failure whose job-retry publish fails, naming the reason", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.putFailures = [["/beep-ci/heavy/tokens/", exhaustedThrottle]];
+      world.sendFailures = [jobRetryUrl];
+      const { retry, lines } = yield* runLogged(world, [queued({ id: 1 })]);
+      expect([retry, A.map(world.sent, (sent) => sent.queueUrl), world.terminated]).toStrictEqual([
+        [],
+        [buildDlqUrl],
+        ["i-0001"],
+      ]);
+      expect(
+        A.map(errorAnnotations(lines), (annotations) => [annotations.reason, annotations.deadLetter])
+      ).toStrictEqual([["retry-publish-failed", "sent"]]);
+    })
+  );
+
+  it.effect("acknowledges and only logs the same failure when the pool has no build DLQ", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.putFailures = [["/beep-ci/heavy/tokens/", exhaustedThrottle]];
+      world.sendFailures = [jobRetryUrl];
+      const config = PoolRuntimeConfig.make({ ...poolConfig(), buildDlqUrl: O.none() });
+      const { retry, lines } = yield* runLogged(world, [queued({ id: 1 })], config);
+      expect([retry, world.sent, world.terminated]).toStrictEqual([[], [], ["i-0001"]]);
+      expect(
+        A.map(errorAnnotations(lines), (annotations) => [annotations.reason, annotations.deadLetter])
+      ).toStrictEqual([["retry-publish-failed", "no-dlq"]]);
+    })
+  );
+
+  it.effect("dead-letters a registration pool whose token request is refused", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.registrationError = GitHubApiError.makeOption({
+        operation: "registrationToken",
+        status: O.some(403),
+        message: "Resource not accessible by integration",
+      });
+      const { retry, lines } = yield* runLogged(world, [queued({ id: 1 })], poolConfig(registrationPool));
+      expect([retry, world.puts, world.cleanupCalls]).toStrictEqual([[], [], ["terminate:i-0001"]]);
+      expect(A.map(world.sent, (sent) => sent.queueUrl)).toStrictEqual([buildDlqUrl]);
+      expect(
+        A.map(warnAnnotations(lines), (annotations) => [
+          annotations.operation,
+          annotations.failureClass,
+          annotations.status,
+        ])
+      ).toStrictEqual([["registrationToken", "deterministic", 403]]);
+    })
+  );
+
+  it.effect("masks the registration token a refused put echoes back, and deletes what landed", () =>
+    Effect.gen(function* () {
+      const world = new World();
+      world.putFailures = [
+        [
+          "/beep-ci/heavy/tokens/",
+          ssmRefusal("Value '--url https://github.com/beep-effect --token reg-token' failed; token reg-token"),
+        ],
+      ];
+      const { lines } = yield* runLogged(world, [queued({ id: 1 })], poolConfig(registrationPool));
+      const rendered = yield* encodeLines(lines);
+      expect(Str.includes("reg-token")(rendered)).toBe(false);
+      expect(Str.includes("--token <redacted>' failed; token <redacted>")(rendered)).toBe(true);
+      // The instance never registered a JIT runner, so only the token parameter and the instance are cleaned up.
+      expect(world.cleanupCalls).toStrictEqual(["deleteToken:/beep-ci/heavy/tokens/i-0001", "terminate:i-0001"]);
+      expect(A.map(world.puts, (put) => put.tier)).toStrictEqual(["Advanced"]);
+    })
   );
 
   it.effect("keeps a dead-lettered message for redelivery only when the DLQ send itself fails", () =>

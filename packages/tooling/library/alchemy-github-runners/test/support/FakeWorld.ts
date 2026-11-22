@@ -73,6 +73,10 @@ export class World {
   /** Scripted terminate failure for every terminate call. */
   terminateFailure: O.Option<AwsApiError> = O.none();
   /** Scripted JIT failure error; default a 500. */
+  /** Scripted runner-group lookup failure for every lookup. */
+  runnerGroupError: O.Option<GitHubApiError> = O.none();
+  /** Scripted registration-token failure for every request. */
+  registrationError: O.Option<GitHubApiError> = O.none();
   jitError: GitHubApiError = GitHubApiError.make({ operation: "jit", status: O.some(500), message: "boom" });
   sent: Array<SentMessage> = [];
   /** Cleanup calls in order: `deleteToken:<name>`, `deleteRunner:<id>`, `terminate:<instance>`. */
@@ -266,6 +270,9 @@ export const worldContext = (world: World) =>
           return world.jobQueued && !A.contains(world.startedJobs, job.jobId);
         }),
         runnerGroupId: Effect.fn("FakeGitHub.runnerGroupId")(function* (_token, _org, groupName) {
+          if (O.isSome(world.runnerGroupError)) {
+            return yield* world.runnerGroupError.value;
+          }
           return yield* Effect.fromOption(O.fromUndefinedOr(world.runnerGroups[groupName])).pipe(
             Effect.mapError(() => GitHubApiError.make({ operation: "runnerGroupId", message: "missing" }))
           );
@@ -282,6 +289,9 @@ export const worldContext = (world: World) =>
           return JitRunnerConfig.make({ runnerId, encodedJitConfig: Redacted.make(`jit-${request.name}`) });
         }),
         registrationToken: Effect.fn("FakeGitHub.registrationToken")(function* () {
+          if (O.isSome(world.registrationError)) {
+            return yield* world.registrationError.value;
+          }
           return Redacted.make("reg-token");
         }),
         getRunner: Effect.fn("FakeGitHub.getRunner")(function* (_token, _owner, runnerId) {
