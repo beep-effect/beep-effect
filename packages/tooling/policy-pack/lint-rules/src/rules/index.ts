@@ -7,6 +7,7 @@
 
 import { definePlugin } from "@oxlint/plugins";
 import namespaceNodeImports from "./namespace-node-imports.ts";
+import noComments from "./no-comments.ts";
 import { noDirectProcessIo } from "./no-direct-process-io.ts";
 import noGlobalProcessRuntime from "./no-global-process-runtime.ts";
 import noInlineSchemaCompile from "./no-inline-schema-compile.ts";
@@ -57,6 +58,7 @@ export default definePlugin({
   },
   rules: {
     "namespace-node-imports": namespaceNodeImports,
+    "no-comments": noComments,
     "no-direct-process-io": noDirectProcessIo,
     "no-global-process-runtime": noGlobalProcessRuntime,
     "no-inline-schema-compile": noInlineSchemaCompile,
