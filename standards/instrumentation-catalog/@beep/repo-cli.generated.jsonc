@@ -2232,7 +2232,6 @@
     {"name":"Knowledge.probeBothSides","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Knowledge.probeCandidatesForHead","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Knowledge.probeCandidatesForSide","owner":"@beep/repo-cli","family":"tooling","conforms":true},
-    {"name":"Knowledge.readGitRefNames","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Knowledge.readHeadRepository","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Knowledge.refsRewrite","owner":"@beep/repo-cli","family":"tooling","conforms":true},
     {"name":"Knowledge.resolveGoalSlug","owner":"@beep/repo-cli","family":"tooling","conforms":true},
