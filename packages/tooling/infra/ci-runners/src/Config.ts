@@ -515,7 +515,7 @@ export const spotVcpuCommitted = (config: typeof SpotBudgetFields.Type): number 
  * import * as Effect from "effect/Effect"
  *
  * const config = Effect.runSync(decodeCiRunnersConfig(productionConfig))
- * console.log(config.phase) // "overlap"
+ * console.log(config.phase) // "primary"
  * ```
  *
  * @category configuration
