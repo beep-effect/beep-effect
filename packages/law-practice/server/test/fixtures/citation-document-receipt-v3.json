@@ -55,7 +55,7 @@
         "status": "Resolved",
         "mentionId": "cm1:e674ceef5fefe41d221cab8c826c1c1f1cf745c2a63d461698e9c450d602ee6c",
         "authorityId": "ca1:95e1d90c373e09de0c16ad09adb1e22302bcc9167b774dc7f656373b9c801045",
-        "confidence": null
+        "confidence": 0.75
       },
       {
         "status": "Resolved",
@@ -82,7 +82,7 @@
           "ca1:4d3093e957c19af6e5f18c989e49ad3202be7546bbc175706a272769b6ff90d4",
           "ca1:95e1d90c373e09de0c16ad09adb1e22302bcc9167b774dc7f656373b9c801045"
         ],
-        "confidence": null
+        "confidence": 0.25
       },
       {
         "status": "Unresolved",
@@ -366,14 +366,14 @@
           }
         },
         "engineArtifact": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-        "signal": null,
+        "signal": "see also",
         "warnings": [
           {
             "kind": "unexpected-overlap",
             "previousMentionId": "cm1:ff70f11b47f3c4492ae5b6b91735bd3b9df115e5a5b627acb0c43fd493470c45"
           }
         ],
-        "evidenceConfidence": null,
+        "evidenceConfidence": 0.5,
         "anchor": {
           "anchor": { "startChar": 37, "endChar": 45, "quote": "1 U.S. 1" },
           "source": {
@@ -840,6 +840,444 @@
         }
       ],
       "decisions": []
+    }
+  ],
+  "canonical": {
+    "schemaVersion": "citation-document-receipt/v3",
+    "source": {
+      "scopeRef": "matter:fixture",
+      "sourceRef": "source:fixture",
+      "locator": "source.txt",
+      "sourceDigest": "sha256:e6796e44abf270e0a2844a20920ead3e4bbe1d37f5828ed5c7f7268ebd4dbce5",
+      "textDigest": "sha256:e6796e44abf270e0a2844a20920ead3e4bbe1d37f5828ed5c7f7268ebd4dbce5",
+      "extractor": { "name": "utf8", "version": "1" },
+      "normalizationVersion": "1"
+    },
+    "engineArtifact": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "authorities": [
+      {
+        "id": "ca1:4d3093e957c19af6e5f18c989e49ad3202be7546bbc175706a272769b6ff90d4",
+        "representative": null
+      },
+      {
+        "id": "ca1:95e1d90c373e09de0c16ad09adb1e22302bcc9167b774dc7f656373b9c801045",
+        "representative": null
+      }
+    ],
+    "resolutions": [
+      {
+        "status": "Resolved",
+        "mentionId": "cm1:3d792c1e9ae784dd60fc15abb6c539e29f7e58ffb116fa6701869fa083416408",
+        "authorityId": "ca1:4d3093e957c19af6e5f18c989e49ad3202be7546bbc175706a272769b6ff90d4",
+        "confidence": null
+      },
+      {
+        "status": "Resolved",
+        "mentionId": "cm1:e674ceef5fefe41d221cab8c826c1c1f1cf745c2a63d461698e9c450d602ee6c",
+        "authorityId": "ca1:95e1d90c373e09de0c16ad09adb1e22302bcc9167b774dc7f656373b9c801045",
+        "confidence": null
+      },
+      {
+        "status": "Resolved",
+        "mentionId": "cm1:ff70f11b47f3c4492ae5b6b91735bd3b9df115e5a5b627acb0c43fd493470c45",
+        "authorityId": "ca1:95e1d90c373e09de0c16ad09adb1e22302bcc9167b774dc7f656373b9c801045",
+        "confidence": null
+      },
+      {
+        "status": "Ambiguous",
+        "mentionId": "cm1:783fb441762ca22b4fbec2f8106bf8cf04fe3437193fcc6d81a643eb2872de24",
+        "candidateAuthorityIds": [
+          "ca1:4d3093e957c19af6e5f18c989e49ad3202be7546bbc175706a272769b6ff90d4",
+          "ca1:95e1d90c373e09de0c16ad09adb1e22302bcc9167b774dc7f656373b9c801045"
+        ],
+        "confidence": null
+      }
+    ],
+    "groups": [
+      {
+        "id": "cg1:99e31e47dba8e1c6dd121e984885439338c0108116e1e3debbdac3df783931d4",
+        "authorityId": "ca1:4d3093e957c19af6e5f18c989e49ad3202be7546bbc175706a272769b6ff90d4",
+        "memberListId": "cl1:9e5ee3e357ea7ec03635ddc1ac397c23026ed796ce48f06cc14d4da8d38a6bc8"
+      },
+      {
+        "id": "cg1:43174dd6dfc68eb11fa1ea115a60ae5b459b02fd2451042305052a275d4ed72f",
+        "authorityId": "ca1:95e1d90c373e09de0c16ad09adb1e22302bcc9167b774dc7f656373b9c801045",
+        "memberListId": "cl1:72b45fbab8362dc85338ca69147fec140c62ac75fc4acbc1347748d580468fac"
+      }
+    ],
+    "memberLists": [
+      {
+        "id": "cl1:9e5ee3e357ea7ec03635ddc1ac397c23026ed796ce48f06cc14d4da8d38a6bc8",
+        "members": [
+          {
+            "_tag": "Mention",
+            "mentionId": "cm1:3d792c1e9ae784dd60fc15abb6c539e29f7e58ffb116fa6701869fa083416408"
+          }
+        ]
+      },
+      {
+        "id": "cl1:72b45fbab8362dc85338ca69147fec140c62ac75fc4acbc1347748d580468fac",
+        "members": [
+          {
+            "_tag": "Mention",
+            "mentionId": "cm1:e674ceef5fefe41d221cab8c826c1c1f1cf745c2a63d461698e9c450d602ee6c"
+          },
+          {
+            "_tag": "Mention",
+            "mentionId": "cm1:ff70f11b47f3c4492ae5b6b91735bd3b9df115e5a5b627acb0c43fd493470c45"
+          }
+        ]
+      }
+    ],
+    "detachedCitations": [],
+    "mentions": [
+      {
+        "schemaVersion": "citation-mention-receipt/v1",
+        "id": "cm1:3d792c1e9ae784dd60fc15abb6c539e29f7e58ffb116fa6701869fa083416408",
+        "citation": {
+          "type": "case",
+          "components": { "volume": "1", "reporter": "U.S.", "page": "1" },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ],
+            "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": { "status": "unmapped", "value": "scotus" },
+            "plaintiff": null,
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "engineArtifact": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "signal": null,
+        "warnings": [],
+        "evidenceConfidence": null,
+        "anchor": {
+          "anchor": { "startChar": 3, "endChar": 11, "quote": "1 U.S. 1" },
+          "source": {
+            "scopeRef": "matter:fixture",
+            "sourceRef": "source:fixture",
+            "locator": "source.txt",
+            "sourceDigest": "sha256:e6796e44abf270e0a2844a20920ead3e4bbe1d37f5828ed5c7f7268ebd4dbce5",
+            "textDigest": "sha256:e6796e44abf270e0a2844a20920ead3e4bbe1d37f5828ed5c7f7268ebd4dbce5",
+            "extractor": { "name": "utf8", "version": "1" },
+            "normalizationVersion": "1"
+          }
+        },
+        "components": [
+          {
+            "name": "volume",
+            "anchor": {
+              "anchor": { "startChar": 3, "endChar": 4, "quote": "1" },
+              "source": {
+                "scopeRef": "matter:fixture",
+                "sourceRef": "source:fixture",
+                "locator": "source.txt",
+                "sourceDigest": "sha256:e6796e44abf270e0a2844a20920ead3e4bbe1d37f5828ed5c7f7268ebd4dbce5",
+                "textDigest": "sha256:e6796e44abf270e0a2844a20920ead3e4bbe1d37f5828ed5c7f7268ebd4dbce5",
+                "extractor": { "name": "utf8", "version": "1" },
+                "normalizationVersion": "1"
+              }
+            }
+          }
+        ],
+        "footnote": {
+          "label": "1",
+          "anchor": {
+            "anchor": {
+              "startChar": 0,
+              "endChar": 77,
+              "quote": "😀 1 U.S. 1; 1 U.S. ___; Roe, supra; 1 U.S. 1; Id.; 1 U.S., at 3; Doe, supra."
+            },
+            "source": {
+              "scopeRef": "matter:fixture",
+              "sourceRef": "source:fixture",
+              "locator": "source.txt",
+              "sourceDigest": "sha256:e6796e44abf270e0a2844a20920ead3e4bbe1d37f5828ed5c7f7268ebd4dbce5",
+              "textDigest": "sha256:e6796e44abf270e0a2844a20920ead3e4bbe1d37f5828ed5c7f7268ebd4dbce5",
+              "extractor": { "name": "utf8", "version": "1" },
+              "normalizationVersion": "1"
+            }
+          }
+        }
+      },
+      {
+        "schemaVersion": "citation-mention-receipt/v1",
+        "id": "cm1:e674ceef5fefe41d221cab8c826c1c1f1cf745c2a63d461698e9c450d602ee6c",
+        "citation": {
+          "type": "case",
+          "components": { "volume": "1", "reporter": "U.S.", "page": null },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ],
+            "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": { "status": "unmapped", "value": "scotus" },
+            "plaintiff": "Roe",
+            "defendant": null,
+            "additionalText": null,
+            "antecedentGuess": null,
+            "shortCaseName": null,
+            "caseName": null
+          }
+        },
+        "engineArtifact": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "signal": null,
+        "warnings": [],
+        "evidenceConfidence": null,
+        "anchor": {
+          "anchor": { "startChar": 13, "endChar": 23, "quote": "1 U.S. ___" },
+          "source": {
+            "scopeRef": "matter:fixture",
+            "sourceRef": "source:fixture",
+            "locator": "source.txt",
+            "sourceDigest": "sha256:e6796e44abf270e0a2844a20920ead3e4bbe1d37f5828ed5c7f7268ebd4dbce5",
+            "textDigest": "sha256:e6796e44abf270e0a2844a20920ead3e4bbe1d37f5828ed5c7f7268ebd4dbce5",
+            "extractor": { "name": "utf8", "version": "1" },
+            "normalizationVersion": "1"
+          }
+        },
+        "components": [],
+        "footnote": null
+      },
+      {
+        "schemaVersion": "citation-mention-receipt/v1",
+        "id": "cm1:ff70f11b47f3c4492ae5b6b91735bd3b9df115e5a5b627acb0c43fd493470c45",
+        "citation": {
+          "type": "supra",
+          "components": {},
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "antecedentGuess": "Roe",
+            "volume": null
+          }
+        },
+        "engineArtifact": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "signal": null,
+        "warnings": [],
+        "evidenceConfidence": null,
+        "anchor": {
+          "anchor": { "startChar": 25, "endChar": 35, "quote": "Roe, supra" },
+          "source": {
+            "scopeRef": "matter:fixture",
+            "sourceRef": "source:fixture",
+            "locator": "source.txt",
+            "sourceDigest": "sha256:e6796e44abf270e0a2844a20920ead3e4bbe1d37f5828ed5c7f7268ebd4dbce5",
+            "textDigest": "sha256:e6796e44abf270e0a2844a20920ead3e4bbe1d37f5828ed5c7f7268ebd4dbce5",
+            "extractor": { "name": "utf8", "version": "1" },
+            "normalizationVersion": "1"
+          }
+        },
+        "components": [],
+        "footnote": null
+      },
+      {
+        "schemaVersion": "citation-mention-receipt/v1",
+        "id": "cm1:783fb441762ca22b4fbec2f8106bf8cf04fe3437193fcc6d81a643eb2872de24",
+        "citation": {
+          "type": "shortFormCase",
+          "components": { "volume": "1", "reporter": "U.S." },
+          "publication": {
+            "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+            "editions": [
+              {
+                "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                "reporterId": "reporter:67d371c6acffe6c7502566ad"
+              }
+            ],
+            "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+          },
+          "metadata": {
+            "pinCite": null,
+            "parenthetical": null,
+            "year": null,
+            "month": null,
+            "day": null,
+            "court": null,
+            "antecedentGuess": null,
+            "plaintiff": null
+          }
+        },
+        "engineArtifact": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "signal": null,
+        "warnings": [],
+        "evidenceConfidence": null,
+        "anchor": {
+          "anchor": { "startChar": 52, "endChar": 64, "quote": "1 U.S., at 3" },
+          "source": {
+            "scopeRef": "matter:fixture",
+            "sourceRef": "source:fixture",
+            "locator": "source.txt",
+            "sourceDigest": "sha256:e6796e44abf270e0a2844a20920ead3e4bbe1d37f5828ed5c7f7268ebd4dbce5",
+            "textDigest": "sha256:e6796e44abf270e0a2844a20920ead3e4bbe1d37f5828ed5c7f7268ebd4dbce5",
+            "extractor": { "name": "utf8", "version": "1" },
+            "normalizationVersion": "1"
+          }
+        },
+        "components": [],
+        "footnote": null
+      }
+    ]
+  },
+  "canonicalBindings": [
+    {
+      "identity": {
+        "_tag": "Canonical",
+        "authority": {
+          "citation": {
+            "type": "case",
+            "components": { "volume": "1", "reporter": "U.S.", "page": "1" },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "court": { "status": "unmapped", "value": "scotus" },
+              "plaintiff": null,
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "mentionId": "cm1:3d792c1e9ae784dd60fc15abb6c539e29f7e58ffb116fa6701869fa083416408",
+          "selectedEdition": {
+            "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+            "shortName": "U.S."
+          }
+        }
+      },
+      "candidates": [
+        {
+          "mentionId": "cm1:783fb441762ca22b4fbec2f8106bf8cf04fe3437193fcc6d81a643eb2872de24",
+          "position": 0
+        }
+      ],
+      "groups": [
+        {
+          "position": 0,
+          "id": "cg1:99e31e47dba8e1c6dd121e984885439338c0108116e1e3debbdac3df783931d4",
+          "list": {
+            "id": "cl1:9e5ee3e357ea7ec03635ddc1ac397c23026ed796ce48f06cc14d4da8d38a6bc8",
+            "members": [
+              {
+                "_tag": "Mention",
+                "mentionId": "cm1:3d792c1e9ae784dd60fc15abb6c539e29f7e58ffb116fa6701869fa083416408"
+              }
+            ]
+          }
+        }
+      ],
+      "decisions": [
+        "cm1:3d792c1e9ae784dd60fc15abb6c539e29f7e58ffb116fa6701869fa083416408"
+      ]
+    },
+    {
+      "identity": {
+        "_tag": "Canonical",
+        "authority": {
+          "citation": {
+            "type": "case",
+            "components": { "volume": "1", "reporter": "U.S.", "page": null },
+            "publication": {
+              "vocabularyVersion": "crv1:f353e51400a5:fad63b383b92",
+              "editions": [
+                {
+                  "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+                  "reporterId": "reporter:67d371c6acffe6c7502566ad"
+                }
+              ],
+              "selectedEdition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718"
+            },
+            "metadata": {
+              "pinCite": null,
+              "parenthetical": null,
+              "year": null,
+              "month": null,
+              "day": null,
+              "court": { "status": "unmapped", "value": "scotus" },
+              "plaintiff": "Roe",
+              "defendant": null,
+              "additionalText": null,
+              "antecedentGuess": null,
+              "shortCaseName": null,
+              "caseName": null
+            }
+          },
+          "mentionId": "cm1:e674ceef5fefe41d221cab8c826c1c1f1cf745c2a63d461698e9c450d602ee6c",
+          "selectedEdition": {
+            "edition": "351eca5a0f8b133ce2d21530fd349f3567079fff849effe0a976efa3fdc16718",
+            "shortName": "U.S."
+          }
+        }
+      },
+      "candidates": [
+        {
+          "mentionId": "cm1:783fb441762ca22b4fbec2f8106bf8cf04fe3437193fcc6d81a643eb2872de24",
+          "position": 1
+        }
+      ],
+      "groups": [
+        {
+          "position": 1,
+          "id": "cg1:43174dd6dfc68eb11fa1ea115a60ae5b459b02fd2451042305052a275d4ed72f",
+          "list": {
+            "id": "cl1:72b45fbab8362dc85338ca69147fec140c62ac75fc4acbc1347748d580468fac",
+            "members": [
+              {
+                "_tag": "Mention",
+                "mentionId": "cm1:e674ceef5fefe41d221cab8c826c1c1f1cf745c2a63d461698e9c450d602ee6c"
+              },
+              {
+                "_tag": "Mention",
+                "mentionId": "cm1:ff70f11b47f3c4492ae5b6b91735bd3b9df115e5a5b627acb0c43fd493470c45"
+              }
+            ]
+          }
+        }
+      ],
+      "decisions": [
+        "cm1:e674ceef5fefe41d221cab8c826c1c1f1cf745c2a63d461698e9c450d602ee6c",
+        "cm1:ff70f11b47f3c4492ae5b6b91735bd3b9df115e5a5b627acb0c43fd493470c45"
+      ]
     }
   ]
 }

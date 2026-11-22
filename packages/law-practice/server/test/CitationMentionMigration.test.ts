@@ -1,16 +1,22 @@
 import {
   Citation,
+  CitationAmbiguous,
   CitationComponentAnchor,
   CitationDocument,
   CitationDocumentReceipt,
   CitationFootnoteZone,
-  CitationMention,
+  CitationGroupMember,
+  CitationMentionId,
   CitationMentionReceipt,
   CitationOverlapWarning,
+  CitationResolution,
+  CitationResolved,
+  FullCitation,
 } from "@beep/law-practice-domain/values";
 import {
   CitationAuthorityEdition,
   CitationAuthorityIdentityInput,
+  makeCitationAuthorityId,
 } from "@beep/law-practice-server/internal/Citation/AuthorityIdentity";
 import { CitationCallbackResult } from "@beep/law-practice-server/internal/Citation/CallbackResource";
 import {
@@ -23,6 +29,7 @@ import {
   makeCitationResolutionWork,
   runPreparedCitationCallbackSession,
 } from "@beep/law-practice-server/internal/Citation/CallbackSession";
+import { runDefaultCitationCallbackSession } from "@beep/law-practice-server/internal/Citation/DefaultCallbacks";
 import {
   projectCitationDocumentReceipt,
   restoreCitationDocument,
@@ -48,6 +55,7 @@ import {
   verifyTextAnchorAgainstVerifiedSource,
 } from "@beep/provenance/VerifiedTextAnchor";
 import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { UnitInterval } from "@beep/schema/UnitInterval";
 import { it } from "@beep/test-runner";
 import { fcRuns } from "@beep/test-utils";
 import * as BunCrypto from "@effect/platform-bun/BunCrypto";
@@ -63,11 +71,11 @@ import * as Str from "effect/String";
 import cases from "../../use-cases/test/fixtures/eyecite/authority-identity-cases.json" with { type: "json" };
 import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 
-// `fixtures/citation-document-receipt-v3.json` holds two receipts over one synthetic text, exactly as
+// `fixtures/citation-document-receipt-v3.json` holds three receipts over one synthetic text, exactly as
 // `projectCitationDocumentReceipt` and the session projector wrote them under citation-document-receipt/v3 and
 // citation-mention-receipt/v1 (`projected` below). Receipts held outside the process keep those bytes, so the file
 // is never regenerated and its digest is pinned.
-const frozenDigest = "ebd1382134f61e6e60be9fb9a2fdeb145fd572f74389605cab57f2b9538dbaac";
+const frozenDigest = "ec3554e18331b56bc4e9758ca33a7065948dc9f92ee89e32548e6a07d1cef90d";
 const frozenText = pipe(
   import.meta.glob<string>("./fixtures/citation-document-receipt-v3.json", {
     eager: true,
@@ -85,6 +93,8 @@ const Frozen = S.Struct({
   document: S.Unknown,
   session: S.Unknown,
   sessionBindings: S.Unknown,
+  canonical: S.Unknown,
+  canonicalBindings: S.Unknown,
 });
 const FrozenJson = S.fromJsonString(Frozen);
 const Json = S.fromJsonString(S.Unknown);
@@ -92,6 +102,8 @@ const MentionJson = S.fromJsonString(CitationMentionReceipt);
 const Bindings = S.Array(CitationResourceBinding);
 const encoder = new TextEncoder();
 const artifact = Sha256Hex.make(Str.repeat(64)("a"));
+const isFull = S.is(FullCitation);
+const suffix = Str.slice(4);
 
 const quotes = ["1 U.S. 1", "1 U.S. ___", "Roe, supra", "1 U.S. 1", "Id.", "1 U.S., at 3", "Doe, supra"];
 const sourceText = `😀 ${A.join(quotes, "; ")}.`;
@@ -115,7 +127,7 @@ const anchorAt = (verifiedSource: VerifiedSourceText, startChar: number, quote: 
 
 // One full case cited twice and by an Id., one missing-page case (its authority key embeds the mention id) cited
 // again by a supra, an ambiguous short form and an unresolved supra; the first mention carries a component and a
-// footnote zone, the fourth an overlap warning.
+// footnote zone, the fourth an overlap warning, a signal and an evidence confidence.
 const scene = Effect.gen(function* () {
   const digest = SourceTextDigest.make(
     `sha256:${yield* S.decodeEffect(Sha256HexFromBytes)(encoder.encode(sourceText))}`
@@ -187,17 +199,25 @@ const scene = Effect.gen(function* () {
     { concurrency: 1 }
   );
   const previousMentionId = A.getUnsafe(plain, 2).id;
-  const mentions = A.map(plain, (mention, index) => {
-    if (index === 0)
-      return CitationMention.make({
+  const mentions = yield* Effect.forEach(
+    plain,
+    Effect.fnUntraced(function* (mention, index) {
+      if (index === 0)
+        return yield* makeCitationMention({
+          ...mention,
+          components: [CitationComponentAnchor.make({ name: "volume", anchor: volume })],
+          footnote: CitationFootnoteZone.makeOption({ label: O.some("1"), anchor: zone }),
+        });
+      if (index !== 3) return mention;
+      return yield* makeCitationMention({
         ...mention,
-        components: [CitationComponentAnchor.make({ name: "volume", anchor: volume })],
-        footnote: CitationFootnoteZone.makeOption({ label: O.some("1"), anchor: zone }),
+        signal: O.some("see also"),
+        warnings: [CitationOverlapWarning.make({ previousMentionId })],
+        evidenceConfidence: UnitInterval.makeOption(0.5),
       });
-    return index === 3
-      ? CitationMention.make({ ...mention, warnings: [CitationOverlapWarning.make({ previousMentionId })] })
-      : mention;
-  });
+    }),
+    { concurrency: 1 }
+  );
   const policy = yield* defaultCitationEnginePolicy;
   const editions = O.toArray(full.selectedEdition);
   return {
@@ -220,6 +240,26 @@ const external = (key: string) =>
     truthy: true,
     value: null,
   });
+
+// The session projector, with the identity each callback resource already carries as its descriptor: the Hashable branch
+// of `makeCitationRegisteredSessionDescriptors`.
+const projectSession = Effect.fn("CitationMigrationTest.projectSession")(function* (
+  state: Effect.Success<ReturnType<typeof runDefaultCitationCallbackSession>>
+) {
+  const projector = yield* makeCitationSessionDocumentProjector().pipe(
+    Effect.provideService(
+      CitationSessionResourceDescriptors,
+      CitationSessionResourceDescriptors.of({
+        describe: Effect.fn("CitationMigrationTest.describe")(function* (resource: CitationCallbackResource) {
+          return resource._tag === "Hashable"
+            ? resource.identity
+            : yield* CitationCallbackFailure.make({ reason: "invalid-input" });
+        }),
+      })
+    )
+  );
+  return yield* projector.project(state);
+});
 
 // A callback session over the first three mentions: one external resource owns every decision, a second one owns a
 // list of one detached citation. Its group, list and detached ids are session nodes.
@@ -251,38 +291,63 @@ const session = Effect.fn("CitationMigrationTest.session")(function* (data: Effe
     Effect.provideService(CitationCallbackDictionary, dictionary),
     Effect.provideService(CitationResolutionCallbacks, callbacks)
   );
-  const projector = yield* makeCitationSessionDocumentProjector().pipe(
-    Effect.provideService(
-      CitationSessionResourceDescriptors,
-      CitationSessionResourceDescriptors.of({
-        describe: Effect.fn("CitationMigrationTest.describe")(function* (resource: CitationCallbackResource) {
-          return resource._tag === "Hashable" ? resource.identity : yield* refuse();
-        }),
-      })
-    )
-  );
-  return yield* projector.project(state);
+  return yield* projectSession(state);
+});
+
+// The default callback session over the full case, the missing-page case, its supra and the ambiguous short form. Its
+// authorities are the canonical keys of the two cases, so the missing-page key embeds a mention id, while every group
+// and list id is a session node. The short form keeps both authorities as candidates, in the receipt and its bindings.
+const canonicalSession = Effect.fn("CitationMigrationTest.canonicalSession")(function* (
+  data: Effect.Success<typeof scene>
+) {
+  const mentions = A.filter(data.input.mentions, (_, index) => A.contains([0, 1, 2, 5], index));
+  const state = yield* runDefaultCitationCallbackSession({ ...data.input, mentions });
+  return yield* projectSession(state);
 });
 
 const encodeFrozen = Effect.fn("CitationMigrationTest.encode")(function* (
-  data: Omit<typeof Frozen.Type, "document" | "session" | "sessionBindings"> & {
+  data: Omit<typeof Frozen.Type, "document" | "session" | "sessionBindings" | "canonical" | "canonicalBindings"> & {
     readonly document: CitationDocumentReceipt;
     readonly session: CitationDocumentReceipt;
     readonly sessionBindings: typeof Bindings.Type;
+    readonly canonical: CitationDocumentReceipt;
+    readonly canonicalBindings: typeof Bindings.Type;
   }
 ) {
   const document = yield* S.encodeEffect(CitationDocumentReceipt)(data.document);
   const session = yield* S.encodeEffect(CitationDocumentReceipt)(data.session);
   const sessionBindings = yield* S.encodeEffect(Bindings)(data.sessionBindings);
-  return yield* S.encodeEffect(FrozenJson)({ ...data, document, session, sessionBindings });
+  const canonical = yield* S.encodeEffect(CitationDocumentReceipt)(data.canonical);
+  const canonicalBindings = yield* S.encodeEffect(Bindings)(data.canonicalBindings);
+  return yield* S.encodeEffect(FrozenJson)({
+    ...data,
+    document,
+    session,
+    sessionBindings,
+    canonical,
+    canonicalBindings,
+  });
 });
 
-// Both receipts, projected now by the production code, in the shape of the frozen file.
+// The three receipts, projected now by the production code, in the shape of the frozen file. The bundled resolvers leave
+// every resolution confidence empty, so the document gives the projector one on a Resolved and one on the Ambiguous
+// decision, as a producer that fills it would.
 const projected = Effect.gen(function* () {
   const data = yield* scene;
   const custom = yield* session(data);
   const resolved = yield* resolveSixFormCitationMentions(data.input);
-  const document = CitationDocument.make({ ...resolved, detachedCitations: custom.document.detachedCitations });
+  const canonical = yield* canonicalSession(data);
+  const document = CitationDocument.make({
+    ...resolved,
+    resolutions: A.map(resolved.resolutions, (resolution, index) => {
+      if (resolution.status === "Ambiguous")
+        return CitationAmbiguous.make({ ...resolution, confidence: UnitInterval.makeOption(0.25) });
+      return index === 1 && resolution.status === "Resolved"
+        ? CitationResolved.make({ ...resolution, confidence: UnitInterval.makeOption(0.75) })
+        : resolution;
+    }),
+    detachedCitations: custom.document.detachedCitations,
+  });
   const receipt = yield* projectCitationDocumentReceipt({ document, editions: data.editions });
   const json = yield* encodeFrozen({
     sourceText,
@@ -292,8 +357,10 @@ const projected = Effect.gen(function* () {
     document: receipt,
     session: custom.receipt,
     sessionBindings: custom.resourceBindings,
+    canonical: canonical.receipt,
+    canonicalBindings: canonical.resourceBindings,
   });
-  return { document, receipt, custom, json };
+  return { document, receipt, custom, canonical, json };
 }).pipe(Effect.withSpan("CitationMigrationTest.projected"));
 
 const readFrozen = Effect.gen(function* () {
@@ -305,6 +372,8 @@ const readFrozen = Effect.gen(function* () {
     document: yield* S.decodeUnknownEffect(CitationDocumentReceipt)(frozen.document),
     session: yield* S.decodeUnknownEffect(CitationDocumentReceipt)(frozen.session),
     sessionBindings: yield* S.decodeUnknownEffect(Bindings)(frozen.sessionBindings),
+    canonical: yield* S.decodeUnknownEffect(CitationDocumentReceipt)(frozen.canonical),
+    canonicalBindings: yield* S.decodeUnknownEffect(Bindings)(frozen.canonicalBindings),
     restore: {
       editions: frozen.editions,
       expectedSource: frozen.expectedSource,
@@ -313,6 +382,48 @@ const readFrozen = Effect.gen(function* () {
     },
   };
 });
+
+// What the v4 step does to each id a receipt owns. An authority key embeds a mention id when the production key of some
+// full mention is that id and differs under another mention id; a group or list id follows it when it is its slice.
+const fatesOf = Effect.fn("CitationMigrationTest.fates")(function* (receipt: CitationDocumentReceipt) {
+  const { frozen } = yield* readFrozen;
+  const otherId = CitationMentionId.make(`cm1:${Str.repeat(64)("f")}`);
+  const embedding = yield* Effect.forEach(
+    receipt.mentions,
+    Effect.fnUntraced(function* ({ citation, id }) {
+      if (!isFull(citation)) return O.none();
+      const selectedEdition = O.flatMap(citation.publication.selectedEdition, (selected) =>
+        A.findFirst(frozen.editions, (edition) => edition.edition === selected)
+      );
+      const key = yield* makeCitationAuthorityId({ citation, mentionId: id, selectedEdition });
+      const other = yield* makeCitationAuthorityId({ citation, mentionId: otherId, selectedEdition });
+      return key === other ? O.none() : O.some(suffix(key));
+    }),
+    { concurrency: 1 }
+  );
+  const rewritten = A.intersection(
+    A.getSomes(embedding),
+    A.map(receipt.authorities, (authority) => suffix(authority.id))
+  );
+  const fates = A.map((node: { readonly id: string }) =>
+    A.contains(rewritten, suffix(node.id)) ? "rewritten" : "kept"
+  );
+  return {
+    authorities: fates(receipt.authorities),
+    groups: fates(receipt.groups),
+    memberLists: fates(receipt.memberLists),
+    detachedCitations: fates(receipt.detachedCitations),
+  };
+});
+
+const representativesOf = (receipt: CitationDocumentReceipt) =>
+  A.getSomes(A.map(receipt.authorities, (authority) => authority.representative));
+
+const candidatesOf = (receipt: CitationDocumentReceipt) =>
+  A.map(
+    A.filter(receipt.resolutions, CitationResolution.guards.Ambiguous),
+    (decision) => decision.candidateAuthorityIds
+  );
 
 it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
   it.effect("is the captured file, and the production projections still write it", () =>
@@ -332,8 +443,17 @@ it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
       expect(read.document).toEqual(fresh.receipt);
       expect(read.session).toEqual(fresh.custom.receipt);
       expect(read.sessionBindings).toEqual(fresh.custom.resourceBindings);
-      const { document, session, sessionBindings } = read;
-      const rewritten = yield* encodeFrozen({ ...read.frozen, document, session, sessionBindings });
+      expect(read.canonical).toEqual(fresh.canonical.receipt);
+      expect(read.canonicalBindings).toEqual(fresh.canonical.resourceBindings);
+      const { document, session, sessionBindings, canonical, canonicalBindings } = read;
+      const rewritten = yield* encodeFrozen({
+        ...read.frozen,
+        document,
+        session,
+        sessionBindings,
+        canonical,
+        canonicalBindings,
+      });
       expect(rewritten).toBe(read.json);
     })
   );
@@ -373,23 +493,34 @@ it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
     })
   );
 
-  it.effect("restores the session receipt only with its out-of-band bindings", () =>
+  it.effect("restores each session receipt only with its out-of-band bindings", () =>
     Effect.gen(function* () {
-      const { custom } = yield* projected;
+      const { custom, canonical } = yield* projected;
       const read = yield* readFrozen;
-      const input = { ...read.restore, receipt: read.session };
-      const restored = yield* restoreCitationDocument({ ...input, resourceBindings: read.sessionBindings });
-      expect(restored.groups).toEqual(custom.document.groups);
-      expect(restored.memberLists).toEqual(custom.document.memberLists);
-      expect(restored.detachedCitations).toEqual(custom.document.detachedCitations);
-      const unbound = yield* restoreCitationDocument(input).pipe(Effect.flip);
-      expect(unbound).toMatchObject({ _tag: "CitationDocumentFailure", reason: "stale-authority" });
+      yield* Effect.forEach(
+        [
+          { receipt: read.session, resourceBindings: read.sessionBindings, document: custom.document },
+          { receipt: read.canonical, resourceBindings: read.canonicalBindings, document: canonical.document },
+        ],
+        Effect.fnUntraced(function* ({ receipt, resourceBindings, document }) {
+          const input = { ...read.restore, receipt };
+          const restored = yield* restoreCitationDocument({ ...input, resourceBindings });
+          expect(restored.authorities).toEqual(document.authorities);
+          expect(restored.resolutions).toEqual(document.resolutions);
+          expect(restored.groups).toEqual(document.groups);
+          expect(restored.memberLists).toEqual(document.memberLists);
+          expect(restored.detachedCitations).toEqual(document.detachedCitations);
+          const unbound = yield* restoreCitationDocument(input).pipe(Effect.flip);
+          expect(unbound).toMatchObject({ _tag: "CitationDocumentFailure", reason: "stale-authority" });
+        }),
+        { concurrency: 1, discard: true }
+      );
     })
   );
 
   it.effect("covers every identifier the v4 step reads, rewrites or keeps", () =>
     Effect.gen(function* () {
-      const { document, session } = yield* readFrozen;
+      const { document } = yield* readFrozen;
       expect(A.map(document.resolutions, (resolution) => resolution.status)).toEqual([
         "Resolved",
         "Resolved",
@@ -398,13 +529,6 @@ it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
         "Resolved",
         "Ambiguous",
         "Unresolved",
-      ]);
-      const [fullCase, missingPage] = document.authorities;
-      const suffix = (id: string) => Str.slice(4)(id);
-      // Both authorities own default groups and lists; the second key embeds the second mention's id.
-      expect(A.map(document.groups, (group) => suffix(group.id))).toEqual([
-        suffix(fullCase?.id ?? ""),
-        suffix(missingPage?.id ?? ""),
       ]);
       expect(A.map(document.memberLists, (list) => A.length(list.members))).toEqual([3, 2]);
       expect(A.map(document.mentions, (mention) => A.length(mention.warnings))).toEqual([0, 0, 0, 1, 0, 0, 0]);
@@ -418,16 +542,92 @@ it.layer(BunCrypto.layer)("frozen citation-document-receipt/v3", (it) => {
         false,
         false,
       ]);
+      // The v4 step carries these optional values over unread; each is present at least once.
+      expect(A.getSomes(A.map(document.mentions, (mention) => mention.signal))).toEqual(["see also"]);
+      expect(A.getSomes(A.map(document.mentions, (mention) => mention.evidenceConfidence))).toEqual([0.5]);
+      const resolved = A.filter(document.resolutions, CitationResolution.guards.Resolved);
+      const ambiguous = A.filter(document.resolutions, CitationResolution.guards.Ambiguous);
+      expect(A.getSomes(A.map(resolved, (resolution) => resolution.confidence))).toEqual([0.75]);
+      expect(A.getSomes(A.map(ambiguous, (resolution) => resolution.confidence))).toEqual([0.25]);
       expect(document.detachedCitations).toHaveLength(1);
-      // Session nodes: no group or list id is a slice of an authority digest.
-      expect(session.groups).toHaveLength(2);
-      expect(
-        A.intersection(
-          A.map(session.groups, (group) => suffix(group.id)),
-          A.map(session.authorities, (authority) => suffix(authority.id))
-        )
-      ).toEqual([]);
+    })
+  );
+
+  // The v4 step rewrites every mention id, and with it each authority whose key embeds one and each group or list id that
+  // is a slice of such an authority. It keeps every other authority, session-node and detached id.
+  it.effect("states what the v4 step keeps and rewrites in each receipt", () =>
+    Effect.gen(function* () {
+      const { document, session, sessionBindings, canonical, canonicalBindings } = yield* readFrozen;
+      const documentFates = yield* fatesOf(document);
+      expect(documentFates).toEqual({
+        authorities: ["kept", "rewritten"],
+        groups: ["kept", "rewritten"],
+        memberLists: ["kept", "rewritten"],
+        detachedCitations: ["kept"],
+      });
+      // External keys: the missing-page mention is there, but no authority is its case-occurrence key.
+      const sessionFates = yield* fatesOf(session);
+      expect(sessionFates).toEqual({
+        authorities: ["kept", "kept"],
+        groups: ["kept", "kept"],
+        memberLists: ["kept", "kept"],
+        detachedCitations: ["kept"],
+      });
+      // Canonical keys under session nodes: the authority is rewritten, its group and list ids are kept.
+      const canonicalFates = yield* fatesOf(canonical);
+      expect(canonicalFates).toEqual({
+        authorities: ["kept", "rewritten"],
+        groups: ["kept", "kept"],
+        memberLists: ["kept", "kept"],
+        detachedCitations: [],
+      });
+
+      // References that follow a rewritten authority: the document's and the canonical session's keys are the same two.
+      const keys = A.map(document.authorities, (authority) => authority.id);
+      expect(A.map(canonical.authorities, (authority) => authority.id)).toEqual(keys);
+      expect(A.map(document.groups, (group) => group.authorityId)).toEqual(keys);
+      expect(A.map(canonical.groups, (group) => group.authorityId)).toEqual(keys);
+      expect(candidatesOf(document)).toEqual([keys]);
+      expect(candidatesOf(canonical)).toEqual([keys]);
+      expect(candidatesOf(session)).toEqual([]);
+
+      // References that follow a rewritten mention: decisions, warnings, representatives, members and the out-of-band
+      // bindings.
+      const ids = A.map(document.mentions, (mention) => mention.id);
+      const at = (index: number) => A.getUnsafe(ids, index);
+      const mentionAt = (index: number) => CitationGroupMember.cases.Mention.make({ mentionId: at(index) });
+      expect(A.map(document.resolutions, (resolution) => resolution.mentionId)).toEqual(ids);
+      expect(A.map(canonical.resolutions, (resolution) => resolution.mentionId)).toEqual([at(0), at(1), at(2), at(5)]);
+      expect(A.flatMap(document.mentions, (mention) => mention.warnings)).toEqual([
+        CitationOverlapWarning.make({ previousMentionId: at(2) }),
+      ]);
+      expect(representativesOf(document)).toEqual([mentionAt(0), mentionAt(1)]);
+      expect(representativesOf(session)).toEqual([]);
+      expect(representativesOf(canonical)).toEqual([]);
+      expect(A.map(document.memberLists, (list) => list.members)).toEqual([
+        [mentionAt(0), mentionAt(3), mentionAt(4)],
+        [mentionAt(1), mentionAt(2)],
+      ]);
+      expect(A.flatMap(session.memberLists, (list) => list.members)).toEqual([
+        CitationGroupMember.cases.Detached.make({
+          detachedId: A.getUnsafe(session.detachedCitations, 0).id,
+        }),
+        mentionAt(0),
+        mentionAt(1),
+        mentionAt(2),
+      ]);
+      expect(A.map(canonical.memberLists, (list) => list.members)).toEqual([
+        [mentionAt(0)],
+        [mentionAt(1), mentionAt(2)],
+      ]);
       expect(session.detachedCitations).toEqual(document.detachedCitations);
+      expect(A.map(sessionBindings, (binding) => binding.identity._tag)).toEqual(["External", "External"]);
+      expect(A.map(canonicalBindings, (binding) => binding.identity._tag)).toEqual(["Canonical", "Canonical"]);
+      expect(A.map(canonicalBindings, (binding) => binding.decisions)).toEqual([[at(0)], [at(1), at(2)]]);
+      expect(A.map(canonicalBindings, (binding) => binding.candidates)).toEqual([
+        [{ mentionId: at(5), position: 0 }],
+        [{ mentionId: at(5), position: 1 }],
+      ]);
     })
   );
 });
