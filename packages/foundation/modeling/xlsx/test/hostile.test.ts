@@ -3,6 +3,7 @@
 
 import { Xlsx } from "@beep/xlsx/Xlsx.codec";
 import { columnLetters } from "@beep/xlsx/XlsxAddress.schema";
+import { XlsxCell, XlsxDate, XlsxNumberFormat } from "@beep/xlsx/XlsxCell.schema";
 import { XlsxParseError } from "@beep/xlsx/XlsxError.errors";
 import { XlsxLimits, XlsxReadOptions } from "@beep/xlsx/XlsxOptions.schema";
 import { XlsxRead } from "@beep/xlsx/XlsxRead.schema";
@@ -22,8 +23,10 @@ import * as Str from "effect/String";
 import {
   appended,
   archive,
+  countedShort,
   earlyEndRecord,
   filler,
+  longFirstListed,
   partsOf,
   sheet,
   sheetWith,
@@ -432,6 +435,52 @@ describe("hostile files", () => {
     })
   );
 
+  // The examples below reach what the property tests reach only with some seeds: a reference with text after its
+  // row digits, and format codes that end in the middle of an escape, a block or a run of sections.
+  it.effect(
+    "a cell reference with text after its row digits is a bad address, and the cell takes the next column",
+    () =>
+      Effect.gen(function* () {
+        const bytes = yield* workbook(one(sheet('<row r="1"><c r="A1"><v>1</v></c><c r="C1x"><v>2</v></c></row>')));
+        const read = yield* Xlsx.parse(bytes, limited({}));
+        expect(A.map(read.workbook.sheets[0].rows[0]?.cells ?? [], (found) => found.column)).toEqual([0, 1]);
+        expect(A.map(read.warnings, (warning) => warning.finding)).toEqual([
+          expect.objectContaining({ kind: "BadAddress", row: 1, raw: "C1x" }),
+        ]);
+      })
+  );
+
+  it.effect("a cell reference with absolute marks names the same column", () =>
+    Effect.gen(function* () {
+      const bytes = yield* workbook(one(sheet('<row r="1"><c r="$C$1"><v>1</v></c></row>')));
+      const read = yield* Xlsx.parse(bytes, limited({}));
+      expect(A.map(read.workbook.sheets[0].rows[0]?.cells ?? [], (found) => found.column)).toEqual([2]);
+      expect(read.warnings).toEqual([]);
+    })
+  );
+
+  it("an escaped character before a number pattern is the pattern's prefix", () => {
+    expect(XlsxNumberFormat.kind({ code: "\\$0.00" })).toMatchObject({ kind: "Fixed", decimals: 2, prefix: "$" });
+    expect(XlsxNumberFormat.kind({ code: "0.00\\" })).toMatchObject({ kind: "Other" });
+    expect(XlsxNumberFormat.kind({ code: "[$€-407]0.00" })).toMatchObject({ kind: "Fixed", prefix: "€" });
+    expect(XlsxNumberFormat.kind({ code: "[$USD]0" })).toMatchObject({ kind: "Fixed", prefix: "USD" });
+  });
+
+  it("a date code that stops inside a block, an escape or its sections is read to its end", () => {
+    const shownAs = (code: string, serial: number) =>
+      O.getOrUndefined(
+        XlsxCell.shown({ value: XlsxDate.make({ serial }), format: XlsxNumberFormat.make({ id: 164, code }) }, "1900")
+      );
+    expect([
+      shownAs("yyyy[", 46_000),
+      shownAs("yyyy\\", 46_000),
+      shownAs("yyyy;;", 46_000),
+      shownAs("yyyy;;", 0),
+      shownAs("yyyy;", 0),
+      shownAs("yyyy_)", 46_000),
+    ]).toEqual(["2025", "2025", "2025", undefined, "1900", "2025 "]);
+  });
+
   it.effect("merged ranges written many times, and more than the read's cap over two sheets", () =>
     Effect.gen(function* () {
       const twice = yield* workbook(
@@ -538,6 +587,14 @@ describe("hostile files", () => {
       const extra = yield* workbook({ ...one(sheet("")), extra: [["xl/extra.xml", "<x/>"]] });
       const unlisted = yield* findingOf(withoutLastListed(extra));
       expect(unlisted).toMatchObject({ kind: "DirectoryMismatch" });
+      // The property tests damage a directory entry's lengths only with some seeds; this entry always runs long.
+      const long = yield* findingOf(longFirstListed(extra));
+      expect(long).toMatchObject({
+        kind: "DirectoryMismatch",
+        reason: "the directory's entry 1 runs past the directory",
+      });
+      const short = yield* findingOf(countedShort(extra));
+      expect(short).toMatchObject({ kind: "DirectoryMismatch", reason: "the directory's 5 entries do not fill it" });
       const streamed = yield* streamedArchive(partsOf(one(sheet('<row r="1"><c r="A1"><v>3</v></c></row>'))));
       const read = yield* Xlsx.parse(streamed);
       expect(read.workbook.sheets[0].rows[0]?.cells[0]?.value).toMatchObject({ kind: "Number", value: 3 });
