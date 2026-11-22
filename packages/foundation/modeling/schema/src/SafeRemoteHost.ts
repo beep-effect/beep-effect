@@ -178,8 +178,8 @@ const extractMappedIpv4 = (host: string): O.Option<string> =>
   );
 
 /**
- * Core blocked-host classifier mirroring the loopback, link-local,
- * RFC1918/ULA private, and cloud-metadata ranges blocked by the dataset loader.
+ * Core blocked-host classifier for the loopback, link-local, RFC1918/ULA
+ * private, and cloud-metadata ranges.
  */
 // SSRF host classifier: the explicit loopback/link-local/RFC1918/ULA/metadata
 // range checks are intentionally exhaustive and flat for auditability; folding
@@ -188,10 +188,6 @@ const extractMappedIpv4 = (host: string): O.Option<string> =>
 // ranges classify through the same isInternalIpv4 checks.
 // fallow-ignore-next-line complexity -- CRAP finding comes from fallow's static coverage estimate; flat SSRF checks keep each blocked network class independently auditable with cognitive 1. Owner: @beep/schema. Exit: remove once fallow health reads the measured coverage for this file (#1855 detector frontier) or the branches collapse.
 const isInternalHost = (host: string): boolean =>
-  // SSRF guard duplicated with @beep/nlp-mcp DatasetLoader.isBlockedRemoteHost by
-  // design: each slice owns a self-contained, independently auditable blocklist
-  // rather than coupling a foundation schema to a driver's internals.
-  // fallow-ignore-next-line code-duplication -- the SSRF blocklist mirrors nlp-mcp DatasetLoader so each security boundary audits independently. Owner: @beep/schema. Exit: have DatasetLoader import SafeRemoteHost, then delete both directives.
   host === "localhost" ||
   Str.endsWith(".localhost")(host) ||
   host === "0.0.0.0" ||
