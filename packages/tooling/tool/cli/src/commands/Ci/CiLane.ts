@@ -41,6 +41,7 @@ import * as Command from "effect/cli/Command";
 import * as Flag from "effect/cli/Flag";
 import * as Duration from "effect/Duration";
 import * as Effect from "effect/Effect";
+import * as Exit from "effect/Exit";
 import * as FileSystem from "effect/FileSystem";
 import { dual, flow, pipe } from "effect/Function";
 import * as HashMap from "effect/HashMap";
@@ -84,6 +85,15 @@ import {
   PartitionedCiLane as PartitionedCiLaneSchema,
   withCiLaneDefaultPlacements,
 } from "./CiLanePartitions.ts";
+import {
+  clearPropertySweepReceipts,
+  judgePropertySweep,
+  PROPERTY_SWEEP_NO_CACHE,
+  propertySweepIsComplete,
+  propertySweepLines,
+  propertySweepPackages,
+  propertySweepReplay,
+} from "./CiPropertySweep.ts";
 import { CiRunnerOutputsLive } from "./CiRunnerOutputs.ts";
 import { DOCS_POLICY_ROOT_TASKS } from "./DocsPolicy.ts";
 import type { FsUtils } from "@beep/repo-utils";
@@ -98,6 +108,7 @@ import type {
   QualityTaskLaneInput,
 } from "../Quality/Tasks.ts";
 import type { CiLanePartition, PartitionedCiLane } from "./CiLanePartitions.ts";
+import type { PropertySweepPackage } from "./CiPropertySweep.ts";
 
 const $I = $RepoCliId.create("commands/Ci/CiLane");
 
@@ -835,8 +846,8 @@ const DEFAULT_PROPERTY_LANE_RUNS = "400";
 // FIXED seed makes the lane deterministic so a local `beep ci lane property`
 // and the CI Property Laws lane (which runs the same command) test identical
 // inputs — a local green then predicts a CI green, closing the seed-dependent
-// gap that otherwise costs extra CI rounds. The nightly sweep leaves this
-// unset to rotate seeds for breadth. Read as a floor of a fixed constant so a
+// gap that otherwise costs extra CI rounds. The nightly sweep passes its own
+// seed, a new one every run, for breadth. Read as a floor of a fixed constant so a
 // blank `--seed ""` cannot silently drop determinism.
 const DEFAULT_PROPERTY_LANE_SEED = "20260708";
 
@@ -2600,8 +2611,106 @@ const runCiStepLane = Effect.fn("CiLane.runCiStepLane")(function* (
     Match.when("check", () =>
       runCiLaneSteps(laneId, steps).pipe(Effect.andThen(runCheckLaneCensus(repoRoot, options)))
     ),
+    Match.when(
+      (lane) => lane === "property" && isFullPropertySweep(options),
+      () => runFullPropertyLane(repoRoot, steps, options)
+    ),
     Match.orElse(() => runCiLaneSteps(laneId, steps))
   );
+});
+
+// The second step of an unfiltered sweep: Turbo's `test` task, uncached, over the packages that have
+// property files and no `test:property` script. Vitest narrows it to those files under the floor.
+const propertySweepStep = (
+  repoRoot: string,
+  packages: ReadonlyArray<PropertySweepPackage>,
+  options: CiLaneRunOptions
+): QualityTaskStep =>
+  QualityTaskStep.make({
+    label: "ci:property:sweep",
+    command: "bunx",
+    args: [
+      "turbo",
+      "run",
+      "test",
+      PROPERTY_SWEEP_NO_CACHE,
+      CI_LANE_TURBO_CONCURRENCY_ARG,
+      "--continue=dependencies-successful",
+      ...turboShapeArgs(options),
+      ...A.map(packages, (entry) => `--filter=${entry.name}`),
+    ],
+    cwd: repoRoot,
+    env: {
+      BEEP_FC_NUM_RUNS: resolvePropertyLaneRuns(options.runs),
+      BEEP_FC_SEED: resolvePropertyLaneSeed(options.seed),
+    },
+  });
+
+/**
+ * Whether a property lane run sweeps everything: the nightly and a plain local
+ * run do; the pull-request and push partitions pass a filter.
+ *
+ * **Example** (The hosted partitions)
+ *
+ * ```ts
+ * import { isFullPropertySweep } from "@beep/repo-cli/commands/Ci"
+ *
+ * console.log(isFullPropertySweep({ affected: false, filter: "@beep/repo-cli" })) // false
+ * console.log(isFullPropertySweep({ affected: false })) // true
+ * ```
+ *
+ * @param options - the lane's shape
+ * @returns whether the run has no filter, no shard and no affected scope
+ * @category predicates
+ * @since 0.0.0
+ */
+export const isFullPropertySweep = (
+  options: Pick<CiLaneRunOptions, "affected"> & Partial<Pick<CiLaneRunOptions, "filter" | "shard">>
+): boolean => !options.affected && options.filter === undefined && options.shard === undefined;
+
+const runPropertySweep = Effect.fn("CiLane.runPropertySweep")(function* (repoRoot: string, options: CiLaneRunOptions) {
+  const packages = yield* propertySweepPackages(repoRoot);
+  const swept = A.filter(packages, (entry) => A.isReadonlyArrayNonEmpty(entry.files));
+  yield* clearPropertySweepReceipts(repoRoot, swept);
+  // An empty list means the census is wrong, and with no filter Turbo would run every package's tests.
+  if (A.isReadonlyArrayEmpty(swept)) {
+    return yield* CiCommandError.make({ message: "The property sweep found no package to run." });
+  }
+  const run = yield* Effect.exit(
+    runQualityTaskStreamingStepGroup("ci:property", [propertySweepStep(repoRoot, swept, options)])
+  );
+  const verdicts = yield* judgePropertySweep(repoRoot, packages);
+  const replay = { seed: resolvePropertyLaneSeed(options.seed), runs: resolvePropertyLaneRuns(options.runs) };
+  yield* Effect.forEach(propertySweepLines(verdicts, replay), (line) => Console.log(line), {
+    concurrency: 1,
+    discard: true,
+  });
+  if (Exit.isFailure(run)) {
+    yield* Console.log(`[property-sweep] red; replay one package with: ${propertySweepReplay("<package>", replay)}`);
+  }
+  yield* run;
+  if (!propertySweepIsComplete(verdicts)) {
+    return yield* CiCommandError.make({ message: "The property sweep did not execute every expected file." });
+  }
+});
+
+// Both steps always run, so a red suite in one never hides the other; the lane is red if either is.
+const runFullPropertyLane = Effect.fn("CiLane.runFullPropertyLane")(function* (
+  repoRoot: string,
+  steps: ReadonlyArray<QualityTaskStep>,
+  options: CiLaneRunOptions
+) {
+  const first = yield* Effect.exit(runCiLaneSteps("property", steps));
+  const second = yield* Effect.exit(runPropertySweep(repoRoot, options));
+  if (Exit.isFailure(first)) {
+    const runs = resolvePropertyLaneRuns(options.runs);
+    const seed = resolvePropertyLaneSeed(options.seed);
+    yield* Console.log(
+      `[property-sweep] test:property red; replay with: bun run beep ci lane property --runs ${runs} --seed ${seed}`
+    );
+  }
+  yield* first;
+  yield* second;
 });
 
 const runCiDoctestLane = Effect.fn("CiLane.runCiDoctestLane")(function* (repoRoot: string) {
