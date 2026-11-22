@@ -113,6 +113,24 @@ const utf16 = (start: number, end: number): Position => Position.make({ unit: "u
 // the string natively and keep their running offsets and the rewrites in local mutable state; the same boundary is
 // drawn in `internal/scalars.ts`. Nothing mutable escapes a call: the result is an immutable schema value.
 
+// The open cluster's NFKC form once `scalar` joins it, or `O.none()` when `scalar` opens a new cluster. A join on a
+// mark leaves the form unknown (`undefined`), to be computed when it is read.
+const joinedForm = (
+  cluster: string,
+  form: string | undefined,
+  scalar: string,
+  scalarForm: string
+): O.Option<string | undefined> => {
+  if (cluster === "") {
+    return O.none();
+  }
+  if (startsWithMark.test(scalarForm)) {
+    return O.some(undefined);
+  }
+  const joined = normalizeNfkc(cluster + scalar);
+  return joined === (form ?? normalizeNfkc(cluster)) + scalarForm ? O.none() : O.some(joined);
+};
+
 // The NFKC clusters of a text: a scalar joins the open cluster when its NFKC form starts with a combining mark or
 // when normalizing the two together differs from normalizing each. Normalization never moves text across a cluster
 // edge, so the NFKC forms of the clusters concatenate to the NFKC form of the text. A cluster whose form differs
@@ -131,26 +149,17 @@ const nfkcRewrites = (text: string): ReadonlyArray<Rewrite> => {
   };
   for (const scalar of text) {
     const scalarForm = normalizeNfkc(scalar);
-    if (cluster !== "") {
-      if (startsWithMark.test(scalarForm)) {
-        cluster += scalar;
-        end += scalar.length;
-        form = undefined;
-        continue;
-      }
-      const joined = normalizeNfkc(cluster + scalar);
-      if (joined !== (form ?? normalizeNfkc(cluster)) + scalarForm) {
-        cluster += scalar;
-        end += scalar.length;
-        form = joined;
-        continue;
-      }
+    const joined = joinedForm(cluster, form, scalar, scalarForm);
+    if (O.isSome(joined)) {
+      cluster += scalar;
+      form = joined.value;
+    } else {
+      close();
+      cluster = scalar;
+      start = end;
+      form = scalarForm;
     }
-    close();
-    cluster = scalar;
-    start = end;
     end += scalar.length;
-    form = scalarForm;
   }
   close();
   return rewrites;

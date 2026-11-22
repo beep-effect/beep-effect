@@ -115,19 +115,47 @@ const emptyText = constant("");
 // Performance boundary (KMP scan): one pass over every UTF-16 code unit of the text and of the needle, with native
 // string indexing; the same boundary is drawn in `@beep/langextract` `VerifiedSpan.behavior.ts`. The prefix table
 // is the one allocation and is not mutated once built.
+
+// The matched length of `needle` after reading one more code unit, falling back through the prefix table.
+const advance = (needle: string, table: ReadonlyArray<number>, matched: number, unit: string | undefined): number => {
+  let next = matched;
+  while (next > 0 && unit !== needle[next]) {
+    next = getUnsafe(table, next - 1);
+  }
+  return unit === needle[next] ? next + 1 : next;
+};
+
 const prefixTable = (needle: string): ReadonlyArray<number> => {
   const table = [0];
   let matched = 0;
   for (let index = 1; index < needle.length; index++) {
-    while (matched > 0 && needle[index] !== needle[matched]) {
-      matched = getUnsafe(table, matched - 1);
-    }
-    if (needle[index] === needle[matched]) {
-      matched++;
-    }
+    matched = advance(needle, table, matched, needle[index]);
     table.push(matched);
   }
   return table;
+};
+
+// Calls `onMatch` with the end offset of every match of `needle` in the text, overlapping matches included.
+const scanMatches = (sourceText: string, needle: string, onMatch: (end: number) => void): void => {
+  const table = prefixTable(needle);
+  let matched = 0;
+  for (let index = 0; index < sourceText.length; index++) {
+    matched = advance(needle, table, matched, sourceText[index]);
+    if (matched === needle.length) {
+      onMatch(index + 1);
+      matched = getUnsafe(table, matched - 1);
+    }
+  }
+};
+
+const isScalarRange = (sourceText: string, start: number, end: number): boolean =>
+  isUtf16Boundary(sourceText, start) && isUtf16Boundary(sourceText, end);
+
+const quoteOutcome = (sourceText: string, hits: number, first: number, width: number): Resolution => {
+  if (hits === 0) {
+    return notFound;
+  }
+  return hits === 1 ? unique(sourceText, first, first + width) : ambiguous(hits);
 };
 
 // Every start of `exact` whose context matches is one hit, overlapping hits included, so the scan runs over the
@@ -135,27 +163,17 @@ const prefixTable = (needle: string): ReadonlyArray<number> => {
 const resolveQuote = (sourceText: string, quote: QuoteSelector): Resolution => {
   const prefix = O.getOrElse(quote.prefix, emptyText);
   const needle = `${prefix}${quote.exact}${O.getOrElse(quote.suffix, emptyText)}`;
-  const table = prefixTable(needle);
-  let matched = 0;
+  const width = quote.exact.length;
   let hits = 0;
   let first = 0;
-  for (let index = 0; index < sourceText.length; index++) {
-    while (matched > 0 && sourceText[index] !== needle[matched]) {
-      matched = getUnsafe(table, matched - 1);
+  scanMatches(sourceText, needle, (end) => {
+    const start = end - needle.length + prefix.length;
+    if (isScalarRange(sourceText, start, start + width)) {
+      first = hits === 0 ? start : first;
+      hits++;
     }
-    if (sourceText[index] === needle[matched]) {
-      matched++;
-    }
-    if (matched === needle.length) {
-      const start = index + 1 - needle.length + prefix.length;
-      if (isUtf16Boundary(sourceText, start) && isUtf16Boundary(sourceText, start + quote.exact.length)) {
-        first = hits === 0 ? start : first;
-        hits++;
-      }
-      matched = getUnsafe(table, matched - 1);
-    }
-  }
-  return hits === 0 ? notFound : hits === 1 ? unique(sourceText, first, first + quote.exact.length) : ambiguous(hits);
+  });
+  return quoteOutcome(sourceText, hits, first, width);
 };
 
 // `by` applies inside the segment `base` selects; a base that is not Unique has no segment, so it is the outcome.
