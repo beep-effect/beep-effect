@@ -28,6 +28,26 @@ const decodeUtf16TextRangeResult = S.decodeResult(Utf16TextRange);
 const encodeUnknownTextOffsetRangeResult = S.encodeUnknownResult(TextOffsetRange);
 const encodeUnknownUtf16TextRangeResult = S.encodeUnknownResult(Utf16TextRange);
 
+// Letters whose NFKC form starts with a combining mark, beside the text that shows a wrong cluster:
+// bases that compose, marks of different canonical classes, conjoining and halfwidth Jamo, compatibility
+// letters and an astral letter. No whitespace or quotes, so the locator form is the NFKC form.
+const MARK_LEADING_LETTERS = [
+  ["U+0E33", "\u0e33"],
+  ["U+0EB3", "\u0eb3"],
+  ["U+FF9E", "\uff9e"],
+  ["U+FF9F", "\uff9f"],
+] as const;
+const NFKC_CLUSTER_SCALARS: ReadonlyArray<string> = [
+  ...A.map(MARK_LEADING_LETTERS, ([, letter]) => letter),
+  ...["Z", "a", "e", "\u0e01", "\u0e81", "\u30ab", "\uff76", "\uff8a"],
+  ...["\u0323", "\u0301", "\u0308", "\u3099", "\u0e48"],
+  ...["\u1100", "\u1161", "\u11a8", "\uac00", "\uffa1", "\uffc2", "\ufb01", "\u2460", "\u{1d4b3}"],
+];
+// Long enough that the triple a wrong cluster needs (a composing base, a mark-leading letter, a mark) is common.
+const nfkcClusterText = Arbitrary.schema(
+  S.Array(S.Literals(NFKC_CLUSTER_SCALARS)).check(S.isMinLength(8), S.isMaxLength(24))
+).pipe(Arbitrary.map(A.join("")));
+
 const expectExactRawSlice = (source: string, startChar: number, endChar: number, quote: string): void => {
   expect(Str.slice(startChar, endChar)(source)).toBe(quote);
 };
@@ -79,6 +99,46 @@ describe("verified-span hostile-text contract", () => {
     expect(Str.startsWith("á")(normalized)).toBe(true);
     expect(Str.length(normalized)).toBe(combiningMarks);
   });
+
+  it("joins a letter whose NFKC form starts with a combining mark to the preceding cluster", () => {
+    expect(normalizeTextLocator("Z\uff9e\u0323")).toBe("\u1e92\u3099");
+    expect(normalizeTextLocator("Z\uff9f\u0323")).toBe("\u1e92\u309a");
+    expect(normalizeTextLocator("\uff9eZ")).toBe("\u3099Z");
+  });
+
+  it.effect.each(MARK_LEADING_LETTERS)(
+    "keeps the mark-leading letter %s in one cluster with the letter before it",
+    Effect.fnUntraced(function* ([, letter]) {
+      const source = `xZ${letter}y`;
+      const exact = yield* locateRawText(source, letter);
+      const cluster = yield* locateRawText(source, Str.normalize("NFKC")(`Z${letter}`));
+      const insideCluster = yield* locateRawText(source, Str.normalize("NFKC")(letter)).pipe(Effect.flip);
+
+      expect(exact).toEqual({ endChar: 3, quote: letter, startChar: 2 });
+      expect(cluster).toEqual({ endChar: 3, quote: `Z${letter}`, startChar: 1 });
+      expect(insideCluster.reason).toBe("not-found");
+    })
+  );
+
+  it.effect(
+    "maps a composed locator onto a raw cluster that holds a mark-leading letter",
+    Effect.fnUntraced(function* () {
+      const source = "xZ\uff9e\u0323y";
+      const anchor = yield* locateRawText(source, "\u1e92\u3099");
+
+      expect(anchor).toEqual({ endChar: 4, quote: "Z\uff9e\u0323", startChar: 1 });
+      expectExactRawSlice(source, anchor.startChar, anchor.endChar, anchor.quote);
+    })
+  );
+
+  it.prop(
+    "normalizes cluster by cluster to the NFKC form of the whole text",
+    { text: nfkcClusterText },
+    ({ text }) => {
+      expect(normalizeTextLocator(text)).toBe(Str.normalize("NFKC")(text));
+    },
+    { arbitrary: fcRuns(500) }
+  );
 
   it.effect(
     "preserves an exact raw locator that ends inside a normalization cluster",
