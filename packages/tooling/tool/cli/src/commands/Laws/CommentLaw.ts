@@ -519,7 +519,30 @@ const readBaseShards = Effect.fn("CommentLaw.readBaseShards")(function* (repoRoo
   return O.some(A.getSomes(shards));
 });
 
-const lawFiles = Effect.fn("CommentLaw.lawFiles")(function* (repoRoot: string) {
+/**
+ * List the files the comment law covers, the package roots and the tracked paths.
+ *
+ * **Details**
+ *
+ * `files` holds tracked and untracked paths the law covers, `roots` every
+ * package directory with a `package.json` in the enforced zones, and
+ * `tracked` every path in the git index.
+ *
+ * **Example** (List the covered files)
+ *
+ * ```ts
+ * import * as Effect from "effect/Effect"
+ * import { commentLawFiles } from "@beep/repo-cli/commands/Laws/CommentLaw"
+ *
+ * console.log(Effect.isEffect(commentLawFiles(process.cwd()))) // true
+ * ```
+ *
+ * @param repoRoot - Repository root directory.
+ * @returns Effect that yields the covered files, package roots and tracked paths, each sorted.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const commentLawFiles = Effect.fn("CommentLaw.commentLawFiles")(function* (repoRoot: string) {
   const git = yield* Git;
   const tracked = yield* mapGit(GitCommand.lsFiles(), git.lsFiles(repoRoot));
   const untracked = yield* mapGit(GitCommand.lsFiles(), git.untrackedFiles(repoRoot));
@@ -532,6 +555,10 @@ const lawFiles = Effect.fn("CommentLaw.lawFiles")(function* (repoRoot: string) {
   return {
     files: A.sort(A.filter(all, isCommentLawPath), Order.String),
     roots: packageRootsOf(all),
+    tracked: A.sort(
+      A.map(tracked, (entry) => entry.path),
+      Order.String
+    ),
   };
 });
 
@@ -548,12 +575,34 @@ const packageRootsOf = (files: ReadonlyArray<string>): ReadonlyArray<string> =>
     Order.String
   );
 
-const packageRootOf = (roots: ReadonlyArray<string>, file: string): string =>
+/**
+ * Package root that owns a file: the longest root that contains it, or `.`.
+ *
+ * **Example** (Find the owning package)
+ *
+ * ```ts
+ * import { commentPackageRootOf } from "@beep/repo-cli/commands/Laws/CommentLaw"
+ *
+ * console.log(commentPackageRootOf(["packages/a"], "packages/a/src/A.ts")) // "packages/a"
+ * console.log(commentPackageRootOf(["packages/a"], "tools/x.ts")) // "."
+ * ```
+ *
+ * @param roots - Package directories, repository-relative.
+ * @param file - Repository-relative file path.
+ * @returns The owning root, or `.` for a file in no package.
+ * @category utilities
+ * @since 0.0.0
+ */
+export const commentPackageRootOf: {
+  (file: string): (roots: ReadonlyArray<string>) => string;
+  (roots: ReadonlyArray<string>, file: string): string;
+} = F.dual(2, (roots: ReadonlyArray<string>, file: string): string =>
   F.pipe(
     roots,
     A.filter((root) => Str.startsWith(`${root}/`)(file)),
     A.reduce(".", (best, root) => (Str.length(root) > Str.length(best) || best === "." ? root : best))
-  );
+  )
+);
 
 const bannedCountsOf = Effect.fn("CommentLaw.bannedCountsOf")(function* (
   repoRoot: string,
@@ -631,7 +680,7 @@ const lockFor = Effect.fn("CommentLaw.lockFor")(function* (
   head: string,
   changes: ReadonlyArray<CommentFileChange>
 ) {
-  const { files } = yield* lawFiles(repoRoot);
+  const { files } = yield* commentLawFiles(repoRoot);
   const headShards = yield* readWorktreeShards(repoRoot);
   const baseShards = yield* readBaseShards(repoRoot, base);
   const bannedCounts = yield* bannedCountsOf(repoRoot, files);
@@ -733,12 +782,12 @@ export const runCommentCensus = Effect.fn("CommentLaw.runCommentCensus")(functio
   const repoRoot = yield* findRepoRoot(cwd).pipe(
     CommentLawExecutionError.mapError("Failed to locate the repository root")
   );
-  const { files, roots } = yield* lawFiles(repoRoot);
+  const { files, roots } = yield* commentLawFiles(repoRoot);
   let counts = HashMap.empty<string, number>();
   for (const file of files) {
     const text = yield* readWorktreeText(repoRoot, file);
     if (O.isNone(text)) continue;
-    const root = packageRootOf(roots, file);
+    const root = commentPackageRootOf(roots, file);
     for (const comment of scanCommentSource(file, text.value)) {
       const key = `${root}\u0000${comment.kind}`;
       counts = HashMap.set(counts, key, O.getOrElse(HashMap.get(counts, key), () => 0) + 1);
@@ -779,7 +828,7 @@ export const runCommentList = Effect.fn("CommentLaw.runCommentList")(function* (
   const repoRoot = yield* findRepoRoot(cwd).pipe(
     CommentLawExecutionError.mapError("Failed to locate the repository root")
   );
-  const { files } = yield* lawFiles(repoRoot);
+  const { files } = yield* commentLawFiles(repoRoot);
   const scoped = A.filter(
     files,
     (file) => file === prefix || Str.startsWith(`${Str.replace(/\/$/, "")(prefix)}/`)(file)
@@ -838,7 +887,7 @@ export const runCommentLawWrite = Effect.fn("CommentLaw.runCommentLawWrite")(fun
   const repoRoot = yield* findRepoRoot(cwd).pipe(
     CommentLawExecutionError.mapError("Failed to locate the repository root")
   );
-  const { files, roots } = yield* lawFiles(repoRoot);
+  const { files, roots } = yield* commentLawFiles(repoRoot);
   const counts = yield* bannedCountsOf(repoRoot, files);
   const current = yield* readWorktreeShards(repoRoot);
   const names = yield* packageNamesOf(repoRoot, roots);
@@ -902,7 +951,7 @@ const seedShards = (
   names: HashMap.HashMap<string, string>,
   bannedFiles: ReadonlyArray<string>
 ): ReadonlyArray<CommentLawPending> => {
-  const owners = A.dedupe(A.map(bannedFiles, (file) => packageRootOf(roots, file)));
+  const owners = A.dedupe(A.map(bannedFiles, (file) => commentPackageRootOf(roots, file)));
   return A.getSomes(
     A.map(A.sort(owners, Order.String), (root) => {
       if (root !== ".")
@@ -914,7 +963,7 @@ const seedShards = (
         });
       const loose = A.dedupe(
         A.map(
-          A.filter(bannedFiles, (file) => packageRootOf(roots, file) === "."),
+          A.filter(bannedFiles, (file) => commentPackageRootOf(roots, file) === "."),
           (file) => O.getOrElse(A.head(Str.split(file, "/")), () => file)
         )
       );
