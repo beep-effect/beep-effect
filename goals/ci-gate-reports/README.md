@@ -47,9 +47,9 @@ projection renderer and `beep ci append-gate-reports`. P2 (workflow wiring) is n
 
 ## Latest Evidence
 
-2026-11-23: census baseline `standards/agent-output-census/runs/2026-11-23T02-00-00Z--census-rules-2026-11-18.json`:
-461 of 464 CI-log fetches piped or redirected (99.4%), 425 of 7,190 run-verification turns
-fetching a CI log (5.9%). `beep ci failures` on two live red runs printed 7,950 and 7,976
+2026-11-23: census baseline `standards/agent-output-census/runs/2026-11-23T02-00-00Z--census-rules-2026-11-23.json`
+(rules that count `beep ci failures` as a CI-log read): 479 of 483 CI-log fetches piped or
+redirected (99.2%), 427 of 7,224 run-verification turns fetching a CI log (5.9%). `beep ci failures` on two live red runs printed 7,950 and 7,976
 characters per job, within the 8,000-character agent budget.
 
 2026-11-22: P3 fixture tests pass (23 across `ci-main-feed`, `ci-job-adapter`, `ci-failures`): a

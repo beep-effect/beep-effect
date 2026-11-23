@@ -1,9 +1,9 @@
 {
   "version": "agent-output-census-baseline/v1",
-  "recordedAt": "2026-11-23T01:45:51.225Z",
+  "recordedAt": "2026-11-23T02:48:11.571Z",
   "report": {
     "version": "agent-output-census/v1",
-    "ruleVersion": "census-rules/2026-11-18",
+    "ruleVersion": "census-rules/2026-11-23",
     "repository": "reference",
     "window": {
       "since": "2026-11-16T02:00:00.000Z",
@@ -12,10 +12,10 @@
     "corpus": {
       "claude": {
         "_tag": "Present",
-        "filesScanned": 197,
-        "contextsActive": 189,
-        "sessions": 80,
-        "subagents": 109,
+        "filesScanned": 202,
+        "contextsActive": 194,
+        "sessions": 82,
+        "subagents": 112,
         "compactionBoundaries": 105,
         "oversizedLines": 70,
         "oversizedBytes": 50340079,
@@ -23,8 +23,8 @@
       },
       "codex": {
         "_tag": "Present",
-        "filesScanned": 493,
-        "sessions": 60,
+        "filesScanned": 490,
+        "sessions": 56,
         "oversizedLines": 28,
         "oversizedBytes": 33403296,
         "unreadableFiles": 0
@@ -32,31 +32,31 @@
     },
     "totals": {
       "claudeSessions": {
-        "apiCalls": 28446,
-        "inputTokens": 136084,
-        "cacheCreationTokens": 98045026,
-        "cacheReadTokens": 12020496965,
-        "outputTokens": 16442652,
-        "contextTokens": 12118678075,
-        "toolOutputChars": 34309456,
-        "verificationChars": 8450714
+        "apiCalls": 28651,
+        "inputTokens": 136534,
+        "cacheCreationTokens": 98493060,
+        "cacheReadTokens": 12087340344,
+        "outputTokens": 16554536,
+        "contextTokens": 12185969938,
+        "toolOutputChars": 34745932,
+        "verificationChars": 8542834
       },
       "claudeSubagents": {
-        "apiCalls": 11875,
-        "inputTokens": 24020,
-        "cacheCreationTokens": 77514598,
-        "cacheReadTokens": 3704446065,
-        "outputTokens": 10084570,
-        "contextTokens": 3781984683,
-        "toolOutputChars": 32158957,
-        "verificationChars": 5034109
+        "apiCalls": 11967,
+        "inputTokens": 24206,
+        "cacheCreationTokens": 78323235,
+        "cacheReadTokens": 3719813803,
+        "outputTokens": 10181855,
+        "contextTokens": 3798161244,
+        "toolOutputChars": 32556615,
+        "verificationChars": 5050675
       },
       "codex": {
-        "inputTokens": 811053279,
-        "cachedInputTokens": 798377472,
-        "outputTokens": 1916316,
-        "toolOutputChars": 23035924,
-        "verificationChars": 3603327
+        "inputTokens": 788110675,
+        "cachedInputTokens": 776036992,
+        "outputTokens": 1821921,
+        "toolOutputChars": 21402883,
+        "verificationChars": 3483236
       }
     },
     "toolOutput": {
@@ -64,13 +64,13 @@
         {
           "toolOutputClass": "ci-logs",
           "claude": {
-            "results": 462,
-            "chars": 706039,
-            "carriedCharTurns": 148618642,
-            "filteredResults": 459,
+            "results": 481,
+            "chars": 725914,
+            "carriedCharTurns": 151499773,
+            "filteredResults": 477,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.010622173271987102,
-            "shareOfContextRead": 0.003999635644348101
+            "shareOfToolOutput": 0.010785832518344364,
+            "shareOfContextRead": 0.00405665746723441
           },
           "codex": {
             "results": 2,
@@ -78,20 +78,20 @@
             "carriedCharTurns": 0,
             "filteredResults": 2,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.00030105152283016733,
+            "shareOfToolOutput": 0.00032402176846922914,
             "shareOfContextRead": null
           }
         },
         {
           "toolOutputClass": "yeet",
           "claude": {
-            "results": 2555,
-            "chars": 2610819,
-            "carriedCharTurns": 509940499,
-            "filteredResults": 2520,
+            "results": 2565,
+            "chars": 2624451,
+            "carriedCharTurns": 513006885,
+            "filteredResults": 2528,
             "persistedResults": 1,
-            "shareOfToolOutput": 0.03927909336424205,
-            "shareOfContextRead": 0.013723555597399805
+            "shareOfToolOutput": 0.038994824371208416,
+            "shareOfContextRead": 0.013736609432265713
           },
           "codex": {
             "results": 30,
@@ -99,20 +99,20 @@
             "carriedCharTurns": 0,
             "filteredResults": 18,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.005545121610923877,
+            "shareOfToolOutput": 0.005968214655941445,
             "shareOfContextRead": null
           }
         },
         {
           "toolOutputClass": "ci-status",
           "claude": {
-            "results": 1361,
-            "chars": 715159,
-            "carriedCharTurns": 210192895,
-            "filteredResults": 1175,
+            "results": 1365,
+            "chars": 717994,
+            "carriedCharTurns": 211754075,
+            "filteredResults": 1178,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.010759381301912533,
-            "shareOfContextRead": 0.0056567263952709106
+            "shareOfToolOutput": 0.010668154951104599,
+            "shareOfContextRead": 0.005670066248654151
           },
           "codex": {
             "results": 0,
@@ -127,84 +127,84 @@
         {
           "toolOutputClass": "quality",
           "claude": {
-            "results": 532,
-            "chars": 518842,
-            "carriedCharTurns": 64728992,
-            "filteredResults": 522,
+            "results": 536,
+            "chars": 524045,
+            "carriedCharTurns": 65057195,
+            "filteredResults": 526,
             "persistedResults": 2,
-            "shareOfToolOutput": 0.007805843055106491,
-            "shareOfContextRead": 0.0017419913150997781
+            "shareOfToolOutput": 0.007786406657091298,
+            "shareOfContextRead": 0.0017420142002065912
           },
           "codex": {
-            "results": 103,
-            "chars": 169587,
+            "results": 102,
+            "chars": 169435,
             "carriedCharTurns": 0,
             "filteredResults": 84,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.007361849257707223,
+            "shareOfToolOutput": 0.007916456862376905,
             "shareOfContextRead": null
           }
         },
         {
           "toolOutputClass": "test",
           "claude": {
-            "results": 3340,
-            "chars": 4455633,
-            "carriedCharTurns": 640542027,
-            "filteredResults": 3093,
+            "results": 3358,
+            "chars": 4495034,
+            "carriedCharTurns": 641366947,
+            "filteredResults": 3108,
             "persistedResults": 4,
-            "shareOfToolOutput": 0.06703384057025703,
-            "shareOfContextRead": 0.017238313366449577
+            "shareOfToolOutput": 0.06678846790151939,
+            "shareOfContextRead": 0.01717366279344119
           },
           "codex": {
-            "results": 361,
-            "chars": 1369383,
+            "results": 336,
+            "chars": 1267480,
             "carriedCharTurns": 0,
-            "filteredResults": 215,
+            "filteredResults": 201,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.05944554253608408,
+            "shareOfToolOutput": 0.05922005927892985,
             "shareOfContextRead": null
           }
         },
         {
           "toolOutputClass": "check",
           "claude": {
-            "results": 1197,
-            "chars": 1488087,
-            "carriedCharTurns": 205921678,
-            "filteredResults": 1109,
+            "results": 1200,
+            "chars": 1495285,
+            "carriedCharTurns": 206324316,
+            "filteredResults": 1112,
             "persistedResults": 3,
-            "shareOfToolOutput": 0.022387882196013918,
-            "shareOfContextRead": 0.005541779094393639
+            "shareOfToolOutput": 0.02221736125380218,
+            "shareOfContextRead": 0.005524675453958812
           },
           "codex": {
-            "results": 301,
-            "chars": 859055,
+            "results": 291,
+            "chars": 853206,
             "carriedCharTurns": 0,
             "filteredResults": 207,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.037291970576044615,
+            "shareOfToolOutput": 0.039864068779892875,
             "shareOfContextRead": null
           }
         },
         {
           "toolOutputClass": "lint",
           "claude": {
-            "results": 1064,
-            "chars": 1556912,
-            "carriedCharTurns": 184343205,
-            "filteredResults": 974,
+            "results": 1073,
+            "chars": 1575230,
+            "carriedCharTurns": 185150950,
+            "filteredResults": 982,
             "persistedResults": 13,
-            "shareOfToolOutput": 0.023423336435007106,
-            "shareOfContextRead": 0.004961057668064072
+            "shareOfToolOutput": 0.023405206343825292,
+            "shareOfContextRead": 0.004957723493638798
           },
           "codex": {
-            "results": 223,
-            "chars": 473896,
+            "results": 220,
+            "chars": 464909,
             "carriedCharTurns": 0,
-            "filteredResults": 115,
+            "filteredResults": 114,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.02057204217204398,
+            "shareOfToolOutput": 0.021721793274298608,
             "shareOfContextRead": null
           }
         },
@@ -213,19 +213,19 @@
           "claude": {
             "results": 137,
             "chars": 313399,
-            "carriedCharTurns": 28342681,
+            "carriedCharTurns": 28485231,
             "filteredResults": 119,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.004715006509934275,
-            "shareOfContextRead": 0.0007627602813379745
+            "shareOfToolOutput": 0.004656569683759516,
+            "shareOfContextRead": 0.000762739261939667
           },
           "codex": {
-            "results": 65,
-            "chars": 361567,
+            "results": 64,
+            "chars": 358367,
             "carriedCharTurns": 0,
-            "filteredResults": 48,
+            "filteredResults": 47,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.015695788890430443,
+            "shareOfToolOutput": 0.016743865767990227,
             "shareOfContextRead": null
           }
         },
@@ -234,11 +234,11 @@
           "claude": {
             "results": 44,
             "chars": 23367,
-            "carriedCharTurns": 5702332,
+            "carriedCharTurns": 5704093,
             "filteredResults": 43,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.00035155044246355034,
-            "shareOfContextRead": 0.0001534615712819311
+            "shareOfToolOutput": 0.0003471933981933849,
+            "shareOfContextRead": 0.0001527365421349478
           },
           "codex": {
             "results": 5,
@@ -246,20 +246,20 @@
             "carriedCharTurns": 0,
             "filteredResults": 4,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.0005336013437099375,
+            "shareOfToolOutput": 0.0005743151518419271,
             "shareOfContextRead": null
           }
         },
         {
           "toolOutputClass": "turbo",
           "claude": {
-            "results": 520,
-            "chars": 947525,
-            "carriedCharTurns": 153936020,
-            "filteredResults": 398,
+            "results": 521,
+            "chars": 949749,
+            "carriedCharTurns": 154377418,
+            "filteredResults": 399,
             "persistedResults": 2,
-            "shareOfToolOutput": 0.01425526738542712,
-            "shareOfContextRead": 0.004142737305735052
+            "shareOfToolOutput": 0.014111635329343479,
+            "shareOfContextRead": 0.0041337111805577935
           },
           "codex": {
             "results": 6,
@@ -267,7 +267,7 @@
             "carriedCharTurns": 0,
             "filteredResults": 2,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.006863801078697777,
+            "shareOfToolOutput": 0.00738750943038842,
             "shareOfContextRead": null
           }
         },
@@ -276,11 +276,11 @@
           "claude": {
             "results": 144,
             "chars": 149041,
-            "carriedCharTurns": 24530732,
+            "carriedCharTurns": 24684857,
             "filteredResults": 140,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.0022422831127320584,
-            "shareOfContextRead": 0.0006601728340994437
+            "shareOfToolOutput": 0.0022144927145179216,
+            "shareOfContextRead": 0.0006609779506182072
           },
           "codex": {
             "results": 19,
@@ -288,28 +288,28 @@
             "carriedCharTurns": 0,
             "filteredResults": 17,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.002811304638789397,
+            "shareOfToolOutput": 0.0030258073176403387,
             "shareOfContextRead": null
           }
         },
         {
           "toolOutputClass": "beep-other",
           "claude": {
-            "results": 941,
-            "chars": 1131932,
-            "carriedCharTurns": 177860496,
-            "filteredResults": 927,
+            "results": 949,
+            "chars": 1142858,
+            "carriedCharTurns": 178150917,
+            "filteredResults": 936,
             "persistedResults": 2,
-            "shareOfToolOutput": 0.01702962277736344,
-            "shareOfContextRead": 0.004786594534506869
+            "shareOfToolOutput": 0.016980902669255594,
+            "shareOfContextRead": 0.004770286010545425
           },
           "codex": {
-            "results": 80,
-            "chars": 692153,
+            "results": 71,
+            "chars": 558431,
             "carriedCharTurns": 0,
-            "filteredResults": 54,
+            "filteredResults": 51,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.03004667839675109,
+            "shareOfToolOutput": 0.026091391519544354,
             "shareOfContextRead": null
           }
         },
@@ -317,12 +317,12 @@
           "toolOutputClass": "gh",
           "claude": {
             "results": 2270,
-            "chars": 2577609,
-            "carriedCharTurns": 481183865,
+            "chars": 2575668,
+            "carriedCharTurns": 483019561,
             "filteredResults": 1871,
             "persistedResults": 2,
-            "shareOfToolOutput": 0.038779457544743844,
-            "shareOfContextRead": 0.012949654982981104
+            "shareOfToolOutput": 0.03826999296178197,
+            "shareOfContextRead": 0.012933649141183442
           },
           "codex": {
             "results": 4,
@@ -330,70 +330,70 @@
             "carriedCharTurns": 0,
             "filteredResults": 4,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.0003544463855671689,
+            "shareOfToolOutput": 0.0003814906617954226,
             "shareOfContextRead": null
           }
         },
         {
           "toolOutputClass": "git",
           "claude": {
-            "results": 2970,
-            "chars": 6215565,
-            "carriedCharTurns": 873619669,
-            "filteredResults": 2499,
+            "results": 2990,
+            "chars": 6288186,
+            "carriedCharTurns": 878305223,
+            "filteredResults": 2517,
             "persistedResults": 12,
-            "shareOfToolOutput": 0.09351156014511736,
-            "shareOfContextRead": 0.023510915728431905
+            "shareOfToolOutput": 0.09343162005443865,
+            "shareOfContextRead": 0.02351807775575963
           },
           "codex": {
-            "results": 890,
-            "chars": 4580774,
+            "results": 862,
+            "chars": 4179065,
             "carriedCharTurns": 0,
-            "filteredResults": 702,
+            "filteredResults": 685,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.1988534950888013,
+            "shareOfToolOutput": 0.1952571062505925,
             "shareOfContextRead": null
           }
         },
         {
           "toolOutputClass": "search-read",
           "claude": {
-            "results": 11706,
-            "chars": 29220559,
-            "carriedCharTurns": 4396913255,
-            "filteredResults": 7843,
-            "persistedResults": 43,
-            "shareOfToolOutput": 0.43961571641555514,
-            "shareOfContextRead": 0.11833004758450581
+            "results": 11851,
+            "chars": 29839432,
+            "carriedCharTurns": 4424763098,
+            "filteredResults": 7936,
+            "persistedResults": 44,
+            "shareOfToolOutput": 0.44336259666368943,
+            "shareOfContextRead": 0.11848036407450566
           },
           "codex": {
-            "results": 2038,
-            "chars": 12490618,
+            "results": 1980,
+            "chars": 11533474,
             "carriedCharTurns": 0,
-            "filteredResults": 1518,
+            "filteredResults": 1479,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.5422234419596106,
+            "shareOfToolOutput": 0.5388747861678261,
             "shareOfContextRead": null
           }
         },
         {
           "toolOutputClass": "other-shell",
           "claude": {
-            "results": 1360,
-            "chars": 841666,
-            "carriedCharTurns": 73407303,
+            "results": 1367,
+            "chars": 842658,
+            "carriedCharTurns": 73810089,
             "filteredResults": 69,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.012662646240703837,
-            "shareOfContextRead": 0.0019755426485074555
+            "shareOfToolOutput": 0.012520447405950328,
+            "shareOfContextRead": 0.0019763874411817526
           },
           "codex": {
-            "results": 636,
-            "chars": 1638403,
+            "results": 617,
+            "chars": 1618028,
             "carriedCharTurns": 0,
-            "filteredResults": 41,
+            "filteredResults": 40,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.071123823815359,
+            "shareOfToolOutput": 0.07559860043154,
             "shareOfContextRead": null
           }
         },
@@ -402,11 +402,11 @@
           "claude": {
             "results": 785,
             "chars": 8244214,
-            "carriedCharTurns": 1065927796,
+            "carriedCharTurns": 1066933108,
             "filteredResults": 0,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.12403205715171807,
-            "shareOfContextRead": 0.02868632595353019
+            "shareOfToolOutput": 0.12249482920757813,
+            "shareOfContextRead": 0.02856890194553504
           },
           "codex": {
             "results": 0,
@@ -426,8 +426,8 @@
             "carriedCharTurns": 25109574,
             "filteredResults": 0,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.0061031245021601465,
-            "shareOfContextRead": 0.000675750671875984
+            "shareOfToolOutput": 0.006027483625545405,
+            "shareOfContextRead": 0.0006723504520774101
           },
           "codex": {
             "results": 0,
@@ -442,13 +442,13 @@
         {
           "toolOutputClass": "other-tool",
           "claude": {
-            "results": 7027,
-            "chars": 4346380,
-            "carriedCharTurns": 943901407,
+            "results": 7067,
+            "chars": 4370357,
+            "carriedCharTurns": 948723266,
             "filteredResults": 0,
             "persistedResults": 1,
-            "shareOfToolOutput": 0.06539015757755492,
-            "shareOfContextRead": 0.025402342945560794
+            "shareOfToolOutput": 0.06493598228905066,
+            "shareOfContextRead": 0.025403637544446467
           },
           "codex": {
             "results": 677,
@@ -456,7 +456,7 @@
             "carriedCharTurns": 0,
             "filteredResults": 0,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.0006324469554596551,
+            "shareOfToolOutput": 0.0006807026885116365,
             "shareOfContextRead": null
           }
         },
@@ -477,46 +477,46 @@
             "carriedCharTurns": 0,
             "filteredResults": 0,
             "persistedResults": 0,
-            "shareOfToolOutput": 0.0003435937711897296,
+            "shareOfToolOutput": 0.00036980999242018,
             "shareOfContextRead": null
           }
         }
       ],
       "verification": {
         "claude": {
-          "results": 11356,
-          "chars": 13484823,
-          "carriedCharTurns": 2176799703,
-          "filteredResults": 10552,
+          "results": 11424,
+          "chars": 13593509,
+          "carriedCharTurns": 2187411740,
+          "filteredResults": 10612,
           "persistedResults": 25,
-          "shareOfToolOutput": 0.20287565764508322,
-          "shareOfContextRead": 0.05858219107348028
+          "shareOfToolOutput": 0.20197614512270984,
+          "shareOfContextRead": 0.05857157402465028
         },
         "codex": {
-          "results": 1115,
-          "chars": 3603327,
+          "results": 1075,
+          "chars": 3483236,
           "carriedCharTurns": 0,
-          "filteredResults": 712,
+          "filteredResults": 696,
           "persistedResults": 0,
-          "shareOfToolOutput": 0.1564220736272615,
+          "shareOfToolOutput": 0.16274611228776983,
           "shareOfContextRead": null
         }
       },
       "all": {
         "claude": {
-          "results": 38427,
-          "chars": 66468413,
-          "carriedCharTurns": 10214723068,
-          "filteredResults": 23761,
-          "persistedResults": 85,
+          "results": 38715,
+          "chars": 67302547,
+          "carriedCharTurns": 10266226576,
+          "filteredResults": 23941,
+          "persistedResults": 86,
           "shareOfToolOutput": 1,
-          "shareOfContextRead": 0.2748993661233804
+          "shareOfContextRead": 0.2748952283898851
         },
         "codex": {
-          "results": 5505,
-          "chars": 23035924,
+          "results": 5351,
+          "chars": 21402883,
           "carriedCharTurns": 0,
-          "filteredResults": 3031,
+          "filteredResults": 2955,
           "persistedResults": 0,
           "shareOfToolOutput": 1,
           "shareOfContextRead": null
@@ -526,79 +526,79 @@
     "verificationByKind": [
       {
         "kind": "yeet",
-        "claudeChars": 2610819,
-        "claudeShareOfVerification": 0.19361166253350154,
-        "claudeShareOfContextRead": 0.013723555597399805,
+        "claudeChars": 2624451,
+        "claudeShareOfVerification": 0.19306648489363562,
+        "claudeShareOfContextRead": 0.013736609432265713,
         "codexChars": 127737
       },
       {
         "kind": "test",
-        "claudeChars": 4455633,
-        "claudeShareOfVerification": 0.3304183525434483,
-        "claudeShareOfContextRead": 0.017238313366449577,
-        "codexChars": 1369383
+        "claudeChars": 4495034,
+        "claudeShareOfVerification": 0.3306750302662837,
+        "claudeShareOfContextRead": 0.01717366279344119,
+        "codexChars": 1267480
       },
       {
         "kind": "check",
-        "claudeChars": 1488087,
-        "claudeShareOfVerification": 0.11035272765537968,
-        "claudeShareOfContextRead": 0.005541779094393639,
-        "codexChars": 859055
+        "claudeChars": 1495285,
+        "claudeShareOfVerification": 0.10999992717112263,
+        "claudeShareOfContextRead": 0.005524675453958812,
+        "codexChars": 853206
       },
       {
         "kind": "lint",
-        "claudeChars": 1556912,
-        "claudeShareOfVerification": 0.11545661370564522,
-        "claudeShareOfContextRead": 0.004961057668064072,
-        "codexChars": 473896
+        "claudeChars": 1575230,
+        "claudeShareOfVerification": 0.11588104293012201,
+        "claudeShareOfContextRead": 0.004957723493638798,
+        "codexChars": 464909
       },
       {
         "kind": "quality",
-        "claudeChars": 518842,
-        "claudeShareOfVerification": 0.0384759963108155,
-        "claudeShareOfContextRead": 0.0017419913150997781,
-        "codexChars": 169587
+        "claudeChars": 524045,
+        "claudeShareOfVerification": 0.03855112024422833,
+        "claudeShareOfContextRead": 0.0017420142002065912,
+        "codexChars": 169435
       },
       {
         "kind": "ci-logs",
-        "claudeChars": 706039,
-        "claudeShareOfVerification": 0.052358047265433146,
-        "claudeShareOfContextRead": 0.003999635644348101,
+        "claudeChars": 725914,
+        "claudeShareOfVerification": 0.053401516856317235,
+        "claudeShareOfContextRead": 0.00405665746723441,
         "codexChars": 6935
       },
       {
         "kind": "turbo",
-        "claudeChars": 947525,
-        "claudeShareOfVerification": 0.07026603167130929,
-        "claudeShareOfContextRead": 0.004142737305735052,
+        "claudeChars": 949749,
+        "claudeShareOfVerification": 0.06986783177176695,
+        "claudeShareOfContextRead": 0.0041337111805577935,
         "codexChars": 158114
       },
       {
         "kind": "ci-status",
-        "claudeChars": 715159,
-        "claudeShareOfVerification": 0.05303436315033575,
-        "claudeShareOfContextRead": 0.0056567263952709106,
+        "claudeChars": 717994,
+        "claudeShareOfVerification": 0.052818885837350754,
+        "claudeShareOfContextRead": 0.005670066248654151,
         "codexChars": 0
       },
       {
         "kind": "install",
         "claudeChars": 149041,
-        "claudeShareOfVerification": 0.011052499539667669,
-        "claudeShareOfContextRead": 0.0006601728340994437,
+        "claudeShareOfVerification": 0.010964130012346333,
+        "claudeShareOfContextRead": 0.0006609779506182072,
         "codexChars": 64761
       },
       {
         "kind": "docgen",
         "claudeChars": 313399,
-        "claudeShareOfVerification": 0.023240868641731523,
-        "claudeShareOfContextRead": 0.0007627602813379745,
-        "codexChars": 361567
+        "claudeShareOfVerification": 0.023055047817307512,
+        "claudeShareOfContextRead": 0.000762739261939667,
+        "codexChars": 358367
       },
       {
         "kind": "build",
         "claudeChars": 23367,
-        "claudeShareOfVerification": 0.001732836982732365,
-        "claudeShareOfContextRead": 0.0001534615712819311,
+        "claudeShareOfVerification": 0.0017189821995189027,
+        "claudeShareOfContextRead": 0.0001527365421349478,
         "codexChars": 12292
       }
     ],
@@ -610,18 +610,18 @@
       },
       {
         "subcommand": "final-check",
-        "results": 500,
-        "chars": 457958
+        "results": 502,
+        "chars": 459835
       },
       {
         "subcommand": "publish",
-        "results": 287,
-        "chars": 279459
+        "results": 288,
+        "chars": 279490
       },
       {
         "subcommand": "open",
-        "results": 164,
-        "chars": 224509
+        "results": 165,
+        "chars": 222960
       },
       {
         "subcommand": "verify",
@@ -630,8 +630,8 @@
       },
       {
         "subcommand": "ready",
-        "results": 14,
-        "chars": 18008
+        "results": 15,
+        "chars": 18246
       },
       {
         "subcommand": "monitor",
@@ -645,8 +645,8 @@
       },
       {
         "subcommand": "job-wait",
-        "results": 182,
-        "chars": 86494
+        "results": 183,
+        "chars": 86846
       },
       {
         "subcommand": "sweep",
@@ -665,8 +665,8 @@
       },
       {
         "subcommand": "gate-table",
-        "results": 512,
-        "chars": 706589
+        "results": 513,
+        "chars": 707583
       },
       {
         "subcommand": "cheap-gates",
@@ -675,8 +675,8 @@
       },
       {
         "subcommand": "inbox",
-        "results": 471,
-        "chars": 451802
+        "results": 475,
+        "chars": 463789
       },
       {
         "subcommand": "gh",
@@ -695,8 +695,8 @@
       },
       {
         "subcommand": "other",
-        "results": 32,
-        "chars": 52043
+        "results": 31,
+        "chars": 51745
       },
       {
         "subcommand": "none",
@@ -708,23 +708,23 @@
       "rows": [
         {
           "kind": "yeet",
-          "runs": 2585,
+          "runs": 2595,
           "habits": [
             {
               "habit": "tail",
-              "runs": 1457
+              "runs": 1461
             },
             {
               "habit": "head",
-              "runs": 827
+              "runs": 828
             },
             {
               "habit": "grep",
-              "runs": 1447
+              "runs": 1452
             },
             {
               "habit": "unfiltered",
-              "runs": 47
+              "runs": 49
             },
             {
               "habit": "redirect",
@@ -734,49 +734,49 @@
         },
         {
           "kind": "test",
-          "runs": 3701,
+          "runs": 3694,
           "habits": [
             {
               "habit": "tail",
-              "runs": 1284
+              "runs": 1289
             },
             {
               "habit": "head",
-              "runs": 1995
+              "runs": 1994
             },
             {
               "habit": "grep",
-              "runs": 2007
+              "runs": 2006
             },
             {
               "habit": "unfiltered",
-              "runs": 393
+              "runs": 385
             },
             {
               "habit": "redirect",
-              "runs": 348
+              "runs": 347
             }
           ]
         },
         {
           "kind": "check",
-          "runs": 1498,
+          "runs": 1491,
           "habits": [
             {
               "habit": "tail",
-              "runs": 488
+              "runs": 491
             },
             {
               "habit": "head",
-              "runs": 682
+              "runs": 681
             },
             {
               "habit": "grep",
-              "runs": 524
+              "runs": 523
             },
             {
               "habit": "unfiltered",
-              "runs": 182
+              "runs": 172
             },
             {
               "habit": "redirect",
@@ -786,23 +786,23 @@
         },
         {
           "kind": "lint",
-          "runs": 1287,
+          "runs": 1293,
           "habits": [
             {
               "habit": "tail",
-              "runs": 513
+              "runs": 515
             },
             {
               "habit": "head",
-              "runs": 568
+              "runs": 573
             },
             {
               "habit": "grep",
-              "runs": 427
+              "runs": 432
             },
             {
               "habit": "unfiltered",
-              "runs": 198
+              "runs": 197
             },
             {
               "habit": "redirect",
@@ -812,59 +812,59 @@
         },
         {
           "kind": "quality",
-          "runs": 635,
+          "runs": 638,
           "habits": [
             {
               "habit": "tail",
-              "runs": 351
+              "runs": 353
             },
             {
               "habit": "head",
-              "runs": 195
+              "runs": 196
             },
             {
               "habit": "grep",
-              "runs": 243
+              "runs": 244
             },
             {
               "habit": "unfiltered",
-              "runs": 29
+              "runs": 28
             },
             {
               "habit": "redirect",
-              "runs": 233
+              "runs": 235
             }
           ]
         },
         {
           "kind": "ci-logs",
-          "runs": 464,
+          "runs": 483,
           "habits": [
             {
               "habit": "tail",
-              "runs": 96
+              "runs": 107
             },
             {
               "habit": "head",
-              "runs": 345
+              "runs": 350
             },
             {
               "habit": "grep",
-              "runs": 316
+              "runs": 322
             },
             {
               "habit": "unfiltered",
-              "runs": 3
+              "runs": 4
             },
             {
               "habit": "redirect",
-              "runs": 172
+              "runs": 174
             }
           ]
         },
         {
           "kind": "turbo",
-          "runs": 526,
+          "runs": 527,
           "habits": [
             {
               "habit": "tail",
@@ -872,7 +872,7 @@
             },
             {
               "habit": "head",
-              "runs": 285
+              "runs": 286
             },
             {
               "habit": "grep",
@@ -890,7 +890,7 @@
         },
         {
           "kind": "ci-status",
-          "runs": 1361,
+          "runs": 1365,
           "habits": [
             {
               "habit": "tail",
@@ -906,7 +906,7 @@
             },
             {
               "habit": "unfiltered",
-              "runs": 186
+              "runs": 187
             },
             {
               "habit": "redirect",
@@ -942,7 +942,7 @@
         },
         {
           "kind": "docgen",
-          "runs": 202,
+          "runs": 201,
           "habits": [
             {
               "habit": "tail",
@@ -950,11 +950,11 @@
             },
             {
               "habit": "head",
-              "runs": 93
+              "runs": 92
             },
             {
               "habit": "grep",
-              "runs": 35
+              "runs": 34
             },
             {
               "habit": "unfiltered",
@@ -993,458 +993,458 @@
           ]
         }
       ],
-      "allRuns": 12471,
+      "allRuns": 12499,
       "allHabits": [
         {
           "habit": "tail",
-          "runs": 4562
+          "runs": 4589
         },
         {
           "habit": "head",
-          "runs": 5291
+          "runs": 5301
         },
         {
           "habit": "grep",
-          "runs": 5385
+          "runs": 5399
         },
         {
           "habit": "unfiltered",
-          "runs": 1207
+          "runs": 1191
         },
         {
           "habit": "redirect",
-          "runs": 1885
+          "runs": 1888
         }
       ]
     },
     "turns": {
-      "turns": 40321,
-      "contextTokens": 15900662758,
+      "turns": 40618,
+      "contextTokens": 15984131182,
       "rows": [
         {
           "turnClass": "rerun-no-edit",
           "turns": 124,
-          "shareOfTurns": 0.0030753205525656606,
+          "shareOfTurns": 0.0030528337190408195,
           "contextTokens": 42097093,
-          "shareOfContextRead": 0.0026475055562586508,
+          "shareOfContextRead": 0.0026336803996832962,
           "resultChars": 152028
         },
         {
           "turnClass": "run-verification",
-          "turns": 7190,
-          "shareOfTurns": 0.1783189901044121,
-          "contextTokens": 2785085216,
-          "shareOfContextRead": 0.17515529122198115,
-          "resultChars": 9408879
+          "turns": 7224,
+          "shareOfTurns": 0.17785218376089418,
+          "contextTokens": 2794301574,
+          "shareOfContextRead": 0.17481723230266716,
+          "resultChars": 9462409
         },
         {
           "turnClass": "dig-captured-log",
-          "turns": 819,
-          "shareOfTurns": 0.020311996230252226,
-          "contextTokens": 333085250,
-          "shareOfContextRead": 0.020947884693197263,
-          "resultChars": 2111884
+          "turns": 821,
+          "shareOfTurns": 0.0202127135752622,
+          "contextTokens": 333619912,
+          "shareOfContextRead": 0.020871945318848173,
+          "resultChars": 2112615
         },
         {
           "turnClass": "fetch-ci-log",
-          "turns": 425,
-          "shareOfTurns": 0.010540413184196821,
-          "contextTokens": 179085840,
-          "shareOfContextRead": 0.011262790911649117,
-          "resultChars": 660131
+          "turns": 427,
+          "shareOfTurns": 0.01051258062927766,
+          "contextTokens": 179513099,
+          "shareOfContextRead": 0.011230707315650207,
+          "resultChars": 661208
         },
         {
           "turnClass": "edit",
-          "turns": 4746,
-          "shareOfTurns": 0.11770541405223085,
-          "contextTokens": 1670596822,
-          "shareOfContextRead": 0.10506460311910477,
+          "turns": 4797,
+          "shareOfTurns": 0.11810034959870008,
+          "contextTokens": 1681447791,
+          "shareOfContextRead": 0.1051948192776037,
           "resultChars": 0
         },
         {
           "turnClass": "other-tool",
-          "turns": 20243,
-          "shareOfTurns": 0.5020460802063441,
-          "contextTokens": 7474802183,
-          "shareOfContextRead": 0.47009374997524866,
+          "turns": 20421,
+          "shareOfTurns": 0.5027573981978434,
+          "contextTokens": 7521155421,
+          "shareOfContextRead": 0.4705388948177365,
           "resultChars": 0
         },
         {
           "turnClass": "no-tool",
-          "turns": 6774,
-          "shareOfTurns": 0.16800178566999827,
-          "contextTokens": 3415910354,
-          "shareOfContextRead": 0.21482817452256037,
+          "turns": 6804,
+          "shareOfTurns": 0.16751194051898174,
+          "contextTokens": 3431996292,
+          "shareOfContextRead": 0.21471272056781096,
           "resultChars": 0
         }
       ],
-      "verificationRuns": 7384,
-      "redirectedRuns": 1091,
+      "verificationRuns": 7418,
+      "redirectedRuns": 1094,
       "rerunsNoEdit": 124,
       "rerunsSameCommand": 2,
-      "logDigs": 829,
-      "ciLogFetches": 427,
+      "logDigs": 831,
+      "ciLogFetches": 429,
       "digFollowUp": {
-        "runs": 7384,
-        "zero": 6892,
+        "runs": 7418,
+        "zero": 6925,
         "one": 310,
-        "two": 102,
+        "two": 103,
         "threeOrMore": 80,
         "max": 10,
-        "mean": 0.11037378114842904
+        "mean": 0.11013750337018065
       }
     },
     "lineClasses": {
-      "totalChars": 17088150,
+      "totalChars": 17076745,
       "classes": [
         {
           "lineClass": "signal",
-          "chars": 4552443,
-          "share": 0.2664093538504753
+          "chars": 4543098,
+          "share": 0.26604004451668045
         },
         {
           "lineClass": "other",
-          "chars": 10769271,
-          "share": 0.6302186602996813
+          "chars": 10753829,
+          "share": 0.6297352920594645
         },
         {
           "lineClass": "dup-line",
-          "chars": 557737,
-          "share": 0.032638816957950394
+          "chars": 554712,
+          "share": 0.0324834738704595
         },
         {
           "lineClass": "pass-line",
           "chars": 58781,
-          "share": 0.003439869149088696
+          "share": 0.003442166525295072
         },
         {
           "lineClass": "runner-chrome",
-          "chars": 199621,
-          "share": 0.011681837998847155
+          "chars": 200379,
+          "share": 0.011734027767001264
         },
         {
           "lineClass": "coverage-table",
           "chars": 22468,
-          "share": 0.0013148292822804106
+          "share": 0.001315707413795779
         },
         {
           "lineClass": "turbo-chrome",
-          "chars": 92202,
-          "share": 0.005395668928467974
+          "chars": 92479,
+          "share": 0.005415493409311903
         },
         {
           "lineClass": "turbo-prefix",
-          "chars": 53008,
-          "share": 0.0031020326951718
+          "chars": 53367,
+          "share": 0.0031251271831956268
         },
         {
           "lineClass": "script-echo",
-          "chars": 300398,
-          "share": 0.017579316660960957
+          "chars": 306145,
+          "share": 0.01792759685759786
         },
         {
           "lineClass": "stack-vendor",
-          "chars": 32536,
-          "share": 0.0019040095036618944
+          "chars": 31242,
+          "share": 0.0018295055644386561
         },
         {
           "lineClass": "stack-own",
           "chars": 26814,
-          "share": 0.0015691575741083733
+          "share": 0.001570205563179634
         },
         {
           "lineClass": "zsh-noise",
-          "chars": 468120,
-          "share": 0.027394422450645623
+          "chars": 479205,
+          "share": 0.02806184668096877
         },
         {
           "lineClass": "blank",
-          "chars": 13935,
-          "share": 0.0008154773922279474
+          "chars": 13797,
+          "share": 0.0008079408575814653
         },
         {
           "lineClass": "ansi",
-          "chars": 22194,
-          "share": 0.0012987947788379666
+          "chars": 22687,
+          "share": 0.0013285318718526276
         },
         {
           "lineClass": "persist-wrapper",
           "chars": 6295,
-          "share": 0.0003683839385773182
+          "share": 0.00036862997017288716
         }
       ],
       "byKind": [
         {
           "kind": "yeet",
-          "totalChars": 2738556,
+          "totalChars": 2752188,
           "classes": [
             {
               "lineClass": "signal",
-              "chars": 282498,
-              "share": 0.10315582372608045
+              "chars": 282538,
+              "share": 0.10265941134835266
             },
             {
               "lineClass": "other",
-              "chars": 2253457,
-              "share": 0.8228632169654373
+              "chars": 2256781,
+              "share": 0.8199952183499092
             },
             {
               "lineClass": "dup-line",
               "chars": 62709,
-              "share": 0.02289856406076779
+              "share": 0.022785144038125302
             },
             {
               "lineClass": "pass-line",
               "chars": 139,
-              "share": 0.00005075667614611496
+              "share": 0.00005050527071551798
             },
             {
               "lineClass": "runner-chrome",
               "chars": 966,
-              "share": 0.0003527406414183241
+              "share": 0.00035099346410928325
             },
             {
               "lineClass": "coverage-table",
               "chars": 240,
-              "share": 0.00008763742643933518
+              "share": 0.00008720334512031881
             },
             {
               "lineClass": "turbo-chrome",
               "chars": 2360,
-              "share": 0.0008617680266534626
+              "share": 0.0008574995603498017
             },
             {
               "lineClass": "turbo-prefix",
-              "chars": 4245,
-              "share": 0.001550086980145741
+              "chars": 4279,
+              "share": 0.0015547629740410174
             },
             {
               "lineClass": "script-echo",
               "chars": 82985,
-              "share": 0.030302465971117624
+              "share": 0.030152373311706903
             },
             {
               "lineClass": "stack-vendor",
               "chars": 447,
-              "share": 0.00016322470674326177
+              "share": 0.0001624162302865938
             },
             {
               "lineClass": "stack-own",
               "chars": 163,
-              "share": 0.000059520418790048477
+              "share": 0.00005922560522754986
             },
             {
               "lineClass": "zsh-noise",
-              "chars": 54292,
-              "share": 0.019825046484351606
+              "chars": 64570,
+              "share": 0.02346133331007911
             },
             {
               "lineClass": "blank",
               "chars": 650,
-              "share": 0.00023735136327319946
+              "share": 0.00023617572636753012
             },
             {
               "lineClass": "ansi",
               "chars": 3596,
-              "share": 0.0013131007728160388
+              "share": 0.0013065967877194436
             },
             {
               "lineClass": "persist-wrapper",
               "chars": 235,
-              "share": 0.00008581164672184903
+              "share": 0.0000853866087636455
             }
           ]
         },
         {
           "kind": "test",
-          "totalChars": 5825016,
+          "totalChars": 5762514,
           "classes": [
             {
               "lineClass": "signal",
-              "chars": 1329525,
-              "share": 0.22824400825680136
+              "chars": 1310361,
+              "share": 0.22739398116863577
             },
             {
               "lineClass": "other",
-              "chars": 3692081,
-              "share": 0.6338319070711566
+              "chars": 3651534,
+              "share": 0.6336703043150959
             },
             {
               "lineClass": "dup-line",
-              "chars": 212967,
-              "share": 0.03656075794469921
+              "chars": 208824,
+              "share": 0.03623835013676323
             },
             {
               "lineClass": "pass-line",
               "chars": 53430,
-              "share": 0.009172506993972205
+              "share": 0.009271994827257686
             },
             {
               "lineClass": "runner-chrome",
-              "chars": 186795,
-              "share": 0.03206772307578211
+              "chars": 187553,
+              "share": 0.03254707927824557
             },
             {
               "lineClass": "coverage-table",
               "chars": 17132,
-              "share": 0.002941107801248958
+              "share": 0.0029730079614557117
             },
             {
               "lineClass": "turbo-chrome",
-              "chars": 22599,
-              "share": 0.0038796459958221575
+              "chars": 22876,
+              "share": 0.003969795127612705
             },
             {
               "lineClass": "turbo-prefix",
-              "chars": 5227,
-              "share": 0.0008973365910067886
+              "chars": 5541,
+              "share": 0.0009615594860159992
             },
             {
               "lineClass": "script-echo",
-              "chars": 76431,
-              "share": 0.0131211656757681
+              "chars": 76692,
+              "share": 0.013308774607749325
             },
             {
               "lineClass": "stack-vendor",
-              "chars": 17858,
-              "share": 0.0030657426520373505
+              "chars": 17211,
+              "share": 0.0029867172556977736
             },
             {
               "lineClass": "stack-own",
               "chars": 19279,
-              "share": 0.003309690479820141
+              "share": 0.0033455884011735154
             },
             {
               "lineClass": "zsh-noise",
-              "chars": 193274,
-              "share": 0.03317999469872701
+              "chars": 194081,
+              "share": 0.033679918174602266
             },
             {
               "lineClass": "blank",
-              "chars": 6330,
-              "share": 0.001086692294064085
+              "chars": 6219,
+              "share": 0.0010792164669795163
             },
             {
               "lineClass": "ansi",
               "chars": 5650,
-              "share": 0.0009699544172925877
+              "share": 0.0009804748413626413
             },
             {
               "lineClass": "persist-wrapper",
               "chars": 1016,
-              "share": 0.0001744201217644724
+              "share": 0.00017631193607512276
             }
           ]
         },
         {
           "kind": "check",
-          "totalChars": 2347142,
+          "totalChars": 2348491,
           "classes": [
             {
               "lineClass": "signal",
-              "chars": 1315762,
-              "share": 0.5605804846915952
+              "chars": 1317428,
+              "share": 0.5609678725615725
             },
             {
               "lineClass": "other",
-              "chars": 868873,
-              "share": 0.3701833975106747
+              "chars": 868485,
+              "share": 0.3698055474770821
             },
             {
               "lineClass": "dup-line",
-              "chars": 53642,
-              "share": 0.02285417754869539
+              "chars": 53578,
+              "share": 0.022813798307083143
             },
             {
               "lineClass": "pass-line",
               "chars": 36,
-              "share": 0.000015337802314474368
+              "share": 0.00001532899210599487
             },
             {
               "lineClass": "runner-chrome",
               "chars": 2187,
-              "share": 0.0009317714906043179
+              "share": 0.0009312362704391884
             },
             {
               "lineClass": "coverage-table",
               "chars": 2752,
-              "share": 0.0011724897769287074
+              "share": 0.0011718162854360524
             },
             {
               "lineClass": "turbo-chrome",
               "chars": 7147,
-              "share": 0.0030449798094874534
+              "share": 0.0030432307383762595
             },
             {
               "lineClass": "turbo-prefix",
               "chars": 7029,
-              "share": 0.0029947059019011205
+              "share": 0.0029929857086954986
             },
             {
               "lineClass": "script-echo",
-              "chars": 32566,
-              "share": 0.013874746393699232
+              "chars": 32703,
+              "share": 0.013925111912287506
             },
             {
               "lineClass": "stack-vendor",
               "chars": 3285,
-              "share": 0.0013995744611957862
+              "share": 0.001398770529672032
             },
             {
               "lineClass": "stack-own",
               "chars": 4104,
-              "share": 0.001748509463850078
+              "share": 0.0017475051000834152
             },
             {
               "lineClass": "zsh-noise",
               "chars": 56005,
-              "share": 0.02386093385061492
+              "share": 0.023847227858228966
             },
             {
               "lineClass": "blank",
-              "chars": 1548,
-              "share": 0.0006595254995223978
+              "chars": 1539,
+              "share": 0.0006553144125312808
             },
             {
               "lineClass": "ansi",
-              "chars": 1607,
-              "share": 0.0006846624533155642
+              "chars": 1709,
+              "share": 0.0007277013196984787
             },
             {
               "lineClass": "persist-wrapper",
               "chars": 733,
-              "share": 0.0003122946971252698
+              "share": 0.00031211531149150665
             }
           ]
         },
         {
           "kind": "lint",
-          "totalChars": 2030808,
+          "totalChars": 2040139,
           "classes": [
             {
               "lineClass": "signal",
-              "chars": 689850,
-              "share": 0.3396923786000449
+              "chars": 691610,
+              "share": 0.33900141117835597
             },
             {
               "lineClass": "other",
-              "chars": 1168955,
-              "share": 0.5756107913697405
+              "chars": 1177042,
+              "share": 0.5769420613007251
             },
             {
               "lineClass": "dup-line",
-              "chars": 56889,
-              "share": 0.028012987933866716
+              "chars": 57083,
+              "share": 0.027979956267685683
             },
             {
               "lineClass": "pass-line",
               "chars": 635,
-              "share": 0.000312683424528562
+              "share": 0.0003112533018583538
             },
             {
               "lineClass": "runner-chrome",
               "chars": 106,
-              "share": 0.000052195973228389884
+              "share": 0.000051957244089740943
             },
             {
               "lineClass": "coverage-table",
@@ -1454,204 +1454,204 @@
             {
               "lineClass": "turbo-chrome",
               "chars": 13816,
-              "share": 0.006803203453994666
+              "share": 0.006772087588149631
             },
             {
               "lineClass": "turbo-prefix",
               "chars": 9934,
-              "share": 0.004891649038215331
+              "share": 0.0048692760640328915
             },
             {
               "lineClass": "script-echo",
-              "chars": 51160,
-              "share": 0.025191943305324777
+              "chars": 51127,
+              "share": 0.025060547345058352
             },
             {
               "lineClass": "stack-vendor",
-              "chars": 2619,
-              "share": 0.0012896344706146519
+              "chars": 1972,
+              "share": 0.0009666008051412183
             },
             {
               "lineClass": "stack-own",
               "chars": 1809,
-              "share": 0.0008907784487750688
+              "share": 0.0008867042882862393
             },
             {
               "lineClass": "zsh-noise",
               "chars": 40897,
-              "share": 0.020138289784164726
+              "share": 0.020046183127718258
             },
             {
               "lineClass": "blank",
-              "chars": 2044,
-              "share": 0.0010064959365927257
+              "chars": 2020,
+              "share": 0.0009901286137856294
             },
             {
               "lineClass": "ansi",
               "chars": 3177,
-              "share": 0.0015644019523263647
+              "share": 0.0015572468346519526
             },
             {
               "lineClass": "persist-wrapper",
               "chars": 3315,
-              "share": 0.001632355200491627
+              "share": 0.0016248892845046343
             }
           ]
         },
         {
           "kind": "quality",
-          "totalChars": 688429,
+          "totalChars": 693480,
           "classes": [
             {
               "lineClass": "signal",
-              "chars": 240575,
-              "share": 0.34945506363038165
+              "chars": 244668,
+              "share": 0.35281190517390554
             },
             {
               "lineClass": "other",
-              "chars": 365978,
-              "share": 0.5316132818344376
+              "chars": 366771,
+              "share": 0.5288847551479495
             },
             {
               "lineClass": "dup-line",
               "chars": 7236,
-              "share": 0.010510887833022722
+              "share": 0.010434331199169406
             },
             {
               "lineClass": "pass-line",
               "chars": 485,
-              "share": 0.0007045025703449447
+              "share": 0.0006993712868431678
             },
             {
               "lineClass": "runner-chrome",
               "chars": 6185,
-              "share": 0.00898422350017213
+              "share": 0.008918786410566995
             },
             {
               "lineClass": "coverage-table",
               "chars": 162,
-              "share": 0.00023531838432140425
+              "share": 0.00023360442983215088
             },
             {
               "lineClass": "turbo-chrome",
               "chars": 9601,
-              "share": 0.01394624572759137
+              "share": 0.013844667474188152
             },
             {
               "lineClass": "turbo-prefix",
-              "chars": 7799,
-              "share": 0.011328691847670566
+              "chars": 7810,
+              "share": 0.011262040722154929
             },
             {
               "lineClass": "script-echo",
-              "chars": 33588,
-              "share": 0.048789345015971146
+              "chars": 33757,
+              "share": 0.04867768356693776
             },
             {
               "lineClass": "stack-vendor",
               "chars": 5352,
-              "share": 0.007774222178321947
+              "share": 0.007717598200380689
             },
             {
               "lineClass": "stack-own",
               "chars": 629,
-              "share": 0.0009136744675195263
+              "share": 0.0009070196689161908
             },
             {
               "lineClass": "zsh-noise",
               "chars": 18087,
-              "share": 0.026272861834699002
+              "share": 0.026081501989963663
             },
             {
               "lineClass": "blank",
-              "chars": 662,
-              "share": 0.000961609693955368
+              "chars": 661,
+              "share": 0.0009531637538213071
             },
             {
               "lineClass": "ansi",
               "chars": 871,
-              "share": 0.0012651994613823649
+              "share": 0.0012559843110111323
             },
             {
               "lineClass": "persist-wrapper",
               "chars": 524,
-              "share": 0.000761153292496394
+              "share": 0.0007556093903212782
             }
           ]
         },
         {
           "kind": "ci-logs",
-          "totalChars": 712974,
+          "totalChars": 732849,
           "classes": [
             {
               "lineClass": "signal",
-              "chars": 147921,
-              "share": 0.20747039864006261
+              "chars": 150181,
+              "share": 0.2049276181041388
             },
             {
               "lineClass": "other",
-              "chars": 528145,
-              "share": 0.740763337793524
+              "chars": 540431,
+              "share": 0.7374384081850422
             },
             {
               "lineClass": "dup-line",
-              "chars": 23157,
-              "share": 0.032479445253263094
+              "chars": 23279,
+              "share": 0.03176507029415337
             },
             {
               "lineClass": "pass-line",
               "chars": 185,
-              "share": 0.0002594765026494655
+              "share": 0.0002524394520562899
             },
             {
               "lineClass": "runner-chrome",
               "chars": 672,
-              "share": 0.0009425308636780583
+              "share": 0.0009169692528747395
             },
             {
               "lineClass": "coverage-table",
               "chars": 62,
-              "share": 0.00008695969277982086
+              "share": 0.00008460132987832419
             },
             {
               "lineClass": "turbo-chrome",
               "chars": 3376,
-              "share": 0.004735095529430246
+              "share": 0.00460667886563262
             },
             {
               "lineClass": "turbo-prefix",
               "chars": 6360,
-              "share": 0.008920381388381624
+              "share": 0.008678459000421641
             },
             {
               "lineClass": "script-echo",
-              "chars": 4493,
-              "share": 0.006301772575157018
+              "chars": 9706,
+              "share": 0.013244201738693782
             },
             {
               "lineClass": "stack-vendor",
               "chars": 1003,
-              "share": 0.001406783417067102
+              "share": 0.0013686311914186961
             },
             {
               "lineClass": "stack-own",
               "chars": 35,
-              "share": 0.00004909014914989887
+              "share": 0.000047758815253892687
             },
             {
               "lineClass": "zsh-noise",
               "chars": 4256,
-              "share": 0.005969362136627703
+              "share": 0.00580747193487335
             },
             {
               "lineClass": "blank",
-              "chars": 133,
-              "share": 0.0001865425667696157
+              "chars": 146,
+              "share": 0.00019922248648766662
             },
             {
               "lineClass": "ansi",
-              "chars": 802,
-              "share": 0.0011248657033776828
+              "chars": 1193,
+              "share": 0.0016278933313683991
             },
             {
               "lineClass": "persist-wrapper",
@@ -1662,32 +1662,32 @@
         },
         {
           "kind": "turbo",
-          "totalChars": 1105639,
+          "totalChars": 1107863,
           "classes": [
             {
               "lineClass": "signal",
               "chars": 208595,
-              "share": 0.1886646545572289
+              "share": 0.18828591621888266
             },
             {
               "lineClass": "other",
-              "chars": 810865,
-              "share": 0.7333903742541643
+              "chars": 813084,
+              "share": 0.733921071468223
             },
             {
               "lineClass": "dup-line",
-              "chars": 54402,
-              "share": 0.049204125397168515
+              "chars": 54408,
+              "share": 0.04911076550078845
             },
             {
               "lineClass": "pass-line",
               "chars": 3494,
-              "share": 0.0031601634891678023
+              "share": 0.0031538195607218582
             },
             {
               "lineClass": "runner-chrome",
               "chars": 1381,
-              "share": 0.0012490514535033587
+              "share": 0.0012465440221399217
             },
             {
               "lineClass": "coverage-table",
@@ -1697,17 +1697,17 @@
             {
               "lineClass": "turbo-chrome",
               "chars": 13329,
-              "share": 0.012055471994023365
+              "share": 0.012031271014556854
             },
             {
               "lineClass": "turbo-prefix",
               "chars": 8932,
-              "share": 0.008078586229320782
+              "share": 0.008062368722486444
             },
             {
               "lineClass": "script-echo",
               "chars": 5080,
-              "share": 0.004594628083850153
+              "share": 0.00458540451301289
             },
             {
               "lineClass": "stack-vendor",
@@ -1717,78 +1717,78 @@
             {
               "lineClass": "stack-own",
               "chars": 368,
-              "share": 0.00033283919977497177
+              "share": 0.00033217103558833537
             },
             {
               "lineClass": "zsh-noise",
               "chars": 6685,
-              "share": 0.006046277311129582
+              "share": 0.006034139600293538
             },
             {
               "lineClass": "blank",
               "chars": 1494,
-              "share": 0.0013512547947386081
+              "share": 0.0013485421933939485
             },
             {
               "lineClass": "ansi",
               "chars": 2861,
-              "share": 0.0025876438873809627
+              "share": 0.002582449273962575
             },
             {
               "lineClass": "persist-wrapper",
               "chars": 472,
-              "share": 0.0004269024518852899
+              "share": 0.00042604545868938666
             }
           ]
         },
         {
           "kind": "ci-status",
-          "totalChars": 715159,
+          "totalChars": 717994,
           "classes": [
             {
               "lineClass": "signal",
               "chars": 51838,
-              "share": 0.07248458035206157
+              "share": 0.07219837491678203
             },
             {
               "lineClass": "other",
-              "chars": 578978,
-              "share": 0.8095794082155157
+              "chars": 580957,
+              "share": 0.8091390735855731
             },
             {
               "lineClass": "dup-line",
-              "chars": 62749,
-              "share": 0.08774132745305589
+              "chars": 63609,
+              "share": 0.08859266233422564
             },
             {
               "lineClass": "pass-line",
               "chars": 327,
-              "share": 0.00045724097718129815
+              "share": 0.0004554355607428474
             },
             {
               "lineClass": "runner-chrome",
               "chars": 641,
-              "share": 0.000896304178511352
+              "share": 0.0008927651205998936
             },
             {
               "lineClass": "coverage-table",
               "chars": 2120,
-              "share": 0.0029643757542029115
+              "share": 0.0029526709136845153
             },
             {
               "lineClass": "turbo-chrome",
               "chars": 11019,
-              "share": 0.015407762469604661
+              "share": 0.015346924904664942
             },
             {
               "lineClass": "turbo-prefix",
               "chars": 224,
-              "share": 0.0003132170608214397
+              "share": 0.00031198032295534503
             },
             {
               "lineClass": "script-echo",
               "chars": 4342,
-              "share": 0.006071377134315586
+              "share": 0.006047404295857626
             },
             {
               "lineClass": "stack-vendor",
@@ -1798,17 +1798,17 @@
             {
               "lineClass": "stack-own",
               "chars": 149,
-              "share": 0.00020834527706426123
+              "share": 0.00020752262553726077
             },
             {
               "lineClass": "zsh-noise",
               "chars": 4042,
-              "share": 0.005651889999286872
+              "share": 0.005629573506185289
             },
             {
               "lineClass": "blank",
               "chars": 315,
-              "share": 0.0004404614917801496
+              "share": 0.00043872232915595396
             },
             {
               "lineClass": "ansi",
@@ -1905,32 +1905,32 @@
         },
         {
           "kind": "docgen",
-          "totalChars": 674966,
+          "totalChars": 671766,
           "classes": [
             {
               "lineClass": "signal",
               "chars": 237953,
-              "share": 0.3525407205696287
+              "share": 0.3542200706793735
             },
             {
               "lineClass": "other",
-              "chars": 346671,
-              "share": 0.5136125375204085
+              "chars": 343476,
+              "share": 0.5113030430239102
             },
             {
               "lineClass": "dup-line",
               "chars": 19437,
-              "share": 0.02879700607141693
+              "share": 0.028934182438527703
             },
             {
               "lineClass": "pass-line",
               "chars": 5,
-              "share": 0.000007407780540056832
+              "share": 0.0000074430679730739575
             },
             {
               "lineClass": "runner-chrome",
               "chars": 668,
-              "share": 0.0009896794801515928
+              "share": 0.0009943938812026808
             },
             {
               "lineClass": "coverage-table",
@@ -1940,42 +1940,42 @@
             {
               "lineClass": "turbo-chrome",
               "chars": 5353,
-              "share": 0.007930769846184845
+              "share": 0.007968548571972978
             },
             {
               "lineClass": "turbo-prefix",
               "chars": 2003,
-              "share": 0.002967556884346767
+              "share": 0.002981693030013427
             },
             {
               "lineClass": "script-echo",
               "chars": 5063,
-              "share": 0.007501118574861548
+              "share": 0.0075368506295346895
             },
             {
               "lineClass": "stack-vendor",
               "chars": 1972,
-              "share": 0.002921628644998415
+              "share": 0.002935546008580369
             },
             {
               "lineClass": "stack-own",
               "chars": 278,
-              "share": 0.0004118725980271599
+              "share": 0.00041383457930291203
             },
             {
               "lineClass": "zsh-noise",
               "chars": 57231,
-              "share": 0.08479093761759851
+              "share": 0.08519484463339913
             },
             {
               "lineClass": "blank",
-              "chars": 537,
-              "share": 0.0007955956300021038
+              "chars": 531,
+              "share": 0.0007904538187404542
             },
             {
               "lineClass": "ansi",
               "chars": 2060,
-              "share": 0.003052005582503415
+              "share": 0.0030665440049064702
             },
             {
               "lineClass": "persist-wrapper",
@@ -2071,126 +2071,126 @@
           "offender": "ts6305-unbuilt-output",
           "lines": 226,
           "chars": 87412,
-          "scopeChars": 5066379,
-          "share": 0.01725334800258725
+          "scopeChars": 5082110,
+          "share": 0.017199942543549826
         },
         {
           "offender": "gate-table-repeat",
           "lines": 906,
           "chars": 141932,
-          "scopeChars": 2738556,
-          "share": 0.051827313372448836
+          "scopeChars": 2752188,
+          "share": 0.051570604915071205
         },
         {
           "offender": "json-envelope",
           "lines": 26,
           "chars": 80213,
-          "scopeChars": 2738556,
-          "share": 0.029290253695743305
+          "scopeChars": 2752188,
+          "share": 0.029145174675567223
         },
         {
           "offender": "help-global-flags",
           "lines": 310,
           "chars": 30108,
-          "scopeChars": 2738556,
-          "share": 0.0109941151468146
+          "scopeChars": 2752188,
+          "share": 0.010939659645343996
         },
         {
           "offender": "tests-passed-line",
-          "lines": 2529,
-          "chars": 73143,
-          "scopeChars": 17088150,
-          "share": 0.004280334617849211
+          "lines": 2533,
+          "chars": 73257,
+          "scopeChars": 17076745,
+          "share": 0.00428986905876969
         }
       ]
     },
     "calibration": {
-      "samples": 4681,
-      "slope": 0.42791978637279704,
-      "intercept": 188.04084629080657,
-      "charsPerToken": 2.3368865657658926,
+      "samples": 4756,
+      "slope": 0.4280015991622289,
+      "intercept": 190.6875487998221,
+      "charsPerToken": 2.3364398683495615,
       "bins": [
         {
           "bin": "3k-6k",
-          "samples": 2812,
-          "median": 2.2216110019646367,
-          "p25": 2.071290944123314,
-          "p75": 2.3683297180043383
+          "samples": 2849,
+          "median": 2.2216653816499616,
+          "p25": 2.071852340145023,
+          "p75": 2.367965367965368
         },
         {
           "bin": "6k-12k",
-          "samples": 1319,
-          "median": 2.282823172274222,
-          "p25": 2.1382191453807593,
+          "samples": 1348,
+          "median": 2.2842916800513975,
+          "p25": 2.1392373923739236,
           "p75": 2.4210652591170825
         },
         {
           "bin": "12k-20k",
-          "samples": 389,
+          "samples": 396,
           "median": 2.314300960512273,
-          "p25": 2.167396429774335,
-          "p75": 2.4295081967213115
+          "p25": 2.167814113597246,
+          "p75": 2.4324471959213403
         },
         {
           "bin": "20k-plus",
-          "samples": 161,
-          "median": 2.2949635648416846,
+          "samples": 163,
+          "median": 2.2957555943858856,
           "p25": 2.185501214013181,
-          "p75": 2.449600525336544
+          "p75": 2.4544492646280816
         }
       ]
     },
     "headline": {
-      "filteredRunShare": 0.9032154598668912,
-      "logDigsPerRun": 0.11037378114842904,
+      "filteredRunShare": 0.9047123769901592,
+      "logDigsPerRun": 0.11013750337018065,
       "verificationCharsPerRun": [
         {
           "kind": "yeet",
-          "runs": 2585,
-          "chars": 2738556,
-          "charsPerRun": 1059.4027079303676
+          "runs": 2595,
+          "chars": 2752188,
+          "charsPerRun": 1060.5734104046244
         },
         {
           "kind": "test",
-          "runs": 3701,
-          "chars": 5825016,
-          "charsPerRun": 1573.9032693866523
+          "runs": 3694,
+          "chars": 5762514,
+          "charsPerRun": 1559.9658906334596
         },
         {
           "kind": "check",
-          "runs": 1498,
-          "chars": 2347142,
-          "charsPerRun": 1566.8504672897195
+          "runs": 1491,
+          "chars": 2348491,
+          "charsPerRun": 1575.111334674715
         },
         {
           "kind": "lint",
-          "runs": 1287,
-          "chars": 2030808,
-          "charsPerRun": 1577.939393939394
+          "runs": 1293,
+          "chars": 2040139,
+          "charsPerRun": 1577.8337200309359
         },
         {
           "kind": "quality",
-          "runs": 635,
-          "chars": 688429,
-          "charsPerRun": 1084.1401574803149
+          "runs": 638,
+          "chars": 693480,
+          "charsPerRun": 1086.9592476489029
         },
         {
           "kind": "ci-logs",
-          "runs": 464,
-          "chars": 712974,
-          "charsPerRun": 1536.5818965517242
+          "runs": 483,
+          "chars": 732849,
+          "charsPerRun": 1517.2857142857142
         },
         {
           "kind": "turbo",
-          "runs": 526,
-          "chars": 1105639,
-          "charsPerRun": 2101.9752851711028
+          "runs": 527,
+          "chars": 1107863,
+          "charsPerRun": 2102.2068311195444
         },
         {
           "kind": "ci-status",
-          "runs": 1361,
-          "chars": 715159,
-          "charsPerRun": 525.4658339456282
+          "runs": 1365,
+          "chars": 717994,
+          "charsPerRun": 526.0029304029304
         },
         {
           "kind": "install",
@@ -2200,9 +2200,9 @@
         },
         {
           "kind": "docgen",
-          "runs": 202,
-          "chars": 674966,
-          "charsPerRun": 3341.4158415841584
+          "runs": 201,
+          "chars": 671766,
+          "charsPerRun": 3342.1194029850744
         },
         {
           "kind": "build",
@@ -2211,7 +2211,7 @@
           "charsPerRun": 727.734693877551
         }
       ],
-      "turnsPerVerdict": 1.1902642559109875
+      "turnsPerVerdict": 1.189922480620155
     }
   }
 }
