@@ -1,6 +1,6 @@
 # beep-fleet-watch GitHub App
 
-The identity behind `.github/workflows/fleet-missed-event-check.yml`. Every ten minutes the
+The identity behind the fleet missed-event check workflow, which #3499 adds. Every ten minutes the
 workflow runs `beep ci fleet-missed-event-check`, which compares the jobs the runner fleet
 was asked to serve with the deliveries its `workflow_job` webhook received and with the
 organization's self-hosted runners (goal `infra-alchemy-rebuild`, P5). It only reads.
