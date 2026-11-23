@@ -1,6 +1,0 @@
-{
-  "schemaVersion": "comment-law-pending/v1",
-  "package": "@beep/public-site",
-  "root": "packages/foundation/modeling/public-site",
-  "scopes": ["."]
-}

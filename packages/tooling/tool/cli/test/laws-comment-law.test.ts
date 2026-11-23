@@ -643,6 +643,8 @@ it.layer(Layer.provideMerge(TSMorphServiceLive, NodeTestLayer), { timeout: "60 s
         expect(listed[2]?.excerpt).toBe(`${Str.slice(0, 72)(LONG_NOTE)}...`);
         const whole = yield* runCommentList(checkout.root, ".");
         expect(A.length(whole)).toBe(5);
+        const bare = yield* runCommentList(checkout.root, "./");
+        expect(A.length(bare)).toBe(5);
         const dotted = yield* runCommentList(checkout.root, "./packages/a/src/");
         expect(A.map(dotted, (finding) => finding.file)).toEqual(["packages/a/src/A.ts", "packages/a/src/U.ts"]);
         const single = yield* runCommentList(checkout.root, "vitest.config.ts");

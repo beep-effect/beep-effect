@@ -1,4 +1,4 @@
 {
   "schemaVersion": "comment-law-policy/v1",
-  "enforcement": "advisory"
+  "enforcement": "blocking"
 }

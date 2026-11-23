@@ -65,6 +65,13 @@
         ".agents/skills/crispen"
       ]
     },
+    "delete-comment": {
+      "_tag": "local",
+      "installedTargets": [
+        ".claude/skills/delete-comment",
+        ".agents/skills/delete-comment"
+      ]
+    },
     "effect-first-development": {
       "_tag": "local",
       "installedTargets": [
