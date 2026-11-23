@@ -637,7 +637,6 @@ const memberFrom = (code: string, from: number): O.Option<readonly [member: stri
   );
 };
 
-// Whether the member call writes: `write`, or an `end` that passes a chunk.
 const writes = (code: string, [method, end]: readonly [member: string, end: number]): boolean =>
   method === "write" || (method === "end" && END_WITH_CHUNK.test(Str.slice(end)(code)));
 

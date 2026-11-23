@@ -176,8 +176,6 @@ export const testRule: {
   });
 });
 
-// ── Inference harness (#345) ────────────────────────────────────────────────
-
 /** Expected strict-resolution outcome for one rule over an EMPTY base config. */
 export type InferenceExpectation =
   | { readonly kind: "options"; readonly options: Record<string, unknown> }

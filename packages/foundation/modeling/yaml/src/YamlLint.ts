@@ -39,8 +39,6 @@ import type { StyleObservation, YamlLintSeverity, YamlRule } from "./YamlLintRul
 
 const $I = $YamlId.create("YamlLint");
 
-// ── Config ──────────────────────────────────────────────────────────────────
-
 /**
  * One entry of the config `rules` map: a bare severity literal (the common
  * case), `"off"` to disable, or a typed per-rule options object (the tuning
@@ -228,8 +226,6 @@ export class YamlLintConfig extends S.Opaque<YamlLintConfig, { readonly brand: u
   });
 }
 
-// ── Context construction ────────────────────────────────────────────────────
-
 /**
  * Split `text` into positioned lines. Line text excludes the terminator
  * whole — for CRLF input the `\r` is part of the terminator and is stripped
@@ -283,8 +279,6 @@ const buildContext = (text: string): LintContext => {
     document: documentFromRaw(composeFirstDocument(text, ParseOptionsInput.make({ uniqueKeys: false })), text),
   });
 };
-
-// ── Style evidence ───────────────────────────────────────────────────
 
 const StyleCandidateValue = S.Union([S.String, S.Finite, S.Boolean]).pipe(
   $I.annoteSchema("StyleCandidateValue", {
@@ -833,7 +827,6 @@ const mergeRuleEntry = (
   return merged;
 };
 
-/** Record one rule dimension's pick. */
 const setPick = (
   picks: MutableHashMap.MutableHashMap<string, MutableHashMap.MutableHashMap<string, string | number | boolean>>,
   ruleId: string,
@@ -944,9 +937,6 @@ export class YamlLintInference extends S.Opaque<YamlLintInference, { readonly br
   )
 ) {}
 
-// ── Facade ──────────────────────────────────────────────────────────────────
-
-/** Resolve the effective severity of a configured entry. */
 const resolveSeverity = (entry: Exclude<YamlLintRuleSetting, "off">): YamlLintSeverity => {
   if (entry === "error" || entry === "warning") return entry;
   const severity = O.getOrUndefined(R.get(entry, "severity"));

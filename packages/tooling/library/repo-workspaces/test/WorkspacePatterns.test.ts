@@ -74,7 +74,6 @@ describe("WorkspacePatterns.read — an absent config is not an error", () => {
   });
 });
 
-// ── the silent-degradation bug ─────────────────────────────────────────────
 //
 // The old code substituted "" for an unreadable pnpm-workspace.yaml and "{}" for
 // an unreadable package.json. That made an UNREADABLE file and an EMPTY file

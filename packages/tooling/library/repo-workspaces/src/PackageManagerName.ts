@@ -625,7 +625,6 @@ export class PackageManagerDetector extends Context.Service<PackageManagerDetect
         (hint) => hint.name
       );
 
-    /** Whether the manifest declares `name` as its manager. */
     const namesManager: {
       (hints: Hints, name: PackageManagerName): boolean;
       (name: PackageManagerName): (hints: Hints) => boolean;

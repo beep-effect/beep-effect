@@ -210,7 +210,6 @@ describe("YamlFormat", () => {
       assert.strictEqual(after.success.length, 2);
       assert.deepStrictEqual(after.success, before.success);
       assert.include(once, "---\nlockfileVersion:");
-      // Fixed point: formatting the formatted stream changes nothing.
       assert.strictEqual(YamlFormat.formatToString(once), once);
     });
 

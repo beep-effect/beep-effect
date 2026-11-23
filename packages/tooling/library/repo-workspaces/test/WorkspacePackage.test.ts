@@ -129,8 +129,6 @@ describe("WorkspacePackage", () => {
     assert.isTrue(utils.matchesDependency("fseven*"));
   });
 
-  // ── dependencyDiff ────────────────────────────────────────────────────────
-
   it("dependencyDiff reports additions, removals and version changes", () => {
     const before = WorkspacePackage.make({
       name: "x",
@@ -163,8 +161,6 @@ describe("WorkspacePackage", () => {
     assert.deepStrictEqual(diff.removed, {});
     assert.deepStrictEqual(diff.changed, {});
   });
-
-  // ── the lockfiles bridge ──────────────────────────────────────────────────
 
   it("toWorkspaceManifest projects onto the lockfiles integrity input", () => {
     const wm = utils.toWorkspaceManifest();

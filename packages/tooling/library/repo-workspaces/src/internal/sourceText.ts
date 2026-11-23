@@ -742,7 +742,6 @@ const isPropertyKey = (code: string, before: number, after: number): boolean => 
   return unitAt(code, k) === ":";
 };
 
-/** Whether the raw identifier `raw` cooks to `name`. */
 const cooksTo = (raw: string, name: string): boolean => O.contains(cookIdentifier(raw), name);
 
 /** Whether the identifier token is a free, global-member or spread reference to `name`. */

@@ -32,8 +32,6 @@ const rootsOver = (tree: Tree) => {
   return WorkspaceRoot.layer.pipe(Layer.provide(base));
 };
 
-// ── bounded ascent (item 4) ─────────────────────────────────────────────────
-
 // The regression shape: `/host` is a real workspace root, `/host/fixtures/wsp`
 // is an intended-but-unmarked one.
 const nested: Tree = {
@@ -237,8 +235,6 @@ describe("WorkspaceRoot.find — marker stat failures", () => {
   });
 });
 
-// ── the carried discovery root (item 5) ─────────────────────────────────────
-
 const discovered: Tree = {
   "/repo/package.json": rootManifest(["packages/*", "apps/nested/*"]),
   "/repo/packages/alpha/package.json": manifest("@x/alpha"),
@@ -295,8 +291,6 @@ describe("WorkspacePackage.workspaceRoot — carried by discovery", () => {
     );
   });
 });
-
-// ── the test double (item 9) ────────────────────────────────────────────────
 
 // Bound to a const: layerTest is a parameterized layer factory and layers
 // memoize by reference.

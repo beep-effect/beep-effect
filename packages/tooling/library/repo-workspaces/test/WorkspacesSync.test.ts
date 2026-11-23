@@ -275,7 +275,6 @@ describe("getWorkspacePackagesSync over pure in-memory ops (no ambient Node fs)"
   });
 });
 
-// ── stopAt: the nested-checkout layout ───────────────────────────────────
 //
 // Mirrors `WorkspacesStopAt.test.ts`: a plain single-package repository
 // checked out inside a directory that is itself a pnpm workspace root. With no

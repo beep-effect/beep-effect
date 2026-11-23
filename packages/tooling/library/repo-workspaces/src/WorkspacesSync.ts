@@ -473,7 +473,6 @@ const ManifestRead = S.Union([
     description: "The existing untagged success or failure of a synchronous manifest read.",
   })
 );
-/** The existing plain-record manifest read result. */
 type ManifestRead = typeof ManifestRead.Type;
 
 /**
@@ -555,7 +554,6 @@ const ResolvedEntry = S.Struct({
     description: "A plain child entry with directory-ness resolved under stat semantics.",
   })
 );
-/** The readonly resolved child entry. */
 type ResolvedEntry = typeof ResolvedEntry.Type;
 
 /**

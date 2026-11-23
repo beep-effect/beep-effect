@@ -217,8 +217,6 @@ describe("ChangeDetector — a git command that fails", () => {
   });
 });
 
-// ── Publishability, which is pure and swappable ────────────────────────────
-
 const location = {
   version: "1.0.0",
   path: "/repo/packages/p",
@@ -290,7 +288,6 @@ describe("PublishabilityDetector — the npm semantics", () => {
   });
 });
 
-// ── a workspace NESTED inside a larger git repository ──────────────────────
 //
 // The `--relative` correctness now lives inside `@effected/git`: `Git` runs
 // `git diff --relative` and returns workspace-root-relative paths. What the

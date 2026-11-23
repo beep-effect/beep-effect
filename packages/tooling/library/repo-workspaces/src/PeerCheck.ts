@@ -1563,9 +1563,6 @@ interface RunScope {
    * The classified `link:` edges.
    */
   readonly links: LinkScan;
-  /**
-   * The lockfile being checked.
-   */
   readonly lockfile: Lockfile;
   /**
    * The supplied manifests by package directory.
@@ -1751,13 +1748,7 @@ interface Declaration {
    * The declaring package's name, which a rule key's parent is matched against.
    */
   readonly declaring: string;
-  /**
-   * Whether the declaration marks a peer optional.
-   */
   readonly isOptional: (peer: string) => boolean;
-  /**
-   * The verdict for one declared peer.
-   */
   readonly verdictOf: (peer: string, wanted: string, optional: boolean) => JoinedVerdict;
 }
 

@@ -304,8 +304,6 @@ describe("WorkspaceDiscovery — NaN maxDepth is a DEFECT", () => {
   });
 });
 
-// ── failure paths ──────────────────────────────────────────────────────────
-
 const missingBase: Tree = {
   "/repo/package.json": rootManifest(["packages/*", "apps/*"]),
   "/repo/packages/alpha/package.json": manifest("@x/alpha"),
@@ -690,8 +688,6 @@ describe("WorkspaceDiscovery — the projection is deliberately tolerant", () =>
   });
 });
 
-// ── no workspace root at all ───────────────────────────────────────────────
-
 describe("WorkspaceRoot — no marker anywhere", () => {
   const bare: Tree = { "/repo/src/index.ts": "" };
   const base = platform(bare);
@@ -706,8 +702,6 @@ describe("WorkspaceRoot — no marker anywhere", () => {
     );
   });
 });
-
-// ── the layer-bound ceiling: a checkout nested in someone else's workspace ──
 
 // The downstream probe: a CI checkout (a plain single-package repo) sits inside
 // a directory that is itself a pnpm workspace root. An unbounded ascent adopts
@@ -824,8 +818,6 @@ describe("WorkspaceRoot — the NEAREST root wins", () => {
   });
 });
 
-// ── a member manifest that is valid JSON but not an object ─────────────────
-
 const nonObjectManifest: Tree = {
   "/repo/package.json": rootManifest(["packages/*"]),
   "/repo/packages/good/package.json": manifest("@x/good"),
@@ -857,8 +849,6 @@ describe("WorkspaceDiscovery — a member package.json that is `null`", () => {
     );
   });
 });
-
-// ── a well-formed manifest the schema rejects ──────────────────────────────
 
 const wrongShape: Tree = {
   "/repo/package.json": rootManifest(["packages/*"]),
