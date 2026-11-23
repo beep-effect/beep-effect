@@ -1,4 +1,4 @@
-import { ActivityId, IdentifierId, OccurrenceId } from "@beep/party-domain/Ids";
+import { ActivityId, IdentifierId, ArtifactOccurrenceId } from "@beep/party-domain/Ids";
 import { RecordRow } from "@beep/party-domain/Provenance";
 import { IngestIdentifier } from "@beep/party-server/ContactEvidence";
 import { identifierOfAddress } from "@beep/party-server/MailIndex";
@@ -99,7 +99,7 @@ describe("review page compatibility", () => {
         decision: page,
         validity: { validFrom: DateTime.makeUnsafe(100), validTo: O.some(DateTime.makeUnsafe(200)) },
         producedBy: ActivityId.make("party-act:import-review"),
-        anchor: RecordRow.make({ occurrence: OccurrenceId.make("party-occ:review-export"), rowKey: "1" }),
+        anchor: RecordRow.make({ occurrence: ArtifactOccurrenceId.make("party-occ:review-export"), rowKey: "1" }),
       });
       const adapted = adaptPageDecision(input);
       expect(adapted.verdict).toEqual(page.verdict);

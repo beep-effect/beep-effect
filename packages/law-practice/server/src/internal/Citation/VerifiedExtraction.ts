@@ -4,9 +4,9 @@
 
 import { $LawPracticeServerId } from "@beep/identity/packages";
 import { CitationEngineSourceEvidence, CitationSourceRole } from "@beep/law-practice-use-cases/server";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 import { O } from "@beep/utils";
 import * as Effect from "effect/Effect";
 import * as S from "effect/Schema";

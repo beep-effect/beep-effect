@@ -18,7 +18,7 @@ import {
   ClaimTermRef,
 } from "@beep/law-practice-domain/values/ClaimElement";
 import { PatentClaim } from "@beep/law-practice-domain/values/PatentDocument";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "effect/Array";
 import { constant, pipe } from "effect/Function";
 import * as O from "effect/Option";

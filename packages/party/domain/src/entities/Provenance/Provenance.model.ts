@@ -8,8 +8,9 @@
  */
 import { $PartyDomainId } from "@beep/identity/packages";
 import { LiteralKit } from "@beep/schema";
+import { Anchored } from "@beep/text/Occurrence";
 import * as S from "effect/Schema";
-import { ActivityId, ContentId, Digest, OccurrenceId, PrincipalId } from "../../Ids.ts";
+import { ActivityId, ArtifactOccurrenceId, ContentId, Digest, PrincipalId } from "../../Ids.ts";
 
 const $I = $PartyDomainId.create("entities/Provenance/Provenance.model");
 
@@ -74,7 +75,7 @@ export class Bates extends S.Opaque<Bates, { readonly brand: unique symbol }>()(
  * @since 0.0.0
  */
 export class ContainerChild extends S.Opaque<ContainerChild, { readonly brand: unique symbol }>()(
-  S.TaggedStruct("ContainerChild", { parent: OccurrenceId, path: S.NonEmptyString }).pipe(
+  S.TaggedStruct("ContainerChild", { parent: ArtifactOccurrenceId, path: S.NonEmptyString }).pipe(
     $I.annoteSchema("ContainerChild", { description: "ContainerChild data." })
   )
 ) {}
@@ -148,7 +149,7 @@ export type Locator = typeof Locator.Type;
  */
 export class ArtifactOccurrence extends S.Opaque<ArtifactOccurrence, { readonly brand: unique symbol }>()(
   S.Struct({
-    id: OccurrenceId,
+    id: ArtifactOccurrenceId,
     content: ContentId,
     locator: Locator,
     side: CollectionSide,
@@ -393,31 +394,39 @@ export const HeaderNamespace = LiteralKit(["rfc5322", "mapi", "x-header", "load-
  */
 export class HeaderField extends S.Opaque<HeaderField, { readonly brand: unique symbol }>()(
   S.TaggedStruct("HeaderField", {
-    occurrence: OccurrenceId,
+    occurrence: ArtifactOccurrenceId,
     namespace: HeaderNamespace,
     field: S.NonEmptyString,
   }).pipe($I.annoteSchema("HeaderField", { description: "HeaderField evidence location." }))
 ) {}
 /**
- * TextSpan evidence location.
+ * A text occurrence inside an artifact occurrence: the `@beep/text` anchor receipt of one place in one text
+ * capture, beside the artifact occurrence that holds the text.
  *
- * **Example** (Decode TextSpan)
+ * **Details**
+ *
+ * The receipt carries the capture, the UTF-16 range and the quote, so the `@beep/text` `OccurrenceId` is
+ * derivable from it with `mintOccurrenceId`. Decoding one grants no proof: the anchor's width must match its quote,
+ * and only re-verification against the source text yields a `VerifiedTextAnchor`.
+ *
+ * **Example** (Decode TextOccurrence)
  * ```ts
- * import { TextSpan } from "@beep/party-domain/Provenance"
+ * import { TextOccurrence } from "@beep/party-domain/Provenance"
  * import * as S from "effect/Schema"
- * const decode = S.decodeUnknownEffect(TextSpan)
+ * const decode = S.decodeUnknownEffect(TextOccurrence)
  * ```
  * @category models
  * @since 0.0.0
  */
-export class TextSpan extends S.Opaque<TextSpan, { readonly brand: unique symbol }>()(
-  S.TaggedStruct("TextSpan", {
-    occurrence: OccurrenceId,
-    textDigest: Digest,
-    start: S.Int.check(S.isGreaterThanOrEqualTo(0)),
-    end: S.Int.check(S.isGreaterThanOrEqualTo(1)),
-    quote: S.NonEmptyString,
-  }).pipe($I.annoteSchema("TextSpan", { description: "TextSpan evidence location." }))
+export class TextOccurrence extends S.Opaque<TextOccurrence, { readonly brand: unique symbol }>()(
+  S.TaggedStruct("TextOccurrence", {
+    occurrence: ArtifactOccurrenceId,
+    anchored: Anchored,
+  }).pipe(
+    $I.annoteSchema("TextOccurrence", {
+      description: "A text occurrence: an anchor receipt beside the artifact occurrence that holds the text.",
+    })
+  )
 ) {}
 /**
  * MetadataTag evidence location.
@@ -433,7 +442,7 @@ export class TextSpan extends S.Opaque<TextSpan, { readonly brand: unique symbol
  */
 export class MetadataTag extends S.Opaque<MetadataTag, { readonly brand: unique symbol }>()(
   S.TaggedStruct("MetadataTag", {
-    occurrence: OccurrenceId,
+    occurrence: ArtifactOccurrenceId,
     namespace: S.NonEmptyString,
     tag: S.NonEmptyString,
   }).pipe($I.annoteSchema("MetadataTag", { description: "MetadataTag evidence location." }))
@@ -451,7 +460,7 @@ export class MetadataTag extends S.Opaque<MetadataTag, { readonly brand: unique 
  * @since 0.0.0
  */
 export class RecordRow extends S.Opaque<RecordRow, { readonly brand: unique symbol }>()(
-  S.TaggedStruct("RecordRow", { occurrence: OccurrenceId, rowKey: S.NonEmptyString }).pipe(
+  S.TaggedStruct("RecordRow", { occurrence: ArtifactOccurrenceId, rowKey: S.NonEmptyString }).pipe(
     $I.annoteSchema("RecordRow", { description: "RecordRow evidence location." })
   )
 ) {}
@@ -467,17 +476,10 @@ export class RecordRow extends S.Opaque<RecordRow, { readonly brand: unique symb
  * @category schemas
  * @since 0.0.0
  */
-export const EvidenceAnchor = S.Union([
-  HeaderField,
-  TextSpan.check(
-    S.makeFilter(
-      ({ start, end }) => start < end,
-      $I.annote("TextSpanOrderCheck", { message: "Expected span start before end." })
-    )
-  ),
-  MetadataTag,
-  RecordRow,
-]).pipe(S.toTaggedUnion("_tag"), $I.annoteSchema("EvidenceAnchor", { description: "Exact evidence location." }));
+export const EvidenceAnchor = S.Union([HeaderField, TextOccurrence, MetadataTag, RecordRow]).pipe(
+  S.toTaggedUnion("_tag"),
+  $I.annoteSchema("EvidenceAnchor", { description: "Exact evidence location." })
+);
 /**
  * Decoded EvidenceAnchor type.
  * @category models

@@ -3,15 +3,15 @@ import { Citation } from "@beep/law-practice-domain/values";
 import { CitationAuthorityEdition } from "@beep/law-practice-server/internal/Citation/AuthorityIdentity";
 import { makeCitationMention } from "@beep/law-practice-server/internal/Citation/Mention";
 import { defaultCitationEnginePolicy } from "@beep/law-practice-use-cases/test";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import {
   VerifySourceTextIdentityInput,
   VerifyTextAnchorAgainstVerifiedSourceInput,
   verifySourceTextIdentity,
   verifyTextAnchorAgainstVerifiedSource,
-} from "@beep/provenance/VerifiedTextAnchor";
-import { PosixPath, Sha256Hex, Sha256HexFromBytes } from "@beep/schema";
+} from "@beep/text/VerifiedTextAnchor";
 import * as Effect from "effect/Effect";
 import * as O from "effect/Option";
 import * as S from "effect/Schema";

@@ -13,7 +13,7 @@ import {
   CitationVerifiedExtractionConfiguration,
   makeCitationVerifiedExtraction as makeOwnedCitationVerifiedExtraction,
 } from "@beep/law-practice-server/internal/Citation/VerifiedExtraction";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
 import { expect } from "@effect/vitest";
 import * as A from "effect/Array";
 import * as DateTime from "effect/DateTime";
@@ -27,7 +27,7 @@ import { citationFixtureSourceProof } from "./CitationOccurrenceProjection.fixtu
 import { assertCitationWorkerCompositionObserved } from "./CitationRegexWorker.fixtures.ts";
 import type { CitationInvocation } from "@beep/law-practice-server/internal/Citation/Invocation";
 import type { CitationNativeRuntimeKind } from "@beep/law-practice-server/internal/Citation/NativeProcess";
-import type { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
+import type { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 
 const makeCitationSemanticExtraction = installCitationOwnedTestStage({
   schema: CitationSemanticExtractionConfiguration,

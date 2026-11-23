@@ -4,7 +4,7 @@
  * @packageDocumentation
  * @since 0.0.0
  */
-import { TextAnchor } from "@beep/provenance/TextAnchor";
+import { TextAnchor } from "@beep/text/TextAnchor";
 import * as A from "effect/Array";
 import { constant, dual, flow, pipe } from "effect/Function";
 import * as Num from "effect/Number";

@@ -685,11 +685,6 @@
       "classification": "production"
     },
     {
-      "path": "packages/foundation/modeling/provenance/package.json",
-      "source": "dependency-graph",
-      "classification": "production"
-    },
-    {
       "path": "packages/foundation/modeling/public-site/package.json",
       "source": "dependency-graph",
       "classification": "production"
@@ -721,6 +716,11 @@
     },
     {
       "path": "packages/foundation/modeling/spdx/package.json",
+      "source": "dependency-graph",
+      "classification": "production"
+    },
+    {
+      "path": "packages/foundation/modeling/text/package.json",
       "source": "dependency-graph",
       "classification": "production"
     },

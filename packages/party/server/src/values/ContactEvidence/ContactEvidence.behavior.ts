@@ -8,7 +8,7 @@ import { ValidTime } from "@beep/epistemics/Claim";
 import { EvidenceSignals, SourceAssertion } from "@beep/party-domain/Claim";
 import { DirectoryRow } from "@beep/party-domain/Communication";
 import { emailAddress, phoneNumber } from "@beep/party-domain/Identifier";
-import { AssertionId, IdentifierId, ObservationId, OccurrenceId } from "@beep/party-domain/Ids";
+import { ArtifactOccurrenceId, AssertionId, IdentifierId, ObservationId } from "@beep/party-domain/Ids";
 import { Organization, Person } from "@beep/party-domain/Party";
 import { partyKeyOf, SourceRecordInput, sourceRecordPartyKey } from "@beep/party-domain/PartyKey";
 import { Proposition } from "@beep/party-domain/Proposition";
@@ -98,7 +98,7 @@ export const ingestContact = Effect.fn("PartyContact.ingestContact")(function* (
     card.kind === "Organization"
       ? Organization.make({ id, keys, label, orgKind: O.none() })
       : Person.make({ id, keys, label });
-  const occurrence = OccurrenceId.make(`party-occ:${source.success}`);
+  const occurrence = ArtifactOccurrenceId.make(`party-occ:${source.success}`);
   const anchor = RecordRow.make({ occurrence, rowKey: card.sourceRecordId });
   const stem = `${source.success}:${encodeURIComponent(input.activity)}`;
   const observation = DirectoryRow.make({

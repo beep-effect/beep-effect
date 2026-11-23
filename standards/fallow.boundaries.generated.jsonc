@@ -948,12 +948,6 @@
         ]
       },
       {
-        "name": "@beep/provenance",
-        "patterns": [
-          "packages/foundation/modeling/provenance/src/**"
-        ]
-      },
-      {
         "name": "@beep/public-site",
         "patterns": [
           "packages/foundation/modeling/public-site/src/**"
@@ -1182,6 +1176,12 @@
         ]
       },
       {
+        "name": "@beep/text",
+        "patterns": [
+          "packages/foundation/modeling/text/src/**"
+        ]
+      },
+      {
         "name": "@beep/tika",
         "patterns": [
           "packages/drivers/tika/src/**"
@@ -1343,18 +1343,18 @@
           "@beep/epistemics",
           "@beep/identity",
           "@beep/markdown",
-          "@beep/provenance",
           "@beep/schema",
-          "@beep/sqlite"
+          "@beep/sqlite",
+          "@beep/text"
         ],
         "allowTypeOnly": [
           "@beep/agent-memory-store",
           "@beep/epistemics",
           "@beep/identity",
           "@beep/markdown",
-          "@beep/provenance",
           "@beep/schema",
-          "@beep/sqlite"
+          "@beep/sqlite",
+          "@beep/text"
         ]
       },
       {
@@ -2513,11 +2513,11 @@
           "@beep/epistemic-domain",
           "@beep/epistemics",
           "@beep/identity",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2525,11 +2525,11 @@
           "@beep/epistemic-domain",
           "@beep/epistemics",
           "@beep/identity",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -2546,13 +2546,13 @@
           "@beep/observability",
           "@beep/pglite",
           "@beep/postgres",
-          "@beep/provenance",
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -2566,13 +2566,13 @@
           "@beep/observability",
           "@beep/pglite",
           "@beep/postgres",
-          "@beep/provenance",
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -2584,11 +2584,11 @@
           "@beep/epistemic-tables",
           "@beep/epistemics",
           "@beep/identity",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/text"
         ],
         "allowTypeOnly": [
           "@beep/effect-drizzle",
@@ -2596,11 +2596,11 @@
           "@beep/epistemic-tables",
           "@beep/epistemics",
           "@beep/identity",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/text"
         ]
       },
       {
@@ -2612,11 +2612,11 @@
           "@beep/epistemic-use-cases",
           "@beep/epistemics",
           "@beep/identity",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/ui"
         ],
         "allowTypeOnly": [
@@ -2626,11 +2626,11 @@
           "@beep/epistemic-use-cases",
           "@beep/epistemics",
           "@beep/identity",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/ui"
         ]
       },
@@ -2642,13 +2642,13 @@
           "@beep/epistemics",
           "@beep/file-processing",
           "@beep/identity",
-          "@beep/provenance",
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/text"
         ],
         "allowTypeOnly": [
           "@beep/epistemic-domain",
@@ -2656,13 +2656,13 @@
           "@beep/epistemics",
           "@beep/file-processing",
           "@beep/identity",
-          "@beep/provenance",
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/shared-domain",
           "@beep/test-runner",
-          "@beep/test-utils"
+          "@beep/test-utils",
+          "@beep/text"
         ]
       },
       {
@@ -2671,18 +2671,18 @@
           "@beep/epistemics",
           "@beep/identity",
           "@beep/jsonc",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/test-runner",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/epistemics",
           "@beep/identity",
           "@beep/jsonc",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/test-runner",
+          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -2864,19 +2864,19 @@
         "allow": [
           "@beep/file-processing",
           "@beep/identity",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/file-processing",
           "@beep/identity",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -3347,20 +3347,20 @@
           "@beep/identity",
           "@beep/langextract",
           "@beep/nlp",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/langextract",
           "@beep/nlp",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -3370,22 +3370,22 @@
           "@beep/identity",
           "@beep/law-practice-domain",
           "@beep/md",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
           "@beep/identity",
           "@beep/law-practice-domain",
           "@beep/md",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -3402,6 +3402,7 @@
           "@beep/eyecite",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-server",
@@ -3416,13 +3417,13 @@
           "@beep/party-use-cases",
           "@beep/pglite",
           "@beep/postgres",
-          "@beep/provenance",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/shared-use-cases",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/tika",
           "@beep/uspto",
           "@beep/utils",
@@ -3439,6 +3440,7 @@
           "@beep/eyecite",
           "@beep/file-processing",
           "@beep/identity",
+          "@beep/jsonc",
           "@beep/langextract",
           "@beep/law-practice-domain",
           "@beep/law-practice-server",
@@ -3453,13 +3455,13 @@
           "@beep/party-use-cases",
           "@beep/pglite",
           "@beep/postgres",
-          "@beep/provenance",
           "@beep/repo-utils",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/shared-use-cases",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/tika",
           "@beep/uspto",
           "@beep/utils",
@@ -3499,11 +3501,11 @@
           "@beep/mcp-kit",
           "@beep/nlp",
           "@beep/nlp-processing",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3518,11 +3520,11 @@
           "@beep/mcp-kit",
           "@beep/nlp",
           "@beep/nlp-processing",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -3539,12 +3541,12 @@
           "@beep/nlp",
           "@beep/oxigraph",
           "@beep/pglite",
-          "@beep/provenance",
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/ui"
         ],
         "allowTypeOnly": [
@@ -3558,12 +3560,12 @@
           "@beep/nlp",
           "@beep/oxigraph",
           "@beep/pglite",
-          "@beep/provenance",
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/ui"
         ]
       },
@@ -3794,6 +3796,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -3805,6 +3808,7 @@
           "@beep/schema",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -4395,6 +4399,7 @@
           "@beep/party-domain",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -4404,6 +4409,7 @@
           "@beep/party-domain",
           "@beep/schema",
           "@beep/shared-domain",
+          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -4824,12 +4830,12 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/professional-desktop",
-          "@beep/provenance",
           "@beep/rdf",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/ui",
           "@beep/utils",
           "@beep/workspace-domain",
@@ -4880,35 +4886,18 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/professional-desktop",
-          "@beep/provenance",
           "@beep/rdf",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/ui",
           "@beep/utils",
           "@beep/workspace-domain",
           "@beep/workspace-server",
           "@beep/workspace-use-cases",
           "@beep/xstate"
-        ]
-      },
-      {
-        "from": "@beep/provenance",
-        "allow": [
-          "@beep/identity",
-          "@beep/provenance",
-          "@beep/schema",
-          "@beep/test-runner",
-          "@beep/test-utils"
-        ],
-        "allowTypeOnly": [
-          "@beep/identity",
-          "@beep/provenance",
-          "@beep/schema",
-          "@beep/test-runner",
-          "@beep/test-utils"
         ]
       },
       {
@@ -4955,6 +4944,7 @@
           "@beep/spdx",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ],
         "allowTypeOnly": [
@@ -4965,6 +4955,7 @@
           "@beep/spdx",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils"
         ]
       },
@@ -5082,7 +5073,6 @@
           "@beep/pdf-tools",
           "@beep/phoenix",
           "@beep/poppler",
-          "@beep/provenance",
           "@beep/qa-capture",
           "@beep/rdf",
           "@beep/repo-ai-metrics",
@@ -5106,6 +5096,7 @@
           "@beep/tesseract",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/tika",
           "@beep/tsconfig",
           "@beep/uspto",
@@ -5162,7 +5153,6 @@
           "@beep/pdf-tools",
           "@beep/phoenix",
           "@beep/poppler",
-          "@beep/provenance",
           "@beep/qa-capture",
           "@beep/rdf",
           "@beep/repo-ai-metrics",
@@ -5186,6 +5176,7 @@
           "@beep/tesseract",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/tika",
           "@beep/tsconfig",
           "@beep/uspto",
@@ -5578,7 +5569,6 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/pretext",
-          "@beep/provenance",
           "@beep/rdf",
           "@beep/repo-cli",
           "@beep/repo-utils",
@@ -5587,6 +5577,7 @@
           "@beep/semantic-web",
           "@beep/shacl",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils",
           "@beep/wink"
         ],
@@ -5610,7 +5601,6 @@
           "@beep/pglite",
           "@beep/postgres",
           "@beep/pretext",
-          "@beep/provenance",
           "@beep/rdf",
           "@beep/repo-cli",
           "@beep/repo-utils",
@@ -5619,6 +5609,7 @@
           "@beep/semantic-web",
           "@beep/shacl",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils",
           "@beep/wink"
         ]
@@ -5662,13 +5653,13 @@
           "@beep/openai",
           "@beep/oxigraph",
           "@beep/pglite",
-          "@beep/provenance",
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/semantica",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/wink"
         ],
         "allowTypeOnly": [
@@ -5685,13 +5676,13 @@
           "@beep/openai",
           "@beep/oxigraph",
           "@beep/pglite",
-          "@beep/provenance",
           "@beep/rdf",
           "@beep/schema",
           "@beep/semantic-web",
           "@beep/semantica",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/wink"
         ]
       },
@@ -5937,6 +5928,25 @@
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
+        ]
+      },
+      {
+        "from": "@beep/text",
+        "allow": [
+          "@beep/identity",
+          "@beep/jsonc",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/text"
+        ],
+        "allowTypeOnly": [
+          "@beep/identity",
+          "@beep/jsonc",
+          "@beep/schema",
+          "@beep/test-runner",
+          "@beep/test-utils",
+          "@beep/text"
         ]
       },
       {
@@ -6207,11 +6217,11 @@
           "@beep/md",
           "@beep/memfs",
           "@beep/postgres",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils",
           "@beep/workspace-domain",
           "@beep/workspace-server",
@@ -6225,11 +6235,11 @@
           "@beep/md",
           "@beep/memfs",
           "@beep/postgres",
-          "@beep/provenance",
           "@beep/schema",
           "@beep/shared-domain",
           "@beep/test-runner",
           "@beep/test-utils",
+          "@beep/text",
           "@beep/utils",
           "@beep/workspace-domain",
           "@beep/workspace-server",

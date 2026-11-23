@@ -28068,17 +28068,29 @@
     },
     "@beep/md": {
       "path": "packages/foundation/modeling/md",
-      "lines": 98.46,
-      "statements": 98.42,
-      "branches": 92.53,
-      "functions": 97.2,
+      "lines": 98.82,
+      "statements": 98.77,
+      "branches": 94.87,
+      "functions": 97.68,
       "uncovered": {
-        "lines": 26,
-        "statements": 29,
-        "branches": 40,
-        "functions": 25
+        "lines": 22,
+        "statements": 25,
+        "branches": 34,
+        "functions": 22
       },
       "files": {
+        "packages/foundation/modeling/md/src/Md.anchors.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/modeling/md/src/Md.behavior.ts": {
           "lines": 100,
           "statements": 100,
@@ -28106,7 +28118,7 @@
         "packages/foundation/modeling/md/src/Md.escape.ts": {
           "lines": 100,
           "statements": 100,
-          "branches": 94.59,
+          "branches": 94.73,
           "functions": 100,
           "uncovered": {
             "lines": 0,
@@ -28152,15 +28164,15 @@
           }
         },
         "packages/foundation/modeling/md/src/Md.render.ts": {
-          "lines": 97.53,
-          "statements": 97.62,
-          "branches": 98.24,
-          "functions": 96.13,
+          "lines": 98.47,
+          "statements": 98.55,
+          "branches": 100,
+          "functions": 97.5,
           "uncovered": {
-            "lines": 10,
-            "statements": 10,
-            "branches": 1,
-            "functions": 10
+            "lines": 7,
+            "statements": 7,
+            "branches": 0,
+            "functions": 7
           }
         },
         "packages/foundation/modeling/md/src/Md.safe.ts": {
@@ -28176,14 +28188,14 @@
           }
         },
         "packages/foundation/modeling/md/src/Md.syntax.ts": {
-          "lines": 99.31,
-          "statements": 99.13,
-          "branches": 93.43,
-          "functions": 98.32,
+          "lines": 99.62,
+          "statements": 99.45,
+          "branches": 96.66,
+          "functions": 98.52,
           "uncovered": {
-            "lines": 3,
-            "statements": 4,
-            "branches": 13,
+            "lines": 2,
+            "statements": 3,
+            "branches": 9,
             "functions": 3
           }
         },
@@ -28274,12 +28286,12 @@
         "packages/foundation/modeling/md/src/internal/syntax/recognizers.ts": {
           "lines": 100,
           "statements": 100,
-          "branches": 91.89,
+          "branches": 95.34,
           "functions": 100,
           "uncovered": {
             "lines": 0,
             "statements": 0,
-            "branches": 3,
+            "branches": 2,
             "functions": 0
           }
         }
@@ -36133,69 +36145,6 @@
         }
       }
     },
-    "@beep/provenance": {
-      "path": "packages/foundation/modeling/provenance",
-      "lines": 100,
-      "statements": 100,
-      "branches": 100,
-      "functions": 100,
-      "uncovered": {
-        "lines": 0,
-        "statements": 0,
-        "branches": 0,
-        "functions": 0
-      },
-      "files": {
-        "packages/foundation/modeling/provenance/src/SourceTextIdentity.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/provenance/src/TextAnchor.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/provenance/src/VerifiedTextAnchor.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        },
-        "packages/foundation/modeling/provenance/src/index.ts": {
-          "lines": 100,
-          "statements": 100,
-          "branches": 100,
-          "functions": 100,
-          "uncovered": {
-            "lines": 0,
-            "statements": 0,
-            "branches": 0,
-            "functions": 0
-          }
-        }
-      }
-    },
     "@beep/public-site": {
       "path": "packages/foundation/modeling/public-site",
       "lines": 100,
@@ -36432,15 +36381,15 @@
     },
     "@beep/rdf": {
       "path": "packages/foundation/modeling/rdf",
-      "lines": 98.59,
-      "statements": 98.54,
-      "branches": 99.73,
-      "functions": 96.07,
+      "lines": 99.71,
+      "statements": 99.72,
+      "branches": 100,
+      "functions": 99.35,
       "uncovered": {
-        "lines": 14,
-        "statements": 15,
-        "branches": 1,
-        "functions": 14
+        "lines": 2,
+        "statements": 2,
+        "branches": 0,
+        "functions": 2
       },
       "files": {
         "packages/foundation/modeling/rdf/src/Adapters/DocumentAnnotation.ts": {
@@ -36457,29 +36406,17 @@
         },
         "packages/foundation/modeling/rdf/src/Adapters/MdSections.ts": {
           "lines": 100,
-          "statements": 97.5,
-          "branches": 90,
+          "statements": 100,
+          "branches": 100,
           "functions": 100,
           "uncovered": {
             "lines": 0,
-            "statements": 1,
-            "branches": 1,
+            "statements": 0,
+            "branches": 0,
             "functions": 0
           }
         },
         "packages/foundation/modeling/rdf/src/Adapters/WebAnnotation.ts": {
-          "lines": 87.09,
-          "statements": 87.5,
-          "branches": 100,
-          "functions": 71.42,
-          "uncovered": {
-            "lines": 8,
-            "statements": 8,
-            "branches": 0,
-            "functions": 8
-          }
-        },
-        "packages/foundation/modeling/rdf/src/Evidence.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -36492,6 +36429,18 @@
           }
         },
         "packages/foundation/modeling/rdf/src/JsonLd.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/rdf/src/NamespacePin.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -36528,15 +36477,15 @@
           }
         },
         "packages/foundation/modeling/rdf/src/Rdf.ts": {
-          "lines": 92.4,
-          "statements": 92.68,
+          "lines": 97.43,
+          "statements": 97.56,
           "branches": 100,
-          "functions": 80,
+          "functions": 93.75,
           "uncovered": {
-            "lines": 6,
-            "statements": 6,
+            "lines": 2,
+            "statements": 2,
             "branches": 0,
-            "functions": 6
+            "functions": 2
           }
         },
         "packages/foundation/modeling/rdf/src/SemanticSchemaConformance.ts": {
@@ -36600,6 +36549,18 @@
           }
         },
         "packages/foundation/modeling/rdf/src/Vocab/Cito.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/rdf/src/Vocab/Dcat.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -36731,7 +36692,31 @@
             "functions": 0
           }
         },
+        "packages/foundation/modeling/rdf/src/Vocab/Shacl.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/modeling/rdf/src/Vocab/Skos.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/rdf/src/Vocab/Void.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -36756,6 +36741,18 @@
           }
         },
         "packages/foundation/modeling/rdf/src/Vocab/generated/Cito.terms.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/rdf/src/Vocab/generated/Dcat.terms.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -36815,7 +36812,43 @@
             "functions": 0
           }
         },
+        "packages/foundation/modeling/rdf/src/Vocab/generated/NamespacePins.data.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/rdf/src/Vocab/generated/Oa.terms.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/modeling/rdf/src/Vocab/generated/Owl.terms.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/rdf/src/Vocab/generated/Prov.terms.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -36863,7 +36896,43 @@
             "functions": 0
           }
         },
+        "packages/foundation/modeling/rdf/src/Vocab/generated/Shacl.terms.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
         "packages/foundation/modeling/rdf/src/Vocab/generated/Skos.terms.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/rdf/src/Vocab/generated/Void.terms.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/rdf/src/Vocab/generated/Xsd.terms.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,
@@ -57366,6 +57435,189 @@
           }
         },
         "packages/tooling/test-kit/test-utils/src/test/Vitest.test-kit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        }
+      }
+    },
+    "@beep/text": {
+      "path": "packages/foundation/modeling/text",
+      "lines": 100,
+      "statements": 100,
+      "branches": 100,
+      "functions": 100,
+      "uncovered": {
+        "lines": 0,
+        "statements": 0,
+        "branches": 0,
+        "functions": 0
+      },
+      "files": {
+        "packages/foundation/modeling/text/src/LocatorMap.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/Occurrence.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/OffsetUnit.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/QuoteKey.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/Reanchoring.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/Resolution.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/Selector.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/SourceTextIdentity.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/TextAnchor.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/TextNormalization.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/VerifiedTextAnchor.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/index.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/internal/scalars.ts": {
+          "lines": 100,
+          "statements": 100,
+          "branches": 100,
+          "functions": 100,
+          "uncovered": {
+            "lines": 0,
+            "statements": 0,
+            "branches": 0,
+            "functions": 0
+          }
+        },
+        "packages/foundation/modeling/text/src/internal/segments.ts": {
           "lines": 100,
           "statements": 100,
           "branches": 100,

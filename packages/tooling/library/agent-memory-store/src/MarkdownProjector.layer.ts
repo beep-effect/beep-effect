@@ -34,8 +34,8 @@
  */
 
 import { MarkdownEdit } from "@beep/markdown";
-import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity, TextAnchor } from "@beep/provenance";
 import { PosixPath, Sha256Hex } from "@beep/schema";
+import { SourceTextDigest, SourceTextExtractor, SourceTextIdentity, TextAnchor } from "@beep/text";
 import * as A from "effect/Array";
 import * as Digest from "effect/crypto/Digest";
 import * as SecureRandom from "effect/crypto/SecureRandom";

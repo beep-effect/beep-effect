@@ -267,7 +267,7 @@ describe("Services and Surface", () => {
         });
 
         expect(annotation.type).toBe("Annotation");
-        expect(annotation.target.selector.type).toBe("TextQuoteSelector");
+        expect(A.map(annotation.target.selector, (selector) => selector.type)).toEqual(["TextQuoteSelector"]);
       })
     );
   });

@@ -424,9 +424,6 @@
       "path": "packages/foundation/modeling/pandoc-ast"
     },
     {
-      "path": "packages/foundation/modeling/provenance"
-    },
-    {
       "path": "packages/foundation/modeling/public-site"
     },
     {
@@ -449,6 +446,9 @@
     },
     {
       "path": "packages/foundation/modeling/spdx"
+    },
+    {
+      "path": "packages/foundation/modeling/text"
     },
     {
       "path": "packages/foundation/modeling/toml"

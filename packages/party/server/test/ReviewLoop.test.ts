@@ -1,4 +1,4 @@
-import { ActivityId, IdentifierId, OccurrenceId, PrincipalId } from "@beep/party-domain/Ids";
+import { ActivityId, ArtifactOccurrenceId, IdentifierId, PrincipalId } from "@beep/party-domain/Ids";
 import { RecordRow } from "@beep/party-domain/Provenance";
 import { ResolutionScope } from "@beep/party-domain/Resolution";
 import { PartyLedgerMemory } from "@beep/party-server/Ledger";
@@ -62,7 +62,10 @@ const decision = (
     note: "",
     validity: { validFrom: at(0), validTo: O.none() },
     producedBy: ActivityId.make("party-act:review"),
-    anchor: RecordRow.make({ occurrence: OccurrenceId.make("party-occ:reviews"), rowKey: current.evidence.name }),
+    anchor: RecordRow.make({
+      occurrence: ArtifactOccurrenceId.make("party-occ:reviews"),
+      rowKey: current.evidence.name,
+    }),
   });
 const apply = (
   cases: ReadonlyArray<CollisionCase>,

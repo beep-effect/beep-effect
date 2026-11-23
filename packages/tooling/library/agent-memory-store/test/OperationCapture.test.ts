@@ -28,7 +28,7 @@ import {
   uuidV7NodeIdMinter,
 } from "@beep/agent-memory-store";
 import { alignFile } from "@beep/agent-memory-store/internal/OperationCapture.align";
-import { TextAnchor } from "@beep/provenance";
+import { TextAnchor } from "@beep/text";
 import { describe, expect, it, layer } from "@effect/vitest";
 import { assertNone, assertSome, assertTrue, deepStrictEqual } from "@effect/vitest/utils";
 import * as A from "effect/Array";

@@ -4,9 +4,9 @@
  */
 import { $LawPracticeUseCasesId } from "@beep/identity/packages";
 import { Citation } from "@beep/law-practice-domain/values";
-import { SourceTextIdentity } from "@beep/provenance/SourceTextIdentity";
-import { VerifiedSourceText } from "@beep/provenance/VerifiedTextAnchor";
 import { LiteralKit, Sha256Hex } from "@beep/schema";
+import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
+import { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 import * as S from "effect/Schema";
 import { CitationEngineAbsoluteMaxima } from "./CitationEngine.limits.ts";
 
