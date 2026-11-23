@@ -4103,21 +4103,25 @@
       {
         "from": "@beep/ontology",
         "allow": [
+          "@beep/annotation",
           "@beep/identity",
           "@beep/memfs",
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/spdx",
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"
         ],
         "allowTypeOnly": [
+          "@beep/annotation",
           "@beep/identity",
           "@beep/memfs",
           "@beep/ontology",
           "@beep/rdf",
           "@beep/schema",
+          "@beep/spdx",
           "@beep/test-runner",
           "@beep/test-utils",
           "@beep/utils"

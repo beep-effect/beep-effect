@@ -637,8 +637,22 @@ const V = {
   referenceContext: term("nif:referenceContext"),
 };
 
-// The NIF class each export-only segmentation kind is also written as.
-const nifClasses: Readonly<Record<string, Rdf.NamedNode>> = {
+/**
+ * The NIF class each export-only segmentation kind is also written as, keyed
+ * by annotation kind.
+ *
+ * **Example** (Read the NIF class of a sentence)
+ *
+ * ```ts
+ * import { nifClassOf } from "@beep/annotation/rdf/OaCodec"
+ *
+ * console.log(nifClassOf["Sentence"]?.value)
+ * ```
+ *
+ * @category constants
+ * @since 0.0.0
+ */
+export const nifClassOf: Readonly<Record<string, Rdf.NamedNode>> = {
   Sentence: term("nif:Sentence"),
   Word: term("nif:Word"),
 };
@@ -834,7 +848,7 @@ export const encodeOa =
           return [
             ...annotationTypeQuads(kinds, subject, annotation),
             ...A.map(targetIds, (target) => quad(subject, V.hasTarget, instanceNode(target))),
-            ...A.flatMap(A.fromOption(R.get(nifClasses, annotation._tag)), (nifClass) =>
+            ...A.flatMap(A.fromOption(R.get(nifClassOf, annotation._tag)), (nifClass) =>
               A.flatMap(targetIds, (target) => {
                 const occurrence = instanceNode(target);
                 return HashMap.get(wireOf, target).pipe(
@@ -1486,7 +1500,7 @@ const normalizedQuads = (kinds: typeof OaKinds, source: Rdf.NamedNode, sourceTex
   Effect.fnUntraced(function* (candidate: Candidate) {
     const subject = instanceNode(candidate.content);
     const annotation = candidate.annotation;
-    const nifClass = A.fromOption(R.get(nifClasses, annotation._tag));
+    const nifClass = A.fromOption(R.get(nifClassOf, annotation._tag));
     const targetQuads = A.flatMap(candidate.targets, ({ id, row }) => {
       const occurrence = instanceNode(id);
       const points = Result.getOrThrow(convertPosition(Anchored.range(row), "unicode-code-point", sourceText));

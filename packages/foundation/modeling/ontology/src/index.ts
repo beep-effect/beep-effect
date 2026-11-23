@@ -61,6 +61,13 @@ export * from "./Fold.projections.ts";
  */
 export * from "./Gufo.ts";
 /**
+ * The repository-owned annotation-to-DoCO and NIF mapping set.
+ *
+ * @category constructors
+ * @since 0.0.0
+ */
+export * from "./Mapping.annotation.ts";
+/**
  * SKOS mapping predicates and their registry expansion.
  *
  * @category models

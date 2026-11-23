@@ -495,20 +495,49 @@ const specializationGraph = (hierarchy: TypedHierarchy) => {
   return { graph, indices };
 };
 
-const strictSupertypes = (hierarchy: TypedHierarchy, term: TermIri): ReadonlyArray<TermIri> => {
-  const { graph, indices } = specializationGraph(hierarchy);
-  return O.match(MutableHashMap.get(indices, term), {
-    onNone: A.empty,
-    onSome: (start) =>
-      graph.pipe(
-        Graph.dfs({ start: [start], direction: "outgoing" }),
-        Graph.values,
-        A.fromIterable,
-        A.filter((supertype) => supertype !== term),
-        A.sort(Order.String)
-      ),
-  });
-};
+/**
+ * The reflexive-transitive supertypes of a term, sorted by IRI.
+ *
+ * **Example** (Read the supertypes of a role)
+ *
+ * ```ts import.meta.vitest name="Read the supertypes of a role"
+ * import { TermIri } from "@beep/identity/Term"
+ * import { supertypes, TypedHierarchy } from "@beep/ontology/Gufo"
+ * import * as S from "effect/Schema"
+ *
+ * const hierarchy = S.decodeUnknownSync(TypedHierarchy)({
+ *   typing: [],
+ *   specializes: [
+ *     ["https://example.test/Student", ["https://example.test/Person"]],
+ *     ["https://example.test/Person", ["https://example.test/Agent"]]
+ *   ]
+ * })
+ * supertypes(hierarchy)(TermIri.make("https://example.test/Student")).length // => 3
+ * ```
+ *
+ * @param hierarchy - The specialization hierarchy.
+ * @returns A function from a term IRI to the term and every term it specializes.
+ * @category getters
+ * @since 0.0.0
+ */
+export const supertypes =
+  (hierarchy: TypedHierarchy) =>
+  (term: TermIri): ReadonlyArray<TermIri> => {
+    const { graph, indices } = specializationGraph(hierarchy);
+    return O.match(MutableHashMap.get(indices, term), {
+      onNone: () => [term],
+      onSome: (start) =>
+        graph.pipe(
+          Graph.dfs({ start: [start], direction: "outgoing" }),
+          Graph.values,
+          A.fromIterable,
+          A.sort(Order.String)
+        ),
+    });
+  };
+
+const strictSupertypes = (hierarchy: TypedHierarchy, term: TermIri): ReadonlyArray<TermIri> =>
+  A.filter(supertypes(hierarchy)(term), (supertype) => supertype !== term);
 
 const roleWithoutKind = (
   hierarchy: TypedHierarchy,
