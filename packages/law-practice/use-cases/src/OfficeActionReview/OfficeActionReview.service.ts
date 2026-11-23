@@ -37,6 +37,7 @@ import { OfficeActionExtractionLabel } from "./OfficeActionExtractionLabel.ts";
 import { OfficeActionCandidateExtraction } from "./OfficeActionReview.ports.ts";
 import type { ClaimGateShape } from "@beep/epistemic-use-cases/ClaimGate";
 import type { ClaimTransitionShape } from "@beep/epistemic-use-cases/ClaimLifecycle";
+import type { ExtractedProcessFileResult } from "@beep/file-processing/Extraction";
 import type { FileProcessingServiceShape } from "@beep/file-processing/Service";
 import type { LangExtractError, LangExtractResult } from "@beep/langextract/Extraction";
 import type { IrToLawShape, LawEntities } from "../IrToLaw/index.ts";
@@ -129,7 +130,7 @@ const failFileExtraction = (
 
 const sourceTextFrom = Effect.fn("law_practice.office_action.source_text_from")(function* (
   result: ProcessFileResult
-): Effect.fn.Return<string, FileProcessingOperationError> {
+): Effect.fn.Return<readonly [ExtractedProcessFileResult, string], FileProcessingOperationError> {
   return yield* ProcessFileResult.match(result, {
     "archive-exported": (archiveExported) =>
       failFileExtraction(
@@ -139,7 +140,7 @@ const sourceTextFrom = Effect.fn("law_practice.office_action.source_text_from")(
     extracted: (extracted) =>
       O.match(O.fromUndefinedOr(extracted.extraction.text), {
         onNone: () => failFileExtraction(extracted, "Office-action review requires text extraction output."),
-        onSome: Effect.succeed,
+        onSome: (sourceText) => Effect.succeed([extracted, sourceText] as const),
       }),
     skipped: (skipped) =>
       failFileExtraction(skipped, `Office-action review requires extracted text, received ${skipped.resultKind}.`),
@@ -150,15 +151,12 @@ const utf8 = new TextEncoder();
 const extractionRequestFrom = Effect.fn("OfficeActionReview.extractionRequestFrom")(function* (
   input: OfficeActionReviewInput,
   sourceText: string,
-  processed: ProcessFileResult
+  processed: ExtractedProcessFileResult
 ) {
-  const version = yield* O.match(
-    O.fromUndefinedOr(processed.resultKind === "extracted" ? processed.extraction.engineVersion : undefined),
-    {
-      onNone: () => failFileExtraction(processed, "Office-action review requires a versioned extractor."),
-      onSome: Effect.succeed,
-    }
-  );
+  const version = yield* O.match(O.fromUndefinedOr(processed.extraction.engineVersion), {
+    onNone: () => failFileExtraction(processed, "Office-action review requires a versioned extractor."),
+    onSome: Effect.succeed,
+  });
   const digest = yield* Digest.Digest;
   const textDigest = yield* digest.digestHex(Digest.sha256, utf8.encode(sourceText));
   const source = SourceTextIdentity.make({
@@ -237,8 +235,8 @@ export const makeOfficeActionReview = (deps: OfficeActionReviewDeps): OfficeActi
         source: input.sourceArtifact,
       })
     );
-    const sourceText = yield* sourceTextFrom(processed);
-    const request = yield* extractionRequestFrom(input, sourceText, processed).pipe(
+    const [extracted, sourceText] = yield* sourceTextFrom(processed);
+    const request = yield* extractionRequestFrom(input, sourceText, extracted).pipe(
       Effect.provideService(Digest.Digest, deps.digest)
     );
     const extractionResult = yield* deps.langExtract.extract(request);
