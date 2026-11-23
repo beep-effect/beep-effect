@@ -5,7 +5,7 @@ reversal: Remove normalization and extend generated values to datetimes and lone
 governs:
   - test/oracle.property.test.ts#canon
   - test/oracle.property.test.ts#oracle
-  - test/oracle.property.test.ts#documentArb
+  - test/oracle.property.test.ts#documentBoundedAtFourNestedTablesAndWidthFive
   - test/oracle.property.test.ts#assertOursAgainstCorpus
 enforcedBy: []
 ---

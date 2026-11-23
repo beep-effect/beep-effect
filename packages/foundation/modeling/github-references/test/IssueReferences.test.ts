@@ -18,12 +18,10 @@ import * as Str from "effect/String";
 
 const isIssueReferences = S.is(S.Array(IssueReference));
 
-// Pure classes get pure tests, with no layer at all.
-
 const capitalized = (word: string): string =>
   Str.toUpperCase(O.getOrElse(Str.charAt(0)(word), constant(""))) + Str.slice(1)(word);
 
-describe("IssueReferences.harvestIssueReferences", () => {
+describe("IssueReferences.harvestIssueReferences: pure classes get pure tests, with no layer at all", () => {
   it("exports exactly the nine documented keywords", () => {
     assert.deepStrictEqual(
       [...CLOSING_KEYWORDS],
@@ -31,7 +29,7 @@ describe("IssueReferences.harvestIssueReferences", () => {
     );
   });
 
-  it("finds every documented keyword, whatever the case, lowercased to canonical form", () => {
+  it("finds every documented keyword, whatever the case and the backtracked alternation order, lowercased to canonical form", () => {
     for (const keyword of CLOSING_KEYWORDS) {
       for (const spelled of [keyword, Str.toUpperCase(keyword), capitalized(keyword)]) {
         const found = harvestIssueReferences(`This ${spelled} #12 today`);
@@ -64,20 +62,18 @@ describe("IssueReferences.harvestIssueReferences", () => {
   });
 
   it("rejects what the inline dialect does not say", () => {
-    const negatives = [
-      "fixes#12", // keyword without the mandatory whitespace
-      "fixesX #12", // not a keyword
-      "prefixes #12", // the keyword must start at a word boundary
-      "#12", // a bare number references nothing
-      "fixes owner/repo#3", // cross-repo is out of scope this round
-      "fixes: #12", // the colon belongs to the bare-line dialect
+    const negatives: ReadonlyArray<readonly [line: string, reason: string]> = [
+      ["fixes#12", "keyword without the mandatory whitespace"],
+      ["fixesX #12", "not a keyword"],
+      ["prefixes #12", "the keyword must start at a word boundary"],
+      ["#12", "a bare number references nothing"],
+      ["fixes owner/repo#3", "cross-repo is out of scope this round"],
+      ["fixes: #12", "the colon belongs to the bare-line dialect"],
     ];
-    for (const text of negatives) assert.lengthOf(harvestIssueReferences(text), 0, text);
+    for (const [text, reason] of negatives) assert.lengthOf(harvestIssueReferences(text), 0, `${reason}: ${text}`);
   });
 
-  it("finds references wrapped in markdown and punctuation, spanning keyword through the last digit", () => {
-    // The keyword needs only a word boundary before it, so emphasis, brackets
-    // and list markers do not hide a reference, and none of them is in its span.
+  it("finds references wrapped in markdown and punctuation, which leave a word boundary before the keyword and stay out of the span", () => {
     const cases: ReadonlyArray<readonly [string, string, number]> = [
       ["(fixes #3).", "fixes #3", 3],
       ["**Fixes #4**", "Fixes #4", 4],
@@ -93,9 +89,7 @@ describe("IssueReferences.harvestIssueReferences", () => {
     }
   });
 
-  it("skips a number too big to represent rather than misparsing it", () => {
-    // 2^53 + 1 rounds under Number; a silently-wrong issue number is worse
-    // than a skipped match, so the match is dropped and its neighbours kept.
+  it("skips a number too big to represent rather than misparsing it: 2^53 + 1 would round to a wrong issue, so the match drops and its neighbours stay", () => {
     const found = harvestIssueReferences("fixes #9007199254740993 and closes #2");
     assert.deepStrictEqual(
       A.map(found, (reference) => reference.issueNumber),
@@ -255,19 +249,20 @@ describe("IssueReferences.parseBareLineReference", () => {
   });
 
   it("rejects everything that is not exactly one bare reference", () => {
-    const negatives = [
-      "fixes #12 because reasons", // trailing prose
-      "see fixes #12", // leading prose
-      "fixes:#12", // colon without the mandatory space
-      "fixes#12", // no separator at all
-      "fixes 12", // no #
-      "#12", // no keyword
-      "fixes owner/repo#3", // cross-repo is out of scope this round
-      "fixes #1 #2", // one reference max
-      "fixes\n#12", // an embedded newline means this was never one line
-      "", // an empty line carries nothing
+    const negatives: ReadonlyArray<readonly [line: string, reason: string]> = [
+      ["fixes #12 because reasons", "trailing prose"],
+      ["see fixes #12", "leading prose"],
+      ["fixes:#12", "colon without the mandatory space"],
+      ["fixes#12", "no separator at all"],
+      ["fixes 12", "no #"],
+      ["#12", "no keyword"],
+      ["fixes owner/repo#3", "cross-repo is out of scope this round"],
+      ["fixes #1 #2", "one reference max"],
+      ["fixes\n#12", "an embedded newline means this was never one line"],
+      ["", "an empty line carries nothing"],
     ];
-    for (const line of negatives) assert.doesNotThrow(() => assertNone(parseBareLineReference(line)), line);
+    for (const [line, reason] of negatives)
+      assert.doesNotThrow(() => assertNone(parseBareLineReference(line)), `${reason}: ${line}`);
   });
 
   it("rejects a number past Number.MAX_SAFE_INTEGER rather than rounding it", () => {

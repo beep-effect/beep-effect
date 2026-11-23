@@ -229,13 +229,14 @@ const hasScheme = /^[A-Za-z][A-Za-z0-9+.-]*:/u;
 const hasAllowedLinkScheme = /^(?:https|mailto|tel):/iu;
 const hasAllowedImageScheme = /^https:/iu;
 
+const hasNoSurroundingUnicodeWhitespaceWhileMicrosyntaxStaysAsciiOnly = (value: string): boolean =>
+  value === Str.trim(value);
+
 const isSafeUrlAttributeWith =
   (allowedScheme: RegExp) =>
   (value: string): boolean =>
     Str.isNonEmpty(value) &&
-    // The safe-output policy deliberately rejects surrounding Unicode
-    // whitespace; HTML microsyntax tokenization elsewhere remains ASCII-only.
-    value === Str.trim(value) &&
+    hasNoSurroundingUnicodeWhitespaceWhileMicrosyntaxStaysAsciiOnly(value) &&
     !hasForbiddenUrlCodePoint.test(value) &&
     !Str.startsWith("//")(value) &&
     !Str.includes("\\")(value) &&

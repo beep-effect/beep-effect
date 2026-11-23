@@ -189,23 +189,11 @@ export class BareLineReference extends S.Opaque<BareLineReference, { readonly br
   )
 ) {}
 
-/**
- * Both patterns derive from {@link CLOSING_KEYWORDS} so the constant and the
- * grammar cannot drift. Alternation order is safe: the regex engine backtracks
- * through alternatives, so `close` matching inside `closes` fails at the
- * mandatory `#`-introducer and retries the longer keyword.
- */
-const KEYWORDS = A.join(CLOSING_KEYWORDS, "|");
+const CLOSING_KEYWORD_ALTERNATION = A.join(CLOSING_KEYWORDS, "|");
 
-/** Inline-in-prose: mandatory whitespace, no colon. */
-const INLINE_PATTERN = new RegExp(`\\b(${KEYWORDS})\\s+#(\\d+)`, "gi");
+const INLINE_PATTERN = new RegExp(`\\b(${CLOSING_KEYWORD_ALTERNATION})\\s+#(\\d+)`, "gi");
 
-/**
- * Bare-line: optional colon, then mandatory same-line whitespace. `[ \t]`
- * rather than `\s`, so an embedded newline cannot smuggle two lines past a
- * parser whose contract is one.
- */
-const BARE_LINE_PATTERN = new RegExp(`^(${KEYWORDS}):?[ \\t]+#(\\d+)$`, "i");
+const BARE_LINE_PATTERN = new RegExp(`^(${CLOSING_KEYWORD_ALTERNATION}):?[ \\t]+#(\\d+)$`, "i");
 
 /**
  * Every inline closing reference in `text`, in document order.
@@ -244,7 +232,6 @@ export const harvestIssueReferences = (text: string): ReadonlyArray<IssueReferen
   const pattern = new RegExp(INLINE_PATTERN);
   let match: RegExpExecArray | null;
   while ((match = pattern.exec(text)) !== null) {
-    // Both captures are mandatory in INLINE_PATTERN.
     const issueNumber = Number(A.getUnsafe(match, 2));
     if (!Number.isSafeInteger(issueNumber)) continue;
     const keyword = O.getOrThrow(R.get(CLOSING_KEYWORD_BY_NAME, Str.toLowerCase(A.getUnsafe(match, 1))));
@@ -284,7 +271,6 @@ export const harvestIssueReferences = (text: string): ReadonlyArray<IssueReferen
 export const parseBareLineReference = (line: string): O.Option<BareLineReference> => {
   const match = BARE_LINE_PATTERN.exec(Str.trim(line));
   if (match === null) return O.none();
-  // Both captures are mandatory in BARE_LINE_PATTERN.
   const issueNumber = Number(A.getUnsafe(match, 2));
   if (!Number.isSafeInteger(issueNumber)) return O.none();
   const keyword = O.getOrThrow(R.get(CLOSING_KEYWORD_BY_NAME, Str.toLowerCase(A.getUnsafe(match, 1))));

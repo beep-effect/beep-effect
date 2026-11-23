@@ -418,6 +418,11 @@ export const GateOutcome = LiteralKit(["allowed", "denied"]).pipe(
  */
 export type GateOutcome = typeof GateOutcome.Type;
 
+const parseBasedDaysThrough28SoGenerationDoesNotRejectionSampleArbitraryStrings = {
+  source: "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|1\\d|2[0-8])T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}Z$",
+  flags: "",
+};
+
 /**
  * Trimmed, non-empty datetime string that `DateTime.make` parses, kept verbatim on the wire.
  *
@@ -450,16 +455,7 @@ export const IsoDateTimeString = S.Trim.check(
       title: "ISO DateTime String",
       description:
         "Accepts any string DateTime.make parses; generation stays inside a constructive ISO 8601 UTC shape.",
-      // The predicate is parse-based, so native generation would rejection-sample
-      // arbitrary strings; the day range 01-28 keeps every candidate a valid date.
-      arbitraryConstraint: {
-        patterns: [
-          {
-            source: "^\\d{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|1\\d|2[0-8])T(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d\\.\\d{3}Z$",
-            flags: "",
-          },
-        ],
-      },
+      arbitraryConstraint: { patterns: [parseBasedDaysThrough28SoGenerationDoesNotRejectionSampleArbitraryStrings] },
     })
   )
 ).pipe(
