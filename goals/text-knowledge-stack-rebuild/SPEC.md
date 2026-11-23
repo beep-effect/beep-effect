@@ -188,7 +188,7 @@ and the phase order is `PLAN.md`), this file is normative.
   `OccurrenceId`, `QuoteKey`, `Resolution`, `Reanchoring`, `LocatorMap`, the
   two text normalizations and unit conversion; `TextAnchor` and
   `VerifiedTextAnchor` keep their shapes). P2 created it through
-  `bun run beep create-package` and retired `packages/foundation/modeling/provenance`
+  `bun run beep create-package` and retired the former provenance workspace
   (`@beep/provenance`) per chapter 11, with every consumer migrated in the same PR
   and no alias.
 - `@beep/annotation`, created in P3 through `bun run beep create-package`
