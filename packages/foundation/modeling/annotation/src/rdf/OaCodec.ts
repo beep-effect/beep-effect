@@ -30,7 +30,7 @@
  */
 import { IRI, IRIReference } from "@beep/identity/Iri";
 import { $AnnotationId } from "@beep/identity/packages";
-import { iri, mint, namespace } from "@beep/identity/Registry";
+import { iri, mint } from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
 import { definePreimage } from "@beep/jsonc/Mint";
 import {
@@ -41,10 +41,11 @@ import {
   WebAnnotationTextQuoteSelector,
   webAnnotationTargetToTextAnchor,
 } from "@beep/rdf/Adapters/WebAnnotation";
+import { canonicalDigest, DatasetDigest } from "@beep/rdf/Canonical";
+import { instanceHash, instanceIri } from "@beep/rdf/InstanceIri";
 import * as Rdf from "@beep/rdf/Rdf";
 import { ActivityId, ContentHash, DomainTag } from "@beep/schema/ContentHash";
 import { LiteralKit } from "@beep/schema/LiteralKit";
-import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
 import { Anchored, mintOccurrenceId } from "@beep/text/Occurrence";
 import { convertPosition } from "@beep/text/OffsetUnit";
 import { SourceTextIdentity } from "@beep/text/SourceTextIdentity";
@@ -72,6 +73,7 @@ import { Mention, OaDocument, OaKinds, Paragraph, Sentence, Title, Word } from "
 import { merge } from "../Merge.ts";
 import type { PreimageMintError } from "@beep/jsonc/Mint";
 import type { WebAnnotationAnchorRefused } from "@beep/rdf/Adapters/WebAnnotation";
+import type { CanonicalizationLimitExceeded } from "@beep/rdf/Canonical";
 import type { OccurrenceId } from "@beep/text/Occurrence";
 import type { VerifiedSourceText } from "@beep/text/VerifiedTextAnchor";
 import type * as Digest from "effect/crypto/Digest";
@@ -299,26 +301,24 @@ export const ImportedActivityPreimage = definePreimage({
 
 /**
  * The import itself: the activity a decode attributes unattributed
- * annotations to, over the SHA-256 of the RDF bytes the caller parsed.
+ * annotations to.
  *
  * **Details**
  *
- * Its id is the `import-activity/v1` hash of the source digest alone
- * ({@link mintImportActivityId}); `importedAt` stays outside every id and
- * every quad, so {@link normalize} depends on the input and the digest only.
+ * Its id is the `import-activity/v2` hash of the input's canonical
+ * `DatasetDigest` alone ({@link mintImportActivityId}), which the codec
+ * computes; `importedAt` stays outside every id and every quad, so two
+ * imports of one dataset share one id and {@link normalize} depends on the
+ * input only.
  *
  * **Example** (Make an import activity)
  *
  * ```ts import.meta.vitest name="Make an import activity"
  * import { ImportActivity } from "@beep/annotation/rdf/OaCodec"
- * import { Sha256PrefixedDigest } from "@beep/schema/Sha256"
  * import * as DateTime from "effect/DateTime"
  *
- * const imported = ImportActivity.make({
- *   sourceDigest: Sha256PrefixedDigest.make(`sha256:${"b".repeat(64)}`),
- *   importedAt: DateTime.makeUnsafe(0),
- * })
- * imported.sourceDigest.length // => 71
+ * const imported = ImportActivity.make({ importedAt: DateTime.makeUnsafe(0) })
+ * DateTime.toEpochMillis(imported.importedAt) // => 0
  * ```
  *
  * @category models
@@ -326,7 +326,6 @@ export const ImportedActivityPreimage = definePreimage({
  */
 export class ImportActivity extends S.Opaque<ImportActivity, { readonly brand: unique symbol }>()(
   S.Struct({
-    sourceDigest: Sha256PrefixedDigest.annotateKey({ description: "The SHA-256 of the RDF bytes the caller parsed." }),
     importedAt: S.DateTimeUtcFromMillis.annotateKey({ description: "When the import ran; outside every id." }),
   }).pipe(
     $I.annoteSchema("ImportActivity", { description: "The import activity of one decode of third-party OA input." })
@@ -334,26 +333,26 @@ export class ImportActivity extends S.Opaque<ImportActivity, { readonly brand: u
 ) {}
 
 /**
- * The `import-activity/v1` preimage over the source digest, with its
- * committed golden vector.
+ * The `import-activity/v2` preimage over the input's canonical dataset
+ * digest, with its committed golden vector.
  *
  * **Example** (Read the domain tag)
  *
  * ```ts import.meta.vitest name="Read the import-activity domain tag"
  * import { ImportActivityPreimage } from "@beep/annotation/rdf/OaCodec"
  *
- * ImportActivityPreimage.domainTag // => "import-activity/v1"
+ * ImportActivityPreimage.domainTag // => "import-activity/v2"
  * ```
  *
  * @category models
  * @since 0.0.0
  */
 export const ImportActivityPreimage = definePreimage({
-  domainTag: DomainTag.make("import-activity/v1"),
-  schema: S.Tuple([Sha256PrefixedDigest]),
+  domainTag: DomainTag.make("import-activity/v2"),
+  schema: S.Tuple([DatasetDigest]),
   golden: {
     preimage: ["sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb"],
-    hash: ContentHash.make("sha256:f5431a3f22f3b795221229eb7c7b3e424d4f89fec11f5ebf7b536973d91429b1"),
+    hash: ContentHash.make("sha256:9215bcc3db199a3fe273addef7a10334b9e5c3fa1d5eac7e408db8b03bbf2590"),
   },
 });
 
@@ -387,32 +386,32 @@ export const mintImportedActivityId = Effect.fn("ImportedActivity.mint")(functio
 });
 
 /**
- * Mint the id of an import activity under `import-activity/v1`, from the
- * digest of the RDF bytes it imported.
+ * Mint the id of an import activity under `import-activity/v2`, from the
+ * canonical digest of the dataset it imported.
  *
  * **Example** (Mint an import activity id)
  *
  * ```ts
  * import { mintImportActivityId } from "@beep/annotation/rdf/OaCodec"
- * import { Sha256PrefixedDigest } from "@beep/schema/Sha256"
+ * import { DatasetDigest } from "@beep/rdf/Canonical"
+ * import { ContentHash } from "@beep/schema/ContentHash"
  * import * as Digest from "effect/crypto/Digest"
  * import * as Effect from "effect/Effect"
  *
- * const id = mintImportActivityId(Sha256PrefixedDigest.make(`sha256:${"b".repeat(64)}`)).pipe(
- *   Effect.provide(Digest.layerWebCrypto)
- * )
+ * const digest = DatasetDigest.make(ContentHash.make(`sha256:${"b".repeat(64)}`))
+ * const id = mintImportActivityId(digest).pipe(Effect.provide(Digest.layerWebCrypto))
  * console.log(typeof id)
  * ```
  *
- * @param sourceDigest - The SHA-256 of the parsed RDF bytes.
+ * @param datasetDigest - The canonical digest of the imported dataset.
  * @returns The import activity's id.
  * @category constructors
  * @since 0.0.0
  */
 export const mintImportActivityId = Effect.fn("ImportActivity.mint")(function* (
-  sourceDigest: Sha256PrefixedDigest
+  datasetDigest: DatasetDigest
 ): Effect.fn.Return<ActivityId, PreimageMintError, Digest.Digest> {
-  const hash = yield* ImportActivityPreimage.mint([sourceDigest]);
+  const hash = yield* ImportActivityPreimage.mint([datasetDigest]);
   return ActivityId.make(hash);
 });
 
@@ -647,65 +646,7 @@ const nifClasses: Readonly<Record<string, Rdf.NamedNode>> = {
 const xsdInteger = iri("xsd:integer");
 const xsdDateTime = iri("xsd:dateTime");
 
-const instanceBase = namespace("instance").iri;
-
-const instancePrefix = `${instanceBase}sha256-`;
-
 const instanceSegment = (hash: ContentHash): string => Str.replace("sha256:", "sha256-")(hash);
-
-const decodeContentHash = S.decodeUnknownOption(ContentHash);
-
-/**
- * The instance IRI a content id prints as:
- * `https://beep-effect.com/ns/instance/sha256-<hex>`.
- *
- * **Details**
- *
- * Annotation, occurrence, run-entity and activity ids all print this way;
- * their domain tags keep the hashes of different brands apart.
- *
- * **Example** (Print an id)
- *
- * ```ts import.meta.vitest name="Print an id as an instance IRI"
- * import { instanceIri } from "@beep/annotation/rdf/OaCodec"
- * import { ContentHash } from "@beep/schema/ContentHash"
- *
- * instanceIri(ContentHash.make(`sha256:${"a".repeat(64)}`)) === `https://beep-effect.com/ns/instance/sha256-${"a".repeat(64)}` // => true
- * ```
- *
- * @param hash - A content id.
- * @returns Its instance IRI.
- * @category mapping
- * @since 0.0.0
- */
-export const instanceIri = (hash: ContentHash): IRI => IRI.make(mint("instance", instanceSegment(hash)));
-
-/**
- * The content id an instance IRI prints, or none for any other IRI.
- *
- * **Example** (Parse an instance IRI)
- *
- * ```ts import.meta.vitest name="Parse an instance IRI"
- * import { instanceHash, instanceIri } from "@beep/annotation/rdf/OaCodec"
- * import { IRI } from "@beep/identity/Iri"
- * import { ContentHash } from "@beep/schema/ContentHash"
- * import * as O from "effect/Option"
- *
- * const hash = ContentHash.make(`sha256:${"a".repeat(64)}`)
- * O.contains(instanceHash(instanceIri(hash)), hash) // => true
- * O.isNone(instanceHash(IRI.make("https://example.org/activity/1"))) // => true
- * ```
- *
- * @param value - An IRI.
- * @returns The content id it prints, when it is an instance IRI.
- * @category mapping
- * @since 0.0.0
- */
-export const instanceHash = (value: IRI): O.Option<ContentHash> =>
-  O.some(value).pipe(
-    O.filter(Str.startsWith(instancePrefix)),
-    O.flatMap((instance) => decodeContentHash(`sha256:${Str.slice(instancePrefix.length)(instance)}`))
-  );
 
 const instanceNode = (hash: ContentHash): Rdf.NamedNode => node(instanceIri(hash));
 
@@ -1283,9 +1224,10 @@ const readProfile = (kinds: typeof OaKinds) => {
   return Effect.fnUntraced(function* (
     input: Rdf.Dataset,
     options: DecodeOptions
-  ): Effect.fn.Return<Profile, PreimageMintError, Digest.Digest> {
+  ): Effect.fn.Return<Profile, PreimageMintError | CanonicalizationLimitExceeded, Digest.Digest> {
     const index = indexOf(input);
-    const importActivity = yield* mintImportActivityId(options.importActivity.sourceDigest);
+    const inputDigest = yield* canonicalDigest(input);
+    const importActivity = yield* mintImportActivityId(inputDigest);
     const isSource = (object: Rdf.Term): boolean => Rdf.NamedNode.is(object) && object.value === options.source;
     const wireSource = IRIReference.make(options.source);
 
@@ -1482,7 +1424,7 @@ export const decodeOa = (kinds: typeof OaKinds) => {
   return Effect.fn("OaCodec.decode")(function* (
     input: Rdf.Dataset,
     options: DecodeOptions
-  ): Effect.fn.Return<OaImport, PreimageMintError, Digest.Digest> {
+  ): Effect.fn.Return<OaImport, PreimageMintError | CanonicalizationLimitExceeded, Digest.Digest> {
     const { accepted, rejected, retained } = yield* read(input, options);
     // What the document carries leaves the residual, except what a rejected annotation reaches.
     const consumed = HashSet.difference(
@@ -1618,7 +1560,7 @@ const normalizedQuads = (kinds: typeof OaKinds, source: Rdf.NamedNode, sourceTex
 export const normalize = Effect.fnUntraced(function* (
   input: Rdf.Dataset,
   options: DecodeOptions
-): Effect.fn.Return<Rdf.Dataset, PreimageMintError, Digest.Digest> {
+): Effect.fn.Return<Rdf.Dataset, PreimageMintError | CanonicalizationLimitExceeded, Digest.Digest> {
   const { accepted } = yield* readProfile(OaKinds)(input, options);
   const quads = yield* Effect.forEach(
     accepted,

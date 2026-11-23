@@ -6,8 +6,6 @@ import {
   encodeOa,
   ImportActivity,
   ImportedActivity,
-  instanceHash,
-  instanceIri,
   normalize,
   OaEncodeRefused,
   OaRejection,
@@ -16,9 +14,10 @@ import { fcRuns } from "@beep/fc-runs";
 import { IRI } from "@beep/identity/Iri";
 import { iri } from "@beep/identity/Registry";
 import { TermIri } from "@beep/identity/Term";
+import { CanonicalizationLimitExceeded, CanonicalWorkBound, canonicalDigest, DatasetDigest } from "@beep/rdf/Canonical";
+import { instanceHash, instanceIri } from "@beep/rdf/InstanceIri";
 import * as Rdf from "@beep/rdf/Rdf";
 import { ContentHash } from "@beep/schema/ContentHash";
-import { Sha256PrefixedDigest } from "@beep/schema/Sha256";
 import { it } from "@beep/test-runner";
 import { anchoredOn, textDigestOf } from "@beep/text/Arbitrary";
 import { Anchored, mintOccurrenceId } from "@beep/text/Occurrence";
@@ -72,10 +71,21 @@ const codec = makeDocumentCodec({ schema: OaDocument, kinds: OaKinds });
 const verify = (source: SourceTextIdentity, sourceText: string) =>
   verifySourceTextIdentity(VerifySourceTextIdentityInput.make({ expectedSource: source, source, sourceText }));
 
-const inputDigest = Sha256PrefixedDigest.make(`sha256:${Str.repeat(64)("c")}`);
+const placeholderDigest = DatasetDigest.make(ContentHash.make(`sha256:${Str.repeat(64)("c")}`));
 
-const importActivityOf = (sourceDigest: Sha256PrefixedDigest) =>
-  ImportActivity.make({ sourceDigest, importedAt: DateTime.makeUnsafe(1_700_000_000_000) });
+const importActivityOf = (importedAt = 1_700_000_000_000) =>
+  ImportActivity.make({ importedAt: DateTime.makeUnsafe(importedAt) });
+
+const relabelTerm = <T extends Rdf.Subject | Rdf.ObjectTerm | Rdf.GraphTerm>(term: T): T =>
+  term.termType === "BlankNode" ? (Rdf.makeBlankNode(`${term.value}-relabelled`) as T) : term;
+
+const relabelBlanks = (quad: Rdf.Quad): Rdf.Quad =>
+  Rdf.Quad.make({
+    subject: relabelTerm(quad.subject),
+    predicate: quad.predicate,
+    object: relabelTerm(quad.object),
+    graph: relabelTerm(quad.graph),
+  });
 
 const targetsOf = (row: Anchored) => Effect.map(mintOccurrenceId(row), (id) => HashSet.make(id));
 
@@ -555,7 +565,7 @@ const fixtures: ReadonlyArray<Fixture> = [
 const fixtureOptions = (text: VerifiedSourceText) => ({
   source: oaSource,
   text,
-  importActivity: importActivityOf(inputDigest),
+  importActivity: importActivityOf(),
 });
 
 it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA codec", (it) => {
@@ -564,9 +574,9 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
     [oaDocumentCase],
     ([generatedCase]) =>
       Effect.gen(function* () {
-        const { text: sourceText, document, importedActivities, sourceDigest } = generatedCase;
+        const { text: sourceText, document, importedActivities } = generatedCase;
         const text = yield* verify(document.text, sourceText);
-        const options = { source: oaSource, text, importActivity: importActivityOf(sourceDigest) };
+        const options = { source: oaSource, text, importActivity: importActivityOf() };
         const dataset = Result.getOrThrow(encode({ document, importedActivities }, options));
         expect(A.filter(A.fromIterable(dataset.quads), hasBlankNode)).toStrictEqual([]);
         const decoded = yield* decode(dataset, options);
@@ -645,9 +655,12 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
       const text = yield* verify(fixtureSource, fixtureText);
       const options = fixtureOptions(text);
       const generationsOf = Effect.fnUntraced(function* (fixture: number) {
-        const decoded = yield* decode(Rdf.makeDataset(A.getUnsafe(fixtures, fixture).quads), options);
+        const dataset = Rdf.makeDataset(A.getUnsafe(fixtures, fixture).quads);
+        const decoded = yield* decode(dataset, options);
+        const digest = yield* canonicalDigest(dataset);
         return {
           decoded,
+          importId: importActivityIdOf(digest),
           generations: A.flatMap(decoded.document.attribution.pipe(HashMap.values, A.fromIterable), A.fromIterable),
         };
       });
@@ -656,7 +669,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
       const unattributed = yield* generationsOf(0);
       assertEquals(
         A.map(unattributed.generations, (g) => [g.activity, stated(g)]),
-        [[importActivityIdOf(inputDigest), O.some(T1)]]
+        [[unattributed.importId, O.some(T1)]]
       );
       assertEquals(unattributed.decoded.importedActivities, HashMap.empty());
 
@@ -706,7 +719,56 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
       const activities = HashSet.fromIterable(A.map(mixed.generations, (g) => g.activity));
       expect(HashSet.has(activities, activityIdOf("native"))).toBe(true);
       // The blank activity is no statement, so that annotation takes the import activity.
-      expect(HashSet.has(activities, importActivityIdOf(inputDigest))).toBe(true);
+      expect(HashSet.has(activities, mixed.importId)).toBe(true);
+    })
+  );
+
+  it.effect(
+    `${L26}: relabelled blank nodes normalize to the same dataset and the same import activity`,
+    Effect.fnUntraced(function* () {
+      const text = yield* verify(fixtureSource, fixtureText);
+      const options = fixtureOptions(text);
+      const input = Rdf.makeDataset(A.getUnsafe(fixtures, 10).quads);
+      const relabelled = input.quads.pipe(A.fromIterable, A.map(relabelBlanks), Rdf.makeDataset);
+      expect(Equal.equals(input, relabelled)).toBe(false);
+      const original = yield* decode(input, options);
+      const renamed = yield* decode(relabelled, options);
+      assertEquals(renamed.document, original.document);
+      const normalizedOriginal = yield* normalize(input, options);
+      const normalizedRenamed = yield* normalize(relabelled, options);
+      assertEquals(normalizedRenamed, normalizedOriginal);
+    })
+  );
+
+  it.effect(
+    `${L26}: two import times of one dataset give one import activity`,
+    Effect.fnUntraced(function* () {
+      const text = yield* verify(fixtureSource, fixtureText);
+      const input = Rdf.makeDataset(A.getUnsafe(fixtures, 0).quads);
+      const early = yield* decode(input, { ...fixtureOptions(text), importActivity: importActivityOf(T0) });
+      const late = yield* decode(input, { ...fixtureOptions(text), importActivity: importActivityOf(T1) });
+      assertEquals(late.document, early.document);
+    })
+  );
+
+  it.effect(
+    `${L26}: a blank-node clique past the canonicalization bound is refused`,
+    Effect.fnUntraced(function* () {
+      const text = yield* verify(fixtureSource, fixtureText);
+      const labels = A.map(A.range(0, 5), (index) => `k${index}`);
+      const clique = A.flatMap(labels, (from) =>
+        A.map(
+          A.filter(labels, (to) => to !== from),
+          (to) =>
+            Rdf.makeQuad(Rdf.makeBlankNode(from), Rdf.makeNamedNode("https://example.org/p"), Rdf.makeBlankNode(to))
+        )
+      );
+      const input = Rdf.makeDataset([...A.getUnsafe(fixtures, 0).quads, ...clique]);
+      const refusal = yield* Effect.flip(decode(input, fixtureOptions(text)));
+      assertEquals(
+        refusal,
+        CanonicalizationLimitExceeded.make({ limit: CanonicalWorkBound, reached: CanonicalWorkBound + 1 })
+      );
     })
   );
 
@@ -716,7 +778,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
       const astral = "A😀B";
       const source = SourceTextIdentity.make({ ...fixtureSource, textDigest: textDigestOf(sha256)(astral) });
       const text = yield* verify(source, astral);
-      const options = { source: oaSource, text, importActivity: importActivityOf(inputDigest) };
+      const options = { source: oaSource, text, importActivity: importActivityOf() };
       const b = anchoredOn(source, astral, { start: 3, end: 4 });
       const wordOnB = yield* targetsOf(b);
       const document = yield* codec.assemble({
@@ -850,7 +912,7 @@ it.layer(Digest.layerWebCrypto, { timeout: "60 seconds" })("@beep/annotation OA 
       const nativePart = yield* parts({ activity: activityIdOf("native"), at: O.some(DateTime.makeUnsafe(T0)) });
       const importedPart = yield* parts({ activity: importedId, at: O.none() });
       const importPart = yield* parts({
-        activity: importActivityIdOf(inputDigest),
+        activity: importActivityIdOf(placeholderDigest),
         at: O.some(DateTime.makeUnsafe(T1)),
       });
       const merged = Result.getOrThrow(

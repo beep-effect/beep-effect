@@ -22,7 +22,7 @@ const generationBytes =
   '["generation/v1","sha256:8a816f6d07f571cb31aba23d9650d0cb67c72ce6832c12b6c89f388b6fd9ddb9",' +
   '"sha256:2a2b259a63e6402ee336c2e1d4f1023b98bee9880bfa586fface844bca277388"]';
 const importedActivityBytes = '["imported-activity/v1",{"_tag":"Activity","iri":"https://example.org/activity/1"}]';
-const importActivityBytes = `["import-activity/v1","sha256:${Str.repeat(64)("b")}"]`;
+const importActivityBytes = `["import-activity/v2","sha256:${Str.repeat(64)("b")}"]`;
 
 const declared = [AnnotationPreimage, GenerationPreimage, ImportedActivityPreimage, ImportActivityPreimage] as const;
 
@@ -34,7 +34,7 @@ describe("@beep/annotation preimages", () => {
       "annotation/v1",
       "generation/v1",
       "imported-activity/v1",
-      "import-activity/v1",
+      "import-activity/v2",
     ]);
     assertSuccess(registry().pipe(Result.flatMap((preimages) => preimages.verifyGoldensResult(sha256))), undefined);
   });
@@ -68,7 +68,7 @@ describe("@beep/annotation preimages", () => {
       "sha256:9924f029d9bb4a3a0788bb5c915176e98210d3b4bbd604efd8b2dfc65b6de8fa"
     );
     expect(ImportActivityPreimage.golden.hash).toBe(
-      "sha256:f5431a3f22f3b795221229eb7c7b3e424d4f89fec11f5ebf7b536973d91429b1"
+      "sha256:9215bcc3db199a3fe273addef7a10334b9e5c3fa1d5eac7e408db8b03bbf2590"
     );
   });
 
