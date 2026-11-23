@@ -88,17 +88,13 @@ const appendClaims = Effect.fn("PartyLedgerMemory.appendClaims")(function* (
     const generation = A.headNonEmpty(generations);
     if (!DateTime.isLessThanOrEqualTo(generation.activity.started, generation.ended))
       return yield* conflict(record.claim, "generation-order");
-    const activity = yield* mintActivityId(generation.activity).pipe(
-      Effect.mapError(() => conflict(record.claim, "invalid-generation"))
-    );
+    const activity = yield* mintActivityId(generation.activity).pipe(Effect.orDie);
     if (!Eq.equals(activity, record.core.generatedBy)) return yield* conflict(record.claim, "generation-mismatch");
     const existing = A.findFirst(claims, (row) => Eq.equals(row.claim, record.claim));
     if (O.isSome(existing)) {
       if (!sameClaim(existing.value, record)) return yield* conflict(record.claim, "conflicting-core");
     } else {
-      const appended = yield* arrows
-        .appendClaim(log, record, { activity, at: generation.ended })
-        .pipe(Effect.mapError(() => conflict(record.claim, "invalid-core")));
+      const appended = yield* arrows.appendClaim(log, record, { activity, at: generation.ended }).pipe(Effect.orDie);
       if (appended._tag === "Refused") return yield* conflict(record.claim, A.headNonEmpty(appended.violations)._tag);
       log = appended.log;
       claims = A.append(claims, record);
